@@ -26,7 +26,7 @@ export class TokenUsageRowObject {
   conversationId!: string | null;
 
   @Field(() => Float, {
-    description: `Reported dollar cost of the turn, when priced.`,
+    description: `Dollar cost of the turn: reported by the producer, or an estimate at Anthropic list price for an unpriced Claude request. Null when it cannot be priced.`,
     nullable: true,
   })
   costUsd!: number | null;
@@ -65,6 +65,12 @@ export class TokenUsageRowObject {
     nullable: true,
   })
   reasoningTokens!: number | null;
+
+  @Field(() => String, {
+    description: `Producer of the row: openthrottle-chat (in-app chat) or claude-code (Claude Code hooks). Null for legacy rows written before sources were recorded, which are chat.`,
+    nullable: true,
+  })
+  source!: string | null;
 
   @Field(() => Float, {
     description: `Total tokens for the turn, when reported.`,
@@ -119,4 +125,17 @@ export class TokenUsageResultObject {
     description: `Summed usage + turn count over the same filtered range.`,
   })
   totals!: TokenUsageTotalsObject;
+}
+
+@ObjectType()
+export class RecordTokenUsageResultObject {
+  @Field(() => Int, {
+    description: `Rows written by this call.`,
+  })
+  inserted!: number;
+
+  @Field(() => Int, {
+    description: `Rows skipped because (source, sessionId, requestId) was already recorded.`,
+  })
+  skipped!: number;
 }

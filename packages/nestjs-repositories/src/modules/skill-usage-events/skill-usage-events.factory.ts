@@ -43,6 +43,7 @@ export const skillUsageEventsFactory =
       agentType: null,
       args: faker.lorem.sentence().slice(0, 80),
       cwd: faker.system.directoryPath(),
+      duplicateOfId: null,
       gitBranch: faker.git.branch(),
       hookEventName: 'PreToolUse',
       id: faker.string.uuid(),

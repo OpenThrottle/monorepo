@@ -18,6 +18,9 @@
       "path": "../nodejs-utils/tsconfig.lib.json"
     },
     {
+      "path": "../agentic-token-usage/tsconfig.lib.json"
+    },
+    {
       "path": "../../tools/dotfiles/tsconfig.lib.json"
     }
   ]

@@ -11,6 +11,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import type { NormalizedTokenUsage } from '@openthrottle/agentic-token-usage';
 import { Repository, type SelectQueryBuilder } from 'typeorm';
 
+import { estimateAnthropicListPriceUsd } from '../../utils/anthropic-list-price.ts';
+import {
+  CAPTURE_HEALTH_STREAMS,
+  type CaptureHealthRow,
+  toCaptureHealthRows,
+} from '../../utils/capture-health.ts';
 import { AgentTokenUsage } from './agent-token-usage.entity.ts';
 
 /**
@@ -23,8 +29,40 @@ export interface RecordTokenUsageInput {
   readonly messageId: string | null;
   readonly model: string | null;
   readonly provider: string;
+  /** Producer id for `agent_token_usage.source`; see AGENT_TOKEN_USAGE_SOURCES. */
+  readonly source: string;
   readonly usage: NormalizedTokenUsage;
   readonly userId: string;
+}
+
+/**
+ * One hook-ingested usage row (Claude Code transcript line). `occurredAt` is
+ * the event time from the transcript and becomes `created_at`, so a late JSONL
+ * drain lands on the day the turn actually ran, not the day it was ingested.
+ */
+export interface TokenUsageBatchRow {
+  readonly cachedReadTokens: number | null;
+  readonly cachedWriteTokens: number | null;
+  readonly costUsd: number | null;
+  readonly cwd: string | null;
+  readonly gitBranch: string | null;
+  readonly inputTokens: number | null;
+  readonly model: string;
+  readonly occurredAt: Date;
+  readonly outputTokens: number | null;
+  readonly provider: string;
+  readonly rawUsage: Record<string, unknown> | null;
+  readonly reasoningTokens: number | null;
+  readonly requestId: string | null;
+  readonly sessionId: string | null;
+  readonly source: string;
+  readonly totalTokens: number | null;
+}
+
+/** Outcome of a batch ingest: rows written vs rows the unique index skipped. */
+export interface TokenUsageBatchResult {
+  readonly inserted: number;
+  readonly skipped: number;
 }
 
 /**
@@ -57,6 +95,9 @@ const exclusiveEndInstant = (end: string): string => {
 
   return date.toISOString();
 };
+
+/** The capture-health grouping key: the producer id, else the provider for pre-source rows. */
+const CAPTURE_SOURCE_EXPRESSION = "COALESCE(NULLIF(u.source, ''), u.provider)";
 
 /** SUM(expr) → number, coalescing NULL (no rows) to 0. */
 const toNumber = (value: unknown): number =>
@@ -96,11 +137,70 @@ export class AgentTokenUsageService {
       provider: input.provider,
       rawUsage: { ...usage },
       reasoningTokens: usage.reasoningTokens ?? null,
+      source: input.source,
       totalTokens: usage.totalTokens ?? null,
       userId: input.userId,
     });
 
     return this.usageRepository.save(row);
+  }
+
+  /**
+   * Insert a batch of hook-ingested usage rows for `userId` in ONE multi-row
+   * `INSERT … ON CONFLICT DO NOTHING RETURNING id`. Re-sending a row whose
+   * `(source, session_id, request_id)` already exists is a no-op (the partial
+   * unique index `uq_agent_token_usage_request`), so `inserted` is the number
+   * of rows RETURNING gave back and `skipped` is the rest of the batch.
+   * `created_at` is set explicitly from each row's `occurredAt`. A row that
+   * reports no cost is priced at Anthropic list price when it can be priced
+   * exactly (see `estimateAnthropicListPriceUsd`); a reported cost is kept as is.
+   */
+  async recordTokenUsageBatch(
+    userId: string,
+    rows: readonly TokenUsageBatchRow[],
+  ): Promise<TokenUsageBatchResult> {
+    if (rows.length === 0) {
+      return { inserted: 0, skipped: 0 };
+    }
+
+    const result = await this.usageRepository
+      .createQueryBuilder()
+      .insert()
+      .into(AgentTokenUsage)
+      .values(
+        rows.map((row) => {
+          // Opaque jsonb payload: typed as `object | null` so TypeORM's
+          // QueryDeepPartialEntity does not try to deep-map Record<string, unknown>.
+          const rawUsage: object | null = row.rawUsage;
+
+          return {
+            cachedReadTokens: row.cachedReadTokens,
+            cachedWriteTokens: row.cachedWriteTokens,
+            costUsd: row.costUsd ?? estimateAnthropicListPriceUsd(row),
+            createdAt: row.occurredAt,
+            cwd: row.cwd,
+            gitBranch: row.gitBranch,
+            inputTokens: row.inputTokens,
+            model: row.model,
+            outputTokens: row.outputTokens,
+            provider: row.provider,
+            rawUsage,
+            reasoningTokens: row.reasoningTokens,
+            requestId: row.requestId,
+            sessionId: row.sessionId,
+            source: row.source,
+            totalTokens: row.totalTokens,
+            userId,
+          };
+        }),
+      )
+      .orIgnore()
+      .returning('id')
+      .execute();
+
+    const inserted = Array.isArray(result.raw) ? result.raw.length : 0;
+
+    return { inserted, skipped: rows.length - inserted };
   }
 
   /**
@@ -140,6 +240,22 @@ export class AgentTokenUsageService {
       totalTokens: toNumber(raw?.totalTokens),
       turnCount: toNumber(raw?.turnCount),
     };
+  }
+
+  /**
+   * When token usage last arrived, per source. Grouped by the producer id in
+   * `source`, falling back to `provider` for any row with a NULL or blank source.
+   */
+  async listCaptureHealth(): Promise<CaptureHealthRow[]> {
+    const rows = await this.usageRepository
+      .createQueryBuilder('u')
+      .select(CAPTURE_SOURCE_EXPRESSION, 'source')
+      .addSelect('MAX(u.created_at)', 'lastCapturedAt')
+      .groupBy(CAPTURE_SOURCE_EXPRESSION)
+      .orderBy(CAPTURE_SOURCE_EXPRESSION, 'ASC')
+      .getRawMany<Record<string, unknown>>();
+
+    return toCaptureHealthRows(CAPTURE_HEALTH_STREAMS.TOKEN_USAGE, rows);
   }
 
   /** Shared user + [start, endExclusive) + optional-provider filter. */

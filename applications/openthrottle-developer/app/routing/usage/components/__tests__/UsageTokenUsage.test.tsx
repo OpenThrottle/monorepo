@@ -25,6 +25,7 @@ const buildRow = (
   outputTokens: 0,
   provider: 'claude',
   reasoningTokens: 0,
+  source: 'openthrottle-chat',
   totalTokens: 0,
   ...overrides,
 });
@@ -85,12 +86,29 @@ describe('UsageTokenUsage Component', () => {
       component.getByRole('heading', { name: 'Model token usage' }),
     ).toBeInTheDocument();
     // Total-tokens tile (1540 → 1.5k) and cost tile ($0.060).
-    expect(component.getByText('1.5k')).toBeInTheDocument();
+    expect(component.getAllByText('1.5k').length).toBeGreaterThan(0);
     expect(component.getByText('$0.060')).toBeInTheDocument();
     // Provider breakdown groups by provider label (table cells, distinct from
     // the same-named filter links).
     expect(component.getByRole('cell', { name: 'Claude' })).toBeInTheDocument();
     expect(component.getByRole('cell', { name: 'OpenAI' })).toBeInTheDocument();
+    expect(
+      component.getByRole('columnheader', { name: 'Provider' }),
+    ).toBeInTheDocument();
+  });
+
+  test('renders the chat vs Claude Code source split alongside the breakdown', () => {
+    const component = renderComponent({
+      items: [
+        buildRow({ id: 'a', source: 'openthrottle-chat', totalTokens: 100 }),
+        buildRow({ id: 'b', source: 'claude-code', totalTokens: 900 }),
+      ],
+      rangeDays: 30,
+      selectedProvider: null,
+      totals: buildTotals({ totalTokens: 1000, turnCount: 2 }),
+    });
+
+    expect(component.getByTestId('UsageTokenUsageSources')).toBeInTheDocument();
     expect(
       component.getByRole('columnheader', { name: 'Provider' }),
     ).toBeInTheDocument();

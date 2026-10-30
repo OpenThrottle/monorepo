@@ -1684,6 +1684,9 @@ importers:
 
   packages/agentic-hooks:
     dependencies:
+      '@openthrottle/agentic-token-usage':
+        specifier: workspace:^
+        version: link:../agentic-token-usage
       '@openthrottle/nodejs-utils':
         specifier: workspace:^
         version: link:../nodejs-utils

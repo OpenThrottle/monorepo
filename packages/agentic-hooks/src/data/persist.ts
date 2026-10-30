@@ -6,16 +6,16 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { isRecord } from '@openthrottle/nodejs-utils';
-
 import { resolveAuthToken, resolveGraphqlUrl } from '../config/env.ts';
 import type {
   DrainFileResult,
   HookFetch,
   OutcomeEvent,
   PersistResult,
+  PersistTokenUsageResult,
   PostResult,
   SkillUsageOutcome,
+  TokenUsageRecord,
   UsageEvent,
 } from '../types.ts';
 import { logHookError } from '../utils/logging.ts';
@@ -27,45 +27,25 @@ import {
   toRecordSkillUsageInput,
   toRecordSkillUsageOutcomeInput,
 } from './events.ts';
+import { postGraphqlMutation } from './graphql.ts';
 import {
+  appendDeadLetters,
   appendJsonl,
   defaultJsonlPath,
   defaultOutcomesJsonlPath,
   defaultStartsDir,
+  defaultTokenUsageJsonlPath,
   drainJsonlFile,
+  drainJsonlFileBatched,
   sanitizeSessionId,
   startCorrelationKey,
 } from './jsonl.ts';
 import { drainStartsForSession, listStartsForSession } from './starts.ts';
-
-/**
- * Read GraphQL `errors` from a JSON payload. Returns null when there is no
- * non-empty `errors` array; otherwise the joined messages (possibly empty),
- * mirroring the original `payload?.errors?.length` truthiness check.
- */
-const readGraphqlErrors = (payload: unknown): string | null => {
-  if (
-    !isRecord(payload) ||
-    !Array.isArray(payload.errors) ||
-    !payload.errors.length
-  ) {
-    return null;
-  }
-  return payload.errors
-    .map((e) => (isRecord(e) && typeof e.message === 'string' ? e.message : ''))
-    .join('; ');
-};
-
-/** Read `data.<field>.id` from a JSON payload, or null when absent. */
-const readMutationId = (payload: unknown, field: string): string | null => {
-  if (isRecord(payload) && isRecord(payload.data)) {
-    const node = payload.data[field];
-    if (isRecord(node) && node.id != null) {
-      return String(node.id);
-    }
-  }
-  return null;
-};
+import {
+  chunkTokenUsage,
+  MAX_TOKEN_USAGE_BATCH,
+  postTokenUsageBatch,
+} from './token-usage.ts';
 
 /**
  * Render an endpoint for a log line. Userinfo is stripped: an endpoint is
@@ -106,68 +86,15 @@ export const postSkillUsageEvent = async ({
   graphqlUrl: string | null;
   timeoutMs?: number;
 }): Promise<PostResult> => {
-  if (typeof fetchImpl !== 'function') {
-    return { ok: false, reason: 'fetch unavailable' };
-  }
-  if (!graphqlUrl) {
-    return { ok: false, reason: 'missing graphql url' };
-  }
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-  if (authToken) {
-    headers.Authorization = `Bearer ${authToken}`;
-  }
-
-  let response;
-  try {
-    response = await fetchImpl(graphqlUrl, {
-      body: JSON.stringify({
-        query: RECORD_SKILL_USAGE_MUTATION,
-        variables: { input: toRecordSkillUsageInput(event) },
-      }),
-      headers,
-      method: 'POST',
-      signal: AbortSignal.timeout(timeoutMs),
-    });
-  } catch (err) {
-    const reason =
-      err instanceof Error && err.name === 'TimeoutError'
-        ? 'timeout'
-        : err instanceof Error
-          ? err.message
-          : String(err);
-    return { ok: false, reason };
-  }
-
-  let payload: unknown;
-  try {
-    payload = await response.json();
-  } catch (err) {
-    return {
-      ok: false,
-      reason: `invalid json (${response.status}): ${
-        err instanceof Error ? err.message : String(err)
-      }`,
-    };
-  }
-
-  const errorMsg = readGraphqlErrors(payload);
-  if (errorMsg !== null) {
-    return { ok: false, reason: errorMsg };
-  }
-
-  if (!response.ok) {
-    return { ok: false, reason: `http ${response.status}` };
-  }
-
-  const id = readMutationId(payload, 'recordSkillUsage');
-  if (!id) {
-    return { ok: false, reason: 'missing recordSkillUsage.id' };
-  }
-
-  return { id, ok: true };
+  return postGraphqlMutation({
+    authToken,
+    fetchImpl,
+    field: 'recordSkillUsage',
+    graphqlUrl,
+    query: RECORD_SKILL_USAGE_MUTATION,
+    timeoutMs,
+    variables: { input: toRecordSkillUsageInput(event) },
+  });
 };
 
 /**
@@ -188,68 +115,15 @@ export const postSkillUsageOutcome = async ({
   graphqlUrl: string | null;
   timeoutMs?: number;
 }): Promise<PostResult> => {
-  if (typeof fetchImpl !== 'function') {
-    return { ok: false, reason: 'fetch unavailable' };
-  }
-  if (!graphqlUrl) {
-    return { ok: false, reason: 'missing graphql url' };
-  }
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-  if (authToken) {
-    headers.Authorization = `Bearer ${authToken}`;
-  }
-
-  let response;
-  try {
-    response = await fetchImpl(graphqlUrl, {
-      body: JSON.stringify({
-        query: RECORD_SKILL_USAGE_OUTCOME_MUTATION,
-        variables: { input: toRecordSkillUsageOutcomeInput(event) },
-      }),
-      headers,
-      method: 'POST',
-      signal: AbortSignal.timeout(timeoutMs),
-    });
-  } catch (err) {
-    const reason =
-      err instanceof Error && err.name === 'TimeoutError'
-        ? 'timeout'
-        : err instanceof Error
-          ? err.message
-          : String(err);
-    return { ok: false, reason };
-  }
-
-  let payload: unknown;
-  try {
-    payload = await response.json();
-  } catch (err) {
-    return {
-      ok: false,
-      reason: `invalid json (${response.status}): ${
-        err instanceof Error ? err.message : String(err)
-      }`,
-    };
-  }
-
-  const errorMsg = readGraphqlErrors(payload);
-  if (errorMsg !== null) {
-    return { ok: false, reason: errorMsg };
-  }
-
-  if (!response.ok) {
-    return { ok: false, reason: `http ${response.status}` };
-  }
-
-  const id = readMutationId(payload, 'recordSkillUsageOutcome');
-  if (!id) {
-    return { ok: false, reason: 'missing recordSkillUsageOutcome.id' };
-  }
-
-  return { id, ok: true };
+  return postGraphqlMutation({
+    authToken,
+    fetchImpl,
+    field: 'recordSkillUsageOutcome',
+    graphqlUrl,
+    query: RECORD_SKILL_USAGE_OUTCOME_MUTATION,
+    timeoutMs,
+    variables: { input: toRecordSkillUsageOutcomeInput(event) },
+  });
 };
 
 const resolveTimeout = (timeoutMs?: number): number =>
@@ -417,6 +291,134 @@ export const persistOutcomeEvent = async ({
     return {
       detail: err instanceof Error ? err.message : String(err),
       sink: 'jsonl',
+    };
+  }
+};
+
+/**
+ * Persist token-usage records to OT in batches of at most
+ * `MAX_TOKEN_USAGE_BATCH`; whatever cannot be delivered is buffered, never
+ * lost. Always resolves; never throws.
+ *
+ * - Offline, no endpoint, or a transient failure (network, timeout, 5xx, auth):
+ *   the unsent records are appended to `token-usage.jsonl` in the telemetry
+ *   directory for a later drain. After the first transient failure the
+ *   remaining batches are buffered WITHOUT another attempt, so a dead server
+ *   costs one bounded timeout, not one per batch.
+ * - A permanent rejection: that batch goes straight to the dead-letter file —
+ *   re-sending the same rows can never succeed — and the next batch is still
+ *   tried, since the rejection says nothing about it.
+ *
+ * Writes only under the telemetry directory, never `repoRoot` (which is read
+ * for endpoint configuration in OT checkouts and nothing else).
+ *
+ * @public
+ */
+export const persistTokenUsage = async ({
+  records,
+  repoRoot,
+  jsonlPath,
+  timeoutMs,
+  fetchImpl,
+  graphqlUrl: graphqlUrlOverride,
+  authToken: authTokenOverride,
+}: {
+  authToken?: string;
+  fetchImpl?: HookFetch;
+  graphqlUrl?: string | null;
+  jsonlPath?: string;
+  records: readonly TokenUsageRecord[];
+  repoRoot: string;
+  timeoutMs?: number;
+}): Promise<PersistTokenUsageResult> => {
+  const outPath = jsonlPath || defaultTokenUsageJsonlPath();
+  const tally = { buffered: 0, deadLettered: 0, inserted: 0, skipped: 0 };
+  let detail: string | null = null;
+
+  const buffer = (unsent: readonly TokenUsageRecord[]): void => {
+    try {
+      for (const record of unsent) {
+        appendJsonl(outPath, record);
+      }
+      tally.buffered += unsent.length;
+    } catch (err) {
+      logHookError('token usage jsonl append failed', err);
+    }
+  };
+
+  try {
+    const batches = chunkTokenUsage(records, MAX_TOKEN_USAGE_BATCH);
+    if (!batches.length) {
+      return { ...tally, detail };
+    }
+
+    const offline = process.env.OPENTHROTTLE_TELEMETRY_OFFLINE === '1';
+    const graphqlUrl = offline
+      ? null
+      : (graphqlUrlOverride ?? resolveGraphqlUrl(repoRoot));
+    if (offline || !graphqlUrl) {
+      buffer(records);
+      return {
+        ...tally,
+        detail: offline
+          ? 'OPENTHROTTLE_TELEMETRY_OFFLINE=1'
+          : 'missing graphql url',
+      };
+    }
+
+    const authToken = authTokenOverride ?? resolveAuthToken(repoRoot);
+    const resolvedTimeout = resolveTimeout(timeoutMs);
+
+    let serverDown = false;
+    for (const batch of batches) {
+      if (serverDown) {
+        buffer(batch);
+        continue;
+      }
+
+      // eslint-disable-next-line no-await-in-loop -- sequential on purpose: stop contacting a failing server after the first transient failure
+      const res = await postTokenUsageBatch({
+        authToken,
+        fetchImpl,
+        graphqlUrl,
+        records: batch,
+        timeoutMs: resolvedTimeout,
+      });
+
+      if (res.ok) {
+        tally.inserted += res.inserted;
+        tally.skipped += res.skipped;
+      } else if (res.permanent) {
+        detail = res.reason;
+        logHookError(
+          `token usage batch rejected; moved to dead-letter (${res.reason}) [endpoint ${forLog(graphqlUrl)}]`,
+        );
+        try {
+          appendDeadLetters({
+            filePath: outPath,
+            reason: res.reason,
+            records: batch,
+          });
+          tally.deadLettered += batch.length;
+        } catch (err) {
+          logHookError('token usage dead-letter append failed', err);
+        }
+      } else {
+        detail = res.reason;
+        serverDown = true;
+        logHookError(
+          `token usage post failed; falling back to jsonl (${res.reason}) [endpoint ${forLog(graphqlUrl)}]`,
+        );
+        buffer(batch);
+      }
+    }
+
+    return { ...tally, detail };
+  } catch (err) {
+    logHookError('persistTokenUsage failed', err);
+    return {
+      ...tally,
+      detail: err instanceof Error ? err.message : String(err),
     };
   }
 };
@@ -685,9 +687,11 @@ export const sweepAbandonedStarts = async ({
 };
 
 /**
- * Opportunistic/scheduled drain of both buffered files (events + outcomes) to
- * OT. Time-boxed via `budgetMs`. Respects OPENTHROTTLE_TELEMETRY_OFFLINE + a missing
- * URL (both → no-op). Fail-open.
+ * Opportunistic/scheduled drain of the buffered files (events, outcomes and
+ * token usage) to OT. Time-boxed via `budgetMs`, shared across the three
+ * streams. Respects OPENTHROTTLE_TELEMETRY_OFFLINE + a missing URL (both →
+ * no-op). Token-usage lines are sent in batches, not one POST per line.
+ * Fail-open.
  *
  * @public
  */
@@ -695,6 +699,7 @@ export const drainBufferedUsage = async ({
   repoRoot,
   eventsPath,
   outcomesPath,
+  tokenUsagePath,
   budgetMs = 500,
   fetchImpl,
   graphqlUrl: graphqlUrlOverride,
@@ -711,16 +716,27 @@ export const drainBufferedUsage = async ({
   outcomesPath?: string;
   repoRoot: string;
   timeoutMs?: number;
-}): Promise<{ events: DrainFileResult; outcomes: DrainFileResult }> => {
-  const empty = (): DrainFileResult => ({ retained: 0, sent: 0, skipped: 0 });
+  tokenUsagePath?: string;
+}): Promise<{
+  events: DrainFileResult;
+  outcomes: DrainFileResult;
+  tokenUsage: DrainFileResult;
+}> => {
+  const empty = (): DrainFileResult => ({
+    deadLettered: 0,
+    reasons: {},
+    retained: 0,
+    sent: 0,
+    skipped: 0,
+  });
 
   if (process.env.OPENTHROTTLE_TELEMETRY_OFFLINE === '1') {
-    return { events: empty(), outcomes: empty() };
+    return { events: empty(), outcomes: empty(), tokenUsage: empty() };
   }
 
   const graphqlUrl = graphqlUrlOverride ?? resolveGraphqlUrl(repoRoot);
   if (!graphqlUrl) {
-    return { events: empty(), outcomes: empty() };
+    return { events: empty(), outcomes: empty(), tokenUsage: empty() };
   }
   const authToken = authTokenOverride ?? resolveAuthToken(repoRoot);
   const resolvedTimeout = resolveTimeout(timeoutMs);
@@ -754,5 +770,59 @@ export const drainBufferedUsage = async ({
       }),
   });
 
-  return { events, outcomes };
+  const tokenUsage = await drainJsonlFileBatched<TokenUsageRecord>({
+    batchSize: MAX_TOKEN_USAGE_BATCH,
+    deadlineMs,
+    filePath: tokenUsagePath || defaultTokenUsageJsonlPath(),
+    nowFn,
+    postBatch: (batch) =>
+      postTokenUsageBatch({
+        authToken,
+        fetchImpl,
+        graphqlUrl,
+        records: batch,
+        timeoutMs: resolvedTimeout,
+      }),
+  });
+
+  reportDeadLetters('events', events);
+  reportDeadLetters('outcomes', outcomes);
+  reportDeadLetters('token usage', tokenUsage);
+
+  return { events, outcomes, tokenUsage };
 };
+
+/**
+ * Say so on stderr when a drain dead-lettered anything. Silence is how the
+ * 2026-09 outcome rejection went unnoticed for six weeks.
+ */
+const reportDeadLetters = (label: string, tally: DrainFileResult): void => {
+  if (tally.deadLettered > 0) {
+    logHookError(
+      `drain: ${tally.deadLettered} ${label} line(s) rejected by the server and moved to dead-letter — ${formatDrainReasons(tally)}`,
+    );
+  }
+};
+
+/**
+ * `reason ×n; reason ×n`, most frequent first — or `none`.
+ *
+ * @public
+ */
+export const formatDrainReasons = (tally: DrainFileResult): string => {
+  const entries = Object.entries(tally.reasons).sort((a, b) => b[1] - a[1]);
+  return entries.length
+    ? entries.map(([reason, count]) => `${reason} ×${count}`).join('; ')
+    : 'none';
+};
+
+/**
+ * One drain summary line for a stream.
+ *
+ * @public
+ */
+export const formatDrainFileResult = (
+  label: string,
+  tally: DrainFileResult,
+): string =>
+  `${label} sent=${tally.sent} retained=${tally.retained} dead-lettered=${tally.deadLettered} skipped=${tally.skipped} reasons: ${formatDrainReasons(tally)}`;

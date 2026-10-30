@@ -16,14 +16,24 @@ payload as `--plugin-dir` for orchestrated runs.
 - `src/types.ts` — **the producer contract.** `NormalizedInvocation` is the seam every adapter
   targets; `UsageEvent` / `OutcomeEvent` are what the core builds from it.
 - `src/adapters/<tool>/` — thin per-tool entrypoints **only**: `payload.ts` (a `<TOOL>_SOURCE`
-  producer id + a normalizer) and one file per hook event. Nothing else belongs here.
+  producer id + a normalizer) and one file per hook event. Nothing else belongs here, except the
+  tool's own transcript handling: Claude's lives in `transcript.ts` (line → `TokenUsageRecord`, no
+  I/O) and `transcript-usage.ts` (checkpointed read at `Stop`; also reads the session's
+  `subagents/agent-*.jsonl`, so `SubagentStop` need not be registered). The file offsets,
+  checkpoints and sending stay in `src/data/`. The one-off operator backfill (`backfill.ts`, bundled
+  to `.claude/hooks/skill-usage-backfill.cjs`, registered as no hook) reuses that reader through
+  `transcript-backfill.ts`, `transcript-skills.ts` and `transcript-projects.ts`; see the README's
+  "Backfilling from transcripts".
 - `src/utils/` — `scope.ts` (ours | personal | third-party), `privacy.ts` (truncation + secret redaction),
   `logging.ts`.
 - `src/config/` — `env.ts`: endpoint resolution by location, the OpenThrottle-checkout
   predicate, git branch, the disable switches.
 - `src/data/` — `events.ts` (event construction + GraphQL inputs), `persist.ts` (POST → JSONL
   fallback, correlation, drain), `starts.ts` (identifiers-only start records used to compute
-  duration), `jsonl.ts`, `plan-runs.ts`.
+  duration), `jsonl.ts`, `plan-runs.ts`. Token usage: `token-usage.ts` (row mapping + batch POST,
+  `persistTokenUsage` in `persist.ts`, buffered to `token-usage.jsonl`), `checkpoints.ts` (per-session
+  byte offsets, `checkpoints/<session>.json`) and `read-new-bytes.ts` (complete-lines-only reader).
+  Keep the word "cursor" out of the core: the neutrality test bans it.
 - `scripts/bundle-hooks.ts` — the deterministic esbuild bundler and the generator for the plugin
   payload. Its `BUNDLES` list is the single source of truth for what gets bundled where.
 

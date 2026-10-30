@@ -248,6 +248,22 @@
         "parallel": false
       }
     },
+    "check-claude-config-json": {
+      "cache": true,
+      "description": "Fail when a tracked file Claude Code reads (.claude/*.json, .mcp.json, .claude-plugin/*.json, plugins/*/hooks/hooks.json) is not strict JSON, via scripts/check-claude-config-json.ts. Claude Code skips an unparseable settings file entirely, so a single `//` comment silently disables every project hook in it — the cause of the 2026-09-23 skill-capture blackout. `inputs` are explicit {workspaceRoot} globs because the root project owns no files.",
+      "executor": "nx:run-commands",
+      "inputs": [
+        "{workspaceRoot}/**/.claude-plugin/*.json",
+        "{workspaceRoot}/.claude/*.json",
+        "{workspaceRoot}/.mcp.json",
+        "{workspaceRoot}/plugins/*/hooks/hooks.json",
+        "{workspaceRoot}/scripts/check-claude-config-json.ts"
+      ],
+      "options": {
+        "command": "tsx ./scripts/check-claude-config-json.ts",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "check-folder-vocabulary": {
       "cache": false,
       "description": "Fail when any tracked path has a directory segment named lib, helpers, common, shared or misc (ot-folders rule 4), via scripts/check-folder-vocabulary.ts. Whole-segment matching, so library.ts and common.ts pass; each hit names the folder to use instead. Never cached: the input is the whole tracked file list, which no `inputs` glob short of the entire tree can hash, and `git ls-files` is fast enough not to need it.",

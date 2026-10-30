@@ -22,6 +22,7 @@ import {
 } from '@openthrottle/nestjs-graphql';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
+  AGENT_TOKEN_USAGE_SOURCES,
   AgentConversationsService,
   AgentTokenUsageService,
 } from '@openthrottle/nestjs-repositories';
@@ -794,6 +795,7 @@ export class ConversationStreamService {
         messageId: run.assistantMessageId,
         model: folded.model ?? run.model,
         provider: (run.provider ?? run.backend).toLowerCase(),
+        source: AGENT_TOKEN_USAGE_SOURCES.CHAT,
         usage: folded,
         userId: run.userId,
       });

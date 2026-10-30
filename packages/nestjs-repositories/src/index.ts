@@ -45,11 +45,19 @@ export type { AgentConversationMessageData } from './modules/agent-conversations
 export { AgentConversationMessage } from './modules/agent-conversations/agent-conversation-message.entity.ts';
 export type { AppendTurnResult } from './modules/agent-conversations/agent-conversations.service.ts';
 export { AgentConversationsService } from './modules/agent-conversations/agent-conversations.service.ts';
-export type { AgentTokenUsageData } from './modules/agent-token-usage/agent-token-usage.entity.ts';
-export { AgentTokenUsage } from './modules/agent-token-usage/agent-token-usage.entity.ts';
+export type {
+  AgentTokenUsageData,
+  AgentTokenUsageSource,
+} from './modules/agent-token-usage/agent-token-usage.entity.ts';
+export {
+  AGENT_TOKEN_USAGE_SOURCES,
+  AgentTokenUsage,
+} from './modules/agent-token-usage/agent-token-usage.entity.ts';
 export { AgentTokenUsageModule } from './modules/agent-token-usage/agent-token-usage.module.ts';
 export type {
   RecordTokenUsageInput,
+  TokenUsageBatchResult,
+  TokenUsageBatchRow,
   TokenUsageRangeQuery,
   TokenUsageTotals,
 } from './modules/agent-token-usage/agent-token-usage.service.ts';
@@ -296,6 +304,7 @@ export type {
   SkillUsageOutcomeValue,
 } from './modules/skill-usage-events/skill-usage-outcomes.entity.ts';
 export {
+  isSkillUsageOutcome,
   SKILL_USAGE_CAPTURE_MODELS,
   SKILL_USAGE_OUTCOMES,
   SkillUsageOutcome,
@@ -407,6 +416,11 @@ export type { WorkspaceLocalRepository } from './modules/workspace-settings/work
 export type { WorkspaceLocalRepositoryData } from './modules/workspace-settings/workspace-local-repository.entity.ts';
 export { NestjsRepositoriesModule } from './nestjs-repositories.module.ts';
 export { ProjectsLoaders } from './projects-loaders.ts';
+export type {
+  CaptureHealthRow,
+  CaptureHealthStream,
+} from './utils/capture-health.ts';
+export { CAPTURE_HEALTH_STREAMS } from './utils/capture-health.ts';
 export {
   resolveCompletedAtForStatusChange,
   type ResolveCompletedAtForStatusChangeInput,

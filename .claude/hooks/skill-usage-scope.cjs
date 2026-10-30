@@ -59,6 +59,9 @@ var TELEMETRY_CONFIG_SOURCES = Object.freeze({
   USER_ENV: "user_env"
 });
 
+// packages/agentic-hooks/src/data/checkpoints.ts
+var DEFAULT_STALE_CHECKPOINT_MS = 6 * 60 * 60 * 1e3;
+
 // packages/agentic-hooks/src/utils/privacy.ts
 var PRIVACY_LEVELS = Object.freeze({
   FULL: "full",

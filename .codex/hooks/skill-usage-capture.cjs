@@ -198,6 +198,12 @@ var TELEMETRY_CONFIG_SOURCES = Object.freeze({
   USER_ENV: "user_env"
 });
 
+// packages/nodejs-utils/src/utils/is-record.ts
+var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
+
+// packages/agentic-hooks/src/data/checkpoints.ts
+var DEFAULT_STALE_CHECKPOINT_MS = 6 * 60 * 60 * 1e3;
+
 // packages/agentic-hooks/src/utils/privacy.ts
 var PRIVACY_LEVELS = Object.freeze({
   FULL: "full",
@@ -402,8 +408,115 @@ var toRecordSkillUsageInput = (event) => {
   return input;
 };
 
-// packages/nodejs-utils/src/utils/is-record.ts
-var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
+// packages/agentic-hooks/src/data/graphql.ts
+var PERMANENT_GRAPHQL_CODES = [
+  "BAD_REQUEST",
+  "BAD_USER_INPUT",
+  "GRAPHQL_PARSE_FAILED",
+  "GRAPHQL_VALIDATION_FAILED"
+];
+var TRANSIENT_CLIENT_STATUSES = [401, 403, 408, 429];
+var isPermanentHttpStatus = (status) => status >= 400 && status < 500 && !TRANSIENT_CLIENT_STATUSES.includes(status);
+var readStatusCode = (extensions) => {
+  const original = extensions.originalError;
+  if (isRecord(original) && typeof original.statusCode === "number") {
+    return original.statusCode;
+  }
+  return null;
+};
+var readGraphqlErrors = (payload) => {
+  if (!isRecord(payload) || !Array.isArray(payload.errors) || !payload.errors.length) {
+    return null;
+  }
+  let permanent = false;
+  const messages = [];
+  for (const error of payload.errors) {
+    if (!isRecord(error)) {
+      continue;
+    }
+    messages.push(typeof error.message === "string" ? error.message : "");
+    const extensions = isRecord(error.extensions) ? error.extensions : {};
+    const code = typeof extensions.code === "string" ? extensions.code : "";
+    const status = readStatusCode(extensions);
+    if (PERMANENT_GRAPHQL_CODES.includes(code) || status !== null && isPermanentHttpStatus(status)) {
+      permanent = true;
+    }
+  }
+  return { message: messages.join("; "), permanent };
+};
+var readMutationData = (payload, field) => isRecord(payload) && isRecord(payload.data) ? payload.data[field] : void 0;
+var transient = (reason) => ({
+  ok: false,
+  permanent: false,
+  reason
+});
+var postMutation = async ({
+  authToken,
+  fetchImpl,
+  graphqlUrl,
+  query,
+  timeoutMs,
+  variables,
+  field
+}) => {
+  if (typeof fetchImpl !== "function") {
+    return transient("fetch unavailable");
+  }
+  if (!graphqlUrl) {
+    return transient("missing graphql url");
+  }
+  const headers = {
+    "Content-Type": "application/json"
+  };
+  if (authToken) {
+    headers.Authorization = `Bearer ${authToken}`;
+  }
+  let response;
+  try {
+    response = await fetchImpl(graphqlUrl, {
+      body: JSON.stringify({ query, variables }),
+      headers,
+      method: "POST",
+      signal: AbortSignal.timeout(timeoutMs)
+    });
+  } catch (err) {
+    const reason = err instanceof Error && err.name === "TimeoutError" ? "timeout" : err instanceof Error ? err.message : String(err);
+    return transient(reason);
+  }
+  let payload;
+  try {
+    payload = await response.json();
+  } catch (err) {
+    return {
+      ok: false,
+      permanent: isPermanentHttpStatus(response.status),
+      reason: `invalid json (${response.status}): ${err instanceof Error ? err.message : String(err)}`
+    };
+  }
+  const errors = readGraphqlErrors(payload);
+  if (errors !== null) {
+    return { ok: false, permanent: errors.permanent, reason: errors.message };
+  }
+  if (!response.ok) {
+    return {
+      ok: false,
+      permanent: isPermanentHttpStatus(response.status),
+      reason: `http ${response.status}`
+    };
+  }
+  return { data: readMutationData(payload, field), ok: true };
+};
+var postGraphqlMutation = async (args) => {
+  const posted = await postMutation(args);
+  if (!posted.ok) {
+    return posted;
+  }
+  const node = posted.data;
+  if (isRecord(node) && node.id != null && String(node.id)) {
+    return { id: String(node.id), ok: true };
+  }
+  return transient(`missing ${args.field}.id`);
+};
 
 // packages/agentic-hooks/src/data/starts.ts
 var recordSkillStart = ({
@@ -440,21 +553,6 @@ var recordSkillStart = ({
 };
 
 // packages/agentic-hooks/src/data/persist.ts
-var readGraphqlErrors = (payload) => {
-  if (!isRecord(payload) || !Array.isArray(payload.errors) || !payload.errors.length) {
-    return null;
-  }
-  return payload.errors.map((e) => isRecord(e) && typeof e.message === "string" ? e.message : "").join("; ");
-};
-var readMutationId = (payload, field) => {
-  if (isRecord(payload) && isRecord(payload.data)) {
-    const node = payload.data[field];
-    if (isRecord(node) && node.id != null) {
-      return String(node.id);
-    }
-  }
-  return null;
-};
 var forLog = (graphqlUrl) => graphqlUrl.replace(/^([a-z][a-z0-9+.-]*:\/\/)[^/?#]*@/i, "$1***@");
 var DEFAULT_POST_TIMEOUT_MS = 750;
 var DEFAULT_ABANDONED_MS = 6 * 60 * 60 * 1e3;
@@ -465,54 +563,15 @@ var postSkillUsageEvent = async ({
   timeoutMs = DEFAULT_POST_TIMEOUT_MS,
   fetchImpl = globalThis.fetch
 }) => {
-  if (typeof fetchImpl !== "function") {
-    return { ok: false, reason: "fetch unavailable" };
-  }
-  if (!graphqlUrl) {
-    return { ok: false, reason: "missing graphql url" };
-  }
-  const headers = {
-    "Content-Type": "application/json"
-  };
-  if (authToken) {
-    headers.Authorization = `Bearer ${authToken}`;
-  }
-  let response;
-  try {
-    response = await fetchImpl(graphqlUrl, {
-      body: JSON.stringify({
-        query: RECORD_SKILL_USAGE_MUTATION,
-        variables: { input: toRecordSkillUsageInput(event) }
-      }),
-      headers,
-      method: "POST",
-      signal: AbortSignal.timeout(timeoutMs)
-    });
-  } catch (err) {
-    const reason = err instanceof Error && err.name === "TimeoutError" ? "timeout" : err instanceof Error ? err.message : String(err);
-    return { ok: false, reason };
-  }
-  let payload;
-  try {
-    payload = await response.json();
-  } catch (err) {
-    return {
-      ok: false,
-      reason: `invalid json (${response.status}): ${err instanceof Error ? err.message : String(err)}`
-    };
-  }
-  const errorMsg = readGraphqlErrors(payload);
-  if (errorMsg !== null) {
-    return { ok: false, reason: errorMsg };
-  }
-  if (!response.ok) {
-    return { ok: false, reason: `http ${response.status}` };
-  }
-  const id = readMutationId(payload, "recordSkillUsage");
-  if (!id) {
-    return { ok: false, reason: "missing recordSkillUsage.id" };
-  }
-  return { id, ok: true };
+  return postGraphqlMutation({
+    authToken,
+    fetchImpl,
+    field: "recordSkillUsage",
+    graphqlUrl,
+    query: RECORD_SKILL_USAGE_MUTATION,
+    timeoutMs,
+    variables: { input: toRecordSkillUsageInput(event) }
+  });
 };
 var resolveTimeout = (timeoutMs) => timeoutMs ?? (Number(process.env.OPENTHROTTLE_TELEMETRY_TIMEOUT_MS) || DEFAULT_POST_TIMEOUT_MS);
 var persistUsageEvent = async ({

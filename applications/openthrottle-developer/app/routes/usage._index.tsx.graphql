@@ -27,6 +27,7 @@ fragment UsageTokenUsageRow on TokenUsageRowObject {
   outputTokens
   provider
   reasoningTokens
+  source
   totalTokens
 }
 
@@ -109,5 +110,17 @@ query getUsageSkillUsage(
       ...UsageSkillUsageFilterOptions
     }
     totalCount
+  }
+}
+
+fragment UsageCaptureHealthRow on CaptureHealthRowObject {
+  lastCapturedAt
+  source
+  stream
+}
+
+query getUsageCaptureHealth {
+  captureHealth {
+    ...UsageCaptureHealthRow
   }
 }

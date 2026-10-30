@@ -33,7 +33,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 
 // packages/agentic-hooks/src/adapters/claude/complete.ts
-var import_node_fs6 = __toESM(require("node:fs"), 1);
+var import_node_fs10 = __toESM(require("node:fs"), 1);
 
 // packages/agentic-hooks/src/data/jsonl.ts
 var import_node_fs2 = __toESM(require("node:fs"), 1);
@@ -174,7 +174,9 @@ var resolveAuthToken = (repoRoot, options) => resolveOtEnv(repoRoot, "OPENTHROTT
 var TELEMETRY_DIR_BASENAME = "skill-usage";
 var EVENTS_JSONL_BASENAME = "events.jsonl";
 var OUTCOMES_JSONL_BASENAME = "outcomes.jsonl";
+var TOKEN_USAGE_JSONL_BASENAME = "token-usage.jsonl";
 var STARTS_DIR_BASENAME = "starts";
+var CHECKPOINTS_DIR_BASENAME = "checkpoints";
 var resolveTelemetryDir = () => process.env.OPENTHROTTLE_TELEMETRY_DIR?.trim() || import_node_path2.default.join(userConfigDir(), TELEMETRY_DIR_BASENAME);
 var appendJsonl = (jsonlPath, event) => {
   import_node_fs2.default.mkdirSync(import_node_path2.default.dirname(jsonlPath), { recursive: true });
@@ -183,6 +185,32 @@ var appendJsonl = (jsonlPath, event) => {
 };
 var defaultJsonlPath = () => import_node_path2.default.join(resolveTelemetryDir(), EVENTS_JSONL_BASENAME);
 var defaultOutcomesJsonlPath = () => import_node_path2.default.join(resolveTelemetryDir(), OUTCOMES_JSONL_BASENAME);
+var defaultTokenUsageJsonlPath = () => import_node_path2.default.join(resolveTelemetryDir(), TOKEN_USAGE_JSONL_BASENAME);
+var defaultCheckpointsDir = () => import_node_path2.default.join(resolveTelemetryDir(), CHECKPOINTS_DIR_BASENAME);
+var deadLetterPathFor = (filePath) => filePath.replace(/\.jsonl$/, "") + ".dead-letter.jsonl";
+var toDeadLetterLine = (record, reason, nowMs) => JSON.stringify({
+  dead_lettered_at: new Date(nowMs).toISOString(),
+  line: record,
+  reason
+});
+var appendDeadLetters = ({
+  filePath,
+  nowMs = Date.now(),
+  reason,
+  records
+}) => {
+  if (!records.length) {
+    return;
+  }
+  const deadPath = deadLetterPathFor(filePath);
+  import_node_fs2.default.mkdirSync(import_node_path2.default.dirname(deadPath), { recursive: true });
+  import_node_fs2.default.appendFileSync(
+    deadPath,
+    `${records.map((record) => toDeadLetterLine(record, reason, nowMs)).join("\n")}
+`,
+    "utf8"
+  );
+};
 var defaultStartsDir = () => import_node_path2.default.join(resolveTelemetryDir(), STARTS_DIR_BASENAME);
 var sanitizeSessionId = (sessionId) => String(sessionId).replace(/[^A-Za-z0-9._-]/g, "-");
 var startsFilePathForSession = (startsDir, sessionId) => import_node_path2.default.join(startsDir, `${sanitizeSessionId(sessionId)}.jsonl`);
@@ -194,13 +222,23 @@ var startCorrelationKey = (entry) => {
   const disc = toolUseId || startedAt;
   return `${sid}::${skill}::${disc}`;
 };
-var drainJsonlFile = async ({
-  filePath,
-  post,
+var drainSnapshot = async ({
+  batchSize,
   deadlineMs,
-  nowFn = Date.now
+  filePath,
+  nowFn,
+  postBatch
 }) => {
-  const result = { retained: 0, sent: 0, skipped: 0 };
+  const result = {
+    deadLettered: 0,
+    reasons: {},
+    retained: 0,
+    sent: 0,
+    skipped: 0
+  };
+  const tally = (reason, count) => {
+    result.reasons[reason] = (result.reasons[reason] ?? 0) + count;
+  };
   if (!import_node_fs2.default.existsSync(filePath)) {
     return result;
   }
@@ -211,42 +249,50 @@ var drainJsonlFile = async ({
     return result;
   }
   const retain = [];
+  const deadLetter = [];
   try {
-    let stopped = false;
-    const lines = import_node_fs2.default.readFileSync(snapshotPath, "utf8").split("\n");
-    for (const line of lines) {
+    const parsed = [];
+    for (const line of import_node_fs2.default.readFileSync(snapshotPath, "utf8").split("\n")) {
       const trimmed = line.trim();
       if (!trimmed) {
         continue;
       }
-      if (stopped) {
-        retain.push(trimmed);
-        continue;
-      }
-      if (deadlineMs != null && nowFn() > deadlineMs) {
-        stopped = true;
-        retain.push(trimmed);
-        continue;
-      }
-      let event;
       try {
-        event = JSON.parse(trimmed);
+        parsed.push({ event: JSON.parse(trimmed), raw: trimmed });
       } catch {
         result.skipped += 1;
         logHookError("drain: skipping malformed jsonl line");
+      }
+    }
+    let stopped = false;
+    for (let start = 0; start < parsed.length; start += Math.max(1, batchSize)) {
+      const batch = parsed.slice(start, start + Math.max(1, batchSize));
+      if (!stopped && deadlineMs != null && nowFn() > deadlineMs) {
+        stopped = true;
+      }
+      if (stopped) {
+        retain.push(...batch.map((entry) => entry.raw));
         continue;
       }
-      let ok = false;
+      let res;
       try {
-        const res = await post(event);
-        ok = Boolean(res && res.ok);
+        res = await postBatch(batch.map((entry) => entry.event));
       } catch (err) {
         logHookError("drain: post threw", err);
+        res = { ok: false, permanent: false, reason: "post threw" };
       }
-      if (ok) {
-        result.sent += 1;
+      if (res.ok) {
+        result.sent += batch.length;
+      } else if (res.permanent) {
+        tally(res.reason, batch.length);
+        deadLetter.push(
+          ...batch.map(
+            (entry) => toDeadLetterLine(entry.event, res.reason, nowFn())
+          )
+        );
       } else {
-        retain.push(trimmed);
+        tally(res.reason, batch.length);
+        retain.push(...batch.map((entry) => entry.raw));
       }
     }
   } catch (err) {
@@ -273,12 +319,40 @@ var drainJsonlFile = async ({
 `, "utf8");
       result.retained = retain.length;
     }
+    if (deadLetter.length) {
+      import_node_fs2.default.appendFileSync(
+        deadLetterPathFor(filePath),
+        `${deadLetter.join("\n")}
+`,
+        "utf8"
+      );
+      result.deadLettered = deadLetter.length;
+    }
     import_node_fs2.default.rmSync(snapshotPath, { force: true });
   } catch (err) {
     logHookError("drain: finalize failed", err);
   }
   return result;
 };
+var drainJsonlFile = async ({
+  filePath,
+  post,
+  deadlineMs,
+  nowFn = Date.now
+}) => drainSnapshot({
+  batchSize: 1,
+  deadlineMs,
+  filePath,
+  nowFn,
+  postBatch: async ([event]) => event === void 0 ? { ok: true } : post(event)
+});
+var drainJsonlFileBatched = async ({
+  batchSize,
+  filePath,
+  postBatch,
+  deadlineMs,
+  nowFn = Date.now
+}) => drainSnapshot({ batchSize, deadlineMs, filePath, nowFn, postBatch });
 
 // packages/agentic-hooks/src/config/describe.ts
 var TELEMETRY_CONFIG_SOURCES = Object.freeze({
@@ -292,6 +366,108 @@ var TELEMETRY_CONFIG_SOURCES = Object.freeze({
   USER_ENV: "user_env"
 });
 
+// packages/agentic-hooks/src/data/checkpoints.ts
+var import_node_fs3 = __toESM(require("node:fs"), 1);
+var import_node_path3 = __toESM(require("node:path"), 1);
+
+// packages/nodejs-utils/src/utils/is-record.ts
+var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
+
+// packages/agentic-hooks/src/data/checkpoints.ts
+var DEFAULT_STALE_CHECKPOINT_MS = 6 * 60 * 60 * 1e3;
+var checkpointFilePath = (dir, sessionId) => import_node_path3.default.join(dir, `${sanitizeSessionId(sessionId)}.json`);
+var isCheckpoint = (value) => isRecord(value) && typeof value.path === "string" && typeof value.offset === "number" && Number.isFinite(value.offset) && value.offset >= 0 && typeof value.updated_at === "string";
+var readSessionFile = (dir, sessionId) => {
+  try {
+    const parsed = JSON.parse(
+      import_node_fs3.default.readFileSync(checkpointFilePath(dir, sessionId), "utf8")
+    );
+    return isRecord(parsed) && Array.isArray(parsed.files) ? parsed.files.filter(isCheckpoint) : [];
+  } catch {
+    return [];
+  }
+};
+var hasSessionId = (sessionId) => typeof sessionId === "string" && sessionId.trim() !== "";
+var readCheckpoint = ({
+  checkpointsDir,
+  filePath,
+  sessionId
+}) => {
+  try {
+    if (!hasSessionId(sessionId)) {
+      return null;
+    }
+    const dir = checkpointsDir || defaultCheckpointsDir();
+    return readSessionFile(dir, sessionId.trim()).find(
+      (entry) => entry.path === filePath
+    ) ?? null;
+  } catch (err) {
+    logHookError("readCheckpoint failed", err);
+    return null;
+  }
+};
+var writeCheckpoint = ({
+  checkpointsDir,
+  filePath,
+  now = Date.now(),
+  offset,
+  sessionId
+}) => {
+  try {
+    if (!hasSessionId(sessionId) || !Number.isFinite(offset) || offset < 0) {
+      return false;
+    }
+    const dir = checkpointsDir || defaultCheckpointsDir();
+    const sid = sessionId.trim();
+    const files = [
+      ...readSessionFile(dir, sid).filter((entry) => entry.path !== filePath),
+      { offset, path: filePath, updated_at: new Date(now).toISOString() }
+    ];
+    const target = checkpointFilePath(dir, sid);
+    const temp = `${target}.tmp.${process.pid}`;
+    import_node_fs3.default.mkdirSync(dir, { recursive: true });
+    import_node_fs3.default.writeFileSync(temp, `${JSON.stringify({ files })}
+`, "utf8");
+    import_node_fs3.default.renameSync(temp, target);
+    return true;
+  } catch (err) {
+    logHookError("writeCheckpoint failed", err);
+    return false;
+  }
+};
+var sweepStaleCheckpoints = ({
+  checkpointsDir,
+  currentSessionId,
+  maxAgeMs = DEFAULT_STALE_CHECKPOINT_MS,
+  now = Date.now()
+}) => {
+  const dir = checkpointsDir || defaultCheckpointsDir();
+  let names;
+  try {
+    names = import_node_fs3.default.readdirSync(dir);
+  } catch {
+    return 0;
+  }
+  const currentName = hasSessionId(currentSessionId) ? `${sanitizeSessionId(currentSessionId.trim())}.json` : null;
+  let swept = 0;
+  for (const name of names) {
+    if (!name.endsWith(".json") || name === currentName) {
+      continue;
+    }
+    const filePath = import_node_path3.default.join(dir, name);
+    try {
+      if (now - import_node_fs3.default.statSync(filePath).mtimeMs < maxAgeMs) {
+        continue;
+      }
+      import_node_fs3.default.rmSync(filePath, { force: true });
+      swept += 1;
+    } catch (err) {
+      logHookError("sweepStaleCheckpoints failed", err);
+    }
+  }
+  return swept;
+};
+
 // packages/agentic-hooks/src/utils/privacy.ts
 var PRIVACY_LEVELS = Object.freeze({
   FULL: "full",
@@ -302,22 +478,22 @@ var DEFAULT_PRIVACY_LEVEL = PRIVACY_LEVELS.TRUNCATED;
 var FOREIGN_PRIVACY_LEVEL = PRIVACY_LEVELS.NAME_ONLY;
 
 // packages/agentic-hooks/src/utils/scope.ts
-var import_node_fs3 = __toESM(require("node:fs"), 1);
+var import_node_fs4 = __toESM(require("node:fs"), 1);
 var import_node_os2 = __toESM(require("node:os"), 1);
-var import_node_path3 = __toESM(require("node:path"), 1);
+var import_node_path4 = __toESM(require("node:path"), 1);
 var PERSONAL_SKILLS_DIR_ENV = "OPENTHROTTLE_PERSONAL_SKILLS_DIR";
-var SKILL_LINK_DIR = import_node_path3.default.join(".agents", "skills");
+var SKILL_LINK_DIR = import_node_path4.default.join(".agents", "skills");
 var resolvePersonalSkillsRoot = (env) => {
   const override = env[PERSONAL_SKILLS_DIR_ENV]?.trim();
   if (override !== void 0 && override !== "") {
     return override;
   }
-  return import_node_path3.default.join(import_node_os2.default.homedir(), ".openthrottle", "skills");
+  return import_node_path4.default.join(import_node_os2.default.homedir(), ".openthrottle", "skills");
 };
 var isPathInsideRoot = (root, candidate) => {
   try {
-    const realRoot = import_node_fs3.default.realpathSync(root);
-    return import_node_fs3.default.realpathSync(candidate).startsWith(`${realRoot}${import_node_path3.default.sep}`);
+    const realRoot = import_node_fs4.default.realpathSync(root);
+    return import_node_fs4.default.realpathSync(candidate).startsWith(`${realRoot}${import_node_path4.default.sep}`);
   } catch {
     return false;
   }
@@ -326,16 +502,16 @@ var isPersonalSkill = (skillName, repoRoot, env) => {
   const personalRoot = resolvePersonalSkillsRoot(env);
   return isPathInsideRoot(
     personalRoot,
-    import_node_path3.default.join(repoRoot, SKILL_LINK_DIR, skillName)
+    import_node_path4.default.join(repoRoot, SKILL_LINK_DIR, skillName)
   );
 };
 var detectScope = (skillName, repoRoot, env = process.env) => {
   if (!skillName || skillName.includes(":")) {
     return "third-party";
   }
-  const authoredDir = import_node_path3.default.join(repoRoot, "skills", skillName);
+  const authoredDir = import_node_path4.default.join(repoRoot, "skills", skillName);
   try {
-    if (import_node_fs3.default.existsSync(authoredDir) && import_node_fs3.default.statSync(authoredDir).isDirectory()) {
+    if (import_node_fs4.default.existsSync(authoredDir) && import_node_fs4.default.statSync(authoredDir).isDirectory()) {
       return "ours";
     }
   } catch {
@@ -488,15 +664,132 @@ var toRecordSkillUsageOutcomeInput = (event) => {
   return input;
 };
 
-// packages/agentic-hooks/src/data/persist.ts
-var import_node_fs5 = __toESM(require("node:fs"), 1);
-var import_node_path4 = __toESM(require("node:path"), 1);
+// packages/agentic-hooks/src/data/graphql.ts
+var PERMANENT_GRAPHQL_CODES = [
+  "BAD_REQUEST",
+  "BAD_USER_INPUT",
+  "GRAPHQL_PARSE_FAILED",
+  "GRAPHQL_VALIDATION_FAILED"
+];
+var TRANSIENT_CLIENT_STATUSES = [401, 403, 408, 429];
+var isPermanentHttpStatus = (status) => status >= 400 && status < 500 && !TRANSIENT_CLIENT_STATUSES.includes(status);
+var readStatusCode = (extensions) => {
+  const original = extensions.originalError;
+  if (isRecord(original) && typeof original.statusCode === "number") {
+    return original.statusCode;
+  }
+  return null;
+};
+var readGraphqlErrors = (payload) => {
+  if (!isRecord(payload) || !Array.isArray(payload.errors) || !payload.errors.length) {
+    return null;
+  }
+  let permanent = false;
+  const messages = [];
+  for (const error of payload.errors) {
+    if (!isRecord(error)) {
+      continue;
+    }
+    messages.push(typeof error.message === "string" ? error.message : "");
+    const extensions = isRecord(error.extensions) ? error.extensions : {};
+    const code = typeof extensions.code === "string" ? extensions.code : "";
+    const status = readStatusCode(extensions);
+    if (PERMANENT_GRAPHQL_CODES.includes(code) || status !== null && isPermanentHttpStatus(status)) {
+      permanent = true;
+    }
+  }
+  return { message: messages.join("; "), permanent };
+};
+var readMutationData = (payload, field) => isRecord(payload) && isRecord(payload.data) ? payload.data[field] : void 0;
+var transient = (reason) => ({
+  ok: false,
+  permanent: false,
+  reason
+});
+var postMutation = async ({
+  authToken,
+  fetchImpl,
+  graphqlUrl,
+  query,
+  timeoutMs,
+  variables,
+  field
+}) => {
+  if (typeof fetchImpl !== "function") {
+    return transient("fetch unavailable");
+  }
+  if (!graphqlUrl) {
+    return transient("missing graphql url");
+  }
+  const headers = {
+    "Content-Type": "application/json"
+  };
+  if (authToken) {
+    headers.Authorization = `Bearer ${authToken}`;
+  }
+  let response;
+  try {
+    response = await fetchImpl(graphqlUrl, {
+      body: JSON.stringify({ query, variables }),
+      headers,
+      method: "POST",
+      signal: AbortSignal.timeout(timeoutMs)
+    });
+  } catch (err) {
+    const reason = err instanceof Error && err.name === "TimeoutError" ? "timeout" : err instanceof Error ? err.message : String(err);
+    return transient(reason);
+  }
+  let payload;
+  try {
+    payload = await response.json();
+  } catch (err) {
+    return {
+      ok: false,
+      permanent: isPermanentHttpStatus(response.status),
+      reason: `invalid json (${response.status}): ${err instanceof Error ? err.message : String(err)}`
+    };
+  }
+  const errors = readGraphqlErrors(payload);
+  if (errors !== null) {
+    return { ok: false, permanent: errors.permanent, reason: errors.message };
+  }
+  if (!response.ok) {
+    return {
+      ok: false,
+      permanent: isPermanentHttpStatus(response.status),
+      reason: `http ${response.status}`
+    };
+  }
+  return { data: readMutationData(payload, field), ok: true };
+};
+var postGraphqlMutation = async (args) => {
+  const posted = await postMutation(args);
+  if (!posted.ok) {
+    return posted;
+  }
+  const node = posted.data;
+  if (isRecord(node) && node.id != null && String(node.id)) {
+    return { id: String(node.id), ok: true };
+  }
+  return transient(`missing ${args.field}.id`);
+};
+var postGraphqlMutationNode = async (args) => {
+  const posted = await postMutation(args);
+  if (!posted.ok) {
+    return posted;
+  }
+  if (!isRecord(posted.data)) {
+    return transient(`missing ${args.field}`);
+  }
+  return { node: posted.data, ok: true };
+};
 
-// packages/nodejs-utils/src/utils/is-record.ts
-var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
+// packages/agentic-hooks/src/data/persist.ts
+var import_node_fs6 = __toESM(require("node:fs"), 1);
+var import_node_path5 = __toESM(require("node:path"), 1);
 
 // packages/agentic-hooks/src/data/starts.ts
-var import_node_fs4 = __toESM(require("node:fs"), 1);
+var import_node_fs5 = __toESM(require("node:fs"), 1);
 var listStartsForSession = ({
   sessionId,
   startsDir
@@ -508,10 +801,10 @@ var listStartsForSession = ({
     }
     const dir = startsDir || defaultStartsDir();
     const filePath = startsFilePathForSession(dir, sid);
-    if (!import_node_fs4.default.existsSync(filePath)) {
+    if (!import_node_fs5.default.existsSync(filePath)) {
       return [];
     }
-    const text = import_node_fs4.default.readFileSync(filePath, "utf8");
+    const text = import_node_fs5.default.readFileSync(filePath, "utf8");
     const out = [];
     for (const line of text.split("\n")) {
       const trimmed = line.trim();
@@ -544,7 +837,7 @@ var drainStartsForSession = ({
     }
     const dir = startsDir || defaultStartsDir();
     const filePath = startsFilePathForSession(dir, sid);
-    if (!import_node_fs4.default.existsSync(filePath)) {
+    if (!import_node_fs5.default.existsSync(filePath)) {
       return 0;
     }
     const entries = listStartsForSession({
@@ -552,7 +845,7 @@ var drainStartsForSession = ({
       startsDir: dir
     });
     if (!resolvedKeys) {
-      import_node_fs4.default.rmSync(filePath, { force: true });
+      import_node_fs5.default.rmSync(filePath, { force: true });
       return entries.length;
     }
     const keep = [];
@@ -565,9 +858,9 @@ var drainStartsForSession = ({
       }
     }
     if (keep.length === 0) {
-      import_node_fs4.default.rmSync(filePath, { force: true });
+      import_node_fs5.default.rmSync(filePath, { force: true });
     } else {
-      import_node_fs4.default.writeFileSync(
+      import_node_fs5.default.writeFileSync(
         filePath,
         `${keep.map((e) => JSON.stringify(e)).join("\n")}
 `,
@@ -581,22 +874,83 @@ var drainStartsForSession = ({
   }
 };
 
+// packages/agentic-hooks/src/data/token-usage.ts
+var MAX_TOKEN_USAGE_BATCH = 500;
+var RECORD_TOKEN_USAGE_MUTATION = `
+mutation RecordTokenUsage($input: RecordTokenUsageInput!) {
+  recordTokenUsage(input: $input) {
+    inserted
+    skipped
+  }
+}
+`;
+var toRecordTokenUsageRow = (record) => ({
+  cacheReadTokens: record.cache_read_tokens,
+  cacheWriteTokens: record.cache_write_tokens,
+  costUsd: record.cost_usd,
+  cwd: record.cwd,
+  gitBranch: record.git_branch,
+  inputTokens: record.input_tokens,
+  model: record.model,
+  occurredAt: record.occurred_at,
+  outputTokens: record.output_tokens,
+  provider: record.provider,
+  rawUsageJson: record.raw_usage_json,
+  reasoningTokens: record.reasoning_tokens,
+  requestId: record.request_id,
+  sessionId: record.session_id,
+  source: record.source,
+  totalTokens: record.total_tokens
+});
+var chunkTokenUsage = (records, size = MAX_TOKEN_USAGE_BATCH) => {
+  const step = Math.max(1, Math.min(size, MAX_TOKEN_USAGE_BATCH));
+  const out = [];
+  for (let start = 0; start < records.length; start += step) {
+    out.push(records.slice(start, start + step));
+  }
+  return out;
+};
+var postTokenUsageBatch = async ({
+  records,
+  graphqlUrl,
+  authToken = "",
+  timeoutMs,
+  fetchImpl = globalThis.fetch
+}) => {
+  if (!records.length) {
+    return { inserted: 0, ok: true, skipped: 0 };
+  }
+  if (records.length > MAX_TOKEN_USAGE_BATCH) {
+    return {
+      ok: false,
+      permanent: true,
+      reason: `batch of ${records.length} exceeds ${MAX_TOKEN_USAGE_BATCH}`
+    };
+  }
+  const posted = await postGraphqlMutationNode({
+    authToken,
+    fetchImpl,
+    field: "recordTokenUsage",
+    graphqlUrl,
+    query: RECORD_TOKEN_USAGE_MUTATION,
+    timeoutMs,
+    variables: { input: { rows: records.map(toRecordTokenUsageRow) } }
+  });
+  if (!posted.ok) {
+    return posted;
+  }
+  const { inserted, skipped } = posted.node;
+  if (typeof inserted !== "number" || typeof skipped !== "number") {
+    return {
+      ok: false,
+      permanent: false,
+      reason: "malformed recordTokenUsage result"
+    };
+  }
+  return { inserted, ok: true, skipped };
+};
+
 // packages/agentic-hooks/src/data/persist.ts
-var readGraphqlErrors = (payload) => {
-  if (!isRecord(payload) || !Array.isArray(payload.errors) || !payload.errors.length) {
-    return null;
-  }
-  return payload.errors.map((e) => isRecord(e) && typeof e.message === "string" ? e.message : "").join("; ");
-};
-var readMutationId = (payload, field) => {
-  if (isRecord(payload) && isRecord(payload.data)) {
-    const node = payload.data[field];
-    if (isRecord(node) && node.id != null) {
-      return String(node.id);
-    }
-  }
-  return null;
-};
 var forLog = (graphqlUrl) => graphqlUrl.replace(/^([a-z][a-z0-9+.-]*:\/\/)[^/?#]*@/i, "$1***@");
 var DEFAULT_POST_TIMEOUT_MS = 750;
 var DEFAULT_ABANDONED_MS = 6 * 60 * 60 * 1e3;
@@ -607,54 +961,15 @@ var postSkillUsageEvent = async ({
   timeoutMs = DEFAULT_POST_TIMEOUT_MS,
   fetchImpl = globalThis.fetch
 }) => {
-  if (typeof fetchImpl !== "function") {
-    return { ok: false, reason: "fetch unavailable" };
-  }
-  if (!graphqlUrl) {
-    return { ok: false, reason: "missing graphql url" };
-  }
-  const headers = {
-    "Content-Type": "application/json"
-  };
-  if (authToken) {
-    headers.Authorization = `Bearer ${authToken}`;
-  }
-  let response;
-  try {
-    response = await fetchImpl(graphqlUrl, {
-      body: JSON.stringify({
-        query: RECORD_SKILL_USAGE_MUTATION,
-        variables: { input: toRecordSkillUsageInput(event) }
-      }),
-      headers,
-      method: "POST",
-      signal: AbortSignal.timeout(timeoutMs)
-    });
-  } catch (err) {
-    const reason = err instanceof Error && err.name === "TimeoutError" ? "timeout" : err instanceof Error ? err.message : String(err);
-    return { ok: false, reason };
-  }
-  let payload;
-  try {
-    payload = await response.json();
-  } catch (err) {
-    return {
-      ok: false,
-      reason: `invalid json (${response.status}): ${err instanceof Error ? err.message : String(err)}`
-    };
-  }
-  const errorMsg = readGraphqlErrors(payload);
-  if (errorMsg !== null) {
-    return { ok: false, reason: errorMsg };
-  }
-  if (!response.ok) {
-    return { ok: false, reason: `http ${response.status}` };
-  }
-  const id = readMutationId(payload, "recordSkillUsage");
-  if (!id) {
-    return { ok: false, reason: "missing recordSkillUsage.id" };
-  }
-  return { id, ok: true };
+  return postGraphqlMutation({
+    authToken,
+    fetchImpl,
+    field: "recordSkillUsage",
+    graphqlUrl,
+    query: RECORD_SKILL_USAGE_MUTATION,
+    timeoutMs,
+    variables: { input: toRecordSkillUsageInput(event) }
+  });
 };
 var postSkillUsageOutcome = async ({
   event,
@@ -663,54 +978,15 @@ var postSkillUsageOutcome = async ({
   timeoutMs = DEFAULT_POST_TIMEOUT_MS,
   fetchImpl = globalThis.fetch
 }) => {
-  if (typeof fetchImpl !== "function") {
-    return { ok: false, reason: "fetch unavailable" };
-  }
-  if (!graphqlUrl) {
-    return { ok: false, reason: "missing graphql url" };
-  }
-  const headers = {
-    "Content-Type": "application/json"
-  };
-  if (authToken) {
-    headers.Authorization = `Bearer ${authToken}`;
-  }
-  let response;
-  try {
-    response = await fetchImpl(graphqlUrl, {
-      body: JSON.stringify({
-        query: RECORD_SKILL_USAGE_OUTCOME_MUTATION,
-        variables: { input: toRecordSkillUsageOutcomeInput(event) }
-      }),
-      headers,
-      method: "POST",
-      signal: AbortSignal.timeout(timeoutMs)
-    });
-  } catch (err) {
-    const reason = err instanceof Error && err.name === "TimeoutError" ? "timeout" : err instanceof Error ? err.message : String(err);
-    return { ok: false, reason };
-  }
-  let payload;
-  try {
-    payload = await response.json();
-  } catch (err) {
-    return {
-      ok: false,
-      reason: `invalid json (${response.status}): ${err instanceof Error ? err.message : String(err)}`
-    };
-  }
-  const errorMsg = readGraphqlErrors(payload);
-  if (errorMsg !== null) {
-    return { ok: false, reason: errorMsg };
-  }
-  if (!response.ok) {
-    return { ok: false, reason: `http ${response.status}` };
-  }
-  const id = readMutationId(payload, "recordSkillUsageOutcome");
-  if (!id) {
-    return { ok: false, reason: "missing recordSkillUsageOutcome.id" };
-  }
-  return { id, ok: true };
+  return postGraphqlMutation({
+    authToken,
+    fetchImpl,
+    field: "recordSkillUsageOutcome",
+    graphqlUrl,
+    query: RECORD_SKILL_USAGE_OUTCOME_MUTATION,
+    timeoutMs,
+    variables: { input: toRecordSkillUsageOutcomeInput(event) }
+  });
 };
 var resolveTimeout = (timeoutMs) => timeoutMs ?? (Number(process.env.OPENTHROTTLE_TELEMETRY_TIMEOUT_MS) || DEFAULT_POST_TIMEOUT_MS);
 var persistOutcomeEvent = async ({
@@ -771,6 +1047,93 @@ var persistOutcomeEvent = async ({
     return {
       detail: err instanceof Error ? err.message : String(err),
       sink: "jsonl"
+    };
+  }
+};
+var persistTokenUsage = async ({
+  records,
+  repoRoot,
+  jsonlPath,
+  timeoutMs,
+  fetchImpl,
+  graphqlUrl: graphqlUrlOverride,
+  authToken: authTokenOverride
+}) => {
+  const outPath = jsonlPath || defaultTokenUsageJsonlPath();
+  const tally = { buffered: 0, deadLettered: 0, inserted: 0, skipped: 0 };
+  let detail = null;
+  const buffer = (unsent) => {
+    try {
+      for (const record of unsent) {
+        appendJsonl(outPath, record);
+      }
+      tally.buffered += unsent.length;
+    } catch (err) {
+      logHookError("token usage jsonl append failed", err);
+    }
+  };
+  try {
+    const batches = chunkTokenUsage(records, MAX_TOKEN_USAGE_BATCH);
+    if (!batches.length) {
+      return { ...tally, detail };
+    }
+    const offline = process.env.OPENTHROTTLE_TELEMETRY_OFFLINE === "1";
+    const graphqlUrl = offline ? null : graphqlUrlOverride ?? resolveGraphqlUrl(repoRoot);
+    if (offline || !graphqlUrl) {
+      buffer(records);
+      return {
+        ...tally,
+        detail: offline ? "OPENTHROTTLE_TELEMETRY_OFFLINE=1" : "missing graphql url"
+      };
+    }
+    const authToken = authTokenOverride ?? resolveAuthToken(repoRoot);
+    const resolvedTimeout = resolveTimeout(timeoutMs);
+    let serverDown = false;
+    for (const batch of batches) {
+      if (serverDown) {
+        buffer(batch);
+        continue;
+      }
+      const res = await postTokenUsageBatch({
+        authToken,
+        fetchImpl,
+        graphqlUrl,
+        records: batch,
+        timeoutMs: resolvedTimeout
+      });
+      if (res.ok) {
+        tally.inserted += res.inserted;
+        tally.skipped += res.skipped;
+      } else if (res.permanent) {
+        detail = res.reason;
+        logHookError(
+          `token usage batch rejected; moved to dead-letter (${res.reason}) [endpoint ${forLog(graphqlUrl)}]`
+        );
+        try {
+          appendDeadLetters({
+            filePath: outPath,
+            reason: res.reason,
+            records: batch
+          });
+          tally.deadLettered += batch.length;
+        } catch (err) {
+          logHookError("token usage dead-letter append failed", err);
+        }
+      } else {
+        detail = res.reason;
+        serverDown = true;
+        logHookError(
+          `token usage post failed; falling back to jsonl (${res.reason}) [endpoint ${forLog(graphqlUrl)}]`
+        );
+        buffer(batch);
+      }
+    }
+    return { ...tally, detail };
+  } catch (err) {
+    logHookError("persistTokenUsage failed", err);
+    return {
+      ...tally,
+      detail: err instanceof Error ? err.message : String(err)
     };
   }
 };
@@ -857,7 +1220,7 @@ var sweepAbandonedStarts = async ({
   const dir = startsDir || defaultStartsDir();
   let files;
   try {
-    files = import_node_fs5.default.readdirSync(dir);
+    files = import_node_fs6.default.readdirSync(dir);
   } catch {
     return { swept: 0 };
   }
@@ -868,10 +1231,10 @@ var sweepAbandonedStarts = async ({
     if (!file.endsWith(".jsonl") || file === currentFile) {
       continue;
     }
-    const filePath = import_node_path4.default.join(dir, file);
+    const filePath = import_node_path5.default.join(dir, file);
     let mtimeMs;
     try {
-      mtimeMs = import_node_fs5.default.statSync(filePath).mtimeMs;
+      mtimeMs = import_node_fs6.default.statSync(filePath).mtimeMs;
     } catch {
       continue;
     }
@@ -935,6 +1298,7 @@ var drainBufferedUsage = async ({
   repoRoot,
   eventsPath,
   outcomesPath,
+  tokenUsagePath,
   budgetMs = 500,
   fetchImpl,
   graphqlUrl: graphqlUrlOverride,
@@ -942,13 +1306,19 @@ var drainBufferedUsage = async ({
   timeoutMs,
   nowFn = Date.now
 }) => {
-  const empty = () => ({ retained: 0, sent: 0, skipped: 0 });
+  const empty = () => ({
+    deadLettered: 0,
+    reasons: {},
+    retained: 0,
+    sent: 0,
+    skipped: 0
+  });
   if (process.env.OPENTHROTTLE_TELEMETRY_OFFLINE === "1") {
-    return { events: empty(), outcomes: empty() };
+    return { events: empty(), outcomes: empty(), tokenUsage: empty() };
   }
   const graphqlUrl = graphqlUrlOverride ?? resolveGraphqlUrl(repoRoot);
   if (!graphqlUrl) {
-    return { events: empty(), outcomes: empty() };
+    return { events: empty(), outcomes: empty(), tokenUsage: empty() };
   }
   const authToken = authTokenOverride ?? resolveAuthToken(repoRoot);
   const resolvedTimeout = resolveTimeout(timeoutMs);
@@ -977,16 +1347,94 @@ var drainBufferedUsage = async ({
       timeoutMs: resolvedTimeout
     })
   });
-  return { events, outcomes };
+  const tokenUsage = await drainJsonlFileBatched({
+    batchSize: MAX_TOKEN_USAGE_BATCH,
+    deadlineMs,
+    filePath: tokenUsagePath || defaultTokenUsageJsonlPath(),
+    nowFn,
+    postBatch: (batch) => postTokenUsageBatch({
+      authToken,
+      fetchImpl,
+      graphqlUrl,
+      records: batch,
+      timeoutMs: resolvedTimeout
+    })
+  });
+  reportDeadLetters("events", events);
+  reportDeadLetters("outcomes", outcomes);
+  reportDeadLetters("token usage", tokenUsage);
+  return { events, outcomes, tokenUsage };
+};
+var reportDeadLetters = (label, tally) => {
+  if (tally.deadLettered > 0) {
+    logHookError(
+      `drain: ${tally.deadLettered} ${label} line(s) rejected by the server and moved to dead-letter — ${formatDrainReasons(tally)}`
+    );
+  }
+};
+var formatDrainReasons = (tally) => {
+  const entries = Object.entries(tally.reasons).sort((a, b) => b[1] - a[1]);
+  return entries.length ? entries.map(([reason, count]) => `${reason} ×${count}`).join("; ") : "none";
 };
 
 // packages/agentic-hooks/src/data/plan-runs.ts
-var import_node_path5 = __toESM(require("node:path"), 1);
-var PLAN_RUNS_DIR_REL = import_node_path5.default.join(".cache", "plan-runs");
+var import_node_path6 = __toESM(require("node:path"), 1);
+var PLAN_RUNS_DIR_REL = import_node_path6.default.join(".cache", "plan-runs");
 var PLAN_RUN_ABANDONED_MS = 6 * 60 * 60 * 1e3;
+
+// packages/agentic-hooks/src/data/read-new-bytes.ts
+var import_node_fs7 = __toESM(require("node:fs"), 1);
+var NEWLINE = 10;
+var readNewBytes = ({
+  filePath,
+  maxBytes,
+  offset
+}) => {
+  const unchanged = { lines: [], nextOffset: offset };
+  let fd = null;
+  try {
+    fd = import_node_fs7.default.openSync(filePath, "r");
+    const { size } = import_node_fs7.default.fstatSync(fd);
+    const start = offset > size || offset < 0 ? 0 : offset;
+    if (size === start) {
+      return { lines: [], nextOffset: start };
+    }
+    const remaining = size - start;
+    let window = maxBytes !== void 0 && maxBytes > 0 ? Math.min(remaining, Math.floor(maxBytes)) : remaining;
+    let buffer = Buffer.alloc(0);
+    let lastNewline = -1;
+    while (lastNewline < 0) {
+      buffer = Buffer.alloc(window);
+      const bytesRead = import_node_fs7.default.readSync(fd, buffer, 0, window, start);
+      lastNewline = buffer.subarray(0, bytesRead).lastIndexOf(NEWLINE);
+      if (window >= remaining) {
+        break;
+      }
+      window = Math.min(remaining, window * 2);
+    }
+    if (lastNewline < 0) {
+      return { lines: [], nextOffset: start };
+    }
+    const lines = buffer.subarray(0, lastNewline).toString("utf8").split("\n").map((line) => line.replace(/\r$/, "")).filter((line) => line.trim() !== "");
+    return { lines, nextOffset: start + lastNewline + 1 };
+  } catch (err) {
+    if (!(err instanceof Error && "code" in err && err.code === "ENOENT")) {
+      logHookError("readNewBytes failed", err);
+    }
+    return unchanged;
+  } finally {
+    if (fd !== null) {
+      try {
+        import_node_fs7.default.closeSync(fd);
+      } catch {
+      }
+    }
+  }
+};
 
 // packages/agentic-hooks/src/adapters/claude/payload.ts
 var CLAUDE_SOURCE = "claude-code";
+var nonEmptyString = (value) => typeof value === "string" && value.trim() !== "" ? value : null;
 var normalizeClaudeStopPayload = (raw) => {
   if (!isRecord(raw)) {
     return null;
@@ -996,16 +1444,335 @@ var normalizeClaudeStopPayload = (raw) => {
     return null;
   }
   return {
+    agent_transcript_path: nonEmptyString(raw.agent_transcript_path),
+    cwd: nonEmptyString(raw.cwd),
     hook_event_name: typeof raw.hook_event_name === "string" ? raw.hook_event_name : "Stop",
-    session_id: sessionId
+    session_id: sessionId,
+    transcript_path: nonEmptyString(raw.transcript_path)
   };
+};
+
+// packages/agentic-hooks/src/adapters/claude/shadow.ts
+var import_node_fs8 = __toESM(require("node:fs"), 1);
+var import_node_path7 = __toESM(require("node:path"), 1);
+var CAPTURE_BUNDLE = "skill-usage-capture";
+var runningFromPlugin = (env, scriptPath) => {
+  const pluginRoot = env.CLAUDE_PLUGIN_ROOT?.trim();
+  if (!pluginRoot || !scriptPath) {
+    return false;
+  }
+  const relative = import_node_path7.default.relative(import_node_path7.default.resolve(pluginRoot), scriptPath);
+  return relative !== "" && !relative.startsWith("..");
+};
+var repoRegistersCapture = (repoRoot) => {
+  try {
+    const raw = import_node_fs8.default.readFileSync(
+      import_node_path7.default.join(repoRoot, ".claude", "settings.json"),
+      "utf8"
+    );
+    const parsed = JSON.parse(raw);
+    if (typeof parsed !== "object" || parsed === null || !("hooks" in parsed)) {
+      return false;
+    }
+    return JSON.stringify(parsed.hooks).includes(CAPTURE_BUNDLE);
+  } catch {
+    return false;
+  }
+};
+var isShadowedByRepoHooks = ({
+  env = process.env,
+  repoRoot,
+  scriptPath = process.argv[1]
+}) => runningFromPlugin(env, scriptPath) && repoRegistersCapture(repoRoot);
+
+// packages/agentic-hooks/src/adapters/claude/transcript-usage.ts
+var import_node_fs9 = __toESM(require("node:fs"), 1);
+var import_node_path8 = __toESM(require("node:path"), 1);
+
+// packages/agentic-token-usage/src/usage.ts
+var asFiniteNumber = (value) => typeof value === "number" && Number.isFinite(value) ? value : void 0;
+var asNonEmptyString = (value) => typeof value === "string" && value !== "" ? value : void 0;
+var firstNumber = (...candidates) => {
+  for (const candidate of candidates) {
+    const parsed = asFiniteNumber(candidate);
+    if (parsed !== void 0) {
+      return parsed;
+    }
+  }
+  return void 0;
+};
+var safeParseRecord = (json) => {
+  if (json === "") {
+    return null;
+  }
+  try {
+    const parsed = JSON.parse(json);
+    return isRecord(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+};
+var normalizeUsage = (input) => {
+  const meta = typeof input === "string" ? safeParseRecord(input) : isRecord(input) ? input : null;
+  if (meta === null) {
+    return {};
+  }
+  const usage = isRecord(meta.usage) ? meta.usage : {};
+  const tokens = isRecord(meta.tokens) ? meta.tokens : {};
+  const cache = isRecord(tokens.cache) ? tokens.cache : {};
+  const inputTokens = firstNumber(
+    usage.input_tokens,
+    usage.inputTokens,
+    usage.prompt_tokens,
+    usage.promptTokens,
+    tokens.input,
+    meta.input_tokens,
+    meta.inputTokens
+  );
+  const outputTokens = firstNumber(
+    usage.output_tokens,
+    usage.outputTokens,
+    usage.completion_tokens,
+    usage.completionTokens,
+    tokens.output,
+    meta.output_tokens,
+    meta.outputTokens
+  );
+  const cacheReadTokens = firstNumber(
+    usage.cache_read_input_tokens,
+    usage.cacheReadInputTokens,
+    usage.cacheReadTokens,
+    usage.cached,
+    cache.read
+  );
+  const cacheWriteTokens = firstNumber(
+    usage.cache_creation_input_tokens,
+    usage.cacheCreationInputTokens,
+    usage.cacheWriteTokens,
+    cache.write
+  );
+  const reasoningTokens = firstNumber(
+    usage.reasoning_tokens,
+    usage.reasoningTokens,
+    tokens.reasoning
+  );
+  const explicitTotal = firstNumber(
+    usage.total_tokens,
+    usage.totalTokens,
+    tokens.total,
+    meta.total_tokens,
+    meta.totalTokens
+  );
+  const costUsd = firstNumber(
+    meta.totalCostUsd,
+    meta.total_cost_usd,
+    meta.cost,
+    usage.costUsd,
+    usage.costUSD,
+    usage.cost
+  );
+  const model = asNonEmptyString(meta.model) ?? asNonEmptyString(usage.model) ?? (isRecord(meta.modelUsage) ? Object.keys(meta.modelUsage)[0] : void 0);
+  const summable = [inputTokens, outputTokens].filter(
+    (value) => value !== void 0
+  );
+  const totalTokens = explicitTotal ?? (summable.length > 0 ? summable.reduce((a, b) => a + b, 0) : void 0);
+  return {
+    ...cacheReadTokens !== void 0 ? { cacheReadTokens } : {},
+    ...cacheWriteTokens !== void 0 ? { cacheWriteTokens } : {},
+    ...costUsd !== void 0 ? { costUsd } : {},
+    ...inputTokens !== void 0 ? { inputTokens } : {},
+    ...model !== void 0 ? { model } : {},
+    ...outputTokens !== void 0 ? { outputTokens } : {},
+    ...reasoningTokens !== void 0 ? { reasoningTokens } : {},
+    ...totalTokens !== void 0 ? { totalTokens } : {}
+  };
+};
+var hasNoCounts = (usage) => usage.inputTokens === void 0 && usage.outputTokens === void 0 && usage.cacheReadTokens === void 0 && usage.cacheWriteTokens === void 0 && usage.reasoningTokens === void 0 && usage.totalTokens === void 0 && usage.costUsd === void 0;
+var hasUsageCounts = (usage) => usage !== void 0 && !hasNoCounts(usage);
+
+// packages/agentic-hooks/src/adapters/claude/transcript.ts
+var CLAUDE_PROVIDER = "claude";
+var SYNTHETIC_MODEL = "<synthetic>";
+var nonEmptyString2 = (value) => typeof value === "string" && value !== "" ? value : null;
+var finiteNumber = (value) => typeof value === "number" && Number.isFinite(value) ? value : null;
+var thinkingTokens = (usage) => isRecord(usage.output_tokens_details) ? finiteNumber(usage.output_tokens_details.thinking_tokens) : null;
+var parseJsonRecord = (line) => {
+  try {
+    const parsed = JSON.parse(line);
+    return isRecord(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+};
+var toRecord = (entry, fallbackSessionId) => {
+  if (entry.type !== "assistant") {
+    return null;
+  }
+  const requestId = nonEmptyString2(entry.requestId);
+  const { message } = entry;
+  if (requestId === null || !isRecord(message) || !isRecord(message.usage)) {
+    return null;
+  }
+  const model = nonEmptyString2(message.model);
+  if (model === null || model === SYNTHETIC_MODEL) {
+    return null;
+  }
+  const { usage } = message;
+  const counts = normalizeUsage({ model, usage });
+  if (!hasUsageCounts(counts)) {
+    return null;
+  }
+  const agentId = nonEmptyString2(entry.agentId);
+  return {
+    cache_read_tokens: counts.cacheReadTokens ?? null,
+    cache_write_tokens: counts.cacheWriteTokens ?? null,
+    cost_usd: counts.costUsd ?? null,
+    cwd: nonEmptyString2(entry.cwd),
+    git_branch: nonEmptyString2(entry.gitBranch),
+    input_tokens: counts.inputTokens ?? null,
+    model,
+    occurred_at: nonEmptyString2(entry.timestamp) ?? (/* @__PURE__ */ new Date()).toISOString(),
+    output_tokens: counts.outputTokens ?? null,
+    provider: CLAUDE_PROVIDER,
+    raw_usage_json: JSON.stringify(
+      agentId === null ? usage : { ...usage, agentId, isSidechain: true }
+    ),
+    reasoning_tokens: counts.reasoningTokens ?? thinkingTokens(usage),
+    request_id: requestId,
+    session_id: nonEmptyString2(entry.sessionId) ?? fallbackSessionId,
+    source: CLAUDE_SOURCE,
+    total_tokens: counts.totalTokens ?? null
+  };
+};
+var parseTranscriptLines = ({
+  fallbackSessionId,
+  lines,
+  seen
+}) => {
+  const records = [];
+  for (const line of lines) {
+    const entry = parseJsonRecord(line);
+    if (entry === null) {
+      continue;
+    }
+    const record = toRecord(entry, fallbackSessionId);
+    if (record === null || record.request_id === null) {
+      continue;
+    }
+    if (seen.has(record.request_id)) {
+      continue;
+    }
+    seen.add(record.request_id);
+    records.push(record);
+  }
+  return records;
+};
+
+// packages/agentic-hooks/src/adapters/claude/transcript-usage.ts
+var MAX_TRANSCRIPT_BYTES_PER_FILE = 4 * 1024 * 1024;
+var MAX_TRANSCRIPT_BYTES_PER_STOP = 16 * 1024 * 1024;
+var SUBAGENT_FILE = /^agent-.+\.jsonl$/;
+var listSubagentTranscripts = (transcriptPath) => {
+  const { dir, name } = import_node_path8.default.parse(transcriptPath);
+  const subagentsDir = import_node_path8.default.join(dir, name, "subagents");
+  try {
+    return import_node_fs9.default.readdirSync(subagentsDir).filter((entry) => SUBAGENT_FILE.test(entry)).sort().map((entry) => import_node_path8.default.join(subagentsDir, entry));
+  } catch {
+    return [];
+  }
+};
+var accountedFor = (result, records) => result.buffered + result.deadLettered + result.inserted + result.skipped >= records;
+var captureTranscriptUsage = async ({
+  agentTranscriptPath,
+  authToken,
+  checkpointsDir,
+  fetchImpl,
+  graphqlUrl,
+  jsonlPath,
+  repoRoot,
+  sessionId,
+  timeoutMs,
+  transcriptPath
+}) => {
+  const idle = {
+    advanced: false,
+    filesRead: 0,
+    records: 0
+  };
+  try {
+    const targets = [
+      ...new Set(
+        [
+          transcriptPath,
+          ...transcriptPath === null ? [] : listSubagentTranscripts(transcriptPath),
+          agentTranscriptPath
+        ].filter((entry) => entry !== null)
+      )
+    ];
+    const seen = /* @__PURE__ */ new Set();
+    const pending = [];
+    const records = [];
+    let budget = MAX_TRANSCRIPT_BYTES_PER_STOP;
+    for (const filePath of targets) {
+      if (budget <= 0) {
+        break;
+      }
+      const prior = readCheckpoint({ checkpointsDir, filePath, sessionId })?.offset ?? 0;
+      const { lines, nextOffset } = readNewBytes({
+        filePath,
+        maxBytes: Math.min(MAX_TRANSCRIPT_BYTES_PER_FILE, budget),
+        offset: prior
+      });
+      budget -= nextOffset >= prior ? nextOffset - prior : nextOffset;
+      if (nextOffset !== prior) {
+        pending.push({ filePath, offset: nextOffset });
+      }
+      records.push(
+        ...parseTranscriptLines({
+          fallbackSessionId: sessionId,
+          lines,
+          seen
+        })
+      );
+    }
+    let advanced = true;
+    if (records.length > 0) {
+      const result = await persistTokenUsage({
+        authToken,
+        fetchImpl,
+        graphqlUrl,
+        jsonlPath,
+        records,
+        repoRoot,
+        timeoutMs
+      });
+      advanced = accountedFor(result, records.length);
+    }
+    if (advanced) {
+      for (const { filePath, offset } of pending) {
+        writeCheckpoint({ checkpointsDir, filePath, offset, sessionId });
+      }
+    }
+    sweepStaleCheckpoints({ checkpointsDir, currentSessionId: sessionId });
+    return {
+      advanced: advanced && pending.length > 0,
+      filesRead: pending.length,
+      records: records.length
+    };
+  } catch (err) {
+    logHookError("captureTranscriptUsage failed", err);
+    return idle;
+  }
 };
 
 // packages/agentic-hooks/src/adapters/claude/complete.ts
 var main = async () => {
   try {
     const repoRoot = process.env.CLAUDE_PROJECT_DIR || process.env.OPEN_THROTTLE_REPO_ROOT || process.cwd();
-    const stdinBuf = import_node_fs6.default.readFileSync(0, "utf8");
+    if (isShadowedByRepoHooks({ repoRoot })) {
+      return;
+    }
+    const stdinBuf = import_node_fs10.default.readFileSync(0, "utf8");
     if (!stdinBuf || !stdinBuf.trim()) {
       return;
     }
@@ -1033,6 +1800,12 @@ var main = async () => {
       currentSessionId: normalized.session_id,
       repoRoot,
       source: CLAUDE_SOURCE
+    });
+    await captureTranscriptUsage({
+      agentTranscriptPath: normalized.agent_transcript_path,
+      repoRoot,
+      sessionId: normalized.session_id,
+      transcriptPath: normalized.transcript_path
     });
     await drainBufferedUsage({ budgetMs: 500, repoRoot });
   } catch (err) {
