@@ -109,6 +109,9 @@ var SKILL_USAGE_OUTCOMES = Object.freeze({
 });
 var SKILL_USAGE_QUALITY_OUTCOMES = Object.freeze([SKILL_USAGE_OUTCOMES.ERROR, SKILL_USAGE_OUTCOMES.SUCCESS]);
 
+// packages/agentic-hooks/src/data/token-usage.ts
+var MAX_TOKEN_USAGE_BATCH_BYTES = 64 * 1024;
+
 // packages/agentic-hooks/src/data/persist.ts
 var DEFAULT_ABANDONED_MS = 6 * 60 * 60 * 1e3;
 

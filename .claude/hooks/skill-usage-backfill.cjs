@@ -167,6 +167,32 @@ var resolveGraphqlUrl = (repoRoot, options) => {
 };
 var resolveAuthToken = (repoRoot, options) => resolveOtEnv(repoRoot, "OPENTHROTTLE_MCP_AUTH_TOKEN", options) || resolveOtEnv(repoRoot, "OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN", options) || "";
 
+// packages/agentic-hooks/src/data/chunk.ts
+var chunkByBudget = (items, {
+  maxBytes,
+  maxItems,
+  sizeOf
+}) => {
+  const itemLimit = Math.max(1, maxItems);
+  const out = [];
+  let batch = [];
+  let batchBytes = 0;
+  for (const item of items) {
+    const size = sizeOf(item);
+    if (batch.length > 0 && (batch.length >= itemLimit || batchBytes + size > maxBytes)) {
+      out.push(batch);
+      batch = [];
+      batchBytes = 0;
+    }
+    batch.push(item);
+    batchBytes += size;
+  }
+  if (batch.length > 0) {
+    out.push(batch);
+  }
+  return out;
+};
+
 // packages/agentic-hooks/src/data/jsonl.ts
 var TELEMETRY_DIR_BASENAME = "skill-usage";
 var EVENTS_JSONL_BASENAME = "events.jsonl";
@@ -548,6 +574,7 @@ var postGraphqlMutationNode = async (args) => {
 
 // packages/agentic-hooks/src/data/token-usage.ts
 var MAX_TOKEN_USAGE_BATCH = 500;
+var MAX_TOKEN_USAGE_BATCH_BYTES = 64 * 1024;
 var RECORD_TOKEN_USAGE_MUTATION = `
 mutation RecordTokenUsage($input: RecordTokenUsageInput!) {
   recordTokenUsage(input: $input) {
@@ -574,14 +601,12 @@ var toRecordTokenUsageRow = (record) => ({
   source: record.source,
   totalTokens: record.total_tokens
 });
-var chunkTokenUsage = (records, size = MAX_TOKEN_USAGE_BATCH) => {
-  const step = Math.max(1, Math.min(size, MAX_TOKEN_USAGE_BATCH));
-  const out = [];
-  for (let start = 0; start < records.length; start += step) {
-    out.push(records.slice(start, start + step));
-  }
-  return out;
-};
+var tokenUsageRowBytes = (record) => Buffer.byteLength(JSON.stringify(toRecordTokenUsageRow(record)), "utf8");
+var chunkTokenUsage = (records, size = MAX_TOKEN_USAGE_BATCH, maxBytes = MAX_TOKEN_USAGE_BATCH_BYTES) => chunkByBudget(records, {
+  maxBytes,
+  maxItems: Math.min(size, MAX_TOKEN_USAGE_BATCH),
+  sizeOf: tokenUsageRowBytes
+});
 var postTokenUsageBatch = async ({
   records,
   graphqlUrl,
@@ -667,7 +692,7 @@ var persistTokenUsage = async ({
     }
   };
   try {
-    const batches = chunkTokenUsage(records, MAX_TOKEN_USAGE_BATCH);
+    const batches = chunkTokenUsage(records);
     if (!batches.length) {
       return { ...tally, detail };
     }

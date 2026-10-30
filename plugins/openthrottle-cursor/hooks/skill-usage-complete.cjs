@@ -170,6 +170,32 @@ var resolveGraphqlUrl = (repoRoot, options) => {
 };
 var resolveAuthToken = (repoRoot, options) => resolveOtEnv(repoRoot, "OPENTHROTTLE_MCP_AUTH_TOKEN", options) || resolveOtEnv(repoRoot, "OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN", options) || "";
 
+// packages/agentic-hooks/src/data/chunk.ts
+var chunkByBudget = (items, {
+  maxBytes,
+  maxItems,
+  sizeOf
+}) => {
+  const itemLimit = Math.max(1, maxItems);
+  const out = [];
+  let batch = [];
+  let batchBytes = 0;
+  for (const item of items) {
+    const size = sizeOf(item);
+    if (batch.length > 0 && (batch.length >= itemLimit || batchBytes + size > maxBytes)) {
+      out.push(batch);
+      batch = [];
+      batchBytes = 0;
+    }
+    batch.push(item);
+    batchBytes += size;
+  }
+  if (batch.length > 0) {
+    out.push(batch);
+  }
+  return out;
+};
+
 // packages/agentic-hooks/src/data/jsonl.ts
 var TELEMETRY_DIR_BASENAME = "skill-usage";
 var EVENTS_JSONL_BASENAME = "events.jsonl";
@@ -203,6 +229,7 @@ var startCorrelationKey = (entry) => {
   return `${sid}::${skill}::${disc}`;
 };
 var drainSnapshot = async ({
+  batchBytes,
   batchSize,
   deadlineMs,
   filePath,
@@ -244,9 +271,13 @@ var drainSnapshot = async ({
         logHookError("drain: skipping malformed jsonl line");
       }
     }
+    const batches = chunkByBudget(parsed, {
+      maxBytes: batchBytes,
+      maxItems: batchSize,
+      sizeOf: (entry) => Buffer.byteLength(entry.raw, "utf8")
+    });
     let stopped = false;
-    for (let start = 0; start < parsed.length; start += Math.max(1, batchSize)) {
-      const batch = parsed.slice(start, start + Math.max(1, batchSize));
+    for (const batch of batches) {
       if (!stopped && deadlineMs != null && nowFn() > deadlineMs) {
         stopped = true;
       }
@@ -320,6 +351,7 @@ var drainJsonlFile = async ({
   deadlineMs,
   nowFn = Date.now
 }) => drainSnapshot({
+  batchBytes: Number.POSITIVE_INFINITY,
   batchSize: 1,
   deadlineMs,
   filePath,
@@ -327,12 +359,20 @@ var drainJsonlFile = async ({
   postBatch: async ([event]) => event === void 0 ? { ok: true } : post(event)
 });
 var drainJsonlFileBatched = async ({
+  batchBytes,
   batchSize,
   filePath,
   postBatch,
   deadlineMs,
   nowFn = Date.now
-}) => drainSnapshot({ batchSize, deadlineMs, filePath, nowFn, postBatch });
+}) => drainSnapshot({
+  batchBytes,
+  batchSize,
+  deadlineMs,
+  filePath,
+  nowFn,
+  postBatch
+});
 
 // packages/agentic-hooks/src/config/describe.ts
 var TELEMETRY_CONFIG_SOURCES = Object.freeze({
@@ -760,6 +800,7 @@ var drainStartsForSession = ({
 
 // packages/agentic-hooks/src/data/token-usage.ts
 var MAX_TOKEN_USAGE_BATCH = 500;
+var MAX_TOKEN_USAGE_BATCH_BYTES = 64 * 1024;
 var RECORD_TOKEN_USAGE_MUTATION = `
 mutation RecordTokenUsage($input: RecordTokenUsageInput!) {
   recordTokenUsage(input: $input) {
@@ -1137,6 +1178,7 @@ var drainBufferedUsage = async ({
     })
   });
   const tokenUsage = await drainJsonlFileBatched({
+    batchBytes: MAX_TOKEN_USAGE_BATCH_BYTES,
     batchSize: MAX_TOKEN_USAGE_BATCH,
     deadlineMs,
     filePath: tokenUsagePath || defaultTokenUsageJsonlPath(),

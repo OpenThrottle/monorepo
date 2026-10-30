@@ -10,10 +10,12 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { HookFetch, TokenUsageRecord } from '../../index.ts';
 import {
+  chunkTokenUsage,
   deadLetterPathFor,
   defaultTokenUsageJsonlPath,
   drainBufferedUsage,
   MAX_TOKEN_USAGE_BATCH,
+  MAX_TOKEN_USAGE_BATCH_BYTES,
   persistTokenUsage,
   postTokenUsageBatch,
   toRecordTokenUsageRow,
@@ -43,8 +45,21 @@ const makeRecord = (n: number): TokenUsageRecord => ({
 const makeRecords = (count: number): TokenUsageRecord[] =>
   Array.from({ length: count }, (_, index) => makeRecord(index));
 
+/** A row the size of a real transcript-derived one (~1.2 KB on the wire). */
+const makeRealisticRecord = (n: number): TokenUsageRecord => ({
+  ...makeRecord(n),
+  cwd: '/Users/someone/Library/Application Support/SomeTool/scratch-workspaces/2cd3e03a/ab06c320/scratch-2026-10-30-d2de16',
+  raw_usage_json: JSON.stringify({ padding: 'x'.repeat(900) }),
+});
+
+const rowsPerBatch = (records: readonly TokenUsageRecord[]): number[] =>
+  chunkTokenUsage(records).map((batch) => batch.length);
+
+/** Bytes of the GraphQL envelope around the rows (query + wrapper keys). */
+const ENVELOPE_BYTES = 512;
+
 interface FakeServer {
-  readonly calls: Array<{ rows: number }>;
+  readonly calls: Array<{ bytes: number; rows: number }>;
   readonly fetchImpl: HookFetch;
 }
 
@@ -55,7 +70,7 @@ const fakeServer = (
     rows: number,
   ) => { body: unknown; status?: number } | Error,
 ): FakeServer => {
-  const calls: Array<{ rows: number }> = [];
+  const calls: Array<{ bytes: number; rows: number }> = [];
   const fetchImpl: HookFetch = async (_url, init) => {
     const parsed: unknown = JSON.parse(init.body);
     const rows =
@@ -71,7 +86,7 @@ const fakeServer = (
       Array.isArray(parsed.variables.input.rows)
         ? parsed.variables.input.rows.length
         : -1;
-    calls.push({ rows });
+    calls.push({ bytes: Buffer.byteLength(init.body, 'utf8'), rows });
     const answer = respond(calls.length, rows);
     if (answer instanceof Error) {
       throw answer;
@@ -218,12 +233,64 @@ describe('token usage', () => {
     });
   });
 
-  describe('persistTokenUsage', () => {
-    it('sends records in batches of at most 500', async () => {
-      const server = fakeServer((_call, rows) => accepted(rows));
-      const res = await persist(makeRecords(1200), server.fetchImpl);
+  describe('chunkTokenUsage', () => {
+    it('never puts more than MAX_TOKEN_USAGE_BATCH rows in a batch', () => {
+      const sizes = chunkTokenUsage(makeRecords(1200), 500, Infinity).map(
+        (batch) => batch.length,
+      );
+      expect(sizes).toEqual([500, 500, 200]);
+      expect(
+        chunkTokenUsage(makeRecords(10), MAX_TOKEN_USAGE_BATCH + 50, Infinity),
+      ).toHaveLength(1);
+    });
 
-      expect(server.calls.map((call) => call.rows)).toEqual([500, 500, 200]);
+    it('splits real-sized rows so each batch stays within the byte budget', () => {
+      const records = Array.from({ length: 500 }, (_, index) =>
+        makeRealisticRecord(index),
+      );
+      const batches = chunkTokenUsage(records);
+
+      expect(batches.length).toBeGreaterThan(1);
+      expect(batches.flat()).toEqual(records);
+      for (const batch of batches) {
+        const bytes = Buffer.byteLength(
+          JSON.stringify(batch.map(toRecordTokenUsageRow)),
+          'utf8',
+        );
+        expect(bytes).toBeLessThanOrEqual(
+          MAX_TOKEN_USAGE_BATCH_BYTES + batch.length,
+        );
+      }
+    });
+
+    it('gives a row bigger than the whole budget a batch of its own', () => {
+      const huge = {
+        ...makeRecord(1),
+        raw_usage_json: 'x'.repeat(MAX_TOKEN_USAGE_BATCH_BYTES),
+      };
+      expect(
+        chunkTokenUsage([makeRecord(0), huge, makeRecord(2)]).map((batch) =>
+          batch.map((record) => record.request_id),
+        ),
+      ).toEqual([['req-0'], ['req-1'], ['req-2']]);
+    });
+  });
+
+  describe('persistTokenUsage', () => {
+    it('sends every record in row- and byte-capped batches', async () => {
+      const server = fakeServer((_call, rows) => accepted(rows));
+      const records = makeRecords(1200);
+      const res = await persist(records, server.fetchImpl);
+
+      expect(server.calls.map((call) => call.rows)).toEqual(
+        rowsPerBatch(records),
+      );
+      for (const call of server.calls) {
+        expect(call.rows).toBeLessThanOrEqual(MAX_TOKEN_USAGE_BATCH);
+        expect(call.bytes).toBeLessThanOrEqual(
+          MAX_TOKEN_USAGE_BATCH_BYTES + call.rows + ENVELOPE_BYTES,
+        );
+      }
       expect(res).toEqual({
         buffered: 0,
         deadLettered: 0,
@@ -256,11 +323,15 @@ describe('token usage', () => {
       const server = fakeServer((call, rows) =>
         call === 1 ? accepted(rows) : new Error('timeout'),
       );
-      const res = await persist(makeRecords(1200), server.fetchImpl);
+      const records = makeRecords(1200);
+      const [first = 0] = rowsPerBatch(records);
+      const res = await persist(records, server.fetchImpl);
 
       expect(server.calls).toHaveLength(2);
-      expect(res).toMatchObject({ buffered: 700, inserted: 500 });
-      expect(readLines(defaultTokenUsageJsonlPath())).toHaveLength(700);
+      expect(res).toMatchObject({ buffered: 1200 - first, inserted: first });
+      expect(readLines(defaultTokenUsageJsonlPath())).toHaveLength(
+        1200 - first,
+      );
     });
 
     it('buffers when OPENTHROTTLE_TELEMETRY_OFFLINE=1', async () => {
@@ -284,19 +355,22 @@ describe('token usage', () => {
         const server = fakeServer((call, rows) =>
           call === 1 ? rejected : accepted(rows),
         );
-        const res = await persist(makeRecords(600), server.fetchImpl);
+        const records = makeRecords(600);
+        const sizes = rowsPerBatch(records);
+        const [first = 0] = sizes;
+        const res = await persist(records, server.fetchImpl);
 
-        expect(server.calls.map((call) => call.rows)).toEqual([500, 100]);
+        expect(server.calls.map((call) => call.rows)).toEqual(sizes);
         expect(res).toMatchObject({
           buffered: 0,
-          deadLettered: 500,
+          deadLettered: first,
           detail: 'row 3: model must not be blank',
-          inserted: 100,
+          inserted: 600 - first,
         });
         expect(fs.existsSync(defaultTokenUsageJsonlPath())).toBe(false);
 
         const dead = readLines(deadLetterPathFor(defaultTokenUsageJsonlPath()));
-        expect(dead).toHaveLength(500);
+        expect(dead).toHaveLength(first);
         expect(dead[0]).toMatchObject({
           line: { request_id: 'req-0' },
           reason: 'row 3: model must not be blank',
@@ -324,7 +398,10 @@ describe('token usage', () => {
       const up = fakeServer((_call, rows) => accepted(rows));
       const summary = await drain(up.fetchImpl);
 
-      expect(up.calls.map((call) => call.rows)).toEqual([500, 500, 100]);
+      expect(up.calls.map((call) => call.rows).reduce((a, b) => a + b)).toBe(
+        1100,
+      );
+      expect(up.calls.length).toBeGreaterThan(1);
       expect(summary.tokenUsage).toEqual({
         deadLettered: 0,
         reasons: {},
@@ -333,6 +410,24 @@ describe('token usage', () => {
         skipped: 0,
       });
       expect(fs.existsSync(defaultTokenUsageJsonlPath())).toBe(false);
+    });
+
+    it('drains real-sized rows in batches within the byte budget', async () => {
+      const records = Array.from({ length: 100 }, (_, index) =>
+        makeRealisticRecord(index),
+      );
+      await persist(records, fakeServer(() => new Error('x')).fetchImpl);
+
+      const up = fakeServer((_call, rows) => accepted(rows));
+      const summary = await drain(up.fetchImpl);
+
+      expect(summary.tokenUsage).toMatchObject({ deadLettered: 0, sent: 100 });
+      expect(up.calls.length).toBeGreaterThan(1);
+      for (const call of up.calls) {
+        expect(call.bytes).toBeLessThanOrEqual(
+          MAX_TOKEN_USAGE_BATCH_BYTES + call.rows + ENVELOPE_BYTES,
+        );
+      }
     });
 
     it('retains a transiently failed batch with its reason', async () => {
@@ -375,7 +470,7 @@ describe('token usage', () => {
       const up = fakeServer((_call, rows) => accepted(rows));
       const summary = await drain(up.fetchImpl);
 
-      expect(up.calls).toEqual([{ rows: 2 }]);
+      expect(up.calls.map((call) => call.rows)).toEqual([2]);
       expect(summary.tokenUsage).toMatchObject({ sent: 2, skipped: 1 });
     });
   });

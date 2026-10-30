@@ -12,6 +12,7 @@
 export * from './config/describe.ts';
 export * from './config/env.ts';
 export * from './data/checkpoints.ts';
+export * from './data/chunk.ts';
 export * from './data/events.ts';
 export * from './data/graphql.ts';
 export * from './data/jsonl.ts';

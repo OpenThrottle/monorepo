@@ -479,7 +479,7 @@ const sendSkillEvents = async ({
 
 /**
  * Post a plan's rows: skill events one mutation each (bounded concurrency),
- * token rows through `persistTokenUsage` in batches of at most 500. Transient
+ * token rows through `persistTokenUsage` (row- and byte-capped batches). Transient
  * failures buffer to the telemetry directory for `skill-usage-drain`; permanent
  * rejections are dead-lettered. Never reads transcripts.
  *
