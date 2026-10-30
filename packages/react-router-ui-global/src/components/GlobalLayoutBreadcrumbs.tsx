@@ -44,7 +44,7 @@ export const GlobalLayoutBreadcrumbs = (
   return (
     <OpenThrottleBreadcrumbs
       children={breadcrumb}
-      className={clsx('ml-4', className)}
+      className={clsx('min-w-0 sm:ml-4', className)}
       links={links.pop() ?? []}
     />
   );

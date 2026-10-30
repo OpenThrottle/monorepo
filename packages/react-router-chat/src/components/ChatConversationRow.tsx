@@ -3,6 +3,10 @@ import clsx from 'clsx';
 import { Pencil, Trash2 } from 'lucide-react';
 import * as React from 'react';
 
+import {
+  ACTION_TOUCH_CLASSES,
+  ACTION_VISIBILITY_CLASSES,
+} from '../data/chat-conversation-row.classes';
 import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../data/chat-conversation-sidebar.copy';
 import type { AgentConversationListItem } from '../types';
 import { formatRelativeChatTimestamp } from '../utils/index';
@@ -84,31 +88,30 @@ export const ChatConversationRow = (
   return (
     <div
       className={clsx(
-        // 'group/row flex items-center gap-1 rounded-md ',
-        'group/row hover:bg-accent/50 flex max-w-full px-2 py-2',
+        'group/row hover:bg-accent/50 flex max-w-full items-center gap-1 px-2 py-2 pointer-coarse:py-0.5',
         isActive && 'bg-accent',
       )}
     >
-      <div className="flex-1">
+      {/* w-0: ScrollArea's display:table viewport would otherwise grow to the untruncated title. */}
+      <div className="w-0 min-w-0 flex-1">
         <button
           aria-current={isActive ? 'true' : undefined}
-          className="flex cursor-pointer flex-col text-left"
-          // className="hover:bg-accent/50 flex min-w-0 flex-1 flex-col items-start rounded-md px-1 py-1 text-left"
+          className="flex w-full min-w-0 cursor-pointer flex-col text-left pointer-coarse:py-1.5"
           data-testid={`ChatConversationSidebar-select-${conversation.id}`}
           onClick={onSelect}
           type="button"
         >
-          <div className="line-clamp-1 text-sm">{label}</div>
-          <div className="text-muted-foreground text-xs">
+          <div className="w-full truncate text-sm">{label}</div>
+          <div className="text-muted-foreground w-full truncate text-xs">
             {formatRelativeChatTimestamp(conversation.updatedAt)}
           </div>
         </button>
       </div>
 
-      <div>
+      <div className="flex shrink-0 items-center">
         <Button
           aria-label={`Rename ${label}`}
-          className="opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100"
+          className={clsx(ACTION_VISIBILITY_CLASSES, ACTION_TOUCH_CLASSES)}
           data-testid={`ChatConversationSidebar-rename-${conversation.id}`}
           onClick={onStartRename}
           size="xs"
@@ -119,7 +122,11 @@ export const ChatConversationRow = (
         </Button>
         <Button
           aria-label={`Delete ${label}`}
-          className="text-muted-foreground hover:text-destructive opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100"
+          className={clsx(
+            'text-muted-foreground hover:text-destructive',
+            ACTION_VISIBILITY_CLASSES,
+            ACTION_TOUCH_CLASSES,
+          )}
           data-testid={`ChatConversationSidebar-delete-${conversation.id}`}
           onClick={onRequestDelete}
           size="xs"

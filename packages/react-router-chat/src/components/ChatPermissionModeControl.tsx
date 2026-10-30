@@ -65,7 +65,7 @@ export const ChatPermissionModeControl = (
       <DropdownMenuTrigger asChild={true}>
         <Button
           aria-label="Permission mode"
-          className={clsx('h-8 w-auto gap-1.5', className)}
+          className={clsx('h-8 w-auto gap-1.5 pointer-coarse:h-11', className)}
           data-testid="ChatPermissionModeControl-trigger"
           type="button"
           variant="outline"

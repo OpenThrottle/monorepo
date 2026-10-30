@@ -66,11 +66,17 @@ export const ChatComposerFooter = (
           <ChatUsageCounter streaming={isStreaming} usage={sessionUsage} />
         ) : null}
         {isStreaming ? (
-          <Button onClick={onStop} size="sm" type="button">
+          <Button
+            className="pointer-coarse:h-11 pointer-coarse:min-w-11"
+            onClick={onStop}
+            size="sm"
+            type="button"
+          >
             {stopLabel}
           </Button>
         ) : (
           <Button
+            className="pointer-coarse:h-11 pointer-coarse:min-w-11"
             disabled={disabled || draft.trim().length === 0}
             size="sm"
             type="submit"

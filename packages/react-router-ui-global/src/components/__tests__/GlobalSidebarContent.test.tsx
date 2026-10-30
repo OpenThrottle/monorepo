@@ -1,8 +1,9 @@
+import { Sidebar, SidebarTrigger } from '@openthrottle/react-router-shadcn';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
-import { describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test } from 'vitest';
 
 import { GlobalProviders } from '../GlobalProviders';
 import type { GlobalSidebarContentProps } from '../GlobalSidebarContent';
@@ -18,7 +19,11 @@ const StubIcon = (iconProps: { className?: string }) => (
 describe('GlobalSidebarContent Component', () => {
   test('renders empty sidebar when no navigation data is provided', () => {
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <GlobalSidebarContent />;
+    const Component = () => (
+      <GlobalProviders>
+        <GlobalSidebarContent />
+      </GlobalProviders>
+    );
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 
@@ -100,5 +105,40 @@ describe('GlobalSidebarContent collapsible sections', () => {
     expect(screen.getByRole('link', { name: 'Link A' })).toBeVisible();
     await user.click(screen.getByRole('link', { name: 'Link A' }));
     expect(await screen.findByText('Alpha page')).toBeInTheDocument();
+  });
+});
+
+describe('GlobalSidebarContent on phones', () => {
+  const desktopWidth = window.innerWidth;
+
+  afterEach(() => {
+    window.innerWidth = desktopWidth;
+  });
+
+  test('closes the sidebar sheet after a link is tapped', async () => {
+    window.innerWidth = 375;
+    const user = userEvent.setup();
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
+    const Component = () => (
+      <GlobalProviders>
+        <SidebarTrigger />
+        <Sidebar>
+          <GlobalSidebarContent
+            data={{ Alpha: [{ children: 'Link A', icon: StubIcon, to: '/' }] }}
+          />
+        </Sidebar>
+      </GlobalProviders>
+    );
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    render(<RoutesStub />);
+
+    await user.click(screen.getByRole('button', { name: /toggle sidebar/i }));
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('link', { name: 'Link A' }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
   });
 });

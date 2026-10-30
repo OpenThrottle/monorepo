@@ -125,6 +125,24 @@ describe('ChatConversationSidebar', () => {
 
       expect(onDelete).toHaveBeenCalledWith('conv-1');
     });
+
+    test('shows the confirmation dialog and does not delete when cancelled', async () => {
+      const onDelete = vi.fn();
+      const component = renderSidebar({ onDelete });
+      const user = userEvent.setup();
+
+      await user.click(
+        component.getByTestId('ChatConversationSidebar-delete-conv-1'),
+      );
+
+      expect(
+        component.getByTestId('ChatConversationSidebar-confirm-delete'),
+      ).toBeInTheDocument();
+
+      await user.click(component.getByText('Cancel'));
+
+      expect(onDelete).not.toHaveBeenCalled();
+    });
   });
 
   describe('pagination', () => {

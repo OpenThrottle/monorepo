@@ -52,7 +52,7 @@ export const ChatComposerPersonaSelect = (
         <TooltipTrigger asChild={true}>
           <SelectTrigger
             aria-label="Agent"
-            className="h-8 w-auto min-w-32 gap-1"
+            className="h-8 w-auto min-w-32 gap-1 pointer-coarse:h-11"
             data-testid="ChatComposerToolbar-persona-select"
           >
             <SelectValue placeholder="Agent" />

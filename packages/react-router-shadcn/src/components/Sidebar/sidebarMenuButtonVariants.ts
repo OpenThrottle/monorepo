@@ -9,9 +9,9 @@ export const sidebarMenuButtonVariants = cva(
     },
     variants: {
       size: {
-        default: 'h-8 text-sm',
+        default: 'h-8 text-sm pointer-coarse:h-11',
         lg: 'h-12 text-sm group-data-[collapsible=icon]:p-0!',
-        sm: 'h-7 text-xs',
+        sm: 'h-7 text-xs pointer-coarse:h-11',
       },
       variant: {
         default: 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',

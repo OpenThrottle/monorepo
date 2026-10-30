@@ -93,7 +93,7 @@ export const ChatConversationSheet = (
           <SheetTrigger asChild={true}>
             <Button
               aria-label={copy.title}
-              className="shrink-0"
+              className="shrink-0 pointer-coarse:size-11"
               data-testid={triggerTestId}
               size="icon"
               type="button"
@@ -121,6 +121,7 @@ export const ChatConversationSheet = (
           </div>
           <Button
             aria-label={copy.newChat}
+            className="pointer-coarse:h-11"
             data-testid="ChatConversationSheet-new-chat"
             onClick={handleNewChat}
             size="sm"

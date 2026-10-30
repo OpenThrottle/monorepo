@@ -65,4 +65,15 @@ describe('ChatComposerPersistControl Component', () => {
 
     expect(onPersistChange).toHaveBeenCalledWith(true);
   });
+
+  test('extends the touch hit area to 44px without resizing the switch', () => {
+    const component = renderControl({ onPersistChange: vi.fn() });
+
+    expect(component.getByTestId('ChatComposerToolbar-persist')).toHaveClass(
+      'pointer-coarse:min-h-11',
+    );
+    expect(
+      component.getByTestId('ChatComposerToolbar-persist-switch'),
+    ).toHaveClass('pointer-coarse:after:-inset-y-[15px]');
+  });
 });
