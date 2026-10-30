@@ -303,7 +303,7 @@ which the run reads as live and its worktree stays marked busy.
 
 ## Finishing
 
-1. **Verify every task is closed, THEN set the plan `COMPLETED`.** First re-fetch `get_tasks_by_plan_id(planId)` (or `get_remaining_tasks_for_plan`) and confirm **zero** tasks are `IN_PROGRESS`, `PENDING`, or `QUEUED`. Flip any stranded task to `COMPLETED` (or `BLOCKED`/`SKIPPED`) before continuing — a committed task left `IN_PROGRESS` is the usual culprit (see the loop invariant). Only once the list is clean, `update_plan(planId, { status: 'COMPLETED' })`. There is no server-side downward reconcile in **either** direction: the plan can read `COMPLETED` while tasks are still `IN_PROGRESS`, so this explicit re-fetch is mandatory — never skip it.
+1. **Verify every task is closed, THEN set the plan `COMPLETED`.** First re-fetch `get_tasks_by_plan_id(planId)` (or `get_remaining_tasks_for_plan`) and confirm **zero** tasks are `IN_PROGRESS`, `PENDING`, or `QUEUED`. Flip any stranded task to `COMPLETED` (or `BLOCKED`/`SKIPPED`) before continuing (`PROMOTED` — the work continued as its own plan — also counts as resolved) — a committed task left `IN_PROGRESS` is the usual culprit (see the loop invariant). Only once the list is clean, `update_plan(planId, { status: 'COMPLETED' })`. There is no server-side downward reconcile in **either** direction: the plan can read `COMPLETED` while tasks are still `IN_PROGRESS`, so this explicit re-fetch is mandatory — never skip it.
 2. Before continuing ensure `nx run-many -t lint test typecheck format check:local` all complete, flagging any errors we encounter
 3. To minimize friction merging with main we will run `/github-squash` to condense our PR to a single commit — its `Task-Id:` footers come from OT, so commitless tasks are carried too
 4. Next we will fetch main `git fetch origin main:main` and rebase the branch against `main`
@@ -361,4 +361,4 @@ The merge-queue caveat still holds where it always did: `gh pr merge --auto` can
 - Author/assignee fields expect the **GitHub username**, not a display name.
 - Never push to `main`, never `--no-verify`; require confirmation before rebase/force-push.
 - **One task `IN_PROGRESS` at a time.** Flip it to `COMPLETED` (or `BLOCKED`/`SKIPPED`) before starting the next, and re-fetch tasks to confirm zero `IN_PROGRESS`/`PENDING`/`QUEUED` before marking the plan `COMPLETED`. Committing the work is not the same as flipping the status.
-- Task states: `BACKLOG`, `BLOCKED`, `CANCELED`, `COMPLETED`, `IN_PROGRESS`, `PENDING`, `QUEUED`, `SKIPPED`.
+- Task states: `BACKLOG`, `BLOCKED`, `CANCELED`, `COMPLETED`, `IN_PROGRESS`, `PENDING`, `PROMOTED`, `QUEUED`, `SKIPPED`. `COMPLETED`, `PROMOTED` and `SKIPPED` are resolved/terminal; `PROMOTED` means the work continued as its own plan (resolved here, not complete).

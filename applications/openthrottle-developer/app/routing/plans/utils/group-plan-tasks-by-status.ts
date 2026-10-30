@@ -14,6 +14,7 @@ export const PLAN_TASK_BOARD_COLUMN_ORDER: readonly PlanStatusKey[] = [
   'IN_PROGRESS',
   'BLOCKED',
   'COMPLETED',
+  'PROMOTED',
   'CANCELED',
   'SKIPPED',
 ] as const;

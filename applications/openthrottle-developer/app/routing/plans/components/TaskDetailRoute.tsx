@@ -64,15 +64,17 @@ export const TaskDetailRoute = (
   const showToolbar = false;
 
   const effectivePlanId = task.planId ?? '';
+  // Status OR tag: promotion writes PROMOTED plus the legacy `promoted` tag,
+  // while older rows are SKIPPED + tag, so either marks the task as promoted.
   const isPromoted =
-    task.status === 'SKIPPED' &&
+    task.status === 'PROMOTED' ||
     task.tags.some((tag: PlanTagChipData) => tag.tag === 'promoted');
 
   // Gate task mutations while the owning plan's run is active (QUEUED /
   // IN_PROGRESS) so Mark Complete / Promote can't fire under a live worker.
   const planIsRunning = getPlanIsRunning(plan?.status);
   // Also gate them when the owning plan is terminal (COMPLETED / CANCELED /
-  // SKIPPED): there is no more work to do here, so close-out/promote a task by
+  // PROMOTED / SKIPPED): there is no more work to do here, so close-out/promote a task by
   // shipping a new plan instead.
   const planIsTerminal = getPlanIsTerminal(plan?.status);
 

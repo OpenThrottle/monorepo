@@ -17,6 +17,13 @@ describe('status-options constants', () => {
       expect(option.label.length).toBeGreaterThan(0);
     }
   });
+
+  test('offers PROMOTED as a filterable status', () => {
+    expect(PLAN_STATUS_FILTER_OPTIONS).toContainEqual({
+      label: 'Promoted',
+      value: 'PROMOTED',
+    });
+  });
 });
 
 describe('isPlanStatusFilterValue', () => {

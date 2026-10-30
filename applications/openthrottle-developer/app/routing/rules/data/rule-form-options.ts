@@ -15,6 +15,7 @@ export const PLAN_STATUSES = [
   'COMPLETED',
   'IN_PROGRESS',
   'PENDING',
+  'PROMOTED',
   'QUEUED',
   'SKIPPED',
 ];

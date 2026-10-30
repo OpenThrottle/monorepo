@@ -1947,7 +1947,7 @@ export type Mutation = {
   pauseQueue: QueueControlResultObject;
   /** Open the host OS folder dialog and return the chosen absolute server-host path, or null on user-cancel. Guarded by the same same-machine predicate as workspacePickerCapabilities (re-checked before spawning) and bounded by a kill timeout. Does not register anything — the client confirms and calls addWorkspaceFolder. */
   pickFolderNative: PickFolderNativePayloadObject;
-  /** Promote a task into a new, first-class plan. Validates the task is promotable (exists, not a lifecycle hook, not already promoted) then enqueues an async task-promotion job (enqueue-after-validate, idempotency key doubles as the BullMQ job id). The job creates the plan, carries the task's tags, seeds an initial task, closes out the source task (→ SKIPPED + `promoted` tag), and records provenance. Returns the accepted job id; the new plan surfaces via the task-status subscription once the job completes. */
+  /** Promote a task into a new, first-class plan. Validates the task is promotable (exists, not a lifecycle hook, not already promoted) then enqueues an async task-promotion job (enqueue-after-validate, idempotency key doubles as the BullMQ job id). The job creates the plan, carries the task's tags, seeds an initial task, closes out the source task (→ PROMOTED + `promoted` tag), and records provenance. Returns the accepted job id; the new plan surfaces via the task-status subscription once the job completes. */
   promoteTaskToPlan: PromoteTaskToPlanResultObject;
   /** Publish a blog post: sets status PUBLISHED and publishedAt. Without publishedAt the post goes live now; a future publishedAt schedules it. Returns BlogPostNotFoundError for an unknown post. */
   publishBlogPost: PublishBlogPostResult;
@@ -2798,7 +2798,7 @@ export type PlanObject = {
   tags: Array<PlanTagObject>;
   /** Number of tasks belonging to this plan. Resolved from tasks table. */
   taskCount: Scalars['Int']['output'];
-  /** Number of resolved tasks on this plan (status COMPLETED or SKIPPED). Mirrors client getResolvedTaskCount; SKIPPED counts as done / won't be worked on. */
+  /** Number of resolved tasks on this plan (status COMPLETED, SKIPPED or PROMOTED). Mirrors client getResolvedTaskCount; SKIPPED and PROMOTED count as done / won't be worked on here (PROMOTED continued as its own plan). */
   tasksCompletedCount: Scalars['Int']['output'];
   title: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
@@ -2962,6 +2962,7 @@ export const PlanTaskStatus = {
   Completed: 'COMPLETED',
   InProgress: 'IN_PROGRESS',
   Pending: 'PENDING',
+  Promoted: 'PROMOTED',
   Queued: 'QUEUED',
   Skipped: 'SKIPPED',
 } as const;
@@ -4845,7 +4846,7 @@ export type SetPlanStatusInput = {
   /** Plan id to update status for */
   planId: Scalars['ID']['input'];
   /**
-   * New plan status — one of: BACKLOG, BLOCKED, CANCELED, COMPLETED, IN_PROGRESS, PENDING, QUEUED, SKIPPED. Normalized to uppercase. Provide this OR statusEnum.
+   * New plan status — one of: BACKLOG, BLOCKED, CANCELED, COMPLETED, IN_PROGRESS, PENDING, PROMOTED, QUEUED, SKIPPED. Normalized to uppercase. Provide this OR statusEnum.
    * @deprecated Use statusEnum (typed PlanTaskStatus). String status is still accepted (normalized to uppercase) and validated against the canonical set.
    */
   status?: InputMaybe<Scalars['String']['input']>;

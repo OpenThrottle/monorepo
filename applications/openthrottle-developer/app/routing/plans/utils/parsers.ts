@@ -159,6 +159,8 @@ export const parseTaskStatusColor = (status: string): BadgeProps['color'] => {
       return 'yellow';
     case 'PENDING':
       return 'blue';
+    case 'PROMOTED':
+      return 'blue';
     case 'QUEUED':
       return 'orange';
     case 'SKIPPED':

@@ -44,6 +44,7 @@ import type {
 import type { WorkflowContext } from '../types.ts';
 import {
   formatPlanAndTasksForPrompt,
+  isRalphTerminalStatus,
   isRunnableRalphTask,
   pickRalphTaskForIteration,
 } from '../utils/index.ts';
@@ -327,7 +328,7 @@ export const createWorkflowRalphOrchestrator = (
       });
 
       // plan.guard
-      if (planRow.status === 'COMPLETED' || planRow.status === 'SKIPPED') {
+      if (isRalphTerminalStatus(planRow.status)) {
         // 🟡 If the plan is already terminal, we return a finished outcome
         return onFinished('workflow_plan_already_terminal');
       }

@@ -178,14 +178,14 @@ When creating or ingesting plans and tasks (e.g. from a strict PRD or via `/open
 - **Category:** agent infers when missing; when provided, confirm it fits the plan or pick a better one
 - **Always handled by DB:** `id`, `created_at`, `updated_at` — never need to supply
 - **Default:** `status` → `pending` if omitted
-- **Optional:** `description`, `status` (one of: BACKLOG, BLOCKED, CANCELED, COMPLETED, IN_PROGRESS, PENDING, QUEUED, SKIPPED), `summary` (PRD summarization: next actions, usage guides, wrap-up notes), `assignee` (see [Assignee rule](#assignee-rule)), `project_id` (see [Project association](#project-association-when-to-set-project))
+- **Optional:** `description`, `status` (one of: BACKLOG, BLOCKED, CANCELED, COMPLETED, IN_PROGRESS, PENDING, PROMOTED, QUEUED, SKIPPED; PROMOTED is written by `promote_task` — see [PROMOTED semantics](../docs/openthrottle/authoring-plans-via-mcp.md#what-promoted-means)), `summary` (PRD summarization: next actions, usage guides, wrap-up notes), `assignee` (see [Assignee rule](#assignee-rule)), `project_id` (see [Project association](#project-association-when-to-set-project))
 
 #### Tasks
 
 - **Required:** `title`, `plan_id` (set when creating under a plan)
 - **Always handled by DB:** `id`, `created_at`, `updated_at` — never need to supply
 - **Default:** `status` → `pending` if omitted; `requirements` → `[]` if omitted
-- **Optional:** `description`, `category`, `status` (one of: BACKLOG, BLOCKED, CANCELED, COMPLETED, IN_PROGRESS, PENDING, SKIPPED), `requirements` (JSONB array), `summary` (per-task wrap-up: actions, usage notes, or why blocked), `assignee` (see [Assignee rule](#assignee-rule)), `project_id` (see [Project association](#project-association-when-to-set-project)), `sort_order` (see [Task sort_order](#task-sort_order); auto-assigned when omitted)
+- **Optional:** `description`, `category`, `status` (one of: BACKLOG, BLOCKED, CANCELED, COMPLETED, IN_PROGRESS, PENDING, PROMOTED, SKIPPED; PROMOTED = resolved and terminal but not complete — the work continued as its own plan), `requirements` (JSONB array), `summary` (per-task wrap-up: actions, usage notes, or why blocked), `assignee` (see [Assignee rule](#assignee-rule)), `project_id` (see [Project association](#project-association-when-to-set-project)), `sort_order` (see [Task sort_order](#task-sort_order); auto-assigned when omitted)
 
 #### Projects collection (applications only)
 
@@ -225,14 +225,15 @@ When in doubt, leave `project_id` null. Associating later is safe; incorrectly a
 
 #### Status semantics (plans and tasks)
 
-Canonical statuses: **backlog**, **blocked**, **canceled**, **completed**, **in_progress**, **pending**, **queued**, **skipped**.
+Canonical statuses: **backlog**, **blocked**, **canceled**, **completed**, **in_progress**, **pending**, **promoted**, **queued**, **skipped**.
 
 - **canceled** — Closed with no work / explicitly not doing.
 - **completed** — Work done.
+- **promoted** — Not finished here; the work continued as its own plan. Written by `promote_task` on the source task (which also keeps the `promoted` tag for one release). Resolved and terminal, but **not** complete. Valid on plans and tasks; see [PROMOTED semantics](../docs/openthrottle/authoring-plans-via-mcp.md#what-promoted-means).
 - **queued** — Plans only: job enqueued in BullMQ (Run plan) until the worker picks it up; then set to **in_progress**.
-- **skipped** — Deferred or skipped for now (may be revisited later).
+- **skipped** — Deferred or skipped for now (may be revisited later). Also the reversible orphan soft-close written by tag-action rules; it is no longer how promotion is recorded.
 
-Remaining-work semantics (e.g. `get_remaining_tasks_for_plan`): tasks whose status is **not** completed, skipped, or canceled (i.e. backlog, blocked, in_progress, pending).
+Remaining-work semantics (e.g. `get_remaining_tasks_for_plan`): tasks whose status is **not** completed, promoted, skipped, or canceled (i.e. backlog, blocked, in_progress, pending).
 
 #### Task sort_order
 
@@ -587,6 +588,8 @@ When using **Option A** (Ollama with a 1536-dim embedding model), no additional 
 35. `054_create_code_index_snapshots_table.sql` – `code_index_snapshots` table (one row per `workspace_root`; `snapshot` JSONB = engine `hashWorkspace` output, `updated_at`) enabling **incremental** code re-indexing: `CodeSearchService` diffs the prior snapshot (engine `diffSnapshots`) so only added/changed files are re-embedded and removed files dropped, falling back to a FULL index when no snapshot exists.
 36. `055_add_completed_at_to_plans_and_tasks.sql` – Add nullable `completed_at` (TIMESTAMPTZ) on `plans` and `tasks` with partial indexes; app write path only (not `updated_at` triggers). No backfill.
 37. `056_backfill_completed_at_and_recompute_daily_stats.sql` – Best-effort `completed_at = updated_at` for currently-COMPLETED rows (triggers disabled so `updated_at` is not re-stamped); recompute `daily_stats.plans_completed` / `tasks_completed` from UTC day buckets of `completed_at`. **Caveat:** rows whose `updated_at` was mass-rewritten by pre-ledger `database:migrate` runs have completion dates collapsed onto the migrate-run day — not recoverable.
+38. `136_add_promoted_status.sql` – Add PROMOTED to `plan_task_status` (plans and tasks), guarded and anchored `AFTER 'PENDING'`; refreshes the `plans.status` / `tasks.status` column comments. No data changes (a newly added enum value cannot be used in the same transaction). See [PROMOTED semantics](../docs/openthrottle/authoring-plans-via-mcp.md#what-promoted-means).
+39. `137_backfill_promoted_task_status.sql` – Move tasks closed by `promote_task` before PROMOTED existed (status SKIPPED + a `promoted` task_tags row) to PROMOTED; untagged SKIPPED rows are left alone and the `promoted` tag stays for one release. Idempotent (the SKIPPED predicate makes a second run a no-op).
 
 ### Migration strategy (TypeORM vs SQL)
 

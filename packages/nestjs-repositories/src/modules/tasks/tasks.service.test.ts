@@ -220,6 +220,15 @@ describe('TasksService', () => {
       });
     });
 
+    it('does not count PROMOTED (or other resolved) tasks as remaining', async () => {
+      vi.mocked(mockTaskRepo.count).mockResolvedValueOnce(0);
+
+      await service.hasRemainingTasks(planId);
+
+      const call = vi.mocked(mockTaskRepo.count).mock.lastCall;
+      expect(JSON.stringify(call?.[0])).not.toContain('PROMOTED');
+    });
+
     it('returns false when no non-terminal task remains', async () => {
       vi.mocked(mockTaskRepo.count).mockResolvedValueOnce(0);
 

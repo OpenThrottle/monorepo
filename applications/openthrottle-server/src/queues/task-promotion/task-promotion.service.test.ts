@@ -30,10 +30,7 @@ import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
 import type { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture.service.ts';
 import type { NotificationsService } from '../../notifications/notifications.service.ts';
-import {
-  PROMOTED_TAG,
-  PROMOTED_TASK_STATUS,
-} from './task-promotion.constants.ts';
+import { PROMOTED_TAG } from './task-promotion.constants.ts';
 import { TaskPromotionService } from './task-promotion.service.ts';
 
 const TASK_ID = '00000000-0000-4000-8000-000000000001';
@@ -193,11 +190,11 @@ describe('TaskPromotionService.promote', () => {
       }),
     );
 
-    // Step 4: source task → SKIPPED with a note, plus the `promoted` tag.
+    // Step 4: source task → PROMOTED with a note, plus the `promoted` tag.
     expect(taskRepo.update).toHaveBeenCalledWith(
       { id: TASK_ID },
       expect.objectContaining({
-        status: PROMOTED_TASK_STATUS,
+        status: 'PROMOTED',
         summary: expect.stringContaining(NEW_PLAN_ID),
       }),
     );
@@ -215,7 +212,7 @@ describe('TaskPromotionService.promote', () => {
         from: 'PENDING',
         planId: SOURCE_PLAN_ID,
         taskId: TASK_ID,
-        to: PROMOTED_TASK_STATUS,
+        to: 'PROMOTED',
       }),
     );
 
@@ -242,7 +239,7 @@ describe('TaskPromotionService.promote', () => {
     // Step 6: status notification emitted after commit.
     expect(notifications.emitTaskStatusChanged).toHaveBeenCalledWith({
       planId: SOURCE_PLAN_ID,
-      status: PROMOTED_TASK_STATUS,
+      status: 'PROMOTED',
       taskId: TASK_ID,
     });
   });
@@ -306,12 +303,12 @@ describe('TaskPromotionService.promote', () => {
     expect(result).toEqual({ newPlanId: NEW_PLAN_ID, skipped: null });
     expect(taskRepo.update).toHaveBeenCalledWith(
       { id: TASK_ID },
-      expect.objectContaining({ status: PROMOTED_TASK_STATUS }),
+      expect.objectContaining({ status: 'PROMOTED' }),
     );
     // Emitted after commit — the capture failure did not roll back the row write.
     expect(notifications.emitTaskStatusChanged).toHaveBeenCalledWith({
       planId: SOURCE_PLAN_ID,
-      status: PROMOTED_TASK_STATUS,
+      status: 'PROMOTED',
       taskId: TASK_ID,
     });
   });
@@ -345,11 +342,27 @@ describe('TaskPromotionService.promote', () => {
     expect(createdRows.map((row) => row?.tag)).toContain('server');
   });
 
-  it('is a no-op when the source task is already promoted (SKIPPED + promoted tag)', async () => {
+  it('is a no-op when the source task is a legacy promotion (SKIPPED + promoted tag)', async () => {
     getOne.mockResolvedValue(buildTask({ status: 'SKIPPED' }));
     vi.mocked(taskTagRepo.findOne).mockResolvedValue(
       asMock<TaskTag>({ tag: PROMOTED_TAG, taskId: TASK_ID }),
     );
+
+    const result = await service.promote({
+      actorServiceAccountId: null,
+      actorUserId: 'user-1',
+      captureFailureIsFatal: true,
+      taskId: TASK_ID,
+    });
+
+    expect(result).toEqual({ newPlanId: null, skipped: 'already-promoted' });
+    expect(planRepo.save).not.toHaveBeenCalled();
+    expect(notifications.emitTaskStatusChanged).not.toHaveBeenCalled();
+  });
+
+  it('is a no-op when the source task is status PROMOTED without the promoted tag', async () => {
+    getOne.mockResolvedValue(buildTask({ status: 'PROMOTED' }));
+    vi.mocked(taskTagRepo.findOne).mockResolvedValue(null);
 
     const result = await service.promote({
       actorServiceAccountId: null,

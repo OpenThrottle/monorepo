@@ -13,6 +13,7 @@ describe('formatPlanTaskStatus', () => {
     expect(formatPlanTaskStatus('CANCELED')).toBe('Canceled');
     expect(formatPlanTaskStatus('COMPLETED')).toBe('Completed');
     expect(formatPlanTaskStatus('PENDING')).toBe('Pending');
+    expect(formatPlanTaskStatus('PROMOTED')).toBe('Promoted');
     expect(formatPlanTaskStatus('QUEUED')).toBe('Queued');
     expect(formatPlanTaskStatus('SKIPPED')).toBe('Skipped');
   });
