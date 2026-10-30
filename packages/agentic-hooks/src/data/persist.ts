@@ -44,6 +44,7 @@ import { drainStartsForSession, listStartsForSession } from './starts.ts';
 import {
   chunkTokenUsage,
   MAX_TOKEN_USAGE_BATCH,
+  MAX_TOKEN_USAGE_BATCH_BYTES,
   postTokenUsageBatch,
 } from './token-usage.ts';
 
@@ -297,7 +298,7 @@ export const persistOutcomeEvent = async ({
 
 /**
  * Persist token-usage records to OT in batches of at most
- * `MAX_TOKEN_USAGE_BATCH`; whatever cannot be delivered is buffered, never
+ * `MAX_TOKEN_USAGE_BATCH` rows and `MAX_TOKEN_USAGE_BATCH_BYTES`; whatever cannot be delivered is buffered, never
  * lost. Always resolves; never throws.
  *
  * - Offline, no endpoint, or a transient failure (network, timeout, 5xx, auth):
@@ -347,7 +348,7 @@ export const persistTokenUsage = async ({
   };
 
   try {
-    const batches = chunkTokenUsage(records, MAX_TOKEN_USAGE_BATCH);
+    const batches = chunkTokenUsage(records);
     if (!batches.length) {
       return { ...tally, detail };
     }
@@ -771,6 +772,7 @@ export const drainBufferedUsage = async ({
   });
 
   const tokenUsage = await drainJsonlFileBatched<TokenUsageRecord>({
+    batchBytes: MAX_TOKEN_USAGE_BATCH_BYTES,
     batchSize: MAX_TOKEN_USAGE_BATCH,
     deadlineMs,
     filePath: tokenUsagePath || defaultTokenUsageJsonlPath(),

@@ -8,6 +8,7 @@ import type {
   TokenUsageBatchResult,
   TokenUsageRecord,
 } from '../types.ts';
+import { chunkByBudget } from './chunk.ts';
 import { postGraphqlMutationNode } from './graphql.ts';
 
 /**
@@ -17,6 +18,17 @@ import { postGraphqlMutationNode } from './graphql.ts';
  * @public
  */
 export const MAX_TOKEN_USAGE_BATCH = 500;
+
+/**
+ * Byte budget for one batch's serialized rows, so a batch stays under any
+ * body limit in front of the server. A real transcript-derived row is ~1.2 KB, which
+ * makes this ~50 rows. It sits well below Express's 100 KB json default (and a
+ * proxy's 1 MB) on purpose: a 413 is permanent, so an oversized batch
+ * dead-letters every row in it.
+ *
+ * @public
+ */
+export const MAX_TOKEN_USAGE_BATCH_BYTES = 64 * 1024;
 
 /** @public */
 export const RECORD_TOKEN_USAGE_MUTATION = `
@@ -55,21 +67,29 @@ export const toRecordTokenUsageRow = (
 });
 
 /**
- * Split records into server-sized batches.
+ * Wire size of one record, as `postTokenUsageBatch` serializes it.
+ *
+ * @public
+ */
+export const tokenUsageRowBytes = (record: TokenUsageRecord): number =>
+  Buffer.byteLength(JSON.stringify(toRecordTokenUsageRow(record)), 'utf8');
+
+/**
+ * Split records into deliverable batches: at most `size` rows (never more than
+ * the server's `MAX_TOKEN_USAGE_BATCH`) and at most `maxBytes` of rows.
  *
  * @public
  */
 export const chunkTokenUsage = (
   records: readonly TokenUsageRecord[],
   size: number = MAX_TOKEN_USAGE_BATCH,
-): TokenUsageRecord[][] => {
-  const step = Math.max(1, Math.min(size, MAX_TOKEN_USAGE_BATCH));
-  const out: TokenUsageRecord[][] = [];
-  for (let start = 0; start < records.length; start += step) {
-    out.push(records.slice(start, start + step));
-  }
-  return out;
-};
+  maxBytes: number = MAX_TOKEN_USAGE_BATCH_BYTES,
+): TokenUsageRecord[][] =>
+  chunkByBudget(records, {
+    maxBytes,
+    maxItems: Math.min(size, MAX_TOKEN_USAGE_BATCH),
+    sizeOf: tokenUsageRowBytes,
+  });
 
 /**
  * POST one batch (at most `MAX_TOKEN_USAGE_BATCH` rows) to recordTokenUsage.

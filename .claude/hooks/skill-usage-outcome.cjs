@@ -453,6 +453,9 @@ var postGraphqlMutation = async (args) => {
   return transient(`missing ${args.field}.id`);
 };
 
+// packages/agentic-hooks/src/data/token-usage.ts
+var MAX_TOKEN_USAGE_BATCH_BYTES = 64 * 1024;
+
 // packages/agentic-hooks/src/data/persist.ts
 var forLog = (graphqlUrl) => graphqlUrl.replace(/^([a-z][a-z0-9+.-]*:\/\/)[^/?#]*@/i, "$1***@");
 var DEFAULT_POST_TIMEOUT_MS = 750;

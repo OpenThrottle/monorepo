@@ -7,6 +7,7 @@ import path from 'node:path';
 import { userConfigDir } from '../config/env.ts';
 import type { DrainFileResult, PostFailure, PostResult } from '../types.ts';
 import { logHookError } from '../utils/logging.ts';
+import { chunkByBudget } from './chunk.ts';
 
 /**
  * Telemetry artifacts live in ONE directory, so a single override redirects all
@@ -235,12 +236,14 @@ interface Parsed<T> {
  * `drainJsonlFileBatched` are both thin wrappers over this.
  */
 const drainSnapshot = async <T extends object>({
+  batchBytes,
   batchSize,
   deadlineMs,
   filePath,
   nowFn,
   postBatch,
 }: {
+  batchBytes: number;
   batchSize: number;
   deadlineMs: number | undefined;
   filePath: string;
@@ -286,14 +289,14 @@ const drainSnapshot = async <T extends object>({
       }
     }
 
-    let stopped = false;
-    for (
-      let start = 0;
-      start < parsed.length;
-      start += Math.max(1, batchSize)
-    ) {
-      const batch = parsed.slice(start, start + Math.max(1, batchSize));
+    const batches = chunkByBudget(parsed, {
+      maxBytes: batchBytes,
+      maxItems: batchSize,
+      sizeOf: (entry) => Buffer.byteLength(entry.raw, 'utf8'),
+    });
 
+    let stopped = false;
+    for (const batch of batches) {
       if (!stopped && deadlineMs != null && nowFn() > deadlineMs) {
         stopped = true;
       }
@@ -400,6 +403,7 @@ export const drainJsonlFile = async <
   post: (event: T) => Promise<PostResult>;
 }): Promise<DrainFileResult> =>
   drainSnapshot<T>({
+    batchBytes: Number.POSITIVE_INFINITY,
     batchSize: 1,
     deadlineMs,
     filePath,
@@ -411,7 +415,7 @@ export const drainJsonlFile = async <
 /**
  * `drainJsonlFile` for a stream whose server mutation takes many rows at once:
  * the same rename / retain / dead-letter mechanics, but lines are posted up to
- * `batchSize` at a time. The outcome is per batch — a batch the server rejects
+ * `batchSize` at a time and at most `batchBytes` of buffered lines per post. The outcome is per batch — a batch the server rejects
  * permanently dead-letters every line in it with the reason, and a transient
  * failure retains every line in it. Delivery is idempotent server-side for the
  * streams that use this, so a retained batch re-sent later cannot double-count.
@@ -421,16 +425,25 @@ export const drainJsonlFile = async <
 export const drainJsonlFileBatched = async <
   T extends object = Record<string, unknown>,
 >({
+  batchBytes,
   batchSize,
   filePath,
   postBatch,
   deadlineMs,
   nowFn = Date.now,
 }: {
+  batchBytes: number;
   batchSize: number;
   deadlineMs?: number;
   filePath: string;
   nowFn?: () => number;
   postBatch: (events: readonly T[]) => Promise<BatchPostResult>;
 }): Promise<DrainFileResult> =>
-  drainSnapshot<T>({ batchSize, deadlineMs, filePath, nowFn, postBatch });
+  drainSnapshot<T>({
+    batchBytes,
+    batchSize,
+    deadlineMs,
+    filePath,
+    nowFn,
+    postBatch,
+  });
