@@ -68,7 +68,11 @@ describe('root action: login', () => {
       }),
     );
 
-    expect(mockLogin).toHaveBeenCalledWith('pilot@example.com', 'pw');
+    expect(mockLogin).toHaveBeenCalledWith(
+      'pilot@example.com',
+      'pw',
+      expect.any(Request),
+    );
     assertResponse(result);
     expect(result.status).toBe(302);
     expect(result.headers.get('location')).toBe('/dashboard');
@@ -160,7 +164,11 @@ describe('root action: register', () => {
       }),
     );
 
-    expect(mockRegister).toHaveBeenCalledWith('new@example.com', 'pw');
+    expect(mockRegister).toHaveBeenCalledWith(
+      'new@example.com',
+      'pw',
+      expect.any(Request),
+    );
     assertResponse(result);
     expect(result.headers.get('location')).toBe('/');
     expect(result.headers.get('set-cookie')).toContain('new-token');

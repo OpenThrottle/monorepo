@@ -63,6 +63,20 @@ caddy run --config tools/caddy/Caddyfile
 - **Keep the ports in sync.** Both Caddyfiles hardcode `6020`–`6025` and `11434`. Change a port here
   and you must change it there.
 
+## From your phone
+
+To use the local stack from a phone, see [phone-access.md](./phone-access.md): a private network
+(Tailscale) plus one HTTPS forward, with the browser calling `/api` on the page's own origin. **Never
+put a local stack behind a public tunnel.**
+
+```bash
+pnpm run remote:serve   # https://<mac>.<tailnet>.ts.net → the developer app's PORT
+pnpm run remote:stop    # remove the forward
+```
+
+The developer app's `/api` path is not a separate port: the Vite dev server proxies it to the server
+port above (`API_URL_INTERNAL`), websocket upgrades included.
+
 ## References
 
 - Caddyfile docs: <https://caddyserver.com/docs/caddyfile>

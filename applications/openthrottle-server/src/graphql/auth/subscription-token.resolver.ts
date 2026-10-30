@@ -7,6 +7,7 @@
  * connectionParams.authToken.
  */
 import { Mutation, Resolver } from '@nestjs/graphql';
+import { Throttle } from '@nestjs/throttler';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 
 import { AuthService } from './auth.service.ts';
@@ -16,6 +17,8 @@ import { AuthService } from './auth.service.ts';
 export class SubscriptionTokenResolver {
   constructor(private readonly authService: AuthService) {}
 
+  // One mint per graphql-ws (re)connect; 60 a minute per client is generous.
+  @Throttle({ default: { limit: 60, ttl: 60_000 } })
   @Mutation(() => String, {
     description: `Mint a short-lived token (scoped to the current user) for authenticating a graphql-ws subscription connection via connectionParams.authToken.`,
   })

@@ -49,7 +49,7 @@ export default function handleRequest(
    * inline bootstrap scripts in `root.tsx` carry a matching `nonce` attribute.
    */
   const nonce = generateCspNonce();
-  const csp = buildCsp(nonce, getCspOptions());
+  const csp = buildCsp(nonce, getCspOptions(request));
   responseHeaders.set(csp.headerName, csp.value);
   if (csp.reportingEndpoints) {
     responseHeaders.set('Reporting-Endpoints', csp.reportingEndpoints);

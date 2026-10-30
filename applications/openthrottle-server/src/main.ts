@@ -10,6 +10,7 @@ import {
   setProfileExecutionReporter,
 } from '@openthrottle/nestjs-profiling';
 import { getCorsOptions } from '@openthrottle/nestjs-rbac';
+import { resolveTrustProxy } from '@openthrottle/nestjs-throttler';
 
 import { buildAppModule } from './app.module.ts';
 import { PROCESS_ROLES, resolveProcessRole } from './config/process-role.ts';
@@ -83,6 +84,15 @@ async function bootstrap(role: 'all' | 'api'): Promise<void> {
   }
 
   app.setGlobalPrefix(globalPrefix);
+
+  /**
+   * Behind Caddy (production) or the developer app's SSR hop / Vite proxy
+   * (local) the TCP peer is the proxy. Trusting private-network peers makes
+   * `req.ip` the real client from `X-Forwarded-For`, which is what the
+   * throttler keys on — without it every request is one IP. A public client
+   * is never trusted, so it cannot forge the header. `TRUST_PROXY` overrides.
+   */
+  app.set('trust proxy', resolveTrustProxy(config.get<string>('TRUST_PROXY')));
 
   /** CORS: allowed origins, credentials, methods from env (CORS_ORIGINS, CORS_CREDENTIALS, CORS_ALLOWED_METHODS). See docs/nestjs/wiring-auth-rbac.md. */
   app.enableCors(getCorsOptions());
