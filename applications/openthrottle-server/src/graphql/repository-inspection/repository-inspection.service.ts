@@ -8,7 +8,7 @@
  */
 
 import { execFile } from 'node:child_process';
-import { existsSync, statSync } from 'node:fs';
+import { existsSync, realpathSync, statSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { isAbsolute, join } from 'node:path';
 import { promisify } from 'node:util';
@@ -21,7 +21,10 @@ import {
   RepositoryCheckoutsService,
 } from '@openthrottle/nestjs-repositories';
 import { isRecord } from '@openthrottle/nodejs-utils';
-import { toContainerPath } from '@openthrottle/openthrottle-agentic-utils';
+import {
+  toContainerPath,
+  toHostPath,
+} from '@openthrottle/openthrottle-agentic-utils';
 
 import { parseLinkedWorktrees } from './parse-linked-worktrees.ts';
 import type {
@@ -136,6 +139,26 @@ export class RepositoryInspectionService {
       stack: this.inspectStack(root),
       warnings,
     };
+  }
+
+  /**
+   * @description The root of the git work tree containing a host path, as a HOST path, or null
+   * when the path is inside no work tree at all. A path that already is the root comes back
+   * exactly as given — even when git would report it through a symlink-resolved spelling — so a
+   * registration never silently rewrites a path the user typed correctly. Throws for a path that
+   * fails {@link validateInspectionPath}, same as {@link scan}.
+   */
+  async resolveWorkTreeRoot(filesystemPath: string): Promise<string | null> {
+    const root = validateInspectionPath(filesystemPath);
+    const toplevel = (
+      await this.git(root, [], ['rev-parse', '--show-toplevel'])
+    )?.trim();
+
+    if (toplevel === undefined || toplevel === '') return null;
+    if (realpathSync(toplevel) === realpathSync(root)) {
+      return filesystemPath.trim();
+    }
+    return toHostPath(toplevel);
   }
 
   /**

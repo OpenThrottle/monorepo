@@ -7,6 +7,8 @@
 import type { GlobalFeatureOnboardingContent } from '@openthrottle/react-router-ui-global';
 import { FolderGit2Icon } from 'lucide-react';
 
+import type { PruneWorktreeCheckoutOutcome } from '~/__generated__/graphql';
+
 /**
  * @description Copy for the repositories index table, toolbar, and per-row
  * actions menu. Labels that already exist on `WORKSPACE_FOLDERS_COPY` (refresh,
@@ -23,6 +25,9 @@ export const REPOSITORIES_TABLE_COPY = {
   injectionInheritedTitle: `Skill injection is set per repository — it applies to every one of your checkouts, including this worktree.`,
   injectionToggleLabelPrefix: `Toggle skill injection for`,
   injectionUpdateFailed: `Failed to update skill injection.`,
+  missingBadge: `Missing on disk`,
+  missingBadgeTitleNotAWorktree: `OpenThrottle has a record of this worktree, but the folder at its path is no longer a git worktree — usually a leftover directory after the worktree was removed. Remove the record to clean it up; the folder itself is not touched.`,
+  missingBadgeTitlePathGone: `OpenThrottle has a record of this worktree, but nothing exists at its path any more — it was removed outside OpenThrottle. Remove the record to clean it up.`,
   noResults: `No repositories match this search.`,
   notAGitRepositoryBadge: `Not a git repository`,
   notAGitRepositoryTitle: `This folder is registered but is not a git checkout, so nothing can be planned or run in it. Removing the checkout here leaves the folder on disk untouched.`,
@@ -66,6 +71,41 @@ export const REPOSITORIES_ROW_ACTIONS_COPY = {
 } as const;
 
 /**
+ * @description Copy for cleaning up registered worktrees whose folders are gone: the
+ * show-missing toggle, the bulk prune confirm, the per-row "Remove record" action, and the
+ * per-id outcome notice. Every surface says the same thing — only OpenThrottle's record is
+ * removed, never anything on disk.
+ */
+export const MISSING_WORKTREES_COPY = {
+  /** Why one requested record was kept, keyed by the server's outcome. */
+  outcomeReasons: {
+    NOT_FOUND: `was already removed.`,
+    SKIPPED_ACTIVE_RUN: `still has a plan run that has not been settled, so its record was kept. Settle the run, then try again.`,
+    SKIPPED_LIVE: `is a live worktree again, so its record was kept.`,
+    SKIPPED_PRIMARY: `is a primary checkout. Only worktree records are pruned.`,
+  } satisfies Record<Exclude<PruneWorktreeCheckoutOutcome, 'PRUNED'>, string>,
+  outcomeRemoved: (count: number): string =>
+    `Removed ${count} stale worktree ${count === 1 ? 'record' : 'records'}.`,
+  outcomeSkipped: (count: number): string =>
+    `Kept ${count} ${count === 1 ? 'record' : 'records'}:`,
+  pruneCancel: `Cancel`,
+  pruneConfirm: `Remove records`,
+  pruneDialogBody: `These worktrees no longer exist on disk. Removing their records only cleans up OpenThrottle — no files or folders are touched. A record is kept if its folder turns out to be a live worktree, or if a plan run that has not been settled still points at it.`,
+  pruneDialogTitle: (count: number): string =>
+    `Remove ${count} stale worktree ${count === 1 ? 'record' : 'records'}?`,
+  pruneLabel: (count: number): string => `Prune missing (${count})`,
+  prunePending: `Removing…`,
+  pruneTitle: `Remove OpenThrottle's records of worktrees that no longer exist on disk.`,
+  removeRecordConfirm: `Remove record`,
+  removeRecordDescriptionPrefix: `The worktree`,
+  removeRecordDescriptionSuffix: `no longer exists on disk. This removes OpenThrottle's record of it; nothing on disk is touched.`,
+  removeRecordLabel: `Remove record`,
+  removeRecordTitle: `Remove this worktree record?`,
+  showMissingLabel: (count: number): string => `Show missing (${count})`,
+  showMissingTitle: `Show registered worktrees whose folders no longer exist on disk. Hidden by default so the list matches git worktree list.`,
+} as const;
+
+/**
  * @description Copy for the on-disk worktree scan banner: the refresh control, the
  * scanned-root line, the warning list, and the state where no root could be
  * resolved at all. Plain sentences only — no markdown, since these render as text.
@@ -79,6 +119,10 @@ export const WORKTREE_DISCOVERY_COPY = {
   /** A repository that has no worktrees yet — stated as a count, never as an error per repo. */
   emptyRootsSuffixOne: `repository has no worktrees yet.`,
   emptyRootsSuffixOther: `repositories have no worktrees yet.`,
+  /** Husk folders a removed worktree left behind. OpenThrottle never deletes folders, so this is manual. */
+  orphanRemedy: `Delete them by hand once you have checked nothing in them is needed — OpenThrottle never deletes folders.`,
+  orphanSummarySuffixOne: `folder in the worktree root is left over from a removed worktree and has no .git.`,
+  orphanSummarySuffixOther: `folders in the worktree root are left over from removed worktrees and have no .git.`,
   problemsCountSuffixOne: `note from the last scan`,
   problemsCountSuffixOther: `notes from the last scan`,
   refreshButton: `Rescan worktrees`,

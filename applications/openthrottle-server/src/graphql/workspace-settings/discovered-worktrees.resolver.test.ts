@@ -10,7 +10,12 @@ import { describe, expect, it, vi } from 'vitest';
 import type { WorktreeActivityService } from '../../services/worktree-activity/worktree-activity.service.ts';
 import type { WorktreeActivityResult } from '../../services/worktree-activity/worktree-activity.types.ts';
 import { WORKTREE_ACTIVITY } from '../../services/worktree-activity/worktree-activity.types.ts';
-import { WORKTREE_DISCOVERY_SOURCE } from '../../services/worktree-discovery/worktree-discovery.types.ts';
+import type { WorktreeCheckoutPruneService } from '../../services/worktree-checkout-prune/worktree-checkout-prune.service.ts';
+import { PRUNE_WORKTREE_CHECKOUT_OUTCOME } from '../../services/worktree-checkout-prune/worktree-checkout-prune.types.ts';
+import {
+  MISSING_CHECKOUT_REASON,
+  WORKTREE_DISCOVERY_SOURCE,
+} from '../../services/worktree-discovery/worktree-discovery.types.ts';
 import { DiscoveredWorktreesResolver } from './discovered-worktrees.resolver.ts';
 
 const ROOT = '/Users/matt/Development/openthrottle-worktrees';
@@ -20,12 +25,14 @@ const build = (result: WorktreeActivityResult): DiscoveredWorktreesResolver =>
     createMock<WorktreeActivityService>({
       discoverAndClassify: vi.fn().mockResolvedValue(result),
     }),
+    createMock<WorktreeCheckoutPruneService>(),
   );
 
 describe('DiscoveredWorktreesResolver', () => {
   it('maps a classified worktree onto the GraphQL object', async () => {
     const resolver = build({
       droppedCount: 0,
+      missingCheckouts: [],
       problems: [],
       rootSource: 'env',
       scannedAt: '2026-08-24T00:00:00.000Z',
@@ -56,6 +63,7 @@ describe('DiscoveredWorktreesResolver', () => {
 
     expect(payload).toEqual({
       droppedCount: 0,
+      missingCheckouts: [],
       problems: [],
       rootSource: 'env',
       scannedAt: '2026-08-24T00:00:00.000Z',
@@ -84,6 +92,7 @@ describe('DiscoveredWorktreesResolver', () => {
   it('passes warnings and the cap overflow through to the client', async () => {
     const resolver = build({
       droppedCount: 7,
+      missingCheckouts: [],
       problems: [],
       rootSource: 'default',
       scannedAt: '2026-08-24T00:00:00.000Z',
@@ -99,9 +108,34 @@ describe('DiscoveredWorktreesResolver', () => {
     expect(payload.warnings).toEqual(['worktree root /nope could not be read']);
   });
 
+  it('passes registered checkouts that are missing on disk through to the client', async () => {
+    const missing = {
+      checkoutId: 'checkout-gone',
+      path: `${ROOT}/wt-gone`,
+      reason: MISSING_CHECKOUT_REASON.PATH_GONE,
+      repositoryId: 'repo-1',
+    };
+    const resolver = build({
+      droppedCount: 0,
+      missingCheckouts: [missing],
+      problems: [],
+      rootSource: 'default',
+      scannedAt: '2026-08-24T00:00:00.000Z',
+      scannedRoots: [],
+      warnings: [],
+      worktreeRoot: ROOT,
+      worktrees: [],
+    });
+
+    const payload = await resolver.discoveredWorktrees('user-1');
+
+    expect(payload.missingCheckouts).toEqual([missing]);
+  });
+
   it('renders an empty list when no root could be resolved', async () => {
     const resolver = build({
       droppedCount: 0,
+      missingCheckouts: [],
       problems: [],
       rootSource: null,
       scannedAt: '2026-08-24T00:00:00.000Z',
@@ -117,6 +151,44 @@ describe('DiscoveredWorktreesResolver', () => {
       rootSource: null,
       worktreeRoot: null,
       worktrees: [],
+    });
+  });
+
+  describe('pruneWorktreeCheckouts', () => {
+    it('hands the requested ids and the caller to the service and maps every outcome', async () => {
+      const pruneByIds = vi.fn().mockResolvedValue([
+        {
+          checkoutId: 'checkout-gone',
+          outcome: PRUNE_WORKTREE_CHECKOUT_OUTCOME.PRUNED,
+          path: `${ROOT}/wt-gone`,
+        },
+        {
+          checkoutId: 'checkout-nope',
+          outcome: PRUNE_WORKTREE_CHECKOUT_OUTCOME.NOT_FOUND,
+          path: null,
+        },
+      ]);
+      const resolver = new DiscoveredWorktreesResolver(
+        createMock<WorktreeActivityService>(),
+        createMock<WorktreeCheckoutPruneService>({ pruneByIds }),
+      );
+
+      const payload = await resolver.pruneWorktreeCheckouts('user-1', {
+        checkoutIds: ['checkout-gone', 'checkout-nope'],
+      });
+
+      expect(pruneByIds).toHaveBeenCalledWith('user-1', [
+        'checkout-gone',
+        'checkout-nope',
+      ]);
+      expect(payload.results).toEqual([
+        {
+          checkoutId: 'checkout-gone',
+          outcome: 'pruned',
+          path: `${ROOT}/wt-gone`,
+        },
+        { checkoutId: 'checkout-nope', outcome: 'not-found', path: null },
+      ]);
     });
   });
 });

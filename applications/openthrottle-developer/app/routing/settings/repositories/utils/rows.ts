@@ -4,6 +4,7 @@ import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/da
 import type {
   DiscoveredWorktree,
   DiscoveredWorktreesResult,
+  MissingWorktreeCheckout,
   RepositoryCheckout,
   RepositoryCheckoutRow,
 } from '~/routing/settings/repositories/data/types';
@@ -19,6 +20,7 @@ const toRow = (
   checkout: RepositoryCheckout,
   foreignSkillInjectionEnabled: boolean,
   discovered: DiscoveredWorktree | null,
+  missing: MissingWorktreeCheckout | null,
   notAGitRepository: boolean,
   children: RepositoryCheckoutRow[] = [],
 ): RepositoryCheckoutRow => ({
@@ -34,6 +36,8 @@ const toRow = (
   foreignSkillInjectionEnabled,
   id: checkout.id,
   isWorktree: checkout.kind === WORKTREE_CHECKOUT_KIND,
+  missing: missing !== null,
+  missingReason: missing?.reason ?? null,
   notAGitRepository,
   path: checkout.filesystemPath,
   planId: discovered?.planId ?? null,
@@ -64,6 +68,9 @@ const toDiscoveredRow = (
   foreignSkillInjectionEnabled,
   id: `${UNREGISTERED_ROW_ID_PREFIX}${discovered.path}`,
   isWorktree: true,
+  // Found on disk, so by definition not missing from it.
+  missing: false,
+  missingReason: null,
   // A worktree found on disk is by definition inside a git repository.
   notAGitRepository: false,
   path: discovered.path,
@@ -99,12 +106,20 @@ const toDiscoveredRow = (
  * - **A discovered worktree whose repository is not registered** — grouped under
  *   its own promoted parent row rather than dropped, keeping the tree two levels
  *   deep.
+ * - **A registered worktree the server reports missing** — still built as a row,
+ *   flagged `missing`, matched on `checkoutId`. Hiding it is a separate, explicit
+ *   step (`hideMissingRows`) so the tree shape here never depends on a view toggle.
  */
 export function buildRepositoryRows(
   repositories: WorkspaceRepositoryFieldsFragment[],
   discoveredWorktrees: readonly DiscoveredWorktree[] = [],
   problems: DiscoveredWorktreesResult['problems'] = [],
+  missingCheckouts: readonly MissingWorktreeCheckout[] = [],
 ): RepositoryCheckoutRow[] {
+  const missingByCheckoutId = new Map(
+    missingCheckouts.map((missing) => [missing.checkoutId, missing]),
+  );
+
   // Discovery attributes this one to a repository precisely so it lands on the row.
   const notGitRepositoryIds = new Set(
     problems
@@ -165,6 +180,7 @@ export function buildRepositoryRows(
         checkout,
         injectionEnabled,
         discoveredByCheckoutId.get(checkout.id) ?? null,
+        missingByCheckoutId.get(checkout.id) ?? null,
         notGitRepositoryIds.has(repository.id),
         children,
       );

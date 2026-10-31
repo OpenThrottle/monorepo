@@ -1123,6 +1123,23 @@ export type DeleteTaskInput = {
   id: Scalars['ID']['input'];
 };
 
+/** The worktree path a teardown just removed. */
+export type DeregisterWorktreeCheckoutInput = {
+  /** Absolute filesystem path of the removed worktree. Matched as given and by its real path. */
+  filesystemPath: Scalars['String']['input'];
+};
+
+/** Result of deregisterWorktreeCheckout for one removed worktree path. */
+export type DeregisterWorktreeCheckoutPayloadObject = {
+  __typename?: 'DeregisterWorktreeCheckoutPayloadObject';
+  /** The checkout row at the path, or null when none is registered there for the caller. */
+  checkoutId?: Maybe<Scalars['ID']['output']>;
+  /** PRUNED when the row was deleted; NOT_FOUND when there was nothing to deregister (the normal case for a worktree OpenThrottle never registered). */
+  outcome: PruneWorktreeCheckoutOutcome;
+  /** The registered path when a row matched, else the path as given. */
+  path: Scalars['String']['output'];
+};
+
 export type DetachHookInput = {
   /** Hook task id to detach (delete) */
   hookTaskId: Scalars['ID']['input'];
@@ -1190,6 +1207,8 @@ export type DiscoveredWorktreesObject = {
   __typename?: 'DiscoveredWorktreesObject';
   /** Worktrees found beyond the hard cap and therefore not listed. Always accompanied by a warning — discovery never truncates silently. */
   droppedCount: Scalars['Int']['output'];
+  /** Registered worktree checkouts with no live worktree behind them, ordered by path — rows left behind when a worktree was removed outside OpenThrottle. Matched against every live worktree before the cap, so a capped scan never reports a live one here. */
+  missingCheckouts: Array<MissingWorktreeCheckoutObject>;
   /** Classified non-fatal problems. Empty on a healthy machine — a repository with no worktrees yet reports nothing at all. */
   problems: Array<WorktreeDiscoveryProblemObject>;
   /** Which rung of the ladder produced worktreeRoot; null when no root could be resolved. */
@@ -1777,6 +1796,29 @@ export type MetricsObjectRecentPlanRunsMetricsArgs = {
   planId: Scalars['ID']['input'];
 };
 
+/** A registered repository_checkouts row of kind worktree that discovery could not match to a live worktree. Reported only — removing the row is the explicit pruneWorktreeCheckouts mutation. */
+export type MissingWorktreeCheckoutObject = {
+  __typename?: 'MissingWorktreeCheckoutObject';
+  /** The orphaned repository_checkouts row. */
+  checkoutId: Scalars['ID']['output'];
+  /** The path as registered. It no longer resolves, so it is not symlink-resolved. */
+  path: Scalars['String']['output'];
+  /** Whether the path is gone or merely is not a worktree. */
+  reason: MissingWorktreeCheckoutReason;
+  /** The repository the row belongs to. */
+  repositoryId: Scalars['ID']['output'];
+};
+
+/** Why a registered worktree checkout has no live worktree behind it. */
+export const MissingWorktreeCheckoutReason = {
+  /** Something exists at the path, but it is not a linked worktree — a husk directory with no .git, or a real clone. */
+  NotAWorktree: 'NOT_A_WORKTREE',
+  /** Nothing exists at the path any more. */
+  PathGone: 'PATH_GONE',
+} as const;
+
+export type MissingWorktreeCheckoutReason =
+  (typeof MissingWorktreeCheckoutReason)[keyof typeof MissingWorktreeCheckoutReason];
 export type ModelEndpointObject = {
   __typename?: 'ModelEndpointObject';
   /** OpenAI-compatible /v1 base URL, e.g. http://localhost:11434/v1. Reflects the server's network vantage point. */
@@ -1904,6 +1946,8 @@ export type Mutation = {
    * @deprecated Replaced by the repository/checkout model; checkout removal moves to the new surface.
    */
   deleteWorkspaceLocalRepository: Scalars['Boolean']['output'];
+  /** The teardown half of registerPlanRunWorktreeCheckout: called right after a worktree is removed, it deletes the actor's repository_checkouts row at that path so the repositories page stops listing a worktree that no longer exists. Runs the same guards as pruneWorktreeCheckouts — the row is kept (and the outcome says why) while the path is still a live worktree, while an unsettled plan run points at it, or when it is a primary checkout. Never touches the filesystem. Resolves a service-account token through its acting user like registration does; an unresolvable actor reports NOT_FOUND rather than throwing, so a teardown can call this best-effort. */
+  deregisterWorktreeCheckout: DeregisterWorktreeCheckoutPayloadObject;
   /** Detach (delete) a lifecycle hook task by id. Only rows that are hooks (hook_role set) are removable this way. */
   detachHook: Scalars['Boolean']['output'];
   /** Disable a service account (admin, human only). */
@@ -1949,6 +1993,8 @@ export type Mutation = {
   pickFolderNative: PickFolderNativePayloadObject;
   /** Promote a task into a new, first-class plan. Validates the task is promotable (exists, not a lifecycle hook, not already promoted) then enqueues an async task-promotion job (enqueue-after-validate, idempotency key doubles as the BullMQ job id). The job creates the plan, carries the task's tags, seeds an initial task, closes out the source task (→ PROMOTED + `promoted` tag), and records provenance. Returns the accepted job id; the new plan surfaces via the task-status subscription once the job completes. */
   promoteTaskToPlan: PromoteTaskToPlanResultObject;
+  /** Delete registered worktree checkout rows whose worktree is gone — the cleanup for discoveredWorktrees.missingCheckouts. Rows only: never touches the filesystem and never deletes a primary checkout. Each id is re-checked server-side and skipped, not failed, when its path is a live worktree or an unsettled plan run still points at it. */
+  pruneWorktreeCheckouts: PruneWorktreeCheckoutsPayloadObject;
   /** Publish a blog post: sets status PUBLISHED and publishedAt. Without publishedAt the post goes live now; a future publishedAt schedules it. Returns BlogPostNotFoundError for an unknown post. */
   publishBlogPost: PublishBlogPostResult;
   /** Bump the liveness heartbeat on a detached-CLI run row (from registerCliPlanRun). The CLI calls this on a ~15s timer so a hard crash (SIGKILL/power-loss) leaves a stale heartbeat the reader/sweeper can detect. Keyed on the run id. Returns null when the row no longer exists. */
@@ -2311,6 +2357,10 @@ export type MutationDeleteWorkspaceLocalRepositoryArgs = {
   id: Scalars['ID']['input'];
 };
 
+export type MutationDeregisterWorktreeCheckoutArgs = {
+  input: DeregisterWorktreeCheckoutInput;
+};
+
 export type MutationDetachHookArgs = {
   input: DetachHookInput;
 };
@@ -2385,6 +2435,10 @@ export type MutationPauseQueueArgs = {
 
 export type MutationPromoteTaskToPlanArgs = {
   input: PromoteTaskToPlanInput;
+};
+
+export type MutationPruneWorktreeCheckoutsArgs = {
+  input: PruneWorktreeCheckoutsInput;
 };
 
 export type MutationPublishBlogPostArgs = {
@@ -3146,6 +3200,43 @@ export type PrsMergedPerPeriodObject = {
   count: Scalars['Int']['output'];
   /** Period bucket in UTC (e.g. YYYY-MM or YYYY-Www). */
   period: Scalars['String']['output'];
+};
+
+/** What happened to one requested checkout id. */
+export const PruneWorktreeCheckoutOutcome = {
+  /** No checkout with that id is owned by the caller, or it was deleted concurrently. */
+  NotFound: 'NOT_FOUND',
+  /** The row was deleted. */
+  Pruned: 'PRUNED',
+  /** An unsettled (QUEUED or IN_PROGRESS) plan run still points at this checkout. Settle the run first. */
+  SkippedActiveRun: 'SKIPPED_ACTIVE_RUN',
+  /** The path is a live linked worktree right now, so the row is not stale. */
+  SkippedLive: 'SKIPPED_LIVE',
+  /** The row is a primary checkout. Prune only ever deletes worktree rows. */
+  SkippedPrimary: 'SKIPPED_PRIMARY',
+} as const;
+
+export type PruneWorktreeCheckoutOutcome =
+  (typeof PruneWorktreeCheckoutOutcome)[keyof typeof PruneWorktreeCheckoutOutcome];
+/** The outcome for one requested checkout id. */
+export type PruneWorktreeCheckoutResultObject = {
+  __typename?: 'PruneWorktreeCheckoutResultObject';
+  checkoutId: Scalars['ID']['output'];
+  outcome: PruneWorktreeCheckoutOutcome;
+  /** The registered path, or null when the checkout was not found. */
+  path?: Maybe<Scalars['String']['output']>;
+};
+
+/** Registered worktree checkouts to delete. A request, not evidence: every guard is re-checked server-side. */
+export type PruneWorktreeCheckoutsInput = {
+  /** repository_checkouts ids, typically DiscoveredWorktrees.missingCheckouts. At most 200 distinct ids; duplicates are collapsed. */
+  checkoutIds: Array<Scalars['ID']['input']>;
+};
+
+/** Result of pruneWorktreeCheckouts: one entry per distinct requested id, in request order. */
+export type PruneWorktreeCheckoutsPayloadObject = {
+  __typename?: 'PruneWorktreeCheckoutsPayloadObject';
+  results: Array<PruneWorktreeCheckoutResultObject>;
 };
 
 /** Linux Pressure Stall Information (PSI) for CPU. Null fields on non-Linux platforms. */
@@ -6202,6 +6293,8 @@ export const WorktreeDiscoveryProblemKind = {
   CheckoutListFailed: 'CHECKOUT_LIST_FAILED',
   /** A registered folder is not a git checkout at all. Carries repositoryId — belongs on that repository’s row, not on the page. */
   NotAGitRepo: 'NOT_A_GIT_REPO',
+  /** A directory in a worktree root with no .git at all — the husk a removed worktree leaves behind. Not a worktree and never probed; nothing deletes it automatically. */
+  OrphanDirectory: 'ORPHAN_DIRECTORY',
   /** A read-only git probe against a directory that does exist failed. The genuinely degraded case: worktrees may be missing from the list. */
   ProbeFailed: 'PROBE_FAILED',
   /** A worktree root exists but could not be read (EACCES and friends). A root that simply does not exist is NOT this — that is a repository with no worktrees yet, and is silent. */
@@ -10593,6 +10686,13 @@ export type GetSettingsRepositoriesQuery = {
     rootSource?: WorktreeRootSource | null;
     scannedAt: string;
     worktreeRoot?: string | null;
+    missingCheckouts: Array<{
+      __typename?: 'MissingWorktreeCheckoutObject';
+      checkoutId: string;
+      path: string;
+      reason: MissingWorktreeCheckoutReason;
+      repositoryId: string;
+    }>;
     problems: Array<{
       __typename?: 'WorktreeDiscoveryProblemObject';
       detail: string;
@@ -11138,6 +11238,23 @@ export type RefreshCheckoutMutation = {
         name: string;
       } | null;
     };
+  };
+};
+
+export type PruneWorktreeCheckoutsMutationVariables = Exact<{
+  input: PruneWorktreeCheckoutsInput;
+}>;
+
+export type PruneWorktreeCheckoutsMutation = {
+  __typename?: 'Mutation';
+  pruneWorktreeCheckouts: {
+    __typename?: 'PruneWorktreeCheckoutsPayloadObject';
+    results: Array<{
+      __typename?: 'PruneWorktreeCheckoutResultObject';
+      checkoutId: string;
+      outcome: PruneWorktreeCheckoutOutcome;
+      path?: string | null;
+    }>;
   };
 };
 
@@ -27368,6 +27485,28 @@ export const GetSettingsRepositoriesDocument = {
                 },
                 {
                   kind: 'Field',
+                  name: { kind: 'Name', value: 'missingCheckouts' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'checkoutId' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'reason' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'repositoryId' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
                   name: { kind: 'Name', value: 'problems' },
                   selectionSet: {
                     kind: 'SelectionSet',
@@ -28734,6 +28873,77 @@ export const RefreshCheckoutDocument = {
 } as unknown as DocumentNode<
   RefreshCheckoutMutation,
   RefreshCheckoutMutationVariables
+>;
+export const PruneWorktreeCheckoutsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'pruneWorktreeCheckouts' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'PruneWorktreeCheckoutsInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'pruneWorktreeCheckouts' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'results' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'checkoutId' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'outcome' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  PruneWorktreeCheckoutsMutation,
+  PruneWorktreeCheckoutsMutationVariables
 >;
 export const DeleteWorkspaceLocalRepositoryDocument = {
   kind: 'Document',

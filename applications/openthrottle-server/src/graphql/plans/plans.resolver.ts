@@ -61,9 +61,13 @@ import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.serv
 import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service.ts';
 import { PlanCreationService } from '../../services/plan-creation/plan-creation.service.ts';
 import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service.ts';
+import { WorktreeCheckoutPruneService } from '../../services/worktree-checkout-prune/worktree-checkout-prune.service.ts';
+import { PRUNE_WORKTREE_CHECKOUT_OUTCOME } from '../../services/worktree-checkout-prune/worktree-checkout-prune.types.ts';
 import { ProjectObject } from '../projects/project.object.ts';
 import { TaskObject } from '../tasks/task.object.ts';
 import { SettleRunLedgerService } from '../work-ledger/settle-run-ledger.service.ts';
+import { DeregisterWorktreeCheckoutInput } from '../workspace-settings/prune-worktree-checkouts.input.ts';
+import { DeregisterWorktreeCheckoutPayloadObject } from '../workspace-settings/prune-worktree-checkouts.object.ts';
 import {
   parseJobRunHooksJsonInput,
   serializeJobRunHooksForGraphql,
@@ -293,6 +297,7 @@ export class PlansResolver {
     private readonly taggingEnqueueService: TaggingEnqueueService,
     private readonly tasksService: TasksService,
     private readonly settleRunLedgerService: SettleRunLedgerService,
+    private readonly worktreeCheckoutPruneService: WorktreeCheckoutPruneService,
   ) {}
 
   /**
@@ -602,6 +607,37 @@ export class PlansResolver {
     });
 
     return run ? this.mapPlanRunObject(run) : null;
+  }
+
+  @Mutation(() => DeregisterWorktreeCheckoutPayloadObject, {
+    description: `The teardown half of registerPlanRunWorktreeCheckout: called right after a worktree is removed, it deletes the actor's repository_checkouts row at that path so the repositories page stops listing a worktree that no longer exists. Runs the same guards as pruneWorktreeCheckouts — the row is kept (and the outcome says why) while the path is still a live worktree, while an unsettled plan run points at it, or when it is a primary checkout. Never touches the filesystem. Resolves a service-account token through its acting user like registration does; an unresolvable actor reports NOT_FOUND rather than throwing, so a teardown can call this best-effort.`,
+  })
+  async deregisterWorktreeCheckout(
+    @Args('input', { type: () => DeregisterWorktreeCheckoutInput })
+    input: DeregisterWorktreeCheckoutInput,
+    @CurrentUser('sub') actorSub?: string,
+  ): Promise<DeregisterWorktreeCheckoutPayloadObject> {
+    // Same acting-user resolution as registerPlanRunWorktreeCheckout, for the same reason: the
+    // checkout belongs to a human, and the teardown authenticates with the MCP service account.
+    const actorUserId =
+      await this.effectiveUserResolution.resolveEffectiveUserId(actorSub);
+    if (actorUserId === null) {
+      return {
+        checkoutId: null,
+        outcome: PRUNE_WORKTREE_CHECKOUT_OUTCOME.NOT_FOUND,
+        path: input.filesystemPath,
+      };
+    }
+
+    const result = await this.worktreeCheckoutPruneService.pruneByPath(
+      actorUserId,
+      input.filesystemPath,
+    );
+    return {
+      checkoutId: result.checkoutId,
+      outcome: result.outcome,
+      path: result.path,
+    };
   }
 
   // @ProfileResponseTime('PlansResolver.plan')

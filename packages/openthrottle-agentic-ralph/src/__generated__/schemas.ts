@@ -52,6 +52,7 @@ import {
   DeleteProjectInput,
   DeleteTagActionRuleInput,
   DeleteTaskInput,
+  DeregisterWorktreeCheckoutInput,
   DetachHookInput,
   DuplicateJobInput,
   EditorPresenceState,
@@ -75,6 +76,7 @@ import {
   ListPlansByStatusInput,
   ListPullsInput,
   LoginInput,
+  MissingWorktreeCheckoutReason,
   OpenToMergedCycleTimeInput,
   PlanEmbeddingsByPlanInput,
   PlanRalphWorkflowMode,
@@ -84,6 +86,8 @@ import {
   PressureLevel,
   PromoteTaskToPlanInput,
   PrsMergedPerPeriodInput,
+  PruneWorktreeCheckoutOutcome,
+  PruneWorktreeCheckoutsInput,
   PublishBlogPostInput,
   QueueControlInput,
   QueueDetailsInput,
@@ -194,11 +198,19 @@ export const CustomPromptTypeSchema = z.nativeEnum(CustomPromptType);
 
 export const EditorPresenceStateSchema = z.nativeEnum(EditorPresenceState);
 
+export const MissingWorktreeCheckoutReasonSchema = z.nativeEnum(
+  MissingWorktreeCheckoutReason,
+);
+
 export const PlanRalphWorkflowModeSchema = z.nativeEnum(PlanRalphWorkflowMode);
 
 export const PlanTaskStatusSchema = z.nativeEnum(PlanTaskStatus);
 
 export const PressureLevelSchema = z.nativeEnum(PressureLevel);
+
+export const PruneWorktreeCheckoutOutcomeSchema = z.nativeEnum(
+  PruneWorktreeCheckoutOutcome,
+);
 
 export const QueueJobLogLevelSchema = z.nativeEnum(QueueJobLogLevel);
 
@@ -745,6 +757,14 @@ export function DeleteTaskInputSchema(): z.ZodObject<
   });
 }
 
+export function DeregisterWorktreeCheckoutInputSchema(): z.ZodObject<
+  Properties<DeregisterWorktreeCheckoutInput>
+> {
+  return z.object({
+    filesystemPath: z.string().min(1),
+  });
+}
+
 export function DetachHookInputSchema(): z.ZodObject<
   Properties<DetachHookInput>
 > {
@@ -1030,6 +1050,14 @@ export function PrsMergedPerPeriodInputSchema(): z.ZodObject<
     owner: z.string().min(1),
     period: z.string().min(1),
     repo: z.string().min(1),
+  });
+}
+
+export function PruneWorktreeCheckoutsInputSchema(): z.ZodObject<
+  Properties<PruneWorktreeCheckoutsInput>
+> {
+  return z.object({
+    checkoutIds: z.array(z.string().min(1)),
   });
 }
 

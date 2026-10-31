@@ -18,12 +18,16 @@ import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
 import { AddFolderDialog } from '~/routing/settings/repositories/components/AddFolderDialog';
 import { AddFolderResult } from '~/routing/settings/repositories/components/AddFolderResult';
 import { CloneRepoDialog } from '~/routing/settings/repositories/components/CloneRepoDialog';
+import { MissingWorktreesToggle } from '~/routing/settings/repositories/components/MissingWorktreesToggle';
+import { PruneMissingWorktreesButton } from '~/routing/settings/repositories/components/PruneMissingWorktreesButton';
+import { PruneWorktreesOutcome } from '~/routing/settings/repositories/components/PruneWorktreesOutcome';
 import { RepositoriesTable } from '~/routing/settings/repositories/components/RepositoriesTable';
 import { RepositoriesToolbar } from '~/routing/settings/repositories/components/RepositoriesToolbar';
 import { WorktreeDiscoveryNotice } from '~/routing/settings/repositories/components/WorktreeDiscoveryNotice';
 import { REPOSITORIES_ONBOARDING } from '~/routing/settings/repositories/data/data.copy';
 import type {
   DiscoveredWorktreesResult,
+  PruneWorktreeCheckoutResult,
   RepositoryCheckoutRow,
 } from '~/routing/settings/repositories/data/types';
 import type { CheckoutDrift } from '~/routing/settings/utils/drift-labels';
@@ -46,6 +50,8 @@ export interface RepositoriesSectionProps {
     WorkspacePickerCapabilitiesObject,
     'canUseNativeDialog' | 'defaultBrowsePath' | 'roots'
   >;
+  /** Per-id outcomes from the last `pruneWorktreeCheckouts`, when that was the last action. */
+  pruned?: readonly PruneWorktreeCheckoutResult[] | null;
   refreshed?: {
     checkoutId: string;
     drift: CheckoutDrift;
@@ -53,6 +59,8 @@ export interface RepositoriesSectionProps {
   } | null;
   rows: RepositoryCheckoutRow[];
   search: string;
+  /** Whether registered worktrees missing from disk are listed. */
+  showMissing: boolean;
   sortBy: string;
   sortOrder: string;
   totalCount: number;
@@ -72,9 +80,11 @@ export const RepositoriesSection = (
     limit,
     page,
     pickerCapabilities,
+    pruned,
     refreshed,
     rows,
     search,
+    showMissing,
     sortBy,
     sortOrder,
     totalCount,
@@ -86,6 +96,9 @@ export const RepositoriesSection = (
   const driftByCheckoutId = refreshed
     ? { [refreshed.checkoutId]: refreshed.drift }
     : undefined;
+  const missingCheckoutIds = discoveredWorktrees.missingCheckouts.map(
+    (missing) => missing.checkoutId,
+  );
 
   // Handlers
 
@@ -118,6 +131,8 @@ export const RepositoriesSection = (
       >
         {addedFolder ? <AddFolderResult payload={addedFolder} /> : null}
 
+        {pruned ? <PruneWorktreesOutcome results={pruned} /> : null}
+
         {refreshed?.merged ? (
           <p className="text-muted-foreground text-sm" role="status">
             {WORKSPACE_FOLDERS_COPY.mergedNotice}
@@ -149,6 +164,11 @@ export const RepositoriesSection = (
               sortOrder={sortOrder}
             >
               <>
+                <MissingWorktreesToggle
+                  count={missingCheckoutIds.length}
+                  showMissing={showMissing}
+                />
+                <PruneMissingWorktreesButton checkoutIds={missingCheckoutIds} />
                 <CloneRepoDialog actionError={actionError} />
                 <AddFolderDialog
                   actionError={actionError}

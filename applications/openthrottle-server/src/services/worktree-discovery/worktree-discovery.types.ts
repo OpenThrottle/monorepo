@@ -63,6 +63,12 @@ export const WORKTREE_DISCOVERY_PROBLEM = {
    * {@link WorktreeDiscoveryProblem.repositoryId}, so the UI badges the row rather than the page.
    */
   NOT_A_GIT_REPO: 'not-a-git-repo',
+  /**
+   * A directory in a worktree root with no `.git` at all — the husk a removed worktree leaves when
+   * something (`.nx`, `.agents`, `.claude`) recreated files in it afterwards. Not a worktree, never
+   * probed, and nothing here deletes it.
+   */
+  ORPHAN_DIRECTORY: 'orphan-directory',
   /** A read-only git probe against an existing directory failed. The genuinely degraded case. */
   PROBE_FAILED: 'probe-failed',
   /**
@@ -95,6 +101,33 @@ export interface WorktreeDiscoveryProblem {
   readonly repositoryId: string | null;
 }
 
+/**
+ * Why a registered `repository_checkouts` row of kind `worktree` has no live worktree behind it.
+ * - `PATH_GONE` — nothing exists at the path any more.
+ * - `NOT_A_WORKTREE` — something exists at the path, but it is not a linked worktree (a husk
+ *   directory with no `.git`, or a real clone).
+ */
+export const MISSING_CHECKOUT_REASON = {
+  NOT_A_WORKTREE: 'not-a-worktree',
+  PATH_GONE: 'path-gone',
+} as const;
+
+/** The union of {@link MISSING_CHECKOUT_REASON} values. */
+export type MissingCheckoutReason =
+  (typeof MISSING_CHECKOUT_REASON)[keyof typeof MISSING_CHECKOUT_REASON];
+
+/**
+ * A registered worktree checkout that discovery could not match to a live worktree. Reported, never
+ * acted on: removing the row is a separate, explicit mutation.
+ */
+export interface MissingWorktreeCheckout {
+  readonly checkoutId: string;
+  /** The path as registered — it no longer resolves, so there is no real path to report. */
+  readonly path: string;
+  readonly reason: MissingCheckoutReason;
+  readonly repositoryId: string;
+}
+
 /** One resolved worktree root and what the depth-1 scan of it found. */
 export interface ScannedWorktreeRoot {
   /**
@@ -115,6 +148,11 @@ export interface WorktreeDiscoveryResult {
    * a warning — discovery never truncates silently.
    */
   readonly droppedCount: number;
+  /**
+   * Registered worktree checkouts with no live worktree behind them, ordered by path. Matched against
+   * the full live set before the cap, so a capped scan never reports a live worktree as missing.
+   */
+  readonly missingCheckouts: readonly MissingWorktreeCheckout[];
   /**
    * Classified non-fatal problems. {@link warnings} is derived from this; new consumers read this.
    */

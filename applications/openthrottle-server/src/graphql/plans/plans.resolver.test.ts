@@ -31,6 +31,8 @@ import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.serv
 import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service.ts';
 import { PlanCreationService } from '../../services/plan-creation/plan-creation.service.ts';
 import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service.ts';
+import { WorktreeCheckoutPruneService } from '../../services/worktree-checkout-prune/worktree-checkout-prune.service.ts';
+import { PRUNE_WORKTREE_CHECKOUT_OUTCOME } from '../../services/worktree-checkout-prune/worktree-checkout-prune.types.ts';
 import { SettleRunLedgerService } from '../work-ledger/settle-run-ledger.service.ts';
 import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service.ts';
 import type {
@@ -222,6 +224,10 @@ describe('PlansResolver', () => {
       resolveEffectiveUserId: mockResolveEffectiveUserId,
     });
 
+  const mockPruneByPath = vi.fn();
+  const mockWorktreeCheckoutPruneService =
+    createMock<WorktreeCheckoutPruneService>({ pruneByPath: mockPruneByPath });
+
   const mockRegisterWorktreeCheckout = vi.fn().mockResolvedValue(null);
   const mockPlanRunWorktreeCheckoutService =
     createMock<PlanRunWorktreeCheckoutService>({
@@ -313,6 +319,10 @@ describe('PlansResolver', () => {
         },
         { provide: PlansService, useValue: mockPlansService },
         { provide: ProjectsService, useValue: mockProjectsService },
+        {
+          provide: WorktreeCheckoutPruneService,
+          useValue: mockWorktreeCheckoutPruneService,
+        },
         { provide: TasksService, useValue: mockTasksService },
         {
           provide: SettleRunLedgerService,
@@ -1784,6 +1794,56 @@ describe('PlansResolver', () => {
       );
 
       expect(result).toBeNull();
+    });
+  });
+
+  describe('deregisterWorktreeCheckout', () => {
+    const userId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+    const filesystemPath =
+      '/Users/matt/.openthrottle/worktrees/OpenThrottle/monorepo/wt-gone';
+
+    beforeEach(() => {
+      mockResolveEffectiveUserId.mockReset();
+      mockPruneByPath.mockReset();
+    });
+
+    test('prunes by path for the acting user of a service-account token', async () => {
+      mockResolveEffectiveUserId.mockResolvedValue(userId);
+      mockPruneByPath.mockResolvedValueOnce({
+        checkoutId: 'checkout-gone',
+        outcome: PRUNE_WORKTREE_CHECKOUT_OUTCOME.PRUNED,
+        path: filesystemPath,
+      });
+
+      const result = await resolver.deregisterWorktreeCheckout(
+        { filesystemPath },
+        'sa-1',
+      );
+
+      expect(mockResolveEffectiveUserId).toHaveBeenCalledWith('sa-1');
+      expect(mockPruneByPath).toHaveBeenCalledWith(userId, filesystemPath);
+      expect(result).toEqual({
+        checkoutId: 'checkout-gone',
+        outcome: 'pruned',
+        path: filesystemPath,
+      });
+    });
+
+    test('reports NOT_FOUND without touching anything for an unresolvable actor', async () => {
+      // A teardown calls this best-effort; an unlinked account must not make it throw.
+      mockResolveEffectiveUserId.mockResolvedValue(null);
+
+      const result = await resolver.deregisterWorktreeCheckout(
+        { filesystemPath },
+        'sa-unlinked',
+      );
+
+      expect(mockPruneByPath).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        checkoutId: null,
+        outcome: 'not-found',
+        path: filesystemPath,
+      });
     });
   });
 

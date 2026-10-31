@@ -504,6 +504,36 @@ describe('PlanRunsService', () => {
       expect(repo.createQueryBuilder).not.toHaveBeenCalled();
     });
 
+    it('findUnsettledRunsByCheckoutIds matches QUEUED and IN_PROGRESS with no liveness cutoff', async () => {
+      const stranded = buildRun({ id: 'run-stranded', status: 'IN_PROGRESS' });
+      qbGetMany.mockResolvedValueOnce([stranded]);
+
+      const result = await service.findUnsettledRunsByCheckoutIds([
+        'checkout-a',
+      ]);
+      const qb = repo.createQueryBuilder.mock.results[0]?.value;
+
+      expect(qb.where).toHaveBeenCalledWith('run.status IN (:...statuses)', {
+        statuses: ['QUEUED', 'IN_PROGRESS'],
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith(
+        'run.checkout_id IN (:...checkoutIds)',
+        { checkoutIds: ['checkout-a'] },
+      );
+      expect(qb.andWhere).not.toHaveBeenCalledWith(
+        expect.stringContaining('heartbeat'),
+        expect.anything(),
+      );
+      expect(result).toEqual([stranded]);
+    });
+
+    it('findUnsettledRunsByCheckoutIds short-circuits on an empty id list', async () => {
+      await expect(service.findUnsettledRunsByCheckoutIds([])).resolves.toEqual(
+        [],
+      );
+      expect(repo.createQueryBuilder).not.toHaveBeenCalled();
+    });
+
     it('findStaleInProgressRuns excludes runs that do not heartbeat', async () => {
       // The sweeper this feeds does not merely settle the run — reconcileStrandedPlan
       // resets the plan and its IN_PROGRESS tasks to PENDING. A run with no timer must

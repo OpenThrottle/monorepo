@@ -1,8 +1,13 @@
 import type { WorkspaceRepositoryFieldsFragment } from '~/__generated__/graphql';
-import { WorktreeActivity, WorktreeRootSource } from '~/__generated__/graphql';
+import {
+  MissingWorktreeCheckoutReason,
+  WorktreeActivity,
+  WorktreeRootSource,
+} from '~/__generated__/graphql';
 import type {
   DiscoveredWorktree,
   DiscoveredWorktreesResult,
+  MissingWorktreeCheckout,
   RepositoryCheckout,
 } from '~/routing/settings/repositories/data/types';
 
@@ -164,6 +169,20 @@ export const mockDiscoveredWorktree = (
 };
 
 /**
+ * @description A registered worktree checkout the scan reported missing. Defaults model the
+ * common case: `worktree-1` of `repo-1`, its folder gone entirely.
+ */
+export const mockMissingCheckout = (
+  overrides: Partial<MissingWorktreeCheckout> = {},
+): MissingWorktreeCheckout => ({
+  checkoutId: 'worktree-1',
+  path: '/Users/dev/.openthrottle/worktrees/monorepo/wt-gone',
+  reason: MissingWorktreeCheckoutReason.PathGone,
+  repositoryId: 'repo-1',
+  ...overrides,
+});
+
+/**
  * @description Minimal worktree-scan payload fixture. Defaults model a clean scan of
  * the default root with nothing found; pass `worktreeRoot: null` to model the
  * "no root to scan" state and `problems` to model a partial scan.
@@ -172,6 +191,7 @@ export const mockDiscoveredWorktrees = (
   overrides: Partial<DiscoveredWorktreesResult> = {},
 ): DiscoveredWorktreesResult => ({
   droppedCount: 0,
+  missingCheckouts: [],
   problems: [],
   rootSource: WorktreeRootSource.Default,
   scannedAt: '2026-08-24T00:00:00.000Z',

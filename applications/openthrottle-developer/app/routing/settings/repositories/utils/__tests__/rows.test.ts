@@ -8,6 +8,7 @@ import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/da
 import {
   mockCheckout,
   mockDiscoveredWorktree,
+  mockMissingCheckout,
   mockRepository,
 } from '~/routing/settings/repositories/data/mock.repositories';
 
@@ -354,5 +355,48 @@ describe('buildRepositoryRows with discovered worktrees', () => {
     expect(
       rows[0]?.children?.every((child) => child.children === undefined),
     ).toBe(true);
+  });
+
+  describe('missing registered worktrees', () => {
+    test('flags the worktree the server reports missing, with its reason, matched on checkout id', () => {
+      const rows = buildRepositoryRows(
+        [
+          mockRepository({
+            checkouts: [
+              mockCheckout({ id: 'primary-1' }),
+              mockCheckout({ id: 'worktree-1', kind: 'worktree' }),
+              mockCheckout({ id: 'worktree-2', kind: 'worktree' }),
+            ],
+            id: 'repo-1',
+          }),
+        ],
+        [],
+        [],
+        [mockMissingCheckout({ checkoutId: 'worktree-1' })],
+      );
+
+      expect(
+        rows[0]?.children?.map((child) => [child.id, child.missing]),
+      ).toEqual([
+        ['worktree-1', true],
+        ['worktree-2', false],
+      ]);
+      expect(rows[0]?.children?.[0]?.missingReason).toBe('PATH_GONE');
+      expect(rows[0]?.missing).toBe(false);
+    });
+
+    test('never flags an unregistered worktree found on disk', () => {
+      const rows = buildRepositoryRows(
+        [
+          mockRepository({
+            checkouts: [mockCheckout({ id: 'primary-1' })],
+            id: 'repo-1',
+          }),
+        ],
+        [mockDiscoveredWorktree({ name: 'wt-a' })],
+      );
+
+      expect(rows[0]?.children?.[0]?.missing).toBe(false);
+    });
   });
 });

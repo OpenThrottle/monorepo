@@ -20,6 +20,7 @@ import {
   cloneRepo,
   deleteRepo,
   pickFolderNative,
+  pruneWorktreeCheckouts,
   refreshCheckout,
 } from '~/routing/settings/repositories/actions/repositories';
 import { RepositoriesSection } from '~/routing/settings/repositories/components/RepositoriesSection';
@@ -30,6 +31,12 @@ import {
   REPOSITORIES_DEFAULT_SORT_BY,
   REPOSITORIES_DEFAULT_SORT_ORDER,
 } from '~/routing/settings/repositories/config/repositories.defaults';
+import {
+  hideMissingRows,
+  PRUNE_WORKTREE_CHECKOUTS_INTENT,
+  SHOW_MISSING_PARAM,
+  SHOW_MISSING_VALUE,
+} from '~/routing/settings/repositories/utils/missing-rows';
 import { buildRepositoryRows } from '~/routing/settings/repositories/utils/rows';
 import { filterRepositoryRows } from '~/routing/settings/repositories/utils/search';
 import { sortRepositoryRows } from '~/routing/settings/repositories/utils/sorting';
@@ -63,13 +70,19 @@ export const loader = async (args: Route.LoaderArgs) => {
     ? sortOrderParam
     : REPOSITORIES_DEFAULT_SORT_ORDER;
 
+  const showMissing =
+    url.searchParams.get(SHOW_MISSING_PARAM) === SHOW_MISSING_VALUE;
+
   const allRows = buildRepositoryRows(
     data.workspaceRepositories,
     data.discoveredWorktrees.worktrees,
     data.discoveredWorktrees.problems,
+    data.discoveredWorktrees.missingCheckouts,
   );
+  // Hidden by default so the visible worktrees are exactly what is on disk.
+  const visibleRows = showMissing ? allRows : hideMissingRows(allRows);
   const { autoExpandedIds, rows: filtered } = filterRepositoryRows(
-    allRows,
+    visibleRows,
     search,
   );
   const sorted = sortRepositoryRows(filtered, sortBy, sortOrder);
@@ -89,6 +102,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     pickerCapabilities: data.workspacePickerCapabilities,
     rows,
     search,
+    showMissing,
     sortBy,
     sortOrder,
     totalCount,
@@ -113,6 +127,7 @@ export default function Component(
     pickerCapabilities,
     rows,
     search,
+    showMissing,
     sortBy,
     sortOrder,
     totalCount,
@@ -127,6 +142,8 @@ export default function Component(
     actionData && 'addedFolder' in actionData ? actionData.addedFolder : null;
   const refreshed =
     actionData && 'refreshed' in actionData ? actionData.refreshed : null;
+  const pruned =
+    actionData && 'pruned' in actionData ? actionData.pruned : null;
 
   // Handlers
 
@@ -148,9 +165,11 @@ export default function Component(
         limit={limit}
         page={page}
         pickerCapabilities={pickerCapabilities}
+        pruned={pruned}
         refreshed={refreshed}
         rows={rows}
         search={search}
+        showMissing={showMissing}
         sortBy={sortBy}
         sortOrder={sortOrder}
         totalCount={totalCount}
@@ -174,6 +193,8 @@ export const action = async (args: Route.ActionArgs) => {
       return deleteRepo(args, formData);
     case 'pickFolderNative':
       return pickFolderNative(args);
+    case PRUNE_WORKTREE_CHECKOUTS_INTENT:
+      return pruneWorktreeCheckouts(args, formData);
     case 'refreshCheckout':
       return refreshCheckout(args, formData);
 

@@ -13,6 +13,7 @@ import { TaggingQueueProducerModule } from '../../queues/tagging/tagging-queue-p
 import { EffectiveUserResolutionModule } from '../../services/effective-user-resolution/effective-user-resolution.module.ts';
 import { PlanCreationModule } from '../../services/plan-creation/plan-creation.module.ts';
 import { PlanRunWorktreeCheckoutModule } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.module.ts';
+import { WorktreeCheckoutPruneModule } from '../../services/worktree-checkout-prune/worktree-checkout-prune.module.ts';
 import { QueuesGraphqlModule } from '../queues/queues-graphql.module.ts';
 import { WorkLedgerGraphqlModule } from '../work-ledger/work-ledger-graphql.module.ts';
 import { PlanEnqueueService } from './plan-enqueue.service.ts';
@@ -35,6 +36,7 @@ import { PlansLoaders } from './plans-loaders.ts';
     TaggingQueueProducerModule,
     QueuesGraphqlModule,
     WorkLedgerGraphqlModule,
+    WorktreeCheckoutPruneModule,
   ],
   providers: [
     PlanEnqueueService,

@@ -13,6 +13,10 @@
  *      worktree whose base checkout is not registered, or whose primary lives outside the
  *      configured workspace roots.
  *
+ * The reverse check runs too: every registered `worktree` checkout with no live worktree behind it is
+ * reported in `missingCheckouts`, and every husk directory in a root (no `.git` at all) is reported
+ * as an `ORPHAN_DIRECTORY` problem. Both are reports only — nothing here deletes a row or a folder.
+ *
  * Bounded and non-fatal by construction: every git probe carries a timeout and maxBuffer, the scan
  * never recurses, the result is capped with the overflow COUNTED and warned about, and every fs or
  * git failure becomes a warning instead of an exception. Discovery must not be able to make
@@ -39,8 +43,13 @@ import { parseLinkedWorktrees } from '../../graphql/repository-inspection/parse-
 import { realPath } from '../paths/real-path.ts';
 import type { WorktreeRootSource } from '../worktree-root/worktree-root.resolver.ts';
 import { resolveWorktreeRoot } from '../worktree-root/worktree-root.resolver.ts';
+import {
+  isExistingDirectory,
+  isLinkedWorktreeDirectory,
+} from './linked-worktree.ts';
 import type {
   DiscoveredWorktree,
+  MissingWorktreeCheckout,
   ScannedWorktreeRoot,
   WorktreeDiscoveryProblem,
   WorktreeDiscoveryProblemKind,
@@ -48,6 +57,7 @@ import type {
   WorktreeDiscoverySource,
 } from './worktree-discovery.types.ts';
 import {
+  MISSING_CHECKOUT_REASON,
   WORKTREE_DISCOVERY_PROBLEM,
   WORKTREE_DISCOVERY_SOURCE,
 } from './worktree-discovery.types.ts';
@@ -146,6 +156,11 @@ export class WorktreeDiscoveryService {
       );
     }
 
+    const missingCheckouts = findMissingCheckouts(
+      checkouts,
+      new Set(live.map((candidate) => candidate.path)),
+    );
+
     const kept = live.slice(0, MAX_DISCOVERED_WORKTREES);
     const droppedCount = live.length - kept.length;
     if (droppedCount > 0) {
@@ -165,6 +180,7 @@ export class WorktreeDiscoveryService {
 
     return {
       droppedCount,
+      missingCheckouts,
       problems,
       rootSource: firstRoot?.[1] ?? null,
       scannedAt,
@@ -335,6 +351,16 @@ export class WorktreeDiscoveryService {
       let worktreeCount = 0;
       for (const entry of entries) {
         const path = join(root, entry);
+        if (isOrphanDirectory(path)) {
+          problems.push(
+            problem(
+              WORKTREE_DISCOVERY_PROBLEM.ORPHAN_DIRECTORY,
+              'directory in the worktree root has no .git; it is not a worktree',
+              path,
+            ),
+          );
+          continue;
+        }
         if (!isLinkedWorktreeDirectory(path)) continue;
         add(candidates, path, WORKTREE_DISCOVERY_SOURCE.ROOT_SCAN);
         worktreeCount += 1;
@@ -474,24 +500,50 @@ const add = (
   existing.sources.add(source);
 };
 
-/** Whether the path is a directory that exists right now. Never throws. */
-const isExistingDirectory = (path: string): boolean => {
-  try {
-    return statSync(path).isDirectory();
-  } catch {
+/**
+ * A directory with no `.git` at all — the husk a removed worktree leaves behind. Dot-entries are
+ * skipped: the root is ours, but `.DS_Store`-style clutter is not worth a problem. Only an absent
+ * `.git` counts; an unreadable one is not evidence of a husk.
+ */
+const isOrphanDirectory = (path: string): boolean => {
+  if (basename(path).startsWith('.') || !isExistingDirectory(path)) {
     return false;
+  }
+  try {
+    statSync(join(path, '.git'));
+    return false;
+  } catch (error) {
+    return isAbsentDirectoryError(error);
   }
 };
 
-/** A linked worktree's `.git` is a FILE (`gitdir:` pointer); a real clone's is a directory. */
-const isLinkedWorktreeDirectory = (path: string): boolean => {
-  try {
-    if (!statSync(path).isDirectory()) return false;
-    return statSync(join(path, '.git')).isFile();
-  } catch {
-    return false;
-  }
-};
+/**
+ * Registered worktree checkouts with nothing live behind them. A checkout counts as live when
+ * discovery found it OR its path is a linked worktree right now — the existence probe is what keeps
+ * a worktree outside every scanned root, whose primary is unregistered or unreadable, from being
+ * reported missing.
+ */
+const findMissingCheckouts = (
+  checkouts: readonly RepositoryCheckout[],
+  livePaths: ReadonlySet<string>,
+): MissingWorktreeCheckout[] =>
+  checkouts
+    .filter((checkout) => checkout.kind === WORKTREE_KIND)
+    .flatMap((checkout): MissingWorktreeCheckout[] => {
+      const path = realPath(checkout.filesystemPath);
+      if (livePaths.has(path) || isLinkedWorktreeDirectory(path)) return [];
+      return [
+        {
+          checkoutId: checkout.id,
+          path: checkout.filesystemPath,
+          reason: isExistingDirectory(path)
+            ? MISSING_CHECKOUT_REASON.NOT_A_WORKTREE
+            : MISSING_CHECKOUT_REASON.PATH_GONE,
+          repositoryId: checkout.repositoryId,
+        },
+      ];
+    })
+    .sort((a, b) => a.path.localeCompare(b.path));
 
 /** Builds one classified problem; `path` and `repositoryId` default to "not applicable". */
 const problem = (
@@ -517,6 +569,8 @@ const formatWarning = ({
       return `could not list registered checkouts: ${detail}`;
     case WORKTREE_DISCOVERY_PROBLEM.NOT_A_GIT_REPO:
       return `${path} is registered but is not a git repository: ${detail}`;
+    case WORKTREE_DISCOVERY_PROBLEM.ORPHAN_DIRECTORY:
+      return `${path} sits in the worktree root but has no .git; it is left over from a removed worktree`;
     case WORKTREE_DISCOVERY_PROBLEM.ROOT_UNREADABLE:
       return `worktree root ${path} could not be read: ${detail}`;
     case WORKTREE_DISCOVERY_PROBLEM.STALE_WORKTREE_ENTRY:

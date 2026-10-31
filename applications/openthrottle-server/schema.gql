@@ -2163,6 +2163,60 @@ type WorkLedgerCompletenessResult {
   totalCount: Int!
 }
 
+"""The outcome for one requested checkout id."""
+type PruneWorktreeCheckoutResultObject {
+  checkoutId: ID!
+  outcome: PruneWorktreeCheckoutOutcome!
+
+  """The registered path, or null when the checkout was not found."""
+  path: String
+}
+
+"""What happened to one requested checkout id."""
+enum PruneWorktreeCheckoutOutcome {
+  """
+  No checkout with that id is owned by the caller, or it was deleted concurrently.
+  """
+  NOT_FOUND
+
+  """The row was deleted."""
+  PRUNED
+
+  """
+  An unsettled (QUEUED or IN_PROGRESS) plan run still points at this checkout. Settle the run first.
+  """
+  SKIPPED_ACTIVE_RUN
+
+  """The path is a live linked worktree right now, so the row is not stale."""
+  SKIPPED_LIVE
+
+  """The row is a primary checkout. Prune only ever deletes worktree rows."""
+  SKIPPED_PRIMARY
+}
+
+"""
+Result of pruneWorktreeCheckouts: one entry per distinct requested id, in request order.
+"""
+type PruneWorktreeCheckoutsPayloadObject {
+  results: [PruneWorktreeCheckoutResultObject!]!
+}
+
+"""Result of deregisterWorktreeCheckout for one removed worktree path."""
+type DeregisterWorktreeCheckoutPayloadObject {
+  """
+  The checkout row at the path, or null when none is registered there for the caller.
+  """
+  checkoutId: ID
+
+  """
+  PRUNED when the row was deleted; NOT_FOUND when there was nothing to deregister (the normal case for a worktree OpenThrottle never registered).
+  """
+  outcome: PruneWorktreeCheckoutOutcome!
+
+  """The registered path when a row matched, else the path as given."""
+  path: String!
+}
+
 """
 A single skill in a project's ingested skill universe, with its static frontmatter tags and tri-state disable-model-invocation flag.
 """
@@ -3737,6 +3791,36 @@ type RepositoryObject {
   updatedAt: DateTime!
 }
 
+"""
+A registered repository_checkouts row of kind worktree that discovery could not match to a live worktree. Reported only — removing the row is the explicit pruneWorktreeCheckouts mutation.
+"""
+type MissingWorktreeCheckoutObject {
+  """The orphaned repository_checkouts row."""
+  checkoutId: ID!
+
+  """
+  The path as registered. It no longer resolves, so it is not symlink-resolved.
+  """
+  path: String!
+
+  """Whether the path is gone or merely is not a worktree."""
+  reason: MissingWorktreeCheckoutReason!
+
+  """The repository the row belongs to."""
+  repositoryId: ID!
+}
+
+"""Why a registered worktree checkout has no live worktree behind it."""
+enum MissingWorktreeCheckoutReason {
+  """
+  Something exists at the path, but it is not a linked worktree — a husk directory with no .git, or a real clone.
+  """
+  NOT_A_WORKTREE
+
+  """Nothing exists at the path any more."""
+  PATH_GONE
+}
+
 """One classified, non-fatal thing that happened during a scan."""
 type WorktreeDiscoveryProblemObject {
   """
@@ -3776,6 +3860,11 @@ enum WorktreeDiscoveryProblemKind {
   A registered folder is not a git checkout at all. Carries repositoryId — belongs on that repository’s row, not on the page.
   """
   NOT_A_GIT_REPO
+
+  """
+  A directory in a worktree root with no .git at all — the husk a removed worktree leaves behind. Not a worktree and never probed; nothing deletes it automatically.
+  """
+  ORPHAN_DIRECTORY
 
   """
   A read-only git probe against a directory that does exist failed. The genuinely degraded case: worktrees may be missing from the list.
@@ -3905,6 +3994,11 @@ type DiscoveredWorktreesObject {
   Worktrees found beyond the hard cap and therefore not listed. Always accompanied by a warning — discovery never truncates silently.
   """
   droppedCount: Int!
+
+  """
+  Registered worktree checkouts with no live worktree behind them, ordered by path — rows left behind when a worktree was removed outside OpenThrottle. Matched against every live worktree before the cap, so a capped scan never reports a live one here.
+  """
+  missingCheckouts: [MissingWorktreeCheckoutObject!]!
 
   """
   Classified non-fatal problems. Empty on a healthy machine — a repository with no worktrees yet reports nothing at all.
@@ -5454,6 +5548,11 @@ type Mutation {
   """
   registerPlanRunWorktreeCheckout(input: RegisterPlanRunWorktreeCheckoutInput!): PlanRunObject
 
+  """
+  The teardown half of registerPlanRunWorktreeCheckout: called right after a worktree is removed, it deletes the actor's repository_checkouts row at that path so the repositories page stops listing a worktree that no longer exists. Runs the same guards as pruneWorktreeCheckouts — the row is kept (and the outcome says why) while the path is still a live worktree, while an unsettled plan run points at it, or when it is a primary checkout. Never touches the filesystem. Resolves a service-account token through its acting user like registration does; an unresolvable actor reports NOT_FOUND rather than throwing, so a teardown can call this best-effort.
+  """
+  deregisterWorktreeCheckout(input: DeregisterWorktreeCheckoutInput!): DeregisterWorktreeCheckoutPayloadObject!
+
   """Create a plan"""
   createPlan(input: CreatePlanInput!): PlanObject!
 
@@ -5765,6 +5864,11 @@ type Mutation {
 
   """Re-enable a disabled user."""
   enableUser(id: ID!): UserObject
+
+  """
+  Delete registered worktree checkout rows whose worktree is gone — the cleanup for discoveredWorktrees.missingCheckouts. Rows only: never touches the filesystem and never deletes a primary checkout. Each id is re-checked server-side and skipped, not failed, when its path is a live worktree or an unsettled plan run still points at it.
+  """
+  pruneWorktreeCheckouts(input: PruneWorktreeCheckoutsInput!): PruneWorktreeCheckoutsPayloadObject!
 
   """
   Open the host OS folder dialog and return the chosen absolute server-host path, or null on user-cancel. Guarded by the same same-machine predicate as workspacePickerCapabilities (re-checked before spawning) and bounded by a kill timeout. Does not register anything — the client confirms and calls addWorkspaceFolder.
@@ -6423,6 +6527,14 @@ input RegisterPlanRunWorktreeCheckoutInput {
   Plan-run row id whose checkout_id should be back-filled when still NULL.
   """
   planRunId: ID!
+}
+
+"""The worktree path a teardown just removed."""
+input DeregisterWorktreeCheckoutInput {
+  """
+  Absolute filesystem path of the removed worktree. Matched as given and by its real path.
+  """
+  filesystemPath: String!
 }
 
 input CreatePlanInput {
@@ -7414,6 +7526,16 @@ input UpdateUserInput {
 
   """User id to update"""
   id: ID!
+}
+
+"""
+Registered worktree checkouts to delete. A request, not evidence: every guard is re-checked server-side.
+"""
+input PruneWorktreeCheckoutsInput {
+  """
+  repository_checkouts ids, typically DiscoveredWorktrees.missingCheckouts. At most 200 distinct ids; duplicates are collapsed.
+  """
+  checkoutIds: [ID!]!
 }
 
 """Register a server-host folder as a workspace checkout."""
