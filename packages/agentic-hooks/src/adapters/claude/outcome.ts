@@ -22,30 +22,12 @@ import {
   persistOutcomeEvent,
   SKILL_USAGE_OUTCOMES,
 } from '../../index.ts';
+import { parseOutcomeArgs } from './outcome-args.ts';
 import { CLAUDE_SOURCE } from './payload.ts';
-
-const parseArgs = (argv: string[]): Record<string, string> => {
-  const out: Record<string, string> = {};
-  for (let i = 0; i < argv.length; i += 1) {
-    const token = argv[i];
-    if (!token || !token.startsWith('--')) {
-      continue;
-    }
-    const key = token.slice(2);
-    const next = argv[i + 1];
-    if (next != null && !next.startsWith('--')) {
-      out[key] = next;
-      i += 1;
-    } else {
-      out[key] = '1';
-    }
-  }
-  return out;
-};
 
 const main = async (): Promise<void> => {
   try {
-    const args = parseArgs(process.argv.slice(2));
+    const args = parseOutcomeArgs(process.argv.slice(2));
     const repoRoot =
       process.env.CLAUDE_PROJECT_DIR ||
       process.env.OPEN_THROTTLE_REPO_ROOT ||
