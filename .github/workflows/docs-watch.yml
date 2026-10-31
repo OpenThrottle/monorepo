@@ -39,7 +39,9 @@ jobs:
         id: vars
         run: |
           SHA="${{ github.sha }}"
-          PATHS=$(git diff-tree --no-commit-id --name-only -r "$SHA" -- docs/ | jq -R -s -c 'map(select(length > 0))')
+          # `-R -s` reads stdin as ONE raw string, so split it into lines before
+          # `map`. Mapping over the string itself errors on every input.
+          PATHS=$(git diff-tree --no-commit-id --name-only -r "$SHA" -- docs/ | jq -R -s -c 'split("\n") | map(select(length > 0))')
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
           echo "paths=$PATHS" >> "$GITHUB_OUTPUT"
           echo "Commit: $SHA"

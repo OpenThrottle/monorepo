@@ -38,6 +38,9 @@ jobs:
 
       - name: 'Query merged PRs'
         id: query
+        env:
+          # `gh` refuses to run in Actions without a token (exit 4).
+          GH_TOKEN: ${{ github.token }}
         run: |
           # Yesterday in UTC (workflow runs at 6 AM UTC; full previous day of merges)
           DATE_START=$(date -u -d 'yesterday' +%Y-%m-%d)
