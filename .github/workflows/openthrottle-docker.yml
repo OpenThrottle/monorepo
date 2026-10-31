@@ -108,7 +108,7 @@ jobs:
     # dual-pushes. Trade-off: a Dependabot bump to an action used in THIS
     # workflow is first exercised on that main push, not on its PR.
     if: github.event_name != 'pull_request' || github.actor != 'dependabot[bot]'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
@@ -206,7 +206,7 @@ jobs:
     # is wired but dormant, and a Hetzner deploy must pull an image tag that was
     # pushed some other way.
     # if: false
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     # 🙈 Scoped to this job, deliberately — never move these back to the
     # workflow-level env. GOOGLE_CREDENTIALS is a pretty-printed service-account

@@ -29,7 +29,7 @@ jobs:
     # 💰 Disabled. Negligible cost (one GitHub API query writing a job summary),
     # but do not enable a schedule nobody reads. See docs/monorepo/ci-cost.md.
     if: false
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
 
     steps:

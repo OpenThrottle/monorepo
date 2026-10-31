@@ -99,7 +99,7 @@ jobs:
   # only those two commits and their trees, not the commit graph between them.
   # `fetch-depth: 1` plus an explicit depth-1 fetch of both SHAs is sufficient.
   changes:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     # runs-on: ${{ github.ref == 'refs/heads/main' && 'blacksmith-4vcpu-ubuntu-2204' || 'ubuntu-latest' }}
     timeout-minutes: 5
     outputs:
@@ -208,7 +208,7 @@ jobs:
   # the squash costs an immutable commit on main.
   attribution-guard:
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 5
     # Job-scoped addition to the workflow's least-privilege default: reading
     # `pulls/{n}/commits` needs pull-requests:read.
@@ -306,7 +306,7 @@ jobs:
       # non-zero if they disagree, rather than letting projects past the end of
       # the list fall off every shard while CI still reports green.
       jobCount: 3
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     # 🧩 SHARDING — live since OT plan b19377d1. `lint`/`typecheck`/`test` are
     #   partitioned across 3 `ubuntu-latest` boxes by
@@ -622,7 +622,7 @@ jobs:
     if: |
       needs.changes.outputs.run == 'true' &&
       (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     concurrency:
       cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
@@ -836,7 +836,7 @@ jobs:
   ci-success:
     needs: [attribution-guard, changes, build, gates]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 2
     steps:
       - name: '✅ Verify CI outcome'
@@ -878,7 +878,7 @@ jobs:
 
   nx-dependency-graph:
     if: ${{ github.ref == 'refs/heads/main' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
 
     steps:

@@ -1,0 +1,90 @@
+name: '🧪 Canary — Ubuntu 26.04 tool probe'
+
+# THROWAWAY (OT plan 4353746e). Lives only on the canary branch; never merges.
+# Runs the exact shell idioms our workflows rely on, side by side on 24.04 and
+# 26.04, so the audit classifies each call site from evidence, not assumption.
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, ubuntu-26.04]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: 'Implementations and versions'
+        run: |
+          cat /etc/os-release | grep -E '^(PRETTY_NAME|VERSION_ID)='
+          uname -r
+          echo "ImageOS=${ImageOS:-?} ImageVersion=${ImageVersion:-?}"
+          for t in sha256sum install date sed xargs tar sudo; do
+            p="$(command -v "$t")"
+            echo "── $t → $p → $(readlink -f "$p")"
+            "$t" --version 2>&1 | head -2 || true
+          done
+          echo "── coreutils packages"; dpkg -l | grep -Ei 'coreutils|sudo|findutils|^ii +sed ' | awk '{print $2, $3}'
+          echo "── docker compose"; docker compose version || true
+          echo "── buildx"; docker buildx version || true
+          echo "── node $(node --version) / git $(git --version) / jq $(jq --version) / gh $(gh --version | head -1)"
+
+      - name: 'secret-scan + terraform-validate: sha256sum -c - / sudo install'
+        run: |
+          printf 'hello\n' > probe.bin
+          sum="$(sha256sum probe.bin | cut -d' ' -f1)"
+          echo "${sum}  probe.bin" | sha256sum -c - && echo "PASS sha256sum -c (good)"
+          if echo "0000000000000000000000000000000000000000000000000000000000000000  probe.bin" | sha256sum -c - 2>/dev/null; then
+            echo "FAIL sha256sum -c accepted a bad checksum"
+          else
+            echo "PASS sha256sum -c rejects a bad checksum"
+          fi
+          sudo install -m 0755 probe.bin /usr/local/bin/probe-bin && stat -c '%a %U' /usr/local/bin/probe-bin && echo "PASS sudo install -m 0755"
+
+      - name: 'daily-merged-prs-summary: GNU relative dates'
+        run: |
+          a="$(date -u -d 'yesterday' +%Y-%m-%d)" || echo "FAIL date -d yesterday"
+          b="$(date -u -d 'yesterday + 1 day' +%Y-%m-%d)" || echo "FAIL date -d 'yesterday + 1 day'"
+          today="$(date -u +%Y-%m-%d)"
+          echo "yesterday=$a yesterday+1=$b today=$today"
+          ref="$(node -e 'const d=new Date();d.setUTCDate(d.getUTCDate()-1);console.log(d.toISOString().slice(0,10))')"
+          [ "$a" = "$ref" ] && [ "$b" = "$today" ] && echo "PASS relative dates" || echo "FAIL relative dates (node says yesterday=$ref)"
+
+      - name: 'continuous-integration: sed -n s///p and xargs -0'
+        run: |
+          partition="$(printf 'selector=a,b\nsuiteShard=1/3\nsuiteShardProjects=\ntestSelector=x y\n')"
+          s="$(printf '%s\n' "$partition" | sed -n 's/^selector=//p')"
+          t="$(printf '%s\n' "$partition" | sed -n 's/^testSelector=//p')"
+          e="$(printf '%s\n' "$partition" | sed -n 's/^suiteShardProjects=//p')"
+          [ "$s" = "a,b" ] && [ "$t" = "x y" ] && [ -z "$e" ] && echo "PASS sed -n s///p" || echo "FAIL sed -n s///p (s=$s t=$t e=$e)"
+          out="$(printf 'a b.ts\nc.ts\n' | tr '\n' '\0' | xargs -0 printf '[%s]')"
+          [ "$out" = "[a b.ts][c.ts]" ] && echo "PASS xargs -0" || echo "FAIL xargs -0 ($out)"
+          n="$(printf 'a\nb\n' | wc -l | tr -d ' ')"; [ "$n" = "2" ] && echo "PASS wc -l | tr" || echo "FAIL wc -l ($n)"
+
+      - name: 'hetzner-deploy idiom (remote-side, probed here for reference): sed -E -i backref'
+        run: |
+          printf '    image: ghcr.io/x/openthrottle-server:sha-old\n    image: ghcr.io/x/openthrottle-server-extra:sha-old\n' > compose.yml
+          repo='ghcr.io/x/openthrottle-server'; IMAGE_TAG='sha-new'
+          sed -E -i "s|(image: ${repo//./\\.}):[^\"'[:space:]]+|\1:${IMAGE_TAG}|g" compose.yml
+          cat compose.yml
+          grep -q 'openthrottle-server:sha-new' compose.yml && grep -q 'openthrottle-server-extra:sha-old' compose.yml && echo "PASS sed -E -i backref" || echo "FAIL sed -E -i backref"
+
+      - name: 'terraform-validate: apt shellcheck over our scripts'
+        run: |
+          sudo apt-get -qq update
+          sudo apt-get -qq install -y shellcheck
+          shellcheck --version
+          mapfile -t files < <(git ls-files '*.sh')
+          echo "checking ${#files[@]} tracked .sh files"
+          shellcheck -f gcc "${files[@]}" > sc.txt 2>&1 || true
+          echo "findings: $(wc -l < sc.txt)  errors: $(grep -c ': error:' sc.txt || true)"
+          awk -F': ' '{print $NF}' sc.txt | grep -oE '\[SC[0-9]+\]' | sort | uniq -c | sort -rn | head -20
+          echo "── infra/ only (what terraform-validate gates)"
+          git ls-files 'infra/*.sh' | xargs -r shellcheck && echo "PASS infra shellcheck" || echo "FAIL infra shellcheck"
