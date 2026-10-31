@@ -6970,6 +6970,12 @@ export type GetPlanQuery = {
     summary?: string | null;
     title: string;
     updatedAt: any;
+    tags: Array<{
+      __typename?: 'PlanTagObject';
+      dimension: string;
+      source: string;
+      tag: string;
+    }>;
   } | null;
 };
 
@@ -6999,6 +7005,12 @@ export type ListPlansByStatusQuery = {
       summary?: string | null;
       title: string;
       updatedAt: any;
+      tags: Array<{
+        __typename?: 'PlanTagObject';
+        dimension: string;
+        source: string;
+        tag: string;
+      }>;
     }>;
   };
 };
@@ -9520,6 +9532,24 @@ export const GetPlanDocument = {
                   kind: 'FragmentSpread',
                   name: { kind: 'Name', value: 'Plan' },
                 },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'tags' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'dimension' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'source' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+                    ],
+                  },
+                },
               ],
             },
           },
@@ -9607,6 +9637,27 @@ export const ListPlansByStatusDocument = {
                       {
                         kind: 'FragmentSpread',
                         name: { kind: 'Name', value: 'Plan' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'tags' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'dimension' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'source' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'tag' },
+                            },
+                          ],
+                        },
                       },
                     ],
                   },

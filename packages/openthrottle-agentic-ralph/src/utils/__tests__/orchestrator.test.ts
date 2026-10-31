@@ -62,6 +62,7 @@ const basePlan = (overrides: Partial<PlanRow> = {}): PlanRow => ({
   runConfigJson: '{}',
   status: 'IN_PROGRESS',
   summary: null,
+  tags: [],
   title: 'Test plan',
   updatedAt: ISO,
   ...overrides,

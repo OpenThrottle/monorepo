@@ -28,7 +28,8 @@ query KickoffGuardLookup($id: ID!) {
 `;
 
 const REMEDIATION =
-  'Create the plan first (create_plan + create_tasks, status PENDING, tagged follow-up), ' +
+  'Create the plan first (create_plan with status PENDING and tags ["follow-up"], then one ' +
+  'create_tasks call with sortOrder and wave set per task), ' +
   'then re-issue this call with a brief whose first line is `/ot-loop <planId>`. ' +
   'See skills/ot-plans/SKILL.md § Follow-ups and session kickoff.';
 

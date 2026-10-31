@@ -49,7 +49,17 @@ describe('decideKickoffBrief', () => {
     );
     expect(result).toMatchObject({
       decision: 'deny',
-      reason: expect.stringContaining('create_plan + create_tasks'),
+      reason: expect.stringContaining('create_plan'),
+    });
+  });
+
+  it('names the follow-up tag and task waves in the remediation', async () => {
+    const result = await decideKickoffBrief(
+      'Refactor the payload parser.',
+      lookupReturning('found'),
+    );
+    expect(result).toMatchObject({
+      reason: expect.stringMatching(/tags \["follow-up"\].*sortOrder and wave/),
     });
   });
 

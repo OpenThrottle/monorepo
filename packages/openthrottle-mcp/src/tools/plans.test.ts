@@ -68,6 +68,11 @@ describe('tool descriptions reflect the canonical status set', () => {
     expect(createPlanToolDescription).toContain('CANCELED');
   });
 
+  it('create_plan tells a follow-up filer to tag it and wave its tasks', () => {
+    expect(createPlanToolDescription).toContain('tags: ["follow-up"]');
+    expect(createPlanToolDescription).toContain('sortOrder and wave');
+  });
+
   it('create_plan documents runConfigJson and workspacePath, which its schema already accepts', () => {
     expect(createPlanToolDescription).toContain('runConfigJson');
     expect(createPlanToolDescription).toContain('workspacePath');
@@ -197,10 +202,12 @@ describe('createPlanToolHandler', () => {
 
   describe('when args are invalid', () => {
     it('returns an invalid-args error without calling GraphQL', async () => {
-      const result = await createPlanToolHandler({
-        category: 'maintenance',
-        title: 'Improve test coverage',
-      });
+      // Parsed from JSON: the args are deliberately invalid for the typed schema.
+      const result = await createPlanToolHandler(
+        JSON.parse(
+          '{"category":"maintenance","title":"Improve test coverage"}',
+        ),
+      );
 
       expect(result).toMatchObject({
         content: [
@@ -266,6 +273,59 @@ describe('createPlanToolHandler', () => {
     });
   });
 
+  describe('when tags are passed', () => {
+    it('creates the plan without them, then tags it', async () => {
+      process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
+      vi.mocked(executeGraphqlWithAuth)
+        .mockResolvedValueOnce({ createPlan: { id: 'plan-1' } })
+        .mockResolvedValueOnce({ addPlanTag: { tag: 'follow-up' } });
+
+      const result = await createPlanToolHandler({
+        author: 'visormatt',
+        category: 'maintenance',
+        tags: ['follow-up'],
+        title: 'Follow-up',
+      });
+
+      expect(result).toMatchObject({
+        structuredContent: { tagFailures: [], tags: ['follow-up'] },
+      });
+      expect(vi.mocked(executeGraphqlWithAuth).mock.calls[0]?.[2]).toEqual({
+        input: {
+          author: 'visormatt',
+          category: 'maintenance',
+          title: 'Follow-up',
+        },
+      });
+      expect(vi.mocked(executeGraphqlWithAuth).mock.calls[1]?.[2]).toEqual({
+        input: { planId: 'plan-1', tag: 'follow-up' },
+      });
+    });
+
+    it('reports a failed tag without failing the create', async () => {
+      process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
+      vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      vi.mocked(executeGraphqlWithAuth)
+        .mockResolvedValueOnce({ createPlan: { id: 'plan-1' } })
+        .mockRejectedValueOnce(new Error('Unknown tag "nope"'));
+
+      const result = await createPlanToolHandler({
+        author: 'visormatt',
+        category: 'maintenance',
+        tags: ['nope'],
+        title: 'Follow-up',
+      });
+
+      expect(result).toMatchObject({
+        structuredContent: {
+          plan: { id: 'plan-1' },
+          tagFailures: [{ tag: 'nope' }],
+          tags: [],
+        },
+      });
+    });
+  });
+
   describe('when GraphQL returns no plan', () => {
     it('returns a no-result error', async () => {
       process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
@@ -325,7 +385,8 @@ describe('createPlansToolHandler', () => {
 
   describe('when args are invalid', () => {
     it('returns an invalid-args error without calling GraphQL', async () => {
-      const result = await createPlansToolHandler({});
+      // Parsed from JSON: the args are deliberately invalid for the typed schema.
+      const result = await createPlansToolHandler(JSON.parse('{}'));
 
       expect(result).toMatchObject({
         content: [
