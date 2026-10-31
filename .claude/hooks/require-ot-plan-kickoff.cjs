@@ -271,8 +271,8 @@ var PLAN_RUN_ABANDONED_MS = 6 * 60 * 60 * 1e3;
 
 // packages/agentic-hooks/src/adapters/claude/kickoff-guard.ts
 var KICKOFF_TOOL_SUFFIXES = [
-  "__start_session",
-  "__hand_off_to_session"
+  "__hand_off_to_session",
+  "__start_session"
 ];
 var BRIEF_KEYS = ["prompt", "remaining_plan"];
 var isKickoffTool = (raw) => isRecord(raw) && typeof raw.tool_name === "string" && KICKOFF_TOOL_SUFFIXES.some(

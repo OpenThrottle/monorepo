@@ -22,8 +22,8 @@ import {
 
 /** Tool-name suffixes this guard applies to; MCP prefixes vary by host. */
 const KICKOFF_TOOL_SUFFIXES = [
-  '__start_session',
   '__hand_off_to_session',
+  '__start_session',
 ] as const;
 
 /** `tool_input` keys that carry a session brief. */
