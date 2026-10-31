@@ -69,8 +69,15 @@ on:
         description: 'Build every image, ignoring Nx affected'
         type: boolean
 
+# Concurrency: PRs cancel superseded runs; `main` queues instead. Every push to
+# main shares one constant group, so cancel-in-progress would kill an image build
+# mid-flight — leaving that SHA with images on some apps but not others, and
+# skipping Hetzner Deploy (it only fires on a successful run). Worse, re-running an
+# OLDER main run counts as the newest request and cancels the newer one. Queueing
+# keeps a started build running; GitHub holds at most one pending run per group,
+# so a burst of merges still collapses to the newest commit.
 concurrency:
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
   group: openthrottle-docker-${{ github.ref }}
 
 env:
