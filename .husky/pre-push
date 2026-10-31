@@ -33,5 +33,9 @@ fi
 # hook — which is precisely the --no-verify path that put one on PR #554.
 . "$(dirname "$0")/utils/attribution-push-gate.sh"
 
+# Flag pushed commits with no Plan-Id: footer. Warn only — it never stops a
+# push; it is the plan-first check that applies under every agent tool.
+. "$(dirname "$0")/utils/plan-footer-push-gate.sh"
+
 # We're good to go here
 exit 0

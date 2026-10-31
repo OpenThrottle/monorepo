@@ -80,6 +80,10 @@ const BUNDLES: readonly BundleSpec[] = [
     outFile: '.claude/hooks/plan-run-janitor.cjs',
   },
   {
+    entry: 'adapters/claude/require-ot-plan-kickoff.ts',
+    outFile: '.claude/hooks/require-ot-plan-kickoff.cjs',
+  },
+  {
     entry: 'adapters/claude/outcome.ts',
     outFile: '.claude/hooks/skill-usage-outcome.cjs',
   },

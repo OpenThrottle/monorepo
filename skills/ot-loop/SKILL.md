@@ -17,6 +17,8 @@ Your job is to run the built-in **`/loop`** over OpenThrottle plan **`$planId`**
 
 ## Setup (once, before the loop)
 
+A session started from a kickoff brief (`/ot-loop <planUuid>` on line 1 — [`ot-plans` § Follow-ups and session kickoff](../ot-plans/SKILL.md#follow-ups-and-session-kickoff)) begins here, at step 1, like any other run.
+
 1. **Work in an isolated worktree on a feature branch**, never on the base checkout. Creating, healing and removing worktrees is the [`ot-worktree`](../ot-worktree/SKILL.md) skill's job — use it for **every** worktree interaction in this loop, never a bare `git worktree` command. Follow that skill for how to invoke create / heal / destroy; a bare `git worktree add` skips the repo's provisioner (ports, `.env`, compose isolation), and a bare `git worktree remove` skips the teardown hook and the safety checks.
 
    Name it for the plan (e.g. `feat/openthrottle-drivers`, `ot/cli-allow-list`); rename the generated branch with `git branch -m` if you want a different prefix. Runs to date have lived in dedicated `loop-plan-*` worktrees so the main checkout's server + OT MCP stay up.

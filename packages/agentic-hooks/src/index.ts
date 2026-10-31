@@ -16,6 +16,7 @@ export * from './data/chunk.ts';
 export * from './data/events.ts';
 export * from './data/graphql.ts';
 export * from './data/jsonl.ts';
+export * from './data/kickoff.ts';
 export * from './data/persist.ts';
 export * from './data/plan-runs.ts';
 export * from './data/read-new-bytes.ts';
