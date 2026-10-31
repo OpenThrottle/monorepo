@@ -465,9 +465,9 @@ closed unmerged) and audited each shell step against the real image:
   the same on both images, including `sha256sum -c -`, `sudo install -m 0755`,
   `date -d 'yesterday'`, `sed -n s///p` and `xargs -0`.
 - **Pins: none.** No job is pinned to `ubuntu-24.04`.
-- **One item for a human.** OpenSSH 10 drops DSA keys, so `hetzner-deploy` breaks on 26.04 only if
-  `HETZNER_SSH_PRIVATE_KEY` is an `ssh-dss` key. That can't be checked without deploying. See
-  [Open items](#open-items).
+- **The Hetzner deploy key is fine.** OpenSSH 10 drops DSA keys, so `hetzner-deploy` would have
+  broken on 26.04 if `HETZNER_SSH_PRIVATE_KEY` were an `ssh-dss` key. The owner confirmed on
+  2026-10-31 that it isn't.
 
 ---
 
@@ -492,9 +492,6 @@ closed unmerged) and audited each shell step against the real image:
 
 - **Blacksmith's per-minute rate** was never confirmed against an invoice; the ~$34–67/month range brackets two plausible rates. Now moot unless paid runners return.
 - **`NX_KEY` is an unreferenced repo variable** and should be deleted from repo settings. It was also stored as a **variable rather than a secret** — Actions variables are not masked in logs. A licence key belongs in `secrets`.
-- **Confirm the Hetzner deploy key is not DSA** (`ssh-keygen -l -f <key>` must not report `DSA`).
-  OpenSSH 10.2 on the Ubuntu 26.04 runner rejects `ssh-dss`; ed25519, RSA and ECDSA keys are
-  unaffected.
 - **After 2026-11-19, confirm a `main` run logs `Image: ubuntu-26.04`** in every job, then close
   OT plan `4353746e`.
 - **`gs://openthrottle-staging-nx-cache`** is kept for a soak period after the cache retirement; delete it around **2026-09-01** so the 90-day lifecycle stops paying storage on dead entries.
