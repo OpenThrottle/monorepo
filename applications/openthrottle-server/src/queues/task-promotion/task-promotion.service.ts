@@ -7,7 +7,7 @@
  *   2. copies the source task's tags onto the new plan (at most one phase tag,
  *      matching the service-enforced plan invariant);
  *   3. seeds one runnable task ("Break down and scope this plan");
- *   4. closes out the source task: status → SKIPPED, a summary note pointing at the
+ *   4. closes out the source task: status → PROMOTED, a summary note pointing at the
  *      new plan, and a `promoted` tag;
  *   5. records a born-verified `plan_promotion` work-ledger artifact under a session
  *      whose subjects are the source (plan, task) and the new plan, so the provenance
@@ -16,7 +16,7 @@
  * source task so subscriptions update (enqueue/emit-after-commit, like plan-enqueue).
  *
  * Idempotent on at-least-once redelivery: the source task is loaded FOR UPDATE and a
- * task already SKIPPED with the `promoted` tag short-circuits to a no-op. Tag writes go
+ * task already PROMOTED, or carrying the legacy `promoted` tag, short-circuits to a no-op. Tag writes go
  * through the transactional EntityManager directly (TagsService is not transaction-aware),
  * carrying each row's dimension/source so provenance is preserved without re-validating
  * against a vocabulary the copied tags already passed.
@@ -56,9 +56,6 @@ import {
 } from './task-promotion.constants.ts';
 
 const PHASE_DIMENSION = 'phase';
-
-/** Terminal statuses whose `promoted`-tagged tasks are treated as already promoted. */
-const ALREADY_PROMOTED_STATUS = PROMOTED_TASK_STATUS;
 
 export interface PromoteTaskParams {
   /** Service-account id of the promoter, when the principal is a machine. */
@@ -156,7 +153,7 @@ export class TaskPromotionService {
     });
 
     if (outcome.newPlanId != null && outcome.sourcePlanId != null) {
-      // Emit-after-commit: the source task is durably SKIPPED before subscribers hear it.
+      // Emit-after-commit: the source task is durably PROMOTED before subscribers hear it.
       this.notificationsService.emitTaskStatusChanged({
         planId: outcome.sourcePlanId,
         status: PROMOTED_TASK_STATUS,
@@ -171,13 +168,16 @@ export class TaskPromotionService {
     return { newPlanId: outcome.newPlanId, skipped: outcome.skipped };
   }
 
-  /** True when the source task is already in a terminal promoted state (no-op guard). */
+  /**
+   * True when the source task is already promoted (no-op guard): status PROMOTED, or the
+   * `promoted` tag that tasks promoted before the PROMOTED status (SKIPPED + tag) still carry.
+   */
   private async isAlreadyPromoted(
     manager: EntityManager,
     task: Task,
   ): Promise<boolean> {
-    if (task.status !== ALREADY_PROMOTED_STATUS) {
-      return false;
+    if (task.status === PROMOTED_TASK_STATUS) {
+      return true;
     }
     const existing = await manager
       .getRepository(TaskTag)
@@ -267,7 +267,7 @@ export class TaskPromotionService {
     );
   }
 
-  /** Step 4: close out the source task (SKIPPED + summary note + `promoted` tag). */
+  /** Step 4: close out the source task (PROMOTED + summary note + `promoted` tag). */
   private async closeOutSourceTask(
     manager: EntityManager,
     task: Task,

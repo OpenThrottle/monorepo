@@ -69,6 +69,7 @@ anything, and nothing executes tasks in parallel from it today — see
 - **"What did I work on yesterday / last 7 days"** → `get_activity_by_date`, taking either `date`
   (`YYYY-MM-DD`) for one day or `daysBack` (1–365) for a window.
 - **"The backlog" means `PENDING`** — default `list_plans_by_status` to it when no status is named.
+- **`PROMOTED` is written by `promote_task`, never by hand** — "not finished here; the work continued as its own plan". It is resolved and terminal but not complete, so do not count it as delivered work. [Semantics](../../docs/openthrottle/authoring-plans-via-mcp.md#what-promoted-means).
 
 ## Authoring vs running
 

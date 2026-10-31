@@ -86,7 +86,7 @@ describe('PlansLoaders', () => {
   });
 
   describe('tasksCompletedCountByPlanIdLoader', () => {
-    test('filters to COMPLETED/SKIPPED and maps counts in key order', async () => {
+    test('filters to COMPLETED/PROMOTED/SKIPPED and maps counts in key order', async () => {
       getRawMany.mockResolvedValue([
         { count: '2', key: 'plan-a' },
         { count: '1', key: 'plan-c' },
@@ -101,7 +101,7 @@ describe('PlansLoaders', () => {
       expect(createQueryBuilder).toHaveBeenCalledTimes(1);
       expect(taskQueryBuilder.andWhere).toHaveBeenCalledWith(
         'entity.status IN (:...filterValues)',
-        { filterValues: ['COMPLETED', 'SKIPPED'] },
+        { filterValues: ['COMPLETED', 'PROMOTED', 'SKIPPED'] },
       );
       expect(counts).toEqual([2, 0, 1]);
     });

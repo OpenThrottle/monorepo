@@ -103,7 +103,7 @@ export function createCollectionByColumnLoader<TEntity extends ObjectLiteral>(
 
 /**
  * @description Optional IN-filter applied on top of the grouped count query
- * (e.g. count only tasks whose `status` is in COMPLETED/SKIPPED).
+ * (e.g. count only tasks whose `status` is in COMPLETED/PROMOTED/SKIPPED).
  */
 export interface GroupedCountColumnInFilter<TEntity extends ObjectLiteral> {
   /** Column to constrain (e.g. `status`). */

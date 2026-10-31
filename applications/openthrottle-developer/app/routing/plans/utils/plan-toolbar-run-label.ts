@@ -12,6 +12,8 @@ export const getPlanToolbarRunButtonLabel = (planStatus?: string): string => {
       return 'In progress';
     case 'PENDING':
       return 'Add to Queue';
+    case 'PROMOTED':
+      return 'Promoted';
     case 'QUEUED':
       return 'Queued';
     case 'SKIPPED':

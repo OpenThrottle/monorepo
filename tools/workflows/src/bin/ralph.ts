@@ -4,6 +4,7 @@
  * Ralph: agentic plan/task runner. Single flow (OpenThrottle required); see main() for steps.
  */
 
+import { isRalphTerminalStatus } from '@openthrottle/openthrottle-agentic-ralph';
 import { resolveGitBranchFromCwd } from '@openthrottle/openthrottle-agentic-utils';
 
 import { ARTWORK_RALPH, ARTWORK_THANK_YOU, COLORS } from '../config/index';
@@ -65,7 +66,7 @@ let settleActiveCliRunOnFatal: ((status: string) => Promise<void>) | null =
  * 6. Exit on COMPLETE, ERROR, or INPUT_REQUIRED (parseRalphResponse) or after max iterations
  *
  * Exit conditions (order of checks):
- * - Plan already COMPLETED or SKIPPED at start → log and exit(0); agent not run.
+ * - Plan already COMPLETED, PROMOTED, or SKIPPED at start → log and exit(0); agent not run.
  * - Plan-centric and no remaining tasks (start of iteration) → set plan COMPLETED, log, exit(0); agent not run for that iteration.
  * - parseRalphResponse: ERROR or INPUT_REQUIRED in agent output → exit(1); COMPLETE → exit(0).
  * - Loop end (max iterations reached without early exit): before exit(0), set the current task (if any) back to PENDING so the next run can resume it; then log and exit(0). See README "Max iterations and task cleanup".
@@ -150,7 +151,7 @@ export const main = async (): Promise<void> => {
   console.log(MESSAGE_INTRO);
   showConfiguration(parsedArgs);
 
-  if (planRow.status === 'COMPLETED' || planRow.status === 'SKIPPED') {
+  if (isRalphTerminalStatus(planRow.status)) {
     console.log(
       ` - 📋 Plan ${COLORS.green}${effectivePlanId}${COLORS.reset} is already ${planRow.status}; Ralph is exiting without running the agent.`,
     );
@@ -599,7 +600,7 @@ export const main = async (): Promise<void> => {
   }
 
   // Terminal reconcile: on this clean exit path (loop finished / max iterations),
-  // re-fetch tasks and, if all are COMPLETED/SKIPPED, flip the plan to COMPLETED so
+  // re-fetch tasks and, if all are COMPLETED/PROMOTED/SKIPPED, flip the plan to COMPLETED so
   // it is never stranded IN_PROGRESS. When the last task was just reset to PENDING
   // above, the set is no longer terminal and this is a no-op. Plan-centric only;
   // task-centric runs do not own the plan lifecycle.

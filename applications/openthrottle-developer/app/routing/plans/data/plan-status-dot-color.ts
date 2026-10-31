@@ -8,6 +8,7 @@ export const PLAN_STATUS_DOT_COLOR: Record<PlanStatusKey, string> = {
   COMPLETED: 'bg-lime-500',
   IN_PROGRESS: 'bg-yellow-500',
   PENDING: 'bg-sky-500',
+  PROMOTED: 'bg-blue-500',
   QUEUED: 'bg-amber-500',
   SKIPPED: 'bg-red-500',
 };
