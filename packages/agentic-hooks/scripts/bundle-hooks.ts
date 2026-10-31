@@ -76,6 +76,10 @@ const BUNDLES: readonly BundleSpec[] = [
     outFile: '.claude/hooks/memory-index-guard.cjs',
   },
   {
+    entry: 'adapters/claude/outcome.ts',
+    outFile: '.claude/hooks/skill-usage-outcome.cjs',
+  },
+  {
     entry: 'adapters/claude/plan-run-janitor.ts',
     outFile: '.claude/hooks/plan-run-janitor.cjs',
   },
@@ -84,20 +88,8 @@ const BUNDLES: readonly BundleSpec[] = [
     outFile: '.claude/hooks/require-ot-plan-kickoff.cjs',
   },
   {
-    entry: 'adapters/claude/outcome.ts',
-    outFile: '.claude/hooks/skill-usage-outcome.cjs',
-  },
-  {
     entry: 'adapters/claude/scope.ts',
     outFile: '.claude/hooks/skill-usage-scope.cjs',
-  },
-  {
-    entry: 'adapters/cursor/capture.ts',
-    outFile: '.cursor/hooks/skill-usage-capture.cjs',
-  },
-  {
-    entry: 'adapters/cursor/complete.ts',
-    outFile: '.cursor/hooks/skill-usage-complete.cjs',
   },
   // Codex reads hooks from ~/.codex/config.toml — the operator's home, never a
   // repo — so there is no in-repo hook folder to write into. The bundles still
@@ -111,6 +103,14 @@ const BUNDLES: readonly BundleSpec[] = [
   {
     entry: 'adapters/codex/complete.ts',
     outFile: '.codex/hooks/skill-usage-complete.cjs',
+  },
+  {
+    entry: 'adapters/cursor/capture.ts',
+    outFile: '.cursor/hooks/skill-usage-capture.cjs',
+  },
+  {
+    entry: 'adapters/cursor/complete.ts',
+    outFile: '.cursor/hooks/skill-usage-complete.cjs',
   },
 ];
 

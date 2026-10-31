@@ -545,11 +545,8 @@ var import_node_path4 = __toESM(require("node:path"), 1);
 var PLAN_RUNS_DIR_REL = import_node_path4.default.join(".cache", "plan-runs");
 var PLAN_RUN_ABANDONED_MS = 6 * 60 * 60 * 1e3;
 
-// packages/agentic-hooks/src/adapters/claude/payload.ts
-var CLAUDE_SOURCE = "claude-code";
-
-// packages/agentic-hooks/src/adapters/claude/outcome.ts
-var parseArgs = (argv) => {
+// packages/agentic-hooks/src/adapters/claude/outcome-args.ts
+var parseOutcomeArgs = (argv) => {
   const out = {};
   for (let i = 0; i < argv.length; i += 1) {
     const token = argv[i];
@@ -567,9 +564,14 @@ var parseArgs = (argv) => {
   }
   return out;
 };
+
+// packages/agentic-hooks/src/adapters/claude/payload.ts
+var CLAUDE_SOURCE = "claude-code";
+
+// packages/agentic-hooks/src/adapters/claude/outcome.ts
 var main = async () => {
   try {
-    const args = parseArgs(process.argv.slice(2));
+    const args = parseOutcomeArgs(process.argv.slice(2));
     const repoRoot = process.env.CLAUDE_PROJECT_DIR || process.env.OPEN_THROTTLE_REPO_ROOT || process.cwd();
     const skillName = args.skill || process.env.OPENTHROTTLE_TELEMETRY_SKILL_NAME || "";
     const outcome = args.outcome || process.env.OPENTHROTTLE_TELEMETRY_OUTCOME || "";
