@@ -100,6 +100,14 @@ jobs:
   # setup. Runner minutes go up slightly (four cold setups), which is free on a
   # public repo's ubuntu-latest — wall clock is the cost that matters here.
   plan:
+    # 🤖 Dependabot-triggered runs read the Dependabot secret store, which
+    # deliberately holds no GCP credentials, so google-github-actions/auth in
+    # `build` can never succeed — skip at the root instead of failing four legs.
+    # `build` needs `plan`, so it skips with it. Scoped to pull_request: the
+    # post-merge push to main (actor = the human merger) still builds and
+    # dual-pushes. Trade-off: a Dependabot bump to an action used in THIS
+    # workflow is first exercised on that main push, not on its PR.
+    if: github.event_name != 'pull_request' || github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:
