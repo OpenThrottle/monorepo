@@ -14,11 +14,11 @@ repo's visibility changes (see the next section).
 
 `OpenThrottle/monorepo` is a **public** repository, and GitHub-hosted **standard** runners are free with **unlimited minutes** on public repos. Everything below rests on that.
 
-**If the canonical repo is ever made private, CI starts billing immediately** — every `runs-on: ubuntu-latest` in `.github/workflows` becomes a metered runner at GitHub's per-minute rate, with no code change and no warning. At the volume measured here (~739 CI runs / 30 days, ~4,200 billed-equivalent minutes) that is a real monthly bill appearing overnight.
+**If the canonical repo is ever made private, CI starts billing immediately** — every `runs-on: ubuntu-26.04` in `.github/workflows` becomes a metered runner at GitHub's per-minute rate, with no code change and no warning. At the volume measured here (~739 CI runs / 30 days, ~4,200 billed-equivalent minutes) that is a real monthly bill appearing overnight.
 
 Two corollaries:
 
-- **Larger and managed runners are never free**, on any repo visibility. `ubuntu-latest` (4 vCPU / 16 GB) is free; `ubuntu-latest-4-cores`, ARM, GPU, and third-party managed runners are not.
+- **Larger and managed runners are never free**, on any repo visibility. The standard `ubuntu-*` labels (`ubuntu-26.04` today, 4 vCPU / 16 GB) are free; `ubuntu-latest-4-cores`, ARM, GPU, and third-party managed runners are not.
 - **Going private is a budget decision, not just an access decision.** Whoever makes that call should re-read this doc first.
 
 > This repo has **two remotes** — `origin` (`OpenThrottle/monorepo`, canonical, public) and a public mirror. The free tier follows the repo Actions runs in, which is `origin`.
@@ -103,7 +103,7 @@ Operations, not egress, were the bulk — and the whole line item was ~$6. It wa
 
 ## What it costs to re-enable a disabled workflow
 
-All estimates assume `ubuntu-latest` (free minutes on this public repo), so **"cost" here means wall-clock, queue contention, and any non-Actions spend** — GCS storage/egress, Artifact Registry, Vercel build minutes. If the repo ever goes private, multiply the job-minutes by GitHub's per-minute rate.
+All estimates assume the standard `ubuntu-26.04` runner (free minutes on this public repo), so **"cost" here means wall-clock, queue contention, and any non-Actions spend** — GCS storage/egress, Artifact Registry, Vercel build minutes. If the repo ever goes private, multiply the job-minutes by GitHub's per-minute rate.
 
 | Workflow                              | Currently                                                                        | Cost to re-enable                                                                                                                                                                                                                                                                                           | Non-Actions spend                                                                                                                       |
 | ------------------------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
@@ -445,9 +445,44 @@ The reverse procedure (disabling again) is what this section's DISABLED note rec
 
 ---
 
+## Runner label: pinned to `ubuntu-26.04`
+
+Every job runs on the explicit `ubuntu-26.04` label, not `ubuntu-latest`. It is the same free
+standard runner (4 vCPU / 16 GB); the difference is who decides when the OS changes. `ubuntu-latest`
+is a moving alias: GitHub re-points it to a new Ubuntu over a weeks-long rollout, and during that
+window any job can land on either image from one run to the next with nothing in our history to
+show it. A pinned label only changes when a commit here changes it, so an OS upgrade is a reviewed
+PR with a canary behind it, not something that happens to us.
+
+The cost is a manual bump when GitHub retires a label. GitHub announces those months ahead, and the
+[checklist](#checklist-before-you-add-a-workflow-or-job) below covers what to do.
+
+### How we got to 26.04 (OT plan `4353746e`)
+
+GitHub moved `ubuntu-latest` from 24.04 to **26.04** between 2026-10-19 and 2026-11-19
+([actions/runner-images#14748](https://github.com/actions/runner-images/issues/14748)). Before
+pinning, every workflow ran on `ubuntu-26.04` from a throwaway draft PR
+([canary PR #602](https://github.com/OpenThrottle/monorepo/pull/602), closed unmerged), and each
+shell step was audited against the real image:
+
+- **What changed on the image.** `sha256sum`, `install`, `date`, `tr` and `seq` are **uutils
+  coreutils** (Rust), and `sudo` is **sudo-rs**. `sed`, `xargs` and `tar` are still GNU. The image
+  also moves Docker 28 → 29, Compose 2.38 → 5.1, jq 1.7 → 1.8.1, shellcheck 0.9 → 0.11, Bash 5.2 → 5.3
+  and openssh-client 9.6 → 10.2.
+- **What we had to change: nothing in the workflows' steps.** Every workflow enabled on `main`
+  passed on 26.04: CI `build`/`gates`, all four Docker image builds and Terraform validate. Every
+  idiom we rely on behaved the same on both images, including `sha256sum -c -`,
+  `sudo install -m 0755`, `date -d 'yesterday'`, `sed -n s///p` and `xargs -0`. The only change is
+  the label itself.
+- **The Hetzner deploy key is fine.** OpenSSH 10 drops DSA keys, so `hetzner-deploy` would have
+  broken on 26.04 if `HETZNER_SSH_PRIVATE_KEY` were an `ssh-dss` key. The owner confirmed on
+  2026-10-31 that it isn't.
+
+---
+
 ## Checklist: before you add a workflow or job
 
-- [ ] **`runs-on: ubuntu-latest`** unless you can state, in a comment, why a larger or managed runner is worth real money. Never add a Blacksmith or larger-runner label without pricing it here first.
+- [ ] **`runs-on: ubuntu-26.04`**, the pinned standard label, unless you can state, in a comment, why a larger or managed runner is worth real money. Never add a Blacksmith or larger-runner label without pricing it here first.
 - [ ] **Path-gate it.** If the result can only change when certain files change, gate on those files. Compute the gate in the existing `changes` job — it already has the diff and costs no extra runner.
 - [ ] **Fail closed.** A gate that skips must never make a broken state look green. Default to _running_ the check when the diff cannot be computed, and for all non-PR events. Remember a **skipped** job reports **green** to branch protection.
 - [ ] **Skip draft PRs.** `build` already does; match it.
@@ -458,6 +493,7 @@ The reverse procedure (disabling again) is what this section's DISABLED note rec
 - [ ] **Don't add a required check that can fail to report.** A workflow-level `paths-ignore` on a required check hangs the PR as _"Expected — waiting for status"_ forever. This is why `ci-success` exists as a separate always-reporting gate — read the header of `continuous-integration.yml` before restructuring it.
 - [ ] **If the merge queue is re-enabled, a required check must trigger on `merge_group`.** A PR-only workflow can never report inside the queue, so GitHub waits until `check_response_timeout_minutes` expires and then dequeues the PR. The queue is currently off (see § Merge queue on `main`), but keep new required checks queue-safe anyway.
 - [ ] **If you disable something, leave a reason and an owner.** `if: false` with no explanation becomes permanent. Link back to this doc.
+- [ ] **Bump the runner label deliberately, with a canary.** When GitHub announces a new Ubuntu runner (or the deprecation of `ubuntu-26.04`), run every workflow on the new label from a throwaway draft PR and dispatch the read-only scheduled workflows against it. Fix anything that breaks, then change every `runs-on` in one PR. Never switch to `ubuntu-latest`: it would bring back unannounced OS changes. OT plan `4353746e` is the worked example; see § Runner label: pinned to `ubuntu-26.04`.
 
 ---
 
@@ -465,6 +501,8 @@ The reverse procedure (disabling again) is what this section's DISABLED note rec
 
 - **Blacksmith's per-minute rate** was never confirmed against an invoice; the ~$34–67/month range brackets two plausible rates. Now moot unless paid runners return.
 - **`NX_KEY` is an unreferenced repo variable** and should be deleted from repo settings. It was also stored as a **variable rather than a secret** — Actions variables are not masked in logs. A licence key belongs in `secrets`.
+- **Once the `ubuntu-26.04` pin merges, confirm the next `main` run logs `Image: ubuntu-26.04`** in
+  every job, then close OT plan `4353746e`.
 - **`gs://openthrottle-staging-nx-cache`** is kept for a soak period after the cache retirement; delete it around **2026-09-01** so the 90-day lifecycle stops paying storage on dead entries.
 - **Nx Powerpack licence type** (paid vs Nx's free-for-OSS grant) is unconfirmed — needs the Nx account. Moot now that `@nx/gcs-cache` is removed.
 - ~~**`nx affected --target=test` still runs at Nx's default concurrency.**~~ **Settled

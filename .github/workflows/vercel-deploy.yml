@@ -22,7 +22,7 @@
 #              VERCEL_PROJECT_ID_OPENTHROTTLE_WEBSITE
 #
 #
-#   💰 Both jobs run on `ubuntu-latest` (free, unlimited on this PUBLIC repo).
+#   💰 Both jobs run on `ubuntu-26.04` (free, unlimited on this PUBLIC repo).
 #   They are currently `if: false`, but the runner label is kept correct so that
 #   re-enabling the workflow does not silently reintroduce paid runners.
 #   See docs/monorepo/ci-cost.md before changing `runs-on`.
@@ -78,7 +78,7 @@ jobs:
     # if: >-
     #   github.event_name != 'pull_request' ||
     #   (github.event.pull_request.draft == false && github.actor != 'dependabot[bot]')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       matrix-json: ${{ steps.affected.outputs.matrix-json }}
     steps:
@@ -114,7 +114,7 @@ jobs:
     if: false
     # # Skip cleanly when nothing is affected (empty matrix include).
     # if: ${{ fromJSON(needs.compute-affected.outputs.matrix-json).include[0] != null }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.compute-affected.outputs.matrix-json) }}

@@ -7,10 +7,12 @@
 #     - https://nx.dev/recipes/ci/monorepo-ci-github-actions#configuring-ci-using-github-actions-and-nx-
 #
 #
-#   💰 RUNNER COST MODEL — every job here runs on `ubuntu-latest`.
+#   💰 RUNNER COST MODEL — every job here runs on `ubuntu-26.04`, the standard
+#   GitHub-hosted runner, pinned on purpose (see docs/monorepo/ci-cost.md
+#   § Runner label: pinned to `ubuntu-26.04`).
 #
 #   OpenThrottle/monorepo is a PUBLIC repository, and GitHub-hosted standard
-#   runners are free with unlimited minutes on public repos. `ubuntu-latest` is
+#   runners are free with unlimited minutes on public repos. `ubuntu-26.04` is
 #   4 vCPU / 16 GB — the same core count as the `blacksmith-4vcpu-ubuntu-2204`
 #   boxes this workflow used to rent, with double the RAM. Blacksmith bought
 #   wall-clock speed (faster clock, sticky-disk caches); it never bought capacity
@@ -99,7 +101,7 @@ jobs:
   # only those two commits and their trees, not the commit graph between them.
   # `fetch-depth: 1` plus an explicit depth-1 fetch of both SHAs is sufficient.
   changes:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     # runs-on: ${{ github.ref == 'refs/heads/main' && 'blacksmith-4vcpu-ubuntu-2204' || 'ubuntu-latest' }}
     timeout-minutes: 5
     outputs:
@@ -208,7 +210,7 @@ jobs:
   # the squash costs an immutable commit on main.
   attribution-guard:
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 5
     # Job-scoped addition to the workflow's least-privilege default: reading
     # `pulls/{n}/commits` needs pull-requests:read.
@@ -306,10 +308,10 @@ jobs:
       # non-zero if they disagree, rather than letting projects past the end of
       # the list fall off every shard while CI still reports green.
       jobCount: 3
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     # 🧩 SHARDING — live since OT plan b19377d1. `lint`/`typecheck`/`test` are
-    #   partitioned across 3 `ubuntu-latest` boxes by
+    #   partitioned across 3 `ubuntu-26.04` boxes by
     #   `scripts/parallelize-tasks.ts`, which deals the affected projects
     #   round-robin (applications first, so the heavy Vitest suites spread out)
     #   and prints THIS box's Nx `--exclude` selector.
@@ -622,7 +624,7 @@ jobs:
     if: |
       needs.changes.outputs.run == 'true' &&
       (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     concurrency:
       cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
@@ -836,7 +838,7 @@ jobs:
   ci-success:
     needs: [attribution-guard, changes, build, gates]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 2
     steps:
       - name: '✅ Verify CI outcome'
@@ -878,7 +880,7 @@ jobs:
 
   nx-dependency-graph:
     if: ${{ github.ref == 'refs/heads/main' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
 
     steps:

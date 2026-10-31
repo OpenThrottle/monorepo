@@ -28,7 +28,7 @@ jobs:
     # docs/nx/dependency-graphs/, which grows the repo and so raises the cost of
     # every clone in every other workflow. Priced in docs/monorepo/ci-cost.md.
     if: false
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
 
     steps:
