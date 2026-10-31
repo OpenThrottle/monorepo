@@ -60,7 +60,7 @@ export const ChatComposerMicControl = (
         <Button
           aria-label={micLabel}
           aria-pressed={isMicRecording}
-          className={clsx({
+          className={clsx('pointer-coarse:size-11', {
             'text-destructive hover:text-destructive': isMicRecording,
           })}
           data-mic-state={micState}

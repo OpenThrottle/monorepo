@@ -117,7 +117,7 @@ export const ChatReasoningTierControl = (
       <DropdownMenuTrigger asChild={true}>
         <Button
           aria-label="Reasoning and service tier"
-          className={clsx('h-8 w-auto gap-1.5', className)}
+          className={clsx('h-8 w-auto gap-1.5 pointer-coarse:h-11', className)}
           data-testid="ChatReasoningTierControl-trigger"
           type="button"
           variant="outline"

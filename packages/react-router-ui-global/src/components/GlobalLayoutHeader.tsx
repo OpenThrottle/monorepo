@@ -4,30 +4,22 @@ import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-  Button,
-  CommandShortcut,
-  Input,
   SidebarTrigger,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { OPENTHROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
-import { GithubLogoIcon } from '@phosphor-icons/react/dist/ssr/GithubLogo';
 import { SignOutIcon } from '@phosphor-icons/react/dist/ssr/SignOut';
 import clsx from 'clsx';
-import { BugIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
 
 import { GlobalLayoutBreadcrumbs } from './GlobalLayoutBreadcrumbs';
+import { GlobalLayoutHeaderLinks } from './GlobalLayoutHeaderLinks';
+import type { GlobalLayoutHeaderSearchEvent } from './GlobalLayoutHeaderSearch';
+import { GlobalLayoutHeaderSearch } from './GlobalLayoutHeaderSearch';
 
-/**
- * @description Discriminated events from the header chrome search control; the app decides navigation vs commander.
- */
-export type GlobalLayoutHeaderSearchEvent =
-  | { readonly type: 'engage' }
-  | { readonly query: string; readonly type: 'submit' };
+export type { GlobalLayoutHeaderSearchEvent };
 
 export interface GlobalLayoutHeaderProps {
   readonly className?: string;
@@ -55,41 +47,11 @@ export const GlobalLayoutHeader = (
   } = props;
 
   // Hooks
-  const [draftQuery, setDraftQuery] = React.useState('');
 
   // Setup
-  const isSearchControlled = searchValue !== undefined;
-  const resolvedSearchValue = isSearchControlled ? searchValue : draftQuery;
   const showProfile = false;
 
   // Handlers
-  const handleSearchDraftChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ): void => {
-    const next = event.target.value;
-    if (isSearchControlled) {
-      onSearchValueChange?.(next);
-    } else {
-      setDraftQuery(next);
-    }
-  };
-
-  const handleSearchEngage = (): void => {
-    onSearchChromeEvent?.({ type: 'engage' });
-  };
-
-  const handleSearchSubmit = (
-    event: React.FormEvent<HTMLFormElement>,
-  ): void => {
-    event.preventDefault();
-    if (!onSearchChromeEvent) {
-      return;
-    }
-    const trimmed = resolvedSearchValue.trim();
-    if (trimmed.length > 0) {
-      onSearchChromeEvent({ query: trimmed, type: 'submit' });
-    }
-  };
 
   // Markup
 
@@ -97,56 +59,26 @@ export const GlobalLayoutHeader = (
 
   // 🔌 Short Circuit
 
-  const searchField = onSearchChromeEvent ? (
-    <form
-      className="relative max-w-52"
-      data-testid="GlobalLayoutHeaderSearch"
-      onSubmit={handleSearchSubmit}
-    >
-      <CommandShortcut className="absolute top-1/2 right-4 z-10 flex w-auto -translate-y-1/2 transform items-center justify-center gap-0.5 p-2 text-sm opacity-100">
-        <span>⌘</span>
-        <span>+</span>
-        <span>k</span>
-      </CommandShortcut>
-      <Input
-        aria-label={searchPlaceholder}
-        className="w-full"
-        onChange={handleSearchDraftChange}
-        onFocus={handleSearchEngage}
-        placeholder={searchPlaceholder}
-        type="search"
-        value={resolvedSearchValue}
-      />
-    </form>
-  ) : (
-    <>
-      <CommandShortcut>⌘K</CommandShortcut>
-      <Input
-        className="max-w-52"
-        placeholder={searchPlaceholder}
-        type="search"
-      />
-    </>
-  );
-
   return (
     <nav
       className={clsx(
         'bg-card/50 backdrop-blur-sm',
         'border-border border-b',
         'flex items-center justify-between',
-        'gap-4 px-4 py-2 md:px-8 lg:px-12',
+        'gap-2 px-2 py-2 sm:gap-4 sm:px-4 md:px-8 lg:px-12',
+        // 44px touch targets leave no room for gaps on a phone.
+        'pointer-coarse:max-sm:gap-0',
         'sticky top-0 z-10 w-full',
         className,
       )}
       data-testid="global-layout-nav"
     >
-      <div className="flex flex-1 items-center gap-2">
+      <div className="flex min-w-0 flex-1 items-center gap-2 pointer-coarse:max-sm:gap-0">
         <Tooltip delayDuration={1_000}>
           <TooltipTrigger asChild={true}>
             <SidebarTrigger
               aria-label="Toggle sidebar (Cmd/Ctrl+B)"
-              className="text-muted-foreground"
+              className="text-muted-foreground shrink-0 pointer-coarse:size-11"
               title=""
             />
           </TooltipTrigger>
@@ -158,7 +90,12 @@ export const GlobalLayoutHeader = (
       </div>
 
       <ChatDialog title="Clutch Assistant" triggerLabel="Chat" />
-      {searchField}
+      <GlobalLayoutHeaderSearch
+        onSearchChromeEvent={onSearchChromeEvent}
+        onSearchValueChange={onSearchValueChange}
+        searchPlaceholder={searchPlaceholder}
+        searchValue={searchValue}
+      />
       {showProfile ? (
         <>
           <Link className="text-foreground" to="/profile">
@@ -173,38 +110,7 @@ export const GlobalLayoutHeader = (
         </>
       ) : null}
       <NotificationBell />
-      <Link
-        className="text-foreground"
-        target="_blank"
-        to={`${OPENTHROTTLE_GITHUB_URL}/monorepo`}
-      >
-        <Button
-          className="relative size-6 shrink-0 rounded-full"
-          variant="ghost"
-        >
-          <GithubLogoIcon />
-        </Button>
-      </Link>
-      <Link
-        className="text-foreground"
-        target="_blank"
-        to={`${OPENTHROTTLE_GITHUB_URL}/monorepo/issues/new/choose`}
-      >
-        <Button
-          className="relative size-6 shrink-0 rounded-full"
-          variant="ghost"
-        >
-          <BugIcon />
-        </Button>
-      </Link>
-      <Link className="text-foreground" reloadDocument={true} to="/auth/logout">
-        <Button
-          className="relative size-6 shrink-0 rounded-full"
-          variant="ghost"
-        >
-          <SignOutIcon />
-        </Button>
-      </Link>
+      <GlobalLayoutHeaderLinks />
     </nav>
   );
 };

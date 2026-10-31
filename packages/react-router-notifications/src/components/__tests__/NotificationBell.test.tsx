@@ -44,6 +44,14 @@ function renderBell(message: string) {
 }
 
 describe('NotificationBell Component', () => {
+  test('trigger grows to 44px on coarse pointers only', () => {
+    const component = renderBell('Anything');
+    expect(component.getByTestId('notification-bell-trigger')).toHaveClass(
+      'size-6',
+      'pointer-coarse:size-11',
+    );
+  });
+
   test('should render notification trigger', () => {
     const component = renderBell('Anything');
     expect(

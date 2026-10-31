@@ -30,20 +30,22 @@ type HandleData = Route.ComponentProps['loaderData'];
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (match) => (
     <OpenThrottleClipboard
-      className="cursor-pointer whitespace-nowrap"
-      label={match.loaderData?.task?.id ?? ''}
+      className="block max-w-full cursor-pointer truncate whitespace-nowrap sm:max-w-64"
+      label={match.loaderData?.task?.title ?? match.params.taskId}
       text={match.loaderData?.task?.id ?? ''}
     />
   ),
   links: (match) => {
-    const title = match.loaderData?.plan?.title;
-    const id = match.loaderData?.plan?.id ?? 'not-found';
-    const planId = `${id.split('-').shift()} …`;
-    const _planTitle = title ? `${title.slice(0, 30)} …` : 'Not Found';
+    const planId = match.loaderData?.plan?.id ?? match.params.planId;
+    const planTitle = match.loaderData?.plan?.title ?? 'Plan';
 
     return [
       { children: 'Plans', to: '/plans' },
-      { children: planId, to: `/plans/${id}` },
+      {
+        children: planTitle,
+        className: 'inline-block max-w-48 truncate align-bottom',
+        to: `/plans/${planId ?? 'not-found'}`,
+      },
     ];
   },
 };

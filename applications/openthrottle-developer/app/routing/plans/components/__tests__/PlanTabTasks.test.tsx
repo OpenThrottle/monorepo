@@ -82,4 +82,44 @@ describe('PlanTabTasks Component', () => {
     expect(titleLinks[0]).toHaveTextContent('First by order');
     expect(titleLinks[1]).toHaveTextContent('Second task');
   });
+
+  describe('mobile card layout (below sm)', () => {
+    test('applies the card layout classes to the table and each row', () => {
+      const { container, getByText } = renderTabTasks([mockTask]);
+
+      expect(container.querySelector('table')).toHaveClass(
+        'max-sm:block',
+        'max-sm:[&_thead]:hidden',
+      );
+      expect(getByText('First task').closest('tr')).toHaveClass(
+        'max-sm:flex',
+        'max-sm:relative',
+        'max-sm:[&>td:nth-child(3)]:absolute',
+      );
+    });
+
+    test('keeps the row anchor id used for in-page links', () => {
+      const { getByText } = renderTabTasks([mockTask]);
+
+      expect(getByText('First task').closest('tr')).toHaveAttribute(
+        'id',
+        'task-task-1',
+      );
+    });
+
+    test('clamps the title to two lines and orders the category chip beside the status', () => {
+      const { getByLabelText, getByText } = renderTabTasks([mockTask]);
+
+      expect(getByText('First task').closest('h2')).toHaveClass('line-clamp-2');
+      expect(getByLabelText('Category: dev')).toHaveClass('max-sm:order-2');
+    });
+
+    test('keeps the per-task actions menu inside its row', () => {
+      const { getByTestId } = renderTabTasks([mockTask]);
+
+      const menu = getByTestId('PlanTasksTableCellActions-task-1');
+      expect(menu.closest('tr')).toHaveClass('max-sm:flex');
+      expect(menu.closest('td')).not.toBeNull();
+    });
+  });
 });

@@ -44,8 +44,8 @@ type HandleData = Route.ComponentProps['loaderData'];
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (match) => (
     <OpenThrottleClipboard
-      className="cursor-pointer whitespace-nowrap"
-      label={match.params.planId}
+      className="block max-w-full cursor-pointer truncate whitespace-nowrap sm:max-w-64"
+      label={match.loaderData?.plan?.title ?? match.params.planId}
       text={match.params.planId ?? 'not-found'}
     />
   ),

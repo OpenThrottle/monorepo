@@ -30,4 +30,10 @@ describe('SidebarMenuButton Component', () => {
       component.container.querySelector('[data-slot="sidebar-menu-button"]'),
     ).toBeInTheDocument();
   });
+
+  test('keeps the 32px desktop height and grows to 44px on coarse pointers', () => {
+    expect(
+      component.container.querySelector('[data-slot="sidebar-menu-button"]'),
+    ).toHaveClass('h-8', 'pointer-coarse:h-11');
+  });
 });

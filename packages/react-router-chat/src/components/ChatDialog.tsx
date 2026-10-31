@@ -100,7 +100,12 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
 
   // Setup
   const triggerNode = trigger ?? (
-    <Button size="sm" type="button" variant="secondary">
+    <Button
+      className="pointer-coarse:h-11 pointer-coarse:min-w-11"
+      size="sm"
+      type="button"
+      variant="secondary"
+    >
       {triggerLabel}
     </Button>
   );

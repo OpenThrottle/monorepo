@@ -85,6 +85,69 @@ describe('ChatConversationRow', () => {
     expect(onRequestDelete).toHaveBeenCalledTimes(1);
   });
 
+  describe('rename/delete controls on touch vs hover', () => {
+    const TEST_IDS = [
+      'ChatConversationSidebar-rename-conv-1',
+      'ChatConversationSidebar-delete-conv-1',
+    ] as const;
+
+    test.each(TEST_IDS)(
+      '%s is hidden and inert on hover-capable devices until hover or focus',
+      (testId) => {
+        const component = renderRow();
+        const button = component.getByTestId(testId);
+
+        expect(button).toHaveClass('opacity-0', 'pointer-events-none');
+        expect(button).toHaveClass(
+          'group-hover/row:opacity-100',
+          'group-hover/row:pointer-events-auto',
+          'focus-visible:opacity-100',
+          'focus-visible:pointer-events-auto',
+        );
+      },
+    );
+
+    test.each(TEST_IDS)(
+      '%s is visible and tappable when the device has no hover',
+      (testId) => {
+        const component = renderRow();
+        const button = component.getByTestId(testId);
+
+        expect(button).toHaveClass(
+          '[@media(hover:none)]:opacity-100',
+          '[@media(hover:none)]:pointer-events-auto',
+        );
+      },
+    );
+
+    test.each(TEST_IDS)(
+      '%s grows to a 44px target on touch without changing the desktop size',
+      (testId) => {
+        const component = renderRow();
+        const button = component.getByTestId(testId);
+
+        expect(button).toHaveClass(
+          'pointer-coarse:size-11',
+          '[@media(hover:none)]:size-11',
+        );
+        expect(button).toHaveClass('h-6');
+      },
+    );
+
+    test('lets the title truncate so enlarged targets do not widen the row', () => {
+      const component = renderRow();
+      const select = component.getByTestId(
+        'ChatConversationSidebar-select-conv-1',
+      );
+
+      expect(select).toHaveClass('min-w-0');
+      expect(select.parentElement).toHaveClass('min-w-0', 'flex-1');
+      expect(component.getByText('Refactor the auth guard')).toHaveClass(
+        'truncate',
+      );
+    });
+  });
+
   test('sets aria-current when active', () => {
     const component = renderRow({ isActive: true });
 
