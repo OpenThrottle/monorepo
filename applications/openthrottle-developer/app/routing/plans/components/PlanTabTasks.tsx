@@ -1,4 +1,4 @@
-import { DataTable, TabsContent } from '@openthrottle/react-router-shadcn';
+import { cn, DataTable, TabsContent } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
@@ -56,7 +56,7 @@ export const PlanTabTasks = (_props: PlanTabTasksProps): React.ReactElement => {
     <TabsContent value="tasks">
       <div className="border-card-border rounded-lg border">
         <DataTable<PlanTaskRowFragment, string | null | undefined>
-          className={`table-auto ${MOBILE_CARD_TABLE_CLASS}`}
+          className={cn('table-auto', MOBILE_CARD_TABLE_CLASS)}
           columns={columns}
           data={sortedTasks}
           emptyState={<PlanTasksEmpty variant="tasks" />}

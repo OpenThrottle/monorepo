@@ -6,6 +6,7 @@
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import {
   Badge,
+  cn,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
@@ -77,7 +78,10 @@ export const buildPlansTableColumns = (
           <div className="flex flex-col gap-4 overflow-hidden p-2 max-sm:contents">
             <div className="max-sm:contents">
               <div
-                className={`flex flex-wrap items-center gap-2 ${MOBILE_CARD_TITLE_CLASS}`}
+                className={cn(
+                  'flex flex-wrap items-center gap-2',
+                  MOBILE_CARD_TITLE_CLASS,
+                )}
               >
                 <h2 className="line-clamp-1 min-w-0 text-sm font-medium text-ellipsis max-sm:line-clamp-2">
                   <Link
@@ -94,7 +98,10 @@ export const buildPlansTableColumns = (
               </div>
 
               <div
-                className={`text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs ${MOBILE_CARD_BLOCK_CLASS.meta}`}
+                className={cn(
+                  'text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs',
+                  MOBILE_CARD_BLOCK_CLASS.meta,
+                )}
               >
                 <span
                   aria-label={`${tasksCompletedCount} of ${taskCount} tasks resolved`}
@@ -163,7 +170,10 @@ export const buildPlansTableColumns = (
 
             {tags.length ? (
               <div
-                className={`flex flex-wrap gap-2 ${MOBILE_CARD_BLOCK_CLASS.tags}`}
+                className={cn(
+                  'flex flex-wrap gap-2',
+                  MOBILE_CARD_BLOCK_CLASS.tags,
+                )}
               >
                 {tags.map((tag) => (
                   <Badge
@@ -184,7 +194,10 @@ export const buildPlansTableColumns = (
             ) : null}
 
             <div
-              className={`flex flex-wrap items-center gap-2 ${MOBILE_CARD_BLOCK_CLASS.description}`}
+              className={cn(
+                'flex flex-wrap items-center gap-2',
+                MOBILE_CARD_BLOCK_CLASS.description,
+              )}
             >
               <MarkdownRenderer
                 className="line-clamp-5 overflow-hidden [&_p]:!mb-0 [&_p]:!text-xs"

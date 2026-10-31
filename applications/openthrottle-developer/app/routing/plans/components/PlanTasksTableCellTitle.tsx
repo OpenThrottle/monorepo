@@ -1,5 +1,5 @@
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
-import { Badge } from '@openthrottle/react-router-shadcn';
+import { Badge, cn } from '@openthrottle/react-router-shadcn';
 import type { Row } from '@tanstack/react-table';
 import * as React from 'react';
 import { Link } from 'react-router';
@@ -47,7 +47,7 @@ export const PlanTasksTableCellTitle = (
 
   return (
     <div className="space-y-4 overflow-hidden max-sm:contents max-sm:space-y-0">
-      <div className={`flex items-center gap-2 ${MOBILE_CARD_TITLE_CLASS}`}>
+      <div className={cn('flex items-center gap-2', MOBILE_CARD_TITLE_CLASS)}>
         <h2 className="line-clamp-2 min-w-0 text-sm font-medium text-ellipsis">
           {row.index + 1}.{' '}
           <Link
@@ -92,7 +92,10 @@ export const PlanTasksTableCellTitle = (
       ) : null}
 
       <div
-        className={`pre-wrap flex flex-col gap-2 overflow-hidden ${MOBILE_CARD_BLOCK_CLASS.description}`}
+        className={cn(
+          'pre-wrap flex flex-col gap-2 overflow-hidden',
+          MOBILE_CARD_BLOCK_CLASS.description,
+        )}
       >
         <MarkdownRenderer
           className="line-clamp-5 overflow-hidden [&_p]:!mb-0 [&_p]:!text-xs"

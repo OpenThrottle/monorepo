@@ -1,3 +1,4 @@
+import { cn } from '@openthrottle/react-router-shadcn';
 /**
  * @description Tailwind class sets that turn the plans and plan-tasks tables
  * into stacked cards below the `sm` breakpoint while keeping a single DOM (one
@@ -16,13 +17,13 @@ export const MOBILE_CARD_TABLE_CLASS =
   'max-sm:block max-sm:[&_tbody]:block max-sm:[&_thead]:hidden';
 
 /** Applied to each body row via `DataTable`'s `getRowProps`. */
-export const MOBILE_CARD_ROW_CLASS = [
+export const MOBILE_CARD_ROW_CLASS = cn(
   'max-sm:relative max-sm:flex max-sm:flex-wrap max-sm:items-center max-sm:gap-x-2 max-sm:gap-y-1.5 max-sm:p-3',
   'max-sm:[&>td]:p-0',
   'max-sm:[&>td:nth-child(1)]:order-2',
   'max-sm:[&>td:nth-child(2)]:contents',
   'max-sm:[&>td:nth-child(3)]:absolute max-sm:[&>td:nth-child(3)]:top-2 max-sm:[&>td:nth-child(3)]:right-2',
-].join(' ');
+);
 
 /** Title row: first, full width, clear of the pinned actions menu. */
 export const MOBILE_CARD_TITLE_CLASS =
