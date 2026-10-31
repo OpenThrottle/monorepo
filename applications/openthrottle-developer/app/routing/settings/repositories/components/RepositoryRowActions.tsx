@@ -4,8 +4,12 @@ import * as React from 'react';
 import { useNavigation } from 'react-router';
 
 import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
-import { REPOSITORIES_ROW_ACTIONS_COPY } from '~/routing/settings/repositories/data/data.copy';
+import {
+  MISSING_WORKTREES_COPY,
+  REPOSITORIES_ROW_ACTIONS_COPY,
+} from '~/routing/settings/repositories/data/data.copy';
 import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/data/types';
+import { PRUNE_WORKTREE_CHECKOUTS_INTENT } from '~/routing/settings/repositories/utils/missing-rows';
 
 export interface RepositoryRowActionsProps {
   className?: string;
@@ -18,8 +22,12 @@ export interface RepositoryRowActionsProps {
  * record of, the single action is registration, which posts the SAME `addFolder`
  * intent the add-folder dialog posts — the registration pipeline already stamps
  * `kind='worktree'` off `snapshot.git.isLinkedWorktree`, so no new server write
- * exists for this. Nothing here removes or prunes a worktree: destructive worktree
- * removal is deliberately out of scope.
+ * exists for this. Nothing here removes or prunes a worktree directory: destructive
+ * worktree removal is deliberately out of scope.
+ *
+ * For a registered worktree the last scan reported missing from disk, refresh and
+ * editor config have nothing to act on, so the single action is "Remove record" —
+ * the same `pruneWorktreeCheckouts` intent the toolbar's bulk prune posts, for one id.
  *
  * For a registered checkout: Each item posts the same intent and hidden fields
  * the inline card buttons posted, so the route action is untouched — note that
@@ -98,6 +106,40 @@ export const RepositoryRowActions = (
   // Life Cycle
 
   // 🔌 Short Circuit
+  if (checkout !== null && row.missing) {
+    return (
+      <GlobalPopover
+        actions={[
+          {
+            confirm: {
+              cancelLabel: REPOSITORIES_ROW_ACTIONS_COPY.cancelButton,
+              confirmLabel: MISSING_WORKTREES_COPY.removeRecordConfirm,
+              description: (
+                <>
+                  {MISSING_WORKTREES_COPY.removeRecordDescriptionPrefix}{' '}
+                  <span className="font-medium">{checkout.displayName}</span>{' '}
+                  {MISSING_WORKTREES_COPY.removeRecordDescriptionSuffix}
+                </>
+              ),
+              title: MISSING_WORKTREES_COPY.removeRecordTitle,
+            },
+            destructive: true,
+            fields: {
+              checkoutIds: checkout.id,
+              intent: PRUNE_WORKTREE_CHECKOUTS_INTENT,
+            },
+            id: 'removeRecord',
+            kind: 'submit',
+            label: MISSING_WORKTREES_COPY.removeRecordLabel,
+          },
+        ]}
+        ariaLabel={`${REPOSITORIES_ROW_ACTIONS_COPY.worktreeMenuAriaLabelPrefix} ${checkout.displayName}`}
+        className={className}
+        testId={`RepositoryRowActions-${checkout.id}`}
+      />
+    );
+  }
+
   if (checkout === null) {
     return (
       <GlobalPopover

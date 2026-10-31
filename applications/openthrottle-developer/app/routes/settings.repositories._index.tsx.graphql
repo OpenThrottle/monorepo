@@ -85,6 +85,12 @@ query getSettingsRepositories {
   }
   discoveredWorktrees {
     droppedCount
+    missingCheckouts {
+      checkoutId
+      path
+      reason
+      repositoryId
+    }
     problems {
       detail
       kind
@@ -183,6 +189,16 @@ mutation refreshCheckout($input: RefreshCheckoutInput!) {
       ...WorkspaceRepositoryFields
     }
     supersededProjectId
+  }
+}
+
+mutation pruneWorktreeCheckouts($input: PruneWorktreeCheckoutsInput!) {
+  pruneWorktreeCheckouts(input: $input) {
+    results {
+      checkoutId
+      outcome
+      path
+    }
   }
 }
 

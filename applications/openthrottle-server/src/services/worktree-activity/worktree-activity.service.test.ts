@@ -46,6 +46,7 @@ const discovery = (
   warnings: readonly string[] = [],
 ): WorktreeDiscoveryResult => ({
   droppedCount: 0,
+  missingCheckouts: [],
   problems: [],
   rootSource: 'default',
   scannedAt: '2026-08-24T00:00:00.000Z',

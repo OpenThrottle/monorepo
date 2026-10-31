@@ -1,6 +1,7 @@
 import type {
   DiscoveredWorktreeFieldsFragment,
   GetSettingsRepositoriesQuery,
+  PruneWorktreeCheckoutsMutation,
   WorkspaceRepositoryFieldsFragment,
 } from '~/__generated__/graphql';
 
@@ -24,6 +25,18 @@ export type DiscoveredWorktree = DiscoveredWorktreeFieldsFragment;
  */
 export type DiscoveredWorktreesResult =
   GetSettingsRepositoriesQuery['discoveredWorktrees'];
+
+/**
+ * @description A registered worktree checkout with no live worktree behind it — the row
+ * outlived the directory (removed outside OpenThrottle, or by a teardown that predates
+ * deregistration).
+ */
+export type MissingWorktreeCheckout =
+  DiscoveredWorktreesResult['missingCheckouts'][number];
+
+/** @description One per-id outcome from the `pruneWorktreeCheckouts` mutation. */
+export type PruneWorktreeCheckoutResult =
+  PruneWorktreeCheckoutsMutation['pruneWorktreeCheckouts']['results'][number];
 
 /**
  * @description One table row = one thing on disk, carrying enough of its parent
@@ -57,6 +70,13 @@ export interface RepositoryCheckoutRow {
   /** Stable row identity: the checkout id, or `worktree:<path>` when unregistered. */
   id: string;
   isWorktree: boolean;
+  /**
+   * A registered worktree checkout the last scan could not match to a live worktree — the row
+   * outlived the directory. Hidden by default and prunable; always false for a primary checkout.
+   */
+  missing: boolean;
+  /** Why {@link missing} is set, or null when it is not. */
+  missingReason: MissingWorktreeCheckout['reason'] | null;
   /**
    * The registered folder is not a git checkout at all. Reported per repository by
    * discovery, so it belongs on the row rather than in a page-level list.

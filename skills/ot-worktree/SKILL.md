@@ -133,9 +133,20 @@ Destroying a worktree is the one action here that can eat real work, so the defa
 - **Branch-preserving.** `--delete-branch` deletes it only if merged; `--delete-branch --force` otherwise.
 - **`--dry-run`** prints exactly what would happen and removes nothing.
 - Runs the teardown hook _before_ removal, then `git worktree prune`.
+- **Deregisters the OpenThrottle checkout record** after a successful removal
+  (`scripts/deregister.sh`), so the repositories page stops listing a worktree that is gone. It
+  calls `deregisterWorktreeCheckout` with the path, resolving the endpoint and token by the same
+  location ladder the agentic hooks use — the _primary_ checkout's `.env` (only in an OpenThrottle
+  checkout), then the ambient environment, then `~/.openthrottle/.env`. Strictly fail-open: no
+  `curl`, no endpoint or token, a server that is down, or a refused request each log one line and
+  the removal still succeeds. The server keeps the record while an unsettled plan run points at it,
+  so settle a run before tearing down its worktree. `OPENTHROTTLE_WORKTREE_DEREGISTER=0` skips it.
 
 With no argument, run from inside a linked worktree, it removes itself (chdir'ing to the primary
 checkout first).
+
+Removal that bypasses this script — `git worktree remove`, an editor's own cleanup — leaves the
+record behind. The repositories page flags such records "Missing on disk" and prunes them.
 
 ## Adopting this in another repo
 

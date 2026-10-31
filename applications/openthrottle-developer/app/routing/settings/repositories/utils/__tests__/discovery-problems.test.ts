@@ -112,4 +112,28 @@ describe('summarizeDiscovery', () => {
     expect(summary.groups).toEqual([]);
     expect(summary.problemCount).toBe(0);
   });
+
+  test('groups husk folders left in a root into one orphan group with a manual remedy', () => {
+    const summary = summarizeDiscovery(
+      mockDiscoveredWorktrees({
+        problems: [
+          problem(WorktreeDiscoveryProblemKind.OrphanDirectory, {
+            path: '/srv/worktrees/org/repo/loop-plan-a',
+          }),
+          problem(WorktreeDiscoveryProblemKind.OrphanDirectory, {
+            path: '/srv/worktrees/org/repo/loop-plan-b',
+          }),
+        ],
+      }),
+    );
+
+    expect(summary.groups).toEqual([
+      expect.objectContaining({
+        id: WORKTREE_PROBLEM_GROUP.ORPHAN,
+        remedy: expect.any(String),
+      }),
+    ]);
+    expect(summary.groups[0]?.details).toHaveLength(2);
+    expect(summary.problemCount).toBe(2);
+  });
 });

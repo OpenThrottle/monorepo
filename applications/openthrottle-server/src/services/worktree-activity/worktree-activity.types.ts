@@ -5,6 +5,7 @@
 
 import type {
   DiscoveredWorktree,
+  MissingWorktreeCheckout,
   ScannedWorktreeRoot,
   WorktreeDiscoveryProblem,
 } from '../worktree-discovery/worktree-discovery.types.ts';
@@ -55,6 +56,8 @@ export interface ClassifiedWorktree extends DiscoveredWorktree {
 
 export interface WorktreeActivityResult {
   readonly droppedCount: number;
+  /** Registered worktree checkouts with no live worktree behind them. Passed through from discovery. */
+  readonly missingCheckouts: readonly MissingWorktreeCheckout[];
   /** Classified non-fatal problems from discovery, plus anything classification itself hit. */
   readonly problems: readonly WorktreeDiscoveryProblem[];
   readonly rootSource: WorktreeRootSource | null;

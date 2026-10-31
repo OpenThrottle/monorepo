@@ -19,6 +19,9 @@
 # Safety: the target must be a registered LINKED worktree of this repo. The
 # primary checkout is refused outright. A dirty worktree is refused without
 # --force. The branch is left alone unless asked for.
+#
+# After a successful removal, the worktree's OpenThrottle checkout record is
+# deregistered best-effort (deregister.sh). That step can only log, never fail.
 
 set -euo pipefail
 
@@ -29,6 +32,8 @@ OPENTHROTTLE_WORKTREE_SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 . "$OPENTHROTTLE_WORKTREE_SCRIPT_DIR/root.sh"
 # shellcheck source=skills/ot-worktree/scripts/provision.sh
 . "$OPENTHROTTLE_WORKTREE_SCRIPT_DIR/provision.sh"
+# shellcheck source=skills/ot-worktree/scripts/deregister.sh
+. "$OPENTHROTTLE_WORKTREE_SCRIPT_DIR/deregister.sh"
 
 DRY_RUN=0
 FORCE=0
@@ -122,6 +127,7 @@ if [ "$DRY_RUN" = "1" ]; then
   [ "$FORCE" = "1" ] && log "    would pass --force to git worktree remove"
   [ "$DELETE_BRANCH" = "1" ] && log "    would delete branch '${BRANCH:-(detached)}'"
   log "    would run: git worktree prune"
+  log "    would deregister its OpenThrottle checkout record (best-effort)"
   exit 0
 fi
 
@@ -146,6 +152,9 @@ else
 fi
 
 git -C "$SRC" worktree prune >&2
+
+# The directory is gone; drop the record that still points at it. Fail-open.
+deregister_worktree_checkout "$WTREE" "$SRC"
 
 if [ "$DELETE_BRANCH" = "1" ] && [ -n "$BRANCH" ] && [ "$BRANCH" != "HEAD" ]; then
   if [ "$FORCE" = "1" ]; then

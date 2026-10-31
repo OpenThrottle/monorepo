@@ -565,6 +565,30 @@ export class PlanRunsService {
   }
 
   /**
+   * @description Finds every UNSETTLED run (QUEUED or IN_PROGRESS) pointed at one of the given
+   * checkouts, with no liveness filter. Deliberately stricter than
+   * {@link findLiveRunsByCheckoutIds}: this guards deleting a checkout row, and a run nobody has
+   * settled yet may still come back to the worktree it names — a stale-looking row is only
+   * provably dead once the sweeper or its owner settles it. Returns [] for an empty id list.
+   * @public
+   */
+  async findUnsettledRunsByCheckoutIds(
+    checkoutIds: readonly string[],
+  ): Promise<PlanRun[]> {
+    if (checkoutIds.length === 0) return [];
+
+    return this.getRepository()
+      .createQueryBuilder('run')
+      .where('run.status IN (:...statuses)', {
+        statuses: [PLAN_RUN_STATUS.QUEUED, PLAN_RUN_STATUS.IN_PROGRESS],
+      })
+      .andWhere('run.checkout_id IN (:...checkoutIds)', {
+        checkoutIds: [...checkoutIds],
+      })
+      .getMany();
+  }
+
+  /**
    * @description Force-settles ONE unsupervised run to STALE — the human escape hatch behind the
    * UI's "settle this run" affordance, and the answer for every case the age sweep and
    * settle-on-next-register do not catch soon enough.

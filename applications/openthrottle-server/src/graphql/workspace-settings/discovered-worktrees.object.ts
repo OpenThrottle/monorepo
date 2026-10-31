@@ -62,6 +62,7 @@ export const WorktreeDiscoveryProblemKindEnum = {
   CAP_EXCEEDED: 'cap-exceeded',
   CHECKOUT_LIST_FAILED: 'checkout-list-failed',
   NOT_A_GIT_REPO: 'not-a-git-repo',
+  ORPHAN_DIRECTORY: 'orphan-directory',
   PROBE_FAILED: 'probe-failed',
   ROOT_UNREADABLE: 'root-unreadable',
   STALE_WORKTREE_ENTRY: 'stale-worktree-entry',
@@ -86,6 +87,10 @@ registerEnumType(WorktreeDiscoveryProblemKindEnum, {
       description:
         'A registered folder is not a git checkout at all. Carries repositoryId — belongs on that repository’s row, not on the page.',
     },
+    ORPHAN_DIRECTORY: {
+      description:
+        'A directory in a worktree root with no .git at all — the husk a removed worktree leaves behind. Not a worktree and never probed; nothing deletes it automatically.',
+    },
     PROBE_FAILED: {
       description:
         'A read-only git probe against a directory that does exist failed. The genuinely degraded case: worktrees may be missing from the list.',
@@ -100,6 +105,47 @@ registerEnumType(WorktreeDiscoveryProblemKindEnum, {
     },
   },
 });
+
+export const MissingWorktreeCheckoutReasonEnum = {
+  NOT_A_WORKTREE: 'not-a-worktree',
+  PATH_GONE: 'path-gone',
+} as const;
+
+export type MissingWorktreeCheckoutReasonEnum =
+  (typeof MissingWorktreeCheckoutReasonEnum)[keyof typeof MissingWorktreeCheckoutReasonEnum];
+
+registerEnumType(MissingWorktreeCheckoutReasonEnum, {
+  description: `Why a registered worktree checkout has no live worktree behind it.`,
+  name: 'MissingWorktreeCheckoutReason',
+  valuesMap: {
+    NOT_A_WORKTREE: {
+      description:
+        'Something exists at the path, but it is not a linked worktree — a husk directory with no .git, or a real clone.',
+    },
+    PATH_GONE: { description: 'Nothing exists at the path any more.' },
+  },
+});
+
+@ObjectType({
+  description: `A registered repository_checkouts row of kind worktree that discovery could not match to a live worktree. Reported only — removing the row is the explicit pruneWorktreeCheckouts mutation.`,
+})
+export class MissingWorktreeCheckoutObject {
+  @Field(() => ID, { description: `The orphaned repository_checkouts row.` })
+  checkoutId!: string;
+
+  @Field(() => String, {
+    description: `The path as registered. It no longer resolves, so it is not symlink-resolved.`,
+  })
+  path!: string;
+
+  @Field(() => MissingWorktreeCheckoutReasonEnum, {
+    description: `Whether the path is gone or merely is not a worktree.`,
+  })
+  reason!: MissingWorktreeCheckoutReasonEnum;
+
+  @Field(() => ID, { description: `The repository the row belongs to.` })
+  repositoryId!: string;
+}
 
 @ObjectType({
   description: `One classified, non-fatal thing that happened during a scan.`,
@@ -220,6 +266,11 @@ export class DiscoveredWorktreesObject {
     description: `Worktrees found beyond the hard cap and therefore not listed. Always accompanied by a warning — discovery never truncates silently.`,
   })
   droppedCount!: number;
+
+  @Field(() => [MissingWorktreeCheckoutObject], {
+    description: `Registered worktree checkouts with no live worktree behind them, ordered by path — rows left behind when a worktree was removed outside OpenThrottle. Matched against every live worktree before the cap, so a capped scan never reports a live one here.`,
+  })
+  missingCheckouts!: MissingWorktreeCheckoutObject[];
 
   @Field(() => [WorktreeDiscoveryProblemObject], {
     description: `Classified non-fatal problems. Empty on a healthy machine — a repository with no worktrees yet reports nothing at all.`,

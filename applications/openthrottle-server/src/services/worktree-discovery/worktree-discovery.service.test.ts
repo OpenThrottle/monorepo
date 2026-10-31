@@ -41,6 +41,7 @@ import {
   WorktreeDiscoveryService,
 } from './worktree-discovery.service.ts';
 import {
+  MISSING_CHECKOUT_REASON,
   WORKTREE_DISCOVERY_PROBLEM,
   WORKTREE_DISCOVERY_SOURCE,
 } from './worktree-discovery.types.ts';
@@ -144,6 +145,8 @@ const withRoot = (options: {
   readonly absent?: readonly string[];
   readonly directories?: readonly string[];
   readonly entries: readonly string[];
+  /** Directories that exist but have no `.git` at all — what a removed worktree leaves behind. */
+  readonly husks?: readonly string[];
   /** The root was never created — the normal state of a repository with no worktrees. */
   readonly missing?: boolean;
   /** The root exists but cannot be read. */
@@ -170,6 +173,12 @@ const withRoot = (options: {
       ? path.slice(0, -'/.git'.length)
       : path;
     if (options.absent?.includes(owner) === true) {
+      throw errnoError(
+        'ENOENT',
+        `ENOENT: no such file or directory, '${path}'`,
+      );
+    }
+    if (path.endsWith('/.git') && options.husks?.includes(owner) === true) {
       throw errnoError(
         'ENOENT',
         `ENOENT: no such file or directory, '${path}'`,
@@ -494,6 +503,160 @@ describe('WorktreeDiscoveryService', () => {
     expect(result.warnings).toHaveLength(result.problems.length);
     expect(result.warnings[0]).toContain(ROOT);
     expect(result.warnings[0]).toContain('EACCES');
+  });
+
+  describe('missing registered checkouts', () => {
+    const registeredWorktree = (name: string): RepositoryCheckout =>
+      checkout({
+        filesystemPath: `${ROOT}/${name}`,
+        id: `checkout-${name}`,
+        kind: 'worktree',
+      });
+
+    describe('when the registered worktree is live', () => {
+      it('does not report it', async () => {
+        scriptGit({
+          worktreeList: `worktree ${PRIMARY}\n\nworktree ${ROOT}/wt-a\n`,
+        });
+        withRoot({ entries: ['wt-a'] });
+
+        const result = await build([
+          checkout(),
+          registeredWorktree('wt-a'),
+        ]).discover(USER);
+
+        expect(result.missingCheckouts).toEqual([]);
+      });
+    });
+
+    describe('when the path is gone', () => {
+      it('reports it as PATH_GONE with the path as registered', async () => {
+        const dead = `${ROOT}/wt-dead`;
+        scriptGit({});
+        withRoot({ absent: [dead], entries: [] });
+
+        const result = await build([
+          checkout(),
+          registeredWorktree('wt-dead'),
+        ]).discover(USER);
+
+        expect(result.missingCheckouts).toEqual([
+          {
+            checkoutId: 'checkout-wt-dead',
+            path: dead,
+            reason: MISSING_CHECKOUT_REASON.PATH_GONE,
+            repositoryId: 'repo-1',
+          },
+        ]);
+      });
+    });
+
+    describe('when the path exists but is not a worktree', () => {
+      it('reports a real clone as NOT_A_WORKTREE', async () => {
+        const clone = `${ROOT}/a-clone`;
+        scriptGit({});
+        withRoot({ directories: [clone], entries: ['a-clone'] });
+
+        const result = await build([
+          checkout(),
+          registeredWorktree('a-clone'),
+        ]).discover(USER);
+
+        expect(result.missingCheckouts).toEqual([
+          expect.objectContaining({
+            checkoutId: 'checkout-a-clone',
+            reason: MISSING_CHECKOUT_REASON.NOT_A_WORKTREE,
+          }),
+        ]);
+      });
+
+      it('reports a registered husk as NOT_A_WORKTREE', async () => {
+        const husk = `${ROOT}/wt-husk`;
+        scriptGit({});
+        withRoot({ entries: ['wt-husk'], husks: [husk] });
+
+        const result = await build([
+          checkout(),
+          registeredWorktree('wt-husk'),
+        ]).discover(USER);
+
+        expect(result.missingCheckouts.map((entry) => entry.reason)).toEqual([
+          MISSING_CHECKOUT_REASON.NOT_A_WORKTREE,
+        ]);
+      });
+    });
+
+    describe('when a husk directory sits in the root', () => {
+      it('reports it once as ORPHAN_DIRECTORY and never probes it', async () => {
+        const husk = `${ROOT}/loop-plan-fail-loudly`;
+        scriptGit({});
+        withRoot({ entries: ['loop-plan-fail-loudly', 'wt-a'], husks: [husk] });
+
+        const result = await build([checkout()]).discover(USER);
+
+        expect(result.worktrees.map((worktree) => worktree.name)).toEqual([
+          'wt-a',
+        ]);
+        expect(result.problems).toEqual([
+          {
+            detail: expect.any(String),
+            kind: WORKTREE_DISCOVERY_PROBLEM.ORPHAN_DIRECTORY,
+            path: husk,
+            repositoryId: null,
+          },
+        ]);
+        const probed = mockExecFile.mock.calls.map((call) => call[1][1]);
+        expect(probed).not.toContain(husk);
+      });
+
+      it('ignores dot-entries in the root', async () => {
+        scriptGit({});
+        withRoot({ entries: ['.cache'], husks: [`${ROOT}/.cache`] });
+
+        const result = await build([checkout()]).discover(USER);
+
+        expect(result.problems).toEqual([]);
+      });
+    });
+
+    describe('when the primary cannot be read', () => {
+      it('still matches a live worktree by probing its path, and still reports a gone one', async () => {
+        const dead = `${ROOT}/wt-dead`;
+        scriptGit({ fail: new Set(['worktree']) });
+        withRoot({ absent: [dead], entries: ['wt-a'] });
+
+        const result = await build([
+          checkout(),
+          registeredWorktree('wt-a'),
+          registeredWorktree('wt-dead'),
+        ]).discover(USER);
+
+        expect(
+          result.missingCheckouts.map((entry) => entry.checkoutId),
+        ).toEqual(['checkout-wt-dead']);
+        expect(result.problems.map((entry) => entry.kind)).toContain(
+          WORKTREE_DISCOVERY_PROBLEM.PROBE_FAILED,
+        );
+      });
+    });
+
+    it('never reports a worktree dropped by the cap as missing', async () => {
+      const names = Array.from(
+        { length: MAX_DISCOVERED_WORKTREES + 1 },
+        (_value, index) => `wt-${String(index).padStart(4, '0')}`,
+      );
+      const last = names.at(-1) ?? '';
+      scriptGit({});
+      withRoot({ entries: names });
+
+      const result = await build([
+        checkout(),
+        registeredWorktree(last),
+      ]).discover(USER);
+
+      expect(result.droppedCount).toBe(1);
+      expect(result.missingCheckouts).toEqual([]);
+    });
   });
 
   it('counts and warns about worktrees dropped by the hard cap', async () => {

@@ -23,7 +23,10 @@ import {
 import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/data/types';
 import { toExpandedState } from '~/routing/settings/repositories/utils/expansion';
 import { planDetailPath } from '~/routing/settings/repositories/utils/paths';
-import { deriveWorktreeBadges } from '~/routing/settings/repositories/utils/worktree-badges';
+import {
+  deriveWorktreeBadges,
+  WORKTREE_BADGE_COLORS,
+} from '~/routing/settings/repositories/utils/worktree-badges';
 import type { CheckoutDrift } from '~/routing/settings/utils/drift-labels';
 import { driftLabels } from '~/routing/settings/utils/drift-labels';
 
@@ -121,7 +124,7 @@ RepositoriesTable.buildTable = (
           ) : null}
           {deriveWorktreeBadges(row.original).map((badge) => (
             <Badge
-              color={badge.tone === 'activity' ? 'green' : 'orange'}
+              color={WORKTREE_BADGE_COLORS[badge.tone]}
               key={badge.id}
               size="xs"
               title={badge.title}

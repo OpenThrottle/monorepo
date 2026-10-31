@@ -12,18 +12,24 @@
  */
 
 import { UseGuards } from '@nestjs/common';
-import { Query, Resolver } from '@nestjs/graphql';
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { WorktreeActivityService } from '../../services/worktree-activity/worktree-activity.service.ts';
+import { WorktreeCheckoutPruneService } from '../../services/worktree-checkout-prune/worktree-checkout-prune.service.ts';
 import { DiscoveredWorktreesObject } from './discovered-worktrees.object.ts';
+import { PruneWorktreeCheckoutsInput } from './prune-worktree-checkouts.input.ts';
+import { PruneWorktreeCheckoutsPayloadObject } from './prune-worktree-checkouts.object.ts';
 
 @Resolver(() => DiscoveredWorktreesObject)
 @UseGuards(GqlPermissionsGuard)
 export class DiscoveredWorktreesResolver {
-  constructor(private readonly activityService: WorktreeActivityService) {}
+  constructor(
+    private readonly activityService: WorktreeActivityService,
+    private readonly pruneService: WorktreeCheckoutPruneService,
+  ) {}
 
   @Query(() => DiscoveredWorktreesObject, {
     description: `Git worktrees that exist on disk for the authenticated user's repositories, whether or not OpenThrottle provisioned them, each classified RUNNING / DIRTY / IDLE. Read-only: nothing here creates, prunes or removes a worktree. Runs live on every request and never throws — an unreadable root or a failed git probe becomes a warning on the payload.`,
@@ -36,6 +42,12 @@ export class DiscoveredWorktreesResolver {
 
     return {
       droppedCount: result.droppedCount,
+      missingCheckouts: result.missingCheckouts.map((entry) => ({
+        checkoutId: entry.checkoutId,
+        path: entry.path,
+        reason: entry.reason,
+        repositoryId: entry.repositoryId,
+      })),
       problems: result.problems.map((entry) => ({
         detail: entry.detail,
         kind: entry.kind,
@@ -63,6 +75,28 @@ export class DiscoveredWorktreesResolver {
         repositoryId: worktree.repositoryId,
         runMonitored: worktree.runMonitored,
         unregistered: worktree.unregistered,
+      })),
+    };
+  }
+
+  @Mutation(() => PruneWorktreeCheckoutsPayloadObject, {
+    description: `Delete registered worktree checkout rows whose worktree is gone — the cleanup for discoveredWorktrees.missingCheckouts. Rows only: never touches the filesystem and never deletes a primary checkout. Each id is re-checked server-side and skipped, not failed, when its path is a live worktree or an unsettled plan run still points at it.`,
+  })
+  @Permissions(PERMISSIONS.SETTINGS_WRITE)
+  async pruneWorktreeCheckouts(
+    @CurrentUser('sub') userId: string,
+    @Args('input', { type: () => PruneWorktreeCheckoutsInput })
+    input: PruneWorktreeCheckoutsInput,
+  ): Promise<PruneWorktreeCheckoutsPayloadObject> {
+    const results = await this.pruneService.pruneByIds(
+      userId,
+      input.checkoutIds,
+    );
+    return {
+      results: results.map((entry) => ({
+        checkoutId: entry.checkoutId,
+        outcome: entry.outcome,
+        path: entry.path,
       })),
     };
   }
