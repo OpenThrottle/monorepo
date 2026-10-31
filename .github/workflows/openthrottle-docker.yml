@@ -105,7 +105,7 @@ jobs:
   # `build` leg then gets its own runner. Sequential builds in one job cost the
   # SUM of the four builds; this costs the slowest one plus ~1 min of per-leg
   # setup. Runner minutes go up slightly (four cold setups), which is free on a
-  # public repo's ubuntu-latest — wall clock is the cost that matters here.
+  # public repo's standard runner — wall clock is the cost that matters here.
   plan:
     # 🤖 Dependabot-triggered runs read the Dependabot secret store, which
     # deliberately holds no GCP credentials, so google-github-actions/auth in
@@ -115,7 +115,7 @@ jobs:
     # dual-pushes. Trade-off: a Dependabot bump to an action used in THIS
     # workflow is first exercised on that main push, not on its PR.
     if: github.event_name != 'pull_request' || github.actor != 'dependabot[bot]'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
@@ -213,7 +213,7 @@ jobs:
     # is wired but dormant, and a Hetzner deploy must pull an image tag that was
     # pushed some other way.
     # if: false
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     # 🙈 Scoped to this job, deliberately — never move these back to the
     # workflow-level env. GOOGLE_CREDENTIALS is a pretty-printed service-account
