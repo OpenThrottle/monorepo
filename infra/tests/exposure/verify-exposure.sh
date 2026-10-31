@@ -16,7 +16,9 @@
 #      asserts, and says why.
 #   4. TLS is actually served and the certificate matches the hostname.
 #   5. GET /health returns 200 with api/database/redis/websocket all "ok", and
-#      the developer app returns 200 at /.
+#      the developer app's / ends on a 200 on its own origin. Signed-out
+#      visitors are redirected to /auth, so redirects are followed (at most 5)
+#      and only an off-origin or non-200 landing fails.
 #
 # Usage:
 #   API_DOMAIN=api.openthrottle.ai DEVELOPER_DOMAIN=developer.openthrottle.ai \
@@ -200,14 +202,30 @@ else
   [[ "${ok_count}" -eq 4 ]] && pass "/health: api, database, redis, websocket all ok"
 fi
 
-# No `|| echo` fallback: -w always emits a code (000 on connect failure), and
-# adding one concatenated two codes into "000000".
-dev_code="$(curl -o /dev/null -s -w '%{http_code}' --max-time 15 "https://${DEVELOPER_DOMAIN}/" 2>/dev/null)"
+# Signed-out visitors are redirected to sign-in (/ -> /auth), so a bare 200 at /
+# is the wrong expectation. Follow the chain, bounded, and judge where it ENDS:
+# a 200 still on this origin. Ending on another host (or on plain http) means
+# the app is sending visitors somewhere it should not.
+#
+# No `|| echo` fallback: -w always emits its fields (000 on connect failure),
+# and adding one concatenated two results into one.
+dev_origin="https://${DEVELOPER_DOMAIN}"
+dev_result="$(curl -o /dev/null -sL --max-redirs 5 --max-time 15 \
+  -w '%{http_code} %{num_redirects} %{url_effective}' "${dev_origin}/" 2>/dev/null)"
+read -r dev_code dev_hops dev_final <<< "${dev_result}"
 dev_code="${dev_code:-000}"
-if [[ "${dev_code}" == "200" ]]; then
+if [[ "${dev_code}" == "000" ]]; then
+  fail "developer app at ${dev_origin}/ did not respond"
+elif [[ "${dev_final}" != "${dev_origin}/"* ]]; then
+  fail "developer app redirected off-origin: / -> ${dev_final} (expected to stay on ${dev_origin})"
+elif [[ "${dev_code}" == 3* ]]; then
+  fail "developer app redirect chain from / did not settle within 5 hops (last: ${dev_code} at ${dev_final#"${dev_origin}"})"
+elif [[ "${dev_code}" != "200" ]]; then
+  fail "developer app returned ${dev_code} at ${dev_final#"${dev_origin}"} after ${dev_hops} redirect(s) from / (expected 200)"
+elif [[ "${dev_hops}" -eq 0 ]]; then
   pass "developer app returns 200 at /"
 else
-  fail "developer app returned ${dev_code} at / (expected 200)"
+  pass "developer app returns 200 at ${dev_final#"${dev_origin}"} (/ redirected ${dev_hops}x, same origin)"
 fi
 
 echo
