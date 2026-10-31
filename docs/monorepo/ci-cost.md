@@ -501,8 +501,11 @@ shell step was audited against the real image:
 
 - **Blacksmith's per-minute rate** was never confirmed against an invoice; the ~$34–67/month range brackets two plausible rates. Now moot unless paid runners return.
 - **`NX_KEY` is an unreferenced repo variable** and should be deleted from repo settings. It was also stored as a **variable rather than a secret** — Actions variables are not masked in logs. A licence key belongs in `secrets`.
-- **Once the `ubuntu-26.04` pin merges, confirm the next `main` run logs `Image: ubuntu-26.04`** in
-  every job, then close OT plan `4353746e`.
+- ~~**Once the `ubuntu-26.04` pin merges, confirm the next `main` run logs `Image: ubuntu-26.04`** in
+  every job, then close OT plan `4353746e`.~~ **Settled 2026-10-31** — the pin landed in
+  `8f0e1b4f` (#604), and every job of that commit's `main` runs logged `Image: ubuntu-26.04`:
+  Continuous Integration (7 jobs; `attribution-guard` is skipped on push), OpenThrottle Docker (5), Terraform Validate (1) and Hetzner
+  Deploy (1). OT plan `4353746e` is closed.
 - **`gs://openthrottle-staging-nx-cache`** is kept for a soak period after the cache retirement; delete it around **2026-09-01** so the 90-day lifecycle stops paying storage on dead entries.
 - **Nx Powerpack licence type** (paid vs Nx's free-for-OSS grant) is unconfirmed — needs the Nx account. Moot now that `@nx/gcs-cache` is removed.
 - ~~**`nx affected --target=test` still runs at Nx's default concurrency.**~~ **Settled
