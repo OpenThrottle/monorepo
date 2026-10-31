@@ -27,7 +27,7 @@ jobs:
     # 💰 Disabled. Cheap to run, but each snapshot is COMMITTED to
     # docs/nx/dependency-graphs/, which grows the repo and so raises the cost of
     # every clone in every other workflow. Priced in docs/monorepo/ci-cost.md.
-    if: false
+    # CANARY: enabled on the throwaway branch only
     runs-on: ubuntu-26.04
     timeout-minutes: 15
 
@@ -77,4 +77,4 @@ jobs:
 
           git add ${{ env.OUTPUT_DIR }}/
           git diff --staged --quiet || git commit -m "chore: update dependency graph visualization [skip ci]"
-          git push || echo "No changes to commit"
+          echo "CANARY: push skipped"; git show --stat HEAD | head -5

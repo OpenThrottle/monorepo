@@ -28,7 +28,7 @@ jobs:
     # Disabled until we enable this workflow. Remove this line or set to true to enable.
     # 💰 Disabled. Negligible cost (one GitHub API query writing a job summary),
     # but do not enable a schedule nobody reads. See docs/monorepo/ci-cost.md.
-    if: false
+    # CANARY: enabled on the throwaway branch only
     runs-on: ubuntu-26.04
     timeout-minutes: 10
 
