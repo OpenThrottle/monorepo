@@ -445,6 +445,32 @@ The reverse procedure (disabling again) is what this section's DISABLED note rec
 
 ---
 
+## `ubuntu-latest` moves to Ubuntu 26.04
+
+GitHub is rolling the `ubuntu-latest` label from Ubuntu 24.04 to **Ubuntu 26.04**
+([actions/runner-images#14748](https://github.com/actions/runner-images/issues/14748)). The rollout
+started 2026-10-19 and is due to finish by **2026-11-19**. Until then any job can land on either
+image from one run to the next, so everything here has to work on both.
+
+We stay on `ubuntu-latest` instead of pinning, because it is the free label. Before the rollout reached
+us, OT plan `4353746e` ran every workflow on the explicit `ubuntu-26.04` label ([canary PR #602](https://github.com/OpenThrottle/monorepo/pull/602),
+closed unmerged) and audited each shell step against the real image:
+
+- **What changed on the image.** `sha256sum`, `install`, `date`, `tr` and `seq` are **uutils
+  coreutils** (Rust), and `sudo` is **sudo-rs**. `sed`, `xargs` and `tar` are still GNU. The image
+  also moves Docker 28 → 29, Compose 2.38 → 5.1, jq 1.7 → 1.8.1, shellcheck 0.9 → 0.11, Bash 5.2 → 5.3
+  and openssh-client 9.6 → 10.2.
+- **What we had to change: nothing.** Every workflow enabled on `main` passed on 26.04: CI
+  `build`/`gates`, all four Docker image builds and Terraform validate. Every idiom we rely on behaved
+  the same on both images, including `sha256sum -c -`, `sudo install -m 0755`,
+  `date -d 'yesterday'`, `sed -n s///p` and `xargs -0`.
+- **Pins: none.** No job is pinned to `ubuntu-24.04`.
+- **One item for a human.** OpenSSH 10 drops DSA keys, so `hetzner-deploy` breaks on 26.04 only if
+  `HETZNER_SSH_PRIVATE_KEY` is an `ssh-dss` key. That can't be checked without deploying. See
+  [Open items](#open-items).
+
+---
+
 ## Checklist: before you add a workflow or job
 
 - [ ] **`runs-on: ubuntu-latest`** unless you can state, in a comment, why a larger or managed runner is worth real money. Never add a Blacksmith or larger-runner label without pricing it here first.
@@ -458,6 +484,7 @@ The reverse procedure (disabling again) is what this section's DISABLED note rec
 - [ ] **Don't add a required check that can fail to report.** A workflow-level `paths-ignore` on a required check hangs the PR as _"Expected — waiting for status"_ forever. This is why `ci-success` exists as a separate always-reporting gate — read the header of `continuous-integration.yml` before restructuring it.
 - [ ] **If the merge queue is re-enabled, a required check must trigger on `merge_group`.** A PR-only workflow can never report inside the queue, so GitHub waits until `check_response_timeout_minutes` expires and then dequeues the PR. The queue is currently off (see § Merge queue on `main`), but keep new required checks queue-safe anyway.
 - [ ] **If you disable something, leave a reason and an owner.** `if: false` with no explanation becomes permanent. Link back to this doc.
+- [ ] **When GitHub announces the next `ubuntu-latest` migration, canary before the rollout window.** Run every workflow on the explicit new label (for example `ubuntu-26.04`) from a throwaway draft PR, and dispatch the read-only scheduled workflows against it. Fix anything that breaks so it works on both images, and only pin a job, with a reason and a removal date, if the fix cannot land in time. OT plan `4353746e` is the worked example; see § `ubuntu-latest` moves to Ubuntu 26.04.
 
 ---
 
@@ -465,6 +492,11 @@ The reverse procedure (disabling again) is what this section's DISABLED note rec
 
 - **Blacksmith's per-minute rate** was never confirmed against an invoice; the ~$34–67/month range brackets two plausible rates. Now moot unless paid runners return.
 - **`NX_KEY` is an unreferenced repo variable** and should be deleted from repo settings. It was also stored as a **variable rather than a secret** — Actions variables are not masked in logs. A licence key belongs in `secrets`.
+- **Confirm the Hetzner deploy key is not DSA** (`ssh-keygen -l -f <key>` must not report `DSA`).
+  OpenSSH 10.2 on the Ubuntu 26.04 runner rejects `ssh-dss`; ed25519, RSA and ECDSA keys are
+  unaffected.
+- **After 2026-11-19, confirm a `main` run logs `Image: ubuntu-26.04`** in every job, then close
+  OT plan `4353746e`.
 - **`gs://openthrottle-staging-nx-cache`** is kept for a soak period after the cache retirement; delete it around **2026-09-01** so the 90-day lifecycle stops paying storage on dead entries.
 - **Nx Powerpack licence type** (paid vs Nx's free-for-OSS grant) is unconfirmed — needs the Nx account. Moot now that `@nx/gcs-cache` is removed.
 - ~~**`nx affected --target=test` still runs at Nx's default concurrency.**~~ **Settled
