@@ -27,6 +27,16 @@
           }
         ],
         "matcher": "Skill"
+      },
+      {
+        "hooks": [
+          {
+            "command": "./.claude/hooks/require-ot-plan-kickoff.cjs",
+            "statusMessage": "Require an OT plan for session kickoffs (PreToolUse)",
+            "type": "command"
+          }
+        ],
+        "matcher": "mcp__ccd_session__start_session|mcp__ccd_session__hand_off_to_session"
       }
     ],
     "Stop": [

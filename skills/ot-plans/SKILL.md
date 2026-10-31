@@ -80,6 +80,50 @@ fits. Report created ids so the user can act on them.
 separate requests. The per-task discipline, when you are told to run one, is canonical in
 [`ot-loop`](../ot-loop/SKILL.md) § The loop; do not restate it here.
 
+## Follow-ups and session kickoff
+
+AGENTS.md and CLAUDE.md state the rule (follow-ups are plans, kickoffs run from a plan). This is
+the how.
+
+**Filing a follow-up plan.**
+
+- `create_plan` with `status: 'PENDING'`. The description names the **originating plan id** (if
+  there is one) and the **evidence** that motivated it — the file and line, the failing output, the
+  review comment. A follow-up with no evidence is a hunch, and the next session cannot check it.
+- Author its tasks in **one** `create_tasks` call with `sortOrder` and `wave` decided per item (see
+  § Task wave above — there is no cheap second pass).
+- Tag it: `add_plan_tag(planId, 'follow-up')`. If the tag is not in your vocabulary yet,
+  `add_skill_tag('follow-up')` once, then retry. Best-effort — never block filing on the tag.
+- Report the plan id. Filing is not starting: [§ Authoring vs running](#authoring-vs-running) still
+  holds.
+
+**Offering a kickoff.** When the harness lets you propose or hand off a session (a "New task" card,
+a background agent, a handoff), the brief is the plan:
+
+```
+/ot-loop <planUuid>
+<at most one line of context the plan does not carry>
+```
+
+Line 1 is exactly that. Everything else belongs in the plan's description and tasks, not the brief:
+a prose brief that restates or replaces the plan drifts from it the moment either is edited. The
+session that picks it up starts at [`ot-loop` § Setup](../ot-loop/SKILL.md#setup-once-before-the-loop)
+step 1.
+
+**What checks you.** The rule binds every tool; the checks differ by tool. Where a harness gives
+the agent a tool for starting a separate session, a hook denies a brief that is not
+`/ot-loop <planUuid>` — today that is only the Claude desktop app's session tools. Cursor and Codex
+have no such tool (their subagents work inside the current task and are exempt), so nothing blocks
+there. Under every tool, `git push` lists commits with no `Plan-Id:` footer — a warning, never a
+block. Per-tool detail:
+[capability matrix § Session kickoff guard](../../docs/monorepo/agent-cli-hook-capability-matrix.md#session-kickoff-guard).
+
+**When to do it here instead.** If the follow-up acts directly on what this session just found and
+nothing else is in flight here (no unfinished change, no open PR for other work), doing it in this
+session is cheaper than a new one rediscovering it. It still gets a plan first — append tasks to
+the current plan with `create_tasks` when it belongs there, otherwise file a new one — so its
+commits carry `Plan-Id:` / `Task-Id:`.
+
 ## Work ledger
 
 **Nothing to call.** Pass `headSha` and `prNumber` to `settle_plan_run` when the PR opens; the
