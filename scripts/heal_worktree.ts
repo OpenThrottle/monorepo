@@ -8,6 +8,10 @@
  * they keep the shared-database behavior (database scripts, scheduled-jobs
  * gate). Idempotent and cheap: an existing marker is never touched.
  *
+ * Then re-renders an existing docker-compose.worktree.yml for that mode, so a
+ * worktree built by an older generator picks up its fixes. Never creates the
+ * file and never touches Docker.
+ *
  * Discovered and exec'd directly by ot-worktree's heal action (heal hook rung
  * 3) and run by bare Node's native type stripping — no tsx, no dependencies.
  * Runs with cwd = the worktree root.
@@ -15,6 +19,7 @@
 import { fileURLToPath } from 'node:url';
 
 import { createLogger } from './utils/logger.ts';
+import { refreshWorktreeComposeOverride, WORKTREE_COMPOSE_FILE } from './utils/worktree-compose.ts'; // prettier-ignore
 import { backfillWorktreeDbMarker } from './utils/worktree-db.ts';
 
 const logger = createLogger();
@@ -24,6 +29,16 @@ const main = (): void => {
 
   if (changed.length > 0) {
     logger.info(`🌳 backfilled OT_WORKTREE_DB=shared into ${changed.length} .env file(s)`); // prettier-ignore
+  }
+
+  const compose = refreshWorktreeComposeOverride(process.cwd());
+
+  if (compose.kind === 'rewritten') {
+    logger.info(`🌳 refreshed ${WORKTREE_COMPOSE_FILE} (${compose.db} database)`); // prettier-ignore
+  }
+
+  if (compose.kind === 'failed') {
+    logger.warn(`could not refresh ${WORKTREE_COMPOSE_FILE}: ${compose.message}`); // prettier-ignore
   }
 };
 

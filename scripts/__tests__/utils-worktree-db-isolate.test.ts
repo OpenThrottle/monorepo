@@ -1,10 +1,12 @@
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'; // prettier-ignore
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
 import { readEnvFile } from '../utils/env.ts';
+import type { WorktreeComposeDb } from '../utils/worktree-compose.ts';
 import { worktreeComposeOverride } from '../utils/worktree-compose.ts';
 import {
   composeProjectFor,
@@ -192,3 +194,70 @@ describe('worktreeComposeOverride', () => {
     expect(worktreeComposeOverride('isolated')).not.toContain('profiles: ["disabled"]'); // prettier-ignore
   });
 });
+
+const REPO_ROOT = join(import.meta.dirname, '..', '..');
+const DB_SERVICES = ['migrations', 'postgres', 'redis'];
+const PROFILES = ['bootstrap', 'dev', 'prod', 'voice'];
+
+const hasDockerCompose =
+  spawnSync('docker', ['compose', 'version'], { stdio: 'ignore' }).status === 0;
+
+interface ComposeServicesResult {
+  readonly services: string[];
+  readonly status: number | null;
+  readonly stderr: string;
+}
+
+/** `docker compose config --services` for the real compose file plus a generated override. */
+const composeServices = (
+  db: WorktreeComposeDb,
+  profile: string,
+): ComposeServicesResult => {
+  const root = mkdtempSync(join(tmpdir(), 'wt-compose-'));
+  copyFileSync(
+    join(REPO_ROOT, 'docker-compose.yml'),
+    join(root, 'docker-compose.yml'),
+  );
+  copyFileSync(join(REPO_ROOT, '.env.default'), join(root, '.env'));
+  writeFileSync(join(root, 'docker-compose.worktree.yml'), worktreeComposeOverride(db)); // prettier-ignore
+
+  const result = spawnSync(
+    'docker',
+    ['compose', '--project-directory', root, '-f', 'docker-compose.yml', '-f', 'docker-compose.worktree.yml', '--profile', profile, 'config', '--services'], // prettier-ignore
+    { cwd: root, encoding: 'utf8', env: { HOME: process.env.HOME, PATH: process.env.PATH } }, // prettier-ignore
+  );
+
+  return {
+    services: result.stdout.split('\n').filter((line) => line !== ''),
+    status: result.status,
+    stderr: result.stderr,
+  };
+};
+
+// `config` needs the Compose CLI, not a running daemon. It is the only check that
+// catches a depends_on edge to a service the override disabled.
+describe.skipIf(!hasDockerCompose)(
+  'worktreeComposeOverride against docker-compose.yml',
+  () => {
+    describe.each(PROFILES)('--profile %s', (profile) => {
+      it('shared validates and starts no database service of its own', () => {
+        const { services, status, stderr } = composeServices('shared', profile);
+
+        expect(stderr).not.toContain('depends on undefined service');
+        expect(status).toBe(0);
+        expect(services.filter((service) => DB_SERVICES.includes(service))).toEqual([]); // prettier-ignore
+      });
+
+      it('isolated validates and keeps its own postgres/redis', () => {
+        const { services, status, stderr } = composeServices(
+          'isolated',
+          profile,
+        );
+
+        expect(stderr).not.toContain('depends on undefined service');
+        expect(status).toBe(0);
+        expect(services).toEqual(expect.arrayContaining(['postgres', 'redis']));
+      });
+    });
+  },
+);
