@@ -254,6 +254,8 @@
     "ollama-proxy": "nx run @tools/ollama-proxy:serve",
     "preinstall": "node ./scripts/check-node-engine.mjs && npx only-allow pnpm",
     "prepare": "husky",
+    "remote:serve": "tsx ./scripts/remote-serve.ts serve",
+    "remote:stop": "tsx ./scripts/remote-serve.ts stop",
     "setup:mcp-instructions": "tsx ./scripts/setup_mcp-instructions.ts",
     "start": "pnpm run sync:skills && pnpm run start:docker && pnpm install && NX_TUI=false pnpm run start:openthrottle",
     "start:docker": "pnpm run database:start",

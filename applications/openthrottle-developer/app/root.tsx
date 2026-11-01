@@ -779,12 +779,16 @@ export const action = async (args: Route.ActionArgs) => {
     }
 
     try {
-      const token = await callLoginMutation(email.trim(), password);
+      const token = await callLoginMutation(
+        email.trim(),
+        password,
+        args.request,
+      );
       if (!token) {
         return { error: 'Login failed' };
       }
 
-      const cookie = buildAuthCookie(token);
+      const cookie = buildAuthCookie(token, { request: args.request });
       return redirect('/dashboard', {
         headers: { 'Set-Cookie': cookie },
       });
@@ -801,7 +805,9 @@ export const action = async (args: Route.ActionArgs) => {
       const success = await callLogoutMutation();
       if (success) {
         return redirectDocument('/auth', {
-          headers: { 'Set-Cookie': getClearAuthCookieHeader() },
+          headers: {
+            'Set-Cookie': getClearAuthCookieHeader({ request: args.request }),
+          },
         });
       }
 
@@ -809,7 +815,11 @@ export const action = async (args: Route.ActionArgs) => {
       // user is not left authenticated client-side after attempting to log out.
       return data(
         { error: 'Logout failed' },
-        { headers: { 'Set-Cookie': getClearAuthCookieHeader() } },
+        {
+          headers: {
+            'Set-Cookie': getClearAuthCookieHeader({ request: args.request }),
+          },
+        },
       );
     } catch (error) {
       const isError = error instanceof Error;
@@ -819,7 +829,11 @@ export const action = async (args: Route.ActionArgs) => {
       // not left authenticated client-side after attempting to log out.
       return data(
         { error: message },
-        { headers: { 'Set-Cookie': getClearAuthCookieHeader() } },
+        {
+          headers: {
+            'Set-Cookie': getClearAuthCookieHeader({ request: args.request }),
+          },
+        },
       );
     }
   }
@@ -833,12 +847,16 @@ export const action = async (args: Route.ActionArgs) => {
     }
 
     try {
-      const token = await callRegisterMutation(email.trim(), password);
+      const token = await callRegisterMutation(
+        email.trim(),
+        password,
+        args.request,
+      );
       if (!token) {
         return { error: 'Registration failed' };
       }
 
-      const cookie = buildAuthCookie(token);
+      const cookie = buildAuthCookie(token, { request: args.request });
       return redirect('/', {
         headers: { 'Set-Cookie': cookie },
       });

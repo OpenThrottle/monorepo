@@ -1,5 +1,7 @@
 import * as React from 'react';
 
+import { resolveApiUrl } from './api-url';
+
 /**
  * @description Content-Security-Policy helpers for nonce-based CSP shipped via
  * response headers (never a `<meta>` tag). A fresh nonce is minted per request
@@ -11,8 +13,10 @@ import * as React from 'react';
  * - `script-src` is `'self'` + per-request `'nonce-...'` + `'strict-dynamic'`;
  *   never `'unsafe-inline'`, never host wildcards.
  * - `connect-src` is enumerated from the app's API URL (the API origin plus
- *   its `ws(s)://` equivalent for graphql-ws); no scheme-wide grants. When no
- *   API URL is configured the policy degrades to `connect-src 'self'`.
+ *   its `ws(s)://` equivalent for graphql-ws); no scheme-wide grants. A
+ *   relative API URL (`/api`) resolves against the request's origin, so the
+ *   same-origin `wss://` is still named explicitly. When no API URL is
+ *   configured the policy degrades to `connect-src 'self'`.
  * - `style-src 'self' 'unsafe-inline'` is a PERMANENT fleet-wide exception:
  *   Radix and the React runtime inject inline styles, and inline styles are
  *   not a script-injection vector.
@@ -43,8 +47,10 @@ export interface BuildCspOptions {
   /**
    * The API URL the browser talks to (e.g. `API_URL_EXTERNAL`). Drives the
    * enumerated `connect-src` (origin + `ws(s)://` equivalent) and the
-   * `report-uri` / `report-to` targets. When absent or unparseable the policy
-   * degrades gracefully: `connect-src 'self'` and no report directives.
+   * `report-uri` / `report-to` targets. May be relative (`/api`), in which
+   * case it resolves against {@link BuildCspOptions.requestOrigin}. When
+   * absent or unparseable the policy degrades gracefully: `connect-src 'self'`
+   * and no report directives.
    */
   apiUrl?: string;
   /**
@@ -52,6 +58,11 @@ export interface BuildCspOptions {
    * header. Ignored (forced `true`) outside `NODE_ENV=production`.
    */
   reportOnly: boolean;
+  /**
+   * The origin the page is served from (see `getRequestOrigin`). Only used to
+   * resolve a relative `apiUrl`; an absolute one ignores it.
+   */
+  requestOrigin?: string;
 }
 
 /**
@@ -72,29 +83,36 @@ export interface BuildCspResult {
 
 interface ApiOrigins {
   httpOrigin?: string;
+  reportUrl?: string;
   wsOrigin?: string;
 }
 
 /**
  * @description Derives the enumerated `connect-src` origins from the API URL:
  * the API origin itself plus its websocket equivalent (`http:` → `ws:`,
- * `https:` → `wss:`) for graphql-ws subscriptions. An absent or unparseable
- * URL yields no origins so the caller degrades to `'self'`.
+ * `https:` → `wss:`) for graphql-ws subscriptions, and the CSP report target
+ * under the API base. A relative URL resolves against `requestOrigin`. An
+ * absent or unresolvable URL yields no origins so the caller degrades to
+ * `'self'`.
  */
-const deriveApiOrigins = (apiUrl: string | undefined): ApiOrigins => {
+const deriveApiOrigins = (
+  apiUrl: string | undefined,
+  requestOrigin: string | undefined,
+): ApiOrigins => {
   if (!apiUrl) return {};
 
-  try {
-    const url = new URL(apiUrl);
-    const wsProtocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+  // A relative URL with no origin to resolve against must not resolve at all.
+  const resolved = resolveApiUrl(apiUrl, requestOrigin ?? apiUrl);
+  if (!resolved) return {};
 
-    return {
-      httpOrigin: url.origin,
-      wsOrigin: `${wsProtocol}//${url.host}`,
-    };
-  } catch {
-    return {};
-  }
+  const url = new URL(resolved);
+  const wsProtocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+
+  return {
+    httpOrigin: url.origin,
+    reportUrl: `${resolved}${CSP_REPORT_PATH}`,
+    wsOrigin: `${wsProtocol}//${url.host}`,
+  };
 };
 
 /**
@@ -112,7 +130,10 @@ export const buildCsp = (
   const isProduction = process.env.NODE_ENV === 'production';
   const reportOnly = isProduction ? options.reportOnly : true;
 
-  const { httpOrigin, wsOrigin } = deriveApiOrigins(options.apiUrl);
+  const { httpOrigin, reportUrl, wsOrigin } = deriveApiOrigins(
+    options.apiUrl,
+    options.requestOrigin,
+  );
 
   const connectSrc = [
     `'self'`,
@@ -157,8 +178,7 @@ export const buildCsp = (
 
   let reportingEndpoints: string | undefined;
 
-  if (httpOrigin) {
-    const reportUrl = `${httpOrigin}${CSP_REPORT_PATH}`;
+  if (reportUrl) {
     directives.push(`report-to ${CSP_REPORT_GROUP}`);
     directives.push(`report-uri ${reportUrl}`);
     reportingEndpoints = `${CSP_REPORT_GROUP}="${reportUrl}"`;
