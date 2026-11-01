@@ -57,7 +57,7 @@ Node 16 has no global `fetch`. The launcher's server probe called it, the result
 
 ### How the launcher picks Node
 
-Before it starts tsx, the shim resolves a Node that satisfies the root `package.json` `engines.node`, puts that Node's `bin` directory at the front of `PATH`, and then `exec`s tsx. tsx's `#!/usr/bin/env node` and the server child the launcher spawns both run on it. First hit wins:
+The shim resolves a Node that satisfies the root `package.json` `engines.node`, puts that Node's `bin` directory at the front of `PATH`, and then `exec`s that Node on `run-openthrottle-mcp.ts` directly. Every `engines.node` line strips types natively, so there is no tsx. The launcher and the server child it spawns both run on that Node. First hit wins:
 
 1. **`OT_MCP_NODE`**: an explicit node binary (see [Overriding](#overriding)).
 2. **The `.nvmrc` version** at `$NVM_DIR/versions/node/v<version>` (`$NVM_DIR` defaults to `~/.nvm`). The checkout's own `.nvmrc` is used, or the primary checkout's when a worktree has none. Only an exact `x.y.z` is looked up, so aliases such as `lts/*` move on to the next step.
@@ -72,7 +72,7 @@ If nothing fits, the shim exits 1 with one stderr line naming the range and ever
 
 Resolution is plain bash ([`scripts/utils/resolve-node.sh`](../../scripts/utils/resolve-node.sh)). It takes about 6 ms, never sources `nvm.sh` (about 210 ms, and `nvm use` prints to stdout), and writes nothing to stdout, which carries only JSON-RPC. Its range parser matches the `pnpm install` guard in [`scripts/check-node-engine.mjs`](../../scripts/check-node-engine.mjs), and the tests check that the two agree.
 
-If the shim is bypassed, for example by running the `.ts` with tsx directly on an old Node, `run-openthrottle-mcp.ts` checks `engines.node` itself. It refuses to start with a banner that names the running version and the required range, and it does so before probing any server. Its probe treats only real network failures and timeouts as "unreachable", so a broken runtime can no longer be reported as a down server.
+If the shim is bypassed, for example by running the `.ts` directly on an old Node, `run-openthrottle-mcp.ts` checks `engines.node` itself. It refuses to start with a banner that names the running version and the required range, and it does so before probing any server. Its probe treats only real network failures and timeouts as "unreachable", so a broken runtime can no longer be reported as a down server.
 
 ### Overriding
 

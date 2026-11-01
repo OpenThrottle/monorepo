@@ -59,7 +59,7 @@ The base is exported as `OT_PORT_BASE` plus
 
 ## The .env rewrite
 
-After `setup_environment.sh` resets each `.env` from `.env.default` (back to
+After `setup_environment.ts` resets each `.env` from `.env.default` (back to
 `6020`–`6025`), `setup_worktree.ts` remaps the six ports across the root `.env`
 and every `applications/*/.env` in one `perl` pass. Because the `70xx` targets
 never overlap the `60xx` sources, the rewrite is internally consistent and
@@ -104,7 +104,7 @@ docker compose -f docker-compose.yml -f docker-compose.worktree.yml --profile de
 
 ## Service-account tokens
 
-`setup_environment.sh` resets every `.env` from `.env.default`, which ships
+`setup_environment.ts` resets every `.env` from `.env.default`, which ships
 **placeholder** service-account tokens (`ot_sa_xxx…`). The `.mcp.json` launcher
 does `source ./.env` from the worktree root, so a placeholder
 `OPENTHROTTLE_MCP_AUTH_TOKEN` makes every authenticated `openthrottle-mcp` call

@@ -1,8 +1,15 @@
+#!/usr/bin/env node
 /**
  * @description OpenThrottle's worktree teardown hook — the mirror of
  * `scripts/setup_worktree.ts`. Discovered by the ot-worktree skill's destroy action via
  * `.worktree/teardown.sh`, and run with cwd = the worktree, immediately BEFORE the worktree is
  * removed.
+ *
+ * Exec'd directly by bare Node's native type stripping — no tsx. Teardown can run against a
+ * half-provisioned worktree or one whose node_modules were pruned, so this script and everything
+ * it imports must stay erasable-syntax TypeScript (no enums, namespaces or parameter properties)
+ * that imports node builtins and scripts/utils only (the shared logger degrades gracefully without
+ * chalk).
  *
  * Provisioning gives a worktree its own docker compose project
  * (`COMPOSE_PROJECT_NAME=openthrottle-<slug>`, container prefix `wt-<slug>-`). Removing the

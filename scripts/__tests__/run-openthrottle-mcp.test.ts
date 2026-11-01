@@ -526,11 +526,11 @@ describe('ot_resolve_node', () => {
 
 /**
  * The resolver tests above prove the choice; these prove the shim acts on it —
- * the chosen bin dir is first on PATH by the time tsx's wrapper runs `node`.
+ * the chosen Node is the one that runs the launcher .ts (and is first on PATH).
  * The stub node announces itself instead of running the launcher, so stdout
- * must stay empty: the shim and the wrapper write nothing there themselves.
+ * must stay empty: the shim writes nothing there itself.
  */
-describe('the shim runs tsx on the Node it resolved', () => {
+describe('the shim runs the launcher on the Node it resolved', () => {
   const SYSTEM_PATH = '/usr/bin:/bin';
 
   const runShim = (env: Readonly<Record<string, string>>) =>
