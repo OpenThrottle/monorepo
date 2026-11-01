@@ -11,6 +11,7 @@ import { Link, useRevalidator } from 'react-router';
 
 import { WORKTREE_DISCOVERY_COPY } from '~/routing/settings/repositories/data/data.copy';
 import type { DiscoveredWorktreesResult } from '~/routing/settings/repositories/data/types';
+import { configuredRoots } from '~/routing/settings/repositories/utils/configured-roots';
 import { summarizeDiscovery } from '~/routing/settings/repositories/utils/discovery-problems';
 
 export interface WorktreeDiscoveryNoticeProps {
@@ -19,8 +20,9 @@ export interface WorktreeDiscoveryNoticeProps {
 }
 
 /**
- * @description Scan-level context for the on-disk worktree list: where OpenThrottle
- * looked, anything worth acting on, and a control to look again.
+ * @description Scan-level context for the on-disk worktree list: the configured
+ * root(s) OpenThrottle looked under and where each came from, anything worth acting
+ * on, and a control to look again.
  *
  * Discovery runs live in the loader with no cached snapshot, so "refresh" is a
  * loader revalidation rather than a mutation. A healthy machine renders one quiet
@@ -33,13 +35,15 @@ export const WorktreeDiscoveryNotice = (
   props: WorktreeDiscoveryNoticeProps,
 ): React.ReactElement => {
   const { className, discoveredWorktrees } = props;
-  const { droppedCount, worktreeRoot } = discoveredWorktrees;
+  const { droppedCount, scannedRoots } = discoveredWorktrees;
 
   // Hooks
   const revalidator = useRevalidator();
 
   // Setup
   const isRescanning = revalidator.state === 'loading';
+  const roots = configuredRoots(scannedRoots);
+  const [singleRoot] = roots.length === 1 ? roots : [];
   const { emptyRootCount, groups, problemCount } =
     summarizeDiscovery(discoveredWorktrees);
 
@@ -60,14 +64,19 @@ export const WorktreeDiscoveryNotice = (
       data-testid="WorktreeDiscoveryNotice"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        {worktreeRoot === null ? (
+        {roots.length === 0 ? (
           <p className="text-sm font-medium">
             {WORKTREE_DISCOVERY_COPY.unconfiguredTitle}
+          </p>
+        ) : singleRoot === undefined ? (
+          <p className="text-muted-foreground text-xs">
+            {WORKTREE_DISCOVERY_COPY.rootsPrefixOther}
           </p>
         ) : (
           <p className="text-muted-foreground text-xs">
             {WORKTREE_DISCOVERY_COPY.rootPrefix}{' '}
-            <span className="font-medium">{worktreeRoot}</span>
+            <span className="font-medium">{singleRoot.baseRoot}</span>{' '}
+            <span>({singleRoot.sourceLabel})</span>
           </p>
         )}
 
@@ -85,7 +94,18 @@ export const WorktreeDiscoveryNotice = (
         </Button>
       </div>
 
-      {worktreeRoot === null ? (
+      {roots.length > 1 ? (
+        <ul className="list-inside list-disc space-y-1">
+          {roots.map((root) => (
+            <li className="text-muted-foreground text-xs" key={root.baseRoot}>
+              <span className="font-medium">{root.baseRoot}</span>{' '}
+              <span>({root.sourceLabel})</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      {roots.length === 0 ? (
         <p className="text-muted-foreground text-xs">
           {WORKTREE_DISCOVERY_COPY.unconfiguredBody}{' '}
           <Link

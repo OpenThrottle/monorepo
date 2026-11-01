@@ -1215,14 +1215,17 @@ export type DiscoveredWorktreesObject = {
   rootSource?: Maybe<WorktreeRootSource>;
   /** ISO timestamp of this scan. Discovery runs live on every request; there is no cached snapshot. */
   scannedAt: Scalars['String']['output'];
-  /** Every root the scan looked in. worktreeRoot names only the first, which misrepresents a machine whose primaries resolve to several roots. */
+  /** Every root the scan looked in, each carrying the configured baseRoot it sits under and the rung that set it. */
   scannedRoots: Array<ScannedWorktreeRootObject>;
   /**
    * Non-fatal problems as flat sentences, one per entry in problems.
    * @deprecated Use problems — warnings is unclassified free text and cannot be presented per-kind.
    */
   warnings: Array<Scalars['String']['output']>;
-  /** The resolved root that was scanned; null when none could be resolved (no registered primary checkout). When several primaries resolve to different roots, this is the first — every root is still scanned. */
+  /**
+   * The first resolved per-repository folder that was scanned; null when none could be resolved (no registered primary checkout).
+   * @deprecated Use scannedRoots.baseRoot — worktreeRoot is the first primary's <root>/<org>/<repo> folder, not the configured root, and names only one of several.
+   */
   worktreeRoot?: Maybe<Scalars['String']['output']>;
   worktrees: Array<DiscoveredWorktreeObject>;
 };
@@ -4646,9 +4649,11 @@ export type RuleApplicationObject = {
 /** One resolved worktree root and what the depth-1 scan of it found. */
 export type ScannedWorktreeRootObject = {
   __typename?: 'ScannedWorktreeRootObject';
+  /** The configured worktree root this directory sits under, before OpenThrottle joins <org>/<repo> onto it — absolute and ~-expanded, on the server host. This is the value to show a person; path is one repository's folder beneath it. Several scanned roots share a baseRoot whenever their repositories share a configured root, so de-duplicate before listing. */
+  baseRoot: Scalars['String']['output'];
   /** Whether the directory is there at all. False is the ordinary state of a repository with no worktrees yet — it is data, not a failure. */
   exists: Scalars['Boolean']['output'];
-  /** Absolute path on the server host. */
+  /** The directory actually scanned: baseRoot joined with the repository's <org>/<repo>. Absolute path on the server host. */
   path: Scalars['String']['output'];
   /** Which rung of the shared ladder resolved this root. */
   source: WorktreeRootSource;

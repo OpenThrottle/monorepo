@@ -9,6 +9,7 @@ import type {
   DiscoveredWorktreesResult,
   MissingWorktreeCheckout,
   RepositoryCheckout,
+  ScannedWorktreeRoot,
 } from '~/routing/settings/repositories/data/types';
 
 export interface MockCheckoutOverrides {
@@ -183,9 +184,24 @@ export const mockMissingCheckout = (
 });
 
 /**
+ * @description One scanned root: a repository's `<root>/<org>/<repo>` folder under
+ * the default configured root, existing and empty.
+ */
+export const mockScannedRoot = (
+  overrides: Partial<ScannedWorktreeRoot> = {},
+): ScannedWorktreeRoot => ({
+  baseRoot: '/Users/dev/.openthrottle/worktrees',
+  exists: true,
+  path: '/Users/dev/.openthrottle/worktrees/acme/monorepo',
+  source: WorktreeRootSource.Default,
+  worktreeCount: 0,
+  ...overrides,
+});
+
+/**
  * @description Minimal worktree-scan payload fixture. Defaults model a clean scan of
- * the default root with nothing found; pass `worktreeRoot: null` to model the
- * "no root to scan" state and `problems` to model a partial scan.
+ * one repository under the default root with nothing found; pass `scannedRoots: []`
+ * to model the "no root to scan" state and `problems` to model a partial scan.
  */
 export const mockDiscoveredWorktrees = (
   overrides: Partial<DiscoveredWorktreesResult> = {},
@@ -193,10 +209,8 @@ export const mockDiscoveredWorktrees = (
   droppedCount: 0,
   missingCheckouts: [],
   problems: [],
-  rootSource: WorktreeRootSource.Default,
   scannedAt: '2026-08-24T00:00:00.000Z',
-  scannedRoots: [],
-  worktreeRoot: '/Users/dev/.openthrottle/worktrees/monorepo',
+  scannedRoots: [mockScannedRoot()],
   worktrees: [],
   ...overrides,
 });

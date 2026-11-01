@@ -21,16 +21,23 @@ import type {
 } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { mockExecFile, mockReaddirSync, mockRealpathSync, mockStatSync } =
-  vi.hoisted(() => ({
-    mockExecFile: vi.fn(),
-    mockReaddirSync: vi.fn(),
-    mockRealpathSync: vi.fn(),
-    mockStatSync: vi.fn(),
-  }));
+const {
+  mockExecFile,
+  mockReaddirSync,
+  mockReadFileSync,
+  mockRealpathSync,
+  mockStatSync,
+} = vi.hoisted(() => ({
+  mockExecFile: vi.fn(),
+  mockReadFileSync: vi.fn(),
+  mockReaddirSync: vi.fn(),
+  mockRealpathSync: vi.fn(),
+  mockStatSync: vi.fn(),
+}));
 
 vi.mock('node:child_process', () => ({ execFile: mockExecFile }));
 vi.mock('node:fs', () => ({
+  readFileSync: mockReadFileSync,
   readdirSync: mockReaddirSync,
   realpathSync: mockRealpathSync,
   statSync: mockStatSync,
@@ -216,6 +223,11 @@ describe('WorktreeDiscoveryService', () => {
   beforeEach(() => {
     mockExecFile.mockReset();
     mockReaddirSync.mockReset();
+    mockReadFileSync.mockReset();
+    // No checkout `.env` by default — the ladder's checkout-env rung stays silent.
+    mockReadFileSync.mockImplementation(() => {
+      throw errnoError('ENOENT', 'ENOENT: no such file or directory');
+    });
     mockRealpathSync.mockReset();
     mockStatSync.mockReset();
     vi.stubEnv('OPENTHROTTLE_WORKTREE_ROOT', '');
@@ -410,6 +422,58 @@ describe('WorktreeDiscoveryService', () => {
     });
     expect(result.worktreeRoot).toBe(ROOT);
     expect(result.problems).toEqual([]);
+  });
+
+  it('carries the configured base root onto each scanned root, one per distinct checkout-env value', async () => {
+    const other = '/Users/someone/code/other';
+    scriptGit({});
+    withRoot({ entries: [] });
+    mockReadFileSync.mockImplementation((path: string) => {
+      if (path === `${PRIMARY}/.env`) {
+        return 'OPENTHROTTLE_WORKTREE_ROOT=/srv/wt-a/\n';
+      }
+      if (path === `${other}/.env`) {
+        return 'OPENTHROTTLE_WORKTREE_ROOT="~/wt-b"\n';
+      }
+      throw errnoError('ENOENT', 'ENOENT: no such file or directory');
+    });
+
+    const result = await build([
+      checkout(),
+      checkout({
+        filesystemPath: other,
+        id: 'checkout-other',
+        repositoryId: 'repo-other',
+      }),
+    ]).discover(USER);
+
+    expect(result.scannedRoots).toEqual([
+      expect.objectContaining({
+        baseRoot: '/srv/wt-a',
+        path: '/srv/wt-a/openthrottle',
+        source: 'checkout-env',
+      }),
+      expect.objectContaining({
+        baseRoot: join(homedir(), 'wt-b'),
+        path: join(homedir(), 'wt-b', 'other'),
+        source: 'checkout-env',
+      }),
+    ]);
+  });
+
+  it('reports the default base root without the <org>/<repo> suffix', async () => {
+    scriptGit({});
+    withRoot({ entries: [] });
+
+    const result = await build([checkout()]).discover(USER);
+
+    expect(result.scannedRoots).toEqual([
+      expect.objectContaining({
+        baseRoot: join(homedir(), '.openthrottle', 'worktrees'),
+        path: ROOT,
+        source: 'default',
+      }),
+    ]);
   });
 
   it('prefers OPENTHROTTLE_WORKTREE_ROOT over the default', async () => {

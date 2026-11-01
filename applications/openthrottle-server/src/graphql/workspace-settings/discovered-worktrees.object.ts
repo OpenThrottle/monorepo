@@ -178,12 +178,19 @@ export class WorktreeDiscoveryProblemObject {
   description: `One resolved worktree root and what the depth-1 scan of it found.`,
 })
 export class ScannedWorktreeRootObject {
+  @Field(() => String, {
+    description: `The configured worktree root this directory sits under, before OpenThrottle joins <org>/<repo> onto it — absolute and ~-expanded, on the server host. This is the value to show a person; path is one repository's folder beneath it. Several scanned roots share a baseRoot whenever their repositories share a configured root, so de-duplicate before listing.`,
+  })
+  baseRoot!: string;
+
   @Field(() => Boolean, {
     description: `Whether the directory is there at all. False is the ordinary state of a repository with no worktrees yet — it is data, not a failure.`,
   })
   exists!: boolean;
 
-  @Field(() => String, { description: `Absolute path on the server host.` })
+  @Field(() => String, {
+    description: `The directory actually scanned: baseRoot joined with the repository's <org>/<repo>. Absolute path on the server host.`,
+  })
   path!: string;
 
   @Field(() => WorktreeRootSourceEnum, {
@@ -289,7 +296,7 @@ export class DiscoveredWorktreesObject {
   scannedAt!: string;
 
   @Field(() => [ScannedWorktreeRootObject], {
-    description: `Every root the scan looked in. worktreeRoot names only the first, which misrepresents a machine whose primaries resolve to several roots.`,
+    description: `Every root the scan looked in, each carrying the configured baseRoot it sits under and the rung that set it.`,
   })
   scannedRoots!: ScannedWorktreeRootObject[];
 
@@ -300,7 +307,8 @@ export class DiscoveredWorktreesObject {
   warnings!: string[];
 
   @Field(() => String, {
-    description: `The resolved root that was scanned; null when none could be resolved (no registered primary checkout). When several primaries resolve to different roots, this is the first — every root is still scanned.`,
+    deprecationReason: `Use scannedRoots.baseRoot — worktreeRoot is the first primary's <root>/<org>/<repo> folder, not the configured root, and names only one of several.`,
+    description: `The first resolved per-repository folder that was scanned; null when none could be resolved (no registered primary checkout).`,
     nullable: true,
   })
   worktreeRoot!: string | null;

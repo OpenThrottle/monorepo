@@ -73,6 +73,7 @@ describe('resolveWorktreeRoot', () => {
         env: { OPENTHROTTLE_WORKTREE_ROOT: '/from/env' },
       }),
     ).toEqual({
+      baseRoot: '/from/env',
       resolvedRoot: `/from/env/${NS}`,
       source: WORKTREE_ROOT_SOURCE.ENV,
     });
@@ -82,6 +83,7 @@ describe('resolveWorktreeRoot', () => {
     withCheckoutEnv('FOO=bar\nOPENTHROTTLE_WORKTREE_ROOT=/from/dot-env\n');
 
     expect(resolveWorktreeRoot({ baseCheckoutPath: BASE, env: {} })).toEqual({
+      baseRoot: '/from/dot-env',
       resolvedRoot: `/from/dot-env/${NS}`,
       source: WORKTREE_ROOT_SOURCE.CHECKOUT_ENV,
     });
@@ -127,6 +129,7 @@ describe('resolveWorktreeRoot', () => {
 
   it('falls back to ~/.openthrottle/worktrees/<org>/<repo>', () => {
     expect(resolveWorktreeRoot({ baseCheckoutPath: BASE, env: {} })).toEqual({
+      baseRoot: `/Users/matt/${DEFAULT_WORKTREE_ROOT_RELATIVE_PATH}`,
       resolvedRoot: `/Users/matt/${DEFAULT_WORKTREE_ROOT_RELATIVE_PATH}/${NS}`,
       source: WORKTREE_ROOT_SOURCE.DEFAULT,
     });
@@ -176,8 +179,33 @@ describe('resolveWorktreeRoot', () => {
       resolveWorktreeRoot({
         baseCheckoutPath: BASE,
         env: { OPENTHROTTLE_WORKTREE_ROOT: '~/wt/here///' },
-      }).resolvedRoot,
-    ).toBe(`/Users/matt/wt/here/${NS}`);
+      }),
+    ).toEqual({
+      baseRoot: '/Users/matt/wt/here',
+      resolvedRoot: `/Users/matt/wt/here/${NS}`,
+      source: WORKTREE_ROOT_SOURCE.ENV,
+    });
+  });
+
+  it('reports a ~-prefixed, trailing-slashed checkout .env root as its base, without <org>/<repo>', () => {
+    withCheckoutEnv('OPENTHROTTLE_WORKTREE_ROOT="~/elsewhere/"\n');
+
+    expect(resolveWorktreeRoot({ baseCheckoutPath: BASE, env: {} })).toEqual({
+      baseRoot: '/Users/matt/elsewhere',
+      resolvedRoot: `/Users/matt/elsewhere/${NS}`,
+      source: WORKTREE_ROOT_SOURCE.CHECKOUT_ENV,
+    });
+  });
+
+  it('keeps baseRoot independent of the repository, so repos sharing a root report one root', () => {
+    withRemote('https://github.com/acme/monorepo.git');
+    const acme = resolveWorktreeRoot({ baseCheckoutPath: '/w/a', env: {} });
+
+    withRemote('https://github.com/other-org/site.git');
+    const other = resolveWorktreeRoot({ baseCheckoutPath: '/w/b', env: {} });
+
+    expect(acme.resolvedRoot).not.toBe(other.resolvedRoot);
+    expect(acme.baseRoot).toBe(other.baseRoot);
   });
 
   it('treats blank and whitespace-only values as absent at every rung', () => {
@@ -189,6 +217,7 @@ describe('resolveWorktreeRoot', () => {
         env: { OPENTHROTTLE_WORKTREE_ROOT: '  ' },
       }),
     ).toEqual({
+      baseRoot: `/Users/matt/${DEFAULT_WORKTREE_ROOT_RELATIVE_PATH}`,
       resolvedRoot: `/Users/matt/${DEFAULT_WORKTREE_ROOT_RELATIVE_PATH}/${NS}`,
       source: WORKTREE_ROOT_SOURCE.DEFAULT,
     });

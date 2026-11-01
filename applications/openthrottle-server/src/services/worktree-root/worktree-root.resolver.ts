@@ -62,7 +62,15 @@ export interface ResolveWorktreeRootParams {
 }
 
 export interface ResolvedWorktreeRoot {
-  /** Absolute, `~`-expanded, trailing-slash-free root directory. */
+  /**
+   * The configured root itself — absolute, `~`-expanded, trailing-slash-free — BEFORE `<org>/<repo>`
+   * is joined on. What a person set (or the default), and therefore what a page should name.
+   */
+  readonly baseRoot: string;
+  /**
+   * The directory worktrees for THIS checkout are created under: {@link baseRoot} joined with the
+   * checkout's `<org>/<repo>` namespace. Absolute and trailing-slash-free.
+   */
   readonly resolvedRoot: string;
   readonly source: WorktreeRootSource;
 }
@@ -228,18 +236,18 @@ export const resolveWorktreeRoot = (
       );
     }
 
+    const baseRoot = stripTrailingSlashes(expanded);
     return {
-      resolvedRoot: join(stripTrailingSlashes(expanded), namespace),
+      baseRoot,
+      resolvedRoot: join(baseRoot, namespace),
       source,
     };
   }
 
+  const baseRoot = join(homedir(), DEFAULT_WORKTREE_ROOT_RELATIVE_PATH);
   return {
-    resolvedRoot: join(
-      homedir(),
-      DEFAULT_WORKTREE_ROOT_RELATIVE_PATH,
-      namespace,
-    ),
+    baseRoot,
+    resolvedRoot: join(baseRoot, namespace),
     source: WORKTREE_ROOT_SOURCE.DEFAULT,
   };
 };

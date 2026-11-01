@@ -97,15 +97,14 @@ query getSettingsRepositories {
       path
       repositoryId
     }
-    rootSource
     scannedAt
     scannedRoots {
+      baseRoot
       exists
       path
       source
       worktreeCount
     }
-    worktreeRoot
     worktrees {
       ...DiscoveredWorktreeFields
     }

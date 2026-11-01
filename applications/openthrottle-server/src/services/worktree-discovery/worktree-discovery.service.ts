@@ -85,6 +85,12 @@ const WORKTREE_KIND = 'worktree';
  */
 const ABSENT_DIRECTORY_ERRNOS = new Set(['ENOENT', 'ENOTDIR']);
 
+/** Where a scanned directory came from: the configured root it sits under, and the rung that set it. */
+interface ResolvedRootOrigin {
+  readonly baseRoot: string;
+  readonly source: WorktreeRootSource;
+}
+
 /** Accumulator for one worktree while the two sources are being merged. */
 interface WorktreeCandidate {
   path: string;
@@ -182,7 +188,7 @@ export class WorktreeDiscoveryService {
       droppedCount,
       missingCheckouts,
       problems,
-      rootSource: firstRoot?.[1] ?? null,
+      rootSource: firstRoot?.[1].source ?? null,
       scannedAt,
       scannedRoots,
       warnings: problems.map(formatWarning),
@@ -226,22 +232,22 @@ export class WorktreeDiscoveryService {
 
   /**
    * @description The distinct worktree roots the shared ladder resolves across the user's primary
-   * checkouts, each mapped to the rung that answered. Insertion-ordered so the payload's
-   * `worktreeRoot` is stable.
+   * checkouts, keyed by the namespaced directory that gets scanned and mapped to the configured base
+   * root plus the rung that answered. Insertion-ordered so the payload's `worktreeRoot` is stable.
    */
   private resolveRoots(
     primaries: readonly RepositoryCheckout[],
     problems: WorktreeDiscoveryProblem[],
-  ): Map<string, WorktreeRootSource> {
-    const roots = new Map<string, WorktreeRootSource>();
+  ): Map<string, ResolvedRootOrigin> {
+    const roots = new Map<string, ResolvedRootOrigin>();
 
     for (const primary of primaries) {
       try {
-        const { resolvedRoot, source } = resolveWorktreeRoot({
+        const { baseRoot, resolvedRoot, source } = resolveWorktreeRoot({
           baseCheckoutPath: primary.filesystemPath,
         });
         if (!roots.has(resolvedRoot)) {
-          roots.set(resolvedRoot, source);
+          roots.set(resolvedRoot, { baseRoot, source });
         }
       } catch (error) {
         problems.push(
@@ -317,13 +323,13 @@ export class WorktreeDiscoveryService {
    * naming the first root and leaving the rest to be inferred from failures.
    */
   private collectFromRootScan(
-    roots: ReadonlyMap<string, WorktreeRootSource>,
+    roots: ReadonlyMap<string, ResolvedRootOrigin>,
     candidates: Map<string, WorktreeCandidate>,
     problems: WorktreeDiscoveryProblem[],
   ): ScannedWorktreeRoot[] {
     const scanned: ScannedWorktreeRoot[] = [];
 
-    for (const [root, source] of roots) {
+    for (const [root, { baseRoot, source }] of roots) {
       let entries: string[];
       try {
         entries = readdirSync(root);
@@ -340,6 +346,7 @@ export class WorktreeDiscoveryService {
           );
         }
         scanned.push({
+          baseRoot,
           exists: !absent,
           path: root,
           source,
@@ -366,7 +373,13 @@ export class WorktreeDiscoveryService {
         worktreeCount += 1;
       }
 
-      scanned.push({ exists: true, path: root, source, worktreeCount });
+      scanned.push({
+        baseRoot,
+        exists: true,
+        path: root,
+        source,
+        worktreeCount,
+      });
     }
 
     return scanned;
