@@ -4,6 +4,11 @@
  * user-global MCP client configs (written by setup_mcp-instructions.ts), so
  * the shim stays put and existing registrations keep working.
  *
+ * The shim runs this file with bare Node's native type stripping — no tsx. It
+ * and everything it imports must stay erasable-syntax TypeScript (no enums,
+ * namespaces or parameter properties) that imports node builtins and repo-local
+ * scripts only.
+ *
  * stdio transport: stdout carries ONLY JSON-RPC for the MCP client. ALL
  * narration goes to stderr (the resolve-only mode's URL is the one deliberate
  * stdout exception).
@@ -23,7 +28,7 @@
  * remains the fallback when the worktree's is unreachable, and vice versa.
  *
  * RUNTIME CWD IS NOT THE AUTHOR'S WORKSPACE. This launcher must run inside the
- * checkout to resolve tsx and the built MCP bundle, so it chdirs there and
+ * checkout to resolve the built MCP bundle, so it chdirs there and
  * spawns the server with the same cwd. That is a tooling requirement, and it
  * must not be mistaken for "where the plan was written". The caller's cwd — the
  * folder the MCP client had open — is captured BEFORE the chdir and forwarded

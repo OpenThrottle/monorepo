@@ -235,7 +235,7 @@ Optional, and off by default — worktrees share the main Postgres. To split the
 
 ## Node version
 
-MCP clients launch the server with their own PATH, which is often not the repo's Node. The Claude desktop app lists every nvm install oldest-first, and `env -i` has no `node` at all. So the launcher picks a Node that satisfies root `engines.node` itself: `OT_MCP_NODE`, then the `.nvmrc` version under `$NVM_DIR`, then the newest nvm install that fits, then PATH's `node`.
+MCP clients launch the server with their own PATH, which is often not the repo's Node. The Claude desktop app lists every nvm install oldest-first, and `env -i` has no `node` at all. So the launcher picks a Node that satisfies root `engines.node` itself: `OT_MCP_NODE`, then the `.nvmrc` version under `$NVM_DIR`, then the newest nvm install that fits, then PATH's `node`. It runs `scripts/run-openthrottle-mcp.ts` on that Node directly (native type stripping, no tsx); the server it then starts is the built `packages/openthrottle-mcp/dist`.
 
 If a client says **"Connection closed"** while the CLI works, or the launcher says **"no reachable OpenThrottle server found"** while the server is up, check the Node version first. Symptom, cause, resolution order and overrides: **[openthrottle-mcp README § Launcher Node version](../../packages/openthrottle-mcp/README.md#launcher-node-version)**.
 

@@ -20,7 +20,7 @@ First-time setup? run `./scripts/setup.sh` instead — it calls this plus instal
 
 ```bash
 # 🔒 Create or update the environment variables
-./scripts/setup_environment.sh
+./scripts/setup_environment.ts
 
 # Run the application
 pnpm nx run openthrottle-admin:dev

@@ -13,7 +13,7 @@
 #   0. $OT_MCP_NODE — an explicit node binary. Explicit means explicit: if it
 #      does not satisfy engines, resolution fails rather than falling through.
 #   1. $NVM_DIR/versions/node/v<.nvmrc> — this checkout's .nvmrc, else the
-#      primary checkout's (worktree fallback, same as tsx). Only a full
+#      primary checkout's (worktree fallback). Only a full
 #      x.y.z .nvmrc is looked up; aliases (lts/*, node) and partials skip on.
 #   2. The newest $NVM_DIR/versions/node/v* that satisfies engines.
 #   3. The `node` on PATH, if its --version satisfies engines.

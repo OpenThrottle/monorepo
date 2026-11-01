@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /**
  * @description Create/reset the local .env files from their .env.default
  * templates — the repo root plus every applications/* and packages/* folder
@@ -6,10 +7,12 @@
  * the default instead of dying at EOF like the old `read -p` did under
  * `set -e`.
  *
- * Invoked through the thin scripts/setup_environment.sh shim (the path the
- * app READMEs document), imported directly by setup_worktree.ts, and run as
- * part of ./scripts/setup.sh. May run before `pnpm install`, so: node
- * builtins + scripts/utils only.
+ * Run directly as ./scripts/setup_environment.ts (the path the app READMEs
+ * document) by bare Node's native type stripping — no tsx — imported directly
+ * by setup_worktree.ts, and run as part of ./scripts/setup.sh. May run before
+ * `pnpm install`, so this script and everything it imports must stay
+ * erasable-syntax TypeScript (no enums, namespaces or parameter properties)
+ * that imports node builtins and scripts/utils only.
  */
 import { copyFileSync, existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';

@@ -173,7 +173,7 @@ made it look that way is described below.
 > two fields are unrelated — see [§ When to set `project`/`projectId`](#author-plans--tasks-via-mcp-tools).
 
 **Where the path comes from.** The MCP client spawns `scripts/run-openthrottle-mcp.sh` with the open
-workspace as its cwd. That launcher then has to `chdir` into this checkout to resolve `tsx` and the
+workspace as its cwd. That launcher then has to `chdir` into this checkout to resolve the
 built MCP bundle — a **runtime** requirement that has nothing to do with where the plan was written.
 It therefore reads the caller's cwd _before_ the `chdir` and forwards it as
 `OPENTHROTTLE_MCP_WORKSPACE_PATH`. Before that split existed, the server saw only the post-`chdir`
