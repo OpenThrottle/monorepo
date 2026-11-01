@@ -50,6 +50,7 @@ lint but never had a rule file of their own:
 | [Alphabetize keys](#alphabetize-arrays-and-object-keys)               | **Enforced**                           | `sort-keys`, `perfectionist/*`, `@graphql-eslint/alphabetize`         |
 | [File length caps](#file-length-caps)                                 | **Enforced**                           | `max-lines` (210 components / 210 routes)                             |
 | [No `await` in loops](#no-await-in-loops)                             | **Enforced**                           | `no-await-in-loop`                                                    |
+| [Composing classes with `cn`](#composing-classes-with-cn)             | **Enforced**                           | `no-restricted-imports` (`clsx`) + `no-restricted-syntax`             |
 | [Return types](#return-types)                                         | **Warned**                             | `explicit-module-boundary-types`                                      |
 | [Route primitive shape](#route-and-component-shape)                   | **Warned**                             | `openthrottle/route-primitive-shape`, `openthrottle/pre-hooks-unpack` |
 | [Hook primitive shape](#hook-shape)                                   | **Enforced**                           | `openthrottle/hook-primitive-shape` + `audit:hook-shape`              |
@@ -789,6 +790,53 @@ introducing a parallel UI system.
   `GlobalPopover`.
 - Details and a copy-paste example:
   [`packages/react-router-ui-global/README.md`](../../packages/react-router-ui-global/README.md).
+
+### Composing classes with `cn`
+
+**Enforced.** Compose Tailwind classes with `cn` from `@openthrottle/react-router-shadcn`,
+never a template literal or bare `clsx`. It is mandatory whenever a `className` prop is merged
+in, and the caller's `className` always goes last.
+
+`no-restricted-imports` rejects a `clsx` import everywhere except `react-router-shadcn`, and
+`no-restricted-syntax` rejects a template literal with an expression directly inside a JSX
+`className` (both in [`tools/dotfiles/src/index.ts`](../../tools/dotfiles/src/index.ts)).
+Putting the caller's `className` last is not something either rule can see, so that part stays
+honor system.
+
+`cn` is `twMerge(clsx(inputs))`, so it reads exactly like `clsx` — strings, conditionals,
+objects, arrays — and then resolves Tailwind conflicts so the last conflicting class wins.
+`clsx` alone does not: `clsx('px-4', className)` with a caller's `px-2` emits both, and which
+one renders depends on stylesheet order, not on what the caller asked for. Template literals
+do the same with worse readability.
+
+```tsx
+// ❌ Both padding classes ship; the caller's px-2 may or may not win
+<div className={clsx('rounded-md px-4', isActive && 'bg-muted', className)} />
+<div className={`rounded-md px-4 ${isActive ? 'bg-muted' : ''} ${className}`} />
+
+// ✅ Conflicts resolve; the caller's className overrides the base
+<div className={cn('rounded-md px-4', isActive && 'bg-muted', className)} />
+```
+
+`clsx` stays acceptable in exactly two places: inside `react-router-shadcn` itself (it is what
+`cn` is built on), and in a package that does not depend on `react-router-shadcn` (none today).
+How components inside that package place `className` relative to `cva` variants is covered by
+its own [conventions](../../packages/react-router-shadcn/README.md#conventions).
+
+**Caveats** — check these whenever you swap `clsx` or a template literal for `cn`:
+
+1. **`cn` silently drops conflicting classes.** A component that passed conflicting classes by
+   accident renders differently after the swap. Review every call where the base classes and a
+   conditional or `className` class set the same property, and confirm the merged result is
+   the one the UI wants.
+2. **Custom theme scales named like built-ins are misread.** tailwind-merge (Tailwind v4 aware)
+   would treat a custom `--text-2xs` font size as a text colour, and drop it next to a
+   `text-*` colour. No custom `--text-*` tokens exist today; adding one means moving `cn` to
+   `extendTailwindMerge` with that scale registered.
+3. **Tests asserting two conflicting classes fail after the swap.** Update the assertion to the
+   merged result; do not revert to `clsx` to keep the old assertion green.
+4. **Runtime cost is negligible.** tailwind-merge caches parsed class lists in an LRU, and a
+   module-scope `cn(...)` constant computes once.
 
 ## Testing
 

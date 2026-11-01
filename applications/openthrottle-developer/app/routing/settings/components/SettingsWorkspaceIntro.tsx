@@ -1,5 +1,5 @@
+import { cn } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
-import clsx from 'clsx';
 import { MonitorCogIcon } from 'lucide-react';
 import * as React from 'react';
 
@@ -27,7 +27,7 @@ export const SettingsWorkspaceIntro = (
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx(className)}>
+    <div className={cn(className)}>
       <GlobalHeading
         className="mb-4"
         heading="h1"

@@ -1,3 +1,4 @@
+import { cn } from '@openthrottle/react-router-shadcn';
 import {
   OpenThrottleAuthForm,
   OpenThrottleLogo,
@@ -8,7 +9,6 @@ import {
   GlobalErrorBoundary,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import clsx from 'clsx';
 import * as React from 'react';
 
 import type { Route } from '@/app/routes/+types/_index';
@@ -54,7 +54,7 @@ export default function Component(
     <GlobalScreen className="relative isolate flex w-full flex-1 flex-col justify-center p-4 md:p-8 lg:p-12">
       <GlobalAnimationMesh />
       <div
-        className={clsx(
+        className={cn(
           'relative z-10 mx-auto flex h-full w-full max-w-xl flex-1 flex-col items-center justify-center gap-8 transition-opacity duration-700',
         )}
       >

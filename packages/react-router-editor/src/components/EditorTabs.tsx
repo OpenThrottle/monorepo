@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import { useAtom } from 'jotai';
 import * as React from 'react';
 
@@ -61,7 +61,7 @@ export const EditorTabs = (
 
   return (
     <div
-      className={clsx('mt-1 flex max-w-full overflow-y-auto', className)}
+      className={cn('mt-1 flex max-w-full overflow-y-auto', className)}
       data-testid="EditorTabs"
     >
       {tabs.map((file) => (

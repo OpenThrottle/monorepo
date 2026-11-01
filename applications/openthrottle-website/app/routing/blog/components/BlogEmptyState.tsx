@@ -1,12 +1,12 @@
 import {
   Button,
+  cn,
   Empty,
   EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -42,7 +42,7 @@ export const BlogEmptyState = (
 
   return (
     <Empty
-      className={clsx('border py-16', className)}
+      className={cn('border py-16', className)}
       data-testid="BlogEmptyState"
     >
       <EmptyHeader>

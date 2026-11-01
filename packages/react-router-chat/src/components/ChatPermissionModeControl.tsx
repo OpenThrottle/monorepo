@@ -1,11 +1,11 @@
 import {
   Button,
+  cn,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import { Check, Lock } from 'lucide-react';
 import * as React from 'react';
 
@@ -65,7 +65,7 @@ export const ChatPermissionModeControl = (
       <DropdownMenuTrigger asChild={true}>
         <Button
           aria-label="Permission mode"
-          className={clsx('h-8 w-auto gap-1.5 pointer-coarse:h-11', className)}
+          className={cn('h-8 w-auto gap-1.5 pointer-coarse:h-11', className)}
           data-testid="ChatPermissionModeControl-trigger"
           type="button"
           variant="outline"
@@ -95,7 +95,7 @@ export const ChatPermissionModeControl = (
                 </span>
               </span>
               <Check
-                className={clsx(
+                className={cn(
                   'mt-0.5 ml-auto size-4 shrink-0',
                   isActive ? 'opacity-100' : 'opacity-0',
                 )}

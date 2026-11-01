@@ -1,12 +1,12 @@
 import type { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
 import {
+  cn,
   SidebarFooter,
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuItem,
 } from '@openthrottle/react-router-shadcn';
 import { ENV_SOURCE } from '@openthrottle/react-router-utils';
-import clsx from 'clsx';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -46,7 +46,7 @@ export const GlobalSidebarFooter = (
             target="_blank"
             to={`${ENV_SOURCE.API_URL_EXTERNAL}/health`}
           >
-            <div className={clsx('h-2 w-2 shrink-0 rounded-full', color)} />
+            <div className={cn('h-2 w-2 shrink-0 rounded-full', color)} />
             <SidebarGroupLabel>&nbsp; System Status</SidebarGroupLabel>
           </Link>
           {/* </SidebarMenuButton> */}

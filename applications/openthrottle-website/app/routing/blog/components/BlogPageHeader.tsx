@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 export interface BlogPageHeaderProps {
@@ -28,7 +28,7 @@ export const BlogPageHeader = (
 
   return (
     <header
-      className={clsx('flex flex-col gap-3', className)}
+      className={cn('flex flex-col gap-3', className)}
       data-testid="BlogPageHeader"
     >
       {eyebrow ? (

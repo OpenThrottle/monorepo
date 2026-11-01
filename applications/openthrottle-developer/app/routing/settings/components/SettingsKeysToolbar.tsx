@@ -1,5 +1,6 @@
 import {
   Button,
+  cn,
   Label,
   Select,
   SelectContent,
@@ -7,7 +8,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import { PlusIcon } from 'lucide-react';
 import * as React from 'react';
 
@@ -66,7 +66,7 @@ export const SettingsKeysToolbar = (
 
   return (
     <div
-      className={clsx(
+      className={cn(
         'flex flex-wrap items-end justify-between gap-4',
         className,
       )}

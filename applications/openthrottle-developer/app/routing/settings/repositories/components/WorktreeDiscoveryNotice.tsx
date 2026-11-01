@@ -1,10 +1,10 @@
 import {
   Button,
+  cn,
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import { RefreshCwIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link, useRevalidator } from 'react-router';
@@ -60,7 +60,7 @@ export const WorktreeDiscoveryNotice = (
 
   return (
     <div
-      className={clsx('flex flex-col gap-2', className)}
+      className={cn('flex flex-col gap-2', className)}
       data-testid="WorktreeDiscoveryNotice"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">

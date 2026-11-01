@@ -4,8 +4,8 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  cn,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import { ArrowRightIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
@@ -46,7 +46,7 @@ export const DocsLanding = (props: DocsLandingProps): React.ReactElement => {
 
   return (
     <div
-      className={clsx('flex flex-col gap-8', className)}
+      className={cn('flex flex-col gap-8', className)}
       data-testid="DocsLanding"
     >
       {intro !== null ? <MarkdownRenderer source={intro.content} /> : null}

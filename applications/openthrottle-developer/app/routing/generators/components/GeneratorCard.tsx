@@ -3,8 +3,8 @@ import {
   Card,
   CardContent,
   CardFooter,
+  cn,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -34,7 +34,7 @@ export const GeneratorCard = (
 
   return (
     <Card
-      className={clsx('', className)}
+      className={cn('', className)}
       data-testid="GeneratorCard"
       key={generator.name}
     >

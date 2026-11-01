@@ -1,7 +1,6 @@
-import { Button } from '@openthrottle/react-router-shadcn';
+import { Button, cn } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleBreadcrumbs } from '@openthrottle/react-router-ui';
 import { SignOutIcon } from '@phosphor-icons/react/dist/ssr/SignOut';
-import clsx from 'clsx';
 import * as React from 'react';
 import { Form } from 'react-router';
 
@@ -32,7 +31,7 @@ export const GlobalHeader = (
 
   return (
     <nav
-      className={clsx(
+      className={cn(
         'border-border border-b',
         'bg-card/50 backdrop-blur-sm',
         'px-4 py-2',

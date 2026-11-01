@@ -1,10 +1,10 @@
 import {
   Button,
+  cn,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import { Star } from 'lucide-react';
 import * as React from 'react';
 
@@ -66,7 +66,7 @@ export const ChatModelPickerRailItem = (
         <Button
           aria-label={group.label}
           aria-pressed={isActive}
-          className={clsx(
+          className={cn(
             'relative size-9 shrink-0',
             isActive &&
               'bg-accent text-accent-foreground before:bg-primary before:absolute before:top-1/2 before:left-0 before:h-5 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:content-[""]',

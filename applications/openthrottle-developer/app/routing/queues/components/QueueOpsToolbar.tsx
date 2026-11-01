@@ -1,6 +1,5 @@
-import { Button } from '@openthrottle/react-router-shadcn';
+import { Button, cn } from '@openthrottle/react-router-shadcn';
 import { GlobalToolbarSearch } from '@openthrottle/react-router-ui-global';
-import clsx from 'clsx';
 import { RefreshCwIcon } from 'lucide-react';
 import * as React from 'react';
 import { useRevalidator, useSearchParams } from 'react-router';
@@ -65,7 +64,7 @@ export const QueueOpsToolbar = (
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx('w-full', className)} data-testid="QueueOpsToolbar">
+    <div className={cn('w-full', className)} data-testid="QueueOpsToolbar">
       <div className="flex w-full flex-wrap items-center gap-2">
         <GlobalToolbarSearch
           aria-label={searchAriaLabel}
@@ -93,7 +92,7 @@ export const QueueOpsToolbar = (
           variant="outline"
         >
           <RefreshCwIcon
-            className={clsx('h-4 w-4', isRefreshing && 'animate-spin')}
+            className={cn('h-4 w-4', isRefreshing && 'animate-spin')}
           />
           Refresh
         </Button>

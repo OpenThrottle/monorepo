@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type { BlogPostSummaryFragment } from '~/__generated__/graphql';
@@ -35,7 +35,7 @@ export const BlogList = (props: BlogListProps): React.ReactElement => {
   return (
     <ul
       aria-label={BLOG_COPY.list.ariaLabel}
-      className={clsx('grid gap-6 md:grid-cols-2 lg:grid-cols-3', className)}
+      className={cn('grid gap-6 md:grid-cols-2 lg:grid-cols-3', className)}
       data-testid="BlogList"
     >
       {posts.map((post) => (

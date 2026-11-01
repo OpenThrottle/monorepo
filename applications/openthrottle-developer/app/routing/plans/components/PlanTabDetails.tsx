@@ -1,9 +1,8 @@
 import { EditorWindow } from '@openthrottle/react-router-editor';
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
-import { TabsContent } from '@openthrottle/react-router-shadcn';
+import { cn, TabsContent } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { FEATURE_CHARLIE_PREVIEW } from '@openthrottle/react-router-utils';
-import clsx from 'clsx';
 import { useAtomValue } from 'jotai';
 import * as React from 'react';
 
@@ -78,7 +77,7 @@ export const PlanTabDetails = (
     <TabsContent value="overview">
       <div className="flex flex-col gap-4 md:gap-8">
         <div
-          className={clsx('----bg-card', {
+          className={cn('----bg-card', {
             'absolute inset-0 z-50 h-full w-full': fullscreen,
             'border-transparent hover:border-transparent': fullscreen,
             relative: !fullscreen,

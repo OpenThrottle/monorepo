@@ -1,11 +1,11 @@
 import {
+  cn,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import * as React from 'react';
 import { useFetcher } from 'react-router';
 
@@ -122,7 +122,7 @@ export const EditorNewFileForm = (
 
   return (
     <div
-      className={clsx('border-b border-gray-700 bg-gray-800 p-4', className)}
+      className={cn('border-b border-gray-700 bg-gray-800 p-4', className)}
       data-testid="EditorNewFileForm"
     >
       <div className="mb-2">
@@ -138,7 +138,7 @@ export const EditorNewFileForm = (
         <div className="flex-1">
           <input
             autoFocus={true}
-            className={clsx(
+            className={cn(
               'w-full rounded-md px-3 py-2 text-sm',
               'border border-gray-700 bg-gray-900',
               'focus:border-blue-500 focus:outline-none',
@@ -178,7 +178,7 @@ export const EditorNewFileForm = (
 
         <div className="flex gap-2">
           <button
-            className={clsx(
+            className={cn(
               'rounded-md px-3 py-2 text-sm',
               'bg-gray-700 transition-colors hover:bg-gray-600',
             )}
@@ -188,7 +188,7 @@ export const EditorNewFileForm = (
             Cancel
           </button>
           <button
-            className={clsx(
+            className={cn(
               'rounded-md px-3 py-2 text-sm',
               'bg-blue-600 transition-colors hover:bg-blue-700',
               'disabled:cursor-not-allowed disabled:opacity-50',

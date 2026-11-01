@@ -1,5 +1,5 @@
+import { cn } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
-import clsx from 'clsx';
 import * as React from 'react';
 
 import type {
@@ -96,7 +96,7 @@ export const UsageSkillUsage = (
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx('mt-8', className)} data-testid="UsageSkillUsage">
+    <div className={cn('mt-8', className)} data-testid="UsageSkillUsage">
       <GlobalHeading
         className="mb-4"
         heading="h2"

@@ -1,10 +1,10 @@
 import {
   Button,
+  cn,
   Input,
   Label,
   TextArea,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import * as React from 'react';
 import { Form, Link } from 'react-router';
 
@@ -36,7 +36,7 @@ export const CalendarForm = (props: CalendarFormProps): React.ReactElement => {
   return (
     <div>
       <Form
-        className={clsx('w-full', className)}
+        className={cn('w-full', className)}
         data-testid="CalendarForm"
         method="post"
       >

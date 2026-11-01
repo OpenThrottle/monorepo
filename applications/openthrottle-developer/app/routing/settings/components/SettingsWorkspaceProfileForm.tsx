@@ -1,6 +1,5 @@
-import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
+import { Button, cn, Input, Label } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
-import clsx from 'clsx';
 import { UserRoundIcon } from 'lucide-react';
 import * as React from 'react';
 import { Form, useNavigation } from 'react-router';
@@ -46,7 +45,7 @@ export const SettingsWorkspaceProfileForm = (
       legend={WORKSPACE_SETTINGS_COPY.contactLegend}
     >
       <div
-        className={clsx('space-y-4', className)}
+        className={cn('space-y-4', className)}
         data-testid="SettingsWorkspaceProfileForm"
       >
         <p className="text-muted-foreground text-sm">

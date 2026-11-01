@@ -1,9 +1,9 @@
 import {
   Button,
   Card,
+  cn,
   ContributionHeatmap,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import { ArrowRightIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
@@ -46,7 +46,7 @@ export const DashboardContributionsCard = (
 
   return (
     <Card
-      className={clsx('gap-3 p-4', className)}
+      className={cn('gap-3 p-4', className)}
       data-testid="DashboardContributionsCard"
     >
       <div className="flex items-center justify-between gap-2">

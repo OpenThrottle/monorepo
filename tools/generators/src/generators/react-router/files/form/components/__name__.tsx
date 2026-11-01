@@ -1,10 +1,10 @@
 import * as React from 'react';
-import clsx from 'clsx';
 import { FocusError } from 'focus-formik-error';
 import { Form } from 'react-router';
 import type { FormProps } from 'react-router';
 import {
   Button,
+  cn,
   InlineErrors,
   Input,
   Label,
@@ -45,7 +45,7 @@ export const <%= name %> = (props: <%= name %>Props): React.ReactElement => {
 
   return (
     <Form
-      className={clsx(className, 'flex flex-col gap-4')}
+      className={cn('flex flex-col gap-4', className)}
       data-testid="<%= name %>"
       id={<%= name %>.id}
       method="POST"

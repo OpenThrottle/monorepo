@@ -3,6 +3,7 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
+  cn,
   Table,
   TableBody,
   TableCell,
@@ -11,7 +12,6 @@ import {
   TableRow,
 } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
-import clsx from 'clsx';
 import * as React from 'react';
 
 import type { UsageCaptureHealthRowFragment } from '~/__generated__/graphql';
@@ -55,7 +55,7 @@ export const UsageCaptureHealth = (
   // 🔌 Short Circuit
   if (entries.length === 0) {
     return (
-      <div className={clsx('mt-8', className)} data-testid="UsageCaptureHealth">
+      <div className={cn('mt-8', className)} data-testid="UsageCaptureHealth">
         <GlobalHeading
           className="mb-4"
           heading="h2"
@@ -72,7 +72,7 @@ export const UsageCaptureHealth = (
   }
 
   return (
-    <div className={clsx('mt-8', className)} data-testid="UsageCaptureHealth">
+    <div className={cn('mt-8', className)} data-testid="UsageCaptureHealth">
       <GlobalHeading
         className="mb-4"
         heading="h2"
@@ -132,9 +132,7 @@ export const UsageCaptureHealth = (
                   </time>
                 </TableCell>
                 <TableCell
-                  className={clsx(
-                    entry.stale && 'text-destructive font-medium',
-                  )}
+                  className={cn(entry.stale && 'text-destructive font-medium')}
                 >
                   {entry.stale
                     ? CAPTURE_HEALTH_COPY.staleStatus

@@ -4,8 +4,8 @@ import {
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
+  cn,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import * as React from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
@@ -56,7 +56,7 @@ export const DashboardOpenPrsByAuthorCard = (
   if (isEmpty) {
     return (
       <div
-        className={clsx('text-muted-foreground text-sm', className)}
+        className={cn('text-muted-foreground text-sm', className)}
         data-testid="DashboardOpenPrsByAuthorCard"
       >
         No PRs by author.
@@ -66,7 +66,7 @@ export const DashboardOpenPrsByAuthorCard = (
 
   return (
     <div
-      className={clsx('-ml-1 overflow-auto text-sm', className)}
+      className={cn('-ml-1 overflow-auto text-sm', className)}
       data-testid="DashboardOpenPrsByAuthorCard"
     >
       <ChartContainer

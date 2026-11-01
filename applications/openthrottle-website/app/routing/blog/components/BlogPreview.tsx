@@ -1,5 +1,4 @@
-import { Card, CardContent } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
+import { Card, CardContent, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -32,7 +31,7 @@ export const BlogPreview = (props: BlogPreviewProps): React.ReactElement => {
 
   return (
     <Card
-      className={clsx(
+      className={cn(
         'group/preview relative gap-0 overflow-hidden py-0 transition-colors',
         'focus-within:border-ring hover:border-accent/60',
         className,

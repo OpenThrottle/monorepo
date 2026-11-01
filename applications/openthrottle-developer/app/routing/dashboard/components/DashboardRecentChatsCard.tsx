@@ -2,8 +2,7 @@ import {
   type AgentConversationListItem,
   formatRelativeChatTimestamp,
 } from '@openthrottle/react-router-chat';
-import { Button, Card } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
+import { Button, Card, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -57,7 +56,7 @@ export const DashboardRecentChatsCard = (
 
   return (
     <Card
-      className={clsx('gap-3 p-4', className)}
+      className={cn('gap-3 p-4', className)}
       data-testid="DashboardRecentChatsCard"
     >
       <div className="flex items-center justify-between gap-2">
@@ -83,7 +82,7 @@ export const DashboardRecentChatsCard = (
                 >
                   <span
                     aria-hidden={true}
-                    className={clsx(
+                    className={cn(
                       'size-2 shrink-0 rounded-full',
                       isActive ? 'bg-primary' : 'bg-muted-foreground/40',
                     )}

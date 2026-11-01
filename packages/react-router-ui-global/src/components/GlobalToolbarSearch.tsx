@@ -1,5 +1,4 @@
-import { Button, Input } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
+import { Button, cn, Input } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { useSearchParams } from 'react-router';
 
@@ -87,7 +86,7 @@ export const GlobalToolbarSearch = (
 
   return (
     <form
-      className={clsx('flex gap-2', className)}
+      className={cn('flex gap-2', className)}
       data-testid="GlobalToolbarSearch"
       onSubmit={handleSubmit}
       role="search"

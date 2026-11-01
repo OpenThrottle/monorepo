@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type {
@@ -155,7 +155,7 @@ export const ChatComposerToolbar = (
 
   return (
     <div
-      className={clsx('flex flex-wrap items-center gap-2', className)}
+      className={cn('flex flex-wrap items-center gap-2', className)}
       data-testid="ChatComposerToolbar"
     >
       <ChatComposerModelControl

@@ -1,5 +1,5 @@
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import { BLOG_EDITOR_COPY } from '~/routing/blog/data/data.copy';
@@ -40,7 +40,7 @@ export const BlogPostPreview = (
   return (
     <article
       aria-label={BLOG_EDITOR_COPY.preview}
-      className={clsx(
+      className={cn(
         'bg-card border-border relative overflow-hidden rounded-lg border',
         className,
       )}

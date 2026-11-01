@@ -1,5 +1,4 @@
-import { Button } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
+import { Button, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 export interface NotificationActionsProps {
@@ -32,7 +31,7 @@ export const NotificationActions = (
   return (
     <div className="flex w-full gap-1" data-testid="NotificationActions">
       <Button
-        className={clsx('h-7 flex-1 text-xs', { 'opacity-25!': !hasAny })}
+        className={cn('h-7 flex-1 text-xs', { 'opacity-25!': !hasAny })}
         disabled={!hasAny}
         onClick={markAllAsRead}
         size="sm"
@@ -41,7 +40,7 @@ export const NotificationActions = (
         Mark all read
       </Button>
       <Button
-        className={clsx('h-7 flex-1 text-xs', { 'opacity-25!': !hasAny })}
+        className={cn('h-7 flex-1 text-xs', { 'opacity-25!': !hasAny })}
         disabled={!hasAny}
         onClick={() => {
           dismissAll();

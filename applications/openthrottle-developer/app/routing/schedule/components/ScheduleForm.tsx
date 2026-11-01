@@ -1,11 +1,11 @@
 import {
   Button,
+  cn,
   Input,
   InputCronExpression,
   Label,
   TextArea,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import * as React from 'react';
 import { Form, Link } from 'react-router';
 
@@ -48,7 +48,7 @@ export const ScheduleForm = (props: ScheduleFormProps): React.ReactElement => {
 
   return (
     <Form
-      className={clsx('w-full max-w-2xl space-y-4', className)}
+      className={cn('w-full max-w-2xl space-y-4', className)}
       data-testid="ScheduleForm"
       method="post"
     >

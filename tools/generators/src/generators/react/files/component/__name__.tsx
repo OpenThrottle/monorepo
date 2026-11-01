@@ -1,5 +1,5 @@
 import * as React from 'react';
-// import clsx from 'clsx';
+// import { cn } from '@openthrottle/react-router-shadcn';
 
 export interface <%= name %>Props {
   // className?: string;

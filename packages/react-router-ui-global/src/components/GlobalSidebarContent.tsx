@@ -1,4 +1,5 @@
 import {
+  cn,
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
@@ -14,7 +15,6 @@ import {
   FEATURE_BETA_PREVIEW,
   FEATURE_CHARLIE_PREVIEW,
 } from '@openthrottle/react-router-utils';
-import clsx from 'clsx';
 import { ChevronDown, StarIcon } from 'lucide-react';
 import * as React from 'react';
 import type { NavLinkProps } from 'react-router';
@@ -98,7 +98,7 @@ export const GlobalSidebarContent = (
           tooltip={String(children)}
         >
           <NavLink
-            className={clsx('text-xs!', {
+            className={cn('text-xs!', {
               'text-muted-foreground pointer-events-none':
                 item.disabled && !isCharlieEnabled,
             })}
@@ -107,18 +107,18 @@ export const GlobalSidebarContent = (
             viewTransition={true}
           >
             <IconComponent
-              className={clsx('size-4 shrink-0', {
+              className={cn('size-4 shrink-0', {
                 'text-accent': isActive,
                 'text-muted-foreground': !isActive,
               })}
             />
-            <span className={clsx('', { 'text-accent': isActive })}>
+            <span className={cn('', { 'text-accent': isActive })}>
               {item.children?.toString()}
             </span>
             {item.beta && (
               <span className="text-muted-foreground flex w-full flex-1 items-center justify-end text-right">
                 <StarIcon
-                  className={clsx('size-3', {
+                  className={cn('size-3', {
                     'text-accent': isActive,
                     'text-muted-foreground': !isActive,
                   })}

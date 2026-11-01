@@ -1,5 +1,4 @@
-import { Button } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
+import { Button, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -41,7 +40,7 @@ export const BlogPagination = (
   return (
     <nav
       aria-label={ariaLabel}
-      className={clsx(
+      className={cn(
         'border-border flex items-center justify-between gap-4 border-t pt-6',
         className,
       )}

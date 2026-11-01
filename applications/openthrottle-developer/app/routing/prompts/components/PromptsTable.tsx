@@ -1,9 +1,8 @@
 import { CustomPromptType } from '@openthrottle/openthrottle-developer-codegen';
 import type { BadgeProps } from '@openthrottle/react-router-shadcn';
-import { Badge, DataTable } from '@openthrottle/react-router-shadcn';
+import { Badge, cn, DataTable } from '@openthrottle/react-router-shadcn';
 import { GlobalPopoverActionsHeader } from '@openthrottle/react-router-ui-global';
 import type { ColumnDef } from '@tanstack/react-table';
-import clsx from 'clsx';
 import { Clock, FileText } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
@@ -40,7 +39,7 @@ export const PromptsTable = (props: PromptsTableProps): React.ReactElement => {
 
   return (
     <div
-      className={clsx('ui-border rounded-lg border', className)}
+      className={cn('ui-border rounded-lg border', className)}
       data-testid="PromptsTable"
     >
       <DataTable<PromptCardFragment, string | number | null | undefined>

@@ -2,8 +2,8 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
+  cn,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import * as React from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
@@ -45,7 +45,7 @@ export const SkillUsageDailyChart = (
   if (chartData.length === 0) {
     return (
       <div
-        className={clsx('text-muted-foreground text-sm', className)}
+        className={cn('text-muted-foreground text-sm', className)}
         data-testid="SkillUsageDailyChart"
       >
         No daily skill usage in range.
@@ -54,10 +54,7 @@ export const SkillUsageDailyChart = (
   }
 
   return (
-    <div
-      className={clsx('w-full', className)}
-      data-testid="SkillUsageDailyChart"
-    >
+    <div className={cn('w-full', className)} data-testid="SkillUsageDailyChart">
       <ChartContainer
         className="min-h-[220px] w-full"
         config={SKILL_USAGE_CHART_CONFIG}

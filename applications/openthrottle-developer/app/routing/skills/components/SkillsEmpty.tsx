@@ -1,6 +1,5 @@
-import { Button, Empty } from '@openthrottle/react-router-shadcn';
+import { Button, cn, Empty } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
-import clsx from 'clsx';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -32,7 +31,7 @@ export const SkillsEmpty = (props: SkillsEmptyProps): React.ReactElement => {
   // 🔌 Short Circuit
 
   return (
-    <Empty className={clsx('my-8', className)}>
+    <Empty className={cn('my-8', className)}>
       <GlobalHeading
         heading="h3"
         title={

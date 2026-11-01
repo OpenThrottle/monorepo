@@ -4,11 +4,11 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  cn,
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import * as React from 'react';
 
 import { type GeneratorDetailCardFragment } from '~/__generated__/graphql';
@@ -55,10 +55,7 @@ export const GeneratorNxBridge = (
   // 🔌 Short Circuit
 
   return (
-    <div
-      className={clsx('space-y-8', className)}
-      data-testid="GeneratorNxBridge"
-    >
+    <div className={cn('space-y-8', className)} data-testid="GeneratorNxBridge">
       {formattedSchema != null ? (
         <Card>
           <CardHeader>

@@ -1,5 +1,4 @@
-import { Badge } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
+import { Badge, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import {
@@ -40,7 +39,7 @@ export const QueueStateBadge = (
   // 🔌 Short Circuit
 
   return (
-    <Badge className={clsx(className)} color={color} data-testid={dataTestId}>
+    <Badge className={cn(className)} color={color} data-testid={dataTestId}>
       {label}
     </Badge>
   );

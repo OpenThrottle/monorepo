@@ -1,3 +1,4 @@
+import { cn } from '@openthrottle/react-router-shadcn';
 import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
 import {
   GlobalFeatureOnboarding,
@@ -5,7 +6,6 @@ import {
   GlobalFeatureOnboardingTrigger,
   GlobalHeading,
 } from '@openthrottle/react-router-ui-global';
-import clsx from 'clsx';
 import { FolderGit2Icon } from 'lucide-react';
 import * as React from 'react';
 
@@ -126,7 +126,7 @@ export const RepositoriesSection = (
       </div>
 
       <section
-        className={clsx('space-y-4 md:space-y-6', className)}
+        className={cn('space-y-4 md:space-y-6', className)}
         data-testid="RepositoriesSection"
       >
         {addedFolder ? <AddFolderResult payload={addedFolder} /> : null}

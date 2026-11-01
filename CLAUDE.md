@@ -103,6 +103,7 @@ examples. The subset that bites most often:
 - Alphabetize object keys and interface members, and GraphQL selection sets in `*.graphql` documents.
 - Indexed access yields `T | undefined` — `noUncheckedIndexedAccess` is on.
 - No `await` inside a loop; collect and `Promise.all`.
+- Compose classes with `cn` from `@openthrottle/react-router-shadcn` — no `clsx` imports outside that package and no template-literal `className`s. Pass the caller's `className` last.
 - Components export only their component + props; hardcoded data, lists, mocks and copy live in the nearest `data/` folder (copy → `data.copy.ts`). Keep the six ordered section markers and the 210-line cap.
 - One hook per file, named after the file (`useFoo` in `hooks/useFoo.ts`, never kebab-case), exporting only the hook, `UseFooOptions` and `UseFooResult`, with no module-scope values, the six markers and an explicit return type ([hook-primitive-shape.md](docs/monorepo/hook-primitive-shape.md)).
 

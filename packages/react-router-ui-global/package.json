@@ -14,7 +14,6 @@
     "@openthrottle/react-router-utils": "workspace:^",
     "@paper-design/shaders-react": "catalog:",
     "@phosphor-icons/react": "catalog:",
-    "clsx": "catalog:",
     "graphql": "catalog:",
     "lucide-react": "catalog:",
     "react": "catalog:",

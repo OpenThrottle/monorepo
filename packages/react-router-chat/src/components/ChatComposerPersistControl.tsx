@@ -1,10 +1,10 @@
 import {
+  cn,
   Switch,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import * as React from 'react';
 
 export interface ChatComposerPersistControlProps {
@@ -62,7 +62,7 @@ export const ChatComposerPersistControl = (
             size="sm"
           />
           <span
-            className={clsx(
+            className={cn(
               'text-xs',
               persist ? 'text-muted-foreground' : 'text-destructive',
             )}

@@ -1,5 +1,4 @@
-import { Button, Input } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
+import { Button, cn, Input } from '@openthrottle/react-router-shadcn';
 import { Pencil, Trash2 } from 'lucide-react';
 import * as React from 'react';
 
@@ -87,7 +86,7 @@ export const ChatConversationRow = (
 
   return (
     <div
-      className={clsx(
+      className={cn(
         'group/row hover:bg-accent/50 flex max-w-full items-center gap-1 px-2 py-2 pointer-coarse:py-0.5',
         isActive && 'bg-accent',
       )}
@@ -111,7 +110,7 @@ export const ChatConversationRow = (
       <div className="flex shrink-0 items-center">
         <Button
           aria-label={`Rename ${label}`}
-          className={clsx(ACTION_VISIBILITY_CLASSES, ACTION_TOUCH_CLASSES)}
+          className={cn(ACTION_VISIBILITY_CLASSES, ACTION_TOUCH_CLASSES)}
           data-testid={`ChatConversationSidebar-rename-${conversation.id}`}
           onClick={onStartRename}
           size="xs"
@@ -122,7 +121,7 @@ export const ChatConversationRow = (
         </Button>
         <Button
           aria-label={`Delete ${label}`}
-          className={clsx(
+          className={cn(
             'text-muted-foreground hover:text-destructive',
             ACTION_VISIBILITY_CLASSES,
             ACTION_TOUCH_CLASSES,

@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import {
@@ -80,7 +80,7 @@ export const TimelineSpanBar = (
     >
       <title>{tooltip}</title>
       <rect
-        className={clsx('rounded-sm', TIMELINE_SPAN_FILL_CLASS[span.kind])}
+        className={cn('rounded-sm', TIMELINE_SPAN_FILL_CLASS[span.kind])}
         height={rect.height}
         opacity={spanStatusOpacity(span.status)}
         rx={2}

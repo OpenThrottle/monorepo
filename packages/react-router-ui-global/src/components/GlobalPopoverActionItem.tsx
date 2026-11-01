@@ -1,8 +1,8 @@
 import {
+  cn,
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import * as React from 'react';
 import { Form, Link } from 'react-router';
 
@@ -88,7 +88,7 @@ export const GlobalPopoverActionItem = (
 
       {action.kind === 'submit' && action.confirm !== undefined ? (
         <DropdownMenuItem
-          className={clsx(
+          className={cn(
             'flex gap-2',
             action.destructive === true ? 'text-destructive' : undefined,
           )}

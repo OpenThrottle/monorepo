@@ -12,7 +12,6 @@
     "@openthrottle/react-router-markdown": "workspace:^",
     "@openthrottle/react-router-shadcn": "workspace:^",
     "@openthrottle/react-router-ui": "workspace:^",
-    "clsx": "catalog:",
     "lucide-react": "catalog:"
   },
   "description": "Reusable modal chat UI for React Router apps: dialog shell, message thread, composer, and Markdown rendering via react-router-shadcn and react-router-ui.",

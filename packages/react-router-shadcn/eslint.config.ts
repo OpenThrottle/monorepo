@@ -8,6 +8,9 @@ export default [
 
   {
     rules: {
+      // `cn` is built on clsx, so this package is the one place the shared
+      // config's clsx import ban does not apply.
+      'no-restricted-imports': 'off',
       // Vendored shadcn/Radix primitives intentionally export a family of
       // Root/Trigger/Content subcomponents per file, so one-component-per-file
       // does not apply here.

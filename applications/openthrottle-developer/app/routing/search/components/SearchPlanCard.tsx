@@ -4,6 +4,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  cn,
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { Link } from 'react-router';
@@ -67,7 +68,10 @@ export const SearchPlanCard = (
           </Badge>
         </div>
         <CardTitle
-          className={`flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2 ${TITLE_CLASS}`}
+          className={cn(
+            'flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2',
+            TITLE_CLASS,
+          )}
         >
           {hasPlanLink ? (
             <Link
