@@ -3645,9 +3645,6 @@ importers:
       '@openthrottle/openthrottle-drivers':
         specifier: workspace:^
         version: link:../../packages/openthrottle-drivers
-      '@tools/generators':
-        specifier: workspace:^
-        version: link:../generators
       async-mutex:
         specifier: 'catalog:'
         version: 0.5.0
