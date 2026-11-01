@@ -8,6 +8,7 @@ import { Client } from 'pg';
 
 import {
   createFsMigrationSource,
+  guardSharedMigrations,
   PgMigrationStore,
   runMigrations,
 } from './openthrottle-database-migrations';
@@ -121,6 +122,14 @@ async function main(): Promise<void> {
   // the discrete vars are kept consistent (written together by setup), so gate and server hit the
   // same DB. The gate deliberately does NOT set a POSTGRES_HOST override (unlike root
   // `database:migrate`) — an override would be shadowed by POSTGRES_URL and could mask a mismatch.
+  //
+  // Shared-DB worktrees refuse branch-only migrations BEFORE touching the database (exit 1).
+  const guard = await guardSharedMigrations();
+  if (guard.kind === 'refused') {
+    logger.fail(guard.message);
+    process.exit(1);
+  }
+
   const connectionString = getPostgresUrl();
   const probe = (): Promise<void> => ensurePostgresReachable(connectionString);
   const migrate = async (): Promise<void> => {

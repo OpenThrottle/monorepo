@@ -8,6 +8,9 @@ import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import { Client } from 'pg';
 
 import { createLogger } from './utils/index.ts';
+import type { MigrationGuardResult } from './utils/migration-guard.ts';
+import { checkMigrationGuard } from './utils/migration-guard.ts';
+import { readWorktreeDbMode } from './utils/worktree-db.ts';
 
 const logger = createLogger();
 
@@ -33,6 +36,26 @@ export function createFsMigrationSource(
     list: () => readdir(dir),
     read: (file) => readFile(join(dir, file), 'utf-8'),
   };
+}
+
+/**
+ * Shared-DB guard for the CLI entrypoints (`database:migrate`, `ensure-migrations`):
+ * in a `OT_WORKTREE_DB=shared` worktree, refuses when this checkout carries a
+ * migration file absent from the local `origin/main` ref. Runs before any
+ * database connection, so a refusal applies nothing. Primary and isolated
+ * checkouts are always allowed. See utils/migration-guard.ts.
+ */
+export async function guardSharedMigrations(
+  source: MigrationSource = createFsMigrationSource(),
+  cwd: string = process.cwd(),
+): Promise<MigrationGuardResult> {
+  const mode = readWorktreeDbMode(cwd);
+
+  return checkMigrationGuard({
+    cwd,
+    localFiles: mode === 'shared' ? await source.list() : [],
+    mode,
+  });
 }
 
 /** Ledger table recording which migration files have been applied. */
@@ -283,6 +306,12 @@ export class PgMigrationStore implements MigrationStore {
 }
 
 async function main(): Promise<void> {
+  const guard = await guardSharedMigrations();
+  if (guard.kind === 'refused') {
+    logger.fail(guard.message);
+    process.exit(1);
+  }
+
   const client = new Client({ connectionString: getPostgresUrl() });
   await client.connect();
 

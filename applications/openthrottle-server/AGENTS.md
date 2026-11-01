@@ -36,14 +36,12 @@ apps, `packages/openthrottle-mcp`) consumes its schema through the committed
 
 ## Invariants & gotchas
 
-- **Schema regeneration:** `autoSchemaFile: 'schema.gql'` (default in
-  `@openthrottle/nestjs-graphql`) is cwd-relative, and the Nx `dev`/`start` targets run with
-  `cwd` at the project root — so booting the server writes the app copy
-  `applications/openthrottle-server/schema.gql`. That is the single committed schema file;
-  every consumer reads it via `@openthrottle/graphql-codegen`'s `defineCodegen`. You don't need
-  to boot: `pnpm nx run openthrottle-server:graphql-schema:write` writes the same bytes with no
-  Postgres/Redis. Then run consumer codegen (`pnpm run check:local:codegen`) and commit both.
-  (There is no repo-root `schema.gql`.)
+- **Schema regeneration:** `applications/openthrottle-server/schema.gql` is the single committed
+  schema file; every consumer reads it via `@openthrottle/graphql-codegen`'s `defineCodegen`.
+  A server boot never writes it (`autoSchemaFile` stays in memory; see
+  `packages/nestjs-graphql/AGENTS.md`), so `pnpm nx run openthrottle-server:graphql-schema:write`
+  (no Postgres/Redis) is the only producer. Then run consumer codegen
+  (`pnpm run check:local:codegen`) and commit both. (There is no repo-root `schema.gql`.)
 - **Schema drift gate:** `graphql-schema:check` (in `check:local`) fails when the committed file no
   longer matches the decorators. The target is the shared `graphql-schema` targetDefault in
   `nx.json`; this app only opts in with an empty `"graphql-schema": {}`. It runs the command
@@ -51,8 +49,7 @@ apps, `packages/openthrottle-mcp`) consumes its schema through the committed
   `./build/src/app.module.js`: `AppModule` is opened in Nest preview mode, where only `GraphQLModule` initializes (`@nestjs/graphql` allowlists it), and
   Nest's own builder writes the file. The emit is pinned to `AppModule` (PROCESS_ROLE=all):
   field order follows module registration order, and `ApiAppModule` currently orders the
-  work-ledger Query fields differently. A `dev-api` boot may therefore rewrite `schema.gql` in
-  another order. Restore it with `graphql-schema:write`.
+  work-ledger Query fields differently, which is why only this command produces the file.
 - Schema evolution (never remove/change existing fields; `@deprecated(reason)`) — root CLAUDE.md.
 - TypeORM entities live in `packages/nestjs-repositories`, not here; each entity's JSDoc names
   the `databases/migrations/` files it matches. A schema change means a new SQL migration in

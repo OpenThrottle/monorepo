@@ -42,6 +42,7 @@ A session started from a kickoff brief (`/ot-loop <planUuid>` on line 1 — [`ot
    Then, once the worktree exists, `register_plan_run_worktree_checkout({ planRunId, filesystemPath })` with the path create printed, so `checkout_id` resolves. That is what makes "open in editor" work for this run and what lets the worktree read as busy while you are in it. It soft-fails harmlessly if the path is not a linked worktree.
 
 5. **A fresh worktree needs codegen before app tests will collect** — run `pnpm nx run-many --target=codegen-graphql --all` if the `__generated__` output is missing.
+6. **Live verification runs from the loop worktree**, on its own ports — never against the primary's `:6020`/`:6021`, which serve the base checkout's code. Start the stack with `pnpm worktree:serve <server|developer>` (it waits for the port, prints a probe and stops with `--stop` — do that before teardown; `--api-only` skips the processors). The worktree shares the primary's database by default. A plan that **adds a migration** must isolate first (`pnpm worktree:db isolate`, or create with `worktree:new <name> --own-db`): in shared mode `database:migrate` and the `dev` gate refuse a migration absent from `origin/main`. Details: [`worktree-port-allocation.md`](../../docs/monorepo/worktree-port-allocation.md).
 
 ## The loop (one task at a time)
 

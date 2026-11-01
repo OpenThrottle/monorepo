@@ -47,6 +47,7 @@ Use **ot-generators** for scaffolding, **nx-workspace** for graph and targets, *
 
 **Conventions (align with workspace rules)**
 
+- **`schema.gql` is only ever written by `pnpm nx run openthrottle-server:graphql-schema:write`** — a server boot keeps the schema in memory. After changing GraphQL types or resolvers: that command, then consumer codegen, then commit both ([root `CLAUDE.md` § GraphQL schema + codegen flow](../../CLAUDE.md)).
 - **Backwards-compatible schema:** when updating `.entity` files the GraphQL schema must stay backwards compatible. Avoid removing fields or changing types on existing ObjectTypes; if a field is no longer needed, mark it **`@deprecated(reason: "...")`** instead of deleting it.
 - **Resolver return types:** resolver methods should return an ObjectType built with **`Result()`**, **`PaginatedResult()`** or **`ListResult()`** (or a module-specific `*ResultObject`), never a raw entity:
 
@@ -101,7 +102,7 @@ Use **ot-generators** for scaffolding, **nx-workspace** for graph and targets, *
 **Conventions**
 
 - **New UI:** **react-router** generator (**ot-generators**); application name **`openthrottle-developer`** from `--list=applications`.
-- After **GraphQL schema changes** or fresh clone: **`pnpm nx run openthrottle-developer:codegen-graphql`** (also noted in run doc above).
+- After **GraphQL schema changes** (once `schema.gql` is regenerated, §1) or fresh clone: **`pnpm nx run openthrottle-developer:codegen-graphql`** (also noted in run doc above).
 - Prefer existing route and **settings** patterns (e.g. `settings.*`, `plans.*`) over one-off structure.
 
 **Testing:** component tests colocated under `app/routes/__tests__/` and route-adjacent `*.test.tsx`; generate mock data from the GraphQL types in the application's `mocks.ts`. UI testing conventions (`component` not `screen`, `userEvent` not `fireEvent`, asserting behavior over copy) live in [`docs/monorepo/code-style.md`](../../docs/monorepo/code-style.md#testing).

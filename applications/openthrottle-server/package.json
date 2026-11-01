@@ -120,7 +120,7 @@
         ],
         "executor": "nx:run-commands",
         "metadata": {
-          "description": "Run the server in watch mode (PROCESS_ROLE=all). `^build` and `^typecheck` run first: tsc -p resolves each project reference through that project's emitted dist/*.d.ts (TS6305 when it is missing), and those declarations come from each package's `typecheck`, since source-first packages have no `build`. Dist-exporting packages also need their one-shot `build` for runtime JS. `^dev` alone does not cover it: continuous dependencies are started, never awaited, and source-first packages have no `dev`. The node half waits for ./build/src/main.js: `node --watch` only watches files it managed to load, so started against a missing entry (any fresh checkout) it waits forever and never sees tsc emit it. Replaces `nest start`: the SWC builder it uses cannot rewrite `.ts` import specifiers to `.js`, so ESM output does not resolve at runtime (OT plan 31454927 task 2). tsc emits, `node --watch` reruns."
+          "description": "Run the server in watch mode (PROCESS_ROLE=all). Repeatable jobs (work-ledger sweep/verify/harvest, daily stats, doc ingestion, data retention, plan-runs stale sweep, scheduled-agent-jobs boot reconcile) register only when this checkout owns repeatables: a shared-DB worktree (OT_WORKTREE_DB=shared) logs one line and registers none, so it never runs duplicates against the primary's data; the primary (marker absent) and an isolated worktree (OT_WORKTREE_DB=isolated) register theirs, and OT_SCHEDULED_JOBS_OWNER=true|false overrides. `^build` and `^typecheck` run first: tsc -p resolves each project reference through that project's emitted dist/*.d.ts (TS6305 when it is missing), and those declarations come from each package's `typecheck`, since source-first packages have no `build`. Dist-exporting packages also need their one-shot `build` for runtime JS. `^dev` alone does not cover it: continuous dependencies are started, never awaited, and source-first packages have no `dev`. The node half waits for ./build/src/main.js: `node --watch` only watches files it managed to load, so started against a missing entry (any fresh checkout) it waits forever and never sees tsc emit it. Replaces `nest start`: the SWC builder it uses cannot rewrite `.ts` import specifiers to `.js`, so ESM output does not resolve at runtime (OT plan 31454927 task 2). tsc emits, `node --watch` reruns."
         },
         "options": {
           "commands": [
@@ -195,6 +195,7 @@
         }
       },
       "graphql-schema": {},
+      "graphql-schema-write": {},
       "lint": {
         "options": {
           "command": "pnpm exec eslint -c ./eslint.config.ts .",

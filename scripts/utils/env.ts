@@ -77,3 +77,89 @@ export const readEnvValue = (
 
   return value === undefined || value === '' ? fallback : value;
 };
+
+/** First `KEY=value` match in raw .env contents (the shell's `sed | head -n1`). */
+export const firstEnvMatch = (
+  contents: string,
+  key: string,
+): string | undefined => {
+  for (const line of contents.split('\n')) {
+    if (line.startsWith(`${key}=`)) {
+      return line.slice(key.length + 1);
+    }
+  }
+
+  return undefined;
+};
+
+/** Replace the `KEY=...` line, or append one when the key is absent. */
+export const upsertEnvLine = (
+  contents: string,
+  key: string,
+  value: string,
+): string => {
+  const pattern = new RegExp(`^${key}=.*$`, 'm');
+
+  if (pattern.test(contents)) {
+    return contents.replace(pattern, `${key}=${value}`);
+  }
+
+  const separator = contents === '' || contents.endsWith('\n') ? '' : '\n';
+
+  return `${contents}${separator}${key}=${value}\n`;
+};
+
+const escapeRegExp = (value: string): string =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const assignmentPattern = (key: string): RegExp =>
+  new RegExp(
+    `^${escapeRegExp(key)}=("[^"\\n]*"|'[^'\\n]*'|[^\\s#]*)(\\s+#.*)?$`,
+    'm',
+  );
+
+/**
+ * Rewrite an existing `KEY` from its current (unquoted) value, keeping the
+ * line's quote style and trailing `# comment` (the shipped .env.default values
+ * are quoted and annotated). Returns `contents` unchanged when the key is
+ * absent or its line has an unrecognised shape. Only the first assignment is
+ * touched.
+ */
+export const updateEnvValue = (
+  contents: string,
+  key: string,
+  update: (current: string) => string,
+): string => {
+  const pattern = assignmentPattern(key);
+  const match = pattern.exec(contents);
+
+  if (match === null) {
+    return contents;
+  }
+
+  const raw = match[1] ?? '';
+  const quote = /^["']/.exec(raw)?.[0] ?? '';
+  const current = quote === '' ? raw : raw.slice(1, -1);
+
+  return contents.replace(
+    pattern,
+    () => `${key}=${quote}${update(current)}${quote}${match[2] ?? ''}`,
+  );
+};
+
+/**
+ * Set `KEY` to `value` (see {@link updateEnvValue} for what is preserved), or
+ * append `KEY=value` when the key is absent or its line has an unrecognised
+ * shape.
+ */
+export const setEnvValue = (
+  contents: string,
+  key: string,
+  value: string,
+): string => {
+  const updated = updateEnvValue(contents, key, () => value);
+
+  return updated === contents && firstEnvMatch(contents, key) === undefined
+    ? upsertEnvLine(contents, key, value)
+    : updated;
+};

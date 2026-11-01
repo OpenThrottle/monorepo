@@ -4,7 +4,13 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { parseEnvContents, readEnvFile, readEnvValue } from '../utils/env.ts';
+import {
+  parseEnvContents,
+  readEnvFile,
+  readEnvValue,
+  setEnvValue,
+  updateEnvValue,
+} from '../utils/env.ts';
 
 describe('parseEnvContents', () => {
   it('parses KEY=VALUE lines and ignores comments and blanks', () => {
@@ -54,5 +60,34 @@ describe('readEnvFile / readEnvValue', () => {
     expect(readEnvValue(file, 'OPENTHROTTLE_SERVER_PORT', '6021')).toBe('7421');
     expect(readEnvValue(file, 'MISSING', '6020')).toBe('6020');
     expect(readEnvValue(file, 'EMPTY', 'fallback')).toBe('fallback');
+  });
+});
+
+describe('setEnvValue', () => {
+  it('keeps double quotes and a trailing comment', () => {
+    expect(setEnvValue('A="1" # note\nB=2\n', 'A', '9')).toBe(
+      'A="9" # note\nB=2\n',
+    );
+  });
+
+  it('keeps an unquoted style and single quotes', () => {
+    expect(setEnvValue('A=1\n', 'A', '9')).toBe('A=9\n');
+    expect(setEnvValue("A='1'\n", 'A', '9')).toBe("A='9'\n");
+  });
+
+  it('appends when absent and does not match a longer key', () => {
+    expect(setEnvValue('XA=1\n', 'A', '9')).toBe('XA=1\nA=9\n');
+  });
+});
+
+describe('updateEnvValue', () => {
+  it('rewrites from the current unquoted value, keeping quotes and the comment', () => {
+    expect(
+      updateEnvValue('U="a:1" # c\n', 'U', (v) => v.replace('1', '2')),
+    ).toBe('U="a:2" # c\n');
+  });
+
+  it('leaves contents alone when the key is absent', () => {
+    expect(updateEnvValue('A=1\n', 'U', () => 'x')).toBe('A=1\n');
   });
 });

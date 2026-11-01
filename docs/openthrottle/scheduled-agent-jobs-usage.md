@@ -92,12 +92,12 @@ removes orphans) — the DB is authoritative, BullMQ is a projection.
 
 ## Configuration (env)
 
-| Env                                | Default               | Purpose                                                                                                                                |
-| ---------------------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `SCHEDULED_AGENT_JOBS_TIMEOUT_MS`  | `900000` (15m)        | Per-run timeout when a schedule sets none.                                                                                             |
-| `SCHEDULED_AGENT_JOBS_CONCURRENCY` | `4`                   | How many **independent directories** may run at once. Runs sharing a directory serialise regardless — see [Concurrency](#concurrency). |
-| `WORKSPACE_ROOT`                   | `process.cwd()`       | Default cwd for the agent CLI when a schedule targets no repository and sets no `cwd`.                                                 |
-| `OT_SCHEDULED_JOBS_OWNER`          | non-worktree checkout | Gates **boot** scheduler registration so many dev workers on one Redis don't fight (mutations always apply). `true`/`false` overrides. |
+| Env                                | Default               | Purpose                                                                                                                                                                                                                                                                     |
+| ---------------------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SCHEDULED_AGENT_JOBS_TIMEOUT_MS`  | `900000` (15m)        | Per-run timeout when a schedule sets none.                                                                                                                                                                                                                                  |
+| `SCHEDULED_AGENT_JOBS_CONCURRENCY` | `4`                   | How many **independent directories** may run at once. Runs sharing a directory serialise regardless — see [Concurrency](#concurrency).                                                                                                                                      |
+| `WORKSPACE_ROOT`                   | `process.cwd()`       | Default cwd for the agent CLI when a schedule targets no repository and sets no `cwd`.                                                                                                                                                                                      |
+| `OT_SCHEDULED_JOBS_OWNER`          | non-worktree checkout | Gates **boot** registration of every repeatable (this feature's boot reconcile plus the sweep/stats/ingestion/retention jobs) via one check: `OT_WORKTREE_DB=shared` is a non-owner, `isolated` and an absent marker own. Mutations always apply. `true`/`false` overrides. |
 
 ## Concurrency
 

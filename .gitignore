@@ -32,6 +32,8 @@ videos
 # Per-worktree generated artifacts (see scripts/utils/worktree-ports.ts, setup_worktree.ts)
 .worktree-ports
 docker-compose.worktree.yml
+# `pnpm worktree:serve` logs and pidfiles (scripts/worktree_serve.ts); .worktree/ itself holds tracked shims
+.worktree/logs/
 **/__generated__/**/*
 databases/backups/**/*.sql
 databases/backups/**/*.zip

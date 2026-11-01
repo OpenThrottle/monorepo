@@ -50,10 +50,10 @@ applications/openthrottle-server
 
 ## The schema is generated, then committed
 
-`schema.gql` is written by `autoSchemaFile` when the server boots — it is
-generated output that is nonetheless **committed**, and consumers read the
-committed file. That is why it sits at the project root rather than under
+`schema.gql` is written by `pnpm nx run <app>:graphql-schema:write` (a server
+boot never writes it) — it is generated output that is nonetheless
+**committed**, and consumers read the committed file. That is why it sits at the project root rather than under
 `src/` or in a `__generated__` directory.
 
-The boot → codegen → commit sequence itself belongs to **ot-stack**; go there
+The schema-write → codegen → commit sequence itself belongs to **ot-stack**; go there
 before changing GraphQL types, resolvers, or documents.

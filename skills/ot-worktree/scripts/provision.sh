@@ -89,6 +89,36 @@ provision_worktree() {
   return 0
 }
 
+# Run the repo's HEAL hook for the already-provisioned worktree at $1, with $2
+# as the primary checkout. This is where a repo backfills state onto worktrees
+# provisioned by an OLDER provisioner (a new marker, a renamed env var) — heal.sh
+# runs it on every heal of a provisioned worktree, so it must be idempotent and
+# cheap. Discovery, first hit wins, all optional:
+#   1. $OPENTHROTTLE_WORKTREE_HEAL   2. .worktree/heal.sh   3. scripts/heal_worktree.ts
+# No hook is a valid outcome. A failing hook is NOT fatal: heal runs before every
+# `dev`, and a backfill problem must not wedge the dev loop — it is logged loudly.
+heal_worktree_hook() {
+  _hw_wt="$1"
+  _hw_src="$2"
+
+  if _ot_setup_disabled; then
+    return 0
+  fi
+
+  for _hw_candidate in \
+    "${OPENTHROTTLE_WORKTREE_HEAL:-}" \
+    ".worktree/heal.sh" \
+    "scripts/heal_worktree.ts"; do
+    if _hw_hook="$(_ot_hook_path "$_hw_wt" "$_hw_candidate")"; then
+      _ot_run_hook "heal" "$_hw_hook" "$_hw_wt" "$_hw_src" ||
+        log "⚠️  heal hook failed ($_hw_hook) — continuing"
+      return 0
+    fi
+  done
+
+  return 0
+}
+
 # Tear the worktree at $1 down, with $2 as the primary checkout. Mirrors
 # provision_worktree minus the scripts/ rungs (no incumbent to preserve).
 # A teardown that fails ABORTS the removal — that is where a repo stops a
