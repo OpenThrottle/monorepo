@@ -1,5 +1,5 @@
+import { cn } from '@openthrottle/react-router-shadcn';
 import { GlobalToolbarSearch } from '@openthrottle/react-router-ui-global';
-import clsx from 'clsx';
 import * as React from 'react';
 
 import { AssigneeMultiSelect } from '~/routing/plans/components/AssigneeMultiSelect';
@@ -51,12 +51,12 @@ export const PlansToolbar = (props: PlansToolbarProps): React.ReactElement => {
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx('w-full', className)} data-testid="PlansToolbar">
+    <div className={cn('w-full', className)} data-testid="PlansToolbar">
       {/* GlobalToolbarSearch owns the only <form role="search"> here; the
           status/assignee/sort filters are siblings outside it so no forms
           nest. Search commits ?search= and resets ?page (dropping the legacy
           ?q, and ?semantic when the query is cleared). */}
-      <div className={clsx('flex w-full flex-wrap items-center', 'gap-2')}>
+      <div className={cn('flex w-full flex-wrap items-center', 'gap-2')}>
         <GlobalToolbarSearch
           aria-label="Search plans"
           placeholder="Search plans & tasks"

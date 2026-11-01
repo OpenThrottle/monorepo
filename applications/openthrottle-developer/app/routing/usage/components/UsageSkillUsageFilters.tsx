@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -69,7 +69,7 @@ export const UsageSkillUsageFilters = (
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx(className)} data-testid="UsageSkillUsageFilters">
+    <div className={cn(className)} data-testid="UsageSkillUsageFilters">
       <div
         aria-label="Filter skill usage by scope"
         className="mb-4 flex flex-wrap gap-2"

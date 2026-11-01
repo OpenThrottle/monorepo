@@ -1,5 +1,6 @@
 import {
   Badge,
+  cn,
   Table,
   TableBody,
   TableCell,
@@ -7,7 +8,6 @@ import {
   TableHeader,
   TableRow,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -68,7 +68,7 @@ export const SkillUsageLeaderboard = (
 
   return (
     <div
-      className={clsx('overflow-x-auto', className)}
+      className={cn('overflow-x-auto', className)}
       data-testid="SkillUsageLeaderboard"
     >
       <Table>

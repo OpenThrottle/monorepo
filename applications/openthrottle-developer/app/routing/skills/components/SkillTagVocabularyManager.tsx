@@ -1,5 +1,6 @@
 import {
   Button,
+  cn,
   Input,
   Label,
   Table,
@@ -9,7 +10,6 @@ import {
   TableRow,
 } from '@openthrottle/react-router-shadcn';
 import { getActionError } from '@openthrottle/react-router-utils';
-import clsx from 'clsx';
 import * as React from 'react';
 import { useFetcher } from 'react-router';
 
@@ -67,7 +67,7 @@ export const SkillTagVocabularyManager = (
 
   return (
     <div
-      className={clsx('flex flex-col gap-4', className)}
+      className={cn('flex flex-col gap-4', className)}
       data-testid="SkillTagVocabularyManager"
     >
       <addFetcher.Form

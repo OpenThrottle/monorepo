@@ -1,6 +1,6 @@
 import type { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
+import { cn } from '@openthrottle/react-router-shadcn';
 import { ENV_SOURCE } from '@openthrottle/react-router-utils';
-import clsx from 'clsx';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -25,7 +25,7 @@ export const GlobalFooter = (props: GlobalFooterProps): React.ReactElement => {
 
     return (
       <div
-        className={clsx('inline-block h-2 w-2 shrink-0 rounded-full', color)}
+        className={cn('inline-block h-2 w-2 shrink-0 rounded-full', color)}
       />
     );
   };

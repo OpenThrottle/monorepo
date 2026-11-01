@@ -1,11 +1,11 @@
 import {
   Button,
+  cn,
   Empty,
   EmptyDescription,
   EmptyMedia,
   EmptyTitle,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import { SearchAlertIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
@@ -31,7 +31,7 @@ export const NotesEmpty = (props: NotesEmptyProps): React.ReactElement => {
   // 🔌 Short Circuit
 
   return (
-    <Empty className={clsx('my-8', className)}>
+    <Empty className={cn('my-8', className)}>
       <EmptyMedia variant="icon">
         <SearchAlertIcon className="size-6" />
       </EmptyMedia>

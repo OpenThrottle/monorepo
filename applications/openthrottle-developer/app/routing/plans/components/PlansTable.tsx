@@ -1,6 +1,5 @@
-import { DataTable } from '@openthrottle/react-router-shadcn';
+import { cn, DataTable } from '@openthrottle/react-router-shadcn';
 import { readSearchParam } from '@openthrottle/react-router-ui-global';
-import clsx from 'clsx';
 import * as React from 'react';
 import { useSearchParams } from 'react-router';
 
@@ -60,7 +59,7 @@ export const PlansTable = (props: PlansTableProps): React.ReactElement => {
 
   return (
     <div
-      className={clsx('ui-border rounded-lg border', className)}
+      className={cn('ui-border rounded-lg border', className)}
       data-testid="PlansTable"
     >
       <DataTable<PlanCardFragment, string | number | null | undefined>

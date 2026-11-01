@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import { CheckIcon, LinkIcon } from 'lucide-react';
 import * as React from 'react';
 
@@ -57,7 +57,7 @@ export const DocHeadingAnchor = (
   return (
     <button
       aria-label={`Copy link to “${slug}” section`}
-      className={clsx(
+      className={cn(
         'text-muted-foreground hover:text-foreground ml-2 inline-flex size-5 items-center justify-center rounded align-middle opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100',
         className,
       )}

@@ -3,9 +3,9 @@ import './Calendar.css';
 import '../utils/temporal-bootstrap';
 import '@schedule-x/theme-shadcn/dist/index.css';
 
+import { cn } from '@openthrottle/react-router-shadcn';
 import { IS_BROWSER } from '@openthrottle/react-router-utils';
 import { ScheduleXCalendar } from '@schedule-x/react';
-import clsx from 'clsx';
 import type { CSSProperties, ReactElement } from 'react';
 import * as React from 'react';
 
@@ -95,7 +95,7 @@ export const Calendar = (props: CalendarProps): ReactElement | null => {
   return (
     <div
       aria-label="Calendar"
-      className={clsx('h-full', className)}
+      className={cn('h-full', className)}
       role="region"
       style={wrapperStyle}
     >

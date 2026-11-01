@@ -3,11 +3,11 @@ import {
   Card,
   CardContent,
   CardFooter,
+  cn,
   Input,
   Label,
   TextArea,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import * as React from 'react';
 import { Form, Link } from 'react-router';
 
@@ -48,7 +48,7 @@ export const ProjectForm = (props: ProjectFormProps): React.ReactElement => {
   // 🔌 Short Circuit
 
   return (
-    <Card className={clsx('w-full', className)} data-testid="ProjectForm">
+    <Card className={cn('w-full', className)} data-testid="ProjectForm">
       <CardContent>
         <Form className="w-full space-y-4 pt-8" method="post">
           <div className="space-y-2">

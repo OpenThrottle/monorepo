@@ -1,5 +1,5 @@
+import { cn } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleStatCard } from '@openthrottle/react-router-ui';
-import clsx from 'clsx';
 import * as React from 'react';
 
 import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
@@ -44,7 +44,7 @@ export const ScheduleStats = (
 
   return (
     <div
-      className={clsx(
+      className={cn(
         'grid gap-4 sm:grid-cols-2 md:grid-cols-4 md:gap-8 lg:gap-12',
         className,
       )}

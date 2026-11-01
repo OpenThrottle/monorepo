@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import { usePinnedToBottom } from '../hooks/usePinnedToBottom';
@@ -94,7 +94,7 @@ export const ChatThread = (props: ChatThreadProps): React.ReactElement => {
     <div
       aria-label="Chat messages"
       aria-live="polite"
-      className={clsx(
+      className={cn(
         'flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1',
         className,
       )}

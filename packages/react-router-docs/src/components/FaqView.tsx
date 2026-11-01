@@ -4,8 +4,8 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
+  cn,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import * as React from 'react';
 
 import type { DocEntry } from '../utils/buildDocsManifest';
@@ -43,10 +43,7 @@ export const FaqView = (props: FaqViewProps): React.ReactElement => {
   // 🔌 Short Circuit
 
   return (
-    <div
-      className={clsx('flex flex-col gap-8', className)}
-      data-testid="FaqView"
-    >
+    <div className={cn('flex flex-col gap-8', className)} data-testid="FaqView">
       {groups.map((group) => (
         <section
           className="scroll-mt-24"

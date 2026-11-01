@@ -1,11 +1,11 @@
 import {
+  cn,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import * as React from 'react';
 import { useSearchParams } from 'react-router';
 
@@ -58,7 +58,7 @@ export const DashboardToolbar = (
 
   return (
     <div
-      className={clsx('flex gap-4 p-4', className)}
+      className={cn('flex gap-4 p-4', className)}
       data-testid="DashboardToolbar"
     >
       <Select onValueChange={onChangeOrg} value={owner}>

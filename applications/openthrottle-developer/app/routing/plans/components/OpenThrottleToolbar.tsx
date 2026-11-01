@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 export interface OpenThrottleToolbarProps {
@@ -78,7 +78,7 @@ export const OpenThrottleToolbar = (
 
   return (
     <div
-      className={clsx('flex flex-col gap-3', className)}
+      className={cn('flex flex-col gap-3', className)}
       data-testid={dataTestId}
     >
       <div className="flex flex-1 flex-wrap items-center gap-2">

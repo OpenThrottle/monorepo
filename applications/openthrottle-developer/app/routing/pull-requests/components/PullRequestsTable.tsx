@@ -1,6 +1,5 @@
 import type { PullRequestCardFragment } from '@openthrottle/openthrottle-developer-codegen';
-import { DataTable } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
+import { cn, DataTable } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type { PullRequestsTableColumnValue } from '~/routing/pull-requests/config/pull-requests-table-columns';
@@ -49,7 +48,7 @@ export const PullRequestsTable = (
 
   return (
     <div
-      className={clsx('ui-border rounded-lg border', className)}
+      className={cn('ui-border rounded-lg border', className)}
       data-testid="PullRequestsTable"
     >
       <DataTable<PullRequestCardFragment, PullRequestsTableColumnValue>

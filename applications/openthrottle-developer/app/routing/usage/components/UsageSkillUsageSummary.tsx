@@ -3,8 +3,8 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  cn,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import * as React from 'react';
 
 import type { UsageSkillUsageByScopeFragment } from '~/__generated__/graphql';
@@ -60,7 +60,7 @@ export const UsageSkillUsageSummary = (
 
   return (
     <div
-      className={clsx(
+      className={cn(
         'mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4',
         className,
       )}

@@ -1,6 +1,5 @@
-import { DataTable } from '@openthrottle/react-router-shadcn';
+import { cn, DataTable } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleEmptyState } from '@openthrottle/react-router-ui';
-import clsx from 'clsx';
 import * as React from 'react';
 
 import type { QueueJobDetailsFragment } from '~/__generated__/graphql';
@@ -41,7 +40,7 @@ export const QueueJobsTable = (
 
   return (
     <div
-      className={clsx('ui-border rounded-lg border', className)}
+      className={cn('ui-border rounded-lg border', className)}
       data-testid="QueueJobsTable"
     >
       <DataTable<QueueJobDetailsFragment, string | number | null | undefined>

@@ -1,6 +1,5 @@
-import { Button } from '@openthrottle/react-router-shadcn';
+import { Button, cn } from '@openthrottle/react-router-shadcn';
 import { GlobalToolbarSearch } from '@openthrottle/react-router-ui-global';
-import clsx from 'clsx';
 import { FolderPlusIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link, useSearchParams } from 'react-router';
@@ -79,7 +78,7 @@ export const ProjectsToolbar = (
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx('w-full', className)} data-testid="ProjectsToolbar">
+    <div className={cn('w-full', className)} data-testid="ProjectsToolbar">
       <div className="flex w-full flex-wrap items-center gap-2">
         <GlobalToolbarSearch
           aria-label="Search projects"

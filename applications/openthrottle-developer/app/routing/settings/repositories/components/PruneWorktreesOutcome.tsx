@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import { PruneWorktreeCheckoutOutcome } from '~/__generated__/graphql';
@@ -49,7 +49,7 @@ export const PruneWorktreesOutcome = (
 
   return (
     <div
-      className={clsx('text-sm', className)}
+      className={cn('text-sm', className)}
       data-testid="PruneWorktreesOutcome"
       role="status"
     >

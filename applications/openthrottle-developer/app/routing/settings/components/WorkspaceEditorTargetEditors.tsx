@@ -1,5 +1,4 @@
-import { Badge } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
+import { Badge, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type {
@@ -48,7 +47,7 @@ export const WorkspaceEditorTargetEditors = (
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx('flex flex-wrap gap-1', className)}>
+    <div className={cn('flex flex-wrap gap-1', className)}>
       {editors.map((editor) => {
         const state = readEditorPresence(presence, editor.id);
         const status = getEditorPresenceStatus(state);

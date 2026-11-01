@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 export interface ChatMentionPopoverProps {
@@ -73,7 +73,7 @@ export const ChatMentionPopover = (
           {results.map((path, index) => (
             <li
               aria-selected={index === activeIndex}
-              className={clsx(
+              className={cn(
                 'cursor-pointer px-3 py-1.5 text-sm',
                 index === activeIndex
                   ? 'bg-accent text-accent-foreground'

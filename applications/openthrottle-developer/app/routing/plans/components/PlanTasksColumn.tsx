@@ -2,8 +2,8 @@ import {
   Card,
   CardContent,
   CardHeader,
+  cn,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import * as React from 'react';
 
 export interface PlanTasksColumnProps {
@@ -47,7 +47,7 @@ export const PlanTasksColumn = (
   return (
     <section
       aria-labelledby={headingId}
-      className={clsx(
+      className={cn(
         'flex w-[min(100vw-2rem,320px)] shrink-0 flex-col',
         className,
       )}

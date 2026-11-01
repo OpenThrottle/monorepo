@@ -1,5 +1,4 @@
-import { Input, Label, TextArea } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
+import { cn, Input, Label, TextArea } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type { BlogPostTextFieldName } from '~/routing/blog/types';
@@ -73,14 +72,14 @@ export const BlogPostTextField = (
 
   return (
     <div
-      className={clsx('flex flex-col gap-1.5', className)}
+      className={cn('flex flex-col gap-1.5', className)}
       data-testid="BlogPostTextField"
     >
       <Label htmlFor={id}>{label}</Label>
       {multiline ? (
         <TextArea
           {...shared}
-          className={clsx('min-h-[72px] resize-y', inputClassName)}
+          className={cn('min-h-[72px] resize-y', inputClassName)}
           onChange={handleChange}
           rows={2}
         />
@@ -93,7 +92,7 @@ export const BlogPostTextField = (
           ) : null}
           <Input
             {...shared}
-            className={clsx(prefix && 'rounded-l-none', inputClassName)}
+            className={cn(prefix && 'rounded-l-none', inputClassName)}
             onChange={handleChange}
           />
         </div>

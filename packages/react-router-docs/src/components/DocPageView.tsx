@@ -1,5 +1,5 @@
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type { DocEntry } from '../utils/buildDocsManifest';
@@ -80,7 +80,7 @@ export const DocPageView = (props: DocPageViewProps): React.ReactElement => {
 
   return (
     <div
-      className={clsx('flex flex-col gap-8 xl:flex-row', className)}
+      className={cn('flex flex-col gap-8 xl:flex-row', className)}
       data-testid="DocPageView"
     >
       <div className="max-w-3xl min-w-0 flex-1">

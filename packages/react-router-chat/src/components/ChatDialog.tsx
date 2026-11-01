@@ -1,5 +1,6 @@
 import {
   Button,
+  cn,
   Dialog,
   DialogContent,
   DialogHeader,
@@ -11,7 +12,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import * as React from 'react';
 
 import type { ChatComposerControls } from '../context/chat-context';
@@ -168,7 +168,7 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
       <Sheet defaultOpen={defaultOpen} onOpenChange={onOpenChange} open={open}>
         <SheetTrigger asChild={true}>{triggerNode}</SheetTrigger>
         <SheetContent
-          className={clsx(
+          className={cn(
             'flex w-full flex-col sm:max-w-md md:max-w-4xl',
             className,
           )}
@@ -190,7 +190,7 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
     <Dialog defaultOpen={defaultOpen} onOpenChange={onOpenChange} open={open}>
       <DialogTrigger asChild={true}>{triggerNode}</DialogTrigger>
       <DialogContent
-        className={clsx(
+        className={cn(
           'flex max-h-[min(85vh,720px)] w-full max-w-3xl flex-col',
           className,
         )}

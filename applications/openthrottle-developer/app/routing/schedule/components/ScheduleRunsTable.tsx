@@ -1,5 +1,4 @@
-import { DataTable } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
+import { cn, DataTable } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type { ScheduledJobRunRowFragment } from '~/__generated__/graphql';
@@ -34,7 +33,7 @@ export const ScheduleRunsTable = (
 
   return (
     <div
-      className={clsx('ui-border rounded-lg border', className)}
+      className={cn('ui-border rounded-lg border', className)}
       data-testid="ScheduleRunsTable"
     >
       <DataTable<ScheduledJobRunRowFragment, string | number | null | undefined>

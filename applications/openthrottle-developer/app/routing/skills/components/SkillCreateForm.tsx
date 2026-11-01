@@ -1,6 +1,5 @@
 import { EditorWindow } from '@openthrottle/react-router-editor';
-import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
+import { Button, cn, Input, Label } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -39,7 +38,7 @@ export const SkillCreateForm = (
 
   return (
     <div
-      className={clsx('flex h-full w-full flex-col gap-6', className)}
+      className={cn('flex h-full w-full flex-col gap-6', className)}
       data-testid="SkillCreateForm"
     >
       {/*

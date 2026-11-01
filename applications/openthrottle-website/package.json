@@ -23,7 +23,6 @@
     "@react-router/node": "catalog:",
     "@vercel/analytics": "catalog:",
     "@vercel/react-router": "catalog:",
-    "clsx": "catalog:",
     "dotenv": "catalog:",
     "isbot": "catalog:",
     "react": "catalog:",

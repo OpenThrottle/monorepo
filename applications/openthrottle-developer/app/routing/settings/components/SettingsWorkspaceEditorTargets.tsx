@@ -1,5 +1,6 @@
 import {
   Button,
+  cn,
   Empty,
   EmptyDescription,
   EmptyHeader,
@@ -11,7 +12,6 @@ import {
   TableHeader,
   TableRow,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import * as React from 'react';
 import { Form, Link, useNavigation } from 'react-router';
 
@@ -77,7 +77,7 @@ export const SettingsWorkspaceEditorTargets = (
   if (targets.length === 0) {
     return (
       <Empty
-        className={clsx(className)}
+        className={cn(className)}
         data-testid="SettingsWorkspaceEditorTargets"
       >
         <EmptyHeader>
@@ -101,7 +101,7 @@ export const SettingsWorkspaceEditorTargets = (
 
   return (
     <div
-      className={clsx('space-y-2', className)}
+      className={cn('space-y-2', className)}
       data-testid="SettingsWorkspaceEditorTargets"
     >
       <Table>

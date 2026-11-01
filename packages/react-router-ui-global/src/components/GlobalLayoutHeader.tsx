@@ -4,13 +4,13 @@ import {
   Avatar,
   AvatarFallback,
   AvatarImage,
+  cn,
   SidebarTrigger,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { SignOutIcon } from '@phosphor-icons/react/dist/ssr/SignOut';
-import clsx from 'clsx';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -61,7 +61,7 @@ export const GlobalLayoutHeader = (
 
   return (
     <nav
-      className={clsx(
+      className={cn(
         'bg-card/50 backdrop-blur-sm',
         'border-border border-b',
         'flex items-center justify-between',

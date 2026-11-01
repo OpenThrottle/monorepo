@@ -1,5 +1,6 @@
 import {
   Button,
+  cn,
   Command,
   CommandEmpty,
   CommandInput,
@@ -8,7 +9,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import { ChevronsUpDown } from 'lucide-react';
 import * as React from 'react';
 
@@ -123,7 +123,7 @@ export const ChatModelPicker = (
         <Button
           aria-expanded={open}
           aria-label="Model"
-          className={clsx(
+          className={cn(
             'h-8 w-auto min-w-40 justify-between gap-2 pointer-coarse:h-11',
             className,
           )}

@@ -1,10 +1,10 @@
 import {
   Button,
+  cn,
   Empty,
   ScrollArea,
   Skeleton,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import { MessageSquarePlus } from 'lucide-react';
 import * as React from 'react';
 
@@ -178,7 +178,7 @@ export const ChatConversationSidebar = (
 
   return (
     <div
-      className={clsx('flex h-full min-h-0 flex-col', className)}
+      className={cn('flex h-full min-h-0 flex-col', className)}
       data-testid="ChatConversationSidebar"
     >
       {hideHeader ? null : header}

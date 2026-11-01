@@ -1,11 +1,11 @@
 import {
   Button,
+  cn,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import { MoreHorizontalIcon } from 'lucide-react';
 import * as React from 'react';
 
@@ -154,7 +154,7 @@ export const GlobalPopover = (
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx('flex justify-end', className)} data-testid={testId}>
+    <div className={cn('flex justify-end', className)} data-testid={testId}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild={true}>
           {trigger ?? defaultTrigger}

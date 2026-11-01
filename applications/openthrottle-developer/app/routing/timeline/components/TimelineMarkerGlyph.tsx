@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type { TimelineMarkerKind } from '~/routing/timeline/config/kinds';
@@ -44,7 +44,7 @@ export const TimelineMarkerGlyph = (
       transform={`translate(${x}, ${y})`}
     >
       <path
-        className={clsx(TIMELINE_MARKER_FILL_CLASS[kind], className)}
+        className={cn(TIMELINE_MARKER_FILL_CLASS[kind], className)}
         d={markerKindPath(kind, radius)}
       />
       {/*

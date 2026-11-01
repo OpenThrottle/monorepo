@@ -1,5 +1,4 @@
-import { Badge } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
+import { Badge, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -35,7 +34,7 @@ export const BlogTagList = (
   return (
     <ul
       aria-label={BLOG_COPY.tags.ariaLabel}
-      className={clsx('flex flex-wrap gap-2', className)}
+      className={cn('flex flex-wrap gap-2', className)}
       data-testid="BlogTagList"
     >
       {tags.map((tag) => (

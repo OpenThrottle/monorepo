@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import { PLAN_STATUS_DOT_COLOR } from '~/routing/plans/data/plan-status-dot-color';
@@ -40,7 +40,7 @@ export const PlanStatusChip = (
   return (
     <span
       aria-label={`Status: ${label}`}
-      className={clsx(
+      className={cn(
         'inline-block size-2 shrink-0 rounded-full',
         color,
         className,

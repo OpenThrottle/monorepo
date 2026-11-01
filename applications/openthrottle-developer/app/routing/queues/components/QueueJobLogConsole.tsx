@@ -1,12 +1,12 @@
 import {
   Button,
   Card,
+  cn,
   Input,
   ToggleGroup,
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
-import clsx from 'clsx';
 import * as React from 'react';
 
 import {
@@ -99,7 +99,7 @@ export const QueueJobLogConsole = (
 
   return (
     <Card
-      className={clsx('gap-3 p-4', className)}
+      className={cn('gap-3 p-4', className)}
       data-testid="QueueJobLogConsole"
     >
       <div className="flex flex-wrap items-center gap-2">
@@ -108,7 +108,7 @@ export const QueueJobLogConsole = (
           className="text-muted-foreground flex items-center gap-1.5 text-xs"
           data-testid="queue-job-log-status"
         >
-          <span className={clsx('size-2 rounded-full', statusMeta.dot)} />
+          <span className={cn('size-2 rounded-full', statusMeta.dot)} />
           {statusMeta.label}
         </span>
         <div className="min-w-0 flex-1" />

@@ -1,6 +1,5 @@
-import { Badge, DataTable } from '@openthrottle/react-router-shadcn';
+import { Badge, cn, DataTable } from '@openthrottle/react-router-shadcn';
 import type { ColumnDef } from '@tanstack/react-table';
-import clsx from 'clsx';
 import { formatDate } from 'date-fns';
 import * as React from 'react';
 import { Link } from 'react-router';
@@ -30,7 +29,7 @@ export const RolesTable = (props: RolesTableProps): React.ReactElement => {
 
   return (
     <div
-      className={clsx('bg-card ui-border rounded-lg border', className)}
+      className={cn('bg-card ui-border rounded-lg border', className)}
       data-testid="RolesTable"
     >
       <DataTable<RoleRowFragment, string | number | null | undefined>

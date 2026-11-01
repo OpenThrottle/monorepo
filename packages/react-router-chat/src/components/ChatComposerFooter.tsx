@@ -1,5 +1,4 @@
-import { Button } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
+import { Button, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type { ChatTokenUsage } from '../types';
@@ -55,7 +54,7 @@ export const ChatComposerFooter = (
 
   return (
     <div
-      className={clsx(
+      className={cn(
         'flex items-center gap-3',
         toolbar ? 'justify-between' : 'justify-end',
       )}

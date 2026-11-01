@@ -7,6 +7,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  cn,
   Table,
   TableBody,
   TableCell,
@@ -15,7 +16,6 @@ import {
   TableRow,
 } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
-import clsx from 'clsx';
 import * as React from 'react';
 
 import type {
@@ -87,7 +87,7 @@ export const UsageTokenUsage = (
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx('mt-8', className)} data-testid="UsageTokenUsage">
+    <div className={cn('mt-8', className)} data-testid="UsageTokenUsage">
       <GlobalHeading
         className="mb-4"
         heading="h2"

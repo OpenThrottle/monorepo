@@ -1,5 +1,4 @@
-import { Button, Card } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
+import { Button, Card, cn } from '@openthrottle/react-router-shadcn';
 import { useAtom } from 'jotai';
 import { XIcon } from 'lucide-react';
 import * as React from 'react';
@@ -57,7 +56,7 @@ export const DashboardGetStartedCard = (
 
   return (
     <Card
-      className={clsx('gap-3 p-4', className)}
+      className={cn('gap-3 p-4', className)}
       data-testid="DashboardGetStartedCard"
     >
       <div className="flex items-start justify-between gap-2">

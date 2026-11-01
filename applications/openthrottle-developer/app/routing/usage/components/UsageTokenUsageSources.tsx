@@ -3,6 +3,7 @@ import {
   formatUsageCost,
 } from '@openthrottle/react-router-chat';
 import {
+  cn,
   Table,
   TableBody,
   TableCell,
@@ -11,7 +12,6 @@ import {
   TableRow,
 } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
-import clsx from 'clsx';
 import * as React from 'react';
 
 import type { UsageTokenUsageRowFragment } from '~/__generated__/graphql';
@@ -50,10 +50,7 @@ export const UsageTokenUsageSources = (
   }
 
   return (
-    <div
-      className={clsx('mt-6', className)}
-      data-testid="UsageTokenUsageSources"
-    >
+    <div className={cn('mt-6', className)} data-testid="UsageTokenUsageSources">
       <GlobalHeading className="mb-3" heading="h3" title={copy.heading} />
       <div className="overflow-x-auto">
         <Table>

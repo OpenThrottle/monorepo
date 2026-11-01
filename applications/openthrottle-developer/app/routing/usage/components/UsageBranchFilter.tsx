@@ -1,6 +1,5 @@
 import type { ComboboxOption } from '@openthrottle/react-router-shadcn';
-import { Combobox } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
+import { cn, Combobox } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { useNavigate } from 'react-router';
 
@@ -101,7 +100,7 @@ export const UsageBranchFilter = (
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx(className)} data-testid="UsageBranchFilter">
+    <div className={cn(className)} data-testid="UsageBranchFilter">
       <span className="text-muted-foreground mb-1 block text-xs font-medium">
         {BRANCH_FILTER_COPY.label}
       </span>

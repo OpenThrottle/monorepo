@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import { useChatComposerMentions } from '../hooks/useChatComposerMentions';
@@ -166,7 +166,7 @@ export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
 
   return (
     <form
-      className={clsx(
+      className={cn(
         'mt-4 flex shrink-0 flex-col gap-4 border-t pt-4',
         className,
       )}

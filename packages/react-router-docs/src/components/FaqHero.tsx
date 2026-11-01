@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import { formatGroupLabel } from '../utils/buildDocsNav';
@@ -34,10 +34,7 @@ export const FaqHero = (props: FaqHeroProps): React.ReactElement => {
   // 🔌 Short Circuit
 
   return (
-    <div
-      className={clsx('flex flex-col gap-4', className)}
-      data-testid="FaqHero"
-    >
+    <div className={cn('flex flex-col gap-4', className)} data-testid="FaqHero">
       {description !== undefined ? (
         <p className="text-muted-foreground max-w-3xl text-sm">{description}</p>
       ) : null}

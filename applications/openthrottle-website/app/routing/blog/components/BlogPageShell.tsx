@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import { GlobalFooter } from '~/global/components/GlobalFooter';
@@ -28,7 +28,7 @@ export const BlogPageShell = (
   return (
     <>
       <main
-        className={clsx(
+        className={cn(
           'mx-auto flex w-full max-w-7xl flex-1 flex-col gap-10 px-4 py-12 sm:px-6 lg:px-8',
           className,
         )}

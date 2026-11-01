@@ -18,7 +18,6 @@
     "@schedule-x/react": "catalog:",
     "@schedule-x/resize": "catalog:",
     "@schedule-x/theme-shadcn": "catalog:",
-    "clsx": "catalog:",
     "preact": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",

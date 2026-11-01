@@ -1,5 +1,4 @@
-import { Badge, Button } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
+import { Badge, Button, cn } from '@openthrottle/react-router-shadcn';
 import { ChevronRightIcon, FolderIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
@@ -52,7 +51,7 @@ export const RepositoryNameCell = (
         >
           <ChevronRightIcon
             aria-hidden={true}
-            className={clsx(
+            className={cn(
               'size-3 transition-transform',
               isExpanded && 'rotate-90',
             )}

@@ -4,8 +4,8 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  cn,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import * as React from 'react';
 
 import type { ProposedPlanDecomposition } from '~/routing/plans/types/document-decompose';
@@ -37,7 +37,7 @@ export const DocumentDecomposePreview = (
   if (!proposal) {
     return (
       <div
-        className={clsx(
+        className={cn(
           'border-border text-muted-foreground rounded-md border border-dashed p-6 text-center text-sm',
           className,
         )}
@@ -50,7 +50,7 @@ export const DocumentDecomposePreview = (
 
   return (
     <div
-      className={clsx('space-y-4', className)}
+      className={cn('space-y-4', className)}
       data-testid="DocumentDecomposePreview"
     >
       <Card>

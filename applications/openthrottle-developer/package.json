@@ -43,7 +43,6 @@
     "@vercel/analytics": "catalog:",
     "@vercel/react-router": "catalog:",
     "@vscode/ripgrep": "catalog:",
-    "clsx": "catalog:",
     "date-fns": "catalog:",
     "dotenv": "catalog:",
     "framer-motion": "catalog:",

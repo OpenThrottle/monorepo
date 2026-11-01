@@ -1,10 +1,9 @@
-import { Badge, DataTable } from '@openthrottle/react-router-shadcn';
+import { Badge, cn, DataTable } from '@openthrottle/react-router-shadcn';
 import {
   GlobalFeatureOnboarding,
   GlobalPopoverActionsHeader,
 } from '@openthrottle/react-router-ui-global';
 import type { ColumnDef, ExpandedState } from '@tanstack/react-table';
-import clsx from 'clsx';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -72,7 +71,7 @@ export const RepositoriesTable = (
 
   return (
     <div
-      className={clsx('ui-border rounded-lg border', className)}
+      className={cn('ui-border rounded-lg border', className)}
       data-testid="RepositoriesTable"
     >
       <DataTable<RepositoryCheckoutRow, string | null | undefined>

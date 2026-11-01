@@ -1,5 +1,4 @@
-import { TableCell, TableRow } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
+import { cn, TableCell, TableRow } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -48,7 +47,7 @@ export const BlogPostRow = (props: BlogPostRowProps): React.ReactElement => {
 
   return (
     <TableRow
-      className={clsx(
+      className={cn(
         isAgentEdit &&
           'border-l-2 border-l-violet-500 bg-violet-500/5 hover:bg-violet-500/10',
       )}

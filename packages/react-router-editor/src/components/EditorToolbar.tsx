@@ -1,5 +1,6 @@
 import {
   Button,
+  cn,
   Input,
   Select,
   SelectContent,
@@ -8,7 +9,6 @@ import {
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
 import { FileIcon } from '@phosphor-icons/react/dist/ssr/File';
-import clsx from 'clsx';
 import * as React from 'react';
 
 import { PROMPT_TYPE_OPTIONS, PROMPT_TYPE_VALUES } from '../config';
@@ -84,7 +84,7 @@ export const EditorToolbar = (
   return (
     <div onKeyDown={handleKeyDown}>
       <div
-        className={clsx(
+        className={cn(
           'flex items-center justify-between border-b border-gray-700 bg-gray-900 p-4',
           className,
         )}

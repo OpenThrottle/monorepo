@@ -1,5 +1,4 @@
-import { Label, Switch } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
+import { cn, Label, Switch } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { useSearchParams } from 'react-router';
 
@@ -61,7 +60,7 @@ export const MissingWorktreesToggle = (
 
   return (
     <div
-      className={clsx('flex items-center gap-2', className)}
+      className={cn('flex items-center gap-2', className)}
       data-testid="MissingWorktreesToggle"
       title={MISSING_WORKTREES_COPY.showMissingTitle}
     >

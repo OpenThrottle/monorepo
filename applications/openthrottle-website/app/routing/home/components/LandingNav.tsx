@@ -1,3 +1,4 @@
+import { cn } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleLogo } from '@openthrottle/react-router-ui';
 import * as React from 'react';
 import { Link } from 'react-router';
@@ -30,7 +31,10 @@ export const LandingNav = (props: LandingNavProps): React.ReactElement => {
 
   return (
     <header
-      className={`absolute inset-x-0 top-0 z-10 flex flex-col items-center justify-between gap-4 px-6 py-5 text-[var(--landing-hero-line-strong)] sm:flex-row ${className ?? ''}`}
+      className={cn(
+        'absolute inset-x-0 top-0 z-10 flex flex-col items-center justify-between gap-4 px-6 py-5 text-[var(--landing-hero-line-strong)] sm:flex-row',
+        className,
+      )}
       data-testid="LandingNav"
     >
       <Link className="font-bold tracking-tight no-underline" to="#top">

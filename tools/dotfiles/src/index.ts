@@ -63,6 +63,24 @@ const CODE_POINT_ALPHABET = Array.from({ length: 95 }, (_, index) =>
   String.fromCharCode(32 + index),
 ).join('');
 
+/**
+ * Compose Tailwind classes with `cn` (docs/monorepo/code-style.md#composing-classes-with-cn).
+ * `clsx` and template literals both emit conflicting classes side by side and
+ * leave the winner to stylesheet order; `cn` resolves them so the last wins.
+ */
+const CLASS_COMPOSITION_MESSAGE = `Compose classes with \`cn\` from @openthrottle/react-router-shadcn, never bare \`clsx\` or a template literal — \`cn\` resolves Tailwind conflicts so the last class (the caller's \`className\`) wins. See docs/monorepo/code-style.md#composing-classes-with-cn.`;
+
+/**
+ * The template-literal half of the class-composition rule. Every
+ * `no-restricted-syntax` array below repeats it, because those options replace
+ * rather than merge.
+ */
+const TEMPLATE_LITERAL_CLASS_NAME_RESTRICTION = {
+  message: CLASS_COMPOSITION_MESSAGE,
+  selector:
+    "JSXAttribute[name.name='className'] > JSXExpressionContainer > TemplateLiteral[expressions.length>0]",
+};
+
 const skipEmptyGraphqlProcessor: Linter.Processor = {
   meta: { name: 'skip-empty-graphql', version: '1.0.0' },
   postprocess(messages) {
@@ -280,6 +298,12 @@ export const eslintConfig = tslint.config([
       'import-x/no-named-as-default-member': 'off',
       'no-await-in-loop': 'error',
       'no-console': 'off',
+      // `cn` is built on clsx, so react-router-shadcn turns this off — in its
+      // own eslint.config.ts for `nx lint`, and in the root-cwd block below.
+      'no-restricted-imports': [
+        'error',
+        { paths: [{ message: CLASS_COMPOSITION_MESSAGE, name: 'clsx' }] },
+      ],
       // Enforce the "no new TypeScript enums — use `as const` objects" rule
       // from CLAUDE.md at the config layer.
       'no-restricted-syntax': [
@@ -288,6 +312,7 @@ export const eslintConfig = tslint.config([
           message: `Avoid TypeScript enums. Use an \`as const\` object instead (existing enums are grandfathered).`,
           selector: 'TSEnumDeclaration',
         },
+        TEMPLATE_LITERAL_CLASS_NAME_RESTRICTION,
       ],
       'no-undef': 'off',
       'no-unused-vars': 'off',
@@ -377,6 +402,7 @@ export const eslintConfig = tslint.config([
           message: `Avoid TypeScript enums. Use an \`as const\` object instead (existing enums are grandfathered).`,
           selector: 'TSEnumDeclaration',
         },
+        TEMPLATE_LITERAL_CLASS_NAME_RESTRICTION,
         {
           message: `Avoid snapshot tests in __tests__. Prefer getByRole/getByText and assertions on visible behavior.`,
           selector: `CallExpression[callee.type="MemberExpression"][callee.property.name="toMatchSnapshot"]`,
@@ -629,6 +655,19 @@ export const eslintConfig = tslint.config([
   },
 
   /**
+   * `cn` is implemented on top of clsx, so react-router-shadcn is the one place
+   * a clsx import is legitimate. Root-cwd coverage only, for the same reason as
+   * the block above; the package's own eslint.config.ts carries the `nx lint`
+   * copy.
+   */
+  {
+    files: ['**/packages/react-router-shadcn/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': 'off',
+    },
+  },
+
+  /**
    * The plans/tasks status-write chokepoint (`openthrottle/plan-task-status-
    * chokepoint`, registered above) is enabled with its per-file
    * `allowedFunctionNames` overrides in EACH project's own `eslint.config.ts`
@@ -728,6 +767,7 @@ export const sourceFirstEslintConfig = tslint.config([
           message: `Avoid TypeScript enums. Use an \`as const\` object instead (existing enums are grandfathered).`,
           selector: 'TSEnumDeclaration',
         },
+        TEMPLATE_LITERAL_CLASS_NAME_RESTRICTION,
         {
           message: `This package is source-first — its "exports" name ./src/, so consumers get raw TypeScript. A decorator implies a generated call wrapping the declaration, which Node's strip-only loader cannot emit: a consumer resolving this package through Node fails with "SyntaxError: Invalid or unexpected token", naming neither this package nor the "exports" decision. Either drop the decorator, or stop pointing this package's require/default conditions at ./src/. See docs/monorepo/source-first-packages-and-strip-only.md.`,
           selector: 'Decorator',

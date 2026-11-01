@@ -10,13 +10,13 @@ import {
   Badge,
   Button,
   Card,
+  cn,
   Input,
   Label,
   ToggleGroup,
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
 import { getActionError } from '@openthrottle/react-router-utils';
-import clsx from 'clsx';
 import * as React from 'react';
 import { useFetcher } from 'react-router';
 
@@ -74,7 +74,7 @@ export const SkillAvailabilityPostureCard = (
 
   return (
     <Card
-      className={clsx('flex flex-col gap-4 p-6', className)}
+      className={cn('flex flex-col gap-4 p-6', className)}
       data-testid="SkillAvailabilityPostureCard"
     >
       <div className="flex items-center gap-2">

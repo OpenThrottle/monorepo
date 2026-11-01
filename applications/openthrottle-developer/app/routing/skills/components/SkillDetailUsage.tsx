@@ -1,6 +1,5 @@
-import { Badge } from '@openthrottle/react-router-shadcn';
+import { Badge, cn } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
-import clsx from 'clsx';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -63,7 +62,7 @@ export const SkillDetailUsage = (
   // 🔌 Short Circuit
   if (!usage.available) {
     return (
-      <div className={clsx('mt-8', className)} data-testid="SkillDetailUsage">
+      <div className={cn('mt-8', className)} data-testid="SkillDetailUsage">
         {header}
         <p
           className="text-muted-foreground text-sm"
@@ -77,7 +76,7 @@ export const SkillDetailUsage = (
 
   if (!skill) {
     return (
-      <div className={clsx('mt-8', className)} data-testid="SkillDetailUsage">
+      <div className={cn('mt-8', className)} data-testid="SkillDetailUsage">
         {header}
         <p
           className="text-muted-foreground text-sm"
@@ -90,7 +89,7 @@ export const SkillDetailUsage = (
   }
 
   return (
-    <div className={clsx(className)} data-testid="SkillDetailUsage">
+    <div className={cn(className)} data-testid="SkillDetailUsage">
       {header}
       <p className="text-muted-foreground mb-4 text-sm">
         {SKILL_USAGE_DETAIL_COPY.intro(rangeDays)}

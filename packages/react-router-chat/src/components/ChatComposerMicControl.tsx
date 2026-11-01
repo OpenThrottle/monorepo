@@ -1,10 +1,10 @@
 import {
   Button,
+  cn,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import { Loader2, Mic } from 'lucide-react';
 import * as React from 'react';
 
@@ -60,7 +60,7 @@ export const ChatComposerMicControl = (
         <Button
           aria-label={micLabel}
           aria-pressed={isMicRecording}
-          className={clsx('pointer-coarse:size-11', {
+          className={cn('pointer-coarse:size-11', {
             'text-destructive hover:text-destructive': isMicRecording,
           })}
           data-mic-state={micState}
@@ -77,7 +77,7 @@ export const ChatComposerMicControl = (
             <Loader2 className="size-4 animate-spin" />
           ) : (
             <Mic
-              className={clsx('size-4', {
+              className={cn('size-4', {
                 'animate-pulse': isMicRecording,
               })}
             />

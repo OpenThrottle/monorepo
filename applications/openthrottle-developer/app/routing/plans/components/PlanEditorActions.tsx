@@ -1,11 +1,11 @@
 import {
   Button,
+  cn,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
-import clsx from 'clsx';
 import { CodeXmlIcon } from 'lucide-react';
 import * as React from 'react';
 
@@ -90,7 +90,7 @@ export const PlanEditorActions = (
 
     return (
       <div
-        className={clsx('flex flex-wrap items-center gap-2', className)}
+        className={cn('flex flex-wrap items-center gap-2', className)}
         data-testid="PlanEditorActions"
       >
         {FEATURE_BETA_PREVIEW ? (

@@ -2,8 +2,8 @@ import {
   Avatar,
   AvatarFallback,
   AvatarImage,
+  cn,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import * as React from 'react';
 
 import type { BlogPostSummaryFragment } from '~/__generated__/graphql';
@@ -41,7 +41,7 @@ export const BlogMeta = (props: BlogMetaProps): React.ReactElement => {
 
   return (
     <div
-      className={clsx(
+      className={cn(
         'text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-sm',
         className,
       )}

@@ -1,4 +1,5 @@
 import {
+  cn,
   Input,
   Label,
   Select,
@@ -8,7 +9,6 @@ import {
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
-import clsx from 'clsx';
 import * as React from 'react';
 
 import type { WorkflowRalphPromptLayer } from '~/routing/plans/utils/build-workflow-ralph-argv';
@@ -76,7 +76,7 @@ export const PlanWorkflowConfigPrompt = (
     >
       <fieldset
         aria-labelledby="workflow-run-layer1-legend"
-        className={clsx('space-y-4', className)}
+        className={cn('space-y-4', className)}
         data-testid="PlanWorkflowConfigPrompt"
       >
         <p className="text-muted-foreground text-xs">

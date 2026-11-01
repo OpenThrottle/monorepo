@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import type { LucideIcon } from 'lucide-react';
 import * as React from 'react';
 
@@ -32,7 +32,7 @@ export const GlobalHeading = (
   return (
     <div className="flex flex-wrap gap-2">
       <Heading
-        className={clsx(
+        className={cn(
           // 'text-5xl text-center my-20 sm:text-xl lg:text-3xl font-bold',
           'flex flex-1 items-center gap-4',
           className,

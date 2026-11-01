@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type { ChatTokenUsage } from '../types';
@@ -61,7 +61,7 @@ export const ChatUsageCounter = (
   return (
     <span
       aria-label={`${intent}: ${label}`}
-      className={clsx(
+      className={cn(
         'text-muted-foreground inline-flex items-center gap-1.5 text-[0.7rem] tabular-nums',
         className,
       )}

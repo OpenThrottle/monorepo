@@ -1,5 +1,5 @@
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -38,7 +38,7 @@ export const BlogDetails = (props: BlogDetailsProps): React.ReactElement => {
 
   return (
     <article
-      className={clsx('mx-auto w-[min(48rem,100%)]', className)}
+      className={cn('mx-auto w-[min(48rem,100%)]', className)}
       data-testid="BlogDetails"
     >
       <header className="flex flex-col gap-5">

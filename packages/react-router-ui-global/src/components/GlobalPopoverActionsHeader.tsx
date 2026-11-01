@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import { GLOBAL_POPOVER_COPY } from '../data/data.copy';
@@ -35,7 +35,7 @@ export const GlobalPopoverActionsHeader = (
 
   return (
     <div
-      className={clsx('p-2 text-center', className)}
+      className={cn('p-2 text-center', className)}
       data-testid="GlobalPopoverActionsHeader"
     >
       <span className="text-sm font-medium">

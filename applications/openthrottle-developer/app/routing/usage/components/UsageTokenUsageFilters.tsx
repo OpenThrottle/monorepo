@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -47,7 +47,7 @@ export const UsageTokenUsageFilters = (
   return (
     <div
       aria-label="Filter usage by provider"
-      className={clsx('mb-6 flex flex-wrap gap-2', className)}
+      className={cn('mb-6 flex flex-wrap gap-2', className)}
       data-testid="UsageTokenUsageFilters"
       role="group"
     >
@@ -57,7 +57,7 @@ export const UsageTokenUsageFilters = (
         return (
           <Link
             aria-current={active ? 'true' : undefined}
-            className={clsx(
+            className={cn(
               'rounded-full border px-3 py-1 text-xs transition-colors',
               active
                 ? 'border-primary bg-primary text-primary-foreground'
