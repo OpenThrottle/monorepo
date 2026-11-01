@@ -2,27 +2,36 @@ import type { RenderResult } from '@testing-library/react';
 import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, test } from 'vitest';
 
 import type { ChatMessageBodyProps } from '../ChatMessageBody';
 import { ChatMessageBody } from '../ChatMessageBody';
 
 /**
  * `ChatMessageBody` loads `MarkdownRenderer` through `React.lazy`, so the first
- * test to await it pays for loading AND MDX-compiling the ~505 KB acorn stack:
- * ~600ms on a warm dev machine, over a second on a contended CI shard. That
- * overran Testing Library's 1000ms `asyncUtilTimeout` default and failed only
- * the first awaiting test on CI, while every later one passed off the hot
- * compiler. The wait is legitimately compiler-bound rather than a hang, so give
- * it a budget — passed per call rather than via `configure`, which is
- * process-global and would leak into sibling suites sharing a worker. Vitest's
- * 15s `testTimeout` still bounds a genuine failure.
+ * test to await it pays for MDX-compiling the ~505 KB acorn stack: ~300ms on a
+ * warm dev machine, over a second on a contended CI shard. That overran Testing
+ * Library's 1000ms `asyncUtilTimeout` default and failed only the first
+ * awaiting test on CI, while every later one passed off the hot compiler. The
+ * wait is legitimately compiler-bound rather than a hang, so give it a budget —
+ * passed per call rather than via `configure`, which is process-global and
+ * would leak into sibling suites sharing a worker. Vitest's 15s `testTimeout`
+ * still bounds a genuine failure.
  */
 const LAZY_RENDERER_TIMEOUT_MS = 10_000;
 
 describe('ChatMessageBody Component', () => {
   let component: RenderResult;
   let props: ChatMessageBodyProps;
+
+  // `MarkdownRenderer` composes classes with `cn`, so the lazy import drags in
+  // the whole `react-router-shadcn` barrel — ~4s to transform on a dev machine,
+  // past the budget above on CI. Every sibling suite pays that cost at import
+  // time; this one only reaches it through `React.lazy`, so preload the module
+  // here and keep the `findBy` waits measuring the render, not module loading.
+  beforeAll(async () => {
+    await import('@openthrottle/react-router-markdown');
+  });
 
   const renderBody = (p: ChatMessageBodyProps): RenderResult => {
     const Comp = () => <ChatMessageBody {...p} />;
