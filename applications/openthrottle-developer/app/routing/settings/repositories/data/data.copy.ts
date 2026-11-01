@@ -128,11 +128,17 @@ export const WORKTREE_DISCOVERY_COPY = {
   refreshButton: `Rescan worktrees`,
   refreshingButton: `Rescanning…`,
   rootPrefix: `Scanning for worktrees in`,
+  /** Leads the list when repositories resolve to more than one configured root. */
+  rootsPrefixOther: `Scanning for worktrees in these roots:`,
+  /** Where a configured root came from — the rungs of the server's worktree-root ladder. */
+  sourceLabelCheckoutEnv: `repository .env`,
+  sourceLabelDefault: `default`,
+  sourceLabelEnv: `server environment`,
   /** The one actionable line: git is still holding entries for directories that are gone. */
   staleRemedy: `Run \`git worktree prune\` in the repository to clear them.`,
   staleSummarySuffixOne: `worktree is still registered with git but no longer on disk.`,
   staleSummarySuffixOther: `worktrees are still registered with git but no longer on disk.`,
-  unconfiguredBody: `OpenThrottle could not work out where your worktrees live, so none are listed. Set a worktree root in workspace settings, or register a primary checkout so the default sibling directory can be resolved.`,
+  unconfiguredBody: `OpenThrottle could not work out where your worktrees live, so none are listed. Register a primary checkout so its worktree root can be resolved: OPENTHROTTLE_WORKTREE_ROOT when set, otherwise ~/.openthrottle/worktrees.`,
   unconfiguredLinkLabel: `Open workspace settings`,
   unconfiguredTitle: `No worktree root to scan`,
 } as const;

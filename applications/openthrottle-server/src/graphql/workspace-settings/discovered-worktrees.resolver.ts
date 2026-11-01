@@ -57,6 +57,7 @@ export class DiscoveredWorktreesResolver {
       rootSource: result.rootSource,
       scannedAt: result.scannedAt,
       scannedRoots: result.scannedRoots.map((root) => ({
+        baseRoot: root.baseRoot,
         exists: root.exists,
         path: root.path,
         source: root.source,

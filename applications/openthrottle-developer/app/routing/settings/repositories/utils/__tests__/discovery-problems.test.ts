@@ -26,6 +26,7 @@ const problem = (
 const root = (
   overrides: Partial<DiscoveredWorktreesResult['scannedRoots'][number]> = {},
 ): DiscoveredWorktreesResult['scannedRoots'][number] => ({
+  baseRoot: '/srv/worktrees',
   exists: true,
   path: '/srv/worktrees/org/repo',
   source: WorktreeRootSource.Default,

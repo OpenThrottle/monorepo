@@ -34,6 +34,13 @@ export type DiscoveredWorktreesResult =
 export type MissingWorktreeCheckout =
   DiscoveredWorktreesResult['missingCheckouts'][number];
 
+/**
+ * @description One directory the scan looked in — a repository's `<root>/<org>/<repo>`
+ * folder — carrying the configured `baseRoot` above it and the rung that set it.
+ */
+export type ScannedWorktreeRoot =
+  DiscoveredWorktreesResult['scannedRoots'][number];
+
 /** @description One per-id outcome from the `pruneWorktreeCheckouts` mutation. */
 export type PruneWorktreeCheckoutResult =
   PruneWorktreeCheckoutsMutation['pruneWorktreeCheckouts']['results'][number];

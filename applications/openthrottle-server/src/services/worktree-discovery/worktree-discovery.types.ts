@@ -131,6 +131,12 @@ export interface MissingWorktreeCheckout {
 /** One resolved worktree root and what the depth-1 scan of it found. */
 export interface ScannedWorktreeRoot {
   /**
+   * The configured root this directory sits under, before OpenThrottle joins `<org>/<repo>` onto
+   * it — what a person set (or the default), and so what the page should name. Several scanned roots
+   * share one base root whenever their repositories share a configured root.
+   */
+  readonly baseRoot: string;
+  /**
    * Whether the directory is there at all. False is the ordinary state of a repository with no
    * worktrees yet — surfaced as data precisely so the UI can say so instead of listing an ENOENT.
    */
@@ -171,8 +177,8 @@ export interface WorktreeDiscoveryResult {
    */
   readonly warnings: readonly string[];
   /**
-   * The resolved worktree root that was scanned. When several registered primaries resolve to
-   * different roots, this is the first one; every root is still scanned.
+   * @deprecated Use {@link scannedRoots} and each root's `baseRoot`. This is ONE repository's
+   * `<root>/<org>/<repo>` folder — the first primary's — not the configured root.
    */
   readonly worktreeRoot: string | null;
   readonly worktrees: readonly DiscoveredWorktree[];

@@ -3885,11 +3885,18 @@ enum WorktreeDiscoveryProblemKind {
 """One resolved worktree root and what the depth-1 scan of it found."""
 type ScannedWorktreeRootObject {
   """
+  The configured worktree root this directory sits under, before OpenThrottle joins <org>/<repo> onto it — absolute and ~-expanded, on the server host. This is the value to show a person; path is one repository's folder beneath it. Several scanned roots share a baseRoot whenever their repositories share a configured root, so de-duplicate before listing.
+  """
+  baseRoot: String!
+
+  """
   Whether the directory is there at all. False is the ordinary state of a repository with no worktrees yet — it is data, not a failure.
   """
   exists: Boolean!
 
-  """Absolute path on the server host."""
+  """
+  The directory actually scanned: baseRoot joined with the repository's <org>/<repo>. Absolute path on the server host.
+  """
   path: String!
 
   """Which rung of the shared ladder resolved this root."""
@@ -4016,7 +4023,7 @@ type DiscoveredWorktreesObject {
   scannedAt: String!
 
   """
-  Every root the scan looked in. worktreeRoot names only the first, which misrepresents a machine whose primaries resolve to several roots.
+  Every root the scan looked in, each carrying the configured baseRoot it sits under and the rung that set it.
   """
   scannedRoots: [ScannedWorktreeRootObject!]!
 
@@ -4024,9 +4031,9 @@ type DiscoveredWorktreesObject {
   warnings: [String!]! @deprecated(reason: "Use problems — warnings is unclassified free text and cannot be presented per-kind.")
 
   """
-  The resolved root that was scanned; null when none could be resolved (no registered primary checkout). When several primaries resolve to different roots, this is the first — every root is still scanned.
+  The first resolved per-repository folder that was scanned; null when none could be resolved (no registered primary checkout).
   """
-  worktreeRoot: String
+  worktreeRoot: String @deprecated(reason: "Use scannedRoots.baseRoot — worktreeRoot is the first primary's <root>/<org>/<repo> folder, not the configured root, and names only one of several.")
   worktrees: [DiscoveredWorktreeObject!]!
 }
 
