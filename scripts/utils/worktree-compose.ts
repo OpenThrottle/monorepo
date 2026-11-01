@@ -6,8 +6,19 @@
  * excluding them, so `database:start` starts the worktree's OWN containers
  * under its own compose project.
  *
- * Dependency-free — it runs during provisioning, before `pnpm install`.
+ * A `shared` worktree also skips the `migrations` runner. The primary owns its
+ * schema, and the runner's image applies every migration it ships with no
+ * branch-only guard (that lives in `database:migrate`), so pointing it at the
+ * shared database would migrate the primary from a feature branch. Every service
+ * that waited on a disabled one is re-pointed, or `config` rejects the project.
+ *
+ * Dependency-free (node builtins + ./worktree-db.ts only) — it runs during
+ * provisioning and heal, before `pnpm install`.
  */
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+import { readWorktreeDbMode } from './worktree-db.ts';
 
 /** Name of the generated, git-ignored override file at the worktree root. */
 export const WORKTREE_COMPOSE_FILE = 'docker-compose.worktree.yml';
@@ -15,15 +26,31 @@ export const WORKTREE_COMPOSE_FILE = 'docker-compose.worktree.yml';
 /** Postgres/Redis ownership a generated override encodes. */
 export type WorktreeComposeDb = 'isolated' | 'shared';
 
-const SHARED_DB_SERVICES = `  postgres:
+const SHARED_DB_SERVICES = `  bootstrap:
+    depends_on: !reset null
+    environment:
+      POSTGRES_HOST: host.docker.internal
+      POSTGRES_PORT: \${POSTGRES_PORT}
+  mcp:
+    depends_on: !override
+      server:
+        condition: service_healthy
+  mcp-dev:
+    depends_on: !override
+      server-dev:
+        condition: service_healthy
+  migrations:
+    profiles: ["disabled"]
+  postgres:
     profiles: ["disabled"]
   redis:
     profiles: ["disabled"]
 `;
 
 const SHARED_HEADER = `# Worktrees share the main checkout's Postgres/Redis. This override disables the
-# postgres/redis services and points the apps at the host DB. Bring up the apps
-# with both files:`;
+# postgres/redis services and the migrations runner (the primary owns its schema;
+# \`pnpm run database:migrate\` is the guarded path), and points the apps at the
+# host DB. Bring up the apps with both files:`;
 
 const ISOLATED_HEADER = `# This worktree owns its Postgres/Redis (OT_WORKTREE_DB=isolated, set by
 # \`pnpm worktree:db isolate\`): the postgres/redis services are NOT disabled, and
@@ -51,3 +78,53 @@ ${db === 'shared' ? SHARED_DB_SERVICES : ''}  server:
       REDIS_HOST: host.docker.internal
       REDIS_PORT: \${REDIS_PORT}
 `;
+
+/** What {@link refreshWorktreeComposeOverride} did. Only `rewritten` touched the disk. */
+export type RefreshComposeOverrideResult =
+  | { readonly db: WorktreeComposeDb; readonly kind: 'rewritten' }
+  | { readonly kind: 'failed'; readonly message: string }
+  | { readonly kind: 'missing' }
+  | { readonly kind: 'primary' }
+  | { readonly kind: 'unchanged' };
+
+/**
+ * @description Heal backfill: re-render the override at `root` for the
+ * worktree's `OT_WORKTREE_DB` mode, so worktrees provisioned by an older
+ * generator pick up its fixes on their next `dev`. Never creates the file —
+ * teardown reads its presence as "this worktree has a compose project to stop" —
+ * and never writes in the primary. Identical contents are left alone, so the
+ * steady state is one read. Never throws: heal runs before every `dev`.
+ */
+export const refreshWorktreeComposeOverride = (
+  root: string,
+  env: Readonly<Record<string, string | undefined>> = process.env,
+): RefreshComposeOverrideResult => {
+  const path = join(root, WORKTREE_COMPOSE_FILE);
+
+  try {
+    const mode = readWorktreeDbMode(root, env);
+
+    if (mode === 'primary') {
+      return { kind: 'primary' };
+    }
+
+    if (!existsSync(path)) {
+      return { kind: 'missing' };
+    }
+
+    const expected = worktreeComposeOverride(mode);
+
+    if (readFileSync(path, 'utf8') === expected) {
+      return { kind: 'unchanged' };
+    }
+
+    writeFileSync(path, expected);
+
+    return { db: mode, kind: 'rewritten' };
+  } catch (error) {
+    return {
+      kind: 'failed',
+      message: error instanceof Error ? error.message : String(error),
+    };
+  }
+};
