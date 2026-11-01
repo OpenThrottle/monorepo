@@ -92,8 +92,10 @@ the how.
   review comment. A follow-up with no evidence is a hunch, and the next session cannot check it.
 - Author its tasks in **one** `create_tasks` call with `sortOrder` and `wave` decided per item (see
   § Task wave above — there is no cheap second pass).
-- Tag it: `add_plan_tag(planId, 'follow-up')`. If the tag is not in your vocabulary yet,
-  `add_skill_tag('follow-up')` once, then retry. Best-effort — never block filing on the tag.
+- Tag it in the same call: `create_plan({ ..., tags: ['follow-up'] })` (or `add_plan_tag(planId,
+'follow-up')` after the fact). `follow-up` is a platform system tag, accepted from any caller
+  without being in your skill-tag vocabulary — do not `add_skill_tag` it (an agent token lacks
+  `settings:write`). Best-effort: a tag that fails comes back in `tagFailures` and never blocks filing.
 - Report the plan id. Filing is not starting: [§ Authoring vs running](#authoring-vs-running) still
   holds.
 

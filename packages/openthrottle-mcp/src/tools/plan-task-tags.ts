@@ -82,7 +82,7 @@ type ProjectSkillTagResult = {
 
 export const addPlanTagToolParameters = AddPlanTagInputSchema().strict();
 
-export const addPlanTagToolDescription = `Attach a tag to a plan via the addPlanTag GraphQL mutation. The tag must be kebab-case and in the caller's skill-tag vocabulary; source is derived server-side from the caller identity (never an argument). At most one phase tag per plan — an equal-or-lower-provenance phase tag is replaced, a higher one rejects.`;
+export const addPlanTagToolDescription = `Attach a tag to a plan via the addPlanTag GraphQL mutation. The tag must be kebab-case and in the caller's skill-tag vocabulary — except platform system tags such as follow-up, which any caller may apply; source is derived server-side from the caller identity (never an argument). At most one phase tag per plan — an equal-or-lower-provenance phase tag is replaced, a higher one rejects.`;
 
 export async function addPlanTagToolHandler(
   args: z.infer<typeof addPlanTagToolParameters>,
@@ -150,7 +150,7 @@ export async function removePlanTagToolHandler(
 
 export const addProjectTagToolParameters = AddProjectTagInputSchema().strict();
 
-export const addProjectTagToolDescription = `Attach a tag to a project via the addProjectTag GraphQL mutation. The tag must be kebab-case and in the caller's skill-tag vocabulary; source is derived server-side from the caller identity (never an argument). Multiple tags per project are allowed.`;
+export const addProjectTagToolDescription = `Attach a tag to a project via the addProjectTag GraphQL mutation. The tag must be kebab-case and in the caller's skill-tag vocabulary — except platform system tags such as follow-up, which any caller may apply; source is derived server-side from the caller identity (never an argument). Multiple tags per project are allowed.`;
 
 export async function addProjectTagToolHandler(
   args: z.infer<typeof addProjectTagToolParameters>,
@@ -221,7 +221,7 @@ export async function removeProjectTagToolHandler(
 
 export const addTaskTagToolParameters = AddTaskTagInputSchema().strict();
 
-export const addTaskTagToolDescription = `Attach a tag to a task via the addTaskTag GraphQL mutation. The tag must be kebab-case and in the caller's skill-tag vocabulary; source is derived server-side from the caller identity (never an argument).`;
+export const addTaskTagToolDescription = `Attach a tag to a task via the addTaskTag GraphQL mutation. The tag must be kebab-case and in the caller's skill-tag vocabulary — except platform system tags such as follow-up, which any caller may apply; source is derived server-side from the caller identity (never an argument).`;
 
 export async function addTaskTagToolHandler(
   args: z.infer<typeof addTaskTagToolParameters>,

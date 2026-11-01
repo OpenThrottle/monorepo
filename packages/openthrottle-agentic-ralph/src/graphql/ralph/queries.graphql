@@ -19,9 +19,16 @@ query getServerHealth {
   }
 }
 
+# tags are selected on the read queries only, not in the shared Plan fragment, so
+# plan mutations do not pay a tag lookup they never return to anyone.
 query getPlan($id: ID!) {
   plan(id: $id) {
     ...Plan
+    tags {
+      dimension
+      source
+      tag
+    }
   }
 }
 
@@ -29,6 +36,11 @@ query listPlansByStatus($input: ListPlansByStatusInput!) {
   listPlansByStatus(input: $input) {
     plans {
       ...Plan
+      tags {
+        dimension
+        source
+        tag
+      }
     }
     totalCount
   }

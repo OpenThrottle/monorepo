@@ -97,3 +97,17 @@ export const DEFAULT_TAG_VOCABULARY_SEED: readonly DefaultTagVocabularyEntry[] =
       tag,
     })),
   ];
+
+/**
+ * @description Tags the platform itself relies on, accepted for plan, task and
+ * project tags from **any** caller regardless of that caller's per-user
+ * vocabulary. `follow-up` marks a plan an agent filed for out-of-scope work
+ * (skills/ot-plans § Follow-ups): an agent's MCP token cannot add vocabulary
+ * entries (`settings:write`), so a vocabulary-gated system tag was unreachable
+ * by the agents meant to apply it. Not seeded into `user_skill_tags`, so it
+ * never shows up as a skill tag.
+ * @public
+ */
+export const SYSTEM_TAG_VOCABULARY: readonly DefaultTagVocabularyEntry[] = [
+  { dimension: 'domain', tag: 'follow-up' },
+];

@@ -272,6 +272,30 @@ describe('TagsService', () => {
     });
   });
 
+  describe('platform system tags', () => {
+    it('accepts follow-up from a service account outside its vocabulary', async () => {
+      vi.mocked(mockPlanTagsRepository.findOne).mockResolvedValue(null);
+
+      await service.addPlanTag(agentCaller, planId, 'follow-up');
+
+      expect(mockPlanTagsRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({ dimension: 'domain', tag: 'follow-up' }),
+      );
+      expect(mockVocabularyRepository.find).not.toHaveBeenCalled();
+    });
+
+    it('accepts follow-up from a user without seeding their vocabulary', async () => {
+      vi.mocked(mockPlanTagsRepository.findOne).mockResolvedValue(null);
+
+      await service.addPlanTag(humanCaller, planId, 'follow-up');
+
+      expect(mockPlanTagsRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({ source: 'human', tag: 'follow-up' }),
+      );
+      expect(mockSkillTagsService.listForUser).not.toHaveBeenCalled();
+    });
+  });
+
   describe('≤1 phase tag per plan (replace/reject semantics)', () => {
     it('replaces an equal-or-lower-provenance phase tag', async () => {
       const existingPhase = planTagRow('design', 'server-llm');
