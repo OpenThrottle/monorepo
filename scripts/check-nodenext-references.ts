@@ -34,6 +34,10 @@
  * those would report non-problems and force this gate into warn-mode for no
  * benefit.
  *
+ * A dependency the consumer negates with Nx `implicitDependencies: ["!<name>"]`
+ * is skipped. That declares there is no build edge to it, so it is never
+ * imported by name.
+ *
  * Deliberately file-based. The `check:tsconfig-refs` approach on the unmerged
  * `openthrottle/squash-nx-typescript-sync-gate` branch runs the Nx sync
  * generator in a throwaway auto-reverted pass and then filters phantom app→app
@@ -278,6 +282,24 @@ const readProjectInfo = (directory: string): ProjectInfo | undefined => {
     (block) => (isRecord(block) ? Object.entries(block) : []),
   );
 
+  // `implicitDependencies: ["!<name>"]` removes the edge Nx infers from the
+  // manifest, which also makes `nx sync` drop the tsconfig reference. The
+  // consumer then has no build or typecheck edge to that dependency, so it
+  // cannot import it by name. It only keeps the pnpm link to resolve files on
+  // disk (openthrottle-server → @tools/generators).
+  const implicitDependencies =
+    isRecord(parsed.nx) && Array.isArray(parsed.nx.implicitDependencies)
+      ? parsed.nx.implicitDependencies
+      : [];
+  const negated = new Set(
+    implicitDependencies
+      .filter(
+        (entry): entry is string =>
+          typeof entry === 'string' && entry.startsWith('!'),
+      )
+      .map((entry) => entry.slice(1)),
+  );
+
   // Resolve the mode from the config that actually compiles the project —
   // `tsconfig.lib.json` for a library, `tsconfig.app.json` for an application —
   // falling back to the project root config.
@@ -295,8 +317,10 @@ const readProjectInfo = (directory: string): ProjectInfo | undefined => {
     referencePaths: readReferencePaths(directory),
     workspaceDependencies: declared
       .filter(
-        ([, version]) =>
-          typeof version === 'string' && version.startsWith('workspace:'),
+        ([dependencyName, version]) =>
+          typeof version === 'string' &&
+          version.startsWith('workspace:') &&
+          !negated.has(dependencyName),
       )
       .map(([dependencyName]) => dependencyName),
   };

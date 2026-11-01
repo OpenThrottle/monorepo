@@ -74,6 +74,12 @@
   "name": "openthrottle-server",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "implicitDependencies": [
+      "!@tools/generators"
+    ],
+    "metadata": {
+      "description": "`!@tools/generators` removes the graph edge Nx infers from the `dependencies` entry. The server never imports that package. It only resolves its package.json and reads generators.json and src/**/schema.json (src/modules/generators/generators.service.ts), so it needs the pnpm link but not a built dist/. Without this, `^build` and `nx sync` make every dev start and typecheck build @tools/generators."
+    },
     "projectType": "application",
     "sourceRoot": "./",
     "tags": [
