@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 import { ApolloDriver, type ApolloDriverConfig } from '@nestjs/apollo';
-import { Module } from '@nestjs/common';
+import { Module, type Type } from '@nestjs/common';
 import {
   Field,
   GraphQLModule,
@@ -13,6 +13,10 @@ import {
 } from '@nestjs/graphql';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import {
+  GRAPHQL_SCHEMA_FILE_ENV,
+  resolveAutoSchemaFile,
+} from './auto-schema-file.ts';
 import {
   type RootModuleLoader,
   runGraphqlSchemaCommand,
@@ -32,21 +36,29 @@ class CommandWidgetResolver {
   }
 }
 
-/** Relative `autoSchemaFile`, exactly as NestjsGraphqlModule configures it. */
-@Module({
-  imports: [
-    GraphQLModule.forRoot<ApolloDriverConfig>({
-      autoSchemaFile: 'schema.gql',
-      driver: ApolloDriver,
-    }),
-  ],
-  providers: [CommandWidgetResolver],
-})
-class CommandFixtureModule {}
+/**
+ * Built when the loader runs, as an app's root module is: `autoSchemaFile` comes
+ * from `resolveAutoSchemaFile()`, exactly as NestjsGraphqlModule configures it,
+ * and reads the environment the command set before loading.
+ */
+const buildFixtureModule = (): Type => {
+  @Module({
+    imports: [
+      GraphQLModule.forRoot<ApolloDriverConfig>({
+        autoSchemaFile: resolveAutoSchemaFile(),
+        driver: ApolloDriver,
+      }),
+    ],
+    providers: [CommandWidgetResolver],
+  })
+  class CommandFixtureModule {}
+
+  return CommandFixtureModule;
+};
 
 const loadFixture: RootModuleLoader = async () => ({
   ok: true,
-  value: CommandFixtureModule,
+  value: buildFixtureModule(),
 });
 
 const SCHEMA = 'applications/api/schema.gql';
@@ -126,18 +138,6 @@ describe('runGraphqlSchemaCommand', () => {
       expect(await run([...BASE_ARGS, '--check'])).toBe(2);
       expect(errors()).toContain('Run through nx');
     });
-
-    it('rejects a schema autoSchemaFile cannot write', async () => {
-      const argv = [
-        '--module=./build/src/app.module.js',
-        '--project=api',
-        '--schema=applications/api/other.gql',
-        '--check',
-      ];
-
-      expect(await run(argv)).toBe(2);
-      expect(errors()).toContain('must name a schema.gql');
-    });
   });
 
   it('exits 2 when the module file has no class under that export', async () => {
@@ -161,6 +161,33 @@ describe('runGraphqlSchemaCommand', () => {
     expect(await readFile(schemaPath, 'utf8')).toContain(
       'commandWidget: CommandWidget!',
     );
+  });
+
+  it('hands the loader the emit target and restores the environment afterwards', async () => {
+    const seen: (string | undefined)[] = [];
+    const load: RootModuleLoader = async () => {
+      seen.push(process.env[GRAPHQL_SCHEMA_FILE_ENV]);
+
+      return { ok: true, value: buildFixtureModule() };
+    };
+
+    await run([...BASE_ARGS, '--write'], load);
+    await run([...BASE_ARGS, '--check'], load);
+
+    expect(seen[0]).toBe(schemaPath);
+    expect(seen[1]).toContain('graphql-schema-');
+    expect(seen[1]).not.toBe(schemaPath);
+    expect(process.env[GRAPHQL_SCHEMA_FILE_ENV]).toBeUndefined();
+  });
+
+  it('leaves the committed schema alone when checking', async () => {
+    await run([...BASE_ARGS, '--write']);
+    const committed = await readFile(schemaPath, 'utf8');
+
+    await writeFile(schemaPath, `# drift\n${committed}`);
+    await run([...BASE_ARGS, '--check']);
+
+    expect(await readFile(schemaPath, 'utf8')).toBe(`# drift\n${committed}`);
   });
 
   it('exits 0 when the committed schema matches', async () => {

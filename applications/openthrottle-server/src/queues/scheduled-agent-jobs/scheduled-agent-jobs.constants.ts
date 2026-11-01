@@ -79,9 +79,8 @@ export const resolveScheduledAgentJobTimeoutMs = (
  * {@link resolveScheduledAgentJobRunCwd}, which puts the checkout ahead of all of these.
  *
  * `process.cwd()` must NOT be the effective default. The server's `dev`/`start` targets run with cwd
- * at the PROJECT root (`applications/openthrottle-server`) so `autoSchemaFile: 'schema.gql'` lands in
- * the committed location — so inheriting it pointed every scheduled agent run at that subdirectory
- * instead of the repo. `WORKSPACE_ROOT` was the intended escape hatch but is never set anywhere in
+ * at the PROJECT root (`applications/openthrottle-server`) — so inheriting it pointed every scheduled
+ * agent run at that subdirectory instead of the repo. `WORKSPACE_ROOT` was the intended escape hatch but is never set anywhere in
  * this repo (only ever read), so the fallback was always `process.cwd()`.
  *
  * Two things broke as a result, and both looked like something else:
@@ -223,40 +222,4 @@ export const resolveScheduledAgentJobConcurrencyKey = (input: {
   const name = requested.trim();
 
   return name === '' ? null : `${directory}#worktree:${name}`;
-};
-
-/**
- * @description Whether THIS checkout owns *boot-time* scheduler registration. Many server instances
- * share one Redis, so only the canonical checkout should register the full schedule set at boot;
- * otherwise dev worktrees would fight over the same scheduler ids. Mirrors `resolveBackupOwnership`:
- * explicit `OT_SCHEDULED_JOBS_OWNER` wins; else a checkout under a `*worktrees/` directory (the
- * `~/.openthrottle/worktrees` default and the historical sibling `openthrottle-worktrees` alike) is
- * a non-owner. NOTE: this gates ONLY boot reconciliation — on-mutation upsert/remove always apply, so
- * a user editing a schedule takes effect immediately regardless of which checkout served the request.
- */
-export const resolveScheduledAgentJobsBootOwner = (): {
-  owner: boolean;
-  reason: string;
-} => {
-  const explicit = process.env.OT_SCHEDULED_JOBS_OWNER?.trim().toLowerCase();
-  if (explicit === 'true' || explicit === '1') {
-    return { owner: true, reason: 'OT_SCHEDULED_JOBS_OWNER is set true' };
-  }
-  if (explicit === 'false' || explicit === '0') {
-    return {
-      owner: false,
-      reason:
-        'OT_SCHEDULED_JOBS_OWNER is false; this checkout skips boot reconciliation',
-    };
-  }
-
-  const workspaceRoot = process.env.WORKSPACE_ROOT?.trim() ?? process.cwd();
-  if (/[/\\][^/\\]*worktrees[/\\]/.test(workspaceRoot)) {
-    return {
-      owner: false,
-      reason: `workspace root ${workspaceRoot} is a worktree checkout; only the canonical checkout runs boot reconciliation (set OT_SCHEDULED_JOBS_OWNER=true to override)`,
-    };
-  }
-
-  return { owner: true, reason: 'canonical checkout' };
 };

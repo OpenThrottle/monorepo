@@ -7,6 +7,7 @@ import type { Queue } from 'bullmq';
 import { ForeignSkillInjectionLifecycleService } from '../../services/foreign-skill-injection/foreign-skill-injection-lifecycle.service.ts';
 import { ForeignSkillMaterializationService } from '../../services/foreign-skill-injection/foreign-skill-materialization.service.ts';
 import { REPEATABLE_JOB_OPTIONS } from '../repeatable-job.options.ts';
+import { resolveRepeatablesOwner } from '../repeatable-job.owner.ts';
 import { PLAN_RUNS_STALE_SWEEP_QUEUE_NAME } from './plan-runs-stale-sweep.constants.ts';
 import type { PlanRunsStaleSweepJobData } from './plan-runs-stale-sweep.types.ts';
 
@@ -85,6 +86,16 @@ export class PlanRunsStaleSweepRepeatableService implements OnModuleInit {
         }`,
         PlanRunsStaleSweepRepeatableService.name,
       );
+    }
+
+    // Only the repeatable registration is gated; the boot reap/reconcile above is per-process.
+    const ownership = resolveRepeatablesOwner();
+    if (!ownership.owner) {
+      this.logger.info(
+        `Plan-runs stale sweep repeatable job not registered: ${ownership.reason}`,
+        PlanRunsStaleSweepRepeatableService.name,
+      );
+      return;
     }
 
     const job = await this.queue.add(

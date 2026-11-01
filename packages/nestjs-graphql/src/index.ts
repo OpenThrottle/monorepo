@@ -5,6 +5,7 @@ export * from './config/response-cache-session.ts';
 export * from './modules/nestjs-graphql.module.ts';
 export * from './pubsub/pubsub.constants.ts';
 export * from './pubsub/pubsub.module.ts';
+export * from './schema/auto-schema-file.ts';
 export * from './schema/emit-code-first-schema.ts';
 export * from './subscriptions/graphql-ws-auth.ts';
 export * from './subscriptions/topics.ts';

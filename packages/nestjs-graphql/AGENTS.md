@@ -21,24 +21,25 @@ and the subscription topic-name helpers.
 - `src/config/` — `format-error` (leak-safe `formatError`), cache plugins, depth-limit rule,
   response-cache session id.
 - `src/schema/emit-code-first-schema.ts` — `emitCodeFirstSchema`: writes a root module's
-  `autoSchemaFile` in Nest preview mode (only `GraphQLModule` initializes; no DB/Redis/HTTP).
+  `autoSchemaFile` (when set) in Nest preview mode (only `GraphQLModule` initializes; no DB/Redis/HTTP).
 - `src/schema/graphql-schema-command.ts` + `src/bin.ts` — the check/write command behind the
   shared `graphql-schema` Nx target (`nx.json` targetDefaults). Nx runs `dist/src/bin.js` with
   node directly (so `--env-file` loads before the app module is imported), passing the app's
   built `--module`, `--project` and `--schema={projectRoot}/schema.gql`. A GraphQL API needs no
-  script of its own: it opts in with an empty `"graphql-schema": {}` target.
+  script of its own: it opts in with an empty `"graphql-schema": {}` target (plus
+  `"graphql-schema-write": {}` for `codegen-graphql-watch`'s dev-path dependency).
 
 ## Invariants & gotchas
 
-- **This package owns the `autoSchemaFile: 'schema.gql'` default.** The path is cwd-relative and
-  the `openthrottle-server` `dev`/`start` targets run with `cwd` at the project root, so server
-  boot writes `applications/openthrottle-server/schema.gql` — the single committed schema file
-  (consumer side documented in
-  [applications/openthrottle-server/AGENTS.md](../../applications/openthrottle-server/AGENTS.md)).
-  Changing this default moves where every consumer's schema lands and breaks the committed-schema
-  codegen flow. It appears twice in the module file (`DEFAULT_DRIVER_CONFIG` and a literal inside
-  `forRoot`) — keep both in sync. The `graphql-schema` command depends on it too: it moves the
-  cwd to choose where the schema lands, which only works while `autoSchemaFile` is relative.
+- **A boot never writes the schema.** `autoSchemaFile` is `true` (in memory) in every environment, so
+  `graphql-schema:write` is the only producer of the committed
+  `applications/openthrottle-server/schema.gql` (a boot orders types differently from that command,
+  so a boot-written file churned the diff and failed `graphql-schema:check`). The one way to point
+  the emit at a file is `GRAPHQL_SCHEMA_FILE` (`src/schema/auto-schema-file.ts`): `forRoot` turns it
+  into `autoSchemaFile` when it runs, and only the `graphql-schema` command sets it, BEFORE importing
+  the app's root module (an absolute path: the committed schema for `write`, a temp file for `check`).
+  Keep that file import-free, and keep `autoSchemaFile` out of `DEFAULT_DRIVER_CONFIG`, so the lookup
+  stays lazy.
 - `mergeSecureDefaults` deep-merges `subscriptions` and `csrfPrevention` so a caller adding one
   nested field (e.g. a ws `path`) can't silently drop the default graphql-ws `onConnect` auth
   (fail-open). Don't simplify to a shallow spread.

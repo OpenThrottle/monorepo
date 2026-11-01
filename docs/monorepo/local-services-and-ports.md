@@ -4,7 +4,7 @@ The canonical port map for local development, plus the optional Caddy reverse pr
 with hostnames instead of ports.
 
 **Worktrees do not use these ports.** These `6010`–`6025` ports are the main checkout's; a git
-worktree gets its own app-port block in the `7000` range (Postgres and Redis stay shared). See
+worktree gets its own app-port block in the `7000` range (Postgres and Redis stay shared unless the worktree opts into its own with `pnpm worktree:db isolate`). See
 [worktree-port-allocation.md](./worktree-port-allocation.md), which is the authority for the offsets —
 this page is the authority for the canonical values.
 
@@ -29,8 +29,8 @@ files set it explicitly.
 
 | Service      | Port      | Notes                                                                                                   |
 | ------------ | --------- | ------------------------------------------------------------------------------------------------------- |
-| **Postgres** | **6010**  | `POSTGRES_PORT` in the server `.env.default`. Shared across worktrees; not proxied.                     |
-| **Redis**    | **6011**  | `REDIS_PORT`, same file (BullMQ). Shared across worktrees; not proxied.                                 |
+| **Postgres** | **6010**  | `POSTGRES_PORT` in the server `.env.default`. Shared across worktrees by default; not proxied.          |
+| **Redis**    | **6011**  | `REDIS_PORT`, same file (BullMQ). Shared across worktrees by default; not proxied.                      |
 | **Ollama**   | **11434** | `OLLAMA_BASE_URL`, default `http://localhost:11434`. See [Ollama.md](./Ollama.md), `scripts/ollama.ts`. |
 
 The GraphQL endpoint is `http://localhost:6021/graphql`. Tools and MCP clients should use the same

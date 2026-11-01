@@ -25,6 +25,18 @@ to a plain `git worktree add`/`git worktree remove` with a log line.
 | 1   | `$OPENTHROTTLE_WORKTREE_TEARDOWN`  |
 | 2   | `<worktree>/.worktree/teardown.sh` |
 
+`heal` — an optional backfill hook, run by `heal.sh` on every heal of an **already-provisioned** linked
+worktree (an unprovisioned one runs `provision` instead). First hit wins:
+
+| #   | Location                              | Notes                                      |
+| --- | ------------------------------------- | ------------------------------------------ |
+| 1   | `$OPENTHROTTLE_WORKTREE_HEAL`         | Absolute, or relative to the worktree root |
+| 2   | `<worktree>/.worktree/heal.sh`        | The portable, repo-agnostic location       |
+| 3   | `<worktree>/scripts/heal_worktree.ts` | Incumbent path — what OpenThrottle uses    |
+
+It exists so a repo can write state onto worktrees an OLDER provisioner built (a new marker, a renamed
+variable). It runs before every `dev`, so it must be idempotent and cheap.
+
 A discovered hook must be a **regular, readable file**. An executable hook is exec'd (so its shebang
 picks the interpreter). A non-executable one is run through an interpreter rather than treated as an
 error: `node` for `.ts`/`.mts`/`.js`/`.mjs` (Node 22.18+ strips types natively), `sh` for anything
@@ -47,10 +59,19 @@ Exported for both hooks:
 | `OPENTHROTTLE_WORKTREE_NAME` | The worktree's name (its directory basename) |
 | `OPENTHROTTLE_WORKTREE_PATH` | Absolute path to the worktree                |
 
+Optional, exported to the **provision** hook only when the caller asked (`create.sh --own-db`). A hook
+that does not support it ignores it:
+
+| Variable                       | Meaning                                                                |
+| ------------------------------ | ---------------------------------------------------------------------- |
+| `OPENTHROTTLE_WORKTREE_OWN_DB` | `1` — provision the worktree with its own database (not the primary's) |
+
 ## Failure semantics
 
 - A **provision** hook that exits non-zero fails worktree creation. Better to fail loudly than hand
   back a half-built tree that fails in a confusing way an hour later.
+- A **heal** hook that exits non-zero is logged and **ignored** — heal runs before every `dev`, and a
+  backfill problem must not wedge the dev loop.
 - A **teardown** hook that exits non-zero **aborts the removal** — the worktree is left in place.
   Teardown is where a repo stops a container, releases a port lease, or drops a scratch database;
   removing the directory anyway would leak all of it.
@@ -90,7 +111,9 @@ marker files. The scheme:
 | `OPENTHROTTLE_WORKTREE_BASE`                | create       | the remote's default branch                    |
 | `OPENTHROTTLE_WORKTREE_REMOTE`              | create       | `origin`                                       |
 | `OPENTHROTTLE_WORKTREE_PROVISION`           | create, heal | (discovery)                                    |
+| `OPENTHROTTLE_WORKTREE_HEAL`                | heal         | (discovery)                                    |
 | `OPENTHROTTLE_WORKTREE_TEARDOWN`            | destroy      | (discovery)                                    |
 | `OPENTHROTTLE_WORKTREE_PROVISIONED_MARKERS` | create, heal | `.env`                                         |
+| `OPENTHROTTLE_WORKTREE_OWN_DB`              | create       | unset (`--own-db` sets `1`)                    |
 | `OPENTHROTTLE_WORKTREE_SETUP`               | create, heal | `1`                                            |
 | `CLAUDE_WORKTREE_SETUP`                     | create, heal | `1`                                            |

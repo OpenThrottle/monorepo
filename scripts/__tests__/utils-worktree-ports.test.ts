@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   CANONICAL_APP_PORTS,
+  dbPortsForBase,
   deriveBase,
   PORT_BASE_MAX,
   PORT_BASE_MIN,
@@ -13,6 +14,7 @@ import {
   PORT_BLOCKS,
   portsForBase,
   posixCksum,
+  resolveWorktreeDbPorts,
   resolveWorktreePorts,
 } from '../utils/worktree-ports.ts';
 
@@ -119,5 +121,32 @@ describe('resolveWorktreePorts', () => {
 
     expect(base).toBe(7310);
     expect(ports.server).toBe(7311);
+  });
+});
+
+describe('isolated database ports (base+8 / base+9)', () => {
+  it('sit in the spare offsets of the block, clear of the app ports', () => {
+    expect(dbPortsForBase(7090)).toEqual({ postgres: 7098, redis: 7099 });
+
+    const apps = Object.values(portsForBase(7090));
+
+    expect(apps).not.toContain(7098);
+    expect(apps).not.toContain(7099);
+  });
+
+  it('allocates the base pair when both ports are free', () => {
+    expect(resolveWorktreeDbPorts(7090, { isPortInUse: () => false })).toEqual({
+      postgres: 7098,
+      redis: 7099,
+    });
+  });
+
+  it('bumps a whole block when either port is in use', () => {
+    expect(resolveWorktreeDbPorts(7090, { isPortInUse: (port) => port === 7098 })).toEqual({ postgres: 7108, redis: 7109 }); // prettier-ignore
+    expect(resolveWorktreeDbPorts(7090, { isPortInUse: (port) => port === 7099 })).toEqual({ postgres: 7108, redis: 7109 }); // prettier-ignore
+  });
+
+  it('throws at the ceiling when nothing is free', () => {
+    expect(() => resolveWorktreeDbPorts(7090, { isPortInUse: () => true })).toThrow(/no free Postgres\/Redis/); // prettier-ignore
   });
 });

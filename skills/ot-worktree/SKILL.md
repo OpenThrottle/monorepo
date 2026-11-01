@@ -64,6 +64,13 @@ The branch is created with `--no-track`: cut from `origin/main`, it would otherw
 its upstream and aim a later `git push` at the wrong branch. `--base` is ignored, with a warning,
 when the branch already exists or when provisioning in place — in both cases there is nothing to fork.
 
+### Provision options
+
+`create.sh` passes repo-agnostic switches to the repo's provisioner as exported environment variables — the
+hook contract has no argv channel. `--own-db` sets `OPENTHROTTLE_WORKTREE_OWN_DB=1`, asking for the worktree's
+own database instead of the primary's; a provisioner that does not know it ignores it. In this repo it runs
+the same code as `pnpm worktree:db isolate`.
+
 **Stdout contract:** `create.sh` prints _only_ the worktree's absolute path. Everything else is stderr.
 Claude's `WorktreeCreate` hook depends on this — any extra stdout line breaks worktree creation.
 
@@ -113,6 +120,11 @@ The skill never knows how to set your repo up. It looks for a provisioner, and r
 2. `<worktree>/.worktree/provision.sh`
 3. `<worktree>/scripts/setup_worktree.ts`
 4. `<worktree>/scripts/setup_worktree.sh` (legacy — branches that predate the `.ts`)
+
+Heal also runs an optional **heal hook** on every already-provisioned worktree, to backfill state onto
+worktrees an older provisioner built: `$OPENTHROTTLE_WORKTREE_HEAL`, then `<worktree>/.worktree/heal.sh`, then
+`<worktree>/scripts/heal_worktree.ts`. It must be idempotent and cheap, and a failing heal hook is logged but
+never fatal (heal runs before every `dev`).
 
 Teardown mirrors it: `$OPENTHROTTLE_WORKTREE_TEARDOWN`, then `<worktree>/.worktree/teardown.sh` (no `scripts/`
 fallback). Nothing found → log and no-op; a plain `git worktree add`/`remove` is a perfectly valid

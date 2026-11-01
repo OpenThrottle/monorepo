@@ -6,6 +6,7 @@ import {
 import type { ValidationRule } from 'graphql';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { GRAPHQL_SCHEMA_FILE_ENV } from '../schema/auto-schema-file.ts';
 import {
   buildCachePlugins,
   buildDriverConfig,
@@ -40,7 +41,6 @@ describe('buildDriverConfig — secure-default preservation', () => {
   it('keeps every secure default when forRoot passes an empty options object', () => {
     const config = buildDriverConfig({});
 
-    // autoSchemaFile is NODE_ENV-dependent — asserted under an explicit env below.
     expect(config.driver).toBeDefined();
     expect(config.formatError).toBeInstanceOf(Function);
     // The default graphql-ws onConnect auth must survive (fail-closed default).
@@ -208,31 +208,41 @@ describe('introspection default — env gating (evaluated at module load)', () =
   });
 });
 
-describe('autoSchemaFile default — env gating (evaluated at module load)', () => {
+describe('autoSchemaFile default — a boot never writes the schema', () => {
   const originalNodeEnv = process.env.NODE_ENV;
-
-  beforeEach(() => {
-    vi.resetModules();
-  });
+  const originalSchemaFile = process.env[GRAPHQL_SCHEMA_FILE_ENV];
 
   afterEach(() => {
     process.env.NODE_ENV = originalNodeEnv;
-    vi.resetModules();
+
+    if (originalSchemaFile === undefined) {
+      Reflect.deleteProperty(process.env, GRAPHQL_SCHEMA_FILE_ENV);
+    } else {
+      process.env[GRAPHQL_SCHEMA_FILE_ENV] = originalSchemaFile;
+    }
   });
 
-  it('writes schema.gql outside production, where codegen reads the committed file', async () => {
-    process.env.NODE_ENV = 'development';
+  it.each(['development', 'production', 'test'])(
+    'keeps the schema in memory when NODE_ENV is %s',
+    (nodeEnv) => {
+      process.env.NODE_ENV = nodeEnv;
+      Reflect.deleteProperty(process.env, GRAPHQL_SCHEMA_FILE_ENV);
 
-    const mod = await import('./nestjs-graphql.module.ts');
+      expect(buildDriverConfig({}).autoSchemaFile).toBe(true);
+    },
+  );
 
-    expect(mod.buildDriverConfig({}).autoSchemaFile).toBe('schema.gql');
+  it('writes only to the file the graphql-schema command names', () => {
+    process.env[GRAPHQL_SCHEMA_FILE_ENV] = '/tmp/emitted/schema.gql';
+
+    expect(buildDriverConfig({}).autoSchemaFile).toBe(
+      '/tmp/emitted/schema.gql',
+    );
   });
 
-  it('keeps the schema in memory in production, whose root filesystem is read-only', async () => {
-    process.env.NODE_ENV = 'production';
+  it('treats an empty file name as unset', () => {
+    process.env[GRAPHQL_SCHEMA_FILE_ENV] = '';
 
-    const mod = await import('./nestjs-graphql.module.ts');
-
-    expect(mod.buildDriverConfig({}).autoSchemaFile).toBe(true);
+    expect(buildDriverConfig({}).autoSchemaFile).toBe(true);
   });
 });

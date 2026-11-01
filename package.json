@@ -234,8 +234,8 @@
     "database:migrate": "POSTGRES_HOST='localhost' tsx --env-file .env ./scripts/openthrottle-database-migrations.ts",
     "database:reset": "POSTGRES_HOST='localhost' tsx --env-file .env ./scripts/openthrottle-database-reset.ts",
     "database:seed:blog": "POSTGRES_HOST='localhost' NODE_ENV=\"${NODE_ENV:-development}\" tsx --env-file .env ./scripts/openthrottle-database-seed-blog.ts",
-    "database:start": "docker compose up -d redis postgres",
-    "database:stop": "docker compose down --remove-orphans",
+    "database:start": "node --experimental-strip-types ./scripts/openthrottle-database-lifecycle.ts start",
+    "database:stop": "node --experimental-strip-types ./scripts/openthrottle-database-lifecycle.ts stop",
     "dev:native": "pnpm nx run openthrottle-server:dev",
     "dev:native:split": "pnpm nx run-many --projects openthrottle-server --targets dev-api,worker",
     "generate": "pnpm run generate:list",
@@ -273,9 +273,11 @@
     "validate:licenses": "tsx ./scripts/validate-license-compliance.ts",
     "validate:notices": "tsx ./scripts/generate-third-party-notices.ts --check",
     "voice:start": "docker compose --profile voice up whisper",
+    "worktree:db": "node --experimental-strip-types ./scripts/worktree_db.ts",
     "worktree:heal": "sh -c 'd=skills/ot-worktree/scripts; [ -x \"$d/heal.sh\" ] || d=.agents/skills/ot-worktree/scripts; exec \"$d/heal.sh\" \"$@\"' --",
     "worktree:new": "sh -c 'd=skills/ot-worktree/scripts; [ -x \"$d/create.sh\" ] || d=.agents/skills/ot-worktree/scripts; exec \"$d/create.sh\" \"$@\"' --",
-    "worktree:remove": "sh -c 'd=skills/ot-worktree/scripts; [ -x \"$d/destroy.sh\" ] || d=.agents/skills/ot-worktree/scripts; exec \"$d/destroy.sh\" \"$@\"' --"
+    "worktree:remove": "sh -c 'd=skills/ot-worktree/scripts; [ -x \"$d/destroy.sh\" ] || d=.agents/skills/ot-worktree/scripts; exec \"$d/destroy.sh\" \"$@\"' --",
+    "worktree:serve": "node --experimental-strip-types ./scripts/worktree_serve.ts"
   },
   "sideEffects": false,
   "type": "module"

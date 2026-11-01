@@ -57,7 +57,7 @@ pnpm nx run-many --target=codegen-graphql --all
 
 The committed schema and `__generated__` output must match the code. Re-run the codegen flow and commit the result:
 
-1. `pnpm nx run openthrottle-server:dev` until bootstrap, then stop (writes `applications/openthrottle-server/schema.gql`).
+1. `pnpm nx run openthrottle-server:graphql-schema:write` (writes `applications/openthrottle-server/schema.gql`; booting the server does not).
 2. `pnpm nx affected --target=codegen-graphql,codegen-react-router --parallel`
 3. Commit `schema.gql` and all `__generated__` files.
 

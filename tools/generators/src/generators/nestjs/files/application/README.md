@@ -11,7 +11,7 @@ pnpm nx run <%= name %>:graphql-schema:write   # regenerate schema.gql without b
 pnpm nx run <%= name %>:graphql-schema:check   # fail when schema.gql has drifted (runs in check:local)
 ```
 
-Commit `schema.gql`. Keep `autoSchemaFile` at its default relative `schema.gql`.
+Commit `schema.gql`. `graphql-schema:write` is its only producer: booting the app keeps the schema in memory, so leave `autoSchemaFile` unset.
 
 ## LangGraph Studio
 

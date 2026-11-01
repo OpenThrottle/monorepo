@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  firstEnvMatch,
-  isSyncableSecret,
-  rewritePortsInContent,
-  upsertEnvLine,
-} from '../setup_worktree.ts';
+import { isSyncableSecret, rewritePortsInContent } from '../setup_worktree.ts';
+import { firstEnvMatch, upsertEnvLine } from '../utils/env.ts';
 import { portsForBase } from '../utils/worktree-ports.ts';
 
 describe('rewritePortsInContent', () => {

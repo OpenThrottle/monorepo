@@ -376,9 +376,15 @@
     },
     "codegen-graphql-watch": {
       "continuous": true,
+      "dependsOn": [
+        {
+          "projects": ["openthrottle-server"],
+          "target": "graphql-schema-write"
+        }
+      ],
       "executor": "nx:run-commands",
       "metadata": {
-        "description": "Watch mode for graphql-codegen — regenerate GraphQL types on change."
+        "description": "Watch mode for graphql-codegen — regenerate GraphQL types on change. Depends on openthrottle-server:graphql-schema-write so the committed schema.gql the watcher validates documents against already holds this branch's resolver fields: a server boot no longer writes it (autoSchemaFile is in memory), and without this edge a new field plus a document selecting it fails `dev` on codegen before anything could write the schema. Deliberately NOT on `codegen-graphql` (the one-shot target CI and check:local run): that would let check:local:affected-test overwrite the schema before check:local:graphql-schema compares it, and the drift check would pass vacuously."
       },
       "options": {
         "command": "graphql-codegen --watch",
@@ -487,9 +493,21 @@
       "dependsOn": ["build", "^build"],
       "executor": "nx:run-commands",
       "metadata": {
-        "description": "Emit or verify a code-first NestJS API's committed {projectRoot}/schema.gql without booting it (configurations: check, write; default check). Runs the command shipped by @openthrottle/nestjs-graphql (src/bin.ts), so an API needs no script of its own: it opts in by declaring an empty `graphql-schema` target and depending on @openthrottle/nestjs-graphql. The target passes the built root module (--module=./build/src/app.module.js, export AppModule), the schema location and the project name. The command opens that module in Nest preview mode — only GraphQLModule initializes, so no Postgres/Redis/HTTP. `check` emits into a temp dir and fails on drift; `write` regenerates in place. Requires the module's autoSchemaFile to be the relative 'schema.gql' (the NestjsGraphqlModule default). `.env.default` is loaded because some modules read env at import time. Depends on build and ^build: the app's built module and the package's dist. Not cached: the emit depends on the whole decorator graph."
+        "description": "Emit or verify a code-first NestJS API's committed {projectRoot}/schema.gql without booting it (configurations: check, write; default check). Runs the command shipped by @openthrottle/nestjs-graphql (src/bin.ts), so an API needs no script of its own: it opts in by declaring an empty `graphql-schema` target and depending on @openthrottle/nestjs-graphql. The target passes the built root module (--module=./build/src/app.module.js, export AppModule), the schema location and the project name. The command opens that module in Nest preview mode — only GraphQLModule initializes, so no Postgres/Redis/HTTP. `check` emits into a temp dir and fails on drift; `write` regenerates in place. The command names the file through the GRAPHQL_SCHEMA_FILE environment variable, which NestjsGraphqlModule turns into autoSchemaFile; with it unset a boot writes nothing, so this is the only producer of schema.gql. `.env.default` is loaded because some modules read env at import time. Depends on build and ^build: the app's built module and the package's dist. Not cached: the emit depends on the whole decorator graph."
       },
       "options": {
+        "cwd": "{projectRoot}"
+      }
+    },
+    "graphql-schema-write": {
+      "cache": false,
+      "dependsOn": ["build", "^build"],
+      "executor": "nx:run-commands",
+      "metadata": {
+        "description": "Regenerate a code-first NestJS API's committed {projectRoot}/schema.gql without booting it: the same command as `graphql-schema` configuration `write` (the only producer of schema.gql; a server boot keeps the schema in memory). A separate target because an Nx dependsOn entry cannot select a configuration, and `graphql-schema` defaults to `check`. Exists for codegen-graphql-watch to depend on, which only `dev` runs; CI and check:local never reach it. Keep the command in step with `graphql-schema` configuration `write`. Not cached: the emit depends on the whole decorator graph."
+      },
+      "options": {
+        "command": "node --enable-source-maps --env-file=.env.default ./node_modules/@openthrottle/nestjs-graphql/dist/src/bin.js --module=./build/src/app.module.js --project={projectName} --schema={projectRoot}/schema.gql --write",
         "cwd": "{projectRoot}"
       }
     },

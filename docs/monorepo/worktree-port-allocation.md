@@ -32,8 +32,10 @@ stay stable:
 | email      | `6024`    | `base + 4` |
 | website    | `6025`    | `base + 5` |
 
-**Postgres (`6010`) and Redis (`6011`) are NOT offset.** Worktrees share the main
-checkout's already-running database — see [Shared database](#shared-database).
+**Postgres (`6010`) and Redis (`6011`) are NOT offset by default.** Worktrees share the main
+checkout's already-running database — see [Shared database](#shared-database). A worktree
+that opts into its own database gets `base + 8` / `base + 9` instead
+([Isolated mode](#isolated-mode-pnpm-worktreedb-isolate)).
 
 A single random port wouldn't work: the six app ports cross-reference each other
 by full URL (`CORS_ORIGINS`, `APP_URL_*`, `API_URL_INTERNAL`/`_EXTERNAL`,
@@ -73,11 +75,127 @@ Host `nx dev` needs nothing further — it reads the rewritten `.env` directly.
 
 The decided model is **shared DB**: worktrees connect to the main checkout's
 Postgres/Redis on `localhost:6010`/`6011` rather than running their own. This is
-the lightest option and avoids one container set per worktree.
+the lightest option and avoids one container set per worktree. It is the default and it is
+**enforced**: the runtime follows the marker below, and a branch that would change the shared
+schema is stopped at the [migration guard](#migration-guard-shared-mode).
 
-> ⚠️ Trade-off: a worktree branch with **divergent migrations** mutates the shared
-> schema. If you're iterating on migrations in a worktree, expect to reset/rebuild
-> the local DB, or switch that worktree to its own Postgres (not the default).
+### The `OT_WORKTREE_DB` marker
+
+One marker is the single runtime signal for "which database does this checkout use":
+
+| `OT_WORKTREE_DB` | Meaning                                                                   |
+| ---------------- | ------------------------------------------------------------------------- |
+| _absent_         | The primary checkout. Owns its Postgres/Redis.                            |
+| `shared`         | A provisioned worktree using the primary's database (the default).        |
+| `isolated`       | A worktree with its own database (`pnpm worktree:db isolate`, see below). |
+
+`scripts/setup_worktree.ts` writes `OT_WORKTREE_DB=shared` into the root and
+`applications/openthrottle-server/.env`. Worktrees provisioned before the marker
+existed are backfilled by `scripts/heal_worktree.ts` (the ot-worktree **heal hook**,
+run by `pnpm worktree:heal` before every `dev`). Git detection of "is this a linked
+worktree" lives only in heal/provision, which decide whether to write the marker;
+everything at runtime reads the marker — `database:start`/`database:stop`
+(`scripts/openthrottle-database-lifecycle.ts`) and the server's "does this checkout own repeatables" gate
+(`applications/openthrottle-server/src/queues/repeatable-job.owner.ts`): every repeatable
+job (work-ledger sweep/verify/harvest, daily stats, doc ingestion, data retention, plan-runs
+stale sweep, and the scheduled-agent-jobs boot reconcile) registers only when that check says
+owner — `shared` is not, `isolated` and an absent marker are. A non-owner logs one line naming
+the reason and registers nothing, so a shared-DB worktree never runs duplicates against the
+primary's data. `OT_SCHEDULED_JOBS_OWNER` stays as the explicit override. That gate, plus the
+per-worktree queue prefix, is why `pnpm nx run openthrottle-server:dev` (`PROCESS_ROLE=all`) is
+safe in a worktree; there is no rule to boot `dev-api` instead. Use `dev-api` (or
+`worktree:serve server --api-only`) only when you do not want processors running.
+
+With `OT_WORKTREE_DB=shared`:
+
+- `pnpm run database:start` is a no-op when the shared Postgres/Redis answer on
+  `POSTGRES_PORT`/`REDIS_PORT` (it prints where they live). If they are down it starts
+  the **primary's** containers on its behalf — the primary's `docker-compose.yml`,
+  `--project-directory` and compose project, never the worktree's own compose file —
+  so a worktree never creates containers under its own compose project.
+- `pnpm run database:stop` never stops the shared database (it says so and exits 0).
+- `pnpm run database:migrate` keeps working against the shared database.
+
+The primary checkout (marker absent) runs the original `docker compose up -d redis
+postgres` / `docker compose down --remove-orphans` unchanged.
+
+### Migration guard (shared mode)
+
+A branch that adds `databases/migrations/1xx_*.sql` must never apply it to the shared
+database (drift detection is warn-only, an abandoned branch leaves tables behind, number
+collisions land in real data). With `OT_WORKTREE_DB=shared`, `pnpm run database:migrate`
+and `monorepo:ensure-migrations` (the gate under `dev-api`/`dev`) **refuse**, before
+touching the database, when any migration file in the checkout is absent from the local
+`origin/main` ref:
+
+```
+this branch adds migrations <files>; a shared-DB worktree cannot apply them. Run `pnpm worktree:db isolate`.
+```
+
+Fetching is the caller's job (`git fetch origin main`); a missing `origin/main` ref fails
+closed with its own message. Migrations already on `origin/main` apply normally, so a
+worktree branched off a newer main than the primary still works. The primary and isolated
+checkouts are never guarded.
+
+### Isolated mode: `pnpm worktree:db isolate`
+
+When a branch needs its own schema, give the worktree its own database. Switching is
+explicit, never automatic — it moves the worktree off your data, starts containers and
+rewrites `.env`:
+
+```bash
+pnpm worktree:db isolate              # an existing worktree
+pnpm worktree:new <name> --own-db     # at create time: the same code path
+```
+
+It allocates `POSTGRES_PORT`/`REDIS_PORT` at **base+8/base+9** of the worktree's existing
+10-wide block (offsets 0–6 are app ports; the block derivation is unchanged, so on-disk
+worktrees keep their ports) with the same free-port bump as the app block (a whole block
+at a time), writes them and every derived value (`POSTGRES_URL`) into the root and per-app
+`.env` files, sets `OT_WORKTREE_DB=isolated`, regenerates `docker-compose.worktree.yml`
+without the disabled postgres/redis, and starts the worktree's own containers under its own
+compose project (`openthrottle-<slug>`). It then applies every migration, runs
+`database:bootstrap-default-user` (developer@openthrottle.ai, with admin), and runs
+`database:bootstrap-service-accounts` so the service-account bearers the worktree's `.env`
+carries (copied from the source checkout) verify against the fresh database. The shared
+database is **not** cloned (slow, and it may carry the personal-archive volume). Running it
+again on an isolated worktree is a no-op; if seeding fails part-way it prints the recovery
+commands (`database:start`, `database:migrate`, `database:bootstrap-default-user`,
+`database:bootstrap-service-accounts`).
+
+`database:start`/`database:stop` then act on the worktree's own containers (`stop` keeps
+the data). `pnpm worktree:remove` runs `.worktree/teardown.sh`, which for an isolated
+worktree stops and removes the containers **and volumes** (`compose down --volumes`); a
+shared worktree's teardown never touches the shared database.
+
+`worktree:new --own-db` reaches the provisioner through the ot-worktree contract's only
+channel, an exported environment variable (`OPENTHROTTLE_WORKTREE_OWN_DB=1`).
+
+## Running the stack: `pnpm worktree:serve`
+
+A worktree runs its own server and developer app on its own port block. To run one from an
+agent shell (where a backgrounded `dev` is reaped with the shell, and an unscoped kill can hit
+the primary's server), use the helper:
+
+```bash
+pnpm worktree:serve server                 # openthrottle-server:dev, detached; blocks until the port listens
+pnpm worktree:serve server --api-only      # openthrottle-server:dev-api (no processors)
+pnpm worktree:serve developer              # openthrottle-developer:dev
+pnpm worktree:serve --stop [server|developer]
+```
+
+It logs to `.worktree/logs/<target>.log` with a pidfile beside it, waits for the worktree's
+`OPENTHROTTLE_SERVER_PORT` / `OPENTHROTTLE_DEVELOPER_PORT` (`--timeout=<seconds>`, default 300),
+and prints a ready-to-run `curl` probe; the server probe uses the worktree's own service-account
+bearer, read from its `.env` at run time, never echoed. `--stop` signals only the pidfile's
+process group and processes whose cwd is inside the worktree, and reaps a stale Nx
+`Waiting for … in another nx process` lock. It refuses in the primary checkout (no
+`OT_WORKTREE_DB` marker). Verify a worktree's server and UI through the URLs it prints, not
+the primary's `6020`/`6021`.
+
+Caveat: running `developer` dirties the tracked `applications/openthrottle-developer/app/__generated__/*`
+(codegen-watch output is unformatted). Unless your change is meant to alter generated output,
+restore those files before committing.
 
 ## docker compose in a worktree
 
@@ -144,6 +262,13 @@ a plan run is decided by the per-checkout BullMQ queue prefix
 - `skills/ot-worktree/scripts/create.sh` — the create action (`pnpm worktree:new`, Claude hook, Cursor); creates the worktree, then hands off to the repo provisioner.
 - `skills/ot-worktree/scripts/heal.sh` — the heal action (`pnpm worktree:heal`); provisions a plain `git worktree add` on first `dev`.
 - `skills/ot-worktree/scripts/destroy.sh` — the destroy action (`pnpm worktree:remove`); teardown hook, `git worktree remove`, prune.
+- `scripts/utils/worktree-db.ts` — the `OT_WORKTREE_DB` marker: mode resolution, write and backfill.
+- `scripts/openthrottle-database-lifecycle.ts` — `database:start` / `database:stop`, marker-aware.
+- `scripts/heal_worktree.ts` — the heal hook that backfills the marker onto pre-existing worktrees.
+- `scripts/worktree_db.ts` / `scripts/utils/worktree-db-isolate.ts` — `pnpm worktree:db isolate` (also run by `worktree:new --own-db`).
+- `scripts/utils/migration-guard.ts` — the shared-mode migration guard behind `database:migrate` and `ensure-migrations`.
+- `scripts/worktree_serve.ts` / `scripts/utils/worktree-serve.ts` — `pnpm worktree:serve` (run, wait, probe, stop).
+- `scripts/utils/worktree-compose.ts` — the generated `docker-compose.worktree.yml` (shared vs isolated).
 - `scripts/setup_worktree.ts` — **OpenThrottle's provisioner** (executable, run by bare Node with native type stripping), found by the skill's third discovery rung. Allocates the port block, rewrites `.env`, writes the compose vars, generates the override.
 - `docker-compose.yml` — `container_name` values parametrized with `OT_CONTAINER_PREFIX`.
 

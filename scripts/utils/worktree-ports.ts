@@ -9,8 +9,11 @@
  * worktree name (POSIX cksum CRC — kept bit-compatible so existing worktrees
  * keep their blocks), with a free-port bump to dodge the rare collision.
  *
- * Only the SEVEN app ports are offset. Postgres (6010) and Redis (6011) are
- * left alone — worktrees share the main checkout's already-running database.
+ * Only the SEVEN app ports are offset by default. Postgres (6010) and Redis
+ * (6011) are left alone — worktrees share the main checkout's already-running
+ * database. The two spare offsets of the 10-wide block (base+8, base+9) are
+ * reserved for the Postgres/Redis of a worktree that opts into its OWN database
+ * (`pnpm worktree:db isolate`); see {@link resolveWorktreeDbPorts}.
  *
  * IMPORTANT: this module must stay dependency-free (node builtins only). It
  * runs during worktree provisioning, before `pnpm install` has populated the
@@ -60,6 +63,19 @@ export const PORT_BASE_MIN = 7000; // first worktree block
 export const PORT_BLOCKS = 50; // deterministic blocks 7000, 7010, … 7490
 export const PORT_BLOCK_SIZE = 10;
 export const PORT_BASE_MAX = 7990; // ceiling while bumping (collision headroom)
+
+/**
+ * Offsets inside a block reserved for an isolated worktree's own Postgres and
+ * Redis. Offsets 0-6 are the app ports (see {@link CANONICAL_APP_PORTS}); 7 is
+ * left spare.
+ */
+export const DB_PORT_OFFSETS = { postgres: 8, redis: 9 } as const;
+
+/** The host ports an isolated worktree's database uses. */
+export interface WorktreeDbPorts {
+  readonly postgres: number;
+  readonly redis: number;
+}
 
 /** The seven app ports for a block base, preserving the canonical offsets. */
 export const portsForBase = (base: number): Record<AppPortName, number> => ({
@@ -191,4 +207,40 @@ export const resolveWorktreePorts = (
   }
 
   return { base, ports: portsForBase(base) };
+};
+
+/** The isolated-database ports of a block: base+8 (Postgres) and base+9 (Redis). */
+export const dbPortsForBase = (base: number): WorktreeDbPorts => ({
+  postgres: base + DB_PORT_OFFSETS.postgres,
+  redis: base + DB_PORT_OFFSETS.redis,
+});
+
+/**
+ * Allocate an isolated worktree's Postgres/Redis host ports from its existing
+ * block: base+8/base+9, with the same free-port bump as the app block — step a
+ * whole block (10) at a time while either port is in use, throwing past the
+ * ceiling. The app-port derivation above is untouched, so worktrees already on
+ * disk keep their blocks.
+ */
+export const resolveWorktreeDbPorts = (
+  base: number,
+  options: Pick<ResolvePortsOptions, 'isPortInUse'> = {},
+): WorktreeDbPorts => {
+  const isPortInUse = options.isPortInUse ?? isPortListening;
+  let candidate = base;
+
+  while (
+    isPortInUse(candidate + DB_PORT_OFFSETS.postgres) ||
+    isPortInUse(candidate + DB_PORT_OFFSETS.redis)
+  ) {
+    candidate += PORT_BLOCK_SIZE;
+
+    if (candidate > PORT_BASE_MAX) {
+      throw new Error(
+        `worktree-ports: no free Postgres/Redis port pair in ${PORT_BASE_MIN}-${PORT_BASE_MAX + DB_PORT_OFFSETS.redis}`,
+      );
+    }
+  }
+
+  return dbPortsForBase(candidate);
 };

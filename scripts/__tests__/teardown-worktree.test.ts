@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  WORKTREE_COMPOSE_PROJECT_PREFIX,
   resolveWorktreeComposeProject,
+  teardownComposeArgs,
+  WORKTREE_COMPOSE_PROJECT_PREFIX,
 } from '../teardown_worktree.ts';
 
 /**
@@ -89,5 +90,28 @@ describe('resolveWorktreeComposeProject', () => {
 
   it('keeps the prefix setup_worktree.ts writes', () => {
     expect(WORKTREE_COMPOSE_PROJECT_PREFIX).toBe('openthrottle-');
+  });
+});
+
+describe('teardownComposeArgs', () => {
+  it('removes volumes only for an isolated worktree (it owns a database)', () => {
+    expect(
+      teardownComposeArgs({ isolated: true, project: 'openthrottle-x' }),
+    ).toEqual([
+      'compose',
+      '-p',
+      'openthrottle-x',
+      '-f',
+      'docker-compose.yml',
+      '-f',
+      'docker-compose.worktree.yml',
+      'down',
+      '--remove-orphans',
+      '--volumes', // prettier-ignore
+    ]);
+  });
+
+  it('never removes volumes for a shared worktree', () => {
+    expect(teardownComposeArgs({ isolated: false, project: 'openthrottle-x' })).not.toContain('--volumes'); // prettier-ignore
   });
 });

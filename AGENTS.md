@@ -51,6 +51,8 @@ The Claude `WorktreeCreate` hook and Cursor's `.cursor/worktrees.json` route thr
 
 Worktrees live at `<root>/<org>/<repo>/<worktree>`; the root defaults to `~/.openthrottle/worktrees`, a hidden directory OpenThrottle owns outside every repo. Override the root with `OPENTHROTTLE_WORKTREE_ROOT` in the environment or in the target repo's `.env` (documented in `.env.default`) — OT always organizes `<org>/<repo>` beneath whatever root it gets, so a configured root behaves like the default. The org comes from the git remote, not the directory name, so two orgs' `monorepo` cannot collide. Worktrees created before this stay where they are — every action reads `git worktree list`.
 
+A worktree runs its own stack: `pnpm worktree:serve <server|developer>` starts, waits for and probes it, and `pnpm nx run openthrottle-server:dev` is safe there. By default it shares the primary's database; a branch that adds migrations needs `pnpm worktree:db isolate` (or `worktree:new <name> --own-db`). The model, marker and guard: [docs/monorepo/worktree-port-allocation.md](docs/monorepo/worktree-port-allocation.md).
+
 `destroy` is deliberately conservative: it refuses the primary checkout, refuses a dirty worktree without `--force`, leaves the branch alone unless you pass `--delete-branch` (merged-only, unless also `--force`), and offers `--dry-run`. Details: [docs/monorepo/worktree-port-allocation.md](docs/monorepo/worktree-port-allocation.md).
 
 ### Contributor workflow (skills, personas, prompts)

@@ -2,8 +2,8 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { ScheduledAgentJobsService } from '@openthrottle/nestjs-repositories';
 
+import { resolveRepeatablesOwner } from '../repeatable-job.owner.ts';
 import { ScheduledAgentJobSchedulerService } from './scheduled-agent-job-scheduler.service.ts';
-import { resolveScheduledAgentJobsBootOwner } from './scheduled-agent-jobs.constants.ts';
 
 /**
  * @description Boot-time convergence of BullMQ schedulers to the DB (the authority): registers every
@@ -12,8 +12,9 @@ import { resolveScheduledAgentJobsBootOwner } from './scheduled-agent-jobs.const
  * module so an api-only process never runs it. On-mutation upsert/remove is handled directly by the
  * shared {@link ScheduledAgentJobSchedulerService} from the GraphQL layer, NOT here.
  *
- * Gated by {@link resolveScheduledAgentJobsBootOwner} so many dev workers on one Redis don't fight
- * over the same scheduler set at boot; in production (single worker) the guard always owns.
+ * Gated by {@link resolveRepeatablesOwner} (the same check every repeatable service uses) so a
+ * shared-DB worktree never registers a second copy of the schedule set; in production (single
+ * worker) the guard always owns.
  */
 @Injectable()
 export class ScheduledAgentJobsReconcileService implements OnModuleInit {
@@ -24,7 +25,7 @@ export class ScheduledAgentJobsReconcileService implements OnModuleInit {
   ) {}
 
   async onModuleInit(): Promise<void> {
-    const ownership = resolveScheduledAgentJobsBootOwner();
+    const ownership = resolveRepeatablesOwner();
     if (!ownership.owner) {
       this.logger.info(
         `Scheduled-agent-jobs boot reconcile skipped: ${ownership.reason}`,

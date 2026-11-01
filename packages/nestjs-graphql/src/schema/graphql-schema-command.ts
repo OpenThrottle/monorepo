@@ -1,11 +1,12 @@
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { basename, dirname, join, resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 
 import type { Type } from '@nestjs/common';
 
+import { GRAPHQL_SCHEMA_FILE_ENV } from './auto-schema-file.ts';
 import { emitCodeFirstSchema } from './emit-code-first-schema.ts';
 
 /**
@@ -13,10 +14,10 @@ import { emitCodeFirstSchema } from './emit-code-first-schema.ts';
  * (nx.json targetDefaults), run through this package's `src/bin.ts`.
  *
  * A code-first API's committed `schema.gql` is written by Nest from the app's
- * decorators, but only when the app boots. Consumers' codegen is checked
- * AGAINST that file; this checks the file against the app, so a changed type,
- * field, description or deprecation cannot pass check:local as a stale
- * contract.
+ * decorators, and only by this command: a server boot keeps the schema in
+ * memory. Consumers' codegen is checked AGAINST that file; this checks the file
+ * against the app, so a changed type, field, description or deprecation cannot
+ * pass check:local as a stale contract.
  *
  * The app's root module is opened in Nest preview mode via
  * {@link emitCodeFirstSchema}: Nest's own schema builder writes the file, with
@@ -24,15 +25,15 @@ import { emitCodeFirstSchema } from './emit-code-first-schema.ts';
  * Query/Mutation field order through its import order, so it must be the same
  * composition the committed file comes from.
  *
- * `autoSchemaFile` must be the relative path `schema.gql` (the
- * NestjsGraphqlModule default), resolved against the working directory when
- * Nest writes it. That is the only seam used: `check` emits from a temporary
- * directory and compares, `write` emits from the schema's own directory. The
- * root module is left exactly as a boot sees it.
+ * The one seam is {@link GRAPHQL_SCHEMA_FILE_ENV}: NestjsGraphqlModule resolves
+ * its `autoSchemaFile` from it when `forRoot` runs, so the command sets it
+ * BEFORE importing the root module. `check` points it at a temporary file and
+ * compares; `write` points it at the committed schema. The root module is left
+ * exactly as a boot sees it.
  */
 
-/** The file name `autoSchemaFile` writes; `--schema` must end in it. */
-const AUTO_SCHEMA_FILE = 'schema.gql';
+/** The file name `check` emits into its temporary directory. */
+const TEMPORARY_SCHEMA_FILE = 'schema.gql';
 const CONTEXT_LINES = 3;
 const DEFAULT_EXPORT_NAME = 'AppModule';
 
@@ -117,13 +118,6 @@ const parseGraphqlSchemaArgs = (
     return { error: USAGE, ok: false };
   }
 
-  if (basename(schema) !== AUTO_SCHEMA_FILE) {
-    return {
-      error: `--schema must name a ${AUTO_SCHEMA_FILE} file (that is what autoSchemaFile writes); got ${schema}.`,
-      ok: false,
-    };
-  }
-
   return {
     ok: true,
     value: {
@@ -166,22 +160,6 @@ const loadRootModule = async (
 };
 
 /**
- * @description Emit the schema with the working directory set to `directory`,
- * restoring the previous working directory afterwards.
- */
-const emitInto = async (rootModule: Type, directory: string): Promise<void> => {
-  const previous = process.cwd();
-
-  process.chdir(directory);
-
-  try {
-    await emitCodeFirstSchema(rootModule);
-  } finally {
-    process.chdir(previous);
-  }
-};
-
-/**
  * @description A few lines either side of the first difference — enough to
  * name what changed without dumping a 200 KB schema.
  */
@@ -219,59 +197,38 @@ const describeFirstDifference = (
 };
 
 /**
- * @description Emit `rootModule`'s schema into a temporary directory and
- * compare it with the committed file. Resolves `true` when they match.
+ * @description Compare the committed file with the one the decorators emitted.
+ * Resolves `true` when they match.
  */
-const checkGraphqlSchema = async (
-  rootModule: Type,
+const compareGraphqlSchema = async (
+  emittedPath: string,
   options: GraphqlSchemaOptions,
 ): Promise<boolean> => {
-  const directory = await mkdtemp(join(tmpdir(), 'graphql-schema-'));
+  const [committed, emitted] = await Promise.all([
+    readFile(options.schemaPath, 'utf8'),
+    readFile(emittedPath, 'utf8'),
+  ]);
 
-  try {
-    await emitInto(rootModule, directory);
-
-    const [committed, emitted] = await Promise.all([
-      readFile(options.schemaPath, 'utf8'),
-      readFile(join(directory, AUTO_SCHEMA_FILE), 'utf8'),
-    ]);
-
-    if (committed === emitted) {
-      console.log(
-        `✅ ${options.schemaDisplayPath} matches the GraphQL decorators.`,
-      );
-
-      return true;
-    }
-
-    console.error(
-      [
-        `❌ ${options.schemaDisplayPath} is stale: it no longer matches what the GraphQL decorators emit.`,
-        '',
-        describeFirstDifference(options.schemaDisplayPath, committed, emitted),
-        '',
-        `Regenerate it with:  ${options.writeCommand}`,
-        'then commit schema.gql and re-run consumer codegen (pnpm run check:local:codegen).',
-      ].join('\n'),
+  if (committed === emitted) {
+    console.log(
+      `✅ ${options.schemaDisplayPath} matches the GraphQL decorators.`,
     );
 
-    return false;
-  } finally {
-    await rm(directory, { force: true, recursive: true });
+    return true;
   }
-};
 
-/**
- * @description Emit `rootModule`'s schema over the committed file.
- */
-const writeGraphqlSchema = async (
-  rootModule: Type,
-  options: GraphqlSchemaOptions,
-): Promise<void> => {
-  await emitInto(rootModule, dirname(options.schemaPath));
-  console.log(
-    `✅ Wrote ${options.schemaDisplayPath} from the GraphQL decorators.`,
+  console.error(
+    [
+      `❌ ${options.schemaDisplayPath} is stale: it no longer matches what the GraphQL decorators emit.`,
+      '',
+      describeFirstDifference(options.schemaDisplayPath, committed, emitted),
+      '',
+      `Regenerate it with:  ${options.writeCommand}`,
+      'then commit schema.gql and re-run consumer codegen (pnpm run check:local:codegen).',
+    ].join('\n'),
   );
+
+  return false;
 };
 
 /** Resolves the root module class named by `--module` / `--export`. */
@@ -279,6 +236,40 @@ export type RootModuleLoader = (
   modulePath: string,
   exportName: string,
 ) => Promise<Result<Type>>;
+
+/**
+ * @description Load the root module and emit its schema to `emitPath`, which
+ * {@link GRAPHQL_SCHEMA_FILE_ENV} carries into the module's `autoSchemaFile`.
+ * The variable is set before the module is imported (it is read when
+ * `forRoot` runs) and put back afterwards.
+ */
+const emitToFile = async (
+  emitPath: string,
+  options: GraphqlSchemaOptions,
+  load: RootModuleLoader,
+): Promise<Failure | Success<undefined>> => {
+  const previous = process.env[GRAPHQL_SCHEMA_FILE_ENV];
+
+  process.env[GRAPHQL_SCHEMA_FILE_ENV] = emitPath;
+
+  try {
+    const loaded = await load(options.modulePath, options.exportName);
+
+    if (!loaded.ok) {
+      return loaded;
+    }
+
+    await emitCodeFirstSchema(loaded.value);
+
+    return { ok: true, value: undefined };
+  } finally {
+    if (previous === undefined) {
+      Reflect.deleteProperty(process.env, GRAPHQL_SCHEMA_FILE_ENV);
+    } else {
+      process.env[GRAPHQL_SCHEMA_FILE_ENV] = previous;
+    }
+  }
+};
 
 /**
  * @description Run the command end to end and resolve its exit code: 0 when
@@ -300,19 +291,37 @@ export const runGraphqlSchemaCommand = async (
   }
 
   const options = parsed.value;
-  const loaded = await load(options.modulePath, options.exportName);
-
-  if (!loaded.ok) {
-    console.error(loaded.error);
-
-    return 2;
-  }
 
   if (options.mode === 'write') {
-    await writeGraphqlSchema(loaded.value, options);
+    const written = await emitToFile(options.schemaPath, options, load);
+
+    if (!written.ok) {
+      console.error(written.error);
+
+      return 2;
+    }
+
+    console.log(
+      `✅ Wrote ${options.schemaDisplayPath} from the GraphQL decorators.`,
+    );
 
     return 0;
   }
 
-  return (await checkGraphqlSchema(loaded.value, options)) ? 0 : 1;
+  const directory = await mkdtemp(join(tmpdir(), 'graphql-schema-'));
+
+  try {
+    const emittedPath = join(directory, TEMPORARY_SCHEMA_FILE);
+    const emitted = await emitToFile(emittedPath, options, load);
+
+    if (!emitted.ok) {
+      console.error(emitted.error);
+
+      return 2;
+    }
+
+    return (await compareGraphqlSchema(emittedPath, options)) ? 0 : 1;
+  } finally {
+    await rm(directory, { force: true, recursive: true });
+  }
 };

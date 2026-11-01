@@ -16,6 +16,11 @@
  * worktree's directory does not stop those containers — they keep running, detached from any
  * checkout, until someone notices. This brings them down.
  *
+ * An `OT_WORKTREE_DB=isolated` worktree (`pnpm worktree:db isolate` / `worktree:new --own-db`)
+ * owns a Postgres/Redis in that project, so its teardown ALSO removes the project's volumes
+ * (`down -v`): the data dies with the worktree. A `shared` worktree's project has no database
+ * (the generated override disables it) and the shared database is never touched.
+ *
  * Nothing else needs undoing: ports are derived deterministically from the worktree name
  * (`scripts/utils/worktree-ports.ts`), not leased from a registry, so there is no allocation to
  * release. `.env` and the compose override die with the directory.
@@ -31,6 +36,10 @@ import { basename, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { createLogger, readEnvValue, run } from './utils/index.ts';
+import {
+  resolveWorktreeDbMode,
+  WORKTREE_DB_ENV_KEY,
+} from './utils/worktree-db.ts';
 
 /** The compose override setup_worktree.ts generates; its presence proves this worktree was provisioned. */
 const WORKTREE_COMPOSE_FILE = 'docker-compose.worktree.yml';
@@ -69,6 +78,26 @@ export const resolveWorktreeComposeProject = (params: {
   return project === expected ? project : null;
 };
 
+/**
+ * The `docker compose` arguments that bring a worktree's project down. Volumes are removed only for
+ * an isolated worktree (it owns a database); `-p` pins the approved project explicitly.
+ */
+export const teardownComposeArgs = (params: {
+  readonly isolated: boolean;
+  readonly project: string;
+}): string[] => [
+  'compose',
+  '-p',
+  params.project,
+  '-f',
+  BASE_COMPOSE_FILE,
+  '-f',
+  WORKTREE_COMPOSE_FILE,
+  'down',
+  '--remove-orphans',
+  ...(params.isolated ? ['--volumes'] : []),
+];
+
 /** True when a docker CLI exists AND its daemon answers — the only state in which `down` can work. */
 const isDockerUsable = (): boolean =>
   run('docker', ['info'], { allowFailure: true, stdio: 'pipe' }).exitCode === 0;
@@ -78,11 +107,12 @@ const main = (): void => {
   const logger = createLogger({ stream: process.stderr });
   const worktreePath = process.env.OPENTHROTTLE_WORKTREE_PATH ?? process.cwd();
 
+  const envPath = join(worktreePath, '.env');
+  const isolated =
+    resolveWorktreeDbMode(readEnvValue(envPath, WORKTREE_DB_ENV_KEY)) === 'isolated'; // prettier-ignore
+
   const project = resolveWorktreeComposeProject({
-    composeProjectName: readEnvValue(
-      join(worktreePath, '.env'),
-      'COMPOSE_PROJECT_NAME',
-    ),
+    composeProjectName: readEnvValue(envPath, 'COMPOSE_PROJECT_NAME'),
     hasComposeOverride: existsSync(join(worktreePath, WORKTREE_COMPOSE_FILE)),
     worktreePath,
   });
@@ -99,25 +129,15 @@ const main = (): void => {
     return;
   }
 
-  logger.info(`teardown: stopping compose project "${project}"`);
+  logger.info(`teardown: stopping compose project "${project}"${isolated ? ' and removing its volumes (isolated database)' : ''}`); // prettier-ignore
 
   // -p pins the project explicitly rather than trusting the ambient .env, so this can only ever
   // touch the project the guard above approved.
-  const result = run(
-    'docker',
-    [
-      'compose',
-      '-p',
-      project,
-      '-f',
-      BASE_COMPOSE_FILE,
-      '-f',
-      WORKTREE_COMPOSE_FILE,
-      'down',
-      '--remove-orphans',
-    ],
-    { allowFailure: true, cwd: worktreePath, stdio: 'pipe' },
-  );
+  const result = run('docker', teardownComposeArgs({ isolated, project }), {
+    allowFailure: true,
+    cwd: worktreePath,
+    stdio: 'pipe',
+  });
 
   if (result.exitCode !== 0) {
     logger.fail(

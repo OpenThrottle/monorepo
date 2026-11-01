@@ -4,6 +4,7 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { Queue } from 'bullmq';
 
 import { REPEATABLE_JOB_OPTIONS } from '../repeatable-job.options.ts';
+import { resolveRepeatablesOwner } from '../repeatable-job.owner.ts';
 import { WORK_LEDGER_SWEEP_QUEUE_NAME } from './work-ledger-sweep.constants.ts';
 import type { WorkLedgerSweepJobData } from './work-ledger-sweep.types.ts';
 
@@ -24,6 +25,15 @@ export class WorkLedgerSweepRepeatableService implements OnModuleInit {
   ) {}
 
   async onModuleInit(): Promise<void> {
+    const ownership = resolveRepeatablesOwner();
+    if (!ownership.owner) {
+      this.logger.info(
+        `Work-ledger sweep repeatable job not registered: ${ownership.reason}`,
+        WorkLedgerSweepRepeatableService.name,
+      );
+      return;
+    }
+
     const job = await this.queue.add(
       JOB_NAME,
       {},
