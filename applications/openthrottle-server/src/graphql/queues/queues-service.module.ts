@@ -7,6 +7,7 @@
  */
 
 import { Module } from '@nestjs/common';
+import { LoggerModule } from '@openthrottle/nestjs-modules';
 
 import { AgenticTestQueueProducerModule } from '../../queues/agentic-test/agentic-test-queue-producer.module.ts';
 import { CodeIndexQueueProducerModule } from '../../queues/code-index/code-index-queue-producer.module.ts';
@@ -31,6 +32,7 @@ import { QueuesService } from './queues.service.ts';
     DatabaseBackupQueueProducerModule,
     DataRetentionQueueProducerModule,
     DocIngestionQueueProducerModule,
+    LoggerModule,
     PlanLifecycleHooksQueueProducerModule,
     PlanRulesQueueProducerModule,
     PlansQueueProducerModule,

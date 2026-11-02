@@ -6,8 +6,11 @@ import { posix } from 'node:path';
 
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { resolveQueuePrefix } from '@openthrottle/nestjs-bullmq';
+import {
+  resolveQueuePrefix,
+  resolveRedisConnection,
+} from '@openthrottle/nestjs-bullmq';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import { isRecord } from '@openthrottle/nodejs-utils';
 import type { Job, JobState, Queue } from 'bullmq';
 import { Queue as BullQueue } from 'bullmq';
@@ -49,6 +52,13 @@ type DynamicJobData = Record<string, unknown>;
 const QUEUE_NAME_REGEX = /^[a-zA-Z0-9_-]+$/;
 const MIN_QUEUE_NAME_LENGTH = 1;
 const MAX_QUEUE_NAME_LENGTH = 128;
+
+/**
+ * @description How long createQueue waits for a new dynamic queue's Redis client
+ * to connect and authenticate. ioredis retries an unreachable host forever, so
+ * without a bound a bad connection would hang the mutation instead of failing it.
+ */
+const DYNAMIC_QUEUE_READY_TIMEOUT_MS = 5000;
 
 /** @description BullMQ `jobId` length and character set (portable dedupe keys). */
 const MIN_IDEMPOTENCY_KEY_LENGTH = 1;
@@ -222,7 +232,7 @@ export class QueuesService implements OnModuleDestroy {
   private readonly dynamicQueues = new Map<string, Queue<AnyJobData, void>>();
 
   constructor(
-    private readonly configService: ConfigService,
+    private readonly logger: LoggerService,
     @InjectQueue(AGENTIC_TEST_QUEUE_NAME)
     private readonly agenticTestQueue: Queue<AnyJobData, void>,
     @InjectQueue(CODE_INDEX_QUEUE_NAME)
@@ -255,7 +265,7 @@ export class QueuesService implements OnModuleDestroy {
   }
 
   /**
-   * @description Creates a queue dynamically and registers it so getStats/getQueueByName include it. Uses shared Redis connection. Returns { queueName } on success or { error } on failure. Idempotent: if the name is already registered, returns success with that name.
+   * @description Creates a queue dynamically and registers it so getStats/getQueueByName include it. Connects with the same Redis options (auth, TLS, db) and key prefix as the DI-registered queues, and is only registered once its client has connected and authenticated. Returns { queueName } on success or { error } on failure. Idempotent: if the name is already registered, returns success with that name.
    */
   async createQueue(
     name: string,
@@ -286,23 +296,42 @@ export class QueuesService implements OnModuleDestroy {
       return { queueName: trimmed };
     }
 
-    const host =
-      this.configService.get<string>('redis.host') ?? process.env.REDIS_HOST;
-    const port =
-      this.configService.get<number>('redis.port') ??
-      Number(process.env.REDIS_PORT ?? 6379);
-
-    if (!host) {
+    const connection = resolveRedisConnection();
+    if (!connection) {
       return { error: 'Redis is not configured (REDIS_HOST)' };
     }
 
     try {
       const queue = new BullQueue<AnyJobData, void>(trimmed, {
-        connection: { host, port },
+        connection,
         // Same environment-scoped prefix as the DI-registered queues so
         // dynamic queues stay inside this checkout's keyspace.
         prefix: resolveQueuePrefix(),
       });
+
+      // A Redis error after creation (dropped connection, failover) must be
+      // logged, not thrown as an unhandled 'error' event.
+      queue.on('error', (error) => {
+        this.logger.warn(
+          `Dynamic queue "${trimmed}" Redis error: ${error.message}`,
+        );
+      });
+
+      const readyError = await this.waitForQueueReady(queue);
+      if (readyError !== null) {
+        // Never registered, so nothing else would ever close this connection.
+        await queue.close();
+
+        return { error: `Failed to create queue: ${readyError}` };
+      }
+
+      // A concurrent createQueue for the same name may have registered while
+      // this one waited; keep that queue and drop the duplicate connection.
+      if (this.dynamicQueues.has(trimmed)) {
+        await queue.close();
+
+        return { queueName: trimmed };
+      }
 
       this.dynamicQueues.set(trimmed, queue);
 
@@ -312,6 +341,40 @@ export class QueuesService implements OnModuleDestroy {
       const message = isError ? error.message : String(error);
 
       return { error: `Failed to create queue: ${message}` };
+    }
+  }
+
+  /**
+   * @description Waits up to {@link DYNAMIC_QUEUE_READY_TIMEOUT_MS} for the queue's Redis client to connect and authenticate. Returns null when ready, otherwise the reason it is not.
+   */
+  private async waitForQueueReady(
+    queue: Queue<AnyJobData, void>,
+  ): Promise<string | null> {
+    let timer: NodeJS.Timeout | undefined;
+    const timeout = new Promise<string>((resolve) => {
+      timer = setTimeout(() => {
+        resolve(
+          `Redis did not become ready within ${DYNAMIC_QUEUE_READY_TIMEOUT_MS}ms`,
+        );
+      }, DYNAMIC_QUEUE_READY_TIMEOUT_MS);
+    });
+
+    // Settles with the failure reason instead of rejecting, so a client that
+    // fails after the timeout already won cannot surface as an unhandled rejection.
+    const ready = (async (): Promise<string | null> => {
+      try {
+        await queue.waitUntilReady();
+
+        return null;
+      } catch (error) {
+        return error instanceof Error ? error.message : String(error);
+      }
+    })();
+
+    try {
+      return await Promise.race([ready, timeout]);
+    } finally {
+      clearTimeout(timer);
     }
   }
 
@@ -367,12 +430,15 @@ export class QueuesService implements OnModuleDestroy {
   }
 
   /**
-   * @description Returns job counts for the named queue, or null if the queue is not registered.
+   * @description Returns job counts for the named queue, or null if the queue is not registered. Reads only that queue, so another queue's Redis failure cannot affect it; this queue's own failure rejects with the Redis error.
    */
   async getStatsForQueue(name: string): Promise<QueueStats | null> {
-    const stats = await this.getStats();
+    const queue = this.getQueueByName(name);
+    if (!queue) {
+      return null;
+    }
 
-    return stats.find((s) => s.name === name) ?? null;
+    return this.readQueueStats(name, queue);
   }
 
   /**
@@ -782,51 +848,57 @@ export class QueuesService implements OnModuleDestroy {
   }
 
   /**
-   * @description Returns job counts per registered queue (static and dynamic). Uses BullMQ getJobCounts().
+   * @description Returns job counts per registered queue (static and dynamic). Uses BullMQ getJobCounts(). A queue whose counts cannot be read is logged and left out, so one broken connection cannot fail the whole listing.
    */
   async getStats(): Promise<QueueStats[]> {
-    const staticResults = await Promise.all(
-      REGISTERED_QUEUES.map(async (queueName) => {
-        const queue = this.getQueueByName(queueName);
-        if (!queue) return null;
+    const staticQueues = REGISTERED_QUEUES.flatMap((name) => {
+      const queue = this.getQueueByName(name);
 
-        const counts = await queue.getJobCounts();
-        const stats: QueueStats = {
-          activeCount: counts['active'] ?? 0,
-          completedCount: counts['completed'] ?? 0,
-          delayedCount: counts['delayed'] ?? 0,
-          failedCount: counts['failed'] ?? 0,
-          name: queueName,
-          waitingCount: counts['waiting'] ?? 0,
-        };
-        return stats;
-      }),
+      return queue ? [{ name, queue }] : [];
+    });
+    const dynamicQueues = Array.from(this.dynamicQueues, ([name, queue]) => ({
+      name,
+      queue,
+    }));
+    const queues = [...staticQueues, ...dynamicQueues];
+
+    const results = await Promise.allSettled(
+      queues.map(({ name, queue }) => this.readQueueStats(name, queue)),
     );
 
-    const dynamicNames = Array.from(this.dynamicQueues.keys());
-    const dynamicResults = await Promise.all(
-      dynamicNames.map(async (queueName) => {
-        const queue = this.dynamicQueues.get(queueName);
-        if (!queue) return null;
-        const counts = await queue.getJobCounts();
-        const stats: QueueStats = {
-          activeCount: counts['active'] ?? 0,
-          completedCount: counts['completed'] ?? 0,
-          delayedCount: counts['delayed'] ?? 0,
-          failedCount: counts['failed'] ?? 0,
-          name: queueName,
-          waitingCount: counts['waiting'] ?? 0,
-        };
-        return stats;
-      }),
-    );
+    return results.flatMap((result, index) => {
+      if (result.status === 'fulfilled') {
+        return [result.value];
+      }
 
-    const all = [
-      ...staticResults.filter((s): s is QueueStats => s != null),
-      ...dynamicResults.filter((s): s is QueueStats => s != null),
-    ];
+      const name = queues[index]?.name ?? 'unknown';
+      const reason =
+        result.reason instanceof Error
+          ? result.reason.message
+          : String(result.reason);
+      this.logger.warn(`Queue "${name}" stats unavailable: ${reason}`);
 
-    return all;
+      return [];
+    });
+  }
+
+  /**
+   * @description Reads one queue's job counts into {@link QueueStats}, defaulting missing states to 0.
+   */
+  private async readQueueStats(
+    name: string,
+    queue: Queue<AnyJobData, void>,
+  ): Promise<QueueStats> {
+    const counts = await queue.getJobCounts();
+
+    return {
+      activeCount: counts['active'] ?? 0,
+      completedCount: counts['completed'] ?? 0,
+      delayedCount: counts['delayed'] ?? 0,
+      failedCount: counts['failed'] ?? 0,
+      name,
+      waitingCount: counts['waiting'] ?? 0,
+    };
   }
 
   /**
