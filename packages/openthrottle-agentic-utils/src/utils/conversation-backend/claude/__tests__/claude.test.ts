@@ -68,17 +68,14 @@ const mcpToolBin = (): string =>
     process.stdout.write(lines.join('\\n') + '\\n');`,
   );
 
-/** The first tool_result block carried by the tool_result chunk, if any. */
+/** The metadata of the first tool_result chunk, if any. */
 function firstToolResult(
   chunks: readonly ConversationStreamChunk[],
-): Record<string, unknown> | undefined {
-  const chunk = chunks.find(
+): Readonly<Record<string, unknown>> | undefined {
+  return chunks.find(
     (candidate) =>
       candidate.kind === CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
-  );
-  const results = chunk?.metadata?.['toolResults'];
-  const block = Array.isArray(results) ? results[0] : undefined;
-  return typeof block === 'object' && block !== null ? block : undefined;
+  )?.metadata;
 }
 
 const MCP_SERVERS = {
@@ -393,7 +390,7 @@ describe('claudeConversationBackend', () => {
 
     const block = firstToolResult(chunks);
     expect(block).toBeDefined();
-    expect(block?.['is_error']).not.toBe(true);
+    expect(block?.['isError']).not.toBe(true);
     expect(JSON.stringify(block)).not.toContain('declined');
   });
 
@@ -410,7 +407,7 @@ describe('claudeConversationBackend', () => {
     });
 
     const block = firstToolResult(chunks);
-    expect(block?.['is_error']).not.toBe(true);
+    expect(block?.['isError']).not.toBe(true);
     expect(JSON.stringify(block)).not.toContain('declined');
   });
 
@@ -425,7 +422,7 @@ describe('claudeConversationBackend', () => {
     });
 
     const block = firstToolResult(chunks);
-    expect(block?.['is_error']).toBe(true);
+    expect(block?.['isError']).toBe(true);
     expect(JSON.stringify(block)).toContain('declined');
   });
 

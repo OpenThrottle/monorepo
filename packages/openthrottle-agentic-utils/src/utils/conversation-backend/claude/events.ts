@@ -46,7 +46,9 @@ function mapSystem(
 /**
  * The nested Anthropic stream event under `stream_event.event`: incremental
  * text/thinking deltas and tool-use starts. `signature_delta` (a cryptographic
- * signature on thinking blocks) carries no user-visible text → skipped.
+ * signature on thinking blocks) carries no user-visible text → skipped, and so
+ * is `input_json_delta`: the complete arguments arrive on the consolidated
+ * `assistant` event ({@link mapAssistant}), so the fragments add nothing.
  */
 function mapStreamEvent(inner: unknown): ConversationStreamChunk | null {
   if (!isRecord(inner)) {
@@ -72,18 +74,6 @@ function mapStreamEvent(inner: unknown): ConversationStreamChunk | null {
       };
     }
 
-    if (delta.type === 'input_json_delta') {
-      return {
-        delta: '',
-        done: false,
-        kind: CONVERSATION_STREAM_CHUNK_KINDS.toolCall,
-        metadata: {
-          index: inner.index ?? null,
-          partialJson: asString(delta.partial_json) ?? '',
-        },
-      };
-    }
-
     return null;
   }
 
@@ -96,10 +86,10 @@ function mapStreamEvent(inner: unknown): ConversationStreamChunk | null {
         done: false,
         kind: CONVERSATION_STREAM_CHUNK_KINDS.toolCall,
         metadata: {
+          callId: asString(block.id) ?? null,
           index: inner.index ?? null,
           name: asString(block.name) ?? null,
           toolName: asString(block.name) ?? null,
-          toolUseId: asString(block.id) ?? null,
         },
       };
     }
@@ -109,32 +99,89 @@ function mapStreamEvent(inner: unknown): ConversationStreamChunk | null {
 }
 
 /**
- * `user` → tool results returned by claude (correlated by `tool_use_id`). One
- * chunk per `user` event carrying every `tool_result` block it holds.
+ * `assistant` (consolidated) → one `tool_call` chunk per `tool_use` block, now
+ * carrying the complete `input` as `toolCall`. It repeats the `callId` of the
+ * `content_block_start` chunk that opened the card, so the timeline fills in
+ * that card's arguments rather than opening a second one. Text and thinking
+ * blocks are skipped (double-count).
+ */
+function mapAssistant(
+  event: Record<string, unknown>,
+): readonly ConversationStreamChunk[] {
+  const message = event.message;
+  if (!isRecord(message) || !Array.isArray(message.content)) {
+    return [];
+  }
+
+  return message.content
+    .filter(
+      (block): block is Record<string, unknown> =>
+        isRecord(block) && block.type === 'tool_use',
+    )
+    .map((block) => ({
+      delta: '',
+      done: false,
+      kind: CONVERSATION_STREAM_CHUNK_KINDS.toolCall,
+      metadata: {
+        callId: asString(block.id) ?? null,
+        name: asString(block.name) ?? null,
+        toolCall: block.input ?? null,
+        toolName: asString(block.name) ?? null,
+      },
+    }));
+}
+
+/**
+ * A `tool_result` block's `content` as display text: a string as-is, an array
+ * of content blocks as its text blocks joined (non-text blocks, e.g. images,
+ * become a `[type]` placeholder), anything else verbatim.
+ */
+function toolResultText(content: unknown): unknown {
+  if (!Array.isArray(content)) {
+    return content ?? null;
+  }
+
+  return content
+    .map((part) => {
+      if (!isRecord(part)) {
+        return '';
+      }
+
+      return part.type === 'text'
+        ? (asString(part.text) ?? '')
+        : `[${asString(part.type) ?? 'content'}]`;
+    })
+    .join('\n');
+}
+
+/**
+ * `user` → one `tool_result` chunk per `tool_result` block, correlated to its
+ * call by `tool_use_id` (a parallel batch returns several in one event). The
+ * result text rides on `toolCall`; `isError` marks a failed call.
  */
 function mapUser(
   event: Record<string, unknown>,
-): ConversationStreamChunk | null {
+): readonly ConversationStreamChunk[] {
   const message = event.message;
   if (!isRecord(message) || !Array.isArray(message.content)) {
-    return null;
+    return [];
   }
 
-  const toolResults = message.content.filter(
-    (block): block is Record<string, unknown> =>
-      isRecord(block) && block.type === 'tool_result',
-  );
-
-  if (toolResults.length === 0) {
-    return null;
-  }
-
-  return {
-    delta: '',
-    done: false,
-    kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
-    metadata: { toolResults },
-  };
+  return message.content
+    .filter(
+      (block): block is Record<string, unknown> =>
+        isRecord(block) && block.type === 'tool_result',
+    )
+    .map((block) => ({
+      delta: '',
+      done: false,
+      kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
+      metadata: {
+        callId: asString(block.tool_use_id) ?? null,
+        isError: block.is_error === true,
+        toolCall: toolResultText(block.content),
+      },
+    }));
 }
 
 /**
@@ -193,31 +240,41 @@ function mapResult(event: Record<string, unknown>): ConversationStreamChunk {
   };
 }
 
+/** A nullable single chunk as the zero-or-one list {@link mapClaudeEvent} returns. */
+const listOf = (
+  chunk: ConversationStreamChunk | null,
+): readonly ConversationStreamChunk[] => (chunk === null ? [] : [chunk]);
+
 /**
- * Map a single claude event to a chunk, or null to skip it. `assistant`
- * (consolidated echo — double-count), non-rejected `rate_limit_event`s, and
- * non-init `system` subtypes have no mapping.
+ * Map a single claude event to its chunks — usually zero or one; a `user` event
+ * holding a parallel batch's results, or an `assistant` event holding several
+ * `tool_use` blocks, yields one per block. Non-rejected `rate_limit_event`s,
+ * non-init `system` subtypes and the consolidated `assistant` text map to none.
  *
  * @public
  */
-export function mapClaudeEvent(event: unknown): ConversationStreamChunk | null {
+export function mapClaudeEvent(
+  event: unknown,
+): readonly ConversationStreamChunk[] {
   if (!isRecord(event)) {
-    return null;
+    return [];
   }
 
   switch (event.type) {
+    case 'assistant':
+      return mapAssistant(event);
     case 'rate_limit_event':
-      return mapRateLimit(event);
+      return listOf(mapRateLimit(event));
     case 'result':
-      return mapResult(event);
+      return [mapResult(event)];
     case 'stream_event':
-      return mapStreamEvent(event.event);
+      return listOf(mapStreamEvent(event.event));
     case 'system':
-      return mapSystem(event);
+      return listOf(mapSystem(event));
     case 'user':
       return mapUser(event);
 
     default:
-      return null;
+      return [];
   }
 }
