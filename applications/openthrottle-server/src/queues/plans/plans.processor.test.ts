@@ -20,7 +20,7 @@ import type {
 import type { ChildProcess } from 'child_process';
 import { spawn as nodeSpawn } from 'child_process';
 import type { Readable } from 'stream';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PlanStatusService } from '../../graphql/plans/plan-status.service.ts';
 import { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account.service.ts';
@@ -737,6 +737,26 @@ describe('PlansProcessor', () => {
   });
 
   describe('Plan status reconciliation on startup', () => {
+    beforeEach(() => {
+      vi.stubEnv('OT_SCHEDULED_JOBS_OWNER', '');
+      vi.stubEnv('OT_WORKTREE_DB', '');
+    });
+
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
+    it('a shared-DB worktree skips both reconciles — its own queue prefix sees no active jobs', async () => {
+      vi.stubEnv('OT_WORKTREE_DB', 'shared');
+
+      await processor.onModuleInit();
+
+      expect(mockRepoFind).not.toHaveBeenCalled();
+      expect(mockGetJobs).not.toHaveBeenCalled();
+      expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
+      expect(mockPromoteParentPlanToInProgress).not.toHaveBeenCalled();
+    });
+
     it('resets IN_PROGRESS plans that have no active job to QUEUED', async () => {
       const stuckPlanId = 'a1b2c3d4-in-progress-no-job';
       mockRepoFind.mockResolvedValueOnce([

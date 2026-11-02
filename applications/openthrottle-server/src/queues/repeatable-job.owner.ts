@@ -19,8 +19,24 @@
  *    like a primary.
  * 4. Marker absent (or unrecognised) — the primary checkout: the owner.
  *
- * Only registration is gated. On-mutation scheduled-job upserts/removals always apply, so a user
- * editing a schedule takes effect immediately regardless of which checkout served the request.
+ * It also gates every lifecycle side effect that writes outside this process (OT plan 50422dc3) —
+ * a shared-DB worktree runs branch code, so it must not touch the user's real repos or data:
+ *
+ * - Gated (owner-only):
+ *   - repeatable registrations, including database backups;
+ *   - the scheduled-agent-jobs boot reconcile;
+ *   - the plan-runs-stale-sweep boot: the foreign-skill reap and reconcile, and the workspace-editors
+ *     manifest-exclude reconcile (all three write into the user's checkouts);
+ *   - the foreign-skill shutdown teardown, because the ledger directory is shared with the primary;
+ *   - the plans startup status reconcile, which would reset every IN_PROGRESS plan because this
+ *     worktree's own queue prefix has no active jobs;
+ *   - the daily-stats on-boot catch-up, which writes `daily_stats` rows.
+ * - Not gated: worker start/stop logs, the plan-cancel subscriber (it only aborts runs this process
+ *   owns), lifecycle `QueueEvents` (this checkout's own prefix), executor registration (in-process),
+ *   and the GraphQL schema emit and JSONL log sink (both write inside this checkout).
+ *
+ * On-mutation scheduled-job upserts/removals always apply, so a user editing a schedule takes effect
+ * immediately regardless of which checkout served the request.
  */
 
 /** @description Whether this checkout registers repeatables, and the one-line reason to log. */

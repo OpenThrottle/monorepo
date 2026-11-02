@@ -161,7 +161,7 @@ from `PATH`". None have `.env.default` entries.
 | `OPENTHROTTLE_FOREIGN_SKILL_LEDGER_DIR`   | Where the foreign-skill-injection ledger is written                                                                                                                               | ❌                                                                                                         |
 | `OT_RUN_OUTCOME`                          | **Not an env var** — a sentinel line (`OT_RUN_OUTCOME: completed\|no_op`) an agent prints in its output so the scheduled-jobs processor can classify the run                      | n/a                                                                                                        |
 | `OT_SCHEDULED_JOBS_OWNER`                 | Whether this checkout registers repeatable BullMQ jobs (all of them, not just scheduled agent jobs); else inferred from `OT_WORKTREE_DB` (`shared` = no, `isolated`/absent = yes) | ❌                                                                                                         |
-| `OT_BACKUP_OWNER`                         | Owner attributed to database-backup jobs; else inferred from the checkout                                                                                                         | ❌                                                                                                         |
+| `OT_BACKUP_OWNER`                         | Whether this checkout schedules database backups (highest-precedence override); else the shared repeatables-owner resolver (`OT_SCHEDULED_JOBS_OWNER`, then `OT_WORKTREE_DB`)     | ❌                                                                                                         |
 
 ## 7. Worktrees
 

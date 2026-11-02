@@ -31,6 +31,10 @@ const JOB_NAME = 'Sweep Stale Plan Runs';
  * injection gets its layer re-projected, so the flag and the disk agree from boot rather than from
  * the next run. Order is load-bearing — reap clears stranded ledgers, reconcile rebuilds what should
  * be there; swapping them would tear down what was just rebuilt.
+ *
+ * All of it is owner-only. The reap, both reconciles and the registration act on the user's real
+ * repos and shared ledgers, so a shared-DB worktree running branch code skips the lot — see
+ * `repeatable-job.owner.ts` for the full boot side-effect inventory.
  */
 @Injectable()
 export class PlanRunsStaleSweepRepeatableService implements OnModuleInit {
@@ -44,6 +48,19 @@ export class PlanRunsStaleSweepRepeatableService implements OnModuleInit {
   ) {}
 
   async onModuleInit(): Promise<void> {
+    const ownership = resolveRepeatablesOwner();
+    if (!ownership.owner) {
+      this.logger.info(
+        `Foreign-skill reap/reconcile and workspace-editors reconcile skipped at boot: ${ownership.reason}`,
+        PlanRunsStaleSweepRepeatableService.name,
+      );
+      this.logger.info(
+        `Plan-runs stale sweep repeatable job not registered: ${ownership.reason}`,
+        PlanRunsStaleSweepRepeatableService.name,
+      );
+      return;
+    }
+
     // Crash recovery for foreign-skill injection, riding the stale-sweep boot lifecycle.
     this.foreignSkillInjectionLifecycle.reapStrandedLedgers();
 
@@ -86,16 +103,6 @@ export class PlanRunsStaleSweepRepeatableService implements OnModuleInit {
         }`,
         PlanRunsStaleSweepRepeatableService.name,
       );
-    }
-
-    // Only the repeatable registration is gated; the boot reap/reconcile above is per-process.
-    const ownership = resolveRepeatablesOwner();
-    if (!ownership.owner) {
-      this.logger.info(
-        `Plan-runs stale sweep repeatable job not registered: ${ownership.reason}`,
-        PlanRunsStaleSweepRepeatableService.name,
-      );
-      return;
     }
 
     const job = await this.queue.add(
