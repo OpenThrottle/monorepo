@@ -62,6 +62,8 @@ fragment PlanDetails on PlanObject {
     ...ProjectDetails
   }
   runConfigJson
+  scheduledRunAt
+  scheduledRunId
   status
   summary
   tags {
@@ -90,6 +92,19 @@ mutation PlanDetailEnqueuePlanRun($input: EnqueuePlanRunInput!) {
     planId
     queuePosition
     queueTotal
+  }
+}
+
+# Fires the run at a later instant (a SCHEDULED plan_runs row + a delayed job).
+# Same input as enqueue plus `scheduledFor`; the server rejects a past instant
+# and anything beyond its 30-day horizon with a message that names the cap.
+mutation PlanDetailSchedulePlanRun($input: SchedulePlanRunInput!) {
+  schedulePlanRun(input: $input) {
+    executionBackend
+    jobId
+    planId
+    planRunId
+    scheduledFor
   }
 }
 
@@ -147,6 +162,15 @@ mutation PlanDetailUpdatePlanJobRunHooks($input: UpdatePlanInput!) {
     id
     jobRunHooksJson
     updatedAt
+  }
+}
+
+# The saved run config, read by the runPlan / schedulePlanRun actions so the
+# dialog's model and effort can be merged into it before the run is enqueued.
+query PlanDetailRunConfig($id: ID!) {
+  plan(id: $id) {
+    id
+    runConfigJson
   }
 }
 
@@ -268,6 +292,7 @@ query PlanDetailRunHistory($planId: ID!) {
     resumeOfRunId
     runConfigSnapshotJson
     runKind
+    scheduledFor
     status
     usageLimitResetsAt
   }

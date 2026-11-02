@@ -152,6 +152,24 @@ describe('WorktreeCheckoutPruneService', () => {
     });
   });
 
+  describe('when only a SCHEDULED run points at the checkout', () => {
+    it('does not hold the worktree: the unsettled-run guard asks for QUEUED/IN_PROGRESS, not SCHEDULED', async () => {
+      // A scheduled run records its checkout at schedule time but holds nothing until it fires.
+      // findUnsettledRunsByCheckoutIds excludes SCHEDULED by construction (pinned in
+      // plan-runs.service.test.ts), so here it comes back empty and the prune proceeds.
+      const free = worktree('wt-scheduled');
+      const { deleteWorktreeCheckout, service } = build({
+        checkouts: [free],
+        unsettledRuns: [],
+      });
+
+      const [result] = await service.pruneByIds(USER, [free.id]);
+
+      expect(result?.outcome).toBe(PRUNE_WORKTREE_CHECKOUT_OUTCOME.PRUNED);
+      expect(deleteWorktreeCheckout).toHaveBeenCalledWith(USER, free.id);
+    });
+  });
+
   describe('when the checkout is a primary', () => {
     it('never deletes it', async () => {
       const primary = createMock<RepositoryCheckout>({

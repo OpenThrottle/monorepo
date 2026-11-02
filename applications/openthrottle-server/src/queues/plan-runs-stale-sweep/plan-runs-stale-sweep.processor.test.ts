@@ -322,4 +322,42 @@ describe('PlanRunsStaleSweepProcessor', () => {
     expect(planFindOne).not.toHaveBeenCalled();
     expect(writeGuardedStatus).not.toHaveBeenCalled();
   });
+
+  describe('a SCHEDULED run is not a stale run', () => {
+    // A run scheduled for next week has an old created_at, no heartbeat and no timer: against a
+    // 120s cutoff it looks maximally stale. Neither pass may touch it, and the plan and tasks it
+    // targets must come out of the sweep exactly as they went in.
+    it('leaves a SCHEDULED row older than the cutoff, and its plan and tasks, untouched', async () => {
+      // Both finders select IN_PROGRESS only (pinned in plan-runs.service.test.ts), so a table
+      // holding nothing but an old SCHEDULED row yields no candidates from either pass.
+      findStaleInProgressRuns.mockResolvedValue([]);
+      findStaleUnsupervisedRuns.mockResolvedValue([]);
+
+      await processor.process(job);
+
+      expect(findStaleInProgressRuns).toHaveBeenCalledTimes(1);
+      expect(findStaleUnsupervisedRuns).toHaveBeenCalledTimes(1);
+      expect(settleStaleRun).not.toHaveBeenCalled();
+      expect(planFindOne).not.toHaveBeenCalled();
+      expect(writeGuardedStatus).not.toHaveBeenCalled();
+      expect(taskManagerTransaction).not.toHaveBeenCalled();
+    });
+
+    it('does not let a waiting SCHEDULED run stop a genuinely stranded plan from being reconciled', async () => {
+      // The other direction: a SCHEDULED row is not a live run, so it must not shield a plan whose
+      // real run died. Only IN_PROGRESS/QUEUED siblings veto the reset.
+      findStaleInProgressRuns.mockResolvedValue([staleRun('run-1', 'plan-1')]);
+      findRecentByPlanId.mockResolvedValue([
+        createMock<PlanRun>({ id: 'run-scheduled', status: 'SCHEDULED' }),
+        createMock<PlanRun>({ id: 'run-1', status: 'STALE' }),
+      ]);
+
+      await processor.process(job);
+
+      expect(writeGuardedStatus).toHaveBeenCalledWith(
+        'plan-1',
+        expect.objectContaining({ requestedStatus: 'PENDING' }),
+      );
+    });
+  });
 });

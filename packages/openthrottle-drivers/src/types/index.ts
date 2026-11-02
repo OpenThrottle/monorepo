@@ -5,6 +5,7 @@
  * package stays a leaf dependency.
  */
 
+import type { DriverReasoningEffort } from '../utils/reasoning-effort.ts';
 import type { UsageLimit } from '../utils/usage-limit.ts';
 
 /**
@@ -63,6 +64,13 @@ export interface DriverEndpointConfig {
 export interface DriverInvocationConfig {
   /** Process cwd for the subprocess; inherits `process.cwd()` when omitted. */
   readonly cwd?: string;
+  /**
+   * Reasoning effort for the run. Mapped per CLI by the shared helpers in `utils/reasoning-effort.ts`
+   * (claude `--effort`, codex `-c model_reasoning_effort=`, grok `--reasoning-effort`, opencode
+   * `--variant`), clamping to what that CLI accepts. Omitted ⇒ no flag. CLIs with no reasoning knob
+   * (cursor, gemini, antigravity) ignore it silently.
+   */
+  readonly effort?: DriverReasoningEffort;
   /**
    * Optional local model-server endpoint to target; honored only by drivers advertising
    * `supportsCustomBaseUrl` (see {@link DriverEndpointConfig}). Others ignore it.

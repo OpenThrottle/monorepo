@@ -25,8 +25,6 @@ export interface PlanDetailTabsListProps {
     readonly PlanRunConfigRepositoryFieldsFragment[]
   >;
   readonly resolvedTaskCount: number;
-  /** The Configuration tab is gated off; kept as a prop, not deleted. */
-  readonly showConfiguration: boolean;
   readonly taskCount: number;
 }
 
@@ -50,7 +48,6 @@ export const PlanDetailTabsList = (
     planId,
     repositories,
     resolvedTaskCount,
-    showConfiguration,
     taskCount,
   } = props;
 
@@ -101,8 +98,8 @@ export const PlanDetailTabsList = (
         planId={planId}
         workingDirectory={editorWorkingDirectory}
       />
-      {/* The in-place fix for a plan with no workspace: without it the only
-          control that can set one lives in the gated-off Configuration tab.
+      {/* The in-place fix for a plan with no workspace, without a trip to the
+          Configuration tab.
           Icon-only here — it is rarely touched, and its full `owner/repo ·
           branch` face crowded a row that already carries three tabs, the editor
           actions and Configuration. `shrink-0` keeps the square button square
@@ -114,16 +111,14 @@ export const PlanDetailTabsList = (
         onCheckoutChange={onCheckoutChange}
         repositories={repositories}
       />
-      {showConfiguration ? (
-        <TabsTrigger
-          className="flex-0 cursor-pointer"
-          id="plan-tab-configuration"
-          value="configuration"
-        >
-          <CogIcon />
-          Configuration
-        </TabsTrigger>
-      ) : null}
+      <TabsTrigger
+        className="flex-0 cursor-pointer"
+        id="plan-tab-configuration"
+        value="configuration"
+      >
+        <CogIcon />
+        Configuration
+      </TabsTrigger>
     </TabsList>
   );
 };

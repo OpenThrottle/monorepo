@@ -314,6 +314,42 @@ describe('runIterationAsync backend dispatch', () => {
     expect(firstArg).toMatch(/^claude -p --permission-mode acceptEdits "/);
   });
 
+  it('threads effort into the spawned claude and codex commands', async () => {
+    await runIterationAsync({
+      agentPrompt: 'hello',
+      backend: 'claude',
+      effort: 'extraHigh',
+      iteration: 1,
+    });
+    await runIterationAsync({
+      agentPrompt: 'hello',
+      backend: 'codex',
+      effort: 'max',
+      iteration: 1,
+    });
+    expect(vi.mocked(spawn).mock.calls[0]?.[0]).toContain(' --effort xhigh');
+    expect(vi.mocked(spawn).mock.calls[1]?.[0]).toContain(
+      ' -c model_reasoning_effort=high',
+    );
+  });
+
+  it('leaves the cursor-agent command unchanged when effort is set', async () => {
+    await runIterationAsync({
+      agentPrompt: 'hello',
+      backend: 'cursor',
+      iteration: 1,
+    });
+    await runIterationAsync({
+      agentPrompt: 'hello',
+      backend: 'cursor',
+      effort: 'ultra',
+      iteration: 1,
+    });
+    expect(vi.mocked(spawn).mock.calls[1]?.[0]).toBe(
+      vi.mocked(spawn).mock.calls[0]?.[0],
+    );
+  });
+
   it('spawns cursor-agent for --backend cursor', async () => {
     await runIterationAsync({
       agentPrompt: 'hello',

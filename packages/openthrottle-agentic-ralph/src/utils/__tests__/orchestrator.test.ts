@@ -226,6 +226,47 @@ describe('createWorkflowRalphOrchestrator task selection', () => {
     });
     expect(run).toHaveBeenCalledTimes(1);
   });
+
+  it('passes the context effort to the iteration runner alongside the model', async () => {
+    const run = vi.fn(async () => '<promise>COMPLETE</promise>');
+    const iterationRunner: WorkflowRalphIterationRunner = { run };
+
+    const executeGraphqlV2 = createMockExecute({
+      getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
+    });
+
+    const orchestrator = createWorkflowRalphOrchestrator({
+      executeGraphqlV2,
+      iterationRunner,
+    });
+
+    await orchestrator.execute({
+      context: {
+        debug: 'omit',
+        effort: 'extraHigh',
+        iterationMax: 1,
+        iterationTimeout: 1000,
+        iterations: 1,
+        kind: 'ralph',
+        mode: 'plan',
+        model: 'test-model',
+        planId: PLAN_ID,
+        project: '',
+        prompt: 'Do work',
+        runner: 'claude',
+        skipWorktreeSetup: false,
+        taskId: '',
+        timeout: 1000,
+        worktree: undefined,
+        worktreeBase: undefined,
+      },
+    });
+
+    expect(run).toHaveBeenCalledTimes(1);
+    expect(run).toHaveBeenCalledWith(
+      expect.objectContaining({ effort: 'extraHigh', model: 'test-model' }),
+    );
+  });
 });
 
 const baseContext = {

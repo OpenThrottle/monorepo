@@ -538,6 +538,16 @@ describe('AgenticRalphOrchestratorService worktree provisioning', () => {
     });
   });
 
+  it('carries ralph.effort from the job data into the flow-context tuning', async () => {
+    await runWithWorktree({ effort: 'extraHigh', worktree: 'plan-aaaaaaaa' });
+
+    expect(mockBuildRalphFlowContext).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ralph: expect.objectContaining({ effort: 'extraHigh' }),
+      }),
+    );
+  });
+
   it('registers the checkout against the provisioned worktree, not the base checkout', async () => {
     await runWithWorktree();
 

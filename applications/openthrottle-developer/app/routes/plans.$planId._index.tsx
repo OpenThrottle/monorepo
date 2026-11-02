@@ -21,6 +21,7 @@ import {
   PlanDetailWorkspaceRepositoriesDocument,
 } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
+import { loadComposerModels } from '~/routing/home/data/models.server';
 import {
   addHook,
   addPlanTag,
@@ -32,6 +33,7 @@ import {
   runPlan,
   saveJobRunHooks,
   saveRunConfig,
+  schedulePlanRun,
   setPlanStatus,
   updateTaskStatus,
 } from '~/routing/plans/actions/planId';
@@ -76,6 +78,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     return {
       enabledEditors: Promise.resolve([]),
       ledger: Promise.resolve({ linkedArtifacts: [], ruleApplications: [] }),
+      models: Promise.resolve([]),
       outputChunks: Promise.resolve([]),
       plan: null,
       runHistory: Promise.resolve({ planRunAuditRows: [], recentPlanRuns: [] }),
@@ -102,6 +105,12 @@ export const loader = async (args: Route.LoaderArgs) => {
   // their own catch (loadEnabledEditors degrades to []). Deferring it as well
   // keeps three toolbar buttons off the critical path entirely.
   const enabledEditors = loadEnabledEditors(args.request);
+
+  // Discovered agent+model options for the Configuration tab's model picker — the same
+  // shared helper the home composer and Run-skill modal use. Deferred because discovery
+  // probes local model servers (cold-slow); it never rejects (degrades to []), so a failed
+  // probe leaves the picker's empty state rather than an error region.
+  const models = loadComposerModels(args.request);
 
   const ledger = executeGraphqlWithAuth(
     args.request,
@@ -144,6 +153,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   return {
     enabledEditors,
     ledger,
+    models,
     outputChunks,
     plan: critical.plan ?? null,
     runHistory,
@@ -225,7 +235,7 @@ export const action = async (args: Route.ActionArgs) => {
     case 'addPlanTag':
       return addPlanTag(args, planId, formData);
     case 'cancelPlanRun':
-      return cancelPlanRun(args, planId);
+      return cancelPlanRun(args, planId, formData);
     case 'detachHook':
       return detachHook(args.request, formData);
     case 'evaluatePlanRules':
@@ -240,6 +250,8 @@ export const action = async (args: Route.ActionArgs) => {
       return saveJobRunHooks(args, planId, formData);
     case 'saveRunConfig':
       return saveRunConfig(args, planId, formData);
+    case 'schedulePlanRun':
+      return schedulePlanRun(args, planId, formData);
     case 'setPlanStatus':
       return setPlanStatus(args, planId, formData);
     case 'updateTaskStatus':

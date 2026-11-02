@@ -15,6 +15,7 @@ import type {
   AgentDriver,
   DriverChunk,
   DriverInvocationConfig,
+  DriverReasoningEffort,
   DriverWorktreeOptions,
   UsageLimit,
 } from '@openthrottle/openthrottle-drivers';
@@ -44,6 +45,12 @@ export interface RunIterationConfig {
    * (e.g. foreign `workingDirectory` from BullMQ spawn or orchestrator).
    */
   cwd?: string;
+  /**
+   * Reasoning effort, mapped per backend by the drivers' shared helpers (claude `--effort`, codex
+   * `-c model_reasoning_effort=`, grok `--reasoning-effort`, opencode `--variant`). Backends with no
+   * reasoning knob (cursor, gemini, antigravity) ignore it.
+   */
+  effort?: DriverReasoningEffort;
   /** Iteration number. */
   iteration: number;
   /** Model preset when the backend supports it (Cursor: `--model`; Claude Code: `--model`). */
@@ -96,6 +103,7 @@ const toDriverConfig = (
   driver: AgentDriver,
 ): DriverInvocationConfig => ({
   cwd: config.cwd,
+  effort: config.effort,
   iteration: config.iteration,
   model: config.model,
   onChunk: config.onChunk,

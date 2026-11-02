@@ -16,6 +16,7 @@ import {
   appendPluginDirShellFlags,
   OPENTHROTTLE_PLUGIN_DIR_REL,
 } from '../utils/plugin-dir.ts';
+import { claudeEffortFlag } from '../utils/reasoning-effort.ts';
 import { escapeForShellDoubleQuoted, escapeShellArg } from '../utils/shell.ts';
 import { appendWorktreeShellFlags } from '../utils/worktree.ts';
 
@@ -79,13 +80,16 @@ export const claudeDriver = defineDriver({
         ? ` --model ${escapeShellArg(modelNorm)}`
         : '';
 
+    const effort = claudeEffortFlag(config.effort);
+    const effortFlag = effort !== undefined ? ` --effort ${effort}` : '';
+
     const safePrompt = escapeForShellDoubleQuoted(config.prompt);
     // `--output-format stream-json --verbose` sits right after the prompt (before `--model`): text
     // mode hides the `rate_limit_event` / 429 `result` that signal a usage limit. `parseOutput`
     // below recovers the text-mode stdout from the terminal `result` event, so callers are unchanged.
-    const base = `claude -p --permission-mode acceptEdits "${safePrompt}" ${STREAM_JSON_FLAGS}${modelFlag}`;
+    const base = `claude -p --permission-mode acceptEdits "${safePrompt}" ${STREAM_JSON_FLAGS}${modelFlag}${effortFlag}`;
 
-    // `--plugin-dir` sits after `--model` and before the worktree flags, matching where cursor
+    // `--effort` follows `--model`. `--plugin-dir` sits after them and before the worktree flags, matching where cursor
     // threads its MCP flags — the position is asserted in the parity tests, not incidental.
     const withPlugins = appendPluginDirShellFlags(
       base,

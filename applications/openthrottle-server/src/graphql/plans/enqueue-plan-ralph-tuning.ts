@@ -9,9 +9,12 @@ import {
   type PlanJobRunHooksStorage,
 } from '@openthrottle/nestjs-repositories';
 import {
+  CONVERSATION_REASONING_EFFORTS,
+  type ConversationReasoningEffort,
   getWorkspacePathMapping,
   parseWorkflowRunnerId,
   toContainerPath,
+  toConversationReasoningEffort,
 } from '@openthrottle/openthrottle-agentic-utils';
 import type {
   WorkflowConfigDebug,
@@ -161,6 +164,26 @@ const normalizeOptionalString = (
 };
 
 /**
+ * Validates the optional `ralph.effort` level against the chat path's vocabulary
+ * ({@link CONVERSATION_REASONING_EFFORTS}). Omitted / blank → `undefined` (a strict no-op); a
+ * present but unrecognized level throws, naming the accepted set. Unlike the chat resolver, which
+ * drops an unknown level, a plan run fails fast so a typo is never silently run at the default.
+ */
+export const validateRalphEffort = (
+  value: string | null | undefined,
+): ConversationReasoningEffort | undefined => {
+  const trimmed = normalizeOptionalString(value);
+  if (trimmed === undefined) return undefined;
+  const effort = toConversationReasoningEffort(trimmed);
+  if (effort === undefined) {
+    throw new Error(
+      `ralph.effort must be one of: ${Object.values(CONVERSATION_REASONING_EFFORTS).join(', ')}`,
+    );
+  }
+  return effort;
+};
+
+/**
  * Normalizes a raw Ralph debug shim level to a nested `debug` value, lowercasing
  * legacy uppercase inputs. Returns `undefined` for anything that is not a known
  * non-`omit` level (so unknown or `omit` values are dropped from job payloads).
@@ -277,6 +300,7 @@ export const parseEnqueueRalphTuning = (
     iterationTimeoutSeconds = sec;
   }
 
+  const effort = validateRalphEffort(input.effort);
   const model = normalizeOptionalString(input.model);
   const project = normalizeOptionalString(input.project);
   const prompt = normalizeOptionalString(input.prompt);
@@ -290,6 +314,7 @@ export const parseEnqueueRalphTuning = (
     ...(backendRaw !== undefined
       ? { backend: parseWorkflowRunnerId(backendRaw, 'cli') }
       : {}),
+    ...(effort !== undefined ? { effort } : {}),
     ...(iterations !== undefined ? { iterations } : {}),
     ...(iterationTimeoutSeconds !== undefined
       ? { iterationTimeoutSeconds }

@@ -1,6 +1,7 @@
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import type { RenderResult } from '@testing-library/react';
-import { cleanup } from '@testing-library/react';
+import { cleanup, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
 
@@ -107,20 +108,47 @@ describe('PlanDetailRoute Component', () => {
     ).toBeInTheDocument();
   });
 
-  // test('renders the toolbar', () => {
-  //   expect(component.getByTestId('PlanToolbar')).toBeInTheDocument();
-  // });
+  test('renders the toolbar', () => {
+    expect(component.getByTestId('PlanToolbar')).toBeInTheDocument();
+    expect(
+      component.getByRole('button', { name: /mark complete/i }),
+    ).toBeInTheDocument();
+  });
 
-  // test('exposes the Details, Tasks, Output, and Configuration tabs', () => {
-  //   expect(
-  //     component.getByRole('tab', { name: /details/i }),
-  //   ).toBeInTheDocument();
-  //   expect(component.getByRole('tab', { name: /tasks/i })).toBeInTheDocument();
-  //   expect(component.getByRole('tab', { name: /output/i })).toBeInTheDocument();
-  //   expect(
-  //     component.getByRole('tab', { name: /configuration/i }),
-  //   ).toBeInTheDocument();
-  // });
+  test('exposes the Details, Tasks, Output, and Configuration tabs', () => {
+    expect(
+      component.getByRole('tab', { name: /details/i }),
+    ).toBeInTheDocument();
+    expect(component.getByRole('tab', { name: /tasks/i })).toBeInTheDocument();
+    expect(component.getByRole('tab', { name: /output/i })).toBeInTheDocument();
+    expect(
+      component.getByRole('tab', { name: /configuration/i }),
+    ).toBeInTheDocument();
+  });
+
+  test('opens the Configuration tab without runtime errors', async () => {
+    const user = userEvent.setup();
+
+    await user.click(component.getByRole('tab', { name: /configuration/i }));
+
+    // The tab click navigates (search param), which revalidates the loader; wait
+    // for the settled tree rather than the first match.
+    await waitFor(() =>
+      expect(
+        component.getByLabelText('Execution backend for this plan run'),
+      ).toBeInTheDocument(),
+    );
+  });
+
+  test('disables the Run button and caret items per the plan state', () => {
+    // A PENDING plan with no workspace has no branch, so one-click Run is gated.
+    expect(
+      component.getByRole('button', { name: /add to queue/i }),
+    ).toBeDisabled();
+    expect(
+      component.getByRole('button', { name: /more run options/i }),
+    ).toBeEnabled();
+  });
 
   test('shows the resolved-task count in the Tasks tab label', () => {
     expect(

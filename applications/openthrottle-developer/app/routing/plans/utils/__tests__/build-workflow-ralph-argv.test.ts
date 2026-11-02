@@ -31,6 +31,7 @@ const basePlanInput = (
   overrides: Partial<WorkflowRalphRunOptionsInput> = {},
 ): WorkflowRalphRunOptionsInput => ({
   debugCli: 'omit',
+  effort: '',
   executionBackend: 'cursor',
   iterationTimeoutSeconds: undefined,
   iterations: DEFAULT_RALPH_ITERATIONS,
@@ -53,6 +54,7 @@ const baseTaskInput = (
   overrides: Partial<WorkflowRalphRunOptionsInput> = {},
 ): WorkflowRalphRunOptionsInput => ({
   debugCli: 'omit',
+  effort: '',
   executionBackend: 'cursor',
   iterationTimeoutSeconds: undefined,
   iterations: DEFAULT_RALPH_ITERATIONS,

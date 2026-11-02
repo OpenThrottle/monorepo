@@ -18,6 +18,8 @@ export type PlanRunConfigSnapshotDebugCli = 'debug' | 'omit' | 'verbose';
  */
 export interface PlanRunConfigSnapshotRalphV1 {
   readonly debug?: PlanRunConfigSnapshotDebugCli;
+  /** @description Reasoning-effort level (chat vocabulary: low|medium|high|extraHigh|max|ultra), validated at enqueue. */
+  readonly effort?: string;
   readonly executionBackend: WorkflowConfigRunner;
   readonly iterationTimeoutSeconds?: number;
   readonly iterations?: number;
@@ -60,6 +62,7 @@ export interface BuildPlanRunConfigSnapshotInput {
   readonly mode?: PlanRunConfigTargetMode | null;
   readonly ralph?: {
     readonly debug?: PlanRunConfigSnapshotDebugCli | null;
+    readonly effort?: string | null;
     readonly iterationTimeoutSeconds?: number | null;
     readonly iterations?: number | null;
     readonly model?: string | null;

@@ -5,7 +5,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
 import { CodeXmlIcon } from 'lucide-react';
 import * as React from 'react';
 
@@ -93,17 +92,6 @@ export const PlanEditorActions = (
         className={cn('flex flex-wrap items-center gap-2', className)}
         data-testid="PlanEditorActions"
       >
-        {FEATURE_BETA_PREVIEW ? (
-          <>
-            <Button size="xs" variant="outline">
-              Add to Queue
-            </Button>
-            <Button size="xs" variant="outline">
-              Schedule
-            </Button>
-          </>
-        ) : null}
-
         {targets.map(({ href, target }) => {
           const label = (
             <div className="flex items-center gap-2">

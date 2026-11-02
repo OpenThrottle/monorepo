@@ -167,4 +167,19 @@ describe('PlanEditorActions Component', () => {
       component.getByRole('button', { name: 'Claude Code' }),
     ).toBeDisabled();
   });
+
+  test('renders no Add to Queue or Schedule placeholder buttons', async () => {
+    const component = renderActions({
+      editors: resolvedEditors([WorkspaceEditorId.Claude]),
+      planId: PLAN_ID,
+      workingDirectory: WORKING_DIRECTORY,
+    });
+
+    await component.findByTestId('PlanEditorActions');
+
+    expect(
+      component.queryByRole('button', { name: /add to queue/i }),
+    ).toBeNull();
+    expect(component.queryByRole('button', { name: /schedule/i })).toBeNull();
+  });
 });

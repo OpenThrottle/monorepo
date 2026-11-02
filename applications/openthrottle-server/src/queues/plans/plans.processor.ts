@@ -18,6 +18,7 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { PlanRunStatus } from '@openthrottle/nestjs-repositories';
 import {
   HEARTBEAT_INTERVAL_MS,
+  PLAN_RUN_STARTABLE_STATUSES,
   PLAN_RUN_STATUS,
   PlanOutputStreamService,
   PlanRunsService,
@@ -69,10 +70,15 @@ import type {
   RunPlanJobData,
 } from './plans.types.ts';
 import { isRunPlanOrchestratorJobData } from './plans.types.ts';
+import { ScheduledPlanRunService } from './scheduled-plan-run.service.ts';
 import { UsageLimitResumeService } from './usage-limit-resume.service.ts';
 import { WorkLedgerRunService } from './work-ledger-run.service.ts';
 
 const CONCURRENCY = 1;
+
+/** Whether a worker may claim a run in `status` (see `PLAN_RUN_STARTABLE_STATUSES`). */
+const isStartableRunStatus = (status: string): boolean =>
+  PLAN_RUN_STARTABLE_STATUSES.some((startable) => startable === status);
 
 /**
  * Processes plan-run jobs for the plans queue. Concurrency is derived from the number
@@ -128,6 +134,7 @@ export class PlansProcessor
     private readonly plansService: PlansService,
     private readonly planStatusService: PlanStatusService,
     private readonly processMetrics: ProcessMetricsService,
+    private readonly scheduledPlanRun: ScheduledPlanRunService,
     private readonly statusChangeSystemAccount: StatusChangeSystemAccountService,
     private readonly tasksService: TasksService,
     private readonly usageLimitResume: UsageLimitResumeService,
@@ -155,6 +162,9 @@ export class PlansProcessor
 
     await this.reconcilePlanStatusOnStartup();
     await this.reconcilePlansQueuedWithInProgressTasks();
+    // Re-project SCHEDULED runs whose delayed job was lost (Redis flushed, volume recreated),
+    // applying the grace window. Owner-only for the same reason as the two above. Never throws.
+    await this.scheduledPlanRun.reconcileOnStartup();
   }
 
   /**
@@ -533,23 +543,29 @@ export class PlansProcessor
 
   async process(job: RunPlanJob): Promise<PlanRunJobResult> {
     const { planId } = job.data;
-    const abortSignal = this.planRunCancellation.attach(planId);
     const jobId = String(job.id);
     const queueName = PLANS_QUEUE_NAME;
+
+    // Admission comes before ANY side effect — the abort-controller attach, the run-location stamp,
+    // the heartbeat, the work-ledger session, the plan status write, the worktree. A scheduled run
+    // the fire-time policy settles (MISSED / SUPERSEDED / nothing to run), a run a cancel already
+    // settled, or one whose claim lost a race returns here having touched nothing else.
+    if (!(await this.admitRun(planId, queueName, jobId))) {
+      const snapshot = this.processMetrics.getCurrentSnapshot();
+
+      return { taskRunMetrics: { atEnd: snapshot, atStart: snapshot } };
+    }
+
+    const abortSignal = this.planRunCancellation.attach(planId);
     // Work-ledger run session (best-effort; opened after the plan resolves, closed in finally).
     let workSessionId: string | null = null;
-
-    // Stamp run-location so a cancel request from another process/host can observe
-    // where the run lives (Channel 0 is the in-memory attach above; this is the
-    // durable, cross-process observability half). Cleared in finally alongside detach.
-    await this.stampRunLocation(queueName, jobId);
 
     // Liveness heartbeat: bump last_heartbeat_at on a wall-clock timer, independent of
     // orchestrator iteration progress (a single iteration can exceed the staleness cutoff,
     // so an iteration-boundary bump would false-trip it on a live run). If this worker
     // crashes hard (SIGKILL/OOM/power-loss) without reaching the finally, the heartbeat
     // stops advancing and the staleness sweeper settles the stranded row. markRunStarted
-    // (in stampRunLocation) already stamped the initial heartbeat, so the first tick can lag.
+    // (the claim in admitRun) already stamped the initial heartbeat, so the first tick can lag.
     const heartbeatTimer = this.startRunHeartbeat(queueName, jobId);
 
     try {
@@ -704,16 +720,72 @@ export class PlansProcessor
   }
 
   /**
-   * Best-effort: stamp hostname/pid/worker_id on the plan_runs row for this job
-   * so cross-process cancel can observe where the run executes. Never throws —
-   * location is diagnostic, not on the critical path.
+   * Decides whether this job may run, and claims its plan_runs row when it may. Reads the row first
+   * and applies, in order:
+   *
+   * - no row (a legacy or duplicated job nothing recorded) → runs, as it always did;
+   * - SCHEDULED → the fire-time policy ({@link ScheduledPlanRunService.fire}): only `fire` continues,
+   *   with the row now claimed QUEUED and the plan and its tasks flipped QUEUED;
+   * - any status a worker cannot start from (CANCELLED, MISSED, SUPERSEDED, STALE, COMPLETED, ...) →
+   *   does not run; a settled row is never reopened;
+   * - QUEUED / IN_PROGRESS → runs.
+   *
+   * Then the claim: {@link stampRunLocation} → `markRunStarted`, the conditional QUEUED|IN_PROGRESS →
+   * IN_PROGRESS update. When a row exists and that update matches nothing, something settled the run
+   * between the read and the claim, and the job backs off. A failed stamp (DB hiccup) stays
+   * best-effort and the run goes ahead, as before.
+   */
+  private async admitRun(
+    planId: string,
+    queueName: string,
+    jobId: string,
+  ): Promise<boolean> {
+    const run = await this.planRunsService.findByQueueNameAndBullmqJobId(
+      queueName,
+      jobId,
+    );
+
+    if (run?.status === PLAN_RUN_STATUS.SCHEDULED) {
+      const outcome = await this.scheduledPlanRun.fire({ run });
+
+      if (outcome.kind !== 'fire') {
+        return false;
+      }
+    } else if (run !== null && !isStartableRunStatus(run.status)) {
+      this.logger.warn(
+        `Plan job ${jobId} for plan ${planId} not started: its plan_runs row ${run.id} is already ${run.status}.`,
+        PlansProcessor.name,
+      );
+
+      return false;
+    }
+
+    const claimed = await this.stampRunLocation(queueName, jobId);
+
+    if (run !== null && claimed === 0) {
+      this.logger.warn(
+        `Plan job ${jobId} for plan ${planId} not started: its plan_runs row ${run.id} was settled before the worker could claim it.`,
+        PlansProcessor.name,
+      );
+
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Stamps hostname/pid/worker_id and IN_PROGRESS on the plan_runs row for this job (the guarded
+   * `markRunStarted` claim) so cross-process cancel can observe where the run executes. Returns the
+   * number of rows claimed, or null when the write failed — logged, never thrown: a DB hiccup here
+   * must not stop a run that admission already let through.
    */
   private async stampRunLocation(
     queueName: string,
     bullmqJobId: string,
-  ): Promise<void> {
+  ): Promise<number | null> {
     try {
-      await this.planRunsService.markRunStarted({
+      return await this.planRunsService.markRunStarted({
         bullmqJobId,
         hostname: os.hostname(),
         pid: process.pid,
@@ -725,6 +797,8 @@ export class PlansProcessor
         `Failed to stamp plan_runs location: jobId=${bullmqJobId}, error=${error instanceof Error ? error.message : String(error)}`,
         PlansProcessor.name,
       );
+
+      return null;
     }
   }
 

@@ -11,16 +11,23 @@ import { renderRouteHarness, renderRoutesStub } from '~/testing/route-fixtures';
 import type { PlanToolbarProps } from '../PlanToolbar';
 import { PlanToolbar } from '../PlanToolbar';
 
-const renderToolbar = (toolbarProps: PlanToolbarProps): RenderResult =>
+type ToolbarTestProps = Omit<PlanToolbarProps, 'models' | 'runConfigJson'> &
+  Partial<Pick<PlanToolbarProps, 'models' | 'runConfigJson'>>;
+
+const renderToolbar = (toolbarProps: ToolbarTestProps): RenderResult =>
   renderRoutesStub(
     <TooltipProvider>
-      <PlanToolbar {...toolbarProps} />
+      <PlanToolbar
+        models={Promise.resolve([])}
+        runConfigJson="{}"
+        {...toolbarProps}
+      />
     </TooltipProvider>,
   );
 
 describe('PlanToolbar Component', () => {
   let component: RenderResult;
-  let props: PlanToolbarProps;
+  let props: ToolbarTestProps;
 
   beforeEach(() => {
     props = { planId: 'test-plan-id' };
@@ -299,7 +306,14 @@ const renderToolbarWithAction = (
 
   const component = renderRouteHarness([
     {
-      Component: () => <PlanToolbar planId={PLAN_ID} {...props} />,
+      Component: () => (
+        <PlanToolbar
+          models={Promise.resolve([])}
+          planId={PLAN_ID}
+          runConfigJson="{}"
+          {...props}
+        />
+      ),
       action,
       path: '/',
     },

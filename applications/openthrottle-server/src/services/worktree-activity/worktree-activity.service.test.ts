@@ -183,6 +183,25 @@ describe('WorktreeActivityService', () => {
     });
   });
 
+  it('does not read RUNNING for a pending SCHEDULED run — the worktree stays free until it fires', async () => {
+    // A scheduled run records its checkout at schedule time, but only IN_PROGRESS runs make a
+    // worktree busy and findLiveRunsByCheckoutIds selects IN_PROGRESS only (pinned in
+    // plan-runs.service.test.ts), so a worktree with nothing but a SCHEDULED run reads IDLE.
+    const { service } = build({
+      discovered: discovery([worktree()]),
+      liveRuns: [],
+    });
+
+    const result = await service.discoverAndClassify(USER);
+
+    expect(result.worktrees[0]).toMatchObject({
+      activity: WORKTREE_ACTIVITY.IDLE,
+      planId: null,
+      planRunId: null,
+      runMonitored: null,
+    });
+  });
+
   it('reads DIRTY for uncommitted changes with no live run', async () => {
     const { service } = build({
       discovered: discovery([worktree({ dirty: true })]),

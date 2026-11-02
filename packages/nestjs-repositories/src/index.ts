@@ -150,10 +150,12 @@ export { PlanRun } from './modules/plan-runs/plan-run.entity.ts';
 export type { PlanRunStatus } from './modules/plan-runs/plan-runs.constants.ts';
 export {
   HEARTBEAT_INTERVAL_MS,
+  PLAN_RUN_STARTABLE_STATUSES,
   PLAN_RUN_STATUS,
   STALE_CUTOFF_MS,
   UNSUPERVISED_STALE_CUTOFF_MS,
 } from './modules/plan-runs/plan-runs.constants.ts';
+export type { ScheduledPlanRun } from './modules/plan-runs/plan-runs.service.ts';
 export { PlanRunsService } from './modules/plan-runs/plan-runs.service.ts';
 export type { PlanData } from './modules/plans/plan.entity.ts';
 export { Plan } from './modules/plans/plan.entity.ts';

@@ -9,7 +9,10 @@
  */
 
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
-import type { UsageLimit } from '@openthrottle/openthrottle-drivers';
+import type {
+  DriverReasoningEffort,
+  UsageLimit,
+} from '@openthrottle/openthrottle-drivers';
 
 import type { CursorAgentChunk } from '../bin/run-iteration';
 import { runIterationAsync } from '../bin/run-iteration';
@@ -33,6 +36,11 @@ export interface CursorWorkflowRalphIterationRunParams {
    * @description Agent subprocess cwd (foreign `workingDirectory` on orchestrator path).
    */
   readonly cwd?: string;
+  /**
+   * @description Reasoning effort forwarded to {@link runIterationAsync}; each backend maps it to its
+   * own flag or ignores it (see `DriverInvocationConfig.effort`).
+   */
+  readonly effort?: DriverReasoningEffort;
   readonly iteration: number;
   readonly model: string | undefined;
   /**
@@ -150,6 +158,7 @@ export const createCursorWorkflowRalphIterationRunner = (
       agentPrompt: params.agentPrompt,
       backend: params.runner,
       cwd: params.cwd,
+      effort: params.effort,
       iteration: params.iteration,
       model: params.model,
       onChunk: mergedOnChunk,

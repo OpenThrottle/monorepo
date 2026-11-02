@@ -55,6 +55,35 @@ describe('hydratePlanRunConfigUiState', () => {
   });
 });
 
+describe('effort', () => {
+  test('a stored config written before effort existed hydrates as unset', () => {
+    const hydrated = hydratePlanRunConfigUiState(
+      planId,
+      JSON.stringify({ version: 1 }),
+    );
+
+    expect(hydrated.workflowInput.effort).toBe('');
+  });
+
+  test('round-trips a chosen effort through serialize and hydrate', () => {
+    const hydrated = hydratePlanRunConfigUiState(planId, null);
+
+    const json = serializePlanRunConfigUiState({
+      ...hydrated,
+      workflowInput: {
+        ...hydrated.workflowInput,
+        effort: 'extraHigh',
+        executionBackend: 'claude',
+      },
+    });
+
+    expect(JSON.parse(json).ralph.effort).toBe('extraHigh');
+    expect(hydratePlanRunConfigUiState(planId, json).workflowInput.effort).toBe(
+      'extraHigh',
+    );
+  });
+});
+
 describe('worktree + verbose defaults', () => {
   test('a plan with no stored config hydrates worktree-on and verbose', () => {
     const hydrated = hydratePlanRunConfigUiState(planId, null);

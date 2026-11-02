@@ -564,6 +564,7 @@ export const createWorkflowRalphOrchestrator = (
           agentOutput = await iterationRunner.run({
             agentPrompt,
             cwd: agentCwd,
+            effort: context.effort,
             iteration,
             model: context.model,
             onChunk,

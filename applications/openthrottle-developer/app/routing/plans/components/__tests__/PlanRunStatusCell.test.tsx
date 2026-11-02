@@ -1,6 +1,6 @@
 import { render, type RenderResult } from '@testing-library/react';
 import * as React from 'react';
-import { describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { PLAN_RUN_STATUS_CELL_COPY } from '~/routing/plans/data/data.copy';
 
@@ -10,6 +10,7 @@ import {
 } from '../PlanRunStatusCell';
 
 const RESETS_AT = '2026-11-01T17:00:00.000Z';
+const FIRES_AT = '2026-11-03T17:30:00.000Z';
 
 const renderCell = (
   overrides: Partial<PlanRunStatusCellProps> = {},
@@ -97,6 +98,79 @@ describe('PlanRunStatusCell Component', () => {
         garbage.getByText(PLAN_RUN_STATUS_CELL_COPY.resetUnknown),
       ).toBeInTheDocument();
       expect(garbage.container.querySelector('time')).toBeNull();
+    });
+  });
+
+  describe('SCHEDULED', () => {
+    beforeEach(() => {
+      // Pin the viewer's zone so the local-time rendering is deterministic.
+      vi.stubEnv('TZ', 'America/New_York');
+    });
+
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
+    test('shows the badge and when it fires, in the viewer local time', () => {
+      const component = renderCell({
+        scheduledFor: FIRES_AT,
+        status: 'SCHEDULED',
+      });
+
+      expect(
+        component.getByText(PLAN_RUN_STATUS_CELL_COPY.scheduledBadge),
+      ).toBeInTheDocument();
+      expect(component.container.textContent).toContain(
+        PLAN_RUN_STATUS_CELL_COPY.firesPrefix,
+      );
+      const time = component.container.querySelector('time');
+      expect(time?.dateTime).toBe(FIRES_AT);
+      // 17:30Z is 12:30 PM EST on Nov 3 2026 (DST ended Nov 1).
+      expect(time?.textContent).toContain('12:30');
+      expect(time?.textContent).toBe(new Date(FIRES_AT).toLocaleString());
+    });
+
+    test('falls back to an unknown line when scheduledFor is missing or unparseable', () => {
+      const missing = renderCell({ status: 'SCHEDULED' });
+      expect(
+        missing.getByText(PLAN_RUN_STATUS_CELL_COPY.firesUnknown),
+      ).toBeInTheDocument();
+      missing.unmount();
+
+      const garbage = renderCell({
+        scheduledFor: 'not-a-date',
+        status: 'SCHEDULED',
+      });
+      expect(
+        garbage.getByText(PLAN_RUN_STATUS_CELL_COPY.firesUnknown),
+      ).toBeInTheDocument();
+      expect(garbage.container.querySelector('time')).toBeNull();
+    });
+  });
+
+  describe('MISSED', () => {
+    test('shows the badge and why it never fired', () => {
+      const component = renderCell({ status: 'MISSED' });
+
+      expect(
+        component.getByText(PLAN_RUN_STATUS_CELL_COPY.missedBadge),
+      ).toBeInTheDocument();
+      expect(
+        component.getByText(PLAN_RUN_STATUS_CELL_COPY.missedReason),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe('SUPERSEDED', () => {
+    test('shows the badge and why it was skipped', () => {
+      const component = renderCell({ status: 'SUPERSEDED' });
+
+      expect(
+        component.getByText(PLAN_RUN_STATUS_CELL_COPY.supersededBadge),
+      ).toBeInTheDocument();
+      expect(
+        component.getByText(PLAN_RUN_STATUS_CELL_COPY.supersededReason),
+      ).toBeInTheDocument();
     });
   });
 });

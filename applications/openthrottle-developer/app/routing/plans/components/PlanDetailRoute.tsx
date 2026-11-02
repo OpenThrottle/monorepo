@@ -75,7 +75,6 @@ export const PlanDetailRoute = (
   });
 
   // Setup
-  const showToolbar = false;
 
   // Handlers
 
@@ -88,41 +87,41 @@ export const PlanDetailRoute = (
     <>
       <GlobalScreen className="-max-w-5xl flex h-full w-full flex-col gap-4 p-4 md:gap-8 md:p-8 lg:gap-12 lg:p-12">
         <PlanDetailRouteHeader plan={plan} status={status} />
-        {showToolbar ? (
-          <PlanToolbar
-            branch={branch}
-            checkoutId={checkoutId}
-            className="bg-card border-card-border rounded-lg border p-4"
-            editorWorkingDirectory={editorWorkingDirectory}
-            editors={loaderData.enabledEditors}
-            jobRunHooksJson={jobRunHooksJson}
-            newestRunIsStale={newestRunIsStale}
-            newestUnsupervisedUnsettledRunId={newestUnsupervisedUnsettledRunId}
-            onAddTag={(tag) =>
-              tagFetcher.submit(
-                { intent: 'addPlanTag', tag },
-                { method: 'post' },
-              )
-            }
-            onRemoveTag={(tag) =>
-              tagFetcher.submit(
-                { intent: 'removePlanTag', tag },
-                { method: 'post' },
-              )
-            }
-            planId={plan.id}
-            planStatus={plan.status}
-            planTitle={plan.title ?? 'Untitled'}
-            ralphTuningJson={ralphTuningJson}
-            repositoryId={repositoryId}
-            tagVocabulary={tagVocabulary}
-            tags={plan.tags}
-            tagsPending={tagFetcher.state !== 'idle'}
-            workflowRunBlocked={workflowRunBlocked}
-            workflowRunBlockedReason={workflowRunBlockedReason}
-            workingDirectory={workingDirectory}
-          />
-        ) : null}
+        {/* No `editors` here: the editor deep links live in the tab row below
+            (PlanDetailTabsList), and rendering them in both places duplicated them. */}
+        <PlanToolbar
+          branch={branch}
+          checkoutId={checkoutId}
+          className="bg-card border-card-border rounded-lg border p-4"
+          jobRunHooksJson={jobRunHooksJson}
+          models={loaderData.models}
+          newestRunIsStale={newestRunIsStale}
+          newestUnsupervisedUnsettledRunId={newestUnsupervisedUnsettledRunId}
+          onAddTag={(tag) =>
+            tagFetcher.submit({ intent: 'addPlanTag', tag }, { method: 'post' })
+          }
+          onRemoveTag={(tag) =>
+            tagFetcher.submit(
+              { intent: 'removePlanTag', tag },
+              { method: 'post' },
+            )
+          }
+          planId={plan.id}
+          planStatus={plan.status}
+          planTitle={plan.title ?? 'Untitled'}
+          ralphTuningJson={ralphTuningJson}
+          repositories={loaderData.workspaceRepositories}
+          repositoryId={repositoryId}
+          runConfigJson={plan.runConfigJson}
+          scheduledRunAt={plan.scheduledRunAt}
+          scheduledRunId={plan.scheduledRunId}
+          tagVocabulary={tagVocabulary}
+          tags={plan.tags}
+          tagsPending={tagFetcher.state !== 'idle'}
+          workflowRunBlocked={workflowRunBlocked}
+          workflowRunBlockedReason={workflowRunBlockedReason}
+          workingDirectory={workingDirectory}
+        />
         <OpenThrottleTabs
           urlSync={{
             defaultValue: 'overview',
@@ -138,7 +137,6 @@ export const PlanDetailRoute = (
             planId={plan.id}
             repositories={loaderData.workspaceRepositories}
             resolvedTaskCount={resolvedTaskCount}
-            showConfiguration={showToolbar}
             taskCount={tasks.length}
           />
           <PlanTabDetails
@@ -147,20 +145,19 @@ export const PlanDetailRoute = (
           />
           <PlanTabTasks />
           <PlanTabOutput chunks={planOutputChunks} />
-          {showToolbar ? (
-            <PlanTabConfiguration
-              onCollapse={() => onToggleExpanded(false)}
-              onResetToDefaults={onResetToDefaults}
-              onSaveJobRunHooks={onSaveJobRunHooks}
-              onSaveRunConfig={onSaveRunConfig}
-              planProjectId={plan.projectId}
-              repositories={loaderData.workspaceRepositories}
-              saveJobRunHooksDisabled={saveJobRunHooksDisabled}
-              saveJobRunHooksPending={saveJobRunHooksPending}
-              saveRunConfigDisabled={runConfigSaveBlocked}
-              saveRunConfigPending={saveRunConfigPending}
-            />
-          ) : null}
+          <PlanTabConfiguration
+            models={loaderData.models}
+            onCollapse={() => onToggleExpanded(false)}
+            onResetToDefaults={onResetToDefaults}
+            onSaveJobRunHooks={onSaveJobRunHooks}
+            onSaveRunConfig={onSaveRunConfig}
+            planProjectId={plan.projectId}
+            repositories={loaderData.workspaceRepositories}
+            saveJobRunHooksDisabled={saveJobRunHooksDisabled}
+            saveJobRunHooksPending={saveJobRunHooksPending}
+            saveRunConfigDisabled={runConfigSaveBlocked}
+            saveRunConfigPending={saveRunConfigPending}
+          />
           {runConfigSaveBlocked && runConfigSaveBlockedReason != null ? (
             <p className="text-muted-foreground px-4 text-xs" role="note">
               Save configuration blocked: {runConfigSaveBlockedReason}

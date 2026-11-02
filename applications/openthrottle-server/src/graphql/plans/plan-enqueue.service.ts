@@ -17,30 +17,40 @@ import {
 } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
-  PlanRun,
   PlanRunExecutionBackend,
+  PlanRunStatus,
 } from '@openthrottle/nestjs-repositories';
 import {
   Plan,
+  PLAN_RUN_STATUS,
+  PlanRun,
   PlanRunsService,
   PlansService,
   RepositoryCheckoutsService,
+  Task,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import type { JobRunHookEntry } from '@tools/workflows';
 import { projectHookTasksToJobRunHookEntries } from '@tools/workflows';
 import type { Queue } from 'bullmq';
+import type { EntityManager } from 'typeorm';
+import { In } from 'typeorm';
 
 import { updateMatchingTasksAndEmitStatusChanged } from '../../notifications/emit-bulk-task-status-changes.ts';
 import { NotificationsService } from '../../notifications/notifications.service.ts';
 import {
   PLAN_JOB_PRIORITY_DEFAULT,
   PLANS_QUEUE_NAME,
+  SCHEDULED_PLAN_RUN_JOB_ID_PREFIX,
+  SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS,
+  SCHEDULED_PLAN_RUN_MAX_HORIZON_MS,
 } from '../../queues/plans/plans.constants.ts';
 import type {
   RunPlanJobData,
   RunPlanOrchestratorJobData,
 } from '../../queues/plans/plans.types.ts';
+import type { ScheduledPlanRunFireDecision } from '../../queues/plans/scheduled-plan-run.utils.ts';
+import { decideScheduledPlanRunFire } from '../../queues/plans/scheduled-plan-run.utils.ts';
 import { USAGE_LIMIT_RESUME_JOB_ID_PREFIX } from '../../queues/usage-limit/usage-limit.constants.ts';
 import {
   normalizeIdempotencyKey,
@@ -48,7 +58,10 @@ import {
 } from '../queues/queues.service.ts';
 import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service.ts';
 import { buildRunPlanOrchestratorJobData } from './enqueue-plan-ralph-tuning.ts';
-import { buildPlanRunConfigSnapshotFromJobData } from './enqueue-plan-run-config-snapshot.ts';
+import {
+  buildPlanRunConfigSnapshotFromJobData,
+  orchestratorJobInputFromSnapshot,
+} from './enqueue-plan-run-config-snapshot.ts';
 import type { RalphPlanRunTuningInput } from './plan.input.ts';
 import { PlanStatusService } from './plan-status.service.ts';
 
@@ -69,6 +82,29 @@ const USAGE_LIMIT_RESUME_TASK_STATUSES_TO_RESET = [
 ] as const;
 
 type ExecutionBackend = PlanRunExecutionBackend;
+
+/**
+ * @description The plan_runs status each fire-time decision moves a SCHEDULED run to: QUEUED claims it
+ * for the worker; the rest settle it. A COMPLETED run with nothing to run is how an immediate run on
+ * a plan with nothing left ends too (`workflow_plan_already_terminal` settles COMPLETED).
+ */
+const SCHEDULED_RUN_STATUS_BY_DECISION = {
+  fire: PLAN_RUN_STATUS.QUEUED,
+  missed: PLAN_RUN_STATUS.MISSED,
+  nothing_to_run: PLAN_RUN_STATUS.COMPLETED,
+  superseded: PLAN_RUN_STATUS.SUPERSEDED,
+} as const satisfies Record<
+  ScheduledPlanRunFireDecision['kind'],
+  PlanRunStatus
+>;
+
+/**
+ * @description What {@link PlanEnqueueService.fireScheduledRun} did: the policy's decision, applied, or
+ * `not_scheduled` when the run was no longer SCHEDULED (a concurrent cancel won, or it already fired)
+ * and nothing was written.
+ */
+export type ScheduledRunFireOutcome =
+  ScheduledPlanRunFireDecision | { readonly kind: 'not_scheduled' };
 
 /** @description Validated parameters for a spawn (nested workflow-ralph) plan-run enqueue. */
 interface EnqueueSpawnParams {
@@ -117,6 +153,34 @@ interface EnqueueOrchestratorParams {
 }
 
 /**
+ * @description Validated parameters for scheduling a plan run: the in-process orchestrator enqueue
+ * shape plus the absolute instant it fires at.
+ */
+interface SchedulePlanRunParams {
+  /** Request-principal actor kind, for the plans.status write's status_change attribution. */
+  readonly actorKind?: string | undefined;
+  /** Request-principal actor sub, for the plans.status write's status_change attribution. */
+  readonly actorSub?: string | undefined;
+  /** User who scheduled the run (null for service-account/system); persisted on the run record. */
+  readonly actorUserId?: string | null;
+  /** REQUIRED git branch the run operates on; persisted on plan_runs.branch. Rejected when blank. */
+  readonly branch: string;
+  /** Explicit registered checkout id; resolved to a filesystem path (highest precedence). */
+  readonly checkoutId?: string | null;
+  /** Client dedupe key; becomes part of the deterministic BullMQ jobId. */
+  readonly idempotencyKey?: string | null;
+  readonly jobRunHooksJson?: string | null;
+  readonly planId: string;
+  readonly priority?: number | null;
+  readonly ralph?: RalphPlanRunTuningInput | null;
+  /** Portable repository id; resolved to the user's single checkout when checkoutId is omitted. */
+  readonly repositoryId?: string | null;
+  /** The absolute instant the run fires at. Must be in the future and within the 30-day horizon. */
+  readonly scheduledFor: Date;
+  readonly workingDirectory?: string | null;
+}
+
+/**
  * @description Validated parameters for continuing a usage-limited run after its reset. `jobData` is
  * the limited job's own payload, reused verbatim so the continuation runs exactly as the original
  * did (same plan, mode, workspace, tuning, hooks).
@@ -132,6 +196,13 @@ interface EnqueueUsageLimitResumeParams {
   readonly limitedRun: PlanRun;
 }
 
+/** @description A run's workspace after resolution: the canonical ids to snapshot plus the path it runs in. */
+interface ResolvedWorkspace {
+  readonly checkoutId: string | null;
+  readonly repositoryId: string | null;
+  readonly workingDirectory: string | null | undefined;
+}
+
 /** @description Result of an enqueue: the persisted backend, job id, and live queue position. */
 export interface EnqueueOutcome {
   readonly executionBackend: ExecutionBackend;
@@ -139,6 +210,15 @@ export interface EnqueueOutcome {
   readonly planId: string;
   readonly queuePosition: number;
   readonly queueTotal: number;
+}
+
+/** @description Result of scheduling a run: the SCHEDULED row, its delayed job, and the instant it fires. */
+export interface ScheduleOutcome {
+  readonly executionBackend: ExecutionBackend;
+  readonly jobId: string;
+  readonly planId: string;
+  readonly planRunId: string;
+  readonly scheduledFor: Date;
 }
 
 /**
@@ -242,50 +322,19 @@ export class PlanEnqueueService {
       workingDirectory,
     } = params;
 
-    // Branch is a REQUIRED kickoff input (locked plan decision): fail fast and
-    // loud rather than infer it late. Rejects a missing or whitespace-only value
-    // so plan_runs.branch is always meaningful for new runs.
-    const resolvedBranch = branch?.trim() ?? '';
-    if (resolvedBranch === '') {
-      throw new BadRequestException(
-        'branch is required to enqueue a plan run (pass the git branch this run operates on)',
-      );
-    }
-
-    const repo = this.plansService.getRepository();
-    const plan = await repo.findOne({ where: { id: planId } });
-
-    if (!plan) {
-      throw new NotFoundException(`🟡 1 - Plan not found: ${planId}`);
-    }
-
-    const resolvedWorkspace = await this.resolveWorkspace({
-      actorUserId,
-      checkoutId,
-      repositoryId,
-      workingDirectory,
-    });
-
-    const materializedHookEntries =
-      await this.resolveMaterializedHookEntries(planId);
-
-    let jobData: ReturnType<typeof buildRunPlanOrchestratorJobData>;
-    try {
-      jobData = buildRunPlanOrchestratorJobData({
+    const { jobData, resolvedBranch, resolvedWorkspace } =
+      await this.prepareOrchestratorRun({
+        actorUserId,
+        branch,
+        checkoutId,
         jobRunHooksJson,
-        materializedHookEntries,
-        mode: mode ?? null,
+        mode,
         planId,
-        planJobRunHooks: plan.jobRunHooks,
         ralph,
+        repositoryId,
         taskId,
-        workingDirectory: resolvedWorkspace.workingDirectory,
+        workingDirectory,
       });
-    } catch (error) {
-      throw new BadRequestException(
-        error instanceof Error ? error.message : String(error),
-      );
-    }
 
     const jobPriority = priority ?? PLAN_JOB_PRIORITY_DEFAULT;
 
@@ -340,6 +389,237 @@ export class PlanEnqueueService {
       queuePosition,
       queueTotal,
     };
+  }
+
+  /**
+   * @description Schedules a plan run for a later instant. Goes through the same two steps as every
+   * other orchestrator enqueue and as {@link enqueueUsageLimitResume} — {@link commitEnqueueTransaction}
+   * (run row SCHEDULED with `scheduled_for`; plan and tasks untouched) then
+   * `QueuesService.enqueuePlanRalphOrchestrator` (BullMQ add after commit, delayed by the time left) —
+   * differing only in that the run is freshly resolved from the request, like
+   * {@link enqueueOrchestrator}, and the status/delay come from `scheduledFor`. Unlike every other
+   * enqueue it does NOT touch the plan or task statuses (see `skipPlanAndTaskStatusWrites`): that
+   * moves to fire time.
+   *
+   * Validation lives here, not in the resolver, so every caller (UI, MCP) gets the same rules:
+   * `scheduledFor` must be a valid instant strictly in the future and no further out than
+   * {@link SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS} days. The frozen `runConfigSnapshot` is built now,
+   * so the run executes with the configuration the user saw when scheduling.
+   *
+   * The BullMQ `jobId` is deterministic (`scheduled-plan-run-<idempotencyKey | planId-epochMs>`): a
+   * retry of the same request lands on the same job. When a run with that job id is still SCHEDULED
+   * the call returns it unchanged rather than rewriting its row while BullMQ keeps the original job
+   * payload (the documented "same key returns the existing job" idempotency). Throws on failure.
+   */
+  async schedulePlanRun(
+    params: SchedulePlanRunParams,
+  ): Promise<ScheduleOutcome> {
+    const {
+      actorKind,
+      actorSub,
+      actorUserId,
+      branch,
+      checkoutId,
+      idempotencyKey,
+      jobRunHooksJson,
+      planId,
+      priority,
+      ralph,
+      repositoryId,
+      scheduledFor,
+      workingDirectory,
+    } = params;
+
+    // One clock read for the whole call, so the past check, the horizon check and the delay agree.
+    const nowMs = Date.now();
+    const scheduledForMs = scheduledFor.getTime();
+    if (Number.isNaN(scheduledForMs)) {
+      throw new BadRequestException('scheduledFor must be a valid date-time');
+    }
+    if (scheduledForMs <= nowMs) {
+      throw new BadRequestException(
+        `scheduledFor must be in the future (got ${scheduledFor.toISOString()})`,
+      );
+    }
+    if (scheduledForMs - nowMs > SCHEDULED_PLAN_RUN_MAX_HORIZON_MS) {
+      throw new BadRequestException(
+        `scheduledFor must be within ${SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS} days from now (SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS; got ${scheduledFor.toISOString()})`,
+      );
+    }
+    const delayMs = scheduledForMs - nowMs;
+
+    const normalizedKey = normalizeIdempotencyKey(idempotencyKey);
+    if ('error' in normalizedKey) {
+      throw new BadRequestException(normalizedKey.error);
+    }
+    // Validate the composed id too: the prefix counts against the key length cap, and a failure
+    // after the commit below would strand a SCHEDULED row with no job.
+    const jobId = `${SCHEDULED_PLAN_RUN_JOB_ID_PREFIX}${normalizedKey.key ?? `${planId}-${scheduledForMs}`}`;
+    const normalizedJobId = normalizeIdempotencyKey(jobId);
+    if ('error' in normalizedJobId) {
+      throw new BadRequestException(normalizedJobId.error);
+    }
+
+    const { jobData, resolvedBranch, resolvedWorkspace } =
+      await this.prepareOrchestratorRun({
+        actorUserId,
+        branch,
+        checkoutId,
+        jobRunHooksJson,
+        mode: null,
+        planId,
+        ralph,
+        repositoryId,
+        taskId: null,
+        workingDirectory,
+      });
+
+    const existing = await this.planRunsService.findByQueueNameAndBullmqJobId(
+      PLANS_QUEUE_NAME,
+      jobId,
+    );
+    if (
+      existing?.status === PLAN_RUN_STATUS.SCHEDULED &&
+      existing.scheduledFor !== null
+    ) {
+      return {
+        executionBackend: existing.executionBackend,
+        jobId,
+        planId,
+        planRunId: existing.id,
+        scheduledFor: existing.scheduledFor,
+      };
+    }
+
+    const runConfigSnapshot = buildPlanRunConfigSnapshotFromJobData(jobData, {
+      checkoutId: resolvedWorkspace.checkoutId,
+      repositoryId: resolvedWorkspace.repositoryId,
+    });
+    const executionBackend = jobData.executionBackend ?? 'cursor';
+
+    const planRun = await this.commitEnqueueTransaction({
+      actorKind,
+      actorSub,
+      actorUserId,
+      branch: resolvedBranch,
+      bullmqJobId: jobId,
+      checkoutId: resolvedWorkspace.checkoutId,
+      executionBackend,
+      model: runConfigSnapshot.ralph.model ?? null,
+      planId,
+      runConfigSnapshot,
+      runKind: 'orchestrator',
+      scheduledFor,
+      // Scheduling writes ONLY the run row. The plan and its tasks are left exactly as they are:
+      // another run may be live on this plan (resetting its tasks to QUEUED would corrupt it), and
+      // a plan must not read QUEUED for up to 30 days. The plan -> QUEUED and task resets happen at
+      // fire time, when the delayed job starts the run.
+      skipPlanAndTaskStatusWrites: true,
+      status: PLAN_RUN_STATUS.SCHEDULED,
+    });
+
+    const enqueueResult = await this.queuesService.enqueuePlanRalphOrchestrator(
+      {
+        delayMs,
+        idempotencyKey: jobId,
+        jobData,
+        priority: priority ?? PLAN_JOB_PRIORITY_DEFAULT,
+      },
+    );
+
+    if ('error' in enqueueResult) {
+      throw new BadRequestException(enqueueResult.error);
+    }
+
+    return {
+      executionBackend,
+      jobId: enqueueResult.jobId,
+      planId,
+      planRunId: planRun.id,
+      scheduledFor,
+    };
+  }
+
+  /**
+   * @description Validates and resolves the parts of an orchestrator run every enqueue shares — the
+   * branch, the plan, the workspace, the lifecycle hooks and the run's job payload — before anything
+   * is written. Shared by {@link enqueueOrchestrator} and {@link schedulePlanRun} so the two cannot
+   * drift on what a valid run is. Throws BadRequestException / NotFoundException.
+   */
+  private async prepareOrchestratorRun(input: {
+    readonly actorUserId?: string | null;
+    readonly branch: string;
+    readonly checkoutId?: string | null;
+    readonly jobRunHooksJson?: string | null;
+    readonly mode?: 'plan' | 'task' | null;
+    readonly planId: string;
+    readonly ralph?: RalphPlanRunTuningInput | null;
+    readonly repositoryId?: string | null;
+    readonly taskId?: string | null;
+    readonly workingDirectory?: string | null;
+  }): Promise<{
+    readonly jobData: ReturnType<typeof buildRunPlanOrchestratorJobData>;
+    readonly resolvedBranch: string;
+    readonly resolvedWorkspace: ResolvedWorkspace;
+  }> {
+    const {
+      actorUserId,
+      branch,
+      checkoutId,
+      jobRunHooksJson,
+      mode,
+      planId,
+      ralph,
+      repositoryId,
+      taskId,
+      workingDirectory,
+    } = input;
+
+    // Branch is a REQUIRED kickoff input (locked plan decision): fail fast and
+    // loud rather than infer it late. Rejects a missing or whitespace-only value
+    // so plan_runs.branch is always meaningful for new runs.
+    const resolvedBranch = branch?.trim() ?? '';
+    if (resolvedBranch === '') {
+      throw new BadRequestException(
+        'branch is required to enqueue a plan run (pass the git branch this run operates on)',
+      );
+    }
+
+    const repo = this.plansService.getRepository();
+    const plan = await repo.findOne({ where: { id: planId } });
+
+    if (!plan) {
+      throw new NotFoundException(`🟡 1 - Plan not found: ${planId}`);
+    }
+
+    const resolvedWorkspace = await this.resolveWorkspace({
+      actorUserId,
+      checkoutId,
+      repositoryId,
+      workingDirectory,
+    });
+
+    const materializedHookEntries =
+      await this.resolveMaterializedHookEntries(planId);
+
+    try {
+      const jobData = buildRunPlanOrchestratorJobData({
+        jobRunHooksJson,
+        materializedHookEntries,
+        mode: mode ?? null,
+        planId,
+        planJobRunHooks: plan.jobRunHooks,
+        ralph,
+        taskId,
+        workingDirectory: resolvedWorkspace.workingDirectory,
+      });
+
+      return { jobData, resolvedBranch, resolvedWorkspace };
+    } catch (error) {
+      throw new BadRequestException(
+        error instanceof Error ? error.message : String(error),
+      );
+    }
   }
 
   /**
@@ -408,11 +688,7 @@ export class PlanEnqueueService {
     readonly checkoutId?: string | null;
     readonly repositoryId?: string | null;
     readonly workingDirectory?: string | null;
-  }): Promise<{
-    readonly checkoutId: string | null;
-    readonly repositoryId: string | null;
-    readonly workingDirectory: string | null | undefined;
-  }> {
+  }): Promise<ResolvedWorkspace> {
     const checkoutId = input.checkoutId?.trim() ?? '';
     const repositoryId = input.repositoryId?.trim() ?? '';
 
@@ -475,8 +751,8 @@ export class PlanEnqueueService {
   }
 
   /**
-   * @description Atomicity invariant: the run record, plan status, and task resets commit together
-   * or not at all. The BullMQ add cannot join a DB transaction, so callers enqueue AFTER this
+   * @description Atomicity invariant: the run record (QUEUED, or SCHEDULED with `scheduledFor`), plan
+   * status, and task resets commit together or not at all. Returns the recorded run. The BullMQ add cannot join a DB transaction, so callers enqueue AFTER this
    * commits (enqueue-after-commit). A DB failure leaves NO orphaned job; the narrow
    * "committed but add threw" window leaves a QUEUED plan with no job, which a retry re-enqueues and
    * the processor's onModuleInit reconciliation tolerates.
@@ -496,8 +772,15 @@ export class PlanEnqueueService {
       typeof buildPlanRunConfigSnapshotFromJobData
     > | null;
     runKind: 'orchestrator' | 'spawn';
+    scheduledFor?: Date | null;
+    /**
+     * True to write only the run row, leaving the plan and its tasks exactly as they are. Used by
+     * a scheduled run: the plan may have another run live, and must not read QUEUED until fire time.
+     */
+    skipPlanAndTaskStatusWrites?: boolean;
+    status?: PlanRunStatus;
     taskStatusesToReset?: readonly string[];
-  }): Promise<void> {
+  }): Promise<PlanRun> {
     const {
       actorKind,
       actorSub,
@@ -511,12 +794,15 @@ export class PlanEnqueueService {
       resumeOfRunId,
       runConfigSnapshot,
       runKind,
+      scheduledFor,
+      skipPlanAndTaskStatusWrites,
+      status,
       taskStatusesToReset,
     } = params;
     const repo = this.plansService.getRepository();
 
-    await repo.manager.transaction(async (manager) => {
-      await this.planRunsService.recordQueuedRun(
+    return repo.manager.transaction(async (manager) => {
+      const planRun = await this.planRunsService.recordQueuedRun(
         {
           actorUserId: actorUserId ?? null,
           branch: branch ?? null,
@@ -529,49 +815,229 @@ export class PlanEnqueueService {
           resumeOfRunId: resumeOfRunId ?? null,
           runConfigSnapshot,
           runKind,
+          scheduledFor: scheduledFor ?? null,
+          status,
         },
         manager,
       );
 
-      // Routed through the applyStatusChange chokepoint, attributed to the request principal
-      // (fatal capture — this is a foreground, user-initiated mutation already inside its own
-      // transaction, same as updatePlan/setStatus). Re-reads the plan fresh under this
-      // transaction rather than reusing the caller's earlier (pre-transaction) read, since that
-      // read predates this commit by the time spent building/validating the job.
-      const planRepo = manager.getRepository(Plan);
-      const planEntity = await planRepo.findOne({ where: { id: planId } });
-
-      if (planEntity) {
-        await this.planStatusService.applyStatusChange(manager, {
-          actorKind,
-          actorSub,
-          captureFailureIsFatal: true,
-          entity: planEntity,
-          requestedStatus: 'QUEUED',
-          throwOnForbiddenInProgress: false,
-        });
-
-        await planRepo.save(planEntity);
+      if (skipPlanAndTaskStatusWrites === true) {
+        return planRun;
       }
 
-      // Select-lock-update-capture, inside this same transaction: ENQUEUE_TASK_STATUSES_TO_RESET
-      // lists SIX different current statuses, so the bulk `.update()` this reset performs has no
-      // single `from` to ledger — each affected task's own prior status is captured instead of a
-      // guess. Attributed to the request principal with a fatal capture (enqueue is user-initiated,
-      // same as the plans.status write immediately above it).
-      await updateMatchingTasksAndEmitStatusChanged({
+      // Fatal capture: this is a foreground, user-initiated mutation already inside its own
+      // transaction, same as updatePlan/setStatus.
+      await this.writeEnqueueStatuses(manager, {
         actorKind,
         actorSub,
         captureFailureIsFatal: true,
-        fromStatuses: taskStatusesToReset ?? ENQUEUE_TASK_STATUSES_TO_RESET,
-        logger: this.logger,
-        manager,
-        notifications: this.notificationsService,
         planId,
-        toStatus: 'QUEUED',
-        workLedgerCapture: this.workLedgerCapture,
+        taskStatusesToReset:
+          taskStatusesToReset ?? ENQUEUE_TASK_STATUSES_TO_RESET,
       });
+
+      return planRun;
     });
+  }
+
+  /**
+   * @description The plan and task half of an enqueue: plan -> QUEUED and the plan's
+   * `taskStatusesToReset` tasks -> QUEUED, inside the caller's transaction. The ONE place these
+   * writes happen for every enqueue — {@link commitEnqueueTransaction} for runs that start now or after
+   * a usage limit, {@link fireScheduledRun} for a scheduled run at the moment it fires — so a run that
+   * was scheduled starts from exactly the state "Run now" would have put the plan in.
+   */
+  private async writeEnqueueStatuses(
+    manager: EntityManager,
+    params: {
+      readonly actorKind: string | undefined;
+      readonly actorSub: string | undefined;
+      readonly captureFailureIsFatal: boolean;
+      readonly planId: string;
+      readonly taskStatusesToReset: readonly string[];
+    },
+  ): Promise<void> {
+    const {
+      actorKind,
+      actorSub,
+      captureFailureIsFatal,
+      planId,
+      taskStatusesToReset,
+    } = params;
+
+    // Routed through the applyStatusChange chokepoint. Re-reads the plan fresh under this
+    // transaction rather than reusing the caller's earlier (pre-transaction) read, since that
+    // read predates this commit by the time spent building/validating the job.
+    const planRepo = manager.getRepository(Plan);
+    const planEntity = await planRepo.findOne({ where: { id: planId } });
+
+    if (planEntity) {
+      await this.planStatusService.applyStatusChange(manager, {
+        actorKind,
+        actorSub,
+        captureFailureIsFatal,
+        entity: planEntity,
+        requestedStatus: 'QUEUED',
+        throwOnForbiddenInProgress: false,
+      });
+
+      await planRepo.save(planEntity);
+    }
+
+    // Select-lock-update-capture, inside this same transaction: ENQUEUE_TASK_STATUSES_TO_RESET
+    // lists SIX different current statuses, so the bulk `.update()` this reset performs has no
+    // single `from` to ledger — each affected task's own prior status is captured instead of a
+    // guess. Attributed to the same actor, with the same capture fatality, as the plans.status
+    // write immediately above it.
+    await updateMatchingTasksAndEmitStatusChanged({
+      actorKind,
+      actorSub,
+      captureFailureIsFatal,
+      fromStatuses: taskStatusesToReset,
+      logger: this.logger,
+      manager,
+      notifications: this.notificationsService,
+      planId,
+      toStatus: 'QUEUED',
+      workLedgerCapture: this.workLedgerCapture,
+    });
+  }
+
+  /**
+   * @description The fire-time half of a scheduled run, run by the plans worker when the run's delayed
+   * job fires and BEFORE anything else touches the run. One transaction:
+   *
+   * 1. Locks the plan row (`pessimistic_write`), so two scheduled runs of one plan firing on different
+   *    workers serialize here and the second sees the first as an active run.
+   * 2. Re-reads the run; anything but SCHEDULED (a cancel settled it, or it already fired) returns
+   *    `not_scheduled` without writing.
+   * 3. Decides with {@link decideScheduledPlanRunFire} from the run's lateness, whether the plan has
+   *    another active run ({@link PlanRunsService.hasActiveRun}), and whether it has a task left to
+   *    run (one in {@link ENQUEUE_TASK_STATUSES_TO_RESET} or already QUEUED — exactly the tasks the
+   *    run would pick up).
+   * 4. Applies it through {@link PlanRunsService.transitionScheduledRun}, the atomic
+   *    `... WHERE status = 'SCHEDULED'` update that a concurrent cancel races: `fire` claims the row
+   *    QUEUED, `missed`/`superseded` settle it MISSED/SUPERSEDED, `nothing_to_run` settles it
+   *    COMPLETED. If the update loses the race the result is `not_scheduled` and nothing else is
+   *    written.
+   * 5. Only for `fire`, and only after the claim won: the plan and task QUEUED flip that scheduling
+   *    skipped, via the same {@link writeEnqueueStatuses} every enqueue uses (non-fatal capture — a
+   *    background writer, like every other worker-side status write). The worker then claims the row
+   *    IN_PROGRESS and promotes the plan as for any run.
+   *
+   * The plan's own status does not gate the fire: a scheduled run on a COMPLETED (or CANCELED,
+   * PENDING, ...) plan that still has runnable tasks starts exactly like "Run now" on that plan
+   * would — plan -> QUEUED -> IN_PROGRESS. A plan with no runnable tasks is never flipped back to
+   * QUEUED: there is no work, so the run settles COMPLETED and the plan keeps its status and
+   * `completedAt`. Notifying the user is the caller's job. Throws only on a database error.
+   */
+  async fireScheduledRun(params: {
+    readonly actorKind: string | undefined;
+    readonly actorSub: string | undefined;
+    readonly now: Date;
+    readonly planId: string;
+    readonly planRunId: string;
+  }): Promise<ScheduledRunFireOutcome> {
+    const { actorKind, actorSub, now, planId, planRunId } = params;
+    const repo = this.plansService.getRepository();
+
+    return repo.manager.transaction(async (manager) => {
+      const plan = await manager.getRepository(Plan).findOne({
+        lock: { mode: 'pessimistic_write' },
+        where: { id: planId },
+      });
+      const run = await manager
+        .getRepository(PlanRun)
+        .findOne({ where: { id: planRunId } });
+
+      if (
+        plan === null ||
+        run?.status !== PLAN_RUN_STATUS.SCHEDULED ||
+        run.scheduledFor === null
+      ) {
+        return { kind: 'not_scheduled' };
+      }
+
+      const hasActiveRun = await this.planRunsService.hasActiveRun(
+        planId,
+        planRunId,
+        manager,
+      );
+      const runnableTaskCount = await manager.getRepository(Task).count({
+        where: {
+          planId,
+          status: In([...ENQUEUE_TASK_STATUSES_TO_RESET, 'QUEUED']),
+        },
+      });
+      const decision = decideScheduledPlanRunFire({
+        hasActiveRun,
+        hasRunnableTasks: runnableTaskCount > 0,
+        now,
+        scheduledFor: run.scheduledFor,
+      });
+
+      const won = await this.planRunsService.transitionScheduledRun(
+        planRunId,
+        SCHEDULED_RUN_STATUS_BY_DECISION[decision.kind],
+        manager,
+      );
+
+      if (!won) {
+        return { kind: 'not_scheduled' };
+      }
+
+      if (decision.kind === 'fire') {
+        await this.writeEnqueueStatuses(manager, {
+          actorKind,
+          actorSub,
+          captureFailureIsFatal: false,
+          planId,
+          taskStatusesToReset: ENQUEUE_TASK_STATUSES_TO_RESET,
+        });
+      }
+
+      return decision;
+    });
+  }
+
+  /**
+   * @description Re-creates the lost delayed BullMQ job of a SCHEDULED run (the boot reconcile, after
+   * Redis was flushed or its volume recreated) under the run's own deterministic job id, so the row
+   * and the job line up again and the fire-time policy runs when it fires. The payload is rebuilt from
+   * the run's frozen `runConfigSnapshot` ({@link orchestratorJobInputFromSnapshot}) through the same
+   * `buildRunPlanOrchestratorJobData` validation an enqueue uses; the original priority is not
+   * recorded, so the default applies. Writes nothing to the database. Throws when the run has no job
+   * id or snapshot, the payload no longer validates, or the BullMQ add fails.
+   */
+  async reprojectScheduledRun(params: {
+    readonly delayMs: number;
+    readonly run: PlanRun;
+  }): Promise<{ readonly jobId: string }> {
+    const { delayMs, run } = params;
+
+    if (run.bullmqJobId === null || run.runConfigSnapshot == null) {
+      throw new Error(
+        `Scheduled run ${run.id} has no job id or config snapshot to rebuild its job from`,
+      );
+    }
+
+    const jobData = buildRunPlanOrchestratorJobData(
+      orchestratorJobInputFromSnapshot(run.planId, run.runConfigSnapshot),
+    );
+    const enqueueResult = await this.queuesService.enqueuePlanRalphOrchestrator(
+      {
+        delayMs,
+        idempotencyKey: run.bullmqJobId,
+        jobData,
+        priority: PLAN_JOB_PRIORITY_DEFAULT,
+      },
+    );
+
+    if ('error' in enqueueResult) {
+      throw new Error(enqueueResult.error);
+    }
+
+    return { jobId: enqueueResult.jobId };
   }
 
   /**
