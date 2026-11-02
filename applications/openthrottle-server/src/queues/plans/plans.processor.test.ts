@@ -39,6 +39,7 @@ import {
 } from './plans.constants.ts';
 import { PlansProcessor } from './plans.processor.ts';
 import type { PlanRunJobResult, RunPlanJob } from './plans.types.ts';
+import { UsageLimitResumeService } from './usage-limit-resume.service.ts';
 import { WorkLedgerRunService } from './work-ledger-run.service.ts';
 
 /** @nestjs/bullmq Worker options metadata key (from bull.constants WORKER_METADATA). Used to assert stalled-job recovery options. */
@@ -144,6 +145,10 @@ const mockFindPlanIdsWithLiveDetachedRun = vi
   .mockResolvedValue(new Set<string>());
 const mockRecordHeartbeatByJob = vi.fn().mockResolvedValue(1);
 const mockSettleRunByJob = vi.fn().mockResolvedValue(null);
+const mockHandleUsageLimited = vi.fn().mockResolvedValue({
+  message: `Plan paused: usage limit reached — resumes at 2026-11-01T17:01:00.000Z`,
+  outcome: 'resumed',
+});
 
 const mockSpawn = vi.mocked(nodeSpawn);
 
@@ -334,6 +339,12 @@ describe('PlansProcessor', () => {
           provide: WorkflowLifecycleDispatcherFactory,
           useValue: createMock<WorkflowLifecycleDispatcherFactory>({
             create: vi.fn(),
+          }),
+        },
+        {
+          provide: UsageLimitResumeService,
+          useValue: createMock<UsageLimitResumeService>({
+            handle: mockHandleUsageLimited,
           }),
         },
         {
@@ -690,6 +701,48 @@ describe('PlansProcessor', () => {
     });
   });
 
+  describe('usage-limited outcome (orchestrator path)', () => {
+    const usageLimit = {
+      rateLimitType: 'five_hour',
+      resetsAt: '2026-11-01T17:00:00.000Z',
+    };
+
+    beforeEach(() => {
+      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+        exitCode: 0,
+        reason: 'workflow_usage_limited',
+        status: 'finished',
+        usageLimit,
+      });
+    });
+
+    it('hands the limit to the usage-limit service (which settles USAGE_LIMITED) instead of settling COMPLETED', async () => {
+      await processor.process(mockJob);
+
+      expect(mockHandleUsageLimited).toHaveBeenCalledExactlyOnceWith({
+        jobData: mockJob.data,
+        jobId: 'job-1',
+        limit: usageLimit,
+        planId: '2794d106-95f9-427e-904d-e0f9b5cbe734',
+      });
+      expect(mockSettleRunByJob).not.toHaveBeenCalled();
+    });
+
+    it('emits the service message as a warning, skips after-run hooks, and resolves normally (no BullMQ retry)', async () => {
+      const result = await processor.process(mockJob);
+
+      const notifications = getProcessorNotifications(processor);
+      expect(notifications.emitQueueJobCompleted).toHaveBeenCalledWith({
+        jobType: 'plans',
+        message: `Plan paused: usage limit reached — resumes at 2026-11-01T17:01:00.000Z`,
+        planId: '2794d106-95f9-427e-904d-e0f9b5cbe734',
+        severity: 'warning',
+      });
+      expect(mockRunAfterRunHooksThenNotify).not.toHaveBeenCalled();
+      expect(result.taskRunMetrics).toBeDefined();
+    });
+  });
+
   describe('iteration limit notification (orchestrator path)', () => {
     it('emits warning when Ralph hits max iterations but plan is still IN_PROGRESS', async () => {
       mockRunPlanOrchestratorJob.mockResolvedValueOnce({
@@ -917,6 +970,26 @@ describe('PlansProcessor', () => {
       );
       const notifications = getProcessorNotifications(processor);
       expect(notifications.emitPlanStatusChanged).not.toHaveBeenCalled();
+    });
+
+    it('leaves a QUEUED plan alone when its BullMQ job is delayed (usage-limit resume)', async () => {
+      const pausedPlanId = 'queued-plan-delayed-resume';
+      mockRepoFind
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([
+          { id: pausedPlanId, status: 'QUEUED', title: 'Paused' },
+        ]);
+      mockGetJobs.mockImplementation(async (states: readonly string[]) =>
+        states.includes('delayed') ? [{ data: { planId: pausedPlanId } }] : [],
+      );
+
+      await processor.onModuleInit();
+
+      // The delayed-job guard short-circuits before the IN_PROGRESS-task lookup.
+      expect(mockTaskRepoFindOne).not.toHaveBeenCalled();
+      expect(mockPromoteParentPlanToInProgress).not.toHaveBeenCalled();
+      mockGetJobs.mockReset();
+      mockGetJobs.mockResolvedValue([]);
     });
 
     it('skips QUEUED plans with no IN_PROGRESS tasks', async () => {

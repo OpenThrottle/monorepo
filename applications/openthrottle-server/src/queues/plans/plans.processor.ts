@@ -69,6 +69,7 @@ import type {
   RunPlanJobData,
 } from './plans.types.ts';
 import { isRunPlanOrchestratorJobData } from './plans.types.ts';
+import { UsageLimitResumeService } from './usage-limit-resume.service.ts';
 import { WorkLedgerRunService } from './work-ledger-run.service.ts';
 
 const CONCURRENCY = 1;
@@ -129,6 +130,7 @@ export class PlansProcessor
     private readonly processMetrics: ProcessMetricsService,
     private readonly statusChangeSystemAccount: StatusChangeSystemAccountService,
     private readonly tasksService: TasksService,
+    private readonly usageLimitResume: UsageLimitResumeService,
     private readonly workLedgerRun: WorkLedgerRunService,
   ) {
     super();
@@ -224,6 +226,10 @@ export class PlansProcessor
   /**
    * On startup, promote QUEUED plans that still have IN_PROGRESS
    * tasks (e.g. after stall/requeue reset the plan but not tasks). Mirrors downward reconcile in {@link reconcilePlanStatusOnStartup}.
+   *
+   * A plan whose BullMQ job is DELAYED is skipped: a usage-limit continuation legitimately sits in
+   * the delayed state for hours, and promoting its plan to IN_PROGRESS would make a paused plan read
+   * as running (the delayed job promotes it itself when it starts).
    */
   private async reconcilePlansQueuedWithInProgressTasks(): Promise<void> {
     const planRepo = this.plansService.getRepository();
@@ -234,9 +240,20 @@ export class PlansProcessor
       return;
     }
 
+    const delayedJobs = await this.plansQueue.getJobs(['delayed'], 0, 500);
+    const planIdsWithDelayedJob = new Set(
+      delayedJobs
+        .map((job) => job.data?.planId)
+        .filter((id): id is string => typeof id === 'string'),
+    );
+
     const actorSub = await this.statusChangeSystemAccount.resolveId();
 
     for (const plan of plans) {
+      if (planIdsWithDelayedJob.has(plan.id)) {
+        continue;
+      }
+
       // eslint-disable-next-line no-await-in-loop
       const tasks = await taskRepo.findOne({
         select: ['id'],
@@ -977,6 +994,32 @@ export class PlansProcessor
           planId: data.planId,
           severity: 'info',
         },
+      });
+
+      return { taskRunMetrics };
+    }
+
+    if (outcome.reason === 'workflow_usage_limited') {
+      this.logger.info(
+        `Orchestrator Ralph stopped on a usage limit (${outcome.usageLimit.rateLimitType ?? 'unknown window'}, resets ${outcome.usageLimit.resetsAt ?? 'unknown'}), ${logContext}`,
+        PlansProcessor.name,
+      );
+
+      // Settles the row USAGE_LIMITED and either enqueues the delayed continuation or parks the
+      // plan. Never throws, so BullMQ sees a normally-completed job and does not retry it.
+      // afterAll hooks are deliberately skipped: the plan is paused, not finished.
+      const handling = await this.usageLimitResume.handle({
+        jobData: data,
+        jobId,
+        limit: outcome.usageLimit,
+        planId: data.planId,
+      });
+
+      this.notifications.emitQueueJobCompleted({
+        jobType: 'plans',
+        message: handling.message,
+        planId: data.planId,
+        severity: 'warning',
       });
 
       return { taskRunMetrics };

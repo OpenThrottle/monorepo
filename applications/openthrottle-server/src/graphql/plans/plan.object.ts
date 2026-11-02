@@ -183,6 +183,12 @@ export class PlanRunObject implements PlanRunData {
   workerId!: string | null;
 
   @Field(() => String, {
+    description: `The usage-limited run this run continues: set on the continuation run enqueued automatically after a Claude usage limit. Null for every ordinary run.`,
+    nullable: true,
+  })
+  resumeOfRunId!: string | null;
+
+  @Field(() => String, {
     description: `Resolved workflow-ralph configuration at enqueue (PlanRunConfigSnapshot v1 JSON). Null for legacy runs.`,
     nullable: true,
   })
@@ -198,6 +204,18 @@ export class PlanRunObject implements PlanRunData {
 
   @Field(() => Date)
   updatedAt!: Date;
+
+  @Field(() => Date, {
+    description: `When the usage limit that stopped this run lifts, as reported by the agent CLI. Null unless status is USAGE_LIMITED, or when the CLI reported no reset time.`,
+    nullable: true,
+  })
+  usageLimitResetsAt!: Date | null;
+
+  @Field(() => String, {
+    description: `Raw name of the usage-limit window that stopped this run (five_hour, seven_day, ...). Null unless status is USAGE_LIMITED, or when the window was not reported.`,
+    nullable: true,
+  })
+  usageLimitType!: string | null;
 
   @Field(() => String, {
     description:

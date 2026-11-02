@@ -4,6 +4,8 @@
  * can resolve conversationStreamChunkAdded (mirrors appendPlanOutput -> planOutputChunkAdded).
  */
 
+import type { UsageLimit } from '@openthrottle/openthrottle-drivers';
+
 /** Subscription field name; used as the PubSub publish envelope key. */
 export const CONVERSATION_STREAM_CHUNK_FIELD =
   'conversationStreamChunkAdded' as const;
@@ -20,7 +22,7 @@ export interface ConversationStreamChunkPayload {
   readonly error: string | null;
   /** Unique id for this chunk (subscription dedupe / cursor). */
   readonly id: string;
-  /** Event kind: text | thinking | tool_call | tool_result | usage | session. */
+  /** Event kind: text | thinking | tool_call | tool_result | usage | usage_limit | session. */
   readonly kind: string;
   /** Assistant message id the deltas accumulate into. */
   readonly messageId: string;
@@ -41,6 +43,20 @@ export interface TerminalTimeoutMetadata {
   readonly retryable: boolean;
   /** Provenance marker: the terminal chunk was synthesized by the idle timeout. */
   readonly timedOut: boolean;
+}
+
+/**
+ * Machine-readable marker carried on a terminal (`done: true`) chunk's
+ * `metadataJson` when the turn ended because the backend account hit a
+ * subscription usage limit. `retryable` is always false: the client must not
+ * auto-retry (it would hammer a limited account); `usageLimit.resetsAt` tells
+ * it when the account is usable again (null when unknown).
+ */
+export interface TerminalUsageLimitMetadata {
+  /** Always false — retrying a usage-limited account cannot succeed. */
+  readonly retryable: false;
+  /** Which limit was hit and when it resets. */
+  readonly usageLimit: UsageLimit;
 }
 
 /**

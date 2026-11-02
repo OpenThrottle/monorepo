@@ -64,9 +64,9 @@ const output = await runDriverAsync(
 advertises `worktreeBase: false` for now — wiring it through the shared formatter (a
 per-driver base-flag name) is a follow-up.
 
-Command shapes (byte-identical to the legacy builders for claude/cursor):
+Command shapes (legacy-identical for cursor; claude adds stream-json output flags):
 
-- `claude -p --permission-mode acceptEdits "<prompt>" [--model M] [-w [name]]`
+- `claude -p --permission-mode acceptEdits "<prompt>" --output-format stream-json --verbose [--model M] [-w [name]]` (the driver's `parseOutput` recovers the text-mode stdout from the terminal `result` event and reports usage limits)
 - `codex exec --sandbox workspace-write [--model M] "<prompt>"`
 - `cursor-agent --force -p "<prompt>" [--model M] [-w [name] [--worktree-base B] [--skip-worktree-setup]]`
 - `gemini --approval-mode yolo "<prompt>" [--model M] < /dev/null` (the redirect is load-bearing:

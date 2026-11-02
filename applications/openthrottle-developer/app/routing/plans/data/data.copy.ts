@@ -302,6 +302,22 @@ export const PLAN_RUN_AUDIT_WORKSPACE_COPY = {
 } as const;
 
 /**
+ * @description Status cell of the queued-run audit table. `USAGE_LIMITED` is a run that stopped
+ * cleanly on a Claude subscription usage limit; the cell says when it resumes (a continuation run
+ * exists) or when the limit resets (none does).
+ */
+export const PLAN_RUN_STATUS_CELL_COPY = {
+  columnLabel: `Status`,
+  notResumedSuffix: `Not resumed automatically`,
+  resetUnknown: `Reset time unknown`,
+  resetsPrefix: `Resets at`,
+  resumedBadge: `Resumed`,
+  resumedHint: `Continues a run that hit a usage limit`,
+  resumesPrefix: `Resumes after the reset at`,
+  usageLimitedBadge: `Usage limited`,
+} as const;
+
+/**
  * @description Plans index row Actions menu (Queue + optional Kill run).
  */
 export const PLANS_ROW_ACTIONS_COPY = {

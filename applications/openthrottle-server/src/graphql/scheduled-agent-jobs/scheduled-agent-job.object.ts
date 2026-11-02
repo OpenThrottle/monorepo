@@ -133,7 +133,7 @@ export class ScheduledAgentJobRunObject {
   bullmqJobId!: string | null;
 
   @Field(() => String, {
-    description: `queued | running | succeeded | no_op | failed | cancelled. no_op is terminal and NOT an error: the process exited cleanly but the agent reported it did not do the work.`,
+    description: `queued | running | succeeded | no_op | failed | cancelled | usage_limited. no_op is terminal and NOT an error: the process exited cleanly but the agent reported it did not do the work. usage_limited is terminal and NOT an error: the agent CLI stopped on a Claude subscription usage limit (see usageLimitResetsAt); a continuation run (trigger resume, resumeOfRunId = this run) may have been enqueued.`,
   })
   status!: string;
 
@@ -143,7 +143,9 @@ export class ScheduledAgentJobRunObject {
   @Field(() => String, { nullable: true })
   model!: string | null;
 
-  @Field(() => String, { description: `schedule | manual (run-now).` })
+  @Field(() => String, {
+    description: `schedule (cron fire) | manual (run-now) | resume (delayed continuation of a usage_limited run).`,
+  })
   trigger!: string;
 
   @Field(() => Int, {
@@ -235,6 +237,24 @@ export class ScheduledAgentJobRunObject {
     nullable: true,
   })
   resolvedCwd!: string | null;
+
+  @Field(() => Date, {
+    description: `When the usage limit that stopped this run lifts, as reported by the agent CLI; null when the run was not usage_limited or no reset time was reported.`,
+    nullable: true,
+  })
+  usageLimitResetsAt!: Date | null;
+
+  @Field(() => String, {
+    description: `Raw usage-limit window that stopped this run (five_hour, seven_day, ...); null when the run was not usage_limited or the window was not reported.`,
+    nullable: true,
+  })
+  usageLimitType!: string | null;
+
+  @Field(() => ID, {
+    description: `The usage_limited run this run continues (trigger resume); null for every ordinary run.`,
+    nullable: true,
+  })
+  resumeOfRunId!: string | null;
 
   @Field(() => Date)
   createdAt!: Date;

@@ -31,10 +31,12 @@ const run = (
   model: 'opus',
   outputTokens: null,
   reasoningTokens: null,
+  resumeOfRunId: null,
   startedAt: '2026-07-31T09:00:00.000Z',
   status: 'succeeded',
   totalTokens: null,
   trigger: 'manual',
+  usageLimitResetsAt: null,
   ...overrides,
 });
 

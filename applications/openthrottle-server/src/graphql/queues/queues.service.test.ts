@@ -852,6 +852,33 @@ describe('QueuesService', () => {
       );
     });
 
+    test('passes delayMs as a BullMQ delay alongside the jobId, and omits it when zero', async () => {
+      mockAdd.mockClear();
+
+      await service.enqueuePlanRalphOrchestrator({
+        delayMs: 90_000,
+        idempotencyKey: 'usage-limit-resume-run-1',
+        jobData: orchJobData,
+      });
+      await service.enqueuePlanRalphOrchestrator({
+        delayMs: 0,
+        jobData: orchJobData,
+      });
+
+      expect(mockAdd).toHaveBeenNthCalledWith(
+        1,
+        RUN_PLAN_ORCHESTRATOR_JOB_NAME,
+        orchJobData,
+        { delay: 90_000, jobId: 'usage-limit-resume-run-1' },
+      );
+      expect(mockAdd).toHaveBeenNthCalledWith(
+        2,
+        RUN_PLAN_ORCHESTRATOR_JOB_NAME,
+        orchJobData,
+        {},
+      );
+    });
+
     test('returns error when idempotencyKey has invalid characters', async () => {
       mockAdd.mockClear();
 

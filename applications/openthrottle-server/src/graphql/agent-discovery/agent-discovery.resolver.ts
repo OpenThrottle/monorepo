@@ -53,6 +53,7 @@ export class AgentDiscoveryResolver {
         const favoritesForAgent = favoriteModels?.get(agent.backend);
         return {
           attachesWorkspaceMcp: agent.attachesWorkspaceMcp,
+          auth: agent.auth,
           backend: agent.backend,
           chatCapable: agent.chatCapable,
           enabled: !agentDisabled,

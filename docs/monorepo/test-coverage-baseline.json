@@ -4755,10 +4755,10 @@
     },
     {
       "category": "data",
-      "file": "applications/openthrottle-developer/app/routing/settings/data/agent-clis.data.ts",
+      "file": "applications/openthrottle-developer/app/routing/settings/data/data.agent-clis.ts",
       "project": "applications/openthrottle-developer",
       "status": "tested",
-      "testFile": "applications/openthrottle-developer/app/routing/settings/data/__tests__/agent-clis.data.test.ts"
+      "testFile": "applications/openthrottle-developer/app/routing/settings/data/__tests__/data.agent-clis.test.ts"
     },
     {
       "category": "data",

@@ -19,7 +19,8 @@ import { claudeDriver, cursorDriver } from '../index.ts';
 const PROMPT = 'p $(x)';
 // escapeForShellDoubleQuoted('p $(x)') === 'p \$(x)'
 const SAFE = 'p \\$(x)';
-const CLAUDE_BASE = `claude -p --permission-mode acceptEdits "${SAFE}"`;
+// Claude emits stream-json right after the prompt (before `--model`); `parseOutput` undoes it.
+const CLAUDE_BASE = `claude -p --permission-mode acceptEdits "${SAFE}" --output-format stream-json --verbose`;
 const CURSOR_BASE = `cursor-agent --force -p "${SAFE}"`;
 /** MCP-attachment flags the cursor driver appends after `--model` and before worktree flags. */
 const CURSOR_MCP = ' --approve-mcps --trust';

@@ -165,6 +165,12 @@ export function toConversationServiceTier(
  * — the orchestrator consumes it to reset that timer and then drops it, so it is
  * never published, persisted, or shown to the client.
  *
+ * `usage_limit` is a non-terminal notice that the backend's account hit a
+ * subscription usage limit (claude's `rate_limit_event` with status `rejected`).
+ * Its `metadata` carries `{ rateLimitType, resetsAt }` (`resetsAt` ISO-8601 or
+ * null). The terminal chunk of a limited turn additionally carries
+ * `metadata.usageLimit` with the same shape.
+ *
  * @public
  */
 export const CONVERSATION_STREAM_CHUNK_KINDS = {
@@ -175,6 +181,7 @@ export const CONVERSATION_STREAM_CHUNK_KINDS = {
   toolCall: 'tool_call',
   toolResult: 'tool_result',
   usage: 'usage',
+  usageLimit: 'usage_limit',
 } as const;
 
 /**

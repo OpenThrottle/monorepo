@@ -119,8 +119,90 @@ describe('mapClaudeEvent', () => {
     expect(chunk?.error).toBe('model_not_found');
   });
 
-  it('ignores rate_limit_event and non-records', () => {
+  it('maps a rejected rate_limit_event to a usage_limit chunk with an ISO resetsAt', () => {
+    expect(
+      mapClaudeEvent({
+        rate_limit_info: {
+          rateLimitType: 'five_hour',
+          resetsAt: 1_800_000_000,
+          status: 'rejected',
+        },
+        type: 'rate_limit_event',
+      }),
+    ).toEqual({
+      delta: '',
+      done: false,
+      kind: 'usage_limit',
+      metadata: {
+        rateLimitType: 'five_hour',
+        resetsAt: new Date(1_800_000_000_000).toISOString(),
+      },
+    });
+  });
+
+  it('maps a rejected rate_limit_event with no reset info to nulls', () => {
+    expect(
+      mapClaudeEvent({
+        rate_limit_info: { status: 'rejected' },
+        type: 'rate_limit_event',
+      }),
+    ).toMatchObject({
+      kind: 'usage_limit',
+      metadata: { rateLimitType: null, resetsAt: null },
+    });
+  });
+
+  it('maps allowed / allowed_warning / malformed rate_limit_events to null', () => {
+    for (const info of [
+      { status: 'allowed' },
+      { resetsAt: 1_800_000_000, status: 'allowed_warning' },
+      undefined,
+    ]) {
+      expect(
+        mapClaudeEvent({ rate_limit_info: info, type: 'rate_limit_event' }),
+      ).toBeNull();
+    }
     expect(mapClaudeEvent({ type: 'rate_limit_event' })).toBeNull();
+  });
+
+  it('ignores non-records', () => {
     expect(mapClaudeEvent('nope')).toBeNull();
+  });
+
+  it('forwards api_error_status and flags a 429 result as a usage limit', () => {
+    const chunk = mapClaudeEvent({
+      api_error_status: 429,
+      is_error: true,
+      result: 'whatever the CLI says',
+      type: 'result',
+    });
+
+    expect(chunk).toMatchObject({
+      done: true,
+      error: 'whatever the CLI says',
+      metadata: {
+        apiErrorStatus: 429,
+        usageLimit: { rateLimitType: null, resetsAt: null },
+      },
+    });
+  });
+
+  it('does not flag a non-429 or successful result as a usage limit', () => {
+    const serverError = mapClaudeEvent({
+      api_error_status: 500,
+      is_error: true,
+      result: 'boom',
+      type: 'result',
+    });
+    expect(serverError?.metadata).toMatchObject({ apiErrorStatus: 500 });
+    expect(serverError?.metadata).not.toHaveProperty('usageLimit');
+
+    const ok = mapClaudeEvent({
+      is_error: false,
+      result: 'ok',
+      type: 'result',
+    });
+    expect(ok?.metadata).toMatchObject({ apiErrorStatus: null });
+    expect(ok?.metadata).not.toHaveProperty('usageLimit');
   });
 });

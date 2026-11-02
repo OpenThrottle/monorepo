@@ -3,9 +3,10 @@ import type {
   WorkflowConfigRunner,
   WorkflowCorrelation,
   WorkflowLifecycleDispatcher,
-  WorkflowOrchestrator as WorkflowOrchestratorBase,
   WorkflowRunResult as WorkflowRunResultBase,
 } from '@openthrottle/openthrottle-agentic-workflow';
+
+import type { WorkflowRalphUsageLimit } from './contract/ralph-orchestrator-deps.ts';
 
 export type WorkflowFinishedReason =
   | 'workflow_budget_exhausted'
@@ -13,7 +14,8 @@ export type WorkflowFinishedReason =
   | 'workflow_cancelled'
   | 'workflow_max_iterations'
   | 'workflow_plan_already_terminal'
-  | 'workflow_tasks_exhausted';
+  | 'workflow_tasks_exhausted'
+  | 'workflow_usage_limited';
 
 export type WorkflowFailedReason =
   'workflow_agent_error' | 'workflow_input_required' | 'workflow_unhandled';
@@ -86,21 +88,36 @@ export interface WorkflowContext extends WorkflowConfigLegacy {
 }
 
 /**
- * @description Terminal outcome of a workflow run (process exit semantics
- * align with current Ralph CLI).
+ * @description A run that stopped cleanly because the agent account hit a subscription usage limit.
+ * Carries the limit (reset time included) so the host can schedule a resume. Exit code 0: nothing
+ * went wrong with the run itself, it is only paused.
  */
-export type WorkflowRunResult = WorkflowRunResultBase<
-  WorkflowFinishedReason,
-  WorkflowFailedReason
->;
+export interface WorkflowUsageLimitedResult {
+  readonly exitCode: 0;
+  readonly reason: 'workflow_usage_limited';
+  readonly status: 'finished';
+  readonly usageLimit: WorkflowRalphUsageLimit;
+}
+
+/**
+ * @description Terminal outcome of a workflow run (process exit semantics
+ * align with current Ralph CLI). Narrow on `reason === 'workflow_usage_limited'` to read
+ * `usageLimit`; the base variants never carry that reason.
+ */
+export type WorkflowRunResult =
+  | WorkflowRunResultBase<
+      Exclude<WorkflowFinishedReason, 'workflow_usage_limited'>,
+      WorkflowFailedReason
+    >
+  | WorkflowUsageLimitedResult;
 
 /**
  * @description Create an Orchestrator type for Ralph workflow customized
  * with the Ralph-specific context(s) and results. Now this package can
  * implement its own Ralph orchestrator.
  */
-export type WorkflowOrchestrator = WorkflowOrchestratorBase<
-  WorkflowFinishedReason,
-  WorkflowFailedReason,
-  WorkflowContext
->;
+export interface WorkflowOrchestrator {
+  readonly execute: (params: {
+    readonly context: WorkflowContext;
+  }) => Promise<WorkflowRunResult>;
+}

@@ -265,9 +265,11 @@ query PlanDetailRunHistory($planId: ID!) {
       state
       url
     }
+    resumeOfRunId
     runConfigSnapshotJson
     runKind
     status
+    usageLimitResetsAt
   }
 }
 

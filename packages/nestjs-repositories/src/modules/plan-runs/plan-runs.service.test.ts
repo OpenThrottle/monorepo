@@ -25,10 +25,13 @@ const buildRun = (overrides: Partial<PlanRun> = {}): PlanRun => {
     pid: null,
     planId: 'plan-1',
     queueName: 'plans',
+    resumeOfRunId: null,
     runConfigSnapshot: null,
     runKind: 'orchestrator',
     status: 'QUEUED',
     updatedAt: new Date('2026-07-21T00:00:00Z'),
+    usageLimitResetsAt: null,
+    usageLimitType: null,
     workerId: null,
   };
 
@@ -42,6 +45,7 @@ describe('PlanRunsService', () => {
     createQueryBuilder: ReturnType<typeof vi.fn>;
     find: ReturnType<typeof vi.fn>;
     findOne: ReturnType<typeof vi.fn>;
+    query: ReturnType<typeof vi.fn>;
     save: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
   };
@@ -74,6 +78,7 @@ describe('PlanRunsService', () => {
       createQueryBuilder: vi.fn(() => qb),
       find: vi.fn().mockResolvedValue([]),
       findOne: vi.fn().mockResolvedValue(null),
+      query: vi.fn().mockResolvedValue([{ count: 0 }]),
       save: vi.fn((row: PlanRun) => Promise.resolve(row)),
       update: vi.fn().mockResolvedValue({ affected: 1 }),
     };
@@ -142,6 +147,25 @@ describe('PlanRunsService', () => {
           checkoutId: '44444444-4444-4444-8444-444444444444',
           model: 'claude-fable-5',
         }),
+      );
+    });
+
+    it('persists resumeOfRunId on a usage-limit continuation row and defaults it to null', async () => {
+      repo.findOne.mockResolvedValue(null);
+
+      await service.recordQueuedRun({
+        ...enqueueInput,
+        resumeOfRunId: 'run-limited',
+      });
+      await service.recordQueuedRun(enqueueInput);
+
+      expect(repo.create).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({ resumeOfRunId: 'run-limited' }),
+      );
+      expect(repo.create).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({ resumeOfRunId: null }),
       );
     });
 
@@ -339,6 +363,73 @@ describe('PlanRunsService', () => {
       expect(
         await service.settleRunByJob('plans', 'missing-job', 'FAILED'),
       ).toBeNull();
+    });
+  });
+
+  describe('settleRunUsageLimited', () => {
+    const resetsAt = new Date('2026-07-21T05:00:00Z');
+
+    it('writes USAGE_LIMITED with the limit, guarded to a QUEUED/IN_PROGRESS row, and returns the row', async () => {
+      qbExecute.mockResolvedValueOnce({ affected: 1 });
+      const settled = buildRun({
+        status: 'USAGE_LIMITED',
+        usageLimitResetsAt: resetsAt,
+        usageLimitType: 'five_hour',
+      });
+      repo.findOne.mockResolvedValueOnce(settled);
+
+      const result = await service.settleRunUsageLimited('plans', 'job-1', {
+        resetsAt,
+        type: 'five_hour',
+      });
+
+      const qb = repo.createQueryBuilder.mock.results[0]?.value;
+      expect(qb.set).toHaveBeenCalledWith({
+        hostname: null,
+        pid: null,
+        status: 'USAGE_LIMITED',
+        usageLimitResetsAt: resetsAt,
+        usageLimitType: 'five_hour',
+        workerId: null,
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith('status IN (:...statuses)', {
+        statuses: ['IN_PROGRESS', 'QUEUED'],
+      });
+      expect(result).toBe(settled);
+    });
+
+    it('returns null without re-reading when the guard matched no row (already settled elsewhere)', async () => {
+      qbExecute.mockResolvedValueOnce({ affected: 0 });
+
+      const result = await service.settleRunUsageLimited('plans', 'job-1', {
+        resetsAt: null,
+        type: null,
+      });
+
+      expect(result).toBeNull();
+      expect(repo.findOne).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('countUsageLimitedInChain', () => {
+    it('walks the resume chain with a depth-bounded recursive query and returns the count', async () => {
+      repo.query.mockResolvedValueOnce([{ count: 2 }]);
+
+      const count = await service.countUsageLimitedInChain('run-3', 5);
+
+      expect(count).toBe(2);
+      const [sql, params] = repo.query.mock.calls[0] ?? [];
+      expect(sql).toContain('WITH RECURSIVE');
+      expect(sql).toContain('chain.depth < $2');
+      expect(params).toEqual(['run-3', 5, 'USAGE_LIMITED']);
+    });
+
+    it('coerces a string count and treats an empty result as zero', async () => {
+      repo.query.mockResolvedValueOnce([{ count: '3' }]);
+      expect(await service.countUsageLimitedInChain('run-1', 5)).toBe(3);
+
+      repo.query.mockResolvedValueOnce([]);
+      expect(await service.countUsageLimitedInChain('run-1', 5)).toBe(0);
     });
   });
 

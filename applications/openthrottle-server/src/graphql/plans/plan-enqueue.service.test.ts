@@ -2,6 +2,7 @@ import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
+  PlanRun,
   PlanRunsService,
   PlansService,
   RepositoryCheckoutsService,
@@ -17,7 +18,10 @@ import type { Queue } from 'bullmq';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { NotificationsService } from '../../notifications/notifications.service.ts';
-import type { RunPlanJobData } from '../../queues/plans/plans.types.ts';
+import type {
+  RunPlanJobData,
+  RunPlanOrchestratorJobData,
+} from '../../queues/plans/plans.types.ts';
 import type { QueuesService } from '../queues/queues.service.ts';
 import type { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service.ts';
 import { PlanEnqueueService } from './plan-enqueue.service.ts';
@@ -650,6 +654,106 @@ describe('PlanEnqueueService', () => {
           workingDirectory: null,
         }),
       ).rejects.toBeInstanceOf(BadRequestException);
+    });
+  });
+  describe('enqueueUsageLimitResume', () => {
+    const limitedRun = createMock<PlanRun>({
+      actorUserId: 'user-1',
+      branch: 'feature/limited',
+      checkoutId: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+      executionBackend: 'claude',
+      id: '11111111-1111-4111-8111-111111111111',
+      model: 'claude-fable-5',
+      planId: mockPlan.id,
+      runConfigSnapshot: null,
+    });
+    const jobData: RunPlanOrchestratorJobData = {
+      executionBackend: 'claude',
+      mode: 'plan',
+      planId: mockPlan.id,
+      runKind: 'orchestrator',
+    };
+    const actor = {
+      actorKind: 'service_account',
+      actorSub: 'status-change-system-account-id',
+    };
+
+    test('records a QUEUED continuation row linked to the limited run, then adds a delayed job under a deterministic jobId', async () => {
+      const result = await service.enqueueUsageLimitResume({
+        ...actor,
+        delayMs: 3_660_000,
+        jobData,
+        limitedRun,
+      });
+
+      expect(mockRecordQueuedRun).toHaveBeenCalledWith(
+        expect.objectContaining({
+          actorUserId: 'user-1',
+          branch: 'feature/limited',
+          bullmqJobId: `usage-limit-resume-11111111-1111-4111-8111-111111111111`,
+          checkoutId: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+          executionBackend: 'claude',
+          model: 'claude-fable-5',
+          planId: mockPlan.id,
+          resumeOfRunId: '11111111-1111-4111-8111-111111111111',
+          runKind: 'orchestrator',
+        }),
+        expect.anything(),
+      );
+      expect(mockEnqueuePlanRalphOrchestrator).toHaveBeenCalledWith(
+        expect.objectContaining({
+          delayMs: 3_660_000,
+          idempotencyKey: `usage-limit-resume-11111111-1111-4111-8111-111111111111`,
+          jobData,
+        }),
+      );
+      expect(result).toEqual({ jobId: 'job-orch-1' });
+    });
+
+    test('sets the plan QUEUED through the status chokepoint, attributed to the given actor', async () => {
+      await service.enqueueUsageLimitResume({
+        ...actor,
+        delayMs: 60_000,
+        jobData,
+        limitedRun,
+      });
+
+      expect(mockApplyStatusChange).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          ...actor,
+          requestedStatus: 'QUEUED',
+        }),
+      );
+    });
+
+    test('re-queues only PENDING and IN_PROGRESS tasks, leaving BLOCKED/SKIPPED/CANCELED alone', async () => {
+      await service.enqueueUsageLimitResume({
+        ...actor,
+        delayMs: 60_000,
+        jobData,
+        limitedRun,
+      });
+
+      expect(mockTaskUpdateQueryBuilder.andWhere).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ fromStatuses: ['PENDING', 'IN_PROGRESS'] }),
+      );
+    });
+
+    test('throws when the queue add fails so the caller can fall back to parking the plan', async () => {
+      mockEnqueuePlanRalphOrchestrator.mockResolvedValueOnce({
+        error: 'queue rejected',
+      });
+
+      await expect(
+        service.enqueueUsageLimitResume({
+          ...actor,
+          delayMs: 60_000,
+          jobData,
+          limitedRun,
+        }),
+      ).rejects.toThrow('queue rejected');
     });
   });
 });

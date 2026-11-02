@@ -57,6 +57,7 @@ export const toScheduledAgentJobRunObject = (
   reasoningTokens: run.reasoningTokens,
   repositoryCheckoutId: run.repositoryCheckoutId,
   resolvedCwd: run.resolvedCwd,
+  resumeOfRunId: run.resumeOfRunId,
   scheduledAgentJobId: run.scheduledAgentJobId,
   // jsonb → JSON string (repo convention); null stays null for legacy/pre-snapshot runs.
   settingsSnapshotJson:
@@ -65,6 +66,8 @@ export const toScheduledAgentJobRunObject = (
   status: run.status,
   totalTokens: run.totalTokens,
   trigger: run.trigger,
+  usageLimitResetsAt: run.usageLimitResetsAt,
+  usageLimitType: run.usageLimitType,
 });
 
 /**
@@ -74,7 +77,8 @@ export const toScheduledAgentJobRunObject = (
  * picture since `since`, while `inFlightCounts` is unwindowed — a run queued days ago and still stuck
  * is exactly what the caller needs to see, so it must not be cut off by the window.
  *
- * `no_op` keeps its own count and is never folded into failures: it is terminal but not an error.
+ * `no_op` and `usage_limited` keep their own counts and are never folded into failures: both are
+ * terminal but not errors.
  */
 export const toScheduledAgentJobRunStatsObject = (
   windowCounts: ScheduledAgentJobRunStatusCount[],
@@ -98,6 +102,7 @@ export const toScheduledAgentJobRunStatsObject = (
     runningCount,
     since,
     succeededCount: countIn(windowCounts, 'succeeded'),
+    usageLimitedCount: countIn(windowCounts, 'usage_limited'),
     windowTotalCount: windowCounts.reduce((total, row) => total + row.count, 0),
   };
 };

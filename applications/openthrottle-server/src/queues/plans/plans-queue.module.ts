@@ -3,6 +3,7 @@ import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import { NestjsWorktreesModule } from '@openthrottle/nestjs-worktrees';
 
+import { PlanEnqueueModule } from '../../graphql/plans/plan-enqueue.module.ts';
 import { PlanStatusModule } from '../../graphql/plans/plan-status.module.ts';
 import { WorkLedgerGraphqlModule } from '../../graphql/work-ledger/work-ledger-graphql.module.ts';
 import { MetricsModule } from '../../metrics/metrics.module.ts';
@@ -11,6 +12,7 @@ import { AgenticRalphModule } from '../agentic-ralph/agentic-ralph.module.ts';
 import { PlanLifecycleHooksQueueProducerModule } from '../plan-lifecycle-hooks/plan-lifecycle-hooks-queue-producer.module.ts';
 import { PlansProcessor } from './plans.processor.ts';
 import { PlansQueueProducerModule } from './plans-queue-producer.module.ts';
+import { UsageLimitResumeService } from './usage-limit-resume.service.ts';
 import { WorkLedgerRunService } from './work-ledger-run.service.ts';
 
 /**
@@ -27,7 +29,9 @@ import { WorkLedgerRunService } from './work-ledger-run.service.ts';
  * `BULLMQ_RUN_OUTPUT_DIR` is set (`BullMqRunOutputModule` in the app module).
  * PlanStatusModule (the plans.status write chokepoint) and WorkLedgerGraphqlModule (for the
  * `status-change-system` service-account lookup the worker attributes its writes to) are imported
- * for the worker's own plan status writes (job start, startup reconcile).
+ * for the worker's own plan status writes (job start, startup reconcile). PlanEnqueueModule lets
+ * {@link UsageLimitResumeService} enqueue a usage-limit continuation through the shared enqueue
+ * pipeline.
  */
 @Module({
   exports: [PlansQueueProducerModule],
@@ -38,11 +42,12 @@ import { WorkLedgerRunService } from './work-ledger-run.service.ts';
     NestjsRepositoriesModule,
     NestjsWorktreesModule,
     NotificationsModule,
+    PlanEnqueueModule,
     PlanLifecycleHooksQueueProducerModule,
     PlanStatusModule,
     PlansQueueProducerModule,
     WorkLedgerGraphqlModule,
   ],
-  providers: [PlansProcessor, WorkLedgerRunService],
+  providers: [PlansProcessor, UsageLimitResumeService, WorkLedgerRunService],
 })
 export class PlansQueueModule {}

@@ -9,7 +9,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
 
-import type { AgentCliStatus } from '~/routing/settings/data/agent-clis.data';
+import type { AgentCliStatus } from '~/routing/settings/data/data.agent-clis';
 
 import { SettingsAgentsTableRow } from '../SettingsAgentsTableRow';
 

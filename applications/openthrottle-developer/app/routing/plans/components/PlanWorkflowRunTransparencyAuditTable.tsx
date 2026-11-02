@@ -2,8 +2,13 @@ import * as React from 'react';
 import { Link } from 'react-router';
 
 import type { PlanDetailRunHistoryQuery } from '~/__generated__/graphql';
+import { collectResumedRunIds } from '~/global/utils/utils.usage-limit';
 import { PlanRunProvenanceCell } from '~/routing/plans/components/PlanRunProvenanceCell';
-import { PLAN_RUN_AUDIT_WORKSPACE_COPY } from '~/routing/plans/data/data.copy';
+import { PlanRunStatusCell } from '~/routing/plans/components/PlanRunStatusCell';
+import {
+  PLAN_RUN_AUDIT_WORKSPACE_COPY,
+  PLAN_RUN_STATUS_CELL_COPY,
+} from '~/routing/plans/data/data.copy';
 import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import { planRunJobDetailPath } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import {
@@ -33,6 +38,7 @@ export const PlanWorkflowRunTransparencyAuditTable = (
   // Hooks
 
   // Setup
+  const resumedRunIds = collectResumedRunIds(planRunAuditRows);
 
   // Handlers
 
@@ -57,6 +63,9 @@ export const PlanWorkflowRunTransparencyAuditTable = (
             </th>
             <th className="text-foreground py-1.5 pr-2 font-medium">Kind</th>
             <th className="text-foreground py-1.5 pr-2 font-medium">
+              {PLAN_RUN_STATUS_CELL_COPY.columnLabel}
+            </th>
+            <th className="text-foreground py-1.5 pr-2 font-medium">
               Provenance
             </th>
             <th className="text-foreground py-1.5 pr-2 font-medium">
@@ -70,7 +79,7 @@ export const PlanWorkflowRunTransparencyAuditTable = (
         <tbody>
           {planRunAuditRows.length === 0 ? (
             <tr>
-              <td className="py-2 text-[0.7rem]" colSpan={6}>
+              <td className="py-2 text-[0.7rem]" colSpan={7}>
                 No queued run audit rows yet. After you enqueue from the
                 toolbar, each run records its resolved configuration here.
               </td>
@@ -107,6 +116,14 @@ export const PlanWorkflowRunTransparencyAuditTable = (
                   </td>
                   <td className="py-1.5 pr-2 align-top text-[0.65rem]">
                     {row.runKind}
+                  </td>
+                  <td className="py-1.5 pr-2 align-top text-[0.65rem]">
+                    <PlanRunStatusCell
+                      resumeOfRunId={row.resumeOfRunId ?? null}
+                      resumeScheduled={resumedRunIds.has(row.id)}
+                      status={row.status}
+                      usageLimitResetsAt={row.usageLimitResetsAt ?? null}
+                    />
                   </td>
                   <td className="py-1.5 pr-2 align-top text-[0.65rem]">
                     <PlanRunProvenanceCell

@@ -394,6 +394,11 @@ type PlanRunObject {
   workerId: String
 
   """
+  The usage-limited run this run continues: set on the continuation run enqueued automatically after a Claude usage limit. Null for every ordinary run.
+  """
+  resumeOfRunId: String
+
+  """
   Resolved workflow-ralph configuration at enqueue (PlanRunConfigSnapshot v1 JSON). Null for legacy runs.
   """
   runConfigSnapshotJson: String
@@ -402,6 +407,16 @@ type PlanRunObject {
   runKind: String!
   status: String!
   updatedAt: DateTime!
+
+  """
+  When the usage limit that stopped this run lifts, as reported by the agent CLI. Null unless status is USAGE_LIMITED, or when the CLI reported no reset time.
+  """
+  usageLimitResetsAt: DateTime
+
+  """
+  Raw name of the usage-limit window that stopped this run (five_hour, seven_day, ...). Null unless status is USAGE_LIMITED, or when the window was not reported.
+  """
+  usageLimitType: String
 
   """
   Git branch this run operates on, captured at kickoff (run provenance). Powers branch↔PR mapping. Null for legacy/backfilled rows that predate branch capture.
@@ -716,11 +731,56 @@ type AgentCliModelOption {
   favorite: Boolean!
 }
 
+type AgentCliAuthStatusObject {
+  """
+  Logged-in account email as reported by `claude auth status`, or null when unknown. No tokens or credential files are read.
+  """
+  accountEmail: String
+
+  """
+  The credential Claude runs will actually bill: "subscription" (claude.ai login), "apiKey" (ANTHROPIC_API_KEY or a configured key source — it always wins in -p mode), or "none". Derived from `claude auth status` plus the presence (never the value) of ANTHROPIC_API_KEY in the server env.
+  """
+  activeCredential: String!
+
+  """
+  True when an API key is active while a subscription login also exists, so runs bill the API key instead of the subscription.
+  """
+  apiKeyOverridesSubscription: Boolean!
+
+  """
+  Login method as reported by `claude auth status` (e.g. "claude.ai"), or null when unknown.
+  """
+  authMethod: String
+
+  """True when `claude auth status` reports a logged-in account."""
+  loggedIn: Boolean!
+
+  """
+  Organization name as reported by `claude auth status`, or null when unknown.
+  """
+  organizationName: String
+
+  """
+  Subscription plan (e.g. "pro", "max", "team") as reported by `claude auth status`, or null when unknown.
+  """
+  subscriptionType: String
+
+  """
+  A loud, specific sentence when the credential setup needs attention (API key overriding the subscription, or not logged in); null when everything is fine.
+  """
+  warning: String
+}
+
 type AgentCliOptionObject {
   """
   Backend discriminator (e.g. "cursor") used in StartConversationStreamInput.
   """
   backend: String!
+
+  """
+  Logged-in account, subscription plan and active credential, reported by `claude auth status --json` (no OAuth tokens or credential files are read, and no Anthropic endpoint is called). Null for CLIs other than claude, or when the probe failed or timed out.
+  """
+  auth: AgentCliAuthStatusObject
 
   """
   True when this CLI resolves the workspace's committed MCP config (.mcp.json / .cursor/mcp.json / opencode.json), so a run in this checkout can reach openthrottle-mcp. False for codex and gemini, which read only their own config scope (codex: user-scope config.toml; gemini: .gemini/settings.json, never .mcp.json) — for those, MCP reachability is a property of the host and cannot be verified from the workspace, so present it as unverifiable rather than as definitely missing. Distinct from emitting MCP flags: claude, grok, and opencode emit none yet attach fine.
@@ -1151,7 +1211,7 @@ type ConversationStreamChunkObject {
   messageId: String!
 
   """
-  Event kind: text (assistant output) | thinking | tool_call | tool_result | usage | session.
+  Event kind: text (assistant output) | thinking | tool_call | tool_result | usage | usage_limit | session.
   """
   kind: String!
 
@@ -2656,13 +2716,15 @@ type ScheduledAgentJobRunObject {
   bullmqJobId: String
 
   """
-  queued | running | succeeded | no_op | failed | cancelled. no_op is terminal and NOT an error: the process exited cleanly but the agent reported it did not do the work.
+  queued | running | succeeded | no_op | failed | cancelled | usage_limited. no_op is terminal and NOT an error: the process exited cleanly but the agent reported it did not do the work. usage_limited is terminal and NOT an error: the agent CLI stopped on a Claude subscription usage limit (see usageLimitResetsAt); a continuation run (trigger resume, resumeOfRunId = this run) may have been enqueued.
   """
   status: String!
   driverId: String!
   model: String
 
-  """schedule | manual (run-now)."""
+  """
+  schedule (cron fire) | manual (run-now) | resume (delayed continuation of a usage_limited run).
+  """
   trigger: String!
 
   """Child process exit code; null on timeout/cancel/spawn error."""
@@ -2722,6 +2784,21 @@ type ScheduledAgentJobRunObject {
   The exact directory the agent CLI was spawned in for this run, after the checkout -> cwd -> WORKSPACE_ROOT precedence. Authoritative record of where the run happened; null for legacy runs.
   """
   resolvedCwd: String
+
+  """
+  When the usage limit that stopped this run lifts, as reported by the agent CLI; null when the run was not usage_limited or no reset time was reported.
+  """
+  usageLimitResetsAt: DateTime
+
+  """
+  Raw usage-limit window that stopped this run (five_hour, seven_day, ...); null when the run was not usage_limited or the window was not reported.
+  """
+  usageLimitType: String
+
+  """
+  The usage_limited run this run continues (trigger resume); null for every ordinary run.
+  """
+  resumeOfRunId: ID
   createdAt: DateTime!
 
   """
@@ -2767,6 +2844,11 @@ type ScheduledAgentJobRunStatsObject {
 
   """Runs that completed successfully inside the window."""
   succeededCount: Int!
+
+  """
+  Runs that stopped on a Claude subscription usage limit inside the window. Terminal and NOT a failure; a continuation run may have been enqueued.
+  """
+  usageLimitedCount: Int!
 
   """
   Every run created inside the window, whatever its status — the "ran today" total.

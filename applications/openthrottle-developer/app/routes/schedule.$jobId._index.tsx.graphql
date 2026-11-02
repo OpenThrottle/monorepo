@@ -13,10 +13,12 @@ fragment ScheduledJobRunRow on ScheduledAgentJobRunObject {
   model
   outputTokens
   reasoningTokens
+  resumeOfRunId
   startedAt
   status
   totalTokens
   trigger
+  usageLimitResetsAt
 }
 
 # The schedule-detail entity shape: everything the list card shows plus the

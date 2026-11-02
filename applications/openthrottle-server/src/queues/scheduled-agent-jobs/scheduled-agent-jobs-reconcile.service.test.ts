@@ -61,6 +61,22 @@ describe('ScheduledAgentJobsReconcileService', () => {
     );
   });
 
+  it('never touches queued runs or their delayed jobs (it only converges schedulers)', async () => {
+    // A usage-limit resume is a queued run row whose BullMQ job is DELAYED under its own jobId
+    // (usage-limit-resume-<runId>), not a repeatable scheduler. The reconciler lists only
+    // `scheduled-job:`-prefixed schedulers and reads no run rows, so a delayed resume survives.
+    vi.mocked(jobsService.listEnabledJobs).mockResolvedValue([job('a')]);
+    vi.mocked(scheduler.listOwnedSchedulerIds).mockResolvedValue([
+      'scheduled-job:a',
+    ]);
+
+    await service.reconcile();
+
+    expect(scheduler.removeScheduler).not.toHaveBeenCalled();
+    expect(jobsService.getRunRepository).not.toHaveBeenCalled();
+    expect(jobsService.findRunById).not.toHaveBeenCalled();
+  });
+
   it('onModuleInit runs reconcile when this checkout is the boot owner', async () => {
     vi.stubEnv('OT_SCHEDULED_JOBS_OWNER', 'true');
     const spy = vi.spyOn(service, 'reconcile').mockResolvedValue();

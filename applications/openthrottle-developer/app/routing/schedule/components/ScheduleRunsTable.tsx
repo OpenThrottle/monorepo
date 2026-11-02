@@ -2,6 +2,7 @@ import { cn, DataTable } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type { ScheduledJobRunRowFragment } from '~/__generated__/graphql';
+import { collectResumedRunIds } from '~/global/utils/utils.usage-limit';
 import { buildScheduleRunsTableColumns } from '~/routing/schedule/utils/schedule-runs-table-columns';
 
 export interface ScheduleRunsTableProps {
@@ -16,9 +17,10 @@ export const ScheduleRunsTable = (
   const { className, jobId, runs } = props;
 
   // Hooks
+  const resumedRunIds = React.useMemo(() => collectResumedRunIds(runs), [runs]);
   const columns = React.useMemo(
-    () => buildScheduleRunsTableColumns(jobId),
-    [jobId],
+    () => buildScheduleRunsTableColumns(jobId, resumedRunIds),
+    [jobId, resumedRunIds],
   );
 
   // Setup

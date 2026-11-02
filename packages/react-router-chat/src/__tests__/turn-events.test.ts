@@ -103,6 +103,47 @@ describe('foldPersistedTurnEvents', () => {
     });
   });
 
+  it('rebuilds a usageLimit event from a persisted usage_limit event', () => {
+    const result = foldPersistedTurnEvents(
+      persisted([
+        {
+          delta: '',
+          kind: 'usage_limit',
+          metadata: {
+            rateLimitType: 'seven_day',
+            resetsAt: '2027-01-15T08:00:00.000Z',
+          },
+        },
+      ]),
+      '',
+    );
+
+    expect(result).toContainEqual({
+      kind: 'usageLimit',
+      rateLimitType: 'seven_day',
+      resetsAt: '2027-01-15T08:00:00.000Z',
+      sortOrder: 0,
+    });
+  });
+
+  it('adds a usageLimit event from a persisted terminal usage payload that carries one', () => {
+    const result = foldPersistedTurnEvents(
+      persisted([
+        {
+          delta: '',
+          kind: 'usage',
+          metadata: {
+            apiErrorStatus: 429,
+            usageLimit: { rateLimitType: null, resetsAt: null },
+          },
+        },
+      ]),
+      '',
+    );
+
+    expect(result.filter((e) => e.kind === 'usageLimit')).toHaveLength(1);
+  });
+
   it('surfaces persisted usage (claude) as a single trailing usage event with typed counts', () => {
     const result = foldPersistedTurnEvents(
       persisted([

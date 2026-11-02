@@ -165,3 +165,38 @@ export const filterAgentCliStatuses = (
       return statuses;
   }
 };
+
+/** One agent CLI whose credential setup needs attention (from `claude auth status`). */
+export interface AgentCliAuthWarning {
+  readonly backend: string;
+  readonly label: string;
+  readonly warning: string;
+}
+
+/** The slice of a discovered agent needed to surface its auth warning. */
+export interface AgentCliAuthSource {
+  readonly auth?: { readonly warning?: string | null } | null;
+  readonly backend: string;
+  readonly label: string;
+}
+
+/**
+ * Collect the loud credential warnings (e.g. an API key overriding the subscription) from the
+ * discovered agents, in discovery order. Agents without an auth report or warning contribute nothing.
+ */
+export const collectAgentCliAuthWarnings = (
+  agents: readonly AgentCliAuthSource[],
+): readonly AgentCliAuthWarning[] => {
+  const warnings: AgentCliAuthWarning[] = [];
+
+  for (const agent of agents) {
+    const warning = agent.auth?.warning;
+    const hasWarning = typeof warning === 'string' && warning !== '';
+
+    if (hasWarning) {
+      warnings.push({ backend: agent.backend, label: agent.label, warning });
+    }
+  }
+
+  return warnings;
+};

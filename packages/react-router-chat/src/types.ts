@@ -17,6 +17,7 @@ export const ChatTurnEventKind = {
   thinking: 'thinking',
   tool: 'tool',
   usage: 'usage',
+  usageLimit: 'usageLimit',
 } as const;
 
 /** Union of {@link ChatTurnEventKind} values. @public */
@@ -109,6 +110,21 @@ export interface ChatTurnSessionEvent {
 }
 
 /**
+ * The backend's subscription account hit a usage limit (claude's 5-hour or
+ * weekly window). There is at most one per turn. `rateLimitType` is the raw
+ * window name (`five_hour`, `seven_day`, …); `resetsAt` is an ISO-8601 instant,
+ * or null when the reset time is unknown.
+ *
+ * @public
+ */
+export interface ChatTurnUsageLimitEvent {
+  readonly kind: 'usageLimit';
+  readonly rateLimitType: string | null;
+  readonly resetsAt: string | null;
+  readonly sortOrder: number;
+}
+
+/**
  * One structured event within an assistant turn, ordered by `sortOrder`.
  * Discriminated on `kind`.
  *
@@ -119,7 +135,8 @@ export type ChatTurnEvent =
   | ChatTurnTextEvent
   | ChatTurnThinkingEvent
   | ChatTurnToolEvent
-  | ChatTurnUsageEvent;
+  | ChatTurnUsageEvent
+  | ChatTurnUsageLimitEvent;
 
 /**
  * Coarse phase of an in-flight assistant turn, used to give the running

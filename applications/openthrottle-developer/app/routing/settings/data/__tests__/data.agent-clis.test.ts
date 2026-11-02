@@ -2,9 +2,10 @@ import { describe, expect, test } from 'vitest';
 
 import {
   type AgentCliStatus,
+  collectAgentCliAuthWarnings,
   filterAgentCliStatuses,
   mergeAgentCliStatuses,
-} from '../agent-clis.data';
+} from '../data.agent-clis';
 
 describe('mergeAgentCliStatuses', () => {
   test('marks every catalog entry not-installed (and enabled) when nothing is available', () => {
@@ -71,17 +72,19 @@ describe('mergeAgentCliStatuses', () => {
 });
 
 describe('filterAgentCliStatuses', () => {
-  const row = (over: Partial<AgentCliStatus>): AgentCliStatus => ({
-    backend: 'x',
-    enabled: true,
-    installUrl: 'https://x',
-    installed: true,
-    label: 'X',
-    modelOptions: [],
-    models: [],
-    version: null,
-    ...over,
-  });
+  const row = (over: Partial<AgentCliStatus>): AgentCliStatus => {
+    return {
+      backend: 'x',
+      enabled: true,
+      installUrl: 'https://x',
+      installed: true,
+      label: 'X',
+      modelOptions: [],
+      models: [],
+      version: null,
+      ...over,
+    };
+  };
 
   const statuses: AgentCliStatus[] = [
     row({ backend: 'a', enabled: true, installed: true }),
@@ -103,5 +106,29 @@ describe('filterAgentCliStatuses', () => {
     expect(
       filterAgentCliStatuses(statuses, 'enabled').map((s) => s.backend),
     ).toEqual(['a', 'c']);
+  });
+});
+
+describe('collectAgentCliAuthWarnings', () => {
+  test('keeps only agents that carry a non-empty auth warning, in order', () => {
+    expect(
+      collectAgentCliAuthWarnings([
+        { auth: null, backend: 'cursor', label: 'Cursor Agent' },
+        { backend: 'codex', label: 'Codex' },
+        { auth: { warning: null }, backend: 'grok', label: 'Grok' },
+        { auth: { warning: '' }, backend: 'gemini', label: 'Gemini CLI' },
+        {
+          auth: { warning: 'ANTHROPIC_API_KEY is set.' },
+          backend: 'claude',
+          label: 'Claude Code',
+        },
+      ]),
+    ).toEqual([
+      {
+        backend: 'claude',
+        label: 'Claude Code',
+        warning: 'ANTHROPIC_API_KEY is set.',
+      },
+    ]);
   });
 });

@@ -83,6 +83,75 @@ describe('runIteration (sync) backend dispatch', () => {
     expect(firstArg).not.toContain('--model');
   });
 
+  it('requests stream-json from claude and returns result.result as the iteration text', () => {
+    vi.mocked(spawnSync).mockReturnValue({
+      error: undefined,
+      output: [],
+      pid: 0,
+      signal: null,
+      status: 0,
+      stderr: '',
+      stdout: `${JSON.stringify({ subtype: 'init', type: 'system' })}\n${JSON.stringify({ is_error: false, result: 'done\n<promise>COMPLETE</promise>', type: 'result' })}\n`,
+    });
+    const onUsageLimit = vi.fn();
+
+    const result = runIteration({
+      agentPrompt: 'task',
+      backend: 'claude',
+      iteration: 1,
+      onUsageLimit,
+    });
+
+    expect(vi.mocked(spawnSync).mock.calls[0]?.[0]).toContain(
+      '--output-format stream-json --verbose',
+    );
+    expect(result).toBe('done\n<promise>COMPLETE</promise>');
+    expect(onUsageLimit).not.toHaveBeenCalled();
+  });
+
+  it('delivers a usage limit to onUsageLimit without changing the string return', () => {
+    vi.mocked(spawnSync).mockReturnValue({
+      error: undefined,
+      output: [],
+      pid: 0,
+      signal: null,
+      status: 1,
+      stderr: '',
+      stdout: [
+        {
+          rate_limit_info: {
+            rateLimitType: 'five_hour',
+            resetsAt: 1_793_594_400,
+            status: 'rejected',
+          },
+          type: 'rate_limit_event',
+        },
+        {
+          api_error_status: 429,
+          is_error: true,
+          result: 'limit reached',
+          type: 'result',
+        },
+      ]
+        .map((event) => JSON.stringify(event))
+        .join('\n'),
+    });
+    const onUsageLimit = vi.fn();
+
+    const result = runIteration({
+      agentPrompt: 'task',
+      backend: 'claude',
+      iteration: 1,
+      onUsageLimit,
+    });
+
+    expect(result).toBe('limit reached');
+    expect(onUsageLimit).toHaveBeenCalledExactlyOnceWith({
+      rateLimitType: 'five_hour',
+      resetsAt: new Date(1_793_594_400_000).toISOString(),
+    });
+  });
+
   it('omits --model for claude when model is auto', () => {
     runIteration({
       agentPrompt: 'x',

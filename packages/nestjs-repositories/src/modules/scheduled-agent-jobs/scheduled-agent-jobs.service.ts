@@ -51,6 +51,8 @@ export interface CreateScheduledAgentJobRunInput {
   readonly model?: string | null;
   readonly repositoryCheckoutId?: string | null;
   readonly resolvedCwd?: string | null;
+  /** The usage_limited run this run continues (trigger `resume`); omitted for every other run. */
+  readonly resumeOfRunId?: string | null;
   readonly scheduledAgentJobId: string;
   readonly settingsSnapshot?: ScheduledAgentJobRunSettingsSnapshot | null;
   readonly status?: ScheduledAgentJobRunStatus;
@@ -84,6 +86,9 @@ export interface FinishScheduledAgentJobRunInput {
   readonly reasoningTokens?: number | null;
   readonly status: ScheduledAgentJobRunStatus;
   readonly totalTokens?: number | null;
+  /** The usage limit that stopped the run (status `usage_limited`); omitted otherwise. */
+  readonly usageLimitResetsAt?: Date | null;
+  readonly usageLimitType?: string | null;
 }
 
 /** One grouped row of `COUNT(*) ... GROUP BY status` over the run history. */
@@ -203,6 +208,7 @@ export class ScheduledAgentJobsService {
       model: input.model ?? null,
       repositoryCheckoutId: input.repositoryCheckoutId ?? null,
       resolvedCwd: input.resolvedCwd ?? null,
+      resumeOfRunId: input.resumeOfRunId ?? null,
       scheduledAgentJobId: input.scheduledAgentJobId,
       settingsSnapshot: input.settingsSnapshot ?? null,
       status: input.status ?? 'queued',
@@ -327,6 +333,8 @@ export class ScheduledAgentJobsService {
     id: string,
     input: FinishScheduledAgentJobRunInput,
   ): Promise<void> {
+    const { usageLimitResetsAt, usageLimitType } = input;
+
     await this.runRepository.save(
       this.runRepository.create({
         errorMessage: input.errorMessage ?? null,
@@ -354,8 +362,54 @@ export class ScheduledAgentJobsService {
         ...(input.totalTokens === undefined
           ? {}
           : { totalTokens: input.totalTokens }),
+        ...(usageLimitResetsAt === undefined ? {} : { usageLimitResetsAt }),
+        ...(usageLimitType === undefined ? {} : { usageLimitType }),
       }),
     );
+  }
+
+  /** @description The continuation of a usage_limited run (`resume_of_run_id` = `runId`), or null. */
+  async findRunResumingFrom(
+    runId: string,
+  ): Promise<ScheduledAgentJobRun | null> {
+    return this.runRepository.findOne({ where: { resumeOfRunId: runId } });
+  }
+
+  /**
+   * @description Counts the usage_limited runs on the continuation chain ENDING at `runId`: the run
+   * itself plus every ancestor reached by following `resume_of_run_id`. Backs the "stop auto-resuming
+   * after N limited runs" bound. The walk is a recursive CTE capped at `maxDepth` rows, so it is
+   * bounded even against a corrupt cyclic chain; the result never exceeds `maxDepth`.
+   */
+  async countUsageLimitedInChain(
+    runId: string,
+    maxDepth: number,
+  ): Promise<number> {
+    const rows: Array<{ readonly count: number | string }> =
+      await this.runRepository.query(
+        `WITH RECURSIVE chain AS (
+           SELECT id, status, resume_of_run_id, 1 AS depth
+             FROM scheduled_agent_job_runs
+            WHERE id = $1
+           UNION ALL
+           SELECT parent.id, parent.status, parent.resume_of_run_id, chain.depth + 1
+             FROM scheduled_agent_job_runs parent
+             JOIN chain ON parent.id = chain.resume_of_run_id
+            WHERE chain.depth < $2
+         )
+         SELECT COUNT(*)::int AS count FROM chain WHERE status = 'usage_limited'`,
+        [runId, maxDepth],
+      );
+
+    return Number(rows[0]?.count ?? 0);
+  }
+
+  /** @description Overwrite a run's error/detail message (e.g. to say why a limited run was not resumed). */
+  async updateRunErrorMessage(
+    id: string,
+    errorMessage: string | null,
+  ): Promise<void> {
+    await this.runRepository.update({ id }, { errorMessage });
   }
 
   /** @description Record a durable cancel request on a run. */

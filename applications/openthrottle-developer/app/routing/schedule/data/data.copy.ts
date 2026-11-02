@@ -40,6 +40,18 @@ export const SCHEDULE_COPY = {
 } as const;
 
 /**
+ * @description Status cell of the scheduled-run tables. `usage_limited` is a run that stopped cleanly
+ * on a Claude subscription usage limit; the cell says when it resumes (a continuation run exists) or
+ * when the limit resets (none does).
+ */
+export const SCHEDULE_RUN_STATUS_CELL_COPY = {
+  notResumedSuffix: `Not resumed automatically`,
+  resetUnknown: `Reset time unknown`,
+  resetsPrefix: `Resets at`,
+  resumesPrefix: `Resumes after the reset at`,
+} as const;
+
+/**
  * @description New-user "teach-me-fast" onboarding copy for the schedule index,
  * shown when there are no scheduled jobs. Conforms to {@link GlobalFeatureOnboardingContent}
  * and is rendered through the shared `GlobalFeatureOnboarding` layout.
