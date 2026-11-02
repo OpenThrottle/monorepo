@@ -10,6 +10,7 @@ import {
 import { And, LessThan, MoreThanOrEqual } from 'typeorm';
 
 import { NotificationsService } from '../../notifications/notifications.service.ts';
+import { resolveRepeatablesOwner } from '../repeatable-job.owner.ts';
 import { DAILY_STATS_QUEUE_NAME } from './daily-stats.constants.ts';
 import {
   addUtcDaysToYmd,
@@ -58,6 +59,17 @@ export class DailyStatsProcessor
   async onModuleInit(): Promise<void> {
     const message = `Daily stats queue worker started (concurrency=${CONCURRENCY})`;
     this.logger.info(message, DailyStatsProcessor.name);
+
+    // Owner-only: the backfill writes daily_stats rows, and a shared-DB worktree's branch code must
+    // not write aggregates into the user's database. The owner's own boot fills the same gaps.
+    const ownership = resolveRepeatablesOwner();
+    if (!ownership.owner) {
+      this.logger.info(
+        `Daily stats on-boot catch-up skipped: ${ownership.reason}`,
+        DailyStatsProcessor.name,
+      );
+      return;
+    }
 
     // Self-heal on boot: a worker that was down at 6am UTC never wrote those
     // days. Backfill them now so downtime doesn't leave permanent holes. Guarded

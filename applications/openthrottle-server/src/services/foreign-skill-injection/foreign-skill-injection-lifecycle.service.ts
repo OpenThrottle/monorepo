@@ -6,6 +6,8 @@ import {
   teardown,
 } from '@openthrottle/openthrottle-agentic-utils';
 
+import { resolveRepeatablesOwner } from '../../queues/repeatable-job.owner.ts';
+
 /**
  * @description Server-scoped lifecycle for foreign-skill injection. The injected skill layer lives
  * inside consumers' repos for the lifetime of the OpenThrottle server (materialized lazily per repo
@@ -64,7 +66,20 @@ export class ForeignSkillInjectionLifecycleService implements OnApplicationShutd
     }
   }
 
+  /**
+   * @description Owner-only. The ledger directory is shared across checkouts, so a shared-DB
+   * worktree's shutdown would tear down layers the primary's live runs are reusing. Skipping it can
+   * strand a layer this worktree materialized itself; the owner's next boot reap removes it.
+   */
   onApplicationShutdown(): void {
+    const ownership = resolveRepeatablesOwner();
+    if (!ownership.owner) {
+      this.logger.log(
+        `Foreign-skill injection: shutdown teardown skipped: ${ownership.reason}`,
+      );
+      return;
+    }
+
     const torndown = this.sweepLedgeredRepos();
     if (torndown > 0) {
       this.logger.log(

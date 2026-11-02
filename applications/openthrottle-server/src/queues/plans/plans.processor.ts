@@ -54,6 +54,7 @@ import {
 } from '../job-run-hooks/execute-plan-job-run-hooks.ts';
 // import { DelayedError } from 'bullmq';
 import { WorkflowLifecycleDispatcherFactory } from '../plan-lifecycle-hooks/workflow-lifecycle-dispatcher.service.ts';
+import { resolveRepeatablesOwner } from '../repeatable-job.owner.ts';
 import { PlanRunCancellationService } from './plan-run-cancellation.service.ts';
 import {
   PLANS_QUEUE_NAME,
@@ -138,6 +139,17 @@ export class PlansProcessor
       `Plans worker stalled-job recovery: lockDuration=${PLANS_WORKER_LOCK_DURATION_MS}ms, stalledInterval=${PLANS_WORKER_STALLED_INTERVAL_MS}ms, maxStalledCount=${PLANS_WORKER_MAX_STALLED_COUNT}. Jobs interrupted by restart re-enter the queue within ~${(PLANS_WORKER_LOCK_DURATION_MS + PLANS_WORKER_STALLED_INTERVAL_MS) / 1000}s.`,
       PlansProcessor.name,
     );
+
+    // Owner-only. A shared-DB worktree's plans queue is its own `bull:wt-<slug>` prefix, so it sees
+    // no active job for ANY plan and would reset every IN_PROGRESS plan in the user's database.
+    const ownership = resolveRepeatablesOwner();
+    if (!ownership.owner) {
+      this.logger.info(
+        `Plan status startup reconciliation skipped: ${ownership.reason}`,
+        PlansProcessor.name,
+      );
+      return;
+    }
 
     await this.reconcilePlanStatusOnStartup();
     await this.reconcilePlansQueuedWithInProgressTasks();

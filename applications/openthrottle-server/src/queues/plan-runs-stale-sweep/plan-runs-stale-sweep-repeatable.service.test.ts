@@ -109,18 +109,28 @@ describe('PlanRunsStaleSweepRepeatableService.onModuleInit', () => {
       expect(add).not.toHaveBeenCalled();
     });
 
-    it('still runs the per-process boot reap and reconcile (only the registration is gated)', async () => {
+    it('skips the boot reap and both reconciles — they act on the user’s real repos', async () => {
+      await build().onModuleInit();
+
+      expect(calls).toEqual([]);
+    });
+
+    it('OT_SCHEDULED_JOBS_OWNER=true restores the full boot lifecycle', async () => {
+      vi.stubEnv('OT_SCHEDULED_JOBS_OWNER', 'true');
+
       await build().onModuleInit();
 
       expect(calls).toEqual(['reap', 'reconcile', 'editors-reconcile']);
+      expect(add).toHaveBeenCalledTimes(1);
     });
   });
 
-  it('registers the sweep on an isolated worktree (owns its own database)', async () => {
+  it('runs the full boot lifecycle on an isolated worktree (owns its own database)', async () => {
     vi.stubEnv('OT_WORKTREE_DB', 'isolated');
 
     await build().onModuleInit();
 
+    expect(calls).toEqual(['reap', 'reconcile', 'editors-reconcile']);
     expect(add).toHaveBeenCalledTimes(1);
   });
 });
