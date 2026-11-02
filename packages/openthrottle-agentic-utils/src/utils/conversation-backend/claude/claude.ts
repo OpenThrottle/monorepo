@@ -98,13 +98,13 @@ function latestUserMessage(run: ConversationBackendRun): string {
 }
 
 /**
- * Parse one NDJSON line into a chunk, tolerating non-JSON lines (skipped).
+ * Parse one NDJSON line into its chunks, tolerating non-JSON lines (none).
  */
-function lineToChunk(line: string): ConversationStreamChunk | null {
+function lineToChunks(line: string): readonly ConversationStreamChunk[] {
   try {
     return mapClaudeEvent(JSON.parse(line));
   } catch {
-    return null;
+    return [];
   }
 }
 
@@ -245,11 +245,7 @@ async function* streamClaude(
   const emit = function* (
     lines: readonly string[],
   ): Generator<ConversationStreamChunk> {
-    for (const line of lines) {
-      const chunk = lineToChunk(line);
-      if (chunk === null) {
-        continue;
-      }
+    for (const chunk of lines.flatMap(lineToChunks)) {
       if (chunk.kind === CONVERSATION_STREAM_CHUNK_KINDS.usageLimit) {
         lastUsageLimit = chunk.metadata ?? null;
       }
