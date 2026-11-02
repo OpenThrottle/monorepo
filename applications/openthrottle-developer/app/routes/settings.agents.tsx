@@ -23,7 +23,7 @@ import {
   collectAgentCliAuthWarnings,
   filterAgentCliStatuses,
   mergeAgentCliStatuses,
-} from '~/routing/settings/data/agent-clis.data';
+} from '~/routing/settings/data/data.agent-clis';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

@@ -32,10 +32,12 @@ const limitAt = (
 ): {
   rateLimitType: string;
   resetsAt: string;
-} => ({
-  rateLimitType: 'five_hour',
-  resetsAt: new Date(NOW.getTime() + offsetMs).toISOString(),
-});
+} => {
+  return {
+    rateLimitType: 'five_hour',
+    resetsAt: new Date(NOW.getTime() + offsetMs).toISOString(),
+  };
+};
 
 describe('UsageLimitResumeService', () => {
   const settleRunUsageLimited = vi.fn();
@@ -87,14 +89,15 @@ describe('UsageLimitResumeService', () => {
   const handle = (limit: {
     rateLimitType: string | null;
     resetsAt: string | null;
-  }) =>
-    service.handle({
+  }) => {
+    return service.handle({
       jobData,
       jobId: 'job-1',
       limit,
       now: NOW,
       planId: PLAN_ID,
     });
+  };
 
   describe('resume path', () => {
     it('settles the run USAGE_LIMITED with the limit, then enqueues a delayed continuation of the same job data', async () => {

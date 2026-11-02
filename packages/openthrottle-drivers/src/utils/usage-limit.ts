@@ -17,8 +17,9 @@ export interface UsageLimit {
   readonly resetsAt: string | null;
 }
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+};
 
 /** Convert unix epoch SECONDS to an ISO-8601 string, or null when not a usable number. */
 const epochSecondsToIso = (value: unknown): string | null => {
@@ -54,8 +55,11 @@ export const parseClaudeRateLimitInfo = (value: unknown): UsageLimit | null => {
  * `api_error_status === 429` — the usage-limit terminal. Never inspects the human `result` text.
  * @public
  */
-export const isClaudeUsageLimitResult = (event: unknown): boolean =>
-  isRecord(event) &&
-  event.type === 'result' &&
-  event.is_error === true &&
-  event.api_error_status === 429;
+export const isClaudeUsageLimitResult = (event: unknown): boolean => {
+  return (
+    isRecord(event) &&
+    event.type === 'result' &&
+    event.is_error === true &&
+    event.api_error_status === 429
+  );
+};

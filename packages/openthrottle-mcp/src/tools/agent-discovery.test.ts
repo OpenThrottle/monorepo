@@ -77,8 +77,7 @@ describe('discoverAgentClisToolHandler', () => {
       loggedIn: true,
       organizationName: 'Example Org',
       subscriptionType: 'team',
-      warning:
-        'ANTHROPIC_API_KEY is set, so Claude runs bill the API key, not your team subscription. Unset it to use the subscription.',
+      warning: `ANTHROPIC_API_KEY is set, so Claude runs bill the API key, not your team subscription. Unset it to use the subscription.`,
     };
     vi.mocked(executeGraphql).mockResolvedValue({
       discoverAgentClis: {

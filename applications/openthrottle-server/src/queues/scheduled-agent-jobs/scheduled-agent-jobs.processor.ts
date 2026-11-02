@@ -111,10 +111,9 @@ const runStatusForAgentStatus = (
 const errorMessageForUsageLimit = (limit: UsageLimit): string => {
   const window =
     limit.rateLimitType === null ? '' : ` (${limit.rateLimitType})`;
-  const reset =
-    limit.resetsAt === null
-      ? 'reset time unknown'
-      : `resets at ${limit.resetsAt}`;
+  const hasResetTime = limit.resetsAt !== null;
+  const knownReset = `resets at ${limit.resetsAt}`;
+  const reset = hasResetTime ? knownReset : 'reset time unknown';
 
   return `Usage limit reached${window}; ${reset}`;
 };
@@ -351,10 +350,8 @@ export class ScheduledAgentJobsProcessor
 
         // A usage limit outranks the exit-code mapping (the CLI exits non-zero when it is stopped by
         // one) but never a cancel: the user stopping the run is the more specific fact.
-        const usageLimit =
-          result.status === RUN_AGENT_STATUS.cancelled
-            ? null
-            : result.usageLimit;
+        const wasCancelled = result.status === RUN_AGENT_STATUS.cancelled;
+        const usageLimit = wasCancelled ? null : result.usageLimit;
 
         if (usageLimit === null) {
           await this.jobsService.markRunFinished(runRowId, {
@@ -449,10 +446,11 @@ export class ScheduledAgentJobsProcessor
       return false;
     }
 
-    const reason =
-      schedule === null
-        ? 'The schedule was deleted before the usage-limit resume fired'
-        : 'The schedule was disabled before the usage-limit resume fired';
+    const deletedReason =
+      'The schedule was deleted before the usage-limit resume fired';
+    const disabledReason =
+      'The schedule was disabled before the usage-limit resume fired';
+    const reason = schedule === null ? deletedReason : disabledReason;
 
     this.logger.info(
       `Scheduled agent job ${scheduleId}: skipping resume run ${runId}. ${reason}.`,

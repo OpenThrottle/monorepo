@@ -106,13 +106,13 @@ export const createCursorWorkflowRalphIterationRunner = (
       onUsageLimit: factoryOnUsageLimit,
     } = options ?? {};
     const paramsOnUsageLimit = params.onUsageLimit;
-    const mergedOnUsageLimit =
-      factoryOnUsageLimit === undefined && paramsOnUsageLimit === undefined
-        ? undefined
-        : (usageLimit: UsageLimit): void => {
-            factoryOnUsageLimit?.(usageLimit);
-            paramsOnUsageLimit?.(usageLimit);
-          };
+    const hasLimitHooks =
+      factoryOnUsageLimit !== undefined || paramsOnUsageLimit !== undefined;
+    const notifyUsageLimit = (usageLimit: UsageLimit): void => {
+      factoryOnUsageLimit?.(usageLimit);
+      paramsOnUsageLimit?.(usageLimit);
+    };
+    const mergedOnUsageLimit = hasLimitHooks ? notifyUsageLimit : undefined;
     const paramsOnChunk = params.onChunk;
     const hasHooks =
       factoryOnChunk !== undefined ||

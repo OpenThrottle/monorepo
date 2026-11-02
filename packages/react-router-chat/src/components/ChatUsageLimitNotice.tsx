@@ -1,7 +1,7 @@
 import * as React from 'react';
 
-import { formatUsageLimitMessage } from '../data/chat-usage-limit.copy';
 import type { ChatTurnUsageLimitEvent } from '../types';
+import { formatUsageLimitMessage } from '../utils/format-usage-limit-message';
 
 export interface ChatUsageLimitNoticeProps {
   /** The turn's usage-limit event (window type + ISO reset time). */

@@ -140,15 +140,17 @@ function withRememberedUsageLimit(
     terminal.metadata?.usageLimit !== undefined ||
     (terminal.error !== null && terminal.error !== undefined);
 
-  return limited
-    ? {
-        ...terminal,
-        metadata: {
-          ...terminal.metadata,
-          usageLimit: toUsageLimit(remembered),
-        },
-      }
-    : terminal;
+  if (!limited) {
+    return terminal;
+  }
+
+  return {
+    ...terminal,
+    metadata: {
+      ...terminal.metadata,
+      usageLimit: toUsageLimit(remembered),
+    },
+  };
 }
 
 async function* streamClaude(

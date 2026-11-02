@@ -13,8 +13,9 @@ import {
   parseClaudeRateLimitInfo,
 } from './usage-limit.ts';
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+};
 
 /** Parse one NDJSON line; non-JSON noise (plugin/hook output, blank lines) yields `undefined`. */
 const parseLine = (line: string): Record<string, unknown> | undefined => {
@@ -156,10 +157,17 @@ export const renderClaudeStreamJsonLine = (line: string): string | null => {
 
       return `Usage limit reached${window}${resets}`;
     }
-    case 'result':
-      return event.is_error === true
-        ? `Error: ${typeof event.result === 'string' ? event.result.trim() : 'unknown error'}`
-        : null;
+    case 'result': {
+      if (event.is_error !== true) {
+        return null;
+      }
+
+      if (typeof event.result === 'string') {
+        return `Error: ${event.result.trim()}`;
+      }
+
+      return 'Error: unknown error';
+    }
     default:
       return null;
   }

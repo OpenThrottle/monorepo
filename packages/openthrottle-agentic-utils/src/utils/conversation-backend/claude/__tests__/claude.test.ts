@@ -117,8 +117,8 @@ const keepaliveBin = (): string =>
 
 // A usage-limited turn: a rejected rate_limit_event (carries the reset), then a
 // terminal 429 error result (carries none).
-const usageLimitBin = (): string =>
-  writeFakeBin(
+const usageLimitBin = (): string => {
+  return writeFakeBin(
     'claude-usage-limit.js',
     `const emit = (o) => process.stdout.write(JSON.stringify(o) + '\\n');
     emit({ type: 'rate_limit_event', rate_limit_info: { status: 'rejected', rateLimitType: 'five_hour', resetsAt: 1800000000 } });
@@ -126,6 +126,7 @@ const usageLimitBin = (): string =>
       emit({ type: 'result', subtype: 'success', is_error: true, api_error_status: 429, result: 'limit reached' });
     }, 25);`,
   );
+};
 
 // Echoes the CLAUDE_CONFIG_DIR the child was spawned with (or 'none'), so a test
 // can assert whether the headless turn was isolated onto a dedicated config dir.

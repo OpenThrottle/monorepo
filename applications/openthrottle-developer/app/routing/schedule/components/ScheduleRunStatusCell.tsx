@@ -1,6 +1,7 @@
 import { Badge } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
+import { parseDate } from '~/global/utils/dates';
 import { SCHEDULE_RUN_STATUS_CELL_COPY } from '~/routing/schedule/data/data.copy';
 import {
   RUN_STATUS_COLOR,
@@ -32,20 +33,16 @@ export const ScheduleRunStatusCell = (
   // Hooks
 
   // Setup
-  const resetsAtDate =
-    typeof usageLimitResetsAt === 'string'
-      ? new Date(usageLimitResetsAt)
-      : null;
-  const hasValidResetTime =
-    resetsAtDate !== null && !Number.isNaN(resetsAtDate.getTime());
+  const { notResumedSuffix, resetUnknown, resetsPrefix, resumesPrefix } =
+    SCHEDULE_RUN_STATUS_CELL_COPY;
+  const isUsageLimited = status === 'usage_limited';
+  const resetsAt = parseDate(usageLimitResetsAt);
+  const hasResetTime = resetsAt !== null;
+  const resetPrefix = resumeScheduled ? resumesPrefix : resetsPrefix;
 
   // Handlers
 
   // Markup
-
-  // Life Cycle
-
-  // 🔌 Short Circuit
   const badge = (
     <Badge
       color={RUN_STATUS_COLOR[status] ?? 'default'}
@@ -55,8 +52,25 @@ export const ScheduleRunStatusCell = (
       {RUN_STATUS_LABEL[status] ?? status}
     </Badge>
   );
+  const knownResetTime = (
+    <span className="text-muted-foreground text-xs">
+      {resetPrefix}{' '}
+      <time dateTime={resetsAt?.toISOString()}>
+        {resetsAt?.toLocaleString()}
+      </time>
+    </span>
+  );
+  const unknownResetTime = (
+    <span className="text-muted-foreground text-xs">{resetUnknown}</span>
+  );
+  const notResumedNote = (
+    <span className="text-muted-foreground text-xs">{notResumedSuffix}</span>
+  );
 
-  if (status !== 'usage_limited') {
+  // Life Cycle
+
+  // 🔌 Short Circuit
+  if (!isUsageLimited) {
     return (
       <div className="p-2" data-testid="ScheduleRunStatusCell">
         {badge}
@@ -70,25 +84,8 @@ export const ScheduleRunStatusCell = (
       data-testid="ScheduleRunStatusCell"
     >
       {badge}
-      {hasValidResetTime && typeof usageLimitResetsAt === 'string' ? (
-        <span className="text-muted-foreground text-xs">
-          {resumeScheduled
-            ? SCHEDULE_RUN_STATUS_CELL_COPY.resumesPrefix
-            : SCHEDULE_RUN_STATUS_CELL_COPY.resetsPrefix}{' '}
-          <time dateTime={usageLimitResetsAt}>
-            {resetsAtDate.toLocaleString()}
-          </time>
-        </span>
-      ) : (
-        <span className="text-muted-foreground text-xs">
-          {SCHEDULE_RUN_STATUS_CELL_COPY.resetUnknown}
-        </span>
-      )}
-      {resumeScheduled ? null : (
-        <span className="text-muted-foreground text-xs">
-          {SCHEDULE_RUN_STATUS_CELL_COPY.notResumedSuffix}
-        </span>
-      )}
+      {hasResetTime ? knownResetTime : unknownResetTime}
+      {resumeScheduled ? null : notResumedNote}
     </div>
   );
 };

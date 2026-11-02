@@ -13,8 +13,8 @@ const RESETS_AT = '2026-11-01T17:00:00.000Z';
 
 const renderCell = (
   overrides: Partial<PlanRunStatusCellProps> = {},
-): RenderResult =>
-  render(
+): RenderResult => {
+  return render(
     <PlanRunStatusCell
       resumeOfRunId={null}
       resumeScheduled={false}
@@ -23,6 +23,7 @@ const renderCell = (
       {...overrides}
     />,
   );
+};
 
 describe('PlanRunStatusCell Component', () => {
   test('renders an ordinary status as plain text with no usage-limit badge', () => {

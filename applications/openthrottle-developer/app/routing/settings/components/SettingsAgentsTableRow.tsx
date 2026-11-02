@@ -6,7 +6,7 @@ import { SettingsAgentsAgentToggle } from '~/routing/settings/components/Setting
 import { SettingsAgentsCliControls } from '~/routing/settings/components/SettingsAgentsCliControls';
 import { SettingsAgentsModelBulkToggle } from '~/routing/settings/components/SettingsAgentsModelBulkToggle';
 import { SettingsAgentsModelRow } from '~/routing/settings/components/SettingsAgentsModelRow';
-import type { AgentCliStatus } from '~/routing/settings/data/agent-clis.data';
+import type { AgentCliStatus } from '~/routing/settings/data/data.agent-clis';
 import {
   SETTINGS_AGENTS_COPY,
   settingsAgentsModelsEnabledSummary,

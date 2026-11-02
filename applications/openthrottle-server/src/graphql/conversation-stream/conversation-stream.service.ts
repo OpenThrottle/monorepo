@@ -67,6 +67,35 @@ const CLI_BACKENDS: Readonly<Record<string, ConversationBackend>> =
 const sessionMetadataKey = (backend: string): string => `${backend}SessionId`;
 
 /**
+ * Serialized `metadataJson` for a turn's terminal chunk: the retryable timeout
+ * marker, else the non-retryable usage-limit marker, else none.
+ */
+const terminalMetadataJson = (
+  timedOut: boolean,
+  usageLimit: UsageLimit | null,
+): string | null => {
+  if (timedOut) {
+    const timeoutMetadata: TerminalTimeoutMetadata = {
+      retryable: true,
+      timedOut: true,
+    };
+
+    return JSON.stringify(timeoutMetadata);
+  }
+
+  if (usageLimit === null) {
+    return null;
+  }
+
+  const usageLimitMetadata: TerminalUsageLimitMetadata = {
+    retryable: false,
+    usageLimit,
+  };
+
+  return JSON.stringify(usageLimitMetadata);
+};
+
+/**
  * Narrow a terminal chunk's `metadata.usageLimit` (untyped backend payload) to a
  * {@link UsageLimit}, or null when the turn was not usage-limited.
  */
@@ -511,29 +540,16 @@ export class ConversationStreamService {
       // completion forwards any backend terminalError with no marker.
       await this.persistAssistant(run, accumulated, toolEvents);
 
-      const timeoutMetadata: TerminalTimeoutMetadata = {
-        retryable: true,
-        timedOut: true,
-      };
-      const usageLimitMetadata: TerminalUsageLimitMetadata | null =
-        terminalUsageLimit === null
-          ? null
-          : { retryable: false, usageLimit: terminalUsageLimit };
+      const timeoutError = `The response timed out after ${Math.round(idleMs / 1000)}s with no activity.`;
       await this.publishChunk({
         conversationId: run.conversationId,
         delta: '',
         done: true,
-        error: timedOut
-          ? `The response timed out after ${Math.round(idleMs / 1000)}s with no activity.`
-          : terminalError,
+        error: timedOut ? timeoutError : terminalError,
         id: randomUUID(),
         kind: CONVERSATION_STREAM_CHUNK_KINDS.text,
         messageId: run.assistantMessageId,
-        metadataJson: timedOut
-          ? JSON.stringify(timeoutMetadata)
-          : usageLimitMetadata === null
-            ? null
-            : JSON.stringify(usageLimitMetadata),
+        metadataJson: terminalMetadataJson(timedOut, terminalUsageLimit),
         sortOrder: sortOrder,
       });
     } catch (error: unknown) {

@@ -125,8 +125,7 @@ describe('routes/settings.agents.tsx', () => {
       agents: [
         {
           auth: {
-            warning:
-              'ANTHROPIC_API_KEY is set, so Claude runs bill the API key.',
+            warning: `ANTHROPIC_API_KEY is set, so Claude runs bill the API key.`,
           },
           backend: 'claude',
           enabled: true,

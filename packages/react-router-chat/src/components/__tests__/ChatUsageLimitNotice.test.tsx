@@ -4,12 +4,14 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { CHAT_USAGE_LIMIT_COPY } from '../../data/chat-usage-limit.copy';
+import { CHAT_USAGE_LIMIT_COPY } from '../../data/data.copy';
 import type { ChatUsageLimitNoticeProps } from '../ChatUsageLimitNotice';
 import { ChatUsageLimitNotice } from '../ChatUsageLimitNotice';
 
 const renderNotice = (props: ChatUsageLimitNoticeProps): RenderResult => {
-  const Comp = (): React.ReactElement => <ChatUsageLimitNotice {...props} />;
+  const Comp = (): React.ReactElement => {
+    return <ChatUsageLimitNotice {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component: Comp, path: '/' }]);
 
   return render(<RoutesStub />);

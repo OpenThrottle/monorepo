@@ -146,8 +146,7 @@ const mockFindPlanIdsWithLiveDetachedRun = vi
 const mockRecordHeartbeatByJob = vi.fn().mockResolvedValue(1);
 const mockSettleRunByJob = vi.fn().mockResolvedValue(null);
 const mockHandleUsageLimited = vi.fn().mockResolvedValue({
-  message:
-    'Plan paused: usage limit reached — resumes at 2026-11-01T17:01:00.000Z',
+  message: `Plan paused: usage limit reached — resumes at 2026-11-01T17:01:00.000Z`,
   outcome: 'resumed',
 });
 
@@ -735,8 +734,7 @@ describe('PlansProcessor', () => {
       const notifications = getProcessorNotifications(processor);
       expect(notifications.emitQueueJobCompleted).toHaveBeenCalledWith({
         jobType: 'plans',
-        message:
-          'Plan paused: usage limit reached — resumes at 2026-11-01T17:01:00.000Z',
+        message: `Plan paused: usage limit reached — resumes at 2026-11-01T17:01:00.000Z`,
         planId: '2794d106-95f9-427e-904d-e0f9b5cbe734',
         severity: 'warning',
       });

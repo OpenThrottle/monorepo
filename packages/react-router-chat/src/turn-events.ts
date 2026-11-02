@@ -60,10 +60,12 @@ export const isRetryableTerminalMetadata = (
 /** Read `{ rateLimitType, resetsAt }` out of an untrusted usage-limit payload. */
 const toUsageLimitFields = (
   value: Record<string, unknown> | null,
-): Pick<ChatTurnUsageLimitEvent, 'rateLimitType' | 'resetsAt'> => ({
-  rateLimitType: asString(value?.rateLimitType),
-  resetsAt: asString(value?.resetsAt),
-});
+): Pick<ChatTurnUsageLimitEvent, 'rateLimitType' | 'resetsAt'> => {
+  return {
+    rateLimitType: asString(value?.rateLimitType),
+    resetsAt: asString(value?.resetsAt),
+  };
+};
 
 /**
  * Fold a usage-limit payload (`{ rateLimitType, resetsAt }`) into the turn's
@@ -84,9 +86,11 @@ export const applyTurnUsageLimit = (
     sortOrder: existing?.sortOrder ?? sortOrder,
   };
 
-  return existing === undefined
-    ? [...events, next]
-    : events.map((event) => (event.kind === 'usageLimit' ? next : event));
+  if (existing === undefined) {
+    return [...events, next];
+  }
+
+  return events.map((event) => (event.kind === 'usageLimit' ? next : event));
 };
 
 /**
@@ -122,7 +126,9 @@ export const applyTerminalUsageLimit = (
  */
 export const parseChunkMetadataRecord = (
   metadataJson: string | null | undefined,
-): Record<string, unknown> | null => safeParse(metadataJson);
+): Record<string, unknown> | null => {
+  return safeParse(metadataJson);
+};
 
 /** Placeholder header used when no backend reported a tool name at all. */
 const FALLBACK_TOOL_NAME = 'tool';

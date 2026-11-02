@@ -178,8 +178,9 @@ describe('runAgentPrompt — claude stream-json', () => {
     vi.mocked(spawn).mockReset();
   });
 
-  const ndjson = (...events: readonly object[]): string =>
-    `${events.map((event) => JSON.stringify(event)).join('\n')}\n`;
+  const ndjson = (...events: readonly object[]): string => {
+    return `${events.map((event) => JSON.stringify(event)).join('\n')}\n`;
+  };
 
   it('returns the parsed result text (not NDJSON) and a null usageLimit on success', async () => {
     const child = makeChild();

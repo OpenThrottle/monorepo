@@ -690,8 +690,7 @@ describe('PlanEnqueueService', () => {
         expect.objectContaining({
           actorUserId: 'user-1',
           branch: 'feature/limited',
-          bullmqJobId:
-            'usage-limit-resume-11111111-1111-4111-8111-111111111111',
+          bullmqJobId: `usage-limit-resume-11111111-1111-4111-8111-111111111111`,
           checkoutId: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
           executionBackend: 'claude',
           model: 'claude-fable-5',
@@ -704,8 +703,7 @@ describe('PlanEnqueueService', () => {
       expect(mockEnqueuePlanRalphOrchestrator).toHaveBeenCalledWith(
         expect.objectContaining({
           delayMs: 3_660_000,
-          idempotencyKey:
-            'usage-limit-resume-11111111-1111-4111-8111-111111111111',
+          idempotencyKey: `usage-limit-resume-11111111-1111-4111-8111-111111111111`,
           jobData,
         }),
       );

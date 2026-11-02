@@ -1,6 +1,7 @@
 import { Badge } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
+import { parseDate } from '~/global/utils/dates';
 import { PLAN_RUN_STATUS_CELL_COPY } from '~/routing/plans/data/data.copy';
 
 export interface PlanRunStatusCellProps {
@@ -28,31 +29,48 @@ export const PlanRunStatusCell = (
   // Hooks
 
   // Setup
-  const resetsAtDate =
-    usageLimitResetsAt === null ? null : new Date(usageLimitResetsAt);
-  const hasValidResetTime =
-    resetsAtDate !== null && !Number.isNaN(resetsAtDate.getTime());
+  const {
+    notResumedSuffix,
+    resetUnknown,
+    resetsPrefix,
+    resumedBadge,
+    resumedHint,
+    resumesPrefix,
+    usageLimitedBadge,
+  } = PLAN_RUN_STATUS_CELL_COPY;
+  const isUsageLimited = status === 'USAGE_LIMITED';
+  const isContinuationRun = resumeOfRunId !== null;
+  const resetsAt = parseDate(usageLimitResetsAt);
+  const hasResetTime = resetsAt !== null;
+  const resetPrefix = resumeScheduled ? resumesPrefix : resetsPrefix;
 
   // Handlers
 
   // Markup
+  const continuationBadge = (
+    <Badge color="blue" size="xs" title={resumedHint}>
+      {resumedBadge}
+    </Badge>
+  );
+  const knownResetTime = (
+    <span>
+      {resetPrefix}{' '}
+      <time dateTime={resetsAt?.toISOString()}>
+        {resetsAt?.toLocaleString()}
+      </time>
+    </span>
+  );
+  const unknownResetTime = <span>{resetUnknown}</span>;
+  const notResumedNote = <span>{notResumedSuffix}</span>;
 
   // Life Cycle
 
   // 🔌 Short Circuit
-  if (status !== 'USAGE_LIMITED') {
+  if (!isUsageLimited) {
     return (
       <span className="flex flex-col gap-1" data-testid="PlanRunStatusCell">
         <span>{status}</span>
-        {resumeOfRunId !== null ? (
-          <Badge
-            color="blue"
-            size="xs"
-            title={PLAN_RUN_STATUS_CELL_COPY.resumedHint}
-          >
-            {PLAN_RUN_STATUS_CELL_COPY.resumedBadge}
-          </Badge>
-        ) : null}
+        {isContinuationRun ? continuationBadge : null}
       </span>
     );
   }
@@ -60,23 +78,10 @@ export const PlanRunStatusCell = (
   return (
     <span className="flex flex-col gap-1" data-testid="PlanRunStatusCell">
       <Badge color="amber" size="xs">
-        {PLAN_RUN_STATUS_CELL_COPY.usageLimitedBadge}
+        {usageLimitedBadge}
       </Badge>
-      {hasValidResetTime && usageLimitResetsAt !== null ? (
-        <span>
-          {resumeScheduled
-            ? PLAN_RUN_STATUS_CELL_COPY.resumesPrefix
-            : PLAN_RUN_STATUS_CELL_COPY.resetsPrefix}{' '}
-          <time dateTime={usageLimitResetsAt}>
-            {resetsAtDate.toLocaleString()}
-          </time>
-        </span>
-      ) : (
-        <span>{PLAN_RUN_STATUS_CELL_COPY.resetUnknown}</span>
-      )}
-      {resumeScheduled ? null : (
-        <span>{PLAN_RUN_STATUS_CELL_COPY.notResumedSuffix}</span>
-      )}
+      {hasResetTime ? knownResetTime : unknownResetTime}
+      {resumeScheduled ? null : notResumedNote}
     </span>
   );
 };

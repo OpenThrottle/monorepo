@@ -52,8 +52,11 @@ export interface RunDriverOptions {
 const interpretStdout = (
   driver: AgentDriver,
   rawStdout: string,
-): DriverParsedOutput =>
-  driver.parseOutput?.(rawStdout) ?? { text: rawStdout, usageLimit: null };
+): DriverParsedOutput => {
+  return (
+    driver.parseOutput?.(rawStdout) ?? { text: rawStdout, usageLimit: null }
+  );
+};
 
 /**
  * @description Runs one driver invocation synchronously (spawnSync). Use for interactive/TTY

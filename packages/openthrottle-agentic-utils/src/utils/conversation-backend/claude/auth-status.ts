@@ -108,6 +108,22 @@ function readString(
   return typeof value === 'string' && value.trim() !== '' ? value.trim() : null;
 }
 
+/** An active API key always wins over a subscription in `-p` mode. */
+function resolveActiveCredential(
+  apiKeyActive: boolean,
+  hasSubscription: boolean,
+): ClaudeActiveCredential {
+  if (apiKeyActive) {
+    return CLAUDE_ACTIVE_CREDENTIALS.apiKey;
+  }
+
+  if (hasSubscription) {
+    return CLAUDE_ACTIVE_CREDENTIALS.subscription;
+  }
+
+  return CLAUDE_ACTIVE_CREDENTIALS.none;
+}
+
 /**
  * Pure projection of `claude auth status --json` stdout. Every field is
  * treated as optional/untrusted; garbage input yields a not-logged-in status.
@@ -130,15 +146,13 @@ export function parseClaudeAuthStatus(
     authMethod === CLAUDE_AI_AUTH_METHOD &&
     subscriptionType !== null;
   const apiKeyActive = env.hasAnthropicApiKey || reportedKeySource !== null;
-  const activeCredential: ClaudeActiveCredential = apiKeyActive
-    ? CLAUDE_ACTIVE_CREDENTIALS.apiKey
-    : hasSubscription
-      ? CLAUDE_ACTIVE_CREDENTIALS.subscription
-      : CLAUDE_ACTIVE_CREDENTIALS.none;
+  const activeCredential = resolveActiveCredential(
+    apiKeyActive,
+    hasSubscription,
+  );
   const apiKeyOverridesSubscription = apiKeyActive && hasSubscription;
-  const keySource = env.hasAnthropicApiKey
-    ? API_KEY_ENV_NAME
-    : (reportedKeySource ?? API_KEY_ENV_NAME);
+  const cliKeySource = env.hasAnthropicApiKey ? null : reportedKeySource;
+  const keySource = cliKeySource ?? API_KEY_ENV_NAME;
 
   let warning: string | null = null;
   if (apiKeyOverridesSubscription) {
@@ -211,11 +225,12 @@ export function probeClaudeAuthStatus(
 
     child.on('close', () => {
       clearTimeout(timer);
-      resolve(
-        readRecord(stdout) === null
-          ? null
-          : parseClaudeAuthStatus(stdout, { hasAnthropicApiKey }),
-      );
+      if (readRecord(stdout) === null) {
+        resolve(null);
+        return;
+      }
+
+      resolve(parseClaudeAuthStatus(stdout, { hasAnthropicApiKey }));
     });
   });
 }

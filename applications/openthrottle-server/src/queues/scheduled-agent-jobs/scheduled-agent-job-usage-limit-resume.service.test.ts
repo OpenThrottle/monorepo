@@ -25,13 +25,14 @@ import type { ScheduledAgentJobPayload } from './scheduled-agent-jobs.types.ts';
 
 const NOW = new Date('2026-11-01T12:00:00.000Z');
 const HOUR_MS = 60 * 60 * 1_000;
-const at = (offsetMs: number): string =>
-  new Date(NOW.getTime() + offsetMs).toISOString();
+const at = (offsetMs: number): string => {
+  return new Date(NOW.getTime() + offsetMs).toISOString();
+};
 
 const jobFixture = (
   overrides: Partial<ScheduledAgentJob> = {},
-): ScheduledAgentJob =>
-  createMock<ScheduledAgentJob>({
+): ScheduledAgentJob => {
+  return createMock<ScheduledAgentJob>({
     cronPattern: '0 9 * * *',
     cwd: '/repos/monorepo',
     driverId: 'claude',
@@ -45,6 +46,7 @@ const jobFixture = (
     timeoutMs: null,
     ...overrides,
   });
+};
 
 describe('ScheduledAgentJobUsageLimitResumeService', () => {
   let jobsService: ScheduledAgentJobsService;
@@ -55,8 +57,8 @@ describe('ScheduledAgentJobUsageLimitResumeService', () => {
 
   const handle = (
     overrides: { resetsAt?: string | null; now?: Date } = {},
-  ): ReturnType<ScheduledAgentJobUsageLimitResumeService['handle']> =>
-    service.handle({
+  ): ReturnType<ScheduledAgentJobUsageLimitResumeService['handle']> => {
+    return service.handle({
       limit: {
         rateLimitType: 'five_hour',
         resetsAt:
@@ -68,6 +70,7 @@ describe('ScheduledAgentJobUsageLimitResumeService', () => {
       now: overrides.now ?? NOW,
       scheduleId: 'sched-1',
     });
+  };
 
   beforeEach(() => {
     runRepoDelete = vi.fn().mockResolvedValue({ affected: 1 });

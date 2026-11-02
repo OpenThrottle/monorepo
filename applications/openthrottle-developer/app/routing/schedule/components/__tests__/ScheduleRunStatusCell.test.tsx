@@ -15,8 +15,8 @@ const USAGE_LIMITED_LABEL = RUN_STATUS_LABEL.usage_limited ?? 'usage_limited';
 
 const renderCell = (
   overrides: Partial<ScheduleRunStatusCellProps> = {},
-): RenderResult =>
-  render(
+): RenderResult => {
+  return render(
     <ScheduleRunStatusCell
       errorMessage={null}
       resumeScheduled={false}
@@ -25,6 +25,7 @@ const renderCell = (
       {...overrides}
     />,
   );
+};
 
 describe('ScheduleRunStatusCell Component', () => {
   test('renders an ordinary status as a badge with no reset line', () => {

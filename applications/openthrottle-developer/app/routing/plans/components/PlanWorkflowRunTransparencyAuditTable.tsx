@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Link } from 'react-router';
 
 import type { PlanDetailRunHistoryQuery } from '~/__generated__/graphql';
+import { collectResumedRunIds } from '~/global/utils/utils.usage-limit';
 import { PlanRunProvenanceCell } from '~/routing/plans/components/PlanRunProvenanceCell';
 import { PlanRunStatusCell } from '~/routing/plans/components/PlanRunStatusCell';
 import {
@@ -37,6 +38,7 @@ export const PlanWorkflowRunTransparencyAuditTable = (
   // Hooks
 
   // Setup
+  const resumedRunIds = collectResumedRunIds(planRunAuditRows);
 
   // Handlers
 
@@ -118,9 +120,7 @@ export const PlanWorkflowRunTransparencyAuditTable = (
                   <td className="py-1.5 pr-2 align-top text-[0.65rem]">
                     <PlanRunStatusCell
                       resumeOfRunId={row.resumeOfRunId ?? null}
-                      resumeScheduled={planRunAuditRows.some(
-                        (other) => other.resumeOfRunId === row.id,
-                      )}
+                      resumeScheduled={resumedRunIds.has(row.id)}
                       status={row.status}
                       usageLimitResetsAt={row.usageLimitResetsAt ?? null}
                     />

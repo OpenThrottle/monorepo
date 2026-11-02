@@ -7,12 +7,13 @@ import {
 import {
   decideScheduledUsageLimitResume,
   decideUsageLimitResume,
-} from './usage-limit-resume-policy.ts';
+} from './usage-limit.utils.ts';
 
 const NOW = new Date('2026-11-01T12:00:00.000Z');
 const HOUR_MS = 60 * 60 * 1_000;
-const at = (offsetMs: number): string =>
-  new Date(NOW.getTime() + offsetMs).toISOString();
+const at = (offsetMs: number): string => {
+  return new Date(NOW.getTime() + offsetMs).toISOString();
+};
 
 describe('decideUsageLimitResume', () => {
   it('resumes after the reset plus the safety buffer for a normal near-future reset', () => {

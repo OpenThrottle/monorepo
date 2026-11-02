@@ -5,7 +5,7 @@ import {
   collectAgentCliAuthWarnings,
   filterAgentCliStatuses,
   mergeAgentCliStatuses,
-} from '../agent-clis.data';
+} from '../data.agent-clis';
 
 describe('mergeAgentCliStatuses', () => {
   test('marks every catalog entry not-installed (and enabled) when nothing is available', () => {
@@ -72,17 +72,19 @@ describe('mergeAgentCliStatuses', () => {
 });
 
 describe('filterAgentCliStatuses', () => {
-  const row = (over: Partial<AgentCliStatus>): AgentCliStatus => ({
-    backend: 'x',
-    enabled: true,
-    installUrl: 'https://x',
-    installed: true,
-    label: 'X',
-    modelOptions: [],
-    models: [],
-    version: null,
-    ...over,
-  });
+  const row = (over: Partial<AgentCliStatus>): AgentCliStatus => {
+    return {
+      backend: 'x',
+      enabled: true,
+      installUrl: 'https://x',
+      installed: true,
+      label: 'X',
+      modelOptions: [],
+      models: [],
+      version: null,
+      ...over,
+    };
+  };
 
   const statuses: AgentCliStatus[] = [
     row({ backend: 'a', enabled: true, installed: true }),

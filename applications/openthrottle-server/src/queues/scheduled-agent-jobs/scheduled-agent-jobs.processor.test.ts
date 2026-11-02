@@ -428,8 +428,12 @@ describe('ScheduledAgentJobsProcessor', () => {
   });
 
   describe('resume of an inactive schedule', () => {
-    const resumeRow = (): ScheduledAgentJobRun =>
-      createMock<ScheduledAgentJobRun>({ id: 'run-resume', trigger: 'resume' });
+    const resumeRow = (): ScheduledAgentJobRun => {
+      return createMock<ScheduledAgentJobRun>({
+        id: 'run-resume',
+        trigger: 'resume',
+      });
+    };
 
     it('cancels a resume run without spawning the agent when the schedule was disabled', async () => {
       vi.mocked(jobsService.findRunById).mockResolvedValue(resumeRow());
@@ -444,8 +448,7 @@ describe('ScheduledAgentJobsProcessor', () => {
       expect(jobsService.markRunFinished).toHaveBeenCalledExactlyOnceWith(
         'run-resume',
         {
-          errorMessage:
-            'The schedule was disabled before the usage-limit resume fired',
+          errorMessage: `The schedule was disabled before the usage-limit resume fired`,
           exitCode: null,
           status: 'cancelled',
         },
@@ -473,8 +476,7 @@ describe('ScheduledAgentJobsProcessor', () => {
       expect(jobsService.markRunFinished).toHaveBeenCalledWith(
         'run-resume',
         expect.objectContaining({
-          errorMessage:
-            'The schedule was deleted before the usage-limit resume fired',
+          errorMessage: `The schedule was deleted before the usage-limit resume fired`,
           status: 'cancelled',
         }),
       );
@@ -524,8 +526,7 @@ describe('ScheduledAgentJobsProcessor', () => {
       await processor.process(makeJob());
 
       expect(jobsService.markRunFinished).toHaveBeenCalledWith('run-1', {
-        errorMessage:
-          'Usage limit reached (five_hour); resets at 2026-11-01T17:00:00.000Z',
+        errorMessage: `Usage limit reached (five_hour); resets at 2026-11-01T17:00:00.000Z`,
         exitCode: 1,
         status: 'usage_limited',
         usageLimitResetsAt: new Date('2026-11-01T17:00:00.000Z'),

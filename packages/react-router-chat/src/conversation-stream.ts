@@ -187,9 +187,8 @@ export function reduceStreamChunk(
         error: chunk.error ?? null,
       },
     );
-    const settled = chunk.error
-      ? failRunningTurnTools(withUsage, chunk.error)
-      : withUsage;
+    const { error } = chunk;
+    const settled = error ? failRunningTurnTools(withUsage, error) : withUsage;
     // A usage-limited terminal carries `usageLimit` in its metadata; make sure
     // the turn shows it even when no `usage_limit` chunk preceded it.
     events.set(

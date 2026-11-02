@@ -329,18 +329,20 @@ describe('ScheduledAgentJobsGraphqlService', () => {
   describe('cancelRun on a queued run', () => {
     const queuedRun = (
       overrides: Partial<ScheduledAgentJobRun> = {},
-    ): ScheduledAgentJobRun =>
-      createMock<ScheduledAgentJobRun>({
+    ): ScheduledAgentJobRun => {
+      return createMock<ScheduledAgentJobRun>({
         bullmqJobId: null,
         id: 'run-1',
         status: 'queued',
         ...overrides,
       });
-    const bullJob = (state: string): Job<ScheduledAgentJobPayload, void> =>
-      createMock<Job<ScheduledAgentJobPayload, void>>({
+    };
+    const bullJob = (state: string): Job<ScheduledAgentJobPayload, void> => {
+      return createMock<Job<ScheduledAgentJobPayload, void>>({
         getState: vi.fn().mockResolvedValue(state),
         remove: vi.fn().mockResolvedValue(undefined),
       });
+    };
 
     it('removes a delayed usage-limit resume job by the run bullmqJobId and records the run cancelled', async () => {
       const job = bullJob('delayed');

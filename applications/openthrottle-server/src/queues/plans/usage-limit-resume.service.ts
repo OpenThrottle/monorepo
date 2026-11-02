@@ -15,7 +15,7 @@ import { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-
 import { updateMatchingTasksAndEmitStatusChanged } from '../../notifications/emit-bulk-task-status-changes.ts';
 import { NotificationsService } from '../../notifications/notifications.service.ts';
 import { USAGE_LIMIT_RESUME_MAX_CHAIN_DEPTH } from '../usage-limit/usage-limit.constants.ts';
-import { decideUsageLimitResume } from '../usage-limit/usage-limit-resume-policy.ts';
+import { decideUsageLimitResume } from '../usage-limit/usage-limit.utils.ts';
 import { PLANS_QUEUE_NAME } from './plans.constants.ts';
 import type { RunPlanOrchestratorJobData } from './plans.types.ts';
 
@@ -29,8 +29,9 @@ export interface UsageLimitHandling {
   readonly outcome: 'held' | 'resumed' | 'skipped';
 }
 
-const describeError = (error: unknown): string =>
-  error instanceof Error ? error.message : String(error);
+const describeError = (error: unknown): string => {
+  return error instanceof Error ? error.message : String(error);
+};
 
 const parseInstant = (iso: string | null): Date | null => {
   if (iso === null) {

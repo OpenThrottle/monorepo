@@ -128,18 +128,22 @@ const onFinished = (
 
 const onUsageLimited = (
   usageLimit: WorkflowRalphUsageLimit,
-): WorkflowRunResult => ({
-  exitCode: 0,
-  reason: 'workflow_usage_limited',
-  status: 'finished',
-  usageLimit,
-});
+): WorkflowRunResult => {
+  return {
+    exitCode: 0,
+    reason: 'workflow_usage_limited',
+    status: 'finished',
+    usageLimit,
+  };
+};
 
-const onFailure = (reason: WorkflowFailedReason): WorkflowRunResult => ({
-  exitCode: 1,
-  reason,
-  status: 'failed',
-});
+const onFailure = (reason: WorkflowFailedReason): WorkflowRunResult => {
+  return {
+    exitCode: 1,
+    reason,
+    status: 'failed',
+  };
+};
 
 /**
  * @description Normalizes an unknown thrown value into a single-line, operator-readable description.

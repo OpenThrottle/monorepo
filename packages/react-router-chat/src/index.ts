@@ -29,7 +29,7 @@ export * from './conversation-stream-action';
 export * from './data/chat-conversation-actions';
 export * from './data/chat-model-picker-favorites';
 export * from './data/chat-turn-fetcher-intents';
-export * from './data/chat-usage-limit.copy';
+export * from './data/data.copy';
 export * from './file-mentions';
 export * from './hooks';
 // Legacy names for the hooks' renamed `Use<Name>Options` input interfaces.

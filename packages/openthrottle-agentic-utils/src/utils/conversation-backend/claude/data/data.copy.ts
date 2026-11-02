@@ -19,9 +19,7 @@ export function claudeApiKeyOverrideWarning(
   subscriptionType: string | null,
   keySource: string,
 ): string {
-  const plan =
-    subscriptionType === null
-      ? 'subscription'
-      : `${subscriptionType} subscription`;
+  const typedPlan = `${subscriptionType} subscription`;
+  const plan = subscriptionType === null ? 'subscription' : typedPlan;
   return `${keySource} is set, so Claude runs bill the API key, not your ${plan}. Unset it to use the subscription.`;
 }

@@ -13,7 +13,7 @@ import {
   USAGE_LIMIT_RESUME_JOB_ID_PREFIX,
   USAGE_LIMIT_RESUME_MAX_CHAIN_DEPTH,
 } from '../usage-limit/usage-limit.constants.ts';
-import { decideScheduledUsageLimitResume } from '../usage-limit/usage-limit-resume-policy.ts';
+import { decideScheduledUsageLimitResume } from '../usage-limit/usage-limit.utils.ts';
 import {
   buildScheduledAgentJobPayload,
   ScheduledAgentJobSchedulerService,
@@ -33,8 +33,9 @@ export type ScheduledUsageLimitHandling =
   | { readonly outcome: 'held'; readonly reason: string }
   | { readonly outcome: 'resumed'; readonly resumeRunId: string };
 
-const describeError = (error: unknown): string =>
-  error instanceof Error ? error.message : String(error);
+const describeError = (error: unknown): string => {
+  return error instanceof Error ? error.message : String(error);
+};
 
 /**
  * @description The BullMQ jobId of the continuation for a limited run. Deterministic, so BullMQ
@@ -42,8 +43,9 @@ const describeError = (error: unknown): string =>
  * run resumes at most once), so a retained completed job with this id can never swallow a legitimate
  * later enqueue — the gotcha documented in `plan-rules-evaluation.service.ts` does not apply.
  */
-export const usageLimitResumeJobId = (limitedRunId: string): string =>
-  `${USAGE_LIMIT_RESUME_JOB_ID_PREFIX}${limitedRunId}`;
+export const usageLimitResumeJobId = (limitedRunId: string): string => {
+  return `${USAGE_LIMIT_RESUME_JOB_ID_PREFIX}${limitedRunId}`;
+};
 
 /**
  * @description Everything that happens after a scheduled-agent-job run, already recorded
@@ -167,9 +169,11 @@ export class ScheduledAgentJobUsageLimitResumeService {
     if (run === null) {
       const winner = await this.jobsService.findRunResumingFrom(limitedRunId);
 
-      return winner === null
-        ? this.hold(limitedRunId, 'scheduling the resume failed')
-        : { outcome: 'resumed', resumeRunId: winner.id };
+      if (winner === null) {
+        return this.hold(limitedRunId, 'scheduling the resume failed');
+      }
+
+      return { outcome: 'resumed', resumeRunId: winner.id };
     }
 
     try {

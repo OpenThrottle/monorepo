@@ -11,6 +11,7 @@
 import { executeGraphql } from '@openthrottle/nodejs-graphql';
 import { z } from 'zod';
 
+import type { DiscoverAgentClisQuery } from '../__generated__/graphql.js';
 import { DiscoverAgentClisDocument } from '../__generated__/graphql.js';
 import type { GenericResult } from '../types/index.ts';
 import { runTool } from '../utils/tool-result.ts';
@@ -40,6 +41,26 @@ type DiscoverAgentClisStructured = {
   scannedAt: string;
   totalCount: number;
 };
+
+type DiscoveredAgent =
+  DiscoverAgentClisQuery['discoverAgentClis']['agents'][number];
+
+function toAgentCliAuth(auth: DiscoveredAgent['auth']): AgentCliAuth | null {
+  if (auth === null || auth === undefined) {
+    return null;
+  }
+
+  return {
+    accountEmail: auth.accountEmail ?? null,
+    activeCredential: auth.activeCredential,
+    apiKeyOverridesSubscription: auth.apiKeyOverridesSubscription,
+    authMethod: auth.authMethod ?? null,
+    loggedIn: auth.loggedIn,
+    organizationName: auth.organizationName ?? null,
+    subscriptionType: auth.subscriptionType ?? null,
+    warning: auth.warning ?? null,
+  };
+}
 
 function describeAuth(agent: AgentCli): string[] {
   const { auth } = agent;
@@ -75,20 +96,7 @@ export async function discoverAgentClisToolHandler(
       }
 
       const agents: AgentCli[] = discovered.agents.map((agent) => ({
-        auth:
-          agent.auth === null || agent.auth === undefined
-            ? null
-            : {
-                accountEmail: agent.auth.accountEmail ?? null,
-                activeCredential: agent.auth.activeCredential,
-                apiKeyOverridesSubscription:
-                  agent.auth.apiKeyOverridesSubscription,
-                authMethod: agent.auth.authMethod ?? null,
-                loggedIn: agent.auth.loggedIn,
-                organizationName: agent.auth.organizationName ?? null,
-                subscriptionType: agent.auth.subscriptionType ?? null,
-                warning: agent.auth.warning ?? null,
-              },
+        auth: toAgentCliAuth(agent.auth),
         backend: agent.backend,
         chatCapable: agent.chatCapable,
         label: agent.label,

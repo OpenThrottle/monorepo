@@ -186,11 +186,17 @@ export interface AgentCliAuthSource {
  */
 export const collectAgentCliAuthWarnings = (
   agents: readonly AgentCliAuthSource[],
-): readonly AgentCliAuthWarning[] =>
-  agents.flatMap((agent) => {
-    const warning = agent.auth?.warning;
+): readonly AgentCliAuthWarning[] => {
+  const warnings: AgentCliAuthWarning[] = [];
 
-    return warning === undefined || warning === null || warning === ''
-      ? []
-      : [{ backend: agent.backend, label: agent.label, warning }];
-  });
+  for (const agent of agents) {
+    const warning = agent.auth?.warning;
+    const hasWarning = typeof warning === 'string' && warning !== '';
+
+    if (hasWarning) {
+      warnings.push({ backend: agent.backend, label: agent.label, warning });
+    }
+  }
+
+  return warnings;
+};

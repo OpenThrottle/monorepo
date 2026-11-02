@@ -181,8 +181,9 @@ export const SETTINGS_AGENTS_COPY = {
 } as const;
 
 /** Title of the credential warning alert shown above the agents table. */
-export const settingsAgentsAuthWarningTitle = (label: string): string =>
-  `${label}: check which credential is active`;
+export const settingsAgentsAuthWarningTitle = (label: string): string => {
+  return `${label}: check which credential is active`;
+};
 
 /** Pluralize the compact models summary shown in the table cell. */
 export const settingsAgentsModelsSummary = (count: number): string =>

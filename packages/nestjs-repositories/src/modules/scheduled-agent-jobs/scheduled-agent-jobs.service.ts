@@ -333,6 +333,8 @@ export class ScheduledAgentJobsService {
     id: string,
     input: FinishScheduledAgentJobRunInput,
   ): Promise<void> {
+    const { usageLimitResetsAt, usageLimitType } = input;
+
     await this.runRepository.save(
       this.runRepository.create({
         errorMessage: input.errorMessage ?? null,
@@ -360,12 +362,8 @@ export class ScheduledAgentJobsService {
         ...(input.totalTokens === undefined
           ? {}
           : { totalTokens: input.totalTokens }),
-        ...(input.usageLimitResetsAt === undefined
-          ? {}
-          : { usageLimitResetsAt: input.usageLimitResetsAt }),
-        ...(input.usageLimitType === undefined
-          ? {}
-          : { usageLimitType: input.usageLimitType }),
+        ...(usageLimitResetsAt === undefined ? {} : { usageLimitResetsAt }),
+        ...(usageLimitType === undefined ? {} : { usageLimitType }),
       }),
     );
   }

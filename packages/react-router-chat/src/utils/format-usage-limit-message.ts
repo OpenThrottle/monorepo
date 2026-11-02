@@ -1,12 +1,4 @@
-/**
- * Static copy and formatting for {@link ChatUsageLimitNotice}. Kept out of the
- * component per the repo's component/data split.
- * @public
- */
-export const CHAT_USAGE_LIMIT_COPY = {
-  limitReached: 'Usage limit reached',
-  resetsPrefix: 'resets',
-} as const;
+import { CHAT_USAGE_LIMIT_COPY } from '../data/data.copy';
 
 /**
  * Human line for a usage-limit event: "Usage limit reached — resets <local

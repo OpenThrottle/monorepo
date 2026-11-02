@@ -170,6 +170,10 @@ function mapRateLimit(
  */
 function mapResult(event: Record<string, unknown>): ConversationStreamChunk {
   const isError = event.is_error === true;
+  const hitUsageLimit = isClaudeUsageLimitResult(event);
+  const unknownUsageLimit = {
+    usageLimit: { rateLimitType: null, resetsAt: null },
+  };
 
   return {
     delta: '',
@@ -184,9 +188,7 @@ function mapResult(event: Record<string, unknown>): ConversationStreamChunk {
       result: asString(event.result) ?? null,
       totalCostUsd: event.total_cost_usd ?? null,
       usage: event.usage ?? null,
-      ...(isClaudeUsageLimitResult(event)
-        ? { usageLimit: { rateLimitType: null, resetsAt: null } }
-        : {}),
+      ...(hitUsageLimit ? unknownUsageLimit : {}),
     },
   };
 }

@@ -14,10 +14,11 @@ import {
 const RESETS_AT = 1_793_594_400;
 const RESETS_AT_ISO = new Date(RESETS_AT * 1000).toISOString();
 
-const ndjson = (...events: readonly (object | string)[]): string =>
-  events
+const ndjson = (...events: readonly (object | string)[]): string => {
+  return events
     .map((event) => (typeof event === 'string' ? event : JSON.stringify(event)))
     .join('\n');
+};
 
 const initEvent = {
   cwd: '/work',
@@ -35,17 +36,19 @@ const assistantEvent = {
   uuid: 'u-1',
 };
 
-const rateLimit = (status: string): object => ({
-  rate_limit_info: {
-    overageStatus: 'allowed',
-    rateLimitType: 'five_hour',
-    resetsAt: RESETS_AT,
-    status,
-  },
-  session_id: 's-1',
-  type: 'rate_limit_event',
-  uuid: 'u-2',
-});
+const rateLimit = (status: string): object => {
+  return {
+    rate_limit_info: {
+      overageStatus: 'allowed',
+      rateLimitType: 'five_hour',
+      resetsAt: RESETS_AT,
+      status,
+    },
+    session_id: 's-1',
+    type: 'rate_limit_event',
+    uuid: 'u-2',
+  };
+};
 
 describe('parseClaudeStreamJsonOutput', () => {
   it('takes result.result as the text on success, with no usage limit', () => {
@@ -236,7 +239,9 @@ describe('parseClaudeStreamJsonOutput', () => {
 });
 
 describe('renderClaudeStreamJsonLine', () => {
-  const line = (event: object): string => JSON.stringify(event);
+  const line = (event: object): string => {
+    return JSON.stringify(event);
+  };
 
   it('renders the concatenated text blocks of an assistant event', () => {
     expect(
