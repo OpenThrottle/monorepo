@@ -32,6 +32,14 @@ export const PLAN_RUN_STATUS = {
   IN_PROGRESS: 'IN_PROGRESS',
   QUEUED: 'QUEUED',
   STALE: 'STALE',
+  /**
+   * Terminal for the row it is written to: the run stopped cleanly because the agent account hit a
+   * subscription usage limit. Distinct from FAILED (the run did not err) and STALE (contact was not
+   * lost). A continuation run may follow, linked by `plan_runs.resume_of_run_id`; that run is a NEW
+   * row, so this one is settled rather than held open. The stale sweeps only select IN_PROGRESS, so
+   * it is exempt from them by construction.
+   */
+  USAGE_LIMITED: 'USAGE_LIMITED',
 } as const;
 
 export type PlanRunStatus =

@@ -42,6 +42,19 @@ describe('ChatTurnTimeline Component', () => {
     expect(text.indexOf('read')).toBeLessThan(text.indexOf('final answer'));
   });
 
+  test('renders a usageLimit event as a status notice', () => {
+    const component = renderTimeline([
+      {
+        kind: 'usageLimit',
+        rateLimitType: 'five_hour',
+        resetsAt: null,
+        sortOrder: 0,
+      },
+    ]);
+
+    expect(component.getByTestId('ChatUsageLimitNotice')).toBeInTheDocument();
+  });
+
   test('folds an adjacent thinking + tool run into one collapsed activity row', () => {
     const component = renderTimeline([
       { kind: 'thinking', sortOrder: 0, text: 'reasoning' },

@@ -4,6 +4,7 @@ import { NestjsRedisModule } from '@openthrottle/nestjs-redis';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
 import { ScheduledAgentJobDirectoryLockService } from './scheduled-agent-job-directory-lock.service.ts';
+import { ScheduledAgentJobUsageLimitResumeService } from './scheduled-agent-job-usage-limit-resume.service.ts';
 import { ScheduledAgentJobsProcessor } from './scheduled-agent-jobs.processor.ts';
 import { ScheduledAgentJobsQueueProducerModule } from './scheduled-agent-jobs-queue-producer.module.ts';
 import { ScheduledAgentJobsReconcileService } from './scheduled-agent-jobs-reconcile.service.ts';
@@ -29,6 +30,7 @@ import { ScheduledAgentRunnerService } from './scheduled-agent-runner.service.ts
     ScheduledAgentJobDirectoryLockService,
     ScheduledAgentJobsProcessor,
     ScheduledAgentJobsReconcileService,
+    ScheduledAgentJobUsageLimitResumeService,
     ScheduledAgentRunnerService,
   ],
 })

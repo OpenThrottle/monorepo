@@ -37,6 +37,7 @@ type RunRepo = {
   createQueryBuilder: ReturnType<typeof vi.fn>;
   find: ReturnType<typeof vi.fn>;
   findOne: ReturnType<typeof vi.fn>;
+  query: ReturnType<typeof vi.fn>;
   save: ReturnType<typeof vi.fn>;
   update: ReturnType<typeof vi.fn>;
 };
@@ -76,6 +77,7 @@ describe('ScheduledAgentJobsService', () => {
       createQueryBuilder: vi.fn(() => queryBuilder),
       find: vi.fn().mockResolvedValue([]),
       findOne: vi.fn().mockResolvedValue(null),
+      query: vi.fn().mockResolvedValue([]),
       save: vi.fn((row: ScheduledAgentJobRun) => Promise.resolve(row)),
       update: vi.fn().mockResolvedValue({ affected: 1 }),
     };
@@ -349,5 +351,95 @@ describe('ScheduledAgentJobsService', () => {
     expect(await service.deleteJob('job-1')).toBe(true);
     jobRepo.delete.mockResolvedValueOnce({ affected: 0 });
     expect(await service.deleteJob('missing')).toBe(false);
+  });
+
+  it('createRun records the run it continues (resume_of_run_id) and defaults it to null', async () => {
+    await service.createRun({
+      driverId: 'claude',
+      resumeOfRunId: 'run-limited',
+      scheduledAgentJobId: 'job-1',
+      trigger: 'resume',
+    });
+    expect(runRepo.save).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        resumeOfRunId: 'run-limited',
+        trigger: 'resume',
+      }),
+    );
+
+    await service.createRun({
+      driverId: 'claude',
+      scheduledAgentJobId: 'job-1',
+      trigger: 'manual',
+    });
+    expect(runRepo.save).toHaveBeenLastCalledWith(
+      expect.objectContaining({ resumeOfRunId: null }),
+    );
+  });
+
+  it('markRunFinished persists the usage limit that stopped the run when supplied', async () => {
+    const resetsAt = new Date('2026-11-01T17:00:00.000Z');
+    await service.markRunFinished('run-1', {
+      status: 'usage_limited',
+      usageLimitResetsAt: resetsAt,
+      usageLimitType: 'five_hour',
+    });
+    expect(runRepo.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 'usage_limited',
+        usageLimitResetsAt: resetsAt,
+        usageLimitType: 'five_hour',
+      }),
+    );
+  });
+
+  it('markRunFinished leaves the usage-limit columns unwritten when omitted', async () => {
+    await service.markRunFinished('run-1', { status: 'failed' });
+    const patch = runRepo.save.mock.calls[0]?.[0];
+    expect('usageLimitResetsAt' in patch).toBe(false);
+    expect('usageLimitType' in patch).toBe(false);
+  });
+
+  it('findRunResumingFrom looks the continuation up by resume_of_run_id', async () => {
+    runRepo.findOne.mockResolvedValueOnce({ id: 'run-next' });
+
+    expect(await service.findRunResumingFrom('run-limited')).toEqual({
+      id: 'run-next',
+    });
+    expect(runRepo.findOne).toHaveBeenCalledWith({
+      where: { resumeOfRunId: 'run-limited' },
+    });
+  });
+
+  describe('countUsageLimitedInChain', () => {
+    it('walks the resume chain with a depth-bounded recursive query and returns the count', async () => {
+      runRepo.query.mockResolvedValueOnce([{ count: 2 }]);
+
+      const count = await service.countUsageLimitedInChain('run-3', 5);
+
+      expect(count).toBe(2);
+      const [sql, params] = runRepo.query.mock.calls[0] ?? [];
+      expect(sql).toContain('WITH RECURSIVE');
+      expect(sql).toContain('FROM scheduled_agent_job_runs');
+      expect(sql).toContain('chain.depth < $2');
+      expect(sql).toContain("status = 'usage_limited'");
+      expect(params).toEqual(['run-3', 5]);
+    });
+
+    it('coerces a string count and treats an empty result as zero', async () => {
+      runRepo.query.mockResolvedValueOnce([{ count: '3' }]);
+      expect(await service.countUsageLimitedInChain('run-1', 5)).toBe(3);
+
+      runRepo.query.mockResolvedValueOnce([]);
+      expect(await service.countUsageLimitedInChain('run-1', 5)).toBe(0);
+    });
+  });
+
+  it('updateRunErrorMessage rewrites only the error message', async () => {
+    await service.updateRunErrorMessage('run-1', 'why');
+    expect(runRepo.update).toHaveBeenCalledWith(
+      { id: 'run-1' },
+      { errorMessage: 'why' },
+    );
   });
 });

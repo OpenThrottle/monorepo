@@ -51,6 +51,11 @@ export class ScheduledAgentJobRunStatsObject {
   succeededCount!: number;
 
   @Field(() => Int, {
+    description: `Runs that stopped on a Claude subscription usage limit inside the window. Terminal and NOT a failure; a continuation run may have been enqueued.`,
+  })
+  usageLimitedCount!: number;
+
+  @Field(() => Int, {
     description: `Every run created inside the window, whatever its status — the "ran today" total.`,
   })
   windowTotalCount!: number;

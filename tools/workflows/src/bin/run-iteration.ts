@@ -16,6 +16,7 @@ import type {
   DriverChunk,
   DriverInvocationConfig,
   DriverWorktreeOptions,
+  UsageLimit,
 } from '@openthrottle/openthrottle-drivers';
 import {
   getDriver,
@@ -49,6 +50,12 @@ export interface RunIterationConfig {
   model?: string;
   /** Optional callback for each stdout/stderr chunk (async path only). */
   onChunk?: (chunk: CursorAgentChunk) => void;
+  /**
+   * Optional callback fired when the iteration closes normally and the driver detected a
+   * subscription usage limit (Claude `stream-json` only). Sync and async paths; does not change the
+   * returned string. Not fired on timeout, abort or spawn failure.
+   */
+  onUsageLimit?: (usageLimit: UsageLimit) => void;
   /** Optional AbortSignal to cancel the iteration (async path only). */
   signal?: AbortSignal;
   /** Cursor-only: `--skip-worktree-setup`. */
@@ -127,6 +134,7 @@ export const runIteration = (config: RunIterationConfig): string => {
 
   return runDriverSync(driver, toDriverConfig(config, driver), {
     logger: ralphDebugLogger,
+    onUsageLimit: config.onUsageLimit,
   });
 };
 
@@ -143,5 +151,6 @@ export const runIterationAsync = (
 
   return runDriverAsync(driver, toDriverConfig(config, driver), {
     logger: ralphDebugLogger,
+    onUsageLimit: config.onUsageLimit,
   });
 };

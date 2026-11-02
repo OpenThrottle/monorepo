@@ -11,7 +11,11 @@
 
 import { isRecord } from '@openthrottle/nodejs-utils';
 
-import type { ChatTurnEvent, ChatTurnUsageEvent } from './types';
+import type {
+  ChatTurnEvent,
+  ChatTurnUsageEvent,
+  ChatTurnUsageLimitEvent,
+} from './types';
 import { hasUsageCounts, normalizeUsage, sumUsage } from './usage';
 
 const asString = (value: unknown): string | null =>
@@ -46,8 +50,79 @@ export const isRetryableTerminalMetadata = (
 ): boolean => {
   const parsed = safeParse(metadataJson);
 
-  return parsed !== null && parsed.retryable === true;
+  // A usage-limited terminal is never retryable, whatever `retryable` says:
+  // replaying the turn would only hammer a limited account.
+  return (
+    parsed !== null && parsed.retryable === true && !isRecord(parsed.usageLimit)
+  );
 };
+
+/** Read `{ rateLimitType, resetsAt }` out of an untrusted usage-limit payload. */
+const toUsageLimitFields = (
+  value: Record<string, unknown> | null,
+): Pick<ChatTurnUsageLimitEvent, 'rateLimitType' | 'resetsAt'> => ({
+  rateLimitType: asString(value?.rateLimitType),
+  resetsAt: asString(value?.resetsAt),
+});
+
+/**
+ * Fold a usage-limit payload (`{ rateLimitType, resetsAt }`) into the turn's
+ * SINGLE `usageLimit` event: a repeat replaces the earlier one in place, since
+ * the CLI may report the rejection more than once.
+ *
+ * @public
+ */
+export const applyTurnUsageLimit = (
+  events: readonly ChatTurnEvent[],
+  payload: Record<string, unknown> | null,
+  sortOrder: number,
+): readonly ChatTurnEvent[] => {
+  const existing = events.find((event) => event.kind === 'usageLimit');
+  const next: ChatTurnUsageLimitEvent = {
+    kind: 'usageLimit',
+    ...toUsageLimitFields(payload),
+    sortOrder: existing?.sortOrder ?? sortOrder,
+  };
+
+  return existing === undefined
+    ? [...events, next]
+    : events.map((event) => (event.kind === 'usageLimit' ? next : event));
+};
+
+/**
+ * Add a `usageLimit` event for a terminal chunk (or persisted usage payload)
+ * whose metadata carries `usageLimit`, unless the turn already has one from a
+ * `usage_limit` chunk. Covers a 429 result that arrived with no preceding
+ * `rate_limit_event`. A payload without `usageLimit` is a no-op.
+ *
+ * @public
+ */
+export const applyTerminalUsageLimit = (
+  events: readonly ChatTurnEvent[],
+  metadata: Record<string, unknown> | null,
+  sortOrder: number,
+): readonly ChatTurnEvent[] => {
+  const usageLimit = metadata?.usageLimit;
+
+  if (
+    !isRecord(usageLimit) ||
+    events.some((event) => event.kind === 'usageLimit')
+  ) {
+    return events;
+  }
+
+  return applyTurnUsageLimit(events, usageLimit, sortOrder);
+};
+
+/**
+ * Parse a chunk's `metadataJson` into a record, or null. Exposed so the stream
+ * reducer can hand usage-limit payloads to {@link applyTurnUsageLimit}.
+ *
+ * @public
+ */
+export const parseChunkMetadataRecord = (
+  metadataJson: string | null | undefined,
+): Record<string, unknown> | null => safeParse(metadataJson);
 
 /** Placeholder header used when no backend reported a tool name at all. */
 const FALLBACK_TOOL_NAME = 'tool';
@@ -428,8 +503,21 @@ export const foldPersistedTurnEvents = (
           ...events,
           { kind: 'session', sessionId: meta.sessionId, sortOrder: order },
         ];
+      } else if (kind === 'usage_limit') {
+        events = applyTurnUsageLimit(
+          events,
+          isRecord(raw.metadata) ? raw.metadata : null,
+          order,
+        );
       } else if (kind === 'usage') {
         usageMetadataJsons.push(metadataJson);
+        // The terminal usage payload of a limited turn carries `usageLimit`;
+        // surface it when no `usage_limit` event was persisted (a bare 429).
+        events = applyTerminalUsageLimit(
+          events,
+          isRecord(raw.metadata) ? raw.metadata : null,
+          order,
+        );
       }
     }
 

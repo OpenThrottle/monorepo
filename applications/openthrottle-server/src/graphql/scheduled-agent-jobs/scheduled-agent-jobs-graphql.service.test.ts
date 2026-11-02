@@ -8,7 +8,7 @@ import {
   type ScheduledAgentJob,
   type ScheduledAgentJobRun,
 } from '@openthrottle/nestjs-repositories';
-import type { Queue } from 'bullmq';
+import type { Job, Queue } from 'bullmq';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ScheduledAgentJobCancellationService } from '../../queues/scheduled-agent-jobs/scheduled-agent-job-cancellation.service.ts';
@@ -324,5 +324,95 @@ describe('ScheduledAgentJobsGraphqlService', () => {
     await service.setEnabled('j1', false);
     expect(scheduler.removeScheduler).toHaveBeenCalledWith('scheduled-job:j1');
     expect(jobsService.updateNextRunAt).toHaveBeenCalledWith('j1', null);
+  });
+
+  describe('cancelRun on a queued run', () => {
+    const queuedRun = (
+      overrides: Partial<ScheduledAgentJobRun> = {},
+    ): ScheduledAgentJobRun =>
+      createMock<ScheduledAgentJobRun>({
+        bullmqJobId: null,
+        id: 'run-1',
+        status: 'queued',
+        ...overrides,
+      });
+    const bullJob = (state: string): Job<ScheduledAgentJobPayload, void> =>
+      createMock<Job<ScheduledAgentJobPayload, void>>({
+        getState: vi.fn().mockResolvedValue(state),
+        remove: vi.fn().mockResolvedValue(undefined),
+      });
+
+    it('removes a delayed usage-limit resume job by the run bullmqJobId and records the run cancelled', async () => {
+      const job = bullJob('delayed');
+      vi.mocked(jobsService.findRunById).mockResolvedValue(
+        queuedRun({ bullmqJobId: 'usage-limit-resume-run-0' }),
+      );
+      vi.mocked(queue.getJob).mockResolvedValue(job);
+
+      await service.cancelRun('run-1');
+
+      expect(jobsService.requestRunCancel).toHaveBeenCalledWith('run-1');
+      expect(queue.getJob).toHaveBeenCalledWith('usage-limit-resume-run-0');
+      expect(job.remove).toHaveBeenCalledOnce();
+      expect(jobsService.markRunFinished).toHaveBeenCalledWith('run-1', {
+        errorMessage: 'Run cancelled',
+        exitCode: null,
+        status: 'cancelled',
+      });
+    });
+
+    it('falls back to the run id for a run-now job (jobId = runId)', async () => {
+      const job = bullJob('waiting');
+      vi.mocked(jobsService.findRunById).mockResolvedValue(queuedRun());
+      vi.mocked(queue.getJob).mockResolvedValue(job);
+
+      await service.cancelRun('run-1');
+
+      expect(queue.getJob).toHaveBeenCalledWith('run-1');
+      expect(job.remove).toHaveBeenCalledOnce();
+    });
+
+    it('records the run cancelled even when its job is already gone', async () => {
+      vi.mocked(jobsService.findRunById).mockResolvedValue(queuedRun());
+      vi.mocked(queue.getJob).mockResolvedValue(undefined);
+
+      await service.cancelRun('run-1');
+
+      expect(jobsService.markRunFinished).toHaveBeenCalledWith(
+        'run-1',
+        expect.objectContaining({ status: 'cancelled' }),
+      );
+    });
+
+    it('leaves a job a worker has already picked up to the processor', async () => {
+      const job = bullJob('active');
+      vi.mocked(jobsService.findRunById).mockResolvedValue(queuedRun());
+      vi.mocked(queue.getJob).mockResolvedValue(job);
+
+      await service.cancelRun('run-1');
+
+      expect(job.remove).not.toHaveBeenCalled();
+      expect(jobsService.markRunFinished).not.toHaveBeenCalled();
+    });
+
+    it('does not touch the queue for a run that is already running', async () => {
+      vi.mocked(jobsService.findRunById).mockResolvedValue(
+        queuedRun({ status: 'running' }),
+      );
+
+      await service.cancelRun('run-1');
+
+      expect(queue.getJob).not.toHaveBeenCalled();
+      expect(jobsService.requestRunCancel).toHaveBeenCalledWith('run-1');
+    });
+
+    it('never throws when Redis fails, leaving the durable marker', async () => {
+      vi.mocked(jobsService.findRunById).mockResolvedValue(queuedRun());
+      vi.mocked(queue.getJob).mockRejectedValue(new Error('redis down'));
+
+      await expect(service.cancelRun('run-1')).resolves.toBeDefined();
+      expect(jobsService.requestRunCancel).toHaveBeenCalledWith('run-1');
+      expect(jobsService.markRunFinished).not.toHaveBeenCalled();
+    });
   });
 });

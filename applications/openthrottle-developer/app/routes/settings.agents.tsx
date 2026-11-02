@@ -13,12 +13,14 @@ import {
   SettingsAgentsAgentClisDocument,
 } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
+import { SettingsAgentsAuthWarnings } from '~/routing/settings/components/SettingsAgentsAuthWarnings';
 import { SettingsAgentsInstallNotice } from '~/routing/settings/components/SettingsAgentsInstallNotice';
 import { SettingsAgentsIntroduction } from '~/routing/settings/components/SettingsAgentsIntroduction';
 import { SettingsAgentsTable } from '~/routing/settings/components/SettingsAgentsTable';
 import { SettingsAgentsToolbar } from '~/routing/settings/components/SettingsAgentsToolbar';
 import {
   type AgentCliFilter,
+  collectAgentCliAuthWarnings,
   filterAgentCliStatuses,
   mergeAgentCliStatuses,
 } from '~/routing/settings/data/agent-clis.data';
@@ -64,6 +66,7 @@ export default function Component(
   // Setup
   const statuses = mergeAgentCliStatuses(loaderData.agents);
   const visibleStatuses = filterAgentCliStatuses(statuses, filter);
+  const authWarnings = collectAgentCliAuthWarnings(loaderData.agents);
 
   // Handlers
 
@@ -77,6 +80,7 @@ export default function Component(
     <GlobalScreen>
       <SettingsAgentsIntroduction scannedAt={loaderData.scannedAt} />
       <div className="mt-6 flex flex-col gap-4">
+        <SettingsAgentsAuthWarnings warnings={authWarnings} />
         <SettingsAgentsToolbar
           filter={filter}
           installEnabled={installEnabled}

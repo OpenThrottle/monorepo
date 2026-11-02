@@ -441,12 +441,15 @@ export class PlansResolver {
     out.pid = planRun.pid;
     out.planId = planRun.planId;
     out.queueName = planRun.queueName;
+    out.resumeOfRunId = planRun.resumeOfRunId;
     out.runConfigSnapshotJson = serializePlanRunConfigSnapshotForGraphql(
       planRun.runConfigSnapshot,
     );
     out.runKind = planRun.runKind;
     out.status = planRun.status;
     out.updatedAt = planRun.updatedAt;
+    out.usageLimitResetsAt = planRun.usageLimitResetsAt;
+    out.usageLimitType = planRun.usageLimitType;
     out.workerId = planRun.workerId;
 
     return out;

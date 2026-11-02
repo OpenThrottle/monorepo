@@ -30,27 +30,12 @@ import {
   type ConversationStreamChunk,
 } from '../types.ts';
 import { buildClaudeArgv, CLAUDE_BIN_ENV, CLAUDE_DEFAULT_BIN } from './argv.ts';
+import {
+  CLAUDE_CONFIG_DIR_KEY,
+  CLAUDE_HOST_ENV_KEYS,
+  resolveClaudeConfigDirOverride,
+} from './config-dir.ts';
 import { mapClaudeEvent } from './events.ts';
-
-/**
- * Env var pointing headless chat spawns at a dedicated claude config directory
- * (`CLAUDE_CONFIG_DIR`) that loads NO user plugins. Every headless `--print`
- * turn otherwise re-runs the host user's plugin SessionStart hooks (verified:
- * warp + vercel) and injects their CLAUDE.md before the model answers — pure
- * per-turn overhead on the critical path, and one source of the null-mapped
- * `system/hook_*` events behind the idle-backstop symptom.
- *
- * Opt-in and unset by default so subscription auth (OAuth creds under the real
- * config dir) keeps working out of the box. To isolate, point this at a stable,
- * server-owned directory that carries auth (a copied `.credentials.json`, or set
- * `ANTHROPIC_API_KEY`) but has no `plugins/`/`settings.json` hooks. It must be
- * STABLE across turns: turn one writes the session transcript there under
- * `--session-id`, and `--resume` reads it back from the same place.
- */
-export const CLAUDE_CONFIG_DIR_ENV = 'OPENTHROTTLE_CLAUDE_CONFIG_DIR';
-
-/** The env key claude itself reads to relocate its config/plugins directory. */
-const CLAUDE_CONFIG_DIR_KEY = 'CLAUDE_CONFIG_DIR';
 
 /**
  * Env vars the child is allowed to inherit (host login + locale), nothing else.
@@ -60,14 +45,7 @@ const CLAUDE_CONFIG_DIR_KEY = 'CLAUDE_CONFIG_DIR';
 const ALLOWED_ENV_KEYS = [
   'ANTHROPIC_API_KEY',
   CLAUDE_CONFIG_DIR_KEY,
-  'HOME',
-  'LANG',
-  'LC_ALL',
-  'LOGNAME',
-  'PATH',
-  'TERM',
-  'TMPDIR',
-  'USER',
+  ...CLAUDE_HOST_ENV_KEYS,
 ] as const;
 
 /**
@@ -78,19 +56,6 @@ function resolveClaudeBin(env: NodeJS.ProcessEnv = process.env): string {
   return override !== undefined && override !== ''
     ? override
     : CLAUDE_DEFAULT_BIN;
-}
-
-/**
- * The dedicated plugin-free config dir for headless chat, or undefined to leave
- * claude on its default (`~/.claude` via HOME). The OT override wins over any
- * inherited `CLAUDE_CONFIG_DIR` so chat turns can isolate independently of the
- * server's own claude config.
- */
-function resolveClaudeConfigDir(
-  env: NodeJS.ProcessEnv = process.env,
-): string | undefined {
-  const override = env[CLAUDE_CONFIG_DIR_ENV]?.trim();
-  return override !== undefined && override !== '' ? override : undefined;
 }
 
 /**
@@ -143,6 +108,49 @@ function lineToChunk(line: string): ConversationStreamChunk | null {
   }
 }
 
+/**
+ * Reduce a `usage_limit` chunk's metadata to the `{ rateLimitType, resetsAt }`
+ * payload carried on the terminal chunk.
+ */
+function toUsageLimit(
+  metadata: ConversationStreamChunk['metadata'],
+): Record<string, unknown> {
+  return {
+    rateLimitType: metadata?.rateLimitType ?? null,
+    resetsAt: metadata?.resetsAt ?? null,
+  };
+}
+
+/**
+ * The terminal chunk, with `metadata.usageLimit` replaced by the details from
+ * the last `usage_limit` chunk when the turn ended in a limit. A 429 `result`
+ * carries no reset time, so this is how `resetsAt` survives to the terminal. A
+ * limit is either the result's own `usageLimit` marker, or an earlier
+ * `usage_limit` chunk followed by any terminal error.
+ */
+function withRememberedUsageLimit(
+  terminal: ConversationStreamChunk,
+  remembered: ConversationStreamChunk['metadata'] | null,
+): ConversationStreamChunk {
+  if (remembered === null) {
+    return terminal;
+  }
+
+  const limited =
+    terminal.metadata?.usageLimit !== undefined ||
+    (terminal.error !== null && terminal.error !== undefined);
+
+  return limited
+    ? {
+        ...terminal,
+        metadata: {
+          ...terminal.metadata,
+          usageLimit: toUsageLimit(remembered),
+        },
+      }
+    : terminal;
+}
+
 async function* streamClaude(
   run: ConversationBackendRun,
 ): AsyncGenerator<ConversationStreamChunk> {
@@ -154,7 +162,7 @@ async function* streamClaude(
     throw new Error('The claude backend requires a sessionId.');
   }
 
-  const claudeConfigDir = resolveClaudeConfigDir();
+  const claudeConfigDir = resolveClaudeConfigDirOverride();
 
   // Abort + timeouts are managed explicitly (not via the spawn `signal` option)
   // so teardown escalates SIGTERM→SIGKILL rather than a single signal. stdin is
@@ -231,15 +239,22 @@ async function* streamClaude(
 
   const buffer = new NdjsonBuffer();
   let sawTerminal = false;
+  let lastUsageLimit: ConversationStreamChunk['metadata'] | null = null;
   const emit = function* (
     lines: readonly string[],
   ): Generator<ConversationStreamChunk> {
     for (const line of lines) {
       const chunk = lineToChunk(line);
-      if (chunk !== null) {
-        if (chunk.done) {
-          sawTerminal = true;
-        }
+      if (chunk === null) {
+        continue;
+      }
+      if (chunk.kind === CONVERSATION_STREAM_CHUNK_KINDS.usageLimit) {
+        lastUsageLimit = chunk.metadata ?? null;
+      }
+      if (chunk.done) {
+        sawTerminal = true;
+        yield withRememberedUsageLimit(chunk, lastUsageLimit);
+      } else {
         yield chunk;
       }
     }
@@ -250,8 +265,8 @@ async function* streamClaude(
     if (child.stdout !== null) {
       for await (const data of child.stdout) {
         resetIdle();
-        // A stdout read that maps to no chunk (startup hooks, status/rate-limit
-        // events, a partial line) still resets the child's idle timer above, so
+        // A stdout read that maps to no chunk (startup hooks, allowed/warning
+        // rate-limit events, a partial line) still resets the child's idle timer above, so
         // surface it as a keepalive to keep the server backstop in lockstep.
         yield* withKeepalive(emit(buffer.push(data)));
       }

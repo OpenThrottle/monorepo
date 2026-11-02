@@ -170,6 +170,8 @@ interface GetJobsResult {
 
 /** @description Payload for {@link QueuesService.enqueuePlanRalphOrchestrator}. */
 interface EnqueuePlanRalphOrchestratorQueuePayload {
+  /** Delay in ms before the job becomes runnable (BullMQ `delay`); omit for an immediate job. */
+  readonly delayMs?: number;
   readonly idempotencyKey?: string;
   readonly jobData: RunPlanOrchestratorJobData;
   readonly priority?: number;
@@ -661,7 +663,7 @@ export class QueuesService implements OnModuleDestroy {
 
   /**
    * @description Enqueues an in-process Ralph orchestrator job on the plans queue (`run-plan-orchestrator`).
-   * Validates tuning via {@link RunPlanOrchestratorJobData}; optional `idempotencyKey` is passed as BullMQ `jobId` so duplicate adds return the existing job.
+   * Validates tuning via {@link RunPlanOrchestratorJobData}; optional `idempotencyKey` is passed as BullMQ `jobId` so duplicate adds return the existing job; optional `delayMs` adds the job in the delayed state (used by usage-limit resume).
    */
   async enqueuePlanRalphOrchestrator(
     input: EnqueuePlanRalphOrchestratorQueuePayload,
@@ -676,16 +678,12 @@ export class QueuesService implements OnModuleDestroy {
     }
     const idempotencyKey = normalizedKey.key;
 
-    const priority = input.priority;
-    const opts =
-      idempotencyKey !== undefined
-        ? {
-            ...(priority !== undefined ? { priority } : {}),
-            jobId: idempotencyKey,
-          }
-        : priority !== undefined
-          ? { priority }
-          : {};
+    const { delayMs, priority } = input;
+    const opts = {
+      ...(delayMs !== undefined && delayMs > 0 ? { delay: delayMs } : {}),
+      ...(idempotencyKey !== undefined ? { jobId: idempotencyKey } : {}),
+      ...(priority !== undefined ? { priority } : {}),
+    };
 
     try {
       const job = await this.plansQueue.add(

@@ -16,9 +16,18 @@ export const ScheduleRunsTable = (
   const { className, jobId, runs } = props;
 
   // Hooks
+  const resumedRunIds = React.useMemo(
+    () =>
+      new Set(
+        runs.flatMap((run) =>
+          typeof run.resumeOfRunId === 'string' ? [run.resumeOfRunId] : [],
+        ),
+      ),
+    [runs],
+  );
   const columns = React.useMemo(
-    () => buildScheduleRunsTableColumns(jobId),
-    [jobId],
+    () => buildScheduleRunsTableColumns(jobId, resumedRunIds),
+    [jobId, resumedRunIds],
   );
 
   // Setup

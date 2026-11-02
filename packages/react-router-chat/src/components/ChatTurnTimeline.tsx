@@ -9,6 +9,7 @@ import { ChatThinkingBlock } from './ChatThinkingBlock';
 import { ChatToolCall } from './ChatToolCall';
 import { ChatToolCallGroup } from './ChatToolCallGroup';
 import { ChatTurnUsageSummary } from './ChatTurnUsageSummary';
+import { ChatUsageLimitNotice } from './ChatUsageLimitNotice';
 import { RunningIndicator } from './RunningIndicator';
 
 export interface ChatTurnTimelineProps {
@@ -102,6 +103,8 @@ export const ChatTurnTimeline = (
             return <ChatThinkingBlock key={key} text={event.text} />;
           case 'usage':
             return <ChatTurnUsageSummary event={event} key={key} />;
+          case 'usageLimit':
+            return <ChatUsageLimitNotice event={event} key={key} />;
           default:
             return null;
         }

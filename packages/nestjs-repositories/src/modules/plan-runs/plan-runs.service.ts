@@ -31,8 +31,18 @@ interface RecordQueuedPlanRunInput {
   readonly model?: string | null;
   readonly planId: string;
   readonly queueName: string;
+  /** The usage-limited run this run continues (migration 138); omit/null for an ordinary run. */
+  readonly resumeOfRunId?: string | null;
   readonly runConfigSnapshot?: PlanRunConfigSnapshot | null;
   readonly runKind: PlanRunKind;
+}
+
+/** The usage limit that stopped a run, as persisted on its row by {@link PlanRunsService.settleRunUsageLimited}. */
+interface UsageLimitSettleInput {
+  /** Reset instant; null when the agent CLI did not report one. */
+  readonly resetsAt: Date | null;
+  /** Raw window name (`five_hour`, `seven_day`, …); null when not reported. */
+  readonly type: string | null;
 }
 
 /**
@@ -125,6 +135,7 @@ export class PlanRunsService {
       model: input.model ?? null,
       planId: input.planId,
       queueName: input.queueName,
+      resumeOfRunId: input.resumeOfRunId ?? null,
       runConfigSnapshot,
       runKind: input.runKind,
       status: 'QUEUED',
@@ -345,6 +356,75 @@ export class PlanRunsService {
     );
 
     return repo.findOne({ where: { bullmqJobId, queueName } });
+  }
+
+  /**
+   * @description Settles a worker-owned run to {@link PLAN_RUN_STATUS.USAGE_LIMITED}, keyed on the
+   * (queueName, bullmqJobId) pair like {@link PlanRunsService.settleRunByJob}, and records the limit
+   * that stopped it (`usage_limit_resets_at` / `usage_limit_type`). Guarded: only a row still
+   * QUEUED or IN_PROGRESS is written, so a run the stale sweeper (STALE) or a cancel (CANCELLED)
+   * already settled is never overwritten. Nulls the run-location columns in the same update. Returns
+   * the settled row, or null when no row matched or the guard rejected the write.
+   */
+  async settleRunUsageLimited(
+    queueName: string,
+    bullmqJobId: string,
+    limit: UsageLimitSettleInput,
+  ): Promise<PlanRun | null> {
+    const repo = this.getRepository();
+    const result = await repo
+      .createQueryBuilder()
+      .update(PlanRun)
+      .set({
+        hostname: null,
+        pid: null,
+        status: PLAN_RUN_STATUS.USAGE_LIMITED,
+        usageLimitResetsAt: limit.resetsAt,
+        usageLimitType: limit.type,
+        workerId: null,
+      })
+      .where('bullmq_job_id = :bullmqJobId', { bullmqJobId })
+      .andWhere('queue_name = :queueName', { queueName })
+      .andWhere('status IN (:...statuses)', {
+        statuses: [PLAN_RUN_STATUS.IN_PROGRESS, PLAN_RUN_STATUS.QUEUED],
+      })
+      .execute();
+
+    if ((result.affected ?? 0) === 0) {
+      return null;
+    }
+
+    return repo.findOne({ where: { bullmqJobId, queueName } });
+  }
+
+  /**
+   * @description Counts the USAGE_LIMITED runs on the continuation chain ENDING at `runId`: the run
+   * itself plus every ancestor reached by following `resume_of_run_id`. Backs the policy's
+   * "stop auto-resuming after N limited runs" bound. The walk is a recursive CTE capped at
+   * `maxDepth` rows, so it is bounded even against a corrupt cyclic chain; the result therefore
+   * never exceeds `maxDepth`.
+   */
+  async countUsageLimitedInChain(
+    runId: string,
+    maxDepth: number,
+  ): Promise<number> {
+    const rows: Array<{ readonly count: number | string }> =
+      await this.getRepository().query(
+        `WITH RECURSIVE chain AS (
+           SELECT id, status, resume_of_run_id, 1 AS depth
+             FROM plan_runs
+            WHERE id = $1
+           UNION ALL
+           SELECT parent.id, parent.status, parent.resume_of_run_id, chain.depth + 1
+             FROM plan_runs parent
+             JOIN chain ON parent.id = chain.resume_of_run_id
+            WHERE chain.depth < $2
+         )
+         SELECT COUNT(*)::int AS count FROM chain WHERE status = $3`,
+        [runId, maxDepth, PLAN_RUN_STATUS.USAGE_LIMITED],
+      );
+
+    return Number(rows[0]?.count ?? 0);
   }
 
   /**

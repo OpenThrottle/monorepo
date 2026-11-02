@@ -19,6 +19,7 @@ import type { BullMqRunOutputRetentionService } from '../bullmq-run-output-reten
 import type { ScheduledAgentJobCancellationService } from './scheduled-agent-job-cancellation.service.ts';
 import type { ScheduledAgentJobDirectoryLockService } from './scheduled-agent-job-directory-lock.service.ts';
 import { type ScheduledAgentJobDirectoryLockResult } from './scheduled-agent-job-directory-lock.service.ts';
+import type { ScheduledAgentJobUsageLimitResumeService } from './scheduled-agent-job-usage-limit-resume.service.ts';
 import {
   foldRunUsage,
   parseRunOutcome,
@@ -34,6 +35,7 @@ const result = (
   exitCode: 0,
   output: '',
   status: RUN_AGENT_STATUS.ok,
+  usageLimit: null,
   ...overrides,
 });
 
@@ -91,6 +93,7 @@ describe('ScheduledAgentJobsProcessor', () => {
   let runner: ScheduledAgentRunnerService;
   let cancellation: ScheduledAgentJobCancellationService;
   let directoryLock: ScheduledAgentJobDirectoryLockService;
+  let usageLimitResume: ScheduledAgentJobUsageLimitResumeService;
   let release: Mock<() => Promise<void>>;
   let retention: BullMqRunOutputRetentionService;
   let writer: KeyedJsonlWriter;
@@ -136,6 +139,9 @@ describe('ScheduledAgentJobsProcessor', () => {
         .fn()
         .mockResolvedValue({ lock: { held: true, release }, status: 'held' }),
     });
+    usageLimitResume = createMock<ScheduledAgentJobUsageLimitResumeService>({
+      handle: vi.fn().mockResolvedValue({ outcome: 'held', reason: 'test' }),
+    });
     retention = createMock<BullMqRunOutputRetentionService>();
     writer = createMock<KeyedJsonlWriter>();
 
@@ -146,6 +152,7 @@ describe('ScheduledAgentJobsProcessor', () => {
       runner,
       cancellation,
       directoryLock,
+      usageLimitResume,
       retention,
       writer,
     );
@@ -293,6 +300,7 @@ describe('ScheduledAgentJobsProcessor', () => {
       runner,
       cancellation,
       directoryLock,
+      usageLimitResume,
       retention,
       writer,
     );
@@ -318,6 +326,7 @@ describe('ScheduledAgentJobsProcessor', () => {
       runner,
       cancellation,
       directoryLock,
+      usageLimitResume,
       retention,
       writer,
     );
@@ -347,6 +356,7 @@ describe('ScheduledAgentJobsProcessor', () => {
       runner,
       cancellation,
       directoryLock,
+      usageLimitResume,
       retention,
       writer,
     );
@@ -414,6 +424,196 @@ describe('ScheduledAgentJobsProcessor', () => {
       exitCode: null,
       status: 'cancelled',
       ...NULL_USAGE_COLUMNS,
+    });
+  });
+
+  describe('resume of an inactive schedule', () => {
+    const resumeRow = (): ScheduledAgentJobRun =>
+      createMock<ScheduledAgentJobRun>({ id: 'run-resume', trigger: 'resume' });
+
+    it('cancels a resume run without spawning the agent when the schedule was disabled', async () => {
+      vi.mocked(jobsService.findRunById).mockResolvedValue(resumeRow());
+      vi.mocked(jobsService.findJobById).mockResolvedValue(
+        createMock<ScheduledAgentJob>({ enabled: false }),
+      );
+
+      await processor.process(makeJob({ runId: 'run-resume' }));
+
+      expect(runner.run).not.toHaveBeenCalled();
+      expect(jobsService.markRunStarted).not.toHaveBeenCalled();
+      expect(jobsService.markRunFinished).toHaveBeenCalledExactlyOnceWith(
+        'run-resume',
+        {
+          errorMessage:
+            'The schedule was disabled before the usage-limit resume fired',
+          exitCode: null,
+          status: 'cancelled',
+        },
+      );
+    });
+
+    it('skips a resume run whose schedule was deleted (the run row cascaded away)', async () => {
+      vi.mocked(jobsService.findRunById).mockResolvedValue(null);
+      vi.mocked(jobsService.findJobById).mockResolvedValue(null);
+
+      await processor.process(makeJob({ runId: 'run-resume' }));
+
+      expect(runner.run).not.toHaveBeenCalled();
+      expect(jobsService.createRun).not.toHaveBeenCalled();
+      expect(jobsService.markRunFinished).not.toHaveBeenCalled();
+    });
+
+    it('cancels a surviving resume run with a deleted-schedule message', async () => {
+      vi.mocked(jobsService.findRunById).mockResolvedValue(resumeRow());
+      vi.mocked(jobsService.findJobById).mockResolvedValue(null);
+
+      await processor.process(makeJob({ runId: 'run-resume' }));
+
+      expect(runner.run).not.toHaveBeenCalled();
+      expect(jobsService.markRunFinished).toHaveBeenCalledWith(
+        'run-resume',
+        expect.objectContaining({
+          errorMessage:
+            'The schedule was deleted before the usage-limit resume fired',
+          status: 'cancelled',
+        }),
+      );
+    });
+
+    it('runs a resume run normally when the schedule is still enabled', async () => {
+      vi.mocked(jobsService.findRunById).mockResolvedValue(resumeRow());
+      vi.mocked(jobsService.findJobById).mockResolvedValue(
+        createMock<ScheduledAgentJob>({ enabled: true, ownerUserId: 'u1' }),
+      );
+
+      await processor.process(makeJob({ runId: 'run-resume' }));
+
+      expect(runner.run).toHaveBeenCalledOnce();
+      expect(jobsService.markRunStarted).toHaveBeenCalled();
+    });
+
+    it('still lets Run now execute on a disabled schedule', async () => {
+      vi.mocked(jobsService.findRunById).mockResolvedValue(
+        createMock<ScheduledAgentJobRun>({ id: 'run-1', trigger: 'manual' }),
+      );
+      vi.mocked(jobsService.findJobById).mockResolvedValue(
+        createMock<ScheduledAgentJob>({ enabled: false }),
+      );
+
+      await processor.process(makeJob({ runId: 'run-1' }));
+
+      expect(runner.run).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('usage limit', () => {
+    const LIMIT = {
+      rateLimitType: 'five_hour',
+      resetsAt: '2026-11-01T17:00:00.000Z',
+    };
+
+    it('records usage_limited (not failed) with the reset columns and hands the run to the resume service', async () => {
+      vi.mocked(runner.run).mockResolvedValue(
+        result({
+          exitCode: 1,
+          status: RUN_AGENT_STATUS.failed,
+          usageLimit: LIMIT,
+        }),
+      );
+
+      await processor.process(makeJob());
+
+      expect(jobsService.markRunFinished).toHaveBeenCalledWith('run-1', {
+        errorMessage:
+          'Usage limit reached (five_hour); resets at 2026-11-01T17:00:00.000Z',
+        exitCode: 1,
+        status: 'usage_limited',
+        usageLimitResetsAt: new Date('2026-11-01T17:00:00.000Z'),
+        usageLimitType: 'five_hour',
+        ...NULL_USAGE_COLUMNS,
+      });
+      expect(usageLimitResume.handle).toHaveBeenCalledExactlyOnceWith({
+        limit: LIMIT,
+        limitedRunId: 'run-1',
+        scheduleId: 'sched-1',
+      });
+    });
+
+    it('records the run as limited even when the reset time and window are unknown', async () => {
+      const unknown = { rateLimitType: null, resetsAt: null };
+      vi.mocked(runner.run).mockResolvedValue(
+        result({
+          exitCode: 1,
+          status: RUN_AGENT_STATUS.failed,
+          usageLimit: unknown,
+        }),
+      );
+
+      await processor.process(makeJob());
+
+      expect(jobsService.markRunFinished).toHaveBeenCalledWith(
+        'run-1',
+        expect.objectContaining({
+          errorMessage: 'Usage limit reached; reset time unknown',
+          status: 'usage_limited',
+          usageLimitResetsAt: null,
+          usageLimitType: null,
+        }),
+      );
+      expect(usageLimitResume.handle).toHaveBeenCalledOnce();
+    });
+
+    it('settles the run before asking the resume service to decide (the chain count must include it)', async () => {
+      vi.mocked(runner.run).mockResolvedValue(
+        result({
+          exitCode: 1,
+          status: RUN_AGENT_STATUS.failed,
+          usageLimit: LIMIT,
+        }),
+      );
+
+      await processor.process(makeJob());
+
+      const finishedOrder = vi.mocked(jobsService.markRunFinished).mock
+        .invocationCallOrder[0];
+      const handleOrder = vi.mocked(usageLimitResume.handle).mock
+        .invocationCallOrder[0];
+      expect(finishedOrder).toBeLessThan(handleOrder ?? 0);
+    });
+
+    it('lets a cancel win over a usage limit', async () => {
+      vi.mocked(runner.run).mockResolvedValue(
+        result({
+          exitCode: null,
+          status: RUN_AGENT_STATUS.cancelled,
+          usageLimit: LIMIT,
+        }),
+      );
+
+      await processor.process(makeJob());
+
+      expect(jobsService.markRunFinished).toHaveBeenCalledWith(
+        'run-1',
+        expect.objectContaining({ status: 'cancelled' }),
+      );
+      expect(usageLimitResume.handle).not.toHaveBeenCalled();
+    });
+
+    it('leaves a run with no usage limit on the ordinary exit-code mapping', async () => {
+      await processor.process(makeJob());
+
+      expect(usageLimitResume.handle).not.toHaveBeenCalled();
+    });
+
+    it('treats a usage_limited run as terminal for the crash safety net', async () => {
+      runRepoFindOne.mockResolvedValue({
+        id: 'run-9',
+        status: 'usage_limited',
+      });
+
+      await processor.onJobStalled('bull-9');
+
+      expect(jobsService.markRunFinished).not.toHaveBeenCalled();
     });
   });
 

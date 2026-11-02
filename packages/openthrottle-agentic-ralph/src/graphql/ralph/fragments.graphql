@@ -85,7 +85,10 @@ fragment PlanRun on PlanRunObject {
   model
   planId
   queueName
+  resumeOfRunId
   runKind
   status
   updatedAt
+  usageLimitResetsAt
+  usageLimitType
 }

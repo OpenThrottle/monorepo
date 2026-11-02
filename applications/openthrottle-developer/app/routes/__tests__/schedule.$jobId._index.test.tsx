@@ -45,10 +45,12 @@ const run: Route.ComponentProps['loaderData']['runs'][number] = {
   model: 'sonnet',
   outputTokens: null,
   reasoningTokens: null,
+  resumeOfRunId: null,
   startedAt: '2026-07-24T00:00:00.000Z',
   status: 'succeeded',
   totalTokens: null,
   trigger: 'schedule',
+  usageLimitResetsAt: null,
 };
 
 describe('routes/schedule.$jobId._index.tsx', () => {

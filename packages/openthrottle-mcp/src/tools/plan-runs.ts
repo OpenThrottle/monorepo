@@ -262,7 +262,7 @@ export const getPlanRunsToolParameters = z
   .strict();
 
 export const getPlanRunsToolDescription =
-  'List the plan runs recorded for a plan, newest first: status, agent backend, model, branch, run kind, timings, and the worktree it ran in. Use it to attribute an executed plan to the agent and model that ran it, and — during a loop — to poll cancelRequestedAt at task boundaries, which is the ONLY way a Kill reaches an interactive run. Read heartbeatExpected next to isStale: on a run that does not heartbeat, isStale false means "nobody knows", not "verified live".';
+  'List the plan runs recorded for a plan, newest first: status, agent backend, model, branch, run kind, timings, and the worktree it ran in. Use it to attribute an executed plan to the agent and model that ran it, and — during a loop — to poll cancelRequestedAt at task boundaries, which is the ONLY way a Kill reaches an interactive run. Read heartbeatExpected next to isStale: on a run that does not heartbeat, isStale false means "nobody knows", not "verified live". A USAGE_LIMITED run stopped cleanly on a subscription usage limit (usageLimitResetsAt says when it lifts); a run whose resumeOfRunId is set is the automatic continuation of that limited run.';
 
 export async function getPlanRunsToolHandler(
   args: z.infer<typeof getPlanRunsToolParameters>,

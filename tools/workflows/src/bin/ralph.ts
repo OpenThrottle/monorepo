@@ -6,6 +6,7 @@
 
 import { isRalphTerminalStatus } from '@openthrottle/openthrottle-agentic-ralph';
 import { resolveGitBranchFromCwd } from '@openthrottle/openthrottle-agentic-utils';
+import type { UsageLimit } from '@openthrottle/openthrottle-drivers';
 
 import { ARTWORK_RALPH, ARTWORK_THANK_YOU, COLORS } from '../config/index';
 import { MESSAGE_COMPLETED, MESSAGE_INTRO } from '../config/messages';
@@ -275,6 +276,37 @@ export const main = async (): Promise<void> => {
     process.exit(0);
   };
 
+  /** Finalize a usage-limited run: log the reset, reset in-flight task + plan to PENDING, settle FAILED, exit 1. */
+  const finishUsageLimitedRun = async (
+    limit: UsageLimit,
+    inFlightTaskId: string | undefined,
+  ): Promise<void> => {
+    console.error(
+      ` - ⏸️ Claude usage limit reached (${limit.rateLimitType ?? 'unknown window'}); resets at ${limit.resetsAt ?? 'an unknown time'}. Stopping without further iterations; re-run after the reset.`,
+    );
+    await settleCliRunSafely('FAILED');
+
+    if (inFlightTaskId) {
+      try {
+        await updateTaskStatus(openthrottleConfig, inFlightTaskId, 'PENDING');
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        console.warn(
+          `⚠️ Could not reset task ${inFlightTaskId} to PENDING: ${msg}`,
+        );
+      }
+    }
+    try {
+      await updatePlanStatus(openthrottleConfig, effectivePlanId, 'PENDING');
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      console.warn(
+        `⚠️ Could not reset plan ${effectivePlanId} to PENDING: ${msg}`,
+      );
+    }
+    process.exit(1);
+  };
+
   if (isDetached && planRunId) {
     const myRunId = planRunId;
 
@@ -436,11 +468,16 @@ export const main = async (): Promise<void> => {
       }
     }
 
+    // Holder object (not a `let`) so the callback's write is not narrowed away at the read below.
+    const usageLimitHit: { current: UsageLimit | null } = { current: null };
     const iterationConfig: RunIterationConfig = {
       agentPrompt,
       backend: parsedArgs.backend,
       iteration,
       model: parsedArgs.model,
+      onUsageLimit: (limit) => {
+        usageLimitHit.current = limit;
+      },
       skipWorktreeSetup: parsedArgs.skipWorktreeSetup,
       worktree: parsedArgs.worktree,
       worktreeBase: parsedArgs.worktreeBase,
@@ -478,6 +515,18 @@ export const main = async (): Promise<void> => {
     if (killRequested) {
       // eslint-disable-next-line no-await-in-loop
       await finishKilledRun(task ?? firstPendingForIteration);
+    }
+
+    // A subscription usage limit stopped the agent. The detached CLI does not auto-resume (the
+    // plans worker does that for queued runs): hand the in-flight task and plan back, record the
+    // run as FAILED (settleCliPlanRun accepts no USAGE_LIMITED) and exit non-zero without burning
+    // the remaining iterations on a limit that will not lift.
+    if (usageLimitHit.current !== null) {
+      // eslint-disable-next-line no-await-in-loop
+      await finishUsageLimitedRun(
+        usageLimitHit.current,
+        task ?? firstPendingForIteration,
+      );
     }
 
     ralphDebugLogger.debug(

@@ -5,6 +5,8 @@
  * package stays a leaf dependency.
  */
 
+import type { UsageLimit } from '../utils/usage-limit.ts';
+
 /**
  * @description One chunk of subprocess output when a driver is run through the async engine.
  * @public
@@ -208,6 +210,17 @@ export type DriverUpdateDescriptor =
   | { readonly method: 'reinstall' };
 
 /**
+ * @description What a driver's {@link AgentDriver.parseOutput} extracts from the raw stdout of one
+ * run. `text` is what text-mode stdout would have been (the engine then merges stderr into it);
+ * `usageLimit` is non-null when the run was stopped by a subscription usage limit.
+ * @public
+ */
+export interface DriverParsedOutput {
+  readonly text: string;
+  readonly usageLimit: UsageLimit | null;
+}
+
+/**
  * @description A single agent CLI, described once. Contributed via `defineDriver` and looked up
  * through the registry. `buildShellCommand` returns a `shell: true` command string and may throw
  * `UnsupportedDriverModeError` when the CLI has no viable headless mode.
@@ -232,12 +245,29 @@ export interface AgentDriver {
   /** Human/iteration label, e.g. `claude-code`, `cursor-agent`. */
   readonly label: string;
   /**
+   * Optional structured-output parser. A driver whose command emits machine-readable stdout
+   * (Claude: `--output-format stream-json`) supplies this so the engine can recover the same text a
+   * plain-text run would have printed AND surface out-of-band signals such as a usage limit. The
+   * engine applies it to the collected RAW stdout before the `stdout\nstderr` merge. Omitted for
+   * every driver whose stdout is already the final text.
+   */
+  readonly parseOutput?: (stdout: string) => DriverParsedOutput;
+  /**
    * Workspace-relative path of the hook plugin payload THIS CLI should be pointed at, for drivers
    * that advertise `capabilities.pluginDir`. Per-driver rather than global because a payload's
    * hook config names one tool's events; a shared payload loads under a second tool and records
    * nothing. Omitted ⇒ the resolver falls back to `OPENTHROTTLE_PLUGIN_DIR_REL`.
    */
   readonly pluginDirRel?: string;
+  /**
+   * Optional live renderer, the streaming counterpart of {@link parseOutput}. When set, the async
+   * engine line-buffers STDOUT and forwards to `config.onChunk` only what this returns for each
+   * complete line (the engine appends the trailing `\n`; `null` skips the line), so a structured
+   * format such as NDJSON never reaches a human-facing sink raw. stderr chunks are forwarded
+   * unchanged, and `parseOutput` still sees the raw stdout. Drivers without it stream byte-identical
+   * chunks. The sync engine has no `onChunk` and ignores it.
+   */
+  readonly renderOutputLine?: (line: string) => string | null;
   /**
    * How this CLI updates itself. Omitted ⇒ falls back to re-running {@link install} (when present).
    */

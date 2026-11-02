@@ -16,7 +16,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { PlanRunExecutionBackend } from '@openthrottle/nestjs-repositories';
+import type {
+  PlanRun,
+  PlanRunExecutionBackend,
+} from '@openthrottle/nestjs-repositories';
 import {
   Plan,
   PlanRunsService,
@@ -34,7 +37,11 @@ import {
   PLAN_JOB_PRIORITY_DEFAULT,
   PLANS_QUEUE_NAME,
 } from '../../queues/plans/plans.constants.ts';
-import type { RunPlanJobData } from '../../queues/plans/plans.types.ts';
+import type {
+  RunPlanJobData,
+  RunPlanOrchestratorJobData,
+} from '../../queues/plans/plans.types.ts';
+import { USAGE_LIMIT_RESUME_JOB_ID_PREFIX } from '../../queues/usage-limit/usage-limit.constants.ts';
 import {
   normalizeIdempotencyKey,
   QueuesService,
@@ -53,6 +60,12 @@ const ENQUEUE_TASK_STATUSES_TO_RESET = [
   'BACKLOG',
   'SKIPPED',
   'CANCELED',
+] as const;
+
+/** Task statuses a usage-limit continuation re-queues: only the limited run's in-flight work. */
+const USAGE_LIMIT_RESUME_TASK_STATUSES_TO_RESET = [
+  'PENDING',
+  'IN_PROGRESS',
 ] as const;
 
 type ExecutionBackend = PlanRunExecutionBackend;
@@ -101,6 +114,22 @@ interface EnqueueOrchestratorParams {
   readonly repositoryId?: string | null;
   readonly taskId?: string | null;
   readonly workingDirectory?: string | null;
+}
+
+/**
+ * @description Validated parameters for continuing a usage-limited run after its reset. `jobData` is
+ * the limited job's own payload, reused verbatim so the continuation runs exactly as the original
+ * did (same plan, mode, workspace, tuning, hooks).
+ */
+interface EnqueueUsageLimitResumeParams {
+  /** Status-change attribution for the plans.status write (the worker's system account). */
+  readonly actorKind: string | undefined;
+  readonly actorSub: string | undefined;
+  /** How long the continuation job sits in BullMQ's delayed state before it becomes runnable. */
+  readonly delayMs: number;
+  readonly jobData: RunPlanOrchestratorJobData;
+  /** The run row that stopped on the limit; the continuation row links back to it. */
+  readonly limitedRun: PlanRun;
 }
 
 /** @description Result of an enqueue: the persisted backend, job id, and live queue position. */
@@ -314,6 +343,58 @@ export class PlanEnqueueService {
   }
 
   /**
+   * @description Enqueues the DELAYED continuation of a run that stopped on a usage limit. It goes
+   * through the same two steps as every other orchestrator enqueue — {@link commitEnqueueTransaction}
+   * (run row QUEUED + plan QUEUED, one transaction) then `QueuesService.enqueuePlanRalphOrchestrator`
+   * (BullMQ add, after commit) — differing only in what it feeds them: the limited run's own job
+   * payload, snapshot, backend, model, branch and checkout rather than a freshly resolved request,
+   * `resume_of_run_id` set on the new row, and a BullMQ `delay`.
+   *
+   * The BullMQ `jobId` is deterministic (`usage-limit-resume-<limitedRunId>`): a retry of the same
+   * limited run lands on the same job and the same run row instead of forking a second chain. Only
+   * PENDING/IN_PROGRESS tasks are re-queued — the limited run's in-flight work — so tasks a human
+   * parked as BLOCKED/SKIPPED/CANCELED are not resurrected the way a manual re-enqueue would.
+   * Throws on failure; the caller decides the fallback.
+   */
+  async enqueueUsageLimitResume(
+    params: EnqueueUsageLimitResumeParams,
+  ): Promise<{ readonly jobId: string }> {
+    const { actorKind, actorSub, delayMs, jobData, limitedRun } = params;
+    const jobId = `${USAGE_LIMIT_RESUME_JOB_ID_PREFIX}${limitedRun.id}`;
+
+    await this.commitEnqueueTransaction({
+      actorKind,
+      actorSub,
+      actorUserId: limitedRun.actorUserId,
+      branch: limitedRun.branch,
+      bullmqJobId: jobId,
+      checkoutId: limitedRun.checkoutId,
+      executionBackend: limitedRun.executionBackend,
+      model: limitedRun.model,
+      planId: limitedRun.planId,
+      resumeOfRunId: limitedRun.id,
+      runConfigSnapshot: limitedRun.runConfigSnapshot,
+      runKind: 'orchestrator',
+      taskStatusesToReset: USAGE_LIMIT_RESUME_TASK_STATUSES_TO_RESET,
+    });
+
+    const enqueueResult = await this.queuesService.enqueuePlanRalphOrchestrator(
+      {
+        delayMs,
+        idempotencyKey: jobId,
+        jobData,
+        priority: PLAN_JOB_PRIORITY_DEFAULT,
+      },
+    );
+
+    if ('error' in enqueueResult) {
+      throw new Error(enqueueResult.error);
+    }
+
+    return { jobId: enqueueResult.jobId };
+  }
+
+  /**
    * @description Resolves the run's working directory using the locked run_config precedence
    * order: an explicit `checkoutId` → a portable `repositoryId` (resolved to the enqueuing
    * user's single checkout of it) → the raw `workingDirectory` escape hatch. Returns the
@@ -410,8 +491,12 @@ export class PlanEnqueueService {
     executionBackend: ExecutionBackend;
     model?: string | null;
     planId: string;
-    runConfigSnapshot: ReturnType<typeof buildPlanRunConfigSnapshotFromJobData>;
+    resumeOfRunId?: string | null;
+    runConfigSnapshot: ReturnType<
+      typeof buildPlanRunConfigSnapshotFromJobData
+    > | null;
     runKind: 'orchestrator' | 'spawn';
+    taskStatusesToReset?: readonly string[];
   }): Promise<void> {
     const {
       actorKind,
@@ -423,8 +508,10 @@ export class PlanEnqueueService {
       executionBackend,
       model,
       planId,
+      resumeOfRunId,
       runConfigSnapshot,
       runKind,
+      taskStatusesToReset,
     } = params;
     const repo = this.plansService.getRepository();
 
@@ -439,6 +526,7 @@ export class PlanEnqueueService {
           model: model ?? null,
           planId,
           queueName: PLANS_QUEUE_NAME,
+          resumeOfRunId: resumeOfRunId ?? null,
           runConfigSnapshot,
           runKind,
         },
@@ -475,7 +563,7 @@ export class PlanEnqueueService {
         actorKind,
         actorSub,
         captureFailureIsFatal: true,
-        fromStatuses: ENQUEUE_TASK_STATUSES_TO_RESET,
+        fromStatuses: taskStatusesToReset ?? ENQUEUE_TASK_STATUSES_TO_RESET,
         logger: this.logger,
         manager,
         notifications: this.notificationsService,

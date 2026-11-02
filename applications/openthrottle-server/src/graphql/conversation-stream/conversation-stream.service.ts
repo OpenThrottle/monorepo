@@ -26,6 +26,7 @@ import {
   AgentConversationsService,
   AgentTokenUsageService,
 } from '@openthrottle/nestjs-repositories';
+import { isRecord } from '@openthrottle/nodejs-utils';
 import {
   type ChatCompletionMessage,
   classifyCursorFailure,
@@ -42,6 +43,7 @@ import {
   openAiConversationBackend,
   resolveChatIdleTimeoutMs,
 } from '@openthrottle/openthrottle-agentic-utils';
+import type { UsageLimit } from '@openthrottle/openthrottle-drivers';
 
 import { composeCursorStartupErrorText } from './conversation-stream.copy.ts';
 import {
@@ -49,6 +51,7 @@ import {
   type ConversationStreamChunkEnvelope,
   type ConversationStreamChunkPayload,
   type TerminalTimeoutMetadata,
+  type TerminalUsageLimitMetadata,
 } from './conversation-stream.types.ts';
 
 /**
@@ -62,6 +65,23 @@ const CLI_BACKENDS: Readonly<Record<string, ConversationBackend>> =
 
 /** Conversation-metadata key holding a backend's persisted session id. */
 const sessionMetadataKey = (backend: string): string => `${backend}SessionId`;
+
+/**
+ * Narrow a terminal chunk's `metadata.usageLimit` (untyped backend payload) to a
+ * {@link UsageLimit}, or null when the turn was not usage-limited.
+ */
+const readUsageLimit = (value: unknown): UsageLimit | null => {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const { rateLimitType, resetsAt } = value;
+
+  return {
+    rateLimitType: typeof rateLimitType === 'string' ? rateLimitType : null,
+    resetsAt: typeof resetsAt === 'string' ? resetsAt : null,
+  };
+};
 
 /**
  * The cursor backend discriminator. Cursor is the only CLI backend whose chat
@@ -268,6 +288,9 @@ export class ConversationStreamService {
     // Error the backend reported on its terminal chunk (claude gates this on
     // `is_error`); forwarded onto the published done chunk instead of dropped.
     let terminalError: string | null = null;
+    // Usage limit the backend flagged on its terminal chunk (a limited
+    // subscription account); published as the terminal `metadataJson` marker.
+    let terminalUsageLimit: UsageLimit | null = null;
 
     // Non-text events (thinking/tool/usage/session) collected for persistence
     // into the assistant message's tool_metadata on completion.
@@ -437,6 +460,7 @@ export class ConversationStreamService {
           }
 
           terminalError = chunk.error ?? null;
+          terminalUsageLimit = readUsageLimit(chunk.metadata?.usageLimit);
           break;
         }
 
@@ -491,6 +515,10 @@ export class ConversationStreamService {
         retryable: true,
         timedOut: true,
       };
+      const usageLimitMetadata: TerminalUsageLimitMetadata | null =
+        terminalUsageLimit === null
+          ? null
+          : { retryable: false, usageLimit: terminalUsageLimit };
       await this.publishChunk({
         conversationId: run.conversationId,
         delta: '',
@@ -501,7 +529,11 @@ export class ConversationStreamService {
         id: randomUUID(),
         kind: CONVERSATION_STREAM_CHUNK_KINDS.text,
         messageId: run.assistantMessageId,
-        metadataJson: timedOut ? JSON.stringify(timeoutMetadata) : null,
+        metadataJson: timedOut
+          ? JSON.stringify(timeoutMetadata)
+          : usageLimitMetadata === null
+            ? null
+            : JSON.stringify(usageLimitMetadata),
         sortOrder: sortOrder,
       });
     } catch (error: unknown) {

@@ -672,6 +672,100 @@ describe('createWorkflowRalphOrchestrator terminal outcomes', () => {
     expect(run).toHaveBeenCalledTimes(2);
     expect(taskUpdates.at(-1)).toEqual({ id: TASK_A, status: 'PENDING' });
   });
+
+  it('stops with workflow_usage_limited when an iteration hits a usage limit, resetting the task and burning no more iterations', async () => {
+    const usageLimit = {
+      rateLimitType: 'five_hour',
+      resetsAt: '2026-04-01T17:00:00.000Z',
+    };
+    // The limited run's "output" even contains a completion marker; it must NOT be parsed.
+    const run = vi.fn(
+      async (params: {
+        readonly onUsageLimit?: (limit: typeof usageLimit) => void;
+      }) => {
+        params.onUsageLimit?.(usageLimit);
+
+        return `limit reached <ralph:task-complete>${TASK_A}</ralph:task-complete>`;
+      },
+    );
+    const iterationRunner: WorkflowRalphIterationRunner = { run };
+
+    let taskStatus = 'PENDING';
+    const taskUpdates: Array<{ id: string; status: string }> = [];
+    const executeGraphqlV2 = asExecuteGraphqlV2(async (document, variables) => {
+      if (document === GetServerHealthDocument) {
+        return { serverHealth: serverHealthOk };
+      }
+      if (document === GetPlanDocument) {
+        return { plan: basePlan() };
+      }
+      if (document === GetTasksByPlanIdDocument) {
+        return { tasksByPlanId: [baseTask(TASK_A, taskStatus)] };
+      }
+      if (document === UpdatePlanDocument) {
+        return { updatePlan: basePlan({ status: 'IN_PROGRESS' }) };
+      }
+      if (document === UpdateTaskDocument) {
+        const input = readUpdateInput(variables);
+        taskStatus = input.status;
+        taskUpdates.push({ id: input.id ?? '', status: input.status });
+
+        return { updateTask: baseTask(TASK_A, input.status) };
+      }
+      throw new Error('unmocked GraphQL document in test');
+    });
+
+    const orchestrator = createWorkflowRalphOrchestrator({
+      executeGraphqlV2,
+      iterationRunner,
+    });
+
+    const result = await orchestrator.execute({
+      context: { ...baseContext, iterationMax: 5, iterations: 5 },
+    });
+
+    expect(result).toEqual({
+      exitCode: 0,
+      reason: 'workflow_usage_limited',
+      status: 'finished',
+      usageLimit,
+    });
+    expect(run).toHaveBeenCalledTimes(1);
+    expect(taskUpdates.at(-1)).toEqual({ id: TASK_A, status: 'PENDING' });
+    expect(taskUpdates.some((u) => u.status === 'COMPLETED')).toBe(false);
+  });
+
+  it('prefers workflow_cancelled over a usage limit when the run was cancelled', async () => {
+    let cancelled = false;
+    const run = vi.fn(
+      async (params: {
+        readonly onUsageLimit?: (limit: {
+          rateLimitType: string | null;
+          resetsAt: string | null;
+        }) => void;
+      }) => {
+        cancelled = true;
+        params.onUsageLimit?.({ rateLimitType: null, resetsAt: null });
+
+        return 'limited';
+      },
+    );
+    const iterationRunner: WorkflowRalphIterationRunner = { run };
+    const executeGraphqlV2 = createMockExecute({
+      getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
+    });
+
+    const orchestrator = createWorkflowRalphOrchestrator({
+      executeGraphqlV2,
+      iterationRunner,
+    });
+
+    const result = await orchestrator.execute({
+      context: { ...baseContext, isCancellationRequested: () => cancelled },
+    });
+
+    expect(result.reason).toBe('workflow_cancelled');
+  });
 });
 
 describe('createWorkflowRalphOrchestrator control parsing', () => {

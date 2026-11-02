@@ -400,6 +400,63 @@ describe('ConversationStreamService', () => {
     expect(last).toMatchObject({ done: true, error: 'model_not_found' });
   });
 
+  it('publishes a non-retryable usageLimit terminal marker and keeps usage_limit chunks in the transcript events', async () => {
+    const usageLimit = {
+      rateLimitType: 'five_hour',
+      resetsAt: '2027-01-15T08:00:00.000Z',
+    };
+    async function* claudeLimited(): AsyncGenerator<{
+      delta: string;
+      done: boolean;
+      error?: string | null;
+      kind: string;
+      metadata?: Record<string, unknown>;
+    }> {
+      yield {
+        delta: '',
+        done: false,
+        kind: 'usage_limit',
+        metadata: usageLimit,
+      };
+      yield {
+        delta: '',
+        done: true,
+        error: 'limit reached',
+        kind: 'usage',
+        metadata: { apiErrorStatus: 429, usageLimit },
+      };
+    }
+    claudeStreamMock.mockImplementation(claudeLimited);
+    const { conversations, publish, service } = buildService();
+
+    await service.runStream({ ...baseRun, backend: 'claude', cwd: '/repo' });
+
+    const published = publish.mock.calls.map(
+      (call) => call[1].conversationStreamChunkAdded,
+    );
+    expect(
+      published.find((chunk) => chunk.kind === 'usage_limit'),
+    ).toMatchObject({ done: false, metadataJson: JSON.stringify(usageLimit) });
+    expect(published.at(-1)).toMatchObject({
+      done: true,
+      error: 'limit reached',
+      metadataJson: JSON.stringify({ retryable: false, usageLimit }),
+    });
+    expect(conversations.appendMessages).toHaveBeenCalledWith(
+      'user-1',
+      'conv-1',
+      [
+        expect.objectContaining({
+          toolMetadata: {
+            events: expect.arrayContaining([
+              expect.objectContaining({ kind: 'usage_limit' }),
+            ]),
+          },
+        }),
+      ],
+    );
+  });
+
   it('publishes the topic keyed by conversation id with the resolver field name', async () => {
     openAiStreamMock.mockReturnValue(fakeStream(['x']));
     const { publish, service } = buildService();

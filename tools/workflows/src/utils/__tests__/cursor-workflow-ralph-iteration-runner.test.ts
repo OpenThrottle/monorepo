@@ -53,6 +53,52 @@ describe('createCursorWorkflowRalphIterationRunner', () => {
     });
   });
 
+  it('merges factory and per-run onUsageLimit hooks into one callback', async () => {
+    const { createCursorWorkflowRalphIterationRunner } =
+      await import('../cursor-workflow-ralph-iteration-runner.ts');
+
+    const factoryHook = vi.fn();
+    const runHook = vi.fn();
+    const runner = createCursorWorkflowRalphIterationRunner({
+      onUsageLimit: factoryHook,
+    });
+
+    await runner.run({
+      agentPrompt: 'p',
+      iteration: 1,
+      model: undefined,
+      onUsageLimit: runHook,
+      runner: 'claude',
+      signal: undefined,
+      timeoutMs: undefined,
+    });
+
+    const call = runIterationAsyncMock.mock.calls[0]?.[0];
+    const limit = { rateLimitType: 'five_hour', resetsAt: null };
+    call.onUsageLimit(limit);
+
+    expect(factoryHook).toHaveBeenCalledExactlyOnceWith(limit);
+    expect(runHook).toHaveBeenCalledExactlyOnceWith(limit);
+  });
+
+  it('passes no onUsageLimit when neither hook is set', async () => {
+    const { createCursorWorkflowRalphIterationRunner } =
+      await import('../cursor-workflow-ralph-iteration-runner.ts');
+
+    await createCursorWorkflowRalphIterationRunner().run({
+      agentPrompt: 'p',
+      iteration: 1,
+      model: undefined,
+      runner: 'claude',
+      signal: undefined,
+      timeoutMs: undefined,
+    });
+
+    expect(
+      runIterationAsyncMock.mock.calls[0]?.[0].onUsageLimit,
+    ).toBeUndefined();
+  });
+
   it('maps runner claude to runIterationAsync backend claude', async () => {
     const { createCursorWorkflowRalphIterationRunner } =
       await import('../cursor-workflow-ralph-iteration-runner.ts');

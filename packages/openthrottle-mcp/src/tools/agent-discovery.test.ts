@@ -17,6 +17,7 @@ describe('discoverAgentClisToolHandler', () => {
       discoverAgentClis: {
         agents: [
           {
+            auth: null,
             backend: 'cursor',
             chatCapable: true,
             label: 'cursor-agent',
@@ -24,6 +25,7 @@ describe('discoverAgentClisToolHandler', () => {
             version: '2026.07.23',
           },
           {
+            auth: null,
             backend: 'codex',
             chatCapable: false,
             label: 'codex',
@@ -64,6 +66,49 @@ describe('discoverAgentClisToolHandler', () => {
       throw new Error('expected tool result content');
     }
     expect(content.text).toContain('plan-run only');
+  });
+
+  it('exposes the claude auth report and prints the override warning', async () => {
+    const auth = {
+      accountEmail: 'dev@example.com',
+      activeCredential: 'apiKey',
+      apiKeyOverridesSubscription: true,
+      authMethod: 'claude.ai',
+      loggedIn: true,
+      organizationName: 'Example Org',
+      subscriptionType: 'team',
+      warning:
+        'ANTHROPIC_API_KEY is set, so Claude runs bill the API key, not your team subscription. Unset it to use the subscription.',
+    };
+    vi.mocked(executeGraphql).mockResolvedValue({
+      discoverAgentClis: {
+        agents: [
+          {
+            auth,
+            backend: 'claude',
+            chatCapable: true,
+            label: 'Claude Code',
+            models: ['opus'],
+            version: '2.1.270',
+          },
+        ],
+        scannedAt: '2026-07-28T00:00:00.000Z',
+        totalCount: 1,
+      },
+    });
+
+    const result = await discoverAgentClisToolHandler({});
+
+    expect(result).toMatchObject({
+      structuredContent: { agents: [{ auth, backend: 'claude' }] },
+    });
+    const [content] = result.content;
+    if (content === undefined) {
+      throw new Error('expected tool result content');
+    }
+    expect(content.text).toContain('dev@example.com, team');
+    expect(content.text).toContain('WARNING (Claude Code)');
+    expect(content.text).toContain(auth.warning);
   });
 
   it('reports no agent CLIs found for an empty result', async () => {

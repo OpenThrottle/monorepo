@@ -9,6 +9,7 @@
  */
 
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
+import type { UsageLimit } from '@openthrottle/openthrottle-drivers';
 
 import type { CursorAgentChunk } from '../bin/run-iteration';
 import { runIterationAsync } from '../bin/run-iteration';
@@ -41,6 +42,12 @@ export interface CursorWorkflowRalphIterationRunParams {
   readonly onChunk?: (
     chunk: CursorWorkflowRalphIterationStreamChunk,
   ) => void | Promise<void>;
+  /**
+   * @description Per-iteration hook fired when the iteration closes normally having hit a
+   * subscription usage limit. Merged with factory
+   * `CreateCursorWorkflowRalphIterationRunnerOptions.onUsageLimit`. The returned string is unchanged.
+   */
+  readonly onUsageLimit?: (usageLimit: UsageLimit) => void;
   readonly runner: WorkflowConfigRunner;
   readonly signal: AbortSignal | undefined;
   readonly skipWorktreeSetup?: boolean;
@@ -68,6 +75,8 @@ export interface CreateCursorWorkflowRalphIterationRunnerOptions {
   readonly appendPlanOutput?: CursorWorkflowRalphAppendPlanOutputChunk;
   /** @description Forwarded to {@link runIterationAsync} `onChunk`. */
   readonly onChunk?: (chunk: CursorAgentChunk) => void | Promise<void>;
+  /** @description Forwarded to {@link runIterationAsync} `onUsageLimit`; invoked alongside the per-run hook. */
+  readonly onUsageLimit?: (usageLimit: UsageLimit) => void;
 }
 
 /**
@@ -91,7 +100,19 @@ export const createCursorWorkflowRalphIterationRunner = (
   run: async (
     params: CursorWorkflowRalphIterationRunParams,
   ): Promise<string> => {
-    const { appendPlanOutput, onChunk: factoryOnChunk } = options ?? {};
+    const {
+      appendPlanOutput,
+      onChunk: factoryOnChunk,
+      onUsageLimit: factoryOnUsageLimit,
+    } = options ?? {};
+    const paramsOnUsageLimit = params.onUsageLimit;
+    const mergedOnUsageLimit =
+      factoryOnUsageLimit === undefined && paramsOnUsageLimit === undefined
+        ? undefined
+        : (usageLimit: UsageLimit): void => {
+            factoryOnUsageLimit?.(usageLimit);
+            paramsOnUsageLimit?.(usageLimit);
+          };
     const paramsOnChunk = params.onChunk;
     const hasHooks =
       factoryOnChunk !== undefined ||
@@ -132,6 +153,7 @@ export const createCursorWorkflowRalphIterationRunner = (
       iteration: params.iteration,
       model: params.model,
       onChunk: mergedOnChunk,
+      onUsageLimit: mergedOnUsageLimit,
       signal: params.signal,
       skipWorktreeSetup: params.skipWorktreeSetup,
       timeoutMs: params.timeoutMs,

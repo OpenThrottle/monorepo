@@ -38,6 +38,39 @@ function writeFakeBin(
   return path;
 }
 
+/**
+ * Write a fake claude: `auth status --json` prints `auth`; anything else
+ * (the `--version` probe) prints a version.
+ */
+function writeAuthBin(name: string, auth: Record<string, unknown>): string {
+  const path = join(dir, name);
+  const body = [
+    'const a = process.argv.slice(2);',
+    `if (a[0] === 'auth') { process.stdout.write(${JSON.stringify(JSON.stringify(auth))}); }`,
+    `else { process.stdout.write('2.1.270 (Claude Code)\\n'); }`,
+  ].join('\n');
+  writeFileSync(path, `#!/usr/bin/env node\n${body}\n`, 'utf8');
+  chmodSync(path, 0o755);
+  return path;
+}
+
+/** A fake claude whose auth output echoes the env it was spawned with. */
+function writeEnvEchoBin(name: string): string {
+  const path = join(dir, name);
+  const body = [
+    'const a = process.argv.slice(2);',
+    'if (a[0] === "auth") {',
+    '  const key = process.env.ANTHROPIC_API_KEY === undefined ? "absent" : "present";',
+    '  const dirValue = process.env.CLAUDE_CONFIG_DIR || "none";',
+    '  const user = process.env.USER || "none";',
+    '  process.stdout.write(JSON.stringify({ email: "key=" + key + ";dir=" + dirValue + ";user=" + user, loggedIn: true }));',
+    '} else { process.stdout.write("2.1.270\\n"); }',
+  ].join('\n');
+  writeFileSync(path, `#!/usr/bin/env node\n${body}\n`, 'utf8');
+  chmodSync(path, 0o755);
+  return path;
+}
+
 /** Point every driver's bin-env at a missing path so PATH lookups can't leak. */
 function hermeticEnv(overrides: Record<string, string>): NodeJS.ProcessEnv {
   return {
@@ -152,6 +185,70 @@ describe('discoverAgentClis', () => {
       models: ['opus', 'sonnet', 'haiku', 'fable'],
       version: '2.1.220 (Claude Code)',
     });
+  });
+
+  it('reports claude auth from `claude auth status --json` and flags an API-key override', async () => {
+    const bin = writeAuthBin('claude-auth.js', {
+      authMethod: 'claude.ai',
+      email: 'dev@example.com',
+      loggedIn: true,
+      orgName: 'Example Org',
+      subscriptionType: 'team',
+    });
+
+    const result = await discoverAgentClis({
+      env: hermeticEnv({
+        ANTHROPIC_API_KEY: 'sk-ant-test',
+        [CLAUDE_BIN_ENV]: bin,
+      }),
+    });
+
+    const claude = result.agents.find((agent) => agent.backend === 'claude');
+    expect(claude?.auth).toMatchObject({
+      accountEmail: 'dev@example.com',
+      activeCredential: 'apiKey',
+      apiKeyOverridesSubscription: true,
+      subscriptionType: 'team',
+    });
+    expect(claude?.auth?.warning).toContain('ANTHROPIC_API_KEY is set');
+    expect(JSON.stringify(result)).not.toContain('sk-ant-test');
+  });
+
+  it('never forwards ANTHROPIC_API_KEY to the auth probe, forwards USER, and resolves the chat config dir', async () => {
+    const bin = writeEnvEchoBin('claude-env.js');
+
+    const result = await discoverAgentClis({
+      env: hermeticEnv({
+        ANTHROPIC_API_KEY: 'sk-ant-test',
+        [CLAUDE_BIN_ENV]: bin,
+        CLAUDE_CONFIG_DIR: '/inherited',
+        OPENTHROTTLE_CLAUDE_CONFIG_DIR: '/override',
+        USER: 'probe-user',
+      }),
+    });
+
+    // The stub reports the env it received via the (otherwise unused) email field.
+    // USER matters: without it macOS claude cannot read its Keychain login.
+    expect(
+      result.agents.find((agent) => agent.backend === 'claude')?.auth
+        ?.accountEmail,
+    ).toBe('key=absent;dir=/override;user=probe-user');
+  });
+
+  it('leaves auth null for claude when the auth probe fails, and for other CLIs', async () => {
+    const bin = writeFakeBin('claude-noauth.js', '2.1.220 (Claude Code)\n');
+    const codex = writeFakeBin('codex-auth.js', 'codex-cli 0.145.0\n');
+
+    const result = await discoverAgentClis({
+      env: hermeticEnv({ [CLAUDE_BIN_ENV]: bin, [CODEX_BIN_ENV]: codex }),
+    });
+
+    expect(
+      result.agents.find((agent) => agent.backend === 'claude'),
+    ).toMatchObject({ auth: null, available: true });
+    expect(
+      result.agents.find((agent) => agent.backend === 'codex')?.auth,
+    ).toBeNull();
   });
 
   it('reports codex available with empty models (no listing descriptor)', async () => {

@@ -15,10 +15,7 @@ import {
   buildForeignWorkspacePromptLayer,
   resolveForeignWorkspaceContext,
 } from '@openthrottle/openthrottle-agentic-utils';
-import type {
-  WorkflowLifecycleTaskContext,
-  WorkflowRunResult,
-} from '@openthrottle/openthrottle-agentic-workflow';
+import type { WorkflowLifecycleTaskContext } from '@openthrottle/openthrottle-agentic-workflow';
 
 import {
   GetPlanDocument,
@@ -35,11 +32,13 @@ import {
 import type {
   WorkflowRalphIterationOnChunk,
   WorkflowRalphOrchestratorDeps,
+  WorkflowRalphUsageLimit,
 } from '../contract/ralph-orchestrator-deps.ts';
 import type {
   WorkflowFailedReason,
   WorkflowFinishedReason,
   WorkflowOrchestrator,
+  WorkflowRunResult,
 } from '../types.ts';
 import type { WorkflowContext } from '../types.ts';
 import {
@@ -120,16 +119,23 @@ const toLifecycleTaskContext = (task: {
 });
 
 const onFinished = (
-  reason: WorkflowFinishedReason,
-): WorkflowRunResult<WorkflowFinishedReason, WorkflowFailedReason> => ({
+  reason: Exclude<WorkflowFinishedReason, 'workflow_usage_limited'>,
+): WorkflowRunResult => ({
   exitCode: 0,
   reason,
   status: 'finished',
 });
 
-const onFailure = (
-  reason: WorkflowFailedReason,
-): WorkflowRunResult<WorkflowFinishedReason, WorkflowFailedReason> => ({
+const onUsageLimited = (
+  usageLimit: WorkflowRalphUsageLimit,
+): WorkflowRunResult => ({
+  exitCode: 0,
+  reason: 'workflow_usage_limited',
+  status: 'finished',
+  usageLimit,
+});
+
+const onFailure = (reason: WorkflowFailedReason): WorkflowRunResult => ({
   exitCode: 1,
   reason,
   status: 'failed',
@@ -247,6 +253,34 @@ const reconcilePlanIfTasksExhausted = async (
   );
 
   return true;
+};
+
+/**
+ * @description Best-effort reset of a task to PENDING (used when an iteration ends without finishing
+ * it: max iterations, usage limit). Failure is surfaced as a diagnostic, never thrown (ralph.ts warns).
+ */
+const resetTaskToPending = async (
+  executeGraphqlV2: WorkflowRalphOrchestratorDeps['executeGraphqlV2'],
+  taskId: string | undefined,
+  sessionOptions: ExecuteGraphqlOptionsV2 | undefined,
+  onChunk: WorkflowRalphIterationOnChunk | undefined,
+): Promise<void> => {
+  if (taskId === undefined || taskId === '') {
+    return;
+  }
+
+  try {
+    await executeGraphqlV2(
+      UpdateTaskDocument,
+      { input: { id: taskId, status: 'PENDING' } },
+      sessionOptions,
+    );
+  } catch (error) {
+    await emitDiagnostic(onChunk, {
+      error,
+      phase: `PENDING reset for task ${taskId} failed`,
+    });
+  }
 };
 
 /**
@@ -518,6 +552,10 @@ export const createWorkflowRalphOrchestrator = (
 
         // iteration.run
         let agentOutput: string;
+        // Holder object (not a `let`) so the callback's write is not narrowed away at the read below.
+        const usageLimitHit: { current: WorkflowRalphUsageLimit | null } = {
+          current: null,
+        };
         try {
           agentOutput = await iterationRunner.run({
             agentPrompt,
@@ -525,6 +563,9 @@ export const createWorkflowRalphOrchestrator = (
             iteration,
             model: context.model,
             onChunk,
+            onUsageLimit: (limit) => {
+              usageLimitHit.current = limit;
+            },
             runner: context.runner,
             signal: abortSignal,
             skipWorktreeSetup: context.skipWorktreeSetup,
@@ -543,6 +584,27 @@ export const createWorkflowRalphOrchestrator = (
 
         if (await shouldStop()) {
           return onFinished('workflow_cancelled');
+        }
+
+        // iteration.usage_limit — a limited run exits non-zero with the limit message as its
+        // "output". Not a real iteration: no marker parsing, no completions. Hand the in-flight
+        // task back and stop cleanly so the host can resume the run after the reset.
+        if (usageLimitHit.current !== null) {
+          await emitDiagnostic(onChunk, {
+            error: new Error(
+              `usage limit reached (${usageLimitHit.current.rateLimitType ?? 'unknown window'}); resets at ${usageLimitHit.current.resetsAt ?? 'an unknown time'}`,
+            ),
+            phase: `iteration ${iteration} stopped`,
+          });
+
+          await resetTaskToPending(
+            executeGraphqlV2,
+            taskIdTrim || firstPendingForIteration,
+            sessionOptions,
+            onChunk,
+          );
+
+          return onUsageLimited(usageLimitHit.current);
         }
 
         // Completion ids are kept in their original casing so the
@@ -668,19 +730,12 @@ export const createWorkflowRalphOrchestrator = (
 
       // 4. 🟡 If we have a task id and it's not completed, we mark it as pending
       if (lastIterationTaskId && !lastIterationTaskCompleted) {
-        try {
-          await executeGraphqlV2(
-            UpdateTaskDocument,
-            { input: { id: lastIterationTaskId, status: 'PENDING' } },
-            sessionOptions,
-          );
-        } catch (error) {
-          // Best-effort reset (ralph.ts warns on failure).
-          await emitDiagnostic(onChunk, {
-            error,
-            phase: `PENDING reset for task ${lastIterationTaskId} failed`,
-          });
-        }
+        await resetTaskToPending(
+          executeGraphqlV2,
+          lastIterationTaskId,
+          sessionOptions,
+          onChunk,
+        );
       }
 
       // 5. 🟡 We've successfully completed the iterations, but we've hit our limit

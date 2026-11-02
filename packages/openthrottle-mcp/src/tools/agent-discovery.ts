@@ -15,7 +15,19 @@ import { DiscoverAgentClisDocument } from '../__generated__/graphql.js';
 import type { GenericResult } from '../types/index.ts';
 import { runTool } from '../utils/tool-result.ts';
 
+type AgentCliAuth = {
+  accountEmail: string | null;
+  activeCredential: string;
+  apiKeyOverridesSubscription: boolean;
+  authMethod: string | null;
+  loggedIn: boolean;
+  organizationName: string | null;
+  subscriptionType: string | null;
+  warning: string | null;
+};
+
 type AgentCli = {
+  auth: AgentCliAuth | null;
   backend: string;
   chatCapable: boolean;
   label: string;
@@ -29,9 +41,26 @@ type DiscoverAgentClisStructured = {
   totalCount: number;
 };
 
+function describeAuth(agent: AgentCli): string[] {
+  const { auth } = agent;
+  if (auth === null) {
+    return [];
+  }
+
+  const account = auth.accountEmail ?? '(account unknown)';
+  const plan = auth.subscriptionType ?? 'no plan reported';
+  const lines = [
+    `  ${agent.label} auth: ${account}, ${plan}, active credential: ${auth.activeCredential}`,
+  ];
+  if (auth.warning !== null) {
+    lines.push(`  WARNING (${agent.label}): ${auth.warning}`);
+  }
+  return lines;
+}
+
 export const discoverAgentClisToolParameters = z.object({}).strict();
 
-export const discoverAgentClisToolDescription = `Discover the agentic CLIs (claude, codex, cursor, gemini, grok, opencode, …) detected as available on the server host, with each CLI's --version and the models it can run, via the discoverAgentClis GraphQL query. No arguments. Returns a cached snapshot (60s TTL). Each agent reports chatCapable — whether it has a wired streaming chat backend (false for plan-run-only drivers). Caveat: availability reflects the server's host, not this MCP process's host.`;
+export const discoverAgentClisToolDescription = `Discover the agentic CLIs (claude, codex, cursor, gemini, grok, opencode, …) detected as available on the server host, with each CLI's --version and the models it can run, via the discoverAgentClis GraphQL query. No arguments. Returns a cached snapshot (60s TTL). Each agent reports chatCapable — whether it has a wired streaming chat backend (false for plan-run-only drivers). For claude, \`auth\` reports the logged-in account (email, organization), the subscription plan, and which credential is active — the subscription or an API key — as read from \`claude auth status\` (no tokens are read). When ANTHROPIC_API_KEY would override the subscription (it always wins in -p mode), \`auth.warning\` says so loudly; relay that warning to the user. Caveat: availability reflects the server's host, not this MCP process's host.`;
 
 export async function discoverAgentClisToolHandler(
   _args: z.infer<typeof discoverAgentClisToolParameters>,
@@ -46,6 +75,20 @@ export async function discoverAgentClisToolHandler(
       }
 
       const agents: AgentCli[] = discovered.agents.map((agent) => ({
+        auth:
+          agent.auth === null || agent.auth === undefined
+            ? null
+            : {
+                accountEmail: agent.auth.accountEmail ?? null,
+                activeCredential: agent.auth.activeCredential,
+                apiKeyOverridesSubscription:
+                  agent.auth.apiKeyOverridesSubscription,
+                authMethod: agent.auth.authMethod ?? null,
+                loggedIn: agent.auth.loggedIn,
+                organizationName: agent.auth.organizationName ?? null,
+                subscriptionType: agent.auth.subscriptionType ?? null,
+                warning: agent.auth.warning ?? null,
+              },
         backend: agent.backend,
         chatCapable: agent.chatCapable,
         label: agent.label,
@@ -64,6 +107,7 @@ export async function discoverAgentClisToolHandler(
                     agent.version ?? '(version unknown)'
                   } — ${agent.models.length} model(s): ${agent.models.join(', ') || '(none)'}`,
               ),
+              ...agents.flatMap((agent) => describeAuth(agent)),
             ].join('\n');
 
       return {

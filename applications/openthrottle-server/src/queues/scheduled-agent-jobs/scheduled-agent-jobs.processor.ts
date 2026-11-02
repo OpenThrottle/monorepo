@@ -22,6 +22,7 @@ import {
   DRIVER_REGISTRY,
   RUN_AGENT_STATUS,
   type RunAgentStatus,
+  type UsageLimit,
 } from '@openthrottle/openthrottle-drivers';
 
 import { closeRunOutputForJob } from '../bullmq-keyed-run-logging.ts';
@@ -29,6 +30,7 @@ import { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.
 import { BULLMQ_RUN_OUTPUT_WRITER } from '../bullmq-run-output-writer.token.ts';
 import { ScheduledAgentJobCancellationService } from './scheduled-agent-job-cancellation.service.ts';
 import { ScheduledAgentJobDirectoryLockService } from './scheduled-agent-job-directory-lock.service.ts';
+import { ScheduledAgentJobUsageLimitResumeService } from './scheduled-agent-job-usage-limit-resume.service.ts';
 import {
   resolveScheduledAgentJobConcurrencyKey,
   resolveScheduledAgentJobRunCwd,
@@ -46,6 +48,7 @@ const TERMINAL_RUN_STATUSES: ReadonlySet<ScheduledAgentJobRunStatus> = new Set([
   'failed',
   'no_op',
   'succeeded',
+  'usage_limited',
 ]);
 
 /**
@@ -99,6 +102,32 @@ const runStatusForAgentStatus = (
     default:
       return 'failed';
   }
+};
+
+/**
+ * @description Error detail recorded on a run that stopped on a Claude subscription usage limit,
+ * naming the window and the reset time when the CLI reported them.
+ */
+const errorMessageForUsageLimit = (limit: UsageLimit): string => {
+  const window =
+    limit.rateLimitType === null ? '' : ` (${limit.rateLimitType})`;
+  const reset =
+    limit.resetsAt === null
+      ? 'reset time unknown'
+      : `resets at ${limit.resetsAt}`;
+
+  return `Usage limit reached${window}; ${reset}`;
+};
+
+/** @description The reset instant as a Date, or null when absent or unparseable. */
+const parseResetInstant = (limit: UsageLimit): Date | null => {
+  if (limit.resetsAt === null) {
+    return null;
+  }
+
+  const parsed = new Date(limit.resetsAt);
+
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
 
 /**
@@ -192,6 +221,7 @@ export class ScheduledAgentJobsProcessor
     private readonly runner: ScheduledAgentRunnerService,
     private readonly cancellation: ScheduledAgentJobCancellationService,
     private readonly directoryLock: ScheduledAgentJobDirectoryLockService,
+    private readonly usageLimitResume: ScheduledAgentJobUsageLimitResumeService,
     private readonly retention: BullMqRunOutputRetentionService,
     @Optional()
     @Inject(BULLMQ_RUN_OUTPUT_WRITER)
@@ -222,6 +252,10 @@ export class ScheduledAgentJobsProcessor
     } = job.data;
     const queueName = SCHEDULED_AGENT_JOBS_QUEUE_NAME;
     const bullmqJobId = String(job.id);
+
+    if (await this.skipResumeOfInactiveSchedule(runId, scheduleId)) {
+      return;
+    }
 
     const target = await this.resolveRunTarget(
       scheduleId,
@@ -315,18 +349,42 @@ export class ScheduledAgentJobsProcessor
           timeoutMs: runTimeoutMs,
         });
 
-        await this.jobsService.markRunFinished(runRowId, {
-          errorMessage: errorMessageForAgentStatus(
-            result.status,
-            result.exitCode,
-          ),
-          exitCode: result.exitCode,
-          status: runStatusForAgentStatus(
-            result.status,
-            parseRunOutcome(result.output),
-          ),
-          ...usageColumns(foldRunUsage(result.output)),
-        });
+        // A usage limit outranks the exit-code mapping (the CLI exits non-zero when it is stopped by
+        // one) but never a cancel: the user stopping the run is the more specific fact.
+        const usageLimit =
+          result.status === RUN_AGENT_STATUS.cancelled
+            ? null
+            : result.usageLimit;
+
+        if (usageLimit === null) {
+          await this.jobsService.markRunFinished(runRowId, {
+            errorMessage: errorMessageForAgentStatus(
+              result.status,
+              result.exitCode,
+            ),
+            exitCode: result.exitCode,
+            status: runStatusForAgentStatus(
+              result.status,
+              parseRunOutcome(result.output),
+            ),
+            ...usageColumns(foldRunUsage(result.output)),
+          });
+        } else {
+          await this.jobsService.markRunFinished(runRowId, {
+            errorMessage: errorMessageForUsageLimit(usageLimit),
+            exitCode: result.exitCode,
+            status: 'usage_limited',
+            usageLimitResetsAt: parseResetInstant(usageLimit),
+            usageLimitType: usageLimit.rateLimitType,
+            ...usageColumns(foldRunUsage(result.output)),
+          });
+          // Never throws, so the limited job completes normally and BullMQ does not retry it.
+          await this.usageLimitResume.handle({
+            limit: usageLimit,
+            limitedRunId: runRowId,
+            scheduleId,
+          });
+        }
       } finally {
         // Release before the outer bookkeeping so the next run for this directory is not held up by
         // this run's log flush and retention pass.
@@ -360,6 +418,56 @@ export class ScheduledAgentJobsProcessor
       });
       this.retention.maybePruneAfterJobClose();
     }
+  }
+
+  /**
+   * @description A usage-limit resume was decided (and delayed) while its schedule was enabled; the
+   * user may have disabled or deleted the schedule during the wait. Re-reads the schedule before the
+   * claim and, when it is gone or disabled, finishes the pre-created resume run `cancelled` — the
+   * user stopped it, the agent never ran, so `no_op` (which means "the agent ran and did nothing")
+   * would misreport it — without spawning anything. Returns true when the run was skipped.
+   *
+   * Only resume runs are checked: Run now is deliberately allowed on a disabled schedule. A missing
+   * run row with a missing schedule is a deleted schedule (the run FK cascades), so that is skipped
+   * too rather than failing later on the run insert.
+   */
+  private async skipResumeOfInactiveSchedule(
+    runId: string | null | undefined,
+    scheduleId: string,
+  ): Promise<boolean> {
+    if (typeof runId !== 'string' || runId.length === 0) {
+      return false;
+    }
+
+    const existing = await this.jobsService.findRunById(runId);
+    if (existing !== null && existing.trigger !== 'resume') {
+      return false;
+    }
+
+    const schedule = await this.jobsService.findJobById(scheduleId);
+    if (schedule?.enabled === true) {
+      return false;
+    }
+
+    const reason =
+      schedule === null
+        ? 'The schedule was deleted before the usage-limit resume fired'
+        : 'The schedule was disabled before the usage-limit resume fired';
+
+    this.logger.info(
+      `Scheduled agent job ${scheduleId}: skipping resume run ${runId}. ${reason}.`,
+      ScheduledAgentJobsProcessor.name,
+    );
+
+    if (existing !== null) {
+      await this.jobsService.markRunFinished(existing.id, {
+        errorMessage: reason,
+        exitCode: null,
+        status: 'cancelled',
+      });
+    }
+
+    return true;
   }
 
   /**

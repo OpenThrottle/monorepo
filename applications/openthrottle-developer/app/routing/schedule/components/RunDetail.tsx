@@ -7,6 +7,7 @@ import {
   RUN_STATUS_COLOR,
   RUN_STATUS_LABEL,
   RUN_STATUS_VARIANT,
+  RUN_TRIGGER_LABEL,
 } from '~/routing/schedule/data/data.run-status';
 import { formatDuration } from '~/routing/schedule/utils/format-duration';
 import {
@@ -48,7 +49,27 @@ export const RunDetail = (props: RunDetailProps): React.ReactElement => {
         </Badge>
       ),
     },
-    { label: fields.trigger, value: run.trigger },
+    {
+      label: fields.trigger,
+      value: RUN_TRIGGER_LABEL[run.trigger] ?? run.trigger,
+    },
+    ...(run.status === 'usage_limited'
+      ? [
+          {
+            label: fields.usageLimitResetsAt,
+            value: formatWhen(run.usageLimitResetsAt),
+          },
+        ]
+      : []),
+    ...(typeof run.resumeOfRunId !== 'string'
+      ? []
+      : [
+          {
+            label: fields.resumeOfRunId,
+            mono: true,
+            value: run.resumeOfRunId,
+          },
+        ]),
     {
       label: fields.driver,
       mono: true,

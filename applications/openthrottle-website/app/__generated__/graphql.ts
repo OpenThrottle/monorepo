@@ -232,6 +232,26 @@ export type AgentAssetSearchResult = {
   chunks: Array<AgentAssetChunk>;
 };
 
+export type AgentCliAuthStatusObject = {
+  __typename?: 'AgentCliAuthStatusObject';
+  /** Logged-in account email as reported by `claude auth status`, or null when unknown. No tokens or credential files are read. */
+  accountEmail?: Maybe<Scalars['String']['output']>;
+  /** The credential Claude runs will actually bill: "subscription" (claude.ai login), "apiKey" (ANTHROPIC_API_KEY or a configured key source — it always wins in -p mode), or "none". Derived from `claude auth status` plus the presence (never the value) of ANTHROPIC_API_KEY in the server env. */
+  activeCredential: Scalars['String']['output'];
+  /** True when an API key is active while a subscription login also exists, so runs bill the API key instead of the subscription. */
+  apiKeyOverridesSubscription: Scalars['Boolean']['output'];
+  /** Login method as reported by `claude auth status` (e.g. "claude.ai"), or null when unknown. */
+  authMethod?: Maybe<Scalars['String']['output']>;
+  /** True when `claude auth status` reports a logged-in account. */
+  loggedIn: Scalars['Boolean']['output'];
+  /** Organization name as reported by `claude auth status`, or null when unknown. */
+  organizationName?: Maybe<Scalars['String']['output']>;
+  /** Subscription plan (e.g. "pro", "max", "team") as reported by `claude auth status`, or null when unknown. */
+  subscriptionType?: Maybe<Scalars['String']['output']>;
+  /** A loud, specific sentence when the credential setup needs attention (API key overriding the subscription, or not logged in); null when everything is fine. */
+  warning?: Maybe<Scalars['String']['output']>;
+};
+
 export type AgentCliModelOption = {
   __typename?: 'AgentCliModelOption';
   /** Effective per-user enablement of this model: false when the user disabled this model OR disabled the whole agent (an agent-level OFF hard-overrides every model). Disabled models are hidden from chat/model pickers and rejected when starting new runs. Defaults to true for an unauthenticated request. */
@@ -246,6 +266,8 @@ export type AgentCliOptionObject = {
   __typename?: 'AgentCliOptionObject';
   /** True when this CLI resolves the workspace's committed MCP config (.mcp.json / .cursor/mcp.json / opencode.json), so a run in this checkout can reach openthrottle-mcp. False for codex and gemini, which read only their own config scope (codex: user-scope config.toml; gemini: .gemini/settings.json, never .mcp.json) — for those, MCP reachability is a property of the host and cannot be verified from the workspace, so present it as unverifiable rather than as definitely missing. Distinct from emitting MCP flags: claude, grok, and opencode emit none yet attach fine. */
   attachesWorkspaceMcp: Scalars['Boolean']['output'];
+  /** Logged-in account, subscription plan and active credential, reported by `claude auth status --json` (no OAuth tokens or credential files are read, and no Anthropic endpoint is called). Null for CLIs other than claude, or when the probe failed or timed out. */
+  auth?: Maybe<AgentCliAuthStatusObject>;
   /** Backend discriminator (e.g. "cursor") used in StartConversationStreamInput. */
   backend: Scalars['String']['output'];
   /** True when this driver has a wired streaming chat backend and can be offered as a chat composer backend (false for plan-run-only drivers like codex/grok). */
@@ -759,7 +781,7 @@ export type ConversationStreamChunkObject = {
   error?: Maybe<Scalars['String']['output']>;
   /** Unique id for this chunk (subscription dedupe / cursor). */
   id: Scalars['String']['output'];
-  /** Event kind: text (assistant output) | thinking | tool_call | tool_result | usage | session. */
+  /** Event kind: text (assistant output) | thinking | tool_call | tool_result | usage | usage_limit | session. */
   kind: Scalars['String']['output'];
   /** Assistant message id the deltas accumulate into. */
   messageId: Scalars['String']['output'];
@@ -2944,12 +2966,18 @@ export type PlanRunObject = {
   /** The run's linked pull request (via the work-ledger session bridge), with lifecycle state and GitHub URL. Null when no PR has been recorded for the run. */
   pullRequest?: Maybe<PlanRunPullRequestObject>;
   queueName: Scalars['String']['output'];
+  /** The usage-limited run this run continues: set on the continuation run enqueued automatically after a Claude usage limit. Null for every ordinary run. */
+  resumeOfRunId?: Maybe<Scalars['String']['output']>;
   /** Resolved workflow-ralph configuration at enqueue (PlanRunConfigSnapshot v1 JSON). Null for legacy runs. */
   runConfigSnapshotJson?: Maybe<Scalars['String']['output']>;
   /** Ralph run implementation: spawn or orchestrator. */
   runKind: Scalars['String']['output'];
   status: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
+  /** When the usage limit that stopped this run lifts, as reported by the agent CLI. Null unless status is USAGE_LIMITED, or when the CLI reported no reset time. */
+  usageLimitResetsAt?: Maybe<Scalars['DateTime']['output']>;
+  /** Raw name of the usage-limit window that stopped this run (five_hour, seven_day, ...). Null unless status is USAGE_LIMITED, or when the window was not reported. */
+  usageLimitType?: Maybe<Scalars['String']['output']>;
   /** Identifier of the worker instance executing this run. Null when not actively executing. */
   workerId?: Maybe<Scalars['String']['output']>;
 };
@@ -4748,16 +4776,22 @@ export type ScheduledAgentJobRunObject = {
   repositoryCheckoutId?: Maybe<Scalars['ID']['output']>;
   /** The exact directory the agent CLI was spawned in for this run, after the checkout -> cwd -> WORKSPACE_ROOT precedence. Authoritative record of where the run happened; null for legacy runs. */
   resolvedCwd?: Maybe<Scalars['String']['output']>;
+  /** The usage_limited run this run continues (trigger resume); null for every ordinary run. */
+  resumeOfRunId?: Maybe<Scalars['ID']['output']>;
   scheduledAgentJobId: Scalars['ID']['output'];
   /** Effective run settings at execution time (driver/model/run-config), serialized JSON; null for legacy/pre-snapshot runs. Never contains endpoint.apiKey. */
   settingsSnapshotJson?: Maybe<Scalars['String']['output']>;
   startedAt?: Maybe<Scalars['DateTime']['output']>;
-  /** queued | running | succeeded | no_op | failed | cancelled. no_op is terminal and NOT an error: the process exited cleanly but the agent reported it did not do the work. */
+  /** queued | running | succeeded | no_op | failed | cancelled | usage_limited. no_op is terminal and NOT an error: the process exited cleanly but the agent reported it did not do the work. usage_limited is terminal and NOT an error: the agent CLI stopped on a Claude subscription usage limit (see usageLimitResetsAt); a continuation run (trigger resume, resumeOfRunId = this run) may have been enqueued. */
   status: Scalars['String']['output'];
   /** Total tokens for the run; null when nothing reported. */
   totalTokens?: Maybe<Scalars['Float']['output']>;
-  /** schedule | manual (run-now). */
+  /** schedule (cron fire) | manual (run-now) | resume (delayed continuation of a usage_limited run). */
   trigger: Scalars['String']['output'];
+  /** When the usage limit that stopped this run lifts, as reported by the agent CLI; null when the run was not usage_limited or no reset time was reported. */
+  usageLimitResetsAt?: Maybe<Scalars['DateTime']['output']>;
+  /** Raw usage-limit window that stopped this run (five_hour, seven_day, ...); null when the run was not usage_limited or the window was not reported. */
+  usageLimitType?: Maybe<Scalars['String']['output']>;
 };
 
 /** Aggregate run counts across all scheduled agent jobs: live in-flight totals plus terminal outcomes since a window boundary. */
@@ -4779,6 +4813,8 @@ export type ScheduledAgentJobRunStatsObject = {
   since: Scalars['DateTime']['output'];
   /** Runs that completed successfully inside the window. */
   succeededCount: Scalars['Int']['output'];
+  /** Runs that stopped on a Claude subscription usage limit inside the window. Terminal and NOT a failure; a continuation run may have been enqueued. */
+  usageLimitedCount: Scalars['Int']['output'];
   /** Every run created inside the window, whatever its status — the "ran today" total. */
   windowTotalCount: Scalars['Int']['output'];
 };

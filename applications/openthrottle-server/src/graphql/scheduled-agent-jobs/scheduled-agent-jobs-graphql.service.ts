@@ -253,8 +253,45 @@ export class ScheduledAgentJobsGraphqlService {
     await this.jobsService.requestRunCancel(runId);
     this.cancellation.abort(runId);
 
+    if (run.status === 'queued') {
+      await this.cancelQueuedRun(run);
+    }
+
     const refreshed = await this.jobsService.findRunById(runId);
     return refreshed ?? run;
+  }
+
+  /**
+   * @description Cancels a run that has not started: removes its BullMQ job (a run-now job that has
+   * not been picked up yet, or a delayed usage-limit resume) and records the run `cancelled`, so the
+   * job cannot fire later. The job is addressed by the run's `bullmqJobId` (set at creation for a
+   * resume) falling back to the run id (run-now's jobId). A job a worker has already locked cannot be
+   * removed; the durable cancel marker stays as the fallback and the row is left for the processor.
+   * Best-effort — a Redis error is logged, never thrown.
+   */
+  private async cancelQueuedRun(run: ScheduledAgentJobRun): Promise<void> {
+    try {
+      const job = await this.queue.getJob(run.bullmqJobId ?? run.id);
+
+      if (job !== undefined) {
+        const state = await job.getState();
+        if (state === 'active') {
+          return;
+        }
+        await job.remove();
+      }
+
+      await this.jobsService.markRunFinished(run.id, {
+        errorMessage: 'Run cancelled',
+        exitCode: null,
+        status: 'cancelled',
+      });
+    } catch (error) {
+      this.logger.warn(
+        `Could not remove the queued job for scheduled run ${run.id}: ${error instanceof Error ? error.message : String(error)}`,
+        ScheduledAgentJobsGraphqlService.name,
+      );
+    }
   }
 
   private async projectScheduler(job: ScheduledAgentJob): Promise<void> {

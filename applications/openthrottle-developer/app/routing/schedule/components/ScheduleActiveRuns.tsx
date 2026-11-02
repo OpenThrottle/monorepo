@@ -19,6 +19,7 @@ import {
   RUN_STATUS_COLOR,
   RUN_STATUS_LABEL,
   RUN_STATUS_VARIANT,
+  RUN_TRIGGER_LABEL,
 } from '~/routing/schedule/data/data.run-status';
 import { useElapsedTicker } from '~/routing/schedule/hooks/useElapsedTicker';
 import { formatDuration } from '~/routing/schedule/utils/format-duration';
@@ -96,7 +97,9 @@ export const ScheduleActiveRuns = (
                     {RUN_STATUS_LABEL[run.status] ?? run.status}
                   </Badge>
                 </TableCell>
-                <TableCell>{run.trigger}</TableCell>
+                <TableCell>
+                  {RUN_TRIGGER_LABEL[run.trigger] ?? run.trigger}
+                </TableCell>
                 <TableCell>
                   {run.driverId}
                   {run.model ? ` · ${run.model}` : ''}

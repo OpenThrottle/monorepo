@@ -13,6 +13,10 @@
  */
 
 import { isRecord } from '@openthrottle/nodejs-utils';
+import {
+  isClaudeUsageLimitResult,
+  parseClaudeRateLimitInfo,
+} from '@openthrottle/openthrottle-drivers';
 
 import type { ConversationStreamChunk } from '../types.ts';
 import { CONVERSATION_STREAM_CHUNK_KINDS } from '../types.ts';
@@ -134,8 +138,35 @@ function mapUser(
 }
 
 /**
+ * `rate_limit_event` → a `usage_limit` chunk only when `rate_limit_info.status`
+ * is `rejected`; `allowed` / `allowed_warning` (and API-key sessions, which omit
+ * the info) map to null and surface as keepalives. `resetsAt` is unix epoch
+ * seconds on the wire and an ISO-8601 string (or null) in the chunk.
+ */
+function mapRateLimit(
+  event: Record<string, unknown>,
+): ConversationStreamChunk | null {
+  const usageLimit = parseClaudeRateLimitInfo(event.rate_limit_info);
+  if (usageLimit === null) {
+    return null;
+  }
+
+  return {
+    delta: '',
+    done: false,
+    kind: CONVERSATION_STREAM_CHUNK_KINDS.usageLimit,
+    metadata: {
+      rateLimitType: usageLimit.rateLimitType,
+      resetsAt: usageLimit.resetsAt,
+    },
+  };
+}
+
+/**
  * `result` → the terminal chunk. Gate the error on `is_error`, NOT `subtype`
- * (an invalid model still reports `subtype:"success"`).
+ * (an invalid model still reports `subtype:"success"`). A 429 error result
+ * (`api_error_status`) also sets `metadata.usageLimit` with unknown type/reset;
+ * the backend swaps in the details from an earlier `usage_limit` chunk.
  */
 function mapResult(event: Record<string, unknown>): ConversationStreamChunk {
   const isError = event.is_error === true;
@@ -148,18 +179,22 @@ function mapResult(event: Record<string, unknown>): ConversationStreamChunk {
       : null,
     kind: CONVERSATION_STREAM_CHUNK_KINDS.usage,
     metadata: {
+      apiErrorStatus: event.api_error_status ?? null,
       modelUsage: event.modelUsage ?? null,
       result: asString(event.result) ?? null,
       totalCostUsd: event.total_cost_usd ?? null,
       usage: event.usage ?? null,
+      ...(isClaudeUsageLimitResult(event)
+        ? { usageLimit: { rateLimitType: null, resetsAt: null } }
+        : {}),
     },
   };
 }
 
 /**
  * Map a single claude event to a chunk, or null to skip it. `assistant`
- * (consolidated echo — double-count), `rate_limit_event`, and non-init `system`
- * subtypes have no mapping.
+ * (consolidated echo — double-count), non-rejected `rate_limit_event`s, and
+ * non-init `system` subtypes have no mapping.
  *
  * @public
  */
@@ -169,6 +204,8 @@ export function mapClaudeEvent(event: unknown): ConversationStreamChunk | null {
   }
 
   switch (event.type) {
+    case 'rate_limit_event':
+      return mapRateLimit(event);
     case 'result':
       return mapResult(event);
     case 'stream_event':

@@ -35,6 +35,17 @@ export type WorkflowRalphIterationOnChunk = (
 ) => void | Promise<void>;
 
 /**
+ * @description A subscription usage limit reported by an iteration runner. Structurally identical to
+ * `UsageLimit` in `@openthrottle/openthrottle-drivers` (which this package deliberately does not
+ * depend on). `resetsAt` is an ISO-8601 instant; `null` means "limited, reset unknown".
+ * @public
+ */
+export interface WorkflowRalphUsageLimit {
+  readonly rateLimitType: string | null;
+  readonly resetsAt: string | null;
+}
+
+/**
  * @description One agent iteration (layer-2), aligned with `tools/workflows` `RunIterationConfig` /
  * `runIterationAsync`: environment-specific runner returns combined stdout/stderr text.
  */
@@ -45,6 +56,12 @@ export interface WorkflowRalphIterationRunParams {
   readonly iteration: number;
   readonly model: string | undefined;
   readonly onChunk?: WorkflowRalphIterationOnChunk;
+  /**
+   * @description Fired by the runner when the iteration closed having hit a subscription usage limit.
+   * The orchestrator uses it to stop the run cleanly instead of treating the iteration as ordinary
+   * (failed) agent output.
+   */
+  readonly onUsageLimit?: (usageLimit: WorkflowRalphUsageLimit) => void;
   readonly runner: WorkflowConfigRunner;
   readonly signal: AbortSignal | undefined;
   readonly skipWorktreeSetup?: boolean;

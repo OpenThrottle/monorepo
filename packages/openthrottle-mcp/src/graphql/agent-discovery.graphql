@@ -1,10 +1,22 @@
 # MCP-only GraphQL document: agent-CLI discovery, which is outside Ralph's
 # plan/task I/O domain (mirrors model-discovery.graphql). Surfaces the agentic
 # CLIs detected on the server host with their versions and per-driver models.
+# `auth` (claude only) reports the account, plan and active credential from
+# `claude auth status`, including the API-key-overrides-subscription warning.
 
 query discoverAgentClis {
   discoverAgentClis {
     agents {
+      auth {
+        accountEmail
+        activeCredential
+        apiKeyOverridesSubscription
+        authMethod
+        loggedIn
+        organizationName
+        subscriptionType
+        warning
+      }
       backend
       chatCapable
       label

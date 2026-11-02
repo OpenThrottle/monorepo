@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for OpenThrottle plan_runs table. Matches databases/migrations/038 (+ 047, 053, 076, 080, 087, 110).
+ * @description TypeORM entity for OpenThrottle plan_runs table. Matches databases/migrations/038 (+ 047, 053, 076, 080, 087, 110, 138).
  */
 
 import type { PlanRunConfigSnapshot } from '@openthrottle/openthrottle-plan-config';
@@ -160,11 +160,31 @@ export class PlanRun {
   @Column({ name: 'run_config_snapshot', nullable: true, type: 'jsonb' })
   runConfigSnapshot!: PlanRunConfigSnapshot | null;
 
+  /**
+   * The usage-limited run this run continues (migration 138). Set on the continuation run the plans
+   * worker enqueues after a Claude usage limit; null for every ordinary run. A partial UNIQUE index
+   * allows at most one continuation per limited run. FK is ON DELETE SET NULL.
+   */
+  @Column({ name: 'resume_of_run_id', nullable: true, type: 'uuid' })
+  resumeOfRunId!: string | null;
+
   @Column({ default: 'QUEUED', name: 'status', type: 'text' })
   status!: string;
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp with time zone' })
   updatedAt!: Date;
+
+  /** When the usage limit that stopped this run lifts (migration 138); null when not usage-limited or unreported. */
+  @Column({
+    name: 'usage_limit_resets_at',
+    nullable: true,
+    type: 'timestamp with time zone',
+  })
+  usageLimitResetsAt!: Date | null;
+
+  /** Raw usage-limit window name (`five_hour`, `seven_day`, …; migration 138); null when not usage-limited or unreported. */
+  @Column({ name: 'usage_limit_type', nullable: true, type: 'text' })
+  usageLimitType!: string | null;
 
   /** Identifier of the executing worker instance (BullMQ worker id); cleared at finish. Null when not actively executing. */
   @Column({ name: 'worker_id', nullable: true, type: 'text' })

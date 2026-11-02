@@ -21,12 +21,14 @@ fragment ScheduledJobRunDetail on ScheduledAgentJobRunObject {
   }
   repositoryCheckoutId
   resolvedCwd
+  resumeOfRunId
   scheduledAgentJobId
   settingsSnapshotJson
   startedAt
   status
   totalTokens
   trigger
+  usageLimitResetsAt
 }
 
 query scheduledAgentJobRunDetail($runId: ID!, $jobId: ID!) {

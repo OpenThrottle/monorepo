@@ -1,6 +1,9 @@
 query SettingsAgentsAgentClis {
   discoverAgentClis {
     agents {
+      auth {
+        warning
+      }
       backend
       enabled
       label

@@ -23,6 +23,7 @@ const SNAPSHOT: AgentCliDiscoveryResult = {
   agents: [
     {
       attachesWorkspaceMcp: true,
+      auth: null,
       available: true,
       backend: 'cursor',
       chatCapable: true,
@@ -33,6 +34,7 @@ const SNAPSHOT: AgentCliDiscoveryResult = {
     },
     {
       attachesWorkspaceMcp: true,
+      auth: null,
       available: false,
       backend: 'claude',
       chatCapable: true,
@@ -43,6 +45,7 @@ const SNAPSHOT: AgentCliDiscoveryResult = {
     },
     {
       attachesWorkspaceMcp: true,
+      auth: null,
       available: true,
       backend: 'opencode',
       chatCapable: true,
@@ -78,6 +81,7 @@ describe('AgentDiscoveryResolver', () => {
     expect(result.agents).toEqual([
       {
         attachesWorkspaceMcp: true,
+        auth: null,
         backend: 'cursor',
         chatCapable: true,
         enabled: true,
@@ -92,6 +96,7 @@ describe('AgentDiscoveryResolver', () => {
       },
       {
         attachesWorkspaceMcp: true,
+        auth: null,
         backend: 'opencode',
         chatCapable: true,
         enabled: true,
@@ -104,6 +109,29 @@ describe('AgentDiscoveryResolver', () => {
         version: '1.18.5',
       },
     ]);
+  });
+
+  it('passes the claude auth report through untouched', async () => {
+    const auth = {
+      accountEmail: 'dev@example.com',
+      activeCredential: 'apiKey',
+      apiKeyOverridesSubscription: true,
+      authMethod: 'claude.ai',
+      loggedIn: true,
+      organizationName: 'Example Org',
+      subscriptionType: 'team',
+      warning: 'ANTHROPIC_API_KEY is set, so Claude runs bill the API key.',
+    } as const;
+    vi.mocked(service.discover).mockResolvedValue({
+      agents: [
+        { ...SNAPSHOT.agents[1]!, auth, available: true, version: '2.1.270' },
+      ],
+      scannedAt: SNAPSHOT.scannedAt,
+    });
+
+    const result = await resolver.discoverAgentClis(human);
+
+    expect(result.agents[0]?.auth).toEqual(auth);
   });
 
   it('overlays per-model disabled + favorite state into modelOptions, and an agent-OFF forces every model disabled', async () => {
@@ -158,6 +186,7 @@ describe('AgentDiscoveryResolver', () => {
       agents: [
         {
           attachesWorkspaceMcp: true,
+          auth: null,
           available: false,
           backend: 'cursor',
           chatCapable: true,

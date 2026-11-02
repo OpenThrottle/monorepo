@@ -299,14 +299,39 @@ Set `OPENTHROTTLE_CLAUDE_CONFIG_DIR` to a dedicated, server-owned config
 directory to skip plugin startup entirely — it is forwarded as `CLAUDE_CONFIG_DIR`
 to the child (overriding any inherited value). Requirements:
 
-- **Auth must live there.** Copy `.credentials.json` from the real config dir, or
-  set `ANTHROPIC_API_KEY` (already allowlisted). Otherwise subscription auth
-  breaks — which is why this is **opt-in and unset by default**.
+- **Auth must live there.** Log in once against the dedicated directory with
+  claude's own login flow:
+
+  ```bash
+  CLAUDE_CONFIG_DIR=/path/to/openthrottle-claude claude auth login
+  ```
+
+  Then confirm it with
+  `CLAUDE_CONFIG_DIR=/path/to/openthrottle-claude claude auth status`. Do **not**
+  copy `.credentials.json` out of your real config dir. On macOS the subscription
+  login lives in the Keychain, not in that file, so the copy silently yields no
+  auth. Moving OAuth tokens around by hand is also not a supported way to handle
+  Anthropic credentials. Without a login there, subscription auth breaks, which is
+  why this is **opt-in and unset by default**.
+
+- **`ANTHROPIC_API_KEY` overrides the subscription.** The key is allowlisted into
+  the child, and in `-p` mode claude always prefers an env key over a logged-in
+  subscription. Leave it unset when you want chat billed to the subscription. Set
+  it only when you deliberately want API-key billing, for example on a server
+  with no interactive login.
 - **No plugins/hooks.** Leave out `plugins/` and any `settings.json`
   `SessionStart` hooks — that is the whole point.
 - **Stable across turns.** claude writes the session transcript here under
   `--session-id` on turn one and reads it back under `--resume`; a per-turn or
   ephemeral dir would break multi-turn resume.
+
+**Which credential is active.** `discoverAgentClis` reports the logged-in account,
+plan and active credential for claude via `claude auth status --json`, run against
+the same config dir a chat spawn uses (`OPENTHROTTLE_CLAUDE_CONFIG_DIR`, else an
+inherited `CLAUDE_CONFIG_DIR`). It never reads tokens or credential files and never
+forwards `ANTHROPIC_API_KEY` (only its presence). When that key is set, claude bills
+it instead of the subscription (the env key always wins in `-p` mode), so the report
+carries a warning that the `discover_agent_clis` MCP tool and `/settings/agents` surface.
 
 ## Adding a new CLI
 

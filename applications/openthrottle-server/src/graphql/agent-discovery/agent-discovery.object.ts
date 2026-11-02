@@ -26,11 +26,65 @@ export class AgentCliModelOption {
 }
 
 @ObjectType()
+export class AgentCliAuthStatusObject {
+  @Field(() => String, {
+    description: `Logged-in account email as reported by \`claude auth status\`, or null when unknown. No tokens or credential files are read.`,
+    nullable: true,
+  })
+  accountEmail!: string | null;
+
+  @Field(() => String, {
+    description: `The credential Claude runs will actually bill: "subscription" (claude.ai login), "apiKey" (ANTHROPIC_API_KEY or a configured key source — it always wins in -p mode), or "none". Derived from \`claude auth status\` plus the presence (never the value) of ANTHROPIC_API_KEY in the server env.`,
+  })
+  activeCredential!: string;
+
+  @Field(() => Boolean, {
+    description: `True when an API key is active while a subscription login also exists, so runs bill the API key instead of the subscription.`,
+  })
+  apiKeyOverridesSubscription!: boolean;
+
+  @Field(() => String, {
+    description: `Login method as reported by \`claude auth status\` (e.g. "claude.ai"), or null when unknown.`,
+    nullable: true,
+  })
+  authMethod!: string | null;
+
+  @Field(() => Boolean, {
+    description: `True when \`claude auth status\` reports a logged-in account.`,
+  })
+  loggedIn!: boolean;
+
+  @Field(() => String, {
+    description: `Organization name as reported by \`claude auth status\`, or null when unknown.`,
+    nullable: true,
+  })
+  organizationName!: string | null;
+
+  @Field(() => String, {
+    description: `Subscription plan (e.g. "pro", "max", "team") as reported by \`claude auth status\`, or null when unknown.`,
+    nullable: true,
+  })
+  subscriptionType!: string | null;
+
+  @Field(() => String, {
+    description: `A loud, specific sentence when the credential setup needs attention (API key overriding the subscription, or not logged in); null when everything is fine.`,
+    nullable: true,
+  })
+  warning!: string | null;
+}
+
+@ObjectType()
 export class AgentCliOptionObject {
   @Field(() => String, {
     description: `Backend discriminator (e.g. "cursor") used in StartConversationStreamInput.`,
   })
   backend!: string;
+
+  @Field(() => AgentCliAuthStatusObject, {
+    description: `Logged-in account, subscription plan and active credential, reported by \`claude auth status --json\` (no OAuth tokens or credential files are read, and no Anthropic endpoint is called). Null for CLIs other than claude, or when the probe failed or timed out.`,
+    nullable: true,
+  })
+  auth!: AgentCliAuthStatusObject | null;
 
   @Field(() => Boolean, {
     description: `True when this CLI resolves the workspace's committed MCP config (.mcp.json / .cursor/mcp.json / opencode.json), so a run in this checkout can reach openthrottle-mcp. False for codex and gemini, which read only their own config scope (codex: user-scope config.toml; gemini: .gemini/settings.json, never .mcp.json) — for those, MCP reachability is a property of the host and cannot be verified from the workspace, so present it as unverifiable rather than as definitely missing. Distinct from emitting MCP flags: claude, grok, and opencode emit none yet attach fine.`,
