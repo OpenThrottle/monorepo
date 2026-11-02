@@ -8,6 +8,7 @@ import {
   encodeRespCommand,
   parseRespReply,
   redisConnectionFromEnv,
+  scanKeysMatching,
 } from '../utils/worktree-queue-keys.ts';
 
 /** Splits the RESP command arrays a client writes into argv lists (bulk strings only). */
@@ -29,23 +30,30 @@ const parseCommands = (raw: string): string[][] => {
 
 const bulk = (value: string): string => `$${value.length}\r\n${value}\r\n`;
 
-/** A fake Redis: SCAN returns two matching keys per page (cursor 1 = more), UNLINK removes from `store`. */
+/**
+ * A fake Redis: SCAN pages two matching keys at a time over a snapshot taken at cursor 0 (the
+ * cursor is the offset into it, 0 = done), UNLINK removes from `store`.
+ */
 const startFakeRedis = async (
   store: Set<string>,
   commandLog: string[][],
 ): Promise<Server> => {
   const server = createServer((socket: Socket) => {
+    let snapshot: string[] = [];
     socket.on('data', (chunk) => {
       for (const command of parseCommands(chunk.toString('utf8'))) {
         commandLog.push(command);
         const [name, ...rest] = command;
         if (name === 'SCAN') {
-          const prefix = (rest[2] ?? '').slice(0, -1);
-          const matching = [...store].filter((key) => key.startsWith(prefix));
-          const page = matching.slice(0, 2);
-          const done = matching.length <= 2;
+          const offset = Number(rest[0]);
+          if (offset === 0) {
+            const prefix = (rest[2] ?? '').slice(0, -1);
+            snapshot = [...store].filter((key) => key.startsWith(prefix));
+          }
+          const page = snapshot.slice(offset, offset + 2);
+          const next = offset + 2 >= snapshot.length ? 0 : offset + 2;
           socket.write(
-            `*2\r\n${bulk(done ? '0' : '1')}*${page.length}\r\n${page.map(bulk).join('')}`,
+            `*2\r\n${bulk(String(next))}*${page.length}\r\n${page.map(bulk).join('')}`,
           );
         } else if (name === 'UNLINK') {
           let removed = 0;
@@ -226,5 +234,51 @@ describe('deleteKeysMatching', () => {
         timeoutMs: 150,
       }),
     ).rejects.toThrow(/did not answer|closed/);
+  });
+});
+
+describe('scanKeysMatching', () => {
+  let server: Server | undefined;
+
+  afterEach(async () => {
+    const closing = server;
+    server = undefined;
+    if (closing) await new Promise((resolve) => closing.close(resolve));
+  });
+
+  it('pages through every matching key with SCAN and deletes nothing', async () => {
+    const store = new Set([
+      'bull:wt-a:Plans:meta',
+      'bull:wt-a:Plans:stalled-check',
+      'bull:wt-b:Plans:meta',
+      'bull:wt-c:Daily Stats:meta',
+      'bull:Plans:meta',
+    ]);
+    const commandLog: string[][] = [];
+    server = await startFakeRedis(store, commandLog);
+
+    const keys = await scanKeysMatching({
+      connection: {
+        ...redisConnectionFromEnv({}),
+        host: '127.0.0.1',
+        port: portOf(server),
+      },
+      pattern: 'bull:wt-*',
+      timeoutMs: 2000,
+    });
+
+    expect(keys.sort()).toEqual([
+      'bull:wt-a:Plans:meta',
+      'bull:wt-a:Plans:stalled-check',
+      'bull:wt-b:Plans:meta',
+      'bull:wt-c:Daily Stats:meta',
+    ]);
+    expect(store.size).toBe(5);
+    expect(
+      commandLog.filter(([name]) => name === 'SCAN').length,
+    ).toBeGreaterThan(1);
+    expect(
+      commandLog.some(([name]) => name === 'KEYS' || name === 'UNLINK'),
+    ).toBe(false);
   });
 });
