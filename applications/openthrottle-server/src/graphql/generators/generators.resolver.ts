@@ -5,7 +5,6 @@
 import { Args, Query, Resolver } from '@nestjs/graphql';
 
 import {
-  GeneratorDetail,
   getGeneratorByName,
   getGeneratorsList,
 } from '../../modules/generators/generators.service.ts';
@@ -30,9 +29,16 @@ export class GeneratorsResolver {
   })
   async generator(
     @Args('input', { type: () => GetGeneratorInput }) input: GetGeneratorInput,
-  ): Promise<GeneratorDetail | null> {
+  ): Promise<GeneratorDetailObject | null> {
     const detail = getGeneratorByName(input.name);
+    if (!detail) {
+      return null;
+    }
 
-    return detail;
+    return {
+      description: detail.description,
+      name: detail.name,
+      schemaJson: detail.schema === null ? null : JSON.stringify(detail.schema),
+    };
   }
 }
