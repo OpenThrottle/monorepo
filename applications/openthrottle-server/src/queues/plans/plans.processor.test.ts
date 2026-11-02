@@ -139,6 +139,9 @@ const mockRunPlanOrchestratorJob = vi.fn().mockResolvedValue({
   status: 'finished',
 });
 
+const mockFindPlanIdsWithLiveDetachedRun = vi
+  .fn()
+  .mockResolvedValue(new Set<string>());
 const mockRecordHeartbeatByJob = vi.fn().mockResolvedValue(1);
 const mockSettleRunByJob = vi.fn().mockResolvedValue(null);
 
@@ -283,6 +286,7 @@ describe('PlansProcessor', () => {
           provide: PlanRunsService,
           useValue: createMock<PlanRunsService>({
             clearRunLocation: vi.fn().mockResolvedValue(0),
+            findPlanIdsWithLiveDetachedRun: mockFindPlanIdsWithLiveDetachedRun,
             markRunStarted: vi.fn().mockResolvedValue(0),
             recordHeartbeatByJob: mockRecordHeartbeatByJob,
             settleRunByJob: mockSettleRunByJob,
@@ -792,6 +796,59 @@ describe('PlansProcessor', () => {
       await processor.onModuleInit();
 
       expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
+    });
+
+    it('leaves an IN_PROGRESS plan alone when its newest run is a live interactive run', async () => {
+      // An /ot-loop run (register_plan_run) never has a BullMQ job, so "no active job" says
+      // nothing about it. Resetting here flipped a live loop's plan to QUEUED on every restart
+      // (reproduced in OT plan d279cccb task 1).
+      const interactivePlanId = 'plan-with-live-interactive-run';
+      mockRepoFind.mockResolvedValueOnce([
+        { id: interactivePlanId, status: 'IN_PROGRESS', title: 'Looping' },
+      ]);
+      mockGetJobs.mockResolvedValueOnce([]);
+      mockFindPlanIdsWithLiveDetachedRun.mockResolvedValueOnce(
+        new Set([interactivePlanId]),
+      );
+
+      await processor.onModuleInit();
+
+      expect(mockFindPlanIdsWithLiveDetachedRun).toHaveBeenCalledWith([
+        interactivePlanId,
+      ]);
+      expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
+      const notifications = getProcessorNotifications(processor);
+      expect(notifications.emitPlanStatusChanged).not.toHaveBeenCalled();
+    });
+
+    it('still resets a queued-run plan with no active job alongside a live interactive one', async () => {
+      const interactivePlanId = 'plan-with-live-interactive-run';
+      const queuedRunPlanId = 'plan-whose-queued-job-died';
+      mockRepoFind.mockResolvedValueOnce([
+        { id: interactivePlanId, status: 'IN_PROGRESS', title: 'Looping' },
+        { id: queuedRunPlanId, status: 'IN_PROGRESS', title: 'Interrupted' },
+      ]);
+      mockGetJobs.mockResolvedValueOnce([]);
+      mockFindPlanIdsWithLiveDetachedRun.mockResolvedValueOnce(
+        new Set([interactivePlanId]),
+      );
+
+      await processor.onModuleInit();
+
+      expect(mockWriteGuardedStatus).toHaveBeenCalledTimes(1);
+      expect(mockWriteGuardedStatus).toHaveBeenCalledWith(
+        queuedRunPlanId,
+        expect.objectContaining({
+          guardCurrentStatus: 'IN_PROGRESS',
+          requestedStatus: 'QUEUED',
+        }),
+      );
+      const notifications = getProcessorNotifications(processor);
+      expect(notifications.emitPlanStatusChanged).toHaveBeenCalledTimes(1);
+      expect(notifications.emitPlanStatusChanged).toHaveBeenCalledWith({
+        planId: queuedRunPlanId,
+        status: 'QUEUED',
+      });
     });
 
     it('does nothing when no plans are IN_PROGRESS', async () => {

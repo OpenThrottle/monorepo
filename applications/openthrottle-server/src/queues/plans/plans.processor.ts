@@ -157,6 +157,10 @@ export class PlansProcessor
 
   /**
    * On startup, reset any plan that is IN_PROGRESS but has no active job in the queue (e.g. after server restart). Prevents plans from staying stuck as IN_PROGRESS when the job was interrupted.
+   *
+   * A plan whose newest run is a live detached run (an interactive /ot-loop or a workflow-ralph CLI
+   * run — no BullMQ job by design) is left alone: that run lives outside this process, survives the
+   * restart, and is settled by its owner or the sweeps, never by this reconcile.
    */
   private async reconcilePlanStatusOnStartup(): Promise<void> {
     const repo = this.plansService.getRepository();
@@ -172,10 +176,22 @@ export class PlansProcessor
         .map((job) => job.data?.planId)
         .filter((id): id is string => typeof id === 'string'),
     );
+    const planIdsWithLiveDetachedRun =
+      await this.planRunsService.findPlanIdsWithLiveDetachedRun(
+        plans.map((plan) => plan.id),
+      );
     const startupActorSub = await this.statusChangeSystemAccount.resolveId();
 
     for (const plan of plans) {
       if (planIdsWithActiveJob.has(plan.id)) {
+        continue;
+      }
+
+      if (planIdsWithLiveDetachedRun.has(plan.id)) {
+        this.logger.info(
+          `Plan status reconciliation: leaving plan ${plan.id} IN_PROGRESS (live detached run, no BullMQ job by design).`,
+          PlansProcessor.name,
+        );
         continue;
       }
 

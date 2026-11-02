@@ -12,7 +12,11 @@ import type {
 } from './plan-run.entity.ts';
 import { PlanRun } from './plan-run.entity.ts';
 import type { PlanRunStatus } from './plan-runs.constants.ts';
-import { PLAN_RUN_STATUS } from './plan-runs.constants.ts';
+import {
+  PLAN_RUN_STATUS,
+  STALE_CUTOFF_MS,
+  UNSUPERVISED_STALE_CUTOFF_MS,
+} from './plan-runs.constants.ts';
 
 interface RecordQueuedPlanRunInput {
   /** User who enqueued the run (auth sub for a user principal); null for service-account/system. */
@@ -562,6 +566,51 @@ export class PlanRunsService {
       )
       .orderBy('run.created_at', 'DESC')
       .getMany();
+  }
+
+  /**
+   * @description Of the given plans, returns the ids whose NEWEST run is a live detached run: no
+   * BullMQ job, still IN_PROGRESS, and not stale. These are the interactive /ot-loop rows
+   * (`heartbeat_expected = false`) and the detached workflow-ralph CLI rows — both drive their own
+   * loop outside the server, so a server restart neither interrupts them nor leaves a job behind to
+   * find. Their owner settles them (or the sweeps do); a caller looking for "IN_PROGRESS with no
+   * active job" must leave these plans alone.
+   *
+   * "Not stale" uses the same two cutoffs as the sweepers, so a row is never live here and dead
+   * there: {@link STALE_CUTOFF_MS} since the last heartbeat for a run that heartbeats, and
+   * {@link UNSUPERVISED_STALE_CUTOFF_MS} of sheer age for one that does not
+   * (see {@link PlanRunsService.findStaleUnsupervisedRuns}). Only the newest run per plan counts — an
+   * older row is superseded, so it says nothing about what is driving the plan now. Returns an empty
+   * set for an empty id list rather than issuing an unbounded query.
+   * @public
+   */
+  async findPlanIdsWithLiveDetachedRun(
+    planIds: readonly string[],
+    now: Date = new Date(),
+  ): Promise<Set<string>> {
+    if (planIds.length === 0) return new Set();
+
+    const latestRuns = await this.getRepository()
+      .createQueryBuilder('run')
+      .distinctOn(['run.plan_id'])
+      .where('run.plan_id IN (:...planIds)', { planIds: [...planIds] })
+      .orderBy('run.plan_id', 'ASC')
+      .addOrderBy('run.created_at', 'DESC')
+      .getMany();
+
+    const live = latestRuns.filter((run) => {
+      if (run.bullmqJobId !== null) return false;
+      if (run.status !== PLAN_RUN_STATUS.IN_PROGRESS) return false;
+
+      const lastSeenAt = run.lastHeartbeatAt ?? run.createdAt;
+      const cutoffMs = run.heartbeatExpected
+        ? STALE_CUTOFF_MS
+        : UNSUPERVISED_STALE_CUTOFF_MS;
+
+      return now.getTime() - lastSeenAt.getTime() < cutoffMs;
+    });
+
+    return new Set(live.map((run) => run.planId));
   }
 
   /**

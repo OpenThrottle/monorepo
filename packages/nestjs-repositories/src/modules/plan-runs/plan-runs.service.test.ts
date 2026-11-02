@@ -54,7 +54,9 @@ describe('PlanRunsService', () => {
     // so .where().andWhere().orderBy().take().getMany() resolves through.
     const qb: Record<string, ReturnType<typeof vi.fn>> = {};
     for (const method of [
+      'addOrderBy',
       'andWhere',
+      'distinctOn',
       'orderBy',
       'set',
       'take',
@@ -501,6 +503,100 @@ describe('PlanRunsService', () => {
       const result = await service.findLiveRunsByCheckoutIds([], new Date());
 
       expect(result).toEqual([]);
+      expect(repo.createQueryBuilder).not.toHaveBeenCalled();
+    });
+
+    it('findPlanIdsWithLiveDetachedRun reads only the newest run per plan', async () => {
+      await service.findPlanIdsWithLiveDetachedRun(
+        ['plan-a', 'plan-b'],
+        new Date('2026-07-21T00:01:00Z'),
+      );
+      const qb = repo.createQueryBuilder.mock.results[0]?.value;
+
+      expect(qb.distinctOn).toHaveBeenCalledWith(['run.plan_id']);
+      expect(qb.where).toHaveBeenCalledWith('run.plan_id IN (:...planIds)', {
+        planIds: ['plan-a', 'plan-b'],
+      });
+      expect(qb.orderBy).toHaveBeenCalledWith('run.plan_id', 'ASC');
+      expect(qb.addOrderBy).toHaveBeenCalledWith('run.created_at', 'DESC');
+    });
+
+    it('findPlanIdsWithLiveDetachedRun keeps a live interactive run and drops a queued one', async () => {
+      const now = new Date('2026-07-21T09:00:00Z');
+      qbGetMany.mockResolvedValueOnce([
+        // /ot-loop: no job, no timer, 9h old — live (under the 12h age cutoff).
+        buildRun({
+          bullmqJobId: null,
+          heartbeatExpected: false,
+          planId: 'plan-interactive',
+          status: 'IN_PROGRESS',
+        }),
+        // A queued run has a job; whether it is live is the active-job check's call, not this.
+        buildRun({
+          bullmqJobId: 'job-9',
+          planId: 'plan-queued',
+          status: 'IN_PROGRESS',
+        }),
+        // Already settled by its owner.
+        buildRun({
+          bullmqJobId: null,
+          heartbeatExpected: false,
+          planId: 'plan-settled',
+          status: 'COMPLETED',
+        }),
+      ]);
+
+      const result = await service.findPlanIdsWithLiveDetachedRun(
+        ['plan-interactive', 'plan-queued', 'plan-settled'],
+        now,
+      );
+
+      expect(result).toEqual(new Set(['plan-interactive']));
+    });
+
+    it('findPlanIdsWithLiveDetachedRun applies the same cutoffs as the sweepers', async () => {
+      const createdAt = new Date('2026-07-21T00:00:00Z');
+      qbGetMany.mockResolvedValueOnce([
+        // Unsupervised, past the 12h age cutoff: the age sweep would settle it, so it is dead.
+        buildRun({
+          bullmqJobId: null,
+          createdAt,
+          heartbeatExpected: false,
+          planId: 'plan-abandoned-loop',
+          status: 'IN_PROGRESS',
+        }),
+        // Detached CLI heartbeating 30s ago: live.
+        buildRun({
+          bullmqJobId: null,
+          createdAt,
+          heartbeatExpected: true,
+          lastHeartbeatAt: new Date('2026-07-21T12:00:30Z'),
+          planId: 'plan-live-cli',
+          status: 'IN_PROGRESS',
+        }),
+        // Detached CLI silent for 3 minutes: past the 120s cutoff, dead.
+        buildRun({
+          bullmqJobId: null,
+          createdAt,
+          heartbeatExpected: true,
+          lastHeartbeatAt: new Date('2026-07-21T11:58:00Z'),
+          planId: 'plan-dead-cli',
+          status: 'IN_PROGRESS',
+        }),
+      ]);
+
+      const result = await service.findPlanIdsWithLiveDetachedRun(
+        ['plan-abandoned-loop', 'plan-live-cli', 'plan-dead-cli'],
+        new Date('2026-07-21T12:01:00Z'),
+      );
+
+      expect(result).toEqual(new Set(['plan-live-cli']));
+    });
+
+    it('findPlanIdsWithLiveDetachedRun short-circuits on an empty id list', async () => {
+      await expect(service.findPlanIdsWithLiveDetachedRun([])).resolves.toEqual(
+        new Set(),
+      );
       expect(repo.createQueryBuilder).not.toHaveBeenCalled();
     });
 
