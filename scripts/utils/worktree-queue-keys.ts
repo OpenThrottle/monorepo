@@ -13,7 +13,7 @@
 import { connect } from 'node:net';
 
 /** Every worktree queue prefix starts with this; the primary's `bull` never does. */
-const WORKTREE_QUEUE_PREFIX_ROOT = 'bull:wt-';
+export const WORKTREE_QUEUE_PREFIX_ROOT = 'bull:wt-';
 
 /** Characters that would turn a prefix into a wider SCAN glob. */
 const GLOB_CHARACTERS = /[*?[\]\\]/;
@@ -206,6 +206,51 @@ const isScanReply = (reply: RespValue): reply is [string, string[]] =>
   Array.isArray(reply[1]) &&
   reply[1].every((key) => typeof key === 'string');
 
+/** AUTH and SELECT for a fresh connection, when the settings ask for them. */
+const selectDatabase = async (
+  send: Send,
+  connection: RedisConnection,
+): Promise<void> => {
+  if (connection.password !== undefined) {
+    await send(connection.username === undefined ? ['AUTH', connection.password] : ['AUTH', connection.username, connection.password]); // prettier-ignore
+  }
+  if (connection.db !== 0) await send(['SELECT', String(connection.db)]);
+};
+
+/**
+ * Lists every key matching `pattern` (a literal prefix ending in `*`). Read-only: cursor-driven
+ * SCAN, never KEYS, and each key is re-checked against the literal prefix like `deleteKeysMatching`.
+ */
+export const scanKeysMatching = (params: {
+  readonly connection: RedisConnection;
+  readonly pattern: string;
+  readonly timeoutMs: number;
+}): Promise<string[]> => {
+  const { connection, pattern, timeoutMs } = params;
+  const literalPrefix = pattern.slice(0, -1);
+
+  return withRedis(connection, timeoutMs, async (send) => {
+    await selectDatabase(send, connection);
+
+    let cursor = '0';
+    const keys: string[] = [];
+
+    /* eslint-disable no-await-in-loop -- each SCAN page needs the previous cursor, and one connection is one command at a time */
+    do {
+      const reply = await send(['SCAN', cursor, 'MATCH', pattern, 'COUNT', String(SCAN_BATCH_SIZE)]); // prettier-ignore
+      if (!isScanReply(reply)) throw new Error('unexpected SCAN reply');
+
+      const [nextCursor, found] = reply;
+      cursor = nextCursor;
+      keys.push(...found.filter((key) => key.startsWith(literalPrefix)));
+    } while (cursor !== '0');
+    /* eslint-enable no-await-in-loop */
+
+    // SCAN may return a key more than once across pages.
+    return [...new Set(keys)];
+  });
+};
+
 /**
  * Deletes every key matching `pattern` (from `worktreeQueueKeyPattern`) and returns how many went.
  * Cursor-driven SCAN — never KEYS, which would block the primary's Redis — with UNLINK in batches.
@@ -221,10 +266,7 @@ export const deleteKeysMatching = (params: {
   const literalPrefix = pattern.slice(0, -1);
 
   return withRedis(connection, timeoutMs, async (send) => {
-    if (connection.password !== undefined) {
-      await send(connection.username === undefined ? ['AUTH', connection.password] : ['AUTH', connection.username, connection.password]); // prettier-ignore
-    }
-    if (connection.db !== 0) await send(['SELECT', String(connection.db)]);
+    await selectDatabase(send, connection);
 
     let cursor = '0';
     let deleted = 0;

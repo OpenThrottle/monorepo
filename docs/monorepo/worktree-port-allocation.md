@@ -171,6 +171,26 @@ shared worktree's teardown never touches the shared database.
 `worktree:new --own-db` reaches the provisioner through the ot-worktree contract's only
 channel, an exported environment variable (`OPENTHROTTLE_WORKTREE_OWN_DB=1`).
 
+### Orphaned queue keys: `pnpm worktree:prune-queues`
+
+A shared worktree's BullMQ queues live in the primary's Redis under its own prefix
+(`bull:wt-<slug>`), and teardown deletes that prefix. Worktrees removed before teardown did
+that, or removed with a bare `git worktree remove` (which skips teardown), left their keys
+behind. List and clear them with:
+
+```bash
+pnpm worktree:prune-queues           # dry run: orphaned prefixes and key counts, deletes nothing
+pnpm worktree:prune-queues --apply   # delete each orphan's bull:wt-<slug>:* keys
+```
+
+A prefix is orphaned when no entry in `git worktree list` claims it — each listed worktree
+protects both the prefix its `.env` resolves to and the `bull:wt-<basename>` provisioning
+derives from its directory name. The bare `bull` prefix (the primary's queues) is never a
+candidate, deletion uses the colon-anchored pattern so `bull:wt-a` cannot take `bull:wt-a-b`
+with it, and if `git worktree list` cannot be read it refuses rather than treating every
+prefix as orphaned. Redis is the primary checkout's (`REDIS_*` from its `.env`), whichever
+checkout you run it from.
+
 ## Running the stack: `pnpm worktree:serve`
 
 A worktree runs its own server and developer app on its own port block. To run one from an
@@ -267,6 +287,7 @@ a plan run is decided by the per-checkout BullMQ queue prefix
 - `scripts/heal_worktree.ts` — the heal hook that backfills the marker onto pre-existing worktrees.
 - `scripts/worktree_db.ts` / `scripts/utils/worktree-db-isolate.ts` — `pnpm worktree:db isolate` (also run by `worktree:new --own-db`).
 - `scripts/utils/migration-guard.ts` — the shared-mode migration guard behind `database:migrate` and `ensure-migrations`.
+- `scripts/worktree_prune_queues.ts` / `scripts/utils/worktree-queue-keys.ts` — `pnpm worktree:prune-queues`; the util also backs teardown's queue-key cleanup.
 - `scripts/worktree_serve.ts` / `scripts/utils/worktree-serve.ts` — `pnpm worktree:serve` (run, wait, probe, stop).
 - `scripts/utils/worktree-compose.ts` — the generated `docker-compose.worktree.yml` (shared vs isolated).
 - `scripts/setup_worktree.ts` — **OpenThrottle's provisioner** (executable, run by bare Node with native type stripping), found by the skill's third discovery rung. Allocates the port block, rewrites `.env`, writes the compose vars, generates the override.

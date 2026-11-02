@@ -276,6 +276,7 @@
     "worktree:db": "node --experimental-strip-types ./scripts/worktree_db.ts",
     "worktree:heal": "sh -c 'd=skills/ot-worktree/scripts; [ -x \"$d/heal.sh\" ] || d=.agents/skills/ot-worktree/scripts; exec \"$d/heal.sh\" \"$@\"' --",
     "worktree:new": "sh -c 'd=skills/ot-worktree/scripts; [ -x \"$d/create.sh\" ] || d=.agents/skills/ot-worktree/scripts; exec \"$d/create.sh\" \"$@\"' --",
+    "worktree:prune-queues": "node --experimental-strip-types ./scripts/worktree_prune_queues.ts",
     "worktree:remove": "sh -c 'd=skills/ot-worktree/scripts; [ -x \"$d/destroy.sh\" ] || d=.agents/skills/ot-worktree/scripts; exec \"$d/destroy.sh\" \"$@\"' --",
     "worktree:serve": "node --experimental-strip-types ./scripts/worktree_serve.ts"
   },
