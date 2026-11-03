@@ -4,6 +4,7 @@ import {
   DeleteAgentConversationDocument,
   GetAgentConversationMessagesDocument,
   ListAgentConversationsDocument,
+  RestoreAgentConversationDocument,
   UpdateAgentConversationTitleDocument,
 } from '~/__generated__/graphql';
 
@@ -18,6 +19,7 @@ const agentConversations = createAgentConversationsApi({
   deleteDocument: DeleteAgentConversationDocument,
   getMessagesDocument: GetAgentConversationMessagesDocument,
   listDocument: ListAgentConversationsDocument,
+  restoreDocument: RestoreAgentConversationDocument,
   updateTitleDocument: UpdateAgentConversationTitleDocument,
 });
 
@@ -29,3 +31,5 @@ export const handleLoadAgentConversationMessagesIntent =
   agentConversations.handleLoadAgentConversationMessagesIntent;
 export const handleRenameAgentConversationIntent =
   agentConversations.handleRenameAgentConversationIntent;
+export const handleRestoreAgentConversationIntent =
+  agentConversations.handleRestoreAgentConversationIntent;

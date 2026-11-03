@@ -4,11 +4,8 @@
  * @public
  */
 export const CHAT_CONVERSATION_SIDEBAR_COPY = {
-  deleteConfirmAction: 'Delete',
-  deleteConfirmCancel: 'Cancel',
-  deleteConfirmDescription:
-    'This removes the conversation from your list. Its messages are retained and can be restored later.',
-  deleteConfirmTitle: 'Delete conversation?',
+  deletedToast: 'Conversation deleted',
+  deletedUndo: 'Undo',
   emptyDescription: 'Your saved conversations will appear here.',
   emptyTitle: 'No conversations yet',
   loadMore: 'Load more',
@@ -19,3 +16,10 @@ export const CHAT_CONVERSATION_SIDEBAR_COPY = {
   title: 'Conversations',
   untitled: 'Untitled conversation',
 } as const;
+
+/**
+ * How long the post-delete Undo toast stays up. Delete is soft and immediate;
+ * this is the window in which a click on Undo restores the conversation.
+ * @public
+ */
+export const CHAT_CONVERSATION_UNDO_TOAST_DURATION_MS = 5000;

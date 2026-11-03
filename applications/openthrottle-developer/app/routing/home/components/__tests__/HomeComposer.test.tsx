@@ -25,6 +25,7 @@ const buildConversationList = (): UseConversationListResult => ({
   refresh: vi.fn(),
   remove: vi.fn(),
   rename: vi.fn(),
+  restore: vi.fn(),
   totalCount: 0,
 });
 

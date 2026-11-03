@@ -14,6 +14,23 @@ if (globalThis.ResizeObserver === undefined) {
 }
 
 /**
+ * @description jsdom does not implement `matchMedia`; Sonner's `Toaster` reads
+ * it in an effect (the sidebar's delete-Undo toast is tested end to end).
+ */
+if (globalThis.matchMedia === undefined) {
+  globalThis.matchMedia = (query: string): MediaQueryList => ({
+    addEventListener: () => {},
+    addListener: () => {},
+    dispatchEvent: () => false,
+    matches: false,
+    media: query,
+    onchange: null,
+    removeEventListener: () => {},
+    removeListener: () => {},
+  });
+}
+
+/**
  * @description jsdom does not implement `scrollIntoView`; {@link ChatThread} uses it when messages change.
  */
 if (typeof Element !== 'undefined' && !Element.prototype.scrollIntoView) {

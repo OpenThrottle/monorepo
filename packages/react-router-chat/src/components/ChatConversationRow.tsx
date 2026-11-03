@@ -17,11 +17,12 @@ export interface ChatConversationRowProps {
   readonly isActive: boolean;
   readonly isEditing: boolean;
   readonly onCancelRename: () => void;
+  /** Soft-delete immediately; the sidebar follows up with an Undo toast. */
+  readonly onDelete: () => void;
   readonly onDraftTitleChange: (value: string) => void;
   readonly onRenameKeyDown: (
     event: React.KeyboardEvent<HTMLInputElement>,
   ) => void;
-  readonly onRequestDelete: () => void;
   readonly onSelect: () => void;
   readonly onStartRename: () => void;
 }
@@ -44,8 +45,8 @@ export const ChatConversationRow = (
     isEditing,
     onCancelRename,
     onDraftTitleChange,
+    onDelete,
     onRenameKeyDown,
-    onRequestDelete,
     onSelect,
     onStartRename,
   } = props;
@@ -127,7 +128,7 @@ export const ChatConversationRow = (
             ACTION_TOUCH_CLASSES,
           )}
           data-testid={`ChatConversationSidebar-delete-${conversation.id}`}
-          onClick={onRequestDelete}
+          onClick={onDelete}
           size="xs"
           type="button"
           variant="ghost"

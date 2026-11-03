@@ -32,15 +32,15 @@ import '@openthrottle/react-router-chat/src/index.css';
 
 ## Public API
 
-| Export                                          | Description                                                                                                                                                                                                      |
-| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ChatDialog`                                    | Modal chat (`dialog` or `sheet`); controlled open via `open` / `onOpenChange`, or `defaultOpen`. Renders a "Conversations" switcher popover when `conversationSidebar` is supplied                               |
-| `ChatThread`, `ChatComposer`, `ChatMessageBody` | Thread list, input, and role-aware body rendering                                                                                                                                                                |
-| `ChatConversationSidebar`                       | Fully-controlled conversations list: select/restore, inline rename, confirm-guarded soft-delete, New chat, Load more, loading + empty states. Used as the home-route rail and inside the header switcher popover |
-| `ChatProvider`, `useChat`                       | Optional context so `ChatDialog` can omit `messages` / `onSendMessage` / `onStartNewChat` / `conversationSidebar`                                                                                                |
-| `useChatMessages`                               | Uncontrolled local message list (`sendUserMessage`, `appendMessage`, `setMessages`)                                                                                                                              |
-| `useChatTurnFetcher`                            | Local thread + root `send-agent-message` fetcher (`startNewChat` when persisted)                                                                                                                                 |
-| `ChatMessage`, `ChatTurnResult`                 | Message model and JSON shape for server chat turns                                                                                                                                                               |
+| Export                                          | Description                                                                                                                                                                                                                           |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ChatDialog`                                    | Modal chat (`dialog` or `sheet`); controlled open via `open` / `onOpenChange`, or `defaultOpen`. Renders a "Conversations" switcher popover when `conversationSidebar` is supplied                                                    |
+| `ChatThread`, `ChatComposer`, `ChatMessageBody` | Thread list, input, and role-aware body rendering                                                                                                                                                                                     |
+| `ChatConversationSidebar`                       | Fully-controlled conversations list: select/restore, inline rename, immediate soft-delete with a 5-second Undo toast, New chat, Load more, loading + empty states. Used as the home-route rail and inside the header switcher popover |
+| `ChatProvider`, `useChat`                       | Optional context so `ChatDialog` can omit `messages` / `onSendMessage` / `onStartNewChat` / `conversationSidebar`                                                                                                                     |
+| `useChatMessages`                               | Uncontrolled local message list (`sendUserMessage`, `appendMessage`, `setMessages`)                                                                                                                                                   |
+| `useChatTurnFetcher`                            | Local thread + root `send-agent-message` fetcher (`startNewChat` when persisted)                                                                                                                                                      |
+| `ChatMessage`, `ChatTurnResult`                 | Message model and JSON shape for server chat turns                                                                                                                                                                                    |
 
 ### Controlled vs uncontrolled
 
@@ -155,7 +155,8 @@ adds two presentational pieces on top of the streaming turn:
   server streams ephemerally (no conversation row, no message writes). Hosts store
   the value in `chatToolbarStateAtom` (`@openthrottle/react-router-chat-state`).
 - **`ChatConversationSidebar`** — a fully-controlled list (select→restore, inline
-  rename, confirm-guarded soft-delete, New chat, Load more). Mount it directly as a
+  rename, immediate soft-delete with a 5-second Undo toast via `onRestore`, New
+  chat, Load more). The host app must mount `Toaster`. Mount it directly as a
   home-route rail, or pass it as `conversationSidebar` to `ChatDialog` /
   `ChatProvider` to render the header's "Conversations" popover. The package owns no
   data — the host supplies rows + every handler (typically from a `useConversationList`

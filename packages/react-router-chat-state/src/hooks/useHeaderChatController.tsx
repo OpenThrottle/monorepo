@@ -237,6 +237,7 @@ export function useHeaderChatController(
     onLoadMore: conversationList.loadMore,
     onNewChat: onStartNewChat,
     onRename: conversationList.rename,
+    onRestore: conversationList.restore,
     onSelect: (id: string): void => turn.restore({ conversationId: id }),
     totalCount: conversationList.totalCount,
   };

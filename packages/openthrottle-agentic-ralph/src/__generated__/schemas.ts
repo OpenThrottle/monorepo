@@ -118,6 +118,7 @@ import {
   RenameSkillTagInput,
   ReorderPlanTasksInput,
   RepeatableJobsInput,
+  RestoreAgentConversationInput,
   RetryJobInput,
   ReviewCycleTimeInput,
   RolloutEvaluationReason,
@@ -1369,6 +1370,14 @@ export function RepeatableJobsInputSchema(): z.ZodObject<
     end: z.number().nullish(),
     queueName: z.string().min(1),
     start: z.number().nullish(),
+  });
+}
+
+export function RestoreAgentConversationInputSchema(): z.ZodObject<
+  Properties<RestoreAgentConversationInput>
+> {
+  return z.object({
+    conversationId: z.string().min(1),
   });
 }
 

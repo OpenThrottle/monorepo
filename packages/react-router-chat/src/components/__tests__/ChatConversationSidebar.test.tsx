@@ -1,9 +1,11 @@
+import { Toaster } from '@openthrottle/react-router-shadcn';
 import type { RenderResult } from '@testing-library/react';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
+import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../../data/chat-conversation-sidebar.copy';
 import type { AgentConversationListItem } from '../../types';
 import type { ChatConversationSidebarProps } from '../ChatConversationSidebar';
 import { ChatConversationSidebar } from '../ChatConversationSidebar';
@@ -32,6 +34,7 @@ const renderSidebar = (
       onDelete={vi.fn()}
       onNewChat={vi.fn()}
       onRename={vi.fn()}
+      onRestore={vi.fn()}
       onSelect={vi.fn()}
       totalCount={CONVERSATIONS.length}
       {...overrides}
@@ -108,40 +111,45 @@ describe('ChatConversationSidebar', () => {
   });
 
   describe('delete', () => {
-    test('soft-deletes only after confirming in the dialog', async () => {
+    test('soft-deletes immediately, with no confirm dialog', async () => {
       const onDelete = vi.fn();
       const component = renderSidebar({ onDelete });
       const user = userEvent.setup();
 
       await user.click(
         component.getByTestId('ChatConversationSidebar-delete-conv-1'),
-      );
-      // Not deleted until confirmed.
-      expect(onDelete).not.toHaveBeenCalled();
-
-      await user.click(
-        component.getByTestId('ChatConversationSidebar-confirm-delete'),
       );
 
       expect(onDelete).toHaveBeenCalledWith('conv-1');
+      expect(component.queryByRole('alertdialog')).not.toBeInTheDocument();
     });
 
-    test('shows the confirmation dialog and does not delete when cancelled', async () => {
-      const onDelete = vi.fn();
-      const component = renderSidebar({ onDelete });
+    test('offers an Undo toast that restores the conversation', async () => {
+      const onRestore = vi.fn();
       const user = userEvent.setup();
+      const component = render(
+        <>
+          <Toaster />
+          <ChatConversationSidebar
+            conversations={CONVERSATIONS}
+            onDelete={vi.fn()}
+            onNewChat={vi.fn()}
+            onRename={vi.fn()}
+            onRestore={onRestore}
+            onSelect={vi.fn()}
+          />
+        </>,
+      );
 
       await user.click(
         component.getByTestId('ChatConversationSidebar-delete-conv-1'),
       );
+      const undo = await component.findByRole('button', {
+        name: CHAT_CONVERSATION_SIDEBAR_COPY.deletedUndo,
+      });
+      await user.click(undo);
 
-      expect(
-        component.getByTestId('ChatConversationSidebar-confirm-delete'),
-      ).toBeInTheDocument();
-
-      await user.click(component.getByText('Cancel'));
-
-      expect(onDelete).not.toHaveBeenCalled();
+      expect(onRestore).toHaveBeenCalledWith(CONVERSATIONS[0]);
     });
   });
 

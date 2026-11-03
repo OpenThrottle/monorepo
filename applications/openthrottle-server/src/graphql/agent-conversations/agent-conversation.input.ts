@@ -88,6 +88,12 @@ export class DeleteAgentConversationInput {
 }
 
 @InputType()
+export class RestoreAgentConversationInput {
+  @Field(() => ID)
+  conversationId!: string;
+}
+
+@InputType()
 export class UpdateAgentConversationTitleInput {
   @Field(() => ID)
   conversationId!: string;

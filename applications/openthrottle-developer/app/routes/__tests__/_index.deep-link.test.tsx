@@ -34,6 +34,7 @@ vi.mock('~/routing/home/hooks/useConversationList', () => ({
     loadMore: vi.fn(),
     remove: vi.fn(),
     rename: vi.fn(),
+    restore: vi.fn(),
     totalCount: 0,
   }),
 }));

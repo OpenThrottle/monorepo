@@ -254,6 +254,28 @@ describe('AgentConversationsResolver', () => {
     });
   });
 
+  describe('restoreAgentConversation', () => {
+    test('restores an owned conversation via the service', async () => {
+      const restored = {
+        ...mockConversation,
+        status: AGENT_CONVERSATION_STATUSES.active,
+      };
+
+      vi.mocked(
+        agentConversationsService.restoreConversation,
+      ).mockResolvedValue(restored);
+
+      const result = await resolver.restoreAgentConversation(humanPrincipal, {
+        conversationId: mockConversation.id,
+      });
+
+      expect(result.status).toBe(AGENT_CONVERSATION_STATUSES.active);
+      expect(
+        agentConversationsService.restoreConversation,
+      ).toHaveBeenCalledWith(humanPrincipal.sub, mockConversation.id);
+    });
+  });
+
   describe('updateAgentConversationTitle', () => {
     test('delegates to service', async () => {
       const updated = { ...mockConversation, title: 'Renamed' };

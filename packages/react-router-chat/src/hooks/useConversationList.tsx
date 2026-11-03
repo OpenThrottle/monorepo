@@ -23,14 +23,16 @@ export interface UseConversationListResult {
   readonly remove: (conversationId: string) => void;
   /** Optimistically rename a conversation, then persist it. */
   readonly rename: (conversationId: string, title: string) => void;
+  /** Undo a {@link remove}: optimistically re-list the conversation, then persist it. */
+  readonly restore: (conversation: AgentConversationListItem) => void;
   /** Server-side total (drives the sidebar's load-more affordance). */
   readonly totalCount: number;
 }
 
 /**
  * @description Owns the conversations-list state for the header switcher /
- * sidebar: paginated fetch + accumulate (dedup by id), optimistic rename +
- * soft-delete, and a refresh used when a new conversation appears server-side.
+ * sidebar: paginated fetch + accumulate (dedup by id), optimistic rename,
+ * soft-delete and its undo (restore), and a refresh used when a new conversation appears server-side.
  * Posts every op to the route-independent `/resources/agent-conversations`
  * action so the home route and the header switcher — across both apps — share
  * one code path.
@@ -95,6 +97,33 @@ export function useConversationList(): UseConversationListResult {
     );
   };
 
+  const restore = (conversation: AgentConversationListItem): void => {
+    const alreadyListed = conversations.some(
+      (row) => row.id === conversation.id,
+    );
+    if (!alreadyListed) {
+      // Re-insert in the list's newest-activity-first order. ISO timestamps
+      // sort lexically, so the first row older than the restored one marks
+      // its slot.
+      setConversations((previous) => {
+        const slot = previous.findIndex(
+          (row) => row.updatedAt < conversation.updatedAt,
+        );
+        const index = slot === -1 ? previous.length : slot;
+        return [
+          ...previous.slice(0, index),
+          conversation,
+          ...previous.slice(index),
+        ];
+      });
+      setTotalCount((previous) => previous + 1);
+    }
+    mutateFetcher.submit(
+      { conversationId: conversation.id, intent: 'restore' },
+      { action: AGENT_CONVERSATIONS_ACTION, method: 'post' },
+    );
+  };
+
   // Markup
 
   // Life Cycle
@@ -140,6 +169,7 @@ export function useConversationList(): UseConversationListResult {
     refresh,
     remove,
     rename,
+    restore,
     totalCount,
   };
 }
