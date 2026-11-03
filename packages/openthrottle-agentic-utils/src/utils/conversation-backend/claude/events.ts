@@ -278,3 +278,42 @@ export function mapClaudeEvent(
       return [];
   }
 }
+
+const asTokenCount = (value: unknown): number =>
+  typeof value === 'number' && Number.isFinite(value) ? value : 0;
+
+/**
+ * Context-window occupancy after one model call: the prompt (uncached input +
+ * cache reads + cache writes) plus the call's output, read off a consolidated
+ * `assistant` event's per-call `message.usage`. `undefined` for any other
+ * event, for a subagent's message (`parent_tool_use_id` set — its context is
+ * not the conversation's), and when no usage is attached.
+ *
+ * The terminal `result.usage` cannot stand in for this: it sums every call in
+ * the turn, so a ten-step agent turn re-counts the same prompt ten times.
+ *
+ * @public
+ */
+export function readClaudeContextTokens(event: unknown): number | undefined {
+  if (!isRecord(event) || event.type !== 'assistant') {
+    return undefined;
+  }
+
+  if (typeof event.parent_tool_use_id === 'string') {
+    return undefined;
+  }
+
+  const message = event.message;
+  if (!isRecord(message) || !isRecord(message.usage)) {
+    return undefined;
+  }
+
+  const usage = message.usage;
+
+  return (
+    asTokenCount(usage.input_tokens) +
+    asTokenCount(usage.cache_read_input_tokens) +
+    asTokenCount(usage.cache_creation_input_tokens) +
+    asTokenCount(usage.output_tokens)
+  );
+}

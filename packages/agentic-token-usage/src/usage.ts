@@ -37,6 +37,16 @@ export interface NormalizedTokenUsage {
   readonly cacheReadTokens?: number;
   /** Tokens written to the prompt cache (claude `cache_creation_input_tokens`, opencode `cache.write`). */
   readonly cacheWriteTokens?: number;
+  /**
+   * Tokens occupying the model's context window after the turn's LAST model
+   * call (its prompt plus its output). Not a turn total: a multi-step agent
+   * turn's summed input re-counts the same prefix every step, so the backend
+   * must report the final step on its own (claude: `contextTokens`, which the
+   * claude backend derives from the last consolidated `assistant` message).
+   */
+  readonly contextTokens?: number;
+  /** Size of the model's context window, when the backend reports it (claude `modelUsage[*].contextWindow`). */
+  readonly contextWindowTokens?: number;
   /** Reported dollar cost of the turn, when the backend prices it (claude `totalCostUsd`, opencode `cost`). */
   readonly costUsd?: number;
   /** Prompt/input tokens. */
@@ -161,6 +171,12 @@ export const normalizeUsage = (input: unknown): NormalizedTokenUsage => {
     asNonEmptyString(meta.model) ??
     asNonEmptyString(usage.model) ??
     (isRecord(meta.modelUsage) ? Object.keys(meta.modelUsage)[0] : undefined);
+  const contextTokens = firstNumber(meta.contextTokens, usage.contextTokens);
+  const contextWindowTokens = firstNumber(
+    meta.contextWindow,
+    usage.contextWindow,
+    largestModelContextWindow(meta.modelUsage),
+  );
 
   const summable = [inputTokens, outputTokens].filter(
     (value): value is number => value !== undefined,
@@ -172,6 +188,8 @@ export const normalizeUsage = (input: unknown): NormalizedTokenUsage => {
   return {
     ...(cacheReadTokens !== undefined ? { cacheReadTokens } : {}),
     ...(cacheWriteTokens !== undefined ? { cacheWriteTokens } : {}),
+    ...(contextTokens !== undefined ? { contextTokens } : {}),
+    ...(contextWindowTokens !== undefined ? { contextWindowTokens } : {}),
     ...(costUsd !== undefined ? { costUsd } : {}),
     ...(inputTokens !== undefined ? { inputTokens } : {}),
     ...(model !== undefined ? { model } : {}),
@@ -180,6 +198,25 @@ export const normalizeUsage = (input: unknown): NormalizedTokenUsage => {
     ...(totalTokens !== undefined ? { totalTokens } : {}),
   };
 };
+
+/**
+ * Largest `contextWindow` across claude's per-model usage map. A turn can call
+ * several models (a small one for housekeeping); the conversation's own model
+ * is the one with the biggest window.
+ */
+function largestModelContextWindow(modelUsage: unknown): number | undefined {
+  if (!isRecord(modelUsage)) {
+    return undefined;
+  }
+
+  const windows = Object.values(modelUsage)
+    .map((entry) =>
+      isRecord(entry) ? asFiniteNumber(entry.contextWindow) : undefined,
+    )
+    .filter((value): value is number => value !== undefined && value > 0);
+
+  return windows.length > 0 ? Math.max(...windows) : undefined;
+}
 
 /** True when the usage carries no reported numbers (all token/cost fields absent). */
 const hasNoCounts = (usage: NormalizedTokenUsage): boolean =>
@@ -233,10 +270,15 @@ export const sumUsage = (
   const reasoningTokens = addOptional(a.reasoningTokens, b.reasoningTokens);
   const totalTokens = addOptional(a.totalTokens, b.totalTokens);
   const model = b.model ?? a.model;
+  // Context occupancy is a snapshot, not a count: the latest report wins.
+  const contextTokens = b.contextTokens ?? a.contextTokens;
+  const contextWindowTokens = b.contextWindowTokens ?? a.contextWindowTokens;
 
   return {
     ...(cacheReadTokens !== undefined ? { cacheReadTokens } : {}),
     ...(cacheWriteTokens !== undefined ? { cacheWriteTokens } : {}),
+    ...(contextTokens !== undefined ? { contextTokens } : {}),
+    ...(contextWindowTokens !== undefined ? { contextWindowTokens } : {}),
     ...(costUsd !== undefined ? { costUsd } : {}),
     ...(inputTokens !== undefined ? { inputTokens } : {}),
     ...(model !== undefined ? { model } : {}),

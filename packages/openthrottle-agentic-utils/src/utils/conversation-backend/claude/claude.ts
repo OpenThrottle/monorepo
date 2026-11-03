@@ -35,7 +35,7 @@ import {
   CLAUDE_HOST_ENV_KEYS,
   resolveClaudeConfigDirOverride,
 } from './config-dir.ts';
-import { mapClaudeEvent } from './events.ts';
+import { mapClaudeEvent, readClaudeContextTokens } from './events.ts';
 
 /**
  * Env vars the child is allowed to inherit (host login + locale), nothing else.
@@ -98,14 +98,29 @@ function latestUserMessage(run: ConversationBackendRun): string {
 }
 
 /**
- * Parse one NDJSON line into its chunks, tolerating non-JSON lines (none).
+ * Parse one NDJSON line, tolerating non-JSON lines (`undefined`).
  */
-function lineToChunks(line: string): readonly ConversationStreamChunk[] {
+function parseLine(line: string): unknown {
   try {
-    return mapClaudeEvent(JSON.parse(line));
+    return JSON.parse(line);
   } catch {
-    return [];
+    return undefined;
   }
+}
+
+/**
+ * The terminal chunk with `metadata.contextTokens` set to the last main-thread
+ * model call's context occupancy, when one was seen. Unchanged otherwise.
+ */
+function withContextTokens(
+  terminal: ConversationStreamChunk,
+  contextTokens: number | undefined,
+): ConversationStreamChunk {
+  if (contextTokens === undefined) {
+    return terminal;
+  }
+
+  return { ...terminal, metadata: { ...terminal.metadata, contextTokens } };
 }
 
 /**
@@ -242,18 +257,26 @@ async function* streamClaude(
   const buffer = new NdjsonBuffer();
   let sawTerminal = false;
   let lastUsageLimit: ConversationStreamChunk['metadata'] | null = null;
+  let lastContextTokens: number | undefined;
   const emit = function* (
     lines: readonly string[],
   ): Generator<ConversationStreamChunk> {
-    for (const chunk of lines.flatMap(lineToChunks)) {
-      if (chunk.kind === CONVERSATION_STREAM_CHUNK_KINDS.usageLimit) {
-        lastUsageLimit = chunk.metadata ?? null;
-      }
-      if (chunk.done) {
-        sawTerminal = true;
-        yield withRememberedUsageLimit(chunk, lastUsageLimit);
-      } else {
-        yield chunk;
+    for (const event of lines.map(parseLine)) {
+      lastContextTokens = readClaudeContextTokens(event) ?? lastContextTokens;
+
+      for (const chunk of mapClaudeEvent(event)) {
+        if (chunk.kind === CONVERSATION_STREAM_CHUNK_KINDS.usageLimit) {
+          lastUsageLimit = chunk.metadata ?? null;
+        }
+        if (chunk.done) {
+          sawTerminal = true;
+          yield withContextTokens(
+            withRememberedUsageLimit(chunk, lastUsageLimit),
+            lastContextTokens,
+          );
+        } else {
+          yield chunk;
+        }
       }
     }
   };

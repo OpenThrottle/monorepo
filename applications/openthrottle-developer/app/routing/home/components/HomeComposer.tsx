@@ -4,9 +4,13 @@ import {
   type ChatModelOption,
   type ChatPersonaOption,
 } from '@openthrottle/react-router-chat';
-import { CHAT_TOOLBAR_CONTEXT_SOURCES } from '@openthrottle/react-router-chat-state';
+import {
+  CHAT_TOOLBAR_CONTEXT_SOURCES,
+  chatContextMeterAtom,
+} from '@openthrottle/react-router-chat-state';
 import { InlineErrors } from '@openthrottle/react-router-shadcn';
 import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
+import { useAtomValue } from 'jotai';
 import * as React from 'react';
 import { useNavigate } from 'react-router';
 
@@ -42,6 +46,7 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
 
   // Hooks
   const navigate = useNavigate();
+  const showContextMeter = useAtomValue(chatContextMeterAtom);
   const {
     capabilities,
     checkouts,
@@ -157,6 +162,7 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
         promptHistory={promptHistory}
         readOnly={voice.isDraftFrozen}
         sessionUsage={turn.sessionUsage}
+        showContextMeter={showContextMeter}
         slashCommandProvider={slashCommandProvider}
         textAreaRef={composerTextAreaRef}
         toolbar={toolbar}

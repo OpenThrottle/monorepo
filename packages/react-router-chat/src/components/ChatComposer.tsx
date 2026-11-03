@@ -42,16 +42,12 @@ export interface ChatComposerProps {
    * Omit to recall only what this composer has sent since it mounted.
    */
   readonly promptHistory?: readonly string[];
-  /**
-   * Freeze the draft (e.g. while voice input records): read-only, dimmed, and
-   * Enter/submit blocked. The consumer keeps writing via {@link draft}.
-   */
+  /** Freeze the draft (e.g. voice recording): read-only and submit blocked; {@link draft} still writes. */
   readonly readOnly?: boolean;
-  /**
-   * Cumulative session usage shown as a running token counter in the footer;
-   * the consumer owns the total. Omit, or pass an all-empty usage, to hide it.
-   */
+  /** Consumer-owned session usage for the footer counter; omit or pass `{}` to hide it. */
   readonly sessionUsage?: ChatTokenUsage;
+  /** Opt in to the context-window meter beside the counter (shown only when the backend reports context). */
+  readonly showContextMeter?: boolean;
   /**
    * Optional `/`-command skill source: `/` at a line start opens a skill picker
    * backed by {@link ChatSlashCommandProvider.onQuerySkills}.
@@ -84,6 +80,7 @@ export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
     promptHistory,
     readOnly = false,
     sessionUsage,
+    showContextMeter = false,
     slashCommandProvider,
     stopLabel = 'Stop',
     submitLabel = 'Send',
@@ -201,6 +198,7 @@ export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
         isStreaming={isStreaming}
         onStop={onStop}
         sessionUsage={sessionUsage}
+        showContextMeter={showContextMeter}
         stopLabel={stopLabel}
         submitLabel={submitLabel}
         toolbar={toolbar}

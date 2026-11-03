@@ -13,6 +13,7 @@ export * from './config/chat-capabilities';
 export * from './config/chat-session-permission-decay';
 
 // 📦 Data / Atoms
+export * from './data/atom.chat-context-meter';
 export * from './data/atom.chat-drafts';
 export * from './data/atom.chat-toolbar';
 export * from './data/chat-toolbar-seeds';

@@ -72,6 +72,7 @@ export const formatRelativeChatTimestamp = (
 };
 
 export * from './chat-checkout-selection';
+export * from './chat-context-window';
 export * from './checkout-groups';
 export * from './checkout-labels';
 export * from './checkout-search-filter';
