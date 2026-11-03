@@ -1,3 +1,4 @@
+import type { ConversationReasoningEffort } from '@openthrottle/openthrottle-agentic-utils';
 import type {
   WorkflowConfigLegacy,
   WorkflowConfigRunner,
@@ -37,6 +38,12 @@ export interface WorkflowContext extends WorkflowConfigLegacy {
    * application-layer structured logs (no plan/task ids at the shared-contract layer).
    */
   readonly correlation?: WorkflowCorrelation;
+
+  /**
+   * Reasoning effort for the run (chat vocabulary), carried from the enqueue tuning (`ralph.effort`).
+   * Forwarded to every iteration, where each backend maps it to its own flag or ignores it.
+   */
+  readonly effort?: ConversationReasoningEffort;
 
   /**
    * @description Names of OpenThrottle curated skills materialized into the foreign target repo for

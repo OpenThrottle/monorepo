@@ -53,6 +53,25 @@ describe('createCursorWorkflowRalphIterationRunner', () => {
     });
   });
 
+  it('forwards effort to runIterationAsync', async () => {
+    const { createCursorWorkflowRalphIterationRunner } =
+      await import('../cursor-workflow-ralph-iteration-runner.ts');
+
+    await createCursorWorkflowRalphIterationRunner().run({
+      agentPrompt: 'prompt',
+      effort: 'high',
+      iteration: 1,
+      model: undefined,
+      runner: 'claude',
+      signal: undefined,
+      timeoutMs: undefined,
+    });
+
+    expect(runIterationAsyncMock).toHaveBeenCalledWith(
+      expect.objectContaining({ backend: 'claude', effort: 'high' }),
+    );
+  });
+
   it('merges factory and per-run onUsageLimit hooks into one callback', async () => {
     const { createCursorWorkflowRalphIterationRunner } =
       await import('../cursor-workflow-ralph-iteration-runner.ts');

@@ -12,6 +12,7 @@ import { AgenticRalphModule } from '../agentic-ralph/agentic-ralph.module.ts';
 import { PlanLifecycleHooksQueueProducerModule } from '../plan-lifecycle-hooks/plan-lifecycle-hooks-queue-producer.module.ts';
 import { PlansProcessor } from './plans.processor.ts';
 import { PlansQueueProducerModule } from './plans-queue-producer.module.ts';
+import { ScheduledPlanRunService } from './scheduled-plan-run.service.ts';
 import { UsageLimitResumeService } from './usage-limit-resume.service.ts';
 import { WorkLedgerRunService } from './work-ledger-run.service.ts';
 
@@ -31,7 +32,8 @@ import { WorkLedgerRunService } from './work-ledger-run.service.ts';
  * `status-change-system` service-account lookup the worker attributes its writes to) are imported
  * for the worker's own plan status writes (job start, startup reconcile). PlanEnqueueModule lets
  * {@link UsageLimitResumeService} enqueue a usage-limit continuation through the shared enqueue
- * pipeline.
+ * pipeline, and lets {@link ScheduledPlanRunService} fire a scheduled run (and re-project a lost one)
+ * through it.
  */
 @Module({
   exports: [PlansQueueProducerModule],
@@ -48,6 +50,11 @@ import { WorkLedgerRunService } from './work-ledger-run.service.ts';
     PlansQueueProducerModule,
     WorkLedgerGraphqlModule,
   ],
-  providers: [PlansProcessor, UsageLimitResumeService, WorkLedgerRunService],
+  providers: [
+    PlansProcessor,
+    ScheduledPlanRunService,
+    UsageLimitResumeService,
+    WorkLedgerRunService,
+  ],
 })
 export class PlansQueueModule {}

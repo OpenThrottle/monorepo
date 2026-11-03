@@ -298,6 +298,16 @@ type PlanObject {
   Resolved project entity when projectId is set; null when projectId is unset.
   """
   projectRelation: ProjectObject
+
+  """
+  The soonest instant a SCHEDULED run of this plan fires at (plan_runs.scheduled_for of its earliest SCHEDULED run); null when none is waiting. Lets the UI explain why a run is already pending ("a run is scheduled for <local time>; cancel it to run now"). Resolved from plan_runs; a run that fired, was cancelled or was settled MISSED/SUPERSEDED no longer counts.
+  """
+  scheduledRunAt: DateTime
+
+  """
+  The id of the SCHEDULED run behind scheduledRunAt (the same soonest run: earliest scheduled_for, then id); null when none is waiting. Pass it as planRunId to cancelPlanRun to cancel just that run, so the UI can offer Cancel without listing run history.
+  """
+  scheduledRunId: ID
   status: String!
   summary: String
 
@@ -405,6 +415,11 @@ type PlanRunObject {
 
   """Ralph run implementation: spawn or orchestrator."""
   runKind: String!
+
+  """
+  The absolute UTC instant a scheduled run fires at. Set only on runs created by schedulePlanRun (status SCHEDULED while waiting) and kept once the run settles, so history still shows when it was meant to fire. Null for every run that was enqueued to run now.
+  """
+  scheduledFor: DateTime
   status: String!
   updatedAt: DateTime!
 
@@ -491,6 +506,27 @@ type EnqueuePlanRunResultObject {
 
   """Total number of jobs waiting in the queue (including this one)."""
   queueTotal: Int!
+}
+
+type SchedulePlanRunResultObject {
+  """Execution backend selected once for the whole run: cursor or claude."""
+  executionBackend: String!
+
+  """
+  BullMQ job id of the delayed job that starts the run (deterministic: scheduled-plan-run-<idempotencyKey | planId-epochMs>).
+  """
+  jobId: String!
+
+  """Plan id the run was scheduled for."""
+  planId: String!
+
+  """
+  plan_runs id of the SCHEDULED run row (status SCHEDULED until the job fires).
+  """
+  planRunId: String!
+
+  """The absolute UTC instant the run fires at."""
+  scheduledFor: DateTime!
 }
 
 type CancelPlanRunResultObject {
@@ -5682,7 +5718,12 @@ type Mutation {
   enqueuePlanRalphOrchestrator(input: EnqueuePlanRalphOrchestratorInput!): EnqueuePlanRunResultObject!
 
   """
-  Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token).
+  Schedule a plan run for a later instant: the enqueuePlanRun input plus scheduledFor. Records a SCHEDULED plan_runs row with a frozen run config snapshot and a delayed job that starts it. scheduledFor must be in the future and within 30 days (SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS). Does not change the plan or task statuses (the plan stays as it is until the run fires). Cancel with cancelPlanRun (pass planRunId to cancel just this run).
+  """
+  schedulePlanRun(input: SchedulePlanRunInput!): SchedulePlanRunResultObject!
+
+  """
+  Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). Also cancels the plan's SCHEDULED runs (delayed job removed, run settled CANCELLED). With planRunId naming a SCHEDULED run of the plan, cancels ONLY that run (its delayed job and row), leaving any other active run, the plan status and the tasks alone; a planRunId that is already settled is a no-op, and one that is QUEUED or IN_PROGRESS is rejected (omit planRunId to stop a live run). Idempotent: once a scheduled run has fired or settled there is nothing left to cancel.
   """
   cancelPlanRun(input: CancelPlanRunInput!): CancelPlanRunResultObject!
 
@@ -6757,6 +6798,11 @@ input RalphPlanRunTuningInput {
   """Execution backend (e.g. cursor). Omit to use worktree defaults."""
   backend: String
 
+  """
+  Reasoning-effort level for the run: "low", "medium", "high", "extraHigh", "max", or "ultra" (the same vocabulary as the chat composer's reasoning). Nullable + additive: omit to leave the run's effort unchanged. An unrecognized level is rejected. Recorded on the run's runConfigSnapshot and forwarded to the agent CLI, where each backend maps it to its own flag (claude --effort, codex -c model_reasoning_effort=, grok --reasoning-effort, opencode --variant), clamping to its accepted set; a backend with no reasoning knob (cursor, gemini, antigravity) ignores it.
+  """
+  effort: String
+
   """Per-iteration timeout in seconds (positive integer)."""
   iterationTimeoutSeconds: Int
 
@@ -6865,9 +6911,64 @@ enum PlanRalphWorkflowMode {
   task
 }
 
+input SchedulePlanRunInput {
+  """
+  REQUIRED git branch this run operates on. Captured on plan_runs.branch as run provenance (powers branch->PR mapping). Passed explicitly by callers (skills/UI may pre-fill a default from the worktree name / HEAD) and never inferred server-side; enqueue fails fast when missing or blank.
+  """
+  branch: String!
+
+  """
+  Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id instead of creating a duplicate.
+  """
+  idempotencyKey: String
+
+  """Plan id to enqueue a run for"""
+  planId: ID!
+
+  """
+  Job priority (lower = higher priority). 1=interactive/UI, 10=normal (default), 100=batch/scheduled. Omit to use normal priority.
+  """
+  priority: Int
+
+  """
+  Optional Ralph / workflow-ralph runtime tuning (iterations, model, backend, etc.). When set, queued workers pass these to nested workflow-ralph; when omitted, defaults come from env and .workflow-ralph.json in the worktree cwd.
+  """
+  ralph: RalphPlanRunTuningInput
+
+  """
+  Optional registered checkout id (highest precedence). Resolved server-side to its filesystem path for this run; when set it overrides repositoryId and workingDirectory.
+  """
+  checkoutId: ID
+
+  """
+  Optional registered repository id. Resolved to the enqueuing user's single checkout of that repository (errors when there is no checkout, or when it is ambiguous). Used when checkoutId is omitted.
+  """
+  repositoryId: ID
+
+  """
+  Optional absolute path to a local project directory used as the working directory for this run. Escape hatch used only when checkoutId and repositoryId are omitted. When all three are omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side.
+  """
+  workingDirectory: String
+
+  """
+  Optional JSON override for job-run lifecycle hooks for this enqueue only ({ hooks: [...] }). When omitted, hooks are copied from the plan. Validated against repo paths when workingDirectory is set.
+  """
+  jobRunHooksJson: String
+
+  """
+  REQUIRED absolute instant the run fires at (an ISO-8601 DateTime; send UTC or an explicit offset). Must be strictly in the future and no more than 30 days from now (SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS); the server rejects anything else.
+  """
+  scheduledFor: DateTime!
+}
+
 input CancelPlanRunInput {
   """Plan id whose in-queue run-plan (Ralph) job should be cancelled"""
   planId: ID!
+
+  """
+  Optional plan_runs id of a SCHEDULED run of this plan. When set, cancels only that run: its delayed job is removed and its row settles CANCELLED, with no effect on any other active run, the plan status or the tasks. Already-settled runs are a no-op; a run that is QUEUED or IN_PROGRESS is rejected (omit planRunId to stop a live run). When omitted, the whole plan is cancelled as before.
+  """
+  planRunId: ID
 }
 
 input AddProjectSkillTagInput {

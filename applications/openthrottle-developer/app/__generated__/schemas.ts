@@ -125,6 +125,7 @@ import {
   RolloutFallthroughInput,
   RolloutFlagKind,
   RolloutFlagVariationInput,
+  SchedulePlanRunInput,
   SearchInput,
   SearchPlansInput,
   SetBlogPostTagsInput,
@@ -426,6 +427,7 @@ export function CancelPlanRunInputSchema(): z.ZodObject<
 > {
   return z.object({
     planId: z.string().min(1),
+    planRunId: z.string().nullish(),
   });
 }
 
@@ -1109,6 +1111,7 @@ export function RalphPlanRunTuningInputSchema(): z.ZodObject<
   return z.object({
     backend: z.string().nullish(),
     disableWorktree: z.boolean().nullish(),
+    effort: z.string().nullish(),
     iterationTimeoutSeconds: z.number().nullish(),
     iterations: z.number().nullish(),
     model: z.string().nullish(),
@@ -1411,6 +1414,23 @@ export function RolloutFlagVariationInputSchema(): z.ZodObject<
     description: z.string().nullish(),
     name: z.string().nullish(),
     valueJson: z.string().min(1),
+  });
+}
+
+export function SchedulePlanRunInputSchema(): z.ZodObject<
+  Properties<SchedulePlanRunInput>
+> {
+  return z.object({
+    branch: z.string().min(1),
+    checkoutId: z.string().nullish(),
+    idempotencyKey: z.string().nullish(),
+    jobRunHooksJson: z.string().nullish(),
+    planId: z.string().min(1),
+    priority: z.number().nullish(),
+    ralph: z.lazy(() => RalphPlanRunTuningInputSchema().nullish()),
+    repositoryId: z.string().nullish(),
+    scheduledFor: definedNonNullAnySchema,
+    workingDirectory: z.string().nullish(),
   });
 }
 

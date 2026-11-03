@@ -86,6 +86,7 @@ import {
   RecordPlanRunHeartbeatInput,
   RegisterCliPlanRunInput,
   RegisterPlanRunWorktreeCheckoutInput,
+  SchedulePlanRunInput,
   SearchPlansInput,
   SetPlanStatusInput,
   SettleCliPlanRunInput,
@@ -101,10 +102,12 @@ import {
   PlanRefObject,
   PlanRunObject,
   PlanStatusCountObject,
+  SchedulePlanRunResultObject,
 } from './plan.object.ts';
 import {
   type EnqueueOutcome,
   PlanEnqueueService,
+  type ScheduleOutcome,
 } from './plan-enqueue.service.ts';
 import { PlanStatusService } from './plan-status.service.ts';
 import { PlanTaskStatus } from './plan-task-status.enum.ts';
@@ -188,6 +191,16 @@ function isEnqueuePlanRunResult(
   value: unknown,
 ): value is EnqueuePlanRunResultObject {
   return isRecord(value) && typeof value.planId === 'string';
+}
+
+function isSchedulePlanRunResult(
+  value: unknown,
+): value is SchedulePlanRunResultObject {
+  return (
+    isRecord(value) &&
+    typeof value.planId === 'string' &&
+    value.scheduledFor instanceof Date
+  );
 }
 
 function isCancelPlanRunResult(
@@ -347,6 +360,20 @@ export class PlansResolver {
     return result;
   }
 
+  private toScheduleResult(
+    outcome: ScheduleOutcome,
+  ): SchedulePlanRunResultObject {
+    const result = new SchedulePlanRunResultObject();
+
+    result.executionBackend = outcome.executionBackend;
+    result.jobId = outcome.jobId;
+    result.planId = outcome.planId;
+    result.planRunId = outcome.planRunId;
+    result.scheduledFor = outcome.scheduledFor;
+
+    return result;
+  }
+
   // @ProfileResponseTime('PlansResolver.projectRelation')
   @ResolveField(() => ProjectObject, {
     description: `Resolved project entity when projectId is set`,
@@ -409,6 +436,26 @@ export class PlansResolver {
     return this.loaders.tasksCompletedCountByPlanIdLoader.load(parent.id);
   }
 
+  @ResolveField(() => Date, {
+    description: `The soonest instant a SCHEDULED run of this plan fires at; null when none is waiting. Resolved from plan_runs through a batched loader.`,
+    nullable: true,
+  })
+  async scheduledRunAt(@Parent() parent: PlanObject): Promise<Date | null> {
+    const run = await this.loaders.scheduledRunByPlanIdLoader.load(parent.id);
+
+    return run?.scheduledFor ?? null;
+  }
+
+  @ResolveField(() => ID, {
+    description: `The id of the SCHEDULED run behind scheduledRunAt (the same soonest run: earliest scheduled_for, then id); null when none is waiting. Pass it as planRunId to cancelPlanRun to cancel just that run.`,
+    nullable: true,
+  })
+  async scheduledRunId(@Parent() parent: PlanObject): Promise<string | null> {
+    const run = await this.loaders.scheduledRunByPlanIdLoader.load(parent.id);
+
+    return run?.id ?? null;
+  }
+
   @ResolveField(() => [TaskObject], {
     description: `Plan-level before-hooks (beforeAll, or beforeEach when scope='each'), in execution order.`,
   })
@@ -446,6 +493,7 @@ export class PlansResolver {
       planRun.runConfigSnapshot,
     );
     out.runKind = planRun.runKind;
+    out.scheduledFor = planRun.scheduledFor;
     out.status = planRun.status;
     out.updatedAt = planRun.updatedAt;
     out.usageLimitResetsAt = planRun.usageLimitResetsAt;
@@ -1441,9 +1489,64 @@ export class PlansResolver {
     return this.toEnqueueResult(outcome);
   }
 
+  @ProfileResponseTime('PlansResolver.schedulePlanRun')
+  @Mutation(() => SchedulePlanRunResultObject, {
+    description: `Schedule a plan run for a later instant: the enqueuePlanRun input plus scheduledFor. Records a SCHEDULED plan_runs row with a frozen run config snapshot and a delayed job that starts it. scheduledFor must be in the future and within 30 days (SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS). Does not change the plan or task statuses (the plan stays as it is until the run fires). Cancel with cancelPlanRun (pass planRunId to cancel just this run).`,
+  })
+  @EmitNotification([
+    {
+      event: NOTIFICATION_EVENT_NAMES.PLAN_UPDATED,
+      payload: (ret) =>
+        isSchedulePlanRunResult(ret)
+          ? {
+              message: `Plan run scheduled for ${ret.scheduledFor.toISOString()}`,
+              planId: ret.planId,
+              severity: 'info' as const,
+            }
+          : null,
+    },
+  ])
+  async schedulePlanRun(
+    @Args('input', { type: () => SchedulePlanRunInput })
+    input: SchedulePlanRunInput,
+    @CurrentUser('sub') actorSub?: string,
+    @CurrentUser('kind') actorKind?: string,
+  ): Promise<SchedulePlanRunResultObject> {
+    const actorUserId = resolveActorUserId(actorSub, actorKind);
+    const requestedBackend = input.ralph?.backend ?? null;
+    if (
+      requestedBackend != null &&
+      isPlanRunExecutionBackend(requestedBackend)
+    ) {
+      await this.assertBackendEnabled(
+        actorUserId,
+        requestedBackend,
+        input.ralph?.model,
+      );
+    }
+
+    const outcome = await this.planEnqueueService.schedulePlanRun({
+      actorKind,
+      actorSub,
+      actorUserId,
+      branch: input.branch,
+      checkoutId: input.checkoutId,
+      idempotencyKey: input.idempotencyKey ?? null,
+      jobRunHooksJson: input.jobRunHooksJson,
+      planId: input.planId,
+      priority: input.priority,
+      ralph: input.ralph,
+      repositoryId: input.repositoryId,
+      scheduledFor: input.scheduledFor,
+      workingDirectory: input.workingDirectory,
+    });
+
+    return this.toScheduleResult(outcome);
+  }
+
   // @ProfileResponseTime('PlansResolver.cancelPlanRun')
   @Mutation(() => CancelPlanRunResultObject, {
-    description: `Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token).`,
+    description: `Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). Also cancels the plan's SCHEDULED runs (delayed job removed, run settled CANCELLED). With planRunId naming a SCHEDULED run of the plan, cancels ONLY that run (its delayed job and row), leaving any other active run, the plan status and the tasks alone; a planRunId that is already settled is a no-op, and one that is QUEUED or IN_PROGRESS is rejected (omit planRunId to stop a live run). Idempotent: once a scheduled run has fired or settled there is nothing left to cancel.`,
   })
   @EmitNotification([
     {
@@ -1498,6 +1601,7 @@ export class PlansResolver {
       input.planId,
       resolveActorUserId(actorSub, actorKind),
       { actorKind, actorSub },
+      input.planRunId ?? null,
     );
 
     const out = new CancelPlanRunResultObject();

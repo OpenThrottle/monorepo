@@ -165,6 +165,7 @@ export const PlanWorkflowRunTransparency = (
           </div>
 
           <PlanWorkflowRunTransparencyAuditTable
+            planId={planId}
             planRunAuditRows={planRunAuditRows}
             workflowInput={workflowInput}
             workingDirectory={workingDirectory}

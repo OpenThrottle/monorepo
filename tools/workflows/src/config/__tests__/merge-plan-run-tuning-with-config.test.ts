@@ -37,6 +37,19 @@ describe('mergePlanRunTuningWithWorkflowRalphConfig', () => {
     expect(merged.ralphDebugCli).toBe('omit');
   });
 
+  it('passes effort through (enqueue-only; no file or env layer)', () => {
+    dir = mkdtempSync(join(tmpdir(), 'ralph-merge-'));
+    const config = loadWorkflowRalphConfig(dir, {});
+
+    expect(
+      mergePlanRunTuningWithWorkflowRalphConfig({ effort: 'max' }, config)
+        .effort,
+    ).toBe('max');
+    expect(
+      mergePlanRunTuningWithWorkflowRalphConfig({}, config).effort,
+    ).toBeUndefined();
+  });
+
   it('enqueue tuning overrides file defaults', () => {
     dir = mkdtempSync(join(tmpdir(), 'ralph-merge-'));
     writeFileSync(

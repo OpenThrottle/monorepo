@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { planHasCustomRunConfig } from './plan-run-config-storage.compare.ts';
 import {
+  DEFAULT_PLAN_RUN_RALPH_EFFORT,
   DEFAULT_PLAN_RUN_RALPH_ITERATIONS,
   DEFAULT_PLAN_RUN_RALPH_MODEL,
   DEFAULT_PLAN_RUN_RALPH_PROMPT,
@@ -44,6 +45,7 @@ describe('getDefaultPlanRunConfigStorage', () => {
     expect(config.ralph.iterations).toBe(DEFAULT_PLAN_RUN_RALPH_ITERATIONS);
     expect(config.ralph.prompt).toBe(DEFAULT_PLAN_RUN_RALPH_PROMPT);
     expect(config.ralph.model).toBe(DEFAULT_PLAN_RUN_RALPH_MODEL);
+    expect(config.ralph.effort).toBe(DEFAULT_PLAN_RUN_RALPH_EFFORT);
   });
 
   it('defaults to task mode when only taskId is seeded', () => {
@@ -196,6 +198,7 @@ describe('planRunConfig round-trip', () => {
     repositoryId: '22222222-2222-4222-8222-222222222222',
     workflowInput: {
       debugCli: 'debug',
+      effort: 'max',
       executionBackend: 'claude',
       iterations: 7,
       model: 'fast',
@@ -429,6 +432,7 @@ describe('buildRalphPlanRunTuningFromPlanRunConfig', () => {
 
     expect(tuning).toEqual({
       backend: 'claude',
+      effort: 'high',
       iterationTimeoutSeconds: 120,
       iterations: 7,
       model: 'fast',
@@ -444,6 +448,7 @@ const fullUiForTuning = (): PlanWorkflowUiState => ({
   iterationTimeoutText: '120',
   workflowInput: {
     debugCli: 'debug',
+    effort: 'high',
     executionBackend: 'claude',
     iterations: 7,
     model: 'fast',
@@ -463,3 +468,87 @@ const fullUiForTuning = (): PlanWorkflowUiState => ({
 });
 
 const fullUiForCompare = (): PlanWorkflowUiState => fullUiForTuning();
+
+describe('ralph.effort', () => {
+  it('is accepted, trimmed and kept by the storage schema', () => {
+    const parsed = parsePlanRunConfigStorage({
+      ...getDefaultPlanRunConfigStorage({ planId }),
+      ralph: {
+        ...getDefaultPlanRunConfigStorage({ planId }).ralph,
+        effort: '  extraHigh ',
+      },
+    });
+
+    expect(parsed.ralph.effort).toBe('extraHigh');
+  });
+
+  it('reads as unset on a config written before effort existed', () => {
+    const { effort: _effort, ...legacyRalph } = getDefaultPlanRunConfigStorage({
+      planId,
+    }).ralph;
+
+    const parsed = parsePlanRunConfigStorage({
+      ...getDefaultPlanRunConfigStorage({ planId }),
+      ralph: legacyRalph,
+    });
+
+    expect(parsed.ralph.effort).toBe('');
+    expect(
+      planHasCustomRunConfig(
+        {
+          ...getDefaultPlanRunConfigStorage({ planId }),
+          ralph: legacyRalph,
+        },
+        { planId },
+      ),
+    ).toBe(false);
+  });
+
+  it('marks a plan with a chosen effort as customized', () => {
+    expect(
+      planHasCustomRunConfig(
+        {
+          ...getDefaultPlanRunConfigStorage({ planId }),
+          ralph: {
+            ...getDefaultPlanRunConfigStorage({ planId }).ralph,
+            effort: 'high',
+          },
+        },
+        { planId },
+      ),
+    ).toBe(true);
+  });
+
+  it('round-trips through the UI state', () => {
+    const ui = getDefaultPlanWorkflowUiState({ planId });
+    const stored = planRunConfigFromWorkflowUiState({
+      ...ui,
+      workflowInput: { ...ui.workflowInput, effort: ' ultra ' },
+    });
+
+    expect(stored.ralph.effort).toBe('ultra');
+    expect(
+      workflowUiStateFromPlanRunConfig(planId, stored).workflowInput.effort,
+    ).toBe('ultra');
+  });
+
+  it('is omitted from enqueue tuning when unset', () => {
+    expect(
+      buildRalphPlanRunTuningFromPlanRunConfig(
+        getDefaultPlanRunConfigStorage({ planId }),
+      ),
+    ).toBeUndefined();
+  });
+
+  it('is sent as tuning.effort when chosen', () => {
+    expect(
+      buildRalphPlanRunTuningFromPlanRunConfig({
+        ...getDefaultPlanRunConfigStorage({ planId }),
+        ralph: {
+          ...getDefaultPlanRunConfigStorage({ planId }).ralph,
+          effort: 'max',
+        },
+      }),
+    ).toEqual({ effort: 'max' });
+  });
+});

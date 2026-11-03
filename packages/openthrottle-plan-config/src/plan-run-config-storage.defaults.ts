@@ -1,5 +1,6 @@
 import {
   DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI,
+  DEFAULT_PLAN_RUN_RALPH_EFFORT,
   DEFAULT_PLAN_RUN_RALPH_ITERATIONS,
   DEFAULT_PLAN_RUN_RALPH_MODEL,
   DEFAULT_PLAN_RUN_RALPH_PROMPT,
@@ -20,6 +21,7 @@ import type {
  */
 export const getDefaultPlanRunConfigRalphV1 = (): PlanRunConfigRalphV1 => ({
   debugCli: DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI,
+  effort: DEFAULT_PLAN_RUN_RALPH_EFFORT,
   executionBackend: DEFAULT_PLAN_RUN_RALPH_RUNNER,
   iterationTimeoutText: '',
   iterations: DEFAULT_PLAN_RUN_RALPH_ITERATIONS,
@@ -80,6 +82,7 @@ export const getDefaultPlanWorkflowUiState = (options?: {
 
   const workflowInput: PlanWorkflowRalphRunOptions = {
     debugCli: DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI,
+    effort: DEFAULT_PLAN_RUN_RALPH_EFFORT,
     executionBackend: DEFAULT_PLAN_RUN_RALPH_RUNNER,
     iterations: DEFAULT_PLAN_RUN_RALPH_ITERATIONS,
     model: DEFAULT_PLAN_RUN_RALPH_MODEL,

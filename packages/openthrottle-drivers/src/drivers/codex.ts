@@ -9,6 +9,7 @@
 
 import { defineDriver } from '../registry/index.ts';
 import type { DriverCapabilities } from '../types/index.ts';
+import { codexReasoningEffort } from '../utils/reasoning-effort.ts';
 import { escapeForShellDoubleQuoted, escapeShellArg } from '../utils/shell.ts';
 
 const capabilities: DriverCapabilities = {
@@ -80,9 +81,14 @@ export const codexDriver = defineDriver({
       )}`;
     }
 
+    // `-c model_reasoning_effort=<value>` overrides the config-file default for this run only.
+    const effort = codexReasoningEffort(config.effort);
+    const effortFlag =
+      effort !== undefined ? ` -c model_reasoning_effort=${effort}` : '';
+
     const safePrompt = escapeForShellDoubleQuoted(config.prompt);
 
-    return `codex exec --sandbox workspace-write${endpointFlags}${modelFlag} "${safePrompt}"`;
+    return `codex exec --sandbox workspace-write${endpointFlags}${effortFlag}${modelFlag} "${safePrompt}"`;
   },
   capabilities,
   id: 'codex',

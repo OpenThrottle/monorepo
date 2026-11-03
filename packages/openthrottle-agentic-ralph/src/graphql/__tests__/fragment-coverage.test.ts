@@ -58,6 +58,10 @@ const EXCLUSIONS: Record<string, Record<string, string>> = {
   PlanObject: {
     hasCustomRunConfig:
       'Computed by the server from runConfigJson, which the fragment already selects — a consumer can derive it and does not need the round trip.',
+    scheduledRunAt:
+      'DataLoader-backed field resolver (scheduledRunByPlanIdLoader in plans-loaders.ts) that exists to drive the Plan Details Run control. Selecting it on every plan-shaped operation buys a per-request lookup no MCP tool consumes.',
+    scheduledRunId:
+      'Same DataLoader as scheduledRunAt, which it identifies the run of; only the UI needs it, to cancel just that scheduled run.',
     taskCount:
       'DataLoader-backed field resolver (plans-loaders.ts). Selecting it on every plan-shaped operation, list_plans_by_status included, buys a per-request count query no MCP tool consumes.',
     tasksCompletedCount:

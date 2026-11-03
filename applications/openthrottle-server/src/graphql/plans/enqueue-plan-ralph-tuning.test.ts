@@ -23,6 +23,7 @@ const makeNxWorkspaceDir = (): string => {
 const emptyTuningInput = (): RalphPlanRunTuningInput => ({
   backend: null,
   disableWorktree: null,
+  effort: null,
   iterationTimeoutSeconds: null,
   iterations: null,
   model: null,
@@ -149,6 +150,50 @@ describe('parseEnqueueRalphTuning', () => {
     });
   });
 
+  test.each(['low', 'medium', 'high', 'extraHigh', 'max', 'ultra'])(
+    'accepts the chat-vocabulary effort level %s',
+    (effort) => {
+      expect(
+        parseEnqueueRalphTuning({ ...emptyTuningInput(), effort }),
+      ).toEqual({ effort });
+    },
+  );
+
+  test('trims effort whitespace', () => {
+    expect(
+      parseEnqueueRalphTuning({ ...emptyTuningInput(), effort: '  high ' }),
+    ).toEqual({ effort: 'high' });
+  });
+
+  test('rejects an unrecognized effort level naming the accepted set', () => {
+    expect(() =>
+      parseEnqueueRalphTuning({ ...emptyTuningInput(), effort: 'turbo' }),
+    ).toThrow(
+      'ralph.effort must be one of: extraHigh, high, low, max, medium, ultra',
+    );
+  });
+
+  test('rejects a wrong-case effort level (vocabulary is case-sensitive like chat)', () => {
+    expect(() =>
+      parseEnqueueRalphTuning({ ...emptyTuningInput(), effort: 'EXTRAHIGH' }),
+    ).toThrow(/ralph\.effort must be one of/);
+  });
+
+  test('omitted, null, or blank effort is a no-op', () => {
+    expect(
+      parseEnqueueRalphTuning({ ...emptyTuningInput(), effort: undefined }),
+    ).toBeUndefined();
+    expect(
+      parseEnqueueRalphTuning({ ...emptyTuningInput(), effort: null }),
+    ).toBeUndefined();
+    expect(
+      parseEnqueueRalphTuning({ ...emptyTuningInput(), effort: '   ' }),
+    ).toBeUndefined();
+    expect(
+      parseEnqueueRalphTuning({ ...emptyTuningInput(), iterations: 2 }),
+    ).toEqual({ iterations: 2 });
+  });
+
   test('parses worktree tuning for nested argv and orchestrator', () => {
     expect(
       parseEnqueueRalphTuning({
@@ -169,6 +214,33 @@ const SAMPLE_PLAN_ID = '80864bba-630a-451d-bfd2-4b25ec202381';
 const SAMPLE_TASK_ID = '45a30762-92a9-42f4-90e0-2437c7ef26a8';
 
 describe('buildRunPlanOrchestratorJobData', () => {
+  test('threads effort into orchestrator job data', () => {
+    expect(
+      buildRunPlanOrchestratorJobData({
+        planId: SAMPLE_PLAN_ID,
+        ralph: { ...emptyTuningInput(), effort: 'extraHigh' },
+      }).ralph?.effort,
+    ).toBe('extraHigh');
+  });
+
+  test('omits effort from job data when not supplied', () => {
+    expect(
+      buildRunPlanOrchestratorJobData({
+        planId: SAMPLE_PLAN_ID,
+        ralph: emptyTuningInput(),
+      }).ralph,
+    ).not.toHaveProperty('effort');
+  });
+
+  test('rejects an unknown effort level before building job data', () => {
+    expect(() =>
+      buildRunPlanOrchestratorJobData({
+        planId: SAMPLE_PLAN_ID,
+        ralph: { ...emptyTuningInput(), effort: 'turbo' },
+      }),
+    ).toThrow(/ralph\.effort must be one of/);
+  });
+
   test('returns orchestrator payload for plan scope (minimal)', () => {
     expect(
       buildRunPlanOrchestratorJobData({

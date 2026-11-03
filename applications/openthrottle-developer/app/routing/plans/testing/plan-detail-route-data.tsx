@@ -75,6 +75,7 @@ export const buildPlanDetailLoaderData = (
   asPlanDetailRouteData({
     enabledEditors: Promise.resolve([]),
     ledger: Promise.resolve({ linkedArtifacts: [], ruleApplications: [] }),
+    models: Promise.resolve([]),
     outputChunks: Promise.resolve([]),
     plan: null,
     runHistory: Promise.resolve({ planRunAuditRows: [], recentPlanRuns: [] }),

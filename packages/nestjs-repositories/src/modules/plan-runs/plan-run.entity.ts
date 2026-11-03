@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for OpenThrottle plan_runs table. Matches databases/migrations/038 (+ 047, 053, 076, 080, 087, 110, 138).
+ * @description TypeORM entity for OpenThrottle plan_runs table. Matches databases/migrations/038 (+ 047, 053, 076, 080, 087, 110, 138, 140).
  */
 
 import type { PlanRunConfigSnapshot } from '@openthrottle/openthrottle-plan-config';
@@ -42,6 +42,7 @@ export type PlanRunData = Pick<
   | 'planId'
   | 'queueName'
   | 'runKind'
+  | 'scheduledFor'
   | 'status'
   | 'updatedAt'
   | 'workerId'
@@ -167,6 +168,18 @@ export class PlanRun {
    */
   @Column({ name: 'resume_of_run_id', nullable: true, type: 'uuid' })
   resumeOfRunId!: string | null;
+
+  /**
+   * The absolute UTC instant a SCHEDULED run fires at (migration 140). Set only on runs created by
+   * schedulePlanRun and kept after the row settles so run history still shows when it was meant to
+   * fire; null for every run that was enqueued to run now.
+   */
+  @Column({
+    name: 'scheduled_for',
+    nullable: true,
+    type: 'timestamp with time zone',
+  })
+  scheduledFor!: Date | null;
 
   @Column({ default: 'QUEUED', name: 'status', type: 'text' })
   status!: string;

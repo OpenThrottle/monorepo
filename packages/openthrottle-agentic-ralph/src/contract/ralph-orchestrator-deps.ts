@@ -1,5 +1,6 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { ExecuteGraphqlOptionsV2 } from '@openthrottle/nodejs-graphql';
+import type { ConversationReasoningEffort } from '@openthrottle/openthrottle-agentic-utils';
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 
 /**
@@ -53,6 +54,11 @@ export interface WorkflowRalphIterationRunParams {
   readonly agentPrompt: string;
   /** @description Agent subprocess cwd (foreign `workingDirectory`). */
   readonly cwd?: string;
+  /**
+   * @description Reasoning effort for the run (chat vocabulary). The runner maps it to each
+   * backend's own flag; a backend with no reasoning knob ignores it.
+   */
+  readonly effort: ConversationReasoningEffort | undefined;
   readonly iteration: number;
   readonly model: string | undefined;
   readonly onChunk?: WorkflowRalphIterationOnChunk;

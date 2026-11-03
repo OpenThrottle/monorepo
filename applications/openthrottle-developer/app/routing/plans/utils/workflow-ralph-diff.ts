@@ -66,6 +66,16 @@ export const buildWorkflowRalphTuningDiffLabels = (
     );
   }
 
+  const curEffort = cur.effort.trim();
+  const refEffort = refMerged.effort.trim();
+  if (curEffort !== refEffort) {
+    lines.push(
+      `Effort: ${refEffort === '' ? 'default' : refEffort} → ${
+        curEffort === '' ? 'default' : curEffort
+      } (ralph.effort)`,
+    );
+  }
+
   if (cur.project.trim() !== refMerged.project.trim()) {
     lines.push(
       `Nx project: ${

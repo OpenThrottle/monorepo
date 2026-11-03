@@ -605,6 +605,8 @@ export type BrowseDirectoryEntryObject = {
 export type CancelPlanRunInput = {
   /** Plan id whose in-queue run-plan (Ralph) job should be cancelled */
   planId: Scalars['ID']['input'];
+  /** Optional plan_runs id of a SCHEDULED run of this plan. When set, cancels only that run: its delayed job is removed and its row settles CANCELLED, with no effect on any other active run, the plan status or the tasks. Already-settled runs are a no-op; a run that is QUEUED or IN_PROGRESS is rejected (omit planRunId to stop a live run). When omitted, the whole plan is cancelled as before. */
+  planRunId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type CancelPlanRunResultObject = {
@@ -1895,7 +1897,7 @@ export type Mutation = {
   attachWorkSessionSubject: WorkSessionSubjectObject;
   /** Abort an in-flight streamed turn for an owned conversation. Returns true when a stream was aborted. */
   cancelConversationStream: Scalars['Boolean']['output'];
-  /** Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). */
+  /** Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). Also cancels the plan's SCHEDULED runs (delayed job removed, run settled CANCELLED). With planRunId naming a SCHEDULED run of the plan, cancels ONLY that run (its delayed job and row), leaving any other active run, the plan status and the tasks alone; a planRunId that is already settled is a no-op, and one that is QUEUED or IN_PROGRESS is rejected (omit planRunId to stop a live run). Idempotent: once a scheduled run has fired or settled there is nothing left to cancel. */
   cancelPlanRun: CancelPlanRunResultObject;
   /** Request cancellation of an in-flight run (durable marker + best-effort in-process abort). */
   cancelScheduledAgentJobRun: ScheduledAgentJobRunObject;
@@ -2075,6 +2077,8 @@ export type Mutation = {
   revokeServiceAccountCredential: Scalars['Boolean']['output'];
   /** Enqueue an immediate one-off run (owner only); allowed even when the schedule is disabled. */
   runScheduledAgentJobNow: ScheduledAgentJobRunObject;
+  /** Schedule a plan run for a later instant: the enqueuePlanRun input plus scheduledFor. Records a SCHEDULED plan_runs row with a frozen run config snapshot and a delayed job that starts it. scheduledFor must be in the future and within 30 days (SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS). Does not change the plan or task statuses (the plan stays as it is until the run fires). Cancel with cancelPlanRun (pass planRunId to cancel just this run). */
+  schedulePlanRun: SchedulePlanRunResultObject;
   /** Relay one ~250ms chunk of base64-encoded 16kHz mono Int16 PCM to the session's WhisperLive connection. Executed over the same authenticated graphql-ws socket as the subscription. Returns false (no throw) for unauthenticated, unknown, foreign, or already-stopping sessions. */
   sendTranscriptionAudioChunk: Scalars['Boolean']['output'];
   /** Enable or disable an agent CLI backend for the current user. A disabled agent is hidden from chat/model pickers and rejected when starting new runs. Presence-as-disabled: enabled=false records the preference, enabled=true clears it (default is enabled). Gated by SETTINGS_WRITE, in parity with install/update; rejects unknown backends. */
@@ -2579,6 +2583,10 @@ export type MutationRunScheduledAgentJobNowArgs = {
   id: Scalars['ID']['input'];
 };
 
+export type MutationSchedulePlanRunArgs = {
+  input: SchedulePlanRunInput;
+};
+
 export type MutationSendTranscriptionAudioChunkArgs = {
   audioBase64: Scalars['String']['input'];
   sessionId: Scalars['ID']['input'];
@@ -2871,6 +2879,10 @@ export type PlanObject = {
   projectRelation?: Maybe<ProjectObject>;
   /** Workflow-ralph run configuration stored on the plan (PlanRunConfigStorage v1). */
   runConfigJson: Scalars['String']['output'];
+  /** The soonest instant a SCHEDULED run of this plan fires at (plan_runs.scheduled_for of its earliest SCHEDULED run); null when none is waiting. Lets the UI explain why a run is already pending ("a run is scheduled for <local time>; cancel it to run now"). Resolved from plan_runs; a run that fired, was cancelled or was settled MISSED/SUPERSEDED no longer counts. */
+  scheduledRunAt?: Maybe<Scalars['DateTime']['output']>;
+  /** The id of the SCHEDULED run behind scheduledRunAt (the same soonest run: earliest scheduled_for, then id); null when none is waiting. Pass it as planRunId to cancelPlanRun to cancel just that run, so the UI can offer Cancel without listing run history. */
+  scheduledRunId?: Maybe<Scalars['ID']['output']>;
   status: Scalars['String']['output'];
   summary?: Maybe<Scalars['String']['output']>;
   /** Tags attached to this plan, alphabetically by tag. */
@@ -2972,6 +2984,8 @@ export type PlanRunObject = {
   runConfigSnapshotJson?: Maybe<Scalars['String']['output']>;
   /** Ralph run implementation: spawn or orchestrator. */
   runKind: Scalars['String']['output'];
+  /** The absolute UTC instant a scheduled run fires at. Set only on runs created by schedulePlanRun (status SCHEDULED while waiting) and kept once the run settles, so history still shows when it was meant to fire. Null for every run that was enqueued to run now. */
+  scheduledFor?: Maybe<Scalars['DateTime']['output']>;
   status: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
   /** When the usage limit that stopped this run lifts, as reported by the agent CLI. Null unless status is USAGE_LIMITED, or when the CLI reported no reset time. */
@@ -4087,6 +4101,8 @@ export type RalphPlanRunTuningInput = {
   backend?: InputMaybe<Scalars['String']['input']>;
   /** Opt out of the worktree default and run in the base checkout. Omit to get the worktree OpenThrottle derives for the plan; only an explicit true disables it. */
   disableWorktree?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Reasoning-effort level for the run: "low", "medium", "high", "extraHigh", "max", or "ultra" (the same vocabulary as the chat composer's reasoning). Nullable + additive: omit to leave the run's effort unchanged. An unrecognized level is rejected. Recorded on the run's runConfigSnapshot and forwarded to the agent CLI, where each backend maps it to its own flag (claude --effort, codex -c model_reasoning_effort=, grok --reasoning-effort, opencode --variant), clamping to its accepted set; a backend with no reasoning knob (cursor, gemini, antigravity) ignores it. */
+  effort?: InputMaybe<Scalars['String']['input']>;
   /** Per-iteration timeout in seconds (positive integer). */
   iterationTimeoutSeconds?: InputMaybe<Scalars['Int']['input']>;
   /** Max Ralph iterations for this run (positive integer). */
@@ -4687,6 +4703,43 @@ export type ScannedWorktreeRootObject = {
   source: WorktreeRootSource;
   /** Linked worktrees this root contributed to the result. */
   worktreeCount: Scalars['Int']['output'];
+};
+
+export type SchedulePlanRunInput = {
+  /** REQUIRED git branch this run operates on. Captured on plan_runs.branch as run provenance (powers branch->PR mapping). Passed explicitly by callers (skills/UI may pre-fill a default from the worktree name / HEAD) and never inferred server-side; enqueue fails fast when missing or blank. */
+  branch: Scalars['String']['input'];
+  /** Optional registered checkout id (highest precedence). Resolved server-side to its filesystem path for this run; when set it overrides repositoryId and workingDirectory. */
+  checkoutId?: InputMaybe<Scalars['ID']['input']>;
+  /** Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id instead of creating a duplicate. */
+  idempotencyKey?: InputMaybe<Scalars['String']['input']>;
+  /** Optional JSON override for job-run lifecycle hooks for this enqueue only ({ hooks: [...] }). When omitted, hooks are copied from the plan. Validated against repo paths when workingDirectory is set. */
+  jobRunHooksJson?: InputMaybe<Scalars['String']['input']>;
+  /** Plan id to enqueue a run for */
+  planId: Scalars['ID']['input'];
+  /** Job priority (lower = higher priority). 1=interactive/UI, 10=normal (default), 100=batch/scheduled. Omit to use normal priority. */
+  priority?: InputMaybe<Scalars['Int']['input']>;
+  /** Optional Ralph / workflow-ralph runtime tuning (iterations, model, backend, etc.). When set, queued workers pass these to nested workflow-ralph; when omitted, defaults come from env and .workflow-ralph.json in the worktree cwd. */
+  ralph?: InputMaybe<RalphPlanRunTuningInput>;
+  /** Optional registered repository id. Resolved to the enqueuing user's single checkout of that repository (errors when there is no checkout, or when it is ambiguous). Used when checkoutId is omitted. */
+  repositoryId?: InputMaybe<Scalars['ID']['input']>;
+  /** REQUIRED absolute instant the run fires at (an ISO-8601 DateTime; send UTC or an explicit offset). Must be strictly in the future and no more than 30 days from now (SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS); the server rejects anything else. */
+  scheduledFor: Scalars['DateTime']['input'];
+  /** Optional absolute path to a local project directory used as the working directory for this run. Escape hatch used only when checkoutId and repositoryId are omitted. When all three are omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side. */
+  workingDirectory?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type SchedulePlanRunResultObject = {
+  __typename?: 'SchedulePlanRunResultObject';
+  /** Execution backend selected once for the whole run: cursor or claude. */
+  executionBackend: Scalars['String']['output'];
+  /** BullMQ job id of the delayed job that starts the run (deterministic: scheduled-plan-run-<idempotencyKey | planId-epochMs>). */
+  jobId: Scalars['String']['output'];
+  /** Plan id the run was scheduled for. */
+  planId: Scalars['String']['output'];
+  /** plan_runs id of the SCHEDULED run row (status SCHEDULED until the job fires). */
+  planRunId: Scalars['String']['output'];
+  /** The absolute UTC instant the run fires at. */
+  scheduledFor: Scalars['DateTime']['output'];
 };
 
 /** A user-defined scheduled agent job: a prompt run with a driver/model/settings on a cron schedule via one shared BullMQ queue. */
@@ -7614,6 +7667,8 @@ export type PlanDetailsFragment = {
   project?: string | null;
   projectId?: string | null;
   runConfigJson: string;
+  scheduledRunAt?: any | null;
+  scheduledRunId?: string | null;
   status: string;
   summary?: string | null;
   title: string;
@@ -7671,6 +7726,8 @@ export type GetPlanByIdQuery = {
     project?: string | null;
     projectId?: string | null;
     runConfigJson: string;
+    scheduledRunAt?: any | null;
+    scheduledRunId?: string | null;
     status: string;
     summary?: string | null;
     title: string;
@@ -7754,6 +7811,22 @@ export type PlanDetailEnqueuePlanRunMutation = {
     planId: string;
     queuePosition: number;
     queueTotal: number;
+  };
+};
+
+export type PlanDetailSchedulePlanRunMutationVariables = Exact<{
+  input: SchedulePlanRunInput;
+}>;
+
+export type PlanDetailSchedulePlanRunMutation = {
+  __typename?: 'Mutation';
+  schedulePlanRun: {
+    __typename?: 'SchedulePlanRunResultObject';
+    executionBackend: string;
+    jobId: string;
+    planId: string;
+    planRunId: string;
+    scheduledFor: any;
   };
 };
 
@@ -7864,6 +7937,19 @@ export type PlanDetailUpdatePlanJobRunHooksMutation = {
   } | null;
 };
 
+export type PlanDetailRunConfigQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+export type PlanDetailRunConfigQuery = {
+  __typename?: 'Query';
+  plan?: {
+    __typename?: 'PlanObject';
+    id: string;
+    runConfigJson: string;
+  } | null;
+};
+
 export type PlanDetailUpdatePlanRunConfigMutationVariables = Exact<{
   input: UpdatePlanInput;
 }>;
@@ -7936,6 +8022,8 @@ export type PlanDetailCriticalQuery = {
     project?: string | null;
     projectId?: string | null;
     runConfigJson: string;
+    scheduledRunAt?: any | null;
+    scheduledRunId?: string | null;
     status: string;
     summary?: string | null;
     title: string;
@@ -8080,6 +8168,7 @@ export type PlanDetailRunHistoryQuery = {
     resumeOfRunId?: string | null;
     runConfigSnapshotJson?: string | null;
     runKind: string;
+    scheduledFor?: any | null;
     status: string;
     usageLimitResetsAt?: any | null;
     checkout?: {
@@ -12798,6 +12887,8 @@ export const PlanDetailsFragmentDoc = {
             },
           },
           { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduledRunAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduledRunId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           {
@@ -18827,6 +18918,8 @@ export const GetPlanByIdDocument = {
             },
           },
           { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduledRunAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduledRunId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           {
@@ -19007,6 +19100,70 @@ export const PlanDetailEnqueuePlanRunDocument = {
 } as unknown as DocumentNode<
   PlanDetailEnqueuePlanRunMutation,
   PlanDetailEnqueuePlanRunMutationVariables
+>;
+export const PlanDetailSchedulePlanRunDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'PlanDetailSchedulePlanRun' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'SchedulePlanRunInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'schedulePlanRun' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'executionBackend' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'planRunId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'scheduledFor' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  PlanDetailSchedulePlanRunMutation,
+  PlanDetailSchedulePlanRunMutationVariables
 >;
 export const PlanDetailEvaluatePlanRulesDocument = {
   kind: 'Document',
@@ -19411,6 +19568,58 @@ export const PlanDetailUpdatePlanJobRunHooksDocument = {
   PlanDetailUpdatePlanJobRunHooksMutation,
   PlanDetailUpdatePlanJobRunHooksMutationVariables
 >;
+export const PlanDetailRunConfigDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'PlanDetailRunConfig' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'plan' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'runConfigJson' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  PlanDetailRunConfigQuery,
+  PlanDetailRunConfigQueryVariables
+>;
 export const PlanDetailUpdatePlanRunConfigDocument = {
   kind: 'Document',
   definitions: [
@@ -19703,6 +19912,8 @@ export const PlanDetailCriticalDocument = {
             },
           },
           { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduledRunAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduledRunId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           {
@@ -20112,6 +20323,10 @@ export const PlanDetailRunHistoryDocument = {
                   name: { kind: 'Name', value: 'runConfigSnapshotJson' },
                 },
                 { kind: 'Field', name: { kind: 'Name', value: 'runKind' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'scheduledFor' },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'status' } },
                 {
                   kind: 'Field',

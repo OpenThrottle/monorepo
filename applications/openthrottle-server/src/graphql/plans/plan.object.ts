@@ -2,7 +2,7 @@
  * @description GraphQL ObjectType for Plan. Implements {@link PlanData} from @openthrottle/nestjs-repositories so the API shape stays in sync with the entity.
  */
 
-import { Field, Int, ObjectType } from '@nestjs/graphql';
+import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
 import type {
   PlanData,
   PlanRunData,
@@ -56,6 +56,18 @@ export class PlanObject implements PlanData {
     nullable: true,
   })
   projectRelation!: ProjectObject | null;
+
+  @Field(() => Date, {
+    description: `The soonest instant a SCHEDULED run of this plan fires at (plan_runs.scheduled_for of its earliest SCHEDULED run); null when none is waiting. Lets the UI explain why a run is already pending ("a run is scheduled for <local time>; cancel it to run now"). Resolved from plan_runs; a run that fired, was cancelled or was settled MISSED/SUPERSEDED no longer counts.`,
+    nullable: true,
+  })
+  scheduledRunAt?: Date | null;
+
+  @Field(() => ID, {
+    description: `The id of the SCHEDULED run behind scheduledRunAt (the same soonest run: earliest scheduled_for, then id); null when none is waiting. Pass it as planRunId to cancelPlanRun to cancel just that run, so the UI can offer Cancel without listing run history.`,
+    nullable: true,
+  })
+  scheduledRunId?: string | null;
 
   @Field(() => String)
   status!: string;
@@ -199,6 +211,12 @@ export class PlanRunObject implements PlanRunData {
   })
   runKind!: 'orchestrator' | 'spawn';
 
+  @Field(() => Date, {
+    description: `The absolute UTC instant a scheduled run fires at. Set only on runs created by schedulePlanRun (status SCHEDULED while waiting) and kept once the run settles, so history still shows when it was meant to fire. Null for every run that was enqueued to run now.`,
+    nullable: true,
+  })
+  scheduledFor!: Date | null;
+
   @Field(() => String)
   status!: string;
 
@@ -325,6 +343,33 @@ export class EnqueuePlanRunResultObject {
     description: `Total number of jobs waiting in the queue (including this one).`,
   })
   queueTotal!: number;
+}
+
+/** Result of schedulePlanRun: the SCHEDULED run, its delayed job, and the instant it fires. */
+@ObjectType()
+export class SchedulePlanRunResultObject {
+  @Field(() => String, {
+    description: `Execution backend selected once for the whole run: cursor or claude.`,
+  })
+  executionBackend!: PlanRunExecutionBackend;
+
+  @Field(() => String, {
+    description: `BullMQ job id of the delayed job that starts the run (deterministic: scheduled-plan-run-<idempotencyKey | planId-epochMs>).`,
+  })
+  jobId!: string;
+
+  @Field(() => String, { description: 'Plan id the run was scheduled for.' })
+  planId!: string;
+
+  @Field(() => String, {
+    description: `plan_runs id of the SCHEDULED run row (status SCHEDULED until the job fires).`,
+  })
+  planRunId!: string;
+
+  @Field(() => Date, {
+    description: `The absolute UTC instant the run fires at.`,
+  })
+  scheduledFor!: Date;
 }
 
 /** Result of cancelPlanRun: removed job ids, active jobs that stayed locked, and optional plan status update. */

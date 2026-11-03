@@ -57,6 +57,12 @@ export const buildRalphPlanRunTuningInputFromWorkflowRunOptions = (
     ralph.model = model;
   }
 
+  // Empty = unset: the backend keeps its own reasoning default and nothing is sent.
+  const effort = input.effort.trim();
+  if (effort !== '') {
+    ralph.effort = effort;
+  }
+
   const project = input.project.trim();
   if (project !== '') {
     ralph.project = project;

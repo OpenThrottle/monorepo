@@ -12,6 +12,7 @@
 
 import {
   DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI,
+  DEFAULT_PLAN_RUN_RALPH_EFFORT,
   DEFAULT_PLAN_RUN_RALPH_ITERATIONS,
   DEFAULT_PLAN_RUN_RALPH_MODEL,
   DEFAULT_PLAN_RUN_RALPH_PROMPT,
@@ -138,6 +139,8 @@ export type WorkflowRalphExecutionBackendUi =
 
 export interface WorkflowRalphRunOptionsInput {
   readonly debugCli: WorkflowRalphDebugCli;
+  /** @description Reasoning-effort level (low|medium|high|extraHigh|max|ultra); empty = unset. */
+  readonly effort: string;
   readonly executionBackend: WorkflowRalphExecutionBackendUi;
   readonly iterationTimeoutSeconds: number | undefined;
   readonly iterations: number;
@@ -200,6 +203,7 @@ export const getDefaultWorkflowRalphRunOptionsInput = (options?: {
 
   return {
     debugCli: DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI,
+    effort: DEFAULT_PLAN_RUN_RALPH_EFFORT,
     executionBackend: DEFAULT_RALPH_RUNNER,
     iterationTimeoutSeconds: undefined,
     iterations: DEFAULT_RALPH_ITERATIONS,

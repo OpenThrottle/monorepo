@@ -10,6 +10,11 @@
  * client renderer can derive from a single source.
  */
 
+import {
+  DRIVER_REASONING_EFFORTS,
+  type DriverReasoningEffort,
+} from '@openthrottle/openthrottle-drivers';
+
 import type { ChatCompletionMessage } from '../chat-completions/index.ts';
 
 /**
@@ -72,22 +77,14 @@ export function toConversationPermissionMode(
  *
  * @public
  */
-export const CONVERSATION_REASONING_EFFORTS = {
-  extraHigh: 'extraHigh',
-  high: 'high',
-  low: 'low',
-  max: 'max',
-  medium: 'medium',
-  ultra: 'ultra',
-} as const;
+export const CONVERSATION_REASONING_EFFORTS = DRIVER_REASONING_EFFORTS;
 
 /**
  * One of the {@link CONVERSATION_REASONING_EFFORTS} values.
  *
  * @public
  */
-export type ConversationReasoningEffort =
-  (typeof CONVERSATION_REASONING_EFFORTS)[keyof typeof CONVERSATION_REASONING_EFFORTS];
+export type ConversationReasoningEffort = DriverReasoningEffort;
 
 /**
  * Narrow an untrusted transport string (GraphQL input) to a

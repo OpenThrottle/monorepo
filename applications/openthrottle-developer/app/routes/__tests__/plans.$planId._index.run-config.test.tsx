@@ -3,7 +3,7 @@ import { getPublicEnv } from '@openthrottle/react-router-utils';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
 import {
@@ -12,6 +12,15 @@ import {
 } from '~/routing/plans/testing/plan-detail-route-data';
 
 import PlanDetail from '../plans.$planId._index';
+
+// The Configuration tab is behind FEATURE_BETA_PREVIEW, which is a frozen
+// `false` under test; turn it on so the tab renders.
+vi.mock('@openthrottle/react-router-utils', async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import('@openthrottle/react-router-utils')
+  >()),
+  FEATURE_BETA_PREVIEW: true,
+}));
 
 type PlanDetailMatches = Route.ComponentProps['matches'];
 type PlanDetailLoaderData = Route.ComponentProps['loaderData'];
@@ -102,7 +111,7 @@ const mockPlan = {
   updatedAt: '2025-01-02T00:00:00Z',
 };
 
-describe.skip('routes/plans.$planId._index run config hydration', () => {
+describe('routes/plans.$planId._index run config hydration', () => {
   test('hydrates Configuration tab from plan.runConfigJson', async () => {
     const user = userEvent.setup();
     const loaderData = buildPlanDetailLoaderData({

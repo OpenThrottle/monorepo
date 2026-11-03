@@ -42,6 +42,27 @@ describe('resolveWorkflowRunOptions', () => {
     });
   });
 
+  it('resolves a recognized ralph.effort onto the context', () => {
+    const context = resolveWorkflowRunOptions({
+      planId: PLAN_ID,
+      ralph: { effort: 'extraHigh' },
+    });
+
+    expect(context.effort).toBe('extraHigh');
+  });
+
+  it('leaves effort unset when ralph.effort is omitted or unrecognized', () => {
+    expect(
+      resolveWorkflowRunOptions({ planId: PLAN_ID }).effort,
+    ).toBeUndefined();
+    expect(
+      resolveWorkflowRunOptions({
+        planId: PLAN_ID,
+        ralph: { effort: 'turbo' },
+      }).effort,
+    ).toBeUndefined();
+  });
+
   it('trims the plan id and task id', () => {
     const context = resolveWorkflowRunOptions({
       planId: `  ${PLAN_ID}  `,

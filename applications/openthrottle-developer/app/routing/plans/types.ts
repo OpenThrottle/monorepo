@@ -1,7 +1,12 @@
 import type { useRouteLoaderData } from 'react-router';
 
-import type { PlanTaskStatus } from '~/__generated__/graphql';
+import type {
+  PlanDetailEnqueuePlanRunMutation,
+  PlanDetailSchedulePlanRunMutation,
+  PlanTaskStatus,
+} from '~/__generated__/graphql';
 import type { loader } from '~/routes/plans.$planId._index';
+import type { WorkflowRalphExecutionBackendUi } from '~/routing/plans/utils/workflow-ralph-config';
 
 /**
  * @description Canonical UI status key — the string-literal union of the
@@ -49,3 +54,37 @@ export interface PlanRunConfigEditorPlan {
 export type PlanDetailRouteData = NonNullable<
   ReturnType<typeof useRouteLoaderData<typeof loader>>
 >;
+
+/** @description Which tab the Run dialog is on: enqueue now, or fire at a later instant. */
+export type PlanRunDialogMode = 'run' | 'schedule';
+
+/**
+ * @description Everything the Run dialog lets the user edit. Rebuilt from the plan's
+ * `runConfigJson` each time the dialog opens, so nothing carries over between opens.
+ * `iterationsText` is the raw field (this run only); backend, model and effort are
+ * PLAN settings the action saves to the run config.
+ */
+export interface PlanRunDialogDraft {
+  readonly backend: WorkflowRalphExecutionBackendUi;
+  readonly effort: string;
+  readonly iterationsText: string;
+  readonly mode: PlanRunDialogMode;
+  readonly model: string;
+  readonly scheduleDate: Date | undefined;
+  /** @description `HH:mm`, 24-hour, in the browser's local zone. */
+  readonly scheduleTime: string;
+}
+
+/**
+ * @description What the Run dialog reports to its caller once the action succeeds, so the
+ * caller can toast: the job id for Run now, the fire time for a scheduled run.
+ */
+export type PlanRunDialogSubmission =
+  | {
+      readonly mode: 'run';
+      readonly result: PlanDetailEnqueuePlanRunMutation['enqueuePlanRun'];
+    }
+  | {
+      readonly mode: 'schedule';
+      readonly result: PlanDetailSchedulePlanRunMutation['schedulePlanRun'];
+    };

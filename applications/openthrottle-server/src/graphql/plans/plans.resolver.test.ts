@@ -142,6 +142,7 @@ describe('PlansResolver', () => {
   });
 
   const mockProjectLoad = vi.fn().mockResolvedValue(null);
+  const mockScheduledRunLoad = vi.fn().mockResolvedValue(null);
   const mockTaskCountLoad = vi.fn().mockResolvedValue(0);
   const mockTasksCompletedCountLoad = vi.fn().mockResolvedValue(0);
   const mockPlanHooksLoad = vi
@@ -150,6 +151,7 @@ describe('PlansResolver', () => {
   const mockPlansLoaders = createMock<PlansLoaders>({
     planHooksByPlanIdLoader: { load: mockPlanHooksLoad },
     projectLoader: { load: mockProjectLoad },
+    scheduledRunByPlanIdLoader: { load: mockScheduledRunLoad },
     taskCountByPlanIdLoader: { load: mockTaskCountLoad },
     tasksCompletedCountByPlanIdLoader: { load: mockTasksCompletedCountLoad },
   });
@@ -247,9 +249,18 @@ describe('PlansResolver', () => {
   const mockEnqueueOrchestrator = vi
     .fn()
     .mockResolvedValue(sampleEnqueueOutcome);
+  const sampleScheduleOutcome = {
+    executionBackend: 'cursor' as const,
+    jobId: 'scheduled-plan-run-1',
+    planId: mockPlan.id,
+    planRunId: 'run-scheduled-1',
+    scheduledFor: new Date('2026-11-02T09:00:00.000Z'),
+  };
+  const mockSchedulePlanRun = vi.fn().mockResolvedValue(sampleScheduleOutcome);
   const mockPlanEnqueueService = createMock<PlanEnqueueService>({
     enqueueOrchestrator: mockEnqueueOrchestrator,
     enqueueSpawn: mockEnqueueSpawn,
+    schedulePlanRun: mockSchedulePlanRun,
   });
 
   const mockEnqueueEvaluation = vi.fn().mockResolvedValue(undefined);
@@ -575,6 +586,41 @@ describe('PlansResolver', () => {
 
       expect(mockTaskCountLoad).toHaveBeenCalledWith(mockPlan.id);
       expect(result).toBe(7);
+    });
+
+    test('scheduledRunAt resolves the soonest SCHEDULED run through scheduledRunByPlanIdLoader', async () => {
+      const soonest = new Date('2026-08-01T09:00:00Z');
+      mockScheduledRunLoad.mockResolvedValueOnce({
+        id: 'run-1',
+        scheduledFor: soonest,
+      });
+
+      const result = await resolver.scheduledRunAt(mockPlan);
+
+      expect(mockScheduledRunLoad).toHaveBeenCalledWith(mockPlan.id);
+      expect(result).toBe(soonest);
+    });
+
+    test('scheduledRunAt is null when no run is scheduled', async () => {
+      mockScheduledRunLoad.mockResolvedValueOnce(null);
+
+      await expect(resolver.scheduledRunAt(mockPlan)).resolves.toBeNull();
+    });
+
+    test('scheduledRunId resolves the id of that same soonest SCHEDULED run', async () => {
+      mockScheduledRunLoad.mockResolvedValueOnce({
+        id: 'run-1',
+        scheduledFor: new Date('2026-08-01T09:00:00Z'),
+      });
+
+      await expect(resolver.scheduledRunId(mockPlan)).resolves.toBe('run-1');
+      expect(mockScheduledRunLoad).toHaveBeenCalledWith(mockPlan.id);
+    });
+
+    test('scheduledRunId is null when no run is scheduled', async () => {
+      mockScheduledRunLoad.mockResolvedValueOnce(null);
+
+      await expect(resolver.scheduledRunId(mockPlan)).resolves.toBeNull();
     });
 
     test('tasksCompletedCount resolves through tasksCompletedCountByPlanIdLoader', async () => {
@@ -1171,7 +1217,100 @@ describe('PlansResolver', () => {
     });
   });
 
+  describe('schedulePlanRun', () => {
+    const scheduledFor = new Date('2026-11-02T09:00:00.000Z');
+    const input = {
+      branch: 'feature/test',
+      planId: mockPlan.id,
+      scheduledFor,
+    };
+
+    beforeEach(() => {
+      mockSchedulePlanRun.mockClear();
+      mockSchedulePlanRun.mockResolvedValue(sampleScheduleOutcome);
+    });
+
+    test('delegates to PlanEnqueueService.schedulePlanRun with the actor and maps the outcome', async () => {
+      const result = await resolver.schedulePlanRun(
+        {
+          ...input,
+          idempotencyKey: 'dedupe-1',
+          ralph: { effort: 'high' },
+        },
+        'user-1',
+        'user',
+      );
+
+      expect(mockSchedulePlanRun).toHaveBeenCalledWith(
+        expect.objectContaining({
+          actorKind: 'user',
+          actorSub: 'user-1',
+          actorUserId: 'user-1',
+          branch: 'feature/test',
+          idempotencyKey: 'dedupe-1',
+          planId: mockPlan.id,
+          ralph: { effort: 'high' },
+          scheduledFor,
+        }),
+      );
+      expect(result).toEqual(sampleScheduleOutcome);
+    });
+
+    test('rejects a disabled agent backend before scheduling anything', async () => {
+      mockAgentIsEnabled.mockResolvedValueOnce(false);
+
+      await expect(
+        resolver.schedulePlanRun(
+          { ...input, ralph: { backend: 'claude' } },
+          'user-1',
+          'user',
+        ),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(mockSchedulePlanRun).not.toHaveBeenCalled();
+    });
+  });
+
   describe('planRunsByPlanId', () => {
+    test('exposes scheduledFor on a SCHEDULED run and null on an immediate one', async () => {
+      const scheduledFor = new Date('2026-11-02T09:00:00.000Z');
+      const baseRow = {
+        createdAt: new Date('2026-11-01T12:00:00.000Z'),
+        executionBackend: 'claude',
+        heartbeatExpected: true,
+        planId: mockPlan.id,
+        queueName: PLANS_QUEUE_NAME,
+        runConfigSnapshot: null,
+        runKind: 'orchestrator',
+        updatedAt: new Date('2026-11-01T12:00:00.000Z'),
+      };
+      mockFindRecentByPlanId.mockResolvedValueOnce([
+        {
+          ...baseRow,
+          bullmqJobId: 'scheduled-plan-run-1',
+          id: 'run-scheduled',
+          scheduledFor,
+          status: 'SCHEDULED',
+        },
+        {
+          ...baseRow,
+          bullmqJobId: 'job-now',
+          id: 'run-now',
+          scheduledFor: null,
+          status: 'QUEUED',
+        },
+      ]);
+
+      const result = await resolver.planRunsByPlanId({
+        limit: 5,
+        planId: mockPlan.id,
+      });
+
+      expect(result.map((r) => [r.id, r.status, r.scheduledFor])).toEqual([
+        ['run-scheduled', 'SCHEDULED', scheduledFor],
+        ['run-now', 'QUEUED', null],
+      ]);
+    });
+
     test('returns recent persisted run audit rows with execution backend', async () => {
       const createdAt = new Date('2026-05-09T12:00:00.000Z');
       const updatedAt = new Date('2026-05-09T12:01:00.000Z');

@@ -75,6 +75,29 @@ Postgres and Redis are required; **Ollama** is what makes semantic search work w
 
 - **Detailed docs:** [monorepo/Ollama.md](../monorepo/Ollama.md) § Embeddings for OpenThrottle (provider config, dimension caveat, MCP launcher), [databases/README.md](../../databases/README.md) (embedding dimension strategy), [local-quickstart.md](./local-quickstart.md) (fresh clone → running).
 
+### Running and scheduling a plan
+
+The **Run** control on Plan Details is a split button. It lives in the plan toolbar, which (with the Configuration tab) is behind `FEATURE_BETA_PREVIEW` for now. The caret menu holds the other ways to start (or stop) a run:
+
+- **Run plan** (primary, one click) enqueues a run now with the plan's saved run configuration.
+- **Run with options…** opens the Run dialog on its _Run now_ tab; **Schedule…** opens it on _Schedule_ (a date and time picked and shown in your browser's local zone, with a "fires 3:00 PM PST, in about 3 hours" summary).
+- **Cancel scheduled run** appears while a run is scheduled and asks for confirmation. The run-history table also has a **Cancel** action on a `Scheduled` row.
+
+**What the dialog changes.** Model and effort are **plan settings**: choosing them saves them to the plan's run configuration, so later one-click runs use them too (effort is disabled on backends with no separate effort knob, such as cursor, where it is part of the model id). Iterations is **this run only**: it resets to the plan's configured value every time the dialog opens and is never saved. Branch and checkout are shown read-only and come from the Configuration tab; Run is blocked while the branch is blank.
+
+**How a scheduled run behaves.**
+
+- A scheduled run is a `plan_runs` row with status `SCHEDULED` and a delayed BullMQ job. Its run configuration is **frozen when you schedule it**, and scheduling changes neither the plan status nor any task status. The plan and its runnable tasks move to `QUEUED` only when the run fires.
+- `scheduledFor` must be strictly in the future and **at most 30 days** ahead (`SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS`); the dialog and the server both reject anything else.
+- While a run is scheduled, both run-now paths (the primary button and _Run with options…_) are disabled; cancel the scheduled run first, or wait for it to fire. _Schedule…_ stays available.
+- **1-hour grace window.** If the run cannot start until it is an hour or more past its time (for example the server was down), it settles `MISSED` and you get a warning notification instead of a surprise late run.
+- **Collision hold.** If the plan already has an active run when the scheduled one is due, the scheduled run settles `SUPERSEDED` (with a warning) rather than double-running the plan. A scheduled run on a plan with no task left to run settles `COMPLETED` with an info notification.
+- **Restarts.** On boot the plans worker re-creates any delayed job missing from Redis (flushed or recreated volume) with the time still left, or settles the run `MISSED` if it is already past the grace window. Only the instance that owns the repeatable jobs does this.
+
+**GraphQL.** `schedulePlanRun(input: SchedulePlanRunInput!)` takes everything `enqueuePlanRun` takes (`planId`, a required `branch`, `ralph` tuning with `backend`/`model`/`effort`/`iterations`, optional `checkoutId`, `idempotencyKey`, ...) plus a required `scheduledFor` ISO-8601 instant, and returns `planRunId`, `jobId`, `scheduledFor`, `executionBackend` and `planId`. Cancel with `cancelPlanRun(input: { planId, planRunId })`: with `planRunId` it cancels only that `SCHEDULED` run (delayed job removed, row `CANCELLED`) and leaves any live run, the plan status and the tasks alone. It is idempotent: a `planRunId` that has already fired or settled is a no-op, and one that is `QUEUED` or `IN_PROGRESS` is rejected. Omit `planRunId` to cancel the whole plan's queued and scheduled runs and stop a live one. Plan objects expose `scheduledRunAt` and `scheduledRunId` for the soonest waiting run.
+
+- **Detailed docs:** [databases/README.md](../../databases/README.md) (`plan_runs.scheduled_for` and the `SCHEDULED` / `MISSED` / `SUPERSEDED` statuses), [plan-run-worktrees.md](./plan-run-worktrees.md) (where a run executes).
+
 ### Background jobs (optional)
 
 - **Run plan** enqueues a plan in BullMQ (status → queued, then in_progress when the worker runs). **Doc ingestion** (diff-based re-index of `docs/` on main). **Daily stats** for dashboard/analytics.

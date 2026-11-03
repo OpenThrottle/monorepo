@@ -6,10 +6,9 @@
  * docs/openthrottle/opencode-stream-json-schema.md §1.
  */
 
-import {
-  CONVERSATION_REASONING_EFFORTS,
-  type ConversationReasoningEffort,
-} from '../types.ts';
+import { opencodeVariant } from '@openthrottle/openthrottle-drivers';
+
+import type { ConversationReasoningEffort } from '../types.ts';
 
 /**
  * Env var holding an absolute path to the opencode binary; overrides PATH lookup.
@@ -58,31 +57,6 @@ export interface OpencodeArgvOptions {
 }
 
 /**
- * Map the composer reasoning level onto an opencode `--variant` token, or
- * `undefined` to omit the flag. Uses opencode's documented `minimal`/`high`/
- * `max` plus OpenAI-style middles: `low`→`low`, `medium`→`medium`,
- * `high`/`extraHigh`→`high`, `max`/`ultra`→`max`.
- */
-function variant(
-  reasoning: ConversationReasoningEffort | undefined,
-): string | undefined {
-  switch (reasoning) {
-    case CONVERSATION_REASONING_EFFORTS.low:
-      return 'low';
-    case CONVERSATION_REASONING_EFFORTS.medium:
-      return 'medium';
-    case CONVERSATION_REASONING_EFFORTS.high:
-    case CONVERSATION_REASONING_EFFORTS.extraHigh:
-      return 'high';
-    case CONVERSATION_REASONING_EFFORTS.max:
-    case CONVERSATION_REASONING_EFFORTS.ultra:
-      return 'max';
-    default:
-      return undefined;
-  }
-}
-
-/**
  * Assemble the argv for a headless single-turn JSON-streamed run. `--format
  * json` emits the raw NDJSON event stream; the prompt is always the final
  * element, after a `--` end-of-options marker (a persona prefix can start with
@@ -105,7 +79,7 @@ export function buildOpencodeArgv(options: OpencodeArgvOptions): string[] {
     argv.push('-m', options.model);
   }
 
-  const modelVariant = variant(options.reasoning);
+  const modelVariant = opencodeVariant(options.reasoning);
   if (modelVariant !== undefined) {
     argv.push('--variant', modelVariant);
   }

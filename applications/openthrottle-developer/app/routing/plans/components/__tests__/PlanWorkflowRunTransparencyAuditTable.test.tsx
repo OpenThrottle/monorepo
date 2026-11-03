@@ -1,9 +1,11 @@
 import type { RenderResult } from '@testing-library/react';
 import { render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { PLAN_RUN_CANCEL_SCHEDULED_COPY } from '~/routing/plans/data/data.copy';
 import { getDefaultWorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
 import type {
@@ -27,6 +29,7 @@ const auditRow = (
   isStale: false,
   runConfigSnapshotJson: null,
   runKind: 'spawn',
+  scheduledFor: null,
   status: 'QUEUED',
   ...overrides,
 });
@@ -37,6 +40,7 @@ describe('PlanWorkflowRunTransparencyAuditTable Component', () => {
 
   beforeEach(() => {
     props = {
+      planId,
       planRunAuditRows: [],
       workflowInput,
       workingDirectory: '',
@@ -132,6 +136,7 @@ describe('PlanWorkflowRunTransparencyAuditTable Component', () => {
 describe('PlanWorkflowRunTransparencyAuditTable worktree column', () => {
   const renderRows = (rows: PlanRunAuditRow[]): RenderResult => {
     const props: PlanWorkflowRunTransparencyAuditTableProps = {
+      planId,
       planRunAuditRows: rows,
       workflowInput,
       workingDirectory: '',
@@ -169,5 +174,117 @@ describe('PlanWorkflowRunTransparencyAuditTable worktree column', () => {
 
     expect(component.getByText('Worktree')).toBeInTheDocument();
     expect(component.getAllByText('—').length).toBeGreaterThan(0);
+  });
+});
+
+describe('PlanWorkflowRunTransparencyAuditTable scheduled runs', () => {
+  const renderRows = (
+    rows: PlanRunAuditRow[],
+    submissions: FormData[] = [],
+  ): RenderResult => {
+    const props: PlanWorkflowRunTransparencyAuditTableProps = {
+      planId,
+      planRunAuditRows: rows,
+      workflowInput,
+      workingDirectory: '',
+    };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
+    const Component = () => (
+      <PlanWorkflowRunTransparencyAuditTable {...props} />
+    );
+    const RoutesStub = createRoutesStub([
+      { Component, path: '/' },
+      {
+        Component: () => null,
+        action: async ({ request }) => {
+          submissions.push(await request.formData());
+          return {
+            cancelPlanRun: { outcome: 'RUN_CANCELLED', removedJobIds: [] },
+          };
+        },
+        path: '/plans/:planId',
+      },
+    ]);
+    return render(<RoutesStub />);
+  };
+
+  test('offers Cancel only on a SCHEDULED row', () => {
+    const component = renderRows([
+      auditRow({ id: 'r-done', status: 'COMPLETED' }),
+      auditRow({ id: 'r-missed', status: 'MISSED' }),
+      auditRow({ id: 'r-superseded', status: 'SUPERSEDED' }),
+      auditRow({ id: 'r-live', status: 'IN_PROGRESS' }),
+      auditRow({
+        id: 'r-scheduled',
+        scheduledFor: '2026-11-05T10:00:00.000Z',
+        status: 'SCHEDULED',
+      }),
+    ]);
+
+    expect(
+      component.getAllByRole('button', {
+        name: PLAN_RUN_CANCEL_SCHEDULED_COPY.ariaLabel,
+      }),
+    ).toHaveLength(1);
+  });
+
+  test('cancelling a SCHEDULED row submits intent=cancelPlanRun and its planRunId', async () => {
+    const user = userEvent.setup();
+    const submissions: FormData[] = [];
+    const component = renderRows(
+      [
+        auditRow({ id: 'r-live', status: 'IN_PROGRESS' }),
+        auditRow({
+          id: 'r-scheduled',
+          scheduledFor: '2026-11-05T10:00:00.000Z',
+          status: 'SCHEDULED',
+        }),
+      ],
+      submissions,
+    );
+
+    await user.click(
+      component.getByRole('button', {
+        name: PLAN_RUN_CANCEL_SCHEDULED_COPY.ariaLabel,
+      }),
+    );
+    await user.click(
+      component.getByRole('button', {
+        name: PLAN_RUN_CANCEL_SCHEDULED_COPY.confirmLabel,
+      }),
+    );
+
+    await vi.waitFor(() => {
+      expect(submissions).toHaveLength(1);
+    });
+    expect(submissions[0]?.get('intent')).toBe('cancelPlanRun');
+    expect(submissions[0]?.get('planRunId')).toBe('r-scheduled');
+  });
+
+  test('pins SCHEDULED rows above newer runs, soonest fire time first', () => {
+    const component = renderRows([
+      auditRow({
+        bullmqJobId: 'job-newest',
+        id: 'r-newest',
+        status: 'COMPLETED',
+      }),
+      auditRow({
+        bullmqJobId: 'job-later',
+        id: 'r-later',
+        scheduledFor: '2026-12-01T10:00:00.000Z',
+        status: 'SCHEDULED',
+      }),
+      auditRow({
+        bullmqJobId: 'job-sooner',
+        id: 'r-sooner',
+        scheduledFor: '2026-11-05T10:00:00.000Z',
+        status: 'SCHEDULED',
+      }),
+    ]);
+
+    const jobLinks = component
+      .getAllByRole('link')
+      .map((link) => link.textContent);
+    expect(jobLinks).toEqual(['job-sooner', 'job-later', 'job-newest']);
   });
 });

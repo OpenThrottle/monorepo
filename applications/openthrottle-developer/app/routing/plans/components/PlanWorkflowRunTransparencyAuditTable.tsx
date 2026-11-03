@@ -3,10 +3,12 @@ import { Link } from 'react-router';
 
 import type { PlanDetailRunHistoryQuery } from '~/__generated__/graphql';
 import { collectResumedRunIds } from '~/global/utils/utils.usage-limit';
+import { PlanRunCancelScheduledButton } from '~/routing/plans/components/PlanRunCancelScheduledButton';
 import { PlanRunProvenanceCell } from '~/routing/plans/components/PlanRunProvenanceCell';
 import { PlanRunStatusCell } from '~/routing/plans/components/PlanRunStatusCell';
 import {
   PLAN_RUN_AUDIT_WORKSPACE_COPY,
+  PLAN_RUN_CANCEL_SCHEDULED_COPY,
   PLAN_RUN_STATUS_CELL_COPY,
 } from '~/routing/plans/data/data.copy';
 import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
@@ -15,11 +17,13 @@ import {
   buildPlanRunSnapshotDiffLabels,
   readPlanRunSnapshotWorkspacePath,
 } from '~/routing/plans/utils/plan-run-config-snapshot-ui';
+import { sortPlanRunAuditRows } from '~/routing/plans/utils/sort-plan-run-audit-rows';
 
 export type PlanRunAuditRow =
   PlanDetailRunHistoryQuery['planRunsByPlanId'][number];
 
 export interface PlanWorkflowRunTransparencyAuditTableProps {
+  planId: string;
   planRunAuditRows: PlanRunAuditRow[];
   workflowInput: WorkflowRalphRunOptionsInput;
   workingDirectory: string;
@@ -28,17 +32,19 @@ export interface PlanWorkflowRunTransparencyAuditTableProps {
 /**
  * @description Queued run audit table for {@link PlanWorkflowRunTransparency}:
  * persisted plan_runs rows with a snapshot diff of enqueue-time config vs the
- * current Configuration tab values.
+ * current Configuration tab values. Pending SCHEDULED rows are pinned to the top and carry a Cancel
+ * action (see {@link sortPlanRunAuditRows}).
  */
 export const PlanWorkflowRunTransparencyAuditTable = (
   props: PlanWorkflowRunTransparencyAuditTableProps,
 ): React.ReactElement => {
-  const { planRunAuditRows, workflowInput, workingDirectory } = props;
+  const { planId, planRunAuditRows, workflowInput, workingDirectory } = props;
 
   // Hooks
 
   // Setup
   const resumedRunIds = collectResumedRunIds(planRunAuditRows);
+  const sortedRows = sortPlanRunAuditRows(planRunAuditRows);
 
   // Handlers
 
@@ -71,21 +77,24 @@ export const PlanWorkflowRunTransparencyAuditTable = (
             <th className="text-foreground py-1.5 pr-2 font-medium">
               {PLAN_RUN_AUDIT_WORKSPACE_COPY.columnLabel}
             </th>
-            <th className="text-foreground py-1.5 font-medium">
+            <th className="text-foreground py-1.5 pr-2 font-medium">
               vs current config
+            </th>
+            <th className="text-foreground py-1.5 font-medium">
+              {PLAN_RUN_CANCEL_SCHEDULED_COPY.actionsColumnLabel}
             </th>
           </tr>
         </thead>
         <tbody>
           {planRunAuditRows.length === 0 ? (
             <tr>
-              <td className="py-2 text-[0.7rem]" colSpan={7}>
+              <td className="py-2 text-[0.7rem]" colSpan={8}>
                 No queued run audit rows yet. After you enqueue from the
                 toolbar, each run records its resolved configuration here.
               </td>
             </tr>
           ) : (
-            planRunAuditRows.map((row) => {
+            sortedRows.map((row) => {
               const diffLabels = buildPlanRunSnapshotDiffLabels(
                 row.runConfigSnapshotJson,
                 { workflowInput, workingDirectory },
@@ -121,6 +130,7 @@ export const PlanWorkflowRunTransparencyAuditTable = (
                     <PlanRunStatusCell
                       resumeOfRunId={row.resumeOfRunId ?? null}
                       resumeScheduled={resumedRunIds.has(row.id)}
+                      scheduledFor={row.scheduledFor ?? null}
                       status={row.status}
                       usageLimitResetsAt={row.usageLimitResetsAt ?? null}
                     />
@@ -136,7 +146,7 @@ export const PlanWorkflowRunTransparencyAuditTable = (
                     {runWorkspacePath ??
                       PLAN_RUN_AUDIT_WORKSPACE_COPY.emptyLabel}
                   </td>
-                  <td className="py-1.5 align-top text-[0.65rem]">
+                  <td className="py-1.5 pr-2 align-top text-[0.65rem]">
                     {row.runConfigSnapshotJson == null ? (
                       '—'
                     ) : diffLabels.length === 0 ? (
@@ -148,6 +158,14 @@ export const PlanWorkflowRunTransparencyAuditTable = (
                         ))}
                       </ul>
                     )}
+                  </td>
+                  <td className="py-1.5 align-top text-[0.65rem]">
+                    {row.status === 'SCHEDULED' ? (
+                      <PlanRunCancelScheduledButton
+                        planId={planId}
+                        planRunId={row.id}
+                      />
+                    ) : null}
                   </td>
                 </tr>
               );
