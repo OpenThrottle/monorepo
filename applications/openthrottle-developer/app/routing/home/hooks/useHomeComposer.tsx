@@ -21,6 +21,7 @@ import {
   decodeChatOption,
   reconcileChatToolbarState,
   toCheckoutOptions,
+  useChatDraft,
 } from '@openthrottle/react-router-chat-state';
 import { useAtom } from 'jotai';
 import * as React from 'react';
@@ -96,7 +97,10 @@ export const useHomeComposer = (
   const { conversationList, models, repositories, turn } = options;
 
   // Hooks
-  const [draft, setDraft] = React.useState('');
+  // Unsent text is saved per conversation, so it survives navigation and reloads.
+  const { clearDraft, draft, setDraft } = useChatDraft({
+    conversationId: turn.conversationId,
+  });
 
   // Toolbar selections persist across reloads in a localStorage-backed atom.
   // Each per-field setter writes only its own key; absent id fields fall back to
@@ -234,6 +238,7 @@ export const useHomeComposer = (
     });
 
     turn.submitTurn(trimmed, fields);
+    clearDraft();
   };
 
   // Markup

@@ -13,10 +13,12 @@ export * from './config/chat-capabilities';
 export * from './config/chat-session-permission-decay';
 
 // 📦 Data / Atoms
+export * from './data/atom.chat-drafts';
 export * from './data/atom.chat-toolbar';
 export * from './data/chat-toolbar-seeds';
 
 // 🪝 React Hooks
+export * from './hooks/useChatDraft';
 export * from './hooks/useHeaderChatController';
 /**
  * Pre-split public names for the header chat controller's input and result.

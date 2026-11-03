@@ -14,6 +14,7 @@ transpile `src` directly.
 | `reconcileChatToolbarState`                                         | PURE, derive-only reconciliation of the persisted blob against current loader data + backend capabilities                                                     |
 | `decodeChatOption`, `buildModelGroups`, `capabilitiesForChatOption` | Model-id decoding, grouped model lists, and per-backend capability descriptors                                                                                |
 | `decayElevatedPermissionModes`, `useSessionPermissionDecay`         | Per-session safety decay of elevated permission modes                                                                                                         |
+| `useChatDraft`, `chatDraftsAtom`                                    | Unsent composer text saved per conversation (key `${APP_NAME}:chat:drafts`), written 300 ms after typing stops and removed as soon as it is emptied           |
 
 ## Persistence & versioning
 
@@ -21,6 +22,10 @@ transpile `src` directly.
 whenever `ChatToolbarState` changes shape; `normalizeChatToolbarState` migrates
 older blobs forward (preserving still-valid picks) rather than wiping them, and
 degrades an unknown/newer version to `DEFAULT_CHAT_TOOLBAR_STATE`.
+
+`chatDraftsAtom` follows the same contract with `CHAT_DRAFTS_STATE_VERSION`. A
+new chat with no conversation id yet drafts under
+`CHAT_DRAFT_NEW_CONVERSATION_KEY`; send clears it before the new id arrives.
 
 ### `persist` (v3)
 

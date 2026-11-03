@@ -3,7 +3,9 @@ import type {
   ChatPersonaOption,
 } from '@openthrottle/react-router-chat';
 import {
+  chatDraftsAtom,
   chatToolbarStateAtom,
+  DEFAULT_CHAT_DRAFTS_STATE,
   DEFAULT_CHAT_TOOLBAR_STATE,
 } from '@openthrottle/react-router-chat-state';
 import { act, render } from '@testing-library/react';
@@ -129,11 +131,13 @@ async function renderComposer(
 
 describe('useHomeComposer', () => {
   beforeEach(() => {
+    store.set(chatDraftsAtom, DEFAULT_CHAT_DRAFTS_STATE);
     store.set(chatToolbarStateAtom, DEFAULT_CHAT_TOOLBAR_STATE);
     value.current = null;
   });
 
   afterEach(() => {
+    store.set(chatDraftsAtom, DEFAULT_CHAT_DRAFTS_STATE);
     store.set(chatToolbarStateAtom, DEFAULT_CHAT_TOOLBAR_STATE);
   });
 
@@ -177,6 +181,18 @@ describe('useHomeComposer', () => {
     act(() => value.current?.setDraft('hello there'));
 
     expect(value.current?.draft).toBe('hello there');
+  });
+
+  test('onSubmit clears the saved draft once the turn is sent', async () => {
+    const turn = makeTurn({ conversationId: 'conv-draft' });
+    await renderComposer({ models: [openaiModel], turn });
+
+    act(() => value.current?.setDraft('send me'));
+    act(() => value.current?.onSubmit('send me'));
+
+    expect(turn.submitTurn).toHaveBeenCalled();
+    expect(value.current?.draft).toBe('');
+    expect(store.get(chatDraftsAtom).drafts['conv-draft']).toBeUndefined();
   });
 
   test('setModelId persists through the toolbar atom and reconciles back', async () => {
