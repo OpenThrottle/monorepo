@@ -196,12 +196,21 @@ export const PLAN_RUN_TRANSPARENCY_COPY = {
   },
   latest: {
     heading: `Latest run`,
+    heartbeatLabel: `Last heartbeat`,
+    staleWarning: `No recent heartbeat. This run may have lost contact.`,
+    startedLabel: `Started`,
+  },
+  meta: {
+    ariaLabel: `Run details`,
   },
   time: {
     unknown: `Time unknown`,
   },
   title: `Runs`,
   upcoming: {
+    backstopMeta: `Details appear once this run is in the run history.`,
+    firesLabel: `Fires`,
+    firesUnknown: `Fire time unknown`,
     heading: `Upcoming`,
   },
 } as const;

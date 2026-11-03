@@ -13,11 +13,13 @@ import { HistoryIcon } from 'lucide-react';
 import * as React from 'react';
 
 import { PlanWorkflowRunCliDebug } from '~/routing/plans/components/PlanWorkflowRunCliDebug';
+import { PlanWorkflowRunLatest } from '~/routing/plans/components/PlanWorkflowRunLatest';
 import { PlanWorkflowRunSection } from '~/routing/plans/components/PlanWorkflowRunSection';
 import type { PlanRunAuditRow } from '~/routing/plans/components/PlanWorkflowRunTransparencyAuditTable';
 import { PlanWorkflowRunTransparencyAuditTable } from '~/routing/plans/components/PlanWorkflowRunTransparencyAuditTable';
 import type { RecentRun } from '~/routing/plans/components/PlanWorkflowRunTransparencyRecentRuns';
 import { PlanWorkflowRunTransparencyRecentRuns } from '~/routing/plans/components/PlanWorkflowRunTransparencyRecentRuns';
+import { PlanWorkflowRunUpcoming } from '~/routing/plans/components/PlanWorkflowRunUpcoming';
 import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/data.copy';
 import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
@@ -25,6 +27,8 @@ export interface PlanWorkflowRunTransparencyProps {
   readonly planId: string;
   readonly planRunAuditRows: PlanRunAuditRow[];
   readonly recentPlanRuns: RecentRun[];
+  /** `plan.scheduledRunAt`: the fire time of {@link scheduledRunId}. */
+  readonly scheduledRunAt: string | null;
   /** `plan.scheduledRunId`: a scheduled run can exist outside the fetched history window. */
   readonly scheduledRunId: string | null;
   readonly workflowInput: WorkflowRalphRunOptionsInput;
@@ -45,6 +49,7 @@ export const PlanWorkflowRunTransparency = (
     planId,
     planRunAuditRows,
     recentPlanRuns,
+    scheduledRunAt,
     scheduledRunId,
     workflowInput,
     workingDirectory,
@@ -62,10 +67,12 @@ export const PlanWorkflowRunTransparency = (
   // Markup
   const runSections = hasRuns ? (
     <>
-      {/* Upcoming slot (PlanWorkflowRunUpcoming): SCHEDULED rows + the
-          plan.scheduledRunId backstop, hidden when nothing is scheduled. */}
-      {/* Latest run slot (PlanWorkflowRunLatest): hidden when every run is
-          SCHEDULED. */}
+      <PlanWorkflowRunUpcoming
+        planId={planId}
+        planRunAuditRows={planRunAuditRows}
+        scheduledRun={{ scheduledRunAt, scheduledRunId }}
+      />
+      <PlanWorkflowRunLatest planRunAuditRows={planRunAuditRows} />
       <PlanWorkflowRunSection heading={copy.history.heading}>
         <PlanWorkflowRunTransparencyAuditTable
           planId={planId}

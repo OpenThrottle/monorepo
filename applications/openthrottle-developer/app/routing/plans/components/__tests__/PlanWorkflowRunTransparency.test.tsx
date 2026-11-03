@@ -44,6 +44,7 @@ function renderTransparency(
     planId,
     planRunAuditRows: [],
     recentPlanRuns: [],
+    scheduledRunAt: null,
     scheduledRunId: null,
     workflowInput: baseWorkflow,
     workflowTimeout: '',
@@ -109,12 +110,48 @@ describe('PlanWorkflowRunTransparency', () => {
   });
 
   describe('when only plan.scheduledRunId is set', () => {
-    test('does not show the no-runs Empty', () => {
-      const component = renderTransparency({ scheduledRunId: 'run-sched' });
+    test('shows the backstop Upcoming item and no Empty or Latest run', () => {
+      const component = renderTransparency({
+        scheduledRunAt: '2030-01-01T00:00:00.000Z',
+        scheduledRunId: 'run-sched',
+      });
 
       expect(
         component.queryByTestId('PlanWorkflowRunTransparency-empty'),
       ).not.toBeInTheDocument();
+      expect(
+        component.getByTestId('PlanWorkflowRunUpcoming'),
+      ).toBeInTheDocument();
+      expect(
+        component.queryByTestId('PlanWorkflowRunLatest'),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe('section order', () => {
+    test('renders Upcoming, Latest run, then Run history', () => {
+      const component = renderTransparency({
+        planRunAuditRows: [
+          completedRun,
+          {
+            ...completedRun,
+            bullmqJobId: null,
+            id: 'run-sched',
+            scheduledFor: '2030-01-01T00:00:00.000Z',
+            status: 'SCHEDULED',
+          },
+        ],
+      });
+
+      const headings = component
+        .getAllByRole('heading', { level: 3 })
+        .map((heading) => heading.textContent);
+      expect(headings).toEqual([
+        PLAN_RUN_TRANSPARENCY_COPY.upcoming.heading,
+        PLAN_RUN_TRANSPARENCY_COPY.latest.heading,
+        PLAN_RUN_TRANSPARENCY_COPY.history.heading,
+        PLAN_RUN_TRANSPARENCY_COPY.cli.heading,
+      ]);
     });
   });
 

@@ -130,6 +130,11 @@ export const PlanTabDetails = (
                   planId={plan.id}
                   planRunAuditRows={history.planRunAuditRows}
                   recentPlanRuns={history.recentPlanRuns}
+                  scheduledRunAt={
+                    typeof plan.scheduledRunAt === 'string'
+                      ? plan.scheduledRunAt
+                      : null
+                  }
                   scheduledRunId={plan.scheduledRunId ?? null}
                   workflowInput={workflowInput}
                   workflowTimeout={workflowTimeout}
