@@ -192,7 +192,40 @@ export const PLAN_RUN_TRANSPARENCY_COPY = {
     title: `No runs yet`,
   },
   history: {
+    actions: {
+      copiedToast: `Run id copied to clipboard`,
+      copyFailedToast: `Could not copy the run id`,
+      copyRunId: `Copy run id`,
+      menuAriaLabelPrefix: `Run actions for`,
+      openJob: `Open job`,
+    },
+    columns: {
+      branch: `Branch / PR`,
+      expand: `Details`,
+      modelBackend: `Model / backend`,
+      status: `Status`,
+      when: `When`,
+    },
+    detail: {
+      ariaLabel: `Run details`,
+      branch: `Branch / PR`,
+      configDiff: `vs current config`,
+      configMatches: `Matches current config`,
+      effort: `Effort`,
+      jobId: `Job id`,
+      modelBackend: `Model / backend`,
+      noJob: `No job (CLI or orchestrator run)`,
+      none: `—`,
+      runKind: `Kind`,
+      workspace: `Workspace`,
+    },
+    /** The chevron keeps one name; `aria-expanded` carries open/closed. */
+    expandAriaLabel: `Run details`,
+    fetchLimitFooter: (limit: number): string =>
+      `Showing the ${limit} most recent runs`,
     heading: `Run history`,
+    showMore: (count: number): string => `Show ${count} more`,
+    staleBadge: `Stale`,
   },
   latest: {
     heading: `Latest run`,

@@ -14,7 +14,6 @@ import * as React from 'react';
 
 import { PlanWorkflowRunCliDebug } from '~/routing/plans/components/PlanWorkflowRunCliDebug';
 import { PlanWorkflowRunLatest } from '~/routing/plans/components/PlanWorkflowRunLatest';
-import { PlanWorkflowRunSection } from '~/routing/plans/components/PlanWorkflowRunSection';
 import type { PlanRunAuditRow } from '~/routing/plans/components/PlanWorkflowRunTransparencyAuditTable';
 import { PlanWorkflowRunTransparencyAuditTable } from '~/routing/plans/components/PlanWorkflowRunTransparencyAuditTable';
 import type { RecentRun } from '~/routing/plans/components/PlanWorkflowRunTransparencyRecentRuns';
@@ -73,17 +72,12 @@ export const PlanWorkflowRunTransparency = (
         scheduledRun={{ scheduledRunAt, scheduledRunId }}
       />
       <PlanWorkflowRunLatest planRunAuditRows={planRunAuditRows} />
-      <PlanWorkflowRunSection heading={copy.history.heading}>
-        <PlanWorkflowRunTransparencyAuditTable
-          planId={planId}
-          planRunAuditRows={planRunAuditRows}
-          workflowInput={workflowInput}
-          workingDirectory={workingDirectory}
-        />
-        <PlanWorkflowRunTransparencyRecentRuns
-          recentPlanRuns={recentPlanRuns}
-        />
-      </PlanWorkflowRunSection>
+      <PlanWorkflowRunTransparencyAuditTable
+        planRunAuditRows={planRunAuditRows}
+        workflowInput={workflowInput}
+        workingDirectory={workingDirectory}
+      />
+      <PlanWorkflowRunTransparencyRecentRuns recentPlanRuns={recentPlanRuns} />
     </>
   ) : (
     <Empty

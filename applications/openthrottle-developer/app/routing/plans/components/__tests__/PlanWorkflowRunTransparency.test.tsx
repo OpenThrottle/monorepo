@@ -101,8 +101,8 @@ describe('PlanWorkflowRunTransparency', () => {
         }),
       ).toBeInTheDocument();
       expect(
-        component.getByRole('link', { name: 'job-snap-1' }),
-      ).toHaveAttribute('href', '/queues/Plans/job-snap-1');
+        component.getByTestId(`PlanWorkflowRunHistoryRow-${completedRun.id}`),
+      ).toBeInTheDocument();
       expect(
         component.queryByTestId('PlanWorkflowRunTransparency-empty'),
       ).not.toBeInTheDocument();

@@ -1,290 +1,352 @@
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import type { RenderResult } from '@testing-library/react';
-import { render } from '@testing-library/react';
+import { render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
-import { PLAN_RUN_CANCEL_SCHEDULED_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/data.copy';
+import {
+  PLAN_RUN_HISTORY_FETCH_LIMIT,
+  PLAN_RUN_HISTORY_INITIAL_ROWS,
+} from '~/routing/plans/data/data.plan-run-history';
 import { getDefaultWorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
-import type {
-  PlanRunAuditRow,
-  PlanWorkflowRunTransparencyAuditTableProps,
-} from '../PlanWorkflowRunTransparencyAuditTable';
+import type { PlanRunAuditRow } from '../PlanWorkflowRunTransparencyAuditTable';
 import { PlanWorkflowRunTransparencyAuditTable } from '../PlanWorkflowRunTransparencyAuditTable';
 
 const planId = '0c2720a9-920f-4b16-865a-f803eb444e18';
 const workflowInput = getDefaultWorkflowRalphRunOptionsInput({ planId });
+const copy = PLAN_RUN_TRANSPARENCY_COPY.history;
 
 const auditRow = (
   overrides: Partial<PlanRunAuditRow> = {},
 ): PlanRunAuditRow => ({
   __typename: 'PlanRunObject',
   bullmqJobId: 'job-1',
-  createdAt: '2024-01-02T03:04:05.000Z',
-  executionBackend: 'cursor',
+  createdAt: '2026-11-02T03:04:05.000Z',
+  executionBackend: 'claude',
   heartbeatExpected: true,
   id: 'run-1',
   isStale: false,
+  model: 'claude-opus',
   runConfigSnapshotJson: null,
   runKind: 'spawn',
   scheduledFor: null,
-  status: 'QUEUED',
+  status: 'COMPLETED',
   ...overrides,
 });
 
-describe('PlanWorkflowRunTransparencyAuditTable Component', () => {
-  let component: RenderResult;
-  let props: PlanWorkflowRunTransparencyAuditTableProps;
+/** `count` COMPLETED runs, one minute apart, newest first. */
+const manyRows = (count: number): PlanRunAuditRow[] =>
+  Array.from({ length: count }, (_, index) =>
+    auditRow({
+      bullmqJobId: `job-${index}`,
+      createdAt: new Date(Date.UTC(2026, 10, 2, 3, 59 - index)).toISOString(),
+      id: `run-${index}`,
+    }),
+  );
 
-  beforeEach(() => {
-    props = {
-      planId,
-      planRunAuditRows: [],
-      workflowInput,
-      workingDirectory: '',
-    };
-  });
+const renderTable = (rows: PlanRunAuditRow[]): RenderResult => {
+  const Component = () => (
+    <TooltipProvider>
+      <PlanWorkflowRunTransparencyAuditTable
+        planRunAuditRows={rows}
+        workflowInput={workflowInput}
+        workingDirectory=""
+      />
+    </TooltipProvider>
+  );
+  const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+  return render(<RoutesStub />);
+};
 
-  const renderTable = (): RenderResult => {
-    const Component = () => (
-      <PlanWorkflowRunTransparencyAuditTable {...props} />
-    );
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    return render(<RoutesStub />);
-  };
+/** Summary rows carry `data-status`; expanded detail rows do not. */
+const bodyRowIds = (component: RenderResult): (string | null)[] =>
+  Array.from(component.container.querySelectorAll('tbody tr[data-status]')).map(
+    (element) => element.getAttribute('data-testid'),
+  );
 
-  test('renders the empty-state message when there are no audit rows', () => {
-    component = renderTable();
+describe('PlanWorkflowRunTransparencyAuditTable', () => {
+  describe('when there is no history', () => {
+    test('renders nothing for no rows', () => {
+      const component = renderTable([]);
 
-    expect(
-      component.getByText(/No queued run audit rows yet/i),
-    ).toBeInTheDocument();
-  });
+      expect(
+        component.queryByTestId('PlanWorkflowRunTransparencyAuditTable'),
+      ).toBeNull();
+    });
 
-  test('renders a job link for a row with a bullmq job id', () => {
-    props = { ...props, planRunAuditRows: [auditRow()] };
-    component = renderTable();
-
-    const link = component.getByRole('link', { name: 'job-1' });
-    expect(link).toHaveAttribute('href', '/queues/Plans/job-1');
-  });
-
-  test('renders a CLI-run label for a row with no bullmq job id', () => {
-    props = {
-      ...props,
-      planRunAuditRows: [auditRow({ bullmqJobId: null })],
-    };
-    component = renderTable();
-
-    expect(component.getByText('CLI run')).toBeInTheDocument();
-  });
-
-  test('renders "Matches current config" when the snapshot matches', () => {
-    props = {
-      ...props,
-      planRunAuditRows: [
+    test('renders nothing when every run is SCHEDULED', () => {
+      const component = renderTable([
         auditRow({
-          runConfigSnapshotJson: JSON.stringify({
-            ralph: { executionBackend: 'cursor' },
-            target: { mode: 'plan', taskId: '' },
-            version: 1,
-            workspace: { workingDirectory: '' },
-          }),
+          scheduledFor: '2026-11-05T10:00:00.000Z',
+          status: 'SCHEDULED',
         }),
-      ],
-    };
-    component = renderTable();
+      ]);
 
-    expect(component.getByText('Matches current config')).toBeInTheDocument();
+      expect(
+        component.queryByRole('region', { name: copy.heading }),
+      ).toBeNull();
+    });
   });
 
-  test('renders diff labels when the snapshot differs from the current config', () => {
-    props = {
-      ...props,
-      planRunAuditRows: [
+  describe('when SCHEDULED runs are mixed in', () => {
+    test('excludes them and keeps MISSED and SUPERSEDED, newest first', () => {
+      const component = renderTable([
         auditRow({
-          executionBackend: 'claude',
-          runConfigSnapshotJson: JSON.stringify({
-            ralph: { executionBackend: 'claude', iterations: 25 },
-            target: { mode: 'plan', taskId: '' },
-            version: 1,
-            workspace: { workingDirectory: '/tmp/other' },
-          }),
+          createdAt: '2026-11-01T00:00:00.000Z',
+          id: 'r-missed',
+          status: 'MISSED',
         }),
-      ],
-    };
-    component = renderTable();
-
-    expect(
-      component.getByText(/Iterations: 25 → 10 \(current\)/),
-    ).toBeInTheDocument();
-  });
-
-  test('renders an em dash when no snapshot was recorded', () => {
-    props = {
-      ...props,
-      planRunAuditRows: [auditRow({ runConfigSnapshotJson: null })],
-    };
-    component = renderTable();
-
-    expect(component.getAllByText('—').length).toBeGreaterThanOrEqual(2);
-  });
-});
-
-describe('PlanWorkflowRunTransparencyAuditTable worktree column', () => {
-  const renderRows = (rows: PlanRunAuditRow[]): RenderResult => {
-    const props: PlanWorkflowRunTransparencyAuditTableProps = {
-      planId,
-      planRunAuditRows: rows,
-      workflowInput,
-      workingDirectory: '',
-    };
-    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <PlanWorkflowRunTransparencyAuditTable {...props} />
-    );
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-    return render(<RoutesStub />);
-  };
-
-  test('shows the directory the run actually worked in', () => {
-    const component = renderRows([
-      auditRow({
-        runConfigSnapshotJson: JSON.stringify({
-          ralph: { executionBackend: 'cursor' },
-          workspace: {
-            workingDirectory:
-              '/Users/matt/Development/openthrottle-worktrees/plan-0c2720a9',
-          },
-        }),
-      }),
-    ]);
-
-    expect(
-      component.getByText(
-        '/Users/matt/Development/openthrottle-worktrees/plan-0c2720a9',
-      ),
-    ).toBeInTheDocument();
-  });
-
-  test('renders a placeholder for a run that recorded no workspace', () => {
-    const component = renderRows([auditRow({ runConfigSnapshotJson: null })]);
-
-    expect(component.getByText('Worktree')).toBeInTheDocument();
-    expect(component.getAllByText('—').length).toBeGreaterThan(0);
-  });
-});
-
-describe('PlanWorkflowRunTransparencyAuditTable scheduled runs', () => {
-  const renderRows = (
-    rows: PlanRunAuditRow[],
-    submissions: FormData[] = [],
-  ): RenderResult => {
-    const props: PlanWorkflowRunTransparencyAuditTableProps = {
-      planId,
-      planRunAuditRows: rows,
-      workflowInput,
-      workingDirectory: '',
-    };
-    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <PlanWorkflowRunTransparencyAuditTable {...props} />
-    );
-    const RoutesStub = createRoutesStub([
-      { Component, path: '/' },
-      {
-        Component: () => null,
-        action: async ({ request }) => {
-          submissions.push(await request.formData());
-          return {
-            cancelPlanRun: { outcome: 'RUN_CANCELLED', removedJobIds: [] },
-          };
-        },
-        path: '/plans/:planId',
-      },
-    ]);
-    return render(<RoutesStub />);
-  };
-
-  test('offers Cancel only on a SCHEDULED row', () => {
-    const component = renderRows([
-      auditRow({ id: 'r-done', status: 'COMPLETED' }),
-      auditRow({ id: 'r-missed', status: 'MISSED' }),
-      auditRow({ id: 'r-superseded', status: 'SUPERSEDED' }),
-      auditRow({ id: 'r-live', status: 'IN_PROGRESS' }),
-      auditRow({
-        id: 'r-scheduled',
-        scheduledFor: '2026-11-05T10:00:00.000Z',
-        status: 'SCHEDULED',
-      }),
-    ]);
-
-    expect(
-      component.getAllByRole('button', {
-        name: PLAN_RUN_CANCEL_SCHEDULED_COPY.ariaLabel,
-      }),
-    ).toHaveLength(1);
-  });
-
-  test('cancelling a SCHEDULED row submits intent=cancelPlanRun and its planRunId', async () => {
-    const user = userEvent.setup();
-    const submissions: FormData[] = [];
-    const component = renderRows(
-      [
-        auditRow({ id: 'r-live', status: 'IN_PROGRESS' }),
         auditRow({
+          createdAt: '2026-11-04T00:00:00.000Z',
           id: 'r-scheduled',
           scheduledFor: '2026-11-05T10:00:00.000Z',
           status: 'SCHEDULED',
         }),
-      ],
-      submissions,
-    );
+        auditRow({ createdAt: '2026-11-03T00:00:00.000Z', id: 'r-done' }),
+        auditRow({
+          createdAt: '2026-11-02T00:00:00.000Z',
+          id: 'r-superseded',
+          status: 'SUPERSEDED',
+        }),
+      ]);
 
-    await user.click(
-      component.getByRole('button', {
-        name: PLAN_RUN_CANCEL_SCHEDULED_COPY.ariaLabel,
-      }),
-    );
-    await user.click(
-      component.getByRole('button', {
-        name: PLAN_RUN_CANCEL_SCHEDULED_COPY.confirmLabel,
-      }),
-    );
-
-    await vi.waitFor(() => {
-      expect(submissions).toHaveLength(1);
+      const section = component.getByRole('region', { name: copy.heading });
+      expect(within(section).getByRole('table')).toBeInTheDocument();
+      expect(bodyRowIds(component)).toEqual([
+        'PlanWorkflowRunHistoryRow-r-done',
+        'PlanWorkflowRunHistoryRow-r-superseded',
+        'PlanWorkflowRunHistoryRow-r-missed',
+      ]);
     });
-    expect(submissions[0]?.get('intent')).toBe('cancelPlanRun');
-    expect(submissions[0]?.get('planRunId')).toBe('r-scheduled');
   });
 
-  test('pins SCHEDULED rows above newer runs, soonest fire time first', () => {
-    const component = renderRows([
-      auditRow({
-        bullmqJobId: 'job-newest',
-        id: 'r-newest',
-        status: 'COMPLETED',
-      }),
-      auditRow({
-        bullmqJobId: 'job-later',
-        id: 'r-later',
-        scheduledFor: '2026-12-01T10:00:00.000Z',
-        status: 'SCHEDULED',
-      }),
-      auditRow({
-        bullmqJobId: 'job-sooner',
-        id: 'r-sooner',
-        scheduledFor: '2026-11-05T10:00:00.000Z',
-        status: 'SCHEDULED',
-      }),
-    ]);
+  describe('when a run is stale', () => {
+    test('shows the stale badge on that row only', () => {
+      const component = renderTable([
+        auditRow({ id: 'r-stale', isStale: true, status: 'IN_PROGRESS' }),
+        auditRow({ createdAt: '2026-11-01T00:00:00.000Z', id: 'r-fresh' }),
+      ]);
 
-    const jobLinks = component
-      .getAllByRole('link')
-      .map((link) => link.textContent);
-    expect(jobLinks).toEqual(['job-sooner', 'job-later', 'job-newest']);
+      const staleRow = component.getByTestId(
+        'PlanWorkflowRunHistoryRow-r-stale',
+      );
+      const freshRow = component.getByTestId(
+        'PlanWorkflowRunHistoryRow-r-fresh',
+      );
+      expect(
+        within(staleRow).getByTestId('PlanWorkflowRunHistoryRow-stale'),
+      ).toBeInTheDocument();
+      expect(
+        within(freshRow).queryByTestId('PlanWorkflowRunHistoryRow-stale'),
+      ).toBeNull();
+    });
+  });
+
+  describe('when a row is expanded and collapsed', () => {
+    test('toggles aria-expanded and the detail row', async () => {
+      const user = userEvent.setup();
+      const component = renderTable([auditRow({ id: 'r-one' })]);
+      const toggle = component.getByRole('button', {
+        name: copy.expandAriaLabel,
+      });
+
+      expect(toggle).toHaveAttribute('aria-expanded', 'false');
+      expect(
+        component.queryByTestId('PlanWorkflowRunHistoryRow-r-one-detail'),
+      ).toBeNull();
+
+      await user.click(toggle);
+
+      expect(toggle).toHaveAttribute('aria-expanded', 'true');
+      const detail = component.getByTestId(
+        'PlanWorkflowRunHistoryDetail-r-one',
+      );
+      expect(
+        within(detail).getByRole('link', { name: 'job-1' }),
+      ).toHaveAttribute('href', '/queues/Plans/job-1');
+
+      await user.click(toggle);
+
+      expect(toggle).toHaveAttribute('aria-expanded', 'false');
+      expect(
+        component.queryByTestId('PlanWorkflowRunHistoryRow-r-one-detail'),
+      ).toBeNull();
+    });
+
+    test('lets several rows stay open at once', async () => {
+      const user = userEvent.setup();
+      const component = renderTable([
+        auditRow({ id: 'r-a' }),
+        auditRow({ createdAt: '2026-11-01T00:00:00.000Z', id: 'r-b' }),
+      ]);
+
+      const [first, second] = component.getAllByRole('button', {
+        name: copy.expandAriaLabel,
+      });
+      if (first === undefined || second === undefined) {
+        throw new Error('expected two row toggles');
+      }
+      await user.click(first);
+      await user.click(second);
+
+      expect(
+        component.getByTestId('PlanWorkflowRunHistoryDetail-r-a'),
+      ).toBeInTheDocument();
+      expect(
+        component.getByTestId('PlanWorkflowRunHistoryDetail-r-b'),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe('when the expanded run has no job and a snapshot that differs', () => {
+    test('shows the no-job label, the workspace, effort and the diff', async () => {
+      const user = userEvent.setup();
+      const component = renderTable([
+        auditRow({
+          bullmqJobId: null,
+          id: 'r-cli',
+          runConfigSnapshotJson: JSON.stringify({
+            ralph: {
+              effort: 'high',
+              executionBackend: 'claude',
+              iterations: 25,
+            },
+            target: { mode: 'plan', taskId: '' },
+            version: 1,
+            workspace: { workingDirectory: '/tmp/worktrees/plan-0c2720a9' },
+          }),
+        }),
+      ]);
+
+      await user.click(
+        component.getByRole('button', { name: copy.expandAriaLabel }),
+      );
+
+      const detail = component.getByTestId(
+        'PlanWorkflowRunHistoryDetail-r-cli',
+      );
+      expect(within(detail).getByText(copy.detail.noJob)).toBeInTheDocument();
+      expect(
+        within(detail).getByText('/tmp/worktrees/plan-0c2720a9'),
+      ).toBeInTheDocument();
+      expect(within(detail).getByText('high')).toBeInTheDocument();
+      expect(
+        within(detail).getByText(/Iterations: 25 → 10 \(current\)/),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe('when the detail is open at a narrow width', () => {
+    test('repeats model / backend and provenance in narrow-only entries', async () => {
+      const user = userEvent.setup();
+      const component = renderTable([auditRow({ id: 'r-narrow' })]);
+
+      await user.click(
+        component.getByRole('button', { name: copy.expandAriaLabel }),
+      );
+
+      const detail = component.getByTestId(
+        'PlanWorkflowRunHistoryDetail-r-narrow',
+      );
+      const modelEntry = detail.querySelector('[data-field="modelBackend"]');
+      const branchEntry = detail.querySelector('[data-field="branch"]');
+      expect(modelEntry).toHaveClass('sm:hidden');
+      expect(branchEntry).toHaveClass('sm:hidden');
+      expect(detail.querySelector('[data-field="jobId"]')).not.toHaveClass(
+        'sm:hidden',
+      );
+      expect(within(detail).getByTestId('PlanRunMetaList')).toBeInTheDocument();
+    });
+  });
+
+  describe('when the row actions menu opens', () => {
+    test('offers Open job and Copy run id for a run with a job', async () => {
+      const user = userEvent.setup();
+      const component = renderTable([auditRow({ id: 'r-job' })]);
+
+      await user.click(
+        component.getByRole('button', {
+          name: `${copy.actions.menuAriaLabelPrefix} r-job`,
+        }),
+      );
+
+      expect(
+        await component.findByRole('menuitem', { name: copy.actions.openJob }),
+      ).toBeInTheDocument();
+      expect(
+        component.getByRole('menuitem', { name: copy.actions.copyRunId }),
+      ).toBeInTheDocument();
+    });
+
+    test('offers only Copy run id for a run with no job', async () => {
+      const user = userEvent.setup();
+      const component = renderTable([
+        auditRow({ bullmqJobId: null, id: 'r-cli' }),
+      ]);
+
+      await user.click(
+        component.getByRole('button', {
+          name: `${copy.actions.menuAriaLabelPrefix} r-cli`,
+        }),
+      );
+
+      expect(
+        await component.findByRole('menuitem', {
+          name: copy.actions.copyRunId,
+        }),
+      ).toBeInTheDocument();
+      expect(
+        component.queryByRole('menuitem', { name: copy.actions.openJob }),
+      ).toBeNull();
+    });
+  });
+
+  describe('when there are more rows than the initial page', () => {
+    test('shows the first rows, then reveals the rest on Show more', async () => {
+      const user = userEvent.setup();
+      const total = PLAN_RUN_HISTORY_INITIAL_ROWS + 1;
+      const component = renderTable(manyRows(total));
+
+      expect(bodyRowIds(component)).toHaveLength(PLAN_RUN_HISTORY_INITIAL_ROWS);
+
+      await user.click(
+        component.getByRole('button', { name: copy.showMore(1) }),
+      );
+
+      expect(bodyRowIds(component)).toHaveLength(total);
+      expect(
+        component.queryByTestId(
+          'PlanWorkflowRunTransparencyAuditTable-show-more',
+        ),
+      ).toBeNull();
+      expect(
+        component.queryByTestId('PlanWorkflowRunTransparencyAuditTable-limit'),
+      ).toBeNull();
+    });
+  });
+
+  describe('when the fetch limit is reached', () => {
+    test('shows the most-recent-runs footer once every row is revealed', async () => {
+      const user = userEvent.setup();
+      const component = renderTable(manyRows(PLAN_RUN_HISTORY_FETCH_LIMIT));
+
+      expect(
+        component.queryByTestId('PlanWorkflowRunTransparencyAuditTable-limit'),
+      ).toBeNull();
+
+      await user.click(
+        component.getByTestId(
+          'PlanWorkflowRunTransparencyAuditTable-show-more',
+        ),
+      );
+
+      expect(
+        component.getByTestId('PlanWorkflowRunTransparencyAuditTable-limit'),
+      ).toHaveTextContent(copy.fetchLimitFooter(PLAN_RUN_HISTORY_FETCH_LIMIT));
+    });
   });
 });

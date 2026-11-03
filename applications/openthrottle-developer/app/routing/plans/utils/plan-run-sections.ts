@@ -93,6 +93,23 @@ export const selectUpcomingRuns = <TRun extends SectionRun>(
 };
 
 /**
+ * @description The rows of the Run history table: every run that is not SCHEDULED (those belong
+ * to Upcoming; MISSED and SUPERSEDED stay, they are history), newest `createdAt` first. An
+ * unparseable `createdAt` sorts last. Returns a new array.
+ */
+export const selectHistoryRuns = <TRun extends SectionRun>(
+  runs: readonly TRun[],
+): TRun[] =>
+  runs
+    .filter((run) => run.status !== 'SCHEDULED')
+    // `filter` already returned a fresh array, so sorting it in place is safe.
+    .sort(
+      (a, b) =>
+        (parseDate(b.createdAt)?.getTime() ?? 0) -
+        (parseDate(a.createdAt)?.getTime() ?? 0),
+    );
+
+/**
  * @description The run Latest run shows: the newest QUEUED or IN_PROGRESS run when one exists,
  * otherwise the newest run that is not SCHEDULED; null when every run is SCHEDULED (or none
  * exist).
@@ -100,13 +117,7 @@ export const selectUpcomingRuns = <TRun extends SectionRun>(
 export const selectLatestRun = <TRun extends SectionRun>(
   runs: readonly TRun[],
 ): TRun | null => {
-  const newestFirst = runs
-    .filter((run) => run.status !== 'SCHEDULED')
-    .sort(
-      (a, b) =>
-        (parseDate(b.createdAt)?.getTime() ?? 0) -
-        (parseDate(a.createdAt)?.getTime() ?? 0),
-    );
+  const newestFirst = selectHistoryRuns(runs);
 
   return (
     newestFirst.find((run) => ACTIVE_RUN_STATUSES.has(run.status)) ??

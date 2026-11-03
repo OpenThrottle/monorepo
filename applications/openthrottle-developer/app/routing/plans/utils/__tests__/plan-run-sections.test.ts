@@ -5,6 +5,7 @@ import { PLAN_RUN_META_FIELDS } from '~/routing/plans/data/data.plan-run-history
 import {
   buildPlanRunMetaItems,
   isActivePlanRunStatus,
+  selectHistoryRuns,
   selectLatestRun,
   selectUpcomingRuns,
 } from '../plan-run-sections';
@@ -90,6 +91,54 @@ describe('selectUpcomingRuns', () => {
 
       expect(items).toHaveLength(1);
       expect(items[0]?.kind).toBe('run');
+    });
+  });
+});
+
+describe('selectHistoryRuns', () => {
+  describe('when SCHEDULED runs are mixed in', () => {
+    test('drops them and keeps MISSED and SUPERSEDED, newest first', () => {
+      const rows = selectHistoryRuns([
+        run('missed', 'MISSED', '2026-11-01T00:00:00Z', '2026-11-01T01:00:00Z'),
+        run(
+          'sched',
+          'SCHEDULED',
+          '2026-11-04T00:00:00Z',
+          '2026-11-05T00:00:00Z',
+        ),
+        run('done', 'COMPLETED', '2026-11-03T00:00:00Z'),
+        run('superseded', 'SUPERSEDED', '2026-11-02T00:00:00Z'),
+      ]);
+
+      expect(rows.map((row) => row.id)).toEqual([
+        'done',
+        'superseded',
+        'missed',
+      ]);
+    });
+  });
+
+  describe('when createdAt is unparseable', () => {
+    test('sorts that run last', () => {
+      const rows = selectHistoryRuns([
+        run('broken', 'COMPLETED', 'not a date'),
+        run('ok', 'COMPLETED', '2026-11-01T00:00:00Z'),
+      ]);
+
+      expect(rows.map((row) => row.id)).toEqual(['ok', 'broken']);
+    });
+  });
+
+  describe('when given an array', () => {
+    test('does not mutate it', () => {
+      const input = [
+        run('old', 'COMPLETED', '2026-11-01T00:00:00Z'),
+        run('new', 'COMPLETED', '2026-11-02T00:00:00Z'),
+      ];
+
+      selectHistoryRuns(input);
+
+      expect(input.map((row) => row.id)).toEqual(['old', 'new']);
     });
   });
 });
