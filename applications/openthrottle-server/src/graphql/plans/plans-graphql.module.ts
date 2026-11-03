@@ -16,7 +16,7 @@ import { PlanRunWorktreeCheckoutModule } from '../../services/plan-run-worktree-
 import { WorktreeCheckoutPruneModule } from '../../services/worktree-checkout-prune/worktree-checkout-prune.module.ts';
 import { QueuesGraphqlModule } from '../queues/queues-graphql.module.ts';
 import { WorkLedgerGraphqlModule } from '../work-ledger/work-ledger-graphql.module.ts';
-import { PlanEnqueueModule } from './plan-enqueue.module.ts';
+import { PlanEnqueueModule } from './plan-enqueue/plan-enqueue.module.ts';
 import { PlanRunObjectResolver } from './plan-run-object.resolver.ts';
 import { PlanStatusModule } from './plan-status.module.ts';
 import { PlansResolver } from './plans.resolver.ts';

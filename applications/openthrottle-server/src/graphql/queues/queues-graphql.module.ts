@@ -6,8 +6,8 @@
 
 import { Module } from '@nestjs/common';
 
+import { QueuesServiceModule } from './queues.module.ts';
 import { QueuesResolver } from './queues.resolver.ts';
-import { QueuesServiceModule } from './queues-service.module.ts';
 
 @Module({
   exports: [QueuesServiceModule],

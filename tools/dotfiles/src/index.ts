@@ -14,6 +14,8 @@ import tslint from 'typescript-eslint';
 
 import { componentPrimitiveShape } from './rules/component-primitive-shape.ts';
 import { hookPrimitiveShape } from './rules/hook-primitive-shape.ts';
+import { nestjsFileExports } from './rules/nestjs-file-exports.ts';
+import { nestjsFileNaming } from './rules/nestjs-file-naming.ts';
 import { planTaskStatusChokepoint } from './rules/plan-task-status-chokepoint.ts';
 import { preHooksUnpack } from './rules/pre-hooks-unpack.ts';
 import { routePrimitiveShape } from './rules/route-primitive-shape.ts';
@@ -240,6 +242,8 @@ export const eslintConfig = tslint.config([
         rules: {
           'component-primitive-shape': componentPrimitiveShape,
           'hook-primitive-shape': hookPrimitiveShape,
+          'nestjs-file-exports': nestjsFileExports,
+          'nestjs-file-naming': nestjsFileNaming,
           'plan-task-status-chokepoint': planTaskStatusChokepoint,
           'pre-hooks-unpack': preHooksUnpack,
           'route-primitive-shape': routePrimitiveShape,
@@ -773,6 +777,31 @@ export const sourceFirstEslintConfig = tslint.config([
           selector: 'Decorator',
         },
       ],
+    },
+  },
+]);
+
+/**
+ * The NestJS file contract: a file is `<folder>.<kind>.ts` and exports only
+ * what its kind says (docs/monorepo/code-style.md, "NestJS file names").
+ * `openthrottle/nestjs-file-naming` checks the name and
+ * `openthrottle/nestjs-file-exports` checks the exports.
+ *
+ * Spread this **after** `eslintConfig` in `applications/openthrottle-server`
+ * and every `packages/nestjs-*` config. It scopes itself to `src/` because nx
+ * lints with cwd at the project, so the glob is project-relative. Both rules
+ * are `warn` until the per-area migration (OT plan 3915bc12) reaches zero;
+ * that plan's last task flips them to `error`. A file that must keep its name
+ * goes in the consuming config's `ignores`, where the exception is reviewed.
+ * @public
+ */
+export const nestjsEslintConfig = tslint.config([
+  {
+    files: ['src/**/*.ts'],
+    ignores: ['**/__generated__/**'],
+    rules: {
+      'openthrottle/nestjs-file-exports': 'warn',
+      'openthrottle/nestjs-file-naming': 'warn',
     },
   },
 ]);

@@ -175,6 +175,18 @@ is a package, and that is the whole test.
   `types.ts`, `utils/`, `data/` or `config/`, and nothing else lives at module scope.
   Full contract: `docs/monorepo/hook-primitive-shape.md` (H1–H6), enforced by
   `openthrottle/hook-primitive-shape` and `pnpm run audit:hook-shape:strict`.
+- **A NestJS file is `<folder>.<kind>.ts`.** In `queues/usage-limit/` the files are
+  `usage-limit.service.ts`, `usage-limit.types.ts`, `usage-limit.utils.ts`,
+  `usage-limit.constants.ts`. Module, service, processor, resolver, controller, types,
+  constants and utils take the folder's name; a **second** module or service in a folder
+  moves to its own sub-folder (`queues/plans/cancel-channel/cancel-channel.service.ts`),
+  never a qualified name beside the first. Subject kinds (`.object.ts`, `.input.ts`,
+  `.entity.ts`, `.guard.ts`, …) keep their own stem. The kind states the exports: a
+  `.service.ts` exports one `@Injectable()` class and nothing else, so its types go to
+  `.types.ts` and its exported helpers to `.utils.ts`. Enforced by
+  `openthrottle/nestjs-file-naming` and `openthrottle/nestjs-file-exports`; the full
+  contract is in
+  [`docs/monorepo/code-style.md`](../../docs/monorepo/code-style.md#nestjs-file-names).
 
 ### What a component file may export, and what belongs in `data/`
 

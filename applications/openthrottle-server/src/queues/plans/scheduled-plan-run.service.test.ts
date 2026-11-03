@@ -7,7 +7,7 @@ import type {
 import type { Job, Queue } from 'bullmq';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { PlanEnqueueService } from '../../graphql/plans/plan-enqueue.service.ts';
+import type { PlanEnqueueService } from '../../graphql/plans/plan-enqueue/plan-enqueue.service.ts';
 import type { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account.service.ts';
 import type { NotificationsService } from '../../notifications/notifications.service.ts';
 import type { PlanRunJobResult, RunPlanJobData } from './plans.types.ts';

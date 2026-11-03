@@ -44,6 +44,7 @@ lint but never had a rule file of their own:
 | [No default exports](#no-default-exports)                             | **Enforced**                           | `import-x/no-default-export`                                          |
 | [`import type`](#import-type)                                         | **Enforced**                           | `@typescript-eslint/consistent-type-imports`                          |
 | [Naming conventions](#naming-conventions)                             | **Enforced** (file names honor system) | `@typescript-eslint/naming-convention`                                |
+| [NestJS file names](#nestjs-file-names)                               | **Warned**                             | `openthrottle/nestjs-file-naming`, `openthrottle/nestjs-file-exports` |
 | [Indexed access is `\| undefined`](#indexed-access-returns-undefined) | **Enforced**                           | `noUncheckedIndexedAccess` compiler flag                              |
 | [No `as` casts](#no-as-casts)                                         | **Enforced**                           | `consistent-type-assertions`, `assertionStyle: 'never'`               |
 | [No `any`](#no-any)                                                   | **Enforced**                           | `@typescript-eslint/no-explicit-any`                                  |
@@ -654,6 +655,62 @@ than a rename:
 
 `_v2` in this codebase consistently marks the Result-returning variant of a throw-based
 `V2` function. That is a convention, not drift.
+
+### NestJS file names
+
+**Warned** by `openthrottle/nestjs-file-naming` and `openthrottle/nestjs-file-exports`, wired
+through `nestjsEslintConfig` from `@tools/dotfiles` into `openthrottle-server` and every
+`packages/nestjs-*` project. Both go to `error` once the per-area migration (OT plan
+`3915bc12`) reaches zero.
+
+NestJS is organised by modules, so a file's name is its folder's name plus a **kind** — the
+last dotted segment, which states what the file exports:
+
+```text
+queues/usage-limit/
+  usage-limit.constants.ts
+  usage-limit.service.ts
+  usage-limit.types.ts
+  usage-limit.utils.ts
+```
+
+- **Module-scoped kinds** — `module`, `service`, `processor`, `resolver`, `controller`,
+  `types`, `constants`, `utils` — are named for their folder: in `queues/plans/` the only
+  service name is `plans.service.ts`. A file directly in a project's `src/` takes the
+  project's folder name (`packages/nestjs-auth/src/nestjs-auth.module.ts`); an
+  application's root `src/app.module.ts` is the one exception.
+- **A second module or service in a folder is a second unit, so it gets a sub-folder** —
+  `queues/plans/cancel-channel/cancel-channel.service.ts`, never
+  `queues/plans/plan-cancel-channel.service.ts` or `plans-cancel-channel.service.ts`. A
+  folder makes the second unit visible; a qualifier stacked on the name hides it.
+- **Subject-named kinds** — `decorator`, `entity`, `enum`, `executor`, `factory`, `guard`,
+  `input`, `mapper`, `object`, `options`, `policy`, `strategy`, `token` — describe one thing
+  each and sit many to a folder, so their stem is free (`graphql/queues/job.object.ts`).
+- **Every file has a kind.** `reading-time-minutes.ts` is reported; it is a `.utils.ts`.
+  Kinds outside the two lists (`.dates.ts`, `.parser.ts`, `.cron.ts`) are reported too —
+  they are `.utils.ts` under another name.
+- **Tests mirror their source** (`usage-limit.service.test.ts`). A test of a folder as a
+  whole, with no single source, is `<folder>.test.ts` / `<folder>.integration.test.ts`.
+- `index.ts` and `main.ts` are exempt. A file that genuinely must keep its name — the
+  server's pre-Nest boot files, which deploy commands name by path — is turned off in the
+  project's own `eslint.config.ts`, where the exception is reviewed, never with an inline
+  disable.
+
+**The kind is a promise about the exports**, checked by `nestjs-file-exports`:
+
+| Kind                                                | Exports                                                            |
+| --------------------------------------------------- | ------------------------------------------------------------------ |
+| `.module.ts`                                        | exactly one `@Module()` class, nothing else                        |
+| `.service.ts`                                       | exactly one `@Injectable()` class, nothing else                    |
+| `.processor.ts` / `.resolver.ts` / `.controller.ts` | exactly one `@Processor()` / `@Resolver()` / `@Controller()` class |
+| `.utils.ts`                                         | functions only                                                     |
+| `.types.ts`                                         | types and interfaces only                                          |
+| `.constants.ts`                                     | non-function `const` values only                                   |
+
+So a result type a service returns lives in the folder's `.types.ts`, and a helper it
+exports for a test lives in `.utils.ts` — see
+`queues/scheduled-agent-jobs/usage-limit-resume/` for both. Subject-named kinds and tests
+are not export-checked.
 
 ## Components and files
 

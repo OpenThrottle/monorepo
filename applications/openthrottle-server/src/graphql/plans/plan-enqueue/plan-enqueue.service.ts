@@ -36,34 +36,39 @@ import type { Queue } from 'bullmq';
 import type { EntityManager } from 'typeorm';
 import { In } from 'typeorm';
 
-import { updateMatchingTasksAndEmitStatusChanged } from '../../notifications/emit-bulk-task-status-changes.ts';
-import { NotificationsService } from '../../notifications/notifications.service.ts';
+import { updateMatchingTasksAndEmitStatusChanged } from '../../../notifications/emit-bulk-task-status-changes.ts';
+import { NotificationsService } from '../../../notifications/notifications.service.ts';
 import {
   PLAN_JOB_PRIORITY_DEFAULT,
   PLANS_QUEUE_NAME,
   SCHEDULED_PLAN_RUN_JOB_ID_PREFIX,
   SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS,
   SCHEDULED_PLAN_RUN_MAX_HORIZON_MS,
-} from '../../queues/plans/plans.constants.ts';
+} from '../../../queues/plans/plans.constants.ts';
 import type {
   RunPlanJobData,
   RunPlanOrchestratorJobData,
-} from '../../queues/plans/plans.types.ts';
-import type { ScheduledPlanRunFireDecision } from '../../queues/plans/scheduled-plan-run.utils.ts';
-import { decideScheduledPlanRunFire } from '../../queues/plans/scheduled-plan-run.utils.ts';
-import { USAGE_LIMIT_RESUME_JOB_ID_PREFIX } from '../../queues/usage-limit/usage-limit.constants.ts';
+} from '../../../queues/plans/plans.types.ts';
+import type { ScheduledPlanRunFireDecision } from '../../../queues/plans/scheduled-plan-run.utils.ts';
+import { decideScheduledPlanRunFire } from '../../../queues/plans/scheduled-plan-run.utils.ts';
+import { USAGE_LIMIT_RESUME_JOB_ID_PREFIX } from '../../../queues/usage-limit/usage-limit.constants.ts';
 import {
   normalizeIdempotencyKey,
   QueuesService,
-} from '../queues/queues.service.ts';
-import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service.ts';
-import { buildRunPlanOrchestratorJobData } from './enqueue-plan-ralph-tuning.ts';
+} from '../../queues/queues.service.ts';
+import { WorkLedgerCaptureService } from '../../work-ledger/work-ledger-capture.service.ts';
+import { buildRunPlanOrchestratorJobData } from '../enqueue-plan-ralph-tuning.ts';
 import {
   buildPlanRunConfigSnapshotFromJobData,
   orchestratorJobInputFromSnapshot,
-} from './enqueue-plan-run-config-snapshot.ts';
-import type { RalphPlanRunTuningInput } from './plan.input.ts';
-import { PlanStatusService } from './plan-status.service.ts';
+} from '../enqueue-plan-run-config-snapshot.ts';
+import type { RalphPlanRunTuningInput } from '../plan.input.ts';
+import { PlanStatusService } from '../plan-status.service.ts';
+import type {
+  EnqueueOutcome,
+  ScheduledRunFireOutcome,
+  ScheduleOutcome,
+} from './plan-enqueue.types.ts';
 
 /** Task statuses reset to QUEUED when a plan run is enqueued (COMPLETED and PROMOTED tasks are left unchanged: PROMOTED work continued as its own plan, so re-running it here would duplicate it). */
 const ENQUEUE_TASK_STATUSES_TO_RESET = [
@@ -97,14 +102,6 @@ const SCHEDULED_RUN_STATUS_BY_DECISION = {
   ScheduledPlanRunFireDecision['kind'],
   PlanRunStatus
 >;
-
-/**
- * @description What {@link PlanEnqueueService.fireScheduledRun} did: the policy's decision, applied, or
- * `not_scheduled` when the run was no longer SCHEDULED (a concurrent cancel won, or it already fired)
- * and nothing was written.
- */
-export type ScheduledRunFireOutcome =
-  ScheduledPlanRunFireDecision | { readonly kind: 'not_scheduled' };
 
 /** @description Validated parameters for a spawn (nested workflow-ralph) plan-run enqueue. */
 interface EnqueueSpawnParams {
@@ -201,24 +198,6 @@ interface ResolvedWorkspace {
   readonly checkoutId: string | null;
   readonly repositoryId: string | null;
   readonly workingDirectory: string | null | undefined;
-}
-
-/** @description Result of an enqueue: the persisted backend, job id, and live queue position. */
-export interface EnqueueOutcome {
-  readonly executionBackend: ExecutionBackend;
-  readonly jobId: string;
-  readonly planId: string;
-  readonly queuePosition: number;
-  readonly queueTotal: number;
-}
-
-/** @description Result of scheduling a run: the SCHEDULED row, its delayed job, and the instant it fires. */
-export interface ScheduleOutcome {
-  readonly executionBackend: ExecutionBackend;
-  readonly jobId: string;
-  readonly planId: string;
-  readonly planRunId: string;
-  readonly scheduledFor: Date;
 }
 
 /**

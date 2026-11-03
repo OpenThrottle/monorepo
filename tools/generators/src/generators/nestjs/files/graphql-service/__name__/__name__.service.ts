@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { RolesRepository } from '@openthrottle/nestjs-core/src/repositories/certs/roles.repository';
-// import { Get<%= namePascal %>Args } from '~/services/<%= name %>/dto/get-<%= name %>.args';
+// import { Get<%= namePascal %>Args } from '~/services/<%= name %>/dto/get-<%= name %>.input';
 
 @Injectable()
 export class <%= namePascal %>Service {

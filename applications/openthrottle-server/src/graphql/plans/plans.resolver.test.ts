@@ -41,7 +41,7 @@ import type {
   UpdatePlanInput,
 } from './plan.input.ts';
 import { PlanRalphWorkflowModeGraphQL } from './plan.input.ts';
-import { PlanEnqueueService } from './plan-enqueue.service.ts';
+import { PlanEnqueueService } from './plan-enqueue/plan-enqueue.service.ts';
 import { PlanStatusService } from './plan-status.service.ts';
 import { PlansResolver } from './plans.resolver.ts';
 import { PlansLoaders } from './plans-loaders.ts';

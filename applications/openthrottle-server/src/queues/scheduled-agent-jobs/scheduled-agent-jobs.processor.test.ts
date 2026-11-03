@@ -19,7 +19,6 @@ import type { BullMqRunOutputRetentionService } from '../bullmq-run-output-reten
 import type { ScheduledAgentJobCancellationService } from './scheduled-agent-job-cancellation.service.ts';
 import type { ScheduledAgentJobDirectoryLockService } from './scheduled-agent-job-directory-lock.service.ts';
 import { type ScheduledAgentJobDirectoryLockResult } from './scheduled-agent-job-directory-lock.service.ts';
-import type { ScheduledAgentJobUsageLimitResumeService } from './scheduled-agent-job-usage-limit-resume.service.ts';
 import {
   foldRunUsage,
   parseRunOutcome,
@@ -27,6 +26,7 @@ import {
 } from './scheduled-agent-jobs.processor.ts';
 import type { ScheduledAgentJobBullJob } from './scheduled-agent-jobs.types.ts';
 import type { ScheduledAgentRunnerService } from './scheduled-agent-runner.service.ts';
+import type { ScheduledAgentJobUsageLimitResumeService } from './usage-limit-resume/usage-limit-resume.service.ts';
 
 const result = (
   overrides: Partial<RunAgentPromptResult>,
