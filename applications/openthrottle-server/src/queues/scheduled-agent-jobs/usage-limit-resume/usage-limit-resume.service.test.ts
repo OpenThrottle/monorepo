@@ -11,17 +11,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   USAGE_LIMIT_RESUME_BUFFER_MS,
   USAGE_LIMIT_RESUME_MAX_CHAIN_DEPTH,
-} from '../usage-limit/usage-limit.constants.ts';
-import type { ScheduledAgentJobSchedulerService } from './scheduled-agent-job-scheduler.service.ts';
-import {
-  ScheduledAgentJobUsageLimitResumeService,
-  usageLimitResumeJobId,
-} from './scheduled-agent-job-usage-limit-resume.service.ts';
+} from '../../usage-limit/usage-limit.constants.ts';
+import type { ScheduledAgentJobSchedulerService } from '../scheduled-agent-job-scheduler.service.ts';
 import {
   SCHEDULED_AGENT_JOB_NAME,
   SCHEDULED_AGENT_JOB_OPTIONS,
-} from './scheduled-agent-jobs.constants.ts';
-import type { ScheduledAgentJobPayload } from './scheduled-agent-jobs.types.ts';
+} from '../scheduled-agent-jobs.constants.ts';
+import type { ScheduledAgentJobPayload } from '../scheduled-agent-jobs.types.ts';
+import { ScheduledAgentJobUsageLimitResumeService } from './usage-limit-resume.service.ts';
+import { usageLimitResumeJobId } from './usage-limit-resume.utils.ts';
 
 const NOW = new Date('2026-11-01T12:00:00.000Z');
 const HOUR_MS = 60 * 60 * 1_000;

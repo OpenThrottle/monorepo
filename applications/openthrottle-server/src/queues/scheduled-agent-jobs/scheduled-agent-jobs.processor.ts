@@ -30,7 +30,6 @@ import { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.
 import { BULLMQ_RUN_OUTPUT_WRITER } from '../bullmq-run-output-writer.token.ts';
 import { ScheduledAgentJobCancellationService } from './scheduled-agent-job-cancellation.service.ts';
 import { ScheduledAgentJobDirectoryLockService } from './scheduled-agent-job-directory-lock.service.ts';
-import { ScheduledAgentJobUsageLimitResumeService } from './scheduled-agent-job-usage-limit-resume.service.ts';
 import {
   resolveScheduledAgentJobConcurrencyKey,
   resolveScheduledAgentJobRunCwd,
@@ -41,6 +40,7 @@ import {
 } from './scheduled-agent-jobs.constants.ts';
 import type { ScheduledAgentJobBullJob } from './scheduled-agent-jobs.types.ts';
 import { ScheduledAgentRunnerService } from './scheduled-agent-runner.service.ts';
+import { ScheduledAgentJobUsageLimitResumeService } from './usage-limit-resume/usage-limit-resume.service.ts';
 
 /** Run-status terminal states — a run in one of these is done and must not be re-marked. */
 const TERMINAL_RUN_STATUSES: ReadonlySet<ScheduledAgentJobRunStatus> = new Set([

@@ -72,7 +72,7 @@ import type {
 } from './plans.types.ts';
 import { isRunPlanOrchestratorJobData } from './plans.types.ts';
 import { ScheduledPlanRunService } from './scheduled-plan-run.service.ts';
-import { UsageLimitResumeService } from './usage-limit-resume.service.ts';
+import { UsageLimitResumeService } from './usage-limit-resume/usage-limit-resume.service.ts';
 import { WorkLedgerRunService } from './work-ledger-run.service.ts';
 
 const CONCURRENCY = 1;

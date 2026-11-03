@@ -19,17 +19,17 @@ import type { Queue } from 'bullmq';
 import { In } from 'typeorm';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { NotificationsService } from '../../notifications/notifications.service.ts';
+import type { NotificationsService } from '../../../notifications/notifications.service.ts';
 import type {
   RunPlanJobData,
   RunPlanOrchestratorJobData,
-} from '../../queues/plans/plans.types.ts';
-import type { QueuesService } from '../queues/queues.service.ts';
-import type { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service.ts';
-import { buildRunPlanOrchestratorJobData } from './enqueue-plan-ralph-tuning.ts';
-import { buildPlanRunConfigSnapshotFromJobData } from './enqueue-plan-run-config-snapshot.ts';
+} from '../../../queues/plans/plans.types.ts';
+import type { QueuesService } from '../../queues/queues.service.ts';
+import type { WorkLedgerCaptureService } from '../../work-ledger/work-ledger-capture.service.ts';
+import { buildRunPlanOrchestratorJobData } from '../enqueue-plan-ralph-tuning.ts';
+import { buildPlanRunConfigSnapshotFromJobData } from '../enqueue-plan-run-config-snapshot.ts';
+import type { PlanStatusService } from '../plan-status.service.ts';
 import { PlanEnqueueService } from './plan-enqueue.service.ts';
-import type { PlanStatusService } from './plan-status.service.ts';
 
 const mockPlan = createMock<Plan>({
   id: '80864bba-630a-451d-bfd2-4b25ec202381',

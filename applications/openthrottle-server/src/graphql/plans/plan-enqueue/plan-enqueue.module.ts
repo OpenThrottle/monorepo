@@ -10,12 +10,12 @@ import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
-import { NotificationsModule } from '../../notifications/notifications.module.ts';
-import { PlansQueueProducerModule } from '../../queues/plans/plans-queue-producer.module.ts';
-import { QueuesServiceModule } from '../queues/queues-service.module.ts';
-import { WorkLedgerGraphqlModule } from '../work-ledger/work-ledger-graphql.module.ts';
+import { NotificationsModule } from '../../../notifications/notifications.module.ts';
+import { PlansQueueProducerModule } from '../../../queues/plans/plans-queue-producer.module.ts';
+import { QueuesServiceModule } from '../../queues/queues.module.ts';
+import { WorkLedgerGraphqlModule } from '../../work-ledger/work-ledger-graphql.module.ts';
+import { PlanStatusModule } from '../plan-status.module.ts';
 import { PlanEnqueueService } from './plan-enqueue.service.ts';
-import { PlanStatusModule } from './plan-status.module.ts';
 
 @Module({
   exports: [PlanEnqueueService],

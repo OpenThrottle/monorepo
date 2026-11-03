@@ -1,3 +1,3 @@
-import { eslintConfig } from '@tools/dotfiles';
+import { eslintConfig, nestjsEslintConfig } from '@tools/dotfiles';
 
-export default [{ ignores: ['!**/*'] }, ...eslintConfig];
+export default [{ ignores: ['!**/*'] }, ...eslintConfig, ...nestjsEslintConfig];

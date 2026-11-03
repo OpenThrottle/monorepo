@@ -3,7 +3,7 @@ import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import { NestjsWorktreesModule } from '@openthrottle/nestjs-worktrees';
 
-import { PlanEnqueueModule } from '../../graphql/plans/plan-enqueue.module.ts';
+import { PlanEnqueueModule } from '../../graphql/plans/plan-enqueue/plan-enqueue.module.ts';
 import { PlanStatusModule } from '../../graphql/plans/plan-status.module.ts';
 import { WorkLedgerGraphqlModule } from '../../graphql/work-ledger/work-ledger-graphql.module.ts';
 import { MetricsModule } from '../../metrics/metrics.module.ts';
@@ -13,7 +13,7 @@ import { PlanLifecycleHooksQueueProducerModule } from '../plan-lifecycle-hooks/p
 import { PlansProcessor } from './plans.processor.ts';
 import { PlansQueueProducerModule } from './plans-queue-producer.module.ts';
 import { ScheduledPlanRunService } from './scheduled-plan-run.service.ts';
-import { UsageLimitResumeService } from './usage-limit-resume.service.ts';
+import { UsageLimitResumeService } from './usage-limit-resume/usage-limit-resume.service.ts';
 import { WorkLedgerRunService } from './work-ledger-run.service.ts';
 
 /**
