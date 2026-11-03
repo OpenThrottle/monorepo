@@ -410,15 +410,6 @@ export const PLAN_RUN_MODEL_EFFORT_COPY = {
 } as const;
 
 /**
- * @description Column header and empty value for the worktree the queued run actually used, read
- * from `run_config_snapshot.workspace.workingDirectory`.
- */
-export const PLAN_RUN_AUDIT_WORKSPACE_COPY = {
-  columnLabel: `Worktree`,
-  emptyLabel: `—`,
-} as const;
-
-/**
  * @description Status cell of the queued-run audit table. `USAGE_LIMITED` is a run that stopped
  * cleanly on a Claude subscription usage limit; the cell says when it resumes (a continuation run
  * exists) or when the limit resets (none does). `SCHEDULED` shows when it fires; `MISSED` (not
