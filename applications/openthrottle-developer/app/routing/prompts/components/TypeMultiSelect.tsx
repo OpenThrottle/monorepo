@@ -99,7 +99,7 @@ export const TypeMultiSelect = (
 
         <PopoverContent
           align="start"
-          className="w-[--radix-popover-trigger-width] p-0"
+          className="w-(--radix-popover-trigger-width) p-0"
         >
           <Command>
             <CommandList>
