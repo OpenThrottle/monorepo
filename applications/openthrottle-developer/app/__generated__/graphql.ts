@@ -20253,7 +20253,7 @@ export const PlanDetailRunHistoryDocument = {
                     {
                       kind: 'ObjectField',
                       name: { kind: 'Name', value: 'limit' },
-                      value: { kind: 'IntValue', value: '10' },
+                      value: { kind: 'IntValue', value: '25' },
                     },
                   ],
                 },

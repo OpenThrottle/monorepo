@@ -169,6 +169,43 @@ export const PLAN_DEFERRED_SECTION_COPY = {
   tagVocabularyError: `Could not load the tag vocabulary.`,
 } as const;
 
+/**
+ * @description The plan Details "Runs" card ({@link PlanWorkflowRunTransparency}): what is about
+ * to run, what just ran, the run history, and a collapsed CLI & debug section. `empty` replaces the
+ * three run sections when the plan has never run and nothing is scheduled; `time` backs
+ * `formatRunTime`.
+ */
+export const PLAN_RUN_TRANSPARENCY_COPY = {
+  cli: {
+    configurationLink: `Configuration tab`,
+    copyDebugBundle: `Copy debug bundle`,
+    diffEmpty: `Matches the defaults — the CLI needs only --plan or --task.`,
+    diffHeading: `Differs from defaults`,
+    heading: `CLI & debug`,
+    precedenceLabel: `Precedence:`,
+    precedenceSuffix: `Edit the CLI layer on the`,
+    queueLinkPrefix: `Queue:`,
+  },
+  description: `Scheduled, active and past runs of this plan.`,
+  empty: {
+    description: `Use Run or Schedule in the toolbar to start this plan.`,
+    title: `No runs yet`,
+  },
+  history: {
+    heading: `Run history`,
+  },
+  latest: {
+    heading: `Latest run`,
+  },
+  time: {
+    unknown: `Time unknown`,
+  },
+  title: `Runs`,
+  upcoming: {
+    heading: `Upcoming`,
+  },
+} as const;
+
 export const LINKED_ARTIFACTS_PANEL_COPY = {
   allTypesLabel: `All types`,
   allVerificationsLabel: `All`,
