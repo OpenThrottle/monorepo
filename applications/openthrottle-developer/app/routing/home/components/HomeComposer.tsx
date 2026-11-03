@@ -4,10 +4,7 @@ import {
   type ChatModelOption,
   type ChatPersonaOption,
 } from '@openthrottle/react-router-chat';
-import {
-  CHAT_TOOLBAR_CONTEXT_SOURCES,
-  chatContextMeterAtom,
-} from '@openthrottle/react-router-chat-state';
+import { chatContextMeterAtom } from '@openthrottle/react-router-chat-state';
 import { InlineErrors } from '@openthrottle/react-router-shadcn';
 import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
 import { useAtomValue } from 'jotai';
@@ -98,15 +95,11 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
       <ChatComposerToolbar
         capabilities={capabilities}
         checkouts={checkouts}
-        contextSources={
-          FEATURE_BETA_PREVIEW ? CHAT_TOOLBAR_CONTEXT_SOURCES : undefined
-        }
         micState={FEATURE_BETA_PREVIEW ? voice.micState : undefined}
         mode={mode}
         modelGroups={modelGroups}
         modelId={modelId}
         models={models}
-        onAddContext={FEATURE_BETA_PREVIEW ? () => {} : undefined}
         onCheckoutChange={setRepositoryId}
         onCheckoutsChange={setRepositoryIds}
         onMicToggle={

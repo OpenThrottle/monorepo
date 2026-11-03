@@ -88,6 +88,12 @@ describe('HomeComposer Component', () => {
     expect(component.getByRole('textbox')).toBeInTheDocument();
   });
 
+  test('renders no attach button until attachments are wired end to end', () => {
+    expect(
+      component.queryByTestId('ChatComposerToolbar-attach'),
+    ).not.toBeInTheDocument();
+  });
+
   test('shows the no-local-models message when no models are discovered', () => {
     component.unmount();
     component = renderComposer({ ...props, models: [] });
