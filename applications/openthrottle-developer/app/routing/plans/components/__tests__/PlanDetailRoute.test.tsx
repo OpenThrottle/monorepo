@@ -3,7 +3,7 @@ import type { RenderResult } from '@testing-library/react';
 import { cleanup, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { WorkspaceEditorId } from '~/__generated__/graphql';
 import { PLAN_CHECKOUT_SELECTOR_COPY } from '~/routing/plans/data/data.copy';
@@ -15,6 +15,23 @@ import {
 import type { PlanDetailRouteProps } from '../PlanDetailRoute';
 import { PlanDetailRoute } from '../PlanDetailRoute';
 import { PlanRunConfigStoreProvider } from '../PlanRunConfigStoreProvider';
+
+// FEATURE_BETA_PREVIEW resolves from process.env at module load, so the real
+// export is a frozen `false` under test. Mock it as a getter over a hoisted
+// box so the suite can exercise both sides of the toolbar gate.
+const betaPreview = vi.hoisted(() => ({ enabled: true }));
+
+vi.mock('@openthrottle/react-router-utils', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@openthrottle/react-router-utils')>();
+
+  return {
+    ...actual,
+    get FEATURE_BETA_PREVIEW() {
+      return betaPreview.enabled;
+    },
+  };
+});
 
 const plan: PlanDetailRouteProps['plan'] = {
   __typename: 'PlanObject',
@@ -99,6 +116,7 @@ describe('PlanDetailRoute Component', () => {
   let component: RenderResult;
 
   beforeEach(() => {
+    betaPreview.enabled = true;
     component = renderRoute();
   });
 
@@ -124,6 +142,18 @@ describe('PlanDetailRoute Component', () => {
     expect(
       component.getByRole('tab', { name: /configuration/i }),
     ).toBeInTheDocument();
+  });
+
+  test('hides the toolbar and Configuration tab without FEATURE_BETA_PREVIEW', () => {
+    cleanup();
+    betaPreview.enabled = false;
+    component = renderRoute();
+
+    expect(component.queryByTestId('PlanToolbar')).not.toBeInTheDocument();
+    expect(
+      component.queryByRole('tab', { name: /configuration/i }),
+    ).not.toBeInTheDocument();
+    expect(component.getByRole('tab', { name: /output/i })).toBeInTheDocument();
   });
 
   test('opens the Configuration tab without runtime errors', async () => {

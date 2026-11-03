@@ -22,6 +22,7 @@ const renderTabs = (
           planId="plan-1"
           repositories={Promise.resolve([])}
           resolvedTaskCount={2}
+          showConfiguration={false}
           taskCount={5}
           {...overrides}
         />
@@ -42,8 +43,16 @@ describe('PlanDetailTabsList Component', () => {
     expect(component.getByRole('tab', { name: /output/i })).toBeInTheDocument();
   });
 
-  test('renders the Configuration tab', () => {
+  test('hides the Configuration tab when it is gated off', () => {
     const component = renderTabs();
+
+    expect(
+      component.queryByRole('tab', { name: /configuration/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  test('shows the Configuration tab when it is turned on', () => {
+    const component = renderTabs({ showConfiguration: true });
 
     expect(
       component.getByRole('tab', { name: /configuration/i }),

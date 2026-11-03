@@ -25,6 +25,8 @@ export interface PlanDetailTabsListProps {
     readonly PlanRunConfigRepositoryFieldsFragment[]
   >;
   readonly resolvedTaskCount: number;
+  /** The Configuration tab is behind `FEATURE_BETA_PREVIEW`; the route decides. */
+  readonly showConfiguration: boolean;
   readonly taskCount: number;
 }
 
@@ -48,6 +50,7 @@ export const PlanDetailTabsList = (
     planId,
     repositories,
     resolvedTaskCount,
+    showConfiguration,
     taskCount,
   } = props;
 
@@ -111,14 +114,16 @@ export const PlanDetailTabsList = (
         onCheckoutChange={onCheckoutChange}
         repositories={repositories}
       />
-      <TabsTrigger
-        className="flex-0 cursor-pointer"
-        id="plan-tab-configuration"
-        value="configuration"
-      >
-        <CogIcon />
-        Configuration
-      </TabsTrigger>
+      {showConfiguration ? (
+        <TabsTrigger
+          className="flex-0 cursor-pointer"
+          id="plan-tab-configuration"
+          value="configuration"
+        >
+          <CogIcon />
+          Configuration
+        </TabsTrigger>
+      ) : null}
     </TabsList>
   );
 };

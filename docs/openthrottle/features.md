@@ -77,7 +77,7 @@ Postgres and Redis are required; **Ollama** is what makes semantic search work w
 
 ### Running and scheduling a plan
 
-The **Run** control on Plan Details is a split button. The caret menu holds the other ways to start (or stop) a run:
+The **Run** control on Plan Details is a split button. It lives in the plan toolbar, which (with the Configuration tab) is behind `FEATURE_BETA_PREVIEW` for now. The caret menu holds the other ways to start (or stop) a run:
 
 - **Run plan** (primary, one click) enqueues a run now with the plan's saved run configuration.
 - **Run with options…** opens the Run dialog on its _Run now_ tab; **Schedule…** opens it on _Schedule_ (a date and time picked and shown in your browser's local zone, with a "fires 3:00 PM PST, in about 3 hours" summary).

@@ -8,6 +8,7 @@
 import { Card } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleTabs } from '@openthrottle/react-router-ui';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
+import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
@@ -75,6 +76,9 @@ export const PlanDetailRoute = (
   });
 
   // Setup
+  // The toolbar (Run / schedule / tags) and the Configuration tab are still
+  // in beta preview.
+  const showToolbar = FEATURE_BETA_PREVIEW;
 
   // Handlers
 
@@ -89,39 +93,44 @@ export const PlanDetailRoute = (
         <PlanDetailRouteHeader plan={plan} status={status} />
         {/* No `editors` here: the editor deep links live in the tab row below
             (PlanDetailTabsList), and rendering them in both places duplicated them. */}
-        <PlanToolbar
-          branch={branch}
-          checkoutId={checkoutId}
-          className="bg-card border-card-border rounded-lg border p-4"
-          jobRunHooksJson={jobRunHooksJson}
-          models={loaderData.models}
-          newestRunIsStale={newestRunIsStale}
-          newestUnsupervisedUnsettledRunId={newestUnsupervisedUnsettledRunId}
-          onAddTag={(tag) =>
-            tagFetcher.submit({ intent: 'addPlanTag', tag }, { method: 'post' })
-          }
-          onRemoveTag={(tag) =>
-            tagFetcher.submit(
-              { intent: 'removePlanTag', tag },
-              { method: 'post' },
-            )
-          }
-          planId={plan.id}
-          planStatus={plan.status}
-          planTitle={plan.title ?? 'Untitled'}
-          ralphTuningJson={ralphTuningJson}
-          repositories={loaderData.workspaceRepositories}
-          repositoryId={repositoryId}
-          runConfigJson={plan.runConfigJson}
-          scheduledRunAt={plan.scheduledRunAt}
-          scheduledRunId={plan.scheduledRunId}
-          tagVocabulary={tagVocabulary}
-          tags={plan.tags}
-          tagsPending={tagFetcher.state !== 'idle'}
-          workflowRunBlocked={workflowRunBlocked}
-          workflowRunBlockedReason={workflowRunBlockedReason}
-          workingDirectory={workingDirectory}
-        />
+        {showToolbar ? (
+          <PlanToolbar
+            branch={branch}
+            checkoutId={checkoutId}
+            className="bg-card border-card-border rounded-lg border p-4"
+            jobRunHooksJson={jobRunHooksJson}
+            models={loaderData.models}
+            newestRunIsStale={newestRunIsStale}
+            newestUnsupervisedUnsettledRunId={newestUnsupervisedUnsettledRunId}
+            onAddTag={(tag) =>
+              tagFetcher.submit(
+                { intent: 'addPlanTag', tag },
+                { method: 'post' },
+              )
+            }
+            onRemoveTag={(tag) =>
+              tagFetcher.submit(
+                { intent: 'removePlanTag', tag },
+                { method: 'post' },
+              )
+            }
+            planId={plan.id}
+            planStatus={plan.status}
+            planTitle={plan.title ?? 'Untitled'}
+            ralphTuningJson={ralphTuningJson}
+            repositories={loaderData.workspaceRepositories}
+            repositoryId={repositoryId}
+            runConfigJson={plan.runConfigJson}
+            scheduledRunAt={plan.scheduledRunAt}
+            scheduledRunId={plan.scheduledRunId}
+            tagVocabulary={tagVocabulary}
+            tags={plan.tags}
+            tagsPending={tagFetcher.state !== 'idle'}
+            workflowRunBlocked={workflowRunBlocked}
+            workflowRunBlockedReason={workflowRunBlockedReason}
+            workingDirectory={workingDirectory}
+          />
+        ) : null}
         <OpenThrottleTabs
           urlSync={{
             defaultValue: 'overview',
@@ -137,6 +146,7 @@ export const PlanDetailRoute = (
             planId={plan.id}
             repositories={loaderData.workspaceRepositories}
             resolvedTaskCount={resolvedTaskCount}
+            showConfiguration={showToolbar}
             taskCount={tasks.length}
           />
           <PlanTabDetails
@@ -145,19 +155,21 @@ export const PlanDetailRoute = (
           />
           <PlanTabTasks />
           <PlanTabOutput chunks={planOutputChunks} />
-          <PlanTabConfiguration
-            models={loaderData.models}
-            onCollapse={() => onToggleExpanded(false)}
-            onResetToDefaults={onResetToDefaults}
-            onSaveJobRunHooks={onSaveJobRunHooks}
-            onSaveRunConfig={onSaveRunConfig}
-            planProjectId={plan.projectId}
-            repositories={loaderData.workspaceRepositories}
-            saveJobRunHooksDisabled={saveJobRunHooksDisabled}
-            saveJobRunHooksPending={saveJobRunHooksPending}
-            saveRunConfigDisabled={runConfigSaveBlocked}
-            saveRunConfigPending={saveRunConfigPending}
-          />
+          {showToolbar ? (
+            <PlanTabConfiguration
+              models={loaderData.models}
+              onCollapse={() => onToggleExpanded(false)}
+              onResetToDefaults={onResetToDefaults}
+              onSaveJobRunHooks={onSaveJobRunHooks}
+              onSaveRunConfig={onSaveRunConfig}
+              planProjectId={plan.projectId}
+              repositories={loaderData.workspaceRepositories}
+              saveJobRunHooksDisabled={saveJobRunHooksDisabled}
+              saveJobRunHooksPending={saveJobRunHooksPending}
+              saveRunConfigDisabled={runConfigSaveBlocked}
+              saveRunConfigPending={saveRunConfigPending}
+            />
+          ) : null}
           {runConfigSaveBlocked && runConfigSaveBlockedReason != null ? (
             <p className="text-muted-foreground px-4 text-xs" role="note">
               Save configuration blocked: {runConfigSaveBlockedReason}
