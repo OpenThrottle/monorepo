@@ -20,12 +20,16 @@ import {
 } from '~/routing/plans/data/data.plan-run-history';
 import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import { selectHistoryRuns } from '~/routing/plans/utils/plan-run-sections';
+import type { PlanRunMetricsEntry } from '~/routing/plans/utils/plan-workflow-run-transparency';
+import { joinPlanRunJobMetrics } from '~/routing/plans/utils/plan-workflow-run-transparency';
 
 export type PlanRunAuditRow =
   PlanDetailRunHistoryQuery['planRunsByPlanId'][number];
 
 export interface PlanWorkflowRunTransparencyAuditTableProps {
   readonly planRunAuditRows: readonly PlanRunAuditRow[];
+  /** Completed-job metrics (`metrics.recentPlanRunsMetrics`), joined onto rows by job id. */
+  readonly planRunMetrics: readonly PlanRunMetricsEntry[];
   readonly workflowInput: WorkflowRalphRunOptionsInput;
   readonly workingDirectory: string;
 }
@@ -35,12 +39,14 @@ export interface PlanWorkflowRunTransparencyAuditTableProps {
  * in Upcoming), newest first (see {@link selectHistoryRuns}). The first
  * {@link PLAN_RUN_HISTORY_INITIAL_ROWS} rows show, a "Show N more" button reveals the rest, and a
  * footer notes when the query's {@link PLAN_RUN_HISTORY_FETCH_LIMIT} was reached. Each row expands
- * inline ({@link PlanWorkflowRunHistoryRow}). Renders nothing when there is no history.
+ * inline ({@link PlanWorkflowRunHistoryRow}), with the run's completed-job metrics joined in
+ * ({@link joinPlanRunJobMetrics}). Renders nothing when there is no history.
  */
 export const PlanWorkflowRunTransparencyAuditTable = (
   props: PlanWorkflowRunTransparencyAuditTableProps,
 ): React.ReactElement | null => {
-  const { planRunAuditRows, workflowInput, workingDirectory } = props;
+  const { planRunAuditRows, planRunMetrics, workflowInput, workingDirectory } =
+    props;
 
   // Hooks
   const [showAll, setShowAll] = React.useState(false);
@@ -49,6 +55,7 @@ export const PlanWorkflowRunTransparencyAuditTable = (
   const copy = PLAN_RUN_TRANSPARENCY_COPY.history;
   const resumedRunIds = collectResumedRunIds(planRunAuditRows);
   const historyRows = selectHistoryRuns(planRunAuditRows);
+  const metricsByRunId = joinPlanRunJobMetrics(historyRows, planRunMetrics);
   const visibleRows = showAll
     ? historyRows
     : historyRows.slice(0, PLAN_RUN_HISTORY_INITIAL_ROWS);
@@ -95,6 +102,7 @@ export const PlanWorkflowRunTransparencyAuditTable = (
             {visibleRows.map((row) => (
               <PlanWorkflowRunHistoryRow
                 key={row.id}
+                metrics={metricsByRunId.get(row.id) ?? null}
                 resumeScheduled={resumedRunIds.has(row.id)}
                 row={row}
                 workflowInput={workflowInput}

@@ -12,6 +12,7 @@ import {
   PLAN_RUN_HISTORY_INITIAL_ROWS,
 } from '~/routing/plans/data/data.plan-run-history';
 import { getDefaultWorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import type { PlanRunMetricsEntry } from '~/routing/plans/utils/plan-workflow-run-transparency';
 
 import type { PlanRunAuditRow } from '../PlanWorkflowRunTransparencyAuditTable';
 import { PlanWorkflowRunTransparencyAuditTable } from '../PlanWorkflowRunTransparencyAuditTable';
@@ -48,11 +49,15 @@ const manyRows = (count: number): PlanRunAuditRow[] =>
     }),
   );
 
-const renderTable = (rows: PlanRunAuditRow[]): RenderResult => {
+const renderTable = (
+  rows: PlanRunAuditRow[],
+  metrics: readonly PlanRunMetricsEntry[] = [],
+): RenderResult => {
   const Component = () => (
     <TooltipProvider>
       <PlanWorkflowRunTransparencyAuditTable
         planRunAuditRows={rows}
+        planRunMetrics={metrics}
         workflowInput={workflowInput}
         workingDirectory=""
       />
@@ -237,6 +242,65 @@ describe('PlanWorkflowRunTransparencyAuditTable', () => {
       expect(
         within(detail).getByText(/Iterations: 25 → 10 \(current\)/),
       ).toBeInTheDocument();
+    });
+  });
+
+  describe('when the expanded run has completed-job metrics', () => {
+    test('shows Finished as a time and the end RSS', async () => {
+      const user = userEvent.setup();
+      const finishedOn = Date.UTC(2026, 10, 2, 3, 30, 0);
+      const component = renderTable(
+        [auditRow({ id: 'r-metrics' })],
+        [
+          {
+            executionBackend: 'claude',
+            finishedOn,
+            jobId: 'job-1',
+            taskRunMetrics: { atEnd: { rssMb: 512.34 } },
+          },
+          {
+            executionBackend: 'claude',
+            finishedOn,
+            jobId: 'job-orphan',
+            taskRunMetrics: { atEnd: { rssMb: 1 } },
+          },
+        ],
+      );
+
+      await user.click(
+        component.getByRole('button', { name: copy.expandAriaLabel }),
+      );
+
+      const detail = component.getByTestId(
+        'PlanWorkflowRunHistoryDetail-r-metrics',
+      );
+      const finished = detail.querySelector('[data-field="finished"]');
+      const rss = detail.querySelector('[data-field="rssEnd"]');
+      expect(finished?.querySelector('time')).toHaveAttribute(
+        'dateTime',
+        new Date(finishedOn).toISOString(),
+      );
+      expect(rss).toHaveTextContent('512.3');
+    });
+  });
+
+  describe('when the expanded run has no completed-job metrics', () => {
+    test('shows an em dash for Finished and RSS', async () => {
+      const user = userEvent.setup();
+      const component = renderTable([auditRow({ id: 'r-no-metrics' })]);
+
+      await user.click(
+        component.getByRole('button', { name: copy.expandAriaLabel }),
+      );
+
+      const detail = component.getByTestId(
+        'PlanWorkflowRunHistoryDetail-r-no-metrics',
+      );
+      const finished = detail.querySelector('[data-field="finished"] dd');
+      const rss = detail.querySelector('[data-field="rssEnd"] dd');
+      expect(finished).toHaveTextContent(copy.detail.none);
+      expect(finished?.querySelector('time')).toBeNull();
+      expect(rss).toHaveTextContent(copy.detail.none);
     });
   });
 

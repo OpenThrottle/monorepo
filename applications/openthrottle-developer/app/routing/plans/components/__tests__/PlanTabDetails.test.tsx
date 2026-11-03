@@ -63,7 +63,7 @@ describe('PlanTabDetails Component', () => {
         plan: mockPlan,
         runHistory: Promise.resolve({
           planRunAuditRows: defaultPlanRunAuditRows,
-          recentPlanRuns: defaultRecent,
+          planRunMetrics: defaultRecent,
         }),
         tasks: [],
       }),

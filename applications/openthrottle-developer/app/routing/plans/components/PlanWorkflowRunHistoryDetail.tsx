@@ -4,6 +4,7 @@ import { Link } from 'react-router';
 
 import { PlanRunMetaList } from '~/routing/plans/components/PlanRunMetaList';
 import { PlanRunProvenanceCell } from '~/routing/plans/components/PlanRunProvenanceCell';
+import { PlanRunTime } from '~/routing/plans/components/PlanRunTime';
 import type { PlanRunAuditRow } from '~/routing/plans/components/PlanWorkflowRunTransparencyAuditTable';
 import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/data.copy';
 import { PLAN_RUN_HISTORY_META_FIELDS } from '~/routing/plans/data/data.plan-run-history';
@@ -15,8 +16,11 @@ import {
   readPlanRunSnapshotWorkspacePath,
 } from '~/routing/plans/utils/plan-run-config-snapshot-ui';
 import { buildPlanRunMetaItems } from '~/routing/plans/utils/plan-run-sections';
+import type { PlanRunJobMetrics } from '~/routing/plans/utils/plan-workflow-run-transparency';
 
 export interface PlanWorkflowRunHistoryDetailProps {
+  /** The run's completed-job metrics; null for runs with no job or no metrics yet. */
+  readonly metrics: PlanRunJobMetrics | null;
   readonly row: PlanRunAuditRow;
   readonly workflowInput: WorkflowRalphRunOptionsInput;
   readonly workingDirectory: string;
@@ -32,14 +36,14 @@ interface DetailEntry {
 
 /**
  * @description The expanded body of a Run history row: a definition list of job id, kind,
- * workspace, effort and the snapshot diff against the current Configuration tab values. Below
+ * finished time and end RSS (from the completed job's metrics), workspace, effort and the snapshot diff against the current Configuration tab values. Below
  * `sm` it also repeats Model / backend and Branch / PR, whose columns are hidden there. Add a
  * field by appending a {@link DetailEntry}.
  */
 export const PlanWorkflowRunHistoryDetail = (
   props: PlanWorkflowRunHistoryDetailProps,
 ): React.ReactElement => {
-  const { row, workflowInput, workingDirectory } = props;
+  const { metrics, row, workflowInput, workingDirectory } = props;
 
   // Hooks
 
@@ -53,6 +57,8 @@ export const PlanWorkflowRunHistoryDetail = (
     row.runConfigSnapshotJson,
   );
   const effort = readPlanRunSnapshotEffort(row.runConfigSnapshotJson);
+  const finishedOn = metrics?.finishedOn ?? null;
+  const rssEndMb = metrics?.rssEndMb ?? null;
 
   // Handlers
 
@@ -109,6 +115,23 @@ export const PlanWorkflowRunHistoryDetail = (
       label: copy.runKind,
       narrowOnly: false,
       value: row.runKind,
+    },
+    {
+      key: 'finished',
+      label: copy.finished,
+      narrowOnly: false,
+      value:
+        finishedOn === null ? copy.none : <PlanRunTime value={finishedOn} />,
+    },
+    {
+      key: 'rssEnd',
+      label: copy.rssEnd,
+      narrowOnly: false,
+      value: (
+        <span className="font-mono text-xs">
+          {rssEndMb === null ? copy.none : rssEndMb.toFixed(1)}
+        </span>
+      ),
     },
     {
       key: 'workspace',

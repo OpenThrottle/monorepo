@@ -38,7 +38,7 @@ const baseLoaderData = asType<UsePlanDetailRouteOptions['loaderData']>({
   outputChunks: Promise.resolve([]),
   runHistory: Promise.resolve({
     planRunAuditRows: [{ isStale: false }],
-    recentPlanRuns: [],
+    planRunMetrics: [],
   }),
   tasks: [{ status: 'COMPLETED' }, { status: 'PENDING' }],
   workspaceRepositories: Promise.resolve([]),
@@ -115,7 +115,7 @@ describe('usePlanDetailRoute', () => {
         outputChunks: Promise.resolve([]),
         runHistory: Promise.resolve({
           planRunAuditRows: [],
-          recentPlanRuns: [],
+          planRunMetrics: [],
         }),
         tasks: [],
         workspaceRepositories: Promise.resolve([]),
@@ -148,7 +148,7 @@ describe('usePlanDetailRoute', () => {
               status: 'IN_PROGRESS',
             },
           ],
-          recentPlanRuns: [],
+          planRunMetrics: [],
         }),
         tasks: [],
         workspaceRepositories: Promise.resolve([]),
@@ -179,7 +179,7 @@ describe('usePlanDetailRoute', () => {
         outputChunks: Promise.resolve([]),
         runHistory: Promise.resolve({
           planRunAuditRows: [{ id: 'run-1', isStale: false, ...row }],
-          recentPlanRuns: [],
+          planRunMetrics: [],
         }),
         tasks: [],
         workspaceRepositories: Promise.resolve([]),
@@ -197,7 +197,7 @@ describe('usePlanDetailRoute', () => {
         outputChunks: Promise.resolve([]),
         runHistory: Promise.resolve({
           planRunAuditRows: [],
-          recentPlanRuns: [],
+          planRunMetrics: [],
         }),
         tasks: [],
         workspaceRepositories: Promise.resolve([]),

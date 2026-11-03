@@ -43,7 +43,7 @@ function renderTransparency(
   const props: PlanWorkflowRunTransparencyProps = {
     planId,
     planRunAuditRows: [],
-    recentPlanRuns: [],
+    planRunMetrics: [],
     scheduledRunAt: null,
     scheduledRunId: null,
     workflowInput: baseWorkflow,

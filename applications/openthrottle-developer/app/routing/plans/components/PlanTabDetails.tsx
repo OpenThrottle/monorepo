@@ -129,7 +129,7 @@ export const PlanTabDetails = (
                 <PlanWorkflowRunTransparency
                   planId={plan.id}
                   planRunAuditRows={history.planRunAuditRows}
-                  recentPlanRuns={history.recentPlanRuns}
+                  planRunMetrics={history.planRunMetrics}
                   scheduledRunAt={
                     typeof plan.scheduledRunAt === 'string'
                       ? plan.scheduledRunAt

@@ -21,8 +21,11 @@ import {
 } from '~/routing/plans/data/data.plan-run-history';
 import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import { buildPlanRunMetaItems } from '~/routing/plans/utils/plan-run-sections';
+import type { PlanRunJobMetrics } from '~/routing/plans/utils/plan-workflow-run-transparency';
 
 export interface PlanWorkflowRunHistoryRowProps {
+  /** Completed-job metrics joined by `bullmqJobId`; null when the run has none. */
+  readonly metrics: PlanRunJobMetrics | null;
   /** A continuation run exists for this run (see `collectResumedRunIds`). */
   readonly resumeScheduled: boolean;
   readonly row: PlanRunAuditRow;
@@ -39,7 +42,8 @@ export interface PlanWorkflowRunHistoryRowProps {
 export const PlanWorkflowRunHistoryRow = (
   props: PlanWorkflowRunHistoryRowProps,
 ): React.ReactElement => {
-  const { resumeScheduled, row, workflowInput, workingDirectory } = props;
+  const { metrics, resumeScheduled, row, workflowInput, workingDirectory } =
+    props;
 
   // Hooks
   const [expanded, setExpanded] = React.useState(false);
@@ -132,6 +136,7 @@ export const PlanWorkflowRunHistoryRow = (
         >
           <TableCell colSpan={PLAN_RUN_HISTORY_COLUMN_COUNT}>
             <PlanWorkflowRunHistoryDetail
+              metrics={metrics}
               row={row}
               workflowInput={workflowInput}
               workingDirectory={workingDirectory}

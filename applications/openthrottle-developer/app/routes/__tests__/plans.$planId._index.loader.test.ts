@@ -128,7 +128,7 @@ describe('routes/plans.$planId._index loader', () => {
     await expect(result.outputChunks).resolves.toEqual([]);
     await expect(result.runHistory).resolves.toEqual({
       planRunAuditRows: [],
-      recentPlanRuns: [],
+      planRunMetrics: [],
     });
     await expect(result.tagVocabulary).resolves.toEqual([]);
     await expect(result.workspaceRepositories).resolves.toEqual([]);
@@ -191,7 +191,7 @@ describe('routes/plans.$planId._index loader', () => {
     await expect(result.outputChunks).resolves.toEqual(outputChunks);
     await expect(result.runHistory).resolves.toEqual({
       planRunAuditRows: auditRows,
-      recentPlanRuns: recentRuns,
+      planRunMetrics: recentRuns,
     });
     await expect(result.tagVocabulary).resolves.toEqual(vocabularyTags);
     await expect(result.workspaceRepositories).resolves.toEqual(repositories);
@@ -238,7 +238,7 @@ describe('routes/plans.$planId._index loader', () => {
     await expect(result.outputChunks).resolves.toEqual([]);
     await expect(result.runHistory).resolves.toEqual({
       planRunAuditRows: [],
-      recentPlanRuns: [],
+      planRunMetrics: [],
     });
     await expect(result.tagVocabulary).resolves.toEqual([]);
     await expect(result.workspaceRepositories).resolves.toEqual([]);
