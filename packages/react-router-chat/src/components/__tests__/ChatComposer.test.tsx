@@ -516,4 +516,132 @@ describe('ChatComposer Component', () => {
       ).not.toBeInTheDocument();
     });
   });
+
+  describe('ArrowUp prompt recall', () => {
+    const getInput = (): HTMLTextAreaElement => {
+      const input = component!.getByLabelText('Message');
+      assertTextArea(input);
+      return input;
+    };
+
+    describe('when the composer is empty', () => {
+      test('recalls the latest prompt with the caret at the end', async () => {
+        const user = userEvent.setup();
+        mountComposer({ promptHistory: ['first', 'second'] });
+        const input = getInput();
+
+        await user.click(input);
+        await user.keyboard('{ArrowUp}');
+
+        expect(input).toHaveValue('second');
+        expect(input.selectionStart).toBe('second'.length);
+      });
+
+      test('walks older with ArrowUp and back with ArrowDown', async () => {
+        const user = userEvent.setup();
+        mountComposer({ promptHistory: ['first', 'second'] });
+        const input = getInput();
+
+        await user.click(input);
+        await user.keyboard('{ArrowUp}{ArrowUp}');
+        expect(input).toHaveValue('first');
+
+        await user.keyboard('{ArrowDown}');
+        expect(input).toHaveValue('second');
+
+        await user.keyboard('{ArrowDown}');
+        expect(input).toHaveValue('');
+      });
+
+      test('does nothing without history', async () => {
+        const user = userEvent.setup();
+        mountComposer({ promptHistory: [] });
+        const input = getInput();
+
+        await user.click(input);
+        await user.keyboard('{ArrowUp}');
+
+        expect(input).toHaveValue('');
+      });
+    });
+
+    describe('when the composer has typed text', () => {
+      test('leaves ArrowUp to move the caret', async () => {
+        const user = userEvent.setup();
+        mountComposer({ promptHistory: ['first'] });
+        const input = getInput();
+
+        await user.type(input, 'draft');
+        await user.keyboard('{ArrowUp}');
+
+        expect(input).toHaveValue('draft');
+      });
+    });
+
+    describe('when the recalled prompt has been edited', () => {
+      test('stops stepping through history', async () => {
+        const user = userEvent.setup();
+        mountComposer({ promptHistory: ['first', 'second'] });
+        const input = getInput();
+
+        await user.click(input);
+        await user.keyboard('{ArrowUp}');
+        await user.type(input, '!');
+        await user.keyboard('{ArrowUp}');
+
+        expect(input).toHaveValue('second!');
+      });
+    });
+
+    describe('when the caret is below the first line of a recalled prompt', () => {
+      test('moves the caret instead of recalling an older prompt', async () => {
+        const user = userEvent.setup();
+        mountComposer({ promptHistory: ['first', 'line one\nline two'] });
+        const input = getInput();
+
+        await user.click(input);
+        await user.keyboard('{ArrowUp}');
+        expect(input).toHaveValue('line one\nline two');
+
+        // Caret sits at the end, on line two: no recall.
+        await user.keyboard('{ArrowUp}');
+        expect(input).toHaveValue('line one\nline two');
+
+        input.setSelectionRange(0, 0);
+        await user.keyboard('{ArrowUp}');
+        expect(input).toHaveValue('first');
+      });
+    });
+
+    describe('when no promptHistory is passed', () => {
+      test('recalls what this composer sent', async () => {
+        const user = userEvent.setup();
+        mountComposer();
+        const input = getInput();
+
+        await user.type(input, 'hello{Enter}');
+        expect(onSubmit).toHaveBeenCalledWith('hello');
+        await user.keyboard('{ArrowUp}');
+
+        expect(input).toHaveValue('hello');
+      });
+    });
+
+    describe('when the @-mention popover is open', () => {
+      test('leaves ArrowUp to the popover', async () => {
+        const user = userEvent.setup();
+        const mentionProvider = {
+          onQueryFiles: vi.fn(async () => ['src/app.ts']),
+        };
+        mountComposer({ mentionProvider, promptHistory: ['first'] });
+        const input = getInput();
+
+        await user.type(input, '@');
+        await component!.findByTestId('ChatMentionPopover');
+        await user.keyboard('{ArrowUp}');
+
+        expect(input).toHaveValue('@');
+      });
+    });
+  });
 });

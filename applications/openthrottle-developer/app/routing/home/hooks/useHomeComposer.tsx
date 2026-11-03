@@ -66,6 +66,7 @@ export interface UseHomeComposerResult {
   readonly persist: boolean;
   readonly personaId: string | undefined;
   readonly personas: readonly ChatPersonaOption[];
+  readonly promptHistory: readonly string[];
   readonly reasoning: ChatReasoningLevel | undefined;
   readonly repositoryId: string | undefined;
   readonly repositoryIds: readonly string[];
@@ -180,6 +181,15 @@ export const useHomeComposer = (
     () => toCheckoutOptions(repositories),
     [repositories],
   );
+  // The conversation's sent prompts, oldest first, for ArrowUp recall; a
+  // restored conversation brings its history with it.
+  const promptHistory = React.useMemo(
+    () =>
+      turn.messages
+        .filter((message) => message.role === 'user')
+        .map((message) => message.body),
+    [turn.messages],
+  );
 
   // Handlers
   const setMode = (mode: ChatComposerMode): void =>
@@ -281,6 +291,7 @@ export const useHomeComposer = (
     persist,
     personaId,
     personas,
+    promptHistory,
     reasoning,
     repositoryId,
     repositoryIds,

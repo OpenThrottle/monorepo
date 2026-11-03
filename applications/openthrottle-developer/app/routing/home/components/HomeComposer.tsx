@@ -59,6 +59,7 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
     persist,
     personaId,
     personas: effectivePersonas,
+    promptHistory,
     reasoning,
     repositoryIds,
     serviceTier,
@@ -153,6 +154,7 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
         onDraftChange={setDraft}
         onStop={turn.onStop}
         onSubmit={onSubmit}
+        promptHistory={promptHistory}
         readOnly={voice.isDraftFrozen}
         sessionUsage={turn.sessionUsage}
         slashCommandProvider={slashCommandProvider}

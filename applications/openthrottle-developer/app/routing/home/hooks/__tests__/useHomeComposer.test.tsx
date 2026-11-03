@@ -195,6 +195,19 @@ describe('useHomeComposer', () => {
     expect(store.get(chatDraftsAtom).drafts['conv-draft']).toBeUndefined();
   });
 
+  test('promptHistory lists the user prompts oldest first', async () => {
+    const turn = makeTurn({
+      messages: [
+        { body: 'first', id: 'm1', role: 'user' },
+        { body: 'reply', id: 'm2', role: 'assistant' },
+        { body: 'second', id: 'm3', role: 'user' },
+      ],
+    });
+    await renderComposer({ turn });
+
+    expect(value.current?.promptHistory).toEqual(['first', 'second']);
+  });
+
   test('setModelId persists through the toolbar atom and reconciles back', async () => {
     await renderComposer({ models: [openaiModel, cliModel] });
 
