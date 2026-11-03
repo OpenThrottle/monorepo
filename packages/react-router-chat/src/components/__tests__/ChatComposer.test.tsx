@@ -215,7 +215,9 @@ describe('ChatComposer Component', () => {
       expect(
         await component!.findByTestId('ChatMentionPopover'),
       ).toBeInTheDocument();
-      expect(await component!.findByText('src/app.ts')).toBeInTheDocument();
+      expect(
+        await component!.findByRole('option', { name: 'src/app.ts' }),
+      ).toBeInTheDocument();
       expect(mentionProvider.onQueryFiles).toHaveBeenCalledWith('');
     });
 
@@ -231,8 +233,12 @@ describe('ChatComposer Component', () => {
       await user.type(component!.getByLabelText('Message'), '@app');
 
       expect(mentionProvider.onQueryFiles).toHaveBeenLastCalledWith('app');
-      expect(await component!.findByText('src/app.ts')).toBeInTheDocument();
-      expect(component!.queryByText('lib/util.ts')).not.toBeInTheDocument();
+      expect(
+        await component!.findByRole('option', { name: 'src/app.ts' }),
+      ).toBeInTheDocument();
+      expect(
+        component!.queryByRole('option', { name: 'lib/util.ts' }),
+      ).not.toBeInTheDocument();
     });
 
     test('Enter inserts the active path and closes the popover without submitting', async () => {
@@ -243,7 +249,7 @@ describe('ChatComposer Component', () => {
       assertTextArea(input);
 
       await user.type(input, 'see @');
-      await component!.findByText('src/app.ts');
+      await component!.findByRole('option', { name: 'src/app.ts' });
       await user.keyboard('{Enter}');
 
       expect(input.value).toBe('see @src/app.ts ');
@@ -261,7 +267,7 @@ describe('ChatComposer Component', () => {
       assertTextArea(input);
 
       await user.type(input, '@');
-      await component!.findByText('lib/util.ts');
+      await component!.findByRole('option', { name: 'lib/util.ts' });
       await user.keyboard('{ArrowDown}{Enter}');
 
       expect(input.value).toBe('@lib/util.ts ');
@@ -275,7 +281,9 @@ describe('ChatComposer Component', () => {
       assertTextArea(input);
 
       await user.type(input, '@');
-      await user.click(await component!.findByText('lib/util.ts'));
+      await user.click(
+        await component!.findByRole('option', { name: 'lib/util.ts' }),
+      );
 
       expect(input.value).toBe('@lib/util.ts ');
     });
@@ -288,7 +296,7 @@ describe('ChatComposer Component', () => {
       assertTextArea(input);
 
       await user.type(input, '@');
-      await component!.findByText('src/app.ts');
+      await component!.findByRole('option', { name: 'src/app.ts' });
       await user.keyboard('{Escape}');
 
       expect(
@@ -304,7 +312,7 @@ describe('ChatComposer Component', () => {
       const input = component!.getByLabelText('Message');
 
       await user.type(input, '@');
-      await component!.findByText('src/app.ts');
+      await component!.findByRole('option', { name: 'src/app.ts' });
       await user.keyboard('{Enter}'); // inserts the mention
       await user.keyboard('{Enter}'); // now submits
 

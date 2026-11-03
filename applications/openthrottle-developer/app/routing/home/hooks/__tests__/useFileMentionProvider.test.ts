@@ -42,7 +42,11 @@ describe('useFileMentionProvider', () => {
     const filtered = await provider!.onQueryFiles('APP');
     expect(filtered).toEqual(['src/App.tsx', 'src/app-shell.ts']);
 
-    // Cached: the second query does not hit the network again.
+    // Ranked, not just filtered: a fuzzy file-name hit (`utl` → util.ts) is found.
+    const fuzzy = await provider!.onQueryFiles('utl');
+    expect(fuzzy).toEqual(['lib/util.ts']);
+
+    // Cached: later queries do not hit the network again.
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledWith('/ide/files?repositoryId=r1');
   });

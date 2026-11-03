@@ -1,4 +1,5 @@
 import type { ChatMentionProvider } from '@openthrottle/react-router-chat';
+import { rankFilePaths } from '@openthrottle/react-router-chat';
 import * as React from 'react';
 
 import type { IdeFilesResponse } from '~/routes/ide.files';
@@ -10,8 +11,9 @@ import { MAX_MENTION_SUGGESTIONS } from '~/routing/home/config/composer-suggesti
  * the composer keeps the `@`-trigger disabled.
  *
  * The full file listing for a repository is fetched once from the `/ide/files`
- * resource route and cached for the session; subsequent keystrokes fuzzy-filter
- * the cached list client-side, so there is no per-keystroke network round-trip.
+ * resource route and cached for the session; subsequent keystrokes rank the
+ * cached list client-side with `rankFilePaths` (file-name hits first), so there
+ * is no per-keystroke network round-trip.
  * Concurrent first-fetches for the same repository are de-duplicated.
  */
 export const useFileMentionProvider = (
@@ -62,12 +64,7 @@ export const useFileMentionProvider = (
       loadingLabel: 'Searching files…',
       onQueryFiles: async (query: string): Promise<readonly string[]> => {
         const paths = await loadListing();
-        const trimmed = query.trim().toLowerCase();
-        const matches =
-          trimmed === ''
-            ? paths
-            : paths.filter((path) => path.toLowerCase().includes(trimmed));
-        return matches.slice(0, MAX_MENTION_SUGGESTIONS);
+        return rankFilePaths(paths, query, MAX_MENTION_SUGGESTIONS);
       },
     };
   }, [repositoryId]);
