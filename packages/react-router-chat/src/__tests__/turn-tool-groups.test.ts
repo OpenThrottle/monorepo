@@ -5,6 +5,7 @@ import {
   aggregateToolStatus,
   buildTurnTimeline,
   foldTurnActivity,
+  summarizeToolGroup,
 } from '../turn-tool-groups';
 import type { ChatTurnEvent, ChatTurnToolEvent } from '../types';
 
@@ -253,5 +254,51 @@ describe('foldTurnActivity', () => {
 
   test('empty input yields no slots', () => {
     expect(foldTurnActivity([])).toEqual([]);
+  });
+});
+
+describe('summarizeToolGroup', () => {
+  const named = (...names: string[]): ChatTurnToolEvent[] =>
+    names.map((name, sortOrder) => tool({ name, sortOrder }));
+
+  test('two categories join with "and", commands first', () => {
+    expect(
+      summarizeToolGroup(named('Edit', 'Bash', 'Write', 'Bash', 'shell')),
+    ).toBe('Ran 3 commands and edited 2 files');
+  });
+
+  test('three or more categories are comma-separated, in a fixed order', () => {
+    expect(
+      summarizeToolGroup(named('WebFetch', 'Grep', 'Read', 'Glob', 'Bash')),
+    ).toBe(
+      'Ran 1 command, read 1 file, searched 2 times and fetched 1 web page',
+    );
+  });
+
+  test('uses the singular for a count of one', () => {
+    expect(summarizeToolGroup(named('Grep', 'view_file'))).toBe(
+      'Read 1 file and searched once',
+    );
+  });
+
+  test('matches names case-insensitively and treats - as _', () => {
+    expect(summarizeToolGroup(named('READ', 'read-file'))).toBe('Read 2 files');
+  });
+
+  test('unknown tools alongside known ones read as "other"', () => {
+    expect(summarizeToolGroup(named('shell', 'getMcpTools'))).toBe(
+      'Ran 1 command and used 1 other tool',
+    );
+  });
+
+  test('a group of only unknown tools drops "other"', () => {
+    expect(summarizeToolGroup(named('mcp__ot__get_plan', 'Task'))).toBe(
+      'Used 2 tools',
+    );
+    expect(summarizeToolGroup(named('Task'))).toBe('Used 1 tool');
+  });
+
+  test('an empty group has a fallback', () => {
+    expect(summarizeToolGroup([])).toBe('No tool calls');
   });
 });

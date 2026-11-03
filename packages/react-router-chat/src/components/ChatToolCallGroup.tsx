@@ -8,7 +8,11 @@ import { ChevronDown, Layers } from 'lucide-react';
 import * as React from 'react';
 
 import { STATUS_CONFIG } from '../data/chat-tool-call-status-config';
-import { activeToolOf, aggregateToolStatus } from '../turn-tool-groups';
+import {
+  activeToolOf,
+  aggregateToolStatus,
+  summarizeToolGroup,
+} from '../turn-tool-groups';
 import type { ChatTurnToolEvent } from '../types';
 import { ChatToolCall } from './ChatToolCall';
 
@@ -23,7 +27,8 @@ export interface ChatToolCallGroupProps {
  * @description A run of consecutive tool invocations folded into one collapsible
  * group so a burst of actions between turns does not flood the thread. The
  * collapsed header surfaces the active step (the running tool, else the last),
- * an "N actions" count, and an aggregate status pill (running / failed /
+ * a sentence summary ("Ran 3 commands and edited 2 files", see
+ * `summarizeToolGroup`), and an aggregate status pill (running / failed /
  * succeeded). Expanding reveals every member as its own {@link ChatToolCall}.
  * Always starts collapsed — including while running, since the header's active
  * step and status pill already carry the progress, and an uncontrolled
@@ -43,7 +48,7 @@ export const ChatToolCallGroup = (
   const aggregate = aggregateToolStatus(tools);
   const status = STATUS_CONFIG[aggregate];
   const active = activeToolOf(tools);
-  const countLabel = `${tools.length} actions`;
+  const summary = summarizeToolGroup(tools);
 
   // Handlers
 
@@ -72,7 +77,12 @@ export const ChatToolCallGroup = (
           {active !== null ? (
             <span className="truncate font-mono">{active.name}</span>
           ) : null}
-          <span className="text-muted-foreground shrink-0">· {countLabel}</span>
+          <span
+            className="text-muted-foreground truncate"
+            data-testid="ChatToolCallGroup-summary"
+          >
+            · {summary}
+          </span>
         </span>
         <Badge color={status.color} size="xs">
           <status.Icon
