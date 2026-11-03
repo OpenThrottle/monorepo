@@ -203,7 +203,7 @@ export const registerPlanRunWorktreeCheckoutToolParameters = z
   .strict();
 
 export const registerPlanRunWorktreeCheckoutToolDescription =
-  'Tell a registered plan run which worktree it is running in, by absolute path, so its checkout_id resolves. That is what makes "open in editor" deep-links work for the run and what lets the worktree read as busy while the loop is live. Call it once, after the worktree exists. Best-effort by design: it quietly returns the run unchanged when the path is not a linked worktree or the repository cannot be resolved.';
+  'Tell a registered plan run which worktree it is running in, by absolute path, so its checkout_id and branch point at that worktree (overwriting a scheduling-time primary checkout). That is what makes "open in editor" deep-links work for the run, what lets the worktree read as busy while the loop is live, and what settle/PR attribution uses. Call it once, after the worktree exists. Best-effort by design: it quietly returns the run unchanged when the path is not a linked worktree or the repository cannot be resolved.';
 
 export async function registerPlanRunWorktreeCheckoutToolHandler(
   args: z.infer<typeof registerPlanRunWorktreeCheckoutToolParameters>,

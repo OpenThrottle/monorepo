@@ -25,8 +25,13 @@ deprecated); see the resolver in `applications/openthrottle-server/src/graphql/p
 - **`createWorkflowRalphOrchestrator(deps)`** — implements `WorkflowOrchestrator`. Requires
   `WorkflowRalphOrchestratorDeps`: a bound **`executeGraphqlV2`** (typed documents only) and an
   injected **`iterationRunner`** (e.g. `createCursorWorkflowRalphIterationRunner` from
-  `@tools/workflows`). The orchestrator never spawns the CLI, opens a Postgres connection, or runs
-  the worktree workflow.
+  `@tools/workflows`). When **`runCommand`** is set (the server deps factory wires
+  `createDefaultWorkflowRalphCommandRunner`), a finished plan also runs the host-owned **finalize**
+  step: `git push` (through Husky, never `--no-verify`), find-or-create PR, `gh pr ready`, and
+  return `headSha` / `prNumber` for settle-time work-ledger artifacts. The orchestrator never
+  opens a Postgres connection or spawns the agent CLI itself; worktree provisioning stays on the
+  server. A non-host (docker) worker without `git`/`gh` credentials fails finalize into
+  `workflow_complete_handoff_owed` (never FAILED) — the agent container is not asked to push.
 - **Contract + config + utils:** Ralph context builders, codegen GraphQL documents, agent-output
   parsing, and the `WorkflowRalphOrchestratorDeps` contract (`src/contract`, `src/config`, `src/utils`).
 

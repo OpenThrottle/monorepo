@@ -2039,7 +2039,7 @@ export type Mutation = {
   register: RegisterResultObject;
   /** Register a detached workflow-ralph CLI run as a first-class plan_runs row (bullmqJobId NULL, runKind 'orchestrator', status IN_PROGRESS) so cancelPlanRun has a row to stamp the durable cancel marker on. Creates NO BullMQ job. The CLI calls this on start, polls the marker each iteration boundary, and settles the row via settleCliPlanRun on exit. */
   registerCliPlanRun: PlanRunObject;
-  /** Best-effort register of a linked git worktree as a repository_checkout for the run actor, then back-fill plan_runs.checkout_id when still NULL. Soft-fails (returns the run unchanged) when the path is not a linked worktree, repository resolution fails, or upsert errors. The actor resolves through its acting user, so a service-account token (the MCP) works when the account is linked to one; an unlinked account resolves to null and soft-fails like any other unresolvable actor. Returns null when the plan-run row does not exist. */
+  /** Best-effort register of a linked git worktree as a repository_checkout for the run actor, then point plan_runs.checkout_id and branch at that worktree (overwrites a scheduling-time primary checkout). Soft-fails (returns the run unchanged) when the path is not a linked worktree, repository resolution fails, or upsert errors. The actor resolves through its acting user, so a service-account token (the MCP) works when the account is linked to one; an unlinked account resolves to null and soft-fails like any other unresolvable actor. Returns null when the plan-run row does not exist. */
   registerPlanRunWorktreeCheckout?: Maybe<PlanRunObject>;
   /** Remove a permission from a role */
   removePermissionFromRole: Scalars['Boolean']['output'];
@@ -4294,7 +4294,7 @@ export type RegisterInput = {
 export type RegisterPlanRunWorktreeCheckoutInput = {
   /** Absolute filesystem path of the resolved worktree for this run. */
   filesystemPath: Scalars['String']['input'];
-  /** Plan-run row id whose checkout_id should be back-filled when still NULL. */
+  /** Plan-run row id whose checkout_id (and branch) should be pointed at the linked worktree path. */
   planRunId: Scalars['ID']['input'];
 };
 

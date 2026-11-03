@@ -42,6 +42,10 @@ import type {
 } from '../types.ts';
 import type { WorkflowContext } from '../types.ts';
 import {
+  finalizePlanRun,
+  shouldFinalizePlanRun,
+} from '../utils/finalize-plan-run.ts';
+import {
   formatPlanAndTasksForPrompt,
   isRalphTerminalStatus,
   isRunnableRalphTask,
@@ -297,7 +301,7 @@ export const createWorkflowRalphOrchestrator = (
   deps: WorkflowRalphOrchestratorDeps,
 ): WorkflowOrchestrator => ({
   execute: async ({ context }) => {
-    const { executeGraphqlV2, iterationRunner, onChunk } = deps;
+    const { executeGraphqlV2, iterationRunner, onChunk, runCommand } = deps;
     const sessionOptions = buildSessionOptions(context.workSessionId);
 
     try {
@@ -334,6 +338,44 @@ export const createWorkflowRalphOrchestrator = (
 
         return onFailure('workflow_unhandled');
       }
+
+      /**
+       * Host-owned push + PR after a plan-finishing reason. Failures become
+       * `workflow_complete_handoff_owed` (never FAILED). Other finished/failed
+       * outcomes pass through unchanged.
+       */
+      const maybeFinalize = async (
+        result: WorkflowRunResult,
+      ): Promise<WorkflowRunResult> => {
+        // Finalize is host-owned and opt-in via `deps.runCommand`. Unit tests that
+        // omit it keep today's loop-only behavior; the server deps factory wires the
+        // real `git`/`gh` runner so scheduled orchestrator runs always finalize.
+        if (runCommand === undefined) {
+          return result;
+        }
+        if (result.status !== 'finished') {
+          return result;
+        }
+        if (result.reason === 'workflow_usage_limited') {
+          return result;
+        }
+        if (!shouldFinalizePlanRun(result.reason)) {
+          return result;
+        }
+
+        const trimmedBase = context.worktreeBase?.trim() ?? '';
+        const baseBranch = trimmedBase !== '' ? trimmedBase : 'main';
+
+        return finalizePlanRun({
+          baseBranch,
+          cwd: resolveOrchestratorAgentCwd(context),
+          executeGraphqlV2,
+          onChunk,
+          planId: effectivePlanId,
+          priorReason: result.reason,
+          runCommand,
+        });
+      };
 
       // state.load
       const [planResult, tasksResult] = await Promise.all([
@@ -491,7 +533,7 @@ export const createWorkflowRalphOrchestrator = (
             );
 
             // 🟢 If we've exhausted the tasks, we return a finished outcome
-            return onFinished('workflow_tasks_exhausted');
+            return maybeFinalize(onFinished('workflow_tasks_exhausted'));
           }
 
           const taskForIteration = pickRalphTaskForIteration(remaining);
@@ -704,7 +746,7 @@ export const createWorkflowRalphOrchestrator = (
             );
 
             if (reconciled) {
-              return onFinished('workflow_tasks_exhausted');
+              return maybeFinalize(onFinished('workflow_tasks_exhausted'));
             }
           } catch (error) {
             await emitDiagnostic(onChunk, {
@@ -722,14 +764,38 @@ export const createWorkflowRalphOrchestrator = (
           return onFailure('workflow_agent_error');
         }
 
-        // 2. 🟡 Then we check for any input required
+        // 2. 🟡 Then we check for any input required.
+        // A finished plan (no runnable tasks left) must not fail just because the
+        // agent asked for input after completing everything — that is a
+        // non-failing handoff-owed outcome. Re-read tasks here: completions from
+        // this same iteration may have just landed.
         if (control === 'INPUT_REQUIRED') {
+          try {
+            const planTasksAfterInput = await executeGraphqlV2(
+              GetTasksByPlanIdDocument,
+              { input: { planId: effectivePlanId } },
+            );
+            const remainingAfterInput =
+              planTasksAfterInput.tasksByPlanId.filter(isRunnableRalphTask);
+
+            if (remainingAfterInput.length === 0) {
+              return maybeFinalize(
+                onFinished('workflow_complete_handoff_owed'),
+              );
+            }
+          } catch (error) {
+            await emitDiagnostic(onChunk, {
+              error,
+              phase: `iteration ${iteration} INPUT_REQUIRED remaining-task re-read failed`,
+            });
+          }
+
           return onFailure('workflow_input_required');
         }
 
         // 3. 🟢 Then we check for any completion
         if (control === 'COMPLETE') {
-          return onFinished('workflow_complete');
+          return maybeFinalize(onFinished('workflow_complete'));
         }
       } // ---> looping ... done
 

@@ -5,11 +5,13 @@ import type {
 } from '@openthrottle/nestjs-agentic-workflow';
 import type { ExecuteGraphqlOptionsV2 } from '@openthrottle/nodejs-graphql';
 import type { WorkflowRalphOrchestratorDeps } from '@openthrottle/openthrottle-agentic-ralph';
+import { createDefaultWorkflowRalphCommandRunner } from '@openthrottle/openthrottle-agentic-ralph';
 import { createCursorWorkflowRalphIterationRunner } from '@tools/workflows';
 
 /**
  * @description Builds {@link WorkflowRalphOrchestratorDeps} for the OpenThrottle server by merging injected
- * worker GraphQL defaults with each operation and registering the Cursor iteration runner.
+ * worker GraphQL defaults with each operation and registering the Cursor iteration runner plus the
+ * host `git`/`gh` command runner for plan-end push/PR finalize.
  */
 export const createAgenticRalphOrchestratorDeps = (
   executeGraphqlV2: AgenticWorkflowExecuteGraphqlV2,
@@ -34,4 +36,5 @@ export const createAgenticRalphOrchestratorDeps = (
     });
   },
   iterationRunner: createCursorWorkflowRalphIterationRunner(),
+  runCommand: createDefaultWorkflowRalphCommandRunner(),
 });

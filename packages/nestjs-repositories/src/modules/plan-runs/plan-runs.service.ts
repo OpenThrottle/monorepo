@@ -285,6 +285,31 @@ export class PlanRunsService {
   }
 
   /**
+   * @description Points the run at the worktree it actually executes in — overwrites
+   * a scheduling-time primary `checkout_id` and (when known) the kickoff `branch`.
+   * Called once the linked worktree exists so settle/PR attribution uses the pushed
+   * branch, not the enqueue checkout. Leaves `branch` alone when omitted or blank
+   * (detached HEAD / probe failure). Returns the updated run, or null when missing.
+   */
+  async setCheckoutAndBranch(
+    planRunId: string,
+    params: {
+      readonly branch: string | null | undefined;
+      readonly checkoutId: string;
+    },
+  ): Promise<PlanRun | null> {
+    const branch = params.branch?.trim() ?? '';
+    const patch =
+      branch === ''
+        ? { checkoutId: params.checkoutId }
+        : { branch, checkoutId: params.checkoutId };
+
+    await this.getRepository().update({ id: planRunId }, patch);
+
+    return this.findById(planRunId);
+  }
+
+  /**
    * @description Rewrites `run_config_snapshot.workspace` for a run whose working directory was
    * resolved after enqueue — a plan run whose worktree OpenThrottle creates at job start only learns
    * the path then, and the snapshot has to show the directory the agent actually used. Leaves the

@@ -85,6 +85,29 @@ export interface WorkflowRalphIterationRunner {
 }
 
 /**
+ * @description Result of one host command (git, gh, or a local script) run by the plan-end
+ * finalize step. Exit code 0 is success; stdout/stderr are UTF-8 text (may be empty).
+ * @public
+ */
+export interface WorkflowRalphCommandResult {
+  readonly exitCode: number;
+  readonly stderr: string;
+  readonly stdout: string;
+}
+
+/**
+ * @description Injectable host command runner for the plan-end finalize step (`git`, `gh`, and
+ * `scripts/check-pr-attribution.sh`). Unit tests supply a fake; production uses
+ * {@link createDefaultWorkflowRalphCommandRunner}. Never shells — argv is passed as an array.
+ * @public
+ */
+export type WorkflowRalphCommandRunner = (params: {
+  readonly args: readonly string[];
+  readonly command: string;
+  readonly cwd: string;
+}) => Promise<WorkflowRalphCommandResult>;
+
+/**
  * @description Dependencies for constructing a Ralph-shaped `WorkflowOrchestrator`: GraphQL I/O and
  * iteration execution. Pass `executeGraphqlV2` from `@openthrottle/nodejs-graphql` with options from
  * `buildWorkflowExecuteGraphqlV2Options` in `graphql.ts`, or a test double.
@@ -99,4 +122,15 @@ export interface WorkflowRalphOrchestratorDeps {
    * internals.
    */
   readonly onChunk?: WorkflowRalphIterationOnChunk;
+
+  /**
+   * @description Host command runner for the plan-end push/PR finalize step. When set, a finished
+   * plan (`workflow_complete` / `workflow_tasks_exhausted` / `workflow_complete_handoff_owed`)
+   * runs the deterministic push + PR step through this runner. When omitted, finalize is skipped
+   * (loop-only / unit-test paths). The server deps factory wires
+   * {@link createDefaultWorkflowRalphCommandRunner}. Credentials are the worker host's existing
+   * `git` / `gh` auth — a non-host (docker) worker without those credentials fails finalize into
+   * `workflow_complete_handoff_owed` rather than FAILED; the agent container is never asked to push.
+   */
+  readonly runCommand?: WorkflowRalphCommandRunner;
 }

@@ -1,6 +1,6 @@
 /**
  * @description Soft-fail registration of linked git worktrees onto
- * `repository_checkouts` + back-fill of `plan_runs.checkout_id` at run start.
+ * `repository_checkouts` + write of `plan_runs.checkout_id`/`branch` at run start.
  */
 
 import { Module } from '@nestjs/common';

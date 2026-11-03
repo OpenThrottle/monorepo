@@ -25,6 +25,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PlanEnqueueService } from '../../graphql/plans/plan-enqueue.service.ts';
 import { PlanStatusService } from '../../graphql/plans/plan-status.service.ts';
+import { SettleRunLedgerService } from '../../graphql/work-ledger/settle-run-ledger.service.ts';
 import { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account.service.ts';
 import { ProcessMetricsService } from '../../metrics/process-metrics.service.ts';
 import type { EnhancedTaskRunMetrics } from '../../metrics/process-metrics.types.ts';
@@ -148,6 +149,7 @@ const mockFindPlanIdsWithLiveDetachedRun = vi
   .mockResolvedValue(new Set<string>());
 const mockRecordHeartbeatByJob = vi.fn().mockResolvedValue(1);
 const mockSettleRunByJob = vi.fn().mockResolvedValue(null);
+const mockRecordSettledRunArtifacts = vi.fn().mockResolvedValue(undefined);
 /** Default: no plan_runs row for the job (a legacy job), so admission lets it run as it always did. */
 const mockFindByQueueNameAndBullmqJobId = vi.fn().mockResolvedValue(null);
 const mockMarkRunStarted = vi.fn().mockResolvedValue(0);
@@ -383,6 +385,12 @@ describe('PlansProcessor', () => {
           useValue: createMock<WorkLedgerRunService>({
             closeRalphSession: vi.fn().mockResolvedValue(undefined),
             openRalphSession: vi.fn().mockResolvedValue(null),
+          }),
+        },
+        {
+          provide: SettleRunLedgerService,
+          useValue: createMock<SettleRunLedgerService>({
+            recordSettledRunArtifacts: mockRecordSettledRunArtifacts,
           }),
         },
       ],
@@ -654,6 +662,58 @@ describe('PlansProcessor', () => {
         'job-1',
         PLAN_RUN_STATUS.COMPLETED,
       );
+    });
+
+    it('settles COMPLETED (not FAILED) when the outcome is workflow_complete_handoff_owed and keeps the reason visible', async () => {
+      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+        exitCode: 0,
+        reason: 'workflow_complete_handoff_owed',
+        status: 'finished',
+      });
+
+      await processor.process(mockJob);
+
+      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        'job-1',
+        PLAN_RUN_STATUS.COMPLETED,
+      );
+
+      const notifications = getProcessorNotifications(processor);
+      expect(notifications.emitQueueJobCompleted).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.stringContaining('workflow_complete_handoff_owed'),
+          severity: 'warning',
+        }),
+      );
+    });
+
+    it('records settle-run ledger artifacts when the orchestrator returns headSha and prNumber', async () => {
+      const settledRun = {
+        id: 'plan-run-1',
+        status: PLAN_RUN_STATUS.COMPLETED,
+      };
+      mockSettleRunByJob.mockResolvedValueOnce(settledRun);
+      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+        exitCode: 0,
+        headSha: 'deadbeef',
+        prNumber: 42,
+        reason: 'workflow_complete',
+        status: 'finished',
+      });
+
+      await processor.process(mockJob);
+
+      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        'job-1',
+        PLAN_RUN_STATUS.COMPLETED,
+      );
+      expect(mockRecordSettledRunArtifacts).toHaveBeenCalledWith({
+        headSha: 'deadbeef',
+        planRun: settledRun,
+        prNumber: 42,
+      });
     });
 
     it('settles the row to FAILED when the orchestrator outcome is failed', async () => {

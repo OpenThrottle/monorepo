@@ -1296,6 +1296,52 @@ describe('PlanRunsService', () => {
     });
   });
 
+  describe('setCheckoutAndBranch', () => {
+    it('overwrites checkout_id and branch on the run row', async () => {
+      const updated = buildRun({
+        branch: 'openthrottle/plan-abcdef12',
+        checkoutId: '44444444-4444-4444-8444-444444444444',
+      });
+      repo.findOne.mockResolvedValueOnce(updated);
+
+      const result = await service.setCheckoutAndBranch('run-1', {
+        branch: 'openthrottle/plan-abcdef12',
+        checkoutId: '44444444-4444-4444-8444-444444444444',
+      });
+
+      expect(repo.update).toHaveBeenCalledWith(
+        { id: 'run-1' },
+        {
+          branch: 'openthrottle/plan-abcdef12',
+          checkoutId: '44444444-4444-4444-8444-444444444444',
+        },
+      );
+      expect(result).toEqual(
+        expect.objectContaining({
+          branch: 'openthrottle/plan-abcdef12',
+          checkoutId: '44444444-4444-4444-8444-444444444444',
+        }),
+      );
+    });
+
+    it('updates only checkout_id when branch is blank or null', async () => {
+      const updated = buildRun({
+        checkoutId: '44444444-4444-4444-8444-444444444444',
+      });
+      repo.findOne.mockResolvedValueOnce(updated);
+
+      await service.setCheckoutAndBranch('run-1', {
+        branch: null,
+        checkoutId: '44444444-4444-4444-8444-444444444444',
+      });
+
+      expect(repo.update).toHaveBeenCalledWith(
+        { id: 'run-1' },
+        { checkoutId: '44444444-4444-4444-8444-444444444444' },
+      );
+    });
+  });
+
   describe('setRunConfigSnapshotWorkspace', () => {
     const snapshot = {
       ralph: { executionBackend: 'cursor' as const },
