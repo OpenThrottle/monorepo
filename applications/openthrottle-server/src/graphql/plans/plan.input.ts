@@ -555,7 +555,7 @@ export class RegisterPlanRunWorktreeCheckoutInput {
   filesystemPath!: string;
 
   @Field(() => ID, {
-    description: `Plan-run row id whose checkout_id should be back-filled when still NULL.`,
+    description: `Plan-run row id whose checkout_id (and branch) should be pointed at the linked worktree path.`,
   })
   planRunId!: string;
 }

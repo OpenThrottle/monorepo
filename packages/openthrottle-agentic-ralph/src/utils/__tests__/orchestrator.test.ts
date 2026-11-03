@@ -854,6 +854,49 @@ describe('createWorkflowRalphOrchestrator control parsing', () => {
     });
   });
 
+  it('finishes with workflow_complete_handoff_owed when INPUT_REQUIRED arrives with every task COMPLETED', async () => {
+    const run = vi.fn(
+      async () =>
+        `<ralph:task-complete>${TASK_A}</ralph:task-complete><promise>INPUT_REQUIRED</promise>`,
+    );
+    const iterationRunner: WorkflowRalphIterationRunner = { run };
+
+    let taskStatus = 'PENDING';
+    const executeGraphqlV2 = asExecuteGraphqlV2(async (document, variables) => {
+      if (document === GetServerHealthDocument) {
+        return { serverHealth: serverHealthOk };
+      }
+      if (document === GetPlanDocument) {
+        return { plan: basePlan() };
+      }
+      if (document === GetTasksByPlanIdDocument) {
+        return { tasksByPlanId: [baseTask(TASK_A, taskStatus)] };
+      }
+      if (document === UpdatePlanDocument) {
+        return { updatePlan: basePlan({ status: 'IN_PROGRESS' }) };
+      }
+      if (document === UpdateTaskDocument) {
+        const input = readUpdateInput(variables);
+        taskStatus = input.status;
+        return { updateTask: baseTask(TASK_A, input.status) };
+      }
+      throw new Error('unmocked GraphQL document in test');
+    });
+
+    const orchestrator = createWorkflowRalphOrchestrator({
+      executeGraphqlV2,
+      iterationRunner,
+    });
+
+    const result = await orchestrator.execute({ context: { ...baseContext } });
+
+    expect(result).toEqual({
+      exitCode: 0,
+      reason: 'workflow_complete_handoff_owed',
+      status: 'finished',
+    });
+  });
+
   it('prefers ERROR over COMPLETE when the agent emits both markers', async () => {
     const run = vi.fn(
       async () => '<promise>COMPLETE</promise><promise>ERROR</promise>',

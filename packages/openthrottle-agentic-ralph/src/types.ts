@@ -4,7 +4,6 @@ import type {
   WorkflowConfigRunner,
   WorkflowCorrelation,
   WorkflowLifecycleDispatcher,
-  WorkflowRunResult as WorkflowRunResultBase,
 } from '@openthrottle/openthrottle-agentic-workflow';
 
 import type { WorkflowRalphUsageLimit } from './contract/ralph-orchestrator-deps.ts';
@@ -12,6 +11,7 @@ import type { WorkflowRalphUsageLimit } from './contract/ralph-orchestrator-deps
 export type WorkflowFinishedReason =
   | 'workflow_budget_exhausted'
   | 'workflow_complete'
+  | 'workflow_complete_handoff_owed'
   | 'workflow_cancelled'
   | 'workflow_max_iterations'
   | 'workflow_plan_already_terminal'
@@ -107,16 +107,32 @@ export interface WorkflowUsageLimitedResult {
 }
 
 /**
+ * @description A clean finish that may carry settle artifacts from the host-owned push/PR
+ * finalize step. `headSha` / `prNumber` are present when that step pushed and opened (or reused)
+ * a PR; omitted when finalize was skipped (no commits ahead) or never ran. The plans worker
+ * records work-ledger git_commit + pull_request artifacts from these fields on COMPLETED settle.
+ */
+export interface WorkflowFinishedResult {
+  readonly exitCode: 0;
+  readonly headSha?: string;
+  readonly prNumber?: number;
+  readonly reason: Exclude<WorkflowFinishedReason, 'workflow_usage_limited'>;
+  readonly status: 'finished';
+}
+
+/**
  * @description Terminal outcome of a workflow run (process exit semantics
  * align with current Ralph CLI). Narrow on `reason === 'workflow_usage_limited'` to read
- * `usageLimit`; the base variants never carry that reason.
+ * `usageLimit`; finished results may carry optional settle artifacts from plan-end finalize.
  */
 export type WorkflowRunResult =
-  | WorkflowRunResultBase<
-      Exclude<WorkflowFinishedReason, 'workflow_usage_limited'>,
-      WorkflowFailedReason
-    >
-  | WorkflowUsageLimitedResult;
+  | WorkflowFinishedResult
+  | WorkflowUsageLimitedResult
+  | {
+      readonly exitCode: 1;
+      readonly reason: WorkflowFailedReason;
+      readonly status: 'failed';
+    };
 
 /**
  * @description Create an Orchestrator type for Ralph workflow customized

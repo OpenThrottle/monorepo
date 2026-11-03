@@ -41,8 +41,10 @@ see [tools/AGENTS.md](../../tools/AGENTS.md)).
   [../AGENTS.md](../AGENTS.md) for the pattern.
 - `src/graphql/ralph/*.graphql` is also consumed by `openthrottle-mcp`'s codegen (its `codegen.ts`
   globs this directory). Editing these documents means regenerating **both** packages' `__generated__`.
-- Keep the orchestrator GraphQL-pure: the single non-plan call allowed is the `getServerHealth`
-  preflight. Never open a Postgres connection or spawn the CLI from here.
+- Keep plan/task transport GraphQL-pure: the single non-plan GraphQL call allowed is the
+  `getServerHealth` preflight. Never open a Postgres connection or spawn the agent CLI from here.
+  The host-owned plan-end finalize step (push + PR via injectable `runCommand`) is the deliberate
+  exception — see `src/utils/finalize-plan-run.ts`.
 - Config precedence is enqueue/GraphQL tuning → env → `.workflow-ralph.json` → built-ins; GraphQL
   URL and auth tokens are **env-only**, never read from the defaults file (`src/utils/context.ts`).
 

@@ -34,6 +34,7 @@ import { loadWorkflowRalphConfig } from '@tools/workflows';
 import type { Queue } from 'bullmq';
 
 import { PlanStatusService } from '../../graphql/plans/plan-status.service.ts';
+import { SettleRunLedgerService } from '../../graphql/work-ledger/settle-run-ledger.service.ts';
 import { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account.service.ts';
 import { ProcessMetricsService } from '../../metrics/process-metrics.service.ts';
 import type {
@@ -135,6 +136,7 @@ export class PlansProcessor
     private readonly planStatusService: PlanStatusService,
     private readonly processMetrics: ProcessMetricsService,
     private readonly scheduledPlanRun: ScheduledPlanRunService,
+    private readonly settleRunLedger: SettleRunLedgerService,
     private readonly statusChangeSystemAccount: StatusChangeSystemAccountService,
     private readonly tasksService: TasksService,
     private readonly usageLimitResume: UsageLimitResumeService,
@@ -823,16 +825,40 @@ export class PlansProcessor
   /**
    * Best-effort: settle the plan_runs row for this job to a terminal status
    * (COMPLETED / CANCELLED / FAILED — never STALE, which is reserved for the stale
-   * sweeper) and null its run-location columns. Never throws — the settle write is
-   * diagnostic bookkeeping, not on the critical path of the job outcome itself.
+   * sweeper) and null its run-location columns. When the orchestrator returned
+   * settle artifacts (`headSha` / `prNumber`) and the status is COMPLETED, also
+   * records work-ledger git_commit + pull_request artifacts (same mechanism as
+   * `settleCliPlanRun`). Never throws — the settle write is diagnostic bookkeeping,
+   * not on the critical path of the job outcome itself.
    */
   private async settleQueuedRunStatus(
     queueName: string,
     bullmqJobId: string,
     status: PlanRunStatus,
+    settleArtifacts?: {
+      readonly headSha: string | undefined;
+      readonly prNumber: number | undefined;
+    },
   ): Promise<void> {
     try {
-      await this.planRunsService.settleRunByJob(queueName, bullmqJobId, status);
+      const run = await this.planRunsService.settleRunByJob(
+        queueName,
+        bullmqJobId,
+        status,
+      );
+
+      if (
+        run != null &&
+        status === PLAN_RUN_STATUS.COMPLETED &&
+        settleArtifacts != null &&
+        (settleArtifacts.headSha != null || settleArtifacts.prNumber != null)
+      ) {
+        await this.settleRunLedger.recordSettledRunArtifacts({
+          headSha: settleArtifacts.headSha ?? null,
+          planRun: run,
+          prNumber: settleArtifacts.prNumber ?? null,
+        });
+      }
     } catch (error) {
       this.logger.warn(
         `Failed to settle plan_runs status: jobId=${bullmqJobId}, status=${status}, error=${error instanceof Error ? error.message : String(error)}`,
@@ -1107,6 +1133,11 @@ export class PlansProcessor
     if (outcome.reason === 'workflow_plan_already_terminal') {
       message = `Plan run skipped: ${data.planId} (plan already terminal)`;
       severity = 'success';
+    } else if (outcome.reason === 'workflow_complete_handoff_owed') {
+      // Finished plan + agent asked for input (or an owed post-plan step). Settle
+      // COMPLETED — never FAILED — and keep the reason in the notification text.
+      message = `Plan run finished with handoff owed: ${data.planId} (workflow_complete_handoff_owed)`;
+      severity = 'warning';
     } else if (outcome.reason === 'workflow_max_iterations') {
       const resolved = await this.getJobCompletedMessageAndSeverity(
         data.planId,
@@ -1128,6 +1159,10 @@ export class PlansProcessor
       PLANS_QUEUE_NAME,
       jobId,
       PLAN_RUN_STATUS.COMPLETED,
+      {
+        headSha: outcome.headSha,
+        prNumber: outcome.prNumber,
+      },
     );
 
     await this.completePlanRunWithHooks({

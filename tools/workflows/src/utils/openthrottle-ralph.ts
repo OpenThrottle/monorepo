@@ -407,8 +407,8 @@ export const isWorkflowActorUserJwt = (token: string | undefined): boolean => {
 
 /**
  * @description Once at CLI run-start path resolve: best-effort call
- * `registerPlanRunWorktreeCheckout` as the run actor so a linked worktree can back-fill
- * `plan_runs.checkout_id`. Soft-fails (debug/ warn + continue) when transport is postgres-direct,
+ * `registerPlanRunWorktreeCheckout` as the run actor so a linked worktree can point
+ * `plan_runs.checkout_id` and `branch` at the worktree. Soft-fails (debug/ warn + continue) when transport is postgres-direct,
  * actor auth is unavailable / is a service-account token, or the GraphQL call fails — never aborts
  * the agent run. Does not pass `ot_sa_` tokens to this mutation. Does not cover provision-time
  * registration from `worktree:new` / `setup_worktree.ts` (deferred follow-up; a worktree
