@@ -22,6 +22,7 @@ export * from './components/Dialog/index';
 export * from './components/Drawer';
 export * from './components/DropdownMenu';
 export * from './components/Empty';
+export * from './components/FacetedFilter';
 export * from './components/HoverCard';
 export * from './components/InlineErrors';
 export * from './components/Input';
@@ -63,6 +64,7 @@ export * from './components/Tooltip/index';
 
 // Data
 export * from './data/data.cron-presets';
+export * from './data/data.faceted-filter';
 
 // Themes
 export * from './themes/index';
