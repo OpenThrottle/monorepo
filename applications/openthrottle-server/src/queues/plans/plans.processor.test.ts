@@ -23,7 +23,7 @@ import { spawn as nodeSpawn } from 'child_process';
 import type { Readable } from 'stream';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { PlanEnqueueService } from '../../graphql/plans/plan-enqueue.service.ts';
+import { PlanEnqueueService } from '../../graphql/plans/plan-enqueue/plan-enqueue.service.ts';
 import { PlanStatusService } from '../../graphql/plans/plan-status.service.ts';
 import { SettleRunLedgerService } from '../../graphql/work-ledger/settle-run-ledger.service.ts';
 import { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account.service.ts';
@@ -43,7 +43,7 @@ import {
 import { PlansProcessor } from './plans.processor.ts';
 import type { PlanRunJobResult, RunPlanJob } from './plans.types.ts';
 import { ScheduledPlanRunService } from './scheduled-plan-run.service.ts';
-import { UsageLimitResumeService } from './usage-limit-resume.service.ts';
+import { UsageLimitResumeService } from './usage-limit-resume/usage-limit-resume.service.ts';
 import { WorkLedgerRunService } from './work-ledger-run.service.ts';
 
 /** @nestjs/bullmq Worker options metadata key (from bull.constants WORKER_METADATA). Used to assert stalled-job recovery options. */

@@ -31,7 +31,7 @@ describe('nestjs-graphql-service generator', () => {
       `applications/${application}/src/services/${name}/test-logs.resolver.ts`,
       `applications/${application}/src/services/${name}/test-logs.service.test.ts`,
       `applications/${application}/src/services/${name}/test-logs.service.ts`,
-      `applications/${application}/src/services/${name}/dto/get-test-logs.args.ts`,
+      `applications/${application}/src/services/${name}/dto/get-test-logs.input.ts`,
       `applications/${application}/src/services/${name}/entities/test-log.entity.ts`,
       `applications/${application}/src/services/${name}/factories/.gitkeep`,
     ]);

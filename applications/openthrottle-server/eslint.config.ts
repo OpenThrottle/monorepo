@@ -1,4 +1,8 @@
-import { eslintConfig, nodeEsmEslintConfig } from '@tools/dotfiles';
+import {
+  eslintConfig,
+  nestjsEslintConfig,
+  nodeEsmEslintConfig,
+} from '@tools/dotfiles';
 
 export default [
   { ignores: ['!**/*'] },
@@ -8,6 +12,25 @@ export default [
   // ESM + `moduleResolution: nodenext`: Node requires the file extension on
   // every relative specifier, and `eslint --fix` is what writes it.
   ...nodeEsmEslintConfig,
+
+  // NestJS files are `<folder>.<kind>.ts` and export only their kind. The
+  // pre-Nest boot files keep their names: deploy commands and `NODE_OPTIONS`
+  // name `bootstrap.js` and `register-workspace-type-stripping.js` by path,
+  // and `main.ts` imports `load-env.ts` first, before any Nest module loads.
+  ...nestjsEslintConfig,
+  {
+    files: [
+      'src/bootstrap.ts',
+      'src/load-env.ts',
+      'src/register-workspace-type-stripping.ts',
+      'src/workspace-type-stripping.ts',
+      'src/workspace-type-stripping.test.ts',
+    ],
+    rules: {
+      'openthrottle/nestjs-file-exports': 'off',
+      'openthrottle/nestjs-file-naming': 'off',
+    },
+  },
 
   /**
    * The plans/tasks status-write chokepoint (282 plans were found to

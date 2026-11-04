@@ -104,11 +104,11 @@ import {
   PlanStatusCountObject,
   SchedulePlanRunResultObject,
 } from './plan.object.ts';
-import {
-  type EnqueueOutcome,
-  PlanEnqueueService,
-  type ScheduleOutcome,
-} from './plan-enqueue.service.ts';
+import { PlanEnqueueService } from './plan-enqueue/plan-enqueue.service.ts';
+import type {
+  EnqueueOutcome,
+  ScheduleOutcome,
+} from './plan-enqueue/plan-enqueue.types.ts';
 import { PlanStatusService } from './plan-status.service.ts';
 import { PlanTaskStatus } from './plan-task-status.enum.ts';
 import { PlansLoaders } from './plans-loaders.ts';

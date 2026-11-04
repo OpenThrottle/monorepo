@@ -8,13 +8,13 @@ import type {
 } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { PlanEnqueueService } from '../../graphql/plans/plan-enqueue.service.ts';
-import type { PlanStatusService } from '../../graphql/plans/plan-status.service.ts';
-import type { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account.service.ts';
-import type { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture.service.ts';
-import type { NotificationsService } from '../../notifications/notifications.service.ts';
-import { PLANS_QUEUE_NAME } from './plans.constants.ts';
-import type { RunPlanOrchestratorJobData } from './plans.types.ts';
+import type { PlanEnqueueService } from '../../../graphql/plans/plan-enqueue/plan-enqueue.service.ts';
+import type { PlanStatusService } from '../../../graphql/plans/plan-status.service.ts';
+import type { StatusChangeSystemAccountService } from '../../../graphql/work-ledger/status-change-system-account.service.ts';
+import type { WorkLedgerCaptureService } from '../../../graphql/work-ledger/work-ledger-capture.service.ts';
+import type { NotificationsService } from '../../../notifications/notifications.service.ts';
+import { PLANS_QUEUE_NAME } from '../plans.constants.ts';
+import type { RunPlanOrchestratorJobData } from '../plans.types.ts';
 import { UsageLimitResumeService } from './usage-limit-resume.service.ts';
 
 const PLAN_ID = '2794d106-95f9-427e-904d-e0f9b5cbe734';

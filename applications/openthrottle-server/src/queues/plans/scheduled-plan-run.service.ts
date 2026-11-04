@@ -9,8 +9,8 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import type { Queue } from 'bullmq';
 
-import type { ScheduledRunFireOutcome } from '../../graphql/plans/plan-enqueue.service.ts';
-import { PlanEnqueueService } from '../../graphql/plans/plan-enqueue.service.ts';
+import { PlanEnqueueService } from '../../graphql/plans/plan-enqueue/plan-enqueue.service.ts';
+import type { ScheduledRunFireOutcome } from '../../graphql/plans/plan-enqueue/plan-enqueue.types.ts';
 import { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account.service.ts';
 import { NotificationsService } from '../../notifications/notifications.service.ts';
 import {
