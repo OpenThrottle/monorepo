@@ -164,6 +164,7 @@
         "scripts/openthrottle-ingest-docs.ts",
         "scripts/validate-agent-assets-frontmatter.ts",
         "scripts/check-migration-table-comments.ts",
+        "scripts/check-model-facing-text.ts",
         "scripts/openthrottle-database-backup.ts",
         "scripts/openthrottle-database-migrations.ts",
         "scripts/openthrottle-database-reset.ts",
@@ -384,6 +385,9 @@
         "src/run-server.ts",
         "src/nest-tool-handlers.ts",
         "src/nest/bootstrap-openthrottle-mcp-app.ts",
+        // Run by the `measure-tool-surface` Nx target (tsx); also reaches
+        // measure-tool-surface.ts, which it imports.
+        "src/model-facing-text/write-tool-surface.ts",
         // Streamable-HTTP MCP surface. Shell-invoked container entrypoints with
         // no in-repo importer, so knip cannot reach them via the import graph:
         // Dockerfile.NestJS `mcp-development` runs `tsx src/bin-http.ts`, and the

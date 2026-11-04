@@ -21,6 +21,12 @@ Nx project name is the full `@openthrottle/openthrottle-mcp` (not the bare direc
   guard says so instead of passing silently; drift on the SHARED plan/task documents is caught in
   CI by `openthrottle-agentic-ralph`, which commits its generated output.
 
+- `pnpm nx run monorepo:check-model-facing-text` — byte budget over the instructions block and every
+  `tools/list` entry (plus skills and prompts). A tool description or input schema that grows fails
+  it until you accept the growth with `-- --write` and commit `scripts/model-facing-text.snapshot.json`;
+  caps live in `scripts/model-facing-text.budget.json`. This package's `measure-tool-surface`
+  target feeds it.
+
 ## Fragment coverage (why a tool result can be missing a field)
 
 Plan/task/note/project operations are consumed cross-package from

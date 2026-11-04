@@ -291,6 +291,21 @@
         "{workspaceRoot}/scripts/check-generated-attributes.ts"
       ]
     },
+    "check-model-facing-text": {
+      "cache": false,
+      "dependsOn": [
+        {
+          "projects": ["@openthrottle/openthrottle-mcp"],
+          "target": "measure-tool-surface"
+        }
+      ],
+      "description": "Byte-budget gate for text injected into model sessions — openthrottle-mcp instructions + tools/list entries, skills/*/SKILL.md bodies and descriptions, .agents/prompts — via scripts/check-model-facing-text.ts. Fails when any item grew past scripts/model-facing-text.snapshot.json (accept with `-- --write` and commit the snapshot) or crosses a cap in scripts/model-facing-text.budget.json (raise the cap, or the model-facing-text-override PR label). Prints the per-item diff. Never cached: the MCP half is measured fresh by its dependency, whose output derives from gitignored codegen that no `inputs` glob can hash.",
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsx ./scripts/check-model-facing-text.ts",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "check-migration-hygiene": {
       "cache": true,
       "executor": "nx:run-commands",

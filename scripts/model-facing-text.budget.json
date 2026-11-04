@@ -1,61 +1,17 @@
 {
-  "$comment": "Byte budgets for model-facing text (OT plan cb4359d4, task a92aaa6b). Measured 2026-11-04 on 0c138881. Bytes are UTF-8; MCP tool bytes are the serialized tools/list entry (name + description + JSON input schema) from packages/openthrottle-mcp/src/model-facing-text/measure-tool-surface.ts. 'measured' is the baseline the gate ratchets against; 'cap' is the hard ceiling no single change may cross without an override.",
-  "surfaces": {
-    "mcpInstructions": {
-      "alwaysInjected": true,
-      "cap": 2048,
-      "measured": 1853
-    },
-    "mcpToolDescription": {
-      "alwaysInjected": true,
-      "capPerItem": 1536,
-      "measuredMax": 1349,
-      "measuredMaxItem": "create_plan"
-    },
-    "mcpToolEntry": {
-      "alwaysInjected": true,
-      "capPerItem": 2560,
-      "measuredMax": 2189,
-      "measuredMaxItem": "create_tasks"
-    },
-    "mcpToolsTotal": {
-      "alwaysInjected": true,
-      "cap": 60000,
-      "measured": 57080,
-      "measuredToolCount": 76
-    },
-    "promptFile": {
-      "alwaysInjected": false,
-      "capPerItem": 16384,
-      "measuredMax": 14873,
-      "measuredMaxItem": ".agents/prompts/Job_RulesConformance.md"
-    },
-    "promptsTotal": {
-      "alwaysInjected": false,
-      "cap": 128000,
-      "measured": 119941,
-      "measuredFileCount": 12
-    },
-    "skillBody": {
-      "alwaysInjected": false,
-      "capPerItem": 32768,
-      "measuredMax": 31843,
-      "measuredMaxItem": "skills/ot-loop/SKILL.md"
-    },
-    "skillDescription": {
-      "alwaysInjected": true,
-      "capPerItem": 1024
-    },
-    "skillsTotal": {
-      "alwaysInjected": false,
-      "cap": 192000,
-      "measured": 179361,
-      "measuredFileCount": 13
-    }
+  "$comment": "Byte caps for model-facing text (OT plan cb4359d4). Measured 2026-11-04 on 0c138881 by task a92aaa6b; enforced by scripts/check-model-facing-text.ts (task 503936c8). Bytes are UTF-8. MCP tool bytes are the serialized tools/list entry (name + description + JSON input schema). The per-item baseline the gate diffs against lives in model-facing-text.snapshot.json; these caps are the hard ceiling no change may cross without raising the cap here (reviewed) or the model-facing-text-override PR label. Always injected into every session: mcpInstructions, mcpTools, every skillDescription, so totals.alwaysInjected is their sum (~15-17k tokens at 3.5-4 bytes/token). Skill bodies and prompt files load only on demand.",
+  "perItem": {
+    "mcpToolDescription": 1536,
+    "mcpToolEntry": 2560,
+    "promptFile": 16384,
+    "skillBody": 32768,
+    "skillDescription": 1024
   },
-  "total": {
-    "$comment": "Always-injected total: MCP instructions + tools/list + every skill frontmatter description (~4.7 KB, measured approximately; task 503936c8 parses the YAML exactly). Roughly 15-17k tokens per session at 3.5-4 bytes/token.",
-    "cap": 68000,
-    "measuredApprox": 63600
+  "totals": {
+    "alwaysInjected": 68000,
+    "mcpInstructions": 2048,
+    "mcpTools": 60000,
+    "prompts": 128000,
+    "skills": 192000
   }
 }
