@@ -97,7 +97,7 @@ worktree" lives only in heal/provision, which decide whether to write the marker
 everything at runtime reads the marker — `database:start`/`database:stop`
 (`scripts/openthrottle-database-lifecycle.ts`) and the server's "does this checkout own repeatables" gate
 (`applications/openthrottle-server/src/queues/repeatable-job.owner.ts`): every repeatable
-job (work-ledger sweep/verify/harvest, daily stats, doc ingestion, data retention, plan-runs
+job (work-ledger sweep/verify/harvest, daily stats, data retention, plan-runs
 stale sweep, and the scheduled-agent-jobs boot reconcile) registers only when that check says
 owner — `shared` is not, `isolated` and an absent marker are. A non-owner logs one line naming
 the reason and registers nothing, so a shared-DB worktree never runs duplicates against the
@@ -105,6 +105,15 @@ primary's data. `OT_SCHEDULED_JOBS_OWNER` stays as the explicit override. That g
 per-worktree queue prefix, is why `pnpm nx run openthrottle-server:dev` (`PROCESS_ROLE=all`) is
 safe in a worktree; there is no rule to boot `dev-api` instead. Use `dev-api` (or
 `worktree:serve server --api-only`) only when you do not want processors running.
+
+> **Leftover keys from the removed `Doc Ingestion` queue.** That queue is gone and nothing cleans
+> up after it. If a checkout ever ran it, delete its keys by hand under that checkout's prefix
+> (`bull` for the primary, `bull:wt-<slug>` for a worktree), e.g.
+> `redis-cli --scan --pattern '<prefix>:Doc Ingestion:*' | while read -r k; do redis-cli del "$k"; done`
+> (the queue name has a space, so don't pipe through plain `xargs`). That pattern also covers the
+> repeatable a `DOC_INGESTION_CRON` setting registered. To remove that repeatable over GraphQL
+> instead, run `createQueue(input: { name: "Doc Ingestion" })` first: the server no longer knows the
+> queue, so `repeatableJobs` / `removeRepeatableJob` answer "Queue not found" until you do.
 
 With `OT_WORKTREE_DB=shared`:
 

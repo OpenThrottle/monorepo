@@ -73,8 +73,7 @@ Every streaming path is bounded so a wedged backend can't hang a chat turn:
 
 ## Don't
 
-- Not a home for CLI bins, OpenThrottle GraphQL/Postgres CRUD, job-run-hook runners, or doc-ingestion —
-  those stay in `@tools/workflows` until their own migration phase.
+- Not a home for CLI bins, OpenThrottle GraphQL/Postgres CRUD, or job-run-hook runners — those stay in `@tools/workflows` until their own migration phase.
 - The cached NestJS wrapper over model discovery is `@openthrottle/nestjs-model-discovery`; don't
   add ConfigService/caching here.
 

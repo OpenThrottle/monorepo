@@ -240,10 +240,6 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
     },
     reason: 'dashboard activity chart',
   },
-  doc_ingestion_state: {
-    classification: 'ignored',
-    reason: 'ingest cursor bookkeeping — the demo ingests from scratch',
-  },
   documentation: {
     classification: 'exported',
     columns: {

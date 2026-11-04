@@ -14,7 +14,6 @@ import { CodeIndexQueueProducerModule } from '../../queues/code-index/code-index
 import { DailyStatsQueueProducerModule } from '../../queues/daily-stats/daily-stats-queue-producer.module.ts';
 import { DataRetentionQueueProducerModule } from '../../queues/data-retention/data-retention-queue-producer.module.ts';
 import { DatabaseBackupQueueProducerModule } from '../../queues/database-backup/database-backup-queue-producer.module.ts';
-import { DocIngestionQueueProducerModule } from '../../queues/doc-ingestion/doc-ingestion-queue-producer.module.ts';
 import { PlanLifecycleHooksQueueProducerModule } from '../../queues/plan-lifecycle-hooks/plan-lifecycle-hooks-queue-producer.module.ts';
 import { PlanRulesQueueProducerModule } from '../../queues/plan-rules/plan-rules-queue-producer.module.ts';
 import { PlansQueueProducerModule } from '../../queues/plans/plans-queue-producer.module.ts';
@@ -31,7 +30,6 @@ import { QueuesService } from './queues.service.ts';
     DailyStatsQueueProducerModule,
     DatabaseBackupQueueProducerModule,
     DataRetentionQueueProducerModule,
-    DocIngestionQueueProducerModule,
     LoggerModule,
     PlanLifecycleHooksQueueProducerModule,
     PlanRulesQueueProducerModule,

@@ -5670,9 +5670,9 @@ type Mutation {
   enqueueAgenticTest: EnqueueAgenticTestResultObject!
 
   """
-  Enqueue a doc-ingestion job. Provide directories and/or files (at least one required). Job runs diff-based re-ingestion for the given paths. Returns job id or error.
+  Deprecated no-op. Doc ingestion has been removed; always returns success: false with an error.
   """
-  enqueueDocIngestion(input: EnqueueDocIngestionInput!): EnqueueDocIngestionResultObject!
+  enqueueDocIngestion(input: EnqueueDocIngestionInput!): EnqueueDocIngestionResultObject! @deprecated(reason: "Doc ingestion has been removed; this mutation always returns success: false.")
 
   """
   Duplicate a job (add new job with same data). Works for plans queue and future queues. Returns new job id or error.

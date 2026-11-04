@@ -2004,7 +2004,10 @@ export type Mutation = {
   enqueueAgenticTest: EnqueueAgenticTestResultObject;
   /** Enqueue a deterministic mock payload on the agentic-test queue (agentic-workflow smoke path). Returns job metadata or error. */
   enqueueAgenticWorkflowMock: EnqueueAgenticWorkflowMockResultObject;
-  /** Enqueue a doc-ingestion job. Provide directories and/or files (at least one required). Job runs diff-based re-ingestion for the given paths. Returns job id or error. */
+  /**
+   * Deprecated no-op. Doc ingestion has been removed; always returns success: false with an error.
+   * @deprecated Doc ingestion has been removed; this mutation always returns success: false.
+   */
   enqueueDocIngestion: EnqueueDocIngestionResultObject;
   /** Enqueue an in-process Ralph orchestrator job (GraphQL-backed pipeline, no nested workflow-ralph process). Same queue position and plan/task status updates as enqueuePlanRun. */
   enqueuePlanRalphOrchestrator: EnqueuePlanRunResultObject;

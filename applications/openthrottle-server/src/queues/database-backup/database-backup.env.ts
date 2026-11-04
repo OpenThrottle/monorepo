@@ -145,7 +145,7 @@ export function parsePositiveIntEnv(
 }
 
 /**
- * @description Resolves monorepo root for `pnpm run database:backup`. Matches doc-ingestion and plans processors.
+ * @description Resolves monorepo root for `pnpm run database:backup`. Matches the plans processor.
  */
 export function getDatabaseBackupWorkspaceRoot(): string {
   const root = process.env.WORKSPACE_ROOT?.trim();

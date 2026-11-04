@@ -1,5 +1,7 @@
 /**
- * @description GraphQL input for enqueueDocIngestion mutation. At least one of directories or files must be set.
+ * @description Deprecated: GraphQL input for the deprecated enqueueDocIngestion
+ * mutation. Doc ingestion has been removed and the mutation ignores this input;
+ * the type stays only for schema compatibility until the mutation is removed.
  */
 
 import { Field, InputType } from '@nestjs/graphql';
