@@ -1,12 +1,13 @@
+import { Badge } from '@openthrottle/react-router-shadcn';
+import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
+import { ToolboxIcon } from 'lucide-react';
 import * as React from 'react';
+
 import {
   VITE_DEVTOOLS_DOC_HREF,
   VITE_DEVTOOLS_DOC_PROFILING_HREF,
   VITE_DEVTOOLS_DOC_QUICK_REF_HREF,
 } from '~/routing/settings/utils/settings-docs-links';
-import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
-import { ToolboxIcon } from 'lucide-react';
-import { Badge } from '@openthrottle/react-router-shadcn';
 
 export interface SettingsBuildToolsProps {}
 

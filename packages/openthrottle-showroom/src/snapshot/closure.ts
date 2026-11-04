@@ -12,8 +12,8 @@
  *   the user ever touched and the window would be meaningless.
  */
 
-import type { DatabaseSchema, TableSchema } from './schema';
-import { stableStringify } from './stable-json';
+import type { DatabaseSchema, TableSchema } from './schema.ts';
+import { stableStringify } from './stable-json.ts';
 
 export interface WindowedRoot {
   table: string;

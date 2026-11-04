@@ -23,8 +23,8 @@ import { fileURLToPath } from 'node:url';
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import pg from 'pg';
 
-import { exportSnapshot } from '../snapshot/export';
-import { createSanitizer } from '../snapshot/sanitize';
+import { exportSnapshot } from '../snapshot/export.ts';
+import { createSanitizer } from '../snapshot/sanitize.ts';
 
 const DEFAULT_WINDOW_DAYS = 30;
 

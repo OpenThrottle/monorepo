@@ -1,3 +1,5 @@
+import { TASK_STATUS } from '@openthrottle/nestjs-repositories';
+
 /** Queue name for task→plan promotion jobs. */
 export const TASK_PROMOTION_QUEUE_NAME = 'task-promotion';
 
@@ -8,9 +10,13 @@ export const TASK_PROMOTION_PROMOTE_JOB_NAME = 'promote';
 export const TASK_PROMOTION_WORKER_CONCURRENCY = 1;
 
 /** Status the source task is moved to once promoted (terminal). */
-export const PROMOTED_TASK_STATUS = 'SKIPPED';
+export const PROMOTED_TASK_STATUS = TASK_STATUS.PROMOTED;
 
-/** Tag stamped on a source task after it is promoted (also the no-op guard). */
+/**
+ * Tag stamped on a source task after it is promoted. Still written alongside
+ * {@link PROMOTED_TASK_STATUS} for one release: tasks promoted before the PROMOTED
+ * status existed are SKIPPED + this tag, so promotion guards accept status OR tag.
+ */
 export const PROMOTED_TAG = 'promoted';
 
 /** Title of the single runnable task seeded on a freshly promoted plan. */

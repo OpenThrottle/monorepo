@@ -12,7 +12,10 @@
     "@openthrottle/react-router-shadcn": "workspace:^"
   },
   "devDependencies": {
-    "@openthrottle/react-router-testing": "workspace:^"
+    "@openthrottle/react-router-testing": "workspace:^",
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "catalog:",
+    "vitest": "catalog:"
   },
   "license": "Apache-2.0",
   "main": "./src/index.ts",

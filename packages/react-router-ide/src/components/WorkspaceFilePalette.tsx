@@ -1,13 +1,14 @@
-import * as React from 'react';
 import {
+  cn,
   Command,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
-  cn,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import type { IdeWorkspaceListing } from '../data/view-models';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 

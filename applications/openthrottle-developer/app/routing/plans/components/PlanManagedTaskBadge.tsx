@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Badge,
   Tooltip,
@@ -6,6 +5,8 @@ import {
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { Lock } from 'lucide-react';
+import * as React from 'react';
+
 import { MANAGED_TASK_BADGE_COPY } from '~/routing/plans/data/data.copy';
 
 export interface PlanManagedTaskBadgeProps {

@@ -2,10 +2,11 @@
  * @description Fishery factory for {@link PlanOutputStreamChunk}. Use in tests to build mock plan output stream chunks.
  */
 
-import { Factory } from 'fishery';
 import { faker } from '@faker-js/faker';
-import { plansFactory } from '../../modules/plans/plans.factory';
-import type { PlanOutputStreamChunk } from './plan-output-stream.entity';
+import { Factory } from 'fishery';
+
+import { plansFactory } from '../../modules/plans/plans.factory.ts';
+import type { PlanOutputStreamChunk } from './plan-output-stream.entity.ts';
 
 // /** Column-only shape for building plan output stream chunk test data (no relations). */
 // export type PlanOutputStreamChunkFactoryData = Pick<

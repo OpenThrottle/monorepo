@@ -1,10 +1,11 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { QueuesIntroduction } from '../QueuesIntroduction';
+
 import type { QueuesIntroductionProps } from '../QueuesIntroduction';
+import { QueuesIntroduction } from '../QueuesIntroduction';
 
 const renderIntroduction = (props: QueuesIntroductionProps): RenderResult => {
   const Component = () => <QueuesIntroduction {...props} />;

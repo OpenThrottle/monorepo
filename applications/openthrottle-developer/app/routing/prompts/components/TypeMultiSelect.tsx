@@ -1,8 +1,7 @@
-import * as React from 'react';
-import { Check, ChevronsUpDown, X } from 'lucide-react';
 import {
   Badge,
   Button,
+  cn,
   Command,
   CommandGroup,
   CommandItem,
@@ -11,8 +10,10 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-  cn,
 } from '@openthrottle/react-router-shadcn';
+import { Check, ChevronsUpDown, X } from 'lucide-react';
+import * as React from 'react';
+
 import { PROMPTS_TYPE_FILTER_OPTIONS } from '~/routing/prompts/utils/parsers';
 
 export interface TypeMultiSelectProps {
@@ -98,7 +99,7 @@ export const TypeMultiSelect = (
 
         <PopoverContent
           align="start"
-          className="w-[--radix-popover-trigger-width] p-0"
+          className="w-(--radix-popover-trigger-width) p-0"
         >
           <Command>
             <CommandList>

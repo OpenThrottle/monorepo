@@ -1,7 +1,8 @@
-import * as React from 'react';
 import { render, screen } from '@testing-library/react';
 import { AlertDialog as AlertDialogPrimitive } from 'radix-ui';
+import * as React from 'react';
 import { describe, expect, it } from 'vitest';
+
 import {
   AlertDialog,
   AlertDialogDescription,

@@ -1,8 +1,9 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+
 import { setWorkspaceRoot, workspaceRoot } from 'nx/src/utils/workspace-root';
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 
 import {
   NX_WORKSPACE_ROOT_PATH_ENV,

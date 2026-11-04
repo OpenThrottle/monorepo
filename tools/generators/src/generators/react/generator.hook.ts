@@ -1,16 +1,17 @@
-import { join } from 'path';
 import type { Tree } from '@nx/devkit';
 import { createProjectGraphAsync, formatFiles, logger } from '@nx/devkit';
+import { join } from 'path';
 import prompts from 'prompts';
+
 import { getCommonVariables, getGeneratorOverview } from '../../utils';
+import { generateFilesSafely } from '../../utils/generate-files-safely';
 import {
   getConfigConfirmation,
   getReactHookDestination,
   parsePossibleNames,
 } from '../../utils/questions';
-import { validateCamelCase } from '../../utils/validation';
 import { throwInvalidDestinationError } from '../../utils/target-validation';
-import { generateFilesSafely } from '../../utils/generate-files-safely';
+import { validateCamelCase } from '../../utils/validation';
 
 export interface ReactHookGeneratorSchema {
   readonly destination?: string;

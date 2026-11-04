@@ -6,6 +6,8 @@
  * minimal. Aligned with `tools/workflows/src/utils/parsers.ts` (`parseRalphArgs`).
  */
 
+import { buildPlanRunWorktreeName } from '@openthrottle/openthrottle-plan-config';
+
 import {
   DEFAULT_RALPH_ITERATIONS,
   DEFAULT_RALPH_MODEL,
@@ -15,7 +17,6 @@ import {
   WORKFLOW_RALPH_WORKTREE_FLAG_ONLY,
   type WorkflowRalphRunOptionsInput,
 } from './workflow-ralph-config';
-import { buildPlanRunWorktreeName } from '@openthrottle/openthrottle-plan-config';
 
 /**
  * @description Resolves agent CLI worktree for argv / GraphQL (flag-only uses {@link WORKFLOW_RALPH_WORKTREE_FLAG_ONLY}).

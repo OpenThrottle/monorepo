@@ -2,8 +2,9 @@
  * @description Health tool handler + schema (`health`). Returns server health from GraphQL only (no direct Postgres). Registered via the shared `developerMcpToolDefinitions` registry and the Nest surface.
  */
 
-import { z } from 'zod';
 import { executeGraphql } from '@openthrottle/nodejs-graphql';
+import { z } from 'zod';
+
 import { GetServerHealthDocument } from '../__generated__/graphql.js';
 import type { GenericResult } from '../types/index.ts';
 import { runTool } from '../utils/tool-result.ts';
@@ -17,7 +18,7 @@ type HealthStructured = {
   };
 };
 
-export const healthToolParameters = z.object({});
+export const healthToolParameters = z.object({}).strict();
 
 export const healthToolDescription = `Health check via GraphQL: returns server health (api, database, redis, websocket). No arguments. No direct Postgres; uses getServerHealth query only.`;
 

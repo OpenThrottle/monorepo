@@ -4,8 +4,8 @@ Docs/FAQ rendering layer: turns a per-app Markdown content folder (`app/docs-con
 `/docs` and `/faq` routes with shared nav and styling. Rendering is delegated to
 `@openthrottle/react-router-markdown` (SSR-capable).
 
-**Consumed by:** all four React Router apps — `openthrottle-developer`, `openthrottle-admin`,
-`openthrottle-email`, `openthrottle-website`.
+**Consumed by:** all three React Router apps — `openthrottle-developer`,
+`openthrottle-admin`, `openthrottle-website`.
 
 ## Layout
 

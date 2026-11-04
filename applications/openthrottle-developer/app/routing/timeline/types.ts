@@ -9,6 +9,7 @@ import type {
   TimelineMarkerRowFragment,
   TimelineSpanRowFragment,
 } from '~/__generated__/graphql';
+
 import type { TimelineMarkerKind, TimelineSpanKind } from './config/kinds';
 
 /** A duration row exactly as the server returned it. */

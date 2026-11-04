@@ -1,6 +1,7 @@
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { UpdateRepositoryDocument } from '~/__generated__/graphql';
+
 import type { Route } from '@/app/routes/+types/resources.repository-skill-injection';
+import { UpdateRepositoryDocument } from '~/__generated__/graphql';
 
 /** JSON shape returned by the inline repositories-table skill-injection toggle. */
 export interface RepositorySkillInjectionActionResult {

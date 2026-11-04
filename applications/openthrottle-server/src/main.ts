@@ -1,17 +1,18 @@
-import './load-env';
+import './load-env.ts';
 
-import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
+import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
+import { resolveQueuePrefix } from '@openthrottle/nestjs-bullmq';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   createProfileExecutionFileWriter,
   setProfileExecutionReporter,
 } from '@openthrottle/nestjs-profiling';
-import { LoggerService } from '@openthrottle/nestjs-modules';
 import { getCorsOptions } from '@openthrottle/nestjs-rbac';
-import { resolveQueuePrefix } from '@openthrottle/nestjs-bullmq';
-import { buildAppModule } from './app.module';
-import { PROCESS_ROLES, resolveProcessRole } from './config/process-role';
+
+import { buildAppModule } from './app.module.ts';
+import { PROCESS_ROLES, resolveProcessRole } from './config/process-role.ts';
 
 /**
  * @description Worker-only bootstrap: an application context with BullMQ
@@ -59,8 +60,14 @@ async function bootstrap(role: 'all' | 'api'): Promise<void> {
    * registerParserMiddleware dedupes by middleware function name), so this
    * parser becomes the ONLY json parser — omitting `application/json` leaves
    * /graphql POST bodies unparsed and Apollo rejects them with 400.
+   *
+   * `limit` replaces body-parser's 100 KB default, which answered 413 to any
+   * `recordTokenUsage` batch over ~80 rows although the mutation accepts 500
+   * (~1.2 KB each). 1 MB fits that with headroom and matches a typical proxy's
+   * own cap; the hooks still send far smaller batches.
    */
   app.useBodyParser('json', {
+    limit: '1mb',
     type: [
       'application/csp-report',
       'application/json',

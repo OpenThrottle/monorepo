@@ -11,7 +11,7 @@
  * It lives here now, once, and the assembler asks for it.
  */
 
-import type { VideoEpisode } from './types';
+import type { VideoEpisode } from './types.ts';
 
 /**
  * The standard block, verbatim from `docs/marketing/youtube-format.md`.

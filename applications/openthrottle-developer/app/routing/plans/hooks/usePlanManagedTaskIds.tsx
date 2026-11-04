@@ -9,16 +9,29 @@
  * last resolved ledger across lifecycle revalidations so badges do not blink.
  */
 import * as React from 'react';
+
 import { usePlanDeferredValue } from '~/routing/plans/hooks/usePlanDeferredValue';
 import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
 import { managedTaskIdsFromRuleApplications } from '~/routing/plans/utils/managed-tasks';
 
 export const usePlanManagedTaskIds = (): ReadonlySet<string> => {
+  // Hooks
   const { ledger } = usePlanDetailRouteData();
   const resolved = usePlanDeferredValue(ledger);
 
-  return React.useMemo(
+  // Setup
+  const managed = React.useMemo(
     () => managedTaskIdsFromRuleApplications(resolved?.ruleApplications ?? []),
     [resolved],
   );
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
+  return managed;
 };

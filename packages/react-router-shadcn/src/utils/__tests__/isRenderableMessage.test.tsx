@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { describe, expect, it } from 'vitest';
+
 import { isRenderableMessage } from '../isRenderableMessage';
 
 describe('isRenderableMessage', () => {

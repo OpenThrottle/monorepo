@@ -1,8 +1,7 @@
+import { Button, cn, Input, Label } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import clsx from 'clsx';
 import { Form } from 'react-router';
 import { Link } from 'react-router';
-import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
 
 export interface QueueFormProps {
   actionData?: { error?: string } | null;
@@ -26,7 +25,7 @@ export const QueueForm = (props: QueueFormProps): React.ReactElement => {
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx('p-4', className)} data-testid="QueueForm">
+    <div className={cn('p-4', className)} data-testid="QueueForm">
       <Form className="w-full space-y-4" method="post">
         <div>
           <Label htmlFor="queue-name">Queue name</Label>

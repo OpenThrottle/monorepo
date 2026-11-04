@@ -1,6 +1,7 @@
-import { describe, expect, beforeEach, test } from 'vitest';
-import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import type { Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { beforeEach, describe, expect, test } from 'vitest';
+
 import { foldersGenerator } from './generator';
 
 describe('folders generator', () => {
@@ -11,7 +12,7 @@ describe('folders generator', () => {
   const name = 'example-folder';
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
   });
 
   test('should run successfully', async () => {
@@ -35,5 +36,17 @@ describe('folders generator', () => {
         `applications/${application}/app/routing/${name}/utils/__tests__/.gitkeep`,
       ]),
     );
+  });
+
+  test('refuses a junk-drawer area name', async () => {
+    await expect(
+      foldersGenerator(tree, { application, folder, name: 'common' }),
+    ).rejects.toThrow(
+      /"common", a junk-drawer folder name[\s\S]*promotion ladder/,
+    );
+
+    expect(
+      tree.listChanges().some((change) => change.path.includes('/common/')),
+    ).toBe(false);
   });
 });

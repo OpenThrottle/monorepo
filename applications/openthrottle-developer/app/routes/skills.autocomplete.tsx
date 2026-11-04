@@ -1,11 +1,11 @@
+import type { Route } from '@/app/routes/+types/skills.autocomplete';
 import { MAX_SLASH_COMMAND_RESULTS } from '~/routing/skills/config/autocomplete';
+import type { SkillsAutocompleteResponse } from '~/routing/skills/utils/autocomplete-entries';
 import {
   composeAutocompleteSkills,
   loadProjectSkillFlags,
   loadSkillAvailability,
 } from '~/routing/skills/utils/autocomplete-entries';
-import type { SkillsAutocompleteResponse } from '~/routing/skills/utils/autocomplete-entries';
-import type { Route } from '@/app/routes/+types/skills.autocomplete';
 
 export type {
   SkillAutocompleteEntry,

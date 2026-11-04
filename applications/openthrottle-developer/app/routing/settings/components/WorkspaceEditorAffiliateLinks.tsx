@@ -1,5 +1,6 @@
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import clsx from 'clsx';
+
 import { getWorkspaceEditorAffiliateUrl } from '~/routing/settings/config/workspace-editor-affiliate-links';
 import { WORKSPACE_EDITOR_OPTIONS } from '~/routing/settings/config/workspace-editors';
 import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
@@ -46,7 +47,7 @@ export const WorkspaceEditorAffiliateLinks = (
 
   return (
     <div
-      className={clsx('space-y-1', className)}
+      className={cn('space-y-1', className)}
       data-testid="WorkspaceEditorAffiliateLinks"
     >
       {editorsWithLinks.map((editor) => (

@@ -1,6 +1,4 @@
-import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
@@ -8,7 +6,11 @@ import {
   GlobalFeatureOnboardingModal,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import * as React from 'react';
 import { useFetcher, useSearchParams } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/rules._index';
 import {
   RulesDeleteTagActionRuleDocument,
   RulesIndexLoaderDocument,
@@ -28,7 +30,6 @@ import {
   parseRulesEnabledFilterFromSearchParams,
   parseRulesSearchFromSearchParams,
 } from '~/routing/rules/utils/parsers';
-import type { Route } from '@/app/routes/+types/rules._index';
 
 export const handle: GlobalLayoutBreadcrumbsHandle = {
   breadcrumb: () => 'Rules',

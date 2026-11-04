@@ -6,8 +6,8 @@ import type { DiscoveryResult } from '@openthrottle/openthrottle-agentic-utils';
 import { discoverModels } from '@openthrottle/openthrottle-agentic-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { ModelDiscoveryConfig } from './config/nestjs-model-discovery.config';
-import { NestjsModelDiscoveryService } from './nestjs-model-discovery.service';
+import type { ModelDiscoveryConfig } from './config/nestjs-model-discovery.config.ts';
+import { NestjsModelDiscoveryService } from './nestjs-model-discovery.service.ts';
 
 const realDiscoverModels = vi.hoisted(
   (): { fn?: typeof discoverModels } => ({}),

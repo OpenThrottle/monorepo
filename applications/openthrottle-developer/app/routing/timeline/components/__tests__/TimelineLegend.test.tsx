@@ -1,8 +1,9 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import {
   TIMELINE_MARKER_KIND_LABEL,
   TIMELINE_MARKER_KINDS,
@@ -14,8 +15,9 @@ import {
   TIMELINE_LEGEND_COPY,
 } from '~/routing/timeline/data/data.copy';
 import { markerKindPath } from '~/routing/timeline/utils/marker-glyph-path';
-import { TimelineLegend } from '../TimelineLegend';
+
 import type { TimelineLegendProps } from '../TimelineLegend';
+import { TimelineLegend } from '../TimelineLegend';
 
 describe('TimelineLegend Component', () => {
   let component: RenderResult;

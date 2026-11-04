@@ -1,5 +1,5 @@
-import type * as React from 'react';
 import { ContextMenu as ContextMenuPrimitive } from 'radix-ui';
+import type * as React from 'react';
 
 export type ContextMenuProps = React.ComponentPropsWithoutRef<
   typeof ContextMenuPrimitive.Root

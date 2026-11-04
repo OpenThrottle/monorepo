@@ -7,11 +7,6 @@
  */
 
 import {
-  AUTH_PRINCIPAL_KIND_USER,
-  CurrentUser,
-  type AuthPrincipal,
-} from '@openthrottle/nestjs-auth';
-import {
   BadRequestException,
   ForbiddenException,
   UseGuards,
@@ -26,31 +21,37 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
+import {
+  AUTH_PRINCIPAL_KIND_USER,
+  type AuthPrincipal,
+  CurrentUser,
+} from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import {
   AgentCliPreferencesService,
   type ScheduledAgentJob,
 } from '@openthrottle/nestjs-repositories';
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs-graphql.service';
-import { ScheduledAgentJobRunStatsObject } from './scheduled-agent-job-run-stats.object';
+
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import {
   ScheduledAgentJobObject,
   ScheduledAgentJobRepositoryObject,
   ScheduledAgentJobRunObject,
-} from './scheduled-agent-job.object';
-import { ScheduledAgentJobsLoaders } from './scheduled-agent-jobs-loaders';
+} from './scheduled-agent-job.object.ts';
+import { ScheduledAgentJobRunStatsObject } from './scheduled-agent-job-run-stats.object.ts';
 import {
   CreateScheduledAgentJobInputType,
   SetScheduledAgentJobEnabledInputType,
   UpdateScheduledAgentJobInputType,
-} from './scheduled-agent-jobs.input';
+} from './scheduled-agent-jobs.input.ts';
 import {
   toScheduledAgentJobObject,
   toScheduledAgentJobRunObject,
   toScheduledAgentJobRunStatsObject,
-} from './scheduled-agent-jobs.mapper';
+} from './scheduled-agent-jobs.mapper.ts';
+import { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs-graphql.service.ts';
+import { ScheduledAgentJobsLoaders } from './scheduled-agent-jobs-loaders.ts';
 
 /** Default window for the run-stats query: the trailing 24 hours. */
 const RUN_STATS_WINDOW_MS = 24 * 60 * 60 * 1000;

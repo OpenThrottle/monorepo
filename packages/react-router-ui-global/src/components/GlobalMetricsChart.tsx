@@ -1,12 +1,13 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   Card,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
+  cn,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts';
+
 import { GLOBAL_METRICS_CHART_CONFIG } from '../config';
 import type { MetricsChartDatum } from '../utils/storage';
 
@@ -37,7 +38,7 @@ export const GlobalMetricsChart = (
   // 🔌 Short Circuit
 
   return (
-    <Card className={clsx('p-4 md:p-8')} data-testid="GlobalMetrics-chart-card">
+    <Card className={cn('p-4 md:p-8')} data-testid="GlobalMetrics-chart-card">
       <ChartContainer
         className="-ml-1 min-h-[160px] w-full overflow-visible text-sm"
         config={GLOBAL_METRICS_CHART_CONFIG}

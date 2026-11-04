@@ -8,8 +8,8 @@
  * unreadable once several markers cluster into a few pixels.
  */
 
-import { TIMELINE_MARKER_GLYPH } from '../config/kinds';
 import type { TimelineMarkerGlyph, TimelineMarkerKind } from '../config/kinds';
+import { TIMELINE_MARKER_GLYPH } from '../config/kinds';
 
 /** Path data for a glyph at the given radius, centred on the origin. */
 export function markerGlyphPath(

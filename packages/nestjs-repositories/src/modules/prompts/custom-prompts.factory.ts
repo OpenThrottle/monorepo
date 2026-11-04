@@ -2,7 +2,7 @@
  * @description Factory function for creating CustomPrompt test fixtures.
  */
 
-import type { CustomPromptType } from './custom-prompt.entity';
+import type { CustomPromptType } from './custom-prompt.entity.ts';
 
 export interface CustomPromptFactoryData {
   readonly content?: string;

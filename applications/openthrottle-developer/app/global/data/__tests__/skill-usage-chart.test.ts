@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { formatSkillUsageChartDate } from '../skill-usage-chart';
 
 describe('formatSkillUsageChartDate', () => {

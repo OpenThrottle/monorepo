@@ -1,10 +1,11 @@
-import * as React from 'react';
+import type { RenderResult } from '@testing-library/react';
 import { render, within } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import type { RenderResult } from '@testing-library/react';
-import { GlobalMetricsStatCards } from '../GlobalMetricsStatCards';
+
 import type { GlobalMetricsStatCardsProps } from '../GlobalMetricsStatCards';
+import { GlobalMetricsStatCards } from '../GlobalMetricsStatCards';
 
 describe('GlobalMetricsStatCards Component', () => {
   let component: RenderResult;

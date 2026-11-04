@@ -9,15 +9,16 @@
  * starting at all.
  */
 
-import { afterEach, describe, expect, it } from 'vitest';
 import { WORKTREE_FLAG_ONLY } from '@openthrottle/openthrottle-drivers';
+import { afterEach, describe, expect, it } from 'vitest';
+
 import {
   resolveScheduledAgentJobConcurrencyKey,
   resolveScheduledAgentJobCwd,
   resolveScheduledAgentJobRunCwd,
   resolveScheduledAgentJobsConcurrency,
   SCHEDULED_AGENT_JOBS_DEFAULT_CONCURRENCY,
-} from './scheduled-agent-jobs.constants';
+} from './scheduled-agent-jobs.constants.ts';
 
 describe('resolveScheduledAgentJobCwd', () => {
   it('prefers an explicit per-schedule cwd', () => {

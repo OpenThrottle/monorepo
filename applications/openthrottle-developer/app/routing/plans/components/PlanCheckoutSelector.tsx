@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { ChatCheckoutSelector } from '@openthrottle/react-router-chat';
 import {
   Skeleton,
@@ -6,6 +5,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
 import { PlanDeferredSection } from '~/routing/plans/components/PlanDeferredSection';
 import {

@@ -1,10 +1,10 @@
-import * as React from 'react';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 
 export interface SkillUsageStatTileProps {
   label: string;

@@ -1,12 +1,17 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { ScheduleTable } from '../ScheduleTable';
-import type { ScheduleTableProps } from '../ScheduleTable';
-import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
+
 import type { ScheduledJobCardFragment } from '~/__generated__/graphql';
+import {
+  SCHEDULE_CADENCE_COPY,
+  SCHEDULE_COPY,
+} from '~/routing/schedule/data/data.copy';
+
+import type { ScheduleTableProps } from '../ScheduleTable';
+import { ScheduleTable } from '../ScheduleTable';
 
 const job = (
   overrides: Partial<ScheduledJobCardFragment> = {},
@@ -20,6 +25,7 @@ const job = (
   model: 'opus',
   name: 'Nightly digest',
   nextRunAt: '2026-08-13T09:00:00.000Z',
+  scheduleKind: 'cron',
   timezone: 'UTC',
   updatedAt: '2026-08-12T00:00:00.000Z',
   ...overrides,
@@ -64,8 +70,26 @@ describe('ScheduleTable Component', () => {
   test('renders the cron pattern and timezone', () => {
     component = renderTable();
 
-    expect(component.getByText('0 9 * * *')).toBeInTheDocument();
-    expect(component.getByText('UTC')).toBeInTheDocument();
+    expect(
+      component.getByText(SCHEDULE_CADENCE_COPY.cron('0 9 * * *', 'UTC')),
+    ).toBeInTheDocument();
+  });
+
+  test('renders an interval schedule as its cadence', () => {
+    props = {
+      jobs: [
+        job({
+          cronPattern: null,
+          intervalMs: 30 * 60_000,
+          scheduleKind: 'interval',
+        }),
+      ],
+    };
+    component = renderTable();
+
+    expect(
+      component.getByText(SCHEDULE_CADENCE_COPY.interval(30)),
+    ).toBeInTheDocument();
   });
 
   test('renders an Enabled badge when the job is enabled', () => {

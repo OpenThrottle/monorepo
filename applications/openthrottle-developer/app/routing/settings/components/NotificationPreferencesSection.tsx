@@ -1,8 +1,13 @@
+import {
+  cn,
+  Label,
+  Separator,
+  Switch,
+} from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import clsx from 'clsx';
-import { Label, Separator, Switch } from '@openthrottle/react-router-shadcn';
-import { NOTIFICATION_PREFERENCE_ROWS } from '~/routing/settings/config/notification-preferences';
+
 import type { NotificationPreferenceId } from '~/routing/settings/config/notification-preferences';
+import { NOTIFICATION_PREFERENCE_ROWS } from '~/routing/settings/config/notification-preferences';
 import { getDefaultNotificationSettings } from '~/routing/settings/utils/parsers';
 
 export interface NotificationPreferencesSectionProps {
@@ -42,7 +47,7 @@ export const NotificationPreferencesSection = (
   return (
     <>
       <div
-        className={clsx(
+        className={cn(
           'bg-card border-card-border space-y-0 rounded-lg border p-4',
           className,
         )}

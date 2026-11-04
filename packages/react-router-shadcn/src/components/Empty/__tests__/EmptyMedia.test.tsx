@@ -1,8 +1,9 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { EmptyMedia } from '../EmptyMedia';
+
 import type { EmptyMediaProps } from '../EmptyMedia';
+import { EmptyMedia } from '../EmptyMedia';
 
 describe('EmptyMedia', () => {
   test('renders with the default variant', () => {

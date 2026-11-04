@@ -1,49 +1,49 @@
-export { CheckoutService } from './services/checkout.service';
+export {
+  createStripeClient,
+  getStripeConfig,
+  STRIPE_API_VERSION,
+  type StripeConfig,
+} from './config/stripe-config.ts';
+export { WebhooksController } from './controllers/webhooks.controller.ts';
 export {
   StripePriceObject,
   StripePriceRecurringObject,
   stripePriceToGql,
-} from './graphql/stripe-price.object';
+} from './graphql/stripe-price.object.ts';
 export {
   StripeProductObject,
   stripeProductToGql,
-} from './graphql/stripe-product.object';
-export { StripeProductResolver } from './graphql/stripe-product.resolver';
+} from './graphql/stripe-product.object.ts';
+export { StripeProductResolver } from './graphql/stripe-product.resolver.ts';
+export { StripeWebhookResolver } from './graphql/stripe-webhook.resolver.ts';
+export { ProcessStripeWebhookInput } from './graphql/stripe-webhook-mutation.input.ts';
+export { StripeWebhookProcessedPayload } from './graphql/stripe-webhook-mutation.object.ts';
+export { StripeModule } from './modules/stripe.module.ts';
+export type {
+  CreateCheckoutSessionParams,
+  CreateCheckoutSessionResult,
+} from './services/checkout.service.ts';
+export { CheckoutService } from './services/checkout.service.ts';
 export {
   type PartitionedProductPrices,
   partitionPricesByDefault,
   StripeProductsService,
-} from './services/stripe-products.service';
-export type {
-  CreateCheckoutSessionParams,
-  CreateCheckoutSessionResult,
-} from './services/checkout.service';
-export {
-  STRIPE_API_VERSION,
-  type StripeConfig,
-  createStripeClient,
-  getStripeConfig,
-} from './config/stripe-config';
-export { ProcessStripeWebhookInput } from './graphql/stripe-webhook-mutation.input';
-export { StripeWebhookProcessedPayload } from './graphql/stripe-webhook-mutation.object';
-export { StripeWebhookResolver } from './graphql/stripe-webhook.resolver';
+} from './services/stripe-products.service.ts';
+export type { StripeWebhookHandleResult } from './services/stripe-webhook-handler.service.ts';
+export { StripeWebhookHandlerService } from './services/stripe-webhook-handler.service.ts';
 export type {
   StripeCheckoutUserPort,
   StripeProcessedEventsPort,
+  StripeSubscriptionsPort,
   StripeSubscriptionUpdatePayload,
   StripeSubscriptionUpsertPayload,
-  StripeSubscriptionsPort,
-} from './tokens/stripe-ports';
-export { StripeModule } from './modules/stripe.module';
-export type { StripeWebhookHandleResult } from './services/stripe-webhook-handler.service';
-export { StripeWebhookHandlerService } from './services/stripe-webhook-handler.service';
+} from './tokens/stripe-ports.ts';
 export type {
   StripeModuleAsyncOptions,
   StripeModuleInit,
-} from './tokens/stripe-tokens';
+} from './tokens/stripe-tokens.ts';
 export {
   STRIPE_CHECKOUT_USER_PORT,
   STRIPE_PROCESSED_EVENTS_PORT,
   STRIPE_SUBSCRIPTIONS_PORT,
-} from './tokens/stripe-tokens';
-export { WebhooksController } from './controllers/webhooks.controller';
+} from './tokens/stripe-tokens.ts';

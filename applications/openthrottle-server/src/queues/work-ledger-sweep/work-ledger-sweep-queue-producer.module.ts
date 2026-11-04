@@ -1,8 +1,9 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
-import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
 import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
-import { WORK_LEDGER_SWEEP_QUEUE_NAME } from './work-ledger-sweep.constants';
+import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
+
+import { WORK_LEDGER_SWEEP_QUEUE_NAME } from './work-ledger-sweep.constants.ts';
 
 /**
  * @description Producer half of the work-ledger-sweep queue: registerQueue + Bull Board,

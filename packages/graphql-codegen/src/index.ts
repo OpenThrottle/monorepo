@@ -1,6 +1,6 @@
-import { resolve } from 'path';
-import * as dotenv from 'dotenv';
 import type { CodegenConfig } from '@graphql-codegen/cli';
+import * as dotenv from 'dotenv';
+import { resolve } from 'path';
 
 /**
  * @description Re-export of the GraphQL Codegen config type so consuming
@@ -37,8 +37,17 @@ export interface DefineCodegenOptions {
    */
   envPath?: string;
   /**
-   * `importExtension` forwarded to the root config (e.g. `'.js'` for
-   * ESM packages that emit `.js` import specifiers).
+   * `importExtension` forwarded to the root config, and to the Zod schemas'
+   * `importFrom`. Pick it from how the package is *consumed*, not just from its
+   * module type:
+   *
+   * - `'.js'` for an ESM package that is **built** — NodeNext source must name
+   *   the emitted `.js` (e.g. `@openthrottle/openthrottle-mcp`).
+   * - `'.ts'` for an ESM package that is **source-first** — consumers read the
+   *   TypeScript directly, so a `.js` specifier names a file that does not
+   *   exist. The failure only appears once something resolves the package from
+   *   built code, which is why it can sit latent for a long time.
+   * - unset for the React Router apps, whose Vite resolves either.
    */
   importExtension?: CodegenConfig['importExtension'];
   /**
@@ -49,7 +58,12 @@ export interface DefineCodegenOptions {
   outputDir?: string;
   /**
    * Extra `presetConfig` keys merged onto the shared `{ fragmentMasking: false }`
-   * for the `client` preset (e.g. `{ enumsAsTypes: true }`).
+   * for the `client` preset (e.g. `{ persistedDocuments: true }`).
+   *
+   * Not the place for enum handling: `enumsAsConst` is a `typescript`-plugin
+   * option set in the shared `config` block, and `enumsAsTypes` would emit a
+   * string-union type only, breaking every value-position use of a generated
+   * enum name.
    */
   presetConfig?: ClientPresetConfig;
   /**
@@ -100,6 +114,32 @@ export const defineCodegen = (options: DefineCodegenOptions): CodegenConfig => {
 
   const generates: CodegenConfig['generates'] = {
     [outputDir]: {
+      config: {
+        // Generated code was the one place the repo's no-enums rule could not
+        // reach: AGENTS.md bans `enum` and ESLint enforces it, but neither can
+        // touch a file codegen overwrites. The cost was real — `export enum` is
+        // non-erasable syntax, so every project whose program included a
+        // generated `graphql.ts` needed an `erasableSyntaxOnly: false` opt-out,
+        // six of them, including one package that merely *consumes* a
+        // source-first package carrying generated enums. `enumsAsConst` emits an
+        // `as const` object plus a matching type alias, which keeps both value
+        // and type positions working. Note this is a `typescript`-plugin option:
+        // in `presetConfig` the client preset silently ignores it.
+        // See docs/monorepo/source-first-packages-and-strip-only.md.
+        enumsAsConst: true,
+        // `@graphql-typed-document-node/core` is a TYPES-ONLY package: its
+        // package.json has `"main": ""` and it ships nothing but
+        // `typings/index.d.ts`. Emitted as a plain value import, the statement
+        // survives Node's strip-only loader — which erases type annotations but
+        // never removes an import that looks like a value — and resolution then
+        // fails with `Cannot find package`, naming the package rather than the
+        // generated file that imported it. Declaring the dependency does not
+        // help; there is no runtime entry to resolve. `import type` erases at
+        // the source level, so the statement is gone before any loader sees it.
+        // Bundler consumers were unaffected, which is why this sat latent until
+        // a source-first ESM package was first reached from built code.
+        useTypeImports: true,
+      },
       overwrite: true,
       preset: 'client',
       presetConfig: {
@@ -112,7 +152,11 @@ export const defineCodegen = (options: DefineCodegenOptions): CodegenConfig => {
   if (withZodSchemas) {
     generates[`${outputDir}schemas.ts`] = {
       config: {
-        importFrom: './graphql.js',
+        // Must follow `importExtension`: a source-first ESM package is consumed
+        // as TypeScript, so a `.js` specifier here names a file that does not
+        // exist. Defaults to `.js` so configs that leave `importExtension` unset
+        // (the React Router apps, whose Vite resolves it) are unaffected.
+        importFrom: `./graphql${importExtension ?? '.js'}`,
         // Required (non-null) GraphQL string inputs reject `''` (emitted as
         // `.min(1)`). Only applies to non-null strings — nullable/optional
         // fields stay lenient — so route actions and MCP tools no longer need

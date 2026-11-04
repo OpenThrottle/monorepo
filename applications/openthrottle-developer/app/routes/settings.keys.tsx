@@ -1,34 +1,35 @@
-import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import {
-  getActionError,
-  mergeRouteModuleMeta,
-} from '@openthrottle/react-router-utils';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalFeatureOnboardingModal,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { useSearchParams } from 'react-router';
-import { SITE_TITLE } from '~/global/config/settings';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import {
+  getActionError,
+  mergeRouteModuleMeta,
+} from '@openthrottle/react-router-utils';
+import * as React from 'react';
+import { useSearchParams } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/settings.keys';
 import { GetSettingsKeysDocument } from '~/__generated__/graphql';
-import { SettingsKeysForm } from '~/routing/settings/components/SettingsKeysForm';
-import { SettingsKeysIntroduction } from '~/routing/settings/components/SettingsKeysIntroduction';
-import { SettingsKeysTable } from '~/routing/settings/components/SettingsKeysTable';
-import { SettingsKeysToolbar } from '~/routing/settings/components/SettingsKeysToolbar';
+import { SITE_TITLE } from '~/global/config/settings';
 import {
   createServiceAccountCredential,
   revokeServiceAccountCredential,
 } from '~/routing/settings/actions/keys';
+import { SettingsKeysForm } from '~/routing/settings/components/SettingsKeysForm';
+import { SettingsKeysIntroduction } from '~/routing/settings/components/SettingsKeysIntroduction';
+import { SettingsKeysTable } from '~/routing/settings/components/SettingsKeysTable';
+import { SettingsKeysToolbar } from '~/routing/settings/components/SettingsKeysToolbar';
+import { SETTINGS_KEYS_ONBOARDING } from '~/routing/settings/data/data.copy';
 import {
   resolveSelectedServiceAccountId,
   SETTINGS_KEYS_ACCOUNT_SEARCH_PARAM,
   SETTINGS_KEYS_PROBE_SERVICE_ACCOUNT_ID,
   type SettingsKeysActionData,
 } from '~/routing/settings/utils/settings-keys-action';
-import { SETTINGS_KEYS_ONBOARDING } from '~/routing/settings/data/data.copy';
-import type { Route } from '@/app/routes/+types/settings.keys';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

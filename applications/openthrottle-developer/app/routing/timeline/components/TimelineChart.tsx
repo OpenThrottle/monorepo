@@ -1,12 +1,7 @@
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import clsx from 'clsx';
-import { buildTimelineLanes } from '~/routing/timeline/utils/lanes';
-import { createTimelineScale } from '~/routing/timeline/utils/scale';
+
 import { TIMELINE_LANE_ROW_HEIGHT } from '~/routing/timeline/config/layout';
-import { TimelineAxis } from './TimelineAxis';
-import { TimelineLaneGutter } from './TimelineLaneGutter';
-import { TimelineMarkerLayer } from './TimelineMarkerLayer';
-import { TimelineSpanLayer } from './TimelineSpanLayer';
 import { useTimelinePan } from '~/routing/timeline/hooks/useTimelinePan';
 import { useTimelineWidth } from '~/routing/timeline/hooks/useTimelineWidth';
 import type {
@@ -15,7 +10,14 @@ import type {
   TimelineMarkerCluster,
   TimelineSpan,
 } from '~/routing/timeline/types';
+import { buildTimelineLanes } from '~/routing/timeline/utils/lanes';
 import type { TimelineScale } from '~/routing/timeline/utils/scale';
+import { createTimelineScale } from '~/routing/timeline/utils/scale';
+
+import { TimelineAxis } from './TimelineAxis';
+import { TimelineLaneGutter } from './TimelineLaneGutter';
+import { TimelineMarkerLayer } from './TimelineMarkerLayer';
+import { TimelineSpanLayer } from './TimelineSpanLayer';
 
 export interface TimelineChartProps {
   readonly className?: string;
@@ -81,7 +83,7 @@ export const TimelineChart = (
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx('w-full', className)} data-testid="TimelineChart">
+    <div className={cn('w-full', className)} data-testid="TimelineChart">
       <div className="flex w-full" ref={bodyRef}>
         <TimelineLaneGutter
           laneRowHeight={TIMELINE_LANE_ROW_HEIGHT}
@@ -97,7 +99,7 @@ export const TimelineChart = (
         */}
         <div
           aria-label="Workstream timeline chart"
-          className={clsx(
+          className={cn(
             'focus-visible:ring-ring flex-1 overflow-x-auto focus-visible:ring-2 focus-visible:outline-none',
             pan.isPanning ? 'cursor-grabbing select-none' : 'cursor-grab',
           )}

@@ -1,10 +1,11 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { DashboardIntroduction } from '../DashboardIntroduction';
+
 import type { DashboardIntroductionProps } from '../DashboardIntroduction';
+import { DashboardIntroduction } from '../DashboardIntroduction';
 
 function renderWithProps(props: DashboardIntroductionProps): RenderResult {
   const Component = () => <DashboardIntroduction {...props} />;

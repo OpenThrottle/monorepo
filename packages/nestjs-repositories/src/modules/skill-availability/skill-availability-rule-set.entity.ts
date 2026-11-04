@@ -14,8 +14,9 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Project } from '../projects/project.entity';
-import { SkillAvailabilityRule } from './skill-availability-rule.entity';
+
+import { Project } from '../projects/project.entity.ts';
+import { SkillAvailabilityRule } from './skill-availability-rule.entity.ts';
 
 /** Scalar/column fields of SkillAvailabilityRuleSet (no relations). */
 export type SkillAvailabilityRuleSetData = Omit<

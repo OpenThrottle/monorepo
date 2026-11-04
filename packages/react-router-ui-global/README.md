@@ -4,7 +4,7 @@ Shared `Global*` app-shell UI for the React Router apps: layout, sidebar, header
 providers, theme, error boundary, metrics, and **per-row table actions** via
 `GlobalPopover`.
 
-**Consumers:** `openthrottle-developer`, `openthrottle-admin`, `openthrottle-email`,
+**Consumers:** `openthrottle-developer`, `openthrottle-admin`,
 `openthrottle-website` (and any other app that already depends on this package).
 
 ## Installation

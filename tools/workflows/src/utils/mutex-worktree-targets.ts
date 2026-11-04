@@ -9,6 +9,7 @@
  */
 
 import type { Mutex } from 'async-mutex';
+
 import type {
   AcquireResult,
   IWorktreeTargetsTracker,

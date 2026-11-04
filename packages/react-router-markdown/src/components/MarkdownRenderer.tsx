@@ -1,8 +1,9 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import { MDXProvider } from '@mdx-js/react';
-import { compileMarkdownSync } from '../utils/compileMarkdown';
+import { cn } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import type { CompiledMarkdown } from '../utils/compileMarkdown';
+import { compileMarkdownSync } from '../utils/compileMarkdown';
 
 type MarkdownComponents = React.ComponentProps<
   typeof MDXProvider
@@ -78,7 +79,7 @@ export const MarkdownRenderer = (
 
   return (
     <div
-      className={clsx('markdown max-w-full overflow-auto', className)}
+      className={cn('markdown max-w-full overflow-auto', className)}
       data-testid="MarkdownRenderer"
     >
       <MDXProvider components={components}>

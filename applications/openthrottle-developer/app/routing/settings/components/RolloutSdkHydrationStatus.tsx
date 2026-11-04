@@ -4,11 +4,12 @@
  * evaluation is empty or fails.
  */
 
-import * as React from 'react';
 import {
   useIsRolloutEnabled,
   useRollout,
 } from '@openthrottle/react-router-rollout';
+import * as React from 'react';
+
 import type { DeveloperRolloutFlags } from '~/global/data/data.rollout-flags';
 import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
 

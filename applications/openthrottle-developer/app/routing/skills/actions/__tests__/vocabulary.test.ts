@@ -1,7 +1,7 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, test, vi } from 'vitest';
-import type { ActionFunctionArgs } from 'react-router';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
+import type { ActionFunctionArgs } from 'react-router';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 // Keep the real `parseFormData` (the action validates FormData through it);
 // only stub the network call. `importOriginal` is SSR-safe here — the package's

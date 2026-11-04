@@ -1,22 +1,24 @@
+import { createMock } from '@golevelup/ts-vitest';
+import { BadRequestException, ConflictException } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
+import type { Plan, Task } from '@openthrottle/nestjs-repositories';
 import {
   CROSS_PLAN_TASK_LIST_ORDER,
   PLAN_TASK_LIST_ORDER,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
-import type { Plan, Task } from '@openthrottle/nestjs-repositories';
 import { isRecord } from '@openthrottle/nodejs-utils';
-import { createMock } from '@golevelup/ts-vitest';
-import { BadRequestException, ConflictException } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
-import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { QueryFailedError } from 'typeorm';
-import { NotificationsService } from '../../notifications/notifications.service';
-import { TasksLoaders } from './tasks-loaders';
-import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service';
-import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service';
-import { TaskPromotionEnqueueService } from '../../queues/task-promotion/task-promotion-enqueue.service';
-import { TasksResolver } from './tasks.resolver';
-import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service';
+import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+
+import { NotificationsService } from '../../notifications/notifications.service.ts';
+import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service.ts';
+import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service.ts';
+import { TaskPromotionEnqueueService } from '../../queues/task-promotion/task-promotion-enqueue.service.ts';
+import { PlanStatusService } from '../plans/plan-status.service.ts';
+import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service.ts';
+import { TasksResolver } from './tasks.resolver.ts';
+import { TasksLoaders } from './tasks-loaders.ts';
 
 describe('TasksResolver', () => {
   let resolver: TasksResolver;
@@ -53,10 +55,14 @@ describe('TasksResolver', () => {
   };
 
   const mockTasksService = createMock<TasksService>({
-    completeParentPlanIfTasksDone: vi.fn().mockResolvedValue(false),
+    createTasksBatch: vi.fn().mockResolvedValue([]),
     getRepository: vi.fn().mockReturnValue(repo),
     resolveNextSortOrder: vi.fn().mockResolvedValue(1000),
-    syncParentPlanStatus: vi.fn().mockResolvedValue(false),
+  });
+
+  const mockPlanStatusService = createMock<PlanStatusService>({
+    completeParentPlanIfTasksDone: vi.fn().mockResolvedValue(false),
+    promoteParentPlanToInProgress: vi.fn().mockResolvedValue(false),
   });
 
   const mockNotificationsService = createMock<NotificationsService>({
@@ -116,6 +122,7 @@ describe('TasksResolver', () => {
     taskEmbeddings: [],
     title: 'Add graphql/tasks/',
     updatedAt: new Date('2026-02-01T21:33:51.891Z'),
+    wave: null,
   };
 
   beforeAll(async () => {
@@ -139,6 +146,7 @@ describe('TasksResolver', () => {
           provide: NotificationsService,
           useValue: mockNotificationsService,
         },
+        { provide: PlanStatusService, useValue: mockPlanStatusService },
         { provide: TasksService, useValue: mockTasksService },
         {
           provide: WorkLedgerCaptureService,
@@ -151,12 +159,14 @@ describe('TasksResolver', () => {
   });
 
   beforeEach(() => {
-    vi.mocked(mockTasksService.syncParentPlanStatus).mockReset();
-    vi.mocked(mockTasksService.syncParentPlanStatus).mockResolvedValue(false);
-    vi.mocked(mockTasksService.completeParentPlanIfTasksDone).mockReset();
-    vi.mocked(mockTasksService.completeParentPlanIfTasksDone).mockResolvedValue(
-      false,
-    );
+    vi.mocked(mockPlanStatusService.promoteParentPlanToInProgress).mockReset();
+    vi.mocked(
+      mockPlanStatusService.promoteParentPlanToInProgress,
+    ).mockResolvedValue(false);
+    vi.mocked(mockPlanStatusService.completeParentPlanIfTasksDone).mockReset();
+    vi.mocked(
+      mockPlanStatusService.completeParentPlanIfTasksDone,
+    ).mockResolvedValue(false);
     vi.mocked(mockTasksService.resolveNextSortOrder).mockReset();
     vi.mocked(mockTasksService.resolveNextSortOrder).mockResolvedValue(1000);
     vi.mocked(mockNotificationsService.emitPlanStatusChanged).mockClear();
@@ -435,6 +445,7 @@ describe('TasksResolver', () => {
         summary: mockTask.summary,
         title: mockTask.title,
         updatedAt: mockTask.updatedAt,
+        wave: mockTask.wave,
       };
 
       const result = await resolver.plan(parent);
@@ -486,6 +497,10 @@ describe('TasksResolver', () => {
             useValue: createMock<NotificationsService>(),
           },
           {
+            provide: PlanStatusService,
+            useValue: createMock<PlanStatusService>(),
+          },
+          {
             provide: TasksService,
             useValue: createMock<TasksService>({
               getRepository: vi.fn().mockReturnValue({
@@ -525,6 +540,7 @@ describe('TasksResolver', () => {
         summary: mockTask.summary,
         title: mockTask.title,
         updatedAt: mockTask.updatedAt,
+        wave: mockTask.wave,
       };
 
       const result = await r.plan(parent);
@@ -562,6 +578,10 @@ describe('TasksResolver', () => {
           {
             provide: NotificationsService,
             useValue: createMock<NotificationsService>(),
+          },
+          {
+            provide: PlanStatusService,
+            useValue: createMock<PlanStatusService>(),
           },
           {
             provide: TasksService,
@@ -603,6 +623,7 @@ describe('TasksResolver', () => {
         summary: mockTask.summary,
         title: mockTask.title,
         updatedAt: mockTask.updatedAt,
+        wave: mockTask.wave,
       };
 
       const result = await r.plan(parent);
@@ -618,7 +639,9 @@ describe('TasksResolver', () => {
         ...mockTask,
         status: 'PENDING',
       });
-      vi.mocked(mockTasksService.syncParentPlanStatus).mockResolvedValue(true);
+      vi.mocked(
+        mockPlanStatusService.promoteParentPlanToInProgress,
+      ).mockResolvedValue(true);
       vi.mocked(repo.save).mockImplementation(async (entity: Task) =>
         Promise.resolve({ ...entity, status: 'IN_PROGRESS' }),
       );
@@ -638,9 +661,15 @@ describe('TasksResolver', () => {
         title: undefined,
       });
 
-      expect(mockTasksService.syncParentPlanStatus).toHaveBeenCalledTimes(1);
-      expect(mockTasksService.syncParentPlanStatus).toHaveBeenCalledWith(
+      expect(
+        mockPlanStatusService.promoteParentPlanToInProgress,
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        mockPlanStatusService.promoteParentPlanToInProgress,
+      ).toHaveBeenCalledWith(
         planId,
+        { actorKind: undefined, actorSub: undefined },
+        true,
       );
       expect(
         mockNotificationsService.emitPlanStatusChanged,
@@ -656,7 +685,9 @@ describe('TasksResolver', () => {
         ...mockTask,
         status: 'PENDING',
       });
-      vi.mocked(mockTasksService.syncParentPlanStatus).mockResolvedValue(false);
+      vi.mocked(
+        mockPlanStatusService.promoteParentPlanToInProgress,
+      ).mockResolvedValue(false);
       vi.mocked(repo.save).mockImplementation(async (entity: Task) =>
         Promise.resolve({ ...entity, status: 'IN_PROGRESS' }),
       );
@@ -676,8 +707,12 @@ describe('TasksResolver', () => {
         title: undefined,
       });
 
-      expect(mockTasksService.syncParentPlanStatus).toHaveBeenCalledWith(
+      expect(
+        mockPlanStatusService.promoteParentPlanToInProgress,
+      ).toHaveBeenCalledWith(
         planId,
+        { actorKind: undefined, actorSub: undefined },
+        true,
       );
       expect(
         mockNotificationsService.emitPlanStatusChanged,
@@ -708,7 +743,9 @@ describe('TasksResolver', () => {
         title: undefined,
       });
 
-      expect(mockTasksService.syncParentPlanStatus).not.toHaveBeenCalled();
+      expect(
+        mockPlanStatusService.promoteParentPlanToInProgress,
+      ).not.toHaveBeenCalled();
       expect(
         mockNotificationsService.emitPlanStatusChanged,
       ).not.toHaveBeenCalled();
@@ -738,7 +775,9 @@ describe('TasksResolver', () => {
         title: undefined,
       });
 
-      expect(mockTasksService.syncParentPlanStatus).not.toHaveBeenCalled();
+      expect(
+        mockPlanStatusService.promoteParentPlanToInProgress,
+      ).not.toHaveBeenCalled();
     });
   });
 
@@ -854,7 +893,7 @@ describe('TasksResolver', () => {
         status: 'IN_PROGRESS',
       });
       vi.mocked(
-        mockTasksService.completeParentPlanIfTasksDone,
+        mockPlanStatusService.completeParentPlanIfTasksDone,
       ).mockResolvedValue(true);
       vi.mocked(repo.save).mockImplementation(async (entity: Task) =>
         Promise.resolve({ ...entity, status: 'COMPLETED' }),
@@ -876,8 +915,11 @@ describe('TasksResolver', () => {
       });
 
       expect(
-        mockTasksService.completeParentPlanIfTasksDone,
-      ).toHaveBeenCalledWith(planId);
+        mockPlanStatusService.completeParentPlanIfTasksDone,
+      ).toHaveBeenCalledWith(planId, {
+        actorKind: undefined,
+        actorSub: undefined,
+      });
       expect(
         mockNotificationsService.emitPlanStatusChanged,
       ).toHaveBeenCalledWith({
@@ -893,7 +935,7 @@ describe('TasksResolver', () => {
         status: 'IN_PROGRESS',
       });
       vi.mocked(
-        mockTasksService.completeParentPlanIfTasksDone,
+        mockPlanStatusService.completeParentPlanIfTasksDone,
       ).mockResolvedValue(false);
       vi.mocked(repo.save).mockImplementation(async (entity: Task) =>
         Promise.resolve({ ...entity, status: 'COMPLETED' }),
@@ -915,8 +957,11 @@ describe('TasksResolver', () => {
       });
 
       expect(
-        mockTasksService.completeParentPlanIfTasksDone,
-      ).toHaveBeenCalledWith(planId);
+        mockPlanStatusService.completeParentPlanIfTasksDone,
+      ).toHaveBeenCalledWith(planId, {
+        actorKind: undefined,
+        actorSub: undefined,
+      });
       expect(
         mockNotificationsService.emitPlanStatusChanged,
       ).not.toHaveBeenCalled();
@@ -947,7 +992,7 @@ describe('TasksResolver', () => {
       });
 
       expect(
-        mockTasksService.completeParentPlanIfTasksDone,
+        mockPlanStatusService.completeParentPlanIfTasksDone,
       ).not.toHaveBeenCalled();
     });
   });
@@ -974,6 +1019,7 @@ describe('TasksResolver', () => {
         status: 'PENDING',
         summary: null,
         title: 'Appended task',
+        wave: null,
       });
 
       expect(mockTasksService.resolveNextSortOrder).toHaveBeenCalledWith(
@@ -1002,6 +1048,7 @@ describe('TasksResolver', () => {
         status: 'PENDING',
         summary: null,
         title: 'Inserted task',
+        wave: null,
       });
 
       expect(mockTasksService.resolveNextSortOrder).not.toHaveBeenCalled();
@@ -1031,6 +1078,7 @@ describe('TasksResolver', () => {
           status: 'PENDING',
           summary: null,
           title: 'Duplicate slot',
+          wave: null,
         }),
       ).rejects.toBeInstanceOf(ConflictException);
     });
@@ -1050,6 +1098,7 @@ describe('TasksResolver', () => {
       status: 'PENDING',
       summary: null,
       title: 'Requirements task',
+      wave: null,
     };
 
     test('throws BadRequestException on malformed requirements JSON', async () => {
@@ -1117,7 +1166,9 @@ describe('TasksResolver', () => {
   describe('createTask — parent plan IN_PROGRESS sync', () => {
     test('calls sync and emits when new task is created as IN_PROGRESS and plan was promoted', async () => {
       const planId = mockTask.planId;
-      vi.mocked(mockTasksService.syncParentPlanStatus).mockResolvedValue(true);
+      vi.mocked(
+        mockPlanStatusService.promoteParentPlanToInProgress,
+      ).mockResolvedValue(true);
       vi.mocked(repo.save).mockResolvedValue({
         ...mockTask,
         id: 'new-task-id',
@@ -1137,11 +1188,18 @@ describe('TasksResolver', () => {
         status: 'IN_PROGRESS',
         summary: null,
         title: 'New task',
+        wave: null,
       });
 
-      expect(mockTasksService.syncParentPlanStatus).toHaveBeenCalledTimes(1);
-      expect(mockTasksService.syncParentPlanStatus).toHaveBeenCalledWith(
+      expect(
+        mockPlanStatusService.promoteParentPlanToInProgress,
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        mockPlanStatusService.promoteParentPlanToInProgress,
+      ).toHaveBeenCalledWith(
         planId,
+        { actorKind: undefined, actorSub: undefined },
+        true,
       );
       expect(
         mockNotificationsService.emitPlanStatusChanged,
@@ -1169,9 +1227,84 @@ describe('TasksResolver', () => {
         status: 'PENDING',
         summary: null,
         title: 'Queued task',
+        wave: null,
       });
 
-      expect(mockTasksService.syncParentPlanStatus).not.toHaveBeenCalled();
+      expect(
+        mockPlanStatusService.promoteParentPlanToInProgress,
+      ).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('createTasks — parent plan IN_PROGRESS sync', () => {
+    test('promotes the plan and emits when any created task is IN_PROGRESS', async () => {
+      const planId = mockTask.planId;
+      vi.mocked(mockTasksService.createTasksBatch).mockResolvedValue([
+        { ...mockTask, id: 'new-task-1', planId, status: 'IN_PROGRESS' },
+      ]);
+      vi.mocked(
+        mockPlanStatusService.promoteParentPlanToInProgress,
+      ).mockResolvedValue(true);
+
+      await resolver.createTasks({
+        planId,
+        tasks: [
+          {
+            assignee: null,
+            category: null,
+            description: null,
+            project: null,
+            projectId: null,
+            requirements: null,
+            sortOrder: null,
+            status: 'IN_PROGRESS',
+            summary: null,
+            title: 'New task',
+            wave: null,
+          },
+        ],
+      });
+
+      expect(
+        mockPlanStatusService.promoteParentPlanToInProgress,
+      ).toHaveBeenCalledWith(
+        planId,
+        { actorKind: undefined, actorSub: undefined },
+        true,
+      );
+      expect(
+        mockNotificationsService.emitPlanStatusChanged,
+      ).toHaveBeenCalledWith({ planId, status: 'IN_PROGRESS' });
+    });
+
+    test('does not promote when no created task is IN_PROGRESS', async () => {
+      const planId = mockTask.planId;
+      vi.mocked(mockTasksService.createTasksBatch).mockResolvedValue([
+        { ...mockTask, id: 'new-task-1', planId, status: 'PENDING' },
+      ]);
+
+      await resolver.createTasks({
+        planId,
+        tasks: [
+          {
+            assignee: null,
+            category: null,
+            description: null,
+            project: null,
+            projectId: null,
+            requirements: null,
+            sortOrder: null,
+            status: 'PENDING',
+            summary: null,
+            title: 'Queued task',
+            wave: null,
+          },
+        ],
+      });
+
+      expect(
+        mockPlanStatusService.promoteParentPlanToInProgress,
+      ).not.toHaveBeenCalled();
     });
   });
 

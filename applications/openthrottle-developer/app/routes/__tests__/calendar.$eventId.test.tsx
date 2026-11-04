@@ -1,10 +1,12 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import Component from '../calendar.$eventId';
-import { CALENDAR_EVENTS } from '~/routing/calendar/data/data.events';
+
 import { CALENDAR_NOT_FOUND_COPY } from '~/routing/calendar/data/data.copy';
+import { CALENDAR_EVENTS } from '~/routing/calendar/data/data.events';
+
+import Component from '../calendar.$eventId';
 
 function stubMatches(): React.ComponentProps<typeof Component>['matches'];
 function stubMatches(): unknown {

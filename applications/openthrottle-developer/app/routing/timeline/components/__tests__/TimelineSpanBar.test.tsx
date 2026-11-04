@@ -1,15 +1,17 @@
-import * as React from 'react';
-import { render, within } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
+
 import { TimelineSpanKind } from '~/__generated__/graphql';
 import { TIMELINE_SPAN_TOOLTIP_COPY } from '~/routing/timeline/data/data.copy';
+import type { TimelineSpan } from '~/routing/timeline/types';
 import { createTimelineScale } from '~/routing/timeline/utils/scale';
 import { spanRect } from '~/routing/timeline/utils/span-geometry';
+
 import { TimelineSpanBar } from '../TimelineSpanBar';
-import type { TimelineSpan } from '~/routing/timeline/types';
 
 const scale = createTimelineScale({
   from: new Date('2026-09-01T00:00:00Z'),

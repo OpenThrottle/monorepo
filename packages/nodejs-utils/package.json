@@ -6,17 +6,13 @@
   },
   "dependencies": {},
   "description": "Zero-dependency, runtime-agnostic TypeScript utilities (shared type guards) for OpenThrottle server and client code.",
-  "devDependencies": {},
+  "devDependencies": {
+    "vitest": "catalog:"
+  },
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
-      "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
-    },
-    "./*": {
-      "types": "./dist/*.d.ts",
-      "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "default": "./src/index.ts",
+      "types": "./src/index.ts"
     }
   },
   "main": "./src/index.ts",

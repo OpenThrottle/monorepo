@@ -1,7 +1,9 @@
 import { EventEmitter } from 'node:events';
+
 import { createMock } from '@golevelup/ts-vitest';
 import type { Redis, RedisOptions } from 'ioredis';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { createRedisClient, disconnectRedisClient } from './redis-client';
 
 /**

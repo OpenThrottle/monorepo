@@ -1,9 +1,11 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import * as RouteModule from '../dashboard._index';
+
 import { ADMIN_PATHS } from '~/global/data/data.navigation';
+
+import * as RouteModule from '../dashboard._index';
 
 describe('routes/dashboard._index.tsx', () => {
   test('exports default component and meta', () => {

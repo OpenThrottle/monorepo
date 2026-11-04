@@ -15,21 +15,22 @@ import {
   buildJobRunHookAgentPrompt,
   createCursorWorkflowRalphIterationRunner,
   formatJobRunHookEntryLabel,
-  mergeRalphNestedRunTuningWithExecutionBackend,
-  resolveJobRunHookLayer1Prompt,
-  resolveJobRunHookOnFailure,
-  resolveJobRunHookTimeoutSeconds,
-  shouldRunJobRunHook,
   type JobRunHookEntry,
   type JobRunHookPhase,
   type JobRunHookRunKind,
   type JobRunHookTaskContext,
   type JobRunHookTaskOutcome,
+  mergeRalphNestedRunTuningWithExecutionBackend,
   type RalphNestedRunTuningInput,
+  resolveJobRunHookLayer1Prompt,
+  resolveJobRunHookOnFailure,
+  resolveJobRunHookTimeoutSeconds,
+  shouldRunJobRunHook,
 } from '@tools/workflows';
-import type { RunPlanJobData } from '../plans/plans.types';
-import { isRunPlanOrchestratorJobData } from '../plans/plans.types';
-import type { PlanLifecycleHookJobResult } from './plan-lifecycle-hooks.types';
+
+import type { RunPlanJobData } from '../plans/plans.types.ts';
+import { isRunPlanOrchestratorJobData } from '../plans/plans.types.ts';
+import type { PlanLifecycleHookJobResult } from './plan-lifecycle-hooks.types.ts';
 
 const hookFailed = (result: {
   readonly cancelled?: boolean;

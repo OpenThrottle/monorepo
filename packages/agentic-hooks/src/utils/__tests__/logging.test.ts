@@ -3,7 +3,7 @@
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { logHookError } from '../logging';
+import { logHookError } from '../logging.ts';
 
 describe('logHookError', () => {
   afterEach(() => {

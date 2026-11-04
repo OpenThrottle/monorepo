@@ -1,7 +1,6 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import {
   buildForeignWorkspacePromptLayer,
@@ -9,6 +8,7 @@ import {
   resolveForeignWorkspacePromptLayer,
   WORKFLOW_RALPH_OT_ROOT_ENV,
 } from '@openthrottle/openthrottle-agentic-utils';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 /** Temp dir with pnpm-workspace.yaml to simulate the OpenThrottle monorepo root. */
 let otRoot: string;

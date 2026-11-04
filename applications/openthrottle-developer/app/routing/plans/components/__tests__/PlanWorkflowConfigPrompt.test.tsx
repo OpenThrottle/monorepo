@@ -1,11 +1,13 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { PlanWorkflowConfigPrompt } from '../PlanWorkflowConfigPrompt';
-import type { PlanWorkflowConfigPromptProps } from '../PlanWorkflowConfigPrompt';
+
 import { DEFAULT_RALPH_PROMPT } from '~/routing/plans/utils/build-workflow-ralph-argv';
+
+import type { PlanWorkflowConfigPromptProps } from '../PlanWorkflowConfigPrompt';
+import { PlanWorkflowConfigPrompt } from '../PlanWorkflowConfigPrompt';
 
 describe('PlanWorkflowConfigPrompt Component', () => {
   let props: PlanWorkflowConfigPromptProps;

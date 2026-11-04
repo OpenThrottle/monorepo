@@ -1,6 +1,6 @@
-import { join, relative } from 'path';
 import type { Tree } from '@nx/devkit';
 import { generateFiles, logger } from '@nx/devkit';
+import { join, relative } from 'path';
 
 /** Staging root inside the tree; never survives a call. */
 const STAGING_ROOT = '.tools-generators-staging';

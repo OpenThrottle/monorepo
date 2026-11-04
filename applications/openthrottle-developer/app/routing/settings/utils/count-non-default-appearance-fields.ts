@@ -1,6 +1,6 @@
 import {
-  DEFAULT_APPEARANCE_CONFIG,
   type ConfigObject,
+  DEFAULT_APPEARANCE_CONFIG,
 } from '~/global/data/atom.config';
 
 /**

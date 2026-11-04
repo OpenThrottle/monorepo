@@ -11,21 +11,63 @@ import {
   Entity,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+
 import {
   SKILL_USAGE_SCOPES,
   type SkillUsageScope,
-} from './skill-usage-events.entity';
+} from './skill-usage-events.entity.ts';
 
+/**
+ * Outcome vocabulary, split by who can honestly emit each value.
+ *
+ * `SUCCESS` / `ERROR` are QUALITY claims and only a deliberate reporter — one
+ * that actually knows how the work went — may write them. `SESSION_ENDED` and
+ * `ABANDONED` describe the PROCESS: the session finished cleanly, or it died.
+ * The automatic session-end hooks can observe nothing beyond those two, so they
+ * write nothing else. See migration 113.
+ */
 export const SKILL_USAGE_OUTCOMES = {
   ABANDONED: 'abandoned',
   ERROR: 'error',
+  SESSION_ENDED: 'session_ended',
   SUCCESS: 'success',
 } as const;
 
 export type SkillUsageOutcomeValue =
   (typeof SKILL_USAGE_OUTCOMES)[keyof typeof SKILL_USAGE_OUTCOMES];
 
+const SKILL_USAGE_OUTCOME_VALUES: readonly string[] =
+  Object.values(SKILL_USAGE_OUTCOMES);
+
+/**
+ * Type predicate over {@link SKILL_USAGE_OUTCOMES}, derived from the const so a
+ * new member is accepted everywhere for free. A hand-listed `===` chain in the
+ * resolver once omitted `SESSION_ENDED`, and every automatic session-end
+ * outcome was rejected for six weeks before anyone noticed.
+ *
+ * @public
+ */
+export const isSkillUsageOutcome = (
+  value: string,
+): value is SkillUsageOutcomeValue =>
+  SKILL_USAGE_OUTCOME_VALUES.includes(value);
+
+/**
+ * Which capture contract wrote a row. `LEGACY_ASSUMED_SUCCESS` rows predate
+ * migration 113, when the automatic session-end path hardcoded `success`; their
+ * outcome is an assumption, not a measurement, so every /usage count excludes
+ * them. See migration 114.
+ */
+export const SKILL_USAGE_CAPTURE_MODELS = {
+  LEGACY_ASSUMED_SUCCESS: 'legacy_assumed_success',
+  REPORTED_V1: 'reported_v1',
+} as const;
+
+export type SkillUsageCaptureModel =
+  (typeof SKILL_USAGE_CAPTURE_MODELS)[keyof typeof SKILL_USAGE_CAPTURE_MODELS];
+
 export interface SkillUsageOutcomeData {
+  readonly captureModel: SkillUsageCaptureModel;
   readonly cwd: string | null;
   readonly durationMs: number | null;
   readonly gitBranch: string | null;
@@ -36,6 +78,7 @@ export interface SkillUsageOutcomeData {
   readonly scope: SkillUsageScope;
   readonly sessionId: string | null;
   readonly skillName: string;
+  readonly source: string | null;
   readonly toolUseId: string | null;
 }
 
@@ -56,6 +99,13 @@ export class SkillUsageOutcome {
   @Column({ name: 'outcome', type: 'text' })
   outcome!: SkillUsageOutcomeValue;
 
+  @Column({
+    default: SKILL_USAGE_CAPTURE_MODELS.REPORTED_V1,
+    name: 'capture_model',
+    type: 'text',
+  })
+  captureModel!: SkillUsageCaptureModel;
+
   @Column({ name: 'duration_ms', nullable: true, type: 'integer' })
   durationMs!: number | null;
 
@@ -71,6 +121,9 @@ export class SkillUsageOutcome {
     type: 'text',
   })
   scope!: SkillUsageScope;
+
+  @Column({ name: 'source', nullable: true, type: 'text' })
+  source!: string | null;
 
   @Column({ name: 'occurred_at', type: 'timestamp with time zone' })
   occurredAt!: Date;

@@ -1,20 +1,22 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { createRoutesStub } from 'react-router';
-import { describe, expect, test } from 'vitest';
 import {
   GLOBAL_FEATURE_ONBOARDING_MODAL,
   GLOBAL_FEATURE_ONBOARDING_TRIGGER_LABEL,
   GlobalFeatureOnboardingModal,
 } from '@openthrottle/react-router-ui-global';
-import { SettingsKeysIntroduction } from '../SettingsKeysIntroduction';
-import type { SettingsKeysIntroductionProps } from '../SettingsKeysIntroduction';
+import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import * as React from 'react';
+import { createRoutesStub } from 'react-router';
+import { describe, expect, test } from 'vitest';
+
 import {
   SETTINGS_KEYS_COPY,
   SETTINGS_KEYS_ONBOARDING,
 } from '~/routing/settings/data/data.copy';
+
+import type { SettingsKeysIntroductionProps } from '../SettingsKeysIntroduction';
+import { SettingsKeysIntroduction } from '../SettingsKeysIntroduction';
 
 function renderIntroduction(
   props: SettingsKeysIntroductionProps = {},

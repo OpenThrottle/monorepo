@@ -1,2 +1,2 @@
-export * from './utils/as-mock';
-export * from './utils/is-record';
+export * from './utils/as-mock.ts';
+export * from './utils/is-record.ts';

@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
@@ -6,6 +5,9 @@ import {
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+
+import type { Route } from '@/app/routes/+types/ide._index';
 import { GetWorkspaceSettingsDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import { IdeWorkspaceBody } from '~/routing/ide/components/IdeWorkspaceBody';
@@ -14,7 +16,6 @@ import {
   resolveSelectedRepository,
   toRepositoryOptions,
 } from '~/routing/ide/utils/repositories';
-import type { Route } from '@/app/routes/+types/ide._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

@@ -1,17 +1,15 @@
-import { describe, expect, it } from 'vitest';
-
 import {
   createVitestConfig,
   createVitestConfigJsdom,
   createVitestConfigNode,
   getDirname,
 } from '@tools/dotfiles';
-
 import {
-  createVitestConfigHappyDom,
   createVitestConfig as createVitestConfigFromMain,
+  createVitestConfigHappyDom,
   getDirname as getDirnameFromMain,
 } from '@tools/dotfiles';
+import { describe, expect, it } from 'vitest';
 
 describe('@tools/dotfiles vitest-config package resolution', () => {
   it('imports vitest helpers from the vitest-config subpath', () => {

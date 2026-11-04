@@ -1,11 +1,12 @@
-import * as React from 'react';
 import { Button, toast } from '@openthrottle/react-router-shadcn';
+import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
+import * as React from 'react';
+
 import {
   buildSupportBundlePayload,
   copyText,
   downloadJson,
 } from '~/routing/settings/utils/settings.support';
-import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 
 export interface SettingsSupportBundleProps {}
 

@@ -1,14 +1,15 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   Button,
+  cn,
   Empty,
   EmptyDescription,
   EmptyMedia,
   EmptyTitle,
 } from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
 import { CalendarSearchIcon } from 'lucide-react';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import { CALENDAR_EMPTY_COPY } from '~/routing/calendar/data/data.copy';
 
 export interface CalendarEmptyProps {
@@ -34,7 +35,7 @@ export const CalendarEmpty = (
   // 🔌 Short Circuit
 
   return (
-    <Empty className={clsx('my-8', className)} data-testid="CalendarEmpty">
+    <Empty className={cn('my-8', className)} data-testid="CalendarEmpty">
       <EmptyMedia variant="icon">
         <CalendarSearchIcon className="size-6" />
       </EmptyMedia>

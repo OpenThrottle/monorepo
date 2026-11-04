@@ -11,7 +11,7 @@ import type { AgentCliDiscoveryResult } from '@openthrottle/openthrottle-agentic
 import { discoverAgentClis } from '@openthrottle/openthrottle-agentic-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { AgentDiscoveryService } from './agent-discovery.service';
+import { AgentDiscoveryService } from './agent-discovery.service.ts';
 
 vi.mock('@openthrottle/openthrottle-agentic-utils', async (importOriginal) => {
   const actual =
@@ -27,6 +27,7 @@ const SNAPSHOT: AgentCliDiscoveryResult = {
   agents: [
     {
       attachesWorkspaceMcp: true,
+      auth: null,
       available: true,
       backend: 'cursor',
       chatCapable: true,
@@ -37,6 +38,7 @@ const SNAPSHOT: AgentCliDiscoveryResult = {
     },
     {
       attachesWorkspaceMcp: true,
+      auth: null,
       available: false,
       backend: 'claude',
       chatCapable: true,

@@ -5,10 +5,14 @@
  */
 
 import { describe, expect, it } from 'vitest';
+
 import {
   TimelineLaneGrouping,
   TimelineSpanKind,
 } from '~/__generated__/graphql';
+
+import { TIMELINE_SEARCH_PARAM } from '../../config/defaults';
+import { TIMELINE_MARKER_KINDS, TIMELINE_SPAN_KINDS } from '../../config/kinds';
 import {
   parseTimelineBranch,
   parseTimelineGrouping,
@@ -23,8 +27,6 @@ import {
   withTimelineKinds,
   withTimelineWindow,
 } from '../search-params';
-import { TIMELINE_MARKER_KINDS, TIMELINE_SPAN_KINDS } from '../../config/kinds';
-import { TIMELINE_SEARCH_PARAM } from '../../config/defaults';
 
 const params = (search: string): URLSearchParams => new URLSearchParams(search);
 

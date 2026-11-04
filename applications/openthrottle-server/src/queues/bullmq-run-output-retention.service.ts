@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { pruneKeyedRunOutputDirectory } from '@openthrottle/nestjs-logging';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+
 import {
-  getBullMqRunOutputRetentionConfig,
   type BullMqRunOutputRetentionConfig,
-} from '../config/bullmq-run-output-retention';
+  getBullMqRunOutputRetentionConfig,
+} from '../config/bullmq-run-output-retention.ts';
 
 /**
  * @description Throttled post-job disk retention for keyed BullMQ run transcripts (see `OT_BULLMQ_RUN_OUTPUT_*` env vars).

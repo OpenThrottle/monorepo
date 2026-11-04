@@ -4,10 +4,10 @@ import { join } from 'node:path';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { OPENCODE_BIN_ENV } from '../argv.ts';
-import { opencodeConversationBackend } from '../opencode.ts';
 import { AGENT_IDLE_TIMEOUT_MS_ENV } from '../../cursor-agent/teardown.ts';
 import type { ConversationStreamChunk } from '../../types.ts';
+import { OPENCODE_BIN_ENV } from '../argv.ts';
+import { opencodeConversationBackend } from '../opencode.ts';
 
 let dir: string;
 

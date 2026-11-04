@@ -1,8 +1,9 @@
 import fs from 'fs';
-import path from 'path';
-import ignore from 'ignore';
 import { glob } from 'glob';
-import type { Extension } from '../loaders/markdown';
+import ignore from 'ignore';
+import path from 'path';
+
+import type { Extension } from '../loaders/markdown.ts';
 
 /**
  * @description Resolve the directory to search from. Callers should pass an

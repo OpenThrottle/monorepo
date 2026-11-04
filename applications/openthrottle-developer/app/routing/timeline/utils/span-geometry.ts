@@ -12,8 +12,8 @@ import {
   TIMELINE_MIN_SPAN_WIDTH,
   TIMELINE_SPAN_HEIGHT,
 } from '../config/layout';
-import type { TimelineScale } from './scale';
 import type { TimelineSpan } from '../types';
+import type { TimelineScale } from './scale';
 
 export type TimelineSpanRect = {
   /** TRUE when the span runs past the window end. */

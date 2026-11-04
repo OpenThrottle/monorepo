@@ -1,21 +1,22 @@
-import * as React from 'react';
+import { getRandomIntroduction } from '@openthrottle/react-router-ui';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { SITE_TITLE } from '~/global/config/settings';
 import {
   APP_URL,
   canonicalMeta,
   mergeRouteModuleMeta,
   OPENTHROTTLE_META_DESCRIPTION,
 } from '@openthrottle/react-router-utils';
-import { getRandomIntroduction } from '@openthrottle/react-router-ui';
+import * as React from 'react';
+
+import type { Route } from '@/app/routes/+types/_index';
 import { GlobalFooter } from '~/global/components/GlobalFooter';
+import { SITE_TITLE } from '~/global/config/settings';
 import { LandingClose } from '~/routing/home/components/LandingClose';
 import { LandingFlow } from '~/routing/home/components/LandingFlow';
 import { LandingHero } from '~/routing/home/components/LandingHero';
 import { LandingPromise } from '~/routing/home/components/LandingPromise';
 import { LandingSurfaces } from '~/routing/home/components/LandingSurfaces';
 import { useRevealOnScroll } from '~/routing/home/hooks/useRevealOnScroll';
-import type { Route } from '@/app/routes/+types/_index';
 
 export const loader = async (_args: Route.LoaderArgs) => {
   const introduction = getRandomIntroduction();

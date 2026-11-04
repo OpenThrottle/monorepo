@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for OpenThrottle tasks table. Matches databases/migrations (003, 012, 015, 023, 049, 055, 071).
+ * @description TypeORM entity for OpenThrottle tasks table. Matches databases/migrations (003, 012, 015, 023, 049, 055, 071, 126).
  */
 
 import {
@@ -12,13 +12,14 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import type { Plan } from '../plans/plan.entity';
-import type { Project } from '../projects/project.entity';
-import type { TaskEmbedding } from '../task-embeddings/task-embedding.entity';
+
 import {
   PLAN_STATUS,
   PLAN_STATUS_VALUES,
-} from '../../common/plan-task-status.constants';
+} from '../../config/plan-task-status.constants.ts';
+import type { Plan } from '../plans/plan.entity.ts';
+import type { Project } from '../projects/project.entity.ts';
+import type { TaskEmbedding } from '../task-embeddings/task-embedding.entity.ts';
 
 /** Lifecycle-hook role marker: NULL = regular task; 'before'/'after' = hook task. */
 export type TaskHookRole = 'after' | 'before';
@@ -52,6 +53,7 @@ export type TaskData = Pick<
   | 'summary'
   | 'title'
   | 'updatedAt'
+  | 'wave'
 >;
 
 @Entity('tasks')
@@ -91,6 +93,18 @@ export class Task {
 
   @Column({ name: 'sort_order', type: 'integer' })
   sortOrder!: number;
+
+  /**
+   * @description Coarse concurrency layer within a plan. NULL means unassigned
+   * (runs alone, in sortOrder position) -- never wave zero (migration 126
+   * enforces `wave IS NULL OR wave >= 1`). Tasks sharing a wave are the
+   * author's claim that they may be worked concurrently; sortOrder remains
+   * canonical and is the tiebreaker within a wave. Hook tasks always stay
+   * NULL. Not consumed for execution yet -- see
+   * docs/openthrottle/task-wave-encoding.md.
+   */
+  @Column({ name: 'wave', nullable: true, type: 'integer' })
+  wave!: number | null;
 
   @Column({ name: 'assignee', nullable: true, type: 'text' })
   assignee!: string | null;

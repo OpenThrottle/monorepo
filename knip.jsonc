@@ -77,9 +77,6 @@
     "applications/openthrottle-server/src/modules/payments/**",
     // Golden prompts consumed by agents-mcp-router.golden-prompts.test.ts (knip excludes *.test.ts)
     "applications/openthrottle-server/src/graphql/agents/agents-mcp-router.golden-prompts.ts",
-    // openthrottle-email: commented layout chrome (intentional rollback; see @deprecated)
-    "applications/openthrottle-email/app/global/components/GlobalFooter.tsx",
-    "applications/openthrottle-email/app/global/components/GlobalHeader.tsx",
     // @openthrottle/react-router-shadcn: CSS entrypoints (app @import)
     "packages/react-router-shadcn/src/theme.css",
     "packages/react-router-shadcn/src/commander.css",
@@ -97,12 +94,24 @@
     "@nx/*",
     "@testing-library/*",
     "@types/*",
-    "@typescript-eslint/*",
     "@vitest/*",
     "eslint-*",
     "prettier",
     "typescript",
     "vitest",
+
+    // Consumed ONLY by the react-router `form` generator templates under
+    // tools/generators/src/generators/react-router/files/form/, which are
+    // .ts/.tsx template files rather than compiled source — so knip cannot
+    // see the imports and reports all three as unused. They are declared at
+    // the root so scaffolded forms resolve them in any app. Removing them
+    // breaks the `form` generator silently, with the failure landing on
+    // whoever scaffolds a form next. See the matching note in
+    // pnpm-workspace.yaml. (formik is additionally a real dependency of
+    // @openthrottle/react-router-utils, which declares it directly.)
+    "focus-formik-error",
+    "formik",
+    "yup",
   ],
   "project": [
     "applications/**/*.{ts,tsx,js,jsx}",
@@ -158,6 +167,7 @@
         "scripts/openthrottle-database-backup.ts",
         "scripts/openthrottle-database-migrations.ts",
         "scripts/openthrottle-database-reset.ts",
+        "scripts/openthrottle-database-seed-blog.ts",
         "scripts/nx-validate-confgurations.ts",
         "scripts/nx-validate-projects.ts",
         "scripts/nx-validate-tags.ts",
@@ -336,8 +346,31 @@
       "project": ["src/**/*.ts"],
       "ignoreDependencies": ["@golevelup/ts-vitest", "@nestjs/testing"],
     },
+    "packages/nestjs-graphql": {
+      "entry": [
+        "src/index.ts",
+        // Shell-invoked with no in-repo importer: the nx.json `graphql-schema`
+        // targetDefault runs `node .../dist/src/bin.js`, so knip cannot reach it
+        // (or schema/graphql-schema-command.ts, which it imports) via the import graph.
+        "src/bin.ts",
+      ],
+      "project": ["src/**/*.ts"],
+    },
+    // Every file Node runs directly in the production image: the server, the one-shot
+    // `bootstrap` compose service, and the NODE_OPTIONS=--import preload (Dockerfile.NestJS).
+    "applications/openthrottle-server": {
+      "entry": [
+        "src/bootstrap.ts",
+        "src/main.ts",
+        "src/register-workspace-type-stripping.ts",
+      ],
+    },
     "packages/nestjs-repositories": {
-      "entry": ["src/index.ts", "src/nestjs-repositories.module.ts"],
+      "entry": [
+        "src/index.ts",
+        "src/nestjs-repositories.module.ts",
+        "src/testing/index.ts",
+      ],
       "project": ["src/**/*.ts"],
     },
     "packages/nestjs-typeorm": {

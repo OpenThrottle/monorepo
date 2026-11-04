@@ -7,8 +7,8 @@ import {
   StaleWhileRevalidateCache,
 } from '@openthrottle/openthrottle-agentic-utils';
 
-import type { ModelDiscoveryConfig } from './config/nestjs-model-discovery.config';
-import { MODEL_DISCOVERY_CONFIG_NAMESPACE } from './config/nestjs-model-discovery.config';
+import type { ModelDiscoveryConfig } from './config/nestjs-model-discovery.config.ts';
+import { MODEL_DISCOVERY_CONFIG_NAMESPACE } from './config/nestjs-model-discovery.config.ts';
 
 /** Options for {@link NestjsModelDiscoveryService.discover}. */
 export interface DiscoverOptions {

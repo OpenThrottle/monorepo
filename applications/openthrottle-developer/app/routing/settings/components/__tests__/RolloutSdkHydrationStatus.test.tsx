@@ -1,12 +1,14 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
 import { RolloutProvider } from '@openthrottle/react-router-rollout';
+import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { developerRolloutFlags } from '~/global/data/data.rollout-flags';
-import { RolloutSdkHydrationStatus } from '../RolloutSdkHydrationStatus';
 import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
+
+import { RolloutSdkHydrationStatus } from '../RolloutSdkHydrationStatus';
 
 const renderWithEvaluations = (
   initialEvaluations: React.ComponentProps<

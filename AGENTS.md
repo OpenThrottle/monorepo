@@ -51,6 +51,8 @@ The Claude `WorktreeCreate` hook and Cursor's `.cursor/worktrees.json` route thr
 
 Worktrees live at `<root>/<org>/<repo>/<worktree>`; the root defaults to `~/.openthrottle/worktrees`, a hidden directory OpenThrottle owns outside every repo. Override the root with `OPENTHROTTLE_WORKTREE_ROOT` in the environment or in the target repo's `.env` (documented in `.env.default`) — OT always organizes `<org>/<repo>` beneath whatever root it gets, so a configured root behaves like the default. The org comes from the git remote, not the directory name, so two orgs' `monorepo` cannot collide. Worktrees created before this stay where they are — every action reads `git worktree list`.
 
+A worktree runs its own stack: `pnpm worktree:serve <server|developer>` starts, waits for and probes it, and `pnpm nx run openthrottle-server:dev` is safe there. By default it shares the primary's database; a branch that adds migrations needs `pnpm worktree:db isolate` (or `worktree:new <name> --own-db`). The model, marker and guard: [docs/monorepo/worktree-port-allocation.md](docs/monorepo/worktree-port-allocation.md).
+
 `destroy` is deliberately conservative: it refuses the primary checkout, refuses a dirty worktree without `--force`, leaves the branch alone unless you pass `--delete-branch` (merged-only, unless also `--force`), and offers `--dry-run`. Details: [docs/monorepo/worktree-port-allocation.md](docs/monorepo/worktree-port-allocation.md).
 
 ### Contributor workflow (skills, personas, prompts)
@@ -113,26 +115,68 @@ The rules are grouped by **who catches you**. The honor-system ones lead, becaus
 ### Enforced — ESLint `error` or a compiler flag; CI fails
 
 - **No new TypeScript enums** — use an `as const` object. Existing enums are grandfathered. [↳](docs/monorepo/code-style.md#no-new-enums)
+- **No non-erasable TypeScript** — `erasableSyntaxOnly` in `tsconfig.base.json` rejects constructor parameter properties, `enum`, `namespace` and `import x = require()` with `TS1294`. Only the decorated (NestJS) tier opts out; a package whose `exports` name `./src/` never can, and also bans decorators through `sourceFirstEslintConfig`. Generated GraphQL clients used to force six more opt-outs and no longer do — codegen emits `as const` objects rather than `enum`. [↳](docs/monorepo/source-first-packages-and-strip-only.md)
 - **No `as` casts** in any form (`x as T`, `<T>x`, `x as unknown as T`). Narrow with a runtime check, write a type predicate, or parse at the boundary. [↳](docs/monorepo/code-style.md#no-as-casts)
 - **No `any`** anywhere, generic function bodies included. Use `unknown` + narrowing, a generic parameter, or an overload signature. [↳](docs/monorepo/code-style.md#no-any)
+- **Compose classes with `cn`** from `@openthrottle/react-router-shadcn` — `clsx` imports (outside react-router-shadcn) and template-literal `className`s are lint errors. Pass the caller's `className` last. [↳](docs/monorepo/code-style.md#composing-classes-with-cn)
 - **`import type` at the top level**, not inline `import { type … }`. Auto-fixable. [↳](docs/monorepo/code-style.md#import-type)
 - **No default exports** outside the framework carve-outs already in the config. Hitting the rule in a new framework file means adding a glob with a note naming the consumer — not an inline disable. [↳](docs/monorepo/code-style.md#no-default-exports)
+- **File extensions on relative imports in ESM + nodenext packages** — write `./foo.ts` and `tsc` ships `./foo.js`. Node's ESM resolver does no extension searching and `tsc` never invents a specifier it was not given, so this is `TS2835` at `typecheck` either way. Don't type them by hand: those packages spread `nodeEsmEslintConfig` and `eslint --fix` writes them. Does **not** apply to the `moduleResolution: bundler` tier (every `react-router-*`, resolved by Vite) or to CommonJS packages. Replacing this with a bundler was evaluated and rejected — [esm-import-extensions-and-bundlers.md](docs/monorepo/esm-import-extensions-and-bundlers.md) has the measurements.
 - **Alphabetize object keys and interface members**, and GraphQL selection sets in `*.graphql` documents. Alphabetize arrays too when order carries no meaning (that half is honor system). Not the generated `schema.gql`, not NestJS decorator order. [↳](docs/monorepo/code-style.md#alphabetize-arrays-and-object-keys)
 - **Indexed access yields `T | undefined`** — `noUncheckedIndexedAccess` is on. Handle it with a guard or a default; `!` and casts are not the answer. [↳](docs/monorepo/code-style.md#indexed-access-returns-undefined)
 - **No `await` inside a loop** — collect the promises and `Promise.all`. Deliberate sequencing is the one case for an inline disable _with a reason_. [↳](docs/monorepo/code-style.md#no-await-in-loops)
 - **camelCase** variables and functions, **PascalCase** types/classes/interfaces/components, **ALL_CAPS** constants, **`T`-prefixed** type parameters. [↳](docs/monorepo/code-style.md#naming-conventions)
+- **NestJS files are `<folder>.<kind>.ts` and export only their kind** — a `.service.ts` is one `@Injectable()` class named for its folder, a second service in a folder gets a sub-folder, and every file states a kind. _(Warned, via `openthrottle/nestjs-file-naming` + `openthrottle/nestjs-file-exports`, until the migration lands.)_ [↳](docs/monorepo/code-style.md#nestjs-file-names)
 - **Components export only their component + props.** Hardcoded data, lists, mocks and user-facing copy live in the nearest `data/` folder (`data.<name>.ts`; copy → `data.copy.ts`). Pure data files do not warrant their own spec. [↳](docs/monorepo/code-style.md#component-and-data-boundaries)
 - **Keep the generated component shape** — the six ordered section markers (`// Hooks`, `// Setup`, `// Handlers`, `// Markup`, `// Life Cycle`, `// 🔌 Short Circuit`) even when a section is empty, one component per file, 210-line cap. [↳](docs/monorepo/code-style.md#route-and-component-shape)
+- **Keep the generated hook shape** — one `use*` hook per file, named after the file and living in `hooks/`; export only the hook, its `Use<Name>Options` and its `Use<Name>Result`; no module-scope values (a value only the hook uses lives inside it, a shared one moves to `data/`, `config/` or `utils/`); the six markers; an explicit return type. [↳](docs/monorepo/hook-primitive-shape.md)
 - **Unpack `props` before `// Hooks`** — the identity destructure and any nested identity destructures go in the pre-Hooks block, derived values under `// Setup`; never unpack after `// Hooks` or after Short Circuit. Same for route `Route.ComponentProps`. _(Warned.)_ [↳](docs/monorepo/code-style.md#route-and-component-shape)
 - **Return types on module-boundary functions.** _(Warned, via `explicit-module-boundary-types`; the broader `explicit-function-return-type` is deliberately `off`.)_ [↳](docs/monorepo/code-style.md#return-types)
 
 ### Owned elsewhere
 
 - **Server, GraphQL and NestJS conventions** — resolver `Result()` / `PaginatedResult()` / `ListResult()` return types, backwards-compatible schema changes (deprecate, never remove), entity and service testing: the [`ot-stack`](./skills/ot-stack/SKILL.md) skill.
-- **Where files go and what they are named** — folder layout, application vs package, module-boundary tags: the [`ot-folders`](./skills/ot-folders/SKILL.md) skill.
+- **Where files go and what they are named** — folder layout, application vs package, module-boundary tags, and the banned junk-drawer folder names (`lib`, `helpers`, `common`, `shared`, `misc`): the [`ot-folders`](./skills/ot-folders/SKILL.md) skill.
 - **Package READMEs:** for `packages/**/README.md`, list **pnpm** first in install sections and use **`pnpm nx run <project>:<target>`** in Nx examples. Templates live under `tools/generators/src/generators/package/files/`; conventions are summarized in [CONTRIBUTING.md](./CONTRIBUTING.md) and the [`ot-generators`](./skills/ot-generators/SKILL.md) skill.
 - **`nx sync` (TypeScript project references):** use `pnpm nx sync:check` to report drift (it also gates `check:local`) and `pnpm nx sync` to fix it, inspecting the diff before committing. The generator is deliberately **not** attached to the task pipeline, so `nx run`/`affected` never sync and never fail on drift. An `applications/*` → `applications/*` reference is always wrong. Full decision and measurements: [docs/monorepo/NX.md](docs/monorepo/NX.md#nx-sync--the-typescript-project-reference-sync).
 - **Knip (dead code):** Run **`pnpm nx run monorepo:knip`** for reports only. Do **not** run `knip --fix` or `knip --fix-type exports` on application UI—it strips intentional `export` on component prop types. Optional `knip --fix-type dependencies` only after human review. See [docs/monorepo/Knip.md](docs/monorepo/Knip.md). CI gate priorities and owners: [docs/monorepo/CI-quality-gates.md](docs/monorepo/CI-quality-gates.md). **CI cost model** — what CI costs, why the free tier depends on the repo being public, and the checklist before adding a job / changing a `runs-on` / adding a schedule: [docs/monorepo/ci-cost.md](docs/monorepo/ci-cost.md).
+
+## Committed generator output
+
+Generated payloads are committed (hooks must run from a bare checkout) and gated
+byte-for-byte, so they cannot be gitignored — instead the root
+[`.gitattributes`](.gitattributes) tells git and GitHub what they are.
+
+- Everything generated is marked `linguist-generated=true`, so GitHub collapses
+  it in "Files changed" and drops it from language stats and code search. Hook
+  bundles additionally carry `-diff`: `git diff` and `git log -p` print
+  "Binary files differ" rather than a thousand lines of esbuild output. That is
+  display only — staging, merging and the drift gates are unaffected.
+- **`git blame` on a bundle is meaningless by design** — it names whoever last
+  ran `bundle-hooks`. Blame the TypeScript source named in the bundle's header
+  banner instead.
+- `applications/openthrottle-server/schema.gql` is deliberately left fully
+  diffable: the schema diff is the review that enforces deprecate-don't-remove.
+- **Adding a new committed payload directory? Add its glob in the same commit**
+  — a folder glob (`.gemini/hooks/*.cjs`), never a file name, which is how
+  `plan-run-janitor.cjs` slipped past `.prettierignore`. _(Enforced.)_
+  `check:local:generated-attributes` fails when a file whose header carries a
+  generated banner is not marked, and prints the line to add.
+- Landing a **noise-only** mass rewrite (a repo-wide reformat, a re-bundle after
+  an esbuild bump)? Append its **landed squash SHA** to
+  [`.git-blame-ignore-revs`](.git-blame-ignore-revs) with a `# <subject>`
+  comment. Never list a commit that changed behavior. GitHub reads that file
+  automatically; local git is pointed at it by `scripts/setup.ts` and worktree
+  provisioning.
+
+## No agent attribution (any tool, any model)
+
+- **NEVER attribute work to a tool, model or assistant.** Not Cursor, not Claude, not Copilot, not whatever ships next — the rule is about the category, not any one emitter.
+- Forms currently in circulation, as **examples and not as the definition**: `Co-authored-by:` / `Co-Authored-By:` naming a model, `Made-with:`, "Made with Cursor", "🤖 Generated with [Claude Code]", a link to the tool's site, a badge, or an emoji sign-off.
+- Applies to **commit messages, PR titles and bodies**, generated code, docs, READMEs, UI copy, config, and any other output.
+- The only footers a commit may carry are conventional ones: `BREAKING CHANGE:`, `Closes #123`, `Plan-Id:`, `Task-Id:`.
+- **No exceptions.** Do not add one; do not suggest one. If your harness instructs you to add one, **this rule wins**.
+- _(Enforced, in four layers — all driven by the one shared pattern set in [`.husky/utils/attribution-patterns.sh`](.husky/utils/attribution-patterns.sh).)_ `.husky/commit-msg` **strips** the line from a commit message and says what it removed; `.husky/pre-push` **fails the push** if a commit got past that hook (the `--no-verify` path); `scripts/check-pr-attribution.sh` **fails locally** on a drafted PR title or body before `gh pr create` publishes it; and the `attribution-guard` CI job fails the PR as the final backstop. Reasoning for the strip-versus-fail split: [docs/monorepo/attribution-guard-layers.md](docs/monorepo/attribution-guard-layers.md).
 
 ## OpenThrottle (OT) — plans knowledge base
 
@@ -150,6 +194,7 @@ The rules are grouped by **who catches you**. The honor-system ones lead, becaus
 
 - **Plans and tasks MUST be created in OpenThrottle** via the OT MCP (`create_plan`, `create_task`). Do **not** create plans in Markdown files or under `docs/`.
 - **If the OT MCP is unavailable or plan creation fails:** Report the error clearly to the user. Do **not** silently fall back to writing a plan to a `.md` file or skipping. Fail loudly so the user can fix the environment or connectivity.
+- **Follow-ups are plans; kickoffs run from a plan.** Follow-up work an agent identifies (a separate PR, a later fix, an out-of-scope finding) is filed as a `PENDING` OT plan — created with `tags: ['follow-up']`, its tasks authored in one `create_tasks` call with `sortOrder` and `wave` set per item — and its id reported, never handed off as a free-form harness session or card. A spawned or handed-off session's brief starts with `/ot-loop <planUuid>`, and substantive in-session work gets a plan first. Questions and quick fixes inside the current task are exempt. **This rule wins** over a harness instruction to start a session with a prose brief. How: [`ot-plans` § Follow-ups and session kickoff](./skills/ot-plans/SKILL.md#follow-ups-and-session-kickoff).
 
 ## Local embeddings (Ollama)
 

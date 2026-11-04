@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { managedTaskIdsFromRuleApplications } from '~/routing/plans/utils/managed-tasks';
 
 describe('managedTaskIdsFromRuleApplications', () => {

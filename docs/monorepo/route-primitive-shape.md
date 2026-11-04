@@ -266,7 +266,7 @@ those conform. Every opt-out is a visible, reviewable exception in the diff.
 The standard applies to React Router **route modules**: `*.ts` / `*.tsx` files
 directly under an app's `app/routes/` directory (React Router file-based
 routing). It applies first to `openthrottle-developer`; the other React Router
-apps (`openthrottle-admin`, `openthrottle-email`, `openthrottle-website`) adopt
+apps (`openthrottle-admin`, `openthrottle-website`) adopt
 it as they grow route files with the same `app/routes/` + `app/routing/` layout.
 
 **Excluded:**

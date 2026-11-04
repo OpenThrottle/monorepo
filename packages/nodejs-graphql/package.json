@@ -5,21 +5,18 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
+    "@graphql-typed-document-node/core": "catalog:",
     "@openthrottle/nodejs-utils": "workspace:^",
     "graphql": "catalog:"
   },
   "description": "Fetch-based GraphQL client for React Router loaders and actions against openthrottle-server, using TypedDocumentNode from codegen.",
-  "devDependencies": {},
+  "devDependencies": {
+    "vitest": "catalog:"
+  },
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
-      "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
-    },
-    "./*": {
-      "types": "./dist/*.d.ts",
-      "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
     }
   },
   "license": "Apache-2.0",
@@ -38,16 +35,17 @@
       "type:package"
     ],
     "targets": {
+      "__build": {
+        "executor": "@nx/js:tsc"
+      },
       "__dev": {
+        "cache": false,
         "continuous": true,
         "executor": "@nx/js:tsc",
         "options": {
           "clean": false,
           "watch": true
         }
-      },
-      "build": {
-        "executor": "@nx/js:tsc"
       },
       "lint": {},
       "test": {},

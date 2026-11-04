@@ -1,6 +1,7 @@
 import * as React from 'react';
-import { ChatCheckoutSelector } from './ChatCheckoutSelector';
+
 import type { ChatBackendCapabilities, ChatCheckoutOption } from '../types';
+import { ChatCheckoutSelector } from './ChatCheckoutSelector';
 
 export interface ChatComposerCheckoutControlProps {
   /** Gates visibility and the multi-select cap; omitted hides the control. */

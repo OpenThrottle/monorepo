@@ -7,6 +7,10 @@ export interface PullDetailDto {
   readonly author: string;
   readonly changedFiles: number;
   readonly deletions: number;
+  /** Squash/merge commit the PR landed as; null while open, or when GitHub reports none. */
+  readonly mergeCommitSha: string | null;
   readonly mergedAt: string | null;
   readonly number: number;
+  /** 'open' or 'closed'. A closed PR with no mergedAt was abandoned, not merged. */
+  readonly state: string;
 }

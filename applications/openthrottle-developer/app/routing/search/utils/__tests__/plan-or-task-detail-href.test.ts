@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { planOrTaskDetailHref } from '../plan-or-task-detail-href';
 
 describe('planOrTaskDetailHref', () => {

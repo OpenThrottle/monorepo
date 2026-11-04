@@ -1,12 +1,14 @@
-import * as React from 'react';
-import { act, render, waitFor } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { act, render, waitFor } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { CustomPromptType } from '~/__generated__/graphql';
+
 import type { Route } from '@/app/routes/+types/prompts.$promptId';
-import { usePromptEditor } from '../usePromptEditor';
+import { CustomPromptType } from '~/__generated__/graphql';
+
 import type { UsePromptEditorResult } from '../usePromptEditor';
+import { usePromptEditor } from '../usePromptEditor';
 
 type PromptDetail = Route.ComponentProps['loaderData']['prompt'];
 type PromptEditorActionData = Route.ComponentProps['actionData'];

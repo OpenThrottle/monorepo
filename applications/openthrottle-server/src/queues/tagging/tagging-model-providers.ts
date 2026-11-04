@@ -15,6 +15,7 @@
 
 import { ConfigService } from '@nestjs/config';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+
 import {
   buildTaggingPrompt,
   parseTaggingResponse,
@@ -23,7 +24,7 @@ import {
   type TaggingModelProvider,
   type TaggingPrediction,
   type TaggingVocabularyEntry,
-} from './tagging-model.provider';
+} from './tagging-model.provider.ts';
 
 const HOSTED_DEFAULT_MODEL = 'claude-haiku-4-5-20251001';
 const OLLAMA_DEFAULT_BASE_URL = 'http://localhost:11434';

@@ -1,11 +1,12 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import { INTRODUCTIONS } from '../../data/data.introductions';
-import { OpenThrottleProductGetStarted } from '../OpenThrottleProductGetStarted';
 import type { OpenThrottleProductGetStartedProps } from '../OpenThrottleProductGetStarted';
+import { OpenThrottleProductGetStarted } from '../OpenThrottleProductGetStarted';
 
 describe('OpenThrottleProductGetStarted Component', () => {
   let component: RenderResult;

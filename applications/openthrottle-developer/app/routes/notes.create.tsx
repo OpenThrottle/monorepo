@@ -1,21 +1,22 @@
-import * as React from 'react';
 import {
   executeGraphqlWithAuth,
   parseFormData,
 } from '@openthrottle/react-router-graphql';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import {
   getActionError,
   mergeRouteModuleMeta,
 } from '@openthrottle/react-router-utils';
+import * as React from 'react';
 import { redirect } from 'react-router';
-import { NoteForm } from '~/routing/notes/components/NoteForm';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+
+import type { Route } from '@/app/routes/+types/notes.create';
 import { CreateNoteDocument, GetMyUserDocument } from '~/__generated__/graphql';
 import { CreateNoteInputSchema } from '~/__generated__/schemas';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/notes.create';
+import { NoteForm } from '~/routing/notes/components/NoteForm';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

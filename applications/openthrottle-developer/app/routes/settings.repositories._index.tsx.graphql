@@ -20,6 +20,15 @@ fragment RepositoryCheckoutFields on RepositoryCheckoutObject {
       linkedWorktrees
       normalizedRemoteUrl
     }
+    hookTelemetry {
+      authTokenConfigured
+      endpointConfigured
+      endpointSource
+      producers
+      reason
+      status
+      telemetryDir
+    }
     scannedAt
     stack {
       languages
@@ -76,21 +85,26 @@ query getSettingsRepositories {
   }
   discoveredWorktrees {
     droppedCount
+    missingCheckouts {
+      checkoutId
+      path
+      reason
+      repositoryId
+    }
     problems {
       detail
       kind
       path
       repositoryId
     }
-    rootSource
     scannedAt
     scannedRoots {
+      baseRoot
       exists
       path
       source
       worktreeCount
     }
-    worktreeRoot
     worktrees {
       ...DiscoveredWorktreeFields
     }
@@ -174,6 +188,16 @@ mutation refreshCheckout($input: RefreshCheckoutInput!) {
       ...WorkspaceRepositoryFields
     }
     supersededProjectId
+  }
+}
+
+mutation pruneWorktreeCheckouts($input: PruneWorktreeCheckoutsInput!) {
+  pruneWorktreeCheckouts(input: $input) {
+    results {
+      checkoutId
+      outcome
+      path
+    }
   }
 }
 

@@ -1,30 +1,32 @@
-import * as React from 'react';
-import { useAtom, useSetAtom } from 'jotai';
+import type { ChatModelOption } from '@openthrottle/react-router-chat';
 import { Card, TabsContent } from '@openthrottle/react-router-shadcn';
-import { DEFAULT_RALPH_PROMPT } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import { useAtom, useSetAtom } from 'jotai';
+import * as React from 'react';
+
+import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
+import { PlanConfigurationTabSkeleton } from '~/routing/plans/components/PlanConfigurationTabSkeleton';
+import { PlanDeferredSection } from '~/routing/plans/components/PlanDeferredSection';
 import { PlanTabConfigurationValidation } from '~/routing/plans/components/PlanTabConfigurationValidation';
 import { PlanWorkflowCommand } from '~/routing/plans/components/PlanWorkflowCommand';
 import { PlanWorkflowConfigExecution } from '~/routing/plans/components/PlanWorkflowConfigExecution';
+import { PlanWorkflowConfigHooks } from '~/routing/plans/components/PlanWorkflowConfigHooks';
 import { PlanWorkflowConfigPrompt } from '~/routing/plans/components/PlanWorkflowConfigPrompt';
 import { PlanWorkflowConfigTarget } from '~/routing/plans/components/PlanWorkflowConfigTarget';
-import { PlanWorkflowConfigHooks } from '~/routing/plans/components/PlanWorkflowConfigHooks';
 import { PlanWorkflowConfigTuning } from '~/routing/plans/components/PlanWorkflowConfigTuning';
-import { PlanWorkflowConfigWorktree } from '~/routing/plans/components/PlanWorkflowConfigWorktree';
 import { PlanWorkflowConfigWorkspaceSelector } from '~/routing/plans/components/PlanWorkflowConfigWorkspaceSelector';
-import { PlanDeferredSection } from '~/routing/plans/components/PlanDeferredSection';
-import { PlanConfigurationTabSkeleton } from '~/routing/plans/components/PlanConfigurationTabSkeleton';
-import { PLAN_DEFERRED_SECTION_COPY } from '~/routing/plans/data/data.copy';
-import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
+import { PlanWorkflowConfigWorktree } from '~/routing/plans/components/PlanWorkflowConfigWorktree';
 import {
   jobRunHookDraftRowsAtom,
-  workflowBranchAtom,
   setWorkflowBranchByUserAtom,
+  workflowBranchAtom,
   workflowCheckoutIdAtom,
   workflowRalphRunOptionsAtom,
   workflowRepositoryIdAtom,
   workflowRunIterationTimeoutTextAtom,
   workflowWorkingDirectoryAtom,
 } from '~/routing/plans/data/atom.plan';
+import { PLAN_DEFERRED_SECTION_COPY } from '~/routing/plans/data/data.copy';
+import { applyPromptLayerChange } from '~/routing/plans/utils/plan-workflow-config-prompt';
 
 /**
  * @description Workflow-ralph CLI options (`--plan` / `--task` and tuning flags)
@@ -35,6 +37,13 @@ import {
  */
 export interface PlanTabConfigurationProps {
   className?: string;
+
+  /**
+   * @description Discovered agent+model options for the Run Tuning model picker, as the
+   * loader's deferred promise. Discovery probes local model servers, so it gets its own
+   * boundary inside the picker field rather than holding up the whole tab.
+   */
+  models: Promise<readonly ChatModelOption[]>;
 
   /**
    * @description When set (plan detail URL-driven panel), shows a control to collapse the section.
@@ -70,6 +79,7 @@ export const PlanTabConfiguration = (
   props: PlanTabConfigurationProps,
 ): React.ReactElement => {
   const {
+    models,
     onCollapse: _onCollapse, // FIXME: Trim this bad boy
     onResetToDefaults,
     onSaveJobRunHooks,
@@ -165,19 +175,9 @@ export const PlanTabConfiguration = (
               onPromptFileChange={(next) =>
                 setInput((prev) => ({ ...prev, promptFile: next }))
               }
-              onPromptLayerChange={(next) => {
-                setInput((prev) => {
-                  if (next === 'named') {
-                    return { ...prev, promptFile: '', promptLayer: 'named' };
-                  }
-
-                  return {
-                    ...prev,
-                    prompt: DEFAULT_RALPH_PROMPT,
-                    promptLayer: 'file',
-                  };
-                });
-              }}
+              onPromptLayerChange={(next) =>
+                setInput((prev) => applyPromptLayerChange(prev, next))
+              }
               prompt={input.prompt}
               promptFile={input.promptFile}
               promptLayer={input.promptLayer}
@@ -197,6 +197,7 @@ export const PlanTabConfiguration = (
               heading="07. Run Tuning"
               input={input}
               iterationTimeoutText={iterationTimeoutText}
+              models={models}
               setInput={setInput}
               setIterationTimeoutText={setIterationTimeoutText}
             />

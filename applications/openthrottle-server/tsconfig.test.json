@@ -2,7 +2,6 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "baseUrl": "./",
     "outDir": "./build",
     "rootDir": "./",
     "composite": false,
@@ -15,9 +14,6 @@
   "include": ["src/**/*.json", "src/**/*.ts", "src/**/*.tsx", "tests/**/*.ts"],
   "exclude": ["build", "src/graphql/resolver-authorization-stance.test.ts"],
   "references": [
-    {
-      "path": "../../tools/generators/tsconfig.lib.json"
-    },
     {
       "path": "../../tools/workflows/tsconfig.lib.json"
     },

@@ -10,12 +10,13 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
 import {
   ROLLOUT_FLAG_KIND,
   type RolloutFallthrough,
   type RolloutFlagKind,
   type RolloutFlagVariation,
-} from './rollout-flag.constants';
+} from './rollout-flag.constants.ts';
 
 /** Scalar/column fields of RolloutFlag (no relations). */
 export type RolloutFlagData = Pick<

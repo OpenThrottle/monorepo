@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { stat } from 'node:fs/promises';
 import * as path from 'node:path';
+
 import type { OnModuleDestroy, Type } from '@nestjs/common';
 import { Inject, Logger } from '@nestjs/common';
 import {
@@ -15,16 +16,20 @@ import {
 import { isRecord } from '@openthrottle/nodejs-utils';
 import type { Server } from 'socket.io';
 import type { Socket } from 'socket.io';
+
 import {
   DEFAULT_MAX_PENDING_WS_RECORDS,
   NESTJS_LOGGING_MODULE_OPTIONS,
   type ResolvedNestjsLoggingModuleOptions,
-} from '../config/nestjs-logging.options';
-import type { LogStreamHub, StructuredLogRecord } from '../ports/logging-ports';
-import { getActiveJsonlRelativePath } from '../services/get-active-jsonl-relative-path';
-import { structuredLogRecordToJsonlPayload } from '../services/jsonl-payload';
-import type { LogRedactor } from '../services/log-redaction';
-import { LOG_STREAM_HUB } from '../tokens/nestjs-logging.tokens';
+} from '../config/nestjs-logging.options.ts';
+import type {
+  LogStreamHub,
+  StructuredLogRecord,
+} from '../ports/logging-ports.ts';
+import { getActiveJsonlRelativePath } from '../services/get-active-jsonl-relative-path.ts';
+import { structuredLogRecordToJsonlPayload } from '../services/jsonl-payload.ts';
+import type { LogRedactor } from '../services/log-redaction.ts';
+import { LOG_STREAM_HUB } from '../tokens/nestjs-logging.tokens.ts';
 
 interface LogSubscriptionFilter {
   readonly contexts: ReadonlySet<string> | undefined;

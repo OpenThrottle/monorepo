@@ -1,9 +1,11 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, test, vi } from 'vitest';
-import * as authUtils from '~/global/utils/utils.auth';
-import { action } from '../../root';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import type { Route } from '@/app/+types/root';
+import * as authUtils from '~/global/utils/utils.auth';
+
+import { action } from '../../root';
 
 vi.mock('~/global/utils/utils.auth', () => ({
   callLoginMutation: vi.fn(),

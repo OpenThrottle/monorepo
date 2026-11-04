@@ -1,6 +1,5 @@
+import { cn, Progress, Spinner } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import clsx from 'clsx';
-import { Progress, Spinner } from '@openthrottle/react-router-shadcn';
 
 export type DocumentUploadProgressState =
   | { readonly kind: 'busy'; readonly message: string; readonly value: number }
@@ -38,7 +37,7 @@ export const DocumentUploadProgress = (
     <div
       aria-busy={true}
       aria-live="polite"
-      className={clsx(
+      className={cn(
         'border-border bg-muted/40 flex flex-col gap-2 rounded-md border p-3',
         className,
       )}

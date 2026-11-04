@@ -1,18 +1,9 @@
-import * as React from 'react';
 import { useSetAtom } from 'jotai';
-import {
-  CHAT_TOOLBAR_STORAGE_KEY,
-  chatToolbarStateAtom,
-} from '../data/atom.chat-toolbar';
-import { decayElevatedPermissionModes } from '../utils/chat-toolbar-decay';
+import * as React from 'react';
 
-/**
- * sessionStorage key whose presence marks that the elevated-permission decay
- * has already run for the current browser session. Derived from
- * {@link CHAT_TOOLBAR_STORAGE_KEY} so it is app-namespaced like the toolbar blob.
- * @public
- */
-export const CHAT_TOOLBAR_SESSION_SENTINEL_KEY = `${CHAT_TOOLBAR_STORAGE_KEY}:session`;
+import { CHAT_TOOLBAR_SESSION_SENTINEL_KEY } from '../config/chat-session-permission-decay';
+import { chatToolbarStateAtom } from '../data/atom.chat-toolbar';
+import { decayElevatedPermissionModes } from '../utils/chat-toolbar-decay';
 
 /**
  * @description Boot hook that runs {@link decayElevatedPermissionModes} once per
@@ -26,8 +17,16 @@ export const CHAT_TOOLBAR_SESSION_SENTINEL_KEY = `${CHAT_TOOLBAR_STORAGE_KEY}:se
  * @public
  */
 export function useSessionPermissionDecay(): void {
+  // Hooks
   const setToolbarState = useSetAtom(chatToolbarStateAtom);
 
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
   React.useEffect(() => {
     if (typeof window === 'undefined') {
       return;
@@ -48,4 +47,6 @@ export function useSessionPermissionDecay(): void {
 
     setToolbarState((previous) => decayElevatedPermissionModes(previous));
   }, [setToolbarState]);
+
+  // 🔌 Short Circuit
 }

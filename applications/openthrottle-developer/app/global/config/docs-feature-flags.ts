@@ -62,3 +62,6 @@ export const isDocsFeatureFlags = (
     (key) => typeof record[key] === 'boolean',
   );
 };
+
+/** Namespaced persistent-setting key for the docs feature flags. */
+export const DOCS_FEATURE_FLAGS_SETTING = 'docs.featureFlags';

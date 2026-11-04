@@ -3,6 +3,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import type { WorkflowRalphConfig } from '../../utils/openthrottle-ralph';
 import type { PlanRow, TaskRow } from '../../utils/openthrottle-ralph';
 
@@ -37,6 +38,7 @@ const mockTask: TaskRow = {
   status: 'IN_PROGRESS',
   title: 'Document current behavior',
   updatedAt: new Date().toISOString(),
+  wave: null,
 };
 
 const mockTasks: TaskRow[] = [mockTask];
@@ -59,7 +61,7 @@ const { updateTaskStatusMock, runIterationMock, getNxProjectNamesMock } =
 
 vi.mock('../../utils/openthrottle-ralph', async (importOriginal) => {
   const actual =
-    await importOriginal<typeof import('../../utils/openthrottle-ralph')>();
+    await importOriginal<typeof import('../../utils/openthrottle-ralph.ts')>();
   return {
     ...actual,
     ensureDatabaseReachableOrExit: vi.fn().mockResolvedValue(undefined),
@@ -73,7 +75,8 @@ vi.mock('../../utils/openthrottle-ralph', async (importOriginal) => {
 });
 
 vi.mock('../../utils/parsers', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../../utils/parsers')>();
+  const actual =
+    await importOriginal<typeof import('../../utils/parsers.ts')>();
   return {
     ...actual,
     parseRalphArgs: vi.fn(() => ({

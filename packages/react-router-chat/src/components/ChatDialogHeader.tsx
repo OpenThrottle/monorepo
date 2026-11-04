@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Button,
   Tooltip,
@@ -6,6 +5,8 @@ import {
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { BotIcon, MessageSquarePlus } from 'lucide-react';
+import * as React from 'react';
+
 import { ChatConversationSheet } from './ChatConversationSheet';
 import type { ChatConversationSidebarProps } from './ChatConversationSidebar';
 
@@ -62,7 +63,7 @@ export const ChatDialogHeader = (
           <TooltipTrigger asChild={true}>
             <Button
               aria-label="New chat"
-              className="shrink-0"
+              className="shrink-0 pointer-coarse:size-11"
               onClick={onStartNewChat}
               size="icon"
               type="button"

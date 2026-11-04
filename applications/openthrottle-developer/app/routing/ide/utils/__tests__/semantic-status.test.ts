@@ -1,5 +1,6 @@
-import { describe, expect, test } from 'vitest';
 import { IDE_SEMANTIC_STATUS } from '@openthrottle/react-router-ide';
+import { describe, expect, test } from 'vitest';
+
 import { toSemanticStatus } from '~/routing/ide/utils/semantic-status';
 
 describe('toSemanticStatus', () => {

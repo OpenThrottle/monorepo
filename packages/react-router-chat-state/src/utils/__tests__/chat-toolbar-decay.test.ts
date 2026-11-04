@@ -1,12 +1,13 @@
-import { describe, expect, test } from 'vitest';
 import {
   ChatPermissionMode,
   ChatReasoningLevel,
   ChatServiceTier,
 } from '@openthrottle/react-router-chat';
+import { describe, expect, test } from 'vitest';
+
 import {
-  DEFAULT_CHAT_TOOLBAR_STATE,
   type ChatToolbarState,
+  DEFAULT_CHAT_TOOLBAR_STATE,
 } from '../../data/atom.chat-toolbar';
 import { decayElevatedPermissionModes } from '../chat-toolbar-decay';
 

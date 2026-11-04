@@ -35,9 +35,15 @@ variable "redis_version" {
   default     = "REDIS_7_2"
 }
 
-variable "reserved_ip_range" {
-  description = "CIDR range for the Redis instance (e.g. 10.0.0.0/29). Must be in the VPC and not overlap with other ranges."
+variable "network" {
+  description = "VPC network id or self_link the instance peers into. The module allocates the peering range itself, so this is the only networking input a caller supplies."
   type        = string
+}
+
+variable "reserved_prefix_length" {
+  description = "Prefix length of the allocated peering range. 29 is Memorystore's minimum and is sized for a single BASIC instance; widen it only for a larger topology, and only to a range that overlaps nothing else in the VPC."
+  type        = number
+  default     = 29
 }
 
 variable "labels" {

@@ -4,12 +4,17 @@
  * @description Resolver for activity-by-date-range. Uses PlansService repository manager for raw SQL across the work ledger (work_artifacts git_commit), plan_output_stream, tasks.
  */
 
+import { Args, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { Plan, Task } from '@openthrottle/nestjs-repositories';
 import { PlansService } from '@openthrottle/nestjs-repositories';
-import { Args, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
-import { PlanObject } from '../plans/plan.object';
-import { TaskObject } from '../tasks/task.object';
-import { ActivityLoaders } from './activity-loaders';
+
+import { PlanObject } from '../plans/plan.object.ts';
+import { TaskObject } from '../tasks/task.object.ts';
+import {
+  ActivityByDateInput,
+  ActivityByDateRangeInput,
+  LastActivityInput,
+} from './activity.input.ts';
 import {
   ActivityByDateResultObject,
   ActivityCommitRowObject,
@@ -19,12 +24,8 @@ import {
   LastActivityOutputChunkPartObject,
   LastActivityResultObject,
   LastActivityTaskUpdatePartObject,
-} from './activity.object';
-import {
-  ActivityByDateInput,
-  ActivityByDateRangeInput,
-  LastActivityInput,
-} from './activity.input';
+} from './activity.object.ts';
+import { ActivityLoaders } from './activity-loaders.ts';
 
 type ActivityRow =
   | ActivityCommitRowObject
@@ -208,7 +209,11 @@ export class ActivityResolver {
       at: string;
       commit?: { message: string | null; repo: string; sha: string };
       kind: 'commit' | 'output_chunk' | 'task_update';
-      outputChunk?: { content: string; iteration: number | null };
+      outputChunk?: {
+        content: string;
+        iteration: number | null;
+        taskId: string | null;
+      };
       summary: string;
       taskUpdate?: { status: string; taskId: string; taskTitle: string };
     };
@@ -277,9 +282,14 @@ export class ActivityResolver {
     }
 
     const outputRows = await q<
-      { content: string; created_at: string; iteration: number | null }[]
+      {
+        content: string;
+        created_at: string;
+        iteration: number | null;
+        task_id: string | null;
+      }[]
     >(
-      `SELECT content, created_at, iteration FROM plan_output_stream WHERE plan_id = $1 ORDER BY created_at DESC LIMIT 1`,
+      `SELECT content, created_at, iteration, task_id FROM plan_output_stream WHERE plan_id = $1 ORDER BY created_at DESC LIMIT 1`,
       [planId],
     );
     const outRow = outputRows[0];
@@ -292,6 +302,7 @@ export class ActivityResolver {
         outputChunk: {
           content: outRow.content,
           iteration: outRow.iteration,
+          taskId: outRow.task_id,
         },
         summary: `Plan output: ${preview}`,
       });
@@ -450,9 +461,10 @@ export class ActivityResolver {
           iteration: number | null;
           plan_id: string;
           plan_title: string;
+          task_id: string | null;
         }[]
       >(
-        `SELECT pos.id, pos.plan_id, pos.iteration, pos.content, pos.created_at, p.title AS plan_title
+        `SELECT pos.id, pos.plan_id, pos.iteration, pos.content, pos.created_at, pos.task_id, p.title AS plan_title
          FROM plan_output_stream pos
          JOIN plans p ON pos.plan_id = p.id
          WHERE pos.created_at >= $1::timestamptz AND pos.created_at < $2::timestamptz
@@ -532,6 +544,7 @@ export class ActivityResolver {
       obj.plan = null;
       obj.planId = r.plan_id;
       obj.planTitle = r.plan_title;
+      obj.taskId = r.task_id;
       return obj;
     });
     const tasksUpdated = taskRows.map((r) => {

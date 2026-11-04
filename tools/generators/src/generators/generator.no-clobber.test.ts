@@ -1,6 +1,7 @@
-import { describe, expect, beforeEach, test, vi } from 'vitest';
 import type { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { componentGenerator } from './react/generator.component';
 import { generatorReactRouterComponent } from './react-router/generator.component';
 
@@ -32,7 +33,7 @@ describe('generators do not clobber existing files', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
   });
 
   const name = 'TestComponent';

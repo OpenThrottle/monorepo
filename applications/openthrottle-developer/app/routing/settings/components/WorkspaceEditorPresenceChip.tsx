@@ -1,10 +1,10 @@
+import { Badge, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import clsx from 'clsx';
-import { Badge } from '@openthrottle/react-router-shadcn';
+
+import type { WorkspaceEditorId } from '~/__generated__/graphql';
 import { EditorPresenceState } from '~/__generated__/graphql';
 import { WorkspaceEditorPresenceMarker } from '~/routing/settings/components/WorkspaceEditorPresenceMarker';
 import { getEditorPresenceStatus } from '~/routing/settings/utils/workspace-editor-presence-status';
-import type { WorkspaceEditorId } from '~/__generated__/graphql';
 
 export interface WorkspaceEditorPresenceChipProps {
   className?: string;
@@ -44,7 +44,7 @@ export const WorkspaceEditorPresenceChip = (
 
   return (
     <Badge
-      className={clsx(
+      className={cn(
         'gap-1 font-normal',
         // The whole chip dims for not-detected rather than only its icon changing —
         // that difference is what makes the two states legible at a glance.
@@ -59,7 +59,7 @@ export const WorkspaceEditorPresenceChip = (
         editorLabel={editorLabel}
         presence={presence}
       />
-      <span className={clsx(isInstalled && 'font-medium')}>{editorLabel}</span>{' '}
+      <span className={cn(isInstalled && 'font-medium')}>{editorLabel}</span>{' '}
       {status.label}
     </Badge>
   );

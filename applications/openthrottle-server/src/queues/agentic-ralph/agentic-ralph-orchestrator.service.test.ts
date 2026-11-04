@@ -1,15 +1,13 @@
 /**
  * @description Unit tests for in-process Ralph orchestrator run-start worktree
- * checkout registration (soft-fail, once-per-start, skip when checkout_id set)
- * and the per-user foreign-skill injection gate (opt-in via the actor's checkout).
+ * checkout registration (soft-fail, once-per-start, still registers when a
+ * scheduling checkout_id is already set so the worktree can overwrite it) and
+ * the per-user foreign-skill injection gate (opt-in via the actor's checkout).
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
-import { asMock } from '@openthrottle/nestjs-testing';
 import type { AgenticWorkflowRegistry } from '@openthrottle/nestjs-agentic-workflow';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type { Repository } from 'typeorm';
 import type {
   PlanOutputStreamService,
   PlanRunsService,
@@ -22,16 +20,22 @@ import {
   type RepositoryCheckout,
   type UserWorkspaceSettings,
 } from '@openthrottle/nestjs-repositories';
-import type { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service';
-import type { PlanRunWorkspacePreflightService } from '../../services/plan-run-workspace-preflight/plan-run-workspace-preflight.service';
-import type { PlanRunWorktreeProvisionService } from '../../services/plan-run-worktree-provision/plan-run-worktree-provision.service';
-import { AgenticRalphOrchestratorService } from './agentic-ralph-orchestrator.service';
+import { asMock } from '@openthrottle/nestjs-testing';
+import { getOpenThrottleRoot } from '@openthrottle/openthrottle-agentic-utils';
+import type { Repository } from 'typeorm';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import type { PlanRunWorkspacePreflightService } from '../../services/plan-run-workspace-preflight/plan-run-workspace-preflight.service.ts';
+import type { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service.ts';
+import type { PlanRunWorktreeProvisionService } from '../../services/plan-run-worktree-provision/plan-run-worktree-provision.service.ts';
+import { AgenticRalphOrchestratorService } from './agentic-ralph-orchestrator.service.ts';
 
 // Force the run's path to read as foreign and stub the materializer so the gate is
 // exercised deterministically (no filesystem, no env-derived OT-root fragility).
 const {
   mockBuildRalphFlowContext,
   mockEnsureMaterialized,
+  mockGetOpenThrottleRoot,
   mockResolveForeign,
 } = vi.hoisted(() => ({
   mockBuildRalphFlowContext: vi.fn(() => ({
@@ -42,6 +46,10 @@ const {
     prompt: '/agents-ralph',
   })),
   mockEnsureMaterialized: vi.fn(),
+  // Defaults to the real implementation (set from `actual` in the factory below) so most tests
+  // exercise the genuine `.openthrottle.mjs` marker walk; individual tests can override it to
+  // force the "unresolvable repo root" branch without touching the filesystem.
+  mockGetOpenThrottleRoot: vi.fn(),
   mockResolveForeign: vi.fn(),
 }));
 
@@ -50,9 +58,11 @@ vi.mock('@openthrottle/openthrottle-agentic-utils', async (importOriginal) => {
     await importOriginal<
       typeof import('@openthrottle/openthrottle-agentic-utils')
     >();
+  mockGetOpenThrottleRoot.mockImplementation(actual.getOpenThrottleRoot);
   return {
     ...actual,
     ensureMaterialized: mockEnsureMaterialized,
+    getOpenThrottleRoot: mockGetOpenThrottleRoot,
     resolveForeignWorkspaceContext: mockResolveForeign,
   };
 });
@@ -248,15 +258,20 @@ describe('AgenticRalphOrchestratorService worktree checkout registration', () =>
     });
   });
 
-  describe('when checkout_id is already set', () => {
-    it('does not invoke register', async () => {
+  describe('when checkout_id already names the scheduling primary', () => {
+    it('still registers so the worktree can overwrite checkout + branch', async () => {
       mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(
         buildRun({ checkoutId: CHECKOUT_ID }),
       );
 
       await runWithCorrelation();
 
-      expect(mockRegister).not.toHaveBeenCalled();
+      expect(mockRegister).toHaveBeenCalledTimes(1);
+      expect(mockRegister).toHaveBeenCalledWith({
+        filesystemPath: WORKTREE_PATH,
+        planRunId: PLAN_RUN_ID,
+        userId: USER_ID,
+      });
       expect(mockExecute).toHaveBeenCalledTimes(1);
     });
   });
@@ -529,7 +544,31 @@ describe('AgenticRalphOrchestratorService worktree provisioning', () => {
     });
   });
 
+  it('carries ralph.effort from the job data into the flow-context tuning', async () => {
+    await runWithWorktree({ effort: 'extraHigh', worktree: 'plan-aaaaaaaa' });
+
+    expect(mockBuildRalphFlowContext).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ralph: expect.objectContaining({ effort: 'extraHigh' }),
+      }),
+    );
+  });
+
   it('registers the checkout against the provisioned worktree, not the base checkout', async () => {
+    await runWithWorktree();
+
+    expect(mockRegister).toHaveBeenCalledWith({
+      filesystemPath: PROVISIONED_WORKTREE_PATH,
+      planRunId: PLAN_RUN_ID,
+      userId: USER_ID,
+    });
+  });
+
+  it('registers the provisioned worktree even when enqueue stamped a primary checkout_id', async () => {
+    mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(
+      buildRun({ checkoutId: CHECKOUT_ID }),
+    );
+
     await runWithWorktree();
 
     expect(mockRegister).toHaveBeenCalledWith({
@@ -606,5 +645,111 @@ describe('AgenticRalphOrchestratorService worktree provisioning', () => {
       baseCheckoutPath: expect.any(String),
       worktreeName: expect.any(String),
     });
+  });
+});
+
+describe('AgenticRalphOrchestratorService default-path worktree root resolution', () => {
+  const mockFindByQueueNameAndBullmqJobId = vi.fn();
+  const mockReadCancelRequested = vi.fn().mockResolvedValue(null);
+  const mockRegister = vi.fn().mockResolvedValue(null);
+  const mockFindByUserAndPath = vi.fn().mockResolvedValue(null);
+  const mockWarn = vi.fn();
+
+  let service: AgenticRalphOrchestratorService;
+
+  beforeEach(() => {
+    mockExecute.mockReset();
+    mockExecute.mockResolvedValue({ reason: 'done', status: 'finished' });
+    mockFindByQueueNameAndBullmqJobId.mockReset();
+    mockFindByQueueNameAndBullmqJobId.mockResolvedValue(buildRun());
+    mockRegister.mockReset();
+    mockRegister.mockResolvedValue(null);
+    mockFindByUserAndPath.mockReset();
+    mockFindByUserAndPath.mockResolvedValue(null);
+    mockProvision.mockReset();
+    mockProvision.mockResolvedValue(PROVISIONED_WORKTREE_PATH);
+    mockPreflightCheck.mockReset();
+    mockPreflightCheck.mockReturnValue([]);
+    mockOutputSave.mockClear();
+    mockOutputCreate.mockClear();
+    mockGetOrCreateForUser.mockReset();
+    mockGetOrCreateForUser.mockResolvedValue(
+      createMock<UserWorkspaceSettings>({ userId: USER_ID }),
+    );
+    mockResolveForeign.mockReset();
+    mockResolveForeign.mockReturnValue({
+      isForeign: false,
+      openThrottleRoot: '/ot-root',
+    });
+    // The real `.openthrottle.mjs` marker walk stays wired from the module factory above
+    // (its implementation is the actual `getOpenThrottleRoot`); only clear call history here.
+    // Do NOT `mockImplementation(getOpenThrottleRoot)` — that name now resolves to this same
+    // mock (the module is mocked), so reassigning it would make the mock call itself.
+    mockGetOpenThrottleRoot.mockClear();
+    mockWarn.mockReset();
+
+    service = new AgenticRalphOrchestratorService(
+      createMock<AgenticWorkflowRegistry>({ resolve: mockResolve }),
+      createMock<LoggerService>({ warn: mockWarn }),
+      planOutputStreamServiceMock(),
+      createMock<PlanRunsService>({
+        findByQueueNameAndBullmqJobId: mockFindByQueueNameAndBullmqJobId,
+        readCancelRequested: mockReadCancelRequested,
+      }),
+      createMock<PlanRunWorktreeCheckoutService>({ register: mockRegister }),
+      createMock<PlanRunWorkspacePreflightService>({
+        check: mockPreflightCheck,
+      }),
+      createMock<PlanRunWorktreeProvisionService>({
+        provision: mockProvision,
+      }),
+      createMock<RepositoryCheckoutsService>({
+        findByUserAndPath: mockFindByUserAndPath,
+      }),
+      createMock<UserWorkspaceSettingsService>({
+        getOrCreateForUser: mockGetOrCreateForUser,
+      }),
+    );
+  });
+
+  /**
+   * Mirrors an `enqueuePlanRalphOrchestrator` call that named no checkoutId, repositoryId, or
+   * workingDirectory — the case `PlanEnqueueService.resolveWorkspace` leaves `workingDirectory`
+   * `undefined` on the job payload.
+   */
+  const runWithoutExplicitWorkingDirectory = async (): Promise<unknown> =>
+    service.runPlanOrchestratorJob({
+      correlation: {
+        correlationId: QUEUE_JOB_ID,
+        queueJobId: QUEUE_JOB_ID,
+        queueName: QUEUE_NAME,
+      },
+      jobData: {
+        planId: PLAN_ID,
+        ralph: { worktree: 'plan-aaaaaaaa' },
+        runKind: 'orchestrator',
+      },
+    });
+
+  it('resolves baseCheckoutPath to a genuine repo root, not the server process cwd', async () => {
+    const expectedRoot = getOpenThrottleRoot(process.env);
+    expect(expectedRoot).toBeDefined();
+
+    await runWithoutExplicitWorkingDirectory();
+
+    expect(mockProvision).toHaveBeenCalledWith({
+      baseCheckoutPath: expectedRoot,
+      worktreeName: 'plan-aaaaaaaa',
+    });
+  });
+
+  it('fails fast with a legible error naming what is missing, instead of three silent retries against a bad path', async () => {
+    mockGetOpenThrottleRoot.mockReturnValueOnce(undefined);
+
+    await expect(runWithoutExplicitWorkingDirectory()).rejects.toThrow(
+      /checkoutId, repositoryId, or workingDirectory/,
+    );
+    expect(mockProvision).not.toHaveBeenCalled();
+    expect(mockExecute).not.toHaveBeenCalled();
   });
 });

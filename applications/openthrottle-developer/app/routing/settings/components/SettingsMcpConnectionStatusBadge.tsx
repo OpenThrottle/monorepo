@@ -1,7 +1,8 @@
-import * as React from 'react';
 import { Badge } from '@openthrottle/react-router-shadcn';
-import type { McpConnectorStatus } from '~/routing/settings/utils/settings-mcp-connection';
+import * as React from 'react';
+
 import { MCP_CONNECTION_STATUS_DISPLAY } from '~/routing/settings/data/mcp-connection-status';
+import type { McpConnectorStatus } from '~/routing/settings/utils/settings-mcp-connection';
 
 export interface SettingsMcpConnectionStatusBadgeProps {
   className?: string;

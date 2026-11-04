@@ -6,8 +6,9 @@ import {
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { firstValueFrom, isObservable, type Observable } from 'rxjs';
-import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
-import { JWT_STRATEGY_NAME } from '../strategies/jwt.strategy';
+
+import { IS_PUBLIC_KEY } from '../decorators/public.decorator.ts';
+import { JWT_STRATEGY_NAME } from '../strategies/jwt.strategy.ts';
 
 /**
  * @description Guard that enforces JWT authentication. Use with @UseGuards(JwtAuthGuard).

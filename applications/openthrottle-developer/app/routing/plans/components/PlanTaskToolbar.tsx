@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Button,
   Input,
@@ -7,21 +6,23 @@ import {
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { CheckCircle } from 'lucide-react';
-import { usePlanTaskToolbar } from '~/routing/plans/hooks/usePlanTaskToolbar';
-import { PLAN_TASK_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
+import * as React from 'react';
+
 import { OpenThrottleToolbar } from '~/routing/plans/components/OpenThrottleToolbar';
-import { PlanTagChips } from '~/routing/plans/components/PlanTagChips';
 import type {
   PlanTagChipData,
   PlanTagVocabularyOption,
 } from '~/routing/plans/components/PlanTagChips';
+import { PlanTagChips } from '~/routing/plans/components/PlanTagChips';
 import { PromoteTaskButton } from '~/routing/plans/components/PromoteTaskButton';
+import { PLAN_TASK_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
+import { usePlanTaskToolbar } from '~/routing/plans/hooks/usePlanTaskToolbar';
 
 export interface PlanTaskToolbarProps {
   className?: string;
   /**
-   * @description True when the task has already been promoted (SKIPPED +
-   * `promoted` tag); disables the Promote to Plan control.
+   * @description True when the task has already been promoted (PROMOTED status,
+   * or the legacy SKIPPED + `promoted` tag); disables the Promote to Plan control.
    */
   isPromoted: boolean;
   /**
@@ -41,7 +42,7 @@ export interface PlanTaskToolbarProps {
   planIsRunning: boolean;
   /**
    * @description Whether the owning plan is in a terminal state (COMPLETED /
-   * CANCELED / SKIPPED). When true, Mark Complete and Promote to Plan are
+   * CANCELED / PROMOTED / SKIPPED). When true, Mark Complete and Promote to Plan are
    * disabled with explanatory tooltips — there is no more work to do on a
    * finished/abandoned plan, so close-out/promote by shipping a new plan
    * instead. Computed via `getPlanIsTerminal` from the plan status.

@@ -5,26 +5,24 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
+    "@graphql-typed-document-node/core": "catalog:",
     "@openthrottle/graphql-codegen": "workspace:^",
     "@openthrottle/nodejs-graphql": "workspace:^",
     "@openthrottle/nodejs-utils": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
-    "@openthrottle/openthrottle-agentic-workflow": "workspace:^"
+    "@openthrottle/openthrottle-agentic-workflow": "workspace:^",
+    "zod": "catalog:"
   },
   "description": "Ralph agentic workflow: codegen GraphQL client for OpenThrottle plans/tasks, injected iteration runner, and GraphQL-only orchestrator (no NestJS or Postgres).",
   "devDependencies": {
-    "graphql": "catalog:"
+    "graphql": "catalog:",
+    "graphql-codegen-typescript-validation-schema": "catalog:",
+    "vitest": "catalog:"
   },
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
-      "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
-    },
-    "./*": {
-      "types": "./dist/*.d.ts",
-      "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
     }
   },
   "license": "Apache-2.0",
@@ -44,28 +42,32 @@
       "type:package"
     ],
     "targets": {
-      "build": {
+      "__build": {
         "dependsOn": [
           "^build",
           "codegen-graphql"
         ]
       },
-      "build-package": {},
+      "__build-package": {},
       "codegen-graphql": {},
       "lint": {},
       "test": {
-        "description": "Run the Vitest suite. Adds the committed openthrottle-server schema.gql as an explicit input: src/graphql/__tests__/fragment-coverage.test.ts reads it, so a server-side field addition must invalidate this cache entry or the tripwire would pass from cache.",
         "inputs": [
           "default",
           "^production",
           "{workspaceRoot}/applications/openthrottle-server/schema.gql"
-        ]
+        ],
+        "metadata": {
+          "description": "Run the Vitest suite. Adds the committed openthrottle-server schema.gql as an explicit input: src/graphql/__tests__/fragment-coverage.test.ts reads it, so a server-side field addition must invalidate this cache entry or the tripwire would pass from cache."
+        }
       },
       "typecheck": {},
       "verify-graphql-codegen": {
         "cache": false,
-        "description": "Regenerate agentic-ralph GraphQL types and fail if the generated src/__generated__ output drifts from the .graphql documents. Output is committed here (see this project's .gitignore negation), so this is the workspace's live gate on the SHARED plan/task documents.",
         "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Regenerate agentic-ralph GraphQL types and fail if the generated src/__generated__ output drifts from the .graphql documents. Output is committed here (see this project's .gitignore negation), so this is the workspace's live gate on the SHARED plan/task documents."
+        },
         "options": {
           "command": "tsx ./scripts/verify-graphql-codegen.ts --project=packages/openthrottle-agentic-ralph",
           "cwd": "{workspaceRoot}"

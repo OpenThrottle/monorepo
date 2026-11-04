@@ -1,8 +1,8 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Badge, DataTable } from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
+import { Badge, cn, DataTable } from '@openthrottle/react-router-shadcn';
 import type { ColumnDef } from '@tanstack/react-table';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import type { GetProjectByIdQuery } from '~/__generated__/graphql';
 import { formatProjectDate } from '~/routing/projects/utils/format';
 
@@ -36,7 +36,7 @@ export const ProjectTasksTable = (
 
   return (
     <div
-      className={clsx('bg-card ui-border rounded-lg border', className)}
+      className={cn('bg-card ui-border rounded-lg border', className)}
       data-testid="ProjectTasksTable"
     >
       <DataTable<ProjectTaskRow, string | number | null | undefined>

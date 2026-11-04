@@ -1,14 +1,16 @@
-import * as React from 'react';
-import { render, waitFor } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub, redirect } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import { RolloutFlagKind } from '~/__generated__/graphql';
 import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
 import { defaultTypedConfigForKind } from '~/routing/settings/utils/rollout-typed-config';
-import { RolloutFlagEditForm } from '../RolloutFlagEditForm';
+
 import type { RolloutFlagEditFormProps } from '../RolloutFlagEditForm';
+import { RolloutFlagEditForm } from '../RolloutFlagEditForm';
 
 const flag = {
   createdAt: '2026-07-24T00:00:00.000Z',

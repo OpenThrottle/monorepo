@@ -1,5 +1,6 @@
-import * as React from 'react';
 import { CommandInput as CmdkCommandInput } from 'cmdk';
+import * as React from 'react';
+
 import { cn } from '../../utils/cn';
 
 export interface CommandInputProps extends React.ComponentPropsWithoutRef<

@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { ProjectsModule } from '../projects/projects.module';
-import { RepositoriesModule } from '../repositories/repositories.module';
-import { UserWorkspaceSettings } from './user-workspace-settings.entity';
-import { UserWorkspaceSettingsService } from './user-workspace-settings.service';
-import { WorkspaceLocalRepositoriesService } from './workspace-local-repositories.service';
-import { WorkspaceEditorConfigService } from './workspace-editor-config.service';
+
+import { ProjectsModule } from '../projects/projects.module.ts';
+import { RepositoriesModule } from '../repositories/repositories.module.ts';
+import { UserWorkspaceSettings } from './user-workspace-settings.entity.ts';
+import { UserWorkspaceSettingsService } from './user-workspace-settings.service.ts';
+import { WorkspaceEditorConfigService } from './workspace-editor-config.service.ts';
+import { WorkspaceLocalRepositoriesService } from './workspace-local-repositories.service.ts';
 
 @Module({
   controllers: [],

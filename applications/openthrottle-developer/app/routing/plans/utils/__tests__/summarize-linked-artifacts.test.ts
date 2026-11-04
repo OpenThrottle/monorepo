@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import {
   ARTIFACT_FILTER_ALL,
   filterLinkedArtifacts,

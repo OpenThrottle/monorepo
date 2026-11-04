@@ -1,9 +1,10 @@
-import * as React from 'react';
-import { WandSparklesIcon } from 'lucide-react';
 import {
   GlobalFeatureOnboardingTrigger,
   GlobalHeading,
 } from '@openthrottle/react-router-ui-global';
+import { WandSparklesIcon } from 'lucide-react';
+import * as React from 'react';
+
 import { RULES_COPY } from '../data/data.copy';
 
 export interface RulesIntroductionProps {}

@@ -1,9 +1,10 @@
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
-import { SymbolRow } from '../SymbolRow';
+
 import type { ExportedSymbol } from '../../data/view-models';
+import { SymbolRow } from '../SymbolRow';
 
 const symbol: ExportedSymbol = {
   isDefault: false,

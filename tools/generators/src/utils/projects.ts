@@ -1,6 +1,7 @@
 import { createProjectGraphAsync } from '@nx/devkit';
 import type { Choice } from 'prompts';
 import prompts from 'prompts';
+
 import { MESSAGE_ON_CANCEL } from '../config/index';
 
 /** NX project graph node types we treat as "projects" (applications + packages). */

@@ -9,7 +9,7 @@
  * stage must not drop frames here — the scroll is the content.
  */
 
-import type { VideoEpisode } from '../types';
+import type { VideoEpisode } from '../types.ts';
 
 export const episode: VideoEpisode = {
   beats: [

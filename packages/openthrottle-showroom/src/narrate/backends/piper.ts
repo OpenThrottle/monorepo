@@ -12,7 +12,7 @@ import { homedir } from 'node:os';
 import { isAbsolute, join } from 'node:path';
 import { promisify } from 'node:util';
 
-import type { RenderRequest, TtsBackend } from '../types';
+import type { RenderRequest, TtsBackend } from '../types.ts';
 
 const execFileAsync = promisify(execFile);
 

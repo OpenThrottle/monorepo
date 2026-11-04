@@ -1,5 +1,6 @@
-import * as React from 'react';
 import { Badge, Button } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import { formatPlanTagProvenance } from '~/routing/plans/utils/plan-tag-chips';
 
 export interface PlanTagChipData {

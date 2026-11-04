@@ -1,11 +1,12 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
+  cn,
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
 import type { WorkspaceApplyResult } from '~/routing/settings/utils/workspace-apply-results';
 
@@ -38,7 +39,7 @@ export const SettingsWorkspaceApplyResults = (
   if (results.length === 0) {
     return (
       <Empty
-        className={clsx(className)}
+        className={cn(className)}
         data-testid="SettingsWorkspaceApplyResults"
       >
         <EmptyHeader>
@@ -53,7 +54,7 @@ export const SettingsWorkspaceApplyResults = (
 
   return (
     <div
-      className={clsx('space-y-3', className)}
+      className={cn('space-y-3', className)}
       data-testid="SettingsWorkspaceApplyResults"
     >
       <p className="text-sm font-medium">

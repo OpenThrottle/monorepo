@@ -3,7 +3,8 @@
  */
 
 import { Field, ObjectType } from '@nestjs/graphql';
-import { PlanObject } from '../plans/plan.object';
+
+import { PlanObject } from '../plans/plan.object.ts';
 
 @ObjectType()
 export class PlanEmbeddingObject {

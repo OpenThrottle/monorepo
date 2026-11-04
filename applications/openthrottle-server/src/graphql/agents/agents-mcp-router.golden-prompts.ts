@@ -1,4 +1,4 @@
-import type { AgentsMcpRoutedToolName } from './agents-mcp-router';
+import type { AgentsMcpRoutedToolName } from './agents-mcp-router.ts';
 
 /**
  * @description Eval / regression cases aligned with the MCP intent matrix (search, plans, tasks, activity, notes, health). Exercised by `agents-mcp-router.golden-prompts.test.ts`.

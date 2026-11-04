@@ -1,14 +1,15 @@
-import * as React from 'react';
-import { fireEvent, render, within } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { fireEvent, render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Provider, createStore } from 'jotai';
+import { createStore, Provider } from 'jotai';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
-import { editorAtom, editorAtomDefaults } from '../../data/atom.editor';
+
 import type { EditorFile } from '../../data/atom.editor';
-import { EditorTab } from '../EditorTab';
+import { editorAtom, editorAtomDefaults } from '../../data/atom.editor';
 import type { EditorTabProps } from '../EditorTab';
+import { EditorTab } from '../EditorTab';
 
 const file = (overrides: Partial<EditorFile> = {}): EditorFile => ({
   directory: '.',

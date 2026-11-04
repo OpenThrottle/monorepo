@@ -2,7 +2,7 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { TranscriptionStreamService } from './transcription-stream.service';
+import { TranscriptionStreamService } from './transcription-stream.service.ts';
 
 /**
  * Minimal WhisperLive-shaped websocket double: records sent frames and lets

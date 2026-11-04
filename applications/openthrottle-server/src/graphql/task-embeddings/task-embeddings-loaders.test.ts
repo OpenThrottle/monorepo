@@ -1,7 +1,8 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { TasksService } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { TaskEmbeddingsLoaders } from './task-embeddings-loaders';
+
+import { TaskEmbeddingsLoaders } from './task-embeddings-loaders.ts';
 
 describe('TaskEmbeddingsLoaders', () => {
   const findTasks = vi.fn();

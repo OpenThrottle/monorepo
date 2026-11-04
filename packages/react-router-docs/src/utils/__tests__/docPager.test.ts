@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
-import { flattenDocsNav, getDocPager } from '../buildDocsNav';
+
 import type { DocsNavGroup, DocsNavItem } from '../buildDocsNav';
+import { flattenDocsNav, getDocPager } from '../buildDocsNav';
 
 const sequence: readonly [DocsNavItem, DocsNavItem, DocsNavItem] = [
   { path: '/docs', title: 'Overview' },

@@ -3,17 +3,19 @@
  */
 
 import { z } from 'zod';
+
 import {
   DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI,
+  DEFAULT_PLAN_RUN_RALPH_EFFORT,
   DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLI,
   MAX_PLAN_RUN_CONFIG_JSON_LEN,
   MAX_PLAN_RUN_ITERATIONS,
   MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN,
   MAX_PLAN_RUN_WORKING_DIRECTORY_LEN,
+  PLAN_RUN_CONFIG_TARGET_MODES,
   PLAN_RUN_CONFIG_UUID_REGEX,
   PLAN_RUN_CONFIG_VERSION,
   PLAN_RUN_DEBUG_CLI,
-  PLAN_RUN_CONFIG_TARGET_MODES,
   PLAN_RUN_KNOWN_BACKENDS,
   PLAN_RUN_PROMPT_LAYERS,
   PLAN_RUN_WORKTREE_CLI,
@@ -34,6 +36,10 @@ const planRunConfigRalphV1Schema = z
     debugCli: z
       .enum(PLAN_RUN_DEBUG_CLI)
       .default(DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI),
+    // Absent on configs written before effort existed; those read as "unset".
+    effort: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN).default(
+      DEFAULT_PLAN_RUN_RALPH_EFFORT,
+    ),
     executionBackend: z.enum(PLAN_RUN_KNOWN_BACKENDS),
     iterationTimeoutText: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN),
     iterations: z.number().int().min(1).max(MAX_PLAN_RUN_ITERATIONS),

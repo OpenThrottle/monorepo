@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'vitest';
+
 import type { SortBy } from '~/routing/projects/config';
 import type { ProjectWithStats } from '~/routing/projects/data/types';
+
 import { sortProjects } from '../sorting';
 
 /** Coerces a value to a target type without a type assertion (for invalid-input branch coverage). */

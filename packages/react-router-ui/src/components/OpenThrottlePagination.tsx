@@ -1,5 +1,3 @@
-import * as React from 'react';
-import { Link, useSearchParams } from 'react-router';
 import {
   Button,
   Pagination,
@@ -7,13 +5,16 @@ import {
   PaginationEllipsis,
   PaginationItem,
 } from '@openthrottle/react-router-shadcn';
+import { ChevronsLeftIcon, ChevronsRightIcon } from 'lucide-react';
+import * as React from 'react';
+import { Link, useSearchParams } from 'react-router';
+
 import type { ProjectsSearchParamsExtras } from '../utils/index';
 import {
   buildPaginationPageItems,
   buildPreservedSearchParams,
   buildProjectsSearchParams,
 } from '../utils/index';
-import { ChevronsLeftIcon, ChevronsRightIcon } from 'lucide-react';
 
 const DEFAULT_BASE_PATH = '/projects';
 

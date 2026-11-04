@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { HEADER_APP_NAME, HEADER_APP_VERSION } from './index';
+import { HEADER_APP_NAME, HEADER_APP_VERSION } from './index.ts';
 
 // These header names are a wire contract consumed by nestjs-graphql and
 // nestjs-modules (Apollo/CLS wiring). Lock the literal values so an accidental

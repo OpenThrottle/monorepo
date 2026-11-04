@@ -1,10 +1,11 @@
-import * as React from 'react';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { GlobalCollapsible } from '../GlobalCollapsible';
+
 import type { GlobalCollapsibleProps } from '../GlobalCollapsible';
+import { GlobalCollapsible } from '../GlobalCollapsible';
 
 describe('GlobalCollapsible Component', () => {
   let props: GlobalCollapsibleProps;

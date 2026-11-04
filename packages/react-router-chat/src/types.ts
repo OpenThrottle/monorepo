@@ -17,6 +17,7 @@ export const ChatTurnEventKind = {
   thinking: 'thinking',
   tool: 'tool',
   usage: 'usage',
+  usageLimit: 'usageLimit',
 } as const;
 
 /** Union of {@link ChatTurnEventKind} values. @public */
@@ -109,6 +110,21 @@ export interface ChatTurnSessionEvent {
 }
 
 /**
+ * The backend's subscription account hit a usage limit (claude's 5-hour or
+ * weekly window). There is at most one per turn. `rateLimitType` is the raw
+ * window name (`five_hour`, `seven_day`, …); `resetsAt` is an ISO-8601 instant,
+ * or null when the reset time is unknown.
+ *
+ * @public
+ */
+export interface ChatTurnUsageLimitEvent {
+  readonly kind: 'usageLimit';
+  readonly rateLimitType: string | null;
+  readonly resetsAt: string | null;
+  readonly sortOrder: number;
+}
+
+/**
  * One structured event within an assistant turn, ordered by `sortOrder`.
  * Discriminated on `kind`.
  *
@@ -119,7 +135,8 @@ export type ChatTurnEvent =
   | ChatTurnTextEvent
   | ChatTurnThinkingEvent
   | ChatTurnToolEvent
-  | ChatTurnUsageEvent;
+  | ChatTurnUsageEvent
+  | ChatTurnUsageLimitEvent;
 
 /**
  * Coarse phase of an in-flight assistant turn, used to give the running
@@ -175,6 +192,15 @@ export interface ChatMessage {
    * label, when known. Ignored unless `phase` is set.
    */
   readonly phaseDetail?: string | null;
+  readonly role: ChatMessageRole;
+}
+
+/** Input for appending a row to an uncontrolled local thread (`useChatMessages`). */
+export interface AppendChatMessageInput {
+  readonly body: string;
+  readonly createdAt?: string;
+  readonly footer?: string | null;
+  readonly id?: string;
   readonly role: ChatMessageRole;
 }
 
@@ -278,6 +304,30 @@ export interface ChatModelGroup {
   readonly icon?: React.ReactNode;
   readonly id: string;
   readonly label: string;
+}
+
+/**
+ * Result of the conversation-stream start action the agentic turn hook reads.
+ * Structural, so each app's route action result is assignable.
+ * @public
+ */
+export interface ChatStartActionResult {
+  readonly assistantMessageId?: string | null;
+  readonly conversationId?: string | null;
+  readonly errorMessage?: string | null;
+  readonly userMessageId?: string | null;
+}
+
+/**
+ * A model group after the picker resolves it: the synthetic favorites group,
+ * each provider group with its models, and the catch-all for ungrouped models.
+ * @public
+ */
+export interface ResolvedGroup {
+  readonly icon?: React.ReactNode;
+  readonly id: string;
+  readonly label: string;
+  readonly models: readonly ChatModelOption[];
 }
 
 /**

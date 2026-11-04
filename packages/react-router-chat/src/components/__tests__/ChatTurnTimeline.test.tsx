@@ -1,10 +1,11 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { ChatTurnTimeline } from '../ChatTurnTimeline';
+
 import type { ChatTurnEvent } from '../../types';
+import { ChatTurnTimeline } from '../ChatTurnTimeline';
 
 const renderTimeline = (events: readonly ChatTurnEvent[]): RenderResult =>
   render(<ChatTurnTimeline events={events} />);
@@ -39,6 +40,19 @@ describe('ChatTurnTimeline Component', () => {
 
     const text = component.container.textContent ?? '';
     expect(text.indexOf('read')).toBeLessThan(text.indexOf('final answer'));
+  });
+
+  test('renders a usageLimit event as a status notice', () => {
+    const component = renderTimeline([
+      {
+        kind: 'usageLimit',
+        rateLimitType: 'five_hour',
+        resetsAt: null,
+        sortOrder: 0,
+      },
+    ]);
+
+    expect(component.getByTestId('ChatUsageLimitNotice')).toBeInTheDocument();
   });
 
   test('folds an adjacent thinking + tool run into one collapsed activity row', () => {

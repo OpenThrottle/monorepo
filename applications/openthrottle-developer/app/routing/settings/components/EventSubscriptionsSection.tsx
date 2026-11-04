@@ -1,6 +1,11 @@
+import {
+  cn,
+  Label,
+  Separator,
+  Switch,
+} from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import clsx from 'clsx';
-import { Label, Separator, Switch } from '@openthrottle/react-router-shadcn';
+
 import {
   EVENT_SUBSCRIPTION_ROWS,
   type EventSubscriptionId,
@@ -56,7 +61,7 @@ export const EventSubscriptionsSection = (
 
   return (
     <div
-      className={clsx(
+      className={cn(
         'bg-card border-card-border space-y-0 rounded-lg border p-4',
         className,
       )}

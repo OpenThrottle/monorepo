@@ -2,7 +2,9 @@
 
 import { glob, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { createLogger } from './lib/index.ts';
+import { fileURLToPath } from 'node:url';
+
+import { createLogger } from './utils/index.ts';
 
 const logger = createLogger();
 
@@ -20,6 +22,12 @@ const logger = createLogger();
  * executor-keyed targetDefault matching the target's executor has one. This mirrors how
  * Nx merges targetDefaults, so we don't need to shell out to `nx show project` per
  * project (slower, and it would also surface plugin-inferred targets we cannot edit).
+ *
+ * A targetDefault may also be Nx's ARRAY form: several entries, each narrowed by
+ * `executor`, `projects` or `filter`. The key counts as described when every entry is,
+ * and it covers a declared target only through an entry that applies to it — unscoped,
+ * or narrowed to the target's executor. `projects`/`filter` entries can't be resolved
+ * statically, so a target they would reach describes itself.
  *
  * Plugin-INFERRED targets (never declared in our config) are intentionally NOT checked.
  * Targets disabled via naming hacks (`__`-prefix, `__DISABLED__`, padded underscores,
@@ -53,35 +61,123 @@ interface TargetRecord {
   target: string;
 }
 
-type NxTargetConfig = { description?: unknown; executor?: unknown } | undefined;
+type NxTargetConfig =
+  | {
+      description?: unknown;
+      executor?: unknown;
+      metadata?: { description?: unknown };
+    }
+  | undefined;
 
 const readJson = async (file: string): Promise<Record<string, unknown>> =>
   JSON.parse(await readFile(join(process.cwd(), file), 'utf8'));
 
-const hasDescription = (config: NxTargetConfig): boolean => {
-  const value = config?.description;
-  return typeof value === 'string' && value.trim().length > 0;
+const isNonEmptyString = (value: unknown): boolean =>
+  typeof value === 'string' && value.trim().length > 0;
+
+/** A target is described by either the legacy top-level key or Nx's `metadata.description`. */
+const hasDescription = (config: NxTargetConfig): boolean =>
+  isNonEmptyString(config?.description) ||
+  isNonEmptyString(config?.metadata?.description);
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/**
+ * One `targetDefaults` entry. A key holds either a single object or — Nx's array form — a
+ * list of entries, each narrowed to the targets it applies to by `executor`, `projects` or
+ * `filter`.
+ */
+export interface TargetDefaultEntry {
+  readonly described: boolean;
+  /**
+   * The executor this entry is narrowed to. Only array entries narrow: in the object
+   * form `executor` is the default executor, applied to every target of that name.
+   */
+  readonly narrowedToExecutor: string | undefined;
+  /** Narrowed by `projects` or `filter`, which this script cannot match statically. */
+  readonly scoped: boolean;
+}
+
+const toTargetDefaultEntry = (
+  value: unknown,
+  isArrayForm: boolean,
+): TargetDefaultEntry | null => {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const { metadata } = value;
+
+  return {
+    described:
+      isNonEmptyString(value.description) ||
+      (isRecord(metadata) && isNonEmptyString(metadata.description)),
+    narrowedToExecutor:
+      isArrayForm && typeof value.executor === 'string'
+        ? value.executor
+        : undefined,
+    scoped: value.projects !== undefined || value.filter !== undefined,
+  };
 };
 
+/** Normalizes a `targetDefaults` value — object or array form — to its entries. */
+export const toTargetDefaultEntries = (
+  config: unknown,
+): readonly TargetDefaultEntry[] => {
+  const isArrayForm = Array.isArray(config);
+
+  return (isArrayForm ? config : [config])
+    .map((value) => toTargetDefaultEntry(value, isArrayForm))
+    .filter((entry): entry is TargetDefaultEntry => entry !== null);
+};
+
+/** A `targetDefaults` key is described only when every one of its entries is. */
+export const isTargetDefaultDescribed = (
+  entries: readonly TargetDefaultEntry[],
+): boolean => entries.length > 0 && entries.every((entry) => entry.described);
+
+/**
+ * Whether a `targetDefaults` key passes a description down to a declared target. Only an
+ * entry that applies to the target counts: one with no narrowing, or one narrowed to the
+ * target's own executor. Entries scoped by `projects` or `filter` (e.g. a plugin filter)
+ * are not counted — they cannot be resolved without Nx, so the target must describe itself.
+ */
+export const coversTarget = (
+  entries: readonly TargetDefaultEntry[],
+  targetExecutor: string | undefined,
+): boolean =>
+  entries.some(
+    (entry) =>
+      entry.described &&
+      !entry.scoped &&
+      (entry.narrowedToExecutor === undefined ||
+        entry.narrowedToExecutor === targetExecutor),
+  );
+
 interface Defaults {
-  byExecutor: Map<string, boolean>;
-  byName: Map<string, boolean>;
+  byExecutor: Map<string, readonly TargetDefaultEntry[]>;
+  byName: Map<string, readonly TargetDefaultEntry[]>;
   records: TargetRecord[];
 }
 
 async function collectTargetDefaults(): Promise<Defaults> {
   const nxJson = await readJson('nx.json');
-  const targetDefaults = nxJson.targetDefaults ?? {};
-  const byName = new Map<string, boolean>();
-  const byExecutor = new Map<string, boolean>();
+  const targetDefaults = isRecord(nxJson.targetDefaults)
+    ? nxJson.targetDefaults
+    : {};
+  const byName = new Map<string, readonly TargetDefaultEntry[]>();
+  const byExecutor = new Map<string, readonly TargetDefaultEntry[]>();
   const records: TargetRecord[] = [];
 
   for (const [key, config] of Object.entries(targetDefaults)) {
-    const described = hasDescription(config);
+    const entries = toTargetDefaultEntries(config);
+    const described = isTargetDefaultDescribed(entries);
+
     if (isExecutorKey(key)) {
-      byExecutor.set(key, described);
+      byExecutor.set(key, entries);
     } else {
-      byName.set(key, described);
+      byName.set(key, entries);
     }
 
     records.push({
@@ -92,6 +188,7 @@ async function collectTargetDefaults(): Promise<Defaults> {
       target: key,
     });
   }
+
   return { byExecutor, byName, records };
 }
 
@@ -120,15 +217,18 @@ async function collectPackageTargets(
       }
 
       const project = typeof manifest.name === 'string' ? manifest.name : file;
+
       return Object.entries(targets).map(([target, config]) => {
         const ownDescription = hasDescription(config);
         const executor =
           typeof config?.executor === 'string' ? config.executor : undefined;
+
         const covered =
           ownDescription ||
-          defaults.byName.get(target) === true ||
+          coversTarget(defaults.byName.get(target) ?? [], executor) ||
           (executor !== undefined &&
-            defaults.byExecutor.get(executor) === true);
+            coversTarget(defaults.byExecutor.get(executor) ?? [], executor));
+
         return {
           covered,
           ownDescription,
@@ -219,4 +319,6 @@ async function main(): Promise<void> {
   logger.success('Every config-declared Nx target has a description.');
 }
 
-await main();
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  await main();
+}

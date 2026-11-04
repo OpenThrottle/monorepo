@@ -1,5 +1,5 @@
-import { CalendarView } from '../types';
 import type { CalendarEvent, SchedulePluginsConfig } from '../types';
+import { CalendarView } from '../types';
 
 /**
  * Stable empty default for an omitted `events` prop, so the array identity is

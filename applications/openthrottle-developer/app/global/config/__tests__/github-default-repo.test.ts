@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+
 import { getDefaultGithubRepo } from '../github-default-repo';
 
 describe('getDefaultGithubRepo', () => {

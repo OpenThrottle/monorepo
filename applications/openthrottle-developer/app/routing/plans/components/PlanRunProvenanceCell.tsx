@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { editorHref } from '@openthrottle/react-router-ide';
 import { Badge } from '@openthrottle/react-router-shadcn';
 import {
@@ -7,6 +6,7 @@ import {
   GitBranch,
   GitPullRequest,
 } from 'lucide-react';
+import * as React from 'react';
 
 export interface PlanRunProvenanceCheckout {
   readonly displayName: string;
@@ -67,7 +67,9 @@ export const PlanRunProvenanceCell = (
       {branch != null ? (
         <span className="flex items-center gap-1">
           <GitBranch aria-hidden={true} className="size-3 shrink-0" />
-          <span className="truncate font-mono">{branch}</span>
+          <span className="truncate font-mono" title={branch}>
+            {branch}
+          </span>
         </span>
       ) : null}
 
@@ -93,7 +95,7 @@ export const PlanRunProvenanceCell = (
           target="_blank"
         >
           <GitPullRequest aria-hidden={true} className="size-3 shrink-0" />
-          <span>
+          <span className="truncate">
             {pullRequest.repo}#{pullRequest.number}
           </span>
           {pullRequest.state != null ? (

@@ -1,12 +1,13 @@
 import Stripe from 'stripe';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
 import {
-  STRIPE_API_VERSION,
-  STRIPE_MAX_NETWORK_RETRIES,
   createLazyStripeClient,
   createStripeClient,
   getStripeConfig,
-} from './stripe-config';
+  STRIPE_API_VERSION,
+  STRIPE_MAX_NETWORK_RETRIES,
+} from './stripe-config.ts';
 
 describe('getStripeConfig', () => {
   const originalEnv = process.env;

@@ -199,11 +199,3 @@ export const generateCspNonce = (): string => {
  * @public
  */
 export const NonceContext = React.createContext<string>('');
-
-/**
- * @description Read the current request's CSP nonce. Returns an empty string
- * when no nonce is in scope (client hydration), in which case no `nonce`
- * attribute should be rendered.
- * @public
- */
-export const useNonce = (): string => React.useContext(NonceContext);

@@ -1,15 +1,16 @@
 // import * as React from 'react';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
+import {
+  LOAD_AGENT_CONVERSATION_MESSAGES_INTENT,
+  SEND_AGENT_MESSAGE_INTENT,
+} from '../../data/chat-turn-fetcher-intents';
 import type {
   ChatTurnResult,
   LoadAgentConversationMessagesResult,
 } from '../../types';
-import {
-  LOAD_AGENT_CONVERSATION_MESSAGES_INTENT,
-  SEND_AGENT_MESSAGE_INTENT,
-  useChatTurnFetcher,
-} from '../useChatTurnFetcher';
+import { useChatTurnFetcher } from '../useChatTurnFetcher';
 
 const mockTurnSubmit = vi.fn();
 const mockHistorySubmit = vi.fn();

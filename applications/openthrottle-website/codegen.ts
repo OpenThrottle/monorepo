@@ -1,6 +1,6 @@
 import {
-  defineCodegen,
   type CodegenConfig,
+  defineCodegen,
 } from '@openthrottle/graphql-codegen';
 
 const config: CodegenConfig = defineCodegen({

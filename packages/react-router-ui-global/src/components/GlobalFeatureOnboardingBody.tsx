@@ -1,7 +1,8 @@
-import * as React from 'react';
 import { Button } from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
 import { ArrowRightIcon } from 'lucide-react';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import { GLOBAL_FEATURE_ONBOARDING_SECTION_COPY } from '../data/data.copy';
 import { isExternalHref } from '../utils/external-href';
 import type { GlobalFeatureOnboardingContent } from './GlobalFeatureOnboarding';

@@ -10,8 +10,8 @@ import { NestjsModelDiscoveryModule } from '@openthrottle/nestjs-model-discovery
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
-import { ConversationStreamResolver } from './conversation-stream.resolver';
-import { ConversationStreamService } from './conversation-stream.service';
+import { ConversationStreamResolver } from './conversation-stream.resolver.ts';
+import { ConversationStreamService } from './conversation-stream.service.ts';
 
 @Module({
   imports: [LoggerModule, NestjsModelDiscoveryModule, NestjsRepositoriesModule],

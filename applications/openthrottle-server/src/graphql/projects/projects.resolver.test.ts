@@ -1,13 +1,14 @@
+import { createMock } from '@golevelup/ts-vitest';
+import { Test } from '@nestjs/testing';
+import type { Plan, Project, Task } from '@openthrottle/nestjs-repositories';
 import {
   ProjectsLoaders,
   ProjectsService,
 } from '@openthrottle/nestjs-repositories';
-import type { Plan, Project, Task } from '@openthrottle/nestjs-repositories';
 import { getDefaultPlanRunConfigStorage } from '@openthrottle/nestjs-repositories';
-import { createMock } from '@golevelup/ts-vitest';
-import { Test } from '@nestjs/testing';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
-import { ProjectsResolver } from './projects.resolver';
+
+import { ProjectsResolver } from './projects.resolver.ts';
 
 const buildMockPlan = (projectId: string): Plan => ({
   assignee: null,
@@ -227,6 +228,7 @@ describe('ProjectsResolver', () => {
           taskEmbeddings: [],
           title: 'Task One',
           updatedAt: new Date('2026-02-03T10:00:00.000Z'),
+          wave: null,
         },
       ];
       vi.mocked(tasksByProjectIdLoader.load).mockResolvedValue(mockTasks);

@@ -1,8 +1,9 @@
-import * as React from 'react';
 import { Button } from '@openthrottle/react-router-shadcn';
-import { readStorageEntries } from '~/routing/settings/utils/settings.debug';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 import { DatabaseIcon } from 'lucide-react';
+import * as React from 'react';
+
+import { readStorageEntries } from '~/routing/settings/utils/settings.debug';
 
 export interface SettingsStorageProps {
   className?: string;

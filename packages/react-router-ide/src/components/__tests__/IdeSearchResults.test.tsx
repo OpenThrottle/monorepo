@@ -1,9 +1,10 @@
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
-import { IdeSearchResults } from '../IdeSearchResults';
+
 import type { IdeRepositoryRef, IdeSearchResult } from '../../data/view-models';
+import { IdeSearchResults } from '../IdeSearchResults';
 
 const repository: IdeRepositoryRef = {
   displayName: 'Repo One',

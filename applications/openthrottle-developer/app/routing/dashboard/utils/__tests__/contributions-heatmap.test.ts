@@ -1,9 +1,10 @@
 import { describe, expect, test } from 'vitest';
+
+import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 import {
   mapDailyStatsToContributions,
   sumDailyStatActivity,
 } from '~/routing/dashboard/utils/contributions-heatmap';
-import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 
 const dailyStat = (
   overrides: Partial<DashboardDailyStatsCardFragment> & { date: string },

@@ -7,8 +7,8 @@ import { type UseViewportResult } from '../hooks/useViewport';
 import { type FloorLayout } from '../types';
 import { floorBounds, sortElementsByLayer } from '../utils/elements';
 import {
-  type Point,
   clampPointToRect,
+  type Point,
   snapPointToGrid,
 } from '../utils/geometry';
 import { FloorElementView } from './FloorElementView';

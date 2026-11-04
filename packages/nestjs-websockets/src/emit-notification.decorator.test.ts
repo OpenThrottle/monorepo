@@ -1,13 +1,15 @@
 import 'reflect-metadata';
+
 import { Reflector } from '@nestjs/core';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { describe, expect, it } from 'vitest';
+
 import {
   EMIT_NOTIFICATION_KEY,
+  EmitNotification,
   type EmitNotificationMetadata,
   type EmitNotificationMetadataValue,
-  EmitNotification,
-} from './emit-notification.decorator';
+} from './emit-notification.decorator.ts';
 
 const reflector = new Reflector();
 

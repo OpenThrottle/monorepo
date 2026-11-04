@@ -1,6 +1,7 @@
+import type { PromptType } from '@openthrottle/react-router-editor';
 import * as React from 'react';
 import { useFetcher } from 'react-router';
-import type { PromptType } from '@openthrottle/react-router-editor';
+
 import { PROMPTS_DEFAULT_CONTENT } from '~/routing/prompts/config';
 
 export interface UsePromptCreateFormResult {
@@ -27,6 +28,7 @@ export interface UsePromptCreateFormResult {
  * route-primitive-shape R4 so the route file stays a thin adapter.
  */
 export const usePromptCreateForm = (): UsePromptCreateFormResult => {
+  // Hooks
   const fetcher = useFetcher();
   const [content, setContent] = React.useState(PROMPTS_DEFAULT_CONTENT);
   const [description, setDescription] = React.useState('');
@@ -35,9 +37,11 @@ export const usePromptCreateForm = (): UsePromptCreateFormResult => {
   const [promptType, setPromptType] = React.useState<PromptType>('prompts');
   const [title, setTitle] = React.useState('');
 
+  // Setup
   const isSubmitting = fetcher.state === 'submitting';
   const canSubmit = title.trim().length > 0 && content.trim().length > 0;
 
+  // Handlers
   const handleEditorChange = (value: string | undefined): void => {
     setContent(value ?? '');
   };
@@ -86,6 +90,9 @@ export const usePromptCreateForm = (): UsePromptCreateFormResult => {
     [handleSubmit],
   );
 
+  // Markup
+
+  // Life Cycle
   React.useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
 
@@ -93,6 +100,8 @@ export const usePromptCreateForm = (): UsePromptCreateFormResult => {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [handleKeyDown]);
+
+  // 🔌 Short Circuit
 
   return {
     canSubmit,

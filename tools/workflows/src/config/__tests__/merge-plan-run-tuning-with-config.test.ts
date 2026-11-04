@@ -1,6 +1,7 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { loadWorkflowRalphConfig } from '../load-workflow-ralph-config.ts';
@@ -34,6 +35,19 @@ describe('mergePlanRunTuningWithWorkflowRalphConfig', () => {
     expect(merged.model).toBe('from-file');
     expect(merged.prompt).toBe('/file-prompt');
     expect(merged.ralphDebugCli).toBe('omit');
+  });
+
+  it('passes effort through (enqueue-only; no file or env layer)', () => {
+    dir = mkdtempSync(join(tmpdir(), 'ralph-merge-'));
+    const config = loadWorkflowRalphConfig(dir, {});
+
+    expect(
+      mergePlanRunTuningWithWorkflowRalphConfig({ effort: 'max' }, config)
+        .effort,
+    ).toBe('max');
+    expect(
+      mergePlanRunTuningWithWorkflowRalphConfig({}, config).effort,
+    ).toBeUndefined();
   });
 
   it('enqueue tuning overrides file defaults', () => {

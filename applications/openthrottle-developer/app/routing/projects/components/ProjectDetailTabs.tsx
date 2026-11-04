@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Badge,
   Button,
@@ -14,18 +13,20 @@ import {
   TabsList,
   TabsTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { Link, useFetcher } from 'react-router';
 import {
   OpenThrottleClipboard,
   OpenThrottlePagination,
 } from '@openthrottle/react-router-ui';
-import { formatProjectDate } from '~/routing/projects/utils/format';
-import { isProjectTabValue } from '~/routing/projects/utils/is-project-tab-value';
-import { type ProjectTabValue } from '~/routing/projects/data/tabs';
-import { PlanTagChips } from '~/routing/plans/components/PlanTagChips';
-import { ProjectTasksTable } from '~/routing/projects/components/ProjectTasksTable';
+import * as React from 'react';
+import { Link, useFetcher } from 'react-router';
+
 import type { Route } from '@/app/routes/+types/projects.$projectId._index';
 import type { ProjectPageDetailsFragment } from '~/__generated__/graphql';
+import { PlanTagChips } from '~/routing/plans/components/PlanTagChips';
+import { ProjectTasksTable } from '~/routing/projects/components/ProjectTasksTable';
+import { type ProjectTabValue } from '~/routing/projects/data/tabs';
+import { formatProjectDate } from '~/routing/projects/utils/format';
+import { isProjectTabValue } from '~/routing/projects/utils/is-project-tab-value';
 
 type ProjectDetailLoaderData = Route.ComponentProps['loaderData'];
 

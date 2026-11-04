@@ -1,9 +1,10 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
-import { hashContent } from '@openthrottle/openthrottle-ide';
 import type { StoredChunk } from '@openthrottle/openthrottle-ide';
+import { hashContent } from '@openthrottle/openthrottle-ide';
 import type { DataSource } from 'typeorm';
-import { CodeVectorStore } from './code-vector-store';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { CodeVectorStore } from './code-vector-store.ts';
 
 const WORKSPACE = '/Users/dev/repo';
 

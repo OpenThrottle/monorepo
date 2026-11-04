@@ -91,7 +91,7 @@ monorepo/
 - **`applications/`**: Contains all standalone, deployable applications. Each application is a complete project that can be built and deployed independently.
 - **`docs/monorepo/`**: Contains monorepo-specific documentation including technology tags reference, dependency relationships, and NX documentation.
 - **`packages/`**: Contains reusable libraries shared across applications and used between packages.
-- **`scripts/`**: Utility scripts for common tasks like setup, validation, and automation. **Convention:** new repo scripts are TypeScript, executed directly via `tsx` (wired through root `package.json` scripts), import shared helpers from `scripts/lib/` (chalk logger, .env reader, exec/arg helpers), and ship a Vitest spec in `scripts/__tests__/` for their extractable logic (export pure functions; keep `main()` thin). The exception is the pre-install bootstrap: anything that must run before `pnpm install` has populated node_modules (`setup.sh`, the `setup_worktree.sh` / `.worktree/teardown.sh` / `setup_environment.sh` / `run-openthrottle-mcp.sh` shims, `vercel.sh`) stays a thin POSIX shim that resolves `tsx` (from this checkout, falling back to the primary checkout for fresh worktrees) and delegates to the `.ts`. Scripts with a stdout contract (the WorktreeCreate hook, MCP stdio launchers, anything piped) construct their logger with `stream: process.stderr` so stdout stays clean.
+- **`scripts/`**: Utility scripts for common tasks like setup, validation, and automation. **Convention:** new repo scripts are TypeScript, executed directly via `tsx` (wired through root `package.json` scripts), import shared helpers from `scripts/utils/` (chalk logger, .env reader, exec/arg helpers), and ship a Vitest spec in `scripts/__tests__/` for their extractable logic (export pure functions; keep `main()` thin). The exception is the pre-install bootstrap: anything that must run before `pnpm install` has populated node_modules cannot use `tsx`. Prefer running the `.ts` with bare Node's native type stripping (the engines floor supports it) — `setup_worktree.ts`, `setup_environment.ts` and `teardown_worktree.ts` are executable with a `#!/usr/bin/env node` shebang, and stay erasable-syntax TypeScript importing only node builtins and `scripts/utils/` (`.worktree/teardown.sh` is a one-line `exec` of the latter, kept because the ot-worktree teardown contract has no `.ts` rung). `run-openthrottle-mcp.sh` stays as the path MCP client configs name, and only pins a Node that then runs `run-openthrottle-mcp.ts` directly. The older pattern — a thin POSIX shim that resolves `tsx` from this checkout, falling back to the primary checkout for fresh worktrees, and delegates to the `.ts` — remains for `setup.sh` and `vercel.sh`. Scripts with a stdout contract (the WorktreeCreate hook, MCP stdio launchers, anything piped) construct their logger with `stream: process.stderr` so stdout stays clean.
 - **`tools/`**: Development tools including NX generators and custom tooling.
 
 ## Applications vs Packages
@@ -248,6 +248,178 @@ To add or upgrade a dependency, edit (or add) its entry in the `catalog:` sectio
 
 Coverage is enforced by `scripts/check-catalog-coverage.ts` (run as part of `pnpm run check:local`).
 
+### TypeScript toolchain: two compilers, one workspace
+
+The workspace installs **two** TypeScript packages on purpose. `typecheck` tasks run the **TypeScript 7**
+native compiler; everything that needs TypeScript's **programmatic API** stays on **6.x**, because
+`typescript@7` exposes no API on its main export (`"."` resolves to `./lib/version.cjs`; the API lives
+behind `./unstable/*`).
+
+| Consumer                                                           | Gets                 | How it resolves               |
+| ------------------------------------------------------------------ | -------------------- | ----------------------------- |
+| `typecheck` targets (both Nx plugins)                              | **TypeScript 7.0.2** | the `tsc` binary              |
+| typescript-eslint (`lint`)                                         | 6.0.3                | `import ts from 'typescript'` |
+| Vite / Vitest (`test`)                                             | 6.0.3                | same                          |
+| ts-morph (`packages/openthrottle-ide`)                             | 6.0.3                | same                          |
+| typescript-json-schema                                             | 6.0.3                | same                          |
+| `@nx/js/typescript` config analysis + project graph                | 6.0.3                | same                          |
+| `react-router typegen`                                             | 6.0.3                | same                          |
+| knip                                                               | 6.0.3                | same                          |
+| `scripts/audit-component-shape.ts`, `scripts/audit-route-shape.ts` | 6.0.3                | same                          |
+
+Catalog entries (`pnpm-workspace.yaml`) — note these are the only catalog values that use an aliased
+`npm:` spec; the consuming manifest still references them as `catalog:`, so `check:catalog` stays at 100%:
+
+```yaml
+'typescript': 'npm:@typescript/typescript6@^6.0.2'
+'typescript7': 'npm:typescript@^7.0.2'
+```
+
+Three things about that shape which are easy to get wrong:
+
+- **The bin names are disjoint by construction**, which is why both can be installed at once:
+  `typescript@7` provides only `tsc`, and `@typescript/typescript6` provides only `tsc6`. Leaving
+  `typescript` at a plain `~6.0.3` and adding a second alias would have **two** packages claiming `tsc`,
+  which pnpm resolves by picking one — unacceptable when the compiler identity is the thing being
+  selected.
+- **`@typescript/typescript6` is a ~50-byte shim, not a republished compiler.** It re-exports
+  `@typescript/old` (itself `npm:typescript@^6`), so the wrapper version reads `6.0.2` while the compiler
+  actually delivered is **6.0.3** — `require('typescript').version` confirms it. There is no downgrade.
+- **`@typescript/native` is not a published package** (the registry returns 404). It is only the alias
+  name the Nx knowledge-base recipe happens to use. Do not go looking for it.
+
+#### Editors and the language service
+
+**TypeScript 7 ships no `tsserver` at all** — the package contains zero `tsserver` files, not merely no
+bin entry — so **no editor can use TypeScript 7 as its language service today.**
+
+- This repo sets **no `typescript.tsdk`**, so VS Code / Cursor use their own **bundled** TypeScript. That
+  is the supported configuration and it is **unchanged** by the TypeScript 7 migration.
+- **"Use Workspace Version" is unsupported.** `node_modules/typescript/lib` is the shim described above
+  and contains no `tsserver.js`.
+- **Consequence:** in-editor diagnostics come from the editor's bundled TypeScript, which is not 7.0.2, so
+  **in-editor errors can differ from CI.** `pnpm nx run <project>:typecheck` is the source of truth.
+- If you want the workspace's 6.x language service anyway, point `typescript.tsdk` at
+  `node_modules/.pnpm/typescript@6.0.3/node_modules/typescript/lib` — and note that path is
+  **version-pinned and breaks on every TypeScript patch bump**, which is why it is not committed.
+
+#### Changing the compiler
+
+The binary is a knob, defined once in [`tools/nx-plugins/typecheck-compiler.ts`](tools/nx-plugins/typecheck-compiler.ts)
+and shared by both typecheck plugins. Highest precedence first:
+
+| Scope                    | How                                                                                                                                                                         |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| one project, permanently | `compilerOverrides: { "packages/foo": "tsc6" }` in the plugin's `nx.json` options — **ignores the env var**, so a workspace-wide sweep cannot drag a pinned project forward |
+| one run / one sweep      | `OPENTHROTTLE_TSC_BIN=tsc6 pnpm nx run <project>:typecheck`                                                                                                                 |
+| the whole workspace      | the plugins' `"options": { "compiler": "tsc" }` in `nx.json` — **delete it to revert to TypeScript 6**, since the built-in default stays `tsc6`                             |
+
+**Any compiler change must be accompanied by a purge**, and by a step `pnpm install` does not do for you:
+
+1. `pnpm nx reset` — clears `.nx/cache` and stops the daemon.
+2. Delete every `*.tsbuildinfo` outside `node_modules`, so the first run is a true cold build.
+3. **Delete stale per-package `node_modules/.bin/tsc` shims.** `pnpm install` — and even
+   `pnpm install --force` — leaves them in place, and a stale shim hard-points at the old compiler's
+   store path, silently pinning that project to TypeScript 6. This is the one that bites when updating an
+   existing checkout rather than cloning fresh.
+4. CI: `gh cache list` then `gh cache delete <id>`. There is **no remote cache backend** — the paid
+   `@nx/gcs-cache` plugin and its bucket were retired (see [docs/monorepo/NX.md](docs/monorepo/NX.md)), so
+   any `gcloud storage rm` instruction is stale.
+
+The compiler identity **is** part of the task hash (an `env` input plus `externalDependencies` on both
+packages), so Nx will not serve one compiler's cached result for the other's run. Before that was fixed,
+it did exactly that.
+
+#### What TypeScript 7 removed, and what it cost here
+
+- **`baseUrl` is removed (TS5102).** It lived in `tsconfig.base.json`, so every project inherited the
+  error. Removing it is **not** sufficient on its own: TypeScript then rejects non-relative `paths`
+  targets with **TS5090**, so every mapping must be explicitly relative (`["./app/*"]`, not `["app/*"]`).
+- **`moduleResolution: "node"` (node10) is removed (TS5108).** The two NestJS presets used it deliberately
+  to opt out of nodenext; they are now `nodenext`. **This paragraph used to end "CommonJS emit is
+  preserved … so no import-extension migration was needed" — that deferral expired.** NestJS 12's
+  packages are ESM-only, the tier dropped `"type": "commonjs"`, and the import-extension migration
+  happened: ~2,560 relative specifiers gained `.ts` suffixes via `scripts/codemod-import-extensions.ts`,
+  which relies on `allowImportingTsExtensions` + `rewriteRelativeImportExtensions` (both already in
+  `tsconfig.base.json`) to emit `.js`. One package, `@openthrottle/nestjs-redis`, is still
+  `"type": "commonjs"` — the reason is a third-party dual-package type conflict recorded at the call
+  site that causes it.
+- **`ignoreDeprecations: "6.0"` is gone** from `tsconfig.base.json`. It existed to suppress the node10
+  deprecation warning; with node10 gone it suppressed nothing, and removing it leaves the workspace green
+  under both compilers.
+- **Avoid a `paths` alias that can name `node_modules`.** A `"#/*": ["./*"]` alias made
+  `#/node_modules/@openthrottle/<pkg>/dist/src` a legal specifier, so TypeScript 7 named inferred types
+  through it and refused them as non-portable (**TS2883**). The alias was removed.
+
+#### Relative import extensions under NodeNext
+
+Relative specifiers in this workspace carry their extension — `from './foo.ts'`, not
+`from './foo'`. The rule that decides when that is **required** is narrower than it looks, and
+stating it imprecisely is what produced two rounds of unnecessary migration planning.
+
+**The hazard is `"type": "module"` AND extensionless — both, not either.** Under
+`moduleResolution: nodenext`, Node picks the resolution algorithm from the package's `type` field. An
+ESM package (`"type": "module"`) gets Node's ESM resolver, which does **not** probe extensions: the
+specifier must name the file exactly. A CommonJS package gets the CJS resolver, which still probes,
+so extensionless relative specifiers resolve there without complaint.
+
+Three things discharge the hazard, any one of which is sufficient:
+
+1. **`.ts` extensions on relative specifiers** — what the workspace does, and the only mechanism that
+   survives publication (see the residual gap below).
+2. **A tsconfig project reference** from the consumer to the dependency — TypeScript then reads the
+   dependency's source directly rather than resolving through its `exports` map.
+3. **Being CommonJS** — no longer an interesting option here; see below.
+
+**Assume you are ESM.** 67 of 70 workspace projects are `"type": "module"`. A new package is ESM
+unless you deliberately make it otherwise, so in practice _extensions are required_ and the third
+mechanism is not a choice you get to make. `#536` moved 26 packages across that line in a single
+commit, adding ~2,560 extensions via `scripts/codemod-import-extensions.ts`.
+
+The three exceptions, and why each is exempt:
+
+| project                 | why CommonJS                                                                     |
+| ----------------------- | -------------------------------------------------------------------------------- |
+| `packages/nestjs-redis` | third-party dual-package type conflict, recorded at the call site that causes it |
+| `tools/generators`      | generator tooling, not consumed as a library                                     |
+| `tools/workflows`       | CLI with live `build` / `build:tsc` / `dev` targets                              |
+
+**The gate is deliberately stricter than the rule.** `scripts/check-nodenext-references.ts`
+(wired into `check:local`) accepts a dependency if it has a project reference **or** zero
+extensionless relative specifiers. That second condition ignores the `type` field, so it would flag a
+CommonJS dependency that is in fact perfectly resolvable. This is sound but not complete, and it is
+the intended design: it keeps the check cheap and stops a package drifting into the hazard the moment
+someone flips it to ESM. **Do not loosen the gate to match the rule** — reading the gate's source and
+inferring the stricter form is the real rule is the mistake this paragraph exists to prevent.
+
+**Counting these requires a comment-aware scan.** A naive grep reports 7 extensionless specifiers in
+`packages/nestjs-repositories/src/index.ts`; all 7 are commented-out `export type` lines, and the real
+count is 0. A scan that does not strip comments manufactures violations and will disagree with
+`check-nodenext-references`, which is green. Likewise, any scan that reads project references must
+read `tsconfig.lib.json` **and** `tsconfig.app.json` — reading only the former misses every
+application and manufactures 21 phantom violations against `openthrottle-server` alone.
+
+**Residual gap: project references are workspace-only.** Mechanism 2 exists only inside this repo. A
+published consumer has no project references and no visibility into our tsconfigs, so for any package
+intended to ship outside the workspace, extensions are the _only_ mechanism available. Nothing here
+ships today, so this is recorded rather than acted on.
+
+Being **outside** the NodeNext closure is a normal, supported state, not technical debt — the bundler
+presets (`tsconfig.react.json`, `tsconfig.node.json`, `tsconfig.react-router.json`) let Vite resolve,
+and Vite does not care about extensions. `moduleResolution: "node"` (node10) no longer exists anywhere
+in the workspace; TypeScript 7 removed it (TS5108).
+
+Figures as of the commit that added this section — re-measure rather than trusting them:
+
+|                                        | value |
+| -------------------------------------- | ----- |
+| workspace projects                     | 70    |
+| `"type": "module"`                     | 67    |
+| `"type": "commonjs"`                   | 3     |
+| NodeNext projects scanned by the gate  | 40    |
+| `check-nodenext-references` violations | 0     |
+| `check-package-entrypoints` offenders  | 0     |
+
 ### Internal Package References
 
 Applications and packages can reference each other directly:
@@ -293,7 +465,7 @@ pnpm nx run <project-name>:test --watch
 
 Do not confuse these Nx targets:
 
-- **`typecheck`** — TypeScript only. Type-checks **source and test files** (`tsc --build … --emitDeclarationOnly` plus `tsc --noEmit -p tsconfig.test.json` when a test config exists); **does not execute test bodies** (no Vitest, no assertions run). It is a single target — it replaced the former `typecheck` + `typecheck-tests` split.
+- **`typecheck`** — TypeScript only. Type-checks **source and test files** (`tsc --build … --emitDeclarationOnly` plus `tsc --noEmit -p tsconfig.test.json` when a test config exists); **does not execute test bodies** (no Vitest, no assertions run). It is a single target — it replaced the former `typecheck` + `typecheck-tests` split. The compiler binary is **selectable, not hardcoded**: `tsc` is TypeScript 7 (the default) and `tsc6` is TypeScript 6 — see [TypeScript toolchain](#typescript-toolchain-two-compilers-one-workspace).
 - **`test`** — Vitest (`@nx/vitest:test`). **Executes** unit and integration tests.
 
 CI P0 runs affected `typecheck` on every PR; phased Vitest runs use the `test` target (see [docs/monorepo/CI-quality-gates.md](docs/monorepo/CI-quality-gates.md)). Contributor summary: [CONTRIBUTING.md](./CONTRIBUTING.md#testing-typecheck-versus-test).
@@ -453,13 +625,27 @@ Two hardening changes reduce this (see `nx.json` `targetDefaults` and the app `v
 - **Ordered declaration writes.** `typecheck` depends on `^build`, its own `build`, and `^typecheck`; `build` depends on `^typecheck`. For any project its own build precedes its own typecheck, and a dependent waits for each dependency's build **and** typecheck — so within Nx's scheduling no `dist` is read while another task writes it. This eliminated the `TS6305`/`TS2307` signatures across repeated cold `--parallel=4` runs.
 - **No fixed-port build server.** `vite-bundle-analyzer` is gated behind `ANALYZE=true` (and uses `analyzerPort: 'auto'`), so app builds no longer start a server on the fixed port `8888` and collide under `--parallel` (`EADDRINUSE`).
 
-These remove the named signatures, but `tsc --build`'s autonomous reference rebuilds can still occasionally collide at high parallelism. **For a trustworthy cold full build, lower the parallelism** to `--parallel=2` (as `pnpm run build:all` does); `--parallel=4` was intermittently flaky. When reproducing, purge first (`rm -rf .nx/workspace-data` and `dist`/`*.tsbuildinfo`) — stale `.nx/workspace-data` compounds the issue. If you need higher throughput in CI, connect [Nx Cloud and enable automatic flaky-task retry](https://nx.dev/ci/features/flaky-tasks); this workspace currently uses GCS bucket-based remote caching rather than Nx Cloud, so flaky-task retry is not active today.
+These removed the named signatures. `--parallel=2` was nevertheless kept for a long time because `--parallel=4` remained _intermittently_ flaky after them — **re-measured 2026-09-16 (OT plan 0494d906), and it no longer is.** Twenty cold purged runs (`rm -rf .nx/workspace-data`, every non-`node_modules` `dist/` and `*.tsbuildinfo`, then `nx run-many --target=build,typecheck --all --parallel=<n> --skip-nx-cache`), settings interleaved 2/4/8 rather than blocked so machine drift could not favour one arm, every run confirmed at the same scope (71 projects + 10 tasks):
+
+| setting            | n      | mean      | median | stdev | TS6305 / TS2307 / TS7016 / EADDRINUSE |
+| ------------------ | ------ | --------- | ------ | ----- | ------------------------------------- |
+| `--parallel=2`     | 5      | 74.4s     | 74.0s  | 2.1   | 0 / 0 / 0 / 0                         |
+| **`--parallel=4`** | **10** | **58.0s** | 58.5s  | 3.4   | **0 / 0 / 0 / 0**                     |
+| `--parallel=8`     | 5      | 56.4s     | 55.0s  | 6.1   | 0 / 0 / 0 / 0                         |
+
+`pnpm run build:all` therefore runs at **`--parallel=4`** — a measured 22% faster than 2, with zero collisions in ten cold runs. **8 was rejected**, not because it failed, but because it adds only 2.2 further points while nearly doubling the variance (stdev 6.1 vs 3.4), and it oversubscribes any machine with fewer than 8 cores.
+
+This is one machine's evidence (10-core Apple Silicon) against a failure that was always non-deterministic, so it lowers the probability of a collision rather than proving it impossible. `build:all` is a local convenience script — CI never runs it — so the cost of being wrong is a flaky local build, not a broken pipeline. **If `TS6305` ever returns, drop back to `--parallel=2` and say so here.** When reproducing, purge first — stale `.nx/workspace-data` compounds the issue. If you need higher throughput in CI, connect [Nx Cloud and enable automatic flaky-task retry](https://nx.dev/ci/features/flaky-tasks); this workspace currently uses GCS bucket-based remote caching rather than Nx Cloud, so flaky-task retry is not active today.
 
 ### Projects without a `build` target
 
 A little under a third of the Nx projects in this workspace do **not** expose a `build` target (audit the exact set with the two `nx show projects` commands at the end of this section — a hardcoded count goes stale every time a package lands). That is intentional — not missing CI coverage. These projects are validated with **`lint`**, **`typecheck`** (which covers source and test files), and (where present) **`test`**, and their output is produced when a **consumer** runs `build`, `dev`, or Vite production bundling.
 
 Most no-build packages are **`technology:react-router`** workspace libraries under `packages/react-router-*` (plus a couple of React-related codegen/MCP helpers). They follow a **source-first** pattern: `package.json` `main`/`module`/`types` point at `./src/index.ts` (not a precompiled `dist/`), and React Router apps (Vite) transpile these workspace dependencies when you run `dev` or `build` on the app. Their `nx.targets` use `__build`/`__build-package` placeholders so the `@nx/js/typescript` plugin does not infer a library `build` target. Do **not** add a standalone `build` target to these libraries unless you are deliberately moving them to a publishable `dist/` workflow.
+
+`nestjs-*` packages are the standing exception in the other direction: every `technology:nestjs` package is **built**, with `main`/`module`/`types` and every `exports` condition on `dist/` and live `build` and `dev` targets, enforced by `scripts/check-package-entrypoints.ts`. That rule is keyed on the tag, not on a per-package scan — never flip one of them individually. **It is not a CommonJS artifact and it is not going away**: the tier moved to ESM with NestJS 12 and not one package became source-first-able, because Node's loader is strip-only and decorators and parameter properties require _emitted_ code. Four packages happen to carry neither today and are still built, deliberately. [↳](docs/monorepo/source-first-packages-and-strip-only.md)
+
+Source-first carries one constraint worth knowing before you flip a package into it: a package whose `exports` name `./src/` hands consumers raw TypeScript, and when that consumer is **Node** its strip-only loader rejects constructor parameter properties, `enum`, decorators and `namespace` blocks outright. The failure surfaces in an unrelated project's test run with an error naming neither the package nor `exports`, and no test-runner setting lifts it. `erasableSyntaxOnly` in `tsconfig.base.json` catches all of it except decorators, which each source-first package bans through `sourceFirstEslintConfig` — see [docs/monorepo/source-first-packages-and-strip-only.md](docs/monorepo/source-first-packages-and-strip-only.md).
 
 When you change one of these projects, run its `lint`/`typecheck`/`test`, then run `build` or `dev` on a consumer app (e.g. `openthrottle-developer`) as the integration check — `pnpm nx affected --target=build` will not schedule the no-build projects. Audit the set by grepping `package.json` for the `__build` placeholder: Nx _infers_ a `build` target from a package's `vite.config.ts`, so `pnpm nx show projects --with-target=build` lists source-first packages too and cannot tell you which set is which.
 

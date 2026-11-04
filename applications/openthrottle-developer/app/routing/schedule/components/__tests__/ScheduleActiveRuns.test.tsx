@@ -1,13 +1,15 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
+import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { ScheduleActiveRuns } from '../ScheduleActiveRuns';
-import { scheduleInFlightRunFixture } from '~/testing/schedule-fixtures';
-import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
+
 import type { ScheduleInFlightRunFragment } from '~/__generated__/graphql';
+import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
+import { scheduleInFlightRunFixture } from '~/testing/schedule-fixtures';
+
+import { ScheduleActiveRuns } from '../ScheduleActiveRuns';
 
 const renderPanel = (
   runs: ScheduleInFlightRunFragment[],

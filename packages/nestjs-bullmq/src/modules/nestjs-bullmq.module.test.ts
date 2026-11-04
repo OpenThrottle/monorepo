@@ -1,11 +1,29 @@
 import 'reflect-metadata';
+
 import type { DynamicModule, Provider } from '@nestjs/common';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
+import type { RedisConnectionOptions } from '../config/nestjs-bullmq.config.ts';
 import {
   redisConfig,
   resolveQueuePrefix,
-} from '../config/nestjs-bullmq.config';
-import { NestjsBullmqModule } from './nestjs-bullmq.module';
+  resolveRedisConnection,
+} from '../config/nestjs-bullmq.config.ts';
+import { NestjsBullmqModule } from './nestjs-bullmq.module.ts';
+
+interface RootFactoryConfig extends RedisConnectionOptions {
+  readonly queuePrefix: string;
+}
+
+const REDIS_ENV_KEYS = [
+  'REDIS_DB',
+  'REDIS_FAMILY',
+  'REDIS_HOST',
+  'REDIS_PASSWORD',
+  'REDIS_PORT',
+  'REDIS_TLS',
+  'REDIS_USERNAME',
+] as const;
 
 /**
  * Pull the real BullMQ root `useFactory` out of the module's `@Module({ imports })`
@@ -13,11 +31,7 @@ import { NestjsBullmqModule } from './nestjs-bullmq.module';
  * than a re-implementation. The forRootAsync DynamicModule is the only import that
  * contributes a factory provider.
  */
-const getRootUseFactory = (): ((config: {
-  host: string;
-  port: number;
-  queuePrefix: string;
-}) => unknown) => {
+const getRootUseFactory = (): ((config: RootFactoryConfig) => unknown) => {
   const imports: ReadonlyArray<DynamicModule> =
     Reflect.getMetadata('imports', NestjsBullmqModule) ?? [];
 
@@ -99,6 +113,60 @@ describe('redisConfig', () => {
   });
 });
 
+describe('resolveRedisConnection', () => {
+  const original = Object.fromEntries(
+    REDIS_ENV_KEYS.map((key) => [key, process.env[key]]),
+  );
+
+  beforeEach(() => {
+    for (const key of REDIS_ENV_KEYS) delete process.env[key];
+  });
+
+  afterEach(() => {
+    for (const key of REDIS_ENV_KEYS) {
+      const value = original[key];
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  });
+
+  it('returns null when REDIS_HOST is unset', () => {
+    expect(resolveRedisConnection()).toBeNull();
+  });
+
+  it('carries auth, TLS, db and family alongside host and port', () => {
+    process.env.REDIS_DB = '3';
+    process.env.REDIS_FAMILY = '6';
+    process.env.REDIS_HOST = 'redis.internal';
+    process.env.REDIS_PASSWORD = 's3cret';
+    process.env.REDIS_PORT = '6380';
+    process.env.REDIS_TLS = 'true';
+    process.env.REDIS_USERNAME = 'queue-user';
+
+    expect(resolveRedisConnection()).toEqual({
+      db: 3,
+      enableReadyCheck: false,
+      family: 6,
+      host: 'redis.internal',
+      maxRetriesPerRequest: null,
+      password: 's3cret',
+      port: 6380,
+      tls: {},
+      username: 'queue-user',
+    });
+  });
+
+  it('is exactly the connection half of redisConfig', () => {
+    process.env.REDIS_HOST = 'redis.internal';
+    process.env.REDIS_PASSWORD = 's3cret';
+
+    const { queuePrefix, ...connection } = redisConfig();
+
+    expect(queuePrefix).toBe(resolveQueuePrefix());
+    expect(connection).toEqual(resolveRedisConnection());
+  });
+});
+
 describe('resolveQueuePrefix', () => {
   const originalQueuePrefix = process.env.OT_QUEUE_PREFIX;
   const originalContainerPrefix = process.env.OT_CONTAINER_PREFIX;
@@ -159,21 +227,34 @@ describe('resolveQueuePrefix', () => {
 
 describe('NestjsBullmqModule BullMQ root factory mapping', () => {
   // Invoke the real forRootAsync useFactory with a stub redis config and assert
-  // it produces { connection: { host, port }, defaultJobOptions, prefix } as
-  // wired in the @Module decorator.
+  // every connection field reaches BullMQ, and the prefix stays out of it.
   it('maps the redis config into BullMQ connection options', () => {
     const useFactory = getRootUseFactory();
 
     const result = useFactory({
+      db: 2,
+      enableReadyCheck: false,
+      family: undefined,
       host: 'redis.internal',
+      maxRetriesPerRequest: null,
+      password: 's3cret',
       port: 6380,
       queuePrefix: 'bull:wt-slug',
+      tls: {},
+      username: 'queue-user',
     });
 
-    expect(result).toMatchObject({
+    expect(result).toEqual({
       connection: {
+        db: 2,
+        enableReadyCheck: false,
+        family: undefined,
         host: 'redis.internal',
+        maxRetriesPerRequest: null,
+        password: 's3cret',
         port: 6380,
+        tls: {},
+        username: 'queue-user',
       },
       defaultJobOptions: {
         attempts: 3,

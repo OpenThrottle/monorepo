@@ -18,8 +18,8 @@
  * `DEMO_MACHINE.shellPrompt` and the seeded user is the fixture's fictional one.
  */
 
-import { DEMO_MACHINE, DEMO_USER } from '../../fixtures/demo-content';
-import { shellSurface } from '../../surfaces/shell';
+import { DEMO_MACHINE, DEMO_USER } from '../../fixtures/demo-content.ts';
+import { shellSurface } from '../../surfaces/shell.ts';
 
 /**
  * `setup.sh`'s opening banner, verbatim from the script's own echo lines.

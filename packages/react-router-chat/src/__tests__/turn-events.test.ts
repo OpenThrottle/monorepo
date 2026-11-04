@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
+
 import {
   applyTurnToolCall,
   applyTurnToolResult,
   foldPersistedTurnEvents,
-  parseChunkMetadata as parseMeta,
   parseChunkMetadata,
+  parseChunkMetadata as parseMeta,
   toolLabelFromMetadataJson,
 } from '../turn-events';
 
@@ -100,6 +101,47 @@ describe('foldPersistedTurnEvents', () => {
       sessionId: 'sess-7',
       sortOrder: 0,
     });
+  });
+
+  it('rebuilds a usageLimit event from a persisted usage_limit event', () => {
+    const result = foldPersistedTurnEvents(
+      persisted([
+        {
+          delta: '',
+          kind: 'usage_limit',
+          metadata: {
+            rateLimitType: 'seven_day',
+            resetsAt: '2027-01-15T08:00:00.000Z',
+          },
+        },
+      ]),
+      '',
+    );
+
+    expect(result).toContainEqual({
+      kind: 'usageLimit',
+      rateLimitType: 'seven_day',
+      resetsAt: '2027-01-15T08:00:00.000Z',
+      sortOrder: 0,
+    });
+  });
+
+  it('adds a usageLimit event from a persisted terminal usage payload that carries one', () => {
+    const result = foldPersistedTurnEvents(
+      persisted([
+        {
+          delta: '',
+          kind: 'usage',
+          metadata: {
+            apiErrorStatus: 429,
+            usageLimit: { rateLimitType: null, resetsAt: null },
+          },
+        },
+      ]),
+      '',
+    );
+
+    expect(result.filter((e) => e.kind === 'usageLimit')).toHaveLength(1);
   });
 
   it('surfaces persisted usage (claude) as a single trailing usage event with typed counts', () => {
@@ -293,7 +335,12 @@ describe('applyTurnToolCall with identity-less chunks', () => {
     );
 
     expect(folded).toHaveLength(1);
-    expect(folded[0]).toMatchObject({ kind: 'tool', name: 'Read' });
+    expect(folded[0]).toMatchObject({
+      argsJson: '{"file{"file{"file{"file{"file',
+      callId: 'toolu_1',
+      kind: 'tool',
+      name: 'Read',
+    });
   });
 
   it('still creates a card for an identity-less chunk with no call open', () => {
@@ -352,5 +399,248 @@ describe('applyTurnToolResult with identity-less chunks', () => {
     expect(
       resolved.map((event) => event.kind === 'tool' && event.status),
     ).toEqual(['running', 'succeeded']);
+  });
+});
+
+/** The tool events' fields only, for compact assertions. */
+const toolCards = (
+  events: ReturnType<typeof applyTurnToolCall>,
+): ReadonlyArray<Record<string, unknown>> =>
+  events.flatMap((event) =>
+    event.kind === 'tool'
+      ? [
+          {
+            argsJson: event.argsJson,
+            callId: event.callId,
+            error: event.error,
+            name: event.name,
+            resultJson: event.resultJson,
+            status: event.status,
+          },
+        ]
+      : [],
+  );
+
+describe('claude tool cards (callId-keyed wire shape)', () => {
+  const meta = (metadata: Record<string, unknown>) =>
+    parseMeta(JSON.stringify(metadata));
+  const start = (callId: string, toolName: string) =>
+    meta({ callId, index: 0, name: toolName, toolName });
+  const args = (callId: string, toolName: string, toolCall: unknown) =>
+    meta({ callId, name: toolName, toolCall, toolName });
+  const result = (callId: string, toolCall: unknown, isError = false) =>
+    meta({ callId, isError, toolCall });
+
+  it('fills in arguments that arrive after the card opened, without a second card', () => {
+    const opened = applyTurnToolCall([], start('toolu_1', 'Bash'), 0);
+    const filled = applyTurnToolCall(
+      opened,
+      args('toolu_1', 'Bash', { command: 'ls' }),
+      1,
+    );
+    const done = applyTurnToolResult(filled, result('toolu_1', 'a.ts'), 2);
+
+    expect(toolCards(done)).toEqual([
+      {
+        argsJson: '{"command":"ls"}',
+        callId: 'toolu_1',
+        error: null,
+        name: 'Bash',
+        resultJson: 'a.ts',
+        status: 'succeeded',
+      },
+    ]);
+  });
+
+  it('resolves each result of a parallel batch onto its own card', () => {
+    const ids = ['toolu_1', 'toolu_2', 'toolu_3'];
+    const opened = ids.reduce<ReturnType<typeof applyTurnToolCall>>(
+      (events, id, i) => applyTurnToolCall(events, start(id, 'Bash'), i),
+      [],
+    );
+    const filled = ids.reduce(
+      (events, id, i) =>
+        applyTurnToolCall(events, args(id, 'Bash', { command: id }), 3 + i),
+      opened,
+    );
+    // Results come back out of order.
+    const done = ['toolu_2', 'toolu_3', 'toolu_1'].reduce(
+      (events, id, i) =>
+        applyTurnToolResult(events, result(id, `out ${id}`), 6 + i),
+      filled,
+    );
+
+    expect(
+      toolCards(done).map((card) => [
+        card.callId,
+        card.argsJson,
+        card.resultJson,
+        card.status,
+      ]),
+    ).toEqual([
+      ['toolu_1', '{"command":"toolu_1"}', 'out toolu_1', 'succeeded'],
+      ['toolu_2', '{"command":"toolu_2"}', 'out toolu_2', 'succeeded'],
+      ['toolu_3', '{"command":"toolu_3"}', 'out toolu_3', 'succeeded'],
+    ]);
+  });
+
+  it('marks an isError result failed with its text as the error', () => {
+    const opened = applyTurnToolCall(
+      [],
+      start('toolu_1', 'mcp__ot__create_plan'),
+      0,
+    );
+    const done = applyTurnToolResult(
+      opened,
+      result('toolu_1', 'user declined the approval', true),
+      1,
+    );
+
+    expect(toolCards(done)[0]).toMatchObject({
+      error: 'user declined the approval',
+      resultJson: null,
+      status: 'failed',
+    });
+  });
+
+  it('keeps a JSON result as JSON text so the card pretty-prints it', () => {
+    const opened = applyTurnToolCall([], start('toolu_1', 'Read'), 0);
+    const done = applyTurnToolResult(
+      opened,
+      result('toolu_1', { ok: true }),
+      1,
+    );
+
+    expect(toolCards(done)[0]?.resultJson).toBe('{"ok":true}');
+  });
+
+  it('replays a persisted new-shape turn identically', () => {
+    const replayed = foldPersistedTurnEvents(
+      persisted([
+        {
+          delta: '',
+          kind: 'tool_call',
+          metadata: { callId: 'toolu_1', toolName: 'Bash' },
+        },
+        {
+          delta: '',
+          kind: 'tool_call',
+          metadata: {
+            callId: 'toolu_1',
+            toolCall: { command: 'ls' },
+            toolName: 'Bash',
+          },
+        },
+        {
+          delta: '',
+          kind: 'tool_result',
+          metadata: { callId: 'toolu_1', isError: false, toolCall: 'a.ts' },
+        },
+      ]),
+      '',
+    );
+
+    expect(toolCards(replayed)).toEqual([
+      {
+        argsJson: '{"command":"ls"}',
+        callId: 'toolu_1',
+        error: null,
+        name: 'Bash',
+        resultJson: 'a.ts',
+        status: 'succeeded',
+      },
+    ]);
+  });
+});
+
+describe('legacy persisted claude turns (toolUseId / partialJson / toolResults)', () => {
+  it('rebuilds arguments and correlates a parallel batch of results by tool_use_id', () => {
+    const startChunk = (id: string, index: number) => ({
+      delta: '',
+      kind: 'tool_call',
+      metadata: { index, name: 'Bash', toolName: 'Bash', toolUseId: id },
+    });
+    const fragment = (index: number, partialJson: string) => ({
+      delta: '',
+      kind: 'tool_call',
+      metadata: { index, partialJson },
+    });
+
+    const replayed = foldPersistedTurnEvents(
+      persisted([
+        startChunk('toolu_1', 1),
+        fragment(1, '{"command":'),
+        fragment(1, '"ls"}'),
+        startChunk('toolu_2', 2),
+        fragment(2, '{"command":"pwd"}'),
+        {
+          delta: '',
+          kind: 'tool_result',
+          metadata: {
+            toolResults: [
+              { content: '/repo', tool_use_id: 'toolu_2', type: 'tool_result' },
+              {
+                content: [{ text: 'a.ts', type: 'text' }],
+                is_error: false,
+                tool_use_id: 'toolu_1',
+                type: 'tool_result',
+              },
+            ],
+          },
+        },
+      ]),
+      '',
+    );
+
+    expect(toolCards(replayed)).toEqual([
+      {
+        argsJson: '{"command":"ls"}',
+        callId: 'toolu_1',
+        error: null,
+        name: 'Bash',
+        resultJson: 'a.ts',
+        status: 'succeeded',
+      },
+      {
+        argsJson: '{"command":"pwd"}',
+        callId: 'toolu_2',
+        error: null,
+        name: 'Bash',
+        resultJson: '/repo',
+        status: 'succeeded',
+      },
+    ]);
+  });
+
+  it('marks a legacy is_error block failed', () => {
+    const replayed = foldPersistedTurnEvents(
+      persisted([
+        {
+          delta: '',
+          kind: 'tool_call',
+          metadata: { toolName: 'Bash', toolUseId: 'toolu_1' },
+        },
+        {
+          delta: '',
+          kind: 'tool_result',
+          metadata: {
+            toolResults: [
+              {
+                content: 'denied',
+                is_error: true,
+                tool_use_id: 'toolu_1',
+                type: 'tool_result',
+              },
+            ],
+          },
+        },
+      ]),
+      '',
+    );
+
+    expect(toolCards(replayed)[0]).toMatchObject({
+      error: 'denied',
+      status: 'failed',
+    });
   });
 });

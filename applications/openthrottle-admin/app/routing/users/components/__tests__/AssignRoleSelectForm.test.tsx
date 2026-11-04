@@ -1,11 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub, useFetcher } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { AssignRoleSelectForm } from '../AssignRoleSelectForm';
-import type { AssignRoleSelectFormProps } from '../AssignRoleSelectForm';
+
 import type { action as userDetailAction } from '~/routes/users.$userId';
+
+import type { AssignRoleSelectFormProps } from '../AssignRoleSelectForm';
+import { AssignRoleSelectForm } from '../AssignRoleSelectForm';
 
 const availableRoles: AssignRoleSelectFormProps['availableRoles'] = [
   { id: 'role-1', name: 'admin' },

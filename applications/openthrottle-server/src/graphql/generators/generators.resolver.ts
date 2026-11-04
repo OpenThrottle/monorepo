@@ -3,13 +3,13 @@
  */
 
 import { Args, Query, Resolver } from '@nestjs/graphql';
+
 import {
-  GeneratorDetail,
   getGeneratorByName,
   getGeneratorsList,
-} from '../../modules/generators/generators.service';
-import { GetGeneratorInput } from './generator.input';
-import { GeneratorDetailObject, GeneratorObject } from './generator.object';
+} from '../../modules/generators/generators.service.ts';
+import { GetGeneratorInput } from './generator.input.ts';
+import { GeneratorDetailObject, GeneratorObject } from './generator.object.ts';
 
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a)
 @Resolver()
@@ -29,9 +29,16 @@ export class GeneratorsResolver {
   })
   async generator(
     @Args('input', { type: () => GetGeneratorInput }) input: GetGeneratorInput,
-  ): Promise<GeneratorDetail | null> {
+  ): Promise<GeneratorDetailObject | null> {
     const detail = getGeneratorByName(input.name);
+    if (!detail) {
+      return null;
+    }
 
-    return detail;
+    return {
+      description: detail.description,
+      name: detail.name,
+      schemaJson: detail.schema === null ? null : JSON.stringify(detail.schema),
+    };
   }
 }

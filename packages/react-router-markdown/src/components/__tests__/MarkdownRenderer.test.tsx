@@ -1,11 +1,12 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
-import { renderToStaticMarkup } from 'react-dom/server';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { MarkdownRenderer } from '../MarkdownRenderer';
-import type { MarkdownRendererProps } from '../MarkdownRenderer';
+
 import * as compileMarkdownModule from '../../utils/compileMarkdown';
+import type { MarkdownRendererProps } from '../MarkdownRenderer';
+import { MarkdownRenderer } from '../MarkdownRenderer';
 
 describe('MarkdownRenderer Component', () => {
   let component: RenderResult;

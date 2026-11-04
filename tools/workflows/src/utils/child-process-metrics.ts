@@ -8,8 +8,8 @@ import pidusage from 'pidusage';
 import type { ChildProcessSample } from '../types/child-process-metrics';
 
 export {
-  createChildProcessMetricsCollector,
   type ChildProcessMetricsCollector,
+  createChildProcessMetricsCollector,
 } from '@openthrottle/openthrottle-agentic-utils';
 
 /**

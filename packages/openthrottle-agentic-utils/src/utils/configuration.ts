@@ -1,10 +1,12 @@
 import { parseArgs } from 'node:util';
+
 import type {
+  WorkflowConfig,
   WorkflowConfigDebug,
   WorkflowConfigRunner,
-  WorkflowConfig,
 } from '@openthrottle/openthrottle-agentic-workflow';
 import { isDriverId } from '@openthrottle/openthrottle-drivers';
+
 import {
   DEFAULT_WORKFLOW_DEBUG,
   DEFAULT_WORKFLOW_ITERATIONS,

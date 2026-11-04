@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { filterOutHookTasks, isHookTask } from '../hook-tasks';
 
 describe('isHookTask', () => {

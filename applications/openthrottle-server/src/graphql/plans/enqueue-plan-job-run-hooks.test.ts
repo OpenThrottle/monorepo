@@ -3,13 +3,14 @@
  */
 
 import { describe, expect, it } from 'vitest';
+
 import {
   jobRunHooksForJobPayload,
   jobRunHooksFromPlanStorage,
   parseJobRunHooksJsonInput,
   resolveJobRunHooksForEnqueue,
   serializeJobRunHooksForGraphql,
-} from './enqueue-plan-job-run-hooks';
+} from './enqueue-plan-job-run-hooks.ts';
 
 describe('parseJobRunHooksJsonInput', () => {
   it('returns undefined for null/empty', () => {

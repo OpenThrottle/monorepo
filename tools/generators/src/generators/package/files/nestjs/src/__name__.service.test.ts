@@ -1,8 +1,9 @@
-import { describe, it, expect, beforeAll } from 'vitest';
-import { Test } from '@nestjs/testing';
 import { createMock } from '@golevelup/ts-vitest';
+import { Test } from '@nestjs/testing';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { <%= namePascal %>Service } from './<%= name %>.service';
+import { beforeAll, describe, expect, it } from 'vitest';
+
+import { <%= namePascal %>Service } from './<%= name %>.service.ts';
 
 describe('<%= namePascal %>Service', () => {
   let service: <%= namePascal %>Service;

@@ -1,20 +1,21 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { NotFoundException } from '@nestjs/common';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { Test } from '@nestjs/testing';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { AgentConversationMessage } from './agent-conversation-message.entity';
+
+import { PlansService } from '../plans/plans.service.ts';
+import { ProjectsService } from '../projects/projects.service.ts';
 import {
   AGENT_CONVERSATION_MESSAGE_ROLES,
   AGENT_CONVERSATION_STATUSES,
-} from './agent-conversation.constants';
-import { AgentConversation } from './agent-conversation.entity';
-import { AgentConversationsService } from './agent-conversations.service';
-import { agentConversationsFactory } from './agent-conversations.factory';
-import { PlansService } from '../plans/plans.service';
-import { ProjectsService } from '../projects/projects.service';
+} from './agent-conversation.constants.ts';
+import { AgentConversation } from './agent-conversation.entity.ts';
+import { AgentConversationMessage } from './agent-conversation-message.entity.ts';
+import { agentConversationsFactory } from './agent-conversations.factory.ts';
+import { AgentConversationsService } from './agent-conversations.service.ts';
 
 describe('AgentConversationsService', () => {
   const userId = '11111111-1111-4111-8111-111111111111';

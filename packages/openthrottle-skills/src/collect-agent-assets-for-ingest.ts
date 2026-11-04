@@ -1,6 +1,6 @@
 import {
-  mapAgentAssetFilesToIngestRecords,
   type AgentAssetIngestRecord,
+  mapAgentAssetFilesToIngestRecords,
 } from './map-agent-assets-for-ingest.ts';
 import type { ValidateAgentAssetsResult } from './validate-agent-asset-frontmatter.ts';
 import { validateAgentAssetsOnDisk } from './validate-agent-assets-on-disk.ts';

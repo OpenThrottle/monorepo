@@ -16,10 +16,10 @@ All of these CLIs read the **[Agent Skills](https://agentskills.io/) `SKILL.md` 
 
 Read off the installed binaries/bundles at the versions shown — the CLIs' own shipped docs and path constants, not vendor marketing. Re-verify before changing the fan-out list.
 
-| CLI                   | version    | `.agents/skills` | `.claude/skills` | its own in-repo dir                  | reached by this layout   |
+| CLI                   | version    | `.agents/skills` | `.claude/skills` | other dir it also scans              | reached by this layout   |
 | --------------------- | ---------- | :--------------: | :--------------: | ------------------------------------ | ------------------------ |
 | claude (Claude Code)  | 2.1.232    |        —         |        ✅        | —                                    | ✅ fan-out               |
-| cursor (cursor-agent) | 2026.08.11 |        ✅        |        ✅        | `.cursor/skills`                     | ✅ stage 1               |
+| cursor (cursor-agent) | 2026.09.10 |        ✅        |        ✅        | `.cursor/skills`                     | ✅ stage 1               |
 | grok (Grok Build)     | 1.0.5      |        ✅        |        ✅        | `.grok/skills`                       | ✅ stage 1               |
 | antigravity (`agy`)   | 1.1.21     |        ✅        |        —         | — (global `~/.gemini/config/skills`) | ✅ stage 1               |
 | gemini (Gemini CLI)   | 0.25.2     |        —         |        —         | `.gemini/skills`                     | ✅ fan-out               |
@@ -31,6 +31,14 @@ Notes on the two ❌ rows and the surprises above:
 - **codex 0.145.0 has no in-repo skills dir at all.** Skills live only in `$CODEX_HOME/skills` (`~/.codex/skills`). Its `.agents/` handling is plugin-marketplace manifests, not skills. Nothing in-repo can reach it. (Cursor reads `.codex/skills` — that is Cursor's compat scan, not codex's own.)
 - **opencode 1.18.16** reads project skills from `.opencode/skill(s)/<name>/SKILL.md`, and its "external" auto-scans are **home-scoped only** (`~/.claude/skills`, `~/.agents/skills` — disableable via `OPENCODE_DISABLE_EXTERNAL_SKILLS`). Add `.opencode/skill` to `AGENT_SKILL_DIRS` if a repo needs it; it is deliberately not a default.
 - **Antigravity needs no fan-out.** `agy` discovers `<workspace>/.agents/skills/<name>/` natively (plus the global `~/.gemini/config/skills/` and an `.agents/skills.json` manifest), so stage 1 already covers it. Do **not** add a `.gemini/skills` expectation for `agy` — that is the _Gemini CLI's_ dir, and the two share nothing but the `~/.gemini` prefix.
+- **The last column is additive, not exclusive — read it with the two ✅ columns, never alone.**
+  Cursor is the row that invites the misreading: `.cursor/skills` in that column does **not** mean
+  Cursor needs one. Its ✅ under `.agents/skills` is what matters, and that is why this repo
+  deliberately generates no `.cursor/skills` — consistent with the drift rule in § What `--check`
+  validates below. Re-verified 2026-09-14 against cursor-agent 2026.09.10: the shipped bundle
+  carries path constants for `.cursor/skills`, `.agents/skills`, `.claude/skills`, `.grok/skills`
+  and `.codex/skills` — Cursor scans all five, so naming any one of them as "Cursor's skills dir"
+  is the error. Only the cursor row was re-probed; the other rows still stand at 2026-08-26.
 - **Claude Code 2.1.232 does not read `.agents/skills`.** `.claude/skills` is its only in-repo skills dir, which is exactly why the fan-out exists.
 
 Several CLIs additionally read per-tool **global** dirs (`~/.claude/skills`, `~/.codex/skills`, `~/.grok/skills`, `~/.gemini/skills`, `~/.gemini/config/skills`) that live outside any repo and are not part of this layout.
@@ -94,6 +102,10 @@ bash <path-to-this-skill>/scripts/sync.sh
 # Use in CI as the "agent skills SSOT drift" gate (run sync first).
 bash <path-to-this-skill>/scripts/sync.sh --check
 
+# Links: verify every relative link in a skill BODY resolves; exit 1 on any dead one.
+# Runs in the same CI gate as --check above.
+bash <path-to-this-skill>/scripts/check-links.sh
+
 # Cleanup: remove everything sync generated (never touches targets)
 bash <path-to-this-skill>/scripts/cleanup.sh
 
@@ -118,6 +130,35 @@ These scripts create symlinks and maintain a single static `.gitignore` block so
 6. The static `.gitignore` block is present and every generated symlink is gitignored
 7. No dangling generated links, and no legacy `.gitignore-symlinks` ledger remains
 8. Every personal link is git-ignored (asserted with `git check-ignore`, never a `test -e`, which follows parent symlinks and passes vacuously), points into the **currently-resolved** personal root, and is not dangling
+
+## What `check-links.sh` validates
+
+`sync.sh --check` never opens a `SKILL.md` — every item above is about layout. That blind spot is
+how three separate classes of dead pointer accumulated here unnoticed (OT `6aec86bf`), and how the
+rules-layer retirement swept every well-formed reference to `.agents/rules/` while leaving four
+malformed ones in `agents-ralph` behind: **a grep for the correct path cannot see a link that is
+wrong.**
+
+So the check resolves rather than pattern-matches. One rule, no allowlist:
+
+> Every relative markdown link is resolved from the directory of the file that contains it. If the
+> target does not exist, the check fails naming the file, the line and the target.
+
+Skipped by design: absolute URLs, `mailto:`, bare `#anchor` links, and anything inside a fenced code
+block — those are examples, not pointers. A `#fragment` or `?query` is stripped before resolution;
+the anchor itself is not validated.
+
+**Why only this, and not a denylist of banned path prefixes.** Banning `.cursor/rules/` and
+`.agents/skills/<name>/SKILL.md` references was considered and rejected. Both need an allowlist for
+the files that legitimately _describe_ those paths as architecture (`README.md`, `AGENTS.md`,
+`ot-worktree`'s ladder snippet), and an allowlist of seven files is a thing people add an eighth
+entry to rather than fix the finding. Both also go stale the moment a path convention changes,
+which is the failure being fixed. Resolution needs no allowlist, would have caught the
+`agents-ralph` breakage on its own, and keeps working after any convention change.
+
+Its honest limit: it sees markdown **links**, not paths written as bare code spans. That is why the
+cross-skill pointers repaired under the same plan were rewritten as real links — doing so is what
+puts them under this check from now on. A pointer worth following is worth writing as a link.
 
 ## Configuration
 

@@ -2,18 +2,19 @@
  * @description GraphQL module for auth: login mutation (public). Uses JwtModule to sign tokens compatible with NestjsAuthModule JWT strategy. LocalStrategy validates email/password against OpenThrottle users.
  */
 
+import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
-import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { Module } from '@nestjs/common';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import { PassportModule } from '@nestjs/passport';
-import { LocalStrategy } from './strategies/local.strategy';
-import { GqlLocalCredentialsGuard } from './guards/gql-local-credentials.guard';
-import { GqlLocalAuthGuard } from './guards/gql-local-auth.guard';
-import { AuthService } from './auth.service';
-import { AuthResolver } from './auth.resolver';
-import { SubscriptionTokenResolver } from './subscription-token.resolver';
+import { LoggerModule } from '@openthrottle/nestjs-modules';
+import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+
+import { AuthResolver } from './auth.resolver.ts';
+import { AuthService } from './auth.service.ts';
+import { GqlLocalAuthGuard } from './guards/gql-local-auth.guard.ts';
+import { GqlLocalCredentialsGuard } from './guards/gql-local-credentials.guard.ts';
+import { LocalStrategy } from './strategies/local.strategy.ts';
+import { SubscriptionTokenResolver } from './subscription-token.resolver.ts';
 
 @Module({
   imports: [
@@ -38,7 +39,16 @@ import { SubscriptionTokenResolver } from './subscription-token.resolver';
     }),
     LoggerModule,
     NestjsRepositoriesModule,
-    PassportModule,
+    // `.register({})` and not a bare `PassportModule`: only the dynamic form
+    // provides `AuthModuleOptions`, which `AuthGuard()` — and therefore the
+    // `GqlLocalAuthGuard` below — takes as its first constructor argument.
+    // NestJS 12 instantiates that guard eagerly because it is listed in
+    // `providers`, so a bare import fails bootstrap outright with
+    // "Nest can't resolve dependencies of the GqlLocalAuthGuard (?)".
+    // `{}` is correct here: both guards name their strategy explicitly, so
+    // there is no `defaultStrategy` to set (contrast nestjs-auth, which
+    // registers `{ defaultStrategy: 'jwt' }`).
+    PassportModule.register({}),
   ],
   providers: [
     AuthResolver,

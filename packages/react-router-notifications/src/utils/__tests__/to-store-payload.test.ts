@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { toStorePayload } from '../to-store-payload';
 
 describe('toStorePayload', () => {

@@ -63,14 +63,33 @@ export const resolveSessionToolVersion = (fallback: string): string =>
   getClientIdentity()?.version ?? fallback;
 
 /**
- * @description `model` for a new work session, or null.
+ * @description `model` for a new work session, or null. Three rungs, highest first:
  *
- * The MCP handshake does not carry a model — a client reports what it *is*, not which model is
- * driving it — so the only honest channel is an explicit `OPENTHROTTLE_MCP_MODEL` set by whatever
- * launched the server. When it is unset the session records null, and a review reports model
- * attribution as "not observable" rather than acting on a guess. Do not infer one.
+ * 1. `declared` — the model the caller states did the work this session records.
+ * 2. `OPENTHROTTLE_MCP_MODEL`, set by whatever launched the server.
+ * 3. null.
+ *
+ * Rung 1 exists because one MCP process serves a whole plan loop, so a per-process variable
+ * cannot express a per-task decision. Rung 2 stays for the callers that have no per-task
+ * decision to express — a headless driver or a queued run whose model is fixed at enqueue.
+ *
+ * Rung 1 is a *declaration*, not a detection. The MCP handshake does not carry a model — a client
+ * reports what it *is*, not which model is driving it — and when a loop delegates a task to a
+ * subagent, the subagent shares the parent's connection, so the tool call is made by the parent
+ * regardless. The caller therefore states which model did the work and owns that claim; nothing
+ * here derives one.
+ *
+ * When every rung is empty the session records null, and a review reports model attribution as
+ * "not observable" rather than acting on a guess. Do not infer one.
+ *
+ * See docs/openthrottle/per-task-model-attribution.md.
  */
-export const resolveSessionModel = (): string | null => {
-  const model = process.env.OPENTHROTTLE_MCP_MODEL?.trim() ?? '';
-  return model !== '' ? model : null;
+export const resolveSessionModel = (
+  declared?: string | null,
+): string | null => {
+  const fromCaller = declared?.trim() ?? '';
+  if (fromCaller !== '') return fromCaller;
+
+  const fromEnv = process.env.OPENTHROTTLE_MCP_MODEL?.trim() ?? '';
+  return fromEnv !== '' ? fromEnv : null;
 };

@@ -7,6 +7,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import type { ReactElement } from 'react';
 import { useEffect, useRef } from 'react';
+
 import {
   CALENDAR_LAYOUT_DEFAULT_EVENTS,
   DEFAULT_VIEW,

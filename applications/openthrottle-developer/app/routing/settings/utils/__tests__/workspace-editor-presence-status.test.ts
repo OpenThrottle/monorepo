@@ -1,13 +1,15 @@
 import { describe, expect, test } from 'vitest';
+
 import {
   EditorPresenceState,
   WorkspaceEditorId,
 } from '~/__generated__/graphql';
+
 import {
-  WORKSPACE_EDITOR_PRESENCE_STATUS,
   buildEditorPresenceIndex,
   getEditorPresenceStatus,
   readEditorPresence,
+  WORKSPACE_EDITOR_PRESENCE_STATUS,
 } from '../workspace-editor-presence-status';
 
 describe('WORKSPACE_EDITOR_PRESENCE_STATUS', () => {

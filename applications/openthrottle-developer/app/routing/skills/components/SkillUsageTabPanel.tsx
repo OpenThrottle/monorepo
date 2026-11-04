@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Await } from 'react-router';
+
 import { SkillDetailUsage } from '~/routing/skills/components/SkillDetailUsage';
 import { SKILL_USAGE_RANGE_DAYS } from '~/routing/skills/config/skill-usage';
 import type { SkillDetailUsageData } from '~/routing/skills/data/skill-usage-detail';

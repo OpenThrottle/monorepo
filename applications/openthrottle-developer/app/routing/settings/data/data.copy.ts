@@ -5,6 +5,7 @@
 
 import type { GlobalFeatureOnboardingContent } from '@openthrottle/react-router-ui-global';
 import { KeyRoundIcon } from 'lucide-react';
+
 import { MCP_DEVELOPER_AUTH_DOC_HREF } from '~/routing/settings/utils/settings-docs-links';
 
 export const WORKSPACE_FOLDERS_COPY = {
@@ -178,6 +179,11 @@ export const SETTINGS_AGENTS_COPY = {
   permissionReason: `Requires the settings:write permission.`,
   toggleDisabledReason: `Requires the settings:write permission.`,
 } as const;
+
+/** Title of the credential warning alert shown above the agents table. */
+export const settingsAgentsAuthWarningTitle = (label: string): string => {
+  return `${label}: check which credential is active`;
+};
 
 /** Pluralize the compact models summary shown in the table cell. */
 export const settingsAgentsModelsSummary = (count: number): string =>

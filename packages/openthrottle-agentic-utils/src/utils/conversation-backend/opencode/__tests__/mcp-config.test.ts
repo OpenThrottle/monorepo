@@ -1,11 +1,12 @@
 import { existsSync, readFileSync } from 'node:fs';
+
 import { describe, expect, it } from 'vitest';
 
+import { CONVERSATION_PERMISSION_MODES } from '../../types.ts';
 import {
   translateManagedMcpToOpencode,
   writeOpencodeMcpConfig,
 } from '../mcp-config.ts';
-import { CONVERSATION_PERMISSION_MODES } from '../../types.ts';
 
 const MANAGED = {
   'openthrottle-mcp': {

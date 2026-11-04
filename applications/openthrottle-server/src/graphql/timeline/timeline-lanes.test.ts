@@ -5,8 +5,9 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { TimelineLaneGrouping } from './timeline.enum';
-import { resolveTimelineLane } from './timeline-lanes';
+
+import { TimelineLaneGrouping } from './timeline.enum.ts';
+import { resolveTimelineLane } from './timeline-lanes.ts';
 
 describe('resolveTimelineLane', () => {
   describe('BY_PLAN', () => {

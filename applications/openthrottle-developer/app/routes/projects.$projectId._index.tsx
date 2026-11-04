@@ -1,22 +1,23 @@
-import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import { GlobalScreen } from '@openthrottle/react-router-ui-global';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import {
   mergeRouteModuleMeta,
   parsePagination,
 } from '@openthrottle/react-router-utils';
-import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
-import { GlobalScreen } from '@openthrottle/react-router-ui-global';
+import * as React from 'react';
+
+import type { Route } from '@/app/routes/+types/projects.$projectId._index';
 import { GetProjectByIdDocument } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { SITE_TITLE } from '~/global/config/settings';
+import { runProjectDetailAction } from '~/routing/projects/actions/projectId';
 import { ProjectDetailTabs } from '~/routing/projects/components/ProjectDetailTabs';
 import { ProjectNotFound } from '~/routing/projects/components/ProjectNotFound';
-import { runProjectDetailAction } from '~/routing/projects/actions/projectId';
 import {
   PROJECT_TASKS_DEFAULT_LIMIT,
   PROJECT_TASKS_DEFAULT_PAGE,
 } from '~/routing/projects/config/projects.defaults';
-import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/projects.$projectId._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

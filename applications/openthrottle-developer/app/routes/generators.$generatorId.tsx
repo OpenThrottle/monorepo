@@ -1,22 +1,23 @@
-import * as React from 'react';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { Tabs, TabsList, TabsTrigger } from '@openthrottle/react-router-shadcn';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalHeading,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { BotIcon, BadgeCheckIcon, BookIcon, ListIcon } from 'lucide-react';
-import { Tabs, TabsList, TabsTrigger } from '@openthrottle/react-router-shadcn';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { PuzzlePieceIcon } from '@phosphor-icons/react/dist/ssr/PuzzlePiece';
+import { BadgeCheckIcon, BookIcon, BotIcon, ListIcon } from 'lucide-react';
+import * as React from 'react';
+
+import type { Route } from '@/app/routes/+types/generators.$generatorId';
+import { GetGeneratorByNameDocument } from '~/__generated__/graphql';
+import { SITE_TITLE } from '~/global/config/settings';
 import { GeneratorNxBridge } from '~/routing/generators/components/GeneratorNxBridge';
 import { GeneratorTabDebug } from '~/routing/generators/components/GeneratorTabDebug';
 import { GeneratorTabDocumentation } from '~/routing/generators/components/GeneratorTabDocumentation';
 import { GeneratorTabPresets } from '~/routing/generators/components/GeneratorTabPresets';
-import { GetGeneratorByNameDocument } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/generators.$generatorId';
-import { PuzzlePieceIcon } from '@phosphor-icons/react/dist/ssr/PuzzlePiece';
 import { GeneratorTabSchema } from '~/routing/generators/components/GeneratorTabSchema';
 
 type HandleData = Route.ComponentProps['loaderData'];

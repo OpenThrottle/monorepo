@@ -4,9 +4,10 @@
  * queue-success + error toast wiring. Extracted from the component per
  * component-primitive-shape R7 so the toolbar stays UI-focused.
  */
-import * as React from 'react';
 import { toast } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { useFetcher } from 'react-router';
+
 import { useActionToast } from '~/global/hooks/useActionToast';
 import type { action } from '~/routes/plans.$planId._index';
 import {
@@ -53,10 +54,10 @@ export const usePlanToolbar = (
   // A run is active (QUEUED / IN_PROGRESS): gate mutating actions so they can't
   // fire out from under the worker. Kill run is the deliberate exception.
   const isRunning = getPlanIsRunning(planStatus);
-  // The plan is finished/abandoned (COMPLETED / CANCELED / SKIPPED): there is no
-  // more work to do here, so gate Run/Queue and Evaluate rules. Mark Complete is
-  // deliberately excluded (stays gated on isCompleted only) so CANCELED/SKIPPED
-  // keep their sole recovery path to done.
+  // The plan is finished/abandoned (COMPLETED / CANCELED / PROMOTED / SKIPPED):
+  // there is no more work to do here, so gate Run/Queue and Evaluate rules. Mark
+  // Complete is deliberately excluded (stays gated on isCompleted only) so
+  // CANCELED/SKIPPED keep their sole recovery path to done.
   const isTerminal = getPlanIsTerminal(planStatus);
   const setPlanStatusData = fetcherSetPlanStatus.data;
   const setPlanStatusError =

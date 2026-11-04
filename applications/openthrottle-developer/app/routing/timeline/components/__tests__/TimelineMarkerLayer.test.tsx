@@ -1,22 +1,24 @@
-import * as React from 'react';
-import { render, within } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
+
 import { TimelineMarkerKind } from '~/__generated__/graphql';
-import { buildTimelineLanes } from '~/routing/timeline/utils/lanes';
-import { createTimelineScale } from '~/routing/timeline/utils/scale';
 import {
   FIXTURE_WINDOW_FROM,
   FIXTURE_WINDOW_TO,
   TIMELINE_FIXTURE_MARKERS,
 } from '~/routing/timeline/data/data.fixtures';
-import { TimelineMarkerLayer } from '../TimelineMarkerLayer';
 import type {
   TimelineLane,
   TimelineMarkerCluster,
 } from '~/routing/timeline/types';
+import { buildTimelineLanes } from '~/routing/timeline/utils/lanes';
+import { createTimelineScale } from '~/routing/timeline/utils/scale';
+
+import { TimelineMarkerLayer } from '../TimelineMarkerLayer';
 
 const scale = createTimelineScale({
   from: FIXTURE_WINDOW_FROM,

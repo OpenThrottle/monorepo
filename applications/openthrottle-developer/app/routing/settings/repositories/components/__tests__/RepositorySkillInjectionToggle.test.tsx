@@ -1,11 +1,13 @@
-import * as React from 'react';
 import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
+
 import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/data.copy';
-import { RepositorySkillInjectionToggle } from '../RepositorySkillInjectionToggle';
+
 import type { RepositorySkillInjectionToggleProps } from '../RepositorySkillInjectionToggle';
+import { RepositorySkillInjectionToggle } from '../RepositorySkillInjectionToggle';
 
 interface ActionOutcome {
   enabled: boolean;

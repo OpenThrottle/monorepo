@@ -1,6 +1,6 @@
-import * as React from 'react';
 import {
   Button,
+  cn,
   Command,
   CommandEmpty,
   CommandInput,
@@ -10,12 +10,13 @@ import {
   PopoverTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { ChevronsUpDown } from 'lucide-react';
-import clsx from 'clsx';
+import * as React from 'react';
+
+import { useChatModelPicker } from '../hooks/useChatModelPicker';
+import type { ChatModelGroup, ChatModelOption } from '../types';
 import { ChatModelPickerRailItem } from './ChatModelPickerRailItem';
 import { ChatModelPickerRailSettings } from './ChatModelPickerRailSettings';
 import { ChatModelPickerRow } from './ChatModelPickerRow';
-import { useChatModelPicker } from '../hooks/use-chat-model-picker';
-import type { ChatModelGroup, ChatModelOption } from '../types';
 
 export interface ChatModelPickerProps {
   /** Popover alignment against the trigger. */
@@ -122,8 +123,8 @@ export const ChatModelPicker = (
         <Button
           aria-expanded={open}
           aria-label="Model"
-          className={clsx(
-            'h-8 w-auto min-w-40 justify-between gap-2',
+          className={cn(
+            'h-8 w-auto min-w-40 justify-between gap-2 pointer-coarse:h-11',
             className,
           )}
           data-testid="ChatModelPicker-trigger"

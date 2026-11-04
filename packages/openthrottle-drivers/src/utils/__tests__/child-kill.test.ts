@@ -1,6 +1,7 @@
 import type { ChildProcess } from 'child_process';
 import { EventEmitter } from 'events';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { escalateKill, SIGKILL_GRACE_MS } from '../child-kill.ts';
 
 /** Minimal fake ChildProcess: an EventEmitter with kill()/killed, matching what escalateKill touches. */

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { toFramePixels, toRegionSample } from '../regions';
+import { toFramePixels, toRegionSample } from '../regions.ts';
 
 /**
  * The bug these guard: `assemble/timeline.ts` `cropPath` clamps region centres

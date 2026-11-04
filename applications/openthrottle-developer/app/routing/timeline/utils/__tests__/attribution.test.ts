@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { TimelineMarkerKind } from '../../config/kinds';
 import type { TimelineMarker } from '../../types';
 import { hasUnattributedGrilling } from '../attribution';

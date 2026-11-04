@@ -45,8 +45,8 @@ future enterprise modules (see [Open core](#open-core-why)).
 Everything first-party in the repository:
 
 - **Applications** — `applications/*` (`openthrottle-server`,
-  `openthrottle-developer`, `openthrottle-admin`, `openthrottle-email`,
-  `openthrottle-website`) and the `applications/openthrottle` local-stack
+  `openthrottle-developer`, `openthrottle-admin`, `openthrottle-website`)
+  and the `applications/openthrottle` local-stack
   Docker/compose assets.
 - **Packages** — all of `packages/*` (`@openthrottle/*`).
 - **Tools** — `tools/*` (`@tools/generators`, `@tools/workflows`,

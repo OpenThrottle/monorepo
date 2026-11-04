@@ -41,11 +41,12 @@ New workflow, queue, orchestrator, or worktree behavior belongs in the `@openthr
 
 At CLI / orchestrator **run-start** (once the concrete worktree path is known, before
 the first agent turn), Ralph soft-calls `registerPlanRunWorktreeCheckout` as the run
-actor so a linked worktree can land in `repository_checkouts` and back-fill
-`plan_runs.checkout_id` when still NULL. **Not** done from `pnpm worktree:new` /
-`setup_worktree.sh` (service-account shell callback is deferred); a worktree does
-not show in Workspace Settings until a run touches it. To remove one, use
-`pnpm worktree:remove <name>` (the `ot-worktree` destroy action).
+actor so a linked worktree can land in `repository_checkouts` and point
+`plan_runs.checkout_id` + `branch` at that worktree (overwriting a scheduling-time
+primary checkout). **Not** done from `pnpm worktree:new` / `setup_worktree.ts`
+(service-account shell callback is deferred); a worktree does not show in Workspace
+Settings until a run touches it. To remove one, use `pnpm worktree:remove <name>`
+(the `ot-worktree` destroy action).
 
 ## Pointers
 

@@ -3,6 +3,7 @@
 import * as React from 'react';
 import type { CurveProps } from 'recharts';
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+
 import { ChartContainer } from './Chart/ChartContainer';
 import { ChartTooltip } from './Chart/ChartTooltip';
 import { ChartTooltipContent } from './Chart/ChartTooltipContent';

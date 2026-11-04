@@ -1,10 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+
 import { Button } from './Button';
 import {
   ButtonGroup,
+  type ButtonGroupProps,
   ButtonGroupSeparator,
   ButtonGroupText,
-  type ButtonGroupProps,
 } from './ButtonGroup';
 
 const ORIENTATIONS: readonly NonNullable<ButtonGroupProps['orientation']>[] = [

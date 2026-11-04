@@ -3,8 +3,9 @@
  */
 
 import { Field, Int, ObjectType } from '@nestjs/graphql';
-import { PlanObject } from '../plans/plan.object';
-import { TaskObject } from '../tasks/task.object';
+
+import { PlanObject } from '../plans/plan.object.ts';
+import { TaskObject } from '../tasks/task.object.ts';
 
 @ObjectType()
 export class ActivityCommitRowObject {
@@ -73,6 +74,13 @@ export class ActivityOutputChunkRowObject {
 
   @Field(() => String)
   planTitle!: string;
+
+  @Field(() => String, {
+    description:
+      'Task this chunk is attributed to; null for plan-scoped chunks and historical rows.',
+    nullable: true,
+  })
+  taskId!: string | null;
 }
 
 @ObjectType()
@@ -151,6 +159,13 @@ export class LastActivityOutputChunkPartObject {
 
   @Field(() => Int, { nullable: true })
   iteration!: number | null;
+
+  @Field(() => String, {
+    description:
+      'Task this chunk is attributed to; null for plan-scoped chunks and historical rows.',
+    nullable: true,
+  })
+  taskId!: string | null;
 }
 
 /** Nested type for lastActivity when kind is task_update. */

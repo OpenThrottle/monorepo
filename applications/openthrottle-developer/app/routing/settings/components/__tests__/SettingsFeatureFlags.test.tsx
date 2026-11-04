@@ -1,9 +1,11 @@
-import * as React from 'react';
-import { screen } from '@testing-library/react';
-import { describe, expect, test } from 'vitest';
 import * as FEATURE_FLAGS from '@openthrottle/react-router-utils/src/config/features';
-import { SettingsFeatureFlags } from '../SettingsFeatureFlags';
+import { screen } from '@testing-library/react';
+import * as React from 'react';
+import { describe, expect, test } from 'vitest';
+
 import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import { SettingsFeatureFlags } from '../SettingsFeatureFlags';
 
 describe('SettingsFeatureFlags Component', () => {
   test('renders feature flag keys and devtools guidance', () => {

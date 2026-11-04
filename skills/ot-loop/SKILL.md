@@ -8,7 +8,7 @@ description: >-
 argument-hint: <planId>
 arguments:
   planId: string
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 Important: `$planId` is the first (and only) argument passed to this prompt. If that value does not map back to an OpenThrottle Plan or Task ID, throw an error immediately!
@@ -16,6 +16,8 @@ Important: `$planId` is the first (and only) argument passed to this prompt. If 
 Your job is to run the built-in **`/loop`** over OpenThrottle plan **`$planId`** and its tasks — executing one task at a time, keeping status in OT in sync, appending progress to the plan output stream as you go, and opening a PR when the plan is done. This is **Ralph driven interactively via `/loop`** rather than the workflow CLI: the loop is the outer driver, but the per-task discipline is identical to the [`agents-ralph`](https://github.com/openthrottle/monorepo/blob/main/skills/agents-ralph/SKILL.md) skill.
 
 ## Setup (once, before the loop)
+
+A session started from a kickoff brief (`/ot-loop <planUuid>` on line 1 — [`ot-plans` § Follow-ups and session kickoff](../ot-plans/SKILL.md#follow-ups-and-session-kickoff)) begins here, at step 1, like any other run.
 
 1. **Work in an isolated worktree on a feature branch**, never on the base checkout. Creating, healing and removing worktrees is the [`ot-worktree`](../ot-worktree/SKILL.md) skill's job — use it for **every** worktree interaction in this loop, never a bare `git worktree` command. Follow that skill for how to invoke create / heal / destroy; a bare `git worktree add` skips the repo's provisioner (ports, `.env`, compose isolation), and a bare `git worktree remove` skips the teardown hook and the safety checks.
 
@@ -40,6 +42,7 @@ Your job is to run the built-in **`/loop`** over OpenThrottle plan **`$planId`**
    Then, once the worktree exists, `register_plan_run_worktree_checkout({ planRunId, filesystemPath })` with the path create printed, so `checkout_id` resolves. That is what makes "open in editor" work for this run and what lets the worktree read as busy while you are in it. It soft-fails harmlessly if the path is not a linked worktree.
 
 5. **A fresh worktree needs codegen before app tests will collect** — run `pnpm nx run-many --target=codegen-graphql --all` if the `__generated__` output is missing.
+6. **Live verification runs from the loop worktree**, on its own ports — never against the primary's `:6020`/`:6021`, which serve the base checkout's code. Start the stack with `pnpm worktree:serve <server|developer>` (it waits for the port, prints a probe and stops with `--stop` — do that before teardown; `--api-only` skips the processors). The worktree shares the primary's database by default. A plan that **adds a migration** must isolate first (`pnpm worktree:db isolate`, or create with `worktree:new <name> --own-db`): in shared mode `database:migrate` and the `dev` gate refuse a migration absent from `origin/main`. Details: [`worktree-port-allocation.md`](../../docs/monorepo/worktree-port-allocation.md).
 
 ## The loop (one task at a time)
 
@@ -52,16 +55,211 @@ Each `/loop` iteration works exactly one task. Resume the lowest-`sortOrder` `IN
 
 > **Invariant — at most ONE task `IN_PROGRESS` at a time.** Steps 1→5 are one atomic unit: never run step 1 (`IN_PROGRESS`) for a task while another task is still `IN_PROGRESS`. Even when you power through several tasks in a single turn, fully close the current one — through **step 4 (`COMPLETED`)** — _before_ you start the next. Dropping the step-4 flip strands the task `IN_PROGRESS` even though its work shipped and was committed; there is no server-side reconcile, so it just sits there. **This is the single most common failure of this loop** — if you ever have two tasks `IN_PROGRESS`, you skipped a step 4.
 
-1. **Start:** `update_task(taskId, { status: 'IN_PROGRESS' })`. (Precondition: no other task is `IN_PROGRESS` — see the invariant above.)
-2. **Do the work** for that task, following the repo's rules (generators first, code style, no deep imports, etc.).
+1. **Start:** `update_task(taskId, { status: 'IN_PROGRESS' })`, then `begin_task_session({ planId, taskId, model })` to open a work session scoped to this task carrying the model that will do its work. (Precondition: no other task is `IN_PROGRESS` — see the invariant above.) Where `model` comes from is [§ Model routing](#model-routing); declare what will actually do the work, and omit it rather than guess — a session's model is fixed when it opens and cannot be corrected later.
+2. **Do the work** for that task, following the repo's rules (generators first, code style, no deep imports, etc.). Do it yourself, or hand it to a subagent on the routed model — [§ Model routing](#model-routing). **This is the only step that may be delegated.**
 3. **Validate** before completing — at minimum `pnpm nx affected --target=lint,typecheck,test` for the touched projects (run targets **sequentially**, not in parallel — they share the Nx cache). Don't mark a task done on red.
 4. **Complete — do this BEFORE starting any other task:** `update_task(taskId, { status: 'COMPLETED' })`. If the task genuinely can't be finished, set `BLOCKED` or `SKIPPED` instead — but never leave it `IN_PROGRESS` while you move on. Committing the work (step 5) is **not** a substitute for this flip.
-5. **Commit per task** with `/github-commit` — conventional commit, with `Plan-Id:` and `Task-Id:` footers for traceability. Do **not** record a work-ledger artifact for these per-task work commits; the footers carry the traceability.
+5. **Commit per task** with `/github-commit` — conventional commit, with `Plan-Id:` and `Task-Id:` footers for traceability. Do **not** record a work-ledger artifact for these per-task work commits; the footers carry the traceability. A task that changes no tracked file (verification-only, gitignored output like `/skill-sync`, OT-only) needs **no** commit — never make an empty or cosmetic one to carry the footer. Its step-4 `COMPLETED` flip is the record; the squash picks it up from OT ([`github-squash` § Footers](../github-squash/SKILL.md#footers)).
    - **💰 Commit per task, but do NOT push per task.** Let the commits accumulate locally and push **once**, when the plan is done (the PR step below does it). Every push to a branch with a ready PR triggers a full CI run, so pushing per task burns N runs validating a branch nobody is reviewing yet. One run at the end validates the whole batch — the same total validation over fewer runs. Push mid-plan only if you must hand off, exit, or the worktree is at risk of being reaped. See [ci-cost.md](../../docs/monorepo/ci-cost.md).
 6. **Add tasks when the work reveals more work** (`create_tasks` appends after the plan max when `sortOrder` is omitted).
 7. **Repeat** — before selecting the next task, confirm the one you just finished is `COMPLETED` (not still `IN_PROGRESS`). Continue until every task is `COMPLETED`.
 
 **Narrate as you go.** Use `append_plan_output(planId, ...)` for decisions and progress, passing `taskId` = the task the log actually describes (omit only for genuinely plan-level notes). One iteration can touch several tasks — tag the right id.
+
+## Model routing
+
+Nothing in this loop used to select a model. Every task ran on whatever the interactive session
+happened to be — a slug rename and an architecture decision alike — and `register_plan_run({ model })`
+only recorded that after the fact. This section is what makes step 2 pick one, and step 1 record it.
+
+The policy is data, not prose: [`references/model-routing.json`](./references/model-routing.json).
+Read it rather than reasoning from memory about which model suits what. Rationale and the measured
+reach: [per-task-model-routing.md](../../docs/openthrottle/per-task-model-routing.md).
+
+**The lookup, in full:** take the task's `category`, lower-case it, find it in `categories`. A hit
+names a tier; a miss — or a null/blank category — is `default`. The tier gives `agentModel` (pass it
+as the Agent tool's `model`) and `recordAs` (declare it to `begin_task_session`). Those two must
+agree: routing and attribution disagreeing about what ran is worse than not routing at all.
+
+Most tasks land on `default`, by design — the policy only maps categories that actually signal
+difficulty, and `default` is the cheap tier. **Never escalate a task just because its category is
+unfamiliar.**
+
+> **Read the cost column the right way round.** In CLAUDE.md's model table every axis is a ranking
+> where higher = better for the owner, so for cost **higher = cheaper**. `sonnet-5` (cost 5) is the
+> cheapest; `fable-5` (cost 2) is the **most expensive**. Reading this backwards once put ~10 fable
+> subagents on ~60 mechanical tasks and exhausted the org's monthly spend cap mid-run (OT
+> `0f0528ff`). If you are about to pick something other than the default tier, re-read this.
+
+### What delegates, and what never does
+
+Step 2 is the only delegatable step, because the loop's most common failure is stranding a task
+`IN_PROGRESS` and every guard against that lives in the parent turn.
+
+| Stays in the parent turn, always    | Goes to the subagent |
+| ----------------------------------- | -------------------- |
+| Task selection and ordering         | The work of step 2   |
+| The status flips (steps 1 and 4)    | — and nothing else   |
+| Session open / `begin_task_session` |                      |
+| Validation (step 3)                 |                      |
+| The commit (step 5)                 |                      |
+| `append_plan_output` narration      |                      |
+| The cancel poll                     |                      |
+| Settling the run row                |                      |
+
+A subagent must not touch OT status or git history. It reports back; the parent decides. If a
+subagent fails or returns something unusable, the parent still owns step 4 — set `BLOCKED` rather
+than leaving the task `IN_PROGRESS`.
+
+### The delegation prompt must stand alone
+
+A subagent inherits none of your context. Build the prompt from the task row alone:
+
+```
+<task title>
+
+<task description — verbatim; real rows carry file paths and line numbers>
+
+Acceptance criteria (from the task's requirements):
+- <requirementsJson[0]>
+- <requirementsJson[1]>
+...
+
+Repo rules that apply: generators before hand-writing, no `as` casts or `any`, no deep package
+imports, `import type` at the top level. Validate with the project's own nx targets, run
+sequentially. Report what you changed and what you could not.
+
+Do NOT change any OpenThrottle plan or task status, and do NOT commit — the caller owns both.
+```
+
+That is sufficient because a well-formed OT task already carries the two things a worker needs:
+`description` says what and where, `requirementsJson` is the acceptance criteria. Worked example —
+this plan's own task 6 row yields a prompt naming the deliverable ("per-task table of category,
+routed model, and recorded model"), the method ("run it twice in a throwaway worktree, or compare
+against a comparable already-executed plan"), and the honesty requirement ("this task is allowed to
+conclude that a mapping was wrong") with no reference to anything outside the row.
+
+**If a task's row is too thin to delegate from, that is a signal about the row, not a reason to
+paste your own context in.** Do the task in the parent turn and say so.
+
+### Cost guardrails
+
+The `guardrails` block in [`model-routing.json`](./references/model-routing.json) is the normative
+copy. The two that bound the damage:
+
+- **At most 1 non-default-tier agent at a time.** This is **structurally enforced**, not an
+  honour-system number: this loop runs exactly one task at a time and delegates at most one
+  subagent per task, so 1 is the shape of the loop rather than a limit bolted onto it. Anything
+  that adds intra-task fan-out or parallel lanes must re-decide the number for non-default tiers
+  explicitly, not inherit the cheap tier's concurrency.
+- **Automatic routing can never select the most expensive model.** No category maps to the `review`
+  tier, so the fable path simply does not exist in the lookup. This is the load-bearing guardrail:
+  even a reader who inverts the cost axis cannot produce a fable fleet through routing.
+
+The remaining rules are prose, and therefore advisory:
+
+- **Escalation is per task, never per fleet.** Escalate one task because that task needs it. There
+  is no "this plan is hard, run it all on opus".
+- **Split mixed batches by difficulty.** Never route a whole batch at its hardest item's tier —
+  that is exactly how one hard task drags 59 mechanical ones up with it.
+- **Finish a finite mechanical tail in the main loop** rather than re-spawning for it. Spawning
+  costs something per agent and mechanical work gains nothing from a stronger model.
+
+**Why advisory is acceptable here, given prose already failed once.** The `0f0528ff` failure was a
+_judgment_ call made from a human-readable table, and the judgment inverted. The common path is no
+longer a judgment call at all — it is a lookup in a data file, and the expensive tier is not
+reachable from it. Prose now governs only the deliberate-escalation path, which already requires
+someone to consciously override the default. That is a much smaller blast radius than last time,
+and it is why the cap that matters is the structural one rather than the written one.
+
+### Harnesses without subagents
+
+Routing is an **interactive-only enhancement, not a requirement of the loop.** A driver with no
+Agent tool — the headless `workflow-ralph` path and every CLI backend it drives — runs the whole
+plan on the single `PlanRunConfigRalphV1.model` fixed at enqueue, exactly as it does today. That is
+correct behaviour, not a degraded mode, and it must not be reported as routing having happened.
+
+Attribution is the part that is **not** interactive-only: a headless driver knows the one model it
+was configured with, so it should still call `begin_task_session` per task and declare it. That
+gives the same per-task read-back with a constant value, which is the honest answer for a run that
+genuinely used one model.
+
+## Intra-task fan-out
+
+Step 2 — and only step 2 — may be worked by **several agents in parallel**. Nothing structural
+moves when it does: exactly one task stays `IN_PROGRESS`, the parent turn still owns every status
+flip, validation, and the single commit with its one correct `Task-Id:` footer. Fan-out is entirely
+inside step 2's box in [§ What delegates, and what never does](#what-delegates-and-what-never-does)
+— it is **not** task-level parallelism, it does not touch the one-task-`IN_PROGRESS` invariant, and
+it does not add a second delegable step.
+
+### Eligibility test
+
+A task is fan-out eligible only when its work decomposes into units with **disjoint file sets** —
+no two units write the same file. That is the test's floor, and it is necessary but not sufficient:
+units that pass it can still be coupled by a shared invariant, so both halves have to hold.
+
+The failure mode the disjoint-file rule rules out: two agents editing the same file, one silently
+losing the other's edit when both write back.
+
+- **Eligible** — plan `f9c8e688`'s task to re-point ~10 doc files across `docs/`,
+  `.agents/personas/`, and the developer UI copy. One file per unit, and no unit's file appears in
+  any other unit — a clean partition.
+- **NOT eligible** — a task to implement the prompt-layer mechanism in both the orchestrator and
+  the CLI, asserting both produce the same shape. The two edits can even touch disjoint files and
+  still fail this test, because they are coupled by a shared assertion that only makes sense once
+  both sides agree — a shared invariant (a shared assertion, a shared contract, a shared generated
+  artifact) is coupling regardless of whether the file sets overlap.
+
+When a task doesn't clearly pass, don't fan it out — the parent doing step 2 itself is always the
+safe fallback.
+
+### What a fan-out agent may not do
+
+Each fan-out agent owns exactly one disjoint unit and reports back; it is a worker, not a
+participant in the loop's bookkeeping. A fan-out agent must never:
+
+- Mutate OT status — no `update_task`, `update_plan`, `begin_task_session`, or any other OT write.
+- Commit.
+- Push.
+- Run an `nx` target, for any project — `lint`, `typecheck`, `test`, `build`, none of them.
+
+That last one is not caution for its own sake. Concurrent `nx` targets in the **same checkout**
+contend on the shared `.nx` cache and produce spurious failures at scale — a suite that passed
+1076/1076 run alone showed dozens of unrelated failures when run alongside a build and a lint in the
+same worktree. Fan-out agents write files; they never validate them.
+
+### Validation stays serialized in the parent
+
+Step 3 is unchanged by fan-out. Once every unit rejoins, the parent runs
+`pnpm nx affected --target=lint,typecheck,test` **sequentially** — the same shared-`.nx`-cache reason
+that already makes every target in this loop run one at a time (§ Validate, above) applies just as
+much to a task that fanned out internally. Fan-out changes who writes the files; it never changes
+who validates them, or that validation happens one target at a time, after the fan-out has fully
+rejoined.
+
+### Model tier and concurrency cap
+
+Fan-out agents default to the cheap (`default`) tier, same as any other step-2 delegation — [§ Model
+routing](#model-routing). Escalating a fan-out unit still follows [§ Cost
+guardrails](#cost-guardrails): per task, never per fleet, and never as a blanket policy for a whole
+fan-out.
+
+The two tiers get **different** caps under fan-out:
+
+- **Cheap-tier (`default`) fan-out agents: at most 4 running at once.** Nothing bounded this before
+  fan-out existed, because there was never more than one step-2 delegate to bound. Fan-out changes
+  that, so this cap is new rather than inherited — pick it deliberately, don't leave it unmetered
+  just because the tier is cheap. Tune it in [`model-routing.json`](./references/model-routing.json)
+  if practice shows a different number is right; treat 4 as a starting point, not a law of nature.
+- **Non-default-tier agents under fan-out: at most 1 — unchanged from the loop-wide cap.**
+  [`model-routing.json`](./references/model-routing.json)'s
+  `guardrails.maxConcurrentNonDefaultTierAgents` is `1`, and its own note requires that any change
+  introducing intra-task fan-out (this one, OT `c22e5ba1`) re-decide that number for non-default
+  tiers explicitly rather than inherit the cheap tier's concurrency. Re-decided explicitly: it stays
+  `1`. Escalation is per task, never per fleet, and that does not stop being true just because the
+  fleet is now inside one task instead of across several — at most one escalated agent runs at a
+  time, fan-out or not.
 
 ## Your run row
 
@@ -82,7 +280,9 @@ Missing a poll only delays a cancel; it corrupts nothing. Best-effort is fine, s
 
 > **Invariant — every exit path settles the run.** `settle_plan_run(planRunId, status)` with
 > `COMPLETED` when the PR opens, `CANCELLED` on a deliberate stop, `FAILED` when you give up or
-> hit something you cannot finish. A row opened and never settled sits `IN_PROGRESS` forever,
+> hit something you cannot finish. On the `COMPLETED` path also pass `headSha` and `prNumber` —
+> that call is what puts the work on the ledger. They are optional precisely so the other two
+> paths, which have no PR, stay valid. A row opened and never settled sits `IN_PROGRESS` forever,
 > reads as live, and holds its worktree marked busy. This is the same class of bug as leaving a task
 > `IN_PROGRESS` (the loop's most common failure), one level up. Settling twice is a safe no-op, so
 > settle when in doubt.
@@ -106,12 +306,12 @@ which the run reads as live and its worktree stays marked busy.
 
 ## Finishing
 
-1. **Verify every task is closed, THEN set the plan `COMPLETED`.** First re-fetch `get_tasks_by_plan_id(planId)` (or `get_remaining_tasks_for_plan`) and confirm **zero** tasks are `IN_PROGRESS`, `PENDING`, or `QUEUED`. Flip any stranded task to `COMPLETED` (or `BLOCKED`/`SKIPPED`) before continuing — a committed task left `IN_PROGRESS` is the usual culprit (see the loop invariant). Only once the list is clean, `update_plan(planId, { status: 'COMPLETED' })`. There is no server-side downward reconcile in **either** direction: the plan can read `COMPLETED` while tasks are still `IN_PROGRESS`, so this explicit re-fetch is mandatory — never skip it.
-2. Before continuing ensure `nx run-many -t lint test typecheck format-write check:local` all complete, flagging any errors we encounter
-3. To minimize friction merging with main we will run `/github-squash` to condense our PR to a single commit
+1. **Verify every task is closed, THEN set the plan `COMPLETED`.** First re-fetch `get_tasks_by_plan_id(planId)` (or `get_remaining_tasks_for_plan`) and confirm **zero** tasks are `IN_PROGRESS`, `PENDING`, or `QUEUED`. Flip any stranded task to `COMPLETED` (or `BLOCKED`/`SKIPPED`) before continuing (`PROMOTED` — the work continued as its own plan — also counts as resolved) — a committed task left `IN_PROGRESS` is the usual culprit (see the loop invariant). Only once the list is clean, `update_plan(planId, { status: 'COMPLETED' })`. There is no server-side downward reconcile in **either** direction: the plan can read `COMPLETED` while tasks are still `IN_PROGRESS`, so this explicit re-fetch is mandatory — never skip it.
+2. Before continuing ensure `nx run-many -t lint test typecheck format check:local` all complete, flagging any errors we encounter
+3. To minimize friction merging with main we will run `/github-squash` to condense our PR to a single commit — its `Task-Id:` footers come from OT, so commitless tasks are carried too
 4. Next we will fetch main `git fetch origin main:main` and rebase the branch against `main`
-5. **Open a Draft PR** with `/github-pull-request` (conventional-commit title, the repo PR template, testing steps phrased as things to do) — this is the single push for the whole plan. Leave it in **draft**: `build` skips on draft PRs, so a draft is what keeps any later push cheap. Mark it ready (`gh pr ready`) only when the work is genuinely up for review. **Capture the PR URL** — a real PR (branch pushed to the remote, PR object created) is the precondition for teardown below.
-6. **Settle your run row** — `settle_plan_run(planRunId, 'COMPLETED')`. The PR is open, so the run is genuinely done. Nothing else will ever close this row.
+5. **Open a Draft PR** with `/github-pull-request` (conventional-commit title, the repo PR template, testing steps phrased as things to do) — this is the single push for the whole plan. Leave it in **draft**: `build` skips on draft PRs, so a draft is what keeps any later push cheap. Mark it ready (`gh pr ready`) only when the work is genuinely up for review. **Capture the PR URL and number, and the branch head sha** — the PR is the precondition for teardown below, and step 6 records both.
+6. **Settle your run row, with the sha and the PR number** — `settle_plan_run(planRunId, 'COMPLETED', headSha, prNumber)`. The PR is open, so the run is genuinely done, and nothing else will ever close this row. Those two values are also how the work gets onto the ledger: the server writes the artifacts itself from them. Pass them here and there is nothing to do after the merge — see [Recording the work on the ledger](#recording-the-work-on-the-ledger).
 7. **Stop the loop** once the PR is open. Do **not** merge.
 
 ## Teardown the worktree (only after a successful PR)
@@ -122,15 +322,42 @@ Once — and **only** once — the PR is confirmed open, tear down the isolated 
 2. **Stop anything running in the worktree** — kill dev servers/watchers scoped to _this worktree's path only_. Never use a bare process-name pattern; that also kills the main checkout's server + OT MCP. You do **not** need to stop the worktree's containers by hand — OpenThrottle's `.worktree/teardown.sh` does that in step 3, scoped to this worktree's own compose project.
 3. **Remove the worktree with [`ot-worktree`](../ot-worktree/SKILL.md) destroy**, never a bare `git worktree remove` — destroy runs `.worktree/teardown.sh` first, which stops this worktree's docker compose project (a bare removal leaves those containers running, detached from any checkout), and it refuses removals that would eat work. Run it from inside the worktree (no argument) or pass the worktree path.
 
+   It also deregisters this worktree's OpenThrottle checkout record once the directory is gone — best-effort, so it never blocks teardown. The server keeps that record while a run that has not been settled still points at it, which is one more reason step 6's settle comes first.
+
    It refuses the primary checkout, refuses a dirty tree, prunes admin dirs afterward, and preserves the branch by default — which is what you want here, since both the open PR and the end-user's verification checkout depend on it. Never pass `--delete-branch`. Add `--force` only if it reports a dirty tree _after_ you have already confirmed everything is committed and pushed; `--dry-run` first if you want to see exactly what it will do.
 
 4. **Report** the PR link and note that the branch is now free to check out in the primary instance for manual verification (`git checkout <branch>`), or in a fresh isolated worktree via [`ot-worktree`](../ot-worktree/SKILL.md) create.
 
-## After merge (not part of the loop)
+## Recording the work on the ledger
 
-This loop **does not wait for merge**. It stops once the PR is open, and any later merge-queue enqueue/landing is a separate step.
+**You do not do this. The server does, when you settle the run.**
 
-Only **after the PR is actually merged**, record the squash on the work ledger — `attach_session_subject({ planId, taskId? })` then `record_artifact({ type: 'git_commit', payload: { repo, sha } })`, or run `pnpm exec workflow-link-merge --plan <id> --sha <squash-sha> --repo <owner/repo>`. On a merge-queue-protected branch, `gh pr merge --auto` can return after **queuing** the PR, so do not use the branch head SHA for this step. Wait until `gh pr view --json mergedAt,mergeCommitSha` shows the landed merge commit (or read it back from `main`), then record that SHA. One `git_commit` artifact per merged commit, never per intermediate work commit.
+Pass `headSha` (the branch head you pushed) and `prNumber` (the PR you opened) to `settle_plan_run`
+alongside `status: COMPLETED`. The server resolves `owner/repo` from the run's checkout and writes
+the `git_commit` and `pull_request` artifacts and their subject rows itself, in one transaction.
+
+That is the whole obligation. There is **no post-merge step**, and nothing to remember after the PR
+lands. The ledger records a claim now, and the verifier discovers what it became — mapping the
+branch sha to its squash commit once the PR merges, and repairing it from the PR when a rebase
+leaves the sha unfindable.
+
+Why the change: the old instruction was to wait for the merge and record the landed squash sha by
+hand. It appeared in eight documents and produced 38 artifacts ever, none since August, against 197
+plans with landed work. It asked for a write at a moment when no session exists to make it — the
+human merges hours later, in a session that has no idea a plan is owed anything.
+
+If nothing records a plan anyway — a run that died before opening a PR, or a PR opened by hand
+outside the loop — the hourly trailer harvest adopts it from the `Plan-Id:` footer on `main`. That
+is the backstop, and it is why those footers matter.
+
+**Manual fallback**, for a commit neither path covers: `attach_session_subject({ planId, taskId? })`
+then `record_artifact({ type: 'git_commit', payload: { repo, sha } })` under an open session. One
+artifact per commit, never per intermediate work commit. Do not reach for `workflow-link-merge` —
+it lives in the deprecated `@tools/workflows` package and is not a path worth keeping alive.
+
+The merge-queue caveat still holds where it always did: `gh pr merge --auto` can return after
+**enqueuing** a PR, so do not call it merged, or read a landed sha from it, until
+`gh pr view --json mergedAt,mergeCommitSha` shows one. It no longer gates ledger recording.
 
 ## Rules
 
@@ -139,4 +366,4 @@ Only **after the PR is actually merged**, record the squash on the work ledger �
 - Author/assignee fields expect the **GitHub username**, not a display name.
 - Never push to `main`, never `--no-verify`; require confirmation before rebase/force-push.
 - **One task `IN_PROGRESS` at a time.** Flip it to `COMPLETED` (or `BLOCKED`/`SKIPPED`) before starting the next, and re-fetch tasks to confirm zero `IN_PROGRESS`/`PENDING`/`QUEUED` before marking the plan `COMPLETED`. Committing the work is not the same as flipping the status.
-- Task states: `BACKLOG`, `BLOCKED`, `CANCELED`, `COMPLETED`, `IN_PROGRESS`, `PENDING`, `QUEUED`, `SKIPPED`.
+- Task states: `BACKLOG`, `BLOCKED`, `CANCELED`, `COMPLETED`, `IN_PROGRESS`, `PENDING`, `PROMOTED`, `QUEUED`, `SKIPPED`. `COMPLETED`, `PROMOTED` and `SKIPPED` are resolved/terminal; `PROMOTED` means the work continued as its own plan (resolved here, not complete).

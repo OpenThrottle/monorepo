@@ -7,8 +7,13 @@
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
-  "dependencies": {},
-  "devDependencies": {},
+  "dependencies": {
+    "formik": "catalog:"
+  },
+  "devDependencies": {
+    "@testing-library/react": "catalog:",
+    "vitest": "catalog:"
+  },
   "license": "Apache-2.0",
   "main": "./src/index.ts",
   "module": "./src/index.ts",

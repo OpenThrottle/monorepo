@@ -1,9 +1,10 @@
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+
+import type { Route } from '@/app/routes/+types/resources.agent-setup';
 import {
   InstallAgentCliDocument,
   UpdateAgentCliDocument,
 } from '~/__generated__/graphql';
-import type { Route } from '@/app/routes/+types/resources.agent-setup';
 
 /** JSON shape returned by the install/update intents (mirrors StartAgentSetupResult). */
 export interface AgentSetupActionResult {

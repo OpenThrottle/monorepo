@@ -1,14 +1,15 @@
-import * as React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import {
+  createRoutesStub,
   Link,
   Outlet,
-  createRoutesStub,
   useNavigate,
   useSearchParams,
 } from 'react-router';
 import { describe, expect, test } from 'vitest';
+
 import { useScrollContainerRestoration } from '../useScrollContainerRestoration';
 
 function ScrollLayout(): React.ReactElement {

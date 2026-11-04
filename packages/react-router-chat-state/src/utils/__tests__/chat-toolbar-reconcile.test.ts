@@ -1,18 +1,19 @@
-import { describe, expect, test } from 'vitest';
+import type {
+  ChatModelOption,
+  ChatPersonaOption,
+} from '@openthrottle/react-router-chat';
 import {
   ChatComposerMode,
   ChatPermissionMode,
   ChatReasoningLevel,
   ChatServiceTier,
 } from '@openthrottle/react-router-chat';
-import type {
-  ChatModelOption,
-  ChatPersonaOption,
-} from '@openthrottle/react-router-chat';
+import { describe, expect, test } from 'vitest';
+
 import {
   CHAT_TOOLBAR_STATE_VERSION,
-  DEFAULT_CHAT_TOOLBAR_STATE,
   type ChatToolbarState,
+  DEFAULT_CHAT_TOOLBAR_STATE,
 } from '../../data/atom.chat-toolbar';
 import {
   reconcileChatToolbarState,

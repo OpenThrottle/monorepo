@@ -1,11 +1,11 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Button } from '@openthrottle/react-router-shadcn';
+import { Button, cn } from '@openthrottle/react-router-shadcn';
 import {
   LEGACY_SEARCH_PARAM_KEY,
   SEARCH_PARAM_KEY,
 } from '@openthrottle/react-router-ui-global';
+import * as React from 'react';
 import { useSearchParams } from 'react-router';
+
 import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/data.copy';
 
 export interface RepositoriesTableEmptyProps {
@@ -45,7 +45,7 @@ export const RepositoriesTableEmpty = (
 
   return (
     <div
-      className={clsx('flex flex-col items-center gap-2', className)}
+      className={cn('flex flex-col items-center gap-2', className)}
       data-testid="RepositoriesTableEmpty"
     >
       <p className="text-muted-foreground text-sm">

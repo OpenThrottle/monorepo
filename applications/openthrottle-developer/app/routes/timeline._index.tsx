@@ -1,32 +1,33 @@
-import * as React from 'react';
-import { APP_NAME } from '@openthrottle/react-router-utils';
-import type { ShouldRevalidateFunction } from 'react-router';
-import {
-  EvaluateFeatureFlagsDocument,
-  GetWorkstreamTimelineDocument,
-} from '~/__generated__/graphql';
+import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { APP_NAME } from '@openthrottle/react-router-utils';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+import type { ShouldRevalidateFunction } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/timeline._index';
+import {
+  EvaluateFeatureFlagsDocument,
+  GetWorkstreamTimelineDocument,
+} from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
+import { TimelineScreen } from '~/routing/timeline/components/TimelineScreen';
+import { TIMELINE_SEARCH_PARAM } from '~/routing/timeline/config/defaults';
 import {
   TIMELINE_MARKER_KINDS,
   TIMELINE_SPAN_KINDS,
 } from '~/routing/timeline/config/kinds';
-import { TIMELINE_SEARCH_PARAM } from '~/routing/timeline/config/defaults';
-import { TimelineScreen } from '~/routing/timeline/components/TimelineScreen';
+import { TIMELINE_ROLLOUT_FLAG_KEY } from '~/routing/timeline/config/rollout';
 import {
   parseTimelineBranch,
   parseTimelineGrouping,
   parseTimelineKinds,
   resolveTimelineWindow,
 } from '~/routing/timeline/utils/parsers';
-import { TIMELINE_ROLLOUT_FLAG_KEY } from '~/routing/timeline/config/rollout';
-import type { Route } from '@/app/routes/+types/timeline._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -131,18 +132,6 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { loaderData } = props;
-  const {
-    grouping,
-    markers,
-    selectedBranch,
-    selectedMarkerKinds,
-    selectedSpanKinds,
-    spans,
-    truncation,
-    windowFromIso,
-    windowPreset,
-    windowToIso,
-  } = loaderData;
 
   // Hooks
 
@@ -159,16 +148,16 @@ export default function Component(
   return (
     <GlobalScreen>
       <TimelineScreen
-        grouping={grouping}
-        markers={markers}
-        selectedBranch={selectedBranch}
-        selectedMarkerKinds={selectedMarkerKinds}
-        selectedSpanKinds={selectedSpanKinds}
-        spans={spans}
-        truncation={truncation}
-        windowFromIso={windowFromIso}
-        windowPreset={windowPreset}
-        windowToIso={windowToIso}
+        grouping={loaderData.grouping}
+        markers={loaderData.markers}
+        selectedBranch={loaderData.selectedBranch}
+        selectedMarkerKinds={loaderData.selectedMarkerKinds}
+        selectedSpanKinds={loaderData.selectedSpanKinds}
+        spans={loaderData.spans}
+        truncation={loaderData.truncation}
+        windowFromIso={loaderData.windowFromIso}
+        windowPreset={loaderData.windowPreset}
+        windowToIso={loaderData.windowToIso}
       />
     </GlobalScreen>
   );

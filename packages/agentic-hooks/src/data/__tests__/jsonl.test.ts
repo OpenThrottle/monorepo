@@ -6,9 +6,87 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from 'vitest';
 
-import { drainJsonlFile } from '../../index';
+import type { PostResult } from '../../index.ts';
+import {
+  deadLetterPathFor,
+  defaultJsonlPath,
+  defaultOutcomesJsonlPath,
+  defaultStartsDir,
+  drainJsonlFile,
+  replayDeadLetter,
+} from '../../index.ts';
+
+const SENT: PostResult = { id: 'id-1', ok: true };
+const failed = (reason: string, permanent = false): PostResult => ({
+  ok: false,
+  permanent,
+  reason,
+});
+const ZERO = { deadLettered: 0, reasons: {}, retained: 0, sent: 0, skipped: 0 };
+
+describe('telemetry directory resolution', () => {
+  let tmpRoot: string;
+  let fakeHome: string;
+  let prev: string | undefined;
+  let prevHome: string | undefined;
+
+  beforeEach(() => {
+    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-usage-dir-'));
+    fakeHome = path.join(tmpRoot, 'home');
+    fs.mkdirSync(fakeHome, { recursive: true });
+    prev = process.env.OPENTHROTTLE_TELEMETRY_DIR;
+    prevHome = process.env.HOME;
+    delete process.env.OPENTHROTTLE_TELEMETRY_DIR;
+    process.env.HOME = fakeHome;
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpRoot, { force: true, recursive: true });
+    if (prev === undefined) {
+      delete process.env.OPENTHROTTLE_TELEMETRY_DIR;
+    } else {
+      process.env.OPENTHROTTLE_TELEMETRY_DIR = prev;
+    }
+    if (prevHome === undefined) {
+      delete process.env.HOME;
+    } else {
+      process.env.HOME = prevHome;
+    }
+  });
+
+  it('defaults all three artifacts to ~/.openthrottle/skill-usage, NOT the repo', () => {
+    const dir = path.join(fakeHome, '.openthrottle', 'skill-usage');
+    expect(defaultJsonlPath()).toBe(path.join(dir, 'events.jsonl'));
+    expect(defaultOutcomesJsonlPath()).toBe(path.join(dir, 'outcomes.jsonl'));
+    expect(defaultStartsDir()).toBe(path.join(dir, 'starts'));
+  });
+
+  it('OPENTHROTTLE_TELEMETRY_DIR redirects events, outcomes AND starts together', () => {
+    process.env.OPENTHROTTLE_TELEMETRY_DIR = tmpRoot;
+    expect(defaultJsonlPath()).toBe(path.join(tmpRoot, 'events.jsonl'));
+    expect(defaultOutcomesJsonlPath()).toBe(
+      path.join(tmpRoot, 'outcomes.jsonl'),
+    );
+    expect(defaultStartsDir()).toBe(path.join(tmpRoot, 'starts'));
+  });
+
+  it('ignores a blank override', () => {
+    process.env.OPENTHROTTLE_TELEMETRY_DIR = '   ';
+    expect(defaultJsonlPath()).toBe(
+      path.join(fakeHome, '.openthrottle', 'skill-usage', 'events.jsonl'),
+    );
+  });
+});
 
 describe('drainJsonlFile', () => {
   let tmpRoot: string;
@@ -36,9 +114,9 @@ describe('drainJsonlFile', () => {
     const filePath = seed('ok.jsonl', ['{"a":1}', '{"a":2}']);
     const res = await drainJsonlFile({
       filePath,
-      post: async () => ({ ok: true }),
+      post: async () => SENT,
     });
-    expect(res).toEqual({ retained: 0, sent: 2, skipped: 0 });
+    expect(res).toEqual({ ...ZERO, sent: 2 });
     expect(fs.existsSync(filePath)).toBe(false);
   });
 
@@ -46,9 +124,9 @@ describe('drainJsonlFile', () => {
     const filePath = seed('down.jsonl', ['{"a":1}', '{"a":2}']);
     const res = await drainJsonlFile({
       filePath,
-      post: async () => ({ ok: false, reason: 'timeout' }),
+      post: async () => failed('timeout'),
     });
-    expect(res).toEqual({ retained: 2, sent: 0, skipped: 0 });
+    expect(res).toEqual({ ...ZERO, reasons: { timeout: 2 }, retained: 2 });
     expect(readLines(filePath)).toEqual(['{"a":1}', '{"a":2}']);
   });
 
@@ -56,7 +134,7 @@ describe('drainJsonlFile', () => {
     const filePath = seed('partial.jsonl', ['{"a":1}', '{"a":2}', '{"a":3}']);
     const res = await drainJsonlFile<{ a: number }>({
       filePath,
-      post: async (event) => ({ ok: event.a === 1 }),
+      post: async (event) => (event.a === 1 ? SENT : failed('fetch failed')),
     });
     expect(res.sent).toBe(1);
     expect(res.retained).toBe(2);
@@ -75,7 +153,7 @@ describe('drainJsonlFile', () => {
     ]);
     const res = await drainJsonlFile({
       filePath,
-      post: async () => ({ ok: true }),
+      post: async () => SENT,
     });
     expect(res.sent).toBe(2);
     expect(res.skipped).toBe(1);
@@ -92,7 +170,7 @@ describe('drainJsonlFile', () => {
       nowFn: () => 2000,
       post: async () => {
         posted += 1;
-        return { ok: true };
+        return SENT;
       },
     });
     expect(posted).toBe(0);
@@ -101,11 +179,79 @@ describe('drainJsonlFile', () => {
     expect(readLines(filePath)).toEqual(['{"a":1}', '{"a":2}']);
   });
 
+  describe('when the server rejects a line permanently', () => {
+    it('dead-letters it with the reason instead of retrying it', async () => {
+      const filePath = seed('rejected.jsonl', [
+        '{"a":1}',
+        '{"a":2}',
+        '{"a":3}',
+      ]);
+      const res = await drainJsonlFile<{ a: number }>({
+        filePath,
+        nowFn: () => Date.parse('2026-10-29T00:00:00.000Z'),
+        post: async (event) =>
+          event.a === 1
+            ? SENT
+            : event.a === 2
+              ? failed('outcome must be one of: x', true)
+              : failed('timeout'),
+      });
+
+      expect(res).toEqual({
+        deadLettered: 1,
+        reasons: { 'outcome must be one of: x': 1, timeout: 1 },
+        retained: 1,
+        sent: 1,
+        skipped: 0,
+      });
+      expect(readLines(filePath)).toEqual(['{"a":3}']);
+      expect(
+        readLines(deadLetterPathFor(filePath)).map((l) => JSON.parse(l)),
+      ).toEqual([
+        {
+          dead_lettered_at: '2026-10-29T00:00:00.000Z',
+          line: { a: 2 },
+          reason: 'outcome must be one of: x',
+        },
+      ]);
+    });
+
+    it('can be replayed into the live buffer after a fix', async () => {
+      const filePath = seed('replay.jsonl', ['{"a":1}']);
+      await drainJsonlFile({
+        filePath,
+        post: async () => failed('bad input', true),
+      });
+      expect(readLines(filePath)).toEqual([]);
+
+      expect(replayDeadLetter(filePath)).toBe(1);
+      expect(readLines(filePath)).toEqual(['{"a":1}']);
+      expect(fs.existsSync(deadLetterPathFor(filePath))).toBe(false);
+    });
+  });
+
+  describe('when post throws', () => {
+    it('retains the line as transient', async () => {
+      const filePath = seed('throws.jsonl', ['{"a":1}']);
+      const res = await drainJsonlFile({
+        filePath,
+        post: async () => {
+          throw new Error('boom');
+        },
+      });
+      expect(res).toEqual({
+        ...ZERO,
+        reasons: { 'post threw': 1 },
+        retained: 1,
+      });
+    });
+  });
+
   it('returns zeros when the file does not exist', async () => {
     const res = await drainJsonlFile({
       filePath: path.join(tmpRoot, 'missing.jsonl'),
-      post: async () => ({ ok: true }),
+      post: async () => SENT,
     });
-    expect(res).toEqual({ retained: 0, sent: 0, skipped: 0 });
+    expect(res).toEqual(ZERO);
   });
 });

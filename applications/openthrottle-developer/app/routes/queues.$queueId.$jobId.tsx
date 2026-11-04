@@ -1,22 +1,23 @@
-import * as React from 'react';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
-import {
-  CancelPlanRunInputSchema,
-  RetryJobInputSchema,
-} from '~/__generated__/schemas';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+
+import type { Route } from '@/app/routes/+types/queues.$queueId.$jobId';
 import {
   GetQueueJobDetailsDocument,
   QueueJobDetailCancelPlanRunDocument,
   QueueJobDetailRetryDocument,
 } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { QueueJobDetail } from '~/routing/queues/components/QueueJobDetail';
+import {
+  CancelPlanRunInputSchema,
+  RetryJobInputSchema,
+} from '~/__generated__/schemas';
 import { SITE_TITLE } from '~/global/config/settings';
 import { toErrorMessage } from '~/global/utils/utils.error-message';
-import type { Route } from '@/app/routes/+types/queues.$queueId.$jobId';
+import { QueueJobDetail } from '~/routing/queues/components/QueueJobDetail';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

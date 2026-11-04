@@ -4,19 +4,23 @@
  * openthrottle-mcp list_skill_tags / add_skill_tag / rename_skill_tag / remove_skill_tag tools.
  */
 
-import type { UserSkillTag } from '@openthrottle/nestjs-repositories';
-import { SkillTagsService } from '@openthrottle/nestjs-repositories';
-import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { UseGuards } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
+import type { UserSkillTag } from '@openthrottle/nestjs-repositories';
+import { SkillTagsService } from '@openthrottle/nestjs-repositories';
+
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import {
+  SkillTagObject,
+  SkillTagVocabularyResult,
+} from './skill-tag.object.ts';
 import {
   AddSkillTagInput,
   RemoveSkillTagInput,
   RenameSkillTagInput,
-} from './skill-tags.input';
-import { SkillTagObject, SkillTagVocabularyResult } from './skill-tag.object';
+} from './skill-tags.input.ts';
 
 @Resolver(() => SkillTagObject)
 @UseGuards(GqlPermissionsGuard)

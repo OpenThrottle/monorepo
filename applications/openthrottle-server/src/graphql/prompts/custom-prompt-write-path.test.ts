@@ -1,11 +1,13 @@
-import { mkdtempSync, mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
 import { beforeAll, describe, expect, test } from 'vitest';
+
 import {
   CUSTOM_PROMPT_WRITE_REFUSAL,
   resolveCustomPromptWritePath,
-} from './custom-prompt-write-path';
+} from './custom-prompt-write-path.ts';
 
 describe('resolveCustomPromptWritePath', () => {
   let workspaceRoot: string;

@@ -1,16 +1,18 @@
 'use client';
 
-import * as React from 'react';
 import {
   type ColumnDef,
   type ExpandedState,
-  type OnChangeFn,
-  type Row,
   flexRender,
   getCoreRowModel,
   getExpandedRowModel,
+  type OnChangeFn,
+  type Row,
   useReactTable,
 } from '@tanstack/react-table';
+import clsx from 'clsx';
+import * as React from 'react';
+
 import {
   Table,
   TableBody,
@@ -19,7 +21,6 @@ import {
   TableHeader,
   TableRow,
 } from './Table';
-import clsx from 'clsx';
 
 export interface DataTableProps<TData, TValue> {
   readonly className?: string;

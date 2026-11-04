@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Button,
   Tooltip,
@@ -6,6 +5,8 @@ import {
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { PencilIcon } from 'lucide-react';
+import * as React from 'react';
+
 import { SKILL_DETAIL_COPY } from '~/routing/skills/data/data.copy';
 
 export interface SkillDetailEditControlsProps {

@@ -9,7 +9,7 @@
  * one shipped with the demo seed — never a real internal document.
  */
 
-import type { VideoEpisode } from '../types';
+import type { VideoEpisode } from '../types.ts';
 
 export const episode: VideoEpisode = {
   beats: [

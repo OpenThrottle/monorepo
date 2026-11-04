@@ -1,5 +1,6 @@
-import * as React from 'react';
 import { Button } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import { SKILL_RECORD_TAGS_COPY } from '~/routing/skills/data/data.copy';
 
 export interface SkillOrphanRemoveButtonProps {

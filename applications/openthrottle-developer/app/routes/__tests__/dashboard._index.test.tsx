@@ -1,12 +1,14 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { createTestRouterContext } from '@openthrottle/react-router-testing';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import Index, { loader, shouldRevalidate } from '../dashboard._index';
+
 import type { Route } from '@/app/routes/+types/dashboard._index';
 import { buildRootMatch } from '~/testing/root-match-fixture';
-import { createTestRouterContext } from '@openthrottle/react-router-testing';
+
+import Index, { loader, shouldRevalidate } from '../dashboard._index';
 
 vi.mock('@openthrottle/react-router-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),

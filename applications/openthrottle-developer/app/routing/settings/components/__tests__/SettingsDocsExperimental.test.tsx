@@ -1,10 +1,12 @@
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { SettingsDocsExperimental } from '../SettingsDocsExperimental';
+
 import { buildPersistentSettingKey } from '~/global/config/persistent-setting-storage';
 import { DOCS_EXPERIMENTAL_ROWS } from '~/routing/settings/config/docs-experimental';
+
+import { SettingsDocsExperimental } from '../SettingsDocsExperimental';
 
 const STORAGE_KEY = buildPersistentSettingKey('docs.featureFlags');
 

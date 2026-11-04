@@ -8,13 +8,14 @@
  * link to paste at each other.
  */
 
+import type { TimelineLaneGrouping } from '~/__generated__/graphql';
+
+import type { TimelineWindowPreset } from '../config/defaults';
 import {
   DEFAULT_TIMELINE_GROUPING,
   DEFAULT_TIMELINE_WINDOW_PRESET,
   TIMELINE_SEARCH_PARAM,
 } from '../config/defaults';
-import type { TimelineWindowPreset } from '../config/defaults';
-import type { TimelineLaneGrouping } from '~/__generated__/graphql';
 
 const withParam = (
   params: URLSearchParams,

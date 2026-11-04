@@ -1,8 +1,9 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import { render } from '@testing-library/react';
+import * as React from 'react';
+import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
+
 import { SettingsAgentsModelRow } from '../SettingsAgentsModelRow';
 
 const renderRow = (

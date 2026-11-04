@@ -1,8 +1,9 @@
-import * as React from 'react';
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleBreadcrumbs } from '@openthrottle/react-router-ui';
+import * as React from 'react';
 import type { LinkProps, UIMatch } from 'react-router';
 import { useMatches } from 'react-router';
+
 import { hasBreadcrumbHandle } from '../utils/breadcrumb-handle';
 
 export interface GlobalLayoutBreadcrumbsHandle<TLoaderData = {}, THandle = {}> {
@@ -43,7 +44,7 @@ export const GlobalLayoutBreadcrumbs = (
   return (
     <OpenThrottleBreadcrumbs
       children={breadcrumb}
-      className={clsx('ml-4', className)}
+      className={cn('min-w-0 sm:ml-4', className)}
       links={links.pop() ?? []}
     />
   );

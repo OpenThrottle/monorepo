@@ -1,25 +1,27 @@
-import * as React from 'react';
+import { Badge } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { ActivityIcon } from 'lucide-react';
-import { Badge } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
+import type { TimelineLaneGrouping } from '~/__generated__/graphql';
+import type { TimelineWindowPreset } from '~/routing/timeline/config/defaults';
 import {
   TIMELINE_EMPTY_COPY,
   TIMELINE_PAGE_COPY,
   TIMELINE_TRUNCATION_COPY,
 } from '~/routing/timeline/data/data.copy';
-import { TimelineChart } from './TimelineChart';
-import { TimelineControls } from './TimelineControls';
-import { TimelineDetailPopover } from './TimelineDetailPopover';
-import { hasUnattributedGrilling } from '~/routing/timeline/utils/attribution';
-import { TimelineLegend } from './TimelineLegend';
 import type {
   TimelineMarker,
   TimelineMarkerCluster,
   TimelineSpan,
   TimelineTruncation,
 } from '~/routing/timeline/types';
-import type { TimelineLaneGrouping } from '~/__generated__/graphql';
-import type { TimelineWindowPreset } from '~/routing/timeline/config/defaults';
+import { hasUnattributedGrilling } from '~/routing/timeline/utils/attribution';
+
+import { TimelineChart } from './TimelineChart';
+import { TimelineControls } from './TimelineControls';
+import { TimelineDetailPopover } from './TimelineDetailPopover';
+import { TimelineLegend } from './TimelineLegend';
 
 export interface TimelineScreenProps {
   readonly grouping: TimelineLaneGrouping;

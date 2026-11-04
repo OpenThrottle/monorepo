@@ -2,15 +2,13 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": ["../../tsconfig.react-router.json", "../../tsconfig.vitest-react.json"],
   "compilerOptions": {
-    "baseUrl": "./",
     "composite": false,
     "declaration": false,
     "declarationMap": false,
     "noEmit": true,
     "paths": {
-      "#/*": ["*"],
-      "@/*": [".react-router/types/*"],
-      "~/*": ["app/*"]
+      "@/*": ["./.react-router/types/*"],
+      "~/*": ["./app/*"]
     },
     "rootDirs": ["./", ".react-router/types"]
   },

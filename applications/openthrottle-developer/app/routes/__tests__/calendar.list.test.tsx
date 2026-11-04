@@ -1,12 +1,14 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { buildRootMatch } from '~/testing/root-match-fixture';
-import Component from '../calendar.list';
-import { CALENDAR_EVENTS } from '~/routing/calendar/data/data.events';
-import { CALENDAR_INTRO_COPY } from '~/routing/calendar/data/data.copy';
+
 import type { Route } from '@/app/routes/+types/calendar.list';
+import { CALENDAR_INTRO_COPY } from '~/routing/calendar/data/data.copy';
+import { CALENDAR_EVENTS } from '~/routing/calendar/data/data.events';
+import { buildRootMatch } from '~/testing/root-match-fixture';
+
+import Component from '../calendar.list';
 
 const matches: Route.ComponentProps['matches'] = [
   buildRootMatch(),

@@ -1,11 +1,12 @@
-import * as React from 'react';
+import type { RenderResult } from '@testing-library/react';
 import { cleanup, render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { RenderResult } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub, useSearchParams } from 'react-router';
 import { afterEach, describe, expect, test } from 'vitest';
-import { NotesToolbar } from '../NotesToolbar';
+
 import type { NotesToolbarProps } from '../NotesToolbar';
+import { NotesToolbar } from '../NotesToolbar';
 
 function NotesToolbarWithQueryString(props: NotesToolbarProps) {
   const [searchParams] = useSearchParams();

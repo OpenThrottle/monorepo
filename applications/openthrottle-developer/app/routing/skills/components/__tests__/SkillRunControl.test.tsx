@@ -1,14 +1,16 @@
-import * as React from 'react';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import type { RenderResult } from '@testing-library/react';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { RenderResult } from '@testing-library/react';
-import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import { SKILL_RUN_COPY } from '~/routing/skills/data/data.copy';
-import { SkillRunControl } from '../SkillRunControl';
+
 import type { SkillRunControlProps } from '../SkillRunControl';
+import { SkillRunControl } from '../SkillRunControl';
 
 const mockEntry: RepoSkillEntry = {
   disableModelInvocation: false,

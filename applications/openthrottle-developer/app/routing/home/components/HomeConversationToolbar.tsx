@@ -1,5 +1,6 @@
-import * as React from 'react';
 import { ChatConversationSheet } from '@openthrottle/react-router-chat';
+import * as React from 'react';
+
 import type { UseConversationListResult } from '~/routing/home/hooks/useConversationList';
 
 export interface HomeConversationToolbarProps {

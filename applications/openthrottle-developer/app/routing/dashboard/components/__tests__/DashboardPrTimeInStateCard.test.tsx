@@ -1,10 +1,11 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { DashboardPrTimeInStateCard } from '../DashboardPrTimeInStateCard';
+
 import type { DashboardPrTimeInStateCardProps } from '../DashboardPrTimeInStateCard';
+import { DashboardPrTimeInStateCard } from '../DashboardPrTimeInStateCard';
 
 const mockPrTimeInStateSummary = [
   { avgDaysInState: 2.5, count: 3, state: 'open' },

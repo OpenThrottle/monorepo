@@ -1,5 +1,6 @@
-import { formatDate } from 'date-fns';
 import type { BadgeProps } from '@openthrottle/react-router-shadcn';
+import { formatDate } from 'date-fns';
+
 import type { ServiceAccountCredentialFieldsFragment } from '~/__generated__/graphql';
 
 export type SettingsKeysCredentialStatus = 'active' | 'expired' | 'revoked';

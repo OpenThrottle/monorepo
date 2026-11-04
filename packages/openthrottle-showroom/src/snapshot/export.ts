@@ -16,14 +16,17 @@
 import { mkdir, readdir, unlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import type { RowFetcher, SnapshotScope } from './closure';
-import { collectSnapshotRows, orderTablesTopologically } from './closure';
-import type { SnapshotManifest } from './manifest';
-import { assertManifestMatchesSchema, assertTableExportable } from './manifest';
-import { SNAPSHOT_MANIFEST } from './manifest.data';
-import type { DatabaseSchema, QueryRunner } from './schema';
-import { quoteIdentifier, reflectSchema } from './schema';
-import { stableStringify, stableStringifyManifest } from './stable-json';
+import type { RowFetcher, SnapshotScope } from './closure.ts';
+import { collectSnapshotRows, orderTablesTopologically } from './closure.ts';
+import { SNAPSHOT_MANIFEST } from './manifest.data.ts';
+import type { SnapshotManifest } from './manifest.ts';
+import {
+  assertManifestMatchesSchema,
+  assertTableExportable,
+} from './manifest.ts';
+import type { DatabaseSchema, QueryRunner } from './schema.ts';
+import { quoteIdentifier, reflectSchema } from './schema.ts';
+import { stableStringify, stableStringifyManifest } from './stable-json.ts';
 
 export const SNAPSHOT_SCOPE: SnapshotScope = {
   // code_embeddings is deliberately ABSENT: the code index spans arbitrary

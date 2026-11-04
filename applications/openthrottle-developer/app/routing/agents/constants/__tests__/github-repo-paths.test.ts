@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { githubOpenThrottleMainBlob } from '~/routing/agents/constants/github-repo-paths';
 
 describe('githubOpenThrottleMainBlob', () => {

@@ -1,14 +1,16 @@
-import * as React from 'react';
-import { cleanup } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { cleanup } from '@testing-library/react';
+import * as React from 'react';
 import { afterEach, describe, expect, test } from 'vitest';
-import { NotesTable } from '../NotesTable';
-import type { NotesTableProps } from '../NotesTable';
+
 import type { NoteCardFragment } from '~/__generated__/graphql';
 import {
   renderRoutesStub,
   renderWithMemoryRouter,
 } from '~/testing/route-fixtures';
+
+import type { NotesTableProps } from '../NotesTable';
+import { NotesTable } from '../NotesTable';
 
 const mockNotes: NoteCardFragment[] = [
   {

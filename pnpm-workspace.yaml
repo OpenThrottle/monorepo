@@ -2,7 +2,7 @@
 #     https://pnpm.io/docker
 #
 
-# 🏗️ pnpm 11 requires an explicit build-script decision per dependency
+# 🏗️ pnpm ≥11 requires an explicit build-script decision per dependency
 # (https://pnpm.io/settings#allowbuilds). All are `false` to preserve the
 # pnpm 10 behavior, under which these were "Ignored build scripts" and the
 # workspace worked off prebuilt binaries. Flip one to `true` only if a build
@@ -33,6 +33,16 @@ allowBuilds:
 # Single source of truth for every external dependency version in the
 # workspace. All package.json files reference these via the `catalog:`
 # protocol; enforced by `pnpm run check:catalog` (scripts/check-catalog-coverage.ts).
+# `@bull-board/api` requires `bullmq` dynamically from inside its own
+# `queueAdapters/bullMQ.js` but declares it neither as a dependency nor as a
+# peer, so pnpm has nothing to link and the require only ever resolved by
+# walking up to a hoisted root `node_modules`. Declaring the peer here lets the
+# consuming project satisfy it honestly instead of relying on root hoisting.
+packageExtensions:
+  '@bull-board/api':
+    peerDependencies:
+      bullmq: '*'
+
 catalog:
   '@apollo/cache-control-types': '^1.0.3'
   '@apollo/server': '^5.2.0'
@@ -46,7 +56,7 @@ catalog:
   '@commitlint/cli': '21.0.2'
   '@commitlint/config-conventional': '21.0.2'
   '@commitlint/config-nx-scopes': '21.0.2'
-  '@eslint/js': '^9.39.2'
+  '@eslint/js': '^10.0.1'
   '@faker-js/faker': '^10.4.0'
   '@golevelup/ts-vitest': '^4.0.0'
   '@graphql-codegen/cli': '^6.2.1'
@@ -72,32 +82,32 @@ catalog:
   '@mjackson/multipart-parser': '^0.10.1'
   '@modelcontextprotocol/sdk': '^1.29.0'
   '@monaco-editor/react': '^4.7.0'
-  '@nestjs/apollo': '^13.2.3'
-  '@nestjs/bullmq': '^11.0.4'
-  '@nestjs/cli': '^11.0.17'
-  '@nestjs/common': '^11.1.18'
-  '@nestjs/config': '^4.0.2'
-  '@nestjs/core': '^11.1.18'
-  '@nestjs/devtools-integration': '^0.2.1'
-  '@nestjs/graphql': '^13.2.4'
-  '@nestjs/jwt': '^11.0.2'
-  '@nestjs/passport': '^11.0.5'
-  '@nestjs/platform-express': '^11.1.18'
-  '@nestjs/platform-socket.io': '^11.1.18'
-  '@nestjs/schematics': '^11.0.10'
-  '@nestjs/swagger': '^11.2.5'
-  '@nestjs/testing': '^11.1.18'
+  '@nestjs/apollo': '^14.0.0'
+  '@nestjs/bullmq': '^12.0.0'
+  '@nestjs/cli': '^12.0.0'
+  '@nestjs/common': '^12.0.1'
+  '@nestjs/config': '^12.0.0'
+  '@nestjs/core': '^12.0.1'
+  '@nestjs/devtools-integration': '^12.0.0'
+  '@nestjs/graphql': '^14.0.0'
+  '@nestjs/jwt': '^12.0.1'
+  '@nestjs/passport': '^12.0.0'
+  '@nestjs/platform-express': '^12.0.1'
+  '@nestjs/platform-socket.io': '^12.0.1'
+  '@nestjs/schematics': '^12.0.1'
+  '@nestjs/swagger': '^12.0.1'
+  '@nestjs/testing': '^12.0.1'
   '@nestjs/throttler': '^6.5.0'
-  '@nestjs/typeorm': '^11.0.1'
-  '@nestjs/websockets': '^11.1.18'
-  '@nx/devkit': '23.1.3'
-  '@nx/eslint': '23.1.3'
-  '@nx/eslint-plugin': '23.1.3'
-  '@nx/js': '23.1.3'
-  '@nx/plugin': '23.1.3'
-  '@nx/react': '23.1.3'
-  '@nx/vite': '23.1.3'
-  '@nx/vitest': '23.1.3'
+  '@nestjs/typeorm': '^12.0.1'
+  '@nestjs/websockets': '^12.0.1'
+  '@nx/devkit': '23.2.0'
+  '@nx/eslint': '23.2.0'
+  '@nx/eslint-plugin': '23.2.0'
+  '@nx/js': '23.2.0'
+  '@nx/plugin': '23.2.0'
+  '@nx/react': '23.2.0'
+  '@nx/vite': '23.2.0'
+  '@nx/vitest': '23.2.0'
   '@paper-design/shaders-react': '^0.0.76'
   '@parcel/watcher': '^2.5.4'
   '@phosphor-icons/react': '^2.1.10'
@@ -146,7 +156,7 @@ catalog:
   '@types/jsonwebtoken': '^9.0.10'
   '@types/lodash': '^4.17.23'
   '@types/morgan': '^1.9.10'
-  '@types/node': '^24.1.0'
+  '@types/node': '^24.19.2'
   '@types/passport-jwt': '^4.0.1'
   '@types/passport-local': '^1.0.38'
   '@types/pg': '^8.18.0'
@@ -158,10 +168,10 @@ catalog:
   '@types/sanitize-html': '^2.16.0'
   '@types/tmp': '^0.2.6'
   '@types/yargs': '^17.0.35'
-  '@typescript-eslint/eslint-plugin': '^8.65.0'
-  '@typescript-eslint/parser': '^8.65.0'
-  '@typescript-eslint/rule-tester': '^8.65.0'
-  '@typescript-eslint/utils': '^8.65.0'
+  '@typescript-eslint/eslint-plugin': '^8.69.0'
+  '@typescript-eslint/parser': '^8.69.0'
+  '@typescript-eslint/rule-tester': '^8.69.0'
+  '@typescript-eslint/utils': '^8.69.0'
   '@vercel/analytics': '^2.0.1'
   '@vercel/react-router': '^1.2.4'
   '@vitejs/plugin-react': '^6.0.1'
@@ -197,19 +207,31 @@ catalog:
   'dotenv': '^17.2.3'
   'enhanced-resolve': '^5.18.4'
   'esbuild': '^0.24.0'
-  'eslint': '^9.39.2'
-  'eslint-plugin-eslint-comments': '^3.2.0'
-  'eslint-plugin-import': '^2.32.0'
-  'eslint-plugin-import-x': '^4.16.2'
-  'eslint-plugin-jest': '^29.15.1'
-  'eslint-plugin-json': '^4.0.1'
+  'eslint': '^10.10.0'
+  # The maintained fork of eslint-plugin-import, and a drop-in for the one rule this repo
+  # uses (no-default-export). Taken over eslint-plugin-import@2.32.0 because it peers
+  # eslint ^10, ships its own types, and makes both its resolver peers optional.
+  'eslint-plugin-import-x': '^4.17.1'
+  'eslint-plugin-jest': '^29.16.6'
+  # Replaces eslint-plugin-sort-keys-fix and eslint-plugin-typescript-sort-keys, both
+  # of which crash outright under ESLint 10 - see the note on the two rules in
+  # tools/dotfiles/src/index.ts. Peers eslint ^8.45 || ^9 || ^10.
+  'eslint-plugin-perfectionist': '^5.11.0'
   'eslint-plugin-react': '^7.37.5'
-  'eslint-plugin-react-hooks': '^7.0.1'
-  'eslint-plugin-simple-import-sort': '^13.0.0'
-  'eslint-plugin-sort-keys-fix': '^1.1.2'
-  'eslint-plugin-typescript-sort-keys': '^3.3.0'
+  'eslint-plugin-react-hooks': '^7.1.1'
+  'eslint-plugin-simple-import-sort': '^14.0.0'
   'express-basic-auth': '^1.2.1'
   'fishery': '^2.4.0'
+  # focus-formik-error / formik / yup: DO NOT REMOVE as "unused".
+  # tools/generators/src/generators/react-router/files/form/ emits templates
+  # importing all three — components/__name__.tsx imports FocusError from
+  # focus-formik-error, and config/form.__schema__.ts imports FormikConfig from
+  # formik plus ObjectSchema/InferType/object/string from yup. Those are .ts
+  # template files, not compiled source, so knip and every other static
+  # analysis in this repo is blind to the reference and nothing in CI fails if
+  # they go — the `form` generator would just start emitting unresolvable
+  # imports on whoever scaffolds a form next. formik is additionally a real
+  # dependency of @openthrottle/react-router-utils (src/hooks/useForm.ts).
   'focus-formik-error': '^1.1.0'
   'formik': '^2.4.9'
   'framer-motion': '^12.26.2'
@@ -254,11 +276,11 @@ catalog:
   'monaco-editor': '^0.55.1'
   'morgan': '^1.10.1'
   'motion': '^12.26.2'
-  'nestjs-cls': '^6.2.0'
+  'nestjs-cls': '^6.3.0'
   'next-themes': '^0.4.6'
   'normalize.css': '^8.0.1'
   'nullthrows': '^1.1.1'
-  'nx': '23.1.3'
+  'nx': '23.2.0'
   'only-allow': '^1.2.2'
   'openai': '^6.16.0'
   'passport': '^0.7.0'
@@ -323,8 +345,13 @@ catalog:
   'tsx': '^4.21.0'
   'tw-animate-css': '1.4.0'
   'typeorm': '^0.3.28'
-  'typescript': '~6.0.3'
-  'typescript-eslint': '^8.65.0'
+  # TS6 line, republished under a scoped name so it can coexist with TS7.
+  # Provides the `tsc6` bin only; `typescript` still resolves to 6.x content for
+  # every programmatic-API consumer (typescript-eslint, vite, vitest, ts-morph, ...).
+  'typescript': 'npm:@typescript/typescript6@^6.0.2'
+  # TS7 native compiler. Provides the `tsc` bin only - no programmatic API, no tsserver.
+  'typescript7': 'npm:typescript@^7.0.2'
+  'typescript-eslint': '^8.69.0'
   'typescript-json-schema': '^0.67.1'
   'unplugin-swc': '^1.5.9'
   'use-latest-callback': '^0.3.3'
@@ -344,6 +371,7 @@ catalog:
   'yaml': '^2.7.1'
   'yargs': '^18.0.0'
   'youtubei.js': '^17.0.1'
+  # yup: see the retention note on 'formik' above — generator template only.
   'yup': '^1.7.1'
   'zod': '^4.4.3'
   'zod-to-json-schema': '^3.25.2'
@@ -358,10 +386,31 @@ minimumReleaseAge: 10080 # 7 days (in minutes)
 minimumReleaseAgeExclude:
   - '@openthrottle/*'
 
+# eslint-plugin-react@7.37.5 is the latest release and its peer range stops at ^9.7,
+# but only 7 of its 103 rules actually break under ESLint 10 (the two that call a
+# removed context method without a fallback, plus five spacing rules that call the
+# removed SourceCode#isSpaceBetweenTokens). This repo enables none of them, and the
+# six rules it does enable were measured to report identically under 9.39.5 and
+# 10.10.0. Drop this when the plugin widens its peer range.
+peerDependencyRules:
+  allowedVersions:
+    'eslint-plugin-react>eslint': '10'
+
 # 🔧 Dependency overrides | https://pnpm.io/settings#overrides
-# Migrated out of package.json's `pnpm` field, which pnpm 11 no longer reads.
+# Migrated out of package.json's `pnpm` field, which pnpm ≥11 no longer reads.
 # `$name` reuses the version declared for that dependency in the root manifest.
 overrides:
+  # @bull-board/nestjs@7 and @rekog/mcp-nest@1.9 cap these Nest peers at ^11, and
+  # their importers don't declare them, so pnpm auto-installs the peer. pnpm 11
+  # reused the workspace's Nest 12; pnpm 12 installs a separate in-range Nest 11
+  # copy instead — a second @nestjs/core at runtime. Pin the peers to the
+  # workspace's Nest 12. (peerDependencyRules.allowedVersions and
+  # packageExtensions only change the warning, not what gets installed.) Drop
+  # each line once its package widens its peer range to Nest 12.
+  '@bull-board/nestjs>@nestjs/bull-shared': '^12.0.0'
+  '@bull-board/nestjs>@nestjs/core': 'catalog:'
+  '@rekog/mcp-nest>@nestjs/jwt': 'catalog:'
+  '@rekog/mcp-nest>@nestjs/passport': 'catalog:'
   '@radix-ui/react-slot': 'catalog:'
   '@tanstack/query-sync-storage-persister': 'catalog:'
   '@tanstack/react-query': 'catalog:'

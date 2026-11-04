@@ -1,11 +1,11 @@
 import { isRecord } from '@openthrottle/nodejs-utils';
-import { APP_NAME } from '@openthrottle/react-router-utils';
 import {
   ChatComposerMode,
   ChatPermissionMode,
   ChatReasoningLevel,
   ChatServiceTier,
 } from '@openthrottle/react-router-chat';
+import { APP_NAME } from '@openthrottle/react-router-utils';
 import { atomWithStorage, createJSONStorage } from 'jotai/utils';
 import type { SyncStorage } from 'jotai/vanilla/utils/atomWithStorage';
 

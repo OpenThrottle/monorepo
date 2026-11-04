@@ -1,5 +1,6 @@
-import { describe, expect, test } from 'vitest';
 import type { OpenThrottleEnv } from '@openthrottle/react-router-utils';
+import { describe, expect, test } from 'vitest';
+
 import {
   maskSensitiveEnvValue,
   sanitizeEnvForDiagnostics,
@@ -15,7 +16,6 @@ const baseEnv: OpenThrottleEnv = {
   APP_URL_ADMIN: 'http://localhost:6022',
   APP_URL_CMS: 'http://localhost:6023',
   APP_URL_DEVELOPER: 'http://localhost:6020',
-  APP_URL_EMAIL: 'http://localhost:6024',
   APP_URL_SERVER: 'http://localhost:6021',
   APP_URL_WEBSITE: 'http://localhost:6025',
   APP_VERSION: 'localhost',

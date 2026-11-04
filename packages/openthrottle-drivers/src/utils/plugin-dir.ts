@@ -22,12 +22,27 @@ import type { DriverCapabilities } from '../types/index.ts';
 import { escapeShellArg } from './shell.ts';
 
 /**
- * @description Workspace-relative location of OT's generated Claude Code plugin payload, produced
- * by `@openthrottle/agentic-hooks`' `bundle-hooks` target. Exported so the resolver in
+ * @description Workspace-relative location of OT's generated plugin payload for Claude Code,
+ * produced by `@openthrottle/agentic-hooks`' `bundle-hooks` target. Also the fallback for any
+ * driver that advertises `pluginDir` without naming its own payload. Exported so the resolver in
  * agentic-utils and this package agree on one spelling of the path rather than two.
  * @public
  */
 export const OPENTHROTTLE_PLUGIN_DIR_REL = 'plugins/openthrottle';
+
+/**
+ * @description Workspace-relative location of the Cursor payload.
+ *
+ * A SEPARATE directory, not a shared one, because a plugin's hook config names its own tool's
+ * events and a payload has exactly one `hooks/hooks.json`. Cursor reads the Claude manifest layout
+ * happily (its lookup is `.cursor-plugin/plugin.json`, then `.claude-plugin/plugin.json`, then
+ * `plugin.json`) and even translates Claude's event names — but the translation drops precisely
+ * what this telemetry needs: `PreToolUse` with `matcher: "Skill"` has no Cursor tool to match,
+ * `UserPromptExpansion` has no Cursor equivalent, and `Stop` maps to an event that never fires in
+ * a headless run. Pointing Cursor at the Claude payload loads cleanly and records nothing.
+ * @public
+ */
+export const OPENTHROTTLE_CURSOR_PLUGIN_DIR_REL = 'plugins/openthrottle-cursor';
 
 /**
  * @description Appends one repeatable `--plugin-dir <path>` per supplied directory. Returns the

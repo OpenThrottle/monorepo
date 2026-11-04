@@ -10,8 +10,9 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import type { Plan } from '../plans/plan.entity';
-import type { Task } from '../tasks/task.entity';
+
+import type { Plan } from '../plans/plan.entity.ts';
+import type { Task } from '../tasks/task.entity.ts';
 
 @Entity('plan_output_stream')
 export class PlanOutputStreamChunk {

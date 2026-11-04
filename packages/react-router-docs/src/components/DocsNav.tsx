@@ -1,8 +1,9 @@
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import clsx from 'clsx';
 import { NavLink } from 'react-router';
-import { formatGroupLabel } from '../utils/buildDocsNav';
+
 import type { DocsNavGroup } from '../utils/buildDocsNav';
+import { formatGroupLabel } from '../utils/buildDocsNav';
 
 export interface DocsNavProps {
   readonly className?: string;
@@ -34,7 +35,7 @@ export const DocsNav = (props: DocsNavProps): React.ReactElement => {
   return (
     <nav
       aria-label="Documentation"
-      className={clsx('flex flex-col gap-4', className)}
+      className={cn('flex flex-col gap-4', className)}
       data-testid="DocsNav"
     >
       {groups.map((group) => (
@@ -48,7 +49,7 @@ export const DocsNav = (props: DocsNavProps): React.ReactElement => {
               <li key={item.path}>
                 <NavLink
                   className={({ isActive }) =>
-                    clsx(
+                    cn(
                       'block rounded-md px-2 py-1 text-sm',
                       isActive
                         ? 'bg-accent text-accent-foreground font-medium'

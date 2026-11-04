@@ -2,7 +2,8 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { PubSubEngine } from '@openthrottle/nestjs-graphql';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { NotificationsService } from './notifications.service';
+
+import { NotificationsService } from './notifications.service.ts';
 
 const publish = vi.fn().mockResolvedValue(undefined);
 const warn = vi.fn();

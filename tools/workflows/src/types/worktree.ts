@@ -4,14 +4,15 @@
  */
 
 import type {
+  WorkflowConfigDebug,
+  WorkflowConfigRunner,
+} from '@openthrottle/openthrottle-agentic-workflow';
+
+import type {
   ChildProcessMetrics,
   ChildProcessMetricsOptions,
 } from './child-process-metrics';
 import type { WallClockMetrics } from './wall-clock-metrics';
-import type {
-  WorkflowConfigDebug,
-  WorkflowConfigRunner,
-} from '@openthrottle/openthrottle-agentic-workflow';
 
 /**
  * Status of a worktree target: available for work or locked by a job.

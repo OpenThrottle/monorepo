@@ -1,6 +1,7 @@
+import { Button } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { Link } from 'react-router';
-import { Button } from '@openthrottle/react-router-shadcn';
+
 import { WORKSPACE_FULL_JUMP_LINKS } from '~/routing/navigation/data/workspace-jump-links';
 
 export interface DashboardQuickNavigationProps {

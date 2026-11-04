@@ -1,9 +1,9 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Form, Link } from 'react-router';
-import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
-import type { PullRequestsListFilters } from '~/routing/pull-requests/types/pull-requests-list-filters';
+import { Button, cn, Input, Label } from '@openthrottle/react-router-shadcn';
 import { Building2Icon, GitGraphIcon } from 'lucide-react';
+import * as React from 'react';
+import { Form, Link } from 'react-router';
+
+import type { PullRequestsListFilters } from '~/routing/pull-requests/types/pull-requests-list-filters';
 
 export interface PullRequestsToolbarProps {
   className?: string;
@@ -29,7 +29,7 @@ export const PullRequestsToolbar = (
 
   return (
     <Form
-      className={clsx(
+      className={cn(
         // 'mb-8 flex flex-col gap-4 rounded-lg border border-border p-4',
         'flex w-full flex-col gap-4',
         className,

@@ -1,27 +1,30 @@
-import * as React from 'react';
 import {
   coerceBoolean,
   executeGraphqlWithAuth,
   parseFormData,
 } from '@openthrottle/react-router-graphql';
-import { z } from 'zod/v3';
-import {
-  getActionError,
-  mergeRouteModuleMeta,
-} from '@openthrottle/react-router-utils';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
   GlobalHeading,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { SITE_TITLE } from '~/global/config/settings';
-import { CreateRolloutFlagInputSchema } from '~/__generated__/schemas';
+import {
+  getActionError,
+  mergeRouteModuleMeta,
+} from '@openthrottle/react-router-utils';
+import { ToggleRightIcon } from 'lucide-react';
+import * as React from 'react';
+import { z } from 'zod/v3';
+
+import type { Route } from '@/app/routes/+types/settings.rollout._index';
 import {
   CreateRolloutFlagDocument,
   DeleteRolloutFlagDocument,
   ListRolloutFlagsDocument,
 } from '~/__generated__/graphql';
+import { CreateRolloutFlagInputSchema } from '~/__generated__/schemas';
+import { SITE_TITLE } from '~/global/config/settings';
 import { RolloutFlagCreateDialog } from '~/routing/settings/components/RolloutFlagCreateDialog';
 import { RolloutFlagsTable } from '~/routing/settings/components/RolloutFlagsTable';
 import { RolloutSdkHydrationStatus } from '~/routing/settings/components/RolloutSdkHydrationStatus';
@@ -31,8 +34,6 @@ import {
   parseRolloutTypedConfig,
   toRolloutGraphqlTypedInput,
 } from '~/routing/settings/utils/rollout-typed-config';
-import type { Route } from '@/app/routes/+types/settings.rollout._index';
-import { ToggleRightIcon } from 'lucide-react';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

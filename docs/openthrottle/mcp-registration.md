@@ -17,6 +17,7 @@ This doc **consolidates** registration guidance that previously lived (partly) a
 - [User-provided servers](#user-provided-servers) — github, shadcn, nx-mcp, maestro, fetch
 - [Secondary workspace](#secondary-workspace) — using OT MCP from another repo
 - [Worktrees](#worktrees) — worktree-aware identity and live-server resolution
+- [Node version](#node-version) — the launcher picks its own Node; "Connection closed" on an old one
 - [Smoke-test checklist](#smoke-test-checklist) — registration gates
 
 ## Current state
@@ -126,7 +127,7 @@ The stdio launcher needs host Node + a built `dist/`. A **fully-Dockerized** ins
 - **Bring it up:** `docker compose --profile prod up mcp` (or `--profile dev up mcp-dev` for hot reload). It `depends_on` migrations + a healthy server.
 - **Provision the token first:** `docker compose run --rm bootstrap` upserts the `ot_sa_` credential matching `OPENTHROTTLE_MCP_AUTH_TOKEN`. If the token is missing/invalid the `mcp` container **fails loudly at startup** (it won't silently serve 401s) — see [bootstrap docs](../../databases/README.md#bootstrapping-a-fully-dockerized-install).
 - **Auth (both identities, per request):** the container holds the `ot_sa_` token for machine tools; a client that sends `Authorization: Bearer <human JWT>` gets that user's identity — required by the `agent_conversation_*` tools (they reject `ot_sa_`). One server, switched per request.
-- **Port:** `${OPENTHROTTLE_MCP_PORT}` (default `6026` at the monorepo root). In a **worktree** it is the block's `base+6` (e.g. `7126`) — `setup_worktree.sh` rewrites it, so use the port printed by `pnpm run worktree:new`. Consumer-install (`applications/openthrottle/`) defaults to `9026`. Update the `url` to match.
+- **Port:** `${OPENTHROTTLE_MCP_PORT}` (default `6026` at the monorepo root). In a **worktree** it is the block's `base+6` (e.g. `7126`) — `setup_worktree.ts` rewrites it, so use the port printed by `pnpm run worktree:new`. Consumer-install (`applications/openthrottle/`) defaults to `9026`. Update the `url` to match.
 - **Hybrid** (server on the host via Nx, infra in Docker): either keep using the **stdio launcher** (`openthrottle-mcp`) — zero-config, it probes the host `/health` — or run the `mcp` container with `OPENTHROTTLE_MCP_UPSTREAM_URL=http://host.docker.internal:${OPENTHROTTLE_SERVER_PORT}` in `.env` so it targets the host server.
 - **Reconnect** the MCP in your client after changing the URL/token (the HTTP server picks up a new env token only on container restart).
 
@@ -232,6 +233,12 @@ For `openthrottle-mcp-docker`, update the committed `url` port to this worktree'
 
 Optional, and off by default — worktrees share the main Postgres. To split them, set `POSTGRES_*` (or `POSTGRES_URL`) in each worktree's `.env` with a different port or database name; openthrottle-server reads those at runtime. `openthrottle-mcp` reaches OT over GraphQL, so point it at the matching API URL too (see `OT_MCP_TARGET` above).
 
+## Node version
+
+MCP clients launch the server with their own PATH, which is often not the repo's Node. The Claude desktop app lists every nvm install oldest-first, and `env -i` has no `node` at all. So the launcher picks a Node that satisfies root `engines.node` itself: `OT_MCP_NODE`, then the `.nvmrc` version under `$NVM_DIR`, then the newest nvm install that fits, then PATH's `node`. It runs `scripts/run-openthrottle-mcp.ts` on that Node directly (native type stripping, no tsx); the server it then starts is the built `packages/openthrottle-mcp/dist`.
+
+If a client says **"Connection closed"** while the CLI works, or the launcher says **"no reachable OpenThrottle server found"** while the server is up, check the Node version first. Symptom, cause, resolution order and overrides: **[openthrottle-mcp README § Launcher Node version](../../packages/openthrottle-mcp/README.md#launcher-node-version)**.
+
 ## Smoke-test checklist
 
 After registering or changing MCP config, confirm `openthrottle-mcp` works. There is **no docs-mcp gate** (retired). The full, maintained checklist lives in **[verification-environment.md § Registration smoke-test](../../packages/openthrottle-mcp/docs/verification-environment.md#registration-smoke-test-root--secondary-workspace)**; the gates in brief:
@@ -257,6 +264,7 @@ After registering or changing MCP config, confirm `openthrottle-mcp` works. Ther
 | Per-worktree port blocks             | [worktree-port-allocation.md](../monorepo/worktree-port-allocation.md)                          |
 | MCP env, fixtures, smoke checks      | [verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md) |
 | Service account tokens & rotation    | [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md)                                         |
+| Launcher Node version & overrides    | [README.md](../../packages/openthrottle-mcp/README.md#launcher-node-version)                    |
 | First agent workflow after MCP works | [first-time-onboarding.md](./first-time-onboarding.md)                                          |
 | Author OT plans & tasks via MCP      | [authoring-plans-via-mcp.md](./authoring-plans-via-mcp.md)                                      |
 | Fresh clone → server + MCP           | [local-quickstart.md](./local-quickstart.md)                                                    |

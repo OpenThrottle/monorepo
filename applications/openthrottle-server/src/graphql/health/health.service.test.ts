@@ -4,13 +4,14 @@
  */
 
 import { createMock, type DeepMocked } from '@golevelup/ts-vitest';
+import { Test } from '@nestjs/testing';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { REDIS_CLIENT } from '@openthrottle/nestjs-redis';
 import { PlansService } from '@openthrottle/nestjs-repositories';
-import { Test } from '@nestjs/testing';
 import type { Redis } from 'ioredis';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { HealthService } from './health.service';
+
+import { HealthService } from './health.service.ts';
 
 const getPostgresUrl = vi.fn<() => string | undefined>();
 vi.mock('@openthrottle/openthrottle-agentic-utils', () => ({

@@ -6,7 +6,7 @@ import {
   coerceRunStatus,
   resolveOffset,
   uniqueViolationConstraint,
-} from '../load';
+} from '../load.ts';
 
 const SEED_TIME = new Date('2026-08-28T12:00:00.000Z');
 

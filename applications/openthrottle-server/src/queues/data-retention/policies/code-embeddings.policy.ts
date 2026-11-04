@@ -38,7 +38,8 @@
  */
 
 import type { DataSource } from 'typeorm';
-import type { RetentionPolicy } from '../data-retention.types';
+
+import type { RetentionPolicy } from '../data-retention.types.ts';
 
 /** A root with no embedding newer than this is considered idle. */
 const IDLE_DAYS = 30;

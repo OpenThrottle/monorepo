@@ -1,9 +1,11 @@
-import * as React from 'react';
 import type { RenderResult } from '@testing-library/react';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { NoteForm } from '../NoteForm';
-import type { NoteFormProps } from '../NoteForm';
+
 import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import type { NoteFormProps } from '../NoteForm';
+import { NoteForm } from '../NoteForm';
 
 describe('NoteForm Component', () => {
   describe('when action is create', () => {

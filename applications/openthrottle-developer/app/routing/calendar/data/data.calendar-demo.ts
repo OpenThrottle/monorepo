@@ -1,9 +1,9 @@
+import type { CalendarEvent } from '@openthrottle/react-router-scheduling';
 import {
+  buildRRule,
   RecurrenceFrequency,
   RecurrenceWeekday,
-  buildRRule,
 } from '@openthrottle/react-router-scheduling';
-import type { CalendarEvent } from '@openthrottle/react-router-scheduling';
 
 /**
  * @description Sample events for the scheduling-calendar demo route, exercising

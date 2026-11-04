@@ -1,5 +1,6 @@
 import { formatDate } from 'date-fns';
 import { describe, expect, test } from 'vitest';
+
 import { formatNoteDate, notePreviewLabel } from '../notes-table';
 
 describe('notePreviewLabel', () => {

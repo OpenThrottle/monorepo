@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Button,
   Card,
@@ -12,6 +11,7 @@ import {
   Label,
 } from '@openthrottle/react-router-shadcn';
 import { IS_DEVELOPMENT } from '@openthrottle/react-router-utils';
+import * as React from 'react';
 
 export interface OpenThrottleAuthFormProps {
   /** Optional form action URL (e.g. for React Router action). Defaults to current path. */
@@ -109,6 +109,7 @@ export const OpenThrottleAuthForm = (
               <Label htmlFor="auth-email">Email</Label>
               <Input
                 autoComplete="email"
+                className="pointer-coarse:h-11"
                 data-testid="auth-email-input"
                 id="auth-email"
                 name="email"
@@ -123,6 +124,7 @@ export const OpenThrottleAuthForm = (
               <Label htmlFor="auth-password">Password</Label>
               <Input
                 autoComplete="current-password"
+                className="pointer-coarse:h-11"
                 data-testid="auth-password-input"
                 id="auth-password"
                 name="password"
@@ -136,7 +138,7 @@ export const OpenThrottleAuthForm = (
 
           <CardFooter>
             <Button
-              className="w-full"
+              className="w-full pointer-coarse:h-11"
               data-testid="auth-submit-button"
               disabled={isLoading}
               id="auth-submit-button"
@@ -147,7 +149,7 @@ export const OpenThrottleAuthForm = (
             </Button>
           </CardFooter>
           <Button
-            className="text-muted-foreground mb-4 w-full text-xs font-normal"
+            className="text-muted-foreground mb-4 w-full text-xs font-normal pointer-coarse:h-11"
             disabled={isLoading}
             onClick={() => setIntent(isLogin ? 'register' : 'login')}
             type="button"

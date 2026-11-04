@@ -1,12 +1,13 @@
-import * as React from 'react';
 import { Badge } from '@openthrottle/react-router-shadcn';
+import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
+import { BadgeInfoIcon } from 'lucide-react';
+import * as React from 'react';
+
 import {
   LOCAL_SERVICES_PORTS_DOC_HREF,
   LOCAL_SERVICES_PORTS_SERVICES_TABLE_HREF,
   VITE_DEVTOOLS_DOC_HREF,
 } from '../utils/settings-docs-links';
-import { BadgeInfoIcon } from 'lucide-react';
-import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 
 /**
  * @description Fragment id for deep links from Appearance diagnostics and bookmarks — stable URL: `/settings/debug#ports-hosts-api-troubleshooting`.

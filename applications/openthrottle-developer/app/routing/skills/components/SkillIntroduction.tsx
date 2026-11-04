@@ -1,15 +1,15 @@
-import * as React from 'react';
-import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { Badge, Button } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
+import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { BrainCircuitIcon } from 'lucide-react';
+import * as React from 'react';
+
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import { SkillDetailEditControls } from '~/routing/skills/components/SkillDetailEditControls';
 import { SkillIntroductionBadges } from '~/routing/skills/components/SkillIntroductionBadges';
 import { SkillOrphanRemoveButton } from '~/routing/skills/components/SkillOrphanRemoveButton';
-import { SkillRunControl } from '~/routing/skills/components/SkillRunControl';
 import type { RunSkillRunOptions } from '~/routing/skills/components/SkillRunControl';
-import type { RunSkillPayload } from '~/routing/skills/components/RunSkillDialog';
+import { SkillRunControl } from '~/routing/skills/components/SkillRunControl';
 import {
   SkillTagChips,
   type SkillTagVocabularyOption,
@@ -18,6 +18,7 @@ import {
   SKILL_DETAIL_COPY,
   SKILL_RECORD_TAGS_COPY,
 } from '~/routing/skills/data/data.copy';
+import type { RunSkillPayload } from '~/routing/skills/types';
 import type { ModelInvocationBadge } from '~/routing/skills/utils/model-invocation-badge';
 
 export interface SkillIntroductionProps {

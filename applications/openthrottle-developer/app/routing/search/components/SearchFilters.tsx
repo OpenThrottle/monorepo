@@ -1,6 +1,7 @@
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { useSearchParams } from 'react-router';
-import clsx from 'clsx';
+
 import {
   DEFAULT_SEARCH_LIMIT,
   SEARCH_LIMIT_OPTIONS,
@@ -48,7 +49,7 @@ export const SearchFilters = (
 
   return (
     <div
-      className={clsx('flex flex-wrap items-center gap-4 p-4', className)}
+      className={cn('flex flex-wrap items-center gap-4 p-4', className)}
       data-testid="SearchFilters"
     >
       <label className="text-muted-foreground flex items-center gap-2 text-sm">

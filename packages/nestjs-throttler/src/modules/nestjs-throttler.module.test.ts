@@ -2,15 +2,16 @@ import type { Provider } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
 import { describe, expect, it } from 'vitest';
-import { NestjsThrottlerError } from '../config/nestjs-throttler.error';
+
+import { NestjsThrottlerError } from '../config/nestjs-throttler.error.ts';
 import {
   applyNestjsThrottlerModuleDefaults,
   DEFAULT_THROTTLER_LIMIT,
   DEFAULT_THROTTLER_TTL_MS,
   validateNestjsThrottlerModuleOptions,
-} from '../config/nestjs-throttler.options';
-import { GqlThrottlerGuard } from '../guards/gql-throttler.guard';
-import { NestjsThrottlerModule } from './nestjs-throttler.module';
+} from '../config/nestjs-throttler.options.ts';
+import { GqlThrottlerGuard } from '../guards/gql-throttler.guard.ts';
+import { NestjsThrottlerModule } from './nestjs-throttler.module.ts';
 
 describe('applyNestjsThrottlerModuleDefaults', () => {
   it('applies the default tier when none provided', () => {
@@ -101,7 +102,13 @@ describe('NestjsThrottlerModule', () => {
       throttlers: [{ limit: 3, ttl: 5_000 }],
     });
 
-    expect(dynamic.module).toBe(NestjsThrottlerModule);
+    // Must NOT be NestjsThrottlerModule itself. Nest merges a DynamicModule
+    // into its `module` class's own @Module metadata, and NestjsThrottlerModule
+    // statically registers the default tier so a bare `imports: [Module]` works.
+    // Pointing forRoot at that same class produced two ThrottlerModule
+    // registrations, and the static default silently won over these tiers under
+    // NestJS 12 — forRoot({ limit: 3 }) kept serving 1,000 and never threw 429.
+    expect(dynamic.module).not.toBe(NestjsThrottlerModule);
     expect(bindsThrottlerGuard(dynamic.providers)).toBe(true);
 
     const app = await Test.createTestingModule({

@@ -1,4 +1,4 @@
-import { NestjsLoggingError } from '../config/nestjs-logging.error';
+import { NestjsLoggingError } from '../config/nestjs-logging.error.ts';
 
 export type KeyedJsonlWriterErrorCode = 'INVALID_KEY' | 'INVALID_CHUNK';
 

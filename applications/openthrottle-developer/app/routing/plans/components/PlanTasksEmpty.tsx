@@ -1,14 +1,15 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   Button,
+  cn,
   Empty,
   EmptyDescription,
   EmptyMedia,
   EmptyTitle,
 } from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
 import { ListXIcon, SearchAlertIcon } from 'lucide-react';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import {
   PLAN_TASKS_EMPTY_COPY,
   PLANS_INDEX_EMPTY_COPY,
@@ -47,7 +48,7 @@ export const PlanTasksEmpty = (
 
   if (variant === 'tasks') {
     return (
-      <Empty className={clsx('', className)}>
+      <Empty className={cn('', className)}>
         <EmptyMedia variant="icon">
           <ListXIcon className="size-6" />
         </EmptyMedia>
@@ -58,7 +59,7 @@ export const PlanTasksEmpty = (
   }
 
   return (
-    <Empty className={clsx('', className)}>
+    <Empty className={cn('', className)}>
       <EmptyMedia variant="icon">
         <SearchAlertIcon className="size-6" />
       </EmptyMedia>

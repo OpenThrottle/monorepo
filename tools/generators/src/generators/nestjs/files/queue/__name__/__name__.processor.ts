@@ -1,7 +1,7 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { queueName } from './<%= name %>.constants';
+import { queueName } from './<%= name %>.constants.ts';
 import { getConfiguration } from '~/common/config/configuration';
 import { onModuleInitWorkerLogging } from '~/common/utils/bullmq';
 import { <%= namePascal %>Job } from '~/queues/<%= name %>/<%= name %>.types';

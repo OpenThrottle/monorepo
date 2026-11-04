@@ -1,24 +1,33 @@
-import * as React from 'react';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import type { RenderResult } from '@testing-library/react';
 import { waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { PlanToolbar } from '../PlanToolbar';
-import type { PlanToolbarProps } from '../PlanToolbar';
-import { renderRouteHarness, renderRoutesStub } from '~/testing/route-fixtures';
-import { WorkspaceEditorId } from '~/__generated__/graphql';
 
-const renderToolbar = (toolbarProps: PlanToolbarProps): RenderResult =>
+import { WorkspaceEditorId } from '~/__generated__/graphql';
+import { renderRouteHarness, renderRoutesStub } from '~/testing/route-fixtures';
+
+import type { PlanToolbarProps } from '../PlanToolbar';
+import { PlanToolbar } from '../PlanToolbar';
+
+type ToolbarTestProps = Omit<PlanToolbarProps, 'models' | 'runConfigJson'> &
+  Partial<Pick<PlanToolbarProps, 'models' | 'runConfigJson'>>;
+
+const renderToolbar = (toolbarProps: ToolbarTestProps): RenderResult =>
   renderRoutesStub(
     <TooltipProvider>
-      <PlanToolbar {...toolbarProps} />
+      <PlanToolbar
+        models={Promise.resolve([])}
+        runConfigJson="{}"
+        {...toolbarProps}
+      />
     </TooltipProvider>,
   );
 
 describe('PlanToolbar Component', () => {
   let component: RenderResult;
-  let props: PlanToolbarProps;
+  let props: ToolbarTestProps;
 
   beforeEach(() => {
     props = { planId: 'test-plan-id' };
@@ -110,6 +119,7 @@ describe('PlanToolbar Component', () => {
     COMPLETED: /^Completed$/i,
     IN_PROGRESS: /^In progress$/i,
     PENDING: /^Add to Queue$/i,
+    PROMOTED: /^Promoted$/i,
     QUEUED: /^Queued$/i,
     SKIPPED: /^Skipped$/i,
   };
@@ -165,7 +175,7 @@ describe('PlanToolbar Component', () => {
     ).not.toBeDisabled();
   });
 
-  test.each(['COMPLETED', 'CANCELED', 'SKIPPED'] as const)(
+  test.each(['COMPLETED', 'CANCELED', 'PROMOTED', 'SKIPPED'] as const)(
     'disables Run and Evaluate rules when the plan is terminal (%s)',
     (planStatus) => {
       const r = within(
@@ -192,7 +202,7 @@ describe('PlanToolbar Component', () => {
     ).not.toBeDisabled();
   });
 
-  test('disables Mark Complete for COMPLETED but keeps it enabled for CANCELED/SKIPPED (recovery path)', () => {
+  test('disables Mark Complete for COMPLETED but keeps it enabled for CANCELED/PROMOTED/SKIPPED (recovery path)', () => {
     const completed = within(
       renderToolbar({
         planId: 'p1',
@@ -204,7 +214,7 @@ describe('PlanToolbar Component', () => {
       completed.getByRole('button', { name: /mark complete/i }),
     ).toBeDisabled();
 
-    for (const planStatus of ['CANCELED', 'SKIPPED'] as const) {
+    for (const planStatus of ['CANCELED', 'PROMOTED', 'SKIPPED'] as const) {
       const r = within(
         renderToolbar({ planId: 'p1', planStatus, planTitle: 'My Plan' })
           .container,
@@ -296,7 +306,14 @@ const renderToolbarWithAction = (
 
   const component = renderRouteHarness([
     {
-      Component: () => <PlanToolbar planId={PLAN_ID} {...props} />,
+      Component: () => (
+        <PlanToolbar
+          models={Promise.resolve([])}
+          planId={PLAN_ID}
+          runConfigJson="{}"
+          {...props}
+        />
+      ),
       action,
       path: '/',
     },
@@ -338,7 +355,7 @@ describe('PlanToolbar editor deep links', () => {
       component.getByRole('link', { name: 'Claude Code' }),
     ).toHaveAttribute(
       'href',
-      `claude://code/new?folder=%2FUsers%2Fmatt%2FDevelopment%2Fopenthrottle%2F&q=%2Fot-loop%20${PLAN_ID}`,
+      `claude://code/new?folder=%2FUsers%2Fmatt%2FDevelopment%2Fopenthrottle%2F&q=Run%20OpenThrottle%20plan%20${PLAN_ID}%20with%20the%20ot-loop%20skill`,
     );
   });
 

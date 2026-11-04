@@ -1,11 +1,12 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
-import { Bar, BarChart, XAxis } from 'recharts';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
+import { Bar, BarChart, XAxis } from 'recharts';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { ChartTooltip } from '../ChartTooltip';
+
 import type { ChartTooltipProps } from '../ChartTooltip';
+import { ChartTooltip } from '../ChartTooltip';
 
 describe('ChartTooltip Component', () => {
   let component: RenderResult;

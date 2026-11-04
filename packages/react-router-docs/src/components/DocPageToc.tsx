@@ -1,5 +1,6 @@
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import clsx from 'clsx';
+
 import type { DocHeading } from '../utils/docHeadings';
 
 export interface DocPageTocProps {
@@ -69,7 +70,7 @@ export const DocPageToc = (props: DocPageTocProps): React.ReactElement => {
   return (
     <nav
       aria-label={title}
-      className={clsx('text-sm', className)}
+      className={cn('text-sm', className)}
       data-testid="DocPageToc"
     >
       <p className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">
@@ -83,7 +84,7 @@ export const DocPageToc = (props: DocPageTocProps): React.ReactElement => {
             <li key={heading.id}>
               <a
                 aria-current={isActive ? 'location' : undefined}
-                className={clsx(
+                className={cn(
                   '-ml-px block border-l py-0.5 pr-2',
                   heading.depth === 3 ? 'pl-6' : 'pl-3',
                   isActive

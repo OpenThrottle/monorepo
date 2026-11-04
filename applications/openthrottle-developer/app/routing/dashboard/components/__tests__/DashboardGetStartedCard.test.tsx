@@ -1,16 +1,18 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'jotai';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { DashboardGetStartedCard } from '../DashboardGetStartedCard';
+
 import { GET_STARTED_CARD_COPY } from '~/routing/dashboard/data/data.copy';
 import {
   ONBOARDING_STEP_ID,
   type OnboardingCompletion,
 } from '~/routing/dashboard/utils/onboarding-steps';
+
+import { DashboardGetStartedCard } from '../DashboardGetStartedCard';
 
 const completion = (
   overrides: Partial<OnboardingCompletion> = {},

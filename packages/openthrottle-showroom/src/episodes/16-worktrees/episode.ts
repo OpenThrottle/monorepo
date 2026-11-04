@@ -11,7 +11,7 @@
  * as an app video is not an option — there is no app surface to record.
  */
 
-import type { VideoEpisode } from '../types';
+import type { VideoEpisode } from '../types.ts';
 
 export const episode: VideoEpisode = {
   beats: [

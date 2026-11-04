@@ -8,11 +8,12 @@ import type {
   ScheduledAgentJobRun,
   ScheduledAgentJobRunStatusCount,
 } from '@openthrottle/nestjs-repositories';
-import type { ScheduledAgentJobRunStatsObject } from './scheduled-agent-job-run-stats.object';
+
 import type {
   ScheduledAgentJobObject,
   ScheduledAgentJobRunObject,
-} from './scheduled-agent-job.object';
+} from './scheduled-agent-job.object.ts';
+import type { ScheduledAgentJobRunStatsObject } from './scheduled-agent-job-run-stats.object.ts';
 
 export const toScheduledAgentJobObject = (
   job: ScheduledAgentJob,
@@ -23,13 +24,18 @@ export const toScheduledAgentJobObject = (
   driverId: job.driverId,
   enabled: job.enabled,
   id: job.id,
+  intervalMs: job.intervalMs,
   lastRunAt: job.lastRunAt,
+  misfirePolicy: job.misfirePolicy,
+  misfireThresholdMs: job.misfireThresholdMs,
   model: job.model,
   name: job.name,
   nextRunAt: job.nextRunAt,
   ownerUserId: job.ownerUserId,
   prompt: job.prompt,
   repositoryCheckoutId: job.repositoryCheckoutId,
+  runAt: job.runAt,
+  scheduleKind: job.scheduleKind,
   settingsJson: JSON.stringify(job.settings ?? {}),
   timeoutMs: job.timeoutMs,
   timezone: job.timezone,
@@ -56,7 +62,9 @@ export const toScheduledAgentJobRunObject = (
   reasoningTokens: run.reasoningTokens,
   repositoryCheckoutId: run.repositoryCheckoutId,
   resolvedCwd: run.resolvedCwd,
+  resumeOfRunId: run.resumeOfRunId,
   scheduledAgentJobId: run.scheduledAgentJobId,
+  scheduledFor: run.scheduledFor,
   // jsonb → JSON string (repo convention); null stays null for legacy/pre-snapshot runs.
   settingsSnapshotJson:
     run.settingsSnapshot === null ? null : JSON.stringify(run.settingsSnapshot),
@@ -64,6 +72,8 @@ export const toScheduledAgentJobRunObject = (
   status: run.status,
   totalTokens: run.totalTokens,
   trigger: run.trigger,
+  usageLimitResetsAt: run.usageLimitResetsAt,
+  usageLimitType: run.usageLimitType,
 });
 
 /**
@@ -73,7 +83,8 @@ export const toScheduledAgentJobRunObject = (
  * picture since `since`, while `inFlightCounts` is unwindowed — a run queued days ago and still stuck
  * is exactly what the caller needs to see, so it must not be cut off by the window.
  *
- * `no_op` keeps its own count and is never folded into failures: it is terminal but not an error.
+ * `no_op` and `usage_limited` keep their own counts and are never folded into failures: both are
+ * terminal but not errors.
  */
 export const toScheduledAgentJobRunStatsObject = (
   windowCounts: ScheduledAgentJobRunStatusCount[],
@@ -97,6 +108,7 @@ export const toScheduledAgentJobRunStatsObject = (
     runningCount,
     since,
     succeededCount: countIn(windowCounts, 'succeeded'),
+    usageLimitedCount: countIn(windowCounts, 'usage_limited'),
     windowTotalCount: windowCounts.reduce((total, row) => total + row.count, 0),
   };
 };

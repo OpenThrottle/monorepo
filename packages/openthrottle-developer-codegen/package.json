@@ -8,6 +8,7 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
+    "@graphql-typed-document-node/core": "catalog:",
     "@openthrottle/graphql-codegen": "workspace:^"
   },
   "license": "Apache-2.0",
@@ -41,8 +42,10 @@
       "typecheck": {},
       "verify-graphql-codegen": {
         "cache": false,
-        "description": "Regenerate openthrottle-developer-codegen GraphQL types and fail if the generated src/__generated__ output drifts from the .graphql documents. Output is gitignored here, so the guard byte-compares against whatever is on disk rather than against git, and reports a vacuous pass when there is no baseline.",
         "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Regenerate openthrottle-developer-codegen GraphQL types and fail if the generated src/__generated__ output drifts from the .graphql documents. Output is gitignored here, so the guard byte-compares against whatever is on disk rather than against git, and reports a vacuous pass when there is no baseline."
+        },
         "options": {
           "command": "tsx ./scripts/verify-graphql-codegen.ts --project=packages/openthrottle-developer-codegen",
           "cwd": "{workspaceRoot}"
@@ -72,5 +75,9 @@
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "module",
-  "types": "./src/index.ts"
+  "types": "./src/index.ts",
+  "devDependencies": {
+    "graphql-codegen-typescript-validation-schema": "catalog:",
+    "vitest": "catalog:"
+  }
 }

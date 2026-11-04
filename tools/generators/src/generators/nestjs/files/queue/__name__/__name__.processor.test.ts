@@ -2,8 +2,8 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Job } from 'bullmq';
-import { <%= namePascal %>Processor } from './<%= name %>.processor';
-import { <%= namePascal %>Data } from './<%= name %>.types';
+import { <%= namePascal %>Processor } from './<%= name %>.processor.ts';
+import { <%= namePascal %>Data } from './<%= name %>.types.ts';
 
 // import { faker } from '@faker-js/faker';
 // import { Processor } from '@nestjs/bullmq';

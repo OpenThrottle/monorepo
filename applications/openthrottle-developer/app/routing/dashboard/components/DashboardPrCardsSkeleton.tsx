@@ -1,6 +1,5 @@
+import { cn, Skeleton } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import clsx from 'clsx';
-import { Skeleton } from '@openthrottle/react-router-shadcn';
 
 export interface DashboardPrCardsSkeletonProps {
   className?: string;
@@ -33,7 +32,7 @@ export const DashboardPrCardsSkeleton = (
   return (
     <div
       aria-busy={true}
-      className={clsx('mt-4 w-full', className)}
+      className={cn('mt-4 w-full', className)}
       data-testid="DashboardPrCardsSkeleton"
     >
       <Skeleton className="min-h-[240px] w-full" />

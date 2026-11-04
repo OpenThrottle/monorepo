@@ -1,5 +1,5 @@
-import { fnv1a32Hex } from '~/routing/prompts/utils/utils.prompts';
 import type { PromptDetailsFragment } from '~/__generated__/graphql';
+import { fnv1a32Hex } from '~/routing/prompts/utils/utils.prompts';
 
 /**
  * @description JSON snapshot for support / diff tools; keys are alphabetized

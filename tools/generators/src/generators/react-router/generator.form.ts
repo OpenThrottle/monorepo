@@ -1,20 +1,21 @@
-import { join } from 'path';
 import type { Tree } from '@nx/devkit';
 import { formatFiles, logger } from '@nx/devkit';
-import prompts from 'prompts';
 import { camelCase } from 'lodash';
+import { join } from 'path';
+import prompts from 'prompts';
+
 import {
   getCommonVariables,
   getRemixRoutingFolders,
   getRemixServiceFolders,
 } from '../../utils';
+import { generateFilesSafely } from '../../utils/generate-files-safely';
+import { MESSAGE_ON_CANCEL } from '../../utils/messages';
 import {
   getTargetApplication,
   parsePossibleNames,
 } from '../../utils/questions';
-import { MESSAGE_ON_CANCEL } from '../../utils/messages';
 import { throwInvalidFolderError } from '../../utils/target-validation';
-import { generateFilesSafely } from '../../utils/generate-files-safely';
 
 export interface ReactRouterFormGeneratorSchema {
   readonly application?: string;

@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
-import { groupLinkedArtifacts } from '../group-linked-artifacts';
+
 import type { LinkedArtifactGroupModel } from '../group-linked-artifacts';
+import { groupLinkedArtifacts } from '../group-linked-artifacts';
 
 /** Narrow the first group without an index-access cast (noUncheckedIndexedAccess). */
 const firstGroup = <T extends { producedAt: number | string; type: string }>(

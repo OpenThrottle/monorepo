@@ -1,8 +1,8 @@
-import * as React from 'react';
-import { Card, DataTable, toast } from '@openthrottle/react-router-shadcn';
+import { Card, cn, DataTable, toast } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleEmptyState } from '@openthrottle/react-router-ui';
-import clsx from 'clsx';
+import * as React from 'react';
 import { useFetcher } from 'react-router';
+
 import type { QueueCardFragment } from '~/__generated__/graphql';
 import {
   buildQueuesTableColumns,
@@ -70,7 +70,7 @@ export const QueuesTable = (props: QueuesTableProps): React.ReactElement => {
   // 🔌 Short Circuit
   if (queues.length === 0) {
     return (
-      <Card className={clsx(className)} data-testid="QueuesTable">
+      <Card className={cn(className)} data-testid="QueuesTable">
         <div className="flex flex-col items-center justify-center gap-2 p-8 text-center sm:p-10">
           <OpenThrottleEmptyState
             description="When workers register Bull queues with the API, they appear here with live backlog, in-flight, and outcome counts."
@@ -83,7 +83,7 @@ export const QueuesTable = (props: QueuesTableProps): React.ReactElement => {
 
   return (
     <div
-      className={clsx('ui-border rounded-lg border', className)}
+      className={cn('ui-border rounded-lg border', className)}
       data-testid="QueuesTable"
     >
       <DataTable<QueueCardFragment, string | number | undefined>

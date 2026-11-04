@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { AgentConversationMessage } from './agent-conversation-message.entity';
-import { AgentConversation } from './agent-conversation.entity';
-import { AgentConversationsService } from './agent-conversations.service';
-import { PlansModule } from '../plans/plans.module';
-import { ProjectsModule } from '../projects/projects.module';
+
+import { PlansModule } from '../plans/plans.module.ts';
+import { ProjectsModule } from '../projects/projects.module.ts';
+import { AgentConversation } from './agent-conversation.entity.ts';
+import { AgentConversationMessage } from './agent-conversation-message.entity.ts';
+import { AgentConversationsService } from './agent-conversations.service.ts';
 
 @Module({
   controllers: [],

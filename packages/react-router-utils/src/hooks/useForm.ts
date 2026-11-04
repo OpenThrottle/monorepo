@@ -1,8 +1,16 @@
-import { useNavigation } from 'react-router';
 import type { FormikConfig, FormikValues } from 'formik';
 import { useFormik } from 'formik';
 import type { FormEvent } from 'react';
 import { useEffect, useState } from 'react';
+import { useNavigation } from 'react-router';
+
+/** @public */
+export interface UseFormResult<T extends FormikValues = FormikValues> {
+  readonly formik: ReturnType<typeof useFormik<T>>;
+  readonly loading: boolean;
+  readonly onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  readonly setLoading: (loading: boolean) => void;
+}
 
 /**
  * @description A simple hook for working with "Formik" and "Yup" in our
@@ -10,9 +18,7 @@ import { useEffect, useState } from 'react';
  */
 export const useForm = <T extends FormikValues = FormikValues>(
   config: FormikConfig<T>,
-) => {
-  // Setup
-
+): UseFormResult<T> => {
   // Hooks
   const formik = useFormik(config);
   const { state } = useNavigation();
@@ -21,7 +27,7 @@ export const useForm = <T extends FormikValues = FormikValues>(
   // Setup
 
   // Handlers
-  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const onSubmit = (event: FormEvent<HTMLFormElement>): void => {
     /**
      * @description If the form is already known-invalid we must suppress the
      * native submission. `preventDefault()` has to run synchronously here —
@@ -41,9 +47,6 @@ export const useForm = <T extends FormikValues = FormikValues>(
       return;
     }
 
-    // Markup
-
-    // Life Cycle
     /**
      * @description Otherwise the form is valid: let the event continue to the
      * "server" (action), which is simply letting the browser's native form
@@ -52,9 +55,9 @@ export const useForm = <T extends FormikValues = FormikValues>(
     setLoading(true);
   };
 
-  // Life Cycle
+  // Markup
 
-  // 🔌 Short Circuits
+  // Life Cycle
   useEffect(() => {
     setLoading(state === 'submitting');
   }, [state]);

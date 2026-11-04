@@ -1,14 +1,5 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  CONVERSATION_PERMISSION_MODES,
-  CONVERSATION_REASONING_EFFORTS,
-  CONVERSATION_SERVICE_TIERS,
-  CONVERSATION_STREAM_CHUNK_KINDS,
-  toConversationPermissionMode,
-  toConversationReasoningEffort,
-  toConversationServiceTier,
-} from '../types.ts';
 import type {
   ConversationBackend,
   ConversationBackendRun,
@@ -17,6 +8,15 @@ import type {
   ConversationServiceTier,
   ConversationStreamChunk,
   ConversationStreamChunkKind,
+} from '../types.ts';
+import {
+  CONVERSATION_PERMISSION_MODES,
+  CONVERSATION_REASONING_EFFORTS,
+  CONVERSATION_SERVICE_TIERS,
+  CONVERSATION_STREAM_CHUNK_KINDS,
+  toConversationPermissionMode,
+  toConversationReasoningEffort,
+  toConversationServiceTier,
 } from '../types.ts';
 
 describe('CONVERSATION_PERMISSION_MODES', () => {
@@ -110,13 +110,14 @@ describe('CONVERSATION_STREAM_CHUNK_KINDS', () => {
       toolCall: 'tool_call',
       toolResult: 'tool_result',
       usage: 'usage',
+      usageLimit: 'usage_limit',
     });
   });
 
-  it('has exactly seven distinct kinds', () => {
+  it('has exactly eight distinct kinds', () => {
     const values = Object.values(CONVERSATION_STREAM_CHUNK_KINDS);
-    expect(values).toHaveLength(7);
-    expect(new Set(values).size).toBe(7);
+    expect(values).toHaveLength(8);
+    expect(new Set(values).size).toBe(8);
   });
 });
 

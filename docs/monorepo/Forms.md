@@ -67,18 +67,18 @@ export const formSetup = (
 
 ### formDefaults
 
-We disable the `sort-keys-fix` rule because we want the default values to be in the same order as the fields in the UI, keeping the tab order consistent. We may also (as seen below) need to use `null` as a default value for a field which is a caveat to React form inputs where we don't want to switch between uncontrolled and controlled inputs. Using a `null` value vs. `undefined` prevents this issue.
+We disable the `sort-keys` rule because we want the default values to be in the same order as the fields in the UI, keeping the tab order consistent. We may also (as seen below) need to use `null` as a default value for a field which is a caveat to React form inputs where we don't want to switch between uncontrolled and controlled inputs. Using a `null` value vs. `undefined` prevents this issue.
 
 > **Note:** We should not export this value, its only used internally.
 
 ```tsx
-/* eslint-disable sort-keys-fix/sort-keys-fix */
+/* eslint-disable sort-keys */
 const formDefaults: FormSchema = {
   locationUUID: '',
   endDate: null as unknown as Date,
   startDate: null as unknown as Date,
 };
-/* eslint-enable sort-keys-fix/sort-keys-fix */
+/* eslint-enable sort-keys */
 ```
 
 ### Example

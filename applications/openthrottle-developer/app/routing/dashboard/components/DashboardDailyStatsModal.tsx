@@ -1,21 +1,22 @@
-import * as React from 'react';
 import { GlobalModal } from '@openthrottle/react-router-ui-global';
+import * as React from 'react';
 import { useSearchParams } from 'react-router';
-import { DAILY_STATS_CHART_CONFIG } from '~/routing/dashboard/data/daily-stats-chart';
-import { formatChartDate } from '~/routing/dashboard/utils/daily-stats-chart';
+
+import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 import { DashboardDailyStatsDayChart } from '~/routing/dashboard/components/DashboardDailyStatsDayChart';
+import { DAILY_STATS_CHART_CONFIG } from '~/routing/dashboard/data/daily-stats-chart';
 import {
   DAILY_STATS_METRICS,
   DAILY_STATS_MODAL_COPY,
 } from '~/routing/dashboard/data/data.copy';
+import { formatChartDate } from '~/routing/dashboard/utils/daily-stats-chart';
 import {
   parseSelectedStatDate,
-  SELECTED_DATE_PARAM,
   selectDailyStatByDate,
+  SELECTED_DATE_PARAM,
   selectMostRecentDailyStat,
   shiftIsoDate,
 } from '~/routing/dashboard/utils/daily-stats-selection';
-import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 
 export interface DashboardDailyStatsModalProps {
   dailyStats: DashboardDailyStatsCardFragment[];

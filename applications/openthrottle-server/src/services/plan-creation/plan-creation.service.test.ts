@@ -1,23 +1,24 @@
+import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException } from '@nestjs/common';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { createMock } from '@golevelup/ts-vitest';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import type {
+  PlanData,
+  PlanRunConfigStorage,
+} from '@openthrottle/nestjs-repositories';
 import {
   getDefaultPlanRunConfigStorage,
   PlanEmbeddingsService,
   PlansService,
 } from '@openthrottle/nestjs-repositories';
-import type {
-  PlanData,
-  PlanRunConfigStorage,
-} from '@openthrottle/nestjs-repositories';
 import { embedQuery } from '@openthrottle/node-client';
-import type { CreatePlanInput } from '../../graphql/plans/plan.input';
-import { CheckoutPathResolutionService } from '../checkout-path-resolution/checkout-path-resolution.service';
-import { EffectiveUserResolutionService } from '../effective-user-resolution/effective-user-resolution.service';
-import { PlanCreationService } from './plan-creation.service';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import type { CreatePlanInput } from '../../graphql/plans/plan.input.ts';
+import { CheckoutPathResolutionService } from '../checkout-path-resolution/checkout-path-resolution.service.ts';
+import { EffectiveUserResolutionService } from '../effective-user-resolution/effective-user-resolution.service.ts';
+import { PlanCreationService } from './plan-creation.service.ts';
 
 vi.mock('@openthrottle/node-client', async (importOriginal) => {
   const mod =

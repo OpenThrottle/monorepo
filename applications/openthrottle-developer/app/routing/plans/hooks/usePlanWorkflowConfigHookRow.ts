@@ -6,6 +6,7 @@
  * through the parent `onChange` with a full next-rows array.
  */
 import type * as React from 'react';
+
 import { DEFAULT_RALPH_PROMPT } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import {
   moveRowWithinPhase,
@@ -21,7 +22,7 @@ import {
   isJobRunHookOnFailureValue,
 } from '~/routing/plans/utils/plan-workflow-config-hook-row';
 
-export interface PlanWorkflowConfigHookRowOptions {
+export interface UsePlanWorkflowConfigHookRowOptions {
   readonly hooks: readonly JobRunHookDraftRow[];
   readonly index: number;
   readonly onChange: (next: JobRunHookDraftRow[]) => void;
@@ -48,7 +49,7 @@ export interface UsePlanWorkflowConfigHookRowResult {
 }
 
 export const usePlanWorkflowConfigHookRow = (
-  options: PlanWorkflowConfigHookRowOptions,
+  options: UsePlanWorkflowConfigHookRowOptions,
 ): UsePlanWorkflowConfigHookRowResult => {
   const { hooks, index, onChange, row } = options;
 

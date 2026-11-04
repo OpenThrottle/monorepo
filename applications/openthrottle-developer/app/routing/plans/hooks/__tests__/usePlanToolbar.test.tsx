@@ -1,10 +1,12 @@
-import * as React from 'react';
+import { toast } from '@openthrottle/react-router-shadcn';
 import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { toast } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { getRecentWorkspacePaths } from '~/routing/plans/utils/workspace-path';
+
 import {
   usePlanToolbar,
   type UsePlanToolbarOptions,

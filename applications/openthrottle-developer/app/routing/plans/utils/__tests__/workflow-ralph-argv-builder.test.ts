@@ -1,12 +1,13 @@
 import { describe, expect, test } from 'vitest';
-import type { WorkflowRalphRunOptionsInput } from '../workflow-ralph-config';
-import { getDefaultWorkflowRalphRunOptionsInput } from '../workflow-ralph-config';
+
 import {
   buildWorkflowRalphOptionArgs,
   formatWorkflowRalphCommandLine,
   planRunJobDetailPath,
   resolveWorkflowRalphWorktreeArgvValue,
 } from '../workflow-ralph-argv-builder';
+import type { WorkflowRalphRunOptionsInput } from '../workflow-ralph-config';
+import { getDefaultWorkflowRalphRunOptionsInput } from '../workflow-ralph-config';
 
 /**
  * A deliberately bare input: the shared defaults now include verbose logging and a named worktree,

@@ -1,3 +1,5 @@
+import * as os from 'node:os';
+
 import {
   InjectQueue,
   OnWorkerEvent,
@@ -6,64 +8,78 @@ import {
 } from '@nestjs/bullmq';
 import {
   Inject,
-  Optional,
   OnApplicationShutdown,
   OnModuleInit,
+  Optional,
 } from '@nestjs/common';
+import { AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT } from '@openthrottle/nestjs-auth';
+import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { getWorkflowConfigCwd } from '@openthrottle/openthrottle-agentic-utils';
-import { loadWorkflowRalphConfig } from '@tools/workflows';
+import type { PlanRunStatus } from '@openthrottle/nestjs-repositories';
 import {
   HEARTBEAT_INTERVAL_MS,
+  PLAN_RUN_STARTABLE_STATUSES,
+  PLAN_RUN_STATUS,
   PlanOutputStreamService,
   PlanRunsService,
   PlansService,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
-import * as os from 'node:os';
+import { getWorkflowConfigCwd } from '@openthrottle/openthrottle-agentic-utils';
+import {
+  isLifecycleHooksChildJobsEnabled,
+  WORKFLOW_EVENT,
+} from '@openthrottle/openthrottle-agentic-workflow';
+import { loadWorkflowRalphConfig } from '@tools/workflows';
+import type { Queue } from 'bullmq';
+
+import { PlanStatusService } from '../../graphql/plans/plan-status.service.ts';
+import { SettleRunLedgerService } from '../../graphql/work-ledger/settle-run-ledger.service.ts';
+import { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account.service.ts';
+import { ProcessMetricsService } from '../../metrics/process-metrics.service.ts';
+import type {
+  EnhancedTaskRunMetrics,
+  ProcessMetricsSnapshot,
+} from '../../metrics/process-metrics.types.ts';
+import { formatEnhancedTaskRunMetricsSummary } from '../../metrics/process-metrics-format.ts';
+import { NotificationsService } from '../../notifications/notifications.service.ts';
+import { AgenticRalphOrchestratorService } from '../agentic-ralph/agentic-ralph-orchestrator.service.ts';
+import { closeRunOutputForJob } from '../bullmq-keyed-run-logging.ts';
+import { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.service.ts';
+import { BULLMQ_RUN_OUTPUT_WRITER } from '../bullmq-run-output-writer.token.ts';
+import type { PlanQueueJobCompletedPayload } from '../job-run-hooks/execute-plan-job-run-hooks.ts';
 import {
   runAfterAllHooksWithDispatcherThenNotify,
   runAfterRunHooksThenNotify,
   runBeforeAllHooksWithDispatcher,
   runBeforeRunHooksAndHandleBlock,
-} from '../job-run-hooks/execute-plan-job-run-hooks';
+} from '../job-run-hooks/execute-plan-job-run-hooks.ts';
 // import { DelayedError } from 'bullmq';
-import { WorkflowLifecycleDispatcherFactory } from '../plan-lifecycle-hooks/workflow-lifecycle-dispatcher.service';
-import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
-import type { PlanQueueJobCompletedPayload } from '../job-run-hooks/execute-plan-job-run-hooks';
-import type { Queue } from 'bullmq';
-import {
-  isLifecycleHooksChildJobsEnabled,
-  WORKFLOW_EVENT,
-} from '@openthrottle/openthrottle-agentic-workflow';
-import { formatEnhancedTaskRunMetricsSummary } from '../../metrics/process-metrics-format';
-import type {
-  EnhancedTaskRunMetrics,
-  ProcessMetricsSnapshot,
-} from '../../metrics/process-metrics.types';
-import { ProcessMetricsService } from '../../metrics/process-metrics.service';
-import { NotificationsService } from '../../notifications/notifications.service';
-import { AgenticRalphOrchestratorService } from '../agentic-ralph/agentic-ralph-orchestrator.service';
-import { closeRunOutputForJob } from '../bullmq-keyed-run-logging';
-import { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.service';
-import { BULLMQ_RUN_OUTPUT_WRITER } from '../bullmq-run-output-writer.token';
+import { WorkflowLifecycleDispatcherFactory } from '../plan-lifecycle-hooks/workflow-lifecycle-dispatcher.service.ts';
+import { resolveRepeatablesOwner } from '../repeatable-job.owner.ts';
+import { PlanRunCancellationService } from './plan-run-cancellation.service.ts';
 import {
   PLANS_QUEUE_NAME,
   PLANS_WORKER_LOCK_DURATION_MS,
   PLANS_WORKER_MAX_STALLED_COUNT,
   PLANS_WORKER_STALLED_INTERVAL_MS,
   // WORKTREE_RETRY_DELAY_MS,
-} from './plans.constants';
-import { PlanRunCancellationService } from './plan-run-cancellation.service';
-import { WorkLedgerRunService } from './work-ledger-run.service';
-import { isRunPlanOrchestratorJobData } from './plans.types';
+} from './plans.constants.ts';
 import type {
   PlanRunJobResult,
   RunPlanJob,
   RunPlanJobData,
-} from './plans.types';
+} from './plans.types.ts';
+import { isRunPlanOrchestratorJobData } from './plans.types.ts';
+import { ScheduledPlanRunService } from './scheduled-plan-run.service.ts';
+import { UsageLimitResumeService } from './usage-limit-resume/usage-limit-resume.service.ts';
+import { WorkLedgerRunService } from './work-ledger-run.service.ts';
 
 const CONCURRENCY = 1;
+
+/** Whether a worker may claim a run in `status` (see `PLAN_RUN_STARTABLE_STATUSES`). */
+const isStartableRunStatus = (status: string): boolean =>
+  PLAN_RUN_STARTABLE_STATUSES.some((startable) => startable === status);
 
 /**
  * Processes plan-run jobs for the plans queue. Concurrency is derived from the number
@@ -117,8 +133,13 @@ export class PlansProcessor
     @InjectQueue(PLANS_QUEUE_NAME)
     private readonly plansQueue: Queue<RunPlanJobData, PlanRunJobResult | void>,
     private readonly plansService: PlansService,
+    private readonly planStatusService: PlanStatusService,
     private readonly processMetrics: ProcessMetricsService,
+    private readonly scheduledPlanRun: ScheduledPlanRunService,
+    private readonly settleRunLedger: SettleRunLedgerService,
+    private readonly statusChangeSystemAccount: StatusChangeSystemAccountService,
     private readonly tasksService: TasksService,
+    private readonly usageLimitResume: UsageLimitResumeService,
     private readonly workLedgerRun: WorkLedgerRunService,
   ) {
     super();
@@ -130,12 +151,30 @@ export class PlansProcessor
       PlansProcessor.name,
     );
 
+    // Owner-only. A shared-DB worktree's plans queue is its own `bull:wt-<slug>` prefix, so it sees
+    // no active job for ANY plan and would reset every IN_PROGRESS plan in the user's database.
+    const ownership = resolveRepeatablesOwner();
+    if (!ownership.owner) {
+      this.logger.info(
+        `Plan status startup reconciliation skipped: ${ownership.reason}`,
+        PlansProcessor.name,
+      );
+      return;
+    }
+
     await this.reconcilePlanStatusOnStartup();
     await this.reconcilePlansQueuedWithInProgressTasks();
+    // Re-project SCHEDULED runs whose delayed job was lost (Redis flushed, volume recreated),
+    // applying the grace window. Owner-only for the same reason as the two above. Never throws.
+    await this.scheduledPlanRun.reconcileOnStartup();
   }
 
   /**
    * On startup, reset any plan that is IN_PROGRESS but has no active job in the queue (e.g. after server restart). Prevents plans from staying stuck as IN_PROGRESS when the job was interrupted.
+   *
+   * A plan whose newest run is a live detached run (an interactive /ot-loop or a workflow-ralph CLI
+   * run — no BullMQ job by design) is left alone: that run lives outside this process, survives the
+   * restart, and is settled by its owner or the sweeps, never by this reconcile.
    */
   private async reconcilePlanStatusOnStartup(): Promise<void> {
     const repo = this.plansService.getRepository();
@@ -151,9 +190,22 @@ export class PlansProcessor
         .map((job) => job.data?.planId)
         .filter((id): id is string => typeof id === 'string'),
     );
+    const planIdsWithLiveDetachedRun =
+      await this.planRunsService.findPlanIdsWithLiveDetachedRun(
+        plans.map((plan) => plan.id),
+      );
+    const startupActorSub = await this.statusChangeSystemAccount.resolveId();
 
     for (const plan of plans) {
       if (planIdsWithActiveJob.has(plan.id)) {
+        continue;
+      }
+
+      if (planIdsWithLiveDetachedRun.has(plan.id)) {
+        this.logger.info(
+          `Plan status reconciliation: leaving plan ${plan.id} IN_PROGRESS (live detached run, no BullMQ job by design).`,
+          PlansProcessor.name,
+        );
         continue;
       }
 
@@ -162,8 +214,19 @@ export class PlansProcessor
         PlansProcessor.name,
       );
 
+      // Routed through the applyStatusChange chokepoint, attributed to the status-change-system
+      // service account with a non-fatal capture failure (a missing migration/ledger hiccup must
+      // not block a startup reconcile). guardCurrentStatus re-checks IN_PROGRESS under
+      // writeGuardedStatus's own row lock — the `plans` list was read moments earlier, above.
       // eslint-disable-next-line no-await-in-loop
-      await repo.update({ id: plan.id }, { status: 'QUEUED' });
+      await this.planStatusService.writeGuardedStatus(plan.id, {
+        actorKind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+        actorSub: startupActorSub ?? undefined,
+        captureFailureIsFatal: false,
+        guardCurrentStatus: 'IN_PROGRESS',
+        requestedStatus: 'QUEUED',
+        throwOnForbiddenInProgress: false,
+      });
 
       this.notifications.emitPlanStatusChanged({
         planId: plan.id,
@@ -175,6 +238,10 @@ export class PlansProcessor
   /**
    * On startup, promote QUEUED plans that still have IN_PROGRESS
    * tasks (e.g. after stall/requeue reset the plan but not tasks). Mirrors downward reconcile in {@link reconcilePlanStatusOnStartup}.
+   *
+   * A plan whose BullMQ job is DELAYED is skipped: a usage-limit continuation legitimately sits in
+   * the delayed state for hours, and promoting its plan to IN_PROGRESS would make a paused plan read
+   * as running (the delayed job promotes it itself when it starts).
    */
   private async reconcilePlansQueuedWithInProgressTasks(): Promise<void> {
     const planRepo = this.plansService.getRepository();
@@ -185,7 +252,20 @@ export class PlansProcessor
       return;
     }
 
+    const delayedJobs = await this.plansQueue.getJobs(['delayed'], 0, 500);
+    const planIdsWithDelayedJob = new Set(
+      delayedJobs
+        .map((job) => job.data?.planId)
+        .filter((id): id is string => typeof id === 'string'),
+    );
+
+    const actorSub = await this.statusChangeSystemAccount.resolveId();
+
     for (const plan of plans) {
+      if (planIdsWithDelayedJob.has(plan.id)) {
+        continue;
+      }
+
       // eslint-disable-next-line no-await-in-loop
       const tasks = await taskRepo.findOne({
         select: ['id'],
@@ -198,7 +278,14 @@ export class PlansProcessor
 
       const promoted =
         // eslint-disable-next-line no-await-in-loop
-        await this.tasksService.syncParentPlanStatus(plan.id);
+        await this.planStatusService.promoteParentPlanToInProgress(
+          plan.id,
+          {
+            actorKind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+            actorSub: actorSub ?? undefined,
+          },
+          false,
+        );
 
       if (!promoted) {
         continue;
@@ -233,6 +320,29 @@ export class PlansProcessor
     if (typeof planId !== 'string') return;
 
     await this.resetPlanStatusToQueued(planId, 'failed', error?.message);
+
+    // The retry boundary: 'failed' fires on EVERY attempt, but a retry is still going
+    // to re-claim this row (via markRunStarted, back to IN_PROGRESS). Only settle the
+    // plan_runs row to the terminal FAILED status once BullMQ will not retry again —
+    // settling earlier would have a retry re-claim a row that already reads terminal.
+    if (job !== undefined && this.hasExhaustedRetries(job)) {
+      await this.settleQueuedRunStatus(
+        PLANS_QUEUE_NAME,
+        String(job.id),
+        PLAN_RUN_STATUS.FAILED,
+      );
+    }
+  }
+
+  /**
+   * Whether a job's failed attempt is its last — `attempts` guards against undefined by
+   * defaulting to 1 (BullMQ's own default, meaning no retries), so an unconfigured job is
+   * treated as exhausted on its first and only attempt.
+   */
+  private hasExhaustedRetries(job: RunPlanJob): boolean {
+    const attempts = job.opts.attempts ?? 1;
+
+    return job.attemptsMade >= attempts;
   }
 
   /**
@@ -383,8 +493,21 @@ export class PlansProcessor
     detail?: string,
   ): Promise<void> {
     try {
-      const repo = this.plansService.getRepository();
-      await repo.update({ id: planId }, { status: 'QUEUED' });
+      // Routed through the applyStatusChange chokepoint, attributed to the status-change-system
+      // service account with a non-fatal capture failure — this method's own contract ("does not
+      // throw; logs on failure") must hold regardless of ledger health, so a capture failure must
+      // not roll back the row write the way a fatal one would. No guardCurrentStatus: the original
+      // write was unconditional (any status → QUEUED on job failure/stall), so this preserves that.
+      const actorSub = await this.statusChangeSystemAccount.resolveId();
+
+      await this.planStatusService.writeGuardedStatus(planId, {
+        actorKind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+        actorSub: actorSub ?? undefined,
+        captureFailureIsFatal: false,
+        guardCurrentStatus: undefined,
+        requestedStatus: 'QUEUED',
+        throwOnForbiddenInProgress: false,
+      });
 
       this.notifications.emitPlanStatusChanged({ planId, status: 'QUEUED' });
 
@@ -422,23 +545,29 @@ export class PlansProcessor
 
   async process(job: RunPlanJob): Promise<PlanRunJobResult> {
     const { planId } = job.data;
-    const abortSignal = this.planRunCancellation.attach(planId);
     const jobId = String(job.id);
     const queueName = PLANS_QUEUE_NAME;
+
+    // Admission comes before ANY side effect — the abort-controller attach, the run-location stamp,
+    // the heartbeat, the work-ledger session, the plan status write, the worktree. A scheduled run
+    // the fire-time policy settles (MISSED / SUPERSEDED / nothing to run), a run a cancel already
+    // settled, or one whose claim lost a race returns here having touched nothing else.
+    if (!(await this.admitRun(planId, queueName, jobId))) {
+      const snapshot = this.processMetrics.getCurrentSnapshot();
+
+      return { taskRunMetrics: { atEnd: snapshot, atStart: snapshot } };
+    }
+
+    const abortSignal = this.planRunCancellation.attach(planId);
     // Work-ledger run session (best-effort; opened after the plan resolves, closed in finally).
     let workSessionId: string | null = null;
-
-    // Stamp run-location so a cancel request from another process/host can observe
-    // where the run lives (Channel 0 is the in-memory attach above; this is the
-    // durable, cross-process observability half). Cleared in finally alongside detach.
-    await this.stampRunLocation(queueName, jobId);
 
     // Liveness heartbeat: bump last_heartbeat_at on a wall-clock timer, independent of
     // orchestrator iteration progress (a single iteration can exceed the staleness cutoff,
     // so an iteration-boundary bump would false-trip it on a live run). If this worker
     // crashes hard (SIGKILL/OOM/power-loss) without reaching the finally, the heartbeat
     // stops advancing and the staleness sweeper settles the stranded row. markRunStarted
-    // (in stampRunLocation) already stamped the initial heartbeat, so the first tick can lag.
+    // (the claim in admitRun) already stamped the initial heartbeat, so the first tick can lag.
     const heartbeatTimer = this.startRunHeartbeat(queueName, jobId);
 
     try {
@@ -461,14 +590,19 @@ export class PlansProcessor
         queueName,
       });
 
-      // Direct operational write (fast, in-process, drives the notification below and the
-      // startup status reconcile). This intentionally does NOT emit a status_change artifact:
-      // it bypasses the updatePlan resolver, and the orchestrator's later
-      // promotePlanToInProgressIfNeeded is then a no-op for capture (from === to). The plan's
-      // worked-on state is instead represented by the run session's attached plan subject; the
-      // plan's COMPLETED transition and all task transitions ARE captured (via the orchestrator's
-      // resolver calls, attributed to this run session through X-OT-Session-Id).
-      await repo.update({ id: planId }, { status: 'IN_PROGRESS' });
+      // Routed through the applyStatusChange chokepoint (system-account actor, non-fatal capture —
+      // a missing service account or ledger hiccup must not block the run from starting) so this
+      // write, like every other plans.status transition, now emits a status_change artifact.
+      const jobStartActorSub = await this.statusChangeSystemAccount.resolveId();
+
+      await this.planStatusService.promoteParentPlanToInProgress(
+        planId,
+        {
+          actorKind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+          actorSub: jobStartActorSub ?? undefined,
+        },
+        false,
+      );
 
       this.notifications.emitPlanUpdated({
         message: `Plan run started: ${planId}`,
@@ -496,8 +630,10 @@ export class PlansProcessor
               logger: this.logger,
               notifications: this.notifications,
               planOutputStreamService: this.planOutputStreamService,
+              planStatusService: this.planStatusService,
               plansService: this.plansService,
               signal: abortSignal,
+              statusChangeSystemAccount: this.statusChangeSystemAccount,
               tasksService: this.tasksService,
             })
           : await runBeforeRunHooksAndHandleBlock({
@@ -507,8 +643,10 @@ export class PlansProcessor
               logger: this.logger,
               notifications: this.notifications,
               planOutputStreamService: this.planOutputStreamService,
+              planStatusService: this.planStatusService,
               plansService: this.plansService,
               signal: abortSignal,
+              statusChangeSystemAccount: this.statusChangeSystemAccount,
               tasksService: this.tasksService,
             });
 
@@ -526,6 +664,7 @@ export class PlansProcessor
         logContext,
         metricsAtStart,
         abortSignal,
+        heartbeatTimer,
         lifecycleDispatcher,
         workSessionId,
       );
@@ -583,16 +722,72 @@ export class PlansProcessor
   }
 
   /**
-   * Best-effort: stamp hostname/pid/worker_id on the plan_runs row for this job
-   * so cross-process cancel can observe where the run executes. Never throws —
-   * location is diagnostic, not on the critical path.
+   * Decides whether this job may run, and claims its plan_runs row when it may. Reads the row first
+   * and applies, in order:
+   *
+   * - no row (a legacy or duplicated job nothing recorded) → runs, as it always did;
+   * - SCHEDULED → the fire-time policy ({@link ScheduledPlanRunService.fire}): only `fire` continues,
+   *   with the row now claimed QUEUED and the plan and its tasks flipped QUEUED;
+   * - any status a worker cannot start from (CANCELLED, MISSED, SUPERSEDED, STALE, COMPLETED, ...) →
+   *   does not run; a settled row is never reopened;
+   * - QUEUED / IN_PROGRESS → runs.
+   *
+   * Then the claim: {@link stampRunLocation} → `markRunStarted`, the conditional QUEUED|IN_PROGRESS →
+   * IN_PROGRESS update. When a row exists and that update matches nothing, something settled the run
+   * between the read and the claim, and the job backs off. A failed stamp (DB hiccup) stays
+   * best-effort and the run goes ahead, as before.
+   */
+  private async admitRun(
+    planId: string,
+    queueName: string,
+    jobId: string,
+  ): Promise<boolean> {
+    const run = await this.planRunsService.findByQueueNameAndBullmqJobId(
+      queueName,
+      jobId,
+    );
+
+    if (run?.status === PLAN_RUN_STATUS.SCHEDULED) {
+      const outcome = await this.scheduledPlanRun.fire({ run });
+
+      if (outcome.kind !== 'fire') {
+        return false;
+      }
+    } else if (run !== null && !isStartableRunStatus(run.status)) {
+      this.logger.warn(
+        `Plan job ${jobId} for plan ${planId} not started: its plan_runs row ${run.id} is already ${run.status}.`,
+        PlansProcessor.name,
+      );
+
+      return false;
+    }
+
+    const claimed = await this.stampRunLocation(queueName, jobId);
+
+    if (run !== null && claimed === 0) {
+      this.logger.warn(
+        `Plan job ${jobId} for plan ${planId} not started: its plan_runs row ${run.id} was settled before the worker could claim it.`,
+        PlansProcessor.name,
+      );
+
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Stamps hostname/pid/worker_id and IN_PROGRESS on the plan_runs row for this job (the guarded
+   * `markRunStarted` claim) so cross-process cancel can observe where the run executes. Returns the
+   * number of rows claimed, or null when the write failed — logged, never thrown: a DB hiccup here
+   * must not stop a run that admission already let through.
    */
   private async stampRunLocation(
     queueName: string,
     bullmqJobId: string,
-  ): Promise<void> {
+  ): Promise<number | null> {
     try {
-      await this.planRunsService.markRunStarted({
+      return await this.planRunsService.markRunStarted({
         bullmqJobId,
         hostname: os.hostname(),
         pid: process.pid,
@@ -604,6 +799,8 @@ export class PlansProcessor
         `Failed to stamp plan_runs location: jobId=${bullmqJobId}, error=${error instanceof Error ? error.message : String(error)}`,
         PlansProcessor.name,
       );
+
+      return null;
     }
   }
 
@@ -620,6 +817,51 @@ export class PlansProcessor
     } catch (error) {
       this.logger.warn(
         `Failed to clear plan_runs location: jobId=${bullmqJobId}, error=${error instanceof Error ? error.message : String(error)}`,
+        PlansProcessor.name,
+      );
+    }
+  }
+
+  /**
+   * Best-effort: settle the plan_runs row for this job to a terminal status
+   * (COMPLETED / CANCELLED / FAILED — never STALE, which is reserved for the stale
+   * sweeper) and null its run-location columns. When the orchestrator returned
+   * settle artifacts (`headSha` / `prNumber`) and the status is COMPLETED, also
+   * records work-ledger git_commit + pull_request artifacts (same mechanism as
+   * `settleCliPlanRun`). Never throws — the settle write is diagnostic bookkeeping,
+   * not on the critical path of the job outcome itself.
+   */
+  private async settleQueuedRunStatus(
+    queueName: string,
+    bullmqJobId: string,
+    status: PlanRunStatus,
+    settleArtifacts?: {
+      readonly headSha: string | undefined;
+      readonly prNumber: number | undefined;
+    },
+  ): Promise<void> {
+    try {
+      const run = await this.planRunsService.settleRunByJob(
+        queueName,
+        bullmqJobId,
+        status,
+      );
+
+      if (
+        run != null &&
+        status === PLAN_RUN_STATUS.COMPLETED &&
+        settleArtifacts != null &&
+        (settleArtifacts.headSha != null || settleArtifacts.prNumber != null)
+      ) {
+        await this.settleRunLedger.recordSettledRunArtifacts({
+          headSha: settleArtifacts.headSha ?? null,
+          planRun: run,
+          prNumber: settleArtifacts.prNumber ?? null,
+        });
+      }
+    } catch (error) {
+      this.logger.warn(
+        `Failed to settle plan_runs status: jobId=${bullmqJobId}, status=${status}, error=${error instanceof Error ? error.message : String(error)}`,
         PlansProcessor.name,
       );
     }
@@ -744,6 +986,7 @@ export class PlansProcessor
     logContext: string,
     metricsAtStart: ProcessMetricsSnapshot,
     abortSignal: AbortSignal,
+    heartbeatTimer: ReturnType<typeof setInterval>,
     lifecycleDispatcher?: ReturnType<
       WorkflowLifecycleDispatcherFactory['create']
     >,
@@ -791,6 +1034,12 @@ export class PlansProcessor
       workflowKind: 'ralph',
     });
 
+    // Stop the wall-clock heartbeat BEFORE any terminal plan_runs write below: a tick
+    // landing after the row is settled would advance last_heartbeat_at on a terminal
+    // (COMPLETED/CANCELLED/FAILED) row, which reads as a live run to the staleness
+    // reader/sweeper and to any human looking at the column.
+    clearInterval(heartbeatTimer);
+
     const metricsAtEnd = this.processMetrics.getCurrentSnapshot();
     const taskRunMetrics = { atEnd: metricsAtEnd, atStart: metricsAtStart };
 
@@ -798,6 +1047,12 @@ export class PlansProcessor
       this.logger.warn(
         `Orchestrator Ralph failed: reason=${outcome.reason}, ${logContext}`,
         PlansProcessor.name,
+      );
+
+      await this.settleQueuedRunStatus(
+        PLANS_QUEUE_NAME,
+        jobId,
+        PLAN_RUN_STATUS.FAILED,
       );
 
       await this.completePlanRunWithHooks({
@@ -822,6 +1077,12 @@ export class PlansProcessor
         PlansProcessor.name,
       );
 
+      await this.settleQueuedRunStatus(
+        PLANS_QUEUE_NAME,
+        jobId,
+        PLAN_RUN_STATUS.CANCELLED,
+      );
+
       await this.completePlanRunWithHooks({
         abortSignal,
         job,
@@ -838,6 +1099,32 @@ export class PlansProcessor
       return { taskRunMetrics };
     }
 
+    if (outcome.reason === 'workflow_usage_limited') {
+      this.logger.info(
+        `Orchestrator Ralph stopped on a usage limit (${outcome.usageLimit.rateLimitType ?? 'unknown window'}, resets ${outcome.usageLimit.resetsAt ?? 'unknown'}), ${logContext}`,
+        PlansProcessor.name,
+      );
+
+      // Settles the row USAGE_LIMITED and either enqueues the delayed continuation or parks the
+      // plan. Never throws, so BullMQ sees a normally-completed job and does not retry it.
+      // afterAll hooks are deliberately skipped: the plan is paused, not finished.
+      const handling = await this.usageLimitResume.handle({
+        jobData: data,
+        jobId,
+        limit: outcome.usageLimit,
+        planId: data.planId,
+      });
+
+      this.notifications.emitQueueJobCompleted({
+        jobType: 'plans',
+        message: handling.message,
+        planId: data.planId,
+        severity: 'warning',
+      });
+
+      return { taskRunMetrics };
+    }
+
     const defaultMessage = `Plan run finished: ${data.planId} (${outcome.reason})`;
 
     let message: string;
@@ -846,6 +1133,11 @@ export class PlansProcessor
     if (outcome.reason === 'workflow_plan_already_terminal') {
       message = `Plan run skipped: ${data.planId} (plan already terminal)`;
       severity = 'success';
+    } else if (outcome.reason === 'workflow_complete_handoff_owed') {
+      // Finished plan + agent asked for input (or an owed post-plan step). Settle
+      // COMPLETED — never FAILED — and keep the reason in the notification text.
+      message = `Plan run finished with handoff owed: ${data.planId} (workflow_complete_handoff_owed)`;
+      severity = 'warning';
     } else if (outcome.reason === 'workflow_max_iterations') {
       const resolved = await this.getJobCompletedMessageAndSeverity(
         data.planId,
@@ -861,6 +1153,16 @@ export class PlansProcessor
     this.logger.info(
       `Orchestrator Ralph finished: reason=${outcome.reason}, jobId=${jobId}, ${logContext}`,
       PlansProcessor.name,
+    );
+
+    await this.settleQueuedRunStatus(
+      PLANS_QUEUE_NAME,
+      jobId,
+      PLAN_RUN_STATUS.COMPLETED,
+      {
+        headSha: outcome.headSha,
+        prNumber: outcome.prNumber,
+      },
     );
 
     await this.completePlanRunWithHooks({

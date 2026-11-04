@@ -1,7 +1,8 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { action } from '../plans.$planId.tasks.$taskId._index';
 
 vi.mock('@openthrottle/react-router-graphql');

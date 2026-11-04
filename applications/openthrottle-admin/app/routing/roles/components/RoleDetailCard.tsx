@@ -1,16 +1,17 @@
-import * as React from 'react';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
-import type { action as roleDetailAction } from '~/routes/roles.$roleId';
 import { formatDate } from 'date-fns';
+import * as React from 'react';
+import type { useFetcher } from 'react-router';
+
+import type { RoleDetailsFragment } from '~/__generated__/graphql';
+import type { action as roleDetailAction } from '~/routes/roles.$roleId';
 import { RoleDeleteDialog } from '~/routing/roles/components/RoleDeleteDialog';
 import { RoleEditSheet } from '~/routing/roles/components/RoleEditSheet';
-import type { RoleDetailsFragment } from '~/__generated__/graphql';
-import type { useFetcher } from 'react-router';
 
 export interface RoleDetailCardProps {
   editOpen: boolean;

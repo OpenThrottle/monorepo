@@ -1,40 +1,50 @@
-import type { ChildProcess } from 'child_process';
-import { spawn as nodeSpawn } from 'child_process';
-import type { Readable } from 'stream';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { Test } from '@nestjs/testing';
-import { getQueueToken } from '@nestjs/bullmq';
-import { LoggerService } from '@openthrottle/nestjs-modules';
+import 'reflect-metadata';
+
 import { createMock } from '@golevelup/ts-vitest';
-import { WORKTREE_TRACKER_TOKEN } from '@openthrottle/nestjs-worktrees';
-import type {
-  ChildProcessMetrics,
-  WallClockMetrics,
-} from '@openthrottle/openthrottle-agentic-utils';
+import { getQueueToken } from '@nestjs/bullmq';
+import { Test } from '@nestjs/testing';
+import { LoggerService } from '@openthrottle/nestjs-modules';
+import type { PlanRun } from '@openthrottle/nestjs-repositories';
 import {
   HEARTBEAT_INTERVAL_MS,
+  PLAN_RUN_STATUS,
   PlanOutputStreamService,
   PlanRunsService,
   PlansService,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
-import 'reflect-metadata';
-import type { EnhancedTaskRunMetrics } from '../../metrics/process-metrics.types';
-import { ProcessMetricsService } from '../../metrics/process-metrics.service';
-import { NotificationsService } from '../../notifications/notifications.service';
-import { AgenticRalphOrchestratorService } from '../agentic-ralph/agentic-ralph-orchestrator.service';
-import { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.service';
-import type { PlanRunJobResult, RunPlanJob } from './plans.types';
+import { WORKTREE_TRACKER_TOKEN } from '@openthrottle/nestjs-worktrees';
+import type {
+  ChildProcessMetrics,
+  WallClockMetrics,
+} from '@openthrottle/openthrottle-agentic-utils';
+import type { ChildProcess } from 'child_process';
+import { spawn as nodeSpawn } from 'child_process';
+import type { Readable } from 'stream';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { PlanEnqueueService } from '../../graphql/plans/plan-enqueue/plan-enqueue.service.ts';
+import { PlanStatusService } from '../../graphql/plans/plan-status.service.ts';
+import { SettleRunLedgerService } from '../../graphql/work-ledger/settle-run-ledger.service.ts';
+import { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account.service.ts';
+import { ProcessMetricsService } from '../../metrics/process-metrics.service.ts';
+import type { EnhancedTaskRunMetrics } from '../../metrics/process-metrics.types.ts';
+import { NotificationsService } from '../../notifications/notifications.service.ts';
+import { AgenticRalphOrchestratorService } from '../agentic-ralph/agentic-ralph-orchestrator.service.ts';
+import { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.service.ts';
+import { WorkflowLifecycleDispatcherFactory } from '../plan-lifecycle-hooks/workflow-lifecycle-dispatcher.service.ts';
+import { PlanRunCancellationService } from './plan-run-cancellation.service.ts';
 import {
   PLANS_QUEUE_NAME,
   PLANS_WORKER_LOCK_DURATION_MS,
   PLANS_WORKER_MAX_STALLED_COUNT,
   PLANS_WORKER_STALLED_INTERVAL_MS,
-} from './plans.constants';
-import { PlanRunCancellationService } from './plan-run-cancellation.service';
-import { WorkLedgerRunService } from './work-ledger-run.service';
-import { PlansProcessor } from './plans.processor';
-import { WorkflowLifecycleDispatcherFactory } from '../plan-lifecycle-hooks/workflow-lifecycle-dispatcher.service';
+} from './plans.constants.ts';
+import { PlansProcessor } from './plans.processor.ts';
+import type { PlanRunJobResult, RunPlanJob } from './plans.types.ts';
+import { ScheduledPlanRunService } from './scheduled-plan-run.service.ts';
+import { UsageLimitResumeService } from './usage-limit-resume/usage-limit-resume.service.ts';
+import { WorkLedgerRunService } from './work-ledger-run.service.ts';
 
 /** @nestjs/bullmq Worker options metadata key (from bull.constants WORKER_METADATA). Used to assert stalled-job recovery options. */
 const WORKER_METADATA_KEY = 'bullmq:worker_metadata';
@@ -134,7 +144,25 @@ const mockRunPlanOrchestratorJob = vi.fn().mockResolvedValue({
   status: 'finished',
 });
 
+const mockFindPlanIdsWithLiveDetachedRun = vi
+  .fn()
+  .mockResolvedValue(new Set<string>());
 const mockRecordHeartbeatByJob = vi.fn().mockResolvedValue(1);
+const mockSettleRunByJob = vi.fn().mockResolvedValue(null);
+const mockRecordSettledRunArtifacts = vi.fn().mockResolvedValue(undefined);
+/** Default: no plan_runs row for the job (a legacy job), so admission lets it run as it always did. */
+const mockFindByQueueNameAndBullmqJobId = vi.fn().mockResolvedValue(null);
+const mockMarkRunStarted = vi.fn().mockResolvedValue(0);
+const mockFindScheduledRunsWithJob = vi.fn().mockResolvedValue([]);
+const mockFireScheduledRun = vi.fn().mockResolvedValue({ kind: 'fire' });
+const mockReprojectScheduledRun = vi
+  .fn()
+  .mockResolvedValue({ jobId: 'scheduled-plan-run-x' });
+const mockEmitQueueJobCompleted = vi.fn();
+const mockHandleUsageLimited = vi.fn().mockResolvedValue({
+  message: `Plan paused: usage limit reached — resumes at 2026-11-01T17:01:00.000Z`,
+  outcome: 'resumed',
+});
 
 const mockSpawn = vi.mocked(nodeSpawn);
 
@@ -150,7 +178,6 @@ const mockWorktreeTracker = {
 const mockRepoUpdate = vi.fn().mockResolvedValue(undefined);
 const mockRepoFind = vi.fn().mockResolvedValue([]);
 const mockTaskRepoFindOne = vi.fn().mockResolvedValue(null);
-const mocksyncParentPlanStatus = vi.fn().mockResolvedValue(false);
 /** Default: plan is COMPLETED so job completed message is success. Override to { status: 'IN_PROGRESS' } to test iteration-limit notification. */
 const mockRepoFindOne = vi.fn().mockResolvedValue({ status: 'COMPLETED' });
 const mockPlansService = createMock<PlansService>({
@@ -168,8 +195,25 @@ const mockTasksService = createMock<TasksService>({
       find: vi.fn().mockResolvedValue([]),
       findOne: mockTaskRepoFindOne,
     }),
-  syncParentPlanStatus: mocksyncParentPlanStatus,
 });
+
+// The plans.status write chokepoint and the background-writer service-account lookup, both now
+// injected into PlansProcessor in place of the old direct repo.update/TasksService.syncParentPlanStatus
+// writes. Mocked wholesale here — PlanStatusService's own race/capture behaviour is covered by
+// plan-status.service.test.ts.
+const mockPromoteParentPlanToInProgress = vi.fn().mockResolvedValue(false);
+const mockWriteGuardedStatus = vi.fn().mockResolvedValue(true);
+const mockPlanStatusService = createMock<PlanStatusService>({
+  promoteParentPlanToInProgress: mockPromoteParentPlanToInProgress,
+  writeGuardedStatus: mockWriteGuardedStatus,
+});
+const mockResolveStatusChangeSystemAccountId = vi
+  .fn()
+  .mockResolvedValue('status-change-system-account-id');
+const mockStatusChangeSystemAccountService =
+  createMock<StatusChangeSystemAccountService>({
+    resolveId: mockResolveStatusChangeSystemAccountId,
+  });
 
 const snapshotStub = {
   cpuSystemMs: 10,
@@ -202,10 +246,15 @@ const mockPlansQueue = {
 
 describe('PlansProcessor', () => {
   let processor: PlansProcessor;
+  let planRunCancellation: PlanRunCancellationService;
   let mockJob: RunPlanJob;
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    mockFindByQueueNameAndBullmqJobId.mockResolvedValue(null);
+    mockMarkRunStarted.mockResolvedValue(0);
+    mockFindScheduledRunsWithJob.mockResolvedValue([]);
+    mockFireScheduledRun.mockResolvedValue({ kind: 'fire' });
     process.env.OPENTHROTTLE_LIFECYCLE_HOOKS_CHILD_JOBS = 'false';
     mockJob = createMock<RunPlanJob>({
       data: {
@@ -255,19 +304,43 @@ describe('PlansProcessor', () => {
         },
         {
           provide: NotificationsService,
-          useValue: createMock<NotificationsService>(),
+          useValue: createMock<NotificationsService>({
+            emitQueueJobCompleted: mockEmitQueueJobCompleted,
+          }),
+        },
+        // The real fire-time/boot-reconcile service, over a mocked enqueue pipeline: the processor
+        // tests below see the whole fire path (decision -> notification -> no side effects).
+        ScheduledPlanRunService,
+        {
+          provide: PlanEnqueueService,
+          useValue: createMock<PlanEnqueueService>({
+            fireScheduledRun: mockFireScheduledRun,
+            reprojectScheduledRun: mockReprojectScheduledRun,
+          }),
         },
         {
           provide: PlanRunsService,
           useValue: createMock<PlanRunsService>({
             clearRunLocation: vi.fn().mockResolvedValue(0),
-            markRunStarted: vi.fn().mockResolvedValue(0),
+            findByQueueNameAndBullmqJobId: mockFindByQueueNameAndBullmqJobId,
+            findPlanIdsWithLiveDetachedRun: mockFindPlanIdsWithLiveDetachedRun,
+            findScheduledRunsWithJob: mockFindScheduledRunsWithJob,
+            markRunStarted: mockMarkRunStarted,
             recordHeartbeatByJob: mockRecordHeartbeatByJob,
+            settleRunByJob: mockSettleRunByJob,
           }),
         },
         {
           provide: PlansService,
           useValue: mockPlansService,
+        },
+        {
+          provide: PlanStatusService,
+          useValue: mockPlanStatusService,
+        },
+        {
+          provide: StatusChangeSystemAccountService,
+          useValue: mockStatusChangeSystemAccountService,
         },
         {
           provide: TasksService,
@@ -302,16 +375,29 @@ describe('PlansProcessor', () => {
           }),
         },
         {
+          provide: UsageLimitResumeService,
+          useValue: createMock<UsageLimitResumeService>({
+            handle: mockHandleUsageLimited,
+          }),
+        },
+        {
           provide: WorkLedgerRunService,
           useValue: createMock<WorkLedgerRunService>({
             closeRalphSession: vi.fn().mockResolvedValue(undefined),
             openRalphSession: vi.fn().mockResolvedValue(null),
           }),
         },
+        {
+          provide: SettleRunLedgerService,
+          useValue: createMock<SettleRunLedgerService>({
+            recordSettledRunArtifacts: mockRecordSettledRunArtifacts,
+          }),
+        },
       ],
     }).compile();
 
     processor = mod.get(PlansProcessor);
+    planRunCancellation = mod.get(PlanRunCancellationService);
   });
 
   it('should be defined', () => {
@@ -332,10 +418,16 @@ describe('PlansProcessor', () => {
   it('should set plan status to IN_PROGRESS when job starts', async () => {
     await processor.process(mockJob);
 
-    expect(mockRepoUpdate).toHaveBeenCalledTimes(1);
-    expect(mockRepoUpdate).toHaveBeenCalledWith(
-      { id: mockJob.data.planId },
-      { status: 'IN_PROGRESS' },
+    // Routed through the applyStatusChange chokepoint (PlanStatusService), attributed to the
+    // status-change-system service account, in place of the old bare repo.update.
+    expect(mockPromoteParentPlanToInProgress).toHaveBeenCalledTimes(1);
+    expect(mockPromoteParentPlanToInProgress).toHaveBeenCalledWith(
+      mockJob.data.planId,
+      {
+        actorKind: 'service_account',
+        actorSub: 'status-change-system-account-id',
+      },
+      false,
     );
   });
 
@@ -555,6 +647,194 @@ describe('PlansProcessor', () => {
     });
   });
 
+  describe('plan_runs status settle on the three processOrchestrator exits', () => {
+    it('settles the row to COMPLETED on orchestrator success', async () => {
+      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+        exitCode: 0,
+        reason: 'workflow_tasks_exhausted',
+        status: 'finished',
+      });
+
+      await processor.process(mockJob);
+
+      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        'job-1',
+        PLAN_RUN_STATUS.COMPLETED,
+      );
+    });
+
+    it('settles COMPLETED (not FAILED) when the outcome is workflow_complete_handoff_owed and keeps the reason visible', async () => {
+      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+        exitCode: 0,
+        reason: 'workflow_complete_handoff_owed',
+        status: 'finished',
+      });
+
+      await processor.process(mockJob);
+
+      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        'job-1',
+        PLAN_RUN_STATUS.COMPLETED,
+      );
+
+      const notifications = getProcessorNotifications(processor);
+      expect(notifications.emitQueueJobCompleted).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.stringContaining('workflow_complete_handoff_owed'),
+          severity: 'warning',
+        }),
+      );
+    });
+
+    it('records settle-run ledger artifacts when the orchestrator returns headSha and prNumber', async () => {
+      const settledRun = {
+        id: 'plan-run-1',
+        status: PLAN_RUN_STATUS.COMPLETED,
+      };
+      mockSettleRunByJob.mockResolvedValueOnce(settledRun);
+      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+        exitCode: 0,
+        headSha: 'deadbeef',
+        prNumber: 42,
+        reason: 'workflow_complete',
+        status: 'finished',
+      });
+
+      await processor.process(mockJob);
+
+      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        'job-1',
+        PLAN_RUN_STATUS.COMPLETED,
+      );
+      expect(mockRecordSettledRunArtifacts).toHaveBeenCalledWith({
+        headSha: 'deadbeef',
+        planRun: settledRun,
+        prNumber: 42,
+      });
+    });
+
+    it('settles the row to FAILED when the orchestrator outcome is failed', async () => {
+      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+        exitCode: 1,
+        reason: 'workflow_error',
+        status: 'failed',
+      });
+
+      await processor.process(mockJob);
+
+      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        'job-1',
+        PLAN_RUN_STATUS.FAILED,
+      );
+    });
+
+    it('settles the row to CANCELLED when the orchestrator outcome is cancelled', async () => {
+      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+        exitCode: 0,
+        reason: 'workflow_cancelled',
+        status: 'finished',
+      });
+
+      await processor.process(mockJob);
+
+      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        'job-1',
+        PLAN_RUN_STATUS.CANCELLED,
+      );
+    });
+
+    it('never writes STALE from the processor', async () => {
+      await processor.process(mockJob);
+
+      for (const call of mockSettleRunByJob.mock.calls) {
+        expect(call[2]).not.toBe(PLAN_RUN_STATUS.STALE);
+      }
+    });
+
+    it('stops the heartbeat timer before the terminal settle write lands', async () => {
+      vi.useFakeTimers();
+      mockRecordHeartbeatByJob.mockClear();
+      mockSettleRunByJob.mockClear();
+
+      // Delay the after-run-hooks/notify pipeline (which runs after the terminal
+      // settle write) so a heartbeat tick landing in that window would prove the
+      // timer was still armed when the terminal write happened.
+      let resolveHooks!: () => void;
+      mockRunAfterRunHooksThenNotify.mockImplementationOnce(
+        () =>
+          new Promise<void>((resolve) => {
+            resolveHooks = resolve;
+          }),
+      );
+
+      const run = processor.process(mockJob);
+
+      // Let the orchestrator promise (resolved synchronously) settle the row, then
+      // advance well past a heartbeat interval while the hooks pipeline is stalled.
+      await vi.advanceTimersByTimeAsync(0);
+      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        'job-1',
+        PLAN_RUN_STATUS.COMPLETED,
+      );
+
+      mockRecordHeartbeatByJob.mockClear();
+      await vi.advanceTimersByTimeAsync(HEARTBEAT_INTERVAL_MS * 2 + 50);
+      expect(mockRecordHeartbeatByJob).not.toHaveBeenCalled();
+
+      resolveHooks();
+      await run;
+      vi.useRealTimers();
+    });
+  });
+
+  describe('usage-limited outcome (orchestrator path)', () => {
+    const usageLimit = {
+      rateLimitType: 'five_hour',
+      resetsAt: '2026-11-01T17:00:00.000Z',
+    };
+
+    beforeEach(() => {
+      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+        exitCode: 0,
+        reason: 'workflow_usage_limited',
+        status: 'finished',
+        usageLimit,
+      });
+    });
+
+    it('hands the limit to the usage-limit service (which settles USAGE_LIMITED) instead of settling COMPLETED', async () => {
+      await processor.process(mockJob);
+
+      expect(mockHandleUsageLimited).toHaveBeenCalledExactlyOnceWith({
+        jobData: mockJob.data,
+        jobId: 'job-1',
+        limit: usageLimit,
+        planId: '2794d106-95f9-427e-904d-e0f9b5cbe734',
+      });
+      expect(mockSettleRunByJob).not.toHaveBeenCalled();
+    });
+
+    it('emits the service message as a warning, skips after-run hooks, and resolves normally (no BullMQ retry)', async () => {
+      const result = await processor.process(mockJob);
+
+      const notifications = getProcessorNotifications(processor);
+      expect(notifications.emitQueueJobCompleted).toHaveBeenCalledWith({
+        jobType: 'plans',
+        message: `Plan paused: usage limit reached — resumes at 2026-11-01T17:01:00.000Z`,
+        planId: '2794d106-95f9-427e-904d-e0f9b5cbe734',
+        severity: 'warning',
+      });
+      expect(mockRunAfterRunHooksThenNotify).not.toHaveBeenCalled();
+      expect(result.taskRunMetrics).toBeDefined();
+    });
+  });
+
   describe('iteration limit notification (orchestrator path)', () => {
     it('emits warning when Ralph hits max iterations but plan is still IN_PROGRESS', async () => {
       mockRunPlanOrchestratorJob.mockResolvedValueOnce({
@@ -605,7 +885,250 @@ describe('PlansProcessor', () => {
     });
   });
 
+  describe('admission: fire-time policy, settled rows and the guarded claim', () => {
+    const planId = '2794d106-95f9-427e-904d-e0f9b5cbe734';
+    const scheduledFor = new Date('2026-11-01T12:00:00.000Z');
+    const scheduledRun = createMock<PlanRun>({
+      bullmqJobId: 'job-1',
+      id: 'run-scheduled',
+      planId,
+      queueName: PLANS_QUEUE_NAME,
+      scheduledFor,
+      status: 'SCHEDULED',
+    });
+
+    beforeEach(() => {
+      // The Worker is only created by the BullMQ explorer at bootstrap; give the claim a worker id so
+      // markRunStarted is actually reached (otherwise the stamp fails best-effort before calling it).
+      Object.defineProperty(processor, 'worker', {
+        configurable: true,
+        value: { id: 'worker-x' },
+      });
+    });
+
+    /** Every side effect a started run has; a run that is not admitted must have none of them. */
+    const expectNoRunSideEffects = (attach: unknown): void => {
+      expect(attach).not.toHaveBeenCalled();
+      expect(mockMarkRunStarted).not.toHaveBeenCalled();
+      expect(mockRecordHeartbeatByJob).not.toHaveBeenCalled();
+      expect(mockPromoteParentPlanToInProgress).not.toHaveBeenCalled();
+      expect(mockRunBeforeRunHooksAndHandleBlock).not.toHaveBeenCalled();
+      expect(mockRunPlanOrchestratorJob).not.toHaveBeenCalled();
+      expect(mockSettleRunByJob).not.toHaveBeenCalled();
+    };
+
+    it('fires a due scheduled run: the policy claims it (plan/tasks QUEUED) before the worker claims it IN_PROGRESS, then the run proceeds', async () => {
+      mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(scheduledRun);
+      mockMarkRunStarted.mockResolvedValueOnce(1);
+
+      const result = await processor.process(mockJob);
+
+      expect(mockFindByQueueNameAndBullmqJobId).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        'job-1',
+      );
+      expect(mockFireScheduledRun).toHaveBeenCalledWith({
+        actorKind: 'service_account',
+        actorSub: 'status-change-system-account-id',
+        now: expect.any(Date),
+        planId,
+        planRunId: 'run-scheduled',
+      });
+      // fireScheduledRun is where the SCHEDULED -> QUEUED claim and the plan/task QUEUED flip
+      // happen (plan-enqueue.service.test.ts); markRunStarted (QUEUED -> IN_PROGRESS) only after.
+      const [fireOrder] = mockFireScheduledRun.mock.invocationCallOrder;
+      const [claimOrder] = mockMarkRunStarted.mock.invocationCallOrder;
+      expect(fireOrder).toBeLessThan(claimOrder ?? 0);
+      expect(mockPromoteParentPlanToInProgress).toHaveBeenCalledTimes(1);
+      expect(mockRunPlanOrchestratorJob).toHaveBeenCalledTimes(1);
+      expect(mockEmitQueueJobCompleted).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.stringContaining('Scheduled plan run'),
+        }),
+      );
+      expect(result).toHaveProperty('taskRunMetrics');
+    });
+
+    it.each([
+      {
+        kind: 'missed',
+        message: 'Scheduled plan run missed',
+        reason: 'it was 90 minutes late, past the 60-minute grace window',
+      },
+      {
+        kind: 'superseded',
+        message: 'Scheduled plan run superseded',
+        reason: 'the plan already had an active run',
+      },
+    ] as const)(
+      '$kind: the run is settled by the policy, the user is warned, and nothing else happens',
+      async ({ kind, message, reason }) => {
+        const attach = vi.spyOn(planRunCancellation, 'attach');
+        mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(scheduledRun);
+        mockFireScheduledRun.mockResolvedValueOnce({ kind, reason });
+
+        const result = await processor.process(mockJob);
+
+        expect(mockFireScheduledRun).toHaveBeenCalledTimes(1);
+        expect(mockEmitQueueJobCompleted).toHaveBeenCalledWith({
+          jobType: 'plans',
+          message: expect.stringContaining(message),
+          planId,
+          severity: 'warning',
+        });
+        expect(mockEmitQueueJobCompleted).toHaveBeenCalledWith(
+          expect.objectContaining({ message: expect.stringContaining(reason) }),
+        );
+        expectNoRunSideEffects(attach);
+        expect(result).toEqual({
+          taskRunMetrics: { atEnd: snapshotStub, atStart: snapshotStub },
+        });
+      },
+    );
+
+    it('nothing to run: settled, notified as info, and not started', async () => {
+      const attach = vi.spyOn(planRunCancellation, 'attach');
+      mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(scheduledRun);
+      mockFireScheduledRun.mockResolvedValueOnce({
+        kind: 'nothing_to_run',
+        reason: 'the plan had no tasks left to run',
+      });
+
+      await processor.process(mockJob);
+
+      expect(mockEmitQueueJobCompleted).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.stringContaining('Scheduled plan run skipped'),
+          severity: 'info',
+        }),
+      );
+      expectNoRunSideEffects(attach);
+    });
+
+    it('cancel won the race (the conditional SCHEDULED update matched nothing): backs off without starting or notifying', async () => {
+      const attach = vi.spyOn(planRunCancellation, 'attach');
+      mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(scheduledRun);
+      mockFireScheduledRun.mockResolvedValueOnce({ kind: 'not_scheduled' });
+
+      await processor.process(mockJob);
+
+      expect(mockEmitQueueJobCompleted).not.toHaveBeenCalled();
+      expectNoRunSideEffects(attach);
+    });
+
+    it.each(['CANCELLED', 'MISSED', 'SUPERSEDED', 'STALE', 'COMPLETED'])(
+      'a job whose row is already %s is never reopened: no policy call, no claim, no run',
+      async (status) => {
+        const attach = vi.spyOn(planRunCancellation, 'attach');
+        mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(
+          createMock<PlanRun>({ id: 'run-settled', planId, status }),
+        );
+
+        await processor.process(mockJob);
+
+        expect(mockFireScheduledRun).not.toHaveBeenCalled();
+        expectNoRunSideEffects(attach);
+      },
+    );
+
+    it('backs off when the guarded claim matches nothing although a row exists (settled between read and claim)', async () => {
+      const attach = vi.spyOn(planRunCancellation, 'attach');
+      mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(
+        createMock<PlanRun>({ id: 'run-queued', planId, status: 'QUEUED' }),
+      );
+      mockMarkRunStarted.mockResolvedValueOnce(0);
+
+      await processor.process(mockJob);
+
+      expect(mockMarkRunStarted).toHaveBeenCalledTimes(1);
+      expect(attach).not.toHaveBeenCalled();
+      expect(mockPromoteParentPlanToInProgress).not.toHaveBeenCalled();
+      expect(mockRunPlanOrchestratorJob).not.toHaveBeenCalled();
+    });
+
+    it.each(['QUEUED', 'IN_PROGRESS'])(
+      'runs a %s row once the claim succeeds (first pickup, or a BullMQ retry / stall recovery)',
+      async (status) => {
+        mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(
+          createMock<PlanRun>({ id: 'run-1', planId, status }),
+        );
+        mockMarkRunStarted.mockResolvedValueOnce(1);
+
+        await processor.process(mockJob);
+
+        expect(mockFireScheduledRun).not.toHaveBeenCalled();
+        expect(mockRunPlanOrchestratorJob).toHaveBeenCalledTimes(1);
+      },
+    );
+
+    it('still runs when the claim write itself fails (best-effort stamp, as before)', async () => {
+      mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(
+        createMock<PlanRun>({ id: 'run-1', planId, status: 'QUEUED' }),
+      );
+      mockMarkRunStarted.mockRejectedValueOnce(new Error('db blip'));
+
+      await processor.process(mockJob);
+
+      expect(mockRunPlanOrchestratorJob).toHaveBeenCalledTimes(1);
+    });
+
+    it('runs a legacy job with no plan_runs row, as it always did', async () => {
+      await processor.process(mockJob);
+
+      expect(mockMarkRunStarted).toHaveBeenCalledTimes(1);
+      expect(mockRunPlanOrchestratorJob).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('Plan status reconciliation on startup', () => {
+    beforeEach(() => {
+      vi.stubEnv('OT_SCHEDULED_JOBS_OWNER', '');
+      vi.stubEnv('OT_WORKTREE_DB', '');
+    });
+
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
+    it('a shared-DB worktree skips every reconcile — its own queue prefix sees no active jobs', async () => {
+      vi.stubEnv('OT_WORKTREE_DB', 'shared');
+
+      await processor.onModuleInit();
+
+      expect(mockRepoFind).not.toHaveBeenCalled();
+      expect(mockGetJobs).not.toHaveBeenCalled();
+      expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
+      expect(mockPromoteParentPlanToInProgress).not.toHaveBeenCalled();
+      // Nor the scheduled-run reconcile: it would see every delayed job as missing in its own prefix.
+      expect(mockFindScheduledRunsWithJob).not.toHaveBeenCalled();
+      expect(mockReprojectScheduledRun).not.toHaveBeenCalled();
+    });
+
+    it('the owner re-projects a SCHEDULED run whose delayed job is missing, with the time still left', async () => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date('2026-11-01T12:00:00.000Z'));
+      const run = createMock<PlanRun>({
+        bullmqJobId: 'scheduled-plan-run-lost',
+        id: 'run-lost',
+        planId: 'plan-x',
+        scheduledFor: new Date('2026-11-01T13:00:00.000Z'),
+        status: 'SCHEDULED',
+      });
+      mockFindScheduledRunsWithJob.mockResolvedValueOnce([run]);
+
+      try {
+        await processor.onModuleInit();
+      } finally {
+        vi.useRealTimers();
+      }
+
+      expect(mockGetJob).toHaveBeenCalledWith('scheduled-plan-run-lost');
+      expect(mockReprojectScheduledRun).toHaveBeenCalledWith({
+        delayMs: 60 * 60 * 1_000,
+        run,
+      });
+    });
+
     it('resets IN_PROGRESS plans that have no active job to QUEUED', async () => {
       const stuckPlanId = 'a1b2c3d4-in-progress-no-job';
       mockRepoFind.mockResolvedValueOnce([
@@ -615,11 +1138,18 @@ describe('PlansProcessor', () => {
 
       await processor.onModuleInit();
 
-      expect(mockRepoUpdate).toHaveBeenCalledWith(
-        { id: stuckPlanId },
-        { status: 'QUEUED' },
-      );
-      expect(mockRepoUpdate).toHaveBeenCalledTimes(1);
+      // Routed through the applyStatusChange chokepoint (PlanStatusService.writeGuardedStatus),
+      // attributed to the status-change-system service account, in place of the old bare
+      // repo.update.
+      expect(mockWriteGuardedStatus).toHaveBeenCalledWith(stuckPlanId, {
+        actorKind: 'service_account',
+        actorSub: 'status-change-system-account-id',
+        captureFailureIsFatal: false,
+        guardCurrentStatus: 'IN_PROGRESS',
+        requestedStatus: 'QUEUED',
+        throwOnForbiddenInProgress: false,
+      });
+      expect(mockWriteGuardedStatus).toHaveBeenCalledTimes(1);
     });
 
     it('does not reset IN_PROGRESS plan when it has an active job', async () => {
@@ -633,7 +1163,60 @@ describe('PlansProcessor', () => {
 
       await processor.onModuleInit();
 
-      expect(mockRepoUpdate).not.toHaveBeenCalled();
+      expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
+    });
+
+    it('leaves an IN_PROGRESS plan alone when its newest run is a live interactive run', async () => {
+      // An /ot-loop run (register_plan_run) never has a BullMQ job, so "no active job" says
+      // nothing about it. Resetting here flipped a live loop's plan to QUEUED on every restart
+      // (reproduced in OT plan d279cccb task 1).
+      const interactivePlanId = 'plan-with-live-interactive-run';
+      mockRepoFind.mockResolvedValueOnce([
+        { id: interactivePlanId, status: 'IN_PROGRESS', title: 'Looping' },
+      ]);
+      mockGetJobs.mockResolvedValueOnce([]);
+      mockFindPlanIdsWithLiveDetachedRun.mockResolvedValueOnce(
+        new Set([interactivePlanId]),
+      );
+
+      await processor.onModuleInit();
+
+      expect(mockFindPlanIdsWithLiveDetachedRun).toHaveBeenCalledWith([
+        interactivePlanId,
+      ]);
+      expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
+      const notifications = getProcessorNotifications(processor);
+      expect(notifications.emitPlanStatusChanged).not.toHaveBeenCalled();
+    });
+
+    it('still resets a queued-run plan with no active job alongside a live interactive one', async () => {
+      const interactivePlanId = 'plan-with-live-interactive-run';
+      const queuedRunPlanId = 'plan-whose-queued-job-died';
+      mockRepoFind.mockResolvedValueOnce([
+        { id: interactivePlanId, status: 'IN_PROGRESS', title: 'Looping' },
+        { id: queuedRunPlanId, status: 'IN_PROGRESS', title: 'Interrupted' },
+      ]);
+      mockGetJobs.mockResolvedValueOnce([]);
+      mockFindPlanIdsWithLiveDetachedRun.mockResolvedValueOnce(
+        new Set([interactivePlanId]),
+      );
+
+      await processor.onModuleInit();
+
+      expect(mockWriteGuardedStatus).toHaveBeenCalledTimes(1);
+      expect(mockWriteGuardedStatus).toHaveBeenCalledWith(
+        queuedRunPlanId,
+        expect.objectContaining({
+          guardCurrentStatus: 'IN_PROGRESS',
+          requestedStatus: 'QUEUED',
+        }),
+      );
+      const notifications = getProcessorNotifications(processor);
+      expect(notifications.emitPlanStatusChanged).toHaveBeenCalledTimes(1);
+      expect(notifications.emitPlanStatusChanged).toHaveBeenCalledWith({
+        planId: queuedRunPlanId,
+        status: 'QUEUED',
+      });
     });
 
     it('does nothing when no plans are IN_PROGRESS', async () => {
@@ -642,7 +1225,7 @@ describe('PlansProcessor', () => {
       await processor.onModuleInit();
 
       expect(mockGetJobs).not.toHaveBeenCalled();
-      expect(mockRepoUpdate).not.toHaveBeenCalled();
+      expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
     });
 
     it('promotes QUEUED plans that have an IN_PROGRESS task and emits plan status changed', async () => {
@@ -657,11 +1240,18 @@ describe('PlansProcessor', () => {
         planId: divergedPlanId,
         status: 'IN_PROGRESS',
       });
-      mocksyncParentPlanStatus.mockResolvedValueOnce(true);
+      mockPromoteParentPlanToInProgress.mockResolvedValueOnce(true);
 
       await processor.onModuleInit();
 
-      expect(mocksyncParentPlanStatus).toHaveBeenCalledWith(divergedPlanId);
+      expect(mockPromoteParentPlanToInProgress).toHaveBeenCalledWith(
+        divergedPlanId,
+        {
+          actorKind: 'service_account',
+          actorSub: 'status-change-system-account-id',
+        },
+        false,
+      );
       const notifications = getProcessorNotifications(processor);
       expect(notifications.emitPlanStatusChanged).toHaveBeenCalledWith({
         planId: divergedPlanId,
@@ -681,13 +1271,40 @@ describe('PlansProcessor', () => {
         planId: divergedPlanId,
         status: 'IN_PROGRESS',
       });
-      mocksyncParentPlanStatus.mockResolvedValueOnce(false);
+      mockPromoteParentPlanToInProgress.mockResolvedValueOnce(false);
 
       await processor.onModuleInit();
 
-      expect(mocksyncParentPlanStatus).toHaveBeenCalledWith(divergedPlanId);
+      expect(mockPromoteParentPlanToInProgress).toHaveBeenCalledWith(
+        divergedPlanId,
+        {
+          actorKind: 'service_account',
+          actorSub: 'status-change-system-account-id',
+        },
+        false,
+      );
       const notifications = getProcessorNotifications(processor);
       expect(notifications.emitPlanStatusChanged).not.toHaveBeenCalled();
+    });
+
+    it('leaves a QUEUED plan alone when its BullMQ job is delayed (usage-limit resume)', async () => {
+      const pausedPlanId = 'queued-plan-delayed-resume';
+      mockRepoFind
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([
+          { id: pausedPlanId, status: 'QUEUED', title: 'Paused' },
+        ]);
+      mockGetJobs.mockImplementation(async (states: readonly string[]) =>
+        states.includes('delayed') ? [{ data: { planId: pausedPlanId } }] : [],
+      );
+
+      await processor.onModuleInit();
+
+      // The delayed-job guard short-circuits before the IN_PROGRESS-task lookup.
+      expect(mockTaskRepoFindOne).not.toHaveBeenCalled();
+      expect(mockPromoteParentPlanToInProgress).not.toHaveBeenCalled();
+      mockGetJobs.mockReset();
+      mockGetJobs.mockResolvedValue([]);
     });
 
     it('skips QUEUED plans with no IN_PROGRESS tasks', async () => {
@@ -701,7 +1318,7 @@ describe('PlansProcessor', () => {
 
       await processor.onModuleInit();
 
-      expect(mocksyncParentPlanStatus).not.toHaveBeenCalled();
+      expect(mockPromoteParentPlanToInProgress).not.toHaveBeenCalled();
     });
   });
 
@@ -714,10 +1331,17 @@ describe('PlansProcessor', () => {
         job: createMock<RunPlanJob>({ data: { planId }, id: 'job-1' }),
       });
 
-      expect(mockRepoUpdate).toHaveBeenCalledWith(
-        { id: planId },
-        { status: 'QUEUED' },
-      );
+      // Routed through the applyStatusChange chokepoint (PlanStatusService.writeGuardedStatus),
+      // attributed to the status-change-system service account, in place of the old bare
+      // repo.update.
+      expect(mockWriteGuardedStatus).toHaveBeenCalledWith(planId, {
+        actorKind: 'service_account',
+        actorSub: 'status-change-system-account-id',
+        captureFailureIsFatal: false,
+        guardCurrentStatus: undefined,
+        requestedStatus: 'QUEUED',
+        throwOnForbiddenInProgress: false,
+      });
     });
 
     it('onPlanJobFailed does nothing when job has no planId', async () => {
@@ -726,7 +1350,66 @@ describe('PlansProcessor', () => {
         job: createMock<RunPlanJob>({ data: {}, id: 'job-1' }),
       });
 
-      expect(mockRepoUpdate).not.toHaveBeenCalled();
+      expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
+    });
+
+    it('a non-final failed attempt leaves the plan_runs row IN_PROGRESS (no settle write)', async () => {
+      const planId = 'plan-retrying';
+      mockSettleRunByJob.mockClear();
+
+      await processor.onPlanJobFailed({
+        error: new Error('Job failed'),
+        job: createMock<RunPlanJob>({
+          attemptsMade: 1,
+          data: { planId },
+          id: 'job-retry-1',
+          opts: { attempts: 3 },
+        }),
+      });
+
+      expect(mockSettleRunByJob).not.toHaveBeenCalled();
+    });
+
+    it('the final failed attempt settles the plan_runs row to FAILED', async () => {
+      const planId = 'plan-exhausted';
+      mockSettleRunByJob.mockClear();
+
+      await processor.onPlanJobFailed({
+        error: new Error('Job failed'),
+        job: createMock<RunPlanJob>({
+          attemptsMade: 3,
+          data: { planId },
+          id: 'job-retry-1',
+          opts: { attempts: 3 },
+        }),
+      });
+
+      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        'job-retry-1',
+        PLAN_RUN_STATUS.FAILED,
+      );
+    });
+
+    it('treats a job with no configured attempts as final (settles to FAILED)', async () => {
+      const planId = 'plan-no-retry-config';
+      mockSettleRunByJob.mockClear();
+
+      await processor.onPlanJobFailed({
+        error: new Error('Job failed'),
+        job: createMock<RunPlanJob>({
+          attemptsMade: 1,
+          data: { planId },
+          id: 'job-single-attempt',
+          opts: {},
+        }),
+      });
+
+      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        'job-single-attempt',
+        PLAN_RUN_STATUS.FAILED,
+      );
     });
 
     it('onPlanJobStalled resets plan status to QUEUED when job has planId', async () => {
@@ -739,10 +1422,14 @@ describe('PlansProcessor', () => {
       await processor.onPlanJobStalled('job-stalled-1');
 
       expect(mockGetJob).toHaveBeenCalledWith('job-stalled-1');
-      expect(mockRepoUpdate).toHaveBeenCalledWith(
-        { id: planId },
-        { status: 'QUEUED' },
-      );
+      expect(mockWriteGuardedStatus).toHaveBeenCalledWith(planId, {
+        actorKind: 'service_account',
+        actorSub: 'status-change-system-account-id',
+        captureFailureIsFatal: false,
+        guardCurrentStatus: undefined,
+        requestedStatus: 'QUEUED',
+        throwOnForbiddenInProgress: false,
+      });
     });
 
     it('onPlanJobStalled does nothing when job is missing or has no planId', async () => {
@@ -752,7 +1439,7 @@ describe('PlansProcessor', () => {
       await processor.onPlanJobStalled('missing-job');
 
       expect(mockGetJob).toHaveBeenCalledWith('missing-job');
-      expect(mockRepoUpdate).not.toHaveBeenCalled();
+      expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
     });
   });
 

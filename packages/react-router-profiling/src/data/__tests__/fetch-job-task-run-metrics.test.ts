@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
 import { fetchJobTaskRunMetrics } from '../fetch-job-task-run-metrics';
 
 interface MockResponseInit {

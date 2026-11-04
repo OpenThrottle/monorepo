@@ -1,8 +1,9 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
-import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
 import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
-import { DOC_INGESTION_QUEUE_NAME } from './doc-ingestion.constants';
+import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
+
+import { DOC_INGESTION_QUEUE_NAME } from './doc-ingestion.constants.ts';
 
 /**
  * @description Producer half of the doc-ingestion queue: registerQueue

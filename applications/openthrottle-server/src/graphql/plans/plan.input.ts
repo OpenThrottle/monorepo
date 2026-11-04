@@ -4,7 +4,8 @@
 
 import { Field, ID, InputType, Int, registerEnumType } from '@nestjs/graphql';
 import { PLAN_STATUS_LIST } from '@openthrottle/nestjs-repositories';
-import { PlanTaskStatus } from './plan-task-status.enum';
+
+import { PlanTaskStatus } from './plan-task-status.enum.ts';
 
 /**
  * @description Matches {@link RalphNestedDebugCli} for nested `workflow-ralph` spawns.
@@ -215,6 +216,12 @@ export class CancelPlanRunInput {
     description: `Plan id whose in-queue run-plan (Ralph) job should be cancelled`,
   })
   planId!: string;
+
+  @Field(() => ID, {
+    description: `Optional plan_runs id of a SCHEDULED run of this plan. When set, cancels only that run: its delayed job is removed and its row settles CANCELLED, with no effect on any other active run, the plan status or the tasks. Already-settled runs are a no-op; a run that is QUEUED or IN_PROGRESS is rejected (omit planRunId to stop a live run). When omitted, the whole plan is cancelled as before.`,
+    nullable: true,
+  })
+  planRunId?: string | null;
 }
 
 @InputType()
@@ -224,6 +231,12 @@ export class RalphPlanRunTuningInput {
     nullable: true,
   })
   backend?: string | null;
+
+  @Field(() => String, {
+    description: `Reasoning-effort level for the run: "low", "medium", "high", "extraHigh", "max", or "ultra" (the same vocabulary as the chat composer's reasoning). Nullable + additive: omit to leave the run's effort unchanged. An unrecognized level is rejected. Recorded on the run's runConfigSnapshot and forwarded to the agent CLI, where each backend maps it to its own flag (claude --effort, codex -c model_reasoning_effort=, grok --reasoning-effort, opencode --variant), clamping to its accepted set; a backend with no reasoning knob (cursor, gemini, antigravity) ignores it.`,
+    nullable: true,
+  })
+  effort?: string | null;
 
   @Field(() => Int, {
     description: `Per-iteration timeout in seconds (positive integer).`,
@@ -344,6 +357,18 @@ export class EnqueuePlanRunInput {
     nullable: true,
   })
   jobRunHooksJson?: string | null;
+}
+
+/**
+ * Input for {@link PlansResolver.schedulePlanRun}: exactly the {@link EnqueuePlanRunInput} shape plus
+ * the instant the run fires at, so a scheduled run is configured the same way an immediate one is.
+ */
+@InputType()
+export class SchedulePlanRunInput extends EnqueuePlanRunInput {
+  @Field(() => Date, {
+    description: `REQUIRED absolute instant the run fires at (an ISO-8601 DateTime; send UTC or an explicit offset). Must be strictly in the future and no more than 30 days from now (SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS); the server rejects anything else.`,
+  })
+  scheduledFor!: Date;
 }
 
 @InputType()
@@ -476,10 +501,22 @@ export class RegisterCliPlanRunInput {
 /** Input for {@link PlansResolver.settleCliPlanRun}: settle a detached-CLI run on exit. */
 @InputType()
 export class SettleCliPlanRunInput {
+  @Field(() => String, {
+    description: `Branch head sha at PR-open. Recorded as a git_commit artifact on COMPLETED; the verifier maps it to its squash commit once the PR merges. Optional — a run that exits without opening a PR has none.`,
+    nullable: true,
+  })
+  headSha!: string | null;
+
   @Field(() => ID, {
     description: `Plan-run row id to settle (returned by registerCliPlanRun).`,
   })
   planRunId!: string;
+
+  @Field(() => Int, {
+    description: `Number of the PR the run opened. Recorded as a pull_request artifact on COMPLETED — it survives a rebase or amend, which the head sha does not. Optional.`,
+    nullable: true,
+  })
+  prNumber!: number | null;
 
   @Field(() => String, {
     description: `Terminal status to set: COMPLETED, CANCELLED, or FAILED. Normalized to uppercase.`,
@@ -518,7 +555,7 @@ export class RegisterPlanRunWorktreeCheckoutInput {
   filesystemPath!: string;
 
   @Field(() => ID, {
-    description: `Plan-run row id whose checkout_id should be back-filled when still NULL.`,
+    description: `Plan-run row id whose checkout_id (and branch) should be pointed at the linked worktree path.`,
   })
   planRunId!: string;
 }

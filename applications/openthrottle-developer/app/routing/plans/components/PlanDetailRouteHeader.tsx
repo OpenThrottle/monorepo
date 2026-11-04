@@ -1,9 +1,10 @@
-import * as React from 'react';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { NotebookTextIcon } from 'lucide-react';
+import * as React from 'react';
+
+import type { PlanDetailsFragment } from '~/__generated__/graphql';
 import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
 import type { PlanStatusKey } from '~/routing/plans/types';
-import type { PlanDetailsFragment } from '~/__generated__/graphql';
 
 export interface PlanDetailRouteHeaderProps {
   readonly plan: PlanDetailsFragment;

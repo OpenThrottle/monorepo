@@ -1,8 +1,6 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Link } from 'react-router';
 import {
   Badge,
+  cn,
   Table,
   TableBody,
   TableCell,
@@ -10,6 +8,9 @@ import {
   TableHeader,
   TableRow,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import {
   SKILL_PRESENCE_BADGED,
   SKILL_PRESENCE_LABELS,
@@ -67,7 +68,7 @@ export const SkillUsageLeaderboard = (
 
   return (
     <div
-      className={clsx('overflow-x-auto', className)}
+      className={cn('overflow-x-auto', className)}
       data-testid="SkillUsageLeaderboard"
     >
       <Table>
@@ -128,8 +129,8 @@ export const SkillUsageLeaderboard = (
                 className="text-right tabular-nums"
                 title={
                   row.outcomeCount > 0
-                    ? `${row.successCount} success · ${row.abandonedCount} abandoned · ${row.errorCount} error`
-                    : 'No opt-in outcome reported (valid for third-party and uninstrumented skills)'
+                    ? `${row.successCount} success · ${row.errorCount} error — plus ${row.sessionEndedCount} session ended · ${row.abandonedCount} abandoned, which are not outcomes`
+                    : `No outcome reported by this skill. ${row.sessionEndedCount} session ended · ${row.abandonedCount} abandoned — those describe the process, not the work.`
                 }
               >
                 {skillUsageOutcomesLabel(row.outcomeCount, row.count)}

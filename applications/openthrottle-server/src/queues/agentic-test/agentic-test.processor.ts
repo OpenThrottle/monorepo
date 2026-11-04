@@ -2,16 +2,17 @@ import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { runAgenticTestEchoLoop } from './agentic-test-echo';
+import { getOpenThrottleRoot } from '@openthrottle/openthrottle-agentic-utils';
+
 import {
   AGENTIC_TEST_QUEUE_NAME,
   AGENTIC_TEST_WORKER_LOCK_DURATION_MS,
-} from './agentic-test.constants';
+} from './agentic-test.constants.ts';
 import type {
   AgenticTestJob,
   AgenticTestJobResult,
-} from './agentic-test.types';
-import { getOpenThrottleRoot } from '@openthrottle/openthrottle-agentic-utils';
+} from './agentic-test.types.ts';
+import { runAgenticTestEchoLoop } from './agentic-test-echo.ts';
 
 const CONCURRENCY = 1;
 

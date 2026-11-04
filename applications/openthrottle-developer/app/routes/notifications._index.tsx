@@ -1,16 +1,17 @@
-import * as React from 'react';
-import { BellIcon, BellRingIcon } from 'lucide-react';
+import { Separator } from '@openthrottle/react-router-shadcn';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalHeading,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { Separator } from '@openthrottle/react-router-shadcn';
-import { EventSubscriptionsSection } from '~/routing/settings/components/EventSubscriptionsSection';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { NotificationPreferencesSection } from '~/routing/settings/components/NotificationPreferencesSection';
-import { SITE_TITLE } from '~/global/config/settings';
+import { BellIcon, BellRingIcon } from 'lucide-react';
+import * as React from 'react';
+
 import type { Route } from '@/app/routes/+types/notifications._index';
+import { SITE_TITLE } from '~/global/config/settings';
+import { EventSubscriptionsSection } from '~/routing/settings/components/EventSubscriptionsSection';
+import { NotificationPreferencesSection } from '~/routing/settings/components/NotificationPreferencesSection';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

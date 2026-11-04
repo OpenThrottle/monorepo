@@ -33,7 +33,7 @@ import {
   unwrapWorkflowGraphqlResult,
   WorkflowGraphqlError,
 } from '@openthrottle/openthrottle-agentic-ralph';
-import { ralphDebugLogger } from './ralph-debug-logger';
+
 import type {
   CliPlanRunCancelMarker,
   CommitLinkInput,
@@ -45,6 +45,7 @@ import type {
   TaskRow,
 } from './openthrottle-ralph-types';
 import { taskRequirementsFromRow } from './openthrottle-ralph-types';
+import { ralphDebugLogger } from './ralph-debug-logger';
 
 const normalizeStatus = (status: string): string => status.trim().toUpperCase();
 
@@ -94,6 +95,7 @@ export const taskFragmentToRow = (task: TaskFragment): TaskRow => {
     status: task.status,
     title: task.title,
     updatedAt: toIsoString(task.updatedAt),
+    wave: task.wave ?? null,
   };
 };
 
@@ -162,6 +164,32 @@ export async function listPlansByStatusGraphql(
   const result = unwrapWorkflowGraphqlResult(
     await executeWorkflowGraphqlV2(ListPlansByStatusDocument, {
       input: { statuses: [status] },
+    }),
+  );
+
+  return result.listPlansByStatus.plans.map((plan) => ({
+    createdAt: toIsoString(plan.createdAt),
+    id: plan.id,
+    status: plan.status,
+    title: plan.title,
+  }));
+}
+
+/**
+ * Every plan, regardless of status, for callers that need to resolve ids rather
+ * than triage by status.
+ *
+ * Passes `statuses: []` — the documented "no status filter" — NOT a misspelled
+ * singular `status`. That distinction is load-bearing: until the tool schemas
+ * were made strict, a misnamed filter key was silently stripped and the call ran
+ * unfiltered while looking like a correct filtered one.
+ */
+export async function listAllPlansGraphql(
+  limit = 2000,
+): Promise<ListPlansByStatusRow[]> {
+  const result = unwrapWorkflowGraphqlResult(
+    await executeWorkflowGraphqlV2(ListPlansByStatusDocument, {
+      input: { limit, statuses: [] },
     }),
   );
 

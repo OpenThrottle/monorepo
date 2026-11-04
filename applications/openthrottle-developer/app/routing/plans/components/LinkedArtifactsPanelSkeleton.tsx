@@ -1,5 +1,5 @@
-import * as React from 'react';
 import { Skeleton } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 
 /** Placeholder rows shown while the ledger promise is in flight. */
 const PLACEHOLDER_ROWS = 3;

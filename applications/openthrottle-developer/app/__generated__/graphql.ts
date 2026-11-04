@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
+import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = T | null | undefined;
 export type Exact<T extends { [key: string]: unknown }> = {
@@ -87,6 +87,8 @@ export type ActivityOutputChunkRowObject = {
   plan?: Maybe<PlanObject>;
   planId: Scalars['String']['output'];
   planTitle: Scalars['String']['output'];
+  /** Task this chunk is attributed to; null for plan-scoped chunks and historical rows. */
+  taskId?: Maybe<Scalars['String']['output']>;
 };
 
 export type ActivityTaskUpdatedRowObject = {
@@ -230,6 +232,26 @@ export type AgentAssetSearchResult = {
   chunks: Array<AgentAssetChunk>;
 };
 
+export type AgentCliAuthStatusObject = {
+  __typename?: 'AgentCliAuthStatusObject';
+  /** Logged-in account email as reported by `claude auth status`, or null when unknown. No tokens or credential files are read. */
+  accountEmail?: Maybe<Scalars['String']['output']>;
+  /** The credential Claude runs will actually bill: "subscription" (claude.ai login), "apiKey" (ANTHROPIC_API_KEY or a configured key source — it always wins in -p mode), or "none". Derived from `claude auth status` plus the presence (never the value) of ANTHROPIC_API_KEY in the server env. */
+  activeCredential: Scalars['String']['output'];
+  /** True when an API key is active while a subscription login also exists, so runs bill the API key instead of the subscription. */
+  apiKeyOverridesSubscription: Scalars['Boolean']['output'];
+  /** Login method as reported by `claude auth status` (e.g. "claude.ai"), or null when unknown. */
+  authMethod?: Maybe<Scalars['String']['output']>;
+  /** True when `claude auth status` reports a logged-in account. */
+  loggedIn: Scalars['Boolean']['output'];
+  /** Organization name as reported by `claude auth status`, or null when unknown. */
+  organizationName?: Maybe<Scalars['String']['output']>;
+  /** Subscription plan (e.g. "pro", "max", "team") as reported by `claude auth status`, or null when unknown. */
+  subscriptionType?: Maybe<Scalars['String']['output']>;
+  /** A loud, specific sentence when the credential setup needs attention (API key overriding the subscription, or not logged in); null when everything is fine. */
+  warning?: Maybe<Scalars['String']['output']>;
+};
+
 export type AgentCliModelOption = {
   __typename?: 'AgentCliModelOption';
   /** Effective per-user enablement of this model: false when the user disabled this model OR disabled the whole agent (an agent-level OFF hard-overrides every model). Disabled models are hidden from chat/model pickers and rejected when starting new runs. Defaults to true for an unauthenticated request. */
@@ -244,6 +266,8 @@ export type AgentCliOptionObject = {
   __typename?: 'AgentCliOptionObject';
   /** True when this CLI resolves the workspace's committed MCP config (.mcp.json / .cursor/mcp.json / opencode.json), so a run in this checkout can reach openthrottle-mcp. False for codex and gemini, which read only their own config scope (codex: user-scope config.toml; gemini: .gemini/settings.json, never .mcp.json) — for those, MCP reachability is a property of the host and cannot be verified from the workspace, so present it as unverifiable rather than as definitely missing. Distinct from emitting MCP flags: claude, grok, and opencode emit none yet attach fine. */
   attachesWorkspaceMcp: Scalars['Boolean']['output'];
+  /** Logged-in account, subscription plan and active credential, reported by `claude auth status --json` (no OAuth tokens or credential files are read, and no Anthropic endpoint is called). Null for CLIs other than claude, or when the probe failed or timed out. */
+  auth?: Maybe<AgentCliAuthStatusObject>;
   /** Backend discriminator (e.g. "cursor") used in StartConversationStreamInput. */
   backend: Scalars['String']['output'];
   /** True when this driver has a wired streaming chat backend and can be offered as a chat composer backend (false for plan-run-only drivers like codex/grok). */
@@ -395,6 +419,9 @@ export type ArchiveAgentConversationInput = {
   conversationId: Scalars['ID']['input'];
 };
 
+/** The archived post, or BlogPostNotFoundError. */
+export type ArchiveBlogPostResult = BlogPostAdminObject | BlogPostNotFoundError;
+
 export type AssignRoleToServiceAccountInput = {
   roleId: Scalars['ID']['input'];
   serviceAccountId: Scalars['ID']['input'];
@@ -416,6 +443,153 @@ export type AttachWorkSessionSubjectInput = {
   taskId?: InputMaybe<Scalars['ID']['input']>;
 };
 
+export type BlogAdminPostListResult = {
+  __typename?: 'BlogAdminPostListResult';
+  /** Opaque cursor of the last item; pass as `after` to fetch the next page. Null when the page is empty. */
+  endCursor?: Maybe<Scalars['String']['output']>;
+  hasNextPage: Scalars['Boolean']['output'];
+  items: Array<BlogPostAdminObject>;
+};
+
+/** The post in any state, or BlogPostNotFoundError. */
+export type BlogAdminPostResult = BlogPostAdminObject | BlogPostNotFoundError;
+
+export type BlogAuthorObject = {
+  __typename?: 'BlogAuthorObject';
+  avatarUrl?: Maybe<Scalars['String']['output']>;
+  bio?: Maybe<Scalars['String']['output']>;
+  displayName: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+};
+
+export type BlogCoverAltRequiredError = {
+  __typename?: 'BlogCoverAltRequiredError';
+  /** Human-readable explanation. */
+  message: Scalars['String']['output'];
+};
+
+export type BlogPostAdminObject = {
+  __typename?: 'BlogPostAdminObject';
+  author?: Maybe<BlogAuthorObject>;
+  bodyMarkdown: Scalars['String']['output'];
+  coverImageAlt?: Maybe<Scalars['String']['output']>;
+  coverImageUrl?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  excerpt?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  /** Who made the most recent write: a user's name or a service account's name. Null for posts last written before this was recorded. */
+  lastEditedBy?: Maybe<Scalars['String']['output']>;
+  /** When the post goes (or went) live. Null for drafts. A PUBLISHED post with a value in the future is scheduled and not yet publicly visible. */
+  publishedAt?: Maybe<Scalars['DateTime']['output']>;
+  seoDescription?: Maybe<Scalars['String']['output']>;
+  seoTitle?: Maybe<Scalars['String']['output']>;
+  slug: Scalars['String']['output'];
+  /** Derived lifecycle state (DRAFT, SCHEDULED, LIVE, ARCHIVED), computed when the response is built from status and publishedAt. */
+  state: BlogPostState;
+  status: BlogPostStatus;
+  tags: Array<BlogTagObject>;
+  title: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type BlogPostListResult = {
+  __typename?: 'BlogPostListResult';
+  /** Opaque cursor of the last item; pass as `after` to fetch the next page. Null when the page is empty. */
+  endCursor?: Maybe<Scalars['String']['output']>;
+  hasNextPage: Scalars['Boolean']['output'];
+  items: Array<BlogPostObject>;
+};
+
+export type BlogPostNotFoundError = {
+  __typename?: 'BlogPostNotFoundError';
+  /** Human-readable explanation. */
+  message: Scalars['String']['output'];
+};
+
+export type BlogPostObject = {
+  __typename?: 'BlogPostObject';
+  author?: Maybe<BlogAuthorObject>;
+  bodyMarkdown: Scalars['String']['output'];
+  coverImageAlt?: Maybe<Scalars['String']['output']>;
+  coverImageUrl?: Maybe<Scalars['String']['output']>;
+  excerpt?: Maybe<Scalars['String']['output']>;
+  id: Scalars['String']['output'];
+  publishedAt?: Maybe<Scalars['DateTime']['output']>;
+  /** Estimated reading time in whole minutes (~200 words per minute, minimum 1) */
+  readingTimeMinutes: Scalars['Int']['output'];
+  seoDescription?: Maybe<Scalars['String']['output']>;
+  seoTitle?: Maybe<Scalars['String']['output']>;
+  slug: Scalars['String']['output'];
+  tags: Array<BlogTagObject>;
+  title: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type BlogPostPublishPermissionRequiredError = {
+  __typename?: 'BlogPostPublishPermissionRequiredError';
+  /** Human-readable explanation. */
+  message: Scalars['String']['output'];
+};
+
+export type BlogPostStaleWriteError = {
+  __typename?: 'BlogPostStaleWriteError';
+  /** The post's updatedAt now; the value to send as expectedUpdatedAt after reloading. */
+  currentUpdatedAt: Scalars['DateTime']['output'];
+  /** Human-readable explanation. */
+  message: Scalars['String']['output'];
+};
+
+/** Derived lifecycle state of a blog post as the authoring surface shows it. LIVE is the only publicly visible state; SCHEDULED is PUBLISHED with a future publishedAt. */
+export const BlogPostState = {
+  Archived: 'ARCHIVED',
+  Draft: 'DRAFT',
+  Live: 'LIVE',
+  Scheduled: 'SCHEDULED',
+} as const;
+
+export type BlogPostState = (typeof BlogPostState)[keyof typeof BlogPostState];
+/** Lifecycle of a blog post. Only PUBLISHED posts whose publishedAt has passed are publicly visible; a PUBLISHED post with a future publishedAt is scheduled. */
+export const BlogPostStatus = {
+  Archived: 'ARCHIVED',
+  Draft: 'DRAFT',
+  Published: 'PUBLISHED',
+} as const;
+
+export type BlogPostStatus =
+  (typeof BlogPostStatus)[keyof typeof BlogPostStatus];
+/** The kind of record a blog write referenced by slug that does not exist. */
+export const BlogReferenceEntity = {
+  Author: 'AUTHOR',
+  Tag: 'TAG',
+} as const;
+
+export type BlogReferenceEntity =
+  (typeof BlogReferenceEntity)[keyof typeof BlogReferenceEntity];
+export type BlogReferenceNotFoundError = {
+  __typename?: 'BlogReferenceNotFoundError';
+  /** Which kind of record was not found. */
+  entity: BlogReferenceEntity;
+  /** The slug that was not found. */
+  key: Scalars['String']['output'];
+  /** Human-readable explanation. */
+  message: Scalars['String']['output'];
+};
+
+export type BlogSlugConflictError = {
+  __typename?: 'BlogSlugConflictError';
+  /** Human-readable explanation. */
+  message: Scalars['String']['output'];
+  /** The slug that is already taken. */
+  slug: Scalars['String']['output'];
+};
+
+export type BlogTagObject = {
+  __typename?: 'BlogTagObject';
+  description?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+};
+
 /** A subdirectory listed by browseDirectory (server-host path). */
 export type BrowseDirectoryEntryObject = {
   __typename?: 'BrowseDirectoryEntryObject';
@@ -431,6 +605,8 @@ export type BrowseDirectoryEntryObject = {
 export type CancelPlanRunInput = {
   /** Plan id whose in-queue run-plan (Ralph) job should be cancelled */
   planId: Scalars['ID']['input'];
+  /** Optional plan_runs id of a SCHEDULED run of this plan. When set, cancels only that run: its delayed job is removed and its row settles CANCELLED, with no effect on any other active run, the plan status or the tasks. Already-settled runs are a no-op; a run that is QUEUED or IN_PROGRESS is rejected (omit planRunId to stop a live run). When omitted, the whole plan is cancelled as before. */
+  planRunId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type CancelPlanRunResultObject = {
@@ -451,6 +627,16 @@ export type CancelPlanRunResultObject = {
   removedJobIds: Array<Scalars['String']['output']>;
   /** True when an in-flight plan run was signaled to stop (Ralph child receives SIGTERM, then SIGKILL if needed). The BullMQ job may still be active until the worker finishes. */
   signaledActiveRunToStop: Scalars['Boolean']['output'];
+};
+
+export type CaptureHealthRowObject = {
+  __typename?: 'CaptureHealthRowObject';
+  /** Server receipt time of the newest row for this (stream, source). */
+  lastCapturedAt: Scalars['DateTime']['output'];
+  /** Capturing tool, e.g. claude-code, cursor, codex; unknown when the row carries no source. */
+  source: Scalars['String']['output'];
+  /** Ingest stream: skill_events, skill_outcomes or token_usage. */
+  stream: Scalars['String']['output'];
 };
 
 /** Drift detected by refreshCheckout, diffing the new scan against the previous snapshot. */
@@ -597,7 +783,7 @@ export type ConversationStreamChunkObject = {
   error?: Maybe<Scalars['String']['output']>;
   /** Unique id for this chunk (subscription dedupe / cursor). */
   id: Scalars['String']['output'];
-  /** Event kind: text (assistant output) | thinking | tool_call | tool_result | usage | session. */
+  /** Event kind: text (assistant output) | thinking | tool_call | tool_result | usage | usage_limit | session. */
   kind: Scalars['String']['output'];
   /** Assistant message id the deltas accumulate into. */
   messageId: Scalars['String']['output'];
@@ -617,6 +803,27 @@ export type CreateAgentConversationInput = {
   /** Optional title; may be set on first persist turn instead */
   title?: InputMaybe<Scalars['String']['input']>;
 };
+
+export type CreateBlogPostInput = {
+  /** Slug of an existing author (see upsertBlogAuthor). Omit for no byline. */
+  authorSlug?: InputMaybe<Scalars['String']['input']>;
+  bodyMarkdown: Scalars['String']['input'];
+  coverImageAlt?: InputMaybe<Scalars['String']['input']>;
+  coverImageUrl?: InputMaybe<Scalars['String']['input']>;
+  excerpt?: InputMaybe<Scalars['String']['input']>;
+  seoDescription?: InputMaybe<Scalars['String']['input']>;
+  seoTitle?: InputMaybe<Scalars['String']['input']>;
+  /** Lowercase letters, digits and single hyphens (^[a-z0-9]+(-[a-z0-9]+)*$), e.g. "my-first-post". */
+  slug: Scalars['String']['input'];
+  title: Scalars['String']['input'];
+};
+
+/** The new DRAFT post, or why it was not created: the slug is taken, a cover image has no alt text, or the author slug is unknown. */
+export type CreateBlogPostResult =
+  | BlogCoverAltRequiredError
+  | BlogPostAdminObject
+  | BlogReferenceNotFoundError
+  | BlogSlugConflictError;
 
 /** Input for creating a new custom prompt */
 export type CreateCustomPromptInput = {
@@ -714,8 +921,8 @@ export type CreateRolloutFlagInput = {
 };
 
 export type CreateScheduledAgentJobInputType = {
-  /** 5- or 6-field cron pattern (may not fire every minute or sub-minute). */
-  cronPattern: Scalars['String']['input'];
+  /** 5- or 6-field cron pattern (may not fire every minute or sub-minute). Required when scheduleKind is cron (the default); ignored otherwise. */
+  cronPattern?: InputMaybe<Scalars['String']['input']>;
   /**
    * Legacy explicit process cwd for the agent CLI; omit for WORKSPACE_ROOT.
    * @deprecated Use repositoryCheckoutId to target a registered repository checkout; cwd is only consulted when no checkout is set.
@@ -725,6 +932,12 @@ export type CreateScheduledAgentJobInputType = {
   driverId: Scalars['String']['input'];
   /** Whether the schedule starts enabled (default true). */
   enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** For scheduleKind interval: ms from the end of one run to the start of the next; at least 60000. */
+  intervalMs?: InputMaybe<Scalars['Int']['input']>;
+  /** Misfire policy for late fires: skip (default) or catch_up_once. */
+  misfirePolicy?: InputMaybe<Scalars['String']['input']>;
+  /** How late (ms) a fire may start and still run; at least 60000. Omit for 10 minutes. */
+  misfireThresholdMs?: InputMaybe<Scalars['Int']['input']>;
   /** Model preset; omit for the driver default. */
   model?: InputMaybe<Scalars['String']['input']>;
   /** Human-friendly schedule name. */
@@ -733,6 +946,10 @@ export type CreateScheduledAgentJobInputType = {
   prompt: Scalars['String']['input'];
   /** Registered repository checkout to run in; must belong to the caller. Takes precedence over cwd. Omit for the legacy cwd / WORKSPACE_ROOT fallback. */
   repositoryCheckoutId?: InputMaybe<Scalars['ID']['input']>;
+  /** For scheduleKind once: when to run, as ISO 8601 with an offset (e.g. 2026-11-03T09:00:00-08:00 or ...Z); must be in the future. */
+  runAt?: InputMaybe<Scalars['String']['input']>;
+  /** How the schedule fires: cron (default), interval or once. */
+  scheduleKind?: InputMaybe<Scalars['String']['input']>;
   /** JSON AgentPromptSettings ({ endpoint?, worktree? }); no endpoint.apiKey. Omit for none. */
   settingsJson?: InputMaybe<Scalars['String']['input']>;
   /** Per-run timeout override in ms; omit for the queue default. */
@@ -777,6 +994,8 @@ export type CreateTaskInput = {
   status?: InputMaybe<Scalars['String']['input']>;
   summary?: InputMaybe<Scalars['String']['input']>;
   title: Scalars['String']['input'];
+  /** Optional. Coarse concurrency layer within the plan: tasks sharing a wave may be worked concurrently. Never 0; NULL (omitted) means unassigned and runs sequentially in sortOrder position. Not consumed for execution yet. */
+  wave?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type CreateTasksInput = {
@@ -800,6 +1019,8 @@ export type CreateTasksItemInput = {
   status?: InputMaybe<Scalars['String']['input']>;
   summary?: InputMaybe<Scalars['String']['input']>;
   title: Scalars['String']['input'];
+  /** Optional. Coarse concurrency layer within the plan: tasks sharing a wave may be worked concurrently. Never 0; NULL (omitted) means unassigned and runs sequentially in sortOrder position. Not consumed for execution yet. */
+  wave?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type CreateTasksResultObject = {
@@ -841,15 +1062,17 @@ export type CustomPromptObject = {
 };
 
 /** Type of custom prompt document */
-export enum CustomPromptType {
-  Agents = 'AGENTS',
-  Commands = 'COMMANDS',
-  Personas = 'PERSONAS',
-  Prompts = 'PROMPTS',
-  Rules = 'RULES',
-  Skills = 'SKILLS',
-}
+export const CustomPromptType = {
+  Agents: 'AGENTS',
+  Commands: 'COMMANDS',
+  Personas: 'PERSONAS',
+  Prompts: 'PROMPTS',
+  Rules: 'RULES',
+  Skills: 'SKILLS',
+} as const;
 
+export type CustomPromptType =
+  (typeof CustomPromptType)[keyof typeof CustomPromptType];
 export type DailyStatsObject = {
   __typename?: 'DailyStatsObject';
   /** Row created_at. */
@@ -934,6 +1157,23 @@ export type DeleteTaskInput = {
   id: Scalars['ID']['input'];
 };
 
+/** The worktree path a teardown just removed. */
+export type DeregisterWorktreeCheckoutInput = {
+  /** Absolute filesystem path of the removed worktree. Matched as given and by its real path. */
+  filesystemPath: Scalars['String']['input'];
+};
+
+/** Result of deregisterWorktreeCheckout for one removed worktree path. */
+export type DeregisterWorktreeCheckoutPayloadObject = {
+  __typename?: 'DeregisterWorktreeCheckoutPayloadObject';
+  /** The checkout row at the path, or null when none is registered there for the caller. */
+  checkoutId?: Maybe<Scalars['ID']['output']>;
+  /** PRUNED when the row was deleted; NOT_FOUND when there was nothing to deregister (the normal case for a worktree OpenThrottle never registered). */
+  outcome: PruneWorktreeCheckoutOutcome;
+  /** The registered path when a row matched, else the path as given. */
+  path: Scalars['String']['output'];
+};
+
 export type DetachHookInput = {
   /** Hook task id to detach (delete) */
   hookTaskId: Scalars['ID']['input'];
@@ -1001,20 +1241,25 @@ export type DiscoveredWorktreesObject = {
   __typename?: 'DiscoveredWorktreesObject';
   /** Worktrees found beyond the hard cap and therefore not listed. Always accompanied by a warning — discovery never truncates silently. */
   droppedCount: Scalars['Int']['output'];
+  /** Registered worktree checkouts with no live worktree behind them, ordered by path — rows left behind when a worktree was removed outside OpenThrottle. Matched against every live worktree before the cap, so a capped scan never reports a live one here. */
+  missingCheckouts: Array<MissingWorktreeCheckoutObject>;
   /** Classified non-fatal problems. Empty on a healthy machine — a repository with no worktrees yet reports nothing at all. */
   problems: Array<WorktreeDiscoveryProblemObject>;
   /** Which rung of the ladder produced worktreeRoot; null when no root could be resolved. */
   rootSource?: Maybe<WorktreeRootSource>;
   /** ISO timestamp of this scan. Discovery runs live on every request; there is no cached snapshot. */
   scannedAt: Scalars['String']['output'];
-  /** Every root the scan looked in. worktreeRoot names only the first, which misrepresents a machine whose primaries resolve to several roots. */
+  /** Every root the scan looked in, each carrying the configured baseRoot it sits under and the rung that set it. */
   scannedRoots: Array<ScannedWorktreeRootObject>;
   /**
    * Non-fatal problems as flat sentences, one per entry in problems.
    * @deprecated Use problems — warnings is unclassified free text and cannot be presented per-kind.
    */
   warnings: Array<Scalars['String']['output']>;
-  /** The resolved root that was scanned; null when none could be resolved (no registered primary checkout). When several primaries resolve to different roots, this is the first — every root is still scanned. */
+  /**
+   * The first resolved per-repository folder that was scanned; null when none could be resolved (no registered primary checkout).
+   * @deprecated Use scannedRoots.baseRoot — worktreeRoot is the first primary's <root>/<org>/<repo> folder, not the configured root, and names only one of several.
+   */
   worktreeRoot?: Maybe<Scalars['String']['output']>;
   worktrees: Array<DiscoveredWorktreeObject>;
 };
@@ -1055,15 +1300,17 @@ export type EditorPresenceResultObject = {
 };
 
 /** Whether an editor appears to be installed on the machine hosting the OpenThrottle server. Advisory only — never a gate on enabling an editor. Supported values: installed, not_found, unknown. */
-export enum EditorPresenceState {
+export const EditorPresenceState = {
   /** The probe found the editor on the host. */
-  Installed = 'INSTALLED',
+  Installed: 'INSTALLED',
   /** The probe ran on the user's own machine and did not find the editor. Safe to show as an advisory; still never a reason to disable the editor. */
-  NotFound = 'NOT_FOUND',
+  NotFound: 'NOT_FOUND',
   /** The probe could not be trusted, so nothing is claimed either way — the server is containerized (its filesystem is not the user's), the platform has no verified probe, or the probe failed. Clients must render no hint for this state. */
-  Unknown = 'UNKNOWN',
-}
+  Unknown: 'UNKNOWN',
+} as const;
 
+export type EditorPresenceState =
+  (typeof EditorPresenceState)[keyof typeof EditorPresenceState];
 export type EndWorkSessionInput = {
   /** Session to close */
   sessionId: Scalars['ID']['input'];
@@ -1333,6 +1580,8 @@ export type LastActivityOutputChunkPartObject = {
   __typename?: 'LastActivityOutputChunkPartObject';
   content: Scalars['String']['output'];
   iteration?: Maybe<Scalars['Int']['output']>;
+  /** Task this chunk is attributed to; null for plan-scoped chunks and historical rows. */
+  taskId?: Maybe<Scalars['String']['output']>;
 };
 
 export type LastActivityResultObject = {
@@ -1428,6 +1677,8 @@ export type ListPlanOutputStreamChunksInput = {
   offset?: InputMaybe<Scalars['Int']['input']>;
   /** Plan id to list chunks for */
   planId: Scalars['ID']['input'];
+  /** Return only chunks attributed to this task id. Omit for the whole plan stream (both tagged and untagged chunks). */
+  taskId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type ListPlanSourceObject = {
@@ -1582,6 +1833,29 @@ export type MetricsObjectRecentPlanRunsMetricsArgs = {
   planId: Scalars['ID']['input'];
 };
 
+/** A registered repository_checkouts row of kind worktree that discovery could not match to a live worktree. Reported only — removing the row is the explicit pruneWorktreeCheckouts mutation. */
+export type MissingWorktreeCheckoutObject = {
+  __typename?: 'MissingWorktreeCheckoutObject';
+  /** The orphaned repository_checkouts row. */
+  checkoutId: Scalars['ID']['output'];
+  /** The path as registered. It no longer resolves, so it is not symlink-resolved. */
+  path: Scalars['String']['output'];
+  /** Whether the path is gone or merely is not a worktree. */
+  reason: MissingWorktreeCheckoutReason;
+  /** The repository the row belongs to. */
+  repositoryId: Scalars['ID']['output'];
+};
+
+/** Why a registered worktree checkout has no live worktree behind it. */
+export const MissingWorktreeCheckoutReason = {
+  /** Something exists at the path, but it is not a linked worktree — a husk directory with no .git, or a real clone. */
+  NotAWorktree: 'NOT_A_WORKTREE',
+  /** Nothing exists at the path any more. */
+  PathGone: 'PATH_GONE',
+} as const;
+
+export type MissingWorktreeCheckoutReason =
+  (typeof MissingWorktreeCheckoutReason)[keyof typeof MissingWorktreeCheckoutReason];
 export type ModelEndpointObject = {
   __typename?: 'ModelEndpointObject';
   /** OpenAI-compatible /v1 base URL, e.g. http://localhost:11434/v1. Reflects the server's network vantage point. */
@@ -1624,6 +1898,8 @@ export type Mutation = {
   applyWorkspaceEditorConfiguration: ApplyWorkspaceEditorConfigurationResultObject;
   /** Archive an owned agent conversation (no hard delete in v1). */
   archiveAgentConversation: AgentConversationObject;
+  /** Archive a blog post. It stops being publicly visible; publishedAt is kept. Returns BlogPostNotFoundError for an unknown post. */
+  archiveBlogPost: ArchiveBlogPostResult;
   /** Assign a role to a service account (admin, human only). */
   assignRoleToServiceAccount: Scalars['Boolean']['output'];
   /** Assign a role to a user */
@@ -1631,7 +1907,7 @@ export type Mutation = {
   attachWorkSessionSubject: WorkSessionSubjectObject;
   /** Abort an in-flight streamed turn for an owned conversation. Returns true when a stream was aborted. */
   cancelConversationStream: Scalars['Boolean']['output'];
-  /** Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). */
+  /** Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). Also cancels the plan's SCHEDULED runs (delayed job removed, run settled CANCELLED). With planRunId naming a SCHEDULED run of the plan, cancels ONLY that run (its delayed job and row), leaving any other active run, the plan status and the tasks alone; a planRunId that is already settled is a no-op, and one that is QUEUED or IN_PROGRESS is rejected (omit planRunId to stop a live run). Idempotent: once a scheduled run has fired or settled there is nothing left to cancel. */
   cancelPlanRun: CancelPlanRunResultObject;
   /** Request cancellation of an in-flight run (durable marker + best-effort in-process abort). */
   cancelScheduledAgentJobRun: ScheduledAgentJobRunObject;
@@ -1643,6 +1919,8 @@ export type Mutation = {
   connectMcpConnector: McpConnectorConnectionResultObject;
   /** Create an agent conversation for the authenticated human user. */
   createAgentConversation: AgentConversationObject;
+  /** Create a blog post as a DRAFT. Returns BlogSlugConflictError when the slug is taken, BlogCoverAltRequiredError when a cover image has no alt text, and BlogReferenceNotFoundError for an unknown authorSlug. */
+  createBlogPost: CreateBlogPostResult;
   /** Create a new custom prompt */
   createCustomPrompt: CustomPromptObject;
   /** Create a note */
@@ -1705,6 +1983,8 @@ export type Mutation = {
    * @deprecated Replaced by the repository/checkout model; checkout removal moves to the new surface.
    */
   deleteWorkspaceLocalRepository: Scalars['Boolean']['output'];
+  /** The teardown half of registerPlanRunWorktreeCheckout: called right after a worktree is removed, it deletes the actor's repository_checkouts row at that path so the repositories page stops listing a worktree that no longer exists. Runs the same guards as pruneWorktreeCheckouts — the row is kept (and the outcome says why) while the path is still a live worktree, while an unsettled plan run points at it, or when it is a primary checkout. Never touches the filesystem. Resolves a service-account token through its acting user like registration does; an unresolvable actor reports NOT_FOUND rather than throwing, so a teardown can call this best-effort. */
+  deregisterWorktreeCheckout: DeregisterWorktreeCheckoutPayloadObject;
   /** Detach (delete) a lifecycle hook task by id. Only rows that are hooks (hook_role set) are removable this way. */
   detachHook: Scalars['Boolean']['output'];
   /** Disable a service account (admin, human only). */
@@ -1748,14 +2028,20 @@ export type Mutation = {
   pauseQueue: QueueControlResultObject;
   /** Open the host OS folder dialog and return the chosen absolute server-host path, or null on user-cancel. Guarded by the same same-machine predicate as workspacePickerCapabilities (re-checked before spawning) and bounded by a kill timeout. Does not register anything — the client confirms and calls addWorkspaceFolder. */
   pickFolderNative: PickFolderNativePayloadObject;
-  /** Promote a task into a new, first-class plan. Validates the task is promotable (exists, not a lifecycle hook, not already promoted) then enqueues an async task-promotion job (enqueue-after-validate, idempotency key doubles as the BullMQ job id). The job creates the plan, carries the task's tags, seeds an initial task, closes out the source task (→ SKIPPED + `promoted` tag), and records provenance. Returns the accepted job id; the new plan surfaces via the task-status subscription once the job completes. */
+  /** Promote a task into a new, first-class plan. Validates the task is promotable (exists, not a lifecycle hook, not already promoted) then enqueues an async task-promotion job (enqueue-after-validate, idempotency key doubles as the BullMQ job id). The job creates the plan, carries the task's tags, seeds an initial task, closes out the source task (→ PROMOTED + `promoted` tag), and records provenance. Returns the accepted job id; the new plan surfaces via the task-status subscription once the job completes. */
   promoteTaskToPlan: PromoteTaskToPlanResultObject;
+  /** Delete registered worktree checkout rows whose worktree is gone — the cleanup for discoveredWorktrees.missingCheckouts. Rows only: never touches the filesystem and never deletes a primary checkout. Each id is re-checked server-side and skipped, not failed, when its path is a live worktree or an unsettled plan run still points at it. */
+  pruneWorktreeCheckouts: PruneWorktreeCheckoutsPayloadObject;
+  /** Publish a blog post: sets status PUBLISHED and publishedAt. Without publishedAt the post goes live now; a future publishedAt schedules it. Returns BlogPostNotFoundError for an unknown post. */
+  publishBlogPost: PublishBlogPostResult;
   /** Bump the liveness heartbeat on a detached-CLI run row (from registerCliPlanRun). The CLI calls this on a ~15s timer so a hard crash (SIGKILL/power-loss) leaves a stale heartbeat the reader/sweeper can detect. Keyed on the run id. Returns null when the row no longer exists. */
   recordPlanRunHeartbeat?: Maybe<PlanRunObject>;
   /** Record one harness-captured skill invocation. Args must already be privacy-processed by the client; the server stores them as-sent. The event is attributed to the human user the authenticated principal acts as, resolved server-side — a userId is never accepted from the client, and stays null when the principal resolves to no one. */
   recordSkillUsage: SkillUsageEventObject;
   /** Record one opt-in outcome/duration enrichment for a skill we author. Correlates to a harness start by sessionId + skillName. Additive to PreToolUse capture — never a replacement. Missing outcomes are a valid state. */
   recordSkillUsageOutcome: SkillUsageOutcomeObject;
+  /** Batch-ingest hook-captured token usage rows (at most 500). Rows are attributed to the human user the authenticated principal acts as (human JWT, or a service account's acting user); a userId is never accepted from the client. Idempotent: rows whose (source, sessionId, requestId) already exist are skipped. created_at is the row's occurredAt, not ingest time. Any invalid row rejects the whole batch with BAD_REQUEST naming the row index. */
+  recordTokenUsage: RecordTokenUsageResultObject;
   recordWorkArtifact: WorkArtifactObject;
   /** Re-run inspection on an owned checkout and surface drift (path missing, remote changed, branch moved). */
   refreshCheckout: RefreshCheckoutPayloadObject;
@@ -1763,7 +2049,7 @@ export type Mutation = {
   register: RegisterResultObject;
   /** Register a detached workflow-ralph CLI run as a first-class plan_runs row (bullmqJobId NULL, runKind 'orchestrator', status IN_PROGRESS) so cancelPlanRun has a row to stamp the durable cancel marker on. Creates NO BullMQ job. The CLI calls this on start, polls the marker each iteration boundary, and settles the row via settleCliPlanRun on exit. */
   registerCliPlanRun: PlanRunObject;
-  /** Best-effort register of a linked git worktree as a repository_checkout for the run actor, then back-fill plan_runs.checkout_id when still NULL. Soft-fails (returns the run unchanged) when the path is not a linked worktree, repository resolution fails, or upsert errors. The actor resolves through its acting user, so a service-account token (the MCP) works when the account is linked to one; an unlinked account resolves to null and soft-fails like any other unresolvable actor. Returns null when the plan-run row does not exist. */
+  /** Best-effort register of a linked git worktree as a repository_checkout for the run actor, then point plan_runs.checkout_id and branch at that worktree (overwrites a scheduling-time primary checkout). Soft-fails (returns the run unchanged) when the path is not a linked worktree, repository resolution fails, or upsert errors. The actor resolves through its acting user, so a service-account token (the MCP) works when the account is linked to one; an unlinked account resolves to null and soft-fails like any other unresolvable actor. Returns null when the plan-run row does not exist. */
   registerPlanRunWorktreeCheckout?: Maybe<PlanRunObject>;
   /** Remove a permission from a role */
   removePermissionFromRole: Scalars['Boolean']['output'];
@@ -1801,6 +2087,8 @@ export type Mutation = {
   revokeServiceAccountCredential: Scalars['Boolean']['output'];
   /** Enqueue an immediate one-off run (owner only); allowed even when the schedule is disabled. */
   runScheduledAgentJobNow: ScheduledAgentJobRunObject;
+  /** Schedule a plan run for a later instant: the enqueuePlanRun input plus scheduledFor. Records a SCHEDULED plan_runs row with a frozen run config snapshot and a delayed job that starts it. scheduledFor must be in the future and within 30 days (SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS). Does not change the plan or task statuses (the plan stays as it is until the run fires). Cancel with cancelPlanRun (pass planRunId to cancel just this run). */
+  schedulePlanRun: SchedulePlanRunResultObject;
   /** Relay one ~250ms chunk of base64-encoded 16kHz mono Int16 PCM to the session's WhisperLive connection. Executed over the same authenticated graphql-ws socket as the subscription. Returns false (no throw) for unauthenticated, unknown, foreign, or already-stopping sessions. */
   sendTranscriptionAudioChunk: Scalars['Boolean']['output'];
   /** Enable or disable an agent CLI backend for the current user. A disabled agent is hidden from chat/model pickers and rejected when starting new runs. Presence-as-disabled: enabled=false records the preference, enabled=true clears it (default is enabled). Gated by SETTINGS_WRITE, in parity with install/update; rejects unknown backends. */
@@ -1811,6 +2099,8 @@ export type Mutation = {
   setAgentModelFavorite: SetAgentModelFavoriteResult;
   /** Bulk enable or disable EVERY model of an agent CLI backend for the current user (the select-all / deselect-all affordance). enabled=true clears all per-model disables for the backend; enabled=false records each supplied model id as disabled. An agent-level OFF still hard-overrides all its models. Gated by SETTINGS_WRITE; rejects unknown backends. */
   setAgentModelsEnabled: SetAgentModelsEnabledResult;
+  /** Replace the full set of tags on a blog post by tag slug. A caller holding only blog:draft may tag DRAFT posts; for any other post it gets BlogPostPublishPermissionRequiredError. Also returns BlogPostNotFoundError and BlogReferenceNotFoundError (unknown tag slug). */
+  setBlogPostTags: SetBlogPostTagsResult;
   /** Enable or disable the authenticated user's connection for a connector. */
   setMcpConnectorEnabled?: Maybe<McpConnectorConnectionResultObject>;
   /** Set a plan's status (e.g. COMPLETED). Convenience mutation for Mark Complete; equivalent to updatePlan with { id, status }. */
@@ -1837,10 +2127,14 @@ export type Mutation = {
   triggerDevJsonlLogSample: Scalars['Boolean']['output'];
   /** Trigger a test websocket notification (system.alert). Returns true when the event was emitted. Use from the web app to verify the notification flow end-to-end. */
   triggerWebsocketNotification: Scalars['Boolean']['output'];
+  /** Return a blog post to DRAFT and clear its publishedAt. It stops being publicly visible immediately. Returns BlogPostNotFoundError for an unknown post. */
+  unpublishBlogPost: UnpublishBlogPostResult;
   /** Update an allowlisted agent CLI on the server host by driver id. Gated by SETTINGS_WRITE and the default-off OT_AGENT_CLI_INSTALL_ENABLED flag; returns a runId to stream via agentSetupChunkAdded. */
   updateAgentCli: StartAgentSetupResult;
   /** Update the title on an owned agent conversation. */
   updateAgentConversationTitle: AgentConversationObject;
+  /** Partially update a blog post. A caller holding only blog:draft may edit DRAFT posts; for any other post it gets BlogPostPublishPermissionRequiredError. Also returns BlogPostNotFoundError, BlogSlugConflictError, BlogCoverAltRequiredError, BlogReferenceNotFoundError (unknown authorSlug) and, when expectedUpdatedAt no longer matches, BlogPostStaleWriteError. */
+  updateBlogPost: UpdateBlogPostResult;
   /** Update an existing custom prompt */
   updateCustomPrompt?: Maybe<CustomPromptObject>;
   /** Update a note */
@@ -1872,6 +2166,10 @@ export type Mutation = {
   updateWorkspaceLocalRepository: WorkspaceLocalRepositoryObject;
   /** Update contact fields and/or enabled editors on the authenticated user's workspace profile. */
   updateWorkspaceProfile: UserWorkspaceProfileObject;
+  /** Create the blog author with this slug, or replace its fields if it exists. */
+  upsertBlogAuthor: BlogAuthorObject;
+  /** Create the blog tag with this slug, or replace its fields if it exists. */
+  upsertBlogTag: BlogTagObject;
   /** Create or update a project's rule set, setting its posture ("allow" | "deny"). Idempotent per project. */
   upsertSkillAvailabilityRuleSet: SkillAvailabilityRuleSetObject;
   /** Create or update a tag→action rule. The JSON payload is validated against the action type's schema. */
@@ -1938,6 +2236,10 @@ export type MutationArchiveAgentConversationArgs = {
   input: ArchiveAgentConversationInput;
 };
 
+export type MutationArchiveBlogPostArgs = {
+  id: Scalars['ID']['input'];
+};
+
 export type MutationAssignRoleToServiceAccountArgs = {
   input: AssignRoleToServiceAccountInput;
 };
@@ -1976,6 +2278,10 @@ export type MutationConnectMcpConnectorArgs = {
 
 export type MutationCreateAgentConversationArgs = {
   input?: InputMaybe<CreateAgentConversationInput>;
+};
+
+export type MutationCreateBlogPostArgs = {
+  input: CreateBlogPostInput;
 };
 
 export type MutationCreateCustomPromptArgs = {
@@ -2090,6 +2396,10 @@ export type MutationDeleteWorkspaceLocalRepositoryArgs = {
   id: Scalars['ID']['input'];
 };
 
+export type MutationDeregisterWorktreeCheckoutArgs = {
+  input: DeregisterWorktreeCheckoutInput;
+};
+
 export type MutationDetachHookArgs = {
   input: DetachHookInput;
 };
@@ -2166,6 +2476,14 @@ export type MutationPromoteTaskToPlanArgs = {
   input: PromoteTaskToPlanInput;
 };
 
+export type MutationPruneWorktreeCheckoutsArgs = {
+  input: PruneWorktreeCheckoutsInput;
+};
+
+export type MutationPublishBlogPostArgs = {
+  input: PublishBlogPostInput;
+};
+
 export type MutationRecordPlanRunHeartbeatArgs = {
   input: RecordPlanRunHeartbeatInput;
 };
@@ -2176,6 +2494,10 @@ export type MutationRecordSkillUsageArgs = {
 
 export type MutationRecordSkillUsageOutcomeArgs = {
   input: RecordSkillUsageOutcomeInput;
+};
+
+export type MutationRecordTokenUsageArgs = {
+  input: RecordTokenUsageInput;
 };
 
 export type MutationRecordWorkArtifactArgs = {
@@ -2271,6 +2593,10 @@ export type MutationRunScheduledAgentJobNowArgs = {
   id: Scalars['ID']['input'];
 };
 
+export type MutationSchedulePlanRunArgs = {
+  input: SchedulePlanRunInput;
+};
+
 export type MutationSendTranscriptionAudioChunkArgs = {
   audioBase64: Scalars['String']['input'];
   sessionId: Scalars['ID']['input'];
@@ -2298,6 +2624,10 @@ export type MutationSetAgentModelsEnabledArgs = {
   backend: Scalars['String']['input'];
   enabled: Scalars['Boolean']['input'];
   models: Array<Scalars['String']['input']>;
+};
+
+export type MutationSetBlogPostTagsArgs = {
+  input: SetBlogPostTagsInput;
 };
 
 export type MutationSetMcpConnectorEnabledArgs = {
@@ -2332,12 +2662,20 @@ export type MutationStopTranscriptionStreamArgs = {
   sessionId: Scalars['ID']['input'];
 };
 
+export type MutationUnpublishBlogPostArgs = {
+  id: Scalars['ID']['input'];
+};
+
 export type MutationUpdateAgentCliArgs = {
   backend: Scalars['String']['input'];
 };
 
 export type MutationUpdateAgentConversationTitleArgs = {
   input: UpdateAgentConversationTitleInput;
+};
+
+export type MutationUpdateBlogPostArgs = {
+  input: UpdateBlogPostInput;
 };
 
 export type MutationUpdateCustomPromptArgs = {
@@ -2395,6 +2733,14 @@ export type MutationUpdateWorkspaceLocalRepositoryArgs = {
 
 export type MutationUpdateWorkspaceProfileArgs = {
   input: UpdateWorkspaceProfileInput;
+};
+
+export type MutationUpsertBlogAuthorArgs = {
+  input: UpsertBlogAuthorInput;
+};
+
+export type MutationUpsertBlogTagArgs = {
+  input: UpsertBlogTagInput;
 };
 
 export type MutationUpsertSkillAvailabilityRuleSetArgs = {
@@ -2543,13 +2889,17 @@ export type PlanObject = {
   projectRelation?: Maybe<ProjectObject>;
   /** Workflow-ralph run configuration stored on the plan (PlanRunConfigStorage v1). */
   runConfigJson: Scalars['String']['output'];
+  /** The soonest instant a SCHEDULED run of this plan fires at (plan_runs.scheduled_for of its earliest SCHEDULED run); null when none is waiting. Lets the UI explain why a run is already pending ("a run is scheduled for <local time>; cancel it to run now"). Resolved from plan_runs; a run that fired, was cancelled or was settled MISSED/SUPERSEDED no longer counts. */
+  scheduledRunAt?: Maybe<Scalars['DateTime']['output']>;
+  /** The id of the SCHEDULED run behind scheduledRunAt (the same soonest run: earliest scheduled_for, then id); null when none is waiting. Pass it as planRunId to cancelPlanRun to cancel just that run, so the UI can offer Cancel without listing run history. */
+  scheduledRunId?: Maybe<Scalars['ID']['output']>;
   status: Scalars['String']['output'];
   summary?: Maybe<Scalars['String']['output']>;
   /** Tags attached to this plan, alphabetically by tag. */
   tags: Array<PlanTagObject>;
   /** Number of tasks belonging to this plan. Resolved from tasks table. */
   taskCount: Scalars['Int']['output'];
-  /** Number of resolved tasks on this plan (status COMPLETED or SKIPPED). Mirrors client getResolvedTaskCount; SKIPPED counts as done / won't be worked on. */
+  /** Number of resolved tasks on this plan (status COMPLETED, SKIPPED or PROMOTED). Mirrors client getResolvedTaskCount; SKIPPED and PROMOTED count as done / won't be worked on here (PROMOTED continued as its own plan). */
   tasksCompletedCount: Scalars['Int']['output'];
   title: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
@@ -2570,11 +2920,13 @@ export type PlanOutputStreamChunkObject = {
 };
 
 /** Plan-scoped run (default) or task-centric run ("task" requires taskId). */
-export enum PlanRalphWorkflowMode {
-  Plan = 'plan',
-  Task = 'task',
-}
+export const PlanRalphWorkflowMode = {
+  Plan: 'plan',
+  Task: 'task',
+} as const;
 
+export type PlanRalphWorkflowMode =
+  (typeof PlanRalphWorkflowMode)[keyof typeof PlanRalphWorkflowMode];
 export type PlanRefObject = {
   __typename?: 'PlanRefObject';
   /** Full plan UUID the prefix resolved to. */
@@ -2636,12 +2988,20 @@ export type PlanRunObject = {
   /** The run's linked pull request (via the work-ledger session bridge), with lifecycle state and GitHub URL. Null when no PR has been recorded for the run. */
   pullRequest?: Maybe<PlanRunPullRequestObject>;
   queueName: Scalars['String']['output'];
+  /** The usage-limited run this run continues: set on the continuation run enqueued automatically after a Claude usage limit. Null for every ordinary run. */
+  resumeOfRunId?: Maybe<Scalars['String']['output']>;
   /** Resolved workflow-ralph configuration at enqueue (PlanRunConfigSnapshot v1 JSON). Null for legacy runs. */
   runConfigSnapshotJson?: Maybe<Scalars['String']['output']>;
   /** Ralph run implementation: spawn or orchestrator. */
   runKind: Scalars['String']['output'];
+  /** The absolute UTC instant a scheduled run fires at. Set only on runs created by schedulePlanRun (status SCHEDULED while waiting) and kept once the run settles, so history still shows when it was meant to fire. Null for every run that was enqueued to run now. */
+  scheduledFor?: Maybe<Scalars['DateTime']['output']>;
   status: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
+  /** When the usage limit that stopped this run lifts, as reported by the agent CLI. Null unless status is USAGE_LIMITED, or when the CLI reported no reset time. */
+  usageLimitResetsAt?: Maybe<Scalars['DateTime']['output']>;
+  /** Raw name of the usage-limit window that stopped this run (five_hour, seven_day, ...). Null unless status is USAGE_LIMITED, or when the window was not reported. */
+  usageLimitType?: Maybe<Scalars['String']['output']>;
   /** Identifier of the worker instance executing this run. Null when not actively executing. */
   workerId?: Maybe<Scalars['String']['output']>;
 };
@@ -2704,17 +3064,20 @@ export type PlanTagObject = {
 };
 
 /** Canonical plan/task status vocabulary (the Postgres plan_task_status enum). QUEUED is plans-only. Sourced from the shared SSOT so the DB enum, GraphQL schema, and MCP tool contract cannot diverge. */
-export enum PlanTaskStatus {
-  Backlog = 'BACKLOG',
-  Blocked = 'BLOCKED',
-  Canceled = 'CANCELED',
-  Completed = 'COMPLETED',
-  InProgress = 'IN_PROGRESS',
-  Pending = 'PENDING',
-  Queued = 'QUEUED',
-  Skipped = 'SKIPPED',
-}
+export const PlanTaskStatus = {
+  Backlog: 'BACKLOG',
+  Blocked: 'BLOCKED',
+  Canceled: 'CANCELED',
+  Completed: 'COMPLETED',
+  InProgress: 'IN_PROGRESS',
+  Pending: 'PENDING',
+  Promoted: 'PROMOTED',
+  Queued: 'QUEUED',
+  Skipped: 'SKIPPED',
+} as const;
 
+export type PlanTaskStatus =
+  (typeof PlanTaskStatus)[keyof typeof PlanTaskStatus];
 export type PlanUpdatedNotification = NotificationEvent & {
   __typename?: 'PlanUpdatedNotification';
   /** Well-known event name (e.g. task.completed). */
@@ -2773,13 +3136,14 @@ export type PrTimeInStateSummaryObject = {
 };
 
 /** System CPU pressure level interpretation. */
-export enum PressureLevel {
-  High = 'high',
-  Low = 'low',
-  Moderate = 'moderate',
-  Unknown = 'unknown',
-}
+export const PressureLevel = {
+  High: 'high',
+  Low: 'low',
+  Moderate: 'moderate',
+  Unknown: 'unknown',
+} as const;
 
+export type PressureLevel = (typeof PressureLevel)[keyof typeof PressureLevel];
 /** Process metrics snapshot: memory (RSS, heap, external in MB) and CPU (user/system in ms). */
 export type ProcessMetricsSnapshot = {
   __typename?: 'ProcessMetricsSnapshot';
@@ -2893,6 +3257,43 @@ export type PrsMergedPerPeriodObject = {
   period: Scalars['String']['output'];
 };
 
+/** What happened to one requested checkout id. */
+export const PruneWorktreeCheckoutOutcome = {
+  /** No checkout with that id is owned by the caller, or it was deleted concurrently. */
+  NotFound: 'NOT_FOUND',
+  /** The row was deleted. */
+  Pruned: 'PRUNED',
+  /** An unsettled (QUEUED or IN_PROGRESS) plan run still points at this checkout. Settle the run first. */
+  SkippedActiveRun: 'SKIPPED_ACTIVE_RUN',
+  /** The path is a live linked worktree right now, so the row is not stale. */
+  SkippedLive: 'SKIPPED_LIVE',
+  /** The row is a primary checkout. Prune only ever deletes worktree rows. */
+  SkippedPrimary: 'SKIPPED_PRIMARY',
+} as const;
+
+export type PruneWorktreeCheckoutOutcome =
+  (typeof PruneWorktreeCheckoutOutcome)[keyof typeof PruneWorktreeCheckoutOutcome];
+/** The outcome for one requested checkout id. */
+export type PruneWorktreeCheckoutResultObject = {
+  __typename?: 'PruneWorktreeCheckoutResultObject';
+  checkoutId: Scalars['ID']['output'];
+  outcome: PruneWorktreeCheckoutOutcome;
+  /** The registered path, or null when the checkout was not found. */
+  path?: Maybe<Scalars['String']['output']>;
+};
+
+/** Registered worktree checkouts to delete. A request, not evidence: every guard is re-checked server-side. */
+export type PruneWorktreeCheckoutsInput = {
+  /** repository_checkouts ids, typically DiscoveredWorktrees.missingCheckouts. At most 200 distinct ids; duplicates are collapsed. */
+  checkoutIds: Array<Scalars['ID']['input']>;
+};
+
+/** Result of pruneWorktreeCheckouts: one entry per distinct requested id, in request order. */
+export type PruneWorktreeCheckoutsPayloadObject = {
+  __typename?: 'PruneWorktreeCheckoutsPayloadObject';
+  results: Array<PruneWorktreeCheckoutResultObject>;
+};
+
 /** Linux Pressure Stall Information (PSI) for CPU. Null fields on non-Linux platforms. */
 export type PsiCpuMetrics = {
   __typename?: 'PsiCpuMetrics';
@@ -2913,6 +3314,15 @@ export type PsiCpuMetrics = {
   /** Total some stall time in microseconds (cumulative since boot). */
   someTotalUs?: Maybe<Scalars['Float']['output']>;
 };
+
+export type PublishBlogPostInput = {
+  id: Scalars['ID']['input'];
+  /** When the post goes live. Omit (or null) to publish now; a future date schedules the post — it is PUBLISHED but not publicly visible until then. */
+  publishedAt?: InputMaybe<Scalars['DateTime']['input']>;
+};
+
+/** The published (or scheduled) post, or BlogPostNotFoundError. */
+export type PublishBlogPostResult = BlogPostAdminObject | BlogPostNotFoundError;
 
 export type PullListItemObject = {
   __typename?: 'PullListItemObject';
@@ -2938,8 +3348,24 @@ export type Query = {
   activityByDateRange: ActivityByDateResultObject;
   /** Whether server-side agent-CLI install/update is enabled (env flag) and whether the current user may run it (SETTINGS_WRITE). Drives the /settings/agents control gating. */
   agentCliSetupConfig: AgentCliSetupConfigObject;
+  /** Every blog author, ordered by display name. */
+  blogAdminAuthors: Array<BlogAuthorObject>;
+  /** One blog post in any state, by id or by slug (exactly one of the two is required, otherwise the query is rejected). BlogPostNotFoundError when no such post exists. */
+  blogAdminPost: BlogAdminPostResult;
+  /** Every blog post in any state, most recently edited first, with cursor pagination. Optionally filtered to one or more derived states and to a case-insensitive title / slug search. */
+  blogAdminPosts: BlogAdminPostListResult;
+  /** Every blog tag (including tags no live post carries yet), ordered by name. */
+  blogAdminTags: Array<BlogTagObject>;
+  /** A publicly visible blog post by slug. Null for an unknown slug and for any post that is not public (draft, archived, or scheduled in the future). */
+  blogPost?: Maybe<BlogPostObject>;
+  /** Publicly visible blog posts, newest first, with cursor pagination. Optionally filtered to one tag. */
+  blogPosts: BlogPostListResult;
+  /** Blog tags carried by at least one publicly visible post, ordered by name. */
+  blogTags: Array<BlogTagObject>;
   /** Interactive directory listing for the in-app picker: immediate subdirectories (annotated with isGitRepo / alreadyRegistered) plus navigation context (current + parent path, current-is-git-repo). With no path, lists the configured workspace roots as entries. All paths are on the server host. */
   browseDirectory: WorkspaceDirectoryListingObject;
+  /** When telemetry last arrived, per (stream, source): skill_events and skill_outcomes by source, token_usage by provider. A source that is absent has never captured; a stale lastCapturedAt means capture may be broken. */
+  captureHealth: Array<CaptureHealthRowObject>;
   /** Index status for a registered repository: unavailable, indexing, ready, or notIndexed. */
   codeIndexStatus: CodeIndexStatusObject;
   /** Natural-language code semantic search over a registered repository's indexed code. available=false when no embeddings provider is configured. */
@@ -3125,7 +3551,7 @@ export type Query = {
   skillAvailabilityRuleSet?: Maybe<SkillAvailabilityRuleSetObject>;
   /** The authenticated user's skill-tag vocabulary. Seeded from the platform default on first read. */
   skillTagVocabulary: SkillTagVocabularyResult;
-  /** Aggregated skill usage over [start, end] (inclusive YYYY-MM-DD, UTC): top skills (with opt-in outcome stats), ours-vs-third-party split, per-day series, and branch/cwd filter options. Optional scope/gitBranch/cwd/skillName narrow the aggregates. */
+  /** Aggregated skill usage over [start, end] (inclusive YYYY-MM-DD, UTC): top skills (with opt-in outcome stats), the ours / personal / third-party split, per-day series, and branch/cwd filter options. Optional scope/gitBranch/cwd/skillName narrow the aggregates. */
   skillUsage: SkillUsageResultObject;
   /** Git branches present in [start, end] (inclusive YYYY-MM-DD, UTC) for the /usage branch filter: the default branch (main, else master) first, then A-Z. Optional query narrows by case-insensitive substring; limit defaults to 20 and is capped at 50, with hasMore signalling that the search should be narrowed rather than paged. */
   skillUsageGitBranches: SkillUsageGitBranchSearchObject;
@@ -3157,6 +3583,7 @@ export type Query = {
   workArtifactsByPlan: WorkArtifactListResult;
   workArtifactsBySession: WorkArtifactListResult;
   workArtifactsByTask: WorkArtifactListResult;
+  workLedgerCompleteness: WorkLedgerCompletenessResult;
   workSession?: Maybe<WorkSessionObject>;
   workSessionsByPlan: WorkSessionListResult;
   /** List local repositories for the authenticated user. */
@@ -3181,6 +3608,28 @@ export type QueryActivityByDateArgs = {
 
 export type QueryActivityByDateRangeArgs = {
   input: ActivityByDateRangeInput;
+};
+
+export type QueryBlogAdminPostArgs = {
+  id?: InputMaybe<Scalars['ID']['input']>;
+  slug?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type QueryBlogAdminPostsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: Scalars['Int']['input'];
+  search?: InputMaybe<Scalars['String']['input']>;
+  state?: InputMaybe<Array<BlogPostState>>;
+};
+
+export type QueryBlogPostArgs = {
+  slug: Scalars['String']['input'];
+};
+
+export type QueryBlogPostsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: Scalars['Int']['input'];
+  tagSlug?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type QueryBrowseDirectoryArgs = {
@@ -3502,6 +3951,10 @@ export type QueryWorkArtifactsByTaskArgs = {
   input: WorkArtifactsByTaskInput;
 };
 
+export type QueryWorkLedgerCompletenessArgs = {
+  input: WorkLedgerCompletenessInput;
+};
+
 export type QueryWorkSessionArgs = {
   id: Scalars['String']['input'];
 };
@@ -3598,13 +4051,15 @@ export type QueueJobLogEventObject = {
 };
 
 /** Severity bucket for a keyed run-output log event (derived; see field semantics). */
-export enum QueueJobLogLevel {
-  Debug = 'debug',
-  Error = 'error',
-  Info = 'info',
-  Warn = 'warn',
-}
+export const QueueJobLogLevel = {
+  Debug: 'debug',
+  Error: 'error',
+  Info: 'info',
+  Warn: 'warn',
+} as const;
 
+export type QueueJobLogLevel =
+  (typeof QueueJobLogLevel)[keyof typeof QueueJobLogLevel];
 export type QueueJobLogPageObject = {
   __typename?: 'QueueJobLogPageObject';
   events: Array<QueueJobLogEventObject>;
@@ -3643,17 +4098,21 @@ export type QueueStatsObject = {
 };
 
 /** Nested workflow-ralph logging: omit (default CLI/env), --debug, or --verbose. */
-export enum RalphNestedDebugCli {
-  Debug = 'debug',
-  Omit = 'omit',
-  Verbose = 'verbose',
-}
+export const RalphNestedDebugCli = {
+  Debug: 'debug',
+  Omit: 'omit',
+  Verbose: 'verbose',
+} as const;
 
+export type RalphNestedDebugCli =
+  (typeof RalphNestedDebugCli)[keyof typeof RalphNestedDebugCli];
 export type RalphPlanRunTuningInput = {
   /** Execution backend (e.g. cursor). Omit to use worktree defaults. */
   backend?: InputMaybe<Scalars['String']['input']>;
   /** Opt out of the worktree default and run in the base checkout. Omit to get the worktree OpenThrottle derives for the plan; only an explicit true disables it. */
   disableWorktree?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Reasoning-effort level for the run: "low", "medium", "high", "extraHigh", "max", or "ultra" (the same vocabulary as the chat composer's reasoning). Nullable + additive: omit to leave the run's effort unchanged. An unrecognized level is rejected. Recorded on the run's runConfigSnapshot and forwarded to the agent CLI, where each backend maps it to its own flag (claude --effort, codex -c model_reasoning_effort=, grok --reasoning-effort, opencode --variant), clamping to its accepted set; a backend with no reasoning knob (cursor, gemini, antigravity) ignores it. */
+  effort?: InputMaybe<Scalars['String']['input']>;
   /** Per-iteration timeout in seconds (positive integer). */
   iterationTimeoutSeconds?: InputMaybe<Scalars['Int']['input']>;
   /** Max Ralph iterations for this run (positive integer). */
@@ -3702,7 +4161,7 @@ export type RecordSkillUsageInput = {
   privacyLevel?: InputMaybe<Scalars['String']['input']>;
   /** Harness prompt_id when present. */
   promptId?: InputMaybe<Scalars['String']['input']>;
-  /** ours | third-party. */
+  /** ours | personal | third-party. */
   scope: Scalars['String']['input'];
   /** Harness session id when present. */
   sessionId?: InputMaybe<Scalars['String']['input']>;
@@ -3725,14 +4184,64 @@ export type RecordSkillUsageOutcomeInput = {
   occurredAt: Scalars['DateTime']['input'];
   /** success | abandoned | error. */
   outcome: Scalars['String']['input'];
-  /** ours | third-party. Defaults to ours for authored-skill enrichment. */
+  /** ours | personal | third-party. Omitting it defaults to ours — a legacy default for senders that predate the field; every current hook posts an explicit scope. */
   scope?: InputMaybe<Scalars['String']['input']>;
   /** Harness session id — primary correlation key with skillName. */
   sessionId?: InputMaybe<Scalars['String']['input']>;
   /** Skill identifier matching the start event. */
   skillName: Scalars['String']['input'];
+  /** Producer id of the tool/adapter that recorded this outcome (e.g. claude-code, cursor). Stamped by the per-tool skill-usage adapter; matches the start event's source. */
+  source?: InputMaybe<Scalars['String']['input']>;
   /** Optional tool_use_id for tighter start↔outcome correlation. */
   toolUseId?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type RecordTokenUsageInput = {
+  /** Usage rows to ingest, at most 500 per call. The whole batch is rejected (BAD_REQUEST, naming the row index) if any row is invalid. */
+  rows: Array<RecordTokenUsageRowInput>;
+};
+
+export type RecordTokenUsageResultObject = {
+  __typename?: 'RecordTokenUsageResultObject';
+  /** Rows written by this call. */
+  inserted: Scalars['Int']['output'];
+  /** Rows skipped because (source, sessionId, requestId) was already recorded. */
+  skipped: Scalars['Int']['output'];
+};
+
+export type RecordTokenUsageRowInput = {
+  /** Cache-read tokens for the turn, when reported. */
+  cacheReadTokens?: InputMaybe<Scalars['Float']['input']>;
+  /** Cache-creation (cache-write) tokens for the turn, when reported. */
+  cacheWriteTokens?: InputMaybe<Scalars['Float']['input']>;
+  /** Dollar cost of the turn when the producer priced it. When null, the server estimates it at Anthropic list price if the request can be priced exactly. */
+  costUsd?: InputMaybe<Scalars['Float']['input']>;
+  /** Working directory the harness reported. */
+  cwd?: InputMaybe<Scalars['String']['input']>;
+  /** Git branch the harness reported. */
+  gitBranch?: InputMaybe<Scalars['String']['input']>;
+  /** Input/prompt tokens for the turn, when reported. */
+  inputTokens?: InputMaybe<Scalars['Float']['input']>;
+  /** Model the usage is attributed to. Must not be blank. */
+  model: Scalars['String']['input'];
+  /** When the turn happened, as an ISO-8601 timestamp (the transcript timestamp). Stored as created_at, so a late JSONL drain lands on the day the turn actually ran. */
+  occurredAt: Scalars['String']['input'];
+  /** Output/completion tokens for the turn, when reported. */
+  outputTokens?: InputMaybe<Scalars['Float']['input']>;
+  /** Provider identity (for example claude). Must not be blank. */
+  provider: Scalars['String']['input'];
+  /** The raw provider usage payload, JSON-serialized (repo convention: no JSON scalar). Must parse to a JSON object; null to omit. */
+  rawUsageJson?: InputMaybe<Scalars['String']['input']>;
+  /** Reasoning tokens for the turn, when reported separately. */
+  reasoningTokens?: InputMaybe<Scalars['Float']['input']>;
+  /** Provider API request id. With source and sessionId it is the idempotency key: a re-sent row is skipped. A row without one is never deduplicated. */
+  requestId?: InputMaybe<Scalars['String']['input']>;
+  /** The agent harness's own session id. */
+  sessionId?: InputMaybe<Scalars['String']['input']>;
+  /** Producer id of the capturing tool (for example claude-code). Free text; must not be blank. */
+  source: Scalars['String']['input'];
+  /** Total tokens for the turn, when reported. */
+  totalTokens?: InputMaybe<Scalars['Float']['input']>;
 };
 
 export type RecordWorkArtifactInput = {
@@ -3795,7 +4304,7 @@ export type RegisterInput = {
 export type RegisterPlanRunWorktreeCheckoutInput = {
   /** Absolute filesystem path of the resolved worktree for this run. */
   filesystemPath: Scalars['String']['input'];
-  /** Plan-run row id whose checkout_id should be back-filled when still NULL. */
+  /** Plan-run row id whose checkout_id (and branch) should be pointed at the linked worktree path. */
   planRunId: Scalars['ID']['input'];
 };
 
@@ -3971,11 +4480,32 @@ export type RepositoryInspectionGitObject = {
   normalizedRemoteUrl?: Maybe<Scalars['String']['output']>;
 };
 
+/** Whether this checkout can actually produce skill-usage telemetry, and if not why not. Carries no secret: the endpoint URL and auth token never cross this boundary, only whether each resolved and which location supplied it. */
+export type RepositoryInspectionHookTelemetryObject = {
+  __typename?: 'RepositoryInspectionHookTelemetryObject';
+  /** True when an auth token resolved. The token itself is never exposed. */
+  authTokenConfigured: Scalars['Boolean']['output'];
+  /** True when an endpoint resolved. The URL itself is never exposed. */
+  endpointConfigured: Scalars['Boolean']['output'];
+  /** Which location supplied the endpoint: repo_env, process_env, user_env, or none. */
+  endpointSource: Scalars['String']['output'];
+  /** Hook configs found in the checkout, e.g. claude, cursor, codex. Empty means nothing in this checkout wires the hooks up — an OT-orchestrated run still records, since the driver passes --plugin-dir at spawn time. */
+  producers: Array<Scalars['String']['output']>;
+  /** Machine-readable reason for a non-recording status: no_producer, no_endpoint, no_auth_token, or offline_flag. Null when recording. */
+  reason?: Maybe<Scalars['String']['output']>;
+  /** recording, buffering, offline, or not_wired. */
+  status: Scalars['String']['output'];
+  /** Absolute path telemetry buffers to when it cannot be sent. */
+  telemetryDir: Scalars['String']['output'];
+};
+
 /** Cached inspection snapshot for a checkout; disk is the source of truth and this refreshes on view (15-minute TTL) or via refreshCheckout. */
 export type RepositoryInspectionObject = {
   __typename?: 'RepositoryInspectionObject';
   agentConfig: RepositoryInspectionAgentConfigObject;
   git: RepositoryInspectionGitObject;
+  /** Absent on snapshots written before hook-readiness was reported; refresh the checkout to populate it. */
+  hookTelemetry?: Maybe<RepositoryInspectionHookTelemetryObject>;
   scannedAt: Scalars['DateTime']['output'];
   stack: RepositoryInspectionStackObject;
   warnings: Array<Scalars['String']['output']>;
@@ -4061,13 +4591,15 @@ export type RoleObject = {
 };
 
 /** Why a rollout variation was chosen: off | target_roles | fallthrough | flag_not_found. */
-export enum RolloutEvaluationReason {
-  Fallthrough = 'fallthrough',
-  FlagNotFound = 'flag_not_found',
-  Off = 'off',
-  TargetRoles = 'target_roles',
-}
+export const RolloutEvaluationReason = {
+  Fallthrough: 'fallthrough',
+  FlagNotFound: 'flag_not_found',
+  Off: 'off',
+  TargetRoles: 'target_roles',
+} as const;
 
+export type RolloutEvaluationReason =
+  (typeof RolloutEvaluationReason)[keyof typeof RolloutEvaluationReason];
 /** One weighted fallthrough bucket (variation index + integer percent). */
 export type RolloutFallthroughBucketInput = {
   /** Index into the flag's variations array. */
@@ -4099,13 +4631,15 @@ export type RolloutFallthroughObject = {
 };
 
 /** Typed rollout flag kind: boolean | string | number | json. Variation values must match. */
-export enum RolloutFlagKind {
-  Boolean = 'boolean',
-  Json = 'json',
-  Number = 'number',
-  String = 'string',
-}
+export const RolloutFlagKind = {
+  Boolean: 'boolean',
+  Json: 'json',
+  Number: 'number',
+  String: 'string',
+} as const;
 
+export type RolloutFlagKind =
+  (typeof RolloutFlagKind)[keyof typeof RolloutFlagKind];
 /** Admin view of a typed rollout feature flag (kind, variations, allocations). */
 export type RolloutFlagObject = {
   __typename?: 'RolloutFlagObject';
@@ -4169,9 +4703,11 @@ export type RuleApplicationObject = {
 /** One resolved worktree root and what the depth-1 scan of it found. */
 export type ScannedWorktreeRootObject = {
   __typename?: 'ScannedWorktreeRootObject';
+  /** The configured worktree root this directory sits under, before OpenThrottle joins <org>/<repo> onto it — absolute and ~-expanded, on the server host. This is the value to show a person; path is one repository's folder beneath it. Several scanned roots share a baseRoot whenever their repositories share a configured root, so de-duplicate before listing. */
+  baseRoot: Scalars['String']['output'];
   /** Whether the directory is there at all. False is the ordinary state of a repository with no worktrees yet — it is data, not a failure. */
   exists: Scalars['Boolean']['output'];
-  /** Absolute path on the server host. */
+  /** The directory actually scanned: baseRoot joined with the repository's <org>/<repo>. Absolute path on the server host. */
   path: Scalars['String']['output'];
   /** Which rung of the shared ladder resolved this root. */
   source: WorktreeRootSource;
@@ -4179,12 +4715,49 @@ export type ScannedWorktreeRootObject = {
   worktreeCount: Scalars['Int']['output'];
 };
 
-/** A user-defined scheduled agent job: a prompt run with a driver/model/settings on a cron schedule via one shared BullMQ queue. */
+export type SchedulePlanRunInput = {
+  /** REQUIRED git branch this run operates on. Captured on plan_runs.branch as run provenance (powers branch->PR mapping). Passed explicitly by callers (skills/UI may pre-fill a default from the worktree name / HEAD) and never inferred server-side; enqueue fails fast when missing or blank. */
+  branch: Scalars['String']['input'];
+  /** Optional registered checkout id (highest precedence). Resolved server-side to its filesystem path for this run; when set it overrides repositoryId and workingDirectory. */
+  checkoutId?: InputMaybe<Scalars['ID']['input']>;
+  /** Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id instead of creating a duplicate. */
+  idempotencyKey?: InputMaybe<Scalars['String']['input']>;
+  /** Optional JSON override for job-run lifecycle hooks for this enqueue only ({ hooks: [...] }). When omitted, hooks are copied from the plan. Validated against repo paths when workingDirectory is set. */
+  jobRunHooksJson?: InputMaybe<Scalars['String']['input']>;
+  /** Plan id to enqueue a run for */
+  planId: Scalars['ID']['input'];
+  /** Job priority (lower = higher priority). 1=interactive/UI, 10=normal (default), 100=batch/scheduled. Omit to use normal priority. */
+  priority?: InputMaybe<Scalars['Int']['input']>;
+  /** Optional Ralph / workflow-ralph runtime tuning (iterations, model, backend, etc.). When set, queued workers pass these to nested workflow-ralph; when omitted, defaults come from env and .workflow-ralph.json in the worktree cwd. */
+  ralph?: InputMaybe<RalphPlanRunTuningInput>;
+  /** Optional registered repository id. Resolved to the enqueuing user's single checkout of that repository (errors when there is no checkout, or when it is ambiguous). Used when checkoutId is omitted. */
+  repositoryId?: InputMaybe<Scalars['ID']['input']>;
+  /** REQUIRED absolute instant the run fires at (an ISO-8601 DateTime; send UTC or an explicit offset). Must be strictly in the future and no more than 30 days from now (SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS); the server rejects anything else. */
+  scheduledFor: Scalars['DateTime']['input'];
+  /** Optional absolute path to a local project directory used as the working directory for this run. Escape hatch used only when checkoutId and repositoryId are omitted. When all three are omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side. */
+  workingDirectory?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type SchedulePlanRunResultObject = {
+  __typename?: 'SchedulePlanRunResultObject';
+  /** Execution backend selected once for the whole run: cursor or claude. */
+  executionBackend: Scalars['String']['output'];
+  /** BullMQ job id of the delayed job that starts the run (deterministic: scheduled-plan-run-<idempotencyKey | planId-epochMs>). */
+  jobId: Scalars['String']['output'];
+  /** Plan id the run was scheduled for. */
+  planId: Scalars['String']['output'];
+  /** plan_runs id of the SCHEDULED run row (status SCHEDULED until the job fires). */
+  planRunId: Scalars['String']['output'];
+  /** The absolute UTC instant the run fires at. */
+  scheduledFor: Scalars['DateTime']['output'];
+};
+
+/** A user-defined scheduled agent job: a prompt run with a driver/model/settings on a cron, interval or run-once schedule via one shared BullMQ queue. */
 export type ScheduledAgentJobObject = {
   __typename?: 'ScheduledAgentJobObject';
   createdAt: Scalars['DateTime']['output'];
-  /** 5- or 6-field cron pattern. */
-  cronPattern: Scalars['String']['output'];
+  /** 5- or 6-field cron pattern for a cron schedule; null for interval and once schedules. */
+  cronPattern?: Maybe<Scalars['String']['output']>;
   /**
    * Legacy explicit process cwd for the agent CLI, used only when repositoryCheckoutId is null; null then uses WORKSPACE_ROOT.
    * @deprecated Use repositoryCheckoutId to target a registered repository checkout; cwd is only consulted when no checkout is set.
@@ -4195,8 +4768,14 @@ export type ScheduledAgentJobObject = {
   /** Whether the schedule is active (registered as a BullMQ scheduler). */
   enabled: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
+  /** For an interval schedule: ms from the end of one run to the start of the next (elapsed time, so DST-safe). Null for other kinds. */
+  intervalMs?: Maybe<Scalars['Int']['output']>;
   /** Last time a run started. */
   lastRunAt?: Maybe<Scalars['DateTime']['output']>;
+  /** What happens to a fire that starts more than misfireThresholdMs late (server down, or a backed-up queue): skip records it as a missed run; catch_up_once runs the most recent late fire once and records any earlier ones as missed. A fire within the threshold always runs. */
+  misfirePolicy: Scalars['String']['output'];
+  /** How late (ms after its cron slot) a fire may start and still count as on time; at least 60000. */
+  misfireThresholdMs: Scalars['Int']['output'];
   /** Model preset; null uses the driver default. */
   model?: Maybe<Scalars['String']['output']>;
   /** Human-friendly schedule name. */
@@ -4211,6 +4790,10 @@ export type ScheduledAgentJobObject = {
   repository?: Maybe<ScheduledAgentJobRepositoryObject>;
   /** Registered repository checkout this schedule runs in; the server resolves its cwd from this. Null means the legacy cwd / WORKSPACE_ROOT fallback. */
   repositoryCheckoutId?: Maybe<Scalars['ID']['output']>;
+  /** For a once schedule: when its single run is due. Null for other kinds. */
+  runAt?: Maybe<Scalars['DateTime']['output']>;
+  /** How the schedule fires: cron (cronPattern in timezone), interval (intervalMs after the previous run finishes) or once (a single run at runAt, after which the schedule is disabled). */
+  scheduleKind: Scalars['String']['output'];
   /** JSON-serialized AgentPromptSettings ({ endpoint?, worktree? }); endpoint.apiKey is never present. */
   settingsJson: Scalars['String']['output'];
   /** Per-run timeout override in ms; null uses the queue default. */
@@ -4266,16 +4849,24 @@ export type ScheduledAgentJobRunObject = {
   repositoryCheckoutId?: Maybe<Scalars['ID']['output']>;
   /** The exact directory the agent CLI was spawned in for this run, after the checkout -> cwd -> WORKSPACE_ROOT precedence. Authoritative record of where the run happened; null for legacy runs. */
   resolvedCwd?: Maybe<Scalars['String']['output']>;
+  /** The usage_limited run this run continues (trigger resume); null for every ordinary run. */
+  resumeOfRunId?: Maybe<Scalars['ID']['output']>;
   scheduledAgentJobId: Scalars['ID']['output'];
+  /** The slot this run belongs to, for trigger schedule (missed runs included): the cron slot, or when an interval or once fire was due. Null for manual and resume runs and for runs recorded before slot accounting. */
+  scheduledFor?: Maybe<Scalars['DateTime']['output']>;
   /** Effective run settings at execution time (driver/model/run-config), serialized JSON; null for legacy/pre-snapshot runs. Never contains endpoint.apiKey. */
   settingsSnapshotJson?: Maybe<Scalars['String']['output']>;
   startedAt?: Maybe<Scalars['DateTime']['output']>;
-  /** queued | running | succeeded | no_op | failed | cancelled. no_op is terminal and NOT an error: the process exited cleanly but the agent reported it did not do the work. */
+  /** queued | running | succeeded | no_op | failed | cancelled | usage_limited | missed. no_op is terminal and NOT an error: the process exited cleanly but the agent reported it did not do the work. usage_limited is terminal and NOT an error: the agent CLI stopped on a Claude subscription usage limit (see usageLimitResetsAt); a continuation run (trigger resume, resumeOfRunId = this run) may have been enqueued. missed is created terminal: a cron fire the schedule's misfire policy did not run (see scheduledFor and errorMessage); no agent was spawned. */
   status: Scalars['String']['output'];
   /** Total tokens for the run; null when nothing reported. */
   totalTokens?: Maybe<Scalars['Float']['output']>;
-  /** schedule | manual (run-now). */
+  /** schedule (a cron, interval or once fire) | manual (run-now) | resume (delayed continuation of a usage_limited run). */
   trigger: Scalars['String']['output'];
+  /** When the usage limit that stopped this run lifts, as reported by the agent CLI; null when the run was not usage_limited or no reset time was reported. */
+  usageLimitResetsAt?: Maybe<Scalars['DateTime']['output']>;
+  /** Raw usage-limit window that stopped this run (five_hour, seven_day, ...); null when the run was not usage_limited or the window was not reported. */
+  usageLimitType?: Maybe<Scalars['String']['output']>;
 };
 
 /** Aggregate run counts across all scheduled agent jobs: live in-flight totals plus terminal outcomes since a window boundary. */
@@ -4297,8 +4888,34 @@ export type ScheduledAgentJobRunStatsObject = {
   since: Scalars['DateTime']['output'];
   /** Runs that completed successfully inside the window. */
   succeededCount: Scalars['Int']['output'];
+  /** Runs that stopped on a Claude subscription usage limit inside the window. Terminal and NOT a failure; a continuation run may have been enqueued. */
+  usageLimitedCount: Scalars['Int']['output'];
   /** Every run created inside the window, whatever its status — the "ran today" total. */
   windowTotalCount: Scalars['Int']['output'];
+};
+
+/** A scheduled agent job run failed, timed out, or was recorded missed. Sent to alert the schedule's owner. */
+export type ScheduledRunFailedNotification = NotificationEvent & {
+  __typename?: 'ScheduledRunFailedNotification';
+  /** The schedule's owner, who the notice is for. Null for a schedule with no owner. */
+  actorUserId?: Maybe<Scalars['ID']['output']>;
+  /** Well-known event name (e.g. task.completed). */
+  event: Scalars['String']['output'];
+  /** App-relative click-through path. */
+  link?: Maybe<Scalars['String']['output']>;
+  message?: Maybe<Scalars['String']['output']>;
+  /** failed | timed_out | missed */
+  reason: Scalars['String']['output'];
+  /** How many runs the notice covers; above 1 only when a server boot records several missed fires at once. */
+  runCount: Scalars['Int']['output'];
+  /** The run, when the notice covers exactly one run whose id is known. */
+  runId?: Maybe<Scalars['ID']['output']>;
+  scheduleName: Scalars['String']['output'];
+  scheduledAgentJobId: Scalars['ID']['output'];
+  /** info | warning | error | success */
+  severity?: Maybe<Scalars['String']['output']>;
+  /** ISO 8601 timestamp when the event occurred. */
+  timestamp: Scalars['String']['output'];
 };
 
 export type SearchChunk = {
@@ -4438,6 +5055,19 @@ export type SetAgentModelsEnabledResult = {
   enabled: Scalars['Boolean']['output'];
 };
 
+export type SetBlogPostTagsInput = {
+  postId: Scalars['ID']['input'];
+  /** Slugs of existing tags (see upsertBlogTag). Replaces the post's whole tag set; an empty list removes every tag. */
+  tagSlugs: Array<Scalars['String']['input']>;
+};
+
+/** The post with its new tag set, or why nothing was written: the post does not exist, a tag slug is unknown, or the post is no longer a DRAFT and the caller lacks blog:write. */
+export type SetBlogPostTagsResult =
+  | BlogPostAdminObject
+  | BlogPostNotFoundError
+  | BlogPostPublishPermissionRequiredError
+  | BlogReferenceNotFoundError;
+
 export type SetMcpConnectorEnabledInput = {
   connectorKey: Scalars['ID']['input'];
   enabled: Scalars['Boolean']['input'];
@@ -4447,7 +5077,7 @@ export type SetPlanStatusInput = {
   /** Plan id to update status for */
   planId: Scalars['ID']['input'];
   /**
-   * New plan status — one of: BACKLOG, BLOCKED, CANCELED, COMPLETED, IN_PROGRESS, PENDING, QUEUED, SKIPPED. Normalized to uppercase. Provide this OR statusEnum.
+   * New plan status — one of: BACKLOG, BLOCKED, CANCELED, COMPLETED, IN_PROGRESS, PENDING, PROMOTED, QUEUED, SKIPPED. Normalized to uppercase. Provide this OR statusEnum.
    * @deprecated Use statusEnum (typed PlanTaskStatus). String status is still accepted (normalized to uppercase) and validated against the canonical set.
    */
   status?: InputMaybe<Scalars['String']['input']>;
@@ -4467,8 +5097,12 @@ export type SetWorkspaceLocalRepositoryProjectInput = {
 };
 
 export type SettleCliPlanRunInput = {
+  /** Branch head sha at PR-open. Recorded as a git_commit artifact on COMPLETED; the verifier maps it to its squash commit once the PR merges. Optional — a run that exits without opening a PR has none. */
+  headSha?: InputMaybe<Scalars['String']['input']>;
   /** Plan-run row id to settle (returned by registerCliPlanRun). */
   planRunId: Scalars['ID']['input'];
+  /** Number of the PR the run opened. Recorded as a pull_request artifact on COMPLETED — it survives a rebase or amend, which the head sha does not. Optional. */
+  prNumber?: InputMaybe<Scalars['Int']['input']>;
   /** Terminal status to set: COMPLETED, CANCELLED, or FAILED. Normalized to uppercase. */
   status: Scalars['String']['input'];
 };
@@ -4574,7 +5208,9 @@ export type SkillUsageByDayObject = {
   date: Scalars['String']['output'];
   /** ours-scoped invocations on this day. */
   oursCount: Scalars['Int']['output'];
-  /** third-party-scoped invocations on this day. */
+  /** personal-scoped invocations on this day. */
+  personalCount: Scalars['Int']['output'];
+  /** third-party-scoped invocations on this day. Excludes personal invocations, which have counted into personalCount since that member was added; historical rows are never reclassified, so a personal skill's series can straddle both fields across that date. */
   thirdPartyCount: Scalars['Int']['output'];
   /** Total invocations on this day. */
   totalCount: Scalars['Int']['output'];
@@ -4584,29 +5220,31 @@ export type SkillUsageByScopeObject = {
   __typename?: 'SkillUsageByScopeObject';
   /** Invocation count for this scope in the filtered range. */
   count: Scalars['Int']['output'];
-  /** ours | third-party. */
+  /** ours | personal | third-party. */
   scope: Scalars['String']['output'];
 };
 
 export type SkillUsageBySkillObject = {
   __typename?: 'SkillUsageBySkillObject';
-  /** Opt-in abandoned outcomes for this skill in the filtered range. */
+  /** Abandoned outcomes for this skill in the filtered range — the session died without a clean end. Liveness, not quality; excluded from outcomeCount. */
   abandonedCount: Scalars['Int']['output'];
-  /** Average reported duration_ms for outcomes with a duration; null when none. */
+  /** Average reported duration_ms for outcomes with a duration; null when none. Only a deliberate reporter supplies a duration — the automatic session-end paths report null, because no hook brackets a skill's own work. */
   avgDurationMs?: Maybe<Scalars['Int']['output']>;
   /** Harness start (invocation) count for this skill in the filtered range. */
   count: Scalars['Int']['output'];
-  /** Opt-in error outcomes for this skill in the filtered range. */
+  /** Reported error outcomes for this skill in the filtered range. A quality claim; only a deliberate reporter or a harness with a real failure status writes it. */
   errorCount: Scalars['Int']['output'];
   /** Most recent start (invocation) timestamp for this skill in the filtered range; null when there are no invocations. */
   lastUsedAt?: Maybe<Scalars['DateTime']['output']>;
-  /** Opt-in outcome events for this skill. May be less than count; missing outcomes are normal. */
+  /** QUALITY outcomes for this skill — successCount + errorCount only. Deliberately excludes sessionEndedCount and abandonedCount, which say the process finished or died, not that the skill's work went well. May be far less than count; zero is the normal, honest reading for any skill that does not report its own outcome. */
   outcomeCount: Scalars['Int']['output'];
-  /** ours | third-party for this skill row. */
+  /** ours | personal | third-party for this skill row. */
   scope: Scalars['String']['output'];
+  /** Automatic session-end records for this skill — the session that loaded it ended normally. Liveness, not quality; excluded from outcomeCount. */
+  sessionEndedCount: Scalars['Int']['output'];
   /** Skill identifier (e.g. ot-plans, vercel:deploy). */
   skillName: Scalars['String']['output'];
-  /** Opt-in success outcomes for this skill in the filtered range. */
+  /** Reported success outcomes for this skill in the filtered range. A quality claim; only a deliberate reporter writes it. */
   successCount: Scalars['Int']['output'];
 };
 
@@ -4636,7 +5274,7 @@ export type SkillUsageEventObject = {
   promptId?: Maybe<Scalars['String']['output']>;
   /** Server receipt time (set on insert). */
   receivedAt: Scalars['DateTime']['output'];
-  /** ours | third-party — derived by the client against skills/. */
+  /** ours | personal | third-party — derived by the client: ours is authored under skills/, personal is linked from the invoking user's personal skills root outside the repo, third-party is everything else. */
   scope: Scalars['String']['output'];
   /** Harness session id when present. */
   sessionId?: Maybe<Scalars['String']['output']>;
@@ -4694,21 +5332,23 @@ export type SkillUsageOutcomeObject = {
   outcome: Scalars['String']['output'];
   /** Server receipt time (set on insert). */
   receivedAt: Scalars['DateTime']['output'];
-  /** ours | third-party. */
+  /** ours | personal | third-party. */
   scope: Scalars['String']['output'];
   /** Harness session id when present. */
   sessionId?: Maybe<Scalars['String']['output']>;
   /** Skill identifier matching the start event. */
   skillName: Scalars['String']['output'];
+  /** Producer id of the tool/adapter that recorded this outcome (e.g. claude-code, cursor). Null for rows ingested before source tracking. */
+  source?: Maybe<Scalars['String']['output']>;
   /** Optional tool_use_id for tighter correlation. */
   toolUseId?: Maybe<Scalars['String']['output']>;
 };
 
 export type SkillUsageResultObject = {
   __typename?: 'SkillUsageResultObject';
-  /** Per-day series (UTC), oldest first, with ours/third-party split. */
+  /** Per-day series (UTC), oldest first, split into ours / personal / third-party. */
   byDay: Array<SkillUsageByDayObject>;
-  /** ours vs third-party totals for the filtered range. */
+  /** ours / personal / third-party totals for the filtered range. */
   byScope: Array<SkillUsageByScopeObject>;
   /** Top skills by count (highest first; capped). */
   bySkill: Array<SkillUsageBySkillObject>;
@@ -4989,6 +5629,8 @@ export type TaskObject = {
   tags: Array<TaskTagObject>;
   title: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
+  /** Coarse concurrency layer within the plan, nullable. NULL means unassigned (runs alone, in sortOrder position) -- never wave zero. Tasks sharing a wave are the author's claim that they may be worked concurrently; sortOrder remains canonical and is the tiebreaker within a wave. Not consumed for execution yet. */
+  wave?: Maybe<Scalars['Int']['output']>;
 };
 
 /** Metrics captured at job start and end for a plan/task run, including process snapshots, child process resource usage, wall-clock analysis, and system CPU pressure. */
@@ -5070,31 +5712,35 @@ export type TimelineKindTruncationObject = {
 };
 
 /** How timeline rows are grouped into lanes. */
-export enum TimelineLaneGrouping {
+export const TimelineLaneGrouping = {
   /** One lane per execution backend / tool / driver. */
-  ByBackend = 'BY_BACKEND',
+  ByBackend: 'BY_BACKEND',
   /** One lane per repository checkout (falling back to branch). */
-  ByCheckout = 'BY_CHECKOUT',
+  ByCheckout: 'BY_CHECKOUT',
   /** One lane per plan. The default. */
-  ByPlan = 'BY_PLAN',
-}
+  ByPlan: 'BY_PLAN',
+} as const;
 
+export type TimelineLaneGrouping =
+  (typeof TimelineLaneGrouping)[keyof typeof TimelineLaneGrouping];
 /** Kinds of timeline marker (work recorded at an instant). */
-export enum TimelineMarkerKind {
+export const TimelineMarkerKind = {
   /** A git_commit work artifact, keyed on produced_at. */
-  GitCommit = 'GIT_COMMIT',
+  GitCommit: 'GIT_COMMIT',
   /** A grilling skill invocation (skill_usage_events where skill_name = 'grilling'), keyed on occurred_at. Attributed via `userId` when ingest resolved a principal; older rows carry none and fall back to the branch heuristic. */
-  Grilling = 'GRILLING',
+  Grilling: 'GRILLING',
   /** A pull_request work artifact, keyed on produced_at. */
-  PullRequest = 'PULL_REQUEST',
+  PullRequest: 'PULL_REQUEST',
   /** A status_change work artifact, keyed on produced_at. Recorded inconsistently — expect a sparse lane. */
-  StatusChange = 'STATUS_CHANGE',
+  StatusChange: 'STATUS_CHANGE',
   /** A task was created (tasks.created_at). */
-  TaskAdded = 'TASK_ADDED',
+  TaskAdded: 'TASK_ADDED',
   /** A task was last written (tasks.updated_at). Last write only — tasks carry no status history. */
-  TaskUpdated = 'TASK_UPDATED',
-}
+  TaskUpdated: 'TASK_UPDATED',
+} as const;
 
+export type TimelineMarkerKind =
+  (typeof TimelineMarkerKind)[keyof typeof TimelineMarkerKind];
 export type TimelineMarkerObject = {
   __typename?: 'TimelineMarkerObject';
   /** When the marker happened. */
@@ -5121,15 +5767,17 @@ export type TimelineMarkerObject = {
 };
 
 /** Kinds of timeline span (work with a duration). */
-export enum TimelineSpanKind {
+export const TimelineSpanKind = {
   /** A queued Ralph plan run (plan_runs). Its end is always derived — the table records no finish timestamp. */
-  PlanRun = 'PLAN_RUN',
+  PlanRun: 'PLAN_RUN',
   /** A scheduled agent job run (scheduled_agent_job_runs). Carries measured started_at/finished_at. */
-  ScheduledRun = 'SCHEDULED_RUN',
+  ScheduledRun: 'SCHEDULED_RUN',
   /** A work-ledger session (work_sessions). Measured unless still open (ended_at IS NULL). */
-  WorkSession = 'WORK_SESSION',
-}
+  WorkSession: 'WORK_SESSION',
+} as const;
 
+export type TimelineSpanKind =
+  (typeof TimelineSpanKind)[keyof typeof TimelineSpanKind];
 export type TimelineSpanObject = {
   __typename?: 'TimelineSpanObject';
   /** Execution backend / tool name / driver id, when the source carries one. */
@@ -5179,7 +5827,7 @@ export type TokenUsageRowObject = {
   cacheWriteTokens?: Maybe<Scalars['Float']['output']>;
   /** Source conversation id, when the usage came from chat; null otherwise. */
   conversationId?: Maybe<Scalars['ID']['output']>;
-  /** Reported dollar cost of the turn, when priced. */
+  /** Dollar cost of the turn: reported by the producer, or an estimate at Anthropic list price for an unpriced Claude request. Null when it cannot be priced. */
   costUsd?: Maybe<Scalars['Float']['output']>;
   /** Turn completion timestamp. */
   createdAt: Scalars['DateTime']['output'];
@@ -5195,6 +5843,8 @@ export type TokenUsageRowObject = {
   provider: Scalars['String']['output'];
   /** Reasoning tokens for the turn, when reported separately. */
   reasoningTokens?: Maybe<Scalars['Float']['output']>;
+  /** Producer of the row: openthrottle-chat (in-app chat) or claude-code (Claude Code hooks). Null for legacy rows written before sources were recorded, which are chat. */
+  source?: Maybe<Scalars['String']['output']>;
   /** Total tokens for the turn, when reported. */
   totalTokens?: Maybe<Scalars['Float']['output']>;
 };
@@ -5232,6 +5882,10 @@ export type TranscriptionStreamChunkObject = {
   transcript: Scalars['String']['output'];
 };
 
+/** The post returned to DRAFT, or BlogPostNotFoundError. */
+export type UnpublishBlogPostResult =
+  BlogPostAdminObject | BlogPostNotFoundError;
+
 export type UnverifiedWorkArtifactsInput = {
   /** Max rows (verifier feed); clamped server-side */
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -5243,6 +5897,36 @@ export type UpdateAgentConversationTitleInput = {
   conversationId: Scalars['ID']['input'];
   title: Scalars['String']['input'];
 };
+
+/** Partial update. Omitted fields are unchanged; null clears a nullable field. Status and publishedAt change only through publish / unpublish / archive. */
+export type UpdateBlogPostInput = {
+  /** Slug of an existing author; null removes the byline. */
+  authorSlug?: InputMaybe<Scalars['String']['input']>;
+  /** Must not be null. */
+  bodyMarkdown?: InputMaybe<Scalars['String']['input']>;
+  coverImageAlt?: InputMaybe<Scalars['String']['input']>;
+  coverImageUrl?: InputMaybe<Scalars['String']['input']>;
+  excerpt?: InputMaybe<Scalars['String']['input']>;
+  /** The post's updatedAt as last read. When set and the post has changed since, nothing is written and BlogPostStaleWriteError is returned. Omit to skip the check. */
+  expectedUpdatedAt?: InputMaybe<Scalars['DateTime']['input']>;
+  id: Scalars['ID']['input'];
+  seoDescription?: InputMaybe<Scalars['String']['input']>;
+  seoTitle?: InputMaybe<Scalars['String']['input']>;
+  /** Lowercase letters, digits and single hyphens (^[a-z0-9]+(-[a-z0-9]+)*$), e.g. "my-first-post". Must not be null. */
+  slug?: InputMaybe<Scalars['String']['input']>;
+  /** Must not be null. */
+  title?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** The updated post, or why nothing was written: the post or author does not exist, the slug is taken, a cover image would have no alt text, the post changed since expectedUpdatedAt, or the post is no longer a DRAFT and the caller lacks blog:write. */
+export type UpdateBlogPostResult =
+  | BlogCoverAltRequiredError
+  | BlogPostAdminObject
+  | BlogPostNotFoundError
+  | BlogPostPublishPermissionRequiredError
+  | BlogPostStaleWriteError
+  | BlogReferenceNotFoundError
+  | BlogSlugConflictError;
 
 /** Input for updating an existing custom prompt */
 export type UpdateCustomPromptInput = {
@@ -5345,11 +6029,21 @@ export type UpdateScheduledAgentJobInputType = {
   driverId?: InputMaybe<Scalars['String']['input']>;
   /** Schedule to update. */
   id: Scalars['ID']['input'];
+  /** For scheduleKind interval: ms from the end of one run to the start of the next; at least 60000. */
+  intervalMs?: InputMaybe<Scalars['Int']['input']>;
+  /** Misfire policy for late fires: skip or catch_up_once. */
+  misfirePolicy?: InputMaybe<Scalars['String']['input']>;
+  /** How late (ms) a fire may start and still run; at least 60000. */
+  misfireThresholdMs?: InputMaybe<Scalars['Int']['input']>;
   model?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   prompt?: InputMaybe<Scalars['String']['input']>;
   /** Registered repository checkout to run in; must belong to the caller. Takes precedence over cwd. */
   repositoryCheckoutId?: InputMaybe<Scalars['ID']['input']>;
+  /** For scheduleKind once: when to run, as ISO 8601 with an offset; a changed time must be in the future. */
+  runAt?: InputMaybe<Scalars['String']['input']>;
+  /** How the schedule fires: cron, interval or once. Omit to keep the current kind. */
+  scheduleKind?: InputMaybe<Scalars['String']['input']>;
   /** JSON AgentPromptSettings; no endpoint.apiKey. */
   settingsJson?: InputMaybe<Scalars['String']['input']>;
   timeoutMs?: InputMaybe<Scalars['Int']['input']>;
@@ -5382,6 +6076,8 @@ export type UpdateTaskInput = {
   status?: InputMaybe<Scalars['String']['input']>;
   summary?: InputMaybe<Scalars['String']['input']>;
   title?: InputMaybe<Scalars['String']['input']>;
+  /** Optional. Coarse concurrency layer within the plan: tasks sharing a wave may be worked concurrently. Never 0; pass null to clear (unassigned); omit to leave unchanged. Not consumed for execution yet. */
+  wave?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type UpdateUserInput = {
@@ -5406,6 +6102,23 @@ export type UpdateWorkspaceProfileInput = {
   contactDisplayName?: InputMaybe<Scalars['String']['input']>;
   contactEmail?: InputMaybe<Scalars['String']['input']>;
   enabledEditors?: InputMaybe<Array<WorkspaceEditorId>>;
+};
+
+/** Creates the author with this slug or replaces its fields. Omitted bio / avatarUrl are cleared. */
+export type UpsertBlogAuthorInput = {
+  avatarUrl?: InputMaybe<Scalars['String']['input']>;
+  bio?: InputMaybe<Scalars['String']['input']>;
+  displayName: Scalars['String']['input'];
+  /** Lowercase letters, digits and single hyphens (^[a-z0-9]+(-[a-z0-9]+)*$), e.g. "my-first-post". */
+  slug: Scalars['String']['input'];
+};
+
+/** Creates the tag with this slug or replaces its fields. An omitted description is cleared. */
+export type UpsertBlogTagInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  /** Lowercase letters, digits and single hyphens (^[a-z0-9]+(-[a-z0-9]+)*$), e.g. "my-first-post". */
+  slug: Scalars['String']['input'];
 };
 
 export type UpsertTagActionRuleInput = {
@@ -5455,13 +6168,15 @@ export type UserWorkspaceProfileObject = {
 };
 
 /** Interpretation of wall-clock to CPU time ratio. */
-export enum WallClockInterpretation {
-  CpuBound = 'cpu_bound',
-  Idle = 'idle',
-  IoBound = 'io_bound',
-  Mixed = 'mixed',
-}
+export const WallClockInterpretation = {
+  CpuBound: 'cpu_bound',
+  Idle: 'idle',
+  IoBound: 'io_bound',
+  Mixed: 'mixed',
+} as const;
 
+export type WallClockInterpretation =
+  (typeof WallClockInterpretation)[keyof typeof WallClockInterpretation];
 /** Wall-clock and CPU time metrics for determining job workload characteristics. */
 export type WallClockMetrics = {
   __typename?: 'WallClockMetrics';
@@ -5522,6 +6237,34 @@ export type WorkArtifactsByTaskInput = {
   taskId: Scalars['ID']['input'];
 };
 
+export type WorkLedgerCompletenessInput = {
+  /** Max owed plans listed; the counts are always over the full set */
+  limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type WorkLedgerCompletenessResult = {
+  __typename?: 'WorkLedgerCompletenessResult';
+  /** Plans with git work but no verifier-confirmed commit; worst-known first */
+  owed: Array<WorkLedgerPlanCompletenessObject>;
+  /** Plans with git work and nothing truthful */
+  owedCount: Scalars['Int']['output'];
+  /** Plans with at least one verifier-confirmed landed commit */
+  recordedCount: Scalars['Int']['output'];
+  /** Plans the ledger knows have git work (see the denominator caveat) */
+  totalCount: Scalars['Int']['output'];
+};
+
+export type WorkLedgerPlanCompletenessObject = {
+  __typename?: 'WorkLedgerPlanCompletenessObject';
+  /** git_commit artifacts linked to this plan, truthful or not */
+  artifactCount: Scalars['Int']['output'];
+  planId: Scalars['ID']['output'];
+  planStatus: Scalars['String']['output'];
+  planTitle: Scalars['String']['output'];
+  /** True when at least one linked git_commit carries a verifier-confirmed landedSha */
+  recorded: Scalars['Boolean']['output'];
+};
+
 export type WorkSessionListResult = {
   __typename?: 'WorkSessionListResult';
   sessions: Array<WorkSessionObject>;
@@ -5532,7 +6275,7 @@ export type WorkSessionObject = {
   __typename?: 'WorkSessionObject';
   actorServiceAccountId?: Maybe<Scalars['String']['output']>;
   actorUserId?: Maybe<Scalars['String']['output']>;
-  /** How the session closed: explicit | sweeper; null while open */
+  /** How the session closed: explicit (after real work) | instant (no span) | sweeper (abandoned past TTL); null while open */
   closedBy?: Maybe<Scalars['String']['output']>;
   conversationId?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];
@@ -5587,24 +6330,28 @@ export type WorkspaceEditorConfigApplicationObject = {
 };
 
 /** Editor OpenThrottle may configure in linked local repositories (MCP, skills, rules). Supported values: claude, cursor, vscode. */
-export enum WorkspaceEditorId {
+export const WorkspaceEditorId = {
   /** Claude Code */
-  Claude = 'CLAUDE',
+  Claude: 'CLAUDE',
   /** Cursor IDE */
-  Cursor = 'CURSOR',
+  Cursor: 'CURSOR',
   /** Visual Studio Code */
-  Vscode = 'VSCODE',
-}
+  Vscode: 'VSCODE',
+} as const;
 
+export type WorkspaceEditorId =
+  (typeof WorkspaceEditorId)[keyof typeof WorkspaceEditorId];
 /** How addWorkspaceFolder resolved the folder's identity: via the on-disk OT manifest (checkout or repository id), via the normalized git remote, or by creating a new canonical/provisional repository. */
-export enum WorkspaceFolderReconciliation {
-  CreatedCanonical = 'CREATED_CANONICAL',
-  CreatedProvisional = 'CREATED_PROVISIONAL',
-  MatchedManifestCheckout = 'MATCHED_MANIFEST_CHECKOUT',
-  MatchedManifestRepository = 'MATCHED_MANIFEST_REPOSITORY',
-  MatchedRemote = 'MATCHED_REMOTE',
-}
+export const WorkspaceFolderReconciliation = {
+  CreatedCanonical: 'CREATED_CANONICAL',
+  CreatedProvisional: 'CREATED_PROVISIONAL',
+  MatchedManifestCheckout: 'MATCHED_MANIFEST_CHECKOUT',
+  MatchedManifestRepository: 'MATCHED_MANIFEST_REPOSITORY',
+  MatchedRemote: 'MATCHED_REMOTE',
+} as const;
 
+export type WorkspaceFolderReconciliation =
+  (typeof WorkspaceFolderReconciliation)[keyof typeof WorkspaceFolderReconciliation];
 /** A local filesystem checkout registered under the user's workspace settings. */
 export type WorkspaceLocalRepositoryObject = {
   __typename?: 'WorkspaceLocalRepositoryObject';
@@ -5677,31 +6424,37 @@ export type WorkstreamTimelineResultObject = {
 };
 
 /** What a discovered worktree is doing. Never inferred from the directory merely existing. */
-export enum WorktreeActivity {
+export const WorktreeActivity = {
   /** No live run, but there is uncommitted work or commits ahead of the upstream. */
-  Dirty = 'DIRTY',
+  Dirty: 'DIRTY',
   /** Clean, with nothing running. */
-  Idle = 'IDLE',
+  Idle: 'IDLE',
   /** A live IN_PROGRESS plan run is executing here — live meaning its heartbeat is inside the staleness cutoff. A stale IN_PROGRESS run is dead and does NOT read as running. */
-  Running = 'RUNNING',
-}
+  Running: 'RUNNING',
+} as const;
 
+export type WorktreeActivity =
+  (typeof WorktreeActivity)[keyof typeof WorktreeActivity];
 /** What a scan noticed that was less than complete. The server decides WHAT happened; the client decides how loud it is. States that are merely the healthy default — above all a repository that has no worktrees yet — are not problems and are never reported. */
-export enum WorktreeDiscoveryProblemKind {
+export const WorktreeDiscoveryProblemKind = {
   /** More worktrees exist than the hard cap; the overflow is counted in droppedCount and not listed. */
-  CapExceeded = 'CAP_EXCEEDED',
+  CapExceeded: 'CAP_EXCEEDED',
   /** The registered checkouts could not be listed, so the scan had nothing to scan from. The whole result is empty. */
-  CheckoutListFailed = 'CHECKOUT_LIST_FAILED',
+  CheckoutListFailed: 'CHECKOUT_LIST_FAILED',
   /** A registered folder is not a git checkout at all. Carries repositoryId — belongs on that repository’s row, not on the page. */
-  NotAGitRepo = 'NOT_A_GIT_REPO',
+  NotAGitRepo: 'NOT_A_GIT_REPO',
+  /** A directory in a worktree root with no .git at all — the husk a removed worktree leaves behind. Not a worktree and never probed; nothing deletes it automatically. */
+  OrphanDirectory: 'ORPHAN_DIRECTORY',
   /** A read-only git probe against a directory that does exist failed. The genuinely degraded case: worktrees may be missing from the list. */
-  ProbeFailed = 'PROBE_FAILED',
+  ProbeFailed: 'PROBE_FAILED',
   /** A worktree root exists but could not be read (EACCES and friends). A root that simply does not exist is NOT this — that is a repository with no worktrees yet, and is silent. */
-  RootUnreadable = 'ROOT_UNREADABLE',
+  RootUnreadable: 'ROOT_UNREADABLE',
   /** git still reports a worktree whose directory is gone. Actionable exactly once, with `git worktree prune`; the path is never probed. */
-  StaleWorktreeEntry = 'STALE_WORKTREE_ENTRY',
-}
+  StaleWorktreeEntry: 'STALE_WORKTREE_ENTRY',
+} as const;
 
+export type WorktreeDiscoveryProblemKind =
+  (typeof WorktreeDiscoveryProblemKind)[keyof typeof WorktreeDiscoveryProblemKind];
 /** One classified, non-fatal thing that happened during a scan. */
 export type WorktreeDiscoveryProblemObject = {
   __typename?: 'WorktreeDiscoveryProblemObject';
@@ -5716,15 +6469,17 @@ export type WorktreeDiscoveryProblemObject = {
 };
 
 /** Which rung of the shared worktree-root ladder resolved the scanned root. The same ladder skills/ot-worktree/scripts/root.sh applies, so the page can never disagree with where the script writes. */
-export enum WorktreeRootSource {
+export const WorktreeRootSource = {
   /** OPENTHROTTLE_WORKTREE_ROOT in the target repo’s .env file — how a repo customizes where its worktrees go. */
-  CheckoutEnv = 'CHECKOUT_ENV',
+  CheckoutEnv: 'CHECKOUT_ENV',
   /** The default: ~/.openthrottle/worktrees, the hidden root OpenThrottle owns. OT appends <org>/<repo> beneath it, taken from the checkout’s git remote. */
-  Default = 'DEFAULT',
+  Default: 'DEFAULT',
   /** OPENTHROTTLE_WORKTREE_ROOT in the server process's environment. */
-  Env = 'ENV',
-}
+  Env: 'ENV',
+} as const;
 
+export type WorktreeRootSource =
+  (typeof WorktreeRootSource)[keyof typeof WorktreeRootSource];
 export type HealthCardFragment = {
   __typename?: 'ServerHealthObject';
   api: string;
@@ -5799,6 +6554,20 @@ type NotificationFields_QueueJobCompletedNotification_Fragment = {
   timestamp: string;
 };
 
+type NotificationFields_ScheduledRunFailedNotification_Fragment = {
+  __typename?: 'ScheduledRunFailedNotification';
+  reason: string;
+  runCount: number;
+  runId?: string | null;
+  scheduledAgentJobId: string;
+  scheduleName: string;
+  event: string;
+  link?: string | null;
+  message?: string | null;
+  severity?: string | null;
+  timestamp: string;
+};
+
 type NotificationFields_SystemAlertNotification_Fragment = {
   __typename?: 'SystemAlertNotification';
   code?: string | null;
@@ -5839,6 +6608,7 @@ export type NotificationFieldsFragment =
   | NotificationFields_PlanUpdatedNotification_Fragment
   | NotificationFields_PlanWaitingForWorktreeNotification_Fragment
   | NotificationFields_QueueJobCompletedNotification_Fragment
+  | NotificationFields_ScheduledRunFailedNotification_Fragment
   | NotificationFields_SystemAlertNotification_Fragment
   | NotificationFields_TaskCompletedNotification_Fragment
   | NotificationFields_TaskStatusChangedNotification_Fragment;
@@ -5851,6 +6621,13 @@ export type RootMetricsFragment = {
   heapTotalMb: number;
   heapUsedMb: number;
   rssMb: number;
+};
+
+export type GetMyPermissionsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type GetMyPermissionsQuery = {
+  __typename?: 'Query';
+  myPermissions: Array<string>;
 };
 
 export type GetMyUserQueryVariables = Exact<{ [key: string]: never }>;
@@ -6103,6 +6880,19 @@ export type NotificationsSubscription = {
         timestamp: string;
       }
     | {
+        __typename?: 'ScheduledRunFailedNotification';
+        reason: string;
+        runCount: number;
+        runId?: string | null;
+        scheduledAgentJobId: string;
+        scheduleName: string;
+        event: string;
+        link?: string | null;
+        message?: string | null;
+        severity?: string | null;
+        timestamp: string;
+      }
+    | {
         __typename?: 'SystemAlertNotification';
         code?: string | null;
         event: string;
@@ -6336,6 +7126,232 @@ export type MintSubscriptionTokenMutationVariables = Exact<{
 export type MintSubscriptionTokenMutation = {
   __typename?: 'Mutation';
   mintSubscriptionToken: string;
+};
+
+export type BlogPostEditorPostFragment = {
+  __typename?: 'BlogPostAdminObject';
+  bodyMarkdown: string;
+  coverImageAlt?: string | null;
+  coverImageUrl?: string | null;
+  excerpt?: string | null;
+  id: string;
+  lastEditedBy?: string | null;
+  publishedAt?: any | null;
+  seoDescription?: string | null;
+  seoTitle?: string | null;
+  slug: string;
+  state: BlogPostState;
+  title: string;
+  updatedAt: any;
+  author?: {
+    __typename?: 'BlogAuthorObject';
+    displayName: string;
+    slug: string;
+  } | null;
+  tags: Array<{ __typename?: 'BlogTagObject'; name: string; slug: string }>;
+};
+
+export type GetBlogPostEditorQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+export type GetBlogPostEditorQuery = {
+  __typename?: 'Query';
+  blogAdminAuthors: Array<{
+    __typename?: 'BlogAuthorObject';
+    displayName: string;
+    slug: string;
+  }>;
+  blogAdminPost:
+    | {
+        __typename: 'BlogPostAdminObject';
+        bodyMarkdown: string;
+        coverImageAlt?: string | null;
+        coverImageUrl?: string | null;
+        excerpt?: string | null;
+        id: string;
+        lastEditedBy?: string | null;
+        publishedAt?: any | null;
+        seoDescription?: string | null;
+        seoTitle?: string | null;
+        slug: string;
+        state: BlogPostState;
+        title: string;
+        updatedAt: any;
+        author?: {
+          __typename?: 'BlogAuthorObject';
+          displayName: string;
+          slug: string;
+        } | null;
+        tags: Array<{
+          __typename?: 'BlogTagObject';
+          name: string;
+          slug: string;
+        }>;
+      }
+    | { __typename: 'BlogPostNotFoundError'; message: string };
+  blogAdminTags: Array<{
+    __typename?: 'BlogTagObject';
+    name: string;
+    slug: string;
+  }>;
+};
+
+export type UpdateBlogPostEditorMutationVariables = Exact<{
+  input: UpdateBlogPostInput;
+}>;
+
+export type UpdateBlogPostEditorMutation = {
+  __typename?: 'Mutation';
+  updateBlogPost:
+    | { __typename: 'BlogCoverAltRequiredError'; message: string }
+    | { __typename: 'BlogPostAdminObject'; id: string; updatedAt: any }
+    | { __typename: 'BlogPostNotFoundError'; message: string }
+    | { __typename: 'BlogPostPublishPermissionRequiredError'; message: string }
+    | {
+        __typename: 'BlogPostStaleWriteError';
+        currentUpdatedAt: any;
+        message: string;
+      }
+    | {
+        __typename: 'BlogReferenceNotFoundError';
+        entity: BlogReferenceEntity;
+        key: string;
+        message: string;
+      }
+    | { __typename: 'BlogSlugConflictError'; message: string; slug: string };
+};
+
+export type SetBlogPostEditorTagsMutationVariables = Exact<{
+  input: SetBlogPostTagsInput;
+}>;
+
+export type SetBlogPostEditorTagsMutation = {
+  __typename?: 'Mutation';
+  setBlogPostTags:
+    | { __typename: 'BlogPostAdminObject'; id: string; updatedAt: any }
+    | { __typename: 'BlogPostNotFoundError'; message: string }
+    | { __typename: 'BlogPostPublishPermissionRequiredError'; message: string }
+    | {
+        __typename: 'BlogReferenceNotFoundError';
+        entity: BlogReferenceEntity;
+        key: string;
+        message: string;
+      };
+};
+
+export type PublishBlogPostEditorMutationVariables = Exact<{
+  input: PublishBlogPostInput;
+}>;
+
+export type PublishBlogPostEditorMutation = {
+  __typename?: 'Mutation';
+  publishBlogPost:
+    | {
+        __typename: 'BlogPostAdminObject';
+        id: string;
+        publishedAt?: any | null;
+        state: BlogPostState;
+        updatedAt: any;
+      }
+    | { __typename: 'BlogPostNotFoundError'; message: string };
+};
+
+export type UnpublishBlogPostEditorMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+export type UnpublishBlogPostEditorMutation = {
+  __typename?: 'Mutation';
+  unpublishBlogPost:
+    | {
+        __typename: 'BlogPostAdminObject';
+        id: string;
+        state: BlogPostState;
+        updatedAt: any;
+      }
+    | { __typename: 'BlogPostNotFoundError'; message: string };
+};
+
+export type ArchiveBlogPostEditorMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+export type ArchiveBlogPostEditorMutation = {
+  __typename?: 'Mutation';
+  archiveBlogPost:
+    | {
+        __typename: 'BlogPostAdminObject';
+        id: string;
+        state: BlogPostState;
+        updatedAt: any;
+      }
+    | { __typename: 'BlogPostNotFoundError'; message: string };
+};
+
+export type BlogPostListRowFragment = {
+  __typename?: 'BlogPostAdminObject';
+  id: string;
+  lastEditedBy?: string | null;
+  publishedAt?: any | null;
+  slug: string;
+  state: BlogPostState;
+  title: string;
+  updatedAt: any;
+  author?: {
+    __typename?: 'BlogAuthorObject';
+    displayName: string;
+    slug: string;
+  } | null;
+};
+
+export type GetBlogAdminPostsQueryVariables = Exact<{
+  after?: InputMaybe<Scalars['String']['input']>;
+  first: Scalars['Int']['input'];
+  search?: InputMaybe<Scalars['String']['input']>;
+  state?: InputMaybe<Array<BlogPostState> | BlogPostState>;
+}>;
+
+export type GetBlogAdminPostsQuery = {
+  __typename?: 'Query';
+  blogAdminPosts: {
+    __typename?: 'BlogAdminPostListResult';
+    endCursor?: string | null;
+    hasNextPage: boolean;
+    items: Array<{
+      __typename?: 'BlogPostAdminObject';
+      id: string;
+      lastEditedBy?: string | null;
+      publishedAt?: any | null;
+      slug: string;
+      state: BlogPostState;
+      title: string;
+      updatedAt: any;
+      author?: {
+        __typename?: 'BlogAuthorObject';
+        displayName: string;
+        slug: string;
+      } | null;
+    }>;
+  };
+};
+
+export type CreateBlogPostDraftMutationVariables = Exact<{
+  input: CreateBlogPostInput;
+}>;
+
+export type CreateBlogPostDraftMutation = {
+  __typename?: 'Mutation';
+  createBlogPost:
+    | { __typename: 'BlogCoverAltRequiredError'; message: string }
+    | { __typename: 'BlogPostAdminObject'; id: string }
+    | {
+        __typename: 'BlogReferenceNotFoundError';
+        entity: BlogReferenceEntity;
+        key: string;
+        message: string;
+      }
+    | { __typename: 'BlogSlugConflictError'; message: string; slug: string };
 };
 
 export type DashboardActivityCardFragment = {
@@ -6700,6 +7716,7 @@ export type PlanTaskRowFragment = {
   summary?: string | null;
   title: string;
   updatedAt: any;
+  wave?: number | null;
   projectRelation?: {
     __typename?: 'ProjectObject';
     id: string;
@@ -6734,6 +7751,8 @@ export type PlanDetailsFragment = {
   project?: string | null;
   projectId?: string | null;
   runConfigJson: string;
+  scheduledRunAt?: any | null;
+  scheduledRunId?: string | null;
   status: string;
   summary?: string | null;
   title: string;
@@ -6791,6 +7810,8 @@ export type GetPlanByIdQuery = {
     project?: string | null;
     projectId?: string | null;
     runConfigJson: string;
+    scheduledRunAt?: any | null;
+    scheduledRunId?: string | null;
     status: string;
     summary?: string | null;
     title: string;
@@ -6852,6 +7873,7 @@ export type GetTasksByPlanIdQuery = {
     summary?: string | null;
     title: string;
     updatedAt: any;
+    wave?: number | null;
     projectRelation?: {
       __typename?: 'ProjectObject';
       id: string;
@@ -6873,6 +7895,22 @@ export type PlanDetailEnqueuePlanRunMutation = {
     planId: string;
     queuePosition: number;
     queueTotal: number;
+  };
+};
+
+export type PlanDetailSchedulePlanRunMutationVariables = Exact<{
+  input: SchedulePlanRunInput;
+}>;
+
+export type PlanDetailSchedulePlanRunMutation = {
+  __typename?: 'Mutation';
+  schedulePlanRun: {
+    __typename?: 'SchedulePlanRunResultObject';
+    executionBackend: string;
+    jobId: string;
+    planId: string;
+    planRunId: string;
+    scheduledFor: any;
   };
 };
 
@@ -6960,6 +7998,7 @@ export type PlanDetailUpdateTaskMutation = {
     summary?: string | null;
     title: string;
     updatedAt: any;
+    wave?: number | null;
     projectRelation?: {
       __typename?: 'ProjectObject';
       id: string;
@@ -6979,6 +8018,19 @@ export type PlanDetailUpdatePlanJobRunHooksMutation = {
     id: string;
     jobRunHooksJson: string;
     updatedAt: any;
+  } | null;
+};
+
+export type PlanDetailRunConfigQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+export type PlanDetailRunConfigQuery = {
+  __typename?: 'Query';
+  plan?: {
+    __typename?: 'PlanObject';
+    id: string;
+    runConfigJson: string;
   } | null;
 };
 
@@ -7054,6 +8106,8 @@ export type PlanDetailCriticalQuery = {
     project?: string | null;
     projectId?: string | null;
     runConfigJson: string;
+    scheduledRunAt?: any | null;
+    scheduledRunId?: string | null;
     status: string;
     summary?: string | null;
     title: string;
@@ -7107,6 +8161,7 @@ export type PlanDetailCriticalQuery = {
     summary?: string | null;
     title: string;
     updatedAt: any;
+    wave?: number | null;
     projectRelation?: {
       __typename?: 'ProjectObject';
       id: string;
@@ -7194,9 +8249,12 @@ export type PlanDetailRunHistoryQuery = {
     isStale: boolean;
     lastHeartbeatAt?: any | null;
     model?: string | null;
+    resumeOfRunId?: string | null;
     runConfigSnapshotJson?: string | null;
     runKind: string;
+    scheduledFor?: any | null;
     status: string;
+    usageLimitResetsAt?: any | null;
     checkout?: {
       __typename?: 'PlanRunCheckoutObject';
       displayName: string;
@@ -7319,6 +8377,7 @@ export type PlanLifecycleNotificationsSubscription = {
     | { __typename?: 'PlanUpdatedNotification'; event: string }
     | { __typename?: 'PlanWaitingForWorktreeNotification'; event: string }
     | { __typename?: 'QueueJobCompletedNotification'; event: string }
+    | { __typename?: 'ScheduledRunFailedNotification'; event: string }
     | { __typename?: 'SystemAlertNotification'; event: string }
     | { __typename?: 'TaskCompletedNotification'; event: string }
     | {
@@ -7413,6 +8472,7 @@ export type GetTaskByIdQuery = {
     summary?: string | null;
     title: string;
     updatedAt: any;
+    wave?: number | null;
     afterHooks: Array<{
       __typename?: 'TaskObject';
       hookRole?: string | null;
@@ -7464,6 +8524,7 @@ export type TaskDetailsFragment = {
   summary?: string | null;
   title: string;
   updatedAt: any;
+  wave?: number | null;
   afterHooks: Array<{
     __typename?: 'TaskObject';
     hookRole?: string | null;
@@ -7576,6 +8637,7 @@ export type TaskLinkedArtifactsQuery = {
 
 export type TaskOutputStreamChunksQueryVariables = Exact<{
   planId: Scalars['ID']['input'];
+  taskId: Scalars['ID']['input'];
 }>;
 
 export type TaskOutputStreamChunksQuery = {
@@ -8664,28 +9726,36 @@ export type ScheduledJobRunRowFragment = {
   model?: string | null;
   outputTokens?: number | null;
   reasoningTokens?: number | null;
+  resumeOfRunId?: string | null;
+  scheduledFor?: any | null;
   startedAt?: any | null;
   status: string;
   totalTokens?: number | null;
   trigger: string;
+  usageLimitResetsAt?: any | null;
 };
 
 export type ScheduledJobDetailFragment = {
   __typename?: 'ScheduledAgentJobObject';
   createdAt: any;
   cwd?: string | null;
+  misfirePolicy: string;
+  misfireThresholdMs: number;
   prompt: string;
   settingsJson: string;
   timeoutMs?: number | null;
-  cronPattern: string;
+  cronPattern?: string | null;
   driverId: string;
   enabled: boolean;
   id: string;
+  intervalMs?: number | null;
   lastRunAt?: any | null;
   model?: string | null;
   name: string;
   nextRunAt?: any | null;
   repositoryCheckoutId?: string | null;
+  runAt?: any | null;
+  scheduleKind: string;
   timezone?: string | null;
   updatedAt: any;
   repository?: {
@@ -8706,18 +9776,23 @@ export type ScheduledAgentJobDetailQuery = {
     __typename?: 'ScheduledAgentJobObject';
     createdAt: any;
     cwd?: string | null;
+    misfirePolicy: string;
+    misfireThresholdMs: number;
     prompt: string;
     settingsJson: string;
     timeoutMs?: number | null;
-    cronPattern: string;
+    cronPattern?: string | null;
     driverId: string;
     enabled: boolean;
     id: string;
+    intervalMs?: number | null;
     lastRunAt?: any | null;
     model?: string | null;
     name: string;
     nextRunAt?: any | null;
     repositoryCheckoutId?: string | null;
+    runAt?: any | null;
+    scheduleKind: string;
     timezone?: string | null;
     updatedAt: any;
     repository?: {
@@ -8743,10 +9818,13 @@ export type ScheduledAgentJobDetailQuery = {
     model?: string | null;
     outputTokens?: number | null;
     reasoningTokens?: number | null;
+    resumeOfRunId?: string | null;
+    scheduledFor?: any | null;
     startedAt?: any | null;
     status: string;
     totalTokens?: number | null;
     trigger: string;
+    usageLimitResetsAt?: any | null;
   }>;
 };
 
@@ -8758,15 +9836,18 @@ export type UpdateScheduledAgentJobMutation = {
   __typename?: 'Mutation';
   updateScheduledAgentJob: {
     __typename?: 'ScheduledAgentJobObject';
-    cronPattern: string;
+    cronPattern?: string | null;
     driverId: string;
     enabled: boolean;
     id: string;
+    intervalMs?: number | null;
     lastRunAt?: any | null;
     model?: string | null;
     name: string;
     nextRunAt?: any | null;
     repositoryCheckoutId?: string | null;
+    runAt?: any | null;
+    scheduleKind: string;
     timezone?: string | null;
     updatedAt: any;
     repository?: {
@@ -8786,15 +9867,18 @@ export type SetScheduledAgentJobEnabledMutation = {
   __typename?: 'Mutation';
   setScheduledAgentJobEnabled: {
     __typename?: 'ScheduledAgentJobObject';
-    cronPattern: string;
+    cronPattern?: string | null;
     driverId: string;
     enabled: boolean;
     id: string;
+    intervalMs?: number | null;
     lastRunAt?: any | null;
     model?: string | null;
     name: string;
     nextRunAt?: any | null;
     repositoryCheckoutId?: string | null;
+    runAt?: any | null;
+    scheduleKind: string;
     timezone?: string | null;
     updatedAt: any;
     repository?: {
@@ -8828,10 +9912,13 @@ export type RunScheduledAgentJobNowMutation = {
     model?: string | null;
     outputTokens?: number | null;
     reasoningTokens?: number | null;
+    resumeOfRunId?: string | null;
+    scheduledFor?: any | null;
     startedAt?: any | null;
     status: string;
     totalTokens?: number | null;
     trigger: string;
+    usageLimitResetsAt?: any | null;
   };
 };
 
@@ -8863,12 +9950,14 @@ export type ScheduledJobRunDetailFragment = {
   reasoningTokens?: number | null;
   repositoryCheckoutId?: string | null;
   resolvedCwd?: string | null;
+  resumeOfRunId?: string | null;
   scheduledAgentJobId: string;
   settingsSnapshotJson?: string | null;
   startedAt?: any | null;
   status: string;
   totalTokens?: number | null;
   trigger: string;
+  usageLimitResetsAt?: any | null;
   repository?: {
     __typename?: 'ScheduledAgentJobRepositoryObject';
     displayName: string;
@@ -8908,12 +9997,14 @@ export type ScheduledAgentJobRunDetailQuery = {
     reasoningTokens?: number | null;
     repositoryCheckoutId?: string | null;
     resolvedCwd?: string | null;
+    resumeOfRunId?: string | null;
     scheduledAgentJobId: string;
     settingsSnapshotJson?: string | null;
     startedAt?: any | null;
     status: string;
     totalTokens?: number | null;
     trigger: string;
+    usageLimitResetsAt?: any | null;
     repository?: {
       __typename?: 'ScheduledAgentJobRepositoryObject';
       displayName: string;
@@ -8948,12 +10039,14 @@ export type CancelScheduledAgentJobRunMutation = {
     reasoningTokens?: number | null;
     repositoryCheckoutId?: string | null;
     resolvedCwd?: string | null;
+    resumeOfRunId?: string | null;
     scheduledAgentJobId: string;
     settingsSnapshotJson?: string | null;
     startedAt?: any | null;
     status: string;
     totalTokens?: number | null;
     trigger: string;
+    usageLimitResetsAt?: any | null;
     repository?: {
       __typename?: 'ScheduledAgentJobRepositoryObject';
       displayName: string;
@@ -8965,15 +10058,18 @@ export type CancelScheduledAgentJobRunMutation = {
 
 export type ScheduledJobCardFragment = {
   __typename?: 'ScheduledAgentJobObject';
-  cronPattern: string;
+  cronPattern?: string | null;
   driverId: string;
   enabled: boolean;
   id: string;
+  intervalMs?: number | null;
   lastRunAt?: any | null;
   model?: string | null;
   name: string;
   nextRunAt?: any | null;
   repositoryCheckoutId?: string | null;
+  runAt?: any | null;
+  scheduleKind: string;
   timezone?: string | null;
   updatedAt: any;
   repository?: {
@@ -9050,15 +10146,18 @@ export type ScheduledAgentJobsQuery = {
   };
   scheduledAgentJobs: Array<{
     __typename?: 'ScheduledAgentJobObject';
-    cronPattern: string;
+    cronPattern?: string | null;
     driverId: string;
     enabled: boolean;
     id: string;
+    intervalMs?: number | null;
     lastRunAt?: any | null;
     model?: string | null;
     name: string;
     nextRunAt?: any | null;
     repositoryCheckoutId?: string | null;
+    runAt?: any | null;
+    scheduleKind: string;
     timezone?: string | null;
     updatedAt: any;
     repository?: {
@@ -9117,15 +10216,18 @@ export type CreateScheduledAgentJobMutation = {
   __typename?: 'Mutation';
   createScheduledAgentJob: {
     __typename?: 'ScheduledAgentJobObject';
-    cronPattern: string;
+    cronPattern?: string | null;
     driverId: string;
     enabled: boolean;
     id: string;
+    intervalMs?: number | null;
     lastRunAt?: any | null;
     model?: string | null;
     name: string;
     nextRunAt?: any | null;
     repositoryCheckoutId?: string | null;
+    runAt?: any | null;
+    scheduleKind: string;
     timezone?: string | null;
     updatedAt: any;
     repository?: {
@@ -9178,6 +10280,10 @@ export type SettingsAgentsAgentClisQuery = {
       enabled: boolean;
       label: string;
       version?: string | null;
+      auth?: {
+        __typename?: 'AgentCliAuthStatusObject';
+        warning?: string | null;
+      } | null;
       modelOptions: Array<{
         __typename?: 'AgentCliModelOption';
         enabled: boolean;
@@ -9517,6 +10623,16 @@ export type GetWorkspaceRepositoryQuery = {
           linkedWorktrees: Array<string>;
           normalizedRemoteUrl?: string | null;
         };
+        hookTelemetry?: {
+          __typename?: 'RepositoryInspectionHookTelemetryObject';
+          authTokenConfigured: boolean;
+          endpointConfigured: boolean;
+          endpointSource: string;
+          producers: Array<string>;
+          reason?: string | null;
+          status: string;
+          telemetryDir: string;
+        } | null;
         stack: {
           __typename?: 'RepositoryInspectionStackObject';
           languages: Array<string>;
@@ -9581,6 +10697,16 @@ export type GetWorkspaceRepositoryForEditQuery = {
           linkedWorktrees: Array<string>;
           normalizedRemoteUrl?: string | null;
         };
+        hookTelemetry?: {
+          __typename?: 'RepositoryInspectionHookTelemetryObject';
+          authTokenConfigured: boolean;
+          endpointConfigured: boolean;
+          endpointSource: string;
+          producers: Array<string>;
+          reason?: string | null;
+          status: string;
+          telemetryDir: string;
+        } | null;
         stack: {
           __typename?: 'RepositoryInspectionStackObject';
           languages: Array<string>;
@@ -9644,6 +10770,16 @@ export type UpdateRepositoryMutation = {
           linkedWorktrees: Array<string>;
           normalizedRemoteUrl?: string | null;
         };
+        hookTelemetry?: {
+          __typename?: 'RepositoryInspectionHookTelemetryObject';
+          authTokenConfigured: boolean;
+          endpointConfigured: boolean;
+          endpointSource: string;
+          producers: Array<string>;
+          reason?: string | null;
+          status: string;
+          telemetryDir: string;
+        } | null;
         stack: {
           __typename?: 'RepositoryInspectionStackObject';
           languages: Array<string>;
@@ -9692,6 +10828,16 @@ export type RepositoryCheckoutFieldsFragment = {
       linkedWorktrees: Array<string>;
       normalizedRemoteUrl?: string | null;
     };
+    hookTelemetry?: {
+      __typename?: 'RepositoryInspectionHookTelemetryObject';
+      authTokenConfigured: boolean;
+      endpointConfigured: boolean;
+      endpointSource: string;
+      producers: Array<string>;
+      reason?: string | null;
+      status: string;
+      telemetryDir: string;
+    } | null;
     stack: {
       __typename?: 'RepositoryInspectionStackObject';
       languages: Array<string>;
@@ -9760,6 +10906,16 @@ export type WorkspaceRepositoryFieldsFragment = {
         linkedWorktrees: Array<string>;
         normalizedRemoteUrl?: string | null;
       };
+      hookTelemetry?: {
+        __typename?: 'RepositoryInspectionHookTelemetryObject';
+        authTokenConfigured: boolean;
+        endpointConfigured: boolean;
+        endpointSource: string;
+        producers: Array<string>;
+        reason?: string | null;
+        status: string;
+        telemetryDir: string;
+      } | null;
       stack: {
         __typename?: 'RepositoryInspectionStackObject';
         languages: Array<string>;
@@ -9788,9 +10944,14 @@ export type GetSettingsRepositoriesQuery = {
   discoveredWorktrees: {
     __typename?: 'DiscoveredWorktreesObject';
     droppedCount: number;
-    rootSource?: WorktreeRootSource | null;
     scannedAt: string;
-    worktreeRoot?: string | null;
+    missingCheckouts: Array<{
+      __typename?: 'MissingWorktreeCheckoutObject';
+      checkoutId: string;
+      path: string;
+      reason: MissingWorktreeCheckoutReason;
+      repositoryId: string;
+    }>;
     problems: Array<{
       __typename?: 'WorktreeDiscoveryProblemObject';
       detail: string;
@@ -9800,6 +10961,7 @@ export type GetSettingsRepositoriesQuery = {
     }>;
     scannedRoots: Array<{
       __typename?: 'ScannedWorktreeRootObject';
+      baseRoot: string;
       exists: boolean;
       path: string;
       source: WorktreeRootSource;
@@ -9868,6 +11030,16 @@ export type GetSettingsRepositoriesQuery = {
           linkedWorktrees: Array<string>;
           normalizedRemoteUrl?: string | null;
         };
+        hookTelemetry?: {
+          __typename?: 'RepositoryInspectionHookTelemetryObject';
+          authTokenConfigured: boolean;
+          endpointConfigured: boolean;
+          endpointSource: string;
+          producers: Array<string>;
+          reason?: string | null;
+          status: string;
+          telemetryDir: string;
+        } | null;
         stack: {
           __typename?: 'RepositoryInspectionStackObject';
           languages: Array<string>;
@@ -9957,6 +11129,16 @@ export type AddWorkspaceFolderMutation = {
           linkedWorktrees: Array<string>;
           normalizedRemoteUrl?: string | null;
         };
+        hookTelemetry?: {
+          __typename?: 'RepositoryInspectionHookTelemetryObject';
+          authTokenConfigured: boolean;
+          endpointConfigured: boolean;
+          endpointSource: string;
+          producers: Array<string>;
+          reason?: string | null;
+          status: string;
+          telemetryDir: string;
+        } | null;
         stack: {
           __typename?: 'RepositoryInspectionStackObject';
           languages: Array<string>;
@@ -10011,6 +11193,16 @@ export type AddWorkspaceFolderMutation = {
             linkedWorktrees: Array<string>;
             normalizedRemoteUrl?: string | null;
           };
+          hookTelemetry?: {
+            __typename?: 'RepositoryInspectionHookTelemetryObject';
+            authTokenConfigured: boolean;
+            endpointConfigured: boolean;
+            endpointSource: string;
+            producers: Array<string>;
+            reason?: string | null;
+            status: string;
+            telemetryDir: string;
+          } | null;
           stack: {
             __typename?: 'RepositoryInspectionStackObject';
             languages: Array<string>;
@@ -10074,6 +11266,16 @@ export type CloneRepositoryMutation = {
           linkedWorktrees: Array<string>;
           normalizedRemoteUrl?: string | null;
         };
+        hookTelemetry?: {
+          __typename?: 'RepositoryInspectionHookTelemetryObject';
+          authTokenConfigured: boolean;
+          endpointConfigured: boolean;
+          endpointSource: string;
+          producers: Array<string>;
+          reason?: string | null;
+          status: string;
+          telemetryDir: string;
+        } | null;
         stack: {
           __typename?: 'RepositoryInspectionStackObject';
           languages: Array<string>;
@@ -10128,6 +11330,16 @@ export type CloneRepositoryMutation = {
             linkedWorktrees: Array<string>;
             normalizedRemoteUrl?: string | null;
           };
+          hookTelemetry?: {
+            __typename?: 'RepositoryInspectionHookTelemetryObject';
+            authTokenConfigured: boolean;
+            endpointConfigured: boolean;
+            endpointSource: string;
+            producers: Array<string>;
+            reason?: string | null;
+            status: string;
+            telemetryDir: string;
+          } | null;
           stack: {
             __typename?: 'RepositoryInspectionStackObject';
             languages: Array<string>;
@@ -10191,6 +11403,16 @@ export type RefreshCheckoutMutation = {
           linkedWorktrees: Array<string>;
           normalizedRemoteUrl?: string | null;
         };
+        hookTelemetry?: {
+          __typename?: 'RepositoryInspectionHookTelemetryObject';
+          authTokenConfigured: boolean;
+          endpointConfigured: boolean;
+          endpointSource: string;
+          producers: Array<string>;
+          reason?: string | null;
+          status: string;
+          telemetryDir: string;
+        } | null;
         stack: {
           __typename?: 'RepositoryInspectionStackObject';
           languages: Array<string>;
@@ -10250,6 +11472,16 @@ export type RefreshCheckoutMutation = {
             linkedWorktrees: Array<string>;
             normalizedRemoteUrl?: string | null;
           };
+          hookTelemetry?: {
+            __typename?: 'RepositoryInspectionHookTelemetryObject';
+            authTokenConfigured: boolean;
+            endpointConfigured: boolean;
+            endpointSource: string;
+            producers: Array<string>;
+            reason?: string | null;
+            status: string;
+            telemetryDir: string;
+          } | null;
           stack: {
             __typename?: 'RepositoryInspectionStackObject';
             languages: Array<string>;
@@ -10266,6 +11498,23 @@ export type RefreshCheckoutMutation = {
         name: string;
       } | null;
     };
+  };
+};
+
+export type PruneWorktreeCheckoutsMutationVariables = Exact<{
+  input: PruneWorktreeCheckoutsInput;
+}>;
+
+export type PruneWorktreeCheckoutsMutation = {
+  __typename?: 'Mutation';
+  pruneWorktreeCheckouts: {
+    __typename?: 'PruneWorktreeCheckoutsPayloadObject';
+    results: Array<{
+      __typename?: 'PruneWorktreeCheckoutResultObject';
+      checkoutId: string;
+      outcome: PruneWorktreeCheckoutOutcome;
+      path?: string | null;
+    }>;
   };
 };
 
@@ -10570,6 +11819,7 @@ export type SkillDetailUsageBySkillFragment = {
   lastUsedAt?: any | null;
   outcomeCount: number;
   scope: string;
+  sessionEndedCount: number;
   skillName: string;
   successCount: number;
 };
@@ -10578,6 +11828,7 @@ export type SkillDetailUsageByDayFragment = {
   __typename?: 'SkillUsageByDayObject';
   date: string;
   oursCount: number;
+  personalCount: number;
   thirdPartyCount: number;
   totalCount: number;
 };
@@ -10596,6 +11847,7 @@ export type GetSkillDetailUsageQuery = {
       __typename?: 'SkillUsageByDayObject';
       date: string;
       oursCount: number;
+      personalCount: number;
       thirdPartyCount: number;
       totalCount: number;
     }>;
@@ -10608,6 +11860,7 @@ export type GetSkillDetailUsageQuery = {
       lastUsedAt?: any | null;
       outcomeCount: number;
       scope: string;
+      sessionEndedCount: number;
       skillName: string;
       successCount: number;
     }>;
@@ -10920,6 +12173,7 @@ export type UsageTokenUsageRowFragment = {
   outputTokens?: number | null;
   provider: string;
   reasoningTokens?: number | null;
+  source?: string | null;
   totalTokens?: number | null;
 };
 
@@ -10957,6 +12211,7 @@ export type GetUsageTokenUsageQuery = {
       outputTokens?: number | null;
       provider: string;
       reasoningTokens?: number | null;
+      source?: string | null;
       totalTokens?: number | null;
     }>;
     totals: {
@@ -10981,6 +12236,7 @@ export type UsageSkillUsageBySkillFragment = {
   errorCount: number;
   outcomeCount: number;
   scope: string;
+  sessionEndedCount: number;
   skillName: string;
   successCount: number;
 };
@@ -10995,6 +12251,7 @@ export type UsageSkillUsageByDayFragment = {
   __typename?: 'SkillUsageByDayObject';
   date: string;
   oursCount: number;
+  personalCount: number;
   thirdPartyCount: number;
   totalCount: number;
 };
@@ -11022,6 +12279,7 @@ export type GetUsageSkillUsageQuery = {
       __typename?: 'SkillUsageByDayObject';
       date: string;
       oursCount: number;
+      personalCount: number;
       thirdPartyCount: number;
       totalCount: number;
     }>;
@@ -11038,6 +12296,7 @@ export type GetUsageSkillUsageQuery = {
       errorCount: number;
       outcomeCount: number;
       scope: string;
+      sessionEndedCount: number;
       skillName: string;
       successCount: number;
     }>;
@@ -11047,6 +12306,27 @@ export type GetUsageSkillUsageQuery = {
       gitBranches: Array<string>;
     };
   };
+};
+
+export type UsageCaptureHealthRowFragment = {
+  __typename?: 'CaptureHealthRowObject';
+  lastCapturedAt: any;
+  source: string;
+  stream: string;
+};
+
+export type GetUsageCaptureHealthQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type GetUsageCaptureHealthQuery = {
+  __typename?: 'Query';
+  captureHealth: Array<{
+    __typename?: 'CaptureHealthRowObject';
+    lastCapturedAt: any;
+    source: string;
+    stream: string;
+  }>;
 };
 
 export type ScheduleFormAgentClisQueryVariables = Exact<{
@@ -11267,6 +12547,29 @@ export const NotificationFieldsFragmentDoc = {
             kind: 'InlineFragment',
             typeCondition: {
               kind: 'NamedType',
+              name: { kind: 'Name', value: 'ScheduledRunFailedNotification' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'runCount' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'runId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'scheduledAgentJobId' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'scheduleName' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
               name: { kind: 'Name', value: 'SystemAlertNotification' },
             },
             selectionSet: {
@@ -11320,6 +12623,95 @@ export const RootMetricsFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<RootMetricsFragment, unknown>;
+export const BlogPostEditorPostFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'BlogPostEditorPost' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'BlogPostAdminObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'author' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'bodyMarkdown' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'coverImageAlt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'coverImageUrl' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'excerpt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastEditedBy' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'publishedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'seoDescription' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'seoTitle' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tags' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<BlogPostEditorPostFragment, unknown>;
+export const BlogPostListRowFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'BlogPostListRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'BlogPostAdminObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'author' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastEditedBy' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'publishedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<BlogPostListRowFragment, unknown>;
 export const DashboardActivityCardFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -11631,6 +13023,8 @@ export const PlanDetailsFragmentDoc = {
             },
           },
           { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduledRunAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduledRunId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           {
@@ -11842,6 +13236,7 @@ export const PlanTaskRowFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'wave' } },
         ],
       },
     },
@@ -11983,6 +13378,7 @@ export const TaskDetailsFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'wave' } },
         ],
       },
     },
@@ -12593,10 +13989,16 @@ export const ScheduledJobRunRowFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
           { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'resumeOfRunId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduledFor' } },
           { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'trigger' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'usageLimitResetsAt' },
+          },
         ],
       },
     },
@@ -12619,6 +14021,7 @@ export const ScheduledJobCardFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'intervalMs' } },
           { kind: 'Field', name: { kind: 'Name', value: 'lastRunAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
@@ -12642,6 +14045,8 @@ export const ScheduledJobCardFragmentDoc = {
             kind: 'Field',
             name: { kind: 'Name', value: 'repositoryCheckoutId' },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'runAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduleKind' } },
           { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
@@ -12664,6 +14069,11 @@ export const ScheduledJobDetailFragmentDoc = {
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'cwd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'misfirePolicy' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'misfireThresholdMs' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'prompt' } },
           {
             kind: 'FragmentSpread',
@@ -12688,6 +14098,7 @@ export const ScheduledJobDetailFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'intervalMs' } },
           { kind: 'Field', name: { kind: 'Name', value: 'lastRunAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
@@ -12711,6 +14122,8 @@ export const ScheduledJobDetailFragmentDoc = {
             kind: 'Field',
             name: { kind: 'Name', value: 'repositoryCheckoutId' },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'runAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduleKind' } },
           { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
@@ -12766,6 +14179,7 @@ export const ScheduledJobRunDetailFragmentDoc = {
             name: { kind: 'Name', value: 'repositoryCheckoutId' },
           },
           { kind: 'Field', name: { kind: 'Name', value: 'resolvedCwd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'resumeOfRunId' } },
           {
             kind: 'Field',
             name: { kind: 'Name', value: 'scheduledAgentJobId' },
@@ -12778,6 +14192,10 @@ export const ScheduledJobRunDetailFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'trigger' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'usageLimitResetsAt' },
+          },
         ],
       },
     },
@@ -13068,6 +14486,43 @@ export const RepositoryCheckoutFieldsFragmentDoc = {
                     ],
                   },
                 },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'hookTelemetry' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'authTokenConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointSource' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'producers' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'reason' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'telemetryDir' },
+                      },
+                    ],
+                  },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
                 {
                   kind: 'Field',
@@ -13239,6 +14694,43 @@ export const WorkspaceRepositoryFieldsFragmentDoc = {
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'normalizedRemoteUrl' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'hookTelemetry' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'authTokenConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointSource' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'producers' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'reason' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'telemetryDir' },
                       },
                     ],
                   },
@@ -13435,6 +14927,7 @@ export const SkillDetailUsageBySkillFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'lastUsedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'outcomeCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'scope' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sessionEndedCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'skillName' } },
           { kind: 'Field', name: { kind: 'Name', value: 'successCount' } },
         ],
@@ -13457,6 +14950,7 @@ export const SkillDetailUsageByDayFragmentDoc = {
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'date' } },
           { kind: 'Field', name: { kind: 'Name', value: 'oursCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'personalCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'thirdPartyCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
         ],
@@ -13574,6 +15068,7 @@ export const UsageTokenUsageRowFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'provider' } },
           { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
           { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
         ],
       },
@@ -13625,6 +15120,7 @@ export const UsageSkillUsageBySkillFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'errorCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'outcomeCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'scope' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sessionEndedCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'skillName' } },
           { kind: 'Field', name: { kind: 'Name', value: 'successCount' } },
         ],
@@ -13667,6 +15163,7 @@ export const UsageSkillUsageByDayFragmentDoc = {
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'date' } },
           { kind: 'Field', name: { kind: 'Name', value: 'oursCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'personalCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'thirdPartyCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
         ],
@@ -13694,6 +15191,46 @@ export const UsageSkillUsageFilterOptionsFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<UsageSkillUsageFilterOptionsFragment, unknown>;
+export const UsageCaptureHealthRowFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageCaptureHealthRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'CaptureHealthRowObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'lastCapturedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'stream' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UsageCaptureHealthRowFragment, unknown>;
+export const GetMyPermissionsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getMyPermissions' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'myPermissions' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetMyPermissionsQuery,
+  GetMyPermissionsQueryVariables
+>;
 export const GetMyUserDocument = {
   kind: 'Document',
   definitions: [
@@ -14533,6 +16070,29 @@ export const NotificationsDocument = {
             kind: 'InlineFragment',
             typeCondition: {
               kind: 'NamedType',
+              name: { kind: 'Name', value: 'ScheduledRunFailedNotification' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'runCount' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'runId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'scheduledAgentJobId' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'scheduleName' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
               name: { kind: 'Name', value: 'SystemAlertNotification' },
             },
             selectionSet: {
@@ -15327,6 +16887,993 @@ export const MintSubscriptionTokenDocument = {
 } as unknown as DocumentNode<
   MintSubscriptionTokenMutation,
   MintSubscriptionTokenMutationVariables
+>;
+export const GetBlogPostEditorDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getBlogPostEditor' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'blogAdminAuthors' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'blogAdminPost' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                {
+                  kind: 'InlineFragment',
+                  typeCondition: {
+                    kind: 'NamedType',
+                    name: { kind: 'Name', value: 'BlogPostAdminObject' },
+                  },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'BlogPostEditorPost' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'InlineFragment',
+                  typeCondition: {
+                    kind: 'NamedType',
+                    name: { kind: 'Name', value: 'BlogPostNotFoundError' },
+                  },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'message' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'blogAdminTags' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'BlogPostEditorPost' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'BlogPostAdminObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'author' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'bodyMarkdown' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'coverImageAlt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'coverImageUrl' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'excerpt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastEditedBy' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'publishedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'seoDescription' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'seoTitle' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tags' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetBlogPostEditorQuery,
+  GetBlogPostEditorQueryVariables
+>;
+export const UpdateBlogPostEditorDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'updateBlogPostEditor' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'UpdateBlogPostInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateBlogPost' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                {
+                  kind: 'InlineFragment',
+                  typeCondition: {
+                    kind: 'NamedType',
+                    name: { kind: 'Name', value: 'BlogCoverAltRequiredError' },
+                  },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'message' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'InlineFragment',
+                  typeCondition: {
+                    kind: 'NamedType',
+                    name: { kind: 'Name', value: 'BlogPostAdminObject' },
+                  },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'updatedAt' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'InlineFragment',
+                  typeCondition: {
+                    kind: 'NamedType',
+                    name: { kind: 'Name', value: 'BlogPostNotFoundError' },
+                  },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'message' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'InlineFragment',
+                  typeCondition: {
+                    kind: 'NamedType',
+                    name: {
+                      kind: 'Name',
+                      value: 'BlogPostPublishPermissionRequiredError',
+                    },
+                  },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'message' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'InlineFragment',
+                  typeCondition: {
+                    kind: 'NamedType',
+                    name: { kind: 'Name', value: 'BlogPostStaleWriteError' },
+                  },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'currentUpdatedAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'message' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'InlineFragment',
+                  typeCondition: {
+                    kind: 'NamedType',
+                    name: { kind: 'Name', value: 'BlogReferenceNotFoundError' },
+                  },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'entity' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'key' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'message' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'InlineFragment',
+                  typeCondition: {
+                    kind: 'NamedType',
+                    name: { kind: 'Name', value: 'BlogSlugConflictError' },
+                  },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'message' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  UpdateBlogPostEditorMutation,
+  UpdateBlogPostEditorMutationVariables
+>;
+export const SetBlogPostEditorTagsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'setBlogPostEditorTags' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'SetBlogPostTagsInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'setBlogPostTags' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                {
+                  kind: 'InlineFragment',
+                  typeCondition: {
+                    kind: 'NamedType',
+                    name: { kind: 'Name', value: 'BlogPostAdminObject' },
+                  },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'updatedAt' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'InlineFragment',
+                  typeCondition: {
+                    kind: 'NamedType',
+                    name: { kind: 'Name', value: 'BlogPostNotFoundError' },
+                  },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'message' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'InlineFragment',
+                  typeCondition: {
+                    kind: 'NamedType',
+                    name: {
+                      kind: 'Name',
+                      value: 'BlogPostPublishPermissionRequiredError',
+                    },
+                  },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'message' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'InlineFragment',
+                  typeCondition: {
+                    kind: 'NamedType',
+                    name: { kind: 'Name', value: 'BlogReferenceNotFoundError' },
+                  },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'entity' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'key' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'message' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  SetBlogPostEditorTagsMutation,
+  SetBlogPostEditorTagsMutationVariables
+>;
+export const PublishBlogPostEditorDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'publishBlogPostEditor' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'PublishBlogPostInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'publishBlogPost' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                {
+                  kind: 'InlineFragment',
+                  typeCondition: {
+                    kind: 'NamedType',
+                    name: { kind: 'Name', value: 'BlogPostAdminObject' },
+                  },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'publishedAt' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'updatedAt' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'InlineFragment',
+                  typeCondition: {
+                    kind: 'NamedType',
+                    name: { kind: 'Name', value: 'BlogPostNotFoundError' },
+                  },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'message' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  PublishBlogPostEditorMutation,
+  PublishBlogPostEditorMutationVariables
+>;
+export const UnpublishBlogPostEditorDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'unpublishBlogPostEditor' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'unpublishBlogPost' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                {
+                  kind: 'InlineFragment',
+                  typeCondition: {
+                    kind: 'NamedType',
+                    name: { kind: 'Name', value: 'BlogPostAdminObject' },
+                  },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'updatedAt' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'InlineFragment',
+                  typeCondition: {
+                    kind: 'NamedType',
+                    name: { kind: 'Name', value: 'BlogPostNotFoundError' },
+                  },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'message' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  UnpublishBlogPostEditorMutation,
+  UnpublishBlogPostEditorMutationVariables
+>;
+export const ArchiveBlogPostEditorDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'archiveBlogPostEditor' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'archiveBlogPost' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                {
+                  kind: 'InlineFragment',
+                  typeCondition: {
+                    kind: 'NamedType',
+                    name: { kind: 'Name', value: 'BlogPostAdminObject' },
+                  },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'updatedAt' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'InlineFragment',
+                  typeCondition: {
+                    kind: 'NamedType',
+                    name: { kind: 'Name', value: 'BlogPostNotFoundError' },
+                  },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'message' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  ArchiveBlogPostEditorMutation,
+  ArchiveBlogPostEditorMutationVariables
+>;
+export const GetBlogAdminPostsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getBlogAdminPosts' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'after' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'first' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'search' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'state' },
+          },
+          type: {
+            kind: 'ListType',
+            type: {
+              kind: 'NonNullType',
+              type: {
+                kind: 'NamedType',
+                name: { kind: 'Name', value: 'BlogPostState' },
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'blogAdminPosts' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'after' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'after' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'first' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'first' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'search' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'search' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'state' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'state' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'endCursor' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'hasNextPage' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'items' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'BlogPostListRow' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'BlogPostListRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'BlogPostAdminObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'author' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastEditedBy' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'publishedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetBlogAdminPostsQuery,
+  GetBlogAdminPostsQueryVariables
+>;
+export const CreateBlogPostDraftDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'createBlogPostDraft' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'CreateBlogPostInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createBlogPost' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                {
+                  kind: 'InlineFragment',
+                  typeCondition: {
+                    kind: 'NamedType',
+                    name: { kind: 'Name', value: 'BlogCoverAltRequiredError' },
+                  },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'message' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'InlineFragment',
+                  typeCondition: {
+                    kind: 'NamedType',
+                    name: { kind: 'Name', value: 'BlogPostAdminObject' },
+                  },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'InlineFragment',
+                  typeCondition: {
+                    kind: 'NamedType',
+                    name: { kind: 'Name', value: 'BlogReferenceNotFoundError' },
+                  },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'entity' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'key' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'message' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'InlineFragment',
+                  typeCondition: {
+                    kind: 'NamedType',
+                    name: { kind: 'Name', value: 'BlogSlugConflictError' },
+                  },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'message' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CreateBlogPostDraftMutation,
+  CreateBlogPostDraftMutationVariables
 >;
 export const GetDashboardDocument = {
   kind: 'Document',
@@ -16542,6 +19089,8 @@ export const GetPlanByIdDocument = {
             },
           },
           { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduledRunAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduledRunId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           {
@@ -16650,6 +19199,7 @@ export const GetTasksByPlanIdDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'wave' } },
         ],
       },
     },
@@ -16721,6 +19271,70 @@ export const PlanDetailEnqueuePlanRunDocument = {
 } as unknown as DocumentNode<
   PlanDetailEnqueuePlanRunMutation,
   PlanDetailEnqueuePlanRunMutationVariables
+>;
+export const PlanDetailSchedulePlanRunDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'PlanDetailSchedulePlanRun' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'SchedulePlanRunInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'schedulePlanRun' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'executionBackend' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'planRunId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'scheduledFor' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  PlanDetailSchedulePlanRunMutation,
+  PlanDetailSchedulePlanRunMutationVariables
 >;
 export const PlanDetailEvaluatePlanRulesDocument = {
   kind: 'Document',
@@ -17057,6 +19671,7 @@ export const PlanDetailUpdateTaskDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'wave' } },
         ],
       },
     },
@@ -17123,6 +19738,58 @@ export const PlanDetailUpdatePlanJobRunHooksDocument = {
 } as unknown as DocumentNode<
   PlanDetailUpdatePlanJobRunHooksMutation,
   PlanDetailUpdatePlanJobRunHooksMutationVariables
+>;
+export const PlanDetailRunConfigDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'PlanDetailRunConfig' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'plan' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'runConfigJson' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  PlanDetailRunConfigQuery,
+  PlanDetailRunConfigQueryVariables
 >;
 export const PlanDetailUpdatePlanRunConfigDocument = {
   kind: 'Document',
@@ -17416,6 +20083,8 @@ export const PlanDetailCriticalDocument = {
             },
           },
           { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduledRunAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduledRunId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           {
@@ -17470,6 +20139,7 @@ export const PlanDetailCriticalDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'wave' } },
         ],
       },
     },
@@ -17754,7 +20424,7 @@ export const PlanDetailRunHistoryDocument = {
                     {
                       kind: 'ObjectField',
                       name: { kind: 'Name', value: 'limit' },
-                      value: { kind: 'IntValue', value: '10' },
+                      value: { kind: 'IntValue', value: '25' },
                     },
                   ],
                 },
@@ -17817,10 +20487,22 @@ export const PlanDetailRunHistoryDocument = {
                 },
                 {
                   kind: 'Field',
+                  name: { kind: 'Name', value: 'resumeOfRunId' },
+                },
+                {
+                  kind: 'Field',
                   name: { kind: 'Name', value: 'runConfigSnapshotJson' },
                 },
                 { kind: 'Field', name: { kind: 'Name', value: 'runKind' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'scheduledFor' },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'usageLimitResetsAt' },
+                },
               ],
             },
           },
@@ -18529,6 +21211,7 @@ export const GetTaskByIdDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'wave' } },
         ],
       },
     },
@@ -18904,6 +21587,17 @@ export const TaskOutputStreamChunksDocument = {
             type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
           },
         },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'taskId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
       ],
       selectionSet: {
         kind: 'SelectionSet',
@@ -18924,6 +21618,14 @@ export const TaskOutputStreamChunksDocument = {
                       value: {
                         kind: 'Variable',
                         name: { kind: 'Name', value: 'planId' },
+                      },
+                    },
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'taskId' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'taskId' },
                       },
                     },
                   ],
@@ -22156,6 +24858,7 @@ export const ScheduledAgentJobDetailDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'intervalMs' } },
           { kind: 'Field', name: { kind: 'Name', value: 'lastRunAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
@@ -22179,6 +24882,8 @@ export const ScheduledAgentJobDetailDocument = {
             kind: 'Field',
             name: { kind: 'Name', value: 'repositoryCheckoutId' },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'runAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduleKind' } },
           { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
@@ -22196,6 +24901,11 @@ export const ScheduledAgentJobDetailDocument = {
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'cwd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'misfirePolicy' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'misfireThresholdMs' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'prompt' } },
           {
             kind: 'FragmentSpread',
@@ -22230,10 +24940,16 @@ export const ScheduledAgentJobDetailDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
           { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'resumeOfRunId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduledFor' } },
           { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'trigger' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'usageLimitResetsAt' },
+          },
         ],
       },
     },
@@ -22308,6 +25024,7 @@ export const UpdateScheduledAgentJobDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'intervalMs' } },
           { kind: 'Field', name: { kind: 'Name', value: 'lastRunAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
@@ -22331,6 +25048,8 @@ export const UpdateScheduledAgentJobDocument = {
             kind: 'Field',
             name: { kind: 'Name', value: 'repositoryCheckoutId' },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'runAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduleKind' } },
           { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
@@ -22410,6 +25129,7 @@ export const SetScheduledAgentJobEnabledDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'intervalMs' } },
           { kind: 'Field', name: { kind: 'Name', value: 'lastRunAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
@@ -22433,6 +25153,8 @@ export const SetScheduledAgentJobEnabledDocument = {
             kind: 'Field',
             name: { kind: 'Name', value: 'repositoryCheckoutId' },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'runAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduleKind' } },
           { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
@@ -22513,10 +25235,16 @@ export const RunScheduledAgentJobNowDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
           { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'resumeOfRunId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduledFor' } },
           { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'trigger' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'usageLimitResetsAt' },
+          },
         ],
       },
     },
@@ -22693,6 +25421,7 @@ export const ScheduledAgentJobRunDetailDocument = {
             name: { kind: 'Name', value: 'repositoryCheckoutId' },
           },
           { kind: 'Field', name: { kind: 'Name', value: 'resolvedCwd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'resumeOfRunId' } },
           {
             kind: 'Field',
             name: { kind: 'Name', value: 'scheduledAgentJobId' },
@@ -22705,6 +25434,10 @@ export const ScheduledAgentJobRunDetailDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'trigger' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'usageLimitResetsAt' },
+          },
         ],
       },
     },
@@ -22807,6 +25540,7 @@ export const CancelScheduledAgentJobRunDocument = {
             name: { kind: 'Name', value: 'repositoryCheckoutId' },
           },
           { kind: 'Field', name: { kind: 'Name', value: 'resolvedCwd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'resumeOfRunId' } },
           {
             kind: 'Field',
             name: { kind: 'Name', value: 'scheduledAgentJobId' },
@@ -22819,6 +25553,10 @@ export const CancelScheduledAgentJobRunDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'trigger' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'usageLimitResetsAt' },
+          },
         ],
       },
     },
@@ -22951,6 +25689,7 @@ export const ScheduledAgentJobsDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'intervalMs' } },
           { kind: 'Field', name: { kind: 'Name', value: 'lastRunAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
@@ -22974,6 +25713,8 @@ export const ScheduledAgentJobsDocument = {
             kind: 'Field',
             name: { kind: 'Name', value: 'repositoryCheckoutId' },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'runAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduleKind' } },
           { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
@@ -23173,6 +25914,7 @@ export const CreateScheduledAgentJobDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'intervalMs' } },
           { kind: 'Field', name: { kind: 'Name', value: 'lastRunAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
@@ -23196,6 +25938,8 @@ export const CreateScheduledAgentJobDocument = {
             kind: 'Field',
             name: { kind: 'Name', value: 'repositoryCheckoutId' },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'runAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduleKind' } },
           { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
@@ -23331,6 +26075,19 @@ export const SettingsAgentsAgentClisDocument = {
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'auth' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'warning' },
+                            },
+                          ],
+                        },
+                      },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'backend' },
@@ -24543,6 +27300,43 @@ export const GetWorkspaceRepositoryDocument = {
                     ],
                   },
                 },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'hookTelemetry' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'authTokenConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointSource' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'producers' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'reason' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'telemetryDir' },
+                      },
+                    ],
+                  },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
                 {
                   kind: 'Field',
@@ -24778,6 +27572,43 @@ export const GetWorkspaceRepositoryForEditDocument = {
                     ],
                   },
                 },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'hookTelemetry' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'authTokenConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointSource' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'producers' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'reason' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'telemetryDir' },
+                      },
+                    ],
+                  },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
                 {
                   kind: 'Field',
@@ -25005,6 +27836,43 @@ export const UpdateRepositoryDocument = {
                     ],
                   },
                 },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'hookTelemetry' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'authTokenConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointSource' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'producers' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'reason' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'telemetryDir' },
+                      },
+                    ],
+                  },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
                 {
                   kind: 'Field',
@@ -25134,6 +28002,28 @@ export const GetSettingsRepositoriesDocument = {
                 },
                 {
                   kind: 'Field',
+                  name: { kind: 'Name', value: 'missingCheckouts' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'checkoutId' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'reason' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'repositoryId' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
                   name: { kind: 'Name', value: 'problems' },
                   selectionSet: {
                     kind: 'SelectionSet',
@@ -25151,7 +28041,6 @@ export const GetSettingsRepositoriesDocument = {
                     ],
                   },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'rootSource' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
                 {
                   kind: 'Field',
@@ -25159,6 +28048,10 @@ export const GetSettingsRepositoriesDocument = {
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'baseRoot' },
+                      },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'exists' },
@@ -25174,10 +28067,6 @@ export const GetSettingsRepositoriesDocument = {
                       },
                     ],
                   },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'worktreeRoot' },
                 },
                 {
                   kind: 'Field',
@@ -25311,6 +28200,43 @@ export const GetSettingsRepositoriesDocument = {
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'normalizedRemoteUrl' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'hookTelemetry' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'authTokenConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointSource' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'producers' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'reason' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'telemetryDir' },
                       },
                     ],
                   },
@@ -25706,6 +28632,43 @@ export const AddWorkspaceFolderDocument = {
                     ],
                   },
                 },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'hookTelemetry' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'authTokenConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointSource' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'producers' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'reason' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'telemetryDir' },
+                      },
+                    ],
+                  },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
                 {
                   kind: 'Field',
@@ -25976,6 +28939,43 @@ export const CloneRepositoryDocument = {
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'normalizedRemoteUrl' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'hookTelemetry' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'authTokenConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointSource' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'producers' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'reason' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'telemetryDir' },
                       },
                     ],
                   },
@@ -26261,6 +29261,43 @@ export const RefreshCheckoutDocument = {
                     ],
                   },
                 },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'hookTelemetry' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'authTokenConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointConfigured' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'endpointSource' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'producers' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'reason' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'telemetryDir' },
+                      },
+                    ],
+                  },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
                 {
                   kind: 'Field',
@@ -26352,6 +29389,77 @@ export const RefreshCheckoutDocument = {
 } as unknown as DocumentNode<
   RefreshCheckoutMutation,
   RefreshCheckoutMutationVariables
+>;
+export const PruneWorktreeCheckoutsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'pruneWorktreeCheckouts' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'PruneWorktreeCheckoutsInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'pruneWorktreeCheckouts' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'results' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'checkoutId' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'outcome' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  PruneWorktreeCheckoutsMutation,
+  PruneWorktreeCheckoutsMutationVariables
 >;
 export const DeleteWorkspaceLocalRepositoryDocument = {
   kind: 'Document',
@@ -27321,6 +30429,7 @@ export const GetSkillDetailUsageDocument = {
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'date' } },
           { kind: 'Field', name: { kind: 'Name', value: 'oursCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'personalCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'thirdPartyCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
         ],
@@ -27343,6 +30452,7 @@ export const GetSkillDetailUsageDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'lastUsedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'outcomeCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'scope' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sessionEndedCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'skillName' } },
           { kind: 'Field', name: { kind: 'Name', value: 'successCount' } },
         ],
@@ -28528,6 +31638,7 @@ export const GetUsageTokenUsageDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'provider' } },
           { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
           { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
         ],
       },
@@ -28738,6 +31849,7 @@ export const GetUsageSkillUsageDocument = {
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'date' } },
           { kind: 'Field', name: { kind: 'Name', value: 'oursCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'personalCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'thirdPartyCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
         ],
@@ -28774,6 +31886,7 @@ export const GetUsageSkillUsageDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'errorCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'outcomeCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'scope' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sessionEndedCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'skillName' } },
           { kind: 'Field', name: { kind: 'Name', value: 'successCount' } },
         ],
@@ -28798,6 +31911,53 @@ export const GetUsageSkillUsageDocument = {
 } as unknown as DocumentNode<
   GetUsageSkillUsageQuery,
   GetUsageSkillUsageQueryVariables
+>;
+export const GetUsageCaptureHealthDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getUsageCaptureHealth' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'captureHealth' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'UsageCaptureHealthRow' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UsageCaptureHealthRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'CaptureHealthRowObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'lastCapturedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'stream' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetUsageCaptureHealthQuery,
+  GetUsageCaptureHealthQueryVariables
 >;
 export const ScheduleFormAgentClisDocument = {
   kind: 'Document',

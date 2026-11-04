@@ -1,13 +1,14 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   Button,
   Card,
   CardContent,
   CardFooter,
+  cn,
   Markdown,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { Link } from 'react-router';
+
 import type { NoteCardFragment } from '~/__generated__/graphql';
 
 export interface NoteCardProps {
@@ -32,7 +33,7 @@ export const NoteCard = (props: NoteCardProps): React.ReactElement => {
 
   return (
     <Card
-      className={clsx('flex flex-col', className)}
+      className={cn('flex flex-col', className)}
       data-testid="NoteCard"
       key={note.id}
     >

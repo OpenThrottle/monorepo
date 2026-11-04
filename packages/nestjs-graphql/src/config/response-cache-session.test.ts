@@ -1,10 +1,12 @@
-import type { BaseContext } from '@apollo/server';
 import { createHash } from 'node:crypto';
+
+import type { BaseContext } from '@apollo/server';
 import { describe, expect, it } from 'vitest';
+
 import {
   defaultResponseCacheSessionId,
   type ResponseCacheSessionRequestContext,
-} from './response-cache-session';
+} from './response-cache-session.ts';
 
 const sha256 = (value: string): string =>
   createHash('sha256').update(value).digest('hex');

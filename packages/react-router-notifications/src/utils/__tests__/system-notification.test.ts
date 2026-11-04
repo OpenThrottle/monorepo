@@ -4,17 +4,18 @@
  * user preference (enabled, onlyWhenBackground), and document visibility.
  */
 
+import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
+import type { NavigateFunction } from 'react-router';
 import {
-  type Mock,
   afterEach,
   beforeEach,
   describe,
   expect,
+  type Mock,
   test,
   vi,
 } from 'vitest';
-import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
-import type { NavigateFunction } from 'react-router';
+
 import { NOTIFICATIONS_STORAGE_KEY } from '../../config/index';
 import {
   DEFAULT_NOTIFICATIONS_STORAGE_KEY,

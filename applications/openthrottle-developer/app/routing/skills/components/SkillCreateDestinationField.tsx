@@ -1,14 +1,15 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
+  cn,
   Label,
   ToggleGroup,
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import type { SkillCreateDestination } from '~/routing/skills/config/skill-create';
 import {
-  SKILL_CREATE_DESTINATIONS,
   isSkillCreateDestination,
+  SKILL_CREATE_DESTINATIONS,
 } from '~/routing/skills/config/skill-create';
 import { SKILL_CREATE_COPY } from '~/routing/skills/data/data.copy';
 
@@ -57,7 +58,7 @@ export const SkillCreateDestinationField = (
 
   return (
     <div
-      className={clsx('flex flex-col gap-2', className)}
+      className={cn('flex flex-col gap-2', className)}
       data-testid="SkillCreateDestinationField"
     >
       <Label>{SKILL_CREATE_COPY.destinationFieldLabel}</Label>

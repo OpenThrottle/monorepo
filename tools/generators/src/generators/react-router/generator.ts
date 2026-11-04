@@ -1,13 +1,18 @@
-import prompts from 'prompts';
 import type { Tree } from '@nx/devkit';
+import prompts from 'prompts';
+
 import {
   getMonorepoApplications,
   getRemixRoutingFolders,
   getRemixServiceFolders,
 } from '../../utils';
-import { writeJsonToStdout } from '../../utils/output';
+import {
+  assertFolderVocabulary,
+  FOLDER_VOCABULARY_RESTRICTION,
+} from '../../utils/folder-vocabulary';
 import { throwGeneratorError } from '../../utils/generator-errors';
 import { isInteractiveArgPresent } from '../../utils/nx-cli';
+import { writeJsonToStdout } from '../../utils/output';
 import { assertReactRouterApplication } from '../../utils/target-validation';
 import { generatorReactRouterApplication } from './generator.application';
 import { generatorReactRouterComponent } from './generator.component';
@@ -74,6 +79,7 @@ export async function reactRouterGenerator(
           type: 'string',
         },
         folder: {
+          description: FOLDER_VOCABULARY_RESTRICTION,
           dynamic: true,
           required: 'variesByGenerator',
           type: 'string',
@@ -243,6 +249,11 @@ export async function reactRouterGenerator(
       ],
     });
   }
+
+  // A free-text --folder could scaffold straight into lib/ or shared/; refuse
+  // before touching the filesystem. Interactive picks come from existing
+  // folders, which the whole-tree folder-vocabulary check keeps clean.
+  assertFolderVocabulary('folder', schema.folder);
 
   // Every sub-generator below except `application` writes inside
   // applications/<app>/app. Validating here — before any filesystem read —

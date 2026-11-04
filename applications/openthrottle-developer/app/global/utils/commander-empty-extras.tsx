@@ -1,4 +1,3 @@
-import * as React from 'react';
 import type {
   CommanderItem,
   PlanRefMatch,
@@ -16,6 +15,7 @@ import {
   MapIcon,
   SearchIcon,
 } from 'lucide-react';
+import * as React from 'react';
 
 /**
  * @description Full OpenThrottle / RFC UUID matcher, re-exported from the shared

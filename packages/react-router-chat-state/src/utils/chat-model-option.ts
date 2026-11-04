@@ -2,6 +2,7 @@ import type {
   ChatModelGroup,
   ChatModelOption,
 } from '@openthrottle/react-router-chat';
+
 import { resolveProviderIcon } from './resolve-provider-icon';
 
 /**

@@ -1,7 +1,7 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
 import { InlineErrors } from '@openthrottle/react-router-shadcn';
+import { render } from '@testing-library/react';
+import * as React from 'react';
+import { describe, expect, it } from 'vitest';
 
 const ERROR_CLASS_NAME = 'text-destructive mb-2 text-center text-sm';
 

@@ -1,11 +1,13 @@
-import * as React from 'react';
-import type { RenderResult } from '@testing-library/react';
 import { Tabs } from '@openthrottle/react-router-shadcn';
+import type { RenderResult } from '@testing-library/react';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { TaskTabOutput } from '../TaskTabOutput';
-import type { TaskTabOutputProps } from '../TaskTabOutput';
+
 import type { TaskOutputStreamChunksQuery } from '~/__generated__/graphql';
 import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import type { TaskTabOutputProps } from '../TaskTabOutput';
+import { TaskTabOutput } from '../TaskTabOutput';
 
 type Chunk = TaskOutputStreamChunksQuery['planOutputStreamChunks'][number];
 

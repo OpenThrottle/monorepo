@@ -1,8 +1,6 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Form } from 'react-router';
 import {
   Button,
+  cn,
   DatePicker,
   Dialog,
   DialogContent,
@@ -13,6 +11,9 @@ import {
   Input,
   Label,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+import { Form } from 'react-router';
+
 import { SettingsKeysFormSuccess } from '~/routing/settings/components/SettingsKeysFormSuccess';
 import { useSettingsKeysForm } from '~/routing/settings/hooks/useSettingsKeysForm';
 import type { SettingsKeysActionData } from '~/routing/settings/utils/settings-keys-action';
@@ -72,7 +73,7 @@ export const SettingsKeysForm = (
   return (
     <Dialog onOpenChange={handleOpenChange} open={createDialogOpen}>
       <DialogContent
-        className={clsx('sm:max-w-lg', className)}
+        className={cn('sm:max-w-lg', className)}
         data-testid="SettingsKeysForm"
       >
         {showSuccess && successPayload != null ? (

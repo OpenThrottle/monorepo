@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { runAgentPrompt } from '@openthrottle/openthrottle-drivers';
 import type {
   RunAgentPromptConfig,
   RunAgentPromptResult,
 } from '@openthrottle/openthrottle-drivers';
+import { runAgentPrompt } from '@openthrottle/openthrottle-drivers';
 
 /**
  * @description Thin injectable wrapper over openthrottle-drivers `runAgentPrompt`. Exists purely as a

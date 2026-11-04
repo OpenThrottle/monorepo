@@ -4,22 +4,23 @@
  * Also exposes getDocument(chunkId) and listSources() for MCP parity.
  */
 
+import { Args, Query, Resolver } from '@nestjs/graphql';
+import type { SemanticSearchChunk } from '@openthrottle/node-client';
 import {
   embedQuery,
   getChunkById,
   listSources,
   runSemanticSearch,
 } from '@openthrottle/node-client';
-import type { SemanticSearchChunk } from '@openthrottle/node-client';
-import { Args, Query, Resolver } from '@nestjs/graphql';
-import { SearchInput } from './search.input';
+
+import { SearchInput } from './search.input.ts';
 import {
   ListPlanSourceObject,
   ListSourceInfoObject,
   ListSourcesResultObject,
   SearchChunk,
   SearchResult,
-} from './search.object';
+} from './search.object.ts';
 
 const DEFAULT_SEARCH_LIMIT = 20;
 const MAX_SEARCH_LIMIT = 50;

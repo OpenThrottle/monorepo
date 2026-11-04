@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { parseQueueJobDataString } from '../parse-queue-job-data';
 
 describe('parseQueueJobDataString', () => {

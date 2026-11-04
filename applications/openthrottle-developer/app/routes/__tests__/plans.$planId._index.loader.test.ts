@@ -1,7 +1,11 @@
-import { describe, expect, test, vi, beforeEach } from 'vitest';
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
+import {
+  createLoaderArgs,
+  createTestRouterContext,
+} from '@openthrottle/react-router-testing';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
-import { loader } from '../plans.$planId._index';
 import {
   PlanDetailCriticalDocument,
   PlanDetailLedgerDocument,
@@ -11,16 +15,17 @@ import {
   PlanDetailWorkspaceEditorsDocument,
   PlanDetailWorkspaceRepositoriesDocument,
 } from '~/__generated__/graphql';
-import {
-  createLoaderArgs,
-  createTestRouterContext,
-} from '@openthrottle/react-router-testing';
+import * as modelsServer from '~/routing/home/data/models.server';
+
+import { loader } from '../plans.$planId._index';
 
 vi.mock('@openthrottle/react-router-graphql');
+vi.mock('~/routing/home/data/models.server');
 
 const mockExecuteGraphqlWithAuth = vi.mocked(
   graphqlWithAuth.executeGraphqlWithAuth,
 );
+const mockLoadComposerModels = vi.mocked(modelsServer.loadComposerModels);
 
 const planId = '80864bba-630a-451d-bfd2-4b25ec202381';
 
@@ -33,6 +38,7 @@ const ruleApplications = [{ __typename: 'RuleApplicationObject', id: 'app-1' }];
 const vocabularyTags = [{ __typename: 'SkillTagObject', id: 'tag-1' }];
 const linkedArtifacts = [{ __typename: 'WorkArtifactObject', id: 'art-1' }];
 const repositories = [{ __typename: 'RepositoryObject', id: 'repo-1' }];
+const models = [{ groupId: 'cursor', id: 'cursor|auto', label: 'auto' }];
 
 /**
  * Route each of the six documents to its own response, so a test can prove the
@@ -98,6 +104,8 @@ function callLoader(): ReturnType<typeof loader> {
 describe('routes/plans.$planId._index loader', () => {
   beforeEach(() => {
     mockExecuteGraphqlWithAuth.mockReset();
+    mockLoadComposerModels.mockReset();
+    mockLoadComposerModels.mockResolvedValue(models);
   });
 
   test('returns an empty data shape and skips GraphQL when planId is missing', async () => {
@@ -115,10 +123,12 @@ describe('routes/plans.$planId._index loader', () => {
       linkedArtifacts: [],
       ruleApplications: [],
     });
+    await expect(result.models).resolves.toEqual([]);
+    expect(mockLoadComposerModels).not.toHaveBeenCalled();
     await expect(result.outputChunks).resolves.toEqual([]);
     await expect(result.runHistory).resolves.toEqual({
       planRunAuditRows: [],
-      recentPlanRuns: [],
+      planRunMetrics: [],
     });
     await expect(result.tagVocabulary).resolves.toEqual([]);
     await expect(result.workspaceRepositories).resolves.toEqual([]);
@@ -135,6 +145,7 @@ describe('routes/plans.$planId._index loader', () => {
 
     // Everything else is still in flight.
     expect(result.ledger).toBeInstanceOf(Promise);
+    expect(result.models).toBeInstanceOf(Promise);
     expect(result.outputChunks).toBeInstanceOf(Promise);
     expect(result.runHistory).toBeInstanceOf(Promise);
     expect(result.tagVocabulary).toBeInstanceOf(Promise);
@@ -157,6 +168,16 @@ describe('routes/plans.$planId._index loader', () => {
     expect(documents).toContain(PlanDetailWorkspaceRepositoriesDocument);
   });
 
+  test('discovers agent+model options with the incoming request, off the critical path', async () => {
+    mockDocuments();
+
+    const result = await callLoader();
+
+    expect(mockLoadComposerModels).toHaveBeenCalledTimes(1);
+    expect(mockLoadComposerModels.mock.calls[0]?.[0]).toBeInstanceOf(Request);
+    expect(result.models).toBeInstanceOf(Promise);
+  });
+
   test('maps each deferred promise to the shape its consumer expects', async () => {
     mockDocuments();
 
@@ -166,10 +187,11 @@ describe('routes/plans.$planId._index loader', () => {
       linkedArtifacts,
       ruleApplications,
     });
+    await expect(result.models).resolves.toEqual(models);
     await expect(result.outputChunks).resolves.toEqual(outputChunks);
     await expect(result.runHistory).resolves.toEqual({
       planRunAuditRows: auditRows,
-      recentPlanRuns: recentRuns,
+      planRunMetrics: recentRuns,
     });
     await expect(result.tagVocabulary).resolves.toEqual(vocabularyTags);
     await expect(result.workspaceRepositories).resolves.toEqual(repositories);
@@ -216,7 +238,7 @@ describe('routes/plans.$planId._index loader', () => {
     await expect(result.outputChunks).resolves.toEqual([]);
     await expect(result.runHistory).resolves.toEqual({
       planRunAuditRows: [],
-      recentPlanRuns: [],
+      planRunMetrics: [],
     });
     await expect(result.tagVocabulary).resolves.toEqual([]);
     await expect(result.workspaceRepositories).resolves.toEqual([]);

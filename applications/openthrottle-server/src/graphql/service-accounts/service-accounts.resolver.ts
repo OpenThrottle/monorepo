@@ -2,6 +2,11 @@
  * @description Admin GraphQL for service accounts and credentials (human JWT + users:* permissions).
  */
 
+import { UseGuards } from '@nestjs/common';
+import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
+import { PERMISSIONS } from '@openthrottle/nestjs-rbac';
+import { Permissions } from '@openthrottle/nestjs-rbac';
 import type {
   Role,
   ServiceAccount,
@@ -11,24 +16,20 @@ import {
   RolesService,
   ServiceAccountsService,
 } from '@openthrottle/nestjs-repositories';
-import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
-import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { UseGuards } from '@nestjs/common';
-import { PERMISSIONS } from '@openthrottle/nestjs-rbac';
-import { Permissions } from '@openthrottle/nestjs-rbac';
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { assertHumanAuthPrincipal } from './assert-human-auth-principal';
-import { CreateServiceAccountCredentialResultObject } from './create-service-account-credential-result.object';
+
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { RoleObject } from '../roles/role.object.ts';
+import { assertHumanAuthPrincipal } from './assert-human-auth-principal.ts';
+import { CreateServiceAccountCredentialResultObject } from './create-service-account-credential-result.object.ts';
 import {
   AssignRoleToServiceAccountInput,
   CreateServiceAccountCredentialInput,
   CreateServiceAccountInput,
   RemoveRoleFromServiceAccountInput,
   UpdateServiceAccountInput,
-} from './service-account.input';
-import { ServiceAccountCredentialObject } from './service-account-credential.object';
-import { ServiceAccountObject } from './service-account.object';
-import { RoleObject } from '../roles/role.object';
+} from './service-account.input.ts';
+import { ServiceAccountObject } from './service-account.object.ts';
+import { ServiceAccountCredentialObject } from './service-account-credential.object.ts';
 
 const toCredentialObject = (
   credential: ServiceAccountCredential,

@@ -40,7 +40,6 @@ body:
         - openthrottle-developer
         - openthrottle-admin
         - openthrottle-website
-        - openthrottle-email
         - packages / shared libraries
         - CLI / agentic tooling
         - Database / migrations

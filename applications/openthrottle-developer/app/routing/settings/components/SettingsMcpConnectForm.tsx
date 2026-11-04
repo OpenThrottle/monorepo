@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Button,
   Card,
@@ -9,7 +8,9 @@ import {
   Input,
   Label,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { Form } from 'react-router';
+
 import type { McpConnectorFieldsFragment } from '~/__generated__/graphql';
 
 export interface SettingsMcpConnectFormProps {

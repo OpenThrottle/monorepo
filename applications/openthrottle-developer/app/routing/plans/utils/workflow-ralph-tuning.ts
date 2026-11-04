@@ -7,23 +7,25 @@
  */
 
 import { RalphNestedDebugCli } from '@openthrottle/openthrottle-developer-codegen';
+
 import type { RalphPlanRunTuningInput } from '~/__generated__/graphql';
-import {
-  DEFAULT_RALPH_ITERATIONS,
-  DEFAULT_RALPH_MODEL,
-  DEFAULT_RALPH_PROMPT,
-  DEFAULT_RALPH_RUNNER,
-  PLAN_RUN_BULLMQ_QUEUE_NAME,
-  WORKFLOW_RALPH_CONFIG_PRECEDENCE,
-  WORKFLOW_RALPH_WORKTREE_FLAG_ONLY,
-  parseWorkflowRunIterationTimeoutSeconds,
-  type WorkflowRalphRunOptionsInput,
-} from './workflow-ralph-config';
+
 import {
   buildWorkflowRalphOptionArgs,
   formatWorkflowRalphCommandLine,
   resolveWorkflowRalphWorktreeArgvValue,
 } from './workflow-ralph-argv-builder';
+import {
+  DEFAULT_RALPH_ITERATIONS,
+  DEFAULT_RALPH_MODEL,
+  DEFAULT_RALPH_PROMPT,
+  DEFAULT_RALPH_RUNNER,
+  parseWorkflowRunIterationTimeoutSeconds,
+  PLAN_RUN_BULLMQ_QUEUE_NAME,
+  WORKFLOW_RALPH_CONFIG_PRECEDENCE,
+  WORKFLOW_RALPH_WORKTREE_FLAG_ONLY,
+  type WorkflowRalphRunOptionsInput,
+} from './workflow-ralph-config';
 
 /**
  * @description Maps workflow run options UI state to GraphQL {@link RalphPlanRunTuningInput} for `enqueuePlanRun`.
@@ -53,6 +55,12 @@ export const buildRalphPlanRunTuningInputFromWorkflowRunOptions = (
   const model = input.model.trim();
   if (model !== '' && model !== DEFAULT_RALPH_MODEL) {
     ralph.model = model;
+  }
+
+  // Empty = unset: the backend keeps its own reasoning default and nothing is sent.
+  const effort = input.effort.trim();
+  if (effort !== '') {
+    ralph.effort = effort;
   }
 
   const project = input.project.trim();

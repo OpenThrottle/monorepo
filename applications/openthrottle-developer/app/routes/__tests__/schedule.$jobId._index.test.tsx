@@ -1,9 +1,11 @@
-import * as React from 'react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import Component from '../schedule.$jobId._index';
-import { renderRoutesStub } from '~/testing/route-fixtures';
+
 import type { Route } from '@/app/routes/+types/schedule.$jobId._index';
+import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import Component from '../schedule.$jobId._index';
 
 function stubMatches(): React.ComponentProps<typeof Component>['matches'];
 function stubMatches(): unknown {
@@ -18,10 +20,13 @@ const job: Route.ComponentProps['loaderData']['job'] = {
   enabled: true,
   id: 'job-1',
   lastRunAt: null,
+  misfirePolicy: 'skip',
+  misfireThresholdMs: 600_000,
   model: 'sonnet',
   name: 'Nightly rebuild',
   nextRunAt: null,
   prompt: 'Rebuild the cache',
+  scheduleKind: 'cron',
   settingsJson: '{}',
   timeoutMs: null,
   timezone: null,
@@ -43,10 +48,12 @@ const run: Route.ComponentProps['loaderData']['runs'][number] = {
   model: 'sonnet',
   outputTokens: null,
   reasoningTokens: null,
+  resumeOfRunId: null,
   startedAt: '2026-07-24T00:00:00.000Z',
   status: 'succeeded',
   totalTokens: null,
   trigger: 'schedule',
+  usageLimitResetsAt: null,
 };
 
 describe('routes/schedule.$jobId._index.tsx', () => {

@@ -3,9 +3,10 @@
  * snapshots.
  */
 
-import { Factory } from 'fishery';
 import { faker } from '@faker-js/faker';
-import type { CodeIndexSnapshot } from './code-index-snapshot.entity';
+import { Factory } from 'fishery';
+
+import type { CodeIndexSnapshot } from './code-index-snapshot.entity.ts';
 
 /**
  * Factory for building CodeIndexSnapshot-shaped objects (plain data for mocks / tests).

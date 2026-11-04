@@ -1,5 +1,6 @@
-import * as React from 'react';
 import { cn } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import { useGlobalAnimationWaves } from '../hooks/useGlobalAnimationWaves';
 
 export interface GlobalAnimationWavesProps extends React.CanvasHTMLAttributes<HTMLCanvasElement> {

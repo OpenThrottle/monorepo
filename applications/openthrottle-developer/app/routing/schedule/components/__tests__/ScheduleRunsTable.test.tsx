@@ -1,8 +1,15 @@
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { ScheduleRunsTable } from '../ScheduleRunsTable';
-import { renderRoutesStub } from '~/testing/route-fixtures';
+
 import type { ScheduledJobRunRowFragment } from '~/__generated__/graphql';
+import { SCHEDULE_RUN_STATUS_CELL_COPY } from '~/routing/schedule/data/data.copy';
+import {
+  RUN_STATUS_LABEL,
+  RUN_TRIGGER_LABEL,
+} from '~/routing/schedule/data/data.run-status';
+import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import { ScheduleRunsTable } from '../ScheduleRunsTable';
 
 const run = (
   overrides: Partial<ScheduledJobRunRowFragment> = {},
@@ -22,10 +29,12 @@ const run = (
   model: 'opus',
   outputTokens: 50,
   reasoningTokens: null,
+  resumeOfRunId: null,
   startedAt: '2026-07-31T09:00:00.000Z',
   status: 'succeeded',
   totalTokens: 150,
   trigger: 'manual',
+  usageLimitResetsAt: null,
   ...overrides,
 });
 
@@ -113,5 +122,59 @@ describe('ScheduleRunsTable', () => {
     expect(noOp.className).toContain('amber');
     expect(succeeded.className).toContain('green');
     expect(noOp.className).not.toContain('red');
+  });
+
+  test('renders a usage_limited run as "Usage limited" with its reset time, and labels the resume trigger', () => {
+    const component = renderRoutesStub(
+      <ScheduleRunsTable
+        jobId="job-1"
+        runs={[
+          run({
+            id: 'run-resume',
+            resumeOfRunId: 'run-limited',
+            status: 'queued',
+            trigger: 'resume',
+          }),
+          run({
+            id: 'run-limited',
+            status: 'usage_limited',
+            usageLimitResetsAt: '2026-11-01T17:00:00.000Z',
+          }),
+        ]}
+      />,
+    );
+
+    expect(component.queryByText('usage_limited')).not.toBeInTheDocument();
+    expect(
+      component.getByText(RUN_STATUS_LABEL.usage_limited ?? ''),
+    ).toBeInTheDocument();
+    // A later run continues it, so the cell promises a resume rather than a hold.
+    expect(component.container.textContent).toContain(
+      SCHEDULE_RUN_STATUS_CELL_COPY.resumesPrefix,
+    );
+    expect(
+      component.queryByText(SCHEDULE_RUN_STATUS_CELL_COPY.notResumedSuffix),
+    ).not.toBeInTheDocument();
+    expect(
+      component.getByText(RUN_TRIGGER_LABEL.resume ?? ''),
+    ).toBeInTheDocument();
+  });
+
+  test('says a usage_limited run with no continuation is not resumed automatically', () => {
+    const component = renderRoutesStub(
+      <ScheduleRunsTable
+        jobId="job-1"
+        runs={[
+          run({
+            status: 'usage_limited',
+            usageLimitResetsAt: '2026-11-01T17:00:00.000Z',
+          }),
+        ]}
+      />,
+    );
+
+    expect(
+      component.getByText(SCHEDULE_RUN_STATUS_CELL_COPY.notResumedSuffix),
+    ).toBeInTheDocument();
   });
 });

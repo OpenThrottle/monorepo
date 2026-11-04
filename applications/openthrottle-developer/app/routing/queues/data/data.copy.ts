@@ -5,6 +5,14 @@
  */
 
 /**
+ * @description Job-state filter on the queue detail toolbar.
+ */
+export const QUEUE_STATE_FILTER_COPY = {
+  allStates: `All states`,
+  title: `State`,
+} as const;
+
+/**
  * @description Per-row actions menu on the queues overview table.
  */
 export const QUEUES_ROW_ACTIONS_COPY = {

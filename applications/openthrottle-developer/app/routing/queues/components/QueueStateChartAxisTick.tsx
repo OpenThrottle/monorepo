@@ -1,4 +1,5 @@
 import * as React from 'react';
+
 import { truncateQueueLabel } from '~/routing/queues/utils/queue-state-chart';
 
 export interface QueueStateChartAxisTickProps {

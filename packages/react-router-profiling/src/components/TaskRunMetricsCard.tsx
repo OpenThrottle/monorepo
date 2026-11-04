@@ -2,7 +2,6 @@
  * @description Displays task-run metrics (atStart, atEnd) and deltas from a plans-queue job. Uses {@link useJobTaskRunMetrics}. Includes interpretation hints per server-and-task-metrics.md §6.4.
  */
 
-import * as React from 'react';
 import {
   Card,
   CardContent,
@@ -16,6 +15,8 @@ import {
   TableHeader,
   TableRow,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import { TASK_RUN_INTERPRETATION_HINTS } from '../data/data.copy';
 import { METRIC_ROWS } from '../data/metric-rows';
 import { computeTaskRunDeltas } from '../data/task-run-metrics-deltas';

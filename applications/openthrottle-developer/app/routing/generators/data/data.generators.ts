@@ -1,4 +1,5 @@
 import type { LinkProps } from 'react-router';
+
 import {
   GENERATOR_DOCS_AGENT_USAGE,
   GENERATOR_DOCS_AGENTS,

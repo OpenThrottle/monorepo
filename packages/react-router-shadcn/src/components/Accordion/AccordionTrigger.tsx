@@ -1,6 +1,7 @@
-import * as React from 'react';
-import { Accordion as AccordionPrimitive } from 'radix-ui';
 import { ChevronDown } from 'lucide-react';
+import { Accordion as AccordionPrimitive } from 'radix-ui';
+import * as React from 'react';
+
 import { cn } from '../../utils/cn';
 
 export interface AccordionTriggerProps extends React.ComponentPropsWithoutRef<

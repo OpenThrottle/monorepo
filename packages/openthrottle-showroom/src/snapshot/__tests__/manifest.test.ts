@@ -1,12 +1,12 @@
 import { describe, expect, test } from 'vitest';
 
-import type { SnapshotManifest } from '../manifest';
+import { SNAPSHOT_MANIFEST } from '../manifest.data.ts';
+import type { SnapshotManifest } from '../manifest.ts';
 import {
   assertManifestMatchesSchema,
   assertTableExportable,
-} from '../manifest';
-import { SNAPSHOT_MANIFEST } from '../manifest.data';
-import type { DatabaseSchema } from '../schema';
+} from '../manifest.ts';
+import type { DatabaseSchema } from '../schema.ts';
 
 /**
  * Each test reproduces one schema-drift failure mode against a mocked

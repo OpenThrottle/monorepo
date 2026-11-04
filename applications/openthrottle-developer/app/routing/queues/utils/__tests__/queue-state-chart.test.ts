@@ -1,20 +1,22 @@
 import { describe, expect, test } from 'vitest';
+
 import type { QueueCardFragment } from '~/__generated__/graphql';
+
 import {
   formatQueueStateChartTick,
   isQueueStateChartView,
-  QUEUE_STATE_CHART_LABEL_MAX_CHARS,
-  truncateQueueLabel,
   QUEUE_STATE_CHART_AGGREGATE_LABEL,
   QUEUE_STATE_CHART_CONFIG,
+  QUEUE_STATE_CHART_LABEL_MAX_CHARS,
   QUEUE_STATE_CHART_MIN_HEIGHT,
   QUEUE_STATE_CHART_SERIES,
   QUEUE_STATE_CHART_VIEWS,
-  queuesToAggregateStateDatum,
-  queuesToPerQueueStateData,
   queueStateChartData,
   queueStateChartHeight,
+  queuesToAggregateStateDatum,
+  queuesToPerQueueStateData,
   totalJobsForStateRow,
+  truncateQueueLabel,
 } from '../queue-state-chart';
 
 const queue = (

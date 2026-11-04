@@ -1,9 +1,10 @@
-import * as React from 'react';
 import {
   ToggleGroup,
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { useSearchParams } from 'react-router';
+
 import type { TimelineLaneGrouping } from '~/__generated__/graphql';
 import {
   TIMELINE_GROUPINGS,
@@ -23,6 +24,7 @@ import {
   withTimelineGrouping,
   withTimelineWindow,
 } from '~/routing/timeline/utils/search-params';
+
 import { TimelineKindToggles } from './TimelineKindToggles';
 
 export interface TimelineControlsProps {
@@ -53,7 +55,7 @@ export const TimelineControls = (
   const range = `${formatTimelineTimestamp(windowFromIso)} – ${formatTimelineTimestamp(windowToIso)} (${timelineZoneLabel()})`;
 
   // Handlers
-  //
+
   // Radix hands back a bare string and clears it when the active item is
   // re-clicked, so both handlers narrow through a predicate and ignore
   // anything unrecognised — re-clicking the current preset must not empty the

@@ -7,8 +7,8 @@ import { Module } from '@nestjs/common';
 import { NestjsModelDiscoveryModule } from '@openthrottle/nestjs-model-discovery';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { ModelDiscoveryResolver } from './model-discovery.resolver';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { ModelDiscoveryResolver } from './model-discovery.resolver.ts';
 
 @Module({
   imports: [NestjsModelDiscoveryModule, NestjsRepositoriesModule],

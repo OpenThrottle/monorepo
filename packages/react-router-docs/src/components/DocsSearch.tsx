@@ -1,9 +1,6 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { SearchIcon } from 'lucide-react';
-import { useNavigate } from 'react-router';
 import {
   Button,
+  cn,
   CommandDialog,
   CommandEmpty,
   CommandGroup,
@@ -13,9 +10,13 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from '@openthrottle/react-router-shadcn';
-import { docEntryHref, searchDocEntries } from '../utils/searchDocs';
-import { docEntryKey } from '../utils/docEntryKey';
+import { SearchIcon } from 'lucide-react';
+import * as React from 'react';
+import { useNavigate } from 'react-router';
+
 import type { DocEntry } from '../utils/buildDocsManifest';
+import { docEntryKey } from '../utils/docEntryKey';
+import { docEntryHref, searchDocEntries } from '../utils/searchDocs';
 
 export interface DocsSearchProps {
   readonly className?: string;
@@ -121,7 +122,7 @@ export const DocsSearch = (props: DocsSearchProps): React.ReactElement => {
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx(className)} data-testid="DocsSearch">
+    <div className={cn(className)} data-testid="DocsSearch">
       <Button
         aria-label={triggerLabel}
         className="text-muted-foreground w-full justify-start gap-2"

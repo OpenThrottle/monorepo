@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'vitest';
+
 import type { PlanTagChipData } from '~/routing/plans/components/PlanTagChips';
+
 import { formatPlanTagProvenance } from '../plan-tag-chips';
 
 const baseTag: PlanTagChipData = {

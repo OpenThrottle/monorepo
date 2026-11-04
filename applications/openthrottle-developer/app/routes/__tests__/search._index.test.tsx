@@ -1,8 +1,8 @@
-import * as React from 'react';
-import { describe, expect, test } from 'vitest';
-import { MemoryRouter } from 'react-router';
 import { render } from '@testing-library/react';
-import SearchIndex from '../search._index';
+import * as React from 'react';
+import { MemoryRouter } from 'react-router';
+import { describe, expect, test } from 'vitest';
+
 import { renderRoutesStub } from '~/testing/route-fixtures';
 import type { SearchIndexLoaderFixture } from '~/testing/search-route-fixtures';
 import {
@@ -10,6 +10,8 @@ import {
   searchIndexLoaderFixtureEmptyQuery,
   searchIndexLoaderFixturePaginated,
 } from '~/testing/search-route-fixtures';
+
+import SearchIndex from '../search._index';
 
 /**
  * @description Converts the shared (readonly) search fixture into the mutable

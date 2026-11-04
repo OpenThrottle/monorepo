@@ -2,7 +2,7 @@ import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import { DisplayUnit, FloorElementType, type FloorElement } from '../../types';
+import { DisplayUnit, type FloorElement, FloorElementType } from '../../types';
 import { createFloorElement } from '../../utils/elements';
 import { type ElementEditPatch, PropertyPanel } from '../PropertyPanel';
 

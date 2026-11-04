@@ -9,6 +9,10 @@
 import { defineDriver } from '../registry/index.ts';
 import type { DriverCapabilities, DriverModelListing } from '../types/index.ts';
 import { appendMcpShellFlags } from '../utils/mcp.ts';
+import {
+  appendPluginDirShellFlags,
+  OPENTHROTTLE_CURSOR_PLUGIN_DIR_REL,
+} from '../utils/plugin-dir.ts';
 import { escapeForShellDoubleQuoted, escapeShellArg } from '../utils/shell.ts';
 import { appendWorktreeShellFlags } from '../utils/worktree.ts';
 
@@ -40,7 +44,11 @@ const capabilities: DriverCapabilities = {
   chatStreaming: true,
   mcpAutoApprove: true,
   permissionMode: false,
-  pluginDir: false,
+  /**
+   * `--plugin-dir <path>`, repeatable — verified against `cursor-agent` 2026.09.10-fd3934a. Points
+   * at the CURSOR payload (`pluginDirRel` below), never the Claude one.
+   */
+  pluginDir: true,
   skipWorktreeSetup: true,
   supportsCustomBaseUrl: false,
   supportsModelFlag: true,
@@ -78,8 +86,13 @@ export const cursorDriver = defineDriver({
     const safePrompt = escapeForShellDoubleQuoted(config.prompt);
     const base = `cursor-agent --force -p "${safePrompt}"${modelFlag}`;
     const withMcp = appendMcpShellFlags(base, capabilities, CURSOR_MCP_FLAGS);
+    const withPlugins = appendPluginDirShellFlags(
+      withMcp,
+      capabilities,
+      config.pluginDirs,
+    );
 
-    return appendWorktreeShellFlags(withMcp, capabilities, config.worktree);
+    return appendWorktreeShellFlags(withPlugins, capabilities, config.worktree);
   },
   capabilities,
   discoverModels,
@@ -90,6 +103,7 @@ export const cursorDriver = defineDriver({
     url: 'https://cursor.com/install',
   },
   label: 'cursor-agent',
+  pluginDirRel: OPENTHROTTLE_CURSOR_PLUGIN_DIR_REL,
   update: { method: 'reinstall' },
   versionArgs: ['--version'],
 });

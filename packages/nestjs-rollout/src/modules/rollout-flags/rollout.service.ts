@@ -22,10 +22,11 @@ import {
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { RolesService } from '@openthrottle/nestjs-repositories';
 import { Repository } from 'typeorm';
+
 import {
   pickFallthroughVariation,
   principalIdToBucket,
-} from './rollout-flag.bucketing';
+} from './rollout-flag.bucketing.ts';
 import {
   ROLLOUT_BOOLEAN_DEFAULT_FALLTHROUGH,
   ROLLOUT_BOOLEAN_DEFAULT_VARIATIONS,
@@ -36,8 +37,8 @@ import {
   type RolloutFlagKind,
   type RolloutFlagVariation,
   type RolloutVariationValue,
-} from './rollout-flag.constants';
-import { RolloutFlag } from './rollout-flag.entity';
+} from './rollout-flag.constants.ts';
+import { RolloutFlag } from './rollout-flag.entity.ts';
 
 const ROLLOUT_FLAG_KINDS = new Set<string>(Object.values(ROLLOUT_FLAG_KIND));
 const MIN_VARIATIONS = 2;

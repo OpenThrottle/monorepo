@@ -1,10 +1,11 @@
-import * as React from 'react';
-import { Link } from 'react-router';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { parseRequirementsList } from '~/routing/plans/utils/formatters';
 

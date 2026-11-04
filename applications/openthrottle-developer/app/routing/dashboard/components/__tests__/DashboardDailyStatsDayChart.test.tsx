@@ -1,8 +1,10 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { DashboardDailyStatsDayChart } from '../DashboardDailyStatsDayChart';
+
 import type { DailyStatsChartDatum } from '~/routing/dashboard/data/daily-stats-chart';
+
+import { DashboardDailyStatsDayChart } from '../DashboardDailyStatsDayChart';
 
 const datum: DailyStatsChartDatum = {
   date: '2026-01-01',

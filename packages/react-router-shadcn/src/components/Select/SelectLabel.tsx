@@ -1,5 +1,6 @@
-import * as React from 'react';
 import { Select as SelectPrimitive } from 'radix-ui';
+import * as React from 'react';
+
 import { cn } from '../../utils/cn';
 
 export interface SelectLabelProps extends React.ComponentPropsWithoutRef<

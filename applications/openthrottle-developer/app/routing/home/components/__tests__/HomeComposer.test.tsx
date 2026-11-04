@@ -1,19 +1,21 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import type { RenderResult } from '@testing-library/react';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type {
   ChatModelOption,
   ChatPersonaOption,
 } from '@openthrottle/react-router-chat';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import type { RepositoryOption } from '~/routing/home/data/models.server';
 import type { UseAgenticChatTurnResult } from '~/routing/home/hooks/useAgenticChatTurn';
 import type { UseConversationListResult } from '~/routing/home/hooks/useConversationList';
-import { HomeComposer } from '../HomeComposer';
+
 import type { HomeComposerProps } from '../HomeComposer';
+import { HomeComposer } from '../HomeComposer';
 
 const buildConversationList = (): UseConversationListResult => ({
   conversations: [],

@@ -19,7 +19,8 @@ import {
 } from '@openthrottle/openthrottle-skills';
 import { Repository } from 'typeorm';
 import { ZodError } from 'zod';
-import { TagActionRule } from './tag-action-rule.entity';
+
+import { TagActionRule } from './tag-action-rule.entity.ts';
 
 /** @public */
 export interface UpsertTagActionRuleInput {

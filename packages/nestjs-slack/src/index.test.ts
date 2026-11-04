@@ -1,8 +1,9 @@
-import { describe, it, expect } from 'vitest';
-import * as entrypoint from './index';
-import { NestjsSlackError } from './config/nestjs-slack.error';
-import { NestjsSlackModule } from './modules/nestjs-slack.module';
-import { NestjsSlackService } from './services/nestjs-slack.service';
+import { describe, expect, it } from 'vitest';
+
+import { NestjsSlackError } from './config/nestjs-slack.error.ts';
+import * as entrypoint from './index.ts';
+import { NestjsSlackModule } from './modules/nestjs-slack.module.ts';
+import { NestjsSlackService } from './services/nestjs-slack.service.ts';
 
 describe('@openthrottle/nestjs-slack entrypoint', () => {
   it('re-exports NestjsSlackModule', () => {

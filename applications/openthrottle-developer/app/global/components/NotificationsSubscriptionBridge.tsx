@@ -6,9 +6,10 @@
  * `@openthrottle/react-router-notifications`.
  */
 
-import * as React from 'react';
-import { useAtomValue } from 'jotai';
 import { NotificationsSubscriptionBridge as NotificationsSubscriptionBridgeBase } from '@openthrottle/react-router-notifications';
+import { useAtomValue } from 'jotai';
+import * as React from 'react';
+
 import { NotificationsDocument } from '~/__generated__/graphql';
 import { userAtom } from '~/global/data/atom.user';
 import { getGraphqlWsClient } from '~/services/graphql-ws-client';

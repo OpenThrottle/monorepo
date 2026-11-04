@@ -1,12 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { SkillDetailUsage } from '../SkillDetailUsage';
-import type { SkillDetailUsageProps } from '../SkillDetailUsage';
+
 import { SKILL_USAGE_DETAIL_COPY } from '../../data/data.copy';
 import type { SkillDetailUsageSkillStats } from '../../data/skill-usage-detail';
+import type { SkillDetailUsageProps } from '../SkillDetailUsage';
+import { SkillDetailUsage } from '../SkillDetailUsage';
 
 const buildSkill = (
   overrides: Partial<SkillDetailUsageSkillStats> = {},
@@ -18,6 +19,7 @@ const buildSkill = (
   lastUsedAt: '2026-08-05T12:00:00.000Z',
   outcomeCount: 3,
   scope: 'ours',
+  sessionEndedCount: 0,
   skillName: 'ot-plans',
   successCount: 2,
   ...overrides,
@@ -74,6 +76,7 @@ describe('SkillDetailUsage Component', () => {
           {
             date: '2026-08-05',
             oursCount: 12,
+            personalCount: 0,
             thirdPartyCount: 0,
             totalCount: 12,
           },

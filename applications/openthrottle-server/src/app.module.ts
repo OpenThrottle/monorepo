@@ -1,107 +1,111 @@
-import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
-import { ConfigModule } from '@nestjs/config';
-import { EmitNotificationInterceptor } from '@openthrottle/nestjs-websockets';
-import { GithubGraphqlModule } from '@openthrottle/nestjs-github';
-import { GlobalClsModule } from '@openthrottle/nestjs-modules';
-import { LoggerModule } from '@openthrottle/nestjs-modules';
+import type { ClassProvider, DynamicModule, Provider } from '@nestjs/common';
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { NestjsAuthModule } from '@openthrottle/nestjs-auth';
+import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
 import {
   isBullBoardEnabled,
   NestjsBullmqBoardModule,
 } from '@openthrottle/nestjs-bullmq-board';
-import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
+import { GithubGraphqlModule } from '@openthrottle/nestjs-github';
 import {
+  isGraphqlWsContext,
   NestjsGraphqlModule,
   PubSubModule,
-  isGraphqlWsContext,
   resolveGraphqlWsUserId,
 } from '@openthrottle/nestjs-graphql';
 import { NestjsLoggingModule } from '@openthrottle/nestjs-logging';
+import { GlobalClsModule } from '@openthrottle/nestjs-modules';
+import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsProfilingModule } from '@openthrottle/nestjs-profiling';
 import { NestjsRbacModule } from '@openthrottle/nestjs-rbac';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import { NestjsThrottlerModule } from '@openthrottle/nestjs-throttler';
-import type { ClassProvider, DynamicModule, Provider } from '@nestjs/common';
+import { EmitNotificationInterceptor } from '@openthrottle/nestjs-websockets';
+
+import { GlobalClsAuthHook } from './auth/global-cls-auth-hook.service.ts';
+import { ServiceAccountAuthService } from './auth/service-account-auth.service.ts';
 import {
   getOpenthrottleServerDevJsonlLogDirectory,
   isOpenthrottleServerDevJsonlLoggingEnabled,
-} from './config/openthrottle-server-dev-jsonl-logging';
-import { PROCESS_ROLES } from './config/process-role';
-import type { ProcessRole } from './config/process-role';
-import { AgenticTestQueueModule } from './queues/agentic-test/agentic-test-queue.module';
-import { ActivityGraphqlModule } from './graphql/activity/activity-graphql.module';
-import { AgenticWorkflowGraphqlModule } from './graphql/agentic-workflow/agentic-workflow-graphql.module';
-import { AgentConversationsGraphqlModule } from './graphql/agent-conversations/agent-conversations-graphql.module';
-import { AgentDiscoveryGraphqlModule } from './graphql/agent-discovery/agent-discovery-graphql.module';
-import { AgentSetupGraphqlModule } from './graphql/agent-setup/agent-setup-graphql.module';
-import { AgentsGraphqlModule } from './graphql/agents/agents-graphql.module';
-import { AuthGraphqlModule } from './graphql/auth/auth-graphql.module';
-import { CodeIndexQueueModule } from './queues/code-index/code-index-queue.module';
-import { CodeSearchGraphqlModule } from './graphql/code-search/code-search-graphql.module';
-import { ConversationStreamGraphqlModule } from './graphql/conversation-stream/conversation-stream-graphql.module';
-import { CspReportsModule } from './modules/csp-reports/csp-reports.module';
-import { CustomPromptsGraphqlModule } from './graphql/prompts/custom-prompts-graphql.module';
-import { DailyStatsGraphqlModule } from './graphql/daily-stats/daily-stats-graphql.module';
-import { EditorPresenceGraphqlModule } from './graphql/editor-presence/editor-presence-graphql.module';
-import { DailyStatsQueueModule } from './queues/daily-stats/daily-stats-queue.module';
-import { DatabaseBackupQueueModule } from './queues/database-backup/database-backup-queue.module';
-import { DataRetentionQueueModule } from './queues/data-retention/data-retention-queue.module';
-import { DevelopmentModule } from './modules/development/development.module';
-import { DocIngestionQueueModule } from './queues/doc-ingestion/doc-ingestion-queue.module';
-import { GeneratorsGraphqlModule } from './graphql/generators/generators-graphql.module';
-import { GeneratorsModule } from './modules/generators/generators.module';
-import { GlobalClsAuthHook } from './auth/global-cls-auth-hook.service';
-import { ServiceAccountAuthService } from './auth/service-account-auth.service';
-import { GlobalAuthGuard } from './guards/global-auth.guard';
-import { GqlJwtAuthGuard } from './guards/gql-jwt-auth.guard';
-import { HealthGraphqlModule } from './graphql/health/health-graphql.module';
-import { HealthModule } from './modules/health/health.module';
-import { McpConnectorsGraphqlModule } from './graphql/mcp-connectors/mcp-connectors-graphql.module';
-import { McpDeveloperModule } from './modules/mcp-developer/mcp-developer.module';
-import { MetricsGraphqlModule } from './graphql/metrics/metrics-graphql.module';
-import { MetricsModule } from './metrics/metrics.module';
-import { ModelDiscoveryGraphqlModule } from './graphql/model-discovery/model-discovery-graphql.module';
-import { NotesGraphqlModule } from './graphql/notes/notes-graphql.module';
-import { NotificationsGraphqlModule } from './graphql/notifications/notifications-graphql.module';
-import { NOTIFICATION_EVENT_TYPES } from './graphql/notifications/notification-event.object';
-import { NotificationsModule } from './notifications/notifications.module';
-import { PlanEmbeddingsGraphqlModule } from './graphql/plan-embeddings/plan-embeddings-graphql.module';
-import { PlanLifecycleHooksQueueModule } from './queues/plan-lifecycle-hooks/plan-lifecycle-hooks-queue.module';
-import { PlanRulesQueueModule } from './queues/plan-rules/plan-rules-queue.module';
-import { PlanRunsStaleSweepQueueModule } from './queues/plan-runs-stale-sweep/plan-runs-stale-sweep-queue.module';
-import { TaggingQueueModule } from './queues/tagging/tagging-queue.module';
-import { TaskPromotionQueueModule } from './queues/task-promotion/task-promotion-queue.module';
-import { PlanOutputStreamGraphqlModule } from './graphql/plan-output-stream/plan-output-stream-graphql.module';
-import { PlansGraphqlModule } from './graphql/plans/plans-graphql.module';
-import { QueueJobLogsGraphqlModule } from './graphql/queue-job-logs/queue-job-logs-graphql.module';
-import { BullMqRunOutputModule } from './queues/bullmq-run-output.module';
-import { PlansQueueModule } from './queues/plans/plans-queue.module';
-import { ProjectSkillsGraphqlModule } from './graphql/project-skills/project-skills-graphql.module';
-import { ProjectsGraphqlModule } from './graphql/projects/projects-graphql.module';
-import { QueuesGraphqlModule } from './graphql/queues/queues-graphql.module';
-import { RepositoryInspectionModule } from './graphql/repository-inspection/repository-inspection.module';
-import { ScheduledAgentJobsGraphqlModule } from './graphql/scheduled-agent-jobs/scheduled-agent-jobs-graphql.module';
-import { ScheduledAgentJobsQueueModule } from './queues/scheduled-agent-jobs/scheduled-agent-jobs-queue.module';
-import { ServiceAccountsGraphqlModule } from './graphql/service-accounts/service-accounts-graphql.module';
-import { SearchGraphqlModule } from './graphql/search/search-graphql.module';
-import { SkillAvailabilityGraphqlModule } from './graphql/skill-availability/skill-availability-graphql.module';
-import { SkillTagsGraphqlModule } from './graphql/skill-tags/skill-tags-graphql.module';
-import { SkillUsageGraphqlModule } from './graphql/skill-usage/skill-usage-graphql.module';
-import { TagActionRulesGraphqlModule } from './graphql/tag-action-rules/tag-action-rules-graphql.module';
-import { TagsGraphqlModule } from './graphql/tags/tags-graphql.module';
-import { TaskEmbeddingsGraphqlModule } from './graphql/task-embeddings/task-embeddings-graphql.module';
-import { TasksGraphqlModule } from './graphql/tasks/tasks-graphql.module';
-import { TimelineGraphqlModule } from './graphql/timeline/timeline-graphql.module';
-import { TokenUsageGraphqlModule } from './graphql/token-usage/token-usage-graphql.module';
-import { TranscriptionStreamGraphqlModule } from './graphql/transcription-stream/transcription-stream-graphql.module';
-import { UsersGraphqlModule } from './graphql/users/users-graphql.module';
-import { WorkLedgerGraphqlModule } from './graphql/work-ledger/work-ledger-graphql.module';
-import { WorkLedgerSweepQueueModule } from './queues/work-ledger-sweep/work-ledger-sweep-queue.module';
-import { WorkLedgerVerifyQueueModule } from './queues/work-ledger-verify/work-ledger-verify-queue.module';
-import { WorkspaceSettingsGraphqlModule } from './graphql/workspace-settings/workspace-settings-graphql.module';
-import { RolesGraphqlModule } from './graphql/roles/roles-graphql.module';
-import { RolloutGraphqlModule } from './graphql/rollout/rollout-graphql.module';
+} from './config/openthrottle-server-dev-jsonl-logging.ts';
+import type { ProcessRole } from './config/process-role.ts';
+import { PROCESS_ROLES } from './config/process-role.ts';
+import { ActivityGraphqlModule } from './graphql/activity/activity-graphql.module.ts';
+import { AgentConversationsGraphqlModule } from './graphql/agent-conversations/agent-conversations-graphql.module.ts';
+import { AgentDiscoveryGraphqlModule } from './graphql/agent-discovery/agent-discovery-graphql.module.ts';
+import { AgentSetupGraphqlModule } from './graphql/agent-setup/agent-setup-graphql.module.ts';
+import { AgenticWorkflowGraphqlModule } from './graphql/agentic-workflow/agentic-workflow-graphql.module.ts';
+import { AgentsGraphqlModule } from './graphql/agents/agents-graphql.module.ts';
+import { AuthGraphqlModule } from './graphql/auth/auth-graphql.module.ts';
+import { BlogGraphqlModule } from './graphql/blog/blog-graphql.module.ts';
+import { CaptureHealthGraphqlModule } from './graphql/capture-health/capture-health-graphql.module.ts';
+import { CodeSearchGraphqlModule } from './graphql/code-search/code-search-graphql.module.ts';
+import { ConversationStreamGraphqlModule } from './graphql/conversation-stream/conversation-stream-graphql.module.ts';
+import { DailyStatsGraphqlModule } from './graphql/daily-stats/daily-stats-graphql.module.ts';
+import { EditorPresenceGraphqlModule } from './graphql/editor-presence/editor-presence-graphql.module.ts';
+import { GeneratorsGraphqlModule } from './graphql/generators/generators-graphql.module.ts';
+import { HealthGraphqlModule } from './graphql/health/health-graphql.module.ts';
+import { McpConnectorsGraphqlModule } from './graphql/mcp-connectors/mcp-connectors-graphql.module.ts';
+import { MetricsGraphqlModule } from './graphql/metrics/metrics-graphql.module.ts';
+import { ModelDiscoveryGraphqlModule } from './graphql/model-discovery/model-discovery-graphql.module.ts';
+import { NotesGraphqlModule } from './graphql/notes/notes-graphql.module.ts';
+import { NOTIFICATION_EVENT_TYPES } from './graphql/notifications/notification-event.object.ts';
+import { NotificationsGraphqlModule } from './graphql/notifications/notifications-graphql.module.ts';
+import { PlanEmbeddingsGraphqlModule } from './graphql/plan-embeddings/plan-embeddings-graphql.module.ts';
+import { PlanOutputStreamGraphqlModule } from './graphql/plan-output-stream/plan-output-stream-graphql.module.ts';
+import { PlansGraphqlModule } from './graphql/plans/plans-graphql.module.ts';
+import { ProjectSkillsGraphqlModule } from './graphql/project-skills/project-skills-graphql.module.ts';
+import { ProjectsGraphqlModule } from './graphql/projects/projects-graphql.module.ts';
+import { CustomPromptsGraphqlModule } from './graphql/prompts/custom-prompts-graphql.module.ts';
+import { QueueJobLogsGraphqlModule } from './graphql/queue-job-logs/queue-job-logs-graphql.module.ts';
+import { QueuesGraphqlModule } from './graphql/queues/queues-graphql.module.ts';
+import { RepositoryInspectionModule } from './graphql/repository-inspection/repository-inspection.module.ts';
+import { RolesGraphqlModule } from './graphql/roles/roles-graphql.module.ts';
+import { RolloutGraphqlModule } from './graphql/rollout/rollout-graphql.module.ts';
+import { ScheduledAgentJobsGraphqlModule } from './graphql/scheduled-agent-jobs/scheduled-agent-jobs-graphql.module.ts';
+import { SearchGraphqlModule } from './graphql/search/search-graphql.module.ts';
+import { ServiceAccountsGraphqlModule } from './graphql/service-accounts/service-accounts-graphql.module.ts';
+import { SkillAvailabilityGraphqlModule } from './graphql/skill-availability/skill-availability-graphql.module.ts';
+import { SkillTagsGraphqlModule } from './graphql/skill-tags/skill-tags-graphql.module.ts';
+import { SkillUsageGraphqlModule } from './graphql/skill-usage/skill-usage-graphql.module.ts';
+import { TagActionRulesGraphqlModule } from './graphql/tag-action-rules/tag-action-rules-graphql.module.ts';
+import { TagsGraphqlModule } from './graphql/tags/tags-graphql.module.ts';
+import { TaskEmbeddingsGraphqlModule } from './graphql/task-embeddings/task-embeddings-graphql.module.ts';
+import { TasksGraphqlModule } from './graphql/tasks/tasks-graphql.module.ts';
+import { TimelineGraphqlModule } from './graphql/timeline/timeline-graphql.module.ts';
+import { TokenUsageGraphqlModule } from './graphql/token-usage/token-usage-graphql.module.ts';
+import { TranscriptionStreamGraphqlModule } from './graphql/transcription-stream/transcription-stream-graphql.module.ts';
+import { UsersGraphqlModule } from './graphql/users/users-graphql.module.ts';
+import { WorkLedgerGraphqlModule } from './graphql/work-ledger/work-ledger-graphql.module.ts';
+import { WorkspaceSettingsGraphqlModule } from './graphql/workspace-settings/workspace-settings-graphql.module.ts';
+import { GlobalAuthGuard } from './guards/global-auth.guard.ts';
+import { GqlJwtAuthGuard } from './guards/gql-jwt-auth.guard.ts';
+import { MetricsModule } from './metrics/metrics.module.ts';
+import { CspReportsModule } from './modules/csp-reports/csp-reports.module.ts';
+import { DevelopmentModule } from './modules/development/development.module.ts';
+import { GeneratorsModule } from './modules/generators/generators.module.ts';
+import { HealthModule } from './modules/health/health.module.ts';
+import { McpDeveloperModule } from './modules/mcp-developer/mcp-developer.module.ts';
+import { NotificationsModule } from './notifications/notifications.module.ts';
+import { AgenticTestQueueModule } from './queues/agentic-test/agentic-test-queue.module.ts';
+import { BullMqRunOutputModule } from './queues/bullmq-run-output.module.ts';
+import { CodeIndexQueueModule } from './queues/code-index/code-index-queue.module.ts';
+import { DailyStatsQueueModule } from './queues/daily-stats/daily-stats-queue.module.ts';
+import { DataRetentionQueueModule } from './queues/data-retention/data-retention-queue.module.ts';
+import { DatabaseBackupQueueModule } from './queues/database-backup/database-backup-queue.module.ts';
+import { DocIngestionQueueModule } from './queues/doc-ingestion/doc-ingestion-queue.module.ts';
+import { PlanLifecycleHooksQueueModule } from './queues/plan-lifecycle-hooks/plan-lifecycle-hooks-queue.module.ts';
+import { PlanRulesQueueModule } from './queues/plan-rules/plan-rules-queue.module.ts';
+import { PlanRunsStaleSweepQueueModule } from './queues/plan-runs-stale-sweep/plan-runs-stale-sweep-queue.module.ts';
+import { PlansQueueModule } from './queues/plans/plans-queue.module.ts';
+import { ScheduledAgentJobsQueueModule } from './queues/scheduled-agent-jobs/scheduled-agent-jobs-queue.module.ts';
+import { TaggingQueueModule } from './queues/tagging/tagging-queue.module.ts';
+import { TaskPromotionQueueModule } from './queues/task-promotion/task-promotion-queue.module.ts';
+import { WorkLedgerHarvestQueueModule } from './queues/work-ledger-harvest/work-ledger-harvest-queue.module.ts';
+import { WorkLedgerSweepQueueModule } from './queues/work-ledger-sweep/work-ledger-sweep-queue.module.ts';
+import { WorkLedgerVerifyQueueModule } from './queues/work-ledger-verify/work-ledger-verify-queue.module.ts';
 
 type AppModuleImports = NonNullable<DynamicModule['imports']>;
 
@@ -243,6 +247,7 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
           ScheduledAgentJobsQueueModule,
           TaggingQueueModule,
           TaskPromotionQueueModule,
+          WorkLedgerHarvestQueueModule,
           WorkLedgerSweepQueueModule,
           WorkLedgerVerifyQueueModule,
         ]
@@ -258,6 +263,8 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
           AgentSetupGraphqlModule,
           AgentsGraphqlModule,
           AuthGraphqlModule,
+          BlogGraphqlModule,
+          CaptureHealthGraphqlModule,
           CodeSearchGraphqlModule,
           ConversationStreamGraphqlModule,
           CustomPromptsGraphqlModule,

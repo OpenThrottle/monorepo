@@ -1,14 +1,15 @@
-import * as React from 'react';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { redirect } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
-import { CreateQueueDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { QueueForm } from '~/routing/queues/components/QueueForm';
-import { SITE_TITLE } from '~/global/config/settings';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+import { redirect } from 'react-router';
+
 import type { Route } from '@/app/routes/+types/queues.create';
+import { CreateQueueDocument } from '~/__generated__/graphql';
+import { SITE_TITLE } from '~/global/config/settings';
+import { QueueForm } from '~/routing/queues/components/QueueForm';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

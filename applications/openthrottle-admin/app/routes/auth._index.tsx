@@ -1,15 +1,16 @@
-import * as React from 'react';
+import { getAuthTokenFromCookie } from '@openthrottle/react-router-auth';
 import {
   OpenThrottleAuthForm,
   OpenThrottleLogo,
 } from '@openthrottle/react-router-ui';
-import { getAuthTokenFromCookie } from '@openthrottle/react-router-auth';
-import { redirect } from 'react-router';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { SITE_SUBDOMAIN, SITE_TITLE } from '~/global/config/settings';
+import * as React from 'react';
+import { redirect } from 'react-router';
+
 import type { Route } from '@/app/routes/+types/auth._index';
+import { SITE_SUBDOMAIN, SITE_TITLE } from '~/global/config/settings';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

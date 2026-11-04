@@ -1,12 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { ChatPermissionModeControl } from '../ChatPermissionModeControl';
-import type { ChatPermissionModeControlProps } from '../ChatPermissionModeControl';
-import { ChatPermissionMode } from '../../types';
+
 import type { ChatBackendCapabilities } from '../../types';
+import { ChatPermissionMode } from '../../types';
+import type { ChatPermissionModeControlProps } from '../ChatPermissionModeControl';
+import { ChatPermissionModeControl } from '../ChatPermissionModeControl';
 
 const ALL_MODES: ChatBackendCapabilities = {
   maxRepositories: 1,

@@ -2,10 +2,11 @@
  * @description GraphQL module that registers NotesResolver, importing NestjsRepositoriesModule for NotesService and GlobalClsModule for the request identity used to stamp note authorship.
  */
 
+import { Module } from '@nestjs/common';
 import { GlobalClsModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
-import { Module } from '@nestjs/common';
-import { NotesResolver } from './notes.resolver';
+
+import { NotesResolver } from './notes.resolver.ts';
 
 @Module({
   imports: [GlobalClsModule, NestjsRepositoriesModule],

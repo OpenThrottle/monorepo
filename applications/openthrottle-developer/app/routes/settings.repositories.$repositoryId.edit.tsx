@@ -1,30 +1,31 @@
-import * as React from 'react';
-import { redirect } from 'react-router';
-import { z } from 'zod/v3';
 import {
   coerceBoolean,
   executeGraphqlWithAuth,
   parseFormData,
 } from '@openthrottle/react-router-graphql';
-import {
-  getActionError,
-  mergeRouteModuleMeta,
-} from '@openthrottle/react-router-utils';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { SITE_TITLE } from '~/global/config/settings';
-import { UpdateRepositoryInputSchema } from '~/__generated__/schemas';
+import {
+  getActionError,
+  mergeRouteModuleMeta,
+} from '@openthrottle/react-router-utils';
+import * as React from 'react';
+import { redirect } from 'react-router';
+import { z } from 'zod/v3';
+
+import type { Route } from '@/app/routes/+types/settings.repositories.$repositoryId.edit';
 import {
   GetWorkspaceRepositoryForEditDocument,
   UpdateRepositoryDocument,
 } from '~/__generated__/graphql';
+import { UpdateRepositoryInputSchema } from '~/__generated__/schemas';
+import { SITE_TITLE } from '~/global/config/settings';
 import { RepositoryEditForm } from '~/routing/settings/repositories/components/RepositoryEditForm';
 import { repositoryDetailPath } from '~/routing/settings/repositories/utils/paths';
 import { parseProjectIdFromFormData } from '~/routing/settings/utils/workspace-settings-action';
-import type { Route } from '@/app/routes/+types/settings.repositories.$repositoryId.edit';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

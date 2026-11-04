@@ -2,33 +2,34 @@
  * @description GraphQL resolver for the agents chat namespace. Runs one turn by routing to the in-process {@link McpDeveloperMcpSurface} tools (OpenThrottle / MCP developer).
  */
 
-import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
 import { ConfigService } from '@nestjs/config';
+import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
+import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
 import {
   McpDeveloperMcpSurface,
   withMcpDeveloperAuthTokenAsync,
-} from '@openthrottle/nestjs-openthrottle-mcp';
+} from '@openthrottle/nestjs-mcp-developer';
 import { AgentConversationsService } from '@openthrottle/nestjs-repositories';
-import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
+
+import { AgentsRunChatTurnInput } from './agents.input.ts';
+import { AgentsChatTurnResult } from './agents.object.ts';
 import {
   isAgentsChatMutationRoutedTool,
   readAgentsChatMutationsEnabledFromConfig,
-} from './agents-chat-mutation-policy';
+} from './agents-chat-mutation-policy.ts';
 import {
   PERSISTED_CONVERSATION_AUTH_ERROR,
   persistSuccessfulAgentsChatTurn,
   resolveHumanUserForPersist,
   resolvePersistedConversation,
-} from './agents-chat-persistence';
+} from './agents-chat-persistence.ts';
 import {
   agentsChatTurnFromMcpToolResult,
   parseBearerJwt,
-} from './agents-mcp-chat.mapper';
-import { dispatchAgentsMcpRoutedTool } from './agents-mcp-dispatch';
-import { AgentsMcpRouterLlmService } from './agents-mcp-router-llm.service';
-import { AgentsMcpRouter } from './agents-mcp-router';
-import { AgentsRunChatTurnInput } from './agents.input';
-import { AgentsChatTurnResult } from './agents.object';
+} from './agents-mcp-chat.mapper.ts';
+import { dispatchAgentsMcpRoutedTool } from './agents-mcp-dispatch.ts';
+import { AgentsMcpRouter } from './agents-mcp-router.ts';
+import { AgentsMcpRouterLlmService } from './agents-mcp-router-llm.service.ts';
 
 interface AgentsGqlContext {
   readonly req?: { headers?: Record<string, string | string[] | undefined> };

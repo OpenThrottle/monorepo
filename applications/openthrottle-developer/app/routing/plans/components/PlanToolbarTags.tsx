@@ -1,10 +1,11 @@
 import * as React from 'react';
+
 import { PlanDeferredSection } from '~/routing/plans/components/PlanDeferredSection';
-import { PlanTagChips } from '~/routing/plans/components/PlanTagChips';
 import type {
   PlanTagChipData,
   PlanTagVocabularyOption,
 } from '~/routing/plans/components/PlanTagChips';
+import { PlanTagChips } from '~/routing/plans/components/PlanTagChips';
 import { PlanToolbarTagsSkeleton } from '~/routing/plans/components/PlanToolbarTagsSkeleton';
 import { PLAN_DEFERRED_SECTION_COPY } from '~/routing/plans/data/data.copy';
 

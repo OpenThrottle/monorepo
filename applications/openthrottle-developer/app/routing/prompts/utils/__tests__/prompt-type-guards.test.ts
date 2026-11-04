@@ -1,6 +1,8 @@
 import { PROMPT_TYPE_VALUES } from '@openthrottle/react-router-editor';
 import { describe, expect, test } from 'vitest';
+
 import { CustomPromptType } from '~/__generated__/graphql';
+
 import { isCustomPromptType, isPromptType } from '../prompt-type-guards';
 
 describe('isPromptType', () => {

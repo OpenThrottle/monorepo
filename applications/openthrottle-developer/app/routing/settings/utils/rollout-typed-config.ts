@@ -7,9 +7,9 @@ import { isRecord } from '@openthrottle/nodejs-utils';
 
 import type { RolloutFlagFieldsFragment } from '~/__generated__/graphql';
 import { RolloutFlagKind } from '~/__generated__/graphql';
+import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
 import type { RolloutFlagKindOption } from '~/routing/settings/data/data.rollout-kinds';
 import { isRolloutFlagKind } from '~/routing/settings/data/data.rollout-kinds';
-import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
 
 /** Form-facing variation row (valueJson is already JSON-serialized). */
 export interface RolloutFormVariation {

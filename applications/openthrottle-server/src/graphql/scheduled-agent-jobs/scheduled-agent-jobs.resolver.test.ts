@@ -10,25 +10,25 @@ import {
   AUTH_PRINCIPAL_KIND_USER,
   type AuthPrincipal,
 } from '@openthrottle/nestjs-auth';
+import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type { AgentCliPreferencesService } from '@openthrottle/nestjs-repositories';
 import {
   type RepositoryCheckout,
   type ScheduledAgentJob,
   type ScheduledAgentJobRun,
 } from '@openthrottle/nestjs-repositories';
-import type { LoggerService } from '@openthrottle/nestjs-modules';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type {
   ScheduledAgentJobObject,
   ScheduledAgentJobRunObject,
-} from './scheduled-agent-job.object';
-import type { ScheduledAgentJobsLoaders } from './scheduled-agent-jobs-loaders';
+} from './scheduled-agent-job.object.ts';
 import {
   ScheduledAgentJobRunRepositoryResolver,
   ScheduledAgentJobsResolver,
-} from './scheduled-agent-jobs.resolver';
-import type { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs-graphql.service';
+} from './scheduled-agent-jobs.resolver.ts';
+import type { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs-graphql.service.ts';
+import type { ScheduledAgentJobsLoaders } from './scheduled-agent-jobs-loaders.ts';
 
 const human: AuthPrincipal = { kind: AUTH_PRINCIPAL_KIND_USER, sub: 'user-1' };
 const serviceAccount: AuthPrincipal = {
@@ -162,12 +162,13 @@ describe('cross-job run reads', () => {
     vi.useRealTimers();
   });
 
-  it('scheduledAgentJobRunStats honours an explicit window and keeps no_op out of failures', async () => {
+  it('scheduledAgentJobRunStats honours an explicit window and keeps no_op and usage_limited out of failures', async () => {
     const since = new Date('2026-08-01T00:00:00.000Z');
     const countRunsByStatusSince = vi.fn().mockResolvedValue([
       { count: 4, status: 'succeeded' },
       { count: 2, status: 'no_op' },
       { count: 1, status: 'failed' },
+      { count: 2, status: 'usage_limited' },
     ]);
     // In-flight is unwindowed, so a long-stuck run still counts.
     const countInFlightRunsByStatus = vi
@@ -186,7 +187,8 @@ describe('cross-job run reads', () => {
     expect(stats.failedCount).toBe(1);
     expect(stats.noOpCount).toBe(2);
     expect(stats.succeededCount).toBe(4);
-    expect(stats.windowTotalCount).toBe(7);
+    expect(stats.usageLimitedCount).toBe(2);
+    expect(stats.windowTotalCount).toBe(9);
     expect(stats.inFlightCount).toBe(3);
     expect(stats.queuedCount).toBe(0);
     expect(stats.runningCount).toBe(3);

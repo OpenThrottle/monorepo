@@ -1,10 +1,11 @@
-import * as React from 'react';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
-import { SITE_TITLE } from '~/global/config/settings';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { SettingsLogsPanel } from '~/routing/settings/components/SettingsLogsPanel';
+import * as React from 'react';
+
 import type { Route } from '@/app/routes/+types/settings.logs';
+import { SITE_TITLE } from '~/global/config/settings';
+import { SettingsLogsPanel } from '~/routing/settings/components/SettingsLogsPanel';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

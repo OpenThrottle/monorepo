@@ -10,9 +10,10 @@
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+
 import { chromium } from 'playwright';
 
-import { repositoryRoot } from '../runner/format';
+import { repositoryRoot } from '../runner/format.ts';
 
 export interface CardRequest {
   /** ALL_CAPS placeholder -> replacement, per docs/marketing/assets/README.md. */

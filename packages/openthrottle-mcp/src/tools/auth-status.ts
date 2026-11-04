@@ -7,14 +7,15 @@
  * Registered via the shared `developerMcpToolDefinitions` registry and the Nest surface.
  */
 
-import { z } from 'zod';
 import {
   executeGraphqlWithAuth,
   getGraphQLUrl,
 } from '@openthrottle/nodejs-graphql';
+import { z } from 'zod';
+
 import { ListSourcesDocument } from '../__generated__/graphql.js';
-import type { GenericResult } from '../types/index.ts';
 import { getAuthToken } from '../auth/get-auth-token.ts';
+import type { GenericResult } from '../types/index.ts';
 
 type AuthStatusStructured = {
   authStatus: {
@@ -28,7 +29,7 @@ type AuthStatusStructured = {
 
 type AuthStatusResult = GenericResult<AuthStatusStructured>;
 
-export const authStatusToolParameters = z.object({});
+export const authStatusToolParameters = z.object({}).strict();
 
 export const authStatusToolDescription = `Auth-status probe: distinguishes a healthy MCP ("connected + authenticated") from the silent-401 trap ("connected but every authenticated tool 401s") on the long-lived stdio server. Runs ONE authenticated GraphQL query with the resolved token and reports authenticated (true/false), the server it hit, a redacted token identity (never the secret), and — when unauthenticated — the exact reconnect steps. Call this FIRST when authenticated OT tools start failing but 'health' is OK.`;
 

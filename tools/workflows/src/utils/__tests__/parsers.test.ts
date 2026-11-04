@@ -2,10 +2,12 @@
  * @description Tests for Ralph CLI parsers (complete-task signals, plan/task ID validation).
  */
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
 import {
   getRalphOutputMarkerFlags,
   isOpenThrottlePlanId,

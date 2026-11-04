@@ -1,17 +1,24 @@
-import { join } from 'path';
-import prompts from 'prompts';
 import type { Tree } from '@nx/devkit';
 import { formatFiles, generateFiles, logger } from '@nx/devkit';
+import { join } from 'path';
+import prompts from 'prompts';
+
+import { getMonorepoApplications } from '../../utils';
+import {
+  assertFolderVocabulary,
+  describeBannedFolder,
+  FOLDER_VOCABULARY_RESTRICTION,
+  isBannedFolderName,
+} from '../../utils/folder-vocabulary';
+import { throwGeneratorError } from '../../utils/generator-errors';
 import { getCommonVariables } from '../../utils/index';
+import { isInteractiveArgPresent } from '../../utils/nx-cli';
+import { writeJsonToStdout } from '../../utils/output';
 import {
   getConfigConfirmation,
   getTargetApplication,
 } from '../../utils/questions';
 import { REGEX_SLUG } from '../../utils/regex';
-import { getMonorepoApplications } from '../../utils';
-import { writeJsonToStdout } from '../../utils/output';
-import { throwGeneratorError } from '../../utils/generator-errors';
-import { isInteractiveArgPresent } from '../../utils/nx-cli';
 
 export interface FoldersGeneratorSchema {
   readonly application?: string;
@@ -48,7 +55,12 @@ export async function foldersGenerator(
           required: true,
           type: 'string',
         },
-        name: { pattern: 'slug', required: true, type: 'string' },
+        name: {
+          description: FOLDER_VOCABULARY_RESTRICTION,
+          pattern: 'slug',
+          required: true,
+          type: 'string',
+        },
       },
     });
 
@@ -119,6 +131,7 @@ export async function foldersGenerator(
             validate: (value) => {
               if (value.length < 3) return 'Must be at least 3 characters';
               if (!REGEX_SLUG.test(value)) return 'Must be a slug (kebab-case)';
+              if (isBannedFolderName(value)) return describeBannedFolder(value);
               return true;
             },
           })
@@ -135,6 +148,7 @@ export async function foldersGenerator(
   if (!REGEX_SLUG.test(name)) {
     throw new Error(`Name must be a slug (lowercase, hyphen-separated).`);
   }
+  assertFolderVocabulary('name', name);
 
   const variables = getCommonVariables(name);
   const destination = join('applications', application, 'app', folder);

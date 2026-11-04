@@ -1,12 +1,12 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { DataTable } from '@openthrottle/react-router-shadcn';
+import { cn, DataTable } from '@openthrottle/react-router-shadcn';
 import { readSearchParam } from '@openthrottle/react-router-ui-global';
-import { Link, useSearchParams } from 'react-router';
-import { CalendarEmpty } from '~/routing/calendar/components/CalendarEmpty';
-import { formatCalendarRange } from '~/routing/calendar/utils/formatters';
-import type { CalendarListEvent } from '~/routing/calendar/types';
 import type { ColumnDef } from '@tanstack/react-table';
+import * as React from 'react';
+import { Link, useSearchParams } from 'react-router';
+
+import { CalendarEmpty } from '~/routing/calendar/components/CalendarEmpty';
+import type { CalendarListEvent } from '~/routing/calendar/types';
+import { formatCalendarRange } from '~/routing/calendar/utils/formatters';
 
 export interface CalendarTableProps {
   className?: string;
@@ -35,7 +35,7 @@ export const CalendarTable = (
 
   return (
     <div
-      className={clsx('ui-border rounded-lg border', className)}
+      className={cn('ui-border rounded-lg border', className)}
       data-testid="CalendarTable"
     >
       <DataTable<CalendarListEvent, string | number | null | undefined>

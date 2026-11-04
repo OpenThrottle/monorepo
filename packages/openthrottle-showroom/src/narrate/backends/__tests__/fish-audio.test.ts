@@ -9,7 +9,7 @@ import {
   fishAudioBackend,
   resolveFishAudioApiKey,
   resolveFishAudioModel,
-} from '../fish-audio';
+} from '../fish-audio.ts';
 
 describe('resolveFishAudioModel', () => {
   test('defaults to the pinned OpenAudio model', () => {

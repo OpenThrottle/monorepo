@@ -1,4 +1,3 @@
-import { createWorkflowRalphOrchestrator } from '@openthrottle/openthrottle-agentic-ralph';
 import type {
   WorkflowContext,
   WorkflowFailedReason,
@@ -6,8 +5,10 @@ import type {
   WorkflowOrchestrator,
   WorkflowRalphOrchestratorDeps,
 } from '@openthrottle/openthrottle-agentic-ralph';
-import { AgenticWorkflowBase } from './agentic-workflow-base';
-import { AGENTIC_WORKFLOW_RALPH_ID } from './agentic-workflow-ralph-registration';
+import { createWorkflowRalphOrchestrator } from '@openthrottle/openthrottle-agentic-ralph';
+
+import { AgenticWorkflowBase } from './agentic-workflow-base.ts';
+import { AGENTIC_WORKFLOW_RALPH_ID } from './agentic-workflow-ralph-registration.ts';
 
 /**
  * @description Concrete Ralph workflow ({@link AgenticWorkflowBase} implementation).

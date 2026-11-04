@@ -1,6 +1,7 @@
-import { describe, it, beforeEach, expect } from 'vitest';
-import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import type { Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { beforeEach, describe, expect, it } from 'vitest';
+
 import { generatorNestJSQueue } from './generator.queue';
 
 describe('nestjs "queue" generator', () => {
@@ -10,7 +11,7 @@ describe('nestjs "queue" generator', () => {
   const name = 'example-queue';
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
   });
 
   it('should run successfully', async () => {

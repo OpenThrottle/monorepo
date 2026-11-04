@@ -1,8 +1,9 @@
-import * as React from 'react';
-import { GlobalPopover } from '@openthrottle/react-router-ui-global';
 import type { GlobalPopoverAction } from '@openthrottle/react-router-ui-global';
-import { RULES_COPY } from '~/routing/rules/data/data.copy';
+import { GlobalPopover } from '@openthrottle/react-router-ui-global';
+import * as React from 'react';
+
 import type { TagActionRuleRowData } from '~/routing/rules/components/RulesTable';
+import { RULES_COPY } from '~/routing/rules/data/data.copy';
 
 export interface RulesTableRowActionsProps {
   readonly onToggleEnabled: (rule: TagActionRuleRowData) => void;

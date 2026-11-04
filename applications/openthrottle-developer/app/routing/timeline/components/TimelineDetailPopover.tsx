@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Button,
   Sheet,
@@ -6,8 +5,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { Link } from 'react-router';
-import { TimelineDetailRow } from './TimelineDetailRow';
+
 import {
   TIMELINE_MARKER_KIND_LABEL,
   TIMELINE_SPAN_KIND_LABEL,
@@ -16,14 +16,16 @@ import {
   TIMELINE_DETAIL_COPY,
   TIMELINE_SPAN_TOOLTIP_COPY,
 } from '~/routing/timeline/data/data.copy';
-import {
-  formatTimelineDuration,
-  formatTimelineTimestamp,
-} from '~/routing/timeline/utils/formatters';
 import type {
   TimelineMarkerCluster,
   TimelineSpan,
 } from '~/routing/timeline/types';
+import {
+  formatTimelineDuration,
+  formatTimelineTimestamp,
+} from '~/routing/timeline/utils/formatters';
+
+import { TimelineDetailRow } from './TimelineDetailRow';
 
 export interface TimelineDetailPopoverProps {
   readonly cluster: TimelineMarkerCluster | null;

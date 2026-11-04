@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { applyLexicon } from '../lexicon';
+import { applyLexicon } from '../lexicon.ts';
 
 describe('applyLexicon', () => {
   describe('when the written form is read', () => {

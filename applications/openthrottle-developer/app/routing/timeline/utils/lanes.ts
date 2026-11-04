@@ -6,8 +6,9 @@
  * jsdom would let none of it be verified through rendering.
  */
 
+import { TimelineMarkerKind } from '~/__generated__/graphql';
+
 import { TIMELINE_MARKER_COLLISION_PX } from '../config/layout';
-import type { TimelineScale } from './scale';
 import type {
   PlacedTimelineSpan,
   TimelineLane,
@@ -15,7 +16,7 @@ import type {
   TimelineMarkerCluster,
   TimelineSpan,
 } from '../types';
-import { TimelineMarkerKind } from '~/__generated__/graphql';
+import type { TimelineScale } from './scale';
 
 const toMillis = (value: Date | number | string): number =>
   value instanceof Date ? value.getTime() : new Date(value).getTime();

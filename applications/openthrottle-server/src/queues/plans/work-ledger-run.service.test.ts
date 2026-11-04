@@ -1,4 +1,3 @@
-import { afterEach, describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
@@ -12,7 +11,9 @@ import type {
   WorkSession,
 } from '@openthrottle/nestjs-repositories';
 import type { Repository } from 'typeorm';
-import { WorkLedgerRunService } from './work-ledger-run.service';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { WorkLedgerRunService } from './work-ledger-run.service.ts';
 
 const RALPH_SA_ID = 'ralph-sa-1';
 const PLAN_ID = 'plan-1';
@@ -94,7 +95,7 @@ describe('WorkLedgerRunService', () => {
     );
   });
 
-  it('actors the session to the worker token principal so it matches the request principal (G11)', async () => {
+  it('actors the session to the worker token principal so it matches the request principal', async () => {
     vi.stubEnv('OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN', 'ot_sa_worker_token');
     vi.mocked(planRunsService.findByQueueNameAndBullmqJobId).mockResolvedValue(
       createMock<PlanRun>({ actorUserId: 'user-9', id: 'run-1' }),

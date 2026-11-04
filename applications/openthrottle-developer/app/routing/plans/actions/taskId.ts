@@ -2,6 +2,8 @@ import {
   executeGraphqlWithAuth,
   parseFormData,
 } from '@openthrottle/react-router-graphql';
+
+import type { Route } from '@/app/routes/+types/plans.$planId.tasks.$taskId._index';
 import {
   PlanDetailAddHookDocument,
   TaskDetailAddTaskTagDocument,
@@ -18,7 +20,6 @@ import {
   messageOrFallback,
   toErrorMessage,
 } from '~/global/utils/utils.error-message';
-import type { Route } from '@/app/routes/+types/plans.$planId.tasks.$taskId._index';
 
 export const promoteTask = async (args: Route.ActionArgs, taskId: string) => {
   try {

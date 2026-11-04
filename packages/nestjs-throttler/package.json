@@ -16,9 +16,12 @@
   },
   "devDependencies": {
     "@apollo/server": "catalog:",
+    "@as-integrations/express5": "catalog:",
     "@nestjs/apollo": "catalog:",
+    "@nestjs/testing": "catalog:",
     "@openthrottle/nestjs-testing": "workspace:^",
-    "graphql": "catalog:"
+    "graphql": "catalog:",
+    "vitest": "catalog:"
   },
   "exports": {
     ".": {
@@ -33,8 +36,8 @@
     }
   },
   "license": "Apache-2.0",
-  "main": "./src/index.ts",
-  "module": "./src/index.ts",
+  "main": "./dist/src/index.js",
+  "module": "./dist/src/index.js",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
@@ -51,6 +54,7 @@
         "executor": "@nx/js:tsc"
       },
       "dev": {
+        "cache": false,
         "continuous": true,
         "executor": "@nx/js:tsc",
         "options": {
@@ -69,6 +73,6 @@
   },
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
-  "type": "commonjs",
-  "types": "./src/index.ts"
+  "type": "module",
+  "types": "./dist/src/index.d.ts"
 }

@@ -1,6 +1,7 @@
-import { describe, expect, beforeEach, test, vi } from 'vitest';
 import type { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { hookGenerator } from './generator.hook';
 
 // The generator resolves `destination` through the real Nx project graph, whose
@@ -30,7 +31,7 @@ describe('hookGenerator', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
   });
 
   const target = '@openthrottle/react-router-ui';

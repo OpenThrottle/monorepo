@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Link } from 'react-router';
+
 import type { SearchChunk } from '~/__generated__/graphql';
 import type { SearchRankMeta } from '~/routing/search/types/search-rank-meta';
 import { githubBlobHref } from '~/routing/search/utils/github-blob-href';

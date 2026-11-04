@@ -1,11 +1,9 @@
 {
   "extends": "../../tsconfig.react-router.json",
   "compilerOptions": {
-    "baseUrl": "./",
     "paths": {
-      "~/*": ["app/*"],
-      "@/*": [".react-router/types/*"],
-      "#/*": ["*"]
+      "~/*": ["./app/*"],
+      "@/*": ["./.react-router/types/*"]
     },
     "rootDirs": ["./", ".react-router/types"]
   },
@@ -14,6 +12,9 @@
   "include": ["**/*", "**/*.json", ".react-router/types"],
   "references": [
     {
+      "path": "../../packages/react-router-markdown"
+    },
+    {
       "path": "../../packages/react-router-docs"
     },
     {
@@ -21,6 +22,9 @@
     },
     {
       "path": "../../packages/graphql-codegen"
+    },
+    {
+      "path": "../../packages/react-router-graphql"
     },
     {
       "path": "../../packages/react-router-shadcn"

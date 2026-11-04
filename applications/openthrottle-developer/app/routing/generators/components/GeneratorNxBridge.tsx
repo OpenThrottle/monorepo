@@ -1,17 +1,18 @@
-import * as React from 'react';
-import { type GeneratorDetailCardFragment } from '~/__generated__/graphql';
-import clsx from 'clsx';
-import { readGeneratorLastRun } from '~/routing/generators/utils/generator-last-run-storage';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
+  cn,
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
+import { type GeneratorDetailCardFragment } from '~/__generated__/graphql';
+import { readGeneratorLastRun } from '~/routing/generators/utils/generator-last-run-storage';
 
 export interface GeneratorNxBridgeProps {
   className?: string;
@@ -54,10 +55,7 @@ export const GeneratorNxBridge = (
   // 🔌 Short Circuit
 
   return (
-    <div
-      className={clsx('space-y-8', className)}
-      data-testid="GeneratorNxBridge"
-    >
+    <div className={cn('space-y-8', className)} data-testid="GeneratorNxBridge">
       {formattedSchema != null ? (
         <Card>
           <CardHeader>

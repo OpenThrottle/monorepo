@@ -1,11 +1,13 @@
-import * as React from 'react';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { TooltipProvider } from '@openthrottle/react-router-shadcn';
-import { buildRootMatch } from '~/testing/root-match-fixture';
-import Component from '../skills.availability';
+
 import type { Route } from '@/app/routes/+types/skills.availability';
+import { buildRootMatch } from '~/testing/root-match-fixture';
+
+import Component from '../skills.availability';
 
 const matches: Route.ComponentProps['matches'] = [
   buildRootMatch(),

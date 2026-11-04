@@ -1,11 +1,12 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
+import { render } from '@testing-library/react';
 import { within } from '@testing-library/react';
+import * as React from 'react';
+import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { SearchForm } from '../SearchForm';
+
 import type { SearchFormProps } from '../SearchForm';
+import { SearchForm } from '../SearchForm';
 
 describe('SearchForm Component', () => {
   let component: RenderResult;

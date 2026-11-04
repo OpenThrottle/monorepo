@@ -1,5 +1,5 @@
-import pluralize from 'pluralize';
 import { startCase } from 'lodash';
+import pluralize from 'pluralize';
 
 /**
  * Product capitalization that survives sentence-casing verbatim.

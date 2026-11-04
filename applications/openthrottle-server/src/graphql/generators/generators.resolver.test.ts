@@ -4,7 +4,8 @@
 
 import { Test } from '@nestjs/testing';
 import { beforeAll, describe, expect, test } from 'vitest';
-import { GeneratorsResolver } from './generators.resolver';
+
+import { GeneratorsResolver } from './generators.resolver.ts';
 
 describe('GeneratorsResolver', () => {
   let resolver: GeneratorsResolver;
@@ -40,7 +41,17 @@ describe('GeneratorsResolver', () => {
       expect(result).not.toBeNull();
       expect(result?.name).toBe('nestjs');
       expect(result?.description).toEqual(expect.any(String));
-      expect(result?.schema).toEqual(expect.any(Object));
+      expect(result?.schemaJson).toEqual(expect.any(String));
+    });
+
+    test('serializes the schema to a parseable schemaJson string', async () => {
+      const result = await resolver.generator({ name: 'react' });
+
+      expect(result?.schemaJson).toEqual(expect.any(String));
+      const parsed: unknown = JSON.parse(result?.schemaJson ?? 'null');
+      expect(parsed).toEqual(
+        expect.objectContaining({ properties: expect.any(Object) }),
+      );
     });
 
     test('returns null for unknown generator name', async () => {

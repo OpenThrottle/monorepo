@@ -1,10 +1,11 @@
-import * as React from 'react';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { OpenThrottleAuthForm } from '../OpenThrottleAuthForm';
+
 import type { OpenThrottleAuthFormProps } from '../OpenThrottleAuthForm';
+import { OpenThrottleAuthForm } from '../OpenThrottleAuthForm';
 
 describe('OpenThrottleAuthForm Component', () => {
   let component: ReturnType<typeof render>;
@@ -73,5 +74,17 @@ describe('OpenThrottleAuthForm Component', () => {
       email: 'test@example.com',
       password: 'secret',
     });
+  });
+
+  test('inputs and submit grow to 44px on coarse pointers', () => {
+    expect(component.getByTestId('auth-email-input')).toHaveClass(
+      'pointer-coarse:h-11',
+    );
+    expect(component.getByTestId('auth-password-input')).toHaveClass(
+      'pointer-coarse:h-11',
+    );
+    expect(component.getByTestId('auth-submit-button')).toHaveClass(
+      'pointer-coarse:h-11',
+    );
   });
 });

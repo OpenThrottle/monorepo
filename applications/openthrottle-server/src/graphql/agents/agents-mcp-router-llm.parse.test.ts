@@ -1,10 +1,11 @@
 import { describe, expect, test } from 'vitest';
+
 import {
   buildAgentsMcpLlmRoutingSystemPrompt,
   messageContentToString,
   parseAgentsMcpLlmRoutingJson,
   stripMarkdownJsonFence,
-} from './agents-mcp-router-llm.parse';
+} from './agents-mcp-router-llm.parse.ts';
 
 describe('stripMarkdownJsonFence', () => {
   test('returns inner JSON for fenced blocks', () => {

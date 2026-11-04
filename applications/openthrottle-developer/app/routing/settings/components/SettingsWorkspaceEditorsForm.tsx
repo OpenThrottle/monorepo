@@ -1,20 +1,20 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Button, Label } from '@openthrottle/react-router-shadcn';
-import { ComputerIcon } from 'lucide-react';
-import { Form, useNavigation } from 'react-router';
+import { Button, cn, Label } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
+import { ComputerIcon } from 'lucide-react';
+import * as React from 'react';
+import { Form, useNavigation } from 'react-router';
+
 import type { WorkspaceEditorId } from '~/__generated__/graphql';
-// import { WorkspaceEditorAffiliateLinks } from '~/routing/settings/components/WorkspaceEditorAffiliateLinks';
-import { WorkspaceEditorMultiSelect } from '~/routing/settings/components/WorkspaceEditorMultiSelect';
-import { WorkspaceEditorPresenceHints } from '~/routing/settings/components/WorkspaceEditorPresenceHints';
-import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
 import type {
   EditorPresenceState,
   GetEditorPresenceQuery,
   UserWorkspaceProfileFieldsFragment,
   WorkspaceEditorId as WorkspaceEditorIdType,
 } from '~/__generated__/graphql';
+// import { WorkspaceEditorAffiliateLinks } from '~/routing/settings/components/WorkspaceEditorAffiliateLinks';
+import { WorkspaceEditorMultiSelect } from '~/routing/settings/components/WorkspaceEditorMultiSelect';
+import { WorkspaceEditorPresenceHints } from '~/routing/settings/components/WorkspaceEditorPresenceHints';
+import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
 
 export interface SettingsWorkspaceEditorsFormProps {
   actionError?: string | null;
@@ -80,7 +80,7 @@ export const SettingsWorkspaceEditorsForm = (
       legend={WORKSPACE_SETTINGS_COPY.editorsLegend}
     >
       <Form
-        className={clsx('space-y-4', className)}
+        className={cn('space-y-4', className)}
         data-testid="SettingsWorkspaceEditorsForm"
         method="post"
       >

@@ -1,13 +1,14 @@
 import { mkdtempSync, writeFileSync } from 'fs';
-import { join } from 'path';
 import { tmpdir } from 'os';
+import { join } from 'path';
 import { describe, expect, test } from 'vitest';
+
 import {
   validateAndNormalizeFilesystemPath,
   validateDisplayName,
   validateGitDefaultBranch,
   validateGitRemoteUrl,
-} from './workspace-local-repository.validation';
+} from './workspace-local-repository.validation.ts';
 
 describe('validateAndNormalizeFilesystemPath', () => {
   test('returns resolved path for an existing directory', () => {

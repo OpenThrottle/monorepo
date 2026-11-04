@@ -1,5 +1,5 @@
-import { isWorkspaceEditorId } from '~/global/config/workspace-editors';
 import type { WorkspaceEditorId } from '~/__generated__/graphql';
+import { isWorkspaceEditorId } from '~/global/config/workspace-editors';
 
 /**
  * @description Parses enabled editor ids from form data (repeated `enabledEditors` fields).

@@ -1,6 +1,7 @@
-import * as React from 'react';
-import { Menubar as MenubarPrimitive } from 'radix-ui';
 import { Circle } from 'lucide-react';
+import { Menubar as MenubarPrimitive } from 'radix-ui';
+import * as React from 'react';
+
 import { cn } from '../../utils/cn';
 
 export interface MenubarRadioItemProps extends React.ComponentPropsWithoutRef<

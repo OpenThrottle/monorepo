@@ -1,7 +1,7 @@
+import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException, ConflictException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { createMock } from '@golevelup/ts-vitest';
 import {
   AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
   AUTH_PRINCIPAL_KIND_USER,
@@ -11,15 +11,16 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import { RolesService } from '@openthrottle/nestjs-repositories';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { principalIdToBucket } from './rollout-flag.bucketing';
+
+import { RolloutService } from './rollout.service.ts';
+import { principalIdToBucket } from './rollout-flag.bucketing.ts';
 import {
   ROLLOUT_BOOLEAN_DEFAULT_FALLTHROUGH,
   ROLLOUT_BOOLEAN_DEFAULT_VARIATIONS,
   ROLLOUT_EVALUATION_REASON,
   ROLLOUT_FLAG_KIND,
-} from './rollout-flag.constants';
-import { RolloutFlag } from './rollout-flag.entity';
-import { RolloutService } from './rollout.service';
+} from './rollout-flag.constants.ts';
+import { RolloutFlag } from './rollout-flag.entity.ts';
 
 /** Last 8 hex → parseInt % 100 === 53 (`11111111`). */
 const userId = '11111111-1111-4111-8111-111111111111';

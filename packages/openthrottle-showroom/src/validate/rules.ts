@@ -33,10 +33,10 @@ import {
   budgetWords,
   estimatedSpokenSeconds,
   spokenWords,
-} from '../episodes/derived';
-import { loadFormat } from '../runner/format';
-import { PLAYLISTS } from '../episodes/types';
-import type { VideoEpisode } from '../episodes/types';
+} from '../episodes/derived.ts';
+import type { VideoEpisode } from '../episodes/types.ts';
+import { PLAYLISTS } from '../episodes/types.ts';
+import { loadFormat } from '../runner/format.ts';
 
 /** Grace over the budget before a script fails rather than warns. */
 const OVER_BUDGET_TOLERANCE_WORDS = 5;

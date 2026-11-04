@@ -1,22 +1,23 @@
-import * as React from 'react';
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
-import { SkillUsageDailyChart } from '~/global/components/SkillUsageDailyChart';
-import { SkillUsageLeaderboard } from '~/routing/usage/components/SkillUsageLeaderboard';
-import { UsageSkillUsageFilters } from '~/routing/usage/components/UsageSkillUsageFilters';
-import { UsageSkillUsageSummary } from '~/routing/usage/components/UsageSkillUsageSummary';
-import { partitionSkillUsageByPresence } from '~/routing/usage/utils/partition-skill-usage-by-presence';
-import {
-  SKILL_USAGE_COPY,
-  type SkillUsageScopeFilter,
-} from '~/routing/usage/data/skill-usage-copy';
-import type { UsageBranchOption } from '~/routing/usage/hooks/useUsageBranchSearch';
+import * as React from 'react';
+
 import type {
   UsageSkillUsageByDayFragment,
   UsageSkillUsageByScopeFragment,
   UsageSkillUsageBySkillFragment,
   UsageSkillUsageFilterOptionsFragment,
 } from '~/__generated__/graphql';
+import { SkillUsageDailyChart } from '~/global/components/SkillUsageDailyChart';
+import { SkillUsageLeaderboard } from '~/routing/usage/components/SkillUsageLeaderboard';
+import { UsageSkillUsageFilters } from '~/routing/usage/components/UsageSkillUsageFilters';
+import { UsageSkillUsageSummary } from '~/routing/usage/components/UsageSkillUsageSummary';
+import {
+  SKILL_USAGE_COPY,
+  type SkillUsageScopeFilter,
+} from '~/routing/usage/data/skill-usage-copy';
+import type { UsageBranchOption } from '~/routing/usage/types';
+import { partitionSkillUsageByPresence } from '~/routing/usage/utils/partition-skill-usage-by-presence';
 
 export interface UsageSkillUsageProps {
   /** SSR first page of branches: default branch first, then A–Z. */
@@ -35,7 +36,6 @@ export interface UsageSkillUsageProps {
    * set, which decides both whether a row links through to its detail page and
    * which table it lands in.
    */
-  personalSlugs?: readonly string[];
   presentSlugs: readonly string[];
   /** Current `?provider=` (token usage); preserved when skill filters change. */
   providerParam: string | null;
@@ -60,7 +60,6 @@ export const UsageSkillUsage = (
     className,
     end,
     filterOptions,
-    personalSlugs,
     presentSlugs,
     providerParam,
     rangeDays,
@@ -75,13 +74,8 @@ export const UsageSkillUsage = (
 
   // Setup
   const partitioned = React.useMemo(
-    () =>
-      partitionSkillUsageByPresence(
-        bySkill,
-        new Set(presentSlugs),
-        new Set(personalSlugs ?? []),
-      ),
-    [bySkill, personalSlugs, presentSlugs],
+    () => partitionSkillUsageByPresence(bySkill, new Set(presentSlugs)),
+    [bySkill, presentSlugs],
   );
   const hasFilters =
     selectedScope != null || selectedGitBranch != null || selectedCwd != null;
@@ -102,7 +96,7 @@ export const UsageSkillUsage = (
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx('mt-8', className)} data-testid="UsageSkillUsage">
+    <div className={cn('mt-8', className)} data-testid="UsageSkillUsage">
       <GlobalHeading
         className="mb-4"
         heading="h2"

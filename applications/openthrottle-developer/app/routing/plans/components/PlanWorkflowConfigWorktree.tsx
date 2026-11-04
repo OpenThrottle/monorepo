@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { buildPlanRunWorktreeName } from '@openthrottle/openthrottle-plan-config';
 import {
   Input,
   Label,
@@ -8,15 +8,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
-import { buildPlanRunWorktreeName } from '@openthrottle/openthrottle-plan-config';
+import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
+import * as React from 'react';
+
+import { PlanWorkflowConfigWorktreeCursorFields } from '~/routing/plans/components/PlanWorkflowConfigWorktreeCursorFields';
+import { PLAN_CONFIG_WORKTREE_COPY } from '~/routing/plans/data/data.copy';
 import {
   WORKFLOW_RALPH_ENV_VARS,
   type WorkflowRalphRunOptionsInput,
   type WorkflowRalphWorktreeCli,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
-import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
-import { PLAN_CONFIG_WORKTREE_COPY } from '~/routing/plans/data/data.copy';
-import { PlanWorkflowConfigWorktreeCursorFields } from '~/routing/plans/components/PlanWorkflowConfigWorktreeCursorFields';
 
 export interface PlanWorkflowConfigWorktreeProps {
   heading: string;

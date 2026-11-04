@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'vitest';
-import { filterJobsBySearch } from '../filter-jobs-by-search';
+
 import type { ScheduledJobCardFragment } from '~/__generated__/graphql';
+
+import { filterJobsBySearch } from '../filter-jobs-by-search';
 
 const buildJob = (
   overrides: Partial<ScheduledJobCardFragment>,
@@ -14,6 +16,7 @@ const buildJob = (
   name: 'Nightly audit',
   nextRunAt: null,
   repositoryCheckoutId: null,
+  scheduleKind: 'cron',
   timezone: 'UTC',
   updatedAt: '2026-08-19T00:00:00.000Z',
   ...overrides,
@@ -44,6 +47,18 @@ describe('filterJobsBySearch', () => {
     const other = buildJob({ cronPattern: '0 9 * * *', id: 'b' });
 
     expect(filterJobsBySearch([match, other], '30 6')).toEqual([match]);
+  });
+
+  test('matches an interval schedule by its cadence', () => {
+    const match = buildJob({
+      cronPattern: null,
+      id: 'a',
+      intervalMs: 45 * 60_000,
+      scheduleKind: 'interval',
+    });
+    const other = buildJob({ id: 'b' });
+
+    expect(filterJobsBySearch([match, other], 'every 45')).toEqual([match]);
   });
 
   test('matches the driver id', () => {

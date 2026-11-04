@@ -1,6 +1,7 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { parse } from 'graphql';
-import { type Mock, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, type Mock, vi } from 'vitest';
+
 import type { GraphqlWsClient } from '../createGraphqlWsClient';
 import { executeWsMutation } from '../executeWsMutation';
 

@@ -1,5 +1,6 @@
-import * as React from 'react';
 import { Badge } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import type { ServiceAccountCredentialFieldsFragment } from '~/__generated__/graphql';
 import {
   credentialStatusBadgeColor,

@@ -7,26 +7,27 @@
  * promotability and hands the job off.
  *
  * Promotable = the task exists, is not a lifecycle-hook task, and is not already
- * promoted (SKIPPED with the `promoted` tag — the same terminal state the worker's
- * idempotency guard recognizes). Returns a discriminated result the resolver maps to
+ * promoted (status PROMOTED, or the legacy `promoted` tag on a task promoted before that
+ * status existed — the same states the worker's idempotency guard recognizes). Returns a discriminated result the resolver maps to
  * the GraphQL result object; it never throws for validation failures.
  */
 
-import { Injectable } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
-import type { Queue } from 'bullmq';
+import { Injectable } from '@nestjs/common';
 import { TagsService, TasksService } from '@openthrottle/nestjs-repositories';
-import { normalizeIdempotencyKey } from '../../graphql/queues/queues.service';
+import type { Queue } from 'bullmq';
+
+import { normalizeIdempotencyKey } from '../../graphql/queues/queues.service.ts';
 import {
   PROMOTED_TAG,
   PROMOTED_TASK_STATUS,
   TASK_PROMOTION_PROMOTE_JOB_NAME,
   TASK_PROMOTION_QUEUE_NAME,
-} from './task-promotion.constants';
+} from './task-promotion.constants.ts';
 import type {
   PromoteTaskJobData,
   PromoteTaskJobResult,
-} from './task-promotion.types';
+} from './task-promotion.types.ts';
 
 export interface EnqueuePromotionParams {
   readonly actorServiceAccountId: string | null;
@@ -76,12 +77,13 @@ export class TaskPromotionEnqueueService {
     }
 
     if (task.status === PROMOTED_TASK_STATUS) {
-      const promotedTag = await this.tagsService
-        .getTaskTagsRepository()
-        .findOne({ where: { tag: PROMOTED_TAG, taskId } });
-      if (promotedTag != null) {
-        return { error: 'Task has already been promoted to a plan.' };
-      }
+      return { error: 'Task has already been promoted to a plan.' };
+    }
+    const promotedTag = await this.tagsService
+      .getTaskTagsRepository()
+      .findOne({ where: { tag: PROMOTED_TAG, taskId } });
+    if (promotedTag != null) {
+      return { error: 'Task has already been promoted to a plan.' };
     }
 
     const jobId = normalizedKey.key ?? `promote-${taskId}`;

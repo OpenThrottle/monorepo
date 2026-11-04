@@ -1,6 +1,7 @@
-import * as React from 'react';
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import { SparklesIcon } from 'lucide-react';
+import * as React from 'react';
+
 import { GLOBAL_FEATURE_ONBOARDING_MODAL } from '../config';
 import { GLOBAL_FEATURE_ONBOARDING_TRIGGER_LABEL } from '../data/data.copy';
 import { useUrlSyncedOverlay } from '../hooks/useUrlSyncedOverlay';
@@ -46,7 +47,7 @@ export const GlobalFeatureOnboardingTrigger = (
   return (
     <button
       aria-label={label}
-      className={clsx(
+      className={cn(
         'cursor-pointer transition-colors',
         'inline-flex items-center gap-3',
         'text-muted-foreground hover:text-foreground text-sm',

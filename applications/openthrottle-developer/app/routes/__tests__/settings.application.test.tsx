@@ -1,9 +1,11 @@
-import * as React from 'react';
 import { render, screen } from '@testing-library/react';
+import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import SettingsApplication from '../settings.application';
+
 import { getSettingsDiagnosticsLoaderData } from '~/routing/settings/utils/settings-diagnostics-loader-data';
+
+import SettingsApplication from '../settings.application';
 
 function stubMatches(): React.ComponentProps<
   typeof SettingsApplication

@@ -1,5 +1,6 @@
-import type * as React from 'react';
 import { Lock, Pencil, Unlock } from 'lucide-react';
+import type * as React from 'react';
+
 import { ChatPermissionMode } from '../types';
 
 interface PermissionModeMeta {

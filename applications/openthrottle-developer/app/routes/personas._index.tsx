@@ -1,13 +1,14 @@
-import * as React from 'react';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
-import { SITE_TITLE } from '~/global/config/settings';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { PersonasStats } from '~/routing/personas/components/PersonasStats';
-import { PersonasToolbar } from '~/routing/personas/components/PersonasToolbar';
-import { PersonasTable } from '~/routing/personas/components/PersonasTable';
-import { PersonasIntroduction } from '~/routing/personas/components/PersonasIntroduction';
+import * as React from 'react';
+
 import type { Route } from '@/app/routes/+types/personas._index';
+import { SITE_TITLE } from '~/global/config/settings';
+import { PersonasIntroduction } from '~/routing/personas/components/PersonasIntroduction';
+import { PersonasStats } from '~/routing/personas/components/PersonasStats';
+import { PersonasTable } from '~/routing/personas/components/PersonasTable';
+import { PersonasToolbar } from '~/routing/personas/components/PersonasToolbar';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

@@ -24,6 +24,13 @@
 
 import { spawn } from 'node:child_process';
 
+import { NdjsonBuffer } from '../cursor-agent/ndjson.ts';
+import {
+  resolveAgentTimeouts,
+  terminateChild,
+} from '../cursor-agent/teardown.ts';
+import { withFileMentions } from '../file-mentions.ts';
+import { withKeepalive } from '../keepalive.ts';
 import {
   CONVERSATION_STREAM_CHUNK_KINDS,
   type ConversationBackend,
@@ -35,14 +42,7 @@ import {
   ANTIGRAVITY_DEFAULT_BIN,
   buildAntigravityArgv,
 } from './argv.ts';
-import { withFileMentions } from '../file-mentions.ts';
-import { withKeepalive } from '../keepalive.ts';
 import { createAntigravityEventMapper } from './events.ts';
-import { NdjsonBuffer } from '../cursor-agent/ndjson.ts';
-import {
-  resolveAgentTimeouts,
-  terminateChild,
-} from '../cursor-agent/teardown.ts';
 
 /** Env vars the child is allowed to inherit (host Google auth + locale), nothing else. */
 const ALLOWED_ENV_KEYS = [

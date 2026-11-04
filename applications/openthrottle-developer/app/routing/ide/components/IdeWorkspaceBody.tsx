@@ -1,4 +1,18 @@
-import * as React from 'react';
+import type {
+  IdeRepositoryOption,
+  IdeSearchResult,
+  IdeWorkspaceListing,
+} from '@openthrottle/react-router-ide';
+import {
+  DefinitionReferencesPanel,
+  ExportsList,
+  IdeRepositorySelector,
+  IdeSearchForm,
+  IdeSearchResults,
+  SemanticSearchForm,
+  SemanticSearchResults,
+  WorkspaceFilePalette,
+} from '@openthrottle/react-router-ide';
 import {
   Button,
   Empty,
@@ -10,22 +24,9 @@ import {
   TabsList,
   TabsTrigger,
 } from '@openthrottle/react-router-shadcn';
-import {
-  DefinitionReferencesPanel,
-  ExportsList,
-  IdeRepositorySelector,
-  IdeSearchForm,
-  IdeSearchResults,
-  SemanticSearchForm,
-  SemanticSearchResults,
-  WorkspaceFilePalette,
-} from '@openthrottle/react-router-ide';
-import type {
-  IdeRepositoryOption,
-  IdeSearchResult,
-  IdeWorkspaceListing,
-} from '@openthrottle/react-router-ide';
+import * as React from 'react';
 import { Link } from 'react-router';
+
 import type { UseIdeWorkspaceResult } from '~/routing/ide/hooks/useIdeWorkspace';
 
 export interface IdeWorkspaceBodyProps {

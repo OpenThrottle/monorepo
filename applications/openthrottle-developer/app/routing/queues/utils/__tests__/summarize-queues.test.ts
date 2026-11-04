@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'vitest';
+
 import type { QueueCardFragment } from '~/__generated__/graphql';
+
 import { summarizeQueues } from '../summarize-queues';
 
 const queue = (

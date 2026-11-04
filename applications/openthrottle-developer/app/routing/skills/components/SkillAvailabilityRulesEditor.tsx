@@ -1,7 +1,8 @@
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import clsx from 'clsx';
-import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
+
 import { SkillAvailabilityRuleForm } from '~/routing/skills/components/SkillAvailabilityRuleForm';
+import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
 import type { SkillAvailabilityRuleValue } from '~/routing/skills/utils/skill-availability';
 
 const COPY = SKILL_AVAILABILITY_COPY.rules;
@@ -38,7 +39,7 @@ export const SkillAvailabilityRulesEditor = (
 
   return (
     <section
-      className={clsx('flex flex-col gap-4', className)}
+      className={cn('flex flex-col gap-4', className)}
       data-testid="SkillAvailabilityRulesEditor"
     >
       <h2 className="text-lg font-semibold">{COPY.heading}</h2>

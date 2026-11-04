@@ -18,14 +18,14 @@
 # `rm -rf node_modules/.pnpm/...` surgery — that was compensating for an over-broad
 # `--legacy` deploy and is tracked for a real fix (injected strict deploy) in a follow-up plan.
 #
-# Build stages use node:24-bookworm-slim (glibc) so native addons match distroless production.
+# Build stages use node:24-trixie-slim (glibc) so native addons match distroless production.
 ###########################################################################
 #
 #     👀 https://pnpm.io/docker using NX for the monorepo build
 #
 ###########################################################################
 ARG NODE_VERSION="24"
-FROM node:${NODE_VERSION}-bookworm-slim AS base
+FROM node:${NODE_VERSION}-trixie-slim AS base
 
 WORKDIR /app
 
@@ -37,7 +37,6 @@ ARG APP_ENV="production"
 ARG APP_NAME="__REQUIRED_ARG__"
 ARG APP_VERSION="__REQUIRED_ARG__"
 ARG GITHUB_TOKEN="__REQUIRED_ARG__"
-ARG PNPM_VERSION="__REQUIRED_ARG__"
 
 ENV APP_ENV="${APP_ENV}"
 ENV APP_NAME="${APP_NAME}"
@@ -48,10 +47,15 @@ ENV NX_DAEMON="false"
 
 # Only copy what's needed to install our dependencies
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig*.json ./
+# Required by the root `preinstall`; without it `pnpm install` below fails with
+# MODULE_NOT_FOUND. Named explicitly rather than `COPY scripts/` so the rest of
+# scripts/ does not bust this layer's cache.
+COPY scripts/check-node-engine.mjs ./scripts/check-node-engine.mjs
 
-# Enable pnpm via corepack
-RUN corepack enable
-RUN corepack prepare pnpm --activate
+# Enable pnpm via corepack. A bare `prepare` reads the root package.json
+# `packageManager` field (copied above), so the version + sha512 there is the
+# single pin — `prepare pnpm` would activate npm's `latest` tag instead.
+RUN corepack enable && corepack prepare --activate
 
 # Non-root identity for intermediate stages (final image uses distroless `nonroot`).
 RUN groupadd --system --gid 1001 appuser \
@@ -76,7 +80,7 @@ COPY ./applications/${APP_NAME}/package.json ./applications/${APP_NAME}/package.
 COPY ./packages ./packages
 COPY ./tools ./tools
 
-# pnpm 11 won't expand ${GITHUB_TOKEN} from the committed .npmrc; write the
+# pnpm ≥11 won't expand ${GITHUB_TOKEN} from the committed .npmrc; write the
 # GitHub Packages credential to the trusted user-level config. Confined to the
 # build stages (builder and the development/build stages that derive from it) —
 # the distroless production stage only copies the pruned tree, never this .npmrc.
@@ -99,7 +103,7 @@ ENV NODE_ENV="development"
 ENV NX_DAEMON="false"
 
 # procps: nx/dev-server process management spawns `ps` (pidtree) — absent from
-# bookworm-slim. git: common dev tooling shells out to it.
+# trixie-slim. git: common dev tooling shells out to it.
 RUN apt-get update \
   && apt-get install -y --no-install-recommends git procps \
   && rm -rf /var/lib/apt/lists/*
@@ -167,11 +171,21 @@ CMD ["node", "node_modules/@react-router/serve/bin.cjs", "build/server/index.js"
 #   PRODUCTION ~ Distroless (default target)
 #
 ################################################################################
-FROM gcr.io/distroless/nodejs24-debian12:nonroot AS production
+FROM gcr.io/distroless/nodejs24-debian13:nonroot AS production
 
 WORKDIR /app
 
 ENV NODE_ENV="production"
+# A stage starts from its own FROM, so the identity `base` sets is not inherited
+# here (production-debian builds FROM base and gets it for free). Re-declared so
+# the distroless image knows its own name and version: the server's log service
+# name and the developer's APP_VERSION (shown in settings, sent to Rollbar).
+ARG APP_ENV="production"
+ARG APP_NAME
+ARG APP_VERSION
+ENV APP_ENV="${APP_ENV}"
+ENV APP_NAME="${APP_NAME}"
+ENV APP_VERSION="${APP_VERSION}"
 
 COPY --from=build --chown=65532:65532 /app/pruned/. /app/
 

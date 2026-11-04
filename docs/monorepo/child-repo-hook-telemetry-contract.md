@@ -12,12 +12,12 @@ it got there via the plugin (leg A), `--plugin-dir` (leg B), or anything built l
 Every resolution path in the hook core was written against exactly one repository — this one — and each
 one silently assumes it. Running unchanged in a child repo, the core would:
 
-| behavior                                  | code                                  | what it does in a foreign repo                                             |
-| ----------------------------------------- | ------------------------------------- | -------------------------------------------------------------------------- |
-| read `<repoRoot>/.env` for the endpoint   | `config/env.ts` → `resolveGraphqlUrl` | reads a **stranger's** `.env`                                              |
-| read `<repoRoot>/.env` for the auth token | `config/env.ts` → `resolveAuthToken`  | ditto, for credentials                                                     |
-| classify a skill as ours vs third-party   | `utils/scope.ts` → `detectScope`      | `<repoRoot>/skills/<name>` never exists → **everything** is `third-party`  |
-| buffer failed posts to JSONL              | `data/jsonl.ts` → `defaultJsonlPath`  | writes `<repoRoot>/.cache/skill-usage/…` **into the child's working tree** |
+| behavior                                  | code                                  | what it does in a foreign repo                                            |
+| ----------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------- |
+| read `<repoRoot>/.env` for the endpoint   | `config/env.ts` → `resolveGraphqlUrl` | reads a **stranger's** `.env`                                             |
+| read `<repoRoot>/.env` for the auth token | `config/env.ts` → `resolveAuthToken`  | ditto, for credentials                                                    |
+| classify a skill by scope                 | `utils/scope.ts` → `detectScope`      | `<repoRoot>/skills/<name>` never exists → **everything** is `third-party` |
+| buffer failed posts to JSONL              | `data/jsonl.ts` → `defaultJsonlPath`  | wrote `<repoRoot>/.cache/skill-usage/…` **into the child's working tree** |
 
 The last row is the serious one: leg B's headline property is _zero disk mutation in the target repo_,
 and the JSONL fallback breaks it precisely when it matters most — a foreign repo is the case **most**
@@ -52,12 +52,19 @@ correctness bug: their `OPENTHROTTLE_*` values, if any, belong to their OT, not 
 
 The remaining, permitted sources, in precedence order:
 
-1. `SKILL_USAGE_GRAPHQL_URL` / `SKILL_USAGE_AUTH_TOKEN` — explicit overrides, already highest.
-2. Process env (`OPENTHROTTLE_GRAPHQL_URL`, `OPENTHROTTLE_SERVER_APP_URL`, …) — this is how **leg B**
-   supplies the endpoint: the driver already controls the spawned process's environment, so no config
-   needs to travel with the payload at all.
-3. Machine-global operator config at `~/.openthrottle/hooks.json` — this is how **leg A** supplies it,
-   since a marketplace-installed plugin has no spawning parent to inherit from. The user writes it once.
+1. Process env (`OPENTHROTTLE_GRAPHQL_URL`, `OPENTHROTTLE_WORKER_GRAPHQL_URL`,
+   `OPENTHROTTLE_SERVER_APP_URL`, …) — this is how **leg B** supplies the endpoint: the driver already
+   controls the spawned process's environment, so no config needs to travel with the payload at all.
+2. Machine-global operator config at `~/.openthrottle/.env` — this is how **leg A** supplies it, since
+   a marketplace-installed plugin has no spawning parent to inherit from. The user writes it once.
+
+**As shipped, two things differ from this section's original draft.** There are no
+`SKILL_USAGE_GRAPHQL_URL` / `SKILL_USAGE_AUTH_TOKEN` overrides: a second name for the same value only
+made the operator guess which layer he was configuring, so every layer now uses the `OPENTHROTTLE_*`
+names and location alone decides precedence. And the machine-global file is `.env`, not `hooks.json` —
+`hooks.json` was advertised in both plugin READMEs from the day they shipped and read by no code path,
+so it was a documented fiction rather than a design. Reusing the `.env` parser means the line a user
+writes in `~/.openthrottle/.env` is byte-identical to the one he would write in the monorepo.
 
 **Never** the plugin directory itself. The payload is generated, byte-stable, and drift-checked; baking
 an endpoint into it would make the artifact operator-specific and break the one-artifact premise.
@@ -90,6 +97,23 @@ quietly corrupting the exact metric the telemetry exists to produce.
 In `foreign` repos, scope resolves against the **injected/plugin skill set** — the skills OT actually
 put there — and falls back to `third-party` only when the skill is in neither. Fail-open is preserved:
 any error still yields `third-party`.
+
+#### The scope vocabulary grows; senders are never required to catch up
+
+Scope is `ours | personal | third-party` as of OT plan `a5f2ce0b`. It was
+`ours | third-party` before that, and the server **keeps accepting the two-member set
+indefinitely** — a child repo running an older overlay simply never emits `personal`, which is
+correct for it rather than a degraded state.
+
+Two consequences this contract commits to:
+
+- **Adding a member is additive, never breaking.** Validation messages and the by-day aggregate are
+  generated from the scope const rather than hand-written, so widening the set cannot orphan an older
+  sender. The `recordSkillUsageOutcome` mutation's `scope` default of `ours` exists precisely for
+  senders that predate the field, and is retained for that reason.
+- **Rows are never retroactively reclassified.** A personal skills root is per-user and lives outside
+  any repo, so the server cannot resolve another machine's, and therefore cannot tell which historical
+  `third-party` rows were really personal. Pre-widening invocations stay as captured, forever.
 
 ## 4. Buffering — nothing is written into a foreign working tree
 
@@ -148,11 +172,18 @@ Aligned with `91679bbf` rather than re-decided:
 - The secret redactor in `utils/privacy.ts` applies regardless of level. It is a backstop, not the
   control — `name-only` is the control.
 
+**Implemented** in `utils/privacy.ts` → `resolvePrivacyLevel`, which keys off the same
+`isOpenThrottleCheckout` test that gates the `.env` layer in §2, so a repo is ours for both purposes or
+neither. Adapters no longer pin a level, so passing the `home` default cannot accidentally opt a foreign
+repo back into arg collection. Covered by `utils/__tests__/privacy.test.ts`, including the path through
+`buildUsageEvent`. The opt-in in the second bullet is **not** implemented: there is currently no way to
+raise a foreign repo above `name-only`.
+
 ## 7. Kill switch
 
 Three layers, each independently sufficient, in precedence order:
 
-1. `SKILL_USAGE_DISABLE_SERVER=1` — already implemented: buffers locally, never posts.
+1. `OPENTHROTTLE_TELEMETRY_OFFLINE=1` — already implemented: buffers locally, never posts.
 2. A total off switch that disables capture entirely (no post, no buffer, no start files).
 3. Leg B's injection gate — the driver omits `--plugin-dir` altogether, so nothing loads. This is the
    only one that costs zero process time, and it is the right lever for repos the operator does not own.
@@ -164,14 +195,23 @@ what is collected and how to turn it off.
 
 ## Summary — the foreign profile
 
-| axis                              | `home`                                | `foreign`                                              |
-| --------------------------------- | ------------------------------------- | ------------------------------------------------------ |
-| endpoint from `<repoRoot>/.env`   | yes                                   | **no**                                                 |
-| auth token from `<repoRoot>/.env` | yes                                   | **no**                                                 |
-| endpoint sources                  | overrides → repo `.env` → process env | overrides → process env → `~/.openthrottle/hooks.json` |
-| repo identity                     | monorepo                              | normalized git remote URL, or none                     |
-| scope detection                   | `<repoRoot>/skills/<name>`            | injected/plugin skill set                              |
-| buffer location                   | `<repoRoot>/.cache/skill-usage/`      | `~/.openthrottle/skill-usage/<repo-id>/`               |
-| privacy default                   | `truncated` (args redacted, 256 cap)  | **`name-only`** (no args)                              |
-| warning on unreachable endpoint   | per failure                           | one per session                                        |
-| writes inside the checkout        | yes (gitignored)                      | **never**                                              |
+| axis                              | `home`                                             | `foreign`                             |
+| --------------------------------- | -------------------------------------------------- | ------------------------------------- |
+| endpoint from `<repoRoot>/.env`   | yes                                                | **no**                                |
+| auth token from `<repoRoot>/.env` | yes                                                | **no**                                |
+| endpoint sources                  | repo `.env` → process env → `~/.openthrottle/.env` | process env → `~/.openthrottle/.env`  |
+| repo identity                     | monorepo                                           | normalized git remote URL, or none    |
+| scope detection                   | `<repoRoot>/skills/<name>`                         | injected/plugin skill set             |
+| buffer location                   | `~/.openthrottle/skill-usage/`                     | `~/.openthrottle/skill-usage/` (same) |
+| privacy default                   | `truncated` (args redacted, 256 cap)               | **`name-only`** (no args)             |
+| warning on unreachable endpoint   | per failure                                        | one per session                       |
+| writes inside the checkout        | **never**                                          | **never**                             |
+
+**Three rows that the draft split by profile are now identical for both.** The buffer is one flat
+`~/.openthrottle/skill-usage/` rather than `<repoRoot>/.cache/` at home and a `<repo-id>` subdirectory
+away: repository identity already travels in every record's `cwd` and `git_branch`, so encoding it in
+a path duplicated it, and a single directory gives the drain hook exactly one place to look regardless
+of where a session ran. The endpoint sources differ only in that the repo `.env` layer is _absent_ in
+a foreign repo — it is gated on `isOpenThrottleCheckout`, which fails closed, so the same code answers
+both profiles rather than branching on a mode. And nothing is written inside any checkout now, home
+included; the gitignored `.cache/` directory is gone.

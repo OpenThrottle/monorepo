@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
-import { findLastUserMessageId } from '../chat-thread';
+
 import type { ChatMessage } from '../../types';
+import { findLastUserMessageId } from '../chat-thread';
 
 describe('findLastUserMessageId', () => {
   test('returns null for an empty list', () => {

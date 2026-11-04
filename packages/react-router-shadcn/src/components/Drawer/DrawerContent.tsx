@@ -2,9 +2,10 @@
 
 import * as React from 'react';
 import { Drawer as DrawerPrimitive } from 'vaul';
+
 import { cn } from '../../utils/cn';
-import { DrawerPortal } from './DrawerPortal';
 import { DrawerOverlay } from './DrawerOverlay';
+import { DrawerPortal } from './DrawerPortal';
 
 export interface DrawerContentProps extends React.ComponentPropsWithoutRef<
   typeof DrawerPrimitive.Content

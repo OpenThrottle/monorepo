@@ -1,7 +1,8 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
+
 import Component from '../docs.$';
 
 function stubMatches(): React.ComponentProps<typeof Component>['matches'];

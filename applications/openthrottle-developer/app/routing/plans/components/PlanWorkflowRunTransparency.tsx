@@ -1,47 +1,55 @@
-import * as React from 'react';
 import {
-  Badge,
   Card,
   CardContent,
   CardDescription,
   CardHeader,
+  CardTitle,
+  Empty,
+  EmptyDescription,
+  EmptyMedia,
+  EmptyTitle,
 } from '@openthrottle/react-router-shadcn';
-import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
-import { Link } from 'react-router';
-import {
-  PLAN_RUN_BULLMQ_QUEUE_NAME,
-  buildWorkflowRalphDebugBundleText,
-  buildWorkflowRalphTuningDiffLabels,
-  WORKFLOW_RALPH_CONFIG_PRECEDENCE,
-} from '~/routing/plans/utils/build-workflow-ralph-argv';
-import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
-import { PlanWorkflowRunTransparencyAuditTable } from '~/routing/plans/components/PlanWorkflowRunTransparencyAuditTable';
+import { HistoryIcon } from 'lucide-react';
+import * as React from 'react';
+
+import { PlanWorkflowRunCliDebug } from '~/routing/plans/components/PlanWorkflowRunCliDebug';
+import { PlanWorkflowRunLatest } from '~/routing/plans/components/PlanWorkflowRunLatest';
 import type { PlanRunAuditRow } from '~/routing/plans/components/PlanWorkflowRunTransparencyAuditTable';
-import { PlanWorkflowRunTransparencyRecentRuns } from '~/routing/plans/components/PlanWorkflowRunTransparencyRecentRuns';
-import type { RecentRun } from '~/routing/plans/components/PlanWorkflowRunTransparencyRecentRuns';
+import { PlanWorkflowRunTransparencyAuditTable } from '~/routing/plans/components/PlanWorkflowRunTransparencyAuditTable';
+import { PlanWorkflowRunUpcoming } from '~/routing/plans/components/PlanWorkflowRunUpcoming';
+import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/data.copy';
+import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import type { PlanRunMetricsEntry } from '~/routing/plans/utils/plan-workflow-run-transparency';
 
 export interface PlanWorkflowRunTransparencyProps {
-  canonicalWorkflowCommand: string;
-  planId: string;
-  planRunAuditRows: PlanRunAuditRow[];
-  recentPlanRuns: RecentRun[];
-  workflowInput: WorkflowRalphRunOptionsInput;
-  workflowTimeout: string;
-  workingDirectory: string;
+  readonly planId: string;
+  readonly planRunAuditRows: PlanRunAuditRow[];
+  /** Completed-job metrics; Run history joins them onto rows by job id. */
+  readonly planRunMetrics: readonly PlanRunMetricsEntry[];
+  /** `plan.scheduledRunAt`: the fire time of {@link scheduledRunId}. */
+  readonly scheduledRunAt: string | null;
+  /** `plan.scheduledRunId`: a scheduled run can exist outside the fetched history window. */
+  readonly scheduledRunId: string | null;
+  readonly workflowInput: WorkflowRalphRunOptionsInput;
+  readonly workflowTimeout: string;
+  readonly workingDirectory: string;
 }
 
 /**
- * @description Plan detail: canonical CLI copy, debug bundle (includes argv segments), diff vs
- * Configuration reset-to-defaults, recent completed plan runs (job id → queue), and queue link.
+ * @description The plan Details "Runs" card. Runs lead, in this order: Upcoming (scheduled runs),
+ * Latest run (the active or most recent run), Run history; then a collapsed CLI & debug section
+ * ({@link PlanWorkflowRunCliDebug}). A plan that has never run and has nothing scheduled shows one
+ * `Empty` in place of the three run sections.
  */
 export const PlanWorkflowRunTransparency = (
   props: PlanWorkflowRunTransparencyProps,
 ): React.ReactElement => {
   const {
-    canonicalWorkflowCommand,
     planId,
     planRunAuditRows,
-    recentPlanRuns,
+    planRunMetrics,
+    scheduledRunAt,
+    scheduledRunId,
     workflowInput,
     workingDirectory,
     workflowTimeout,
@@ -50,24 +58,39 @@ export const PlanWorkflowRunTransparency = (
   // Hooks
 
   // Setup
-  const debugBundleText = React.useMemo(
-    () =>
-      buildWorkflowRalphDebugBundleText({
-        iterationTimeoutText: workflowTimeout,
-        planId,
-        workflowInput,
-      }),
-    [planId, workflowInput, workflowTimeout],
-  );
-
-  const tuningDiffLabels = React.useMemo(
-    () => buildWorkflowRalphTuningDiffLabels(workflowInput, workflowTimeout),
-    [workflowInput, workflowTimeout],
-  );
+  const copy = PLAN_RUN_TRANSPARENCY_COPY;
+  const hasRuns = planRunAuditRows.length > 0 || scheduledRunId !== null;
 
   // Handlers
 
   // Markup
+  const runSections = hasRuns ? (
+    <>
+      <PlanWorkflowRunUpcoming
+        planId={planId}
+        planRunAuditRows={planRunAuditRows}
+        scheduledRun={{ scheduledRunAt, scheduledRunId }}
+      />
+      <PlanWorkflowRunLatest planRunAuditRows={planRunAuditRows} />
+      <PlanWorkflowRunTransparencyAuditTable
+        planRunAuditRows={planRunAuditRows}
+        planRunMetrics={planRunMetrics}
+        workflowInput={workflowInput}
+        workingDirectory={workingDirectory}
+      />
+    </>
+  ) : (
+    <Empty
+      className="border-border border border-dashed p-6 md:p-8"
+      data-testid="PlanWorkflowRunTransparency-empty"
+    >
+      <EmptyMedia variant="icon">
+        <HistoryIcon className="size-6" />
+      </EmptyMedia>
+      <EmptyTitle>{copy.empty.title}</EmptyTitle>
+      <EmptyDescription>{copy.empty.description}</EmptyDescription>
+    </Empty>
+  );
 
   // Life Cycle
 
@@ -75,102 +98,23 @@ export const PlanWorkflowRunTransparency = (
 
   return (
     <Card className="mt-8">
-      <CardHeader className="pb-0!" />
+      <CardHeader>
+        <CardTitle>
+          <h2 className="text-lg leading-none font-semibold">{copy.title}</h2>
+        </CardTitle>
+        <CardDescription>{copy.description}</CardDescription>
+      </CardHeader>
       <CardContent>
         <div
+          className="flex flex-col gap-8"
           data-testid="PlanWorkflowRunTransparency"
           id="plan-workflow-run-transparency"
         >
-          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-            <CardDescription className="text-xs">
-              Flags match{' '}
-              <code className="text-xs">pnpm exec workflow-ralph --help</code>{' '}
-              and{' '}
-              <span className="font-mono text-[0.7rem]">
-                tools/workflows/README.md
-              </span>
-              .{' '}
-              <strong className="text-foreground font-medium">Required</strong>{' '}
-              CLI target (one of):{' '}
-              <code className="text-[0.65rem]">--plan &lt;uuid&gt;</code> or{' '}
-              <code className="text-[0.65rem]">--task &lt;uuid&gt;</code>.
-              Toolbar “Add to Queue” enqueues a{' '}
-              <span className="text-foreground font-medium">plan-scoped</span>{' '}
-              worker job with one execution backend for the whole run (Cursor or
-              Claude Code).{' '}
-              <strong className="text-foreground font-medium">
-                Precedence
-              </strong>
-              : {WORKFLOW_RALPH_CONFIG_PRECEDENCE}. Configuration tab values and
-              enqueue tuning sit at the CLI layer; omit fields to inherit from{' '}
-              <code className="text-[0.65rem]">.workflow-ralph.json</code> in
-              the worktree or repo root.
-            </CardDescription>
-            <div className="my-4 flex flex-wrap gap-2">
-              <Badge color="accent">
-                <OpenThrottleClipboard
-                  label="Copy canonical workflow-ralph command"
-                  text={canonicalWorkflowCommand}
-                />
-              </Badge>
-              <Badge color="accent">
-                <OpenThrottleClipboard
-                  label="Copy workflow debug bundle"
-                  text={debugBundleText.trim()}
-                />
-              </Badge>
-              <Badge color="accent">
-                <Link
-                  className="text-xs underline-offset-4 hover:underline"
-                  to={`/queues/${encodeURIComponent(PLAN_RUN_BULLMQ_QUEUE_NAME)}`}
-                >
-                  Queue: {PLAN_RUN_BULLMQ_QUEUE_NAME}
-                </Link>
-              </Badge>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <p className="text-muted-foreground text-[0.65rem] font-medium tracking-wide uppercase">
-              Canonical argv (local CLI)
-            </p>
-            <pre
-              className="bg-background text-foreground border-border max-h-36 overflow-x-auto overflow-y-auto rounded border p-2 font-mono text-[0.65rem] leading-relaxed break-all whitespace-pre-wrap"
-              data-testid="PlanWorkflowRunTransparency-canonical-cli"
-            >
-              {canonicalWorkflowCommand}
-            </pre>
-          </div>
-
-          <div className="space-y-1.5">
-            <p className="text-muted-foreground text-[0.65rem] font-medium tracking-wide uppercase">
-              vs Configuration reset (CLI argv)
-            </p>
-            {tuningDiffLabels.length === 0 ? (
-              <p className="text-muted-foreground text-xs">
-                Tuning matches reset-to-defaults for this target — minimal flags
-                after{' '}
-                <code className="text-[0.65rem]">pnpm exec workflow-ralph</code>{' '}
-                (only <code className="text-[0.65rem]">--plan</code> or{' '}
-                <code className="text-[0.65rem]">--task</code> plus ids).
-              </p>
-            ) : (
-              <ul className="text-muted-foreground list-inside list-disc text-xs">
-                {tuningDiffLabels.map((line, index) => (
-                  <li key={`${index}-${line}`}>{line}</li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          <PlanWorkflowRunTransparencyAuditTable
-            planRunAuditRows={planRunAuditRows}
+          {runSections}
+          <PlanWorkflowRunCliDebug
+            planId={planId}
             workflowInput={workflowInput}
-            workingDirectory={workingDirectory}
-          />
-
-          <PlanWorkflowRunTransparencyRecentRuns
-            recentPlanRuns={recentPlanRuns}
+            workflowTimeout={workflowTimeout}
           />
         </div>
       </CardContent>

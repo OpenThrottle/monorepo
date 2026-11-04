@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Input,
   Select,
@@ -8,6 +7,8 @@ import {
   SelectValue,
   TextArea,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import { RolloutFlagKind } from '~/__generated__/graphql';
 import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
 import type { RolloutFlagKindOption } from '~/routing/settings/data/data.rollout-kinds';

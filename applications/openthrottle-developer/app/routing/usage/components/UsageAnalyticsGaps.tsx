@@ -1,6 +1,6 @@
+import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
 import { Link } from 'react-router';
-import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 
 export interface UsageAnalyticsGapsProps {}
 

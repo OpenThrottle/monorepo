@@ -8,16 +8,16 @@
 import { createHash } from 'node:crypto';
 import {
   mkdirSync,
-  readFileSync,
   readdirSync,
+  readFileSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-import { FOREIGN_SKILL_LEDGER_DIR_ENV } from './types.ts';
 import type { ForeignSkillLedger } from './types.ts';
+import { FOREIGN_SKILL_LEDGER_DIR_ENV } from './types.ts';
 
 const isErrnoException = (error: unknown): error is NodeJS.ErrnoException =>
   error instanceof Error && 'code' in error;

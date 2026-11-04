@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,11 +9,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
   Button,
+  cn,
   toast,
 } from '@openthrottle/react-router-shadcn';
-import { useFetcher } from 'react-router';
 import { PauseIcon, PlayIcon, Trash2Icon } from 'lucide-react';
-import clsx from 'clsx';
+import * as React from 'react';
+import { useFetcher } from 'react-router';
 
 export interface QueueDetailControlsProps {
   className?: string;
@@ -83,7 +83,7 @@ export const QueueDetailControls = (
 
   return (
     <div
-      className={clsx('flex flex-wrap items-center gap-2', className)}
+      className={cn('flex flex-wrap items-center gap-2', className)}
       data-testid="QueueDetailControls"
     >
       <Button

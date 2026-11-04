@@ -1,8 +1,9 @@
+import { createMock } from '@golevelup/ts-vitest';
 import type { ExecutionContext } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
-import { createMock } from '@golevelup/ts-vitest';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { getRequestFromExecutionContext } from './get-request-from-execution-context';
+
+import { getRequestFromExecutionContext } from './get-request-from-execution-context.ts';
 
 const createHttpContext = (httpReq: object): ExecutionContext =>
   createMock<ExecutionContext>({

@@ -1,7 +1,8 @@
-import * as React from 'react';
 import { act, render, waitFor } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
+
 import type {
   UsePlanDetailRouteOptions,
   UsePlanDetailRouteResult,
@@ -37,7 +38,7 @@ const baseLoaderData = asType<UsePlanDetailRouteOptions['loaderData']>({
   outputChunks: Promise.resolve([]),
   runHistory: Promise.resolve({
     planRunAuditRows: [{ isStale: false }],
-    recentPlanRuns: [],
+    planRunMetrics: [],
   }),
   tasks: [{ status: 'COMPLETED' }, { status: 'PENDING' }],
   workspaceRepositories: Promise.resolve([]),
@@ -114,7 +115,7 @@ describe('usePlanDetailRoute', () => {
         outputChunks: Promise.resolve([]),
         runHistory: Promise.resolve({
           planRunAuditRows: [],
-          recentPlanRuns: [],
+          planRunMetrics: [],
         }),
         tasks: [],
         workspaceRepositories: Promise.resolve([]),
@@ -147,7 +148,7 @@ describe('usePlanDetailRoute', () => {
               status: 'IN_PROGRESS',
             },
           ],
-          recentPlanRuns: [],
+          planRunMetrics: [],
         }),
         tasks: [],
         workspaceRepositories: Promise.resolve([]),
@@ -178,7 +179,7 @@ describe('usePlanDetailRoute', () => {
         outputChunks: Promise.resolve([]),
         runHistory: Promise.resolve({
           planRunAuditRows: [{ id: 'run-1', isStale: false, ...row }],
-          recentPlanRuns: [],
+          planRunMetrics: [],
         }),
         tasks: [],
         workspaceRepositories: Promise.resolve([]),
@@ -196,7 +197,7 @@ describe('usePlanDetailRoute', () => {
         outputChunks: Promise.resolve([]),
         runHistory: Promise.resolve({
           planRunAuditRows: [],
-          recentPlanRuns: [],
+          planRunMetrics: [],
         }),
         tasks: [],
         workspaceRepositories: Promise.resolve([]),

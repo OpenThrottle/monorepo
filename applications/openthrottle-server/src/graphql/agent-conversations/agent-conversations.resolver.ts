@@ -2,17 +2,18 @@
  * @description GraphQL resolver for persisted agent conversations (human JWT user-scoped).
  */
 
+import { UseGuards } from '@nestjs/common';
+import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
+import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import {
   AGENT_CONVERSATION_STATUSES,
   AgentConversationsService,
   type AgentConversationStatus,
 } from '@openthrottle/nestjs-repositories';
-import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
-import { UseGuards } from '@nestjs/common';
-import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { assertHumanAuthPrincipal } from '../service-accounts/assert-human-auth-principal';
+
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { assertHumanAuthPrincipal } from '../service-accounts/assert-human-auth-principal.ts';
 import {
   ArchiveAgentConversationInput,
   CreateAgentConversationInput,
@@ -20,17 +21,17 @@ import {
   GetAgentConversationMessagesInput,
   ListAgentConversationsInput,
   UpdateAgentConversationTitleInput,
-} from './agent-conversation.input';
+} from './agent-conversation.input.ts';
 import {
   parseAgentConversationMetadataJson,
   toAgentConversationMessageObject,
   toAgentConversationObject,
-} from './agent-conversation.mapper';
+} from './agent-conversation.mapper.ts';
 import {
   AgentConversationObject,
   ListAgentConversationMessagesResultObject,
   ListAgentConversationsResultObject,
-} from './agent-conversation.object';
+} from './agent-conversation.object.ts';
 
 const resolveConversationStatus = (
   status: string | null | undefined,

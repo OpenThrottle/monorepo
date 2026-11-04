@@ -1,9 +1,9 @@
-import * as React from 'react';
 import {
   GlobalFeatureOnboardingTrigger,
   GlobalHeading,
 } from '@openthrottle/react-router-ui-global';
 import { ListChevronsUpDownIcon } from 'lucide-react';
+import * as React from 'react';
 
 export interface PlansIntroductionProps {
   className?: string;

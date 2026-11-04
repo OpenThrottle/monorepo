@@ -1,22 +1,18 @@
 import * as React from 'react';
+
+import type { DocsFeatureFlags } from '~/global/config/docs-feature-flags';
 import {
   DOCS_FEATURE_FLAG_DEFAULTS,
+  DOCS_FEATURE_FLAGS_SETTING,
   isDocsFeatureFlags,
 } from '~/global/config/docs-feature-flags';
 import { usePersistentSetting } from '~/global/hooks/usePersistentSetting';
-import type {
-  DocsFeatureFlagKey,
+import type { SetDocsFeatureFlag } from '~/global/types';
+
+export type UseDocsFeatureFlagsResult = readonly [
   DocsFeatureFlags,
-} from '~/global/config/docs-feature-flags';
-
-/** Namespaced persistent-setting key for the docs feature flags. */
-const DOCS_FEATURE_FLAGS_SETTING = 'docs.featureFlags';
-
-/** Flips a single docs feature flag, persisting the merged result. */
-export type SetDocsFeatureFlag = (
-  key: DocsFeatureFlagKey,
-  enabled: boolean,
-) => void;
+  SetDocsFeatureFlag,
+];
 
 /**
  * @public
@@ -27,22 +23,29 @@ export type SetDocsFeatureFlag = (
  * changes survive reloads and sync across tabs). `setFlag(key, enabled)` merges
  * one flag over the stored object and persists it.
  */
-export const useDocsFeatureFlags = (): readonly [
-  DocsFeatureFlags,
-  SetDocsFeatureFlag,
-] => {
+export const useDocsFeatureFlags = (): UseDocsFeatureFlagsResult => {
+  // Hooks
   const [flags, setFlags] = usePersistentSetting<DocsFeatureFlags>(
     DOCS_FEATURE_FLAGS_SETTING,
     DOCS_FEATURE_FLAG_DEFAULTS,
     isDocsFeatureFlags,
   );
 
+  // Setup
+
+  // Handlers
   const setFlag = React.useCallback<SetDocsFeatureFlag>(
     (key, enabled) => {
       setFlags((prev) => ({ ...prev, [key]: enabled }));
     },
     [setFlags],
   );
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return [flags, setFlag];
 };

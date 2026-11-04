@@ -4,13 +4,13 @@
  * here; `dimension` is denormalized from the writer's vocabulary.
  */
 
+import { Field, Float, ID, ObjectType } from '@nestjs/graphql';
 import type {
   PlanTagData,
   ProjectTagData,
-  TaskTagData,
   TagSource,
+  TaskTagData,
 } from '@openthrottle/nestjs-repositories';
-import { Field, Float, ID, ObjectType } from '@nestjs/graphql';
 
 @ObjectType({
   description: `A tag attached to a plan. Source is derived from the writing identity (human > agent > server-llm) and never client-supplied.`,

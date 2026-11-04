@@ -1,6 +1,7 @@
-import * as React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
+
 import { ContextMenu, ContextMenuContent, ContextMenuTrigger } from '../index';
 
 describe('ContextMenuContent', () => {

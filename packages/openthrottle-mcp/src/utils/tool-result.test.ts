@@ -4,6 +4,7 @@
  */
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
 import { SafeToolError } from './errors.ts';
 import { runTool } from './tool-result.ts';
 

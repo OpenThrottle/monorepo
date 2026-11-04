@@ -3,14 +3,14 @@
  * component file per component-primitive-shape R4 (module-scope helpers live in
  * the sibling utils/ folder) so the table component stays UI-focused.
  */
+import type { ColumnDef } from '@tanstack/react-table';
 import * as React from 'react';
-import { Badge } from '@openthrottle/react-router-shadcn';
 import { Link } from 'react-router';
-import {
-  RUN_STATUS_COLOR,
-  RUN_STATUS_LABEL,
-  RUN_STATUS_VARIANT,
-} from '~/routing/schedule/data/data.run-status';
+
+import type { ScheduledJobRunRowFragment } from '~/__generated__/graphql';
+import type { ScheduleRunsTableProps } from '~/routing/schedule/components/ScheduleRunsTable';
+import { ScheduleRunStatusCell } from '~/routing/schedule/components/ScheduleRunStatusCell';
+import { RUN_TRIGGER_LABEL } from '~/routing/schedule/data/data.run-status';
 import { formatDuration } from '~/routing/schedule/utils/format-duration';
 import {
   formatRunCost,
@@ -18,12 +18,14 @@ import {
   runUsageTooltip,
 } from '~/routing/schedule/utils/format-usage';
 import { formatWhen } from '~/routing/schedule/utils/format-when';
-import type { ColumnDef } from '@tanstack/react-table';
-import type { ScheduledJobRunRowFragment } from '~/__generated__/graphql';
-import type { ScheduleRunsTableProps } from '~/routing/schedule/components/ScheduleRunsTable';
 
+/**
+ * @param resumedRunIds ids of the usage_limited runs that a later run in the list continues, so the
+ * status cell can tell "resumes at ..." from "not resumed automatically".
+ */
 export const buildScheduleRunsTableColumns = (
   jobId: ScheduleRunsTableProps['jobId'],
+  resumedRunIds: ReadonlySet<string>,
 ): ColumnDef<
   ScheduledJobRunRowFragment,
   string | number | null | undefined
@@ -31,26 +33,23 @@ export const buildScheduleRunsTableColumns = (
   return [
     {
       accessorKey: 'status',
-      cell: ({ row }) => {
-        const run = row.original;
-
-        return (
-          <div className="p-2">
-            <Badge
-              color={RUN_STATUS_COLOR[run.status] ?? 'default'}
-              title={run.errorMessage ?? undefined}
-              variant={RUN_STATUS_VARIANT[run.status] ?? 'outline'}
-            >
-              {RUN_STATUS_LABEL[run.status] ?? run.status}
-            </Badge>
-          </div>
-        );
-      },
+      cell: ({ row }) => (
+        <ScheduleRunStatusCell
+          errorMessage={row.original.errorMessage}
+          resumeScheduled={resumedRunIds.has(row.original.id)}
+          status={row.original.status}
+          usageLimitResetsAt={row.original.usageLimitResetsAt}
+        />
+      ),
       header: () => <div className="p-2">Status</div>,
     },
     {
       accessorKey: 'trigger',
-      cell: ({ row }) => <div className="p-2">{row.original.trigger}</div>,
+      cell: ({ row }) => (
+        <div className="p-2">
+          {RUN_TRIGGER_LABEL[row.original.trigger] ?? row.original.trigger}
+        </div>
+      ),
       header: () => <div className="p-2">Trigger</div>,
     },
     {

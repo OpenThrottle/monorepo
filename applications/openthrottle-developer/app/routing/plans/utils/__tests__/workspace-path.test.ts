@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import {
-  RECENT_WORKSPACE_PATHS_STORAGE_KEY,
   RECENT_WORKSPACE_PATHS_MAX,
+  RECENT_WORKSPACE_PATHS_STORAGE_KEY,
 } from '~/routing/plans/config/defaults';
 import {
   addRecentWorkspacePath,

@@ -75,7 +75,7 @@ export class SkillUsageEventObject {
   receivedAt!: Date;
 
   @Field(() => String, {
-    description: `ours | third-party — derived by the client against skills/.`,
+    description: `ours | personal | third-party — derived by the client: ours is authored under skills/, personal is linked from the invoking user's personal skills root outside the repo, third-party is everything else.`,
   })
   scope!: string;
 
@@ -106,12 +106,12 @@ export class SkillUsageEventObject {
 @ObjectType()
 export class SkillUsageBySkillObject {
   @Field(() => Int, {
-    description: `Opt-in abandoned outcomes for this skill in the filtered range.`,
+    description: `Abandoned outcomes for this skill in the filtered range — the session died without a clean end. Liveness, not quality; excluded from outcomeCount.`,
   })
   abandonedCount!: number;
 
   @Field(() => Int, {
-    description: `Average reported duration_ms for outcomes with a duration; null when none.`,
+    description: `Average reported duration_ms for outcomes with a duration; null when none. Only a deliberate reporter supplies a duration — the automatic session-end paths report null, because no hook brackets a skill's own work.`,
     nullable: true,
   })
   avgDurationMs!: number | null;
@@ -122,7 +122,7 @@ export class SkillUsageBySkillObject {
   count!: number;
 
   @Field(() => Int, {
-    description: `Opt-in error outcomes for this skill in the filtered range.`,
+    description: `Reported error outcomes for this skill in the filtered range. A quality claim; only a deliberate reporter or a harness with a real failure status writes it.`,
   })
   errorCount!: number;
 
@@ -133,14 +133,19 @@ export class SkillUsageBySkillObject {
   lastUsedAt!: Date | null;
 
   @Field(() => Int, {
-    description: `Opt-in outcome events for this skill. May be less than count; missing outcomes are normal.`,
+    description: `QUALITY outcomes for this skill — successCount + errorCount only. Deliberately excludes sessionEndedCount and abandonedCount, which say the process finished or died, not that the skill's work went well. May be far less than count; zero is the normal, honest reading for any skill that does not report its own outcome.`,
   })
   outcomeCount!: number;
 
   @Field(() => String, {
-    description: `ours | third-party for this skill row.`,
+    description: `ours | personal | third-party for this skill row.`,
   })
   scope!: string;
+
+  @Field(() => Int, {
+    description: `Automatic session-end records for this skill — the session that loaded it ended normally. Liveness, not quality; excluded from outcomeCount.`,
+  })
+  sessionEndedCount!: number;
 
   @Field(() => String, {
     description: `Skill identifier (e.g. ot-plans, vercel:deploy).`,
@@ -148,7 +153,7 @@ export class SkillUsageBySkillObject {
   skillName!: string;
 
   @Field(() => Int, {
-    description: `Opt-in success outcomes for this skill in the filtered range.`,
+    description: `Reported success outcomes for this skill in the filtered range. A quality claim; only a deliberate reporter writes it.`,
   })
   successCount!: number;
 }
@@ -192,7 +197,7 @@ export class SkillUsageOutcomeObject {
   receivedAt!: Date;
 
   @Field(() => String, {
-    description: `ours | third-party.`,
+    description: `ours | personal | third-party.`,
   })
   scope!: string;
 
@@ -206,6 +211,12 @@ export class SkillUsageOutcomeObject {
     description: `Skill identifier matching the start event.`,
   })
   skillName!: string;
+
+  @Field(() => String, {
+    description: `Producer id of the tool/adapter that recorded this outcome (e.g. claude-code, cursor). Null for rows ingested before source tracking.`,
+    nullable: true,
+  })
+  source!: string | null;
 
   @Field(() => String, {
     description: `Optional tool_use_id for tighter correlation.`,
@@ -222,7 +233,7 @@ export class SkillUsageByScopeObject {
   count!: number;
 
   @Field(() => String, {
-    description: `ours | third-party.`,
+    description: `ours | personal | third-party.`,
   })
   scope!: string;
 }
@@ -240,7 +251,12 @@ export class SkillUsageByDayObject {
   oursCount!: number;
 
   @Field(() => Int, {
-    description: `third-party-scoped invocations on this day.`,
+    description: `personal-scoped invocations on this day.`,
+  })
+  personalCount!: number;
+
+  @Field(() => Int, {
+    description: `third-party-scoped invocations on this day. Excludes personal invocations, which have counted into personalCount since that member was added; historical rows are never reclassified, so a personal skill's series can straddle both fields across that date.`,
   })
   thirdPartyCount!: number;
 
@@ -294,12 +310,12 @@ export class SkillUsageGitBranchSearchObject {
 @ObjectType()
 export class SkillUsageResultObject {
   @Field(() => [SkillUsageByDayObject], {
-    description: `Per-day series (UTC), oldest first, with ours/third-party split.`,
+    description: `Per-day series (UTC), oldest first, split into ours / personal / third-party.`,
   })
   byDay!: SkillUsageByDayObject[];
 
   @Field(() => [SkillUsageByScopeObject], {
-    description: `ours vs third-party totals for the filtered range.`,
+    description: `ours / personal / third-party totals for the filtered range.`,
   })
   byScope!: SkillUsageByScopeObject[];
 

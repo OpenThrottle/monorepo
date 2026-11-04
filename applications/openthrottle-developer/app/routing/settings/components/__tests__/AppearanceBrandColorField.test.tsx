@@ -1,16 +1,18 @@
-import * as React from 'react';
-import { fireEvent, render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { fireEvent, render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Provider, createStore } from 'jotai';
+import { createStore, Provider } from 'jotai';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { AppearanceBrandColorField } from '../AppearanceBrandColorField';
-import type { AppearanceBrandColorFieldProps } from '../AppearanceBrandColorField';
+
+import type { ConfigObject } from '~/global/data/atom.config';
 import {
   configAtom,
   DEFAULT_APPEARANCE_CONFIG,
 } from '~/global/data/atom.config';
-import type { ConfigObject } from '~/global/data/atom.config';
+
+import type { AppearanceBrandColorFieldProps } from '../AppearanceBrandColorField';
+import { AppearanceBrandColorField } from '../AppearanceBrandColorField';
 
 type Store = ReturnType<typeof createStore>;
 

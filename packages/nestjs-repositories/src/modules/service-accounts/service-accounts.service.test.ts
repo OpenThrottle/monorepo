@@ -1,13 +1,14 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { Test } from '@nestjs/testing';
 import { createMock } from '@golevelup/ts-vitest';
+import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { asMock } from '@openthrottle/nestjs-testing';
-import { ServiceAccountCredential } from './service-account-credential.entity';
-import { ServiceAccount } from './service-account.entity';
-import { SERVICE_ACCOUNT_BEARER_PREFIX } from './service-account-token.util';
-import { ServiceAccountsService } from './service-accounts.service';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { ServiceAccount } from './service-account.entity.ts';
+import { ServiceAccountCredential } from './service-account-credential.entity.ts';
+import { SERVICE_ACCOUNT_BEARER_PREFIX } from './service-account-token.util.ts';
+import { ServiceAccountsService } from './service-accounts.service.ts';
 
 const serviceAccountId = '11111111-1111-4111-8111-111111111111';
 const credentialId = '22222222-2222-4222-8222-222222222222';

@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Badge,
   Button,
@@ -9,6 +8,8 @@ import {
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
 import { ExternalLink } from 'lucide-react';
+import * as React from 'react';
+
 import { githubOpenThrottleMainBlob } from '~/routing/agents/constants/github-repo-paths';
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import {

@@ -7,17 +7,18 @@
 
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
-import { LoggerService } from '@openthrottle/nestjs-modules';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
+import { LoggerService } from '@openthrottle/nestjs-modules';
+
 import {
   TASK_PROMOTION_QUEUE_NAME,
   TASK_PROMOTION_WORKER_CONCURRENCY,
-} from './task-promotion.constants';
-import { TaskPromotionService } from './task-promotion.service';
+} from './task-promotion.constants.ts';
+import { TaskPromotionService } from './task-promotion.service.ts';
 import type {
   PromoteTaskJob,
   PromoteTaskJobResult,
-} from './task-promotion.types';
+} from './task-promotion.types.ts';
 
 @Processor(TASK_PROMOTION_QUEUE_NAME, {
   ...defaultWorkerOptions,
@@ -51,6 +52,10 @@ export class TaskPromotionProcessor
     const outcome = await this.taskPromotionService.promote({
       actorServiceAccountId,
       actorUserId,
+      // This queue is reached only from the promoteTaskToPlan GraphQL mutation
+      // (TaskPromotionEnqueueService.enqueuePromotion) — a user-initiated write, same fatality
+      // as the mutation's other chokepoints (PlanStatusService.cancelRun, PlanEnqueueService).
+      captureFailureIsFatal: true,
       taskId,
     });
 

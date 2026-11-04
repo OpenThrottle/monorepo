@@ -10,6 +10,7 @@
  */
 
 import { isAbsolute } from 'node:path';
+
 import type {
   AcquireResult,
   IWorktreeTargetsTracker,
@@ -17,7 +18,7 @@ import type {
   WorktreeTarget,
   WorktreeTargetAvailable,
   WorktreeTargetLocked,
-} from '../types/worktree';
+} from '../types/worktree.ts';
 
 /**
  * @description Validates that a worktree target path is safe to use as a `git -C`

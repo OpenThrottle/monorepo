@@ -17,6 +17,9 @@
     "@nestjs/jwt": "catalog:",
     "@nestjs/passport": "catalog:",
     "@nestjs/platform-express": "catalog:",
+    "@nestjs/throttler": "catalog:",
+    "@nestjs/typeorm": "catalog:",
+    "@openthrottle/agentic-hooks": "workspace:^",
     "@openthrottle/agentic-token-usage": "workspace:^",
     "@openthrottle/nestjs-agentic-workflow": "workspace:^",
     "@openthrottle/nestjs-auth": "workspace:^",
@@ -27,7 +30,7 @@
     "@openthrottle/nestjs-logging": "workspace:^",
     "@openthrottle/nestjs-model-discovery": "workspace:^",
     "@openthrottle/nestjs-modules": "workspace:^",
-    "@openthrottle/nestjs-openthrottle-mcp": "workspace:^",
+    "@openthrottle/nestjs-mcp-developer": "workspace:^",
     "@openthrottle/nestjs-profiling": "workspace:^",
     "@openthrottle/nestjs-rbac": "workspace:^",
     "@openthrottle/nestjs-redis": "workspace:^",
@@ -48,6 +51,7 @@
     "@openthrottle/openthrottle-drivers": "workspace:^",
     "@openthrottle/openthrottle-notifications": "workspace:^",
     "@openthrottle/openthrottle-skills": "workspace:^",
+    "@tools/generators": "workspace:^",
     "@tools/workflows": "workspace:^",
     "bullmq": "catalog:",
     "dataloader": "catalog:",
@@ -59,6 +63,7 @@
     "pg": "catalog:",
     "reflect-metadata": "catalog:",
     "rxjs": "catalog:",
+    "tslib": "catalog:",
     "typeorm": "catalog:",
     "zod": "catalog:"
   },
@@ -69,6 +74,12 @@
   "name": "openthrottle-server",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "implicitDependencies": [
+      "!@tools/generators"
+    ],
+    "metadata": {
+      "description": "`!@tools/generators` removes the graph edge Nx infers from the `dependencies` entry. The server never imports that package. It only resolves its package.json and reads generators.json and src/**/schema.json (src/modules/generators/generators.service.ts), so it needs the pnpm link but not a built dist/. Without this, `^build` and `nx sync` make every dev start and typecheck build @tools/generators."
+    },
     "projectType": "application",
     "sourceRoot": "./",
     "tags": [
@@ -84,22 +95,13 @@
           "^build-package"
         ],
         "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Emit the server to ./build with tsc. NOT `nest build`: its SWC builder cannot rewrite `.ts` import specifiers to `.js`, so ESM output would not resolve at runtime (OT plan 31454927 task 2). `--noCheck` keeps this an emit-only step, preserving the separation the old `typeCheck: false` had \u2014 the `typecheck` target is the type gate, and it resolves workspace types through project references that the pruned Docker tree does not carry. The compiler is the same $OPENTHROTTLE_TSC_BIN knob typecheck uses."
+        },
         "options": {
-          "command": "nest build --path tsconfig.app.json",
+          "command": "${OPENTHROTTLE_TSC_BIN:-tsc} -p tsconfig.app.json --noCheck",
           "cwd": "{projectRoot}"
         }
-      },
-      "docker-build": {
-        "executor": "nx:run-commands",
-        "options": {
-          "command": "docker build -f Dockerfile.NestJS --target production --build-arg APP_NAME=openthrottle-server --build-arg APP_VERSION=$APP_VERSION --build-arg PNPM_VERSION=$PNPM_VERSION --build-arg GITHUB_TOKEN=$GITHUB_TOKEN -t openthrottle-server:local .",
-          "cwd": "{workspaceRoot}",
-          "env": {
-            "APP_VERSION": "1.3.0",
-            "PNPM_VERSION": "11.6.0"
-          }
-        },
-        "description": "Build openthrottle-server image from root Dockerfile.NestJS (monorepo context). Set GITHUB_TOKEN in environment for private deps."
       },
       "dev": {
         "continuous": true,
@@ -112,12 +114,21 @@
             "target": "ensure-migrations",
             "projects": "monorepo"
           },
+          "^build",
+          "^typecheck",
           "^dev"
         ],
         "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Run the server in watch mode (PROCESS_ROLE=all). Repeatable jobs (work-ledger sweep/verify/harvest, daily stats, doc ingestion, data retention, plan-runs stale sweep, scheduled-agent-jobs boot reconcile) register only when this checkout owns repeatables: a shared-DB worktree (OT_WORKTREE_DB=shared) logs one line and registers none, so it never runs duplicates against the primary's data; the primary (marker absent) and an isolated worktree (OT_WORKTREE_DB=isolated) register theirs, and OT_SCHEDULED_JOBS_OWNER=true|false overrides. `^build` and `^typecheck` run first: tsc -p resolves each project reference through that project's emitted dist/*.d.ts (TS6305 when it is missing), and those declarations come from each package's `typecheck`, since source-first packages have no `build`. Dist-exporting packages also need their one-shot `build` for runtime JS. `^dev` alone does not cover it: continuous dependencies are started, never awaited, and source-first packages have no `dev`. The node half waits for ./build/src/main.js: `node --watch` only watches files it managed to load, so started against a missing entry (any fresh checkout) it waits forever and never sees tsc emit it. Replaces `nest start`: the SWC builder it uses cannot rewrite `.ts` import specifiers to `.js`, so ESM output does not resolve at runtime (OT plan 31454927 task 2). tsc emits, `node --watch` reruns."
+        },
         "options": {
-          "command": "nest start --path tsconfig.app.json --watch",
+          "commands": [
+            "${OPENTHROTTLE_TSC_BIN:-tsc} -p tsconfig.app.json --watch --preserveWatchOutput",
+            "until [ -f ./build/src/main.js ]; do sleep 1; done; exec node --watch --enable-source-maps ./build/src/main.js"
+          ],
           "cwd": "{projectRoot}",
+          "parallel": true,
           "env": {
             "PROCESS_ROLE": "all"
           }
@@ -130,13 +141,21 @@
             "target": "ensure-migrations",
             "projects": "monorepo"
           },
+          "^build",
+          "^typecheck",
           "^dev"
         ],
-        "description": "dev (watch) restricted to PROCESS_ROLE=api: HTTP/GraphQL + queue producers, no BullMQ processors. Pair with the `worker` target so API edits never restart in-flight jobs or detach the worker debugger.",
         "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Run the API role in watch mode. `^build` and `^typecheck` run first: tsc -p resolves each project reference through that project's emitted dist/*.d.ts (TS6305 when it is missing), and those declarations come from each package's `typecheck`, since source-first packages have no `build`. Dist-exporting packages also need their one-shot `build` for runtime JS. `^dev` alone does not cover it: continuous dependencies are started, never awaited, and source-first packages have no `dev`. The node half waits for ./build/src/main.js: `node --watch` only watches files it managed to load, so started against a missing entry (any fresh checkout) it waits forever and never sees tsc emit it. Replaces `nest start`: the SWC builder it uses cannot rewrite `.ts` import specifiers to `.js`, so ESM output does not resolve at runtime (OT plan 31454927 task 2). tsc emits, `node --watch` reruns."
+        },
         "options": {
-          "command": "nest start --path tsconfig.app.json --watch",
+          "commands": [
+            "${OPENTHROTTLE_TSC_BIN:-tsc} -p tsconfig.app.json --watch --preserveWatchOutput",
+            "until [ -f ./build/src/main.js ]; do sleep 1; done; exec node --watch --enable-source-maps ./build/src/main.js"
+          ],
           "cwd": "{projectRoot}",
+          "parallel": true,
           "env": {
             "PROCESS_ROLE": "api"
           }
@@ -145,18 +164,41 @@
       "dev-debug": {
         "continuous": true,
         "dependsOn": [
+          "^build",
+          "^typecheck",
           "^dev"
         ],
-        "description": "dev with the Node inspector bound to 0.0.0.0:9229 (used by the compose dev profile so a host debugger can attach; --debug flags only the Nest app process, unlike NODE_OPTIONS).",
         "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Run the server in watch mode with the inspector on 9229. `^build` and `^typecheck` run first: tsc -p resolves each project reference through that project's emitted dist/*.d.ts (TS6305 when it is missing), and those declarations come from each package's `typecheck`, since source-first packages have no `build`. Dist-exporting packages also need their one-shot `build` for runtime JS. `^dev` alone does not cover it: continuous dependencies are started, never awaited, and source-first packages have no `dev`. The node half waits for ./build/src/main.js: `node --watch` only watches files it managed to load, so started against a missing entry (any fresh checkout) it waits forever and never sees tsc emit it. Replaces `nest start`: the SWC builder it uses cannot rewrite `.ts` import specifiers to `.js`, so ESM output does not resolve at runtime (OT plan 31454927 task 2). tsc emits, `node --watch` reruns."
+        },
         "options": {
-          "command": "nest start --path tsconfig.app.json --debug 0.0.0.0:9229 --watch",
-          "cwd": "{projectRoot}"
+          "commands": [
+            "${OPENTHROTTLE_TSC_BIN:-tsc} -p tsconfig.app.json --watch --preserveWatchOutput",
+            "until [ -f ./build/src/main.js ]; do sleep 1; done; exec node --watch --enable-source-maps --inspect=0.0.0.0:9229 ./build/src/main.js"
+          ],
+          "cwd": "{projectRoot}",
+          "parallel": true
         }
       },
+      "docker-build": {
+        "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Build openthrottle-server image from root Dockerfile.NestJS (monorepo context). Set GITHUB_TOKEN in environment for private deps."
+        },
+        "options": {
+          "command": "docker build -f Dockerfile.NestJS --target production --build-arg APP_NAME=openthrottle-server --build-arg APP_VERSION=$APP_VERSION --build-arg GITHUB_TOKEN=$GITHUB_TOKEN -t openthrottle-server:local .",
+          "cwd": "{workspaceRoot}",
+          "env": {
+            "APP_VERSION": "1.3.0"
+          }
+        }
+      },
+      "graphql-schema": {},
+      "graphql-schema-write": {},
       "lint": {
         "options": {
-          "command": "pnpm exec eslint -c ./eslint.config.mts .",
+          "command": "pnpm exec eslint -c ./eslint.config.ts .",
           "cwd": "{projectRoot}"
         }
       },
@@ -167,12 +209,15 @@
             "target": "ensure-migrations",
             "projects": "monorepo"
           },
+          "build",
           "^build"
         ],
-        "description": "Run openthrottle-server via `nest start` (no watch, no debug) after dependencies build.",
         "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Run openthrottle-server (no watch, no debug) after building the server and its dependencies. `build` is listed in dependsOn alongside `^build`: `^build` is only *dependencies'* output, so without it this target would run whatever stale `build/` happened to be on disk. Replaces `nest start`: the SWC builder it uses cannot rewrite `.ts` import specifiers to `.js`, so ESM output does not resolve at runtime (OT plan 31454927 task 2). tsc emits, `node --watch` reruns."
+        },
         "options": {
-          "command": "nest start --path tsconfig.app.json",
+          "command": "node --enable-source-maps ./build/src/main.js",
           "cwd": "{projectRoot}"
         }
       },
@@ -185,12 +230,15 @@
             "target": "ensure-migrations",
             "projects": "monorepo"
           },
+          "build",
           "^build"
         ],
-        "description": "Run BullMQ processors only (PROCESS_ROLE=worker, no HTTP listener, no watch — deliberately, so API edits can't restart it). Pair with `dev-api` for the split dev loop.",
         "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Run BullMQ processors only (PROCESS_ROLE=worker, no HTTP listener, no watch \u2014 deliberately, so API edits can't restart it). Pair with `dev-api` for the split dev loop. Replaces `nest start`: the SWC builder it uses cannot rewrite `.ts` import specifiers to `.js`, so ESM output does not resolve at runtime (OT plan 31454927 task 2). tsc emits, `node --watch` reruns."
+        },
         "options": {
-          "command": "nest start --path tsconfig.app.json",
+          "command": "node --enable-source-maps ./build/src/main.js",
           "cwd": "{projectRoot}",
           "env": {
             "PROCESS_ROLE": "worker"
@@ -203,12 +251,19 @@
   "repository": "git://github.com/OpenThrottle/server.git",
   "scripts": {
     "langgraph": "npx @langchain/langgraph-cli dev",
-    "start:docker": "node -r dotenv/config ./build/src/main.js"
+    "start:docker": "node ./build/src/main.js"
   },
   "sideEffects": false,
-  "type": "commonjs",
+  "type": "module",
   "version": "1.3.0",
   "devDependencies": {
-    "@openthrottle/nestjs-testing": "workspace:^"
+    "@golevelup/ts-vitest": "catalog:",
+    "@nestjs/testing": "catalog:",
+    "@openthrottle/nestjs-testing": "workspace:^",
+    "@testing-library/jest-dom": "catalog:",
+    "nestjs-cls": "catalog:",
+    "unplugin-swc": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   }
 }

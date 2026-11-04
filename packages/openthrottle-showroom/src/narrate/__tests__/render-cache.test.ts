@@ -8,7 +8,7 @@ import {
   findCachedRender,
   renderCacheKey,
   storeCachedRender,
-} from '../render-cache';
+} from '../render-cache.ts';
 
 describe('renderCacheKey', () => {
   test('is stable for identical inputs', () => {

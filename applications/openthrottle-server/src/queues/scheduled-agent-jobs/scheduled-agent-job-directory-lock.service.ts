@@ -14,11 +14,13 @@
  */
 
 import { createHash } from 'node:crypto';
+
 import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { REDIS_CLIENT } from '@openthrottle/nestjs-redis';
 import type { Redis } from 'ioredis';
-import { SCHEDULED_AGENT_JOBS_LOCK_KEY_PREFIX } from './scheduled-agent-jobs.constants';
+
+import { SCHEDULED_AGENT_JOBS_LOCK_KEY_PREFIX } from './scheduled-agent-jobs.constants.ts';
 
 /**
  * Lock TTL. Deliberately far SHORTER than a run (runs default to 15m), because the TTL is the only
@@ -166,6 +168,30 @@ export class ScheduledAgentJobDirectoryLockService {
       );
     }
     /* eslint-enable no-await-in-loop */
+  }
+
+  /**
+   * @description Deletes the lock for `key` whoever holds it, and returns whether a key was removed.
+   * Only for crash recovery: the caller must already know that no live run holds `key`, because this
+   * skips the fencing-token check that {@link holdLock}'s release relies on. A null `key` or an
+   * unconfigured Redis is a no-op, and a Redis error is logged and reported as nothing removed. The
+   * TTL frees the directory soon anyway.
+   */
+  async forceRelease(key: string | null): Promise<boolean> {
+    if (key === null || this.redis === null) {
+      return false;
+    }
+
+    try {
+      return (await this.redis.del(this.redisKeyFor(key))) > 0;
+    } catch (error) {
+      this.logger.warn(
+        `Failed to force-release the directory lock for ${key}: ${error instanceof Error ? error.message : String(error)}`,
+        ScheduledAgentJobDirectoryLockService.name,
+      );
+
+      return false;
+    }
   }
 
   /**

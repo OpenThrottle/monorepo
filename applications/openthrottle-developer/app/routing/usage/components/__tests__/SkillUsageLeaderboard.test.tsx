@@ -1,10 +1,9 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { SkillUsageLeaderboard } from '../SkillUsageLeaderboard';
-import type { SkillUsageLeaderboardProps } from '../SkillUsageLeaderboard';
+
 import {
   SKILL_PRESENCE,
   SKILL_PRESENCE_LABELS,
@@ -15,6 +14,8 @@ import {
   SKILL_USAGE_SCOPES,
 } from '../../data/skill-usage-copy';
 import type { SkillUsageRowWithPresence } from '../../utils/partition-skill-usage-by-presence';
+import type { SkillUsageLeaderboardProps } from '../SkillUsageLeaderboard';
+import { SkillUsageLeaderboard } from '../SkillUsageLeaderboard';
 
 const buildBySkill = (
   overrides: Partial<SkillUsageRowWithPresence>,
@@ -26,6 +27,7 @@ const buildBySkill = (
   outcomeCount: 0,
   presence: SKILL_PRESENCE.INSTALLED,
   scope: SKILL_USAGE_SCOPES.OURS,
+  sessionEndedCount: 0,
   skillName: 'ot-plans',
   successCount: 0,
   ...overrides,
@@ -50,6 +52,7 @@ describe('SkillUsageLeaderboard Component', () => {
           outcomeCount: 3,
           presence: SKILL_PRESENCE.INSTALLED,
           scope: SKILL_USAGE_SCOPES.OURS,
+          sessionEndedCount: 0,
           skillName: 'ot-plans',
           successCount: 3,
         }),
@@ -57,6 +60,7 @@ describe('SkillUsageLeaderboard Component', () => {
           count: 2,
           presence: SKILL_PRESENCE.EXTERNAL,
           scope: SKILL_USAGE_SCOPES.THIRD_PARTY,
+          sessionEndedCount: 0,
           skillName: 'vercel:deploy',
         }),
       ],
@@ -87,11 +91,13 @@ describe('SkillUsageLeaderboard Component', () => {
         buildBySkill({
           presence: SKILL_PRESENCE.INSTALLED,
           scope: SKILL_USAGE_SCOPES.OURS,
+          sessionEndedCount: 0,
           skillName: 'ot-plans',
         }),
         buildBySkill({
           presence: SKILL_PRESENCE.EXTERNAL,
           scope: SKILL_USAGE_SCOPES.THIRD_PARTY,
+          sessionEndedCount: 0,
           skillName: 'vercel:deploy',
         }),
       ],
@@ -115,6 +121,7 @@ describe('SkillUsageLeaderboard Component', () => {
         buildBySkill({
           presence: SKILL_PRESENCE.INSTALLED,
           scope: SKILL_USAGE_SCOPES.OURS,
+          sessionEndedCount: 0,
           skillName: 'engineering:code-review',
         }),
       ],
@@ -131,6 +138,7 @@ describe('SkillUsageLeaderboard Component', () => {
         buildBySkill({
           presence: SKILL_PRESENCE.MISSING,
           scope: SKILL_USAGE_SCOPES.OURS,
+          sessionEndedCount: 0,
           skillName: 'renamed-away',
         }),
       ],
@@ -151,6 +159,7 @@ describe('SkillUsageLeaderboard Component', () => {
         buildBySkill({
           presence: SKILL_PRESENCE.MISSING,
           scope: SKILL_USAGE_SCOPES.OURS,
+          sessionEndedCount: 0,
           skillName: 'renamed-away',
         }),
       ],
@@ -166,6 +175,7 @@ describe('SkillUsageLeaderboard Component', () => {
         buildBySkill({
           presence: SKILL_PRESENCE.EXTERNAL,
           scope: SKILL_USAGE_SCOPES.THIRD_PARTY,
+          sessionEndedCount: 0,
           skillName: 'vercel:deploy',
         }),
       ],

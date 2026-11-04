@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Button,
   Tooltip,
@@ -6,6 +5,7 @@ import {
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { Settings } from 'lucide-react';
+import * as React from 'react';
 
 export interface ChatModelPickerRailSettingsProps {
   readonly onOpenSettings: () => void;

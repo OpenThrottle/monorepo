@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { composeCursorStartupErrorText } from './conversation-stream.copy';
+import { composeCursorStartupErrorText } from './conversation-stream.copy.ts';
 
 // Captured verbatim off cursor-agent 2026.08.11 during the task 1 evidence gate.
 const REAL_AUTH_REQUIRED =

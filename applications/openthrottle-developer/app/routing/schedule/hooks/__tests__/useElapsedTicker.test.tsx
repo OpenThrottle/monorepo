@@ -1,7 +1,8 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { useElapsedTicker } from '~/routing/schedule/hooks/useElapsedTicker';
 
 const Probe = (props: { enabled: boolean }): React.ReactElement => {

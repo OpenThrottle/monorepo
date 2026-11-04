@@ -18,18 +18,20 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { Injectable, Inject } from '@nestjs/common';
+
+import { Inject, Injectable } from '@nestjs/common';
 import {
   PUB_SUB,
-  transcriptionStreamTopic,
   type PubSubEngine,
+  transcriptionStreamTopic,
 } from '@openthrottle/nestjs-graphql';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { isRecord } from '@openthrottle/nodejs-utils';
+
 import {
   TRANSCRIPTION_STREAM_CHUNK_FIELD,
   type TranscriptionStreamChunkPayload,
-} from './transcription-stream.types';
+} from './transcription-stream.types.ts';
 
 /** Reap a session when no audio chunk has arrived for this long. */
 const IDLE_REAP_MS = 15_000;

@@ -1,10 +1,11 @@
-import * as React from 'react';
-import type { ColumnDef } from '@tanstack/react-table';
+import type { GlobalPopoverAction } from '@openthrottle/react-router-ui-global';
 import {
   GlobalPopover,
   GlobalPopoverActionsHeader,
 } from '@openthrottle/react-router-ui-global';
-import type { GlobalPopoverAction } from '@openthrottle/react-router-ui-global';
+import type { ColumnDef } from '@tanstack/react-table';
+import * as React from 'react';
+
 import type { RepoPersonaEntry } from '~/routing/agents/data/repo-personas-registry';
 import { PERSONAS_ROW_ACTIONS_COPY } from '~/routing/personas/data/data.copy';
 

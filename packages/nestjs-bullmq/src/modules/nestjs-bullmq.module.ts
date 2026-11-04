@@ -1,13 +1,14 @@
 import { BullModule } from '@nestjs/bullmq';
-import { ConfigModule } from '@nestjs/config';
-import type { ConfigType } from '@nestjs/config';
 import { DynamicModule, Module } from '@nestjs/common';
+import type { ConfigType } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
+
 import {
   configValidationSchema,
   redisConfig,
-} from '../config/nestjs-bullmq.config';
+} from '../config/nestjs-bullmq.config.ts';
 
 /**
  * Root BullMQ defaults. Worker-level options (lockDuration, stalledInterval) are not set here;
@@ -31,14 +32,21 @@ const defaultJobOptions = {
     // Fail fast at bootstrap: validate REDIS_* env vars against the Joi schema
     // instead of letting a missing/invalid REDIS_HOST surface as a late runtime
     // throw at first connection. allowUnknown keeps unrelated system env vars
-    // from tripping validation; validationOptions.abortEarly: false reports all
-    // misconfigured vars at once.
+    // from tripping validation; abortEarly: false reports all misconfigured
+    // vars at once.
+    //
+    // Joi-specific options live under `libraryOptions` since @nestjs/config v12,
+    // which validates through Standard Schema rather than calling Joi directly.
+    // These two are also v12's defaults for Joi schemas, and are kept explicit
+    // because the behaviour they buy is the reason this block exists.
     ConfigModule.forRoot({
       cache: true,
       load: [redisConfig],
       validationOptions: {
-        abortEarly: false,
-        allowUnknown: true,
+        libraryOptions: {
+          abortEarly: false,
+          allowUnknown: true,
+        },
       },
       validationSchema: configValidationSchema,
     }),
@@ -47,24 +55,20 @@ const defaultJobOptions = {
     BullModule.forRootAsync({
       imports: [ConfigModule.forFeature(redisConfig)],
       inject: [redisConfig.KEY],
-      useFactory: (redis: ConfigType<typeof redisConfig>) => ({
-        connection: {
-          db: redis.db,
-          enableReadyCheck: redis.enableReadyCheck,
-          family: redis.family,
-          host: redis.host,
-          maxRetriesPerRequest: redis.maxRetriesPerRequest,
-          password: redis.password,
-          port: redis.port,
-          tls: redis.tls,
-          username: redis.username,
-        },
-        defaultJobOptions,
-        // Environment-scoped key prefix: registerQueue queues, @Processor
-        // workers, and QueueEvents all inherit it from this root config, so
-        // checkouts sharing one Redis cannot consume each other's jobs.
-        prefix: redis.queuePrefix,
-      }),
+      useFactory: (redis: ConfigType<typeof redisConfig>) => {
+        // Everything but the prefix is connection options — the same set
+        // resolveRedisConnection() hands to queues built outside DI.
+        const { queuePrefix, ...connection } = redis;
+
+        return {
+          connection,
+          defaultJobOptions,
+          // Environment-scoped key prefix: registerQueue queues, @Processor
+          // workers, and QueueEvents all inherit it from this root config, so
+          // checkouts sharing one Redis cannot consume each other's jobs.
+          prefix: queuePrefix,
+        };
+      },
     }),
   ],
   providers: [LoggerService],

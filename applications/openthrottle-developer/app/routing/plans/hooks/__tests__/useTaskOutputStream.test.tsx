@@ -1,6 +1,7 @@
-import * as React from 'react';
 import { act, render } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
+
 import { useTaskOutputStream } from '../useTaskOutputStream';
 
 // Controllable fake graphql-ws client: capture the subscription sink so the
@@ -58,14 +59,16 @@ const pushDelta = (c: Chunk): void => {
 };
 
 describe('useTaskOutputStream', () => {
-  test('filters the seed to the given taskId, sorted by createdAt', () => {
+  test('shows the already task-scoped seed, sorted by createdAt', () => {
+    // The server filters planOutputStreamChunks by taskId, so the seed the
+    // hook receives already belongs to this task alone — no client-side
+    // filtering of the seed is expected here.
     const component = render(
       <Harness
         planId="p1"
         seed={[
           chunk('b', '2026-01-01T00:00:02Z', 't1'),
           chunk('a', '2026-01-01T00:00:01Z', 't1'),
-          chunk('other', '2026-01-01T00:00:00Z', 't2'),
         ]}
         taskId="t1"
       />,

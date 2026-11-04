@@ -7,12 +7,13 @@
 
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
+import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { WorkspaceLocalRepositoriesService } from '@openthrottle/nestjs-repositories';
 import { CodeSearchService } from '@openthrottle/nestjs-vector-search';
-import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
-import { CODE_INDEX_QUEUE_NAME } from './code-index.constants';
-import type { CodeIndexJob, CodeIndexJobResult } from './code-index.types';
+
+import { CODE_INDEX_QUEUE_NAME } from './code-index.constants.ts';
+import type { CodeIndexJob, CodeIndexJobResult } from './code-index.types.ts';
 
 const CONCURRENCY = 1;
 

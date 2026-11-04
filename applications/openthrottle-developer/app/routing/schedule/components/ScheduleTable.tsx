@@ -1,8 +1,8 @@
+import { cn, DataTable } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import clsx from 'clsx';
-import { DataTable } from '@openthrottle/react-router-shadcn';
-import { buildScheduleTableColumns } from '~/routing/schedule/utils/schedule-table-columns';
+
 import type { ScheduledJobCardFragment } from '~/__generated__/graphql';
+import { buildScheduleTableColumns } from '~/routing/schedule/utils/schedule-table-columns';
 
 export interface ScheduleTableProps {
   className?: string;
@@ -34,8 +34,8 @@ export const ScheduleTable = (
 
   return (
     <div
-      className={clsx('ui-border rounded-lg border', className)}
-      // className={clsx('ui-border rounded-lg border [&_tbody_tr_td]:hover:py-4 [&_tbody_tr_td]:transition-all [&_tbody_tr_td]:duration-500', className)}
+      className={cn('ui-border rounded-lg border', className)}
+      // className={cn('ui-border rounded-lg border [&_tbody_tr_td]:hover:py-4 [&_tbody_tr_td]:transition-all [&_tbody_tr_td]:duration-500', className)}
       data-testid="ScheduleTable"
     >
       <DataTable<ScheduledJobCardFragment, string | number | null | undefined>

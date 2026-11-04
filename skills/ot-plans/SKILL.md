@@ -11,132 +11,138 @@ description: >-
 
 # OpenThrottle plans and MCP traceability
 
-## When to read this skill
+The openthrottle-mcp instructions block and CLAUDE.md are already in context before you read this,
+free and with perfect recall. **This file carries only what neither says.** "Plans live in OT only",
+the atomic batch create, `update_task` takes a UUID, GitHub-username author, the `Plan-Id:` /
+`Task-Id:` footers — all injected already; restating them bills every session for nothing.
 
-Read this whenever work touches **plans, tasks, the OT knowledge base, or Ralph-injected plan
-context** — and always when the user says **"ask OpenThrottle …"**, **"ask OT …"**, **"OT, …"**,
-or invokes one of the OT skills (`/ot-plans`, `/ot-loop`, `/ot-onboarding`).
+Answer OT plan content from retrieved chunks, never memory. If nothing relevant comes back, say so.
 
-**OpenThrottle (OT)** is the plans/tasks knowledge base (Postgres + pgvector) and the MCP server
-that talks to it. **`@openthrottle/openthrottle-mcp`** is that MCP: GraphQL-only to
-openthrottle-server, storing plans, tasks, embeddings for semantic search, and the plan output
-stream. Schema, migrations and setup: [`databases/README.md`](../../databases/README.md).
+## The plan remembers the workspace it was created in
 
-## OT vs documentation
+On stdio, `create_plan` / `create_plans` send your working folder as `workspacePath` automatically,
+in **any** registered checkout. **You do not pass it.** Chain: folder → your registered checkouts →
+`runConfigJson.workspace.repositoryId`. Precedence: a workspace already in `runConfigJson` →
+explicit `workspacePath` (`""` opts out) → captured cwd → nothing. Resolved server-side; never fails
+plan creation.
 
-| Need                                                          | Use                                                                                                     |
-| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Plans, tasks, embeddings, plan output, activity, commit links | **openthrottle-mcp** (`@openthrottle/openthrottle-mcp`), registered in Cursor as **`openthrottle-mcp`** |
-| Semantic search over repo **`docs/`**                         | **docs-mcp** (separate server)                                                                          |
-| Schema, migrations, DB setup                                  | `databases/README.md`                                                                                   |
+**The free-text `project` field is a label and does NOT link a plan to a repository** — the trap
+worth knowing, because setting it looks like it should.
+[Detail](../../docs/openthrottle/authoring-plans-via-mcp.md#the-plan-remembers-the-workspace-it-was-created-in).
 
-Do not answer OT plan content from memory; use MCP tools and answer from retrieved chunks only.
-
-## Fail loudly
-
-- **Creating or updating plans/tasks:** use OT only (`create_plan`, `create_task`, `update_task`, etc.).
-- If **openthrottle-mcp is unavailable** or **`create_plan` / `create_task` fails:** report the error clearly to the user.
-- **Do not** silently write plans to Markdown under `docs/` or skip plan creation.
-
-## MCP workflow (openthrottle-mcp)
-
-GraphQL-only boundary to **openthrottle-server**. Typical tools:
-
-- **Read / search:** `semantic_search`, `list_plans_by_status`, `list_sources`, `get_document`
-- **Plans:** `get_plan`, `create_plan` — on stdio, `create_plan` / `create_plans` automatically send the folder you are working in as `workspacePath`, so the plan records the checkout it was authored from and its Configuration tab opens pre-selected. You do not pass it. This works the same in **any** registered checkout, not just the OpenThrottle monorepo: the chain is folder → your registered checkouts → `runConfigJson.workspace.repositoryId`. The free-text `project` field is a label and does **not** link a plan to a repository. Precedence: a workspace already in `runConfigJson` → an explicit `workspacePath` (pass `""` to opt out) → the captured cwd → nothing. It is resolved server-side against your own registered checkouts and never fails plan creation. See [authoring-plans-via-mcp.md](../../docs/openthrottle/authoring-plans-via-mcp.md#the-plan-remembers-the-workspace-it-was-created-in).
-- **Tasks:** `get_tasks_by_plan_id`, `get_remaining_tasks_for_plan`, `get_task`, `create_task`, `create_tasks`, `update_task`, `reorder_plan_tasks` — list tools return tasks in `sortOrder ASC`, `createdAt ASC`. `create_task` / `create_tasks` accept optional `sortOrder` (auto-append `MAX + 1000` when omitted; batch appends preserve array order at end of plan). `update_task` accepts optional `sortOrder` for gap-based mid-list inserts. **`reorder_plan_tasks`** bulk-renumbers `1000, 2000, …` in the given task-id order — **prefer this over delete-and-recreate** when fixing Ralph execution order.
-- **Activity:** `get_activity_by_date`, `get_last_activity`
-- **Output stream (e.g. Ralph):** `append_plan_output`, `get_plan_output`
-- **After merge (work ledger):** `attach_session_subject` + `record_artifact` (type `git_commit`) — or the `workflow-link-merge` CLI, which orchestrates them
-
-**Author and assignee** on plans must be the **GitHub username** (not display name). When `GITHUB_USER` is set, the MCP uses it for author/assignee.
-
-## Executing a plan
-
-The per-task discipline — one task `IN_PROGRESS` at a time, work, validate, flip to `COMPLETED`,
-commit with `Plan-Id:` / `Task-Id:` — is stated canonically in
-[`ot-loop`](../ot-loop/SKILL.md) § The loop. Do not restate it here.
-
-## Common operations
-
-The four thin `/ot/*` slash wrappers (`ot-ask`, `ot-create-plan`, `ot-edit-task`,
-`ot-list-by-status`) were retired into this section — each was a restatement of one MCP call. The
-conventions they carried are worth keeping:
-
-- **Ask the knowledge base.** Prefer `semantic_search` for semantic questions, `list_sources` to
-  enumerate what is indexed, and `get_document` (or `knowledge-base://chunk/{id}`) for full chunk
-  content. For "what did I work on yesterday / in the last 7 days", use
-  `get_activity_by_date` — `date` (`YYYY-MM-DD`) for one day, `daysBack` (1–365) for a window.
-  Answer only from retrieved chunks; if nothing relevant comes back, say so rather than inventing.
-- **Create a plan.** `create_plan` needs `title`; infer `author` (GitHub handle) and `category`
-  from context when absent, and confirm a provided `category` actually fits. Use the atomic
-  `create_plans` / `create_tasks` for batches. Report the created plan and task ids so the user can
-  act on them. **Never start executing a plan or task unless explicitly told to.**
-- **Edit a task.** `get_task` to load it when you need current state, `update_task` with the id and
-  only the changed fields. Report what changed.
-- **List by status.** `list_plans_by_status` with `PENDING`, `IN_PROGRESS`, `COMPLETED`, `BLOCKED`,
-  or `SKIPPED`. "The backlog" means `PENDING` — default to it when the user names no status.
-
-## Commits while working on OT plans/tasks
-
-When you commit work tied to a plan or task:
-
-1. Use **conventional commits** (see the [`github-commit`](../github-commit/SKILL.md) skill).
-2. Include traceability in the commit **body or footer**:
-
-   ```text
-   Plan-Id: <plan-uuid>
-   Task-Id: <task-uuid>
-   ```
-
-3. **Do not** record a commit artifact for every task commit. **Record only landed work** (see below).
-
-## Post-merge: record the squash commit on the work ledger
-
-The `link_commit` MCP tool and its `commit_links` table are **retired** (work-ledger epic). Record the merged squash commit as a work-ledger `git_commit` artifact instead:
-
-- **MCP:** `attach_session_subject(planId, taskId?)` then `record_artifact(type: "git_commit", payloadJson: {repo, sha}, message?)` under an open session (opened implicitly by the MCP). One artifact per task per **squash commit on main** — not transient branch commits.
-- **One-shot CLI (preferred ergonomics):** `pnpm exec workflow-link-merge --plan <plan-uuid> --sha <squash-sha> --repo <owner/repo> [--task <task-uuid>] [--message <msg>]` — orchestrates the same ledger primitives internally.
-
-The artifact is recorded `unverified`; the git verifier promotes it to `landed`/`verified`. `get_activity_by_date` and `get_last_activity` surface the ledger, aligned with **landed** commits.
+`author` / `assignee` come from `GITHUB_USER` when set — why they are already right unprompted.
 
 ## Task sortOrder (execution order)
 
-`sortOrder` is the canonical execution and list sequence for tasks within a plan (`UNIQUE (plan_id, sort_order)`). Ralph, prompt injection, and MCP list tools all order by `sortOrder ASC`, `createdAt ASC`.
+Canonical execution and list order within a plan, `UNIQUE (plan_id, sort_order)`. Ralph, prompt
+injection and every list tool sort by `sortOrder ASC, createdAt ASC`.
 
-- **Create:** omit `sortOrder` to append after the plan max; `create_tasks` assigns `MAX+1000`, `MAX+2000`, … in array order.
-- **Reorder:** use `reorder_plan_tasks` instead of deleting and recreating tasks when fixing order.
-- **Schema detail:** `databases/README.md` § Task sort_order.
+- **Append:** omit it — `create_tasks` assigns `MAX+1000`, `MAX+2000`, … in array order, so a batch
+  keeps the order you wrote.
+- **Insert mid-list:** `update_task` takes `sortOrder`; the 1000-wide gaps exist so you can land
+  between two tasks without renumbering.
+- **Renumber:** `reorder_plan_tasks` assigns `1000, 2000, …` in the task-id order you give.
+- Schema: `databases/README.md` § Task sort_order.
 
-## Skill-usage outcome enrichment (automatic)
+## Task wave (concurrency layer) — set it while you author
 
-Outcomes + duration are now captured **automatically, with zero manual steps**. The
-`PreToolUse` / `UserPromptExpansion` hook records each start (→ `skill_usage_events`, the
-Invocations column) and remembers it in a session-scoped correlation store; the `Stop` hook
-(`.claude/hooks/skill-usage-complete.cjs`) then emits one `success` outcome per open start with
-`duration_ms = Stop − start` (→ `skill_usage_outcomes`, powering the **Outcomes** + **Avg
-duration** columns on `/usage`). You do **not** need to run anything at skill completion.
+`wave` is a nullable integer, `>= 1`, that groups a contiguous `sortOrder` run as the plan's claim
+that those tasks **may** be worked concurrently. It is not a dependency graph, it does not reorder
+anything, and nothing executes tasks in parallel from it today — see
+[docs/openthrottle/task-wave-encoding.md](../../docs/openthrottle/task-wave-encoding.md).
 
-Missing outcomes remain a valid state: third-party / uninstrumented skills legitimately show `—`.
+- **Set it in the same `create_tasks` call, or it will likely never get set.** `create_tasks` is one
+  atomic batch — the tasks in it have no ids yet, so there is no cheap second pass. Decide grouping
+  in the same breath you decide `sortOrder`, per item in the array.
+- **Same wave number = may run together.** Give independent tasks (disjoint files, no shared
+  invariant) the same `wave`; give a task that must run alone its own `wave` or leave it `null`.
+- **Omit it when you don't know, or when the plan is genuinely sequential.** `null` (the default) is
+  always safe: it means "runs alone, in `sortOrder` position" — the same behavior every plan had
+  before this field existed.
+- **Never `0`.** Waves number densely from `1`.
+- **Hook tasks are never waved.** Leave `wave` unset on any task you attach via `addHook` / `add_hook`.
+- **Update later with `update_task`** if you didn't decide at creation time — passing `null` clears it
+  back to unassigned.
 
-**Optional precision (opt-in):** to record a specific outcome the automatic path can't infer —
-notably `error` (the `Stop` payload carries no error signal) — call the manual helper:
+## Retrieval gotchas
 
-```bash
-node .claude/hooks/skill-usage-outcome.cjs \
-  --skill ot-plans \
-  --outcome error \
-  --duration-ms 4200 \
-  --session "$CLAUDE_SESSION_ID"
+- **"What did I work on yesterday / last 7 days"** → `get_activity_by_date`, taking either `date`
+  (`YYYY-MM-DD`) for one day or `daysBack` (1–365) for a window.
+- **"The backlog" means `PENDING`** — default `list_plans_by_status` to it when no status is named.
+- **`PROMOTED` is written by `promote_task`, never by hand** — "not finished here; the work continued as its own plan". It is resolved and terminal but not complete, so do not count it as delivered work. [Semantics](../../docs/openthrottle/authoring-plans-via-mcp.md#what-promoted-means).
+
+## Authoring vs running
+
+Infer `author` and `category` from context when absent, and confirm a provided `category` actually
+fits. Report created ids so the user can act on them.
+
+**Never start executing a plan or task unless explicitly told to** — authoring and running are
+separate requests. The per-task discipline, when you are told to run one, is canonical in
+[`ot-loop`](../ot-loop/SKILL.md) § The loop; do not restate it here.
+
+## Follow-ups and session kickoff
+
+AGENTS.md and CLAUDE.md state the rule (follow-ups are plans, kickoffs run from a plan). This is
+the how.
+
+**Filing a follow-up plan.**
+
+- `create_plan` with `status: 'PENDING'`. The description names the **originating plan id** (if
+  there is one) and the **evidence** that motivated it — the file and line, the failing output, the
+  review comment. A follow-up with no evidence is a hunch, and the next session cannot check it.
+- Author its tasks in **one** `create_tasks` call with `sortOrder` and `wave` decided per item (see
+  § Task wave above — there is no cheap second pass).
+- Tag it in the same call: `create_plan({ ..., tags: ['follow-up'] })` (or `add_plan_tag(planId,
+'follow-up')` after the fact). `follow-up` is a platform system tag, accepted from any caller
+  without being in your skill-tag vocabulary — do not `add_skill_tag` it (an agent token lacks
+  `settings:write`). Best-effort: a tag that fails comes back in `tagFailures` and never blocks filing.
+- Report the plan id. Filing is not starting: [§ Authoring vs running](#authoring-vs-running) still
+  holds.
+
+**Offering a kickoff.** When the harness lets you propose or hand off a session (a "New task" card,
+a background agent, a handoff), the brief is the plan:
+
+```
+/ot-loop <planUuid>
+<at most one line of context the plan does not carry>
 ```
 
-`--outcome` is `success` | `abandoned` | `error`. Fail-open throughout: outcome capture never
-blocks the skill.
+Line 1 is exactly that. Everything else belongs in the plan's description and tasks, not the brief:
+a prose brief that restates or replaces the plan drifts from it the moment either is edited. The
+session that picks it up starts at [`ot-loop` § Setup](../ot-loop/SKILL.md#setup-once-before-the-loop)
+step 1.
+
+**What checks you.** The rule binds every tool; the checks differ by tool. Where a harness gives
+the agent a tool for starting a separate session, a hook denies a brief that is not
+`/ot-loop <planUuid>` — today that is only the Claude desktop app's session tools. Cursor and Codex
+have no such tool (their subagents work inside the current task and are exempt), so nothing blocks
+there. Under every tool, `git push` lists commits with no `Plan-Id:` footer — a warning, never a
+block. Per-tool detail:
+[capability matrix § Session kickoff guard](../../docs/monorepo/agent-cli-hook-capability-matrix.md#session-kickoff-guard).
+
+**When to do it here instead.** If the follow-up acts directly on what this session just found and
+nothing else is in flight here (no unfinished change, no open PR for other work), doing it in this
+session is cheaper than a new one rediscovering it. It still gets a plan first — append tasks to
+the current plan with `create_tasks` when it belongs there, otherwise file a new one — so its
+commits carry `Plan-Id:` / `Task-Id:`.
+
+## Work ledger
+
+**Nothing to call.** Pass `headSha` and `prNumber` to `settle_plan_run` when the PR opens; the
+server resolves `owner/repo` from the run's checkout and writes the `git_commit` and
+`pull_request` artifacts itself. An hourly harvest of `Plan-Id:` trailers on each default branch
+backstops a run that died before opening a PR. Two things the injected mechanics omit:
+
+- **The artifact lands `unverified`**; the git verifier promotes it to `landed`/`verified`, and the
+  activity tools align with **landed** commits. A fresh artifact not yet landed is the expected
+  intermediate state, not a reason to re-record it.
+- **`attach_session_subject` + `record_artifact` are the manual fallback only.** Do not reach for
+  `workflow-link-merge` — it lives in the deprecated `@tools/workflows` package.
+
+(`link_commit` and `commit_links` are retired — work-ledger epic.)
 
 ## Cross-links
 
-- **Conventional commits and staging:** [`github-commit`](../github-commit/SKILL.md)
-- **Driving a plan to completion, one task at a time:** [`ot-loop`](../ot-loop/SKILL.md), and [`agents-ralph`](../agents-ralph/SKILL.md) for the detached CLI
-- **Code style:** [`docs/monorepo/code-style.md`](../../docs/monorepo/code-style.md), normative in `AGENTS.md` § Code style
-- **DB / embeddings / ingest:** `databases/README.md`
-- **Repo OT overview:** `AGENTS.md` (OpenThrottle section)
+- **Commits:** [`github-commit`](../github-commit/SKILL.md) · **Execution:** [`ot-loop`](../ot-loop/SKILL.md), [`agents-ralph`](../agents-ralph/SKILL.md)
+- **Skill-usage telemetry:** [`docs/monorepo/skill-usage-telemetry-scope.md`](../../docs/monorepo/skill-usage-telemetry-scope.md)
+- **Code style:** [`docs/monorepo/code-style.md`](../../docs/monorepo/code-style.md) · **DB / ingest:** `databases/README.md`

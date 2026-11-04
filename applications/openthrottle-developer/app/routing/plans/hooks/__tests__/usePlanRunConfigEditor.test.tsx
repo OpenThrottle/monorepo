@@ -1,17 +1,17 @@
-import * as React from 'react';
 import { act, render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub, useSearchParams } from 'react-router';
 import { describe, expect, test } from 'vitest';
+
 import { PlanRunConfigStoreProvider } from '~/routing/plans/components/PlanRunConfigStoreProvider';
+import type { PlanRunConfigEditorPlan } from '~/routing/plans/types';
 import {
   WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE,
   WORKFLOW_RUN_OPTIONS_SEARCH_PARAM,
 } from '~/routing/plans/utils/workflow-run-options-search-param';
+
+import type { UsePlanRunConfigEditorResult } from '../usePlanRunConfigEditor';
 import { usePlanRunConfigEditor } from '../usePlanRunConfigEditor';
-import type {
-  PlanRunConfigEditorPlan,
-  UsePlanRunConfigEditorResult,
-} from '../usePlanRunConfigEditor';
 
 interface EditorProbeValue {
   hook: UsePlanRunConfigEditorResult;

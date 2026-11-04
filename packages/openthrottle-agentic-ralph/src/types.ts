@@ -1,19 +1,22 @@
+import type { ConversationReasoningEffort } from '@openthrottle/openthrottle-agentic-utils';
 import type {
   WorkflowConfigLegacy,
-  WorkflowLifecycleDispatcher,
-  WorkflowCorrelation,
-  WorkflowRunResult as WorkflowRunResultBase,
-  WorkflowOrchestrator as WorkflowOrchestratorBase,
   WorkflowConfigRunner,
+  WorkflowCorrelation,
+  WorkflowLifecycleDispatcher,
 } from '@openthrottle/openthrottle-agentic-workflow';
+
+import type { WorkflowRalphUsageLimit } from './contract/ralph-orchestrator-deps.ts';
 
 export type WorkflowFinishedReason =
   | 'workflow_budget_exhausted'
   | 'workflow_complete'
+  | 'workflow_complete_handoff_owed'
   | 'workflow_cancelled'
   | 'workflow_max_iterations'
   | 'workflow_plan_already_terminal'
-  | 'workflow_tasks_exhausted';
+  | 'workflow_tasks_exhausted'
+  | 'workflow_usage_limited';
 
 export type WorkflowFailedReason =
   'workflow_agent_error' | 'workflow_input_required' | 'workflow_unhandled';
@@ -35,6 +38,12 @@ export interface WorkflowContext extends WorkflowConfigLegacy {
    * application-layer structured logs (no plan/task ids at the shared-contract layer).
    */
   readonly correlation?: WorkflowCorrelation;
+
+  /**
+   * Reasoning effort for the run (chat vocabulary), carried from the enqueue tuning (`ralph.effort`).
+   * Forwarded to every iteration, where each backend maps it to its own flag or ignores it.
+   */
+  readonly effort?: ConversationReasoningEffort;
 
   /**
    * @description Names of OpenThrottle curated skills materialized into the foreign target repo for
@@ -71,8 +80,9 @@ export interface WorkflowContext extends WorkflowConfigLegacy {
   /**
    * @description Work-ledger run session id (opened by the plans worker for this run). When set, the
    * orchestrator sends it as an `X-OT-Session-Id` header on its status-mutating GraphQL calls so the
-   * server-side capture (design §4.3, G11) attaches the run's task/plan status_change artifacts to
-   * this session instead of spawning per-mutation instant sessions. Omitted for CLI/dev paths.
+   * server-side capture attaches the run's task/plan status_change artifacts to this session
+   * instead of spawning per-mutation instant sessions — provided the session's actor matches the
+   * request principal (G11 in docs/monorepo/work-ledger-sessions.md). Omitted for CLI/dev paths.
    */
   readonly workSessionId?: string;
   /**
@@ -85,21 +95,52 @@ export interface WorkflowContext extends WorkflowConfigLegacy {
 }
 
 /**
- * @description Terminal outcome of a workflow run (process exit semantics
- * align with current Ralph CLI).
+ * @description A run that stopped cleanly because the agent account hit a subscription usage limit.
+ * Carries the limit (reset time included) so the host can schedule a resume. Exit code 0: nothing
+ * went wrong with the run itself, it is only paused.
  */
-export type WorkflowRunResult = WorkflowRunResultBase<
-  WorkflowFinishedReason,
-  WorkflowFailedReason
->;
+export interface WorkflowUsageLimitedResult {
+  readonly exitCode: 0;
+  readonly reason: 'workflow_usage_limited';
+  readonly status: 'finished';
+  readonly usageLimit: WorkflowRalphUsageLimit;
+}
+
+/**
+ * @description A clean finish that may carry settle artifacts from the host-owned push/PR
+ * finalize step. `headSha` / `prNumber` are present when that step pushed and opened (or reused)
+ * a PR; omitted when finalize was skipped (no commits ahead) or never ran. The plans worker
+ * records work-ledger git_commit + pull_request artifacts from these fields on COMPLETED settle.
+ */
+export interface WorkflowFinishedResult {
+  readonly exitCode: 0;
+  readonly headSha?: string;
+  readonly prNumber?: number;
+  readonly reason: Exclude<WorkflowFinishedReason, 'workflow_usage_limited'>;
+  readonly status: 'finished';
+}
+
+/**
+ * @description Terminal outcome of a workflow run (process exit semantics
+ * align with current Ralph CLI). Narrow on `reason === 'workflow_usage_limited'` to read
+ * `usageLimit`; finished results may carry optional settle artifacts from plan-end finalize.
+ */
+export type WorkflowRunResult =
+  | WorkflowFinishedResult
+  | WorkflowUsageLimitedResult
+  | {
+      readonly exitCode: 1;
+      readonly reason: WorkflowFailedReason;
+      readonly status: 'failed';
+    };
 
 /**
  * @description Create an Orchestrator type for Ralph workflow customized
  * with the Ralph-specific context(s) and results. Now this package can
  * implement its own Ralph orchestrator.
  */
-export type WorkflowOrchestrator = WorkflowOrchestratorBase<
-  WorkflowFinishedReason,
-  WorkflowFailedReason,
-  WorkflowContext
->;
+export interface WorkflowOrchestrator {
+  readonly execute: (params: {
+    readonly context: WorkflowContext;
+  }) => Promise<WorkflowRunResult>;
+}

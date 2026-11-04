@@ -7,6 +7,7 @@ import {
   POSTGRES_UNREACHABLE_HINT,
 } from '@openthrottle/openthrottle-agentic-utils';
 import pg from 'pg';
+
 import type {
   CliPlanRunCancelMarker,
   CommitLinkInput,
@@ -87,8 +88,9 @@ export async function getTaskByIdPostgres(
       status: string;
       title: string;
       updated_at: string;
+      wave: number | null;
     }>(
-      `SELECT id, plan_id, title, description, category, status, requirements, sort_order, created_at, updated_at FROM tasks WHERE id = $1`,
+      `SELECT id, plan_id, title, description, category, status, requirements, sort_order, wave, created_at, updated_at FROM tasks WHERE id = $1`,
       [id],
     );
     const row = res.rows[0];
@@ -104,6 +106,7 @@ export async function getTaskByIdPostgres(
       status: row.status,
       title: row.title,
       updatedAt: row.updated_at,
+      wave: row.wave,
     };
   } finally {
     await client.end();
@@ -264,8 +267,9 @@ export async function getTasksByPlanIdPostgres(
       status: string;
       title: string;
       updated_at: string;
+      wave: number | null;
     }>(
-      `SELECT id, plan_id, title, description, category, status, requirements, sort_order, created_at, updated_at FROM tasks WHERE plan_id = $1 ORDER BY sort_order ASC, created_at ASC`,
+      `SELECT id, plan_id, title, description, category, status, requirements, sort_order, wave, created_at, updated_at FROM tasks WHERE plan_id = $1 ORDER BY sort_order ASC, created_at ASC`,
       [planId],
     );
     return res.rows.map((row) => ({
@@ -279,6 +283,7 @@ export async function getTasksByPlanIdPostgres(
       status: row.status,
       title: row.title,
       updatedAt: row.updated_at,
+      wave: row.wave,
     }));
   } finally {
     await client.end();
@@ -384,6 +389,7 @@ export async function updateTaskStatusPostgres(
       status: string;
       title: string;
       updated_at: string;
+      wave: number | null;
     }>(
       `UPDATE tasks SET status = $1,
         completed_at = CASE
@@ -393,7 +399,7 @@ export async function updateTaskStatusPostgres(
         END,
         updated_at = NOW()
        WHERE id = $2
-       RETURNING id, plan_id, title, description, category, status, requirements, sort_order, created_at, updated_at`,
+       RETURNING id, plan_id, title, description, category, status, requirements, sort_order, wave, created_at, updated_at`,
       [status, id],
     );
     const row = res.rows[0];
@@ -409,6 +415,7 @@ export async function updateTaskStatusPostgres(
       status: row.status,
       title: row.title,
       updatedAt: row.updated_at,
+      wave: row.wave,
     };
     if (status === 'IN_PROGRESS') {
       await updatePlanStatusPostgres(config, taskRow.planId, 'IN_PROGRESS');
@@ -604,7 +611,7 @@ export async function insertCommitLinkPostgres(
     await client.query(
       `INSERT INTO work_sessions
          (actor_service_account_id, closed_by, ended_at, external_ref, on_behalf_of_verified, started_at, tool_name)
-       SELECT $1, 'explicit', NOW(), $2, FALSE, NOW(), 'workflow-ralph'
+       SELECT $1, 'instant', NOW(), $2, FALSE, NOW(), 'workflow-ralph'
        WHERE NOT EXISTS (SELECT 1 FROM work_sessions WHERE external_ref = $2)`,
       [serviceAccountId, externalRef],
     );

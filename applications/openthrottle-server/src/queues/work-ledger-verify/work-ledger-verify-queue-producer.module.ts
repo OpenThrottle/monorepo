@@ -1,8 +1,9 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
-import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
 import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
-import { WORK_LEDGER_VERIFY_QUEUE_NAME } from './work-ledger-verify.constants';
+import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
+
+import { WORK_LEDGER_VERIFY_QUEUE_NAME } from './work-ledger-verify.constants.ts';
 
 /**
  * @description Producer half of the work-ledger-verify queue: registerQueue +

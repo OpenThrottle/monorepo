@@ -5,10 +5,11 @@
  */
 
 import { Controller, Get } from '@nestjs/common';
-import type { ProcessMetricsSnapshot } from './process-metrics.types';
-import { ProcessMetricsService } from './process-metrics.service';
-import type { SystemMetricsSnapshot } from './system-metrics.types';
-import { SystemMetricsService } from './system-metrics.service';
+
+import { ProcessMetricsService } from './process-metrics.service.ts';
+import type { ProcessMetricsSnapshot } from './process-metrics.types.ts';
+import { SystemMetricsService } from './system-metrics.service.ts';
+import type { SystemMetricsSnapshot } from './system-metrics.types.ts';
 
 @Controller('metrics')
 export class MetricsController {

@@ -3,11 +3,13 @@
  * and its GraphQL ObjectTypes.
  */
 
+import './project-skill.object.ts';
+import './project-skills.input.ts';
+
 import { Module } from '@nestjs/common';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
-import './project-skill.object';
-import './project-skills.input';
-import { ProjectSkillsResolver } from './project-skills.resolver';
+
+import { ProjectSkillsResolver } from './project-skills.resolver.ts';
 
 @Module({
   imports: [NestjsRepositoriesModule],

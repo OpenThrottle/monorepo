@@ -1,13 +1,15 @@
-import * as React from 'react';
-import { act, render } from '@testing-library/react';
 import type { CommanderGroup } from '@openthrottle/react-router-ui';
+import { act, render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
+
 import {
   dataNavigationGuest,
   dataNavigationV2,
 } from '~/global/data/data.navigation';
 import type { NavigationRecord } from '~/global/utils/navigation-to-commander-groups';
+
 import { useCommanderOptions } from '../useCommanderOptions';
 
 function HookProbe(props: {

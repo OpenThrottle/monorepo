@@ -1,6 +1,7 @@
-import * as React from 'react';
 import { render, screen } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
+
 import { Command } from '../Command';
 import { CommandGroup } from '../CommandGroup';
 import { CommandItem } from '../CommandItem';

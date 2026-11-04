@@ -1,5 +1,6 @@
-import * as React from 'react';
 import { CommandSeparator as CmdkCommandSeparator } from 'cmdk';
+import * as React from 'react';
+
 import { cn } from '../../utils/cn';
 
 export interface CommandSeparatorProps extends React.ComponentPropsWithoutRef<

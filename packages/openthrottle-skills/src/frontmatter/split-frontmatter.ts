@@ -1,6 +1,5 @@
-import type { FrontmatterScalar } from './parse-yaml-frontmatter.ts';
-
 import { extractContentAfterFrontmatter } from './extract-frontmatter-body.ts';
+import type { FrontmatterScalar } from './parse-yaml-frontmatter.ts';
 import { parseYamlFrontmatter } from './parse-yaml-frontmatter.ts';
 
 export interface SplitFrontmatterResult {

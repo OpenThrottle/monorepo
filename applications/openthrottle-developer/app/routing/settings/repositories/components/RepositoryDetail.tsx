@@ -1,18 +1,20 @@
-import * as React from 'react';
-import { Link } from 'react-router';
-import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import {
   Badge,
   Button,
   Card,
   CardContent,
 } from '@openthrottle/react-router-shadcn';
+import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { FolderGit2Icon, PencilIcon } from 'lucide-react';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import type { WorkspaceRepositoryFieldsFragment } from '~/__generated__/graphql';
 import {
   WORKSPACE_FOLDERS_COPY,
   WORKSPACE_REPOSITORY_DETAIL_COPY,
 } from '~/routing/settings/data/data.copy';
+import { RepositoryHookTelemetry } from '~/routing/settings/repositories/components/RepositoryHookTelemetry';
 import { deriveCheckoutInspectionBadges } from '~/routing/settings/repositories/utils/checkout-inspection-badges';
 
 export interface RepositoryDetailProps {
@@ -186,6 +188,7 @@ export const RepositoryDetail = (
                       ))}
                     </div>
                   ) : null}
+                  <RepositoryHookTelemetry inspection={checkout.inspection} />
                 </Card>
               );
             })}

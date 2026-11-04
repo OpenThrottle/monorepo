@@ -1,14 +1,6 @@
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import clsx from 'clsx';
-import { ChatComposerCheckoutControl } from './ChatComposerCheckoutControl';
-import { ChatComposerAttachControl } from './ChatComposerAttachControl';
-import { ChatComposerMicControl } from './ChatComposerMicControl';
-import { ChatComposerModelControl } from './ChatComposerModelControl';
-import { ChatComposerPersistControl } from './ChatComposerPersistControl';
-import { ChatComposerPersonaSelect } from './ChatComposerPersonaSelect';
-import { ChatPermissionModeControl } from './ChatPermissionModeControl';
-import { ChatReasoningTierControl } from './ChatReasoningTierControl';
-import { ChatComposerMicState } from '../types';
+
 import type {
   ChatBackendCapabilities,
   ChatCheckoutOption,
@@ -21,6 +13,15 @@ import type {
   ChatReasoningLevel,
   ChatServiceTier,
 } from '../types';
+import { ChatComposerMicState } from '../types';
+import { ChatComposerAttachControl } from './ChatComposerAttachControl';
+import { ChatComposerCheckoutControl } from './ChatComposerCheckoutControl';
+import { ChatComposerMicControl } from './ChatComposerMicControl';
+import { ChatComposerModelControl } from './ChatComposerModelControl';
+import { ChatComposerPersistControl } from './ChatComposerPersistControl';
+import { ChatComposerPersonaSelect } from './ChatComposerPersonaSelect';
+import { ChatPermissionModeControl } from './ChatPermissionModeControl';
+import { ChatReasoningTierControl } from './ChatReasoningTierControl';
 
 export interface ChatComposerToolbarProps {
   /**
@@ -154,7 +155,7 @@ export const ChatComposerToolbar = (
 
   return (
     <div
-      className={clsx('flex flex-wrap items-center gap-2', className)}
+      className={cn('flex flex-wrap items-center gap-2', className)}
       data-testid="ChatComposerToolbar"
     >
       <ChatComposerModelControl

@@ -2,13 +2,14 @@
  * @description GraphQL ObjectType for Plan. Implements {@link PlanData} from @openthrottle/nestjs-repositories so the API shape stays in sync with the entity.
  */
 
+import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
 import type {
   PlanData,
   PlanRunData,
   PlanRunExecutionBackend,
 } from '@openthrottle/nestjs-repositories';
-import { Field, Int, ObjectType } from '@nestjs/graphql';
-import { ProjectObject } from '../projects/project.object';
+
+import { ProjectObject } from '../projects/project.object.ts';
 
 @ObjectType()
 export class PlanObject implements PlanData {
@@ -56,6 +57,18 @@ export class PlanObject implements PlanData {
   })
   projectRelation!: ProjectObject | null;
 
+  @Field(() => Date, {
+    description: `The soonest instant a SCHEDULED run of this plan fires at (plan_runs.scheduled_for of its earliest SCHEDULED run); null when none is waiting. Lets the UI explain why a run is already pending ("a run is scheduled for <local time>; cancel it to run now"). Resolved from plan_runs; a run that fired, was cancelled or was settled MISSED/SUPERSEDED no longer counts.`,
+    nullable: true,
+  })
+  scheduledRunAt?: Date | null;
+
+  @Field(() => ID, {
+    description: `The id of the SCHEDULED run behind scheduledRunAt (the same soonest run: earliest scheduled_for, then id); null when none is waiting. Pass it as planRunId to cancelPlanRun to cancel just that run, so the UI can offer Cancel without listing run history.`,
+    nullable: true,
+  })
+  scheduledRunId?: string | null;
+
   @Field(() => String)
   status!: string;
 
@@ -68,7 +81,7 @@ export class PlanObject implements PlanData {
   taskCount?: number;
 
   @Field(() => Int, {
-    description: `Number of resolved tasks on this plan (status COMPLETED or SKIPPED). Mirrors client getResolvedTaskCount; SKIPPED counts as done / won't be worked on.`,
+    description: `Number of resolved tasks on this plan (status COMPLETED, SKIPPED or PROMOTED). Mirrors client getResolvedTaskCount; SKIPPED and PROMOTED count as done / won't be worked on here (PROMOTED continued as its own plan).`,
   })
   tasksCompletedCount?: number;
 
@@ -182,6 +195,12 @@ export class PlanRunObject implements PlanRunData {
   workerId!: string | null;
 
   @Field(() => String, {
+    description: `The usage-limited run this run continues: set on the continuation run enqueued automatically after a Claude usage limit. Null for every ordinary run.`,
+    nullable: true,
+  })
+  resumeOfRunId!: string | null;
+
+  @Field(() => String, {
     description: `Resolved workflow-ralph configuration at enqueue (PlanRunConfigSnapshot v1 JSON). Null for legacy runs.`,
     nullable: true,
   })
@@ -192,11 +211,29 @@ export class PlanRunObject implements PlanRunData {
   })
   runKind!: 'orchestrator' | 'spawn';
 
+  @Field(() => Date, {
+    description: `The absolute UTC instant a scheduled run fires at. Set only on runs created by schedulePlanRun (status SCHEDULED while waiting) and kept once the run settles, so history still shows when it was meant to fire. Null for every run that was enqueued to run now.`,
+    nullable: true,
+  })
+  scheduledFor!: Date | null;
+
   @Field(() => String)
   status!: string;
 
   @Field(() => Date)
   updatedAt!: Date;
+
+  @Field(() => Date, {
+    description: `When the usage limit that stopped this run lifts, as reported by the agent CLI. Null unless status is USAGE_LIMITED, or when the CLI reported no reset time.`,
+    nullable: true,
+  })
+  usageLimitResetsAt!: Date | null;
+
+  @Field(() => String, {
+    description: `Raw name of the usage-limit window that stopped this run (five_hour, seven_day, ...). Null unless status is USAGE_LIMITED, or when the window was not reported.`,
+    nullable: true,
+  })
+  usageLimitType!: string | null;
 
   @Field(() => String, {
     description:
@@ -306,6 +343,33 @@ export class EnqueuePlanRunResultObject {
     description: `Total number of jobs waiting in the queue (including this one).`,
   })
   queueTotal!: number;
+}
+
+/** Result of schedulePlanRun: the SCHEDULED run, its delayed job, and the instant it fires. */
+@ObjectType()
+export class SchedulePlanRunResultObject {
+  @Field(() => String, {
+    description: `Execution backend selected once for the whole run: cursor or claude.`,
+  })
+  executionBackend!: PlanRunExecutionBackend;
+
+  @Field(() => String, {
+    description: `BullMQ job id of the delayed job that starts the run (deterministic: scheduled-plan-run-<idempotencyKey | planId-epochMs>).`,
+  })
+  jobId!: string;
+
+  @Field(() => String, { description: 'Plan id the run was scheduled for.' })
+  planId!: string;
+
+  @Field(() => String, {
+    description: `plan_runs id of the SCHEDULED run row (status SCHEDULED until the job fires).`,
+  })
+  planRunId!: string;
+
+  @Field(() => Date, {
+    description: `The absolute UTC instant the run fires at.`,
+  })
+  scheduledFor!: Date;
 }
 
 /** Result of cancelPlanRun: removed job ids, active jobs that stayed locked, and optional plan status update. */

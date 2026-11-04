@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildClaudeArgv } from '../argv.ts';
 import {
   CONVERSATION_PERMISSION_MODES,
   CONVERSATION_REASONING_EFFORTS,
 } from '../../types.ts';
+import { buildClaudeArgv } from '../argv.ts';
 
 const MCP_SERVERS = {
   'openthrottle-mcp': {

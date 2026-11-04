@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildGrokArgv } from '../argv.ts';
 import {
   CONVERSATION_PERMISSION_MODES,
   CONVERSATION_REASONING_EFFORTS,
 } from '../../types.ts';
+import { buildGrokArgv } from '../argv.ts';
 
 /** The value after a flag, or undefined when the flag is absent. */
 const valueAfter = (

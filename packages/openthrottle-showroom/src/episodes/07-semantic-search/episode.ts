@@ -16,7 +16,7 @@
  * against the commander while the narration still describes a results page.
  */
 
-import type { VideoEpisode } from '../types';
+import type { VideoEpisode } from '../types.ts';
 
 export const episode: VideoEpisode = {
   beats: [

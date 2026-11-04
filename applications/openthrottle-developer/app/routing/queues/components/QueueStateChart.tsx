@@ -1,17 +1,19 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
+  cn,
   ToggleGroup,
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+
 import type { QueueCardFragment } from '~/__generated__/graphql';
 import { QueueStateChartAxisTick } from '~/routing/queues/components/QueueStateChartAxisTick';
+import type { QueueStateChartView } from '~/routing/queues/utils/queue-state-chart';
 import {
   formatQueueStateChartTick,
   isQueueStateChartView,
@@ -21,7 +23,6 @@ import {
   queueStateChartData,
   queueStateChartHeight,
 } from '~/routing/queues/utils/queue-state-chart';
-import type { QueueStateChartView } from '~/routing/queues/utils/queue-state-chart';
 
 export interface QueueStateChartProps {
   className?: string;
@@ -67,7 +68,7 @@ export const QueueStateChart = (
     return (
       <section
         aria-labelledby="queue-state-chart-heading"
-        className={clsx(className)}
+        className={cn(className)}
         data-testid="QueueStateChart"
       >
         <h2 className="text-md" id="queue-state-chart-heading">
@@ -84,7 +85,7 @@ export const QueueStateChart = (
   return (
     <section
       aria-labelledby="queue-state-chart-heading"
-      className={clsx(className)}
+      className={cn(className)}
       data-testid="QueueStateChart"
     >
       <div className="mb-4 flex items-center justify-between">

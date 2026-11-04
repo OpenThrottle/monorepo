@@ -1,12 +1,13 @@
 import {
-  createConversationStreamAction,
   type ChatStartActionResult,
+  createConversationStreamAction,
 } from '@openthrottle/react-router-chat';
+
+import type { Route } from '@/app/routes/+types/resources.conversation-stream';
 import {
   CancelConversationStreamDocument,
   StartConversationStreamDocument,
 } from '~/__generated__/graphql';
-import type { Route } from '@/app/routes/+types/resources.conversation-stream';
 
 /**
  * Resource route action backing the agentic chat's streaming turn —

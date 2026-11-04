@@ -2,30 +2,31 @@
  * @description TanStack Table column definitions for the pull requests list
  * (badge state, dates like the route cards, compact GlobalPopover actions).
  */
-import * as React from 'react';
+import type { PullRequestCardFragment } from '@openthrottle/openthrottle-developer-codegen';
+import { Button } from '@openthrottle/react-router-shadcn';
+import type { GlobalPopoverAction } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalPopover,
+  GlobalPopoverActionsHeader,
+} from '@openthrottle/react-router-ui-global';
+import type { ColumnDef } from '@tanstack/react-table';
+import { formatDate } from 'date-fns';
 import {
   ArrowRightIcon,
   GitPullRequestIcon,
   PanelRightIcon,
 } from 'lucide-react';
-import { Button } from '@openthrottle/react-router-shadcn';
-import {
-  GlobalPopover,
-  GlobalPopoverActionsHeader,
-} from '@openthrottle/react-router-ui-global';
-import type { GlobalPopoverAction } from '@openthrottle/react-router-ui-global';
-import { formatDate } from 'date-fns';
+import * as React from 'react';
+
+import { PullRequestStatus } from '~/routing/pull-requests/components/PullRequestStatus';
+import { buildPullRequestListSearchWithPreview } from '~/routing/pull-requests/constants/pull-request-list-url';
+import { PULL_REQUESTS_ROW_ACTIONS_COPY } from '~/routing/pull-requests/data/data.copy';
+import type { PullRequestsListFilters } from '~/routing/pull-requests/types/pull-requests-list-filters';
 import {
   githubCommitUrl,
   githubPullChecksUrl,
   githubPullConversationUrl,
 } from '~/routing/pull-requests/utils/github-pr-links';
-import { PullRequestStatus } from '~/routing/pull-requests/components/PullRequestStatus';
-import { buildPullRequestListSearchWithPreview } from '~/routing/pull-requests/constants/pull-request-list-url';
-import { PULL_REQUESTS_ROW_ACTIONS_COPY } from '~/routing/pull-requests/data/data.copy';
-import type { ColumnDef } from '@tanstack/react-table';
-import type { PullRequestCardFragment } from '@openthrottle/openthrottle-developer-codegen';
-import type { PullRequestsListFilters } from '~/routing/pull-requests/types/pull-requests-list-filters';
 
 export type PullRequestsTableColumnValue =
   | PullRequestCardFragment['author']

@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { formatLocationLabel } from '../formatLocationLabel';
 
 describe('formatLocationLabel', () => {

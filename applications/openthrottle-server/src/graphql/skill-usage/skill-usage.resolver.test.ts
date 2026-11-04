@@ -1,20 +1,21 @@
+import { createMock } from '@golevelup/ts-vitest';
+import { BadRequestException } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
+import { PERMISSIONS, PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
 import {
   RolesService,
   SKILL_USAGE_OUTCOMES,
   SKILL_USAGE_PRIVACY_LEVELS,
   SKILL_USAGE_SCOPES,
-  SkillUsageEventsService,
   type SkillUsageEvent,
+  SkillUsageEventsService,
   type SkillUsageOutcome,
 } from '@openthrottle/nestjs-repositories';
-import { BadRequestException } from '@nestjs/common';
-import { PERMISSIONS, PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
-import { createMock } from '@golevelup/ts-vitest';
-import { Test } from '@nestjs/testing';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service';
-import { SkillUsageResolver } from './skill-usage.resolver';
+
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service.ts';
+import { SkillUsageResolver } from './skill-usage.resolver.ts';
 
 describe('SkillUsageResolver', () => {
   let resolver: SkillUsageResolver;
@@ -36,10 +37,12 @@ describe('SkillUsageResolver', () => {
     agentType: null,
     args: 'truncated args…',
     cwd: '/repo',
+    duplicateOfId: null,
     gitBranch: 'example-usage-tracking',
     hookEventName: 'PreToolUse',
     id: 'event-1',
     invocationPath: 'skill_tool',
+    isFixture: false,
     occurredAt: new Date('2026-07-31T12:00:00.000Z'),
     privacyLevel: SKILL_USAGE_PRIVACY_LEVELS.TRUNCATED,
     promptId: null,
@@ -109,6 +112,39 @@ describe('SkillUsageResolver', () => {
       expect(result.skillName).toBe('ot-plans');
       expect(result.scope).toBe(SKILL_USAGE_SCOPES.OURS);
       expect(result.args).toBe('truncated args…');
+    });
+
+    describe('scope validation', () => {
+      test('accepts a personal-scoped invocation', async () => {
+        recordSkillUsage.mockResolvedValue({
+          ...savedRow,
+          scope: SKILL_USAGE_SCOPES.PERSONAL,
+          skillName: 'ot-beta-loop',
+        });
+
+        const result = await resolver.recordSkillUsage({
+          occurredAt: new Date('2026-07-31T12:00:00.000Z'),
+          scope: SKILL_USAGE_SCOPES.PERSONAL,
+          skillName: 'ot-beta-loop',
+        });
+
+        expect(recordSkillUsage).toHaveBeenLastCalledWith(
+          expect.objectContaining({ scope: SKILL_USAGE_SCOPES.PERSONAL }),
+        );
+        expect(result.scope).toBe(SKILL_USAGE_SCOPES.PERSONAL);
+      });
+
+      test('rejects an unknown scope with a message naming every member', async () => {
+        // Generated from the scope const, so this message can never go stale
+        // the way the old hardcoded 'ours or third-party' string did.
+        await expect(
+          resolver.recordSkillUsage({
+            occurredAt: new Date('2026-07-31T12:00:00.000Z'),
+            scope: 'not-a-real-scope',
+            skillName: 'ot-plans',
+          }),
+        ).rejects.toThrow('scope must be one of: ours, personal, third-party');
+      });
     });
 
     describe('attribution', () => {
@@ -239,6 +275,7 @@ describe('SkillUsageResolver', () => {
 
   describe('recordSkillUsageOutcome', () => {
     const savedOutcome: SkillUsageOutcome = {
+      captureModel: 'reported_v1',
       cwd: '/repo',
       durationMs: 4200,
       gitBranch: 'example-usage-tracking',
@@ -249,6 +286,7 @@ describe('SkillUsageResolver', () => {
       scope: SKILL_USAGE_SCOPES.OURS,
       sessionId: 'session-1',
       skillName: 'ot-plans',
+      source: 'claude-code',
       toolUseId: 'tool-1',
     };
 
@@ -263,6 +301,7 @@ describe('SkillUsageResolver', () => {
         outcome: SKILL_USAGE_OUTCOMES.SUCCESS,
         sessionId: 'session-1',
         skillName: 'ot-plans',
+        source: 'claude-code',
         toolUseId: 'tool-1',
       });
 
@@ -275,12 +314,39 @@ describe('SkillUsageResolver', () => {
         scope: SKILL_USAGE_SCOPES.OURS,
         sessionId: 'session-1',
         skillName: 'ot-plans',
+        source: 'claude-code',
         toolUseId: 'tool-1',
       });
       expect(result.id).toBe('outcome-1');
       expect(result.outcome).toBe(SKILL_USAGE_OUTCOMES.SUCCESS);
       expect(result.durationMs).toBe(4200);
+      expect(result.source).toBe('claude-code');
     });
+
+    // Iterates the vocabulary rather than naming members, so a value the
+    // predicate forgets fails here — SESSION_ENDED was rejected for six weeks.
+    describe.each(Object.values(SKILL_USAGE_OUTCOMES))(
+      'when outcome is %s',
+      (outcome) => {
+        test('accepts it and passes it through', async () => {
+          recordSkillUsageOutcome.mockResolvedValue({
+            ...savedOutcome,
+            outcome,
+          });
+
+          const result = await resolver.recordSkillUsageOutcome({
+            occurredAt: new Date('2026-07-31T12:05:00.000Z'),
+            outcome,
+            skillName: 'ot-plans',
+          });
+
+          expect(recordSkillUsageOutcome).toHaveBeenLastCalledWith(
+            expect.objectContaining({ outcome }),
+          );
+          expect(result.outcome).toBe(outcome);
+        });
+      },
+    );
 
     describe('when outcome is invalid', () => {
       test('rejects with BadRequestException', async () => {
@@ -315,12 +381,14 @@ describe('SkillUsageResolver', () => {
           {
             date: '2026-07-15',
             oursCount: 2,
+            personalCount: 3,
             thirdPartyCount: 1,
-            totalCount: 3,
+            totalCount: 6,
           },
         ],
         byScope: [
           { count: 2, scope: SKILL_USAGE_SCOPES.OURS },
+          { count: 3, scope: SKILL_USAGE_SCOPES.PERSONAL },
           { count: 1, scope: SKILL_USAGE_SCOPES.THIRD_PARTY },
         ],
         bySkill: [
@@ -336,7 +404,7 @@ describe('SkillUsageResolver', () => {
           },
         ],
         filterOptions: { cwds: ['/repo'], gitBranches: ['main'] },
-        totalCount: 3,
+        totalCount: 6,
       });
 
       const result = await resolver.skillUsage(
@@ -355,10 +423,11 @@ describe('SkillUsageResolver', () => {
         skillName: null,
         start: '2026-07-01',
       });
-      expect(result.totalCount).toBe(3);
+      expect(result.totalCount).toBe(6);
       expect(result.bySkill[0]?.skillName).toBe('ot-plans');
-      expect(result.byScope).toHaveLength(2);
+      expect(result.byScope).toHaveLength(3);
       expect(result.byDay[0]?.date).toBe('2026-07-15');
+      expect(result.byDay[0]?.personalCount).toBe(3);
       expect(result.filterOptions.gitBranches).toEqual(['main']);
     });
 

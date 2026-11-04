@@ -1,5 +1,6 @@
 import type { PullRequestCardFragment } from '@openthrottle/openthrottle-developer-codegen';
 import { describe, expect, test } from 'vitest';
+
 import { getPullRequestsTableRowId } from '../pull-requests-table-columns';
 
 describe('getPullRequestsTableRowId', () => {

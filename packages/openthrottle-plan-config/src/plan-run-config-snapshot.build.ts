@@ -2,13 +2,13 @@
  * @description Builds resolved enqueue snapshots from validated plan-run job data.
  */
 
-import { DEFAULT_PLAN_RUN_RALPH_RUNNER } from './plan-run-config-storage.constants.ts';
 import { PLAN_RUN_CONFIG_SNAPSHOT_VERSION } from './plan-run-config-snapshot.constants.ts';
 import type {
   BuildPlanRunConfigSnapshotInput,
   PlanRunConfigSnapshot,
   PlanRunConfigSnapshotDebugCli,
 } from './plan-run-config-snapshot.types.ts';
+import { DEFAULT_PLAN_RUN_RALPH_RUNNER } from './plan-run-config-storage.constants.ts';
 
 const trimOptionalString = (
   value: string | null | undefined,
@@ -43,6 +43,9 @@ export const buildPlanRunConfigSnapshot = (
     executionBackend: input.executionBackend ?? DEFAULT_PLAN_RUN_RALPH_RUNNER,
     ...(normalizeDebugCli(ralphInput?.debug) !== undefined
       ? { debug: normalizeDebugCli(ralphInput?.debug) }
+      : {}),
+    ...(trimOptionalString(ralphInput?.effort) !== undefined
+      ? { effort: trimOptionalString(ralphInput?.effort) }
       : {}),
     ...(ralphInput?.iterationTimeoutSeconds != null
       ? { iterationTimeoutSeconds: ralphInput.iterationTimeoutSeconds }

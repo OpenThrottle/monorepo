@@ -11,8 +11,9 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Plan } from '../plans/plan.entity';
-import type { TagSource } from './tag-provenance';
+
+import { Plan } from '../plans/plan.entity.ts';
+import type { TagSource } from './tag-provenance.ts';
 
 export interface PlanTagData {
   readonly confidence: number | null;

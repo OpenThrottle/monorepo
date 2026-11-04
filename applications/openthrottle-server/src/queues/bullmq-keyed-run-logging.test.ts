@@ -1,15 +1,16 @@
+import { createMock } from '@golevelup/ts-vitest';
 import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import { createMock } from '@golevelup/ts-vitest';
 import type { ChildJobStreamChunk } from '@tools/workflows';
 import { beforeEach, describe, expect, it } from 'vitest';
+
 import {
   appendChildJobChunkToRunOutput,
   classifyRunOutputSource,
   createSpawnRunOutputHandlers,
   RUN_OUTPUT_SOURCE,
   runOutputLogContext,
-} from './bullmq-keyed-run-logging';
+} from './bullmq-keyed-run-logging.ts';
 
 const QUEUE = 'plans';
 const JOB_ID = '42';

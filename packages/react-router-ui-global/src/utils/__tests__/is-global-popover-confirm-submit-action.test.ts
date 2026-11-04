@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
-import { isGlobalPopoverConfirmSubmitAction } from '../is-global-popover-confirm-submit-action';
+
 import type { GlobalPopoverAction } from '../../components/GlobalPopover';
+import { isGlobalPopoverConfirmSubmitAction } from '../is-global-popover-confirm-submit-action';
 
 describe('isGlobalPopoverConfirmSubmitAction', () => {
   test('returns true for submit actions with confirm', () => {

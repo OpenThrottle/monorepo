@@ -1,9 +1,11 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { APP_NAME } from '@openthrottle/react-router-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import {
   GLOBAL_METRICS_COLLAPSED_KEY,
   GLOBAL_METRICS_STORAGE_KEY,
 } from '../../config';
+import type { MetricsChartDatum } from '../storage';
 import {
   getStoredMetricsCollapsed,
   getStoredPollIntervalMs,
@@ -12,7 +14,6 @@ import {
   writeStoredMetricsChartHistory,
   writeStoredMetricsCollapsed,
 } from '../storage';
-import type { MetricsChartDatum } from '../storage';
 
 const CHART_HISTORY_STORAGE_KEY = `${APP_NAME}:global-metrics:v1`;
 

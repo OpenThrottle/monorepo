@@ -5,6 +5,7 @@ import {
 } from '@openthrottle/react-router-utils';
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router';
+
 import type { NavigationRecord } from '~/global/utils/navigation-to-commander-groups';
 import { buildCommanderGroupsFromNavigation } from '~/global/utils/navigation-to-commander-groups';
 

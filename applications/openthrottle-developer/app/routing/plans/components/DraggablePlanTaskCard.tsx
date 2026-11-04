@@ -1,10 +1,11 @@
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import clsx from 'clsx';
 import { useDrag } from 'react-dnd';
+
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { PlanTaskCard } from '~/routing/plans/components/PlanTaskCard';
-import { PLAN_TASK_DRAG_TYPE } from '~/routing/plans/utils/plan-task-drag-type';
 import type { PlanTaskDragItem } from '~/routing/plans/utils/plan-task-drag-type';
+import { PLAN_TASK_DRAG_TYPE } from '~/routing/plans/utils/plan-task-drag-type';
 
 export interface DraggablePlanTaskCardProps {
   /** True when a tag→action rule manages this task's placement. */
@@ -52,7 +53,7 @@ export const DraggablePlanTaskCard = (
 
   return (
     <div
-      className={clsx(
+      className={cn(
         'touch-manipulation rounded-md',
         isDragging && 'opacity-50',
       )}

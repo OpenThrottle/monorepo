@@ -1,10 +1,11 @@
-import * as React from 'react';
-import { render, within } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render, within } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { PlanCreateMcpParityShell } from '../PlanCreateMcpParityShell';
+
 import type { PlanCreateMcpParityShellProps } from '../PlanCreateMcpParityShell';
+import { PlanCreateMcpParityShell } from '../PlanCreateMcpParityShell';
 
 describe('PlanCreateMcpParityShell Component', () => {
   let component: RenderResult;

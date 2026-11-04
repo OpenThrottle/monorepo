@@ -3,12 +3,13 @@
  * Captures the resolved configuration actually enqueued, not the plan defaults column.
  */
 
+import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
+
 import type { PLAN_RUN_CONFIG_SNAPSHOT_VERSION } from './plan-run-config-snapshot.constants.ts';
 import type {
   PlanJobRunHooksStorage,
   PlanRunConfigTargetMode,
 } from './plan-run-config-storage.types.ts';
-import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 
 export type PlanRunConfigSnapshotDebugCli = 'debug' | 'omit' | 'verbose';
 
@@ -17,6 +18,8 @@ export type PlanRunConfigSnapshotDebugCli = 'debug' | 'omit' | 'verbose';
  */
 export interface PlanRunConfigSnapshotRalphV1 {
   readonly debug?: PlanRunConfigSnapshotDebugCli;
+  /** @description Reasoning-effort level (chat vocabulary: low|medium|high|extraHigh|max|ultra), validated at enqueue. */
+  readonly effort?: string;
   readonly executionBackend: WorkflowConfigRunner;
   readonly iterationTimeoutSeconds?: number;
   readonly iterations?: number;
@@ -59,6 +62,7 @@ export interface BuildPlanRunConfigSnapshotInput {
   readonly mode?: PlanRunConfigTargetMode | null;
   readonly ralph?: {
     readonly debug?: PlanRunConfigSnapshotDebugCli | null;
+    readonly effort?: string | null;
     readonly iterationTimeoutSeconds?: number | null;
     readonly iterations?: number | null;
     readonly model?: string | null;

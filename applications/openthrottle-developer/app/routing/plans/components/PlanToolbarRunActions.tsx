@@ -1,4 +1,4 @@
-import * as React from 'react';
+import type { ChatModelOption } from '@openthrottle/react-router-chat';
 import {
   Button,
   Input,
@@ -6,12 +6,18 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { Gauge, PlayCircle } from 'lucide-react';
+import { Gauge } from 'lucide-react';
+import * as React from 'react';
 import type { useFetcher } from 'react-router';
+
+import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
 import type { action } from '~/routes/plans.$planId._index';
+import { PlanRunCancelScheduledDialog } from '~/routing/plans/components/PlanRunCancelScheduledDialog';
+import { PlanRunDialog } from '~/routing/plans/components/PlanRunDialog';
 import { PlanToolbarActiveRunControl } from '~/routing/plans/components/PlanToolbarActiveRunControl';
+import { PlanToolbarRunSplitButton } from '~/routing/plans/components/PlanToolbarRunSplitButton';
 import { PLAN_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
-import { getPlanToolbarRunButtonLabel } from '~/routing/plans/utils/plan-toolbar-run-label';
+import { usePlanToolbarRunDialog } from '~/routing/plans/hooks/usePlanToolbarRunDialog';
 
 export interface PlanToolbarRunActionsProps {
   readonly branch?: string;
@@ -21,6 +27,8 @@ export interface PlanToolbarRunActionsProps {
   readonly isRunning: boolean;
   readonly isTerminal: boolean;
   readonly jobRunHooksJson: string;
+  /** @description The loader's deferred model discovery, for the Run dialog's model picker. */
+  readonly models: Promise<readonly ChatModelOption[]>;
   /**
    * `undefined` while the deferred run history is still loading. The Stale badge
    * is withheld then — "not stale" is a claim we cannot make yet — but Kill still
@@ -38,16 +46,28 @@ export interface PlanToolbarRunActionsProps {
   readonly planStatus?: string;
   readonly planTitle: string;
   readonly ralphTuningJson: string;
+  /** @description Deferred repositories; the Run dialog names the checkout from them. */
+  readonly repositories?: Promise<
+    readonly PlanRunConfigRepositoryFieldsFragment[]
+  >;
   readonly repositoryId?: string;
+  /** @description The plan's saved run config the Run dialog seeds model, effort and iterations from. */
+  readonly runConfigJson: string | null | undefined;
+  /** @description The soonest SCHEDULED run's fire time; non-null gates every run-now path. */
+  readonly scheduledRunAt?: Date | string | null;
+  /** @description Id of that same run; when set the caret menu offers Cancel scheduled run. */
+  readonly scheduledRunId?: string | null;
   readonly workflowRunBlocked: boolean;
   readonly workflowRunBlockedReason?: string;
   readonly workingDirectory?: string;
 }
 
 /**
- * @description The {@link PlanToolbar} primary action group: the Run/Queue
- * enqueue form, the Evaluate rules form, and the active-run control (Kill /
- * Stale / Settle). Extracted from the toolbar per component-primitive-shape R6.
+ * @description The {@link PlanToolbar} primary action group: the Run split button
+ * (one-click enqueue plus a caret for Run with options / Schedule), the Evaluate
+ * rules form, the active-run control (Kill / Stale / Settle) and the
+ * {@link PlanRunDialog} the caret opens. Extracted from the toolbar per
+ * component-primitive-shape R6.
  */
 export const PlanToolbarRunActions = (
   props: PlanToolbarRunActionsProps,
@@ -60,27 +80,31 @@ export const PlanToolbarRunActions = (
     isRunning,
     isTerminal,
     jobRunHooksJson,
+    models,
     newestRunIsStale,
     newestUnsupervisedUnsettledRunId,
     planId,
     planStatus,
     planTitle,
     ralphTuningJson,
+    repositories,
     repositoryId,
+    runConfigJson,
+    scheduledRunAt,
+    scheduledRunId,
     workflowRunBlocked,
     workflowRunBlockedReason,
     workingDirectory,
   } = props;
 
-  // Branch is a REQUIRED enqueue input; with it blank the run would fail fast at
-  // the server boundary, so gate the Run control and surface the reason.
-  const branchMissing = branch == null || branch.trim() === '';
-
   // Hooks
+  const runDialog = usePlanToolbarRunDialog({ repositories, workingDirectory });
+  const [cancelOpen, setCancelOpen] = React.useState(false);
 
   // Setup
 
   // Handlers
+  const onOpenCancelScheduled = (): void => setCancelOpen(true);
 
   // Markup
 
@@ -90,68 +114,24 @@ export const PlanToolbarRunActions = (
 
   return (
     <>
-      <Tooltip delayDuration={1_000}>
-        <TooltipTrigger asChild={true}>
-          <fetcherRunPlan.Form method="post">
-            <Input name="intent" type="hidden" value="runPlan" />
-            <Input name="ralphTuning" type="hidden" value={ralphTuningJson} />
-            {branch != null && branch !== '' && (
-              <Input name="branch" type="hidden" value={branch} />
-            )}
-            {jobRunHooksJson !== '' ? (
-              <Input
-                name="jobRunHooksJson"
-                type="hidden"
-                value={jobRunHooksJson}
-              />
-            ) : null}
-            {workingDirectory != null && workingDirectory !== '' && (
-              <Input
-                name="workingDirectory"
-                type="hidden"
-                value={workingDirectory}
-              />
-            )}
-            {checkoutId != null && checkoutId !== '' && (
-              <Input name="checkoutId" type="hidden" value={checkoutId} />
-            )}
-            {repositoryId != null && repositoryId !== '' && (
-              <Input name="repositoryId" type="hidden" value={repositoryId} />
-            )}
-            <Button
-              disabled={
-                fetcherRunPlan.state !== 'idle' ||
-                workflowRunBlocked ||
-                branchMissing ||
-                isRunning ||
-                isTerminal
-              }
-              size="xs"
-              type="submit"
-              variant="ghost"
-            >
-              <PlayCircle />
-              {getPlanToolbarRunButtonLabel(planStatus)}
-            </Button>
-          </fetcherRunPlan.Form>
-        </TooltipTrigger>
-        <TooltipContent className="max-w-xs" side="top">
-          {/* Precedence: submitting > terminal > running > blocked > default
-              (terminal and running are mutually exclusive). */}
-          {fetcherRunPlan.state !== 'idle'
-            ? 'Submitting…'
-            : isTerminal
-              ? PLAN_TOOLBAR_COPY.runTerminalTooltip
-              : isRunning
-                ? PLAN_TOOLBAR_COPY.runRunningTooltip
-                : workflowRunBlocked
-                  ? (workflowRunBlockedReason ??
-                    'Fix workflow run options in Configuration (aligned with workflow-ralph argv).')
-                  : branchMissing
-                    ? 'Set the git branch in Configuration → Workspace before running (branch is required).'
-                    : 'Enqueue a worker run for this plan using tuning from Workflow run options (defaults apply if you have not changed them).'}
-        </TooltipContent>
-      </Tooltip>
+      <PlanToolbarRunSplitButton
+        branch={branch}
+        checkoutId={checkoutId}
+        fetcherRunPlan={fetcherRunPlan}
+        isRunning={isRunning}
+        isTerminal={isTerminal}
+        jobRunHooksJson={jobRunHooksJson}
+        onOpenCancelScheduled={onOpenCancelScheduled}
+        onOpenDialog={runDialog.onOpenDialog}
+        planStatus={planStatus}
+        ralphTuningJson={ralphTuningJson}
+        repositoryId={repositoryId}
+        scheduledRunAt={scheduledRunAt}
+        scheduledRunId={scheduledRunId}
+        workflowRunBlocked={workflowRunBlocked}
+        workflowRunBlockedReason={workflowRunBlockedReason}
+        workingDirectory={workingDirectory}
+      />
 
       <Tooltip delayDuration={1_000}>
         <TooltipTrigger asChild={true}>
@@ -188,6 +168,35 @@ export const PlanToolbarRunActions = (
         planId={planId}
         planStatus={planStatus}
         planTitle={planTitle}
+      />
+
+      {scheduledRunId == null ? null : (
+        <PlanRunCancelScheduledDialog
+          onOpenChange={setCancelOpen}
+          open={cancelOpen}
+          planId={planId}
+          planRunId={scheduledRunId}
+        />
+      )}
+
+      <PlanRunDialog
+        branch={branch ?? ''}
+        checkoutId={checkoutId ?? ''}
+        jobRunHooksJson={jobRunHooksJson}
+        mode={runDialog.mode}
+        models={models}
+        onOpenChange={runDialog.onOpenChange}
+        onSubmitted={runDialog.onSubmitted}
+        open={runDialog.open}
+        planId={planId}
+        planStatus={planStatus}
+        ralphTuningJson={ralphTuningJson}
+        repositories={runDialog.repositories}
+        repositoryId={repositoryId ?? ''}
+        runConfigJson={runConfigJson}
+        workflowRunBlocked={workflowRunBlocked}
+        workflowRunBlockedReason={workflowRunBlockedReason}
+        workingDirectory={workingDirectory ?? ''}
       />
     </>
   );

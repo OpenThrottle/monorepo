@@ -1,11 +1,12 @@
-import * as React from 'react';
+import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
-import { NotificationsStoreProvider } from '../NotificationsStoreProvider';
-import { NotificationBell } from '../NotificationBell';
+
 import { useNotificationsStore } from '../../hooks/useNotificationsStore';
+import { NotificationBell } from '../NotificationBell';
+import { NotificationsStoreProvider } from '../NotificationsStoreProvider';
 
 // Single harness component (satisfies react/no-multi-comp): an add button that
 // drives a payload through the real store the same way the subscription bridge
@@ -43,6 +44,14 @@ function renderBell(message: string) {
 }
 
 describe('NotificationBell Component', () => {
+  test('trigger grows to 44px on coarse pointers only', () => {
+    const component = renderBell('Anything');
+    expect(component.getByTestId('notification-bell-trigger')).toHaveClass(
+      'size-6',
+      'pointer-coarse:size-11',
+    );
+  });
+
   test('should render notification trigger', () => {
     const component = renderBell('Anything');
     expect(

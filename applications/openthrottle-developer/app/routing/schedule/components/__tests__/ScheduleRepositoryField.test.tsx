@@ -1,12 +1,14 @@
-import * as React from 'react';
+import type { RenderResult } from '@testing-library/react';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { RenderResult } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
-import { ScheduleRepositoryField } from '../ScheduleRepositoryField';
+
 import type { ScheduleRepositoryFieldProps } from '../ScheduleRepositoryField';
+import { ScheduleRepositoryField } from '../ScheduleRepositoryField';
 
 const SettingsStub = (): React.ReactElement => <p>Repository settings</p>;
 

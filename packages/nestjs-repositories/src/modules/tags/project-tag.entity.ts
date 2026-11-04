@@ -11,8 +11,9 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Project } from '../projects/project.entity';
-import type { TagSource } from './tag-provenance';
+
+import { Project } from '../projects/project.entity.ts';
+import type { TagSource } from './tag-provenance.ts';
 
 export interface ProjectTagData {
   readonly confidence: number | null;

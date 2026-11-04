@@ -1,7 +1,4 @@
-import type {
-  GlobalSidebarContentLinkProps,
-  GlobalSidebarLinkProps,
-} from '@openthrottle/react-router-ui-global';
+import type { GlobalSidebarLinkProps } from '@openthrottle/react-router-ui-global';
 import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
 import {
   BellIcon,
@@ -26,6 +23,7 @@ import {
   LogInIcon,
   MessageCircleCode,
   MonitorCogIcon,
+  NewspaperIcon,
   NotebookTextIcon,
   Search,
   StickyNoteIcon,
@@ -37,8 +35,11 @@ import {
   WrenchIcon,
 } from 'lucide-react';
 
-/* eslint-disable sort-keys, sort-keys-fix/sort-keys-fix */
-export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
+import { PERMISSIONS } from '~/global/config/permissions';
+import type { PermissionGatedNavigationLink } from '~/global/utils/utils.permissions';
+
+/* eslint-disable sort-keys */
+export const dataNavigationV2: Record<string, PermissionGatedNavigationLink[]> =
   {
     Agents: [
       {
@@ -215,6 +216,13 @@ export const dataNavigationV2: Record<string, GlobalSidebarContentLinkProps[]> =
     ],
     Workspace: [
       {
+        beta: true,
+        children: 'Blog',
+        icon: NewspaperIcon,
+        requiredPermission: PERMISSIONS.BLOG_DRAFT,
+        to: '/blog',
+      },
+      {
         children: 'Documentation',
         icon: BookOpenIcon,
         to: '/docs',
@@ -259,4 +267,4 @@ export const dataNavigationGuest: Record<string, GlobalSidebarLinkProps[]> = {
   ],
 };
 
-/* eslint-enable sort-keys, sort-keys-fix/sort-keys-fix */
+/* eslint-enable sort-keys */

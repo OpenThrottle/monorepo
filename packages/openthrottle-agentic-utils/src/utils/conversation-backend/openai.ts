@@ -8,15 +8,15 @@
 
 import { streamChatCompletion } from '../chat-completions/index.ts';
 import { withFileMentionsMessage } from './file-mentions.ts';
-import {
-  CONVERSATION_REASONING_EFFORTS,
-  CONVERSATION_STREAM_CHUNK_KINDS,
-  type ConversationReasoningEffort,
-} from './types.ts';
 import type {
   ConversationBackend,
   ConversationBackendRun,
   ConversationStreamChunk,
+} from './types.ts';
+import {
+  CONVERSATION_REASONING_EFFORTS,
+  CONVERSATION_STREAM_CHUNK_KINDS,
+  type ConversationReasoningEffort,
 } from './types.ts';
 
 /**

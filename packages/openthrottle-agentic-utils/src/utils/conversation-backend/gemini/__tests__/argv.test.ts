@@ -9,9 +9,9 @@ import { describe, expect, it } from 'vitest';
 
 import { CONVERSATION_PERMISSION_MODES } from '../../types.ts';
 import {
+  buildGeminiArgv,
   GEMINI_BIN_ENV,
   GEMINI_DEFAULT_BIN,
-  buildGeminiArgv,
 } from '../argv.ts';
 
 describe('buildGeminiArgv', () => {

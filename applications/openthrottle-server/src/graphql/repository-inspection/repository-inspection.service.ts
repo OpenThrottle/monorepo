@@ -8,27 +8,39 @@
  */
 
 import { execFile } from 'node:child_process';
-import { existsSync, statSync } from 'node:fs';
+import { existsSync, realpathSync, statSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { isAbsolute, join } from 'node:path';
 import { promisify } from 'node:util';
+
 import { Injectable } from '@nestjs/common';
+import { describeTelemetryConfig } from '@openthrottle/agentic-hooks';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   normalizeRemoteUrl,
   RepositoryCheckoutsService,
 } from '@openthrottle/nestjs-repositories';
 import { isRecord } from '@openthrottle/nodejs-utils';
-import { toContainerPath } from '@openthrottle/openthrottle-agentic-utils';
-import { parseLinkedWorktrees } from './parse-linked-worktrees';
+import {
+  toContainerPath,
+  toHostPath,
+} from '@openthrottle/openthrottle-agentic-utils';
+
+import { parseLinkedWorktrees } from './parse-linked-worktrees.ts';
 import type {
   RepositoryInspectionAgentConfig,
   RepositoryInspectionGit,
+  RepositoryInspectionHookTelemetry,
   RepositoryInspectionManifest,
   RepositoryInspectionRemote,
   RepositoryInspectionSnapshot,
   RepositoryInspectionStack,
-} from './repository-inspection.snapshot';
+} from './repository-inspection.snapshot.ts';
+import {
+  HOOK_TELEMETRY_PRODUCER_MARKERS,
+  HOOK_TELEMETRY_REASONS,
+  HOOK_TELEMETRY_STATUSES,
+} from './repository-inspection.snapshot.ts';
 
 const execFileAsync = promisify(execFile);
 
@@ -121,11 +133,32 @@ export class RepositoryInspectionService {
     return {
       agentConfig: this.inspectAgentConfig(root),
       git,
+      hookTelemetry: this.inspectHookTelemetry(root),
       manifest,
       scannedAt: new Date().toISOString(),
       stack: this.inspectStack(root),
       warnings,
     };
+  }
+
+  /**
+   * @description The root of the git work tree containing a host path, as a HOST path, or null
+   * when the path is inside no work tree at all. A path that already is the root comes back
+   * exactly as given — even when git would report it through a symlink-resolved spelling — so a
+   * registration never silently rewrites a path the user typed correctly. Throws for a path that
+   * fails {@link validateInspectionPath}, same as {@link scan}.
+   */
+  async resolveWorkTreeRoot(filesystemPath: string): Promise<string | null> {
+    const root = validateInspectionPath(filesystemPath);
+    const toplevel = (
+      await this.git(root, [], ['rev-parse', '--show-toplevel'])
+    )?.trim();
+
+    if (toplevel === undefined || toplevel === '') return null;
+    if (realpathSync(toplevel) === realpathSync(root)) {
+      return filesystemPath.trim();
+    }
+    return toHostPath(toplevel);
   }
 
   /**
@@ -164,6 +197,87 @@ export class RepositoryInspectionService {
       cursorRules: existsSync(join(root, '.cursor/rules')),
       mcpJson: existsSync(join(root, '.mcp.json')),
       skillsDir: SKILLS_DIRECTORIES.some((dir) => existsSync(join(root, dir))),
+    };
+  }
+
+  /**
+   * @description Whether this checkout can actually produce skill-usage
+   * telemetry. The endpoint half is resolved by `describeTelemetryConfig` from
+   * `@openthrottle/agentic-hooks` — the same code the hooks run — so this
+   * answer cannot drift from their behaviour. The producer half is a local
+   * directory check, which is the tool-specific part the hook core stays
+   * neutral about.
+   *
+   * Status order is deliberate. A checkout with no hook config is reported as
+   * `not_wired` even when an endpoint resolves: the endpoint is irrelevant if
+   * nothing invokes a hook. It is still not "cannot record" — an
+   * OT-orchestrated run passes `--plugin-dir` at spawn time and records
+   * regardless — which is why the reason code is `no_producer` rather than
+   * anything more final.
+   */
+  private inspectHookTelemetry(
+    root: string,
+  ): RepositoryInspectionHookTelemetry {
+    // `includeProcessEnv: false` because this runs in the SERVER process. Its
+    // environment is not the environment of an agent the user starts in that
+    // checkout, and counting it would report an endpoint the agent never sees —
+    // the server was launched from the monorepo with its `.env` loaded, so
+    // every foreign checkout would otherwise claim `process_env`. The two file
+    // layers are genuinely shared: same checkout, same home directory.
+    //
+    // An OT-orchestrated run does inherit this process's environment, so for
+    // that path the omitted layer would apply. The status already separates the
+    // cases — `not_wired` says in so many words that orchestrated runs still
+    // record — so the answer here is the one the reader is asking about: what
+    // happens when they run the agent themselves.
+    const config = describeTelemetryConfig(root, { includeProcessEnv: false });
+    const producers = HOOK_TELEMETRY_PRODUCER_MARKERS.filter(([, marker]) =>
+      existsSync(join(root, marker)),
+    ).map(([producer]) => producer);
+
+    const { reason, status } = ((): {
+      reason: string | null;
+      status: string;
+    } => {
+      if (!producers.length) {
+        return {
+          reason: HOOK_TELEMETRY_REASONS.NO_PRODUCER,
+          status: HOOK_TELEMETRY_STATUSES.NOT_WIRED,
+        };
+      }
+      if (config.offline) {
+        return {
+          reason: HOOK_TELEMETRY_REASONS.OFFLINE_FLAG,
+          status: HOOK_TELEMETRY_STATUSES.OFFLINE,
+        };
+      }
+      if (!config.endpointConfigured) {
+        return {
+          reason: HOOK_TELEMETRY_REASONS.NO_ENDPOINT,
+          status: HOOK_TELEMETRY_STATUSES.BUFFERING,
+        };
+      }
+      // An endpoint without a token is reported as buffering, not recording.
+      // A server that requires auth answers `Unauthorized` and the record falls
+      // back to the buffer; claiming "Recording" there would reproduce exactly
+      // the silent loss this field exists to expose.
+      if (!config.authTokenConfigured) {
+        return {
+          reason: HOOK_TELEMETRY_REASONS.NO_AUTH_TOKEN,
+          status: HOOK_TELEMETRY_STATUSES.BUFFERING,
+        };
+      }
+      return { reason: null, status: HOOK_TELEMETRY_STATUSES.RECORDING };
+    })();
+
+    return {
+      authTokenConfigured: config.authTokenConfigured,
+      endpointConfigured: config.endpointConfigured,
+      endpointSource: config.endpointSource,
+      producers,
+      reason,
+      status,
+      telemetryDir: config.telemetryDir,
     };
   }
 

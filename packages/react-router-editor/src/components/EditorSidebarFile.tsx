@@ -1,5 +1,6 @@
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import clsx from 'clsx';
+
 import { useEditor } from '../hooks/useEditor';
 import { isHiddenFile } from '../utils';
 
@@ -39,7 +40,7 @@ export const EditorSidebarFile = (
 
   return (
     <div
-      className={clsx(
+      className={cn(
         'cursor-pointer rounded-sm px-2 py-1 transition-colors',
         'hover:bg-white/10',
         {

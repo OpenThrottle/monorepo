@@ -1,12 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { PopoverDescription } from '../PopoverDescription';
-import type { PopoverDescriptionProps } from '../PopoverDescription';
+
 import { Popover } from '../Popover';
 import { PopoverContent } from '../PopoverContent';
+import type { PopoverDescriptionProps } from '../PopoverDescription';
+import { PopoverDescription } from '../PopoverDescription';
 
 describe('PopoverDescription Component', () => {
   let component: RenderResult;

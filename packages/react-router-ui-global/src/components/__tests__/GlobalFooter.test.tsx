@@ -1,8 +1,9 @@
-import * as React from 'react';
+import type { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
 import { render, screen } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import type { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
+
 import type { GlobalFooterProps } from '../GlobalFooter';
 import { GlobalFooter } from '../GlobalFooter';
 

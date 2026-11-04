@@ -1,7 +1,8 @@
-import * as React from 'react';
 import { cleanup, render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, describe, expect, test } from 'vitest';
+
 import { GLOBAL_POPOVER_COPY } from '../../data/data.copy';
 import { GlobalPopoverActionsHeader } from '../GlobalPopoverActionsHeader';
 

@@ -1,12 +1,14 @@
-import * as React from 'react';
-import { render, waitFor } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub, redirect } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import { WORKSPACE_REPOSITORY_DETAIL_COPY } from '~/routing/settings/data/data.copy';
-import { RepositoryEditForm } from '../RepositoryEditForm';
+
 import type { RepositoryEditFormProps } from '../RepositoryEditForm';
+import { RepositoryEditForm } from '../RepositoryEditForm';
 
 const repository = {
   checkouts: [],

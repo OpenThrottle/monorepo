@@ -13,16 +13,19 @@ import type {
   RuleApplication,
   RuleApplicationsService,
   TagActionRule,
-  Task,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
-import type { MatchedTagAction } from '@openthrottle/openthrottle-skills';
+import { Task } from '@openthrottle/nestjs-repositories';
 import { asMock } from '@openthrottle/nestjs-testing';
+import type { MatchedTagAction } from '@openthrottle/openthrottle-skills';
 import { QueryFailedError } from 'typeorm';
-import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
-import type { PlanContextAvailabilityService } from '../../services/plan-context-availability/plan-context-availability.service';
-import { ActionExecutorRegistry } from './action-executor';
-import { InjectTaskExecutor } from './inject-task.executor';
+import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
+
+import type { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account.service.ts';
+import type { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture.service.ts';
+import type { PlanContextAvailabilityService } from '../../services/plan-context-availability/plan-context-availability.service.ts';
+import { ActionExecutorRegistry } from './action-executor.ts';
+import { InjectTaskExecutor } from './inject-task.executor.ts';
 
 const planId = '00000000-0000-4000-8000-000000000001';
 const ruleId = '00000000-0000-4000-8000-000000000002';
@@ -72,6 +75,12 @@ describe('InjectTaskExecutor', () => {
   let configGet: ReturnType<typeof vi.fn>;
   let siblingGetRawMany: ReturnType<typeof vi.fn>;
   let managerUpdate: ReturnType<typeof vi.fn>;
+  let resolveStatusChangeSystemAccountId: Mock<
+    StatusChangeSystemAccountService['resolveId']
+  >;
+  let mockRecordStatusChange: Mock<
+    WorkLedgerCaptureService['recordStatusChange']
+  >;
   let allocateSortOrderBesideAnchor: Mock<
     TasksService['allocateSortOrderBesideAnchor']
   >;
@@ -176,13 +185,28 @@ describe('InjectTaskExecutor', () => {
       ),
     });
 
+    resolveStatusChangeSystemAccountId = vi
+      .fn()
+      .mockResolvedValue('status-change-system-account-id');
+    const statusChangeSystemAccount =
+      createMock<StatusChangeSystemAccountService>({
+        resolveId: resolveStatusChangeSystemAccountId,
+      });
+
+    mockRecordStatusChange = vi.fn().mockResolvedValue(undefined);
+    const workLedgerCapture = createMock<WorkLedgerCaptureService>({
+      recordStatusChange: mockRecordStatusChange,
+    });
+
     executor = new InjectTaskExecutor(
       configService,
       new ActionExecutorRegistry(createMock<LoggerService>()),
       createMock<LoggerService>(),
       planContextAvailabilityService,
       ruleApplicationsService,
+      statusChangeSystemAccount,
       tasksService,
+      workLedgerCapture,
     );
   });
 
@@ -546,22 +570,25 @@ describe('InjectTaskExecutor', () => {
       expect(taskUpdate).not.toHaveBeenCalled();
     });
 
-    it('is a no-op for a task in a terminal status', async () => {
-      taskFindOne.mockResolvedValue(
-        asMock<Task>({
-          id: taskId,
-          planId,
-          sortOrder: 1000,
-          status: 'COMPLETED',
-        }),
-      );
+    it.each(['CANCELED', 'COMPLETED', 'PROMOTED', 'SKIPPED'])(
+      'is a no-op for a task in the terminal status %s',
+      async (status) => {
+        taskFindOne.mockResolvedValue(
+          asMock<Task>({
+            id: taskId,
+            planId,
+            sortOrder: 1000,
+            status,
+          }),
+        );
 
-      await executor.reconcile(
-        buildReconcile({ placement: 'last', skillSlug: 'grilling' }),
-      );
+        await executor.reconcile(
+          buildReconcile({ placement: 'last', skillSlug: 'grilling' }),
+        );
 
-      expect(taskUpdate).not.toHaveBeenCalled();
-    });
+        expect(taskUpdate).not.toHaveBeenCalled();
+      },
+    );
 
     it("orders two 'last' siblings deterministically at base+GAP, base+2·GAP", async () => {
       const siblingA = '00000000-0000-4000-8000-0000000000aa';
@@ -778,7 +805,7 @@ describe('InjectTaskExecutor', () => {
       );
     });
 
-    it('revives (reopens) the soft-closed task for an orphaned row that matches again', async () => {
+    it('revives (reopens) the soft-closed task for an orphaned row that matches again, capturing a status_change', async () => {
       taskFindOne.mockResolvedValue(
         asMock<Task>({ id: 'old-task', planId, status: 'SKIPPED' }),
       );
@@ -787,11 +814,27 @@ describe('InjectTaskExecutor', () => {
         buildReinject({ state: 'orphaned', taskId: 'old-task' }),
       );
 
-      expect(taskUpdate).toHaveBeenCalledWith(
+      // The revive runs the update + capture inside its own manager.transaction (background
+      // writer, no request principal — see reviveSoftClosedTask's doc comment), so the row write
+      // lands via managerUpdate rather than the bare taskRepo.update used by the reconcile paths.
+      expect(managerUpdate).toHaveBeenCalledWith(
+        Task,
         { id: 'old-task' },
         { status: 'PENDING' },
       );
       expect(taskSave).not.toHaveBeenCalled();
+      expect(mockRecordStatusChange).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          actorKind: 'service_account',
+          actorSub: 'status-change-system-account-id',
+          entity: 'task',
+          from: 'SKIPPED',
+          planId,
+          taskId: 'old-task',
+          to: 'PENDING',
+        }),
+      );
       expect(ruleApplicationsService.upsertApplication).toHaveBeenCalledWith(
         expect.objectContaining({ state: 'applied', taskId: 'old-task' }),
       );

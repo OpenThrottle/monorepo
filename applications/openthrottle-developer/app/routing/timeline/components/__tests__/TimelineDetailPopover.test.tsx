@@ -1,8 +1,9 @@
-import * as React from 'react';
-import { render, screen } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
+
 import { TimelineMarkerKind } from '~/__generated__/graphql';
 import {
   TIMELINE_DETAIL_COPY,
@@ -12,9 +13,10 @@ import {
   TIMELINE_FIXTURE_MARKERS,
   TIMELINE_FIXTURE_SPANS,
 } from '~/routing/timeline/data/data.fixtures';
-import { TimelineDetailPopover } from '../TimelineDetailPopover';
-import type { TimelineDetailPopoverProps } from '../TimelineDetailPopover';
 import type { TimelineSpan } from '~/routing/timeline/types';
+
+import type { TimelineDetailPopoverProps } from '../TimelineDetailPopover';
+import { TimelineDetailPopover } from '../TimelineDetailPopover';
 
 const spanById = (id: string): TimelineSpan => {
   const span = TIMELINE_FIXTURE_SPANS.find((entry) => entry.id === id);

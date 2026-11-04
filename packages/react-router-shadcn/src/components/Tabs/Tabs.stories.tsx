@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+
 import { Tabs } from './Tabs';
 import { TabsContent } from './TabsContent';
 import { TabsList, type TabsListProps } from './TabsList';

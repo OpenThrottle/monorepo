@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Badge,
   Collapsible,
@@ -6,9 +5,11 @@ import {
   CollapsibleTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { ChevronDownIcon, ChevronRightIcon } from 'lucide-react';
+import * as React from 'react';
+
+import type { LinkedArtifactRow } from '~/routing/plans/components/LinkedArtifactsPanel';
 import { LINKED_ARTIFACTS_PANEL_COPY } from '~/routing/plans/data/data.copy';
 import { LINKED_ARTIFACT_COLLAPSED_PREVIEW_COUNT } from '~/routing/plans/data/linked-artifacts-panel-groups';
-import type { LinkedArtifactRow } from '~/routing/plans/components/LinkedArtifactsPanel';
 
 export interface LinkedArtifactGroupProps {
   /** Render closed on first paint (high-volume event types, e.g. status_change). */

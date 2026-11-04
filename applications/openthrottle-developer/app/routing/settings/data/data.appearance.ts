@@ -1,6 +1,7 @@
-import type * as React from 'react';
 import type { ThemeTokenName } from '@openthrottle/react-router-shadcn';
-import { GaugeIcon, MonitorIcon, type LucideIcon } from 'lucide-react';
+import { GaugeIcon, type LucideIcon, MonitorIcon } from 'lucide-react';
+import type * as React from 'react';
+
 import {
   REDUCED_MOTION_MODES,
   type ReducedMotionMode,

@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   ChatComposer,
   ChatComposerToolbar,
@@ -8,7 +7,9 @@ import {
 import { CHAT_TOOLBAR_CONTEXT_SOURCES } from '@openthrottle/react-router-chat-state';
 import { InlineErrors } from '@openthrottle/react-router-shadcn';
 import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
+import * as React from 'react';
 import { useNavigate } from 'react-router';
+
 import type { RepositoryOption } from '~/routing/home/data/models.server';
 import type { UseAgenticChatTurnResult } from '~/routing/home/hooks/useAgenticChatTurn';
 import type { UseConversationListResult } from '~/routing/home/hooks/useConversationList';

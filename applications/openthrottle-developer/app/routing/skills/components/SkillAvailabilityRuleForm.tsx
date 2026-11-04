@@ -1,13 +1,14 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   Button,
+  cn,
   Input,
   Label,
   MultiSelect,
   ToggleGroup,
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import { SkillAvailabilityRuleRemoveButton } from '~/routing/skills/components/SkillAvailabilityRuleRemoveButton';
 import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
 import { useSkillAvailabilityRuleForm } from '~/routing/skills/hooks/useSkillAvailabilityRuleForm';
@@ -77,7 +78,7 @@ export const SkillAvailabilityRuleForm = (
 
   return (
     <div
-      className={clsx('flex flex-col gap-3 rounded-lg border p-4', className)}
+      className={cn('flex flex-col gap-3 rounded-lg border p-4', className)}
       data-testid="SkillAvailabilityRuleForm"
     >
       <fetcher.Form

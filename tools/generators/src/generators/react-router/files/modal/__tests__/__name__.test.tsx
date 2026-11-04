@@ -6,14 +6,16 @@ import { <%= name %> } from '../<%= name %>';
 import type { <%= name %>Props } from '../<%= name %>';
 
 describe('<%= name %> Component', () => {
+  const props: <%= name %>Props = {};
+
+  // Declared once for the whole file: `react/no-multi-comp` rejects a second
+  // component declaration, and both cases render the same one.
+  const Component = () => <<%= name %> {...props} />;
+
   describe('modal is open', () => {
     let component: RenderResult;
-    let props: <%= name %>Props;
 
     beforeEach(() => {
-      props = {};
-
-      const Component = () => <<%= name %> {...props} />;
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
       component = render(
@@ -28,12 +30,8 @@ describe('<%= name %> Component', () => {
 
   describe('modal is closed', () => {
     let component: RenderResult;
-    let props: <%= name %>Props;
 
     beforeEach(() => {
-      props = {};
-
-      const Component = () => <<%= name %> {...props} />;
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
       component = render(<RoutesStub />);

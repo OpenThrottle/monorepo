@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import * as route from '../settings.appearance';
 
 describe('routes/settings.appearance.tsx', () => {

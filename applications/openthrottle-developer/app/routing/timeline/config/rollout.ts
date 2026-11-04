@@ -7,5 +7,4 @@
 import type { DeveloperRolloutFlags } from '~/global/data/data.rollout-flags';
 
 /** Key in {@link DeveloperRolloutFlags}; defaults to `false` until turned on per user. */
-export const TIMELINE_ROLLOUT_FLAG_KEY: keyof DeveloperRolloutFlags =
-  'timeline';
+export const TIMELINE_ROLLOUT_FLAG_KEY: keyof DeveloperRolloutFlags = `timeline`;

@@ -1,10 +1,11 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { TableHead } from '../TableHead';
+
 import type { TableHeadProps } from '../TableHead';
+import { TableHead } from '../TableHead';
 
 describe('TableHead Component', () => {
   let component: RenderResult;

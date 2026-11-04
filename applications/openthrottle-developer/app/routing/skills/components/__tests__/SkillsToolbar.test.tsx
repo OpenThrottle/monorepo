@@ -1,12 +1,14 @@
-import * as React from 'react';
+import { GLOBAL_TOOLBAR_SEARCH_COPY } from '@openthrottle/react-router-ui-global';
 import { cleanup, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { GLOBAL_TOOLBAR_SEARCH_COPY } from '@openthrottle/react-router-ui-global';
+import * as React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import {
   SKILL_CREATE_COPY,
   SKILLS_SEARCH_COPY,
 } from '~/routing/skills/data/data.copy';
+
 import { renderRoutesStub } from '../../../../testing/route-fixtures';
 import { SkillsToolbar } from '../SkillsToolbar';
 

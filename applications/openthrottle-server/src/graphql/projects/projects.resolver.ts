@@ -2,11 +2,6 @@
  * @description Resolver for Project queries and mutations. Injects ProjectsService and ProjectsLoaders from @openthrottle/nestjs-repositories. ResolveField for plans and tasks use ProjectsLoaders to avoid N+1.
  */
 
-import type { Plan, Project, Task } from '@openthrottle/nestjs-repositories';
-import {
-  ProjectsLoaders,
-  ProjectsService,
-} from '@openthrottle/nestjs-repositories';
 import {
   Args,
   ID,
@@ -16,14 +11,20 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { PlanObject } from '../plans/plan.object';
-import { TaskObject } from '../tasks/task.object';
+import type { Plan, Project, Task } from '@openthrottle/nestjs-repositories';
+import {
+  ProjectsLoaders,
+  ProjectsService,
+} from '@openthrottle/nestjs-repositories';
+
+import { PlanObject } from '../plans/plan.object.ts';
+import { TaskObject } from '../tasks/task.object.ts';
 import {
   CreateProjectInput,
   DeleteProjectInput,
   UpdateProjectInput,
-} from './project.input';
-import { ProjectObject } from './project.object';
+} from './project.input.ts';
+import { ProjectObject } from './project.object.ts';
 
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a)
 @Resolver(() => ProjectObject)

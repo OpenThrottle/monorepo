@@ -11,20 +11,21 @@ import {
   type Plan,
   type RuleApplicationsService,
   type TagActionRule,
-  type Task,
   type TagsService,
+  type Task,
   type TasksService,
 } from '@openthrottle/nestjs-repositories';
 import { asMock } from '@openthrottle/nestjs-testing';
 import type { MatchedTagAction } from '@openthrottle/openthrottle-skills';
 import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import type { TaskPromotionService } from '../task-promotion/task-promotion.service.ts';
 import {
-  ActionExecutorRegistry,
   type ActionExecutorContext,
-} from './action-executor';
-import { PromoteTaskToPlanExecutor } from './promote-task-to-plan.executor';
-import type { TaskPromotionService } from '../task-promotion/task-promotion.service';
+  ActionExecutorRegistry,
+} from './action-executor.ts';
+import { PromoteTaskToPlanExecutor } from './promote-task-to-plan.executor.ts';
 
 const PLAN_ID = '00000000-0000-4000-8000-0000000000a1';
 const OWNER_ID = '00000000-0000-4000-8000-0000000000b2';
@@ -125,6 +126,7 @@ describe('PromoteTaskToPlanExecutor', () => {
     expect(taskPromotionService.promote).toHaveBeenCalledWith({
       actorServiceAccountId: null,
       actorUserId: OWNER_ID,
+      captureFailureIsFatal: false,
       taskId: 'task-1',
     });
     expect(ruleApplicationsService.record).toHaveBeenCalledWith(
@@ -151,7 +153,7 @@ describe('PromoteTaskToPlanExecutor', () => {
     );
   });
 
-  it('skips a task already promoted (SKIPPED + promoted tag)', async () => {
+  it('skips a legacy promoted task (SKIPPED + promoted tag)', async () => {
     taskFindOne.mockResolvedValue(
       asMock<Task>({ id: 'task-1', status: 'SKIPPED' }),
     );
@@ -160,6 +162,20 @@ describe('PromoteTaskToPlanExecutor', () => {
     await executor.execute(buildContext());
 
     // No eligible candidate remains → flagged, promotion not invoked.
+    expect(taskPromotionService.promote).not.toHaveBeenCalled();
+    expect(ruleApplicationsService.record).toHaveBeenCalledWith(
+      expect.objectContaining({ state: 'flagged' }),
+    );
+  });
+
+  it('skips a status-PROMOTED task that has no promoted tag', async () => {
+    taskFindOne.mockResolvedValue(
+      asMock<Task>({ id: 'task-1', status: 'PROMOTED' }),
+    );
+    tagFindOne.mockResolvedValue(null);
+
+    await executor.execute(buildContext());
+
     expect(taskPromotionService.promote).not.toHaveBeenCalled();
     expect(ruleApplicationsService.record).toHaveBeenCalledWith(
       expect.objectContaining({ state: 'flagged' }),

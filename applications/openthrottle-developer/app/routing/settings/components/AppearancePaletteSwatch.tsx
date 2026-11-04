@@ -1,7 +1,8 @@
-import * as React from 'react';
 import type { Theme } from '@openthrottle/react-router-shadcn';
+import { cn } from '@openthrottle/react-router-shadcn';
 import type { ResolvedThemeMode } from '@openthrottle/react-router-utils';
-import clsx from 'clsx';
+import * as React from 'react';
+
 import { APPEARANCE_SWATCH_TOKEN_NAMES } from '~/routing/settings/data/data.appearance';
 
 export interface AppearancePaletteSwatchProps {
@@ -47,7 +48,7 @@ export const AppearancePaletteSwatch = (
   return (
     <button
       aria-pressed={isSelected}
-      className={clsx(
+      className={cn(
         'flex flex-col gap-2 rounded-lg border p-3 text-left transition-colors',
         'hover:bg-muted/50 focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none',
         isSelected && 'ring-ring border-ring ring-2',

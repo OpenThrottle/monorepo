@@ -1,16 +1,17 @@
-import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { SITE_TITLE } from '~/global/config/settings';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+
+import type { Route } from '@/app/routes/+types/settings.mcp._index';
 import { GetSettingsMcpDocument } from '~/__generated__/graphql';
+import { SITE_TITLE } from '~/global/config/settings';
 import { SettingsMcpCatalog } from '~/routing/settings/components/SettingsMcpCatalog';
 import { SettingsMcpIntroduction } from '~/routing/settings/components/SettingsMcpIntroduction';
-import type { Route } from '@/app/routes/+types/settings.mcp._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

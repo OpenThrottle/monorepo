@@ -4,7 +4,8 @@
 
 import { Injectable } from '@nestjs/common';
 import Stripe from 'stripe';
-import { createLazyStripeClient } from '../config/stripe-config';
+
+import { createLazyStripeClient } from '../config/stripe-config.ts';
 
 /**
  * @description Active prices for a product split into the catalog default (when present in the list) and any other active prices.

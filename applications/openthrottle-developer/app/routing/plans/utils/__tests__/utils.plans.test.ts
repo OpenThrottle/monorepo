@@ -1,9 +1,12 @@
 import { describe, expect, test } from 'vitest';
+
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
+
 import {
   getPlanIsCancelable,
   getPlanIsRunning,
   getPlanIsTerminal,
+  getPlanStatusBadgeColor,
   getResolvedTaskCount,
 } from '../utils.plans';
 
@@ -31,6 +34,7 @@ describe('utils.plans', () => {
       ['IN_PROGRESS', true],
       ['PENDING', false],
       ['COMPLETED', false],
+      ['PROMOTED', false],
       ['SKIPPED', false],
       ['BLOCKED', false],
       ['', false],
@@ -47,6 +51,7 @@ describe('utils.plans', () => {
   describe('getResolvedTaskCount', () => {
     test.each([
       ['COMPLETED', 1],
+      ['PROMOTED', 1],
       ['SKIPPED', 1],
       ['PENDING', 0],
       ['IN_PROGRESS', 0],
@@ -58,9 +63,10 @@ describe('utils.plans', () => {
       expect(getResolvedTaskCount([taskWithStatus(status)])).toBe(expected);
     });
 
-    test('counts COMPLETED and SKIPPED together, ignoring open work', () => {
+    test('counts COMPLETED, PROMOTED and SKIPPED together, ignoring open work', () => {
       const tasks = [
         taskWithStatus('COMPLETED'),
+        taskWithStatus('PROMOTED'),
         taskWithStatus('SKIPPED'),
         taskWithStatus('PENDING'),
         taskWithStatus('IN_PROGRESS'),
@@ -68,9 +74,9 @@ describe('utils.plans', () => {
         taskWithStatus('CANCELED'),
       ];
 
-      // Matches plan b1524f1d: 6 tasks, 2 resolved (1 completed-equivalent +
-      // 1 skipped) -> the Tasks tab reads 2/6.
-      expect(getResolvedTaskCount(tasks)).toBe(2);
+      // 7 tasks, 3 resolved (1 completed + 1 promoted + 1 skipped) -> the Tasks
+      // tab reads 3/7.
+      expect(getResolvedTaskCount(tasks)).toBe(3);
     });
 
     test('an empty task list resolves to zero', () => {
@@ -84,6 +90,7 @@ describe('utils.plans', () => {
       ['IN_PROGRESS', true],
       ['PENDING', false],
       ['COMPLETED', false],
+      ['PROMOTED', false],
       ['SKIPPED', false],
       ['BLOCKED', false],
       ['BACKLOG', false],
@@ -104,6 +111,7 @@ describe('utils.plans', () => {
         'IN_PROGRESS',
         'PENDING',
         'COMPLETED',
+        'PROMOTED',
         'SKIPPED',
         'BLOCKED',
         'BACKLOG',
@@ -121,6 +129,7 @@ describe('utils.plans', () => {
     test.each([
       ['COMPLETED', true],
       ['CANCELED', true],
+      ['PROMOTED', true],
       ['SKIPPED', true],
       ['PENDING', false],
       ['QUEUED', false],
@@ -143,6 +152,7 @@ describe('utils.plans', () => {
         'IN_PROGRESS',
         'PENDING',
         'COMPLETED',
+        'PROMOTED',
         'SKIPPED',
         'BLOCKED',
         'BACKLOG',
@@ -155,6 +165,22 @@ describe('utils.plans', () => {
           false,
         );
       }
+    });
+  });
+
+  describe('getPlanStatusBadgeColor', () => {
+    test('gives PROMOTED its own "moved on" color, distinct from SKIPPED and COMPLETED', () => {
+      expect(getPlanStatusBadgeColor('PROMOTED')).toBe('blue');
+      expect(getPlanStatusBadgeColor('PROMOTED')).not.toBe(
+        getPlanStatusBadgeColor('SKIPPED'),
+      );
+      expect(getPlanStatusBadgeColor('PROMOTED')).not.toBe(
+        getPlanStatusBadgeColor('COMPLETED'),
+      );
+    });
+
+    test('keeps SKIPPED on slate', () => {
+      expect(getPlanStatusBadgeColor('SKIPPED')).toBe('slate');
     });
   });
 });

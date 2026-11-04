@@ -4,14 +4,15 @@
  * (module-scope helpers live in the sibling utils/ folder) so the tab
  * component stays UI-focused.
  */
-import * as React from 'react';
 import { GlobalPopoverActionsHeader } from '@openthrottle/react-router-ui-global';
-import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
+import type { ColumnDef } from '@tanstack/react-table';
+import * as React from 'react';
+
+import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
 import { PlanTasksTableCellActions } from '~/routing/plans/components/PlanTasksTableCellActions';
 import { PlanTasksTableCellTitle } from '~/routing/plans/components/PlanTasksTableCellTitle';
-import type { ColumnDef } from '@tanstack/react-table';
-import type { PlanTaskRowFragment } from '~/__generated__/graphql';
+import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
 
 export const buildPlanTabTasksColumns = (
   managedTaskIds: ReadonlySet<string>,
@@ -22,7 +23,7 @@ export const buildPlanTabTasksColumns = (
       cell: ({ row }) => {
         const status = row.original.status;
         return (
-          <div className="p-2">
+          <div className="p-2 max-sm:p-0">
             {isPlanStatusKey(status) ? (
               <PlanStatusBadge status={status} />
             ) : (
@@ -36,7 +37,7 @@ export const buildPlanTabTasksColumns = (
     {
       accessorKey: 'details',
       cell: ({ row }) => (
-        <div className="p-2">
+        <div className="p-2 max-sm:contents">
           <PlanTasksTableCellTitle
             isManaged={managedTaskIds.has(row.original.id)}
             row={row}

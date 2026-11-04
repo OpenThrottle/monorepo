@@ -1,13 +1,14 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { ChatActivityGroup } from '../ChatActivityGroup';
-import type { ChatActivityGroupProps } from '../ChatActivityGroup';
-import { buildTurnTimeline, foldTurnActivity } from '../../turn-tool-groups';
+
 import type { TurnTimelineActivityGroup } from '../../turn-tool-groups';
+import { buildTurnTimeline, foldTurnActivity } from '../../turn-tool-groups';
 import type { ChatTurnEvent, ChatTurnToolEvent } from '../../types';
+import type { ChatActivityGroupProps } from '../ChatActivityGroup';
+import { ChatActivityGroup } from '../ChatActivityGroup';
 
 const tool = (
   overrides: Partial<ChatTurnToolEvent> = {},

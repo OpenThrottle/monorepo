@@ -7,13 +7,14 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { PlansService } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import {
   TimelineLaneGrouping,
   TimelineMarkerKind,
   TimelineSpanKind,
-} from './timeline.enum';
-import { TimelineResolver } from './timeline.resolver';
-import type { WorkstreamTimelineInput } from './timeline.input';
+} from './timeline.enum.ts';
+import type { WorkstreamTimelineInput } from './timeline.input.ts';
+import { TimelineResolver } from './timeline.resolver.ts';
 
 type QueryFn = (sql: string, params?: unknown[]) => Promise<unknown[]>;
 

@@ -1,7 +1,8 @@
 import * as React from 'react';
+
 import { SettingsAgentsModelFavorite } from '~/routing/settings/components/SettingsAgentsModelFavorite';
 import { SettingsAgentsModelToggle } from '~/routing/settings/components/SettingsAgentsModelToggle';
-import type { AgentCliModelStatus } from '~/routing/settings/data/agent-clis.data';
+import type { AgentCliModelStatus } from '~/routing/settings/data/data.agent-clis';
 
 export interface SettingsAgentsModelRowProps {
   /** True when the parent agent is disabled (agent-OFF hard-overrides its models). */

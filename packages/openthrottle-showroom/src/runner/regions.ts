@@ -13,8 +13,8 @@
  * Everything downstream then works in one space.
  */
 
-import type { Viewport } from './format';
-import type { RegionSample } from './types';
+import type { Viewport } from './format.ts';
+import type { RegionSample } from './types.ts';
 
 export interface BoundingBox {
   readonly height: number;

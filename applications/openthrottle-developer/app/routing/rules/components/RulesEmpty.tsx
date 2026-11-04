@@ -1,14 +1,15 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   Button,
+  cn,
   Empty,
   EmptyDescription,
   EmptyMedia,
   EmptyTitle,
 } from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
 import { SearchAlertIcon } from 'lucide-react';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import { RULES_COPY } from '~/routing/rules/data/data.copy';
 
 export interface RulesEmptyProps {
@@ -38,7 +39,7 @@ export const RulesEmpty = (props: RulesEmptyProps): React.ReactElement => {
   // 🔌 Short Circuit
 
   return (
-    <Empty className={clsx('my-8', className)} data-testid="RulesEmpty">
+    <Empty className={cn('my-8', className)} data-testid="RulesEmpty">
       <EmptyMedia variant="icon">
         <SearchAlertIcon className="size-6" />
       </EmptyMedia>

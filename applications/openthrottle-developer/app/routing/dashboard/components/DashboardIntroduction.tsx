@@ -1,7 +1,7 @@
-import * as React from 'react';
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { GaugeIcon } from 'lucide-react';
+import * as React from 'react';
 
 export interface DashboardIntroductionProps {
   className?: string;
@@ -25,7 +25,7 @@ export const DashboardIntroduction = (
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx('', className)} data-testid="DashboardIntroduction">
+    <div className={cn('', className)} data-testid="DashboardIntroduction">
       <GlobalHeading
         className="mb-4"
         heading="h1"

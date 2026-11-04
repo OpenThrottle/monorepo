@@ -1,12 +1,13 @@
-import * as React from 'react';
-import { render, screen } from '@testing-library/react';
-import { describe, expect, test } from 'vitest';
 import {
   NOTIFICATION_EVENT_NAMES,
   type NotificationPayload,
 } from '@openthrottle/openthrottle-notifications';
-import { WebsocketDebuggerLogRow } from '../WebsocketDebuggerLogRow';
+import { render, screen } from '@testing-library/react';
+import * as React from 'react';
+import { describe, expect, test } from 'vitest';
+
 import type { WebsocketDebuggerLogEntry } from '../websocket-debugger';
+import { WebsocketDebuggerLogRow } from '../WebsocketDebuggerLogRow';
 
 const planUpdatedPayload = {
   message: 'Plan updated',

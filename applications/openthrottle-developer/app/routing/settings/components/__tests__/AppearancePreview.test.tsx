@@ -1,10 +1,12 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { AppearancePreview } from '../AppearancePreview';
-import type { AppearancePreviewProps } from '../AppearancePreview';
+
 import { APPEARANCE_PREVIEW_CHART_CLASSES } from '~/routing/settings/data/data.appearance';
+
+import type { AppearancePreviewProps } from '../AppearancePreview';
+import { AppearancePreview } from '../AppearancePreview';
 
 describe('AppearancePreview Component', () => {
   let component: RenderResult;

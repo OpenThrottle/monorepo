@@ -26,6 +26,12 @@ export class ListPlanOutputStreamChunksInput {
     nullable: true,
   })
   offset?: number | null;
+
+  @Field(() => ID, {
+    description: `Return only chunks attributed to this task id. Omit for the whole plan stream (both tagged and untagged chunks).`,
+    nullable: true,
+  })
+  taskId?: string | null;
 }
 
 @InputType()

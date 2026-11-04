@@ -1,6 +1,7 @@
-import * as React from 'react';
-import { ArrowDown, ArrowUp, Trash2 } from 'lucide-react';
 import { Button } from '@openthrottle/react-router-shadcn';
+import { ArrowDown, ArrowUp, Trash2 } from 'lucide-react';
+import * as React from 'react';
+
 import { PlanWorkflowConfigHookRowPrompt } from '~/routing/plans/components/PlanWorkflowConfigHookRowPrompt';
 import { PlanWorkflowConfigHookRowSelects } from '~/routing/plans/components/PlanWorkflowConfigHookRowSelects';
 import { usePlanWorkflowConfigHookRow } from '~/routing/plans/hooks/usePlanWorkflowConfigHookRow';

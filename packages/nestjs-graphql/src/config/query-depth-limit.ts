@@ -9,11 +9,11 @@
  */
 
 import {
-  GraphQLError,
-  Kind,
   type ASTNode,
   type DefinitionNode,
   type FragmentDefinitionNode,
+  GraphQLError,
+  Kind,
   type OperationDefinitionNode,
   type ValidationContext,
   type ValidationRule,

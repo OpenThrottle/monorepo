@@ -2,6 +2,7 @@
  * @description TypeORM entity for tag_action_rules. Matches databases/migrations/065.
  */
 
+import type { TagActionType } from '@openthrottle/openthrottle-skills';
 import {
   Column,
   CreateDateColumn,
@@ -11,9 +12,9 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import type { TagActionType } from '@openthrottle/openthrottle-skills';
-import { Project } from '../projects/project.entity';
-import { User } from '../users/user.entity';
+
+import { Project } from '../projects/project.entity.ts';
+import { User } from '../users/user.entity.ts';
 
 export interface TagActionRuleData {
   readonly actionPayload: unknown;

@@ -6,9 +6,10 @@
  * docs/openthrottle/codex-stream-json-schema.md §1.
  */
 
+import { codexReasoningEffort } from '@openthrottle/openthrottle-drivers';
+
 import {
   CONVERSATION_PERMISSION_MODES,
-  CONVERSATION_REASONING_EFFORTS,
   type ConversationPermissionMode,
   type ConversationReasoningEffort,
 } from '../types.ts';
@@ -79,29 +80,6 @@ function sandboxFlags(
 }
 
 /**
- * Map the composer reasoning level onto codex's `model_reasoning_effort` value
- * (`low`/`medium`/`high`), or `undefined` to omit the override. codex/OpenAI
- * cap reasoning at `high`, so `extraHigh`/`max`/`ultra` all clamp to `high`.
- */
-function reasoningEffort(
-  reasoning: ConversationReasoningEffort | undefined,
-): string | undefined {
-  switch (reasoning) {
-    case CONVERSATION_REASONING_EFFORTS.low:
-      return 'low';
-    case CONVERSATION_REASONING_EFFORTS.medium:
-      return 'medium';
-    case CONVERSATION_REASONING_EFFORTS.high:
-    case CONVERSATION_REASONING_EFFORTS.extraHigh:
-    case CONVERSATION_REASONING_EFFORTS.max:
-    case CONVERSATION_REASONING_EFFORTS.ultra:
-      return 'high';
-    default:
-      return undefined;
-  }
-}
-
-/**
  * Assemble the argv for a streamed, headless codex turn. `--json` emits the
  * JSONL thread-event stream; `--skip-git-repo-check` lets codex run in a
  * workspace that is not a git repo. The prompt is always the final element,
@@ -118,7 +96,7 @@ export function buildCodexArgv(options: CodexArgvOptions): string[] {
 
   // `-c model_reasoning_effort=<value>` overrides the config-file default for
   // this run only (one `-c` arg is `key=value`; see `codex exec --help`).
-  const effort = reasoningEffort(options.reasoning);
+  const effort = codexReasoningEffort(options.reasoning);
   if (effort !== undefined) {
     common.push('-c', `model_reasoning_effort=${effort}`);
   }

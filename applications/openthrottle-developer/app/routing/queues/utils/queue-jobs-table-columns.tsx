@@ -4,10 +4,11 @@
  * component-primitive-shape R4 so the component stays UI-focused.
  */
 
-import * as React from 'react';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import type { ColumnDef } from '@tanstack/react-table';
+import * as React from 'react';
 import { Link } from 'react-router';
+
 import type { QueueJobDetailsFragment } from '~/__generated__/graphql';
 import { QueueStateBadge } from '~/routing/queues/components/QueueStateBadge';
 import { parseQueueJobDataString } from '~/routing/queues/utils/parse-queue-job-data';

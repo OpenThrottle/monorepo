@@ -11,9 +11,9 @@ import type {
 } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { AGENT_CLI_INSTALL_ENABLED_ENV } from './agent-setup.config';
-import { AgentSetupResolver } from './agent-setup.resolver';
-import type { AgentSetupService } from './agent-setup.service';
+import { AGENT_CLI_INSTALL_ENABLED_ENV } from './agent-setup.config.ts';
+import { AgentSetupResolver } from './agent-setup.resolver.ts';
+import type { AgentSetupService } from './agent-setup.service.ts';
 
 const human: AuthPrincipal = { kind: AUTH_PRINCIPAL_KIND_USER, sub: 'user-1' };
 

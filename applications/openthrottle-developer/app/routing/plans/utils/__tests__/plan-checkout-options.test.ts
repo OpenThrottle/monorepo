@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'vitest';
+
 import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
+
 import { toPlanCheckoutOptions } from '../plan-checkout-options';
 
 type Checkout = PlanRunConfigRepositoryFieldsFragment['checkouts'][number];

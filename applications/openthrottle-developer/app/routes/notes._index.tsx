@@ -1,22 +1,23 @@
-import * as React from 'react';
-import { useSearchParams } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalScreen,
   readSearchParam,
 } from '@openthrottle/react-router-ui-global';
-import { GetNotesDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+import { useSearchParams } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/notes._index';
+import { GetNotesDocument } from '~/__generated__/graphql';
+import { SITE_TITLE } from '~/global/config/settings';
 import { NoteCard } from '~/routing/notes/components/NoteCard';
 import { NotesEmpty } from '~/routing/notes/components/NotesEmpty';
 import { NotesIntroduction } from '~/routing/notes/components/NotesIntroduction';
 import { NotesTable } from '~/routing/notes/components/NotesTable';
 import { NotesToolbar } from '~/routing/notes/components/NotesToolbar';
 import { filterNotesBySearch } from '~/routing/notes/utils/filter-notes-by-search';
-import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/notes._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

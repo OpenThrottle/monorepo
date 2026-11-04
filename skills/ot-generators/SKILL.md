@@ -18,13 +18,13 @@ description: >-
 
 ## How this fits other skills (no duplication)
 
-| Need                                                                      | Use                                                                             |
-| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| **Local `@tools/generators` workflow, OT flags, doc paths**               | **This skill**                                                                  |
-| **Read-only** workspace: project list, `nx show project`, graph, affected | **nx-workspace** — `.agents/skills/nx-workspace/SKILL.md`                       |
-| **Execute** `nx run`, `affected`, `run-many` after code exists            | **nx-workspace** — `.agents/skills/nx-workspace/SKILL.md`                       |
-| **Plans, Plan-Id / Task-Id, openthrottle-mcp**                            | **ot-plans** — `.agents/skills/ot-plans/SKILL.md`                               |
-| **Link workspace packages** after new packages                            | **link-workspace-packages** — `.agents/skills/link-workspace-packages/SKILL.md` |
+| Need                                                                      | Use                                                            |
+| ------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| **Local `@tools/generators` workflow, OT flags, doc paths**               | **This skill**                                                 |
+| **Read-only** workspace: project list, `nx show project`, graph, affected | **nx-workspace** (installed skill — invoke by name)            |
+| **Execute** `nx run`, `affected`, `run-many` after code exists            | **nx-workspace** (installed skill — invoke by name)            |
+| **Plans, Plan-Id / Task-Id, openthrottle-mcp**                            | [**ot-plans**](../ot-plans/SKILL.md)                           |
+| **Link workspace packages** after new packages                            | **link-workspace-packages** (installed skill — invoke by name) |
 
 ## Non-negotiable: `NX_ISOLATE_PLUGINS=false`
 
@@ -113,6 +113,13 @@ Prefer **`--dry-run`** where supported before writing files.
 what a generator would have scaffolded is how files drift out of the primitive shape the
 [`ot-folders`](../ot-folders/SKILL.md) rules and the component ESLint rule then reject.
 
+**Hooks have the same contract.** `--subGenerator=hook` (`react --destination=<package>` or
+`react-router --application=<app> --folder=<area>`) emits a hook that already passes
+`openthrottle/hook-primitive-shape`: one `useFoo` in `hooks/useFoo.tsx`, its `UseFooOptions`
+and `UseFooResult` interfaces, an explicit return type and the six markers. A second hook gets
+its own generated file, never a second export
+([hook-primitive-shape.md](../../docs/monorepo/hook-primitive-shape.md)).
+
 ## Batch generation (`--name` comma-separated)
 
 Most `@tools/generators` sub-generators accept **multiple names in one invocation** via comma-separated `--name` values (spaces after commas are fine: `A, B, C`).
@@ -151,13 +158,14 @@ Per-generator markdown deep-dives live under `docs/tools/templates/` (e.g. `reac
 | **Generators package overview**                            | `tools/generators/README.md`                                               |
 | **Generator source**                                       | `tools/generators/src/generators/`                                         |
 | **Code style (component/data boundaries, shape)**          | `docs/monorepo/code-style.md`                                              |
+| **Hook shape (H1–H6)**                                     | `docs/monorepo/hook-primitive-shape.md`                                    |
 | **Monorepo entry**                                         | `AGENTS.md` (Generators / Nx sections)                                     |
 
 ## OpenThrottle and commits
 
-Scaffolding is unrelated to **OT** tool calls, but if work is tracked under a plan/task, follow **ot-plans**: conventional commits with **`Plan-Id`** / **`Task-Id`** in the footer; record the merged squash on the work ledger (`record_artifact` / `workflow-link-merge`) post-merge when your team uses that workflow.
+Scaffolding is unrelated to **OT** tool calls, but if work is tracked under a plan/task, follow **ot-plans**: conventional commits with **`Plan-Id`** / **`Task-Id`** in the footer; the work ledger records itself when the PR opens (`settle_plan_run` with `headSha` / `prNumber`), so there is no post-merge step to remember.
 
 ## Cross-links
 
-- \*_nx-workspace:^_ `.agents/skills/nx-workspace/SKILL.md`
-- **ot-plans:** `.agents/skills/ot-plans/SKILL.md`
+- **nx-workspace** — installed skill, not authored under `skills/`; invoke it by name.
+- [**ot-plans**](../ot-plans/SKILL.md)

@@ -29,8 +29,14 @@
     "vaul": "catalog:"
   },
   "devDependencies": {
+    "@openthrottle/react-router-shadcn": "workspace:*",
     "@storybook/react-vite": "catalog:",
-    "@tailwindcss/vite": "catalog:"
+    "@tailwindcss/vite": "catalog:",
+    "@testing-library/jest-dom": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "catalog:",
+    "react-router": "catalog:",
+    "vitest": "catalog:"
   },
   "imports": {
     "#components/*": "./src/components/*.tsx",

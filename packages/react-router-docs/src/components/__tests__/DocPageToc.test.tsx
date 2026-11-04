@@ -1,12 +1,13 @@
-import * as React from 'react';
 import { act, render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+
+import type { DocEntry } from '../../utils/buildDocsManifest';
+import type { DocHeading } from '../../utils/docHeadings';
 import { DocHeadingAnchor } from '../DocHeadingAnchor';
 import { DocPageToc } from '../DocPageToc';
 import { DocPageView } from '../DocPageView';
-import type { DocHeading } from '../../utils/docHeadings';
-import type { DocEntry } from '../../utils/buildDocsManifest';
 
 const headings: readonly DocHeading[] = [
   { depth: 2, id: 'intro', text: 'Intro' },

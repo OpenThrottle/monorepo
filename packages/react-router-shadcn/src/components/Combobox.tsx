@@ -1,5 +1,6 @@
-import * as React from 'react';
 import { Check, ChevronsUpDown } from 'lucide-react';
+import * as React from 'react';
+
 import { cn } from '../utils/cn';
 import { Button } from './Button';
 import {
@@ -118,7 +119,7 @@ export const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
         </PopoverTrigger>
         <PopoverContent
           align="start"
-          className="w-[--radix-popover-trigger-width] p-0"
+          className="w-(--radix-popover-trigger-width) p-0"
         >
           <Command shouldFilter={shouldFilter}>
             <CommandInput

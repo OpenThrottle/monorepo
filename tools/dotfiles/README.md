@@ -37,7 +37,7 @@ import { prettierConfig } from '@tools/dotfiles';
 export default prettierConfig;
 ```
 
-`prettierConfig` wires `prettier-plugin-tailwindcss` (Tailwind class sorting) and pins YAML to **single quotes** via a `*.{yml,yaml}` override. Keep that in sync with the `quote_type = single` entries in the root `.editorconfig` so editors and Prettier agree. Format the repo with `pnpm format` / check it with `pnpm format:check` (or `pnpm nx run monorepo:format-write` / `format-check`).
+`prettierConfig` wires `prettier-plugin-tailwindcss` (Tailwind class sorting) and pins YAML to **single quotes** via a `*.{yml,yaml}` override. Keep that in sync with the `quote_type = single` entries in the root `.editorconfig` so editors and Prettier agree. Format the repo with `pnpm nx run monorepo:format:fix` / check it with `pnpm nx run monorepo:format:check`.
 
 ### Vite Configuration
 

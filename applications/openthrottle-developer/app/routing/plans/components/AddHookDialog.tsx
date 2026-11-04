@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Button,
   Dialog,
@@ -9,6 +8,8 @@ import {
   Input,
   Label,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import { PLAN_LIFECYCLE_HOOKS_COPY } from '~/routing/plans/data/data.copy';
 
 export type HookRole = 'after' | 'before';

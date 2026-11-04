@@ -1,11 +1,12 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { APP_NAME } from '@openthrottle/react-router-utils';
 import {
   ChatComposerMode,
   ChatPermissionMode,
   ChatReasoningLevel,
   ChatServiceTier,
 } from '@openthrottle/react-router-chat';
+import { APP_NAME } from '@openthrottle/react-router-utils';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+
 import {
   CHAT_TOOLBAR_STATE_VERSION,
   CHAT_TOOLBAR_STORAGE_KEY,

@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { opensource } from '~/routing/legal/data/data.opensource';
 
 describe('routing/legal data.opensource', () => {

@@ -10,8 +10,9 @@
  * (workflowInput / iteration timeout / working directory / job-run hook rows) and the
  * derived memos; those now live in the atom module.
  */
-import { useFetcher, useRevalidator, useSearchParams } from 'react-router';
 import { useAtomValue, useSetAtom } from 'jotai';
+import { useFetcher, useRevalidator, useSearchParams } from 'react-router';
+
 import { useActionToast } from '~/global/hooks/useActionToast';
 import {
   jobRunHooksJsonAtom,
@@ -20,20 +21,11 @@ import {
   runConfigJsonAtom,
   runConfigSaveBlockedAtom,
 } from '~/routing/plans/data/atom.plan';
+import type { PlanRunConfigEditorPlan } from '~/routing/plans/types';
 import {
   WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE,
   WORKFLOW_RUN_OPTIONS_SEARCH_PARAM,
 } from '~/routing/plans/utils/workflow-run-options-search-param';
-
-/**
- * @description Minimal plan shape the editor reads to gate + seed saves.
- * Structurally satisfied by the route's loader plan.
- */
-export interface PlanRunConfigEditorPlan {
-  readonly id: string;
-  readonly jobRunHooksJson?: string | null;
-  readonly runConfigJson?: string | null;
-}
 
 export interface UsePlanRunConfigEditorResult {
   readonly onResetToDefaults: () => void;
@@ -122,6 +114,8 @@ export function usePlanRunConfigEditor(
     });
   };
 
+  // Markup
+
   // Life Cycle
   useActionToast(saveJobRunHooksData, {
     active: fetcherSaveJobRunHooks.state !== 'idle',
@@ -140,6 +134,7 @@ export function usePlanRunConfigEditor(
   });
 
   // 🔌 Short Circuit
+
   return {
     onResetToDefaults,
     onSaveJobRunHooks,

@@ -2,16 +2,17 @@
  * @description Unit tests for DatabaseBackupProcessor (spawn command and cwd).
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createMock } from '@golevelup/ts-vitest';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { createMock } from '@golevelup/ts-vitest';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { NotificationsService } from '../../notifications/notifications.service';
-import { DATABASE_BACKUP_PNPM_SCRIPT } from './database-backup.constants';
-import { DatabaseBackupProcessor } from './database-backup.processor';
-import { spawnDatabaseBackup } from './database-backup.spawn';
-import type { DatabaseBackupJob } from './database-backup.types';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { NotificationsService } from '../../notifications/notifications.service.ts';
+import { DATABASE_BACKUP_PNPM_SCRIPT } from './database-backup.constants.ts';
+import { DatabaseBackupProcessor } from './database-backup.processor.ts';
+import { spawnDatabaseBackup } from './database-backup.spawn.ts';
+import type { DatabaseBackupJob } from './database-backup.types.ts';
 
 vi.mock('./database-backup.spawn', () => ({
   spawnDatabaseBackup: vi.fn(),

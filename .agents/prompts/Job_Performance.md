@@ -22,7 +22,7 @@ git log --since='7 days ago' --oneline     # what landed in the measurement wind
 
 Facts that change the analysis:
 
-- The four React Router (v8) + Vite apps are `openthrottle-developer`, `openthrottle-admin`, `openthrottle-email`, and `openthrottle-website`. Measure against a **production build**, never a dev server — dev-server numbers are meaningless here.
+- The three React Router (v8) + Vite apps are `openthrottle-developer`, `openthrottle-admin`, and `openthrottle-website`. Measure against a **production build**, never a dev server — dev-server numbers are meaningless here.
 - `openthrottle-server` is NestJS with **code-first GraphQL**. Resolver cost and per-request work are the server-side subject.
 - **Nx targets share a cache and build dependencies — run them sequentially, not in parallel.** Concurrent runs produce spurious failures and garbage wall-clock numbers, which is fatal for a job whose whole output is measurements.
 - Gitignored `__generated__` output is **invisible to Nx hashing**, which has poisoned the remote cache before. A cache miss you cannot explain is itself a finding worth reporting.

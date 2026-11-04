@@ -4,17 +4,18 @@ import {
   ThrottlerModule,
   type ThrottlerModuleOptions,
 } from '@nestjs/throttler';
-import { GqlThrottlerGuard } from '../guards/gql-throttler.guard';
-import {
-  applyNestjsThrottlerModuleDefaults,
-  parseNestjsThrottlerModuleOptions,
-  validateNestjsThrottlerModuleOptions,
-} from '../config/nestjs-throttler.options';
+
 import type {
   NestjsThrottlerModuleAsyncOptions,
   NestjsThrottlerModuleOptions,
   ResolvedNestjsThrottlerModuleOptions,
-} from '../config/nestjs-throttler.options';
+} from '../config/nestjs-throttler.options.ts';
+import {
+  applyNestjsThrottlerModuleDefaults,
+  parseNestjsThrottlerModuleOptions,
+  validateNestjsThrottlerModuleOptions,
+} from '../config/nestjs-throttler.options.ts';
+import { GqlThrottlerGuard } from '../guards/gql-throttler.guard.ts';
 
 const toThrottlerModuleOptions = (
   resolved: ResolvedNestjsThrottlerModuleOptions,
@@ -25,6 +26,28 @@ const toThrottlerModuleOptions = (
     ttl: tier.ttl,
   })),
 });
+
+/**
+ * @description Host module for {@link NestjsThrottlerModule.forRoot} /
+ * {@link NestjsThrottlerModule.forRootAsync}.
+ *
+ * Deliberately carries EMPTY decorator metadata, and exists only so the dynamic
+ * registrations have a module to attach to that is not `NestjsThrottlerModule`.
+ *
+ * Nest MERGES a `DynamicModule` into its `module` class's own `@Module`
+ * metadata. `NestjsThrottlerModule` statically imports
+ * `ThrottlerModule.forRoot(<defaults>)` so a direct `imports: [NestjsThrottlerModule]`
+ * works without a call — so returning `{ module: NestjsThrottlerModule }` from
+ * `forRoot` produced TWO `ThrottlerModule.forRoot` registrations, and the
+ * static default tier won over the caller's. Under NestJS 11 the caller's tiers
+ * still took effect; under 12 they silently do not, so `forRoot({ limit: 3 })`
+ * quietly kept serving the 1,000-request default and never returned 429.
+ *
+ * Pointing the dynamic path at its own class means no merge, so there is
+ * exactly one registration whichever entry point a consumer uses.
+ */
+@Module({})
+class NestjsThrottlerRootModule {}
 
 /**
  * @external https://docs.nestjs.com/security/rate-limiting
@@ -65,7 +88,7 @@ export class NestjsThrottlerModule {
       exports: [ThrottlerModule],
       global: options.isGlobal === true,
       imports: [ThrottlerModule.forRoot(toThrottlerModuleOptions(resolved))],
-      module: NestjsThrottlerModule,
+      module: NestjsThrottlerRootModule,
       providers: [
         {
           provide: APP_GUARD,
@@ -103,7 +126,7 @@ export class NestjsThrottlerModule {
           },
         }),
       ],
-      module: NestjsThrottlerModule,
+      module: NestjsThrottlerRootModule,
       providers: [
         {
           provide: APP_GUARD,

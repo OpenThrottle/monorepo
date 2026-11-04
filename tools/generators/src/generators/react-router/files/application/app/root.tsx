@@ -5,7 +5,7 @@ import { APP_URL, useNonce } from '@openthrottle/react-router-utils';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, useRouteLoaderData, } from 'react-router';
 import { artwork } from '~/global/config/artwork';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { SITE_TITLE } from '#/app/global/config/settings';
+import { SITE_TITLE } from '~/global/config/settings';
 import stylesheet from '~/styles.css?url';
 import type { Route } from '@/app/+types/root';
 

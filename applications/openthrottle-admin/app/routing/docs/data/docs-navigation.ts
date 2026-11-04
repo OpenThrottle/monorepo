@@ -1,4 +1,5 @@
 import { buildDocsNav } from '@openthrottle/react-router-docs';
+
 import { docsManifest } from '~/routing/docs/data/docsManifest';
 
 /** Grouped docs navigation for the `docs` section (built from the app manifest). */

@@ -3,20 +3,21 @@
  * Uses GraphQL only (activityByDate, activityByDateRange, lastActivity).
  */
 
-import type { z } from 'zod';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
+import type { z } from 'zod';
+
 import {
-  type GetActivityByDateQuery,
-  type GetLastActivityQuery,
   GetActivityByDateDocument,
+  type GetActivityByDateQuery,
   GetLastActivityDocument,
+  type GetLastActivityQuery,
 } from '../__generated__/graphql.js';
 import {
   ActivityByDateInputSchema,
   LastActivityInputSchema,
 } from '../__generated__/schemas.ts';
-import type { GenericResult } from '../types/index.ts';
 import { getAuthToken } from '../auth/get-auth-token.ts';
+import type { GenericResult } from '../types/index.ts';
 import { invalidArgsContent } from '../utils/errors.ts';
 import { runTool } from '../utils/tool-result.ts';
 
@@ -29,8 +30,12 @@ type GetLastActivityResult = GenericResult<{
 }>;
 
 /** Exactly one of date (YYYY-MM-DD) or daysBack (1–365). */
-export const getActivityByDateToolParameters =
-  ActivityByDateInputSchema().refine(
+export const getActivityByDateToolParameters = ActivityByDateInputSchema()
+  // `.strict()` BEFORE `.refine()`: refine returns a ZodEffects wrapper with no
+  // `.strict()` of its own, so the unknown-key check has to be installed on the
+  // object schema underneath it.
+  .strict()
+  .refine(
     (data) => {
       const hasDate = data.date != null && data.date !== '';
       const hasDaysBack = data.daysBack != null;
@@ -39,7 +44,7 @@ export const getActivityByDateToolParameters =
     { message: 'Provide exactly one of date (YYYY-MM-DD) or daysBack (1–365)' },
   );
 
-export const getLastActivityToolParameters = LastActivityInputSchema();
+export const getLastActivityToolParameters = LastActivityInputSchema().strict();
 
 export const getActivityByDateToolDescription = `Fetch activity (commits, plan output chunks, tasks updated) for "worked on / shipped on X date or X days ago" answers. Provide either date (YYYY-MM-DD) for that day, or daysBack (1–365) for the last N days. Uses the work ledger (git_commit artifacts), plan_output_stream, and task updated_at.`;
 

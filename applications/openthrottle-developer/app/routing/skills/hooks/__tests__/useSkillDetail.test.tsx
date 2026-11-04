@@ -1,8 +1,10 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
+
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import { SKILL_DETAIL_COPY } from '~/routing/skills/data/data.copy';
-import { useSkillDetail, type SkillDetailOptions } from '../useSkillDetail';
+
+import { useSkillDetail, type UseSkillDetailOptions } from '../useSkillDetail';
 
 const baseEntry = (
   overrides: Partial<RepoSkillEntry> = {},
@@ -18,8 +20,8 @@ const baseEntry = (
 });
 
 const baseOptions = (
-  overrides: Partial<SkillDetailOptions> = {},
-): SkillDetailOptions => ({
+  overrides: Partial<UseSkillDetailOptions> = {},
+): UseSkillDetailOptions => ({
   content: 'original content',
   editable: true,
   entry: baseEntry(),
@@ -111,7 +113,7 @@ describe('useSkillDetail', () => {
 
   test('leaves edit mode once a save completes without a rejection', () => {
     const { rerender, result } = renderHook(
-      (opts: SkillDetailOptions) => useSkillDetail(opts),
+      (opts: UseSkillDetailOptions) => useSkillDetail(opts),
       { initialProps: baseOptions({ content: 'v1', saving: true }) },
     );
 
@@ -128,7 +130,7 @@ describe('useSkillDetail', () => {
 
   test('stays in edit mode when a save finishes with a rejection', () => {
     const { rerender, result } = renderHook(
-      (opts: SkillDetailOptions) => useSkillDetail(opts),
+      (opts: UseSkillDetailOptions) => useSkillDetail(opts),
       { initialProps: baseOptions({ content: 'v1', saving: true }) },
     );
 
@@ -149,7 +151,7 @@ describe('useSkillDetail', () => {
 
   test('keeps a non-dirty draft in sync with content while not editing', () => {
     const { rerender, result } = renderHook(
-      (opts: SkillDetailOptions) => useSkillDetail(opts),
+      (opts: UseSkillDetailOptions) => useSkillDetail(opts),
       { initialProps: baseOptions({ content: 'v1' }) },
     );
 

@@ -9,7 +9,7 @@ import type { NestjsModelDiscoveryService } from '@openthrottle/nestjs-model-dis
 import type { DiscoveryResult } from '@openthrottle/openthrottle-agentic-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ModelDiscoveryResolver } from './model-discovery.resolver';
+import { ModelDiscoveryResolver } from './model-discovery.resolver.ts';
 
 const SNAPSHOT: DiscoveryResult = {
   endpoints: [

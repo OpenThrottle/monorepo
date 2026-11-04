@@ -9,13 +9,13 @@ import path from 'node:path';
 
 import {
   buildUsageEvent,
-  DEFAULT_PRIVACY_LEVEL,
   defaultJsonlPath,
   logHookError,
   persistUsageEvent,
   recordSkillStart,
-} from '../../index';
-import { CLAUDE_SOURCE, normalizeClaudePayload } from './payload';
+} from '../../index.ts';
+import { CLAUDE_SOURCE, normalizeClaudePayload } from './payload.ts';
+import { isShadowedByRepoHooks } from './shadow.ts';
 
 const main = async (): Promise<void> => {
   try {
@@ -23,6 +23,11 @@ const main = async (): Promise<void> => {
       process.env.CLAUDE_PROJECT_DIR ||
       process.env.OPEN_THROTTLE_REPO_ROOT ||
       process.cwd();
+
+    // The repository registers this same hook; let that copy do the work.
+    if (isShadowedByRepoHooks({ repoRoot })) {
+      return;
+    }
 
     const stdinBuf = fs.readFileSync(0, 'utf8');
     if (!stdinBuf || !stdinBuf.trim()) {
@@ -44,7 +49,6 @@ const main = async (): Promise<void> => {
 
     const event = buildUsageEvent({
       normalized,
-      privacyLevel: DEFAULT_PRIVACY_LEVEL,
       repoRoot,
       source: CLAUDE_SOURCE,
     });
@@ -55,7 +59,6 @@ const main = async (): Promise<void> => {
     // Additive: remember this start (identifiers + timestamp only, no args) so
     // the completion hook can compute duration and correlate. Fail-open inside.
     recordSkillStart({
-      repoRoot,
       scope: event.scope,
       sessionId: event.session_id,
       skillName: event.skill_name,
@@ -63,8 +66,7 @@ const main = async (): Promise<void> => {
       toolUseId: event.tool_use_id ?? null,
     });
 
-    const outPath =
-      process.env.SKILL_USAGE_JSONL_PATH || defaultJsonlPath(repoRoot);
+    const outPath = defaultJsonlPath();
 
     await persistUsageEvent({
       event,

@@ -1,11 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { RuleFormActionSection } from '../RuleFormActionSection';
-import type { RuleFormActionSectionProps } from '../RuleFormActionSection';
+
 import { RULES_COPY } from '~/routing/rules/data/data.copy';
+
+import type { RuleFormActionSectionProps } from '../RuleFormActionSection';
+import { RuleFormActionSection } from '../RuleFormActionSection';
 
 const buildProps = (
   overrides: Partial<RuleFormActionSectionProps> = {},

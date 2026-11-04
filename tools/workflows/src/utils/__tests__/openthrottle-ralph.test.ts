@@ -270,6 +270,35 @@ describe('reconcilePlanCompletionIfAllTasksTerminal (postgres-direct)', () => {
     ).toBe(true);
   });
 
+  it('marks the plan COMPLETED when tasks are COMPLETED or PROMOTED', async () => {
+    mockState.planTaskStatuses = ['COMPLETED', 'PROMOTED'];
+    const { reconcilePlanCompletionIfAllTasksTerminal } =
+      await import('../openthrottle-ralph.js');
+
+    const reconciled = await reconcilePlanCompletionIfAllTasksTerminal(
+      mockConfig,
+      'plan-1',
+    );
+
+    expect(reconciled).toBe(true);
+    expect(
+      mockState.queryLog.some((sql) => sql.includes('UPDATE plans SET status')),
+    ).toBe(true);
+  });
+
+  it('marks the plan COMPLETED when every task is PROMOTED', async () => {
+    mockState.planTaskStatuses = ['PROMOTED', 'PROMOTED'];
+    const { reconcilePlanCompletionIfAllTasksTerminal } =
+      await import('../openthrottle-ralph.js');
+
+    const reconciled = await reconcilePlanCompletionIfAllTasksTerminal(
+      mockConfig,
+      'plan-1',
+    );
+
+    expect(reconciled).toBe(true);
+  });
+
   it('leaves the plan untouched when a task is still pending', async () => {
     mockState.planTaskStatuses = ['COMPLETED', 'PENDING'];
     const { reconcilePlanCompletionIfAllTasksTerminal } =

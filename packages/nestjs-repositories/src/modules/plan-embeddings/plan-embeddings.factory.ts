@@ -2,10 +2,11 @@
  * @description Fishery factory for {@link PlanEmbedding}. Use in tests to build mock plan embeddings.
  */
 
-import { Factory } from 'fishery';
 import { faker } from '@faker-js/faker';
-import { plansFactory } from '../../modules/plans/plans.factory';
-import type { PlanEmbedding } from './plan-embedding.entity';
+import { Factory } from 'fishery';
+
+import { plansFactory } from '../../modules/plans/plans.factory.ts';
+import type { PlanEmbedding } from './plan-embedding.entity.ts';
 
 /** Column-only shape for building plan embedding test data (no relations). */
 // export type PlanEmbeddingFactoryData = Pick<

@@ -1,7 +1,8 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { DataSource } from 'typeorm';
 import { describe, expect, it, vi } from 'vitest';
-import { createAgeRetentionPolicy } from './create-age-retention-policy';
+
+import { createAgeRetentionPolicy } from './create-age-retention-policy.ts';
 
 describe('createAgeRetentionPolicy', () => {
   const options = {

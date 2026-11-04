@@ -1,6 +1,6 @@
 import {
-  THEME_TOKEN_NAMES,
   type Theme,
+  THEME_TOKEN_NAMES,
   type ThemeTokens,
 } from './theme-contract';
 

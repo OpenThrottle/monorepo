@@ -7,10 +7,10 @@
 import { Injectable, Scope } from '@nestjs/common';
 import {
   createEntityByIdLoader,
-  RepositoryCheckoutsService,
-  ScheduledAgentJobsService,
   type RepositoryCheckout,
+  RepositoryCheckoutsService,
   type ScheduledAgentJob,
+  ScheduledAgentJobsService,
 } from '@openthrottle/nestjs-repositories';
 import type DataLoader from 'dataloader';
 

@@ -1,4 +1,5 @@
 import { isRecord } from '@openthrottle/nodejs-utils';
+
 import { buildAgentsChatAssistantFooter } from './agents-chat-footer';
 import { foldPersistedTurnEvents } from './turn-events';
 import type { ChatMessage, ChatTurnResult } from './types';

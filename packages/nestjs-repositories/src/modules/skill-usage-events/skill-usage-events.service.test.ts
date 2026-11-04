@@ -1,19 +1,20 @@
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { describe, expect, it, vi } from 'vitest';
+
 import {
   SKILL_USAGE_PRIVACY_LEVELS,
   SKILL_USAGE_SCOPES,
   SkillUsageEvent,
-} from './skill-usage-events.entity';
+} from './skill-usage-events.entity.ts';
 import {
   SKILL_USAGE_DEFAULT_BRANCHES,
   SkillUsageEventsService,
-} from './skill-usage-events.service';
+} from './skill-usage-events.service.ts';
 import {
   SKILL_USAGE_OUTCOMES,
   SkillUsageOutcome,
-} from './skill-usage-outcomes.entity';
+} from './skill-usage-outcomes.entity.ts';
 
 type QueryBuilderMock = {
   addGroupBy: ReturnType<typeof vi.fn>;
@@ -69,11 +70,33 @@ const createQueryBuilderMock = (
   return qb;
 };
 
+/** INSERT … ON CONFLICT DO NOTHING RETURNING id; `raw` is what Postgres returns. */
+const insertBuilderMock = (raw: unknown[]) => {
+  const execute = vi.fn().mockResolvedValue({ raw });
+  const builder = {
+    execute,
+    insert: vi.fn(),
+    into: vi.fn(),
+    orIgnore: vi.fn(),
+    returning: vi.fn(),
+    values: vi.fn(),
+  };
+  builder.insert.mockReturnValue(builder);
+  builder.into.mockReturnValue(builder);
+  builder.orIgnore.mockReturnValue(builder);
+  builder.returning.mockReturnValue(builder);
+  builder.values.mockReturnValue(builder);
+
+  return builder;
+};
+
 describe('SkillUsageEventsService', () => {
   const buildService = async (mockRepos: {
     events?: {
       create?: ReturnType<typeof vi.fn>;
       createQueryBuilder?: ReturnType<typeof vi.fn>;
+      findOneByOrFail?: ReturnType<typeof vi.fn>;
+      findOneOrFail?: ReturnType<typeof vi.fn>;
       save?: ReturnType<typeof vi.fn>;
     };
     outcomes?: {
@@ -116,10 +139,15 @@ describe('SkillUsageEventsService', () => {
   describe('recordSkillUsage', () => {
     it('maps a full input to a row and defaults privacy_level to truncated', async () => {
       const create = vi.fn((input: Partial<SkillUsageEvent>) => input);
-      const save = vi.fn((row: Partial<SkillUsageEvent>) =>
-        Promise.resolve({ ...row, id: 'event-1', receivedAt: new Date() }),
+      const createQueryBuilder = vi
+        .fn()
+        .mockReturnValue(insertBuilderMock([{ id: 'event-1' }]));
+      const findOneByOrFail = vi.fn(({ id }: { id: string }) =>
+        Promise.resolve({ id, receivedAt: new Date() }),
       );
-      const service = await buildService({ events: { create, save } });
+      const service = await buildService({
+        events: { create, createQueryBuilder, findOneByOrFail },
+      });
       const occurredAt = new Date('2026-07-31T12:00:00.000Z');
 
       const saved = await service.recordSkillUsage({
@@ -164,10 +192,15 @@ describe('SkillUsageEventsService', () => {
     describe('when optional fields are omitted', () => {
       it('nulls optional columns and keeps required skillName/scope/occurredAt', async () => {
         const create = vi.fn((input: Partial<SkillUsageEvent>) => input);
-        const save = vi.fn((row: Partial<SkillUsageEvent>) =>
-          Promise.resolve({ ...row, id: 'event-2', receivedAt: new Date() }),
+        const createQueryBuilder = vi
+          .fn()
+          .mockReturnValue(insertBuilderMock([{ id: 'event-2' }]));
+        const findOneByOrFail = vi.fn(({ id }: { id: string }) =>
+          Promise.resolve({ id, receivedAt: new Date() }),
         );
-        const service = await buildService({ events: { create, save } });
+        const service = await buildService({
+          events: { create, createQueryBuilder, findOneByOrFail },
+        });
         const occurredAt = new Date('2026-07-31T13:00:00.000Z');
 
         await service.recordSkillUsage({
@@ -200,10 +233,15 @@ describe('SkillUsageEventsService', () => {
     describe('when privacyLevel is name-only', () => {
       it('stores the client-provided level without altering args', async () => {
         const create = vi.fn((input: Partial<SkillUsageEvent>) => input);
-        const save = vi.fn((row: Partial<SkillUsageEvent>) =>
-          Promise.resolve({ ...row, id: 'event-3', receivedAt: new Date() }),
+        const createQueryBuilder = vi
+          .fn()
+          .mockReturnValue(insertBuilderMock([{ id: 'event-3' }]));
+        const findOneByOrFail = vi.fn(({ id }: { id: string }) =>
+          Promise.resolve({ id, receivedAt: new Date() }),
         );
-        const service = await buildService({ events: { create, save } });
+        const service = await buildService({
+          events: { create, createQueryBuilder, findOneByOrFail },
+        });
         const occurredAt = new Date('2026-07-31T14:00:00.000Z');
 
         await service.recordSkillUsage({
@@ -221,6 +259,42 @@ describe('SkillUsageEventsService', () => {
             skillName: 'git-commit',
           }),
         );
+      });
+    });
+    describe('when the event was already stored', () => {
+      it('inserts nothing and returns the surviving row by its tool_use_id key', async () => {
+        const builder = insertBuilderMock([]);
+        const findOneOrFail = vi
+          .fn()
+          .mockResolvedValue({ id: 'event-original' });
+        const service = await buildService({
+          events: {
+            create: vi.fn((input: Partial<SkillUsageEvent>) => input),
+            createQueryBuilder: vi.fn().mockReturnValue(builder),
+            findOneOrFail,
+          },
+        });
+
+        const saved = await service.recordSkillUsage({
+          hookEventName: 'PreToolUse',
+          occurredAt: new Date('2026-07-31T12:00:00.000Z'),
+          scope: SKILL_USAGE_SCOPES.OURS,
+          sessionId: 'session-1',
+          skillName: 'ot-plans',
+          source: 'claude-code',
+          toolUseId: 'tool-1',
+        });
+
+        expect(builder.orIgnore).toHaveBeenCalled();
+        expect(findOneOrFail).toHaveBeenCalledWith({
+          where: expect.objectContaining({
+            hookEventName: 'PreToolUse',
+            sessionId: 'session-1',
+            source: 'claude-code',
+            toolUseId: 'tool-1',
+          }),
+        });
+        expect(saved.id).toBe('event-original');
       });
     });
   });
@@ -242,6 +316,7 @@ describe('SkillUsageEventsService', () => {
         outcome: SKILL_USAGE_OUTCOMES.SUCCESS,
         sessionId: 'session-1',
         skillName: 'ot-plans',
+        source: 'claude-code',
         toolUseId: 'tool-1',
       });
 
@@ -254,6 +329,7 @@ describe('SkillUsageEventsService', () => {
         scope: SKILL_USAGE_SCOPES.OURS,
         sessionId: 'session-1',
         skillName: 'ot-plans',
+        source: 'claude-code',
         toolUseId: 'tool-1',
       });
       expect(saved.id).toBe('outcome-1');
@@ -283,6 +359,7 @@ describe('SkillUsageEventsService', () => {
           scope: SKILL_USAGE_SCOPES.OURS,
           sessionId: null,
           skillName: 'ot-plans',
+          source: null,
           toolUseId: null,
         });
       });
@@ -314,6 +391,8 @@ describe('SkillUsageEventsService', () => {
             avgDurationMs: '1500.4',
             errorCount: '0',
             outcomeCount: '8',
+            scope: SKILL_USAGE_SCOPES.OURS,
+            sessionEndedCount: '0',
             skillName: 'ot-plans',
             successCount: '7',
           },
@@ -331,6 +410,15 @@ describe('SkillUsageEventsService', () => {
 
       expect(eventsQb.groupBy).toHaveBeenCalledWith('e.skill_name');
       expect(eventsQb.limit).toHaveBeenCalledWith(50);
+
+      // The two discriminators are the whole point of migrations 114/115: a
+      // count that quietly readmits instrumentation probes or pre-fix
+      // assumed-success rows is the bug, not a cosmetic difference.
+      expect(eventsQb.andWhere).toHaveBeenCalledWith('e.is_fixture = FALSE');
+      expect(outcomesQb.where).toHaveBeenCalledWith(
+        'o.capture_model = :captureModel',
+        { captureModel: 'reported_v1' },
+      );
       expect(rows).toEqual([
         {
           abandonedCount: 1,
@@ -340,6 +428,7 @@ describe('SkillUsageEventsService', () => {
           lastUsedAt: new Date('2026-07-30T09:00:00.000Z'),
           outcomeCount: 8,
           scope: SKILL_USAGE_SCOPES.OURS,
+          sessionEndedCount: 0,
           skillName: 'ot-plans',
           successCount: 7,
         },
@@ -351,10 +440,84 @@ describe('SkillUsageEventsService', () => {
           lastUsedAt: new Date('2026-07-28T09:00:00.000Z'),
           outcomeCount: 0,
           scope: SKILL_USAGE_SCOPES.THIRD_PARTY,
+          sessionEndedCount: 0,
           skillName: 'vercel:deploy',
           successCount: 0,
         },
       ]);
+    });
+
+    it("does not merge one scope row's outcomes into another scope row of the same skill", async () => {
+      // A personal skill whose history straddles the migration: 34 old
+      // third-party starts and 1 new personal start, with outcomes recorded
+      // only against the third-party half. Keying outcomes by skill_name alone
+      // gave BOTH rows all 31 outcomes, rendering the impossible cell "31/1".
+      const eventsQb = createQueryBuilderMock({
+        getRawMany: vi.fn().mockResolvedValue([
+          {
+            count: '34',
+            lastUsedAt: '2026-09-16T01:39:07.600Z',
+            scope: SKILL_USAGE_SCOPES.THIRD_PARTY,
+            skillName: 'ot-beta-loop',
+          },
+          {
+            count: '1',
+            lastUsedAt: '2026-09-16T02:37:43.113Z',
+            scope: SKILL_USAGE_SCOPES.PERSONAL,
+            skillName: 'ot-beta-loop',
+          },
+        ]),
+      });
+      const outcomesQb = createQueryBuilderMock({
+        getRawMany: vi.fn().mockResolvedValue([
+          {
+            abandonedCount: '4',
+            avgDurationMs: '3830200',
+            errorCount: '0',
+            outcomeCount: '31',
+            scope: SKILL_USAGE_SCOPES.THIRD_PARTY,
+            skillName: 'ot-beta-loop',
+            successCount: '27',
+          },
+        ]),
+      });
+      const service = await buildService({
+        events: { createQueryBuilder: vi.fn().mockReturnValue(eventsQb) },
+        outcomes: { createQueryBuilder: vi.fn().mockReturnValue(outcomesQb) },
+      });
+
+      const rows = await service.listBySkill({
+        end: '2026-09-16',
+        start: '2026-08-17',
+      });
+
+      expect(rows[0]).toMatchObject({
+        count: 34,
+        outcomeCount: 31,
+        scope: SKILL_USAGE_SCOPES.THIRD_PARTY,
+      });
+      // The personal row has its own (empty) outcome history, not the other
+      // row's — an outcome count may never exceed its own start count.
+      expect(rows[1]).toMatchObject({
+        avgDurationMs: null,
+        count: 1,
+        outcomeCount: 0,
+        scope: SKILL_USAGE_SCOPES.PERSONAL,
+      });
+    });
+
+    it('groups outcomes by skill_name and scope so the join matches starts', async () => {
+      const eventsQb = createQueryBuilderMock();
+      const outcomesQb = createQueryBuilderMock();
+      const service = await buildService({
+        events: { createQueryBuilder: vi.fn().mockReturnValue(eventsQb) },
+        outcomes: { createQueryBuilder: vi.fn().mockReturnValue(outcomesQb) },
+      });
+
+      await service.listBySkill({ end: '2026-07-31', start: '2026-07-01' });
+
+      expect(outcomesQb.groupBy).toHaveBeenCalledWith('o.skill_name');
+      expect(outcomesQb.addGroupBy).toHaveBeenCalledWith('o.scope');
     });
 
     it('merges a mixed automatic + opt-in feed and averages only non-null durations', async () => {
@@ -379,6 +542,8 @@ describe('SkillUsageEventsService', () => {
             avgDurationMs: '2000', // AVG over the 6 success + 1 error timed rows
             errorCount: '1',
             outcomeCount: '10',
+            scope: SKILL_USAGE_SCOPES.OURS,
+            sessionEndedCount: '0',
             skillName: 'ot-plans',
             successCount: '6',
           },
@@ -408,6 +573,7 @@ describe('SkillUsageEventsService', () => {
           lastUsedAt: new Date('2026-07-31T00:00:00.000Z'),
           outcomeCount: 10,
           scope: SKILL_USAGE_SCOPES.OURS,
+          sessionEndedCount: 0,
           skillName: 'ot-plans',
           successCount: 6,
         },
@@ -567,10 +733,13 @@ describe('SkillUsageEventsService', () => {
   });
 
   describe('listByScope', () => {
-    it('returns ours vs third-party counts', async () => {
+    it('returns ours vs personal vs third-party counts', async () => {
+      // Grouping is by the column itself, so a new scope member needs no
+      // widening here — it simply arrives as another row.
       const qb = createQueryBuilderMock({
         getRawMany: vi.fn().mockResolvedValue([
           { count: '10', scope: SKILL_USAGE_SCOPES.OURS },
+          { count: '7', scope: SKILL_USAGE_SCOPES.PERSONAL },
           { count: '4', scope: SKILL_USAGE_SCOPES.THIRD_PARTY },
         ]),
       });
@@ -585,13 +754,172 @@ describe('SkillUsageEventsService', () => {
 
       expect(rows).toEqual([
         { count: 10, scope: SKILL_USAGE_SCOPES.OURS },
+        { count: 7, scope: SKILL_USAGE_SCOPES.PERSONAL },
         { count: 4, scope: SKILL_USAGE_SCOPES.THIRD_PARTY },
+      ]);
+    });
+
+    it('does not fall back to ours for an unrecognized stored scope', async () => {
+      // Falling back to ours would inflate the count of skills we authored —
+      // the number people actually act on. third-party matches how capture
+      // itself fails open.
+      const qb = createQueryBuilderMock({
+        getRawMany: vi
+          .fn()
+          .mockResolvedValue([{ count: '3', scope: 'not-a-real-scope' }]),
+      });
+      const service = await buildService({
+        events: { createQueryBuilder: vi.fn().mockReturnValue(qb) },
+      });
+
+      const rows = await service.listByScope({
+        end: '2026-07-31',
+        start: '2026-07-01',
+      });
+
+      expect(rows).toEqual([
+        { count: 3, scope: SKILL_USAGE_SCOPES.THIRD_PARTY },
       ]);
     });
   });
 
+  describe('listCaptureHealth', () => {
+    it('maps event and outcome sources to stream-tagged rows', async () => {
+      const eventsQb = createQueryBuilderMock({
+        getRawMany: vi.fn().mockResolvedValue([
+          {
+            lastCapturedAt: new Date('2026-10-29T10:00:00.000Z'),
+            source: 'claude-code',
+          },
+          { lastCapturedAt: '2026-10-28T08:00:00.000Z', source: 'unknown' },
+        ]),
+      });
+      const outcomesQb = createQueryBuilderMock({
+        getRawMany: vi.fn().mockResolvedValue([
+          {
+            lastCapturedAt: new Date('2026-10-27T09:00:00.000Z'),
+            source: 'cursor',
+          },
+        ]),
+      });
+      const service = await buildService({
+        events: { createQueryBuilder: vi.fn().mockReturnValue(eventsQb) },
+        outcomes: { createQueryBuilder: vi.fn().mockReturnValue(outcomesQb) },
+      });
+
+      const rows = await service.listCaptureHealth();
+
+      expect(rows).toEqual([
+        {
+          lastCapturedAt: new Date('2026-10-29T10:00:00.000Z'),
+          source: 'claude-code',
+          stream: 'skill_events',
+        },
+        {
+          lastCapturedAt: new Date('2026-10-28T08:00:00.000Z'),
+          source: 'unknown',
+          stream: 'skill_events',
+        },
+        {
+          lastCapturedAt: new Date('2026-10-27T09:00:00.000Z'),
+          source: 'cursor',
+          stream: 'skill_outcomes',
+        },
+      ]);
+    });
+
+    it('takes MAX(received_at) grouped by a NULL-safe source and excludes fixtures', async () => {
+      const eventsQb = createQueryBuilderMock();
+      const outcomesQb = createQueryBuilderMock();
+      const service = await buildService({
+        events: { createQueryBuilder: vi.fn().mockReturnValue(eventsQb) },
+        outcomes: { createQueryBuilder: vi.fn().mockReturnValue(outcomesQb) },
+      });
+
+      await service.listCaptureHealth();
+
+      expect(eventsQb.select).toHaveBeenCalledWith(
+        expect.stringContaining(`'unknown'`),
+        'source',
+      );
+      expect(eventsQb.addSelect).toHaveBeenCalledWith(
+        'MAX(e.received_at)',
+        'lastCapturedAt',
+      );
+      expect(eventsQb.where).toHaveBeenCalledWith('e.is_fixture = FALSE');
+      expect(eventsQb.groupBy).toHaveBeenCalledWith(
+        expect.stringContaining('e.source'),
+      );
+      expect(outcomesQb.addSelect).toHaveBeenCalledWith(
+        'MAX(o.received_at)',
+        'lastCapturedAt',
+      );
+      expect(outcomesQb.groupBy).toHaveBeenCalledWith(
+        expect.stringContaining('o.source'),
+      );
+    });
+
+    describe('when nothing has been captured', () => {
+      it('returns no rows', async () => {
+        const service = await buildService({});
+
+        await expect(service.listCaptureHealth()).resolves.toEqual([]);
+      });
+    });
+  });
+
   describe('listByDay', () => {
-    it('maps per-day ours/third-party/total counts', async () => {
+    it('maps per-day ours/personal/third-party/total counts', async () => {
+      const qb = createQueryBuilderMock({
+        getRawMany: vi.fn().mockResolvedValue([
+          {
+            date: '2026-07-15',
+            oursCount: '2',
+            personalCount: '4',
+            thirdPartyCount: '1',
+            totalCount: '7',
+          },
+        ]),
+      });
+      const service = await buildService({
+        events: { createQueryBuilder: vi.fn().mockReturnValue(qb) },
+      });
+
+      const rows = await service.listByDay({
+        end: '2026-07-31',
+        start: '2026-07-01',
+      });
+
+      expect(rows).toEqual([
+        {
+          date: '2026-07-15',
+          oursCount: 2,
+          personalCount: 4,
+          thirdPartyCount: 1,
+          totalCount: 7,
+        },
+      ]);
+    });
+
+    it('selects one COUNT FILTER per scope member', async () => {
+      const qb = createQueryBuilderMock();
+      const service = await buildService({
+        events: { createQueryBuilder: vi.fn().mockReturnValue(qb) },
+      });
+
+      await service.listByDay({ end: '2026-07-31', start: '2026-07-01' });
+
+      const aliases = qb.addSelect.mock.calls.map((call) => call[1]);
+      expect(aliases).toEqual(
+        expect.arrayContaining([
+          'oursCount',
+          'personalCount',
+          'thirdPartyCount',
+        ]),
+      );
+    });
+
+    it('reports a zero count for a scope absent from the window', async () => {
       const qb = createQueryBuilderMock({
         getRawMany: vi.fn().mockResolvedValue([
           {
@@ -611,14 +939,7 @@ describe('SkillUsageEventsService', () => {
         start: '2026-07-01',
       });
 
-      expect(rows).toEqual([
-        {
-          date: '2026-07-15',
-          oursCount: 2,
-          thirdPartyCount: 1,
-          totalCount: 3,
-        },
-      ]);
+      expect(rows[0]?.personalCount).toBe(0);
     });
   });
 
@@ -646,8 +967,9 @@ describe('SkillUsageEventsService', () => {
           {
             date: '2026-07-15',
             oursCount: '5',
+            personalCount: '2',
             thirdPartyCount: '0',
-            totalCount: '5',
+            totalCount: '7',
           },
         ]),
       });
@@ -691,12 +1013,22 @@ describe('SkillUsageEventsService', () => {
           lastUsedAt: null,
           outcomeCount: 0,
           scope: SKILL_USAGE_SCOPES.OURS,
+          sessionEndedCount: 0,
           skillName: 'ot-plans',
           successCount: 0,
         },
       ]);
       expect(result.byScope).toEqual([
         { count: 5, scope: SKILL_USAGE_SCOPES.OURS },
+      ]);
+      expect(result.byDay).toEqual([
+        {
+          date: '2026-07-15',
+          oursCount: 5,
+          personalCount: 2,
+          thirdPartyCount: 0,
+          totalCount: 7,
+        },
       ]);
       expect(result.filterOptions).toEqual({
         cwds: ['/repo'],

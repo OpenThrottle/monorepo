@@ -1,16 +1,18 @@
-import * as React from 'react';
 import type { RenderResult } from '@testing-library/react';
 import { waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { PlanEditorActions } from '../PlanEditorActions';
-import type { PlanEditorActionsProps } from '../PlanEditorActions';
-import { renderRoutesStub } from '~/testing/route-fixtures';
+
 import { WorkspaceEditorId } from '~/__generated__/graphql';
 import {
   PLAN_DEFERRED_SECTION_COPY,
   PLAN_EDITOR_ACTIONS_COPY,
 } from '~/routing/plans/data/data.copy';
+import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import type { PlanEditorActionsProps } from '../PlanEditorActions';
+import { PlanEditorActions } from '../PlanEditorActions';
 
 const PLAN_ID = 'ec3dcee9-36e6-4ecb-876a-f689723f6db4';
 const WORKING_DIRECTORY = '/Users/matt/Development/openthrottle';
@@ -42,7 +44,7 @@ describe('PlanEditorActions Component', () => {
       component.getByRole('link', { name: 'Claude Code' }),
     ).toHaveAttribute(
       'href',
-      `claude://code/new?folder=%2FUsers%2Fmatt%2FDevelopment%2Fopenthrottle%2F&q=%2Fot-loop%20${PLAN_ID}`,
+      `claude://code/new?folder=%2FUsers%2Fmatt%2FDevelopment%2Fopenthrottle%2F&q=Run%20OpenThrottle%20plan%20${PLAN_ID}%20with%20the%20ot-loop%20skill`,
     );
     expect(component.getByRole('link', { name: 'Cursor' })).toHaveAttribute(
       'href',
@@ -164,5 +166,20 @@ describe('PlanEditorActions Component', () => {
     expect(
       component.getByRole('button', { name: 'Claude Code' }),
     ).toBeDisabled();
+  });
+
+  test('renders no Add to Queue or Schedule placeholder buttons', async () => {
+    const component = renderActions({
+      editors: resolvedEditors([WorkspaceEditorId.Claude]),
+      planId: PLAN_ID,
+      workingDirectory: WORKING_DIRECTORY,
+    });
+
+    await component.findByTestId('PlanEditorActions');
+
+    expect(
+      component.queryByRole('button', { name: /add to queue/i }),
+    ).toBeNull();
+    expect(component.queryByRole('button', { name: /schedule/i })).toBeNull();
   });
 });

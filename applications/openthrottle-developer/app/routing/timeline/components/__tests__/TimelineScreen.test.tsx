@@ -1,21 +1,23 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import { TimelineLaneGrouping } from '~/__generated__/graphql';
+import {
+  TIMELINE_EMPTY_COPY,
+  TIMELINE_PAGE_COPY,
+} from '~/routing/timeline/data/data.copy';
 import {
   FIXTURE_WINDOW_FROM,
   FIXTURE_WINDOW_TO,
   TIMELINE_FIXTURE_MARKERS,
   TIMELINE_FIXTURE_SPANS,
 } from '~/routing/timeline/data/data.fixtures';
-import {
-  TIMELINE_EMPTY_COPY,
-  TIMELINE_PAGE_COPY,
-} from '~/routing/timeline/data/data.copy';
-import { TimelineScreen } from '../TimelineScreen';
+
 import type { TimelineScreenProps } from '../TimelineScreen';
+import { TimelineScreen } from '../TimelineScreen';
 
 const baseProps = (
   overrides: Partial<TimelineScreenProps> = {},

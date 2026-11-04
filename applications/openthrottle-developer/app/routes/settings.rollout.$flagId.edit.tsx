@@ -1,27 +1,29 @@
-import * as React from 'react';
-import { redirect } from 'react-router';
 import {
   coerceBoolean,
   executeGraphqlWithAuth,
   parseFormData,
 } from '@openthrottle/react-router-graphql';
-import { z } from 'zod/v3';
-import {
-  getActionError,
-  mergeRouteModuleMeta,
-} from '@openthrottle/react-router-utils';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { SITE_TITLE } from '~/global/config/settings';
-import { CreateRolloutFlagInputSchema } from '~/__generated__/schemas';
+import {
+  getActionError,
+  mergeRouteModuleMeta,
+} from '@openthrottle/react-router-utils';
+import * as React from 'react';
+import { redirect } from 'react-router';
+import { z } from 'zod/v3';
+
+import type { Route } from '@/app/routes/+types/settings.rollout.$flagId.edit';
 import {
   DeleteRolloutFlagDocument,
   GetRolloutFlagDocument,
   UpdateRolloutFlagDocument,
 } from '~/__generated__/graphql';
+import { CreateRolloutFlagInputSchema } from '~/__generated__/schemas';
+import { SITE_TITLE } from '~/global/config/settings';
 import { RolloutFlagEditForm } from '~/routing/settings/components/RolloutFlagEditForm';
 import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
 import {
@@ -32,7 +34,6 @@ import {
   parseRolloutTypedConfig,
   toRolloutGraphqlTypedInput,
 } from '~/routing/settings/utils/rollout-typed-config';
-import type { Route } from '@/app/routes/+types/settings.rollout.$flagId.edit';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

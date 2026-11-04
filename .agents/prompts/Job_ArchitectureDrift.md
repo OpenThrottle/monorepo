@@ -12,7 +12,7 @@ OpenThrottle is an Nx + pnpm workspace monorepo (Node >= 22, pnpm only) that doe
 
 Layout:
 
-- **`applications/`** — deployable apps. `openthrottle-server` is the NestJS code-first GraphQL API; `openthrottle-developer`, `openthrottle-admin`, `openthrottle-email`, `openthrottle-website` are React Router (v8) + Vite apps.
+- **`applications/`** — deployable apps. `openthrottle-server` is the NestJS code-first GraphQL API; `openthrottle-developer`, `openthrottle-admin`, `openthrottle-website` are React Router (v8) + Vite apps.
 - **`packages/`** — `@openthrottle/nestjs-*` server modules, `@openthrottle/react-router-*` shared UI/client libraries, `openthrottle-agentic-*` agentic tooling, `openthrottle-mcp`.
 - **`tools/`** — Nx plugins, `@tools/generators`, `@tools/workflows`.
 - **`databases/`** — Postgres schema, migrations, local DB scripts.

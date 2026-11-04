@@ -15,8 +15,8 @@ import {
   getEpisode,
   getVariant,
   resolveVariant,
-} from '../registry';
-import type { VideoEpisode } from '../types';
+} from '../registry.ts';
+import type { VideoEpisode } from '../types.ts';
 
 const episode = (
   id: string,

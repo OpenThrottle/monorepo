@@ -16,6 +16,7 @@
  * and the audit says which.
  */
 
+import type { DemoFlow } from '../../runner/types.ts';
 import {
   click,
   dwell,
@@ -24,8 +25,7 @@ import {
   scrollTo,
   type_,
   waitFor,
-} from '../../runner/types';
-import type { DemoFlow } from '../../runner/types';
+} from '../../runner/types.ts';
 
 /**
  * Deep-linked ids come from the hero fixture (`src/fixtures/demo-content.ts`),

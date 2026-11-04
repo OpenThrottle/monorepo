@@ -12,6 +12,12 @@ export const DEFAULT_PLAN_RUN_RALPH_ITERATIONS = 10;
 export const DEFAULT_PLAN_RUN_RALPH_MODEL = 'auto';
 
 /**
+ * @description Empty effort means "unset": the run keeps the backend's own reasoning default and
+ * no `ralph.effort` is sent at enqueue.
+ */
+export const DEFAULT_PLAN_RUN_RALPH_EFFORT = '';
+
+/**
  * @description Programmatic plan runs log verbosely by default so the run output stream carries
  * the agent CLI's reasoning. See docs/openthrottle/plan-run-worktrees.md.
  */

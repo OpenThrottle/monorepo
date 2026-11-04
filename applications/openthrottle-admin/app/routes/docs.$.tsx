@@ -1,9 +1,10 @@
-import * as React from 'react';
 import { DocPageView } from '@openthrottle/react-router-docs';
-import { SITE_TITLE } from '~/global/config/settings';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { docsBySlug } from '~/routing/docs/data/docs-navigation';
+import * as React from 'react';
+
 import type { Route } from '@/app/routes/+types/docs.$';
+import { SITE_TITLE } from '~/global/config/settings';
+import { docsBySlug } from '~/routing/docs/data/docs-navigation';
 
 export const loader = async (args: Route.LoaderArgs) => {
   const entry = docsBySlug.get(`/docs/${args.params['*']}`);

@@ -1,6 +1,8 @@
 import type { TSESTree } from '@typescript-eslint/utils';
 import { ESLintUtils } from '@typescript-eslint/utils';
 
+import { MARKERS } from './primitive-shape-shared.ts';
+
 /**
  * The route-primitive-shape rule keeps React Router route modules under
  * `app/routes/*.tsx` thin and template-shaped — the routing-layer sibling of
@@ -22,16 +24,6 @@ import { ESLintUtils } from '@typescript-eslint/utils';
  * R4 (the file-size cap) is enforced separately by ESLint `max-lines` scoped to
  * route files, exactly like the component R6 cap.
  */
-
-/** The six canonical section markers, in order. Shared with the component shape. */
-const MARKERS: readonly string[] = [
-  'Hooks',
-  'Setup',
-  'Handlers',
-  'Markup',
-  'Life Cycle',
-  '🔌 Short Circuit',
-];
 
 /**
  * The React Router route module export surface. Everything else that is a value

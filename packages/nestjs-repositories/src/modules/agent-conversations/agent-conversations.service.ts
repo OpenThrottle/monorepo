@@ -6,24 +6,25 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Repository } from 'typeorm';
-import { AgentConversationMessage } from './agent-conversation-message.entity';
-import {
-  AGENT_CONVERSATION_MESSAGE_ROLES,
-  AGENT_CONVERSATION_STATUSES,
-} from './agent-conversation.constants';
+
+import { PlansService } from '../plans/plans.service.ts';
+import { ProjectsService } from '../projects/projects.service.ts';
 import type {
   AgentConversationMessageRole,
   AgentConversationStatus,
-} from './agent-conversation.constants';
-import { AgentConversation } from './agent-conversation.entity';
+} from './agent-conversation.constants.ts';
+import {
+  AGENT_CONVERSATION_MESSAGE_ROLES,
+  AGENT_CONVERSATION_STATUSES,
+} from './agent-conversation.constants.ts';
+import { AgentConversation } from './agent-conversation.entity.ts';
 import {
   capAgentConversationContent,
   capAgentConversationToolMetadata,
   clampAgentConversationListLimit,
   clampAgentConversationMessagesLimit,
-} from './agent-conversation.util';
-import { PlansService } from '../plans/plans.service';
-import { ProjectsService } from '../projects/projects.service';
+} from './agent-conversation.util.ts';
+import { AgentConversationMessage } from './agent-conversation-message.entity.ts';
 
 interface CreateConversationInput {
   readonly metadata?: Record<string, unknown> | null;

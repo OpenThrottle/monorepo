@@ -2,11 +2,12 @@
  * @description GraphQL entrypoint for Stripe webhooks when the raw body is sent as base64 (e.g. gateway → GraphQL). Delegates to {@link StripeWebhookHandlerService}.
  */
 
-import { Public } from '@openthrottle/nestjs-auth';
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
-import { StripeWebhookHandlerService } from '../services/stripe-webhook-handler.service';
-import { ProcessStripeWebhookInput } from './stripe-webhook-mutation.input';
-import { StripeWebhookProcessedPayload } from './stripe-webhook-mutation.object';
+import { Public } from '@openthrottle/nestjs-auth';
+
+import { StripeWebhookHandlerService } from '../services/stripe-webhook-handler.service.ts';
+import { ProcessStripeWebhookInput } from './stripe-webhook-mutation.input.ts';
+import { StripeWebhookProcessedPayload } from './stripe-webhook-mutation.object.ts';
 
 @Resolver()
 export class StripeWebhookResolver {

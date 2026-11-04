@@ -1,25 +1,25 @@
-import { componentPrimitiveShape } from './rules/component-primitive-shape.ts';
-import { preHooksUnpack } from './rules/pre-hooks-unpack.ts';
-import { routePrimitiveShape } from './rules/route-primitive-shape.ts';
-import { getDirname } from './vite-config.ts';
+import js from '@eslint/js';
 import graphqlEslint, {
   parser as graphqlParser,
 } from '@graphql-eslint/eslint-plugin';
-import js from '@eslint/js';
-import pluginImport from 'eslint-plugin-import';
-import pluginImportSort from 'eslint-plugin-simple-import-sort';
-import pluginJest from 'eslint-plugin-jest';
 import pluginNx from '@nx/eslint-plugin';
+import type { Linter } from 'eslint';
+import pluginImportX, { createNodeResolver } from 'eslint-plugin-import-x';
+import pluginJest from 'eslint-plugin-jest';
+import pluginPerfectionist from 'eslint-plugin-perfectionist';
 import pluginReact from 'eslint-plugin-react';
 import pluginReactHooks from 'eslint-plugin-react-hooks';
+import pluginSimpleImportSort from 'eslint-plugin-simple-import-sort';
 import tslint from 'typescript-eslint';
-// These plugins ship no types; ambient `declare module` shims in src/types.d.ts
-// satisfy the resolver (see tsconfig.lib.json include).
-import pluginComments from 'eslint-plugin-eslint-comments';
-import pluginJson from 'eslint-plugin-json';
-import pluginSortKeys from 'eslint-plugin-sort-keys-fix';
-import pluginTypescriptSortKeys from 'eslint-plugin-typescript-sort-keys';
-import type { Linter } from 'eslint';
+
+import { componentPrimitiveShape } from './rules/component-primitive-shape.ts';
+import { hookPrimitiveShape } from './rules/hook-primitive-shape.ts';
+import { nestjsFileExports } from './rules/nestjs-file-exports.ts';
+import { nestjsFileNaming } from './rules/nestjs-file-naming.ts';
+import { planTaskStatusChokepoint } from './rules/plan-task-status-chokepoint.ts';
+import { preHooksUnpack } from './rules/pre-hooks-unpack.ts';
+import { routePrimitiveShape } from './rules/route-primitive-shape.ts';
+import { getDirname } from './vite-config.ts';
 
 /** @public */
 export type { Config as EslintFlatConfig } from 'eslint/config';
@@ -28,21 +28,21 @@ export { prettierConfig } from './prettier-config.ts';
 /** @public */
 export {
   createViteConfig,
+  type CreateViteConfigOptions,
   defineViteConfig,
   getDirname,
-  type CreateViteConfigOptions,
   type PackageType,
 } from './vite-config.ts';
 /** @public */
 export {
   createVitestConfig,
-  createVitestConfigJsdom,
   createVitestConfigHappyDom,
+  createVitestConfigJsdom,
   createVitestConfigNode,
-  VITEST_HOOK_TIMEOUT_MS,
-  VITEST_TEST_TIMEOUT_MS,
   type CreateVitestConfigOptions,
   type TestEnvironment,
+  VITEST_HOOK_TIMEOUT_MS,
+  VITEST_TEST_TIMEOUT_MS,
 } from './vitest-config.ts';
 
 /**
@@ -55,6 +55,34 @@ export {
  * and rules run normally). `supportsAutofix` keeps `eslint --fix` working
  * through the processor.
  */
+/**
+ * Printable ASCII in code-point order, fed to `perfectionist`'s `type: 'custom'`
+ * so its collation matches the core `sort-keys` rule exactly. Perfectionist's
+ * built-in `'alphabetical'` mode collates by locale instead, which disagrees
+ * with `sort-keys` wherever a name differs only by case.
+ */
+const CODE_POINT_ALPHABET = Array.from({ length: 95 }, (_, index) =>
+  String.fromCharCode(32 + index),
+).join('');
+
+/**
+ * Compose Tailwind classes with `cn` (docs/monorepo/code-style.md#composing-classes-with-cn).
+ * `clsx` and template literals both emit conflicting classes side by side and
+ * leave the winner to stylesheet order; `cn` resolves them so the last wins.
+ */
+const CLASS_COMPOSITION_MESSAGE = `Compose classes with \`cn\` from @openthrottle/react-router-shadcn, never bare \`clsx\` or a template literal — \`cn\` resolves Tailwind conflicts so the last class (the caller's \`className\`) wins. See docs/monorepo/code-style.md#composing-classes-with-cn.`;
+
+/**
+ * The template-literal half of the class-composition rule. Every
+ * `no-restricted-syntax` array below repeats it, because those options replace
+ * rather than merge.
+ */
+const TEMPLATE_LITERAL_CLASS_NAME_RESTRICTION = {
+  message: CLASS_COMPOSITION_MESSAGE,
+  selector:
+    "JSXAttribute[name.name='className'] > JSXExpressionContainer > TemplateLiteral[expressions.length>0]",
+};
+
 const skipEmptyGraphqlProcessor: Linter.Processor = {
   meta: { name: 'skip-empty-graphql', version: '1.0.0' },
   postprocess(messages) {
@@ -86,6 +114,14 @@ export const eslintConfig = tslint.config([
       '**/*.d.ts',
       '**/__generated__/**/*',
       '**/.cache/**/*',
+      // Every hook bundle under a tool's hooks/ folder is esbuild output from
+      // @openthrottle/agentic-hooks, committed and drift-checked byte-for-byte
+      // by bundle-hooks-check. Linting it is meaningless (it is not authored
+      // code) and `eslint --fix` would fight esbuild and break the drift gate.
+      // `.cursor` is already covered wholesale below. Mirrors the same set in
+      // .prettierignore — change one, change both.
+      '**/.claude/hooks/**/*',
+      '**/.codex/hooks/**/*',
       '**/.cursor/**/*',
       '**/.git/**/*',
       '**/.github/**/*',
@@ -97,6 +133,7 @@ export const eslintConfig = tslint.config([
       '**/build/**/*',
       '**/dist/**/*',
       '**/node_modules/**/*',
+      '**/plugins/*/hooks/**/*',
       '**/public/worker.js',
       '**/tools/generators/src/generators/*/files/**/*',
       '**/vite.config.ts.timestamp-*.mjs',
@@ -199,22 +236,23 @@ export const eslintConfig = tslint.config([
 
     plugins: {
       '@nx': pluginNx,
-      comments: pluginComments,
-      import: pluginImport,
+      'import-x': pluginImportX,
       jest: pluginJest,
-      json: pluginJson,
       openthrottle: {
         rules: {
           'component-primitive-shape': componentPrimitiveShape,
+          'hook-primitive-shape': hookPrimitiveShape,
+          'nestjs-file-exports': nestjsFileExports,
+          'nestjs-file-naming': nestjsFileNaming,
+          'plan-task-status-chokepoint': planTaskStatusChokepoint,
           'pre-hooks-unpack': preHooksUnpack,
           'route-primitive-shape': routePrimitiveShape,
         },
       },
+      perfectionist: pluginPerfectionist,
       react: pluginReact,
       'react-hooks': pluginReactHooks,
-      'simple-import-sort': pluginImportSort,
-      'sort-keys-fix': pluginSortKeys,
-      'typescript-sort-keys': pluginTypescriptSortKeys,
+      'simple-import-sort': pluginSimpleImportSort,
     },
 
     rules: {
@@ -260,10 +298,16 @@ export const eslintConfig = tslint.config([
       // Named exports only — a default export costs the importer the shared,
       // greppable name. Framework entry points that *require* a default are
       // carved out below; everything else is an error.
-      'import/no-default-export': 'error',
-      'import/no-named-as-default-member': 'off',
+      'import-x/no-default-export': 'error',
+      'import-x/no-named-as-default-member': 'off',
       'no-await-in-loop': 'error',
       'no-console': 'off',
+      // `cn` is built on clsx, so react-router-shadcn turns this off — in its
+      // own eslint.config.ts for `nx lint`, and in the root-cwd block below.
+      'no-restricted-imports': [
+        'error',
+        { paths: [{ message: CLASS_COMPOSITION_MESSAGE, name: 'clsx' }] },
+      ],
       // Enforce the "no new TypeScript enums — use `as const` objects" rule
       // from CLAUDE.md at the config layer.
       'no-restricted-syntax': [
@@ -272,10 +316,66 @@ export const eslintConfig = tslint.config([
           message: `Avoid TypeScript enums. Use an \`as const\` object instead (existing enums are grandfathered).`,
           selector: 'TSEnumDeclaration',
         },
+        TEMPLATE_LITERAL_CLASS_NAME_RESTRICTION,
       ],
       'no-undef': 'off',
-
       'no-unused-vars': 'off',
+      // New in the ESLint 10 `recommended` set. 13 real dead stores across the
+      // repo when the upgrade landed; `warn` so the bump stays behaviour-neutral
+      // at `error`, and because a "useless" assignment is occasionally a typo
+      // masking a bug, which wants a human read rather than a blind delete.
+      'no-useless-assignment': 'warn',
+      // Interface-member and enum alphabetization, replacing
+      // eslint-plugin-typescript-sort-keys. That plugin is abandoned (peer range
+      // `^7 || ^8`) and crashes at rule *load* under ESLint 10 —
+      // `createNodeSwapper` calls the removed `context.getSourceCode()` — so it
+      // could not be carried forward.
+      //
+      // `type: 'custom'` with an explicit printable-ASCII alphabet, not the
+      // default `'alphabetical'`. Perfectionist's alphabetical mode collates by
+      // locale, where `editors` sorts before `editorWorkingDirectory` and
+      // `pickedPath` before `pickError`. Core `sort-keys` (still on, below)
+      // compares by code point, where the capital sorts first in both. Measured:
+      // the locale default disagreed with the repo's existing order on 32
+      // interfaces. Two collations in one repo is worse than either, so this
+      // matches `sort-keys` rather than the other way round.
+      //
+      // `perfectionist/sort-objects` is deliberately NOT enabled. Core
+      // `sort-keys` already covers object literals with identical detection
+      // (sort-keys-fix was a fork of it that only added a fixer), and
+      // perfectionist's version additionally sorts destructuring patterns —
+      // 369 new errors, and a reordering hazard where a default value
+      // references an earlier binding. The cost of dropping sort-keys-fix is
+      // therefore the autofix alone, not the enforcement.
+      'perfectionist/sort-enums': [
+        'error',
+        {
+          alphabet: CODE_POINT_ALPHABET,
+          ignoreCase: false,
+          order: 'asc',
+          type: 'custom',
+        },
+      ],
+      'perfectionist/sort-interfaces': [
+        'error',
+        {
+          alphabet: CODE_POINT_ALPHABET,
+          // Index signatures sort ahead of named members rather than being
+          // collated with them by their rendered text (`readonly [key: string]`,
+          // which would sort under `r`). `typescript-sort-keys` skipped index
+          // signatures entirely, so this keeps the one interface in the repo
+          // that mixes the two — ConversationStreamSubscriptionVariables — legal.
+          groups: ['index-signature', 'unknown'],
+          ignoreCase: false,
+          order: 'asc',
+          type: 'custom',
+        },
+      ],
+      // Also new in the ESLint 10 `recommended` set: 9 sites rethrow inside a
+      // `catch` without attaching `{ cause }`, losing the original error. Real
+      // findings and worth fixing, but they are edits to error-handling paths,
+      // not part of a toolchain bump — `warn` until they are done deliberately.
+      'preserve-caught-error': 'warn',
       'react/jsx-boolean-value': ['error', 'always'],
       'react/jsx-curly-brace-presence': ['error', 'never'],
       'react/jsx-sort-props': 'error',
@@ -284,14 +384,13 @@ export const eslintConfig = tslint.config([
       'react/no-multi-comp': ['error', { ignoreStateless: false }],
       'react/prop-types': 'off',
       'react/react-in-jsx-scope': 'off',
+      'simple-import-sort/exports': 'error',
+      'simple-import-sort/imports': 'error',
       'sort-keys': [
         'error',
         'asc',
         { caseSensitive: true, minKeys: 2, natural: false },
       ],
-      'sort-keys-fix/sort-keys-fix': 'error',
-      'typescript-sort-keys/interface': 'error',
-      'typescript-sort-keys/string-enum': 'error',
     },
   },
 
@@ -307,6 +406,7 @@ export const eslintConfig = tslint.config([
           message: `Avoid TypeScript enums. Use an \`as const\` object instead (existing enums are grandfathered).`,
           selector: 'TSEnumDeclaration',
         },
+        TEMPLATE_LITERAL_CLASS_NAME_RESTRICTION,
         {
           message: `Avoid snapshot tests in __tests__. Prefer getByRole/getByText and assertions on visible behavior.`,
           selector: `CallExpression[callee.type="MemberExpression"][callee.property.name="toMatchSnapshot"]`,
@@ -423,7 +523,7 @@ export const eslintConfig = tslint.config([
       '**/src/generators/*/generator.ts',
     ],
     rules: {
-      'import/no-default-export': 'off',
+      'import-x/no-default-export': 'off',
     },
   },
 
@@ -470,6 +570,32 @@ export const eslintConfig = tslint.config([
       // visible without breaking the build. Graduates to `error` later,
       // independently per surface.
       'openthrottle/pre-hooks-unpack': 'warn',
+    },
+  },
+
+  /**
+   * The hook primitive shape (docs/monorepo/hook-primitive-shape.md). Scoped to
+   * authored `use*` hook files under a `hooks/` folder; tests, stories and the
+   * vendored shadcn package (which carries its own hooks, held to the shadcn
+   * variant standard) are excluded. Enforced repo-wide at `error` now that every
+   * existing hook is at spec — regressions block the build. ESLint owns H1 (one
+   * hook named after the file), H2
+   * (exports), H3 (module-scope values), H4 (markers, autofix scaffolds) and H5
+   * (return type); H6 and the cross-file H3 check belong to the audit script.
+   * Use the first-line `hook-shape: opt-out` block-comment pragma for the
+   * genuinely-irreducible hook.
+   */
+  {
+    files: ['**/hooks/use*.{ts,tsx}'],
+    ignores: [
+      '**/*.stories.tsx',
+      '**/*.test.ts',
+      '**/*.test.tsx',
+      '**/__tests__/**',
+      '**/packages/react-router-shadcn/**',
+    ],
+    rules: {
+      'openthrottle/hook-primitive-shape': 'error',
     },
   },
 
@@ -533,6 +659,42 @@ export const eslintConfig = tslint.config([
   },
 
   /**
+   * `cn` is implemented on top of clsx, so react-router-shadcn is the one place
+   * a clsx import is legitimate. Root-cwd coverage only, for the same reason as
+   * the block above; the package's own eslint.config.ts carries the `nx lint`
+   * copy.
+   */
+  {
+    files: ['**/packages/react-router-shadcn/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': 'off',
+    },
+  },
+
+  /**
+   * The plans/tasks status-write chokepoint (`openthrottle/plan-task-status-
+   * chokepoint`, registered above) is enabled with its per-file
+   * `allowedFunctionNames` overrides in EACH project's own `eslint.config.ts`
+   * — `applications/openthrottle-server/eslint.config.ts` and
+   * `packages/nestjs-repositories/eslint.config.ts` — not here. `nx run
+   * <project>:lint` runs `eslint -c ./eslint.config.ts` with cwd AT the
+   * project, so a shared-config `files` pattern prefixed with
+   * `applications/openthrottle-server/…` can never match: from that cwd the
+   * file is just `src/graphql/…`, with no project-path prefix left to match
+   * against. This is exactly why `component-primitive-shape`'s shadcn variant
+   * below has its enabling override duplicated inside
+   * `packages/react-router-shadcn/eslint.config.ts` rather than relying on the
+   * `packages/react-router-shadcn/**` glob a few blocks down — that glob only
+   * matches when eslint is invoked from the repo root (lint-staged), not via
+   * `nx run`. `packages/node-client` is out of scope for the status-write
+   * rule (`openthrottle-client.ts` writes `plan.status`/`task.status` directly
+   * against its own `DataSource` — no NestJS DI graph, no HTTP request for the
+   * server-side chokepoint to intercept, a real gap not a carve-out): its own
+   * `eslint.config.ts` deliberately has no enabling override, so no `files`
+   * glob here needs to exclude it.
+   */
+
+  /**
    * GraphQL operation documents — alphabetize selection-set fields.
    *
    * `@graphql-eslint/alphabetize` (fixable via `eslint --fix`) recursively
@@ -569,6 +731,126 @@ export const eslintConfig = tslint.config([
         {
           selections: ['OperationDefinition', 'FragmentDefinition'],
         },
+      ],
+    },
+  },
+]);
+
+/**
+ * The one strip-only restriction the TypeScript compiler will not enforce for
+ * us, for the packages that need it.
+ *
+ * A **source-first** package — one whose `exports` name `./src/` — hands raw
+ * TypeScript to its consumers, and when the consumer is Node, its strip-only
+ * type loader *erases* types but never *emits* code. Every construct whose
+ * semantics require generated output is rejected outright, in an unrelated
+ * project's test run, with an error naming neither the package nor `exports`.
+ * See docs/monorepo/source-first-packages-and-strip-only.md.
+ *
+ * `erasableSyntaxOnly` in `tsconfig.base.json` covers that class repo-wide —
+ * parameter properties, `enum`, `namespace`, `import x = require()` — at
+ * `typecheck`, in the editor, with no custom code. It deliberately does **not**
+ * flag decorators, which are equally unemittable but which the NestJS surface
+ * is built out of. So decorators are the residue, and they are banned here
+ * rather than globally, scoped by each package that opts into source-first.
+ *
+ * Spread this **after** `eslintConfig` in a source-first package's
+ * `eslint.config.ts`. `no-restricted-syntax` options replace rather than merge,
+ * so the enum entry from the base block is repeated; `__tests__` is left alone
+ * so the snapshot restrictions there survive.
+ * @public
+ */
+export const sourceFirstEslintConfig = tslint.config([
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    ignores: ['**/__tests__/**'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          message: `Avoid TypeScript enums. Use an \`as const\` object instead (existing enums are grandfathered).`,
+          selector: 'TSEnumDeclaration',
+        },
+        TEMPLATE_LITERAL_CLASS_NAME_RESTRICTION,
+        {
+          message: `This package is source-first — its "exports" name ./src/, so consumers get raw TypeScript. A decorator implies a generated call wrapping the declaration, which Node's strip-only loader cannot emit: a consumer resolving this package through Node fails with "SyntaxError: Invalid or unexpected token", naming neither this package nor the "exports" decision. Either drop the decorator, or stop pointing this package's require/default conditions at ./src/. See docs/monorepo/source-first-packages-and-strip-only.md.`,
+          selector: 'Decorator',
+        },
+      ],
+    },
+  },
+]);
+
+/**
+ * The NestJS file contract: a file is `<folder>.<kind>.ts` and exports only
+ * what its kind says (docs/monorepo/code-style.md, "NestJS file names").
+ * `openthrottle/nestjs-file-naming` checks the name and
+ * `openthrottle/nestjs-file-exports` checks the exports.
+ *
+ * Spread this **after** `eslintConfig` in `applications/openthrottle-server`
+ * and every `packages/nestjs-*` config. It scopes itself to `src/` because nx
+ * lints with cwd at the project, so the glob is project-relative. Both rules
+ * are `warn` until the per-area migration (OT plan 3915bc12) reaches zero;
+ * that plan's last task flips them to `error`. A file that must keep its name
+ * goes in the consuming config's `ignores`, where the exception is reviewed.
+ * @public
+ */
+export const nestjsEslintConfig = tslint.config([
+  {
+    files: ['src/**/*.ts'],
+    ignores: ['**/__generated__/**'],
+    rules: {
+      'openthrottle/nestjs-file-exports': 'warn',
+      'openthrottle/nestjs-file-naming': 'warn',
+    },
+  },
+]);
+
+/**
+ * Autofix for the file extensions Node ESM requires, for the packages that
+ * require them.
+ *
+ * A `"type": "module"` package compiled under `moduleResolution: nodenext` must
+ * spell out the extension on every relative specifier: Node's ESM resolver,
+ * unlike CJS, does no extension searching, and `tsc` never rewrites a specifier
+ * it was not given. (`rewriteRelativeImportExtensions` in `tsconfig.base.json`
+ * maps a `.ts` you wrote down to `.js` on emit — it cannot invent one.) So we
+ * write `./foo.ts` and ship `./foo.js`.
+ *
+ * `tsc` already *enforces* this — a missing extension is TS2835. What it does
+ * not do is *write* it, which left ~23 specifiers per package to type by hand.
+ * That is all this block buys: `eslint --fix` now writes them.
+ *
+ * The resolver is not optional. Without one the rule cannot see the file behind
+ * `./foo`, so `extension` falls back to `path.extname(importPath)` — which
+ * silently passes every dotted filename in this repo (`./pubsub.constants`
+ * "already has" a `.constants` extension) and downgrades the rest to a
+ * suggestion with no fixer. With it, all 23 report and all 23 fix.
+ *
+ * Spread this **after** `eslintConfig` in an ESM + nodenext package's
+ * `eslint.config.ts`. It is opt-in rather than repo-wide because the two other
+ * tiers must NOT have extensions forced on them: `moduleResolution: bundler`
+ * packages (every `react-router-*`) are resolved by Vite, which never sees a
+ * Node specifier, and CommonJS packages do not need extensions at all.
+ * @public
+ */
+export const nodeEsmEslintConfig = tslint.config([
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    rules: {
+      // `ignorePackages` scopes this to relative specifiers — a bare
+      // `@nestjs/common` is resolved by its own `exports` map and must stay
+      // extensionless. `checkTypeImports` because `import type` is erased at
+      // runtime but still resolved by `tsc`, which fails it identically.
+      'import-x/extensions': [
+        'error',
+        'ignorePackages',
+        { checkTypeImports: true, fix: true },
+      ],
+    },
+    settings: {
+      'import-x/resolver-next': [
+        createNodeResolver({ extensions: ['.ts', '.tsx', '.js', '.jsx'] }),
       ],
     },
   },

@@ -4,9 +4,9 @@ import { usePointerDrag } from '../hooks/usePointerDrag';
 import { type UseViewportResult } from '../hooks/useViewport';
 import { type FloorElement } from '../types';
 import {
-  type SelectionTransform,
   computeRotation,
   computeSize,
+  type SelectionTransform,
 } from '../utils/selection-transform';
 
 /**

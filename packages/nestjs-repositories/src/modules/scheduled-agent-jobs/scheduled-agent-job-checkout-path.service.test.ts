@@ -2,8 +2,9 @@ import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { RepositoryCheckoutsService } from '../repositories/repository-checkouts.service';
-import { ScheduledAgentJobCheckoutPathService } from './scheduled-agent-job-checkout-path.service';
+
+import { RepositoryCheckoutsService } from '../repositories/repository-checkouts.service.ts';
+import { ScheduledAgentJobCheckoutPathService } from './scheduled-agent-job-checkout-path.service.ts';
 
 describe('ScheduledAgentJobCheckoutPathService', () => {
   let service: ScheduledAgentJobCheckoutPathService;

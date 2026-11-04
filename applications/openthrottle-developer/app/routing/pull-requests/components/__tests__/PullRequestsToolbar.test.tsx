@@ -1,11 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import type { PullRequestsListFilters } from '~/routing/pull-requests/types/pull-requests-list-filters';
-import { PullRequestsToolbar } from '../PullRequestsToolbar';
+
 import type { PullRequestsToolbarProps } from '../PullRequestsToolbar';
+import { PullRequestsToolbar } from '../PullRequestsToolbar';
 
 const baseFilters: PullRequestsListFilters = {
   author: 'alice',

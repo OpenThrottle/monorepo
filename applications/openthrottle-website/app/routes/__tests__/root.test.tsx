@@ -1,5 +1,6 @@
 import { RouterContextProvider } from 'react-router';
 import { describe, expect, test } from 'vitest';
+
 import { loader } from '~/root';
 
 // This app has middleware enabled, so `Route.LoaderArgs['context']` is a

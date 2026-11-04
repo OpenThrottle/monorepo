@@ -1,0 +1,19 @@
+{
+  "conversation_id": "e747cb7c-e568-4341-aece-6fe8bb11b174",
+  "generation_id": "e747cb7c-e568-4341-aece-6fe8bb11b174",
+  "model": "claude-sonnet-4-5",
+  "tool_name": "Shell",
+  "tool_input": {
+    "command": "echo probeshell",
+    "cwd": "",
+    "timeout": 30000
+  },
+  "tool_use_id": "3e39a5cd-412e-4570-a92c-f9c40dfd2d0c",
+  "cwd": "",
+  "session_id": "e747cb7c-e568-4341-aece-6fe8bb11b174",
+  "hook_event_name": "preToolUse",
+  "cursor_version": "2026.09.10-fd3934a",
+  "workspace_roots": ["/tmp/probe-repo"],
+  "user_email": "probe@example.com",
+  "transcript_path": "/home/probe/.cursor/projects/probe-repo/agent-transcripts/e747cb7c-e568-4341-aece-6fe8bb11b174.jsonl"
+}

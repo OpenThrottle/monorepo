@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Badge,
   Table,
@@ -8,6 +7,8 @@ import {
   TableHeader,
   TableRow,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import type {
   DefinitionLocation,
   ReferenceLocation,

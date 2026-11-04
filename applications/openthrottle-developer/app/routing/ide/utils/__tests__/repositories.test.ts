@@ -1,9 +1,10 @@
 import { describe, expect, test } from 'vitest';
+
+import type { IdeWorkspaceRepository } from '../repositories';
 import {
   resolveSelectedRepository,
   toRepositoryOptions,
 } from '../repositories';
-import type { IdeWorkspaceRepository } from '../repositories';
 
 const repositories: IdeWorkspaceRepository[] = [
   {

@@ -8,9 +8,14 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@nx/devkit": "catalog:"
+    "@nx/devkit": "catalog:",
+    "lodash": "catalog:",
+    "pluralize": "catalog:",
+    "prompts": "catalog:"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "vitest": "catalog:"
+  },
   "__exports": {
     ".": {
       "import": "./dist/src/index.js",
@@ -43,6 +48,7 @@
     ],
     "targets": {
       "__dev": {
+        "cache": false,
         "continuous": true,
         "executor": "@nx/js:tsc",
         "options": {
@@ -51,7 +57,6 @@
         }
       },
       "build": {
-        "cache": false,
         "executor": "@nx/js:tsc"
       },
       "lint": {},

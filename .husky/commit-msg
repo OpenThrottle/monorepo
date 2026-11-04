@@ -1,14 +1,34 @@
 #!/usr/bin/env sh
 
 #
-# Strip Co-authored-by and Made-with lines (e.g. from Cursor) so only conventional footers remain.
+# Strip agent-attribution lines so only conventional footers remain.
 #
+# Emitter-agnostic on purpose — the pattern set is shared with CI in
+# .husky/utils/attribution-patterns.sh, and the match is case-insensitive because
+# the exact spelling varies by tool (`Co-Authored-By:` vs `Co-authored-by:`).
+#
+# It strips rather than fails on purpose: several harnesses inject the line
+# themselves, so failing here would block nearly every agent commit and teach
+# `--no-verify` as the way around it — which is how the one line that reached
+# CI on PR #554 got there. But it strips LOUDLY. The silent version rewrote
+# three commits on that branch without the author ever learning the rule
+# existed, which is why the fourth was written without care. Saying what was
+# removed costs nothing and is the whole difference.
+#
+. "$(dirname "$0")/utils/attribution-patterns.sh"
+
 if [ -n "$1" ] && [ -f "$1" ]; then
-  sed -i.bak \
-    -e '/^[[:space:]]*Co-authored-by:/d' \
-    -e '/^[[:space:]]*Made-with:/d' \
-    "$1"
-  rm -f "$1.bak"
+  if stripped="$(grep -inE "$OT_ATTRIBUTION_PATTERN" "$1")"; then
+    echo "✂️  Removed agent attribution from the commit message:"
+    echo "$stripped" | sed 's/^/     line /'
+    echo "   Rule:  AGENTS.md § No agent attribution — commits carry only"
+    echo "          conventional footers (BREAKING CHANGE:, Closes #, Plan-Id:, Task-Id:)."
+    echo "   Guard: .husky/utils/attribution-patterns.sh"
+    echo "   The commit itself is fine — the line is gone. Nothing to redo."
+
+    grep -viE "$OT_ATTRIBUTION_PATTERN" "$1" > "$1.stripped" || true
+    mv "$1.stripped" "$1"
+  fi
 fi
 
 #

@@ -4,16 +4,24 @@
  * label that drifts from its lane by even a few pixels reads as a bug.
  */
 
-/** Height of one lane sub-row. A lane is this times its sub-row count. */
+/**
+ * Height of one lane sub-row. A lane is this times its sub-row count.
+ */
 export const TIMELINE_LANE_ROW_HEIGHT = 28;
 
-/** Height of a span bar inside its sub-row, leaving a little breathing room. */
+/**
+ * Height of a span bar inside its sub-row, leaving a little breathing room.
+ */
 export const TIMELINE_SPAN_HEIGHT = 16;
 
-/** Minimum rendered width of a span, so a one-second run is still clickable. */
+/**
+ * Minimum rendered width of a span, so a one-second run is still clickable.
+ */
 export const TIMELINE_MIN_SPAN_WIDTH = 3;
 
-/** Marker glyph size, in px. */
+/**
+ * Marker glyph size, in px.
+ */
 export const TIMELINE_MARKER_SIZE = 9;
 
 /**
@@ -22,3 +30,14 @@ export const TIMELINE_MARKER_SIZE = 9;
  * so drawing them individually costs DOM nodes and buys nothing.
  */
 export const TIMELINE_MARKER_COLLISION_PX = 10;
+
+/**
+ * Pixels the chart body scrolls per arrow-key press when panning by keyboard.
+ */
+export const TIMELINE_PAN_KEY_STEP = 80;
+
+/**
+ * Chart body width used before the element is measured, and in any environment
+ * that reports none (jsdom's ResizeObserver is a no-op).
+ */
+export const TIMELINE_FALLBACK_WIDTH = 960;

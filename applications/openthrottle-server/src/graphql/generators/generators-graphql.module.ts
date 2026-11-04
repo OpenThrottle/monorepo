@@ -3,7 +3,8 @@
  */
 
 import { Module } from '@nestjs/common';
-import { GeneratorsResolver } from './generators.resolver';
+
+import { GeneratorsResolver } from './generators.resolver.ts';
 
 @Module({
   providers: [GeneratorsResolver],

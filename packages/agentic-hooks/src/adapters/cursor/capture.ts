@@ -8,13 +8,12 @@ import path from 'node:path';
 
 import {
   buildUsageEvent,
-  DEFAULT_PRIVACY_LEVEL,
   defaultJsonlPath,
   logHookError,
   persistUsageEvent,
   recordSkillStart,
-} from '../../index';
-import { CURSOR_SOURCE, normalizeCursorPayload } from './payload';
+} from '../../index.ts';
+import { CURSOR_SOURCE, normalizeCursorPayload } from './payload.ts';
 
 const main = async (): Promise<void> => {
   try {
@@ -43,7 +42,6 @@ const main = async (): Promise<void> => {
 
     const event = buildUsageEvent({
       normalized,
-      privacyLevel: DEFAULT_PRIVACY_LEVEL,
       repoRoot,
       source: CURSOR_SOURCE,
     });
@@ -52,7 +50,6 @@ const main = async (): Promise<void> => {
     }
 
     recordSkillStart({
-      repoRoot,
       scope: event.scope,
       sessionId: event.session_id,
       skillName: event.skill_name,
@@ -60,8 +57,7 @@ const main = async (): Promise<void> => {
       toolUseId: event.tool_use_id ?? null,
     });
 
-    const outPath =
-      process.env.SKILL_USAGE_JSONL_PATH || defaultJsonlPath(repoRoot);
+    const outPath = defaultJsonlPath();
 
     await persistUsageEvent({
       event,

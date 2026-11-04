@@ -1,5 +1,5 @@
-import { parseRepositoryRemote } from './repository-identity';
 import type { ChatCheckoutOption } from '../types';
+import { parseRepositoryRemote } from './repository-identity';
 
 /**
  * Heading for the trailing group of checkouts with no parseable remote — a

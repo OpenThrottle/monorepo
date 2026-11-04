@@ -1,15 +1,17 @@
-import * as React from 'react';
+import type { RenderResult } from '@testing-library/react';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { RenderResult } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, describe, expect, test } from 'vitest';
+
+import type { ServiceAccountCredentialFieldsFragment } from '~/__generated__/graphql';
+
+import type { SettingsKeysTableProps } from '../SettingsKeysTable';
 import {
   getSettingsKeysCredentialStatus,
   SettingsKeysTable,
 } from '../SettingsKeysTable';
-import type { SettingsKeysTableProps } from '../SettingsKeysTable';
-import type { ServiceAccountCredentialFieldsFragment } from '~/__generated__/graphql';
 
 const credential = (
   overrides: Partial<ServiceAccountCredentialFieldsFragment> &

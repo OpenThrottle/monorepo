@@ -6,8 +6,8 @@
  * `toSkillDetailUsageData` for the single-skill detail card.
  */
 
-import type { SkillsIndexUsageData } from '~/routing/skills/data/skills-index-usage';
 import type { GetUsageSkillUsageQuery } from '~/__generated__/graphql';
+import type { SkillsIndexUsageData } from '~/routing/skills/data/skills-index-usage';
 
 /** Map the deferred aggregate usage query → the sections' discriminated prop. */
 export const toSkillsIndexUsageData = (
@@ -18,6 +18,7 @@ export const toSkillsIndexUsageData = (
     byDay: skillUsage.byDay.map((day) => ({
       date: day.date,
       oursCount: day.oursCount,
+      personalCount: day.personalCount,
       thirdPartyCount: day.thirdPartyCount,
       totalCount: day.totalCount,
     })),

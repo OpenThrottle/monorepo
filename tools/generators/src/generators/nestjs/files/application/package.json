@@ -24,40 +24,53 @@
     "targets": {
       "build": {
         "executor": "nx:run-commands",
-        "options": {
-          "command": "nest build --path {projectRoot}/tsconfig.app.json"
-        },
         "dependsOn": [
           "^build",
           "^build-package"
-        ]
+        ],
+        "metadata": {
+          "description": "Emit the app to ./build with tsc (emit only; `typecheck` is the type gate). Not `nest build`/`nest start`: their SWC builder cannot rewrite `.ts` import specifiers to `.js`, so the ESM this package emits would not resolve at runtime (OT plan 31454927 task 2). Mirrors applications/openthrottle-server."
+        },
+        "options": {
+          "command": "${OPENTHROTTLE_TSC_BIN:-tsc} -p {projectRoot}/tsconfig.app.json --noCheck"
+        },
       },
       "dev": {
         "continuous": true,
-        "executor": "nx:run-commands",
-        "options": {
-          "command": "nest start --path {projectRoot}/tsconfig.app.json --watch"
-        },
         "dependsOn": [
           {
             "target": "ensure-worktree",
             "projects": "monorepo"
           },
           "^dev"
-        ]
+        ],
+        "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Run the app in watch mode: tsc emits, `node --watch` reruns. Not `nest build`/`nest start`: their SWC builder cannot rewrite `.ts` import specifiers to `.js`, so the ESM this package emits would not resolve at runtime (OT plan 31454927 task 2). Mirrors applications/openthrottle-server."
+        },
+        "options": {
+          "commands": [
+            "${OPENTHROTTLE_TSC_BIN:-tsc} -p {projectRoot}/tsconfig.app.json --watch --preserveWatchOutput",
+            "node --watch --enable-source-maps ./build/src/main.js"
+          ],
+          "parallel": true
+        },
       },
       "lint": {
         "options": {
-          "command": "pnpm exec eslint -c ./eslint.config.mts .",
+          "command": "pnpm exec eslint -c ./eslint.config.ts .",
           "cwd": "{projectRoot}"
         }
       },
       "start": {
         "continuous": true,
         "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Run the built app. Not `nest build`/`nest start`: their SWC builder cannot rewrite `.ts` import specifiers to `.js`, so the ESM this package emits would not resolve at runtime (OT plan 31454927 task 2). Mirrors applications/openthrottle-server."
+        },
         "options": {
-          "command": "nest start --path {projectRoot}/tsconfig.app.json"
-        }
+          "command": "node --enable-source-maps ./build/src/main.js"
+        },
       },
       "test": {},
       "typecheck": {}
@@ -70,5 +83,5 @@
     "start:docker": "node -r dotenv/config ./build/src/main.js"
   },
   "sideEffects": false,
-  "type": "commonjs"
+  "type": "module"
 }

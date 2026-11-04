@@ -1,5 +1,8 @@
-import * as React from 'react';
-import { redirect } from 'react-router';
+import {
+  executeGraphqlWithAuth,
+  isAuthError,
+  parseFormData,
+} from '@openthrottle/react-router-graphql';
 import {
   Button,
   Input,
@@ -10,24 +13,22 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { useFetcher } from 'react-router';
-import {
-  executeGraphqlWithAuth,
-  isAuthError,
-  parseFormData,
-} from '@openthrottle/react-router-graphql';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalHeading,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { UserIcon } from 'lucide-react';
+import * as React from 'react';
+import { redirect } from 'react-router';
+import { useFetcher } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/users._index';
 import { CreateUserDocument, GetUsersDocument } from '~/__generated__/graphql';
 import { CreateUserInputSchema } from '~/__generated__/schemas';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
-import { UserIcon } from 'lucide-react';
 import { UsersTable } from '~/routing/users/components/UsersTable';
-import type { Route } from '@/app/routes/+types/users._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

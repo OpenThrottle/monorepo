@@ -1,7 +1,8 @@
-import { describe, expect, beforeEach, test } from 'vitest';
-import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { readJson } from '@nx/devkit';
 import type { Tree } from '@nx/devkit';
+import { readJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { beforeEach, describe, expect, test } from 'vitest';
+
 import { packageGenerator } from './generator';
 
 describe('package generator', () => {
@@ -13,7 +14,7 @@ describe('package generator', () => {
     const name = 'example-xxx-package';
 
     beforeEach(() => {
-      tree = createTreeWithEmptyWorkspace();
+      tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
     });
 
     test('should create a new "@tools" package', async () => {
@@ -79,7 +80,7 @@ describe('package generator', () => {
     const name = 'example-xxx-package';
 
     beforeEach(() => {
-      tree = createTreeWithEmptyWorkspace();
+      tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
     });
 
     test('should create a new "@openthrottle" package', async () => {

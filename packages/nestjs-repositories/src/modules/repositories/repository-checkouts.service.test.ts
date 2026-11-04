@@ -1,13 +1,14 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { ConflictException } from '@nestjs/common';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { Test } from '@nestjs/testing';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { QueryFailedError } from 'typeorm';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { RepositoryCheckout } from './repository-checkout.entity';
-import { RepositoryCheckoutsService } from './repository-checkouts.service';
+
+import { RepositoryCheckout } from './repository-checkout.entity.ts';
+import { RepositoryCheckoutsService } from './repository-checkouts.service.ts';
 
 describe('RepositoryCheckoutsService', () => {
   const userId = '11111111-1111-4111-8111-111111111111';
@@ -318,6 +319,29 @@ describe('RepositoryCheckoutsService', () => {
       vi.mocked(mockOrmRepository.delete).mockResolvedValue({ affected: 0 });
 
       await expect(service.delete(userId, checkoutId)).resolves.toBe(false);
+    });
+  });
+
+  describe('deleteWorktreeCheckout', () => {
+    it('scopes the delete to the user and to kind=worktree, so a primary row is never removed', async () => {
+      vi.mocked(mockOrmRepository.delete).mockResolvedValue({ affected: 1 });
+
+      await expect(
+        service.deleteWorktreeCheckout(userId, checkoutId),
+      ).resolves.toBe(true);
+      expect(mockOrmRepository.delete).toHaveBeenCalledWith({
+        id: checkoutId,
+        kind: 'worktree',
+        userId,
+      });
+    });
+
+    it('returns false when no worktree row matched', async () => {
+      vi.mocked(mockOrmRepository.delete).mockResolvedValue({ affected: 0 });
+
+      await expect(
+        service.deleteWorktreeCheckout(userId, checkoutId),
+      ).resolves.toBe(false);
     });
   });
 });

@@ -1,9 +1,10 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { FaqView } from '../FaqView';
+
 import type { DocEntry } from '../../utils/buildDocsManifest';
+import { FaqView } from '../FaqView';
 
 const makeEntry = (overrides: Partial<DocEntry>): DocEntry => ({
   content: 'Answer body.',

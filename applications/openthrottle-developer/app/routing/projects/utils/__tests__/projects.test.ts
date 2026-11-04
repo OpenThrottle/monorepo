@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { isSortBy, isSortOrder, isView } from '../projects';
 
 describe('isSortBy', () => {

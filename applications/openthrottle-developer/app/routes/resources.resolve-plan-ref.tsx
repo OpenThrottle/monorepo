@@ -1,8 +1,9 @@
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import type { PlanRefResolverData } from '@openthrottle/react-router-ui';
 import { normalizeIdFragment } from '@openthrottle/react-router-utils';
-import { ResolvePlanRefDocument } from '~/__generated__/graphql';
+
 import type { Route } from '@/app/routes/+types/resources.resolve-plan-ref';
+import { ResolvePlanRefDocument } from '~/__generated__/graphql';
 
 /**
  * Resource route (loader-only) backing the ⌘K commander's short-id-prefix

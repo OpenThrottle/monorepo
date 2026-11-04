@@ -1,11 +1,12 @@
 import { mkdirSync, mkdtempSync, writeFileSync } from 'fs';
-import { join } from 'path';
 import { tmpdir } from 'os';
+import { join } from 'path';
 import { describe, expect, test } from 'vitest';
+
 import {
   buildManagedMcpServers,
   mergeManagedMcpServers,
-} from './workspace-editor-mcp-config';
+} from './workspace-editor-mcp-config.ts';
 
 describe('mergeManagedMcpServers', () => {
   test('preserves unrelated servers and merges managed entries', () => {

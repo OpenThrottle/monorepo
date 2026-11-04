@@ -1,7 +1,8 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
-import { describe, expect, test } from 'vitest';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
+import { describe, expect, test } from 'vitest';
+
 import { PaginationLink } from '../PaginationLink';
 
 describe('PaginationLink', () => {

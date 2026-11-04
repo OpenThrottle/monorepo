@@ -1,11 +1,13 @@
 import { describe, expect, test } from 'vitest';
+
+import type { PlanTaskRowFragment } from '~/__generated__/graphql';
+
 import {
   getPlanTaskBoardColumnId,
   getPlanTaskBoardColumnTitle,
   groupPlanTasksByStatus,
   PLAN_TASK_BOARD_COLUMN_ORDER,
 } from '../group-plan-tasks-by-status';
-import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 
 const baseTask = (): PlanTaskRowFragment => ({
   __typename: 'TaskObject',
@@ -37,6 +39,18 @@ describe('groupPlanTasksByStatus', () => {
     expect(grouped.get('PENDING')?.map((t) => t.id)).toEqual(['a']);
     expect(grouped.get('IN_PROGRESS')?.map((t) => t.id)).toEqual(['b']);
     expect(grouped.get('COMPLETED')?.map((t) => t.id)).toEqual(['c']);
+  });
+
+  test('places PROMOTED tasks in their own column, not UNKNOWN', () => {
+    const tasks: PlanTaskRowFragment[] = [
+      { ...baseTask(), id: 'p', status: 'PROMOTED' },
+    ];
+
+    const grouped = groupPlanTasksByStatus(tasks);
+
+    expect(PLAN_TASK_BOARD_COLUMN_ORDER).toContain('PROMOTED');
+    expect(grouped.get('PROMOTED')?.map((t) => t.id)).toEqual(['p']);
+    expect(grouped.get('UNKNOWN')).toEqual([]);
   });
 
   test('routes unknown status strings to UNKNOWN', () => {

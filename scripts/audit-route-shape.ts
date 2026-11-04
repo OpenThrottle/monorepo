@@ -19,9 +19,11 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
 import { globSync } from 'glob';
 import ts from 'typescript';
-import { createLogger } from './lib/index.ts';
+
+import { countLines, createLogger } from './utils/index.ts';
 
 const logger = createLogger();
 
@@ -140,7 +142,7 @@ const analyze = (absPath: string): FileReport => {
     }
   }
 
-  const lineCount = content.split('\n').length;
+  const lineCount = countLines(content);
 
   return {
     disallowedExports: optOut ? [] : disallowedExports,

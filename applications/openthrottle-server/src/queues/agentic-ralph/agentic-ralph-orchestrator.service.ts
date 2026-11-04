@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+
 import { Inject, Injectable } from '@nestjs/common';
 import type { AgenticWorkflowRegistry } from '@openthrottle/nestjs-agentic-workflow';
 import {
@@ -13,33 +15,35 @@ import {
   UserWorkspaceSettingsService,
 } from '@openthrottle/nestjs-repositories';
 import type {
+  WorkflowContext,
+  WorkflowOrchestrator,
+  WorkflowRunResult,
+} from '@openthrottle/openthrottle-agentic-ralph';
+import { buildRalphFlowContextFromPlanRunTuning } from '@openthrottle/openthrottle-agentic-ralph';
+import {
+  ensureMaterialized,
+  getOpenThrottleRoot,
+  getWorkflowConfigCwd,
+  OPENTHROTTLE_WORKSPACE_MARKER,
+  resolveForeignWorkspaceContext,
+  resolvePersonalSkillsDir,
+} from '@openthrottle/openthrottle-agentic-utils';
+import type {
   WorkflowConfigRunner,
   WorkflowCorrelation,
   WorkflowLifecycleDispatcher,
 } from '@openthrottle/openthrottle-agentic-workflow';
 import {
-  ensureMaterialized,
-  getWorkflowConfigCwd,
-  resolveForeignWorkspaceContext,
-  resolvePersonalSkillsDir,
-} from '@openthrottle/openthrottle-agentic-utils';
-import { join } from 'node:path';
-import {
-  applyWorkflowRalphOtRootFromConfig,
   applyWorkflowRalphDebugCli,
+  applyWorkflowRalphOtRootFromConfig,
   loadWorkflowRalphConfig,
   mergePlanRunTuningWithWorkflowRalphConfig,
 } from '@tools/workflows';
-import { buildRalphFlowContextFromPlanRunTuning } from '@openthrottle/openthrottle-agentic-ralph';
-import type {
-  WorkflowContext,
-  WorkflowOrchestrator,
-  WorkflowRunResult,
-} from '@openthrottle/openthrottle-agentic-ralph';
-import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service';
-import { PlanRunWorkspacePreflightService } from '../../services/plan-run-workspace-preflight/plan-run-workspace-preflight.service';
-import { PlanRunWorktreeProvisionService } from '../../services/plan-run-worktree-provision/plan-run-worktree-provision.service';
-import type { RunPlanOrchestratorJobData } from './agentic-ralph.types';
+
+import { PlanRunWorkspacePreflightService } from '../../services/plan-run-workspace-preflight/plan-run-workspace-preflight.service.ts';
+import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service.ts';
+import { PlanRunWorktreeProvisionService } from '../../services/plan-run-worktree-provision/plan-run-worktree-provision.service.ts';
+import type { RunPlanOrchestratorJobData } from './agentic-ralph.types.ts';
 
 type PlanRunTuningInput = NonNullable<
   Parameters<typeof buildRalphFlowContextFromPlanRunTuning>[0]['ralph']
@@ -69,8 +73,10 @@ const stripAgentCliWorktreeFlags = (
  * orchestrator via {@link AgenticWorkflowBase.createOrchestrator}. The registry indirection is
  * behavior-neutral: id `'ralph'` yields exactly today's `createWorkflowRalphOrchestrator(deps)` wiring
  * from `@openthrottle/openthrottle-agentic-ralph`. After the concrete worktree path is resolved and
- * before the first agent turn, soft-registers a linked worktree checkout when
- * `plan_runs.checkout_id` is still NULL (see {@link PlanRunWorktreeCheckoutService}).
+ * before the first agent turn, soft-registers a linked worktree checkout and
+ * rewrites `plan_runs.checkout_id` + `branch` to that worktree (see
+ * {@link PlanRunWorktreeCheckoutService}) — including when enqueue stamped the
+ * scheduling primary checkout.
  */
 @Injectable()
 export class AgenticRalphOrchestratorService {
@@ -98,7 +104,8 @@ export class AgenticRalphOrchestratorService {
     readonly signal?: AbortSignal;
     /**
      * Work-ledger run session id opened by the plans worker. Forwarded into the orchestrator
-     * context so its status mutations carry X-OT-Session-Id (ambient attribution, G11).
+     * context so its status mutations carry X-OT-Session-Id (ambient attribution; G11 in
+     * docs/monorepo/work-ledger-sessions.md).
      */
     readonly workSessionId?: string | null;
   }): Promise<WorkflowRunResult> {
@@ -302,8 +309,23 @@ export class AgenticRalphOrchestratorService {
       return baseCheckoutCwd;
     }
 
+    // `worktree:new` is a root-only workspace script. An explicit `workingDirectory` (itself
+    // derived from checkoutId/repositoryId upstream — see PlanEnqueueService.resolveWorkspace) is
+    // trusted as-is and takes precedence, unchanged. Absent that, `baseCheckoutCwd` is whatever
+    // `getWorkflowConfigCwd` fell back to (WORKSPACE_ROOT, or this process's own cwd — a
+    // subdirectory such as `applications/openthrottle-server` when nothing named a checkout), which
+    // is not necessarily a repo root and must not be handed to the script.
+    const explicitWorkingDirectory = jobData.workingDirectory?.trim();
+    const baseCheckoutPath =
+      explicitWorkingDirectory !== undefined && explicitWorkingDirectory !== ''
+        ? baseCheckoutCwd
+        : this.resolveRepoRootForWorktreeProvisioning(
+            jobData.planId,
+            worktreeName,
+          );
+
     const worktreePath = await this.planRunWorktreeProvisionService.provision({
-      baseCheckoutPath: baseCheckoutCwd,
+      baseCheckoutPath,
       worktreeName,
     });
 
@@ -313,6 +335,33 @@ export class AgenticRalphOrchestratorService {
     );
 
     return worktreePath;
+  }
+
+  /**
+   * @description Resolves a genuine OpenThrottle repo root (via {@link getOpenThrottleRoot}'s
+   * `.openthrottle.mjs` marker walk) to hand `worktree:new` — a root-only workspace script — when
+   * the enqueue named no checkoutId/repositoryId/workingDirectory. Throws a legible error naming
+   * what is missing when no root is resolvable, so the job fails fast with that message in
+   * `failedReason` instead of retrying three times against a doomed `baseCheckoutPath` and giving up
+   * silently.
+   */
+  private resolveRepoRootForWorktreeProvisioning(
+    planId: string,
+    worktreeName: string,
+  ): string {
+    const repoRoot = getOpenThrottleRoot(process.env);
+    if (repoRoot === undefined) {
+      throw new Error(
+        `Cannot provision worktree "${worktreeName}" for plan run ${planId}: no checkoutId, ` +
+          `repositoryId, or workingDirectory was provided on enqueue, and no OpenThrottle ` +
+          `repository root could be resolved from this process (checked WORKFLOW_RALPH_OT_ROOT, ` +
+          `WORKSPACE_ROOT, and a walk up from this process's cwd for the ` +
+          `${OPENTHROTTLE_WORKSPACE_MARKER} marker). Pass a checkoutId, repositoryId, or ` +
+          `workingDirectory when enqueuing this plan run, or set WORKSPACE_ROOT/WORKFLOW_RALPH_OT_ROOT ` +
+          `on the server process.`,
+      );
+    }
+    return repoRoot;
   }
 
   /**
@@ -409,10 +458,12 @@ export class AgenticRalphOrchestratorService {
   }
 
   /**
-   * @description Once at run-start path resolve: when the plan run still has a NULL
-   * `checkout_id` and an actor user, register the resolved filesystem path as a
-   * linked worktree checkout. Soft-fails (log + continue) so registration never
-   * aborts the orchestrator.
+   * @description Once at run-start path resolve: with an actor user, register the
+   * resolved filesystem path as a linked worktree checkout and point the run at
+   * that checkout + branch — even when enqueue already stamped a primary
+   * `checkout_id`. Soft-fails (log + continue) so registration never aborts the
+   * orchestrator. A non-worktree path is a soft no-op inside the registration
+   * service (leaves the enqueue checkout alone).
    */
   private async maybeRegisterWorktreeCheckout(params: {
     readonly filesystemPath: string;
@@ -421,10 +472,6 @@ export class AgenticRalphOrchestratorService {
     const { filesystemPath, run } = params;
 
     if (run === null) {
-      return;
-    }
-
-    if (run.checkoutId !== null) {
       return;
     }
 

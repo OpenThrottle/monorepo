@@ -1,9 +1,10 @@
-import * as React from 'react';
-import { BookOpenIcon } from 'lucide-react';
 import { Label, Separator, Switch } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
-import { DOCS_EXPERIMENTAL_ROWS } from '~/routing/settings/config/docs-experimental';
+import { BookOpenIcon } from 'lucide-react';
+import * as React from 'react';
+
 import { useDocsFeatureFlags } from '~/global/hooks/useDocsFeatureFlags';
+import { DOCS_EXPERIMENTAL_ROWS } from '~/routing/settings/config/docs-experimental';
 
 export interface SettingsDocsExperimentalProps {
   className?: string;

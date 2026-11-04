@@ -7,16 +7,17 @@
  * Each chunk compiles through its own {@link MarkdownRenderer} so one malformed
  * fragment cannot blank the whole stream.
  */
-import * as React from 'react';
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
+import * as React from 'react';
+
 import { OUTPUT_STREAM_COPY } from '~/routing/plans/data/data.copy';
+import type { OutputStreamChunk } from '~/routing/plans/utils/output-stream-chunks';
 import {
   formatChunkTime,
   formatChunkTimestamp,
   groupChunksByDay,
   toChunkDateTimeAttribute,
 } from '~/routing/plans/utils/output-stream-chunks';
-import type { OutputStreamChunk } from '~/routing/plans/utils/output-stream-chunks';
 
 export interface OutputStreamProps {
   chunks: readonly OutputStreamChunk[];

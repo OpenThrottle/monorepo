@@ -2,22 +2,23 @@
  * @description Runs vector similarity search against OpenThrottle Postgres (plan_embeddings + task_embeddings + documentation_embeddings).
  */
 
-import {
-  PLAN_TASK_LIST_ORDER,
-  Plan,
-  PlanEmbedding,
-  resolveCompletedAtForStatusChange,
-  Task,
-  TaskEmbedding,
-} from '@openthrottle/nestjs-repositories';
 import type {
   PlanData,
   PlanEmbeddingSearchRow,
   TaskData,
   TaskEmbeddingSearchRow,
 } from '@openthrottle/nestjs-repositories';
+import {
+  Plan,
+  PLAN_TASK_LIST_ORDER,
+  PlanEmbedding,
+  resolveCompletedAtForStatusChange,
+  Task,
+  TaskEmbedding,
+} from '@openthrottle/nestjs-repositories';
 import { isRecord } from '@openthrottle/nodejs-utils';
 import { In } from 'typeorm';
+
 import { getOrCreateDataSource, runQuery } from './data-source.ts';
 import { embedQuery } from './embedding.ts';
 
@@ -553,7 +554,7 @@ export const DEFAULT_PLANS_PAGE_SIZE = 20;
 
 /**
  * @description Lists plans in OpenThrottle filtered by status (from plan JSON metadata). Optionally filter by assignee or title substring. Supports sort by created_at or updated_at. Supports pagination via limit and offset.
- * @param status Plan status to filter by (e.g. BACKLOG, BLOCKED, CANCELED, COMPLETED, IN_PROGRESS, PENDING, QUEUED, SKIPPED). Use '' or 'all' to show plans regardless of status.
+ * @param status Plan status to filter by (e.g. BACKLOG, BLOCKED, CANCELED, COMPLETED, IN_PROGRESS, PENDING, PROMOTED, QUEUED, SKIPPED). Use '' or 'all' to show plans regardless of status.
  * @param assignee Optional: filter plans where author or assignee equals this value (e.g. GitHub username).
  * @param project Optional: filter plans whose project equals this value (NX project name).
  * @param projectId Optional: filter plans whose project_id equals this UUID (FK to projects).
@@ -803,6 +804,7 @@ function _mapTaskRow(r: {
   summary: string | null;
   title: string;
   updated_at: string;
+  wave: number | null;
 }): TaskRow {
   const requirements = r.requirements;
   return {
@@ -821,6 +823,7 @@ function _mapTaskRow(r: {
     summary: r.summary,
     title: r.title,
     updatedAt: r.updated_at,
+    wave: r.wave,
   };
 }
 
@@ -890,6 +893,7 @@ function mapTaskEntityToRow(task: Task): TaskRow {
     summary: task.summary,
     title: task.title,
     updatedAt: updatedAt.toISOString(),
+    wave: task.wave,
   };
 }
 
@@ -1028,6 +1032,7 @@ export async function createTask(input: CreateTaskInput): Promise<TaskRow> {
     plan &&
     (plan.status === 'CANCELED' ||
       plan.status === 'COMPLETED' ||
+      plan.status === 'PROMOTED' ||
       plan.status === 'SKIPPED')
   ) {
     plan.status = 'IN_PROGRESS';
@@ -1062,7 +1067,7 @@ export async function getTasksByPlanId(
   return tasks.map(mapTaskEntityToRow);
 }
 
-/** Statuses considered "remaining" (not completed, skipped, or canceled). Canonical enum values: BACKLOG, BLOCKED, IN_PROGRESS, PENDING. */
+/** Statuses considered "remaining" (not completed, promoted, skipped, or canceled). Canonical enum values: BACKLOG, BLOCKED, IN_PROGRESS, PENDING. */
 const REMAINING_TASK_STATUSES = [
   'BACKLOG',
   'BLOCKED',
@@ -1234,12 +1239,12 @@ export async function createCommitLink(
       );
     }
 
-    // 2. Create-or-reuse the (plan, task) instant session (started_at = ended_at, closed explicitly).
+    // 2. Create-or-reuse the (plan, task) instant session (started_at = ended_at, closed_by='instant').
     await runQuery(
       manager,
       `INSERT INTO work_sessions
          (actor_service_account_id, closed_by, ended_at, external_ref, on_behalf_of_verified, started_at, tool_name)
-       SELECT $1, 'explicit', NOW(), $2, FALSE, NOW(), 'node-client'
+       SELECT $1, 'instant', NOW(), $2, FALSE, NOW(), 'node-client'
        WHERE NOT EXISTS (SELECT 1 FROM work_sessions WHERE external_ref = $2)`,
       [serviceAccountId, externalRef],
     );

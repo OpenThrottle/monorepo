@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { isExternalHref } from '../external-href';
 
 describe('isExternalHref', () => {

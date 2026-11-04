@@ -1,16 +1,16 @@
+import type { ComboboxOption } from '@openthrottle/react-router-shadcn';
+import { cn, Combobox } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import clsx from 'clsx';
-import { Combobox } from '@openthrottle/react-router-shadcn';
 import { useNavigate } from 'react-router';
+
 import {
   BRANCH_FILTER_ALL_VALUE,
   BRANCH_FILTER_COPY,
 } from '~/routing/usage/data/branch-filter-copy';
-import { buildUsageSearch } from '~/routing/usage/utils/usage-search';
-import { useUsageBranchSearch } from '~/routing/usage/hooks/useUsageBranchSearch';
-import type { ComboboxOption } from '@openthrottle/react-router-shadcn';
 import type { SkillUsageScopeFilter } from '~/routing/usage/data/skill-usage-copy';
-import type { UsageBranchOption } from '~/routing/usage/hooks/useUsageBranchSearch';
+import { useUsageBranchSearch } from '~/routing/usage/hooks/useUsageBranchSearch';
+import type { UsageBranchOption } from '~/routing/usage/types';
+import { buildUsageSearch } from '~/routing/usage/utils/usage-search';
 
 export interface UsageBranchFilterProps {
   className?: string;
@@ -100,7 +100,7 @@ export const UsageBranchFilter = (
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx(className)} data-testid="UsageBranchFilter">
+    <div className={cn(className)} data-testid="UsageBranchFilter">
       <span className="text-muted-foreground mb-1 block text-xs font-medium">
         {BRANCH_FILTER_COPY.label}
       </span>

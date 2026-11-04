@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { validateScheduledAgentJobCron } from './scheduled-agent-jobs.cron';
+import { describe, expect, it } from 'vitest';
+
+import { validateScheduledAgentJobCron } from './scheduled-agent-jobs.cron.ts';
 
 describe('validateScheduledAgentJobCron', () => {
   it.each([

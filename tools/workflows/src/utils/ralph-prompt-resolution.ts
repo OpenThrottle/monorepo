@@ -5,6 +5,7 @@
 
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+
 import type { RalphRuntimeSeed } from './ralph-runtime-config';
 
 /** How the effective prompt string was obtained (for logging / `--help` semantics). */

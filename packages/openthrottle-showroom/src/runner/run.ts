@@ -32,24 +32,25 @@
  * the dev database is a leak.
  */
 
+import { spawn } from 'node:child_process';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { spawn } from 'node:child_process';
+
 import { chromium } from 'playwright';
 
-import { getFlow } from '../episodes/flows';
-import { isDemoDataDirty } from './dirty';
-import { loadFormat, outputRoot, repositoryRoot } from './format';
-import { toRegionSample } from './regions';
-import { createCapture } from './record';
-import { runStep, signIn, stepTarget } from './actions';
-import type { ActionContext } from './actions';
+import { getFlow } from '../episodes/flows.ts';
+import type { ActionContext } from './actions.ts';
+import { runStep, signIn, stepTarget } from './actions.ts';
+import { isDemoDataDirty } from './dirty.ts';
+import { loadFormat, outputRoot, repositoryRoot } from './format.ts';
+import { createCapture } from './record.ts';
+import { toRegionSample } from './regions.ts';
 import type {
   DemoFlow,
   ManifestStep,
   RecordingManifest,
   RegionSample,
-} from './types';
+} from './types.ts';
 
 /**
  * Chrome kept out of frame. The editor deep-link buttons on the plan detail

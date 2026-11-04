@@ -1,4 +1,4 @@
 export {
   isBullBoardEnabled,
   NestjsBullmqBoardModule,
-} from './modules/nestjs-bullmq-board.module';
+} from './modules/nestjs-bullmq-board.module.ts';

@@ -1,9 +1,10 @@
+import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 import { Await } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/dashboard._index';
 import { DashboardGetStartedCard } from '~/routing/dashboard/components/DashboardGetStartedCard';
 import { deriveOnboardingCompletion } from '~/routing/dashboard/utils/onboarding-steps';
-import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
-import type { Route } from '@/app/routes/+types/dashboard._index';
 
 type DashboardLoaderData = Route.ComponentProps['loaderData'];
 

@@ -1,16 +1,17 @@
-import * as React from 'react';
-import { cleanup, render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { createRoutesStub } from 'react-router';
-import { afterEach, describe, expect, test } from 'vitest';
 import {
   Table,
   TableBody,
   TooltipProvider,
 } from '@openthrottle/react-router-shadcn';
-import { SkillTagVocabularyRow } from '../SkillTagVocabularyRow';
+import type { RenderResult } from '@testing-library/react';
+import { cleanup, render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import * as React from 'react';
+import { createRoutesStub } from 'react-router';
+import { afterEach, describe, expect, test } from 'vitest';
+
 import type { SkillTagVocabularyRowProps } from '../SkillTagVocabularyRow';
+import { SkillTagVocabularyRow } from '../SkillTagVocabularyRow';
 
 const renderRow = (
   props: SkillTagVocabularyRowProps,

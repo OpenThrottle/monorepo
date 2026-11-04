@@ -1,23 +1,24 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException, ConflictException } from '@nestjs/common';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { Test } from '@nestjs/testing';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { SkillTagsService } from '../skill-tags/skill-tags.service';
-import type { UserSkillTag } from '../skill-tags/user-skill-tag.entity';
-import { PlanTag } from './plan-tag.entity';
-import { ProjectTag } from './project-tag.entity';
-import { TaskTag } from './task-tag.entity';
+
+import { SkillTagsService } from '../skill-tags/skill-tags.service.ts';
+import type { UserSkillTag } from '../skill-tags/user-skill-tag.entity.ts';
+import { PlanTag } from './plan-tag.entity.ts';
+import { ProjectTag } from './project-tag.entity.ts';
 import {
   deriveTagSource,
   TAG_SOURCES,
-  TAGGING_SERVICE_ACCOUNT_NAME,
   type TagCaller,
+  TAGGING_SERVICE_ACCOUNT_NAME,
   type TagSource,
-} from './tag-provenance';
-import { TagsService } from './tags.service';
+} from './tag-provenance.ts';
+import { TagsService } from './tags.service.ts';
+import { TaskTag } from './task-tag.entity.ts';
 
 describe('deriveTagSource', () => {
   it('classifies a user principal as human', () => {
@@ -266,6 +267,30 @@ describe('TagsService', () => {
 
       expect(mockPlanTagsRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({ dimension: 'phase', tag: 'breakdown' }),
+      );
+      expect(mockSkillTagsService.listForUser).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('platform system tags', () => {
+    it('accepts follow-up from a service account outside its vocabulary', async () => {
+      vi.mocked(mockPlanTagsRepository.findOne).mockResolvedValue(null);
+
+      await service.addPlanTag(agentCaller, planId, 'follow-up');
+
+      expect(mockPlanTagsRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({ dimension: 'domain', tag: 'follow-up' }),
+      );
+      expect(mockVocabularyRepository.find).not.toHaveBeenCalled();
+    });
+
+    it('accepts follow-up from a user without seeding their vocabulary', async () => {
+      vi.mocked(mockPlanTagsRepository.findOne).mockResolvedValue(null);
+
+      await service.addPlanTag(humanCaller, planId, 'follow-up');
+
+      expect(mockPlanTagsRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({ source: 'human', tag: 'follow-up' }),
       );
       expect(mockSkillTagsService.listForUser).not.toHaveBeenCalled();
     });

@@ -1,14 +1,16 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
+
 import {
   EditorPresenceState,
   WorkspaceEditorId,
 } from '~/__generated__/graphql';
 import { buildEditorPresenceIndex } from '~/routing/settings/utils/workspace-editor-presence-status';
-import { WorkspaceEditorTargetEditors } from '../WorkspaceEditorTargetEditors';
+
 import type { WorkspaceEditorTargetEditorsProps } from '../WorkspaceEditorTargetEditors';
+import { WorkspaceEditorTargetEditors } from '../WorkspaceEditorTargetEditors';
 
 const editors = [
   { id: WorkspaceEditorId.Claude, label: 'Claude Code' },

@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
+
 import {
   agentOutputHasPromiseComplete,
   getRalphOutputMarkerFlags,
   parseAgentCompleteTaskSignals,
   parseAgentOutput,
-} from '../output.js';
+} from '../output.ts';
 
 const UPPER = 'A64424D1-4BB0-4B08-ADE3-B9822411D05C';
 const LOWER = 'a64424d1-4bb0-4b08-ade3-b9822411d05c';

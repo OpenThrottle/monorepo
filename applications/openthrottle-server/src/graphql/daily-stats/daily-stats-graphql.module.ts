@@ -1,6 +1,7 @@
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import { Module } from '@nestjs/common';
-import { DailyStatsResolver } from './daily-stats.resolver';
+import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+
+import { DailyStatsResolver } from './daily-stats.resolver.ts';
 
 /**
  * @description GraphQL module for daily stats. Imports NestjsRepositoriesModule for DailyStatsService.

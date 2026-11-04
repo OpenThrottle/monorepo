@@ -1,10 +1,11 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { PromptCreateForm } from '../PromptCreateForm';
+
 import type { PromptCreateFormProps } from '../PromptCreateForm';
+import { PromptCreateForm } from '../PromptCreateForm';
 
 // Monaco cannot boot under jsdom; stand in a textarea with the same
 // controlled value/onChange contract so the editor is exercisable.

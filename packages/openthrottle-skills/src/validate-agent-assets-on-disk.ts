@@ -1,9 +1,9 @@
 import type { AgentAssetValidationIssue } from './schemas/agent-asset-frontmatter.schemas.ts';
+import type { ValidateAgentAssetsResult } from './validate-agent-asset-frontmatter.ts';
 import {
   mergeValidationResults,
   validateAgentAssetFrontmatter,
 } from './validate-agent-asset-frontmatter.ts';
-import type { ValidateAgentAssetsResult } from './validate-agent-asset-frontmatter.ts';
 import {
   walkAgentAssetFiles,
   type WalkAgentAssetsOptions,

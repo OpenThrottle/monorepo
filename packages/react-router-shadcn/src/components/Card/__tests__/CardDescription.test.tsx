@@ -1,8 +1,9 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { CardDescription } from '../CardDescription';
+
 import type { CardDescriptionProps } from '../CardDescription';
+import { CardDescription } from '../CardDescription';
 
 describe('CardDescription', () => {
   test('renders the primitive with its data-slot and merges className', () => {

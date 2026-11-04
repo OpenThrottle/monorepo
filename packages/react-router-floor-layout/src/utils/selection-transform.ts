@@ -6,8 +6,8 @@
  */
 
 import {
-  type Point,
   angleBetween,
+  type Point,
   rotatePoint,
   snapValueToGrid,
 } from './geometry';

@@ -1,6 +1,9 @@
 import type { PlanStatusKey } from '~/routing/plans/types';
 
-/** Tailwind dot color per plan status, for the compact `PlanStatusChip`. */
+/**
+ * Tailwind dot color per plan status, for the compact `PlanStatusChip` and the
+ * `PlanStatusFilter` rows. Keep every hue distinct.
+ */
 export const PLAN_STATUS_DOT_COLOR: Record<PlanStatusKey, string> = {
   BACKLOG: 'bg-violet-500',
   BLOCKED: 'bg-red-500',
@@ -8,6 +11,7 @@ export const PLAN_STATUS_DOT_COLOR: Record<PlanStatusKey, string> = {
   COMPLETED: 'bg-lime-500',
   IN_PROGRESS: 'bg-yellow-500',
   PENDING: 'bg-sky-500',
+  PROMOTED: 'bg-blue-500',
   QUEUED: 'bg-amber-500',
-  SKIPPED: 'bg-red-500',
+  SKIPPED: 'bg-teal-500',
 };

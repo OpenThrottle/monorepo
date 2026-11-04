@@ -1,14 +1,15 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { GlobalToolbarSearch } from '@openthrottle/react-router-ui-global';
 import {
+  cn,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
+import { GlobalToolbarSearch } from '@openthrottle/react-router-ui-global';
+import * as React from 'react';
 import { useSearchParams } from 'react-router';
+
 import {
   REPOSITORIES_DEFAULT_SORT_BY,
   REPOSITORIES_DEFAULT_SORT_ORDER,
@@ -87,10 +88,7 @@ export const RepositoriesToolbar = (
   // 🔌 Short Circuit
 
   return (
-    <div
-      className={clsx('w-full', className)}
-      data-testid="RepositoriesToolbar"
-    >
+    <div className={cn('w-full', className)} data-testid="RepositoriesToolbar">
       <div className="flex w-full flex-wrap items-center gap-2">
         <GlobalToolbarSearch
           aria-label={REPOSITORIES_TABLE_COPY.searchLabel}

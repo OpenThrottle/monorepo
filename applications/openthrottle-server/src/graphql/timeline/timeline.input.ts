@@ -4,11 +4,12 @@
  */
 
 import { Field, InputType } from '@nestjs/graphql';
+
 import {
   TimelineLaneGrouping,
   TimelineMarkerKind,
   TimelineSpanKind,
-} from './timeline.enum';
+} from './timeline.enum.ts';
 
 @InputType()
 export class WorkstreamTimelineInput {

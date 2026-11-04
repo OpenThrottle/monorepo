@@ -1,10 +1,13 @@
-import * as React from 'react';
 import { screen } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import CreateSchedule from '../schedule.create';
+
+import type { Route } from '@/app/routes/+types/schedule.create';
+import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
 import { buildRootMatch } from '~/testing/root-match-fixture';
 import { renderRoutesStub } from '~/testing/route-fixtures';
-import type { Route } from '@/app/routes/+types/schedule.create';
+
+import CreateSchedule from '../schedule.create';
 
 const matches: Route.ComponentProps['matches'] = [
   buildRootMatch(),
@@ -30,7 +33,7 @@ describe('routes/schedule.create.tsx', () => {
 
     expect(screen.getByTestId('ScheduleForm')).toBeInTheDocument();
     expect(screen.getByLabelText('Prompt')).toBeRequired();
-    expect(screen.getByLabelText('Schedule (cron)')).toBeRequired();
+    expect(screen.getByLabelText(SCHEDULE_COPY.cronLabel)).toBeRequired();
     expect(
       screen.getByRole('button', { name: /create schedule/i }),
     ).toBeInTheDocument();

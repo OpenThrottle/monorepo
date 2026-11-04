@@ -1,13 +1,20 @@
-import * as React from 'react';
-import { act, render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub, useSearchParams } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { usePlansToolbar } from '../usePlansToolbar';
+
+import {
+  ALL_STATUSES_PARAM,
+  DEFAULT_STATUSES,
+  STATUS_OPTIONS,
+} from '~/routing/plans/config/status-options';
+
 import type {
   UsePlansToolbarOptions,
   UsePlansToolbarResult,
 } from '../usePlansToolbar';
+import { usePlansToolbar } from '../usePlansToolbar';
 
 interface ToolbarProbeValue {
   hook: UsePlansToolbarResult;
@@ -49,6 +56,40 @@ describe('usePlansToolbar', () => {
 
     expect(value.current?.search.getAll('status')).toEqual(['IN_PROGRESS']);
     expect(value.current?.search.get('page')).toBe('1');
+  });
+
+  test('handleStatusChange drops the param for the defaults', () => {
+    const { value } = renderToolbar({ limit: 25, page: 1 }, [
+      '/?status=BACKLOG',
+    ]);
+
+    act(() =>
+      value.current?.hook.handleStatusChange([...DEFAULT_STATUSES].reverse()),
+    );
+
+    expect(value.current?.search.has('status')).toBe(false);
+  });
+
+  test('handleStatusChange writes status=all for every status', () => {
+    const { value } = renderToolbar({ limit: 25, page: 1 });
+
+    act(() => value.current?.hook.handleStatusChange([...STATUS_OPTIONS]));
+
+    expect(value.current?.search.getAll('status')).toEqual([
+      ALL_STATUSES_PARAM,
+    ]);
+  });
+
+  test('handleStatusChange writes status=all for an empty selection', () => {
+    const { value } = renderToolbar({ limit: 25, page: 1 }, [
+      '/?status=BACKLOG',
+    ]);
+
+    act(() => value.current?.hook.handleStatusChange([]));
+
+    expect(value.current?.search.getAll('status')).toEqual([
+      ALL_STATUSES_PARAM,
+    ]);
   });
 
   test('handleSortChange sets sortBy/sortOrder and preserves page/limit', () => {

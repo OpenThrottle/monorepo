@@ -10,6 +10,7 @@ import {
   serializePlanRunConfigForGraphql,
   workflowUiStateFromPlanRunConfig,
 } from '@openthrottle/openthrottle-plan-config';
+
 import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
 export interface PlanRunConfigUiState {
@@ -89,6 +90,7 @@ export const serializePlanRunConfigUiState = (
     repositoryId,
     workflowInput: {
       debugCli: workflowInput.debugCli,
+      effort: workflowInput.effort,
       executionBackend: workflowInput.executionBackend,
       iterations: workflowInput.iterations,
       model: workflowInput.model,

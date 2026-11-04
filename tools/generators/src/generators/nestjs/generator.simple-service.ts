@@ -1,7 +1,8 @@
-import { join } from 'path';
-import prompts from 'prompts';
 import type { Tree } from '@nx/devkit';
 import { formatFiles, generateFiles, logger } from '@nx/devkit';
+import { join } from 'path';
+import prompts from 'prompts';
+
 import { getCommonVariables } from '../../utils/index';
 import { getGraphQLApplications } from '../../utils/projects';
 import { REGEX_SLUG } from '../../utils/regex';

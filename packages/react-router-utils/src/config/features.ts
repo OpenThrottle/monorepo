@@ -41,3 +41,15 @@ export const FEATURE_CHARLIE_PREVIEW = parseEnvBoolean(
   ENV_SOURCE.FEATURE_CHARLIE_PREVIEW,
   false,
 );
+
+/**
+ * Publishes the website's blog: the Blog nav/footer links, the sitemap blog
+ * entries, the `/blog` routes and the RSS feed (all 404 when off). Sourced from
+ * `FEATURE_BLOG_ENABLED`; defaults to `false` so the blog ships dark until the
+ * API is publicly reachable. It is part of the public env tier, so the server
+ * and the hydrating client agree on it.
+ */
+export const FEATURE_BLOG_ENABLED = parseEnvBoolean(
+  ENV_SOURCE.FEATURE_BLOG_ENABLED,
+  false,
+);

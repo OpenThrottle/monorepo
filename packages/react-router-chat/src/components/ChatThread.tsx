@@ -1,10 +1,11 @@
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import clsx from 'clsx';
-import { ChatRetryNotice } from './ChatRetryNotice';
-import { ChatThreadMessage } from './ChatThreadMessage';
-import { usePinnedToBottom } from '../hooks/use-pinned-to-bottom';
+
+import { usePinnedToBottom } from '../hooks/usePinnedToBottom';
 import type { ChatMessage } from '../types';
 import { findLastUserMessageId } from '../utils/chat-thread';
+import { ChatRetryNotice } from './ChatRetryNotice';
+import { ChatThreadMessage } from './ChatThreadMessage';
 
 export interface ChatThreadProps {
   /**
@@ -93,7 +94,7 @@ export const ChatThread = (props: ChatThreadProps): React.ReactElement => {
     <div
       aria-label="Chat messages"
       aria-live="polite"
-      className={clsx(
+      className={cn(
         'flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1',
         className,
       )}

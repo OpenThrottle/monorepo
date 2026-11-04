@@ -12,12 +12,9 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import {
-  CONTAINER_WORKSPACES_DIR_ENV,
-  HOST_WORKSPACES_DIR_ENV,
-} from '../workspace-paths.ts';
 import {
   ensureMaterialized,
   teardown,
@@ -27,6 +24,10 @@ import {
   ledgerPathForRepo,
   readLedger,
 } from '../foreign-skill-injection/index.ts';
+import {
+  CONTAINER_WORKSPACES_DIR_ENV,
+  HOST_WORKSPACES_DIR_ENV,
+} from '../workspace-paths.ts';
 
 const git = (repo: string, ...args: string[]): string =>
   execFileSync('git', ['-C', repo, ...args], { encoding: 'utf8' }).trim();

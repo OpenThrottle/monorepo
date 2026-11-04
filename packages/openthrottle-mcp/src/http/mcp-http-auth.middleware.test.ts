@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { requestAuthTokenStorage } from '../auth/get-auth-token.ts';
 import {
   extractBearerToken,

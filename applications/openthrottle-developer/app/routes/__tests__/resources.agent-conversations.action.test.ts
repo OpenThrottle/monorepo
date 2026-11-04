@@ -1,6 +1,7 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import type { Route } from '@/app/routes/+types/resources.agent-conversations';
 
 vi.mock('~/global/utils/utils.agents-chat', () => ({

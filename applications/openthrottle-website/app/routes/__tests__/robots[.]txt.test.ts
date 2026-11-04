@@ -1,5 +1,6 @@
-import { describe, expect, test, vi } from 'vitest';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
+import { describe, expect, test, vi } from 'vitest';
+
 import type { Route } from '@/app/routes/+types/robots[.]txt';
 
 // The robots.txt body/format (crawler allowances, sitemap advertisement) lives

@@ -4,8 +4,10 @@
  * change updates one place and no spec breaks on copy drift. Add new copy here
  * rather than inlining sentence-length literals in components.
  */
-import { FolderGit2Icon } from 'lucide-react';
 import type { GlobalFeatureOnboardingContent } from '@openthrottle/react-router-ui-global';
+import { FolderGit2Icon } from 'lucide-react';
+
+import type { PruneWorktreeCheckoutOutcome } from '~/__generated__/graphql';
 
 /**
  * @description Copy for the repositories index table, toolbar, and per-row
@@ -23,6 +25,9 @@ export const REPOSITORIES_TABLE_COPY = {
   injectionInheritedTitle: `Skill injection is set per repository — it applies to every one of your checkouts, including this worktree.`,
   injectionToggleLabelPrefix: `Toggle skill injection for`,
   injectionUpdateFailed: `Failed to update skill injection.`,
+  missingBadge: `Missing on disk`,
+  missingBadgeTitleNotAWorktree: `OpenThrottle has a record of this worktree, but the folder at its path is no longer a git worktree — usually a leftover directory after the worktree was removed. Remove the record to clean it up; the folder itself is not touched.`,
+  missingBadgeTitlePathGone: `OpenThrottle has a record of this worktree, but nothing exists at its path any more — it was removed outside OpenThrottle. Remove the record to clean it up.`,
   noResults: `No repositories match this search.`,
   notAGitRepositoryBadge: `Not a git repository`,
   notAGitRepositoryTitle: `This folder is registered but is not a git checkout, so nothing can be planned or run in it. Removing the checkout here leaves the folder on disk untouched.`,
@@ -66,6 +71,41 @@ export const REPOSITORIES_ROW_ACTIONS_COPY = {
 } as const;
 
 /**
+ * @description Copy for cleaning up registered worktrees whose folders are gone: the
+ * show-missing toggle, the bulk prune confirm, the per-row "Remove record" action, and the
+ * per-id outcome notice. Every surface says the same thing — only OpenThrottle's record is
+ * removed, never anything on disk.
+ */
+export const MISSING_WORKTREES_COPY = {
+  /** Why one requested record was kept, keyed by the server's outcome. */
+  outcomeReasons: {
+    NOT_FOUND: `was already removed.`,
+    SKIPPED_ACTIVE_RUN: `still has a plan run that has not been settled, so its record was kept. Settle the run, then try again.`,
+    SKIPPED_LIVE: `is a live worktree again, so its record was kept.`,
+    SKIPPED_PRIMARY: `is a primary checkout. Only worktree records are pruned.`,
+  } satisfies Record<Exclude<PruneWorktreeCheckoutOutcome, 'PRUNED'>, string>,
+  outcomeRemoved: (count: number): string =>
+    `Removed ${count} stale worktree ${count === 1 ? 'record' : 'records'}.`,
+  outcomeSkipped: (count: number): string =>
+    `Kept ${count} ${count === 1 ? 'record' : 'records'}:`,
+  pruneCancel: `Cancel`,
+  pruneConfirm: `Remove records`,
+  pruneDialogBody: `These worktrees no longer exist on disk. Removing their records only cleans up OpenThrottle — no files or folders are touched. A record is kept if its folder turns out to be a live worktree, or if a plan run that has not been settled still points at it.`,
+  pruneDialogTitle: (count: number): string =>
+    `Remove ${count} stale worktree ${count === 1 ? 'record' : 'records'}?`,
+  pruneLabel: (count: number): string => `Prune missing (${count})`,
+  prunePending: `Removing…`,
+  pruneTitle: `Remove OpenThrottle's records of worktrees that no longer exist on disk.`,
+  removeRecordConfirm: `Remove record`,
+  removeRecordDescriptionPrefix: `The worktree`,
+  removeRecordDescriptionSuffix: `no longer exists on disk. This removes OpenThrottle's record of it; nothing on disk is touched.`,
+  removeRecordLabel: `Remove record`,
+  removeRecordTitle: `Remove this worktree record?`,
+  showMissingLabel: (count: number): string => `Show missing (${count})`,
+  showMissingTitle: `Show registered worktrees whose folders no longer exist on disk. Hidden by default so the list matches git worktree list.`,
+} as const;
+
+/**
  * @description Copy for the on-disk worktree scan banner: the refresh control, the
  * scanned-root line, the warning list, and the state where no root could be
  * resolved at all. Plain sentences only — no markdown, since these render as text.
@@ -79,16 +119,26 @@ export const WORKTREE_DISCOVERY_COPY = {
   /** A repository that has no worktrees yet — stated as a count, never as an error per repo. */
   emptyRootsSuffixOne: `repository has no worktrees yet.`,
   emptyRootsSuffixOther: `repositories have no worktrees yet.`,
+  /** Husk folders a removed worktree left behind. OpenThrottle never deletes folders, so this is manual. */
+  orphanRemedy: `Delete them by hand once you have checked nothing in them is needed — OpenThrottle never deletes folders.`,
+  orphanSummarySuffixOne: `folder in the worktree root is left over from a removed worktree and has no .git.`,
+  orphanSummarySuffixOther: `folders in the worktree root are left over from removed worktrees and have no .git.`,
   problemsCountSuffixOne: `note from the last scan`,
   problemsCountSuffixOther: `notes from the last scan`,
   refreshButton: `Rescan worktrees`,
   refreshingButton: `Rescanning…`,
   rootPrefix: `Scanning for worktrees in`,
+  /** Leads the list when repositories resolve to more than one configured root. */
+  rootsPrefixOther: `Scanning for worktrees in these roots:`,
+  /** Where a configured root came from — the rungs of the server's worktree-root ladder. */
+  sourceLabelCheckoutEnv: `repository .env`,
+  sourceLabelDefault: `default`,
+  sourceLabelEnv: `server environment`,
   /** The one actionable line: git is still holding entries for directories that are gone. */
   staleRemedy: `Run \`git worktree prune\` in the repository to clear them.`,
   staleSummarySuffixOne: `worktree is still registered with git but no longer on disk.`,
   staleSummarySuffixOther: `worktrees are still registered with git but no longer on disk.`,
-  unconfiguredBody: `OpenThrottle could not work out where your worktrees live, so none are listed. Set a worktree root in workspace settings, or register a primary checkout so the default sibling directory can be resolved.`,
+  unconfiguredBody: `OpenThrottle could not work out where your worktrees live, so none are listed. Register a primary checkout so its worktree root can be resolved: OPENTHROTTLE_WORKTREE_ROOT when set, otherwise ~/.openthrottle/worktrees.`,
   unconfiguredLinkLabel: `Open workspace settings`,
   unconfiguredTitle: `No worktree root to scan`,
 } as const;
@@ -121,3 +171,50 @@ export const REPOSITORIES_ONBOARDING: GlobalFeatureOnboardingContent = {
   ],
   whatItIs: `A repository is an on-disk git checkout on the server host that OpenThrottle can plan against, run agents in, and open in the IDE. Checkouts sharing a git remote are grouped under one repository entry.`,
 };
+
+/**
+ * @description Copy for the per-checkout skill-usage telemetry readiness badge
+ * and its expanded explanation.
+ *
+ * Every negative state carries a `remediation` the user can act on without
+ * leaving the page. That is the point of the feature: a cursor-agent run once
+ * captured a skill invocation correctly, resolved no endpoint, wrote the record
+ * to a local buffer, and nothing in the product said so — the missing value was
+ * a single line in `~/.openthrottle/.env`.
+ *
+ * `notWired` is deliberately not phrased as breakage. An OpenThrottle-
+ * orchestrated run passes `--plugin-dir` at spawn time and records from any
+ * checkout, wired or not; what is missing is only the wiring for runs the user
+ * starts himself.
+ */
+export const REPOSITORY_HOOK_TELEMETRY_COPY = {
+  bufferingLabel: `Buffering locally`,
+  bufferingRemediation: `Add your OpenThrottle server to ~/.openthrottle/.env — one line, and it applies to every repository on this machine:`,
+  bufferingSummary: `Skill invocations are captured here, but no OpenThrottle endpoint resolves, so records are written to a local file instead of being sent.`,
+  columnLabel: `Telemetry`,
+  endpointSourceLabels: {
+    none: `not configured`,
+    process_env: `the shell environment`,
+    repo_env: `this checkout's .env`,
+    user_env: `~/.openthrottle/.env`,
+  },
+  envSnippet: `OPENTHROTTLE_GRAPHQL_URL=https://your-openthrottle-server/graphql`,
+  heading: `Skill-usage telemetry`,
+  missingTokenLabel: `Buffering locally`,
+  missingTokenRemediation: `An endpoint is configured but no auth token is. A server that requires authentication rejects these records and they buffer instead — add the token alongside the URL in ~/.openthrottle/.env:`,
+  missingTokenSnippet: `OPENTHROTTLE_MCP_AUTH_TOKEN=your-token`,
+  missingTokenSummary: `An endpoint resolves but no auth token does, so records are rejected with Unauthorized and buffered locally.`,
+  notInspectedLabel: `Not inspected`,
+  notInspectedSummary: `This checkout has not been inspected since telemetry readiness was added. Refresh it to find out.`,
+  notWiredLabel: `Not wired here`,
+  notWiredRemediation: `Install the plugin for the agent you use, or start runs through OpenThrottle — the driver passes --plugin-dir at spawn time and records either way:`,
+  notWiredSummary: `Nothing in this checkout wires the hooks up, so a run you start yourself records nothing. OpenThrottle-orchestrated runs still record.`,
+  offlineLabel: `Offline`,
+  offlineRemediation: `Unset OPENTHROTTLE_TELEMETRY_OFFLINE to start sending again:`,
+  offlineSnippet: `unset OPENTHROTTLE_TELEMETRY_OFFLINE`,
+  offlineSummary: `OPENTHROTTLE_TELEMETRY_OFFLINE is set, so records are buffered on purpose and never sent.`,
+  producersLabel: `Wired for`,
+  recordingLabel: `Recording`,
+  recordingSummary: `Skill invocations from this checkout are sent to OpenThrottle.`,
+  wireSnippet: `cursor-agent --plugin-dir <monorepo>/plugins/openthrottle-cursor -p "…"`,
+} as const;

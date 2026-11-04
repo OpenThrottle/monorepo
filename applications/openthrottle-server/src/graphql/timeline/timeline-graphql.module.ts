@@ -4,9 +4,10 @@
  * activity module it extends uses.
  */
 
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 import { Module } from '@nestjs/common';
-import { TimelineResolver } from './timeline.resolver';
+import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+
+import { TimelineResolver } from './timeline.resolver.ts';
 
 @Module({
   imports: [NestjsRepositoriesModule],

@@ -1,10 +1,11 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { PullRequestNotFound } from '../PullRequestNotFound';
+
 import type { PullRequestNotFoundProps } from '../PullRequestNotFound';
+import { PullRequestNotFound } from '../PullRequestNotFound';
 
 describe('PullRequestNotFound Component', () => {
   describe('when listQuery is set', () => {

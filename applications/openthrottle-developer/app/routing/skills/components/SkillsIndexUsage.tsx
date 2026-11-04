@@ -1,12 +1,13 @@
-import * as React from 'react';
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import * as React from 'react';
+
 import { SkillUsageDailyChart } from '~/global/components/SkillUsageDailyChart';
-import { SkillUsageLeaderboard } from '~/routing/usage/components/SkillUsageLeaderboard';
-import { partitionSkillUsageByPresence } from '~/routing/usage/utils/partition-skill-usage-by-presence';
 import { SKILLS_INDEX_USAGE_COPY } from '~/routing/skills/data/data.copy';
-import { SKILL_USAGE_COPY } from '~/routing/usage/data/skill-usage-copy';
 import type { SkillsIndexUsageData } from '~/routing/skills/data/skills-index-usage';
+import { SkillUsageLeaderboard } from '~/routing/usage/components/SkillUsageLeaderboard';
+import { SKILL_USAGE_COPY } from '~/routing/usage/data/skill-usage-copy';
+import { partitionSkillUsageByPresence } from '~/routing/usage/utils/partition-skill-usage-by-presence';
 
 export interface SkillsIndexUsageProps {
   className?: string;
@@ -15,7 +16,6 @@ export interface SkillsIndexUsageProps {
    * set, which decides both whether a row links through to its detail page and
    * which table it lands in.
    */
-  personalSlugs?: readonly string[];
   presentSlugs: readonly string[];
   rangeDays: number;
   usage: SkillsIndexUsageData;
@@ -38,7 +38,7 @@ export interface SkillsIndexUsageProps {
 export const SkillsIndexUsage = (
   props: SkillsIndexUsageProps,
 ): React.ReactElement => {
-  const { className, personalSlugs, presentSlugs, rangeDays, usage } = props;
+  const { className, presentSlugs, rangeDays, usage } = props;
 
   // Hooks
 
@@ -48,9 +48,8 @@ export const SkillsIndexUsage = (
       partitionSkillUsageByPresence(
         usage.available ? usage.bySkill : [],
         new Set(presentSlugs),
-        new Set(personalSlugs ?? []),
       ),
-    [personalSlugs, presentSlugs, usage],
+    [presentSlugs, usage],
   );
 
   // Handlers
@@ -74,7 +73,7 @@ export const SkillsIndexUsage = (
   // 🔌 Short Circuit
   if (!usage.available) {
     return (
-      <div className={clsx('mt-8', className)} data-testid="SkillsIndexUsage">
+      <div className={cn('mt-8', className)} data-testid="SkillsIndexUsage">
         {header}
         <p
           className="text-muted-foreground text-sm"
@@ -87,7 +86,7 @@ export const SkillsIndexUsage = (
   }
 
   return (
-    <div className={clsx('mt-8', className)} data-testid="SkillsIndexUsage">
+    <div className={cn('mt-8', className)} data-testid="SkillsIndexUsage">
       {header}
 
       <GlobalHeading

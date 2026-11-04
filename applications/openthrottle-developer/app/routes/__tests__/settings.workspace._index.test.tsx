@@ -1,9 +1,11 @@
-import { describe, expect, test, vi, beforeEach } from 'vitest';
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
-import { WorkspaceEditorId } from '~/__generated__/graphql';
-import { action, loader } from '../settings.workspace._index';
-import type { Route } from '@/app/routes/+types/settings.workspace._index';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
+import type { Route } from '@/app/routes/+types/settings.workspace._index';
+import { WorkspaceEditorId } from '~/__generated__/graphql';
+
+import { action, loader } from '../settings.workspace._index';
 
 vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
   const actual =

@@ -1,12 +1,13 @@
-import * as React from 'react';
-import { ChatProvider } from '@openthrottle/react-router-chat';
 import type { ChatProviderProps } from '@openthrottle/react-router-chat';
-import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
+import { ChatProvider } from '@openthrottle/react-router-chat';
 import {
   SidebarProvider,
   TooltipProvider,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+
 import { LegacyChatTurnProvider } from './LegacyChatTurnProvider';
 
 /**

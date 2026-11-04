@@ -1,9 +1,10 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Redis } from 'ioredis';
-import { PlanCancelChannelService } from './plan-cancel-channel.service';
-import type { PlanRunCancellationService } from './plan-run-cancellation.service';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { PlanCancelChannelService } from './plan-cancel-channel.service.ts';
+import type { PlanRunCancellationService } from './plan-run-cancellation.service.ts';
 
 const PLAN_ID = '2ab62876-4c4c-4b7e-8fc1-82d1ede05715';
 

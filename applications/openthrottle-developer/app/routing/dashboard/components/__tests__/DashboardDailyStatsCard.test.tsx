@@ -1,11 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { DashboardDailyStatsCard } from '../DashboardDailyStatsCard';
-import type { DashboardDailyStatsCardProps } from '../DashboardDailyStatsCard';
+
 import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
+
+import type { DashboardDailyStatsCardProps } from '../DashboardDailyStatsCard';
+import { DashboardDailyStatsCard } from '../DashboardDailyStatsCard';
 
 const twoDayStats: ReadonlyArray<DashboardDailyStatsCardFragment> = [
   {

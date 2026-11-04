@@ -2,7 +2,7 @@
  * @description Editor-specific config file paths relative to a linked repository root.
  */
 
-import type { WorkspaceEditorId } from './workspace-editor-id';
+import type { WorkspaceEditorId } from './workspace-editor-id.ts';
 
 interface WorkspaceEditorConfigPaths {
   readonly mcpConfigRelativePath: string;

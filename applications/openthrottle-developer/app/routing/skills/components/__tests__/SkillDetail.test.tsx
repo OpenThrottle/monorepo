@@ -1,13 +1,15 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
+
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import { SKILL_DETAIL_COPY } from '~/routing/skills/data/data.copy';
-import { SkillDetail } from '../SkillDetail';
+
 import type { SkillDetailProps } from '../SkillDetail';
+import { SkillDetail } from '../SkillDetail';
 
 // Monaco cannot boot under jsdom; stand in a textarea with the same
 // controlled value/onChange contract so dirty tracking is exercisable.

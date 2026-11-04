@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import {
   AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
   AUTH_PRINCIPAL_KIND_USER,
@@ -7,7 +8,7 @@ import {
   getAuthPrincipalSub,
   isAuthPrincipal,
   normalizeRequestAuthPrincipal,
-} from './auth-principal';
+} from './auth-principal.ts';
 
 describe('authPrincipalFromServiceAccountId', () => {
   it('maps service account id to service_account principal', () => {

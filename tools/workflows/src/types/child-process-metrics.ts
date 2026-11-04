@@ -3,8 +3,8 @@
  */
 
 export {
-  DEFAULT_POLL_INTERVAL_MS,
   type ChildProcessMetrics,
   type ChildProcessMetricsOptions,
   type ChildProcessSample,
+  DEFAULT_POLL_INTERVAL_MS,
 } from '@openthrottle/openthrottle-agentic-utils';

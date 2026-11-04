@@ -1,11 +1,12 @@
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
-import { LocationTable } from '../LocationTable';
+
 import type {
   DefinitionLocation,
   ReferenceLocation,
 } from '../../data/view-models';
+import { LocationTable } from '../LocationTable';
 
 const definitions: DefinitionLocation[] = [
   {

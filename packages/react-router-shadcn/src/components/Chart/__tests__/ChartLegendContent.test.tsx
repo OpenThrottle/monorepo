@@ -1,11 +1,12 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import { ChartConfigContext } from '../../chart-config-context';
-import { ChartLegendContent } from '../ChartLegendContent';
 import type { ChartLegendContentProps } from '../ChartLegendContent';
+import { ChartLegendContent } from '../ChartLegendContent';
 
 describe('ChartLegendContent Component', () => {
   let component: RenderResult;

@@ -4,14 +4,14 @@
  * within the request and avoid N+1 when resolving tags across many rows.
  */
 
+import { Injectable, Scope } from '@nestjs/common';
 import {
+  createCollectionByColumnLoader,
   type PlanTag,
   type ProjectTag,
-  type TaskTag,
   TagsService,
-  createCollectionByColumnLoader,
+  type TaskTag,
 } from '@openthrottle/nestjs-repositories';
-import { Injectable, Scope } from '@nestjs/common';
 import type DataLoader from 'dataloader';
 
 /**

@@ -2,9 +2,10 @@
  * @description GraphQL ObjectType for Role. Mirrors {@link RoleData} and includes permissions relation.
  */
 
-import type { RoleData } from '@openthrottle/nestjs-repositories';
 import { Field, ObjectType } from '@nestjs/graphql';
-import { PermissionObject } from './permission.object';
+import type { RoleData } from '@openthrottle/nestjs-repositories';
+
+import { PermissionObject } from './permission.object.ts';
 
 @ObjectType()
 export class RoleObject implements RoleData {

@@ -1,16 +1,17 @@
-import * as React from 'react';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalHeading,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { CogIcon } from 'lucide-react';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { getSettingsDiagnosticsLoaderData } from '~/routing/settings/utils/settings-diagnostics-loader-data';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { SettingsEnvironmentDiagnostics } from '~/routing/settings/components/SettingsEnvironmentDiagnostics';
-import { SITE_TITLE } from '~/global/config/settings';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { CogIcon } from 'lucide-react';
+import * as React from 'react';
+
 import type { Route } from '@/app/routes/+types/settings._index';
+import { SITE_TITLE } from '~/global/config/settings';
+import { SettingsEnvironmentDiagnostics } from '~/routing/settings/components/SettingsEnvironmentDiagnostics';
+import { getSettingsDiagnosticsLoaderData } from '~/routing/settings/utils/settings-diagnostics-loader-data';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

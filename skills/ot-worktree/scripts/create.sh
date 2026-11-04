@@ -21,6 +21,12 @@
 # No fetch is performed: rung 2 is the last-fetched ref, so create stays fast and
 # works offline. Pull inside the worktree if you need newer than your last fetch.
 #
+# Provision options — repo-agnostic switches handed to the repo's provisioner as
+# exported environment variables (the contract's only channel; see
+# references/contract.md). A provisioner that does not know one ignores it:
+#   --own-db    $OPENTHROTTLE_WORKTREE_OWN_DB=1  ask for the worktree's own database
+#               (instead of the default, sharing the primary checkout's).
+#
 # Hook contract (https://code.claude.com/docs/en/hooks.md):
 #   - MUST print ONLY the worktree's absolute path on stdout.
 #   - Any non-zero exit, or missing path, fails worktree creation.
@@ -95,6 +101,7 @@ while [ $# -gt 0 ]; do
       BASE_OVERRIDE="$1"; BASE_EXPLICIT=1
       ;;
     --base=*) BASE_OVERRIDE="${1#--base=}"; BASE_EXPLICIT=1 ;;
+    --own-db) OPENTHROTTLE_WORKTREE_OWN_DB=1; export OPENTHROTTLE_WORKTREE_OWN_DB ;;
     --) ;;
     -*) log "🔴 unknown option: $1"; exit 1 ;;
     *)
@@ -127,7 +134,7 @@ if [ -z "$NAME" ] && [ -z "$RAW" ]; then
     exit 0
   fi
   log "🔴 ot-worktree create: no worktree name given and not inside a linked worktree."
-  log "    usage: pnpm worktree:new <name> [--base <ref>]"
+  log "    usage: pnpm worktree:new <name> [--base <ref>] [--own-db]"
   log "           (or run inside a worktree to provision it)"
   exit 1
 fi

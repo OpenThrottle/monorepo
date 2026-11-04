@@ -2,6 +2,8 @@ import {
   executeGraphqlWithAuth,
   parseFormData,
 } from '@openthrottle/react-router-graphql';
+
+import type { Route } from '@/app/routes/+types/projects.$projectId._index';
 import {
   ProjectDetailAddProjectTagDocument,
   ProjectDetailRemoveProjectTagDocument,
@@ -10,7 +12,6 @@ import {
   AddProjectTagInputSchema,
   RemoveProjectTagInputSchema,
 } from '~/__generated__/schemas';
-import type { Route } from '@/app/routes/+types/projects.$projectId._index';
 
 /**
  * @description Project detail tag mutations (add / remove), dispatched by

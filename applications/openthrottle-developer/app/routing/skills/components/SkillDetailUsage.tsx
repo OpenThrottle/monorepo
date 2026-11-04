@@ -1,21 +1,21 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Link } from 'react-router';
-import { Badge } from '@openthrottle/react-router-shadcn';
+import { Badge, cn } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import { SkillUsageDailyChart } from '~/global/components/SkillUsageDailyChart';
 import { SkillUsageStatTile } from '~/routing/skills/components/SkillUsageStatTile';
 import { SKILL_USAGE_DETAIL_COPY } from '~/routing/skills/data/data.copy';
 import {
+  type SkillDetailUsageData,
   skillUsageLastUsedLabel,
   skillUsageSuccessRateLabel,
-  type SkillDetailUsageData,
 } from '~/routing/skills/data/skill-usage-detail';
 import {
   SKILL_USAGE_COPY,
-  SKILL_USAGE_SCOPES,
   skillUsageAvgDurationLabel,
   skillUsageOutcomesLabel,
+  skillUsageScopeBadgeColor,
   skillUsageScopeLabel,
 } from '~/routing/usage/data/skill-usage-copy';
 
@@ -40,6 +40,7 @@ export const SkillDetailUsage = (
 
   // Setup
   const skill = usage.available ? usage.skill : null;
+  const scopeBadgeColor = skillUsageScopeBadgeColor(skill?.scope ?? '');
 
   // Handlers
 
@@ -61,7 +62,7 @@ export const SkillDetailUsage = (
   // 🔌 Short Circuit
   if (!usage.available) {
     return (
-      <div className={clsx('mt-8', className)} data-testid="SkillDetailUsage">
+      <div className={cn('mt-8', className)} data-testid="SkillDetailUsage">
         {header}
         <p
           className="text-muted-foreground text-sm"
@@ -75,7 +76,7 @@ export const SkillDetailUsage = (
 
   if (!skill) {
     return (
-      <div className={clsx('mt-8', className)} data-testid="SkillDetailUsage">
+      <div className={cn('mt-8', className)} data-testid="SkillDetailUsage">
         {header}
         <p
           className="text-muted-foreground text-sm"
@@ -88,7 +89,7 @@ export const SkillDetailUsage = (
   }
 
   return (
-    <div className={clsx(className)} data-testid="SkillDetailUsage">
+    <div className={cn(className)} data-testid="SkillDetailUsage">
       {header}
       <p className="text-muted-foreground mb-4 text-sm">
         {SKILL_USAGE_DETAIL_COPY.intro(rangeDays)}
@@ -105,12 +106,7 @@ export const SkillDetailUsage = (
         <SkillUsageStatTile
           label={SKILL_USAGE_DETAIL_COPY.scopeTile}
           value={
-            <Badge
-              color={
-                skill.scope === SKILL_USAGE_SCOPES.OURS ? 'green' : 'orange'
-              }
-              size="xs"
-            >
+            <Badge color={scopeBadgeColor} size="xs">
               {skillUsageScopeLabel(skill.scope)}
             </Badge>
           }
@@ -142,7 +138,7 @@ export const SkillDetailUsage = (
         title={SKILL_USAGE_DETAIL_COPY.outcomeBreakdownHeading}
       />
       <div
-        className="mb-2 grid grid-cols-3 gap-3"
+        className="mb-2 grid grid-cols-2 gap-3 md:grid-cols-4"
         data-testid="SkillDetailUsageOutcomes"
       >
         <SkillUsageStatTile
@@ -150,12 +146,16 @@ export const SkillDetailUsage = (
           value={skill.successCount}
         />
         <SkillUsageStatTile
-          label={SKILL_USAGE_DETAIL_COPY.abandonedTile}
-          value={skill.abandonedCount}
-        />
-        <SkillUsageStatTile
           label={SKILL_USAGE_DETAIL_COPY.errorTile}
           value={skill.errorCount}
+        />
+        <SkillUsageStatTile
+          label={SKILL_USAGE_DETAIL_COPY.sessionEndedTile}
+          value={skill.sessionEndedCount}
+        />
+        <SkillUsageStatTile
+          label={SKILL_USAGE_DETAIL_COPY.abandonedTile}
+          value={skill.abandonedCount}
         />
       </div>
       <p className="text-muted-foreground mb-8 text-xs">

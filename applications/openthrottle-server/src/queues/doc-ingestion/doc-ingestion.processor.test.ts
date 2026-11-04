@@ -4,13 +4,14 @@
  * unit tests and by running the job with OpenThrottle and docs available.
  */
 
-import { beforeEach, describe, expect, it } from 'vitest';
+import { createMock } from '@golevelup/ts-vitest';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { createMock } from '@golevelup/ts-vitest';
-import { DocIngestionProcessor } from './doc-ingestion.processor';
-import type { DocIngestionJob } from './doc-ingestion.types';
+import { beforeEach, describe, expect, it } from 'vitest';
+
+import { DocIngestionProcessor } from './doc-ingestion.processor.ts';
+import type { DocIngestionJob } from './doc-ingestion.types.ts';
 
 describe('DocIngestionProcessor', () => {
   let processor: DocIngestionProcessor;

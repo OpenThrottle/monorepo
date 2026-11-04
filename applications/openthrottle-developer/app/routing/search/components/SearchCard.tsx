@@ -1,10 +1,11 @@
 import * as React from 'react';
+
+import type { SearchChunk } from '~/__generated__/graphql';
 import { SearchDocumentationCard } from '~/routing/search/components/SearchDocumentationCard';
 import { SearchPlanCard } from '~/routing/search/components/SearchPlanCard';
 import { SearchTaskCard } from '~/routing/search/components/SearchTaskCard';
-import { normalizeSource } from '~/routing/search/utils/search-card';
-import type { SearchChunk } from '~/__generated__/graphql';
 import type { SearchRankMeta } from '~/routing/search/types/search-rank-meta';
+import { normalizeSource } from '~/routing/search/utils/search-card';
 
 export interface SearchCardProps {
   className?: string;

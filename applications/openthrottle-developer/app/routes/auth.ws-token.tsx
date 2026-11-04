@@ -6,8 +6,9 @@
  * short-lived token as JSON. The durable cookie never reaches client JS.
  */
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { MintSubscriptionTokenDocument } from '~/__generated__/graphql';
+
 import type { Route } from '@/app/routes/+types/auth.ws-token';
+import { MintSubscriptionTokenDocument } from '~/__generated__/graphql';
 
 export const loader = async (
   args: Route.LoaderArgs,

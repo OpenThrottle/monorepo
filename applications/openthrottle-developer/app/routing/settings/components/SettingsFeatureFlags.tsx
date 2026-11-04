@@ -1,7 +1,7 @@
-import * as React from 'react';
+import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 import * as FEATURE_FLAGS from '@openthrottle/react-router-utils/src/config/features';
 import { FlagIcon } from 'lucide-react';
-import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
+import * as React from 'react';
 
 export interface SettingsFeatureFlagsProps {
   className?: string;

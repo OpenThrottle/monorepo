@@ -1,0 +1,777 @@
+#!/usr/bin/env node
+
+/**
+ * -------- GENERATED — DO NOT EDIT ------------------------------------
+ * Source: packages/agentic-hooks/src/adapters/cursor/capture.ts
+ * Regenerate: pnpm nx run @openthrottle/agentic-hooks:bundle-hooks
+ * Authoring lives in @openthrottle/agentic-hooks; this file is a bundle.
+ * ----------------------------------------------------------------------
+ */
+
+"use strict";
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
+
+// packages/agentic-hooks/src/adapters/cursor/capture.ts
+var import_node_fs4 = __toESM(require("node:fs"), 1);
+var import_node_path5 = __toESM(require("node:path"), 1);
+
+// packages/agentic-hooks/src/data/jsonl.ts
+var import_node_fs2 = __toESM(require("node:fs"), 1);
+var import_node_path2 = __toESM(require("node:path"), 1);
+
+// packages/agentic-hooks/src/config/env.ts
+var import_node_child_process = require("node:child_process");
+var import_node_fs = __toESM(require("node:fs"), 1);
+var import_node_os = __toESM(require("node:os"), 1);
+var import_node_path = __toESM(require("node:path"), 1);
+
+// packages/agentic-hooks/src/utils/logging.ts
+var logHookError = (message, err) => {
+  try {
+    const detail = err instanceof Error ? err.message : err != null ? String(err) : "";
+    process.stderr.write(
+      `[skill-usage-capture] ${message}${detail ? `: ${detail}` : ""}
+`
+    );
+  } catch {
+  }
+};
+
+// packages/agentic-hooks/src/config/env.ts
+var userConfigDir = () => import_node_path.default.join(import_node_os.default.homedir(), ".openthrottle");
+var OT_MARKER_REL = import_node_path.default.join(
+  "applications",
+  "openthrottle-server",
+  "package.json"
+);
+var OT_MARKER_NAME = "openthrottle-server";
+var checkoutCache = /* @__PURE__ */ new Map();
+var isOpenThrottleCheckout = (repoRoot) => {
+  if (!repoRoot) {
+    return false;
+  }
+  const cached = checkoutCache.get(repoRoot);
+  if (cached !== void 0) {
+    return cached;
+  }
+  let match = false;
+  try {
+    const markerPath = import_node_path.default.join(repoRoot, OT_MARKER_REL);
+    if (import_node_fs.default.existsSync(markerPath)) {
+      const parsed = JSON.parse(import_node_fs.default.readFileSync(markerPath, "utf8"));
+      match = typeof parsed === "object" && parsed !== null && "name" in parsed && parsed.name === OT_MARKER_NAME;
+    }
+  } catch {
+    match = false;
+  }
+  checkoutCache.set(repoRoot, match);
+  return match;
+};
+var resolveGitBranch = (repoRoot) => {
+  try {
+    return (0, import_node_child_process.execFileSync)("git", ["rev-parse", "--abbrev-ref", "HEAD"], {
+      cwd: repoRoot,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+      timeout: 2e3
+    }).trim();
+  } catch {
+    return "";
+  }
+};
+var readEnvFile = (envPath) => {
+  const out = {};
+  try {
+    if (!import_node_fs.default.existsSync(envPath)) {
+      return out;
+    }
+    const text = import_node_fs.default.readFileSync(envPath, "utf8");
+    for (const line of text.split("\n")) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) {
+        continue;
+      }
+      const eq = trimmed.indexOf("=");
+      if (eq <= 0) {
+        continue;
+      }
+      const key = trimmed.slice(0, eq).trim();
+      if (!key) {
+        continue;
+      }
+      let value = trimmed.slice(eq + 1).trim();
+      if (value.startsWith('"') && value.endsWith('"') || value.startsWith("'") && value.endsWith("'")) {
+        value = value.slice(1, -1);
+      }
+      out[key] = value;
+    }
+  } catch (err) {
+    logHookError("readEnvFile failed", err);
+  }
+  return out;
+};
+var readRepoEnvFile = (repoRoot) => isOpenThrottleCheckout(repoRoot) ? readEnvFile(import_node_path.default.join(repoRoot, ".env")) : {};
+var readUserEnvFile = () => readEnvFile(import_node_path.default.join(userConfigDir(), ".env"));
+var envLayers = (repoRoot, options) => [
+  repoRoot ? readRepoEnvFile(repoRoot) : {},
+  ...options?.includeProcessEnv === false ? [] : [process.env],
+  readUserEnvFile()
+];
+var resolveOtEnv = (repoRoot, key, options) => {
+  for (const layer of envLayers(repoRoot, options)) {
+    const value = layer[key];
+    if (value && value.trim()) {
+      return value.trim();
+    }
+  }
+  return "";
+};
+var LOOPBACK_AUTHORITY = /^([a-z][a-z0-9+.-]*:\/\/(?:[^/?#@]*@)?)localhost(?=[:/?#]|$)/i;
+var normalizeLoopbackHost = (url) => url.replace(LOOPBACK_AUTHORITY, "$1127.0.0.1");
+var graphqlUrlFromEnvMap = (env) => {
+  const explicit = env.OPENTHROTTLE_GRAPHQL_URL?.trim() || env.OPENTHROTTLE_WORKER_GRAPHQL_URL?.trim();
+  if (explicit) {
+    return normalizeLoopbackHost(explicit.replace(/\/$/, ""));
+  }
+  const appUrl = env.OPENTHROTTLE_SERVER_APP_URL?.trim()?.replace(/\/$/, "");
+  if (appUrl) {
+    return normalizeLoopbackHost(`${appUrl}/graphql`);
+  }
+  return null;
+};
+var resolveGraphqlUrl = (repoRoot, options) => {
+  for (const layer of envLayers(repoRoot, options)) {
+    const url = graphqlUrlFromEnvMap(layer);
+    if (url) {
+      return url;
+    }
+  }
+  return null;
+};
+var resolveAuthToken = (repoRoot, options) => resolveOtEnv(repoRoot, "OPENTHROTTLE_MCP_AUTH_TOKEN", options) || resolveOtEnv(repoRoot, "OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN", options) || "";
+
+// packages/agentic-hooks/src/data/jsonl.ts
+var TELEMETRY_DIR_BASENAME = "skill-usage";
+var EVENTS_JSONL_BASENAME = "events.jsonl";
+var STARTS_DIR_BASENAME = "starts";
+var resolveTelemetryDir = () => process.env.OPENTHROTTLE_TELEMETRY_DIR?.trim() || import_node_path2.default.join(userConfigDir(), TELEMETRY_DIR_BASENAME);
+var appendJsonl = (jsonlPath, event) => {
+  import_node_fs2.default.mkdirSync(import_node_path2.default.dirname(jsonlPath), { recursive: true });
+  import_node_fs2.default.appendFileSync(jsonlPath, `${JSON.stringify(event)}
+`, "utf8");
+};
+var defaultJsonlPath = () => import_node_path2.default.join(resolveTelemetryDir(), EVENTS_JSONL_BASENAME);
+var defaultStartsDir = () => import_node_path2.default.join(resolveTelemetryDir(), STARTS_DIR_BASENAME);
+var sanitizeSessionId = (sessionId) => String(sessionId).replace(/[^A-Za-z0-9._-]/g, "-");
+var startsFilePathForSession = (startsDir, sessionId) => import_node_path2.default.join(startsDir, `${sanitizeSessionId(sessionId)}.jsonl`);
+
+// packages/agentic-hooks/src/config/describe.ts
+var TELEMETRY_CONFIG_SOURCES = Object.freeze({
+  /** No layer yielded an endpoint. */
+  NONE: "none",
+  /** The ambient shell. */
+  PROCESS_ENV: "process_env",
+  /** This checkout's own `.env` — only read in an OpenThrottle checkout. */
+  REPO_ENV: "repo_env",
+  /** `~/.openthrottle/.env`. */
+  USER_ENV: "user_env"
+});
+
+// packages/nodejs-utils/src/utils/is-record.ts
+var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
+
+// packages/agentic-hooks/src/data/checkpoints.ts
+var DEFAULT_STALE_CHECKPOINT_MS = 6 * 60 * 60 * 1e3;
+
+// packages/agentic-hooks/src/utils/privacy.ts
+var PRIVACY_LEVELS = Object.freeze({
+  FULL: "full",
+  NAME_ONLY: "name-only",
+  TRUNCATED: "truncated"
+});
+var DEFAULT_PRIVACY_LEVEL = PRIVACY_LEVELS.TRUNCATED;
+var FOREIGN_PRIVACY_LEVEL = PRIVACY_LEVELS.NAME_ONLY;
+var resolvePrivacyLevel = (repoRoot) => isOpenThrottleCheckout(repoRoot) ? DEFAULT_PRIVACY_LEVEL : FOREIGN_PRIVACY_LEVEL;
+var DEFAULT_ARGS_MAX_LEN = 256;
+var SECRET_PATTERNS = [
+  /\bBearer\s+[A-Za-z0-9._\-+=/]+/gi,
+  /\bsk-[A-Za-z0-9]{8,}/gi,
+  /\b(password|passwd|pwd|secret|token|api[_-]?key)\s*[=:]\s*\S+/gi,
+  /\bAIza[0-9A-Za-z\-_]{20,}/gi,
+  /\bghp_[A-Za-z0-9]{20,}/gi,
+  /\bgithub_pat_[A-Za-z0-9_]{20,}/gi
+];
+var redactSecrets = (value) => {
+  let out = value;
+  for (const pattern of SECRET_PATTERNS) {
+    pattern.lastIndex = 0;
+    out = out.replace(pattern, "[REDACTED]");
+  }
+  return out;
+};
+var applyPrivacy = (level, args, options = {}) => {
+  const maxLen = options.maxLen ?? DEFAULT_ARGS_MAX_LEN;
+  if (level === PRIVACY_LEVELS.NAME_ONLY) {
+    return null;
+  }
+  const asString = args == null ? "" : typeof args === "string" ? args : (() => {
+    try {
+      return JSON.stringify(args);
+    } catch {
+      return String(args);
+    }
+  })();
+  const redacted = redactSecrets(asString);
+  if (level === PRIVACY_LEVELS.FULL) {
+    return redacted;
+  }
+  if (redacted.length <= maxLen) {
+    return redacted;
+  }
+  return `${redacted.slice(0, maxLen)}…`;
+};
+
+// packages/agentic-hooks/src/utils/scope.ts
+var import_node_fs3 = __toESM(require("node:fs"), 1);
+var import_node_os2 = __toESM(require("node:os"), 1);
+var import_node_path3 = __toESM(require("node:path"), 1);
+var PERSONAL_SKILLS_DIR_ENV = "OPENTHROTTLE_PERSONAL_SKILLS_DIR";
+var SKILL_LINK_DIR = import_node_path3.default.join(".agents", "skills");
+var resolvePersonalSkillsRoot = (env) => {
+  const override = env[PERSONAL_SKILLS_DIR_ENV]?.trim();
+  if (override !== void 0 && override !== "") {
+    return override;
+  }
+  return import_node_path3.default.join(import_node_os2.default.homedir(), ".openthrottle", "skills");
+};
+var isPathInsideRoot = (root, candidate) => {
+  try {
+    const realRoot = import_node_fs3.default.realpathSync(root);
+    return import_node_fs3.default.realpathSync(candidate).startsWith(`${realRoot}${import_node_path3.default.sep}`);
+  } catch {
+    return false;
+  }
+};
+var isPersonalSkill = (skillName, repoRoot, env) => {
+  const personalRoot = resolvePersonalSkillsRoot(env);
+  return isPathInsideRoot(
+    personalRoot,
+    import_node_path3.default.join(repoRoot, SKILL_LINK_DIR, skillName)
+  );
+};
+var detectScope = (skillName, repoRoot, env = process.env) => {
+  if (!skillName || skillName.includes(":")) {
+    return "third-party";
+  }
+  const authoredDir = import_node_path3.default.join(repoRoot, "skills", skillName);
+  try {
+    if (import_node_fs3.default.existsSync(authoredDir) && import_node_fs3.default.statSync(authoredDir).isDirectory()) {
+      return "ours";
+    }
+  } catch {
+  }
+  try {
+    if (isPersonalSkill(skillName, repoRoot, env)) {
+      return "personal";
+    }
+  } catch {
+  }
+  return "third-party";
+};
+
+// packages/agentic-hooks/src/data/events.ts
+var RECORD_SKILL_USAGE_MUTATION = `
+mutation RecordSkillUsage($input: RecordSkillUsageInput!) {
+  recordSkillUsage(input: $input) {
+    id
+    skillName
+  }
+}
+`;
+var SKILL_USAGE_OUTCOMES = Object.freeze({
+  ABANDONED: "abandoned",
+  ERROR: "error",
+  SESSION_ENDED: "session_ended",
+  SUCCESS: "success"
+});
+var SKILL_USAGE_QUALITY_OUTCOMES = Object.freeze([SKILL_USAGE_OUTCOMES.ERROR, SKILL_USAGE_OUTCOMES.SUCCESS]);
+var buildUsageEvent = ({
+  normalized,
+  repoRoot,
+  source,
+  privacyLevel,
+  timestamp = (/* @__PURE__ */ new Date()).toISOString(),
+  gitBranch
+}) => {
+  if (!normalized || !normalized.skill_name) {
+    return null;
+  }
+  const cwd = normalized.cwd || repoRoot;
+  const scope = detectScope(normalized.skill_name, repoRoot);
+  const level = privacyLevel ?? resolvePrivacyLevel(repoRoot);
+  const args = applyPrivacy(level, normalized.args);
+  const resolvedSource = source ?? normalized.source ?? void 0;
+  const event = {
+    args,
+    cwd,
+    git_branch: gitBranch ?? resolveGitBranch(repoRoot),
+    invocation_path: normalized.invocation_path ?? null,
+    privacy_level: level,
+    scope,
+    session_id: normalized.session_id ?? null,
+    skill_name: normalized.skill_name,
+    timestamp
+  };
+  if (resolvedSource) {
+    event.source = resolvedSource;
+  }
+  if (normalized.agent_id) {
+    event.agent_id = normalized.agent_id;
+  }
+  if (normalized.agent_type) {
+    event.agent_type = normalized.agent_type;
+  }
+  if (normalized.tool_use_id) {
+    event.tool_use_id = normalized.tool_use_id;
+  }
+  if (normalized.prompt_id) {
+    event.prompt_id = normalized.prompt_id;
+  }
+  if (normalized.hook_event_name) {
+    event.hook_event_name = normalized.hook_event_name;
+  }
+  return event;
+};
+var toRecordSkillUsageInput = (event) => {
+  const input = {
+    occurredAt: event.timestamp,
+    scope: event.scope,
+    skillName: event.skill_name
+  };
+  if (event.source != null) {
+    input.source = event.source;
+  }
+  if (event.args !== void 0) {
+    input.args = event.args;
+  }
+  if (event.cwd != null) {
+    input.cwd = event.cwd;
+  }
+  if (event.git_branch != null && event.git_branch !== "") {
+    input.gitBranch = event.git_branch;
+  }
+  if (event.session_id != null) {
+    input.sessionId = event.session_id;
+  }
+  if (event.privacy_level != null) {
+    input.privacyLevel = event.privacy_level;
+  }
+  if (event.invocation_path != null) {
+    input.invocationPath = event.invocation_path;
+  }
+  if (event.hook_event_name != null) {
+    input.hookEventName = event.hook_event_name;
+  }
+  if (event.agent_id != null) {
+    input.agentId = event.agent_id;
+  }
+  if (event.agent_type != null) {
+    input.agentType = event.agent_type;
+  }
+  if (event.tool_use_id != null) {
+    input.toolUseId = event.tool_use_id;
+  }
+  if (event.prompt_id != null) {
+    input.promptId = event.prompt_id;
+  }
+  return input;
+};
+
+// packages/agentic-hooks/src/data/graphql.ts
+var PERMANENT_GRAPHQL_CODES = [
+  "BAD_REQUEST",
+  "BAD_USER_INPUT",
+  "GRAPHQL_PARSE_FAILED",
+  "GRAPHQL_VALIDATION_FAILED"
+];
+var TRANSIENT_CLIENT_STATUSES = [401, 403, 408, 429];
+var isPermanentHttpStatus = (status) => status >= 400 && status < 500 && !TRANSIENT_CLIENT_STATUSES.includes(status);
+var readStatusCode = (extensions) => {
+  const original = extensions.originalError;
+  if (isRecord(original) && typeof original.statusCode === "number") {
+    return original.statusCode;
+  }
+  return null;
+};
+var readGraphqlErrors = (payload) => {
+  if (!isRecord(payload) || !Array.isArray(payload.errors) || !payload.errors.length) {
+    return null;
+  }
+  let permanent = false;
+  const messages = [];
+  for (const error of payload.errors) {
+    if (!isRecord(error)) {
+      continue;
+    }
+    messages.push(typeof error.message === "string" ? error.message : "");
+    const extensions = isRecord(error.extensions) ? error.extensions : {};
+    const code = typeof extensions.code === "string" ? extensions.code : "";
+    const status = readStatusCode(extensions);
+    if (PERMANENT_GRAPHQL_CODES.includes(code) || status !== null && isPermanentHttpStatus(status)) {
+      permanent = true;
+    }
+  }
+  return { message: messages.join("; "), permanent };
+};
+var readMutationData = (payload, field) => isRecord(payload) && isRecord(payload.data) ? payload.data[field] : void 0;
+var transient = (reason) => ({
+  ok: false,
+  permanent: false,
+  reason
+});
+var postMutation = async ({
+  authToken,
+  fetchImpl,
+  graphqlUrl,
+  query,
+  timeoutMs,
+  variables,
+  field
+}) => {
+  if (typeof fetchImpl !== "function") {
+    return transient("fetch unavailable");
+  }
+  if (!graphqlUrl) {
+    return transient("missing graphql url");
+  }
+  const headers = {
+    "Content-Type": "application/json"
+  };
+  if (authToken) {
+    headers.Authorization = `Bearer ${authToken}`;
+  }
+  let response;
+  try {
+    response = await fetchImpl(graphqlUrl, {
+      body: JSON.stringify({ query, variables }),
+      headers,
+      method: "POST",
+      signal: AbortSignal.timeout(timeoutMs)
+    });
+  } catch (err) {
+    const reason = err instanceof Error && err.name === "TimeoutError" ? "timeout" : err instanceof Error ? err.message : String(err);
+    return transient(reason);
+  }
+  let payload;
+  try {
+    payload = await response.json();
+  } catch (err) {
+    return {
+      ok: false,
+      permanent: isPermanentHttpStatus(response.status),
+      reason: `invalid json (${response.status}): ${err instanceof Error ? err.message : String(err)}`
+    };
+  }
+  const errors = readGraphqlErrors(payload);
+  if (errors !== null) {
+    return { ok: false, permanent: errors.permanent, reason: errors.message };
+  }
+  if (!response.ok) {
+    return {
+      ok: false,
+      permanent: isPermanentHttpStatus(response.status),
+      reason: `http ${response.status}`
+    };
+  }
+  return { data: readMutationData(payload, field), ok: true };
+};
+var postGraphqlMutation = async (args) => {
+  const posted = await postMutation(args);
+  if (!posted.ok) {
+    return posted;
+  }
+  const node = posted.data;
+  if (isRecord(node) && node.id != null && String(node.id)) {
+    return { id: String(node.id), ok: true };
+  }
+  return transient(`missing ${args.field}.id`);
+};
+
+// packages/agentic-hooks/src/data/starts.ts
+var recordSkillStart = ({
+  sessionId,
+  skillName,
+  toolUseId = null,
+  scope = null,
+  startedAt = (/* @__PURE__ */ new Date()).toISOString(),
+  startsDir
+}) => {
+  try {
+    const sid = typeof sessionId === "string" ? sessionId.trim() : "";
+    const name = typeof skillName === "string" ? skillName.trim() : "";
+    if (!sid || !name) {
+      return { ok: false, reason: "missing session_id or skill_name" };
+    }
+    const dir = startsDir || defaultStartsDir();
+    const filePath = startsFilePathForSession(dir, sid);
+    appendJsonl(filePath, {
+      scope: scope ?? null,
+      session_id: sid,
+      skill_name: name,
+      started_at: startedAt,
+      tool_use_id: toolUseId ?? null
+    });
+    return { ok: true, path: filePath };
+  } catch (err) {
+    logHookError("recordSkillStart failed", err);
+    return {
+      ok: false,
+      reason: err instanceof Error ? err.message : String(err)
+    };
+  }
+};
+
+// packages/agentic-hooks/src/data/token-usage.ts
+var MAX_TOKEN_USAGE_BATCH_BYTES = 64 * 1024;
+
+// packages/agentic-hooks/src/data/persist.ts
+var forLog = (graphqlUrl) => graphqlUrl.replace(/^([a-z][a-z0-9+.-]*:\/\/)[^/?#]*@/i, "$1***@");
+var DEFAULT_POST_TIMEOUT_MS = 750;
+var DEFAULT_ABANDONED_MS = 6 * 60 * 60 * 1e3;
+var postSkillUsageEvent = async ({
+  event,
+  graphqlUrl,
+  authToken = "",
+  timeoutMs = DEFAULT_POST_TIMEOUT_MS,
+  fetchImpl = globalThis.fetch
+}) => {
+  return postGraphqlMutation({
+    authToken,
+    fetchImpl,
+    field: "recordSkillUsage",
+    graphqlUrl,
+    query: RECORD_SKILL_USAGE_MUTATION,
+    timeoutMs,
+    variables: { input: toRecordSkillUsageInput(event) }
+  });
+};
+var resolveTimeout = (timeoutMs) => timeoutMs ?? (Number(process.env.OPENTHROTTLE_TELEMETRY_TIMEOUT_MS) || DEFAULT_POST_TIMEOUT_MS);
+var persistUsageEvent = async ({
+  event,
+  repoRoot,
+  jsonlPath,
+  timeoutMs,
+  fetchImpl,
+  graphqlUrl: graphqlUrlOverride,
+  authToken: authTokenOverride
+}) => {
+  const outPath = jsonlPath || defaultJsonlPath();
+  if (process.env.OPENTHROTTLE_TELEMETRY_OFFLINE === "1") {
+    try {
+      appendJsonl(outPath, event);
+    } catch (err) {
+      logHookError("jsonl append failed", err);
+    }
+    return { detail: "OPENTHROTTLE_TELEMETRY_OFFLINE=1", sink: "jsonl" };
+  }
+  const graphqlUrl = graphqlUrlOverride ?? resolveGraphqlUrl(repoRoot);
+  const authToken = authTokenOverride ?? resolveAuthToken(repoRoot);
+  if (!graphqlUrl) {
+    try {
+      appendJsonl(outPath, event);
+    } catch (err) {
+      logHookError("jsonl append failed", err);
+    }
+    return { detail: "missing graphql url", sink: "jsonl" };
+  }
+  try {
+    const result = await postSkillUsageEvent({
+      authToken,
+      event,
+      fetchImpl,
+      graphqlUrl,
+      timeoutMs: resolveTimeout(timeoutMs)
+    });
+    if (result.ok) {
+      return { id: result.id, sink: "server" };
+    }
+    logHookError(
+      `server post failed; falling back to jsonl (${result.reason}) [endpoint ${forLog(graphqlUrl)}]`
+    );
+    try {
+      appendJsonl(outPath, event);
+    } catch (err) {
+      logHookError("jsonl append failed", err);
+    }
+    return { detail: result.reason, sink: "jsonl" };
+  } catch (err) {
+    logHookError("persistUsageEvent failed", err);
+    try {
+      appendJsonl(outPath, event);
+    } catch (appendErr) {
+      logHookError("jsonl append failed", appendErr);
+    }
+    return {
+      detail: err instanceof Error ? err.message : String(err),
+      sink: "jsonl"
+    };
+  }
+};
+
+// packages/agentic-hooks/src/data/plan-runs.ts
+var import_node_path4 = __toESM(require("node:path"), 1);
+var PLAN_RUNS_DIR_REL = import_node_path4.default.join(".cache", "plan-runs");
+var PLAN_RUN_ABANDONED_MS = 6 * 60 * 60 * 1e3;
+
+// packages/agentic-hooks/src/adapters/cursor/payload.ts
+var CURSOR_SOURCE = "cursor";
+var CURSOR_INVOCATION_PATHS = Object.freeze({
+  SKILL_READ: "skill_read",
+  SLASH: "slash"
+});
+var SKILL_FILE_PATTERN = /(?:^|\/)([^/]+)\/SKILL\.md$/;
+var SLASH_COMMAND_PATTERN = /^\s*\/([A-Za-z0-9][\w.:-]*)\s*([\s\S]*)$/;
+var readString = (value) => typeof value === "string" && value ? value : null;
+var resolveSessionId = (payload) => readString(payload.session_id) ?? readString(payload.conversation_id);
+var resolveCwd = (payload) => {
+  const cwd = readString(payload.cwd);
+  if (cwd) {
+    return cwd;
+  }
+  if (Array.isArray(payload.workspace_roots)) {
+    const [first] = payload.workspace_roots;
+    return readString(first);
+  }
+  return null;
+};
+var skillNameFromPath = (filePath) => {
+  const match = SKILL_FILE_PATTERN.exec(filePath.split("\\").join("/"));
+  return match?.[1] ?? null;
+};
+var normalizeSkillRead = (payload) => {
+  if (payload.tool_name !== "Read" || !isRecord(payload.tool_input)) {
+    return null;
+  }
+  const filePath = readString(payload.tool_input.file_path);
+  if (!filePath) {
+    return null;
+  }
+  const skillName = skillNameFromPath(filePath);
+  if (!skillName) {
+    return null;
+  }
+  const normalized = {
+    args: "",
+    cwd: resolveCwd(payload),
+    hook_event_name: "preToolUse",
+    invocation_path: CURSOR_INVOCATION_PATHS.SKILL_READ,
+    session_id: resolveSessionId(payload),
+    skill_name: skillName
+  };
+  const toolUseId = readString(payload.tool_use_id);
+  if (toolUseId) {
+    normalized.tool_use_id = toolUseId;
+  }
+  return normalized;
+};
+var normalizeSlashCommand = (payload) => {
+  const prompt = readString(payload.prompt);
+  if (!prompt) {
+    return null;
+  }
+  const match = SLASH_COMMAND_PATTERN.exec(prompt);
+  const skillName = match?.[1];
+  if (!skillName) {
+    return null;
+  }
+  return {
+    args: match?.[2] ?? "",
+    cwd: resolveCwd(payload),
+    hook_event_name: "beforeSubmitPrompt",
+    invocation_path: CURSOR_INVOCATION_PATHS.SLASH,
+    session_id: resolveSessionId(payload),
+    skill_name: skillName
+  };
+};
+var normalizeCursorPayload = (raw) => {
+  if (!isRecord(raw)) {
+    return null;
+  }
+  switch (raw.hook_event_name) {
+    case "beforeSubmitPrompt":
+      return normalizeSlashCommand(raw);
+    case "preToolUse":
+      return normalizeSkillRead(raw);
+    default:
+      return null;
+  }
+};
+
+// packages/agentic-hooks/src/adapters/cursor/capture.ts
+var main = async () => {
+  try {
+    const repoRoot = process.env.CURSOR_PROJECT_DIR || process.env.OPEN_THROTTLE_REPO_ROOT || process.cwd();
+    const stdinBuf = import_node_fs4.default.readFileSync(0, "utf8");
+    if (!stdinBuf || !stdinBuf.trim()) {
+      return;
+    }
+    let raw;
+    try {
+      raw = JSON.parse(stdinBuf);
+    } catch (err) {
+      logHookError("invalid JSON stdin", err);
+      return;
+    }
+    const normalized = normalizeCursorPayload(raw);
+    if (!normalized) {
+      return;
+    }
+    const event = buildUsageEvent({
+      normalized,
+      repoRoot,
+      source: CURSOR_SOURCE
+    });
+    if (!event) {
+      return;
+    }
+    recordSkillStart({
+      scope: event.scope,
+      sessionId: event.session_id,
+      skillName: event.skill_name,
+      startedAt: event.timestamp,
+      toolUseId: event.tool_use_id ?? null
+    });
+    const outPath = defaultJsonlPath();
+    await persistUsageEvent({
+      event,
+      jsonlPath: import_node_path5.default.resolve(outPath),
+      repoRoot
+    });
+  } catch (err) {
+    logHookError("capture failed", err);
+  }
+};
+main().finally(() => {
+  process.exit(0);
+});

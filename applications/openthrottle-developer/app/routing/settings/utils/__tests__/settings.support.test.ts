@@ -1,5 +1,7 @@
 import { describe, expect, test, vi } from 'vitest';
+
 import type { ClientLogEntry } from '~/routing/settings/client-log-sink';
+
 import {
   copyText,
   entryToJsonRecord,

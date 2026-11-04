@@ -1,11 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import { WorkspaceFolderReconciliation } from '~/__generated__/graphql';
-import { AddFolderResult } from '../AddFolderResult';
+
 import type { AddFolderResultProps } from '../AddFolderResult';
+import { AddFolderResult } from '../AddFolderResult';
 
 const checkout = {
   createdAt: '2026-07-24T00:00:00.000Z',

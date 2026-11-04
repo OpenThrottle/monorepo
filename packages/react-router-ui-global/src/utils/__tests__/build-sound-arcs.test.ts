@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { buildSoundArcs } from '../build-sound-arcs';
 
 const quiet = {

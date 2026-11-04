@@ -1,7 +1,8 @@
-import { describe, expect, test } from 'vitest';
 import type { UIMatch } from 'react-router';
-import { hasBreadcrumbHandle } from '../breadcrumb-handle';
+import { describe, expect, test } from 'vitest';
+
 import type { BreadcrumbMatch } from '../breadcrumb-handle';
+import { hasBreadcrumbHandle } from '../breadcrumb-handle';
 
 const baseMatch: Omit<UIMatch, 'handle'> = {
   id: 'route-1',

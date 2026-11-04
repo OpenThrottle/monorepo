@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
+
 import { buildCsp, generateCspNonce } from '../csp';
 
 const NONCE = 'test-nonce-value';

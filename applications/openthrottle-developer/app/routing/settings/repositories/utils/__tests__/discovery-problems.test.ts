@@ -1,14 +1,16 @@
 import { describe, expect, test } from 'vitest';
+
 import {
   WorktreeDiscoveryProblemKind,
   WorktreeRootSource,
 } from '~/__generated__/graphql';
 import { mockDiscoveredWorktrees } from '~/routing/settings/repositories/data/mock.repositories';
-import {
-  WORKTREE_PROBLEM_GROUP,
-  summarizeDiscovery,
-} from '../discovery-problems';
 import type { DiscoveredWorktreesResult } from '~/routing/settings/repositories/data/types';
+
+import {
+  summarizeDiscovery,
+  WORKTREE_PROBLEM_GROUP,
+} from '../discovery-problems';
 
 const problem = (
   kind: WorktreeDiscoveryProblemKind,
@@ -24,6 +26,7 @@ const problem = (
 const root = (
   overrides: Partial<DiscoveredWorktreesResult['scannedRoots'][number]> = {},
 ): DiscoveredWorktreesResult['scannedRoots'][number] => ({
+  baseRoot: '/srv/worktrees',
   exists: true,
   path: '/srv/worktrees/org/repo',
   source: WorktreeRootSource.Default,
@@ -109,5 +112,29 @@ describe('summarizeDiscovery', () => {
     // droppedCount renders its own line; NOT_A_GIT_REPO belongs on the repository's row.
     expect(summary.groups).toEqual([]);
     expect(summary.problemCount).toBe(0);
+  });
+
+  test('groups husk folders left in a root into one orphan group with a manual remedy', () => {
+    const summary = summarizeDiscovery(
+      mockDiscoveredWorktrees({
+        problems: [
+          problem(WorktreeDiscoveryProblemKind.OrphanDirectory, {
+            path: '/srv/worktrees/org/repo/loop-plan-a',
+          }),
+          problem(WorktreeDiscoveryProblemKind.OrphanDirectory, {
+            path: '/srv/worktrees/org/repo/loop-plan-b',
+          }),
+        ],
+      }),
+    );
+
+    expect(summary.groups).toEqual([
+      expect.objectContaining({
+        id: WORKTREE_PROBLEM_GROUP.ORPHAN,
+        remedy: expect.any(String),
+      }),
+    ]);
+    expect(summary.groups[0]?.details).toHaveLength(2);
+    expect(summary.problemCount).toBe(2);
   });
 });

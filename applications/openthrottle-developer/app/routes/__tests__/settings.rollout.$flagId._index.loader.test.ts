@@ -1,9 +1,10 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
-import { RolloutFlagKind } from '~/__generated__/graphql';
-import type { RolloutFlagFieldsFragment } from '~/__generated__/graphql';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import type { Route } from '@/app/routes/+types/settings.rollout.$flagId._index';
+import type { RolloutFlagFieldsFragment } from '~/__generated__/graphql';
+import { RolloutFlagKind } from '~/__generated__/graphql';
 
 vi.mock('@openthrottle/react-router-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),

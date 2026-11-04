@@ -2,13 +2,14 @@
  * @description Fishery factory for the skill_usage_events entity (test fixtures).
  */
 
-import { Factory } from 'fishery';
 import { faker } from '@faker-js/faker';
-import type { SkillUsageEvent } from './skill-usage-events.entity';
+import { Factory } from 'fishery';
+
+import type { SkillUsageEvent } from './skill-usage-events.entity.ts';
 import {
   SKILL_USAGE_PRIVACY_LEVELS,
   SKILL_USAGE_SCOPES,
-} from './skill-usage-events.entity';
+} from './skill-usage-events.entity.ts';
 
 export type SkillUsageEventFactoryData = Pick<
   SkillUsageEvent,
@@ -20,6 +21,7 @@ export type SkillUsageEventFactoryData = Pick<
   | 'hookEventName'
   | 'id'
   | 'invocationPath'
+  | 'isFixture'
   | 'occurredAt'
   | 'privacyLevel'
   | 'promptId'
@@ -41,10 +43,12 @@ export const skillUsageEventsFactory =
       agentType: null,
       args: faker.lorem.sentence().slice(0, 80),
       cwd: faker.system.directoryPath(),
+      duplicateOfId: null,
       gitBranch: faker.git.branch(),
       hookEventName: 'PreToolUse',
       id: faker.string.uuid(),
       invocationPath: 'skill_tool',
+      isFixture: false,
       occurredAt,
       privacyLevel: SKILL_USAGE_PRIVACY_LEVELS.TRUNCATED,
       promptId: null,

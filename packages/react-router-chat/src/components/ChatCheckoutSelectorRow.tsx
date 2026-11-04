@@ -1,7 +1,7 @@
-import * as React from 'react';
-import { CommandItem } from '@openthrottle/react-router-shadcn';
+import { cn, CommandItem } from '@openthrottle/react-router-shadcn';
 import { Check, GitBranch } from 'lucide-react';
-import clsx from 'clsx';
+import * as React from 'react';
+
 import type { ChatCheckoutOption } from '../types';
 import { checkoutSearchTerms } from '../utils/checkout-groups';
 import type { ChatCheckoutDescriptor } from '../utils/checkout-labels';
@@ -90,7 +90,7 @@ export const ChatCheckoutSelectorRow = (
             ) : null}
           </span>
           <Check
-            className={clsx(
+            className={cn(
               'size-5 shrink-0',
               isSelected ? 'opacity-100' : 'opacity-0',
             )}

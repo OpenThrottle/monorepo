@@ -1,10 +1,11 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { SkillUsageDailyChart } from '../SkillUsageDailyChart';
+
 import type { SkillUsageDailyChartProps } from '../SkillUsageDailyChart';
+import { SkillUsageDailyChart } from '../SkillUsageDailyChart';
 
 const renderComponent = (props: SkillUsageDailyChartProps): RenderResult => {
   const Component = (): React.ReactElement => (
@@ -30,8 +31,9 @@ describe('SkillUsageDailyChart Component', () => {
         {
           date: '2026-07-15',
           oursCount: 2,
+          personalCount: 3,
           thirdPartyCount: 1,
-          totalCount: 3,
+          totalCount: 6,
         },
       ],
     });

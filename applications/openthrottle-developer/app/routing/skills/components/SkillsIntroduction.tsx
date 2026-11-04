@@ -1,9 +1,10 @@
-import * as React from 'react';
 import {
   GlobalFeatureOnboardingTrigger,
   GlobalHeading,
 } from '@openthrottle/react-router-ui-global';
 import { BrainCircuitIcon } from 'lucide-react';
+import * as React from 'react';
+
 import { SKILLS_COPY } from '~/routing/skills/data/data.copy';
 
 export interface SkillsIntroductionProps {}

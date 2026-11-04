@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { getGithubUsername } from './index';
 
 // `vi.hoisted` runs before the hoisted `vi.mock` factory below, so the mock can

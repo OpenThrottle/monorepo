@@ -3,18 +3,19 @@
  * All backend communication via GraphQL only (search, getDocument, listSources queries).
  */
 
-import { z } from 'zod';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
+import { z } from 'zod';
+
 import {
-  type GetDocumentQuery,
-  type ListSourcesQuery,
-  type SearchQuery,
   GetDocumentDocument,
+  type GetDocumentQuery,
   ListSourcesDocument,
+  type ListSourcesQuery,
   SearchDocument,
+  type SearchQuery,
 } from '../__generated__/graphql.js';
-import type { GenericResult } from '../types/index.ts';
 import { getAuthToken } from '../auth/get-auth-token.ts';
+import type { GenericResult } from '../types/index.ts';
 import { invalidArgsContent, SafeToolError } from '../utils/errors.ts';
 import { runTool } from '../utils/tool-result.ts';
 
@@ -34,12 +35,16 @@ type SemanticSearchResult = GenericResult<{
   chunks: SearchQuery['search']['chunks'];
 }>;
 
-export const getDocumentToolParameters = z.object({ id: z.string().uuid() });
-export const listSourcesToolParameters = z.object({});
-export const semanticSearchToolParameters = z.object({
-  limit: z.number().int().min(1).max(SEARCH_MAX_LIMIT).optional(),
-  query: z.string().min(1),
-});
+export const getDocumentToolParameters = z
+  .object({ id: z.string().uuid() })
+  .strict();
+export const listSourcesToolParameters = z.object({}).strict();
+export const semanticSearchToolParameters = z
+  .object({
+    limit: z.number().int().min(1).max(SEARCH_MAX_LIMIT).optional(),
+    query: z.string().min(1),
+  })
+  .strict();
 
 export const getDocumentToolDescription = `Fetch a single document chunk by id (UUID from plan_embeddings or task_embeddings). Use after semantic_search to read full chunk content.`;
 

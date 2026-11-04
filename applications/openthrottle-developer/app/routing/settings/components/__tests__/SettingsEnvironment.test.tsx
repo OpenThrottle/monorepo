@@ -1,10 +1,12 @@
-import * as React from 'react';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { SettingsEnvironment } from '../SettingsEnvironment';
-import type { SettingsEnvironmentProps } from '../SettingsEnvironment';
+
 import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import type { SettingsEnvironmentProps } from '../SettingsEnvironment';
+import { SettingsEnvironment } from '../SettingsEnvironment';
 
 describe('SettingsEnvironment Component', () => {
   let props: SettingsEnvironmentProps;

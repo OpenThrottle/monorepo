@@ -1,9 +1,9 @@
-import * as React from 'react';
 import {
   Dialog,
   DialogContent,
   DialogTitle,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { useSearchParams } from 'react-router';
 
 export interface OpenThrottleModalProps {

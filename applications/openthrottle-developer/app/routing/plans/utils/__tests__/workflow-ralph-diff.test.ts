@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import {
   getDefaultWorkflowRalphRunOptionsInput,
   type WorkflowRalphRunOptionsInput,
@@ -136,5 +137,14 @@ describe('buildWorkflowRalphTuningDiffLabels', () => {
     expect(lines).toContain(
       'Skip worktree setup: false → true (--skip-worktree-setup, Cursor only)',
     );
+  });
+
+  test('reports an effort change against the unset baseline', () => {
+    const input: WorkflowRalphRunOptionsInput = {
+      ...baseline,
+      effort: 'high',
+    };
+    const lines = buildWorkflowRalphTuningDiffLabels(input, '');
+    expect(lines).toContain('Effort: default → high (ralph.effort)');
   });
 });

@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Badge,
   Card,
@@ -7,6 +6,8 @@ import {
   CardTitle,
   Separator,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import type { SearchChunk } from '~/__generated__/graphql';
 import { SearchWhyThisResult } from '~/routing/search/components/SearchWhyThisResult';
 import type { SearchRankMeta } from '~/routing/search/types/search-rank-meta';

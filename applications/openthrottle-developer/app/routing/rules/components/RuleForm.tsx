@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Button,
   Card,
@@ -10,15 +9,17 @@ import {
   Input,
   Label,
 } from '@openthrottle/react-router-shadcn';
-import { Form, Link } from 'react-router';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
-import { RULES_COPY } from '~/routing/rules/data/data.copy';
-import { ANY } from '~/routing/rules/data/rule-form-options';
+import { WandSparklesIcon } from 'lucide-react';
+import * as React from 'react';
+import { Form, Link } from 'react-router';
+
 import { RuleFormActionSection } from '~/routing/rules/components/RuleFormActionSection';
 import { RuleFormMatchSection } from '~/routing/rules/components/RuleFormMatchSection';
-import { useRuleForm } from '~/routing/rules/hooks/useRuleForm';
 import type { TagActionRuleRowData } from '~/routing/rules/components/RulesTable';
-import { WandSparklesIcon } from 'lucide-react';
+import { RULES_COPY } from '~/routing/rules/data/data.copy';
+import { ANY } from '~/routing/rules/data/rule-form-options';
+import { useRuleForm } from '~/routing/rules/hooks/useRuleForm';
 
 export interface RuleFormVocabularyOption {
   dimension: string;

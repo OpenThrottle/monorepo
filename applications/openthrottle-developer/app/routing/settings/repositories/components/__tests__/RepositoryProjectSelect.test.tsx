@@ -1,10 +1,11 @@
-import * as React from 'react';
+import type { RenderResult } from '@testing-library/react';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { RenderResult } from '@testing-library/react';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { RepositoryProjectSelect } from '../RepositoryProjectSelect';
+
 import type { RepositoryProjectSelectProps } from '../RepositoryProjectSelect';
+import { RepositoryProjectSelect } from '../RepositoryProjectSelect';
 
 describe('RepositoryProjectSelect Component', () => {
   let component: RenderResult;

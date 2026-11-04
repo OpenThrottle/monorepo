@@ -7,6 +7,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
+
 import type { DriverInvocationConfig } from '../../types/index.ts';
 import { antigravityDriver } from '../antigravity.ts';
 import { getDriver } from '../index.ts';

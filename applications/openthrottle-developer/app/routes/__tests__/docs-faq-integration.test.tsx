@@ -1,15 +1,17 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router';
 import { afterEach, describe, expect, test } from 'vitest';
+
+import type { Route as DocsIndexRoute } from '@/app/routes/+types/docs._index';
+import type { Route as FaqRoute } from '@/app/routes/+types/faq._index';
+import { buildPersistentSettingKey } from '~/global/config/persistent-setting-storage';
+import { buildRootMatch } from '~/testing/root-match-fixture';
+
 import DocsIndex from '../docs._index';
 import DocsSplat from '../docs.$';
 import FaqIndex from '../faq._index';
-import { buildRootMatch } from '~/testing/root-match-fixture';
-import { buildPersistentSettingKey } from '~/global/config/persistent-setting-storage';
-import type { Route as DocsIndexRoute } from '@/app/routes/+types/docs._index';
-import type { Route as FaqRoute } from '@/app/routes/+types/faq._index';
 
 const ALL_OFF = {
   codeCopy: false,

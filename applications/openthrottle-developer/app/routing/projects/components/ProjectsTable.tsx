@@ -1,9 +1,4 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { DataTable } from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
-import { ProjectsEmpty } from '~/routing/projects/components/ProjectsEmpty';
-import { PROJECTS_ROW_ACTIONS_COPY } from '~/routing/projects/data/data.copy';
+import { cn, DataTable } from '@openthrottle/react-router-shadcn';
 // import { formatUpdatedAt } from '~/routing/plans/utils/formatters';
 import type { GlobalPopoverAction } from '@openthrottle/react-router-ui-global';
 import {
@@ -11,7 +6,12 @@ import {
   GlobalPopoverActionsHeader,
 } from '@openthrottle/react-router-ui-global';
 import type { ColumnDef } from '@tanstack/react-table';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import type { ProjectCardFragment } from '~/__generated__/graphql';
+import { ProjectsEmpty } from '~/routing/projects/components/ProjectsEmpty';
+import { PROJECTS_ROW_ACTIONS_COPY } from '~/routing/projects/data/data.copy';
 
 export interface ProjectsTableProps {
   className?: string;
@@ -39,7 +39,7 @@ export const ProjectsTable = (
 
   return (
     <div
-      className={clsx('ui-border rounded-lg border', className)}
+      className={cn('ui-border rounded-lg border', className)}
       data-testid="ProjectsTable"
     >
       <DataTable<ProjectCardFragment, string | null | undefined>

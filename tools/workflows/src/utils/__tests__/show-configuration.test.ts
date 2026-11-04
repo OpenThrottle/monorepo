@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { RalphArgs } from '../parsers';
+
 import { showConfiguration } from '../index';
+import type { RalphArgs } from '../parsers';
 
 const baseArgs = (): RalphArgs => ({
   backend: 'cursor',

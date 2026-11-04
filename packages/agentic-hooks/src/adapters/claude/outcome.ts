@@ -3,6 +3,12 @@
  * the harness capture path remains primary. Call at skill completion to record
  * an outcome + optional duration correlated by session_id + skill_name.
  *
+ * This is the ONLY path that may claim `success` or `error`, and the only path
+ * that may report a duration: the automatic session-end hooks cannot observe
+ * either (see `completeOpenStartsForSession`). It is therefore what makes the
+ * `/usage` Outcomes column mean anything — a skill that never calls this shows
+ * `—`, which is the honest reading of "nobody measured".
+ *
  * Usage:
  *   node .claude/hooks/skill-usage-outcome.cjs --skill ot-plans \
  *     --outcome success --duration-ms 4200 --session "$CLAUDE_SESSION_ID"
@@ -15,55 +21,52 @@ import {
   logHookError,
   persistOutcomeEvent,
   SKILL_USAGE_OUTCOMES,
-} from '../../index';
-
-const parseArgs = (argv: string[]): Record<string, string> => {
-  const out: Record<string, string> = {};
-  for (let i = 0; i < argv.length; i += 1) {
-    const token = argv[i];
-    if (!token || !token.startsWith('--')) {
-      continue;
-    }
-    const key = token.slice(2);
-    const next = argv[i + 1];
-    if (next != null && !next.startsWith('--')) {
-      out[key] = next;
-      i += 1;
-    } else {
-      out[key] = '1';
-    }
-  }
-  return out;
-};
+} from '../../index.ts';
+import { parseOutcomeArgs } from './outcome-args.ts';
+import { CLAUDE_SOURCE } from './payload.ts';
 
 const main = async (): Promise<void> => {
   try {
-    const args = parseArgs(process.argv.slice(2));
+    const args = parseOutcomeArgs(process.argv.slice(2));
     const repoRoot =
       process.env.CLAUDE_PROJECT_DIR ||
       process.env.OPEN_THROTTLE_REPO_ROOT ||
       process.cwd();
 
-    const skillName = args.skill || process.env.SKILL_USAGE_SKILL_NAME || '';
-    const outcome = args.outcome || process.env.SKILL_USAGE_OUTCOME || '';
+    const skillName =
+      args.skill || process.env.OPENTHROTTLE_TELEMETRY_SKILL_NAME || '';
+    const outcome =
+      args.outcome || process.env.OPENTHROTTLE_TELEMETRY_OUTCOME || '';
     const sessionId =
       args.session ||
-      process.env.SKILL_USAGE_SESSION_ID ||
+      process.env.OPENTHROTTLE_TELEMETRY_SESSION_ID ||
       process.env.CLAUDE_SESSION_ID ||
       null;
     const toolUseId =
-      args['tool-use-id'] || process.env.SKILL_USAGE_TOOL_USE_ID || null;
+      args['tool-use-id'] ||
+      process.env.OPENTHROTTLE_TELEMETRY_TOOL_USE_ID ||
+      null;
     const durationRaw =
-      args['duration-ms'] || process.env.SKILL_USAGE_DURATION_MS || '';
+      args['duration-ms'] ||
+      process.env.OPENTHROTTLE_TELEMETRY_DURATION_MS ||
+      '';
     const durationMs = durationRaw === '' ? null : Number(durationRaw);
 
+    // `session_ended` is deliberately NOT accepted here. It is the automatic
+    // session-end path's way of saying "no quality claim"; a deliberate
+    // reporter, which by definition knows how the work went, has no reason to
+    // emit it and would only dilute the honest values.
     if (
       outcome !== SKILL_USAGE_OUTCOMES.SUCCESS &&
       outcome !== SKILL_USAGE_OUTCOMES.ABANDONED &&
       outcome !== SKILL_USAGE_OUTCOMES.ERROR
     ) {
       logHookError(
-        `invalid --outcome (want ${Object.values(SKILL_USAGE_OUTCOMES).join('|')})`,
+        `invalid --outcome (want ${[
+          SKILL_USAGE_OUTCOMES.SUCCESS,
+          SKILL_USAGE_OUTCOMES.ABANDONED,
+          SKILL_USAGE_OUTCOMES.ERROR,
+        ].join('|')})`,
       );
       return;
     }
@@ -74,6 +77,7 @@ const main = async (): Promise<void> => {
       repoRoot,
       sessionId,
       skillName,
+      source: CLAUDE_SOURCE,
       toolUseId,
     });
     if (!event) {
@@ -81,9 +85,7 @@ const main = async (): Promise<void> => {
       return;
     }
 
-    const outPath =
-      process.env.SKILL_USAGE_OUTCOMES_JSONL_PATH ||
-      defaultOutcomesJsonlPath(repoRoot);
+    const outPath = defaultOutcomesJsonlPath();
 
     await persistOutcomeEvent({
       event,

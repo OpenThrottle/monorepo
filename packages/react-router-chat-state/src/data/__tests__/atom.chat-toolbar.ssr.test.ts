@@ -6,8 +6,9 @@
 // only reachable under the node test environment — hence the docblock above.
 // Imports are static (not in-test dynamic imports) so the check stays fast and
 // does not time out when the whole suite runs concurrently.
-import { describe, expect, test } from 'vitest';
 import { createStore } from 'jotai/vanilla';
+import { describe, expect, test } from 'vitest';
+
 import {
   chatToolbarStateAtom,
   DEFAULT_CHAT_TOOLBAR_STATE,

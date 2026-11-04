@@ -14,7 +14,6 @@ flowchart TB
     Server["openthrottle-server<br/>(NestJS, GraphQL)"]
     Developer["openthrottle-developer<br/>(React Router)"]
     Admin["openthrottle-admin"]
-    Email["openthrottle-email"]
     Website["openthrottle-website"]
     Workbench["openthrottle-workbench<br/>(Storybook host)"]
   end
@@ -52,7 +51,7 @@ flowchart TB
 - **openthrottle-developer**: Browser app; calls `API_URL` (openthrottle-server) for GraphQL and optional WebSocket (e.g. realtime, notifications).
 - **openthrottle-mcp**: MCP server used by Cursor/other hosts; uses `@openthrottle/nodejs-graphql` to talk to openthrottle-server GraphQL (plans, tasks, search, commit links, plan output stream, etc.). No direct Postgres access.
 - **openthrottle-server**: NestJS app; GraphQL API, auth (JWT), queues (BullMQ/Redis), and **NestjsRepositoriesModule** (`@openthrottle/nestjs-repositories`) for OpenThrottle (plans, tasks, embeddings, commit_links, plan_output_stream, docs, users, RBAC). Optional OpenAI or Ollama for embeddings.
-- **Ralph** (`workflow-ralph`): Loads plan/tasks from OpenThrottle (via server or env), runs the agent loop, updates task status from agent output; can append iteration output to OpenThrottle `plan_output_stream`. Commit linking is done only after PR merge via `workflow-link-merge`.
+- **Ralph** (`workflow-ralph`): Loads plan/tasks from OpenThrottle (via server or env), runs the agent loop, updates task status from agent output; can append iteration output to OpenThrottle `plan_output_stream`. Commit linking happens server-side when the run settles (`settle_plan_run` with `headSha` / `prNumber`), with an hourly `Plan-Id:` trailer harvest as the backstop.
 
 ```mermaid
 sequenceDiagram
@@ -82,7 +81,6 @@ sequenceDiagram
 | **openthrottle-server**    | NestJS GraphQL API; auth, plans, tasks, embeddings, commit links, docs, users, RBAC; BullMQ queues; talks to OpenThrottle via `@openthrottle/nestjs-repositories`. |
 | **openthrottle-developer** | React Router UI for developers; plans, tasks, search, commit links; configurable `API_URL` to the server.                                                          |
 | **openthrottle-admin**     | Admin portal.                                                                                                                                                      |
-| **openthrottle-email**     | Email-related services.                                                                                                                                            |
 | **openthrottle-website**   | Marketing website.                                                                                                                                                 |
 | **openthrottle-workbench** | Storybook 10 host for `@openthrottle/react-router-shadcn` — component library, `cva` variants, themes. Not deployed with the product.                              |
 

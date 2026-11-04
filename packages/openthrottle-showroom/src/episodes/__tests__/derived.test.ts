@@ -20,8 +20,8 @@ import {
   sentences,
   spokenWords,
   WORDS_PER_MINUTE,
-} from '../derived';
-import type { Variant } from '../types';
+} from '../derived.ts';
+import type { Variant } from '../types.ts';
 
 /**
  * Episode 05's shipping narration, cue for cue. The times are the beat times the

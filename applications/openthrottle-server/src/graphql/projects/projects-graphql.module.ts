@@ -7,7 +7,8 @@ import {
   NestjsRepositoriesModule,
   ProjectsLoaders,
 } from '@openthrottle/nestjs-repositories';
-import { ProjectsResolver } from './projects.resolver';
+
+import { ProjectsResolver } from './projects.resolver.ts';
 
 @Module({
   imports: [NestjsRepositoriesModule],

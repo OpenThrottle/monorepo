@@ -1,10 +1,11 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
-import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
 import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
-import { PLAN_RULES_QUEUE_NAME } from './plan-rules.constants';
-import { PlanRulesEvaluationService } from './plan-rules-evaluation.service';
+import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
+import { LoggerModule } from '@openthrottle/nestjs-modules';
+
+import { PLAN_RULES_QUEUE_NAME } from './plan-rules.constants.ts';
+import { PlanRulesEvaluationService } from './plan-rules-evaluation.service.ts';
 
 /**
  * @description Producer half of the plan-rules queue: registerQueue, Bull

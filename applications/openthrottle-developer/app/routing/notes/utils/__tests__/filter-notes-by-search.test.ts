@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'vitest';
+
 import type { NoteCardFragment } from '~/__generated__/graphql';
+
 import { filterNotesBySearch } from '../filter-notes-by-search';
 
 const note = (over: Partial<NoteCardFragment>): NoteCardFragment => ({

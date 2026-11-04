@@ -4,9 +4,9 @@ import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import type { SnapshotDiff } from '../workspace.ts';
 import type { WatchEvent, WatchHandle, WorkspaceIndex } from '../watch.ts';
 import { createWorkspaceIndex, watchWorkspace } from '../watch.ts';
+import type { SnapshotDiff } from '../workspace.ts';
 
 /** Seed content for `src/a.ts`, restored after the liveness probe below. */
 const SEED_A = 'export const a = 1;\n';

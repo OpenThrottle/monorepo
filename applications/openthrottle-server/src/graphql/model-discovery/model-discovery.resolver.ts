@@ -9,11 +9,11 @@ import { Query, Resolver } from '@nestjs/graphql';
 import { NestjsModelDiscoveryService } from '@openthrottle/nestjs-model-discovery';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import {
   DiscoverLocalModelsResult,
   ModelEndpointObject,
-} from './model-discovery.object';
+} from './model-discovery.object.ts';
 
 @Resolver()
 @UseGuards(GqlPermissionsGuard)

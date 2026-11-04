@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Select,
   SelectContent,
@@ -6,13 +5,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
+import { PROJECTS_SORT_OPTIONS } from '~/routing/projects/config';
 import {
   PROJECTS_SORT_BY,
   PROJECTS_SORT_ORDER,
   type ProjectsSortBy,
   type ProjectsSortOrder,
 } from '~/routing/prompts/config/types';
-import { PROJECTS_SORT_OPTIONS } from '~/routing/projects/config';
 
 export interface ProjectsSortDropdownProps {
   onChange: (sortBy: ProjectsSortBy, sortOrder: ProjectsSortOrder) => void;

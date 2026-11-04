@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { formatWhen } from '../format-when';
 
 describe('formatWhen', () => {

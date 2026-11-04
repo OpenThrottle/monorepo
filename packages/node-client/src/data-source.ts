@@ -10,8 +10,8 @@ import {
   Task,
   TaskEmbedding,
 } from '@openthrottle/nestjs-repositories';
-import { DataSource } from 'typeorm';
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
+import { DataSource } from 'typeorm';
 
 const cache = new Map<string, DataSource>();
 

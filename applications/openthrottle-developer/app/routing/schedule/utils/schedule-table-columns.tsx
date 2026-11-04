@@ -3,18 +3,20 @@
  * component file per component-primitive-shape R4 (module-scope helpers live in
  * the sibling utils/ folder) so the table component stays UI-focused.
  */
-import * as React from 'react';
 import { Badge } from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
-import { RUN_STATUS_COLOR } from '~/routing/schedule/data/data.run-status';
-import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
 import {
   GlobalPopover,
   GlobalPopoverActionsHeader,
 } from '@openthrottle/react-router-ui-global';
 import type { ColumnDef } from '@tanstack/react-table';
-import type { ScheduleTableProps } from '~/routing/schedule/components/ScheduleTable';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import type { ScheduledJobCardFragment } from '~/__generated__/graphql';
+import type { ScheduleTableProps } from '~/routing/schedule/components/ScheduleTable';
+import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
+import { RUN_STATUS_COLOR } from '~/routing/schedule/data/data.run-status';
+import { describeScheduleCadence } from '~/routing/schedule/utils/describe-schedule-cadence';
 // import { formatWhen } from '~/routing/schedule/utils/format-when';
 // import { RepositoryRowActions } from '~/routing/settings/repositories/components/RepositoryRowActions';
 
@@ -53,7 +55,7 @@ export const buildScheduleTableColumns = (
     {
       accessorKey: 'details',
       cell: ({ row }) => {
-        const { cronPattern = '', repository, timezone } = row.original;
+        const { repository } = row.original;
         const repo =
           repository?.displayName ?? SCHEDULE_COPY.repositoryNoneOption;
 
@@ -69,13 +71,10 @@ export const buildScheduleTableColumns = (
 
             <div className="text-muted-foreground space-y-1">
               <div>
-                <b>Cron Pattern:</b> {cronPattern}
+                <b>Schedule:</b> {describeScheduleCadence(row.original)}
               </div>
               <div>
                 <b>Repository:</b> {repo}
-              </div>
-              <div>
-                <b>Timezone:</b> {timezone ?? 'Pacific Time (US & Canada)'}
               </div>
             </div>
           </div>

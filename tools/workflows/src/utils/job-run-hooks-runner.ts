@@ -5,6 +5,7 @@
 
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+
 import type {
   JobRunHookEntry,
   JobRunHookOnFailure,
@@ -18,11 +19,11 @@ import {
   formatJobRunHookEntryLabel,
   resolveJobRunHookOnFailure,
 } from '../types/job-run-lifecycle-hooks';
-import { DEFAULT_RALPH_RUNNER } from './ralph-execution-backend';
 import { jobRunHookEntryToPromptSeed } from './job-run-lifecycle-hooks-validation';
-import { resolveRalphPromptFromSeed } from './ralph-prompt-resolution';
 import { shouldRunJobRunHook } from './job-run-lifecycle-hooks-validation';
 import { resolveJobRunHookTimeoutSeconds } from './job-run-lifecycle-hooks-validation';
+import { DEFAULT_RALPH_RUNNER } from './ralph-execution-backend';
+import { resolveRalphPromptFromSeed } from './ralph-prompt-resolution';
 import {
   DEFAULT_RALPH_ITERATIONS,
   DEFAULT_RALPH_MODEL,

@@ -47,6 +47,14 @@ fragment NotificationFields on NotificationEvent {
     status
   }
 
+  ... on ScheduledRunFailedNotification {
+    reason
+    runCount
+    runId
+    scheduledAgentJobId
+    scheduleName
+  }
+
   ... on SystemAlertNotification {
     code
   }
@@ -65,6 +73,10 @@ fragment RootMetrics on ServerMetricsObject {
   heapTotalMb
   heapUsedMb
   rssMb
+}
+
+query getMyPermissions {
+  myPermissions
 }
 
 query getMyUser {
@@ -125,7 +137,9 @@ mutation deleteAgentConversation($input: DeleteAgentConversationInput!) {
   }
 }
 
-mutation updateAgentConversationTitle($input: UpdateAgentConversationTitleInput!) {
+mutation updateAgentConversationTitle(
+  $input: UpdateAgentConversationTitleInput!
+) {
   updateAgentConversationTitle(input: $input) {
     id
     status

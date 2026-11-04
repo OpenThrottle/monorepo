@@ -6,8 +6,8 @@
  */
 
 import { randomUUID } from 'node:crypto';
+
 import { ForbiddenException } from '@nestjs/common';
-import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   Args,
   Context,
@@ -23,15 +23,16 @@ import {
   Public,
 } from '@openthrottle/nestjs-auth';
 import { NestjsModelDiscoveryService } from '@openthrottle/nestjs-model-discovery';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   AGENT_CONVERSATION_MESSAGE_ROLES,
+  AgentCliPreferencesService,
   type AgentConversationMessage,
   type AgentConversationMessageRole,
-  AgentCliPreferencesService,
   AgentConversationsService,
+  buildManagedMcpServers,
   CustomPromptsService,
   WorkspaceLocalRepositoriesService,
-  buildManagedMcpServers,
 } from '@openthrottle/nestjs-repositories';
 import {
   AGENT_CLI_ALLOWLIST,
@@ -45,13 +46,14 @@ import {
   toConversationReasoningEffort,
   toConversationServiceTier,
 } from '@openthrottle/openthrottle-agentic-utils';
-import { StartConversationStreamInput } from './conversation-stream.input';
+
+import { StartConversationStreamInput } from './conversation-stream.input.ts';
 import {
   ConversationStreamChunkObject,
   StartConversationStreamResult,
-} from './conversation-stream.object';
-import { ConversationStreamService } from './conversation-stream.service';
-import { type ConversationStreamChunkEnvelope } from './conversation-stream.types';
+} from './conversation-stream.object.ts';
+import { ConversationStreamService } from './conversation-stream.service.ts';
+import { type ConversationStreamChunkEnvelope } from './conversation-stream.types.ts';
 
 /**
  * Roles the model accepts; persisted `tool` rows are excluded from the prompt.

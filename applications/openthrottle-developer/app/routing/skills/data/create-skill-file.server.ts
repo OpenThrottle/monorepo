@@ -50,10 +50,11 @@ import { dirname, join } from 'node:path';
 import { resolvePersonalSkillsRoot } from '@openthrottle/openthrottle-agentic-utils';
 import {
   AGENT_ASSET_SLUG_PATTERN,
-  SKILLS_LOCK_FILENAME,
   parseSkillsLockFile,
+  SKILLS_LOCK_FILENAME,
   validateAgentAssetFrontmatter,
 } from '@openthrottle/openthrottle-skills';
+
 import { discoverRepoSkills } from '~/routing/agents/data/discover-repo-skills.server';
 import { getMonorepoRoot } from '~/routing/agents/data/resolve-monorepo-root.server';
 import { isPathInsideRoot } from '~/routing/agents/data/skill-path-allowlist.server';

@@ -1,17 +1,19 @@
-import * as React from 'react';
-import { render, within } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render, within } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { buildTimelineLanes } from '~/routing/timeline/utils/lanes';
-import { createTimelineScale } from '~/routing/timeline/utils/scale';
+
 import {
   FIXTURE_WINDOW_FROM,
   FIXTURE_WINDOW_TO,
   TIMELINE_FIXTURE_SPANS,
 } from '~/routing/timeline/data/data.fixtures';
-import { TimelineSpanLayer } from '../TimelineSpanLayer';
 import type { TimelineLane } from '~/routing/timeline/types';
+import { buildTimelineLanes } from '~/routing/timeline/utils/lanes';
+import { createTimelineScale } from '~/routing/timeline/utils/scale';
+
+import { TimelineSpanLayer } from '../TimelineSpanLayer';
 
 const scale = createTimelineScale({
   from: FIXTURE_WINDOW_FROM,

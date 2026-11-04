@@ -1,11 +1,12 @@
-import * as React from 'react';
-import MonacoEditor from '@monaco-editor/react';
 import type {
   BeforeMount,
   EditorProps as MonacoEditorProps,
   OnMount,
 } from '@monaco-editor/react';
+import MonacoEditor from '@monaco-editor/react';
 import { IS_BROWSER } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+
 import { EDITOR_DEFAULTS } from '../config';
 
 export interface EditorWindowProps extends MonacoEditorProps {
@@ -45,6 +46,12 @@ export interface EditorWindowProps extends MonacoEditorProps {
    */
   readonly path?: string;
   /**
+   * @description Monaco theme name (e.g. `light`, `vs-dark`). Defaults to
+   * {@link EDITOR_DEFAULTS.theme}; pass one to follow the host app's light or
+   * dark mode.
+   */
+  readonly theme?: string;
+  /**
    * @description Contents of the **currently active file only**, not an
    * aggregate of every open tab. This wrapper is a controlled component for
    * the active file: pair `value` with `onChange`, and change `value` (and
@@ -60,7 +67,8 @@ export interface EditorWindowProps extends MonacoEditorProps {
 export const EditorWindow = (
   props: EditorWindowProps,
 ): React.ReactElement | null => {
-  const { beforeMount, className, onMount, path, value, ...rest } = props;
+  const { beforeMount, className, onMount, path, theme, value, ...rest } =
+    props;
 
   // Hooks
 
@@ -89,7 +97,7 @@ export const EditorWindow = (
       onMount={onMount}
       options={mergedOptions}
       path={path}
-      theme={EDITOR_DEFAULTS.theme}
+      theme={theme ?? EDITOR_DEFAULTS.theme}
       value={value}
     />
   );

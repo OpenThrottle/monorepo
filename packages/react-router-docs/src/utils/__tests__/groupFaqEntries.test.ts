@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
-import { groupFaqEntries } from '../groupFaqEntries';
+
 import type { DocEntry } from '../buildDocsManifest';
+import { groupFaqEntries } from '../groupFaqEntries';
 
 const makeEntry = (overrides: Partial<DocEntry>): DocEntry => ({
   content: '',

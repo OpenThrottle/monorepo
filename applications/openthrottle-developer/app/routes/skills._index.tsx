@@ -1,11 +1,5 @@
-import * as React from 'react';
-import { Await, useFetcher, useSearchParams } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import {
-  mergeRouteModuleMeta,
-  parsePaginationLimit,
-  parsePaginationPage,
-} from '@openthrottle/react-router-utils';
+import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalFeatureOnboarding,
@@ -14,9 +8,21 @@ import {
   readSearchParam,
 } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
+import {
+  mergeRouteModuleMeta,
+  parsePaginationLimit,
+  parsePaginationPage,
+} from '@openthrottle/react-router-utils';
+import * as React from 'react';
+import { Await, useFetcher, useSearchParams } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/skills._index';
 import { GetUsageSkillUsageDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
+import {
+  runSkillRecordTagAction,
+  SKILL_RECORD_TAG_INTENTS,
+} from '~/routing/skills/actions/project-skill-tags';
 import { SkillsIndexUsage } from '~/routing/skills/components/SkillsIndexUsage';
 import { SkillsIntroduction } from '~/routing/skills/components/SkillsIntroduction';
 import { SkillsTable } from '~/routing/skills/components/SkillsTable';
@@ -28,21 +34,16 @@ import {
   loadSkillAvailability,
   loadSkillTagVocabulary,
 } from '~/routing/skills/data/skill-index-loaders';
-import { mergeRepoSkillsWithProjectSkills } from '~/routing/skills/utils/merge-project-skills';
+import type { SkillsIndexUsageData } from '~/routing/skills/data/skills-index-usage';
 import { filterSkillsByQuery } from '~/routing/skills/utils/filter-skills-by-query';
 import {
   filterSkillsBySource,
   parseSkillSourceFilter,
   type SkillSourceFilter,
 } from '~/routing/skills/utils/filter-skills-by-source';
+import { mergeRepoSkillsWithProjectSkills } from '~/routing/skills/utils/merge-project-skills';
 import { mergeRepoSkillsWithSkillAvailability } from '~/routing/skills/utils/merge-skill-availability';
 import { toSkillsIndexUsageData } from '~/routing/skills/utils/to-skills-index-usage-data';
-import type { SkillsIndexUsageData } from '~/routing/skills/data/skills-index-usage';
-import {
-  runSkillRecordTagAction,
-  SKILL_RECORD_TAG_INTENTS,
-} from '~/routing/skills/actions/project-skill-tags';
-import type { Route } from '@/app/routes/+types/skills._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -82,11 +83,6 @@ export const loader = async (args: Route.LoaderArgs) => {
   // and which ones are only history. Reuse the same disk gate `/skills/$slug`
   // uses to 404, so neither depends on DB ingest/auth state (mirrors /usage).
   const presentSlugs = diskEntries.map((entry) => entry.slug);
-  // Present, but only in this person's checkout — the leaderboard says so
-  // rather than letting a personal skill read as an ordinary shared one.
-  const personalSlugs = diskEntries
-    .filter((entry) => entry.isPersonal === true)
-    .map((entry) => entry.slug);
 
   // Deferred aggregate usage over a fixed 30-day window (YYYY-MM-DD, matching
   // the /usage contract; all skills, no scope/branch/cwd filter). Streamed as a
@@ -111,7 +107,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     .then(({ skillUsage }) => toSkillsIndexUsageData(skillUsage))
     .catch(() => ({ available: false as const }));
 
-  return { entries, personalSlugs, presentSlugs, tagVocabulary, usage };
+  return { entries, presentSlugs, tagVocabulary, usage };
 };
 
 export const links: Route.LinksFunction = () => {
@@ -125,8 +121,7 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
-  const { entries, personalSlugs, presentSlugs, tagVocabulary, usage } =
-    props.loaderData;
+  const { entries, presentSlugs, tagVocabulary, usage } = props.loaderData;
 
   // Hooks
   const [searchParams, setSearchParams] = useSearchParams();
@@ -277,7 +272,6 @@ export default function Component(
           <Await resolve={usage}>
             {(data) => (
               <SkillsIndexUsage
-                personalSlugs={personalSlugs}
                 presentSlugs={presentSlugs}
                 rangeDays={SKILL_USAGE_RANGE_DAYS}
                 usage={data}

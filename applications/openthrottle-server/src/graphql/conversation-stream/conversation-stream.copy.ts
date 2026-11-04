@@ -11,9 +11,9 @@
  */
 
 import {
+  classifyCursorFailure,
   CURSOR_FAILURE_KINDS,
   type CursorFailureKind,
-  classifyCursorFailure,
   stripAnsi,
 } from '@openthrottle/openthrottle-agentic-utils';
 

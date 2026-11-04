@@ -1,4 +1,3 @@
-import * as React from 'react';
 import type {
   ChatCheckoutOption,
   ChatModelGroup,
@@ -12,17 +11,10 @@ import {
   reconcileChatToolbarState,
 } from '@openthrottle/react-router-chat-state';
 import { useAtom } from 'jotai';
-import type { RepositoryOption } from '~/routing/home/data/models.server';
+import * as React from 'react';
 
-/**
- * The composed invocation the parent submits through the streamed-conversation
- * path. `message` is the `/<slug> <args>` command; `fields` are the
- * `StartConversationStreamInput`-shaped values derived from the picked option.
- */
-export interface RunSkillPayload {
-  readonly fields: Record<string, string>;
-  readonly message: string;
-}
+import type { RepositoryOption } from '~/routing/home/data/models.server';
+import type { RunSkillPayload } from '~/routing/skills/types';
 
 export interface UseRunSkillDialogOptions {
   /** Discovered agent+model options (local endpoints + agent CLIs + driver×endpoint). */
@@ -182,6 +174,8 @@ export const useRunSkillDialog = (
     serviceTier,
     slug,
   ]);
+
+  // Markup
 
   // Life Cycle
   // Reset only the local arguments each time the dialog opens; the model/repo

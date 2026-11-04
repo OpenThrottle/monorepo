@@ -1,21 +1,23 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'jotai';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { SettingsOnboardingRestore } from '../SettingsOnboardingRestore';
+
 import { DashboardGetStartedCard } from '~/routing/dashboard/components/DashboardGetStartedCard';
 import {
-  ONBOARDING_STORAGE_KEY,
   ONBOARDING_STATE_VERSION,
+  ONBOARDING_STORAGE_KEY,
 } from '~/routing/dashboard/data/atom.onboarding';
 import { GET_STARTED_RESTORE_COPY } from '~/routing/dashboard/data/data.copy';
 import {
   ONBOARDING_STEP_ID,
   type OnboardingCompletion,
 } from '~/routing/dashboard/utils/onboarding-steps';
+
+import { SettingsOnboardingRestore } from '../SettingsOnboardingRestore';
 
 const INCOMPLETE: OnboardingCompletion = {
   [ONBOARDING_STEP_ID.agentCli]: false,

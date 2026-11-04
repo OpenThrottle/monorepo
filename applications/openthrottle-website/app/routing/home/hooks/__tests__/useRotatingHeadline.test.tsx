@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { useRotatingHeadline } from '../useRotatingHeadline';
 
 const ITEMS = ['alpha', 'bravo', 'charlie'] as const;

@@ -1,4 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
+
 import { fnv1a32Hex, formatIso, formatRelativeFromIso } from '../utils.prompts';
 
 describe('formatIso', () => {

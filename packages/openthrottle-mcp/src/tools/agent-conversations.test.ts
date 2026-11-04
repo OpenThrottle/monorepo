@@ -4,11 +4,12 @@
 
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import {
-  getAgentConversationMessagesToolHandler,
-  getAgentConversationToolHandler,
-  getAgentConversationToolDescription,
   getAgentConversationMessagesToolDescription,
+  getAgentConversationMessagesToolHandler,
+  getAgentConversationToolDescription,
+  getAgentConversationToolHandler,
   listAgentConversationsToolDescription,
   listAgentConversationsToolHandler,
 } from './agent-conversations.ts';

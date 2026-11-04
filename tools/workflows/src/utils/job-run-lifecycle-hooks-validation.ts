@@ -4,15 +4,12 @@
 
 import { existsSync } from 'node:fs';
 import { isAbsolute, resolve } from 'node:path';
+
 import { isRecord } from '@openthrottle/nodejs-utils';
-import { DEFAULT_RALPH_PROMPT } from './ralph-runtime-config';
+
 import {
   DEFAULT_JOB_RUN_HOOK_TIMEOUT_SECONDS,
   JOB_RUN_HOOK_SKILL_PATH_PREFIXES,
-  MAX_JOB_RUN_HOOK_STRING_LEN,
-  MAX_JOB_RUN_HOOK_TIMEOUT_SECONDS,
-  MAX_JOB_RUN_HOOKS_PER_PHASE,
-  MAX_JOB_RUN_HOOKS_TOTAL,
   type JobRunHookConditions,
   type JobRunHookEntry,
   type JobRunHookOnFailure,
@@ -20,12 +17,17 @@ import {
   type JobRunHookPhaseWire,
   type JobRunHookPromptDelivery,
   type JobRunHookRunKind,
+  type JobRunHooksConfig,
   type JobRunHookTaskContext,
   type JobRunHookTaskOutcome,
-  type JobRunHooksConfig,
+  MAX_JOB_RUN_HOOK_STRING_LEN,
+  MAX_JOB_RUN_HOOK_TIMEOUT_SECONDS,
+  MAX_JOB_RUN_HOOKS_PER_PHASE,
+  MAX_JOB_RUN_HOOKS_TOTAL,
   normalizeJobRunHookPhase,
   sortJobRunHookEntries,
 } from '../types/job-run-lifecycle-hooks';
+import { DEFAULT_RALPH_PROMPT } from './ralph-runtime-config';
 
 const JOB_RUN_HOOK_PHASES_WIRE: readonly JobRunHookPhaseWire[] = [
   'afterAll',

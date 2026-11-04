@@ -5,8 +5,8 @@
  * discoverable and independently testable.
  */
 
-import type { SkillDetailUsageData } from '~/routing/skills/data/skill-usage-detail';
 import type { GetSkillDetailUsageQuery } from '~/__generated__/graphql';
+import type { SkillDetailUsageData } from '~/routing/skills/data/skill-usage-detail';
 
 /** Map the deferred usage query → the component's discriminated prop. */
 export const toSkillDetailUsageData = (
@@ -19,6 +19,7 @@ export const toSkillDetailUsageData = (
     byDay: skillUsage.byDay.map((day) => ({
       date: day.date,
       oursCount: day.oursCount,
+      personalCount: day.personalCount,
       thirdPartyCount: day.thirdPartyCount,
       totalCount: day.totalCount,
     })),
@@ -31,6 +32,7 @@ export const toSkillDetailUsageData = (
           lastUsedAt: row.lastUsedAt == null ? null : String(row.lastUsedAt),
           outcomeCount: row.outcomeCount,
           scope: row.scope,
+          sessionEndedCount: row.sessionEndedCount,
           skillName: row.skillName,
           successCount: row.successCount,
         }

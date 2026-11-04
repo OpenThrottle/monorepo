@@ -1,11 +1,13 @@
-import * as React from 'react';
-import { Link } from 'react-router';
 import {
   Badge,
   Card,
   CardContent,
   CardHeader,
+  cn,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import type { SearchChunk } from '~/__generated__/graphql';
 import { SearchWhyThisResult } from '~/routing/search/components/SearchWhyThisResult';
 import type { SearchRankMeta } from '~/routing/search/types/search-rank-meta';
@@ -51,7 +53,10 @@ export const SearchTaskCard = (
   return (
     <Card className={className} data-testid="SearchTaskCard" key={result.id}>
       <CardHeader
-        className={`flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2 ${titleClass}`}
+        className={cn(
+          'flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2',
+          titleClass,
+        )}
       >
         <div className="flex flex-wrap items-center">
           <Badge

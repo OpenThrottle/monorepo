@@ -3,7 +3,7 @@
 Shadcn-style component library (Radix primitives + Tailwind v4 + cva) and the shared CSS-variable
 theme for all React Router apps. The base layer of the `react-router-*` UI stack.
 
-**Consumed by:** `openthrottle-developer`, `openthrottle-email`, and 9 `react-router-*` packages
+**Consumed by:** `openthrottle-developer` and 9 `react-router-*` packages
 (`ui`, `ui-global`, `chat`, `ide`, `docs`, `notifications`, `profiling`, `scheduling`, `floor-layout`).
 
 ## Layout

@@ -1,12 +1,13 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Form, Link } from 'react-router';
 import {
   Button,
+  cn,
   Input,
   Label,
   TextArea,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+import { Form, Link } from 'react-router';
+
 import type { NoteCardFragment } from '~/__generated__/graphql';
 
 export interface NoteFormProps {
@@ -48,7 +49,7 @@ export const NoteForm = (props: NoteFormProps): React.ReactElement => {
   return (
     <div>
       <Form
-        className={clsx('w-full', className)}
+        className={cn('w-full', className)}
         data-testid="NoteForm"
         method="post"
       >

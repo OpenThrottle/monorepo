@@ -1,16 +1,17 @@
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import clsx from 'clsx';
 import { Link } from 'react-router';
+
+import type { UsageSkillUsageFilterOptionsFragment } from '~/__generated__/graphql';
+import { UsageBranchFilter } from '~/routing/usage/components/UsageBranchFilter';
 import {
   SKILL_USAGE_SCOPES,
   skillUsageCwdLabel,
   type SkillUsageScopeFilter,
 } from '~/routing/usage/data/skill-usage-copy';
+import type { UsageBranchOption } from '~/routing/usage/types';
 import { skillUsageChipClass } from '~/routing/usage/utils/skill-usage-chip-class';
-import { UsageBranchFilter } from '~/routing/usage/components/UsageBranchFilter';
 import { buildUsageSearch } from '~/routing/usage/utils/usage-search';
-import type { UsageBranchOption } from '~/routing/usage/hooks/useUsageBranchSearch';
-import type { UsageSkillUsageFilterOptionsFragment } from '~/__generated__/graphql';
 
 export interface UsageSkillUsageFiltersProps {
   /** SSR first page of branches: default branch first, then A–Z. */
@@ -55,6 +56,7 @@ export const UsageSkillUsageFilters = (
   }> = [
     { id: null, label: 'All scopes' },
     { id: SKILL_USAGE_SCOPES.OURS, label: 'Ours' },
+    { id: SKILL_USAGE_SCOPES.PERSONAL, label: 'Personal' },
     { id: SKILL_USAGE_SCOPES.THIRD_PARTY, label: 'Third-party' },
   ];
 
@@ -67,7 +69,7 @@ export const UsageSkillUsageFilters = (
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx(className)} data-testid="UsageSkillUsageFilters">
+    <div className={cn(className)} data-testid="UsageSkillUsageFilters">
       <div
         aria-label="Filter skill usage by scope"
         className="mb-4 flex flex-wrap gap-2"

@@ -1,8 +1,8 @@
-import * as React from 'react';
-import { Button, Card } from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
+import { Button, Card, cn } from '@openthrottle/react-router-shadcn';
 import { ArrowRightIcon } from 'lucide-react';
-import clsx from 'clsx';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import type { DashboardQueueStatsCardFragment } from '~/__generated__/graphql';
 import { QueueHealthPill } from '~/routing/queues/components/QueueHealthPill';
 import { QUEUE_HEALTH_RANK } from '~/routing/queues/data/queue-health-display';
@@ -65,7 +65,7 @@ export const DashboardQueueHealthCard = (
 
   return (
     <Card
-      className={clsx('gap-3 p-4', className)}
+      className={cn('gap-3 p-4', className)}
       data-testid="DashboardQueueHealthCard"
     >
       <div className="flex items-center justify-between gap-2">

@@ -1,6 +1,7 @@
-import * as React from 'react';
 import { renderHook } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
+
 import { ChartConfigContext, useChartConfig } from '../chart-config-context';
 
 describe('chart-config-context', () => {

@@ -1,7 +1,8 @@
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+
+import type { Route } from '@/app/routes/+types/ide.symbols';
 import { GetWorkspaceSettingsDocument } from '~/__generated__/graphql';
 import { resolveSelectedRepository } from '~/routing/ide/utils/repositories';
-import type { Route } from '@/app/routes/+types/ide.symbols';
 
 /**
  * Resource route (loader-only) for the lazy symbols tier: returns the workspace's

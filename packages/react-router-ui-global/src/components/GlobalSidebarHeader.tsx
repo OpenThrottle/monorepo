@@ -1,7 +1,6 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { SidebarHeader } from '@openthrottle/react-router-shadcn';
+import { cn, SidebarHeader } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleLogo } from '@openthrottle/react-router-ui';
+import * as React from 'react';
 
 export interface GlobalSidebarHeaderProps {
   readonly className?: string;
@@ -27,10 +26,7 @@ export const GlobalSidebarHeader = (
   // 🔌 Short Circuit
 
   return (
-    <SidebarHeader
-      className={clsx(className)}
-      data-testid="GlobalSidebarHeader"
-    >
+    <SidebarHeader className={cn(className)} data-testid="GlobalSidebarHeader">
       <OpenThrottleLogo name={name} to={to} />
     </SidebarHeader>
   );

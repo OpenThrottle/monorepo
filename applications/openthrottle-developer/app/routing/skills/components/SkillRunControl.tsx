@@ -1,5 +1,3 @@
-import * as React from 'react';
-import { Await } from 'react-router';
 import type { ChatModelOption } from '@openthrottle/react-router-chat';
 import {
   Button,
@@ -7,11 +5,14 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+import { Await } from 'react-router';
+
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import type { RepositoryOption } from '~/routing/home/data/models.server';
 import { RunSkillDialog } from '~/routing/skills/components/RunSkillDialog';
-import type { RunSkillPayload } from '~/routing/skills/components/RunSkillDialog';
 import { SKILL_RUN_COPY } from '~/routing/skills/data/data.copy';
+import type { RunSkillPayload } from '~/routing/skills/types';
 
 /** Deferred bundle the loader streams for the Run-skill modal. */
 export interface RunSkillRunOptions {

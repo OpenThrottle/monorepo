@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { buildStubProposal } from '../document-decompose';
 
 describe('routing/plans/utils/document-decompose', () => {

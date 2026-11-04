@@ -1,8 +1,8 @@
 import {
   AGENTIC_TEST_ECHO_COUNT,
   AGENTIC_TEST_ECHO_INTERVAL_MS,
-} from './agentic-test.constants';
-import type { AgenticTestJobResult } from './agentic-test.types';
+} from './agentic-test.constants.ts';
+import type { AgenticTestJobResult } from './agentic-test.types.ts';
 
 export interface RunAgenticTestEchoLoopOptions {
   readonly echoCount?: number;

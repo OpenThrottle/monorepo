@@ -2,8 +2,11 @@
  * @description Resolver for PlanOutputStreamChunk queries and mutations. Injects PlanOutputStreamService from @openthrottle/nestjs-repositories and maps entities to PlanOutputStreamChunkObject.
  */
 
-import type { PlanOutputStreamChunk } from '@openthrottle/nestjs-repositories';
-import { PlanOutputStreamService } from '@openthrottle/nestjs-repositories';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+} from '@nestjs/common';
 import {
   Args,
   Context,
@@ -13,27 +16,25 @@ import {
   Resolver,
   Subscription,
 } from '@nestjs/graphql';
-import {
-  PUB_SUB,
-  planOutputTopic,
-  type PubSubEngine,
-} from '@openthrottle/nestjs-graphql';
 import { Public } from '@openthrottle/nestjs-auth';
 import {
-  BadRequestException,
-  ForbiddenException,
-  Inject,
-} from '@nestjs/common';
-import {
-  DeletePlanOutputResult,
-  PlanOutputStreamChunkObject,
-} from './plan-output-stream-chunk.object';
+  planOutputTopic,
+  PUB_SUB,
+  type PubSubEngine,
+} from '@openthrottle/nestjs-graphql';
+import type { PlanOutputStreamChunk } from '@openthrottle/nestjs-repositories';
+import { PlanOutputStreamService } from '@openthrottle/nestjs-repositories';
+
 import {
   AppendPlanOutputInput,
   DeletePlanOutputInput,
   GetPlanOutputStreamChunkInput,
   ListPlanOutputStreamChunksInput,
-} from './plan-output-stream.input';
+} from './plan-output-stream.input.ts';
+import {
+  DeletePlanOutputResult,
+  PlanOutputStreamChunkObject,
+} from './plan-output-stream-chunk.object.ts';
 
 /** Default and hard ceiling for the unbounded list query (bounds API memory). */
 const DEFAULT_LIST_LIMIT = 1000;
@@ -78,11 +79,11 @@ export class PlanOutputStreamResolver {
     );
     const skip = Math.max(0, input.offset ?? 0);
 
-    const entities = await this.planOutputStreamService.getRepository().find({
-      order: { createdAt: 'ASC' },
+    const entities = await this.planOutputStreamService.listChunks({
+      planId: input.planId,
       skip,
       take,
-      where: { planId: input.planId },
+      taskId: input.taskId,
     });
 
     return entities;

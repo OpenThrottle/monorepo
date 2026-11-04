@@ -1,6 +1,7 @@
 import type {
   DiscoveredWorktreeFieldsFragment,
   GetSettingsRepositoriesQuery,
+  PruneWorktreeCheckoutsMutation,
   WorkspaceRepositoryFieldsFragment,
 } from '~/__generated__/graphql';
 
@@ -24,6 +25,25 @@ export type DiscoveredWorktree = DiscoveredWorktreeFieldsFragment;
  */
 export type DiscoveredWorktreesResult =
   GetSettingsRepositoriesQuery['discoveredWorktrees'];
+
+/**
+ * @description A registered worktree checkout with no live worktree behind it — the row
+ * outlived the directory (removed outside OpenThrottle, or by a teardown that predates
+ * deregistration).
+ */
+export type MissingWorktreeCheckout =
+  DiscoveredWorktreesResult['missingCheckouts'][number];
+
+/**
+ * @description One directory the scan looked in — a repository's `<root>/<org>/<repo>`
+ * folder — carrying the configured `baseRoot` above it and the rung that set it.
+ */
+export type ScannedWorktreeRoot =
+  DiscoveredWorktreesResult['scannedRoots'][number];
+
+/** @description One per-id outcome from the `pruneWorktreeCheckouts` mutation. */
+export type PruneWorktreeCheckoutResult =
+  PruneWorktreeCheckoutsMutation['pruneWorktreeCheckouts']['results'][number];
 
 /**
  * @description One table row = one thing on disk, carrying enough of its parent
@@ -58,6 +78,13 @@ export interface RepositoryCheckoutRow {
   id: string;
   isWorktree: boolean;
   /**
+   * A registered worktree checkout the last scan could not match to a live worktree — the row
+   * outlived the directory. Hidden by default and prunable; always false for a primary checkout.
+   */
+  missing: boolean;
+  /** Why {@link missing} is set, or null when it is not. */
+  missingReason: MissingWorktreeCheckout['reason'] | null;
+  /**
    * The registered folder is not a git checkout at all. Reported per repository by
    * discovery, so it belongs on the row rather than in a page-level list.
    */
@@ -84,4 +111,27 @@ export interface RepositoryCheckoutRow {
   /** True when there is no `repository_checkouts` row at this path. */
   unregistered: boolean;
   updatedAt: string | null;
+}
+
+/** A single directory entry returned by the enriched `browseDirectory`. */
+export interface WorkspaceBrowseEntry {
+  alreadyRegistered: boolean;
+  isGitRepo: boolean;
+  name: string;
+  path: string;
+}
+
+/** The rich listing payload the `browseDirectory` action returns. */
+export interface WorkspaceBrowseListing {
+  entries: WorkspaceBrowseEntry[];
+  isGitRepo: boolean;
+  parentPath: string | null;
+  path: string | null;
+}
+
+/** One clickable breadcrumb segment for the current path. */
+export interface WorkspaceBreadcrumbSegment {
+  label: string;
+  navigable: boolean;
+  path: string;
 }

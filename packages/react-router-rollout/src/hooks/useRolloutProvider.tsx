@@ -1,7 +1,7 @@
 import * as React from 'react';
 
-import type { RolloutFlagCatalog } from '../types';
 import type { RolloutContextValue } from '../data';
+import type { RolloutFlagCatalog } from '../types';
 import type {
   RolloutCacheOptions,
   RolloutEvaluation,
@@ -12,8 +12,9 @@ import {
   defaultsFromCatalog,
   mergeRolloutEvaluations,
   readRolloutEvaluationCache,
-  writeRolloutEvaluationCache,
   type RolloutResolvedValues,
+  toError,
+  writeRolloutEvaluationCache,
 } from '../utils';
 
 export interface UseRolloutProviderOptions<
@@ -28,9 +29,6 @@ export interface UseRolloutProviderOptions<
   readonly initialEvaluations?: readonly RolloutEvaluation[];
   readonly strict?: boolean;
 }
-
-const toError = (cause: unknown): Error =>
-  cause instanceof Error ? cause : new Error(String(cause));
 
 /**
  * Hydration state machine for {@link RolloutProvider}: cache → fetch → merge.

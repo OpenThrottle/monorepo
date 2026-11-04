@@ -1,0 +1,24 @@
+# Commits git blame should look straight through.
+#
+# The root .gitattributes handles generated output per *path*. This file handles
+# the case that remains: a one-off commit that rewrote a pile of lines without
+# changing any behavior — a repo-wide reformat, or a mass re-bundle after an
+# esbuild or tooling bump that rewrites all 14 hook payloads at once. Blame on
+# those lines otherwise names whoever ran the tool.
+#
+# Belongs here:
+#   - the full 40-character SHA of the *landed* commit (the squash on main, not
+#     the branch head that was pushed), one per line
+#   - a `# <commit subject>` comment on the line above it
+#
+# Does NOT belong here: any commit that changed behavior, even slightly. A
+# commit listed here is invisible to blame forever; that is only safe when the
+# commit genuinely carries no authorship worth finding.
+#
+# GitHub reads this file from the repo root automatically. Local git does not —
+# `blame.ignoreRevsFile` is set by scripts/setup.sh and by worktree
+# provisioning. Note that git fails *fatally* when that config points at a
+# missing file, so the setup scripts only set it when this file is present. To
+# opt out locally: git config --unset blame.ignoreRevsFile
+#
+# Seeded empty on purpose — there is no such commit yet.

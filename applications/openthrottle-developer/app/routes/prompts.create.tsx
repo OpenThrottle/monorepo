@@ -1,24 +1,25 @@
-import * as React from 'react';
-import { redirect } from 'react-router';
-import { z } from 'zod/v3';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import {
   executeGraphqlWithAuth,
   parseFormData,
 } from '@openthrottle/react-router-graphql';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+import { redirect } from 'react-router';
+import { z } from 'zod/v3';
+
+import type { Route } from '@/app/routes/+types/prompts.create';
 import {
   CreatePromptDocument,
   CustomPromptType,
 } from '~/__generated__/graphql';
 import { CreateCustomPromptInputSchema } from '~/__generated__/schemas';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { SITE_TITLE } from '~/global/config/settings';
-import { PROMPTS_BASE_PATH } from '~/routing/prompts/config';
 import { PromptCreateForm } from '~/routing/prompts/components/PromptCreateForm';
+import { PROMPTS_BASE_PATH } from '~/routing/prompts/config';
 import { usePromptCreateForm } from '~/routing/prompts/hooks/usePromptCreateForm';
-import type { Route } from '@/app/routes/+types/prompts.create';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

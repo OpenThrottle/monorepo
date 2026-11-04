@@ -2,9 +2,10 @@
  * @description Fishery factory for {@link User}. Use in tests to build mock users.
  */
 
-import { Factory } from 'fishery';
 import { faker } from '@faker-js/faker';
-import type { User } from './user.entity';
+import { Factory } from 'fishery';
+
+import type { User } from './user.entity.ts';
 
 // /** Column-only shape for building user test data (no relations). */
 // export type UserFactoryData = Pick<

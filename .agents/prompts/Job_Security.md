@@ -26,7 +26,7 @@ Facts that change the analysis:
 - The repo **already has a gitleaks gate** — `.gitleaks.toml` at the root and `.github/workflows/secret-scan.yml` in CI. Run it and triage its output; do not re-invent secret detection with ad-hoc greps (do use targeted greps to confirm or expand on a gitleaks hit).
 - There are **two git remotes**: `origin` is `OpenThrottle/monorepo` (canonical) and a separate public mirror with unrelated history. Anything leaked is potentially public — treat a hit in history as exposed, not merely committed.
 - The server is `applications/openthrottle-server`: NestJS, **code-first GraphQL** (`autoSchemaFile`). Authorization lives in guards and the RBAC modules (`packages/nestjs-auth`, `packages/nestjs-rbac`). A resolver without a guard is open.
-- The four React Router apps (`openthrottle-developer`, `openthrottle-admin`, `openthrottle-email`, `openthrottle-website`) expose config to the client through `window.env`. Anything placed there is public. Server-only values must never reach it.
+- The three React Router apps (`openthrottle-developer`, `openthrottle-admin`, `openthrottle-website`) expose config to the client through `window.env`. Anything placed there is public. Server-only values must never reach it.
 - Form input is parsed through `parseFormData` in `@openthrottle/react-router-graphql`, which validates with Zod. An action that reads raw form data without a schema is unvalidated input.
 - A nonce-based CSP rollout is in progress across the RR apps — missing or bypassed nonce usage is a real finding, not a hypothetical.
 - SQL lives in `databases/migrations/`; runtime queries go through TypeORM. Raw string-interpolated SQL is the pattern to hunt.

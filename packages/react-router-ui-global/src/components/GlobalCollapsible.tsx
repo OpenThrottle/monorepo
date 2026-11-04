@@ -1,13 +1,14 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   Button,
+  cn,
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@openthrottle/react-router-shadcn';
 import type { LucideIcon } from 'lucide-react';
 import { ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
+import * as React from 'react';
+
 import { GlobalHeading } from './GlobalHeading';
 
 export interface GlobalCollapsibleProps extends React.PropsWithChildren {
@@ -37,7 +38,7 @@ export const GlobalCollapsible = (
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx(className)} data-testid="GlobalCollapsible">
+    <div className={cn(className)} data-testid="GlobalCollapsible">
       <Collapsible onOpenChange={setIsOpen} open={isOpen}>
         <GlobalHeading
           className="p-4 text-xl font-semibold"

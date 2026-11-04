@@ -93,6 +93,7 @@ mutation appendPlanOutput($input: AppendPlanOutputInput!) {
     id
     iteration
     planId
+    taskId
   }
 }
 

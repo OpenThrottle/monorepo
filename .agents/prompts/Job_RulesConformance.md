@@ -55,8 +55,8 @@ spent reading code for them is time not spent on the honor-system list above.
 
 `no-restricted-syntax` → new `enum` declarations · `consistent-type-assertions`
 (`assertionStyle: 'never'`) → **all `as` casts** · `no-explicit-any` → **all `any`** ·
-`consistent-type-imports` → `import type` · `import/no-default-export` → named exports ·
-`sort-keys` / `sort-keys-fix` / `typescript-sort-keys` → **alphabetization** ·
+`consistent-type-imports` → `import type` · `import-x/no-default-export` → named exports ·
+`sort-keys` / `perfectionist/sort-interfaces` / `perfectionist/sort-enums` → **alphabetization** ·
 `no-await-in-loop` · `max-lines` · `naming-convention` → every naming clause except file
 names · `noUncheckedIndexedAccess` (compiler) → unchecked indexed access.
 
@@ -71,7 +71,7 @@ names · `noUncheckedIndexedAccess` (compiler) → unchecked indexed access.
 
 3. **Read for the lint-invisible rules.** Grep plus read for the honor-system list above: `.then()` chains, `let` that is never reassigned, `&` intersections of object types, `x?: T` on values that are always supplied, object types with no `readonly`, `throw`s whose only consumer is a caller's `try`/`catch`, missing `@public` on package exports, deep package imports, non-kebab-case file names. Confirm each hit by reading the surrounding code — some are genuinely justified; say so rather than filing them.
 
-   **Rules that used to be on this list and no longer belong on it.** Each is enforced by ESLint at `error` (or by a compiler flag), so a clean run _is_ proof and hand-hunting is wasted effort: `as` casts (`consistent-type-assertions`, `assertionStyle: 'never'`), `any` (`no-explicit-any`), new `enum` declarations (`no-restricted-syntax`), `import type` (`consistent-type-imports`), named exports (`import/no-default-export`), alphabetization (the sort-keys trio), and unchecked indexed access (`noUncheckedIndexedAccess`).
+   **Rules that used to be on this list and no longer belong on it.** Each is enforced by ESLint at `error` (or by a compiler flag), so a clean run _is_ proof and hand-hunting is wasted effort: `as` casts (`consistent-type-assertions`, `assertionStyle: 'never'`), `any` (`no-explicit-any`), new `enum` declarations (`no-restricted-syntax`), `import type` (`consistent-type-imports`), named exports (`import-x/no-default-export`), alphabetization (the sort-keys trio), and unchecked indexed access (`noUncheckedIndexedAccess`).
 
    This list shrinks over time — that is the point. **Before treating any rule as lint-invisible, check its label in `code-style.md`.** A previous version of this job insisted that `as` casts had to be found by reading because "the root ESLint config forces `consistent-type-assertions` to `off`". That was false: `tools/dotfiles/src/index.ts` sets it to `['error', { assertionStyle: 'never' }]`, in exactly one place. The job spent weeks hand-reading code for something CI had already blocked.
 

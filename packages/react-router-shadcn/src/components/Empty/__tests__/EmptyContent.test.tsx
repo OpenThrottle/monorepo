@@ -1,8 +1,9 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { EmptyContent } from '../EmptyContent';
+
 import type { EmptyContentProps } from '../EmptyContent';
+import { EmptyContent } from '../EmptyContent';
 
 describe('EmptyContent', () => {
   test('renders the primitive with its data-slot and merges className', () => {

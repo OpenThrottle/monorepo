@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'vitest';
+
 import type { GetDashboardOnboardingQuery } from '~/__generated__/graphql';
+
 import {
   deriveOnboardingCompletion,
   isOnboardingComplete,

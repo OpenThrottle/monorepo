@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import type { NestjsAuthOptions } from '../config/nestjs-auth.options';
+
+import type { NestjsAuthOptions } from '../config/nestjs-auth.options.ts';
 
 /** Strategy name for use with AuthGuard('jwt'). */
 export const JWT_STRATEGY_NAME = 'jwt';

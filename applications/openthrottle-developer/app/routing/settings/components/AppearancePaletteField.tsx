@@ -1,11 +1,12 @@
-import * as React from 'react';
 import {
   Label,
   OPENTHROTTLE_THEME,
   THEMES,
 } from '@openthrottle/react-router-shadcn';
-import { useAtom } from 'jotai';
 import { useResolvedThemeMode } from '@openthrottle/react-router-utils';
+import { useAtom } from 'jotai';
+import * as React from 'react';
+
 import { configAtom } from '~/global/data/atom.config';
 import { AppearancePaletteSwatch } from '~/routing/settings/components/AppearancePaletteSwatch';
 import { THEME_DEFAULT_OPTION } from '~/routing/settings/config/appearance';

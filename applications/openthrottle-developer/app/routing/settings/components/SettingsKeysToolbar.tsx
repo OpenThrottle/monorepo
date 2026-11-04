@@ -1,8 +1,6 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { PlusIcon } from 'lucide-react';
 import {
   Button,
+  cn,
   Label,
   Select,
   SelectContent,
@@ -10,6 +8,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
+import { PlusIcon } from 'lucide-react';
+import * as React from 'react';
+
 import type { ServiceAccountListItemFragment } from '~/__generated__/graphql';
 
 export interface SettingsKeysToolbarProps {
@@ -65,7 +66,7 @@ export const SettingsKeysToolbar = (
 
   return (
     <div
-      className={clsx(
+      className={cn(
         'flex flex-wrap items-end justify-between gap-4',
         className,
       )}

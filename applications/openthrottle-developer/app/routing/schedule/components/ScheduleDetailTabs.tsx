@@ -1,17 +1,18 @@
-import * as React from 'react';
+import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import {
   TabsContent,
   TabsList,
   TabsTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import { OpenThrottleTabs } from '@openthrottle/react-router-ui';
 import { FileTextIcon, HistoryIcon } from 'lucide-react';
+import * as React from 'react';
+
 import type { ScheduledJobRunRowFragment } from '~/__generated__/graphql';
 import { ScheduleRunsTable } from '~/routing/schedule/components/ScheduleRunsTable';
 import {
-  SCHEDULE_DETAIL_TAB_SEARCH_PARAM,
   parseScheduleDetailTab,
+  SCHEDULE_DETAIL_TAB_SEARCH_PARAM,
 } from '~/routing/schedule/utils/parse-schedule-detail-tab';
 
 export interface ScheduleDetailTabsProps {

@@ -4,12 +4,17 @@
 
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { captureCallerWorkspacePath } from '../config/workspace-path.ts';
 import {
-  createPlanToolDescription,
-  createPlanToolHandler,
+  clearCurrentSession,
+  ensureWorkSession,
+} from '../session/current-session.ts';
+import {
   createPlansToolDescription,
   createPlansToolHandler,
+  createPlanToolDescription,
+  createPlanToolHandler,
   listPlansByStatusToolDescription,
   listPlansByStatusToolHandler,
 } from './plans.ts';
@@ -17,6 +22,26 @@ import {
 vi.mock('@openthrottle/nodejs-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),
 }));
+
+/**
+ * @description Puts the process-level work session into a known state. Mutating plan/task
+ * tools now attach the connection's ambient session to their GraphQL calls, so the first such
+ * call in a process also opens the session. Priming it here through the ordinary public path
+ * keeps that one-off out of each test's mock sequence, and stops the cached session leaking
+ * between tests, so each test goes on asserting only the call it cares about.
+ */
+const SESSION_ID = 'sess-test';
+const SESSION_OPTIONS = { headers: { 'X-OT-Session-Id': SESSION_ID } };
+
+async function primeWorkSession(): Promise<void> {
+  clearCurrentSession();
+  const mock = vi.mocked(executeGraphqlWithAuth);
+  mock.mockResolvedValueOnce({ startWorkSession: { id: SESSION_ID } });
+  await ensureWorkSession('prime-token');
+  // Reset AFTER priming: the session is cached in module state, not mock state, so the
+  // cache survives while the call history starts clean for the test's own assertions.
+  mock.mockReset();
+}
 
 describe('tool descriptions reflect the canonical status set', () => {
   it('list_plans_by_status lists the uppercase canonical statuses, not the stale lowercase trio', () => {
@@ -27,6 +52,7 @@ describe('tool descriptions reflect the canonical status set', () => {
       'COMPLETED',
       'IN_PROGRESS',
       'PENDING',
+      'PROMOTED',
       'QUEUED',
       'SKIPPED',
     ]) {
@@ -40,6 +66,11 @@ describe('tool descriptions reflect the canonical status set', () => {
   it('create_plan documents the canonical status set', () => {
     expect(createPlanToolDescription).toContain('IN_PROGRESS');
     expect(createPlanToolDescription).toContain('CANCELED');
+  });
+
+  it('create_plan tells a follow-up filer to tag it and wave its tasks', () => {
+    expect(createPlanToolDescription).toContain('tags: ["follow-up"]');
+    expect(createPlanToolDescription).toContain('sortOrder and wave');
   });
 
   it('create_plan documents runConfigJson and workspacePath, which its schema already accepts', () => {
@@ -66,8 +97,8 @@ describe('the captured workspace reaches create_plan / create_plans', () => {
   const sentInput = (): unknown =>
     vi.mocked(executeGraphqlWithAuth).mock.calls[0]?.[2];
 
-  beforeEach(() => {
-    vi.mocked(executeGraphqlWithAuth).mockReset();
+  beforeEach(async () => {
+    await primeWorkSession();
     vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
       createPlan: { id: 'plan-1' },
       createPlans: { plans: [{ id: 'plan-1' }], totalCount: 1 },
@@ -160,8 +191,8 @@ describe('the captured workspace reaches create_plan / create_plans', () => {
 describe('createPlanToolHandler', () => {
   const serviceAccountToken = '***REMOVED-OT-TOKEN***';
 
-  beforeEach(() => {
-    vi.mocked(executeGraphqlWithAuth).mockReset();
+  beforeEach(async () => {
+    await primeWorkSession();
     delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
   });
 
@@ -171,10 +202,12 @@ describe('createPlanToolHandler', () => {
 
   describe('when args are invalid', () => {
     it('returns an invalid-args error without calling GraphQL', async () => {
-      const result = await createPlanToolHandler({
-        category: 'maintenance',
-        title: 'Improve test coverage',
-      });
+      // Parsed from JSON: the args are deliberately invalid for the typed schema.
+      const result = await createPlanToolHandler(
+        JSON.parse(
+          '{"category":"maintenance","title":"Improve test coverage"}',
+        ),
+      );
 
       expect(result).toMatchObject({
         content: [
@@ -235,7 +268,61 @@ describe('createPlanToolHandler', () => {
             title: 'Improve test coverage',
           },
         },
+        SESSION_OPTIONS,
       );
+    });
+  });
+
+  describe('when tags are passed', () => {
+    it('creates the plan without them, then tags it', async () => {
+      process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
+      vi.mocked(executeGraphqlWithAuth)
+        .mockResolvedValueOnce({ createPlan: { id: 'plan-1' } })
+        .mockResolvedValueOnce({ addPlanTag: { tag: 'follow-up' } });
+
+      const result = await createPlanToolHandler({
+        author: 'visormatt',
+        category: 'maintenance',
+        tags: ['follow-up'],
+        title: 'Follow-up',
+      });
+
+      expect(result).toMatchObject({
+        structuredContent: { tagFailures: [], tags: ['follow-up'] },
+      });
+      expect(vi.mocked(executeGraphqlWithAuth).mock.calls[0]?.[2]).toEqual({
+        input: {
+          author: 'visormatt',
+          category: 'maintenance',
+          title: 'Follow-up',
+        },
+      });
+      expect(vi.mocked(executeGraphqlWithAuth).mock.calls[1]?.[2]).toEqual({
+        input: { planId: 'plan-1', tag: 'follow-up' },
+      });
+    });
+
+    it('reports a failed tag without failing the create', async () => {
+      process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
+      vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      vi.mocked(executeGraphqlWithAuth)
+        .mockResolvedValueOnce({ createPlan: { id: 'plan-1' } })
+        .mockRejectedValueOnce(new Error('Unknown tag "nope"'));
+
+      const result = await createPlanToolHandler({
+        author: 'visormatt',
+        category: 'maintenance',
+        tags: ['nope'],
+        title: 'Follow-up',
+      });
+
+      expect(result).toMatchObject({
+        structuredContent: {
+          plan: { id: 'plan-1' },
+          tagFailures: [{ tag: 'nope' }],
+          tags: [],
+        },
+      });
     });
   });
 
@@ -287,8 +374,8 @@ describe('createPlanToolHandler', () => {
 describe('createPlansToolHandler', () => {
   const serviceAccountToken = '***REMOVED-OT-TOKEN***';
 
-  beforeEach(() => {
-    vi.mocked(executeGraphqlWithAuth).mockReset();
+  beforeEach(async () => {
+    await primeWorkSession();
     process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
   });
 
@@ -298,7 +385,8 @@ describe('createPlansToolHandler', () => {
 
   describe('when args are invalid', () => {
     it('returns an invalid-args error without calling GraphQL', async () => {
-      const result = await createPlansToolHandler({});
+      // Parsed from JSON: the args are deliberately invalid for the typed schema.
+      const result = await createPlansToolHandler(JSON.parse('{}'));
 
       expect(result).toMatchObject({
         content: [
@@ -362,6 +450,7 @@ describe('createPlansToolHandler', () => {
             ],
           },
         },
+        SESSION_OPTIONS,
       );
     });
   });
@@ -389,8 +478,8 @@ describe('createPlansToolHandler', () => {
 describe('listPlansByStatusToolHandler', () => {
   const serviceAccountToken = '***REMOVED-OT-TOKEN***';
 
-  beforeEach(() => {
-    vi.mocked(executeGraphqlWithAuth).mockReset();
+  beforeEach(async () => {
+    await primeWorkSession();
     process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = serviceAccountToken;
   });
 

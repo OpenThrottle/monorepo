@@ -1,6 +1,7 @@
-import * as React from 'react';
 import { Button } from '@openthrottle/react-router-shadcn';
 import { IS_BROWSER } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+
 import { isUsableRollbarClientToken } from '../utils/client-error-diagnostics';
 
 export interface GlobalErrorBoundaryReferencePanelProps {

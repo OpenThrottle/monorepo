@@ -1,20 +1,22 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { UsageSkillUsage } from '../UsageSkillUsage';
-import type { UsageSkillUsageProps } from '../UsageSkillUsage';
-import {
-  SKILL_USAGE_COPY,
-  SKILL_USAGE_SCOPES,
-} from '../../data/skill-usage-copy';
+
 import type {
   UsageSkillUsageByDayFragment,
   UsageSkillUsageByScopeFragment,
   UsageSkillUsageBySkillFragment,
   UsageSkillUsageFilterOptionsFragment,
 } from '~/__generated__/graphql';
+
+import {
+  SKILL_USAGE_COPY,
+  SKILL_USAGE_SCOPES,
+} from '../../data/skill-usage-copy';
+import type { UsageSkillUsageProps } from '../UsageSkillUsage';
+import { UsageSkillUsage } from '../UsageSkillUsage';
 
 const buildBySkill = (
   overrides: Partial<UsageSkillUsageBySkillFragment>,
@@ -25,6 +27,7 @@ const buildBySkill = (
   errorCount: 0,
   outcomeCount: 0,
   scope: SKILL_USAGE_SCOPES.OURS,
+  sessionEndedCount: 0,
   skillName: 'ot-plans',
   successCount: 0,
   ...overrides,
@@ -43,6 +46,7 @@ const buildByDay = (
 ): UsageSkillUsageByDayFragment => ({
   date: '2026-07-15',
   oursCount: 0,
+  personalCount: 0,
   thirdPartyCount: 0,
   totalCount: 0,
   ...overrides,
@@ -99,7 +103,7 @@ describe('UsageSkillUsage Component', () => {
     ).toBeInTheDocument();
   });
 
-  test('renders leaderboard rows with ours vs third-party labels', () => {
+  test('renders leaderboard rows with their scope labels', () => {
     const component = renderComponent({
       ...baseProps(),
       byScope: [
@@ -112,6 +116,7 @@ describe('UsageSkillUsage Component', () => {
           count: 5,
           outcomeCount: 3,
           scope: SKILL_USAGE_SCOPES.OURS,
+          sessionEndedCount: 0,
           skillName: 'ot-plans',
           successCount: 3,
         }),
@@ -268,6 +273,20 @@ describe('UsageSkillUsage Component', () => {
     expect(
       component.getByRole('link', { name: 'Third-party' }),
     ).toHaveAttribute('href', '/?skillScope=third-party');
+  });
+
+  test('the Personal chip round-trips through the skillScope param', () => {
+    const component = renderComponent({
+      ...baseProps(),
+      selectedScope: SKILL_USAGE_SCOPES.PERSONAL,
+    });
+
+    const personalLink = component.getByRole('link', { name: 'Personal' });
+    expect(personalLink).toHaveAttribute('href', '/?skillScope=personal');
+    expect(personalLink).toHaveAttribute('aria-current', 'true');
+    expect(component.getByRole('link', { name: 'Ours' })).not.toHaveAttribute(
+      'aria-current',
+    );
   });
 
   test('renders the branch dropdown and cwd chips, preserving provider', () => {

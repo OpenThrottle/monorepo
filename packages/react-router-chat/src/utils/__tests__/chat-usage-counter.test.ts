@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
-import { resolveTotalTokens } from '../chat-usage-counter';
+
 import type { ChatTokenUsage } from '../../types';
+import { resolveTotalTokens } from '../chat-usage-counter';
 
 describe('resolveTotalTokens', () => {
   test('returns undefined when nothing is reported', () => {

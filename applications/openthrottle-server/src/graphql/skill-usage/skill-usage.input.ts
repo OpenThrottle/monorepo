@@ -68,7 +68,7 @@ export class RecordSkillUsageInput {
   promptId?: string | null;
 
   @Field(() => String, {
-    description: `ours | third-party.`,
+    description: `ours | personal | third-party.`,
   })
   scope!: string;
 
@@ -127,7 +127,7 @@ export class RecordSkillUsageOutcomeInput {
   outcome!: string;
 
   @Field(() => String, {
-    description: `ours | third-party. Defaults to ours for authored-skill enrichment.`,
+    description: `ours | personal | third-party. Omitting it defaults to ours — a legacy default for senders that predate the field; every current hook posts an explicit scope.`,
     nullable: true,
   })
   scope?: string | null;
@@ -142,6 +142,12 @@ export class RecordSkillUsageOutcomeInput {
     description: `Skill identifier matching the start event.`,
   })
   skillName!: string;
+
+  @Field(() => String, {
+    description: `Producer id of the tool/adapter that recorded this outcome (e.g. claude-code, cursor). Stamped by the per-tool skill-usage adapter; matches the start event's source.`,
+    nullable: true,
+  })
+  source?: string | null;
 
   @Field(() => String, {
     description: `Optional tool_use_id for tighter start↔outcome correlation.`,

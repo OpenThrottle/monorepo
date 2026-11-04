@@ -2,23 +2,24 @@
  * @description Plan output tool handlers + schemas: append_plan_output, get_plan_output. Wired up via the shared `developerMcpToolDefinitions` registry and the Nest surface.
  */
 
-import type { z } from 'zod';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
+import type { z } from 'zod';
+
 import {
-  type AppendPlanOutputMutation,
-  type DeletePlanOutputMutation,
-  type GetPlanOutputStreamChunksQuery,
   AppendPlanOutputDocument,
+  type AppendPlanOutputMutation,
   DeletePlanOutputDocument,
+  type DeletePlanOutputMutation,
   GetPlanOutputStreamChunksDocument,
+  type GetPlanOutputStreamChunksQuery,
 } from '../__generated__/graphql.js';
 import {
   AppendPlanOutputInputSchema,
   DeletePlanOutputInputSchema,
   ListPlanOutputStreamChunksInputSchema,
 } from '../__generated__/schemas.ts';
-import type { GenericResult } from '../types/index.ts';
 import { getAuthToken } from '../auth/get-auth-token.ts';
+import type { GenericResult } from '../types/index.ts';
 import { invalidArgsContent } from '../utils/errors.ts';
 import { runTool } from '../utils/tool-result.ts';
 
@@ -34,7 +35,8 @@ type DeletePlanOutputResult = GenericResult<{
   deletedCount: DeletePlanOutputMutation['deletePlanOutput']['deletedCount'];
 }>;
 
-export const appendPlanOutputToolParameters = AppendPlanOutputInputSchema();
+export const appendPlanOutputToolParameters =
+  AppendPlanOutputInputSchema().strict();
 
 export const appendPlanOutputToolDescription = `Append a chunk of streaming output (e.g. agent iteration log) to a plan. Requires planId and content; optional iteration number and taskId (attribute the chunk to the task you are actively working, for task-scoped output).`;
 
@@ -75,10 +77,10 @@ export async function appendPlanOutputToolHandler(
 }
 
 export const getPlanOutputToolParameters =
-  ListPlanOutputStreamChunksInputSchema();
+  ListPlanOutputStreamChunksInputSchema().strict();
 
 export const getPlanOutputToolDescription =
-  'Fetch all streaming output chunks for a plan, ordered by created_at ascending (stream order).';
+  'Fetch streaming output chunks for a plan, ordered by created_at ascending (stream order). Pass taskId to return only the narration attributed to that task; omit it for the whole plan stream. limit (default and hard cap 1000) and offset page the result.';
 
 export async function getPlanOutputToolHandler(
   args: z.infer<typeof getPlanOutputToolParameters>,
@@ -92,23 +94,35 @@ export async function getPlanOutputToolHandler(
     chunks: GetPlanOutputStreamChunksQuery['planOutputStreamChunks'];
   }>('get_plan_output', async () => {
     const token = getAuthToken();
+    // Forward every parsed argument: limit/offset were already accepted by the
+    // generated schema but silently dropped here, so a paged request quietly
+    // returned the default first 1000 rows instead.
     const result = await executeGraphqlWithAuth(
       token,
       GetPlanOutputStreamChunksDocument,
-      { input: { planId: parsed.data.planId } },
+      {
+        input: {
+          limit: parsed.data.limit ?? null,
+          offset: parsed.data.offset ?? null,
+          planId: parsed.data.planId,
+          taskId: parsed.data.taskId ?? null,
+        },
+      },
     );
 
     const chunks = result?.planOutputStreamChunks ?? [];
+    const emptyText = parsed.data.taskId
+      ? `No output chunks attributed to task ${parsed.data.taskId} on this plan.`
+      : 'No output chunks for this plan.';
     const text =
-      chunks.length === 0
-        ? 'No output chunks for this plan.'
-        : JSON.stringify(chunks, null, 2);
+      chunks.length === 0 ? emptyText : JSON.stringify(chunks, null, 2);
 
     return { structuredContent: { chunks }, text };
   });
 }
 
-export const deletePlanOutputToolParameters = DeletePlanOutputInputSchema();
+export const deletePlanOutputToolParameters =
+  DeletePlanOutputInputSchema().strict();
 
 export const deletePlanOutputToolDescription =
   'Delete plan output stream chunks. With chunkId, delete that single chunk (it must belong to planId). Without chunkId, clear all chunks for planId, optionally scoped to taskId. Returns the number of chunks deleted. Use to remove stale or incorrect output (e.g. when resetting a plan back to PENDING). GraphQL-only: delegates to the deletePlanOutput mutation.';

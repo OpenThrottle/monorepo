@@ -1,5 +1,6 @@
-import * as React from 'react';
 import { Check } from 'lucide-react';
+import * as React from 'react';
+
 import { cn } from '../utils/cn';
 import { Badge } from './Badge';
 import {
@@ -111,7 +112,7 @@ export const MultiSelect = React.forwardRef<
       </PopoverTrigger>
       <PopoverContent
         align="start"
-        className="w-[--radix-popover-trigger-width] min-w-32 p-0"
+        className="w-(--radix-popover-trigger-width) min-w-32 p-0"
       >
         <Command>
           <CommandInput placeholder={searchPlaceholder} />

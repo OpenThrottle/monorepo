@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'vitest';
+
 import type { ServiceAccountCredentialFieldsFragment } from '~/__generated__/graphql';
+
 import {
   credentialDisplayName,
   credentialRowId,

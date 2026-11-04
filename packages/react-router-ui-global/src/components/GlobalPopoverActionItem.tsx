@@ -1,10 +1,11 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
+  cn,
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { Form, Link } from 'react-router';
+
 import type { GlobalPopoverAction } from './GlobalPopover';
 
 /**
@@ -87,7 +88,7 @@ export const GlobalPopoverActionItem = (
 
       {action.kind === 'submit' && action.confirm !== undefined ? (
         <DropdownMenuItem
-          className={clsx(
+          className={cn(
             'flex gap-2',
             action.destructive === true ? 'text-destructive' : undefined,
           )}
@@ -99,6 +100,23 @@ export const GlobalPopoverActionItem = (
         </DropdownMenuItem>
       ) : null}
 
+      {/*
+        A real `<Form>` inside the dropdown content, submitted by a menu item
+        that closes the menu on select. This LOOKS like the unmount-before-
+        submit defect that killed the old confirm path (where a real browser
+        logged "Form submission canceled because the form is not connected" and
+        sent nothing), and it was reported as such — but it is NOT. Verified
+        live against `/settings/repositories` on a production-ish build: opening
+        a repository row's overflow and selecting `Refresh` sends
+        `POST /settings/repositories.data?index` -> 200 carrying the real
+        `refreshCheckout` result, with no "not connected" warning. The two
+        Radix primitives tear down on different schedules, so the dialog's
+        behaviour does not generalize to the menu.
+
+        Do not "fix" this by moving it to an imperative `useSubmit` without
+        re-verifying in a browser first — the submit paths are pinned by
+        `GlobalPopoverSubmitPaths.test.tsx`. See OT task 0a6d9c4e.
+      */}
       {action.kind === 'submit' && action.confirm === undefined ? (
         <Form
           action={action.action}

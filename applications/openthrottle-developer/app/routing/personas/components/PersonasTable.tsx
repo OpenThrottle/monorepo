@@ -1,12 +1,12 @@
+import { cn, DataTable } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import clsx from 'clsx';
-import { DataTable } from '@openthrottle/react-router-shadcn';
+
 import type { RepoPersonaEntry } from '~/routing/agents/data/repo-personas-registry';
+import type { PersonasTableColumnValue } from '~/routing/personas/config/personas-table-columns';
 import {
   getPersonasTableRowId,
   personasTableColumns,
 } from '~/routing/personas/config/personas-table-columns';
-import type { PersonasTableColumnValue } from '~/routing/personas/config/personas-table-columns';
 
 export interface PersonasTableProps {
   className?: string;
@@ -34,7 +34,7 @@ export const PersonasTable = (
 
   return (
     <div
-      className={clsx('ui-border rounded-lg border', className)}
+      className={cn('ui-border rounded-lg border', className)}
       data-testid="PersonasTable"
     >
       <DataTable<RepoPersonaEntry, PersonasTableColumnValue>

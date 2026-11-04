@@ -18,18 +18,13 @@
     "@types/pidusage": "catalog:",
     "nx": "catalog:",
     "pg": "catalog:",
-    "pidusage": "catalog:"
+    "pidusage": "catalog:",
+    "vitest": "catalog:"
   },
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
-      "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
-    },
-    "./*": {
-      "types": "./dist/*.d.ts",
-      "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
     }
   },
   "license": "Apache-2.0",
@@ -80,6 +75,7 @@
   },
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
+  "sideEffects": false,
   "type": "module",
   "types": "./src/index.ts"
 }

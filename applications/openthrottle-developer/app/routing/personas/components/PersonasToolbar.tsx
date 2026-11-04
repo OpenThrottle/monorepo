@@ -1,5 +1,5 @@
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import clsx from 'clsx';
 
 export interface PersonasToolbarProps {
   className?: string;
@@ -24,7 +24,7 @@ export const PersonasToolbar = (
 
   return (
     <div
-      className={clsx('text-muted-foreground text-sm', className)}
+      className={cn('text-muted-foreground text-sm', className)}
       data-testid="PersonasToolbar"
     >
       Personas are read from <code>.agents/personas/</code> on disk. Edit files

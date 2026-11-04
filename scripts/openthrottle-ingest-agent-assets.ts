@@ -8,6 +8,10 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import {
+  embedQuery,
+  isOllamaEmbeddingConfigured,
+} from '@openthrottle/node-client';
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import type { SkillsLockMap } from '@openthrottle/openthrottle-skills';
 import {
@@ -19,11 +23,7 @@ import {
 } from '@openthrottle/openthrottle-skills';
 import { Client } from 'pg';
 
-import {
-  embedQuery,
-  isOllamaEmbeddingConfigured,
-} from '@openthrottle/node-client';
-import { createLogger } from './lib/index.ts';
+import { createLogger } from './utils/index.ts';
 
 const logger = createLogger();
 

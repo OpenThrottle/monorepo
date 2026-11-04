@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+
 import { Markdown } from './Markdown';
 
 const SAMPLE = `# Component workbench

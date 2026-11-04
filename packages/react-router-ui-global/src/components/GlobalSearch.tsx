@@ -1,5 +1,5 @@
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import clsx from 'clsx';
 
 export interface GlobalSearchProps {
   readonly className?: string;
@@ -21,7 +21,7 @@ export const GlobalSearch = (props: GlobalSearchProps): React.ReactElement => {
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx('p-4', className)} data-testid="GlobalSearch">
+    <div className={cn('p-4', className)} data-testid="GlobalSearch">
       <h2>GlobalSearch</h2>
     </div>
   );

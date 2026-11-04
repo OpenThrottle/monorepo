@@ -1,5 +1,5 @@
-import * as React from 'react';
 import { Button } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { Link, useSearchParams } from 'react-router';
 
 export interface OpenThrottlePaginationSimpleProps {

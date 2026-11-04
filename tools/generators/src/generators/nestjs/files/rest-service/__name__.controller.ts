@@ -1,5 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
-import { <%= namePascal %>Service } from './<%= name %>.service';
+import { <%= namePascal %>Service } from './<%= name %>.service.ts';
 
 @Controller()
 export class <%= namePascal %>Controller {

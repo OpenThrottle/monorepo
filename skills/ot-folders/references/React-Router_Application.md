@@ -2,8 +2,8 @@
 
 Reproduce with `tree -L 2 -I 'node_modules|dist|build|__generated__' applications/openthrottle-developer`.
 
-The four React Router applications — `openthrottle-developer`, `openthrottle-admin`,
-`openthrottle-email`, `openthrottle-website` — all share this shape.
+The three React Router applications — `openthrottle-developer`,
+`openthrottle-admin`, `openthrottle-website` — all share this shape.
 
 ```bash
 applications/openthrottle-developer

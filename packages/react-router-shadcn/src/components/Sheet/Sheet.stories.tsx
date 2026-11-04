@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { VariantProps } from 'class-variance-authority';
+
 import { Button } from '../Button';
 import { Input } from '../Input';
 import { Label } from '../Label';

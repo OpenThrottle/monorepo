@@ -4,8 +4,8 @@
  */
 
 import { registerEnumType } from '@nestjs/graphql';
-import { ROLLOUT_EVALUATION_REASON } from '@openthrottle/nestjs-rollout';
 import type { RolloutEvaluationReason } from '@openthrottle/nestjs-rollout';
+import { ROLLOUT_EVALUATION_REASON } from '@openthrottle/nestjs-rollout';
 
 /**
  * Runtime enum object for code-first registration. Lowercase GraphQL names match

@@ -1,14 +1,16 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
+  cn,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+
 import {
   formatSkillUsageChartDate,
   SKILL_USAGE_CHART_CONFIG,
+  SKILL_USAGE_CHART_SERIES,
   type SkillUsageChartDatum,
 } from '~/global/data/skill-usage-chart';
 
@@ -18,7 +20,8 @@ export interface SkillUsageDailyChartProps {
 }
 
 /**
- * @description Stacked daily bar chart: ours vs third-party skill invocations.
+ * @description Stacked daily bar chart: ours / personal / third-party skill
+ * invocations.
  * Shared by the /usage route and the /skills/$slug detail route. Under jsdom,
  * Recharts draws no geometry — tests assert the wrapper mounts.
  */
@@ -42,7 +45,7 @@ export const SkillUsageDailyChart = (
   if (chartData.length === 0) {
     return (
       <div
-        className={clsx('text-muted-foreground text-sm', className)}
+        className={cn('text-muted-foreground text-sm', className)}
         data-testid="SkillUsageDailyChart"
       >
         No daily skill usage in range.
@@ -51,10 +54,7 @@ export const SkillUsageDailyChart = (
   }
 
   return (
-    <div
-      className={clsx('w-full', className)}
-      data-testid="SkillUsageDailyChart"
-    >
+    <div className={cn('w-full', className)} data-testid="SkillUsageDailyChart">
       <ChartContainer
         className="min-h-[220px] w-full"
         config={SKILL_USAGE_CHART_CONFIG}
@@ -76,18 +76,19 @@ export const SkillUsageDailyChart = (
             width={36}
           />
           <ChartTooltip content={<ChartTooltipContent />} />
-          <Bar
-            dataKey="oursCount"
-            fill="var(--color-oursCount)"
-            radius={[0, 0, 0, 0]}
-            stackId="skillUsage"
-          />
-          <Bar
-            dataKey="thirdPartyCount"
-            fill="var(--color-thirdPartyCount)"
-            radius={[4, 4, 0, 0]}
-            stackId="skillUsage"
-          />
+          {SKILL_USAGE_CHART_SERIES.map((series, index) => (
+            <Bar
+              dataKey={series}
+              fill={`var(--color-${series})`}
+              key={series}
+              radius={
+                index === SKILL_USAGE_CHART_SERIES.length - 1
+                  ? [4, 4, 0, 0]
+                  : [0, 0, 0, 0]
+              }
+              stackId="skillUsage"
+            />
+          ))}
         </BarChart>
       </ChartContainer>
     </div>

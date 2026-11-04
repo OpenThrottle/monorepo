@@ -1,11 +1,13 @@
-import * as React from 'react';
 import type { RenderResult } from '@testing-library/react';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { SettingsWorkspaceProfileForm } from '../SettingsWorkspaceProfileForm';
-import type { SettingsWorkspaceProfileFormProps } from '../SettingsWorkspaceProfileForm';
+
 import type { UserWorkspaceProfileFieldsFragment } from '~/__generated__/graphql';
 import { WorkspaceEditorId } from '~/__generated__/graphql';
 import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import type { SettingsWorkspaceProfileFormProps } from '../SettingsWorkspaceProfileForm';
+import { SettingsWorkspaceProfileForm } from '../SettingsWorkspaceProfileForm';
 
 const profile: UserWorkspaceProfileFieldsFragment = {
   __typename: 'UserWorkspaceProfileObject',

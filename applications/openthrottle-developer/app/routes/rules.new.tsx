@@ -1,26 +1,27 @@
-import * as React from 'react';
 import {
   coerceBoolean,
   executeGraphqlWithAuth,
   parseFormData,
 } from '@openthrottle/react-router-graphql';
-import { z } from 'zod/v3';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import * as React from 'react';
 import { redirect } from 'react-router';
-import { UpsertTagActionRuleInputSchema } from '~/__generated__/schemas';
+import { z } from 'zod/v3';
+
+import type { Route } from '@/app/routes/+types/rules.new';
 import {
   RulesIndexLoaderDocument,
   RulesUpsertTagActionRuleDocument,
 } from '~/__generated__/graphql';
-import { RULES_COPY } from '~/routing/rules/data/data.copy';
-import { RuleForm } from '~/routing/rules/components/RuleForm';
+import { UpsertTagActionRuleInputSchema } from '~/__generated__/schemas';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/rules.new';
+import { RuleForm } from '~/routing/rules/components/RuleForm';
+import { RULES_COPY } from '~/routing/rules/data/data.copy';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

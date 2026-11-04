@@ -7,22 +7,12 @@
  * Deliberately tiny — no Apollo Client. Pair it with the loader snapshot: seed
  * component state from the loader, then merge deltas from here (dedupe by id).
  */
-import * as React from 'react';
-import { print } from 'graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import type { GraphqlWsClient } from './createGraphqlWsClient';
+import { print } from 'graphql';
+import * as React from 'react';
 
-/**
- * Callbacks for {@link useSubscription}.
- */
-export interface UseSubscriptionHandlers<TData> {
-  /** Called when the server completes the subscription. */
-  readonly onComplete?: () => void;
-  /** Called with each subscription payload's `data`. */
-  readonly onData: (data: TData) => void;
-  /** Called on transport/operation error. */
-  readonly onError?: (error: unknown) => void;
-}
+import type { UseSubscriptionHandlers } from '../types';
+import type { GraphqlWsClient } from './createGraphqlWsClient';
 
 /**
  * @description Subscribe to `document` with `variables` for the lifetime of the
@@ -42,9 +32,9 @@ export function useSubscription<
 ): void {
   // Hooks
   const handlersRef = React.useRef(handlers);
-  handlersRef.current = handlers;
 
   // Setup
+  handlersRef.current = handlers;
 
   // Serialize variables so the effect re-runs on value (not identity) changes.
   const variablesKey = JSON.stringify(variables);
@@ -56,7 +46,6 @@ export function useSubscription<
   // Life Cycle
   React.useEffect(
     () => {
-      // 🔌 Short Circuit
       if (!client || !enabled) return undefined;
 
       const dispose = client.subscribe<TData, TVariables>(
@@ -77,4 +66,6 @@ export function useSubscription<
 
     [client, document, enabled, variablesKey],
   );
+
+  // 🔌 Short Circuit
 }

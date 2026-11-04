@@ -15,6 +15,8 @@
  *   active credential (unchanged legacy behavior).
  */
 
+import { fileURLToPath } from 'node:url';
+
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   getOpenThrottleTypeOrmOptions,
@@ -22,7 +24,6 @@ import {
   ServiceAccountCredential,
   ServiceAccountsService,
 } from '@openthrottle/nestjs-repositories';
-import { fileURLToPath } from 'node:url';
 import { DataSource, IsNull } from 'typeorm';
 
 import {
@@ -30,7 +31,7 @@ import {
   readLocalSecrets,
   upsertLocalSecrets,
 } from './local-secrets-file';
-import { createLogger } from './lib/index.ts';
+import { createLogger } from './utils/index.ts';
 
 const logger = createLogger();
 

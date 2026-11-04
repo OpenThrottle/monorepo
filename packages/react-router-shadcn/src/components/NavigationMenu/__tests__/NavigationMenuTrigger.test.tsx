@@ -1,14 +1,15 @@
-import * as React from 'react';
 import { render, screen } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
+
 import {
   NavigationMenu,
   NavigationMenuItem,
   NavigationMenuList,
 } from '../index';
 import {
-  navigationMenuTriggerStyle,
   NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
 } from '../NavigationMenuTrigger';
 
 describe('NavigationMenuTrigger', () => {

@@ -1,16 +1,18 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { DashboardDailyStatsModal } from '../DashboardDailyStatsModal';
-import type { DashboardDailyStatsModalProps } from '../DashboardDailyStatsModal';
+
+import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 import {
   DAILY_STATS_METRICS,
   DAILY_STATS_MODAL_COPY,
 } from '~/routing/dashboard/data/data.copy';
-import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
+
+import type { DashboardDailyStatsModalProps } from '../DashboardDailyStatsModal';
+import { DashboardDailyStatsModal } from '../DashboardDailyStatsModal';
 
 const twoDayStats: ReadonlyArray<DashboardDailyStatsCardFragment> = [
   {

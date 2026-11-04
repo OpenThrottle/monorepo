@@ -1,9 +1,9 @@
-import * as React from 'react';
 import { renderHook, waitFor } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, expectTypeOf, test, vi } from 'vitest';
 
-import { defineRolloutFlags } from '../../index';
 import { RolloutProvider } from '../../components/RolloutProvider';
+import { defineRolloutFlags } from '../../index';
 import { useRollout } from '../useRollout';
 
 const flags = defineRolloutFlags({

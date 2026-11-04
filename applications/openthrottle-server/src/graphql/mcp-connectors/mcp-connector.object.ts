@@ -3,7 +3,8 @@
  */
 
 import { Field, ID, ObjectType } from '@nestjs/graphql';
-import type { McpConnectorCatalogEntry } from './mcp-connector-catalog';
+
+import type { McpConnectorCatalogEntry } from './mcp-connector-catalog.ts';
 
 @ObjectType()
 export class McpConnectorObject implements McpConnectorCatalogEntry {

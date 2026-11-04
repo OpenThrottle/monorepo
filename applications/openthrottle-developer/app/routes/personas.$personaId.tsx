@@ -1,16 +1,17 @@
-import * as React from 'react';
-import { Link } from 'react-router';
-import { BookOpenIcon } from 'lucide-react';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalHeading,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { SITE_TITLE } from '~/global/config/settings';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { BookOpenIcon } from 'lucide-react';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import type { Route } from '@/app/routes/+types/personas.$personaId';
+import { SITE_TITLE } from '~/global/config/settings';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

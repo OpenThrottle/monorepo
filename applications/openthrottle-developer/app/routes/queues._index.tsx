@@ -1,30 +1,31 @@
-import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { Button } from '@openthrottle/react-router-shadcn';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalScreen,
   readSearchParam,
 } from '@openthrottle/react-router-ui-global';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { PlusIcon } from 'lucide-react';
+import * as React from 'react';
 import { useSearchParams } from 'react-router';
+import { Link } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/queues._index';
 import {
   GetQueuesDocument,
   QueuesPauseQueueDocument,
   QueuesResumeQueueDocument,
 } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { Button } from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
-import { PlusIcon } from 'lucide-react';
+import { SITE_TITLE } from '~/global/config/settings';
 import { QueueOpsToolbar } from '~/routing/queues/components/QueueOpsToolbar';
 import { QueuesIntroduction } from '~/routing/queues/components/QueuesIntroduction';
 import { QueuesStats } from '~/routing/queues/components/QueuesStats';
 import { QueuesTable } from '~/routing/queues/components/QueuesTable';
 import { QueueStateChart } from '~/routing/queues/components/QueueStateChart';
 import { QueueStatRow } from '~/routing/queues/components/QueueStatRow';
-import { SITE_TITLE } from '~/global/config/settings';
 import { summarizeQueues } from '~/routing/queues/utils/summarize-queues';
-import type { Route } from '@/app/routes/+types/queues._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

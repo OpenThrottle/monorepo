@@ -1,5 +1,3 @@
-import * as React from 'react';
-import { BookPlusIcon } from 'lucide-react';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
@@ -7,16 +5,19 @@ import {
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { BookPlusIcon } from 'lucide-react';
+import * as React from 'react';
 import { redirect } from 'react-router';
-import { SITE_TITLE } from '~/global/config/settings';
-import { SKILL_CREATE_COPY } from '~/routing/skills/data/data.copy';
-import {
-  SKILL_CREATE_FIELDS,
-  isSkillCreateDestination,
-} from '~/routing/skills/config/skill-create';
-import { SkillCreateForm } from '~/routing/skills/components/SkillCreateForm';
-import { useSkillCreateForm } from '~/routing/skills/hooks/useSkillCreateForm';
+
 import type { Route } from '@/app/routes/+types/skills.create';
+import { SITE_TITLE } from '~/global/config/settings';
+import { SkillCreateForm } from '~/routing/skills/components/SkillCreateForm';
+import {
+  isSkillCreateDestination,
+  SKILL_CREATE_FIELDS,
+} from '~/routing/skills/config/skill-create';
+import { SKILL_CREATE_COPY } from '~/routing/skills/data/data.copy';
+import { useSkillCreateForm } from '~/routing/skills/hooks/useSkillCreateForm';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

@@ -1,7 +1,6 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "baseUrl": "./",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "outDir": "./dist",
@@ -16,6 +15,9 @@
     "dist"
   ],
   "references": [
+    {
+      "path": "../agentic-hooks/tsconfig.lib.json"
+    },
     {
       "path": "../nestjs-modules/tsconfig.lib.json"
     },

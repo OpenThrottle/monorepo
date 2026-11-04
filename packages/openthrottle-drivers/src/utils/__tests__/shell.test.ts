@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import {
   escapeForShellDoubleQuoted,
   escapeShellArg,
@@ -67,7 +68,7 @@ describe('formatShellEnvPrefix', () => {
 
   it('emits KEY=value pairs in alphabetical key order with a trailing space', () => {
     // Deliberately out-of-order input to prove the function reorders keys.
-    // eslint-disable-next-line sort-keys, sort-keys-fix/sort-keys-fix
+    // eslint-disable-next-line sort-keys
     expect(formatShellEnvPrefix({ ZED: 'z', ABE: 'a' })).toBe('ABE=a ZED=z ');
   });
 

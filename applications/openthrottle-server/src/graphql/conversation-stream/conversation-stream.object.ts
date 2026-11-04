@@ -39,7 +39,7 @@ export class ConversationStreamChunkObject {
   messageId!: string;
 
   @Field(() => String, {
-    description: `Event kind: text (assistant output) | thinking | tool_call | tool_result | usage | session.`,
+    description: `Event kind: text (assistant output) | thinking | tool_call | tool_result | usage | usage_limit | session.`,
   })
   kind!: string;
 

@@ -1,15 +1,17 @@
-import * as React from 'react';
 import type { RenderResult } from '@testing-library/react';
 import { within } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { TaskDetailRoute } from '../TaskDetailRoute';
-import type { TaskDetailRouteProps } from '../TaskDetailRoute';
+
 import type {
   PlanDetailsFragment,
   TaskDetailsFragment,
 } from '~/__generated__/graphql';
 import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import type { TaskDetailRouteProps } from '../TaskDetailRoute';
+import { TaskDetailRoute } from '../TaskDetailRoute';
 
 const mockTask: TaskDetailsFragment = {
   __typename: 'TaskObject',

@@ -1,12 +1,14 @@
-import * as React from 'react';
-import { act, render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
+
 import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
 import type { SkillAvailabilityRuleValue } from '~/routing/skills/utils/skill-availability';
+
 import type {
-  SkillAvailabilityRuleFormOptions,
+  UseSkillAvailabilityRuleFormOptions,
   UseSkillAvailabilityRuleFormResult,
 } from '../useSkillAvailabilityRuleForm';
 import { useSkillAvailabilityRuleForm } from '../useSkillAvailabilityRuleForm';
@@ -22,7 +24,7 @@ const existingRule: SkillAvailabilityRuleValue = {
   tagDeny: [],
 };
 
-function renderRuleForm(options: SkillAvailabilityRuleFormOptions): {
+function renderRuleForm(options: UseSkillAvailabilityRuleFormOptions): {
   component: RenderResult;
   result: () => UseSkillAvailabilityRuleFormResult;
   submit: () => boolean;

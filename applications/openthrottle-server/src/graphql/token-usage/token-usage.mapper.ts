@@ -2,10 +2,11 @@ import type {
   AgentTokenUsage,
   TokenUsageTotals,
 } from '@openthrottle/nestjs-repositories';
+
 import {
   TokenUsageRowObject,
   TokenUsageTotalsObject,
-} from './token-usage.object';
+} from './token-usage.object.ts';
 
 /** Map a persisted usage row to its GraphQL object (DB `cached_*` → client `cache*` naming). */
 export const toTokenUsageRowObject = (
@@ -22,6 +23,7 @@ export const toTokenUsageRowObject = (
   object.cacheReadTokens = row.cachedReadTokens;
   object.cacheWriteTokens = row.cachedWriteTokens;
   object.reasoningTokens = row.reasoningTokens;
+  object.source = row.source;
   object.totalTokens = row.totalTokens;
   object.costUsd = row.costUsd;
   object.createdAt = row.createdAt;

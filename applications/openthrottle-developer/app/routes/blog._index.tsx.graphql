@@ -1,0 +1,28 @@
+fragment BlogPostListRow on BlogPostAdminObject {
+  author {
+    displayName
+    slug
+  }
+  id
+  lastEditedBy
+  publishedAt
+  slug
+  state
+  title
+  updatedAt
+}
+
+query getBlogAdminPosts(
+  $after: String
+  $first: Int!
+  $search: String
+  $state: [BlogPostState!]
+) {
+  blogAdminPosts(after: $after, first: $first, search: $search, state: $state) {
+    endCursor
+    hasNextPage
+    items {
+      ...BlogPostListRow
+    }
+  }
+}

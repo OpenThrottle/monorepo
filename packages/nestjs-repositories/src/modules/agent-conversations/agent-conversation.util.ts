@@ -1,4 +1,5 @@
 import { isRecord } from '@openthrottle/nodejs-utils';
+
 import {
   AGENT_CONVERSATION_CONTENT_MAX_BYTES,
   AGENT_CONVERSATION_LIST_DEFAULT_LIMIT,
@@ -6,7 +7,7 @@ import {
   AGENT_CONVERSATION_MESSAGES_DEFAULT_LIMIT,
   AGENT_CONVERSATION_MESSAGES_MAX_LIMIT,
   AGENT_CONVERSATION_TOOL_METADATA_MAX_BYTES,
-} from './agent-conversation.constants';
+} from './agent-conversation.constants.ts';
 
 /** Marks UTF-8 continuation bytes (0b10xxxxxx) when backing off to a code-point boundary. */
 const UTF8_CONTINUATION_MASK = 0b1100_0000;

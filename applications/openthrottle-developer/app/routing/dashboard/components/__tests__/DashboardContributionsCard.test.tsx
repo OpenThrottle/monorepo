@@ -1,12 +1,14 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
-import { DashboardContributionsCard } from '../DashboardContributionsCard';
-import type { DashboardContributionsCardProps } from '../DashboardContributionsCard';
+
 import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
+
+import type { DashboardContributionsCardProps } from '../DashboardContributionsCard';
+import { DashboardContributionsCard } from '../DashboardContributionsCard';
 
 // A recent, non-future date so the heatmap (which defaults its window to
 // today) renders it as an active cell rather than a placeholder.

@@ -4,14 +4,15 @@ import { join } from 'node:path';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { CLAUDE_BIN_ENV } from '../argv.ts';
-import { CLAUDE_CONFIG_DIR_ENV, claudeConversationBackend } from '../claude.ts';
 import { AGENT_IDLE_TIMEOUT_MS_ENV } from '../../cursor-agent/teardown.ts';
 import {
   CONVERSATION_PERMISSION_MODES,
   CONVERSATION_STREAM_CHUNK_KINDS,
   type ConversationStreamChunk,
 } from '../../types.ts';
+import { CLAUDE_BIN_ENV } from '../argv.ts';
+import { claudeConversationBackend } from '../claude.ts';
+import { CLAUDE_CONFIG_DIR_ENV } from '../config-dir.ts';
 
 let dir: string;
 
@@ -67,17 +68,14 @@ const mcpToolBin = (): string =>
     process.stdout.write(lines.join('\\n') + '\\n');`,
   );
 
-/** The first tool_result block carried by the tool_result chunk, if any. */
+/** The metadata of the first tool_result chunk, if any. */
 function firstToolResult(
   chunks: readonly ConversationStreamChunk[],
-): Record<string, unknown> | undefined {
-  const chunk = chunks.find(
+): Readonly<Record<string, unknown>> | undefined {
+  return chunks.find(
     (candidate) =>
       candidate.kind === CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
-  );
-  const results = chunk?.metadata?.['toolResults'];
-  const block = Array.isArray(results) ? results[0] : undefined;
-  return typeof block === 'object' && block !== null ? block : undefined;
+  )?.metadata;
 }
 
 const MCP_SERVERS = {
@@ -106,13 +104,26 @@ const keepaliveBin = (): string =>
     `const emit = (o) => process.stdout.write(JSON.stringify(o) + '\\n');
     emit({ type: 'system', subtype: 'hook_started', hook: 'SessionStart' });
     setTimeout(() => {
-      emit({ type: 'rate_limit_event', status: 'throttled' });
+      emit({ type: 'rate_limit_event', rate_limit_info: { status: 'allowed_warning', resetsAt: 1800000000 } });
       setTimeout(() => {
         emit({ type: 'stream_event', event: { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: 'hi' } } });
         emit({ type: 'result', subtype: 'success', is_error: false, result: 'hi' });
       }, 25);
     }, 25);`,
   );
+
+// A usage-limited turn: a rejected rate_limit_event (carries the reset), then a
+// terminal 429 error result (carries none).
+const usageLimitBin = (): string => {
+  return writeFakeBin(
+    'claude-usage-limit.js',
+    `const emit = (o) => process.stdout.write(JSON.stringify(o) + '\\n');
+    emit({ type: 'rate_limit_event', rate_limit_info: { status: 'rejected', rateLimitType: 'five_hour', resetsAt: 1800000000 } });
+    setTimeout(() => {
+      emit({ type: 'result', subtype: 'success', is_error: true, api_error_status: 429, result: 'limit reached' });
+    }, 25);`,
+  );
+};
 
 // Echoes the CLAUDE_CONFIG_DIR the child was spawned with (or 'none'), so a test
 // can assert whether the headless turn was isolated onto a dedicated config dir.
@@ -194,6 +205,35 @@ describe('claudeConversationBackend', () => {
     // The turn still completes normally with its text + terminal result.
     expect(chunks.some((chunk) => chunk.delta === 'hi')).toBe(true);
     expect(chunks.at(-1)).toMatchObject({ done: true, error: null });
+  });
+
+  it('carries the rejected rate_limit_event resetsAt onto the terminal chunk of a 429 result', async () => {
+    process.env[CLAUDE_BIN_ENV] = usageLimitBin();
+
+    const chunks = await collect({
+      cwd: dir,
+      messages: [{ content: 'hi', role: 'user' }],
+      model: 'auto',
+      sessionId: 'sess-1',
+    });
+
+    const resetsAt = new Date(1_800_000_000_000).toISOString();
+    expect(chunks.map((chunk) => chunk.kind)).toEqual([
+      CONVERSATION_STREAM_CHUNK_KINDS.usageLimit,
+      CONVERSATION_STREAM_CHUNK_KINDS.usage,
+    ]);
+    expect(chunks[0]?.metadata).toEqual({
+      rateLimitType: 'five_hour',
+      resetsAt,
+    });
+    expect(chunks.at(-1)).toMatchObject({
+      done: true,
+      error: 'limit reached',
+      metadata: {
+        apiErrorStatus: 429,
+        usageLimit: { rateLimitType: 'five_hour', resetsAt },
+      },
+    });
   });
 
   it('synthesizes a terminal error chunk from stderr when the process fails with no result', async () => {
@@ -350,7 +390,7 @@ describe('claudeConversationBackend', () => {
 
     const block = firstToolResult(chunks);
     expect(block).toBeDefined();
-    expect(block?.['is_error']).not.toBe(true);
+    expect(block?.['isError']).not.toBe(true);
     expect(JSON.stringify(block)).not.toContain('declined');
   });
 
@@ -367,7 +407,7 @@ describe('claudeConversationBackend', () => {
     });
 
     const block = firstToolResult(chunks);
-    expect(block?.['is_error']).not.toBe(true);
+    expect(block?.['isError']).not.toBe(true);
     expect(JSON.stringify(block)).not.toContain('declined');
   });
 
@@ -382,7 +422,7 @@ describe('claudeConversationBackend', () => {
     });
 
     const block = firstToolResult(chunks);
-    expect(block?.['is_error']).toBe(true);
+    expect(block?.['isError']).toBe(true);
     expect(JSON.stringify(block)).toContain('declined');
   });
 

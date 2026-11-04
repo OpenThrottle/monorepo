@@ -34,6 +34,11 @@ mechanics, see [MONOREPO.md](./MONOREPO.md) and [docs/monorepo/](./docs/monorepo
 
    CI and the Docker build stages do the equivalent from their `GITHUB_TOKEN`.
 
+3. **Let Claude Code load `AGENTS.md` (one-time, if you use it).** The setting is
+   user-global only; `setup.sh` warns when it is missing. Check or fix it per
+   [agent-editor-folders.md](./docs/monorepo/agent-editor-folders.md#claude-code-load-agentsmd-global-only-setting)
+   (`pnpm run check:claude-settings`).
+
 ## The change loop
 
 1. **Branch** off `main` — never commit to `main` directly.
@@ -41,7 +46,7 @@ mechanics, see [MONOREPO.md](./MONOREPO.md) and [docs/monorepo/](./docs/monorepo
    the generators, not hand-scaffolding — see
    [Creating new projects](./MONOREPO.md#creating-new-projects). Follow the code
    style in [`docs/monorepo/code-style.md`](./docs/monorepo/code-style.md). New repo scripts are
-   TypeScript run via `tsx`, use the shared `scripts/lib/` toolkit, and ship a
+   TypeScript run via `tsx`, use the shared `scripts/utils/` toolkit, and ship a
    Vitest spec in `scripts/__tests__/` — see the `scripts/` convention in
    [MONOREPO.md](./MONOREPO.md#key-directories-explained) (the pre-install
    bootstrap keeps thin POSIX shims).
@@ -61,7 +66,10 @@ mechanics, see [MONOREPO.md](./MONOREPO.md) and [docs/monorepo/](./docs/monorepo
    (enforced by commitlint + Husky). Don't bypass the hooks (`--no-verify`).
 5. **Open a PR** with the
    [pull request template](./.github/pull_request_template.md): a
-   conventional-commit title, and testing steps phrased as things to do.
+   conventional-commit title, and testing steps phrased as things to do. Files
+   that arrive **collapsed** in "Files changed" are generator output marked in
+   [`.gitattributes`](./.gitattributes) and do not need review — each entry
+   there names the gate that protects it and the source to read instead.
 6. **Merge with a direct squash.** The merge queue on `main` is currently
    **disabled** (single contributor — see
    [docs/monorepo/ci-cost.md](./docs/monorepo/ci-cost.md#merge-queue-on-main); it
@@ -216,8 +224,10 @@ your first PR.
   `@tools/generators` template); scaffold with the generator and run
   `pnpm run audit:component-shape`. The strict audit
   (`pnpm run audit:component-shape:strict`) is a **commit gate** — it runs at
-  pre-commit, pre-push, and CI on one identical command; fix any R4/R5 violation
-  rather than bypassing with `--no-verify`.
+  pre-commit, pre-push, and CI on one identical command; fix any R4/R5/R6
+  violation rather than bypassing with `--no-verify`. R6 (the 210-line cap)
+  repeats ESLint `max-lines` because prettier runs after `eslint --fix` in
+  lint-staged and can push a file past the cap; the audit sees the final file.
 - [docs/monorepo/route-primitive-shape.md](./docs/monorepo/route-primitive-shape.md)
   — the routing-layer sibling of the component shape: keeps React Router route
   modules under `app/routes/*.tsx` thin (only the framework surface + type

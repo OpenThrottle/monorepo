@@ -1,7 +1,8 @@
 import { describe, expect, test } from 'vitest';
+
 import {
-  SCHEDULE_DETAIL_TAB_SEARCH_PARAM,
   parseScheduleDetailTab,
+  SCHEDULE_DETAIL_TAB_SEARCH_PARAM,
 } from '../parse-schedule-detail-tab';
 
 describe('parseScheduleDetailTab', () => {

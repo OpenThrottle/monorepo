@@ -1,4 +1,6 @@
 import { describe, expect, test } from 'vitest';
+
+import type { EditorFile } from '../../data/atom.editor';
 import {
   areFilesUpdated,
   getFilenameError,
@@ -7,7 +9,6 @@ import {
   parseFilePath,
   validateFilename,
 } from '../index';
-import type { EditorFile } from '../../data/atom.editor';
 
 const file = (overrides: Partial<EditorFile> = {}): EditorFile => ({
   directory: '.',

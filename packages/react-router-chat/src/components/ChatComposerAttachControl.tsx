@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Button,
   DropdownMenu,
@@ -10,6 +9,8 @@ import {
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { Paperclip } from 'lucide-react';
+import * as React from 'react';
+
 import type { ChatContextSource } from '../types';
 
 export interface ChatComposerAttachControlProps {
@@ -55,6 +56,7 @@ export const ChatComposerAttachControl = (
         <TooltipTrigger asChild={true}>
           <Button
             aria-label="Add context"
+            className="pointer-coarse:size-11"
             data-testid="ChatComposerToolbar-attach"
             disabled={true}
             size="icon"
@@ -76,6 +78,7 @@ export const ChatComposerAttachControl = (
           <DropdownMenuTrigger asChild={true}>
             <Button
               aria-label="Add context"
+              className="pointer-coarse:size-11"
               data-testid="ChatComposerToolbar-attach"
               size="icon"
               type="button"

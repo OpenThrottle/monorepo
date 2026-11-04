@@ -1,4 +1,3 @@
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import {
   GetAgentConversationMessagesDocument,
   SendAgentMessageDocument,
@@ -7,7 +6,9 @@ import type {
   ChatTurnResult,
   LoadAgentConversationMessagesResult,
 } from '@openthrottle/react-router-chat';
+import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import {
   callLoadAgentConversationMessages,
   callSendAgentMessage,

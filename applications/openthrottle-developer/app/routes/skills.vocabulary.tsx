@@ -1,25 +1,26 @@
-import * as React from 'react';
-import { Link } from 'react-router';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { Button } from '@openthrottle/react-router-shadcn';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
   GlobalHeading,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import { TagsIcon } from 'lucide-react';
-import { Button } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+import { Link } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/skills.vocabulary';
 import { SkillAvailabilityAuthoringVocabularyDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
+import { runVocabularyAction } from '~/routing/skills/actions/vocabulary';
 import { SkillTagVocabularyManager } from '~/routing/skills/components/SkillTagVocabularyManager';
 import {
   SKILL_AVAILABILITY_COPY,
   SKILL_VOCABULARY_COPY,
 } from '~/routing/skills/data/data.copy';
 import type { SkillTagValue } from '~/routing/skills/utils/skill-availability';
-import { runVocabularyAction } from '~/routing/skills/actions/vocabulary';
-import type { Route } from '@/app/routes/+types/skills.vocabulary';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

@@ -1,7 +1,7 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Button } from '@openthrottle/react-router-shadcn';
+import { Button, cn } from '@openthrottle/react-router-shadcn';
 import { GradientMesh } from '@openthrottle/react-router-ui-global';
+import * as React from 'react';
+
 import { LANDING_CLOSE } from '~/routing/home/data/data.landing';
 
 export interface LandingCloseProps {
@@ -36,7 +36,7 @@ export const LandingClose = (props: LandingCloseProps): React.ReactElement => {
   return (
     <>
       <section
-        className={clsx(
+        className={cn(
           'bg-background border-border justify-center border-y px-6 py-[clamp(3.5rem,8vw,6rem)]',
           'flex min-h-svh items-center',
           'landing-close-ground relative',
@@ -79,7 +79,7 @@ export const LandingClose = (props: LandingCloseProps): React.ReactElement => {
             <code>
               {code.map((line, index) => (
                 <span
-                  className={`block ${codeLineClass[line.kind] ?? ''}`}
+                  className={cn('block', codeLineClass[line.kind])}
                   key={index}
                 >
                   {line.text || ' '}

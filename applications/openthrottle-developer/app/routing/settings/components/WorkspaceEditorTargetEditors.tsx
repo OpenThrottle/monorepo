@@ -1,15 +1,15 @@
+import { Badge, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import clsx from 'clsx';
-import { Badge } from '@openthrottle/react-router-shadcn';
+
+import type {
+  EditorPresenceState,
+  WorkspaceEditorId,
+} from '~/__generated__/graphql';
 import { WorkspaceEditorPresenceMarker } from '~/routing/settings/components/WorkspaceEditorPresenceMarker';
 import {
   getEditorPresenceStatus,
   readEditorPresence,
 } from '~/routing/settings/utils/workspace-editor-presence-status';
-import type {
-  EditorPresenceState,
-  WorkspaceEditorId,
-} from '~/__generated__/graphql';
 import type { WorkspaceEditorTargetEditor } from '~/routing/settings/utils/workspace-editor-targets';
 
 export interface WorkspaceEditorTargetEditorsProps {
@@ -47,7 +47,7 @@ export const WorkspaceEditorTargetEditors = (
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx('flex flex-wrap gap-1', className)}>
+    <div className={cn('flex flex-wrap gap-1', className)}>
       {editors.map((editor) => {
         const state = readEditorPresence(presence, editor.id);
         const status = getEditorPresenceStatus(state);

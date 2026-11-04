@@ -21,13 +21,17 @@ import {
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import { TAG_ACTION_TYPES } from '@openthrottle/openthrottle-skills';
-import { TaskPromotionService } from '../task-promotion/task-promotion.service';
-import { PROMOTED_TAG } from '../task-promotion/task-promotion.constants';
+
 import {
-  ActionExecutorRegistry,
+  PROMOTED_TAG,
+  PROMOTED_TASK_STATUS,
+} from '../task-promotion/task-promotion.constants.ts';
+import { TaskPromotionService } from '../task-promotion/task-promotion.service.ts';
+import {
   type ActionExecutor,
   type ActionExecutorContext,
-} from './action-executor';
+  ActionExecutorRegistry,
+} from './action-executor.ts';
 
 @Injectable()
 export class PromoteTaskToPlanExecutor implements ActionExecutor, OnModuleInit {
@@ -73,6 +77,9 @@ export class PromoteTaskToPlanExecutor implements ActionExecutor, OnModuleInit {
           .promote({
             actorServiceAccountId: null,
             actorUserId: ownerUserId,
+            // Background tag-rule automation on the plan-rules queue, not a direct request —
+            // a ledger hiccup must not fail the whole evaluation pass over one capture.
+            captureFailureIsFatal: false,
             taskId,
           })
           .then((outcome) => ({ outcome, taskId })),
@@ -100,7 +107,7 @@ export class PromoteTaskToPlanExecutor implements ActionExecutor, OnModuleInit {
 
   /**
    * @description Tasks in the plan carrying one of the matched tags that are not
-   * already promoted (SKIPPED + `promoted` tag). Returns distinct task ids.
+   * already promoted (status PROMOTED or the legacy `promoted` tag). Returns distinct task ids.
    */
   private async resolveCandidateTaskIds(
     planId: string,
@@ -130,13 +137,16 @@ export class PromoteTaskToPlanExecutor implements ActionExecutor, OnModuleInit {
       .map(({ taskId }) => taskId);
   }
 
-  /** A task already SKIPPED with the `promoted` tag is skipped (idempotency). */
+  /** A task already PROMOTED, or carrying the legacy `promoted` tag, is skipped (idempotency). */
   private async isAlreadyPromoted(taskId: string): Promise<boolean> {
     const task = await this.tasksService
       .getRepository()
       .findOne({ where: { id: taskId } });
-    if (task == null || task.status !== 'SKIPPED') {
+    if (task == null) {
       return false;
+    }
+    if (task.status === PROMOTED_TASK_STATUS) {
+      return true;
     }
     const promotedTag = await this.tagsService
       .getTaskTagsRepository()

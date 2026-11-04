@@ -1,12 +1,14 @@
-import * as React from 'react';
-import { Link } from 'react-router';
 import {
   Badge,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
+  cn,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import type { SearchChunk } from '~/__generated__/graphql';
 import { SearchWhyThisResult } from '~/routing/search/components/SearchWhyThisResult';
 import type { SearchRankMeta } from '~/routing/search/types/search-rank-meta';
@@ -66,7 +68,10 @@ export const SearchPlanCard = (
           </Badge>
         </div>
         <CardTitle
-          className={`flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2 ${TITLE_CLASS}`}
+          className={cn(
+            'flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2',
+            TITLE_CLASS,
+          )}
         >
           {hasPlanLink ? (
             <Link

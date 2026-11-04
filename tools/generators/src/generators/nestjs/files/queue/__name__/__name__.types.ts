@@ -1,5 +1,5 @@
 import { Job, Queue } from 'bullmq';
-import { queueName } from './<%= name %>.constants';
+import { queueName } from './<%= name %>.constants.ts';
 
 export type <%= namePascal %>Data = {
   question: string;

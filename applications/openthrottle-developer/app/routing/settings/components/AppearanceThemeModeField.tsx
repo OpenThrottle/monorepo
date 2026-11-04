@@ -1,8 +1,9 @@
-import * as React from 'react';
 import { Label } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleThemeToggle } from '@openthrottle/react-router-ui';
-import { useAtom } from 'jotai';
 import type { ThemeMode } from '@openthrottle/react-router-utils';
+import { useAtom } from 'jotai';
+import * as React from 'react';
+
 import {
   configAtom,
   DEFAULT_APPEARANCE_CONFIG,

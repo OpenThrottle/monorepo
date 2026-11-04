@@ -1,6 +1,7 @@
-import * as React from 'react';
-import { CalendarDaysIcon } from 'lucide-react';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import { CalendarDaysIcon } from 'lucide-react';
+import * as React from 'react';
+
 import { CALENDAR_INTRO_COPY } from '~/routing/calendar/data/data.copy';
 
 export interface CalendarIntroductionProps {}

@@ -18,8 +18,8 @@
  */
 import fs from 'node:fs';
 
-import { logHookError, settleAbandonedPlanRuns } from '../../index';
-import { normalizeClaudeStopPayload } from './payload';
+import { logHookError, settleAbandonedPlanRuns } from '../../index.ts';
+import { normalizeClaudeStopPayload } from './payload.ts';
 
 const main = async (): Promise<void> => {
   try {

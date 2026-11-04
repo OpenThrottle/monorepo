@@ -1,11 +1,12 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { PlanTasksColumnDrop } from '../PlanTasksColumnDrop';
+
 import type { PlanTasksColumnDropProps } from '../PlanTasksColumnDrop';
+import { PlanTasksColumnDrop } from '../PlanTasksColumnDrop';
 
 const renderColumn = (props: PlanTasksColumnDropProps): RenderResult =>
   render(

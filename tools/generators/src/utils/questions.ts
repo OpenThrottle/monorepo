@@ -1,11 +1,12 @@
 import { logger } from '@nx/devkit';
 import prompts from 'prompts';
+
+import { getMonorepoApplications } from './index';
 import { MESSAGE_ON_CANCEL } from './messages';
 import { ORGANIZATIONS } from './organizations';
 import { getProjectsByTags } from './projects';
 import { parseCommaSeparatedValues } from './strings';
 import { validatePascalCase, validatePort, validateSlug } from './validation';
-import { getMonorepoApplications } from './index';
 
 /**
  * Get the destination "project" for a new React component.

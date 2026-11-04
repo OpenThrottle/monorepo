@@ -4,13 +4,16 @@
  * ordering, timeout + abort sentinels (including a pre-spawn aborted signal), and error-event reject.
  */
 
-import type { ChildProcess } from 'child_process';
-import { spawn, spawnSync } from 'child_process';
 import { EventEmitter } from 'node:events';
 import { PassThrough } from 'node:stream';
+
+import type { ChildProcess } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { AgentDriver, DriverChunk } from '../../types/index.ts';
+
 import { defineDriver } from '../../registry/index.ts';
+import type { AgentDriver, DriverChunk } from '../../types/index.ts';
+import type { DriverParsedOutput } from '../../types/index.ts';
 import { runDriverAsync, runDriverSync } from '../index.ts';
 
 /**
@@ -48,6 +51,33 @@ const testDriver: AgentDriver = defineDriver({
   id: 'echo',
   label: 'echo-driver',
   versionArgs: ['--version'],
+});
+
+/** Stand-in structured driver: `LIMIT:<text>` marks a usage limit, anything else is passthrough. */
+const parseTestOutput = (stdout: string): DriverParsedOutput => {
+  return stdout.startsWith('LIMIT:')
+    ? {
+        text: stdout.slice('LIMIT:'.length),
+        usageLimit: { rateLimitType: 'five_hour', resetsAt: null },
+      }
+    : { text: `parsed(${stdout})`, usageLimit: null };
+};
+
+const structuredDriver: AgentDriver = defineDriver({
+  ...testDriver,
+  id: 'structured',
+  parseOutput: parseTestOutput,
+});
+
+/** Renderer double: upper-cases lines, drops `skip` lines. */
+const renderTestLine = (line: string): string | null => {
+  return line === 'skip' ? null : line.toUpperCase();
+};
+
+const renderingDriver: AgentDriver = defineDriver({
+  ...testDriver,
+  id: 'rendering',
+  renderOutputLine: renderTestLine,
 });
 
 describe('runDriverSync', () => {
@@ -98,6 +128,45 @@ describe('runDriverSync', () => {
     expect(runDriverSync(testDriver, { iteration: 1, prompt: 'x' })).toBe(
       'only-out',
     );
+  });
+
+  it('applies parseOutput to stdout before the stderr merge', () => {
+    mockReturn('  raw  ', '  err  ');
+    expect(runDriverSync(structuredDriver, { iteration: 1, prompt: 'x' })).toBe(
+      'parsed(  raw  )\nerr',
+    );
+  });
+
+  it('fires onUsageLimit with the parsed limit; no parseOutput never fires', () => {
+    const onUsageLimit = vi.fn();
+    mockReturn('LIMIT:stopped', '');
+    expect(
+      runDriverSync(
+        structuredDriver,
+        { iteration: 1, prompt: 'x' },
+        { onUsageLimit },
+      ),
+    ).toBe('stopped');
+    expect(onUsageLimit).toHaveBeenCalledExactlyOnceWith({
+      rateLimitType: 'five_hour',
+      resetsAt: null,
+    });
+
+    onUsageLimit.mockClear();
+    mockReturn('LIMIT:ignored', '');
+    runDriverSync(testDriver, { iteration: 1, prompt: 'x' }, { onUsageLimit });
+    expect(onUsageLimit).not.toHaveBeenCalled();
+  });
+
+  it('does not fire onUsageLimit when the child fails to launch', () => {
+    const onUsageLimit = vi.fn();
+    mockReturn('LIMIT:x', '', new Error('spawn ENOENT'));
+    runDriverSync(
+      structuredDriver,
+      { iteration: 1, prompt: 'x' },
+      { onUsageLimit },
+    );
+    expect(onUsageLimit).not.toHaveBeenCalled();
   });
 
   it('returns the spawn-error message when the child fails to launch', () => {
@@ -153,6 +222,189 @@ describe('runDriverAsync', () => {
       { data: 'err', stream: 'stderr' },
     ]);
     expect(vi.mocked(spawn).mock.calls[0]?.[0]).toBe('echo-driver -p "go"');
+  });
+
+  describe('renderOutputLine live rendering', () => {
+    const run = async (
+      emit: (child: ChildProcess) => void,
+      driver: AgentDriver = renderingDriver,
+    ): Promise<{ chunks: DriverChunk[]; result: string }> => {
+      const child = makeChild();
+      vi.mocked(spawn).mockReturnValue(child);
+      const chunks: DriverChunk[] = [];
+      const promise = runDriverAsync(driver, {
+        iteration: 1,
+        onChunk: (chunk) => chunks.push(chunk),
+        prompt: 'go',
+      });
+      emit(child);
+      child.emit('close', 0);
+
+      return { chunks, result: await promise };
+    };
+
+    it('renders a line split across chunks exactly once, with a trailing newline', async () => {
+      const { chunks } = await run((child) => {
+        child.stdout?.emit('data', 'hel');
+        child.stdout?.emit('data', 'lo\nwor');
+        child.stdout?.emit('data', 'ld\n');
+      });
+
+      expect(chunks).toEqual([
+        { data: 'HELLO\n', stream: 'stdout' },
+        { data: 'WORLD\n', stream: 'stdout' },
+      ]);
+    });
+
+    it('renders several lines from one chunk in order', async () => {
+      const { chunks } = await run((child) => {
+        child.stdout?.emit('data', 'a\nb\nc\n');
+      });
+
+      expect(chunks.map((chunk) => chunk.data)).toEqual(['A\n', 'B\n', 'C\n']);
+    });
+
+    it('flushes the trailing partial line on close', async () => {
+      const { chunks } = await run((child) => {
+        child.stdout?.emit('data', 'done\npartial');
+      });
+
+      expect(chunks.map((chunk) => chunk.data)).toEqual([
+        'DONE\n',
+        'PARTIAL\n',
+      ]);
+    });
+
+    it('skips lines the renderer maps to null', async () => {
+      const { chunks } = await run((child) => {
+        child.stdout?.emit('data', 'a\nskip\nb\nskip');
+      });
+
+      expect(chunks.map((chunk) => chunk.data)).toEqual(['A\n', 'B\n']);
+    });
+
+    it('forwards stderr chunks unchanged and keeps the raw stdout for the result', async () => {
+      const { chunks, result } = await run((child) => {
+        child.stdout?.emit('data', 'out\n');
+        child.stderr?.emit('data', 'raw err');
+      });
+
+      expect(chunks).toEqual([
+        { data: 'OUT\n', stream: 'stdout' },
+        { data: 'raw err', stream: 'stderr' },
+      ]);
+      expect(result).toBe('out\nraw err');
+    });
+
+    it('leaves a driver without renderOutputLine byte-identical (raw, unbuffered chunks)', async () => {
+      const { chunks } = await run((child) => {
+        child.stdout?.emit('data', 'hel');
+        child.stdout?.emit('data', 'lo\nwor');
+      }, testDriver);
+
+      expect(chunks).toEqual([
+        { data: 'hel', stream: 'stdout' },
+        { data: 'lo\nwor', stream: 'stdout' },
+      ]);
+    });
+
+    it('flushes a pending partial line before the timeout sentinel resolves', async () => {
+      vi.useFakeTimers();
+      const child = makeChild();
+      child.kill = vi.fn(() => {
+        queueMicrotask(() => child.emit('close', null));
+        return true;
+      });
+      vi.mocked(spawn).mockReturnValue(child);
+      const chunks: DriverChunk[] = [];
+
+      const promise = runDriverAsync(renderingDriver, {
+        iteration: 1,
+        onChunk: (chunk) => chunks.push(chunk),
+        prompt: 'x',
+        timeoutMs: 1000,
+      });
+      child.stdout?.emit('data', 'half');
+      await vi.advanceTimersByTimeAsync(1000);
+      await promise;
+
+      expect(chunks.map((chunk) => chunk.data)).toEqual(['HALF\n']);
+    });
+  });
+
+  it('applies parseOutput to collected stdout, streams raw chunks, and fires onUsageLimit before onExit', async () => {
+    const child = makeChild();
+    vi.mocked(spawn).mockReturnValue(child);
+
+    const order: string[] = [];
+    const chunks: DriverChunk[] = [];
+    const promise = runDriverAsync(
+      structuredDriver,
+      {
+        iteration: 1,
+        onChunk: (chunk) => chunks.push(chunk),
+        prompt: 'go',
+      },
+      {
+        onExit: () => order.push('exit'),
+        onUsageLimit: (limit) => order.push(`limit:${limit.rateLimitType}`),
+      },
+    );
+
+    child.stdout?.emit('data', 'LIMIT:par');
+    child.stdout?.emit('data', 'tial');
+    child.stderr?.emit('data', 'err');
+    child.emit('close', 1);
+
+    expect(await promise).toBe('partial\nerr');
+    expect(order).toEqual(['limit:five_hour', 'exit']);
+    // Live chunks are the raw stdout, unmodified by parseOutput.
+    expect(chunks.map((chunk) => chunk.data)).toEqual([
+      'LIMIT:par',
+      'tial',
+      'err',
+    ]);
+  });
+
+  it('does not fire onUsageLimit when there is no limit', async () => {
+    const child = makeChild();
+    vi.mocked(spawn).mockReturnValue(child);
+    const onUsageLimit = vi.fn();
+
+    const promise = runDriverAsync(
+      structuredDriver,
+      { iteration: 1, prompt: 'go' },
+      { onUsageLimit },
+    );
+    child.stdout?.emit('data', 'fine');
+    child.emit('close', 0);
+
+    expect(await promise).toBe('parsed(fine)');
+    expect(onUsageLimit).not.toHaveBeenCalled();
+  });
+
+  it('leaves the timeout sentinel path alone (no parse, no onUsageLimit)', async () => {
+    vi.useFakeTimers();
+    const child = makeChild();
+    child.kill = vi.fn(() => {
+      queueMicrotask(() => child.emit('close', null));
+      return true;
+    });
+    vi.mocked(spawn).mockReturnValue(child);
+    const onUsageLimit = vi.fn();
+
+    const promise = runDriverAsync(
+      structuredDriver,
+      { iteration: 1, prompt: 'x', timeoutMs: 1000 },
+      { onUsageLimit },
+    );
+    child.stdout?.emit('data', 'LIMIT:x');
+    await vi.advanceTimersByTimeAsync(1000);
+
+    expect(await promise).toBe(
+      '<promise>ERROR</promise>\necho-driver iteration timed out after 1000ms',
+    );
+    expect(onUsageLimit).not.toHaveBeenCalled();
   });
 
   it('resolves with a timeout sentinel and kills the child', async () => {

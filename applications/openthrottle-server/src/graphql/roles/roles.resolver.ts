@@ -2,17 +2,19 @@
  * @description GraphQL resolver for roles and permissions. CRUD for roles, assign roles to users, manage role-permission links.
  */
 
+import { UseGuards } from '@nestjs/common';
+import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { CurrentUser } from '@openthrottle/nestjs-auth';
+import { PERMISSIONS } from '@openthrottle/nestjs-rbac';
+import { Permissions } from '@openthrottle/nestjs-rbac';
 import type { Permission, Role } from '@openthrottle/nestjs-repositories';
 import {
   PermissionsService,
   RolesService,
 } from '@openthrottle/nestjs-repositories';
-import { PERMISSIONS } from '@openthrottle/nestjs-rbac';
-import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { CurrentUser } from '@openthrottle/nestjs-auth';
-import { UseGuards } from '@nestjs/common';
-import { Permissions } from '@openthrottle/nestjs-rbac';
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
+
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { PermissionObject } from './permission.object.ts';
 import {
   AddPermissionToRoleInput,
   AssignRoleToUserInput,
@@ -20,9 +22,8 @@ import {
   RemovePermissionFromRoleInput,
   RemoveRoleFromUserInput,
   UpdateRoleInput,
-} from './role.input';
-import { PermissionObject } from './permission.object';
-import { RoleObject } from './role.object';
+} from './role.input.ts';
+import { RoleObject } from './role.object.ts';
 
 @Resolver(() => RoleObject)
 @UseGuards(GqlPermissionsGuard)

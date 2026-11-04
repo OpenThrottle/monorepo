@@ -10,6 +10,7 @@
  * leak across the package boundary.
  */
 import OpenAI from 'openai';
+
 import { resolveAgentTimeouts } from '../conversation-backend/cursor-agent/teardown.ts';
 
 /** A chat message role the local model understands. */

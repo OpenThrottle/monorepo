@@ -1,9 +1,10 @@
-import * as React from 'react';
 import { render, screen } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { NotificationActions } from '../NotificationActions';
+
 import type { NotificationActionsProps } from '../NotificationActions';
+import { NotificationActions } from '../NotificationActions';
 
 describe('NotificationActions Component', () => {
   let props: NotificationActionsProps;

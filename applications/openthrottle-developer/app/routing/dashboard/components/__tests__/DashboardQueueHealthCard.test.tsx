@@ -1,11 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { DashboardQueueHealthCard } from '../DashboardQueueHealthCard';
-import type { DashboardQueueHealthCardProps } from '../DashboardQueueHealthCard';
+
 import type { DashboardQueueStatsCardFragment } from '~/__generated__/graphql';
+
+import type { DashboardQueueHealthCardProps } from '../DashboardQueueHealthCard';
+import { DashboardQueueHealthCard } from '../DashboardQueueHealthCard';
 
 const queue = (
   overrides: Partial<DashboardQueueStatsCardFragment> & { name: string },

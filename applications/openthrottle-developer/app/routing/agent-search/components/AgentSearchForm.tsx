@@ -1,6 +1,6 @@
+import { Button, cn, Input, Label } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import clsx from 'clsx';
-import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
+
 import { AGENT_SEARCH_BASE_PATH } from '~/routing/agent-search/config';
 import { AGENT_SEARCH_COPY } from '~/routing/agent-search/data/data.copy';
 import type { AgentSearchTab } from '~/routing/agent-search/types';
@@ -43,7 +43,7 @@ export const AgentSearchForm = (
   return (
     <form
       action={AGENT_SEARCH_BASE_PATH}
-      className={clsx('p-4', className)}
+      className={cn('p-4', className)}
       data-testid="AgentSearchForm"
       method="get"
       role="search"

@@ -1,21 +1,27 @@
-import * as React from 'react';
-import { useFetcher } from 'react-router';
 import { ChatDialog } from '@openthrottle/react-router-chat';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import { GlobalScreen } from '@openthrottle/react-router-ui-global';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import {
   getActionError,
   isFetcherBusy,
   mergeRouteModuleMeta,
 } from '@openthrottle/react-router-utils';
-import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
-import { GlobalScreen } from '@openthrottle/react-router-ui-global';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import * as React from 'react';
+import { useFetcher } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/skills.$slug';
 import { GetSkillDetailUsageDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import {
   loadComposerModels,
   loadRepositories,
 } from '~/routing/home/data/models.server';
+import {
+  runSkillRecordTagAction,
+  SKILL_RECORD_TAG_INTENTS,
+} from '~/routing/skills/actions/project-skill-tags';
 import { SkillDetailTabs } from '~/routing/skills/components/SkillDetailTabs';
 import { SKILL_USAGE_RANGE_DAYS } from '~/routing/skills/config/skill-usage';
 import {
@@ -27,15 +33,10 @@ import {
   loadProjectSkillFlags,
   loadSkillTagVocabulary,
 } from '~/routing/skills/data/skill-index-loaders';
+import type { SkillDetailUsageData } from '~/routing/skills/data/skill-usage-detail';
 import { useRunSkill } from '~/routing/skills/hooks/useRunSkill';
 import { mergeRepoSkillsWithProjectSkills } from '~/routing/skills/utils/merge-project-skills';
 import { toSkillDetailUsageData } from '~/routing/skills/utils/to-skill-detail-usage-data';
-import {
-  runSkillRecordTagAction,
-  SKILL_RECORD_TAG_INTENTS,
-} from '~/routing/skills/actions/project-skill-tags';
-import type { SkillDetailUsageData } from '~/routing/skills/data/skill-usage-detail';
-import type { Route } from '@/app/routes/+types/skills.$slug';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

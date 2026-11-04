@@ -1,11 +1,12 @@
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import clsx from 'clsx';
+
 import {
   formatTimelineTick,
   timelineZoneLabel,
 } from '~/routing/timeline/utils/formatters';
-import { buildTimelineTicks, nowLineX } from '~/routing/timeline/utils/scale';
 import type { TimelineScale } from '~/routing/timeline/utils/scale';
+import { buildTimelineTicks, nowLineX } from '~/routing/timeline/utils/scale';
 
 export interface TimelineAxisProps {
   readonly className?: string;
@@ -44,7 +45,7 @@ export const TimelineAxis = (props: TimelineAxisProps): React.ReactElement => {
   return (
     <svg
       aria-label={`Time axis, times shown in ${zone}`}
-      className={clsx('block', className)}
+      className={cn('block', className)}
       data-testid="TimelineAxis"
       height={AXIS_HEIGHT + ruleHeight}
       role="img"

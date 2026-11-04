@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
+
 import {
   formatServiceAccountToken,
   normalizeServiceAccountBearerToken,
   parseServiceAccountToken,
   safeEqualStrings,
   SERVICE_ACCOUNT_BEARER_PREFIX,
-} from './service-account-token.util';
+} from './service-account-token.util.ts';
 
 describe('service-account-token.util', () => {
   describe('normalizeServiceAccountBearerToken', () => {

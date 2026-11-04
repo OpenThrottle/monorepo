@@ -1,11 +1,11 @@
 import { render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import * as slotsModule from '../slots';
 import { useSchedule } from '../../hooks/useSchedule';
 import { CalendarView } from '../../types';
 import { Calendar } from '../Calendar';
 import type { CalendarSlots } from '../slots';
+import * as slotsModule from '../slots';
 
 function Harness({
   className = 'demo-calendar',

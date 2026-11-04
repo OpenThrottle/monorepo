@@ -11,7 +11,8 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { User } from '../users/user.entity';
+
+import { User } from '../users/user.entity.ts';
 
 export interface UserSkillTagData {
   readonly dimension: string;

@@ -1,16 +1,17 @@
-import * as React from 'react';
-import { render, screen, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { TooltipProvider } from '@openthrottle/react-router-shadcn';
-import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
 import type { NotificationEventName } from '@openthrottle/openthrottle-notifications';
 import {
   NOTIFICATION_EVENT_NAMES,
   type NotificationPayload,
 } from '@openthrottle/openthrottle-notifications';
-import { OpenThrottleWebsocketDebugger } from '../OpenThrottleWebsocketDebugger';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import * as React from 'react';
+import { createRoutesStub } from 'react-router';
+import { beforeEach, describe, expect, test } from 'vitest';
+
 import type { OpenThrottleWebsocketDebuggerProps } from '../OpenThrottleWebsocketDebugger';
+import { OpenThrottleWebsocketDebugger } from '../OpenThrottleWebsocketDebugger';
 import type { WebsocketDebuggerLogEntry } from '../websocket-debugger';
 
 const systemAlertPayload = {

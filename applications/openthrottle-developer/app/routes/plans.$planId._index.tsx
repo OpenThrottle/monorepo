@@ -1,11 +1,17 @@
-import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  OpenThrottleClipboard,
+  OpenThrottleEmptyState,
+} from '@openthrottle/react-router-ui';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+
+import type { Route } from '@/app/routes/+types/plans.$planId._index';
 import {
   PlanDetailCriticalDocument,
   PlanDetailLedgerDocument,
@@ -14,6 +20,8 @@ import {
   PlanDetailTagVocabularyDocument,
   PlanDetailWorkspaceRepositoriesDocument,
 } from '~/__generated__/graphql';
+import { SITE_TITLE } from '~/global/config/settings';
+import { loadComposerModels } from '~/routing/home/data/models.server';
 import {
   addHook,
   addPlanTag,
@@ -25,26 +33,21 @@ import {
   runPlan,
   saveJobRunHooks,
   saveRunConfig,
+  schedulePlanRun,
   setPlanStatus,
   updateTaskStatus,
 } from '~/routing/plans/actions/planId';
-import { loadEnabledEditors } from '~/routing/plans/utils/load-enabled-editors';
 import { PlanDetailRoute } from '~/routing/plans/components/PlanDetailRoute';
 import { PlanRunConfigStoreProvider } from '~/routing/plans/components/PlanRunConfigStoreProvider';
-import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/plans.$planId._index';
-import {
-  OpenThrottleClipboard,
-  OpenThrottleEmptyState,
-} from '@openthrottle/react-router-ui';
+import { loadEnabledEditors } from '~/routing/plans/utils/load-enabled-editors';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (match) => (
     <OpenThrottleClipboard
-      className="cursor-pointer whitespace-nowrap"
-      label={match.params.planId}
+      className="block max-w-full cursor-pointer truncate whitespace-nowrap sm:max-w-64"
+      label={match.loaderData?.plan?.title ?? match.params.planId}
       text={match.params.planId ?? 'not-found'}
     />
   ),
@@ -75,9 +78,10 @@ export const loader = async (args: Route.LoaderArgs) => {
     return {
       enabledEditors: Promise.resolve([]),
       ledger: Promise.resolve({ linkedArtifacts: [], ruleApplications: [] }),
+      models: Promise.resolve([]),
       outputChunks: Promise.resolve([]),
       plan: null,
-      runHistory: Promise.resolve({ planRunAuditRows: [], recentPlanRuns: [] }),
+      runHistory: Promise.resolve({ planRunAuditRows: [], planRunMetrics: [] }),
       tagVocabulary: Promise.resolve([]),
       tasks: [],
       workspaceRepositories: Promise.resolve([]),
@@ -102,6 +106,12 @@ export const loader = async (args: Route.LoaderArgs) => {
   // keeps three toolbar buttons off the critical path entirely.
   const enabledEditors = loadEnabledEditors(args.request);
 
+  // Discovered agent+model options for the Configuration tab's model picker — the same
+  // shared helper the home composer and Run-skill modal use. Deferred because discovery
+  // probes local model servers (cold-slow); it never rejects (degrades to []), so a failed
+  // probe leaves the picker's empty state rather than an error region.
+  const models = loadComposerModels(args.request);
+
   const ledger = executeGraphqlWithAuth(
     args.request,
     PlanDetailLedgerDocument,
@@ -123,7 +133,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     { planId },
   ).then((result) => ({
     planRunAuditRows: result.planRunsByPlanId ?? [],
-    recentPlanRuns: result.metrics.recentPlanRunsMetrics ?? [],
+    planRunMetrics: result.metrics.recentPlanRunsMetrics ?? [],
   }));
 
   const tagVocabulary = executeGraphqlWithAuth(
@@ -143,6 +153,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   return {
     enabledEditors,
     ledger,
+    models,
     outputChunks,
     plan: critical.plan ?? null,
     runHistory,
@@ -224,7 +235,7 @@ export const action = async (args: Route.ActionArgs) => {
     case 'addPlanTag':
       return addPlanTag(args, planId, formData);
     case 'cancelPlanRun':
-      return cancelPlanRun(args, planId);
+      return cancelPlanRun(args, planId, formData);
     case 'detachHook':
       return detachHook(args.request, formData);
     case 'evaluatePlanRules':
@@ -239,6 +250,8 @@ export const action = async (args: Route.ActionArgs) => {
       return saveJobRunHooks(args, planId, formData);
     case 'saveRunConfig':
       return saveRunConfig(args, planId, formData);
+    case 'schedulePlanRun':
+      return schedulePlanRun(args, planId, formData);
     case 'setPlanStatus':
       return setPlanStatus(args, planId, formData);
     case 'updateTaskStatus':

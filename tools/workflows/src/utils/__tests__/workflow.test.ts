@@ -6,7 +6,9 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
 import { describe, expect, it, vi } from 'vitest';
+
 import { runWorktreeWorkflow } from '../workflow';
 import { WorktreeTargetsTracker } from '../worktree-targets';
 
@@ -173,7 +175,9 @@ describe('runWorktreeWorkflow with throwing ensureCommit', () => {
     vi.resetModules();
     vi.doMock('../parent-job', async () => {
       const actual =
-        await vi.importActual<typeof import('../parent-job')>('../parent-job');
+        await vi.importActual<typeof import('../parent-job.ts')>(
+          '../parent-job',
+        );
       return {
         ...actual,
         parentJobEnsureCommitBeforeRelease: () => {
@@ -182,9 +186,9 @@ describe('runWorktreeWorkflow with throwing ensureCommit', () => {
       };
     });
 
-    const { runWorktreeWorkflow: runWithMock } = await import('../workflow');
+    const { runWorktreeWorkflow: runWithMock } = await import('../workflow.ts');
     const { WorktreeTargetsTracker: TrackerWithMock } =
-      await import('../worktree-targets');
+      await import('../worktree-targets.ts');
 
     const dir = createTempGitRepo();
     const tracker = new TrackerWithMock([{ id: 'wt1', path: dir }]);

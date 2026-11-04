@@ -1,20 +1,21 @@
-import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
-import { useSearchParams } from 'react-router';
-import { DEFAULT_SEARCH_LIMIT } from '~/routing/search/config';
-import { GetSearchResultsDocument } from '~/__generated__/graphql';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { parseSearchParams } from '~/routing/search/utils/parsers';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+import { useSearchParams } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/search._index';
+import { GetSearchResultsDocument } from '~/__generated__/graphql';
+import { SITE_TITLE } from '~/global/config/settings';
 import { SearchCard } from '~/routing/search/components/SearchCard';
 import { SearchFilters } from '~/routing/search/components/SearchFilters';
 import { SearchForm } from '~/routing/search/components/SearchForm';
 import { SearchIntroduction } from '~/routing/search/components/SearchIntroduction';
-import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/search._index';
+import { DEFAULT_SEARCH_LIMIT } from '~/routing/search/config';
+import { parseSearchParams } from '~/routing/search/utils/parsers';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

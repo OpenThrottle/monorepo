@@ -1,7 +1,7 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, test, vi } from 'vitest';
-import type { IdeRepositoryRef } from '@openthrottle/react-router-ide';
 import type { WorkspaceConfig } from '@openthrottle/openthrottle-ide';
+import type { IdeRepositoryRef } from '@openthrottle/react-router-ide';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 vi.mock('@openthrottle/openthrottle-ide', () => ({
   findDefinition: vi.fn(),

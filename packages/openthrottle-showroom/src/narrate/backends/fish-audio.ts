@@ -10,7 +10,7 @@
 
 import { writeFileSync } from 'node:fs';
 
-import type { RenderRequest, TtsBackend } from '../types';
+import type { RenderRequest, TtsBackend } from '../types.ts';
 
 /**
  * The pinned voice for the default backend, from the public library

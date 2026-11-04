@@ -1,4 +1,3 @@
-import * as React from 'react';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
@@ -8,10 +7,12 @@ import {
   IS_BROWSER,
   mergeRouteModuleMeta,
 } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+
+import type { Route } from '@/app/routes/+types/calendar._index';
 import { SITE_TITLE } from '~/global/config/settings';
 import { CalendarMonth } from '~/routing/calendar/components/CalendarMonth';
 import { CALENDAR_DEMO_EVENTS } from '~/routing/calendar/data/data.calendar-demo';
-import type { Route } from '@/app/routes/+types/calendar._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

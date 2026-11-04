@@ -6,6 +6,16 @@
  * are the code-first NotificationEvent types in the schema.
  */
 
+import { Inject, Injectable } from '@nestjs/common';
+import {
+  notificationsFirehoseTopic,
+  planLifecycleTopic,
+  PUB_SUB,
+  type PubSubEngine,
+  systemAlertTopic,
+  userNotificationsTopic,
+} from '@openthrottle/nestjs-graphql';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   DebugPayload,
   NotificationSeverity,
@@ -14,20 +24,13 @@ import type {
   PlanUpdatedPayload,
   PlanWaitingForWorktreePayload,
   QueueJobCompletedPayload,
+  ScheduledRunFailedPayload,
+  ScheduledRunFailureReason,
   SystemAlertPayload,
   TaskCompletedPayload,
   TaskStatusChangedPayload,
 } from '@openthrottle/openthrottle-notifications';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
-import { Inject, Injectable } from '@nestjs/common';
-import { LoggerService } from '@openthrottle/nestjs-modules';
-import {
-  PUB_SUB,
-  notificationsFirehoseTopic,
-  planLifecycleTopic,
-  systemAlertTopic,
-  type PubSubEngine,
-} from '@openthrottle/nestjs-graphql';
 
 function isoNow(): string {
   return new Date().toISOString();
@@ -266,6 +269,44 @@ export class NotificationsService {
     this.fanout(
       { ...data, event: NOTIFICATION_EVENT_NAMES.PLAN_STATUS_CHANGED },
       [planLifecycleTopic(payload.planId)],
+    );
+  }
+
+  /**
+   * @description Emits scheduled_run.failed when a scheduled agent job run failed, timed out, or
+   * was recorded missed. Goes to the firehose (which the developer app's toast pipeline reads)
+   * and, when the schedule has an owner, to that owner's personal topic too, so a per-user
+   * subscription receives only the notices it owns.
+   */
+  emitScheduledRunFailed(payload: {
+    link: string;
+    message: string;
+    ownerUserId: string | null;
+    reason: ScheduledRunFailureReason;
+    runCount: number;
+    runId: string | undefined;
+    scheduleName: string;
+    scheduledAgentJobId: string;
+    severity: NotificationSeverity;
+  }): void {
+    const data: ScheduledRunFailedPayload = {
+      actorUserId: payload.ownerUserId ?? undefined,
+      link: payload.link,
+      message: payload.message,
+      reason: payload.reason,
+      runCount: payload.runCount,
+      runId: payload.runId,
+      scheduleName: payload.scheduleName,
+      scheduledAgentJobId: payload.scheduledAgentJobId,
+      severity: payload.severity,
+      timestamp: isoNow(),
+    };
+
+    this.fanout(
+      { ...data, event: NOTIFICATION_EVENT_NAMES.SCHEDULED_RUN_FAILED },
+      payload.ownerUserId === null
+        ? []
+        : [userNotificationsTopic(payload.ownerUserId)],
     );
   }
 

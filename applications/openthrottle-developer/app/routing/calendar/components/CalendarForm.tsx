@@ -1,14 +1,15 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Form, Link } from 'react-router';
 import {
   Button,
+  cn,
   Input,
   Label,
   TextArea,
 } from '@openthrottle/react-router-shadcn';
-import { toDatetimeLocalValue } from '~/routing/calendar/utils/formatters';
+import * as React from 'react';
+import { Form, Link } from 'react-router';
+
 import type { CalendarListEvent } from '~/routing/calendar/types';
+import { toDatetimeLocalValue } from '~/routing/calendar/utils/formatters';
 
 export interface CalendarFormProps {
   action: 'create' | 'update';
@@ -35,7 +36,7 @@ export const CalendarForm = (props: CalendarFormProps): React.ReactElement => {
   return (
     <div>
       <Form
-        className={clsx('w-full', className)}
+        className={cn('w-full', className)}
         data-testid="CalendarForm"
         method="post"
       >

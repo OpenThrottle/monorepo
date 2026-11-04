@@ -1,9 +1,10 @@
-import * as React from 'react';
 import { DocPageView } from '@openthrottle/react-router-docs';
-import { SITE_TITLE } from '~/global/config/settings';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { indexEntry } from '~/routing/docs/data/docs-navigation';
+import * as React from 'react';
+
 import type { Route } from '@/app/routes/+types/docs._index';
+import { SITE_TITLE } from '~/global/config/settings';
+import { indexEntry } from '~/routing/docs/data/docs-navigation';
 
 export const meta = (_args: Route.MetaArgs) => {
   return [{ title: `Docs | ${SITE_TITLE}` }];

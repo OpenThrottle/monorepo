@@ -2,10 +2,11 @@
  * @description Fishery factory for {@link Plan}. Use in tests to build mock plans.
  */
 
-import { Factory } from 'fishery';
 import { faker } from '@faker-js/faker';
 import { getDefaultPlanRunConfigStorage } from '@openthrottle/openthrottle-plan-config';
-import type { Plan } from './plan.entity';
+import { Factory } from 'fishery';
+
+import type { Plan } from './plan.entity.ts';
 
 // /** Column-only shape for building plan test data (no relations). */
 // export type PlanFactoryData = Pick<

@@ -1,6 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
-import type { Queue } from 'bullmq';
+import { BadRequestException } from '@nestjs/common';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   ScheduledAgentJobCheckoutPathService,
@@ -10,10 +9,13 @@ import {
   type ScheduledAgentJob,
   type ScheduledAgentJobRun,
 } from '@openthrottle/nestjs-repositories';
-import type { ScheduledAgentJobCancellationService } from '../../queues/scheduled-agent-jobs/scheduled-agent-job-cancellation.service';
-import type { ScheduledAgentJobSchedulerService } from '../../queues/scheduled-agent-jobs/scheduled-agent-job-scheduler.service';
-import type { ScheduledAgentJobPayload } from '../../queues/scheduled-agent-jobs/scheduled-agent-jobs.types';
-import { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs-graphql.service';
+import type { Job, Queue } from 'bullmq';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import type { ScheduledAgentJobCancellationService } from '../../queues/scheduled-agent-jobs/scheduled-agent-job-cancellation.service.ts';
+import type { ScheduledAgentJobSchedulerService } from '../../queues/scheduled-agent-jobs/scheduled-agent-job-scheduler.service.ts';
+import type { ScheduledAgentJobPayload } from '../../queues/scheduled-agent-jobs/scheduled-agent-jobs.types.ts';
+import { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs-graphql.service.ts';
 
 const jobFixture = (
   overrides: Partial<ScheduledAgentJob> = {},
@@ -60,6 +62,7 @@ describe('ScheduledAgentJobsGraphqlService', () => {
     });
     scheduler = createMock<ScheduledAgentJobSchedulerService>({
       removeScheduler: vi.fn().mockResolvedValue(undefined),
+      unschedule: vi.fn().mockResolvedValue(undefined),
       upsertScheduler: vi
         .fn()
         .mockResolvedValue(new Date('2026-07-01T09:00:00Z')),
@@ -194,6 +197,67 @@ describe('ScheduledAgentJobsGraphqlService', () => {
     expect(jobsService.updateJob).not.toHaveBeenCalled();
   });
 
+  describe('misfire policy', () => {
+    const base = {
+      cronPattern: '0 9 * * *',
+      driverId: 'claude',
+      name: 'nightly',
+      ownerUserId: 'user-1',
+      prompt: 'audit',
+    };
+
+    it('persists a valid policy and threshold on create', async () => {
+      await service.create({
+        ...base,
+        misfirePolicy: 'catch_up_once',
+        misfireThresholdMs: 30 * 60_000,
+      });
+
+      expect(jobsService.createJob).toHaveBeenCalledWith(
+        expect.objectContaining({
+          misfirePolicy: 'catch_up_once',
+          misfireThresholdMs: 30 * 60_000,
+        }),
+      );
+    });
+
+    it('leaves both to the column defaults when omitted', async () => {
+      await service.create(base);
+
+      expect(jobsService.createJob).toHaveBeenCalledWith(
+        expect.objectContaining({
+          misfirePolicy: undefined,
+          misfireThresholdMs: undefined,
+        }),
+      );
+    });
+
+    it('rejects an unknown policy', async () => {
+      await expect(
+        service.create({ ...base, misfirePolicy: 'run_all' }),
+      ).rejects.toThrow(/Unknown misfire policy/);
+      expect(jobsService.createJob).not.toHaveBeenCalled();
+    });
+
+    it('rejects a threshold under a minute', async () => {
+      await expect(
+        service.create({ ...base, misfireThresholdMs: 59_999 }),
+      ).rejects.toThrow(/at least 60000/);
+    });
+
+    it('updates only the misfire fields it is given', async () => {
+      await service.update('j1', { misfirePolicy: 'skip' });
+
+      expect(jobsService.updateJob).toHaveBeenCalledWith(
+        'j1',
+        expect.objectContaining({
+          misfirePolicy: 'skip',
+          misfireThresholdMs: undefined,
+        }),
+      );
+    });
+  });
+
   it('rejects an unknown driver id', async () => {
     await expect(
       service.create({
@@ -309,19 +373,173 @@ describe('ScheduledAgentJobsGraphqlService', () => {
     expect(await service.getRun('nope')).toBeNull();
   });
 
-  it('delete removes the scheduler then the row', async () => {
+  it('delete unschedules every kind of fire, then removes the row', async () => {
     const ok = await service.delete('j1');
-    expect(scheduler.removeScheduler).toHaveBeenCalledWith('scheduled-job:j1');
+    expect(scheduler.unschedule).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'j1' }),
+    );
     expect(jobsService.deleteJob).toHaveBeenCalledWith('j1');
     expect(ok).toBe(true);
   });
 
-  it('disabling removes the scheduler and clears next run', async () => {
+  it('disabling unschedules the job and clears next run', async () => {
     vi.mocked(jobsService.setJobEnabled).mockResolvedValue(
       jobFixture({ enabled: false }),
     );
     await service.setEnabled('j1', false);
-    expect(scheduler.removeScheduler).toHaveBeenCalledWith('scheduled-job:j1');
+    expect(scheduler.unschedule).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'j1' }),
+    );
     expect(jobsService.updateNextRunAt).toHaveBeenCalledWith('j1', null);
+  });
+
+  describe('schedule kinds', () => {
+    describe('when creating an interval schedule', () => {
+      it('persists the interval with no cron pattern', async () => {
+        await service.create({
+          driverId: 'claude',
+          intervalMs: 15 * 60_000,
+          name: 'poll',
+          ownerUserId: 'user-1',
+          prompt: 'check',
+          scheduleKind: 'interval',
+        });
+
+        expect(jobsService.createJob).toHaveBeenCalledWith(
+          expect.objectContaining({
+            cronPattern: null,
+            intervalMs: 15 * 60_000,
+            runAt: null,
+            scheduleKind: 'interval',
+          }),
+        );
+      });
+    });
+
+    describe('when creating a once schedule in the past', () => {
+      it('is rejected before anything is written', async () => {
+        await expect(
+          service.create({
+            driverId: 'claude',
+            name: 'once',
+            ownerUserId: 'user-1',
+            prompt: 'go',
+            runAt: '2020-01-01T00:00:00Z',
+            scheduleKind: 'once',
+          }),
+        ).rejects.toThrow(BadRequestException);
+        expect(jobsService.createJob).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when switching a cron schedule to run once', () => {
+      it('writes the new kind and clears the cron pattern', async () => {
+        await service.update('j1', {
+          runAt: '2099-01-01T09:00:00+01:00',
+          scheduleKind: 'once',
+        });
+
+        expect(jobsService.updateJob).toHaveBeenCalledWith(
+          'j1',
+          expect.objectContaining({
+            cronPattern: null,
+            runAt: new Date('2099-01-01T08:00:00Z'),
+            scheduleKind: 'once',
+          }),
+        );
+      });
+    });
+  });
+
+  describe('cancelRun on a queued run', () => {
+    const queuedRun = (
+      overrides: Partial<ScheduledAgentJobRun> = {},
+    ): ScheduledAgentJobRun => {
+      return createMock<ScheduledAgentJobRun>({
+        bullmqJobId: null,
+        id: 'run-1',
+        status: 'queued',
+        ...overrides,
+      });
+    };
+    const bullJob = (state: string): Job<ScheduledAgentJobPayload, void> => {
+      return createMock<Job<ScheduledAgentJobPayload, void>>({
+        getState: vi.fn().mockResolvedValue(state),
+        remove: vi.fn().mockResolvedValue(undefined),
+      });
+    };
+
+    it('removes a delayed usage-limit resume job by the run bullmqJobId and records the run cancelled', async () => {
+      const job = bullJob('delayed');
+      vi.mocked(jobsService.findRunById).mockResolvedValue(
+        queuedRun({ bullmqJobId: 'usage-limit-resume-run-0' }),
+      );
+      vi.mocked(queue.getJob).mockResolvedValue(job);
+
+      await service.cancelRun('run-1');
+
+      expect(jobsService.requestRunCancel).toHaveBeenCalledWith('run-1');
+      expect(queue.getJob).toHaveBeenCalledWith('usage-limit-resume-run-0');
+      expect(job.remove).toHaveBeenCalledOnce();
+      expect(jobsService.markRunFinished).toHaveBeenCalledWith('run-1', {
+        errorMessage: 'Run cancelled',
+        exitCode: null,
+        status: 'cancelled',
+      });
+    });
+
+    it('falls back to the run id for a run-now job (jobId = runId)', async () => {
+      const job = bullJob('waiting');
+      vi.mocked(jobsService.findRunById).mockResolvedValue(queuedRun());
+      vi.mocked(queue.getJob).mockResolvedValue(job);
+
+      await service.cancelRun('run-1');
+
+      expect(queue.getJob).toHaveBeenCalledWith('run-1');
+      expect(job.remove).toHaveBeenCalledOnce();
+    });
+
+    it('records the run cancelled even when its job is already gone', async () => {
+      vi.mocked(jobsService.findRunById).mockResolvedValue(queuedRun());
+      vi.mocked(queue.getJob).mockResolvedValue(undefined);
+
+      await service.cancelRun('run-1');
+
+      expect(jobsService.markRunFinished).toHaveBeenCalledWith(
+        'run-1',
+        expect.objectContaining({ status: 'cancelled' }),
+      );
+    });
+
+    it('leaves a job a worker has already picked up to the processor', async () => {
+      const job = bullJob('active');
+      vi.mocked(jobsService.findRunById).mockResolvedValue(queuedRun());
+      vi.mocked(queue.getJob).mockResolvedValue(job);
+
+      await service.cancelRun('run-1');
+
+      expect(job.remove).not.toHaveBeenCalled();
+      expect(jobsService.markRunFinished).not.toHaveBeenCalled();
+    });
+
+    it('does not touch the queue for a run that is already running', async () => {
+      vi.mocked(jobsService.findRunById).mockResolvedValue(
+        queuedRun({ status: 'running' }),
+      );
+
+      await service.cancelRun('run-1');
+
+      expect(queue.getJob).not.toHaveBeenCalled();
+      expect(jobsService.requestRunCancel).toHaveBeenCalledWith('run-1');
+    });
+
+    it('never throws when Redis fails, leaving the durable marker', async () => {
+      vi.mocked(jobsService.findRunById).mockResolvedValue(queuedRun());
+      vi.mocked(queue.getJob).mockRejectedValue(new Error('redis down'));
+
+      await expect(service.cancelRun('run-1')).resolves.toBeDefined();
+      expect(jobsService.requestRunCancel).toHaveBeenCalledWith('run-1');
+      expect(jobsService.markRunFinished).not.toHaveBeenCalled();
+    });
   });
 });

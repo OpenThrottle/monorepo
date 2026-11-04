@@ -1,7 +1,8 @@
-import * as React from 'react';
 import { render, screen } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
+
 import LogsRoute from '../settings.logs';
 
 describe('routes/settings.logs.tsx', () => {

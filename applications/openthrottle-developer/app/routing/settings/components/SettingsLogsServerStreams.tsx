@@ -1,5 +1,6 @@
-import * as React from 'react';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
+import * as React from 'react';
+
 import { DEFAULT_SETTINGS_LOGS_DOC } from '~/routing/settings/config/defaults';
 
 export interface SettingsLogsServerStreamsProps {}

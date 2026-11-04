@@ -1,6 +1,5 @@
+import { Card, cn, Skeleton } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import clsx from 'clsx';
-import { Card, Skeleton } from '@openthrottle/react-router-shadcn';
 
 export interface DashboardContributionsCardSkeletonProps {
   className?: string;
@@ -32,7 +31,7 @@ export const DashboardContributionsCardSkeleton = (
   return (
     <Card
       aria-busy={true}
-      className={clsx('gap-3 p-4', className)}
+      className={cn('gap-3 p-4', className)}
       data-testid="DashboardContributionsCardSkeleton"
     >
       <div className="flex items-center justify-between gap-2">

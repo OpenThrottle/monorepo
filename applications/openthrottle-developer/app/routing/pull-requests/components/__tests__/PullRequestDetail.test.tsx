@@ -1,11 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { PullRequestDetail } from '../PullRequestDetail';
-import type { PullRequestDetailProps } from '../PullRequestDetail';
+
 import type { PullRequestDetailFragment } from '~/__generated__/graphql';
+
+import type { PullRequestDetailProps } from '../PullRequestDetail';
+import { PullRequestDetail } from '../PullRequestDetail';
 
 const pull = (
   overrides: Partial<PullRequestDetailFragment> = {},

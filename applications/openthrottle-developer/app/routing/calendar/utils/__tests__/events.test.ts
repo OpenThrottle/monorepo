@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'vitest';
+
 import type { CalendarListEvent } from '~/routing/calendar/types';
+
 import { filterCalendarEventsBySearch, getCalendarEventById } from '../events';
 
 const buildEvent = (

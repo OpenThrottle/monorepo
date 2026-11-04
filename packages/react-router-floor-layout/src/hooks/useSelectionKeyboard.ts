@@ -9,6 +9,8 @@
 
 import { useEffect } from 'react';
 
+import { isEditableTarget } from '../utils/editable-target';
+
 /**
  * Configuration for {@link useSelectionKeyboard}.
  *
@@ -33,17 +35,6 @@ export interface UseSelectionKeyboardOptions {
   readonly shiftMultiplier?: number;
 }
 
-function isEditableTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false;
-  const tag = target.tagName;
-  return (
-    target.isContentEditable ||
-    tag === 'INPUT' ||
-    tag === 'SELECT' ||
-    tag === 'TEXTAREA'
-  );
-}
-
 /**
  * Attach window keydown handling for the current selection.
  *
@@ -63,6 +54,15 @@ export function useSelectionKeyboard(
     shiftMultiplier = 4,
   } = options;
 
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
   useEffect(() => {
     if (!enabled) return;
 
@@ -123,4 +123,6 @@ export function useSelectionKeyboard(
     rotateStep,
     shiftMultiplier,
   ]);
+
+  // 🔌 Short Circuit
 }

@@ -7,14 +7,37 @@
  * `.opencode/skills`, and deliberately excludes per-tool global dirs. A
  * plugin-namespaced third-party row (`vercel:deploy`) therefore never matches a
  * disk slug, but it is not missing — it is out of scan scope. So presence is a
- * three-member vocabulary keyed off scope AND slug match, not a boolean:
+ * four-member vocabulary keyed off scope AND slug match, not a boolean:
  *
- * | scope         | slug on disk | personal | presence    |
- * | ------------- | ------------ | -------- | ----------- |
- * | `ours`        | yes          | no       | `installed` |
- * | `ours`        | yes          | yes      | `personal`  |
- * | `ours`        | no           | —        | `missing`   |
- * | `third-party` | —            | —        | `external`  |
+ * | scope         | slug on disk | presence    |
+ * | ------------- | ------------ | ----------- |
+ * | `ours`        | yes          | `installed` |
+ * | `ours`        | no           | `missing`   |
+ * | `personal`    | yes          | `personal`  |
+ * | `personal`    | no           | `missing`   |
+ * | `third-party` | —            | `external`  |
+ *
+ * Personal-ness comes from the captured scope, not from intersecting `ours`
+ * with a discovered set of personal slugs. That indirection existed only
+ * because scope could not say `personal`, and it never once fired in
+ * production: capture recorded exactly those rows as `third-party`, so the
+ * `personal` arm was dead code that only hand-built fixtures reached.
+ *
+ * A `personal` row whose slug is gone is `missing`, not `personal` — the
+ * personal tier is where drafts live, so deletion is routine, and
+ * {@link SKILL_PRESENCE_LINKABLE} makes `personal` linkable. Calling a deleted
+ * one `personal` would render a `/skills/$slug` link straight into a 404,
+ * which is the exact failure the `missing` bucket exists to prevent. The
+ * `missing` wording ("recorded usage but no SKILL.md in this checkout") is
+ * true of it either way.
+ *
+ * Rows captured before the `personal` scope existed stay `third-party`
+ * forever (they are never retroactively reclassified — personal roots are
+ * per-user and unresolvable server-side), so a personal skill's history
+ * straddles two scopes for a while. That renders sanely rather than as a
+ * broken duplicate: the server groups `bySkill` by (skill_name, scope) and
+ * `SkillUsageLeaderboard` keys rows by `${skillName}:${scope}`, so the two
+ * halves are two distinct rows whose Scope column says which is which.
  *
  * `personal` is present-but-not-shared: the SKILL.md is on disk and invokable,
  * but it is linked in from outside the repo, so nobody else's checkout has it
@@ -102,16 +125,12 @@ export const SKILL_PRESENCE_LINKABLE: Record<SkillPresence, boolean> = {
 /**
  * Classify one leaderboard row. A `third-party` row is `external` regardless of
  * whether its name coincidentally matches a disk slug — scope wins, because the
- * scan never covered it in the first place.
- *
- * `personalSlugs` is a subset of `presentSlugs`; it defaults to empty so a
- * caller without the discovery entries to hand degrades to `installed`, which
- * is still true — just less specific — rather than to a wrong answer.
+ * scan never covered it in the first place. Everything else must still be on
+ * disk to count as present; scope then says whether it is shared or personal.
  */
 export const classifySkillUsagePresence = (
   row: { readonly scope: string; readonly skillName: string },
   presentSlugs: ReadonlySet<string>,
-  personalSlugs: ReadonlySet<string> = new Set(),
 ): SkillPresence => {
   if (row.scope === SKILL_USAGE_SCOPES.THIRD_PARTY) {
     return SKILL_PRESENCE.EXTERNAL;
@@ -121,7 +140,7 @@ export const classifySkillUsagePresence = (
     return SKILL_PRESENCE.MISSING;
   }
 
-  return personalSlugs.has(row.skillName)
+  return row.scope === SKILL_USAGE_SCOPES.PERSONAL
     ? SKILL_PRESENCE.PERSONAL
     : SKILL_PRESENCE.INSTALLED;
 };

@@ -10,7 +10,14 @@
  */
 
 import { isRecord } from '@openthrottle/nodejs-utils';
-import type { ChatTurnEvent, ChatTurnUsageEvent } from './types';
+
+import type {
+  ChatTurnEvent,
+  ChatTurnToolEvent,
+  ChatTurnUsageEvent,
+  ChatTurnUsageLimitEvent,
+} from './types';
+import { ChatToolStatus } from './types';
 import { hasUsageCounts, normalizeUsage, sumUsage } from './usage';
 
 const asString = (value: unknown): string | null =>
@@ -45,7 +52,84 @@ export const isRetryableTerminalMetadata = (
 ): boolean => {
   const parsed = safeParse(metadataJson);
 
-  return parsed !== null && parsed.retryable === true;
+  // A usage-limited terminal is never retryable, whatever `retryable` says:
+  // replaying the turn would only hammer a limited account.
+  return (
+    parsed !== null && parsed.retryable === true && !isRecord(parsed.usageLimit)
+  );
+};
+
+/** Read `{ rateLimitType, resetsAt }` out of an untrusted usage-limit payload. */
+const toUsageLimitFields = (
+  value: Record<string, unknown> | null,
+): Pick<ChatTurnUsageLimitEvent, 'rateLimitType' | 'resetsAt'> => {
+  return {
+    rateLimitType: asString(value?.rateLimitType),
+    resetsAt: asString(value?.resetsAt),
+  };
+};
+
+/**
+ * Fold a usage-limit payload (`{ rateLimitType, resetsAt }`) into the turn's
+ * SINGLE `usageLimit` event: a repeat replaces the earlier one in place, since
+ * the CLI may report the rejection more than once.
+ *
+ * @public
+ */
+export const applyTurnUsageLimit = (
+  events: readonly ChatTurnEvent[],
+  payload: Record<string, unknown> | null,
+  sortOrder: number,
+): readonly ChatTurnEvent[] => {
+  const existing = events.find((event) => event.kind === 'usageLimit');
+  const next: ChatTurnUsageLimitEvent = {
+    kind: 'usageLimit',
+    ...toUsageLimitFields(payload),
+    sortOrder: existing?.sortOrder ?? sortOrder,
+  };
+
+  if (existing === undefined) {
+    return [...events, next];
+  }
+
+  return events.map((event) => (event.kind === 'usageLimit' ? next : event));
+};
+
+/**
+ * Add a `usageLimit` event for a terminal chunk (or persisted usage payload)
+ * whose metadata carries `usageLimit`, unless the turn already has one from a
+ * `usage_limit` chunk. Covers a 429 result that arrived with no preceding
+ * `rate_limit_event`. A payload without `usageLimit` is a no-op.
+ *
+ * @public
+ */
+export const applyTerminalUsageLimit = (
+  events: readonly ChatTurnEvent[],
+  metadata: Record<string, unknown> | null,
+  sortOrder: number,
+): readonly ChatTurnEvent[] => {
+  const usageLimit = metadata?.usageLimit;
+
+  if (
+    !isRecord(usageLimit) ||
+    events.some((event) => event.kind === 'usageLimit')
+  ) {
+    return events;
+  }
+
+  return applyTurnUsageLimit(events, usageLimit, sortOrder);
+};
+
+/**
+ * Parse a chunk's `metadataJson` into a record, or null. Exposed so the stream
+ * reducer can hand usage-limit payloads to {@link applyTurnUsageLimit}.
+ *
+ * @public
+ */
+export const parseChunkMetadataRecord = (
+  metadataJson: string | null | undefined,
+): Record<string, unknown> | null => {
+  return safeParse(metadataJson);
 };
 
 /** Placeholder header used when no backend reported a tool name at all. */
@@ -105,20 +189,40 @@ const extractToolName = (
   );
 };
 
+/**
+ * One `tool_result` block of a legacy claude chunk, which carried every result
+ * of a `user` event as `toolResults: [...]` instead of one chunk per result.
+ */
+export interface ParsedToolResultBlock {
+  readonly callId: string | null;
+  readonly isError: boolean;
+  readonly resultJson: string | null;
+}
+
 /** Normalized fields the event folders read out of a chunk's metadata. */
 export interface ParsedChunkMetadata {
   readonly callId: string | null;
   /**
    * False when the chunk identifies no tool at all — neither a `callId` nor a
    * reported name. Such a chunk is a continuation of the call already open
-   * (claude streams its arguments as `input_json_delta` chunks carrying only
-   * `{ index, partialJson }`), not a new call, so the folders must not
+   * (legacy claude streamed its arguments as `input_json_delta` chunks carrying
+   * only `{ index, partialJson }`), not a new call, so the folders must not
    * synthesize a placeholder event from it.
    */
   readonly hasToolIdentity: boolean;
+  /** True when a `tool_result` chunk reports a failed call. */
+  readonly isError: boolean;
+  /** A legacy claude argument fragment, appended to the open call's args. */
+  readonly partialJson: string | null;
   readonly sessionId: string | null;
+  /**
+   * The `toolCall` payload as display text: a string payload as-is (a tool
+   * result is usually text), anything else as JSON.
+   */
   readonly toolCallJson: string | null;
   readonly toolName: string;
+  /** Legacy claude `toolResults` blocks, each resolved by its own id. */
+  readonly toolResultBlocks: readonly ParsedToolResultBlock[];
   readonly usageJson: string | null;
   readonly usageResult: string | null;
 }
@@ -126,11 +230,50 @@ export interface ParsedChunkMetadata {
 const EMPTY_METADATA: ParsedChunkMetadata = {
   callId: null,
   hasToolIdentity: false,
+  isError: false,
+  partialJson: null,
   sessionId: null,
   toolCallJson: null,
   toolName: FALLBACK_TOOL_NAME,
+  toolResultBlocks: [],
   usageJson: null,
   usageResult: null,
+};
+
+/** A tool payload as display text — strings verbatim, anything else as JSON. */
+const toPayloadText = (value: unknown): string | null => {
+  if (value === undefined || value === null) {
+    return null;
+  }
+
+  return typeof value === 'string' ? value : JSON.stringify(value);
+};
+
+/** A legacy `tool_result` block's `content`: text blocks joined, else JSON. */
+const toolResultContentText = (content: unknown): string | null => {
+  if (!Array.isArray(content)) {
+    return toPayloadText(content);
+  }
+
+  return content
+    .map((part) =>
+      isRecord(part) && part.type === 'text' ? (asString(part.text) ?? '') : '',
+    )
+    .join('\n');
+};
+
+const parseToolResultBlocks = (
+  value: unknown,
+): readonly ParsedToolResultBlock[] => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter(isRecord).map((block) => ({
+    callId: asString(block.tool_use_id),
+    isError: block.is_error === true,
+    resultJson: toolResultContentText(block.content),
+  }));
 };
 
 const normalizeMetadata = (
@@ -140,19 +283,19 @@ const normalizeMetadata = (
     return EMPTY_METADATA;
   }
 
-  const toolCall = parsed.toolCall;
-  const callId = asString(parsed.callId);
+  // Legacy claude chunks named the call `toolUseId` rather than `callId`.
+  const callId = asString(parsed.callId) ?? asString(parsed.toolUseId);
   const toolName = extractToolName(parsed);
 
   return {
     callId,
     hasToolIdentity: toolName !== null || callId !== null,
+    isError: parsed.isError === true,
+    partialJson: asString(parsed.partialJson),
     sessionId: asString(parsed.sessionId),
-    toolCallJson:
-      toolCall === undefined || toolCall === null
-        ? null
-        : JSON.stringify(toolCall),
+    toolCallJson: toPayloadText(parsed.toolCall),
     toolName: toolName ?? FALLBACK_TOOL_NAME,
+    toolResultBlocks: parseToolResultBlocks(parsed.toolResults),
     usageJson:
       parsed.usage === undefined || parsed.usage === null
         ? null
@@ -206,49 +349,6 @@ export const appendTurnTextEvent = (
   return [...events, { kind, sortOrder, text: delta }];
 };
 
-/**
- * Start a tool event (status running); idempotent on a repeated callId.
- *
- * @public
- */
-export const applyTurnToolCall = (
-  events: readonly ChatTurnEvent[],
-  meta: ParsedChunkMetadata,
-  sortOrder: number,
-): readonly ChatTurnEvent[] => {
-  const exists =
-    meta.callId !== null &&
-    events.some((e) => e.kind === 'tool' && e.callId === meta.callId);
-  if (exists) {
-    return events;
-  }
-
-  // An identity-less chunk continues the call already streaming (claude sends
-  // one such chunk per `input_json_delta`); appending would head a card with the
-  // `'tool'` placeholder. With no open call it still becomes one, so a genuinely
-  // nameless one-off is never silently swallowed.
-  if (
-    !meta.hasToolIdentity &&
-    events.some((e) => e.kind === 'tool' && e.status === 'running')
-  ) {
-    return events;
-  }
-
-  return [
-    ...events,
-    {
-      argsJson: meta.toolCallJson,
-      callId: meta.callId,
-      error: null,
-      kind: 'tool',
-      name: meta.toolName,
-      resultJson: null,
-      sortOrder,
-      status: 'running',
-    },
-  ];
-};
-
 /** Index of the newest still-running tool event, or -1 when none is open. */
 const lastRunningToolIndex = (events: readonly ChatTurnEvent[]): number => {
   for (let index = events.length - 1; index >= 0; index -= 1) {
@@ -261,8 +361,139 @@ const lastRunningToolIndex = (events: readonly ChatTurnEvent[]): number => {
   return -1;
 };
 
+/** Replace the tool event at `index` with `patch` applied; others untouched. */
+const patchToolEvent = (
+  events: readonly ChatTurnEvent[],
+  index: number,
+  patch: (event: ChatTurnToolEvent) => ChatTurnToolEvent,
+): readonly ChatTurnEvent[] =>
+  events.map((event, i) =>
+    i === index && event.kind === 'tool' ? patch(event) : event,
+  );
+
 /**
- * Resolve a tool event to succeeded, correlating by callId.
+ * Start a tool event (status running). A repeated callId is the same call, not
+ * a new one: when it carries arguments the first chunk lacked (claude opens the
+ * card at `content_block_start` and sends the full input on the consolidated
+ * `assistant` event) they are filled in; otherwise it is a no-op.
+ *
+ * @public
+ */
+export const applyTurnToolCall = (
+  events: readonly ChatTurnEvent[],
+  meta: ParsedChunkMetadata,
+  sortOrder: number,
+): readonly ChatTurnEvent[] => {
+  const existingIndex =
+    meta.callId === null
+      ? -1
+      : events.findIndex((e) => e.kind === 'tool' && e.callId === meta.callId);
+
+  if (existingIndex >= 0) {
+    const argsJson = meta.toolCallJson;
+
+    return argsJson === null
+      ? events
+      : patchToolEvent(events, existingIndex, (event) => ({
+          ...event,
+          argsJson,
+        }));
+  }
+
+  // Legacy claude argument fragments concatenate onto the open call's args;
+  // the card shows them raw until the JSON is complete, then pretty-printed.
+  const partialJson = meta.partialJson;
+  const runningIndex = lastRunningToolIndex(events);
+  if (partialJson !== null && !meta.hasToolIdentity && runningIndex >= 0) {
+    return patchToolEvent(events, runningIndex, (event) => ({
+      ...event,
+      argsJson: (event.argsJson ?? '') + partialJson,
+    }));
+  }
+
+  // Any other identity-less chunk continues the call already open; appending
+  // would head a card with the `'tool'` placeholder. With no open call it still
+  // becomes one, so a genuinely nameless one-off is never silently swallowed.
+  if (!meta.hasToolIdentity && runningIndex >= 0) {
+    return events;
+  }
+
+  return [
+    ...events,
+    {
+      argsJson: meta.toolCallJson ?? partialJson,
+      callId: meta.callId,
+      error: null,
+      kind: 'tool',
+      name: meta.toolName,
+      resultJson: null,
+      sortOrder,
+      status: 'running',
+    },
+  ];
+};
+
+/** One result to resolve, from a canonical chunk or a legacy block. */
+interface ToolResultInput {
+  readonly callId: string | null;
+  readonly isError: boolean;
+  /** An id-less result names a tool, so it must not adopt another's card. */
+  readonly namesTool: boolean;
+  /**
+   * Whether an id that matches no call may still resolve the newest open one.
+   * True only for legacy claude blocks, whose start chunks may predate ids.
+   */
+  readonly positionalFallback: boolean;
+  readonly resultJson: string | null;
+  readonly toolName: string;
+}
+
+const resolveToolResult = (
+  events: readonly ChatTurnEvent[],
+  input: ToolResultInput,
+  sortOrder: number,
+): readonly ChatTurnEvent[] => {
+  const byId =
+    input.callId === null
+      ? -1
+      : events.findIndex((e) => e.kind === 'tool' && e.callId === input.callId);
+  const positional =
+    input.callId === null ? !input.namesTool : input.positionalFallback;
+  const index = byId >= 0 || !positional ? byId : lastRunningToolIndex(events);
+
+  const resolved = {
+    error: input.isError ? (input.resultJson ?? 'Tool call failed.') : null,
+    resultJson: input.isError ? null : input.resultJson,
+    status: input.isError ? ChatToolStatus.failed : ChatToolStatus.succeeded,
+  };
+
+  if (index >= 0) {
+    return patchToolEvent(events, index, (event) => ({
+      ...event,
+      ...resolved,
+    }));
+  }
+
+  // A result with no prior call (out-of-order/edge) — synthesize a completed one.
+  return [
+    ...events,
+    {
+      argsJson: null,
+      callId: input.callId,
+      kind: 'tool',
+      name: input.toolName,
+      sortOrder,
+      ...resolved,
+    },
+  ];
+};
+
+/**
+ * Resolve a tool event to succeeded (or failed, when the chunk says `isError`),
+ * correlating by callId. An identity-less result (legacy claude's `user` chunk,
+ * with its ids on each `toolResults` block) resolves each block by its own id,
+ * falling back to the call still open — which both suppresses a placeholder
+ * card and unsticks the real call, which would otherwise stay `running`.
  *
  * @public
  */
@@ -271,41 +502,35 @@ export const applyTurnToolResult = (
   meta: ParsedChunkMetadata,
   sortOrder: number,
 ): readonly ChatTurnEvent[] => {
-  // An identity-less result (claude's `user` event carries only `toolResults`,
-  // with the id on each block rather than the chunk) belongs to the call still
-  // open. Resolving that one both suppresses a placeholder card and unsticks the
-  // real call, which would otherwise stay `running` forever.
-  const index =
-    meta.callId === null
-      ? meta.hasToolIdentity
-        ? -1
-        : lastRunningToolIndex(events)
-      : events.findIndex((e) => e.kind === 'tool' && e.callId === meta.callId);
-
-  const existing = index >= 0 ? events[index] : undefined;
-
-  if (existing !== undefined) {
-    return events.map((event, i) =>
-      i === index
-        ? { ...existing, resultJson: meta.toolCallJson, status: 'succeeded' }
-        : event,
+  if (meta.toolResultBlocks.length > 0) {
+    return meta.toolResultBlocks.reduce(
+      (folded, block) =>
+        resolveToolResult(
+          folded,
+          {
+            ...block,
+            namesTool: false,
+            positionalFallback: true,
+            toolName: FALLBACK_TOOL_NAME,
+          },
+          sortOrder,
+        ),
+      events,
     );
   }
 
-  // A result with no prior call (out-of-order/edge) — synthesize a completed one.
-  return [
-    ...events,
+  return resolveToolResult(
+    events,
     {
-      argsJson: null,
       callId: meta.callId,
-      error: null,
-      kind: 'tool',
-      name: meta.toolName,
+      isError: meta.isError,
+      namesTool: meta.hasToolIdentity,
+      positionalFallback: false,
       resultJson: meta.toolCallJson,
-      sortOrder,
-      status: 'succeeded',
+      toolName: meta.toolName,
     },
-  ];
+    sortOrder,
+  );
 };
 
 /**
@@ -427,8 +652,21 @@ export const foldPersistedTurnEvents = (
           ...events,
           { kind: 'session', sessionId: meta.sessionId, sortOrder: order },
         ];
+      } else if (kind === 'usage_limit') {
+        events = applyTurnUsageLimit(
+          events,
+          isRecord(raw.metadata) ? raw.metadata : null,
+          order,
+        );
       } else if (kind === 'usage') {
         usageMetadataJsons.push(metadataJson);
+        // The terminal usage payload of a limited turn carries `usageLimit`;
+        // surface it when no `usage_limit` event was persisted (a bare 429).
+        events = applyTerminalUsageLimit(
+          events,
+          isRecord(raw.metadata) ? raw.metadata : null,
+          order,
+        );
       }
     }
 

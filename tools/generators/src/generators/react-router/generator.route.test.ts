@@ -1,13 +1,14 @@
-import { describe, expect, test, beforeEach } from 'vitest';
 import type { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { beforeEach, describe, expect, test } from 'vitest';
+
 import { generatorReactRouterRoute } from './generator.route';
 
 describe('generatorReactRouterRoute', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
   });
 
   const application = 'openthrottle';

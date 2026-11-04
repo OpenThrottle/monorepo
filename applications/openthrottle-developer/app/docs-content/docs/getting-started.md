@@ -70,7 +70,7 @@ pnpm run check:local                        # full local CI parity
 
 The schema is code-first in `openthrottle-server`. After changing GraphQL types, resolvers, or documents:
 
-1. Run `pnpm nx run openthrottle-server:dev` until it bootstraps, then stop it — this writes `applications/openthrottle-server/schema.gql`.
+1. Run `pnpm nx run openthrottle-server:graphql-schema:write` — this writes `applications/openthrottle-server/schema.gql` (no Postgres, Redis or running server needed).
 2. `pnpm nx affected --target=codegen-graphql,codegen-react-router --parallel`
 3. Commit the updated `schema.gql` and all `__generated__` output. CI fails on codegen drift.
 

@@ -4,9 +4,10 @@
  */
 
 import { Module } from '@nestjs/common';
-import { QueuesGraphqlModule } from '../queues/queues-graphql.module';
-import { MetricsModule } from '../../metrics/metrics.module';
-import { MetricsResolver } from './metrics.resolver';
+
+import { MetricsModule } from '../../metrics/metrics.module.ts';
+import { QueuesGraphqlModule } from '../queues/queues-graphql.module.ts';
+import { MetricsResolver } from './metrics.resolver.ts';
 
 @Module({
   imports: [MetricsModule, QueuesGraphqlModule],

@@ -4,7 +4,7 @@ Family-shared notes for everything under `applications/`. Per-project deltas liv
 
 ## What lives here
 
-- Four React Router v8 + Vite apps: `openthrottle-developer`, `openthrottle-admin`, `openthrottle-email`, `openthrottle-website`.
+- Three React Router v8 + Vite apps: `openthrottle-developer`, `openthrottle-admin`, `openthrottle-website`.
 - One NestJS app: `openthrottle-server` — the only backend, owner of the code-first GraphQL schema (`schema.gql`).
 - One Storybook host: `openthrottle-workbench` — Storybook 10 for `@openthrottle/react-router-shadcn`. **Not** a React Router app; `production:false`, local dev tool only, never deployed. See [`openthrottle-workbench/AGENTS.md`](./openthrottle-workbench/AGENTS.md).
 - [`openthrottle/`](./openthrottle/) is **not an Nx project** (no `package.json`): a standalone consumer-install `docker-compose.yml` + Dockerfiles running published images. Local dev Postgres/Redis come from the **root** `docker-compose.yml` via `pnpm run database:start`, not this directory.
@@ -27,4 +27,4 @@ Apps with `tests/e2e/` run Maestro flows via `pnpm nx run <app>:test-e2e` (confi
 
 ## Server/schema gotcha that affects everyone
 
-`autoSchemaFile` is the cwd-relative string `'schema.gql'` (set in `packages/nestjs-graphql`), and the `openthrottle-server` `dev`/`start` targets run with `cwd` at the project root, so booting `pnpm nx run openthrottle-server:dev` writes `applications/openthrottle-server/schema.gql`. That is the single committed schema; every consumer reads it via `@openthrottle/graphql-codegen`'s `defineCodegen`. Boot, then run consumer codegen and commit both.
+`applications/openthrottle-server/schema.gql` is the single committed schema; every consumer reads it via `@openthrottle/graphql-codegen`'s `defineCodegen`. Booting the server never writes it (the schema stays in memory): `pnpm nx run openthrottle-server:graphql-schema:write` (no Postgres/Redis) is the only producer. Run it, then consumer codegen, and commit both. A running `dev` loop that adds a resolver field does not rewrite the file on a server restart: re-run `graphql-schema:write` (or restart `openthrottle-developer:dev`, whose codegen-watch regenerates it first). `check:local` fails via `graphql-schema:check` when the committed file has drifted from the decorators. Mechanics: [`packages/nestjs-graphql/AGENTS.md`](../packages/nestjs-graphql/AGENTS.md).

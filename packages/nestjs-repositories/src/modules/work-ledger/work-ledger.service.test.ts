@@ -1,17 +1,18 @@
-import { describe, it, expect, beforeAll } from 'vitest';
-import { Test } from '@nestjs/testing';
 import { createMock } from '@golevelup/ts-vitest';
+import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { WorkArtifact } from './work-artifact.entity';
-import { WorkSessionSubject } from './work-session-subject.entity';
-import { WorkSession } from './work-session.entity';
+import { beforeAll, describe, expect, it } from 'vitest';
+
+import { WorkArtifact } from './work-artifact.entity.ts';
 import {
   workArtifactsFactory,
-  workSessionSubjectsFactory,
   workSessionsFactory,
-} from './work-ledger.factory';
-import { WorkLedgerService } from './work-ledger.service';
+  workSessionSubjectsFactory,
+} from './work-ledger.factory.ts';
+import { WorkLedgerService } from './work-ledger.service.ts';
+import { WorkSession } from './work-session.entity.ts';
+import { WorkSessionSubject } from './work-session-subject.entity.ts';
 
 describe('WorkLedgerService', () => {
   let service: WorkLedgerService;

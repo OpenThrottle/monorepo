@@ -33,7 +33,6 @@ const DEFAULT_TEST_ENV: Required<OpenThrottleEnv> = {
   APP_URL_ADMIN: 'http://localhost:6022',
   APP_URL_CMS: 'http://localhost:6023',
   APP_URL_DEVELOPER: 'http://localhost:6024',
-  APP_URL_EMAIL: 'http://localhost:6025',
   APP_URL_SERVER: 'http://localhost:6026',
   APP_URL_WEBSITE: 'http://localhost:6027',
   APP_VERSION: '1.0.0',
@@ -46,6 +45,7 @@ const DEFAULT_TEST_ENV: Required<OpenThrottleEnv> = {
    * consumers. The runtime length assertion in env.test.ts backstops the count.
    */
   FEATURE_BETA_PREVIEW: 'false',
+  FEATURE_BLOG_ENABLED: 'false',
   FEATURE_CHARLIE_PREVIEW: 'false',
 
   NODE_ENV: 'test',

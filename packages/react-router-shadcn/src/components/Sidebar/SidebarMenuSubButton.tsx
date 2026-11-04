@@ -1,5 +1,6 @@
-import * as React from 'react';
 import { Slot } from 'radix-ui';
+import * as React from 'react';
+
 import { cn } from '../../utils/cn';
 
 export type SidebarMenuSubButtonProps = React.ComponentProps<'a'> & {

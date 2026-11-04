@@ -1,11 +1,11 @@
 import * as React from 'react';
 
-import type { RolloutFlagCatalog } from '../types';
 import { RolloutContext } from '../data';
 import {
   useRolloutProvider,
   type UseRolloutProviderOptions,
 } from '../hooks/useRolloutProvider';
+import type { RolloutFlagCatalog } from '../types';
 
 export interface RolloutProviderProps<
   TCatalog extends RolloutFlagCatalog = RolloutFlagCatalog,

@@ -2,18 +2,24 @@
  * @description Compares persisted plan run snapshots to current Configuration tab state.
  */
 
+import { isRecord } from '@openthrottle/nodejs-utils';
 import {
   DEFAULT_PLAN_RUN_RALPH_ITERATIONS,
   DEFAULT_PLAN_RUN_RALPH_RUNNER,
 } from '@openthrottle/openthrottle-plan-config';
-import { isRecord } from '@openthrottle/nodejs-utils';
+
 import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import { formatWorkflowRalphExecutionBackendLabel } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
 interface PlanRunSnapshotRalphShape {
-  readonly executionBackend?: string;
-  readonly iterations?: number;
+  readonly effort: string | undefined;
+  readonly executionBackend: string | undefined;
+  readonly iterations: number | undefined;
+  readonly model: string | undefined;
 }
+
+const readNonEmptyString = (value: unknown): string | undefined =>
+  typeof value === 'string' && value.trim() !== '' ? value.trim() : undefined;
 
 interface PlanRunSnapshotShape {
   readonly ralph?: PlanRunSnapshotRalphShape;
@@ -43,6 +49,7 @@ const parseSnapshot = (
   const ralphRaw = parsed.ralph;
   const ralph: PlanRunSnapshotRalphShape | undefined = isRecord(ralphRaw)
     ? {
+        effort: readNonEmptyString(ralphRaw.effort),
         executionBackend:
           typeof ralphRaw.executionBackend === 'string'
             ? ralphRaw.executionBackend
@@ -51,6 +58,7 @@ const parseSnapshot = (
           typeof ralphRaw.iterations === 'number'
             ? ralphRaw.iterations
             : undefined,
+        model: readNonEmptyString(ralphRaw.model),
       }
     : undefined;
 
@@ -131,4 +139,28 @@ export const readPlanRunSnapshotWorkspacePath = (
   const snapshot = parseSnapshot(runConfigSnapshotJson);
   const path = snapshot?.workspace?.workingDirectory?.trim();
   return path === undefined || path === '' ? null : path;
+};
+
+/**
+ * @description The reasoning effort a run was enqueued with, from
+ * `run_config_snapshot.ralph.effort`; null when the snapshot is missing or recorded none.
+ */
+export const readPlanRunSnapshotEffort = (
+  runConfigSnapshotJson: string | null | undefined,
+): string | null => parseSnapshot(runConfigSnapshotJson)?.ralph?.effort ?? null;
+
+/**
+ * @description The model a run used: the row's own `model` column when set, else the
+ * snapshot's `ralph.model`; null when neither recorded one.
+ */
+export const readPlanRunModel = (row: {
+  readonly model?: string | null;
+  readonly runConfigSnapshotJson?: string | null;
+}): string | null => {
+  const own = readNonEmptyString(row.model);
+  if (own !== undefined) {
+    return own;
+  }
+
+  return parseSnapshot(row.runConfigSnapshotJson)?.ralph?.model ?? null;
 };

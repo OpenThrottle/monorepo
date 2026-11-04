@@ -10,12 +10,12 @@ export const MenubarSub = MenubarPrimitive.Sub;
 export const MenubarRadioGroup = MenubarPrimitive.RadioGroup;
 
 export * from './Menubar';
+export * from './MenubarCheckboxItem';
 export * from './MenubarContent';
 export * from './MenubarItem';
-export * from './MenubarCheckboxItem';
-export * from './MenubarRadioItem';
 export * from './MenubarLabel';
+export * from './MenubarRadioItem';
 export * from './MenubarSeparator';
 export * from './MenubarShortcut';
-export * from './MenubarSubTrigger';
 export * from './MenubarSubContent';
+export * from './MenubarSubTrigger';

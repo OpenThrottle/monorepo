@@ -3,17 +3,18 @@ import {
   parseFormData,
 } from '@openthrottle/react-router-graphql';
 import { z } from 'zod/v3';
-import { CreateServiceAccountCredentialInputSchema } from '~/__generated__/schemas';
+
+import type { Route } from '@/app/routes/+types/settings.keys';
 import {
   CreateServiceAccountCredentialDocument,
   RevokeServiceAccountCredentialDocument,
 } from '~/__generated__/graphql';
+import { CreateServiceAccountCredentialInputSchema } from '~/__generated__/schemas';
 import { toErrorMessage } from '~/global/utils/utils.error-message';
 import {
   parseExpiresAtFromFormData,
   type SettingsKeysActionData,
 } from '~/routing/settings/utils/settings-keys-action';
-import type { Route } from '@/app/routes/+types/settings.keys';
 
 export const createServiceAccountCredential = async (
   args: Route.ActionArgs,

@@ -52,6 +52,7 @@ fragment Task on TaskObject {
   summary
   title
   updatedAt
+  wave
 }
 
 fragment Project on ProjectObject {
@@ -84,7 +85,10 @@ fragment PlanRun on PlanRunObject {
   model
   planId
   queueName
+  resumeOfRunId
   runKind
   status
   updatedAt
+  usageLimitResetsAt
+  usageLimitType
 }

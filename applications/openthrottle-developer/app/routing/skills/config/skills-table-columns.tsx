@@ -1,23 +1,24 @@
-import * as React from 'react';
+import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import {
   Badge,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
-import { getResolvedModelInvocationDisplay } from '~/routing/skills/utils/model-invocation-badge';
-import { getSkillSourceBadge } from '~/routing/skills/utils/source-badge';
+import type { ColumnDef } from '@tanstack/react-table';
+import * as React from 'react';
 import { Link } from 'react-router';
+
+import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import { SkillOrphanRemoveButton } from '~/routing/skills/components/SkillOrphanRemoveButton';
+import type { SkillTagVocabularyOption } from '~/routing/skills/components/SkillTagChips';
 import {
   SKILL_RECORD_TAGS_COPY,
   SKILLS_MODEL_INVOCATION_COPY,
   SKILLS_SOURCE_COPY,
 } from '~/routing/skills/data/data.copy';
-import { SkillOrphanRemoveButton } from '~/routing/skills/components/SkillOrphanRemoveButton';
-import type { ColumnDef } from '@tanstack/react-table';
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
-import type { SkillTagVocabularyOption } from '~/routing/skills/components/SkillTagChips';
+import { getResolvedModelInvocationDisplay } from '~/routing/skills/utils/model-invocation-badge';
+import { getSkillSourceBadge } from '~/routing/skills/utils/source-badge';
 
 export type SkillsTableColumnValue =
   | RepoSkillEntry['disableModelInvocation']

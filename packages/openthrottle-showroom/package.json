@@ -14,18 +14,13 @@
   },
   "description": "Screencast pipeline for the @OpenThrottleAI '0-60' channel: typed episode scripts, demo flows, Playwright capture, narration, assembly and leak scanning.",
   "devDependencies": {
-    "playwright": "catalog:"
+    "playwright": "catalog:",
+    "vitest": "catalog:"
   },
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
-      "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
-    },
-    "./*": {
-      "types": "./dist/*.d.ts",
-      "import": "./dist/*.js",
-      "require": "./dist/*.js"
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
     }
   },
   "main": "./src/index.ts",

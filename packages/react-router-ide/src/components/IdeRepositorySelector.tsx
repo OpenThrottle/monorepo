@@ -1,6 +1,6 @@
-import * as React from 'react';
-import { Combobox, cn } from '@openthrottle/react-router-shadcn';
 import type { ComboboxOption } from '@openthrottle/react-router-shadcn';
+import { cn, Combobox } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 
 /** A selectable workspace repository, kept domain-agnostic (no GraphQL types). */
 export interface IdeRepositoryOption {

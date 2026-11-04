@@ -1,8 +1,9 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { ChatTurnUsageSummary } from '../ChatTurnUsageSummary';
+
 import type { ChatTurnUsageEvent } from '../../types';
+import { ChatTurnUsageSummary } from '../ChatTurnUsageSummary';
 
 const usageEvent = (
   overrides: Partial<ChatTurnUsageEvent>,

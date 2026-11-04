@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import {
   AGENTS_CHAT_LOW_CONFIDENCE_THRESHOLD,
   buildAgentsChatAssistantFooter,

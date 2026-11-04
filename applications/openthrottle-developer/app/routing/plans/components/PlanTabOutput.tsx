@@ -1,8 +1,9 @@
-import * as React from 'react';
 import type { PlanDetailOutputChunksQuery } from '@openthrottle/openthrottle-developer-codegen';
-import { GlobalHeading } from '@openthrottle/react-router-ui-global';
-import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 import { TabsContent } from '@openthrottle/react-router-shadcn';
+import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
+import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import * as React from 'react';
+
 import { LinkedArtifactsPanel } from '~/routing/plans/components/LinkedArtifactsPanel';
 import { LinkedArtifactsPanelSkeleton } from '~/routing/plans/components/LinkedArtifactsPanelSkeleton';
 import { OutputStream } from '~/routing/plans/components/OutputStream';

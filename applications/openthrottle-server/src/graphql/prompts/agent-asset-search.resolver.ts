@@ -6,18 +6,19 @@
  * back to a live disk scan.
  */
 
+import { Args, Query, Resolver } from '@nestjs/graphql';
+import type { AgentAssetSearchChunk } from '@openthrottle/node-client';
 import {
   embedQuery,
   searchAgentAssets as runAgentAssetSearch,
 } from '@openthrottle/node-client';
-import type { AgentAssetSearchChunk } from '@openthrottle/node-client';
-import { Args, Query, Resolver } from '@nestjs/graphql';
-import { AgentAssetSearchInput } from './agent-asset-search.input';
+
+import { AgentAssetSearchInput } from './agent-asset-search.input.ts';
 import {
   AgentAssetChunk,
   AgentAssetSearchResult,
-} from './agent-asset-search.object';
-import { CustomPromptTypeEnum } from './custom-prompt.object';
+} from './agent-asset-search.object.ts';
+import { CustomPromptTypeEnum } from './custom-prompt.object.ts';
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;

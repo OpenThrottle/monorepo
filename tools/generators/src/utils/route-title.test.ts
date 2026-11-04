@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { getRouteTitleVariables } from './route-title';
 
 describe('getRouteTitleVariables', () => {

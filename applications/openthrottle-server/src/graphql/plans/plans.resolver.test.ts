@@ -1,45 +1,50 @@
 import { createMock } from '@golevelup/ts-vitest';
+import { getQueueToken } from '@nestjs/bullmq';
+import { BadRequestException } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
+import { AUTH_PRINCIPAL_KIND_USER } from '@openthrottle/nestjs-auth';
+import { LoggerService } from '@openthrottle/nestjs-modules';
+import { PERMISSIONS, PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
+import type { Plan } from '@openthrottle/nestjs-repositories';
 import {
   AgentCliPreferencesService,
   getDefaultPlanRunConfigStorage,
-  PlansService,
   PlanRunsService,
+  PlansService,
   ProjectsService,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
-import type { Plan } from '@openthrottle/nestjs-repositories';
 import { Task } from '@openthrottle/nestjs-repositories';
-import { BadRequestException } from '@nestjs/common';
-import { getQueueToken } from '@nestjs/bullmq';
-import { Test } from '@nestjs/testing';
-import { describe, expect, beforeAll, test, vi, beforeEach } from 'vitest';
 import type { Queue } from 'bullmq';
 import type { SelectQueryBuilder } from 'typeorm';
-import { AUTH_PRINCIPAL_KIND_USER } from '@openthrottle/nestjs-auth';
-import { NotificationsService } from '../../notifications/notifications.service';
-import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants';
-import { PlanCancelChannelService } from '../../queues/plans/plan-cancel-channel.service';
-import { PlanRunCancellationService } from '../../queues/plans/plan-run-cancellation.service';
-import type { RunPlanJobData } from '../../queues/plans/plans.types';
-import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service';
-import { PlanCreationService } from '../../services/plan-creation/plan-creation.service';
-import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service';
-import { PlanEnqueueService } from './plan-enqueue.service';
-import { PlanStatusService } from './plan-status.service';
+import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { NotificationsService } from '../../notifications/notifications.service.ts';
+import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.types.ts';
+import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service.ts';
+import { PlanCancelChannelService } from '../../queues/plans/plan-cancel-channel.service.ts';
+import { PlanRunCancellationService } from '../../queues/plans/plan-run-cancellation.service.ts';
+import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants.ts';
+import type { RunPlanJobData } from '../../queues/plans/plans.types.ts';
+import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service.ts';
+import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service.ts';
+import { PlanCreationService } from '../../services/plan-creation/plan-creation.service.ts';
+import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service.ts';
+import { WorktreeCheckoutPruneService } from '../../services/worktree-checkout-prune/worktree-checkout-prune.service.ts';
+import { PRUNE_WORKTREE_CHECKOUT_OUTCOME } from '../../services/worktree-checkout-prune/worktree-checkout-prune.types.ts';
+import { SettleRunLedgerService } from '../work-ledger/settle-run-ledger.service.ts';
+import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service.ts';
 import type {
   CreatePlanInput,
   ListPlansByStatusInput,
   UpdatePlanInput,
-} from './plan.input';
-import { PlanRalphWorkflowModeGraphQL } from './plan.input';
-import { PlansLoaders } from './plans-loaders';
-import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service';
-import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.types';
-import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service';
-import { PERMISSIONS, PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { PlansResolver } from './plans.resolver';
-import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service';
+} from './plan.input.ts';
+import { PlanRalphWorkflowModeGraphQL } from './plan.input.ts';
+import { PlanEnqueueService } from './plan-enqueue/plan-enqueue.service.ts';
+import { PlanStatusService } from './plan-status.service.ts';
+import { PlansResolver } from './plans.resolver.ts';
+import { PlansLoaders } from './plans-loaders.ts';
 
 vi.mock('@openthrottle/node-client', () => ({
   getPostgresConfig: vi.fn(),
@@ -137,6 +142,7 @@ describe('PlansResolver', () => {
   });
 
   const mockProjectLoad = vi.fn().mockResolvedValue(null);
+  const mockScheduledRunLoad = vi.fn().mockResolvedValue(null);
   const mockTaskCountLoad = vi.fn().mockResolvedValue(0);
   const mockTasksCompletedCountLoad = vi.fn().mockResolvedValue(0);
   const mockPlanHooksLoad = vi
@@ -145,6 +151,7 @@ describe('PlansResolver', () => {
   const mockPlansLoaders = createMock<PlansLoaders>({
     planHooksByPlanIdLoader: { load: mockPlanHooksLoad },
     projectLoader: { load: mockProjectLoad },
+    scheduledRunByPlanIdLoader: { load: mockScheduledRunLoad },
     taskCountByPlanIdLoader: { load: mockTaskCountLoad },
     tasksCompletedCountByPlanIdLoader: { load: mockTasksCompletedCountLoad },
   });
@@ -219,6 +226,10 @@ describe('PlansResolver', () => {
       resolveEffectiveUserId: mockResolveEffectiveUserId,
     });
 
+  const mockPruneByPath = vi.fn();
+  const mockWorktreeCheckoutPruneService =
+    createMock<WorktreeCheckoutPruneService>({ pruneByPath: mockPruneByPath });
+
   const mockRegisterWorktreeCheckout = vi.fn().mockResolvedValue(null);
   const mockPlanRunWorktreeCheckoutService =
     createMock<PlanRunWorktreeCheckoutService>({
@@ -238,9 +249,18 @@ describe('PlansResolver', () => {
   const mockEnqueueOrchestrator = vi
     .fn()
     .mockResolvedValue(sampleEnqueueOutcome);
+  const sampleScheduleOutcome = {
+    executionBackend: 'cursor' as const,
+    jobId: 'scheduled-plan-run-1',
+    planId: mockPlan.id,
+    planRunId: 'run-scheduled-1',
+    scheduledFor: new Date('2026-11-02T09:00:00.000Z'),
+  };
+  const mockSchedulePlanRun = vi.fn().mockResolvedValue(sampleScheduleOutcome);
   const mockPlanEnqueueService = createMock<PlanEnqueueService>({
     enqueueOrchestrator: mockEnqueueOrchestrator,
     enqueueSpawn: mockEnqueueSpawn,
+    schedulePlanRun: mockSchedulePlanRun,
   });
 
   const mockEnqueueEvaluation = vi.fn().mockResolvedValue(undefined);
@@ -249,6 +269,11 @@ describe('PlansResolver', () => {
       enqueueEvaluation: mockEnqueueEvaluation,
     },
   );
+
+  const mockRecordSettledRunArtifacts = vi.fn().mockResolvedValue(undefined);
+  const mockSettleRunLedgerService = createMock<SettleRunLedgerService>({
+    recordSettledRunArtifacts: mockRecordSettledRunArtifacts,
+  });
 
   beforeAll(async () => {
     const app = await Test.createTestingModule({
@@ -290,6 +315,10 @@ describe('PlansResolver', () => {
           }),
         },
         { provide: PlanEnqueueService, useValue: mockPlanEnqueueService },
+        {
+          provide: LoggerService,
+          useValue: createMock<LoggerService>(),
+        },
         // Real PlanStatusService wired to the existing mocks: updatePlan's merge + transition
         // policy orchestration is exercised end-to-end here; the focused setStatus/cancelRun/policy
         // unit coverage lives in plan-status.service.test.ts.
@@ -301,7 +330,15 @@ describe('PlansResolver', () => {
         },
         { provide: PlansService, useValue: mockPlansService },
         { provide: ProjectsService, useValue: mockProjectsService },
+        {
+          provide: WorktreeCheckoutPruneService,
+          useValue: mockWorktreeCheckoutPruneService,
+        },
         { provide: TasksService, useValue: mockTasksService },
+        {
+          provide: SettleRunLedgerService,
+          useValue: mockSettleRunLedgerService,
+        },
         {
           provide: WorkLedgerCaptureService,
           useValue: createMock<WorkLedgerCaptureService>(),
@@ -549,6 +586,41 @@ describe('PlansResolver', () => {
 
       expect(mockTaskCountLoad).toHaveBeenCalledWith(mockPlan.id);
       expect(result).toBe(7);
+    });
+
+    test('scheduledRunAt resolves the soonest SCHEDULED run through scheduledRunByPlanIdLoader', async () => {
+      const soonest = new Date('2026-08-01T09:00:00Z');
+      mockScheduledRunLoad.mockResolvedValueOnce({
+        id: 'run-1',
+        scheduledFor: soonest,
+      });
+
+      const result = await resolver.scheduledRunAt(mockPlan);
+
+      expect(mockScheduledRunLoad).toHaveBeenCalledWith(mockPlan.id);
+      expect(result).toBe(soonest);
+    });
+
+    test('scheduledRunAt is null when no run is scheduled', async () => {
+      mockScheduledRunLoad.mockResolvedValueOnce(null);
+
+      await expect(resolver.scheduledRunAt(mockPlan)).resolves.toBeNull();
+    });
+
+    test('scheduledRunId resolves the id of that same soonest SCHEDULED run', async () => {
+      mockScheduledRunLoad.mockResolvedValueOnce({
+        id: 'run-1',
+        scheduledFor: new Date('2026-08-01T09:00:00Z'),
+      });
+
+      await expect(resolver.scheduledRunId(mockPlan)).resolves.toBe('run-1');
+      expect(mockScheduledRunLoad).toHaveBeenCalledWith(mockPlan.id);
+    });
+
+    test('scheduledRunId is null when no run is scheduled', async () => {
+      mockScheduledRunLoad.mockResolvedValueOnce(null);
+
+      await expect(resolver.scheduledRunId(mockPlan)).resolves.toBeNull();
     });
 
     test('tasksCompletedCount resolves through tasksCompletedCountByPlanIdLoader', async () => {
@@ -930,6 +1002,8 @@ describe('PlansResolver', () => {
       });
 
       expect(mockEnqueueSpawn).toHaveBeenCalledWith({
+        actorKind: undefined,
+        actorSub: undefined,
         actorUserId: null,
         branch: 'feature/test',
         idempotencyKey: 'caller-key',
@@ -1143,7 +1217,100 @@ describe('PlansResolver', () => {
     });
   });
 
+  describe('schedulePlanRun', () => {
+    const scheduledFor = new Date('2026-11-02T09:00:00.000Z');
+    const input = {
+      branch: 'feature/test',
+      planId: mockPlan.id,
+      scheduledFor,
+    };
+
+    beforeEach(() => {
+      mockSchedulePlanRun.mockClear();
+      mockSchedulePlanRun.mockResolvedValue(sampleScheduleOutcome);
+    });
+
+    test('delegates to PlanEnqueueService.schedulePlanRun with the actor and maps the outcome', async () => {
+      const result = await resolver.schedulePlanRun(
+        {
+          ...input,
+          idempotencyKey: 'dedupe-1',
+          ralph: { effort: 'high' },
+        },
+        'user-1',
+        'user',
+      );
+
+      expect(mockSchedulePlanRun).toHaveBeenCalledWith(
+        expect.objectContaining({
+          actorKind: 'user',
+          actorSub: 'user-1',
+          actorUserId: 'user-1',
+          branch: 'feature/test',
+          idempotencyKey: 'dedupe-1',
+          planId: mockPlan.id,
+          ralph: { effort: 'high' },
+          scheduledFor,
+        }),
+      );
+      expect(result).toEqual(sampleScheduleOutcome);
+    });
+
+    test('rejects a disabled agent backend before scheduling anything', async () => {
+      mockAgentIsEnabled.mockResolvedValueOnce(false);
+
+      await expect(
+        resolver.schedulePlanRun(
+          { ...input, ralph: { backend: 'claude' } },
+          'user-1',
+          'user',
+        ),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(mockSchedulePlanRun).not.toHaveBeenCalled();
+    });
+  });
+
   describe('planRunsByPlanId', () => {
+    test('exposes scheduledFor on a SCHEDULED run and null on an immediate one', async () => {
+      const scheduledFor = new Date('2026-11-02T09:00:00.000Z');
+      const baseRow = {
+        createdAt: new Date('2026-11-01T12:00:00.000Z'),
+        executionBackend: 'claude',
+        heartbeatExpected: true,
+        planId: mockPlan.id,
+        queueName: PLANS_QUEUE_NAME,
+        runConfigSnapshot: null,
+        runKind: 'orchestrator',
+        updatedAt: new Date('2026-11-01T12:00:00.000Z'),
+      };
+      mockFindRecentByPlanId.mockResolvedValueOnce([
+        {
+          ...baseRow,
+          bullmqJobId: 'scheduled-plan-run-1',
+          id: 'run-scheduled',
+          scheduledFor,
+          status: 'SCHEDULED',
+        },
+        {
+          ...baseRow,
+          bullmqJobId: 'job-now',
+          id: 'run-now',
+          scheduledFor: null,
+          status: 'QUEUED',
+        },
+      ]);
+
+      const result = await resolver.planRunsByPlanId({
+        limit: 5,
+        planId: mockPlan.id,
+      });
+
+      expect(result.map((r) => [r.id, r.status, r.scheduledFor])).toEqual([
+        ['run-scheduled', 'SCHEDULED', scheduledFor],
+        ['run-now', 'QUEUED', null],
+      ]);
+    });
+
     test('returns recent persisted run audit rows with execution backend', async () => {
       const createdAt = new Date('2026-05-09T12:00:00.000Z');
       const updatedAt = new Date('2026-05-09T12:01:00.000Z');
@@ -1498,7 +1665,9 @@ describe('PlansResolver', () => {
       });
 
       const result = await resolver.settleCliPlanRun({
+        headSha: null,
         planRunId: 'cli-run-1',
+        prNumber: null,
         status: 'cancelled',
       });
 
@@ -1512,7 +1681,9 @@ describe('PlansResolver', () => {
       mockSettleCliRun.mockClear();
       await expect(
         resolver.settleCliPlanRun({
+          headSha: null,
           planRunId: 'cli-run-1',
+          prNumber: null,
           status: 'IN_PROGRESS',
         }),
       ).rejects.toThrow(/Invalid settle status/);
@@ -1523,11 +1694,76 @@ describe('PlansResolver', () => {
       mockSettleCliRun.mockResolvedValueOnce(null);
 
       const result = await resolver.settleCliPlanRun({
+        headSha: null,
         planRunId: 'missing',
+        prNumber: null,
         status: 'COMPLETED',
       });
 
       expect(result).toBeNull();
+    });
+
+    test('records both artifacts when a COMPLETED run reports a sha and a PR', async () => {
+      mockRecordSettledRunArtifacts.mockClear();
+      const run = {
+        bullmqJobId: null,
+        createdAt: new Date('2026-07-22T00:00:00.000Z'),
+        executionBackend: 'claude',
+        hostname: null,
+        id: 'cli-run-1',
+        pid: null,
+        planId: mockPlan.id,
+        queueName: PLANS_QUEUE_NAME,
+        runConfigSnapshot: null,
+        runKind: 'orchestrator',
+        status: 'COMPLETED',
+        updatedAt: new Date('2026-07-22T00:01:00.000Z'),
+        workerId: null,
+      };
+      mockSettleCliRun.mockResolvedValueOnce(run);
+
+      await resolver.settleCliPlanRun({
+        headSha: 'deadbeef',
+        planRunId: 'cli-run-1',
+        prNumber: 537,
+        status: 'COMPLETED',
+      });
+
+      expect(mockRecordSettledRunArtifacts).toHaveBeenCalledWith({
+        headSha: 'deadbeef',
+        planRun: run,
+        prNumber: 537,
+      });
+    });
+
+    test('records nothing on a non-COMPLETED exit even when a sha is supplied', async () => {
+      mockRecordSettledRunArtifacts.mockClear();
+      mockSettleCliRun.mockResolvedValueOnce({
+        bullmqJobId: null,
+        createdAt: new Date('2026-07-22T00:00:00.000Z'),
+        executionBackend: 'claude',
+        hostname: null,
+        id: 'cli-run-1',
+        pid: null,
+        planId: mockPlan.id,
+        queueName: PLANS_QUEUE_NAME,
+        runConfigSnapshot: null,
+        runKind: 'orchestrator',
+        status: 'FAILED',
+        updatedAt: new Date('2026-07-22T00:01:00.000Z'),
+        workerId: null,
+      });
+
+      // A run that died mid-way may still have pushed a branch; that is not a claim
+      // the ledger should make on its behalf.
+      await resolver.settleCliPlanRun({
+        headSha: 'deadbeef',
+        planRunId: 'cli-run-1',
+        prNumber: null,
+        status: 'FAILED',
+      });
+
+      expect(mockRecordSettledRunArtifacts).not.toHaveBeenCalled();
     });
   });
 
@@ -1697,6 +1933,56 @@ describe('PlansResolver', () => {
       );
 
       expect(result).toBeNull();
+    });
+  });
+
+  describe('deregisterWorktreeCheckout', () => {
+    const userId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+    const filesystemPath =
+      '/Users/matt/.openthrottle/worktrees/OpenThrottle/monorepo/wt-gone';
+
+    beforeEach(() => {
+      mockResolveEffectiveUserId.mockReset();
+      mockPruneByPath.mockReset();
+    });
+
+    test('prunes by path for the acting user of a service-account token', async () => {
+      mockResolveEffectiveUserId.mockResolvedValue(userId);
+      mockPruneByPath.mockResolvedValueOnce({
+        checkoutId: 'checkout-gone',
+        outcome: PRUNE_WORKTREE_CHECKOUT_OUTCOME.PRUNED,
+        path: filesystemPath,
+      });
+
+      const result = await resolver.deregisterWorktreeCheckout(
+        { filesystemPath },
+        'sa-1',
+      );
+
+      expect(mockResolveEffectiveUserId).toHaveBeenCalledWith('sa-1');
+      expect(mockPruneByPath).toHaveBeenCalledWith(userId, filesystemPath);
+      expect(result).toEqual({
+        checkoutId: 'checkout-gone',
+        outcome: 'pruned',
+        path: filesystemPath,
+      });
+    });
+
+    test('reports NOT_FOUND without touching anything for an unresolvable actor', async () => {
+      // A teardown calls this best-effort; an unlinked account must not make it throw.
+      mockResolveEffectiveUserId.mockResolvedValue(null);
+
+      const result = await resolver.deregisterWorktreeCheckout(
+        { filesystemPath },
+        'sa-unlinked',
+      );
+
+      expect(mockPruneByPath).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        checkoutId: null,
+        outcome: 'not-found',
+        path: filesystemPath,
+      });
     });
   });
 

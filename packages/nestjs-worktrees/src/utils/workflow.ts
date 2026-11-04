@@ -11,12 +11,12 @@ import type {
   WorkflowLoopResult,
   WorktreeWorkflowOptions,
   WorktreeWorkflowResult,
-} from '../types/worktree';
+} from '../types/worktree.ts';
 import {
   parentJobAcquireAndCreateBranch,
   parentJobEnsureCommitBeforeRelease,
   pushBranchToRemote,
-} from './parent-job';
+} from './parent-job.ts';
 
 /**
  * @description Runs the full worktree workflow: acquire target and create branch, run the provided

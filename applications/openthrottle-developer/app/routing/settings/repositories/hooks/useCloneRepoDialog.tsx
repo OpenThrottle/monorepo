@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useNavigation } from 'react-router';
 
-export interface CloneRepoDialogOptions {
+export interface UseCloneRepoDialogOptions {
   /**
    * The latest route action error, threaded from the route. Used to keep the
    * dialog open on a failed clone while auto-closing it on success.
@@ -22,7 +22,7 @@ export interface UseCloneRepoDialogResult {
  * the dialog component renders from this.
  */
 export const useCloneRepoDialog = (
-  options: CloneRepoDialogOptions,
+  options: UseCloneRepoDialogOptions,
 ): UseCloneRepoDialogResult => {
   const { actionError } = options;
 
@@ -37,6 +37,8 @@ export const useCloneRepoDialog = (
     navigation.formData?.get('intent') === 'cloneRepo';
 
   // Handlers
+
+  // Markup
 
   // Life Cycle
   // Close the dialog on the cloneRepo submit's true→false edge, but only on a

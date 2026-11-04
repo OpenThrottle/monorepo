@@ -2,13 +2,13 @@
  * Pure element helpers — layering and floor bounds. No React, no DOM.
  */
 
-import { type Point, type Rect } from './geometry';
 import { ELEMENT_DEFAULTS, ELEMENT_LAYER } from '../data/elements';
 import {
   type FloorElement,
   FloorElementType,
   type FloorLayout,
 } from '../types';
+import { type Point, type Rect } from './geometry';
 
 /**
  * The floor rectangle (world inches) an element's center is clamped to.

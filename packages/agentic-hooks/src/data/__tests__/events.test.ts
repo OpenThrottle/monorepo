@@ -18,8 +18,8 @@ import {
   SKILL_USAGE_OUTCOMES,
   toRecordSkillUsageInput,
   toRecordSkillUsageOutcomeInput,
-} from '../../index';
-import type { OutcomeEvent, UsageEvent } from '../../types';
+} from '../../index.ts';
+import type { OutcomeEvent, UsageEvent } from '../../types.ts';
 
 describe('buildUsageEvent + appendJsonl', () => {
   let tmpRoot: string;
@@ -153,6 +153,17 @@ describe('buildOutcomeEvent', () => {
     expect(event.duration_ms).toBe(4201);
     expect(event.scope).toBe('ours');
     expect(event.event_kind).toBe('outcome');
+  });
+
+  it("accepts session_ended, the automatic path's no-quality-claim value", () => {
+    const event = buildOutcomeEvent({
+      outcome: SKILL_USAGE_OUTCOMES.SESSION_ENDED,
+      repoRoot: tmpRoot,
+      sessionId: 'sess-2',
+      skillName: 'ot-plans',
+    });
+    expect(event?.outcome).toBe('session_ended');
+    expect(event?.duration_ms).toBeNull();
   });
 
   it('rejects invalid outcome values', () => {

@@ -1,7 +1,8 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Button } from '@openthrottle/react-router-shadcn';
+import { Button, cn } from '@openthrottle/react-router-shadcn';
 import { AlertTriangle, RefreshCw, X } from 'lucide-react';
+import * as React from 'react';
+
+import { ROOT_LOADER_FAILURE_SNIPPET_MAX } from '~/global/config/root-loader-failure-banner';
 import type {
   RootLoaderDiagnostics,
   RootLoaderFailure,
@@ -11,7 +12,6 @@ import {
   rootLoaderStepLabel,
   truncateForBanner,
 } from '~/global/utils/root-loader-diagnostics';
-import { ROOT_LOADER_FAILURE_SNIPPET_MAX } from '~/global/config/root-loader-failure-banner';
 
 export interface GlobalRootLoaderFailureBannerProps {
   readonly diagnostics?: RootLoaderDiagnostics | null;
@@ -92,7 +92,7 @@ export const GlobalRootLoaderFailureBanner = (
 
   return (
     <div
-      className={clsx(
+      className={cn(
         'border-destructive/40 bg-destructive/15 text-destructive-foreground flex w-full flex-wrap items-center justify-center gap-2 border-b px-4 py-2 text-sm',
       )}
       data-testid="GlobalRootLoaderFailureBanner"
@@ -147,7 +147,7 @@ export const GlobalRootLoaderFailureBanner = (
         variant="secondary"
       >
         <RefreshCw
-          className={clsx('size-4', {
+          className={cn('size-4', {
             'animate-spin': isRevalidating === true,
           })}
         />

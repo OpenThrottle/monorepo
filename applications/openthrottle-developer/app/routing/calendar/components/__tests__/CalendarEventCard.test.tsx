@@ -1,9 +1,10 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { CalendarEventCard } from '../CalendarEventCard';
+
 import type { CalendarEventCardProps } from '../CalendarEventCard';
+import { CalendarEventCard } from '../CalendarEventCard';
 
 describe('CalendarEventCard Component', () => {
   let component: RenderResult;

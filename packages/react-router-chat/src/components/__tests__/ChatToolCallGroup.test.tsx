@@ -1,11 +1,12 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { ChatToolCallGroup } from '../ChatToolCallGroup';
-import type { ChatToolCallGroupProps } from '../ChatToolCallGroup';
+
 import type { ChatTurnToolEvent } from '../../types';
+import type { ChatToolCallGroupProps } from '../ChatToolCallGroup';
+import { ChatToolCallGroup } from '../ChatToolCallGroup';
 
 const tool = (
   overrides: Partial<ChatTurnToolEvent> = {},

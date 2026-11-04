@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+
 import type { DriverLogger } from '../logger.ts';
 import { noopDriverLogger } from '../logger.ts';
 

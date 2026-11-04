@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import {
   GENERATOR_DOCS_AGENT_USAGE,
   GENERATOR_DOCS_AGENTS,
@@ -6,6 +7,7 @@ import {
   GENERATOR_DOCS_OT_GENERATORS_SKILL,
   GENERATOR_DOCS_TOOLS_PACKAGE_README,
 } from '~/routing/generators/constants/generator-nx-docs';
+
 import { generators } from '../data.generators';
 
 function assertIsString(value: unknown): asserts value is string {

@@ -1,15 +1,16 @@
-import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { SITE_TITLE } from '~/global/config/settings';
-import { GetWorkspaceRepositoryDocument } from '~/__generated__/graphql';
-import { RepositoryDetail } from '~/routing/settings/repositories/components/RepositoryDetail';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+
 import type { Route } from '@/app/routes/+types/settings.repositories.$repositoryId._index';
+import { GetWorkspaceRepositoryDocument } from '~/__generated__/graphql';
+import { SITE_TITLE } from '~/global/config/settings';
+import { RepositoryDetail } from '~/routing/settings/repositories/components/RepositoryDetail';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

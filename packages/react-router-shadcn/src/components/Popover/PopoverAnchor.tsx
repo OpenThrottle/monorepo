@@ -1,6 +1,6 @@
-import * as React from 'react';
-import type { ComponentPropsWithoutRef } from 'react';
 import { Popover as PopoverPrimitive } from 'radix-ui';
+import type { ComponentPropsWithoutRef } from 'react';
+import * as React from 'react';
 
 export type PopoverAnchorProps = ComponentPropsWithoutRef<
   typeof PopoverPrimitive.Anchor

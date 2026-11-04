@@ -2,12 +2,6 @@
  * @description Resolver for Plan queries and mutations. Injects PlansService from @openthrottle/nestjs-repositories and maps Plan entities to PlanObject.
  */
 
-import {
-  getPostgresConfig,
-  searchPlansBySemanticQuery,
-} from '@openthrottle/node-client';
-import type { PlanStatusCount } from '@openthrottle/node-client';
-import { isRecord } from '@openthrottle/nodejs-utils';
 import { BadRequestException, UseGuards } from '@nestjs/common';
 import {
   Args,
@@ -19,62 +13,65 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { ProfileResponseTime } from '@openthrottle/nestjs-profiling';
-import { EmitNotification } from '@openthrottle/nestjs-websockets';
 import {
   AUTH_PRINCIPAL_KIND_USER,
   CurrentUser,
 } from '@openthrottle/nestjs-auth';
-import {
-  AgentCliPreferencesService,
-  getDefaultPlanRunConfigStorage,
-  isPlanStatus,
-  parsePlanRunConfigJson,
-  planHasCustomRunConfig,
-  PLAN_STATUS_LIST,
-  PLAN_STATUS_VALUES,
-  PlansService,
-  PlanRunsService,
-  planRunConfigFromPlanStorage,
-  resolveCompletedAtForStatusChange,
-  serializePlanRunConfigForGraphql,
-  serializePlanRunConfigSnapshotForGraphql,
-  STALE_CUTOFF_MS,
-  TASK_STATUS_VALUES,
-  TasksService,
-} from '@openthrottle/nestjs-repositories';
+import { ProfileResponseTime } from '@openthrottle/nestjs-profiling';
+import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import type { PlanStatus, TaskStatus } from '@openthrottle/nestjs-repositories';
-import { PlanTaskStatus } from './plan-task-status.enum';
 import type {
   PlanJobRunHooksStorage,
   PlanRun,
   PlanRunConfigStorage,
   PlanRunExecutionBackend,
 } from '@openthrottle/nestjs-repositories';
-import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 import type { Project, Task } from '@openthrottle/nestjs-repositories';
-import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service';
-import { PlanCreationService } from '../../services/plan-creation/plan-creation.service';
-import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service';
-import { ProjectObject } from '../projects/project.object';
-import { TaskObject } from '../tasks/task.object';
 import {
-  type EnqueueOutcome,
-  PlanEnqueueService,
-} from './plan-enqueue.service';
-import { PlanStatusService } from './plan-status.service';
-import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service';
-import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service';
-import { TAGGING_ENTITY_TYPES } from '../../queues/tagging/tagging.types';
-import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.types';
-import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service';
-import { PlansLoaders } from './plans-loaders';
+  AgentCliPreferencesService,
+  getDefaultPlanRunConfigStorage,
+  isPlanStatus,
+  parsePlanRunConfigJson,
+  PLAN_STATUS_LIST,
+  PLAN_STATUS_VALUES,
+  planHasCustomRunConfig,
+  planRunConfigFromPlanStorage,
+  PlanRunsService,
+  PlansService,
+  serializePlanRunConfigForGraphql,
+  serializePlanRunConfigSnapshotForGraphql,
+  STALE_CUTOFF_MS,
+  TASK_STATUS_VALUES,
+  TasksService,
+} from '@openthrottle/nestjs-repositories';
+import { EmitNotification } from '@openthrottle/nestjs-websockets';
+import type { PlanStatusCount } from '@openthrottle/node-client';
+import {
+  getPostgresConfig,
+  searchPlansBySemanticQuery,
+} from '@openthrottle/node-client';
+import { isRecord } from '@openthrottle/nodejs-utils';
+import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
+
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.types.ts';
+import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service.ts';
+import { TAGGING_ENTITY_TYPES } from '../../queues/tagging/tagging.types.ts';
+import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service.ts';
+import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service.ts';
+import { PlanCreationService } from '../../services/plan-creation/plan-creation.service.ts';
+import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service.ts';
+import { WorktreeCheckoutPruneService } from '../../services/worktree-checkout-prune/worktree-checkout-prune.service.ts';
+import { PRUNE_WORKTREE_CHECKOUT_OUTCOME } from '../../services/worktree-checkout-prune/worktree-checkout-prune.types.ts';
+import { ProjectObject } from '../projects/project.object.ts';
+import { TaskObject } from '../tasks/task.object.ts';
+import { SettleRunLedgerService } from '../work-ledger/settle-run-ledger.service.ts';
+import { DeregisterWorktreeCheckoutInput } from '../workspace-settings/prune-worktree-checkouts.input.ts';
+import { DeregisterWorktreeCheckoutPayloadObject } from '../workspace-settings/prune-worktree-checkouts.object.ts';
 import {
   parseJobRunHooksJsonInput,
   serializeJobRunHooksForGraphql,
-} from './enqueue-plan-job-run-hooks';
+} from './enqueue-plan-job-run-hooks.ts';
 import {
   CancelPlanRunInput,
   CreatePlanInput,
@@ -82,18 +79,19 @@ import {
   DeletePlanInput,
   EnqueuePlanRalphOrchestratorInput,
   EnqueuePlanRunInput,
+  ForceSettlePlanRunInput,
   ListPlansByStatusInput,
   PlanRalphWorkflowModeGraphQL,
   PlanRunsByPlanIdInput,
-  ForceSettlePlanRunInput,
   RecordPlanRunHeartbeatInput,
   RegisterCliPlanRunInput,
   RegisterPlanRunWorktreeCheckoutInput,
+  SchedulePlanRunInput,
   SearchPlansInput,
   SetPlanStatusInput,
   SettleCliPlanRunInput,
   UpdatePlanInput,
-} from './plan.input';
+} from './plan.input.ts';
 import {
   CancelPlanRunResultObject,
   CreatePlansResultObject,
@@ -104,7 +102,16 @@ import {
   PlanRefObject,
   PlanRunObject,
   PlanStatusCountObject,
-} from './plan.object';
+  SchedulePlanRunResultObject,
+} from './plan.object.ts';
+import { PlanEnqueueService } from './plan-enqueue/plan-enqueue.service.ts';
+import type {
+  EnqueueOutcome,
+  ScheduleOutcome,
+} from './plan-enqueue/plan-enqueue.types.ts';
+import { PlanStatusService } from './plan-status.service.ts';
+import { PlanTaskStatus } from './plan-task-status.enum.ts';
+import { PlansLoaders } from './plans-loaders.ts';
 
 const DEFAULT_SEARCH_PLANS_LIMIT = 20;
 const DEFAULT_PLAN_RUNS_LIMIT = 20;
@@ -184,6 +191,16 @@ function isEnqueuePlanRunResult(
   value: unknown,
 ): value is EnqueuePlanRunResultObject {
   return isRecord(value) && typeof value.planId === 'string';
+}
+
+function isSchedulePlanRunResult(
+  value: unknown,
+): value is SchedulePlanRunResultObject {
+  return (
+    isRecord(value) &&
+    typeof value.planId === 'string' &&
+    value.scheduledFor instanceof Date
+  );
 }
 
 function isCancelPlanRunResult(
@@ -292,7 +309,8 @@ export class PlansResolver {
     private readonly plansService: PlansService,
     private readonly taggingEnqueueService: TaggingEnqueueService,
     private readonly tasksService: TasksService,
-    private readonly workLedgerCapture: WorkLedgerCaptureService,
+    private readonly settleRunLedgerService: SettleRunLedgerService,
+    private readonly worktreeCheckoutPruneService: WorktreeCheckoutPruneService,
   ) {}
 
   /**
@@ -338,6 +356,20 @@ export class PlansResolver {
     result.planId = outcome.planId;
     result.queuePosition = outcome.queuePosition;
     result.queueTotal = outcome.queueTotal;
+
+    return result;
+  }
+
+  private toScheduleResult(
+    outcome: ScheduleOutcome,
+  ): SchedulePlanRunResultObject {
+    const result = new SchedulePlanRunResultObject();
+
+    result.executionBackend = outcome.executionBackend;
+    result.jobId = outcome.jobId;
+    result.planId = outcome.planId;
+    result.planRunId = outcome.planRunId;
+    result.scheduledFor = outcome.scheduledFor;
 
     return result;
   }
@@ -398,10 +430,30 @@ export class PlansResolver {
   }
 
   @ResolveField(() => Int, {
-    description: `Number of resolved tasks on this plan (status COMPLETED or SKIPPED). SKIPPED counts as done / won't be worked on (e.g. promoted).`,
+    description: `Number of resolved tasks on this plan (status COMPLETED, SKIPPED or PROMOTED). SKIPPED and PROMOTED count as done / won't be worked on here (PROMOTED continued as its own plan).`,
   })
   async tasksCompletedCount(@Parent() parent: PlanObject): Promise<number> {
     return this.loaders.tasksCompletedCountByPlanIdLoader.load(parent.id);
+  }
+
+  @ResolveField(() => Date, {
+    description: `The soonest instant a SCHEDULED run of this plan fires at; null when none is waiting. Resolved from plan_runs through a batched loader.`,
+    nullable: true,
+  })
+  async scheduledRunAt(@Parent() parent: PlanObject): Promise<Date | null> {
+    const run = await this.loaders.scheduledRunByPlanIdLoader.load(parent.id);
+
+    return run?.scheduledFor ?? null;
+  }
+
+  @ResolveField(() => ID, {
+    description: `The id of the SCHEDULED run behind scheduledRunAt (the same soonest run: earliest scheduled_for, then id); null when none is waiting. Pass it as planRunId to cancelPlanRun to cancel just that run.`,
+    nullable: true,
+  })
+  async scheduledRunId(@Parent() parent: PlanObject): Promise<string | null> {
+    const run = await this.loaders.scheduledRunByPlanIdLoader.load(parent.id);
+
+    return run?.id ?? null;
   }
 
   @ResolveField(() => [TaskObject], {
@@ -436,12 +488,16 @@ export class PlansResolver {
     out.pid = planRun.pid;
     out.planId = planRun.planId;
     out.queueName = planRun.queueName;
+    out.resumeOfRunId = planRun.resumeOfRunId;
     out.runConfigSnapshotJson = serializePlanRunConfigSnapshotForGraphql(
       planRun.runConfigSnapshot,
     );
     out.runKind = planRun.runKind;
+    out.scheduledFor = planRun.scheduledFor;
     out.status = planRun.status;
     out.updatedAt = planRun.updatedAt;
+    out.usageLimitResetsAt = planRun.usageLimitResetsAt;
+    out.usageLimitType = planRun.usageLimitType;
     out.workerId = planRun.workerId;
 
     return out;
@@ -523,6 +579,17 @@ export class PlansResolver {
       status,
     );
 
+    if (run != null && status === 'COMPLETED') {
+      // Best-effort and awaited: recording must not fail the settle, but it must also not race
+      // past it. This is the whole point of the mechanism — the run is settled here, while the
+      // PR is open and the row still names its plan, checkout and actor.
+      await this.settleRunLedgerService.recordSettledRunArtifacts({
+        headSha: input.headSha ?? null,
+        planRun: run,
+        prNumber: input.prNumber ?? null,
+      });
+    }
+
     return run ? this.mapPlanRunObject(run) : null;
   }
 
@@ -557,7 +624,7 @@ export class PlansResolver {
   }
 
   @Mutation(() => PlanRunObject, {
-    description: `Best-effort register of a linked git worktree as a repository_checkout for the run actor, then back-fill plan_runs.checkout_id when still NULL. Soft-fails (returns the run unchanged) when the path is not a linked worktree, repository resolution fails, or upsert errors. The actor resolves through its acting user, so a service-account token (the MCP) works when the account is linked to one; an unlinked account resolves to null and soft-fails like any other unresolvable actor. Returns null when the plan-run row does not exist.`,
+    description: `Best-effort register of a linked git worktree as a repository_checkout for the run actor, then point plan_runs.checkout_id and branch at that worktree (overwrites a scheduling-time primary checkout). Soft-fails (returns the run unchanged) when the path is not a linked worktree, repository resolution fails, or upsert errors. The actor resolves through its acting user, so a service-account token (the MCP) works when the account is linked to one; an unlinked account resolves to null and soft-fails like any other unresolvable actor. Returns null when the plan-run row does not exist.`,
     nullable: true,
   })
   async registerPlanRunWorktreeCheckout(
@@ -591,6 +658,37 @@ export class PlansResolver {
     });
 
     return run ? this.mapPlanRunObject(run) : null;
+  }
+
+  @Mutation(() => DeregisterWorktreeCheckoutPayloadObject, {
+    description: `The teardown half of registerPlanRunWorktreeCheckout: called right after a worktree is removed, it deletes the actor's repository_checkouts row at that path so the repositories page stops listing a worktree that no longer exists. Runs the same guards as pruneWorktreeCheckouts — the row is kept (and the outcome says why) while the path is still a live worktree, while an unsettled plan run points at it, or when it is a primary checkout. Never touches the filesystem. Resolves a service-account token through its acting user like registration does; an unresolvable actor reports NOT_FOUND rather than throwing, so a teardown can call this best-effort.`,
+  })
+  async deregisterWorktreeCheckout(
+    @Args('input', { type: () => DeregisterWorktreeCheckoutInput })
+    input: DeregisterWorktreeCheckoutInput,
+    @CurrentUser('sub') actorSub?: string,
+  ): Promise<DeregisterWorktreeCheckoutPayloadObject> {
+    // Same acting-user resolution as registerPlanRunWorktreeCheckout, for the same reason: the
+    // checkout belongs to a human, and the teardown authenticates with the MCP service account.
+    const actorUserId =
+      await this.effectiveUserResolution.resolveEffectiveUserId(actorSub);
+    if (actorUserId === null) {
+      return {
+        checkoutId: null,
+        outcome: PRUNE_WORKTREE_CHECKOUT_OUTCOME.NOT_FOUND,
+        path: input.filesystemPath,
+      };
+    }
+
+    const result = await this.worktreeCheckoutPruneService.pruneByPath(
+      actorUserId,
+      input.filesystemPath,
+    );
+    return {
+      checkoutId: result.checkoutId,
+      outcome: result.outcome,
+      path: result.path,
+    };
   }
 
   // @ProfileResponseTime('PlansResolver.plan')
@@ -992,8 +1090,19 @@ export class PlansResolver {
       input.status,
     );
 
-    let statusChanged = false;
-    let statusChangeFrom: string | null = null;
+    // Read-only decision: resolveStatusChange does not mutate `entity`. The actual mutation is
+    // deferred to applyStatusChange inside the transaction below, so this is the only place that
+    // decides WHETHER the status changes; entity.status still reads as the pre-transition value
+    // until then.
+    const statusChange =
+      input.status != null
+        ? this.planStatusService.resolveStatusChange(
+            entity.status,
+            input.status,
+          )
+        : null;
+    const statusChanged = statusChange != null;
+
     let touched = false;
 
     if (input.author != null && input.author !== entity.author) {
@@ -1004,23 +1113,8 @@ export class PlansResolver {
       entity.category = input.category;
       touched = true;
     }
-    if (input.status != null) {
-      const change = this.planStatusService.resolveStatusChange(
-        entity.status,
-        input.status,
-      );
-      if (change) {
-        const previousStatus = entity.status;
-        entity.status = change.nextStatus;
-        entity.completedAt = resolveCompletedAtForStatusChange({
-          currentCompletedAt: entity.completedAt,
-          nextStatus: change.nextStatus,
-          previousStatus,
-        });
-        statusChanged = true;
-        statusChangeFrom = previousStatus;
-        touched = true;
-      }
+    if (statusChanged) {
+      touched = true;
     }
     if (input.title != null && input.title !== entity.title) {
       entity.title = input.title;
@@ -1098,24 +1192,23 @@ export class PlansResolver {
       return entity;
     }
 
-    // Status fact + completed_at commit together with the status_change ledger row (G12).
+    // Status fact + completed_at commit together with the status_change ledger row, via the
+    // applyStatusChange chokepoint (mutates entity.status/completedAt in place when statusChanged —
+    // resolveStatusChange above already established the transition is valid and not a no-op, so
+    // this repeats the same decision and always applies).
     const saved = await repo.manager.transaction(async (manager) => {
-      const persisted = await manager.save(entity);
-
-      if (statusChanged) {
-        await this.workLedgerCapture.recordStatusChange(manager, {
+      if (statusChanged && statusChange) {
+        await this.planStatusService.applyStatusChange(manager, {
           actorKind,
           actorSub,
-          entity: 'plan',
-          from: statusChangeFrom,
-          id: persisted.id,
-          planId: persisted.id,
-          taskId: null,
-          to: persisted.status,
+          captureFailureIsFatal: true,
+          entity,
+          requestedStatus: statusChange.nextStatus,
+          throwOnForbiddenInProgress: false,
         });
       }
 
-      return persisted;
+      return manager.save(entity);
     });
 
     // Downstream reaction stays outside the transaction (fire-and-forget, as before).
@@ -1159,6 +1252,8 @@ export class PlansResolver {
   async setPlanStatus(
     @Args('input', { type: () => SetPlanStatusInput })
     input: SetPlanStatusInput,
+    @CurrentUser('sub') actorSub?: string,
+    @CurrentUser('kind') actorKind?: string,
   ): Promise<PlanObject | null> {
     const rawStatus = input.statusEnum ?? input.status;
     if (rawStatus == null || String(rawStatus).trim() === '') {
@@ -1171,6 +1266,7 @@ export class PlansResolver {
     const plan = await this.planStatusService.setStatus(
       input.planId,
       nextStatus,
+      { actorKind, actorSub },
     );
     if (plan != null) {
       await this.planRulesEvaluationService.enqueueEvaluation(
@@ -1272,6 +1368,8 @@ export class PlansResolver {
     }
 
     const outcome = await this.planEnqueueService.enqueueSpawn({
+      actorKind,
+      actorSub,
       actorUserId,
       branch: input.branch,
       checkoutId: input.checkoutId,
@@ -1372,6 +1470,8 @@ export class PlansResolver {
     }
 
     const outcome = await this.planEnqueueService.enqueueOrchestrator({
+      actorKind,
+      actorSub,
       actorUserId,
       branch: input.branch,
       checkoutId: input.checkoutId,
@@ -1389,9 +1489,64 @@ export class PlansResolver {
     return this.toEnqueueResult(outcome);
   }
 
+  @ProfileResponseTime('PlansResolver.schedulePlanRun')
+  @Mutation(() => SchedulePlanRunResultObject, {
+    description: `Schedule a plan run for a later instant: the enqueuePlanRun input plus scheduledFor. Records a SCHEDULED plan_runs row with a frozen run config snapshot and a delayed job that starts it. scheduledFor must be in the future and within 30 days (SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS). Does not change the plan or task statuses (the plan stays as it is until the run fires). Cancel with cancelPlanRun (pass planRunId to cancel just this run).`,
+  })
+  @EmitNotification([
+    {
+      event: NOTIFICATION_EVENT_NAMES.PLAN_UPDATED,
+      payload: (ret) =>
+        isSchedulePlanRunResult(ret)
+          ? {
+              message: `Plan run scheduled for ${ret.scheduledFor.toISOString()}`,
+              planId: ret.planId,
+              severity: 'info' as const,
+            }
+          : null,
+    },
+  ])
+  async schedulePlanRun(
+    @Args('input', { type: () => SchedulePlanRunInput })
+    input: SchedulePlanRunInput,
+    @CurrentUser('sub') actorSub?: string,
+    @CurrentUser('kind') actorKind?: string,
+  ): Promise<SchedulePlanRunResultObject> {
+    const actorUserId = resolveActorUserId(actorSub, actorKind);
+    const requestedBackend = input.ralph?.backend ?? null;
+    if (
+      requestedBackend != null &&
+      isPlanRunExecutionBackend(requestedBackend)
+    ) {
+      await this.assertBackendEnabled(
+        actorUserId,
+        requestedBackend,
+        input.ralph?.model,
+      );
+    }
+
+    const outcome = await this.planEnqueueService.schedulePlanRun({
+      actorKind,
+      actorSub,
+      actorUserId,
+      branch: input.branch,
+      checkoutId: input.checkoutId,
+      idempotencyKey: input.idempotencyKey ?? null,
+      jobRunHooksJson: input.jobRunHooksJson,
+      planId: input.planId,
+      priority: input.priority,
+      ralph: input.ralph,
+      repositoryId: input.repositoryId,
+      scheduledFor: input.scheduledFor,
+      workingDirectory: input.workingDirectory,
+    });
+
+    return this.toScheduleResult(outcome);
+  }
+
   // @ProfileResponseTime('PlansResolver.cancelPlanRun')
   @Mutation(() => CancelPlanRunResultObject, {
-    description: `Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token).`,
+    description: `Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). Also cancels the plan's SCHEDULED runs (delayed job removed, run settled CANCELLED). With planRunId naming a SCHEDULED run of the plan, cancels ONLY that run (its delayed job and row), leaving any other active run, the plan status and the tasks alone; a planRunId that is already settled is a no-op, and one that is QUEUED or IN_PROGRESS is rejected (omit planRunId to stop a live run). Idempotent: once a scheduled run has fired or settled there is nothing left to cancel.`,
   })
   @EmitNotification([
     {
@@ -1445,6 +1600,8 @@ export class PlansResolver {
     const outcome = await this.planStatusService.cancelRun(
       input.planId,
       resolveActorUserId(actorSub, actorKind),
+      { actorKind, actorSub },
+      input.planRunId ?? null,
     );
 
     const out = new CancelPlanRunResultObject();

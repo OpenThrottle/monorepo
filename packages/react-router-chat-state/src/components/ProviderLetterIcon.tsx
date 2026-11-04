@@ -1,4 +1,5 @@
 import * as React from 'react';
+
 import type { ProviderIconProps } from './svg-base';
 
 /** Props for the letter-avatar fallback glyph. @public */

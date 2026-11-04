@@ -23,13 +23,13 @@ Use **ot-generators** for scaffolding, **nx-workspace** for graph and targets, *
 
 | Need                                                       | Use                                                                       |
 | ---------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `@tools/generators`, `NX_ISOLATE_PLUGINS`                  | **ot-generators** — `.agents/skills/ot-generators/SKILL.md`               |
-| Plans, `Plan-Id` / `Task-Id`, work-ledger commit recording | **ot-plans** — `.agents/skills/ot-plans/SKILL.md`                         |
-| Ralph loop prompt (one task at a time)                     | **agents-ralph** — `.agents/skills/agents-ralph/SKILL.md`                 |
+| `@tools/generators`, `NX_ISOLATE_PLUGINS`                  | [**ot-generators**](../ot-generators/SKILL.md)                            |
+| Plans, `Plan-Id` / `Task-Id`, work-ledger commit recording | [**ot-plans**](../ot-plans/SKILL.md)                                      |
+| Ralph loop prompt (one task at a time)                     | [**agents-ralph**](../agents-ralph/SKILL.md)                              |
 | Ralph CLI, BullMQ mental model                             | `tools/workflows/README.md` (no skill)                                    |
-| Nx graph, `nx show project`, affected                      | **nx-workspace** — `.agents/skills/nx-workspace/SKILL.md`                 |
-| Run `nx` targets                                           | **nx-workspace** — `.agents/skills/nx-workspace/SKILL.md`                 |
-| **SQL migrations / table comments**                        | **ot-postgres** — `.agents/skills/ot-postgres/SKILL.md`                   |
+| Nx graph, `nx show project`, affected                      | **nx-workspace** (installed skill — invoke by name)                       |
+| Run `nx` targets                                           | **nx-workspace** (installed skill — invoke by name)                       |
+| **SQL migrations / table comments**                        | [**ot-postgres**](../ot-postgres/SKILL.md)                                |
 | **This file**                                              | Server conventions, DB/embeddings, developer UI, openthrottle-mcp package |
 
 ---
@@ -47,6 +47,7 @@ Use **ot-generators** for scaffolding, **nx-workspace** for graph and targets, *
 
 **Conventions (align with workspace rules)**
 
+- **`schema.gql` is only ever written by `pnpm nx run openthrottle-server:graphql-schema:write`** — a server boot keeps the schema in memory. After changing GraphQL types or resolvers: that command, then consumer codegen, then commit both ([root `CLAUDE.md` § GraphQL schema + codegen flow](../../CLAUDE.md)).
 - **Backwards-compatible schema:** when updating `.entity` files the GraphQL schema must stay backwards compatible. Avoid removing fields or changing types on existing ObjectTypes; if a field is no longer needed, mark it **`@deprecated(reason: "...")`** instead of deleting it.
 - **Resolver return types:** resolver methods should return an ObjectType built with **`Result()`**, **`PaginatedResult()`** or **`ListResult()`** (or a module-specific `*ResultObject`), never a raw entity:
 
@@ -70,7 +71,7 @@ Use **ot-generators** for scaffolding, **nx-workspace** for graph and targets, *
 
 ## 2. Data, embeddings, imports (`databases/`)
 
-**SQL migrations and table comments:** **ot-postgres** — `.agents/skills/ot-postgres/SKILL.md` (`COMMENT ON TABLE`, migration naming, diff-scoped lint). **Schema, ingest, embeddings:** **`databases/README.md`**.
+**SQL migrations and table comments:** [**ot-postgres**](../ot-postgres/SKILL.md) (`COMMENT ON TABLE`, migration naming, diff-scoped lint). **Schema, ingest, embeddings:** **`databases/README.md`**.
 
 **Typical commands (repo root)**
 
@@ -101,7 +102,7 @@ Use **ot-generators** for scaffolding, **nx-workspace** for graph and targets, *
 **Conventions**
 
 - **New UI:** **react-router** generator (**ot-generators**); application name **`openthrottle-developer`** from `--list=applications`.
-- After **GraphQL schema changes** or fresh clone: **`pnpm nx run openthrottle-developer:codegen-graphql`** (also noted in run doc above).
+- After **GraphQL schema changes** (once `schema.gql` is regenerated, §1) or fresh clone: **`pnpm nx run openthrottle-developer:codegen-graphql`** (also noted in run doc above).
 - Prefer existing route and **settings** patterns (e.g. `settings.*`, `plans.*`) over one-off structure.
 
 **Testing:** component tests colocated under `app/routes/__tests__/` and route-adjacent `*.test.tsx`; generate mock data from the GraphQL types in the application's `mocks.ts`. UI testing conventions (`component` not `screen`, `userEvent` not `fireEvent`, asserting behavior over copy) live in [`docs/monorepo/code-style.md`](../../docs/monorepo/code-style.md#testing).

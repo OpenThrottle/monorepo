@@ -1,8 +1,9 @@
-import * as React from 'react';
+import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
+import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
+
 import { DOC_CODE_COMPONENTS } from '../docCodeComponents';
 
 const source = ['```ts', 'const x = 1;', '```'].join('\n');

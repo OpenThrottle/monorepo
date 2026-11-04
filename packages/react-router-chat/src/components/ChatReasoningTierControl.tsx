@@ -1,6 +1,6 @@
-import * as React from 'react';
 import {
   Button,
+  cn,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -9,7 +9,8 @@ import {
   DropdownMenuTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { Check, SlidersHorizontal } from 'lucide-react';
-import clsx from 'clsx';
+import * as React from 'react';
+
 import {
   DEFAULT_REASONING_LABELS,
   DEFAULT_SERVICE_TIER_LABELS,
@@ -116,7 +117,7 @@ export const ChatReasoningTierControl = (
       <DropdownMenuTrigger asChild={true}>
         <Button
           aria-label="Reasoning and service tier"
-          className={clsx('h-8 w-auto gap-1.5', className)}
+          className={cn('h-8 w-auto gap-1.5 pointer-coarse:h-11', className)}
           data-testid="ChatReasoningTierControl-trigger"
           type="button"
           variant="outline"
@@ -139,7 +140,7 @@ export const ChatReasoningTierControl = (
                   onSelect={(event) => onReasoningSelect(event, level)}
                 >
                   <Check
-                    className={clsx(
+                    className={cn(
                       'size-4 shrink-0',
                       isActive ? 'opacity-100' : 'opacity-0',
                     )}
@@ -164,7 +165,7 @@ export const ChatReasoningTierControl = (
                   onSelect={(event) => onTierSelect(event, tier)}
                 >
                   <Check
-                    className={clsx(
+                    className={cn(
                       'size-4 shrink-0',
                       isActive ? 'opacity-100' : 'opacity-0',
                     )}

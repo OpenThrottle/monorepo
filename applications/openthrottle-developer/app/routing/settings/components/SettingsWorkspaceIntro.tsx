@@ -1,7 +1,8 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { MonitorCogIcon } from 'lucide-react';
+import { cn } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import { MonitorCogIcon } from 'lucide-react';
+import * as React from 'react';
+
 import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
 
 export interface SettingsWorkspaceIntroProps {
@@ -26,7 +27,7 @@ export const SettingsWorkspaceIntro = (
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx(className)}>
+    <div className={cn(className)}>
       <GlobalHeading
         className="mb-4"
         heading="h1"

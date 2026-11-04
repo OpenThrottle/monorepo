@@ -1,10 +1,12 @@
-import * as React from 'react';
-import type { RenderResult } from '@testing-library/react';
 import { Tabs, TooltipProvider } from '@openthrottle/react-router-shadcn';
+import type { RenderResult } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { PlanDetailTabsList } from '../PlanDetailTabsList';
-import type { PlanDetailTabsListProps } from '../PlanDetailTabsList';
+
 import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import type { PlanDetailTabsListProps } from '../PlanDetailTabsList';
+import { PlanDetailTabsList } from '../PlanDetailTabsList';
 
 const renderTabs = (
   overrides: Partial<PlanDetailTabsListProps> = {},
@@ -29,7 +31,7 @@ const renderTabs = (
   );
 
 describe('PlanDetailTabsList Component', () => {
-  test('renders the three always-on tabs with the resolved-task count', () => {
+  test('renders the Details, Tasks and Output tabs with the resolved-task count', () => {
     const component = renderTabs();
 
     expect(
@@ -41,7 +43,7 @@ describe('PlanDetailTabsList Component', () => {
     expect(component.getByRole('tab', { name: /output/i })).toBeInTheDocument();
   });
 
-  test('keeps the Configuration tab gated off by default', () => {
+  test('hides the Configuration tab when it is gated off', () => {
     const component = renderTabs();
 
     expect(

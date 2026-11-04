@@ -4,6 +4,7 @@ import { join } from 'node:path';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import type { ConversationStreamChunk } from '../../types.ts';
 import { CURSOR_AGENT_BIN_ENV } from '../argv.ts';
 import {
   createCursorAgentSession,
@@ -13,7 +14,6 @@ import {
   AGENT_IDLE_TIMEOUT_MS_ENV,
   AGENT_SESSION_TIMEOUT_MS_ENV,
 } from '../teardown.ts';
-import type { ConversationStreamChunk } from '../../types.ts';
 
 let dir: string;
 

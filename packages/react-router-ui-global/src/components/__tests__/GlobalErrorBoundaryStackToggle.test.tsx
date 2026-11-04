@@ -1,11 +1,12 @@
-import * as React from 'react';
+import type { RenderResult } from '@testing-library/react';
 import { cleanup, render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
-import type { RenderResult } from '@testing-library/react';
-import { GlobalErrorBoundaryStackToggle } from '../GlobalErrorBoundaryStackToggle';
+
 import type { GlobalErrorBoundaryStackToggleProps } from '../GlobalErrorBoundaryStackToggle';
+import { GlobalErrorBoundaryStackToggle } from '../GlobalErrorBoundaryStackToggle';
 
 describe('GlobalErrorBoundaryStackToggle Component', () => {
   let component: RenderResult;

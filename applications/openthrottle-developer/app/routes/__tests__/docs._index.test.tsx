@@ -1,12 +1,14 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { buildRootMatch } from '~/testing/root-match-fixture';
-import { buildPersistentSettingKey } from '~/global/config/persistent-setting-storage';
-import { DOCS_FEATURE_FLAG_DEFAULTS } from '~/global/config/docs-feature-flags';
-import Component from '../docs._index';
+
 import type { Route } from '@/app/routes/+types/docs._index';
+import { DOCS_FEATURE_FLAG_DEFAULTS } from '~/global/config/docs-feature-flags';
+import { buildPersistentSettingKey } from '~/global/config/persistent-setting-storage';
+import { buildRootMatch } from '~/testing/root-match-fixture';
+
+import Component from '../docs._index';
 
 const matches: Route.ComponentProps['matches'] = [
   buildRootMatch(),

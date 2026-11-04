@@ -1,5 +1,6 @@
-import * as React from 'react';
 import { Dialog as SheetPrimitive } from 'radix-ui';
+import * as React from 'react';
+
 import { cn } from '../../utils/cn';
 
 export interface SheetTitleProps extends React.ComponentPropsWithoutRef<

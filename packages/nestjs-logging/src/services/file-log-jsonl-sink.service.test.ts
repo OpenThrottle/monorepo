@@ -1,18 +1,20 @@
-import { mkdtemp, readFile, readdir } from 'node:fs/promises';
+import { mkdtemp, readdir, readFile } from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
+
 import { Test } from '@nestjs/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import {
   applyNestjsLoggingModuleDefaults,
   NESTJS_LOGGING_MODULE_OPTIONS,
-} from '../config/nestjs-logging.options';
+} from '../config/nestjs-logging.options.ts';
 import {
   NESTJS_LOGGING_LEVELS,
   type NestjsLoggingLevel,
-} from '../config/nestjs-logging-levels';
-import type { StructuredLogRecord } from '../ports/logging-ports';
-import { FileLogJsonlSink } from './file-log-jsonl-sink.service';
+} from '../config/nestjs-logging-levels.ts';
+import type { StructuredLogRecord } from '../ports/logging-ports.ts';
+import { FileLogJsonlSink } from './file-log-jsonl-sink.service.ts';
 
 const baseRecord = (
   message: string,

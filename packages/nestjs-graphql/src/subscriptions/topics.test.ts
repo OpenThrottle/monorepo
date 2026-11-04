@@ -1,18 +1,19 @@
 import { describe, expect, it } from 'vitest';
+
 import {
   conversationStreamTopic,
   globalTopic,
   instanceTopic,
   notificationsFirehoseTopic,
   parsePlanIdFromCancelTopic,
-  planCancelTopic,
   PLAN_CANCEL_TOPIC_PATTERN,
+  planCancelTopic,
   planLifecycleTopic,
   planOutputTopic,
   systemAlertTopic,
   transcriptionStreamTopic,
   userNotificationsTopic,
-} from './topics';
+} from './topics.ts';
 
 describe('instanceTopic', () => {
   it('formats as <entity>:<id>:<facet>', () => {

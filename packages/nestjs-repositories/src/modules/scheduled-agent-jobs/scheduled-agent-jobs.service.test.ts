@@ -1,17 +1,18 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { Test } from '@nestjs/testing';
 import { createMock } from '@golevelup/ts-vitest';
+import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { ScheduledAgentJob } from './scheduled-agent-job.entity';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { ScheduledAgentJob } from './scheduled-agent-job.entity.ts';
 import {
   SCHEDULED_AGENT_JOB_RUN_IN_FLIGHT_STATUSES,
   ScheduledAgentJobRun,
-} from './scheduled-agent-job-run.entity';
+} from './scheduled-agent-job-run.entity.ts';
 import {
   ScheduledAgentJobsService,
   schedulerKeyForJob,
-} from './scheduled-agent-jobs.service';
+} from './scheduled-agent-jobs.service.ts';
 
 type JobRepo = {
   create: ReturnType<typeof vi.fn>;
@@ -36,6 +37,7 @@ type RunRepo = {
   createQueryBuilder: ReturnType<typeof vi.fn>;
   find: ReturnType<typeof vi.fn>;
   findOne: ReturnType<typeof vi.fn>;
+  query: ReturnType<typeof vi.fn>;
   save: ReturnType<typeof vi.fn>;
   update: ReturnType<typeof vi.fn>;
 };
@@ -75,6 +77,7 @@ describe('ScheduledAgentJobsService', () => {
       createQueryBuilder: vi.fn(() => queryBuilder),
       find: vi.fn().mockResolvedValue([]),
       findOne: vi.fn().mockResolvedValue(null),
+      query: vi.fn().mockResolvedValue([]),
       save: vi.fn((row: ScheduledAgentJobRun) => Promise.resolve(row)),
       update: vi.fn().mockResolvedValue({ affected: 1 }),
     };
@@ -348,5 +351,192 @@ describe('ScheduledAgentJobsService', () => {
     expect(await service.deleteJob('job-1')).toBe(true);
     jobRepo.delete.mockResolvedValueOnce({ affected: 0 });
     expect(await service.deleteJob('missing')).toBe(false);
+  });
+
+  it('createRun records the run it continues (resume_of_run_id) and defaults it to null', async () => {
+    await service.createRun({
+      driverId: 'claude',
+      resumeOfRunId: 'run-limited',
+      scheduledAgentJobId: 'job-1',
+      trigger: 'resume',
+    });
+    expect(runRepo.save).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        resumeOfRunId: 'run-limited',
+        trigger: 'resume',
+      }),
+    );
+
+    await service.createRun({
+      driverId: 'claude',
+      scheduledAgentJobId: 'job-1',
+      trigger: 'manual',
+    });
+    expect(runRepo.save).toHaveBeenLastCalledWith(
+      expect.objectContaining({ resumeOfRunId: null }),
+    );
+  });
+
+  it('markRunFinished persists the usage limit that stopped the run when supplied', async () => {
+    const resetsAt = new Date('2026-11-01T17:00:00.000Z');
+    await service.markRunFinished('run-1', {
+      status: 'usage_limited',
+      usageLimitResetsAt: resetsAt,
+      usageLimitType: 'five_hour',
+    });
+    expect(runRepo.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 'usage_limited',
+        usageLimitResetsAt: resetsAt,
+        usageLimitType: 'five_hour',
+      }),
+    );
+  });
+
+  it('markRunFinished leaves the usage-limit columns unwritten when omitted', async () => {
+    await service.markRunFinished('run-1', { status: 'failed' });
+    const patch = runRepo.save.mock.calls[0]?.[0];
+    expect('usageLimitResetsAt' in patch).toBe(false);
+    expect('usageLimitType' in patch).toBe(false);
+  });
+
+  it('findRunResumingFrom looks the continuation up by resume_of_run_id', async () => {
+    runRepo.findOne.mockResolvedValueOnce({ id: 'run-next' });
+
+    expect(await service.findRunResumingFrom('run-limited')).toEqual({
+      id: 'run-next',
+    });
+    expect(runRepo.findOne).toHaveBeenCalledWith({
+      where: { resumeOfRunId: 'run-limited' },
+    });
+  });
+
+  describe('countUsageLimitedInChain', () => {
+    it('walks the resume chain with a depth-bounded recursive query and returns the count', async () => {
+      runRepo.query.mockResolvedValueOnce([{ count: 2 }]);
+
+      const count = await service.countUsageLimitedInChain('run-3', 5);
+
+      expect(count).toBe(2);
+      const [sql, params] = runRepo.query.mock.calls[0] ?? [];
+      expect(sql).toContain('WITH RECURSIVE');
+      expect(sql).toContain('FROM scheduled_agent_job_runs');
+      expect(sql).toContain('chain.depth < $2');
+      expect(sql).toContain("status = 'usage_limited'");
+      expect(params).toEqual(['run-3', 5]);
+    });
+
+    it('coerces a string count and treats an empty result as zero', async () => {
+      runRepo.query.mockResolvedValueOnce([{ count: '3' }]);
+      expect(await service.countUsageLimitedInChain('run-1', 5)).toBe(3);
+
+      runRepo.query.mockResolvedValueOnce([]);
+      expect(await service.countUsageLimitedInChain('run-1', 5)).toBe(0);
+    });
+  });
+
+  it('updateRunErrorMessage rewrites only the error message', async () => {
+    await service.updateRunErrorMessage('run-1', 'why');
+    expect(runRepo.update).toHaveBeenCalledWith(
+      { id: 'run-1' },
+      { errorMessage: 'why' },
+    );
+  });
+
+  describe('slot accounting', () => {
+    const SLOT = new Date('2026-11-02T09:00:00Z');
+
+    /** An `INSERT ... ON CONFLICT DO NOTHING RETURNING id` chain resolving to `raw`. */
+    const givenInsertReturning = (
+      raw: unknown,
+    ): { readonly values: ReturnType<typeof vi.fn> } => {
+      const insertBuilder = {
+        execute: vi.fn().mockResolvedValue({ raw }),
+        insert: vi.fn(() => insertBuilder),
+        into: vi.fn(() => insertBuilder),
+        orIgnore: vi.fn(() => insertBuilder),
+        returning: vi.fn(() => insertBuilder),
+        values: vi.fn(() => insertBuilder),
+      };
+      runRepo.createQueryBuilder.mockReturnValue(insertBuilder);
+
+      return insertBuilder;
+    };
+
+    describe('claimScheduledSlot', () => {
+      it('returns the new run when the slot was free', async () => {
+        const insert = givenInsertReturning([{ id: 'run-9' }]);
+        runRepo.findOne.mockResolvedValue({ id: 'run-9' });
+
+        const claimed = await service.claimScheduledSlot({
+          bullmqJobId: 'repeat:k:1',
+          driverId: 'claude',
+          scheduledAgentJobId: 'job-1',
+          scheduledFor: SLOT,
+          status: 'running',
+        });
+
+        expect(claimed).toEqual({ id: 'run-9' });
+        expect(insert.values).toHaveBeenCalledWith(
+          expect.objectContaining({
+            scheduledFor: SLOT,
+            status: 'running',
+            trigger: 'schedule',
+          }),
+        );
+      });
+
+      it('returns null when the slot already had a row', async () => {
+        givenInsertReturning([]);
+
+        const claimed = await service.claimScheduledSlot({
+          driverId: 'claude',
+          scheduledAgentJobId: 'job-1',
+          scheduledFor: SLOT,
+        });
+
+        expect(claimed).toBeNull();
+        expect(runRepo.findOne).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('recordMissedRuns', () => {
+      it('inserts one terminal missed row per slot and counts the inserted ones', async () => {
+        const insert = givenInsertReturning([{ id: 'm-1' }]);
+
+        const inserted = await service.recordMissedRuns({
+          driverId: 'claude',
+          errorMessage: 'Missed: down',
+          model: null,
+          scheduledAgentJobId: 'job-1',
+          slots: [SLOT, new Date('2026-11-02T10:00:00Z')],
+        });
+
+        expect(inserted).toBe(1);
+        const rows: unknown = insert.values.mock.calls[0]?.[0];
+        expect(rows).toEqual([
+          expect.objectContaining({
+            finishedAt: expect.any(Date),
+            scheduledFor: SLOT,
+            status: 'missed',
+            trigger: 'schedule',
+          }),
+          expect.objectContaining({ status: 'missed' }),
+        ]);
+      });
+
+      it('does not touch the database for no slots', async () => {
+        const inserted = await service.recordMissedRuns({
+          driverId: 'claude',
+          errorMessage: 'Missed: down',
+          model: null,
+          scheduledAgentJobId: 'job-1',
+          slots: [],
+        });
+
+        expect(inserted).toBe(0);
+        expect(runRepo.createQueryBuilder).not.toHaveBeenCalled();
+      });
+    });
   });
 });

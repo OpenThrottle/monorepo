@@ -1,21 +1,23 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { useDebouncedSearchParam } from '@openthrottle/react-router-ui';
 import {
   Button,
+  cn,
   Input,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { Link, useSearchParams } from 'react-router';
+import { useDebouncedSearchParam } from '@openthrottle/react-router-ui';
 import { FilePlusIcon } from 'lucide-react';
-import { TypeMultiSelect } from './TypeMultiSelect';
-import { PromptSortDropdown } from './PromptSortDropdown';
+import * as React from 'react';
+import { Link, useSearchParams } from 'react-router';
+
 import type {
   PromptsSortBy,
   PromptsSortOrder,
 } from '~/routing/prompts/config/types';
+
+import { PromptSortDropdown } from './PromptSortDropdown';
+import { TypeMultiSelect } from './TypeMultiSelect';
 
 export interface PromptToolbarProps {
   className?: string;
@@ -123,7 +125,7 @@ export const PromptToolbar = (
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx('w-full', className)} data-testid="PromptToolbar">
+    <div className={cn('w-full', className)} data-testid="PromptToolbar">
       <form
         className="flex w-full flex-wrap items-center gap-2"
         onSubmit={handleSearchSubmit}

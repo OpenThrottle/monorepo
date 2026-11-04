@@ -1,10 +1,11 @@
-import * as os from 'os';
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import type { IWorktreeTargetsTracker } from '@openthrottle/nestjs-worktrees';
 import { WORKTREE_TRACKER_TOKEN } from '@openthrottle/nestjs-worktrees';
+import * as os from 'os';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { SystemMetricsService } from './system-metrics.service';
+
+import { SystemMetricsService } from './system-metrics.service.ts';
 
 vi.mock('os', async () => {
   const actual = await vi.importActual('os');

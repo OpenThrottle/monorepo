@@ -1,7 +1,8 @@
-import * as React from 'react';
 import { Badge } from '@openthrottle/react-router-shadcn';
-import { DatabaseIcon } from 'lucide-react';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
+import { DatabaseIcon } from 'lucide-react';
+import * as React from 'react';
+
 import type { SettingsDebugGraphQLResult } from '~/routing/settings/components/SettingsDebugPanel';
 
 export interface SettingsGraphQLHealthCardProps {

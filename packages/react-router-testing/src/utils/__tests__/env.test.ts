@@ -1,5 +1,6 @@
-import { afterEach, describe, expect, test, vi } from 'vitest';
 import type { OpenThrottleEnv } from '@openthrottle/react-router-utils';
+import { afterEach, describe, expect, test, vi } from 'vitest';
+
 import { createTestEnv, installTestEnv } from '../env';
 
 // Compile-time contract: the set of keys the fixture must contain, derived from
@@ -18,11 +19,11 @@ const EXPECTED_ENV_KEYS = {
   APP_URL_ADMIN: true,
   APP_URL_CMS: true,
   APP_URL_DEVELOPER: true,
-  APP_URL_EMAIL: true,
   APP_URL_SERVER: true,
   APP_URL_WEBSITE: true,
   APP_VERSION: true,
   FEATURE_BETA_PREVIEW: true,
+  FEATURE_BLOG_ENABLED: true,
   FEATURE_CHARLIE_PREVIEW: true,
   NODE_ENV: true,
   ROLLBAR_TOKEN: true,

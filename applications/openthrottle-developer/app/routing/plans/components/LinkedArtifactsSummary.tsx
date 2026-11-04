@@ -1,13 +1,13 @@
+import { Badge, Button, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import clsx from 'clsx';
-import { Badge, Button } from '@openthrottle/react-router-shadcn';
+
 import { LINKED_ARTIFACTS_PANEL_COPY } from '~/routing/plans/data/data.copy';
 import { LINKED_ARTIFACT_GROUP_LABELS } from '~/routing/plans/data/linked-artifacts-panel-groups';
+import type { LinkedArtifactsSummaryModel } from '~/routing/plans/utils/summarize-linked-artifacts';
 import {
   ARTIFACT_FILTER_ALL,
   ARTIFACT_VERIFICATIONS,
 } from '~/routing/plans/utils/summarize-linked-artifacts';
-import type { LinkedArtifactsSummaryModel } from '~/routing/plans/utils/summarize-linked-artifacts';
 
 export interface LinkedArtifactsSummaryProps {
   onTypeChange: (type: string) => void;
@@ -52,7 +52,7 @@ export const LinkedArtifactsSummary = (
 
       {ARTIFACT_VERIFICATIONS.map((verification) => (
         <span
-          className={clsx(
+          className={cn(
             // An orphaned artifact is the one thing here worth acting on, so
             // it is the only count allowed to shout — and only when non-zero.
             verification === 'orphaned' && orphaned > 0

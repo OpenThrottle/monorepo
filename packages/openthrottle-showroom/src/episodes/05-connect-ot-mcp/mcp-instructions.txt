@@ -4,7 +4,7 @@ Installing the OpenThrottle MCP globally looks a bit different in each client. T
 
 Install it globally for all your Claude Code instances by running:
 
-claude mcp add-json openthrottle-mcp --scope user '{"args":["/workspace/openthrottle/scripts/run-openthrottle-mcp.sh"],"command":"bash","description":"OpenThrottle (OT) plans knowledge base (Postgres + GraphQL). Plans, tasks, notes, commit links, activity, output stream, semantic search, health."'
+claude mcp add-json openthrottle-mcp --scope user '{"args":["/workspace/openthrottle/scripts/run-openthrottle-mcp.sh"],"command":"bash","description":"OpenThrottle (OT) plans knowledge base (Postgres + GraphQL). Plans, tasks, notes, commit links, activity, output stream, semantic search, health."}'
 
 ▶ Cursor
 
@@ -23,5 +23,5 @@ Install it globally across all Cursor instances by adding this to ~/.cursor/mcp.
 
 ────────────────────────────────────────────────────────────────────────
 
-Launcher resolved to: /workspace/openthrottle/scripts/run-openthrottle-mcp.sh
-The ${...} entries are placeholders resolved at launch by the MCP tooling —  copy them verbatim .
+Launcher resolved to: /workspace/openthrottle/scripts/run-openthrottle-mcp.sh 
+The launcher resolves its own environment —  copy the block verbatim .

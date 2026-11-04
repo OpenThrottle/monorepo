@@ -1,14 +1,15 @@
-import * as React from 'react';
-import { act, render, waitFor } from '@testing-library/react';
-import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { parse } from 'graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { useSubscription } from '@openthrottle/react-router-graphql';
-import { NotificationsSubscriptionBridge } from '../NotificationsSubscriptionBridge';
-import type { NotificationsSubscriptionData } from '../NotificationsSubscriptionBridge';
-import { NotificationsStoreProvider } from '../NotificationsStoreProvider';
+import { act, render, waitFor } from '@testing-library/react';
+import { parse } from 'graphql';
+import * as React from 'react';
+import { createRoutesStub } from 'react-router';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { useNotificationsStore } from '../../hooks/useNotificationsStore';
+import { NotificationsStoreProvider } from '../NotificationsStoreProvider';
+import type { NotificationsSubscriptionData } from '../NotificationsSubscriptionBridge';
+import { NotificationsSubscriptionBridge } from '../NotificationsSubscriptionBridge';
 
 vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
   const actual =

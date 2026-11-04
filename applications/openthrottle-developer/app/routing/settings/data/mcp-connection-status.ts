@@ -3,6 +3,7 @@
  */
 
 import type { BadgeProps } from '@openthrottle/react-router-shadcn';
+
 import type { McpConnectorStatus } from '~/routing/settings/utils/settings-mcp-connection';
 
 export const MCP_CONNECTION_STATUS_DISPLAY: Record<

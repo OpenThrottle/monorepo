@@ -9,8 +9,9 @@ vi.mock('@openthrottle/react-router-graphql', () => ({
 
 import { createActionArgs } from '@openthrottle/react-router-testing';
 
-import * as RouteModule from '../auth.logout';
 import type { Route } from '@/app/routes/+types/auth.logout';
+
+import * as RouteModule from '../auth.logout';
 
 // The loader and action under test only need a request (both use POST here).
 const createArgs = <T extends Route.LoaderArgs | Route.ActionArgs>() =>

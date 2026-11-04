@@ -1,11 +1,10 @@
-import {
-  dailyStatsFactory,
-  DailyStatsService,
-} from '@openthrottle/nestjs-repositories';
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
+import { DailyStatsService } from '@openthrottle/nestjs-repositories';
+import { dailyStatsFactory } from '@openthrottle/nestjs-repositories/testing';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
-import { DailyStatsResolver } from './daily-stats.resolver';
+
+import { DailyStatsResolver } from './daily-stats.resolver.ts';
 
 /**
  * @description Unit tests for daily stats resolver: dailyStats and dailyStatsRange. Mocks DailyStatsService.

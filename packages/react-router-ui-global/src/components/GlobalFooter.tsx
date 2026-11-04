@@ -1,8 +1,9 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Link } from 'react-router';
-import { ENV_SOURCE } from '@openthrottle/react-router-utils';
 import type { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
+import { cn } from '@openthrottle/react-router-shadcn';
+import { ENV_SOURCE } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import { healthValueColorClass } from '../utils/utils.global';
 
 export interface GlobalFooterProps {
@@ -24,7 +25,7 @@ export const GlobalFooter = (props: GlobalFooterProps): React.ReactElement => {
 
     return (
       <div
-        className={clsx('inline-block h-2 w-2 shrink-0 rounded-full', color)}
+        className={cn('inline-block h-2 w-2 shrink-0 rounded-full', color)}
       />
     );
   };

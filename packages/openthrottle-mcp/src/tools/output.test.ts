@@ -4,6 +4,11 @@
 
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import {
+  AppendPlanOutputDocument,
+  GetPlanOutputStreamChunksDocument,
+} from '../__generated__/graphql.js';
 import {
   appendPlanOutputToolHandler,
   deletePlanOutputToolHandler,
@@ -16,6 +21,72 @@ vi.mock('@openthrottle/nodejs-graphql', () => ({
 
 const planId = 'd37426aa-3d3e-469e-9d27-9f9bbbd1f13e';
 const serviceAccountToken = '***REMOVED-OT-TOKEN***';
+
+/**
+ * The handler tests below mock the GraphQL transport, so they can only prove that
+ * whatever the server returns is passed through — never that the document actually
+ * asked for a field. `taskId` was stored but never returned precisely because it was
+ * missing from these selection sets, and no mocked test could see that. These assert
+ * on the generated documents themselves so a future selection-set trim fails here.
+ */
+function rootFieldNames(document: {
+  readonly definitions: readonly unknown[];
+}): readonly string[] {
+  const operation = document.definitions.find(isOperationDefinition);
+  if (!operation) return [];
+
+  const rootField = operation.selectionSet.selections.find(isField);
+  return (
+    rootField?.selectionSet?.selections
+      .filter(isField)
+      .map((field) => field.name.value) ?? []
+  );
+}
+
+interface FieldLike {
+  readonly kind: string;
+  readonly name: { readonly value: string };
+  readonly selectionSet?: { readonly selections: readonly unknown[] };
+}
+
+interface OperationDefinitionLike {
+  readonly kind: string;
+  readonly selectionSet: { readonly selections: readonly unknown[] };
+}
+
+function isField(node: unknown): node is FieldLike {
+  return (
+    typeof node === 'object' &&
+    node !== null &&
+    'kind' in node &&
+    node.kind === 'Field'
+  );
+}
+
+function isOperationDefinition(node: unknown): node is OperationDefinitionLike {
+  return (
+    typeof node === 'object' &&
+    node !== null &&
+    'kind' in node &&
+    node.kind === 'OperationDefinition'
+  );
+}
+
+describe('the generated plan-output documents', () => {
+  describe('appendPlanOutput', () => {
+    it('selects taskId, so the mutation response can be attributed to a task', () => {
+      expect(rootFieldNames(AppendPlanOutputDocument)).toContain('taskId');
+    });
+  });
+
+  describe('getPlanOutputStreamChunks', () => {
+    it('selects taskId, so a reader can tell tagged narration from untagged', () => {
+      expect(rootFieldNames(GetPlanOutputStreamChunksDocument)).toContain(
+        'taskId',
+      );
+    });
+  });
+});
 
 describe('appendPlanOutputToolHandler', () => {
   beforeEach(() => {
@@ -110,7 +181,7 @@ describe('appendPlanOutputToolHandler', () => {
         appendPlanOutput: chunk,
       });
 
-      await appendPlanOutputToolHandler({
+      const result = await appendPlanOutputToolHandler({
         content: 'task log',
         planId,
         taskId,
@@ -121,6 +192,9 @@ describe('appendPlanOutputToolHandler', () => {
         expect.anything(),
         { input: { content: 'task log', iteration: null, planId, taskId } },
       );
+      expect(result).toMatchObject({
+        structuredContent: { chunk: { taskId } },
+      });
     });
   });
 
@@ -177,8 +251,62 @@ describe('getPlanOutputToolHandler', () => {
       expect(executeGraphqlWithAuth).toHaveBeenCalledWith(
         serviceAccountToken,
         expect.anything(),
-        { input: { planId } },
+        { input: { limit: null, offset: null, planId, taskId: null } },
       );
+    });
+
+    it('forwards a taskId filter into the GraphQL variables', async () => {
+      const outputTaskId = 'b7c8d9e0-f1a2-4b3c-8d4e-5f6a7b8c9d0e';
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
+        planOutputStreamChunks: [],
+      });
+
+      await getPlanOutputToolHandler({ planId, taskId: outputTaskId });
+
+      expect(executeGraphqlWithAuth).toHaveBeenCalledWith(
+        serviceAccountToken,
+        expect.anything(),
+        {
+          input: {
+            limit: null,
+            offset: null,
+            planId,
+            taskId: outputTaskId,
+          },
+        },
+      );
+    });
+
+    // limit/offset were accepted by the generated schema but dropped before the
+    // request, so a paged read silently returned the default first page.
+    it('forwards limit and offset instead of dropping them', async () => {
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
+        planOutputStreamChunks: [],
+      });
+
+      await getPlanOutputToolHandler({ limit: 25, offset: 50, planId });
+
+      expect(executeGraphqlWithAuth).toHaveBeenCalledWith(
+        serviceAccountToken,
+        expect.anything(),
+        { input: { limit: 25, offset: 50, planId, taskId: null } },
+      );
+    });
+
+    it('round-trips taskId, keeping tagged and untagged chunks distinguishable', async () => {
+      const taskId = 'a1b2c3d4-e5f6-4789-a0b1-c2d3e4f5a6b7';
+      const chunks = [
+        { content: 'task log', id: 'chunk-1', planId, taskId },
+        { content: 'plan log', id: 'chunk-2', planId, taskId: null },
+      ];
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
+        planOutputStreamChunks: chunks,
+      });
+
+      const result = await getPlanOutputToolHandler({ planId });
+
+      expect(result).toMatchObject({ structuredContent: { chunks } });
+      expect(result.content?.[0]?.text).toContain(taskId);
     });
   });
 
@@ -192,6 +320,27 @@ describe('getPlanOutputToolHandler', () => {
 
       expect(result).toMatchObject({
         content: [{ text: 'No output chunks for this plan.' }],
+        structuredContent: { chunks: [] },
+      });
+    });
+
+    it('names the task in the empty message when filtering by taskId', async () => {
+      const outputTaskId = 'b7c8d9e0-f1a2-4b3c-8d4e-5f6a7b8c9d0e';
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
+        planOutputStreamChunks: [],
+      });
+
+      const result = await getPlanOutputToolHandler({
+        planId,
+        taskId: outputTaskId,
+      });
+
+      expect(result).toMatchObject({
+        content: [
+          {
+            text: `No output chunks attributed to task ${outputTaskId} on this plan.`,
+          },
+        ],
         structuredContent: { chunks: [] },
       });
     });

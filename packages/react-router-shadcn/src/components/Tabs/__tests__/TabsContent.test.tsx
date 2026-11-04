@@ -1,9 +1,10 @@
-import * as React from 'react';
 import { render, screen } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
+
 import { Tabs } from '../Tabs';
-import { TabsContent } from '../TabsContent';
 import type { TabsContentProps } from '../TabsContent';
+import { TabsContent } from '../TabsContent';
 import { TabsList } from '../TabsList';
 import { TabsTrigger } from '../TabsTrigger';
 

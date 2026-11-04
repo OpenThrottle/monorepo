@@ -1,9 +1,8 @@
-import * as React from 'react';
 import { render, waitFor } from '@testing-library/react';
-import { Provider, createStore, useAtomValue } from 'jotai';
+import { createStore, Provider, useAtomValue } from 'jotai';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { PlanRunConfigRepositoriesHydrator } from '../PlanRunConfigRepositoriesHydrator';
-import type { PlanRunConfigRepositoriesHydratorProps } from '../PlanRunConfigRepositoriesHydrator';
+
 import {
   workflowBranchAtom,
   workflowBranchDirtyAtom,
@@ -11,6 +10,9 @@ import {
   workspaceRepositoriesReadyAtom,
 } from '~/routing/plans/data/atom.plan';
 import { FALLBACK_RUN_BRANCH } from '~/routing/plans/utils/plan-run-branch';
+
+import type { PlanRunConfigRepositoriesHydratorProps } from '../PlanRunConfigRepositoriesHydrator';
+import { PlanRunConfigRepositoriesHydrator } from '../PlanRunConfigRepositoriesHydrator';
 
 const CHECKOUT_ID = '11111111-1111-4111-8111-111111111111';
 

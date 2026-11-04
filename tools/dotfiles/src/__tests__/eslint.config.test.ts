@@ -1,6 +1,5 @@
-import { describe, expect, it } from 'vitest';
-
 import { eslintConfig } from '@tools/dotfiles';
+import { describe, expect, it } from 'vitest';
 
 interface FlatConfigEntry {
   readonly files?: ReadonlyArray<string | readonly string[]>;
@@ -75,6 +74,64 @@ describe('eslintConfig flat config', () => {
     );
 
     expect(selectors).toContain('TSEnumDeclaration');
+  });
+
+  it('bans clsx imports, except inside react-router-shadcn', () => {
+    const value = ruleEntry('no-restricted-imports');
+    const options = Array.isArray(value) ? value[1] : undefined;
+    const paths =
+      isRecord(options) && Array.isArray(options.paths) ? options.paths : [];
+
+    expect(Array.isArray(value) ? value[0] : undefined).toBe('error');
+    expect(paths.some((path) => isRecord(path) && path.name === 'clsx')).toBe(
+      true,
+    );
+
+    const shadcnEntry = entries.find(
+      (entry) =>
+        entry.rules?.['no-restricted-imports'] === 'off' &&
+        flattenFiles(entry.files).some((pattern) =>
+          pattern.includes('packages/react-router-shadcn'),
+        ),
+    );
+
+    expect(shadcnEntry).toBeDefined();
+  });
+
+  it('bans template-literal className expressions in source and tests', () => {
+    const testsEntry = entries.find((entry) =>
+      flattenFiles(entry.files).some((pattern) =>
+        pattern.includes('__tests__'),
+      ),
+    );
+    const isTemplateLiteralSelector = (selector: string): boolean =>
+      selector.includes("JSXAttribute[name.name='className']") &&
+      selector.includes('TemplateLiteral');
+
+    expect(
+      selectorsFromRestrictedSyntax(ruleEntry('no-restricted-syntax')).some(
+        isTemplateLiteralSelector,
+      ),
+    ).toBe(true);
+    expect(
+      selectorsFromRestrictedSyntax(
+        testsEntry?.rules?.['no-restricted-syntax'],
+      ).some(isTemplateLiteralSelector),
+    ).toBe(true);
+  });
+
+  it('errors on the hook primitive shape, scoped to hook files', () => {
+    expect(ruleSeverity('openthrottle/hook-primitive-shape')).toBe('error');
+
+    const hookEntry = entries.find(
+      (entry) =>
+        entry.rules !== undefined &&
+        'openthrottle/hook-primitive-shape' in entry.rules,
+    );
+
+    expect(flattenFiles(hookEntry?.files)).toContain('**/hooks/use*.{ts,tsx}');
+    expect(hookEntry?.ignores).toContain('**/__tests__/**');
+    expect(hookEntry?.ignores).toContain('**/packages/react-router-shadcn/**');
   });
 
   it('errors on enforce-module-boundaries', () => {

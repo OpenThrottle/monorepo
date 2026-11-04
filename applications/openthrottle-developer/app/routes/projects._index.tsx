@@ -1,39 +1,40 @@
-import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { Button } from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
-import { FolderPlusIcon, FoldersIcon } from 'lucide-react';
+import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalHeading,
   GlobalScreen,
   readSearchParam,
 } from '@openthrottle/react-router-ui-global';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import {
   mergeRouteModuleMeta,
   parsePagination,
 } from '@openthrottle/react-router-utils';
-import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
+import { FolderPlusIcon, FoldersIcon } from 'lucide-react';
+import * as React from 'react';
+import { Link } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/projects._index';
 import { GetProjectsDocument } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { SITE_TITLE } from '~/global/config/settings';
+import { ProjectsStats } from '~/routing/projects/components/ProjectsStats';
+import { ProjectsTable } from '~/routing/projects/components/ProjectsTable';
+import { ProjectsToolbar } from '~/routing/projects/components/ProjectsToolbar';
+import type { SortBy, SortOrder, View } from '~/routing/projects/config';
+import { PROJECTS_DEFAULT_LIMIT } from '~/routing/projects/config/projects.defaults';
+import type { ProjectWithStats } from '~/routing/projects/data/types';
+import {
+  parseProjectsBySearch,
+  parseProjectWithStats,
+} from '~/routing/projects/utils/parsers';
 import {
   isSortBy,
   isSortOrder,
   isView,
 } from '~/routing/projects/utils/projects';
-import {
-  parseProjectsBySearch,
-  parseProjectWithStats,
-} from '~/routing/projects/utils/parsers';
-import { PROJECTS_DEFAULT_LIMIT } from '~/routing/projects/config/projects.defaults';
-import { ProjectsStats } from '~/routing/projects/components/ProjectsStats';
-import { ProjectsTable } from '~/routing/projects/components/ProjectsTable';
-import { ProjectsToolbar } from '~/routing/projects/components/ProjectsToolbar';
-import { SITE_TITLE } from '~/global/config/settings';
-import type { SortBy, SortOrder, View } from '~/routing/projects/config';
 import { sortProjects } from '~/routing/projects/utils/sorting';
-import type { ProjectWithStats } from '~/routing/projects/data/types';
-import type { Route } from '@/app/routes/+types/projects._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

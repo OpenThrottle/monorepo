@@ -1,4 +1,5 @@
 import { Redis, type RedisOptions } from 'ioredis';
+
 import { redisConfig } from './nestjs-redis.config';
 
 /**

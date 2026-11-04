@@ -1,11 +1,5 @@
-import * as React from 'react';
-import type { RouteMatch } from 'react-router';
-import { useSearchParams } from 'react-router';
-import {
-  mergeRouteModuleMeta,
-  parsePagination,
-} from '@openthrottle/react-router-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
 import {
   GlobalErrorBoundary,
   GlobalFeatureOnboarding,
@@ -13,26 +7,33 @@ import {
   GlobalScreen,
   readSearchParam,
 } from '@openthrottle/react-router-ui-global';
-import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
+import {
+  mergeRouteModuleMeta,
+  parsePagination,
+} from '@openthrottle/react-router-utils';
+import * as React from 'react';
+import type { RouteMatch } from 'react-router';
+import { useSearchParams } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/plans._index';
 import {
   GetPlanAssigneeOptionsDocument,
   GetPlanCountsByStatusDocument,
   GetPlansByStatusDocument,
 } from '~/__generated__/graphql';
+import { SITE_TITLE } from '~/global/config/settings';
+import { PlansIntroduction } from '~/routing/plans/components/PlansIntroduction';
+import { PlansStats } from '~/routing/plans/components/PlansStats';
+import { PlansTable } from '~/routing/plans/components/PlansTable';
+import { PlansToolbar } from '~/routing/plans/components/PlansToolbar';
+import { parseStatusesFromSearchParams } from '~/routing/plans/config/status-options';
+import { PLANS_ONBOARDING } from '~/routing/plans/data/data.copy';
 import {
   buildStatusFilterUrls,
   hasActivePlansFilters,
   parseAssigneesFromSearchParams,
   parsePlansSortFromSearch,
 } from '~/routing/plans/utils/parsers';
-import { parseStatusesFromSearchParams } from '~/routing/plans/config/status-options';
-import { PlansIntroduction } from '~/routing/plans/components/PlansIntroduction';
-import { PlansStats } from '~/routing/plans/components/PlansStats';
-import { PLANS_ONBOARDING } from '~/routing/plans/data/data.copy';
-import { PlansTable } from '~/routing/plans/components/PlansTable';
-import { PlansToolbar } from '~/routing/plans/components/PlansToolbar';
-import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/plans._index';
 
 export const handle = {
   breadcrumb: () => 'Plans',

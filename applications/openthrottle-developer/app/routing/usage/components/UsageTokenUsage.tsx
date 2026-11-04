@@ -1,10 +1,13 @@
-import * as React from 'react';
-import clsx from 'clsx';
+import {
+  formatTokenCount,
+  formatUsageCost,
+} from '@openthrottle/react-router-chat';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
+  cn,
   Table,
   TableBody,
   TableCell,
@@ -12,22 +15,21 @@ import {
   TableHeader,
   TableRow,
 } from '@openthrottle/react-router-shadcn';
-import {
-  formatTokenCount,
-  formatUsageCost,
-} from '@openthrottle/react-router-chat';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import * as React from 'react';
+
+import type {
+  UsageTokenUsageRowFragment,
+  UsageTokenUsageTotalsFragment,
+} from '~/__generated__/graphql';
 import { UsageTokenUsageFilters } from '~/routing/usage/components/UsageTokenUsageFilters';
-import { groupTokenUsage } from '~/routing/usage/utils/aggregate-token-usage';
+import { UsageTokenUsageSources } from '~/routing/usage/components/UsageTokenUsageSources';
 import {
   TOKEN_USAGE_COPY,
   TOKEN_USAGE_STATS,
   tokenUsageProviderLabel,
 } from '~/routing/usage/data/token-usage-copy';
-import type {
-  UsageTokenUsageRowFragment,
-  UsageTokenUsageTotalsFragment,
-} from '~/__generated__/graphql';
+import { groupTokenUsage } from '~/routing/usage/utils/aggregate-token-usage';
 
 export interface UsageTokenUsageProps {
   className?: string;
@@ -85,7 +87,7 @@ export const UsageTokenUsage = (
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx('mt-8', className)} data-testid="UsageTokenUsage">
+    <div className={cn('mt-8', className)} data-testid="UsageTokenUsage">
       <GlobalHeading
         className="mb-4"
         heading="h2"
@@ -135,6 +137,8 @@ export const UsageTokenUsage = (
         turn{totals.turnCount === 1 ? '' : 's'}.
       </p>
 
+      <UsageTokenUsageSources items={items} />
+
       {groups.length === 0 ? (
         <p
           className="text-muted-foreground mt-6 text-sm"
@@ -176,7 +180,9 @@ export const UsageTokenUsage = (
                     {formatTokenCount(group.totalTokens)}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
-                    {formatUsageCost(group.costUsd) ?? '—'}
+                    {group.pricedTurnCount === 0
+                      ? '—'
+                      : (formatUsageCost(group.costUsd) ?? '—')}
                   </TableCell>
                 </TableRow>
               ))}

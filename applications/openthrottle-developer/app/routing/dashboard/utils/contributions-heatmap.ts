@@ -1,4 +1,5 @@
 import type { ContributionHeatmapValue } from '@openthrottle/react-router-shadcn';
+
 import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 
 /**

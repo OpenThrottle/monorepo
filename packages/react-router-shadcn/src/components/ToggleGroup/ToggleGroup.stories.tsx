@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+
 import { ToggleGroup, type ToggleGroupProps } from './ToggleGroup';
 import { ToggleGroupItem } from './ToggleGroupItem';
 

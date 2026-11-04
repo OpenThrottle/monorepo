@@ -1,9 +1,9 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Badge, DataTable } from '@openthrottle/react-router-shadcn';
-import { formatDate } from 'date-fns';
-import { Link } from 'react-router';
+import { Badge, cn, DataTable } from '@openthrottle/react-router-shadcn';
 import type { ColumnDef } from '@tanstack/react-table';
+import { formatDate } from 'date-fns';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import type { UserRowFragment } from '~/__generated__/graphql';
 
 export interface UsersTableProps {
@@ -29,7 +29,7 @@ export const UsersTable = (props: UsersTableProps): React.ReactElement => {
 
   return (
     <div
-      className={clsx('bg-card ui-border rounded-lg border', className)}
+      className={cn('bg-card ui-border rounded-lg border', className)}
       data-testid="UsersTable"
     >
       <DataTable<UserRowFragment, string | number | null | undefined>

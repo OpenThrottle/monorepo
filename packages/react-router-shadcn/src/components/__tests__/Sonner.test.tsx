@@ -1,7 +1,8 @@
-import * as React from 'react';
 import { render, screen } from '@testing-library/react';
+import * as React from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { Toaster, toast } from '../Sonner';
+
+import { toast, Toaster } from '../Sonner';
 
 describe('Sonner', () => {
   it('should render Toaster', () => {

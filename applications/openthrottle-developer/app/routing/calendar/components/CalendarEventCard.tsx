@@ -1,5 +1,5 @@
-import * as React from 'react';
 import type { CalendarEventSlotProps } from '@openthrottle/react-router-scheduling';
+import * as React from 'react';
 
 export interface CalendarEventCardProps extends CalendarEventSlotProps {}
 

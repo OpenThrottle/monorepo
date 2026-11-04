@@ -6,8 +6,8 @@ import { Injectable } from '@nestjs/common';
 import {
   AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
   AUTH_PRINCIPAL_KIND_USER,
-  authPrincipalFromJwtPayload,
   type AuthPrincipal,
+  authPrincipalFromJwtPayload,
   type JwtPayload,
 } from '@openthrottle/nestjs-auth';
 import {

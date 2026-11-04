@@ -1,14 +1,15 @@
+import { createMock } from '@golevelup/ts-vitest';
+import { BadRequestException } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
 import type { McpConnectorConnection } from '@openthrottle/nestjs-repositories';
 import {
   McpConnectorsService,
   RolesService,
 } from '@openthrottle/nestjs-repositories';
-import { createMock } from '@golevelup/ts-vitest';
-import { BadRequestException } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { McpConnectorsResolver } from './mcp-connectors.resolver';
+
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { McpConnectorsResolver } from './mcp-connectors.resolver.ts';
 
 const userId = 'user-id';
 

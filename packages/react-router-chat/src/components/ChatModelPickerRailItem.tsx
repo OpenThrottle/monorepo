@@ -1,16 +1,15 @@
-import * as React from 'react';
 import {
   Button,
+  cn,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { Star } from 'lucide-react';
-import clsx from 'clsx';
-import {
-  FAVORITES_GROUP_ID,
-  type ResolvedGroup,
-} from '../hooks/use-chat-model-picker';
+import * as React from 'react';
+
+import { FAVORITES_GROUP_ID } from '../data/chat-model-picker-favorites';
+import type { ResolvedGroup } from '../types';
 
 export interface ChatModelPickerRailItemProps {
   readonly group: ResolvedGroup;
@@ -67,7 +66,7 @@ export const ChatModelPickerRailItem = (
         <Button
           aria-label={group.label}
           aria-pressed={isActive}
-          className={clsx(
+          className={cn(
             'relative size-9 shrink-0',
             isActive &&
               'bg-accent text-accent-foreground before:bg-primary before:absolute before:top-1/2 before:left-0 before:h-5 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:content-[""]',

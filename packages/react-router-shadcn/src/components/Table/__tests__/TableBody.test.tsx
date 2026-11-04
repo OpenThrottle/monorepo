@@ -1,10 +1,11 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { TableBody } from '../TableBody';
+
 import type { TableBodyProps } from '../TableBody';
+import { TableBody } from '../TableBody';
 
 describe('TableBody Component', () => {
   let component: RenderResult;

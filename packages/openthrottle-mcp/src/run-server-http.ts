@@ -15,9 +15,11 @@
  * Run: `OT_MCP_HTTP_PORT=6022 tsx src/run-server-http.ts`
  */
 import { randomUUID } from 'node:crypto';
+
 import { Module } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { McpModule, McpTransportType } from '@rekog/mcp-nest';
+
 import {
   getServerName,
   SERVER_INSTRUCTIONS,

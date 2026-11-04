@@ -1,11 +1,13 @@
-import * as React from 'react';
+import type { RenderResult } from '@testing-library/react';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { RenderResult } from '@testing-library/react';
+import * as React from 'react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { AgentsSkillsRegistryGrid } from '../AgentsSkillsRegistryGrid';
-import type { AgentsSkillsRegistryGridProps } from '../AgentsSkillsRegistryGrid';
+
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+
+import type { AgentsSkillsRegistryGridProps } from '../AgentsSkillsRegistryGrid';
+import { AgentsSkillsRegistryGrid } from '../AgentsSkillsRegistryGrid';
 
 const entry = (overrides: Partial<RepoSkillEntry> = {}): RepoSkillEntry => ({
   disableModelInvocation: undefined,

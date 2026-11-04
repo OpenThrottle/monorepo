@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { buildUsageSupportSnapshotJson } from '~/routing/usage/utils/build-usage-support-snapshot';
 
 describe('buildUsageSupportSnapshotJson', () => {

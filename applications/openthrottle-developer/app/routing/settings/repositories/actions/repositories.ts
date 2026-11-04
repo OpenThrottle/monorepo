@@ -3,19 +3,21 @@ import {
   parseFormData,
 } from '@openthrottle/react-router-graphql';
 import { z } from 'zod/v3';
-import {
-  AddWorkspaceFolderInputSchema,
-  CloneRepositoryInputSchema,
-} from '~/__generated__/schemas';
+
+import type { Route } from '@/app/routes/+types/settings.repositories._index';
 import {
   AddWorkspaceFolderDocument,
   BrowseWorkspaceDirectoryDocument,
   CloneRepositoryDocument,
   DeleteWorkspaceLocalRepositoryDocument,
   PickFolderNativeDocument,
+  PruneWorktreeCheckoutsDocument,
   RefreshCheckoutDocument,
 } from '~/__generated__/graphql';
-import type { Route } from '@/app/routes/+types/settings.repositories._index';
+import {
+  AddWorkspaceFolderInputSchema,
+  CloneRepositoryInputSchema,
+} from '~/__generated__/schemas';
 
 export const addFolder = async (args: Route.ActionArgs, formData: FormData) => {
   const parsed = parseFormData(formData, AddWorkspaceFolderInputSchema(), {
@@ -140,6 +142,45 @@ export const refreshCheckout = async (
   } catch (error) {
     const message =
       error instanceof Error ? error.message : 'Failed to refresh checkout.';
+    return { error: message };
+  }
+};
+
+/**
+ * @description Prunes stale worktree checkout rows. Ids arrive comma-joined in one
+ * `checkoutIds` field so the bulk button and the per-row action post the same shape; the
+ * server re-checks every id and reports a per-id outcome rather than failing the batch.
+ */
+export const pruneWorktreeCheckouts = async (
+  args: Route.ActionArgs,
+  formData: FormData,
+) => {
+  const parsed = parseFormData(
+    formData,
+    z.object({ checkoutIds: z.string().min(1) }),
+    { labels: { checkoutIds: 'Worktree records' }, strict: false },
+  );
+  if (!parsed.success) {
+    return { error: parsed.error };
+  }
+
+  const checkoutIds = parsed.data.checkoutIds
+    .split(',')
+    .map((id) => id.trim())
+    .filter((id) => id !== '');
+
+  try {
+    const data = await executeGraphqlWithAuth(
+      args.request,
+      PruneWorktreeCheckoutsDocument,
+      { input: { checkoutIds } },
+    );
+    return { pruned: data.pruneWorktreeCheckouts.results };
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : 'Failed to remove worktree records.';
     return { error: message };
   }
 };

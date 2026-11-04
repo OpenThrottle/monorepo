@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { MIN_SIZE, computeRotation, computeSize } from '../selection-transform';
+import { computeRotation, computeSize, MIN_SIZE } from '../selection-transform';
 
 describe('computeSize', () => {
   const anchor = { rotation: 0, x: 100, y: 100 };

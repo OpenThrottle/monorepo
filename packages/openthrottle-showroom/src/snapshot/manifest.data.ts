@@ -12,7 +12,7 @@
  * anything credential-adjacent, `denied` any table that stores secrets.
  */
 
-import type { SnapshotManifest } from './manifest';
+import type { SnapshotManifest } from './manifest.ts';
 
 export const SNAPSHOT_MANIFEST: SnapshotManifest = {
   agent_conversation_messages: {

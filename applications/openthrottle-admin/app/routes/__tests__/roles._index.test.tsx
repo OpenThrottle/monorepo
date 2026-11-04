@@ -13,14 +13,15 @@ vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
   };
 });
 
+import { GraphqlAuthError } from '@openthrottle/react-router-graphql';
 import {
   createActionArgs as buildActionArgs,
   createLoaderArgs as buildLoaderArgs,
 } from '@openthrottle/react-router-testing';
 
-import { GraphqlAuthError } from '@openthrottle/react-router-graphql';
-import * as RouteModule from '../roles._index';
 import type { Route } from '@/app/routes/+types/roles._index';
+
+import * as RouteModule from '../roles._index';
 
 const createLoaderArgs = () =>
   buildLoaderArgs<Route.LoaderArgs>({

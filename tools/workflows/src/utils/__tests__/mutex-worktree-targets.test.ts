@@ -4,6 +4,7 @@
 
 import { Mutex } from 'async-mutex';
 import { describe, expect, it, vi } from 'vitest';
+
 import type { AcquireResult } from '../../types/worktree';
 import {
   createMutexWorktreeTargetsTracker,

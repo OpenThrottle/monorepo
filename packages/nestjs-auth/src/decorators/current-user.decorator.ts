@@ -1,10 +1,11 @@
 import { createParamDecorator, type ExecutionContext } from '@nestjs/common';
+
 import {
+  type AuthPrincipal,
   getAuthPrincipalSub,
   normalizeRequestAuthPrincipal,
-  type AuthPrincipal,
-} from '../auth-principal';
-import { getRequestFromExecutionContext } from '../utils/get-request-from-execution-context';
+} from '../auth-principal.ts';
+import { getRequestFromExecutionContext } from '../utils/get-request-from-execution-context.ts';
 
 /** Fields selectable via `@CurrentUser('sub')` on {@link AuthPrincipal}. */
 export type CurrentUserProperty = 'sub' | 'kind';

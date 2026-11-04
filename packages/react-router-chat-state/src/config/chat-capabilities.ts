@@ -1,8 +1,9 @@
+import type { ChatBackendCapabilities } from '@openthrottle/react-router-chat';
 import {
   ChatPermissionMode,
   ChatReasoningLevel,
 } from '@openthrottle/react-router-chat';
-import type { ChatBackendCapabilities } from '@openthrottle/react-router-chat';
+
 import type { DecodedChatOption } from '../utils/chat-model-option';
 
 /**

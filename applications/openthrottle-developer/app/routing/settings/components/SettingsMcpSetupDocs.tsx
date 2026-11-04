@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Badge,
   Button,
@@ -8,6 +7,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import type { McpConnectorFieldsFragment } from '~/__generated__/graphql';
 import {
   MCP_AUTH_TYPE_LABEL,

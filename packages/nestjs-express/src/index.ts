@@ -1,1 +1,1 @@
-export { NestjsExpressModule } from './modules/nestjs-express.module';
+export { NestjsExpressModule } from './modules/nestjs-express.module.ts';

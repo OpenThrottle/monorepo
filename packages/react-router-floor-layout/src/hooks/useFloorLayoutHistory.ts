@@ -47,6 +47,7 @@ export interface UseFloorLayoutHistoryResult {
 export function useFloorLayoutHistory(
   initial: FloorLayout,
 ): UseFloorLayoutHistoryResult {
+  // Hooks
   const [state, setState] = useState<HistoryState>({
     future: [],
     past: [],
@@ -54,8 +55,11 @@ export function useFloorLayoutHistory(
   });
   // Mirror for synchronous reads in the imperative callbacks.
   const stateRef = useRef(state);
+
+  // Setup
   stateRef.current = state;
 
+  // Handlers
   const commit = useCallback((next: FloorLayout) => {
     const current = stateRef.current;
     setState({
@@ -92,6 +96,12 @@ export function useFloorLayoutHistory(
     });
     return next;
   }, []);
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return {
     canRedo: state.future.length > 0,

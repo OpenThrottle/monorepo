@@ -1,6 +1,6 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { createActionArgs } from '@openthrottle/react-router-testing';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 vi.mock('~/global/utils/utils.agents-chat', () => ({
   handleDeleteAgentConversationIntent: vi.fn(),

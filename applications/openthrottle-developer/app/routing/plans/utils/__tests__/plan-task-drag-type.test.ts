@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
-import { PLAN_TASK_DRAG_TYPE } from '../plan-task-drag-type';
+
 import type { PlanTaskDragItem } from '../plan-task-drag-type';
+import { PLAN_TASK_DRAG_TYPE } from '../plan-task-drag-type';
 
 describe('PLAN_TASK_DRAG_TYPE', () => {
   test('is the stable react-dnd drag type string', () => {

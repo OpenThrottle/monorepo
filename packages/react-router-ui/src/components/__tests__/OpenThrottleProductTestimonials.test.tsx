@@ -1,9 +1,10 @@
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { OpenThrottleProductTestimonials } from '../OpenThrottleProductTestimonials';
+
 import type { OpenThrottleProductTestimonialsProps } from '../OpenThrottleProductTestimonials';
+import { OpenThrottleProductTestimonials } from '../OpenThrottleProductTestimonials';
 
 describe('OpenThrottleProductTestimonials Component', () => {
   let component: RenderResult;

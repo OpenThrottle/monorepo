@@ -1,11 +1,11 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { AssigneeMultiSelect } from '~/routing/plans/components/AssigneeMultiSelect';
+import { cn } from '@openthrottle/react-router-shadcn';
 import { GlobalToolbarSearch } from '@openthrottle/react-router-ui-global';
-import type { PlansSortBy, PlansSortOrder } from '~/routing/plans/config/types';
+import * as React from 'react';
+
+import { AssigneeMultiSelect } from '~/routing/plans/components/AssigneeMultiSelect';
+import { PlanStatusFilter } from '~/routing/plans/components/PlanStatusFilter';
 import { SortDropdown } from '~/routing/plans/components/SortDropdown';
-import { STATUS_OPTIONS } from '~/routing/plans/config/status-options';
-import { StatusMultiSelect } from '~/routing/plans/components/StatusMultiSelect';
+import type { PlansSortBy, PlansSortOrder } from '~/routing/plans/config/types';
 import { usePlansToolbar } from '~/routing/plans/hooks/usePlansToolbar';
 
 export interface PlansToolbarProps {
@@ -50,12 +50,12 @@ export const PlansToolbar = (props: PlansToolbarProps): React.ReactElement => {
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx('w-full', className)} data-testid="PlansToolbar">
+    <div className={cn('w-full', className)} data-testid="PlansToolbar">
       {/* GlobalToolbarSearch owns the only <form role="search"> here; the
           status/assignee/sort filters are siblings outside it so no forms
           nest. Search commits ?search= and resets ?page (dropping the legacy
           ?q, and ?semantic when the query is cleared). */}
-      <div className={clsx('flex w-full flex-wrap items-center', 'gap-2')}>
+      <div className={cn('flex w-full flex-wrap items-center', 'gap-2')}>
         <GlobalToolbarSearch
           aria-label="Search plans"
           placeholder="Search plans & tasks"
@@ -68,13 +68,9 @@ export const PlansToolbar = (props: PlansToolbarProps): React.ReactElement => {
           }}
         />
 
-        <StatusMultiSelect
-          compact={true}
-          data-testid="PlansToolbar-status-filter"
-          onChange={handleStatusChange}
-          options={STATUS_OPTIONS}
-          value={statuses}
-        />
+        <div data-testid="PlansToolbar-status-filter">
+          <PlanStatusFilter onChange={handleStatusChange} value={statuses} />
+        </div>
         <div>
           <AssigneeMultiSelect
             onChange={handleAssigneeChange}

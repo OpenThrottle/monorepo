@@ -1,6 +1,8 @@
+import { Badge } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { Link } from 'react-router';
-import { Badge } from '@openthrottle/react-router-shadcn';
+
+import type { LinkedArtifactRow } from '~/routing/plans/components/LinkedArtifactsPanel';
 import {
   LINKED_ARTIFACT_FALLBACK_ICON,
   LINKED_ARTIFACT_ICONS,
@@ -13,7 +15,6 @@ import {
   formatProducedAt,
   formatProducedAtRelative,
 } from '~/routing/plans/utils/linked-artifacts-panel';
-import type { LinkedArtifactRow } from '~/routing/plans/components/LinkedArtifactsPanel';
 
 export interface LinkedArtifactRowItemProps {
   artifact: LinkedArtifactRow;

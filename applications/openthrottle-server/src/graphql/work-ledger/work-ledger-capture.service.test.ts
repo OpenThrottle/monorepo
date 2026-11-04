@@ -1,16 +1,19 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException } from '@nestjs/common';
 import type { GlobalClsService } from '@openthrottle/nestjs-modules';
 import type { WorkArtifact } from '@openthrottle/nestjs-repositories';
 import {
-  workArtifactsFactory,
   WorkSession,
   WorkSessionSubject,
-  workSessionsFactory,
 } from '@openthrottle/nestjs-repositories';
+import {
+  workArtifactsFactory,
+  workSessionsFactory,
+} from '@openthrottle/nestjs-repositories/testing';
 import type { EntityManager, Repository } from 'typeorm';
-import { WorkLedgerCaptureService } from './work-ledger-capture.service';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { WorkLedgerCaptureService } from './work-ledger-capture.service.ts';
 
 const USER_SUB = 'user-1';
 const USER_KIND = 'user';
@@ -73,8 +76,12 @@ describe('WorkLedgerCaptureService', () => {
       expect.objectContaining({
         actorServiceAccountId: null,
         actorUserId: USER_SUB,
-        closedBy: 'explicit',
-        toolName: 'developer-app',
+        // 'instant', not 'explicit': the session has no span, and saying so in the data
+        // is what keeps duration views from having to infer it from ended_at = started_at.
+        closedBy: 'instant',
+        // No usable x-app-name on this request, so the client is honestly unknown
+        // rather than the old hardcoded (and frequently wrong) 'developer-app'.
+        toolName: 'unknown',
       }),
     );
     expect(artifactRepo.create).toHaveBeenCalledWith(
@@ -84,6 +91,35 @@ describe('WorkLedgerCaptureService', () => {
         type: 'status_change',
         verification: 'verified',
       }),
+    );
+  });
+
+  it('records the calling client from x-app-name as the instant session tool_name', async () => {
+    vi.mocked(cls.get).mockImplementation((key?: unknown) =>
+      key === 'app'
+        ? { name: 'openthrottle-developer', version: '1.2.3' }
+        : undefined,
+    );
+
+    await service.recordStatusChange(manager, params);
+
+    expect(sessionRepo.create).toHaveBeenCalledWith(
+      expect.objectContaining({ toolName: 'openthrottle-developer' }),
+    );
+  });
+
+  it('falls back to unknown when x-app-name is only the sentinel', async () => {
+    vi.mocked(cls.get).mockImplementation((key?: unknown) =>
+      key === 'app'
+        ? { name: 'x-app-name - unknown', version: 'x-app-version - unknown' }
+        : undefined,
+    );
+
+    await service.recordStatusChange(manager, params);
+
+    // The sentinel means "no header", so it must not be recorded as a client name.
+    expect(sessionRepo.create).toHaveBeenCalledWith(
+      expect.objectContaining({ toolName: 'unknown' }),
     );
   });
 
@@ -133,5 +169,62 @@ describe('WorkLedgerCaptureService', () => {
       }),
     ).rejects.toBeInstanceOf(BadRequestException);
     expect(artifactRepo.create).not.toHaveBeenCalled();
+  });
+
+  it('reuses a supplied sessionId instead of resolving ambient-or-instant again', async () => {
+    await service.recordStatusChange(manager, {
+      ...params,
+      sessionId: 'shared-session',
+    });
+
+    // No session lookup/creation at all — the given id is used directly.
+    expect(sessionRepo.findOne).not.toHaveBeenCalled();
+    expect(sessionRepo.create).not.toHaveBeenCalled();
+    expect(artifactRepo.create).toHaveBeenCalledWith(
+      expect.objectContaining({ sessionId: 'shared-session' }),
+    );
+  });
+
+  describe('resolveSessionId', () => {
+    it('resolves (and opens, when needed) a session for the actor without writing an artifact', async () => {
+      const sessionId = await service.resolveSessionId(manager, {
+        actorKind: USER_KIND,
+        actorSub: USER_SUB,
+      });
+
+      expect(sessionId).toBe('instant-session');
+      expect(sessionRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ actorUserId: USER_SUB }),
+      );
+      expect(artifactRepo.create).not.toHaveBeenCalled();
+    });
+
+    it('reuses a valid ambient session whose actor matches, same as recordStatusChange', async () => {
+      vi.mocked(cls.get).mockReturnValue('ambient-1');
+      vi.mocked(sessionRepo.findOne).mockResolvedValue(
+        workSessionsFactory.build({
+          actorServiceAccountId: null,
+          actorUserId: USER_SUB,
+          id: 'ambient-1',
+        }),
+      );
+
+      const sessionId = await service.resolveSessionId(manager, {
+        actorKind: USER_KIND,
+        actorSub: USER_SUB,
+      });
+
+      expect(sessionId).toBe('ambient-1');
+      expect(sessionRepo.create).not.toHaveBeenCalled();
+    });
+
+    it('throws on an unresolved principal', async () => {
+      await expect(
+        service.resolveSessionId(manager, {
+          actorKind: undefined,
+          actorSub: undefined,
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
   });
 });

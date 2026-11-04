@@ -1,6 +1,7 @@
 import path from 'node:path';
-import { defineViteConfig, getDirname } from '@tools/dotfiles';
+
 import tailwindcss from '@tailwindcss/vite';
+import { defineViteConfig, getDirname } from '@tools/dotfiles';
 
 /**
  * @link https://vitejs.dev/guide/build.html#library-mode

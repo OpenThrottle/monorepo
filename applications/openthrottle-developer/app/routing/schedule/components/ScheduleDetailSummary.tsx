@@ -1,12 +1,21 @@
-import * as React from 'react';
 import { Badge } from '@openthrottle/react-router-shadcn';
-import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
+import * as React from 'react';
+
 import type { ScheduledJobCardFragment } from '~/__generated__/graphql';
+import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
+import { describeScheduleCadence } from '~/routing/schedule/utils/describe-schedule-cadence';
 
 export interface ScheduleDetailSummaryProps {
   job: Pick<
     ScheduledJobCardFragment,
-    'cronPattern' | 'driverId' | 'model' | 'repository' | 'timezone'
+    | 'cronPattern'
+    | 'driverId'
+    | 'intervalMs'
+    | 'model'
+    | 'repository'
+    | 'runAt'
+    | 'scheduleKind'
+    | 'timezone'
   >;
 }
 
@@ -38,7 +47,7 @@ export const ScheduleDetailSummary = (
           {job.driverId} {job.model ? ` · ${job.model}` : ''}
         </Badge>
         <p className="text-muted-foreground text-sm">
-          {job.cronPattern} {job.timezone ? ` (${job.timezone})` : ' (UTC)'}
+          {describeScheduleCadence(job)}
         </p>
       </div>
       <p className="text-muted-foreground text-sm">

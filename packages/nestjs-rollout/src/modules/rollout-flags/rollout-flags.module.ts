@@ -9,8 +9,9 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
-import { RolloutFlag } from './rollout-flag.entity';
-import { RolloutService } from './rollout.service';
+
+import { RolloutService } from './rollout.service.ts';
+import { RolloutFlag } from './rollout-flag.entity.ts';
 
 @Module({
   controllers: [],

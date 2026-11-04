@@ -13,14 +13,13 @@ import { mkdir, readdir, rm } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { basename, dirname, isAbsolute, join } from 'node:path';
 import { promisify } from 'node:util';
+
 import {
   BadRequestException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { isRecord } from '@openthrottle/nodejs-utils';
-import { expandHome } from '../../services/paths/expand-home';
 import type {
   Repository,
   RepositoryCheckout,
@@ -31,23 +30,26 @@ import {
   RepositoriesService,
   RepositoryCheckoutsService,
 } from '@openthrottle/nestjs-repositories';
+import { isRecord } from '@openthrottle/nodejs-utils';
 import {
   toContainerPath,
   toHostPath,
 } from '@openthrottle/openthrottle-agentic-utils';
-import { RepositoryInspectionService } from '../repository-inspection/repository-inspection.service';
-import type { RepositoryInspectionSnapshot } from '../repository-inspection/repository-inspection.snapshot';
-import { ForeignSkillMaterializationService } from '../../services/foreign-skill-injection/foreign-skill-materialization.service';
+
+import { ForeignSkillMaterializationService } from '../../services/foreign-skill-injection/foreign-skill-materialization.service.ts';
+import { expandHome } from '../../services/paths/expand-home.ts';
+import { RepositoryInspectionService } from '../repository-inspection/repository-inspection.service.ts';
+import type { RepositoryInspectionSnapshot } from '../repository-inspection/repository-inspection.snapshot.ts';
 import {
   canUseNativeFolderDialog,
   type NativeDialogRunner,
   pickNativeFolder,
-} from './native-folder-picker';
+} from './native-folder-picker.ts';
 import type {
   RepositoryCheckoutObject,
   RepositoryInspectionObject,
   RepositoryObject,
-} from './repository.object';
+} from './repository.object.ts';
 import type {
   AddWorkspaceFolderPayloadObject,
   BrowseDirectoryEntryObject,
@@ -57,8 +59,8 @@ import type {
   RefreshCheckoutPayloadObject,
   WorkspaceDirectoryListingObject,
   WorkspacePickerCapabilitiesObject,
-} from './workspace-folders.object';
-import { WorkspaceFolderReconciliationEnum } from './workspace-folders.object';
+} from './workspace-folders.object.ts';
+import { WorkspaceFolderReconciliationEnum } from './workspace-folders.object.ts';
 
 /** Env var: comma-separated absolute host-view paths scanned for candidates. */
 export const WORKSPACE_ROOTS_ENV = 'OPENTHROTTLE_WORKSPACE_ROOTS';
@@ -103,6 +105,7 @@ const toInspectionObject = (
     linkedWorktrees: snapshot.git.linkedWorktrees,
     normalizedRemoteUrl: snapshot.git.normalizedRemoteUrl,
   },
+  hookTelemetry: snapshot.hookTelemetry ? { ...snapshot.hookTelemetry } : null,
   scannedAt: new Date(snapshot.scannedAt),
   stack: { ...snapshot.stack },
   warnings: snapshot.warnings,
@@ -465,12 +468,26 @@ export class WorkspaceFoldersService {
    * create/relink the checkout → persist inspection → auto-provision the project.
    * `managed` distinguishes an OT-cloned checkout (true) from a user-registered
    * existing folder (false).
+   *
+   * A checkout is a git work tree, so the path is first resolved to the root of
+   * the work tree containing it: a subdirectory of a repository registers the
+   * repository, and a folder inside no repository at all — a directory that
+   * merely CONTAINS repositories, say — is rejected rather than registered as a
+   * primary checkout nothing can ever run in.
    */
   private async registerCheckout(
     userId: string,
-    hostPath: string,
+    requestedPath: string,
     opts: { displayName?: string | null; managed: boolean },
   ): Promise<AddWorkspaceFolderPayloadObject> {
+    const hostPath =
+      await this.inspectionService.resolveWorkTreeRoot(requestedPath);
+    if (hostPath === null) {
+      throw new BadRequestException(
+        `${requestedPath} is not inside a git repository. Add the repository's own folder instead.`,
+      );
+    }
+
     const snapshot = await this.inspectionService.scan(hostPath);
 
     const displayName =

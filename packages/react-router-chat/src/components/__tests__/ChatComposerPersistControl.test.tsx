@@ -1,11 +1,12 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { ChatComposerPersistControl } from '../ChatComposerPersistControl';
+
 import type { ChatComposerPersistControlProps } from '../ChatComposerPersistControl';
+import { ChatComposerPersistControl } from '../ChatComposerPersistControl';
 
 const renderControl = (
   props: ChatComposerPersistControlProps = {},
@@ -63,5 +64,16 @@ describe('ChatComposerPersistControl Component', () => {
     );
 
     expect(onPersistChange).toHaveBeenCalledWith(true);
+  });
+
+  test('extends the touch hit area to 44px without resizing the switch', () => {
+    const component = renderControl({ onPersistChange: vi.fn() });
+
+    expect(component.getByTestId('ChatComposerToolbar-persist')).toHaveClass(
+      'pointer-coarse:min-h-11',
+    );
+    expect(
+      component.getByTestId('ChatComposerToolbar-persist-switch'),
+    ).toHaveClass('pointer-coarse:after:-inset-y-[15px]');
   });
 });

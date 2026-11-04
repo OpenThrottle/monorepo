@@ -1,7 +1,6 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "baseUrl": "./",
     "outDir": "./dist",
     "rootDirs": ["./src"]
   },
@@ -15,6 +14,9 @@
     "tests/**"
   ],
   "references": [
+    {
+      "path": "../react-router-shadcn/tsconfig.lib.json"
+    },
     {
       "path": "../../tools/dotfiles/tsconfig.lib.json"
     }

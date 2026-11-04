@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Badge,
   Button,
@@ -7,11 +6,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@openthrottle/react-router-shadcn';
-import { AddPermissionSelectForm } from '~/routing/roles/components/AddPermissionSelectForm';
-import type { action as roleDetailAction } from '~/routes/roles.$roleId';
-import type { Route } from '@/app/routes/+types/roles.$roleId';
+import * as React from 'react';
 import type { useFetcher } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/roles.$roleId';
 import type { RoleDetailsFragment } from '~/__generated__/graphql';
+import type { action as roleDetailAction } from '~/routes/roles.$roleId';
+import { AddPermissionSelectForm } from '~/routing/roles/components/AddPermissionSelectForm';
 
 type LoaderData = Route.ComponentProps['loaderData'];
 

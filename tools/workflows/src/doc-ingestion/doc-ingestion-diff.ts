@@ -4,9 +4,10 @@
  */
 
 import { createHash } from 'node:crypto';
-import { readFile, readdir } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import { access } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
+
 import { getPriorState } from './doc-ingestion-state';
 
 /** Payload for the doc-ingestion BullMQ job. At least one of directories or files must be set. */

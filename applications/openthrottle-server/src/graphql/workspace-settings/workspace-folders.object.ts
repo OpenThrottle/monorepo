@@ -5,11 +5,12 @@
  */
 
 import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
-import { ProjectObject } from '../projects/project.object';
+
+import { ProjectObject } from '../projects/project.object.ts';
 import {
   RepositoryCheckoutObject,
   RepositoryObject,
-} from './repository.object';
+} from './repository.object.ts';
 
 export const WorkspaceFolderReconciliationEnum = {
   CREATED_CANONICAL: 'created_canonical',

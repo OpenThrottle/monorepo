@@ -72,19 +72,35 @@ Option **D** (server-side transcript derivation) was not chosen as the mechanism
 the fallback for CLIs whose hooks we cannot reach — currently grok, opencode, and gemini (whose
 settings-gated hooks system has not yet been exercised end-to-end).
 
-## 3. The design — one artifact, two delivery paths
+## 3. The design — one payload per tool, two delivery paths
 
-The payload is built **once**, by the existing `bundle-hooks` target in
-`@openthrottle/agentic-hooks`, and committed to `plugins/openthrottle/`:
+Payloads are built by the `bundle-hooks` target in `@openthrottle/agentic-hooks` and committed,
+**one directory per tool**:
 
 ```
-plugins/openthrottle/
-  .claude-plugin/plugin.json     # name, version (derived), description, author
-  hooks/hooks.json               # event → matcher → ${CLAUDE_PLUGIN_ROOT}/hooks/*.cjs
-  hooks/skill-usage-capture.cjs  # bundled, zero runtime deps
+plugins/openthrottle/                # Claude Code
+plugins/openthrottle-cursor/         # Cursor
+  .claude-plugin/plugin.json         # name, version (derived), description, author
+  hooks/hooks.json                   # event → handler, in THAT tool's event names
+  hooks/skill-usage-capture.cjs      # bundled, zero runtime deps
   hooks/skill-usage-complete.cjs
-  README.md                      # what it collects, and how to turn it off
+  README.md                          # what it collects, and how to turn it off
 ```
+
+**Why one per tool rather than one shared payload.** Everything except `hooks/hooks.json` is
+already portable — Cursor's manifest lookup is `.cursor-plugin/plugin.json`, then
+`.claude-plugin/plugin.json`, then `plugin.json`, so the Claude-shaped manifest satisfies both, and
+Cursor even translates Claude's event names (`PreToolUse` → `preToolUse`, `Stop` → `stop`,
+`UserPromptSubmit` → `beforeSubmitPrompt`). But a payload has exactly one `hooks/hooks.json`, and
+the translation drops precisely what this telemetry needs: `PreToolUse` with `matcher: "Skill"` has
+no Cursor tool to match, `UserPromptExpansion` has no Cursor equivalent at all, and `Stop` maps to
+an event that never fires in a headless run. A shared payload would load under Cursor, report no
+error, and record nothing — the worst of the three outcomes. Measurements:
+[cursor-agent-hook-probe.md](./cursor-agent-hook-probe.md).
+
+Each driver names its own payload through `AgentDriver.pluginDirRel`, and
+`resolveHookPluginDirs({ payloadRel })` resolves that one. A driver that names none falls back to
+the Claude payload.
 
 - **Leg A — plugin + marketplace.** `.claude-plugin/marketplace.json` at the repo root lists the
   payload with `source: "./plugins/openthrottle"`. A user runs `/plugin marketplace add
@@ -92,9 +108,11 @@ OpenThrottle/monorepo` then `/plugin install openthrottle@openthrottle` **once**
   every repo they open. This repo is public, so it hosts the marketplace itself — no second repo, no
   sync, no drift gate between repos, and no separate LICENSE.
 - **Leg B — spawn-time.** `resolveHookPluginDirs`
-  (`packages/openthrottle-agentic-utils/src/utils/hook-plugin-injection.ts`) locates the payload and
-  hands it to the driver, which appends `--plugin-dir <path>` via `appendPluginDirShellFlags`. OT
-  runs never depend on the user having installed anything.
+  (`packages/openthrottle-agentic-utils/src/utils/hook-plugin-injection.ts`) locates the payload for
+  the driver being spawned and hands it over, and the driver appends `--plugin-dir <path>` via
+  `appendPluginDirShellFlags`. OT runs never depend on the user having installed anything.
+  **Claude and Cursor both support this leg** — `cursor-agent --plugin-dir <path>` is repeatable in
+  exactly the same way, verified against 2026.09.10-fd3934a.
 
 The payload is a **real committed directory, not gitignored build output**, because leg B points a
 running server at it in a plain checkout with nothing built. It is drift-gated by
@@ -170,16 +188,23 @@ flag at all**. Both captured a skill event and a correlated `success` outcome wi
 Leg B writes nothing into the target checkout: no ledger, no teardown, no `.git/info/exclude` block.
 That is a genuine improvement over skill injection, which needs all three.
 
-**But the hook core itself is not yet foreign-repo-safe.** When the OT server is unreachable, the
-JSONL buffer falls back to `<repoRoot>/.cache/skill-usage/`, which is _inside the target repo_. The
-live verification run reproduced this exactly — `?? .cache/` appeared in the scratch repo's
-`git status`. A foreign repo is the case _most_ likely to have no reachable server, so this is the
-normal path there rather than a rare one.
+**The core is now foreign-repo-safe too.** It was not: when the OT server was unreachable the JSONL
+buffer fell back to `<repoRoot>/.cache/skill-usage/`, _inside the target repo_, and the live
+verification run reproduced it exactly — `?? .cache/` in the scratch repo's `git status`. A foreign
+repo is the case _most_ likely to have no reachable server, so that was the normal path there rather
+than a rare one.
 
-§4 of the [telemetry contract](./child-repo-hook-telemetry-contract.md) makes relocating the buffer to
-a machine-global root a hard requirement, along with the other foreign-repo behaviors (no reading a
-stranger's `.env`, `name-only` privacy, scope detection against the injected skill set). **Until that
-lands, leg B's zero-mutation property holds for the flag but not for the core.**
+Two changes closed it, both unconditional rather than gated on a `home`/`foreign` mode:
+
+- The buffer is `~/.openthrottle/skill-usage/` for **every** repo, this one included. Repository
+  identity travels in each record's `cwd` and `git_branch`, so no per-repo directory is needed and the
+  drain has one place to look.
+- The `<repoRoot>/.env` layer is gated on `isOpenThrottleCheckout`, so a stranger's `.env` is never
+  opened. It fails closed: an ambiguous checkout is treated as foreign.
+
+**Leg B's zero-mutation property now holds for the core as well as the flag.** The remaining
+foreign-repo behaviors in §4 of the [telemetry contract](./child-repo-hook-telemetry-contract.md) —
+`name-only` privacy and scope detection against the injected skill set — are unchanged by this.
 
 ---
 

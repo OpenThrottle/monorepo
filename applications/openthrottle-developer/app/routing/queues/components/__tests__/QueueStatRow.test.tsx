@@ -1,10 +1,11 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { QueueStatRow } from '../QueueStatRow';
+
 import type { QueueStatRowProps } from '../QueueStatRow';
+import { QueueStatRow } from '../QueueStatRow';
 
 const renderRow = (props: QueueStatRowProps): RenderResult => {
   const Component = () => <QueueStatRow {...props} />;

@@ -1,12 +1,14 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { ProjectsTable } from '../ProjectsTable';
-import type { ProjectsTableProps } from '../ProjectsTable';
+
 import type { ProjectCardFragment } from '~/__generated__/graphql';
 import { PROJECTS_ROW_ACTIONS_COPY } from '~/routing/projects/data/data.copy';
+
+import type { ProjectsTableProps } from '../ProjectsTable';
+import { ProjectsTable } from '../ProjectsTable';
 
 const mockProjects: ProjectCardFragment[] = [
   {

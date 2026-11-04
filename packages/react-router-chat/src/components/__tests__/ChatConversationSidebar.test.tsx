@@ -1,11 +1,12 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { ChatConversationSidebar } from '../ChatConversationSidebar';
-import type { ChatConversationSidebarProps } from '../ChatConversationSidebar';
+
 import type { AgentConversationListItem } from '../../types';
+import type { ChatConversationSidebarProps } from '../ChatConversationSidebar';
+import { ChatConversationSidebar } from '../ChatConversationSidebar';
 
 const CONVERSATIONS: readonly AgentConversationListItem[] = [
   {
@@ -123,6 +124,24 @@ describe('ChatConversationSidebar', () => {
       );
 
       expect(onDelete).toHaveBeenCalledWith('conv-1');
+    });
+
+    test('shows the confirmation dialog and does not delete when cancelled', async () => {
+      const onDelete = vi.fn();
+      const component = renderSidebar({ onDelete });
+      const user = userEvent.setup();
+
+      await user.click(
+        component.getByTestId('ChatConversationSidebar-delete-conv-1'),
+      );
+
+      expect(
+        component.getByTestId('ChatConversationSidebar-confirm-delete'),
+      ).toBeInTheDocument();
+
+      await user.click(component.getByText('Cancel'));
+
+      expect(onDelete).not.toHaveBeenCalled();
     });
   });
 

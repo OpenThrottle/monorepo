@@ -1,8 +1,6 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { FileIcon } from '@phosphor-icons/react/dist/ssr/File';
 import {
   Button,
+  cn,
   Input,
   Select,
   SelectContent,
@@ -10,6 +8,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
+import { FileIcon } from '@phosphor-icons/react/dist/ssr/File';
+import * as React from 'react';
+
 import { PROMPT_TYPE_OPTIONS, PROMPT_TYPE_VALUES } from '../config';
 import { useEditor } from '../hooks/useEditor';
 import { EditorNewFileForm } from './EditorNewFileForm';
@@ -83,7 +84,7 @@ export const EditorToolbar = (
   return (
     <div onKeyDown={handleKeyDown}>
       <div
-        className={clsx(
+        className={cn(
           'flex items-center justify-between border-b border-gray-700 bg-gray-900 p-4',
           className,
         )}

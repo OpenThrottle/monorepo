@@ -1,9 +1,10 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { PullRequestChecksLinks } from '../PullRequestChecksLinks';
+
 import type { PullRequestChecksLinksProps } from '../PullRequestChecksLinks';
+import { PullRequestChecksLinks } from '../PullRequestChecksLinks';
 
 const basePull: PullRequestChecksLinksProps['pull'] = {
   author: 'visormatt',

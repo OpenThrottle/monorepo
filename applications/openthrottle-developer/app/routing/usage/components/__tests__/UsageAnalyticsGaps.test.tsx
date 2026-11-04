@@ -1,8 +1,10 @@
-import * as React from 'react';
 import { screen } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { UsageAnalyticsGaps } from '../UsageAnalyticsGaps';
+
 import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import { UsageAnalyticsGaps } from '../UsageAnalyticsGaps';
 
 describe('UsageAnalyticsGaps Component', () => {
   test('renders analytics gaps heading and limitation bullets', () => {

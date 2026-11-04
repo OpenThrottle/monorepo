@@ -1,18 +1,19 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
+  cn,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+
+import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 import { DAILY_STATS_CHART_CONFIG } from '~/routing/dashboard/data/daily-stats-chart';
-import { resolveDateFromActiveIndex } from '~/routing/dashboard/utils/daily-stats-selection';
 import {
   formatChartDate,
   mapToChartData,
 } from '~/routing/dashboard/utils/daily-stats-chart';
-import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
+import { resolveDateFromActiveIndex } from '~/routing/dashboard/utils/daily-stats-selection';
 
 export interface DashboardDailyStatsCardProps {
   className?: string;
@@ -54,7 +55,7 @@ export const DashboardDailyStatsCard = (
   if (chartData.length === 0) {
     return (
       <div
-        className={clsx('text-muted-foreground text-sm', className)}
+        className={cn('text-muted-foreground text-sm', className)}
         data-testid="DashboardDailyStatsCard"
       >
         No daily stats in range.
@@ -64,11 +65,11 @@ export const DashboardDailyStatsCard = (
 
   return (
     <div
-      className={clsx('-ml-1 overflow-auto text-sm', className)}
+      className={cn('-ml-1 overflow-auto text-sm', className)}
       data-testid="DashboardDailyStatsCard"
     >
       <ChartContainer
-        className={clsx('mt-4 min-h-[240px] w-full', {
+        className={cn('mt-4 min-h-[240px] w-full', {
           'cursor-pointer': onSelectDate !== undefined,
         })}
         config={DAILY_STATS_CHART_CONFIG}

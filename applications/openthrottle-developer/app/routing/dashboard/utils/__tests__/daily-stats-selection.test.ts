@@ -1,4 +1,7 @@
 import { describe, expect, test } from 'vitest';
+
+import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
+
 import {
   parseSelectedStatDate,
   resolveDateFromActiveIndex,
@@ -6,7 +9,6 @@ import {
   selectMostRecentDailyStat,
   shiftIsoDate,
 } from '../daily-stats-selection';
-import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 
 const stats: ReadonlyArray<DashboardDailyStatsCardFragment> = [
   {

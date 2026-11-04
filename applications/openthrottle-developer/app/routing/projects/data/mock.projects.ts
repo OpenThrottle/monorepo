@@ -1,4 +1,5 @@
 import { fakerEN as faker } from '@faker-js/faker';
+
 import type { ProjectWithStats } from '~/routing/projects/data/types';
 
 faker.seed(42);

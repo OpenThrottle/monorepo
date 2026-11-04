@@ -1,24 +1,26 @@
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { CustomPrompt } from '@openthrottle/nestjs-repositories';
-import {
-  CustomPromptsService,
-  RolesService,
-} from '@openthrottle/nestjs-repositories';
+
 import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Test } from '@nestjs/testing';
 import {
   AUTH_PRINCIPAL_KIND_USER,
   type UserAuthPrincipal,
 } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS } from '@openthrottle/nestjs-rbac';
-import { Test } from '@nestjs/testing';
+import type { CustomPrompt } from '@openthrottle/nestjs-repositories';
+import {
+  CustomPromptsService,
+  RolesService,
+} from '@openthrottle/nestjs-repositories';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
-import { CUSTOM_PROMPT_WRITE_REFUSAL } from './custom-prompt-write-path';
-import { CustomPromptTypeEnum } from './custom-prompt.object';
-import { CustomPromptsResolver } from './custom-prompts.resolver';
+
+import { CustomPromptTypeEnum } from './custom-prompt.object.ts';
+import { CUSTOM_PROMPT_WRITE_REFUSAL } from './custom-prompt-write-path.ts';
+import { CustomPromptsResolver } from './custom-prompts.resolver.ts';
 
 const workspaceRoot = mkdtempSync(join(tmpdir(), 'custom-prompts-resolver-'));
 

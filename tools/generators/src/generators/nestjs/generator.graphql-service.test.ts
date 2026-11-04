@@ -1,6 +1,7 @@
-import { describe, it, beforeEach, expect } from 'vitest';
-import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import type { Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { beforeEach, describe, expect, it } from 'vitest';
+
 import { generatorNestJSGraphQLService } from './generator.graphql-service';
 
 describe('nestjs-graphql-service generator', () => {
@@ -10,7 +11,7 @@ describe('nestjs-graphql-service generator', () => {
   const name = 'test-logs';
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
   });
 
   it('should run successfully', async () => {
@@ -30,7 +31,7 @@ describe('nestjs-graphql-service generator', () => {
       `applications/${application}/src/services/${name}/test-logs.resolver.ts`,
       `applications/${application}/src/services/${name}/test-logs.service.test.ts`,
       `applications/${application}/src/services/${name}/test-logs.service.ts`,
-      `applications/${application}/src/services/${name}/dto/get-test-logs.args.ts`,
+      `applications/${application}/src/services/${name}/dto/get-test-logs.input.ts`,
       `applications/${application}/src/services/${name}/entities/test-log.entity.ts`,
       `applications/${application}/src/services/${name}/factories/.gitkeep`,
     ]);

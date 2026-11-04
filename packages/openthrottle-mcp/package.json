@@ -8,19 +8,26 @@
     "openthrottle-mcp": "./dist/src/bin.js"
   },
   "dependencies": {
+    "@graphql-typed-document-node/core": "catalog:",
     "@modelcontextprotocol/sdk": "catalog:",
     "@nestjs/common": "catalog:",
     "@nestjs/core": "catalog:",
+    "@nestjs/platform-express": "catalog:",
+    "@openthrottle/agentic-hooks": "workspace:^",
     "@openthrottle/graphql-codegen": "workspace:^",
     "@openthrottle/nestjs-modules": "workspace:^",
     "@openthrottle/nodejs-graphql": "workspace:^",
     "@rekog/mcp-nest": "catalog:",
-    "zod": "catalog:",
-    "@nestjs/platform-express": "catalog:"
+    "dotenv": "catalog:",
+    "zod": "catalog:"
   },
   "description": "Model Context Protocol server for OpenThrottle: plans, tasks, and GraphQL-backed tools (no direct database access).",
   "devDependencies": {
-    "esbuild": "catalog:"
+    "@nestjs/testing": "catalog:",
+    "esbuild": "catalog:",
+    "graphql-codegen-typescript-validation-schema": "catalog:",
+    "reflect-metadata": "catalog:",
+    "vitest": "catalog:"
   },
   "exports": {
     ".": {
@@ -50,8 +57,8 @@
     }
   },
   "license": "Apache-2.0",
-  "main": "./src/index.ts",
-  "module": "./src/index.ts",
+  "main": "./dist/src/index.js",
+  "module": "./dist/src/index.js",
   "name": "@openthrottle/openthrottle-mcp",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
@@ -67,6 +74,7 @@
     ],
     "targets": {
       "__dev": {
+        "cache": false,
         "continuous": true,
         "dependsOn": [
           "codegen-graphql-watch"
@@ -97,8 +105,10 @@
         "dependsOn": [
           "build"
         ],
-        "description": "Run the built openthrottle-mcp server entrypoint (dist/src/bin.js) after build.",
         "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Run the built openthrottle-mcp server entrypoint (dist/src/bin.js) after build."
+        },
         "options": {
           "command": "node ./dist/src/bin.js",
           "cwd": "{projectRoot}"
@@ -108,8 +118,10 @@
       "typecheck": {},
       "verify-graphql-codegen": {
         "cache": false,
-        "description": "Regenerate openthrottle-mcp GraphQL types and fail if the generated src/__generated__ output drifts from the .graphql documents. Output is gitignored here, so the guard byte-compares against whatever is on disk rather than against git, and reports a vacuous pass when there is no baseline.",
         "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Regenerate openthrottle-mcp GraphQL types and fail if the generated src/__generated__ output drifts from the .graphql documents. Output is gitignored here, so the guard byte-compares against whatever is on disk rather than against git, and reports a vacuous pass when there is no baseline."
+        },
         "options": {
           "command": "tsx ./scripts/verify-graphql-codegen.ts --project=packages/openthrottle-mcp",
           "cwd": "{workspaceRoot}"
@@ -124,6 +136,6 @@
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "type": "module",
-  "types": "./src/index.ts",
+  "types": "./dist/src/index.d.ts",
   "version": "1.0.0"
 }

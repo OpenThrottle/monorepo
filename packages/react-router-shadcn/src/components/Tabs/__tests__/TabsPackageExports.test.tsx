@@ -1,11 +1,11 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from '@openthrottle/react-router-shadcn';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 
 /**
  * @description Ensures Tabs primitives are reachable from the package public entry

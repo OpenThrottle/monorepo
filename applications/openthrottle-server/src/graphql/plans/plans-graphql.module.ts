@@ -3,41 +3,42 @@
  */
 
 import { Module } from '@nestjs/common';
+import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
-import { NotificationsModule } from '../../notifications/notifications.module';
-import { PlanRulesQueueProducerModule } from '../../queues/plan-rules/plan-rules-queue-producer.module';
-import { PlansQueueProducerModule } from '../../queues/plans/plans-queue-producer.module';
-import { TaggingQueueProducerModule } from '../../queues/tagging/tagging-queue-producer.module';
-import { EffectiveUserResolutionModule } from '../../services/effective-user-resolution/effective-user-resolution.module';
-import { PlanCreationModule } from '../../services/plan-creation/plan-creation.module';
-import { PlanRunWorktreeCheckoutModule } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.module';
-import { QueuesGraphqlModule } from '../queues/queues-graphql.module';
-import { WorkLedgerGraphqlModule } from '../work-ledger/work-ledger-graphql.module';
-import { PlanEnqueueService } from './plan-enqueue.service';
-import { PlanRunObjectResolver } from './plan-run-object.resolver';
-import { PlanStatusService } from './plan-status.service';
-import { PlansLoaders } from './plans-loaders';
-import { PlansResolver } from './plans.resolver';
+
+import { NotificationsModule } from '../../notifications/notifications.module.ts';
+import { PlanRulesQueueProducerModule } from '../../queues/plan-rules/plan-rules-queue-producer.module.ts';
+import { PlansQueueProducerModule } from '../../queues/plans/plans-queue-producer.module.ts';
+import { TaggingQueueProducerModule } from '../../queues/tagging/tagging-queue-producer.module.ts';
+import { EffectiveUserResolutionModule } from '../../services/effective-user-resolution/effective-user-resolution.module.ts';
+import { PlanCreationModule } from '../../services/plan-creation/plan-creation.module.ts';
+import { PlanRunWorktreeCheckoutModule } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.module.ts';
+import { WorktreeCheckoutPruneModule } from '../../services/worktree-checkout-prune/worktree-checkout-prune.module.ts';
+import { QueuesGraphqlModule } from '../queues/queues-graphql.module.ts';
+import { WorkLedgerGraphqlModule } from '../work-ledger/work-ledger-graphql.module.ts';
+import { PlanEnqueueModule } from './plan-enqueue/plan-enqueue.module.ts';
+import { PlanRunObjectResolver } from './plan-run-object.resolver.ts';
+import { PlanStatusModule } from './plan-status.module.ts';
+import { PlansResolver } from './plans.resolver.ts';
+import { PlansLoaders } from './plans-loaders.ts';
 
 @Module({
   imports: [
     EffectiveUserResolutionModule,
+    LoggerModule,
     NestjsRepositoriesModule,
     NotificationsModule,
     PlanCreationModule,
+    PlanEnqueueModule,
     PlanRulesQueueProducerModule,
     PlanRunWorktreeCheckoutModule,
+    PlanStatusModule,
     PlansQueueProducerModule,
     TaggingQueueProducerModule,
     QueuesGraphqlModule,
     WorkLedgerGraphqlModule,
+    WorktreeCheckoutPruneModule,
   ],
-  providers: [
-    PlanEnqueueService,
-    PlanRunObjectResolver,
-    PlanStatusService,
-    PlansLoaders,
-    PlansResolver,
-  ],
+  providers: [PlanRunObjectResolver, PlansLoaders, PlansResolver],
 })
 export class PlansGraphqlModule {}

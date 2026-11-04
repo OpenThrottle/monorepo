@@ -1,28 +1,33 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Badge, DataTable } from '@openthrottle/react-router-shadcn';
+import { Badge, cn, DataTable } from '@openthrottle/react-router-shadcn';
 import {
   GlobalFeatureOnboarding,
   GlobalPopoverActionsHeader,
 } from '@openthrottle/react-router-ui-global';
-import { Link } from 'react-router';
 import type { ColumnDef, ExpandedState } from '@tanstack/react-table';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import { formatUpdatedAt } from '~/routing/plans/utils/formatters';
-import {
-  REPOSITORIES_ONBOARDING,
-  REPOSITORIES_TABLE_COPY,
-} from '~/routing/settings/repositories/data/data.copy';
-import { driftLabels } from '~/routing/settings/utils/drift-labels';
+import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
 import { RepositoriesTableEmpty } from '~/routing/settings/repositories/components/RepositoriesTableEmpty';
+import { RepositoryHookTelemetryCell } from '~/routing/settings/repositories/components/RepositoryHookTelemetryCell';
 import { RepositoryInjectionCell } from '~/routing/settings/repositories/components/RepositoryInjectionCell';
 import { RepositoryNameCell } from '~/routing/settings/repositories/components/RepositoryNameCell';
 import { RepositoryRowActions } from '~/routing/settings/repositories/components/RepositoryRowActions';
-import { deriveWorktreeBadges } from '~/routing/settings/repositories/utils/worktree-badges';
+import {
+  REPOSITORIES_ONBOARDING,
+  REPOSITORIES_TABLE_COPY,
+  REPOSITORY_HOOK_TELEMETRY_COPY,
+} from '~/routing/settings/repositories/data/data.copy';
+import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/data/types';
 import { toExpandedState } from '~/routing/settings/repositories/utils/expansion';
 import { planDetailPath } from '~/routing/settings/repositories/utils/paths';
-import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
+import {
+  deriveWorktreeBadges,
+  WORKTREE_BADGE_COLORS,
+} from '~/routing/settings/repositories/utils/worktree-badges';
 import type { CheckoutDrift } from '~/routing/settings/utils/drift-labels';
-import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/data/types';
+import { driftLabels } from '~/routing/settings/utils/drift-labels';
 
 export interface RepositoriesTableProps {
   /** Parent row ids to open on mount, e.g. groups whose worktree matched the search. */
@@ -66,7 +71,7 @@ export const RepositoriesTable = (
 
   return (
     <div
-      className={clsx('ui-border rounded-lg border', className)}
+      className={cn('ui-border rounded-lg border', className)}
       data-testid="RepositoriesTable"
     >
       <DataTable<RepositoryCheckoutRow, string | null | undefined>
@@ -118,7 +123,7 @@ RepositoriesTable.buildTable = (
           ) : null}
           {deriveWorktreeBadges(row.original).map((badge) => (
             <Badge
-              color={badge.tone === 'activity' ? 'green' : 'orange'}
+              color={WORKTREE_BADGE_COLORS[badge.tone]}
               key={badge.id}
               size="xs"
               title={badge.title}
@@ -146,6 +151,11 @@ RepositoriesTable.buildTable = (
       ),
       header: () => REPOSITORIES_TABLE_COPY.injectionColumn,
       id: 'injection',
+    },
+    {
+      cell: ({ row }) => <RepositoryHookTelemetryCell row={row.original} />,
+      header: () => REPOSITORY_HOOK_TELEMETRY_COPY.columnLabel,
+      id: 'hookTelemetry',
     },
     {
       cell: ({ row }) => {

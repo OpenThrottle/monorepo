@@ -13,11 +13,13 @@
  *     share this Postgres and must NOT re-seed (they use setup_worktree).
  */
 import { spawnSync } from 'node:child_process';
+import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 
-import { createLogger } from './lib/index.ts';
-import { isLinkedWorktree } from './lib/git.ts';
+import { runClaudeGlobalSettingsCheck } from './check-claude-global-settings.ts';
 import { interactiveConfirm, resetEnvironmentFiles } from './setup_environment.ts'; // prettier-ignore
+import { configureBlameIgnoreRevs, isLinkedWorktree } from './utils/git.ts';
+import { createLogger } from './utils/index.ts';
 
 const logger = createLogger();
 
@@ -75,6 +77,14 @@ const outro = (): void => {
   logger.info("And lastly run 'pnpm run setup:mcp-instructions' to get the");
   logger.info('OpenThrottle MCP server installed globally.');
   logger.blank();
+
+  // Advisory only and last on screen: reads the per-user Claude settings,
+  // warns with a remediation snippet, and never fails setup.
+  runClaudeGlobalSettingsCheck({
+    env: process.env,
+    homedir: homedir(),
+    logger,
+  });
 };
 
 const main = async (): Promise<void> => {
@@ -84,6 +94,13 @@ const main = async (): Promise<void> => {
     logger.fail('setup runs on the primary checkout only — this is a linked worktree.'); // prettier-ignore
     logger.detail('Provision worktrees with: pnpm run worktree:new <name> (or pnpm run worktree:heal)'); // prettier-ignore
     process.exit(1);
+  }
+
+  // Local git needs blame.ignoreRevsFile pointed at .git-blame-ignore-revs;
+  // GitHub picks the root file up on its own. Best-effort — a checkout without
+  // the file is left unconfigured on purpose (see configureBlameIgnoreRevs).
+  if (configureBlameIgnoreRevs(process.cwd())) {
+    logger.detail('git blame.ignoreRevsFile → .git-blame-ignore-revs');
   }
 
   logger.heading('Environment files 🔐');

@@ -1,8 +1,8 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Link } from 'react-router';
 import { EditorWindow } from '@openthrottle/react-router-editor';
-import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
+import { Button, cn, Input, Label } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import { SkillCreateDestinationField } from '~/routing/skills/components/SkillCreateDestinationField';
 import { SKILL_CREATE_COPY } from '~/routing/skills/data/data.copy';
 import type { UseSkillCreateFormResult } from '~/routing/skills/hooks/useSkillCreateForm';
@@ -38,7 +38,7 @@ export const SkillCreateForm = (
 
   return (
     <div
-      className={clsx('flex h-full w-full flex-col gap-6', className)}
+      className={cn('flex h-full w-full flex-col gap-6', className)}
       data-testid="SkillCreateForm"
     >
       {/*

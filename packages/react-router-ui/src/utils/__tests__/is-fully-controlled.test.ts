@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { isFullyControlled } from '../is-fully-controlled';
 
 describe('isFullyControlled', () => {

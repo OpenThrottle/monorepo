@@ -1,11 +1,11 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
-import { UserRoundIcon } from 'lucide-react';
-import { Form, useNavigation } from 'react-router';
+import { Button, cn, Input, Label } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
-import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
+import { UserRoundIcon } from 'lucide-react';
+import * as React from 'react';
+import { Form, useNavigation } from 'react-router';
+
 import type { UserWorkspaceProfileFieldsFragment } from '~/__generated__/graphql';
+import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
 
 export interface SettingsWorkspaceProfileFormProps {
   actionError?: string | null;
@@ -45,7 +45,7 @@ export const SettingsWorkspaceProfileForm = (
       legend={WORKSPACE_SETTINGS_COPY.contactLegend}
     >
       <div
-        className={clsx('space-y-4', className)}
+        className={cn('space-y-4', className)}
         data-testid="SettingsWorkspaceProfileForm"
       >
         <p className="text-muted-foreground text-sm">

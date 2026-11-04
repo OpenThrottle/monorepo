@@ -1,9 +1,10 @@
 import type { FactoryProvider, ModuleMetadata } from '@nestjs/common';
+
 import type {
   StripeCheckoutUserPort,
   StripeProcessedEventsPort,
   StripeSubscriptionsPort,
-} from './stripe-ports';
+} from './stripe-ports.ts';
 
 /**
  * @description Injection token for {@link StripeCheckoutUserPort} (wired by {@link StripeModule.forRootAsync}).

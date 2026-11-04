@@ -1,8 +1,9 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
-import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
 import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
-import { CODE_INDEX_QUEUE_NAME } from './code-index.constants';
+import { NestjsBullmqBoardModule } from '@openthrottle/nestjs-bullmq-board';
+
+import { CODE_INDEX_QUEUE_NAME } from './code-index.constants.ts';
 
 /**
  * @description Producer half of the code-index queue: registerQueue (enqueue

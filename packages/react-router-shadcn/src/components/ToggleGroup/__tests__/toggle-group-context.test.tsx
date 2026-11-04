@@ -1,6 +1,7 @@
-import * as React from 'react';
 import { renderHook } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
+
 import { ToggleGroupContext } from '../toggle-group-context';
 
 describe('toggle-group-context', () => {

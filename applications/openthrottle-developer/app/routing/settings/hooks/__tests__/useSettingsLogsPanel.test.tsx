@@ -1,6 +1,8 @@
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { clearClientLogSink, push } from '~/routing/settings/client-log-sink';
+
 import { useSettingsLogsPanel } from '../useSettingsLogsPanel';
 
 describe('useSettingsLogsPanel', () => {

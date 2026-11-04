@@ -1,10 +1,12 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { AgentSearchEmpty } from '../AgentSearchEmpty';
-import type { AgentSearchEmptyProps } from '../AgentSearchEmpty';
+
 import { AGENT_SEARCH_COPY } from '~/routing/agent-search/data/data.copy';
+
+import type { AgentSearchEmptyProps } from '../AgentSearchEmpty';
+import { AgentSearchEmpty } from '../AgentSearchEmpty';
 
 describe('AgentSearchEmpty Component', () => {
   let component: RenderResult;

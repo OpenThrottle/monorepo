@@ -1,10 +1,11 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { PullRequestGithubCard } from '../PullRequestGithubCard';
+
 import type { PullRequestGithubCardProps } from '../PullRequestGithubCard';
+import { PullRequestGithubCard } from '../PullRequestGithubCard';
 
 const mockPull: PullRequestGithubCardProps['pull'] = {
   __typename: 'PullListItemObject',

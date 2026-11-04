@@ -1,9 +1,10 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { SettingsKeysTableEmpty } from '../SettingsKeysTableEmpty';
+
 import type { SettingsKeysTableEmptyProps } from '../SettingsKeysTableEmpty';
+import { SettingsKeysTableEmpty } from '../SettingsKeysTableEmpty';
 
 describe('SettingsKeysTableEmpty Component', () => {
   let component: RenderResult;

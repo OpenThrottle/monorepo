@@ -1,27 +1,28 @@
-import * as React from 'react';
 import type { NotificationEventName } from '@openthrottle/openthrottle-notifications';
 import {
   Badge,
   Button,
+  cn,
   MultiSelect,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-  cn,
 } from '@openthrottle/react-router-shadcn';
+import { InfoIcon } from 'lucide-react';
+import * as React from 'react';
+
 import { useOpenThrottleWebsocketDebugger } from '../hooks/useOpenThrottleWebsocketDebugger';
-import {
-  formatWebsocketDebuggerStatusColor,
-  WEBSOCKET_DEBUGGER_EVENT_OPTIONS,
-} from './websocket-debugger';
 import type {
   WebsocketDebuggerConnectionStatus,
   WebsocketDebuggerEventSubscriber,
   WebsocketDebuggerLogEntry,
   WebsocketDebuggerSocket,
 } from './websocket-debugger';
+import {
+  formatWebsocketDebuggerStatusColor,
+  WEBSOCKET_DEBUGGER_EVENT_OPTIONS,
+} from './websocket-debugger';
 import { WebsocketDebuggerLogRow } from './WebsocketDebuggerLogRow';
-import { InfoIcon } from 'lucide-react';
 
 export interface OpenThrottleWebsocketDebuggerProps {
   readonly className?: string;

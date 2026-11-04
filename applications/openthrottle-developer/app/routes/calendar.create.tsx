@@ -1,12 +1,13 @@
-import * as React from 'react';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import * as React from 'react';
 import { redirect } from 'react-router';
-import { CalendarForm } from '~/routing/calendar/components/CalendarForm';
-import { SITE_TITLE } from '~/global/config/settings';
+
 import type { Route } from '@/app/routes/+types/calendar.create';
+import { SITE_TITLE } from '~/global/config/settings';
+import { CalendarForm } from '~/routing/calendar/components/CalendarForm';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

@@ -1,17 +1,18 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createMock } from '@golevelup/ts-vitest';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { createMock } from '@golevelup/ts-vitest';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   DailyStatsService,
   PlansService,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
-import { NotificationsService } from '../../notifications/notifications.service';
-import { addUtcDaysToYmd, getPreviousUtcDayYmd } from './daily-stats.dates';
-import type { AggregateDailyStatsJob } from './daily-stats.types';
-import { DailyStatsProcessor } from './daily-stats.processor';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { NotificationsService } from '../../notifications/notifications.service.ts';
+import { addUtcDaysToYmd, getPreviousUtcDayYmd } from './daily-stats.dates.ts';
+import { DailyStatsProcessor } from './daily-stats.processor.ts';
+import type { AggregateDailyStatsJob } from './daily-stats.types.ts';
 
 /**
  * Local mock signature for `DailyStatsService.upsertForDate`: same call args as the real
@@ -210,6 +211,33 @@ describe('DailyStatsProcessor', () => {
     );
     expect(taskCompletedWhere).not.toHaveProperty('status');
     expect(taskCompletedWhere).not.toHaveProperty('updatedAt');
+  });
+
+  describe('on-boot catch-up', () => {
+    beforeEach(() => {
+      vi.stubEnv('OT_SCHEDULED_JOBS_OWNER', '');
+      vi.stubEnv('OT_WORKTREE_DB', '');
+    });
+
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
+    it('backfills missing days on the owner’s boot', async () => {
+      await processor.onModuleInit();
+
+      expect(mockGetLatestDate).toHaveBeenCalledTimes(1);
+      expect(mockUpsertForDate).toHaveBeenCalledTimes(1);
+    });
+
+    it('a shared-DB worktree writes no daily_stats rows at boot', async () => {
+      vi.stubEnv('OT_WORKTREE_DB', 'shared');
+
+      await processor.onModuleInit();
+
+      expect(mockGetLatestDate).not.toHaveBeenCalled();
+      expect(mockUpsertForDate).not.toHaveBeenCalled();
+    });
   });
 
   it('upserts a zero-count row for a quiet day so the chart stays continuous', async () => {

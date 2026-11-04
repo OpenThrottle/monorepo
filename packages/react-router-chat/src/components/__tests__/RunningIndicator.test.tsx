@@ -1,15 +1,16 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { RunningIndicator } from '../RunningIndicator';
-import type { RunningIndicatorProps } from '../RunningIndicator';
+
 import {
+  resolveRunningIndicatorCopy,
   RUNNING_INDICATOR_SLOW_HINT,
   RUNNING_INDICATOR_SLOW_HINT_AFTER_MS,
-  resolveRunningIndicatorCopy,
 } from '../../data/chat-run-phase-copy';
 import { ChatRunPhase } from '../../types';
+import type { RunningIndicatorProps } from '../RunningIndicator';
+import { RunningIndicator } from '../RunningIndicator';
 
 const renderIndicator = (props: RunningIndicatorProps = {}): RenderResult =>
   render(<RunningIndicator {...props} />);

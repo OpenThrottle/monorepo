@@ -6,7 +6,7 @@
 import type {
   EnhancedTaskRunMetrics,
   TaskRunMetrics,
-} from './process-metrics.types';
+} from './process-metrics.types.ts';
 
 /**
  * @description Returns a one-line summary of task-run metrics (start → end) for logs and plan output.

@@ -7,9 +7,10 @@
  * Run: node esbuild.http.mjs   (from packages/openthrottle-mcp)
  * Out: dist/bundle/bin-http.mjs  (under dist/, which is gitignored)
  */
-import { build } from 'esbuild';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+import { build } from 'esbuild';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const workspacePackages = resolve(here, '..');

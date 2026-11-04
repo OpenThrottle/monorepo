@@ -1,9 +1,10 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
-import { PlanToolbarTags } from '../PlanToolbarTags';
+
 import type { PlanToolbarTagsProps } from '../PlanToolbarTags';
+import { PlanToolbarTags } from '../PlanToolbarTags';
 
 const renderTags = (props: PlanToolbarTagsProps) => {
   const Component = () => <PlanToolbarTags {...props} />;

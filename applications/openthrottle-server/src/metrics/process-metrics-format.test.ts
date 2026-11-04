@@ -1,12 +1,13 @@
-import { describe, it, expect } from 'vitest';
-import {
-  formatEnhancedTaskRunMetricsSummary,
-  formatTaskRunMetricsSummary,
-} from './process-metrics-format';
+import { describe, expect, it } from 'vitest';
+
 import type {
   EnhancedTaskRunMetrics,
   TaskRunMetrics,
-} from './process-metrics.types';
+} from './process-metrics.types.ts';
+import {
+  formatEnhancedTaskRunMetricsSummary,
+  formatTaskRunMetricsSummary,
+} from './process-metrics-format.ts';
 
 describe('formatTaskRunMetricsSummary', () => {
   const metrics: TaskRunMetrics = {

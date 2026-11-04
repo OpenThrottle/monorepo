@@ -26,7 +26,7 @@
  * immediately — so nothing is given up by choosing the safe one.
  */
 
-import { createAgeRetentionPolicy } from './create-age-retention-policy';
+import { createAgeRetentionPolicy } from './create-age-retention-policy.ts';
 
 const RETENTION_DAYS = 90;
 

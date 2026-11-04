@@ -1,6 +1,3 @@
-import * as React from 'react';
-import { Link, useFetcher } from 'react-router';
-import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import {
   Badge,
   Button,
@@ -11,16 +8,21 @@ import {
   TableHeader,
   TableRow,
 } from '@openthrottle/react-router-shadcn';
+import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import { CalendarDaysIcon } from 'lucide-react';
+import * as React from 'react';
+import { Link, useFetcher } from 'react-router';
+
 import type { ScheduleInFlightRunFragment } from '~/__generated__/graphql';
+import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
 import {
   RUN_STATUS_COLOR,
   RUN_STATUS_LABEL,
   RUN_STATUS_VARIANT,
+  RUN_TRIGGER_LABEL,
 } from '~/routing/schedule/data/data.run-status';
-import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
-import { formatDuration } from '~/routing/schedule/utils/format-duration';
 import { useElapsedTicker } from '~/routing/schedule/hooks/useElapsedTicker';
-import { CalendarDaysIcon } from 'lucide-react';
+import { formatDuration } from '~/routing/schedule/utils/format-duration';
 
 export interface ScheduleActiveRunsProps {
   className?: string;
@@ -95,7 +97,9 @@ export const ScheduleActiveRuns = (
                     {RUN_STATUS_LABEL[run.status] ?? run.status}
                   </Badge>
                 </TableCell>
-                <TableCell>{run.trigger}</TableCell>
+                <TableCell>
+                  {RUN_TRIGGER_LABEL[run.trigger] ?? run.trigger}
+                </TableCell>
                 <TableCell>
                   {run.driverId}
                   {run.model ? ` · ${run.model}` : ''}

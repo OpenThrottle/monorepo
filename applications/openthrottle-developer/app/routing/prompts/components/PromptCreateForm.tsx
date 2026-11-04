@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   EditorWindow,
   PROMPT_TYPE_OPTIONS,
@@ -13,9 +12,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import { PROMPTS_BASE_PATH } from '~/routing/prompts/config';
-import { isPromptType } from '~/routing/prompts/utils/prompt-type-guards';
 import type { UsePromptCreateFormResult } from '~/routing/prompts/hooks/usePromptCreateForm';
+import { isPromptType } from '~/routing/prompts/utils/prompt-type-guards';
 
 export interface PromptCreateFormProps {
   error: string | undefined;

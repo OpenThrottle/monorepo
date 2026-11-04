@@ -6,6 +6,7 @@
 
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { print } from 'graphql';
+
 import {
   buildTimeoutSignal,
   getGraphQLUrl,
@@ -30,9 +31,9 @@ export type {
   GraphqlV2RetryOptions,
 } from './graphql-v2.ts';
 export { defaultRetryOn, executeGraphql_v2 } from './graphql-v2.ts';
+export type { ExecuteGraphqlOptionsV2, GraphqlResponseV2 } from './index-v2.ts';
 export { executeGraphqlV2 } from './index-v2.ts';
 export { getGraphQLUrl, parseDateTimeInResponse } from './utils.ts';
-export type { ExecuteGraphqlOptionsV2, GraphqlResponseV2 } from './index-v2.ts';
 export {
   DEFAULT_GRAPHQL_TIMEOUT_MS,
   GRAPHQL_TIMEOUT_ERROR_PREFIX,

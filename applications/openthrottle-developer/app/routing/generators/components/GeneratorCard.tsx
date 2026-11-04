@@ -1,12 +1,13 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   Button,
   Card,
   CardContent,
   CardFooter,
+  cn,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { Link } from 'react-router';
+
 import type { GeneratorCardFragment } from '~/__generated__/graphql';
 
 export interface GeneratorCardProps {
@@ -33,7 +34,7 @@ export const GeneratorCard = (
 
   return (
     <Card
-      className={clsx('', className)}
+      className={cn('', className)}
       data-testid="GeneratorCard"
       key={generator.name}
     >

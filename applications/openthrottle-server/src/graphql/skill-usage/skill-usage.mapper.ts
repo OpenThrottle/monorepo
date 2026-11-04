@@ -13,6 +13,7 @@ import type {
   SkillUsageGitBranchSearchResult,
   SkillUsageOutcome,
 } from '@openthrottle/nestjs-repositories';
+
 import {
   SkillUsageByDayObject,
   SkillUsageByScopeObject,
@@ -23,7 +24,7 @@ import {
   SkillUsageGitBranchSearchObject,
   SkillUsageOutcomeObject,
   SkillUsageResultObject,
-} from './skill-usage.object';
+} from './skill-usage.object.ts';
 
 export const toSkillUsageEventObject = (
   row: SkillUsageEvent,
@@ -66,6 +67,7 @@ export const toSkillUsageOutcomeObject = (
   object.scope = row.scope;
   object.sessionId = row.sessionId;
   object.skillName = row.skillName;
+  object.source = row.source;
   object.toolUseId = row.toolUseId;
 
   return object;
@@ -83,6 +85,7 @@ export const toSkillUsageBySkillObject = (
   object.lastUsedAt = row.lastUsedAt;
   object.outcomeCount = row.outcomeCount;
   object.scope = row.scope;
+  object.sessionEndedCount = row.sessionEndedCount;
   object.skillName = row.skillName;
   object.successCount = row.successCount;
 
@@ -107,6 +110,7 @@ export const toSkillUsageByDayObject = (
 
   object.date = row.date;
   object.oursCount = row.oursCount;
+  object.personalCount = row.personalCount;
   object.thirdPartyCount = row.thirdPartyCount;
   object.totalCount = row.totalCount;
 

@@ -1,7 +1,8 @@
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import type { RolloutEvaluation } from '@openthrottle/react-router-rollout';
-import { EvaluateFeatureFlagsDocument } from '~/__generated__/graphql';
+
 import type { Route } from '@/app/routes/+types/resources.rollout-evaluations';
+import { EvaluateFeatureFlagsDocument } from '~/__generated__/graphql';
 
 /** JSON shape returned to the client-side {@link RolloutProvider} fetcher. */
 export interface RolloutEvaluationsResponse {

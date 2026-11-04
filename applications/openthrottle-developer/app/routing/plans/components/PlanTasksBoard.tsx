@@ -1,16 +1,14 @@
-import * as React from 'react';
-import clsx from 'clsx';
 // import { DndProvider } from 'react-dnd';
 // import { HTML5Backend } from 'react-dnd-html5-backend';
-import { toast } from '@openthrottle/react-router-shadcn';
+import { cn, toast } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { useFetcher, useRevalidator } from 'react-router';
+
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { DraggablePlanTaskCard } from '~/routing/plans/components/DraggablePlanTaskCard';
-import { filterOutHookTasks } from '~/routing/plans/utils/hook-tasks';
+import { PlanTasksColumnDrop } from '~/routing/plans/components/PlanTasksColumnDrop';
 import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
 import { usePlanManagedTaskIds } from '~/routing/plans/hooks/usePlanManagedTaskIds';
-import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
-import { PlanTasksColumnDrop } from '~/routing/plans/components/PlanTasksColumnDrop';
 import {
   getPlanTaskBoardColumnId,
   getPlanTaskBoardColumnTitle,
@@ -18,6 +16,8 @@ import {
   PLAN_TASK_BOARD_COLUMN_ORDER,
   type PlanTaskBoardGroupKey,
 } from '~/routing/plans/utils/group-plan-tasks-by-status';
+import { filterOutHookTasks } from '~/routing/plans/utils/hook-tasks';
+import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
 
 export interface PlanTasksBoardProps {
   className?: string;
@@ -147,7 +147,7 @@ export const PlanTasksBoard = (
       <div
         aria-busy={fetcher.state !== 'idle'}
         aria-label="Plan tasks board"
-        className={clsx(
+        className={cn(
           'flex min-h-[min(70vh,560px)] w-full min-w-0 gap-3 overflow-x-auto pb-2',
           className,
         )}

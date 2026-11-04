@@ -3,8 +3,10 @@
  * and returnvalue contains taskRunMetrics. Used by JobObject.taskRunMetrics resolver.
  */
 
-import { ChildProcessMetricsObject } from '../metrics/child-process-metrics.object';
-import { ProcessMetricsSnapshotObject } from '../metrics/process-metrics-snapshot.object';
+import { isRecord } from '@openthrottle/nodejs-utils';
+
+import { ChildProcessMetricsObject } from '../metrics/child-process-metrics.object.ts';
+import { ProcessMetricsSnapshotObject } from '../metrics/process-metrics-snapshot.object.ts';
 import {
   LoadAverageMetricsObject,
   PressureLevel,
@@ -12,15 +14,13 @@ import {
   PsiCpuMetricsObject,
   SystemCpuMetricsObject,
   SystemCpuSnapshotObject,
-} from '../metrics/system-cpu-metrics.object';
-import { isRecord } from '@openthrottle/nodejs-utils';
-
-import { TaskRunMetricsObject } from '../metrics/task-run-metrics.object';
+} from '../metrics/system-cpu-metrics.object.ts';
+import { TaskRunMetricsObject } from '../metrics/task-run-metrics.object.ts';
 import {
   WallClockInterpretation,
   type WallClockInterpretationType,
   WallClockMetricsObject,
-} from '../metrics/wall-clock-metrics.object';
+} from '../metrics/wall-clock-metrics.object.ts';
 
 /**
  * @description Reads a required numeric field. The default is unreachable when

@@ -1,12 +1,14 @@
-import * as React from 'react';
 import { screen } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { UsageDailyActivityOverview } from '../UsageDailyActivityOverview';
+
 import {
   USAGE_COMPLETION_ATTRIBUTION_CAVEAT,
   USAGE_DAILY_STATS_SERIES,
 } from '~/routing/usage/data/daily-stats-series-glossary';
 import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import { UsageDailyActivityOverview } from '../UsageDailyActivityOverview';
 
 describe('UsageDailyActivityOverview Component', () => {
   test('renders chart scope copy with rangeDays', () => {

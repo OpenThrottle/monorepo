@@ -7,23 +7,27 @@
  */
 
 import {
+  DEFAULT_WORKFLOW_RUNNER,
+  resolveHookPluginDirs,
+} from '@openthrottle/openthrottle-agentic-utils';
+import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
+import type {
+  AgentDriver,
+  DriverChunk,
+  DriverInvocationConfig,
+  DriverReasoningEffort,
+  DriverWorktreeOptions,
+  UsageLimit,
+} from '@openthrottle/openthrottle-drivers';
+import {
   getDriver,
   runDriverAsync,
   runDriverSync,
 } from '@openthrottle/openthrottle-drivers';
-import type {
-  DriverChunk,
-  DriverInvocationConfig,
-  DriverWorktreeOptions,
-} from '@openthrottle/openthrottle-drivers';
+
 import { ARTWORK_LINE, COLORS } from '../config/index';
-import {
-  DEFAULT_WORKFLOW_RUNNER,
-  resolveHookPluginDirs,
-} from '@openthrottle/openthrottle-agentic-utils';
 import { ralphDebugLogger } from '../utils/ralph-debug-logger';
 import type { RalphWorktreeCliOptions } from '../utils/ralph-worktree-cli';
-import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 
 /**
  * @description Chunk from runner stdout or stderr when using async spawn.
@@ -41,12 +45,26 @@ export interface RunIterationConfig {
    * (e.g. foreign `workingDirectory` from BullMQ spawn or orchestrator).
    */
   cwd?: string;
+  /**
+   * Reasoning effort, mapped per backend by the drivers' shared helpers (claude `--effort`, codex
+   * `-c model_reasoning_effort=`, grok `--reasoning-effort`, opencode `--variant`). Backends with no
+   * reasoning knob (cursor, gemini, antigravity) ignore it.
+   */
+  effort?: DriverReasoningEffort;
+  /** Extra env for the runner subprocess, merged over `process.env` (e.g. `OT_PR_DRAFT_DIR`). */
+  env?: Readonly<Record<string, string>>;
   /** Iteration number. */
   iteration: number;
   /** Model preset when the backend supports it (Cursor: `--model`; Claude Code: `--model`). */
   model?: string;
   /** Optional callback for each stdout/stderr chunk (async path only). */
   onChunk?: (chunk: CursorAgentChunk) => void;
+  /**
+   * Optional callback fired when the iteration closes normally and the driver detected a
+   * subscription usage limit (Claude `stream-json` only). Sync and async paths; does not change the
+   * returned string. Not fired on timeout, abort or spawn failure.
+   */
+  onUsageLimit?: (usageLimit: UsageLimit) => void;
   /** Optional AbortSignal to cancel the iteration (async path only). */
   signal?: AbortSignal;
   /** Cursor-only: `--skip-worktree-setup`. */
@@ -84,8 +102,11 @@ const toWorktreeOptions = (
  */
 const toDriverConfig = (
   config: RunIterationConfig,
+  driver: AgentDriver,
 ): DriverInvocationConfig => ({
   cwd: config.cwd,
+  effort: config.effort,
+  env: config.env,
   iteration: config.iteration,
   model: config.model,
   onChunk: config.onChunk,
@@ -93,7 +114,13 @@ const toDriverConfig = (
   // payload out-of-repo, so a run in a foreign checkout is observed without a byte being written
   // into it. Resolution is fail-open — an empty list emits no flag — and gated by
   // OPENTHROTTLE_HOOK_PLUGIN_ENABLED. Drivers without the capability ignore this outright.
-  pluginDirs: resolveHookPluginDirs(),
+  // The payload is per-driver: a plugin's hook config names one tool's events, so pointing a
+  // CLI at another tool's payload loads cleanly and records nothing.
+  pluginDirs: resolveHookPluginDirs(
+    driver.pluginDirRel === undefined
+      ? {}
+      : { payloadRel: driver.pluginDirRel },
+  ),
   prompt: config.agentPrompt,
   signal: config.signal,
   timeoutMs: config.timeoutMs,
@@ -116,8 +143,9 @@ export const runIteration = (config: RunIterationConfig): string => {
 
   const driver = getDriver(backend);
 
-  return runDriverSync(driver, toDriverConfig(config), {
+  return runDriverSync(driver, toDriverConfig(config, driver), {
     logger: ralphDebugLogger,
+    onUsageLimit: config.onUsageLimit,
   });
 };
 
@@ -132,7 +160,8 @@ export const runIterationAsync = (
 
   const driver = getDriver(backend);
 
-  return runDriverAsync(driver, toDriverConfig(config), {
+  return runDriverAsync(driver, toDriverConfig(config, driver), {
     logger: ralphDebugLogger,
+    onUsageLimit: config.onUsageLimit,
   });
 };

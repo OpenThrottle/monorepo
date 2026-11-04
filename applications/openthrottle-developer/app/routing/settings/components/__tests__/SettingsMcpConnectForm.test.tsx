@@ -1,11 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import type { McpConnectorFieldsFragment } from '~/__generated__/graphql';
-import { SettingsMcpConnectForm } from '../SettingsMcpConnectForm';
+
 import type { SettingsMcpConnectFormProps } from '../SettingsMcpConnectForm';
+import { SettingsMcpConnectForm } from '../SettingsMcpConnectForm';
 
 const stripeConnector: McpConnectorFieldsFragment = {
   __typename: 'McpConnectorObject',

@@ -1,11 +1,12 @@
-import { describe, it, expect, beforeAll } from 'vitest';
-import { Test } from '@nestjs/testing';
 import { createMock } from '@golevelup/ts-vitest';
+import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { Note } from './note.entity';
-import { notesFactory } from './notes.factory';
-import { NotesService } from './notes.service';
+import { beforeAll, describe, expect, it } from 'vitest';
+
+import { Note } from './note.entity.ts';
+import { notesFactory } from './notes.factory.ts';
+import { NotesService } from './notes.service.ts';
 
 describe('NotesService', () => {
   type GetRepository = ReturnType<NotesService['getRepository']>;

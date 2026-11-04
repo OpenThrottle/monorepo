@@ -47,13 +47,16 @@ export function usePerElementPointerDown(
 ): UsePerElementPointerDownResult {
   const { handler } = options;
 
+  // Hooks
   const handlerRef = useRef(handler);
-  handlerRef.current = handler;
-
   const cacheRef = useRef(
     new Map<string, (event: ReactPointerEvent) => void>(),
   );
 
+  // Setup
+  handlerRef.current = handler;
+
+  // Handlers
   const getPointerDown = useCallback(
     (id: string): ((event: ReactPointerEvent) => void) => {
       const cache = cacheRef.current;
@@ -66,6 +69,12 @@ export function usePerElementPointerDown(
     },
     [],
   );
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
 
   return { getPointerDown };
 }

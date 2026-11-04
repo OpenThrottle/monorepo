@@ -1,7 +1,8 @@
 import * as React from 'react';
+
+import type { ChatModelGroup, ChatModelOption } from '../types';
 import { ChatComposerModelSelect } from './ChatComposerModelSelect';
 import { ChatModelPicker } from './ChatModelPicker';
-import type { ChatModelGroup, ChatModelOption } from '../types';
 
 export interface ChatComposerModelControlProps {
   readonly disabledModelIds?: readonly string[];

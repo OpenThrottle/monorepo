@@ -1,5 +1,6 @@
-import * as React from 'react';
 import type { ChartTooltipContentProps } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import {
   isQueueStatsChartRow,
   QUEUE_STATS_CHART_CONFIG,

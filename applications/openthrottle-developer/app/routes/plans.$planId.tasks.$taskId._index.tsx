@@ -1,18 +1,20 @@
-import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+import { redirect } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/plans.$planId.tasks.$taskId._index';
 import {
   GetPlanByIdDocument,
   GetTaskByIdDocument,
   TaskLinkedArtifactsDocument,
   TaskOutputStreamChunksDocument,
 } from '~/__generated__/graphql';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
-import { PlanTaskNotFound } from '~/routing/plans/components/PlanTaskNotFound';
-import { redirect } from 'react-router';
+import { SITE_TITLE } from '~/global/config/settings';
 import { detachHook } from '~/routing/plans/actions/planId';
 import {
   addTaskHook,
@@ -20,29 +22,30 @@ import {
   setTaskStatus,
   updateTaskTag,
 } from '~/routing/plans/actions/taskId';
-import { SITE_TITLE } from '~/global/config/settings';
+import { PlanTaskNotFound } from '~/routing/plans/components/PlanTaskNotFound';
 import { TaskDetailRoute } from '~/routing/plans/components/TaskDetailRoute';
-import type { Route } from '@/app/routes/+types/plans.$planId.tasks.$taskId._index';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   breadcrumb: (match) => (
     <OpenThrottleClipboard
-      className="cursor-pointer whitespace-nowrap"
-      label={match.loaderData?.task?.id ?? ''}
+      className="block max-w-full cursor-pointer truncate whitespace-nowrap sm:max-w-64"
+      label={match.loaderData?.task?.title ?? match.params.taskId}
       text={match.loaderData?.task?.id ?? ''}
     />
   ),
   links: (match) => {
-    const title = match.loaderData?.plan?.title;
-    const id = match.loaderData?.plan?.id ?? 'not-found';
-    const planId = `${id.split('-').shift()} …`;
-    const _planTitle = title ? `${title.slice(0, 30)} …` : 'Not Found';
+    const planId = match.loaderData?.plan?.id ?? match.params.planId;
+    const planTitle = match.loaderData?.plan?.title ?? 'Plan';
 
     return [
       { children: 'Plans', to: '/plans' },
-      { children: planId, to: `/plans/${id}` },
+      {
+        children: planTitle,
+        className: 'inline-block max-w-48 truncate align-bottom',
+        to: `/plans/${planId ?? 'not-found'}`,
+      },
     ];
   },
 };
@@ -76,9 +79,8 @@ export const loader = async (args: Route.LoaderArgs) => {
   /*
     The plan, the linked artifacts and the output chunks each depend only on the
     task we just fetched — never on each other — so they issue together instead
-    of stacking three more round-trips behind the first. Task-scoped output (v1)
-    fetches the plan's chunks; the Output tab filters client-side by taskId (see
-    useTaskOutputStream).
+    of stacking three more round-trips behind the first. The server filters
+    output chunks by both planId and taskId.
   */
   const [planResult, linkedArtifactsResult, planOutputChunksResult] =
     await Promise.all([
@@ -95,6 +97,7 @@ export const loader = async (args: Route.LoaderArgs) => {
       task?.planId != null
         ? executeGraphqlWithAuth(args.request, TaskOutputStreamChunksDocument, {
             planId: task.planId,
+            taskId,
           })
         : null,
     ]);

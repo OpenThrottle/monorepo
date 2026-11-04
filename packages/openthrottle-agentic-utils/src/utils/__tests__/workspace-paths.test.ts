@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import {
   CONTAINER_WORKSPACES_DIR_ENV,
-  HOST_WORKSPACES_DIR_ENV,
   getWorkspacePathMapping,
+  HOST_WORKSPACES_DIR_ENV,
   toContainerPath,
   toHostPath,
 } from '../workspace-paths.ts';

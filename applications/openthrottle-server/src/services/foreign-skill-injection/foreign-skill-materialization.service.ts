@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { RepositoryCheckoutsService } from '@openthrottle/nestjs-repositories';
@@ -7,7 +9,6 @@ import {
   resolvePersonalSkillsDir,
   teardown,
 } from '@openthrottle/openthrottle-agentic-utils';
-import { join } from 'node:path';
 
 /**
  * @description On-demand "apply now" side of the per-checkout foreign-skill injection toggle.

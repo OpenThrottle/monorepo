@@ -3,12 +3,14 @@
  * from {@link loadWorkflowRalphConfig}. Precedence: **enqueue tuning > env > file > built-ins**.
  */
 
-import type { WorkflowRalphResolvedDefaults } from './workflow-ralph-defaults.types.ts';
 import type { WorkflowConfigDebug } from '@openthrottle/openthrottle-agentic-workflow';
+
+import type { WorkflowRalphResolvedDefaults } from './workflow-ralph-defaults.types.ts';
 
 /** @description Subset of GraphQL `RalphPlanRunTuningInput` / nested job tuning fields. */
 export interface PlanRunTuningMergeInput {
   readonly backend?: string | null;
+  readonly effort?: string | null;
   readonly iterationTimeoutSeconds?: number | null;
   readonly iterations?: number | null;
   readonly model?: string | null;
@@ -52,6 +54,8 @@ export const mergePlanRunTuningWithWorkflowRalphConfig = (
 
   return {
     backend: r.backend ?? config.backend,
+    // No file/env layer for effort: it is enqueue-only, so it passes straight through.
+    effort: r.effort,
     iterationTimeoutSeconds:
       r.iterationTimeoutSeconds ?? config.iterationTimeout ?? undefined,
     iterations: r.iterations ?? config.iterations,

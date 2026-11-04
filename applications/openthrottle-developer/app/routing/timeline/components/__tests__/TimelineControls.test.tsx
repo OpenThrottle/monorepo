@@ -1,16 +1,18 @@
-import * as React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
-import { SearchParamsProbe } from '~/testing/SearchParamsProbe';
 import { describe, expect, test } from 'vitest';
+
 import { TimelineLaneGrouping } from '~/__generated__/graphql';
 import {
   TIMELINE_GROUPING_LABELS,
   TIMELINE_WINDOW_LABELS,
 } from '~/routing/timeline/data/data.copy';
-import { TimelineControls } from '../TimelineControls';
+import { SearchParamsProbe } from '~/testing/SearchParamsProbe';
+
 import type { TimelineControlsProps } from '../TimelineControls';
+import { TimelineControls } from '../TimelineControls';
 
 const baseProps = (
   overrides: Partial<TimelineControlsProps> = {},

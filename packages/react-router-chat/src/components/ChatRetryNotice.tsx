@@ -1,5 +1,5 @@
-import * as React from 'react';
 import { Button } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 
 export interface ChatRetryNoticeProps {
   /** Disable the Retry button while a replay is already in flight. */

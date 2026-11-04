@@ -1,9 +1,10 @@
-import * as React from 'react';
 import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import { GLOBAL_METRICS_STAT_CARD_DOCS } from '../config';
 import { GlobalModal } from './GlobalModal';
 

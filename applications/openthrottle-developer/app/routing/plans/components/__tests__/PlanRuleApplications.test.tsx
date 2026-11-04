@@ -1,9 +1,10 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { PlanRuleApplications } from '../PlanRuleApplications';
+
 import type { PlanRuleApplicationsProps } from '../PlanRuleApplications';
+import { PlanRuleApplications } from '../PlanRuleApplications';
 
 describe('PlanRuleApplications Component', () => {
   let component: RenderResult;

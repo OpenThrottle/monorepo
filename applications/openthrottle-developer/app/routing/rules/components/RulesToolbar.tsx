@@ -1,14 +1,15 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { useDebouncedSearchParam } from '@openthrottle/react-router-ui';
 import {
   Button,
+  cn,
   Input,
   ToggleGroup,
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
-import { Link, useSearchParams } from 'react-router';
+import { useDebouncedSearchParam } from '@openthrottle/react-router-ui';
 import { PlusIcon } from 'lucide-react';
+import * as React from 'react';
+import { Link, useSearchParams } from 'react-router';
+
 import { RULES_COPY } from '../data/data.copy';
 import {
   isRulesEnabledFilter,
@@ -86,7 +87,7 @@ export const RulesToolbar = (props: RulesToolbarProps): React.ReactElement => {
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx('w-full', className)} data-testid="RulesToolbar">
+    <div className={cn('w-full', className)} data-testid="RulesToolbar">
       <form
         className="flex w-full flex-wrap items-center gap-2"
         onSubmit={handleSearchSubmit}

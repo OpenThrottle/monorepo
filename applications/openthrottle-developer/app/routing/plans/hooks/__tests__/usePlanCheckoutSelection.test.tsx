@@ -1,9 +1,8 @@
-import * as React from 'react';
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { Provider, createStore } from 'jotai';
+import { createStore, Provider } from 'jotai';
+import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { usePlanCheckoutSelection } from '../usePlanCheckoutSelection';
-import type { UsePlanCheckoutSelectionOptions } from '../usePlanCheckoutSelection';
+
 import {
   workflowBranchAtom,
   workflowBranchDirtyAtom,
@@ -11,6 +10,9 @@ import {
   workflowRepositoryIdAtom,
   workflowWorkingDirectoryAtom,
 } from '~/routing/plans/data/atom.plan';
+
+import type { UsePlanCheckoutSelectionOptions } from '../usePlanCheckoutSelection';
+import { usePlanCheckoutSelection } from '../usePlanCheckoutSelection';
 
 const CHECKOUT_ID = '11111111-1111-4111-8111-111111111111';
 const OTHER_CHECKOUT_ID = '22222222-2222-4222-8222-222222222222';

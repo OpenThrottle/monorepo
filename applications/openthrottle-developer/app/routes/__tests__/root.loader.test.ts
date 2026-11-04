@@ -1,14 +1,17 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, test, vi } from 'vitest';
-import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { buildAuthCookie } from '@openthrottle/react-router-auth';
+import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { createLoaderArgs } from '@openthrottle/react-router-testing';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
+import type { Route } from '@/app/+types/root';
 import {
+  GetMyPermissionsDocument,
   GetMyUserDocument,
   GetRootHealthDocument,
 } from '~/__generated__/graphql';
+
 import { loader } from '../../root';
-import type { Route } from '@/app/+types/root';
 
 vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
   const actual =
@@ -37,7 +40,6 @@ const PUBLIC_ENV = {
   APP_URL_ADMIN: 'http://localhost:6010',
   APP_URL_CMS: 'http://localhost:6030',
   APP_URL_DEVELOPER: 'http://localhost:6020',
-  APP_URL_EMAIL: 'http://localhost:6040',
   APP_URL_SERVER: 'http://localhost:6021',
   APP_URL_WEBSITE: 'http://localhost:6050',
   APP_VERSION: '0.0.0',
@@ -105,8 +107,9 @@ function assertIsData<T>(value: T): asserts value is Exclude<T, Response> {
 }
 
 /**
- * Sequence the two GraphQL calls the loader makes when a token is present:
- * 1) GetRootHealth (health poll), 2) GetMyUser (session user).
+ * Resolve the three GraphQL calls the loader makes (concurrently) when a token
+ * is present: GetRootHealth (health poll), GetMyUser (session user) and
+ * GetMyPermissions (`myPermissions`).
  */
 const resolveHealthThenUser = (user: unknown): void => {
   mockExecuteGraphqlWithAuth.mockImplementation(async (_request, document) => {
@@ -115,6 +118,9 @@ const resolveHealthThenUser = (user: unknown): void => {
     }
     if (document === GetMyUserDocument) {
       return { me: user };
+    }
+    if (document === GetMyPermissionsDocument) {
+      return { myPermissions: ['blog:draft'] };
     }
     throw new Error('unexpected GraphQL document');
   });
@@ -191,6 +197,17 @@ describe('root loader: token gate + protected-prefix redirect', () => {
       expect.anything(),
       GetMyUserDocument,
     );
+    // `myPermissions` is loaded once here and read by useHasPermission.
+    expect(data.permissions).toEqual(['blog:draft']);
+  });
+
+  test('returns an empty permission list when no token is present', async () => {
+    mockExecuteGraphqlWithAuth.mockResolvedValue({ serverHealth: HEALTHY });
+
+    const result = await loader(loaderArgs('http://localhost/auth'));
+
+    assertIsData(result);
+    expect(result.permissions).toEqual([]);
   });
 
   test('redirects a protected path to /auth when the token is present but `me` resolves null', async () => {
@@ -241,6 +258,8 @@ describe('root loader: token gate + protected-prefix redirect', () => {
     expect(data.user).toBeNull();
     expect(data.userLoadOk).toBe(false);
     expect(data.rootLoaderFailure?.step).toBe('user');
+    // The permissions probe soft-fails to [] and never becomes the failure.
+    expect(data.permissions).toEqual([]);
   });
 
   test('records a health-step failure when the health query throws', async () => {

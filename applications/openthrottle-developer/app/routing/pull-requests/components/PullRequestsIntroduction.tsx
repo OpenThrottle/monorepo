@@ -1,6 +1,6 @@
-import * as React from 'react';
-import { GitPullRequestIcon } from 'lucide-react';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import { GitPullRequestIcon } from 'lucide-react';
+import * as React from 'react';
 
 export interface PullRequestsIntroductionProps {}
 

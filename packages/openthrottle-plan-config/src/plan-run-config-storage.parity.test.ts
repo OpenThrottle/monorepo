@@ -3,6 +3,7 @@
  * `buildRalphPlanRunTuningInputFromWorkflowRunOptions` (same omission rules as nested argv).
  */
 import { describe, expect, it } from 'vitest';
+
 import { getDefaultPlanWorkflowUiState } from './plan-run-config-storage.defaults.ts';
 import {
   buildRalphPlanRunTuningFromPlanRunConfig,
@@ -37,6 +38,7 @@ describe('plan run config enqueue tuning parity', () => {
       iterationTimeoutText: '45',
       workflowInput: {
         debugCli: 'debug',
+        effort: 'max',
         executionBackend: 'claude',
         iterations: 3,
         model: 'sonnet',
@@ -59,6 +61,7 @@ describe('plan run config enqueue tuning parity', () => {
 
     expect(buildRalphPlanRunTuningFromPlanRunConfig(stored)).toEqual({
       backend: 'claude',
+      effort: 'max',
       iterationTimeoutSeconds: 45,
       iterations: 3,
       model: 'sonnet',

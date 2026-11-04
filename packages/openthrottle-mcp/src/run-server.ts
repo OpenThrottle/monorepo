@@ -1,6 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { bootstrapMcpDeveloperApp, McpTransportType } from './nest/index.ts';
+
+import { captureClientIdentityProvider } from './config/client-identity.ts';
+import { captureStdioExecutionBackend } from './config/execution-backend.ts';
 import {
   getServerName,
   SERVER_INSTRUCTIONS,
@@ -10,11 +12,10 @@ import {
   captureCallerWorkspacePath,
   resolveStdioWorkspacePath,
 } from './config/workspace-path.ts';
-import { captureClientIdentityProvider } from './config/client-identity.ts';
-import { captureStdioExecutionBackend } from './config/execution-backend.ts';
+import type { NestjsMcpDeveloperBootstrapOptions } from './nest/index.ts';
+import { bootstrapMcpDeveloperApp, McpTransportType } from './nest/index.ts';
 import { registerKnowledgeBaseResource } from './nest-tool-handlers.ts';
 import { registerDeveloperMcpTools } from './tool-registry.ts';
-import type { NestjsMcpDeveloperBootstrapOptions } from './nest/index.ts';
 
 /**
  * @description Starts the MCP server on stdio via `@rekog/mcp-nest` and the developer Nest MCP module. Used by the CLI bin and `nx run @openthrottle/openthrottle-mcp:serve`.

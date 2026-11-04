@@ -6,8 +6,9 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { vectorTransformer } from '../../common/vector.transformer';
-import type { Plan } from '../plans/plan.entity';
+
+import { vectorTransformer } from '../../utils/vector.transformer.ts';
+import type { Plan } from '../plans/plan.entity.ts';
 
 /**
  * @description TypeORM entity for OpenThrottle plan_embeddings table. Matches databases/migrations (004). Uses pgvector vector(1536).

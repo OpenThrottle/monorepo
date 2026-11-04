@@ -1,6 +1,7 @@
 import type { ClsStore } from 'nestjs-cls';
 import { ClsService } from 'nestjs-cls';
-import type { GlobalClsUser } from './global-cls-user';
+
+import type { GlobalClsUser } from './global-cls-user.ts';
 
 /**
  * @external https://papooch.github.io/nestjs-cls/features-and-use-cases/type-safety-and-type-inference#type-safe-clsservice
@@ -17,7 +18,8 @@ export interface GlobalClsStore extends ClsStore {
   /**
    * @description Raw `x-ot-session-id` request header, if present. An UNVALIDATED
    * client claim — consumers must verify the session's actor matches the request
-   * principal before attributing work to it (work-ledger ambient attribution, G11).
+   * principal before attributing work to it (work-ledger ambient attribution; G11 in
+   * docs/monorepo/work-ledger-sessions.md).
    */
   sessionId?: string;
 

@@ -3,8 +3,9 @@
  */
 
 import { Field, Int, ObjectType } from '@nestjs/graphql';
-import { PlanObject } from '../plans/plan.object';
-import { ProjectObject } from '../projects/project.object';
+
+import { PlanObject } from '../plans/plan.object.ts';
+import { ProjectObject } from '../projects/project.object.ts';
 
 @ObjectType()
 export class TaskObject {
@@ -105,6 +106,12 @@ export class TaskObject {
 
   @Field(() => Date)
   updatedAt!: Date;
+
+  @Field(() => Int, {
+    description: `Coarse concurrency layer within the plan, nullable. NULL means unassigned (runs alone, in sortOrder position) -- never wave zero. Tasks sharing a wave are the author's claim that they may be worked concurrently; sortOrder remains canonical and is the tiebreaker within a wave. Not consumed for execution yet.`,
+    nullable: true,
+  })
+  wave!: number | null;
 }
 
 /** Result of tasksByProjectId: tasks slice and total count for pagination. */

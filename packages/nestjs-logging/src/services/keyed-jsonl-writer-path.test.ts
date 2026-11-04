@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
+
 import {
   buildKeyedJsonlRelativePath,
   KEYED_JSONL_MAX_SEGMENT_UTF16,
   keyedJsonlHash8,
   keyedJsonlPairHash8,
   sanitizeKeyedJsonlSegment,
-} from './keyed-jsonl-writer-path';
+} from './keyed-jsonl-writer-path.ts';
 
 describe('sanitizeKeyedJsonlSegment', () => {
   it('replaces path separators and control characters with underscores', () => {

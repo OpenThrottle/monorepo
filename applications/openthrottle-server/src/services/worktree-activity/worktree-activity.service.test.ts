@@ -5,7 +5,6 @@
  * tolerated, and `unregistered` tracks the checkout row independently of activity.
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
@@ -13,14 +12,16 @@ import type {
   PlanRunsService,
 } from '@openthrottle/nestjs-repositories';
 import { STALE_CUTOFF_MS } from '@openthrottle/nestjs-repositories';
-import type { WorktreeDiscoveryService } from '../worktree-discovery/worktree-discovery.service';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import type { WorktreeDiscoveryService } from '../worktree-discovery/worktree-discovery.service.ts';
 import type {
   DiscoveredWorktree,
   WorktreeDiscoveryResult,
-} from '../worktree-discovery/worktree-discovery.types';
-import { WORKTREE_DISCOVERY_SOURCE } from '../worktree-discovery/worktree-discovery.types';
-import { WorktreeActivityService } from './worktree-activity.service';
-import { WORKTREE_ACTIVITY } from './worktree-activity.types';
+} from '../worktree-discovery/worktree-discovery.types.ts';
+import { WORKTREE_DISCOVERY_SOURCE } from '../worktree-discovery/worktree-discovery.types.ts';
+import { WorktreeActivityService } from './worktree-activity.service.ts';
+import { WORKTREE_ACTIVITY } from './worktree-activity.types.ts';
 
 const ROOT = '/Users/matt/Development/openthrottle-worktrees';
 const USER = 'user-1';
@@ -45,6 +46,7 @@ const discovery = (
   warnings: readonly string[] = [],
 ): WorktreeDiscoveryResult => ({
   droppedCount: 0,
+  missingCheckouts: [],
   problems: [],
   rootSource: 'default',
   scannedAt: '2026-08-24T00:00:00.000Z',
@@ -178,6 +180,25 @@ describe('WorktreeActivityService', () => {
     expect(result.worktrees[0]).toMatchObject({
       activity: WORKTREE_ACTIVITY.DIRTY,
       planRunId: null,
+    });
+  });
+
+  it('does not read RUNNING for a pending SCHEDULED run — the worktree stays free until it fires', async () => {
+    // A scheduled run records its checkout at schedule time, but only IN_PROGRESS runs make a
+    // worktree busy and findLiveRunsByCheckoutIds selects IN_PROGRESS only (pinned in
+    // plan-runs.service.test.ts), so a worktree with nothing but a SCHEDULED run reads IDLE.
+    const { service } = build({
+      discovered: discovery([worktree()]),
+      liveRuns: [],
+    });
+
+    const result = await service.discoverAndClassify(USER);
+
+    expect(result.worktrees[0]).toMatchObject({
+      activity: WORKTREE_ACTIVITY.IDLE,
+      planId: null,
+      planRunId: null,
+      runMonitored: null,
     });
   });
 

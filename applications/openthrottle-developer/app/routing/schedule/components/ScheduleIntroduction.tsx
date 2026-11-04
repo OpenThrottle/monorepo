@@ -1,9 +1,10 @@
-import * as React from 'react';
-import { CalendarClockIcon } from 'lucide-react';
 import {
   GlobalFeatureOnboardingTrigger,
   GlobalHeading,
 } from '@openthrottle/react-router-ui-global';
+import { CalendarClockIcon } from 'lucide-react';
+import * as React from 'react';
+
 import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
 
 export interface ScheduleIntroductionProps {

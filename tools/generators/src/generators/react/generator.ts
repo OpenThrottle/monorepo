@@ -1,9 +1,10 @@
-import prompts from 'prompts';
 import type { Tree } from '@nx/devkit';
-import { getProjectsByTags } from '../../utils/projects';
-import { writeJsonToStdout } from '../../utils/output';
+import prompts from 'prompts';
+
 import { throwGeneratorError } from '../../utils/generator-errors';
 import { isInteractiveArgPresent } from '../../utils/nx-cli';
+import { writeJsonToStdout } from '../../utils/output';
+import { getProjectsByTags } from '../../utils/projects';
 import { componentGenerator } from './generator.component';
 import { hookGenerator } from './generator.hook';
 import { storyGenerator } from './generator.story';

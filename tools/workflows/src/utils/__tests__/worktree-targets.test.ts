@@ -3,6 +3,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
+
 import { WorktreeTargetsTracker } from '../worktree-targets';
 
 describe('WorktreeTargetsTracker', () => {

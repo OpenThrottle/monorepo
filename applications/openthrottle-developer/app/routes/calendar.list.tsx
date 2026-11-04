@@ -1,4 +1,3 @@
-import * as React from 'react';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalScreen,
@@ -6,13 +5,15 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import * as React from 'react';
+
+import type { Route } from '@/app/routes/+types/calendar.list';
+import { SITE_TITLE } from '~/global/config/settings';
 import { CalendarIntroduction } from '~/routing/calendar/components/CalendarIntroduction';
 import { CalendarTable } from '~/routing/calendar/components/CalendarTable';
 import { CalendarToolbar } from '~/routing/calendar/components/CalendarToolbar';
 import { CALENDAR_EVENTS } from '~/routing/calendar/data/data.events';
 import { filterCalendarEventsBySearch } from '~/routing/calendar/utils/events';
-import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/calendar.list';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

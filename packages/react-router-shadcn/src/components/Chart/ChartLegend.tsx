@@ -1,8 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { Legend as RechartsLegend } from 'recharts';
 import type { LegendProps as RechartsLegendProps } from 'recharts';
+import { Legend as RechartsLegend } from 'recharts';
 
 export interface ChartLegendProps extends RechartsLegendProps {}
 

@@ -3,11 +3,12 @@
  */
 
 import { describe, expect, it } from 'vitest';
+
 import {
+  DEFAULT_RALPH_RUNNER,
   isRalphExecutionBackendId,
   parseRalphExecutionBackendId,
   RALPH_EXECUTION_BACKEND_IDS,
-  DEFAULT_RALPH_RUNNER,
 } from '../ralph-execution-backend';
 
 describe('parseRalphExecutionBackendId', () => {

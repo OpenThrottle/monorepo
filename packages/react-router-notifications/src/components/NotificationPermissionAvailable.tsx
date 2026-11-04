@@ -1,5 +1,5 @@
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import clsx from 'clsx';
 
 export interface NotificationPermissionAvailableProps {
   readonly className?: string;
@@ -25,7 +25,7 @@ export const NotificationPermissionAvailable = (
 
   return (
     <div
-      className={clsx('p-4', className)}
+      className={cn('p-4', className)}
       data-testid="NotificationPermissionAvailable"
     >
       <h2>NotificationPermissionAvailable</h2>

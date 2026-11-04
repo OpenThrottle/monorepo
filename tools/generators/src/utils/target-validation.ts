@@ -1,4 +1,5 @@
 import { createProjectGraphAsync } from '@nx/devkit';
+
 import { throwGeneratorError } from './generator-errors';
 
 const PREFIX = 'NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators';

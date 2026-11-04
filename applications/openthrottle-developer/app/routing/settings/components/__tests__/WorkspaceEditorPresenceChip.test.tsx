@@ -1,14 +1,16 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
+
 import {
   EditorPresenceState,
   WorkspaceEditorId,
 } from '~/__generated__/graphql';
-import { WorkspaceEditorPresenceChip } from '../WorkspaceEditorPresenceChip';
+
 import type { WorkspaceEditorPresenceChipProps } from '../WorkspaceEditorPresenceChip';
+import { WorkspaceEditorPresenceChip } from '../WorkspaceEditorPresenceChip';
 
 const renderChip = (props: WorkspaceEditorPresenceChipProps): RenderResult => {
   const Component = () => <WorkspaceEditorPresenceChip {...props} />;

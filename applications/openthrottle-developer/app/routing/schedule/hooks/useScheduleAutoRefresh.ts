@@ -1,8 +1,7 @@
 import * as React from 'react';
 import { useRevalidator } from 'react-router';
 
-/** How often to re-read the route while something is in flight. */
-const REFRESH_INTERVAL_MS = 5000;
+import { REFRESH_INTERVAL_MS } from '~/routing/schedule/config/schedule-auto-refresh';
 
 /**
  * @description Keeps /schedule's activity view current by revalidating the route on an interval —
@@ -22,16 +21,22 @@ const REFRESH_INTERVAL_MS = 5000;
  *   the finished counts instead of keeping the last polled snapshot of a run that has since ended.
  */
 export const useScheduleAutoRefresh = (inFlightCount: number): void => {
+  // Hooks
   const revalidator = useRevalidator();
-  const isInFlight = inFlightCount > 0;
-
   // Read the revalidator through a ref so changing `state` does not tear down
   // and rebuild the interval on every request.
   const revalidatorRef = React.useRef(revalidator);
+  const wasInFlightRef = React.useRef(inFlightCount > 0);
+
+  // Setup
+  const isInFlight = inFlightCount > 0;
   revalidatorRef.current = revalidator;
 
-  const wasInFlightRef = React.useRef(isInFlight);
+  // Handlers
 
+  // Markup
+
+  // Life Cycle
   React.useEffect(() => {
     const revalidateWhenIdle = (): void => {
       if (revalidatorRef.current.state === 'idle') {
@@ -72,4 +77,6 @@ export const useScheduleAutoRefresh = (inFlightCount: number): void => {
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, [isInFlight]);
+
+  // 🔌 Short Circuit
 };

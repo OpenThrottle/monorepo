@@ -1,5 +1,6 @@
 import { RuleTester } from '@typescript-eslint/rule-tester';
 import { afterAll, describe, it } from 'vitest';
+
 import { componentPrimitiveShape } from '../rules/component-primitive-shape.ts';
 
 // Wire the framework hooks the RuleTester calls to Vitest's.

@@ -40,22 +40,61 @@ Tasks within a plan are sequenced by **`sortOrder`** (DB column `sort_order`, `I
 - **Auto-assign on create:** omit `sortOrder` and OT appends `MAX(sort_order) + 1000` (first task → `1000`, next → `2000`, …). Batch creates preserve array order.
 - **Re-sequence with the right tool:** use `reorder_plan_tasks` to renumber; never delete-and-recreate to reorder. Gaps (the `1000` stride) leave room for `update_task`'s gap-based inserts (e.g. `1500` between `1000` and `2000`).
 
+### `wave` groups sortOrder into a concurrency layer — decide it while you author
+
+`wave` is an optional integer (`>= 1`, nullable) on each task: the plan's claim that the tasks
+sharing a wave number **may** be worked concurrently. It groups a `sortOrder` run; it never replaces
+or reorders it, and — as of this writing — **nothing executes tasks concurrently from it**. Full
+contract: [task-wave-encoding.md](./task-wave-encoding.md).
+
+- **Set it per item in the same `create_tasks` call.** This is the only cheap moment: the batch is
+  one atomic transaction, so the tasks don't have ids yet for a `depends_on`-style second pass, and a
+  field that needs a second pass tends to stay empty. Decide `wave` in the same breath as `sortOrder`.
+- **Same number = may run together.** Tasks 2 and 3 both `wave: 1` says "these are independent, go
+  ahead and work them at the same time"; a task with no `wave` (the default, `null`) runs alone, in
+  its `sortOrder` position — exactly like every plan before this field existed.
+- **Never `0`; dense from `1`.** `wave: 1`, `wave: 2`, … — no reserved gaps, unlike `sortOrder`'s
+  1000-wide stride.
+- **Hook tasks (added via `add_hook`) are never waved** — leave `wave` unset on them.
+- **When unsure, leave it `null`.** A wrong or missing wave never breaks anything; it just falls back
+  to sequential, which is always correct, only slower.
+
 ### Status lifecycle
 
-Both plans and tasks carry a `status` from a fixed enum. The canonical statuses are **`BACKLOG`**, **`BLOCKED`**, **`CANCELED`**, **`COMPLETED`**, **`IN_PROGRESS`**, **`PENDING`**, **`SKIPPED`** (plus **`QUEUED`** for plans only — set when a Run-plan job is enqueued in BullMQ until the worker picks it up).
+Both plans and tasks carry a `status` from a fixed enum. The canonical statuses are **`BACKLOG`**, **`BLOCKED`**, **`CANCELED`**, **`COMPLETED`**, **`IN_PROGRESS`**, **`PENDING`**, **`PROMOTED`**, **`SKIPPED`** (plus **`QUEUED`** for plans only — set when a Run-plan job is enqueued in BullMQ until the worker picks it up).
 
 The everyday task path is:
 
 ```text
 PENDING ──▶ IN_PROGRESS ──▶ COMPLETED
-                 │
-                 ├──▶ BLOCKED   (waiting on something; record why in summary)
-                 └──▶ SKIPPED / CANCELED
+   │             │
+   │             ├──▶ BLOCKED   (waiting on something; record why in summary)
+   │             └──▶ SKIPPED / CANCELED
+   │
+   └──▶ PROMOTED  (set by promote_task from any open status: the work continues as its own plan)
 ```
 
 - You **drive lifecycle by updating `status`** (via `update_task` / `update_plan`), not by recreating rows.
 - Transitioning into `COMPLETED` stamps `completed_at`; leaving `COMPLETED` clears it.
-- "Remaining work" (e.g. `get_remaining_tasks_for_plan`) means any status that is **not** `COMPLETED`, `SKIPPED`, or `CANCELED`.
+- "Remaining work" (e.g. `get_remaining_tasks_for_plan`) means any status that is **not** `COMPLETED`, `PROMOTED`, `SKIPPED`, or `CANCELED`.
+
+#### What `PROMOTED` means
+
+`PROMOTED` = **not finished here; the work continued as its own plan.** `promote_task` writes it on the source task. It is the only way a task reaches `PROMOTED` — you do not set it by hand.
+
+| Status      | Resolved (counts toward progress) | Terminal (no more work here) | Complete (the work was done here) |
+| ----------- | --------------------------------- | ---------------------------- | --------------------------------- |
+| `COMPLETED` | yes                               | yes                          | yes                               |
+| `PROMOTED`  | yes                               | yes                          | **no**                            |
+| `SKIPPED`   | yes                               | yes                          | no                                |
+| `CANCELED`  | no                                | yes                          | no                                |
+
+- **Resolved.** Plan progress (resolved/total) and the "no remaining tasks → plan `COMPLETED`" rollup treat `PROMOTED` exactly as they treated a promotion-`SKIPPED` before it existed — promoting a task never un-finishes its plan.
+- **Membership: plans and tasks.** `plan_task_status` is one shared Postgres enum, and `plan-task-status.constants.test.ts` asserts `TASK_STATUS === PLAN_STATUS − QUEUED`. A tasks-only `PROMOTED` would turn that into a two-exception rule and weaken the parity gate, so the value is valid on both. Promoting a _plan_ is not an operation today; the label is permitted, not used.
+- **Enum position:** `ADD VALUE 'PROMOTED' AFTER 'PENDING'`, giving `… QUEUED, PENDING, PROMOTED, SKIPPED` — next to the status it was split out of.
+- **The `promoted` tag is kept** alongside the status for one release. Readers accept **status or tag** (`status === 'PROMOTED' || tags include 'promoted'`), so rows promoted before the change and rows backfilled by migration render and guard identically. Retire the tag write once a release has shipped with the backfill applied and no reader still needs the fallback; that retirement is its own change.
+- **`SKIPPED` keeps its other two meanings:** "won't be worked on", and the reversible orphan soft-close written by tag-action rules (`SOFT_CLOSED_TASK_STATUS`). The soft-close is **not** a promotion and stays `SKIPPED` — `inject-task` revives a task by recognising exactly that value.
+- `PROMOTED` says the work moved, not **where**. Today a note on the source task names the new plan.
 
 ### From authored to executable
 
@@ -134,7 +173,7 @@ made it look that way is described below.
 > two fields are unrelated — see [§ When to set `project`/`projectId`](#author-plans--tasks-via-mcp-tools).
 
 **Where the path comes from.** The MCP client spawns `scripts/run-openthrottle-mcp.sh` with the open
-workspace as its cwd. That launcher then has to `chdir` into this checkout to resolve `tsx` and the
+workspace as its cwd. That launcher then has to `chdir` into this checkout to resolve the
 built MCP bundle — a **runtime** requirement that has nothing to do with where the plan was written.
 It therefore reads the caller's cwd _before_ the `chdir` and forwards it as
 `OPENTHROTTLE_MCP_WORKSPACE_PATH`. Before that split existed, the server saw only the post-`chdir`
@@ -176,10 +215,10 @@ Records several plans in one call — the **whole batch commits or rolls back to
 
 ### Create tasks — `create_task` / `create_tasks`
 
-- **`create_task`** — one task on a plan. **Required:** `planId`, `title`. **Optional:** `description`, `category`, `status`, `requirements`, `summary`, `assignee`, `project`/`projectId`, `sortOrder`.
+- **`create_task`** — one task on a plan. **Required:** `planId`, `title`. **Optional:** `description`, `category`, `status`, `requirements`, `summary`, `assignee`, `project`/`projectId`, `sortOrder`, `wave`.
 - **`create_tasks`** — many tasks on **one** plan, **atomically** (all or nothing). Prefer this for authoring a plan's task list in a single shot.
 
-`sortOrder` semantics (see [the mental model](#sortorder-is-the-canonical-execution-order)): omit it to auto-append `MAX + 1000`; in a batch, tasks are appended in **array order**, so the array itself is your execution sequence.
+`sortOrder` semantics (see [the mental model](#sortorder-is-the-canonical-execution-order)): omit it to auto-append `MAX + 1000`; in a batch, tasks are appended in **array order**, so the array itself is your execution sequence. `wave` semantics (see [the wave mental model](#wave-groups-sortorder-into-a-concurrency-layer--decide-it-while-you-author)): set it per item now, in this same call — a plan with tasks that can genuinely run in parallel should say so here.
 
 ```jsonc
 create_tasks({
@@ -256,19 +295,34 @@ Task-Id: 9f8e7d6c-…-…
 - Only conventional footers are allowed (`Plan-Id:`, `Task-Id:`, `BREAKING CHANGE:`, `Closes #123`). **Never** add `Co-authored-by` or any attribution line — this is enforced by repo convention ([CLAUDE.md](../../CLAUDE.md)).
 - **Do not** record a commit artifact for these intermediate work commits.
 
-**2. Record the _landed_ squash commit on the work ledger — after merge.** The legacy `link_commit` tool is retired; record a work-ledger `git_commit` artifact instead. `attach_session_subject(planId, taskId?)` then `record_artifact(type: "git_commit", payloadJson: {repo, sha}, message?)` associates the **squash commit on `main` after the PR merges** with the plan (and optionally a specific task) — **one artifact per task**, to what actually shipped. On a merge-queue-protected branch, `gh pr merge --auto` may only enqueue the PR; wait until `gh pr view --json mergedAt,mergeCommitSha` shows the landed commit, then use that SHA rather than the branch head. This is what keeps `get_activity_by_date` / `get_last_activity` aligned with landed work.
+**2. The ledger records itself when the PR opens.** There is no post-merge step, and the legacy `link_commit` tool is retired. Pass `headSha` (the branch head you pushed) and `prNumber` to `settle_plan_run` alongside `status: COMPLETED`; the server resolves `owner/repo` from the run's checkout and writes a `git_commit` artifact, a `pull_request` artifact, and their subject rows in one transaction.
 
 ```jsonc
-// AFTER the PR merges to main (under an open session):
+// When the PR opens — the same call that settles the run row:
+settle_plan_run({ "planRunId": "…run-uuid…",
+                  "status": "COMPLETED",
+                  "headSha": "…branch-head-sha…",
+                  "prNumber": 123 })
+```
+
+You record the **branch head**, not a landed squash sha, and that is deliberate: the verifier maps it to its squash commit once the PR merges, and repairs it from the `pull_request` sibling when a rebase leaves the sha unfindable. Waiting for the merge was never required — it just moved the write to a moment when no session exists to make it.
+
+Anything neither path covers — a run that died before opening a PR, a PR opened by hand outside the loop — is adopted by an hourly harvest that reads `Plan-Id:` trailers off the default branch. That is what those footers are for.
+
+**Manual fallback,** for a commit no automated path claimed:
+
+```jsonc
 attach_session_subject({ "planId": "…plan-uuid…", "taskId": "…task-uuid…" })
 record_artifact({ "type": "git_commit",
-                  "payloadJson": "{\"repo\":\"OpenThrottle/monorepo\",\"sha\":\"…squash-sha…\"}",
+                  "payloadJson": "{\"repo\":\"OpenThrottle/monorepo\",\"sha\":\"…sha…\"}",
                   "message": "feat(server): add rate-limit guard (#123)" })
 ```
 
-Or the one-shot CLI equivalent (orchestrates the same primitives): `pnpm exec workflow-link-merge --plan <plan-uuid> --sha <squash-sha> --repo <owner/repo>`. The SHA must be the landed default-branch commit, not the PR head SHA.
+Do not reach for `workflow-link-merge` — it lives in the deprecated `@tools/workflows` package.
 
-> **Why the split?** Footers give you cheap, per-commit traceability while work is in flight; the ledger `git_commit` artifact gives OT a clean record of exactly one shipped SHA per task. Recording every branch commit would pollute that record — so footers during, one ledger artifact on merge.
+The merge-queue caveat still holds where it always did: `gh pr merge --auto` may only _enqueue_ a PR, so do not call it merged, or read a landed sha from it, until `gh pr view --json mergedAt,mergeCommitSha` shows one. It no longer gates ledger recording.
+
+> **Why the split?** Footers give you cheap, per-commit traceability while work is in flight; the ledger artifacts give OT a clean record of exactly one commit per PR. Recording every branch commit would pollute that record — so footers during, one ledger artifact when the PR opens. The footers also double as the harvest's input, which is what makes them worth enforcing.
 
 ## End-to-end worked example
 
@@ -347,17 +401,16 @@ update_task({ "id": "9f8e7d6c-0000-4000-8000-000000000002", "status": "COMPLETED
 
 **7 — Open a PR, get it merged.** Repeat steps 4–6 for the remaining tasks.
 
-**8 — After the PR merges to `main`, record the landed squash commit on the work ledger** — one `git_commit` artifact per task, to the shipped SHA:
+**8 — Settle the run when the PR opens, and the ledger records itself.** Pass the branch head and the PR number; the server writes the artifacts:
 
 ```jsonc
-attach_session_subject({ "planId": "1a2b3c4d-0000-4000-8000-000000000001",
-                         "taskId": "9f8e7d6c-0000-4000-8000-000000000002" })
-record_artifact({ "type": "git_commit",
-                  "payloadJson": "{\"repo\":\"OpenThrottle/monorepo\",\"sha\":\"abcdef1234567890\"}",
-                  "message": "feat(server): add rate-limit guard (#123)" })
+settle_plan_run({ "planRunId": "…run-uuid…",
+                  "status": "COMPLETED",
+                  "headSha": "abcdef1234567890",
+                  "prNumber": 123 })
 ```
 
-Or simply: `pnpm exec workflow-link-merge --plan 1a2b3c4d-0000-4000-8000-000000000001 --task 9f8e7d6c-0000-4000-8000-000000000002 --repo OpenThrottle/monorepo --sha abcdef1234567890`.
+Nothing to do after the merge — the verifier resolves the squash commit itself.
 
 **9 — Close out the plan.** When every task is `COMPLETED`, set the plan to `COMPLETED` and give it a `summary` (next actions / usage notes). Now `get_last_activity` and `get_activity_by_date` show the plan's landed history, and `semantic_search` can surface it for the next person. The idea became rows, the rows became shipped code, and the code points back to the rows.
 
@@ -377,4 +430,5 @@ Or simply: `pnpm exec workflow-link-merge --plan 1a2b3c4d-0000-4000-8000-0000000
 | **Run loop / queue** (Ralph)                       | [tools/workflows/README.md](../../tools/workflows/README.md), [`agents-ralph` skill](../../skills/agents-ralph/SKILL.md) |
 | **Conventional commits & staging**                 | [`github-commit` skill](../../skills/github-commit/SKILL.md)                                                             |
 | **Schema, migrations, `sort_order`, commit links** | [databases/README.md](../../databases/README.md)                                                                         |
+| **`wave` full contract** (why a layer, not a DAG)  | [task-wave-encoding.md](./task-wave-encoding.md)                                                                         |
 | **Monorepo-wide agent conventions**                | [AGENTS.md § OpenThrottle](../../AGENTS.md), [CLAUDE.md](../../CLAUDE.md)                                                |

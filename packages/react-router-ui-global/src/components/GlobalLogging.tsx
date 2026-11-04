@@ -1,5 +1,5 @@
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import clsx from 'clsx';
 
 export interface GlobalLoggingProps {
   readonly className?: string;
@@ -23,7 +23,7 @@ export const GlobalLogging = (
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx('p-4', className)} data-testid="GlobalLogging">
+    <div className={cn('p-4', className)} data-testid="GlobalLogging">
       <h2>GlobalLogging</h2>
     </div>
   );

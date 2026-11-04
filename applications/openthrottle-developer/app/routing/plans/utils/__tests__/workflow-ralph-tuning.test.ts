@@ -1,5 +1,6 @@
 import { RalphNestedDebugCli } from '@openthrottle/openthrottle-developer-codegen';
 import { describe, expect, test } from 'vitest';
+
 import {
   DEFAULT_RALPH_ITERATIONS,
   DEFAULT_RALPH_MODEL,
@@ -17,6 +18,7 @@ const basePlanInput = (
   overrides: Partial<WorkflowRalphRunOptionsInput> = {},
 ): WorkflowRalphRunOptionsInput => ({
   debugCli: 'omit',
+  effort: '',
   executionBackend: 'cursor',
   iterationTimeoutSeconds: undefined,
   iterations: DEFAULT_RALPH_ITERATIONS,
@@ -48,6 +50,14 @@ describe('buildRalphPlanRunTuningInputFromWorkflowRunOptions', () => {
         basePlanInput({ executionBackend: 'claude' }),
       ),
     ).toEqual({ backend: 'claude' });
+  });
+
+  test('sets effort only when one is chosen', () => {
+    expect(
+      buildRalphPlanRunTuningInputFromWorkflowRunOptions(
+        basePlanInput({ effort: ' high ' }),
+      ),
+    ).toEqual({ effort: 'high' });
   });
 
   test('sets iterations when it differs from the default', () => {

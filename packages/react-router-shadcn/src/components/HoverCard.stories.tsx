@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+
 import { Avatar, AvatarFallback } from './Avatar';
 import { Button } from './Button';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from './HoverCard';

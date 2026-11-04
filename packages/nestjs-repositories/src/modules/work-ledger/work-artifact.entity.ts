@@ -9,10 +9,11 @@ import {
   Entity,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+
 import type {
   WorkArtifactSource,
   WorkArtifactVerification,
-} from './work-ledger.constants';
+} from './work-ledger.constants.ts';
 
 /** Column-only shape of WorkArtifact (no relations). */
 export type WorkArtifactData = Pick<

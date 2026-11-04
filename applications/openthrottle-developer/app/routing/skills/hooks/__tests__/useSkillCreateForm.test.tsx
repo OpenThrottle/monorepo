@@ -1,10 +1,12 @@
-import * as React from 'react';
 import { act, render, waitFor } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
+
 import { SKILL_CREATE_DESTINATIONS } from '~/routing/skills/config/skill-create';
-import { useSkillCreateForm } from '../useSkillCreateForm';
+
 import type { UseSkillCreateFormResult } from '../useSkillCreateForm';
+import { useSkillCreateForm } from '../useSkillCreateForm';
 
 /**
  * The hook calls `useFetcher`, so it needs a router above it. `renderHook`'s

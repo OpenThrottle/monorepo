@@ -1,3 +1,11 @@
+import { createMock } from '@golevelup/ts-vitest';
+import { ForbiddenException } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
+import {
+  AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+  AUTH_PRINCIPAL_KIND_USER,
+  type AuthPrincipal,
+} from '@openthrottle/nestjs-auth';
 import type {
   Role,
   ServiceAccount,
@@ -7,17 +15,10 @@ import {
   RolesService,
   ServiceAccountsService,
 } from '@openthrottle/nestjs-repositories';
-import {
-  AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
-  AUTH_PRINCIPAL_KIND_USER,
-  type AuthPrincipal,
-} from '@openthrottle/nestjs-auth';
-import { createMock } from '@golevelup/ts-vitest';
-import { ForbiddenException } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { ServiceAccountsResolver } from './service-accounts.resolver';
+
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { ServiceAccountsResolver } from './service-accounts.resolver.ts';
 
 describe('ServiceAccountsResolver', () => {
   let resolver: ServiceAccountsResolver;

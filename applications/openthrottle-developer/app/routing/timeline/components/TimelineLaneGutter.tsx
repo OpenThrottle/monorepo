@@ -1,5 +1,6 @@
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import clsx from 'clsx';
+
 import type { TimelineLane } from '~/routing/timeline/types';
 
 export interface TimelineLaneGutterProps {
@@ -31,7 +32,7 @@ export const TimelineLaneGutter = (
 
   return (
     <div
-      className={clsx(
+      className={cn(
         // Sticky rather than fixed: the labels stay put while the chart body
         // scrolls horizontally, but still scroll away vertically with the page.
         'bg-background sticky left-0 z-10 shrink-0 border-r',

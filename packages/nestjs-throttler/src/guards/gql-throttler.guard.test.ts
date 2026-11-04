@@ -3,7 +3,8 @@ import { GqlExecutionContext } from '@nestjs/graphql';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { GqlThrottlerGuard } from './gql-throttler.guard';
+
+import { GqlThrottlerGuard } from './gql-throttler.guard.ts';
 
 /**
  * Unit coverage for the GraphQL-specific skip logic. The throttling behaviour

@@ -1,45 +1,46 @@
 /**
  * @description GraphQL resolver for skill usage ingest + aggregation.
- * Persists harness-captured Skill invocations (ours + third-party), opt-in
+ * Persists harness-captured Skill invocations (ours, personal and
+ * third-party), opt-in
  * outcome enrichment for authored skills, and serves the Developer Usage
  * surface. Args are stored as-sent; the server never re-expands
  * truncated/redacted payloads.
  */
 
-import {
-  SKILL_USAGE_OUTCOMES,
-  SKILL_USAGE_PRIVACY_LEVELS,
-  SKILL_USAGE_SCOPES,
-  SkillUsageEventsService,
-  type SkillUsageOutcomeValue,
-  type SkillUsagePrivacyLevel,
-  type SkillUsageScope,
-} from '@openthrottle/nestjs-repositories';
 import { BadRequestException, UseGuards } from '@nestjs/common';
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
-import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard';
-import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service';
+import {
+  isSkillUsageOutcome,
+  isSkillUsageScope,
+  SKILL_USAGE_OUTCOMES,
+  SKILL_USAGE_PRIVACY_LEVELS,
+  SKILL_USAGE_SCOPE_LIST,
+  SKILL_USAGE_SCOPES,
+  SkillUsageEventsService,
+  type SkillUsagePrivacyLevel,
+  type SkillUsageScope,
+} from '@openthrottle/nestjs-repositories';
+
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service.ts';
 import {
   RecordSkillUsageInput,
   RecordSkillUsageOutcomeInput,
-} from './skill-usage.input';
+} from './skill-usage.input.ts';
 import {
   toSkillUsageEventObject,
   toSkillUsageGitBranchSearchObject,
   toSkillUsageOutcomeObject,
   toSkillUsageResultObject,
-} from './skill-usage.mapper';
+} from './skill-usage.mapper.ts';
 import {
   SkillUsageEventObject,
   SkillUsageGitBranchSearchObject,
   SkillUsageOutcomeObject,
   SkillUsageResultObject,
-} from './skill-usage.object';
-
-const isSkillUsageScope = (value: string): value is SkillUsageScope =>
-  value === SKILL_USAGE_SCOPES.OURS || value === SKILL_USAGE_SCOPES.THIRD_PARTY;
+} from './skill-usage.object.ts';
 
 const isSkillUsagePrivacyLevel = (
   value: string,
@@ -47,11 +48,6 @@ const isSkillUsagePrivacyLevel = (
   value === SKILL_USAGE_PRIVACY_LEVELS.FULL ||
   value === SKILL_USAGE_PRIVACY_LEVELS.NAME_ONLY ||
   value === SKILL_USAGE_PRIVACY_LEVELS.TRUNCATED;
-
-const isSkillUsageOutcome = (value: string): value is SkillUsageOutcomeValue =>
-  value === SKILL_USAGE_OUTCOMES.ABANDONED ||
-  value === SKILL_USAGE_OUTCOMES.ERROR ||
-  value === SKILL_USAGE_OUTCOMES.SUCCESS;
 
 const YYYY_MM_DD = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -94,7 +90,7 @@ export class SkillUsageResolver {
 
     if (!isSkillUsageScope(input.scope)) {
       throw new BadRequestException(
-        `scope must be "${SKILL_USAGE_SCOPES.OURS}" or "${SKILL_USAGE_SCOPES.THIRD_PARTY}"`,
+        `scope must be one of: ${SKILL_USAGE_SCOPE_LIST}`,
       );
     }
 
@@ -162,11 +158,16 @@ export class SkillUsageResolver {
       );
     }
 
+    // Legacy default for two-member senders only: every current hook posts an
+    // explicit scope from detectScope, `personal` included. Defaulting an
+    // omitted scope to `ours` therefore cannot mislabel a personal
+    // invocation in practice, and changing it would silently reclassify the
+    // older child repos the telemetry contract promises to keep accepting.
     let resolvedScope: SkillUsageScope = SKILL_USAGE_SCOPES.OURS;
     if (input.scope != null && input.scope !== '') {
       if (!isSkillUsageScope(input.scope)) {
         throw new BadRequestException(
-          `scope must be "${SKILL_USAGE_SCOPES.OURS}" or "${SKILL_USAGE_SCOPES.THIRD_PARTY}"`,
+          `scope must be one of: ${SKILL_USAGE_SCOPE_LIST}`,
         );
       }
       resolvedScope = input.scope;
@@ -196,6 +197,7 @@ export class SkillUsageResolver {
       scope: resolvedScope,
       sessionId: input.sessionId ?? null,
       skillName,
+      source: input.source?.trim() || null,
       toolUseId: input.toolUseId ?? null,
     });
 
@@ -203,7 +205,7 @@ export class SkillUsageResolver {
   }
 
   @Query(() => SkillUsageResultObject, {
-    description: `Aggregated skill usage over [start, end] (inclusive YYYY-MM-DD, UTC): top skills (with opt-in outcome stats), ours-vs-third-party split, per-day series, and branch/cwd filter options. Optional scope/gitBranch/cwd/skillName narrow the aggregates.`,
+    description: `Aggregated skill usage over [start, end] (inclusive YYYY-MM-DD, UTC): top skills (with opt-in outcome stats), the ours / personal / third-party split, per-day series, and branch/cwd filter options. Optional scope/gitBranch/cwd/skillName narrow the aggregates.`,
   })
   @UseGuards(GqlPermissionsGuard)
   @Permissions(PERMISSIONS.SETTINGS_READ)
@@ -213,7 +215,7 @@ export class SkillUsageResolver {
     @Args('end', { description: 'End date (inclusive), YYYY-MM-DD' })
     end: string,
     @Args('scope', {
-      description: 'Restrict to ours or third-party; omit for both.',
+      description: `Restrict to one of: ${SKILL_USAGE_SCOPE_LIST}; omit for all.`,
       nullable: true,
       type: () => String,
     })
@@ -249,7 +251,7 @@ export class SkillUsageResolver {
     if (scope != null && scope !== '') {
       if (!isSkillUsageScope(scope)) {
         throw new BadRequestException(
-          `scope must be "${SKILL_USAGE_SCOPES.OURS}" or "${SKILL_USAGE_SCOPES.THIRD_PARTY}"`,
+          `scope must be one of: ${SKILL_USAGE_SCOPE_LIST}`,
         );
       }
       resolvedScope = scope;

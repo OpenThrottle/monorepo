@@ -1,5 +1,6 @@
-import * as React from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import * as React from 'react';
+
 import { Button } from '../Button';
 import { Command } from './Command';
 import { CommandDialog } from './CommandDialog';

@@ -7,7 +7,15 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 
 import {
   completeOpenStartsForSession,
@@ -20,8 +28,8 @@ import {
   recordSkillStart,
   startsFilePathForSession,
   sweepAbandonedStarts,
-} from '../../index';
-import type { HookFetch, OutcomeEvent, UsageEvent } from '../../types';
+} from '../../index.ts';
+import type { HookFetch, OutcomeEvent, UsageEvent } from '../../types.ts';
 
 /** Build a HookFetch that returns a fixed JSON body. */
 const jsonFetch = (
@@ -99,6 +107,53 @@ describe('postSkillUsageEvent + persistUsageEvent', () => {
     expect(fs.existsSync(jsonlPath)).toBe(false);
   });
 
+  /**
+   * The endpoint in the log line is the whole point: `fetch failed` alone gave
+   * no clue which host was tried, which is what made the IPv6 loopback bug
+   * slow to spot.
+   */
+  it('names the resolved endpoint in the fallback log line', async () => {
+    const write = vi.spyOn(process.stderr, 'write').mockReturnValue(true);
+
+    await persistUsageEvent({
+      event: sampleEvent,
+      fetchImpl: async () => {
+        throw new Error('fetch failed');
+      },
+      graphqlUrl: 'http://127.0.0.1:7451/graphql',
+      jsonlPath: path.join(tmpRoot, 'named-endpoint.jsonl'),
+      repoRoot: tmpRoot,
+      timeoutMs: 50,
+    });
+
+    const logged = write.mock.calls.map(([line]) => String(line)).join('');
+    expect(logged).toContain('server post failed; falling back to jsonl');
+    expect(logged).toContain('http://127.0.0.1:7451/graphql');
+
+    vi.restoreAllMocks();
+  });
+
+  it('redacts userinfo from the endpoint it logs', async () => {
+    const write = vi.spyOn(process.stderr, 'write').mockReturnValue(true);
+
+    await persistUsageEvent({
+      event: sampleEvent,
+      fetchImpl: async () => {
+        throw new Error('fetch failed');
+      },
+      graphqlUrl: 'http://user:hunter2@127.0.0.1:7451/graphql',
+      jsonlPath: path.join(tmpRoot, 'redacted-endpoint.jsonl'),
+      repoRoot: tmpRoot,
+      timeoutMs: 50,
+    });
+
+    const logged = write.mock.calls.map(([line]) => String(line)).join('');
+    expect(logged).not.toContain('hunter2');
+    expect(logged).toContain('http://***@127.0.0.1:7451/graphql');
+
+    vi.restoreAllMocks();
+  });
+
   it('falls back to JSONL when fetch fails', async () => {
     const offlinePath = path.join(tmpRoot, 'offline.jsonl');
     const fetchImpl: HookFetch = async () => {
@@ -136,11 +191,11 @@ describe('postSkillUsageEvent + persistUsageEvent', () => {
     expect(fs.existsSync(errPath)).toBe(true);
   });
 
-  it('SKILL_USAGE_DISABLE_SERVER forces JSONL without calling fetch', async () => {
+  it('OPENTHROTTLE_TELEMETRY_OFFLINE forces JSONL without calling fetch', async () => {
     const forcedPath = path.join(tmpRoot, 'forced.jsonl');
     let called = false;
-    const prev = process.env.SKILL_USAGE_DISABLE_SERVER;
-    process.env.SKILL_USAGE_DISABLE_SERVER = '1';
+    const prev = process.env.OPENTHROTTLE_TELEMETRY_OFFLINE;
+    process.env.OPENTHROTTLE_TELEMETRY_OFFLINE = '1';
     try {
       const result = await persistUsageEvent({
         event: sampleEvent,
@@ -156,9 +211,9 @@ describe('postSkillUsageEvent + persistUsageEvent', () => {
       expect(fs.existsSync(forcedPath)).toBe(true);
     } finally {
       if (prev === undefined) {
-        delete process.env.SKILL_USAGE_DISABLE_SERVER;
+        delete process.env.OPENTHROTTLE_TELEMETRY_OFFLINE;
       } else {
-        process.env.SKILL_USAGE_DISABLE_SERVER = prev;
+        process.env.OPENTHROTTLE_TELEMETRY_OFFLINE = prev;
       }
     }
   });
@@ -263,10 +318,9 @@ describe('completeOpenStartsForSession', () => {
       };
     };
 
-  it('emits one success outcome per open start with computed duration, then drains', async () => {
+  it('emits one session_ended outcome per open start with no duration, then drains', async () => {
     const sessionId = 'sess-complete';
     recordSkillStart({
-      repoRoot: tmpRoot,
       scope: 'ours',
       sessionId,
       skillName: 'ot-plans',
@@ -275,7 +329,6 @@ describe('completeOpenStartsForSession', () => {
       toolUseId: 'tu-a',
     });
     recordSkillStart({
-      repoRoot: tmpRoot,
       scope: 'ours',
       sessionId,
       skillName: 'create-readme',
@@ -299,15 +352,18 @@ describe('completeOpenStartsForSession', () => {
     const bySkill = Object.fromEntries(
       posted.map((p) => [String(p.skillName), p]),
     );
-    expect(bySkill['ot-plans']?.outcome).toBe('success');
-    expect(bySkill['ot-plans']?.durationMs).toBe(5000);
+    // `session_ended`, never `success`: a session-end payload cannot tell
+    // whether the skill helped, so this path makes no quality claim.
+    expect(bySkill['ot-plans']?.outcome).toBe('session_ended');
     expect(bySkill['ot-plans']?.sessionId).toBe(sessionId);
     expect(bySkill['ot-plans']?.toolUseId).toBe('tu-a');
-    expect(bySkill['create-readme']?.durationMs).toBe(2000);
+    // No duration on any automatic path — the only figure available is
+    // session-tail length, which is not this skill's work. The event carries
+    // null, and the GraphQL input omits null durations entirely.
+    expect(bySkill['ot-plans']?.durationMs).toBeUndefined();
+    expect(bySkill['create-readme']?.durationMs).toBeUndefined();
 
-    expect(
-      listStartsForSession({ repoRoot: tmpRoot, sessionId, startsDir }),
-    ).toEqual([]);
+    expect(listStartsForSession({ sessionId, startsDir })).toEqual([]);
     const posted2: Array<Record<string, unknown>> = [];
     const res2 = await completeOpenStartsForSession({
       fetchImpl: recordingFetch(posted2),
@@ -324,7 +380,6 @@ describe('completeOpenStartsForSession', () => {
     const sessionId = 'sess-dupe';
     for (let i = 0; i < 3; i += 1) {
       recordSkillStart({
-        repoRoot: tmpRoot,
         sessionId,
         skillName: 'ot-plans',
         startedAt: '2026-08-01T00:00:00.000Z',
@@ -348,7 +403,6 @@ describe('completeOpenStartsForSession', () => {
   it('falls back to outcomes JSONL when the server is down, still draining starts', async () => {
     const sessionId = 'sess-offline';
     recordSkillStart({
-      repoRoot: tmpRoot,
       sessionId,
       skillName: 'ot-plans',
       startedAt: '2026-08-01T00:00:00.000Z',
@@ -371,11 +425,9 @@ describe('completeOpenStartsForSession', () => {
     expect(res.resolved).toBe(1);
     expect(res.results[0]?.sink).toBe('jsonl');
     const line = JSON.parse(fs.readFileSync(jsonlPath, 'utf8').trim());
-    expect(line.outcome).toBe('success');
-    expect(line.duration_ms).toBe(2000);
-    expect(
-      listStartsForSession({ repoRoot: tmpRoot, sessionId, startsDir }),
-    ).toEqual([]);
+    expect(line.outcome).toBe('session_ended');
+    expect(line.duration_ms).toBeNull();
+    expect(listStartsForSession({ sessionId, startsDir })).toEqual([]);
   });
 });
 
@@ -396,7 +448,6 @@ describe('sweepAbandonedStarts', () => {
     const maxAgeMs = 6 * 60 * 60 * 1000;
 
     recordSkillStart({
-      repoRoot: tmpRoot,
       sessionId: 'sess-stale',
       skillName: 'ot-plans',
       startedAt: '2026-07-31T00:00:00.000Z',
@@ -408,7 +459,6 @@ describe('sweepAbandonedStarts', () => {
     fs.utimesSync(stalePath, new Date(oldMs), new Date(oldMs));
 
     recordSkillStart({
-      repoRoot: tmpRoot,
       sessionId: 'sess-current',
       skillName: 'ot-plans',
       startedAt: '2026-08-01T00:00:00.000Z',
@@ -422,7 +472,6 @@ describe('sweepAbandonedStarts', () => {
     );
 
     recordSkillStart({
-      repoRoot: tmpRoot,
       sessionId: 'sess-fresh',
       skillName: 'ot-plans',
       startedAt: '2026-08-01T23:59:00.000Z',
@@ -466,9 +515,11 @@ describe('sweepAbandonedStarts', () => {
     // mtime — an mtime stamp lands the row next to the start that wrote it and
     // makes every abandonment look instantaneous.
     expect(posted[0]?.occurredAt).toBe(new Date(now).toISOString());
-    // Observed lower bound on how far the run got: last file signal (mtime,
-    // now − 24h) minus started_at (now − 48h) = 24h.
-    expect(posted[0]?.durationMs).toBe(24 * 60 * 60 * 1000);
+    // Absent like every other automatic path: mtime − started_at is how long the
+    // SESSION ran before going silent, not how long this skill's work took, and
+    // averaging it into avgDurationMs would keep that column reporting session
+    // length under an honest-looking label.
+    expect(posted[0]?.durationMs).toBeUndefined();
 
     expect(fs.existsSync(stalePath)).toBe(false);
     expect(
@@ -486,7 +537,7 @@ describe('drainBufferedUsage', () => {
     tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-drainall-'));
   });
   afterEach(() => {
-    delete process.env.SKILL_USAGE_DISABLE_SERVER;
+    delete process.env.OPENTHROTTLE_TELEMETRY_OFFLINE;
   });
   afterAll(() => {
     fs.rmSync(tmpRoot, { force: true, recursive: true });
@@ -537,10 +588,10 @@ describe('drainBufferedUsage', () => {
     expect(fs.existsSync(outcomesPath)).toBe(false);
   });
 
-  it('is a no-op when SKILL_USAGE_DISABLE_SERVER=1 (buffer left intact)', async () => {
+  it('is a no-op when OPENTHROTTLE_TELEMETRY_OFFLINE=1 (buffer left intact)', async () => {
     const eventsPath = path.join(tmpRoot, 'events-disabled.jsonl');
     fs.writeFileSync(eventsPath, `${JSON.stringify({ a: 1 })}\n`, 'utf8');
-    process.env.SKILL_USAGE_DISABLE_SERVER = '1';
+    process.env.OPENTHROTTLE_TELEMETRY_OFFLINE = '1';
     const res = await drainBufferedUsage({
       eventsPath,
       fetchImpl: async () => {

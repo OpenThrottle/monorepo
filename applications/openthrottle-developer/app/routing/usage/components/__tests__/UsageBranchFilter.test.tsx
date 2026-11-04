@@ -1,13 +1,14 @@
-import * as React from 'react';
-import { render, waitFor } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
-import { createRoutesStub, useLocation } from 'react-router';
+import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
+import { createRoutesStub, useLocation } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
-import { UsageBranchFilter } from '../UsageBranchFilter';
-import type { UsageBranchFilterProps } from '../UsageBranchFilter';
+
 import { BRANCH_FILTER_COPY } from '../../data/branch-filter-copy';
 import { SKILL_USAGE_SCOPES } from '../../data/skill-usage-copy';
+import type { UsageBranchFilterProps } from '../UsageBranchFilter';
+import { UsageBranchFilter } from '../UsageBranchFilter';
 
 const BRANCH_OPTIONS = [
   { branch: 'main', count: 12 },

@@ -28,11 +28,6 @@ developer.local {
 	reverse_proxy localhost:6020
 }
 
-# openthrottle-email (React Router + Vite).
-email.local {
-	reverse_proxy localhost:6024
-}
-
 # openthrottle-website (React Router + Vite).
 website.local {
 	reverse_proxy localhost:6025

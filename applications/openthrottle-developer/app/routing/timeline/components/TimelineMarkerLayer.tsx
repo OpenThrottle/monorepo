@@ -1,16 +1,18 @@
 import * as React from 'react';
+
+import { TIMELINE_MARKER_KIND_LABEL } from '~/routing/timeline/config/kinds';
 import {
   TIMELINE_LANE_ROW_HEIGHT,
   TIMELINE_MARKER_SIZE,
 } from '~/routing/timeline/config/layout';
-import { TIMELINE_MARKER_KIND_LABEL } from '~/routing/timeline/config/kinds';
-import { formatTimelineTimestamp } from '~/routing/timeline/utils/formatters';
-import { TimelineMarkerGlyph } from './TimelineMarkerGlyph';
 import type {
   TimelineLane,
   TimelineMarkerCluster,
 } from '~/routing/timeline/types';
+import { formatTimelineTimestamp } from '~/routing/timeline/utils/formatters';
 import type { TimelineScale } from '~/routing/timeline/utils/scale';
+
+import { TimelineMarkerGlyph } from './TimelineMarkerGlyph';
 
 export interface TimelineMarkerLayerProps {
   readonly lane: TimelineLane;

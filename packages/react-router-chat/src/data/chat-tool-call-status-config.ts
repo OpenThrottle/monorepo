@@ -1,6 +1,7 @@
 import { Check, Loader2, X } from 'lucide-react';
-import { ChatToolStatus } from '../types';
+
 import type { ChatToolStatus as ChatToolStatusType } from '../types';
+import { ChatToolStatus } from '../types';
 
 interface StatusConfig {
   readonly Icon: typeof Check;

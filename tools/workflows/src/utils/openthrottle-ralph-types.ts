@@ -2,7 +2,11 @@
  * @description Shared Ralph plan/task row types and helpers (transport-agnostic).
  */
 
-import { sortTasksByPlanListOrder } from '@openthrottle/openthrottle-agentic-ralph';
+import {
+  isRalphTerminalStatus,
+  sortTasksByPlanListOrder,
+} from '@openthrottle/openthrottle-agentic-ralph';
+
 import type { WorkflowRalphTransport } from './workflow-transport';
 
 export interface WorkflowRalphConfig {
@@ -27,18 +31,23 @@ export interface TaskRow {
   readonly status: string;
   readonly title: string;
   readonly updatedAt: string;
+  /**
+   * Coarse concurrency layer, nullable (migration 126). Carried through for
+   * readers; the Ralph CLI loop does not consume it to run tasks concurrently.
+   */
+  readonly wave: number | null;
 }
 
 /**
  * @description True when a plan's task set is non-empty and every task is in a
- * terminal state (`COMPLETED` or `SKIPPED`). This is the single source of truth
+ * terminal state (`COMPLETED`, `PROMOTED`, or `SKIPPED`; see `isRalphTerminalStatus` in
+ * `@openthrottle/openthrottle-agentic-ralph`, the single edit site for that set). This is the single source of truth
  * for the "all tasks terminal ⇒ plan should be COMPLETED" rule used by the Ralph
  * CLI loop's terminal reconcile. An empty task set is intentionally NOT considered
  * terminal (a plan with no tasks is not "done").
  */
 export const areAllTasksTerminal = (tasks: readonly TaskRow[]): boolean =>
-  tasks.length > 0 &&
-  tasks.every((t) => t.status === 'COMPLETED' || t.status === 'SKIPPED');
+  tasks.length > 0 && tasks.every((t) => isRalphTerminalStatus(t.status));
 
 export interface PlanRow {
   readonly author: string;

@@ -1,5 +1,5 @@
-import { ChatToolStatus } from './types';
 import type { ChatTurnEvent, ChatTurnToolEvent } from './types';
+import { ChatToolStatus } from './types';
 
 /** A run of two or more consecutive tool events, folded for display. */
 export interface TurnTimelineToolGroup {

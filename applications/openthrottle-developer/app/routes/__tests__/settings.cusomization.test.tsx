@@ -1,23 +1,25 @@
-import * as React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { Provider, createStore } from 'jotai';
-import { MemoryRouter } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
-import SettingsAppearance from '../settings.appearance';
 import {
   APPEARANCE_BRAND_OVERRIDE_KEYS,
   APPEARANCE_THEME_COLOR_TOKEN_KEYS,
   buildAppearanceRootCssBlock,
   DEFAULT_BRAND_HSL,
 } from '@openthrottle/react-router-utils';
+import { fireEvent, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { createStore, Provider } from 'jotai';
+import * as React from 'react';
+import { MemoryRouter } from 'react-router';
+import { beforeEach, describe, expect, test } from 'vitest';
+
+import type { Route } from '@/app/routes/+types/settings.appearance';
 import {
   configAtom,
-  DEFAULT_APPEARANCE_CONFIG,
   type ConfigObject,
+  DEFAULT_APPEARANCE_CONFIG,
 } from '~/global/data/atom.config';
 import { buildRootMatch } from '~/testing/root-match-fixture';
-import type { Route } from '@/app/routes/+types/settings.appearance';
+
+import SettingsAppearance from '../settings.appearance';
 
 const matches: Route.ComponentProps['matches'] = [
   buildRootMatch(),

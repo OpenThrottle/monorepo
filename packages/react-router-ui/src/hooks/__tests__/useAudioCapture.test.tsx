@@ -1,7 +1,8 @@
-import * as React from 'react';
 import { act, render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { useAudioCapture } from '../useAudioCapture';
 
 class MockMessagePort {
@@ -11,15 +12,17 @@ class MockMessagePort {
 
 class MockAudioWorkletNode {
   static instances: MockAudioWorkletNode[] = [];
+  readonly context: unknown;
+  readonly options: unknown;
   readonly port = new MockMessagePort();
+  readonly processorName: string;
   connect = vi.fn();
   disconnect = vi.fn();
 
-  constructor(
-    readonly context: unknown,
-    readonly processorName: string,
-    readonly options: unknown,
-  ) {
+  constructor(context: unknown, processorName: string, options: unknown) {
+    this.context = context;
+    this.options = options;
+    this.processorName = processorName;
     MockAudioWorkletNode.instances.push(this);
   }
 }
@@ -33,10 +36,12 @@ class MockAudioContext {
   static instances: MockAudioContext[] = [];
   readonly audioWorklet = { addModule: vi.fn().mockResolvedValue(undefined) };
   readonly destination = {};
+  readonly options: unknown;
   close = vi.fn().mockResolvedValue(undefined);
   createMediaStreamSource = vi.fn().mockReturnValue(new MockSourceNode());
 
-  constructor(readonly options: unknown) {
+  constructor(options: unknown) {
+    this.options = options;
     MockAudioContext.instances.push(this);
   }
 }

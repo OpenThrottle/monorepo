@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Badge,
   Button,
@@ -6,7 +5,10 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  cn,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import { APPEARANCE_PREVIEW_CHART_CLASSES } from '~/routing/settings/data/data.appearance';
 import { APPEARANCE_COPY } from '~/routing/settings/data/data.copy';
 
@@ -66,7 +68,7 @@ export const AppearancePreview = (
             {APPEARANCE_PREVIEW_CHART_CLASSES.map((chartClass) => (
               <span
                 aria-hidden={true}
-                className={`h-6 flex-1 rounded ${chartClass}`}
+                className={cn('h-6 flex-1 rounded', chartClass)}
                 key={chartClass}
               />
             ))}

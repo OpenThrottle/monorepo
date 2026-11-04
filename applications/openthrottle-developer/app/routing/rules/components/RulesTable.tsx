@@ -1,13 +1,13 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Badge, DataTable } from '@openthrottle/react-router-shadcn';
+import { Badge, cn, DataTable } from '@openthrottle/react-router-shadcn';
 import { GlobalPopoverActionsHeader } from '@openthrottle/react-router-ui-global';
-import { Link } from 'react-router';
 import type { ColumnDef } from '@tanstack/react-table';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import type { TagActionRuleRowFragment } from '~/__generated__/graphql';
-import { RULES_COPY } from '~/routing/rules/data/data.copy';
 import { RulesEmpty } from '~/routing/rules/components/RulesEmpty';
 import { RulesTableRowActions } from '~/routing/rules/components/RulesTableRowActions';
+import { RULES_COPY } from '~/routing/rules/data/data.copy';
 import { summarizeRuleAction } from '~/routing/rules/utils/formatters';
 
 /** Row shape for the rules table — matches the `TagActionRuleRow` GraphQL fragment. */
@@ -64,7 +64,7 @@ export const RulesTable = (props: RulesTableProps): React.ReactElement => {
 
   return (
     <div
-      className={clsx('bg-card ui-border rounded-lg border', className)}
+      className={cn('bg-card ui-border rounded-lg border', className)}
       data-testid="RulesTable"
     >
       <DataTable<TagActionRuleRowData, string | number | null | undefined>

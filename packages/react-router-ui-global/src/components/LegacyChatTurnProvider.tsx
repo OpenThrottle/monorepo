@@ -1,8 +1,8 @@
-import * as React from 'react';
 import {
   ChatProvider,
   useChatTurnFetcher,
 } from '@openthrottle/react-router-chat';
+import * as React from 'react';
 
 export interface LegacyChatTurnProviderProps extends React.PropsWithChildren {
   /**

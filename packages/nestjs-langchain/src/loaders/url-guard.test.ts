@@ -4,7 +4,7 @@ import {
   assertSafeWebURL,
   getWebURLRejectionReason,
   isSafeWebURL,
-} from './url-guard';
+} from './url-guard.ts';
 
 describe('url-guard', () => {
   describe('safe URLs', () => {

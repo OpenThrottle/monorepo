@@ -2,13 +2,14 @@
  * @description Service for server health checks: OpenThrottle DB (via existing logic) and Redis (BullMQ PING).
  */
 
-import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { REDIS_CLIENT } from '@openthrottle/nestjs-redis';
 import { PlansService } from '@openthrottle/nestjs-repositories';
+import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 import type { Redis } from 'ioredis';
-import type { ServerHealthStatus } from './server-health.object';
+
+import type { ServerHealthStatus } from './server-health.object.ts';
 
 export interface ServerHealthResponse {
   readonly api: string;

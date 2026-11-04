@@ -1,10 +1,12 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { SettingsKeysCredentialStatusBadge } from '../SettingsKeysCredentialStatusBadge';
-import type { SettingsKeysCredentialStatusBadgeProps } from '../SettingsKeysCredentialStatusBadge';
+
 import type { ServiceAccountCredentialFieldsFragment } from '~/__generated__/graphql';
+
+import type { SettingsKeysCredentialStatusBadgeProps } from '../SettingsKeysCredentialStatusBadge';
+import { SettingsKeysCredentialStatusBadge } from '../SettingsKeysCredentialStatusBadge';
 
 const credential = (
   overrides: Partial<ServiceAccountCredentialFieldsFragment> = {},

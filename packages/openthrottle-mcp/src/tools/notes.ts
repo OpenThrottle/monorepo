@@ -2,25 +2,26 @@
  * @description Note CRUD tool handlers + schemas: create_note, get_note, list_notes, update_note, delete_note. Wired up via the shared `developerMcpToolDefinitions` registry and the Nest surface.
  */
 
-import { z } from 'zod';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
+import { z } from 'zod';
+
 import {
-  type CreateNoteMutation,
-  type GetNoteQuery,
-  type GetNotesQuery,
-  type UpdateNoteMutation,
   CreateNoteDocument,
+  type CreateNoteMutation,
   DeleteNoteDocument,
   GetNoteDocument,
+  type GetNoteQuery,
   GetNotesDocument,
+  type GetNotesQuery,
   UpdateNoteDocument,
+  type UpdateNoteMutation,
 } from '../__generated__/graphql.js';
 import {
   CreateNoteInputSchema,
   UpdateNoteInputSchema,
 } from '../__generated__/schemas.ts';
-import type { GenericResult } from '../types/index.ts';
 import { getAuthToken } from '../auth/get-auth-token.ts';
+import type { GenericResult } from '../types/index.ts';
 import { invalidArgsContent } from '../utils/errors.ts';
 import { runTool } from '../utils/tool-result.ts';
 
@@ -44,11 +45,15 @@ type UpdateNoteResult = GenericResult<{
   note: UpdateNoteMutation['updateNote'];
 }>;
 
-export const createNoteToolParameters = CreateNoteInputSchema();
-export const deleteNoteToolParameters = z.object({ id: z.string().min(1) });
-export const getNoteToolParameters = z.object({ id: z.string().min(1) });
-export const listNotesToolParameters = z.object({});
-export const updateNoteToolParameters = UpdateNoteInputSchema();
+export const createNoteToolParameters = CreateNoteInputSchema().strict();
+export const deleteNoteToolParameters = z
+  .object({ id: z.string().min(1) })
+  .strict();
+export const getNoteToolParameters = z
+  .object({ id: z.string().min(1) })
+  .strict();
+export const listNotesToolParameters = z.object({}).strict();
+export const updateNoteToolParameters = UpdateNoteInputSchema().strict();
 
 export const createNoteToolDescription = `Create a note in OpenThrottle. Requires content; optional author (e.g. GitHub username). For quick unstructured thoughts; foundation for notes route and planning workflow.`;
 

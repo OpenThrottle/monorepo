@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'vitest';
+
 import { CLIENT_LOG_LEVELS } from '~/routing/settings/client-log-sink';
+
 import { isClientLogLevel } from '../is-client-log-level';
 
 describe('isClientLogLevel', () => {

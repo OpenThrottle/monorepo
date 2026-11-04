@@ -1,11 +1,12 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import { RULES_COPY } from '../../data/data.copy';
-import { RulesIntroduction } from '../RulesIntroduction';
 import type { RulesIntroductionProps } from '../RulesIntroduction';
+import { RulesIntroduction } from '../RulesIntroduction';
 
 describe('RulesIntroduction Component', () => {
   let component: RenderResult;

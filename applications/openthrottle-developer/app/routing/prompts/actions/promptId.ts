@@ -1,8 +1,10 @@
-import { redirect } from 'react-router';
 import {
   executeGraphqlWithAuth,
   parseFormData,
 } from '@openthrottle/react-router-graphql';
+import { redirect } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/prompts.$promptId';
 import {
   DeletePromptDocument,
   UpdatePromptDocument,
@@ -10,7 +12,6 @@ import {
 } from '~/__generated__/graphql';
 import { UpdateCustomPromptInputSchema } from '~/__generated__/schemas';
 import { PROMPTS_BASE_PATH } from '~/routing/prompts/config';
-import type { Route } from '@/app/routes/+types/prompts.$promptId';
 
 /**
  * @description Prompt detail mutations (delete, write-to-filesystem, update),

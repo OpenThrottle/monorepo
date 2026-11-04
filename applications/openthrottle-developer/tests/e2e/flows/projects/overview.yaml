@@ -13,7 +13,7 @@ tags:
   - full
 ---
 - runFlow:
-    file: ../../helpers/login.yaml
+    file: ../../subflows/login.yaml
 - openLink: http://localhost:6020/projects
 # List loaded (the table carries the per-row Plans/Tasks count columns).
 - extendedWaitUntil:

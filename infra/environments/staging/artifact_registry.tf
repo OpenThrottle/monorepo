@@ -3,7 +3,7 @@
 #
 # CI: GOOGLE_CREDENTIALS_STAGING (JSON key for google_service_account.gcs_workflow) must match a
 # member here or pushes will fail permission denied. E2 image pull is roles/artifactregistry.reader
-# on the project in infra/applications/openthrottle (default compute SA).
+# on the project in infra/applications/openthrottle_gcp (default compute SA).
 
 module "artifact_registry_openthrottle" {
   source = "../../modules/gcp_artifact_registry"

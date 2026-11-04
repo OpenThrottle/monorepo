@@ -1,9 +1,11 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import Component from '../settings.repositories.$repositoryId._index';
+
 import type { Route } from '@/app/routes/+types/settings.repositories.$repositoryId._index';
+
+import Component from '../settings.repositories.$repositoryId._index';
 
 function stubMatches(): React.ComponentProps<typeof Component>['matches'];
 function stubMatches(): unknown {

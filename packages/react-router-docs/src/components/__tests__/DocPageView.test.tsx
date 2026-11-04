@@ -1,10 +1,11 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { DocPageView } from '../DocPageView';
-import type { DocsNavItem } from '../../utils/buildDocsNav';
+
 import type { DocEntry } from '../../utils/buildDocsManifest';
+import type { DocsNavItem } from '../../utils/buildDocsNav';
+import { DocPageView } from '../DocPageView';
 
 const entry: DocEntry = {
   content: '# Title\n\n## Setup\n\nSome body text.',

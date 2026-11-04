@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'vitest';
-import { skillUsageScopeCount } from '../skill-usage-scope-count';
+
 import type { UsageSkillUsageByScopeFragment } from '~/__generated__/graphql';
+
+import { skillUsageScopeCount } from '../skill-usage-scope-count';
 
 describe('skillUsageScopeCount', () => {
   test('returns the count for a matching scope', () => {

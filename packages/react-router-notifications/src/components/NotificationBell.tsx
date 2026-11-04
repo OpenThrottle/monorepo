@@ -1,5 +1,3 @@
-import * as React from 'react';
-import { Bell } from 'lucide-react';
 import {
   Badge,
   Button,
@@ -11,14 +9,17 @@ import {
   Label,
   Switch,
 } from '@openthrottle/react-router-shadcn';
-import { useNotificationsStoreOptional } from '../hooks/useNotificationsStoreOptional';
+import { Bell } from 'lucide-react';
+import * as React from 'react';
+
 import { useNotificationPermission } from '../hooks/useNotificationPermission';
-import { useNotificationsSystemPreferences } from '../hooks/use-system-notifications-preference';
-import { NotificationPermissionDenied } from './NotificationPermissionDenied';
-import { NotificationPermissionUnsupported } from './NotificationPermissionUnsupported';
+import { useNotificationsStoreOptional } from '../hooks/useNotificationsStoreOptional';
+import { useNotificationsSystemPreferences } from '../hooks/useNotificationsSystemPreferences';
 import { NotificationActions } from './NotificationActions';
 import { NotificationEmpty } from './NotificationEmpty';
 import { NotificationItem } from './NotificationItem';
+import { NotificationPermissionDenied } from './NotificationPermissionDenied';
+import { NotificationPermissionUnsupported } from './NotificationPermissionUnsupported';
 
 export interface NotificationBellProps {}
 
@@ -73,7 +74,7 @@ export const NotificationBell = (
               ? `${unreadCount} unread notifications`
               : 'Notifications'
           }
-          className="relative size-6 shrink-0 rounded-full"
+          className="relative size-6 shrink-0 rounded-full pointer-coarse:size-11"
           data-testid="notification-bell-trigger"
           variant="ghost"
         >

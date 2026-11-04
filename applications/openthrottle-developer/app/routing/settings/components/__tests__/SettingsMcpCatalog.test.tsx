@@ -1,13 +1,15 @@
-import * as React from 'react';
 import type { RenderResult } from '@testing-library/react';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { SettingsMcpCatalog } from '../SettingsMcpCatalog';
-import type { SettingsMcpCatalogProps } from '../SettingsMcpCatalog';
+
 import type {
   McpConnectorConnectionFieldsFragment,
   McpConnectorFieldsFragment,
 } from '~/__generated__/graphql';
 import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import type { SettingsMcpCatalogProps } from '../SettingsMcpCatalog';
+import { SettingsMcpCatalog } from '../SettingsMcpCatalog';
 
 const connectorA: McpConnectorFieldsFragment = {
   __typename: 'McpConnectorObject',

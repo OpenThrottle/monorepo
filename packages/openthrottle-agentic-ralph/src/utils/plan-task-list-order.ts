@@ -1,4 +1,13 @@
-/** Fields required for canonical plan task list ordering. */
+/**
+ * Fields required for canonical plan task list ordering.
+ *
+ * Deliberately excludes `wave`: sortOrder alone remains sufficient to execute
+ * any plan (docs/openthrottle/task-wave-encoding.md § Interaction with
+ * sortOrder), and this module — including {@link pickRalphTaskForIteration} —
+ * picks and orders tasks strictly sequentially. Nothing here reads `wave` or
+ * runs tasks concurrently; that consumption is explicitly out of scope until a
+ * later plan.
+ */
 export interface PlanTaskSortFields {
   readonly createdAt: string;
   readonly sortOrder: number;

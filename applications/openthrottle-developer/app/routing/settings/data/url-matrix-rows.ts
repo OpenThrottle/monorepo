@@ -13,7 +13,6 @@ export const URL_MATRIX_ROWS = [
   { key: 'APP_URL_ADMIN' as const, label: 'Admin' },
   { key: 'APP_URL_CMS' as const, label: 'CMS' },
   { key: 'APP_URL_DEVELOPER' as const, label: 'Developer' },
-  { key: 'APP_URL_EMAIL' as const, label: 'Email' },
   { key: 'APP_URL_SERVER' as const, label: 'Server' },
   { key: 'APP_URL_WEBSITE' as const, label: 'Website' },
 ] satisfies {

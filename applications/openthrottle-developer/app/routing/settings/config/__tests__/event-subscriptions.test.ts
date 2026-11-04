@@ -1,7 +1,8 @@
 import { describe, expect, test } from 'vitest';
+
 import {
-  EVENT_SUBSCRIPTION_ROWS,
   buildInitialSubscriptions,
+  EVENT_SUBSCRIPTION_ROWS,
 } from '../event-subscriptions';
 
 describe('buildInitialSubscriptions', () => {

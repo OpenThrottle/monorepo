@@ -14,8 +14,11 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
-import { EmitNotification } from '@openthrottle/nestjs-websockets';
-import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
+import type {
+  CreateTaskBatchItem,
+  Plan,
+  Project,
+} from '@openthrottle/nestjs-repositories';
 import {
   CROSS_PLAN_TASK_LIST_ORDER,
   PLAN_TASK_LIST_ORDER,
@@ -23,16 +26,21 @@ import {
   TASK_SORT_ORDER_GAP,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
-import type {
-  CreateTaskBatchItem,
-  Plan,
-  Project,
-} from '@openthrottle/nestjs-repositories';
 import { Task } from '@openthrottle/nestjs-repositories';
+import { EmitNotification } from '@openthrottle/nestjs-websockets';
+import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 import { In, QueryFailedError } from 'typeorm';
-import { NotificationsService } from '../../notifications/notifications.service';
-import { PlanObject } from '../plans/plan.object';
-import { ProjectObject } from '../projects/project.object';
+
+import { NotificationsService } from '../../notifications/notifications.service.ts';
+import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.types.ts';
+import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service.ts';
+import { TAGGING_ENTITY_TYPES } from '../../queues/tagging/tagging.types.ts';
+import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service.ts';
+import { TaskPromotionEnqueueService } from '../../queues/task-promotion/task-promotion-enqueue.service.ts';
+import { PlanObject } from '../plans/plan.object.ts';
+import { PlanStatusService } from '../plans/plan-status.service.ts';
+import { ProjectObject } from '../projects/project.object.ts';
+import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service.ts';
 import {
   AddHookInput,
   CreateTaskInput,
@@ -40,25 +48,19 @@ import {
   DeleteTaskInput,
   DetachHookInput,
   PromoteTaskToPlanInput,
-  ReorderPlanTasksInput,
   RemainingTasksByPlanIdInput,
+  ReorderPlanTasksInput,
   TasksByPlanIdInput,
   TasksByProjectIdInput,
   UpdateTaskInput,
-} from './task.input';
+} from './task.input.ts';
 import {
   CreateTasksResultObject,
   PromoteTaskToPlanResultObject,
   TaskObject,
   TasksByProjectIdResultObject,
-} from './task.object';
-import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service';
-import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service';
-import { TAGGING_ENTITY_TYPES } from '../../queues/tagging/tagging.types';
-import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.types';
-import { TaskPromotionEnqueueService } from '../../queues/task-promotion/task-promotion-enqueue.service';
-import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service';
-import { TasksLoaders } from './tasks-loaders';
+} from './task.object.ts';
+import { TasksLoaders } from './tasks-loaders.ts';
 
 /** Default cap for the unpaginated tasks() list query so it never full-table-scans. */
 const DEFAULT_TASKS_LIMIT = 100;
@@ -134,6 +136,7 @@ export class TasksResolver {
     private readonly loaders: TasksLoaders,
     private readonly notificationsService: NotificationsService,
     private readonly planRulesEvaluationService: PlanRulesEvaluationService,
+    private readonly planStatusService: PlanStatusService,
     private readonly taggingEnqueueService: TaggingEnqueueService,
     private readonly taskPromotionEnqueueService: TaskPromotionEnqueueService,
     private readonly tasksService: TasksService,
@@ -312,6 +315,8 @@ export class TasksResolver {
   )
   async createTask(
     @Args('input', { type: () => CreateTaskInput }) input: CreateTaskInput,
+    @CurrentUser('sub') actorSub?: string,
+    @CurrentUser('kind') actorKind?: string,
   ): Promise<Task> {
     const repo = this.tasksService.getRepository();
     const requirementsArr = parseRequirements(input.requirements);
@@ -335,6 +340,7 @@ export class TasksResolver {
       status,
       summary: input.summary ?? null,
       title: input.title,
+      wave: input.wave ?? null,
     });
 
     let saved: Task;
@@ -348,9 +354,12 @@ export class TasksResolver {
     }
 
     if (saved.status === 'IN_PROGRESS') {
-      const promoted = await this.tasksService.syncParentPlanStatus(
-        saved.planId,
-      );
+      const promoted =
+        await this.planStatusService.promoteParentPlanToInProgress(
+          saved.planId,
+          { actorKind, actorSub },
+          true,
+        );
       if (promoted) {
         this.notificationsService.emitPlanStatusChanged({
           planId: saved.planId,
@@ -376,6 +385,8 @@ export class TasksResolver {
   })
   async createTasks(
     @Args('input', { type: () => CreateTasksInput }) input: CreateTasksInput,
+    @CurrentUser('sub') actorSub?: string,
+    @CurrentUser('kind') actorKind?: string,
   ): Promise<CreateTasksResultObject> {
     const items: CreateTaskBatchItem[] = input.tasks.map((item) => ({
       assignee: item.assignee ?? null,
@@ -388,6 +399,7 @@ export class TasksResolver {
       status: (item.status ?? 'PENDING').toUpperCase(),
       summary: item.summary ?? null,
       title: item.title,
+      wave: item.wave ?? null,
     }));
 
     let saved: Task[];
@@ -401,9 +413,12 @@ export class TasksResolver {
     }
 
     if (saved.some((task) => task.status === 'IN_PROGRESS')) {
-      const promoted = await this.tasksService.syncParentPlanStatus(
-        input.planId,
-      );
+      const promoted =
+        await this.planStatusService.promoteParentPlanToInProgress(
+          input.planId,
+          { actorKind, actorSub },
+          true,
+        );
       if (promoted) {
         this.notificationsService.emitPlanStatusChanged({
           planId: input.planId,
@@ -505,9 +520,10 @@ export class TasksResolver {
     if (input.sortOrder !== undefined && input.sortOrder !== null) {
       entity.sortOrder = input.sortOrder;
     }
+    if (input.wave !== undefined) entity.wave = input.wave;
 
     // A real status transition (not a no-op re-assert). The status_change ledger fact and the
-    // row's completed_at must commit together (G12) — so save + capture run in one transaction.
+    // row's completed_at must commit together — so save + capture run in one transaction.
     const statusChanged =
       input.status != null && entity.status !== previousStatus;
 
@@ -539,9 +555,12 @@ export class TasksResolver {
     }
 
     if (saved.status === 'IN_PROGRESS' && previousStatus !== 'IN_PROGRESS') {
-      const promoted = await this.tasksService.syncParentPlanStatus(
-        saved.planId,
-      );
+      const promoted =
+        await this.planStatusService.promoteParentPlanToInProgress(
+          saved.planId,
+          { actorKind, actorSub },
+          true,
+        );
       if (promoted) {
         this.notificationsService.emitPlanStatusChanged({
           planId: saved.planId,
@@ -552,11 +571,13 @@ export class TasksResolver {
 
     // Downward reconcile: completing the last task closes out the plan. Without this the plan can be
     // stranded IN_PROGRESS with every task COMPLETED (the orchestrator only completes plans at its
-    // top-of-loop check, which several exit paths skip). See TasksService.completeParentPlanIfTasksDone.
+    // top-of-loop check, which several exit paths skip). See PlanStatusService.completeParentPlanIfTasksDone.
     if (saved.status === 'COMPLETED' && previousStatus !== 'COMPLETED') {
-      const completed = await this.tasksService.completeParentPlanIfTasksDone(
-        saved.planId,
-      );
+      const completed =
+        await this.planStatusService.completeParentPlanIfTasksDone(
+          saved.planId,
+          { actorKind, actorSub },
+        );
       if (completed) {
         this.notificationsService.emitPlanStatusChanged({
           planId: saved.planId,
@@ -693,7 +714,7 @@ export class TasksResolver {
   }
 
   @Mutation(() => PromoteTaskToPlanResultObject, {
-    description: `Promote a task into a new, first-class plan. Validates the task is promotable (exists, not a lifecycle hook, not already promoted) then enqueues an async task-promotion job (enqueue-after-validate, idempotency key doubles as the BullMQ job id). The job creates the plan, carries the task's tags, seeds an initial task, closes out the source task (→ SKIPPED + \`promoted\` tag), and records provenance. Returns the accepted job id; the new plan surfaces via the task-status subscription once the job completes.`,
+    description: `Promote a task into a new, first-class plan. Validates the task is promotable (exists, not a lifecycle hook, not already promoted) then enqueues an async task-promotion job (enqueue-after-validate, idempotency key doubles as the BullMQ job id). The job creates the plan, carries the task's tags, seeds an initial task, closes out the source task (→ PROMOTED + \`promoted\` tag), and records provenance. Returns the accepted job id; the new plan surfaces via the task-status subscription once the job completes.`,
   })
   async promoteTaskToPlan(
     @Args('input', { type: () => PromoteTaskToPlanInput })

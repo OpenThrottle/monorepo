@@ -8,6 +8,7 @@
  * a55b76ba (tasks 1–2).
  */
 
+export type { NormalizedTokenUsage } from '@openthrottle/agentic-token-usage';
 export {
   formatTokenCount,
   formatUsageCost,
@@ -15,4 +16,3 @@ export {
   normalizeUsage,
   sumUsage,
 } from '@openthrottle/agentic-token-usage';
-export type { NormalizedTokenUsage } from '@openthrottle/agentic-token-usage';

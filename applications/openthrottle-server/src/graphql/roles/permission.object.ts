@@ -2,8 +2,8 @@
  * @description GraphQL ObjectType for Permission. Mirrors {@link PermissionData} from @openthrottle/nestjs-repositories.
  */
 
-import type { PermissionData } from '@openthrottle/nestjs-repositories';
 import { Field, ObjectType } from '@nestjs/graphql';
+import type { PermissionData } from '@openthrottle/nestjs-repositories';
 
 @ObjectType()
 export class PermissionObject implements PermissionData {

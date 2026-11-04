@@ -5,12 +5,13 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import {
   AGENTIC_TEST_JOB_NAME,
   AGENTIC_TEST_QUEUE_NAME,
-} from '../../queues/agentic-test/agentic-test.constants';
-import { AgenticWorkflowResolver } from './agentic-workflow.resolver';
-import { AgenticWorkflowService } from './agentic-workflow.service';
+} from '../../queues/agentic-test/agentic-test.constants.ts';
+import { AgenticWorkflowResolver } from './agentic-workflow.resolver.ts';
+import { AgenticWorkflowService } from './agentic-workflow.service.ts';
 
 describe('AgenticWorkflowResolver', () => {
   let resolver: AgenticWorkflowResolver;

@@ -1,11 +1,12 @@
 import { createStore } from 'jotai';
 import { describe, expect, test } from 'vitest';
+
+import type { EditorAtom, EditorFile } from '../atom.editor';
 import {
   editorAtom,
   editorAtomDefaults,
   filteredFilesAtom,
 } from '../atom.editor';
-import type { EditorAtom, EditorFile } from '../atom.editor';
 
 const file = (overrides: Partial<EditorFile> = {}): EditorFile => ({
   directory: '.',

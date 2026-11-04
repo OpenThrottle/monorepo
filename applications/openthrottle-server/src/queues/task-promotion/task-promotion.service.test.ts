@@ -12,22 +12,26 @@ import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type { WorkArtifact } from '@openthrottle/nestjs-repositories';
 import {
   Plan,
-  PlanTag,
   type PlansService,
+  PlanTag,
   Task,
   TaskTag,
   WorkSession,
   WorkSessionSubject,
+} from '@openthrottle/nestjs-repositories';
+import {
   plansFactory,
   tasksFactory,
   workSessionsFactory,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import type { EntityManager, Repository } from 'typeorm';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { NotificationsService } from '../../notifications/notifications.service';
-import { PROMOTED_TAG, PROMOTED_TASK_STATUS } from './task-promotion.constants';
-import { TaskPromotionService } from './task-promotion.service';
+import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
+
+import type { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture.service.ts';
+import type { NotificationsService } from '../../notifications/notifications.service.ts';
+import { PROMOTED_TAG } from './task-promotion.constants.ts';
+import { TaskPromotionService } from './task-promotion.service.ts';
 
 const TASK_ID = '00000000-0000-4000-8000-000000000001';
 const SOURCE_PLAN_ID = '00000000-0000-4000-8000-0000000000a1';
@@ -46,6 +50,9 @@ describe('TaskPromotionService.promote', () => {
   let plansService: PlansService;
   let service: TaskPromotionService;
   let getOne: ReturnType<typeof vi.fn>;
+  let mockRecordStatusChange: Mock<
+    WorkLedgerCaptureService['recordStatusChange']
+  >;
 
   const buildTask = (overrides: Partial<Task> = {}): Task =>
     tasksFactory.build({
@@ -139,10 +146,15 @@ describe('TaskPromotionService.promote', () => {
     });
     notifications = createMock<NotificationsService>();
 
+    mockRecordStatusChange = vi.fn().mockResolvedValue(undefined);
+
     service = new TaskPromotionService(
       createMock<LoggerService>(),
       notifications,
       plansService,
+      createMock<WorkLedgerCaptureService>({
+        recordStatusChange: mockRecordStatusChange,
+      }),
     );
   });
 
@@ -150,6 +162,7 @@ describe('TaskPromotionService.promote', () => {
     const result = await service.promote({
       actorServiceAccountId: null,
       actorUserId: 'user-1',
+      captureFailureIsFatal: true,
       taskId: TASK_ID,
     });
 
@@ -177,16 +190,30 @@ describe('TaskPromotionService.promote', () => {
       }),
     );
 
-    // Step 4: source task → SKIPPED with a note, plus the `promoted` tag.
+    // Step 4: source task → PROMOTED with a note, plus the `promoted` tag.
     expect(taskRepo.update).toHaveBeenCalledWith(
       { id: TASK_ID },
       expect.objectContaining({
-        status: PROMOTED_TASK_STATUS,
+        status: 'PROMOTED',
         summary: expect.stringContaining(NEW_PLAN_ID),
       }),
     );
     expect(taskTagRepo.create).toHaveBeenCalledWith(
       expect.objectContaining({ tag: PROMOTED_TAG, taskId: TASK_ID }),
+    );
+
+    // Step 4b: the source task's status_change is captured (own real prior status as `from`).
+    expect(mockRecordStatusChange).toHaveBeenCalledWith(
+      manager,
+      expect.objectContaining({
+        actorKind: 'user',
+        actorSub: 'user-1',
+        entity: 'task',
+        from: 'PENDING',
+        planId: SOURCE_PLAN_ID,
+        taskId: TASK_ID,
+        to: 'PROMOTED',
+      }),
     );
 
     // Step 5: born-verified plan_promotion artifact under a 2-subject session,
@@ -212,7 +239,7 @@ describe('TaskPromotionService.promote', () => {
     // Step 6: status notification emitted after commit.
     expect(notifications.emitTaskStatusChanged).toHaveBeenCalledWith({
       planId: SOURCE_PLAN_ID,
-      status: PROMOTED_TASK_STATUS,
+      status: 'PROMOTED',
       taskId: TASK_ID,
     });
   });
@@ -221,6 +248,7 @@ describe('TaskPromotionService.promote', () => {
     await service.promote({
       actorServiceAccountId: 'svc-1',
       actorUserId: null,
+      captureFailureIsFatal: true,
       taskId: TASK_ID,
     });
 
@@ -236,6 +264,7 @@ describe('TaskPromotionService.promote', () => {
     const result = await service.promote({
       actorServiceAccountId: null,
       actorUserId: null,
+      captureFailureIsFatal: true,
       taskId: TASK_ID,
     });
 
@@ -243,6 +272,45 @@ describe('TaskPromotionService.promote', () => {
     expect(result).toEqual({ newPlanId: NEW_PLAN_ID, skipped: null });
     expect(sessionRepo.create).not.toHaveBeenCalled();
     expect(artifactRepo.create).not.toHaveBeenCalled();
+    // Same guard applies to the status_change capture: no actor, no attempted write.
+    expect(mockRecordStatusChange).not.toHaveBeenCalled();
+  });
+
+  it('a fatal capture failure (captureFailureIsFatal: true) rolls back the whole promotion', async () => {
+    mockRecordStatusChange.mockRejectedValueOnce(new Error('ledger down'));
+
+    await expect(
+      service.promote({
+        actorServiceAccountId: null,
+        actorUserId: 'user-1',
+        captureFailureIsFatal: true,
+        taskId: TASK_ID,
+      }),
+    ).rejects.toThrow('ledger down');
+    expect(notifications.emitTaskStatusChanged).not.toHaveBeenCalled();
+  });
+
+  it('a non-fatal capture failure (captureFailureIsFatal: false) still commits the promotion', async () => {
+    mockRecordStatusChange.mockRejectedValueOnce(new Error('ledger down'));
+
+    const result = await service.promote({
+      actorServiceAccountId: null,
+      actorUserId: 'plan-owner-1',
+      captureFailureIsFatal: false,
+      taskId: TASK_ID,
+    });
+
+    expect(result).toEqual({ newPlanId: NEW_PLAN_ID, skipped: null });
+    expect(taskRepo.update).toHaveBeenCalledWith(
+      { id: TASK_ID },
+      expect.objectContaining({ status: 'PROMOTED' }),
+    );
+    // Emitted after commit — the capture failure did not roll back the row write.
+    expect(notifications.emitTaskStatusChanged).toHaveBeenCalledWith({
+      planId: SOURCE_PLAN_ID,
+      status: 'PROMOTED',
+      taskId: TASK_ID,
+    });
   });
 
   it('copies task tags to the plan, keeping at most one phase tag', async () => {
@@ -259,6 +327,7 @@ describe('TaskPromotionService.promote', () => {
     await service.promote({
       actorServiceAccountId: null,
       actorUserId: null,
+      captureFailureIsFatal: true,
       taskId: TASK_ID,
     });
 
@@ -273,7 +342,7 @@ describe('TaskPromotionService.promote', () => {
     expect(createdRows.map((row) => row?.tag)).toContain('server');
   });
 
-  it('is a no-op when the source task is already promoted (SKIPPED + promoted tag)', async () => {
+  it('is a no-op when the source task is a legacy promotion (SKIPPED + promoted tag)', async () => {
     getOne.mockResolvedValue(buildTask({ status: 'SKIPPED' }));
     vi.mocked(taskTagRepo.findOne).mockResolvedValue(
       asMock<TaskTag>({ tag: PROMOTED_TAG, taskId: TASK_ID }),
@@ -282,6 +351,23 @@ describe('TaskPromotionService.promote', () => {
     const result = await service.promote({
       actorServiceAccountId: null,
       actorUserId: 'user-1',
+      captureFailureIsFatal: true,
+      taskId: TASK_ID,
+    });
+
+    expect(result).toEqual({ newPlanId: null, skipped: 'already-promoted' });
+    expect(planRepo.save).not.toHaveBeenCalled();
+    expect(notifications.emitTaskStatusChanged).not.toHaveBeenCalled();
+  });
+
+  it('is a no-op when the source task is status PROMOTED without the promoted tag', async () => {
+    getOne.mockResolvedValue(buildTask({ status: 'PROMOTED' }));
+    vi.mocked(taskTagRepo.findOne).mockResolvedValue(null);
+
+    const result = await service.promote({
+      actorServiceAccountId: null,
+      actorUserId: 'user-1',
+      captureFailureIsFatal: true,
       taskId: TASK_ID,
     });
 
@@ -296,6 +382,7 @@ describe('TaskPromotionService.promote', () => {
     const result = await service.promote({
       actorServiceAccountId: null,
       actorUserId: null,
+      captureFailureIsFatal: true,
       taskId: TASK_ID,
     });
 

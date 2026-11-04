@@ -1,4 +1,4 @@
-import * as React from 'react';
+import type { ChatModelOption } from '@openthrottle/react-router-chat';
 import {
   Input,
   Label,
@@ -8,21 +8,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
-import {
-  DEFAULT_RALPH_ITERATIONS,
-  DEFAULT_RALPH_MODEL,
-  WORKFLOW_RALPH_ENV_VARS,
-} from '~/routing/plans/utils/build-workflow-ralph-argv';
+import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
+import * as React from 'react';
+
+import { PlanWorkflowConfigModelEffort } from '~/routing/plans/components/PlanWorkflowConfigModelEffort';
 import type {
   WorkflowRalphDebugCli,
   WorkflowRalphRunOptionsInput,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
-import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
+import {
+  DEFAULT_RALPH_ITERATIONS,
+  WORKFLOW_RALPH_ENV_VARS,
+} from '~/routing/plans/utils/build-workflow-ralph-argv';
 
 export interface PlanWorkflowConfigTuningProps {
   heading: string;
   input: WorkflowRalphRunOptionsInput;
   iterationTimeoutText: string;
+
+  /** @description Deferred discovered agent+model options for the model picker. */
+  models: Promise<readonly ChatModelOption[]>;
   setInput: (
     updater: React.SetStateAction<WorkflowRalphRunOptionsInput>,
   ) => void;
@@ -36,6 +41,7 @@ export const PlanWorkflowConfigTuning = (
     heading,
     input,
     iterationTimeoutText,
+    models,
     setInput,
     setIterationTimeoutText,
   } = props;
@@ -71,8 +77,8 @@ export const PlanWorkflowConfigTuning = (
       legend={heading}
     >
       <p className="text-muted-foreground text-xs">
-        Control the run by adjusting the flags below, run a specific model,
-        limit the iteration count, etc..
+        Control the run by adjusting the flags below, run a specific model and
+        effort, limit the iteration count, etc..
       </p>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
@@ -123,29 +129,11 @@ export const PlanWorkflowConfigTuning = (
             Non-interactive only; empty omits the flag.
           </p>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="workflow-run-model">--model</Label>
-          <Input
-            aria-describedby="workflow-run-model-hint"
-            aria-label="Cursor model for --model"
-            autoComplete="off"
-            id="workflow-run-model"
-            onChange={(e) =>
-              setInput((prev) => ({ ...prev, model: e.target.value }))
-            }
-            placeholder={DEFAULT_RALPH_MODEL}
-            spellCheck={false}
-            value={input.model}
-          />
-          <p
-            className="text-muted-foreground text-xs"
-            id="workflow-run-model-hint"
-          >
-            Cursor model preset; default &apos;
-            {DEFAULT_RALPH_MODEL}
-            &apos; is omitted.
-          </p>
-        </div>
+        <PlanWorkflowConfigModelEffort
+          input={input}
+          models={models}
+          setInput={setInput}
+        />
         <div className="space-y-2">
           <Label htmlFor="workflow-run-project">--project</Label>
           <Input

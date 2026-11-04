@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
-import { Client } from 'pg';
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
-import { createLogger } from './lib/index.ts';
+import { Client } from 'pg';
+
+import { createLogger } from './utils/index.ts';
 
 const logger = createLogger();
 

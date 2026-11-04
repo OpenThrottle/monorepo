@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { describeCheckouts } from '../checkout-labels';
+
 import type { ChatCheckoutOption } from '../../types';
+import { describeCheckouts } from '../checkout-labels';
 
 /**
  * The scenario that motivated the plan: two `monorepo` checkouts in different

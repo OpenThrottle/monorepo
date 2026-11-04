@@ -1,15 +1,16 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
-  PLAN_RUN_ABANDONED_MS,
   clearPlanRunForSession,
+  PLAN_RUN_ABANDONED_MS,
   planRunFilePath,
   recordPlanRunForSession,
   settleAbandonedPlanRuns,
-} from '../plan-runs';
+} from '../plan-runs.ts';
 
 const GRAPHQL_URL = 'http://localhost:6021/graphql';
 

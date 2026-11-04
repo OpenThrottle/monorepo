@@ -4,9 +4,10 @@
  */
 
 import { type ExecutionContext, Injectable } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { GqlExecutionContext } from '@nestjs/graphql';
-import { LOCAL_STRATEGY_NAME } from '../strategies/local.strategy';
+import { AuthGuard } from '@nestjs/passport';
+
+import { LOCAL_STRATEGY_NAME } from '../strategies/local.strategy.ts';
 
 @Injectable()
 export class GqlLocalAuthGuard extends AuthGuard(LOCAL_STRATEGY_NAME) {

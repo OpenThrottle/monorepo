@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { isPlansSortBy, isPlansSortOrder } from '../plans-sort';
 
 describe('isPlansSortBy', () => {

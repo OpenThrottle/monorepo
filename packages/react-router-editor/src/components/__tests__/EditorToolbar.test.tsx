@@ -1,14 +1,15 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Provider, createStore } from 'jotai';
+import { createStore, Provider } from 'jotai';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { editorAtom, editorAtomDefaults } from '../../data/atom.editor';
+
 import type { EditorAtom } from '../../data/atom.editor';
-import { EditorToolbar } from '../EditorToolbar';
+import { editorAtom, editorAtomDefaults } from '../../data/atom.editor';
 import type { EditorToolbarProps } from '../EditorToolbar';
+import { EditorToolbar } from '../EditorToolbar';
 
 // jsdom does not implement the Pointer Capture API; Radix Select calls it
 // when opening, so userEvent interactions throw without this guard. This

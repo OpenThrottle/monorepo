@@ -1,10 +1,5 @@
-import * as React from 'react';
-import { useFetcher } from 'react-router';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import {
-  parseFileMentions,
-  useAgenticChatTurn,
-  useConversationList,
   type ChatComposerControls,
   type ChatComposerMode,
   type ChatContextSource,
@@ -16,41 +11,30 @@ import {
   type ChatServiceTier,
   type ConversationStreamSubscriptionData,
   type ConversationStreamSubscriptionVariables,
+  parseFileMentions,
+  useAgenticChatTurn,
+  useConversationList,
 } from '@openthrottle/react-router-chat';
 import type { GraphqlWsClient } from '@openthrottle/react-router-graphql';
 import { useAtom } from 'jotai';
-import { buildModelGroups } from '../utils/chat-model-option';
-import { buildChatTurnFields } from '../utils/chat-turn-fields';
+import * as React from 'react';
+import { useFetcher } from 'react-router';
+
 import { capabilitiesForChatOption } from '../config/chat-capabilities';
-import { decodeChatOption } from '../utils/chat-model-option';
-import { chatToolbarStateAtom } from '../data/atom.chat-toolbar';
-import { reconcileChatToolbarState } from '../utils/chat-toolbar-reconcile';
-import { toCheckoutOptions } from '../utils/chat-discovery-options';
-import { useSessionPermissionDecay } from './useSessionPermissionDecay';
 import type {
   ChatToolbarBackendPrefs,
   ChatToolbarState,
 } from '../data/atom.chat-toolbar';
+import { chatToolbarStateAtom } from '../data/atom.chat-toolbar';
+import { EMPTY_CHAT_OPTIONS } from '../data/data.chat-options';
+import type { HeaderChatOptionsCache } from '../types';
 import type { ChatOptionsResponse } from '../utils/chat-discovery-options';
-
-const CHAT_OPTIONS_ROUTE = '/resources/chat-options';
-
-const EMPTY_OPTIONS: ChatOptionsResponse = {
-  models: [],
-  personas: [],
-  repositories: [],
-};
-
-/**
- * A client-side discovery-options cache (module-scope + sessionStorage) the host
- * app may provide so a warm mount reuses the last good `/resources/chat-options`
- * result. Optional — omit it and the controller always probes the route.
- * @public
- */
-export interface HeaderChatOptionsCache {
-  read(): ChatOptionsResponse | null;
-  write(options: ChatOptionsResponse): void;
-}
+import { toCheckoutOptions } from '../utils/chat-discovery-options';
+import { buildModelGroups } from '../utils/chat-model-option';
+import { decodeChatOption } from '../utils/chat-model-option';
+import { reconcileChatToolbarState } from '../utils/chat-toolbar-reconcile';
+import { buildChatTurnFields } from '../utils/chat-turn-fields';
+import { useSessionPermissionDecay } from './useSessionPermissionDecay';
 
 /**
  * Host-provided wiring for {@link useHeaderChatController}. `streamClient` /
@@ -59,7 +43,7 @@ export interface HeaderChatOptionsCache {
  * client-side discovery cache.
  * @public
  */
-export interface UseHeaderChatControllerConfig {
+export interface UseHeaderChatControllerOptions {
   readonly contextSources: readonly ChatContextSource[];
   readonly enabled: boolean;
   readonly optionsCache?: HeaderChatOptionsCache | null;
@@ -72,7 +56,7 @@ export interface UseHeaderChatControllerConfig {
 }
 
 /** The header chat surface injected into GlobalProviders' ChatProvider. @public */
-export interface HeaderChatSurface {
+export interface UseHeaderChatControllerResult {
   readonly composer: ChatComposerControls;
   readonly composerDisabled: boolean;
   /** Conversations switcher for the header ChatDialog (list/restore/rename/delete/new). */
@@ -93,12 +77,12 @@ export interface HeaderChatSurface {
  * so the header conversation is separate from the home thread. When `enabled` is
  * false (logged out) it stays idle and hosts fall back to the legacy provider.
  * Shared by both apps; the host injects its ws client + subscription document +
- * toolbar seeds + optional discovery cache via {@link UseHeaderChatControllerConfig}.
+ * toolbar seeds + optional discovery cache via {@link UseHeaderChatControllerOptions}.
  * @public
  */
 export function useHeaderChatController(
-  config: UseHeaderChatControllerConfig,
-): HeaderChatSurface {
+  config: UseHeaderChatControllerOptions,
+): UseHeaderChatControllerResult {
   const {
     contextSources,
     enabled,
@@ -126,28 +110,13 @@ export function useHeaderChatController(
   // Elevated permission modes decay to the safe default once per browser session.
   useSessionPermissionDecay();
 
-  // Setup — prefer a live fetch, then the fresh client cache, then empty.
-  const options = optionsFetcher.data ?? cachedOptions ?? EMPTY_OPTIONS;
+  // Setup
+  // Prefer a live fetch, then the fresh client cache, then empty.
+  const options = optionsFetcher.data ?? cachedOptions ?? EMPTY_CHAT_OPTIONS;
   const models = options.models;
   const repositories = options.repositories;
   const personas =
     options.personas.length > 0 ? options.personas : personasFallback;
-
-  const setMode = (mode: ChatComposerMode): void =>
-    setToolbarState((previous) => ({ ...previous, mode }));
-  const setModelId = (modelId: string): void =>
-    setToolbarState((previous) => ({ ...previous, modelId }));
-  const setPersist = (persist: boolean): void =>
-    setToolbarState((previous) => ({ ...previous, persist }));
-  const setPersonaId = (personaId: string): void =>
-    setToolbarState((previous) => ({ ...previous, personaId }));
-  const setRepositoryId = (repositoryId: string): void =>
-    setToolbarState((previous) => ({
-      ...previous,
-      repositoryIds: [repositoryId],
-    }));
-  const setRepositoryIds = (repositoryIds: readonly string[]): void =>
-    setToolbarState((previous) => ({ ...previous, repositoryIds }));
 
   const effectiveToolbar = React.useMemo(
     () =>
@@ -189,6 +158,30 @@ export function useHeaderChatController(
             [backendKey]: { ...previous.perBackend[backendKey], ...patch },
           },
         };
+
+  const modelGroups = React.useMemo(() => buildModelGroups(models), [models]);
+  const checkouts = React.useMemo(
+    () => toCheckoutOptions(repositories),
+    [repositories],
+  );
+
+  // Handlers
+  const setMode = (mode: ChatComposerMode): void =>
+    setToolbarState((previous) => ({ ...previous, mode }));
+  const setModelId = (modelId: string): void =>
+    setToolbarState((previous) => ({ ...previous, modelId }));
+  const setPersist = (persist: boolean): void =>
+    setToolbarState((previous) => ({ ...previous, persist }));
+  const setPersonaId = (personaId: string): void =>
+    setToolbarState((previous) => ({ ...previous, personaId }));
+  const setRepositoryId = (repositoryId: string): void =>
+    setToolbarState((previous) => ({
+      ...previous,
+      repositoryIds: [repositoryId],
+    }));
+  const setRepositoryIds = (repositoryIds: readonly string[]): void =>
+    setToolbarState((previous) => ({ ...previous, repositoryIds }));
+
   const setPermissionMode = (permissionMode: ChatPermissionMode): void =>
     setToolbarState((previous) =>
       writeBackendPref(previous, { permissionMode }),
@@ -198,13 +191,6 @@ export function useHeaderChatController(
   const setServiceTier = (serviceTier: ChatServiceTier): void =>
     setToolbarState((previous) => writeBackendPref(previous, { serviceTier }));
 
-  const modelGroups = React.useMemo(() => buildModelGroups(models), [models]);
-  const checkouts = React.useMemo(
-    () => toCheckoutOptions(repositories),
-    [repositories],
-  );
-
-  // Handlers
   const onSendMessage = (message: string): void => {
     const trimmed = message.trim();
     const decoded = modelId ? decodeChatOption(modelId) : null;
@@ -241,6 +227,7 @@ export function useHeaderChatController(
     turn.reset();
   };
 
+  // Markup
   const conversationSidebar: ChatConversationSidebarProps = {
     activeConversationId: turn.conversationId,
     conversations: conversationList.conversations,
@@ -254,6 +241,38 @@ export function useHeaderChatController(
     totalCount: conversationList.totalCount,
   };
 
+  const composer: ChatComposerControls = {
+    canRetry: turn.canRetry,
+    capabilities,
+    checkouts,
+    contextSources,
+    isStreaming: turn.isStreaming,
+    mode,
+    modelGroups,
+    modelId,
+    models,
+    onCheckoutChange: setRepositoryId,
+    onCheckoutsChange: setRepositoryIds,
+    onModeChange: setMode,
+    onModelChange: setModelId,
+    onPermissionModeChange: setPermissionMode,
+    onPersistChange: setPersist,
+    onPersonaChange: setPersonaId,
+    onReasoningChange: setReasoning,
+    onRetry: turn.onRetry,
+    onServiceTierChange: setServiceTier,
+    onStop: turn.onStop,
+    permissionMode,
+    persist,
+    personaId,
+    personas,
+    reasoning,
+    selectedCheckoutId: repositoryIds[0],
+    selectedCheckoutIds: repositoryIds,
+    serviceTier,
+    sessionUsage: turn.sessionUsage,
+  };
+
   // Life Cycle
   React.useEffect(() => {
     if (!enabled) {
@@ -264,7 +283,7 @@ export function useHeaderChatController(
       return;
     }
     if (optionsFetcher.state === 'idle' && optionsFetcher.data === undefined) {
-      optionsFetcher.load(CHAT_OPTIONS_ROUTE);
+      optionsFetcher.load('/resources/chat-options');
     }
   }, [cachedOptions, enabled, optionsFetcher]);
 
@@ -299,38 +318,6 @@ export function useHeaderChatController(
   }, [turn.conversationId, persist]);
 
   // 🔌 Short Circuit
-  const composer: ChatComposerControls = {
-    canRetry: turn.canRetry,
-    capabilities,
-    checkouts,
-    contextSources,
-    isStreaming: turn.isStreaming,
-    mode,
-    modelGroups,
-    modelId,
-    models,
-    onCheckoutChange: setRepositoryId,
-    onCheckoutsChange: setRepositoryIds,
-    onModeChange: setMode,
-    onModelChange: setModelId,
-    onPermissionModeChange: setPermissionMode,
-    onPersistChange: setPersist,
-    onPersonaChange: setPersonaId,
-    onReasoningChange: setReasoning,
-    onRetry: turn.onRetry,
-    onServiceTierChange: setServiceTier,
-    onStop: turn.onStop,
-    permissionMode,
-    persist,
-    personaId,
-    personas,
-    reasoning,
-    selectedCheckoutId: repositoryIds[0],
-    selectedCheckoutIds: repositoryIds,
-    serviceTier,
-    sessionUsage: turn.sessionUsage,
-  };
-
   return {
     composer,
     composerDisabled: models.length === 0,

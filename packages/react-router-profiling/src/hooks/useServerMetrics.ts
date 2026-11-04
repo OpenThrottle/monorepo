@@ -3,11 +3,10 @@
  */
 
 import * as React from 'react';
+
 import { getMetricsApiBaseUrl } from '../config/metrics-api';
 import { fetchServerMetrics } from '../data/fetch-server-metrics';
 import type { ProcessMetricsSnapshot } from '../data/metrics-types';
-
-const DEFAULT_INTERVAL_MS = 60_000;
 
 export interface UseServerMetricsResult {
   readonly error: Error | null;
@@ -30,11 +29,9 @@ export interface UseServerMetricsOptions {
 export function useServerMetrics(
   options: UseServerMetricsOptions = {},
 ): UseServerMetricsResult {
-  const {
-    apiBaseUrl = getMetricsApiBaseUrl(),
-    intervalMs = DEFAULT_INTERVAL_MS,
-  } = options;
+  const { apiBaseUrl = getMetricsApiBaseUrl(), intervalMs = 60_000 } = options;
 
+  // Hooks
   const [serverMetrics, setServerMetrics] =
     React.useState<ProcessMetricsSnapshot | null>(null);
   const [loading, setLoading] = React.useState(true);
@@ -43,13 +40,10 @@ export function useServerMetrics(
   // Guards every setState against firing after unmount (a slow in-flight
   // request or a polling interval that resolves mid-teardown).
   const mountedRef = React.useRef(true);
-  React.useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
 
+  // Setup
+
+  // Handlers
   const fetchMetrics = React.useCallback(
     async (signal?: AbortSignal): Promise<void> => {
       try {
@@ -78,6 +72,16 @@ export function useServerMetrics(
     await fetchMetrics();
   }, [fetchMetrics]);
 
+  // Markup
+
+  // Life Cycle
+  React.useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   React.useEffect(() => {
     const controller = new AbortController();
     void fetchMetrics(controller.signal);
@@ -95,6 +99,8 @@ export function useServerMetrics(
       clearInterval(id);
     };
   }, [fetchMetrics, intervalMs]);
+
+  // 🔌 Short Circuit
 
   return { error, loading, refetch, serverMetrics };
 }

@@ -1,11 +1,12 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
+  cn,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+
 import { PR_TIME_IN_STATE_CHART_CONFIG } from '~/routing/dashboard/data/pr-time-in-state-chart';
 
 /** One row for the chart: state + count + avgDaysInState. */
@@ -54,7 +55,7 @@ export const DashboardPrTimeInStateCard = (
   if (isEmpty) {
     return (
       <div
-        className={clsx('text-muted-foreground text-sm', className)}
+        className={cn('text-muted-foreground text-sm', className)}
         data-testid="DashboardPrTimeInStateCard"
       >
         No PR time in state summary.
@@ -64,7 +65,7 @@ export const DashboardPrTimeInStateCard = (
 
   return (
     <div
-      className={clsx('-ml-1 overflow-auto text-sm', className)}
+      className={cn('-ml-1 overflow-auto text-sm', className)}
       data-testid="DashboardPrTimeInStateCard"
     >
       <ChartContainer

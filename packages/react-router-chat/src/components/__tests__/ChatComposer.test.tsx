@@ -1,11 +1,12 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { ChatComposer } from '../ChatComposer';
+
 import type { ChatComposerProps } from '../ChatComposer';
+import { ChatComposer } from '../ChatComposer';
 
 function assertTextArea(
   element: HTMLElement,

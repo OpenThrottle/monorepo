@@ -1,8 +1,8 @@
 # 📱 Progressive Web App (PWA)
 
-**Every React Router app in this repo is already a PWA.** All four —
-`openthrottle-developer`, `openthrottle-admin`, `openthrottle-email`,
-`openthrottle-website` — ship a web app manifest and a service worker, and the
+**Every React Router app in this repo is already a PWA.** All three —
+`openthrottle-developer`, `openthrottle-admin`, `openthrottle-website` — ship a
+web app manifest and a service worker, and the
 `react-router` **application** generator template ships both, so any app scaffolded
 from it is installable by default. There is no `vite-plugin-pwa` and no build-time
 PWA plugin: the wiring is three plain files you can read.
@@ -47,11 +47,11 @@ copies all of it, so a new app is installable with no extra work. See
 ## 3. Icons: template-local vs CDN
 
 The template (and `openthrottle-admin`) point at repo-local
-`/branding/icon-<size>.png` under `public/branding/`. `openthrottle-developer`,
-`openthrottle-email`, and `openthrottle-website` instead point at absolute GCS URLs
-under `monorepo-production-assets/OpenThrottle/branding/icons/<color>/` — blue for
-developer, yellow for email, red for website — so the per-app accent color comes from
-the CDN rather than from checked-in assets.
+`/branding/icon-<size>.png` under `public/branding/`. `openthrottle-developer` and
+`openthrottle-website` instead point at absolute GCS URLs under
+`monorepo-production-assets/OpenThrottle/branding/icons/<color>/` — blue for
+developer, red for website — so the per-app accent color comes from the CDN rather
+than from checked-in assets.
 
 Both are valid. Prefer the CDN set for a branded app; keep the local set if the app
 must install while offline or you do not want a CDN dependency in the manifest.

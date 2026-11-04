@@ -1,9 +1,11 @@
-import * as React from 'react';
 import type { RenderResult } from '@testing-library/react';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { NoteCard } from '../NoteCard';
-import type { NoteCardProps } from '../NoteCard';
+
 import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import type { NoteCardProps } from '../NoteCard';
+import { NoteCard } from '../NoteCard';
 
 describe('NoteCard Component', () => {
   describe('with default props', () => {

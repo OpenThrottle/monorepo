@@ -1,19 +1,20 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Form, Link } from 'react-router';
 import {
   Button,
+  cn,
   Input,
-  InputCronExpression,
   Label,
   TextArea,
 } from '@openthrottle/react-router-shadcn';
-import { SCHEDULED_JOB_DRIVER_IDS } from '~/routing/schedule/data/data.drivers';
+import * as React from 'react';
+import { Form, Link } from 'react-router';
+
+import type { ScheduledJobDetailFragment } from '~/__generated__/graphql';
+import { ScheduleKindFields } from '~/routing/schedule/components/ScheduleKindFields';
 import { ScheduleMcpWarning } from '~/routing/schedule/components/ScheduleMcpWarning';
 import { ScheduleRepositoryField } from '~/routing/schedule/components/ScheduleRepositoryField';
 import type { DriverMcpOption } from '~/routing/schedule/data/data.driver-mcp';
+import { SCHEDULED_JOB_DRIVER_IDS } from '~/routing/schedule/data/data.drivers';
 import type { ScheduleRepositoryOption } from '~/routing/schedule/data/data.repositories';
-import type { ScheduledJobDetailFragment } from '~/__generated__/graphql';
 
 export interface ScheduleFormProps {
   action: 'create' | 'update';
@@ -47,7 +48,7 @@ export const ScheduleForm = (props: ScheduleFormProps): React.ReactElement => {
 
   return (
     <Form
-      className={clsx('w-full max-w-2xl space-y-4', className)}
+      className={cn('w-full max-w-2xl space-y-4', className)}
       data-testid="ScheduleForm"
       method="post"
     >
@@ -62,16 +63,7 @@ export const ScheduleForm = (props: ScheduleFormProps): React.ReactElement => {
         />
       </div>
 
-      <div>
-        <Label htmlFor="cronPattern">Schedule (cron)</Label>
-        <InputCronExpression
-          defaultValue={job?.cronPattern}
-          id="cronPattern"
-          name="cronPattern"
-          placeholder="0 9 * * *"
-          required={true}
-        />
-      </div>
+      <ScheduleKindFields job={job} />
 
       <div>
         <Label htmlFor="prompt">Prompt</Label>
@@ -126,7 +118,7 @@ export const ScheduleForm = (props: ScheduleFormProps): React.ReactElement => {
             placeholder="America/Los_Angeles"
           />
           <p className="text-muted-foreground mt-1 text-xs">
-            IANA timezone; blank means UTC.
+            IANA timezone for a cron pattern; blank means UTC.
           </p>
         </div>
         <div>

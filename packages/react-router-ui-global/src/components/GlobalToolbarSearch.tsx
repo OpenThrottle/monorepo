@@ -1,7 +1,7 @@
+import { Button, cn, Input } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import clsx from 'clsx';
 import { useSearchParams } from 'react-router';
-import { Button, Input } from '@openthrottle/react-router-shadcn';
+
 import { GLOBAL_TOOLBAR_SEARCH_COPY } from '../data/data.copy';
 
 export interface GlobalToolbarSearchProps {
@@ -86,7 +86,7 @@ export const GlobalToolbarSearch = (
 
   return (
     <form
-      className={clsx('flex gap-2', className)}
+      className={cn('flex gap-2', className)}
       data-testid="GlobalToolbarSearch"
       onSubmit={handleSubmit}
       role="search"

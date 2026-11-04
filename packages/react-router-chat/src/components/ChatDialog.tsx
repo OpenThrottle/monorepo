@@ -1,6 +1,6 @@
-import * as React from 'react';
 import {
   Button,
+  cn,
   Dialog,
   DialogContent,
   DialogHeader,
@@ -12,16 +12,17 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
+import * as React from 'react';
+
 import type { ChatComposerControls } from '../context/chat-context';
+import { useChatDialog } from '../hooks/useChatDialog';
+import type { ChatMessage } from '../types';
 import { ChatComposer } from './ChatComposer';
 import { ChatComposerToolbar } from './ChatComposerToolbar';
+import type { ChatConversationSidebarProps } from './ChatConversationSidebar';
 import { ChatDialogHeader } from './ChatDialogHeader';
 import { ChatJumpToLatest } from './ChatJumpToLatest';
-import type { ChatConversationSidebarProps } from './ChatConversationSidebar';
 import { ChatThread } from './ChatThread';
-import { useChatDialog } from '../hooks/use-chat-dialog';
-import type { ChatMessage } from '../types';
 
 type ChatDialogVariant = 'dialog' | 'sheet';
 
@@ -99,7 +100,12 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
 
   // Setup
   const triggerNode = trigger ?? (
-    <Button size="sm" type="button" variant="secondary">
+    <Button
+      className="pointer-coarse:h-11 pointer-coarse:min-w-11"
+      size="sm"
+      type="button"
+      variant="secondary"
+    >
       {triggerLabel}
     </Button>
   );
@@ -162,7 +168,7 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
       <Sheet defaultOpen={defaultOpen} onOpenChange={onOpenChange} open={open}>
         <SheetTrigger asChild={true}>{triggerNode}</SheetTrigger>
         <SheetContent
-          className={clsx(
+          className={cn(
             'flex w-full flex-col sm:max-w-md md:max-w-4xl',
             className,
           )}
@@ -184,7 +190,7 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
     <Dialog defaultOpen={defaultOpen} onOpenChange={onOpenChange} open={open}>
       <DialogTrigger asChild={true}>{triggerNode}</DialogTrigger>
       <DialogContent
-        className={clsx(
+        className={cn(
           'flex max-h-[min(85vh,720px)] w-full max-w-3xl flex-col',
           className,
         )}

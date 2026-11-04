@@ -7,25 +7,27 @@ import {
   WorkLedgerService,
 } from '@openthrottle/nestjs-repositories';
 import { IsNull, LessThan } from 'typeorm';
+
 import {
   WORK_LEDGER_SWEEP_BATCH_SIZE,
   WORK_LEDGER_SWEEP_QUEUE_NAME,
   WORK_LEDGER_SWEEP_TTL_HOURS,
-} from './work-ledger-sweep.constants';
+} from './work-ledger-sweep.constants.ts';
 import type {
   WorkLedgerSweepJob,
   WorkLedgerSweepSummary,
-} from './work-ledger-sweep.types';
+} from './work-ledger-sweep.types.ts';
 
 const CONCURRENCY = 1;
 const MS_PER_HOUR = 60 * 60 * 1000;
 
 /**
- * @description Abandoned-session sweeper (design §4.4, G6). Hourly, it closes work sessions that
- * are still open past the TTL — a crashed/killed producer that never called endWorkSession. It
- * stamps ended_at from the session's last artifact (or started_at if artifact-less) and
- * closed_by='sweeper', which distinguishes "ran to completion" (explicit) from "process died"
- * (sweeper) as a reliability signal. PURE HYGIENE: it writes no verification/lifecycle state.
+ * @description Abandoned-session sweeper (G6 in docs/monorepo/work-ledger-sessions.md). Hourly, it
+ * closes work sessions that are still open past the TTL — a crashed/killed producer that never
+ * called endWorkSession. It stamps ended_at from the session's last artifact (or started_at if
+ * artifact-less) and closed_by='sweeper', which distinguishes "ran to completion" (explicit) from
+ * "process died" (sweeper) as a reliability signal. PURE HYGIENE: it writes no
+ * verification/lifecycle state.
  * Idempotent — only open, past-TTL sessions match, and a closed session is never reopened.
  */
 @Processor(WORK_LEDGER_SWEEP_QUEUE_NAME, {

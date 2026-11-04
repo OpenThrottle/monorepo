@@ -1,17 +1,19 @@
-import * as React from 'react';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import type { RenderResult } from '@testing-library/react';
 import { waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { PlansTable } from '../PlansTable';
-import type { PlansTableProps } from '../PlansTable';
+
 import type { PlanCardFragment } from '~/__generated__/graphql';
 import {
   PLANS_INDEX_EMPTY_COPY,
   PLANS_ROW_ACTIONS_COPY,
 } from '~/routing/plans/data/data.copy';
 import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import type { PlansTableProps } from '../PlansTable';
+import { PlansTable } from '../PlansTable';
 
 const mockPlans: [PlanCardFragment, PlanCardFragment] = [
   {
@@ -62,6 +64,30 @@ const mockPlans: [PlanCardFragment, PlanCardFragment] = [
     updatedAt: '2025-01-02T00:00:00Z',
   },
 ];
+
+/**
+ * Mirrors a revalidation: the loader hands down a fresh `plans` array with the
+ * same contents but a new identity. `PlansTable` must not rebuild its columns
+ * in response — new `columnDef.cell` function identities are new React element
+ * types, so every cell subtree would unmount and remount.
+ */
+
+const RevalidationHarness = (): React.ReactElement => {
+  const [revision, setRevision] = React.useState(0);
+  const plans = React.useMemo(
+    () => mockPlans.map((plan) => ({ ...plan })),
+    [revision],
+  );
+
+  return (
+    <TooltipProvider>
+      <button onClick={() => setRevision((value) => value + 1)} type="button">
+        Revalidate
+      </button>
+      <PlansTable plans={plans} />
+    </TooltipProvider>
+  );
+};
 
 const renderPlansTable = (tableProps: PlansTableProps): RenderResult =>
   renderRoutesStub(
@@ -134,6 +160,23 @@ describe('PlansTable Component', () => {
     ).toBeInTheDocument();
   });
 
+  // A remount here is what destroyed the keyed cancel fetcher's payload: React
+  // Router refcounts fetcher keys, so tearing down the row took the count to
+  // zero and purged `fetcher.data` before the Kill outcome could be toasted.
+  test('keeps row cells mounted across a revalidation', async () => {
+    const user = userEvent.setup();
+    const component = renderRoutesStub(<RevalidationHarness />);
+    const actionsLabel = `${PLANS_ROW_ACTIONS_COPY.menuAriaLabelPrefix} First Plan`;
+    const before = component.getByRole('button', { name: actionsLabel });
+
+    await user.click(component.getByRole('button', { name: 'Revalidate' }));
+
+    const after = component.getByRole('button', { name: actionsLabel });
+
+    // Same DOM node instance: the cell re-rendered, it did not remount.
+    expect(after).toBe(before);
+  });
+
   test('shows author, assignee, and updated date when present', () => {
     const { container, getByText } = renderPlansTable({
       plans: mockPlans,
@@ -203,6 +246,53 @@ describe('PlansTable Component', () => {
           'Open the Configuration tab to view or edit.',
         );
       });
+    });
+  });
+
+  describe('mobile card layout (below sm)', () => {
+    test('applies the card layout classes to the table and each row', () => {
+      const { getByTestId, getByText } = renderPlansTable({
+        plans: mockPlans,
+      });
+
+      const table = getByTestId('PlansTable').querySelector('table');
+      expect(table).toHaveClass('max-sm:block', 'max-sm:[&_thead]:hidden');
+
+      for (const title of ['First Plan', 'Second Plan']) {
+        const row = getByText(title).closest('tr');
+        expect(row).toHaveClass(
+          'max-sm:flex',
+          'max-sm:relative',
+          'max-sm:[&>td:nth-child(3)]:absolute',
+        );
+      }
+    });
+
+    test('lets the title wrap to two lines on mobile but stays one line on desktop', () => {
+      const { getByText } = renderPlansTable({ plans: mockPlans });
+
+      const heading = getByText('First Plan').closest('h2');
+      expect(heading).toHaveClass('line-clamp-1', 'max-sm:line-clamp-2');
+    });
+
+    test('keeps every row actions menu inside its own row', () => {
+      const { getByRole } = renderPlansTable({ plans: mockPlans });
+
+      for (const title of ['First Plan', 'Second Plan']) {
+        const menu = getByRole('button', {
+          name: `${PLANS_ROW_ACTIONS_COPY.menuAriaLabelPrefix} ${title}`,
+        });
+        const row = menu.closest('tr');
+        expect(row).toHaveClass('max-sm:flex');
+        expect(row?.querySelectorAll(':scope > td')).toHaveLength(3);
+      }
+    });
+
+    test('does not apply the card layout to the empty state row', () => {
+      const { getByText } = renderPlansTable({ plans: [] });
+
+      const row = getByText(PLANS_INDEX_EMPTY_COPY.emptyTitle).closest('tr');
+      expect(row).not.toHaveClass('max-sm:flex');
     });
   });
 });

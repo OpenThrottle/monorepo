@@ -1,9 +1,10 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { DocsNav } from '../DocsNav';
+
 import type { DocsNavGroup } from '../../utils/buildDocsNav';
+import { DocsNav } from '../DocsNav';
 
 const groups: readonly DocsNavGroup[] = [
   {

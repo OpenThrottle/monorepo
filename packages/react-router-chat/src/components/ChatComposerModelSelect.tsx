@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Select,
   SelectContent,
@@ -9,6 +8,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import type { ChatModelOption } from '../types';
 
 export interface ChatComposerModelSelectProps {
@@ -48,7 +49,7 @@ export const ChatComposerModelSelect = (
         <TooltipTrigger asChild={true}>
           <SelectTrigger
             aria-label="Model"
-            className="h-8 w-auto min-w-32 gap-1"
+            className="h-8 w-auto min-w-32 gap-1 pointer-coarse:h-11"
             data-testid="ChatComposerToolbar-model-select"
           >
             <SelectValue placeholder="Model" />

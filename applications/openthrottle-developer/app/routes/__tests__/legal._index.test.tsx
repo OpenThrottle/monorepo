@@ -1,10 +1,12 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { buildRootMatch } from '~/testing/root-match-fixture';
-import LegalIndex from '../legal._index';
+
 import type { Route } from '@/app/routes/+types/legal._index';
+import { buildRootMatch } from '~/testing/root-match-fixture';
+
+import LegalIndex from '../legal._index';
 
 const matches: Route.ComponentProps['matches'] = [
   buildRootMatch(),

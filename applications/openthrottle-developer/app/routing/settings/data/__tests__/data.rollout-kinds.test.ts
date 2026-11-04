@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'vitest';
+
 import { RolloutFlagKind } from '~/__generated__/graphql';
-import { ROLLOUT_FLAG_KINDS, isRolloutFlagKind } from '../data.rollout-kinds';
+
+import { isRolloutFlagKind, ROLLOUT_FLAG_KINDS } from '../data.rollout-kinds';
 
 describe('data.rollout-kinds', () => {
   test('lists the kind options in boolean|string|number|json order', () => {

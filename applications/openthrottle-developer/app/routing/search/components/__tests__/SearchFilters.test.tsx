@@ -1,11 +1,12 @@
-import * as React from 'react';
+import type { RenderResult } from '@testing-library/react';
 import { cleanup, render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { RenderResult } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub, useSearchParams } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
-import { SearchFilters } from '../SearchFilters';
+
 import type { SearchFiltersProps } from '../SearchFilters';
+import { SearchFilters } from '../SearchFilters';
 
 function SearchFiltersWithQueryString(props: SearchFiltersProps) {
   const [searchParams] = useSearchParams();

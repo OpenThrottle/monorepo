@@ -7,9 +7,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Repository as OrmRepository } from 'typeorm';
-import { normalizeRemoteUrl } from './normalize-remote-url';
-import { Repository } from './repository.entity';
-import { RepositoryCheckout } from './repository-checkout.entity';
+
+import { normalizeRemoteUrl } from './normalize-remote-url.ts';
+import { Repository } from './repository.entity.ts';
+import { RepositoryCheckout } from './repository-checkout.entity.ts';
 
 interface CreateRepositoryData {
   readonly defaultBranch: string | null;
@@ -42,6 +43,15 @@ export class RepositoriesService {
     private readonly repository: OrmRepository<Repository>,
   ) {
     this.logger.debug('🧩 repositories 🧩');
+  }
+
+  /**
+   * @description Returns the TypeORM repository for repositories. Use for queries this service
+   * does not wrap — e.g. the work-ledger harvest listing enabled repos and stamping its watermark.
+   * @public
+   */
+  getRepository(): OrmRepository<Repository> {
+    return this.repository;
   }
 
   /**

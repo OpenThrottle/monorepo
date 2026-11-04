@@ -1,6 +1,7 @@
-import { describe, expect, beforeEach, test } from 'vitest';
-import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import type { Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { beforeEach, describe, expect, test } from 'vitest';
+
 import { generatorReactRouterTable } from './generator.table';
 
 describe('react-router table generator', () => {
@@ -11,7 +12,7 @@ describe('react-router table generator', () => {
   const name = 'HomeExampleTable';
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
   });
 
   test('should run successfully', async () => {

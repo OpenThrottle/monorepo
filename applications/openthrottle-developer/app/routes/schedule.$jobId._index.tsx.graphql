@@ -13,10 +13,13 @@ fragment ScheduledJobRunRow on ScheduledAgentJobRunObject {
   model
   outputTokens
   reasoningTokens
+  resumeOfRunId
+  scheduledFor
   startedAt
   status
   totalTokens
   trigger
+  usageLimitResetsAt
 }
 
 # The schedule-detail entity shape: everything the list card shows plus the
@@ -28,6 +31,8 @@ fragment ScheduledJobRunRow on ScheduledAgentJobRunObject {
 fragment ScheduledJobDetail on ScheduledAgentJobObject {
   createdAt
   cwd
+  misfirePolicy
+  misfireThresholdMs
   prompt
   ...ScheduledJobCard
   settingsJson

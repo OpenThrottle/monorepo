@@ -1,12 +1,14 @@
-import * as React from 'react';
+import type { RenderResult } from '@testing-library/react';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { RenderResult } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+
 import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
-import { RolloutFlagCreateDialog } from '../RolloutFlagCreateDialog';
+
 import type { RolloutFlagCreateDialogProps } from '../RolloutFlagCreateDialog';
+import { RolloutFlagCreateDialog } from '../RolloutFlagCreateDialog';
 
 describe('RolloutFlagCreateDialog Component', () => {
   let component: RenderResult;

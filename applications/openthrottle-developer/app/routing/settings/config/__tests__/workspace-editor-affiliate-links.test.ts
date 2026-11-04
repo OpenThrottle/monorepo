@@ -1,8 +1,10 @@
 import { describe, expect, test } from 'vitest';
+
 import { WorkspaceEditorId } from '~/__generated__/graphql';
+
 import {
-  WORKSPACE_EDITOR_AFFILIATE_LINKS,
   getWorkspaceEditorAffiliateUrl,
+  WORKSPACE_EDITOR_AFFILIATE_LINKS,
 } from '../workspace-editor-affiliate-links';
 
 describe('workspace-editor-affiliate-links', () => {

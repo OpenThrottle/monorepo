@@ -1,10 +1,12 @@
-import * as React from 'react';
 import { screen } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import AuthIndex from '../auth._index';
-import { renderRoutesStub } from '~/testing/route-fixtures';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+
 import type { Route } from '@/app/routes/+types/_index';
+import { buildRootMatch } from '~/testing/root-match-fixture';
+import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import AuthIndex from '../auth._index';
 
 const composerData = Promise.resolve({
   models: [{ id: 'model-1', label: 'GPT-4' }],

@@ -1,8 +1,9 @@
+import { Switch } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { useFetcher, useRevalidator } from 'react-router';
-import { Switch } from '@openthrottle/react-router-shadcn';
-import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/data.copy';
+
 import type { action as repositorySkillInjectionAction } from '~/routes/resources.repository-skill-injection';
+import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/data.copy';
 
 /** Resource-route action path backing the inline skill-injection toggle. */
 const SKILL_INJECTION_ACTION = '/resources/repository-skill-injection';

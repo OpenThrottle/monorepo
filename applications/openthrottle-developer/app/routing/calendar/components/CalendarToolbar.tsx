@@ -1,9 +1,8 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Button } from '@openthrottle/react-router-shadcn';
+import { Button, cn } from '@openthrottle/react-router-shadcn';
 import { GlobalToolbarSearch } from '@openthrottle/react-router-ui-global';
-import { Link } from 'react-router';
 import { PlusIcon } from 'lucide-react';
+import * as React from 'react';
+import { Link } from 'react-router';
 
 export interface CalendarToolbarProps {
   className?: string;
@@ -31,8 +30,8 @@ export const CalendarToolbar = (
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx('w-full', className)} data-testid="CalendarToolbar">
-      <div className={clsx('flex w-full flex-wrap items-center', 'gap-2')}>
+    <div className={cn('w-full', className)} data-testid="CalendarToolbar">
+      <div className={cn('flex w-full flex-wrap items-center', 'gap-2')}>
         <GlobalToolbarSearch
           aria-label="Search events"
           placeholder="Search events"

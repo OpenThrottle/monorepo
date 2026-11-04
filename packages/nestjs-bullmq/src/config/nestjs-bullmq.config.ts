@@ -1,5 +1,5 @@
 import { registerAs } from '@nestjs/config';
-import * as Joi from 'joi';
+import Joi from 'joi';
 
 /**
  * @external https://docs.nestjs.com/techniques/configuration
@@ -43,7 +43,7 @@ const DEFAULT_QUEUE_PREFIX = 'bull';
  *
  * Resolution order:
  * 1. `OT_QUEUE_PREFIX` — explicit override.
- * 2. `OT_CONTAINER_PREFIX` (written per-worktree by `setup_worktree.sh`, e.g.
+ * 2. `OT_CONTAINER_PREFIX` (written per-worktree by `setup_worktree.ts`, e.g.
  *    `wt-<slug>-`) → `bull:wt-<slug>` so worktrees are isolated out of the box.
  * 3. `'bull'` — BullMQ's default; the main checkout and self-hosted deploys
  *    keep their existing Redis keys (repeatable jobs, cron state) untouched.
@@ -72,7 +72,29 @@ export const resolveQueuePrefix = (): string => {
 };
 
 /**
- * @description ioredis connection options derived from REDIS_* env vars.
+ * @description ioredis connection options every BullMQ queue in this checkout
+ * connects with. Shared by the module's root config and by queues built outside
+ * DI (e.g. dynamic queues) so neither can drift from the other — a queue that
+ * drops `password`/`username`/`tls`/`db` cannot authenticate, or lands in the
+ * wrong database.
+ *
+ * @public
+ */
+export interface RedisConnectionOptions {
+  readonly db: number | undefined;
+  readonly enableReadyCheck: boolean;
+  readonly family: number | undefined;
+  readonly host: string;
+  readonly maxRetriesPerRequest: null;
+  readonly password: string | undefined;
+  readonly port: number;
+  readonly tls: Record<string, never> | undefined;
+  readonly username: string | undefined;
+}
+
+/**
+ * @description Resolves ioredis connection options from REDIS_* env vars, or
+ * `null` when `REDIS_HOST` is unset.
  *
  * Required: `REDIS_HOST`. Optional: `REDIS_PORT` (default 6379), `REDIS_DB`,
  * `REDIS_USERNAME`, `REDIS_PASSWORD`, `REDIS_TLS` (enables TLS — required by most
@@ -82,15 +104,14 @@ export const resolveQueuePrefix = (): string => {
  * Client resiliency defaults follow BullMQ requirements: `maxRetriesPerRequest`
  * is `null` and `enableReadyCheck` is `false` so blocking commands work and
  * connections survive transient Redis failovers.
+ *
+ * @public
  */
-export const redisConfig = registerAs('redis', () => {
+export const resolveRedisConnection = (): RedisConnectionOptions | null => {
   const host = process.env.REDIS_HOST;
-  // Coerce REDIS_PORT to a number once here so the connection contract is a
-  // typed number, not the raw process.env string. Consumers read `port`
-  // directly without re-coercing.
-  const port = Number(process.env.REDIS_PORT) || 6379;
-
-  if (!host) throw new Error('REDIS_HOST is not set');
+  if (!host) {
+    return null;
+  }
 
   return {
     db: process.env.REDIS_DB ? Number(process.env.REDIS_DB) : undefined,
@@ -101,9 +122,23 @@ export const redisConfig = registerAs('redis', () => {
     host,
     maxRetriesPerRequest: null,
     password: process.env.REDIS_PASSWORD || undefined,
-    port,
-    queuePrefix: resolveQueuePrefix(),
+    // Coerce REDIS_PORT to a number once here so the connection contract is a
+    // typed number, not the raw process.env string. Consumers read `port`
+    // directly without re-coercing.
+    port: Number(process.env.REDIS_PORT) || 6379,
     tls: isEnvTrue(process.env.REDIS_TLS) ? {} : undefined,
     username: process.env.REDIS_USERNAME || undefined,
   };
+};
+
+/**
+ * @description The `redis` config namespace: {@link resolveRedisConnection}
+ * plus the checkout's {@link resolveQueuePrefix}. Throws at bootstrap when
+ * `REDIS_HOST` is unset.
+ */
+export const redisConfig = registerAs('redis', () => {
+  const connection = resolveRedisConnection();
+  if (!connection) throw new Error('REDIS_HOST is not set');
+
+  return { ...connection, queuePrefix: resolveQueuePrefix() };
 });

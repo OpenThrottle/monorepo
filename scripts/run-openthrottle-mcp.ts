@@ -4,6 +4,11 @@
  * user-global MCP client configs (written by setup_mcp-instructions.ts), so
  * the shim stays put and existing registrations keep working.
  *
+ * The shim runs this file with bare Node's native type stripping — no tsx. It
+ * and everything it imports must stay erasable-syntax TypeScript (no enums,
+ * namespaces or parameter properties) that imports node builtins and repo-local
+ * scripts only.
+ *
  * stdio transport: stdout carries ONLY JSON-RPC for the MCP client. ALL
  * narration goes to stderr (the resolve-only mode's URL is the one deliberate
  * stdout exception).
@@ -23,7 +28,7 @@
  * remains the fallback when the worktree's is unreachable, and vice versa.
  *
  * RUNTIME CWD IS NOT THE AUTHOR'S WORKSPACE. This launcher must run inside the
- * checkout to resolve tsx and the built MCP bundle, so it chdirs there and
+ * checkout to resolve the built MCP bundle, so it chdirs there and
  * spawns the server with the same cwd. That is a tooling requirement, and it
  * must not be mistaken for "where the plan was written". The caller's cwd — the
  * folder the MCP client had open — is captured BEFORE the chdir and forwarded
@@ -32,12 +37,14 @@
  * other repo is stamped with THIS checkout instead (see resolveClientWorkspacePath).
  */
 import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { readEnvValue } from './lib/env.ts';
-import { gitOutput, primaryCheckoutDir } from './lib/git.ts';
-import { createLogger, run } from './lib/index.ts';
+import { parseVersion, satisfies } from './check-node-engine.mjs';
+import { readEnvValue } from './utils/env.ts';
+import { gitOutput, primaryCheckoutDir } from './utils/git.ts';
+import { createLogger, run } from './utils/index.ts';
 import { classifyAuthSmoke } from './verify-openthrottle-mcp-env.ts';
 
 const logger = createLogger({ stream: process.stderr });
@@ -128,14 +135,115 @@ export const buildCandidateUrls = (inputs: CandidateInputs): string[] => {
   return result;
 };
 
-const probe = async (url: string): Promise<boolean> => {
-  try {
-    const response = await fetch(`${url}/health`, { signal: AbortSignal.timeout(2000) }); // prettier-ignore
+export type NodeEngineVerdict =
+  | { readonly kind: 'satisfied' }
+  | { readonly kind: 'unreadable'; readonly range: string | undefined }
+  | { readonly kind: 'unsupported'; readonly range: string };
 
-    return response.ok;
+/** The root package.json `engines.node` range, if it declares one. */
+export const readEnginesNodeRange = (
+  manifestPath: string,
+): string | undefined => {
+  let manifest: unknown;
+  try {
+    manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
   } catch {
+    return undefined;
+  }
+
+  if (
+    typeof manifest !== 'object' ||
+    manifest === null ||
+    !('engines' in manifest)
+  ) {
+    return undefined;
+  }
+
+  const { engines } = manifest;
+
+  if (typeof engines !== 'object' || engines === null || !('node' in engines)) {
+    return undefined;
+  }
+
+  return typeof engines.node === 'string' ? engines.node : undefined;
+};
+
+/**
+ * @description Whether `version` satisfies `range`, using the same parser as
+ * the preinstall guard (scripts/check-node-engine.mjs). The shim normally
+ * picks a matching Node; this is the backstop for when it was bypassed. A
+ * range that cannot be read is its own verdict rather than a silent pass.
+ */
+export const checkNodeEngine = (
+  version: string,
+  range: string | undefined,
+): NodeEngineVerdict => {
+  if (range === undefined) {
+    return { kind: 'unreadable', range };
+  }
+
+  const parsed = parseVersion(version);
+  const result = parsed === null ? null : satisfies(parsed, range);
+
+  if (result === null) {
+    return { kind: 'unreadable', range };
+  }
+
+  return result ? { kind: 'satisfied' } : { kind: 'unsupported', range };
+};
+
+/**
+ * @description True for the failures `fetch` itself reports when a server is
+ * down, refuses, or is too slow: aborts/timeouts, and the `TypeError` it
+ * rejects with for network and URL errors, which always carries a `cause`.
+ * Anything else — notably a `ReferenceError` because `fetch` does not exist on
+ * an old Node — is a bug in the launcher's runtime, not an unreachable server.
+ */
+export const isUnreachableError = (error: unknown): boolean => {
+  if (!(error instanceof Error)) {
     return false;
   }
+
+  if (error.name === 'AbortError' || error.name === 'TimeoutError') {
+    return true;
+  }
+
+  return error instanceof TypeError && error.cause !== undefined;
+};
+
+export const probe = async (
+  url: string,
+  timeoutMs = 2000,
+): Promise<boolean> => {
+  try {
+    const response = await fetch(`${url}/health`, { signal: AbortSignal.timeout(timeoutMs) }); // prettier-ignore
+
+    return response.ok;
+  } catch (error) {
+    if (isUnreachableError(error)) {
+      return false;
+    }
+
+    throw error;
+  }
+};
+
+const nodeEngineBanner = (
+  verdict: Exclude<NodeEngineVerdict, { kind: 'satisfied' }>,
+): void => {
+  logger.blank();
+  logger.fail(
+    verdict.kind === 'unsupported'
+      ? `openthrottle-mcp: refusing to start — Node ${process.version} does not satisfy engines.node "${verdict.range}"`
+      : `openthrottle-mcp: refusing to start — cannot check Node ${process.version} against engines.node "${verdict.range ?? '(missing)'}"`,
+  );
+  logger.detail('This is the Node the MCP client launched, not a server problem — no server was probed.'); // prettier-ignore
+  logger.detail('Fix:');
+  logger.detail('  1. Install the pinned version:  nvm install   (in the checkout; reads .nvmrc)'); // prettier-ignore
+  logger.detail('  2. Launch through the shim:     scripts/run-openthrottle-mcp.sh   (it picks a matching Node)'); // prettier-ignore
+  logger.detail('  3. Or pin one in the MCP config env block:  OT_MCP_NODE=/absolute/path/to/node'); // prettier-ignore
+  logger.detail('Details: packages/openthrottle-mcp/README.md § Launcher Node version'); // prettier-ignore
+  logger.blank();
 };
 
 const authFailBanner = (reason: string, apiUrl: string): void => {
@@ -153,11 +261,21 @@ const authFailBanner = (reason: string, apiUrl: string): void => {
 const main = async (): Promise<void> => {
   logger.detail(`🔍 Using Node.js version: ${process.version}`);
 
+  const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+
+  // Before any probing: on a too-old Node the probe fails for reasons that
+  // have nothing to do with the server (v16 has no global fetch).
+  const engine = checkNodeEngine(process.version, readEnginesNodeRange(join(root, 'package.json'))); // prettier-ignore
+
+  if (engine.kind !== 'satisfied') {
+    nodeEngineBanner(engine);
+    process.exit(1);
+  }
+
   // Read the caller's cwd BEFORE chdir — after it, the folder the MCP client
   // had open is unrecoverable and every plan looks like it came from here.
   const callerCwd = process.cwd();
 
-  const root = join(dirname(fileURLToPath(import.meta.url)), '..');
   process.chdir(root);
 
   // Worktree-aware identity: basename of git root (e.g. monorepo-worktree-one)

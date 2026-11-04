@@ -1,13 +1,14 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
-import { Provider, createStore } from 'jotai';
+import { render } from '@testing-library/react';
+import { createStore, Provider } from 'jotai';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { editorAtom, editorAtomDefaults } from '../../data/atom.editor';
+
 import type { EditorAtom, EditorFile } from '../../data/atom.editor';
-import { EditorSidebar } from '../EditorSidebar';
+import { editorAtom, editorAtomDefaults } from '../../data/atom.editor';
 import type { EditorSidebarProps } from '../EditorSidebar';
+import { EditorSidebar } from '../EditorSidebar';
 
 const file = (overrides: Partial<EditorFile> = {}): EditorFile => ({
   directory: '.',

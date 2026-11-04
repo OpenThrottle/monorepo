@@ -3,11 +3,13 @@
  * shell commands passed to {@link spawnSync} / {@link spawn}.
  */
 
-import type { ChildProcess } from 'child_process';
-import { spawn, spawnSync } from 'child_process';
 import { EventEmitter } from 'node:events';
 import { PassThrough } from 'node:stream';
+
+import type { ChildProcess } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { runIteration, runIterationAsync } from '../run-iteration';
 
 /**
@@ -79,6 +81,75 @@ describe('runIteration (sync) backend dispatch', () => {
     const firstArg = vi.mocked(spawnSync).mock.calls[0]?.[0];
     expect(firstArg).toMatch(/^claude -p --permission-mode acceptEdits "/);
     expect(firstArg).not.toContain('--model');
+  });
+
+  it('requests stream-json from claude and returns result.result as the iteration text', () => {
+    vi.mocked(spawnSync).mockReturnValue({
+      error: undefined,
+      output: [],
+      pid: 0,
+      signal: null,
+      status: 0,
+      stderr: '',
+      stdout: `${JSON.stringify({ subtype: 'init', type: 'system' })}\n${JSON.stringify({ is_error: false, result: 'done\n<promise>COMPLETE</promise>', type: 'result' })}\n`,
+    });
+    const onUsageLimit = vi.fn();
+
+    const result = runIteration({
+      agentPrompt: 'task',
+      backend: 'claude',
+      iteration: 1,
+      onUsageLimit,
+    });
+
+    expect(vi.mocked(spawnSync).mock.calls[0]?.[0]).toContain(
+      '--output-format stream-json --verbose',
+    );
+    expect(result).toBe('done\n<promise>COMPLETE</promise>');
+    expect(onUsageLimit).not.toHaveBeenCalled();
+  });
+
+  it('delivers a usage limit to onUsageLimit without changing the string return', () => {
+    vi.mocked(spawnSync).mockReturnValue({
+      error: undefined,
+      output: [],
+      pid: 0,
+      signal: null,
+      status: 1,
+      stderr: '',
+      stdout: [
+        {
+          rate_limit_info: {
+            rateLimitType: 'five_hour',
+            resetsAt: 1_793_594_400,
+            status: 'rejected',
+          },
+          type: 'rate_limit_event',
+        },
+        {
+          api_error_status: 429,
+          is_error: true,
+          result: 'limit reached',
+          type: 'result',
+        },
+      ]
+        .map((event) => JSON.stringify(event))
+        .join('\n'),
+    });
+    const onUsageLimit = vi.fn();
+
+    const result = runIteration({
+      agentPrompt: 'task',
+      backend: 'claude',
+      iteration: 1,
+      onUsageLimit,
+    });
+
+    expect(result).toBe('limit reached');
+    expect(onUsageLimit).toHaveBeenCalledExactlyOnceWith({
+      rateLimitType: 'five_hour',
+      resetsAt: new Date(1_793_594_400_000).toISOString(),
+    });
   });
 
   it('omits --model for claude when model is auto', () => {
@@ -241,6 +312,42 @@ describe('runIterationAsync backend dispatch', () => {
     expect(spawn).toHaveBeenCalledTimes(1);
     const firstArg = vi.mocked(spawn).mock.calls[0]?.[0];
     expect(firstArg).toMatch(/^claude -p --permission-mode acceptEdits "/);
+  });
+
+  it('threads effort into the spawned claude and codex commands', async () => {
+    await runIterationAsync({
+      agentPrompt: 'hello',
+      backend: 'claude',
+      effort: 'extraHigh',
+      iteration: 1,
+    });
+    await runIterationAsync({
+      agentPrompt: 'hello',
+      backend: 'codex',
+      effort: 'max',
+      iteration: 1,
+    });
+    expect(vi.mocked(spawn).mock.calls[0]?.[0]).toContain(' --effort xhigh');
+    expect(vi.mocked(spawn).mock.calls[1]?.[0]).toContain(
+      ' -c model_reasoning_effort=high',
+    );
+  });
+
+  it('leaves the cursor-agent command unchanged when effort is set', async () => {
+    await runIterationAsync({
+      agentPrompt: 'hello',
+      backend: 'cursor',
+      iteration: 1,
+    });
+    await runIterationAsync({
+      agentPrompt: 'hello',
+      backend: 'cursor',
+      effort: 'ultra',
+      iteration: 1,
+    });
+    expect(vi.mocked(spawn).mock.calls[1]?.[0]).toBe(
+      vi.mocked(spawn).mock.calls[0]?.[0],
+    );
   });
 
   it('spawns cursor-agent for --backend cursor', async () => {

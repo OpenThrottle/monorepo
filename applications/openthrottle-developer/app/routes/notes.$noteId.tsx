@@ -1,32 +1,33 @@
-import * as React from 'react';
-import {
-  getActionError,
-  mergeRouteModuleMeta,
-} from '@openthrottle/react-router-utils';
 import {
   executeGraphqlWithAuth,
   parseFormData,
 } from '@openthrottle/react-router-graphql';
+import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
+import { Button } from '@openthrottle/react-router-shadcn';
+import {
+  OpenThrottleClipboard,
+  OpenThrottleEmptyState,
+} from '@openthrottle/react-router-ui';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import {
+  getActionError,
+  mergeRouteModuleMeta,
+} from '@openthrottle/react-router-utils';
+import { EyeIcon, PencilIcon } from 'lucide-react';
+import * as React from 'react';
+import { useNavigation, useSearchParams } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/notes.$noteId';
 import {
   GetNoteByIdDocument,
   UpdateNoteDocument,
 } from '~/__generated__/graphql';
 import { UpdateNoteInputSchema } from '~/__generated__/schemas';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
-import { NoteForm } from '~/routing/notes/components/NoteForm';
 import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/notes.$noteId';
 import { useActionToast } from '~/global/hooks/useActionToast';
-import { useNavigation, useSearchParams } from 'react-router';
-import { Button } from '@openthrottle/react-router-shadcn';
-import { EyeIcon, PencilIcon } from 'lucide-react';
-import {
-  OpenThrottleClipboard,
-  OpenThrottleEmptyState,
-} from '@openthrottle/react-router-ui';
+import { NoteForm } from '~/routing/notes/components/NoteForm';
 import {
   NOTE_EDIT_MODE,
   NOTE_MODE_PARAM,

@@ -6,6 +6,7 @@
  * run-config setters, and pre-fills a single-checkout project repository once.
  */
 import * as React from 'react';
+
 import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
 import {
   CHECKOUT_PREFIX,
@@ -14,7 +15,7 @@ import {
   ROOT_VALUE,
 } from '~/routing/plans/utils/plan-workflow-config-workspace-selector';
 
-export interface PlanWorkflowConfigWorkspaceSelectorOptions {
+export interface UsePlanWorkflowConfigWorkspaceSelectorOptions {
   readonly checkoutId: string;
   readonly onCheckoutIdChange: (checkoutId: string) => void;
   readonly onRepositoryIdChange: (repositoryId: string) => void;
@@ -39,7 +40,7 @@ export interface UsePlanWorkflowConfigWorkspaceSelectorResult {
 }
 
 export const usePlanWorkflowConfigWorkspaceSelector = (
-  options: PlanWorkflowConfigWorkspaceSelectorOptions,
+  options: UsePlanWorkflowConfigWorkspaceSelectorOptions,
 ): UsePlanWorkflowConfigWorkspaceSelectorResult => {
   const {
     checkoutId,

@@ -1,6 +1,6 @@
-import * as React from 'react';
-import { StickyNoteIcon } from 'lucide-react';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import { StickyNoteIcon } from 'lucide-react';
+import * as React from 'react';
 
 export interface NotesIntroductionProps {}
 

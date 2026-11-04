@@ -1,10 +1,11 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { ChatComposerFooter } from '../ChatComposerFooter';
+
 import type { ChatComposerFooterProps } from '../ChatComposerFooter';
+import { ChatComposerFooter } from '../ChatComposerFooter';
 
 const renderFooter = (
   overrides: Partial<ChatComposerFooterProps> = {},
@@ -85,6 +86,21 @@ describe('ChatComposerFooter Component', () => {
 
     expect(component.getByTestId('ChatUsageCounter')).toHaveTextContent(
       '1.2k tokens',
+    );
+  });
+
+  test('Send and Stop grow to 44px on coarse pointers', () => {
+    const send = renderFooter({ draft: 'hello' });
+    expect(send.getByRole('button', { name: 'Send' })).toHaveClass(
+      'pointer-coarse:h-11',
+      'pointer-coarse:min-w-11',
+    );
+    send.unmount();
+
+    const stop = renderFooter({ isStreaming: true });
+    expect(stop.getByRole('button', { name: 'Stop' })).toHaveClass(
+      'pointer-coarse:h-11',
+      'pointer-coarse:min-w-11',
     );
   });
 });

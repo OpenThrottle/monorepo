@@ -1,5 +1,5 @@
-import { buildDocsManifest } from '@openthrottle/react-router-docs';
 import type { DocEntry } from '@openthrottle/react-router-docs';
+import { buildDocsManifest } from '@openthrottle/react-router-docs';
 
 /**
  * The app owns the `import.meta.glob` (it resolves relative to this file, so it

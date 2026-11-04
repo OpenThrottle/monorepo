@@ -1,6 +1,7 @@
-import { describe, it, beforeEach, expect } from 'vitest';
-import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import type { Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { beforeEach, describe, expect, it } from 'vitest';
+
 import { generatorNestJS } from './generator';
 
 describe('nestjs generator', () => {
@@ -15,7 +16,7 @@ describe('nestjs generator', () => {
   const username = 'test-user';
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
   });
 
   it('should run successfully', async () => {
@@ -40,7 +41,7 @@ describe('nestjs generator', () => {
         `applications/${name}/.env.default`,
         `applications/${name}/.gitignore`,
         `applications/${name}/README.md`,
-        `applications/${name}/eslint.config.mts`,
+        `applications/${name}/eslint.config.ts`,
         `applications/${name}/langgraph.json`,
         `applications/${name}/package.json`,
         `applications/${name}/src/agents/.gitkeep`,

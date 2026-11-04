@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+
 import {
   Sidebar,
   SidebarContent,
@@ -17,10 +18,10 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  type SidebarProps,
   SidebarProvider,
   SidebarSeparator,
   SidebarTrigger,
-  type SidebarProps,
 } from './index';
 
 const VARIANTS: readonly NonNullable<SidebarProps['variant']>[] = [

@@ -1,18 +1,19 @@
 import { WORKFLOW_RUNNER_IDS } from '@openthrottle/openthrottle-agentic-utils';
 import { describe, expect, it } from 'vitest';
+
+import { RalphNestedDebugCli } from '../../__generated__/graphql.ts';
 import {
   DEFAULT_ITERATIONS,
   DEFAULT_MODEL,
   DEFAULT_PROMPT,
   DEFAULT_RUNNER,
-} from '../../config/index.js';
-import { RalphNestedDebugCli } from '../../__generated__/graphql.js';
+} from '../../config/index.ts';
 import type { WorkflowContext } from '../../types.ts';
 import {
   buildRalphFlowContextFromPlanRunTuning,
   buildRalphFlowContextFromRunOptionsShape,
   resolveWorkflowRunOptions,
-} from '../context.js';
+} from '../context.ts';
 
 const PLAN_ID = '0f9e1a94-8d39-4aa7-ada2-2d107d41ab37';
 const TASK_ID = '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d';
@@ -39,6 +40,27 @@ describe('resolveWorkflowRunOptions', () => {
       worktree: undefined,
       worktreeBase: undefined,
     });
+  });
+
+  it('resolves a recognized ralph.effort onto the context', () => {
+    const context = resolveWorkflowRunOptions({
+      planId: PLAN_ID,
+      ralph: { effort: 'extraHigh' },
+    });
+
+    expect(context.effort).toBe('extraHigh');
+  });
+
+  it('leaves effort unset when ralph.effort is omitted or unrecognized', () => {
+    expect(
+      resolveWorkflowRunOptions({ planId: PLAN_ID }).effort,
+    ).toBeUndefined();
+    expect(
+      resolveWorkflowRunOptions({
+        planId: PLAN_ID,
+        ralph: { effort: 'turbo' },
+      }).effort,
+    ).toBeUndefined();
   });
 
   it('trims the plan id and task id', () => {

@@ -10,7 +10,8 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import type { ServiceAccount } from './service-account.entity';
+
+import type { ServiceAccount } from './service-account.entity.ts';
 
 /** Scalar/column fields of ServiceAccountCredential (no relations). */
 export type ServiceAccountCredentialData = Pick<

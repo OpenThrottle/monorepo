@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Button,
   Label,
@@ -8,13 +7,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
+import type { RuleFormVocabularyOption } from '~/routing/rules/components/RuleForm';
 import { RULES_COPY } from '~/routing/rules/data/data.copy';
 import {
   ANY,
   ENVIRONMENTS,
   PLAN_STATUSES,
 } from '~/routing/rules/data/rule-form-options';
-import type { RuleFormVocabularyOption } from '~/routing/rules/components/RuleForm';
 
 export interface RuleFormMatchSectionProps {
   environment: string;

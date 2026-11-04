@@ -2,10 +2,11 @@
  * @description Fishery factory for {@link Task}. Use in tests to build mock tasks.
  */
 
-import { Factory } from 'fishery';
 import { faker } from '@faker-js/faker';
-import { plansFactory } from '../../modules/plans/plans.factory';
-import type { Task } from './task.entity';
+import { Factory } from 'fishery';
+
+import { plansFactory } from '../../modules/plans/plans.factory.ts';
+import type { Task } from './task.entity.ts';
 
 /** Column-only shape for building task test data (no relations). */
 // export type TaskFactoryData = Pick<
@@ -60,4 +61,5 @@ export const tasksFactory = Factory.define<Task>(() => ({
   taskEmbeddings: [],
   title: faker.lorem.sentence(),
   updatedAt: faker.date.recent(),
+  wave: null,
 }));

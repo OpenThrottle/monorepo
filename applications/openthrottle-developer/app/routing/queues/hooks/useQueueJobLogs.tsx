@@ -5,21 +5,22 @@
  * loader-seed + subscription-delta pattern of usePlanOutputStream. SSR-safe:
  * with no browser ws client it simply shows the backfilled history.
  */
+import { useSubscription } from '@openthrottle/react-router-graphql';
 import * as React from 'react';
 import { useFetcher } from 'react-router';
-import { useSubscription } from '@openthrottle/react-router-graphql';
-import { QueueJobLogTailDocument } from '~/__generated__/graphql';
+
 import type {
-  QueueJobLogEventFragment,
-  QueueJobLogTailSubscription,
   QueueJobLogsQuery,
+  QueueJobLogTailSubscription,
 } from '~/__generated__/graphql';
+import { QueueJobLogTailDocument } from '~/__generated__/graphql';
+import { BACKFILL_LIMIT } from '~/routing/queues/config/queue-job-logs';
+import type {
+  QueueJobLogEvent,
+  QueueJobLogStreamStatus,
+} from '~/routing/queues/types';
+import { compareQueueJobLogEvents } from '~/routing/queues/utils/compare-queue-job-log-events';
 import { getGraphqlWsClient } from '~/services/graphql-ws-client';
-
-export type QueueJobLogEvent = QueueJobLogEventFragment;
-
-/** Live-stream lifecycle for the console indicator. */
-export type QueueJobLogStreamStatus = 'ended' | 'error' | 'idle' | 'live';
 
 type QueueJobLogsPage = QueueJobLogsQuery['queueJobLogs'];
 
@@ -35,17 +36,6 @@ export interface UseQueueJobLogsResult {
   isBackfilling: boolean;
   loadOlder: () => void;
   status: QueueJobLogStreamStatus;
-}
-
-const BACKFILL_LIMIT = 200;
-
-/** Stable order: by timestamp, then cursor, so renders don't jump on arrival order. */
-function compareEvents(a: QueueJobLogEvent, b: QueueJobLogEvent): number {
-  const at = String(a.timestamp);
-  const bt = String(b.timestamp);
-  if (at !== bt) return at < bt ? -1 : 1;
-  if (a.cursor !== b.cursor) return a.cursor < b.cursor ? -1 : 1;
-  return 0;
 }
 
 export const useQueueJobLogs = (
@@ -67,6 +57,10 @@ export const useQueueJobLogs = (
   // Setup
   const client = React.useMemo(() => getGraphqlWsClient(), []);
   const active = enabled && jobId !== '' && queueName !== '';
+  const events = React.useMemo(
+    () => Array.from(byCursor.values()).sort(compareQueueJobLogEvents),
+    [byCursor],
+  );
 
   // Handlers
   const mergeEvents = React.useCallback(
@@ -111,6 +105,9 @@ export const useQueueJobLogs = (
     fetcher.load(buildUrl(nextCursor));
   }, [buildUrl, fetcher, hasMore, nextCursor]);
 
+  // Markup
+
+  // Life Cycle
   // Live deltas from the subscription (no-op when client is null / disabled).
   useSubscription(
     client,
@@ -125,7 +122,6 @@ export const useQueueJobLogs = (
     active,
   );
 
-  // Life Cycle
   // Backfill the first history page once per job identity; reset on change.
   React.useEffect(() => {
     if (!active) {
@@ -160,10 +156,6 @@ export const useQueueJobLogs = (
   }, [fetcher.data, fetcher.state, mergeEvents]);
 
   // 🔌 Short Circuit
-  const events = React.useMemo(
-    () => Array.from(byCursor.values()).sort(compareEvents),
-    [byCursor],
-  );
 
   return {
     events,

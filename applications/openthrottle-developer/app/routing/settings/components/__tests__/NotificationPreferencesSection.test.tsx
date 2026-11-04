@@ -1,11 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { NotificationPreferencesSection } from '../NotificationPreferencesSection';
+
 import { NOTIFICATION_PREFERENCE_ROWS } from '~/routing/settings/config/notification-preferences';
+
+import { NotificationPreferencesSection } from '../NotificationPreferencesSection';
 
 // Spy on every toast entry point so we can assert the placeholder panel stays
 // silent on toggle (the phantom-toast regression this guards against).

@@ -1,11 +1,12 @@
-import * as React from 'react';
+import type { RenderResult } from '@testing-library/react';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { RenderResult } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { ProjectDetailTabs } from '../ProjectDetailTabs';
+
 import type { ProjectDetailTabsProps } from '../ProjectDetailTabs';
+import { ProjectDetailTabs } from '../ProjectDetailTabs';
 
 const mockProject: ProjectDetailTabsProps['project'] = {
   __typename: 'ProjectObject',

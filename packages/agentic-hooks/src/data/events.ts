@@ -2,16 +2,16 @@
  * Event construction + GraphQL input mapping. Tool-neutral: an adapter hands in
  * a NormalizedInvocation and gets back the durable event shape.
  */
-import { resolveGitBranch } from '../config/env';
-import { applyPrivacy, DEFAULT_PRIVACY_LEVEL } from '../utils/privacy';
-import { detectScope } from '../utils/scope';
+import { resolveGitBranch } from '../config/env.ts';
 import type {
   NormalizedInvocation,
   OutcomeEvent,
   PrivacyLevel,
   SkillUsageOutcome,
   UsageEvent,
-} from '../types';
+} from '../types.ts';
+import { applyPrivacy, resolvePrivacyLevel } from '../utils/privacy.ts';
+import { detectScope } from '../utils/scope.ts';
 
 /** @public */
 export const RECORD_SKILL_USAGE_MUTATION = `
@@ -30,6 +30,7 @@ mutation RecordSkillUsageOutcome($input: RecordSkillUsageOutcomeInput!) {
     id
     skillName
     outcome
+    source
   }
 }
 `;
@@ -38,8 +39,20 @@ mutation RecordSkillUsageOutcome($input: RecordSkillUsageOutcomeInput!) {
 export const SKILL_USAGE_OUTCOMES = Object.freeze({
   ABANDONED: 'abandoned',
   ERROR: 'error',
+  SESSION_ENDED: 'session_ended',
   SUCCESS: 'success',
 } as const) satisfies Readonly<Record<string, SkillUsageOutcome>>;
+
+/**
+ * The outcomes that represent a QUALITY judgement about the skill's work, as
+ * opposed to the liveness of the session that loaded it. Only these belong in
+ * an "outcomes reported" numerator; `session_ended` and `abandoned` say
+ * something about the process, not about the skill.
+ *
+ * @public
+ */
+export const SKILL_USAGE_QUALITY_OUTCOMES: readonly SkillUsageOutcome[] =
+  Object.freeze([SKILL_USAGE_OUTCOMES.ERROR, SKILL_USAGE_OUTCOMES.SUCCESS]);
 
 /**
  * Build a tool-neutral usage event from an adapter's NormalizedInvocation.
@@ -51,7 +64,7 @@ export const buildUsageEvent = ({
   normalized,
   repoRoot,
   source,
-  privacyLevel = DEFAULT_PRIVACY_LEVEL,
+  privacyLevel,
   timestamp = new Date().toISOString(),
   gitBranch,
 }: {
@@ -68,7 +81,11 @@ export const buildUsageEvent = ({
 
   const cwd = normalized.cwd || repoRoot;
   const scope = detectScope(normalized.skill_name, repoRoot);
-  const args = applyPrivacy(privacyLevel, normalized.args);
+  // Resolved from the checkout when the caller does not pin one, so an adapter
+  // cannot accidentally opt a foreign repo back into arg collection by passing
+  // the OpenThrottle default.
+  const level = privacyLevel ?? resolvePrivacyLevel(repoRoot);
+  const args = applyPrivacy(level, normalized.args);
   const resolvedSource = source ?? normalized.source ?? undefined;
 
   const event: UsageEvent = {
@@ -76,7 +93,7 @@ export const buildUsageEvent = ({
     cwd,
     git_branch: gitBranch ?? resolveGitBranch(repoRoot),
     invocation_path: normalized.invocation_path ?? null,
-    privacy_level: privacyLevel,
+    privacy_level: level,
     scope,
     session_id: normalized.session_id ?? null,
     skill_name: normalized.skill_name,
@@ -121,6 +138,7 @@ export const buildOutcomeEvent = ({
   timestamp = new Date().toISOString(),
   gitBranch,
   cwd,
+  source,
 }: {
   cwd?: string | null;
   durationMs?: number | null;
@@ -131,6 +149,7 @@ export const buildOutcomeEvent = ({
   repoRoot: string;
   sessionId?: string | null;
   skillName: string;
+  source?: string;
   timestamp?: string;
   toolUseId?: string | null;
 }): OutcomeEvent | null => {
@@ -138,7 +157,12 @@ export const buildOutcomeEvent = ({
   if (!name) {
     return null;
   }
-  if (outcome !== 'success' && outcome !== 'abandoned' && outcome !== 'error') {
+  if (
+    outcome !== 'success' &&
+    outcome !== 'abandoned' &&
+    outcome !== 'error' &&
+    outcome !== 'session_ended'
+  ) {
     return null;
   }
 
@@ -149,7 +173,7 @@ export const buildOutcomeEvent = ({
       ? null
       : Math.max(0, Math.round(Number(durationMs)));
 
-  return {
+  const event: OutcomeEvent = {
     cwd: resolvedCwd,
     duration_ms: resolvedDuration,
     event_kind: 'outcome',
@@ -161,6 +185,15 @@ export const buildOutcomeEvent = ({
     timestamp,
     tool_use_id: toolUseId,
   };
+
+  // Conditional assign rather than `source: source ?? undefined` because
+  // `exactOptionalPropertyTypes` rejects an explicit undefined here. Mirrors
+  // how `UsageEvent.source` is handled in buildUsageEvent.
+  if (source != null) {
+    event.source = source;
+  }
+
+  return event;
 };
 
 /**
@@ -231,6 +264,9 @@ export const toRecordSkillUsageOutcomeInput = (
     skillName: event.skill_name,
   };
 
+  if (event.source != null) {
+    input.source = event.source;
+  }
   if (event.scope != null) {
     input.scope = event.scope;
   }

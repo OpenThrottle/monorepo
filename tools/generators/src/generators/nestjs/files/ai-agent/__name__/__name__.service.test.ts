@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import { createMock } from '@golevelup/ts-vitest';
 import { ConfigService } from '@nestjs/config';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { <%= namePascal %>Service } from './<%= name %>.service';
+import { <%= namePascal %>Service } from './<%= name %>.service.ts';
 
 describe('<%= namePascal %>Service', () => {
   let service: <%= namePascal %>Service;

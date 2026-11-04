@@ -29,9 +29,11 @@ videos
 *.cpuprofile
 *.d.ts.map
 *.tsbuildinfo
-# Per-worktree generated artifacts (see scripts/lib/worktree-ports.ts, setup_worktree.ts)
+# Per-worktree generated artifacts (see scripts/utils/worktree-ports.ts, setup_worktree.ts)
 .worktree-ports
 docker-compose.worktree.yml
+# `pnpm worktree:serve` logs and pidfiles (scripts/worktree_serve.ts); .worktree/ itself holds tracked shims
+.worktree/logs/
 **/__generated__/**/*
 databases/backups/**/*.sql
 databases/backups/**/*.zip
@@ -48,6 +50,12 @@ databases/seed.sql
 # covered by the .env* glob (it does not start with .env), so it is listed here
 # explicitly. See scripts/local-secrets-file.ts and databases/README.md.
 .bootstrap-secrets.local
+# @tools/ot-telemetry (src/index.ts) defaults --out to a scratch dir OUTSIDE
+# this repo, so neither file should ever appear here. These two entries are anchored to the repo
+# root only, catching the realistic accident — running with `--out .` from the root — without
+# shadowing a legitimately tracked report.json/report.md somewhere else in the tree.
+/report.json
+/report.md
 vite.config.*.timestamp*
 vite.config.ts.timestamp*
 vitest.config.*.timestamp*

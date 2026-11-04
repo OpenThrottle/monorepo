@@ -1,8 +1,3 @@
-import * as React from 'react';
-import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
-import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
-import { GlobalScreen } from '@openthrottle/react-router-ui-global';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import {
   Button,
   Empty,
@@ -10,15 +5,21 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
-import { CalendarSearchIcon } from 'lucide-react';
-import { CalendarEventDetails } from '~/routing/calendar/components/CalendarEventDetails';
-import { CALENDAR_EVENTS } from '~/routing/calendar/data/data.events';
-import { CALENDAR_NOT_FOUND_COPY } from '~/routing/calendar/data/data.copy';
-import { getCalendarEventById } from '~/routing/calendar/utils/events';
-import { SITE_TITLE } from '~/global/config/settings';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
+import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import { GlobalScreen } from '@openthrottle/react-router-ui-global';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { CalendarSearchIcon } from 'lucide-react';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import type { Route } from '@/app/routes/+types/calendar.$eventId';
+import { SITE_TITLE } from '~/global/config/settings';
+import { CalendarEventDetails } from '~/routing/calendar/components/CalendarEventDetails';
+import { CALENDAR_NOT_FOUND_COPY } from '~/routing/calendar/data/data.copy';
+import { CALENDAR_EVENTS } from '~/routing/calendar/data/data.events';
+import { getCalendarEventById } from '~/routing/calendar/utils/events';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

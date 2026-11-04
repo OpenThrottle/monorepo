@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
-import {
-  EMBEDDING_DIMENSIONS,
-  hashContent,
-} from '@openthrottle/openthrottle-ide';
 import type {
   StoredChunk,
   VectorMatch,
   VectorStore,
+} from '@openthrottle/openthrottle-ide';
+import {
+  EMBEDDING_DIMENSIONS,
+  hashContent,
 } from '@openthrottle/openthrottle-ide';
 import { DataSource } from 'typeorm';
 

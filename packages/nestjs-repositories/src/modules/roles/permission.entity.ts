@@ -9,7 +9,8 @@ import {
   ManyToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import type { Role } from './role.entity';
+
+import type { Role } from './role.entity.ts';
 
 /** Scalar/column fields of Permission (no relations). */
 export type PermissionData = Pick<

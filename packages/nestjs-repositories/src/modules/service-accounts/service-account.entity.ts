@@ -10,8 +10,9 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import type { Role } from '../roles/role.entity';
-import type { ServiceAccountCredential } from './service-account-credential.entity';
+
+import type { Role } from '../roles/role.entity.ts';
+import type { ServiceAccountCredential } from './service-account-credential.entity.ts';
 
 /** Scalar/column fields of ServiceAccount (no relations). */
 export type ServiceAccountData = Pick<

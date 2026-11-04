@@ -1,5 +1,6 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+
 import { config as loadDotenv } from 'dotenv';
 
 /**
@@ -7,7 +8,7 @@ import { config as loadDotenv } from 'dotenv';
  * `process.env` (e.g. conditional {@link AppModule} imports). `ConfigModule` still merges
  * the same file at runtime; dotenv does not override existing keys by default.
  */
-const envPath = join(__dirname, '..', '.env');
+const envPath = join(import.meta.dirname, '..', '.env');
 
 if (existsSync(envPath)) {
   loadDotenv({ path: envPath });

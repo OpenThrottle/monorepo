@@ -1,12 +1,12 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
+  cn,
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
   Markdown,
 } from '@openthrottle/react-router-shadcn';
 import { ChevronDown } from 'lucide-react';
+import * as React from 'react';
 
 export interface ChatThinkingBlockProps {
   /** Whether the reasoning starts expanded. Collapsed by default. */
@@ -70,7 +70,7 @@ export const ChatThinkingBlock = (
         data-testid="ChatThinkingBlock-content"
       >
         <Markdown
-          className={clsx(
+          className={cn(
             'text-muted-foreground text-xs break-words italic',
             '[&_pre]:whitespace-pre-wrap',
           )}

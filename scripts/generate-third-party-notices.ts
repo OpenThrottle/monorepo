@@ -4,6 +4,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { createLogger, hasFlag } from './utils/index.ts';
 import {
   collectPlatformSpecificPackages,
   type LicensePolicy,
@@ -11,7 +12,6 @@ import {
   readInstalledLicenses,
   resolveEffectiveLicense,
 } from './validate-license-compliance.ts';
-import { createLogger, hasFlag } from './lib/index.ts';
 
 const logger = createLogger();
 

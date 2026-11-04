@@ -1,6 +1,14 @@
 import { describe, expect, test } from 'vitest';
+
 import type { QueueCardFragment } from '~/__generated__/graphql';
+
 import {
+  analyzeQueuesChartSkew,
+  backlogForQueue,
+  chartConfigForQueueStatsView,
+  formatQueueStatsChartTick,
+  maxSingleSeriesForQueues,
+  maxSingleSeriesForView,
   QUEUE_STATS_CHART_FINALIST_IDS,
   QUEUE_STATS_CHART_MIN_HEIGHT,
   QUEUE_STATS_CHART_OPERATIONAL_SERIES,
@@ -8,15 +16,9 @@ import {
   QUEUE_STATS_CHART_ROW_HEIGHT,
   QUEUE_STATS_CHART_SUCCESS_CRITERIA,
   QUEUE_STATS_CHART_VIEW_OPTIONS,
-  REPRESENTATIVE_SKEWED_QUEUES,
-  analyzeQueuesChartSkew,
-  backlogForQueue,
-  chartConfigForQueueStatsView,
-  formatQueueStatsChartTick,
-  maxSingleSeriesForQueues,
-  maxSingleSeriesForView,
   queueStatsChartHeight,
   queuesToStatsChartData,
+  REPRESENTATIVE_SKEWED_QUEUES,
   seriesKeysForQueueStatsView,
 } from '../queue-stats-chart';
 

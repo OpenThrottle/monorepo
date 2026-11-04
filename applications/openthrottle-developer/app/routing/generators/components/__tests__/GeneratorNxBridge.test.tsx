@@ -1,9 +1,11 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
+
 import type { GeneratorDetailCardFragment } from '~/__generated__/graphql';
+
 import { GeneratorNxBridge } from '../GeneratorNxBridge';
 
 const baseGenerator: GeneratorDetailCardFragment = {

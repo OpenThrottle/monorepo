@@ -1,6 +1,6 @@
-import * as runtime from 'react/jsx-runtime';
 import { evaluate, evaluateSync } from '@mdx-js/mdx';
 import { useMDXComponents } from '@mdx-js/react';
+import * as runtime from 'react/jsx-runtime';
 import remarkGfm from 'remark-gfm';
 
 export interface CompileMarkdownOptions {

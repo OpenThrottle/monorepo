@@ -1,12 +1,14 @@
-import * as React from 'react';
+import type { RenderResult } from '@testing-library/react';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { RenderResult } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { SettingsKeysRevokeCell } from '../SettingsKeysRevokeCell';
-import type { SettingsKeysRevokeCellProps } from '../SettingsKeysRevokeCell';
+
 import type { ServiceAccountCredentialFieldsFragment } from '~/__generated__/graphql';
+
+import type { SettingsKeysRevokeCellProps } from '../SettingsKeysRevokeCell';
+import { SettingsKeysRevokeCell } from '../SettingsKeysRevokeCell';
 
 const credential = (
   overrides: Partial<ServiceAccountCredentialFieldsFragment> = {},

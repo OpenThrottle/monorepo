@@ -3,7 +3,8 @@
  */
 
 import { Field, ObjectType } from '@nestjs/graphql';
-import { TaskObject } from '../tasks/task.object';
+
+import { TaskObject } from '../tasks/task.object.ts';
 
 @ObjectType()
 export class TaskEmbeddingObject {

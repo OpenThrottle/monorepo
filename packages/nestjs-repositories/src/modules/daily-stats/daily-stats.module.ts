@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { DailyStat } from './daily-stat.entity';
-import { DailyStatsService } from './daily-stats.service';
+
+import { DailyStat } from './daily-stat.entity.ts';
+import { DailyStatsService } from './daily-stats.service.ts';
 
 @Module({
   controllers: [],

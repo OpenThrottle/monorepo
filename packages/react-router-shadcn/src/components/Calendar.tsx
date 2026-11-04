@@ -1,11 +1,11 @@
 'use client';
 
-import * as React from 'react';
 import {
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
 } from 'lucide-react';
+import * as React from 'react';
 import { DayPicker, getDefaultClassNames } from 'react-day-picker';
 
 import { cn } from '../utils/cn';
@@ -195,5 +195,5 @@ export const Calendar = (props: CalendarProps): React.ReactElement => {
   );
 };
 
-export { CalendarDayButton } from './CalendarDayButton';
 export type { CalendarDayButtonProps } from './CalendarDayButton';
+export { CalendarDayButton } from './CalendarDayButton';

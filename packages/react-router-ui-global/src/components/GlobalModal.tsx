@@ -1,5 +1,6 @@
-import * as React from 'react';
 import { Dialog, DialogContent } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import { useUrlSyncedOverlay } from '../hooks/useUrlSyncedOverlay';
 
 export interface GlobalModalProps extends React.PropsWithChildren {

@@ -13,7 +13,7 @@
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 
-import type { RenderRequest, TtsBackend } from '../types';
+import type { RenderRequest, TtsBackend } from '../types.ts';
 
 const execFileAsync = promisify(execFile);
 

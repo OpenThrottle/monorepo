@@ -3,6 +3,8 @@ import {
   parseFormData,
 } from '@openthrottle/react-router-graphql';
 import { z } from 'zod/v3';
+
+import type { Route } from '@/app/routes/+types/skills.availability';
 import {
   AddSkillAvailabilityRuleDocument,
   DeleteSkillAvailabilityRuleSetDocument,
@@ -13,7 +15,6 @@ import {
 } from '~/__generated__/graphql';
 import { DOGFOOD_NX_PROJECT_NAME } from '~/routing/skills/config/availability';
 import { readRuleInput } from '~/routing/skills/utils/skill-availability-action';
-import type { Route } from '@/app/routes/+types/skills.availability';
 
 /**
  * Loose-variable mutations (`upsertRuleSet`, `updateRule`, `removeRule`) do not

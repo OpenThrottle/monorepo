@@ -1,12 +1,13 @@
 import * as React from 'react';
+
+import type {
+  ClientLogEntry,
+  ClientLogLevel,
+} from '~/routing/settings/client-log-sink';
 import {
   clearClientLogSink,
   getClientLogEntries,
   subscribeClientLogSink,
-} from '~/routing/settings/client-log-sink';
-import type {
-  ClientLogEntry,
-  ClientLogLevel,
 } from '~/routing/settings/client-log-sink';
 import { CLIENT_LOG_LEVELS } from '~/routing/settings/client-log-sink';
 import { isClientLogLevel } from '~/routing/settings/utils/is-client-log-level';
@@ -17,7 +18,7 @@ import {
   getEmptyServerSnapshot,
 } from '~/routing/settings/utils/settings.support';
 
-export interface SettingsLogsPanelOptions {}
+export interface UseSettingsLogsPanelOptions {}
 
 export interface UseSettingsLogsPanelResult {
   entries: readonly ClientLogEntry[];
@@ -43,7 +44,7 @@ export interface UseSettingsLogsPanelResult {
  * component-primitive-shape R6/R7 so the panel component stays UI-focused.
  */
 export const useSettingsLogsPanel = (
-  _options: SettingsLogsPanelOptions = {},
+  _options: UseSettingsLogsPanelOptions = {},
 ): UseSettingsLogsPanelResult => {
   // Hooks
   const logPreRef = React.useRef<HTMLPreElement>(null);

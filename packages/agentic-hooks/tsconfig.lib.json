@@ -1,7 +1,6 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "baseUrl": "./",
     "outDir": "./dist",
     "rootDirs": ["./src"]
   },
@@ -17,6 +16,9 @@
   "references": [
     {
       "path": "../nodejs-utils/tsconfig.lib.json"
+    },
+    {
+      "path": "../agentic-token-usage/tsconfig.lib.json"
     },
     {
       "path": "../../tools/dotfiles/tsconfig.lib.json"

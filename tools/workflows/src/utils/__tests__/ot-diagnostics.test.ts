@@ -1,14 +1,15 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { WORKFLOW_RALPH_DEFAULTS_FILENAME } from '../../config/workflow-ralph-defaults.types';
 import {
-  OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS_ENV,
   formatPlansProcessorSpawnOtDiagnosticsMessage,
   logWorkflowRalphOtDiagnostics,
+  OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS_ENV,
 } from '../ot-diagnostics';
-import { WORKFLOW_RALPH_DEFAULTS_FILENAME } from '../../config/workflow-ralph-defaults.types';
 
 describe('ot-diagnostics', () => {
   it('formatPlansProcessorSpawnOtDiagnosticsMessage returns null when diagnostics disabled', () => {

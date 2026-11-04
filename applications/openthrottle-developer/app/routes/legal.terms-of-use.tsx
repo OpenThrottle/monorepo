@@ -1,19 +1,20 @@
-import * as React from 'react';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalHeading,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { BookOpenIcon } from 'lucide-react';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import { SITE_TITLE } from '~/global/config/settings';
-import type { Route } from '@/app/routes/+types/legal.terms-of-use';
-import { Link } from 'react-router';
 import {
   OPENTHROTTLE_CONTACT_PORTFOLIO,
   OPENTHROTTLE_CONTACT_PORTFOLIO_REF,
   OPENTHROTTLE_LEGAL_NOTICE,
 } from '@openthrottle/react-router-utils';
+import { BookOpenIcon } from 'lucide-react';
+import * as React from 'react';
+import { Link } from 'react-router';
+
+import type { Route } from '@/app/routes/+types/legal.terms-of-use';
+import { SITE_TITLE } from '~/global/config/settings';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

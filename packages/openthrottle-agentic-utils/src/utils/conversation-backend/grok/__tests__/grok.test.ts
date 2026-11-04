@@ -4,10 +4,10 @@ import { join } from 'node:path';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { GROK_BIN_ENV } from '../argv.ts';
-import { grokConversationBackend } from '../grok.ts';
 import { AGENT_IDLE_TIMEOUT_MS_ENV } from '../../cursor-agent/teardown.ts';
 import type { ConversationStreamChunk } from '../../types.ts';
+import { GROK_BIN_ENV } from '../argv.ts';
+import { grokConversationBackend } from '../grok.ts';
 
 let dir: string;
 

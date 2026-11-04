@@ -1,11 +1,12 @@
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import clsx from 'clsx';
+
+import { CHAT_ROLE_LABEL } from '../data/chat-thread-message-role-labels';
+import type { ChatMessage } from '../types';
+import { formatChatTimestamp } from '../utils/index';
 import { ChatMessageBody } from './ChatMessageBody';
 import { ChatTurnTimeline } from './ChatTurnTimeline';
 import { RunningIndicator } from './RunningIndicator';
-import { CHAT_ROLE_LABEL } from '../data/chat-thread-message-role-labels';
-import { formatChatTimestamp } from '../utils/index';
-import type { ChatMessage } from '../types';
 
 export interface ChatThreadMessageProps {
   readonly message: ChatMessage;
@@ -45,14 +46,14 @@ const ChatThreadMessageComponent = (
 
   return (
     <article
-      className={clsx('flex flex-col gap-1 text-sm', {
+      className={cn('flex flex-col gap-1 text-sm', {
         'items-end': message.role === 'user',
         'items-start': message.role !== 'user',
       })}
       data-testid={`ChatThread-message-${message.id}`}
     >
       <div
-        className={clsx('flex flex-wrap items-baseline gap-x-2 gap-y-0.5', {
+        className={cn('flex flex-wrap items-baseline gap-x-2 gap-y-0.5', {
           'justify-end': message.role === 'user',
           'justify-start': message.role !== 'user',
         })}
@@ -70,7 +71,7 @@ const ChatThreadMessageComponent = (
         ) : null}
       </div>
       <div
-        className={clsx('max-w-[85%] rounded-lg', {
+        className={cn('max-w-[85%] rounded-lg', {
           'bg-primary text-primary-foreground px-3 py-2':
             message.role === 'user',
           // 'px-3 py-2': message.role === 'assistant',

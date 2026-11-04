@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   Select,
   SelectContent,
@@ -9,6 +8,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
 import type { ChatPersonaOption } from '../types';
 
 export interface ChatComposerPersonaSelectProps {
@@ -51,7 +52,7 @@ export const ChatComposerPersonaSelect = (
         <TooltipTrigger asChild={true}>
           <SelectTrigger
             aria-label="Agent"
-            className="h-8 w-auto min-w-32 gap-1"
+            className="h-8 w-auto min-w-32 gap-1 pointer-coarse:h-11"
             data-testid="ChatComposerToolbar-persona-select"
           >
             <SelectValue placeholder="Agent" />

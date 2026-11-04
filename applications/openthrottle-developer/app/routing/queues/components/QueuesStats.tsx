@@ -1,14 +1,15 @@
-import * as React from 'react';
-import clsx from 'clsx';
 import {
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
+  cn,
   Label,
   Switch,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+
 import type { QueueCardFragment } from '~/__generated__/graphql';
 import { QueueStatsChartTooltip } from '~/routing/queues/components/QueueStatsChartTooltip';
 import {
@@ -59,7 +60,7 @@ export const QueuesStats = (props: QueuesStatsProps): React.ReactElement => {
     return (
       <section
         aria-labelledby="queues-stats-heading"
-        className={clsx(className)}
+        className={cn(className)}
         data-testid="QueuesStats"
       >
         <h2 className="text-md" id="queues-stats-heading">
@@ -76,7 +77,7 @@ export const QueuesStats = (props: QueuesStatsProps): React.ReactElement => {
   return (
     <section
       aria-labelledby="queues-stats-heading"
-      className={clsx(className)}
+      className={cn(className)}
       data-testid="QueuesStats"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">

@@ -7,10 +7,12 @@ import { createMock } from '@golevelup/ts-vitest';
 import { ConflictException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService, usersFactory } from '@openthrottle/nestjs-repositories';
 import { Test } from '@nestjs/testing';
+import { UsersService } from '@openthrottle/nestjs-repositories';
+import { usersFactory } from '@openthrottle/nestjs-repositories/testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { AuthService } from './auth.service';
+
+import { AuthService } from './auth.service.ts';
 
 const mockUser = usersFactory.build({
   createdAt: new Date('2026-02-02T10:00:00.000Z'),

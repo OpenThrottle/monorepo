@@ -1,5 +1,5 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
 /**
@@ -68,6 +68,29 @@ describe('EditorWindow Component', () => {
       theme: 'vs-dark',
       wordWrap: 'on',
     });
+  });
+
+  test('uses a passed theme instead of the default', async () => {
+    const monacoMock = vi.fn<(props: Record<string, unknown>) => void>();
+
+    vi.doMock('@openthrottle/react-router-utils', () => ({
+      IS_BROWSER: true,
+    }));
+    vi.doMock('@monaco-editor/react', () => ({
+      default: (props: Record<string, unknown>) => {
+        monacoMock(props);
+        return <div data-testid="MonacoEditor" />;
+      },
+    }));
+
+    const { EditorWindow } = await import('../EditorWindow');
+    render(<EditorWindow theme="light" />);
+
+    const [props] = monacoMock.mock.calls[0] ?? [];
+    if (!props) {
+      throw new Error('expected Monaco to have been rendered with props');
+    }
+    expect(props.theme).toBe('light');
   });
 
   test('forwards beforeMount/onMount and lets custom options override the defaults', async () => {

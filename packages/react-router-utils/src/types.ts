@@ -41,7 +41,6 @@ export type OpenThrottlePublicEnv = {
 
   APP_URL_CMS: string;
   APP_URL_DEVELOPER: string;
-  APP_URL_EMAIL: string;
   APP_URL_SERVER: string;
   APP_URL_WEBSITE: string;
   APP_VERSION: string;
@@ -49,6 +48,12 @@ export type OpenThrottlePublicEnv = {
   // Environment
   /** Feature flag (string-encoded boolean; see config/features.ts). */
   FEATURE_BETA_PREVIEW?: string;
+  /**
+   * Publishes the website's blog discovery surfaces and routes (nav + footer
+   * links, sitemap entries, `/blog` routes, RSS). String-encoded boolean;
+   * absent means off.
+   */
+  FEATURE_BLOG_ENABLED?: string;
   FEATURE_CHARLIE_PREVIEW?: string;
 
   /**

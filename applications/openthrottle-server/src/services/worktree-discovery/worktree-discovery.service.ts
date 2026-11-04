@@ -13,6 +13,10 @@
  *      worktree whose base checkout is not registered, or whose primary lives outside the
  *      configured workspace roots.
  *
+ * The reverse check runs too: every registered `worktree` checkout with no live worktree behind it is
+ * reported in `missingCheckouts`, and every husk directory in a root (no `.git` at all) is reported
+ * as an `ORPHAN_DIRECTORY` problem. Both are reports only — nothing here deletes a row or a folder.
+ *
  * Bounded and non-fatal by construction: every git probe carries a timeout and maxBuffer, the scan
  * never recurses, the result is capped with the overflow COUNTED and warned about, and every fs or
  * git failure becomes a warning instead of an exception. Discovery must not be able to make
@@ -26,6 +30,7 @@ import { execFile } from 'node:child_process';
 import { readdirSync, statSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { promisify } from 'node:util';
+
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories';
@@ -33,22 +38,29 @@ import {
   RepositoryCheckoutsService,
   UserWorkspaceSettingsService,
 } from '@openthrottle/nestjs-repositories';
-import { parseLinkedWorktrees } from '../../graphql/repository-inspection/parse-linked-worktrees';
-import type { WorktreeRootSource } from '../worktree-root/worktree-root.resolver';
-import { realPath } from '../paths/real-path';
-import { resolveWorktreeRoot } from '../worktree-root/worktree-root.resolver';
+
+import { parseLinkedWorktrees } from '../../graphql/repository-inspection/parse-linked-worktrees.ts';
+import { realPath } from '../paths/real-path.ts';
+import type { WorktreeRootSource } from '../worktree-root/worktree-root.resolver.ts';
+import { resolveWorktreeRoot } from '../worktree-root/worktree-root.resolver.ts';
+import {
+  isExistingDirectory,
+  isLinkedWorktreeDirectory,
+} from './linked-worktree.ts';
 import type {
   DiscoveredWorktree,
+  MissingWorktreeCheckout,
   ScannedWorktreeRoot,
   WorktreeDiscoveryProblem,
   WorktreeDiscoveryProblemKind,
   WorktreeDiscoveryResult,
   WorktreeDiscoverySource,
-} from './worktree-discovery.types';
+} from './worktree-discovery.types.ts';
 import {
+  MISSING_CHECKOUT_REASON,
   WORKTREE_DISCOVERY_PROBLEM,
   WORKTREE_DISCOVERY_SOURCE,
-} from './worktree-discovery.types';
+} from './worktree-discovery.types.ts';
 
 const execFileAsync = promisify(execFile);
 
@@ -72,6 +84,12 @@ const WORKTREE_KIND = 'worktree';
  * EPERM, …) genuinely may be hiding worktrees and is reported.
  */
 const ABSENT_DIRECTORY_ERRNOS = new Set(['ENOENT', 'ENOTDIR']);
+
+/** Where a scanned directory came from: the configured root it sits under, and the rung that set it. */
+interface ResolvedRootOrigin {
+  readonly baseRoot: string;
+  readonly source: WorktreeRootSource;
+}
 
 /** Accumulator for one worktree while the two sources are being merged. */
 interface WorktreeCandidate {
@@ -144,6 +162,11 @@ export class WorktreeDiscoveryService {
       );
     }
 
+    const missingCheckouts = findMissingCheckouts(
+      checkouts,
+      new Set(live.map((candidate) => candidate.path)),
+    );
+
     const kept = live.slice(0, MAX_DISCOVERED_WORKTREES);
     const droppedCount = live.length - kept.length;
     if (droppedCount > 0) {
@@ -163,8 +186,9 @@ export class WorktreeDiscoveryService {
 
     return {
       droppedCount,
+      missingCheckouts,
       problems,
-      rootSource: firstRoot?.[1] ?? null,
+      rootSource: firstRoot?.[1].source ?? null,
       scannedAt,
       scannedRoots,
       warnings: problems.map(formatWarning),
@@ -208,22 +232,22 @@ export class WorktreeDiscoveryService {
 
   /**
    * @description The distinct worktree roots the shared ladder resolves across the user's primary
-   * checkouts, each mapped to the rung that answered. Insertion-ordered so the payload's
-   * `worktreeRoot` is stable.
+   * checkouts, keyed by the namespaced directory that gets scanned and mapped to the configured base
+   * root plus the rung that answered. Insertion-ordered so the payload's `worktreeRoot` is stable.
    */
   private resolveRoots(
     primaries: readonly RepositoryCheckout[],
     problems: WorktreeDiscoveryProblem[],
-  ): Map<string, WorktreeRootSource> {
-    const roots = new Map<string, WorktreeRootSource>();
+  ): Map<string, ResolvedRootOrigin> {
+    const roots = new Map<string, ResolvedRootOrigin>();
 
     for (const primary of primaries) {
       try {
-        const { resolvedRoot, source } = resolveWorktreeRoot({
+        const { baseRoot, resolvedRoot, source } = resolveWorktreeRoot({
           baseCheckoutPath: primary.filesystemPath,
         });
         if (!roots.has(resolvedRoot)) {
-          roots.set(resolvedRoot, source);
+          roots.set(resolvedRoot, { baseRoot, source });
         }
       } catch (error) {
         problems.push(
@@ -299,13 +323,13 @@ export class WorktreeDiscoveryService {
    * naming the first root and leaving the rest to be inferred from failures.
    */
   private collectFromRootScan(
-    roots: ReadonlyMap<string, WorktreeRootSource>,
+    roots: ReadonlyMap<string, ResolvedRootOrigin>,
     candidates: Map<string, WorktreeCandidate>,
     problems: WorktreeDiscoveryProblem[],
   ): ScannedWorktreeRoot[] {
     const scanned: ScannedWorktreeRoot[] = [];
 
-    for (const [root, source] of roots) {
+    for (const [root, { baseRoot, source }] of roots) {
       let entries: string[];
       try {
         entries = readdirSync(root);
@@ -322,6 +346,7 @@ export class WorktreeDiscoveryService {
           );
         }
         scanned.push({
+          baseRoot,
           exists: !absent,
           path: root,
           source,
@@ -333,12 +358,28 @@ export class WorktreeDiscoveryService {
       let worktreeCount = 0;
       for (const entry of entries) {
         const path = join(root, entry);
+        if (isOrphanDirectory(path)) {
+          problems.push(
+            problem(
+              WORKTREE_DISCOVERY_PROBLEM.ORPHAN_DIRECTORY,
+              'directory in the worktree root has no .git; it is not a worktree',
+              path,
+            ),
+          );
+          continue;
+        }
         if (!isLinkedWorktreeDirectory(path)) continue;
         add(candidates, path, WORKTREE_DISCOVERY_SOURCE.ROOT_SCAN);
         worktreeCount += 1;
       }
 
-      scanned.push({ exists: true, path: root, source, worktreeCount });
+      scanned.push({
+        baseRoot,
+        exists: true,
+        path: root,
+        source,
+        worktreeCount,
+      });
     }
 
     return scanned;
@@ -472,24 +513,50 @@ const add = (
   existing.sources.add(source);
 };
 
-/** Whether the path is a directory that exists right now. Never throws. */
-const isExistingDirectory = (path: string): boolean => {
-  try {
-    return statSync(path).isDirectory();
-  } catch {
+/**
+ * A directory with no `.git` at all — the husk a removed worktree leaves behind. Dot-entries are
+ * skipped: the root is ours, but `.DS_Store`-style clutter is not worth a problem. Only an absent
+ * `.git` counts; an unreadable one is not evidence of a husk.
+ */
+const isOrphanDirectory = (path: string): boolean => {
+  if (basename(path).startsWith('.') || !isExistingDirectory(path)) {
     return false;
+  }
+  try {
+    statSync(join(path, '.git'));
+    return false;
+  } catch (error) {
+    return isAbsentDirectoryError(error);
   }
 };
 
-/** A linked worktree's `.git` is a FILE (`gitdir:` pointer); a real clone's is a directory. */
-const isLinkedWorktreeDirectory = (path: string): boolean => {
-  try {
-    if (!statSync(path).isDirectory()) return false;
-    return statSync(join(path, '.git')).isFile();
-  } catch {
-    return false;
-  }
-};
+/**
+ * Registered worktree checkouts with nothing live behind them. A checkout counts as live when
+ * discovery found it OR its path is a linked worktree right now — the existence probe is what keeps
+ * a worktree outside every scanned root, whose primary is unregistered or unreadable, from being
+ * reported missing.
+ */
+const findMissingCheckouts = (
+  checkouts: readonly RepositoryCheckout[],
+  livePaths: ReadonlySet<string>,
+): MissingWorktreeCheckout[] =>
+  checkouts
+    .filter((checkout) => checkout.kind === WORKTREE_KIND)
+    .flatMap((checkout): MissingWorktreeCheckout[] => {
+      const path = realPath(checkout.filesystemPath);
+      if (livePaths.has(path) || isLinkedWorktreeDirectory(path)) return [];
+      return [
+        {
+          checkoutId: checkout.id,
+          path: checkout.filesystemPath,
+          reason: isExistingDirectory(path)
+            ? MISSING_CHECKOUT_REASON.NOT_A_WORKTREE
+            : MISSING_CHECKOUT_REASON.PATH_GONE,
+          repositoryId: checkout.repositoryId,
+        },
+      ];
+    })
+    .sort((a, b) => a.path.localeCompare(b.path));
 
 /** Builds one classified problem; `path` and `repositoryId` default to "not applicable". */
 const problem = (
@@ -515,6 +582,8 @@ const formatWarning = ({
       return `could not list registered checkouts: ${detail}`;
     case WORKTREE_DISCOVERY_PROBLEM.NOT_A_GIT_REPO:
       return `${path} is registered but is not a git repository: ${detail}`;
+    case WORKTREE_DISCOVERY_PROBLEM.ORPHAN_DIRECTORY:
+      return `${path} sits in the worktree root but has no .git; it is left over from a removed worktree`;
     case WORKTREE_DISCOVERY_PROBLEM.ROOT_UNREADABLE:
       return `worktree root ${path} could not be read: ${detail}`;
     case WORKTREE_DISCOVERY_PROBLEM.STALE_WORKTREE_ENTRY:

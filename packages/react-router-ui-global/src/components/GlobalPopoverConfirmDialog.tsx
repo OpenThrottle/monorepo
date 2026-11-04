@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -9,7 +8,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
 import { useFetcher, useSubmit } from 'react-router';
+
 import { GLOBAL_POPOVER_COPY } from '../data/data.copy';
 
 /**
@@ -102,8 +103,16 @@ export const GlobalPopoverConfirmDialog = (
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>{cancelLabel}</AlertDialogCancel>
-          <AlertDialogAction onClick={handleConfirm} type="button">
+          <AlertDialogCancel data-testid="GlobalPopoverConfirmDialogCancel">
+            {cancelLabel}
+          </AlertDialogCancel>
+          {/* Stable hook for e2e: the confirm label is often identical to the
+              menu item's label, which leaves a text selector ambiguous. */}
+          <AlertDialogAction
+            data-testid="GlobalPopoverConfirmDialogConfirm"
+            onClick={handleConfirm}
+            type="button"
+          >
             {confirmLabel}
           </AlertDialogAction>
         </AlertDialogFooter>

@@ -1,8 +1,8 @@
-import * as React from 'react';
-import clsx from 'clsx';
-import { Button, Empty } from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
+import { Button, cn, Empty } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import { SKILLS_EMPTY_COPY } from '~/routing/skills/data/data.copy';
 
 export interface SkillsEmptyProps {
@@ -31,7 +31,7 @@ export const SkillsEmpty = (props: SkillsEmptyProps): React.ReactElement => {
   // 🔌 Short Circuit
 
   return (
-    <Empty className={clsx('my-8', className)}>
+    <Empty className={cn('my-8', className)}>
       <GlobalHeading
         heading="h3"
         title={

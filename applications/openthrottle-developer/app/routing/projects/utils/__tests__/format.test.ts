@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { formatProjectDate } from '../format';
 
 describe('formatProjectDate', () => {

@@ -1,16 +1,17 @@
-import * as React from 'react';
+import type { RenderResult } from '@testing-library/react';
 import { cleanup, render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import {
   createRoutesStub,
   useNavigationType,
   useSearchParams,
 } from 'react-router';
 import { afterEach, describe, expect, test } from 'vitest';
-import type { RenderResult } from '@testing-library/react';
+
 import { GLOBAL_TOOLBAR_SEARCH_COPY } from '../../data/data.copy';
-import { GlobalToolbarSearch } from '../GlobalToolbarSearch';
 import type { GlobalToolbarSearchProps } from '../GlobalToolbarSearch';
+import { GlobalToolbarSearch } from '../GlobalToolbarSearch';
 
 const ARIA_LABEL = 'Search skills';
 

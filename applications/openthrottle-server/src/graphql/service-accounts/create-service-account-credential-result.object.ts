@@ -3,7 +3,8 @@
  */
 
 import { Field, ObjectType } from '@nestjs/graphql';
-import { ServiceAccountCredentialObject } from './service-account-credential.object';
+
+import { ServiceAccountCredentialObject } from './service-account-credential.object.ts';
 
 @ObjectType()
 export class CreateServiceAccountCredentialResultObject {

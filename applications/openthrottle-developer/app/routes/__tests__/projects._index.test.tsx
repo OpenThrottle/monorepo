@@ -1,12 +1,14 @@
-import * as React from 'react';
 import { render } from '@testing-library/react';
+import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import Index from '../projects._index';
+
+import type { Route } from '@/app/routes/+types/projects._index';
+import type { ProjectWithStats } from '~/routing/projects/data/types';
 import { buildRootMatch } from '~/testing/root-match-fixture';
 import { renderRoutesStub } from '~/testing/route-fixtures';
-import type { ProjectWithStats } from '~/routing/projects/data/types';
-import type { Route } from '@/app/routes/+types/projects._index';
+
+import Index from '../projects._index';
 
 const mockProjects: ProjectWithStats[] = [
   {

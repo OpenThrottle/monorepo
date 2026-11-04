@@ -1,5 +1,6 @@
-import { describe, expect, test } from 'vitest';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
+import { describe, expect, test } from 'vitest';
+
 import { isNotificationEventName } from '../is-notification-event-name';
 
 describe('isNotificationEventName', () => {

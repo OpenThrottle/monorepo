@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { toggleCheckoutSelection } from '../chat-checkout-selection';
 
 describe('toggleCheckoutSelection', () => {

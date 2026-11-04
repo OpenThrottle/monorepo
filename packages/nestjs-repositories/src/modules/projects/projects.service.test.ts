@@ -1,13 +1,14 @@
-import { describe, it, expect, beforeAll, vi } from 'vitest';
-import { Test } from '@nestjs/testing';
 import { createMock } from '@golevelup/ts-vitest';
+import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import type { DeepPartial } from 'typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { asMock } from '@openthrottle/nestjs-testing';
-import { Project } from './project.entity';
-import { projectsFactory } from './projects.factory';
-import { ProjectsService } from './projects.service';
+import type { DeepPartial } from 'typeorm';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
+
+import { Project } from './project.entity.ts';
+import { projectsFactory } from './projects.factory.ts';
+import { ProjectsService } from './projects.service.ts';
 
 describe('ProjectsService', () => {
   type GetRepository = ReturnType<ProjectsService['getRepository']>;

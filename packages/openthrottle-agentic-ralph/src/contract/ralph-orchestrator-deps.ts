@@ -1,5 +1,6 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { ExecuteGraphqlOptionsV2 } from '@openthrottle/nodejs-graphql';
+import type { ConversationReasoningEffort } from '@openthrottle/openthrottle-agentic-utils';
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 
 /**
@@ -35,6 +36,17 @@ export type WorkflowRalphIterationOnChunk = (
 ) => void | Promise<void>;
 
 /**
+ * @description A subscription usage limit reported by an iteration runner. Structurally identical to
+ * `UsageLimit` in `@openthrottle/openthrottle-drivers` (which this package deliberately does not
+ * depend on). `resetsAt` is an ISO-8601 instant; `null` means "limited, reset unknown".
+ * @public
+ */
+export interface WorkflowRalphUsageLimit {
+  readonly rateLimitType: string | null;
+  readonly resetsAt: string | null;
+}
+
+/**
  * @description One agent iteration (layer-2), aligned with `tools/workflows` `RunIterationConfig` /
  * `runIterationAsync`: environment-specific runner returns combined stdout/stderr text.
  */
@@ -42,9 +54,25 @@ export interface WorkflowRalphIterationRunParams {
   readonly agentPrompt: string;
   /** @description Agent subprocess cwd (foreign `workingDirectory`). */
   readonly cwd?: string;
+  /**
+   * @description Reasoning effort for the run (chat vocabulary). The runner maps it to each
+   * backend's own flag; a backend with no reasoning knob ignores it.
+   */
+  readonly effort: ConversationReasoningEffort | undefined;
+  /**
+   * @description Extra env for the agent subprocess, merged over `process.env`. The orchestrator
+   * sets `OT_PR_DRAFT_DIR` here so the agent's PR draft lands where finalize reads it.
+   */
+  readonly env?: Readonly<Record<string, string>>;
   readonly iteration: number;
   readonly model: string | undefined;
   readonly onChunk?: WorkflowRalphIterationOnChunk;
+  /**
+   * @description Fired by the runner when the iteration closed having hit a subscription usage limit.
+   * The orchestrator uses it to stop the run cleanly instead of treating the iteration as ordinary
+   * (failed) agent output.
+   */
+  readonly onUsageLimit?: (usageLimit: WorkflowRalphUsageLimit) => void;
   readonly runner: WorkflowConfigRunner;
   readonly signal: AbortSignal | undefined;
   readonly skipWorktreeSetup?: boolean;
@@ -62,6 +90,29 @@ export interface WorkflowRalphIterationRunner {
 }
 
 /**
+ * @description Result of one host command (git, gh, or a local script) run by the plan-end
+ * finalize step. Exit code 0 is success; stdout/stderr are UTF-8 text (may be empty).
+ * @public
+ */
+export interface WorkflowRalphCommandResult {
+  readonly exitCode: number;
+  readonly stderr: string;
+  readonly stdout: string;
+}
+
+/**
+ * @description Injectable host command runner for the plan-end finalize step (`git`, `gh`, and
+ * `scripts/check-pr-attribution.sh`). Unit tests supply a fake; production uses
+ * {@link createDefaultWorkflowRalphCommandRunner}. Never shells — argv is passed as an array.
+ * @public
+ */
+export type WorkflowRalphCommandRunner = (params: {
+  readonly args: readonly string[];
+  readonly command: string;
+  readonly cwd: string;
+}) => Promise<WorkflowRalphCommandResult>;
+
+/**
  * @description Dependencies for constructing a Ralph-shaped `WorkflowOrchestrator`: GraphQL I/O and
  * iteration execution. Pass `executeGraphqlV2` from `@openthrottle/nodejs-graphql` with options from
  * `buildWorkflowExecuteGraphqlV2Options` in `graphql.ts`, or a test double.
@@ -76,4 +127,15 @@ export interface WorkflowRalphOrchestratorDeps {
    * internals.
    */
   readonly onChunk?: WorkflowRalphIterationOnChunk;
+
+  /**
+   * @description Host command runner for the plan-end push/PR finalize step. When set, a finished
+   * plan (`workflow_complete` / `workflow_tasks_exhausted` / `workflow_complete_handoff_owed`)
+   * runs the deterministic push + PR step through this runner. When omitted, finalize is skipped
+   * (loop-only / unit-test paths). The server deps factory wires
+   * {@link createDefaultWorkflowRalphCommandRunner}. Credentials are the worker host's existing
+   * `git` / `gh` auth — a non-host (docker) worker without those credentials fails finalize into
+   * `workflow_complete_handoff_owed` rather than FAILED; the agent container is never asked to push.
+   */
+  readonly runCommand?: WorkflowRalphCommandRunner;
 }

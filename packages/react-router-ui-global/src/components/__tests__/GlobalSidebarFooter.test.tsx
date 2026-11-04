@@ -1,10 +1,11 @@
-import * as React from 'react';
+import type { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
 import { render, screen } from '@testing-library/react';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import type { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
-import type { GlobalSidebarFooterProps } from '../GlobalSidebarFooter';
+
 import { GlobalProviders } from '../GlobalProviders';
+import type { GlobalSidebarFooterProps } from '../GlobalSidebarFooter';
 import { GlobalSidebarFooter } from '../GlobalSidebarFooter';
 
 const renderSidebarFooter = (props: GlobalSidebarFooterProps = {}): void => {

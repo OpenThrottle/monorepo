@@ -90,14 +90,49 @@ message naming the checkout, instead of an opaque driver error. Each run records
 targeted and its `resolved_cwd`, so run history stays truthful after later edits. 3. At worker boot, the reconciler converges BullMQ schedulers to the DB (registers enabled rows,
 removes orphans) — the DB is authoritative, BullMQ is a projection.
 
+## Usage limits
+
+A Claude subscription has 5-hour and weekly usage windows. When the agent CLI stops on one, the run is
+recorded **`usage_limited`** instead of `failed` ("Agent exited with code N"): the status is terminal
+for that row, is **not** an error, and carries the window (`usage_limit_type`, e.g. `five_hour`) and
+the reset time the CLI reported (`usage_limit_resets_at`). A cancelled run stays `cancelled`.
+
+When the limit is a short wait the processor schedules the work to run again by itself:
+
+1. It pre-creates a **continuation run** (`trigger = resume`, `status = queued`,
+   `resume_of_run_id` = the limited run) and enqueues a delayed job that claims it one minute after
+   the reset. The delayed job's id is `usage-limit-resume-<limited run id>`; its payload carries the
+   continuation run's id, so the processor claims the pre-created row exactly as it does for Run now.
+2. The continuation shows as `queued` in the in-flight list until it starts, and can be cancelled like
+   any queued run: cancelling removes the delayed job (it is never left to fire later).
+
+The run is **held** (left `usage_limited`, with the reason appended to its error message) instead of
+resumed when any of these is true:
+
+- the reset time is unknown or unreadable;
+- the reset is more than 24 hours away (a weekly window), or already more than 15 minutes in the past;
+- the run's chain has already been limited three times (the limited run plus two resumes), so a job
+  that keeps hitting the limit cannot loop forever;
+- the schedule is disabled or deleted;
+- **the job's next cron fire is at or before the resume time** — the schedule supersedes the
+  continuation, so the work runs once, not twice. The next fire is read from the live BullMQ scheduler
+  (`scheduled_agent_jobs.next_run_at` is only refreshed on upsert and boot reconcile, so it goes stale
+  after the first fire).
+
+Resume handling never throws: the limited BullMQ job completes normally and is never retried. The
+policy is the same pure function the plan-run resume uses (`queues/usage-limit/`), plus the cron rule
+above. The run list shows a limited run as **Usage limited** with the reset time in the viewer's local
+time and whether it resumes at that time or was not resumed automatically; a continuation's trigger
+reads **resume (after usage limit)**.
+
 ## Configuration (env)
 
-| Env                                | Default               | Purpose                                                                                                                                |
-| ---------------------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `SCHEDULED_AGENT_JOBS_TIMEOUT_MS`  | `900000` (15m)        | Per-run timeout when a schedule sets none.                                                                                             |
-| `SCHEDULED_AGENT_JOBS_CONCURRENCY` | `4`                   | How many **independent directories** may run at once. Runs sharing a directory serialise regardless — see [Concurrency](#concurrency). |
-| `WORKSPACE_ROOT`                   | `process.cwd()`       | Default cwd for the agent CLI when a schedule targets no repository and sets no `cwd`.                                                 |
-| `OT_SCHEDULED_JOBS_OWNER`          | non-worktree checkout | Gates **boot** scheduler registration so many dev workers on one Redis don't fight (mutations always apply). `true`/`false` overrides. |
+| Env                                | Default               | Purpose                                                                                                                                                                                                                                                                     |
+| ---------------------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SCHEDULED_AGENT_JOBS_TIMEOUT_MS`  | `900000` (15m)        | Per-run timeout when a schedule sets none.                                                                                                                                                                                                                                  |
+| `SCHEDULED_AGENT_JOBS_CONCURRENCY` | `4`                   | How many **independent directories** may run at once. Runs sharing a directory serialise regardless — see [Concurrency](#concurrency).                                                                                                                                      |
+| `WORKSPACE_ROOT`                   | `process.cwd()`       | Default cwd for the agent CLI when a schedule targets no repository and sets no `cwd`.                                                                                                                                                                                      |
+| `OT_SCHEDULED_JOBS_OWNER`          | non-worktree checkout | Gates **boot** registration of every repeatable (this feature's boot reconcile plus the sweep/stats/ingestion/retention jobs) via one check: `OT_WORKTREE_DB=shared` is a non-owner, `isolated` and an absent marker own. Mutations always apply. `true`/`false` overrides. |
 
 ## Concurrency
 

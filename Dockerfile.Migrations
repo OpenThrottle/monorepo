@@ -12,7 +12,7 @@
 # Published as openthrottle/migrations:<tag> alongside server/developer.
 ###########################################################################
 ARG NODE_VERSION="24"
-FROM node:${NODE_VERSION}-bookworm-slim AS production
+FROM node:${NODE_VERSION}-trixie-slim AS production
 
 WORKDIR /app
 

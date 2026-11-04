@@ -10,7 +10,7 @@
 
 import { writeFileSync } from 'node:fs';
 
-import type { RenderRequest, TtsBackend } from '../types';
+import type { RenderRequest, TtsBackend } from '../types.ts';
 
 /**
  * Won the 2026-08 listen but not adopted: "Will", a friendly young-male premade narration

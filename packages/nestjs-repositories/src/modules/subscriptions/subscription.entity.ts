@@ -12,7 +12,8 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import type { User } from '../users/user.entity';
+
+import type { User } from '../users/user.entity.ts';
 
 /** Scalar/column fields of Subscription (no relations). */
 export type SubscriptionData = Pick<

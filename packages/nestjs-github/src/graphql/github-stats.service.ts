@@ -3,8 +3,9 @@
  */
 
 import { Injectable } from '@nestjs/common';
-import type { ListPullsOptions } from '../github/github.service';
-import { GitHubService } from '../github/github.service';
+
+import type { ListPullsOptions } from '../github/github.service.ts';
+import { GitHubService } from '../github/github.service.ts';
 
 /**
  * @description Open PR count per author for a repo (mirrors queues stats

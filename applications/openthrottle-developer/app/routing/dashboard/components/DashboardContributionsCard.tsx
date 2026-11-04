@@ -1,14 +1,15 @@
-import * as React from 'react';
 import {
   Button,
   Card,
+  cn,
   ContributionHeatmap,
 } from '@openthrottle/react-router-shadcn';
-import { Link } from 'react-router';
 import { ArrowRightIcon } from 'lucide-react';
-import clsx from 'clsx';
-import { mapDailyStatsToContributions } from '~/routing/dashboard/utils/contributions-heatmap';
+import * as React from 'react';
+import { Link } from 'react-router';
+
 import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
+import { mapDailyStatsToContributions } from '~/routing/dashboard/utils/contributions-heatmap';
 
 export interface DashboardContributionsCardProps {
   className?: string;
@@ -45,7 +46,7 @@ export const DashboardContributionsCard = (
 
   return (
     <Card
-      className={clsx('gap-3 p-4', className)}
+      className={cn('gap-3 p-4', className)}
       data-testid="DashboardContributionsCard"
     >
       <div className="flex items-center justify-between gap-2">

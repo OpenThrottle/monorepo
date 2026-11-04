@@ -1,13 +1,15 @@
-import { describe, expect, test, vi, beforeEach } from 'vitest';
 import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
-import { action, loader } from '../settings.repositories._index';
-import type { Route } from '@/app/routes/+types/settings.repositories._index';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+
+import type { Route } from '@/app/routes/+types/settings.repositories._index';
 import {
   mockCheckout,
   mockDiscoveredWorktree,
   mockRepository,
 } from '~/routing/settings/repositories/data/mock.repositories';
+
+import { action, loader } from '../settings.repositories._index';
 
 vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
   const actual =
@@ -46,10 +48,17 @@ const workspaceRepositories = [
 
 const discoveredWorktrees = {
   droppedCount: 0,
-  rootSource: 'DEFAULT',
   scannedAt: '2026-08-24T00:00:00.000Z',
+  scannedRoots: [
+    {
+      baseRoot: '/Users/dev/.openthrottle/worktrees',
+      exists: true,
+      path: '/Users/dev/.openthrottle/worktrees/acme/monorepo',
+      source: 'DEFAULT',
+      worktreeCount: 0,
+    },
+  ],
   warnings: [],
-  worktreeRoot: '/Users/dev/.openthrottle/worktrees/monorepo',
   worktrees: [],
 };
 

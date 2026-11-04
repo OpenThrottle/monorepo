@@ -1,17 +1,18 @@
-import * as React from 'react';
 import {
   Button,
+  cn,
   Empty,
   ScrollArea,
   Skeleton,
 } from '@openthrottle/react-router-shadcn';
 import { MessageSquarePlus } from 'lucide-react';
-import clsx from 'clsx';
+import * as React from 'react';
+
+import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../data/chat-conversation-sidebar.copy';
+import { useChatConversationSidebar } from '../hooks/useChatConversationSidebar';
+import type { AgentConversationListItem } from '../types';
 import { ChatConversationDeleteDialog } from './ChatConversationDeleteDialog';
 import { ChatConversationRow } from './ChatConversationRow';
-import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../data/chat-conversation-sidebar.copy';
-import { useChatConversationSidebar } from '../hooks/use-chat-conversation-sidebar';
-import type { AgentConversationListItem } from '../types';
 
 export interface ChatConversationSidebarProps {
   /** Currently-open conversation, highlighted in the list; null/undefined for a fresh thread. */
@@ -177,7 +178,7 @@ export const ChatConversationSidebar = (
 
   return (
     <div
-      className={clsx('flex h-full min-h-0 flex-col', className)}
+      className={cn('flex h-full min-h-0 flex-col', className)}
       data-testid="ChatConversationSidebar"
     >
       {hideHeader ? null : header}

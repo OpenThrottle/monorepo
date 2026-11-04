@@ -1,28 +1,29 @@
-import * as React from 'react';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import { GlobalScreen } from '@openthrottle/react-router-ui-global';
+import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import {
   getActionError,
   mergeRouteModuleMeta,
 } from '@openthrottle/react-router-utils';
-import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
-import { GlobalScreen } from '@openthrottle/react-router-ui-global';
-import { SITE_TITLE } from '~/global/config/settings';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import * as React from 'react';
+
+import type { Route } from '@/app/routes/+types/settings.workspace._index';
 import {
   GetEditorPresenceDocument,
   GetWorkspaceSettingsDocument,
 } from '~/__generated__/graphql';
-import { SettingsWorkspaceEditorsForm } from '~/routing/settings/components/SettingsWorkspaceEditorsForm';
-import { SettingsWorkspaceIntro } from '~/routing/settings/components/SettingsWorkspaceIntro';
-import { SettingsWorkspaceProfileForm } from '~/routing/settings/components/SettingsWorkspaceProfileForm';
+import { SITE_TITLE } from '~/global/config/settings';
 import {
   applyEditorConfig,
   updateProfile,
 } from '~/routing/settings/actions/workspace';
-import { buildEditorPresenceIndex } from '~/routing/settings/utils/workspace-editor-presence-status';
+import { SettingsWorkspaceEditorsForm } from '~/routing/settings/components/SettingsWorkspaceEditorsForm';
+import { SettingsWorkspaceIntro } from '~/routing/settings/components/SettingsWorkspaceIntro';
+import { SettingsWorkspaceProfileForm } from '~/routing/settings/components/SettingsWorkspaceProfileForm';
 import { buildWorkspaceApplyResults } from '~/routing/settings/utils/workspace-apply-results';
+import { buildEditorPresenceIndex } from '~/routing/settings/utils/workspace-editor-presence-status';
 import { buildWorkspaceEditorTargetGroups } from '~/routing/settings/utils/workspace-editor-targets';
-import type { Route } from '@/app/routes/+types/settings.workspace._index';
 // import { FolderGit2Icon } from 'lucide-react';
 // import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 // import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';

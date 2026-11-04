@@ -1,8 +1,10 @@
-import * as React from 'react';
 import { screen } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import { UsageIntroduction } from '../UsageIntroduction';
+
 import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import { UsageIntroduction } from '../UsageIntroduction';
 
 describe('UsageIntroduction Component', () => {
   test('renders Usage heading and range copy', () => {

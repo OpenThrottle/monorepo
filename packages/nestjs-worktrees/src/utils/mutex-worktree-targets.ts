@@ -9,13 +9,14 @@
  */
 
 import type { Mutex } from 'async-mutex';
+
 import type {
   AcquireResult,
   IWorktreeTargetsTracker,
   ReleaseResult,
   WorktreeTarget,
   WorktreeTargetAvailable,
-} from '../types/worktree';
+} from '../types/worktree.ts';
 
 /**
  * @description Async mutex-wrapped interface for worktree target tracking.

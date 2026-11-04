@@ -1,13 +1,15 @@
-import * as React from 'react';
-import { act, render, waitFor } from '@testing-library/react';
-import type { RenderResult } from '@testing-library/react';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
-import { createRoutesStub } from 'react-router';
+import type { RenderResult } from '@testing-library/react';
+import { act, render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
+import { createRoutesStub } from 'react-router';
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { buildRootMatch } from '~/testing/root-match-fixture';
-import Index from '../_index';
+
 import type { Route } from '@/app/routes/+types/_index';
+import { buildRootMatch } from '~/testing/root-match-fixture';
+
+import Index from '../_index';
 
 // A long thread is the whole point of docking, and `messages` lives in client
 // state rather than the loader — so stub the turn hook to hand the route one.

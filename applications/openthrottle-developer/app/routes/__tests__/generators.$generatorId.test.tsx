@@ -1,8 +1,10 @@
-import * as React from 'react';
 import { render, screen } from '@testing-library/react';
+import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
+
 import type { GeneratorDetailCardFragment } from '~/__generated__/graphql';
+
 import GeneratorDetail from '../generators.$generatorId';
 
 const mockGenerator: GeneratorDetailCardFragment = {

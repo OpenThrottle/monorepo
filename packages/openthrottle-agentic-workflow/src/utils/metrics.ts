@@ -5,6 +5,7 @@
  */
 
 import * as os from 'os';
+
 import type {
   LoadAverageMetrics,
   PsiCpuMetrics,

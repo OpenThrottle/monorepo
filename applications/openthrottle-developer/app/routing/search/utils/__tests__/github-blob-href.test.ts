@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { githubBlobHref } from '../github-blob-href';
 
 describe('githubBlobHref', () => {

@@ -1,11 +1,13 @@
-import * as React from 'react';
-import { Button } from '@openthrottle/react-router-shadcn';
-import { GithubLogoIcon } from '@phosphor-icons/react/dist/ssr/GithubLogo';
+import { Button, cn } from '@openthrottle/react-router-shadcn';
 import { GlobalAnimationMesh } from '@openthrottle/react-router-ui-global';
-import { LANDING_HERO } from '~/routing/home/data/data.landing';
-import { LandingNav } from './LandingNav';
+import { GithubLogoIcon } from '@phosphor-icons/react/dist/ssr/GithubLogo';
+import * as React from 'react';
 import { Link } from 'react-router';
+
+import { LANDING_HERO } from '~/routing/home/data/data.landing';
 import { useRotatingHeadline } from '~/routing/home/hooks/useRotatingHeadline';
+
+import { LandingNav } from './LandingNav';
 
 export interface LandingHeroProps {
   /**
@@ -69,18 +71,20 @@ export const LandingHero = (props: LandingHeroProps): React.ReactElement => {
             {outgoing ? (
               <span
                 aria-hidden="true"
-                className={`landing-headline-fade col-start-1 row-start-1 ${
-                  incomingVisible ? 'opacity-0' : 'opacity-100'
-                }`}
+                className={cn(
+                  'landing-headline-fade col-start-1 row-start-1',
+                  incomingVisible ? 'opacity-0' : 'opacity-100',
+                )}
               >
                 {outgoing}
               </span>
             ) : null}
             <span
               aria-live="polite"
-              className={`landing-headline-fade col-start-1 row-start-1 ${
-                outgoing && !incomingVisible ? 'opacity-0' : 'opacity-100'
-              }`}
+              className={cn(
+                'landing-headline-fade col-start-1 row-start-1',
+                outgoing && !incomingVisible ? 'opacity-0' : 'opacity-100',
+              )}
             >
               {headline}
             </span>

@@ -1,9 +1,10 @@
 import { ALL_DRIVERS } from '@openthrottle/openthrottle-drivers';
-import * as React from 'react';
 import { render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
+
 import Component from '../settings.agents';
 
 // The table embeds the install/update controls, which open a graphql-ws
@@ -14,6 +15,7 @@ vi.mock('~/services/graphql-ws-client', () => ({
 
 type LoaderData = {
   agents: Array<{
+    auth?: { warning: string | null } | null;
     backend: string;
     enabled: boolean;
     label: string;
@@ -116,6 +118,31 @@ describe('routes/settings.agents.tsx', () => {
     expect(
       component.getByTestId('SettingsAgentsTableRow-claude'),
     ).toBeInTheDocument();
+  });
+
+  test('shows the claude credential warning prominently when an API key overrides the subscription', async () => {
+    const component = renderRoute({
+      agents: [
+        {
+          auth: {
+            warning: `ANTHROPIC_API_KEY is set, so Claude runs bill the API key.`,
+          },
+          backend: 'claude',
+          enabled: true,
+          label: 'claude-code',
+          models: ['opus'],
+          version: '2.1.0',
+        },
+      ],
+      canManage: true,
+      installEnabled: true,
+      scannedAt: '2026-08-12T00:00:00.000Z',
+    });
+
+    const alert = await component.findByTestId(
+      'SettingsAgentsAuthWarning-claude',
+    );
+    expect(alert).toHaveTextContent('ANTHROPIC_API_KEY is set');
   });
 
   test('shows the last-checked timestamp from the scan', async () => {

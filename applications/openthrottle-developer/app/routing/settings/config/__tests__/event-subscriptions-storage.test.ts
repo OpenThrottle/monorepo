@@ -4,9 +4,10 @@
  */
 
 import { afterEach, describe, expect, test, vi } from 'vitest';
+
 import {
-  EVENT_SUBSCRIPTION_ROWS,
   buildInitialSubscriptions,
+  EVENT_SUBSCRIPTION_ROWS,
   type EventSubscriptionId,
 } from '~/routing/settings/config/event-subscriptions';
 import {

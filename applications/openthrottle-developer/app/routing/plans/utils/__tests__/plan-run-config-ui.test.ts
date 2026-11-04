@@ -1,7 +1,8 @@
 import { describe, expect, test } from 'vitest';
+
 import {
-  getDefaultWorkflowRalphRunOptionsInput,
   DEFAULT_RALPH_ITERATIONS,
+  getDefaultWorkflowRalphRunOptionsInput,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import {
   hydratePlanRunConfigUiState,
@@ -51,6 +52,35 @@ describe('hydratePlanRunConfigUiState', () => {
     expect(hydrated.workflowInput.project).toBe('packages/foo');
     expect(hydrated.workingDirectory).toBe('/tmp/openthrottle');
     expect(hydrated.iterationTimeoutText).toBe('120');
+  });
+});
+
+describe('effort', () => {
+  test('a stored config written before effort existed hydrates as unset', () => {
+    const hydrated = hydratePlanRunConfigUiState(
+      planId,
+      JSON.stringify({ version: 1 }),
+    );
+
+    expect(hydrated.workflowInput.effort).toBe('');
+  });
+
+  test('round-trips a chosen effort through serialize and hydrate', () => {
+    const hydrated = hydratePlanRunConfigUiState(planId, null);
+
+    const json = serializePlanRunConfigUiState({
+      ...hydrated,
+      workflowInput: {
+        ...hydrated.workflowInput,
+        effort: 'extraHigh',
+        executionBackend: 'claude',
+      },
+    });
+
+    expect(JSON.parse(json).ralph.effort).toBe('extraHigh');
+    expect(hydratePlanRunConfigUiState(planId, json).workflowInput.effort).toBe(
+      'extraHigh',
+    );
   });
 });
 

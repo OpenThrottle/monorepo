@@ -1,4 +1,4 @@
-import type { ProfileExecutionResult } from './profile-execution.types';
+import type { ProfileExecutionResult } from './profile-execution.types.ts';
 
 type Reporter = (result: ProfileExecutionResult) => void;
 

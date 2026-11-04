@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { ModelEndpoint } from '../../../types/model-discovery.ts';
 import { DEFAULT_PORTS } from '../constants.ts';
+import { dedupeEndpoints, discoverModels } from '../discover.ts';
 import { resolveHosts, resolvePorts } from '../hosts.ts';
 import {
   createLimiter,
@@ -9,7 +10,6 @@ import {
   probeAll,
   probeEndpoint,
 } from '../probe.ts';
-import { dedupeEndpoints, discoverModels } from '../discover.ts';
 
 /** Build a JSON 200 Response. */
 function json(body: unknown): Response {

@@ -1,9 +1,10 @@
-import * as React from 'react';
 import clsx from 'clsx';
 import cronstrue from 'cronstrue';
 import { ChevronDownIcon } from 'lucide-react';
-import { cn } from '../utils/cn';
+import * as React from 'react';
+
 import { CRON_EXPRESSION_COPY, CRON_PRESETS } from '../data/data.cron-presets';
+import { cn } from '../utils/cn';
 import {
   DropdownMenu,
   DropdownMenuContent,

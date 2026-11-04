@@ -2,13 +2,14 @@ import {
   buildChatOptionsResponse,
   type ChatOptionsResponse,
 } from '@openthrottle/react-router-chat-state';
+
+import type { Route } from '@/app/routes/+types/resources.chat-options';
 import {
   loadAgentClis,
   loadDiscoveredModels,
   loadPersonas,
   loadRepositories,
 } from '~/routing/home/data/models.server';
-import type { Route } from '@/app/routes/+types/resources.chat-options';
 
 /**
  * The response contract is single-sourced in

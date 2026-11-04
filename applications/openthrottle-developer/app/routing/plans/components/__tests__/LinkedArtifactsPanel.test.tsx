@@ -1,14 +1,15 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
-import { LinkedArtifactsPanel } from '../LinkedArtifactsPanel';
+
 import type {
   LinkedArtifactRow,
   LinkedArtifactsPanelProps,
 } from '../LinkedArtifactsPanel';
+import { LinkedArtifactsPanel } from '../LinkedArtifactsPanel';
 
 const PLAN_ID = 'plan-1';
 

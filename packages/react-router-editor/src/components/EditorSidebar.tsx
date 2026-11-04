@@ -1,5 +1,6 @@
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import clsx from 'clsx';
+
 import { useEditor } from '../hooks/useEditor';
 import { EditorSidebarFile } from './EditorSidebarFile';
 
@@ -31,7 +32,7 @@ export const EditorSidebar = (
 
   return (
     <div
-      className={clsx(
+      className={cn(
         'w-[220px] text-xs overflow-ellipsis',
         'flex flex-col gap-0.5 p-4',
         'border-l border-gray-700',

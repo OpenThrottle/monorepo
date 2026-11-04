@@ -1,10 +1,12 @@
-import * as React from 'react';
 import { screen } from '@testing-library/react';
+import * as React from 'react';
 import { describe, expect, test } from 'vitest';
-import CreateProject from '../projects.create';
-import { renderRoutesStub } from '~/testing/route-fixtures';
-import { buildRootMatch } from '~/testing/root-match-fixture';
+
 import type { Route } from '@/app/routes/+types/projects.create';
+import { buildRootMatch } from '~/testing/root-match-fixture';
+import { renderRoutesStub } from '~/testing/route-fixtures';
+
+import CreateProject from '../projects.create';
 
 const matches: Route.ComponentProps['matches'] = [
   buildRootMatch(),

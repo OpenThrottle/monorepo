@@ -7,8 +7,8 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 
-import { TranscriptionStreamResolver } from './transcription-stream.resolver';
-import { TranscriptionStreamService } from './transcription-stream.service';
+import { TranscriptionStreamResolver } from './transcription-stream.resolver.ts';
+import { TranscriptionStreamService } from './transcription-stream.service.ts';
 
 @Module({
   imports: [LoggerModule],

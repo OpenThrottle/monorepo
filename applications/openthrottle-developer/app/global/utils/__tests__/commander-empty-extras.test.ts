@@ -1,8 +1,9 @@
 import { describe, expect, test, vi } from 'vitest';
+
 import type { CommanderSearchFields } from '../commander-empty-extras';
 import {
-  REGEX_UUID,
   buildCommanderEmptyStateExtras,
+  REGEX_UUID,
 } from '../commander-empty-extras';
 
 describe('buildCommanderEmptyStateExtras', () => {

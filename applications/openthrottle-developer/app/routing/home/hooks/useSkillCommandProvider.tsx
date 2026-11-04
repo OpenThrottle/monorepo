@@ -1,12 +1,11 @@
-import * as React from 'react';
 import type {
   ChatSlashCommand,
   ChatSlashCommandProvider,
 } from '@openthrottle/react-router-chat';
-import type { SkillsAutocompleteResponse } from '~/routing/skills/utils/autocomplete-entries';
+import * as React from 'react';
 
-/** Cap on suggestions surfaced in the composer's `/`-command popover. */
-export const MAX_SKILL_SUGGESTIONS = 50;
+import { MAX_SKILL_SUGGESTIONS } from '~/routing/home/config/composer-suggestions';
+import type { SkillsAutocompleteResponse } from '~/routing/skills/utils/autocomplete-entries';
 
 /**
  * Build the composer's `/`-command {@link ChatSlashCommandProvider}. Unlike the
@@ -22,13 +21,15 @@ export const MAX_SKILL_SUGGESTIONS = 50;
  * shows the empty label.
  */
 export const useSkillCommandProvider = (): ChatSlashCommandProvider => {
+  // Hooks
   // Kept in refs so the cache survives re-renders and popover open/close cycles.
   const listingCache = React.useRef<readonly ChatSlashCommand[] | null>(null);
   const inflight = React.useRef<Promise<readonly ChatSlashCommand[]> | null>(
     null,
   );
 
-  return React.useMemo<ChatSlashCommandProvider>(() => {
+  // Setup
+  const provider = React.useMemo<ChatSlashCommandProvider>(() => {
     const loadListing = async (): Promise<readonly ChatSlashCommand[]> => {
       if (listingCache.current !== null) {
         return listingCache.current;
@@ -80,4 +81,14 @@ export const useSkillCommandProvider = (): ChatSlashCommandProvider => {
       },
     };
   }, []);
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
+  return provider;
 };

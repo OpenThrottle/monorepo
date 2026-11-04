@@ -1,12 +1,13 @@
-import * as React from 'react';
-import { cleanup, render, waitFor } from '@testing-library/react';
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import type { RenderResult } from '@testing-library/react';
+import { cleanup, render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, describe, expect, test } from 'vitest';
-import { TooltipProvider } from '@openthrottle/react-router-shadcn';
-import { SkillAvailabilityPostureCard } from '../SkillAvailabilityPostureCard';
+
 import type { SkillAvailabilityPostureCardProps } from '../SkillAvailabilityPostureCard';
+import { SkillAvailabilityPostureCard } from '../SkillAvailabilityPostureCard';
 
 interface Captured {
   intent: string | null;

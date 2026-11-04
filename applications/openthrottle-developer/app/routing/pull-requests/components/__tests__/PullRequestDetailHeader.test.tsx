@@ -1,10 +1,11 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { formatDate } from 'date-fns';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { PullRequestDetailHeader } from '../PullRequestDetailHeader';
+
 import type { PullRequestDetailHeaderProps } from '../PullRequestDetailHeader';
+import { PullRequestDetailHeader } from '../PullRequestDetailHeader';
 
 describe('PullRequestDetailHeader Component', () => {
   let component: RenderResult;

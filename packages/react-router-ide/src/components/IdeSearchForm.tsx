@@ -1,5 +1,5 @@
+import { Button, cn, Input, Label } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import { Button, Input, Label, cn } from '@openthrottle/react-router-shadcn';
 
 export interface IdeSearchFormProps {
   className?: string;

@@ -6,18 +6,8 @@
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type {
-  WorkflowRalphDefaultsDebug,
-  WorkflowRalphDefaultsDiagnosticsJson,
-  WorkflowRalphDefaultsFileV1Json,
-  WorkflowRalphDefaultsSpawnJson,
-  WorkflowRalphResolvedDefaults,
-} from './workflow-ralph-defaults.types.ts';
-import { WORKFLOW_RALPH_DEFAULTS_FILENAME } from './workflow-ralph-defaults.types.ts';
-import {
-  DEFAULT_RALPH_RUNNER,
-  parseRalphExecutionBackendId,
-} from '../utils/ralph-execution-backend.ts';
+
+import { isRecord } from '@openthrottle/nodejs-utils';
 import {
   isWorkflowVerboseEnvTruthy,
   readWorkflowDebugLevelFromEnv,
@@ -26,16 +16,28 @@ import {
   WORKFLOW_RALPH_VERBOSE_ENV,
   type WorkflowDebugLevel,
 } from '@openthrottle/openthrottle-agentic-utils';
-import { isRecord } from '@openthrottle/nodejs-utils';
-import {
-  WORKFLOW_RALPH_TRANSPORT_ENV,
-  type WorkflowRalphTransport,
-} from '../utils/workflow-transport.ts';
+
+import type { Writable } from '../type.ts';
 import {
   OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS_ENV,
   WORKFLOW_RALPH_OT_DIAGNOSTICS_ENV,
 } from '../utils/ot-diagnostics.ts';
-import type { Writable } from '../type.ts';
+import {
+  DEFAULT_RALPH_RUNNER,
+  parseRalphExecutionBackendId,
+} from '../utils/ralph-execution-backend.ts';
+import {
+  WORKFLOW_RALPH_TRANSPORT_ENV,
+  type WorkflowRalphTransport,
+} from '../utils/workflow-transport.ts';
+import type {
+  WorkflowRalphDefaultsDebug,
+  WorkflowRalphDefaultsDiagnosticsJson,
+  WorkflowRalphDefaultsFileV1Json,
+  WorkflowRalphDefaultsSpawnJson,
+  WorkflowRalphResolvedDefaults,
+} from './workflow-ralph-defaults.types.ts';
+import { WORKFLOW_RALPH_DEFAULTS_FILENAME } from './workflow-ralph-defaults.types.ts';
 
 export const DEFAULT_RALPH_PROMPT = '/agents-ralph';
 export const DEFAULT_RALPH_ITERATIONS = 10;

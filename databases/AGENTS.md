@@ -19,5 +19,7 @@ No `package.json` here. Everything runs through root `pnpm run database:*` scrip
 ## Other contents
 
 - [`backups/`](./backups/) — zip dumps from `pnpm run database:backup`. The migrate script itself does **not** back up; run a backup first before risky migrations.
+- [`backup-offsite.sh`](./backup-offsite.sh) — host-level nightly `pg_dump` shipped off the box via rclone, with retention mirroring `DATABASE_BACKUP_RETENTION_COUNT`. **The app's own scheduled backup job cannot run on a deployed box** — it spawns `pnpm run database:backup` in a workspace checkout, which a distroless image does not have — so this is the only database backup on a deployment. Wired as a systemd timer by the Hetzner cloud-init.
+- [`SEEDING.md`](./SEEDING.md) + [`verify-restore.sh`](./verify-restore.sh) — provider-agnostic runbook for loading a dump into a fresh database (Hetzner, GCP, local, or a restore drill), and the script that verifies it. **A row count does not prove a good restore** — embeddings can arrive NULL with every count matching, so the script exercises the extensions and a real nearest-neighbour query. SEEDING.md also documents that the containerized `migrations` runner has **no ledger** and re-applies all 118 migrations on every deploy, unlike `pnpm run database:migrate`.
 - `seed.sql` — ~45 MB dump copied into the consumer-install seeded Postgres image (`applications/openthrottle/Dockerfile.Postgres`); don't grep or edit it casually.
 - [`TABLE_COMMENTS_AUDIT.md`](./TABLE_COMMENTS_AUDIT.md) — audit trail for the comment backfill effort.

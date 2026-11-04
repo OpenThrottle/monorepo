@@ -1,9 +1,10 @@
-import * as React from 'react';
 import { Card } from '@openthrottle/react-router-shadcn';
+import * as React from 'react';
+
+import type { PullRequestDetailFragment } from '~/__generated__/graphql';
 import { PullRequestActionsLinks } from '~/routing/pull-requests/components/PullRequestActionsLinks';
 import { PullRequestChecksLinks } from '~/routing/pull-requests/components/PullRequestChecksLinks';
 import { PullRequestDiffLinks } from '~/routing/pull-requests/components/PullRequestDiffLinks';
-import type { PullRequestDetailFragment } from '~/__generated__/graphql';
 
 export interface PullRequestGithubCardProps {
   owner: string;

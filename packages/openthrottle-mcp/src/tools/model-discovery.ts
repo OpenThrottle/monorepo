@@ -30,7 +30,7 @@ type DiscoverLocalModelsStructured = {
   totalCount: number;
 };
 
-export const discoverLocalModelsToolParameters = z.object({});
+export const discoverLocalModelsToolParameters = z.object({}).strict();
 
 export const discoverLocalModelsToolDescription = `Discover locally-running OpenAI-compatible model servers (Ollama-primary; also vLLM, llama.cpp, SGLang, LM Studio) and the models they serve, via the discoverLocalModels GraphQL query. No arguments. Returns a cached snapshot (60s TTL). Caveat: baseUrls reflect the server's network vantage point (a Dockerized server reaches a host Ollama via host.docker.internal).`;
 

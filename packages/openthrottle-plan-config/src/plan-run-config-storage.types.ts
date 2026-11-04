@@ -4,6 +4,7 @@
  */
 
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
+
 import type { PLAN_RUN_CONFIG_VERSION } from './plan-run-config-storage.constants.ts';
 
 export type PlanRunConfigTargetMode = 'plan' | 'task';
@@ -27,6 +28,11 @@ export interface PlanJobRunHooksStorage {
  */
 export interface PlanRunConfigRalphV1 {
   readonly debugCli: PlanRunConfigDebugCli;
+  /**
+   * @description Reasoning-effort level (chat vocabulary: low|medium|high|extraHigh|max|ultra);
+   * empty = unset. Validated against the backend at enqueue.
+   */
+  readonly effort: string;
   readonly executionBackend: WorkflowConfigRunner;
   /** @description Raw Configuration tab timeout field; empty omits `--iteration-timeout`. */
   readonly iterationTimeoutText: string;
@@ -72,6 +78,7 @@ export type PlanRunConfigStorage = PlanRunConfigStorageV1;
  */
 export interface PlanWorkflowRalphRunOptions {
   readonly debugCli: PlanRunConfigDebugCli;
+  readonly effort: string;
   readonly executionBackend: WorkflowConfigRunner;
   readonly iterations: number;
   readonly model: string;

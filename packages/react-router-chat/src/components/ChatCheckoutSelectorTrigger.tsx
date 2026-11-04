@@ -1,7 +1,6 @@
-import * as React from 'react';
-import { Button } from '@openthrottle/react-router-shadcn';
+import { Button, cn } from '@openthrottle/react-router-shadcn';
 import { FolderGit2, GitBranch } from 'lucide-react';
-import clsx from 'clsx';
+import * as React from 'react';
 
 export interface ChatCheckoutSelectorTriggerProps extends Omit<
   React.ComponentPropsWithoutRef<typeof Button>,
@@ -73,9 +72,9 @@ export const ChatCheckoutSelectorTrigger = React.forwardRef<
       // Icon-only drops every visible word, so the name the label was carrying
       // has to move here or a screen reader hears "Checkout" and nothing else.
       aria-label={minimal ? `Checkout: ${label}` : 'Checkout'}
-      className={clsx(
-        'h-8',
-        minimal ? 'w-8 p-0' : 'w-auto max-w-56 gap-1.5',
+      className={cn(
+        'h-8 pointer-coarse:h-11',
+        minimal ? 'w-8 p-0 pointer-coarse:w-11' : 'w-auto max-w-56 gap-1.5',
         className,
       )}
       data-testid="ChatCheckoutSelector-trigger"

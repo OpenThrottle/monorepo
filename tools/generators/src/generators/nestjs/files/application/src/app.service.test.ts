@@ -1,8 +1,9 @@
-import { describe, expect, beforeAll, test } from 'vitest';
+import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { createMock } from '@golevelup/ts-vitest';
-import { AppService } from './app.service';
+import { beforeAll, describe, expect, test } from 'vitest';
+
+import { AppService } from './app.service.ts';
 
 describe('AppService', () => {
   let service: AppService;

@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 
-import * as fs from 'fs';
-import * as path from 'path';
 import * as chromeLauncher from 'chrome-launcher';
 import { Command } from 'commander';
-import lighthouse from 'lighthouse';
+import * as fs from 'fs';
 import type { Flags } from 'lighthouse';
+import lighthouse from 'lighthouse';
+import * as path from 'path';
+
 import type {
   LighthouseActionableInsight,
   LighthouseActionableInsightsReport,

@@ -1,11 +1,13 @@
-import * as React from 'react';
-import { render } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { RolloutFlagFormFields } from '../RolloutFlagFormFields';
-import type { RolloutFlagFormFieldsProps } from '../RolloutFlagFormFields';
+
 import { RolloutFlagKind } from '~/__generated__/graphql';
 import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
+
+import type { RolloutFlagFormFieldsProps } from '../RolloutFlagFormFields';
+import { RolloutFlagFormFields } from '../RolloutFlagFormFields';
 
 const flag: RolloutFlagFormFieldsProps['flag'] = {
   createdAt: '2026-07-24T00:00:00.000Z',

@@ -1,7 +1,7 @@
 /**
  * @description GraphQL input types for work-ledger operations. One input arg per operation,
  * matching the repo convention. Actor is NEVER an input — it is stamped server-side from the
- * authenticated principal (design §2.1).
+ * authenticated principal.
  */
 
 import { Field, ID, InputType, Int } from '@nestjs/graphql';
@@ -133,4 +133,13 @@ export class UnverifiedWorkArtifactsInput {
     nullable: true,
   })
   type!: string | null;
+}
+
+@InputType()
+export class WorkLedgerCompletenessInput {
+  @Field(() => Int, {
+    description: `Max owed plans listed; the counts are always over the full set`,
+    nullable: true,
+  })
+  limit!: number | null;
 }

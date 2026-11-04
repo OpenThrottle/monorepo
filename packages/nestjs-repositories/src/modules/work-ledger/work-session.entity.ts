@@ -9,7 +9,8 @@ import {
   Entity,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import type { WorkSessionClosedBy } from './work-ledger.constants';
+
+import type { WorkSessionClosedBy } from './work-ledger.constants.ts';
 
 /** Column-only shape of WorkSession (no relations). */
 export type WorkSessionData = Pick<

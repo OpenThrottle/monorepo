@@ -64,6 +64,13 @@ The branch is created with `--no-track`: cut from `origin/main`, it would otherw
 its upstream and aim a later `git push` at the wrong branch. `--base` is ignored, with a warning,
 when the branch already exists or when provisioning in place — in both cases there is nothing to fork.
 
+### Provision options
+
+`create.sh` passes repo-agnostic switches to the repo's provisioner as exported environment variables — the
+hook contract has no argv channel. `--own-db` sets `OPENTHROTTLE_WORKTREE_OWN_DB=1`, asking for the worktree's
+own database instead of the primary's; a provisioner that does not know it ignores it. In this repo it runs
+the same code as `pnpm worktree:db isolate`.
+
 **Stdout contract:** `create.sh` prints _only_ the worktree's absolute path. Everything else is stderr.
 Claude's `WorktreeCreate` hook depends on this — any extra stdout line breaks worktree creation.
 
@@ -111,7 +118,13 @@ The skill never knows how to set your repo up. It looks for a provisioner, and r
 
 1. `$OPENTHROTTLE_WORKTREE_PROVISION` (absolute, or relative to the worktree)
 2. `<worktree>/.worktree/provision.sh`
-3. `<worktree>/scripts/setup_worktree.sh`
+3. `<worktree>/scripts/setup_worktree.ts`
+4. `<worktree>/scripts/setup_worktree.sh` (legacy — branches that predate the `.ts`)
+
+Heal also runs an optional **heal hook** on every already-provisioned worktree, to backfill state onto
+worktrees an older provisioner built: `$OPENTHROTTLE_WORKTREE_HEAL`, then `<worktree>/.worktree/heal.sh`, then
+`<worktree>/scripts/heal_worktree.ts`. It must be idempotent and cheap, and a failing heal hook is logged but
+never fatal (heal runs before every `dev`).
 
 Teardown mirrors it: `$OPENTHROTTLE_WORKTREE_TEARDOWN`, then `<worktree>/.worktree/teardown.sh` (no `scripts/`
 fallback). Nothing found → log and no-op; a plain `git worktree add`/`remove` is a perfectly valid
@@ -133,9 +146,20 @@ Destroying a worktree is the one action here that can eat real work, so the defa
 - **Branch-preserving.** `--delete-branch` deletes it only if merged; `--delete-branch --force` otherwise.
 - **`--dry-run`** prints exactly what would happen and removes nothing.
 - Runs the teardown hook _before_ removal, then `git worktree prune`.
+- **Deregisters the OpenThrottle checkout record** after a successful removal
+  (`scripts/deregister.sh`), so the repositories page stops listing a worktree that is gone. It
+  calls `deregisterWorktreeCheckout` with the path, resolving the endpoint and token by the same
+  location ladder the agentic hooks use — the _primary_ checkout's `.env` (only in an OpenThrottle
+  checkout), then the ambient environment, then `~/.openthrottle/.env`. Strictly fail-open: no
+  `curl`, no endpoint or token, a server that is down, or a refused request each log one line and
+  the removal still succeeds. The server keeps the record while an unsettled plan run points at it,
+  so settle a run before tearing down its worktree. `OPENTHROTTLE_WORKTREE_DEREGISTER=0` skips it.
 
 With no argument, run from inside a linked worktree, it removes itself (chdir'ing to the primary
 checkout first).
+
+Removal that bypasses this script — `git worktree remove`, an editor's own cleanup — leaves the
+record behind. The repositories page flags such records "Missing on disk" and prunes them.
 
 ## Adopting this in another repo
 
@@ -159,8 +183,8 @@ checkout first).
 4. Optionally wire the Claude `WorktreeCreate` hook in `.claude/settings.json` and Cursor's
    `.cursor/worktrees.json` provision-in-place command at the same scripts, using the same ladder.
 
-OpenThrottle itself needs no `.worktree/provision.sh`: its existing `scripts/setup_worktree.sh` is
-discovered by rung 3. It _does_ ship `.worktree/teardown.sh` (teardown has no `scripts/` rung), which
+OpenThrottle itself needs no `.worktree/provision.sh`: its `scripts/setup_worktree.ts` is discovered
+by rung 3 and run by bare Node (native type stripping, so no tsx and no `node_modules` needed). It _does_ ship `.worktree/teardown.sh` (teardown has no `scripts/` rung), which
 stops the worktree's own docker compose project before removal.
 
 Note the hook is read from the **worktree's** checkout, not the primary one — so a worktree on a

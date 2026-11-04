@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
+
 import type { OpenThrottleEnv, OpenThrottlePublicEnv } from '../../types';
 
 const VALID_ENV: Record<string, number | string> = {
@@ -11,7 +12,6 @@ const VALID_ENV: Record<string, number | string> = {
   APP_URL_ADMIN: 'https://admin.example.com',
   APP_URL_CMS: 'https://cms.example.com',
   APP_URL_DEVELOPER: 'https://dev.example.com',
-  APP_URL_EMAIL: 'https://email.example.com',
   APP_URL_SERVER: 'https://server.example.com',
   APP_URL_WEBSITE: 'https://www.example.com',
   APP_VERSION: 42,
@@ -30,7 +30,6 @@ const REQUIRED_KEYS = [
   'APP_URL_ADMIN',
   'APP_URL_CMS',
   'APP_URL_DEVELOPER',
-  'APP_URL_EMAIL',
   'APP_URL_SERVER',
   'APP_URL_WEBSITE',
   'APP_VERSION',
@@ -85,11 +84,11 @@ describe('getEnvironment', () => {
       APP_URL_ADMIN: 'https://admin.example.com',
       APP_URL_CMS: 'https://cms.example.com',
       APP_URL_DEVELOPER: 'https://dev.example.com',
-      APP_URL_EMAIL: 'https://email.example.com',
       APP_URL_SERVER: 'https://server.example.com',
       APP_URL_WEBSITE: 'https://www.example.com',
       APP_VERSION: '42',
       FEATURE_BETA_PREVIEW: 'false',
+      FEATURE_BLOG_ENABLED: 'false',
       FEATURE_CHARLIE_PREVIEW: 'false',
       NODE_ENV: 'development',
       ROLLBAR_TOKEN: '1234567890',

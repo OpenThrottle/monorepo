@@ -23,19 +23,20 @@
  * not run on the ws connection).
  */
 
-import { Throttle } from '@nestjs/throttler';
 import { ForbiddenException, Inject } from '@nestjs/common';
 import { Args, Context, Query, Resolver, Subscription } from '@nestjs/graphql';
+import { Throttle } from '@nestjs/throttler';
+import { Public } from '@openthrottle/nestjs-auth';
 import {
   PUB_SUB,
-  queueJobLogTopic,
   type PubSubEngine,
+  queueJobLogTopic,
 } from '@openthrottle/nestjs-graphql';
-import { Public } from '@openthrottle/nestjs-auth';
-import { QueueJobLogEventObject } from './queue-job-log-event.object';
-import { QueueJobLogPageObject } from './queue-job-log-page.object';
-import { QueueJobLogsInput } from './queue-job-logs.input';
-import { QueueJobLogsService } from './queue-job-logs.service';
+
+import { QueueJobLogEventObject } from './queue-job-log-event.object.ts';
+import { QueueJobLogPageObject } from './queue-job-log-page.object.ts';
+import { QueueJobLogsInput } from './queue-job-logs.input.ts';
+import { QueueJobLogsService } from './queue-job-logs.service.ts';
 
 /** Strict per-subject limit for the catch-up query (global default is 1000/60s). */
 const QUEUE_JOB_LOGS_THROTTLE = {

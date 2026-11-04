@@ -1,22 +1,26 @@
 /**
  * @description Soft-fail upsert of a linked worktree checkout for a plan run,
- * then NULL-only back-fill of `plan_runs.checkout_id`. Shared by the GraphQL
- * mutation, the in-process Ralph orchestrator run-start hook, and the CLI
- * `workflow-ralph` run-start hook. Shell provision-time registration from
- * `worktree:new` / `setup_worktree.sh` (service-account callback) is explicitly
- * deferred — see docs/monorepo/git-worktree-setup-timing.md.
+ * then write `plan_runs.checkout_id` (and `branch` from HEAD) to that worktree —
+ * overwriting a scheduling-time primary checkout when the run moved into a
+ * worktree. Shared by the GraphQL mutation, the in-process Ralph orchestrator
+ * run-start hook, and the CLI `workflow-ralph` run-start hook. Shell
+ * provision-time registration from `worktree:new` / `setup_worktree.ts`
+ * (service-account callback) is explicitly deferred — see
+ * docs/monorepo/git-worktree-setup-timing.md.
  */
 
 import { basename } from 'node:path';
+
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
+  type PlanRun,
   PlanRunsService,
   RepositoriesService,
   RepositoryCheckoutsService,
-  type PlanRun,
 } from '@openthrottle/nestjs-repositories';
-import { RepositoryInspectionService } from '../../graphql/repository-inspection/repository-inspection.service';
+
+import { RepositoryInspectionService } from '../../graphql/repository-inspection/repository-inspection.service.ts';
 
 export interface RegisterPlanRunWorktreeCheckoutParams {
   /** Absolute filesystem path of the resolved worktree for this run. */
@@ -42,9 +46,11 @@ export class PlanRunWorktreeCheckoutService {
 
   /**
    * @description Registers the resolved path as a managed worktree checkout when
-   * eligible and back-fills `plan_runs.checkout_id` only when it is still NULL.
-   * Soft-fails (logs, returns the unchanged run) on any registration error so
-   * the caller can continue the agent turn.
+   * eligible and points `plan_runs.checkout_id` + `branch` at that worktree
+   * (overwrites a prior scheduling checkout). Soft-fails (logs, returns the
+   * unchanged run) on any registration error so the caller can continue the
+   * agent turn. No-ops when the path is not a linked worktree — leaving a
+   * primary checkout already recorded at enqueue alone.
    */
   async register(
     params: RegisterPlanRunWorktreeCheckoutParams,
@@ -58,10 +64,6 @@ export class PlanRunWorktreeCheckoutService {
           `[${this.name}] plan run ${planRunId} not found; skipping worktree checkout registration`,
         );
         return null;
-      }
-
-      if (run.checkoutId !== null) {
-        return run;
       }
 
       const snapshot = await this.inspectionService.scan(filesystemPath);
@@ -78,7 +80,7 @@ export class PlanRunWorktreeCheckoutService {
       );
       if (repositoryId === null) {
         this.logger.warn(
-          `[${this.name}] could not resolve repositoryId for run ${planRunId} at ${filesystemPath}; leaving checkout_id NULL`,
+          `[${this.name}] could not resolve repositoryId for run ${planRunId} at ${filesystemPath}; leaving checkout_id unchanged`,
         );
         return run;
       }
@@ -92,9 +94,12 @@ export class PlanRunWorktreeCheckoutService {
         },
       );
 
-      const updated = await this.planRunsService.setCheckoutIdIfNull(
+      const updated = await this.planRunsService.setCheckoutAndBranch(
         planRunId,
-        checkout.id,
+        {
+          branch: snapshot.git.currentBranch,
+          checkoutId: checkout.id,
+        },
       );
 
       return updated ?? run;
