@@ -1,7 +1,7 @@
 # Scheduled agent jobs — usage
 
-Run any agent prompt on a cron schedule. Unlike the five code-defined cron services (doc-ingestion,
-work-ledger-sweep, database-backup, …), scheduled agent jobs are **user-defined at runtime**: pick a
+Run any agent prompt on a cron schedule. Unlike the code-defined cron services (work-ledger-sweep,
+database-backup, daily-stats, …), scheduled agent jobs are **user-defined at runtime**: pick a
 prompt + provider/model/settings + cron, and it runs on one shared BullMQ queue — no new queue per
 job.
 

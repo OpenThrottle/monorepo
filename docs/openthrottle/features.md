@@ -100,7 +100,7 @@ The **Run** control on Plan Details is a split button. It lives in the plan tool
 
 ### Background jobs (optional)
 
-- **Run plan** enqueues a plan in BullMQ (status → queued, then in_progress when the worker runs). **Doc ingestion** (diff-based re-index of `docs/` on main). **Daily stats** for dashboard/analytics.
+- **Run plan** enqueues a plan in BullMQ (status → queued, then in_progress when the worker runs). **Daily stats** for dashboard/analytics.
 - **Detailed docs:** [databases/README.md](../../databases/README.md) (queued status, doc tables).
 
 ---

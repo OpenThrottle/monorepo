@@ -5,7 +5,7 @@ job options (retries/backoff/retention), and a `registerQueue` helper for featur
 
 **Consumed by:** `openthrottle-server` only — `NestjsBullmqModule` imported once in
 `app.module.ts`, then `NestjsBullmqModule.registerQueue(<name>)` per feature queue in
-`applications/openthrottle-server/src/queues/*` (plans, doc-ingestion, code-index, …).
+`applications/openthrottle-server/src/queues/*` (plans, code-index, daily-stats, …).
 
 ## Layout
 
