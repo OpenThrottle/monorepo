@@ -33,11 +33,6 @@
       "import": "./dist/src/index.js",
       "require": "./dist/src/index.js"
     },
-    "./doc-ingestion": {
-      "types": "./dist/src/doc-ingestion/index.d.ts",
-      "import": "./dist/src/doc-ingestion/index.js",
-      "require": "./dist/src/doc-ingestion/index.js"
-    },
     "./*": {
       "import": "./dist/*.js",
       "require": "./dist/*.js"
@@ -104,12 +99,5 @@
     "postbuild": "chmod +x ./dist/src/bin/*.js"
   },
   "types": "./dist/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "doc-ingestion": [
-        "./dist/src/doc-ingestion/index.d.ts"
-      ]
-    }
-  },
   "version": "1.0.0"
 }
