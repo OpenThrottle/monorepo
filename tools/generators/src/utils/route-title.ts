@@ -1,5 +1,9 @@
-import { startCase } from 'lodash';
+import lodash from 'lodash';
 import pluralize from 'pluralize';
+
+// lodash is CommonJS without static named exports, so native ESM can only
+// default-import it.
+const { startCase } = lodash;
 
 /**
  * Product capitalization that survives sentence-casing verbatim.

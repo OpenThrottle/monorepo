@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
-import { syncProjectReferences } from './generator';
+import { syncProjectReferences } from './generator.ts';
 
 const execSync = vi.fn();
 const readFileSync = vi.fn();

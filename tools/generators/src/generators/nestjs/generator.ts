@@ -2,16 +2,16 @@ import type { Tree } from '@nx/devkit';
 import type { Choice } from 'prompts';
 import prompts from 'prompts';
 
-import { throwGeneratorError } from '../../utils/generator-errors';
-import { isInteractiveArgPresent } from '../../utils/nx-cli';
-import { writeJsonToStdout } from '../../utils/output';
-import { getProjectsByTags } from '../../utils/projects';
-import { generatorNestJSAIAgent } from './generator.ai-agent';
-import { generatorNestJSApplication } from './generator.application';
-import { generatorNestJSGraphQLService } from './generator.graphql-service';
-import { generatorNestJSModule } from './generator.module';
-import { generatorNestJSQueue } from './generator.queue';
-import { generatorNestJSSimpleService } from './generator.simple-service';
+import { throwGeneratorError } from '../../utils/generator-errors.ts';
+import { isInteractiveArgPresent } from '../../utils/nx-cli.ts';
+import { writeJsonToStdout } from '../../utils/output.ts';
+import { getProjectsByTags } from '../../utils/projects.ts';
+import { generatorNestJSAIAgent } from './generator.ai-agent.ts';
+import { generatorNestJSApplication } from './generator.application.ts';
+import { generatorNestJSGraphQLService } from './generator.graphql-service.ts';
+import { generatorNestJSModule } from './generator.module.ts';
+import { generatorNestJSQueue } from './generator.queue.ts';
+import { generatorNestJSSimpleService } from './generator.simple-service.ts';
 
 const generators: Choice[] = [
   {

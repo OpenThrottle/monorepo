@@ -46,9 +46,9 @@ const RE_EXPORT_STAR = /^export\s*\*\s*from\s*['"]([^'"]+)['"]/gm;
 /** `export { A, B as C }`, with or without a trailing `from './x'`. */
 const RE_EXPORT_NAMED = /^export\s*\{([^}]*)\}\s*(?:from\s*['"][^'"]+['"])?/gm;
 
-// `__dirname`, not `import.meta` — this package builds to CommonJS, which is
-// also why the generators themselves resolve their template dirs this way.
-const HERE = __dirname;
+// `import.meta.dirname` — the package is ESM, which is also how the generators
+// themselves resolve their template dirs.
+const HERE = import.meta.dirname;
 const TEMPLATE_ROOT = join(HERE, 'files');
 
 const findWorkspaceRoot = (start: string): string => {

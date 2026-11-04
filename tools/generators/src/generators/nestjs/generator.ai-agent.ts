@@ -2,10 +2,10 @@ import type { Tree } from '@nx/devkit';
 import { formatFiles, generateFiles, logger } from '@nx/devkit';
 import { join } from 'path';
 
-import { getCommonVariables } from '../../utils/index';
-import { getNestJSApplication } from '../../utils/projects';
-import { getTargetName } from '../../utils/questions';
-import { REGEX_SLUG } from '../../utils/regex';
+import { getCommonVariables } from '../../utils/index.ts';
+import { getNestJSApplication } from '../../utils/projects.ts';
+import { getTargetName } from '../../utils/questions.ts';
+import { REGEX_SLUG } from '../../utils/regex.ts';
 
 export interface NestJSAIAgentGeneratorSchema {
   readonly application?: string;
@@ -48,7 +48,7 @@ export const generatorNestJSAIAgent = async (
   }
 
   // 📂 Define the source and destination paths
-  const source = join(__dirname, `files/ai-agent`);
+  const source = join(import.meta.dirname, `files/ai-agent`);
   const destination = `applications/${application}/src/agents/`;
   const options = { ...getCommonVariables(name), application, name };
 

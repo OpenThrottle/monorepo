@@ -2,10 +2,10 @@ import type { Tree } from '@nx/devkit';
 import { formatFiles, generateFiles, logger } from '@nx/devkit';
 import { join } from 'path';
 
-import { getGithubUsername } from '../../utils';
-import { onApplicationSuccess } from '../../utils/messages';
-import { getTargetName, getTargetPort } from '../../utils/questions';
-import { REGEX_SLUG } from '../../utils/regex';
+import { getGithubUsername } from '../../utils/index.ts';
+import { onApplicationSuccess } from '../../utils/messages.ts';
+import { getTargetName, getTargetPort } from '../../utils/questions.ts';
+import { REGEX_SLUG } from '../../utils/regex.ts';
 
 export interface NestJSApplicationGeneratorSchema {
   readonly interactive?: boolean;
@@ -53,7 +53,7 @@ export const generatorNestJSApplication = async (
   const username = schema.username ?? getGithubUsername();
 
   // 📂 Define the source and destination paths
-  const source = join(__dirname, `files/application`);
+  const source = join(import.meta.dirname, `files/application`);
   const destination = `applications/${name}`;
   const options = { name, port, username };
 

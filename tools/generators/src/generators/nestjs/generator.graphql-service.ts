@@ -3,9 +3,9 @@ import { formatFiles, generateFiles, logger } from '@nx/devkit';
 import { join } from 'path';
 import prompts from 'prompts';
 
-import { getCommonVariables } from '../../utils/index';
-import { getGraphQLApplications } from '../../utils/projects';
-import { REGEX_SLUG } from '../../utils/regex';
+import { getCommonVariables } from '../../utils/index.ts';
+import { getGraphQLApplications } from '../../utils/projects.ts';
+import { REGEX_SLUG } from '../../utils/regex.ts';
 
 export interface NestJSGraphQLServiceGeneratorSchema {
   readonly application?: string;
@@ -58,7 +58,7 @@ export const generatorNestJSGraphQLService = async (
   if (!REGEX_SLUG.test(name)) throw new Error(`Name must be a valid slug.`);
 
   // 📂 Define the source and destination paths
-  const source = join(__dirname, `files/graphql-service`);
+  const source = join(import.meta.dirname, `files/graphql-service`);
   const destination = `applications/${application}/src/services/`;
   const options = { ...getCommonVariables(name), application, name };
 

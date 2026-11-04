@@ -2,17 +2,20 @@ import type { Tree } from '@nx/devkit';
 import { createProjectGraphAsync, formatFiles, logger } from '@nx/devkit';
 import { join } from 'path';
 
-import { getCommonVariables, getGeneratorOverview } from '../../utils';
-import type { CvaVariantGroup } from '../../utils/cva-variants';
-import { acceptsChildren, extractCvaVariants } from '../../utils/cva-variants';
-import { generateFilesSafely } from '../../utils/generate-files-safely';
+import type { CvaVariantGroup } from '../../utils/cva-variants.ts';
+import {
+  acceptsChildren,
+  extractCvaVariants,
+} from '../../utils/cva-variants.ts';
+import { generateFilesSafely } from '../../utils/generate-files-safely.ts';
+import { getCommonVariables, getGeneratorOverview } from '../../utils/index.ts';
 import {
   getComponentNames,
   getConfigConfirmation,
   getReactComponentDestination,
   parsePossibleNames,
-} from '../../utils/questions';
-import { throwInvalidDestinationError } from '../../utils/target-validation';
+} from '../../utils/questions.ts';
+import { throwInvalidDestinationError } from '../../utils/target-validation.ts';
 
 export interface ReactStoryGeneratorSchema {
   readonly destination?: string;
@@ -153,7 +156,7 @@ export async function storyGenerator(
       source ? extractCvaVariants(source) : []
     ).map((group) => ({ ...group, constName: toConstName(group.propName) }));
 
-    const templates = join(__dirname, 'files/story');
+    const templates = join(import.meta.dirname, 'files/story');
     const variables = getCommonVariables(name);
 
     const data = {

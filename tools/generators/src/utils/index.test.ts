@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { getGithubUsername } from './index';
+import { getGithubUsername } from './index.ts';
 
 // `vi.hoisted` runs before the hoisted `vi.mock` factory below, so the mock can
 // close over this spy.

@@ -2,7 +2,7 @@ import { createProjectGraphAsync } from '@nx/devkit';
 import type { Choice } from 'prompts';
 import prompts from 'prompts';
 
-import { MESSAGE_ON_CANCEL } from '../config/index';
+import { MESSAGE_ON_CANCEL } from '../config/index.ts';
 
 /** NX project graph node types we treat as "projects" (applications + packages). */
 const PROJECT_TAGS = ['type:application', 'type:package'] as const;

@@ -3,13 +3,13 @@ import { formatFiles, logger } from '@nx/devkit';
 import { join } from 'path';
 import prompts from 'prompts';
 
-import { generateFilesSafely } from '../../utils/generate-files-safely';
-import { getCommonVariables } from '../../utils/index';
+import { generateFilesSafely } from '../../utils/generate-files-safely.ts';
+import { getCommonVariables } from '../../utils/index.ts';
 import {
   getTargetApplication,
   parsePossibleNames,
-} from '../../utils/questions';
-import { getRouteTitleVariables } from '../../utils/route-title';
+} from '../../utils/questions.ts';
+import { getRouteTitleVariables } from '../../utils/route-title.ts';
 
 export interface ReactRouterRouteGeneratorSchema {
   readonly application?: string;
@@ -55,7 +55,7 @@ export const generatorReactRouterRoute = async (
     const isApiRoute = name.startsWith('api.');
     const destination = join('applications', application, 'app/routes');
     const template = isApiRoute ? 'route-api' : 'route';
-    const templates = join(__dirname, 'files', template);
+    const templates = join(import.meta.dirname, 'files', template);
     const variables = {
       ...getCommonVariables(name),
       ...getRouteTitleVariables(name),

@@ -3,7 +3,7 @@ import { readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { packageGenerator } from './generator';
+import { packageGenerator } from './generator.ts';
 
 describe('package generator', () => {
   let tree: Tree;

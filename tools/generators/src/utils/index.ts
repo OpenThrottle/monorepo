@@ -2,11 +2,15 @@ import { logger } from '@nx/devkit';
 import { execSync } from 'child_process';
 import type { Dirent } from 'fs';
 import { readdirSync } from 'fs';
-import { camelCase, kebabCase, upperFirst } from 'lodash';
+import lodash from 'lodash';
 import { join } from 'path';
 import pluralize from 'pluralize';
 
-import { getProjectsByTag } from './projects';
+import { getProjectsByTag } from './projects.ts';
+
+// lodash is CommonJS without static named exports, so native ESM can only
+// default-import it.
+const { camelCase, kebabCase, upperFirst } = lodash;
 
 /**
  * A little helper that gets the current git username which we use in some of
@@ -45,7 +49,7 @@ export const getGeneratorOverview = async (name: string, overview: string) => {
  * Returns an array of all the "applications" in the monorepo.
  */
 const getMonorepoRoot = () => {
-  const dir = __dirname;
+  const dir = import.meta.dirname;
   const path = join(dir, '../../../../');
 
   return path;

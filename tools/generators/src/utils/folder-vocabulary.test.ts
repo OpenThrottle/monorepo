@@ -1,10 +1,10 @@
 import { describe, expect, test } from 'vitest';
 
-import { BANNED_FOLDER_NAMES } from '../config/folder-vocabulary';
+import { BANNED_FOLDER_NAMES } from '../config/folder-vocabulary.ts';
 import {
   assertFolderVocabulary,
   describeBannedFolder,
-} from './folder-vocabulary';
+} from './folder-vocabulary.ts';
 
 describe('assertFolderVocabulary', () => {
   test('throws with the replacement hint and a machine-readable code', () => {

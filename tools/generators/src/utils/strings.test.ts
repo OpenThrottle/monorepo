@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { parseCommaSeparatedValues } from './strings';
+import { parseCommaSeparatedValues } from './strings.ts';
 
 describe('parseCommaSeparatedValues', () => {
   test('splits a simple comma-separated list', () => {

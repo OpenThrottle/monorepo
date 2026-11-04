@@ -3,22 +3,24 @@ import { formatFiles, generateFiles, logger } from '@nx/devkit';
 import { join } from 'path';
 import prompts from 'prompts';
 
-import { getMonorepoApplications } from '../../utils';
 import {
   assertFolderVocabulary,
   describeBannedFolder,
   FOLDER_VOCABULARY_RESTRICTION,
   isBannedFolderName,
-} from '../../utils/folder-vocabulary';
-import { throwGeneratorError } from '../../utils/generator-errors';
-import { getCommonVariables } from '../../utils/index';
-import { isInteractiveArgPresent } from '../../utils/nx-cli';
-import { writeJsonToStdout } from '../../utils/output';
+} from '../../utils/folder-vocabulary.ts';
+import { throwGeneratorError } from '../../utils/generator-errors.ts';
+import {
+  getCommonVariables,
+  getMonorepoApplications,
+} from '../../utils/index.ts';
+import { isInteractiveArgPresent } from '../../utils/nx-cli.ts';
+import { writeJsonToStdout } from '../../utils/output.ts';
 import {
   getConfigConfirmation,
   getTargetApplication,
-} from '../../utils/questions';
-import { REGEX_SLUG } from '../../utils/regex';
+} from '../../utils/questions.ts';
+import { REGEX_SLUG } from '../../utils/regex.ts';
 
 export interface FoldersGeneratorSchema {
   readonly application?: string;
@@ -152,7 +154,7 @@ export async function foldersGenerator(
 
   const variables = getCommonVariables(name);
   const destination = join('applications', application, 'app', folder);
-  const templates = join(__dirname, 'files');
+  const templates = join(import.meta.dirname, 'files');
 
   const data = { ...variables, destination, templates };
   if (interactive) {

@@ -2,7 +2,7 @@ import type { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { generatorNestJSApplication } from './generator.application';
+import { generatorNestJSApplication } from './generator.application.ts';
 
 describe('nestjs-application generator', () => {
   let tree: Tree;

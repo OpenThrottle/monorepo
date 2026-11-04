@@ -1,21 +1,25 @@
 import type { Tree } from '@nx/devkit';
 import { formatFiles, logger } from '@nx/devkit';
-import { camelCase } from 'lodash';
+import lodash from 'lodash';
 import { join } from 'path';
 import prompts from 'prompts';
 
+import { generateFilesSafely } from '../../utils/generate-files-safely.ts';
 import {
   getCommonVariables,
   getRemixRoutingFolders,
   getRemixServiceFolders,
-} from '../../utils';
-import { generateFilesSafely } from '../../utils/generate-files-safely';
-import { MESSAGE_ON_CANCEL } from '../../utils/messages';
+} from '../../utils/index.ts';
+import { MESSAGE_ON_CANCEL } from '../../utils/messages.ts';
 import {
   getTargetApplication,
   parsePossibleNames,
-} from '../../utils/questions';
-import { throwInvalidFolderError } from '../../utils/target-validation';
+} from '../../utils/questions.ts';
+import { throwInvalidFolderError } from '../../utils/target-validation.ts';
+
+// lodash is CommonJS without static named exports, so native ESM can only
+// default-import it.
+const { camelCase } = lodash;
 
 export interface ReactRouterFormGeneratorSchema {
   readonly application?: string;
@@ -112,7 +116,7 @@ export const generatorReactRouterForm = async (
     const directory = folder.replace('/components', '');
 
     const destination = join('applications', application, 'app', directory);
-    const templates = join(__dirname, 'files/form');
+    const templates = join(import.meta.dirname, 'files/form');
     const options = {
       ...variables,
       directory,

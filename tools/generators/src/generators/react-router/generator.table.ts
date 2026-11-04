@@ -3,18 +3,18 @@ import { formatFiles, logger } from '@nx/devkit';
 import { join } from 'path';
 import prompts from 'prompts';
 
+import { generateFilesSafely } from '../../utils/generate-files-safely.ts';
 import {
   getCommonVariables,
   getRemixRoutingFolders,
   getRemixServiceFolders,
-} from '../../utils';
-import { generateFilesSafely } from '../../utils/generate-files-safely';
+} from '../../utils/index.ts';
 import {
   getTargetApplication,
   parsePossibleNames,
-} from '../../utils/questions';
-import { REGEX_PASCAL_CASE } from '../../utils/regex';
-import { throwInvalidFolderError } from '../../utils/target-validation';
+} from '../../utils/questions.ts';
+import { REGEX_PASCAL_CASE } from '../../utils/regex.ts';
+import { throwInvalidFolderError } from '../../utils/target-validation.ts';
 
 export interface ReactRouterTableGeneratorSchema {
   readonly application?: string;
@@ -110,7 +110,7 @@ export const generatorReactRouterTable = async (
   names.forEach((name: string) => {
     const variables = getCommonVariables(name);
     const destination = join('applications', application, 'app', folder);
-    const templates = join(__dirname, 'files/table');
+    const templates = join(import.meta.dirname, 'files/table');
 
     generateFilesSafely(tree, templates, destination, variables);
   });

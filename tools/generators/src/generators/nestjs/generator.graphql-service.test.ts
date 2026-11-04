@@ -2,7 +2,7 @@ import type { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { generatorNestJSGraphQLService } from './generator.graphql-service';
+import { generatorNestJSGraphQLService } from './generator.graphql-service.ts';
 
 describe('nestjs-graphql-service generator', () => {
   let tree: Tree;
