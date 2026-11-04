@@ -1,6 +1,8 @@
-import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import { execFile } from 'node:child_process';
+import { mkdir, mkdtemp, readdir, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { promisify } from 'node:util';
 
 import { describe, expect, it, vi } from 'vitest';
 
@@ -14,7 +16,11 @@ import type {
   WorkflowRalphCommandResult,
   WorkflowRalphCommandRunner,
 } from '../../contract/ralph-orchestrator-deps.ts';
-import { finalizePlanRun } from '../finalize-plan-run.ts';
+import {
+  finalizePlanRun,
+  preparePlanRunPrDraftDir,
+  resolvePlanRunPrDraftDir,
+} from '../finalize-plan-run.ts';
 import {
   classifyPlanRunPrBody,
   PLAN_RUN_BODY_CLOSE_MARKER,
@@ -133,6 +139,8 @@ const createExecuteGraphqlV2 = (appendCalls: unknown[]) =>
 interface StubOptions {
   readonly aheadCount: string;
   readonly attribution?: WorkflowRalphCommandResult;
+  /** @description Collects each body the attribution guard is shown. */
+  readonly attributionBodies?: string[];
   readonly existingPrs?: string;
   readonly push?: WorkflowRalphCommandResult;
   readonly remoteBase?: boolean;
@@ -154,8 +162,8 @@ const createRunCommand = (
       if (sub === 'rev-parse' && first === '--abbrev-ref') {
         return ok(`${BRANCH}\n`);
       }
-      if (sub === 'rev-parse' && first === '--absolute-git-dir') {
-        return ok(`${join(cwd, '.git')}\n`);
+      if (sub === 'rev-parse' && first === '--show-toplevel') {
+        return ok(`${cwd}\n`);
       }
       if (sub === 'rev-parse' && first === '--verify') {
         return options.remoteBase === false
@@ -188,6 +196,10 @@ const createRunCommand = (
       }
     }
     if (command === 'bash' && args[0]?.endsWith('check-pr-attribution.sh')) {
+      const bodyFile = args[args.indexOf('--body-file') + 1];
+      if (options.attributionBodies !== undefined && bodyFile !== undefined) {
+        options.attributionBodies.push(await readFile(bodyFile, 'utf8'));
+      }
       return options.attribution ?? ok();
     }
     if (command === 'gh' && args[0] === 'pr' && args[1] === 'list') {
@@ -201,6 +213,135 @@ const createRunCommand = (
     }
     throw new Error(`unexpected ${command} ${args.join(' ')}`);
   });
+
+const execFileAsync = promisify(execFile);
+
+/** A real `git` runner, for the tests that need git's own view of ignored files. */
+const realRunCommand: WorkflowRalphCommandRunner = async ({
+  args,
+  command,
+  cwd,
+}) => {
+  try {
+    const { stderr, stdout } = await execFileAsync(command, [...args], { cwd });
+
+    return { exitCode: 0, stderr, stdout };
+  } catch (error: unknown) {
+    return {
+      exitCode: 1,
+      stderr: error instanceof Error ? error.message : String(error),
+      stdout: '',
+    };
+  }
+};
+
+/** A fresh repo with one commit and no `.gitignore` of its own. */
+const createGitRepo = async (): Promise<string> => {
+  const cwd = await mkdtemp(join(tmpdir(), 'ralph-draft-dir-'));
+  await execFileAsync('git', ['init', '--quiet'], { cwd });
+  await writeFile(join(cwd, 'README.md'), '# repo\n', 'utf8');
+  await execFileAsync('git', ['add', 'README.md'], { cwd });
+  await execFileAsync(
+    'git',
+    [
+      '-c',
+      'user.email=test@example.com',
+      '-c',
+      'user.name=test',
+      '-c',
+      'commit.gpgsign=false',
+      'commit',
+      '--quiet',
+      '--no-verify',
+      '-m',
+      'chore: init',
+    ],
+    { cwd },
+  );
+
+  return cwd;
+};
+
+describe('resolvePlanRunPrDraftDir', () => {
+  it('resolves <worktree root>/.ot-pr-draft, outside .git', async () => {
+    const cwd = await createGitRepo();
+    const draftDir = await resolvePlanRunPrDraftDir({
+      cwd,
+      runCommand: realRunCommand,
+    });
+    const { stdout: topLevel } = await execFileAsync(
+      'git',
+      ['rev-parse', '--show-toplevel'],
+      { cwd },
+    );
+
+    expect(draftDir).toBe(join(topLevel.trim(), '.ot-pr-draft'));
+    expect(draftDir).not.toContain(`${'/'}.git${'/'}`);
+  });
+
+  it('resolves the worktree root even when cwd is a subdirectory', async () => {
+    const cwd = await createGitRepo();
+    await mkdir(join(cwd, 'packages', 'app'), { recursive: true });
+
+    expect(
+      await resolvePlanRunPrDraftDir({
+        cwd: join(cwd, 'packages', 'app'),
+        runCommand: realRunCommand,
+      }),
+    ).toBe(await resolvePlanRunPrDraftDir({ cwd, runCommand: realRunCommand }));
+  });
+
+  it('is undefined outside a git checkout', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'ralph-no-git-'));
+
+    expect(
+      await resolvePlanRunPrDraftDir({ cwd, runCommand: realRunCommand }),
+    ).toBeUndefined();
+  });
+});
+
+describe('preparePlanRunPrDraftDir', () => {
+  it('creates the dir with a .gitignore of `*`', async () => {
+    const cwd = await createGitRepo();
+    const draftDir = await preparePlanRunPrDraftDir({
+      cwd,
+      runCommand: realRunCommand,
+    });
+
+    expect(draftDir).toBeDefined();
+    expect(await readFile(join(draftDir ?? '', '.gitignore'), 'utf8')).toBe(
+      '*\n',
+    );
+  });
+
+  it('keeps `git status --porcelain` clean after a draft is written, with no repo ignore rule', async () => {
+    const cwd = await createGitRepo();
+    const draftDir =
+      (await preparePlanRunPrDraftDir({ cwd, runCommand: realRunCommand })) ??
+      '';
+    await writeFile(join(draftDir, 'title.txt'), 'fix: a title\n', 'utf8');
+    await writeFile(join(draftDir, 'body.md'), '# Summary\n', 'utf8');
+    await execFileAsync('git', ['add', '-A'], { cwd });
+    const { stdout } = await execFileAsync('git', ['status', '--porcelain'], {
+      cwd,
+    });
+
+    expect(stdout).toBe('');
+  });
+
+  it('removes a stale draft but keeps the .gitignore', async () => {
+    const cwd = await createGitRepo();
+    const draftDir =
+      (await preparePlanRunPrDraftDir({ cwd, runCommand: realRunCommand })) ??
+      '';
+    await writeFile(join(draftDir, 'title.txt'), 'fix: stale\n', 'utf8');
+    await writeFile(join(draftDir, 'body.md'), '# Stale\n', 'utf8');
+
+    await preparePlanRunPrDraftDir({ cwd, runCommand: realRunCommand });
+
+    expect(await readdir(draftDir)).toEqual(['.gitignore']);
+  });
+});
 
 describe('finalizePlanRun', () => {
   it('skips push and PR when the branch has no commits ahead of the base', async () => {
@@ -394,7 +535,7 @@ describe('finalizePlanRun', () => {
       readonly title: string;
     }) => {
       const cwd = await createCwdWithTemplate();
-      const draftDir = join(cwd, '.git', 'ot-pr-draft');
+      const draftDir = join(cwd, '.ot-pr-draft');
       await mkdir(draftDir, { recursive: true });
       await writeFile(join(draftDir, 'title.txt'), draft.title, 'utf8');
       await writeFile(join(draftDir, 'body.md'), draft.body, 'utf8');
@@ -490,8 +631,13 @@ describe('finalizePlanRun', () => {
     const runExisting = async (currentBody: string) => {
       const cwd = await createCwdWithTemplate();
       const appendCalls: unknown[] = [];
+      const attributionBodies: string[] = [];
       const runCommand = createRunCommand(
-        { aheadCount: '1', existingPrs: '[{"number":99}]\n' },
+        {
+          aheadCount: '1',
+          attributionBodies,
+          existingPrs: '[{"number":99}]\n',
+        },
         (args) => {
           if (args[1] === 'view') {
             expect(args).toEqual([
@@ -528,14 +674,24 @@ describe('finalizePlanRun', () => {
       const editArgs = runCommand.mock.calls.find(
         ([call]) => call.command === 'gh' && call.args[1] === 'edit',
       )?.[0].args;
+      const editedBodyFile = editArgs?.[editArgs.indexOf('--body-file') + 1];
 
       return {
         appendCalls: JSON.stringify(appendCalls),
+        attributionBodies,
         editArgs,
+        editedBody:
+          editedBodyFile === undefined
+            ? undefined
+            : await readFile(editedBodyFile, 'utf8'),
         result,
         runCommand,
       };
     };
+
+    const olderHostBody = wrapPlanRunBody(
+      '# Summary\n\nAn older host body.\n\nPlan-Id: x',
+    );
 
     it('refreshes an untouched host-written body, then marks the PR ready', async () => {
       const { editArgs, result, runCommand } = await runExisting(
@@ -572,7 +728,7 @@ describe('finalizePlanRun', () => {
       );
 
       expect(editArgs).toBeUndefined();
-      expect(appendCalls).toContain('edited by a human');
+      expect(appendCalls).toContain('was edited inside the host markers');
       expect(runCommand).toHaveBeenCalledWith(
         expect.objectContaining({ args: ['pr', 'ready', '99'] }),
       );
@@ -582,9 +738,49 @@ describe('finalizePlanRun', () => {
       });
     });
 
-    it('leaves a body with text outside the host markers alone', async () => {
+    it('refreshes a host body followed by a bot footer and keeps the footer', async () => {
+      const footer =
+        '\n<!-- codesmith:footer -->\n🤖 Made with a CI bot.\n<!-- /codesmith:footer -->';
+      const { attributionBodies, editedBody } = await runExisting(
+        `${olderHostBody}${footer}`,
+      );
+
+      expect(editedBody).toContain(`Task-Id: ${TASK_DONE_NO_COMMIT}`);
+      expect(editedBody).not.toContain('An older host body.');
+      expect(
+        editedBody?.endsWith(`${PLAN_RUN_BODY_CLOSE_MARKER}\n${footer}`),
+      ).toBe(true);
+      expect(attributionBodies.join('')).not.toContain('codesmith');
+    });
+
+    it('refreshes a host body under an unknown bot block, so no vendor list is involved', async () => {
+      const botBlock =
+        '<!-- some-future-bot:report -->\nAll checks green.\n<!-- /some-future-bot:report -->\n\n';
+      const { editedBody } = await runExisting(`${botBlock}${olderHostBody}`);
+
+      expect(
+        editedBody?.startsWith(`${botBlock}${PLAN_RUN_BODY_OPEN_MARKER}\n`),
+      ).toBe(true);
+      expect(editedBody).toContain(`Task-Id: ${TASK_DONE_NO_COMMIT}`);
+    });
+
+    it('keeps human prose above and below the markers on refresh', async () => {
+      const { editedBody } = await runExisting(
+        `Context from a reviewer.\n\n${olderHostBody}\nA human note below.`,
+      );
+
+      expect(editedBody?.startsWith('Context from a reviewer.\n\n')).toBe(true);
+      expect(
+        editedBody?.endsWith(
+          `${PLAN_RUN_BODY_CLOSE_MARKER}\n\nA human note below.`,
+        ),
+      ).toBe(true);
+      expect(editedBody).not.toContain('An older host body.');
+    });
+
+    it('leaves a body with two marked blocks alone', async () => {
       const { editArgs } = await runExisting(
-        `${wrapPlanRunBody('# Summary\n\nHost text.')}\nA human note below.`,
+        `${olderHostBody}\n${olderHostBody}`,
       );
 
       expect(editArgs).toBeUndefined();

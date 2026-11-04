@@ -1,6 +1,10 @@
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import { isRecord } from '@openthrottle/nodejs-utils';
 import type { WorkflowLifecycleDispatcher } from '@openthrottle/openthrottle-agentic-workflow';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   GetPlanDocument,
@@ -231,14 +235,38 @@ describe('createWorkflowRalphOrchestrator final-iteration prompt line', () => {
 });
 
 describe('createWorkflowRalphOrchestrator PR draft dir', () => {
-  const runCapturingEnv = async (
+  interface CapturedIteration {
+    readonly env: Readonly<Record<string, string>> | undefined;
+    readonly prompt: string;
+  }
+
+  let repoRoot = '';
+
+  beforeEach(async () => {
+    repoRoot = await mkdtemp(join(tmpdir(), 'ot-orchestrator-draft-'));
+  });
+
+  afterEach(async () => {
+    await rm(repoRoot, { force: true, recursive: true });
+  });
+
+  const topLevelRunner = (): WorkflowRalphCommandRunner =>
+    vi.fn<WorkflowRalphCommandRunner>(async ({ args }) =>
+      args[0] === 'rev-parse' && args[1] === '--show-toplevel'
+        ? { exitCode: 0, stderr: '', stdout: `${repoRoot}\n` }
+        : { exitCode: 1, stderr: 'unexpected', stdout: '' },
+    );
+
+  const runCapturing = async (
     runCommand: WorkflowRalphCommandRunner | undefined,
-  ): Promise<Readonly<Record<string, string>> | undefined> => {
-    const envs: (Readonly<Record<string, string>> | undefined)[] = [];
-    const run = vi.fn<WorkflowRalphIterationRunner['run']>(async ({ env }) => {
-      envs.push(env);
-      return 'no control marker';
-    });
+  ): Promise<CapturedIteration | undefined> => {
+    const iterations: CapturedIteration[] = [];
+    const run = vi.fn<WorkflowRalphIterationRunner['run']>(
+      async ({ agentPrompt, env }) => {
+        iterations.push({ env, prompt: agentPrompt });
+        return 'no control marker';
+      },
+    );
     const orchestrator = createWorkflowRalphOrchestrator({
       executeGraphqlV2: createMockExecute({
         getTasksByPlanId: () => [baseTask(TASK_A, 'QUEUED')],
@@ -268,25 +296,45 @@ describe('createWorkflowRalphOrchestrator PR draft dir', () => {
       },
     });
 
-    return envs[0];
+    return iterations[0];
   };
 
-  it('sets OT_PR_DRAFT_DIR to <git dir>/ot-pr-draft when the host finalizes', async () => {
-    const runCommand = vi.fn<WorkflowRalphCommandRunner>(async ({ args }) =>
-      args[0] === 'rev-parse' && args[1] === '--absolute-git-dir'
-        ? { exitCode: 0, stderr: '', stdout: '/tmp/ot-test-repo/.git\n' }
-        : { exitCode: 1, stderr: 'unexpected', stdout: '' },
-    );
+  it('sets OT_PR_DRAFT_DIR to <worktree root>/.ot-pr-draft when the host finalizes', async () => {
+    const captured = await runCapturing(topLevelRunner());
 
-    const env = await runCapturingEnv(runCommand);
-
-    expect(env).toEqual({
-      OT_PR_DRAFT_DIR: '/tmp/ot-test-repo/.git/ot-pr-draft',
+    expect(captured?.env).toEqual({
+      OT_PR_DRAFT_DIR: join(repoRoot, '.ot-pr-draft'),
     });
   });
 
+  it('never resolves the draft dir under .git', async () => {
+    const captured = await runCapturing(topLevelRunner());
+
+    expect(captured?.env?.OT_PR_DRAFT_DIR).not.toContain(`${'/'}.git${'/'}`);
+  });
+
+  it('creates the draft dir with a self-ignoring .gitignore before the agent runs', async () => {
+    await runCapturing(topLevelRunner());
+
+    expect(
+      await readFile(join(repoRoot, '.ot-pr-draft', '.gitignore'), 'utf8'),
+    ).toBe('*\n');
+  });
+
+  it('writes the absolute draft path into the final-iteration prompt line', async () => {
+    const captured = await runCapturing(topLevelRunner());
+
+    expect(captured?.prompt).toContain(FINAL_ITERATION_FLAG);
+    expect(captured?.prompt).toContain(
+      `draft directory: ${join(repoRoot, '.ot-pr-draft')}`,
+    );
+  });
+
   it('passes no env when finalize is not wired', async () => {
-    expect(await runCapturingEnv(undefined)).toBeUndefined();
+    const captured = await runCapturing(undefined);
+
+    expect(captured?.env).toBeUndefined();
+    expect(captured?.prompt).toContain('$OT_PR_DRAFT_DIR when set');
   });
 });
 
