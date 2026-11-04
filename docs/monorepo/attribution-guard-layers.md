@@ -10,12 +10,12 @@ and every layer below sources it rather than restating it.
 
 ## The layers
 
-| layer                             | when                               | behavior                |
-| --------------------------------- | ---------------------------------- | ----------------------- |
-| `.husky/commit-msg`               | as a commit message is written     | **strips**, and says so |
-| `.husky/pre-push`                 | before a push leaves the machine   | **fails the push**      |
-| `scripts/check-pr-attribution.sh` | before `gh pr create`/`gh pr edit` | **fails locally**       |
-| `attribution-guard` (CI)          | after the PR exists                | **fails the PR**        |
+| layer                             | when                                        | behavior                                        |
+| --------------------------------- | ------------------------------------------- | ----------------------------------------------- |
+| `.husky/commit-msg`               | as a commit message is written              | **strips**, and says so                         |
+| `.husky/pre-push`                 | before a push leaves the machine            | **fails the push**                              |
+| `scripts/check-pr-attribution.sh` | before `gh pr create`/`gh pr edit`          | **fails locally**                               |
+| `attribution-guard` (CI)          | after the PR exists, and in the merge queue | **fails the PR** / **ejects it from the queue** |
 
 The dividing line is **publication**. Text that is still local and still rewritable gets rewritten.
 Text that is about to become someone else's — or already has — gets refused.
@@ -92,6 +92,12 @@ The three local layers are all skippable — by `--no-verify`, by an agent that 
 around, and it is also the only one that sees the **squash-merge commit**, whose message GitHub
 composes server-side from the branch commits. Two commits (`0e009e5f`/#499 and `463616df`/#497)
 landed on `main` carrying `Co-authored-by:` through exactly that path.
+
+It sees that commit in the merge queue. On a PR, the job checks the title, the body and the branch
+commits. On the `merge_group` event it checks every commit in `merge_group.base_sha..head_sha`,
+through the compare API. With a `SQUASH` queue those are the server-composed squash commits, and the
+queue fast-forwards `main` to `head_sha`, so they are byte-for-byte what lands. A hit ejects the PR
+before its squash becomes immutable history on `main`.
 
 The local layers exist to make the common case never reach CI, not to replace it.
 

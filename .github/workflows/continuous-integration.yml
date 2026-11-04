@@ -29,12 +29,11 @@ on:
   # workflow_dispatch enables the cost-gated nx-dependency-graph job to be run on demand
   # (it is gated to manual dispatch below) instead of being dead `if: false` code.
   workflow_dispatch:
-  # ⚠️ KEEP this trigger even though the merge queue on `main` is currently
-  # DISABLED (2026-08-28, single contributor — see docs/monorepo/ci-cost.md
-  # § Merge queue on `main`). It is inert while the queue is off, and it is a
-  # hard prerequisite for ever re-enabling it: a required check whose workflow
-  # does not trigger on merge_group can never report inside the queue, so every
-  # PR would sit until check_response_timeout_minutes and then be dequeued.
+  # `main` lands PRs through GitHub's merge queue (see docs/monorepo/ci-cost.md
+  # § Merge queue on `main`). This trigger is what lets the required `ci-success`
+  # check report inside the queue: a required check whose workflow does not
+  # trigger on merge_group can never report there, so every PR would sit until
+  # check_response_timeout_minutes and then be dequeued. Never remove it.
   merge_group:
     types: [checks_requested]
   pull_request:
@@ -91,8 +90,9 @@ permissions:
 jobs:
   # Cheap path-filter gate. Replaces the old workflow-level `paths-ignore` so the
   # workflow always TRIGGERS (required checks can report), but the expensive
-  # `build` below still skips when a PR touches only docs/markdown. Non-PR events
-  # (merge_group, push, workflow_dispatch) always run the full build.
+  # `build` below still skips when a PR touches only docs/markdown. A merge-queue
+  # entry is filtered the same way, over the queue's own base..head range. Push
+  # and workflow_dispatch always run everything.
   # Native git diff (no third-party action) to match the repo's SHA-pinning posture.
   #
   # 💰 This job must stay cheap — it is one `git diff`. It used to clone the FULL
@@ -123,24 +123,39 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Only PRs need doc-only detection; everything else runs the full build.
-          # Non-PR events (merge_group, push, workflow_dispatch) run EVERYTHING.
-          if [ "${{ github.event_name }}" != "pull_request" ]; then
-            {
-              echo "run=true"
-              echo "deps=true"
-              echo "graph=true"
-            } >> "$GITHUB_OUTPUT"
-            echo "event=${{ github.event_name }} → run/deps/graph=true (not a pull_request)"
-            exit 0
-          fi
-
-          base="${{ github.event.pull_request.base.sha }}"
-          head="${{ github.event.pull_request.head.sha }}"
+          # PRs and merge-queue entries are filtered by their diff; push and
+          # workflow_dispatch run EVERYTHING.
+          #
+          # A merge-queue entry diffs merge_group.base_sha (the `main` tip the
+          # queue built on) against head_sha (that tip plus every squash ahead of
+          # this one, plus this one). That is the whole delta that will land, so
+          # a dependency bump anywhere in the group still trips `deps`. Before
+          # this, every queue entry re-ran the uncached full-graph licence scans
+          # and the circular-dependency check whether or not their inputs moved.
+          case "${{ github.event_name }}" in
+            pull_request)
+              base="${{ github.event.pull_request.base.sha }}"
+              head="${{ github.event.pull_request.head.sha }}"
+              ;;
+            merge_group)
+              base="${{ github.event.merge_group.base_sha }}"
+              head="${{ github.event.merge_group.head_sha }}"
+              ;;
+            *)
+              {
+                echo "run=true"
+                echo "deps=true"
+                echo "graph=true"
+              } >> "$GITHUB_OUTPUT"
+              echo "event=${{ github.event_name }} → run/deps/graph=true (not a PR or queue entry)"
+              exit 0
+              ;;
+          esac
 
           # Fetch just the two endpoints (commit + tree, no history). The shallow
           # checkout above has neither: on a pull_request event actions/checkout
-          # lands on refs/pull/N/merge, whose parents are absent at depth 1.
+          # lands on refs/pull/N/merge, whose parents are absent at depth 1. A
+          # failed fetch is caught by the fail-closed diff below.
           git fetch --no-tags --depth=1 origin "$base" "$head" >/dev/null 2>&1 || true
 
           # FAIL CLOSED: if the diff cannot be computed for any reason (fetch
@@ -200,6 +215,12 @@ jobs:
   #     carrying `Co-authored-by:` for exactly this reason).
   # This job is the check on the other side of that boundary.
   #
+  # On a PR it checks the title, body and branch commits. In the merge queue it
+  # checks the squash commits themselves: with `merge_method: SQUASH`, every
+  # commit in merge_group base_sha..head_sha is a server-composed squash, and
+  # the queue fast-forwards `main` to head_sha, so those exact messages are what
+  # land. Failing here ejects the PR before the commit becomes immutable history.
+  #
   # The pattern set is NOT restated here — it is sourced from
   # .husky/utils/attribution-patterns.sh, the same file the hook sources, so the
   # two cannot drift. Same arrangement as .husky/utils/component-shape-gate.sh.
@@ -209,7 +230,7 @@ jobs:
   # `build` — catching this before review costs nothing and catching it after
   # the squash costs an immutable commit on main.
   attribution-guard:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
     runs-on: ubuntu-26.04
     timeout-minutes: 5
     # Job-scoped addition to the workflow's least-privilege default: reading
@@ -229,6 +250,9 @@ jobs:
         env:
           # Via env, never `${{ }}` inside the script: a PR title or body is
           # attacker-controlled text and would otherwise be shell-injected.
+          EVENT_NAME: ${{ github.event_name }}
+          MERGE_GROUP_BASE: ${{ github.event.merge_group.base_sha }}
+          MERGE_GROUP_HEAD: ${{ github.event.merge_group.head_sha }}
           PR_BODY: ${{ github.event.pull_request.body }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_TITLE: ${{ github.event.pull_request.title }}
@@ -255,19 +279,33 @@ jobs:
             fi
           }
 
-          printf '%s' "$PR_TITLE" > "$work/title"
-          printf '%s' "$PR_BODY" > "$work/body"
+          # A PR title is one line, so attribution lands at its end rather than on
+          # a line of its own — it needs the unanchored pattern. Bodies and commit
+          # messages are prose and keep the anchored one (a squash subject is the
+          # PR title, which the PR run already checked unanchored).
+          if [ "$EVENT_NAME" = "merge_group" ]; then
+            # The squash commits the queue built, i.e. exactly what will land.
+            # The compare API needs no clone; --paginate covers a deep group.
+            gh api "repos/$REPO/compare/$MERGE_GROUP_BASE...$MERGE_GROUP_HEAD" --paginate \
+              --jq '.commits[] | .sha[0:8] + " " + (.commit.message | @base64)' > "$work/commits"
+          else
+            printf '%s' "$PR_TITLE" > "$work/title"
+            printf '%s' "$PR_BODY" > "$work/body"
+            check "PR title" "$work/title" "$OT_ATTRIBUTION_PATTERN_INLINE"
+            check "PR body" "$work/body"
 
-          # A title is one line, so attribution lands at its end rather than on a
-          # line of its own — it needs the unanchored pattern. The body is prose
-          # and keeps the anchored one.
-          check "PR title" "$work/title" "$OT_ATTRIBUTION_PATTERN_INLINE"
-          check "PR body" "$work/body"
+            # One paginated call; the message is base64'd so multi-line bodies
+            # survive being paired with their SHA on a single line.
+            gh api "repos/$REPO/pulls/$PR_NUMBER/commits" --paginate \
+              --jq '.[] | .sha[0:8] + " " + (.commit.message | @base64)' > "$work/commits"
+          fi
 
-          # One paginated call; the message is base64'd so multi-line bodies
-          # survive being paired with their SHA on a single line.
-          gh api "repos/$REPO/pulls/$PR_NUMBER/commits" --paginate \
-            --jq '.[] | .sha[0:8] + " " + (.commit.message | @base64)' > "$work/commits"
+          # An empty range would pass vacuously, so treat it as a failure: a
+          # queue entry always carries at least its own squash commit.
+          if [ ! -s "$work/commits" ]; then
+            echo "❌ no commits found to check (event=$EVENT_NAME); failing closed"
+            exit 1
+          fi
 
           while read -r sha encoded; do
             printf '%s' "$encoded" | base64 -d > "$work/message"
@@ -277,8 +315,9 @@ jobs:
           if [ "$failed" -ne 0 ]; then
             echo ""
             echo "🚫 Attribution to a tool, model or assistant is not allowed in a PR"
-            echo "   title, a PR body, or any commit in the range. Remove the lines"
-            echo "   above and push again."
+            echo "   title, a PR body, or any commit in the range — including the"
+            echo "   squash commit the merge queue composes. Remove the lines above"
+            echo "   and push again (a queued PR has been ejected; re-enqueue it)."
             echo ""
             echo "   Rule:  AGENTS.md § No agent attribution"
             echo "   Guard: .husky/utils/attribution-patterns.sh (shared with the commit-msg hook)"
@@ -731,11 +770,15 @@ jobs:
       # reason, so it must be free to run even when this PR's diff is empty
       # under databases/migrations/. It costs ~1s.
       #
+      # In the merge queue there is no base_ref either, so the base falls back to
+      # `main`. HEAD is the queue commit (the `main` tip plus every squash ahead of
+      # this entry), so the script stays in branch mode and judges the union of
+      # that tree and the `main` tip, which is the real post-merge tree. This is
+      # the pass that catches two concurrently queued PRs taking the same prefix.
+      #
       # On `push: main` there is no base_ref, HEAD IS the trunk, and the script
       # switches to trunk mode — reporting any non-grandfathered duplicate in
-      # the tree. That is the post-merge pass; nothing else re-checks after a
-      # merge, and with the merge queue on `main` disabled (see the `on:` block)
-      # there is no merge_group run to do it either.
+      # the tree. That is the post-merge backstop.
       - name: '🗄️ Migration hygiene (foreign keys + duplicate prefixes)'
         run: pnpm exec nx run monorepo:check-migration-hygiene
         env:
@@ -855,8 +898,8 @@ jobs:
             exit 1
           fi
 
-          # 'skipped' is the correct outcome on merge_group/push/workflow_dispatch,
-          # where there is no PR payload to inspect. Anything else is a real failure.
+          # 'skipped' is the correct outcome on push/workflow_dispatch, where there
+          # is no PR or queue range to inspect. Anything else is a real failure.
           if [ "$attribution_result" != "success" ] && [ "$attribution_result" != "skipped" ]; then
             echo "❌ attribution guard did not succeed ($attribution_result)"
             exit 1

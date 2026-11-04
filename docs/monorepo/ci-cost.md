@@ -381,67 +381,67 @@ count.
 
 ## Merge queue on `main`
 
-> **DISABLED 2026-08-28.** With a single contributor there is no PR concurrency, so the queue's
-> ALLGREEN speculative grouping protected against semantic conflicts that cannot occur — while
-> every enqueued PR still paid a duplicate `merge_group` CI run plus queue wait time. The
-> `merge_queue` rule was removed from ruleset `main` (`14604876`); everything else (the rest of
-> the ruleset, classic branch protection, the `ci-success` required check, and the workflow's
-> `merge_group` trigger) is untouched. Re-enable by restoring the captured pre-change payload:
-> [rulesets/main-ruleset-with-merge-queue.json](./rulesets/main-ruleset-with-merge-queue.json).
+`main` lands every PR through GitHub's merge queue, configured as the `merge_queue` rule on ruleset
+`main` (`14604876`). The source of truth for the whole ruleset is
+[rulesets/main-ruleset-with-merge-queue.json](./rulesets/main-ruleset-with-merge-queue.json), a
+payload that can be `PUT` as-is. Classic branch protection still owns the one required context
+(`ci-success`). That split is deliberate: the queue and the required-check surface change
+independently, so a stall has one candidate cause at a time.
 
-While it was on, `main` used GitHub's merge queue through ruleset `main` (`14604876`). The queue
-was configured on the **ruleset** surface, while classic branch protection still owns the one
-required context (`ci-success`). That split is deliberate: the queue flip and the required-check
-surface move were kept separate so a stall would have one candidate cause at a time.
+**Why it is on.** Plan runs open PRs in parallel. Without a queue, `strict` up-to-date protection
+makes every merge invalidate every other ready PR, which then has to rebase and re-run CI before it
+can merge. That is O(N²) rebases for N concurrent PRs. The queue instead tests each entry once,
+against the tree `main` will actually have after it lands, and lands entries in order without a
+manual rebase.
 
-Applied queue settings (historical record — these are the values in the captured payload, and what
-a re-enable restores):
+| Setting                             | Value      | Why                                                                                                                                                                                                                                                                                                          |
+| ----------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `merge_method`                      | `SQUASH`   | Preserves the repo's one-commit-per-PR history while staying compatible with `required_linear_history`. The landed commit keeps the PR title plus the commits' bodies (`squash_merge_commit_message: COMMIT_MESSAGES`), which preserves `Plan-Id:` / `Task-Id:` traceability.                                |
+| `grouping_strategy`                 | `ALLGREEN` | Every entry in a group must go green before anything lands. A failing entry is ejected and the entries behind it rebuild without it. HEADGREEN would land a group on its head's result alone, trusting that the earlier entries' own runs would have caught their breakage. That is not worth the risk here. |
+| `max_entries_to_build`              | `3`        | Sized to the org's **GitHub Free** plan, which allows 20 concurrent Linux jobs. One entry runs about 5 jobs at once (3 `build` shards, `gates`, `attribution-guard`), so 3 entries take ~15 and leave room for ready-PR runs and `push: main`. 5 would ask for ~25 and queue its own jobs behind each other. |
+| `min_entries_to_merge`              | `1`        | A ready PR never waits for company before the queue starts validating it.                                                                                                                                                                                                                                    |
+| `max_entries_to_merge`              | `3`        | Lets a busy queue land a whole built group in one fast-forward, capped at the build depth.                                                                                                                                                                                                                   |
+| `min_entries_to_merge_wait_minutes` | `0`        | The wait only applies while a group is below `min_entries_to_merge`. That minimum is 1, so any wait would never fire. 0 says so instead of implying a batching window that does not exist.                                                                                                                   |
+| `check_response_timeout_minutes`    | `45`       | The per-shard `build` ceiling is `30` minutes, so the queue timeout must exceed the workflow's own worst case with real headroom rather than dequeue healthy runs. Typical runs take 3–9 minutes.                                                                                                            |
 
-| Setting                             | Value      | Why                                                                                                                                                                                                                               |
-| ----------------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `merge_method`                      | `SQUASH`   | Preserves the repo's one-commit-per-PR history while staying compatible with `required_linear_history`; the landed commit keeps the PR title plus the commits' footer body, which preserves `Plan-Id:` / `Task-Id:` traceability. |
-| `grouping_strategy`                 | `ALLGREEN` | Every entry in a speculative group must go green before anything lands, which is the conservative "no semantic-conflict hole" choice this queue exists to buy.                                                                    |
-| `max_entries_to_build`              | `5`        | Enough speculative depth to keep the queue moving without exploding parallel runner demand.                                                                                                                                       |
-| `min_entries_to_merge`              | `1`        | A ready PR never waits for company before the queue can start validating it.                                                                                                                                                      |
-| `max_entries_to_merge`              | `5`        | Allows grouped landings when the queue is busy, capped to the same scale as speculative builds.                                                                                                                                   |
-| `min_entries_to_merge_wait_minutes` | `5`        | Small batching window: enough to catch a nearby second PR, short enough not to feel stuck.                                                                                                                                        |
-| `check_response_timeout_minutes`    | `45`       | The per-shard CI ceiling is `30` minutes, so the queue timeout must exceed the workflow's own worst case with real headroom rather than dequeuing healthy runs.                                                                   |
+What a queue entry runs, in `continuous-integration.yml` on the `merge_group` event:
 
-What this does to CI volume:
+- **`changes`** diffs `merge_group.base_sha..head_sha`: the `main` tip the queue built on, against
+  that tip plus every squash ahead of this entry plus this one. The licence scans and the
+  circular-dependency check only run when the group touched their inputs, and a docs-only group
+  skips `build`. Any diff error fails closed.
+- **`build` / `gates`** are affected-scoped by `nrwl/nx-set-shas`. Its default
+  `use-previous-merge-group-commit: true` sets `NX_BASE` to `HEAD^1`, the previous commit in the
+  group, so an entry builds only its own change, on a tree that already holds the entries ahead of it.
+  Under ALLGREEN those entries are covered by their own runs. Prettier and migration hygiene sweep
+  the whole tree.
+- **`attribution-guard`** checks the squash commits in `base_sha..head_sha`. The queue fast-forwards
+  `main` to `head_sha`, so those exact server-composed messages are what land, and no local hook can
+  see them. A hit ejects the PR before it becomes immutable history.
 
-- **Queue off (current):** a PR costs its ordinary `pull_request` run, plus the `push: main` run
-  when the squash lands — **2 runs total**, with no queue latency. The pre-merge `merge_group` run
-  on a synthetic `gh-readonly-queue/main/pr-N-<sha>` ref is gone.
-- **Queue on (historical):** enqueuing added that `merge_group` run between the two — roughly a
-  **2x increase before merge, and often a 3rd post-merge validation run**.
+CI volume per PR: the ordinary `pull_request` run, one `merge_group` run, and the `push: main` run
+when the squash lands. That is 3 runs, against 2 without a queue, and far fewer than the rebase
+churn `strict` causes with several ready PRs at once. Runner minutes are free on this public repo
+either way, so the cost is wall-clock on the queue entry. The `push: main` run stays on purpose: it
+is the only post-merge signal on the real default-branch ref, and the cache-seeding run that
+downstream PRs restore from.
 
-On this **public** repo the runner minutes are free either way, so what the disable buys back is
-wall-clock: no queue wait (`min_entries_to_merge_wait_minutes: 5`, `check_response_timeout_minutes:
-45` worst case) and no duplicate pre-merge validation. The `push: main` run stays on purpose: it is
-the only post-merge signal on the actual default-branch ref and the cache-seeding run that
-downstream PRs restore from. If that changes, reprice the wall-clock and re-document it here rather
-than letting the rationale drift.
+Required-check rule: **a status check may be marked required on `main` only if the workflow that
+reports it also triggers on `merge_group`.** Otherwise the queue waits for a status that can never
+report, and dequeues the PR when the timeout runs out. `ci-success` is safe: it is the stable,
+non-matrix job in `continuous-integration.yml`, and that workflow runs on `merge_group`.
 
-Required-check rule **if the queue is re-enabled**: **a status check may be marked required on
-`main` only if the workflow that reports it also triggers on `merge_group`.** Otherwise the queue
-waits for a status that can never report and eventually dequeues the PR on timeout. `ci-success` is
-safe because it is the stable, non-matrix job in `continuous-integration.yml`, and that workflow
-still runs on `merge_group` — the trigger is deliberately kept (inert while the queue is off)
-precisely so re-enabling cannot recreate this failure mode.
+Landing a PR: `gh pr merge --squash --auto` **enqueues** it. Do not call a PR merged, or read a
+landed SHA, until `gh pr view --json mergedAt,mergeCommitSha` shows one.
 
-Re-enable path:
+Applying or changing the queue:
 
-1. Restore the captured pre-change ruleset payload:
-   `gh api -X PUT repos/OpenThrottle/monorepo/rulesets/14604876 --input docs/monorepo/rulesets/main-ruleset-with-merge-queue.json`
-   (strip the read-only fields — `id`, `node_id`, `source*`, `created_at`, `updated_at`,
-   `current_user_can_bypass`, `_links` — or resend just `name`/`target`/`enforcement`/`conditions`/`bypass_actors`/`rules`).
-2. Re-read the ruleset and classic branch protection to confirm the `merge_queue` rule is back and
+1. Edit the payload, then `gh api -X PUT repos/OpenThrottle/monorepo/rulesets/14604876 --input docs/monorepo/rulesets/main-ruleset-with-merge-queue.json`.
+2. Re-read the ruleset and classic branch protection to confirm the `merge_queue` values, and that
    `ci-success` is still the only required status check.
-3. Before flipping, confirm every required check's workflow triggers on `merge_group` (see the rule
-   above) — a PR-only required check dequeues every PR on timeout.
 
-The reverse procedure (disabling again) is what this section's DISABLED note records: remove the
-`merge_queue` rule from the ruleset via `gh api -X PUT`, touching nothing else.
+Turning it off: `PUT` the same payload without the `merge_queue` rule, touching nothing else. Keep
+the workflow's `merge_group` trigger either way.
 
 ---
 
@@ -491,7 +491,7 @@ shell step was audited against the real image:
 - [ ] **Minimise the checkout.** `fetch-depth: 1` if you need no history; `fetch-depth: 0` + `filter: 'blob:none'` if you need history but not old file contents. Full clones need a written justification (only `secret-scan` has one).
 - [ ] **Never add a schedule without an estimate.** State the cadence, the per-run cost, and who reads the output. A cron nobody reads is pure spend forever.
 - [ ] **Don't add a required check that can fail to report.** A workflow-level `paths-ignore` on a required check hangs the PR as _"Expected — waiting for status"_ forever. This is why `ci-success` exists as a separate always-reporting gate — read the header of `continuous-integration.yml` before restructuring it.
-- [ ] **If the merge queue is re-enabled, a required check must trigger on `merge_group`.** A PR-only workflow can never report inside the queue, so GitHub waits until `check_response_timeout_minutes` expires and then dequeues the PR. The queue is currently off (see § Merge queue on `main`), but keep new required checks queue-safe anyway.
+- [ ] **A required check must trigger on `merge_group`.** `main` lands through the merge queue (see § Merge queue on `main`), and a PR-only workflow can never report inside it, so GitHub waits until `check_response_timeout_minutes` expires and then dequeues every PR.
 - [ ] **If you disable something, leave a reason and an owner.** `if: false` with no explanation becomes permanent. Link back to this doc.
 - [ ] **Bump the runner label deliberately, with a canary.** When GitHub announces a new Ubuntu runner (or the deprecation of `ubuntu-26.04`), run every workflow on the new label from a throwaway draft PR and dispatch the read-only scheduled workflows against it. Fix anything that breaks, then change every `runs-on` in one PR. Never switch to `ubuntu-latest`: it would bring back unannounced OS changes. OT plan `4353746e` is the worked example; see § Runner label: pinned to `ubuntu-26.04`.
 
