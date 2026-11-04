@@ -204,10 +204,16 @@ export type {
   ScheduledAgentJobData,
   ScheduledAgentJobDriverId,
   ScheduledAgentJobEndpointSettings,
+  ScheduledAgentJobMisfirePolicy,
+  ScheduledAgentJobScheduleKind,
   ScheduledAgentJobSettings,
   ScheduledAgentJobWorktreeSettings,
 } from './modules/scheduled-agent-jobs/scheduled-agent-job.entity.ts';
-export { ScheduledAgentJob } from './modules/scheduled-agent-jobs/scheduled-agent-job.entity.ts';
+export {
+  SCHEDULED_AGENT_JOB_MISFIRE_POLICIES,
+  SCHEDULED_AGENT_JOB_SCHEDULE_KINDS,
+  ScheduledAgentJob,
+} from './modules/scheduled-agent-jobs/scheduled-agent-job.entity.ts';
 export type {
   ResolveScheduledAgentJobCheckoutPathInput,
   ResolveScheduledAgentJobCheckoutPathResult,
@@ -225,9 +231,11 @@ export {
 } from './modules/scheduled-agent-jobs/scheduled-agent-job-run.entity.ts';
 export { ScheduledAgentJobsModule } from './modules/scheduled-agent-jobs/scheduled-agent-jobs.module.ts';
 export type {
+  ClaimScheduledAgentJobSlotInput,
   CreateScheduledAgentJobInput,
   CreateScheduledAgentJobRunInput,
   FinishScheduledAgentJobRunInput,
+  RecordMissedScheduledAgentJobRunsInput,
   ScheduledAgentJobRunStatusCount,
   StartScheduledAgentJobRunInput,
   UpdateScheduledAgentJobInput,

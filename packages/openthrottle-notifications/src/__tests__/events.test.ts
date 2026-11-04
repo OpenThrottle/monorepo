@@ -17,6 +17,7 @@ describe('events', () => {
         PLAN_UPDATED: 'plan.updated',
         PLAN_WAITING_FOR_WORKTREE: 'plan.waiting_for_worktree',
         QUEUE_JOB_COMPLETED: 'queue.job.completed',
+        SCHEDULED_RUN_FAILED: 'scheduled_run.failed',
         SYSTEM_ALERT: 'system.alert',
         TASK_COMPLETED: 'task.completed',
         TASK_STATUS_CHANGED: 'task.status_changed',

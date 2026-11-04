@@ -12,10 +12,20 @@ export const SCHEDULE_COPY = {
   activeRunsCancelRequested: `Cancelling…`,
   activeRunsHeading: `In flight`,
   activeRunsQueued: `Waiting to start`,
+  cronLabel: `Cron pattern`,
   editPageDescription: `Edit a scheduled run's details.`,
+  intervalHelp: `Counted from when the previous run finishes, so runs never overlap. At least 1 minute.`,
+  intervalLabel: `Every (minutes)`,
+  kindLabel: `Runs`,
+  misfireHelp: `A run counts as late when it starts after the grace period, for example because the server was down. Either way, an outage gets at most one late run, and every run that does not happen appears in run history as missed.`,
+  misfirePolicyLabel: `Late runs`,
+  misfireThresholdLabel: `Grace period (minutes)`,
+  missingCronPattern: `Enter a cron pattern.`,
+  missingInterval: `Enter how many minutes to wait between runs.`,
+  missingRunAt: `Enter when to run.`,
   newScheduleAction: `New schedule`,
   noSearchResults: `No schedules match your search.`,
-  pageDescription: `Run an agent prompt on a cron schedule.`,
+  pageDescription: `Run an agent prompt on a cron schedule, on an interval, or once.`,
   pageTitle: `Schedule`,
   repositoryColumnLabel: `Repository`,
   repositoryEmptyState: `You have no registered repositories yet, so runs will use the workspace root.`,
@@ -23,6 +33,8 @@ export const SCHEDULE_COPY = {
   repositoryHelp: `Runs execute in this checkout. The server resolves the directory, so there is no path to type.`,
   repositoryLabel: `Repository`,
   repositoryNoneOption: `Workspace root (default)`,
+  runAtHelp: `An ISO 8601 time with its offset, e.g. 2026-11-03T09:00:00-08:00 or 2026-11-03T17:00:00Z. The schedule turns itself off after this run.`,
+  runAtLabel: `Run at`,
   runNowAction: `Run now`,
   runNowError: `Could not queue the run.`,
   runNowQueued: `Run queued.`,
@@ -37,6 +49,19 @@ export const SCHEDULE_COPY = {
   statInFlightTitle: `Running / queued`,
   statRanTodayTitle: `Ran today / succeeded`,
   tableRunningBadge: `Running`,
+} as const;
+
+/**
+ * @description How a schedule's cadence reads in the table, the detail summary and search. Each
+ * builder takes the one value its kind carries.
+ */
+export const SCHEDULE_CADENCE_COPY = {
+  cron: (pattern: string, timezone: string | null): string =>
+    `${pattern} (${timezone ?? 'UTC'})`,
+  interval: (minutes: number): string =>
+    minutes === 1 ? `Every minute` : `Every ${minutes} minutes`,
+  once: (isoTime: string): string => `Once at ${isoTime}`,
+  unknown: `Unknown schedule`,
 } as const;
 
 /**

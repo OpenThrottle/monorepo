@@ -47,6 +47,14 @@ fragment NotificationFields on NotificationEvent {
     status
   }
 
+  ... on ScheduledRunFailedNotification {
+    reason
+    runCount
+    runId
+    scheduledAgentJobId
+    scheduleName
+  }
+
   ... on SystemAlertNotification {
     code
   }

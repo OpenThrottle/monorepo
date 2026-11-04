@@ -3,6 +3,7 @@ import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/schedule.create';
+import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
 import { buildRootMatch } from '~/testing/root-match-fixture';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
@@ -32,7 +33,7 @@ describe('routes/schedule.create.tsx', () => {
 
     expect(screen.getByTestId('ScheduleForm')).toBeInTheDocument();
     expect(screen.getByLabelText('Prompt')).toBeRequired();
-    expect(screen.getByLabelText('Schedule (cron)')).toBeRequired();
+    expect(screen.getByLabelText(SCHEDULE_COPY.cronLabel)).toBeRequired();
     expect(
       screen.getByRole('button', { name: /create schedule/i }),
     ).toBeInTheDocument();

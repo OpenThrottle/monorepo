@@ -1,5 +1,6 @@
 /**
- * @description TypeORM entity for the scheduled_agent_job_runs table (databases/migrations/082): the
+ * @description TypeORM entity for the scheduled_agent_job_runs table (databases/migrations/082, 087,
+ * 095, 096, 139, 141): the
  * append-only run history (status/timing/exit) for a scheduled_agent_jobs row. Run *logs* are not
  * here — they stream to the JSONL sink (queueJobLogs/queueJobLogTail), joined by `bullmqJobId`.
  */
@@ -21,11 +22,13 @@ import type { ScheduledAgentJobDriverId } from './scheduled-agent-job.entity.ts'
  * it is terminal and is NOT an error. `usage_limited` means the agent CLI reported a Claude
  * subscription usage limit — it is terminal for the row and is NOT an error; a continuation run may
  * have been enqueued (see `resumeOfRunId`). `failed` stays reserved for a non-zero exit, timeout, or
- * spawn failure. See databases/migrations/095 and 139.
+ * spawn failure. `missed` is created terminal: a cron fire the job's misfire policy did not run, so
+ * no agent was spawned (see `scheduledFor`). See databases/migrations/095, 139 and 141.
  */
 export type ScheduledAgentJobRunStatus =
   | 'cancelled'
   | 'failed'
+  | 'missed'
   | 'no_op'
   | 'queued'
   | 'running'
@@ -76,6 +79,7 @@ export type ScheduledAgentJobRunData = Pick<
   | 'resolvedCwd'
   | 'resumeOfRunId'
   | 'scheduledAgentJobId'
+  | 'scheduledFor'
   | 'settingsSnapshot'
   | 'startedAt'
   | 'status'
@@ -237,6 +241,18 @@ export class ScheduledAgentJobRun {
 
   @Column({ name: 'scheduled_agent_job_id', type: 'uuid' })
   scheduledAgentJobId!: string;
+
+  /**
+   * The cron slot a `schedule`-trigger run belongs to, missed rows included (migration 141). Unique
+   * per (scheduledAgentJobId, scheduledFor) among schedule-trigger rows, so a slot is claimed at most
+   * once. Null for manual/resume runs and for runs recorded before 141.
+   */
+  @Column({
+    name: 'scheduled_for',
+    nullable: true,
+    type: 'timestamp with time zone',
+  })
+  scheduledFor!: Date | null;
 
   @Column({
     name: 'started_at',

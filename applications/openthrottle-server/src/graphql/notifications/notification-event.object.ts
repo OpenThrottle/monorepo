@@ -17,6 +17,7 @@ const EVENT_TYPE_NAMES: Record<string, string> = {
   [NOTIFICATION_EVENT_NAMES.PLAN_UPDATED]: `PlanUpdatedNotification`,
   [NOTIFICATION_EVENT_NAMES.PLAN_WAITING_FOR_WORKTREE]: `PlanWaitingForWorktreeNotification`,
   [NOTIFICATION_EVENT_NAMES.QUEUE_JOB_COMPLETED]: `QueueJobCompletedNotification`,
+  [NOTIFICATION_EVENT_NAMES.SCHEDULED_RUN_FAILED]: `ScheduledRunFailedNotification`,
   [NOTIFICATION_EVENT_NAMES.SYSTEM_ALERT]: `SystemAlertNotification`,
   [NOTIFICATION_EVENT_NAMES.TASK_COMPLETED]: `TaskCompletedNotification`,
   [NOTIFICATION_EVENT_NAMES.TASK_STATUS_CHANGED]: `TaskStatusChangedNotification`,
@@ -125,6 +126,38 @@ export class PlanStatusChangedNotification extends NotificationEvent {
   status!: string;
 }
 
+@ObjectType({
+  description: `A scheduled agent job run failed, timed out, or was recorded missed. Sent to alert the schedule's owner.`,
+  implements: () => [NotificationEvent],
+})
+export class ScheduledRunFailedNotification extends NotificationEvent {
+  @Field(() => ID, {
+    description: `The schedule's owner, who the notice is for. Null for a schedule with no owner.`,
+    nullable: true,
+  })
+  actorUserId?: string;
+
+  @Field(() => String, { description: `failed | timed_out | missed` })
+  reason!: string;
+
+  @Field(() => Int, {
+    description: `How many runs the notice covers; above 1 only when a server boot records several missed fires at once.`,
+  })
+  runCount!: number;
+
+  @Field(() => ID, {
+    description: `The run, when the notice covers exactly one run whose id is known.`,
+    nullable: true,
+  })
+  runId?: string;
+
+  @Field(() => ID)
+  scheduledAgentJobId!: string;
+
+  @Field(() => String)
+  scheduleName!: string;
+}
+
 @ObjectType({ implements: () => [NotificationEvent] })
 export class SystemAlertNotification extends NotificationEvent {
   @Field(() => String, { nullable: true })
@@ -152,6 +185,7 @@ export const NOTIFICATION_EVENT_TYPES = [
   PlanUpdatedNotification,
   PlanWaitingForWorktreeNotification,
   QueueJobCompletedNotification,
+  ScheduledRunFailedNotification,
   SystemAlertNotification,
   TaskCompletedNotification,
   TaskStatusChangedNotification,

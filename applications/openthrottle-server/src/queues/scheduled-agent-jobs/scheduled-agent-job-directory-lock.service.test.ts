@@ -63,9 +63,13 @@ const fakeRedis = (): {
     },
   );
 
+  const del = vi.fn(async (key: string): Promise<number> =>
+    store.delete(key) ? 1 : 0,
+  );
+
   return {
     evals,
-    redis: asMock<Redis>({ eval: evalFn, set }),
+    redis: asMock<Redis>({ del, eval: evalFn, set }),
     set,
     store,
   };
@@ -323,6 +327,70 @@ describe('ScheduledAgentJobDirectoryLockService', () => {
       await expect(result.lock.release()).resolves.toBeUndefined();
       expect(logger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Failed to release'),
+        ScheduledAgentJobDirectoryLockService.name,
+      );
+    });
+  });
+
+  describe('forceRelease', () => {
+    it('deletes a lock held under any token, so the directory is free again', async () => {
+      const { redis, store } = fakeRedis();
+      const service = new ScheduledAgentJobDirectoryLockService(
+        fakeLogger(),
+        redis,
+      );
+      await service.acquire('/repos/monorepo', { timeoutMs: 1_000 });
+
+      await expect(service.forceRelease('/repos/monorepo')).resolves.toBe(true);
+      expect(store.size).toBe(0);
+
+      const again = await service.acquire('/repos/monorepo', {
+        timeoutMs: 1_000,
+      });
+      expect(again.status).toBe('held');
+    });
+
+    it('reports false when nothing was locked', async () => {
+      const { redis } = fakeRedis();
+      const service = new ScheduledAgentJobDirectoryLockService(
+        fakeLogger(),
+        redis,
+      );
+
+      await expect(service.forceRelease('/repos/monorepo')).resolves.toBe(
+        false,
+      );
+    });
+
+    it('is a no-op for a null key or an unconfigured Redis', async () => {
+      const { redis } = fakeRedis();
+
+      await expect(
+        new ScheduledAgentJobDirectoryLockService(
+          fakeLogger(),
+          redis,
+        ).forceRelease(null),
+      ).resolves.toBe(false);
+      await expect(
+        new ScheduledAgentJobDirectoryLockService(
+          fakeLogger(),
+          null,
+        ).forceRelease('/repos/monorepo'),
+      ).resolves.toBe(false);
+    });
+
+    it('logs and reports false when Redis errors', async () => {
+      const logger = fakeLogger();
+      const service = new ScheduledAgentJobDirectoryLockService(
+        logger,
+        asMock<Redis>({ del: vi.fn().mockRejectedValue(new Error('down')) }),
+      );
+
+      await expect(service.forceRelease('/repos/monorepo')).resolves.toBe(
+        false,
+      );
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to force-release'),
         ScheduledAgentJobDirectoryLockService.name,
       );
     });

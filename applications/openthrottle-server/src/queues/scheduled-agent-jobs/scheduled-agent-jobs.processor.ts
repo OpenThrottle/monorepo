@@ -13,6 +13,7 @@ import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
+  type ScheduledAgentJob,
   ScheduledAgentJobCheckoutPathService,
   type ScheduledAgentJobRunSettingsSnapshot,
   type ScheduledAgentJobRunStatus,
@@ -24,12 +25,15 @@ import {
   type RunAgentStatus,
   type UsageLimit,
 } from '@openthrottle/openthrottle-drivers';
+import { SCHEDULED_RUN_FAILURE_REASONS } from '@openthrottle/openthrottle-notifications';
 
 import { closeRunOutputForJob } from '../bullmq-keyed-run-logging.ts';
 import { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.service.ts';
 import { BULLMQ_RUN_OUTPUT_WRITER } from '../bullmq-run-output-writer.token.ts';
 import { ScheduledAgentJobCancellationService } from './scheduled-agent-job-cancellation.service.ts';
 import { ScheduledAgentJobDirectoryLockService } from './scheduled-agent-job-directory-lock.service.ts';
+import { ScheduledAgentJobFailureNotifierService } from './scheduled-agent-job-failure-notifier.service.ts';
+import { ScheduledAgentJobSchedulerService } from './scheduled-agent-job-scheduler.service.ts';
 import {
   resolveScheduledAgentJobConcurrencyKey,
   resolveScheduledAgentJobRunCwd,
@@ -38,7 +42,17 @@ import {
   SCHEDULED_AGENT_JOB_OUTPUT_SOURCE,
   SCHEDULED_AGENT_JOBS_QUEUE_NAME,
 } from './scheduled-agent-jobs.constants.ts';
-import type { ScheduledAgentJobBullJob } from './scheduled-agent-jobs.types.ts';
+import {
+  missedOnPickupMessage,
+  SCHEDULED_AGENT_JOB_MISFIRE_MIN_THRESHOLD_MS,
+  shouldRunLateFire,
+  slotMillisFromJobId,
+} from './scheduled-agent-jobs.misfire.ts';
+import { isSelfScheduledKind } from './scheduled-agent-jobs.schedule-kind.ts';
+import type {
+  ScheduledAgentJobBullJob,
+  ScheduledAgentJobPayload,
+} from './scheduled-agent-jobs.types.ts';
 import { ScheduledAgentRunnerService } from './scheduled-agent-runner.service.ts';
 import { ScheduledAgentJobUsageLimitResumeService } from './usage-limit-resume/usage-limit-resume.service.ts';
 
@@ -46,6 +60,7 @@ import { ScheduledAgentJobUsageLimitResumeService } from './usage-limit-resume/u
 const TERMINAL_RUN_STATUSES: ReadonlySet<ScheduledAgentJobRunStatus> = new Set([
   'cancelled',
   'failed',
+  'missed',
   'no_op',
   'succeeded',
   'usage_limited',
@@ -222,6 +237,8 @@ export class ScheduledAgentJobsProcessor
     private readonly directoryLock: ScheduledAgentJobDirectoryLockService,
     private readonly usageLimitResume: ScheduledAgentJobUsageLimitResumeService,
     private readonly retention: BullMqRunOutputRetentionService,
+    private readonly scheduler: ScheduledAgentJobSchedulerService,
+    private readonly failureNotifier: ScheduledAgentJobFailureNotifierService,
     @Optional()
     @Inject(BULLMQ_RUN_OUTPUT_WRITER)
     private readonly writer: KeyedJsonlWriter | undefined,
@@ -256,6 +273,15 @@ export class ScheduledAgentJobsProcessor
       return;
     }
 
+    if (await this.skipStaleSelfScheduledFire(job.data)) {
+      return;
+    }
+
+    const slot = this.slotFor(job);
+    if (slot !== null && (await this.skipLateFire(job.data, slot))) {
+      return;
+    }
+
     const target = await this.resolveRunTarget(
       scheduleId,
       repositoryCheckoutId,
@@ -278,8 +304,19 @@ export class ScheduledAgentJobsProcessor
       repositoryCheckoutId: target.repositoryCheckoutId,
       resolvedCwd: target.cwd,
       scheduleId,
+      scheduledFor: slot,
       settingsSnapshot,
     });
+
+    // The slot already has a row: BullMQ delivered this fire twice (a stalled re-queue), or the boot
+    // reconcile recorded it missed / ran it as the outage's catch-up first. One run per slot.
+    if (runRowId === null) {
+      this.logger.info(
+        `Scheduled agent job ${scheduleId}: slot ${slot?.toISOString() ?? 'unknown'} already has a run; not running BullMQ job ${bullmqJobId} again`,
+        ScheduledAgentJobsProcessor.name,
+      );
+      return;
+    }
 
     // A schedule whose targeted checkout no longer resolves keeps running, from the payload's
     // fallback path — but say so loudly, because that path is not the one the user picked.
@@ -354,18 +391,32 @@ export class ScheduledAgentJobsProcessor
         const usageLimit = wasCancelled ? null : result.usageLimit;
 
         if (usageLimit === null) {
+          const errorMessage = errorMessageForAgentStatus(
+            result.status,
+            result.exitCode,
+          );
+          const status = runStatusForAgentStatus(
+            result.status,
+            parseRunOutcome(result.output),
+          );
           await this.jobsService.markRunFinished(runRowId, {
-            errorMessage: errorMessageForAgentStatus(
-              result.status,
-              result.exitCode,
-            ),
+            errorMessage,
             exitCode: result.exitCode,
-            status: runStatusForAgentStatus(
-              result.status,
-              parseRunOutcome(result.output),
-            ),
+            status,
             ...usageColumns(foldRunUsage(result.output)),
           });
+          if (status === 'failed') {
+            await this.failureNotifier.notify({
+              errorMessage,
+              reason:
+                result.status === RUN_AGENT_STATUS.timeout
+                  ? SCHEDULED_RUN_FAILURE_REASONS.TIMED_OUT
+                  : SCHEDULED_RUN_FAILURE_REASONS.FAILED,
+              runCount: 1,
+              runId: runRowId,
+              scheduledAgentJobId: scheduleId,
+            });
+          }
         } else {
           await this.jobsService.markRunFinished(runRowId, {
             errorMessage: errorMessageForUsageLimit(usageLimit),
@@ -401,11 +452,22 @@ export class ScheduledAgentJobsProcessor
         exitCode: null,
         status: 'failed',
       });
+      await this.failureNotifier.notify({
+        errorMessage: message,
+        reason: SCHEDULED_RUN_FAILURE_REASONS.FAILED,
+        runCount: 1,
+        runId: runRowId,
+        scheduledAgentJobId: scheduleId,
+      });
     } finally {
       this.cancellation.detach(runRowId);
+      const finishedAt = new Date();
       await this.jobsService
         .getJobRepository()
-        .update({ id: scheduleId }, { lastRunAt: new Date() });
+        .update({ id: scheduleId }, { lastRunAt: finishedAt });
+      if (typeof job.data.slotMs === 'number') {
+        await this.afterSelfScheduledFire(scheduleId, finishedAt);
+      }
       await closeRunOutputForJob({
         jobId: bullmqJobId,
         logLabel: ScheduledAgentJobsProcessor.name,
@@ -464,6 +526,175 @@ export class ScheduledAgentJobsProcessor
         status: 'cancelled',
       });
     }
+
+    return true;
+  }
+
+  /**
+   * @description Drops an interval or once fire that no longer matches its schedule, without a run
+   * row: the schedule was deleted, disabled, or changed kind, a once schedule's `runAt` moved, or an
+   * interval fire is already running. Arming removes the previous pending fire, so this is the
+   * backstop for one that slipped past (it was mid-promotion, or an edit landed while a fire ran).
+   * A running interval fire re-arms the chain when it finishes, so dropping this one loses nothing.
+   * Returns true when the fire was dropped. Every other job returns false without a read.
+   */
+  private async skipStaleSelfScheduledFire(
+    data: ScheduledAgentJobPayload,
+  ): Promise<boolean> {
+    if (typeof data.slotMs !== 'number') return false;
+
+    const schedule = await this.jobsService.findJobById(data.scheduleId);
+    const reason = await this.staleSelfScheduledFireReason(
+      schedule,
+      data.slotMs,
+    );
+    if (reason === null) return false;
+
+    this.logger.info(
+      `Scheduled agent job ${data.scheduleId}: dropping the fire for ${new Date(data.slotMs).toISOString()}: ${reason}`,
+      ScheduledAgentJobsProcessor.name,
+    );
+
+    return true;
+  }
+
+  /** @description Why an interval/once fire for `slotMs` is stale, or null when it should run. */
+  private async staleSelfScheduledFireReason(
+    schedule: ScheduledAgentJob | null,
+    slotMs: number,
+  ): Promise<string | null> {
+    if (schedule === null) return 'the schedule was deleted';
+    if (!schedule.enabled) return 'the schedule is disabled';
+    if (!isSelfScheduledKind(schedule.scheduleKind)) {
+      return 'the schedule is no longer an interval or once schedule';
+    }
+    if (schedule.scheduleKind === 'once') {
+      return schedule.runAt?.getTime() === slotMs
+        ? null
+        : 'the schedule now runs at a different time';
+    }
+
+    const isRunning = await this.jobsService.hasLiveScheduledRun({
+      createdSince: new Date(Date.now() - process.uptime() * 1_000),
+      excludeRunId: null,
+      scheduledAgentJobId: schedule.id,
+    });
+
+    return isRunning
+      ? 'a fire of this schedule is still running; it re-arms the next one when it finishes'
+      : null;
+  }
+
+  /**
+   * @description Settles an interval or once schedule after one of its fires finished, whatever the
+   * outcome: an interval arms its next fire `intervalMs` from now (counted from completion), and a
+   * once schedule is disabled — it has fired. Never throws: it runs in the processor's `finally`, and
+   * a failure is logged; the next boot reconcile re-arms an interval whose chain broke.
+   */
+  private async afterSelfScheduledFire(
+    scheduleId: string,
+    finishedAt: Date,
+  ): Promise<void> {
+    try {
+      const schedule = await this.jobsService.findJobById(scheduleId);
+      if (schedule === null || !schedule.enabled) return;
+
+      if (schedule.scheduleKind === 'once') {
+        await this.jobsService.setJobEnabled(scheduleId, false);
+        await this.jobsService.updateNextRunAt(scheduleId, null);
+        return;
+      }
+
+      if (schedule.scheduleKind !== 'interval') return;
+
+      const next = await this.scheduler.armSelfScheduledFire(schedule, {
+        lastFinishedAt: finishedAt,
+      });
+      await this.jobsService.updateNextRunAt(scheduleId, next);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.warn(
+        `Scheduled agent job ${scheduleId}: could not arm the next fire: ${message}`,
+        ScheduledAgentJobsProcessor.name,
+      );
+    }
+  }
+
+  /**
+   * @description The cron slot this job fires for, or null when it is not a scheduled fire. A run-now
+   * or resume job (it carries a pre-created `runId`) has none; the reconcile's catch-up names its slot
+   * in the payload; a BullMQ scheduler job carries it in its id (`repeat:<key>:<slotMillis>`).
+   */
+  private slotFor(job: ScheduledAgentJobBullJob): Date | null {
+    const { catchUpForSlotMs, runId, slotMs } = job.data;
+    if (typeof runId === 'string' && runId.length > 0) return null;
+
+    if (typeof catchUpForSlotMs === 'number') return new Date(catchUpForSlotMs);
+    if (typeof slotMs === 'number') return new Date(slotMs);
+
+    const millis = slotMillisFromJobId(
+      job.id === undefined ? undefined : String(job.id),
+    );
+
+    return millis === null ? null : new Date(millis);
+  }
+
+  /**
+   * @description The processor half of the misfire policy: a scheduler fire picked up later than its
+   * job's threshold, under `skip`, is recorded as a `missed` run and not spawned. Returns true when the
+   * fire was skipped.
+   *
+   * Lives here rather than only in the boot reconcile because whether BullMQ's one surviving overdue
+   * job runs at boot is a race the reconcile cannot win reliably; gating at pickup makes the policy
+   * hold either way, and also covers a queue backed up behind the per-directory lock. The reconcile's
+   * own catch-up already applied the policy, so it is never re-gated. Fires within the minimum
+   * threshold skip the schedule read entirely: no policy can skip them.
+   */
+  private async skipLateFire(
+    data: ScheduledAgentJobPayload,
+    slot: Date,
+  ): Promise<boolean> {
+    const latenessMs = Date.now() - slot.getTime();
+    const isCatchUp = typeof data.catchUpForSlotMs === 'number';
+    // An interval or once fire is never gated: one the server was down for runs once, late.
+    const isSelfScheduled = typeof data.slotMs === 'number';
+    if (
+      isCatchUp ||
+      isSelfScheduled ||
+      latenessMs <= SCHEDULED_AGENT_JOB_MISFIRE_MIN_THRESHOLD_MS
+    ) {
+      return false;
+    }
+
+    const schedule = await this.jobsService.findJobById(data.scheduleId);
+    if (schedule === null) return false;
+
+    const policy = {
+      policy: schedule.misfirePolicy,
+      thresholdMs: schedule.misfireThresholdMs,
+    };
+    if (shouldRunLateFire({ latenessMs, ...policy })) return false;
+
+    const errorMessage = missedOnPickupMessage({ latenessMs, ...policy });
+    const recorded = await this.jobsService.recordMissedRuns({
+      driverId: data.driverId,
+      errorMessage,
+      model: data.model ?? null,
+      scheduledAgentJobId: data.scheduleId,
+      slots: [slot],
+    });
+    // Zero means the slot already had a row (a duplicate delivery), which was already reported.
+    await this.failureNotifier.notify({
+      errorMessage,
+      reason: SCHEDULED_RUN_FAILURE_REASONS.MISSED,
+      runCount: recorded,
+      runId: undefined,
+      scheduledAgentJobId: data.scheduleId,
+    });
+    this.logger.info(
+      `Scheduled agent job ${data.scheduleId}: fire for ${slot.toISOString()} is ${Math.round(latenessMs / 1_000)}s late, beyond its ${policy.thresholdMs}ms misfire threshold; recorded as missed`,
+      ScheduledAgentJobsProcessor.name,
+    );
 
     return true;
   }
@@ -572,7 +803,8 @@ export class ScheduledAgentJobsProcessor
   /**
    * @description Claims a pre-created run row (run-now) or creates one (scheduled fire); both end up
    * `running` with `bullmq_job_id` set, carrying the fire-time provenance (settings snapshot, targeted
-   * checkout, resolved cwd). Returns the run row id.
+   * checkout, resolved cwd). Returns the run row id, or null when the fire's cron slot already has a
+   * row — the slot is claimed through a unique index, so each slot runs at most once.
    */
   private async claimOrCreateRun(
     runId: string | null | undefined,
@@ -582,10 +814,11 @@ export class ScheduledAgentJobsProcessor
       readonly model: string | null;
       readonly repositoryCheckoutId: string | null;
       readonly resolvedCwd: string;
+      readonly scheduledFor: Date | null;
       readonly scheduleId: string;
       readonly settingsSnapshot: ScheduledAgentJobRunSettingsSnapshot;
     },
-  ): Promise<string> {
+  ): Promise<string | null> {
     if (typeof runId === 'string' && runId.length > 0) {
       const existing = await this.jobsService.findRunById(runId);
       if (existing !== null) {
@@ -599,6 +832,26 @@ export class ScheduledAgentJobsProcessor
       }
     }
 
+    if (input.scheduledFor !== null) {
+      const claimed = await this.jobsService.claimScheduledSlot({
+        bullmqJobId: input.bullmqJobId,
+        driverId: input.driverId,
+        model: input.model,
+        repositoryCheckoutId: input.repositoryCheckoutId,
+        resolvedCwd: input.resolvedCwd,
+        scheduledAgentJobId: input.scheduleId,
+        scheduledFor: input.scheduledFor,
+        status: 'running',
+      });
+      if (claimed === null) return null;
+
+      await this.jobsService.markRunStarted(claimed.id, input.bullmqJobId, {
+        settingsSnapshot: input.settingsSnapshot,
+      });
+      return claimed.id;
+    }
+
+    // A fire with no readable slot (a job id from before slot accounting) keeps the old path.
     const created = await this.jobsService.createRun({
       bullmqJobId: input.bullmqJobId,
       driverId: input.driverId,
@@ -658,6 +911,13 @@ export class ScheduledAgentJobsProcessor
       errorMessage: reason,
       exitCode: null,
       status: 'failed',
+    });
+    await this.failureNotifier.notify({
+      errorMessage: reason,
+      reason: SCHEDULED_RUN_FAILURE_REASONS.FAILED,
+      runCount: 1,
+      runId: run.id,
+      scheduledAgentJobId: run.scheduledAgentJobId,
     });
   }
 }
