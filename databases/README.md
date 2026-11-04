@@ -772,7 +772,7 @@ A collision that already exists wholly on main is **not** reported on a branch â
 pnpm exec tsx ./scripts/check-migration-hygiene.ts --all
 ```
 
-`--all` drops the base comparison and judges the whole tree. CI infers it automatically on `push: main`, where the base tip _is_ HEAD. That is the only post-merge alarm there is â€” the `merge_group` trigger exists but the merge queue on `main` is currently disabled, so no queue-time run happens.
+`--all` drops the base comparison and judges the whole tree. CI infers it automatically on `push: main`, where the base tip _is_ HEAD. That is the post-merge alarm. Before a merge, the merge-queue run (`merge_group`) judges the tree `main` will have once the entry lands, so it is what stops two concurrently queued PRs taking the same prefix.
 
 #### Never renumber an applied migration
 

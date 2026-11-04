@@ -1,9 +1,6 @@
 {
-  "id": 14604876,
   "name": "main",
   "target": "branch",
-  "source_type": "Repository",
-  "source": "OpenThrottle/monorepo",
   "enforcement": "active",
   "conditions": {
     "ref_name": {
@@ -11,6 +8,7 @@
       "include": ["refs/heads/main"]
     }
   },
+  "bypass_actors": [],
   "rules": [
     {
       "type": "deletion"
@@ -42,26 +40,13 @@
       "type": "merge_queue",
       "parameters": {
         "merge_method": "SQUASH",
-        "max_entries_to_build": 5,
+        "max_entries_to_build": 3,
         "min_entries_to_merge": 1,
-        "max_entries_to_merge": 5,
-        "min_entries_to_merge_wait_minutes": 5,
+        "max_entries_to_merge": 3,
+        "min_entries_to_merge_wait_minutes": 0,
         "grouping_strategy": "ALLGREEN",
         "check_response_timeout_minutes": 45
       }
     }
-  ],
-  "node_id": "RRS_lACqUmVwb3NpdG9yec5HR08BzgDe2kw",
-  "created_at": "2026-04-01T11:08:59.271-07:00",
-  "updated_at": "2026-08-19T00:01:51.071-07:00",
-  "bypass_actors": [],
-  "current_user_can_bypass": "never",
-  "_links": {
-    "self": {
-      "href": "https://api.github.com/repos/OpenThrottle/monorepo/rulesets/14604876"
-    },
-    "html": {
-      "href": "https://github.com/OpenThrottle/monorepo/rules/14604876"
-    }
-  }
+  ]
 }

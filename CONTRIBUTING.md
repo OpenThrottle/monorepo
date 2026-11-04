@@ -70,16 +70,17 @@ mechanics, see [MONOREPO.md](./MONOREPO.md) and [docs/monorepo/](./docs/monorepo
    that arrive **collapsed** in "Files changed" are generator output marked in
    [`.gitattributes`](./.gitattributes) and do not need review — each entry
    there names the gate that protects it and the source to read instead.
-6. **Merge with a direct squash.** The merge queue on `main` is currently
-   **disabled** (single contributor — see
-   [docs/monorepo/ci-cost.md](./docs/monorepo/ci-cost.md#merge-queue-on-main); it
-   may return when there are concurrent contributors). Merge with
-   `gh pr merge --squash` (or `--squash --auto` to land when `ci-success` goes
-   green) — the PR merges directly, with no queue latency and no `merge_group`
-   run. The landed commit on `main` is the squash commit GitHub creates, so any
-   post-merge bookkeeping that needs "the merged SHA" must read it back from the
-   merged PR (`gh pr view --json mergedAt,mergeCommitSha`) or from `main`, not
-   from the branch head you pushed.
+6. **Land through the merge queue.** `main` merges every PR through GitHub's
+   merge queue (see
+   [docs/monorepo/ci-cost.md](./docs/monorepo/ci-cost.md#merge-queue-on-main)).
+   `gh pr merge --squash --auto` **enqueues** the PR once `ci-success` is green.
+   The queue then tests it against the tree `main` will have after it lands and
+   squashes it in, so you never rebase onto a moving `main` by hand. Enqueuing is
+   not merging: the landed commit is the squash the queue creates, so any
+   post-merge bookkeeping that needs "the merged SHA" must wait for
+   `gh pr view --json mergedAt,mergeCommitSha` to report one, or read it from
+   `main`, never from the branch head you pushed. A PR the queue ejects (a red
+   `merge_group` run) goes back to you: fix it and enqueue it again.
 
 ## Documentation
 

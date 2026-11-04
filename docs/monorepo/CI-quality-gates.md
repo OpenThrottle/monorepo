@@ -26,11 +26,11 @@ See [CONTRIBUTING.md](../../CONTRIBUTING.md#testing-typecheck-versus-test) for c
 
 ## Gate table (P0–P4)
 
-> **Note on the "merge queue" trigger:** the merge queue on `main` is currently **disabled**
-> (see [ci-cost.md § Merge queue on `main`](./ci-cost.md#merge-queue-on-main)), so the
-> `merge_group` event never fires and the "merge queue" entries in the **Runs on** column are
-> inert. They are kept — along with the workflow's `merge_group:` trigger — so the rows stay
-> accurate if the queue is re-enabled.
+> **Note on the "merge queue" trigger:** every PR lands on `main` through GitHub's merge queue
+> (see [ci-cost.md § Merge queue on `main`](./ci-cost.md#merge-queue-on-main)). A "merge queue"
+> entry in the **Runs on** column runs on the `merge_group` event, against the tree `main` will
+> have after the entry lands. There, path-gated rows are filtered over the queue's
+> `base_sha..head_sha` range rather than a PR diff.
 
 | Priority | Gate                                          | CI job / step                                                                   | Runs on                                                                   | Command / target                                                                                                                                                                                                                                                                                                                                                                                                                       | Owner                                     | Merge blocker   | Status                                                                                                                    |
 | -------- | --------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------- |
