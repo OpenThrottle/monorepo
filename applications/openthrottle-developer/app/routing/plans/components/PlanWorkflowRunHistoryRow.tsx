@@ -86,10 +86,10 @@ export const PlanWorkflowRunHistoryRow = (
             />
           </Button>
         </TableCell>
-        <TableCell className="align-top">
+        <TableCell className="align-top lg:min-w-40">
           <PlanRunTime value={row.createdAt} />
         </TableCell>
-        <TableCell className="align-top">
+        <TableCell className="align-top lg:min-w-52">
           <div className="flex flex-col items-start gap-1">
             <PlanRunStatusCell
               resumeOfRunId={row.resumeOfRunId ?? null}
@@ -114,11 +114,13 @@ export const PlanWorkflowRunHistoryRow = (
           />
         </TableCell>
         <TableCell className="hidden align-top sm:table-cell">
-          <PlanRunProvenanceCell
-            branch={row.branch}
-            checkout={row.checkout}
-            pullRequest={row.pullRequest}
-          />
+          <div className="max-w-48">
+            <PlanRunProvenanceCell
+              branch={row.branch}
+              checkout={row.checkout}
+              pullRequest={row.pullRequest}
+            />
+          </div>
         </TableCell>
         <TableCell className="w-10 align-top">
           <PlanWorkflowRunHistoryRowActions

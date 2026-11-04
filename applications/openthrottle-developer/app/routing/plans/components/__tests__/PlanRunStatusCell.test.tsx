@@ -1,6 +1,8 @@
+import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import { render, type RenderResult } from '@testing-library/react';
 import * as React from 'react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { renderToString } from 'react-dom/server';
+import { describe, expect, test } from 'vitest';
 
 import { PLAN_RUN_STATUS_CELL_COPY } from '~/routing/plans/data/data.copy';
 
@@ -16,13 +18,15 @@ const renderCell = (
   overrides: Partial<PlanRunStatusCellProps> = {},
 ): RenderResult => {
   return render(
-    <PlanRunStatusCell
-      resumeOfRunId={null}
-      resumeScheduled={false}
-      status="COMPLETED"
-      usageLimitResetsAt={null}
-      {...overrides}
-    />,
+    <TooltipProvider>
+      <PlanRunStatusCell
+        resumeOfRunId={null}
+        resumeScheduled={false}
+        status="COMPLETED"
+        usageLimitResetsAt={null}
+        {...overrides}
+      />
+    </TooltipProvider>,
   );
 };
 
@@ -102,16 +106,7 @@ describe('PlanRunStatusCell Component', () => {
   });
 
   describe('SCHEDULED', () => {
-    beforeEach(() => {
-      // Pin the viewer's zone so the local-time rendering is deterministic.
-      vi.stubEnv('TZ', 'America/New_York');
-    });
-
-    afterEach(() => {
-      vi.unstubAllEnvs();
-    });
-
-    test('shows the badge and when it fires, in the viewer local time', () => {
+    test('shows the badge and when it fires, as a hydrated run time', () => {
       const component = renderCell({
         scheduledFor: FIRES_AT,
         status: 'SCHEDULED',
@@ -123,11 +118,26 @@ describe('PlanRunStatusCell Component', () => {
       expect(component.container.textContent).toContain(
         PLAN_RUN_STATUS_CELL_COPY.firesPrefix,
       );
-      const time = component.container.querySelector('time');
-      expect(time?.dateTime).toBe(FIRES_AT);
-      // 17:30Z is 12:30 PM EST on Nov 3 2026 (DST ended Nov 1).
-      expect(time?.textContent).toContain('12:30');
-      expect(time?.textContent).toBe(new Date(FIRES_AT).toLocaleString());
+      const time = component.getByTestId('PlanRunTime');
+      expect(time).toHaveAttribute('dateTime', FIRES_AT);
+      expect(time).not.toHaveTextContent(/UTC$/);
+    });
+
+    test('server-renders the fire time in UTC so hydration matches in any server zone', () => {
+      const html = renderToString(
+        <TooltipProvider>
+          <PlanRunStatusCell
+            resumeOfRunId={null}
+            resumeScheduled={false}
+            scheduledFor={FIRES_AT}
+            status="SCHEDULED"
+            usageLimitResetsAt={null}
+          />
+        </TooltipProvider>,
+      );
+
+      expect(html).toContain(`dateTime="${FIRES_AT}"`);
+      expect(html).toContain('Nov 3, 2026, 5:30 PM UTC');
     });
 
     test('falls back to an unknown line when scheduledFor is missing or unparseable', () => {

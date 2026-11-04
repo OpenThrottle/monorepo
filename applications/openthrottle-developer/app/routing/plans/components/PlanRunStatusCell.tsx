@@ -3,6 +3,7 @@ import * as React from 'react';
 
 import { parseDate } from '~/global/utils/dates';
 import { PlanRunStatusBadge } from '~/routing/plans/components/PlanRunStatusBadge';
+import { PlanRunTime } from '~/routing/plans/components/PlanRunTime';
 import { PLAN_RUN_STATUS_CELL_COPY } from '~/routing/plans/data/data.copy';
 
 export interface PlanRunStatusCellProps {
@@ -20,9 +21,10 @@ export interface PlanRunStatusCellProps {
 
 /**
  * @description Status cell for the queued-run audit table. Most statuses render as plain text.
- * `USAGE_LIMITED` gets a badge plus the reset time in the viewer's local time and whether the run
- * resumes by itself; `SCHEDULED` a badge plus when it fires (local time); `MISSED` and `SUPERSEDED`
- * a badge plus why the run never started. A continuation run is badged "Resumed".
+ * `USAGE_LIMITED` gets a badge plus the reset time and whether the run resumes by itself;
+ * `SCHEDULED` a badge plus when it fires; `MISSED` and `SUPERSEDED` a badge plus why the run never
+ * started. A continuation run is badged "Resumed". Both times go through {@link PlanRunTime}, so
+ * the server render (UTC) matches the hydrating render and the viewer's local time appears after.
  */
 export const PlanRunStatusCell = (
   props: PlanRunStatusCellProps,
@@ -72,18 +74,14 @@ export const PlanRunStatusCell = (
   );
   const knownResetTime = (
     <span>
-      {resetPrefix}{' '}
-      <time dateTime={resetsAt?.toISOString()}>
-        {resetsAt?.toLocaleString()}
-      </time>
+      {resetPrefix} <PlanRunTime value={usageLimitResetsAt} />
     </span>
   );
   const unknownResetTime = <span>{resetUnknown}</span>;
   const notResumedNote = <span>{notResumedSuffix}</span>;
   const knownFireTime = (
     <span>
-      {firesPrefix}{' '}
-      <time dateTime={firesAt?.toISOString()}>{firesAt?.toLocaleString()}</time>
+      {firesPrefix} <PlanRunTime value={scheduledFor} />
     </span>
   );
   const unknownFireTime = <span>{firesUnknown}</span>;
