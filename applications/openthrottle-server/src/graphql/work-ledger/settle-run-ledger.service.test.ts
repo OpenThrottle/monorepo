@@ -10,6 +10,7 @@ import type {
 } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { RepositoryInspectionService } from '../repository-inspection/repository-inspection.service.ts';
 import { SettleRunLedgerService } from './settle-run-ledger.service.ts';
 
 const PLAN_RUN_ID = 'run-1';
@@ -55,6 +56,7 @@ describe('SettleRunLedgerService', () => {
 
   let repositoriesService: RepositoriesService;
   let repositoryCheckoutsService: RepositoryCheckoutsService;
+  let repositoryInspectionService: RepositoryInspectionService;
   let serviceAccountsService: ServiceAccountsService;
   let workLedgerService: WorkLedgerService;
   let logger: LoggerService;
@@ -100,12 +102,18 @@ describe('SettleRunLedgerService', () => {
         .fn()
         .mockReturnValue({ manager: { transaction } }),
     });
+    repositoryInspectionService = createMock<RepositoryInspectionService>({
+      scan: vi.fn().mockResolvedValue({
+        git: { normalizedRemoteUrl: 'github.com/openthrottle/monorepo' },
+      }),
+    });
     logger = createMock<LoggerService>();
 
     service = new SettleRunLedgerService(
       logger,
       repositoriesService,
       repositoryCheckoutsService,
+      repositoryInspectionService,
       serviceAccountsService,
       workLedgerService,
     );
@@ -199,7 +207,7 @@ describe('SettleRunLedgerService', () => {
     );
   });
 
-  it('skips quietly when the run has no checkout to resolve a repo from', async () => {
+  it('skips quietly when the run has nothing to resolve a repo from', async () => {
     await service.recordSettledRunArtifacts({
       headSha: 'deadbeef',
       planRun: planRun({ checkoutId: null }),
@@ -208,6 +216,105 @@ describe('SettleRunLedgerService', () => {
 
     expect(transaction).not.toHaveBeenCalled();
     expect(logger.warn).toHaveBeenCalled();
+  });
+
+  /**
+   * Mirrors a service-account `enqueuePlanRalphOrchestrator`: actor_user_id is null, so enqueue
+   * could only take a raw workingDirectory and the orchestrator skipped worktree checkout
+   * registration — the run reaches settle with no checkout_id at all (run f38ce1aa / PR #627).
+   */
+  describe('when a service account enqueued the run (actor_user_id null, no checkout)', () => {
+    function serviceAccountRun(
+      workspace: Partial<PlanRunConfigSnapshotV1['workspace']>,
+    ): PlanRun {
+      return planRun({
+        actorUserId: null,
+        checkoutId: null,
+        runConfigSnapshot: createMock<PlanRunConfigSnapshotV1>({
+          target: { mode: 'plan' },
+          workspace: {
+            checkoutId: undefined,
+            repositoryId: undefined,
+            workingDirectory: '',
+            ...workspace,
+          },
+        }),
+      });
+    }
+
+    it('resolves the repo from the snapshot repositoryId', async () => {
+      await service.recordSettledRunArtifacts({
+        headSha: 'deadbeef',
+        planRun: serviceAccountRun({ repositoryId: 'repository-1' }),
+        prNumber: 627,
+      });
+
+      expect(repositoriesService.findById).toHaveBeenCalledWith('repository-1');
+      expect(repositoryInspectionService.scan).not.toHaveBeenCalled();
+      expect(artifacts().map((artifact) => artifact.type)).toEqual([
+        'git_commit',
+        'pull_request',
+      ]);
+    });
+
+    it('resolves the repo from the working directory remote and writes both artifacts', async () => {
+      vi.mocked(
+        repositoriesService.findByNormalizedRemoteUrl,
+      ).mockResolvedValue(
+        createMock<
+          NonNullable<Awaited<ReturnType<RepositoriesService['findById']>>>
+        >({
+          name: 'OpenThrottle/monorepo',
+        }),
+      );
+
+      await service.recordSettledRunArtifacts({
+        headSha: 'deadbeef',
+        planRun: serviceAccountRun({
+          workingDirectory: '/worktrees/OpenThrottle/monorepo/plan-a68b3a2c',
+        }),
+        prNumber: 627,
+      });
+
+      expect(repositoryInspectionService.scan).toHaveBeenCalledWith(
+        '/worktrees/OpenThrottle/monorepo/plan-a68b3a2c',
+      );
+      expect(
+        repositoriesService.findByNormalizedRemoteUrl,
+      ).toHaveBeenCalledWith('github.com/openthrottle/monorepo');
+      expect(artifacts()).toEqual([
+        expect.objectContaining({
+          externalKey: 'github:OpenThrottle/monorepo@deadbeef',
+          type: 'git_commit',
+        }),
+        expect.objectContaining({
+          externalKey: 'github:OpenThrottle/monorepo#627',
+          type: 'pull_request',
+        }),
+      ]);
+      // No user verified the run, so the session must not claim one.
+      expect(saved.WorkSession.at(0)).toEqual(
+        expect.objectContaining({
+          onBehalfOfUserId: null,
+          onBehalfOfVerified: false,
+        }),
+      );
+    });
+
+    it('skips with a warning when the remote matches no registered repository', async () => {
+      vi.mocked(
+        repositoriesService.findByNormalizedRemoteUrl,
+      ).mockResolvedValue(null);
+
+      await service.recordSettledRunArtifacts({
+        headSha: 'deadbeef',
+        planRun: serviceAccountRun({ workingDirectory: '/somewhere/else' }),
+        prNumber: 627,
+      });
+
+      expect(transaction).not.toHaveBeenCalled();
+      expect(logger.warn).toHaveBeenCalled();
+    });
   });
 
   it('never throws — ledger bookkeeping must not fail a settle', async () => {
