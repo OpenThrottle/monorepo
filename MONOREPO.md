@@ -248,6 +248,10 @@ To add or upgrade a dependency, edit (or add) its entry in the `catalog:` sectio
 
 Coverage is enforced by `scripts/check-catalog-coverage.ts` (run as part of `pnpm run check:local`).
 
+### Virtual store
+
+Every checkout and worktree keeps its own `node_modules/.pnpm` (pnpm's default `virtualStoreType: project`). The global virtual store was measured and deliberately left off. It installs a fresh worktree about 7s faster but saves almost no disk on macOS, and it breaks the developer app's Vitest suite. Numbers, failure modes and what a retry would need: [docs/monorepo/pnpm-global-virtual-store.md](docs/monorepo/pnpm-global-virtual-store.md).
+
 ### TypeScript toolchain: two compilers, one workspace
 
 The workspace installs **two** TypeScript packages on purpose. `typecheck` tasks run the **TypeScript 7**
