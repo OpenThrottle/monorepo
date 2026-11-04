@@ -12,10 +12,13 @@ import pluginReactHooks from 'eslint-plugin-react-hooks';
 import pluginSimpleImportSort from 'eslint-plugin-simple-import-sort';
 import tslint from 'typescript-eslint';
 
+import { agentCliSpawnChokepoint } from './rules/agent-cli-spawn-chokepoint.ts';
 import { componentPrimitiveShape } from './rules/component-primitive-shape.ts';
 import { dataFileShape } from './rules/data-file-shape.ts';
+import { disableRequiresReason } from './rules/disable-requires-reason.ts';
 import { hookPrimitiveShape } from './rules/hook-primitive-shape.ts';
 import { longStringTemplateLiteral } from './rules/long-string-template-literal.ts';
+import { mcpToolRegistration } from './rules/mcp-tool-registration.ts';
 import { namedFunctionBlockBody } from './rules/named-function-block-body.ts';
 import { nestjsFileExports } from './rules/nestjs-file-exports.ts';
 import { nestjsFileNaming } from './rules/nestjs-file-naming.ts';
@@ -265,10 +268,13 @@ export const eslintConfig = tslint.config([
       jest: pluginJest,
       openthrottle: {
         rules: {
+          'agent-cli-spawn-chokepoint': agentCliSpawnChokepoint,
           'component-primitive-shape': componentPrimitiveShape,
           'data-file-shape': dataFileShape,
+          'disable-requires-reason': disableRequiresReason,
           'hook-primitive-shape': hookPrimitiveShape,
           'long-string-template-literal': longStringTemplateLiteral,
+          'mcp-tool-registration': mcpToolRegistration,
           'named-function-block-body': namedFunctionBlockBody,
           'nestjs-file-exports': nestjsFileExports,
           'nestjs-file-naming': nestjsFileNaming,
@@ -518,6 +524,38 @@ export const eslintConfig = tslint.config([
     ignores: ['**/*.integration.{test,spec}.{ts,tsx}'],
     rules: {
       'openthrottle/no-per-test-timeout': 'warn',
+    },
+  },
+
+  /**
+   * Agent-safety rules (docs/monorepo/code-style.md#agent-safety-rules).
+   *
+   * Every suppression states its reason, in every authored file, tests
+   * included: a bare `eslint-disable` is the cheapest way for an agent to turn
+   * lint green, and nothing about it can be reviewed.
+   */
+  {
+    files: ['**/*.{cjs,js,jsx,mjs,ts,tsx}'],
+    rules: {
+      'openthrottle/disable-requires-reason': 'warn',
+    },
+  },
+  /**
+   * MCP tools register only through the openthrottle-mcp registry, and agent
+   * CLIs spawn only through openthrottle-drivers or the agentic-utils
+   * conversation backends. The allowed files are rule options matched on the
+   * absolute path, not `ignores` here, because `nx lint` runs with cwd at the
+   * project and a repo-relative glob would never match. Tests are exempt: they
+   * stub `registerTool` and spawn fake binaries on purpose.
+   *
+   * All three are `warn` until plan 0b6dfaf8's burn-down task flips them.
+   */
+  {
+    files: ['**/*.{cjs,js,jsx,mjs,ts,tsx}'],
+    ignores: ['**/*.{test,spec}.{ts,tsx}', '**/__tests__/**', '**/tests/**'],
+    rules: {
+      'openthrottle/agent-cli-spawn-chokepoint': 'warn',
+      'openthrottle/mcp-tool-registration': 'warn',
     },
   },
 

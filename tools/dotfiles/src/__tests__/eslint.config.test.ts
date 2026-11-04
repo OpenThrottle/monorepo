@@ -201,6 +201,29 @@ describe('eslintConfig flat config', () => {
     );
   });
 
+  it('warns on the agent-safety rules, exempting tests from the chokepoints', () => {
+    const entryFor = (ruleName: string): FlatConfigEntry | undefined =>
+      entries.find(
+        (entry) => entry.rules !== undefined && ruleName in entry.rules,
+      );
+
+    expect(ruleSeverity('openthrottle/disable-requires-reason')).toBe('warn');
+    expect(entryFor('openthrottle/disable-requires-reason')?.ignores).toBe(
+      undefined,
+    );
+
+    [
+      'openthrottle/agent-cli-spawn-chokepoint',
+      'openthrottle/mcp-tool-registration',
+    ].forEach((ruleName) => {
+      expect(ruleSeverity(ruleName)).toBe('warn');
+      expect(entryFor(ruleName)?.ignores).toContain('**/__tests__/**');
+      expect(entryFor(ruleName)?.ignores).toContain(
+        '**/*.{test,spec}.{ts,tsx}',
+      );
+    });
+  });
+
   it('ignores node_modules and __generated__', () => {
     const ignoreEntry = entries.find((entry) => entry.ignores !== undefined);
 

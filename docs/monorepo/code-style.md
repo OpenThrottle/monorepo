@@ -39,6 +39,7 @@ lint but never had a rule file of their own:
 
 | Convention                                                                  | Enforcement                            | Mechanism                                                             |
 | --------------------------------------------------------------------------- | -------------------------------------- | --------------------------------------------------------------------- |
+| --------------------------------------------------------------------------- | -------------------------------------- | --------------------------------------------------------------------- |
 | [No new enums](#no-new-enums)                                               | **Enforced**                           | `no-restricted-syntax` → `TSEnumDeclaration`                          |
 | [Component and data boundaries](#component-and-data-boundaries)             | **Enforced**                           | `openthrottle/component-primitive-shape` + `audit:component-shape`    |
 | [No default exports](#no-default-exports)                                   | **Enforced**                           | `import-x/no-default-export`                                          |
@@ -57,6 +58,7 @@ lint but never had a rule file of their own:
 | [Hook primitive shape](#hook-shape)                                         | **Enforced**                           | `openthrottle/hook-primitive-shape` + `audit:hook-shape`              |
 | [Import order](#import-order)                                               | **Warned**                             | `simple-import-sort/imports`, `simple-import-sort/exports`            |
 | [Anti-flake test rules](#anti-flake-test-rules)                             | **Warned**                             | `openthrottle/no-test-sleep` and four siblings; Vitest `retry: 0`     |
+| [Agent-safety rules](#agent-safety-rules)                                   | **Warned**                             | `openthrottle/mcp-tool-registration` and two siblings                 |
 | [Discriminated unions](#discriminated-unions)                               | Honor system                           | —                                                                     |
 | [`interface extends` over `&`](#interface-extends-over-)                    | Honor system                           | —                                                                     |
 | [`readonly` by default](#readonly-properties)                               | Honor system                           | —                                                                     |
@@ -1253,6 +1255,33 @@ and `<input type="color">` changes are the cases `userEvent` cannot drive. They 
 
 Retries are pinned to `0` (`VITEST_RETRY` in `@tools/dotfiles`, mirrored in the configs that
 bypass the factory). A retry turns a flaky test green without fixing it.
+
+### Agent-safety rules
+
+**Warned**, for the same reason as the anti-flake rules: `warn` while plan `0b6dfaf8` burns down
+the existing sites, then each flips to `error` on its own. Each one routes a sensitive operation
+through the code that already hardens it.
+
+| Rule                                      | Flags                                                                                                                                         | Use instead                                                                                                            |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `openthrottle/mcp-tool-registration`      | `server.registerTool(…)`, `server.tool('name', …)` and `@Tool` from `@rekog/mcp-nest`, outside openthrottle-mcp's registry                    | `defineTool` in `packages/openthrottle-mcp/src/tool-registry.ts`, mirrored on the Nest surface                         |
+| `openthrottle/agent-cli-spawn-chokepoint` | A `child_process` / `execa` / `cross-spawn` call naming an agent CLI (`claude`, `codex`, `cursor-agent`, `gemini`, `grok`, `opencode`, `agy`) | `runDriverSync` / `runDriverAsync` from `@openthrottle/openthrottle-drivers`, or an agentic-utils conversation backend |
+| `openthrottle/disable-requires-reason`    | An `eslint-disable`, `-line` or `-next-line` directive with no `-- reason`                                                                    | `// eslint-disable-next-line <rule> -- <why the rule is wrong here>`                                                   |
+
+Every MCP handler in the registry calls the OpenThrottle GraphQL API with the caller's token, so
+the server's auth guards decide what a tool can touch, and a parity test keeps the stdio and Nest
+surfaces identical. A tool registered anywhere else gets neither. The driver engine and the
+conversation backends pin the binary, scrub the environment, pass an argv array with no shell,
+and enforce idle and wall-clock timeouts with SIGTERM→SIGKILL teardown. A third spawn site gets
+none of that.
+
+Both chokepoint rules skip test files, which stub `registerTool` and spawn fake binaries on
+purpose. Their allowed files are rule options matched against the absolute path, because
+`nx lint` runs with cwd at the project. The spawn rule is syntactic, so it only sees a binary
+named in the file: a literal, a same-file `const`, or the first word of a shell string. A blanket
+`/* eslint-disable */` with no rule list hides every report after it, including the one
+`disable-requires-reason` would make, so that form cannot be caught. Only generated files use
+it, and the shared config ignores those.
 
 Server-side testing conventions — mocking NestJS providers in `beforeEach`, model factories
 from the repository and entity factories from the service — live in the
