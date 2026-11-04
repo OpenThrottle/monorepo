@@ -2,13 +2,27 @@ import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { AppendPlanOutputDocument } from '../__generated__/graphql.ts';
+import {
+  AppendPlanOutputDocument,
+  GetPlanDocument,
+  GetTasksByPlanIdDocument,
+} from '../__generated__/graphql.ts';
 import type {
   WorkflowExecuteGraphqlV2,
   WorkflowRalphCommandRunner,
   WorkflowRalphIterationOnChunk,
 } from '../contract/ralph-orchestrator-deps.ts';
 import type { WorkflowFinishedReason, WorkflowRunResult } from '../types.ts';
+import type { PlanRunPrPlan, PlanRunPrTask } from './plan-run-pr-body.ts';
+import {
+  buildPlanRunPrBody,
+  parseOnelineLog,
+  parseTaskIdTrailers,
+  PR_TEMPLATE_FALLBACK,
+  resolvePlanRunPrTitle,
+  selectFooterTaskIds,
+} from './plan-run-pr-body.ts';
+import { sortTasksByPlanListOrder } from './plan-task-list-order.ts';
 
 /** Finished reasons that trigger the host-owned push + PR finalize step. */
 const FINALIZE_REASONS = [
@@ -179,86 +193,162 @@ const findExistingPrNumber = async (params: {
 };
 
 /**
- * @description Builds a conventional-commit PR title from the branch tip subject, falling back to a
- * plan-scoped default when git log is empty.
+ * @description The ref the branch is compared against. Fetches `origin/<base>` first because a
+ * stale local base widens `<base>..HEAD` with commits that already landed. Falls back to the local
+ * base when the remote ref can't be resolved (offline host, no `origin`).
  */
-const resolvePrTitle = async (params: {
+const resolveBaseRef = async (params: {
+  readonly baseBranch: string;
   readonly cwd: string;
-  readonly planId: string;
   readonly runCommand: WorkflowRalphCommandRunner;
 }): Promise<string> => {
-  const { cwd, planId, runCommand } = params;
-  const tip = await runGit(runCommand, cwd, ['log', '-1', '--format=%s']);
-  const subject = tip.exitCode === 0 ? tip.stdout.trim() : '';
+  const { baseBranch, cwd, runCommand } = params;
+  // Best-effort: a failed fetch still leaves whatever origin/<base> the host already has.
+  await runGit(runCommand, cwd, ['fetch', 'origin', baseBranch]);
+  const remote = await runGit(runCommand, cwd, [
+    'rev-parse',
+    '--verify',
+    '--quiet',
+    `refs/remotes/origin/${baseBranch}`,
+  ]);
 
-  if (subject !== '') {
-    return subject;
+  return remote.exitCode === 0 && remote.stdout.trim() !== ''
+    ? `origin/${baseBranch}`
+    : baseBranch;
+};
+
+const toOptionalText = (
+  value: string | null | undefined,
+): string | undefined =>
+  value === null || value === undefined || value.trim() === ''
+    ? undefined
+    : value;
+
+/**
+ * @description Plan and task rows for the PR body. Best-effort: an unreachable OT yields
+ * `undefined`, and the body falls back to git alone rather than failing finalize.
+ */
+const loadPlanAndTasks = async (params: {
+  readonly executeGraphqlV2: WorkflowExecuteGraphqlV2;
+  readonly planId: string;
+}): Promise<{
+  readonly plan: PlanRunPrPlan | undefined;
+  readonly tasks: readonly PlanRunPrTask[] | undefined;
+}> => {
+  const { executeGraphqlV2, planId } = params;
+  const [planResult, tasksResult] = await Promise.allSettled([
+    executeGraphqlV2(GetPlanDocument, { id: planId }),
+    executeGraphqlV2(GetTasksByPlanIdDocument, { input: { planId } }),
+  ]);
+
+  const planRow =
+    planResult.status === 'fulfilled'
+      ? (planResult.value.plan ?? undefined)
+      : undefined;
+  const plan =
+    planRow === undefined
+      ? undefined
+      : {
+          description: toOptionalText(planRow.description),
+          summary: toOptionalText(planRow.summary),
+          title: planRow.title,
+        };
+
+  const tasks =
+    tasksResult.status === 'fulfilled' &&
+    Array.isArray(tasksResult.value.tasksByPlanId)
+      ? sortTasksByPlanListOrder(tasksResult.value.tasksByPlanId).map(
+          (task) => ({
+            id: task.id,
+            status: task.status,
+            summary: toOptionalText(task.summary),
+            title: task.title,
+          }),
+        )
+      : undefined;
+
+  return { plan, tasks };
+};
+
+const readPrTemplate = async (cwd: string): Promise<string> => {
+  try {
+    return await readFile(
+      join(cwd, '.github', 'pull_request_template.md'),
+      'utf8',
+    );
+  } catch {
+    return PR_TEMPLATE_FALLBACK;
   }
-
-  return `chore: complete plan ${planId.slice(0, 8)}`;
 };
 
 /**
- * @description Fills `.github/pull_request_template.md` with a short summary and Plan-Id footer.
- * Never adds agent attribution.
+ * @description Deterministic host-written PR title and body: only the branch's own commits
+ * (`<baseRef>..HEAD`), plan and task data from OT, and a `Plan-Id:` plus every delivered
+ * `Task-Id:` footer. Never adds agent attribution.
  */
-const buildPrBody = async (params: {
+const buildPrDraft = async (params: {
+  readonly baseRef: string;
   readonly cwd: string;
+  readonly executeGraphqlV2: WorkflowExecuteGraphqlV2;
   readonly planId: string;
   readonly runCommand: WorkflowRalphCommandRunner;
-}): Promise<string> => {
-  const { cwd, planId, runCommand } = params;
-  const templatePath = join(cwd, '.github', 'pull_request_template.md');
-  let template: string;
+}): Promise<{ readonly body: string; readonly title: string }> => {
+  const { baseRef, cwd, executeGraphqlV2, planId, runCommand } = params;
+  const range = `${baseRef}..HEAD`;
 
-  try {
-    template = await readFile(templatePath, 'utf8');
-  } catch {
-    template =
-      '# Summary\n\n**TODO:** Describe the changes in this PR.\n\n## Testing\n\n- [ ] Pipelines should be passing\n';
-  }
-
-  const log = await runGit(runCommand, cwd, [
-    'log',
-    '--oneline',
-    '--no-decorate',
-    '-20',
+  const [template, log, rangeBodies, baseTrailers, ot] = await Promise.all([
+    readPrTemplate(cwd),
+    runGit(runCommand, cwd, ['log', '--oneline', '--no-decorate', range]),
+    runGit(runCommand, cwd, ['log', '--format=%b', range]),
+    runGit(runCommand, cwd, [
+      'log',
+      baseRef,
+      '--grep=^Task-Id:',
+      '--format=%b',
+    ]),
+    loadPlanAndTasks({ executeGraphqlV2, planId }),
   ]);
-  const summaryLines =
-    log.exitCode === 0 && log.stdout.trim() !== ''
-      ? log.stdout
-          .trim()
-          .split('\n')
-          .map((line) => `- ${line.trim()}`)
-          .join('\n')
-      : '- Plan run completed; see commits on this branch.';
 
-  const withSummary = template.includes(
-    '**TODO:** Describe the changes in this PR.',
-  )
-    ? template.replace(
-        '**TODO:** Describe the changes in this PR.',
-        summaryLines,
-      )
-    : `${template.trimEnd()}\n\n## Summary\n\n${summaryLines}\n`;
+  const commits = log.exitCode === 0 ? parseOnelineLog(log.stdout) : [];
+  const footerTaskIds = selectFooterTaskIds({
+    rangeTaskIds:
+      rangeBodies.exitCode === 0 ? parseTaskIdTrailers(rangeBodies.stdout) : [],
+    taskIdsOnBase: new Set(
+      baseTrailers.exitCode === 0
+        ? parseTaskIdTrailers(baseTrailers.stdout)
+        : [],
+    ),
+    tasks: ot.tasks,
+  });
 
-  return `${withSummary.trimEnd()}\n\nPlan-Id: ${planId}\n`;
+  return {
+    body: buildPlanRunPrBody({
+      commits,
+      footerTaskIds,
+      plan: ot.plan,
+      planId,
+      tasks: ot.tasks ?? [],
+      template,
+    }),
+    title: resolvePlanRunPrTitle({ commits, plan: ot.plan, planId }),
+  };
 };
 
 /**
  * @description Creates a draft PR after the local attribution guard passes, then marks it ready.
  */
 const createAndReadyPr = async (params: {
+  readonly baseRef: string;
   readonly cwd: string;
+  readonly executeGraphqlV2: WorkflowExecuteGraphqlV2;
   readonly planId: string;
   readonly runCommand: WorkflowRalphCommandRunner;
 }): Promise<
   | { readonly ok: true; readonly prNumber: number }
   | { readonly detail: string; readonly ok: false; readonly owedStep: string }
 > => {
-  const { cwd, planId, runCommand } = params;
-  const title = await resolvePrTitle({ cwd, planId, runCommand });
-  const body = await buildPrBody({ cwd, planId, runCommand });
+  const { cwd, runCommand } = params;
+  const { body, title } = await buildPrDraft(params);
 
   let tempDir: string;
   try {
@@ -407,10 +497,11 @@ export const finalizePlanRun = async (
     });
   }
 
+  const baseRef = await resolveBaseRef({ baseBranch, cwd, runCommand });
   const ahead = await runGit(runCommand, cwd, [
     'rev-list',
     '--count',
-    `${baseBranch}..HEAD`,
+    `${baseRef}..HEAD`,
   ]);
 
   if (ahead.exitCode !== 0) {
@@ -525,7 +616,9 @@ export const finalizePlanRun = async (
   }
 
   const created = await createAndReadyPr({
+    baseRef,
     cwd,
+    executeGraphqlV2,
     planId,
     runCommand,
   });
