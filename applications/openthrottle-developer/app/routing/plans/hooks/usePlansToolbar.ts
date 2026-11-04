@@ -9,6 +9,7 @@
 import * as React from 'react';
 import { useSearchParams } from 'react-router';
 
+import { statusesToSearchParamValues } from '~/routing/plans/config/status-options';
 import type { PlansSortBy, PlansSortOrder } from '~/routing/plans/config/types';
 
 export interface UsePlansToolbarOptions {
@@ -54,7 +55,7 @@ export const usePlansToolbar = (
     (newStatuses: string[]) => {
       const next = new URLSearchParams(searchParams);
       next.delete('status');
-      for (const s of newStatuses) {
+      for (const s of statusesToSearchParamValues(newStatuses)) {
         next.append('status', s);
       }
       next.set('page', '1');

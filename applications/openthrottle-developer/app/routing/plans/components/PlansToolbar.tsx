@@ -3,9 +3,8 @@ import { GlobalToolbarSearch } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
 
 import { AssigneeMultiSelect } from '~/routing/plans/components/AssigneeMultiSelect';
+import { PlanStatusFilter } from '~/routing/plans/components/PlanStatusFilter';
 import { SortDropdown } from '~/routing/plans/components/SortDropdown';
-import { StatusMultiSelect } from '~/routing/plans/components/StatusMultiSelect';
-import { STATUS_OPTIONS } from '~/routing/plans/config/status-options';
 import type { PlansSortBy, PlansSortOrder } from '~/routing/plans/config/types';
 import { usePlansToolbar } from '~/routing/plans/hooks/usePlansToolbar';
 
@@ -69,13 +68,9 @@ export const PlansToolbar = (props: PlansToolbarProps): React.ReactElement => {
           }}
         />
 
-        <StatusMultiSelect
-          compact={true}
-          data-testid="PlansToolbar-status-filter"
-          onChange={handleStatusChange}
-          options={STATUS_OPTIONS}
-          value={statuses}
-        />
+        <div data-testid="PlansToolbar-status-filter">
+          <PlanStatusFilter onChange={handleStatusChange} value={statuses} />
+        </div>
         <div>
           <AssigneeMultiSelect
             onChange={handleAssigneeChange}

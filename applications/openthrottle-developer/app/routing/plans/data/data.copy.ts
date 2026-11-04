@@ -34,6 +34,18 @@ export const PLANS_ONBOARDING = {
   whatItIs: `A plan is OpenThrottle's record of intended work — what you decided to build, broken into tasks with status, assignee, and summaries. Plans can be worked by hand or executed agentically, with commits linked back for traceability.`,
 } satisfies GlobalFeatureOnboardingContent;
 
+/**
+ * @description Copy for the plans index Status filter ({@link PlanStatusFilter}):
+ * the trigger title, the two group headings and the two footer actions.
+ */
+export const PLAN_STATUS_FILTER_COPY = {
+  activeGroup: `Active`,
+  allStatuses: `All statuses`,
+  resetToDefaults: `Reset to defaults`,
+  resolvedGroup: `Resolved`,
+  title: `Status`,
+} as const;
+
 export const PLAN_TASK_NOT_FOUND_COPY = {
   description: `The task you are looking for does not exist.`,
   title: `Task not found`,
