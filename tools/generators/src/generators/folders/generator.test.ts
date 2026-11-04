@@ -49,4 +49,27 @@ describe('folders generator', () => {
       tree.listChanges().some((change) => change.path.includes('/common/')),
     ).toBe(false);
   });
+
+  test('emits valid CONSTANT_CASE identifiers for a hyphenated name', async () => {
+    await foldersGenerator(tree, { application, folder, name: 'probe-area' });
+
+    const root = `applications/${application}/app/routing/probe-area`;
+    const copy = tree.read(`${root}/data/data.copy.ts`, 'utf-8');
+    const defaults = tree.read(`${root}/config/defaults.ts`, 'utf-8');
+
+    expect(copy).toContain('export const PROBE_AREA_NOT_FOUND_COPY = {');
+    expect(defaults).toContain('export const DEFAULT_PROBE_AREA =');
+    expect(`${copy}${defaults}`).not.toContain('PROBE-AREA');
+  });
+
+  test('imports what the generated formatter uses', async () => {
+    await foldersGenerator(tree, { application, folder, name });
+
+    const formatters = tree.read(
+      `applications/${application}/app/routing/${name}/utils/formatters.ts`,
+      'utf-8',
+    );
+
+    expect(formatters).toContain("import { format } from 'date-fns';");
+  });
 });
