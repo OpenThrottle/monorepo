@@ -268,7 +268,10 @@ query PlanDetailRunHistory($planId: ID!) {
       }
     }
   }
-  planRunsByPlanId(input: { planId: $planId, limit: 10 }) {
+  # `limit: 25` matches `recentPlanRunsMetrics` above so completed-job metrics can
+  # join onto history rows, and must equal PLAN_RUN_HISTORY_FETCH_LIMIT in
+  # routing/plans/data/data.plan-run-history.ts (the history footer reads it).
+  planRunsByPlanId(input: { planId: $planId, limit: 25 }) {
     branch
     bullmqJobId
     checkout {

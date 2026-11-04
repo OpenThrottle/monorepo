@@ -81,7 +81,7 @@ export const loader = async (args: Route.LoaderArgs) => {
       models: Promise.resolve([]),
       outputChunks: Promise.resolve([]),
       plan: null,
-      runHistory: Promise.resolve({ planRunAuditRows: [], recentPlanRuns: [] }),
+      runHistory: Promise.resolve({ planRunAuditRows: [], planRunMetrics: [] }),
       tagVocabulary: Promise.resolve([]),
       tasks: [],
       workspaceRepositories: Promise.resolve([]),
@@ -133,7 +133,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     { planId },
   ).then((result) => ({
     planRunAuditRows: result.planRunsByPlanId ?? [],
-    recentPlanRuns: result.metrics.recentPlanRunsMetrics ?? [],
+    planRunMetrics: result.metrics.recentPlanRunsMetrics ?? [],
   }));
 
   const tagVocabulary = executeGraphqlWithAuth(

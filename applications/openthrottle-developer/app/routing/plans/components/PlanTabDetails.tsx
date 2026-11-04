@@ -18,12 +18,6 @@ import {
 import { PLAN_LIFECYCLE_HOOKS_COPY } from '~/routing/plans/data/data.copy';
 import { PLAN_DEFERRED_SECTION_COPY } from '~/routing/plans/data/data.copy';
 import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
-import {
-  buildWorkflowRalphOptionArgs,
-  formatWorkflowRalphCommandLine,
-  parseWorkflowRunIterationTimeoutSeconds,
-  type WorkflowRalphRunOptionsInput,
-} from '~/routing/plans/utils/build-workflow-ralph-argv';
 
 export interface PlanTabDetailsProps {
   fullscreen: boolean;
@@ -45,16 +39,6 @@ export const PlanTabDetails = (
   const workingDirectory = useAtomValue(workflowWorkingDirectoryAtom);
 
   // Setup
-  const canonicalWorkflowCommand = React.useMemo(() => {
-    const merged: WorkflowRalphRunOptionsInput = {
-      ...workflowInput,
-      iterationTimeoutSeconds:
-        parseWorkflowRunIterationTimeoutSeconds(workflowTimeout),
-    };
-
-    return formatWorkflowRalphCommandLine(buildWorkflowRalphOptionArgs(merged));
-  }, [workflowInput, workflowTimeout]);
-
   const hasSummary = plan?.summary != null && plan.summary !== '';
   const requirements = React.useMemo(() => {
     return tasks
@@ -143,10 +127,15 @@ export const PlanTabDetails = (
             >
               {(history) => (
                 <PlanWorkflowRunTransparency
-                  canonicalWorkflowCommand={canonicalWorkflowCommand}
                   planId={plan.id}
                   planRunAuditRows={history.planRunAuditRows}
-                  recentPlanRuns={history.recentPlanRuns}
+                  planRunMetrics={history.planRunMetrics}
+                  scheduledRunAt={
+                    typeof plan.scheduledRunAt === 'string'
+                      ? plan.scheduledRunAt
+                      : null
+                  }
+                  scheduledRunId={plan.scheduledRunId ?? null}
                   workflowInput={workflowInput}
                   workflowTimeout={workflowTimeout}
                   workingDirectory={workingDirectory ?? ''}

@@ -181,6 +181,87 @@ export const PLAN_DEFERRED_SECTION_COPY = {
   tagVocabularyError: `Could not load the tag vocabulary.`,
 } as const;
 
+/**
+ * @description The plan Details "Runs" card ({@link PlanWorkflowRunTransparency}): what is about
+ * to run, what just ran, the run history, and a collapsed CLI & debug section. `empty` replaces the
+ * three run sections when the plan has never run and nothing is scheduled; `time` backs
+ * `formatRunTime`.
+ */
+export const PLAN_RUN_TRANSPARENCY_COPY = {
+  cli: {
+    configurationLink: `Configuration tab`,
+    copyDebugBundle: `Copy debug bundle`,
+    diffEmpty: `Matches the defaults — the CLI needs only --plan or --task.`,
+    diffHeading: `Differs from defaults`,
+    heading: `CLI & debug`,
+    precedenceLabel: `Precedence:`,
+    precedenceSuffix: `Edit the CLI layer on the`,
+    queueLinkPrefix: `Queue:`,
+  },
+  description: `Scheduled, active and past runs of this plan.`,
+  empty: {
+    description: `Use Run or Schedule in the toolbar to start this plan.`,
+    title: `No runs yet`,
+  },
+  history: {
+    actions: {
+      copiedToast: `Run id copied to clipboard`,
+      copyFailedToast: `Could not copy the run id`,
+      copyRunId: `Copy run id`,
+      menuAriaLabelPrefix: `Run actions for`,
+      openJob: `Open job`,
+    },
+    columns: {
+      branch: `Branch / PR`,
+      expand: `Details`,
+      modelBackend: `Model / backend`,
+      status: `Status`,
+      when: `When`,
+    },
+    detail: {
+      ariaLabel: `Run details`,
+      branch: `Branch / PR`,
+      configDiff: `vs current config`,
+      configMatches: `Matches current config`,
+      effort: `Effort`,
+      finished: `Finished`,
+      jobId: `Job id`,
+      modelBackend: `Model / backend`,
+      noJob: `No job (CLI or orchestrator run)`,
+      none: `—`,
+      rssEnd: `RSS end (MB)`,
+      runKind: `Kind`,
+      workspace: `Workspace`,
+    },
+    /** The chevron keeps one name; `aria-expanded` carries open/closed. */
+    expandAriaLabel: `Run details`,
+    fetchLimitFooter: (limit: number): string =>
+      `Showing the ${limit} most recent runs`,
+    heading: `Run history`,
+    showMore: (count: number): string => `Show ${count} more`,
+    staleBadge: `Stale`,
+  },
+  latest: {
+    heading: `Latest run`,
+    heartbeatLabel: `Last heartbeat`,
+    staleWarning: `No recent heartbeat. This run may have lost contact.`,
+    startedLabel: `Started`,
+  },
+  meta: {
+    ariaLabel: `Run details`,
+  },
+  time: {
+    unknown: `Time unknown`,
+  },
+  title: `Runs`,
+  upcoming: {
+    backstopMeta: `Details appear once this run is in the run history.`,
+    firesLabel: `Fires`,
+    firesUnknown: `Fire time unknown`,
+    heading: `Upcoming`,
+  },
+} as const;
+
 export const LINKED_ARTIFACTS_PANEL_COPY = {
   allTypesLabel: `All types`,
   allVerificationsLabel: `All`,
@@ -338,15 +419,6 @@ export const PLAN_RUN_MODEL_EFFORT_COPY = {
   modelLabel: `Model`,
   modelsError: `Could not load the model list.`,
   noModelsNotice: `No agent models were discovered. Check Settings → Agents.`,
-} as const;
-
-/**
- * @description Column header and empty value for the worktree the queued run actually used, read
- * from `run_config_snapshot.workspace.workingDirectory`.
- */
-export const PLAN_RUN_AUDIT_WORKSPACE_COPY = {
-  columnLabel: `Worktree`,
-  emptyLabel: `—`,
 } as const;
 
 /**

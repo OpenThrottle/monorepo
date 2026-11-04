@@ -1,178 +1,137 @@
+import {
+  Button,
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@openthrottle/react-router-shadcn';
+import { GlobalPopoverActionsHeader } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
-import { Link } from 'react-router';
 
 import type { PlanDetailRunHistoryQuery } from '~/__generated__/graphql';
 import { collectResumedRunIds } from '~/global/utils/utils.usage-limit';
-import { PlanRunCancelScheduledButton } from '~/routing/plans/components/PlanRunCancelScheduledButton';
-import { PlanRunProvenanceCell } from '~/routing/plans/components/PlanRunProvenanceCell';
-import { PlanRunStatusCell } from '~/routing/plans/components/PlanRunStatusCell';
+import { PlanWorkflowRunHistoryRow } from '~/routing/plans/components/PlanWorkflowRunHistoryRow';
+import { PlanWorkflowRunSection } from '~/routing/plans/components/PlanWorkflowRunSection';
+import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/data.copy';
 import {
-  PLAN_RUN_AUDIT_WORKSPACE_COPY,
-  PLAN_RUN_CANCEL_SCHEDULED_COPY,
-  PLAN_RUN_STATUS_CELL_COPY,
-} from '~/routing/plans/data/data.copy';
+  PLAN_RUN_HISTORY_FETCH_LIMIT,
+  PLAN_RUN_HISTORY_INITIAL_ROWS,
+} from '~/routing/plans/data/data.plan-run-history';
 import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
-import { planRunJobDetailPath } from '~/routing/plans/utils/build-workflow-ralph-argv';
-import {
-  buildPlanRunSnapshotDiffLabels,
-  readPlanRunSnapshotWorkspacePath,
-} from '~/routing/plans/utils/plan-run-config-snapshot-ui';
-import { sortPlanRunAuditRows } from '~/routing/plans/utils/sort-plan-run-audit-rows';
+import { selectHistoryRuns } from '~/routing/plans/utils/plan-run-sections';
+import type { PlanRunMetricsEntry } from '~/routing/plans/utils/plan-workflow-run-transparency';
+import { joinPlanRunJobMetrics } from '~/routing/plans/utils/plan-workflow-run-transparency';
 
 export type PlanRunAuditRow =
   PlanDetailRunHistoryQuery['planRunsByPlanId'][number];
 
 export interface PlanWorkflowRunTransparencyAuditTableProps {
-  planId: string;
-  planRunAuditRows: PlanRunAuditRow[];
-  workflowInput: WorkflowRalphRunOptionsInput;
-  workingDirectory: string;
+  readonly planRunAuditRows: readonly PlanRunAuditRow[];
+  /** Completed-job metrics (`metrics.recentPlanRunsMetrics`), joined onto rows by job id. */
+  readonly planRunMetrics: readonly PlanRunMetricsEntry[];
+  readonly workflowInput: WorkflowRalphRunOptionsInput;
+  readonly workingDirectory: string;
 }
 
 /**
- * @description Queued run audit table for {@link PlanWorkflowRunTransparency}:
- * persisted plan_runs rows with a snapshot diff of enqueue-time config vs the
- * current Configuration tab values. Pending SCHEDULED rows are pinned to the top and carry a Cancel
- * action (see {@link sortPlanRunAuditRows}).
+ * @description The Runs card's Run history section: every run that is not SCHEDULED (those live
+ * in Upcoming), newest first (see {@link selectHistoryRuns}). The first
+ * {@link PLAN_RUN_HISTORY_INITIAL_ROWS} rows show, a "Show N more" button reveals the rest, and a
+ * footer notes when the query's {@link PLAN_RUN_HISTORY_FETCH_LIMIT} was reached. Each row expands
+ * inline ({@link PlanWorkflowRunHistoryRow}), with the run's completed-job metrics joined in
+ * ({@link joinPlanRunJobMetrics}). Renders nothing when there is no history.
  */
 export const PlanWorkflowRunTransparencyAuditTable = (
   props: PlanWorkflowRunTransparencyAuditTableProps,
-): React.ReactElement => {
-  const { planId, planRunAuditRows, workflowInput, workingDirectory } = props;
+): React.ReactElement | null => {
+  const { planRunAuditRows, planRunMetrics, workflowInput, workingDirectory } =
+    props;
 
   // Hooks
+  const [showAll, setShowAll] = React.useState(false);
 
   // Setup
+  const copy = PLAN_RUN_TRANSPARENCY_COPY.history;
   const resumedRunIds = collectResumedRunIds(planRunAuditRows);
-  const sortedRows = sortPlanRunAuditRows(planRunAuditRows);
+  const historyRows = selectHistoryRuns(planRunAuditRows);
+  const metricsByRunId = joinPlanRunJobMetrics(historyRows, planRunMetrics);
+  const visibleRows = showAll
+    ? historyRows
+    : historyRows.slice(0, PLAN_RUN_HISTORY_INITIAL_ROWS);
+  const hiddenCount = historyRows.length - visibleRows.length;
+  // The limit caps every run, SCHEDULED included, so it is reached on the raw row count.
+  const reachedFetchLimit =
+    planRunAuditRows.length >= PLAN_RUN_HISTORY_FETCH_LIMIT;
 
   // Handlers
+  const handleShowAll = (): void => setShowAll(true);
 
   // Markup
 
   // Life Cycle
 
   // 🔌 Short Circuit
+  if (historyRows.length === 0) {
+    return null;
+  }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="text-muted-foreground mt-8 w-full min-w-[28rem] border-collapse text-xs">
-        <caption className="caption-bottom pt-2 text-left text-[0.65rem]">
-          Queued run audit (persisted plan_runs rows). Snapshot diff compares
-          enqueue-time config to current Configuration tab values.
-        </caption>
-        <thead>
-          <tr className="border-border border-b text-left">
-            <th className="text-foreground py-1.5 pr-2 font-medium">Job id</th>
-            <th className="text-foreground py-1.5 pr-2 font-medium">
-              Queued (UTC)
-            </th>
-            <th className="text-foreground py-1.5 pr-2 font-medium">Kind</th>
-            <th className="text-foreground py-1.5 pr-2 font-medium">
-              {PLAN_RUN_STATUS_CELL_COPY.columnLabel}
-            </th>
-            <th className="text-foreground py-1.5 pr-2 font-medium">
-              Provenance
-            </th>
-            <th className="text-foreground py-1.5 pr-2 font-medium">
-              {PLAN_RUN_AUDIT_WORKSPACE_COPY.columnLabel}
-            </th>
-            <th className="text-foreground py-1.5 pr-2 font-medium">
-              vs current config
-            </th>
-            <th className="text-foreground py-1.5 font-medium">
-              {PLAN_RUN_CANCEL_SCHEDULED_COPY.actionsColumnLabel}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {planRunAuditRows.length === 0 ? (
-            <tr>
-              <td className="py-2 text-[0.7rem]" colSpan={8}>
-                No queued run audit rows yet. After you enqueue from the
-                toolbar, each run records its resolved configuration here.
-              </td>
-            </tr>
-          ) : (
-            sortedRows.map((row) => {
-              const diffLabels = buildPlanRunSnapshotDiffLabels(
-                row.runConfigSnapshotJson,
-                { workflowInput, workingDirectory },
-              );
-              const runWorkspacePath = readPlanRunSnapshotWorkspacePath(
-                row.runConfigSnapshotJson,
-              );
-
-              return (
-                <tr
-                  className="border-border/60 border-b last:border-0"
-                  key={row.id}
-                >
-                  <td className="py-1.5 pr-2 align-top font-mono text-[0.65rem]">
-                    {row.bullmqJobId == null ? (
-                      <span className="text-muted-foreground">CLI run</span>
-                    ) : (
-                      <Link
-                        className="text-primary underline-offset-2 hover:underline"
-                        to={planRunJobDetailPath(row.bullmqJobId)}
-                      >
-                        {row.bullmqJobId}
-                      </Link>
-                    )}
-                  </td>
-                  <td className="py-1.5 pr-2 align-top font-mono text-[0.65rem]">
-                    {new Date(row.createdAt).toISOString()}
-                  </td>
-                  <td className="py-1.5 pr-2 align-top text-[0.65rem]">
-                    {row.runKind}
-                  </td>
-                  <td className="py-1.5 pr-2 align-top text-[0.65rem]">
-                    <PlanRunStatusCell
-                      resumeOfRunId={row.resumeOfRunId ?? null}
-                      resumeScheduled={resumedRunIds.has(row.id)}
-                      scheduledFor={row.scheduledFor ?? null}
-                      status={row.status}
-                      usageLimitResetsAt={row.usageLimitResetsAt ?? null}
-                    />
-                  </td>
-                  <td className="py-1.5 pr-2 align-top text-[0.65rem]">
-                    <PlanRunProvenanceCell
-                      branch={row.branch}
-                      checkout={row.checkout}
-                      pullRequest={row.pullRequest}
-                    />
-                  </td>
-                  <td className="py-1.5 pr-2 align-top font-mono text-[0.65rem] break-all">
-                    {runWorkspacePath ??
-                      PLAN_RUN_AUDIT_WORKSPACE_COPY.emptyLabel}
-                  </td>
-                  <td className="py-1.5 pr-2 align-top text-[0.65rem]">
-                    {row.runConfigSnapshotJson == null ? (
-                      '—'
-                    ) : diffLabels.length === 0 ? (
-                      'Matches current config'
-                    ) : (
-                      <ul className="list-inside list-disc">
-                        {diffLabels.map((line, index) => (
-                          <li key={`${row.id}-${index}`}>{line}</li>
-                        ))}
-                      </ul>
-                    )}
-                  </td>
-                  <td className="py-1.5 align-top text-[0.65rem]">
-                    {row.status === 'SCHEDULED' ? (
-                      <PlanRunCancelScheduledButton
-                        planId={planId}
-                        planRunId={row.id}
-                      />
-                    ) : null}
-                  </td>
-                </tr>
-              );
-            })
-          )}
-        </tbody>
-      </table>
-    </div>
+    <PlanWorkflowRunSection heading={copy.heading}>
+      <div data-testid="PlanWorkflowRunTransparencyAuditTable">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-8 pr-0">
+                <span className="sr-only">{copy.columns.expand}</span>
+              </TableHead>
+              <TableHead>{copy.columns.when}</TableHead>
+              <TableHead>{copy.columns.status}</TableHead>
+              <TableHead className="hidden sm:table-cell">
+                {copy.columns.modelBackend}
+              </TableHead>
+              <TableHead className="hidden sm:table-cell">
+                {copy.columns.branch}
+              </TableHead>
+              <TableHead className="w-10 p-0">
+                <GlobalPopoverActionsHeader className="max-sm:sr-only" />
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {visibleRows.map((row) => (
+              <PlanWorkflowRunHistoryRow
+                key={row.id}
+                metrics={metricsByRunId.get(row.id) ?? null}
+                resumeScheduled={resumedRunIds.has(row.id)}
+                row={row}
+                workflowInput={workflowInput}
+                workingDirectory={workingDirectory}
+              />
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      {hiddenCount > 0 ? (
+        <Button
+          className="self-start"
+          data-testid="PlanWorkflowRunTransparencyAuditTable-show-more"
+          onClick={handleShowAll}
+          size="sm"
+          type="button"
+          variant="ghost"
+        >
+          {copy.showMore(hiddenCount)}
+        </Button>
+      ) : null}
+      {reachedFetchLimit && hiddenCount === 0 ? (
+        <p
+          className="text-muted-foreground text-xs"
+          data-testid="PlanWorkflowRunTransparencyAuditTable-limit"
+        >
+          {copy.fetchLimitFooter(PLAN_RUN_HISTORY_FETCH_LIMIT)}
+        </p>
+      ) : null}
+    </PlanWorkflowRunSection>
   );
 };
