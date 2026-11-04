@@ -7,6 +7,8 @@ import { renderRoutesStub } from '~/testing/route-fixtures';
 import type { NoteFormProps } from '../NoteForm';
 import { NoteForm } from '../NoteForm';
 
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+
 describe('NoteForm Component', () => {
   describe('when action is create', () => {
     let component: RenderResult;
@@ -59,9 +61,9 @@ describe('NoteForm Component', () => {
         note: {
           author: 'alpha',
           content: 'Body text',
-          createdAt: new Date(),
+          createdAt: FIXED_NOW,
           id: 'n-42',
-          updatedAt: new Date(),
+          updatedAt: FIXED_NOW,
         },
       };
       const component = renderRoutesStub(<NoteForm {...props} />);
@@ -80,9 +82,9 @@ describe('NoteForm Component', () => {
         action: 'update',
         note: {
           content: 'Only body',
-          createdAt: new Date(),
+          createdAt: FIXED_NOW,
           id: 'n-99',
-          updatedAt: new Date(),
+          updatedAt: FIXED_NOW,
         },
       };
       const component = renderRoutesStub(<NoteForm {...props} />);

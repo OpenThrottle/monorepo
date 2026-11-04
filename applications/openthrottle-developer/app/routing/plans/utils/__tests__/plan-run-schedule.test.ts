@@ -44,8 +44,8 @@ describe('plan-run-schedule', () => {
 
     test('is undefined for a missing date or a malformed time', () => {
       expect(composeScheduleInstant(undefined, '15:30')).toBeUndefined();
-      expect(composeScheduleInstant(new Date(), '')).toBeUndefined();
-      expect(composeScheduleInstant(new Date(), '3pm')).toBeUndefined();
+      expect(composeScheduleInstant(NOW, '')).toBeUndefined();
+      expect(composeScheduleInstant(NOW, '3pm')).toBeUndefined();
     });
   });
 

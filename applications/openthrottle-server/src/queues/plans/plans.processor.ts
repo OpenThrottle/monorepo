@@ -252,7 +252,7 @@ export class PlansProcessor
       // service account with a non-fatal capture failure (a missing migration/ledger hiccup must
       // not block a startup reconcile). guardCurrentStatus re-checks IN_PROGRESS under
       // writeGuardedStatus's own row lock — the `plans` list was read moments earlier, above.
-      // eslint-disable-next-line no-await-in-loop
+      // eslint-disable-next-line no-await-in-loop -- sequential by design: each write takes its own row lock and re-checks status
       await this.planStatusService.writeGuardedStatus(plan.id, {
         actorKind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
         actorSub: startupActorSub ?? undefined,
@@ -368,7 +368,7 @@ export class PlansProcessor
         continue;
       }
 
-      // eslint-disable-next-line no-await-in-loop
+      // eslint-disable-next-line no-await-in-loop -- sequential by design: one plan reconciled at a time
       const tasks = await taskRepo.findOne({
         select: ['id'],
         where: { planId: plan.id, status: 'IN_PROGRESS' },
@@ -379,7 +379,7 @@ export class PlansProcessor
       }
 
       const promoted =
-        // eslint-disable-next-line no-await-in-loop
+        // eslint-disable-next-line no-await-in-loop -- sequential by design: promotion is a guarded per-plan write
         await this.planStatusService.promoteParentPlanToInProgress(
           plan.id,
           {

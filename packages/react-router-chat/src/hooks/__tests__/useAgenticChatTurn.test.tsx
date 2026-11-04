@@ -1,5 +1,6 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { RenderResult } from '@testing-library/react';
+// eslint-disable-next-line openthrottle/no-fire-event -- the watchdog tests run under vi.useFakeTimers(); RTL's asyncWrapper (which every userEvent call goes through) drains on a setTimeout(0) it only auto-advances under jest fake timers, so an awaited userEvent call never resolves there
 import { act, fireEvent, render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { parse } from 'graphql';

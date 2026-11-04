@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -11,16 +12,17 @@ import {
 
 describe('ContextMenu', () => {
   it('should render trigger area', () => {
-    render(
+    const component = render(
       <ContextMenu>
         <ContextMenuTrigger>Right-click me</ContextMenuTrigger>
       </ContextMenu>,
     );
-    expect(screen.getByText('Right-click me')).toBeInTheDocument();
+    expect(component.getByText('Right-click me')).toBeInTheDocument();
   });
 
-  it('should render ContextMenuContent after contextmenu event', () => {
-    render(
+  it('should render ContextMenuContent after contextmenu event', async () => {
+    const user = userEvent.setup();
+    const component = render(
       <ContextMenu>
         <ContextMenuTrigger>Area</ContextMenuTrigger>
         <ContextMenuContent>
@@ -29,15 +31,19 @@ describe('ContextMenu', () => {
       </ContextMenu>,
     );
 
-    fireEvent.contextMenu(screen.getByText('Area'));
+    await user.pointer({
+      keys: '[MouseRight]',
+      target: component.getByText('Area'),
+    });
 
     const menu = document.body.querySelector('[role="menu"]');
     expect(menu).toBeInTheDocument();
     expect(menu).toHaveTextContent('One');
   });
 
-  it('should render ContextMenuItem with role menuitem when open', () => {
-    render(
+  it('should render ContextMenuItem with role menuitem when open', async () => {
+    const user = userEvent.setup();
+    const component = render(
       <ContextMenu>
         <ContextMenuTrigger>Area</ContextMenuTrigger>
         <ContextMenuContent>
@@ -46,7 +52,10 @@ describe('ContextMenu', () => {
       </ContextMenu>,
     );
 
-    fireEvent.contextMenu(screen.getByText('Area'));
+    await user.pointer({
+      keys: '[MouseRight]',
+      target: component.getByText('Area'),
+    });
 
     const item = document.body.querySelector('[role="menuitem"]');
     expect(item).toBeInTheDocument();

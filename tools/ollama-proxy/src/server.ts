@@ -167,7 +167,7 @@ async function pipeStreamToResponse(
 
   try {
     for (;;) {
-      // eslint-disable-next-line no-await-in-loop
+      // eslint-disable-next-line no-await-in-loop -- sequential by design: stream chunks must be read and written in order
       const { done, value } = await reader.read();
 
       if (done) break;
@@ -175,7 +175,7 @@ async function pipeStreamToResponse(
 
       const ok = res.write(Buffer.from(value));
       if (!ok) {
-        // eslint-disable-next-line no-await-in-loop
+        // eslint-disable-next-line no-await-in-loop -- sequential by design: backpressure, wait for drain before reading more
         await waitForDrain(res);
       }
     }

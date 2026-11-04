@@ -13,13 +13,19 @@ import type { NotificationInstance } from '../../types';
 import { loadFromStorage } from '../loadFromStorage';
 import { saveToStorage } from '../saveToStorage';
 
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+
 function makeNotification(message: string): NotificationInstance {
   return {
-    createdAt: new Date().toISOString(),
+    createdAt: FIXED_NOW.toISOString(),
     dismissed: false,
     event: 'system.alert',
     id: `id-${message}`,
-    payload: { message, severity: 'info', timestamp: new Date().toISOString() },
+    payload: {
+      message,
+      severity: 'info',
+      timestamp: FIXED_NOW.toISOString(),
+    },
     read: false,
   };
 }

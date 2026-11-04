@@ -41,7 +41,7 @@ interface HastNode {
 const isUnsafeUrl = (value: string): boolean => {
   // Strip ASCII control chars and spaces before reading the scheme so the
   // classic `java\tscript:` / leading-newline bypasses are defeated.
-  // eslint-disable-next-line no-control-regex
+  // eslint-disable-next-line no-control-regex -- stripping control chars is the point of this normalization
   const normalized = value.replace(/[\u0000-\u0020]/g, '').toLowerCase();
   const schemeMatch = normalized.match(/^([a-z][a-z0-9+.-]*):/);
 
@@ -63,7 +63,7 @@ const isUnsafeUrl = (value: string): boolean => {
  * normalization in {@link isUnsafeUrl}.
  */
 const isExternalUrl = (value: string): boolean => {
-  // eslint-disable-next-line no-control-regex
+  // eslint-disable-next-line no-control-regex -- same control-char stripping as isUnsafeUrl
   const normalized = value.replace(/[\u0000-\u0020]/g, '').toLowerCase();
 
   return /^https?:/u.test(normalized) || normalized.startsWith('//');

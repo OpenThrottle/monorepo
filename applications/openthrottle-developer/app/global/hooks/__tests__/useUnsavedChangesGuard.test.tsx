@@ -19,9 +19,9 @@ const Probe = (props: { readonly isDirty: boolean }): React.ReactElement => {
 
 const renderProbe = (isDirty: boolean) => {
   const Stub = createRoutesStub([
-    // eslint-disable-next-line react/no-multi-comp
+    // eslint-disable-next-line react/no-multi-comp -- inline route stub component, createRoutesStub needs a Component per route
     { Component: () => <Probe isDirty={isDirty} />, path: '/' },
-    // eslint-disable-next-line react/no-multi-comp
+    // eslint-disable-next-line react/no-multi-comp -- inline route stub component, createRoutesStub needs a Component per route
     { Component: () => <p>elsewhere</p>, path: '/elsewhere' },
   ]);
 

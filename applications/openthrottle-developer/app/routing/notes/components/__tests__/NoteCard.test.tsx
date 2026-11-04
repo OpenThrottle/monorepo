@@ -7,6 +7,8 @@ import { renderRoutesStub } from '~/testing/route-fixtures';
 import type { NoteCardProps } from '../NoteCard';
 import { NoteCard } from '../NoteCard';
 
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+
 describe('NoteCard Component', () => {
   describe('with default props', () => {
     let component: RenderResult;
@@ -16,9 +18,9 @@ describe('NoteCard Component', () => {
       props = {
         note: {
           content: 'Note 1 content',
-          createdAt: new Date(),
+          createdAt: FIXED_NOW,
           id: 'note-1',
-          updatedAt: new Date(),
+          updatedAt: FIXED_NOW,
         },
       };
 
@@ -38,9 +40,9 @@ describe('NoteCard Component', () => {
       className: 'note-card-extra',
       note: {
         content: 'Note 1 content',
-        createdAt: new Date(),
+        createdAt: FIXED_NOW,
         id: 'note-1',
-        updatedAt: new Date(),
+        updatedAt: FIXED_NOW,
       },
     };
     const { getByTestId } = renderRoutesStub(<NoteCard {...props} />);

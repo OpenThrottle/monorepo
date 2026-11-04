@@ -1,3 +1,4 @@
+// eslint-disable-next-line openthrottle/no-fire-event -- every test runs under vi.useFakeTimers(); RTL's asyncWrapper (which every userEvent call goes through) drains on a setTimeout(0) it only auto-advances under jest fake timers, so an awaited userEvent call never resolves there
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub, useSearchParams } from 'react-router';

@@ -13,6 +13,8 @@ import {
   writeCheckpoint,
 } from '../../index.ts';
 
+const FIXED_NOW_MS = Date.parse('2026-01-15T12:00:00.000Z');
+
 describe('checkpoints', () => {
   let tmpRoot: string;
   let repoRoot: string;
@@ -173,7 +175,7 @@ describe('checkpoints', () => {
     };
 
     it('removes old checkpoints, keeping fresh ones and the current session', () => {
-      const now = Date.now();
+      const now = FIXED_NOW_MS;
       const hour = 60 * 60 * 1000;
       touch('old.json', 7 * hour, now);
       touch('fresh.json', 1 * hour, now);
@@ -193,7 +195,7 @@ describe('checkpoints', () => {
     });
 
     it('honors a custom maxAgeMs', () => {
-      const now = Date.now();
+      const now = FIXED_NOW_MS;
       touch('a.json', 2000, now);
       expect(
         sweepStaleCheckpoints({ checkpointsDir, maxAgeMs: 1000, now }),

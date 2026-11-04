@@ -26,7 +26,7 @@ const Probe = (props: {
 
 const renderProbe = (canWrite: boolean, post: BlogEditorPost) => {
   const Stub = createRoutesStub([
-    // eslint-disable-next-line react/no-multi-comp
+    // eslint-disable-next-line react/no-multi-comp -- inline route stub component, createRoutesStub needs a Component per route
     { Component: () => <Probe canWrite={canWrite} post={post} />, path: '/' },
   ]);
 

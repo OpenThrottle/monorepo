@@ -495,8 +495,7 @@ export const eslintConfig = tslint.config([
    * `*.test.ts` / `*.spec.ts` as well as `__tests__/`, which the snapshot block
    * misses.
    *
-   * `warn` until the burn-down (plan 0b6dfaf8) clears each rule's existing
-   * sites; then each flips to `error` individually.
+   * All `error` since plan 0b6dfaf8 burned the existing sites down.
    */
   {
     files: [
@@ -505,15 +504,15 @@ export const eslintConfig = tslint.config([
       '**/__tests__/**/*.tsx',
     ],
     rules: {
-      'openthrottle/no-fire-event': 'warn',
-      'openthrottle/no-test-sleep': 'warn',
-      'openthrottle/no-wall-clock-in-tests': 'warn',
-      'openthrottle/skip-requires-issue': 'warn',
+      'openthrottle/no-fire-event': 'error',
+      'openthrottle/skip-requires-issue': 'error',
     },
   },
   /**
-   * Timeouts are exempt in env-gated integration suites, which do real I/O
-   * (git, Postgres, child processes) and are not part of the default run.
+   * The clock rules (timeouts, sleeps, wall-clock reads) are exempt in
+   * `*.integration.test.ts` suites. Those suites are env-gated, do real I/O
+   * against git, Postgres, BullMQ or child processes, and wait on real time
+   * by design.
    */
   {
     files: [
@@ -523,7 +522,9 @@ export const eslintConfig = tslint.config([
     ],
     ignores: ['**/*.integration.{test,spec}.{ts,tsx}'],
     rules: {
-      'openthrottle/no-per-test-timeout': 'warn',
+      'openthrottle/no-per-test-timeout': 'error',
+      'openthrottle/no-test-sleep': 'error',
+      'openthrottle/no-wall-clock-in-tests': 'error',
     },
   },
 
@@ -537,7 +538,7 @@ export const eslintConfig = tslint.config([
   {
     files: ['**/*.{cjs,js,jsx,mjs,ts,tsx}'],
     rules: {
-      'openthrottle/disable-requires-reason': 'warn',
+      'openthrottle/disable-requires-reason': 'error',
     },
   },
   /**
@@ -548,14 +549,13 @@ export const eslintConfig = tslint.config([
    * project and a repo-relative glob would never match. Tests are exempt: they
    * stub `registerTool` and spawn fake binaries on purpose.
    *
-   * All three are `warn` until plan 0b6dfaf8's burn-down task flips them.
    */
   {
     files: ['**/*.{cjs,js,jsx,mjs,ts,tsx}'],
     ignores: ['**/*.{test,spec}.{ts,tsx}', '**/__tests__/**', '**/tests/**'],
     rules: {
-      'openthrottle/agent-cli-spawn-chokepoint': 'warn',
-      'openthrottle/mcp-tool-registration': 'warn',
+      'openthrottle/agent-cli-spawn-chokepoint': 'error',
+      'openthrottle/mcp-tool-registration': 'error',
     },
   },
 

@@ -365,19 +365,19 @@ describe('createCursorAgentSession', () => {
       `console.log('05dbda6a-4b19-4862-b4fc-205c78affb66');
       setInterval(() => {}, 1000000);`,
     );
-    process.env[AGENT_SESSION_TIMEOUT_MS_ENV] = '3000';
+    // A mint budget far beyond the per-test budget: if the create waited for
+    // the timeout instead of returning on the id, the test itself would time
+    // out. No wall-clock measurement needed.
+    process.env[AGENT_SESSION_TIMEOUT_MS_ENV] = '600000';
 
     try {
-      const startedAt = Date.now();
       await expect(createCursorAgentSession({ cwd: dir })).resolves.toBe(
         '05dbda6a-4b19-4862-b4fc-205c78affb66',
       );
-      // Well inside the budget: it returned on the id, not on the timeout.
-      expect(Date.now() - startedAt).toBeLessThan(2500);
     } finally {
       delete process.env[AGENT_SESSION_TIMEOUT_MS_ENV];
     }
-  }, 15_000);
+  });
 
   it('still waits (and fails) when a lingering child prints no id at all', async () => {
     // The early-return must not weaken the backstop: no id means no shortcut.
@@ -395,7 +395,7 @@ describe('createCursorAgentSession', () => {
     } finally {
       delete process.env[AGENT_SESSION_TIMEOUT_MS_ENV];
     }
-  }, 15_000);
+  });
 
   it('times out (killing the child) when create-chat hangs', async () => {
     // A create-chat that never prints and never exits.

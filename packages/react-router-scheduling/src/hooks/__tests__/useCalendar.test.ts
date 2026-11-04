@@ -1,9 +1,11 @@
 import { act, renderHook } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CalendarView } from '../../types';
 import { useCalendar } from '../useCalendar';
 import { useSchedule } from '../useSchedule';
+
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
 
 function renderUseCalendar(defaultView: CalendarView = CalendarView.Week) {
   return renderHook(() => {
@@ -19,6 +21,15 @@ function renderUseCalendar(defaultView: CalendarView = CalendarView.Week) {
 }
 
 describe('useCalendar', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(FIXED_NOW);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('initializes from the provided default view and date', () => {
     const { result } = renderUseCalendar();
     expect(result.current.view).toBe(CalendarView.Week);
@@ -55,6 +66,6 @@ describe('useCalendar', () => {
     expect(result.current.date.getFullYear()).toBe(2027);
 
     act(() => result.current.today());
-    expect(result.current.date.getFullYear()).toBe(new Date().getFullYear());
+    expect(result.current.date.getFullYear()).toBe(FIXED_NOW.getFullYear());
   });
 });

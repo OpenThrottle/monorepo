@@ -1,5 +1,5 @@
 import { render } from '@testing-library/react';
-import { fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -23,76 +23,95 @@ const Probe = (): React.ReactElement => {
 };
 
 describe('useTimelinePan', () => {
-  test('pans right on ArrowRight', () => {
+  test('pans right on ArrowRight', async () => {
+    const user = userEvent.setup();
     const view = render(<Probe />);
     const pane = view.getByTestId('pane');
     pane.scrollLeft = 0;
+    pane.focus();
 
-    fireEvent.keyDown(pane, { key: 'ArrowRight' });
+    await user.keyboard('{ArrowRight}');
 
     expect(pane.scrollLeft).toBe(50);
   });
 
-  test('pans left on ArrowLeft', () => {
+  test('pans left on ArrowLeft', async () => {
+    const user = userEvent.setup();
     const view = render(<Probe />);
     const pane = view.getByTestId('pane');
     pane.scrollLeft = 100;
+    pane.focus();
 
-    fireEvent.keyDown(pane, { key: 'ArrowLeft' });
+    await user.keyboard('{ArrowLeft}');
 
     expect(pane.scrollLeft).toBe(50);
   });
 
-  test('jumps to the window start on Home', () => {
+  test('jumps to the window start on Home', async () => {
+    const user = userEvent.setup();
     const view = render(<Probe />);
     const pane = view.getByTestId('pane');
     pane.scrollLeft = 300;
+    pane.focus();
 
-    fireEvent.keyDown(pane, { key: 'Home' });
+    await user.keyboard('{Home}');
 
     expect(pane.scrollLeft).toBe(0);
   });
 
-  test('ignores keys it does not own, so the page keeps its own scrolling', () => {
+  test('ignores keys it does not own, so the page keeps its own scrolling', async () => {
+    const user = userEvent.setup();
     const view = render(<Probe />);
     const pane = view.getByTestId('pane');
     pane.scrollLeft = 40;
+    pane.focus();
 
-    fireEvent.keyDown(pane, { key: 'PageDown' });
+    await user.keyboard('{PageDown}');
 
     expect(pane.scrollLeft).toBe(40);
   });
 
-  test('drags the body by the pointer delta', () => {
+  test('drags the body by the pointer delta', async () => {
+    const user = userEvent.setup();
     const view = render(<Probe />);
     const pane = view.getByTestId('pane');
     pane.scrollLeft = 100;
 
-    fireEvent.pointerDown(pane, { button: 0, clientX: 200 });
-    fireEvent.pointerMove(pane, { clientX: 150 });
+    await user.pointer([
+      { coords: { clientX: 200 }, keys: '[MouseLeft>]', target: pane },
+      { coords: { clientX: 150 }, target: pane },
+    ]);
 
     expect(pane.scrollLeft).toBe(150);
   });
 
-  test('ignores a non-primary button so context menus still work', () => {
+  test('ignores a non-primary button so context menus still work', async () => {
+    const user = userEvent.setup();
     const view = render(<Probe />);
     const pane = view.getByTestId('pane');
     pane.scrollLeft = 100;
 
-    fireEvent.pointerDown(pane, { button: 2, clientX: 200 });
-    fireEvent.pointerMove(pane, { clientX: 150 });
+    await user.pointer([
+      { coords: { clientX: 200 }, keys: '[MouseRight>]', target: pane },
+      { coords: { clientX: 150 }, target: pane },
+    ]);
 
     expect(pane.scrollLeft).toBe(100);
   });
 
-  test('stops panning on pointer up', () => {
+  test('stops panning on pointer up', async () => {
+    const user = userEvent.setup();
     const view = render(<Probe />);
     const pane = view.getByTestId('pane');
 
-    fireEvent.pointerDown(pane, { button: 0, clientX: 200 });
+    await user.pointer({
+      coords: { clientX: 200 },
+      keys: '[MouseLeft>]',
+      target: pane,
+    });
     expect(pane).toHaveAttribute('data-panning', 'true');
 
-    fireEvent.pointerUp(pane);
+    await user.pointer({ keys: '[/MouseLeft]', target: pane });
     expect(pane).toHaveAttribute('data-panning', 'false');
   });
 });

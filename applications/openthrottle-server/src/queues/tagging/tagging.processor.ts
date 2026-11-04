@@ -317,7 +317,7 @@ export class TaggingProcessor
       try {
         // Sequential on purpose: phase replacement on plans reads then
         // deletes; concurrent adds would race the ≤1-phase invariant.
-        // eslint-disable-next-line no-await-in-loop
+        // eslint-disable-next-line no-await-in-loop -- sequential by design: concurrent adds would race the one-phase invariant
         const row = await addTag(prediction);
         if (row.source === SOURCE_SERVER_LLM) {
           added += 1;
@@ -353,7 +353,7 @@ export class TaggingProcessor
     let removed = 0;
     for (const row of stale) {
       try {
-        // eslint-disable-next-line no-await-in-loop
+        // eslint-disable-next-line no-await-in-loop -- sequential by design: tag removals share the add path's ordering
         const deleted = await (isPlan
           ? this.tagsService.removePlanTag(caller, entityId, row.tag)
           : this.tagsService.removeTaskTag(caller, entityId, row.tag));

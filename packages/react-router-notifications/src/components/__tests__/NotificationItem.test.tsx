@@ -13,12 +13,14 @@ import type { NotificationInstance } from '../../types';
 import type { NotificationItemProps } from '../NotificationItem';
 import { NotificationItem } from '../NotificationItem';
 
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+
 describe('NotificationItem Component', () => {
   let props: NotificationItemProps;
 
   beforeEach(() => {
     const notification: NotificationInstance = {
-      createdAt: new Date().toISOString(),
+      createdAt: FIXED_NOW.toISOString(),
       dismissed: false,
       event: NOTIFICATION_EVENT_NAMES.PLAN_UPDATED,
       id: 'test-id',
@@ -27,7 +29,7 @@ describe('NotificationItem Component', () => {
         message: 'Plan updated',
         planId: 'plan-1',
         severity: 'info',
-        timestamp: new Date().toISOString(),
+        timestamp: FIXED_NOW.toISOString(),
       },
       read: false,
     };

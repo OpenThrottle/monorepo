@@ -2,7 +2,7 @@ import type { RenderResult } from '@testing-library/react';
 import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { createTimelineScale } from '~/routing/timeline/utils/scale';
 
@@ -18,6 +18,8 @@ const renderAxis = (props: TimelineAxisProps): RenderResult => {
   return render(<RoutesStub />);
 };
 
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+
 const pastScale = createTimelineScale({
   from: new Date('2026-01-01T00:00:00Z'),
   to: new Date('2026-01-08T00:00:00Z'),
@@ -28,7 +30,13 @@ describe('TimelineAxis Component', () => {
   let component: RenderResult;
 
   beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(FIXED_NOW);
     component = renderAxis({ scale: pastScale });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   test('should render the axis', () => {
@@ -60,8 +68,8 @@ describe('TimelineAxis Component', () => {
     const live = renderAxis({
       isLiveWindow: true,
       scale: createTimelineScale({
-        from: new Date(Date.now() - 60 * 60 * 1000),
-        to: new Date(Date.now() - 90 * 1000),
+        from: new Date(FIXED_NOW.getTime() - 60 * 60 * 1000),
+        to: new Date(FIXED_NOW.getTime() - 90 * 1000),
         width: 700,
       }),
     });
@@ -78,8 +86,8 @@ describe('TimelineAxis Component', () => {
   test('should draw the now line when the window includes the present', () => {
     const current = renderAxis({
       scale: createTimelineScale({
-        from: new Date(Date.now() - 60 * 60 * 1000),
-        to: new Date(Date.now() + 60 * 60 * 1000),
+        from: new Date(FIXED_NOW.getTime() - 60 * 60 * 1000),
+        to: new Date(FIXED_NOW.getTime() + 60 * 60 * 1000),
         width: 700,
       }),
     });

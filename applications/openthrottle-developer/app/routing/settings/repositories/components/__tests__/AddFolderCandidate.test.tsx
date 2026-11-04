@@ -41,7 +41,7 @@ describe('AddFolderCandidate Component', () => {
     props = { candidate, isAdding: true };
     const RoutesStub = createRoutesStub([
       {
-        // eslint-disable-next-line react/no-multi-comp
+        // eslint-disable-next-line react/no-multi-comp -- inline route stub component, createRoutesStub needs a Component per route
         Component: () => <AddFolderCandidate {...props} />,
         path: '/',
       },
@@ -59,7 +59,7 @@ describe('AddFolderCandidate Component', () => {
     };
     const RoutesStub = createRoutesStub([
       {
-        // eslint-disable-next-line react/no-multi-comp
+        // eslint-disable-next-line react/no-multi-comp -- inline route stub component, createRoutesStub needs a Component per route
         Component: () => <AddFolderCandidate {...props} />,
         path: '/',
       },

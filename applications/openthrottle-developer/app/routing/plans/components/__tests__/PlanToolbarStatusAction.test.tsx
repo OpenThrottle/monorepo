@@ -48,7 +48,7 @@ describe('PlanToolbarStatusAction Component', () => {
   const setup = (): void => {
     const RoutesStub = createRoutesStub([
       {
-        // eslint-disable-next-line react/no-multi-comp
+        // eslint-disable-next-line react/no-multi-comp -- inline route stub component, createRoutesStub needs a Component per route
         Component: () => <Harness {...props} />,
         action: async ({ request }: { request: Request }) => {
           const formData = await request.formData();

@@ -7,7 +7,7 @@
 //     re-fetch, and an ordered `afterEach` lifecycle hook per task; running it
 //     concurrently would fire N concurrent re-fetches and dispatch lifecycle
 //     hooks in a non-deterministic order against a shared dispatcher.
-/* eslint-disable no-await-in-loop */
+/* eslint-disable no-await-in-loop -- sequential by design: tasks run one at a time in a deterministic order (see above) */
 
 import type { ExecuteGraphqlOptionsV2 } from '@openthrottle/nodejs-graphql';
 import type { TrajectoryRecord } from '@openthrottle/openthrottle-agentic-utils';

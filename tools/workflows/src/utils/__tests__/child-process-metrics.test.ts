@@ -1,3 +1,4 @@
+/* eslint-disable openthrottle/no-test-sleep -- samples real processes through real pidusage, so fake timers cannot drive it; deprecated duplicate of the agentic-utils suite, retired with this package (plan 62c58119-54c3-4b3e-b57c-bdf921e247cc) */
 import { spawn } from 'child_process';
 import { describe, expect, it } from 'vitest';
 

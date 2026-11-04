@@ -6,7 +6,7 @@
 
 import { createMock } from '@golevelup/ts-vitest';
 import type { PlansService } from '@openthrottle/nestjs-repositories';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   TimelineLaneGrouping,
@@ -20,6 +20,11 @@ type QueryFn = (sql: string, params?: unknown[]) => Promise<unknown[]>;
 
 /** Mirrors the resolver's own cap; asserted rather than imported so a change is visible here. */
 const ROWS_PER_KIND = 500;
+const FIXED_NOW = new Date('2026-09-05T00:00:00.000Z');
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 const baseInput = (
   overrides: Partial<WorkstreamTimelineInput> = {},
@@ -246,7 +251,9 @@ describe('TimelineResolver.workstreamTimeline', () => {
         },
       ]);
 
-      const before = Date.now();
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(FIXED_NOW);
+      const before = FIXED_NOW.getTime();
       const result = await resolver.workstreamTimeline(
         baseInput({ spanKinds: [TimelineSpanKind.WORK_SESSION] }),
       );

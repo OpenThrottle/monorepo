@@ -6,13 +6,19 @@ import type {
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import type { PlanRun } from '@openthrottle/nestjs-repositories';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { PlanStatusService } from '../../graphql/plans/plan-status/plan-status.service.ts';
 import type { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account/status-change-system-account.service.ts';
 import type { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture/work-ledger-capture.service.ts';
 import { PlanRunsStaleSweepProcessor } from './plan-runs-stale-sweep.processor.ts';
 import type { PlanRunsStaleSweepJob } from './plan-runs-stale-sweep.types.ts';
+
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 /** Minimal stale-run fixture (only the fields the processor reads). */
 const staleRun = (id: string, planId: string): PlanRun => {
@@ -290,11 +296,15 @@ describe('PlanRunsStaleSweepProcessor', () => {
       return Promise.resolve([]);
     });
 
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(FIXED_NOW);
+
     await processor.process(job);
 
     expect(unsupervisedCutoff).toBeInstanceOf(Date);
     expect(heartbeatCutoff).toBeInstanceOf(Date);
-    const unsupervisedAgeMs = Date.now() - (unsupervisedCutoff?.getTime() ?? 0);
+    const unsupervisedAgeMs =
+      FIXED_NOW.getTime() - (unsupervisedCutoff?.getTime() ?? 0);
     expect(unsupervisedAgeMs).toBeGreaterThan(11 * 60 * 60 * 1_000);
     // Strictly further back than the heartbeating pass's cutoff.
     expect(unsupervisedCutoff?.getTime() ?? 0).toBeLessThan(

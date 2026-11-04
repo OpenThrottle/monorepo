@@ -234,7 +234,7 @@ describe('OpenThrottleCommander Component', () => {
       );
       expect(onJumpPlan).toHaveBeenCalledTimes(1);
       expect(component.queryByRole('dialog')).not.toBeInTheDocument();
-    }, 15000);
+    });
 
     test('should not show Search option when onEmptyStateSearch is not provided', async () => {
       const user = userEvent.setup();
@@ -254,7 +254,7 @@ describe('OpenThrottleCommander Component', () => {
       expect(
         within(dialog).queryByRole('option', { name: /Search for/ }),
       ).not.toBeInTheDocument();
-    }, 15000);
+    });
   });
 
   describe('controlled open state', () => {

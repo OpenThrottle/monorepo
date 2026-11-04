@@ -1,4 +1,5 @@
 import type { RenderResult } from '@testing-library/react';
+// eslint-disable-next-line openthrottle/no-fire-event -- `<input type="color">` has no keyboard/pointer affordance userEvent can drive; a change event is the only way to simulate the native picker
 import { fireEvent, render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createStore, Provider } from 'jotai';

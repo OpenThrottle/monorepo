@@ -10,12 +10,14 @@ import { createChildProcessMetricsCollector } from '../metrics.ts';
 
 describe('createChildProcessMetricsCollector (mocked pidusage)', () => {
   beforeEach(() => {
+    vi.useFakeTimers();
     mockPidusage.mockReset();
     mockPidusage.mockResolvedValue({ cpu: 10, memory: 50 * 1024 * 1024 });
   });
 
   afterEach(() => {
     mockPidusage.mockReset();
+    vi.useRealTimers();
   });
 
   it('returns null when stopped before starting', () => {
@@ -60,7 +62,7 @@ describe('createChildProcessMetricsCollector (mocked pidusage)', () => {
     });
     collector.start(42);
 
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await vi.advanceTimersByTimeAsync(50);
 
     const metrics = collector.stop();
 
@@ -81,7 +83,7 @@ describe('createChildProcessMetricsCollector (mocked pidusage)', () => {
     });
     collector.start(42);
 
-    await new Promise((resolve) => setTimeout(resolve, 30));
+    await vi.advanceTimersByTimeAsync(30);
 
     const metrics = collector.stop();
     expect(metrics).not.toBeNull();
@@ -95,7 +97,7 @@ describe('createChildProcessMetricsCollector (mocked pidusage)', () => {
     });
     collector.start(42);
 
-    await new Promise((resolve) => setTimeout(resolve, 30));
+    await vi.advanceTimersByTimeAsync(30);
 
     const metrics = collector.stop();
     expect(metrics).not.toBeNull();
@@ -110,11 +112,11 @@ describe('createChildProcessMetricsCollector (mocked pidusage)', () => {
     });
     collector.start(42);
 
-    await new Promise((resolve) => setTimeout(resolve, 30));
+    await vi.advanceTimersByTimeAsync(30);
     const firstMetrics = collector.stop();
     expect(firstMetrics).not.toBeNull();
 
-    await new Promise((resolve) => setTimeout(resolve, 30));
+    await vi.advanceTimersByTimeAsync(30);
     const secondMetrics = collector.stop();
     expect(secondMetrics).toBeNull();
   });
@@ -127,7 +129,7 @@ describe('createChildProcessMetricsCollector (mocked pidusage)', () => {
     });
     collector.start(999999);
 
-    await new Promise((resolve) => setTimeout(resolve, 30));
+    await vi.advanceTimersByTimeAsync(30);
 
     const metrics = collector.stop();
     expect(metrics).toBeNull();

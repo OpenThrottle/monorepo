@@ -12,6 +12,7 @@ import { ServiceAccountsService } from './service-accounts.service.ts';
 
 const serviceAccountId = '11111111-1111-4111-8111-111111111111';
 const credentialId = '22222222-2222-4222-8222-222222222222';
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
 
 describe('ServiceAccountsService', () => {
   type ServiceAccountRepo = {
@@ -45,7 +46,7 @@ describe('ServiceAccountsService', () => {
       findOne: vi.fn(),
       save: vi.fn(async (entity: ServiceAccountCredential) => ({
         ...entity,
-        createdAt: new Date(),
+        createdAt: new Date(FIXED_NOW),
         id: credentialId,
       })),
       update: vi.fn().mockResolvedValue({ affected: 1 }),
@@ -86,7 +87,7 @@ describe('ServiceAccountsService', () => {
     it('returns null when service account is disabled', async () => {
       serviceAccountRepository.findOne.mockResolvedValue(
         asMock<ServiceAccount>({
-          disabledAt: new Date(),
+          disabledAt: new Date(FIXED_NOW),
           id: serviceAccountId,
         }),
       );
@@ -149,7 +150,7 @@ describe('ServiceAccountsService', () => {
     it('returns null when the service account is disabled', async () => {
       serviceAccountRepository.findOne.mockResolvedValue(
         asMock<ServiceAccount>({
-          disabledAt: new Date(),
+          disabledAt: new Date(FIXED_NOW),
           id: serviceAccountId,
         }),
       );
@@ -235,7 +236,7 @@ describe('ServiceAccountsService', () => {
       const existing = asMock<ServiceAccountCredential>({
         id: credentialId,
         prefix,
-        revokedAt: new Date(),
+        revokedAt: new Date(FIXED_NOW),
         secretHash: staleHash,
         serviceAccountId,
       });
@@ -323,7 +324,7 @@ describe('ServiceAccountsService', () => {
           expiresAt: null,
           id: credentialId,
           prefix: 'known',
-          revokedAt: new Date(),
+          revokedAt: new Date(FIXED_NOW),
           secretHash: hash,
           serviceAccount: { disabledAt: null },
           serviceAccountId,
@@ -483,7 +484,7 @@ describe('ServiceAccountsService', () => {
       serviceAccountRepository.findOne.mockResolvedValue(
         asMock<ServiceAccount>({
           actingUserId,
-          disabledAt: new Date(),
+          disabledAt: new Date(FIXED_NOW),
           id: serviceAccountId,
         }),
       );

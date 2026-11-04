@@ -17,6 +17,8 @@ import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service.ts';
 import { SkillUsageResolver } from './skill-usage.resolver.ts';
 
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+
 describe('SkillUsageResolver', () => {
   let resolver: SkillUsageResolver;
   const recordSkillUsage = vi.fn();
@@ -233,7 +235,7 @@ describe('SkillUsageResolver', () => {
       test('rejects with BadRequestException', async () => {
         await expect(
           resolver.recordSkillUsage({
-            occurredAt: new Date(),
+            occurredAt: new Date(FIXED_NOW),
             scope: SKILL_USAGE_SCOPES.OURS,
             skillName: '   ',
           }),
@@ -245,7 +247,7 @@ describe('SkillUsageResolver', () => {
       test('rejects with BadRequestException', async () => {
         await expect(
           resolver.recordSkillUsage({
-            occurredAt: new Date(),
+            occurredAt: new Date(FIXED_NOW),
             scope: 'unknown',
             skillName: 'ot-plans',
           }),
@@ -257,7 +259,7 @@ describe('SkillUsageResolver', () => {
       test('rejects with BadRequestException', async () => {
         await expect(
           resolver.recordSkillUsage({
-            occurredAt: new Date(),
+            occurredAt: new Date(FIXED_NOW),
             privacyLevel: 'verbose',
             scope: SKILL_USAGE_SCOPES.OURS,
             skillName: 'ot-plans',
@@ -389,7 +391,7 @@ describe('SkillUsageResolver', () => {
       test('rejects with BadRequestException', async () => {
         await expect(
           resolver.recordSkillUsageOutcome({
-            occurredAt: new Date(),
+            occurredAt: new Date(FIXED_NOW),
             outcome: 'done',
             skillName: 'ot-plans',
           }),
@@ -402,7 +404,7 @@ describe('SkillUsageResolver', () => {
         await expect(
           resolver.recordSkillUsageOutcome({
             durationMs: -1,
-            occurredAt: new Date(),
+            occurredAt: new Date(FIXED_NOW),
             outcome: SKILL_USAGE_OUTCOMES.SUCCESS,
             skillName: 'ot-plans',
           }),

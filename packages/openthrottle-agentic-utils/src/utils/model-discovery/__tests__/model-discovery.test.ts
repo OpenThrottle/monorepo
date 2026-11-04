@@ -234,7 +234,8 @@ describe('createLimiter / probeAll concurrency', () => {
         limit(async () => {
           active += 1;
           peak = Math.max(peak, active);
-          await new Promise((resolve) => setTimeout(resolve, 10));
+          // Yield a macrotask so the in-flight tasks overlap.
+          await new Promise((resolve) => setTimeout(resolve, 0));
           active -= 1;
           return active;
         }),

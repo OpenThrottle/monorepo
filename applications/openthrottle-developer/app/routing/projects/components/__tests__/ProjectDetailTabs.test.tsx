@@ -73,7 +73,7 @@ describe('ProjectDetailTabs Component', () => {
 
   test('renders an empty state when there are no tasks', async () => {
     component.unmount();
-    // eslint-disable-next-line react/no-multi-comp
+    // eslint-disable-next-line react/no-multi-comp -- inline stub component for a re-render with a different route tree
     const Component = () => {
       return <ProjectDetailTabs {...props} tasks={[]} totalTaskCount={0} />;
     };

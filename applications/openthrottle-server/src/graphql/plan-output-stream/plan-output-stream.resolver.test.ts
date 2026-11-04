@@ -13,6 +13,8 @@ import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { PlanOutputStreamResolver } from './plan-output-stream.resolver.ts';
 
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+
 const mockAsyncIterator = { next: vi.fn(), return: vi.fn(), throw: vi.fn() };
 const mockPubSub = {
   asyncIterator: vi.fn().mockReturnValue(mockAsyncIterator),
@@ -250,7 +252,7 @@ describe('PlanOutputStreamResolver', () => {
     test('passes null iteration when omitted', async () => {
       const created = {
         content: 'No iteration',
-        createdAt: new Date(),
+        createdAt: new Date(FIXED_NOW),
         id: 'id-2',
         iteration: null,
         planId: mockChunk.planId,
@@ -298,7 +300,7 @@ describe('PlanOutputStreamResolver', () => {
     test('defaults taskId to null when omitted', async () => {
       const created = {
         content: 'Plan-scoped output',
-        createdAt: new Date(),
+        createdAt: new Date(FIXED_NOW),
         id: 'id-3',
         iteration: null,
         planId: mockChunk.planId,

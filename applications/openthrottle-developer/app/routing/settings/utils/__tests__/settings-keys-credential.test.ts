@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import type { ServiceAccountCredentialFieldsFragment } from '~/__generated__/graphql';
 
@@ -10,6 +10,12 @@ import {
   formatCredentialTimestamp,
   getSettingsKeysCredentialStatus,
 } from '../settings-keys-credential';
+
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 const credential = (
   overrides: Partial<ServiceAccountCredentialFieldsFragment> = {},
@@ -46,7 +52,11 @@ describe('getSettingsKeysCredentialStatus', () => {
   });
 
   test('returns "active" when expiresAt is in the future', () => {
-    const future = new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString();
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(FIXED_NOW);
+    const future = new Date(
+      FIXED_NOW.getTime() + 1000 * 60 * 60 * 24,
+    ).toISOString();
     expect(
       getSettingsKeysCredentialStatus(credential({ expiresAt: future })),
     ).toBe('active');

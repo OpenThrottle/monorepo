@@ -1,5 +1,5 @@
 import type { RenderResult } from '@testing-library/react';
-import { fireEvent, render } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
@@ -267,8 +267,8 @@ describe('useChatComposerMentions', () => {
 
     expect(component.getByTestId('popover-open').textContent).toBe('false');
 
-    input.setSelectionRange(10, 10);
-    fireEvent.click(input);
+    // A primary click whose mousedown places the caret at offset 10.
+    await user.pointer({ keys: '[MouseLeft]', offset: 10, target: input });
 
     expect(component.getByTestId('popover-open').textContent).toBe('false');
   });

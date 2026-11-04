@@ -22,24 +22,26 @@ import type {
 } from './role.input.ts';
 import { RolesResolver } from './roles.resolver.ts';
 
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+
 describe('RolesResolver', () => {
   let resolver: RolesResolver;
   let rolesService: RolesService;
   let permissionsService: PermissionsService;
 
   const mockRole: Role = {
-    createdAt: new Date(),
+    createdAt: new Date(FIXED_NOW),
     description: 'Full access',
     id: 'role-uuid',
     name: 'admin',
     permissions: [],
     serviceAccounts: [],
-    updatedAt: new Date(),
+    updatedAt: new Date(FIXED_NOW),
     users: [],
   };
 
   const mockPermission: Permission = {
-    createdAt: new Date(),
+    createdAt: new Date(FIXED_NOW),
     description: 'Read users',
     id: 'perm-uuid',
     name: 'users:read',

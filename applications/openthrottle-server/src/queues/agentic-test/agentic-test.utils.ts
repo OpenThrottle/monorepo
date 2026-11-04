@@ -20,7 +20,7 @@ export const runAgenticTestEchoLoop = async (
     timestamps.push(timestamp);
     options.onEcho(timestamp, index);
     if (index < echoCount - 1) {
-      // eslint-disable-next-line no-await-in-loop
+      // eslint-disable-next-line no-await-in-loop -- sequential by design: echoes must be spaced by intervalMs
       await options.sleep(intervalMs);
     }
   }

@@ -72,7 +72,7 @@ const renderRoute = (
   const value: { current: UsePlanDetailRouteResult | null } = { current: null };
   const Stub = createRoutesStub([
     {
-      // eslint-disable-next-line react/no-multi-comp
+      // eslint-disable-next-line react/no-multi-comp -- inline route stub component, createRoutesStub needs a Component per route
       Component: () => (
         <Harness loaderData={loaderData} plan={plan} value={value} />
       ),

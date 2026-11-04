@@ -100,7 +100,7 @@ describe('NestjsThrottlerModule (HTTP integration)', () => {
     // hits the guard records per request.
     const statuses: number[] = [];
     for (let i = 0; i < LIMIT * 4; i += 1) {
-      // eslint-disable-next-line no-await-in-loop
+      // eslint-disable-next-line no-await-in-loop -- sequential by design: the throttle window counts requests in order
       statuses.push(await getPing(booted.url));
     }
 
@@ -125,9 +125,9 @@ describe('NestjsThrottlerModule (HTTP integration)', () => {
     let throttled: Response | undefined;
 
     for (let i = 0; i < LIMIT + 1; i += 1) {
-      // eslint-disable-next-line no-await-in-loop
+      // eslint-disable-next-line no-await-in-loop -- sequential by design: the throttle window counts requests in order
       const response = await fetch(`${booted.url}/ping`);
-      // eslint-disable-next-line no-await-in-loop
+      // eslint-disable-next-line no-await-in-loop -- sequential by design: drain the body before the next request
       await response.text();
 
       if (response.status === 429) {
@@ -146,7 +146,7 @@ describe('NestjsThrottlerModule (HTTP integration)', () => {
       // Client A exhausts its own bucket.
       const clientA: number[] = [];
       for (let i = 0; i < LIMIT * 4; i += 1) {
-        // eslint-disable-next-line no-await-in-loop
+        // eslint-disable-next-line no-await-in-loop -- sequential by design: the throttle window counts requests in order
         clientA.push(await getPing(booted.url, '203.0.113.1'));
       }
       expect(clientA).toContain(429);
@@ -166,7 +166,7 @@ describe('NestjsThrottlerModule (HTTP integration)', () => {
       // IP — so all of these requests share a single bucket and still get
       // throttled. This is the core anti-spoofing guarantee.
       for (let i = 0; i < LIMIT * 4; i += 1) {
-        // eslint-disable-next-line no-await-in-loop
+        // eslint-disable-next-line no-await-in-loop -- sequential by design: the throttle window counts requests in order
         statuses.push(await getPing(booted.url, `198.51.100.${i + 1}`));
       }
 

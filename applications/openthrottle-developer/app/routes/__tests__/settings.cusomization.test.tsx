@@ -4,6 +4,7 @@ import {
   buildAppearanceRootCssBlock,
   DEFAULT_BRAND_HSL,
 } from '@openthrottle/react-router-utils';
+// eslint-disable-next-line openthrottle/no-fire-event -- `<input type="color">` has no keyboard/pointer affordance userEvent can drive; a change event is the only way to simulate the native picker
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createStore, Provider } from 'jotai';

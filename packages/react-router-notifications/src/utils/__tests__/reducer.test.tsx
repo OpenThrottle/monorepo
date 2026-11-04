@@ -2,7 +2,7 @@ import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notificatio
 import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { NotificationsStoreProvider } from '../../components/NotificationsStoreProvider';
 import { NOTIFICATIONS_DEDUP_WINDOW_MS } from '../../config/index';
@@ -10,16 +10,18 @@ import { useNotificationsStore } from '../../hooks/useNotificationsStore';
 import type { NotificationInstance } from '../../types';
 import { reducer } from '../reducer';
 
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+
 const systemAlertPayload = {
   message: 'Test alert',
   severity: 'info' as const,
-  timestamp: new Date().toISOString(),
+  timestamp: FIXED_NOW.toISOString(),
 };
 
 const otherAlertPayload = {
   message: 'Different alert',
   severity: 'info' as const,
-  timestamp: new Date().toISOString(),
+  timestamp: FIXED_NOW.toISOString(),
 };
 
 function TestConsumer(): React.ReactElement {
@@ -205,6 +207,15 @@ describe('reducer add coalescing', () => {
     timestamp: '2026-06-26T00:00:00.000Z',
   };
 
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(FIXED_NOW);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   function addAction() {
     return {
       event: NOTIFICATION_EVENT_NAMES.SYSTEM_ALERT,
@@ -225,7 +236,7 @@ describe('reducer add coalescing', () => {
   test('adds again once the newest matching entry is older than the window', () => {
     const stale: NotificationInstance = {
       createdAt: new Date(
-        Date.now() - (NOTIFICATIONS_DEDUP_WINDOW_MS + 1000),
+        FIXED_NOW.getTime() - (NOTIFICATIONS_DEDUP_WINDOW_MS + 1000),
       ).toISOString(),
       dismissed: false,
       event: NOTIFICATION_EVENT_NAMES.SYSTEM_ALERT,

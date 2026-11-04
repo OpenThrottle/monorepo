@@ -66,6 +66,8 @@ import { BlogReferenceNotFoundError } from '../blog-reference-not-found-error.ob
 import { BlogSlugConflictError } from '../blog-slug-conflict-error.object.ts';
 import { BlogAdminResolver } from './blog-admin.resolver.ts';
 
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+
 const DRAFT_OPERATIONS = [
   'blogAdminAuthors',
   'blogAdminPost',
@@ -563,7 +565,10 @@ describe('BlogAdminResolver', () => {
 
     test.each([
       ['a post not-found', { entity: 'post', key: 'x', kind: 'not-found' }],
-      ['a stale write', { currentUpdatedAt: new Date(), kind: 'stale-write' }],
+      [
+        'a stale write',
+        { currentUpdatedAt: new Date(FIXED_NOW), kind: 'stale-write' },
+      ],
     ] as const)(
       'treats %s as an invariant violation, not a union member',
       async (_name, result) => {
@@ -970,7 +975,10 @@ describe('BlogAdminResolver', () => {
     test.each([
       ['a slug conflict', { kind: 'slug-conflict', slug: 's' }],
       ['a cover-alt failure', { kind: 'cover-alt-required' }],
-      ['a stale write', { currentUpdatedAt: new Date(), kind: 'stale-write' }],
+      [
+        'a stale write',
+        { currentUpdatedAt: new Date(FIXED_NOW), kind: 'stale-write' },
+      ],
       [
         'an author not-found',
         { entity: 'author', key: 'a', kind: 'not-found' },

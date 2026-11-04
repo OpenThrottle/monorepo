@@ -121,7 +121,7 @@ const BETA_NAVIGATION_LINKS: PermissionGatedNavigationLink[] = [
   },
 ];
 
-/* eslint-disable sort-keys */
+/* eslint-disable sort-keys -- keys are in sidebar display order, not alphabetical */
 export const dataNavigationV2: Record<string, PermissionGatedNavigationLink[]> =
   {
     Agents: [

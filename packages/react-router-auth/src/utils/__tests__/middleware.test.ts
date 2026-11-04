@@ -1,7 +1,7 @@
 // @vitest-environment node
 import type { Params } from 'react-router';
 import { RouterContextProvider } from 'react-router';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { buildAuthCookie, getClearAuthCookieHeader } from '../index';
 import { authMiddleware } from '../middleware';
@@ -14,14 +14,17 @@ const makeJwt = (payload: Record<string, unknown>): string => {
   return `${seg({ alg: 'HS256', typ: 'JWT' })}.${seg(payload)}.sig`;
 };
 
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+const FIXED_NOW_SECONDS = Math.floor(FIXED_NOW.getTime() / 1000);
+
 /** A JWT whose `exp` claim is safely in the future. */
 const validToken = makeJwt({
-  exp: Math.floor(Date.now() / 1000) + 3600,
+  exp: FIXED_NOW_SECONDS + 3600,
 });
 
 /** A JWT whose `exp` claim is in the past. */
 const expiredToken = makeJwt({
-  exp: Math.floor(Date.now() / 1000) - 3600,
+  exp: FIXED_NOW_SECONDS - 3600,
 });
 
 /** A no-op downstream `next` matching `MiddlewareNextFunction`. */
@@ -78,10 +81,16 @@ describe('authMiddleware', () => {
   const originalNodeEnv = process.env.NODE_ENV;
   const originalBetaFlag = process.env.FEATURE_BETA_PREVIEW;
 
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(FIXED_NOW);
+  });
+
   afterEach(() => {
     process.env.NODE_ENV = originalNodeEnv;
     process.env.FEATURE_BETA_PREVIEW = originalBetaFlag;
     vi.restoreAllMocks();
+    vi.useRealTimers();
   });
 
   describe('when there is no auth token', () => {

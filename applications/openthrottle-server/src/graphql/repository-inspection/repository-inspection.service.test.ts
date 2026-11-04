@@ -72,7 +72,7 @@ describe('RepositoryInspectionService', () => {
       }),
     );
     await writeFile(join(plainDir, 'go.mod'), 'module fixture');
-  }, 30_000);
+  });
 
   afterAll(async () => {
     await rm(fixturesRoot, { force: true, recursive: true });

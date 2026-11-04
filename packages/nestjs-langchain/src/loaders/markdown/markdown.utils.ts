@@ -1,4 +1,4 @@
-/* eslint-disable no-await-in-loop */
+/* eslint-disable no-await-in-loop -- sequential by design: files are loaded one at a time to bound memory and file handles */
 import { TextLoader } from '@langchain/classic/document_loaders/fs/text';
 import type { Document } from '@langchain/core/documents';
 import path from 'path';

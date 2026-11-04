@@ -27,10 +27,12 @@ import {
   showSystemNotification,
 } from '../system-notification';
 
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+
 const systemAlertPayload = {
   message: 'Test alert message',
   severity: 'info' as const,
-  timestamp: new Date().toISOString(),
+  timestamp: FIXED_NOW.toISOString(),
 };
 
 describe('getSystemNotificationsPreference / setSystemNotificationsPreference', () => {
@@ -116,7 +118,7 @@ describe('preference key vs notification list key', () => {
 
   test('preference and notification list round-trip independently without clobbering', () => {
     const notification: NotificationInstance = {
-      createdAt: new Date().toISOString(),
+      createdAt: FIXED_NOW.toISOString(),
       dismissed: false,
       event: NOTIFICATION_EVENT_NAMES.SYSTEM_ALERT,
       id: 'n-1',

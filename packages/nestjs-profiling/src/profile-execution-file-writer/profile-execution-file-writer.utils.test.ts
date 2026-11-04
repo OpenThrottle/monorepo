@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -18,10 +19,7 @@ describe('createProfileExecutionFileWriter', () => {
   let outputPath: string;
 
   beforeEach(() => {
-    outputPath = path.join(
-      os.tmpdir(),
-      `profile-exec-${Date.now()}-${Math.random().toString(36).slice(2)}.ndjson`,
-    );
+    outputPath = path.join(os.tmpdir(), `profile-exec-${randomUUID()}.ndjson`);
   });
 
   afterEach(async () => {
@@ -156,7 +154,7 @@ describe('createProfileExecutionFileWriter', () => {
     // A directory path that does not exist forces appendFile to reject.
     const badPath = path.join(
       os.tmpdir(),
-      `nonexistent-dir-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      `nonexistent-dir-${randomUUID()}`,
       'out.ndjson',
     );
     const writer = createProfileExecutionFileWriter({ outputPath: badPath });
@@ -182,7 +180,7 @@ describe('createProfileExecutionFileWriter', () => {
 
     const badPath = path.join(
       os.tmpdir(),
-      `nonexistent-dir-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      `nonexistent-dir-${randomUUID()}`,
       'out.ndjson',
     );
     const writer = createProfileExecutionFileWriter({ outputPath: badPath });
@@ -314,17 +312,27 @@ describe('createProfileExecutionFileWriter', () => {
   });
 
   it('flushes a partially-filled buffer after flushIntervalMs', async () => {
-    const writer = createProfileExecutionFileWriter({
-      flushIntervalMs: 20,
-      maxBufferedLines: 100,
-      outputPath,
+    // Fake only the timer functions: the flush append is real fs I/O.
+    vi.useFakeTimers({
+      toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'],
     });
 
-    writer(makeResult('timed'));
-    // Wait past the flush interval so the timer fires the flush, then drain to await
-    // the resulting append deterministically (no racing the write itself).
-    await new Promise((r) => setTimeout(r, 40));
-    await writer.drain();
+    try {
+      const writer = createProfileExecutionFileWriter({
+        flushIntervalMs: 20,
+        maxBufferedLines: 100,
+        outputPath,
+      });
+
+      writer(makeResult('timed'));
+      // Step past the flush interval so the timer fires the flush, then drain
+      // to await the resulting append deterministically.
+      await vi.advanceTimersByTimeAsync(40);
+      vi.useRealTimers();
+      await writer.drain();
+    } finally {
+      vi.useRealTimers();
+    }
 
     const content = await fs.readFile(outputPath, 'utf8');
     const lines = content.trim().split('\n').filter(Boolean);

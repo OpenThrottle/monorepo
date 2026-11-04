@@ -9,6 +9,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PlanRun } from './plan-run.entity.ts';
 import { PlanRunsService } from './plan-runs.service.ts';
 
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+
 const buildRun = (overrides: Partial<PlanRun> = {}): PlanRun => {
   const run: PlanRun = {
     actorUserId: null,
@@ -1147,7 +1149,10 @@ describe('PlanRunsService', () => {
     });
 
     it('findLiveRunsByCheckoutIds short-circuits on an empty id list', async () => {
-      const result = await service.findLiveRunsByCheckoutIds([], new Date());
+      const result = await service.findLiveRunsByCheckoutIds(
+        [],
+        new Date(FIXED_NOW),
+      );
 
       expect(result).toEqual([]);
       expect(repo.createQueryBuilder).not.toHaveBeenCalled();
@@ -1296,7 +1301,7 @@ describe('PlanRunsService', () => {
       // The sweeper this feeds does not merely settle the run — reconcileStrandedPlan
       // resets the plan and its IN_PROGRESS tasks to PENDING. A run with no timer must
       // never be a candidate, so the exclusion is a WHERE clause, not a post-filter.
-      await service.findStaleInProgressRuns(new Date(), 200);
+      await service.findStaleInProgressRuns(new Date(FIXED_NOW), 200);
       const qb = repo.createQueryBuilder.mock.results[0]?.value;
 
       expect(qb.andWhere).toHaveBeenCalledWith('run.heartbeat_expected');
@@ -1751,7 +1756,7 @@ describe('PlanRunsService', () => {
     };
 
     it('the 120s stale sweep (findStaleInProgressRuns) never selects a SCHEDULED run', async () => {
-      await service.findStaleInProgressRuns(new Date(), 200);
+      await service.findStaleInProgressRuns(new Date(FIXED_NOW), 200);
       const qb = repo.createQueryBuilder.mock.results[0]?.value;
 
       expect(qb.where).toHaveBeenCalledWith('run.status = :status', {
@@ -1761,7 +1766,7 @@ describe('PlanRunsService', () => {
     });
 
     it('the unsupervised age sweep (findStaleUnsupervisedRuns) never selects a SCHEDULED run', async () => {
-      await service.findStaleUnsupervisedRuns(new Date(), 200);
+      await service.findStaleUnsupervisedRuns(new Date(FIXED_NOW), 200);
       const qb = repo.createQueryBuilder.mock.results[0]?.value;
 
       expect(qb.where).toHaveBeenCalledWith('run.status = :status', {
@@ -1771,7 +1776,10 @@ describe('PlanRunsService', () => {
     });
 
     it('a worktree is not busy for a pending SCHEDULED run (findLiveRunsByCheckoutIds)', async () => {
-      await service.findLiveRunsByCheckoutIds(['checkout-a'], new Date());
+      await service.findLiveRunsByCheckoutIds(
+        ['checkout-a'],
+        new Date(FIXED_NOW),
+      );
       const qb = repo.createQueryBuilder.mock.results[0]?.value;
 
       expect(qb.where).toHaveBeenCalledWith('run.status = :status', {

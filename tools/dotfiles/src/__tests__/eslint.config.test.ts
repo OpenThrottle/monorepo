@@ -170,7 +170,7 @@ describe('eslintConfig flat config', () => {
     });
   });
 
-  it('warns on the anti-flake rules in colocated and __tests__ test files', () => {
+  it('errors on the anti-flake rules in colocated and __tests__ test files', () => {
     const antiFlakeRules = [
       'openthrottle/no-fire-event',
       'openthrottle/no-per-test-timeout',
@@ -185,29 +185,33 @@ describe('eslintConfig flat config', () => {
           candidate.rules !== undefined && ruleName in candidate.rules,
       );
 
-      expect(ruleSeverity(ruleName)).toBe('warn');
+      expect(ruleSeverity(ruleName)).toBe('error');
       expect(flattenFiles(entry?.files)).toContain('**/*.{test,spec}.{ts,tsx}');
       expect(flattenFiles(entry?.files)).toContain('**/__tests__/**/*.ts');
     });
 
-    const timeoutEntry = entries.find(
-      (entry) =>
-        entry.rules !== undefined &&
-        'openthrottle/no-per-test-timeout' in entry.rules,
-    );
+    [
+      'openthrottle/no-per-test-timeout',
+      'openthrottle/no-test-sleep',
+      'openthrottle/no-wall-clock-in-tests',
+    ].forEach((ruleName) => {
+      const clockEntry = entries.find(
+        (entry) => entry.rules !== undefined && ruleName in entry.rules,
+      );
 
-    expect(timeoutEntry?.ignores).toContain(
-      '**/*.integration.{test,spec}.{ts,tsx}',
-    );
+      expect(clockEntry?.ignores).toContain(
+        '**/*.integration.{test,spec}.{ts,tsx}',
+      );
+    });
   });
 
-  it('warns on the agent-safety rules, exempting tests from the chokepoints', () => {
+  it('errors on the agent-safety rules, exempting tests from the chokepoints', () => {
     const entryFor = (ruleName: string): FlatConfigEntry | undefined =>
       entries.find(
         (entry) => entry.rules !== undefined && ruleName in entry.rules,
       );
 
-    expect(ruleSeverity('openthrottle/disable-requires-reason')).toBe('warn');
+    expect(ruleSeverity('openthrottle/disable-requires-reason')).toBe('error');
     expect(entryFor('openthrottle/disable-requires-reason')?.ignores).toBe(
       undefined,
     );
@@ -216,7 +220,7 @@ describe('eslintConfig flat config', () => {
       'openthrottle/agent-cli-spawn-chokepoint',
       'openthrottle/mcp-tool-registration',
     ].forEach((ruleName) => {
-      expect(ruleSeverity(ruleName)).toBe('warn');
+      expect(ruleSeverity(ruleName)).toBe('error');
       expect(entryFor(ruleName)?.ignores).toContain('**/__tests__/**');
       expect(entryFor(ruleName)?.ignores).toContain(
         '**/*.{test,spec}.{ts,tsx}',

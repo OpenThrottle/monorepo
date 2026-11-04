@@ -13,6 +13,7 @@ import {
 } from '../plan-runs.ts';
 
 const GRAPHQL_URL = 'http://localhost:6021/graphql';
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
 
 const okFetch = () => {
   return vi.fn().mockResolvedValue({
@@ -27,9 +28,14 @@ describe('plan-run janitor', () => {
 
   beforeEach(() => {
     repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'plan-runs-'));
+    // The janitor ages records against the clock; pin Date only so aged
+    // mtimes seeded below line up with it.
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(FIXED_NOW);
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     fs.rmSync(repoRoot, { force: true, recursive: true });
   });
 
@@ -42,7 +48,7 @@ describe('plan-run janitor', () => {
     });
     const filePath = planRunFilePath(repoRoot, sessionId);
     if (ageMs > 0) {
-      const past = new Date(Date.now() - ageMs);
+      const past = new Date(FIXED_NOW.getTime() - ageMs);
       fs.utimesSync(filePath, past, past);
     }
     return filePath;
@@ -169,7 +175,7 @@ describe('plan-run janitor', () => {
       PLAN_RUN_ABANDONED_MS + 60_000,
     );
     fs.writeFileSync(filePath, 'not json', 'utf8');
-    const past = new Date(Date.now() - PLAN_RUN_ABANDONED_MS - 60_000);
+    const past = new Date(FIXED_NOW.getTime() - PLAN_RUN_ABANDONED_MS - 60_000);
     fs.utimesSync(filePath, past, past);
     const fetchImpl = okFetch();
 

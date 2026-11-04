@@ -12,33 +12,24 @@ describe('Badge', () => {
     expect(badge).toHaveTextContent('Label');
   });
 
-  it.skip('should apply default variant classes', () => {
-    const { container } = render(<Badge>Default</Badge>);
-    const badge = container.querySelector('span');
-    expect(badge).toHaveClass('bg-primary', 'text-primary-foreground');
-  });
+  /**
+   * @description `variant` deliberately carries no classes (Badge.tsx keeps the
+   * shadcn utilities commented out); the semantic variant is exposed through
+   * `data-variant` instead, and colour comes from `color`.
+   */
+  describe('variants', () => {
+    it('should default data-variant to default', () => {
+      const { container } = render(<Badge>Default</Badge>);
+      const badge = container.querySelector('span');
+      expect(badge).toHaveAttribute('data-variant', 'default');
+    });
 
-  describe.skip('variants', () => {
-    it('should apply destructive variant', () => {
+    it('should expose the variant through data-variant', () => {
       const { container } = render(
         <Badge variant="destructive">Destructive</Badge>,
       );
       const badge = container.querySelector('span');
-      expect(badge).toHaveClass('bg-destructive', 'text-white');
-    });
-
-    it('should apply outline variant', () => {
-      const { container } = render(<Badge variant="outline">Outline</Badge>);
-      const badge = container.querySelector('span');
-      expect(badge).toHaveClass('text-foreground');
-    });
-
-    it('should apply secondary variant', () => {
-      const { container } = render(
-        <Badge variant="secondary">Secondary</Badge>,
-      );
-      const badge = container.querySelector('span');
-      expect(badge).toHaveClass('bg-secondary', 'text-secondary-foreground');
+      expect(badge).toHaveAttribute('data-variant', 'destructive');
     });
   });
 

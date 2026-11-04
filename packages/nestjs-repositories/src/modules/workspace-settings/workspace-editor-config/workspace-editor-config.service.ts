@@ -91,7 +91,7 @@ export class WorkspaceEditorConfigService {
     for (const checkout of targetCheckouts) {
       for (const editor of enabledEditors) {
         results.push(
-          // eslint-disable-next-line no-await-in-loop
+          // eslint-disable-next-line no-await-in-loop -- sequential by design: editors write the same config files, so applies must not interleave
           await this.applyForRepositoryEditor({
             apiBaseUrl: options.apiBaseUrl,
             checkoutId: checkout.id,

@@ -225,7 +225,7 @@ const killGroup = async (pgid: number, root: string): Promise<void> => {
     (isGroupAlive(pgid) || members.some(isAlive))
   ) {
     // Polling for exit; there is no event for a non-child.
-    // eslint-disable-next-line no-await-in-loop
+    // eslint-disable-next-line no-await-in-loop -- poll loop: each check must wait for the previous interval
     await sleep(200);
   }
 
@@ -285,7 +285,7 @@ const reapOrphanedNx = async (
 
   for (const pid of owners) {
     logger.warn(`stale Nx lock: nx pid ${pid} (orphaned: no helper launcher) still holds ${tasksHeldBy(rows, pid).filter((id) => nxTaskIds(target).includes(id)).join(', ')} (and ${tasksHeldBy(rows, pid).length - 1} other running task(s)); killing it and its children`); // prettier-ignore
-    // eslint-disable-next-line no-await-in-loop
+    // eslint-disable-next-line no-await-in-loop -- kill one orphan group at a time so each SIGTERM grace window is honoured
     await killGroup(pid, root);
   }
 
@@ -337,11 +337,11 @@ const waitForPort = async (
         describeNxLock(readRunningTasks(root), root, record.task, target),
       );
       printLogTail(root, target);
-      // eslint-disable-next-line no-await-in-loop
+      // eslint-disable-next-line no-await-in-loop -- exits the loop: the blocked launch is killed before the orphan reap
       await killGroup(record.pid, root);
       removePidfile(root, target);
 
-      // eslint-disable-next-line no-await-in-loop
+      // eslint-disable-next-line no-await-in-loop -- exits the loop: reap only after the blocked launch is gone
       if (await reapOrphanedNx(root, target)) {
         logger.info(`cleared it; re-run \`pnpm worktree:serve ${target}\``);
       }
@@ -354,7 +354,7 @@ const waitForPort = async (
       logger.detail(`still waiting for :${record.port} (${Math.round((Date.now() - started) / 1000)}s): ${tailLines(readLog(root, target), 1)}`); // prettier-ignore
     }
 
-    // eslint-disable-next-line no-await-in-loop
+    // eslint-disable-next-line no-await-in-loop -- poll loop: each check must wait for the previous interval
     await sleep(POLL_MS);
   }
 
@@ -521,7 +521,7 @@ const stopTarget = async (
         logger.step(
           `stopping the listener still on :${resolution.port}: pid ${pid}`,
         );
-        // eslint-disable-next-line no-await-in-loop
+        // eslint-disable-next-line no-await-in-loop -- kill one listener group at a time so each SIGTERM grace window is honoured
         await killGroup(pid, root);
         stoppedAnything = true;
       } else {
@@ -552,7 +552,7 @@ export const stop = async (
   let failed = false;
 
   for (const name of targets) {
-    // eslint-disable-next-line no-await-in-loop
+    // eslint-disable-next-line no-await-in-loop -- stop targets one at a time; they can share an Nx lock and process tree
     const stopped = await stopTarget(root, name);
     const resolution = readServePort(root, name);
 

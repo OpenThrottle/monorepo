@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/data.copy';
 
@@ -7,6 +7,10 @@ import { formatRunTime } from '../formatRunTime';
 const NOW = new Date('2026-11-02T15:00:00.000Z');
 
 describe('formatRunTime', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   describe('when the value is unparseable', () => {
     test.each([null, undefined, '', 'not a date'])(
       'returns the copy fallback for %s',
@@ -69,7 +73,9 @@ describe('formatRunTime', () => {
     });
 
     test('defaults now to the current time', () => {
-      const soon = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(NOW);
+      const soon = new Date(NOW.getTime() + 60 * 60 * 1000).toISOString();
 
       expect(
         formatRunTime(soon, { hydrated: true, now: undefined }).label,

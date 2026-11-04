@@ -14,10 +14,11 @@ import { RolesService } from './roles.service.ts';
 const serviceAccountId = '11111111-1111-4111-8111-111111111111';
 const roleAId = '22222222-2222-4222-8222-222222222222';
 const roleBId = '33333333-3333-4333-8333-333333333333';
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
 
 function permission(name: string): Permission {
   return {
-    createdAt: new Date(),
+    createdAt: new Date(FIXED_NOW),
     description: null,
     id: `perm-${name}`,
     name,
@@ -27,13 +28,13 @@ function permission(name: string): Permission {
 
 function role(id: string, name: string, permissions: Permission[]): Role {
   return {
-    createdAt: new Date(),
+    createdAt: new Date(FIXED_NOW),
     description: null,
     id,
     name,
     permissions,
     serviceAccounts: [],
-    updatedAt: new Date(),
+    updatedAt: new Date(FIXED_NOW),
     users: [],
   };
 }

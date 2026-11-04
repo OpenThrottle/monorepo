@@ -40,6 +40,7 @@ lint but never had a rule file of their own:
 | Convention                                                                  | Enforcement                            | Mechanism                                                             |
 | --------------------------------------------------------------------------- | -------------------------------------- | --------------------------------------------------------------------- |
 | --------------------------------------------------------------------------- | -------------------------------------- | --------------------------------------------------------------------- |
+| --------------------------------------------------------------------------- | -------------------------------------- | --------------------------------------------------------------------- |
 | [No new enums](#no-new-enums)                                               | **Enforced**                           | `no-restricted-syntax` → `TSEnumDeclaration`                          |
 | [Component and data boundaries](#component-and-data-boundaries)             | **Enforced**                           | `openthrottle/component-primitive-shape` + `audit:component-shape`    |
 | [No default exports](#no-default-exports)                                   | **Enforced**                           | `import-x/no-default-export`                                          |
@@ -57,8 +58,8 @@ lint but never had a rule file of their own:
 | [Route primitive shape](#route-and-component-shape)                         | **Warned**                             | `openthrottle/route-primitive-shape`, `openthrottle/pre-hooks-unpack` |
 | [Hook primitive shape](#hook-shape)                                         | **Enforced**                           | `openthrottle/hook-primitive-shape` + `audit:hook-shape`              |
 | [Import order](#import-order)                                               | **Warned**                             | `simple-import-sort/imports`, `simple-import-sort/exports`            |
-| [Anti-flake test rules](#anti-flake-test-rules)                             | **Warned**                             | `openthrottle/no-test-sleep` and four siblings; Vitest `retry: 0`     |
-| [Agent-safety rules](#agent-safety-rules)                                   | **Warned**                             | `openthrottle/mcp-tool-registration` and two siblings                 |
+| [Anti-flake test rules](#anti-flake-test-rules)                             | **Enforced**                           | `openthrottle/no-test-sleep` and four siblings; Vitest `retry: 0`     |
+| [Agent-safety rules](#agent-safety-rules)                                   | **Enforced**                           | `openthrottle/mcp-tool-registration` and two siblings                 |
 | [Discriminated unions](#discriminated-unions)                               | Honor system                           | —                                                                     |
 | [`interface extends` over `&`](#interface-extends-over-)                    | Honor system                           | —                                                                     |
 | [`readonly` by default](#readonly-properties)                               | Honor system                           | —                                                                     |
@@ -1234,9 +1235,11 @@ The React Router apps share one Vitest setup: `tests/setup.ts` is a single
 
 ### Anti-flake test rules
 
-**Warned** — `warn` while plan `0b6dfaf8` burns down the existing sites, then each flips to
-`error` on its own. They apply to `*.test.ts(x)`, `*.spec.ts(x)` and everything under
-`__tests__/`. A test that depends on the real clock or the machine's speed passes locally and
+**Enforced** — ESLint `error` since plan `0b6dfaf8` burned the existing sites down. They apply
+to `*.test.ts(x)`, `*.spec.ts(x)` and everything under `__tests__/`. The three clock rules
+(`no-test-sleep`, `no-wall-clock-in-tests`, `no-per-test-timeout`) skip `*.integration.test.ts`
+suites. Those are env-gated, do real I/O against git, Postgres, BullMQ or child processes, and
+wait on real time by design. A test that depends on the real clock or the machine's speed passes locally and
 fails on a loaded CI runner, so each rule names the deterministic replacement.
 
 | Rule                                  | Flags                                                                                        | Use instead                                                                                             |
@@ -1258,8 +1261,7 @@ bypass the factory). A retry turns a flaky test green without fixing it.
 
 ### Agent-safety rules
 
-**Warned**, for the same reason as the anti-flake rules: `warn` while plan `0b6dfaf8` burns down
-the existing sites, then each flips to `error` on its own. Each one routes a sensitive operation
+**Enforced** — ESLint `error` since plan `0b6dfaf8` burned the existing sites down. Each one routes a sensitive operation
 through the code that already hardens it.
 
 | Rule                                      | Flags                                                                                                                                         | Use instead                                                                                                            |

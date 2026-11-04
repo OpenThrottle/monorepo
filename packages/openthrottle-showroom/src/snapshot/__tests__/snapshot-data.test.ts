@@ -65,16 +65,12 @@ describe('committed snapshot data', () => {
     expect(files.length).toBeGreaterThan(0);
   });
 
-  test.each(files)(
-    '%s is leak-free',
-    (file) => {
-      const lines = readFileSync(join(DATA_DIR, file), 'utf8').split('\n');
-      const findings = lines.flatMap((line, index) =>
-        scanSnapshotText(`${file}:${index + 1}`, line),
-      );
+  test.each(files)('%s is leak-free', (file) => {
+    const lines = readFileSync(join(DATA_DIR, file), 'utf8').split('\n');
+    const findings = lines.flatMap((line, index) =>
+      scanSnapshotText(`${file}:${index + 1}`, line),
+    );
 
-      expect(findings).toEqual([]);
-    },
-    30_000,
-  );
+    expect(findings).toEqual([]);
+  });
 });

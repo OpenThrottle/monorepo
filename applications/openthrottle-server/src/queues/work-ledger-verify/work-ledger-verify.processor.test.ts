@@ -7,7 +7,7 @@ import type {
   WorkSessionSubject,
 } from '@openthrottle/nestjs-repositories';
 import type { FindManyOptions, Repository } from 'typeorm';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { TaggingEnqueueService } from '../tagging/enqueue/enqueue.service.ts';
 import { WorkLedgerVerifyProcessor } from './work-ledger-verify.processor.ts';
@@ -20,8 +20,20 @@ function findTypeOf(options?: FindManyOptions<WorkArtifact>): unknown {
   return where.type;
 }
 
-const RECENT = new Date();
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+const RECENT = new Date(FIXED_NOW);
 const OLD = new Date('2020-01-01T00:00:00Z');
+
+// The processor ages artifacts against the clock, so pin it to the same
+// instant RECENT was stamped with.
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(FIXED_NOW);
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 function artifact(overrides: Partial<WorkArtifact>): WorkArtifact {
   return createMock<WorkArtifact>({

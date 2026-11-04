@@ -207,7 +207,7 @@ async function collectPackageTargets(
     files.map(async (file: string): Promise<TargetRecord[]> => {
       const manifest = await readJson(file);
 
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- package.json `nx` is untyped JSON; this read-only audit tolerates a wrong shape
       const nx = manifest.nx as unknown as
         { targets?: Record<string, NxTargetConfig> } | undefined;
 

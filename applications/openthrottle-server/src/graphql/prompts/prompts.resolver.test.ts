@@ -22,6 +22,8 @@ import { CustomPromptTypeEnum } from './custom-prompt.object.ts';
 import { CUSTOM_PROMPT_WRITE_REFUSAL } from './prompts.constants.ts';
 import { CustomPromptsResolver } from './prompts.resolver.ts';
 
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+
 const workspaceRoot = mkdtempSync(join(tmpdir(), 'custom-prompts-resolver-'));
 
 const principal: UserAuthPrincipal = {
@@ -240,7 +242,7 @@ describe('CustomPromptsResolver', () => {
       vi.mocked(repo.findOne).mockResolvedValue(mockCustomPrompt);
       vi.mocked(repo.save).mockResolvedValue({
         ...mockCustomPrompt,
-        deletedAt: new Date(),
+        deletedAt: new Date(FIXED_NOW),
       });
 
       const result = await resolver.deleteCustomPrompt(mockCustomPrompt.id);

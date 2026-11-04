@@ -78,7 +78,7 @@ const Harness = (props: HarnessProps): React.ReactElement => {
   );
 };
 
-// eslint-disable-next-line react/no-multi-comp
+// eslint-disable-next-line react/no-multi-comp -- test-only probe component kept beside the test that renders it
 function Probe(): React.ReactElement {
   const branch = useAtomValue(workflowBranchAtom);
   const ready = useAtomValue(workspaceRepositoriesReadyAtom);

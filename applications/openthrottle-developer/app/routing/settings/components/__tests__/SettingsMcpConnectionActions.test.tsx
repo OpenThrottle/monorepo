@@ -73,7 +73,7 @@ describe('SettingsMcpConnectionActions Component', () => {
     };
     const RoutesStub = createRoutesStub([
       {
-        // eslint-disable-next-line react/no-multi-comp
+        // eslint-disable-next-line react/no-multi-comp -- inline route stub component, createRoutesStub needs a Component per route
         Component: () => <SettingsMcpConnectionActions {...props} />,
         path: '/',
       },

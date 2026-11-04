@@ -21,6 +21,8 @@ vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
   };
 });
 
+const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+
 interface TestSubscriptionData extends NotificationsSubscriptionData {
   readonly notifications: {
     readonly event: string;
@@ -111,7 +113,7 @@ describe('NotificationsSubscriptionBridge', () => {
           event: 'SYSTEM_ALERT',
           message: 'Realtime message arrived',
           severity: 'info',
-          timestamp: new Date().toISOString(),
+          timestamp: FIXED_NOW.toISOString(),
         },
       });
     });

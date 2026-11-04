@@ -19,7 +19,7 @@ const renderProbe = (
 ): ReturnType<typeof render> => {
   const Stub = createRoutesStub([
     {
-      // eslint-disable-next-line react/no-multi-comp
+      // eslint-disable-next-line react/no-multi-comp -- inline route stub component, createRoutesStub needs a Component per route
       Component: () => <Probe permission={PERMISSIONS.BLOG_DRAFT} />,
       id: ROOT_ROUTE_ID,
       loader: () => rootLoaderData ?? {},

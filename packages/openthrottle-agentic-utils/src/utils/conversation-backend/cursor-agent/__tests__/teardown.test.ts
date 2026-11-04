@@ -162,8 +162,18 @@ describe('terminateChild', () => {
     expect(killSpy).toHaveBeenCalledWith('SIGTERM');
     expect(killSpy).toHaveBeenCalledWith('SIGKILL');
     expect(child.signalCode).toBe('SIGKILL');
-  }, 10_000);
+  });
 });
+
+/** True while `pid` exists (signal 0 probes without signalling). */
+function isRunning(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 describe('terminateChild process-group teardown', () => {
   it('reaps a grandchild that outlives the direct child when processGroup is set', async () => {
@@ -187,15 +197,14 @@ describe('terminateChild process-group teardown', () => {
       );
     });
 
-    expect(() => process.kill(grandchildPid, 0)).not.toThrow();
+    expect(isRunning(grandchildPid)).toBe(true);
 
     terminateChild(child, 50, { processGroup: true });
     await waitForEvent(child, 'exit');
-    // Let the group signal land on the grandchild.
-    await new Promise((resolve) => setTimeout(resolve, 250));
 
-    expect(() => process.kill(grandchildPid, 0)).toThrow();
-  }, 15_000);
+    // The group signal lands on the grandchild asynchronously.
+    await vi.waitFor(() => expect(isRunning(grandchildPid)).toBe(false));
+  });
 
   it('leaves the grandchild alone by default, so shared callers keep the old behavior', async () => {
     const child = spawn(
@@ -216,17 +225,24 @@ describe('terminateChild process-group teardown', () => {
       );
     });
 
-    terminateChild(child, 50);
-    await waitForEvent(child, 'exit');
-    await new Promise((resolve) => setTimeout(resolve, 250));
+    const processKillSpy = vi.spyOn(process, 'kill');
 
     try {
-      // Still running: opting out means the group is never signalled.
-      expect(() => process.kill(grandchildPid, 0)).not.toThrow();
+      terminateChild(child, 50);
+      await waitForEvent(child, 'exit');
+
+      // Opting out means the group is never signalled: no negative-pid kill,
+      // and the grandchild is still running.
+      const groupSignals = processKillSpy.mock.calls.filter(
+        ([pid]) => pid === -(child.pid ?? 0),
+      );
+      expect(groupSignals).toEqual([]);
+      expect(isRunning(grandchildPid)).toBe(true);
     } finally {
+      processKillSpy.mockRestore();
       process.kill(grandchildPid, 'SIGKILL');
     }
-  }, 15_000);
+  });
 
   it('sweeps the group even when the direct child already exited cleanly', async () => {
     // The real shape of the cursor leak: the turn ends normally, the child
@@ -256,13 +272,12 @@ describe('terminateChild process-group teardown', () => {
     });
     // Let the parent exit on its own, as a completed turn does.
     await exited;
-    expect(() => process.kill(grandchildPid, 0)).not.toThrow();
+    expect(isRunning(grandchildPid)).toBe(true);
 
     terminateChild(child, 50, { processGroup: true });
-    await new Promise((resolve) => setTimeout(resolve, 300));
 
-    expect(() => process.kill(grandchildPid, 0)).toThrow();
-  }, 15_000);
+    await vi.waitFor(() => expect(isRunning(grandchildPid)).toBe(false));
+  });
 
   it('still signals the direct child even when the group call cannot apply', async () => {
     // Not spawned detached, so there is no own group to signal.
@@ -275,5 +290,5 @@ describe('terminateChild process-group teardown', () => {
     await waitForEvent(child, 'exit');
 
     expect(child.signalCode).not.toBeNull();
-  }, 15_000);
+  });
 });

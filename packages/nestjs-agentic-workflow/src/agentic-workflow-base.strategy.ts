@@ -50,7 +50,7 @@ export abstract class AgenticWorkflowBase<
  * cannot otherwise hold workflows with differing contexts — `any` here is the registry escape
  * hatch (resolution is by id and the dispatcher narrows the orchestrator at the call site).
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- registry stores workflows of differing context types; see the escape-hatch note above
 export type AnyAgenticWorkflow = AgenticWorkflowBase<string, string, any>;
 
 /**
