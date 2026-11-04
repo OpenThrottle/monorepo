@@ -19,9 +19,14 @@ import { longStringTemplateLiteral } from './rules/long-string-template-literal.
 import { namedFunctionBlockBody } from './rules/named-function-block-body.ts';
 import { nestjsFileExports } from './rules/nestjs-file-exports.ts';
 import { nestjsFileNaming } from './rules/nestjs-file-naming.ts';
+import { noFireEvent } from './rules/no-fire-event.ts';
+import { noPerTestTimeout } from './rules/no-per-test-timeout.ts';
+import { noTestSleep } from './rules/no-test-sleep.ts';
+import { noWallClockInTests } from './rules/no-wall-clock-in-tests.ts';
 import { planTaskStatusChokepoint } from './rules/plan-task-status-chokepoint.ts';
 import { preHooksUnpack } from './rules/pre-hooks-unpack.ts';
 import { routePrimitiveShape } from './rules/route-primitive-shape.ts';
+import { skipRequiresIssue } from './rules/skip-requires-issue.ts';
 import { threeLineTernary } from './rules/three-line-ternary.ts';
 import { getDirname } from './vite-config.ts';
 
@@ -53,6 +58,7 @@ export {
   type CreateVitestConfigOptions,
   type TestEnvironment,
   VITEST_HOOK_TIMEOUT_MS,
+  VITEST_RETRY,
   VITEST_TEST_TIMEOUT_MS,
 } from './vitest-config.ts';
 
@@ -266,9 +272,14 @@ export const eslintConfig = tslint.config([
           'named-function-block-body': namedFunctionBlockBody,
           'nestjs-file-exports': nestjsFileExports,
           'nestjs-file-naming': nestjsFileNaming,
+          'no-fire-event': noFireEvent,
+          'no-per-test-timeout': noPerTestTimeout,
+          'no-test-sleep': noTestSleep,
+          'no-wall-clock-in-tests': noWallClockInTests,
           'plan-task-status-chokepoint': planTaskStatusChokepoint,
           'pre-hooks-unpack': preHooksUnpack,
           'route-primitive-shape': routePrimitiveShape,
+          'skip-requires-issue': skipRequiresIssue,
           'three-line-ternary': threeLineTernary,
         },
       },
@@ -463,6 +474,50 @@ export const eslintConfig = tslint.config([
           selector: `CallExpression[callee.type="MemberExpression"][callee.property.name="toThrowErrorMatchingInlineSnapshot"]`,
         },
       ],
+    },
+  },
+
+  /**
+   * Anti-flake test rules (docs/monorepo/code-style.md#anti-flake-test-rules):
+   * no real-clock sleeps, no wall-clock reads, no per-test timeout/retry
+   * overrides, skips cite an issue, `userEvent` over `fireEvent`.
+   *
+   * Dedicated `openthrottle/*` rules rather than more `no-restricted-syntax`
+   * entries: flat config replaces that rule's whole option array per block, so
+   * a test-file block adding selectors would silently drop the enum and
+   * snapshot restrictions above. The files glob covers colocated
+   * `*.test.ts` / `*.spec.ts` as well as `__tests__/`, which the snapshot block
+   * misses.
+   *
+   * `warn` until the burn-down (plan 0b6dfaf8) clears each rule's existing
+   * sites; then each flips to `error` individually.
+   */
+  {
+    files: [
+      '**/*.{test,spec}.{ts,tsx}',
+      '**/__tests__/**/*.ts',
+      '**/__tests__/**/*.tsx',
+    ],
+    rules: {
+      'openthrottle/no-fire-event': 'warn',
+      'openthrottle/no-test-sleep': 'warn',
+      'openthrottle/no-wall-clock-in-tests': 'warn',
+      'openthrottle/skip-requires-issue': 'warn',
+    },
+  },
+  /**
+   * Timeouts are exempt in env-gated integration suites, which do real I/O
+   * (git, Postgres, child processes) and are not part of the default run.
+   */
+  {
+    files: [
+      '**/*.{test,spec}.{ts,tsx}',
+      '**/__tests__/**/*.ts',
+      '**/__tests__/**/*.tsx',
+    ],
+    ignores: ['**/*.integration.{test,spec}.{ts,tsx}'],
+    rules: {
+      'openthrottle/no-per-test-timeout': 'warn',
     },
   },
 

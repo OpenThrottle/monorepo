@@ -109,6 +109,7 @@ export default (config: ConfigEnv) => {
        */
       pool: 'vmForks',
       reporters: ['default'],
+      retry: 0, // VITEST_RETRY in @tools/dotfiles: a flake must fail, not retry
       setupFiles: ['./tests/setup.ts'],
       testTimeout: 15_000,
       /**

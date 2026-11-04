@@ -170,6 +170,37 @@ describe('eslintConfig flat config', () => {
     });
   });
 
+  it('warns on the anti-flake rules in colocated and __tests__ test files', () => {
+    const antiFlakeRules = [
+      'openthrottle/no-fire-event',
+      'openthrottle/no-per-test-timeout',
+      'openthrottle/no-test-sleep',
+      'openthrottle/no-wall-clock-in-tests',
+      'openthrottle/skip-requires-issue',
+    ];
+
+    antiFlakeRules.forEach((ruleName) => {
+      const entry = entries.find(
+        (candidate) =>
+          candidate.rules !== undefined && ruleName in candidate.rules,
+      );
+
+      expect(ruleSeverity(ruleName)).toBe('warn');
+      expect(flattenFiles(entry?.files)).toContain('**/*.{test,spec}.{ts,tsx}');
+      expect(flattenFiles(entry?.files)).toContain('**/__tests__/**/*.ts');
+    });
+
+    const timeoutEntry = entries.find(
+      (entry) =>
+        entry.rules !== undefined &&
+        'openthrottle/no-per-test-timeout' in entry.rules,
+    );
+
+    expect(timeoutEntry?.ignores).toContain(
+      '**/*.integration.{test,spec}.{ts,tsx}',
+    );
+  });
+
   it('ignores node_modules and __generated__', () => {
     const ignoreEntry = entries.find((entry) => entry.ignores !== undefined);
 

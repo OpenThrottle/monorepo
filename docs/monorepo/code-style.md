@@ -56,6 +56,7 @@ lint but never had a rule file of their own:
 | [Route primitive shape](#route-and-component-shape)                         | **Warned**                             | `openthrottle/route-primitive-shape`, `openthrottle/pre-hooks-unpack` |
 | [Hook primitive shape](#hook-shape)                                         | **Enforced**                           | `openthrottle/hook-primitive-shape` + `audit:hook-shape`              |
 | [Import order](#import-order)                                               | **Warned**                             | `simple-import-sort/imports`, `simple-import-sort/exports`            |
+| [Anti-flake test rules](#anti-flake-test-rules)                             | **Warned**                             | `openthrottle/no-test-sleep` and four siblings; Vitest `retry: 0`     |
 | [Discriminated unions](#discriminated-unions)                               | Honor system                           | —                                                                     |
 | [`interface extends` over `&`](#interface-extends-over-)                    | Honor system                           | —                                                                     |
 | [`readonly` by default](#readonly-properties)                               | Honor system                           | —                                                                     |
@@ -1228,6 +1229,30 @@ The React Router apps share one Vitest setup: `tests/setup.ts` is a single
 `setupReactRouterTest({ env: { APP_NAME: '<app>' } })` call from
 `@openthrottle/react-router-testing` (jsdom polyfills, `window.env` fixture, and a baked-in
 `afterEach(cleanup)`). Do not re-add those shared shims per app.
+
+### Anti-flake test rules
+
+**Warned** — `warn` while plan `0b6dfaf8` burns down the existing sites, then each flips to
+`error` on its own. They apply to `*.test.ts(x)`, `*.spec.ts(x)` and everything under
+`__tests__/`. A test that depends on the real clock or the machine's speed passes locally and
+fails on a loaded CI runner, so each rule names the deterministic replacement.
+
+| Rule                                  | Flags                                                                                        | Use instead                                                                                             |
+| ------------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `openthrottle/no-test-sleep`          | `new Promise((r) => setTimeout(r, N))`, `timers/promises`, same-file sleep helpers           | `vi.useFakeTimers()` + `vi.advanceTimersByTimeAsync()`; `vi.waitFor` / `expect.poll` for real OS events |
+| `openthrottle/no-wall-clock-in-tests` | `Date.now()`, no-argument `new Date()` / `Date()`, `performance.now()`                       | A fixed timestamp constant, or `vi.setSystemTime()`                                                     |
+| `openthrottle/no-per-test-timeout`    | A timeout argument or `{ timeout }` / `{ retry }` on a test or hook; `vi.setConfig` timeouts | Make the test faster, or move real I/O into a `*.integration.test.ts` suite (exempt)                    |
+| `openthrottle/skip-requires-issue`    | `.skip` / `.todo` / `xit` without a `#123`, issue URL or OT id in a comment above            | Cite the tracking issue, or delete the test. `skipIf` / `runIf` are allowed                             |
+| `openthrottle/no-fire-event`          | Importing `fireEvent` from `@testing-library/*` (one report per file)                        | `userEvent`; under fake timers, `userEvent.setup({ advanceTimers: vi.advanceTimersByTime })`            |
+
+`no-test-sleep` skips files that call `vi.useFakeTimers()`, and `no-wall-clock-in-tests` also
+skips files that call `vi.setSystemTime()`, because under a fake clock those calls are
+deterministic. A delay of `0` is a tick flush, not a sleep. Drag-and-drop with a `dataTransfer`
+and `<input type="color">` changes are the cases `userEvent` cannot drive. They keep
+`fireEvent` behind an inline disable that states the reason.
+
+Retries are pinned to `0` (`VITEST_RETRY` in `@tools/dotfiles`, mirrored in the configs that
+bypass the factory). A retry turns a flaky test green without fixing it.
 
 Server-side testing conventions — mocking NestJS providers in `beforeEach`, model factories
 from the repository and entity factories from the service — live in the

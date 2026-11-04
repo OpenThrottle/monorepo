@@ -30,6 +30,7 @@ export default (config: ConfigEnv) => {
       hookTimeout: 15_000,
       include: ['**/*.test.(ts|tsx)'],
       reporters: ['default'],
+      retry: 0, // VITEST_RETRY in @tools/dotfiles: a flake must fail, not retry
       testTimeout: 15_000,
       setupFiles: ['./tests/setup.ts'],
     },
