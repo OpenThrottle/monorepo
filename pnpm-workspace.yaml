@@ -24,6 +24,13 @@ allowBuilds:
   unrs-resolver: false
   zeromq: false
 
+# 🗄️ Virtual store | https://pnpm.io/settings
+# `virtualStoreType` is deliberately left at its default (`project`). The
+# global virtual store was measured and rejected for now: it breaks the
+# developer Vitest suite through pnpm's injected NODE_OPTIONS hook, and it
+# needs a lockfile-wide `addMissingPeerTypes`. Read
+# docs/monorepo/pnpm-global-virtual-store.md before turning it on.
+
 # injectWorkspacePackages: true
 # syncInjectedDepsAfterScripts:
 # - build
