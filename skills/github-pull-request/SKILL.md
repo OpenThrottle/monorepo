@@ -44,8 +44,9 @@ A queued plan run's agent knows why the code changed: it wrote the code and has 
 The host process that runs it owns `git push` and the PR, because a headless agent's push is denied.
 So the agent writes the draft and the host publishes it. This mode is how the agent writes it.
 
-**Enter it** when `OT_PR_DRAFT_DIR` is set in the environment (the orchestrator sets it on the final
-iteration), or when the user or prompt asks for a draft only. Otherwise run the normal process.
+**Enter it** when `OT_PR_DRAFT_DIR` is set in the environment, when the prompt carries the
+orchestrator's `OT_FINAL_ITERATION=1` line (it adds that line when the agent's task is the plan's
+last runnable one), or when the user or prompt asks for a draft only. Otherwise run the normal process.
 
 **The draft directory** is `$OT_PR_DRAFT_DIR` when set. Otherwise it is
 `"$(git rev-parse --absolute-git-dir)/ot-pr-draft"`. Because that path is inside the git dir, it is

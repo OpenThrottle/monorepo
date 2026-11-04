@@ -130,6 +130,105 @@ const createMockExecute = (opts: {
     throw new Error('unmocked GraphQL document in test');
   });
 
+const FINAL_ITERATION_FLAG = 'OT_FINAL_ITERATION=1';
+
+const runOnceCapturingPrompt = async (params: {
+  readonly mode: 'plan' | 'task';
+  readonly taskId: string;
+  readonly tasks: GetTasksByPlanIdQuery['tasksByPlanId'];
+}): Promise<string> => {
+  const prompts: string[] = [];
+  const run = vi.fn(async ({ agentPrompt }: { agentPrompt: string }) => {
+    prompts.push(agentPrompt);
+    return 'no control marker';
+  });
+  const orchestrator = createWorkflowRalphOrchestrator({
+    executeGraphqlV2: createMockExecute({
+      getTasksByPlanId: () => params.tasks,
+    }),
+    iterationRunner: { run },
+  });
+
+  await orchestrator.execute({
+    context: {
+      debug: 'omit',
+      iterationMax: 1,
+      iterationTimeout: 1000,
+      iterations: 1,
+      kind: 'ralph',
+      mode: params.mode,
+      model: 'test-model',
+      planId: PLAN_ID,
+      project: '',
+      prompt: 'Do work',
+      runner: 'cursor',
+      skipWorktreeSetup: false,
+      taskId: params.taskId,
+      timeout: 1000,
+      worktree: undefined,
+      worktreeBase: undefined,
+    },
+  });
+
+  return prompts[0] ?? '';
+};
+
+describe('createWorkflowRalphOrchestrator final-iteration prompt line', () => {
+  it('omits the flag while another runnable task remains (plan mode)', async () => {
+    const prompt = await runOnceCapturingPrompt({
+      mode: 'plan',
+      taskId: '',
+      tasks: [
+        baseTask(TASK_A, 'QUEUED', { sortOrder: 1000 }),
+        baseTask(TASK_B, 'QUEUED', { sortOrder: 2000 }),
+      ],
+    });
+
+    expect(prompt).toContain(TASK_A);
+    expect(prompt).not.toContain(FINAL_ITERATION_FLAG);
+  });
+
+  it('adds the flag and the draft-only instruction on the last runnable task (plan mode)', async () => {
+    const prompt = await runOnceCapturingPrompt({
+      mode: 'plan',
+      taskId: '',
+      tasks: [
+        baseTask(TASK_A, 'COMPLETED', { sortOrder: 1000 }),
+        baseTask(TASK_B, 'QUEUED', { sortOrder: 2000 }),
+      ],
+    });
+
+    expect(prompt).toContain(FINAL_ITERATION_FLAG);
+    expect(prompt).toContain('/github-pull-request in draft-only mode');
+  });
+
+  it('adds the flag in task mode when the target task is the only runnable one', async () => {
+    const prompt = await runOnceCapturingPrompt({
+      mode: 'task',
+      taskId: TASK_B,
+      tasks: [
+        baseTask(TASK_A, 'COMPLETED', { sortOrder: 1000 }),
+        baseTask(TASK_B, 'PENDING', { sortOrder: 2000 }),
+      ],
+    });
+
+    expect(prompt).toContain(FINAL_ITERATION_FLAG);
+  });
+
+  it('omits the flag in task mode when other runnable tasks remain', async () => {
+    const prompt = await runOnceCapturingPrompt({
+      mode: 'task',
+      taskId: TASK_A,
+      tasks: [
+        baseTask(TASK_A, 'PENDING', { sortOrder: 1000 }),
+        baseTask(TASK_B, 'PENDING', { sortOrder: 2000 }),
+      ],
+    });
+
+    expect(prompt).not.toContain(FINAL_ITERATION_FLAG);
+  });
+});
+
 describe('createWorkflowRalphOrchestrator task selection', () => {
   it('picks lowest sortOrder PENDING task when createdAt order differs', async () => {
     const run = vi.fn(async ({ agentPrompt }: { agentPrompt: string }) => {

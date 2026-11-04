@@ -110,6 +110,30 @@ const buildOrchestratorBasePrompt = (params: {
   );
 };
 
+/**
+ * @description Prompt line the agent reads as "this is the plan's last runnable task". The
+ * orchestrator states it rather than letting the agent infer it, because the agent can't see
+ * completions applied by the host after it exits. On reading it, agents-ralph drafts the PR with
+ * `github-pull-request` in draft-only mode once the task is committed; the host publishes the draft.
+ */
+const FINAL_ITERATION_PROMPT_LINE =
+  ' OT_FINAL_ITERATION=1: this is the last runnable task in the plan. After you complete and commit it, run /github-pull-request in draft-only mode (draft directory: $OT_PR_DRAFT_DIR when set, else the skill default) so the host can publish the PR. Never git push and never open, edit or ready the PR yourself.';
+
+/**
+ * @description True when `taskId` is the only runnable task left, i.e. finishing it ends the plan.
+ */
+const isLastRunnableTask = (
+  runnable: readonly { readonly id: string }[],
+  taskId: string,
+): boolean => {
+  const lowered = taskId.toLowerCase();
+
+  return (
+    runnable.length > 0 &&
+    runnable.every((task) => task.id.toLowerCase() === lowered)
+  );
+};
+
 const toLifecycleTaskContext = (task: {
   readonly category?: string | null;
   readonly id: string;
@@ -400,12 +424,20 @@ export const createWorkflowRalphOrchestrator = (
       // prompt.build
       const injectedContext = formatPlanAndTasksForPrompt(planRow, tasksRows);
       const agentCwd = resolveOrchestratorAgentCwd(context);
-      const basePrompt = buildOrchestratorBasePrompt({
-        context,
-        effectivePlanId,
-        injectedContext,
-        taskIdTrim,
-      });
+      // Task mode never re-reads tasks per iteration, so decide "last task" from the state load.
+      const taskModeFinalLine =
+        isTaskCentric &&
+        taskIdTrim !== '' &&
+        isLastRunnableTask(tasksRows.filter(isRunnableRalphTask), taskIdTrim)
+          ? FINAL_ITERATION_PROMPT_LINE
+          : '';
+      const basePrompt =
+        buildOrchestratorBasePrompt({
+          context,
+          effectivePlanId,
+          injectedContext,
+          taskIdTrim,
+        }) + taskModeFinalLine;
 
       // plan.guard
       if (isRalphTerminalStatus(planRow.status)) {
@@ -587,7 +619,11 @@ export const createWorkflowRalphOrchestrator = (
               );
             }
 
-            agentPrompt = `${basePrompt} Current task for this iteration: ${taskForIteration.id}. When you log progress via append_plan_output, pass taskId: ${taskForIteration.id} — the task you are actively working — so the output is attributed to that task and not just the iteration. (One iteration can touch several tasks; if you switch tasks mid-iteration, tag the id of the task you are actually working.) When you complete it output <ralph:task-complete>${taskForIteration.id}</ralph:task-complete> so the CLI can mark it completed.`;
+            agentPrompt =
+              `${basePrompt} Current task for this iteration: ${taskForIteration.id}. When you log progress via append_plan_output, pass taskId: ${taskForIteration.id} — the task you are actively working — so the output is attributed to that task and not just the iteration. (One iteration can touch several tasks; if you switch tasks mid-iteration, tag the id of the task you are actually working.) When you complete it output <ralph:task-complete>${taskForIteration.id}</ralph:task-complete> so the CLI can mark it completed.` +
+              (isLastRunnableTask(remaining, taskForIteration.id)
+                ? FINAL_ITERATION_PROMPT_LINE
+                : '');
           }
         }
 

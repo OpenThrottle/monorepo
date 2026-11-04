@@ -46,7 +46,11 @@ see [tools/AGENTS.md](../../tools/AGENTS.md)).
   The host-owned plan-end finalize step (push + PR via injectable `runCommand`) is the deliberate
   exception — see `src/utils/finalize-plan-run.ts`.
 - **PR draft hand-off (agent drafts, host publishes).** On its final iteration the agent runs the
-  `github-pull-request` skill in draft-only mode. That mode writes `title.txt` (a one-line
+  `github-pull-request` skill in draft-only mode. The orchestrator marks that iteration explicitly:
+  when the task it hands the agent is the plan's only runnable one, it appends
+  `FINAL_ITERATION_PROMPT_LINE` (`OT_FINAL_ITERATION=1: …`) to the prompt (`orchestrator.ts`; plan
+  mode per iteration, task mode from the state load). The agent can't infer this on its own,
+  because completions are applied by the host after it exits. That mode writes `title.txt` (a one-line
   conventional title) and `body.md` (UTF-8, ending in the `Plan-Id:`/`Task-Id:` trailer) into
   `OT_PR_DRAFT_DIR`, and it never runs `gh` or `git push`. The host should always set
   `OT_PR_DRAFT_DIR` explicitly to `<worktree git dir>/ot-pr-draft`
