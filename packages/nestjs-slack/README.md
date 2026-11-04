@@ -82,3 +82,5 @@ If you omit options, pass an empty `webhookUrl`, or an invalid URL, the app thro
 
 - Set `SLACK_WEBHOOK_URL` (or your preferred env var) and pass it into `forRoot({ webhookUrl: process.env.SLACK_WEBHOOK_URL })`.
 - Ensure the value is a valid `https://` URL before the app starts (cleartext `http://` is only accepted for loopback hosts); otherwise validation will throw.
+
+<!-- Merge-queue probe A (OT plan e702d884): docs-only queue entry. Safe to revert. -->
