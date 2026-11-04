@@ -94,7 +94,7 @@ export const PlanWorkflowRunTransparencyAuditTable = (
                 {copy.columns.branch}
               </TableHead>
               <TableHead className="w-10 p-0">
-                <GlobalPopoverActionsHeader />
+                <GlobalPopoverActionsHeader className="max-sm:sr-only" />
               </TableHead>
             </TableRow>
           </TableHeader>

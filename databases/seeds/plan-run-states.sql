@@ -35,7 +35,8 @@
 -- Run states covered (plan_runs.status is plain TEXT; see migrations 138 and 140):
 --   SCHEDULED x2 (+2h, +1 day), IN_PROGRESS, STALE, USAGE_LIMITED + its COMPLETED resume run
 --   (resume_of_run_id), MISSED, SUPERSEDED, COMPLETED with a job id + branch + PR, and a
---   CLI/orchestrator COMPLETED run with no job.
+--   CLI/orchestrator COMPLETED run with no job, plus four older COMPLETED runs so history has
+--   12 rows and shows its "Show N more" button.
 
 BEGIN;
 
@@ -144,7 +145,29 @@ VALUES
    NULL, 'orchestrator', 'claude', 'COMPLETED',
    now() - interval '9 days', now() - interval '9 days' + interval '25 minutes',
    NULL,
-   now() - interval '9 days' + interval '25 minutes', FALSE, NULL, NULL, NULL, NULL, NULL, NULL);
+   now() - interval '9 days' + interval '25 minutes', FALSE, NULL, NULL, NULL, NULL, NULL, NULL),
+
+  -- 11–14 older COMPLETED runs: they take history past its 10-row page, so "Show N more" renders.
+  ('fe000000-0000-4000-8000-000000000111', 'fe000000-0000-4000-8000-000000000001', 'plans',
+   NULL, 'orchestrator', 'claude', 'COMPLETED',
+   now() - interval '10 days', now() - interval '10 days' + interval '20 minutes',
+   NULL, now() - interval '10 days' + interval '20 minutes', FALSE, NULL, 'claude-sonnet-5',
+   NULL, NULL, NULL, NULL),
+  ('fe000000-0000-4000-8000-000000000112', 'fe000000-0000-4000-8000-000000000001', 'plans',
+   NULL, 'orchestrator', 'claude', 'COMPLETED',
+   now() - interval '11 days', now() - interval '11 days' + interval '20 minutes',
+   NULL, now() - interval '11 days' + interval '20 minutes', FALSE, NULL, 'claude-sonnet-5',
+   NULL, NULL, NULL, NULL),
+  ('fe000000-0000-4000-8000-000000000113', 'fe000000-0000-4000-8000-000000000001', 'plans',
+   NULL, 'orchestrator', 'codex', 'COMPLETED',
+   now() - interval '12 days', now() - interval '12 days' + interval '20 minutes',
+   NULL, now() - interval '12 days' + interval '20 minutes', FALSE, NULL, NULL,
+   NULL, NULL, NULL, NULL),
+  ('fe000000-0000-4000-8000-000000000114', 'fe000000-0000-4000-8000-000000000001', 'plans',
+   NULL, 'orchestrator', 'claude', 'COMPLETED',
+   now() - interval '13 days', now() - interval '13 days' + interval '20 minutes',
+   NULL, now() - interval '13 days' + interval '20 minutes', FALSE, NULL, 'claude-opus-4.8',
+   NULL, NULL, NULL, NULL);
 
 -- ---------------------------------------------------------------------------
 -- PR provenance for run 09: plan_runs → work_sessions.plan_run_id →

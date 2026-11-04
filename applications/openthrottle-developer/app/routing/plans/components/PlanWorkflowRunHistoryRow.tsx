@@ -100,8 +100,9 @@ export const PlanWorkflowRunHistoryRow = (
             />
             {row.isStale ? (
               <Badge
+                color="red"
                 data-testid="PlanWorkflowRunHistoryRow-stale"
-                variant="destructive"
+                size="xs"
               >
                 {copy.staleBadge}
               </Badge>
@@ -122,7 +123,7 @@ export const PlanWorkflowRunHistoryRow = (
             />
           </div>
         </TableCell>
-        <TableCell className="w-10 align-top">
+        <TableCell className="w-10 align-top max-sm:pl-0">
           <PlanWorkflowRunHistoryRowActions
             bullmqJobId={row.bullmqJobId ?? null}
             runId={row.id}
