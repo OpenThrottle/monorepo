@@ -117,9 +117,11 @@ const buildOrchestratorBasePrompt = (params: {
  * orchestrator states it rather than letting the agent infer it, because the agent can't see
  * completions applied by the host after it exits. On reading it, agents-ralph drafts the PR with
  * `github-pull-request` in draft-only mode once the task is committed; the host publishes the draft.
+ * The resolved draft path is written into the line itself, not only into `OT_PR_DRAFT_DIR`, so an
+ * agent whose CLI doesn't forward env to its tool shell still knows where to write.
  */
-const FINAL_ITERATION_PROMPT_LINE =
-  ' OT_FINAL_ITERATION=1: this is the last runnable task in the plan. After you complete and commit it, run /github-pull-request in draft-only mode (draft directory: $OT_PR_DRAFT_DIR when set, else the skill default) so the host can publish the PR. Never git push and never open, edit or ready the PR yourself.';
+const buildFinalIterationPromptLine = (draftDir: string | undefined): string =>
+  ` OT_FINAL_ITERATION=1: this is the last runnable task in the plan. After you complete and commit it, run /github-pull-request in draft-only mode (draft directory: ${draftDir === undefined ? '$OT_PR_DRAFT_DIR when set, else the skill default' : `${draftDir} — the same path as $OT_PR_DRAFT_DIR`}) so the host can publish the PR. Never git push and never open, edit or ready the PR yourself.`;
 
 /**
  * @description True when `taskId` is the only runnable task left, i.e. finishing it ends the plan.
@@ -447,7 +449,7 @@ export const createWorkflowRalphOrchestrator = (
         isTaskCentric &&
         taskIdTrim !== '' &&
         isLastRunnableTask(tasksRows.filter(isRunnableRalphTask), taskIdTrim)
-          ? FINAL_ITERATION_PROMPT_LINE
+          ? buildFinalIterationPromptLine(prDraftDir)
           : '';
       const basePrompt =
         buildOrchestratorBasePrompt({
@@ -640,7 +642,7 @@ export const createWorkflowRalphOrchestrator = (
             agentPrompt =
               `${basePrompt} Current task for this iteration: ${taskForIteration.id}. When you log progress via append_plan_output, pass taskId: ${taskForIteration.id} — the task you are actively working — so the output is attributed to that task and not just the iteration. (One iteration can touch several tasks; if you switch tasks mid-iteration, tag the id of the task you are actually working.) When you complete it output <ralph:task-complete>${taskForIteration.id}</ralph:task-complete> so the CLI can mark it completed.` +
               (isLastRunnableTask(remaining, taskForIteration.id)
-                ? FINAL_ITERATION_PROMPT_LINE
+                ? buildFinalIterationPromptLine(prDraftDir)
                 : '');
           }
         }

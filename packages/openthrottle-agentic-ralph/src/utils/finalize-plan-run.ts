@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -18,16 +18,19 @@ import type { PlanRunPrPlan, PlanRunPrTask } from './plan-run-pr-body.ts';
 import {
   buildPlanRunPrBody,
   buildPlanRunPrFooter,
-  classifyPlanRunPrBody,
+  locatePlanRunPrBody,
   parseOnelineLog,
   parseTaskIdTrailers,
   PR_TEMPLATE_FALLBACK,
+  replacePlanRunPrBodyRegion,
   resolvePlanRunPrTitle,
   selectFooterTaskIds,
 } from './plan-run-pr-body.ts';
 import {
   PLAN_RUN_PR_DRAFT_DIR_NAME,
   PLAN_RUN_PR_DRAFT_FILES,
+  PLAN_RUN_PR_DRAFT_GITIGNORE_CONTENT,
+  PLAN_RUN_PR_DRAFT_GITIGNORE_FILE,
   validatePlanRunPrDraft,
 } from './plan-run-pr-draft.ts';
 import { sortTasksByPlanListOrder } from './plan-task-list-order.ts';
@@ -49,7 +52,7 @@ export interface FinalizePlanRunParams {
   readonly cwd: string;
   /**
    * @description Where the agent wrote its PR draft (`OT_PR_DRAFT_DIR`). `undefined` resolves the
-   * skill default, `<absolute git dir>/ot-pr-draft`.
+   * skill default, `<worktree root>/.ot-pr-draft`.
    */
   readonly draftDir: string | undefined;
   readonly executeGraphqlV2: WorkflowExecuteGraphqlV2;
@@ -382,8 +385,10 @@ const appendFinalizeNote = async (params: {
 };
 
 /**
- * @description The draft directory the agent writes to: `<absolute git dir>/ot-pr-draft`, the
- * github-pull-request skill's own default. `undefined` when `cwd` isn't a git checkout.
+ * @description The draft directory the agent writes to: `<worktree root>/.ot-pr-draft`, the
+ * github-pull-request skill's own default. It lives in the working tree because that is the one
+ * place every agent backend may write — `.git/` and OS temp dirs fall outside some CLIs' write
+ * policy or sandbox. `undefined` when `cwd` isn't a git checkout.
  * @public
  */
 export const resolvePlanRunPrDraftDir = async (params: {
@@ -393,11 +398,11 @@ export const resolvePlanRunPrDraftDir = async (params: {
   const { cwd, runCommand } = params;
 
   try {
-    const gitDir = await runGit(runCommand, cwd, [
+    const topLevel = await runGit(runCommand, cwd, [
       'rev-parse',
-      '--absolute-git-dir',
+      '--show-toplevel',
     ]);
-    const trimmed = gitDir.exitCode === 0 ? gitDir.stdout.trim() : '';
+    const trimmed = topLevel.exitCode === 0 ? topLevel.stdout.trim() : '';
 
     return trimmed === ''
       ? undefined
@@ -408,8 +413,10 @@ export const resolvePlanRunPrDraftDir = async (params: {
 };
 
 /**
- * @description Run-start step: resolves the draft directory and deletes a draft left by an earlier
- * run, so finalize can never publish text that predates this run's commits. Never throws.
+ * @description Run-start step: resolves the draft directory, creates it with a `.gitignore` of `*`
+ * so it stays untracked in any repo (a `git add -A` can't commit the draft), and deletes a draft
+ * left by an earlier run, so finalize can never publish text that predates this run's commits.
+ * The `.gitignore` is kept. Never throws.
  * @public
  */
 export const preparePlanRunPrDraftDir = async (params: {
@@ -420,6 +427,17 @@ export const preparePlanRunPrDraftDir = async (params: {
 
   if (draftDir === undefined) {
     return undefined;
+  }
+
+  try {
+    await mkdir(draftDir, { recursive: true });
+    await writeFile(
+      join(draftDir, PLAN_RUN_PR_DRAFT_GITIGNORE_FILE),
+      PLAN_RUN_PR_DRAFT_GITIGNORE_CONTENT,
+      'utf8',
+    );
+  } catch {
+    // The agent can still create the dir itself; finalize falls back when no draft appears.
   }
 
   await Promise.all(
@@ -480,7 +498,7 @@ const resolvePrContent = async (params: {
 
   const reason =
     validation === undefined
-      ? `no agent draft in ${draftDirPath ?? '(no git dir)'}`
+      ? `no agent draft in ${draftDirPath ?? '(not a git checkout)'}`
       : validation.ok
         ? undefined
         : `agent draft rejected: ${validation.reason}`;
@@ -593,13 +611,17 @@ const readPrBody = async (params: {
     '.body',
   ]);
 
-  return viewed.exitCode === 0 ? viewed.stdout : undefined;
+  // `--jq` prints the string plus one newline of its own; drop it so the body round-trips byte for
+  // byte and a refresh never grows the text it preserves outside the markers.
+  return viewed.exitCode === 0 ? viewed.stdout.replace(/\n$/, '') : undefined;
 };
 
 /**
- * @description Refreshes an existing PR's title and body when the current body is empty or an
- * untouched host body; leaves a human-edited body alone. Uses `gh pr edit`, falling back to the
- * REST API (per the github-pull-request skill) when `gh pr edit` fails.
+ * @description Refreshes an existing PR's title and body when the current body is empty or holds
+ * one untouched host-marked block; leaves an `edited` body alone. Only the marked region is
+ * replaced: text above or below it (a human's prose, any bot's footer) is published back byte for
+ * byte. Uses `gh pr edit`, falling back to the REST API (per the github-pull-request skill) when
+ * `gh pr edit` fails.
  */
 const refreshExistingPr = async (params: {
   readonly baseRef: string;
@@ -614,28 +636,52 @@ const refreshExistingPr = async (params: {
   const { cwd, executeGraphqlV2, onChunk, planId, prNumber, runCommand } =
     params;
   const current = await readPrBody({ cwd, prNumber, runCommand });
-  const owner =
-    current === undefined ? undefined : classifyPlanRunPrBody(current);
-
-  if (owner === undefined || owner === 'edited') {
+  const leftUnchanged = async (
+    reason: string,
+  ): Promise<{ readonly ok: true }> => {
     await appendFinalizeNote({
-      content:
-        owner === undefined
-          ? `[ralph-orchestrator] finalize: could not read PR #${prNumber} body; left it unchanged\n`
-          : `[ralph-orchestrator] finalize: PR #${prNumber} body was edited by a human; left it unchanged\n`,
+      content: `[ralph-orchestrator] finalize: PR #${prNumber} body ${reason}; left it unchanged\n`,
       executeGraphqlV2,
       onChunk,
       planId,
     });
 
     return { ok: true };
+  };
+
+  if (current === undefined) {
+    return leftUnchanged('could not be read');
+  }
+
+  const region = locatePlanRunPrBody(current);
+
+  if (region.owner === 'edited') {
+    return leftUnchanged(
+      'was edited inside the host markers, or has no single well-formed marked block',
+    );
   }
 
   const { body, title } = await resolvePrContent(params);
+  // Guard only the host-written text: what sits outside the markers isn't ours, and a bot footer
+  // that trips the attribution patterns must not block the refresh.
   const guarded = await writeAndGuardPrFiles({ body, cwd, runCommand, title });
 
   if (!guarded.ok) {
     return guarded;
+  }
+
+  try {
+    await writeFile(
+      guarded.bodyPath,
+      replacePlanRunPrBodyRegion({ region, replacement: body }),
+      'utf8',
+    );
+  } catch (error) {
+    return {
+      detail: error instanceof Error ? error.message : String(error),
+      ok: false,
+      owedStep: 'pr-write-draft',
+    };
   }
 
   const edited = await runGh(runCommand, cwd, [

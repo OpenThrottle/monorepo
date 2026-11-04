@@ -21,10 +21,26 @@ export const PLAN_RUN_PR_DRAFT_FILES = {
 } as const;
 
 /**
- * @description Directory name the skill defaults to inside `git rev-parse --absolute-git-dir`.
+ * @description Directory name the skill defaults to at the worktree root
+ * (`git rev-parse --show-toplevel`). Worktree-local because the agent's working tree is the only
+ * place every agent backend's write policy allows; `.git/` and OS temp dirs are not.
  * @public
  */
-export const PLAN_RUN_PR_DRAFT_DIR_NAME = 'ot-pr-draft';
+export const PLAN_RUN_PR_DRAFT_DIR_NAME = '.ot-pr-draft';
+
+/**
+ * @description The host writes this file into the draft directory with
+ * {@link PLAN_RUN_PR_DRAFT_GITIGNORE_CONTENT}, so the directory ignores itself in any repo without
+ * relying on that repo's own ignore rules.
+ * @public
+ */
+export const PLAN_RUN_PR_DRAFT_GITIGNORE_FILE = '.gitignore';
+
+/**
+ * @description Ignores everything in the draft directory, the `.gitignore` itself included.
+ * @public
+ */
+export const PLAN_RUN_PR_DRAFT_GITIGNORE_CONTENT = '*\n';
 
 /**
  * @description Env var the orchestrator sets on the agent so it writes the draft where finalize reads it.

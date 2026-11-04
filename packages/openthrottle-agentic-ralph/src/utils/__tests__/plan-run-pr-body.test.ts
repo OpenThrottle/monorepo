@@ -4,11 +4,13 @@ import type { PlanRunPrTask } from '../plan-run-pr-body.ts';
 import {
   buildPlanRunPrBody,
   classifyPlanRunPrBody,
+  locatePlanRunPrBody,
   parseOnelineLog,
   parseTaskIdTrailers,
   PLAN_RUN_BODY_CLOSE_MARKER,
   PLAN_RUN_BODY_OPEN_MARKER,
   PR_TEMPLATE_FALLBACK,
+  replacePlanRunPrBodyRegion,
   resolvePlanRunPrTitle,
   selectFooterTaskIds,
   wrapPlanRunBody,
@@ -218,13 +220,111 @@ describe('classifyPlanRunPrBody', () => {
     );
   });
 
-  it('treats text outside the markers as human-edited', () => {
-    expect(classifyPlanRunPrBody(`Intro.\n${hostBody}`)).toBe('edited');
+  it('ignores a bot footer appended after the markers', () => {
+    expect(
+      classifyPlanRunPrBody(
+        `${hostBody}\n<!-- codesmith:footer -->\nReviewed by a bot.\n<!-- /codesmith:footer -->\n`,
+      ),
+    ).toBe('host');
   });
 
-  it('treats a body without markers as human-edited', () => {
+  it('ignores any unknown bot block above or below the markers', () => {
+    const botBlock =
+      '<!-- some-future-bot:summary -->\n🤖 Made with a tool.\n<!-- /some-future-bot:summary -->';
+
+    expect(classifyPlanRunPrBody(`${botBlock}\n\n${hostBody}`)).toBe('host');
+    expect(classifyPlanRunPrBody(`${hostBody}\n${botBlock}`)).toBe('host');
+  });
+
+  it('ignores human prose above or below the markers', () => {
+    expect(classifyPlanRunPrBody(`Intro.\n${hostBody}Outro.`)).toBe('host');
+  });
+
+  it('treats a body without markers as edited', () => {
     expect(classifyPlanRunPrBody('# Summary\n\nWritten by hand.')).toBe(
       'edited',
     );
+  });
+
+  it('treats two marked blocks as edited', () => {
+    expect(classifyPlanRunPrBody(`${hostBody}\n${hostBody}`)).toBe('edited');
+  });
+
+  it('treats unbalanced markers as edited', () => {
+    expect(
+      classifyPlanRunPrBody(hostBody.replace(PLAN_RUN_BODY_CLOSE_MARKER, '')),
+    ).toBe('edited');
+    expect(
+      classifyPlanRunPrBody(hostBody.replace(PLAN_RUN_BODY_OPEN_MARKER, '')),
+    ).toBe('edited');
+    expect(
+      classifyPlanRunPrBody(
+        `${hostBody}\n${PLAN_RUN_BODY_OPEN_MARKER}\nA stray opener.`,
+      ),
+    ).toBe('edited');
+  });
+
+  it('treats markers in the wrong order, or not on their own line, as edited', () => {
+    expect(
+      classifyPlanRunPrBody(
+        `${PLAN_RUN_BODY_CLOSE_MARKER}\nHost text.\n${PLAN_RUN_BODY_OPEN_MARKER}\n`,
+      ),
+    ).toBe('edited');
+    expect(classifyPlanRunPrBody(`Inline: ${hostBody}`)).toBe('edited');
+  });
+
+  it('treats a block with its digest line removed as edited', () => {
+    expect(
+      classifyPlanRunPrBody(
+        hostBody.replace(/<!-- ot:plan-run-digest [^>]*-->\n/, ''),
+      ),
+    ).toBe('edited');
+  });
+});
+
+describe('replacePlanRunPrBodyRegion', () => {
+  const oldBlock = wrapPlanRunBody('# Summary\n\nOld host text.');
+  const newBlock = wrapPlanRunBody('# Summary\n\nNew host text.');
+
+  const refresh = (current: string): string => {
+    const region = locatePlanRunPrBody(current);
+
+    if (region.owner === 'edited') {
+      throw new Error('expected a refreshable body');
+    }
+
+    return replacePlanRunPrBodyRegion({ region, replacement: newBlock });
+  };
+
+  it('replaces an empty body outright', () => {
+    expect(refresh('')).toBe(newBlock);
+  });
+
+  it('replaces only the marked region, keeping a bot footer byte for byte', () => {
+    const footer =
+      '\n<!-- codesmith:footer -->\r\nReviewed.  \n<!-- /codesmith:footer -->\n';
+
+    expect(refresh(`${oldBlock}${footer}`)).toBe(
+      `${newBlock.trimEnd()}\n${footer}`,
+    );
+  });
+
+  it('keeps human prose above and below the block', () => {
+    const refreshed = refresh(`Above.\n\n${oldBlock}\nBelow.`);
+
+    expect(refreshed).toBe(`Above.\n\n${newBlock}\nBelow.`);
+    expect(classifyPlanRunPrBody(refreshed)).toBe('host');
+  });
+
+  it('is stable across repeated refreshes', () => {
+    const once = refresh(`${oldBlock}\nBelow.\n`);
+
+    expect(refresh(once)).toBe(once);
+  });
+
+  it('reports an inner edit as edited, so it is never replaced', () => {
+    expect(
+      locatePlanRunPrBody(oldBlock.replace('Old host text.', 'Mine.')).owner,
+    ).toBe('edited');
   });
 });

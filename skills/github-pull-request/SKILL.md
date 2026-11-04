@@ -48,11 +48,14 @@ So the agent writes the draft and the host publishes it. This mode is how the ag
 orchestrator's `OT_FINAL_ITERATION=1` line (it adds that line when the agent's task is the plan's
 last runnable one), or when the user or prompt asks for a draft only. Otherwise run the normal process.
 
-**The draft directory** is `$OT_PR_DRAFT_DIR` when set. Otherwise it is
-`"$(git rev-parse --absolute-git-dir)/ot-pr-draft"`. Because that path is inside the git dir, it is
-never tracked or committed. In a linked worktree it resolves to that worktree's own
-`.git/worktrees/<name>/`, so parallel runs can't overwrite each other's drafts. Create the directory
-if it is missing (`mkdir -p`).
+**The draft directory** is the absolute path the `OT_FINAL_ITERATION=1` line names, which is also
+`$OT_PR_DRAFT_DIR` when your shell has it. With neither, it is
+`"$(git rev-parse --show-toplevel)/.ot-pr-draft"`. It sits inside the working tree, never under
+`.git/` or an OS temp dir, because the working tree is the one place every agent CLI's write policy
+or sandbox allows. Each worktree has its own, so parallel runs can't overwrite each other's drafts.
+The directory ignores itself: the host creates it with a `.gitignore` containing `*`, so a
+`git add -A` never commits the draft, in any repo. If the directory is missing, create it and that
+file yourself (`mkdir -p "$dir" && printf '*\n' > "$dir/.gitignore"`) before writing the draft.
 
 **Same analysis.** Run steps 1, 3, 4 and 5 of [Process](#process) unchanged: commit any unstaged work
 first, then use `git log <base>..HEAD`, `git diff --stat` and the full diff, and get the OT footer set

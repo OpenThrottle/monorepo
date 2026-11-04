@@ -371,35 +371,105 @@ export const wrapPlanRunBody = (inner: string): string => {
 };
 
 /**
- * @description Who owns an existing PR body. `empty` and `host` may be refreshed; `edited` (markers
- * gone, text outside them, or a digest that no longer matches) must be left alone.
+ * @description Who owns an existing PR body. `empty` and `host` may be refreshed; `edited` (no
+ * marked block, more than one, a malformed one, or a digest that no longer matches) must be left
+ * alone. Text outside the marked block never decides this on its own.
  * @public
  */
 export type PlanRunPrBodyOwner = 'edited' | 'empty' | 'host';
 
 /**
+ * @description An existing PR body split around its one host-marked block. `before` and `after`
+ * are the raw text outside the block, byte for byte; they belong to whoever wrote them (a human or
+ * any bot) and a refresh always keeps them.
+ * @public
+ */
+export type PlanRunPrBodyRegion =
+  | { readonly after: string; readonly before: string; readonly owner: 'host' }
+  | { readonly owner: 'edited' }
+  | { readonly owner: 'empty' };
+
+const countOccurrences = (text: string, needle: string): number =>
+  text.split(needle).length - 1;
+
+/**
+ * @description True when the marker at `index` starts a line and its line holds nothing else.
+ */
+const isMarkerOnOwnLine = (
+  text: string,
+  index: number,
+  marker: string,
+): boolean => {
+  const end = index + marker.length;
+  const startsLine = index === 0 || text[index - 1] === '\n';
+  const rest = text.slice(end);
+  const endsLine = rest === '' || /^\r?\n/.test(rest);
+
+  return startsLine && endsLine;
+};
+
+/**
+ * @description Finds the single host-marked block in a PR body and checks its digest. Only the
+ * marked region is inspected: whatever sits above or below it is kept as-is and never makes the
+ * body `edited`, so a footer any bot appends (or prose a human adds) doesn't block a refresh. No
+ * bot's markers are known here, by design — a vendor allow-list would rot.
+ * @public
+ */
+export const locatePlanRunPrBody = (body: string): PlanRunPrBodyRegion => {
+  if (normalizeBodyText(body) === '') {
+    return { owner: 'empty' };
+  }
+
+  const openIndex = body.indexOf(PLAN_RUN_BODY_OPEN_MARKER);
+  const closeIndex = body.indexOf(PLAN_RUN_BODY_CLOSE_MARKER);
+  const isSingleBlock =
+    countOccurrences(body, PLAN_RUN_BODY_OPEN_MARKER) === 1 &&
+    countOccurrences(body, PLAN_RUN_BODY_CLOSE_MARKER) === 1 &&
+    openIndex < closeIndex &&
+    isMarkerOnOwnLine(body, openIndex, PLAN_RUN_BODY_OPEN_MARKER) &&
+    isMarkerOnOwnLine(body, closeIndex, PLAN_RUN_BODY_CLOSE_MARKER);
+
+  if (!isSingleBlock) {
+    return { owner: 'edited' };
+  }
+
+  const lines = normalizeBodyText(
+    body.slice(openIndex + PLAN_RUN_BODY_OPEN_MARKER.length, closeIndex),
+  ).split('\n');
+  const digest = DIGEST_LINE.exec(lines[lines.length - 1] ?? '')?.groups
+    ?.digest;
+  const inner = lines.slice(0, -1).join('\n');
+
+  return lines.length >= 2 && digest !== undefined && digest === digestOf(inner)
+    ? {
+        after: body.slice(closeIndex + PLAN_RUN_BODY_CLOSE_MARKER.length),
+        before: body.slice(0, openIndex),
+        owner: 'host',
+      }
+    : { owner: 'edited' };
+};
+
+/**
  * @description Classifies an existing PR body for the refresh decision; see {@link PlanRunPrBodyOwner}.
  * @public
  */
-export const classifyPlanRunPrBody = (body: string): PlanRunPrBodyOwner => {
-  const normalized = normalizeBodyText(body);
+export const classifyPlanRunPrBody = (body: string): PlanRunPrBodyOwner =>
+  locatePlanRunPrBody(body).owner;
 
-  if (normalized === '') {
-    return 'empty';
-  }
+/**
+ * @description The body a refresh publishes for a refreshable `region` (from
+ * {@link locatePlanRunPrBody}): `replacement`, a freshly wrapped host block, in place of the old
+ * marked region, with everything outside that region kept byte for byte. An empty body is
+ * replaced outright.
+ * @public
+ */
+export const replacePlanRunPrBodyRegion = (params: {
+  readonly region: Exclude<PlanRunPrBodyRegion, { readonly owner: 'edited' }>;
+  readonly replacement: string;
+}): string => {
+  const { region, replacement } = params;
 
-  const lines = normalized.split('\n');
-  const digestLine = lines[lines.length - 2] ?? '';
-  const digest = DIGEST_LINE.exec(digestLine)?.groups?.digest;
-  const inner = lines.slice(1, -2).join('\n');
-  const isWrapped =
-    lines.length >= 4 &&
-    lines[0] === PLAN_RUN_BODY_OPEN_MARKER &&
-    lines[lines.length - 1] === PLAN_RUN_BODY_CLOSE_MARKER &&
-    !inner.includes(PLAN_RUN_BODY_OPEN_MARKER) &&
-    !inner.includes(PLAN_RUN_BODY_CLOSE_MARKER);
-
-  return isWrapped && digest !== undefined && digest === digestOf(inner)
-    ? 'host'
-    : 'edited';
+  return region.owner === 'empty'
+    ? replacement
+    : `${region.before}${replacement.replace(/\n+$/, '')}${region.after}`;
 };
