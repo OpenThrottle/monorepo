@@ -25,9 +25,6 @@ describe('QueuesResolver', () => {
     createQueue: vi.fn().mockResolvedValue({ error: 'not implemented' }),
     duplicateJob: vi.fn().mockResolvedValue({ error: 'not implemented' }),
     enqueueAgenticTest: vi.fn().mockResolvedValue({ error: 'not implemented' }),
-    enqueueDocIngestion: vi
-      .fn()
-      .mockResolvedValue({ error: 'not implemented' }),
     getJob: vi.fn().mockResolvedValue(null),
     getJobs: vi.fn().mockResolvedValue({ hasNext: false, jobs: [], total: 0 }),
     getRepeatableJobs: vi.fn().mockResolvedValue([]),
@@ -472,13 +469,9 @@ describe('QueuesResolver', () => {
     });
   });
 
-  describe('enqueueDocIngestion', () => {
-    test('returns success and jobId when service returns jobId', async () => {
-      vi.mocked(mockQueuesService.enqueueDocIngestion).mockResolvedValueOnce({
-        jobId: 'doc-job-123',
-      });
-
-      const result = await resolver.enqueueDocIngestion({
+  describe('enqueueDocIngestion (deprecated)', () => {
+    test('always returns success false with a removal error', () => {
+      const result = resolver.enqueueDocIngestion({
         directories: ['docs'],
         files: null,
         repo: null,
@@ -486,36 +479,11 @@ describe('QueuesResolver', () => {
         sha: null,
       });
 
-      expect(result.success).toBe(true);
-      expect(result.jobId).toBe('doc-job-123');
-      expect(result.error).toBeNull();
-      expect(mockQueuesService.enqueueDocIngestion).toHaveBeenCalledWith({
-        directories: ['docs'],
-        files: undefined,
-        repo: undefined,
-        scope: 'default',
-        sha: undefined,
+      expect(result).toEqual({
+        error: 'Doc ingestion has been removed.',
+        jobId: null,
+        success: false,
       });
-    });
-
-    test('returns success false and error when service returns error', async () => {
-      vi.mocked(mockQueuesService.enqueueDocIngestion).mockResolvedValueOnce({
-        error: 'At least one of directories or files required.',
-      });
-
-      const result = await resolver.enqueueDocIngestion({
-        directories: null,
-        files: null,
-        repo: null,
-        scope: null,
-        sha: null,
-      });
-
-      expect(result.success).toBe(false);
-      expect(result.jobId).toBeNull();
-      expect(result.error).toBe(
-        'At least one of directories or files required.',
-      );
     });
   });
 

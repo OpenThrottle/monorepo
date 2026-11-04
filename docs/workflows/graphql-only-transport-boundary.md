@@ -116,13 +116,13 @@ deleted it. Both implementations exist side by side and the caller picks one:
   only for the rollback switch; growing it re-opens the second credential path this rule exists to
   close.
 
-`pg` therefore still appears in `tools/workflows/package.json`, and in `src/doc-ingestion/*` — the
-docs-ingestion pipeline is not plan/task I/O and is out of this rule's scope.
+`pg` therefore still appears in `tools/workflows/package.json`, imported only by
+`src/utils/openthrottle-ralph-postgres.ts`.
 
 ## Checks that keep the rule true
 
 - No package in `packages/openthrottle-*workflow*` / `packages/openthrottle-agentic-*` imports `pg`.
-  (`@tools/workflows` is the one exception, and only in the two files named above plus doc-ingestion.)
+  (`@tools/workflows` is the one exception, and only in the rollback file named above.)
 - Every plan/task read/write traces to a generated `*Document` called via `executeGraphqlV2` /
   `executeWorkflowGraphqlV2` — or, under the rollback flag only, to its paired `*Postgres` twin.
 - The only liveness probe in the workflow paths is `GetServerHealthDocument`.

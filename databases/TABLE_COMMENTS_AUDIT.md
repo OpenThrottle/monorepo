@@ -64,7 +64,6 @@ Tables with comments today (no action for task 3 unless listed above).
 | `custom_prompt_embeddings`     | 039                               | yes                      |
 | `custom_prompts`               | 039                               | yes                      |
 | `daily_stats`                  | 039                               | yes (OpenThrottle prose) |
-| `doc_ingestion_state`          | 039                               | yes                      |
 | `documentation`                | 039                               | yes                      |
 | `documentation_embeddings`     | 039                               | yes                      |
 | `notes`                        | 039                               | yes (OpenThrottle prose) |

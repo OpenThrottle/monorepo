@@ -262,32 +262,25 @@ export class QueuesResolver {
     return out;
   }
 
+  /**
+   * @description Deprecated stub kept for schema compatibility: the Doc Ingestion
+   * queue was removed, so this never enqueues anything and always reports
+   * `success: false`. Remove together with its input/result types in a later
+   * schema change.
+   */
   @Mutation(() => EnqueueDocIngestionResultObject, {
-    description: `Enqueue a doc-ingestion job. Provide directories and/or files (at least one required). Job runs diff-based re-ingestion for the given paths. Returns job id or error.`,
+    deprecationReason:
+      'Doc ingestion has been removed; this mutation always returns success: false.',
+    description: `Deprecated no-op. Doc ingestion has been removed; always returns success: false with an error.`,
   })
-  async enqueueDocIngestion(
+  enqueueDocIngestion(
     @Args('input', { type: () => EnqueueDocIngestionInput })
-    input: EnqueueDocIngestionInput,
-  ): Promise<EnqueueDocIngestionResultObject> {
-    const payload = {
-      directories: input.directories ?? undefined,
-      files: input.files ?? undefined,
-      repo: input.repo ?? undefined,
-      scope: input.scope ?? undefined,
-      sha: input.sha ?? undefined,
-    };
-    const result = await this.queuesService.enqueueDocIngestion(payload);
-
+    _input: EnqueueDocIngestionInput,
+  ): EnqueueDocIngestionResultObject {
     const out = new EnqueueDocIngestionResultObject();
-    if ('jobId' in result) {
-      out.success = true;
-      out.jobId = result.jobId;
-      out.error = null;
-    } else {
-      out.success = false;
-      out.jobId = null;
-      out.error = result.error;
-    }
+    out.success = false;
+    out.jobId = null;
+    out.error = 'Doc ingestion has been removed.';
     return out;
   }
 

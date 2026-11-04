@@ -7,7 +7,7 @@ NestJS backend for the OpenThrottle platform. Exposes a GraphQL API for plans, t
 - **NestJS** – API framework
 - **GraphQL** – Apollo with code-first schema, JWT auth, RBAC, response caching
 - **OpenThrottle** – Postgres database (`databases/`): plans, tasks, plan/task embeddings, commit links, plan output stream, notes, documentation embeddings
-- **Redis** – BullMQ (plans, daily-stats, doc-ingestion, database-backup queues) and GraphQL cache
+- **Redis** – BullMQ (plans, daily-stats, database-backup queues) and GraphQL cache
 - **Socket.IO** – Real-time notifications via `@openthrottle/nestjs-websockets`
 
 ## Prerequisites

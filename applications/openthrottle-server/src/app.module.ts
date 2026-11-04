@@ -95,7 +95,6 @@ import { CodeIndexQueueModule } from './queues/code-index/code-index-queue.modul
 import { DailyStatsQueueModule } from './queues/daily-stats/daily-stats-queue.module.ts';
 import { DataRetentionQueueModule } from './queues/data-retention/data-retention-queue.module.ts';
 import { DatabaseBackupQueueModule } from './queues/database-backup/database-backup-queue.module.ts';
-import { DocIngestionQueueModule } from './queues/doc-ingestion/doc-ingestion-queue.module.ts';
 import { PlanLifecycleHooksQueueModule } from './queues/plan-lifecycle-hooks/plan-lifecycle-hooks-queue.module.ts';
 import { PlanRulesQueueModule } from './queues/plan-rules/plan-rules-queue.module.ts';
 import { PlanRunsStaleSweepQueueModule } from './queues/plan-runs-stale-sweep/plan-runs-stale-sweep-queue.module.ts';
@@ -236,7 +235,6 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
         ]
       : []),
     ...(isApiLike ? [DevelopmentModule] : []),
-    ...(isWorkerLike ? [DocIngestionQueueModule] : []),
     ...(isApiLike ? [GeneratorsModule, McpDeveloperModule] : []),
     ...(isWorkerLike
       ? [
