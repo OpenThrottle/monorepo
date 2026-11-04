@@ -7,6 +7,7 @@ import {
   type ReducedMotionMode,
 } from '~/global/data/atom.config';
 import { AppearanceBrandColorField } from '~/routing/settings/components/AppearanceBrandColorField';
+import { AppearanceContextMeterField } from '~/routing/settings/components/AppearanceContextMeterField';
 import { AppearanceMotionField } from '~/routing/settings/components/AppearanceMotionField';
 import { AppearancePaletteField } from '~/routing/settings/components/AppearancePaletteField';
 import { AppearanceResetField } from '~/routing/settings/components/AppearanceResetField';
@@ -34,6 +35,7 @@ export const APPEARANCE_SWATCH_TOKEN_NAMES: readonly ThemeTokenName[] = [
  */
 const APPEARANCE_SECTION_IDS = {
   colorScheme: 'color-scheme',
+  composer: 'composer',
   guides: 'guides',
   motion: 'motion',
   palette: 'palette',
@@ -74,6 +76,12 @@ export const APPEARANCE_SECTIONS: readonly AppearanceSectionEntry[] = [
     description: APPEARANCE_COPY.sectionMotionDescription,
     id: APPEARANCE_SECTION_IDS.motion,
     title: APPEARANCE_COPY.sectionMotionTitle,
+  },
+  {
+    Components: [AppearanceContextMeterField],
+    description: APPEARANCE_COPY.sectionComposerDescription,
+    id: APPEARANCE_SECTION_IDS.composer,
+    title: APPEARANCE_COPY.sectionComposerTitle,
   },
   {
     Components: [SettingsOnboardingRestore, AppearanceResetField],

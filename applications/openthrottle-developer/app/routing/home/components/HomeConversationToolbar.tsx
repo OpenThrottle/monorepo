@@ -55,6 +55,7 @@ export const HomeConversationToolbar = (
         onLoadMore={conversationList.loadMore}
         onNewChat={onNewChat}
         onRename={conversationList.rename}
+        onRestore={conversationList.restore}
         onSelect={onSelectConversation}
         side="left"
         totalCount={conversationList.totalCount}

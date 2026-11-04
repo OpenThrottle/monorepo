@@ -222,6 +222,47 @@ describe('AgentConversationsService', () => {
     });
   });
 
+  describe('restoreConversation', () => {
+    beforeEach(() => {
+      vi.mocked(mockConversationRepository.save).mockClear();
+    });
+
+    it('sets a deleted conversation back to active', async () => {
+      vi.mocked(mockConversationRepository.findOne).mockResolvedValue({
+        ...mockConversation,
+        status: AGENT_CONVERSATION_STATUSES.deleted,
+      });
+      vi.mocked(mockConversationRepository.save).mockImplementation(
+        async (entity) => entity,
+      );
+
+      const result = await service.restoreConversation(userId, conversationId);
+
+      expect(result.status).toBe(AGENT_CONVERSATION_STATUSES.active);
+      expect(mockConversationRepository.save).toHaveBeenCalledTimes(1);
+    });
+
+    it('leaves a non-deleted conversation unchanged without writing', async () => {
+      vi.mocked(mockConversationRepository.findOne).mockResolvedValue({
+        ...mockConversation,
+        status: AGENT_CONVERSATION_STATUSES.archived,
+      });
+
+      const result = await service.restoreConversation(userId, conversationId);
+
+      expect(result.status).toBe(AGENT_CONVERSATION_STATUSES.archived);
+      expect(mockConversationRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('throws when the conversation is not owned', async () => {
+      vi.mocked(mockConversationRepository.findOne).mockResolvedValue(null);
+
+      await expect(
+        service.restoreConversation(userId, conversationId),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+  });
+
   describe('updateConversationTitle', () => {
     it('updates title for an owned conversation', async () => {
       vi.mocked(mockConversationRepository.findOne).mockResolvedValue({

@@ -125,6 +125,20 @@ const usageLimitBin = (): string => {
   );
 };
 
+// A two-call agent turn plus a subagent message: the terminal should carry the
+// LAST main-thread call's context occupancy, not the summed result usage.
+const contextBin = (): string =>
+  writeFakeBin(
+    'claude-context.js',
+    `const lines = [
+      JSON.stringify({ type: 'assistant', parent_tool_use_id: null, message: { content: [], usage: { input_tokens: 10, cache_read_input_tokens: 1000, cache_creation_input_tokens: 0, output_tokens: 20 } } }),
+      JSON.stringify({ type: 'assistant', parent_tool_use_id: null, message: { content: [], usage: { input_tokens: 5, cache_read_input_tokens: 1030, cache_creation_input_tokens: 40, output_tokens: 25 } } }),
+      JSON.stringify({ type: 'assistant', parent_tool_use_id: 'task-1', message: { content: [], usage: { input_tokens: 9000, output_tokens: 1 } } }),
+      JSON.stringify({ type: 'result', subtype: 'success', is_error: false, result: 'ok', usage: { input_tokens: 15, cache_read_input_tokens: 2030, output_tokens: 45 } }),
+    ];
+    process.stdout.write(lines.join('\\n') + '\\n');`,
+  );
+
 // Echoes the CLAUDE_CONFIG_DIR the child was spawned with (or 'none'), so a test
 // can assert whether the headless turn was isolated onto a dedicated config dir.
 const configDirBin = (): string =>
@@ -234,6 +248,32 @@ describe('claudeConversationBackend', () => {
         usageLimit: { rateLimitType: 'five_hour', resetsAt },
       },
     });
+  });
+
+  it('stamps the last main-thread call context occupancy onto the terminal chunk', async () => {
+    process.env[CLAUDE_BIN_ENV] = contextBin();
+
+    const chunks = await collect({
+      cwd: dir,
+      messages: [{ content: 'hi', role: 'user' }],
+      model: 'auto',
+      sessionId: 'sess-1',
+    });
+
+    expect(chunks.at(-1)?.metadata?.contextTokens).toBe(5 + 1030 + 40 + 25);
+  });
+
+  it('leaves contextTokens off the terminal when no assistant usage was seen', async () => {
+    process.env[CLAUDE_BIN_ENV] = successBin();
+
+    const chunks = await collect({
+      cwd: dir,
+      messages: [{ content: 'hi', role: 'user' }],
+      model: 'auto',
+      sessionId: 'sess-1',
+    });
+
+    expect(chunks.at(-1)?.metadata).not.toHaveProperty('contextTokens');
   });
 
   it('synthesizes a terminal error chunk from stderr when the process fails with no result', async () => {

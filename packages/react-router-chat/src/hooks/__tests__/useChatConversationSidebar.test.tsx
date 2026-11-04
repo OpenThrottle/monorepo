@@ -1,16 +1,55 @@
 import { act, render, renderHook } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import {
+  CHAT_CONVERSATION_SIDEBAR_COPY,
+  CHAT_CONVERSATION_UNDO_TOAST_DURATION_MS,
+} from '../../data/chat-conversation-sidebar.copy';
 import type { AgentConversationListItem } from '../../types';
+import type { UseChatConversationSidebarOptions } from '../useChatConversationSidebar';
 import { useChatConversationSidebar } from '../useChatConversationSidebar';
+
+const { toastMock } = vi.hoisted(() => ({ toastMock: vi.fn() }));
+
+vi.mock('@openthrottle/react-router-shadcn', async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
+  toast: toastMock,
+}));
 
 const conversation: AgentConversationListItem = {
   id: 'c1',
   status: 'active',
   title: 'Existing title',
   updatedAt: '2026-08-01T00:00:00.000Z',
+};
+
+const buildOptions = (
+  overrides: Partial<UseChatConversationSidebarOptions> = {},
+): UseChatConversationSidebarOptions => ({
+  onDelete: vi.fn(),
+  onRename: vi.fn(),
+  onRestore: vi.fn(),
+  ...overrides,
+});
+
+/** The `{ action: { onClick } }` options object passed to the last toast call. */
+const lastToastUndo = (): (() => void) => {
+  const options: unknown = toastMock.mock.lastCall?.[1];
+  if (
+    typeof options === 'object' &&
+    options !== null &&
+    'action' in options &&
+    typeof options.action === 'object' &&
+    options.action !== null &&
+    'onClick' in options.action &&
+    typeof options.action.onClick === 'function'
+  ) {
+    const { onClick } = options.action;
+    return () => onClick();
+  }
+  throw new Error('toast was not called with an action');
 };
 
 interface RenameHarnessProps {
@@ -35,19 +74,22 @@ const RenameHarness = (props: RenameHarnessProps): React.ReactElement => (
 );
 
 describe('useChatConversationSidebar', () => {
-  test('starts with no editing, no draft, and no pending delete', () => {
+  beforeEach(() => {
+    toastMock.mockClear();
+  });
+
+  test('starts with no editing and no draft', () => {
     const { result } = renderHook(() =>
-      useChatConversationSidebar({ onDelete: vi.fn(), onRename: vi.fn() }),
+      useChatConversationSidebar(buildOptions()),
     );
     expect(result.current.editingId).toBeNull();
     expect(result.current.draftTitle).toBe('');
-    expect(result.current.pendingDeleteId).toBeNull();
   });
 
   describe('startRename', () => {
     test('seeds the draft from the conversation title', () => {
       const { result } = renderHook(() =>
-        useChatConversationSidebar({ onDelete: vi.fn(), onRename: vi.fn() }),
+        useChatConversationSidebar(buildOptions()),
       );
       act(() => {
         result.current.startRename(conversation);
@@ -58,7 +100,7 @@ describe('useChatConversationSidebar', () => {
 
     test('falls back to an empty draft for a null title', () => {
       const { result } = renderHook(() =>
-        useChatConversationSidebar({ onDelete: vi.fn(), onRename: vi.fn() }),
+        useChatConversationSidebar(buildOptions()),
       );
       act(() => {
         result.current.startRename({ ...conversation, title: null });
@@ -70,7 +112,7 @@ describe('useChatConversationSidebar', () => {
   describe('cancelRename', () => {
     test('clears the editing id and draft', () => {
       const { result } = renderHook(() =>
-        useChatConversationSidebar({ onDelete: vi.fn(), onRename: vi.fn() }),
+        useChatConversationSidebar(buildOptions()),
       );
       act(() => {
         result.current.startRename(conversation);
@@ -86,7 +128,7 @@ describe('useChatConversationSidebar', () => {
   describe('setDraftTitle', () => {
     test('replaces the draft text', () => {
       const { result } = renderHook(() =>
-        useChatConversationSidebar({ onDelete: vi.fn(), onRename: vi.fn() }),
+        useChatConversationSidebar(buildOptions()),
       );
       act(() => {
         result.current.setDraftTitle('New draft');
@@ -100,7 +142,7 @@ describe('useChatConversationSidebar', () => {
       const user = userEvent.setup();
       const onRename = vi.fn();
       const { result } = renderHook(() =>
-        useChatConversationSidebar({ onDelete: vi.fn(), onRename }),
+        useChatConversationSidebar(buildOptions({ onRename })),
       );
       act(() => {
         result.current.startRename(conversation);
@@ -125,7 +167,7 @@ describe('useChatConversationSidebar', () => {
       const user = userEvent.setup();
       const onRename = vi.fn();
       const { result } = renderHook(() =>
-        useChatConversationSidebar({ onDelete: vi.fn(), onRename }),
+        useChatConversationSidebar(buildOptions({ onRename })),
       );
       act(() => {
         result.current.startRename(conversation);
@@ -149,7 +191,7 @@ describe('useChatConversationSidebar', () => {
       const user = userEvent.setup();
       const onRename = vi.fn();
       const { result } = renderHook(() =>
-        useChatConversationSidebar({ onDelete: vi.fn(), onRename }),
+        useChatConversationSidebar(buildOptions({ onRename })),
       );
       act(() => {
         result.current.startRename(conversation);
@@ -174,7 +216,7 @@ describe('useChatConversationSidebar', () => {
       const user = userEvent.setup();
       const onRename = vi.fn();
       const { result } = renderHook(() =>
-        useChatConversationSidebar({ onDelete: vi.fn(), onRename }),
+        useChatConversationSidebar(buildOptions({ onRename })),
       );
       act(() => {
         result.current.startRename(conversation);
@@ -194,56 +236,92 @@ describe('useChatConversationSidebar', () => {
     });
   });
 
-  describe('delete flow', () => {
-    test('requestDelete queues a pending delete', () => {
-      const { result } = renderHook(() =>
-        useChatConversationSidebar({ onDelete: vi.fn(), onRename: vi.fn() }),
-      );
-      act(() => {
-        result.current.requestDelete('c1');
-      });
-      expect(result.current.pendingDeleteId).toBe('c1');
-    });
-
-    test('confirmDelete invokes onDelete with the pending id and clears it', () => {
+  describe('deleteWithUndo', () => {
+    test('deletes immediately, without a confirm step', () => {
       const onDelete = vi.fn();
       const { result } = renderHook(() =>
-        useChatConversationSidebar({ onDelete, onRename: vi.fn() }),
+        useChatConversationSidebar(buildOptions({ onDelete })),
       );
       act(() => {
-        result.current.requestDelete('c1');
-      });
-      act(() => {
-        result.current.confirmDelete();
+        result.current.deleteWithUndo(conversation);
       });
       expect(onDelete).toHaveBeenCalledWith('c1');
-      expect(result.current.pendingDeleteId).toBeNull();
     });
 
-    test('confirmDelete is a no-op when nothing is pending', () => {
-      const onDelete = vi.fn();
+    test('shows a 5-second toast naming the conversation', () => {
       const { result } = renderHook(() =>
-        useChatConversationSidebar({ onDelete, onRename: vi.fn() }),
+        useChatConversationSidebar(buildOptions()),
       );
       act(() => {
-        result.current.confirmDelete();
+        result.current.deleteWithUndo(conversation);
       });
-      expect(onDelete).not.toHaveBeenCalled();
+      expect(toastMock).toHaveBeenCalledWith(
+        CHAT_CONVERSATION_SIDEBAR_COPY.deletedToast,
+        expect.objectContaining({
+          action: expect.objectContaining({
+            label: CHAT_CONVERSATION_SIDEBAR_COPY.deletedUndo,
+          }),
+          description: 'Existing title',
+          duration: CHAT_CONVERSATION_UNDO_TOAST_DURATION_MS,
+        }),
+      );
+      expect(CHAT_CONVERSATION_UNDO_TOAST_DURATION_MS).toBe(5000);
     });
 
-    test('resetPendingDelete dismisses without deleting', () => {
-      const onDelete = vi.fn();
+    test('falls back to the untitled label for an untitled conversation', () => {
       const { result } = renderHook(() =>
-        useChatConversationSidebar({ onDelete, onRename: vi.fn() }),
+        useChatConversationSidebar(buildOptions()),
       );
       act(() => {
-        result.current.requestDelete('c1');
+        result.current.deleteWithUndo({ ...conversation, title: null });
+      });
+      expect(toastMock).toHaveBeenCalledWith(
+        CHAT_CONVERSATION_SIDEBAR_COPY.deletedToast,
+        expect.objectContaining({
+          description: CHAT_CONVERSATION_SIDEBAR_COPY.untitled,
+        }),
+      );
+    });
+
+    test('Undo restores the deleted conversation', () => {
+      const onRestore = vi.fn();
+      const { result } = renderHook(() =>
+        useChatConversationSidebar(buildOptions({ onRestore })),
+      );
+      act(() => {
+        result.current.deleteWithUndo(conversation);
+      });
+      expect(onRestore).not.toHaveBeenCalled();
+
+      lastToastUndo()();
+
+      expect(onRestore).toHaveBeenCalledWith(conversation);
+    });
+
+    test('abandons an in-flight rename of the deleted conversation', () => {
+      const { result } = renderHook(() =>
+        useChatConversationSidebar(buildOptions()),
+      );
+      act(() => {
+        result.current.startRename(conversation);
       });
       act(() => {
-        result.current.resetPendingDelete();
+        result.current.deleteWithUndo(conversation);
       });
-      expect(result.current.pendingDeleteId).toBeNull();
-      expect(onDelete).not.toHaveBeenCalled();
+      expect(result.current.editingId).toBeNull();
+    });
+
+    test('leaves a rename of a different conversation alone', () => {
+      const { result } = renderHook(() =>
+        useChatConversationSidebar(buildOptions()),
+      );
+      act(() => {
+        result.current.startRename({ ...conversation, id: 'c2' });
+      });
+      act(() => {
+        result.current.deleteWithUndo(conversation);
+      });
+      expect(result.current.editingId).toBe('c2');
     });
   });
 });

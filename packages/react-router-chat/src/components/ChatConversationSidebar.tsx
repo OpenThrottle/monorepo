@@ -11,7 +11,6 @@ import * as React from 'react';
 import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../data/chat-conversation-sidebar.copy';
 import { useChatConversationSidebar } from '../hooks/useChatConversationSidebar';
 import type { AgentConversationListItem } from '../types';
-import { ChatConversationDeleteDialog } from './ChatConversationDeleteDialog';
 import { ChatConversationRow } from './ChatConversationRow';
 
 export interface ChatConversationSidebarProps {
@@ -30,7 +29,7 @@ export interface ChatConversationSidebarProps {
   readonly isLoading?: boolean;
   /** True while a load-more request is in flight — disables the button. */
   readonly isLoadingMore?: boolean;
-  /** Soft-delete a conversation (confirmed via an in-component dialog first). */
+  /** Soft-delete a conversation immediately (an Undo toast follows). */
   readonly onDelete: (conversationId: string) => void;
   /** Fetch the next page; omit to hide the load-more affordance. */
   readonly onLoadMore?: () => void;
@@ -38,6 +37,8 @@ export interface ChatConversationSidebarProps {
   readonly onNewChat: () => void;
   /** Commit an inline rename (only fired with a non-empty, trimmed title). */
   readonly onRename: (conversationId: string, title: string) => void;
+  /** Undo a soft-delete — fired from the post-delete toast's Undo action. */
+  readonly onRestore: (conversation: AgentConversationListItem) => void;
   /** Open a conversation (restore its thread). */
   readonly onSelect: (conversationId: string) => void;
   /**
@@ -51,7 +52,8 @@ export interface ChatConversationSidebarProps {
  * @description Fully-controlled, presentational conversations list for the chat
  * sidebar (home route) and the header switcher. Renders each conversation as a
  * selectable row (title + relative timestamp + active highlight) with inline
- * rename (Enter commits, Escape cancels) and a confirm-guarded soft-delete, plus
+ * rename (Enter commits, Escape cancels) and an immediate soft-delete with a
+ * 5-second Undo toast (no confirm dialog — the delete is reversible), plus
  * a New chat action and an optional Load more affordance. Loading and empty
  * states are handled. The package owns no data or fetching — the consumer
  * supplies the rows and every handler.
@@ -72,6 +74,7 @@ export const ChatConversationSidebar = (
     onLoadMore,
     onNewChat,
     onRename,
+    onRestore,
     onSelect,
     totalCount,
   } = props;
@@ -79,16 +82,13 @@ export const ChatConversationSidebar = (
   // Hooks
   const {
     cancelRename,
-    confirmDelete,
+    deleteWithUndo,
     draftTitle,
     editingId,
     onRenameKeyDown,
-    pendingDeleteId,
-    requestDelete,
-    resetPendingDelete,
     setDraftTitle,
     startRename,
-  } = useChatConversationSidebar({ onDelete, onRename });
+  } = useChatConversationSidebar({ onDelete, onRename, onRestore });
 
   // Setup
   const copy = CHAT_CONVERSATION_SIDEBAR_COPY;
@@ -148,9 +148,9 @@ export const ChatConversationSidebar = (
       isEditing={conversation.id === editingId}
       key={conversation.id}
       onCancelRename={cancelRename}
+      onDelete={() => deleteWithUndo(conversation)}
       onDraftTitleChange={setDraftTitle}
       onRenameKeyDown={(event) => onRenameKeyDown(event, conversation.id)}
-      onRequestDelete={() => requestDelete(conversation.id)}
       onSelect={() => onSelect(conversation.id)}
       onStartRename={() => startRename(conversation)}
     />
@@ -192,12 +192,6 @@ export const ChatConversationSidebar = (
         )}
         {loadMore}
       </ScrollArea>
-
-      <ChatConversationDeleteDialog
-        onConfirm={confirmDelete}
-        onDismiss={resetPendingDelete}
-        open={pendingDeleteId != null}
-      />
     </div>
   );
 };

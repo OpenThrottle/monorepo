@@ -2067,6 +2067,8 @@ export type Mutation = {
   renameSkillTag: SkillTagObject;
   /** Reorder tasks within a plan. Renumbers sortOrder 1000, 2000, … in taskIds order atomically. */
   reorderPlanTasks: Array<TaskObject>;
+  /** Restore a soft-deleted agent conversation (status deleted → active). A conversation in any other status is returned unchanged. */
+  restoreAgentConversation: AgentConversationObject;
   /** Restore a soft-deleted custom prompt */
   restoreCustomPrompt?: Maybe<CustomPromptObject>;
   /** Resume a paused queue so workers pick up jobs again. */
@@ -2561,6 +2563,10 @@ export type MutationRenameSkillTagArgs = {
 
 export type MutationReorderPlanTasksArgs = {
   input: ReorderPlanTasksInput;
+};
+
+export type MutationRestoreAgentConversationArgs = {
+  input: RestoreAgentConversationInput;
 };
 
 export type MutationRestoreCustomPromptArgs = {
@@ -4526,6 +4532,10 @@ export type RepositoryObject = {
   /** OpenThrottle project linked at the repository level. */
   projectId?: Maybe<Scalars['ID']['output']>;
   updatedAt: Scalars['DateTime']['output'];
+};
+
+export type RestoreAgentConversationInput = {
+  conversationId: Scalars['ID']['input'];
 };
 
 export type RetryJobInput = {

@@ -1,6 +1,8 @@
 import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
+import { splitFilePath } from '../utils/fuzzy-match';
+
 export interface ChatMentionPopoverProps {
   /** Index of the highlighted option (keyboard/hover). */
   readonly activeIndex: number;
@@ -49,6 +51,8 @@ export const ChatMentionPopover = (
   // Hooks
 
   // Setup
+  // File name is the label; the folder sits underneath it.
+  const options = results.map((path) => ({ path, ...splitFilePath(path) }));
 
   // Handlers
 
@@ -70,11 +74,12 @@ export const ChatMentionPopover = (
         <div className="text-muted-foreground p-3 text-sm">{emptyLabel}</div>
       ) : (
         <ul aria-label="File mentions" id={listboxId} role="listbox">
-          {results.map((path, index) => (
+          {options.map(({ folder, name, path }, index) => (
             <li
+              aria-label={path}
               aria-selected={index === activeIndex}
               className={cn(
-                'cursor-pointer px-3 py-1.5 text-sm',
+                'flex cursor-pointer flex-col px-3 py-1.5 text-sm',
                 index === activeIndex
                   ? 'bg-accent text-accent-foreground'
                   : 'text-foreground',
@@ -89,7 +94,12 @@ export const ChatMentionPopover = (
               onMouseEnter={() => onHoverOption(index)}
               role="option"
             >
-              {path}
+              <span className="truncate font-medium">{name}</span>
+              {folder === '' ? null : (
+                <span className="text-muted-foreground truncate text-xs">
+                  {folder}
+                </span>
+              )}
             </li>
           ))}
         </ul>

@@ -2,6 +2,7 @@ import type {
   ChatSlashCommand,
   ChatSlashCommandProvider,
 } from '@openthrottle/react-router-chat';
+import { rankFuzzyMatches } from '@openthrottle/react-router-chat';
 import * as React from 'react';
 
 import { MAX_SKILL_SUGGESTIONS } from '~/routing/home/config/composer-suggestions';
@@ -14,8 +15,8 @@ import type { SkillsAutocompleteResponse } from '~/routing/skills/utils/autocomp
  * trigger regardless of the selected model/repository.
  *
  * The full skill list is fetched once from the `/skills/autocomplete` resource
- * route and cached for the session; subsequent keystrokes fuzzy-filter the
- * cached list client-side (by slug + description), so there is no per-keystroke
+ * route and cached for the session; subsequent keystrokes rank the cached list
+ * client-side with `rankFuzzyMatches` (slug + description), so there is no per-keystroke
  * network round-trip. Concurrent first-fetches are de-duplicated. On a deployed
  * app with no checkout the route returns an empty list, so the popover just
  * shows the empty label.
@@ -68,16 +69,16 @@ export const useSkillCommandProvider = (): ChatSlashCommandProvider => {
         query: string,
       ): Promise<readonly ChatSlashCommand[]> => {
         const skills = await loadListing();
-        const trimmed = query.trim().toLowerCase();
-        const matches =
-          trimmed === ''
-            ? skills
-            : skills.filter(
-                (skill) =>
-                  skill.slug.toLowerCase().includes(trimmed) ||
-                  skill.description.toLowerCase().includes(trimmed),
-              );
-        return matches.slice(0, MAX_SKILL_SUGGESTIONS);
+        // Slug hits (fuzzy) outrank description hits (contiguous only).
+        return rankFuzzyMatches(
+          skills,
+          query,
+          (skill) => [
+            { mode: 'fuzzy', text: skill.slug, weight: 1 },
+            { mode: 'substring', text: skill.description, weight: 0.5 },
+          ],
+          MAX_SKILL_SUGGESTIONS,
+        );
       },
     };
   }, []);

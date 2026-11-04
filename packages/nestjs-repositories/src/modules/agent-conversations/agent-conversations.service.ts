@@ -322,6 +322,29 @@ export class AgentConversationsService {
   }
 
   /**
+   * @description Reverses {@link softDeleteConversation}: a `deleted`
+   * conversation goes back to `active`. Any other status is returned unchanged
+   * (no write), so a repeated or stale restore cannot un-archive a conversation.
+   */
+  async restoreConversation(
+    userId: string,
+    conversationId: string,
+  ): Promise<AgentConversation> {
+    const conversation = await this.getConversationForUser(
+      userId,
+      conversationId,
+    );
+
+    if (conversation.status !== AGENT_CONVERSATION_STATUSES.deleted) {
+      return conversation;
+    }
+
+    conversation.status = AGENT_CONVERSATION_STATUSES.active;
+
+    return this.conversationRepository.save(conversation);
+  }
+
+  /**
    * @description Returns a conversation when owned by the user; otherwise throws 404.
    */
   async getConversationForUser(

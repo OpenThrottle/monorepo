@@ -1,3 +1,9 @@
+import type { ChatToolCategory } from './data/chat-tool-categories';
+import {
+  CHAT_TOOL_CATEGORY_BY_NAME,
+  CHAT_TOOL_CATEGORY_ORDER,
+} from './data/chat-tool-categories';
+import { CHAT_TOOL_SUMMARY_COPY } from './data/data.copy';
 import type { ChatTurnEvent, ChatTurnToolEvent } from './types';
 import { ChatToolStatus } from './types';
 
@@ -84,6 +90,66 @@ export const activeToolOf = (
     .at(-1);
 
   return lastRunning ?? tools.at(-1) ?? null;
+};
+
+/**
+ * The summary category a tool name counts under (see
+ * {@link CHAT_TOOL_CATEGORY_BY_NAME}); names are matched case-insensitively,
+ * with `-` treated as `_`. Unknown names are `other`.
+ */
+const toolCategoryOf = (name: string): ChatToolCategory =>
+  CHAT_TOOL_CATEGORY_BY_NAME.get(
+    name.trim().toLowerCase().replaceAll('-', '_'),
+  ) ?? 'other';
+
+const capitalize = (text: string): string =>
+  text.charAt(0).toUpperCase() + text.slice(1);
+
+const joinClauses = (clauses: readonly string[]): string => {
+  const { conjunction, separator } = CHAT_TOOL_SUMMARY_COPY;
+  const last = clauses.at(-1) ?? '';
+  const head = clauses.slice(0, -1);
+
+  return head.length === 0
+    ? last
+    : `${head.join(separator)} ${conjunction} ${last}`;
+};
+
+/**
+ * A sentence describing what a folded tool group did, e.g. "Ran 3 commands
+ * and edited 2 files". Counts tools per {@link toolCategoryOf} category and
+ * reads them in {@link CHAT_TOOL_CATEGORY_ORDER}; when no tool is
+ * categorized the sentence is just "Used N tools". Wording lives in
+ * {@link CHAT_TOOL_SUMMARY_COPY}.
+ *
+ * @public
+ */
+export const summarizeToolGroup = (
+  tools: readonly ChatTurnToolEvent[],
+): string => {
+  const counts = new Map<ChatToolCategory, number>();
+  for (const tool of tools) {
+    const category = toolCategoryOf(tool.name);
+    counts.set(category, (counts.get(category) ?? 0) + 1);
+  }
+  const onlyOther = counts.size === 1 && counts.has('other');
+
+  const clauses = CHAT_TOOL_CATEGORY_ORDER.flatMap((category) => {
+    const count = counts.get(category) ?? 0;
+    if (count === 0) {
+      return [];
+    }
+    const templates = onlyOther
+      ? CHAT_TOOL_SUMMARY_COPY.otherOnly
+      : CHAT_TOOL_SUMMARY_COPY.clauses[category];
+    const template = count === 1 ? templates.one : templates.many;
+
+    return [template.replace(CHAT_TOOL_SUMMARY_COPY.countToken, String(count))];
+  });
+
+  return clauses.length === 0
+    ? CHAT_TOOL_SUMMARY_COPY.empty
+    : capitalize(joinClauses(clauses));
 };
 
 /**

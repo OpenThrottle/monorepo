@@ -10,6 +10,7 @@ import {
   handleListAgentConversationsIntent,
   handleLoadAgentConversationMessagesIntent,
   handleRenameAgentConversationIntent,
+  handleRestoreAgentConversationIntent,
 } from '~/global/utils/utils.agents-chat';
 
 /** Union of every JSON shape this route's action can return, keyed by intent. */
@@ -25,7 +26,7 @@ export type AgentConversationsActionResult =
  * route's sidebar and the globally-mounted header switcher post here (a root
  * action is not reachable from the `_index` leaf). Dispatches by `intent`:
  * `list` (paginated), `load-messages` (restore a thread), `rename`, `delete`
- * (soft-delete). All auth + validation is handled by the shared `handle*`
+ * (soft-delete), `restore` (undo a soft-delete). All auth + validation is handled by the shared `handle*`
  * helpers in utils.agents-chat.
  */
 export const action = async (
@@ -48,6 +49,10 @@ export const action = async (
 
   if (intent === 'delete') {
     return handleDeleteAgentConversationIntent(args.request, formData);
+  }
+
+  if (intent === 'restore') {
+    return handleRestoreAgentConversationIntent(args.request, formData);
   }
 
   return null;

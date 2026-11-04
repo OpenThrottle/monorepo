@@ -10,6 +10,11 @@ export type {
 } from './useChatComposerMentions';
 export { useChatComposerMentions } from './useChatComposerMentions';
 export type {
+  UseChatComposerPromptRecallOptions,
+  UseChatComposerPromptRecallResult,
+} from './useChatComposerPromptRecall';
+export { useChatComposerPromptRecall } from './useChatComposerPromptRecall';
+export type {
   UseChatComposerSlashCommandsOptions,
   UseChatComposerSlashCommandsResult,
 } from './useChatComposerSlashCommands';

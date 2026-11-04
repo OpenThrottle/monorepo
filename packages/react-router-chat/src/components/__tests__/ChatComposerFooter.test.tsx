@@ -15,6 +15,7 @@ const renderFooter = (
       disabled={false}
       draft=""
       isStreaming={false}
+      showContextMeter={false}
       stopLabel="Stop"
       submitLabel="Send"
       {...overrides}
@@ -87,6 +88,33 @@ describe('ChatComposerFooter Component', () => {
     expect(component.getByTestId('ChatUsageCounter')).toHaveTextContent(
       '1.2k tokens',
     );
+  });
+
+  describe('context meter', () => {
+    const contextUsage = {
+      contextTokens: 50_000,
+      contextWindowTokens: 200_000,
+      totalTokens: 1200,
+    };
+
+    test('stays hidden until the consumer opts in', () => {
+      const component = renderFooter({ sessionUsage: contextUsage });
+
+      expect(component.queryByRole('meter')).not.toBeInTheDocument();
+    });
+
+    test('renders beside the counter when opted in', () => {
+      const component = renderFooter({
+        sessionUsage: contextUsage,
+        showContextMeter: true,
+      });
+
+      expect(component.getByRole('meter')).toHaveAttribute(
+        'aria-valuenow',
+        '25',
+      );
+      expect(component.getByTestId('ChatUsageCounter')).toBeInTheDocument();
+    });
   });
 
   test('Send and Stop grow to 44px on coarse pointers', () => {

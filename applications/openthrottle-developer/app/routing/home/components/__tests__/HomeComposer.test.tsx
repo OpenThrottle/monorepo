@@ -25,6 +25,7 @@ const buildConversationList = (): UseConversationListResult => ({
   refresh: vi.fn(),
   remove: vi.fn(),
   rename: vi.fn(),
+  restore: vi.fn(),
   totalCount: 0,
 });
 
@@ -85,6 +86,12 @@ describe('HomeComposer Component', () => {
 
   test('renders the composer textbox', () => {
     expect(component.getByRole('textbox')).toBeInTheDocument();
+  });
+
+  test('renders no attach button until attachments are wired end to end', () => {
+    expect(
+      component.queryByTestId('ChatComposerToolbar-attach'),
+    ).not.toBeInTheDocument();
   });
 
   test('shows the no-local-models message when no models are discovered', () => {

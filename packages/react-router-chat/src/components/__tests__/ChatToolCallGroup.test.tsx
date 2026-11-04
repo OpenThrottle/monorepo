@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
+import { summarizeToolGroup } from '../../turn-tool-groups';
 import type { ChatTurnToolEvent } from '../../types';
 import type { ChatToolCallGroupProps } from '../ChatToolCallGroup';
 import { ChatToolCallGroup } from '../ChatToolCallGroup';
@@ -26,49 +27,49 @@ const renderGroup = (props: ChatToolCallGroupProps): RenderResult =>
   render(<ChatToolCallGroup {...props} />);
 
 describe('ChatToolCallGroup Component', () => {
-  test('summarizes the count and the active (running) step in the header', () => {
-    const component = renderGroup({
-      tools: [
-        tool({ name: 'getMcpTools', sortOrder: 0, status: 'succeeded' }),
-        tool({ name: 'shell', sortOrder: 1, status: 'running' }),
-      ],
-    });
+  test('summarizes the group and the active (running) step in the header', () => {
+    const tools = [
+      tool({ name: 'getMcpTools', sortOrder: 0, status: 'succeeded' }),
+      tool({ name: 'shell', sortOrder: 1, status: 'running' }),
+    ];
+    const component = renderGroup({ tools });
 
     // Assert against the header (trigger) specifically — it is the only thing
     // rendered while the group is collapsed.
     const trigger = component.getByTestId('ChatToolCallGroup-trigger');
     expect(trigger).toHaveTextContent('shell');
-    expect(trigger).toHaveTextContent('· 2 actions');
+    expect(
+      component.getByTestId('ChatToolCallGroup-summary'),
+    ).toHaveTextContent(summarizeToolGroup(tools));
     // aggregate is running while a member is still running
     expect(trigger).toHaveTextContent('running');
   });
 
-  test('the collapsed header names the active tool beside the count', () => {
+  test('the collapsed header names the active tool beside the summary', () => {
     // The exact spot that regressed to `name · 10 actions`: ten real reads whose
     // header carried no information at all.
-    const component = renderGroup({
-      tools: Array.from({ length: 10 }, (_unused, index) =>
-        tool({ name: 'view_file', sortOrder: index, status: 'succeeded' }),
-      ),
-    });
+    const tools = Array.from({ length: 10 }, (_unused, index) =>
+      tool({ name: 'view_file', sortOrder: index, status: 'succeeded' }),
+    );
+    const component = renderGroup({ tools });
 
     const trigger = component.getByTestId('ChatToolCallGroup-trigger');
     expect(trigger).toHaveAttribute('aria-expanded', 'false');
     expect(trigger).toHaveTextContent('view_file');
-    expect(trigger).toHaveTextContent('· 10 actions');
+    expect(trigger).toHaveTextContent(summarizeToolGroup(tools));
+    expect(trigger).not.toHaveTextContent(/\bactions\b/);
     expect(trigger).not.toHaveTextContent(/\bname\b/);
   });
 
   test('truncates a long active tool name in the header', () => {
-    const component = renderGroup({
-      tools: [
-        tool({
-          name: 'mcp__openthrottle-mcp__get_remaining_tasks_for_plan',
-          sortOrder: 0,
-          status: 'succeeded',
-        }),
-      ],
-    });
+    const tools = [
+      tool({
+        name: 'mcp__openthrottle-mcp__get_remaining_tasks_for_plan',
+        sortOrder: 0,
+        status: 'succeeded',
+      }),
+    ];
+    const component = renderGroup({ tools });
 
     expect(
       component.getByText(
@@ -76,8 +77,8 @@ describe('ChatToolCallGroup Component', () => {
       ),
     ).toHaveClass('truncate');
     expect(
-      component.getByTestId('ChatToolCallGroup-trigger'),
-    ).toHaveTextContent('· 1 actions');
+      component.getByTestId('ChatToolCallGroup-summary'),
+    ).toHaveTextContent(summarizeToolGroup(tools));
   });
 
   test('a completed group shows a succeeded pill and the last step', () => {

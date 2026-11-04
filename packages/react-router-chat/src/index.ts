@@ -6,6 +6,7 @@ export * from './components/ChatCheckoutSelectorRow';
 export * from './components/ChatCheckoutSelectorTrigger';
 export * from './components/ChatComposer';
 export * from './components/ChatComposerToolbar';
+export * from './components/ChatContextMeter';
 export * from './components/ChatConversationSheet';
 export * from './components/ChatConversationSidebar';
 export * from './components/ChatDialog';

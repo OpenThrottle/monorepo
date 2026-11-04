@@ -4,9 +4,10 @@ import {
   type ChatModelOption,
   type ChatPersonaOption,
 } from '@openthrottle/react-router-chat';
-import { CHAT_TOOLBAR_CONTEXT_SOURCES } from '@openthrottle/react-router-chat-state';
+import { chatContextMeterAtom } from '@openthrottle/react-router-chat-state';
 import { InlineErrors } from '@openthrottle/react-router-shadcn';
 import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
+import { useAtomValue } from 'jotai';
 import * as React from 'react';
 import { useNavigate } from 'react-router';
 
@@ -42,6 +43,7 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
 
   // Hooks
   const navigate = useNavigate();
+  const showContextMeter = useAtomValue(chatContextMeterAtom);
   const {
     capabilities,
     checkouts,
@@ -59,6 +61,7 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
     persist,
     personaId,
     personas: effectivePersonas,
+    promptHistory,
     reasoning,
     repositoryIds,
     serviceTier,
@@ -92,15 +95,11 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
       <ChatComposerToolbar
         capabilities={capabilities}
         checkouts={checkouts}
-        contextSources={
-          FEATURE_BETA_PREVIEW ? CHAT_TOOLBAR_CONTEXT_SOURCES : undefined
-        }
         micState={FEATURE_BETA_PREVIEW ? voice.micState : undefined}
         mode={mode}
         modelGroups={modelGroups}
         modelId={modelId}
         models={models}
-        onAddContext={FEATURE_BETA_PREVIEW ? () => {} : undefined}
         onCheckoutChange={setRepositoryId}
         onCheckoutsChange={setRepositoryIds}
         onMicToggle={
@@ -153,8 +152,10 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
         onDraftChange={setDraft}
         onStop={turn.onStop}
         onSubmit={onSubmit}
+        promptHistory={promptHistory}
         readOnly={voice.isDraftFrozen}
         sessionUsage={turn.sessionUsage}
+        showContextMeter={showContextMeter}
         slashCommandProvider={slashCommandProvider}
         textAreaRef={composerTextAreaRef}
         toolbar={toolbar}

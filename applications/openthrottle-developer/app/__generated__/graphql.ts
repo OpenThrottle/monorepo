@@ -2067,6 +2067,8 @@ export type Mutation = {
   renameSkillTag: SkillTagObject;
   /** Reorder tasks within a plan. Renumbers sortOrder 1000, 2000, … in taskIds order atomically. */
   reorderPlanTasks: Array<TaskObject>;
+  /** Restore a soft-deleted agent conversation (status deleted → active). A conversation in any other status is returned unchanged. */
+  restoreAgentConversation: AgentConversationObject;
   /** Restore a soft-deleted custom prompt */
   restoreCustomPrompt?: Maybe<CustomPromptObject>;
   /** Resume a paused queue so workers pick up jobs again. */
@@ -2561,6 +2563,10 @@ export type MutationRenameSkillTagArgs = {
 
 export type MutationReorderPlanTasksArgs = {
   input: ReorderPlanTasksInput;
+};
+
+export type MutationRestoreAgentConversationArgs = {
+  input: RestoreAgentConversationInput;
 };
 
 export type MutationRestoreCustomPromptArgs = {
@@ -4526,6 +4532,10 @@ export type RepositoryObject = {
   /** OpenThrottle project linked at the repository level. */
   projectId?: Maybe<Scalars['ID']['output']>;
   updatedAt: Scalars['DateTime']['output'];
+};
+
+export type RestoreAgentConversationInput = {
+  conversationId: Scalars['ID']['input'];
 };
 
 export type RetryJobInput = {
@@ -6646,6 +6656,21 @@ export type DeleteAgentConversationMutationVariables = Exact<{
 export type DeleteAgentConversationMutation = {
   __typename?: 'Mutation';
   deleteAgentConversation: {
+    __typename?: 'AgentConversationObject';
+    id: string;
+    status: string;
+    title?: string | null;
+    updatedAt: any;
+  };
+};
+
+export type RestoreAgentConversationMutationVariables = Exact<{
+  input: RestoreAgentConversationInput;
+}>;
+
+export type RestoreAgentConversationMutation = {
+  __typename?: 'Mutation';
+  restoreAgentConversation: {
     __typename?: 'AgentConversationObject';
     id: string;
     status: string;
@@ -15406,6 +15431,63 @@ export const DeleteAgentConversationDocument = {
 } as unknown as DocumentNode<
   DeleteAgentConversationMutation,
   DeleteAgentConversationMutationVariables
+>;
+export const RestoreAgentConversationDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'restoreAgentConversation' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'RestoreAgentConversationInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'restoreAgentConversation' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RestoreAgentConversationMutation,
+  RestoreAgentConversationMutationVariables
 >;
 export const UpdateAgentConversationTitleDocument = {
   kind: 'Document',

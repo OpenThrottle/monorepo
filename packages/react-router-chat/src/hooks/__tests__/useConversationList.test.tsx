@@ -20,6 +20,28 @@ function conversationsPage(
   }));
 }
 
+/** Newest-activity-first, as the server lists them. */
+const DATED_CONVERSATIONS = [
+  {
+    id: 'conv-0',
+    status: 'active',
+    title: 'Newest',
+    updatedAt: '2026-08-03T00:00:00.000Z',
+  },
+  {
+    id: 'conv-1',
+    status: 'active',
+    title: 'Middle',
+    updatedAt: '2026-08-02T00:00:00.000Z',
+  },
+  {
+    id: 'conv-2',
+    status: 'active',
+    title: 'Oldest',
+    updatedAt: '2026-08-01T00:00:00.000Z',
+  },
+] as const;
+
 interface HarnessProps {
   readonly onRender: (result: UseConversationListResult) => void;
 }
@@ -52,6 +74,20 @@ function Harness({ onRender }: HarnessProps): React.ReactElement {
         type="button"
       >
         Remove
+      </button>
+      <button
+        data-testid="remove-middle"
+        onClick={() => list.remove(DATED_CONVERSATIONS[1].id)}
+        type="button"
+      >
+        Remove middle
+      </button>
+      <button
+        data-testid="restore-middle"
+        onClick={() => list.restore(DATED_CONVERSATIONS[1])}
+        type="button"
+      >
+        Restore middle
       </button>
     </div>
   );
@@ -204,5 +240,66 @@ describe('useConversationList', () => {
       expect(latest.current?.conversations).toHaveLength(0);
     });
     expect(latest.current?.totalCount).toBe(0);
+  });
+
+  test('restore re-lists a removed conversation in its date slot and persists it', async () => {
+    const intents: string[] = [];
+    const { getByTestId, latest } = renderConversationList(
+      async ({ request }) => {
+        const body = await request.formData();
+        const intent = String(body.get('intent'));
+        intents.push(`${intent}:${String(body.get('conversationId'))}`);
+        if (intent === 'list') {
+          return { conversations: DATED_CONVERSATIONS, totalCount: 3 };
+        }
+        return { ok: true };
+      },
+    );
+
+    await waitFor(() => {
+      expect(latest.current?.conversations).toHaveLength(3);
+    });
+
+    const user = userEvent.setup();
+    await user.click(getByTestId('remove-middle'));
+    await waitFor(() => {
+      expect(latest.current?.conversations).toHaveLength(2);
+    });
+
+    await user.click(getByTestId('restore-middle'));
+
+    await waitFor(() => {
+      expect(latest.current?.conversations.map((c) => c.id)).toEqual([
+        'conv-0',
+        'conv-1',
+        'conv-2',
+      ]);
+    });
+    expect(latest.current?.totalCount).toBe(3);
+    await waitFor(() => {
+      expect(intents).toContain('restore:conv-1');
+    });
+  });
+
+  test('restore is a no-op on the list when the conversation is already listed', async () => {
+    const { getByTestId, latest } = renderConversationList(
+      async ({ request }) => {
+        const body = await request.formData();
+        if (body.get('intent') === 'list') {
+          return { conversations: DATED_CONVERSATIONS, totalCount: 3 };
+        }
+        return { ok: true };
+      },
+    );
+
+    await waitFor(() => {
+      expect(latest.current?.conversations).toHaveLength(3);
+    });
+
+    const user = userEvent.setup();
+    await user.click(getByTestId('restore-middle'));
+
+    expect(latest.current?.conversations).toHaveLength(3);
+    expect(latest.current?.totalCount).toBe(3);
   });
 });

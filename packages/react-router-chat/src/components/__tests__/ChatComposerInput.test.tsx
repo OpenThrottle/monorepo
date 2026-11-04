@@ -113,7 +113,9 @@ describe('ChatComposerInput Component', () => {
     });
     const component = renderInput({ mentions });
 
-    expect(component.getByText('src/app/root.tsx')).toBeInTheDocument();
+    expect(
+      component.getByRole('option', { name: 'src/app/root.tsx' }),
+    ).toBeInTheDocument();
   });
 
   test('renders the slash-command popover when slash.popoverOpen is true', () => {

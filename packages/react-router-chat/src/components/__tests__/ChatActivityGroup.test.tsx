@@ -167,7 +167,7 @@ describe('ChatActivityGroup Component', () => {
     await user.click(component.getByTestId('ChatActivityGroup-trigger'));
 
     const nested = component.getByTestId('ChatToolCallGroup-trigger');
-    expect(nested).toHaveTextContent('· 2 actions');
+    expect(component.getByTestId('ChatToolCallGroup-summary')).toBeVisible();
     expect(nested).toHaveAttribute('aria-expanded', 'false');
   });
 

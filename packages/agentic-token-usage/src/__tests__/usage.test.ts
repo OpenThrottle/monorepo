@@ -27,6 +27,8 @@ const BACKEND_FIXTURES: Record<
     expected: {
       cacheReadTokens: 900,
       cacheWriteTokens: 300,
+      contextTokens: 1640,
+      contextWindowTokens: 200_000,
       costUsd: 0.042,
       inputTokens: 1200,
       model: 'claude-opus-4-8',
@@ -34,7 +36,10 @@ const BACKEND_FIXTURES: Record<
       totalTokens: 1540,
     },
     metadata: {
-      modelUsage: { 'claude-opus-4-8': { inputTokens: 1200 } },
+      contextTokens: 1640,
+      modelUsage: {
+        'claude-opus-4-8': { contextWindow: 200_000, inputTokens: 1200 },
+      },
       result: 'done',
       totalCostUsd: 0.042,
       usage: {
@@ -184,6 +189,45 @@ describe('normalizeUsage — edge cases', () => {
       inputTokens: 100,
       totalTokens: 100,
     });
+  });
+
+  it('takes the largest per-model context window and ignores invalid ones', () => {
+    expect(
+      normalizeUsage({
+        modelUsage: {
+          'claude-haiku': { contextWindow: 100_000 },
+          'claude-opus': { contextWindow: 200_000 },
+          garbage: { contextWindow: 'big' },
+          zero: { contextWindow: 0 },
+        },
+      }),
+    ).toEqual({ contextWindowTokens: 200_000, model: 'claude-haiku' });
+  });
+
+  it('prefers an explicit top-level context window over modelUsage', () => {
+    expect(
+      normalizeUsage({
+        contextWindow: 128_000,
+        modelUsage: { m: { contextWindow: 200_000 } },
+      }).contextWindowTokens,
+    ).toBe(128_000);
+  });
+});
+
+describe('sumUsage — context snapshot', () => {
+  it('keeps the latest context report rather than adding them', () => {
+    expect(
+      sumUsage(
+        { contextTokens: 50_000, contextWindowTokens: 200_000 },
+        { contextTokens: 80_000 },
+      ),
+    ).toEqual({ contextTokens: 80_000, contextWindowTokens: 200_000 });
+  });
+
+  it('does not count context fields as usage', () => {
+    expect(hasUsageCounts({ contextTokens: 10, contextWindowTokens: 20 })).toBe(
+      false,
+    );
   });
 });
 

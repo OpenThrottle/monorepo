@@ -25,9 +25,9 @@ const renderRow = (
       isActive={false}
       isEditing={false}
       onCancelRename={vi.fn()}
+      onDelete={vi.fn()}
       onDraftTitleChange={vi.fn()}
       onRenameKeyDown={vi.fn()}
-      onRequestDelete={vi.fn()}
       onSelect={vi.fn()}
       onStartRename={vi.fn()}
       {...overrides}
@@ -73,16 +73,16 @@ describe('ChatConversationRow', () => {
     expect(onStartRename).toHaveBeenCalledTimes(1);
   });
 
-  test('calls onRequestDelete from the delete button', async () => {
-    const onRequestDelete = vi.fn();
-    const component = renderRow({ onRequestDelete });
+  test('calls onDelete from the delete button', async () => {
+    const onDelete = vi.fn();
+    const component = renderRow({ onDelete });
     const user = userEvent.setup();
 
     await user.click(
       component.getByTestId('ChatConversationSidebar-delete-conv-1'),
     );
 
-    expect(onRequestDelete).toHaveBeenCalledTimes(1);
+    expect(onDelete).toHaveBeenCalledTimes(1);
   });
 
   describe('rename/delete controls on touch vs hover', () => {

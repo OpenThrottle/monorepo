@@ -50,8 +50,24 @@ describe('ChatMentionPopover', () => {
 
     expect(component.getByRole('listbox')).toBeInTheDocument();
     expect(component.getAllByRole('option')).toHaveLength(2);
-    expect(component.getByText('src/a.ts')).toBeInTheDocument();
-    expect(component.getByText('src/b.ts')).toBeInTheDocument();
+    expect(
+      component.getByRole('option', { name: 'src/a.ts' }),
+    ).toBeInTheDocument();
+    expect(
+      component.getByRole('option', { name: 'src/b.ts' }),
+    ).toBeInTheDocument();
+  });
+
+  test('labels each option with the file name and shows the folder under it', () => {
+    const component = renderPopover({
+      results: ['src/app/root.tsx', 'README.md'],
+    });
+
+    const [nested, rootLevel] = component.getAllByRole('option');
+    expect(nested?.children[0]).toHaveTextContent('root.tsx');
+    expect(nested?.children[1]).toHaveTextContent('src/app');
+    expect(rootLevel?.children).toHaveLength(1);
+    expect(rootLevel).toHaveTextContent('README.md');
   });
 
   test('marks the active option as selected', () => {
@@ -67,7 +83,7 @@ describe('ChatMentionPopover', () => {
     const component = renderPopover({ onHoverOption });
     const user = userEvent.setup();
 
-    await user.hover(component.getByText('src/b.ts'));
+    await user.hover(component.getByRole('option', { name: 'src/b.ts' }));
 
     expect(onHoverOption).toHaveBeenCalledWith(1);
   });
@@ -77,7 +93,7 @@ describe('ChatMentionPopover', () => {
     const component = renderPopover({ onSelectOption });
     const user = userEvent.setup();
 
-    await user.click(component.getByText('src/a.ts'));
+    await user.click(component.getByRole('option', { name: 'src/a.ts' }));
 
     expect(onSelectOption).toHaveBeenCalledWith('src/a.ts');
   });

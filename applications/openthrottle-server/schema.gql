@@ -5446,6 +5446,11 @@ type Mutation {
   """
   deleteAgentConversation(input: DeleteAgentConversationInput!): AgentConversationObject!
 
+  """
+  Restore a soft-deleted agent conversation (status deleted → active). A conversation in any other status is returned unchanged.
+  """
+  restoreAgentConversation(input: RestoreAgentConversationInput!): AgentConversationObject!
+
   """Update the title on an owned agent conversation."""
   updateAgentConversationTitle(input: UpdateAgentConversationTitleInput!): AgentConversationObject!
 
@@ -6137,6 +6142,10 @@ input ArchiveAgentConversationInput {
 }
 
 input DeleteAgentConversationInput {
+  conversationId: ID!
+}
+
+input RestoreAgentConversationInput {
   conversationId: ID!
 }
 

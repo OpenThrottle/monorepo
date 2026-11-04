@@ -11,7 +11,7 @@ import type {
 
 /**
  * @description Shared persisted-conversation CRUD for the agentic chat sidebar /
- * switcher — list, load-messages, rename, soft-delete — behind the
+ * switcher — list, load-messages, rename, soft-delete, restore — behind the
  * `/resources/agent-conversations` resource route in both apps. Single-sourced
  * here (each app injects only its generated documents) so the developer and
  * admin copies cannot drift. This is the CRUD half of the old `utils.agents-chat`;
@@ -132,6 +132,10 @@ export interface AgentConversationsDocuments {
     },
     { input: { limit?: number; offset?: number; status?: string } }
   >;
+  readonly restoreDocument: TypedDocumentNode<
+    { restoreAgentConversation: AgentConversationRow },
+    { input: { conversationId: string } }
+  >;
   readonly updateTitleDocument: TypedDocumentNode<
     { updateAgentConversationTitle: AgentConversationRow },
     { input: { conversationId: string; title: string } }
@@ -169,6 +173,10 @@ export interface AgentConversationsApi {
     formData: FormData,
   ): Promise<LoadAgentConversationMessagesResult>;
   handleRenameAgentConversationIntent(
+    request: Request,
+    formData: FormData,
+  ): Promise<MutateAgentConversationResult>;
+  handleRestoreAgentConversationIntent(
     request: Request,
     formData: FormData,
   ): Promise<MutateAgentConversationResult>;
@@ -263,6 +271,21 @@ export function createAgentConversationsApi(
 
     return emptyMutateAgentConversationResult({
       conversation: toAgentConversationListItem(data.deleteAgentConversation),
+    });
+  };
+
+  const callRestoreAgentConversation = async (
+    request: Request,
+    params: { conversationId: string },
+  ): Promise<MutateAgentConversationResult> => {
+    const data = await executeGraphqlWithAuth(
+      request,
+      documents.restoreDocument,
+      { input: { conversationId: params.conversationId } },
+    );
+
+    return emptyMutateAgentConversationResult({
+      conversation: toAgentConversationListItem(data.restoreAgentConversation),
     });
   };
 
@@ -374,6 +397,30 @@ export function createAgentConversationsApi(
     }
   };
 
+  const handleRestoreAgentConversationIntent = async (
+    request: Request,
+    formData: FormData,
+  ): Promise<MutateAgentConversationResult> => {
+    const conversationId = trimStringFormField(formData.get('conversationId'));
+
+    if (conversationId == null) {
+      return emptyMutateAgentConversationResult({
+        errorMessage: 'conversationId is required',
+      });
+    }
+
+    try {
+      return await callRestoreAgentConversation(request, { conversationId });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Failed to restore conversation';
+
+      return emptyMutateAgentConversationResult({ errorMessage });
+    }
+  };
+
   return {
     callDeleteAgentConversation,
     callListAgentConversations,
@@ -383,5 +430,6 @@ export function createAgentConversationsApi(
     handleListAgentConversationsIntent,
     handleLoadAgentConversationMessagesIntent,
     handleRenameAgentConversationIntent,
+    handleRestoreAgentConversationIntent,
   };
 }
