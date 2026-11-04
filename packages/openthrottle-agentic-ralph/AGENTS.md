@@ -45,6 +45,27 @@ see [tools/AGENTS.md](../../tools/AGENTS.md)).
   `getServerHealth` preflight. Never open a Postgres connection or spawn the agent CLI from here.
   The host-owned plan-end finalize step (push + PR via injectable `runCommand`) is the deliberate
   exception — see `src/utils/finalize-plan-run.ts`.
+- **PR draft hand-off (agent drafts, host publishes).** On its final iteration the agent runs the
+  `github-pull-request` skill in draft-only mode. The orchestrator marks that iteration explicitly:
+  when the task it hands the agent is the plan's only runnable one, it appends
+  `FINAL_ITERATION_PROMPT_LINE` (`OT_FINAL_ITERATION=1: …`) to the prompt (`orchestrator.ts`; plan
+  mode per iteration, task mode from the state load). The agent can't infer this on its own,
+  because completions are applied by the host after it exits. That mode writes `title.txt` (a one-line
+  conventional title) and `body.md` (UTF-8, ending in the `Plan-Id:`/`Task-Id:` trailer) into
+  `OT_PR_DRAFT_DIR`, and it never runs `gh` or `git push`. When `runCommand` is wired, the
+  orchestrator resolves `<worktree git dir>/ot-pr-draft` (`git rev-parse --absolute-git-dir`, the
+  skill's own default) once at run start, deletes any stale draft there, and passes it to every
+  iteration as `env.OT_PR_DRAFT_DIR` (merged over `process.env` by the drivers engine) and to
+  finalize as `draftDir`. That path is untracked and local to each worktree. Finalize treats the
+  draft as untrusted (`plan-run-pr-draft.ts`): it checks the conventional title and the absence of
+  template `**TODO:**` text, replaces every `Plan-Id:`/`Task-Id:` line with the OT footer set, wraps
+  the body in `<!-- ot:plan-run-body -->` markers plus a sha256 digest line, and runs
+  `check-pr-attribution.sh`. If a check fails it falls back to `plan-run-pr-body.ts`; either way a
+  plan_output line names the source. On an existing PR it refreshes title + body (`gh pr edit`, REST
+  `PATCH` fallback) only when `classifyPlanRunPrBody` says `empty` or `host`; a missing marker, text
+  outside the markers, or a digest mismatch (an edit inside them) means `edited`, and the body is
+  left alone. The contract lives in
+  [`skills/github-pull-request/SKILL.md` § Draft-only (orchestrator) mode](../../skills/github-pull-request/SKILL.md#draft-only-orchestrator-mode).
 - Config precedence is enqueue/GraphQL tuning → env → `.workflow-ralph.json` → built-ins; GraphQL
   URL and auth tokens are **env-only**, never read from the defaults file (`src/utils/context.ts`).
 

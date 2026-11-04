@@ -1,14 +1,36 @@
-import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { AppendPlanOutputDocument } from '../__generated__/graphql.ts';
+import {
+  AppendPlanOutputDocument,
+  GetPlanDocument,
+  GetTasksByPlanIdDocument,
+} from '../__generated__/graphql.ts';
 import type {
   WorkflowExecuteGraphqlV2,
+  WorkflowRalphCommandResult,
   WorkflowRalphCommandRunner,
   WorkflowRalphIterationOnChunk,
 } from '../contract/ralph-orchestrator-deps.ts';
 import type { WorkflowFinishedReason, WorkflowRunResult } from '../types.ts';
+import type { PlanRunPrPlan, PlanRunPrTask } from './plan-run-pr-body.ts';
+import {
+  buildPlanRunPrBody,
+  buildPlanRunPrFooter,
+  classifyPlanRunPrBody,
+  parseOnelineLog,
+  parseTaskIdTrailers,
+  PR_TEMPLATE_FALLBACK,
+  resolvePlanRunPrTitle,
+  selectFooterTaskIds,
+} from './plan-run-pr-body.ts';
+import {
+  PLAN_RUN_PR_DRAFT_DIR_NAME,
+  PLAN_RUN_PR_DRAFT_FILES,
+  validatePlanRunPrDraft,
+} from './plan-run-pr-draft.ts';
+import { sortTasksByPlanListOrder } from './plan-task-list-order.ts';
 
 /** Finished reasons that trigger the host-owned push + PR finalize step. */
 const FINALIZE_REASONS = [
@@ -25,6 +47,11 @@ const isFinalizePriorReason = (reason: string): reason is FinalizePriorReason =>
 export interface FinalizePlanRunParams {
   readonly baseBranch: string;
   readonly cwd: string;
+  /**
+   * @description Where the agent wrote its PR draft (`OT_PR_DRAFT_DIR`). `undefined` resolves the
+   * skill default, `<absolute git dir>/ot-pr-draft`.
+   */
+  readonly draftDir: string | undefined;
   readonly executeGraphqlV2: WorkflowExecuteGraphqlV2;
   readonly onChunk: WorkflowRalphIterationOnChunk | undefined;
   readonly planId: string;
@@ -179,86 +206,324 @@ const findExistingPrNumber = async (params: {
 };
 
 /**
- * @description Builds a conventional-commit PR title from the branch tip subject, falling back to a
- * plan-scoped default when git log is empty.
+ * @description The ref the branch is compared against. Fetches `origin/<base>` first because a
+ * stale local base widens `<base>..HEAD` with commits that already landed. Falls back to the local
+ * base when the remote ref can't be resolved (offline host, no `origin`).
  */
-const resolvePrTitle = async (params: {
+const resolveBaseRef = async (params: {
+  readonly baseBranch: string;
   readonly cwd: string;
-  readonly planId: string;
   readonly runCommand: WorkflowRalphCommandRunner;
 }): Promise<string> => {
-  const { cwd, planId, runCommand } = params;
-  const tip = await runGit(runCommand, cwd, ['log', '-1', '--format=%s']);
-  const subject = tip.exitCode === 0 ? tip.stdout.trim() : '';
+  const { baseBranch, cwd, runCommand } = params;
+  // Best-effort: a failed fetch still leaves whatever origin/<base> the host already has.
+  await runGit(runCommand, cwd, ['fetch', 'origin', baseBranch]);
+  const remote = await runGit(runCommand, cwd, [
+    'rev-parse',
+    '--verify',
+    '--quiet',
+    `refs/remotes/origin/${baseBranch}`,
+  ]);
 
-  if (subject !== '') {
-    return subject;
+  return remote.exitCode === 0 && remote.stdout.trim() !== ''
+    ? `origin/${baseBranch}`
+    : baseBranch;
+};
+
+const toOptionalText = (
+  value: string | null | undefined,
+): string | undefined =>
+  value === null || value === undefined || value.trim() === ''
+    ? undefined
+    : value;
+
+/**
+ * @description Plan and task rows for the PR body. Best-effort: an unreachable OT yields
+ * `undefined`, and the body falls back to git alone rather than failing finalize.
+ */
+const loadPlanAndTasks = async (params: {
+  readonly executeGraphqlV2: WorkflowExecuteGraphqlV2;
+  readonly planId: string;
+}): Promise<{
+  readonly plan: PlanRunPrPlan | undefined;
+  readonly tasks: readonly PlanRunPrTask[] | undefined;
+}> => {
+  const { executeGraphqlV2, planId } = params;
+  const [planResult, tasksResult] = await Promise.allSettled([
+    executeGraphqlV2(GetPlanDocument, { id: planId }),
+    executeGraphqlV2(GetTasksByPlanIdDocument, { input: { planId } }),
+  ]);
+
+  const planRow =
+    planResult.status === 'fulfilled'
+      ? (planResult.value.plan ?? undefined)
+      : undefined;
+  const plan =
+    planRow === undefined
+      ? undefined
+      : {
+          description: toOptionalText(planRow.description),
+          summary: toOptionalText(planRow.summary),
+          title: planRow.title,
+        };
+
+  const tasks =
+    tasksResult.status === 'fulfilled' &&
+    Array.isArray(tasksResult.value.tasksByPlanId)
+      ? sortTasksByPlanListOrder(tasksResult.value.tasksByPlanId).map(
+          (task) => ({
+            id: task.id,
+            status: task.status,
+            summary: toOptionalText(task.summary),
+            title: task.title,
+          }),
+        )
+      : undefined;
+
+  return { plan, tasks };
+};
+
+const readPrTemplate = async (cwd: string): Promise<string> => {
+  try {
+    return await readFile(
+      join(cwd, '.github', 'pull_request_template.md'),
+      'utf8',
+    );
+  } catch {
+    return PR_TEMPLATE_FALLBACK;
   }
-
-  return `chore: complete plan ${planId.slice(0, 8)}`;
 };
 
 /**
- * @description Fills `.github/pull_request_template.md` with a short summary and Plan-Id footer.
- * Never adds agent attribution.
+ * @description Deterministic host-written PR title and body: only the branch's own commits
+ * (`<baseRef>..HEAD`), plan and task data from OT, and a `Plan-Id:` plus every delivered
+ * `Task-Id:` footer. Never adds agent attribution. Also returns the bare footer block, which
+ * replaces the trailer of an agent-written draft.
  */
-const buildPrBody = async (params: {
+const buildFallbackPr = async (params: {
+  readonly baseRef: string;
   readonly cwd: string;
+  readonly executeGraphqlV2: WorkflowExecuteGraphqlV2;
   readonly planId: string;
   readonly runCommand: WorkflowRalphCommandRunner;
-}): Promise<string> => {
-  const { cwd, planId, runCommand } = params;
-  const templatePath = join(cwd, '.github', 'pull_request_template.md');
-  let template: string;
+}): Promise<{
+  readonly body: string;
+  readonly footer: string;
+  readonly title: string;
+}> => {
+  const { baseRef, cwd, executeGraphqlV2, planId, runCommand } = params;
+  const range = `${baseRef}..HEAD`;
+
+  const [template, log, rangeBodies, baseTrailers, ot] = await Promise.all([
+    readPrTemplate(cwd),
+    runGit(runCommand, cwd, ['log', '--oneline', '--no-decorate', range]),
+    runGit(runCommand, cwd, ['log', '--format=%b', range]),
+    runGit(runCommand, cwd, [
+      'log',
+      baseRef,
+      '--grep=^Task-Id:',
+      '--format=%b',
+    ]),
+    loadPlanAndTasks({ executeGraphqlV2, planId }),
+  ]);
+
+  const commits = log.exitCode === 0 ? parseOnelineLog(log.stdout) : [];
+  const footerTaskIds = selectFooterTaskIds({
+    rangeTaskIds:
+      rangeBodies.exitCode === 0 ? parseTaskIdTrailers(rangeBodies.stdout) : [],
+    taskIdsOnBase: new Set(
+      baseTrailers.exitCode === 0
+        ? parseTaskIdTrailers(baseTrailers.stdout)
+        : [],
+    ),
+    tasks: ot.tasks,
+  });
+
+  return {
+    body: buildPlanRunPrBody({
+      commits,
+      footerTaskIds,
+      plan: ot.plan,
+      planId,
+      tasks: ot.tasks ?? [],
+      template,
+    }),
+    footer: buildPlanRunPrFooter({ footerTaskIds, planId }),
+    title: resolvePlanRunPrTitle({ commits, plan: ot.plan, planId }),
+  };
+};
+
+/**
+ * @description Best-effort plan_output + onChunk note from the finalize step. Never throws.
+ */
+const appendFinalizeNote = async (params: {
+  readonly content: string;
+  readonly executeGraphqlV2: WorkflowExecuteGraphqlV2;
+  readonly onChunk: WorkflowRalphIterationOnChunk | undefined;
+  readonly planId: string;
+}): Promise<void> => {
+  const { content, executeGraphqlV2, onChunk, planId } = params;
 
   try {
-    template = await readFile(templatePath, 'utf8');
+    await executeGraphqlV2(AppendPlanOutputDocument, {
+      input: { content, planId },
+    });
   } catch {
-    template =
-      '# Summary\n\n**TODO:** Describe the changes in this PR.\n\n## Testing\n\n- [ ] Pipelines should be passing\n';
+    // best-effort
   }
 
-  const log = await runGit(runCommand, cwd, [
-    'log',
-    '--oneline',
-    '--no-decorate',
-    '-20',
-  ]);
-  const summaryLines =
-    log.exitCode === 0 && log.stdout.trim() !== ''
-      ? log.stdout
-          .trim()
-          .split('\n')
-          .map((line) => `- ${line.trim()}`)
-          .join('\n')
-      : '- Plan run completed; see commits on this branch.';
-
-  const withSummary = template.includes(
-    '**TODO:** Describe the changes in this PR.',
-  )
-    ? template.replace(
-        '**TODO:** Describe the changes in this PR.',
-        summaryLines,
-      )
-    : `${template.trimEnd()}\n\n## Summary\n\n${summaryLines}\n`;
-
-  return `${withSummary.trimEnd()}\n\nPlan-Id: ${planId}\n`;
+  if (onChunk) {
+    try {
+      await onChunk({ data: content, stream: 'stderr' });
+    } catch {
+      // ignore
+    }
+  }
 };
 
 /**
- * @description Creates a draft PR after the local attribution guard passes, then marks it ready.
+ * @description The draft directory the agent writes to: `<absolute git dir>/ot-pr-draft`, the
+ * github-pull-request skill's own default. `undefined` when `cwd` isn't a git checkout.
+ * @public
  */
-const createAndReadyPr = async (params: {
+export const resolvePlanRunPrDraftDir = async (params: {
   readonly cwd: string;
+  readonly runCommand: WorkflowRalphCommandRunner;
+}): Promise<string | undefined> => {
+  const { cwd, runCommand } = params;
+
+  try {
+    const gitDir = await runGit(runCommand, cwd, [
+      'rev-parse',
+      '--absolute-git-dir',
+    ]);
+    const trimmed = gitDir.exitCode === 0 ? gitDir.stdout.trim() : '';
+
+    return trimmed === ''
+      ? undefined
+      : join(trimmed, PLAN_RUN_PR_DRAFT_DIR_NAME);
+  } catch {
+    return undefined;
+  }
+};
+
+/**
+ * @description Run-start step: resolves the draft directory and deletes a draft left by an earlier
+ * run, so finalize can never publish text that predates this run's commits. Never throws.
+ * @public
+ */
+export const preparePlanRunPrDraftDir = async (params: {
+  readonly cwd: string;
+  readonly runCommand: WorkflowRalphCommandRunner;
+}): Promise<string | undefined> => {
+  const draftDir = await resolvePlanRunPrDraftDir(params);
+
+  if (draftDir === undefined) {
+    return undefined;
+  }
+
+  await Promise.all(
+    Object.values(PLAN_RUN_PR_DRAFT_FILES).map(async (name) => {
+      try {
+        await rm(join(draftDir, name), { force: true });
+      } catch {
+        // A stale draft that can't be removed is still caught by finalize's validation.
+      }
+    }),
+  );
+
+  return draftDir;
+};
+
+const readOptionalFile = async (path: string): Promise<string | undefined> => {
+  try {
+    return await readFile(path, 'utf8');
+  } catch {
+    return undefined;
+  }
+};
+
+/**
+ * @description The title and body to publish: the agent's draft when it exists and validates
+ * (with the host footer and markers applied), otherwise the deterministic fallback. Logs which
+ * source was used and why to plan_output.
+ */
+const resolvePrContent = async (params: {
+  readonly baseRef: string;
+  readonly cwd: string;
+  readonly draftDir: string | undefined;
+  readonly executeGraphqlV2: WorkflowExecuteGraphqlV2;
+  readonly onChunk: WorkflowRalphIterationOnChunk | undefined;
   readonly planId: string;
   readonly runCommand: WorkflowRalphCommandRunner;
+}): Promise<{ readonly body: string; readonly title: string }> => {
+  const { draftDir, executeGraphqlV2, onChunk, planId } = params;
+  const draftDirPath = draftDir ?? (await resolvePlanRunPrDraftDir(params));
+  const [fallback, draftTitle, draftBody] = await Promise.all([
+    buildFallbackPr(params),
+    draftDirPath === undefined
+      ? Promise.resolve(undefined)
+      : readOptionalFile(join(draftDirPath, PLAN_RUN_PR_DRAFT_FILES.title)),
+    draftDirPath === undefined
+      ? Promise.resolve(undefined)
+      : readOptionalFile(join(draftDirPath, PLAN_RUN_PR_DRAFT_FILES.body)),
+  ]);
+
+  const validation =
+    draftTitle === undefined || draftBody === undefined
+      ? undefined
+      : validatePlanRunPrDraft({
+          body: draftBody,
+          footer: fallback.footer,
+          title: draftTitle,
+        });
+
+  const reason =
+    validation === undefined
+      ? `no agent draft in ${draftDirPath ?? '(no git dir)'}`
+      : validation.ok
+        ? undefined
+        : `agent draft rejected: ${validation.reason}`;
+
+  await appendFinalizeNote({
+    content:
+      reason === undefined
+        ? `[ralph-orchestrator] finalize: PR body source=agent-draft (${draftDirPath ?? ''})\n`
+        : `[ralph-orchestrator] finalize: PR body source=fallback — ${reason}\n`,
+    executeGraphqlV2,
+    onChunk,
+    planId,
+  });
+
+  return validation?.ok === true
+    ? { body: validation.body, title: validation.title }
+    : { body: fallback.body, title: fallback.title };
+};
+
+interface PrStepFailure {
+  readonly detail: string;
+  readonly ok: false;
+  readonly owedStep: string;
+}
+
+const commandDetail = (
+  result: WorkflowRalphCommandResult,
+  fallback: string,
+): string => result.stderr.trim() || result.stdout.trim() || fallback;
+
+/**
+ * @description Writes the title and body to a temp dir and runs `check-pr-attribution.sh` on them.
+ */
+const writeAndGuardPrFiles = async (params: {
+  readonly body: string;
+  readonly cwd: string;
+  readonly runCommand: WorkflowRalphCommandRunner;
+  readonly title: string;
 }): Promise<
-  | { readonly ok: true; readonly prNumber: number }
-  | { readonly detail: string; readonly ok: false; readonly owedStep: string }
+  | { readonly bodyPath: string; readonly ok: true; readonly titlePath: string }
+  | PrStepFailure
 > => {
-  const { cwd, planId, runCommand } = params;
-  const title = await resolvePrTitle({ cwd, planId, runCommand });
-  const body = await buildPrBody({ cwd, planId, runCommand });
+  const { body, cwd, runCommand, title } = params;
 
   let tempDir: string;
   try {
@@ -299,13 +564,134 @@ const createAndReadyPr = async (params: {
 
   if (attribution.exitCode !== 0) {
     return {
-      detail:
-        attribution.stderr.trim() ||
-        attribution.stdout.trim() ||
-        'attribution check failed',
+      detail: commandDetail(attribution, 'attribution check failed'),
       ok: false,
       owedStep: 'pr-attribution',
     };
+  }
+
+  return { bodyPath, ok: true, titlePath };
+};
+
+/**
+ * @description Reads an existing PR's body. `undefined` when it can't be read, which the caller
+ * treats as "not ours to touch".
+ */
+const readPrBody = async (params: {
+  readonly cwd: string;
+  readonly prNumber: number;
+  readonly runCommand: WorkflowRalphCommandRunner;
+}): Promise<string | undefined> => {
+  const { cwd, prNumber, runCommand } = params;
+  const viewed = await runGh(runCommand, cwd, [
+    'pr',
+    'view',
+    String(prNumber),
+    '--json',
+    'body',
+    '--jq',
+    '.body',
+  ]);
+
+  return viewed.exitCode === 0 ? viewed.stdout : undefined;
+};
+
+/**
+ * @description Refreshes an existing PR's title and body when the current body is empty or an
+ * untouched host body; leaves a human-edited body alone. Uses `gh pr edit`, falling back to the
+ * REST API (per the github-pull-request skill) when `gh pr edit` fails.
+ */
+const refreshExistingPr = async (params: {
+  readonly baseRef: string;
+  readonly cwd: string;
+  readonly draftDir: string | undefined;
+  readonly executeGraphqlV2: WorkflowExecuteGraphqlV2;
+  readonly onChunk: WorkflowRalphIterationOnChunk | undefined;
+  readonly planId: string;
+  readonly prNumber: number;
+  readonly runCommand: WorkflowRalphCommandRunner;
+}): Promise<{ readonly ok: true } | PrStepFailure> => {
+  const { cwd, executeGraphqlV2, onChunk, planId, prNumber, runCommand } =
+    params;
+  const current = await readPrBody({ cwd, prNumber, runCommand });
+  const owner =
+    current === undefined ? undefined : classifyPlanRunPrBody(current);
+
+  if (owner === undefined || owner === 'edited') {
+    await appendFinalizeNote({
+      content:
+        owner === undefined
+          ? `[ralph-orchestrator] finalize: could not read PR #${prNumber} body; left it unchanged\n`
+          : `[ralph-orchestrator] finalize: PR #${prNumber} body was edited by a human; left it unchanged\n`,
+      executeGraphqlV2,
+      onChunk,
+      planId,
+    });
+
+    return { ok: true };
+  }
+
+  const { body, title } = await resolvePrContent(params);
+  const guarded = await writeAndGuardPrFiles({ body, cwd, runCommand, title });
+
+  if (!guarded.ok) {
+    return guarded;
+  }
+
+  const edited = await runGh(runCommand, cwd, [
+    'pr',
+    'edit',
+    String(prNumber),
+    '--title',
+    title,
+    '--body-file',
+    guarded.bodyPath,
+  ]);
+
+  if (edited.exitCode === 0) {
+    return { ok: true };
+  }
+
+  const patched = await runGh(runCommand, cwd, [
+    'api',
+    '--method',
+    'PATCH',
+    `repos/{owner}/{repo}/pulls/${prNumber}`,
+    '-f',
+    `title=${title}`,
+    '-F',
+    `body=@${guarded.bodyPath}`,
+  ]);
+
+  return patched.exitCode === 0
+    ? { ok: true }
+    : {
+        detail: `${commandDetail(edited, 'gh pr edit failed')}; REST fallback: ${commandDetail(patched, 'gh api PATCH failed')}`,
+        ok: false,
+        owedStep: 'pr-edit',
+      };
+};
+
+/**
+ * @description Creates a draft PR after the local attribution guard passes, then marks it ready.
+ */
+const createAndReadyPr = async (params: {
+  readonly baseRef: string;
+  readonly cwd: string;
+  readonly draftDir: string | undefined;
+  readonly executeGraphqlV2: WorkflowExecuteGraphqlV2;
+  readonly onChunk: WorkflowRalphIterationOnChunk | undefined;
+  readonly planId: string;
+  readonly runCommand: WorkflowRalphCommandRunner;
+}): Promise<
+  { readonly ok: true; readonly prNumber: number } | PrStepFailure
+> => {
+  const { cwd, runCommand } = params;
+  const { body, title } = await resolvePrContent(params);
+  const guarded = await writeAndGuardPrFiles({ body, cwd, runCommand, title });
+
+  if (!guarded.ok) {
+    return guarded;
   }
 
   const created = await runGh(runCommand, cwd, [
@@ -315,7 +701,7 @@ const createAndReadyPr = async (params: {
     '--title',
     title,
     '--body-file',
-    bodyPath,
+    guarded.bodyPath,
   ]);
 
   if (created.exitCode !== 0) {
@@ -382,6 +768,7 @@ export const finalizePlanRun = async (
   const {
     baseBranch,
     cwd,
+    draftDir,
     executeGraphqlV2,
     onChunk,
     planId,
@@ -407,10 +794,11 @@ export const finalizePlanRun = async (
     });
   }
 
+  const baseRef = await resolveBaseRef({ baseBranch, cwd, runCommand });
   const ahead = await runGit(runCommand, cwd, [
     'rev-list',
     '--count',
-    `${baseBranch}..HEAD`,
+    `${baseRef}..HEAD`,
   ]);
 
   if (ahead.exitCode !== 0) {
@@ -492,6 +880,28 @@ export const finalizePlanRun = async (
   });
 
   if (existingPr !== undefined) {
+    const refreshed = await refreshExistingPr({
+      baseRef,
+      cwd,
+      draftDir,
+      executeGraphqlV2,
+      onChunk,
+      planId,
+      prNumber: existingPr,
+      runCommand,
+    });
+
+    if (!refreshed.ok) {
+      return handoffOwed({
+        cwd,
+        detail: refreshed.detail,
+        executeGraphqlV2,
+        onChunk,
+        owedStep: refreshed.owedStep,
+        planId,
+      });
+    }
+
     const ready = await runGh(runCommand, cwd, [
       'pr',
       'ready',
@@ -525,7 +935,11 @@ export const finalizePlanRun = async (
   }
 
   const created = await createAndReadyPr({
+    baseRef,
     cwd,
+    draftDir,
+    executeGraphqlV2,
+    onChunk,
     planId,
     runCommand,
   });

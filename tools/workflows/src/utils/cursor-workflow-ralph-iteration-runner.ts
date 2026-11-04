@@ -41,6 +41,8 @@ export interface CursorWorkflowRalphIterationRunParams {
    * own flag or ignores it (see `DriverInvocationConfig.effort`).
    */
   readonly effort?: DriverReasoningEffort;
+  /** @description Extra env for the agent subprocess, merged over `process.env`. */
+  readonly env?: Readonly<Record<string, string>>;
   readonly iteration: number;
   readonly model: string | undefined;
   /**
@@ -159,6 +161,7 @@ export const createCursorWorkflowRalphIterationRunner = (
       backend: params.runner,
       cwd: params.cwd,
       effort: params.effort,
+      env: params.env,
       iteration: params.iteration,
       model: params.model,
       onChunk: mergedOnChunk,

@@ -51,6 +51,8 @@ export interface RunIterationConfig {
    * reasoning knob (cursor, gemini, antigravity) ignore it.
    */
   effort?: DriverReasoningEffort;
+  /** Extra env for the runner subprocess, merged over `process.env` (e.g. `OT_PR_DRAFT_DIR`). */
+  env?: Readonly<Record<string, string>>;
   /** Iteration number. */
   iteration: number;
   /** Model preset when the backend supports it (Cursor: `--model`; Claude Code: `--model`). */
@@ -104,6 +106,7 @@ const toDriverConfig = (
 ): DriverInvocationConfig => ({
   cwd: config.cwd,
   effort: config.effort,
+  env: config.env,
   iteration: config.iteration,
   model: config.model,
   onChunk: config.onChunk,

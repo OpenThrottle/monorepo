@@ -59,6 +59,11 @@ export interface WorkflowRalphIterationRunParams {
    * backend's own flag; a backend with no reasoning knob ignores it.
    */
   readonly effort: ConversationReasoningEffort | undefined;
+  /**
+   * @description Extra env for the agent subprocess, merged over `process.env`. The orchestrator
+   * sets `OT_PR_DRAFT_DIR` here so the agent's PR draft lands where finalize reads it.
+   */
+  readonly env?: Readonly<Record<string, string>>;
   readonly iteration: number;
   readonly model: string | undefined;
   readonly onChunk?: WorkflowRalphIterationOnChunk;

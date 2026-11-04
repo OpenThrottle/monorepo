@@ -46,6 +46,15 @@ export interface RunDriverOptions {
 }
 
 /**
+ * @description Child env: `undefined` (inherit `process.env`, the historical behavior) unless the
+ * caller supplied extra variables, which are merged over the inherited set.
+ */
+const mergeChildEnv = (
+  extra: Readonly<Record<string, string>> | undefined,
+): NodeJS.ProcessEnv | undefined =>
+  extra === undefined ? undefined : { ...process.env, ...extra };
+
+/**
  * @description Applies the driver's optional `parseOutput` to the raw collected stdout. Drivers
  * without one pass through untouched, so only drivers that opted in change behavior.
  */
@@ -76,6 +85,7 @@ export const runDriverSync = (
   const child = spawnSync(command, [], {
     cwd,
     encoding: 'utf-8',
+    env: mergeChildEnv(config.env),
     shell: true,
     stdio: ['inherit', 'pipe', 'pipe'],
   });
@@ -138,6 +148,7 @@ export const runDriverAsync = (
 
     const child: ChildProcess = spawn(command, [], {
       cwd,
+      env: mergeChildEnv(config.env),
       shell: true,
       stdio: ['inherit', 'pipe', 'pipe'],
     });
