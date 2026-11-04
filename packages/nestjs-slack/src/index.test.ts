@@ -26,3 +26,13 @@ describe('@openthrottle/nestjs-slack entrypoint', () => {
     ]);
   });
 });
+
+// Merge-queue probe C (OT plan e702d884). Passes alone; redeclares probe B's
+// QUEUE_PROBE, so the queue must eject it once B is ahead of it. Never merge.
+const QUEUE_PROBE = 'c';
+
+describe('merge-queue probe c', () => {
+  it('runs inside the queue', () => {
+    expect(QUEUE_PROBE).toBe('c');
+  });
+});
