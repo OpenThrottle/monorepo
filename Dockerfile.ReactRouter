@@ -44,6 +44,13 @@ ENV APP_VERSION="${APP_VERSION}"
 ENV CI="true"
 ENV HUSKY="0"
 ENV NX_DAEMON="false"
+# Point pnpm's content-addressable store at the BuildKit cache mount that every
+# `pnpm install` below mounts (`--mount=type=cache,...,target=/pnpm/store`).
+# Without it pnpm uses ~/.local/share/pnpm/store: the mount stays empty, every
+# build re-downloads the whole graph, and the 1.5G store is baked into the
+# builder layer. pnpm 12 reads `pnpm_config_*` env vars and ignores the old
+# `npm_config_*` spelling — check with `pnpm store path` before renaming this.
+ENV pnpm_config_store_dir="/pnpm/store"
 
 # Only copy what's needed to install our dependencies
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig*.json ./
@@ -145,7 +152,9 @@ RUN --mount=type=cache,id=pnpm-development,target=/pnpm/store pnpm install --fro
 RUN pnpm nx run ${APP_NAME}:build
 
 # App-only runtime tree: pruned package dir with build/ + isolated production node_modules.
-RUN pnpm --filter "${APP_NAME}" --prod deploy /app/pruned --legacy
+# `deploy` resolves the pruned tree through the store, so it mounts the same
+# cache as the installs — without it, it downloads every runtime dep again.
+RUN --mount=type=cache,id=pnpm-development,target=/pnpm/store pnpm --filter "${APP_NAME}" --prod deploy /app/pruned --legacy
 
 ################################################################################
 #
