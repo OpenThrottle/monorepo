@@ -27,7 +27,7 @@ apps, `packages/openthrottle-mcp`) consumes its schema through the committed
   `*.input.ts`, module). Example with tests to copy: `src/graphql/queue-job-logs/` (the
   queue-job log tail API; design doc in [docs/log-tail-api-design.md](./docs/log-tail-api-design.md)).
 - `src/queues/` — BullMQ queue modules (plans, code-index, daily-stats, database-backup,
-  doc-ingestion, agentic-test) plus `bullmq-run-output.module.ts`.
+  agentic-test) plus `bullmq-run-output.module.ts`.
 - `src/guards/` + `src/auth/` — `GlobalAuthGuard` (service-account `ot_sa_…` tokens first, then
   JWT) and the CLS auth hook; registered as `APP_GUARD`.
 - `src/main.ts` — bootstrap: `rawBody: true`, CORS from `@openthrottle/nestjs-rbac`, shutdown

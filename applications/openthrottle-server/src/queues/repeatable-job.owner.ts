@@ -7,7 +7,7 @@
  * worktree its own `bull:wt-<slug>` prefix), so a worktree never consumes the primary's jobs. The
  * hazard is DUPLICATE EXECUTION against a shared database: with `PROCESS_ROLE=all` a shared-DB
  * worktree registers its own copy of every repeatable under its own prefix and runs it against the
- * user's real data (and, for doc ingestion, double-spends embeddings).
+ * user's real data.
  *
  * Precedence:
  *

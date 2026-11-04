@@ -2,8 +2,6 @@
  * @description Aggregates BullMQ queue(s) and exposes job counts per queue via getJobCounts(). Supports dynamic queue creation via createQueue().
  */
 
-import { posix } from 'node:path';
-
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import {
@@ -25,8 +23,6 @@ import { DAILY_STATS_QUEUE_NAME } from '../../queues/daily-stats/daily-stats.con
 import type { AggregateDailyStatsJobData } from '../../queues/daily-stats/daily-stats.types.ts';
 import { DATABASE_BACKUP_QUEUE_NAME } from '../../queues/database-backup/database-backup.constants.ts';
 import type { DatabaseBackupJobPayload } from '../../queues/database-backup/database-backup.types.ts';
-import { DOC_INGESTION_QUEUE_NAME } from '../../queues/doc-ingestion/doc-ingestion.constants.ts';
-import type { DocIngestionJobPayload } from '../../queues/doc-ingestion/doc-ingestion.types.ts';
 import { PLAN_LIFECYCLE_HOOKS_QUEUE_NAME } from '../../queues/plan-lifecycle-hooks/plan-lifecycle-hooks.constants.ts';
 import { PLAN_RULES_QUEUE_NAME } from '../../queues/plan-rules/plan-rules.constants.ts';
 import {
@@ -98,52 +94,11 @@ export function normalizeIdempotencyKey(
   return { key: trimmed };
 }
 
-/**
- * @description Validate doc-ingestion directory/file paths before enqueue. The
- * downstream `openthrottle:import-docs` script resolves each path against
- * `WORKSPACE_ROOT`, so a path that is absolute or traverses upward (`../`) could
- * escape the workspace. Reject those at the API boundary (defense-in-depth — the
- * spawn args themselves are fixed, so this is not command injection). Returns the
- * trimmed, POSIX-normalized paths on success or `{ error }` on the first bad path.
- */
-export function normalizeWorkspaceRelativePaths(
-  raw: readonly string[],
-  label: string,
-): { readonly paths: readonly string[] } | { readonly error: string } {
-  const normalized: string[] = [];
-
-  for (const entry of raw) {
-    const trimmed = entry.trim();
-    if (trimmed === '') {
-      return { error: `${label} must not contain empty paths` };
-    }
-
-    if (posix.isAbsolute(trimmed) || /^[A-Za-z]:[\\/]/.test(trimmed)) {
-      return {
-        error: `${label} must be relative to the workspace root: "${entry}"`,
-      };
-    }
-
-    // Collapse `.`/`..` segments; a leading `..` means the path escapes the root.
-    const collapsed = posix.normalize(trimmed.replace(/\\/g, '/'));
-    if (collapsed === '..' || collapsed.startsWith('../')) {
-      return {
-        error: `${label} must not escape the workspace root: "${entry}"`,
-      };
-    }
-
-    normalized.push(collapsed);
-  }
-
-  return { paths: normalized };
-}
-
 /** @description Union of all queue job data types for methods that work across static and dynamic queues. */
 type AnyJobData =
   | AgenticTestJobPayload
   | AggregateDailyStatsJobData
   | DatabaseBackupJobPayload
-  | DocIngestionJobPayload
   | DynamicJobData
   | RunPlanJobData;
 
@@ -217,7 +172,6 @@ const REGISTERED_QUEUES = [
   CODE_INDEX_QUEUE_NAME,
   DAILY_STATS_QUEUE_NAME,
   DATABASE_BACKUP_QUEUE_NAME,
-  DOC_INGESTION_QUEUE_NAME,
   PLAN_LIFECYCLE_HOOKS_QUEUE_NAME,
   PLAN_RULES_QUEUE_NAME,
   PLANS_QUEUE_NAME,
@@ -241,8 +195,6 @@ export class QueuesService implements OnModuleDestroy {
     private readonly dailyStatsQueue: Queue<AnyJobData, void>,
     @InjectQueue(DATABASE_BACKUP_QUEUE_NAME)
     private readonly databaseBackupQueue: Queue<AnyJobData, void>,
-    @InjectQueue(DOC_INGESTION_QUEUE_NAME)
-    private readonly docIngestionQueue: Queue<AnyJobData, void>,
     @InjectQueue(PLAN_LIFECYCLE_HOOKS_QUEUE_NAME)
     private readonly planLifecycleHooksQueue: Queue<AnyJobData, void>,
     @InjectQueue(PLAN_RULES_QUEUE_NAME)
@@ -396,10 +348,6 @@ export class QueuesService implements OnModuleDestroy {
 
     if (name === DATABASE_BACKUP_QUEUE_NAME) {
       return this.databaseBackupQueue;
-    }
-
-    if (name === DOC_INGESTION_QUEUE_NAME) {
-      return this.docIngestionQueue;
     }
 
     if (name === PLAN_LIFECYCLE_HOOKS_QUEUE_NAME) {
@@ -669,57 +617,10 @@ export class QueuesService implements OnModuleDestroy {
   }
 
   /**
-   * @description Enqueues a doc-ingestion job with the given payload. At least one of directories or files must be non-empty. Returns new job id on success or error message.
-   */
-  /**
    * @description Enqueues an agentic-test smoke job (echo timestamps for ~30s). Returns new job id on success.
    */
   async enqueueAgenticTest(): Promise<{ jobId: string } | { error: string }> {
     const job = await this.agenticTestQueue.add(AGENTIC_TEST_JOB_NAME, {});
-    if (job.id == null) {
-      return { error: 'Failed to get new job id' };
-    }
-
-    return { jobId: String(job.id) };
-  }
-
-  /**
-   * @description Enqueues a doc-ingestion job with the given payload. At least one of directories or files must be non-empty. Returns new job id on success or error message.
-   */
-  async enqueueDocIngestion(
-    payload: DocIngestionJobPayload,
-  ): Promise<{ jobId: string } | { error: string }> {
-    const directories = payload.directories ?? [];
-    const files = payload.files ?? [];
-    if (directories.length === 0 && files.length === 0) {
-      return {
-        error:
-          'Doc-ingestion requires at least one of directories or files to be non-empty.',
-      };
-    }
-
-    const normalizedDirectories = normalizeWorkspaceRelativePaths(
-      directories,
-      'directories',
-    );
-    if ('error' in normalizedDirectories) {
-      return { error: normalizedDirectories.error };
-    }
-
-    const normalizedFiles = normalizeWorkspaceRelativePaths(files, 'files');
-    if ('error' in normalizedFiles) {
-      return { error: normalizedFiles.error };
-    }
-
-    const safePayload: DocIngestionJobPayload = {
-      ...payload,
-      ...(directories.length > 0
-        ? { directories: normalizedDirectories.paths }
-        : {}),
-      ...(files.length > 0 ? { files: normalizedFiles.paths } : {}),
-    };
-
-    const job = await this.docIngestionQueue.add('doc-ingestion', safePayload);
     if (job.id == null) {
       return { error: 'Failed to get new job id' };
     }

@@ -24,11 +24,6 @@ import { CODE_INDEX_QUEUE_NAME } from '../../queues/code-index/code-index.consta
 import { DAILY_STATS_QUEUE_NAME } from '../../queues/daily-stats/daily-stats.constants.ts';
 import type { AggregateDailyStatsJobData } from '../../queues/daily-stats/daily-stats.types.ts';
 import { DATABASE_BACKUP_QUEUE_NAME } from '../../queues/database-backup/database-backup.constants.ts';
-import { DOC_INGESTION_QUEUE_NAME } from '../../queues/doc-ingestion/doc-ingestion.constants.ts';
-import type {
-  DocIngestionJobPayload,
-  DocIngestionJobResult,
-} from '../../queues/doc-ingestion/doc-ingestion.types.ts';
 import { PLAN_LIFECYCLE_HOOKS_QUEUE_NAME } from '../../queues/plan-lifecycle-hooks/plan-lifecycle-hooks.constants.ts';
 import { PLAN_RULES_QUEUE_NAME } from '../../queues/plan-rules/plan-rules.constants.ts';
 import {
@@ -170,21 +165,6 @@ describe('QueuesService', () => {
     getJobCounts: mockGetJobCounts,
   });
 
-  const mockDocIngestionAdd = vi.fn().mockResolvedValue(
-    createMock<Job<DocIngestionJobPayload, DocIngestionJobResult>>({
-      id: 'doc-ingestion-job-id',
-    }),
-  );
-  const mockDocIngestionQueue = createMock<
-    Queue<DocIngestionJobPayload, DocIngestionJobResult>
-  >({
-    add: mockDocIngestionAdd,
-    getJobCounts: mockGetJobCounts,
-    getJobs: mockGetJobs,
-    getRepeatableJobs: mockGetRepeatableJobs,
-    removeRepeatableByKey: mockRemoveRepeatableByKey,
-  });
-
   const mockDatabaseBackupQueue = createMock<Queue>({
     getJobCounts: mockGetJobCounts,
     getJobs: mockGetJobs,
@@ -226,10 +206,6 @@ describe('QueuesService', () => {
         {
           provide: getQueueToken(DATABASE_BACKUP_QUEUE_NAME),
           useValue: mockDatabaseBackupQueue,
-        },
-        {
-          provide: getQueueToken(DOC_INGESTION_QUEUE_NAME),
-          useValue: mockDocIngestionQueue,
         },
         {
           provide: getQueueToken(PLAN_LIFECYCLE_HOOKS_QUEUE_NAME),
@@ -451,12 +427,6 @@ describe('QueuesService', () => {
       );
     });
 
-    test('returns queue when name is doc-ingestion', () => {
-      expect(service.getQueueByName(DOC_INGESTION_QUEUE_NAME)).toBe(
-        mockDocIngestionQueue,
-      );
-    });
-
     test('returns queue when name is plans', () => {
       expect(service.getQueueByName(PLANS_QUEUE_NAME)).toBe(mockPlansQueue);
     });
@@ -664,10 +634,6 @@ describe('QueuesService', () => {
             useValue: mockDatabaseBackupQueue,
           },
           {
-            provide: getQueueToken(DOC_INGESTION_QUEUE_NAME),
-            useValue: mockDocIngestionQueue,
-          },
-          {
             provide: getQueueToken(PLAN_LIFECYCLE_HOOKS_QUEUE_NAME),
             useValue: mockStaticStatsQueue,
           },
@@ -764,7 +730,7 @@ describe('QueuesService', () => {
 
       const result = await service.getStats();
 
-      expect(result).toHaveLength(11);
+      expect(result).toHaveLength(10);
       const agenticTestStats = result.find(
         (s) => s.name === AGENTIC_TEST_QUEUE_NAME,
       );
@@ -774,9 +740,6 @@ describe('QueuesService', () => {
       );
       const databaseBackupStats = result.find(
         (s) => s.name === DATABASE_BACKUP_QUEUE_NAME,
-      );
-      const docIngestionStats = result.find(
-        (s) => s.name === DOC_INGESTION_QUEUE_NAME,
       );
       expect(agenticTestStats).toMatchObject({
         activeCount: 1,
@@ -802,14 +765,6 @@ describe('QueuesService', () => {
         name: DAILY_STATS_QUEUE_NAME,
         waitingCount: 0,
       });
-      expect(docIngestionStats).toMatchObject({
-        activeCount: 1,
-        completedCount: 10,
-        delayedCount: 0,
-        failedCount: 2,
-        name: DOC_INGESTION_QUEUE_NAME,
-        waitingCount: 3,
-      });
       expect(databaseBackupStats).toMatchObject({
         activeCount: 1,
         completedCount: 10,
@@ -818,7 +773,7 @@ describe('QueuesService', () => {
         name: DATABASE_BACKUP_QUEUE_NAME,
         waitingCount: 3,
       });
-      expect(mockGetJobCounts).toHaveBeenCalledTimes(10);
+      expect(mockGetJobCounts).toHaveBeenCalledTimes(9);
       expect(mockDailyStatsGetJobCounts).toHaveBeenCalledTimes(1);
     });
 
@@ -831,7 +786,7 @@ describe('QueuesService', () => {
 
         const result = await service.getStats();
 
-        expect(result).toHaveLength(10);
+        expect(result).toHaveLength(9);
         expect(result.map((s) => s.name)).not.toContain(DAILY_STATS_QUEUE_NAME);
         expect(mockLogger.warn).toHaveBeenCalledWith(
           `Queue "${DAILY_STATS_QUEUE_NAME}" stats unavailable: NOAUTH Authentication required.`,
@@ -858,7 +813,7 @@ describe('QueuesService', () => {
 
         const result = await service.getStats();
 
-        expect(result).toHaveLength(11);
+        expect(result).toHaveLength(10);
         expect(result.map((s) => s.name)).not.toContain('dynamic-broken');
       });
     });
@@ -938,101 +893,6 @@ describe('QueuesService', () => {
 
       expect(result).toEqual({ jobId: 'agentic-test-job-id' });
       expect(mockAgenticTestAdd).toHaveBeenCalledWith('agentic-test', {});
-    });
-  });
-
-  describe('enqueueDocIngestion', () => {
-    test('returns error when both directories and files are empty', async () => {
-      const result = await service.enqueueDocIngestion({});
-
-      expect(result).toEqual({
-        error:
-          'Doc-ingestion requires at least one of directories or files to be non-empty.',
-      });
-      expect(mockDocIngestionAdd).not.toHaveBeenCalled();
-    });
-
-    test('returns jobId when payload has directories', async () => {
-      mockDocIngestionAdd.mockClear();
-
-      const result = await service.enqueueDocIngestion({
-        directories: ['docs'],
-        scope: 'default',
-      });
-
-      expect(result).toEqual({ jobId: 'doc-ingestion-job-id' });
-      expect(mockDocIngestionAdd).toHaveBeenCalledWith('doc-ingestion', {
-        directories: ['docs'],
-        scope: 'default',
-      });
-    });
-
-    test('returns jobId when payload has files', async () => {
-      mockDocIngestionAdd.mockClear();
-
-      const result = await service.enqueueDocIngestion({
-        files: ['README.md'],
-      });
-
-      expect(result).toEqual({ jobId: 'doc-ingestion-job-id' });
-      expect(mockDocIngestionAdd).toHaveBeenCalledWith('doc-ingestion', {
-        files: ['README.md'],
-      });
-    });
-
-    test('returns error when add returns job without id', async () => {
-      mockDocIngestionAdd.mockResolvedValueOnce(
-        createMock<Job<DocIngestionJobPayload, DocIngestionJobResult>>({
-          id: undefined,
-        }),
-      );
-
-      const result = await service.enqueueDocIngestion({
-        directories: ['docs'],
-      });
-
-      expect(result).toEqual({ error: 'Failed to get new job id' });
-    });
-
-    test('rejects directories that traverse outside the workspace root', async () => {
-      mockDocIngestionAdd.mockClear();
-
-      const result = await service.enqueueDocIngestion({
-        directories: ['../../etc'],
-      });
-
-      expect(result).toEqual({
-        error: 'directories must not escape the workspace root: "../../etc"',
-      });
-      expect(mockDocIngestionAdd).not.toHaveBeenCalled();
-    });
-
-    test('rejects absolute file paths', async () => {
-      mockDocIngestionAdd.mockClear();
-
-      const result = await service.enqueueDocIngestion({
-        files: ['/etc/passwd'],
-      });
-
-      expect(result).toEqual({
-        error: 'files must be relative to the workspace root: "/etc/passwd"',
-      });
-      expect(mockDocIngestionAdd).not.toHaveBeenCalled();
-    });
-
-    test('normalizes safe relative paths before enqueue', async () => {
-      mockDocIngestionAdd.mockClear();
-
-      const result = await service.enqueueDocIngestion({
-        directories: ['docs/./guides'],
-        files: ['docs/a/../b.md'],
-      });
-
-      expect(result).toEqual({ jobId: 'doc-ingestion-job-id' });
-      expect(mockDocIngestionAdd).toHaveBeenCalledWith('doc-ingestion', {
-        directories: ['docs/guides'],
-        files: ['docs/b.md'],
-      });
     });
   });
 

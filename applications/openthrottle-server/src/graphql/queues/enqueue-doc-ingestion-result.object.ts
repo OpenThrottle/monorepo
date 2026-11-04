@@ -1,5 +1,8 @@
 /**
- * @description GraphQL result object for enqueueDocIngestion mutation. success true with jobId, or success false with error.
+ * @description Deprecated: GraphQL result object for the deprecated
+ * enqueueDocIngestion mutation. Doc ingestion has been removed, so it is always
+ * `success: false` with an error; the type stays only for schema compatibility
+ * until the mutation is removed.
  */
 
 import { Field, ObjectType } from '@nestjs/graphql';
