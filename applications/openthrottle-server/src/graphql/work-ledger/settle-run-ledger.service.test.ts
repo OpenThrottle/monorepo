@@ -233,8 +233,8 @@ describe('SettleRunLedgerService', () => {
         runConfigSnapshot: createMock<PlanRunConfigSnapshotV1>({
           target: { mode: 'plan' },
           workspace: {
-            checkoutId: null,
-            repositoryId: null,
+            checkoutId: undefined,
+            repositoryId: undefined,
             workingDirectory: '',
             ...workspace,
           },
@@ -261,7 +261,9 @@ describe('SettleRunLedgerService', () => {
       vi.mocked(
         repositoriesService.findByNormalizedRemoteUrl,
       ).mockResolvedValue(
-        createMock<Awaited<ReturnType<RepositoriesService['findById']>>>({
+        createMock<
+          NonNullable<Awaited<ReturnType<RepositoriesService['findById']>>>
+        >({
           name: 'OpenThrottle/monorepo',
         }),
       );
