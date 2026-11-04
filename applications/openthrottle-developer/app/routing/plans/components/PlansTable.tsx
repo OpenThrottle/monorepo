@@ -1,11 +1,14 @@
-import { DataTable } from '@openthrottle/react-router-shadcn';
+import { cn, DataTable } from '@openthrottle/react-router-shadcn';
 import { readSearchParam } from '@openthrottle/react-router-ui-global';
-import clsx from 'clsx';
 import * as React from 'react';
 import { useSearchParams } from 'react-router';
 
 import type { PlanCardFragment } from '~/__generated__/graphql';
 import { PlanTasksEmpty } from '~/routing/plans/components/PlanTasksEmpty';
+import {
+  MOBILE_CARD_ROW_CLASS,
+  MOBILE_CARD_TABLE_CLASS,
+} from '~/routing/plans/data/data.mobile-card';
 import { buildPlansTableColumns } from '~/routing/plans/utils/plans-table-columns';
 
 export interface PlansTableProps {
@@ -43,6 +46,10 @@ export const PlansTable = (props: PlansTableProps): React.ReactElement => {
   );
 
   // Handlers
+  const getRowProps = React.useCallback(
+    () => ({ className: MOBILE_CARD_ROW_CLASS }),
+    [],
+  );
 
   // Markup
 
@@ -52,13 +59,15 @@ export const PlansTable = (props: PlansTableProps): React.ReactElement => {
 
   return (
     <div
-      className={clsx('ui-border rounded-lg border', className)}
+      className={cn('ui-border rounded-lg border', className)}
       data-testid="PlansTable"
     >
       <DataTable<PlanCardFragment, string | number | null | undefined>
+        className={MOBILE_CARD_TABLE_CLASS}
         columns={columns}
         data={plans}
         emptyState={<PlanTasksEmpty filtered={hasActiveFilters} />}
+        getRowProps={getRowProps}
       />
     </div>
   );

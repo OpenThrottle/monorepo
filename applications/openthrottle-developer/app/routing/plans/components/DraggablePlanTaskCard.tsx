@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { useDrag } from 'react-dnd';
 
@@ -53,7 +53,7 @@ export const DraggablePlanTaskCard = (
 
   return (
     <div
-      className={clsx(
+      className={cn(
         'touch-manipulation rounded-md',
         isDragging && 'opacity-50',
       )}

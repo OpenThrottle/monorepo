@@ -1,6 +1,14 @@
 import * as React from 'react';
 
-export type AudioCaptureStatus = 'idle' | 'recording' | 'requesting';
+import {
+  CAPTURE_SAMPLE_RATE,
+  DEFAULT_CHUNK_DURATION_MS,
+  WORKLET_PROCESSOR_NAME,
+} from '../config/audio-capture';
+import { WORKLET_PROCESSOR_SOURCE } from '../data/data.audio-capture-worklet';
+import type { AudioCaptureStatus } from '../types';
+import { isCaptureSupported } from '../utils/is-capture-supported';
+import { toError } from '../utils/to-error';
 
 export interface UseAudioCaptureOptions {
   /**
@@ -33,61 +41,12 @@ export interface UseAudioCaptureResult {
   readonly stop: () => void;
 }
 
-const CAPTURE_SAMPLE_RATE = 16000;
-const DEFAULT_CHUNK_DURATION_MS = 250;
-const WORKLET_PROCESSOR_NAME = 'openthrottle-pcm-chunk';
-
-// Runs on the audio rendering thread: batches 128-sample render quanta into
-// fixed-size Float32 chunks and transfers them to the main thread.
-const WORKLET_PROCESSOR_SOURCE = `
-class PcmChunkProcessor extends AudioWorkletProcessor {
-  constructor(options) {
-    super();
-    const chunkSamples = options?.processorOptions?.chunkSamples ?? 4000;
-    this.buffer = new Float32Array(chunkSamples);
-    this.offset = 0;
-  }
-
-  process(inputs) {
-    const channel = inputs[0]?.[0];
-    if (!channel) {
-      return true;
-    }
-    let read = 0;
-    while (read < channel.length) {
-      const available = this.buffer.length - this.offset;
-      const toCopy = Math.min(available, channel.length - read);
-      this.buffer.set(channel.subarray(read, read + toCopy), this.offset);
-      this.offset += toCopy;
-      read += toCopy;
-      if (this.offset === this.buffer.length) {
-        this.port.postMessage(this.buffer, [this.buffer.buffer]);
-        this.buffer = new Float32Array(this.buffer.length);
-        this.offset = 0;
-      }
-    }
-    return true;
-  }
-}
-
-registerProcessor('${WORKLET_PROCESSOR_NAME}', PcmChunkProcessor);
-`;
-
 interface CapturePipeline {
   readonly audioContext: AudioContext;
   readonly mediaStream: MediaStream;
   readonly sourceNode: MediaStreamAudioSourceNode;
   readonly workletNode: AudioWorkletNode;
 }
-
-const isCaptureSupported = (): boolean =>
-  typeof navigator !== 'undefined' &&
-  typeof navigator.mediaDevices?.getUserMedia === 'function' &&
-  typeof AudioContext !== 'undefined' &&
-  typeof AudioWorkletNode !== 'undefined';
-
-const toError = (value: unknown): Error =>
-  value instanceof Error ? value : new Error(String(value));
 
 /**
  * @description Captures microphone audio as ~250ms chunks of 16kHz mono Float32 PCM via
@@ -100,22 +59,23 @@ export function useAudioCapture(
 ): UseAudioCaptureResult {
   const { chunkDurationMs = DEFAULT_CHUNK_DURATION_MS, onChunk } = options;
 
+  // Hooks
   const [status, setStatus] = React.useState<AudioCaptureStatus>('idle');
   const [error, setError] = React.useState<Error | null>(null);
 
   const pipelineRef = React.useRef<CapturePipeline | null>(null);
   const startingRef = React.useRef(false);
   const onChunkRef = React.useRef<UseAudioCaptureOptions['onChunk']>(onChunk);
-  onChunkRef.current = onChunk;
 
   // Two-pass on purpose: SSR (and the hydrating first client render) reports
   // unsupported, then the mount effect upgrades — keeping server and client
   // markup identical avoids a hydration attribute mismatch on consumers.
   const [isSupported, setIsSupported] = React.useState(false);
-  React.useEffect(() => {
-    setIsSupported(isCaptureSupported());
-  }, []);
 
+  // Setup
+  onChunkRef.current = onChunk;
+
+  // Handlers
   const teardown = React.useCallback((): void => {
     const pipeline = pipelineRef.current;
     pipelineRef.current = null;
@@ -217,7 +177,16 @@ export function useAudioCapture(
     }
   }, [chunkDurationMs]);
 
+  // Markup
+
+  // Life Cycle
+  React.useEffect(() => {
+    setIsSupported(isCaptureSupported());
+  }, []);
+
   React.useEffect(() => teardown, [teardown]);
+
+  // 🔌 Short Circuit
 
   return {
     error,

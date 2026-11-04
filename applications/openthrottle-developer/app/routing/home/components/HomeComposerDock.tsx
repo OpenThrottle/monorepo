@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 export interface HomeComposerDockProps {
@@ -41,7 +41,7 @@ export const HomeComposerDock = (
 
   return (
     <div
-      className={clsx(
+      className={cn(
         'bg-background sticky bottom-0 z-10 pb-[env(safe-area-inset-bottom)]',
         className,
       )}

@@ -2,9 +2,7 @@ import type { ChatMentionProvider } from '@openthrottle/react-router-chat';
 import * as React from 'react';
 
 import type { IdeFilesResponse } from '~/routes/ide.files';
-
-/** Cap on suggestions surfaced in the composer's `@`-mention popover. */
-export const MAX_MENTION_SUGGESTIONS = 50;
+import { MAX_MENTION_SUGGESTIONS } from '~/routing/home/config/composer-suggestions';
 
 /**
  * Build the composer's `@`-mention {@link ChatMentionProvider} for the selected
@@ -19,11 +17,13 @@ export const MAX_MENTION_SUGGESTIONS = 50;
 export const useFileMentionProvider = (
   repositoryId: string | undefined,
 ): ChatMentionProvider | undefined => {
+  // Hooks
   // Kept in refs so the cache survives re-renders and popover open/close cycles.
   const listingCache = React.useRef(new Map<string, readonly string[]>());
   const inflight = React.useRef(new Map<string, Promise<readonly string[]>>());
 
-  return React.useMemo<ChatMentionProvider | undefined>(() => {
+  // Setup
+  const provider = React.useMemo<ChatMentionProvider | undefined>(() => {
     if (repositoryId === undefined || repositoryId === '') {
       return undefined;
     }
@@ -71,4 +71,14 @@ export const useFileMentionProvider = (
       },
     };
   }, [repositoryId]);
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
+  return provider;
 };

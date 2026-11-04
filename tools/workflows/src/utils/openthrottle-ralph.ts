@@ -275,7 +275,7 @@ export const updatePlanStatus = async (
 
 /**
  * @description Terminal reconcile for plan completion. Re-fetches the plan's tasks and,
- * if the set is non-empty and every task is terminal (`COMPLETED`/`SKIPPED`), flips the
+ * if the set is non-empty and every task is terminal (`COMPLETED`/`PROMOTED`/`SKIPPED`), flips the
  * plan to `COMPLETED`. Safe to call on any clean exit path (end of the Ralph loop,
  * max-iterations) so a plan whose tasks are all done is never stranded in `IN_PROGRESS`.
  * Returns `true` when it set the plan to `COMPLETED`, `false` otherwise. Uses the
@@ -407,11 +407,11 @@ export const isWorkflowActorUserJwt = (token: string | undefined): boolean => {
 
 /**
  * @description Once at CLI run-start path resolve: best-effort call
- * `registerPlanRunWorktreeCheckout` as the run actor so a linked worktree can back-fill
- * `plan_runs.checkout_id`. Soft-fails (debug/ warn + continue) when transport is postgres-direct,
+ * `registerPlanRunWorktreeCheckout` as the run actor so a linked worktree can point
+ * `plan_runs.checkout_id` and `branch` at the worktree. Soft-fails (debug/ warn + continue) when transport is postgres-direct,
  * actor auth is unavailable / is a service-account token, or the GraphQL call fails — never aborts
  * the agent run. Does not pass `ot_sa_` tokens to this mutation. Does not cover provision-time
- * registration from `worktree:new` / `setup_worktree.sh` (deferred follow-up; a worktree
+ * registration from `worktree:new` / `setup_worktree.ts` (deferred follow-up; a worktree
  * stays out of Workspace Settings until a run starts against them). Removal has its own
  * front door: `pnpm worktree:remove <name>` (the `ot-worktree` destroy action).
  */

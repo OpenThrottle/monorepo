@@ -10,6 +10,7 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { Queue } from 'bullmq';
 
 import { REPEATABLE_JOB_OPTIONS } from '../repeatable-job.options.ts';
+import { resolveRepeatablesOwner } from '../repeatable-job.owner.ts';
 import { DOC_INGESTION_QUEUE_NAME } from './doc-ingestion.constants.ts';
 import type {
   DocIngestionJobPayload,
@@ -51,6 +52,15 @@ export class DocIngestionRepeatableService implements OnModuleInit {
   ) {}
 
   async onModuleInit(): Promise<void> {
+    const ownership = resolveRepeatablesOwner();
+    if (!ownership.owner) {
+      this.logger.info(
+        `Doc-ingestion repeatable job not registered: ${ownership.reason}`,
+        DocIngestionRepeatableService.name,
+      );
+      return;
+    }
+
     const cron = process.env.DOC_INGESTION_CRON;
     if (!cron || cron.trim() === '') {
       this.logger.debug(

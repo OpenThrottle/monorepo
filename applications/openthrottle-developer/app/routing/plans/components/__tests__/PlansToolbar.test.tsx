@@ -1,8 +1,11 @@
+import { FACETED_FILTER_COPY } from '@openthrottle/react-router-shadcn';
 import type { RenderResult } from '@testing-library/react';
-import { render } from '@testing-library/react';
+import { render, within } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
+
+import { PLAN_STATUS_FILTER_COPY } from '~/routing/plans/data/data.copy';
 
 import type { PlansToolbarProps } from '../PlansToolbar';
 import { PlansToolbar } from '../PlansToolbar';
@@ -33,13 +36,12 @@ describe('PlansToolbar Component', () => {
     expect(component.getByTestId('PlansToolbar')).toBeInTheDocument();
   });
 
-  test('renders status filter (StatusMultiSelect) with selected count in trigger', () => {
+  test('renders the status filter, collapsing 3 selections to a count', () => {
     const statusFilter = component.getByTestId('PlansToolbar-status-filter');
-    expect(statusFilter).toBeInTheDocument();
-    expect(
-      component.getByRole('combobox', { name: /status/i }),
-    ).toBeInTheDocument();
-    expect(component.getByText('Status (3)')).toBeInTheDocument();
+    const trigger = within(statusFilter).getByRole('combobox', {
+      name: PLAN_STATUS_FILTER_COPY.title,
+    });
+    expect(trigger).toHaveTextContent(FACETED_FILTER_COPY.selectedCount(3));
   });
 
   test('renders plans search input', () => {

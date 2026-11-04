@@ -32,7 +32,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { createLogger, run } from './lib/index.ts';
+import { createLogger, run } from './utils/index.ts';
 
 const logger = createLogger();
 

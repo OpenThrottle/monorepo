@@ -2,15 +2,37 @@ import type { RenderResult } from '@testing-library/react';
 import { act, render, waitFor, within } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+} from 'vitest';
 
 import type { ChatMessage } from '../../types';
 import type { ChatThreadProps } from '../ChatThread';
 import { ChatThread } from '../ChatThread';
 
+/**
+ * Assistant and system bodies render through `ChatMessageBody`'s lazy
+ * `MarkdownRenderer`, so the first `findBy` pays for MDX-compiling the acorn
+ * stack — over Testing Library's 1000ms default on a contended CI shard. See
+ * `ChatMessageBody.test.tsx` for the full reasoning behind this budget.
+ */
+const LAZY_RENDERER_TIMEOUT_MS = 10_000;
+
 describe('ChatThread Component', () => {
   let component: RenderResult;
   let props: ChatThreadProps;
+
+  // Preload the lazy module so the `react-router-shadcn` barrel it drags in
+  // lands in the hook budget, and the `findBy` waits measure only the render.
+  beforeAll(async () => {
+    await import('@openthrottle/react-router-markdown');
+  });
 
   const renderThread = (p: ChatThreadProps): RenderResult => {
     const Comp = () => <ChatThread {...p} />;
@@ -52,7 +74,9 @@ describe('ChatThread Component', () => {
 
     test('should render assistant content in Markdown wrapper', async () => {
       // The markdown renderer is lazy; wait for it before asserting on its DOM.
-      await component.findByTestId('MarkdownRenderer');
+      await component.findByTestId('MarkdownRenderer', undefined, {
+        timeout: LAZY_RENDERER_TIMEOUT_MS,
+      });
 
       expect(component.getByTestId('ChatThread-message-2')).toBeInTheDocument();
       expect(
@@ -69,7 +93,9 @@ describe('ChatThread Component', () => {
         { body: '# Title', id: 'a1', role: 'assistant' },
       ];
       component = renderThread({ messages: markdownMessages });
-      await component.findByTestId('MarkdownRenderer');
+      await component.findByTestId('MarkdownRenderer', undefined, {
+        timeout: LAZY_RENDERER_TIMEOUT_MS,
+      });
 
       // The renderer parses Markdown, so `# Title` becomes a heading element
       // with the text `Title` — not the literal `# Title` string.
@@ -429,7 +455,9 @@ describe('ChatThread Component', () => {
           { body: authRequiredCopy, id: '2', role: 'system' },
         ],
       });
-      await component.findByTestId('MarkdownRenderer');
+      await component.findByTestId('MarkdownRenderer', undefined, {
+        timeout: LAZY_RENDERER_TIMEOUT_MS,
+      });
 
       const thread = within(component.container).getByTestId('ChatThread');
       // The body renders as markdown, so the backticked command lands in its

@@ -298,6 +298,16 @@ type PlanObject {
   Resolved project entity when projectId is set; null when projectId is unset.
   """
   projectRelation: ProjectObject
+
+  """
+  The soonest instant a SCHEDULED run of this plan fires at (plan_runs.scheduled_for of its earliest SCHEDULED run); null when none is waiting. Lets the UI explain why a run is already pending ("a run is scheduled for <local time>; cancel it to run now"). Resolved from plan_runs; a run that fired, was cancelled or was settled MISSED/SUPERSEDED no longer counts.
+  """
+  scheduledRunAt: DateTime
+
+  """
+  The id of the SCHEDULED run behind scheduledRunAt (the same soonest run: earliest scheduled_for, then id); null when none is waiting. Pass it as planRunId to cancelPlanRun to cancel just that run, so the UI can offer Cancel without listing run history.
+  """
+  scheduledRunId: ID
   status: String!
   summary: String
 
@@ -305,7 +315,7 @@ type PlanObject {
   taskCount: Int!
 
   """
-  Number of resolved tasks on this plan (status COMPLETED or SKIPPED). Mirrors client getResolvedTaskCount; SKIPPED counts as done / won't be worked on.
+  Number of resolved tasks on this plan (status COMPLETED, SKIPPED or PROMOTED). Mirrors client getResolvedTaskCount; SKIPPED and PROMOTED count as done / won't be worked on here (PROMOTED continued as its own plan).
   """
   tasksCompletedCount: Int!
   title: String!
@@ -394,14 +404,34 @@ type PlanRunObject {
   workerId: String
 
   """
+  The usage-limited run this run continues: set on the continuation run enqueued automatically after a Claude usage limit. Null for every ordinary run.
+  """
+  resumeOfRunId: String
+
+  """
   Resolved workflow-ralph configuration at enqueue (PlanRunConfigSnapshot v1 JSON). Null for legacy runs.
   """
   runConfigSnapshotJson: String
 
   """Ralph run implementation: spawn or orchestrator."""
   runKind: String!
+
+  """
+  The absolute UTC instant a scheduled run fires at. Set only on runs created by schedulePlanRun (status SCHEDULED while waiting) and kept once the run settles, so history still shows when it was meant to fire. Null for every run that was enqueued to run now.
+  """
+  scheduledFor: DateTime
   status: String!
   updatedAt: DateTime!
+
+  """
+  When the usage limit that stopped this run lifts, as reported by the agent CLI. Null unless status is USAGE_LIMITED, or when the CLI reported no reset time.
+  """
+  usageLimitResetsAt: DateTime
+
+  """
+  Raw name of the usage-limit window that stopped this run (five_hour, seven_day, ...). Null unless status is USAGE_LIMITED, or when the window was not reported.
+  """
+  usageLimitType: String
 
   """
   Git branch this run operates on, captured at kickoff (run provenance). Powers branch↔PR mapping. Null for legacy/backfilled rows that predate branch capture.
@@ -476,6 +506,27 @@ type EnqueuePlanRunResultObject {
 
   """Total number of jobs waiting in the queue (including this one)."""
   queueTotal: Int!
+}
+
+type SchedulePlanRunResultObject {
+  """Execution backend selected once for the whole run: cursor or claude."""
+  executionBackend: String!
+
+  """
+  BullMQ job id of the delayed job that starts the run (deterministic: scheduled-plan-run-<idempotencyKey | planId-epochMs>).
+  """
+  jobId: String!
+
+  """Plan id the run was scheduled for."""
+  planId: String!
+
+  """
+  plan_runs id of the SCHEDULED run row (status SCHEDULED until the job fires).
+  """
+  planRunId: String!
+
+  """The absolute UTC instant the run fires at."""
+  scheduledFor: DateTime!
 }
 
 type CancelPlanRunResultObject {
@@ -716,11 +767,56 @@ type AgentCliModelOption {
   favorite: Boolean!
 }
 
+type AgentCliAuthStatusObject {
+  """
+  Logged-in account email as reported by `claude auth status`, or null when unknown. No tokens or credential files are read.
+  """
+  accountEmail: String
+
+  """
+  The credential Claude runs will actually bill: "subscription" (claude.ai login), "apiKey" (ANTHROPIC_API_KEY or a configured key source — it always wins in -p mode), or "none". Derived from `claude auth status` plus the presence (never the value) of ANTHROPIC_API_KEY in the server env.
+  """
+  activeCredential: String!
+
+  """
+  True when an API key is active while a subscription login also exists, so runs bill the API key instead of the subscription.
+  """
+  apiKeyOverridesSubscription: Boolean!
+
+  """
+  Login method as reported by `claude auth status` (e.g. "claude.ai"), or null when unknown.
+  """
+  authMethod: String
+
+  """True when `claude auth status` reports a logged-in account."""
+  loggedIn: Boolean!
+
+  """
+  Organization name as reported by `claude auth status`, or null when unknown.
+  """
+  organizationName: String
+
+  """
+  Subscription plan (e.g. "pro", "max", "team") as reported by `claude auth status`, or null when unknown.
+  """
+  subscriptionType: String
+
+  """
+  A loud, specific sentence when the credential setup needs attention (API key overriding the subscription, or not logged in); null when everything is fine.
+  """
+  warning: String
+}
+
 type AgentCliOptionObject {
   """
   Backend discriminator (e.g. "cursor") used in StartConversationStreamInput.
   """
   backend: String!
+
+  """
+  Logged-in account, subscription plan and active credential, reported by `claude auth status --json` (no OAuth tokens or credential files are read, and no Anthropic endpoint is called). Null for CLIs other than claude, or when the probe failed or timed out.
+  """
+  auth: AgentCliAuthStatusObject
 
   """
   True when this CLI resolves the workspace's committed MCP config (.mcp.json / .cursor/mcp.json / opencode.json), so a run in this checkout can reach openthrottle-mcp. False for codex and gemini, which read only their own config scope (codex: user-scope config.toml; gemini: .gemini/settings.json, never .mcp.json) — for those, MCP reachability is a property of the host and cannot be verified from the workspace, so present it as unverifiable rather than as definitely missing. Distinct from emitting MCP flags: claude, grok, and opencode emit none yet attach fine.
@@ -966,6 +1062,122 @@ type SignoutResultObject {
   success: Boolean!
 }
 
+type BlogAuthorObject {
+  avatarUrl: String
+  bio: String
+  displayName: String!
+  slug: String!
+}
+
+type BlogTagObject {
+  description: String
+  name: String!
+  slug: String!
+}
+
+type BlogPostObject {
+  author: BlogAuthorObject
+  bodyMarkdown: String!
+  coverImageAlt: String
+  coverImageUrl: String
+  excerpt: String
+  id: String!
+  publishedAt: DateTime
+
+  """
+  Estimated reading time in whole minutes (~200 words per minute, minimum 1)
+  """
+  readingTimeMinutes: Int!
+  seoDescription: String
+  seoTitle: String
+  slug: String!
+  tags: [BlogTagObject!]!
+  title: String!
+  updatedAt: DateTime!
+}
+
+type BlogPostListResult {
+  """
+  Opaque cursor of the last item; pass as `after` to fetch the next page. Null when the page is empty.
+  """
+  endCursor: String
+  hasNextPage: Boolean!
+  items: [BlogPostObject!]!
+}
+
+type BlogPostAdminObject {
+  author: BlogAuthorObject
+  bodyMarkdown: String!
+  coverImageAlt: String
+  coverImageUrl: String
+  createdAt: DateTime!
+  excerpt: String
+  id: ID!
+
+  """
+  Who made the most recent write: a user's name or a service account's name. Null for posts last written before this was recorded.
+  """
+  lastEditedBy: String
+
+  """
+  When the post goes (or went) live. Null for drafts. A PUBLISHED post with a value in the future is scheduled and not yet publicly visible.
+  """
+  publishedAt: DateTime
+  seoDescription: String
+  seoTitle: String
+  slug: String!
+
+  """
+  Derived lifecycle state (DRAFT, SCHEDULED, LIVE, ARCHIVED), computed when the response is built from status and publishedAt.
+  """
+  state: BlogPostState!
+  status: BlogPostStatus!
+  tags: [BlogTagObject!]!
+  title: String!
+  updatedAt: DateTime!
+}
+
+"""
+Derived lifecycle state of a blog post as the authoring surface shows it. LIVE is the only publicly visible state; SCHEDULED is PUBLISHED with a future publishedAt.
+"""
+enum BlogPostState {
+  ARCHIVED
+  DRAFT
+  LIVE
+  SCHEDULED
+}
+
+"""
+Lifecycle of a blog post. Only PUBLISHED posts whose publishedAt has passed are publicly visible; a PUBLISHED post with a future publishedAt is scheduled.
+"""
+enum BlogPostStatus {
+  ARCHIVED
+  DRAFT
+  PUBLISHED
+}
+
+type BlogAdminPostListResult {
+  """
+  Opaque cursor of the last item; pass as `after` to fetch the next page. Null when the page is empty.
+  """
+  endCursor: String
+  hasNextPage: Boolean!
+  items: [BlogPostAdminObject!]!
+}
+
+type CaptureHealthRowObject {
+  """Server receipt time of the newest row for this (stream, source)."""
+  lastCapturedAt: DateTime!
+
+  """
+  Capturing tool, e.g. claude-code, cursor, codex; unknown when the row carries no source.
+  """
+  source: String!
+
+  """Ingest stream: skill_events, skill_outcomes or token_usage."""
+  stream: String!
+}
+
 type CodeSearchMatch {
   """Raw source text of the matched chunk."""
   content: String!
@@ -1035,7 +1247,7 @@ type ConversationStreamChunkObject {
   messageId: String!
 
   """
-  Event kind: text (assistant output) | thinking | tool_call | tool_result | usage | session.
+  Event kind: text (assistant output) | thinking | tool_call | tool_result | usage | usage_limit | session.
   """
   kind: String!
 
@@ -1888,6 +2100,42 @@ type PlanStatusChangedNotification implements NotificationEvent {
   status: String!
 }
 
+"""
+A scheduled agent job run failed, timed out, or was recorded missed. Sent to alert the schedule's owner.
+"""
+type ScheduledRunFailedNotification implements NotificationEvent {
+  """Well-known event name (e.g. task.completed)."""
+  event: String!
+
+  """ISO 8601 timestamp when the event occurred."""
+  timestamp: String!
+  message: String
+
+  """info | warning | error | success"""
+  severity: String
+
+  """App-relative click-through path."""
+  link: String
+
+  """
+  The schedule's owner, who the notice is for. Null for a schedule with no owner.
+  """
+  actorUserId: ID
+
+  """failed | timed_out | missed"""
+  reason: String!
+
+  """
+  How many runs the notice covers; above 1 only when a server boot records several missed fires at once.
+  """
+  runCount: Int!
+
+  """The run, when the notice covers exactly one run whose id is known."""
+  runId: ID
+  scheduledAgentJobId: ID!
+  scheduleName: String!
+}
+
 type SystemAlertNotification implements NotificationEvent {
   """Well-known event name (e.g. task.completed)."""
   event: String!
@@ -2045,6 +2293,60 @@ type WorkLedgerCompletenessResult {
 
   """Plans the ledger knows have git work (see the denominator caveat)"""
   totalCount: Int!
+}
+
+"""The outcome for one requested checkout id."""
+type PruneWorktreeCheckoutResultObject {
+  checkoutId: ID!
+  outcome: PruneWorktreeCheckoutOutcome!
+
+  """The registered path, or null when the checkout was not found."""
+  path: String
+}
+
+"""What happened to one requested checkout id."""
+enum PruneWorktreeCheckoutOutcome {
+  """
+  No checkout with that id is owned by the caller, or it was deleted concurrently.
+  """
+  NOT_FOUND
+
+  """The row was deleted."""
+  PRUNED
+
+  """
+  An unsettled (QUEUED or IN_PROGRESS) plan run still points at this checkout. Settle the run first.
+  """
+  SKIPPED_ACTIVE_RUN
+
+  """The path is a live linked worktree right now, so the row is not stale."""
+  SKIPPED_LIVE
+
+  """The row is a primary checkout. Prune only ever deletes worktree rows."""
+  SKIPPED_PRIMARY
+}
+
+"""
+Result of pruneWorktreeCheckouts: one entry per distinct requested id, in request order.
+"""
+type PruneWorktreeCheckoutsPayloadObject {
+  results: [PruneWorktreeCheckoutResultObject!]!
+}
+
+"""Result of deregisterWorktreeCheckout for one removed worktree path."""
+type DeregisterWorktreeCheckoutPayloadObject {
+  """
+  The checkout row at the path, or null when none is registered there for the caller.
+  """
+  checkoutId: ID
+
+  """
+  PRUNED when the row was deleted; NOT_FOUND when there was nothing to deregister (the normal case for a worktree OpenThrottle never registered).
+  """
+  outcome: PruneWorktreeCheckoutOutcome!
+
+  """The registered path when a row matched, else the path as given."""
+  path: String!
 }
 
 """
@@ -2412,7 +2714,7 @@ type ScheduledAgentJobRepositoryObject {
 }
 
 """
-A user-defined scheduled agent job: a prompt run with a driver/model/settings on a cron schedule via one shared BullMQ queue.
+A user-defined scheduled agent job: a prompt run with a driver/model/settings on a cron, interval or run-once schedule via one shared BullMQ queue.
 """
 type ScheduledAgentJobObject {
   id: ID!
@@ -2434,14 +2736,39 @@ type ScheduledAgentJobObject {
   """
   settingsJson: String!
 
-  """5- or 6-field cron pattern."""
-  cronPattern: String!
+  """
+  How the schedule fires: cron (cronPattern in timezone), interval (intervalMs after the previous run finishes) or once (a single run at runAt, after which the schedule is disabled).
+  """
+  scheduleKind: String!
+
+  """
+  5- or 6-field cron pattern for a cron schedule; null for interval and once schedules.
+  """
+  cronPattern: String
+
+  """
+  For an interval schedule: ms from the end of one run to the start of the next (elapsed time, so DST-safe). Null for other kinds.
+  """
+  intervalMs: Int
+
+  """For a once schedule: when its single run is due. Null for other kinds."""
+  runAt: DateTime
 
   """IANA timezone for the cron pattern; null means UTC."""
   timezone: String
 
   """Per-run timeout override in ms; null uses the queue default."""
   timeoutMs: Int
+
+  """
+  What happens to a fire that starts more than misfireThresholdMs late (server down, or a backed-up queue): skip records it as a missed run; catch_up_once runs the most recent late fire once and records any earlier ones as missed. A fire within the threshold always runs.
+  """
+  misfirePolicy: String!
+
+  """
+  How late (ms after its cron slot) a fire may start and still count as on time; at least 60000.
+  """
+  misfireThresholdMs: Int!
 
   """Whether the schedule is active (registered as a BullMQ scheduler)."""
   enabled: Boolean!
@@ -2486,13 +2813,20 @@ type ScheduledAgentJobRunObject {
   bullmqJobId: String
 
   """
-  queued | running | succeeded | no_op | failed | cancelled. no_op is terminal and NOT an error: the process exited cleanly but the agent reported it did not do the work.
+  queued | running | succeeded | no_op | failed | cancelled | usage_limited | missed. no_op is terminal and NOT an error: the process exited cleanly but the agent reported it did not do the work. usage_limited is terminal and NOT an error: the agent CLI stopped on a Claude subscription usage limit (see usageLimitResetsAt); a continuation run (trigger resume, resumeOfRunId = this run) may have been enqueued. missed is created terminal: a cron fire the schedule's misfire policy did not run (see scheduledFor and errorMessage); no agent was spawned.
   """
   status: String!
+
+  """
+  The slot this run belongs to, for trigger schedule (missed runs included): the cron slot, or when an interval or once fire was due. Null for manual and resume runs and for runs recorded before slot accounting.
+  """
+  scheduledFor: DateTime
   driverId: String!
   model: String
 
-  """schedule | manual (run-now)."""
+  """
+  schedule (a cron, interval or once fire) | manual (run-now) | resume (delayed continuation of a usage_limited run).
+  """
   trigger: String!
 
   """Child process exit code; null on timeout/cancel/spawn error."""
@@ -2552,6 +2886,21 @@ type ScheduledAgentJobRunObject {
   The exact directory the agent CLI was spawned in for this run, after the checkout -> cwd -> WORKSPACE_ROOT precedence. Authoritative record of where the run happened; null for legacy runs.
   """
   resolvedCwd: String
+
+  """
+  When the usage limit that stopped this run lifts, as reported by the agent CLI; null when the run was not usage_limited or no reset time was reported.
+  """
+  usageLimitResetsAt: DateTime
+
+  """
+  Raw usage-limit window that stopped this run (five_hour, seven_day, ...); null when the run was not usage_limited or the window was not reported.
+  """
+  usageLimitType: String
+
+  """
+  The usage_limited run this run continues (trigger resume); null for every ordinary run.
+  """
+  resumeOfRunId: ID
   createdAt: DateTime!
 
   """
@@ -2597,6 +2946,11 @@ type ScheduledAgentJobRunStatsObject {
 
   """Runs that completed successfully inside the window."""
   succeededCount: Int!
+
+  """
+  Runs that stopped on a Claude subscription usage limit inside the window. Terminal and NOT a failure; a continuation run may have been enqueued.
+  """
+  usageLimitedCount: Int!
 
   """
   Every run created inside the window, whatever its status — the "ran today" total.
@@ -3298,7 +3652,9 @@ type TokenUsageRowObject {
   """Source conversation id, when the usage came from chat; null otherwise."""
   conversationId: ID
 
-  """Reported dollar cost of the turn, when priced."""
+  """
+  Dollar cost of the turn: reported by the producer, or an estimate at Anthropic list price for an unpriced Claude request. Null when it cannot be priced.
+  """
   costUsd: Float
 
   """Turn completion timestamp."""
@@ -3323,6 +3679,11 @@ type TokenUsageRowObject {
 
   """Reasoning tokens for the turn, when reported separately."""
   reasoningTokens: Float
+
+  """
+  Producer of the row: openthrottle-chat (in-app chat) or claude-code (Claude Code hooks). Null for legacy rows written before sources were recorded, which are chat.
+  """
+  source: String
 
   """Total tokens for the turn, when reported."""
   totalTokens: Float
@@ -3360,6 +3721,16 @@ type TokenUsageResultObject {
 
   """Summed usage + turn count over the same filtered range."""
   totals: TokenUsageTotalsObject!
+}
+
+type RecordTokenUsageResultObject {
+  """Rows written by this call."""
+  inserted: Int!
+
+  """
+  Rows skipped because (source, sessionId, requestId) was already recorded.
+  """
+  skipped: Int!
 }
 
 type TranscriptionStreamChunkObject {
@@ -3604,6 +3975,36 @@ type RepositoryObject {
   updatedAt: DateTime!
 }
 
+"""
+A registered repository_checkouts row of kind worktree that discovery could not match to a live worktree. Reported only — removing the row is the explicit pruneWorktreeCheckouts mutation.
+"""
+type MissingWorktreeCheckoutObject {
+  """The orphaned repository_checkouts row."""
+  checkoutId: ID!
+
+  """
+  The path as registered. It no longer resolves, so it is not symlink-resolved.
+  """
+  path: String!
+
+  """Whether the path is gone or merely is not a worktree."""
+  reason: MissingWorktreeCheckoutReason!
+
+  """The repository the row belongs to."""
+  repositoryId: ID!
+}
+
+"""Why a registered worktree checkout has no live worktree behind it."""
+enum MissingWorktreeCheckoutReason {
+  """
+  Something exists at the path, but it is not a linked worktree — a husk directory with no .git, or a real clone.
+  """
+  NOT_A_WORKTREE
+
+  """Nothing exists at the path any more."""
+  PATH_GONE
+}
+
 """One classified, non-fatal thing that happened during a scan."""
 type WorktreeDiscoveryProblemObject {
   """
@@ -3645,6 +4046,11 @@ enum WorktreeDiscoveryProblemKind {
   NOT_A_GIT_REPO
 
   """
+  A directory in a worktree root with no .git at all — the husk a removed worktree leaves behind. Not a worktree and never probed; nothing deletes it automatically.
+  """
+  ORPHAN_DIRECTORY
+
+  """
   A read-only git probe against a directory that does exist failed. The genuinely degraded case: worktrees may be missing from the list.
   """
   PROBE_FAILED
@@ -3663,11 +4069,18 @@ enum WorktreeDiscoveryProblemKind {
 """One resolved worktree root and what the depth-1 scan of it found."""
 type ScannedWorktreeRootObject {
   """
+  The configured worktree root this directory sits under, before OpenThrottle joins <org>/<repo> onto it — absolute and ~-expanded, on the server host. This is the value to show a person; path is one repository's folder beneath it. Several scanned roots share a baseRoot whenever their repositories share a configured root, so de-duplicate before listing.
+  """
+  baseRoot: String!
+
+  """
   Whether the directory is there at all. False is the ordinary state of a repository with no worktrees yet — it is data, not a failure.
   """
   exists: Boolean!
 
-  """Absolute path on the server host."""
+  """
+  The directory actually scanned: baseRoot joined with the repository's <org>/<repo>. Absolute path on the server host.
+  """
   path: String!
 
   """Which rung of the shared ladder resolved this root."""
@@ -3774,6 +4187,11 @@ type DiscoveredWorktreesObject {
   droppedCount: Int!
 
   """
+  Registered worktree checkouts with no live worktree behind them, ordered by path — rows left behind when a worktree was removed outside OpenThrottle. Matched against every live worktree before the cap, so a capped scan never reports a live one here.
+  """
+  missingCheckouts: [MissingWorktreeCheckoutObject!]!
+
+  """
   Classified non-fatal problems. Empty on a healthy machine — a repository with no worktrees yet reports nothing at all.
   """
   problems: [WorktreeDiscoveryProblemObject!]!
@@ -3789,7 +4207,7 @@ type DiscoveredWorktreesObject {
   scannedAt: String!
 
   """
-  Every root the scan looked in. worktreeRoot names only the first, which misrepresents a machine whose primaries resolve to several roots.
+  Every root the scan looked in, each carrying the configured baseRoot it sits under and the rung that set it.
   """
   scannedRoots: [ScannedWorktreeRootObject!]!
 
@@ -3797,9 +4215,9 @@ type DiscoveredWorktreesObject {
   warnings: [String!]! @deprecated(reason: "Use problems — warnings is unclassified free text and cannot be presented per-kind.")
 
   """
-  The resolved root that was scanned; null when none could be resolved (no registered primary checkout). When several primaries resolve to different roots, this is the first — every root is still scanned.
+  The first resolved per-repository folder that was scanned; null when none could be resolved (no registered primary checkout).
   """
-  worktreeRoot: String
+  worktreeRoot: String @deprecated(reason: "Use scannedRoots.baseRoot — worktreeRoot is the first primary's <root>/<org>/<repo> folder, not the configured root, and names only one of several.")
   worktrees: [DiscoveredWorktreeObject!]!
 }
 
@@ -4010,6 +4428,44 @@ type Query {
   Whether server-side agent-CLI install/update is enabled (env flag) and whether the current user may run it (SETTINGS_WRITE). Drives the /settings/agents control gating.
   """
   agentCliSetupConfig: AgentCliSetupConfigObject!
+
+  """
+  Every blog post in any state, most recently edited first, with cursor pagination. Optionally filtered to one or more derived states and to a case-insensitive title / slug search.
+  """
+  blogAdminPosts(state: [BlogPostState!], first: Int! = 10, after: String, search: String): BlogAdminPostListResult!
+
+  """
+  One blog post in any state, by id or by slug (exactly one of the two is required, otherwise the query is rejected). BlogPostNotFoundError when no such post exists.
+  """
+  blogAdminPost(id: ID, slug: String): BlogAdminPostResult!
+
+  """
+  Every blog tag (including tags no live post carries yet), ordered by name.
+  """
+  blogAdminTags: [BlogTagObject!]!
+
+  """Every blog author, ordered by display name."""
+  blogAdminAuthors: [BlogAuthorObject!]!
+
+  """
+  A publicly visible blog post by slug. Null for an unknown slug and for any post that is not public (draft, archived, or scheduled in the future).
+  """
+  blogPost(slug: String!): BlogPostObject
+
+  """
+  Publicly visible blog posts, newest first, with cursor pagination. Optionally filtered to one tag.
+  """
+  blogPosts(first: Int! = 10, after: String, tagSlug: String): BlogPostListResult!
+
+  """
+  Blog tags carried by at least one publicly visible post, ordered by name.
+  """
+  blogTags: [BlogTagObject!]!
+
+  """
+  When telemetry last arrived, per (stream, source): skill_events and skill_outcomes by source, token_usage by provider. A source that is absent has never captured; a stale lastCapturedAt means capture may be broken.
+  """
+  captureHealth: [CaptureHealthRowObject!]!
 
   """
   Natural-language code semantic search over a registered repository's indexed code. available=false when no embeddings provider is configured.
@@ -4599,6 +5055,14 @@ input GetAgentConversationMessagesInput {
   offset: Int = 0
 }
 
+"""The post in any state, or BlogPostNotFoundError."""
+union BlogAdminPostResult = BlogPostAdminObject | BlogPostNotFoundError
+
+type BlogPostNotFoundError {
+  """Human-readable explanation."""
+  message: String!
+}
+
 input CodeSemanticSearchInput {
   """Max number of matches to return (default 10)."""
   limit: Int
@@ -4895,6 +5359,7 @@ enum PlanTaskStatus {
   COMPLETED
   IN_PROGRESS
   PENDING
+  PROMOTED
   QUEUED
   SKIPPED
 }
@@ -5104,6 +5569,46 @@ type Mutation {
   mintSubscriptionToken: String!
 
   """
+  Create a blog post as a DRAFT. Returns BlogSlugConflictError when the slug is taken, BlogCoverAltRequiredError when a cover image has no alt text, and BlogReferenceNotFoundError for an unknown authorSlug.
+  """
+  createBlogPost(input: CreateBlogPostInput!): CreateBlogPostResult!
+
+  """
+  Partially update a blog post. A caller holding only blog:draft may edit DRAFT posts; for any other post it gets BlogPostPublishPermissionRequiredError. Also returns BlogPostNotFoundError, BlogSlugConflictError, BlogCoverAltRequiredError, BlogReferenceNotFoundError (unknown authorSlug) and, when expectedUpdatedAt no longer matches, BlogPostStaleWriteError.
+  """
+  updateBlogPost(input: UpdateBlogPostInput!): UpdateBlogPostResult!
+
+  """
+  Publish a blog post: sets status PUBLISHED and publishedAt. Without publishedAt the post goes live now; a future publishedAt schedules it. Returns BlogPostNotFoundError for an unknown post.
+  """
+  publishBlogPost(input: PublishBlogPostInput!): PublishBlogPostResult!
+
+  """
+  Return a blog post to DRAFT and clear its publishedAt. It stops being publicly visible immediately. Returns BlogPostNotFoundError for an unknown post.
+  """
+  unpublishBlogPost(id: ID!): UnpublishBlogPostResult!
+
+  """
+  Archive a blog post. It stops being publicly visible; publishedAt is kept. Returns BlogPostNotFoundError for an unknown post.
+  """
+  archiveBlogPost(id: ID!): ArchiveBlogPostResult!
+
+  """
+  Replace the full set of tags on a blog post by tag slug. A caller holding only blog:draft may tag DRAFT posts; for any other post it gets BlogPostPublishPermissionRequiredError. Also returns BlogPostNotFoundError and BlogReferenceNotFoundError (unknown tag slug).
+  """
+  setBlogPostTags(input: SetBlogPostTagsInput!): SetBlogPostTagsResult!
+
+  """
+  Create the blog author with this slug, or replace its fields if it exists.
+  """
+  upsertBlogAuthor(input: UpsertBlogAuthorInput!): BlogAuthorObject!
+
+  """
+  Create the blog tag with this slug, or replace its fields if it exists.
+  """
+  upsertBlogTag(input: UpsertBlogTagInput!): BlogTagObject!
+
+  """
   Enqueue a full re-index of a registered repository's code. Returns indexing, or unavailable when no embeddings provider is configured.
   """
   indexCodeRepository(repositoryId: ID!): IndexCodeRepositoryResult!
@@ -5230,9 +5735,14 @@ type Mutation {
   recordPlanRunHeartbeat(input: RecordPlanRunHeartbeatInput!): PlanRunObject
 
   """
-  Best-effort register of a linked git worktree as a repository_checkout for the run actor, then back-fill plan_runs.checkout_id when still NULL. Soft-fails (returns the run unchanged) when the path is not a linked worktree, repository resolution fails, or upsert errors. The actor resolves through its acting user, so a service-account token (the MCP) works when the account is linked to one; an unlinked account resolves to null and soft-fails like any other unresolvable actor. Returns null when the plan-run row does not exist.
+  Best-effort register of a linked git worktree as a repository_checkout for the run actor, then point plan_runs.checkout_id and branch at that worktree (overwrites a scheduling-time primary checkout). Soft-fails (returns the run unchanged) when the path is not a linked worktree, repository resolution fails, or upsert errors. The actor resolves through its acting user, so a service-account token (the MCP) works when the account is linked to one; an unlinked account resolves to null and soft-fails like any other unresolvable actor. Returns null when the plan-run row does not exist.
   """
   registerPlanRunWorktreeCheckout(input: RegisterPlanRunWorktreeCheckoutInput!): PlanRunObject
+
+  """
+  The teardown half of registerPlanRunWorktreeCheckout: called right after a worktree is removed, it deletes the actor's repository_checkouts row at that path so the repositories page stops listing a worktree that no longer exists. Runs the same guards as pruneWorktreeCheckouts — the row is kept (and the outcome says why) while the path is still a live worktree, while an unsettled plan run points at it, or when it is a primary checkout. Never touches the filesystem. Resolves a service-account token through its acting user like registration does; an unresolvable actor reports NOT_FOUND rather than throwing, so a teardown can call this best-effort.
+  """
+  deregisterWorktreeCheckout(input: DeregisterWorktreeCheckoutInput!): DeregisterWorktreeCheckoutPayloadObject!
 
   """Create a plan"""
   createPlan(input: CreatePlanInput!): PlanObject!
@@ -5274,7 +5784,12 @@ type Mutation {
   enqueuePlanRalphOrchestrator(input: EnqueuePlanRalphOrchestratorInput!): EnqueuePlanRunResultObject!
 
   """
-  Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token).
+  Schedule a plan run for a later instant: the enqueuePlanRun input plus scheduledFor. Records a SCHEDULED plan_runs row with a frozen run config snapshot and a delayed job that starts it. scheduledFor must be in the future and within 30 days (SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS). Does not change the plan or task statuses (the plan stays as it is until the run fires). Cancel with cancelPlanRun (pass planRunId to cancel just this run).
+  """
+  schedulePlanRun(input: SchedulePlanRunInput!): SchedulePlanRunResultObject!
+
+  """
+  Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). Also cancels the plan's SCHEDULED runs (delayed job removed, run settled CANCELLED). With planRunId naming a SCHEDULED run of the plan, cancels ONLY that run (its delayed job and row), leaving any other active run, the plan status and the tasks alone; a planRunId that is already settled is a no-op, and one that is QUEUED or IN_PROGRESS is rejected (omit planRunId to stop a live run). Idempotent: once a scheduled run has fired or settled there is nothing left to cancel.
   """
   cancelPlanRun(input: CancelPlanRunInput!): CancelPlanRunResultObject!
 
@@ -5502,9 +6017,14 @@ type Mutation {
   detachHook(input: DetachHookInput!): Boolean!
 
   """
-  Promote a task into a new, first-class plan. Validates the task is promotable (exists, not a lifecycle hook, not already promoted) then enqueues an async task-promotion job (enqueue-after-validate, idempotency key doubles as the BullMQ job id). The job creates the plan, carries the task's tags, seeds an initial task, closes out the source task (→ SKIPPED + `promoted` tag), and records provenance. Returns the accepted job id; the new plan surfaces via the task-status subscription once the job completes.
+  Promote a task into a new, first-class plan. Validates the task is promotable (exists, not a lifecycle hook, not already promoted) then enqueues an async task-promotion job (enqueue-after-validate, idempotency key doubles as the BullMQ job id). The job creates the plan, carries the task's tags, seeds an initial task, closes out the source task (→ PROMOTED + `promoted` tag), and records provenance. Returns the accepted job id; the new plan surfaces via the task-status subscription once the job completes.
   """
   promoteTaskToPlan(input: PromoteTaskToPlanInput!): PromoteTaskToPlanResultObject!
+
+  """
+  Batch-ingest hook-captured token usage rows (at most 500). Rows are attributed to the human user the authenticated principal acts as (human JWT, or a service account's acting user); a userId is never accepted from the client. Idempotent: rows whose (source, sessionId, requestId) already exist are skipped. created_at is the row's occurredAt, not ingest time. Any invalid row rejects the whole batch with BAD_REQUEST naming the row index.
+  """
+  recordTokenUsage(input: RecordTokenUsageInput!): RecordTokenUsageResultObject!
 
   """
   Mint a transcription session: the server opens a websocket to the local WhisperLive service (WHISPER_SERVICE_URL — env-only, never client-supplied) and returns the session id to stream audio to. Must be executed over an authenticated graphql-ws connection (the audio mutations ride the same socket). A user's previous active session is closed first. Uses errorMessage for expected failures (unconfigured / unreachable).
@@ -5540,6 +6060,11 @@ type Mutation {
 
   """Re-enable a disabled user."""
   enableUser(id: ID!): UserObject
+
+  """
+  Delete registered worktree checkout rows whose worktree is gone — the cleanup for discoveredWorktrees.missingCheckouts. Rows only: never touches the filesystem and never deletes a primary checkout. Each id is re-checked server-side and skipped, not failed, when its path is a live worktree or an unsettled plan run still points at it.
+  """
+  pruneWorktreeCheckouts(input: PruneWorktreeCheckoutsInput!): PruneWorktreeCheckoutsPayloadObject!
 
   """
   Open the host OS folder dialog and return the chosen absolute server-host path, or null on user-cancel. Guarded by the same same-machine predicate as workspacePickerCapabilities (re-checked before spawning) and bounded by a kill timeout. Does not register anything — the client confirms and calls addWorkspaceFolder.
@@ -5718,6 +6243,169 @@ input RegisterInput {
 
   """GitHub username for display; defaults to email local part if omitted"""
   githubUsername: String
+}
+
+"""
+The new DRAFT post, or why it was not created: the slug is taken, a cover image has no alt text, or the author slug is unknown.
+"""
+union CreateBlogPostResult = BlogPostAdminObject | BlogCoverAltRequiredError | BlogReferenceNotFoundError | BlogSlugConflictError
+
+type BlogCoverAltRequiredError {
+  """Human-readable explanation."""
+  message: String!
+}
+
+type BlogReferenceNotFoundError {
+  """Which kind of record was not found."""
+  entity: BlogReferenceEntity!
+
+  """The slug that was not found."""
+  key: String!
+
+  """Human-readable explanation."""
+  message: String!
+}
+
+"""
+The kind of record a blog write referenced by slug that does not exist.
+"""
+enum BlogReferenceEntity {
+  AUTHOR
+  TAG
+}
+
+type BlogSlugConflictError {
+  """Human-readable explanation."""
+  message: String!
+
+  """The slug that is already taken."""
+  slug: String!
+}
+
+input CreateBlogPostInput {
+  """Slug of an existing author (see upsertBlogAuthor). Omit for no byline."""
+  authorSlug: String
+  bodyMarkdown: String!
+  coverImageAlt: String
+  coverImageUrl: String
+  excerpt: String
+  seoDescription: String
+  seoTitle: String
+
+  """
+  Lowercase letters, digits and single hyphens (^[a-z0-9]+(-[a-z0-9]+)*$), e.g. "my-first-post".
+  """
+  slug: String!
+  title: String!
+}
+
+"""
+The updated post, or why nothing was written: the post or author does not exist, the slug is taken, a cover image would have no alt text, the post changed since expectedUpdatedAt, or the post is no longer a DRAFT and the caller lacks blog:write.
+"""
+union UpdateBlogPostResult = BlogPostAdminObject | BlogCoverAltRequiredError | BlogPostNotFoundError | BlogPostPublishPermissionRequiredError | BlogPostStaleWriteError | BlogReferenceNotFoundError | BlogSlugConflictError
+
+type BlogPostPublishPermissionRequiredError {
+  """Human-readable explanation."""
+  message: String!
+}
+
+type BlogPostStaleWriteError {
+  """
+  The post's updatedAt now; the value to send as expectedUpdatedAt after reloading.
+  """
+  currentUpdatedAt: DateTime!
+
+  """Human-readable explanation."""
+  message: String!
+}
+
+"""
+Partial update. Omitted fields are unchanged; null clears a nullable field. Status and publishedAt change only through publish / unpublish / archive.
+"""
+input UpdateBlogPostInput {
+  """Slug of an existing author; null removes the byline."""
+  authorSlug: String
+
+  """Must not be null."""
+  bodyMarkdown: String
+  coverImageAlt: String
+  coverImageUrl: String
+
+  """
+  The post's updatedAt as last read. When set and the post has changed since, nothing is written and BlogPostStaleWriteError is returned. Omit to skip the check.
+  """
+  expectedUpdatedAt: DateTime
+  excerpt: String
+  id: ID!
+  seoDescription: String
+  seoTitle: String
+
+  """
+  Lowercase letters, digits and single hyphens (^[a-z0-9]+(-[a-z0-9]+)*$), e.g. "my-first-post". Must not be null.
+  """
+  slug: String
+
+  """Must not be null."""
+  title: String
+}
+
+"""The published (or scheduled) post, or BlogPostNotFoundError."""
+union PublishBlogPostResult = BlogPostAdminObject | BlogPostNotFoundError
+
+input PublishBlogPostInput {
+  id: ID!
+
+  """
+  When the post goes live. Omit (or null) to publish now; a future date schedules the post — it is PUBLISHED but not publicly visible until then.
+  """
+  publishedAt: DateTime
+}
+
+"""The post returned to DRAFT, or BlogPostNotFoundError."""
+union UnpublishBlogPostResult = BlogPostAdminObject | BlogPostNotFoundError
+
+"""The archived post, or BlogPostNotFoundError."""
+union ArchiveBlogPostResult = BlogPostAdminObject | BlogPostNotFoundError
+
+"""
+The post with its new tag set, or why nothing was written: the post does not exist, a tag slug is unknown, or the post is no longer a DRAFT and the caller lacks blog:write.
+"""
+union SetBlogPostTagsResult = BlogPostAdminObject | BlogPostNotFoundError | BlogPostPublishPermissionRequiredError | BlogReferenceNotFoundError
+
+input SetBlogPostTagsInput {
+  postId: ID!
+
+  """
+  Slugs of existing tags (see upsertBlogTag). Replaces the post's whole tag set; an empty list removes every tag.
+  """
+  tagSlugs: [String!]!
+}
+
+"""
+Creates the author with this slug or replaces its fields. Omitted bio / avatarUrl are cleared.
+"""
+input UpsertBlogAuthorInput {
+  avatarUrl: String
+  bio: String
+  displayName: String!
+
+  """
+  Lowercase letters, digits and single hyphens (^[a-z0-9]+(-[a-z0-9]+)*$), e.g. "my-first-post".
+  """
+  slug: String!
+}
+
+"""
+Creates the tag with this slug or replaces its fields. An omitted description is cleared.
+"""
+input UpsertBlogTagInput {
+  description: String
+  name: String!
+
+  """
+  Lowercase letters, digits and single hyphens (^[a-z0-9]+(-[a-z0-9]+)*$), e.g. "my-first-post".
+  """
+  slug: String!
 }
 
 input StartConversationStreamInput {
@@ -6032,9 +6720,17 @@ input RegisterPlanRunWorktreeCheckoutInput {
   filesystemPath: String!
 
   """
-  Plan-run row id whose checkout_id should be back-filled when still NULL.
+  Plan-run row id whose checkout_id (and branch) should be pointed at the linked worktree path.
   """
   planRunId: ID!
+}
+
+"""The worktree path a teardown just removed."""
+input DeregisterWorktreeCheckoutInput {
+  """
+  Absolute filesystem path of the removed worktree. Matched as given and by its real path.
+  """
+  filesystemPath: String!
 }
 
 input CreatePlanInput {
@@ -6104,7 +6800,7 @@ input SetPlanStatusInput {
   planId: ID!
 
   """
-  New plan status — one of: BACKLOG, BLOCKED, CANCELED, COMPLETED, IN_PROGRESS, PENDING, QUEUED, SKIPPED. Normalized to uppercase. Provide this OR statusEnum.
+  New plan status — one of: BACKLOG, BLOCKED, CANCELED, COMPLETED, IN_PROGRESS, PENDING, PROMOTED, QUEUED, SKIPPED. Normalized to uppercase. Provide this OR statusEnum.
   """
   status: String @deprecated(reason: "Use statusEnum (typed PlanTaskStatus). String status is still accepted (normalized to uppercase) and validated against the canonical set.")
 
@@ -6167,6 +6863,11 @@ input EnqueuePlanRunInput {
 input RalphPlanRunTuningInput {
   """Execution backend (e.g. cursor). Omit to use worktree defaults."""
   backend: String
+
+  """
+  Reasoning-effort level for the run: "low", "medium", "high", "extraHigh", "max", or "ultra" (the same vocabulary as the chat composer's reasoning). Nullable + additive: omit to leave the run's effort unchanged. An unrecognized level is rejected. Recorded on the run's runConfigSnapshot and forwarded to the agent CLI, where each backend maps it to its own flag (claude --effort, codex -c model_reasoning_effort=, grok --reasoning-effort, opencode --variant), clamping to its accepted set; a backend with no reasoning knob (cursor, gemini, antigravity) ignores it.
+  """
+  effort: String
 
   """Per-iteration timeout in seconds (positive integer)."""
   iterationTimeoutSeconds: Int
@@ -6276,9 +6977,64 @@ enum PlanRalphWorkflowMode {
   task
 }
 
+input SchedulePlanRunInput {
+  """
+  REQUIRED git branch this run operates on. Captured on plan_runs.branch as run provenance (powers branch->PR mapping). Passed explicitly by callers (skills/UI may pre-fill a default from the worktree name / HEAD) and never inferred server-side; enqueue fails fast when missing or blank.
+  """
+  branch: String!
+
+  """
+  Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id instead of creating a duplicate.
+  """
+  idempotencyKey: String
+
+  """Plan id to enqueue a run for"""
+  planId: ID!
+
+  """
+  Job priority (lower = higher priority). 1=interactive/UI, 10=normal (default), 100=batch/scheduled. Omit to use normal priority.
+  """
+  priority: Int
+
+  """
+  Optional Ralph / workflow-ralph runtime tuning (iterations, model, backend, etc.). When set, queued workers pass these to nested workflow-ralph; when omitted, defaults come from env and .workflow-ralph.json in the worktree cwd.
+  """
+  ralph: RalphPlanRunTuningInput
+
+  """
+  Optional registered checkout id (highest precedence). Resolved server-side to its filesystem path for this run; when set it overrides repositoryId and workingDirectory.
+  """
+  checkoutId: ID
+
+  """
+  Optional registered repository id. Resolved to the enqueuing user's single checkout of that repository (errors when there is no checkout, or when it is ambiguous). Used when checkoutId is omitted.
+  """
+  repositoryId: ID
+
+  """
+  Optional absolute path to a local project directory used as the working directory for this run. Escape hatch used only when checkoutId and repositoryId are omitted. When all three are omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side.
+  """
+  workingDirectory: String
+
+  """
+  Optional JSON override for job-run lifecycle hooks for this enqueue only ({ hooks: [...] }). When omitted, hooks are copied from the plan. Validated against repo paths when workingDirectory is set.
+  """
+  jobRunHooksJson: String
+
+  """
+  REQUIRED absolute instant the run fires at (an ISO-8601 DateTime; send UTC or an explicit offset). Must be strictly in the future and no more than 30 days from now (SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS); the server rejects anything else.
+  """
+  scheduledFor: DateTime!
+}
+
 input CancelPlanRunInput {
   """Plan id whose in-queue run-plan (Ralph) job should be cancelled"""
   planId: ID!
+
+  """
+  Optional plan_runs id of a SCHEDULED run of this plan. When set, cancels only that run: its delayed job is removed and its row settles CANCELLED, with no effect on any other active run, the plan status or the tasks. Already-settled runs are a no-op; a run that is QUEUED or IN_PROGRESS is rejected (omit planRunId to stop a live run). When omitted, the whole plan is cancelled as before.
+  """
+  planRunId: ID
 }
 
 input AddProjectSkillTagInput {
@@ -6488,14 +7244,37 @@ input CreateScheduledAgentJobInputType {
   """
   settingsJson: String
 
-  """5- or 6-field cron pattern (may not fire every minute or sub-minute)."""
-  cronPattern: String!
+  """How the schedule fires: cron (default), interval or once."""
+  scheduleKind: String
+
+  """
+  5- or 6-field cron pattern (may not fire every minute or sub-minute). Required when scheduleKind is cron (the default); ignored otherwise.
+  """
+  cronPattern: String
+
+  """
+  For scheduleKind interval: ms from the end of one run to the start of the next; at least 60000.
+  """
+  intervalMs: Int
+
+  """
+  For scheduleKind once: when to run, as ISO 8601 with an offset (e.g. 2026-11-03T09:00:00-08:00 or ...Z); must be in the future.
+  """
+  runAt: String
 
   """IANA timezone; omit for UTC."""
   timezone: String
 
   """Per-run timeout override in ms; omit for the queue default."""
   timeoutMs: Int
+
+  """Misfire policy for late fires: skip (default) or catch_up_once."""
+  misfirePolicy: String
+
+  """
+  How late (ms) a fire may start and still run; at least 60000. Omit for 10 minutes.
+  """
+  misfireThresholdMs: Int
 
   """
   Legacy explicit process cwd for the agent CLI; omit for WORKSPACE_ROOT.
@@ -6521,9 +7300,30 @@ input UpdateScheduledAgentJobInputType {
 
   """JSON AgentPromptSettings; no endpoint.apiKey."""
   settingsJson: String
+
+  """
+  How the schedule fires: cron, interval or once. Omit to keep the current kind.
+  """
+  scheduleKind: String
   cronPattern: String
+
+  """
+  For scheduleKind interval: ms from the end of one run to the start of the next; at least 60000.
+  """
+  intervalMs: Int
+
+  """
+  For scheduleKind once: when to run, as ISO 8601 with an offset; a changed time must be in the future.
+  """
+  runAt: String
   timezone: String
   timeoutMs: Int
+
+  """Misfire policy for late fires: skip or catch_up_once."""
+  misfirePolicy: String
+
+  """How late (ms) a fire may start and still run; at least 60000."""
+  misfireThresholdMs: Int
   cwd: String @deprecated(reason: "Use repositoryCheckoutId to target a registered repository checkout; cwd is only consulted when no checkout is set.")
 
   """
@@ -6942,6 +7742,73 @@ input PromoteTaskToPlanInput {
   idempotencyKey: String
 }
 
+input RecordTokenUsageInput {
+  """
+  Usage rows to ingest, at most 500 per call. The whole batch is rejected (BAD_REQUEST, naming the row index) if any row is invalid.
+  """
+  rows: [RecordTokenUsageRowInput!]!
+}
+
+input RecordTokenUsageRowInput {
+  """Cache-read tokens for the turn, when reported."""
+  cacheReadTokens: Float
+
+  """Cache-creation (cache-write) tokens for the turn, when reported."""
+  cacheWriteTokens: Float
+
+  """
+  Dollar cost of the turn when the producer priced it. When null, the server estimates it at Anthropic list price if the request can be priced exactly.
+  """
+  costUsd: Float
+
+  """Working directory the harness reported."""
+  cwd: String
+
+  """Git branch the harness reported."""
+  gitBranch: String
+
+  """Input/prompt tokens for the turn, when reported."""
+  inputTokens: Float
+
+  """Model the usage is attributed to. Must not be blank."""
+  model: String!
+
+  """
+  When the turn happened, as an ISO-8601 timestamp (the transcript timestamp). Stored as created_at, so a late JSONL drain lands on the day the turn actually ran.
+  """
+  occurredAt: String!
+
+  """Output/completion tokens for the turn, when reported."""
+  outputTokens: Float
+
+  """Provider identity (for example claude). Must not be blank."""
+  provider: String!
+
+  """
+  The raw provider usage payload, JSON-serialized (repo convention: no JSON scalar). Must parse to a JSON object; null to omit.
+  """
+  rawUsageJson: String
+
+  """Reasoning tokens for the turn, when reported separately."""
+  reasoningTokens: Float
+
+  """
+  Provider API request id. With source and sessionId it is the idempotency key: a re-sent row is skipped. A row without one is never deduplicated.
+  """
+  requestId: String
+
+  """The agent harness's own session id."""
+  sessionId: String
+
+  """
+  Producer id of the capturing tool (for example claude-code). Free text; must not be blank.
+  """
+  source: String!
+
+  """Total tokens for the turn, when reported."""
+  totalTokens: Float
+}
+
 input CreateUserInput {
   email: String
 
@@ -6959,6 +7826,16 @@ input UpdateUserInput {
 
   """User id to update"""
   id: ID!
+}
+
+"""
+Registered worktree checkouts to delete. A request, not evidence: every guard is re-checked server-side.
+"""
+input PruneWorktreeCheckoutsInput {
+  """
+  repository_checkouts ids, typically DiscoveredWorktrees.missingCheckouts. At most 200 distinct ids; duplicates are collapsed.
+  """
+  checkoutIds: [ID!]!
 }
 
 """Register a server-host folder as a workspace checkout."""

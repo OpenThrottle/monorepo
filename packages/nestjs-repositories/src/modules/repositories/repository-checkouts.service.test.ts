@@ -321,4 +321,27 @@ describe('RepositoryCheckoutsService', () => {
       await expect(service.delete(userId, checkoutId)).resolves.toBe(false);
     });
   });
+
+  describe('deleteWorktreeCheckout', () => {
+    it('scopes the delete to the user and to kind=worktree, so a primary row is never removed', async () => {
+      vi.mocked(mockOrmRepository.delete).mockResolvedValue({ affected: 1 });
+
+      await expect(
+        service.deleteWorktreeCheckout(userId, checkoutId),
+      ).resolves.toBe(true);
+      expect(mockOrmRepository.delete).toHaveBeenCalledWith({
+        id: checkoutId,
+        kind: 'worktree',
+        userId,
+      });
+    });
+
+    it('returns false when no worktree row matched', async () => {
+      vi.mocked(mockOrmRepository.delete).mockResolvedValue({ affected: 0 });
+
+      await expect(
+        service.deleteWorktreeCheckout(userId, checkoutId),
+      ).resolves.toBe(false);
+    });
+  });
 });

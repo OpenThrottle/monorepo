@@ -63,7 +63,7 @@ export const ChatDialogHeader = (
           <TooltipTrigger asChild={true}>
             <Button
               aria-label="New chat"
-              className="shrink-0"
+              className="shrink-0 pointer-coarse:size-11"
               onClick={onStartNewChat}
               size="icon"
               type="button"

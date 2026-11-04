@@ -474,6 +474,48 @@ export const developerMcpToolDefinitions: readonly DeveloperMcpToolDefinition[] 
       Th.updateTaskToolHandler,
     ),
     defineTool(
+      'list_blog_posts',
+      Th.listBlogPostsToolDescription,
+      Th.listBlogPostsToolParameters,
+      Th.listBlogPostsToolHandler,
+    ),
+    defineTool(
+      'get_blog_post',
+      Th.getBlogPostToolDescription,
+      Th.getBlogPostToolParameters,
+      Th.getBlogPostToolHandler,
+    ),
+    defineTool(
+      'create_blog_post',
+      Th.createBlogPostToolDescription,
+      Th.createBlogPostToolParameters,
+      Th.createBlogPostToolHandler,
+    ),
+    defineTool(
+      'update_blog_post',
+      Th.updateBlogPostToolDescription,
+      Th.updateBlogPostToolParameters,
+      Th.updateBlogPostToolHandler,
+    ),
+    defineTool(
+      'set_blog_post_tags',
+      Th.setBlogPostTagsToolDescription,
+      Th.setBlogPostTagsToolParameters,
+      Th.setBlogPostTagsToolHandler,
+    ),
+    defineTool(
+      'list_blog_tags',
+      Th.listBlogTagsToolDescription,
+      Th.listBlogTagsToolParameters,
+      Th.listBlogTagsToolHandler,
+    ),
+    defineTool(
+      'list_blog_authors',
+      Th.listBlogAuthorsToolDescription,
+      Th.listBlogAuthorsToolParameters,
+      Th.listBlogAuthorsToolHandler,
+    ),
+    defineTool(
       'promote_task',
       Th.promoteTaskToolDescription,
       Th.promoteTaskToolParameters,

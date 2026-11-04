@@ -1,8 +1,12 @@
-import { DataTable, TabsContent } from '@openthrottle/react-router-shadcn';
+import { cn, DataTable, TabsContent } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { PlanTasksEmpty } from '~/routing/plans/components/PlanTasksEmpty';
+import {
+  MOBILE_CARD_ROW_CLASS,
+  MOBILE_CARD_TABLE_CLASS,
+} from '~/routing/plans/data/data.mobile-card';
 import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
 import { usePlanManagedTaskIds } from '~/routing/plans/hooks/usePlanManagedTaskIds';
 import { filterOutHookTasks } from '~/routing/plans/utils/hook-tasks';
@@ -34,6 +38,7 @@ export const PlanTabTasks = (_props: PlanTabTasksProps): React.ReactElement => {
 
   const getRowProps = React.useCallback(
     (row: { original: PlanTaskRowFragment }) => ({
+      className: MOBILE_CARD_ROW_CLASS,
       id: `task-${row.original.id}`,
     }),
     [],
@@ -51,7 +56,7 @@ export const PlanTabTasks = (_props: PlanTabTasksProps): React.ReactElement => {
     <TabsContent value="tasks">
       <div className="border-card-border rounded-lg border">
         <DataTable<PlanTaskRowFragment, string | null | undefined>
-          className="table-auto"
+          className={cn('table-auto', MOBILE_CARD_TABLE_CLASS)}
           columns={columns}
           data={sortedTasks}
           emptyState={<PlanTasksEmpty variant="tasks" />}

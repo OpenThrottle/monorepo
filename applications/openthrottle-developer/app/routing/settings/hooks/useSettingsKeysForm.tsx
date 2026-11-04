@@ -2,16 +2,10 @@ import { toast } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { useNavigation, useRevalidator } from 'react-router';
 
+import type { SettingsKeysCreateCredentialActionData } from '~/routing/settings/types';
 import { copyText } from '~/routing/settings/utils/settings.support';
-import type { SettingsKeysActionData } from '~/routing/settings/utils/settings-keys-action';
 
-/** The create-credential slice of the settings/keys action payload. */
-export type SettingsKeysCreateCredentialActionData = Extract<
-  SettingsKeysActionData,
-  { intent: 'createCredential' }
->;
-
-export interface SettingsKeysFormOptions {
+export interface UseSettingsKeysFormOptions {
   actionData?: SettingsKeysCreateCredentialActionData | null;
   onCreateDialogOpenChange?: (open: boolean) => void;
   serviceAccountId?: string | null;
@@ -35,7 +29,7 @@ export interface UseSettingsKeysFormResult {
  * SettingsKeysForm per component-primitive-shape R6/R7.
  */
 export const useSettingsKeysForm = (
-  options: SettingsKeysFormOptions,
+  options: UseSettingsKeysFormOptions,
 ): UseSettingsKeysFormResult => {
   const { actionData, onCreateDialogOpenChange, serviceAccountId } = options;
 

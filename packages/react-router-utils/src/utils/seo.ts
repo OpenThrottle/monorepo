@@ -159,15 +159,46 @@ export function serializeJsonLd(entries: readonly unknown[]): string {
 
 /**
  * @public
- * @description Builds an XML sitemap body from a list of route paths. Paths are
- * deduped, sorted, and rendered as absolute canonical URLs.
+ * @description A sitemap entry with an optional `<lastmod>` (ISO 8601 date or
+ * datetime). Plain path strings are entries without a `lastmod`.
  */
-export function buildSitemapXml(paths: readonly string[]): string {
-  const unique = [...new Set(paths)].sort();
-  const urls = unique
-    .map(
-      (path) => `  <url>\n    <loc>${buildCanonicalUrl(path)}</loc>\n  </url>`,
-    )
+export interface SitemapEntry {
+  readonly lastmod?: string | undefined;
+  readonly path: string;
+}
+
+const toSitemapEntry = (input: string | SitemapEntry): SitemapEntry =>
+  typeof input === 'string' ? { path: input } : input;
+
+/**
+ * @public
+ * @description Builds an XML sitemap body from route paths and/or
+ * {@link SitemapEntry} objects. Entries are deduped by path (the first
+ * occurrence wins, so a `lastmod` entry beats a later bare path), sorted by
+ * path, and rendered as absolute canonical URLs with `<lastmod>` when given.
+ */
+export function buildSitemapXml(
+  entries: readonly (string | SitemapEntry)[],
+): string {
+  const byPath = new Map<string, SitemapEntry>();
+
+  for (const input of entries) {
+    const entry = toSitemapEntry(input);
+
+    if (!byPath.has(entry.path)) {
+      byPath.set(entry.path, entry);
+    }
+  }
+
+  const urls = [...byPath.values()]
+    .sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0))
+    .map((entry) => {
+      const lastmod = entry.lastmod
+        ? `\n    <lastmod>${entry.lastmod}</lastmod>`
+        : '';
+
+      return `  <url>\n    <loc>${buildCanonicalUrl(entry.path)}</loc>${lastmod}\n  </url>`;
+    })
     .join('\n');
 
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
@@ -175,14 +206,15 @@ export function buildSitemapXml(paths: readonly string[]): string {
 
 /**
  * @public
- * @description Builds a `GET /sitemap.xml` {@link Response} from a list of route
- * paths, with an `application/xml` content type and a cache header.
+ * @description Builds a `GET /sitemap.xml` {@link Response} from route paths
+ * and/or {@link SitemapEntry} objects, with an `application/xml` content type
+ * and a cache header.
  */
 export function buildSitemapResponse(
-  paths: readonly string[],
+  entries: readonly (string | SitemapEntry)[],
   options?: { readonly maxAgeSeconds?: number },
 ): Response {
-  return new Response(buildSitemapXml(paths), {
+  return new Response(buildSitemapXml(entries), {
     headers: {
       'Cache-Control': `public, max-age=${options?.maxAgeSeconds ?? 3600}`,
       'Content-Type': 'application/xml',

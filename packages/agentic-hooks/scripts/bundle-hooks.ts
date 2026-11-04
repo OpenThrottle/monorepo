@@ -54,6 +54,11 @@ interface BundleSpec {
  * here, then run `pnpm nx run @openthrottle/agentic-hooks:bundle-hooks`.
  */
 const BUNDLES: readonly BundleSpec[] = [
+  // Operator-run, one-off: registered as no hook and shipped in no plugin payload.
+  {
+    entry: 'adapters/claude/backfill.ts',
+    outFile: '.claude/hooks/skill-usage-backfill.cjs',
+  },
   {
     entry: 'adapters/claude/capture.ts',
     outFile: '.claude/hooks/skill-usage-capture.cjs',
@@ -71,24 +76,20 @@ const BUNDLES: readonly BundleSpec[] = [
     outFile: '.claude/hooks/memory-index-guard.cjs',
   },
   {
-    entry: 'adapters/claude/plan-run-janitor.ts',
-    outFile: '.claude/hooks/plan-run-janitor.cjs',
-  },
-  {
     entry: 'adapters/claude/outcome.ts',
     outFile: '.claude/hooks/skill-usage-outcome.cjs',
   },
   {
+    entry: 'adapters/claude/plan-run-janitor.ts',
+    outFile: '.claude/hooks/plan-run-janitor.cjs',
+  },
+  {
+    entry: 'adapters/claude/require-ot-plan-kickoff.ts',
+    outFile: '.claude/hooks/require-ot-plan-kickoff.cjs',
+  },
+  {
     entry: 'adapters/claude/scope.ts',
     outFile: '.claude/hooks/skill-usage-scope.cjs',
-  },
-  {
-    entry: 'adapters/cursor/capture.ts',
-    outFile: '.cursor/hooks/skill-usage-capture.cjs',
-  },
-  {
-    entry: 'adapters/cursor/complete.ts',
-    outFile: '.cursor/hooks/skill-usage-complete.cjs',
   },
   // Codex reads hooks from ~/.codex/config.toml — the operator's home, never a
   // repo — so there is no in-repo hook folder to write into. The bundles still
@@ -102,6 +103,14 @@ const BUNDLES: readonly BundleSpec[] = [
   {
     entry: 'adapters/codex/complete.ts',
     outFile: '.codex/hooks/skill-usage-complete.cjs',
+  },
+  {
+    entry: 'adapters/cursor/capture.ts',
+    outFile: '.cursor/hooks/skill-usage-capture.cjs',
+  },
+  {
+    entry: 'adapters/cursor/complete.ts',
+    outFile: '.cursor/hooks/skill-usage-complete.cjs',
   },
 ];
 
@@ -156,7 +165,7 @@ interface PluginEntry {
 /**
  * The adapters that are genuine hook handlers, bundled into a payload.
  *
- * Deliberately NOT every adapter: `drain`, `outcome`, `scope` and
+ * Deliberately NOT every adapter: `backfill`, `drain`, `outcome`, `scope` and
  * `plan-run-janitor` are manual CLIs (`node …drain.cjs --budget-ms 500`), wired
  * to no event. Shipping them would be dead weight in someone else's repo. The
  * buffer still flushes — the completion handler drains opportunistically.

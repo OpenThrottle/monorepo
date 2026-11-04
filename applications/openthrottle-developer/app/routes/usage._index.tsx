@@ -11,6 +11,7 @@ import type { Route } from '@/app/routes/+types/usage._index';
 import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 import {
   GetUsageBranchSearchDocument,
+  GetUsageCaptureHealthDocument,
   GetUsageDailyStatsDocument,
   GetUsageSkillUsageDocument,
   GetUsageTokenUsageDocument,
@@ -18,6 +19,7 @@ import {
 import { SITE_TITLE } from '~/global/config/settings';
 import { DashboardDailyStatsCard } from '~/routing/dashboard/components/DashboardDailyStatsCard';
 import { UsageAnalyticsGaps } from '~/routing/usage/components/UsageAnalyticsGaps';
+import { UsageCaptureHealth } from '~/routing/usage/components/UsageCaptureHealth';
 import { UsageDailyActivityOverview } from '~/routing/usage/components/UsageDailyActivityOverview';
 import { UsageIntroduction } from '~/routing/usage/components/UsageIntroduction';
 import { UsageOverview } from '~/routing/usage/components/UsageOverview';
@@ -74,33 +76,41 @@ export const loader = async (args: Route.LoaderArgs) => {
   const startDate = startIso.slice(0, 10);
   const endDate = endIso.slice(0, 10);
 
-  const [dailyResult, tokenUsageResult, skillUsageResult, branchResult] =
-    await Promise.all([
-      executeGraphqlWithAuth(args.request, GetUsageDailyStatsDocument, {
-        end: endIso,
-        start: startIso,
-      }),
-      executeGraphqlWithAuth(args.request, GetUsageTokenUsageDocument, {
-        end: endDate,
-        provider: selectedProvider,
-        start: startDate,
-      }),
-      executeGraphqlWithAuth(args.request, GetUsageSkillUsageDocument, {
-        cwd: selectedSkillCwd,
-        end: endDate,
-        gitBranch: selectedSkillGitBranch,
-        scope: selectedSkillScope,
-        start: startDate,
-      }),
-      // First page of the branch dropdown, so SSR renders a populated,
-      // correctly-ordered list without waiting on a client search.
-      executeGraphqlWithAuth(args.request, GetUsageBranchSearchDocument, {
-        end: endDate,
-        limit: null,
-        query: null,
-        start: startDate,
-      }),
-    ]);
+  const [
+    dailyResult,
+    tokenUsageResult,
+    skillUsageResult,
+    branchResult,
+    captureHealthResult,
+  ] = await Promise.all([
+    executeGraphqlWithAuth(args.request, GetUsageDailyStatsDocument, {
+      end: endIso,
+      start: startIso,
+    }),
+    executeGraphqlWithAuth(args.request, GetUsageTokenUsageDocument, {
+      end: endDate,
+      provider: selectedProvider,
+      start: startDate,
+    }),
+    executeGraphqlWithAuth(args.request, GetUsageSkillUsageDocument, {
+      cwd: selectedSkillCwd,
+      end: endDate,
+      gitBranch: selectedSkillGitBranch,
+      scope: selectedSkillScope,
+      start: startDate,
+    }),
+    // First page of the branch dropdown, so SSR renders a populated,
+    // correctly-ordered list without waiting on a client search.
+    executeGraphqlWithAuth(args.request, GetUsageBranchSearchDocument, {
+      end: endDate,
+      limit: null,
+      query: null,
+      start: startDate,
+    }),
+    // Per-source "last captured" signal: a silent capture outage looks
+    // identical to a quiet week in the charts above.
+    executeGraphqlWithAuth(args.request, GetUsageCaptureHealthDocument, {}),
+  ]);
 
   const dailyStats: DashboardDailyStatsCardFragment[] =
     dailyResult.dailyStatsRange.items ?? [];
@@ -108,6 +118,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   return {
     branchOptions: branchResult.skillUsageGitBranches.items,
     branchesHaveMore: branchResult.skillUsageGitBranches.hasMore,
+    captureHealth: captureHealthResult.captureHealth,
     dailyStats,
     presentSkillSlugs,
     rangeDays: 30,
@@ -140,6 +151,7 @@ export default function Component(
   const {
     branchOptions,
     branchesHaveMore,
+    captureHealth,
     dailyStats,
     presentSkillSlugs,
     rangeDays,
@@ -172,6 +184,7 @@ export default function Component(
     <GlobalScreen>
       <UsageIntroduction rangeDays={rangeDays} />
       <UsageOverview rangeDays={rangeDays} />
+      <UsageCaptureHealth nowIso={rangeEndIso} rows={captureHealth} />
       <UsageTokenUsage
         items={tokenUsageItems}
         rangeDays={rangeDays}

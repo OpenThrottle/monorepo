@@ -36,6 +36,22 @@ export const SKILL_USAGE_OUTCOMES = {
 export type SkillUsageOutcomeValue =
   (typeof SKILL_USAGE_OUTCOMES)[keyof typeof SKILL_USAGE_OUTCOMES];
 
+const SKILL_USAGE_OUTCOME_VALUES: readonly string[] =
+  Object.values(SKILL_USAGE_OUTCOMES);
+
+/**
+ * Type predicate over {@link SKILL_USAGE_OUTCOMES}, derived from the const so a
+ * new member is accepted everywhere for free. A hand-listed `===` chain in the
+ * resolver once omitted `SESSION_ENDED`, and every automatic session-end
+ * outcome was rejected for six weeks before anyone noticed.
+ *
+ * @public
+ */
+export const isSkillUsageOutcome = (
+  value: string,
+): value is SkillUsageOutcomeValue =>
+  SKILL_USAGE_OUTCOME_VALUES.includes(value);
+
 /**
  * Which capture contract wrote a row. `LEGACY_ASSUMED_SUCCESS` rows predate
  * migration 113, when the automatic session-end path hardcoded `success`; their

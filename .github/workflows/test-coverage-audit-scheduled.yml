@@ -12,7 +12,7 @@
 #   therefore gates nothing, so running it on every PR bought a report nobody
 #   was blocked by. Weekly is often enough to feed remediation planning.
 #
-#   Runs on `ubuntu-latest` — free and unlimited on this PUBLIC repo. See
+#   Runs on `ubuntu-26.04` — free and unlimited on this PUBLIC repo. See
 #   docs/monorepo/ci-cost.md before changing `runs-on` or adding a schedule.
 #
 #   FLIP PATH (unchanged — this workflow is a staging area, not a demotion):
@@ -46,7 +46,7 @@ env:
 
 jobs:
   test-coverage-audit:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
 
     steps:

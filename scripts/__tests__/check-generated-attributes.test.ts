@@ -14,7 +14,7 @@ import {
   HEADER_LINES,
   suggestGlob,
 } from '../check-generated-attributes.ts';
-import { run } from '../lib/exec.ts';
+import { run } from '../utils/exec.ts';
 
 const BANNER = GENERATED_BANNERS[0] ?? '';
 

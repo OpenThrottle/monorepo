@@ -1,6 +1,10 @@
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import { isRecord } from '@openthrottle/nodejs-utils';
 import type { WorkflowLifecycleDispatcher } from '@openthrottle/openthrottle-agentic-workflow';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   GetPlanDocument,
@@ -14,6 +18,7 @@ import {
 } from '../../__generated__/graphql.ts';
 import type {
   WorkflowExecuteGraphqlV2,
+  WorkflowRalphCommandRunner,
   WorkflowRalphIterationOnChunk,
   WorkflowRalphIterationRunner,
 } from '../../contract/ralph-orchestrator-deps.ts';
@@ -62,6 +67,7 @@ const basePlan = (overrides: Partial<PlanRow> = {}): PlanRow => ({
   runConfigJson: '{}',
   status: 'IN_PROGRESS',
   summary: null,
+  tags: [],
   title: 'Test plan',
   updatedAt: ISO,
   ...overrides,
@@ -128,6 +134,209 @@ const createMockExecute = (opts: {
     }
     throw new Error('unmocked GraphQL document in test');
   });
+
+const FINAL_ITERATION_FLAG = 'OT_FINAL_ITERATION=1';
+
+const runOnceCapturingPrompt = async (params: {
+  readonly mode: 'plan' | 'task';
+  readonly taskId: string;
+  readonly tasks: GetTasksByPlanIdQuery['tasksByPlanId'];
+}): Promise<string> => {
+  const prompts: string[] = [];
+  const run = vi.fn(async ({ agentPrompt }: { agentPrompt: string }) => {
+    prompts.push(agentPrompt);
+    return 'no control marker';
+  });
+  const orchestrator = createWorkflowRalphOrchestrator({
+    executeGraphqlV2: createMockExecute({
+      getTasksByPlanId: () => params.tasks,
+    }),
+    iterationRunner: { run },
+  });
+
+  await orchestrator.execute({
+    context: {
+      debug: 'omit',
+      iterationMax: 1,
+      iterationTimeout: 1000,
+      iterations: 1,
+      kind: 'ralph',
+      mode: params.mode,
+      model: 'test-model',
+      planId: PLAN_ID,
+      project: '',
+      prompt: 'Do work',
+      runner: 'cursor',
+      skipWorktreeSetup: false,
+      taskId: params.taskId,
+      timeout: 1000,
+      worktree: undefined,
+      worktreeBase: undefined,
+    },
+  });
+
+  return prompts[0] ?? '';
+};
+
+describe('createWorkflowRalphOrchestrator final-iteration prompt line', () => {
+  it('omits the flag while another runnable task remains (plan mode)', async () => {
+    const prompt = await runOnceCapturingPrompt({
+      mode: 'plan',
+      taskId: '',
+      tasks: [
+        baseTask(TASK_A, 'QUEUED', { sortOrder: 1000 }),
+        baseTask(TASK_B, 'QUEUED', { sortOrder: 2000 }),
+      ],
+    });
+
+    expect(prompt).toContain(TASK_A);
+    expect(prompt).not.toContain(FINAL_ITERATION_FLAG);
+  });
+
+  it('adds the flag and the draft-only instruction on the last runnable task (plan mode)', async () => {
+    const prompt = await runOnceCapturingPrompt({
+      mode: 'plan',
+      taskId: '',
+      tasks: [
+        baseTask(TASK_A, 'COMPLETED', { sortOrder: 1000 }),
+        baseTask(TASK_B, 'QUEUED', { sortOrder: 2000 }),
+      ],
+    });
+
+    expect(prompt).toContain(FINAL_ITERATION_FLAG);
+    expect(prompt).toContain('/github-pull-request in draft-only mode');
+  });
+
+  it('adds the flag in task mode when the target task is the only runnable one', async () => {
+    const prompt = await runOnceCapturingPrompt({
+      mode: 'task',
+      taskId: TASK_B,
+      tasks: [
+        baseTask(TASK_A, 'COMPLETED', { sortOrder: 1000 }),
+        baseTask(TASK_B, 'PENDING', { sortOrder: 2000 }),
+      ],
+    });
+
+    expect(prompt).toContain(FINAL_ITERATION_FLAG);
+  });
+
+  it('omits the flag in task mode when other runnable tasks remain', async () => {
+    const prompt = await runOnceCapturingPrompt({
+      mode: 'task',
+      taskId: TASK_A,
+      tasks: [
+        baseTask(TASK_A, 'PENDING', { sortOrder: 1000 }),
+        baseTask(TASK_B, 'PENDING', { sortOrder: 2000 }),
+      ],
+    });
+
+    expect(prompt).not.toContain(FINAL_ITERATION_FLAG);
+  });
+});
+
+describe('createWorkflowRalphOrchestrator PR draft dir', () => {
+  interface CapturedIteration {
+    readonly env: Readonly<Record<string, string>> | undefined;
+    readonly prompt: string;
+  }
+
+  let repoRoot = '';
+
+  beforeEach(async () => {
+    repoRoot = await mkdtemp(join(tmpdir(), 'ot-orchestrator-draft-'));
+  });
+
+  afterEach(async () => {
+    await rm(repoRoot, { force: true, recursive: true });
+  });
+
+  const topLevelRunner = (): WorkflowRalphCommandRunner =>
+    vi.fn<WorkflowRalphCommandRunner>(async ({ args }) =>
+      args[0] === 'rev-parse' && args[1] === '--show-toplevel'
+        ? { exitCode: 0, stderr: '', stdout: `${repoRoot}\n` }
+        : { exitCode: 1, stderr: 'unexpected', stdout: '' },
+    );
+
+  const runCapturing = async (
+    runCommand: WorkflowRalphCommandRunner | undefined,
+  ): Promise<CapturedIteration | undefined> => {
+    const iterations: CapturedIteration[] = [];
+    const run = vi.fn<WorkflowRalphIterationRunner['run']>(
+      async ({ agentPrompt, env }) => {
+        iterations.push({ env, prompt: agentPrompt });
+        return 'no control marker';
+      },
+    );
+    const orchestrator = createWorkflowRalphOrchestrator({
+      executeGraphqlV2: createMockExecute({
+        getTasksByPlanId: () => [baseTask(TASK_A, 'QUEUED')],
+      }),
+      iterationRunner: { run },
+      ...(runCommand === undefined ? {} : { runCommand }),
+    });
+
+    await orchestrator.execute({
+      context: {
+        debug: 'omit',
+        iterationMax: 1,
+        iterationTimeout: 1000,
+        iterations: 1,
+        kind: 'ralph',
+        mode: 'plan',
+        model: 'test-model',
+        planId: PLAN_ID,
+        project: '',
+        prompt: 'Do work',
+        runner: 'cursor',
+        skipWorktreeSetup: false,
+        taskId: '',
+        timeout: 1000,
+        worktree: undefined,
+        worktreeBase: undefined,
+      },
+    });
+
+    return iterations[0];
+  };
+
+  it('sets OT_PR_DRAFT_DIR to <worktree root>/.ot-pr-draft when the host finalizes', async () => {
+    const captured = await runCapturing(topLevelRunner());
+
+    expect(captured?.env).toEqual({
+      OT_PR_DRAFT_DIR: join(repoRoot, '.ot-pr-draft'),
+    });
+  });
+
+  it('never resolves the draft dir under .git', async () => {
+    const captured = await runCapturing(topLevelRunner());
+
+    expect(captured?.env?.OT_PR_DRAFT_DIR).not.toContain(`${'/'}.git${'/'}`);
+  });
+
+  it('creates the draft dir with a self-ignoring .gitignore before the agent runs', async () => {
+    await runCapturing(topLevelRunner());
+
+    expect(
+      await readFile(join(repoRoot, '.ot-pr-draft', '.gitignore'), 'utf8'),
+    ).toBe('*\n');
+  });
+
+  it('writes the absolute draft path into the final-iteration prompt line', async () => {
+    const captured = await runCapturing(topLevelRunner());
+
+    expect(captured?.prompt).toContain(FINAL_ITERATION_FLAG);
+    expect(captured?.prompt).toContain(
+      `draft directory: ${join(repoRoot, '.ot-pr-draft')}`,
+    );
+  });
+
+  it('passes no env when finalize is not wired', async () => {
+    const captured = await runCapturing(undefined);
+
+    expect(captured?.env).toBeUndefined();
+    expect(captured?.prompt).toContain('$OT_PR_DRAFT_DIR when set');
+  });
+});
 
 describe('createWorkflowRalphOrchestrator task selection', () => {
   it('picks lowest sortOrder PENDING task when createdAt order differs', async () => {
@@ -224,6 +433,47 @@ describe('createWorkflowRalphOrchestrator task selection', () => {
       status: 'finished',
     });
     expect(run).toHaveBeenCalledTimes(1);
+  });
+
+  it('passes the context effort to the iteration runner alongside the model', async () => {
+    const run = vi.fn(async () => '<promise>COMPLETE</promise>');
+    const iterationRunner: WorkflowRalphIterationRunner = { run };
+
+    const executeGraphqlV2 = createMockExecute({
+      getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
+    });
+
+    const orchestrator = createWorkflowRalphOrchestrator({
+      executeGraphqlV2,
+      iterationRunner,
+    });
+
+    await orchestrator.execute({
+      context: {
+        debug: 'omit',
+        effort: 'extraHigh',
+        iterationMax: 1,
+        iterationTimeout: 1000,
+        iterations: 1,
+        kind: 'ralph',
+        mode: 'plan',
+        model: 'test-model',
+        planId: PLAN_ID,
+        project: '',
+        prompt: 'Do work',
+        runner: 'claude',
+        skipWorktreeSetup: false,
+        taskId: '',
+        timeout: 1000,
+        worktree: undefined,
+        worktreeBase: undefined,
+      },
+    });
+
+    expect(run).toHaveBeenCalledTimes(1);
+    expect(run).toHaveBeenCalledWith(
+      expect.objectContaining({ effort: 'extraHigh', model: 'test-model' }),
+    );
   });
 });
 
@@ -551,6 +801,35 @@ describe('createWorkflowRalphOrchestrator terminal outcomes', () => {
     expect(run).not.toHaveBeenCalled();
   });
 
+  it('returns workflow_plan_already_terminal when the plan is PROMOTED', async () => {
+    const run = vi.fn(async () => '<promise>COMPLETE</promise>');
+    const iterationRunner: WorkflowRalphIterationRunner = { run };
+
+    const executeGraphqlV2 = asExecuteGraphqlV2(async (document) => {
+      const doc = document;
+      if (doc === GetServerHealthDocument) {
+        return { serverHealth: serverHealthOk };
+      }
+      if (doc === GetPlanDocument) {
+        return { plan: basePlan({ status: 'PROMOTED' }) };
+      }
+      if (doc === GetTasksByPlanIdDocument) {
+        return { tasksByPlanId: [baseTask(TASK_A, 'PENDING')] };
+      }
+      throw new Error('unmocked GraphQL document in test');
+    });
+
+    const orchestrator = createWorkflowRalphOrchestrator({
+      executeGraphqlV2,
+      iterationRunner,
+    });
+
+    const result = await orchestrator.execute({ context: { ...baseContext } });
+
+    expect(result.reason).toBe('workflow_plan_already_terminal');
+    expect(run).not.toHaveBeenCalled();
+  });
+
   it('returns workflow_tasks_exhausted (plan mode) and marks the plan COMPLETED when no task remains', async () => {
     const run = vi.fn(async () => '<promise>COMPLETE</promise>');
     const iterationRunner: WorkflowRalphIterationRunner = { run };
@@ -642,6 +921,100 @@ describe('createWorkflowRalphOrchestrator terminal outcomes', () => {
     expect(run).toHaveBeenCalledTimes(2);
     expect(taskUpdates.at(-1)).toEqual({ id: TASK_A, status: 'PENDING' });
   });
+
+  it('stops with workflow_usage_limited when an iteration hits a usage limit, resetting the task and burning no more iterations', async () => {
+    const usageLimit = {
+      rateLimitType: 'five_hour',
+      resetsAt: '2026-04-01T17:00:00.000Z',
+    };
+    // The limited run's "output" even contains a completion marker; it must NOT be parsed.
+    const run = vi.fn(
+      async (params: {
+        readonly onUsageLimit?: (limit: typeof usageLimit) => void;
+      }) => {
+        params.onUsageLimit?.(usageLimit);
+
+        return `limit reached <ralph:task-complete>${TASK_A}</ralph:task-complete>`;
+      },
+    );
+    const iterationRunner: WorkflowRalphIterationRunner = { run };
+
+    let taskStatus = 'PENDING';
+    const taskUpdates: Array<{ id: string; status: string }> = [];
+    const executeGraphqlV2 = asExecuteGraphqlV2(async (document, variables) => {
+      if (document === GetServerHealthDocument) {
+        return { serverHealth: serverHealthOk };
+      }
+      if (document === GetPlanDocument) {
+        return { plan: basePlan() };
+      }
+      if (document === GetTasksByPlanIdDocument) {
+        return { tasksByPlanId: [baseTask(TASK_A, taskStatus)] };
+      }
+      if (document === UpdatePlanDocument) {
+        return { updatePlan: basePlan({ status: 'IN_PROGRESS' }) };
+      }
+      if (document === UpdateTaskDocument) {
+        const input = readUpdateInput(variables);
+        taskStatus = input.status;
+        taskUpdates.push({ id: input.id ?? '', status: input.status });
+
+        return { updateTask: baseTask(TASK_A, input.status) };
+      }
+      throw new Error('unmocked GraphQL document in test');
+    });
+
+    const orchestrator = createWorkflowRalphOrchestrator({
+      executeGraphqlV2,
+      iterationRunner,
+    });
+
+    const result = await orchestrator.execute({
+      context: { ...baseContext, iterationMax: 5, iterations: 5 },
+    });
+
+    expect(result).toEqual({
+      exitCode: 0,
+      reason: 'workflow_usage_limited',
+      status: 'finished',
+      usageLimit,
+    });
+    expect(run).toHaveBeenCalledTimes(1);
+    expect(taskUpdates.at(-1)).toEqual({ id: TASK_A, status: 'PENDING' });
+    expect(taskUpdates.some((u) => u.status === 'COMPLETED')).toBe(false);
+  });
+
+  it('prefers workflow_cancelled over a usage limit when the run was cancelled', async () => {
+    let cancelled = false;
+    const run = vi.fn(
+      async (params: {
+        readonly onUsageLimit?: (limit: {
+          rateLimitType: string | null;
+          resetsAt: string | null;
+        }) => void;
+      }) => {
+        cancelled = true;
+        params.onUsageLimit?.({ rateLimitType: null, resetsAt: null });
+
+        return 'limited';
+      },
+    );
+    const iterationRunner: WorkflowRalphIterationRunner = { run };
+    const executeGraphqlV2 = createMockExecute({
+      getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
+    });
+
+    const orchestrator = createWorkflowRalphOrchestrator({
+      executeGraphqlV2,
+      iterationRunner,
+    });
+
+    const result = await orchestrator.execute({
+      context: { ...baseContext, isCancellationRequested: () => cancelled },
+    });
+
+    expect(result.reason).toBe('workflow_cancelled');
+  });
 });
 
 describe('createWorkflowRalphOrchestrator control parsing', () => {
@@ -686,6 +1059,49 @@ describe('createWorkflowRalphOrchestrator control parsing', () => {
       exitCode: 1,
       reason: 'workflow_input_required',
       status: 'failed',
+    });
+  });
+
+  it('finishes with workflow_complete_handoff_owed when INPUT_REQUIRED arrives with every task COMPLETED', async () => {
+    const run = vi.fn(
+      async () =>
+        `<ralph:task-complete>${TASK_A}</ralph:task-complete><promise>INPUT_REQUIRED</promise>`,
+    );
+    const iterationRunner: WorkflowRalphIterationRunner = { run };
+
+    let taskStatus = 'PENDING';
+    const executeGraphqlV2 = asExecuteGraphqlV2(async (document, variables) => {
+      if (document === GetServerHealthDocument) {
+        return { serverHealth: serverHealthOk };
+      }
+      if (document === GetPlanDocument) {
+        return { plan: basePlan() };
+      }
+      if (document === GetTasksByPlanIdDocument) {
+        return { tasksByPlanId: [baseTask(TASK_A, taskStatus)] };
+      }
+      if (document === UpdatePlanDocument) {
+        return { updatePlan: basePlan({ status: 'IN_PROGRESS' }) };
+      }
+      if (document === UpdateTaskDocument) {
+        const input = readUpdateInput(variables);
+        taskStatus = input.status;
+        return { updateTask: baseTask(TASK_A, input.status) };
+      }
+      throw new Error('unmocked GraphQL document in test');
+    });
+
+    const orchestrator = createWorkflowRalphOrchestrator({
+      executeGraphqlV2,
+      iterationRunner,
+    });
+
+    const result = await orchestrator.execute({ context: { ...baseContext } });
+
+    expect(result).toEqual({
+      exitCode: 0,
+      reason: 'workflow_complete_handoff_owed',
+      status: 'finished',
     });
   });
 

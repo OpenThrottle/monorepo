@@ -12,6 +12,9 @@ import { spawn } from 'node:child_process';
 import type { DriverModelListing } from '@openthrottle/openthrottle-drivers';
 import { ALL_DRIVERS } from '@openthrottle/openthrottle-drivers';
 
+import type { ClaudeAuthStatus } from './claude/auth-status.ts';
+import { probeClaudeAuthStatus } from './claude/auth-status.ts';
+
 /**
  * A supported agent CLI in the allowlist, projected from a registry driver.
  */
@@ -50,6 +53,11 @@ export interface AgentCliDescriptor {
 export interface AgentCliAvailability {
   /** True when the CLI resolves the workspace's committed MCP config (see {@link AgentCliDescriptor}). */
   readonly attachesWorkspaceMcp: boolean;
+  /**
+   * Logged-in account, plan and active credential, from `claude auth status`
+   * (no tokens read). Non-null only for an available claude whose probe parsed.
+   */
+  readonly auth: ClaudeAuthStatus | null;
   /** True when the binary is present and its version probe exited cleanly. */
   readonly available: boolean;
   /** Backend discriminator (driver id). */
@@ -203,6 +211,7 @@ function probe(
     let stdout = '';
     const unavailable: AgentCliAvailability = {
       attachesWorkspaceMcp,
+      auth: null,
       available: false,
       backend,
       chatCapable,
@@ -249,6 +258,7 @@ function probe(
       listModels(descriptor, env, modelListTimeoutMs).then((models) => {
         resolve({
           attachesWorkspaceMcp,
+          auth: null,
           available: true,
           backend,
           chatCapable,
@@ -262,8 +272,46 @@ function probe(
   });
 }
 
+const CLAUDE_BACKEND = 'claude';
+
 /**
- * Probe every allowlisted agent CLI for availability + per-driver models.
+ * Probe one CLI. For claude the `claude auth status` probe runs concurrently
+ * with the version probe and is kept only when the binary is available; every
+ * other entry has `auth: null`. The auth probe never rejects (null on failure).
+ */
+async function probeWithAuth(
+  descriptor: AgentCliDescriptor,
+  env: NodeJS.ProcessEnv,
+  probeTimeoutMs: number,
+  modelListTimeoutMs: number,
+): Promise<AgentCliAvailability> {
+  const availabilityPromise = probe(
+    descriptor,
+    env,
+    probeTimeoutMs,
+    modelListTimeoutMs,
+  );
+
+  if (descriptor.backend !== CLAUDE_BACKEND) {
+    return availabilityPromise;
+  }
+
+  const [availability, auth] = await Promise.all([
+    availabilityPromise,
+    probeClaudeAuthStatus({
+      binary: resolveBinary(descriptor, env),
+      env,
+      timeoutMs: probeTimeoutMs,
+    }),
+  ]);
+
+  return availability.available ? { ...availability, auth } : availability;
+}
+
+/**
+ * Probe every allowlisted agent CLI for availability + per-driver models. For
+ * claude it also reports the account, plan and active credential via
+ * `claude auth status` (never reading tokens).
  *
  * @public
  */
@@ -275,7 +323,7 @@ export async function discoverAgentClis(
   const modelListTimeoutMs = options.modelListTimeoutMs ?? 5000;
   const agents = await Promise.all(
     AGENT_CLI_ALLOWLIST.map((descriptor) =>
-      probe(descriptor, env, probeTimeoutMs, modelListTimeoutMs),
+      probeWithAuth(descriptor, env, probeTimeoutMs, modelListTimeoutMs),
     ),
   );
 

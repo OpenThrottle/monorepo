@@ -5,7 +5,10 @@
 import { faker } from '@faker-js/faker';
 import { Factory } from 'fishery';
 
-import type { AgentTokenUsage } from './agent-token-usage.entity.ts';
+import {
+  AGENT_TOKEN_USAGE_SOURCES,
+  type AgentTokenUsage,
+} from './agent-token-usage.entity.ts';
 
 export type AgentTokenUsageFactoryData = Pick<
   AgentTokenUsage,
@@ -14,6 +17,8 @@ export type AgentTokenUsageFactoryData = Pick<
   | 'conversationId'
   | 'costUsd'
   | 'createdAt'
+  | 'cwd'
+  | 'gitBranch'
   | 'id'
   | 'inputTokens'
   | 'messageId'
@@ -22,6 +27,9 @@ export type AgentTokenUsageFactoryData = Pick<
   | 'provider'
   | 'rawUsage'
   | 'reasoningTokens'
+  | 'requestId'
+  | 'sessionId'
+  | 'source'
   | 'totalTokens'
   | 'userId'
 >;
@@ -37,6 +45,8 @@ export const agentTokenUsageFactory =
       conversationId: faker.string.uuid(),
       costUsd: faker.number.float({ fractionDigits: 6, max: 1, min: 0 }),
       createdAt: faker.date.recent(),
+      cwd: null,
+      gitBranch: null,
       id: faker.string.uuid(),
       inputTokens,
       messageId: faker.string.uuid(),
@@ -53,6 +63,9 @@ export const agentTokenUsageFactory =
       ]),
       rawUsage: null,
       reasoningTokens: faker.number.int({ max: 500, min: 0 }),
+      requestId: null,
+      sessionId: null,
+      source: AGENT_TOKEN_USAGE_SOURCES.CHAT,
       totalTokens: inputTokens + outputTokens,
       userId: faker.string.uuid(),
     };

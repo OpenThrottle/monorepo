@@ -13,7 +13,7 @@ import { IsNull, Repository } from 'typeorm';
 import {
   type ListPaginationInput,
   resolveListPagination,
-} from '../../common/list-pagination.ts';
+} from '../../utils/list-pagination.ts';
 import { ServiceAccount } from './service-account.entity.ts';
 import { ServiceAccountCredential } from './service-account-credential.entity.ts';
 import {

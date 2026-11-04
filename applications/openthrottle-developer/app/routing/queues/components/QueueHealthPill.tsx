@@ -1,5 +1,4 @@
-import { Badge } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
+import { Badge, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import { QUEUE_HEALTH_DOT_CLASS } from '~/routing/queues/data/queue-health-display';
@@ -52,7 +51,7 @@ export const QueueHealthPill = (
   return (
     <Badge
       aria-label={description}
-      className={clsx('gap-1.5', className)}
+      className={cn('gap-1.5', className)}
       color={health.color}
       data-health-level={health.level}
       data-testid={dataTestId}
@@ -60,7 +59,7 @@ export const QueueHealthPill = (
     >
       <span
         aria-hidden={true}
-        className={clsx(
+        className={cn(
           'size-2 rounded-full',
           QUEUE_HEALTH_DOT_CLASS[health.level],
         )}

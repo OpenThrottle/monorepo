@@ -1,6 +1,6 @@
 import { Editor } from '@openthrottle/react-router-editor';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { Button } from '@openthrottle/react-router-shadcn';
+import { Button, cn } from '@openthrottle/react-router-shadcn';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
@@ -99,13 +99,11 @@ export default function Component(
           {/* Status indicator */}
           {statusText && (
             <span
-              className={`text-sm ${
-                actionData?.error
-                  ? 'text-red-400'
-                  : isDirty
-                    ? 'text-yellow-400'
-                    : 'text-gray-400'
-              }`}
+              className={cn(
+                'text-sm text-gray-400',
+                isDirty && 'text-yellow-400',
+                actionData?.error && 'text-red-400',
+              )}
             >
               {statusText}
             </span>

@@ -3,6 +3,7 @@ fragment ScheduledJobCard on ScheduledAgentJobObject {
   driverId
   enabled
   id
+  intervalMs
   lastRunAt
   model
   name
@@ -13,6 +14,8 @@ fragment ScheduledJobCard on ScheduledAgentJobObject {
     id
   }
   repositoryCheckoutId
+  runAt
+  scheduleKind
   timezone
   updatedAt
 }

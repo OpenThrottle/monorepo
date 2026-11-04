@@ -1,5 +1,5 @@
 /**
- * @description TypeORM entity for agent_token_usage. Matches databases/migrations/083.
+ * @description TypeORM entity for agent_token_usage. Matches databases/migrations/083 and 135.
  * One immutable row per persisted assistant turn (normalized token/cost usage).
  */
 
@@ -27,12 +27,29 @@ const nullableNumberColumn = {
   to: (value: number | null): number | null => value,
 };
 
+/**
+ * @public
+ * Producer ids stored in `agent_token_usage.source` (free text in the database,
+ * like skill_usage_events.source). `CHAT` is OpenThrottle's own chat path
+ * (ConversationStreamService); `CLAUDE_CODE` is the Claude Code hook ingest.
+ */
+export const AGENT_TOKEN_USAGE_SOURCES = {
+  CHAT: 'openthrottle-chat',
+  CLAUDE_CODE: 'claude-code',
+} as const;
+
+/** @public */
+export type AgentTokenUsageSource =
+  (typeof AGENT_TOKEN_USAGE_SOURCES)[keyof typeof AGENT_TOKEN_USAGE_SOURCES];
+
 export interface AgentTokenUsageData {
   readonly cachedReadTokens: number | null;
   readonly cachedWriteTokens: number | null;
   readonly conversationId: string | null;
   readonly costUsd: number | null;
   readonly createdAt: Date;
+  readonly cwd: string | null;
+  readonly gitBranch: string | null;
   readonly id: string;
   readonly inputTokens: number | null;
   readonly messageId: string | null;
@@ -41,6 +58,9 @@ export interface AgentTokenUsageData {
   readonly provider: string;
   readonly rawUsage: Record<string, unknown> | null;
   readonly reasoningTokens: number | null;
+  readonly requestId: string | null;
+  readonly sessionId: string | null;
+  readonly source: string | null;
   readonly totalTokens: number | null;
   readonly userId: string;
 }
@@ -138,6 +158,21 @@ export class AgentTokenUsage {
 
   @Column({ name: 'raw_usage', nullable: true, type: 'jsonb' })
   rawUsage!: Record<string, unknown> | null;
+
+  @Column({ name: 'source', nullable: true, type: 'text' })
+  source!: string | null;
+
+  @Column({ name: 'session_id', nullable: true, type: 'text' })
+  sessionId!: string | null;
+
+  @Column({ name: 'request_id', nullable: true, type: 'text' })
+  requestId!: string | null;
+
+  @Column({ name: 'cwd', nullable: true, type: 'text' })
+  cwd!: string | null;
+
+  @Column({ name: 'git_branch', nullable: true, type: 'text' })
+  gitBranch!: string | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
   createdAt!: Date;

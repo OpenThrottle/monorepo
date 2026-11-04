@@ -1,5 +1,8 @@
 import * as React from 'react';
 
+import { getMediaError } from '../utils/get-media-error';
+import { readPlaybackState } from '../utils/read-playback-state';
+
 export interface UseAudioOptions {
   /**
    * @description Existing ref for an `<audio>` element; kept in sync with {@link UseAudioResult.audioRef}.
@@ -28,52 +31,23 @@ export interface UseAudioResult {
   readonly toggle: () => Promise<void>;
 }
 
-const getMediaError = (target: HTMLMediaElement): Error | null => {
-  const mediaError = target.error;
-  if (mediaError == null) {
-    return null;
-  }
-
-  const message =
-    typeof mediaError.message === 'string' && mediaError.message.length > 0
-      ? mediaError.message
-      : `Media error code ${mediaError.code}`;
-
-  return new Error(message);
-};
-
-const readPlaybackState = (
-  target: HTMLAudioElement | null,
-): Pick<UseAudioResult, 'currentTime' | 'duration' | 'ended' | 'paused'> => {
-  if (target === null) {
-    return {
-      currentTime: 0,
-      duration: 0,
-      ended: false,
-      paused: true,
-    };
-  }
-
-  return {
-    currentTime: target.currentTime,
-    duration: Number.isFinite(target.duration) ? target.duration : 0,
-    ended: target.ended,
-    paused: target.paused,
-  };
-};
-
 /**
  * @description Controls an `<audio>` element via the HTMLMediaElement API: playback state, seek, and event-synced metrics.
  */
 export function useAudio(options: UseAudioOptions = {}): UseAudioResult {
   const { audioRef: externalAudioRef, src } = options;
 
+  // Hooks
   const elementRef = React.useRef<HTMLAudioElement | null>(null);
   const [mediaElement, setMediaElement] =
     React.useState<HTMLAudioElement | null>(null);
   const [playback, setPlayback] = React.useState(() => readPlaybackState(null));
   const [error, setError] = React.useState<Error | null>(null);
 
+  // Setup
+  const getElement = (): HTMLAudioElement | null => elementRef.current;
+
+  // Handlers
   const syncFromElement = React.useCallback((): void => {
     const target = elementRef.current;
     setPlayback(readPlaybackState(target));
@@ -127,24 +101,6 @@ export function useAudio(options: UseAudioOptions = {}): UseAudioResult {
     [externalAudioRef, src],
   );
 
-  React.useEffect(
-    () => bindMediaListeners(mediaElement),
-    [bindMediaListeners, mediaElement],
-  );
-
-  React.useEffect(() => {
-    const target = elementRef.current;
-    if (target === null || src === undefined) {
-      return;
-    }
-    if (target.src !== src) {
-      target.src = src;
-    }
-    syncFromElement();
-  }, [src, syncFromElement]);
-
-  const getElement = (): HTMLAudioElement | null => elementRef.current;
-
   const play = React.useCallback(async (): Promise<void> => {
     const target = getElement();
     if (target === null) {
@@ -193,6 +149,27 @@ export function useAudio(options: UseAudioOptions = {}): UseAudioResult {
     },
     [syncFromElement],
   );
+
+  // Markup
+
+  // Life Cycle
+  React.useEffect(
+    () => bindMediaListeners(mediaElement),
+    [bindMediaListeners, mediaElement],
+  );
+
+  React.useEffect(() => {
+    const target = elementRef.current;
+    if (target === null || src === undefined) {
+      return;
+    }
+    if (target.src !== src) {
+      target.src = src;
+    }
+    syncFromElement();
+  }, [src, syncFromElement]);
+
+  // 🔌 Short Circuit
 
   return {
     audioRef,

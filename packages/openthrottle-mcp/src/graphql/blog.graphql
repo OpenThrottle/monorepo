@@ -1,0 +1,171 @@
+# MCP-only GraphQL documents: draft-only blog authoring. Mirrors the
+# blogAdmin* queries and the createBlogPost / updateBlogPost / setBlogPostTags
+# mutations exposed by openthrottle-server. There is deliberately no publish,
+# unpublish, archive or upsert document: those need blog:write and stay with a
+# human in the developer app.
+
+fragment BlogPostAdminFields on BlogPostAdminObject {
+  author {
+    avatarUrl
+    bio
+    displayName
+    slug
+  }
+  bodyMarkdown
+  coverImageAlt
+  coverImageUrl
+  createdAt
+  excerpt
+  id
+  lastEditedBy
+  publishedAt
+  seoDescription
+  seoTitle
+  slug
+  state
+  status
+  tags {
+    description
+    name
+    slug
+  }
+  title
+  updatedAt
+}
+
+fragment BlogPostAdminSummaryFields on BlogPostAdminObject {
+  author {
+    displayName
+    slug
+  }
+  createdAt
+  excerpt
+  id
+  lastEditedBy
+  publishedAt
+  slug
+  state
+  status
+  tags {
+    name
+    slug
+  }
+  title
+  updatedAt
+}
+
+query ListBlogPosts(
+  $after: String
+  $first: Int! = 10
+  $search: String
+  $state: [BlogPostState!]
+) {
+  blogAdminPosts(after: $after, first: $first, search: $search, state: $state) {
+    endCursor
+    hasNextPage
+    items {
+      ...BlogPostAdminSummaryFields
+    }
+  }
+}
+
+query GetBlogPost($id: ID, $slug: String) {
+  blogAdminPost(id: $id, slug: $slug) {
+    __typename
+    ... on BlogPostAdminObject {
+      ...BlogPostAdminFields
+    }
+    ... on BlogPostNotFoundError {
+      message
+    }
+  }
+}
+
+query ListBlogTags {
+  blogAdminTags {
+    description
+    name
+    slug
+  }
+}
+
+query ListBlogAuthors {
+  blogAdminAuthors {
+    avatarUrl
+    bio
+    displayName
+    slug
+  }
+}
+
+mutation CreateBlogPost($input: CreateBlogPostInput!) {
+  createBlogPost(input: $input) {
+    __typename
+    ... on BlogCoverAltRequiredError {
+      message
+    }
+    ... on BlogPostAdminObject {
+      ...BlogPostAdminFields
+    }
+    ... on BlogReferenceNotFoundError {
+      entity
+      key
+      message
+    }
+    ... on BlogSlugConflictError {
+      message
+      slug
+    }
+  }
+}
+
+mutation UpdateBlogPost($input: UpdateBlogPostInput!) {
+  updateBlogPost(input: $input) {
+    __typename
+    ... on BlogCoverAltRequiredError {
+      message
+    }
+    ... on BlogPostAdminObject {
+      ...BlogPostAdminFields
+    }
+    ... on BlogPostNotFoundError {
+      message
+    }
+    ... on BlogPostPublishPermissionRequiredError {
+      message
+    }
+    ... on BlogPostStaleWriteError {
+      currentUpdatedAt
+      message
+    }
+    ... on BlogReferenceNotFoundError {
+      entity
+      key
+      message
+    }
+    ... on BlogSlugConflictError {
+      message
+      slug
+    }
+  }
+}
+
+mutation SetBlogPostTags($input: SetBlogPostTagsInput!) {
+  setBlogPostTags(input: $input) {
+    __typename
+    ... on BlogPostAdminObject {
+      ...BlogPostAdminFields
+    }
+    ... on BlogPostNotFoundError {
+      message
+    }
+    ... on BlogPostPublishPermissionRequiredError {
+      message
+    }
+    ... on BlogReferenceNotFoundError {
+      entity
+      key
+      message
+    }
+  }
+}

@@ -1,6 +1,10 @@
+import type { ChatModelOption } from '@openthrottle/react-router-chat';
 import * as React from 'react';
 
-import type { WorkspaceEditorId } from '~/__generated__/graphql';
+import type {
+  PlanRunConfigRepositoryFieldsFragment,
+  WorkspaceEditorId,
+} from '~/__generated__/graphql';
 import { OpenThrottleToolbar } from '~/routing/plans/components/OpenThrottleToolbar';
 import { PlanEditorActions } from '~/routing/plans/components/PlanEditorActions';
 import type {
@@ -13,13 +17,9 @@ import { PlanToolbarTags } from '~/routing/plans/components/PlanToolbarTags';
 import { usePlanToolbar } from '~/routing/plans/hooks/usePlanToolbar';
 
 export interface PlanToolbarProps {
-  /**
-   * @description REQUIRED git branch the run operates on, submitted to the enqueuePlanRun mutation.
-   */
+  /** @description REQUIRED git branch the run operates on, submitted to the enqueuePlanRun mutation. */
   branch?: string;
-  /**
-   * @description Optional registered checkout id, submitted to the enqueuePlanRun mutation.
-   */
+  /** @description Optional registered checkout id, submitted to the enqueuePlanRun mutation. */
   checkoutId?: string;
   className?: string;
   /**
@@ -34,18 +34,16 @@ export interface PlanToolbarProps {
    * own boundary rather than holding up the toolbar's Run/Queue controls.
    */
   editors?: Promise<readonly WorkspaceEditorId[]>;
-  /**
-   * @description JSON `{ hooks: [...] }` for enqueuePlanRun; empty when no hooks or invalid.
-   */
+  /** @description JSON `{ hooks: [...] }` for enqueuePlanRun; empty when no hooks or invalid. */
   jobRunHooksJson?: string;
+  /** @description The loader's deferred model discovery, for the Run dialog's model picker. */
+  models: Promise<readonly ChatModelOption[]>;
   /**
    * @description Whether the plan's newest run is stale — its owning process crashed hard and its
    * heartbeat went quiet past the cutoff. When true the Kill control is replaced by a 'Stale'
-   * badge: the run is already dead, so Kill cannot work; a sweeper will settle it.
-   */
-  /**
-   * `undefined` means the deferred run history has not resolved yet: render no
-   * badge at all rather than asserting "not stale", which we cannot yet know.
+   * badge: the run is already dead, so Kill cannot work; a sweeper will settle it. `undefined`
+   * means the deferred run history has not resolved yet: render no badge at all rather than
+   * asserting "not stale", which we cannot yet know.
    */
   newestRunIsStale?: boolean | undefined;
   /**
@@ -60,39 +58,32 @@ export interface PlanToolbarProps {
    * {@link tags}, and {@link tagVocabulary}, the toolbar renders the tag chips.
    */
   onAddTag?: (tag: string) => void;
-  /**
-   * @description Remove a plan tag. See {@link onAddTag}.
-   */
+  /** @description Remove a plan tag. See {@link onAddTag}. */
   onRemoveTag?: (tag: string) => void;
   planId: string;
   planStatus?: string;
-  /**
-   * @description Display title for Kill run confirmation (defaults when omitted).
-   */
+  /** @description Display title for Kill run confirmation (defaults when omitted). */
   planTitle?: string;
-  /**
-   * @description JSON-serialized GraphQL Ralph tuning input for enqueuePlanRun, or empty when defaults only.
-   */
+  /** @description JSON-serialized GraphQL Ralph tuning input for enqueuePlanRun, or empty when defaults only. */
   ralphTuningJson?: string;
-  /**
-   * @description Optional registered repository id, submitted to the enqueuePlanRun mutation.
-   */
+  /** @description Deferred repositories; the Run dialog names the checkout from them. */
+  repositories?: Promise<readonly PlanRunConfigRepositoryFieldsFragment[]>;
+  /** @description Optional registered repository id, submitted to the enqueuePlanRun mutation. */
   repositoryId?: string;
+  /** @description The plan's saved run config the Run dialog seeds from. */
+  runConfigJson: string | null | undefined;
+  /** @description The soonest scheduled run's fire time; non-null disables run-now. */
+  scheduledRunAt?: Date | string | null;
+  scheduledRunId?: string | null;
   /** @description Tag vocabulary for the add-tag dropdown. See {@link onAddTag}. */
   tagVocabulary?: Promise<PlanTagVocabularyOption[]>;
   /** @description Applied plan tags rendered as chips. See {@link onAddTag}. */
   tags?: PlanTagChipData[];
-  /**
-   * @description Whether a tag add/remove is in flight (disables tag controls).
-   */
+  /** @description Whether a tag add/remove is in flight (disables tag controls). */
   tagsPending?: boolean;
-  /**
-   * @description When true, queue/run is disabled (e.g. workflow-ralph option validation failed on the plan).
-   */
+  /** @description When true, queue/run is disabled (e.g. workflow-ralph option validation failed on the plan). */
   workflowRunBlocked?: boolean;
-  /**
-   * @description First validation message for tooltip when {@link workflowRunBlocked} is true.
-   */
+  /** @description First validation message for tooltip when {@link workflowRunBlocked} is true. */
   workflowRunBlockedReason?: string;
   /**
    * @description Optional absolute path to a local project directory for multi-workspace runs.
@@ -122,7 +113,12 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
     planTitle = 'Untitled',
     planStatus,
     jobRunHooksJson = '',
+    models,
     ralphTuningJson = '',
+    repositories,
+    runConfigJson,
+    scheduledRunAt,
+    scheduledRunId,
     tags,
     tagsPending = false,
     tagVocabulary,
@@ -173,13 +169,18 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
           isRunning={isRunning}
           isTerminal={isTerminal}
           jobRunHooksJson={jobRunHooksJson}
+          models={models}
           newestRunIsStale={newestRunIsStale}
           newestUnsupervisedUnsettledRunId={newestUnsupervisedUnsettledRunId}
           planId={planId}
           planStatus={planStatus}
           planTitle={planTitle}
           ralphTuningJson={ralphTuningJson}
+          repositories={repositories}
           repositoryId={repositoryId}
+          runConfigJson={runConfigJson}
+          scheduledRunAt={scheduledRunAt}
+          scheduledRunId={scheduledRunId}
           workflowRunBlocked={workflowRunBlocked}
           workflowRunBlockedReason={workflowRunBlockedReason}
           workingDirectory={workingDirectory}

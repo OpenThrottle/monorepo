@@ -169,6 +169,7 @@
         // Run by the migrations image (Dockerfile.Migrations CMD), not imported.
         "databases/migrate.ts",
         "scripts/openthrottle-database-reset.ts",
+        "scripts/openthrottle-database-seed-blog.ts",
         "scripts/nx-validate-confgurations.ts",
         "scripts/nx-validate-projects.ts",
         "scripts/nx-validate-tags.ts",
@@ -347,8 +348,31 @@
       "project": ["src/**/*.ts"],
       "ignoreDependencies": ["@golevelup/ts-vitest", "@nestjs/testing"],
     },
+    "packages/nestjs-graphql": {
+      "entry": [
+        "src/index.ts",
+        // Shell-invoked with no in-repo importer: the nx.json `graphql-schema`
+        // targetDefault runs `node .../dist/src/bin.js`, so knip cannot reach it
+        // (or schema/graphql-schema-command.ts, which it imports) via the import graph.
+        "src/bin.ts",
+      ],
+      "project": ["src/**/*.ts"],
+    },
+    // Every file Node runs directly in the production image: the server, the one-shot
+    // `bootstrap` compose service, and the NODE_OPTIONS=--import preload (Dockerfile.NestJS).
+    "applications/openthrottle-server": {
+      "entry": [
+        "src/bootstrap.ts",
+        "src/main.ts",
+        "src/register-workspace-type-stripping.ts",
+      ],
+    },
     "packages/nestjs-repositories": {
-      "entry": ["src/index.ts", "src/nestjs-repositories.module.ts"],
+      "entry": [
+        "src/index.ts",
+        "src/nestjs-repositories.module.ts",
+        "src/testing/index.ts",
+      ],
       "project": ["src/**/*.ts"],
     },
     "packages/nestjs-typeorm": {

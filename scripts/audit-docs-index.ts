@@ -28,9 +28,11 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
 import { globSync } from 'glob';
+
 import { ALLOWLIST } from './audit-docs-index.rules.ts';
-import { createLogger, hasFlag } from './lib/index.ts';
+import { createLogger, hasFlag } from './utils/index.ts';
 
 const logger = createLogger();
 

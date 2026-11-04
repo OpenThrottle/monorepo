@@ -44,14 +44,17 @@ lint but never had a rule file of their own:
 | [No default exports](#no-default-exports)                             | **Enforced**                           | `import-x/no-default-export`                                          |
 | [`import type`](#import-type)                                         | **Enforced**                           | `@typescript-eslint/consistent-type-imports`                          |
 | [Naming conventions](#naming-conventions)                             | **Enforced** (file names honor system) | `@typescript-eslint/naming-convention`                                |
+| [NestJS file names](#nestjs-file-names)                               | **Warned**                             | `openthrottle/nestjs-file-naming`, `openthrottle/nestjs-file-exports` |
 | [Indexed access is `\| undefined`](#indexed-access-returns-undefined) | **Enforced**                           | `noUncheckedIndexedAccess` compiler flag                              |
 | [No `as` casts](#no-as-casts)                                         | **Enforced**                           | `consistent-type-assertions`, `assertionStyle: 'never'`               |
 | [No `any`](#no-any)                                                   | **Enforced**                           | `@typescript-eslint/no-explicit-any`                                  |
 | [Alphabetize keys](#alphabetize-arrays-and-object-keys)               | **Enforced**                           | `sort-keys`, `perfectionist/*`, `@graphql-eslint/alphabetize`         |
 | [File length caps](#file-length-caps)                                 | **Enforced**                           | `max-lines` (210 components / 210 routes)                             |
 | [No `await` in loops](#no-await-in-loops)                             | **Enforced**                           | `no-await-in-loop`                                                    |
+| [Composing classes with `cn`](#composing-classes-with-cn)             | **Enforced**                           | `no-restricted-imports` (`clsx`) + `no-restricted-syntax`             |
 | [Return types](#return-types)                                         | **Warned**                             | `explicit-module-boundary-types`                                      |
 | [Route primitive shape](#route-and-component-shape)                   | **Warned**                             | `openthrottle/route-primitive-shape`, `openthrottle/pre-hooks-unpack` |
+| [Hook primitive shape](#hook-shape)                                   | **Enforced**                           | `openthrottle/hook-primitive-shape` + `audit:hook-shape`              |
 | [Import order](#import-order)                                         | **Warned**                             | `simple-import-sort/imports`, `simple-import-sort/exports`            |
 | [Discriminated unions](#discriminated-unions)                         | Honor system                           | —                                                                     |
 | [`interface extends` over `&`](#interface-extends-over-)              | Honor system                           | —                                                                     |
@@ -653,6 +656,62 @@ than a rename:
 `_v2` in this codebase consistently marks the Result-returning variant of a throw-based
 `V2` function. That is a convention, not drift.
 
+### NestJS file names
+
+**Warned** by `openthrottle/nestjs-file-naming` and `openthrottle/nestjs-file-exports`, wired
+through `nestjsEslintConfig` from `@tools/dotfiles` into `openthrottle-server` and every
+`packages/nestjs-*` project. Both go to `error` once the per-area migration (OT plan
+`3915bc12`) reaches zero.
+
+NestJS is organised by modules, so a file's name is its folder's name plus a **kind** — the
+last dotted segment, which states what the file exports:
+
+```text
+queues/usage-limit/
+  usage-limit.constants.ts
+  usage-limit.service.ts
+  usage-limit.types.ts
+  usage-limit.utils.ts
+```
+
+- **Module-scoped kinds** — `module`, `service`, `processor`, `resolver`, `controller`,
+  `types`, `constants`, `utils` — are named for their folder: in `queues/plans/` the only
+  service name is `plans.service.ts`. A file directly in a project's `src/` takes the
+  project's folder name (`packages/nestjs-auth/src/nestjs-auth.module.ts`); an
+  application's root `src/app.module.ts` is the one exception.
+- **A second module or service in a folder is a second unit, so it gets a sub-folder** —
+  `queues/plans/cancel-channel/cancel-channel.service.ts`, never
+  `queues/plans/plan-cancel-channel.service.ts` or `plans-cancel-channel.service.ts`. A
+  folder makes the second unit visible; a qualifier stacked on the name hides it.
+- **Subject-named kinds** — `decorator`, `entity`, `enum`, `executor`, `factory`, `guard`,
+  `input`, `mapper`, `object`, `options`, `policy`, `strategy`, `token` — describe one thing
+  each and sit many to a folder, so their stem is free (`graphql/queues/job.object.ts`).
+- **Every file has a kind.** `reading-time-minutes.ts` is reported; it is a `.utils.ts`.
+  Kinds outside the two lists (`.dates.ts`, `.parser.ts`, `.cron.ts`) are reported too —
+  they are `.utils.ts` under another name.
+- **Tests mirror their source** (`usage-limit.service.test.ts`). A test of a folder as a
+  whole, with no single source, is `<folder>.test.ts` / `<folder>.integration.test.ts`.
+- `index.ts` and `main.ts` are exempt. A file that genuinely must keep its name — the
+  server's pre-Nest boot files, which deploy commands name by path — is turned off in the
+  project's own `eslint.config.ts`, where the exception is reviewed, never with an inline
+  disable.
+
+**The kind is a promise about the exports**, checked by `nestjs-file-exports`:
+
+| Kind                                                | Exports                                                            |
+| --------------------------------------------------- | ------------------------------------------------------------------ |
+| `.module.ts`                                        | exactly one `@Module()` class, nothing else                        |
+| `.service.ts`                                       | exactly one `@Injectable()` class, nothing else                    |
+| `.processor.ts` / `.resolver.ts` / `.controller.ts` | exactly one `@Processor()` / `@Resolver()` / `@Controller()` class |
+| `.utils.ts`                                         | functions only                                                     |
+| `.types.ts`                                         | types and interfaces only                                          |
+| `.constants.ts`                                     | non-function `const` values only                                   |
+
+So a result type a service returns lives in the folder's `.types.ts`, and a helper it
+exports for a test lives in `.utils.ts` — see
+`queues/scheduled-agent-jobs/usage-limit-resume/` for both. Subject-named kinds and tests
+are not export-checked.
+
 ## Components and files
 
 ### Component and data boundaries
@@ -717,6 +776,24 @@ The short version:
 - File-scope helpers, data and config are hoisted to a sibling `utils/`, `data/` or
   `config/` — or into a `use<Name>` hook.
 
+### Hook shape
+
+**Enforced** by the ESLint rule `openthrottle/hook-primitive-shape` plus
+`pnpm run audit:hook-shape:strict`. Full contract:
+[hook-primitive-shape.md](./hook-primitive-shape.md).
+
+The short version:
+
+- One `use*` hook per file, named after the file (`useFoo` in `useFoo.ts`), in a `hooks/`
+  folder. Never kebab-case.
+- Export only the hook, its `UseFooOptions` and its `UseFooResult`. Other types go to
+  `types.ts`, helpers to `utils/`, data to `data/`, tunables to `config/`.
+- No module-scope values. A value only the hook uses lives inside it. When an object or
+  array's identity matters (it reaches a dependency array, a memoized child, a context, or
+  the hook's return value), derive it with `React.useMemo`, or import a constant from
+  `data/` / `config/` when it doesn't depend on inputs.
+- The six section markers and an explicit return type, as in a component.
+
 ### File length caps
 
 **Enforced** by `max-lines`: 210 lines for authored components and routes. shadcn
@@ -770,6 +847,53 @@ introducing a parallel UI system.
   `GlobalPopover`.
 - Details and a copy-paste example:
   [`packages/react-router-ui-global/README.md`](../../packages/react-router-ui-global/README.md).
+
+### Composing classes with `cn`
+
+**Enforced.** Compose Tailwind classes with `cn` from `@openthrottle/react-router-shadcn`,
+never a template literal or bare `clsx`. It is mandatory whenever a `className` prop is merged
+in, and the caller's `className` always goes last.
+
+`no-restricted-imports` rejects a `clsx` import everywhere except `react-router-shadcn`, and
+`no-restricted-syntax` rejects a template literal with an expression directly inside a JSX
+`className` (both in [`tools/dotfiles/src/index.ts`](../../tools/dotfiles/src/index.ts)).
+Putting the caller's `className` last is not something either rule can see, so that part stays
+honor system.
+
+`cn` is `twMerge(clsx(inputs))`, so it reads exactly like `clsx` — strings, conditionals,
+objects, arrays — and then resolves Tailwind conflicts so the last conflicting class wins.
+`clsx` alone does not: `clsx('px-4', className)` with a caller's `px-2` emits both, and which
+one renders depends on stylesheet order, not on what the caller asked for. Template literals
+do the same with worse readability.
+
+```tsx
+// ❌ Both padding classes ship; the caller's px-2 may or may not win
+<div className={clsx('rounded-md px-4', isActive && 'bg-muted', className)} />
+<div className={`rounded-md px-4 ${isActive ? 'bg-muted' : ''} ${className}`} />
+
+// ✅ Conflicts resolve; the caller's className overrides the base
+<div className={cn('rounded-md px-4', isActive && 'bg-muted', className)} />
+```
+
+`clsx` stays acceptable in exactly two places: inside `react-router-shadcn` itself (it is what
+`cn` is built on), and in a package that does not depend on `react-router-shadcn` (none today).
+How components inside that package place `className` relative to `cva` variants is covered by
+its own [conventions](../../packages/react-router-shadcn/README.md#conventions).
+
+**Caveats** — check these whenever you swap `clsx` or a template literal for `cn`:
+
+1. **`cn` silently drops conflicting classes.** A component that passed conflicting classes by
+   accident renders differently after the swap. Review every call where the base classes and a
+   conditional or `className` class set the same property, and confirm the merged result is
+   the one the UI wants.
+2. **Custom theme scales named like built-ins are misread.** tailwind-merge (Tailwind v4 aware)
+   would treat a custom `--text-2xs` font size as a text colour, and drop it next to a
+   `text-*` colour. No custom `--text-*` tokens exist today; adding one means moving `cn` to
+   `extendTailwindMerge` with that scale registered.
+3. **Tests asserting two conflicting classes fail after the swap.** Update the assertion to the
+   merged result; do not revert to `clsx` to keep the old assertion green.
+4. **Runtime cost is negligible.** tailwind-merge caches parsed class lists in an LRU, and a
+   module-scope `cn(...)` constant computes once.
 
 ## Testing
 

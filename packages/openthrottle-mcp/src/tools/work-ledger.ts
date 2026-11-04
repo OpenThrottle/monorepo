@@ -2,7 +2,7 @@
  * @description Work-ledger tools: begin_task_session, record_artifact, attach_session_subject,
  * end_session, get_work_sessions.
  * These let an agent self-report the outputs it produced (git commits, PRs, documents)
- * and tie its work to a plan/task, under a session opened lazily on first use (design §4.2).
+ * and tie its work to a plan/task, under a session opened lazily on first use.
  * The session id is process-managed (see ../session/current-session.ts), never a tool arg.
  * An X-OT-Session-Id header is sent so server-side side effects can attribute to this session.
  *

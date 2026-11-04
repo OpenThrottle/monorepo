@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import { ArrowLeftIcon, ArrowRightIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
@@ -40,7 +40,7 @@ export const DocPagePager = (props: DocPagePagerProps): React.ReactElement => {
   return (
     <nav
       aria-label="Pagination"
-      className={clsx(
+      className={cn(
         'flex flex-col gap-3 border-t pt-6 sm:flex-row sm:justify-between',
         className,
       )}

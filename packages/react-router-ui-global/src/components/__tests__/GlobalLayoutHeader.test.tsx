@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
@@ -50,6 +50,35 @@ describe('GlobalLayoutHeader Component', () => {
     expect(
       screen.queryByTestId('GlobalLayoutHeaderSearch'),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe('GlobalLayoutHeader mobile chrome', () => {
+  test('exposes the trailing links through a labelled overflow menu', () => {
+    renderHeader({});
+    expect(
+      screen.getByRole('button', { name: 'More actions' }),
+    ).toBeInTheDocument();
+  });
+
+  test('gives every header link an accessible name', () => {
+    renderHeader({});
+    const nav = screen.getByTestId('global-layout-nav');
+    within(nav)
+      .getAllByRole('link')
+      .forEach((link) => {
+        expect(link).toHaveAccessibleName();
+      });
+  });
+
+  test('the collapsed search icon opens the commander via engage', async () => {
+    const user = userEvent.setup();
+    const onSearchChromeEvent = vi.fn();
+    renderHeader({ onSearchChromeEvent });
+
+    await user.click(screen.getByRole('button', { name: 'Search' }));
+
+    expect(onSearchChromeEvent).toHaveBeenCalledWith({ type: 'engage' });
   });
 });
 
@@ -133,5 +162,21 @@ describe('GlobalLayoutHeader search chrome', () => {
 
     await user.type(field, 'x');
     expect(field).toHaveValue('seedx');
+  });
+});
+
+describe('GlobalLayoutHeader touch targets', () => {
+  test('grows every header control to 44px on coarse pointers and drops the gaps', () => {
+    renderHeader({ onSearchChromeEvent: vi.fn() });
+
+    expect(screen.getByRole('button', { name: /toggle sidebar/i })).toHaveClass(
+      'pointer-coarse:size-11',
+    );
+    expect(screen.getByRole('button', { name: 'Search' })).toHaveClass(
+      'pointer-coarse:size-11',
+    );
+    expect(screen.getByTestId('global-layout-nav')).toHaveClass(
+      'pointer-coarse:max-sm:gap-0',
+    );
   });
 });

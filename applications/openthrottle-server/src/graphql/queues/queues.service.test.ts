@@ -1,9 +1,19 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { getQueueToken } from '@nestjs/bullmq';
-import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
+import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { Job, Queue } from 'bullmq';
-import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
+import type { Mock } from 'vitest';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+} from 'vitest';
 
 import { AGENTIC_TEST_QUEUE_NAME } from '../../queues/agentic-test/agentic-test.constants.ts';
 import type {
@@ -33,6 +43,54 @@ import { TAGGING_QUEUE_NAME } from '../../queues/tagging/tagging.constants.ts';
 import { WORK_LEDGER_SWEEP_QUEUE_NAME } from '../../queues/work-ledger-sweep/work-ledger-sweep.constants.ts';
 import { WORK_LEDGER_VERIFY_QUEUE_NAME } from '../../queues/work-ledger-verify/work-ledger-verify.constants.ts';
 import { QueuesService } from './queues.service.ts';
+
+interface MockBullQueueInstance {
+  readonly close: Mock;
+  readonly getJobCounts: Mock;
+  readonly name: string;
+  readonly on: Mock;
+  readonly opts: unknown;
+}
+
+const { bullQueues, queueReadiness } = vi.hoisted(() => {
+  const instances: MockBullQueueInstance[] = [];
+  const readiness: { current: () => Promise<unknown> } = {
+    current: async () => undefined,
+  };
+
+  return { bullQueues: instances, queueReadiness: readiness };
+});
+
+// Dynamic queues are built with `new Queue(...)` outside DI; record what they
+// are constructed with instead of opening a real Redis connection.
+vi.mock('bullmq', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('bullmq')>();
+
+  class MockBullQueue {
+    readonly close = vi.fn().mockResolvedValue(undefined);
+    readonly getJobCounts = vi.fn().mockResolvedValue({});
+    readonly name: string;
+    readonly on = vi.fn();
+    readonly opts: unknown;
+    readonly waitUntilReady = vi.fn(() => queueReadiness.current());
+
+    constructor(name: string, opts: unknown) {
+      this.name = name;
+      this.opts = opts;
+      bullQueues.push(this);
+    }
+  }
+
+  return { ...actual, Queue: MockBullQueue };
+});
+
+const REDIS_ENV_KEYS = [
+  'REDIS_DB',
+  'REDIS_HOST',
+  'REDIS_PASSWORD',
+  'REDIS_TLS',
+  'REDIS_USERNAME',
+] as const;
 
 function createMockJob(overrides: Partial<Job<RunPlanJobData, void>> = {}) {
   return createMock<Job<RunPlanJobData, void>>({
@@ -141,13 +199,7 @@ describe('QueuesService', () => {
     removeRepeatableByKey: mockRemoveRepeatableByKey,
   });
 
-  const mockConfigService = createMock<ConfigService>({
-    get: vi.fn((key: string) => {
-      if (key === 'redis.host') return undefined;
-      if (key === 'redis.port') return undefined;
-      return undefined;
-    }),
-  });
+  const mockLogger = createMock<LoggerService>();
 
   let savedRedisHost: string | undefined;
 
@@ -158,7 +210,7 @@ describe('QueuesService', () => {
     const app = await Test.createTestingModule({
       providers: [
         QueuesService,
-        { provide: ConfigService, useValue: mockConfigService },
+        { provide: LoggerService, useValue: mockLogger },
         {
           provide: getQueueToken(AGENTIC_TEST_QUEUE_NAME),
           useValue: mockAgenticTestQueue,
@@ -262,6 +314,128 @@ describe('QueuesService', () => {
         error: 'Redis is not configured (REDIS_HOST)',
       });
     });
+
+    describe('when Redis is configured', () => {
+      const original = Object.fromEntries(
+        REDIS_ENV_KEYS.map((key) => [key, process.env[key]]),
+      );
+
+      beforeEach(() => {
+        process.env.REDIS_HOST = 'redis.internal';
+      });
+
+      afterEach(async () => {
+        for (const key of REDIS_ENV_KEYS) {
+          const value = original[key];
+          if (value === undefined) delete process.env[key];
+          else process.env[key] = value;
+        }
+        // Drop dynamic queues so later getStats tests see static queues only.
+        await service.onModuleDestroy();
+        bullQueues.length = 0;
+        queueReadiness.current = async () => undefined;
+        vi.useRealTimers();
+      });
+
+      test('connects the dynamic queue with the configured credentials', async () => {
+        process.env.REDIS_DB = '3';
+        process.env.REDIS_PASSWORD = 's3cret';
+        process.env.REDIS_TLS = 'true';
+        process.env.REDIS_USERNAME = 'queue-user';
+
+        const result = await service.createQueue('dynamic-auth');
+
+        expect(result).toEqual({ queueName: 'dynamic-auth' });
+        expect(bullQueues).toHaveLength(1);
+        expect(bullQueues[0]?.name).toBe('dynamic-auth');
+        expect(bullQueues[0]?.opts).toEqual({
+          connection: expect.objectContaining({
+            db: 3,
+            host: 'redis.internal',
+            password: 's3cret',
+            tls: {},
+            username: 'queue-user',
+          }),
+          prefix: expect.any(String),
+        });
+      });
+
+      test('registers the queue once its client is ready', async () => {
+        await service.createQueue('dynamic-ready');
+
+        expect(service.getQueueByName('dynamic-ready')).toBe(bullQueues[0]);
+        expect(bullQueues[0]?.close).not.toHaveBeenCalled();
+      });
+
+      test('returns the existing queue on re-create without a new connection', async () => {
+        await service.createQueue('dynamic-twice');
+        const result = await service.createQueue('dynamic-twice');
+
+        expect(result).toEqual({ queueName: 'dynamic-twice' });
+        expect(bullQueues).toHaveLength(1);
+      });
+
+      test('keeps one connection when two creates of a name race', async () => {
+        const [first, second] = await Promise.all([
+          service.createQueue('dynamic-race'),
+          service.createQueue('dynamic-race'),
+        ]);
+
+        expect(first).toEqual({ queueName: 'dynamic-race' });
+        expect(second).toEqual({ queueName: 'dynamic-race' });
+        expect(bullQueues).toHaveLength(2);
+        expect(service.getQueueByName('dynamic-race')).toBe(bullQueues[0]);
+        expect(bullQueues[1]?.close).toHaveBeenCalledOnce();
+      });
+
+      test('logs Redis errors raised after creation', async () => {
+        await service.createQueue('dynamic-errors');
+        const errorListener = bullQueues[0]?.on.mock.calls.find(
+          ([event]) => event === 'error',
+        )?.[1];
+
+        expect(errorListener).toBeTypeOf('function');
+        if (typeof errorListener === 'function') {
+          errorListener(new Error('connection lost'));
+        }
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('connection lost'),
+        );
+      });
+
+      describe('when the client cannot authenticate', () => {
+        test('returns the reason, closes the connection and registers nothing', async () => {
+          queueReadiness.current = async () => {
+            throw new Error('NOAUTH Authentication required.');
+          };
+
+          const result = await service.createQueue('dynamic-noauth');
+
+          expect(result).toEqual({
+            error: 'Failed to create queue: NOAUTH Authentication required.',
+          });
+          expect(bullQueues[0]?.close).toHaveBeenCalledOnce();
+          expect(service.getQueueByName('dynamic-noauth')).toBeNull();
+        });
+      });
+
+      describe('when the client never becomes ready', () => {
+        test('times out, closes the connection and registers nothing', async () => {
+          vi.useFakeTimers();
+          queueReadiness.current = () => new Promise(() => undefined);
+
+          const pending = service.createQueue('dynamic-unreachable');
+          await vi.advanceTimersByTimeAsync(5000);
+          const result = await pending;
+
+          expect(result).toEqual({
+            error: expect.stringContaining('did not become ready within'),
+          });
+          expect(bullQueues[0]?.close).toHaveBeenCalledOnce();
+          expect(service.getQueueByName('dynamic-unreachable')).toBeNull();
+        });
+      });
+    });
   });
 
   describe('getQueueByName', () => {
@@ -308,6 +482,27 @@ describe('QueuesService', () => {
       const result = await service.getStatsForQueue('other');
 
       expect(result).toBeNull();
+    });
+
+    test('reads only the named queue', async () => {
+      mockDailyStatsGetJobCounts.mockClear();
+
+      const result = await service.getStatsForQueue(PLANS_QUEUE_NAME);
+
+      expect(result).toMatchObject({ name: PLANS_QUEUE_NAME });
+      expect(mockDailyStatsGetJobCounts).not.toHaveBeenCalled();
+    });
+
+    describe('when the named queue cannot read its counts', () => {
+      test('rejects with the Redis error rather than reporting not found', async () => {
+        mockDailyStatsGetJobCounts.mockRejectedValueOnce(
+          new Error('NOAUTH Authentication required.'),
+        );
+
+        await expect(
+          service.getStatsForQueue(DAILY_STATS_QUEUE_NAME),
+        ).rejects.toThrow('NOAUTH Authentication required.');
+      });
     });
   });
 
@@ -451,7 +646,7 @@ describe('QueuesService', () => {
       const serviceWithNoPlans = await Test.createTestingModule({
         providers: [
           QueuesService,
-          { provide: ConfigService, useValue: mockConfigService },
+          { provide: LoggerService, useValue: mockLogger },
           {
             provide: getQueueToken(AGENTIC_TEST_QUEUE_NAME),
             useValue: mockAgenticTestQueue,
@@ -625,6 +820,47 @@ describe('QueuesService', () => {
       });
       expect(mockGetJobCounts).toHaveBeenCalledTimes(10);
       expect(mockDailyStatsGetJobCounts).toHaveBeenCalledTimes(1);
+    });
+
+    describe('when one static queue cannot read its counts', () => {
+      test('omits that queue, returns the rest and logs why', async () => {
+        mockLogger.warn.mockClear();
+        mockDailyStatsGetJobCounts.mockRejectedValueOnce(
+          new Error('NOAUTH Authentication required.'),
+        );
+
+        const result = await service.getStats();
+
+        expect(result).toHaveLength(10);
+        expect(result.map((s) => s.name)).not.toContain(DAILY_STATS_QUEUE_NAME);
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          `Queue "${DAILY_STATS_QUEUE_NAME}" stats unavailable: NOAUTH Authentication required.`,
+        );
+      });
+    });
+
+    describe('when a dynamic queue cannot read its counts', () => {
+      const savedHost = process.env.REDIS_HOST;
+
+      afterEach(async () => {
+        if (savedHost === undefined) delete process.env.REDIS_HOST;
+        else process.env.REDIS_HOST = savedHost;
+        await service.onModuleDestroy();
+        bullQueues.length = 0;
+      });
+
+      test('still lists every static queue', async () => {
+        process.env.REDIS_HOST = 'redis.internal';
+        await service.createQueue('dynamic-broken');
+        bullQueues[0]?.getJobCounts.mockRejectedValue(
+          new Error('WRONGPASS invalid username-password pair'),
+        );
+
+        const result = await service.getStats();
+
+        expect(result).toHaveLength(11);
+        expect(result.map((s) => s.name)).not.toContain('dynamic-broken');
+      });
     });
 
     test('uses 0 for missing count keys', async () => {
@@ -849,6 +1085,33 @@ describe('QueuesService', () => {
         RUN_PLAN_ORCHESTRATOR_JOB_NAME,
         orchJobData,
         { jobId: 'ralph-orch:80864bba', priority: 10 },
+      );
+    });
+
+    test('passes delayMs as a BullMQ delay alongside the jobId, and omits it when zero', async () => {
+      mockAdd.mockClear();
+
+      await service.enqueuePlanRalphOrchestrator({
+        delayMs: 90_000,
+        idempotencyKey: 'usage-limit-resume-run-1',
+        jobData: orchJobData,
+      });
+      await service.enqueuePlanRalphOrchestrator({
+        delayMs: 0,
+        jobData: orchJobData,
+      });
+
+      expect(mockAdd).toHaveBeenNthCalledWith(
+        1,
+        RUN_PLAN_ORCHESTRATOR_JOB_NAME,
+        orchJobData,
+        { delay: 90_000, jobId: 'usage-limit-resume-run-1' },
+      );
+      expect(mockAdd).toHaveBeenNthCalledWith(
+        2,
+        RUN_PLAN_ORCHESTRATOR_JOB_NAME,
+        orchJobData,
+        {},
       );
     });
 

@@ -1,5 +1,6 @@
 import {
   Button,
+  cn,
   DatePicker,
   Dialog,
   DialogContent,
@@ -10,7 +11,6 @@ import {
   Input,
   Label,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import * as React from 'react';
 import { Form } from 'react-router';
 
@@ -73,7 +73,7 @@ export const SettingsKeysForm = (
   return (
     <Dialog onOpenChange={handleOpenChange} open={createDialogOpen}>
       <DialogContent
-        className={clsx('sm:max-w-lg', className)}
+        className={cn('sm:max-w-lg', className)}
         data-testid="SettingsKeysForm"
       >
         {showSuccess && successPayload != null ? (

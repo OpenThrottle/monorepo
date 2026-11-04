@@ -38,6 +38,7 @@ describe('plan run config enqueue tuning parity', () => {
       iterationTimeoutText: '45',
       workflowInput: {
         debugCli: 'debug',
+        effort: 'max',
         executionBackend: 'claude',
         iterations: 3,
         model: 'sonnet',
@@ -60,6 +61,7 @@ describe('plan run config enqueue tuning parity', () => {
 
     expect(buildRalphPlanRunTuningFromPlanRunConfig(stored)).toEqual({
       backend: 'claude',
+      effort: 'max',
       iterationTimeoutSeconds: 45,
       iterations: 3,
       model: 'sonnet',

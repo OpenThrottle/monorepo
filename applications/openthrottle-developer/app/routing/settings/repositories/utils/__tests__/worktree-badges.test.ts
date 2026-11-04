@@ -1,10 +1,14 @@
 import { describe, expect, test } from 'vitest';
 
-import { WorktreeActivity } from '~/__generated__/graphql';
+import {
+  MissingWorktreeCheckoutReason,
+  WorktreeActivity,
+} from '~/__generated__/graphql';
 import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/data.copy';
 import {
   mockCheckout,
   mockDiscoveredWorktree,
+  mockMissingCheckout,
   mockRepository,
 } from '~/routing/settings/repositories/data/mock.repositories';
 
@@ -111,5 +115,54 @@ describe('deriveWorktreeBadges', () => {
 
     expect(badges).toHaveLength(2);
     expect(badges.every((badge) => badge.title.length > 0)).toBe(true);
+  });
+
+  describe('a registered worktree missing from disk', () => {
+    const missingRow = (
+      reason: Parameters<typeof mockMissingCheckout>[0],
+    ): ReturnType<typeof buildRepositoryRows>[number] => {
+      const child = buildRepositoryRows(
+        [
+          mockRepository({
+            checkouts: [
+              mockCheckout({ id: 'primary-1' }),
+              mockCheckout({ id: 'worktree-1', kind: 'worktree' }),
+            ],
+            id: 'repo-1',
+          }),
+        ],
+        [],
+        [],
+        [mockMissingCheckout(reason)],
+      )[0]?.children?.[0];
+      if (child === undefined) throw new Error('expected a worktree child row');
+      return child;
+    };
+
+    test('gets a missing badge in the missing tone', () => {
+      const badges = deriveWorktreeBadges(missingRow({}));
+
+      expect(badges).toEqual([
+        expect.objectContaining({
+          id: 'missing',
+          label: REPOSITORIES_TABLE_COPY.missingBadge,
+          tone: 'missing',
+        }),
+      ]);
+    });
+
+    test('explains a gone path and a leftover folder differently', () => {
+      const gone = deriveWorktreeBadges(missingRow({}))[0];
+      const husk = deriveWorktreeBadges(
+        missingRow({ reason: MissingWorktreeCheckoutReason.NotAWorktree }),
+      )[0];
+
+      expect(gone?.title).toBe(
+        REPOSITORIES_TABLE_COPY.missingBadgeTitlePathGone,
+      );
+      expect(husk?.title).toBe(
+        REPOSITORIES_TABLE_COPY.missingBadgeTitleNotAWorktree,
+      );
+    });
   });
 });

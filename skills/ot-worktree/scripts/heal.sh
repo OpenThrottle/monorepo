@@ -9,8 +9,9 @@
 # first USE instead: it runs before `dev` (wired via nx.json targetDefaults) and,
 # when it finds an unprovisioned linked worktree, provisions it once.
 #
-# It is a no-op in the primary checkout and on already-provisioned worktrees, so
-# the common dev path pays only a couple of `git rev-parse` calls.
+# It is a no-op in the primary checkout. On an already-provisioned worktree it only
+# runs the repo's optional, idempotent heal hook (a backfill), so the common dev
+# path pays a couple of `git rev-parse` calls plus that hook.
 
 set -e
 
@@ -26,8 +27,13 @@ is_linked_worktree || exit 0
 _root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
 
 # 2. Fast path: already provisioned (skill marker, or the repo's declared marker
-#    files for worktrees that predate the skill) → exit immediately.
-worktree_is_provisioned "$_root" && exit 0
+#    files for worktrees that predate the skill) → nothing to provision. Give the
+#    repo's optional heal hook a chance to backfill state onto worktrees an older
+#    provisioner built (see heal_worktree_hook), then exit.
+if worktree_is_provisioned "$_root"; then
+  heal_worktree_hook "$_root" "$(primary_checkout "$_root")"
+  exit 0
+fi
 
 # 3. Unprovisioned linked worktree → provision it once, then mark it so the next
 #    run takes the fast path.

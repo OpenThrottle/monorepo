@@ -3,12 +3,15 @@ import { isRecord } from '@openthrottle/nodejs-utils';
 import type { ResolvedRunPhase } from './run-phase';
 import {
   appendTurnTextEvent,
+  applyTerminalUsageLimit,
   applyTurnToolCall,
   applyTurnToolResult,
   applyTurnUsage,
+  applyTurnUsageLimit,
   failRunningTurnTools,
   isRetryableTerminalMetadata,
   parseChunkMetadata,
+  parseChunkMetadataRecord,
   toolLabelFromMetadataJson,
 } from './turn-events';
 import type { ChatMessage, ChatTurnEvent } from './types';
@@ -63,11 +66,27 @@ export interface ChatStreamChunk {
   readonly delta: string;
   readonly done: boolean;
   readonly error?: string | null;
-  /** `text` | `thinking` | `tool_call` | `tool_result` | `session` | terminal. */
+  /** `text` | `thinking` | `tool_call` | `tool_result` | `session` | `usage_limit` | terminal. */
   readonly kind: string;
   readonly messageId: string;
   readonly metadataJson?: string | null;
   readonly sortOrder: number;
+}
+
+/**
+ * The subscription payload shape the stream reads: one `conversationStreamChunkAdded`
+ * chunk per event. Structural, so each app's generated subscription result is
+ * assignable.
+ * @public
+ */
+export interface ConversationStreamSubscriptionData {
+  readonly conversationStreamChunkAdded: ChatStreamChunk;
+}
+
+/** Variables for the conversation-stream subscription. @public */
+export interface ConversationStreamSubscriptionVariables {
+  readonly [key: string]: unknown;
+  readonly conversationId: string;
 }
 
 /** Accumulated streaming state folded from {@link ChatStreamChunk}s. @public */
@@ -91,7 +110,8 @@ export interface StreamState {
    * messageIds whose terminal chunk carried the server's retryable timeout
    * marker (`TerminalTimeoutMetadata`) — the turn stalled and was safely
    * interrupted, so the client may auto-retry it (vs a fatal error, which is
-   * `completedIds` without `retryableIds`).
+   * `completedIds` without `retryableIds`). A usage-limited terminal
+   * (`TerminalUsageLimitMetadata`) is never in this set.
    */
   readonly retryableIds: ReadonlySet<string>;
   /** Seen `messageId:sortOrder` keys for dedupe. */
@@ -167,9 +187,17 @@ export function reduceStreamChunk(
         error: chunk.error ?? null,
       },
     );
+    const { error } = chunk;
+    const settled = error ? failRunningTurnTools(withUsage, error) : withUsage;
+    // A usage-limited terminal carries `usageLimit` in its metadata; make sure
+    // the turn shows it even when no `usage_limit` chunk preceded it.
     events.set(
       chunk.messageId,
-      chunk.error ? failRunningTurnTools(withUsage, chunk.error) : withUsage,
+      applyTerminalUsageLimit(
+        settled,
+        parseChunkMetadataRecord(chunk.metadataJson ?? null),
+        chunk.sortOrder,
+      ),
     );
 
     const completedIds = new Set(state.completedIds);
@@ -243,6 +271,15 @@ export function reduceStreamChunk(
         sortOrder: chunk.sortOrder,
       },
     ]);
+  } else if (chunk.kind === 'usage_limit') {
+    events.set(
+      chunk.messageId,
+      applyTurnUsageLimit(
+        currentEvents,
+        parseChunkMetadataRecord(chunk.metadataJson ?? null),
+        chunk.sortOrder,
+      ),
+    );
   } else if (chunk.kind === 'usage') {
     // Mid-stream usage: opencode emits per-step `usage` chunks, and the server
     // forwards claude/cursor terminal usage as a discrete `usage` chunk. Fold

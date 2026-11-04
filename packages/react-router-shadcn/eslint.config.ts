@@ -8,10 +8,28 @@ export default [
 
   {
     rules: {
+      // `cn` is built on clsx, so this package is the one place the shared
+      // config's clsx import ban does not apply.
+      'no-restricted-imports': 'off',
       // Vendored shadcn/Radix primitives intentionally export a family of
       // Root/Trigger/Content subcomponents per file, so one-component-per-file
       // does not apply here.
       'react/no-multi-comp': 'off',
+    },
+  },
+
+  /**
+   * Vendored shadcn hooks (`useIsMobile`, …) are out of scope for the hook
+   * shape (docs/monorepo/hook-primitive-shape.md § Scope): re-syncing from
+   * upstream must stay a diff, not a rewrite. Turned off here for the same
+   * reason as the component override below — the base config's
+   * `packages/react-router-shadcn/**` ignore can't match under nx's
+   * package-relative cwd.
+   */
+  {
+    files: ['**/hooks/use*.{ts,tsx}'],
+    rules: {
+      'openthrottle/hook-primitive-shape': 'off',
     },
   },
 

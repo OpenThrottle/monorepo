@@ -2,6 +2,7 @@ import {
   buildAuthCookie,
   getAuthTokenFromCookie,
 } from '@openthrottle/react-router-auth';
+import { cn } from '@openthrottle/react-router-shadcn';
 import {
   OpenThrottleAuthForm,
   OpenThrottleLogo,
@@ -12,7 +13,6 @@ import {
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import clsx from 'clsx';
 import { animate, useReducedMotion } from 'framer-motion';
 import { useAtom } from 'jotai';
 import * as React from 'react';
@@ -173,7 +173,7 @@ export default function Component(
       )}
 
       <div
-        className={clsx(
+        className={cn(
           'relative z-10 mx-auto flex h-full w-full max-w-xl flex-1 flex-col items-center justify-center gap-8 transition-opacity duration-700',
           { 'opacity-0': isExiting },
         )}

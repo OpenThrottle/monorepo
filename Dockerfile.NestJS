@@ -18,8 +18,8 @@
 # `rm -rf node_modules/.pnpm/...` surgery — that was compensating for an over-broad
 # `--legacy` deploy and is tracked for a real fix (injected strict deploy) in a follow-up plan.
 #
-# Production runtime: gcr.io/distroless/nodejs24-debian12:nonroot (glibc). Build stages use
-# node:24-bookworm-slim so pruned native addons match distroless (Alpine/musl would not, and
+# Production runtime: gcr.io/distroless/nodejs24-debian13:nonroot (glibc). Build stages use
+# node:24-trixie-slim so pruned native addons match distroless (Alpine/musl would not, and
 # the build Node major must match the runtime's nodejs24 to keep native ABIs compatible).
 ###########################################################################
 #
@@ -27,7 +27,7 @@
 #
 ###########################################################################
 ARG NODE_VERSION="24"
-FROM node:${NODE_VERSION}-bookworm-slim AS base
+FROM node:${NODE_VERSION}-trixie-slim AS base
 
 WORKDIR /app
 
@@ -39,7 +39,6 @@ ARG APP_ENV="production"
 ARG APP_NAME="__REQUIRED_ARG__"
 ARG APP_VERSION="__REQUIRED_ARG__"
 ARG GITHUB_TOKEN="__REQUIRED_ARG__"
-ARG PNPM_VERSION="__REQUIRED_ARG__"
 
 ENV APP_ENV="${APP_ENV}"
 ENV APP_NAME="${APP_NAME}"
@@ -56,9 +55,10 @@ ENV NX_DAEMON="false"
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig*.json ./
 COPY scripts/check-node-engine.mjs ./scripts/check-node-engine.mjs
 
-# Enable pnpm via corepack
-RUN corepack enable
-RUN corepack prepare pnpm --activate
+# Enable pnpm via corepack. A bare `prepare` reads the root package.json
+# `packageManager` field (copied above), so the version + sha512 there is the
+# single pin — `prepare pnpm` would activate npm's `latest` tag instead.
+RUN corepack enable && corepack prepare --activate
 
 # Non-root identity for intermediate stages (final image uses distroless `nonroot`).
 RUN groupadd --system --gid 1001 appuser \
@@ -86,7 +86,7 @@ COPY ./tools ./tools
 COPY ./.agents ./.agents
 COPY ./skills ./skills
 
-# pnpm 11 won't expand ${GITHUB_TOKEN} from the committed .npmrc; write the
+# pnpm ≥11 won't expand ${GITHUB_TOKEN} from the committed .npmrc; write the
 # GitHub Packages credential to the trusted user-level config. Confined to the
 # build stages (builder and the development/build stages that derive from it) —
 # the distroless production stage only copies the pruned tree, never this .npmrc.
@@ -109,7 +109,7 @@ ENV NODE_ENV="development"
 ENV NX_DAEMON="false"
 
 # procps: nx/dev-server process management spawns `ps` (pidtree) — absent from
-# bookworm-slim. git: common dev tooling shells out to it.
+# trixie-slim. git: common dev tooling shells out to it.
 RUN apt-get update \
   && apt-get install -y --no-install-recommends git procps \
   && rm -rf /var/lib/apt/lists/*
@@ -172,6 +172,19 @@ CMD ["sh", "-c", "node_modules/.bin/tsx packages/openthrottle-mcp/src/bin-http.t
 # single file and needs zero node_modules.
 FROM builder AS mcp-build
 
+# src/__generated__ is gitignored codegen output that the source imports, so it
+# must be generated here — a local build only "works" because the host's copy
+# rides in through the build context; a clean CI checkout has none. Codegen
+# reads the committed server schema.gql (not in `builder`, which copies only the
+# app's package.json) and runs graphql-codegen directly rather than through Nx,
+# which has no nx.json in this stage. Output is identical to
+# `pnpm nx run openthrottle-mcp:codegen-graphql`. NODE_ENV=production for this
+# command only: defineCodegen hard-requires API_URL_INTERNAL (a live server)
+# when NODE_ENV=development, which `builder` sets.
+COPY ./applications/openthrottle-server/schema.gql ./applications/openthrottle-server/schema.gql
+
+RUN cd packages/openthrottle-mcp && NODE_ENV=production pnpm exec graphql-codegen
+
 RUN node packages/openthrottle-mcp/esbuild.http.mjs
 
 ################################################################################
@@ -181,7 +194,7 @@ RUN node packages/openthrottle-mcp/esbuild.http.mjs
 ################################################################################
 # Distroless + ONE bundled file — no source, node_modules, tsx, Nx, pnpm, or shell.
 # Clients register { "type": "http", "url": "http://<host>:<port>/mcp" }.
-FROM gcr.io/distroless/nodejs24-debian12:nonroot AS mcp
+FROM gcr.io/distroless/nodejs24-debian13:nonroot AS mcp
 
 WORKDIR /app
 
@@ -238,6 +251,12 @@ RUN pnpm --filter "${APP_NAME}" --prod deploy /app/pruned --legacy
 FROM base AS production-debian
 
 ENV NODE_ENV="production"
+# Strip types from source-first workspace packages, which `pnpm deploy` places under
+# node_modules — the one place Node refuses to strip them (ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING).
+# NODE_OPTIONS rather than CMD so every entrypoint gets it, including the one-shot
+# `build/src/bootstrap.js` the compose `bootstrap` service runs. See
+# applications/openthrottle-server/src/workspace-type-stripping.ts.
+ENV NODE_OPTIONS="--import=/app/build/src/register-workspace-type-stripping.js"
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends git procps \
@@ -264,11 +283,23 @@ CMD ["node", "build/src/main.js"]
 # the health probe (no extra packages). Compose maps PORT from OPENTHROTTLE_SERVER_PORT. If you
 # override the healthcheck in compose, use exec form with /nodejs/bin/node (CMD-SHELL + wget will
 # not run on distroless).
-FROM gcr.io/distroless/nodejs24-debian12:nonroot AS production
+FROM gcr.io/distroless/nodejs24-debian13:nonroot AS production
 
 WORKDIR /app
 
 ENV NODE_ENV="production"
+# A stage starts from its own FROM, so the identity `base` sets is not inherited
+# here (production-debian builds FROM base and gets it for free). Re-declared so
+# the distroless image knows its own name and version: the server's log service
+# name and the developer's APP_VERSION (shown in settings, sent to Rollbar).
+ARG APP_ENV="production"
+ARG APP_NAME
+ARG APP_VERSION
+ENV APP_ENV="${APP_ENV}"
+ENV APP_NAME="${APP_NAME}"
+ENV APP_VERSION="${APP_VERSION}"
+# Same preload as production-debian — see the note there.
+ENV NODE_OPTIONS="--import=/app/build/src/register-workspace-type-stripping.js"
 
 # Production ships only `pnpm deploy` output: the app package, its `build/`, and prod `node_modules`.
 # We never COPY monorepo roots `/app/packages` or `/app/tools` into this stage; workspace libraries

@@ -1,9 +1,6 @@
 import * as React from 'react';
 import { useSearchParams } from 'react-router';
 
-const DEFAULT_DEBOUNCE_MS = 300;
-const DEFAULT_PARAM_KEY = 'q';
-
 export interface UseDebouncedSearchParamOptions {
   /**
    * @description Delay between last keystroke and writing the trimmed value to the URL. Use `replace: true` so history is not flooded (see {@link UseDebouncedSearchParamOptions.replace}).
@@ -60,30 +57,29 @@ export interface UseDebouncedSearchParamResult {
 export function useDebouncedSearchParam(
   options?: UseDebouncedSearchParamOptions,
 ): UseDebouncedSearchParamResult {
-  const debounceMs = options?.debounceMs ?? DEFAULT_DEBOUNCE_MS;
-  const paramKey = options?.paramKey ?? DEFAULT_PARAM_KEY;
-  const replace = options?.replace ?? true;
-  const preventScrollReset = options?.preventScrollReset;
-  const transformCommittedParams = options?.transformCommittedParams;
+  const {
+    debounceMs = 300,
+    paramKey = 'q',
+    preventScrollReset,
+    replace = true,
+    transformCommittedParams,
+  } = options ?? {};
 
+  // Hooks
   const [searchParams, setSearchParams] = useSearchParams();
   const searchParamsRef = React.useRef(searchParams);
 
-  React.useEffect(() => {
-    searchParamsRef.current = searchParams;
-  }, [searchParams]);
-
+  // Derived up here (not under Setup) because the input state below seeds from it.
   const committedValue = searchParams.get(paramKey) ?? '';
 
   const [searchInputValue, setSearchInputValue] =
     React.useState(committedValue);
 
-  React.useEffect(() => {
-    setSearchInputValue(committedValue);
-  }, [committedValue]);
-
   const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Setup
+
+  // Handlers
   const clearDebounce = React.useCallback((): void => {
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
@@ -127,8 +123,6 @@ export function useDebouncedSearchParam(
     [applyToUrl, clearDebounce, debounceMs],
   );
 
-  React.useEffect(() => () => clearDebounce(), [clearDebounce]);
-
   const commitNow = React.useCallback((): void => {
     clearDebounce();
     applyToUrl(searchInputValue);
@@ -142,6 +136,21 @@ export function useDebouncedSearchParam(
     },
     [scheduleCommit],
   );
+
+  // Markup
+
+  // Life Cycle
+  React.useEffect(() => {
+    searchParamsRef.current = searchParams;
+  }, [searchParams]);
+
+  React.useEffect(() => {
+    setSearchInputValue(committedValue);
+  }, [committedValue]);
+
+  React.useEffect(() => () => clearDebounce(), [clearDebounce]);
+
+  // 🔌 Short Circuit
 
   return {
     commitNow,

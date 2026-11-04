@@ -57,6 +57,33 @@ describe('areAllTasksTerminal', () => {
     ).toBe(true);
   });
 
+  it('treats PROMOTED as terminal alongside COMPLETED', () => {
+    expect(
+      areAllTasksTerminal([
+        baseTask({ id: 'a', status: 'COMPLETED' }),
+        baseTask({ id: 'b', status: 'PROMOTED' }),
+      ]),
+    ).toBe(true);
+  });
+
+  it('returns true when every task is PROMOTED', () => {
+    expect(
+      areAllTasksTerminal([
+        baseTask({ id: 'a', status: 'PROMOTED' }),
+        baseTask({ id: 'b', status: 'PROMOTED' }),
+      ]),
+    ).toBe(true);
+  });
+
+  it('returns false when a PROMOTED task sits beside an unresolved one', () => {
+    expect(
+      areAllTasksTerminal([
+        baseTask({ id: 'a', status: 'PROMOTED' }),
+        baseTask({ id: 'b', status: 'IN_PROGRESS' }),
+      ]),
+    ).toBe(false);
+  });
+
   it('returns false when any task is not terminal', () => {
     expect(
       areAllTasksTerminal([

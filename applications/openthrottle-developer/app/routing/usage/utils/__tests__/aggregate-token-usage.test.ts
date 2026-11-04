@@ -17,6 +17,7 @@ const row = (
   outputTokens: null,
   provider: 'claude',
   reasoningTokens: null,
+  source: 'openthrottle-chat',
   totalTokens: null,
   ...overrides,
 });
@@ -61,6 +62,39 @@ describe('groupTokenUsage', () => {
       'claude-opus-4-8',
       '(unknown model)',
     ]);
+  });
+
+  test('groups by source, folding NULL and blank sources into chat', () => {
+    const groups = groupTokenUsage(
+      [
+        row({ id: 'a', source: 'openthrottle-chat', totalTokens: 100 }),
+        row({ id: 'b', source: null, totalTokens: 50 }),
+        row({ id: 'c', source: '', totalTokens: 25 }),
+        row({ id: 'd', source: 'claude-code', totalTokens: 900 }),
+        row({ id: 'e', source: 'some-future-tool', totalTokens: 1 }),
+      ],
+      'source',
+    );
+
+    expect(groups.map((group) => group.key)).toEqual([
+      'claude-code',
+      'openthrottle-chat',
+      'some-future-tool',
+    ]);
+    expect(groups[1]).toMatchObject({ totalTokens: 175, turnCount: 3 });
+  });
+
+  test('counts only rows that reported a cost as priced', () => {
+    const [group] = groupTokenUsage(
+      [
+        row({ costUsd: 0, id: 'a' }),
+        row({ costUsd: 0.5, id: 'b' }),
+        row({ costUsd: null, id: 'c' }),
+      ],
+      'provider',
+    );
+
+    expect(group).toMatchObject({ pricedTurnCount: 2, turnCount: 3 });
   });
 
   test('returns [] for no rows', () => {

@@ -20,7 +20,7 @@ import {
 import {
   PLAN_STATUS,
   PLAN_STATUS_VALUES,
-} from '../../common/plan-task-status.constants.ts';
+} from '../../config/plan-task-status.constants.ts';
 import type { PlanEmbedding } from '../plan-embeddings/plan-embedding.entity.ts';
 import type { PlanOutputStreamChunk } from '../plan-output-stream/plan-output-stream.entity.ts';
 import type { Project } from '../projects/project.entity.ts';

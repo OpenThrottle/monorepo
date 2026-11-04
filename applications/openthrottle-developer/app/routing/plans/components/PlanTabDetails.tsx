@@ -1,9 +1,8 @@
 import { EditorWindow } from '@openthrottle/react-router-editor';
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
-import { TabsContent } from '@openthrottle/react-router-shadcn';
+import { cn, TabsContent } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { FEATURE_CHARLIE_PREVIEW } from '@openthrottle/react-router-utils';
-import clsx from 'clsx';
 import { useAtomValue } from 'jotai';
 import * as React from 'react';
 
@@ -19,12 +18,6 @@ import {
 import { PLAN_LIFECYCLE_HOOKS_COPY } from '~/routing/plans/data/data.copy';
 import { PLAN_DEFERRED_SECTION_COPY } from '~/routing/plans/data/data.copy';
 import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
-import {
-  buildWorkflowRalphOptionArgs,
-  formatWorkflowRalphCommandLine,
-  parseWorkflowRunIterationTimeoutSeconds,
-  type WorkflowRalphRunOptionsInput,
-} from '~/routing/plans/utils/build-workflow-ralph-argv';
 
 export interface PlanTabDetailsProps {
   fullscreen: boolean;
@@ -46,16 +39,6 @@ export const PlanTabDetails = (
   const workingDirectory = useAtomValue(workflowWorkingDirectoryAtom);
 
   // Setup
-  const canonicalWorkflowCommand = React.useMemo(() => {
-    const merged: WorkflowRalphRunOptionsInput = {
-      ...workflowInput,
-      iterationTimeoutSeconds:
-        parseWorkflowRunIterationTimeoutSeconds(workflowTimeout),
-    };
-
-    return formatWorkflowRalphCommandLine(buildWorkflowRalphOptionArgs(merged));
-  }, [workflowInput, workflowTimeout]);
-
   const hasSummary = plan?.summary != null && plan.summary !== '';
   const requirements = React.useMemo(() => {
     return tasks
@@ -78,7 +61,7 @@ export const PlanTabDetails = (
     <TabsContent value="overview">
       <div className="flex flex-col gap-4 md:gap-8">
         <div
-          className={clsx('----bg-card', {
+          className={cn('----bg-card', {
             'absolute inset-0 z-50 h-full w-full': fullscreen,
             'border-transparent hover:border-transparent': fullscreen,
             relative: !fullscreen,
@@ -144,10 +127,15 @@ export const PlanTabDetails = (
             >
               {(history) => (
                 <PlanWorkflowRunTransparency
-                  canonicalWorkflowCommand={canonicalWorkflowCommand}
                   planId={plan.id}
                   planRunAuditRows={history.planRunAuditRows}
-                  recentPlanRuns={history.recentPlanRuns}
+                  planRunMetrics={history.planRunMetrics}
+                  scheduledRunAt={
+                    typeof plan.scheduledRunAt === 'string'
+                      ? plan.scheduledRunAt
+                      : null
+                  }
+                  scheduledRunId={plan.scheduledRunId ?? null}
                   workflowInput={workflowInput}
                   workflowTimeout={workflowTimeout}
                   workingDirectory={workingDirectory ?? ''}

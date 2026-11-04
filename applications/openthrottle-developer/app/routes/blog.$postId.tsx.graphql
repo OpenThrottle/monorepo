@@ -1,0 +1,139 @@
+fragment BlogPostEditorPost on BlogPostAdminObject {
+  author {
+    displayName
+    slug
+  }
+  bodyMarkdown
+  coverImageAlt
+  coverImageUrl
+  excerpt
+  id
+  lastEditedBy
+  publishedAt
+  seoDescription
+  seoTitle
+  slug
+  state
+  tags {
+    name
+    slug
+  }
+  title
+  updatedAt
+}
+
+query getBlogPostEditor($id: ID!) {
+  blogAdminAuthors {
+    displayName
+    slug
+  }
+  blogAdminPost(id: $id) {
+    __typename
+    ... on BlogPostAdminObject {
+      ...BlogPostEditorPost
+    }
+    ... on BlogPostNotFoundError {
+      message
+    }
+  }
+  blogAdminTags {
+    name
+    slug
+  }
+}
+
+mutation updateBlogPostEditor($input: UpdateBlogPostInput!) {
+  updateBlogPost(input: $input) {
+    __typename
+    ... on BlogCoverAltRequiredError {
+      message
+    }
+    ... on BlogPostAdminObject {
+      id
+      updatedAt
+    }
+    ... on BlogPostNotFoundError {
+      message
+    }
+    ... on BlogPostPublishPermissionRequiredError {
+      message
+    }
+    ... on BlogPostStaleWriteError {
+      currentUpdatedAt
+      message
+    }
+    ... on BlogReferenceNotFoundError {
+      entity
+      key
+      message
+    }
+    ... on BlogSlugConflictError {
+      message
+      slug
+    }
+  }
+}
+
+mutation setBlogPostEditorTags($input: SetBlogPostTagsInput!) {
+  setBlogPostTags(input: $input) {
+    __typename
+    ... on BlogPostAdminObject {
+      id
+      updatedAt
+    }
+    ... on BlogPostNotFoundError {
+      message
+    }
+    ... on BlogPostPublishPermissionRequiredError {
+      message
+    }
+    ... on BlogReferenceNotFoundError {
+      entity
+      key
+      message
+    }
+  }
+}
+
+mutation publishBlogPostEditor($input: PublishBlogPostInput!) {
+  publishBlogPost(input: $input) {
+    __typename
+    ... on BlogPostAdminObject {
+      id
+      publishedAt
+      state
+      updatedAt
+    }
+    ... on BlogPostNotFoundError {
+      message
+    }
+  }
+}
+
+mutation unpublishBlogPostEditor($id: ID!) {
+  unpublishBlogPost(id: $id) {
+    __typename
+    ... on BlogPostAdminObject {
+      id
+      state
+      updatedAt
+    }
+    ... on BlogPostNotFoundError {
+      message
+    }
+  }
+}
+
+mutation archiveBlogPostEditor($id: ID!) {
+  archiveBlogPost(id: $id) {
+    __typename
+    ... on BlogPostAdminObject {
+      id
+      state
+      updatedAt
+    }
+    ... on BlogPostNotFoundError {
+      message
+    }
+  }
+}

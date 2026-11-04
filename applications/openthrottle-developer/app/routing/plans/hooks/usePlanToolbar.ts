@@ -54,10 +54,10 @@ export const usePlanToolbar = (
   // A run is active (QUEUED / IN_PROGRESS): gate mutating actions so they can't
   // fire out from under the worker. Kill run is the deliberate exception.
   const isRunning = getPlanIsRunning(planStatus);
-  // The plan is finished/abandoned (COMPLETED / CANCELED / SKIPPED): there is no
-  // more work to do here, so gate Run/Queue and Evaluate rules. Mark Complete is
-  // deliberately excluded (stays gated on isCompleted only) so CANCELED/SKIPPED
-  // keep their sole recovery path to done.
+  // The plan is finished/abandoned (COMPLETED / CANCELED / PROMOTED / SKIPPED):
+  // there is no more work to do here, so gate Run/Queue and Evaluate rules. Mark
+  // Complete is deliberately excluded (stays gated on isCompleted only) so
+  // CANCELED/SKIPPED keep their sole recovery path to done.
   const isTerminal = getPlanIsTerminal(planStatus);
   const setPlanStatusData = fetcherSetPlanStatus.data;
   const setPlanStatusError =

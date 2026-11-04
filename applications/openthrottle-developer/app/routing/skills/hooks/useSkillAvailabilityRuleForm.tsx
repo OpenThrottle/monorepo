@@ -14,9 +14,7 @@ import {
   type SkillAvailabilityRuleValue,
 } from '~/routing/skills/utils/skill-availability';
 
-const COPY = SKILL_AVAILABILITY_COPY.rules;
-
-export interface SkillAvailabilityRuleFormOptions {
+export interface UseSkillAvailabilityRuleFormOptions {
   /** Existing rule to edit; omitted for the blank add form. */
   rule?: SkillAvailabilityRuleValue;
   /** Workspace vocabulary that constrains the tag pickers. */
@@ -50,7 +48,7 @@ export interface UseSkillAvailabilityRuleFormResult {
  * SkillAvailabilityRuleForm per component-primitive-shape R6/R7.
  */
 export const useSkillAvailabilityRuleForm = (
-  options: SkillAvailabilityRuleFormOptions,
+  options: UseSkillAvailabilityRuleFormOptions,
 ): UseSkillAvailabilityRuleFormResult => {
   const { rule, vocabulary } = options;
   const seed = rule ?? SKILL_AVAILABILITY_EMPTY_RULE;
@@ -74,6 +72,7 @@ export const useSkillAvailabilityRuleForm = (
   );
 
   // Setup
+  const COPY = SKILL_AVAILABILITY_COPY.rules;
   const slugAllow = React.useMemo(
     () => parseSlugInput(slugAllowRaw),
     [slugAllowRaw],

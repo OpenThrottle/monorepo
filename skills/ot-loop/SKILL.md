@@ -17,6 +17,8 @@ Your job is to run the built-in **`/loop`** over OpenThrottle plan **`$planId`**
 
 ## Setup (once, before the loop)
 
+A session started from a kickoff brief (`/ot-loop <planUuid>` on line 1 — [`ot-plans` § Follow-ups and session kickoff](../ot-plans/SKILL.md#follow-ups-and-session-kickoff)) begins here, at step 1, like any other run.
+
 1. **Work in an isolated worktree on a feature branch**, never on the base checkout. Creating, healing and removing worktrees is the [`ot-worktree`](../ot-worktree/SKILL.md) skill's job — use it for **every** worktree interaction in this loop, never a bare `git worktree` command. Follow that skill for how to invoke create / heal / destroy; a bare `git worktree add` skips the repo's provisioner (ports, `.env`, compose isolation), and a bare `git worktree remove` skips the teardown hook and the safety checks.
 
    Name it for the plan (e.g. `feat/openthrottle-drivers`, `ot/cli-allow-list`); rename the generated branch with `git branch -m` if you want a different prefix. Runs to date have lived in dedicated `loop-plan-*` worktrees so the main checkout's server + OT MCP stay up.
@@ -40,6 +42,7 @@ Your job is to run the built-in **`/loop`** over OpenThrottle plan **`$planId`**
    Then, once the worktree exists, `register_plan_run_worktree_checkout({ planRunId, filesystemPath })` with the path create printed, so `checkout_id` resolves. That is what makes "open in editor" work for this run and what lets the worktree read as busy while you are in it. It soft-fails harmlessly if the path is not a linked worktree.
 
 5. **A fresh worktree needs codegen before app tests will collect** — run `pnpm nx run-many --target=codegen-graphql --all` if the `__generated__` output is missing.
+6. **Live verification runs from the loop worktree**, on its own ports — never against the primary's `:6020`/`:6021`, which serve the base checkout's code. Start the stack with `pnpm worktree:serve <server|developer>` (it waits for the port, prints a probe and stops with `--stop` — do that before teardown; `--api-only` skips the processors). The worktree shares the primary's database by default. A plan that **adds a migration** must isolate first (`pnpm worktree:db isolate`, or create with `worktree:new <name> --own-db`): in shared mode `database:migrate` and the `dev` gate refuse a migration absent from `origin/main`. Details: [`worktree-port-allocation.md`](../../docs/monorepo/worktree-port-allocation.md).
 
 ## The loop (one task at a time)
 
@@ -303,7 +306,7 @@ which the run reads as live and its worktree stays marked busy.
 
 ## Finishing
 
-1. **Verify every task is closed, THEN set the plan `COMPLETED`.** First re-fetch `get_tasks_by_plan_id(planId)` (or `get_remaining_tasks_for_plan`) and confirm **zero** tasks are `IN_PROGRESS`, `PENDING`, or `QUEUED`. Flip any stranded task to `COMPLETED` (or `BLOCKED`/`SKIPPED`) before continuing — a committed task left `IN_PROGRESS` is the usual culprit (see the loop invariant). Only once the list is clean, `update_plan(planId, { status: 'COMPLETED' })`. There is no server-side downward reconcile in **either** direction: the plan can read `COMPLETED` while tasks are still `IN_PROGRESS`, so this explicit re-fetch is mandatory — never skip it.
+1. **Verify every task is closed, THEN set the plan `COMPLETED`.** First re-fetch `get_tasks_by_plan_id(planId)` (or `get_remaining_tasks_for_plan`) and confirm **zero** tasks are `IN_PROGRESS`, `PENDING`, or `QUEUED`. Flip any stranded task to `COMPLETED` (or `BLOCKED`/`SKIPPED`) before continuing (`PROMOTED` — the work continued as its own plan — also counts as resolved) — a committed task left `IN_PROGRESS` is the usual culprit (see the loop invariant). Only once the list is clean, `update_plan(planId, { status: 'COMPLETED' })`. There is no server-side downward reconcile in **either** direction: the plan can read `COMPLETED` while tasks are still `IN_PROGRESS`, so this explicit re-fetch is mandatory — never skip it.
 2. Before continuing ensure `nx run-many -t lint test typecheck format check:local` all complete, flagging any errors we encounter
 3. To minimize friction merging with main we will run `/github-squash` to condense our PR to a single commit — its `Task-Id:` footers come from OT, so commitless tasks are carried too
 4. Next we will fetch main `git fetch origin main:main` and rebase the branch against `main`
@@ -318,6 +321,8 @@ Once — and **only** once — the PR is confirmed open, tear down the isolated 
 1. **Confirm the PR is real first.** You must have the PR URL from the step above, and `git status` in the worktree must show the branch up to date with its remote and nothing uncommitted. If PR creation failed or anything is unpushed, **do not tear down** — leave the worktree intact and report the failure so no work is lost. Settle your run row `FAILED` in that case: the work is preserved but this run is over, and an unsettled row keeps the worktree marked busy for as long as it lives.
 2. **Stop anything running in the worktree** — kill dev servers/watchers scoped to _this worktree's path only_. Never use a bare process-name pattern; that also kills the main checkout's server + OT MCP. You do **not** need to stop the worktree's containers by hand — OpenThrottle's `.worktree/teardown.sh` does that in step 3, scoped to this worktree's own compose project.
 3. **Remove the worktree with [`ot-worktree`](../ot-worktree/SKILL.md) destroy**, never a bare `git worktree remove` — destroy runs `.worktree/teardown.sh` first, which stops this worktree's docker compose project (a bare removal leaves those containers running, detached from any checkout), and it refuses removals that would eat work. Run it from inside the worktree (no argument) or pass the worktree path.
+
+   It also deregisters this worktree's OpenThrottle checkout record once the directory is gone — best-effort, so it never blocks teardown. The server keeps that record while a run that has not been settled still points at it, which is one more reason step 6's settle comes first.
 
    It refuses the primary checkout, refuses a dirty tree, prunes admin dirs afterward, and preserves the branch by default — which is what you want here, since both the open PR and the end-user's verification checkout depend on it. Never pass `--delete-branch`. Add `--force` only if it reports a dirty tree _after_ you have already confirmed everything is committed and pushed; `--dry-run` first if you want to see exactly what it will do.
 
@@ -361,4 +366,4 @@ The merge-queue caveat still holds where it always did: `gh pr merge --auto` can
 - Author/assignee fields expect the **GitHub username**, not a display name.
 - Never push to `main`, never `--no-verify`; require confirmation before rebase/force-push.
 - **One task `IN_PROGRESS` at a time.** Flip it to `COMPLETED` (or `BLOCKED`/`SKIPPED`) before starting the next, and re-fetch tasks to confirm zero `IN_PROGRESS`/`PENDING`/`QUEUED` before marking the plan `COMPLETED`. Committing the work is not the same as flipping the status.
-- Task states: `BACKLOG`, `BLOCKED`, `CANCELED`, `COMPLETED`, `IN_PROGRESS`, `PENDING`, `QUEUED`, `SKIPPED`.
+- Task states: `BACKLOG`, `BLOCKED`, `CANCELED`, `COMPLETED`, `IN_PROGRESS`, `PENDING`, `PROMOTED`, `QUEUED`, `SKIPPED`. `COMPLETED`, `PROMOTED` and `SKIPPED` are resolved/terminal; `PROMOTED` means the work continued as its own plan (resolved here, not complete).

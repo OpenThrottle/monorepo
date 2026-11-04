@@ -4,15 +4,22 @@
  * (`shell: true`, `stdio: ['inherit','pipe','pipe']`, stdout/stderr trim + `\n` merge, spawn-error
  * message passthrough, `<promise>ERROR</promise>` timeout/abort sentinels, streaming chunks,
  * SIGTERM→SIGKILL escalation) but with the Ralph logger replaced by an injectable {@link DriverLogger}.
+ * A driver may add `parseOutput` (final text + usage limit from raw stdout) and `renderOutputLine`
+ * (live, line-buffered stdout rendering for `onChunk`); drivers without them behave byte-identically.
  */
 
 import type { ChildProcess } from 'child_process';
 import { spawn, spawnSync } from 'child_process';
 
-import type { AgentDriver, DriverInvocationConfig } from '../types/index.ts';
+import type {
+  AgentDriver,
+  DriverInvocationConfig,
+  DriverParsedOutput,
+} from '../types/index.ts';
 import { escalateKill } from '../utils/child-kill.ts';
 import type { DriverLogger } from '../utils/logger.ts';
 import { noopDriverLogger } from '../utils/logger.ts';
+import type { UsageLimit } from '../utils/usage-limit.ts';
 
 /**
  * @description Optional dependencies for a driver run. `logger` defaults to a no-op.
@@ -28,7 +35,37 @@ export interface RunDriverOptions {
    * return is unchanged, so existing callers are unaffected.
    */
   readonly onExit?: (exitCode: number | null) => void;
+  /**
+   * Called with the parsed {@link UsageLimit} when a run closes **normally** and the driver's
+   * `parseOutput` found a subscription usage limit in its output (today only Claude emits one). Like
+   * `onExit` it does NOT fire on timeout or abort, nor when the child fails to launch. It fires
+   * before the run resolves (async: just before `onExit`) and never changes the returned string, so
+   * existing callers are unaffected.
+   */
+  readonly onUsageLimit?: (usageLimit: UsageLimit) => void;
 }
+
+/**
+ * @description Child env: `undefined` (inherit `process.env`, the historical behavior) unless the
+ * caller supplied extra variables, which are merged over the inherited set.
+ */
+const mergeChildEnv = (
+  extra: Readonly<Record<string, string>> | undefined,
+): NodeJS.ProcessEnv | undefined =>
+  extra === undefined ? undefined : { ...process.env, ...extra };
+
+/**
+ * @description Applies the driver's optional `parseOutput` to the raw collected stdout. Drivers
+ * without one pass through untouched, so only drivers that opted in change behavior.
+ */
+const interpretStdout = (
+  driver: AgentDriver,
+  rawStdout: string,
+): DriverParsedOutput => {
+  return (
+    driver.parseOutput?.(rawStdout) ?? { text: rawStdout, usageLimit: null }
+  );
+};
 
 /**
  * @description Runs one driver invocation synchronously (spawnSync). Use for interactive/TTY
@@ -48,11 +85,13 @@ export const runDriverSync = (
   const child = spawnSync(command, [], {
     cwd,
     encoding: 'utf-8',
+    env: mergeChildEnv(config.env),
     shell: true,
     stdio: ['inherit', 'pipe', 'pipe'],
   });
 
-  const stdout = child.stdout?.trim() ?? '';
+  const parsed = interpretStdout(driver, child.stdout ?? '');
+  const stdout = parsed.text.trim();
   const stderr = child.stderr?.trim() ?? '';
   const result = stderr ? `${stdout}\n${stderr}` : stdout;
 
@@ -64,6 +103,10 @@ export const runDriverSync = (
     });
 
     return child.error.message;
+  }
+
+  if (parsed.usageLimit !== null) {
+    options.onUsageLimit?.(parsed.usageLimit);
   }
 
   logger.debug('runDriverSync: runner exited', {
@@ -105,6 +148,7 @@ export const runDriverAsync = (
 
     const child: ChildProcess = spawn(command, [], {
       cwd,
+      env: mergeChildEnv(config.env),
       shell: true,
       stdio: ['inherit', 'pipe', 'pipe'],
     });
@@ -114,6 +158,28 @@ export const runDriverAsync = (
     let resolved = false;
     let stderr = '';
     let stdout = '';
+
+    // Live rendering (drivers with `renderOutputLine`): stdout is line-buffered so a line split
+    // across chunks renders once, whole. Raw stdout is still accumulated for `parseOutput`.
+    const renderLine = driver.renderOutputLine;
+    let pendingLine = '';
+
+    const emitRendered = (line: string): void => {
+      const rendered = renderLine?.(line) ?? null;
+
+      if (rendered !== null) {
+        onChunk?.({ data: `${rendered}\n`, stream: 'stdout' });
+      }
+    };
+
+    const flushPendingLine = (): void => {
+      if (pendingLine !== '') {
+        const line = pendingLine;
+
+        pendingLine = '';
+        emitRendered(line);
+      }
+    };
 
     const push = (stream: 'stderr' | 'stdout', data: string): void => {
       if (stream === 'stdout') {
@@ -132,6 +198,15 @@ export const runDriverAsync = (
         stdoutLen: stdout.length,
         stream,
       });
+
+      if (renderLine !== undefined && stream === 'stdout') {
+        const lines = (pendingLine + data).split('\n');
+
+        pendingLine = lines.pop() ?? '';
+        lines.forEach(emitRendered);
+
+        return;
+      }
 
       onChunk?.({ data, stream });
     };
@@ -165,6 +240,7 @@ export const runDriverAsync = (
       resolved = true;
       clearTimeout(timeoutId);
       signal?.removeEventListener('abort', onAbort);
+      flushPendingLine();
 
       if (killReason === 'timeout') {
         logger.debug('runDriverAsync: resolved after kill (timeout)', {
@@ -198,7 +274,8 @@ export const runDriverAsync = (
         return;
       }
 
-      const stdoutTrim = stdout.trim();
+      const parsed = interpretStdout(driver, stdout);
+      const stdoutTrim = parsed.text.trim();
       const stderrTrim = stderr.trim();
       const result = stderrTrim ? `${stdoutTrim}\n${stderrTrim}` : stdoutTrim;
 
@@ -211,6 +288,10 @@ export const runDriverAsync = (
         stderrLen: stderr.length,
         stdoutLen: stdout.length,
       });
+
+      if (parsed.usageLimit !== null) {
+        options.onUsageLimit?.(parsed.usageLimit);
+      }
 
       options.onExit?.(status);
       resolve(result);

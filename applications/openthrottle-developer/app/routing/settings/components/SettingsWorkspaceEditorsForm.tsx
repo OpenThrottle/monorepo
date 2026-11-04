@@ -1,6 +1,5 @@
-import { Button, Label } from '@openthrottle/react-router-shadcn';
+import { Button, cn, Label } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
-import clsx from 'clsx';
 import { ComputerIcon } from 'lucide-react';
 import * as React from 'react';
 import { Form, useNavigation } from 'react-router';
@@ -81,7 +80,7 @@ export const SettingsWorkspaceEditorsForm = (
       legend={WORKSPACE_SETTINGS_COPY.editorsLegend}
     >
       <Form
-        className={clsx('space-y-4', className)}
+        className={cn('space-y-4', className)}
         data-testid="SettingsWorkspaceEditorsForm"
         method="post"
       >

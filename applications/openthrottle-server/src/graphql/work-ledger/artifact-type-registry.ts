@@ -1,5 +1,6 @@
 /**
- * @description Server-side registry of work-ledger artifact types (design §5, G10).
+ * @description Server-side registry of work-ledger artifact types.
+ * Per-type dedupe identity is defined by G10 in docs/monorepo/work-ledger-sessions.md.
  * Each type declares: its dedupe identity (idempotent | event), a zod payload schema,
  * an external_key derivation rule, and its lifecycle vocabulary + which lifecycle
  * states fire downstream triggers. The type set is open by design — adding an ecosystem
@@ -27,7 +28,8 @@ export type ArtifactIdentity =
 interface ArtifactTypeDefinition {
   /**
    * Derive the canonical external_key from a validated payload. For `event` types this is
-   * the transition base; recordWorkArtifact appends a uniqueness discriminator (design §3.3).
+   * the transition base; recordWorkArtifact appends a uniqueness discriminator
+   * so each report is its own row (G10 in docs/monorepo/work-ledger-sessions.md).
    */
   readonly deriveExternalKey: (payload: Record<string, unknown>) => string;
   /** Dedupe identity — drives upsert vs append in recordWorkArtifact. */

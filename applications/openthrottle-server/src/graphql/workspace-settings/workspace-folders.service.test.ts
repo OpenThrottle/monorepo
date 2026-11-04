@@ -349,6 +349,62 @@ describe('WorkspaceFoldersService', () => {
   });
 
   describe('addWorkspaceFolder', () => {
+    describe('when the path is inside no git repository', () => {
+      it('rejects a plain folder without registering anything', async () => {
+        await expect(
+          service.addWorkspaceFolder(userId, {
+            path: join(workspaceRoot, 'not-a-repo'),
+          }),
+        ).rejects.toThrow(/not inside a git repository/);
+        expect(mockRepositoriesService.create).not.toHaveBeenCalled();
+        expect(mockCheckoutsService.create).not.toHaveBeenCalled();
+      });
+
+      it('rejects the folder that merely CONTAINS a repository', async () => {
+        // The stray-primary case: a session started in the parent of a checkout registered the
+        // parent itself as a primary checkout that nothing could ever run in.
+        await expect(
+          service.addWorkspaceFolder(userId, { path: workspaceRoot }),
+        ).rejects.toThrow(/not inside a git repository/);
+        expect(mockCheckoutsService.create).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when the path is a subdirectory of a repository', () => {
+      it('registers the repository root instead', async () => {
+        const subdirectory = join(gitRepoDir, 'packages', 'nested');
+        await mkdir(subdirectory, { recursive: true });
+        vi.mocked(mockRepositoriesService.create).mockResolvedValue(
+          asMock<Repository>({
+            id: 'repo-1',
+            name: 'Fixture',
+            projectId: null,
+          }),
+        );
+        vi.mocked(mockCheckoutsService.create).mockResolvedValue(
+          asMock<RepositoryCheckout>({
+            displayName: 'fixture-repo',
+            filesystemPath: gitRepoDir,
+            id: 'checkout-1',
+            kind: 'primary',
+            repositoryId: 'repo-1',
+            userId,
+          }),
+        );
+
+        await service.addWorkspaceFolder(userId, { path: subdirectory });
+
+        expect(mockCheckoutsService.create).toHaveBeenCalledWith(
+          userId,
+          expect.objectContaining({
+            displayName: 'fixture-repo',
+            filesystemPath: realpathSync(gitRepoDir),
+            kind: 'primary',
+          }),
+        );
+      });
+    });
+
     it('creates a canonical repository and checkout with detected metadata', async () => {
       const repository = asMock<Repository>({
         id: 'repo-1',

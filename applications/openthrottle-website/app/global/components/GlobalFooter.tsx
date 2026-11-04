@@ -1,5 +1,9 @@
 import { OpenThrottleLogo } from '@openthrottle/react-router-ui';
 import * as React from 'react';
+import { Link } from 'react-router';
+
+import { GLOBAL_FOOTER } from '~/global/data/data.copy';
+import { isBlogEnabled } from '~/global/utils/blog-enabled';
 
 export interface GlobalFooterProps {}
 
@@ -9,6 +13,8 @@ export const GlobalFooter = (_props: GlobalFooterProps): React.ReactElement => {
   // Hooks
 
   // Setup
+  const { blogLink, navAriaLabel } = GLOBAL_FOOTER;
+  const blogEnabled = isBlogEnabled();
 
   // Handlers
 
@@ -37,6 +43,17 @@ export const GlobalFooter = (_props: GlobalFooterProps): React.ReactElement => {
             <b className="text-foreground/80">Open source</b>. No lock-in.
           </p>
         </div>
+
+        {blogEnabled && (
+          <nav aria-label={navAriaLabel} className="text-sm">
+            <Link
+              className="text-muted-foreground hover:text-foreground no-underline"
+              to={blogLink.href}
+            >
+              {blogLink.label}
+            </Link>
+          </nav>
+        )}
       </div>
     </footer>
   );

@@ -73,7 +73,7 @@
   },
   "engines": {
     "node": ">=22.22.3 <23 || >=24.15 <25 || >=26",
-    "pnpm": ">=11"
+    "pnpm": ">=12"
   },
   "license": "Apache-2.0",
   "nx": {
@@ -88,12 +88,17 @@
     ],
     "targets": {
       "build": {
-        "executor": "nx:noop"
+        "executor": "nx:noop",
+        "metadata": {
+          "description": "Deliberately a no-op. The root `pnpm run build` script runs `nx run-many -t build` over `tag:type:package`, which includes this project, so inferring a build target from that script would make it call itself. Build the workspace with `pnpm run build` instead."
+        }
       },
       "dev": {
         "executor": "nx:noop"
       },
       "check-agent-assets-ssot": {},
+      "check-claude-config-json": {},
+      "check-folder-vocabulary": {},
       "check-generated-attributes": {},
       "check-migration-hygiene": {},
       "check-migration-table-comments": {},
@@ -146,7 +151,7 @@
       "validate-licenses": {}
     }
   },
-  "packageManager": "pnpm@11.6.0+sha512.9a36518224080c6fe5165afdcfe79bfa118c29be703f3f462b1e32efe1e98e47e8750b148e08286250aad4113cc7993ca413c4e2cd447752708c2ee5751bc95f",
+  "packageManager": "pnpm@12.14.0+sha512.c18ba6d87993d3d164cb5e8948f32b2c06ee854487e06cd8d86781342fb3e5bb4634367034711e86802baa9c37bea906ce1929ad08d70884c97d801df13389a6",
   "private": true,
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {
@@ -154,6 +159,8 @@
     "audit:component-shape:shadcn": "tsx ./scripts/audit-component-shape.ts --shadcn",
     "audit:component-shape:shadcn:strict": "tsx ./scripts/audit-component-shape.ts --shadcn --strict",
     "audit:component-shape:strict": "tsx ./scripts/audit-component-shape.ts --strict",
+    "audit:hook-shape": "tsx ./scripts/audit-hook-shape.ts",
+    "audit:hook-shape:strict": "tsx ./scripts/audit-hook-shape.ts --strict",
     "audit:route-shape": "tsx ./scripts/audit-route-shape.ts",
     "audit:route-shape:strict": "tsx ./scripts/audit-route-shape.ts --strict",
     "audit:strict": "pnpm run \"/^audit:(?!test-coverage).*:strict$/\"",
@@ -176,17 +183,21 @@
     "caddy": "caddy run --config tools/caddy/Caddyfile",
     "check:bootstrap-secrets": "tsx ./scripts/check-bootstrap-secrets.ts",
     "check:catalog": "tsx ./scripts/check-catalog-coverage.ts",
-    "check:local": "pnpm run check:catalog && pnpm run check:target-descriptions && pnpm run validate:licenses && pnpm run validate:notices && pnpm run check:local:validate-tags && pnpm run check:local:format && pnpm run check:local:component-shape && pnpm run check:local:agent-assets && pnpm run check:local:video-scripts && pnpm run check:local:migration-comments && pnpm run check:local:migration-hygiene && pnpm run check:local:package-entrypoints && pnpm run check:local:nodenext-references && pnpm run check:local:workspace-deps && pnpm run check:local:third-party-deps && pnpm run check:local:tsconfig-refs && pnpm run check:rbac-admin-coverage && pnpm run check:local:affected-lint && pnpm run check:local:affected-typecheck && pnpm run check:local:affected-test && pnpm run check:local:bundle-hooks && pnpm run check:local:generated-attributes && pnpm run check:local:verify && pnpm run check:local:codegen",
+    "check:claude-settings": "tsx ./scripts/check-claude-global-settings.ts",
+    "check:local": "pnpm run check:catalog && pnpm run check:local:folder-vocabulary && pnpm run check:local:claude-config-json && pnpm run check:target-descriptions && pnpm run validate:licenses && pnpm run validate:notices && pnpm run check:local:validate-tags && pnpm run check:local:format && pnpm run check:local:component-shape && pnpm run check:local:agent-assets && pnpm run check:local:video-scripts && pnpm run check:local:migration-comments && pnpm run check:local:migration-hygiene && pnpm run check:local:package-entrypoints && pnpm run check:local:nodenext-references && pnpm run check:local:workspace-deps && pnpm run check:local:third-party-deps && pnpm run check:local:tsconfig-refs && pnpm run check:rbac-admin-coverage && pnpm run check:local:affected-lint && pnpm run check:local:affected-typecheck && pnpm run check:local:affected-test && pnpm run check:local:bundle-hooks && pnpm run check:local:generated-attributes && pnpm run check:local:graphql-schema && pnpm run check:local:verify && pnpm run check:local:codegen",
     "check:local:affected-lint": "pnpm nx affected --target=lint --parallel",
     "check:local:affected-test": "pnpm nx affected --target=test --parallel --nxBail",
     "check:local:affected-typecheck": "pnpm nx affected --target=typecheck --parallel",
     "check:local:agent-assets": "pnpm nx run monorepo:check-agent-assets-ssot && pnpm nx run monorepo:validate-agent-assets-frontmatter",
     "check:local:audit": "pnpm run \"/^audit:(?!test-coverage).*:strict$/\"",
+    "check:local:claude-config-json": "pnpm nx run monorepo:check-claude-config-json",
     "check:local:bundle-hooks": "pnpm nx run @openthrottle/agentic-hooks:bundle-hooks-check",
     "check:local:codegen": "pnpm nx affected --target=codegen-graphql,codegen-react-router --parallel",
     "check:local:component-shape": "pnpm run audit:component-shape:strict && pnpm run audit:component-shape:shadcn:strict",
+    "check:local:folder-vocabulary": "pnpm nx run monorepo:check-folder-vocabulary",
     "check:local:format": "pnpm nx run monorepo:format:check",
     "check:local:generated-attributes": "pnpm nx run monorepo:check-generated-attributes",
+    "check:local:graphql-schema": "pnpm nx run-many --target=graphql-schema --configuration=check",
     "check:local:knip": "pnpm nx run monorepo:knip",
     "check:local:migration-comments": "pnpm nx run monorepo:check-migration-table-comments",
     "check:local:migration-hygiene": "pnpm nx run monorepo:check-migration-hygiene",
@@ -222,8 +233,9 @@
     "database:import-docs": "node --env-file .env --experimental-strip-types ./scripts/openthrottle-ingest-docs.ts",
     "database:migrate": "POSTGRES_HOST='localhost' tsx --env-file .env ./scripts/openthrottle-database-migrations.ts",
     "database:reset": "POSTGRES_HOST='localhost' tsx --env-file .env ./scripts/openthrottle-database-reset.ts",
-    "database:start": "docker compose up -d redis postgres",
-    "database:stop": "docker compose down --remove-orphans",
+    "database:seed:blog": "POSTGRES_HOST='localhost' NODE_ENV=\"${NODE_ENV:-development}\" tsx --env-file .env ./scripts/openthrottle-database-seed-blog.ts",
+    "database:start": "node --experimental-strip-types ./scripts/openthrottle-database-lifecycle.ts start",
+    "database:stop": "node --experimental-strip-types ./scripts/openthrottle-database-lifecycle.ts stop",
     "dev:native": "pnpm nx run openthrottle-server:dev",
     "dev:native:split": "pnpm nx run-many --projects openthrottle-server --targets dev-api,worker",
     "generate": "pnpm run generate:list",
@@ -261,9 +273,12 @@
     "validate:licenses": "tsx ./scripts/validate-license-compliance.ts",
     "validate:notices": "tsx ./scripts/generate-third-party-notices.ts --check",
     "voice:start": "docker compose --profile voice up whisper",
+    "worktree:db": "node --experimental-strip-types ./scripts/worktree_db.ts",
     "worktree:heal": "sh -c 'd=skills/ot-worktree/scripts; [ -x \"$d/heal.sh\" ] || d=.agents/skills/ot-worktree/scripts; exec \"$d/heal.sh\" \"$@\"' --",
     "worktree:new": "sh -c 'd=skills/ot-worktree/scripts; [ -x \"$d/create.sh\" ] || d=.agents/skills/ot-worktree/scripts; exec \"$d/create.sh\" \"$@\"' --",
-    "worktree:remove": "sh -c 'd=skills/ot-worktree/scripts; [ -x \"$d/destroy.sh\" ] || d=.agents/skills/ot-worktree/scripts; exec \"$d/destroy.sh\" \"$@\"' --"
+    "worktree:prune-queues": "node --experimental-strip-types ./scripts/worktree_prune_queues.ts",
+    "worktree:remove": "sh -c 'd=skills/ot-worktree/scripts; [ -x \"$d/destroy.sh\" ] || d=.agents/skills/ot-worktree/scripts; exec \"$d/destroy.sh\" \"$@\"' --",
+    "worktree:serve": "node --experimental-strip-types ./scripts/worktree_serve.ts"
   },
   "sideEffects": false,
   "type": "module"

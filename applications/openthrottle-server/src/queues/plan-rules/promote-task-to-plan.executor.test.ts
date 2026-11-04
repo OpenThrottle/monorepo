@@ -153,7 +153,7 @@ describe('PromoteTaskToPlanExecutor', () => {
     );
   });
 
-  it('skips a task already promoted (SKIPPED + promoted tag)', async () => {
+  it('skips a legacy promoted task (SKIPPED + promoted tag)', async () => {
     taskFindOne.mockResolvedValue(
       asMock<Task>({ id: 'task-1', status: 'SKIPPED' }),
     );
@@ -162,6 +162,20 @@ describe('PromoteTaskToPlanExecutor', () => {
     await executor.execute(buildContext());
 
     // No eligible candidate remains → flagged, promotion not invoked.
+    expect(taskPromotionService.promote).not.toHaveBeenCalled();
+    expect(ruleApplicationsService.record).toHaveBeenCalledWith(
+      expect.objectContaining({ state: 'flagged' }),
+    );
+  });
+
+  it('skips a status-PROMOTED task that has no promoted tag', async () => {
+    taskFindOne.mockResolvedValue(
+      asMock<Task>({ id: 'task-1', status: 'PROMOTED' }),
+    );
+    tagFindOne.mockResolvedValue(null);
+
+    await executor.execute(buildContext());
+
     expect(taskPromotionService.promote).not.toHaveBeenCalled();
     expect(ruleApplicationsService.record).toHaveBeenCalledWith(
       expect.objectContaining({ state: 'flagged' }),

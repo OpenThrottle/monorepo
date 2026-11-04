@@ -39,3 +39,15 @@ export const GLOBAL_POPOVER_COPY = {
 export const GLOBAL_TOOLBAR_SEARCH_COPY = {
   buttonLabel: `Search`,
 } as const;
+
+/**
+ * @description Accessible names and menu labels for the trailing icon links in
+ * {@link GlobalLayoutHeaderLinks}. The same strings label the inline icon links
+ * (`aria-label`) and the overflow menu items shown below `sm`.
+ */
+export const GLOBAL_LAYOUT_HEADER_LINKS_COPY = {
+  github: `GitHub`,
+  menuLabel: `More actions`,
+  reportBug: `Report a bug`,
+  signOut: `Sign out`,
+} as const;

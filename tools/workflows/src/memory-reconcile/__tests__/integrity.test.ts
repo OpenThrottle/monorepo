@@ -4,11 +4,13 @@ import { checkIndexIntegrity, formatIntegrityReport } from '../integrity';
 
 const run = (input: {
   archives?: ReadonlyMap<string, string>;
+  fileContents?: ReadonlyMap<string, string>;
   files: readonly string[];
   indexContent: string;
 }) =>
   checkIndexIntegrity({
     archives: input.archives ?? new Map(),
+    fileContents: input.fileContents ?? new Map(),
     files: input.files,
     indexContent: input.indexContent,
     indexName: 'MEMORY.md',
@@ -69,6 +71,71 @@ describe('checkIndexIntegrity', () => {
     });
 
     expect(report.orphans).toEqual([]);
+  });
+
+  it('treats the children of an index-linked hub as reachable', () => {
+    // The video/showroom consolidation: nine plan files moved out of the index
+    // into one topic file that the index links. Every child is still one link
+    // away from the index, so none of them is lost.
+    const report = run({
+      fileContents: new Map([
+        [
+          'video-showroom-workstream.md',
+          '- [Video plan](youtube-0-60-video-plan.md) — x\n- [TTS](elevenlabs-tts-spike-plan.md) — y\n',
+        ],
+      ]),
+      files: [
+        'MEMORY.md',
+        'elevenlabs-tts-spike-plan.md',
+        'video-showroom-workstream.md',
+        'youtube-0-60-video-plan.md',
+      ],
+      indexContent: '- [Video hub](video-showroom-workstream.md) — 9 plans\n',
+    });
+
+    expect(report.orphans).toEqual([]);
+    expect(report.brokenLinks).toEqual([]);
+    expect(report.totalLinks).toBe(3);
+  });
+
+  it('follows exactly one hop: a hub linked only from a hub is not followed', () => {
+    const report = run({
+      fileContents: new Map([
+        ['hub.md', '- [Nested](nested-hub.md)'],
+        ['nested-hub.md', '- [Deep](deep.md)'],
+      ]),
+      files: ['MEMORY.md', 'deep.md', 'hub.md', 'nested-hub.md'],
+      indexContent: '- [Hub](hub.md)\n',
+    });
+
+    expect(report.orphans.map((issue) => issue.file)).toEqual(['deep.md']);
+  });
+
+  it('does not treat a file the index never links as a hub', () => {
+    // Links inside an orphan must not rescue other orphans, or two dropped
+    // files pointing at each other would both read as reachable.
+    const report = run({
+      fileContents: new Map([['dropped.md', '- [Other](other.md)']]),
+      files: ['MEMORY.md', 'dropped.md', 'other.md'],
+      indexContent: '',
+    });
+
+    expect(report.orphans.map((issue) => issue.file)).toEqual([
+      'dropped.md',
+      'other.md',
+    ]);
+  });
+
+  it('attributes a broken link inside a hub to that hub', () => {
+    const report = run({
+      fileContents: new Map([['hub.md', '- [Renamed](renamed.md)']]),
+      files: ['MEMORY.md', 'hub.md'],
+      indexContent: '- [Hub](hub.md)\n',
+    });
+
+    expect(report.brokenLinks).toEqual([
+      { file: 'renamed.md', source: 'hub.md' },
+    ]);
   });
 
   it('ignores URLs and paths outside the memory directory', () => {

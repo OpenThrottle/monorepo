@@ -73,7 +73,7 @@ import { fileURLToPath } from 'node:url';
 
 import ts from 'typescript';
 
-import { createLogger, hasFlag } from './lib/index.ts';
+import { createLogger, hasFlag } from './utils/index.ts';
 
 const logger = createLogger();
 

@@ -1,0 +1,24 @@
+# Fragments shared by the public blog routes. The operations live next to the
+# route that runs them (`app/routes/blog.*.tsx.graphql`); every one is
+# `@Public()` on openthrottle-server and is executed server-side only, from a
+# route loader, via `fetchPublicGraphql` (`~/services/graphql.server`).
+
+fragment BlogPostSummary on BlogPostObject {
+  author {
+    avatarUrl
+    displayName
+    slug
+  }
+  coverImageAlt
+  coverImageUrl
+  excerpt
+  id
+  publishedAt
+  readingTimeMinutes
+  slug
+  tags {
+    name
+    slug
+  }
+  title
+}

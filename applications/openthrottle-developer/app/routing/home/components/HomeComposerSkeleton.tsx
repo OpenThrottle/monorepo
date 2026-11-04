@@ -1,5 +1,4 @@
-import { Skeleton } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
+import { cn, Skeleton } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 export interface HomeComposerSkeletonProps {
@@ -32,7 +31,7 @@ export const HomeComposerSkeleton = (
   return (
     <div
       aria-busy={true}
-      className={clsx('flex shrink-0 flex-col gap-4 pt-4', className)}
+      className={cn('flex shrink-0 flex-col gap-4 pt-4', className)}
       data-testid="HomeComposerSkeleton"
     >
       {/* Textarea frame */}

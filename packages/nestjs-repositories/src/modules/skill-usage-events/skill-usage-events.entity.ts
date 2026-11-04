@@ -180,4 +180,13 @@ export class SkillUsageEvent {
    */
   @Column({ default: false, name: 'is_fixture', type: 'boolean' })
   isFixture!: boolean;
+
+  /**
+   * Set when this row duplicates another capture of the same invocation (two
+   * hook registrations firing at once), pointing at the row that survives.
+   * Historic twins were flagged, not deleted; /usage excludes them. New
+   * duplicates are refused at insert instead. See migration 134.
+   */
+  @Column({ name: 'duplicate_of_id', nullable: true, type: 'uuid' })
+  duplicateOfId!: string | null;
 }

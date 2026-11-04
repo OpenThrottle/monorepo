@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type { GetEditorPresenceQuery } from '~/__generated__/graphql';
@@ -61,7 +61,7 @@ export const WorkspaceEditorPresenceHints = (
   if (isUntrusted) {
     return (
       <p
-        className={clsx('text-muted-foreground text-xs', className)}
+        className={cn('text-muted-foreground text-xs', className)}
         data-testid="WorkspaceEditorPresenceUntrusted"
       >
         {WORKSPACE_SETTINGS_COPY.presenceUntrustedNote}
@@ -71,7 +71,7 @@ export const WorkspaceEditorPresenceHints = (
 
   return (
     <div
-      className={clsx('space-y-1.5', className)}
+      className={cn('space-y-1.5', className)}
       data-testid="WorkspaceEditorPresenceHints"
     >
       <div className="flex flex-wrap items-center gap-1.5">

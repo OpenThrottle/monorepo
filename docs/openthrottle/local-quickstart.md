@@ -45,7 +45,7 @@ pnpm run database:start
 pnpm run database:migrate
 ```
 
-- `database:start` — brings up the `postgres` (port **6010**) and `redis` (port **6011**) Compose services via root `docker-compose.yml`.
+- `database:start` — brings up the `postgres` (port **6010**) and `redis` (port **6011**) Compose services via root `docker-compose.yml`. In a git worktree (`OT_WORKTREE_DB=shared`) it instead reuses the primary checkout's database, starting the primary's containers only if they are down; `database:stop` never stops that shared database.
 - `database:migrate` — applies the OpenThrottle schema (includes service-account seed migration **045**; no secrets yet).
 
 Stop the stack when finished: `pnpm run database:stop`.

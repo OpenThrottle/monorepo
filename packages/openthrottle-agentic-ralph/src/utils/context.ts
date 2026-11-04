@@ -7,7 +7,10 @@
  * Queue orchestrators merge file + env via {@link mergePlanRunTuningWithWorkflowRalphConfig}
  * in `@tools/workflows` before calling {@link resolveWorkflowRunOptions}.
  */
-import { WORKFLOW_RUNNER_IDS } from '@openthrottle/openthrottle-agentic-utils';
+import {
+  toConversationReasoningEffort,
+  WORKFLOW_RUNNER_IDS,
+} from '@openthrottle/openthrottle-agentic-utils';
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 
 import type { RalphPlanRunTuningInput } from '../__generated__/graphql.ts';
@@ -138,6 +141,7 @@ export function resolveWorkflowRunOptions(params: {
 
   return {
     debug: resolveDebug(r.ralphDebugCli),
+    effort: toConversationReasoningEffort(r.effort),
     iterationMax: iterations,
     iterationTimeout,
     iterations,

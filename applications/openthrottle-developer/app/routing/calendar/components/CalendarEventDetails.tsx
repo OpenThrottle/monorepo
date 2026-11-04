@@ -5,8 +5,8 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  cn,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import { CalendarClockIcon, MapPinIcon } from 'lucide-react';
 import * as React from 'react';
 
@@ -39,7 +39,7 @@ export const CalendarEventDetails = (
 
   return (
     <Card
-      className={clsx('w-full', className)}
+      className={cn('w-full', className)}
       data-testid="CalendarEventDetails"
     >
       <CardHeader>

@@ -56,6 +56,25 @@ describe('buildPlanRunConfigSnapshot', () => {
     });
   });
 
+  test('captures effort and round-trips it through parsePlanRunConfigSnapshot', () => {
+    const built = buildPlanRunConfigSnapshot({
+      executionBackend: 'claude',
+      ralph: { effort: 'ultra' },
+    });
+
+    expect(built.ralph.effort).toBe('ultra');
+    expect(parsePlanRunConfigSnapshot(built)).toEqual(built);
+  });
+
+  test('omits effort when unset or blank', () => {
+    const built = buildPlanRunConfigSnapshot({
+      executionBackend: 'cursor',
+      ralph: { effort: '  ' },
+    });
+
+    expect(built.ralph).not.toHaveProperty('effort');
+  });
+
   test('round-trips through parsePlanRunConfigSnapshot', () => {
     const built = buildPlanRunConfigSnapshot({
       executionBackend: 'cursor',

@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type { EditorPresenceState } from '~/__generated__/graphql';
@@ -41,13 +41,13 @@ export const WorkspaceEditorPresenceMarker = (
 
   return (
     <span
-      className={clsx('inline-flex items-center', className)}
+      className={cn('inline-flex items-center', className)}
       data-presence={presence}
       data-testid={`WorkspaceEditorPresenceMarker-${presence}`}
     >
       <Icon
         aria-hidden={true}
-        className={clsx('size-3 shrink-0', status.indicatorClassName)}
+        className={cn('size-3 shrink-0', status.indicatorClassName)}
       />
       <span className="sr-only">{status.srLabel(editorLabel)}</span>
     </span>

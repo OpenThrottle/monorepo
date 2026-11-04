@@ -22,9 +22,11 @@ import {
 } from '@openthrottle/nestjs-graphql';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
+  AGENT_TOKEN_USAGE_SOURCES,
   AgentConversationsService,
   AgentTokenUsageService,
 } from '@openthrottle/nestjs-repositories';
+import { isRecord } from '@openthrottle/nodejs-utils';
 import {
   type ChatCompletionMessage,
   classifyCursorFailure,
@@ -41,6 +43,7 @@ import {
   openAiConversationBackend,
   resolveChatIdleTimeoutMs,
 } from '@openthrottle/openthrottle-agentic-utils';
+import type { UsageLimit } from '@openthrottle/openthrottle-drivers';
 
 import { composeCursorStartupErrorText } from './conversation-stream.copy.ts';
 import {
@@ -48,6 +51,7 @@ import {
   type ConversationStreamChunkEnvelope,
   type ConversationStreamChunkPayload,
   type TerminalTimeoutMetadata,
+  type TerminalUsageLimitMetadata,
 } from './conversation-stream.types.ts';
 
 /**
@@ -61,6 +65,52 @@ const CLI_BACKENDS: Readonly<Record<string, ConversationBackend>> =
 
 /** Conversation-metadata key holding a backend's persisted session id. */
 const sessionMetadataKey = (backend: string): string => `${backend}SessionId`;
+
+/**
+ * Serialized `metadataJson` for a turn's terminal chunk: the retryable timeout
+ * marker, else the non-retryable usage-limit marker, else none.
+ */
+const terminalMetadataJson = (
+  timedOut: boolean,
+  usageLimit: UsageLimit | null,
+): string | null => {
+  if (timedOut) {
+    const timeoutMetadata: TerminalTimeoutMetadata = {
+      retryable: true,
+      timedOut: true,
+    };
+
+    return JSON.stringify(timeoutMetadata);
+  }
+
+  if (usageLimit === null) {
+    return null;
+  }
+
+  const usageLimitMetadata: TerminalUsageLimitMetadata = {
+    retryable: false,
+    usageLimit,
+  };
+
+  return JSON.stringify(usageLimitMetadata);
+};
+
+/**
+ * Narrow a terminal chunk's `metadata.usageLimit` (untyped backend payload) to a
+ * {@link UsageLimit}, or null when the turn was not usage-limited.
+ */
+const readUsageLimit = (value: unknown): UsageLimit | null => {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const { rateLimitType, resetsAt } = value;
+
+  return {
+    rateLimitType: typeof rateLimitType === 'string' ? rateLimitType : null,
+    resetsAt: typeof resetsAt === 'string' ? resetsAt : null,
+  };
+};
 
 /**
  * The cursor backend discriminator. Cursor is the only CLI backend whose chat
@@ -267,6 +317,9 @@ export class ConversationStreamService {
     // Error the backend reported on its terminal chunk (claude gates this on
     // `is_error`); forwarded onto the published done chunk instead of dropped.
     let terminalError: string | null = null;
+    // Usage limit the backend flagged on its terminal chunk (a limited
+    // subscription account); published as the terminal `metadataJson` marker.
+    let terminalUsageLimit: UsageLimit | null = null;
 
     // Non-text events (thinking/tool/usage/session) collected for persistence
     // into the assistant message's tool_metadata on completion.
@@ -436,6 +489,7 @@ export class ConversationStreamService {
           }
 
           terminalError = chunk.error ?? null;
+          terminalUsageLimit = readUsageLimit(chunk.metadata?.usageLimit);
           break;
         }
 
@@ -486,21 +540,16 @@ export class ConversationStreamService {
       // completion forwards any backend terminalError with no marker.
       await this.persistAssistant(run, accumulated, toolEvents);
 
-      const timeoutMetadata: TerminalTimeoutMetadata = {
-        retryable: true,
-        timedOut: true,
-      };
+      const timeoutError = `The response timed out after ${Math.round(idleMs / 1000)}s with no activity.`;
       await this.publishChunk({
         conversationId: run.conversationId,
         delta: '',
         done: true,
-        error: timedOut
-          ? `The response timed out after ${Math.round(idleMs / 1000)}s with no activity.`
-          : terminalError,
+        error: timedOut ? timeoutError : terminalError,
         id: randomUUID(),
         kind: CONVERSATION_STREAM_CHUNK_KINDS.text,
         messageId: run.assistantMessageId,
-        metadataJson: timedOut ? JSON.stringify(timeoutMetadata) : null,
+        metadataJson: terminalMetadataJson(timedOut, terminalUsageLimit),
         sortOrder: sortOrder,
       });
     } catch (error: unknown) {
@@ -794,6 +843,7 @@ export class ConversationStreamService {
         messageId: run.assistantMessageId,
         model: folded.model ?? run.model,
         provider: (run.provider ?? run.backend).toLowerCase(),
+        source: AGENT_TOKEN_USAGE_SOURCES.CHAT,
         usage: folded,
         userId: run.userId,
       });

@@ -7,6 +7,7 @@ import {
   RUN_STATUS_COLOR,
   RUN_STATUS_LABEL,
   RUN_STATUS_VARIANT,
+  RUN_TRIGGER_LABEL,
 } from '~/routing/schedule/data/data.run-status';
 import { formatDuration } from '~/routing/schedule/utils/format-duration';
 import {
@@ -16,6 +17,7 @@ import {
   runUsageRows,
 } from '~/routing/schedule/utils/format-usage';
 import { formatWhen } from '~/routing/schedule/utils/format-when';
+import { runUsageLimitRows } from '~/routing/schedule/utils/run-usage-limit-rows';
 
 export interface RunDetailProps {
   run: ScheduledJobRunDetailFragment;
@@ -48,7 +50,11 @@ export const RunDetail = (props: RunDetailProps): React.ReactElement => {
         </Badge>
       ),
     },
-    { label: fields.trigger, value: run.trigger },
+    {
+      label: fields.trigger,
+      value: RUN_TRIGGER_LABEL[run.trigger] ?? run.trigger,
+    },
+    ...runUsageLimitRows(run),
     {
       label: fields.driver,
       mono: true,

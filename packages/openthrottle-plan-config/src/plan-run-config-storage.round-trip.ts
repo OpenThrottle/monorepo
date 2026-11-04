@@ -46,6 +46,7 @@ export const planRunConfigFromWorkflowUiState = (
     ...defaults,
     ralph: {
       debugCli: workflowInput.debugCli,
+      effort: workflowInput.effort.trim(),
       executionBackend: workflowInput.executionBackend,
       iterationTimeoutText: iterationTimeoutText.trim(),
       iterations: workflowInput.iterations,
@@ -88,6 +89,7 @@ export const workflowUiStateFromPlanRunConfig = (
 
   const workflowInput: PlanWorkflowRalphRunOptions = {
     debugCli: parsed.ralph.debugCli,
+    effort: parsed.ralph.effort,
     executionBackend: parsed.ralph.executionBackend,
     iterations: parsed.ralph.iterations,
     model: parsed.ralph.model,
@@ -142,6 +144,12 @@ export const buildRalphPlanRunTuningFromPlanRunConfig = (
   const model = ralph.model.trim();
   if (model !== '' && model !== 'auto') {
     tuning.model = model;
+  }
+
+  // Unset (empty) keeps the backend's own default, so nothing travels.
+  const effort = ralph.effort.trim();
+  if (effort !== '') {
+    tuning.effort = effort;
   }
 
   const project = ralph.project.trim();

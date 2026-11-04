@@ -1,7 +1,8 @@
 /**
  * @description Unit tests for in-process Ralph orchestrator run-start worktree
- * checkout registration (soft-fail, once-per-start, skip when checkout_id set)
- * and the per-user foreign-skill injection gate (opt-in via the actor's checkout).
+ * checkout registration (soft-fail, once-per-start, still registers when a
+ * scheduling checkout_id is already set so the worktree can overwrite it) and
+ * the per-user foreign-skill injection gate (opt-in via the actor's checkout).
  */
 
 import { createMock } from '@golevelup/ts-vitest';
@@ -257,15 +258,20 @@ describe('AgenticRalphOrchestratorService worktree checkout registration', () =>
     });
   });
 
-  describe('when checkout_id is already set', () => {
-    it('does not invoke register', async () => {
+  describe('when checkout_id already names the scheduling primary', () => {
+    it('still registers so the worktree can overwrite checkout + branch', async () => {
       mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(
         buildRun({ checkoutId: CHECKOUT_ID }),
       );
 
       await runWithCorrelation();
 
-      expect(mockRegister).not.toHaveBeenCalled();
+      expect(mockRegister).toHaveBeenCalledTimes(1);
+      expect(mockRegister).toHaveBeenCalledWith({
+        filesystemPath: WORKTREE_PATH,
+        planRunId: PLAN_RUN_ID,
+        userId: USER_ID,
+      });
       expect(mockExecute).toHaveBeenCalledTimes(1);
     });
   });
@@ -538,7 +544,31 @@ describe('AgenticRalphOrchestratorService worktree provisioning', () => {
     });
   });
 
+  it('carries ralph.effort from the job data into the flow-context tuning', async () => {
+    await runWithWorktree({ effort: 'extraHigh', worktree: 'plan-aaaaaaaa' });
+
+    expect(mockBuildRalphFlowContext).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ralph: expect.objectContaining({ effort: 'extraHigh' }),
+      }),
+    );
+  });
+
   it('registers the checkout against the provisioned worktree, not the base checkout', async () => {
+    await runWithWorktree();
+
+    expect(mockRegister).toHaveBeenCalledWith({
+      filesystemPath: PROVISIONED_WORKTREE_PATH,
+      planRunId: PLAN_RUN_ID,
+      userId: USER_ID,
+    });
+  });
+
+  it('registers the provisioned worktree even when enqueue stamped a primary checkout_id', async () => {
+    mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(
+      buildRun({ checkoutId: CHECKOUT_ID }),
+    );
+
     await runWithWorktree();
 
     expect(mockRegister).toHaveBeenCalledWith({

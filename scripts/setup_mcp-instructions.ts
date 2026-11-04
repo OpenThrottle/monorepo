@@ -39,8 +39,8 @@ import { fileURLToPath } from 'node:url';
 
 import chalk from 'chalk';
 
-import { scriptArgs } from './lib/args.ts';
-import { SYMBOLS } from './lib/index.ts';
+import { scriptArgs } from './utils/args.ts';
+import { SYMBOLS } from './utils/index.ts';
 
 const SERVER_NAME = 'openthrottle-mcp';
 const DESCRIPTION = `OpenThrottle (OT) plans knowledge base (Postgres + GraphQL). Plans, tasks, notes, commit links, activity, output stream, semantic search, health.`;

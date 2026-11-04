@@ -41,8 +41,45 @@ see [tools/AGENTS.md](../../tools/AGENTS.md)).
   [../AGENTS.md](../AGENTS.md) for the pattern.
 - `src/graphql/ralph/*.graphql` is also consumed by `openthrottle-mcp`'s codegen (its `codegen.ts`
   globs this directory). Editing these documents means regenerating **both** packages' `__generated__`.
-- Keep the orchestrator GraphQL-pure: the single non-plan call allowed is the `getServerHealth`
-  preflight. Never open a Postgres connection or spawn the CLI from here.
+- Keep plan/task transport GraphQL-pure: the single non-plan GraphQL call allowed is the
+  `getServerHealth` preflight. Never open a Postgres connection or spawn the agent CLI from here.
+  The host-owned plan-end finalize step (push + PR via injectable `runCommand`) is the deliberate
+  exception — see `src/utils/finalize-plan-run.ts`.
+- **PR draft hand-off (agent drafts, host publishes).** On its final iteration the agent runs the
+  `github-pull-request` skill in draft-only mode. The orchestrator marks that iteration explicitly:
+  when the task it hands the agent is the plan's only runnable one, it appends the
+  `buildFinalIterationPromptLine` line (`OT_FINAL_ITERATION=1: …`) to the prompt (`orchestrator.ts`;
+  plan mode per iteration, task mode from the state load). The agent can't infer this on its own,
+  because completions are applied by the host after it exits. That mode writes `title.txt` (a one-line
+  conventional title) and `body.md` (UTF-8, ending in the `Plan-Id:`/`Task-Id:` trailer) into
+  the draft directory, and it never runs `gh` or `git push`. When `runCommand` is wired, the
+  orchestrator resolves `<worktree root>/.ot-pr-draft` (`git rev-parse --show-toplevel`, the skill's
+  own default) once at run start, creates it with a `.gitignore` of `*`, deletes any stale
+  `title.txt`/`body.md` there (keeping the `.gitignore`), and hands the path to the agent twice: as
+  `env.OT_PR_DRAFT_DIR` (merged over `process.env` by the drivers engine) and written verbatim into
+  the `OT_FINAL_ITERATION=1` line, so delivery never depends on a CLI forwarding env to its tool
+  shell. Finalize gets the same path as `draftDir`. The dir is in the working tree because that is
+  the only place every backend can write — `.git/` is denied or read-only under some CLIs' policies
+  (Claude Code's sensitive-path guard, codex `workspace-write`) and an OS temp dir is outside others'
+  sandboxes (antigravity `--add-dir "$PWD"`, sandboxed gemini). The self-ignoring `.gitignore` keeps
+  it untracked in any repo without that repo's own ignore rules. Never branch on `executionBackend`
+  here. Finalize treats the
+  draft as untrusted (`plan-run-pr-draft.ts`): it checks the conventional title and the absence of
+  template `**TODO:**` text, replaces every `Plan-Id:`/`Task-Id:` line with the OT footer set, wraps
+  the body in `<!-- ot:plan-run-body -->` markers plus a sha256 digest line, and runs
+  `check-pr-attribution.sh`. If a check fails it falls back to `plan-run-pr-body.ts`; either way a
+  plan_output line names the source. On an existing PR it refreshes title + body
+  (`gh pr edit`, REST `PATCH` fallback) only when `locatePlanRunPrBody` says `empty` or `host`.
+  Ownership is decided by the marked region alone: `host` means exactly one well-formed
+  `<!-- ot:plan-run-body -->` block (each marker on its own line, open before close) whose digest
+  still matches. Zero blocks, two or more, unbalanced or out-of-place markers, or a digest mismatch
+  (an edit inside them) mean `edited`, and the body is left alone. **Text outside the markers belongs
+  to whoever wrote it — a human or any bot — and is always preserved**: refresh replaces only the
+  marked region (`replacePlanRunPrBodyRegion`), keeps the rest byte for byte, and runs the
+  attribution guard on the host text only. That text never makes a body `edited` on its own, and
+  there is deliberately no allow-list of known bot blocks; a vendor list rots on the next bot.
+  The contract lives in
+  [`skills/github-pull-request/SKILL.md` § Draft-only (orchestrator) mode](../../skills/github-pull-request/SKILL.md#draft-only-orchestrator-mode).
 - Config precedence is enqueue/GraphQL tuning → env → `.workflow-ralph.json` → built-ins; GraphQL
   URL and auth tokens are **env-only**, never read from the defaults file (`src/utils/context.ts`).
 

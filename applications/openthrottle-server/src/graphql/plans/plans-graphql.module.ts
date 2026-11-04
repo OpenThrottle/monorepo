@@ -13,9 +13,10 @@ import { TaggingQueueProducerModule } from '../../queues/tagging/tagging-queue-p
 import { EffectiveUserResolutionModule } from '../../services/effective-user-resolution/effective-user-resolution.module.ts';
 import { PlanCreationModule } from '../../services/plan-creation/plan-creation.module.ts';
 import { PlanRunWorktreeCheckoutModule } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.module.ts';
+import { WorktreeCheckoutPruneModule } from '../../services/worktree-checkout-prune/worktree-checkout-prune.module.ts';
 import { QueuesGraphqlModule } from '../queues/queues-graphql.module.ts';
 import { WorkLedgerGraphqlModule } from '../work-ledger/work-ledger-graphql.module.ts';
-import { PlanEnqueueService } from './plan-enqueue.service.ts';
+import { PlanEnqueueModule } from './plan-enqueue/plan-enqueue.module.ts';
 import { PlanRunObjectResolver } from './plan-run-object.resolver.ts';
 import { PlanStatusModule } from './plan-status.module.ts';
 import { PlansResolver } from './plans.resolver.ts';
@@ -28,6 +29,7 @@ import { PlansLoaders } from './plans-loaders.ts';
     NestjsRepositoriesModule,
     NotificationsModule,
     PlanCreationModule,
+    PlanEnqueueModule,
     PlanRulesQueueProducerModule,
     PlanRunWorktreeCheckoutModule,
     PlanStatusModule,
@@ -35,12 +37,8 @@ import { PlansLoaders } from './plans-loaders.ts';
     TaggingQueueProducerModule,
     QueuesGraphqlModule,
     WorkLedgerGraphqlModule,
+    WorktreeCheckoutPruneModule,
   ],
-  providers: [
-    PlanEnqueueService,
-    PlanRunObjectResolver,
-    PlansLoaders,
-    PlansResolver,
-  ],
+  providers: [PlanRunObjectResolver, PlansLoaders, PlansResolver],
 })
 export class PlansGraphqlModule {}

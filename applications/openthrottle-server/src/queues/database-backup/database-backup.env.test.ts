@@ -16,6 +16,8 @@ const ENV_KEYS = [
   'DATABASE_BACKUP_JOB_TIMEOUT_MS',
   'WORKSPACE_ROOT',
   'OT_BACKUP_OWNER',
+  'OT_SCHEDULED_JOBS_OWNER',
+  'OT_WORKTREE_DB',
 ] as const;
 
 function clearEnv(): void {
@@ -25,6 +27,10 @@ function clearEnv(): void {
 }
 
 describe('resolveDatabaseBackupSchedule', () => {
+  beforeEach(() => {
+    clearEnv();
+  });
+
   afterEach(() => {
     clearEnv();
   });
@@ -45,8 +51,6 @@ describe('resolveDatabaseBackupSchedule', () => {
 
   describe('when DATABASE_BACKUP_CRON is set', () => {
     beforeEach(() => {
-      // Pin a canonical (non-worktree) root so the ownership gate passes
-      // regardless of where the suite runs from.
       process.env.WORKSPACE_ROOT = '/repo/root';
     });
 
@@ -141,42 +145,70 @@ describe('validateBackupCronPattern', () => {
 });
 
 describe('resolveBackupOwnership', () => {
+  beforeEach(() => {
+    clearEnv();
+  });
+
   afterEach(() => {
     clearEnv();
   });
 
-  test('a canonical checkout is the owner', () => {
-    expect(resolveBackupOwnership('/Users/x/Development/openthrottle')).toEqual(
-      {
-        owner: true,
-      },
-    );
+  test('the primary checkout (no OT_WORKTREE_DB marker) is the owner', () => {
+    expect(resolveBackupOwnership()).toEqual({ owner: true });
   });
 
-  test('a worktree checkout is not the owner by default', () => {
-    const result = resolveBackupOwnership(
-      '/Users/x/Development/openthrottle-worktrees/feature',
-    );
+  test('a worktree sharing the primary database is not the owner', () => {
+    process.env.OT_WORKTREE_DB = 'shared';
+    const result = resolveBackupOwnership();
     expect(result.owner).toBe(false);
+    if (!result.owner) {
+      expect(result.reason).toContain('OT_WORKTREE_DB=shared');
+    }
   });
 
-  test('OT_BACKUP_OWNER=true overrides a worktree path', () => {
+  test('a worktree with its own isolated database owns its backups', () => {
+    process.env.OT_WORKTREE_DB = 'isolated';
+    expect(resolveBackupOwnership()).toEqual({ owner: true });
+  });
+
+  test('a worktree-looking WORKSPACE_ROOT does not matter without a marker', () => {
+    process.env.WORKSPACE_ROOT = '/Users/x/.openthrottle/worktrees/acme/wt';
+    expect(resolveBackupOwnership()).toEqual({ owner: true });
+  });
+
+  test('OT_BACKUP_OWNER=true overrides a shared worktree', () => {
+    process.env.OT_WORKTREE_DB = 'shared';
     process.env.OT_BACKUP_OWNER = 'true';
-    expect(
-      resolveBackupOwnership(
-        '/Users/x/Development/openthrottle-worktrees/feature',
-      ),
-    ).toEqual({ owner: true });
+    expect(resolveBackupOwnership()).toEqual({ owner: true });
   });
 
-  test('OT_BACKUP_OWNER=false makes even a canonical checkout a non-owner', () => {
+  test('OT_BACKUP_OWNER=false makes even the primary checkout a non-owner', () => {
     process.env.OT_BACKUP_OWNER = 'false';
-    const result = resolveBackupOwnership('/Users/x/Development/openthrottle');
+    const result = resolveBackupOwnership();
     expect(result.owner).toBe(false);
+    if (!result.owner) {
+      expect(result.reason).toContain('OT_BACKUP_OWNER');
+    }
+  });
+
+  test('OT_BACKUP_OWNER outranks OT_SCHEDULED_JOBS_OWNER', () => {
+    process.env.OT_BACKUP_OWNER = 'false';
+    process.env.OT_SCHEDULED_JOBS_OWNER = 'true';
+    expect(resolveBackupOwnership().owner).toBe(false);
+  });
+
+  test('without OT_BACKUP_OWNER, OT_SCHEDULED_JOBS_OWNER decides', () => {
+    process.env.OT_WORKTREE_DB = 'shared';
+    process.env.OT_SCHEDULED_JOBS_OWNER = 'true';
+    expect(resolveBackupOwnership()).toEqual({ owner: true });
   });
 });
 
 describe('resolveDatabaseBackupSchedule cron + ownership gating', () => {
+  beforeEach(() => {
+    clearEnv();
+  });
+
   afterEach(() => {
     clearEnv();
   });
@@ -202,21 +234,28 @@ describe('resolveDatabaseBackupSchedule cron + ownership gating', () => {
     }
   });
 
-  test('a worktree checkout does not register (owner gate), not flagged invalid', () => {
-    process.env.WORKSPACE_ROOT =
-      '/Users/x/Development/openthrottle-worktrees/feature';
+  test('a shared-DB worktree does not register (owner gate), not flagged invalid', () => {
+    process.env.WORKSPACE_ROOT = '/repo/root';
+    process.env.OT_WORKTREE_DB = 'shared';
     process.env.DATABASE_BACKUP_CRON = '0 0 0 * * *';
     const result = resolveDatabaseBackupSchedule();
     expect(result.enabled).toBe(false);
     if (!result.enabled) {
       expect(result.invalid).toBeUndefined();
-      expect(result.reason).toContain('worktree');
+      expect(result.reason).toContain('OT_WORKTREE_DB=shared');
     }
   });
 
-  test('OT_BACKUP_OWNER=true lets a worktree register', () => {
-    process.env.WORKSPACE_ROOT =
-      '/Users/x/Development/openthrottle-worktrees/feature';
+  test('an isolated worktree registers its own backups', () => {
+    process.env.WORKSPACE_ROOT = '/repo/root';
+    process.env.OT_WORKTREE_DB = 'isolated';
+    process.env.DATABASE_BACKUP_CRON = '0 0 0 * * *';
+    expect(resolveDatabaseBackupSchedule().enabled).toBe(true);
+  });
+
+  test('OT_BACKUP_OWNER=true lets a shared-DB worktree register', () => {
+    process.env.WORKSPACE_ROOT = '/repo/root';
+    process.env.OT_WORKTREE_DB = 'shared';
     process.env.OT_BACKUP_OWNER = 'true';
     process.env.DATABASE_BACKUP_CRON = '0 0 0 * * *';
     const result = resolveDatabaseBackupSchedule();

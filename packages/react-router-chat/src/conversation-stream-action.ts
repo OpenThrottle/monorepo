@@ -1,7 +1,7 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 
-import type { ChatStartActionResult } from './hooks/use-agentic-chat-turn';
+import type { ChatStartActionResult } from './types';
 
 /**
  * @description Shared `/resources/conversation-stream` resource-route action —

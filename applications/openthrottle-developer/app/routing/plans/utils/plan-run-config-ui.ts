@@ -90,6 +90,7 @@ export const serializePlanRunConfigUiState = (
     repositoryId,
     workflowInput: {
       debugCli: workflowInput.debugCli,
+      effort: workflowInput.effort,
       executionBackend: workflowInput.executionBackend,
       iterations: workflowInput.iterations,
       model: workflowInput.model,

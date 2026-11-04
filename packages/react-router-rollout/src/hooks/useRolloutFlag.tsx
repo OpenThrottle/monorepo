@@ -3,7 +3,7 @@ import type {
   RolloutFlagKey,
   RolloutFlagValue,
 } from '../types';
-import { useRequiredRolloutContext } from './useRolloutContext';
+import { useRequiredRolloutContext } from './useRequiredRolloutContext';
 
 /**
  * Returns the resolved value for a catalog flag key under {@link RolloutProvider}.

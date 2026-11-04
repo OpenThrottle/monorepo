@@ -5,8 +5,8 @@ import { createRoutesStub, useSubmit } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ServiceAccountCredentialFieldsFragment } from '~/__generated__/graphql';
+import type { SettingsKeysCreateCredentialActionData } from '~/routing/settings/types';
 
-import type { SettingsKeysCreateCredentialActionData } from '../useSettingsKeysForm';
 import type { UseSettingsKeysFormResult } from '../useSettingsKeysForm';
 import { useSettingsKeysForm } from '../useSettingsKeysForm';
 

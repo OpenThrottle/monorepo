@@ -12,6 +12,36 @@ export interface UseRuleFormOptions {
   initialRule?: TagActionRuleRowData | null;
 }
 
+export interface UseRuleFormResult {
+  readonly actionPayloadJson: string;
+  readonly actionType: string;
+  readonly environment: string;
+  readonly handleToggleTag: (tag: string) => void;
+  readonly isEdit: boolean;
+  readonly placement: string;
+  readonly setActionType: React.Dispatch<React.SetStateAction<string>>;
+  readonly setEnvironment: React.Dispatch<React.SetStateAction<string>>;
+  readonly setPlacement: React.Dispatch<React.SetStateAction<string>>;
+  readonly setSkillSlug: React.Dispatch<React.SetStateAction<string>>;
+  readonly setSlugAllow: React.Dispatch<React.SetStateAction<string>>;
+  readonly setSlugDeny: React.Dispatch<React.SetStateAction<string>>;
+  readonly setStatus: React.Dispatch<React.SetStateAction<string>>;
+  readonly setTagAllow: React.Dispatch<React.SetStateAction<string>>;
+  readonly setTagDeny: React.Dispatch<React.SetStateAction<string>>;
+  readonly setTitle: React.Dispatch<React.SetStateAction<string>>;
+  readonly setTitleTemplate: React.Dispatch<React.SetStateAction<string>>;
+  readonly skillSlug: string;
+  readonly slugAllow: string;
+  readonly slugDeny: string;
+  readonly status: string;
+  readonly submitDisabled: boolean;
+  readonly tagAll: string[];
+  readonly tagAllow: string;
+  readonly tagDeny: string;
+  readonly title: string;
+  readonly titleTemplate: string;
+}
+
 /**
  * @description All form state behind RuleForm: the field values hydrated from
  * an optional initial rule, the assembled typed action payload, the
@@ -19,7 +49,7 @@ export interface UseRuleFormOptions {
  * RuleForm per component-primitive-shape R7 (the spec's worked example) so the
  * component stays UI-focused and the form logic is testable on its own.
  */
-export const useRuleForm = (options: UseRuleFormOptions) => {
+export const useRuleForm = (options: UseRuleFormOptions): UseRuleFormResult => {
   const { initialRule } = options;
 
   // Hooks

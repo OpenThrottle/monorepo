@@ -44,6 +44,9 @@ export const buildPlanRunConfigSnapshot = (
     ...(normalizeDebugCli(ralphInput?.debug) !== undefined
       ? { debug: normalizeDebugCli(ralphInput?.debug) }
       : {}),
+    ...(trimOptionalString(ralphInput?.effort) !== undefined
+      ? { effort: trimOptionalString(ralphInput?.effort) }
+      : {}),
     ...(ralphInput?.iterationTimeoutSeconds != null
       ? { iterationTimeoutSeconds: ralphInput.iterationTimeoutSeconds }
       : {}),

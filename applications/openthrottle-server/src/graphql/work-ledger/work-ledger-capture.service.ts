@@ -1,5 +1,6 @@
 /**
- * @description Server-side work-ledger capture for first-party mutations (design §4.3, G11/G12/G13).
+ * @description Server-side work-ledger capture for first-party mutations.
+ * Guarantees G11/G12/G13 are defined in docs/monorepo/work-ledger-sessions.md.
  * Records a born-verified `status_change` artifact for a task/plan status transition, inside the
  * SAME transaction as the row update (the caller passes its transactional EntityManager). Attributes
  * it to an ambient work session when a valid X-OT-Session-Id was presented (validated against the
@@ -79,7 +80,10 @@ function resolveActorColumns(
   );
 }
 
-/** True when the session's actor matches the request principal (G11 ambient-attribution guard). */
+/**
+ * True when the session's actor matches the request principal (ambient-attribution guard;
+ * G11 in docs/monorepo/work-ledger-sessions.md).
+ */
 function sessionBelongsToActor(
   session: WorkSession,
   actor: ActorColumns,
@@ -130,7 +134,7 @@ export class WorkLedgerCaptureService {
         sessionId,
         source: WORK_ARTIFACT_SOURCE.SERVER,
         type: 'status_change',
-        // First-party, server-witnessed event: born verified, not a claim (design §3.3).
+        // First-party, server-witnessed event: born verified, not a claim.
         verification: WORK_ARTIFACT_VERIFICATION.VERIFIED,
         verifiedAt: now,
       }),
@@ -158,7 +162,8 @@ export class WorkLedgerCaptureService {
 
   /**
    * @description Use the ambient session from X-OT-Session-Id when it exists AND belongs to the
-   * request principal; otherwise open an instant session. Never errors on a bad/foreign id (G11).
+   * request principal; otherwise open an instant session. Never errors on a bad/foreign id
+   * (G11 in docs/monorepo/work-ledger-sessions.md).
    */
   private async resolveSession(
     manager: EntityManager,

@@ -23,7 +23,7 @@ First-time setup? run `./scripts/setup.sh` instead — it calls this plus instal
 
 ```bash
 # 🔒 Create or update the environment variables
-./scripts/setup_environment.sh
+./scripts/setup_environment.ts
 
 # Run the application
 pnpm nx run openthrottle-website:dev
@@ -34,6 +34,8 @@ pnpm nx run openthrottle-website:dev
 Shared URL and app identity values are read through `@openthrottle/react-router-utils` (see `getEnvironment` in `packages/openthrottle/react-router-utils`). The local template is [`.env.default`](./.env.default); it must stay aligned with that helper (for example `API_URL_*`, `APP_*`, `NODE_ENV`, `ROLLBAR_TOKEN`). `vite.config.ts` loads all keys from `.env` into `process.env` for dev and build—there is no separate `VITE_*` app surface for these.
 
 Optional: `OFFLINE_MODE=true` serves an offline placeholder from `entry.server.tsx`. `COOKIE_SECRET` defaults in code if unset.
+
+`FEATURE_BLOG_ENABLED` (`"false"` by default) is the single switch for the blog: while off there are no Blog nav/footer links or sitemap entries, and `/blog`, `/blog/<slug>`, `/blog/tags/<slug>` and `/blog/rss.xml` all return 404 without calling the API. To try the blog locally, set `FEATURE_BLOG_ENABLED="true"` in `.env` (a copy of `.env.default`, gitignored), start `openthrottle-server`, and restart the website dev server. In production, set it only once the API is publicly reachable.
 
 ## Deployment
 

@@ -4,6 +4,7 @@
  * env and `.workflow-ralph.json` in the child cwd still apply (CLI > env > file > built-ins).
  */
 
+import type { ConversationReasoningEffort } from '@openthrottle/openthrottle-agentic-utils';
 import type {
   WorkflowConfigDebug,
   WorkflowConfigRunner,
@@ -30,6 +31,12 @@ export interface RalphNestedRunTuningInput {
    */
   readonly backend?: WorkflowConfigRunner | null;
   readonly debug?: WorkflowConfigDebug;
+  /**
+   * Reasoning-effort level (chat vocabulary). Carried on job data and the run snapshot, and consumed
+   * by the in-process orchestrator, which forwards it to the agent CLI driver; deliberately NOT turned
+   * into a nested `workflow-ralph` argv flag by {@link buildWorkflowRalphRunTuningArgv}.
+   */
+  readonly effort?: ConversationReasoningEffort;
   readonly iterationTimeoutSeconds?: number | null;
   readonly iterations?: number | null;
   readonly model?: string;

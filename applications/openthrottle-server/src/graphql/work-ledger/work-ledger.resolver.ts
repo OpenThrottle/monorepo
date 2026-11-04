@@ -1,8 +1,9 @@
 /**
  * @description Work-ledger GraphQL resolver: session/artifact/subject writes + reads.
  * @authz-stance: authenticated-only. Actor is stamped from the request principal (never an input);
- * exactly one of actor_user_id / actor_service_account_id is set (design §2.1, mirrors the DB CHECK).
- * Per-session ownership checks on write ops are deferred to slice 3 (X-OT-Session-Id / G11).
+ * exactly one of actor_user_id / actor_service_account_id is set (mirrors the DB CHECK).
+ * Per-session ownership checks on write ops are deferred to slice 3 (X-OT-Session-Id validation,
+ * see G11 in docs/monorepo/work-ledger-sessions.md).
  */
 
 import { BadRequestException } from '@nestjs/common';
@@ -163,7 +164,9 @@ export class WorkLedgerResolver {
       externalRef: input.externalRef,
       model: input.model,
       onBehalfOfUserId: input.onBehalfOfUserId,
-      // v1: on_behalf_of via this mutation is always an unverified hint (design §2.3).
+      // v1: on_behalf_of via this mutation is always an unverified hint
+      // (verified inheritance is a server-stamped fact — see the actor model in
+      // docs/monorepo/work-ledger-sessions.md).
       // Ralph's verified inheritance is stamped on its own write path (slice 4).
       onBehalfOfVerified: false,
       planRunId: input.planRunId,

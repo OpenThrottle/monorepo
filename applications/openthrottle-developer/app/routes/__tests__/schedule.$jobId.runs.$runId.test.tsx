@@ -31,12 +31,14 @@ const run = (
   model: 'opus',
   outputTokens: 50,
   reasoningTokens: null,
+  resumeOfRunId: null,
   scheduledAgentJobId: 'job-1',
   settingsSnapshotJson: JSON.stringify({ driverId: 'claude', model: 'opus' }),
   startedAt: '2026-07-31T09:00:00.000Z',
   status: 'succeeded',
   totalTokens: 150,
   trigger: 'manual',
+  usageLimitResetsAt: null,
   ...overrides,
 });
 

@@ -1,5 +1,4 @@
-import { Badge, Button } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
+import { Badge, Button, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import { LINKED_ARTIFACTS_PANEL_COPY } from '~/routing/plans/data/data.copy';
@@ -53,7 +52,7 @@ export const LinkedArtifactsSummary = (
 
       {ARTIFACT_VERIFICATIONS.map((verification) => (
         <span
-          className={clsx(
+          className={cn(
             // An orphaned artifact is the one thing here worth acting on, so
             // it is the only count allowed to shout — and only when non-zero.
             verification === 'orphaned' && orphaned > 0

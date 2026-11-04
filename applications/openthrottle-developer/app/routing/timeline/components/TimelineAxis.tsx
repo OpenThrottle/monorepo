@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import {
@@ -45,7 +45,7 @@ export const TimelineAxis = (props: TimelineAxisProps): React.ReactElement => {
   return (
     <svg
       aria-label={`Time axis, times shown in ${zone}`}
-      className={clsx('block', className)}
+      className={cn('block', className)}
       data-testid="TimelineAxis"
       height={AXIS_HEIGHT + ruleHeight}
       role="img"

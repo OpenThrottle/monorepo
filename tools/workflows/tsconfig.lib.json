@@ -15,9 +15,6 @@
   ],
   "references": [
     {
-      "path": "../generators/tsconfig.lib.json"
-    },
-    {
       "path": "../../packages/openthrottle-drivers/tsconfig.lib.json"
     },
     {

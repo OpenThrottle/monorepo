@@ -10,6 +10,7 @@
 
 import { defineDriver } from '../registry/index.ts';
 import type { DriverCapabilities, DriverModelListing } from '../types/index.ts';
+import { grokReasoningEffort } from '../utils/reasoning-effort.ts';
 import {
   escapeForShellDoubleQuoted,
   escapeShellArg,
@@ -96,8 +97,12 @@ export const grokDriver = defineDriver({
         })
       : '';
 
+    const effort = grokReasoningEffort(config.effort);
+    const effortFlag =
+      effort !== undefined ? ` --reasoning-effort ${effort}` : '';
+
     const safePrompt = escapeForShellDoubleQuoted(config.prompt);
-    const base = `${endpointPrefix}grok -p "${safePrompt}" --permission-mode acceptEdits${modelFlag}`;
+    const base = `${endpointPrefix}grok -p "${safePrompt}" --permission-mode acceptEdits${modelFlag}${effortFlag}`;
 
     return appendWorktreeShellFlags(base, capabilities, config.worktree);
   },

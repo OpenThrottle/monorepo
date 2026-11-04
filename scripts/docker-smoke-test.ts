@@ -25,8 +25,8 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { readEnvValue } from './lib/env.ts';
-import { createLogger, positionals } from './lib/index.ts';
+import { readEnvValue } from './utils/env.ts';
+import { createLogger, positionals } from './utils/index.ts';
 
 const logger = createLogger();
 

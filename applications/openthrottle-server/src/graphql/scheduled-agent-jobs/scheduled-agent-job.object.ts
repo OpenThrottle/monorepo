@@ -24,7 +24,7 @@ export class ScheduledAgentJobRepositoryObject {
 }
 
 @ObjectType({
-  description: `A user-defined scheduled agent job: a prompt run with a driver/model/settings on a cron schedule via one shared BullMQ queue.`,
+  description: `A user-defined scheduled agent job: a prompt run with a driver/model/settings on a cron, interval or run-once schedule via one shared BullMQ queue.`,
 })
 export class ScheduledAgentJobObject {
   @Field(() => ID)
@@ -52,8 +52,28 @@ export class ScheduledAgentJobObject {
   })
   settingsJson!: string;
 
-  @Field(() => String, { description: `5- or 6-field cron pattern.` })
-  cronPattern!: string;
+  @Field(() => String, {
+    description: `How the schedule fires: cron (cronPattern in timezone), interval (intervalMs after the previous run finishes) or once (a single run at runAt, after which the schedule is disabled).`,
+  })
+  scheduleKind!: string;
+
+  @Field(() => String, {
+    description: `5- or 6-field cron pattern for a cron schedule; null for interval and once schedules.`,
+    nullable: true,
+  })
+  cronPattern!: string | null;
+
+  @Field(() => Int, {
+    description: `For an interval schedule: ms from the end of one run to the start of the next (elapsed time, so DST-safe). Null for other kinds.`,
+    nullable: true,
+  })
+  intervalMs!: number | null;
+
+  @Field(() => Date, {
+    description: `For a once schedule: when its single run is due. Null for other kinds.`,
+    nullable: true,
+  })
+  runAt!: Date | null;
 
   @Field(() => String, {
     description: `IANA timezone for the cron pattern; null means UTC.`,
@@ -66,6 +86,16 @@ export class ScheduledAgentJobObject {
     nullable: true,
   })
   timeoutMs!: number | null;
+
+  @Field(() => String, {
+    description: `What happens to a fire that starts more than misfireThresholdMs late (server down, or a backed-up queue): skip records it as a missed run; catch_up_once runs the most recent late fire once and records any earlier ones as missed. A fire within the threshold always runs.`,
+  })
+  misfirePolicy!: string;
+
+  @Field(() => Int, {
+    description: `How late (ms after its cron slot) a fire may start and still count as on time; at least 60000.`,
+  })
+  misfireThresholdMs!: number;
 
   @Field(() => Boolean, {
     description: `Whether the schedule is active (registered as a BullMQ scheduler).`,
@@ -133,9 +163,15 @@ export class ScheduledAgentJobRunObject {
   bullmqJobId!: string | null;
 
   @Field(() => String, {
-    description: `queued | running | succeeded | no_op | failed | cancelled. no_op is terminal and NOT an error: the process exited cleanly but the agent reported it did not do the work.`,
+    description: `queued | running | succeeded | no_op | failed | cancelled | usage_limited | missed. no_op is terminal and NOT an error: the process exited cleanly but the agent reported it did not do the work. usage_limited is terminal and NOT an error: the agent CLI stopped on a Claude subscription usage limit (see usageLimitResetsAt); a continuation run (trigger resume, resumeOfRunId = this run) may have been enqueued. missed is created terminal: a cron fire the schedule's misfire policy did not run (see scheduledFor and errorMessage); no agent was spawned.`,
   })
   status!: string;
+
+  @Field(() => Date, {
+    description: `The slot this run belongs to, for trigger schedule (missed runs included): the cron slot, or when an interval or once fire was due. Null for manual and resume runs and for runs recorded before slot accounting.`,
+    nullable: true,
+  })
+  scheduledFor!: Date | null;
 
   @Field(() => String)
   driverId!: string;
@@ -143,7 +179,9 @@ export class ScheduledAgentJobRunObject {
   @Field(() => String, { nullable: true })
   model!: string | null;
 
-  @Field(() => String, { description: `schedule | manual (run-now).` })
+  @Field(() => String, {
+    description: `schedule (a cron, interval or once fire) | manual (run-now) | resume (delayed continuation of a usage_limited run).`,
+  })
   trigger!: string;
 
   @Field(() => Int, {
@@ -235,6 +273,24 @@ export class ScheduledAgentJobRunObject {
     nullable: true,
   })
   resolvedCwd!: string | null;
+
+  @Field(() => Date, {
+    description: `When the usage limit that stopped this run lifts, as reported by the agent CLI; null when the run was not usage_limited or no reset time was reported.`,
+    nullable: true,
+  })
+  usageLimitResetsAt!: Date | null;
+
+  @Field(() => String, {
+    description: `Raw usage-limit window that stopped this run (five_hour, seven_day, ...); null when the run was not usage_limited or the window was not reported.`,
+    nullable: true,
+  })
+  usageLimitType!: string | null;
+
+  @Field(() => ID, {
+    description: `The usage_limited run this run continues (trigger resume); null for every ordinary run.`,
+    nullable: true,
+  })
+  resumeOfRunId!: string | null;
 
   @Field(() => Date)
   createdAt!: Date;

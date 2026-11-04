@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 /**
@@ -28,7 +28,7 @@ export const PlanCreateMcpParityShell = (
 
   return (
     <div
-      className={clsx('p-4', className)}
+      className={cn('p-4', className)}
       data-testid="PlanCreateMcpParityShell"
     >
       {children ?? null}

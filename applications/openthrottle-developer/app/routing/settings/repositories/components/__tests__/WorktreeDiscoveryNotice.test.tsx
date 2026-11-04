@@ -10,7 +10,10 @@ import {
   WorktreeRootSource,
 } from '~/__generated__/graphql';
 import { WORKTREE_DISCOVERY_COPY } from '~/routing/settings/repositories/data/data.copy';
-import { mockDiscoveredWorktrees } from '~/routing/settings/repositories/data/mock.repositories';
+import {
+  mockDiscoveredWorktrees,
+  mockScannedRoot,
+} from '~/routing/settings/repositories/data/mock.repositories';
 import type { DiscoveredWorktreesResult } from '~/routing/settings/repositories/data/types';
 
 import { WorktreeDiscoveryNotice } from '../WorktreeDiscoveryNotice';
@@ -28,15 +31,75 @@ const renderNotice = (
 };
 
 describe('WorktreeDiscoveryNotice Component', () => {
-  test('names the root it scanned', () => {
-    const component = renderNotice(mockDiscoveredWorktrees());
+  describe('when every repository resolves to one configured root', () => {
+    test('names the configured root, not a repository folder beneath it', () => {
+      const component = renderNotice(
+        mockDiscoveredWorktrees({
+          scannedRoots: [
+            mockScannedRoot({
+              path: '/Users/dev/.openthrottle/worktrees/acme/monorepo',
+            }),
+            mockScannedRoot({
+              path: '/Users/dev/.openthrottle/worktrees/acme/website',
+            }),
+          ],
+        }),
+      );
 
-    expect(
-      component.getByTestId('WorktreeDiscoveryNotice'),
-    ).toBeInTheDocument();
-    expect(
-      component.getByText('/Users/dev/.openthrottle/worktrees/monorepo'),
-    ).toBeInTheDocument();
+      expect(
+        component.getByTestId('WorktreeDiscoveryNotice'),
+      ).toHaveTextContent(
+        `${WORKTREE_DISCOVERY_COPY.rootPrefix} /Users/dev/.openthrottle/worktrees (${WORKTREE_DISCOVERY_COPY.sourceLabelDefault})`,
+      );
+      expect(component.queryByText(/acme\/monorepo/)).toBeNull();
+      expect(component.queryByRole('list')).toBeNull();
+    });
+
+    test.each([
+      [WorktreeRootSource.Default, WORKTREE_DISCOVERY_COPY.sourceLabelDefault],
+      [WorktreeRootSource.Env, WORKTREE_DISCOVERY_COPY.sourceLabelEnv],
+      [
+        WorktreeRootSource.CheckoutEnv,
+        WORKTREE_DISCOVERY_COPY.sourceLabelCheckoutEnv,
+      ],
+    ])('labels a %s root with where it came from', (source, label) => {
+      const component = renderNotice(
+        mockDiscoveredWorktrees({
+          scannedRoots: [mockScannedRoot({ baseRoot: '/srv/wt', source })],
+        }),
+      );
+
+      expect(component.getByText(`(${label})`)).toBeInTheDocument();
+    });
+  });
+
+  describe('when repositories resolve to several configured roots', () => {
+    test('lists every root with its source, in scan order', () => {
+      const component = renderNotice(
+        mockDiscoveredWorktrees({
+          scannedRoots: [
+            mockScannedRoot(),
+            mockScannedRoot({
+              baseRoot: '/srv/wt',
+              path: '/srv/wt/acme/website',
+              source: WorktreeRootSource.CheckoutEnv,
+            }),
+          ],
+        }),
+      );
+
+      expect(
+        component.getByText(WORKTREE_DISCOVERY_COPY.rootsPrefixOther),
+      ).toBeInTheDocument();
+      const items = component.getAllByRole('listitem');
+      expect(items).toHaveLength(2);
+      expect(items[0]).toHaveTextContent(
+        `/Users/dev/.openthrottle/worktrees (${WORKTREE_DISCOVERY_COPY.sourceLabelDefault})`,
+      );
+      expect(items[1]).toHaveTextContent(
+        `/srv/wt (${WORKTREE_DISCOVERY_COPY.sourceLabelCheckoutEnv})`,
+      );
+    });
   });
 
   test('re-runs discovery by revalidating the loader', async () => {
@@ -119,18 +182,8 @@ describe('WorktreeDiscoveryNotice Component', () => {
     const component = renderNotice(
       mockDiscoveredWorktrees({
         scannedRoots: [
-          {
-            exists: false,
-            path: '/srv/worktrees/org/one',
-            source: WorktreeRootSource.Default,
-            worktreeCount: 0,
-          },
-          {
-            exists: false,
-            path: '/srv/worktrees/org/two',
-            source: WorktreeRootSource.Default,
-            worktreeCount: 0,
-          },
+          mockScannedRoot({ exists: false, path: '/srv/worktrees/org/one' }),
+          mockScannedRoot({ exists: false, path: '/srv/worktrees/org/two' }),
         ],
       }),
     );
@@ -153,7 +206,7 @@ describe('WorktreeDiscoveryNotice Component', () => {
 
   test('offers a deep link to workspace settings when no root could be resolved', () => {
     const component = renderNotice(
-      mockDiscoveredWorktrees({ rootSource: null, worktreeRoot: null }),
+      mockDiscoveredWorktrees({ scannedRoots: [] }),
     );
 
     expect(

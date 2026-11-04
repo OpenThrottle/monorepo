@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import { CheckIcon, CopyIcon } from 'lucide-react';
 import * as React from 'react';
 
@@ -58,7 +58,7 @@ export const DocCodeBlock = (props: DocCodeBlockProps): React.ReactElement => {
       </pre>
       <button
         aria-label={copied ? 'Code copied' : 'Copy code'}
-        className={clsx(
+        className={cn(
           'text-muted-foreground hover:text-foreground bg-background/80 absolute top-2 right-2',
           'inline-flex size-7 items-center justify-center rounded border opacity-0 transition-opacity',
           'group-hover:opacity-100 focus-visible:opacity-100',

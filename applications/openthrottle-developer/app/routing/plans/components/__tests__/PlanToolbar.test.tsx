@@ -11,16 +11,23 @@ import { renderRouteHarness, renderRoutesStub } from '~/testing/route-fixtures';
 import type { PlanToolbarProps } from '../PlanToolbar';
 import { PlanToolbar } from '../PlanToolbar';
 
-const renderToolbar = (toolbarProps: PlanToolbarProps): RenderResult =>
+type ToolbarTestProps = Omit<PlanToolbarProps, 'models' | 'runConfigJson'> &
+  Partial<Pick<PlanToolbarProps, 'models' | 'runConfigJson'>>;
+
+const renderToolbar = (toolbarProps: ToolbarTestProps): RenderResult =>
   renderRoutesStub(
     <TooltipProvider>
-      <PlanToolbar {...toolbarProps} />
+      <PlanToolbar
+        models={Promise.resolve([])}
+        runConfigJson="{}"
+        {...toolbarProps}
+      />
     </TooltipProvider>,
   );
 
 describe('PlanToolbar Component', () => {
   let component: RenderResult;
-  let props: PlanToolbarProps;
+  let props: ToolbarTestProps;
 
   beforeEach(() => {
     props = { planId: 'test-plan-id' };
@@ -112,6 +119,7 @@ describe('PlanToolbar Component', () => {
     COMPLETED: /^Completed$/i,
     IN_PROGRESS: /^In progress$/i,
     PENDING: /^Add to Queue$/i,
+    PROMOTED: /^Promoted$/i,
     QUEUED: /^Queued$/i,
     SKIPPED: /^Skipped$/i,
   };
@@ -167,7 +175,7 @@ describe('PlanToolbar Component', () => {
     ).not.toBeDisabled();
   });
 
-  test.each(['COMPLETED', 'CANCELED', 'SKIPPED'] as const)(
+  test.each(['COMPLETED', 'CANCELED', 'PROMOTED', 'SKIPPED'] as const)(
     'disables Run and Evaluate rules when the plan is terminal (%s)',
     (planStatus) => {
       const r = within(
@@ -194,7 +202,7 @@ describe('PlanToolbar Component', () => {
     ).not.toBeDisabled();
   });
 
-  test('disables Mark Complete for COMPLETED but keeps it enabled for CANCELED/SKIPPED (recovery path)', () => {
+  test('disables Mark Complete for COMPLETED but keeps it enabled for CANCELED/PROMOTED/SKIPPED (recovery path)', () => {
     const completed = within(
       renderToolbar({
         planId: 'p1',
@@ -206,7 +214,7 @@ describe('PlanToolbar Component', () => {
       completed.getByRole('button', { name: /mark complete/i }),
     ).toBeDisabled();
 
-    for (const planStatus of ['CANCELED', 'SKIPPED'] as const) {
+    for (const planStatus of ['CANCELED', 'PROMOTED', 'SKIPPED'] as const) {
       const r = within(
         renderToolbar({ planId: 'p1', planStatus, planTitle: 'My Plan' })
           .container,
@@ -298,7 +306,14 @@ const renderToolbarWithAction = (
 
   const component = renderRouteHarness([
     {
-      Component: () => <PlanToolbar planId={PLAN_ID} {...props} />,
+      Component: () => (
+        <PlanToolbar
+          models={Promise.resolve([])}
+          planId={PLAN_ID}
+          runConfigJson="{}"
+          {...props}
+        />
+      ),
       action,
       path: '/',
     },

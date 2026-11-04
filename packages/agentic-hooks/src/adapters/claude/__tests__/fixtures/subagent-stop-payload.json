@@ -1,0 +1,12 @@
+{
+  "agent_id": "a39ec7aafbeffa589",
+  "agent_transcript_path": "/home/dev/.claude/projects/-repo/00000000-0000-4000-8000-000000000001/subagents/agent-a39ec7aafbeffa589.jsonl",
+  "agent_type": "general-purpose",
+  "cwd": "/repo",
+  "hook_event_name": "SubagentStop",
+  "last_assistant_message": "[redacted]",
+  "permission_mode": "auto",
+  "session_id": "00000000-0000-4000-8000-000000000001",
+  "stop_hook_active": false,
+  "transcript_path": "/home/dev/.claude/projects/-repo/00000000-0000-4000-8000-000000000001.jsonl"
+}

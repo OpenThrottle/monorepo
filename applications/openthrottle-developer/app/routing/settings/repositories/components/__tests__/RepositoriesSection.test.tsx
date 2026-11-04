@@ -5,12 +5,16 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { WorkspaceFolderReconciliation } from '~/__generated__/graphql';
+import {
+  PruneWorktreeCheckoutOutcome,
+  WorkspaceFolderReconciliation,
+} from '~/__generated__/graphql';
 import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
 import { REPOSITORIES_ONBOARDING } from '~/routing/settings/repositories/data/data.copy';
 import {
   mockCheckout,
   mockDiscoveredWorktrees,
+  mockMissingCheckout,
   mockRepository,
 } from '~/routing/settings/repositories/data/mock.repositories';
 import { buildRepositoryRows } from '~/routing/settings/repositories/utils/rows';
@@ -57,6 +61,7 @@ describe('RepositoriesSection Component', () => {
       },
       rows: [],
       search: '',
+      showMissing: false,
       sortBy: 'name',
       sortOrder: 'asc',
       totalCount: 0,
@@ -192,5 +197,45 @@ describe('RepositoriesSection Component', () => {
 
     expect(component.getByTestId('AddFolderResult')).toBeInTheDocument();
     expect(component.queryByText('ignored error')).toBeNull();
+  });
+
+  describe('when the scan reports registered worktrees missing from disk', () => {
+    test('offers the show-missing toggle and the bulk prune in the toolbar', () => {
+      props = {
+        ...props,
+        discoveredWorktrees: mockDiscoveredWorktrees({
+          missingCheckouts: [mockMissingCheckout()],
+        }),
+      };
+      populate();
+
+      expect(
+        component.getByTestId('MissingWorktreesToggle'),
+      ).toBeInTheDocument();
+      expect(
+        component.getByTestId('PruneMissingWorktreesButton'),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe('when a prune just ran', () => {
+    test('reports its outcome', () => {
+      props = {
+        ...props,
+        pruned: [
+          {
+            checkoutId: 'worktree-1',
+            outcome: PruneWorktreeCheckoutOutcome.Pruned,
+            path: '/wt/gone',
+          },
+        ],
+      };
+      populate();
+
+      expect(component.getByTestId('PruneWorktreesOutcome')).toHaveAttribute(
+        'role',
+        'status',
+      );
+    });
   });
 });

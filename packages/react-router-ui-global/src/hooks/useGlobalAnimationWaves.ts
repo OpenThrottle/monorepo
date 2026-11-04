@@ -1,28 +1,16 @@
 import * as React from 'react';
 
-import type { CubicPoints } from '../utils/build-sound-arcs';
+import { DEFAULT_GLOBAL_ANIMATION_WAVES } from '../config/global-animation-waves';
 import { buildSoundArcs } from '../utils/build-sound-arcs';
-
-/**
- * Velocity-reactive "sound wave" arcs — an animated, canvas-based backdrop.
- *
- * Stacked flowing arcs sweep across the canvas (`n`). A travelling sine wave
- * ripples along each one; its amplitude swells with how fast the pointer is
- * moving (fast = an oscilloscope going loud) and rings back down to a calm
- * idle when the pointer slows. Ends are pinned so the arcs stay anchored.
- *
- * SSR-safe (all DOM work runs client-side in an effect) and degrades
- * gracefully: `prefers-reduced-motion: reduce` renders a single static frame of
- * the resting arcs, and the animation pauses while the canvas is off-screen.
- */
-const TWO_PI = Math.PI * 2;
+import { cubicAt } from '../utils/cubic-at';
+import { cubicDerivativeAt } from '../utils/cubic-derivative-at';
 
 /**
  * Tunables for the sound-wave arcs. Every field is optional; omitting one
  * falls back to {@link DEFAULT_GLOBAL_ANIMATION_WAVES}, so passing `{}`
  * reproduces the default look exactly.
  */
-export interface GlobalAnimationWavesConfig {
+export interface UseGlobalAnimationWavesOptions {
   /** Attack rate as energy rises toward a faster pointer (snappy). */
   readonly attack?: number;
   /** Gradient end stop as an "r, g, b" triple. */
@@ -64,88 +52,63 @@ export interface GlobalAnimationWavesConfig {
 }
 
 /**
- * Default sound-wave tunables. Colours are the brand → signal → paper gradient
- * carried over from the original static arc SVG.
+ * Velocity-reactive "sound wave" arcs — an animated, canvas-based backdrop.
+ *
+ * Stacked flowing arcs sweep across the canvas (`n`). A travelling sine wave
+ * ripples along each one; its amplitude swells with how fast the pointer is
+ * moving (fast = an oscilloscope going loud) and rings back down to a calm
+ * idle when the pointer slows. Ends are pinned so the arcs stay anchored.
+ *
+ * SSR-safe (all DOM work runs client-side in an effect) and degrades
+ * gracefully: `prefers-reduced-motion: reduce` renders a single static frame of
+ * the resting arcs, and the animation pauses while the canvas is off-screen.
  */
-export const DEFAULT_GLOBAL_ANIMATION_WAVES = {
-  attack: 0.24,
-  colorEnd: '243, 240, 234',
-  colorMid: '30, 120, 104',
-  colorStart: '229, 20, 20',
-  distributionEnd: 0.28,
-  distributionStart: 0.22,
-  gain: 42,
-  idleAmplitude: 4,
-  lineWidth: 1.5,
-  n: 21,
-  noise: 0.022,
-  release: 0.05,
-  samples: 96,
-  seed: 0x51ed,
-  speed: 0.004,
-  speedGain: 6,
-  velocityRef: 2.2,
-  waveCycles: 3.2,
-} as const;
-
-const cubicAt = (t: number, p: CubicPoints, axis: 0 | 1): number => {
-  const mt = 1 - t;
-
-  return (
-    mt * mt * mt * p[0][axis] +
-    3 * mt * mt * t * p[1][axis] +
-    3 * mt * t * t * p[2][axis] +
-    t * t * t * p[3][axis]
-  );
-};
-
-const cubicDerivativeAt = (t: number, p: CubicPoints, axis: 0 | 1): number => {
-  const mt = 1 - t;
-
-  return (
-    3 * mt * mt * (p[1][axis] - p[0][axis]) +
-    6 * mt * t * (p[2][axis] - p[1][axis]) +
-    3 * t * t * (p[3][axis] - p[2][axis])
-  );
-};
-
 export const useGlobalAnimationWaves = <
   T extends HTMLCanvasElement = HTMLCanvasElement,
 >(
-  config: GlobalAnimationWavesConfig = {},
+  options: UseGlobalAnimationWavesOptions = {},
 ): React.RefObject<T | null> => {
+  // Hooks
   const canvasRef = React.useRef<T>(null);
 
-  const attack = config.attack ?? DEFAULT_GLOBAL_ANIMATION_WAVES.attack;
-  const colorEnd = config.colorEnd ?? DEFAULT_GLOBAL_ANIMATION_WAVES.colorEnd;
-  const colorMid = config.colorMid ?? DEFAULT_GLOBAL_ANIMATION_WAVES.colorMid;
+  // Setup
+  const attack = options.attack ?? DEFAULT_GLOBAL_ANIMATION_WAVES.attack;
+  const colorEnd = options.colorEnd ?? DEFAULT_GLOBAL_ANIMATION_WAVES.colorEnd;
+  const colorMid = options.colorMid ?? DEFAULT_GLOBAL_ANIMATION_WAVES.colorMid;
   const colorStart =
-    config.colorStart ?? DEFAULT_GLOBAL_ANIMATION_WAVES.colorStart;
+    options.colorStart ?? DEFAULT_GLOBAL_ANIMATION_WAVES.colorStart;
   const distributionEnd =
-    config.distributionEnd ?? DEFAULT_GLOBAL_ANIMATION_WAVES.distributionEnd;
+    options.distributionEnd ?? DEFAULT_GLOBAL_ANIMATION_WAVES.distributionEnd;
   const distributionStart =
-    config.distributionStart ??
+    options.distributionStart ??
     DEFAULT_GLOBAL_ANIMATION_WAVES.distributionStart;
-  const enabled = config.enabled ?? true;
-  const gain = config.gain ?? DEFAULT_GLOBAL_ANIMATION_WAVES.gain;
+  const enabled = options.enabled ?? true;
+  const gain = options.gain ?? DEFAULT_GLOBAL_ANIMATION_WAVES.gain;
   const idleAmplitude =
-    config.idleAmplitude ?? DEFAULT_GLOBAL_ANIMATION_WAVES.idleAmplitude;
+    options.idleAmplitude ?? DEFAULT_GLOBAL_ANIMATION_WAVES.idleAmplitude;
   const lineWidth =
-    config.lineWidth ?? DEFAULT_GLOBAL_ANIMATION_WAVES.lineWidth;
-  const n = config.n ?? DEFAULT_GLOBAL_ANIMATION_WAVES.n;
-  const noise = config.noise ?? DEFAULT_GLOBAL_ANIMATION_WAVES.noise;
-  const release = config.release ?? DEFAULT_GLOBAL_ANIMATION_WAVES.release;
-  const samples = config.samples ?? DEFAULT_GLOBAL_ANIMATION_WAVES.samples;
-  const seed = config.seed ?? DEFAULT_GLOBAL_ANIMATION_WAVES.seed;
-  const speed = config.speed ?? DEFAULT_GLOBAL_ANIMATION_WAVES.speed;
+    options.lineWidth ?? DEFAULT_GLOBAL_ANIMATION_WAVES.lineWidth;
+  const n = options.n ?? DEFAULT_GLOBAL_ANIMATION_WAVES.n;
+  const noise = options.noise ?? DEFAULT_GLOBAL_ANIMATION_WAVES.noise;
+  const release = options.release ?? DEFAULT_GLOBAL_ANIMATION_WAVES.release;
+  const samples = options.samples ?? DEFAULT_GLOBAL_ANIMATION_WAVES.samples;
+  const seed = options.seed ?? DEFAULT_GLOBAL_ANIMATION_WAVES.seed;
+  const speed = options.speed ?? DEFAULT_GLOBAL_ANIMATION_WAVES.speed;
   const speedGain =
-    config.speedGain ?? DEFAULT_GLOBAL_ANIMATION_WAVES.speedGain;
+    options.speedGain ?? DEFAULT_GLOBAL_ANIMATION_WAVES.speedGain;
   const velocityRef =
-    config.velocityRef ?? DEFAULT_GLOBAL_ANIMATION_WAVES.velocityRef;
+    options.velocityRef ?? DEFAULT_GLOBAL_ANIMATION_WAVES.velocityRef;
   const waveCycles =
-    config.waveCycles ?? DEFAULT_GLOBAL_ANIMATION_WAVES.waveCycles;
+    options.waveCycles ?? DEFAULT_GLOBAL_ANIMATION_WAVES.waveCycles;
 
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
   React.useEffect(() => {
+    const twoPi = Math.PI * 2;
+
     const canvas = canvasRef.current;
 
     if (!canvas || !enabled) {
@@ -240,7 +203,7 @@ export const useGlobalAnimationWaves = <
 
         // Pin the ends (envelope → 0 at u=0 and u=1) so arcs stay anchored.
         const envelope = Math.sin(Math.PI * u);
-        const wave = Math.sin(u * waveCycles * TWO_PI - travel + arc.phase);
+        const wave = Math.sin(u * waveCycles * twoPi - travel + arc.phase);
         const offset = envelope * wave * amp;
 
         const x = bx + nx * offset;
@@ -418,6 +381,8 @@ export const useGlobalAnimationWaves = <
     velocityRef,
     waveCycles,
   ]);
+
+  // 🔌 Short Circuit
 
   return canvasRef;
 };

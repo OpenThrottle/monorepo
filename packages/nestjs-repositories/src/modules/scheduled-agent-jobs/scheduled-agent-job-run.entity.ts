@@ -1,5 +1,6 @@
 /**
- * @description TypeORM entity for the scheduled_agent_job_runs table (databases/migrations/082): the
+ * @description TypeORM entity for the scheduled_agent_job_runs table (databases/migrations/082, 087,
+ * 095, 096, 139, 141): the
  * append-only run history (status/timing/exit) for a scheduled_agent_jobs row. Run *logs* are not
  * here — they stream to the JSONL sink (queueJobLogs/queueJobLogTail), joined by `bullmqJobId`.
  */
@@ -14,14 +15,25 @@ import {
 import type { ScheduledAgentJobDriverId } from './scheduled-agent-job.entity.ts';
 
 /**
- * queued (pre-created by run-now) -> running (claimed) -> succeeded | no_op | failed | cancelled.
+ * queued (pre-created by run-now, or a delayed usage-limit resume) -> running (claimed) ->
+ * succeeded | no_op | failed | cancelled | usage_limited.
  *
  * `no_op` means the process ran and exited cleanly but the agent reported it did NOT do the work —
- * it is terminal and is NOT an error. `failed` stays reserved for a non-zero exit, timeout, or spawn
- * failure. See databases/migrations/095.
+ * it is terminal and is NOT an error. `usage_limited` means the agent CLI reported a Claude
+ * subscription usage limit — it is terminal for the row and is NOT an error; a continuation run may
+ * have been enqueued (see `resumeOfRunId`). `failed` stays reserved for a non-zero exit, timeout, or
+ * spawn failure. `missed` is created terminal: a cron fire the job's misfire policy did not run, so
+ * no agent was spawned (see `scheduledFor`). See databases/migrations/095, 139 and 141.
  */
 export type ScheduledAgentJobRunStatus =
-  'cancelled' | 'failed' | 'no_op' | 'queued' | 'running' | 'succeeded';
+  | 'cancelled'
+  | 'failed'
+  | 'missed'
+  | 'no_op'
+  | 'queued'
+  | 'running'
+  | 'succeeded'
+  | 'usage_limited';
 
 /**
  * The statuses that mean a run is *in flight* — not yet terminal. The single definition shared by
@@ -32,8 +44,8 @@ export const SCHEDULED_AGENT_JOB_RUN_IN_FLIGHT_STATUSES = [
   'running',
 ] as const;
 
-/** schedule = cron fire; manual = run-now. */
-export type ScheduledAgentJobRunTrigger = 'manual' | 'schedule';
+/** schedule = cron fire; manual = run-now; resume = delayed continuation of a usage_limited run. */
+export type ScheduledAgentJobRunTrigger = 'manual' | 'resume' | 'schedule';
 
 /**
  * Effective run settings captured on the run row at execution time, so later edits
@@ -65,12 +77,16 @@ export type ScheduledAgentJobRunData = Pick<
   | 'reasoningTokens'
   | 'repositoryCheckoutId'
   | 'resolvedCwd'
+  | 'resumeOfRunId'
   | 'scheduledAgentJobId'
+  | 'scheduledFor'
   | 'settingsSnapshot'
   | 'startedAt'
   | 'status'
   | 'totalTokens'
   | 'trigger'
+  | 'usageLimitResetsAt'
+  | 'usageLimitType'
 >;
 
 /**
@@ -215,8 +231,28 @@ export class ScheduledAgentJobRun {
   @Column({ name: 'resolved_cwd', nullable: true, type: 'text' })
   resolvedCwd!: string | null;
 
+  /**
+   * The usage_limited run this run continues (trigger `resume`); null for every ordinary run. A
+   * partial UNIQUE index allows at most one continuation per limited run — the idempotency anchor —
+   * and walking it backwards bounds how many times a job is auto-resumed.
+   */
+  @Column({ name: 'resume_of_run_id', nullable: true, type: 'uuid' })
+  resumeOfRunId!: string | null;
+
   @Column({ name: 'scheduled_agent_job_id', type: 'uuid' })
   scheduledAgentJobId!: string;
+
+  /**
+   * The cron slot a `schedule`-trigger run belongs to, missed rows included (migration 141). Unique
+   * per (scheduledAgentJobId, scheduledFor) among schedule-trigger rows, so a slot is claimed at most
+   * once. Null for manual/resume runs and for runs recorded before 141.
+   */
+  @Column({
+    name: 'scheduled_for',
+    nullable: true,
+    type: 'timestamp with time zone',
+  })
+  scheduledFor!: Date | null;
 
   @Column({
     name: 'started_at',
@@ -230,4 +266,16 @@ export class ScheduledAgentJobRun {
 
   @Column({ default: 'schedule', name: 'trigger', type: 'text' })
   trigger!: ScheduledAgentJobRunTrigger;
+
+  /** When the usage limit that stopped this run lifts, per the agent CLI; null when unreported. */
+  @Column({
+    name: 'usage_limit_resets_at',
+    nullable: true,
+    type: 'timestamp with time zone',
+  })
+  usageLimitResetsAt!: Date | null;
+
+  /** Raw usage-limit window name (five_hour, seven_day, ...); null when unreported. */
+  @Column({ name: 'usage_limit_type', nullable: true, type: 'text' })
+  usageLimitType!: string | null;
 }

@@ -29,7 +29,7 @@ jobs:
     # 💰 Disabled. Negligible cost (one GitHub API query writing a job summary),
     # but do not enable a schedule nobody reads. See docs/monorepo/ci-cost.md.
     if: false
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
 
     steps:
@@ -38,6 +38,9 @@ jobs:
 
       - name: 'Query merged PRs'
         id: query
+        env:
+          # `gh` refuses to run in Actions without a token (exit 4).
+          GH_TOKEN: ${{ github.token }}
         run: |
           # Yesterday in UTC (workflow runs at 6 AM UTC; full previous day of merges)
           DATE_START=$(date -u -d 'yesterday' +%Y-%m-%d)

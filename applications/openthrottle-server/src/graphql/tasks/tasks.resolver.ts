@@ -523,7 +523,7 @@ export class TasksResolver {
     if (input.wave !== undefined) entity.wave = input.wave;
 
     // A real status transition (not a no-op re-assert). The status_change ledger fact and the
-    // row's completed_at must commit together (G12) — so save + capture run in one transaction.
+    // row's completed_at must commit together — so save + capture run in one transaction.
     const statusChanged =
       input.status != null && entity.status !== previousStatus;
 
@@ -714,7 +714,7 @@ export class TasksResolver {
   }
 
   @Mutation(() => PromoteTaskToPlanResultObject, {
-    description: `Promote a task into a new, first-class plan. Validates the task is promotable (exists, not a lifecycle hook, not already promoted) then enqueues an async task-promotion job (enqueue-after-validate, idempotency key doubles as the BullMQ job id). The job creates the plan, carries the task's tags, seeds an initial task, closes out the source task (→ SKIPPED + \`promoted\` tag), and records provenance. Returns the accepted job id; the new plan surfaces via the task-status subscription once the job completes.`,
+    description: `Promote a task into a new, first-class plan. Validates the task is promotable (exists, not a lifecycle hook, not already promoted) then enqueues an async task-promotion job (enqueue-after-validate, idempotency key doubles as the BullMQ job id). The job creates the plan, carries the task's tags, seeds an initial task, closes out the source task (→ PROMOTED + \`promoted\` tag), and records provenance. Returns the accepted job id; the new plan surfaces via the task-status subscription once the job completes.`,
   })
   async promoteTaskToPlan(
     @Args('input', { type: () => PromoteTaskToPlanInput })

@@ -36,6 +36,10 @@ export {
   pickRalphTaskForIteration,
   sortTasksByPlanListOrder,
 } from './plan-task-list-order.ts';
+export {
+  isRalphTerminalStatus,
+  RALPH_TERMINAL_STATUSES,
+} from './terminal-status.ts';
 
 /**
  * @description Normalizes a task's requirements from either the GraphQL

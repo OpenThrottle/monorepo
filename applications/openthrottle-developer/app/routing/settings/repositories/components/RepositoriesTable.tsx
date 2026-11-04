@@ -1,10 +1,9 @@
-import { Badge, DataTable } from '@openthrottle/react-router-shadcn';
+import { Badge, cn, DataTable } from '@openthrottle/react-router-shadcn';
 import {
   GlobalFeatureOnboarding,
   GlobalPopoverActionsHeader,
 } from '@openthrottle/react-router-ui-global';
 import type { ColumnDef, ExpandedState } from '@tanstack/react-table';
-import clsx from 'clsx';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -23,7 +22,10 @@ import {
 import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/data/types';
 import { toExpandedState } from '~/routing/settings/repositories/utils/expansion';
 import { planDetailPath } from '~/routing/settings/repositories/utils/paths';
-import { deriveWorktreeBadges } from '~/routing/settings/repositories/utils/worktree-badges';
+import {
+  deriveWorktreeBadges,
+  WORKTREE_BADGE_COLORS,
+} from '~/routing/settings/repositories/utils/worktree-badges';
 import type { CheckoutDrift } from '~/routing/settings/utils/drift-labels';
 import { driftLabels } from '~/routing/settings/utils/drift-labels';
 
@@ -69,7 +71,7 @@ export const RepositoriesTable = (
 
   return (
     <div
-      className={clsx('ui-border rounded-lg border', className)}
+      className={cn('ui-border rounded-lg border', className)}
       data-testid="RepositoriesTable"
     >
       <DataTable<RepositoryCheckoutRow, string | null | undefined>
@@ -121,7 +123,7 @@ RepositoriesTable.buildTable = (
           ) : null}
           {deriveWorktreeBadges(row.original).map((badge) => (
             <Badge
-              color={badge.tone === 'activity' ? 'green' : 'orange'}
+              color={WORKTREE_BADGE_COLORS[badge.tone]}
               key={badge.id}
               size="xs"
               title={badge.title}

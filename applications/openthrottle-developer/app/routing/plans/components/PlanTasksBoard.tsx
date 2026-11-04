@@ -1,7 +1,6 @@
 // import { DndProvider } from 'react-dnd';
 // import { HTML5Backend } from 'react-dnd-html5-backend';
-import { toast } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
+import { cn, toast } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { useFetcher, useRevalidator } from 'react-router';
 
@@ -148,7 +147,7 @@ export const PlanTasksBoard = (
       <div
         aria-busy={fetcher.state !== 'idle'}
         aria-label="Plan tasks board"
-        className={clsx(
+        className={cn(
           'flex min-h-[min(70vh,560px)] w-full min-w-0 gap-3 overflow-x-auto pb-2',
           className,
         )}

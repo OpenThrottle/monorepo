@@ -9,7 +9,7 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type { WorkspaceEditorConfigService } from '@openthrottle/nestjs-repositories';
 import type { Job, Queue } from 'bullmq';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ForeignSkillInjectionLifecycleService } from '../../services/foreign-skill-injection/foreign-skill-injection-lifecycle.service.ts';
 import type { ForeignSkillMaterializationService } from '../../services/foreign-skill-injection/foreign-skill-materialization.service.ts';
@@ -48,11 +48,17 @@ describe('PlanRunsStaleSweepRepeatableService.onModuleInit', () => {
     );
 
   beforeEach(() => {
+    vi.stubEnv('OT_SCHEDULED_JOBS_OWNER', '');
+    vi.stubEnv('OT_WORKTREE_DB', '');
     calls.length = 0;
     reapStrandedLedgers.mockClear();
     remateralizeEnabledCheckouts.mockClear();
     reconcileManifestExclusions.mockClear();
     add.mockClear();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it('reaps stranded layers BEFORE reconciling opted-in checkouts', async () => {
@@ -89,6 +95,42 @@ describe('PlanRunsStaleSweepRepeatableService.onModuleInit', () => {
     );
 
     await expect(build().onModuleInit()).resolves.toBeUndefined();
+    expect(add).toHaveBeenCalledTimes(1);
+  });
+
+  describe('as a shared-DB worktree (non-owner)', () => {
+    beforeEach(() => {
+      vi.stubEnv('OT_WORKTREE_DB', 'shared');
+    });
+
+    it('registers no repeatable sweep job', async () => {
+      await build().onModuleInit();
+
+      expect(add).not.toHaveBeenCalled();
+    });
+
+    it('skips the boot reap and both reconciles — they act on the user’s real repos', async () => {
+      await build().onModuleInit();
+
+      expect(calls).toEqual([]);
+    });
+
+    it('OT_SCHEDULED_JOBS_OWNER=true restores the full boot lifecycle', async () => {
+      vi.stubEnv('OT_SCHEDULED_JOBS_OWNER', 'true');
+
+      await build().onModuleInit();
+
+      expect(calls).toEqual(['reap', 'reconcile', 'editors-reconcile']);
+      expect(add).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('runs the full boot lifecycle on an isolated worktree (owns its own database)', async () => {
+    vi.stubEnv('OT_WORKTREE_DB', 'isolated');
+
+    await build().onModuleInit();
+
+    expect(calls).toEqual(['reap', 'reconcile', 'editors-reconcile']);
     expect(add).toHaveBeenCalledTimes(1);
   });
 });

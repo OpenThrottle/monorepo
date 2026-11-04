@@ -17,7 +17,7 @@ import type {
 import {
   agentConversationMessagesFactory,
   agentConversationsFactory,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories/testing';
 import type { DiscoveryResult } from '@openthrottle/openthrottle-agentic-utils';
 import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';

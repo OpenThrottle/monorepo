@@ -1,11 +1,11 @@
 import {
   Button,
+  cn,
   ToggleGroup,
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
 import { GlobalToolbarSearch } from '@openthrottle/react-router-ui-global';
 import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
-import clsx from 'clsx';
 import { PlusIcon, SlidersHorizontalIcon, TagsIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
@@ -54,7 +54,7 @@ export const SkillsToolbar = (
 
   return (
     <div
-      className={clsx('flex items-center gap-2', className)}
+      className={cn('flex items-center gap-2', className)}
       data-testid="SkillsToolbar"
     >
       {/* GlobalToolbarSearch owns its own <form role="search">; the source

@@ -20,6 +20,7 @@ export const buildRootMatch = (): RootMatch => ({
   loaderData: {
     canonical: 'http://localhost/',
     env: getPublicEnv(),
+    permissions: [],
     rootLoaderDiagnostics: {},
     rootLoaderFailure: null,
     serverHealth: {

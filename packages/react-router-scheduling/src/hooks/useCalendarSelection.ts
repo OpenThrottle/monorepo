@@ -1,6 +1,10 @@
 import { useCallback, useRef, useState } from 'react';
 
-import type { CalendarEvent, ScheduleCallbacks } from '../types';
+import type {
+  CalendarEvent,
+  CalendarSelection,
+  ScheduleCallbacks,
+} from '../types';
 
 // An ergonomic selection layer over the engine-agnostic interaction callbacks.
 // It tracks the most recent click (an empty time slot, a month-grid day, or an
@@ -11,21 +15,6 @@ import type { CalendarEvent, ScheduleCallbacks } from '../types';
 // Note: true drag-to-create (dragging across the grid to create an event) is the
 // premium `@sx-premium/drag-to-create` plugin and is intentionally out of scope;
 // this hook covers the open-source click path.
-
-/**
- * The most recent calendar selection, in engine-agnostic shape. Each field is
- * set by the corresponding click and persists until the next click or `clear`.
- *
- * @public
- */
-export interface CalendarSelection {
-  /** Last clicked month-grid day (`YYYY-MM-DD`). */
-  date?: string;
-  /** Last clicked empty time-grid slot (ISO 8601). */
-  dateTime?: string;
-  /** Last clicked existing event. */
-  event?: CalendarEvent;
-}
 
 /**
  * Options for {@link useCalendarSelection}. Each handler fires after the

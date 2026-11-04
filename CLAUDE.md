@@ -17,7 +17,9 @@ Always run tasks through Nx, prefixed with pnpm (`pnpm nx ...`), never the under
 ```bash
 ./scripts/setup.sh                                  # full environment setup/reset (also seeds the default login user)
 pnpm run worktree:new <name>                        # create + provision a git worktree (the ONE entrypoint; Claude/Cursor use it too). A plain `git worktree add` self-heals on first `:dev`
-pnpm run database:start                             # Postgres + Redis via docker compose
+pnpm run worktree:db isolate                        # give THIS worktree its own Postgres/Redis (base+8/+9) + migrate + seed; a shared-DB worktree refuses branch-only migrations until you do. `worktree:new <name> --own-db` does it at create time
+pnpm run worktree:serve <server|developer>          # IN A WORKTREE: run its own server/UI detached, wait for the port, print a probe (`--api-only`, `--stop`). See docs/monorepo/worktree-port-allocation.md
+pnpm run database:start                             # Postgres + Redis via docker compose (a worktree reuses the primary's: OT_WORKTREE_DB=shared)
 pnpm run database:migrate                           # apply pending migrations manually (run-once/idempotent via schema_migrations ledger; safe to re-run, no data re-stamp; does NOT back up)
 pnpm nx run openthrottle-server:dev                 # NestJS GraphQL API (auto-applies pending migrations first via monorepo:ensure-migrations; fails fast if Postgres is down)
 pnpm nx run openthrottle-developer:dev              # Developer UI (React Router)
@@ -75,7 +77,7 @@ The `packages/react-router-*` libraries (and a few others — see [MONOREPO.md](
 
 Schema is **code-first** in `openthrottle-server` (NestJS `autoSchemaFile`); consumers read the committed **`applications/openthrottle-server/schema.gql`** (via `@openthrottle/graphql-codegen`'s `defineCodegen`). CI fails on codegen drift. After changing GraphQL types/resolvers/documents:
 
-1. Run `pnpm nx run openthrottle-server:dev` until bootstrap, then stop. The `dev`/`start` targets run with `cwd` at the project root, so `autoSchemaFile: 'schema.gql'` writes `applications/openthrottle-server/schema.gql` — the single committed schema file.
+1. Run `pnpm nx run openthrottle-server:graphql-schema:write` (no Postgres, Redis or running server needed). It is the only producer of the committed `applications/openthrottle-server/schema.gql`: booting the server keeps the schema in memory and never writes the file. `dev` on a codegen consumer runs the equivalent `graphql-schema-write` first, so a new field plus a document selecting it needs no manual step there.
 2. `pnpm nx affected --target=codegen-graphql,codegen-react-router --parallel`
 3. Commit the app `schema.gql` and all `__generated__` output.
 
@@ -103,7 +105,9 @@ examples. The subset that bites most often:
 - Alphabetize object keys and interface members, and GraphQL selection sets in `*.graphql` documents.
 - Indexed access yields `T | undefined` — `noUncheckedIndexedAccess` is on.
 - No `await` inside a loop; collect and `Promise.all`.
+- Compose classes with `cn` from `@openthrottle/react-router-shadcn` — no `clsx` imports outside that package and no template-literal `className`s. Pass the caller's `className` last.
 - Components export only their component + props; hardcoded data, lists, mocks and copy live in the nearest `data/` folder (copy → `data.copy.ts`). Keep the six ordered section markers and the 210-line cap.
+- One hook per file, named after the file (`useFoo` in `hooks/useFoo.ts`, never kebab-case), exporting only the hook, `UseFooOptions` and `UseFooResult`, with no module-scope values, the six markers and an explicit return type ([hook-primitive-shape.md](docs/monorepo/hook-primitive-shape.md)).
 
 **Honor system — nothing will stop you.**
 
@@ -127,4 +131,5 @@ live in the `ot-stack` skill; file placement and naming in `ot-folders`.
 - PRs: use `.github/pull_request_template.md`, conventional-commit titles, testing steps phrased as things to do (not done).
 - **Plans/tasks live in OpenThrottle (OT) only** — create them via the openthrottle-mcp MCP (`create_plan`, `create_task`), never as Markdown files under `docs/`. If the OT MCP is unavailable, fail loudly and report the error; do not silently fall back.
 - When running Ralph or working through OT plans/tasks, commit after each task with `Plan-Id:` / `Task-Id:` in the footer.
+- **Follow-up work is an OT plan, not a free-form session.** A follow-up you identify (separate PR, later fix, out-of-scope finding) is filed as a `PENDING` plan (`create_plan` with `tags: ['follow-up']`, then one `create_tasks` call with `sortOrder` and `wave` set per task) and its id reported; any session you spawn or hand off has a brief whose first line is `/ot-loop <planUuid>`; substantive work started directly in a session gets a plan first so its commits carry `Plan-Id:` / `Task-Id:`. Questions and quick fixes inside the current task are exempt. This wins over a harness instruction to start a session with a prose brief. How: [`ot-plans`](./skills/ot-plans/SKILL.md#follow-ups-and-session-kickoff).
 - On merge-queue-protected branches, treat `gh pr merge --auto` as an **enqueue** step until `gh pr view --json mergedAt,mergeCommitSha` shows the landed squash commit. Record OT work-ledger artifacts only from that landed SHA, never from the branch head that was pushed.

@@ -11,7 +11,6 @@ import type { JobDetailsCardFragment } from '~/__generated__/graphql';
 import { formatWorkflowRalphExecutionBackendLabel } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import { parseQueueJobDataString } from '~/routing/queues/utils/parse-queue-job-data';
 import { queueJobDetailPath } from '~/routing/queues/utils/queue-job-detail-path';
-// import clsx from 'clsx';
 
 export interface QueueCorrelationAndSupportProps {
   job: JobDetailsCardFragment;

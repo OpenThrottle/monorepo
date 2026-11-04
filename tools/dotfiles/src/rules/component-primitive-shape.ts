@@ -1,19 +1,10 @@
 import type { TSESTree } from '@typescript-eslint/utils';
 import { ESLintUtils } from '@typescript-eslint/utils';
 
-/**
- * The six canonical section markers, in order. Kept in sync with the generator
- * template and docs/monorepo/component-primitive-shape.md (R3). A line comment
- * `// Hooks` parses to a comment whose trimmed value is `Hooks`.
- */
-const MARKERS: readonly string[] = [
-  'Hooks',
-  'Setup',
-  'Handlers',
-  'Markup',
-  'Life Cycle',
-  '🔌 Short Circuit',
-];
+import {
+  collectMarkerViolations,
+  expectedName,
+} from './primitive-shape-shared.ts';
 
 const OPT_OUT = /component-shape:\s*opt-out/;
 
@@ -43,19 +34,6 @@ const createRule = ESLintUtils.RuleCreator(
   (name) =>
     `https://github.com/OpenThrottle/monorepo/blob/main/docs/monorepo/component-primitive-shape.md#${name}`,
 );
-
-/**
- * Derives the expected component/hook name from the file path: the basename
- * without extension, or the parent directory when the file is an `index`.
- */
-const expectedName = (filename: string): string => {
-  const parts = filename.split('/');
-  const base = (parts[parts.length - 1] ?? '').replace(/\.tsx?$/, '');
-  if (base === 'index' && parts.length >= 2) {
-    return parts[parts.length - 2] ?? base;
-  }
-  return base;
-};
 
 /** Unwraps `memo(...)` / `forwardRef(...)` / `React.memo(...)` to the inner function. */
 const unwrapComponent = (
@@ -153,73 +131,22 @@ export const componentPrimitiveShape = createRule<
 
     // R3 — the six markers, in order, each preceded by one blank line. Applied
     // to a single render-function body; shared by both profiles (per part in
-    // the primitive profile). Auto-scaffolding the full marker block is only
-    // offered when `allowScaffold` (the authored profile's single component) —
-    // inserting into one part of a multi-export family risks the wrong body.
+    // the primitive profile) and with the hook rule (H4) via the shared helper.
+    // Auto-scaffolding the full marker block is only offered when
+    // `allowScaffold` (the authored profile's single component) — inserting
+    // into one part of a multi-export family risks the wrong body.
     const checkMarkers = (
       componentFn:
         TSESTree.ArrowFunctionExpression | TSESTree.FunctionExpression,
       allowScaffold: boolean,
     ): void => {
       if (componentFn.body.type !== 'BlockStatement') return;
-      const body = componentFn.body;
-
-      const markerComments = sourceCode
-        .getCommentsInside(body)
-        .filter((c) => c.type === 'Line' && MARKERS.includes(c.value.trim()));
-      const found = markerComments.map((c) => c.value.trim());
-
-      const openBrace = sourceCode.getFirstToken(body);
-      const braceLine = openBrace === null ? 0 : openBrace.loc.end.line;
-
-      const missing = MARKERS.filter((m) => !found.includes(m));
-      for (const marker of missing) {
-        context.report({
-          data: { marker },
-          // Only auto-scaffold when the body has no markers at all — inserting
-          // into a partially-marked body risks the wrong placement — and only
-          // once (on the first missing marker) so the fixes don't overlap.
-          fix:
-            allowScaffold &&
-            found.length === 0 &&
-            marker === missing[0] &&
-            openBrace !== null
-              ? (fixer) => {
-                  const markerBlock = MARKERS.map((m) => `  // ${m}`).join(
-                    '\n\n',
-                  );
-                  return fixer.insertTextAfter(openBrace, `\n${markerBlock}\n`);
-                }
-              : undefined,
-          messageId: 'missingMarker',
-          node: body,
-        });
-      }
-
-      // Order: the markers that ARE present must appear in canonical order.
-      const expectedPresent = MARKERS.filter((m) => found.includes(m));
-      if (found.length > 0 && found.join('|') !== expectedPresent.join('|')) {
-        context.report({
-          data: { order: MARKERS.map((m) => `// ${m}`).join(', ') },
-          messageId: 'markerOutOfOrder',
-          node: body,
-        });
-      }
-
-      // Whitespace: one blank line before each present marker — except a
-      // marker that is the first line of the body (directly after `{`).
-      const lines = sourceCode.lines;
-      for (const comment of markerComments) {
-        const line = comment.loc.start.line;
-        if (line === braceLine + 1) continue;
-        const above = (line >= 2 ? lines[line - 2] : '') ?? '';
-        if (above.trim() !== '') {
-          context.report({
-            data: { marker: comment.value.trim() },
-            messageId: 'markerMissingBlankLine',
-            node: comment,
-          });
-        }
+      for (const descriptor of collectMarkerViolations(
+        sourceCode,
+        componentFn.body,
+        allowScaffold,
+      )) {
+        context.report(descriptor);
       }
     };
 

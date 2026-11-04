@@ -24,6 +24,7 @@ export const NOTIFICATION_EVENT_NAMES = {
   PLAN_UPDATED: 'plan.updated',
   PLAN_WAITING_FOR_WORKTREE: 'plan.waiting_for_worktree',
   QUEUE_JOB_COMPLETED: 'queue.job.completed',
+  SCHEDULED_RUN_FAILED: 'scheduled_run.failed',
   SYSTEM_ALERT: 'system.alert',
   TASK_COMPLETED: 'task.completed',
   TASK_STATUS_CHANGED: 'task.status_changed',
@@ -114,6 +115,33 @@ export interface QueueJobCompletedPayload extends NotificationPayloadBase {
 }
 
 /**
+ * @description Why a scheduled run needs its owner's attention: it failed, ran out of time, or
+ * never ran because its fire was missed.
+ */
+export const SCHEDULED_RUN_FAILURE_REASONS = {
+  FAILED: 'failed',
+  MISSED: 'missed',
+  TIMED_OUT: 'timed_out',
+} as const;
+
+export type ScheduledRunFailureReason =
+  (typeof SCHEDULED_RUN_FAILURE_REASONS)[keyof typeof SCHEDULED_RUN_FAILURE_REASONS];
+
+/**
+ * @description Payload for scheduled_run.failed. Emit when a scheduled agent job run fails, times
+ * out, or is recorded missed. `actorUserId` is the schedule's owner, who is the person to tell.
+ */
+export interface ScheduledRunFailedPayload extends NotificationPayloadBase {
+  readonly reason: ScheduledRunFailureReason;
+  /** How many runs this notice covers; above 1 only when a boot records several missed fires. */
+  readonly runCount: number;
+  /** The run, when the notice covers exactly one run whose id is known. */
+  readonly runId: string | undefined;
+  readonly scheduleName: string;
+  readonly scheduledAgentJobId: string;
+}
+
+/**
  * @description Payload for system.alert. Emit for system-wide alerts (e.g. maintenance, errors).
  */
 export interface SystemAlertPayload extends NotificationPayloadBase {
@@ -131,6 +159,7 @@ export type NotificationPayload =
   | PlanUpdatedPayload
   | PlanWaitingForWorktreePayload
   | QueueJobCompletedPayload
+  | ScheduledRunFailedPayload
   | SystemAlertPayload
   | TaskCompletedPayload;
 
@@ -195,6 +224,7 @@ export interface NotificationEventMap {
   [NOTIFICATION_EVENT_NAMES.PLAN_UPDATED]: PlanUpdatedPayload;
   [NOTIFICATION_EVENT_NAMES.PLAN_WAITING_FOR_WORKTREE]: PlanWaitingForWorktreePayload;
   [NOTIFICATION_EVENT_NAMES.QUEUE_JOB_COMPLETED]: QueueJobCompletedPayload;
+  [NOTIFICATION_EVENT_NAMES.SCHEDULED_RUN_FAILED]: ScheduledRunFailedPayload;
   [NOTIFICATION_EVENT_NAMES.SYSTEM_ALERT]: SystemAlertPayload;
   [NOTIFICATION_EVENT_NAMES.TASK_COMPLETED]: TaskCompletedPayload;
   [NOTIFICATION_EVENT_NAMES.TASK_STATUS_CHANGED]: TaskStatusChangedPayload;

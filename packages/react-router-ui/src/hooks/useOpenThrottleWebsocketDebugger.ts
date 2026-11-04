@@ -6,13 +6,11 @@ import type {
   WebsocketDebuggerLogEntry,
   WebsocketDebuggerSocket,
 } from '../components/websocket-debugger';
-import {
-  filterWebsocketDebuggerEntries,
-  useWebsocketDebuggerLog,
-  useWebsocketDebuggerSocketSubscription,
-  WEBSOCKET_DEBUGGER_ALL_EVENT_NAMES,
-} from '../components/websocket-debugger';
+import { WEBSOCKET_DEBUGGER_ALL_EVENT_NAMES } from '../components/websocket-debugger';
+import { filterWebsocketDebuggerEntries } from '../utils/filter-websocket-debugger-entries';
 import { isNotificationEventName } from '../utils/is-notification-event-name';
+import { useWebsocketDebuggerLog } from './useWebsocketDebuggerLog';
+import { useWebsocketDebuggerSocketSubscription } from './useWebsocketDebuggerSocketSubscription';
 
 export interface UseOpenThrottleWebsocketDebuggerOptions {
   /**

@@ -1,9 +1,8 @@
-import { TextArea } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
+import { cn, TextArea } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import type { UseChatComposerMentionsResult } from '../hooks/use-chat-composer-mentions';
-import type { UseChatComposerSlashCommandsResult } from '../hooks/use-chat-composer-slash-commands';
+import type { UseChatComposerMentionsResult } from '../hooks/useChatComposerMentions';
+import type { UseChatComposerSlashCommandsResult } from '../hooks/useChatComposerSlashCommands';
 import type { ChatMentionProvider, ChatSlashCommandProvider } from '../types';
 import { ChatMentionPopover } from './ChatMentionPopover';
 import { ChatSlashCommandPopover } from './ChatSlashCommandPopover';
@@ -93,7 +92,7 @@ export const ChatComposerInput = (
         aria-controls={open ? open.listboxId : undefined}
         aria-expanded={autocompleteEnabled ? open !== null : undefined}
         aria-label="Message"
-        className={clsx({ 'text-muted-foreground': readOnly })}
+        className={cn({ 'text-muted-foreground': readOnly })}
         disabled={disabled}
         onChange={onChange}
         onClick={onClick}

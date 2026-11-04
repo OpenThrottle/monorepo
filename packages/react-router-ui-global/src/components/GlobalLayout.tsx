@@ -1,11 +1,11 @@
 import type { ServerHealthObject } from '@openthrottle/openthrottle-developer-codegen';
 import {
+  cn,
   Sidebar,
   SidebarInset,
   SidebarRail,
 } from '@openthrottle/react-router-shadcn';
 import { APP_NAME_SHORT } from '@openthrottle/react-router-utils';
-import clsx from 'clsx';
 import * as React from 'react';
 
 import { useScrollContainerRestoration } from '../hooks/useScrollContainerRestoration';
@@ -63,7 +63,7 @@ export const GlobalLayout = (props: GlobalLayoutProps): React.ReactElement => {
   return (
     <>
       <Sidebar
-        className={clsx('border-sidebar-border', className)}
+        className={cn('border-sidebar-border', className)}
         collapsible="icon"
         variant="sidebar"
       >

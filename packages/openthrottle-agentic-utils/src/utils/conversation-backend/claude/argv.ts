@@ -6,9 +6,10 @@
  * docs/openthrottle/claude-stream-json-schema.md §1.
  */
 
+import { claudeEffortFlag } from '@openthrottle/openthrottle-drivers';
+
 import {
   CONVERSATION_PERMISSION_MODES,
-  CONVERSATION_REASONING_EFFORTS,
   type ConversationPermissionMode,
   type ConversationReasoningEffort,
 } from '../types.ts';
@@ -74,31 +75,6 @@ export interface ClaudeArgvOptions {
 }
 
 /**
- * Map the composer reasoning level onto claude's `--effort` vocabulary
- * (`low`/`medium`/`high`/`xhigh`/`max`), or `undefined` to omit the flag.
- * `extraHigh` → `xhigh`; both `max` and `ultra` → `max` (claude's ceiling).
- */
-function effortFlag(
-  reasoning: ConversationReasoningEffort | undefined,
-): string | undefined {
-  switch (reasoning) {
-    case CONVERSATION_REASONING_EFFORTS.low:
-      return 'low';
-    case CONVERSATION_REASONING_EFFORTS.medium:
-      return 'medium';
-    case CONVERSATION_REASONING_EFFORTS.high:
-      return 'high';
-    case CONVERSATION_REASONING_EFFORTS.extraHigh:
-      return 'xhigh';
-    case CONVERSATION_REASONING_EFFORTS.max:
-    case CONVERSATION_REASONING_EFFORTS.ultra:
-      return 'max';
-    default:
-      return undefined;
-  }
-}
-
-/**
  * Assemble the argv for a streamed, headless, session-scoped turn. `--verbose`
  * is required for `stream-json` under `--print`; `--include-partial-messages`
  * turns on the incremental `stream_event` deltas. The prompt is always the final
@@ -134,7 +110,7 @@ export function buildClaudeArgv(options: ClaudeArgvOptions): string[] {
     argv.push('--append-system-prompt', systemPrompt);
   }
 
-  const effort = effortFlag(options.reasoning);
+  const effort = claudeEffortFlag(options.reasoning);
   if (effort !== undefined) {
     argv.push('--effort', effort);
   }

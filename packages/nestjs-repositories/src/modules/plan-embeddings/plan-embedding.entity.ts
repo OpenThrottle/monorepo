@@ -7,7 +7,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-import { vectorTransformer } from '../../common/vector.transformer.ts';
+import { vectorTransformer } from '../../utils/vector.transformer.ts';
 import type { Plan } from '../plans/plan.entity.ts';
 
 /**

@@ -16,7 +16,7 @@ import {
 import {
   PLAN_STATUS,
   PLAN_STATUS_VALUES,
-} from '../../common/plan-task-status.constants.ts';
+} from '../../config/plan-task-status.constants.ts';
 import type { Plan } from '../plans/plan.entity.ts';
 import type { Project } from '../projects/project.entity.ts';
 import type { TaskEmbedding } from '../task-embeddings/task-embedding.entity.ts';

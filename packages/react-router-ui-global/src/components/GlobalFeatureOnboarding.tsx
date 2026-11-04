@@ -1,10 +1,10 @@
 import {
   Card,
   CardContent,
+  cn,
   DialogDescription,
   DialogTitle,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import type { LucideIcon } from 'lucide-react';
 import * as React from 'react';
 
@@ -139,7 +139,7 @@ export const GlobalFeatureOnboarding = (
   if (isDialog) {
     return (
       <div
-        className={clsx('flex flex-col gap-8', className)}
+        className={cn('flex flex-col gap-8', className)}
         data-testid="GlobalFeatureOnboarding"
       >
         {header}
@@ -150,7 +150,7 @@ export const GlobalFeatureOnboarding = (
 
   return (
     <Card
-      className={clsx('bg-card', className)}
+      className={cn('bg-card', className)}
       data-testid="GlobalFeatureOnboarding"
     >
       <CardContent className="flex flex-col gap-8 p-6 md:p-10">

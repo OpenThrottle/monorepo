@@ -1,7 +1,5 @@
 import * as React from 'react';
 
-const QUERY = '(prefers-reduced-motion: reduce)';
-
 /**
  * @description Returns true when the user has requested reduced motion via the
  * OS/browser `prefers-reduced-motion` setting. SSR-safe (defaults to false on
@@ -14,6 +12,7 @@ export const usePrefersReducedMotion = (): boolean => {
     React.useState<boolean>(false);
 
   // Setup
+  const query = '(prefers-reduced-motion: reduce)';
 
   // Handlers
 
@@ -21,7 +20,7 @@ export const usePrefersReducedMotion = (): boolean => {
 
   // Life Cycle
   React.useEffect(() => {
-    const mql = window.matchMedia(QUERY);
+    const mql = window.matchMedia(query);
     const onChange = (): void => {
       setPrefersReducedMotion(mql.matches);
     };

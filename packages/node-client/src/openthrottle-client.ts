@@ -554,7 +554,7 @@ export const DEFAULT_PLANS_PAGE_SIZE = 20;
 
 /**
  * @description Lists plans in OpenThrottle filtered by status (from plan JSON metadata). Optionally filter by assignee or title substring. Supports sort by created_at or updated_at. Supports pagination via limit and offset.
- * @param status Plan status to filter by (e.g. BACKLOG, BLOCKED, CANCELED, COMPLETED, IN_PROGRESS, PENDING, QUEUED, SKIPPED). Use '' or 'all' to show plans regardless of status.
+ * @param status Plan status to filter by (e.g. BACKLOG, BLOCKED, CANCELED, COMPLETED, IN_PROGRESS, PENDING, PROMOTED, QUEUED, SKIPPED). Use '' or 'all' to show plans regardless of status.
  * @param assignee Optional: filter plans where author or assignee equals this value (e.g. GitHub username).
  * @param project Optional: filter plans whose project equals this value (NX project name).
  * @param projectId Optional: filter plans whose project_id equals this UUID (FK to projects).
@@ -1032,6 +1032,7 @@ export async function createTask(input: CreateTaskInput): Promise<TaskRow> {
     plan &&
     (plan.status === 'CANCELED' ||
       plan.status === 'COMPLETED' ||
+      plan.status === 'PROMOTED' ||
       plan.status === 'SKIPPED')
   ) {
     plan.status = 'IN_PROGRESS';
@@ -1066,7 +1067,7 @@ export async function getTasksByPlanId(
   return tasks.map(mapTaskEntityToRow);
 }
 
-/** Statuses considered "remaining" (not completed, skipped, or canceled). Canonical enum values: BACKLOG, BLOCKED, IN_PROGRESS, PENDING. */
+/** Statuses considered "remaining" (not completed, promoted, skipped, or canceled). Canonical enum values: BACKLOG, BLOCKED, IN_PROGRESS, PENDING. */
 const REMAINING_TASK_STATUSES = [
   'BACKLOG',
   'BLOCKED',

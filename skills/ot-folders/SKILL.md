@@ -2,16 +2,18 @@
 name: ot-folders
 description: >-
   Where OpenThrottle code goes, what it is named, what shape it must have, and
-  how to prove it. USE WHEN adding, moving or renaming a file; deciding between
+  how to prove it. USE WHEN adding, moving or renaming a file or folder (naming
+  a new directory included); deciding between
   app/global/ and app/routing/<area>/; deciding whether something is an
   application or a package; or when lint reports
-  openthrottle/component-primitive-shape, openthrottle/route-primitive-shape,
-  openthrottle/pre-hooks-unpack, max-lines, or
+  openthrottle/component-primitive-shape, openthrottle/hook-primitive-shape,
+  openthrottle/route-primitive-shape, openthrottle/pre-hooks-unpack, max-lines,
+  audit:hook-shape, or
   @nx/enforce-module-boundaries. NOT FOR scaffolding — generate the file with
   ot-generators first, then use this skill to place and shape it.
 metadata:
   author: OpenThrottle
-  version: '2.0'
+  version: '2.1'
 ---
 
 # OpenThrottle Folders
@@ -109,7 +111,7 @@ is a package, and that is the whole test.
 `app/routing/<area>/`, which carries all eight:
 `{actions,components,config,data,hooks,testing,types,utils}`.
 
-## The three standing rules
+## The four standing rules
 
 1. **Do not invent new folders.** Use the vocabulary above. If nothing fits, the
    code probably belongs in a different bucket, not a new directory.
@@ -118,6 +120,25 @@ is a package, and that is the whole test.
 3. **Do not delete empty folders or their `.gitkeep`.** They are placeholders for
    functionality that is coming, and removing them makes the next generator run
    noisier than it needs to be.
+4. **No junk-drawer folder names: `lib`, `helpers`, `common`, `shared`, `misc`.**
+   `lib` is the main offender. In this monorepo **a package is the lib** — a
+   `type:package` under `packages/`. A `lib/` inside an app, a package or `scripts/`
+   is a vaguer second word for the same idea, and it grows without bound because
+   nothing in the name says what belongs there. Ask "which vocabulary word
+   describes what's in here?"; if none does, see rule 1.
+
+   | You reached for              | Use instead                                                                  |
+   | ---------------------------- | ---------------------------------------------------------------------------- |
+   | `lib/`, `helpers/`, `misc/`  | `utils/` (pure functions), `config/` (constants, defaults), `data/` (static) |
+   | `shared/`, `common/`         | the [promotion ladder](#the-promotion-ladder): `app/global/`, then a package |
+   | "it's reusable library code" | a package — scaffold it with `ot-generators`                                 |
+   | a tool's own specific term   | fine — Maestro `subflows/` is specific; vagueness is the problem             |
+
+   **No exceptions remain.** `scripts/utils/` used to be `scripts/lib/`; `.husky/lib`,
+   `nestjs-repositories/src/common` and the e2e `helpers/` were renamed the same
+   way. `git ls-files | grep -E '(^|/)(lib|helpers|common|shared|misc)/'` returns only
+   `tools/generators/**/files/common/`, which is generator template input, not a
+   source folder.
 
 ## The folder vocabulary
 
@@ -148,6 +169,24 @@ is a package, and that is the whole test.
   **parent directory name**. So `plans/components/PlanCard.tsx` must export
   `PlanCard`, and `plans/components/PlanCard/index.tsx` must too.
 - The component's props type is its name plus `Props` (`PlanCardProps`).
+- **One hook per file, named after the file, in a `hooks/` folder.** `useFoo` lives
+  in `hooks/useFoo.ts(x)` — camelCase, never `use-foo.ts`. It exports only the hook,
+  `UseFooOptions` and `UseFooResult`; every other type, helper or constant goes to
+  `types.ts`, `utils/`, `data/` or `config/`, and nothing else lives at module scope.
+  Full contract: `docs/monorepo/hook-primitive-shape.md` (H1–H6), enforced by
+  `openthrottle/hook-primitive-shape` and `pnpm run audit:hook-shape:strict`.
+- **A NestJS file is `<folder>.<kind>.ts`.** In `queues/usage-limit/` the files are
+  `usage-limit.service.ts`, `usage-limit.types.ts`, `usage-limit.utils.ts`,
+  `usage-limit.constants.ts`. Module, service, processor, resolver, controller, types,
+  constants and utils take the folder's name; a **second** module or service in a folder
+  moves to its own sub-folder (`queues/plans/cancel-channel/cancel-channel.service.ts`),
+  never a qualified name beside the first. Subject kinds (`.object.ts`, `.input.ts`,
+  `.entity.ts`, `.guard.ts`, …) keep their own stem. The kind states the exports: a
+  `.service.ts` exports one `@Injectable()` class and nothing else, so its types go to
+  `.types.ts` and its exported helpers to `.utils.ts`. Enforced by
+  `openthrottle/nestjs-file-naming` and `openthrottle/nestjs-file-exports`; the full
+  contract is in
+  [`docs/monorepo/code-style.md`](../../docs/monorepo/code-style.md#nestjs-file-names).
 
 ### What a component file may export, and what belongs in `data/`
 
@@ -240,13 +279,18 @@ the exit code.
 pnpm run audit:component-shape:strict
 pnpm run audit:component-shape:shadcn:strict
 pnpm run audit:route-shape:strict
+pnpm nx run monorepo:check-folder-vocabulary
 ```
 
-`pnpm run check:local:audit` runs all three. Note what `--strict` actually gates:
-it exits non-zero on **R4/R5 only** (hoist violations and multi-component files).
-R6, the 210-line count, is reported but never fails the audit — ESLint's
-`max-lines` owns that cap, and the audit's count runs one line higher than
-ESLint's, so a file the audit lists as 211 can be at the cap and pass lint.
+`check-folder-vocabulary` fails on any tracked path under a rule-4 junk-drawer
+folder and names the replacement; `check:local` and the CI `gates` job run it too.
+`pnpm run check:local:audit` runs the three shape audits. Note what `--strict` actually gates:
+the component audit exits non-zero on **R4/R5/R6** (hoist violations,
+multi-component files, and authored components over the 210-line cap). Its R6
+count matches ESLint's `max-lines` exactly, and it repeats that cap on purpose:
+lint-staged runs `eslint --fix` before `prettier --write`, so prettier can reflow
+a file past 210 after lint has passed. The shadcn profile's VR6 cap stays
+report-only.
 
 **3 — New project, moved package, changed tags.**
 
@@ -272,8 +316,9 @@ pnpm run check:local
 
 See `docs/monorepo/CI-quality-gates.md`. In short:
 
-- **Blocking today:** `component-primitive-shape` (both profiles) at `error`, the
-  component `max-lines` cap, `@nx/enforce-module-boundaries`,
+- **Blocking today:** `component-primitive-shape` (both profiles) and
+  `hook-primitive-shape` at `error`, `audit:hook-shape:strict`, the component
+  `max-lines` cap, `@nx/enforce-module-boundaries`,
   `@nx/dependency-checks`, tag validation, and package entrypoints.
 - **Advisory today:** `route-primitive-shape`, `pre-hooks-unpack`, and the route
   `max-lines` cap are all `warn` — the warn-first rollout. Each application

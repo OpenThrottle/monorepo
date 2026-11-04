@@ -1,8 +1,8 @@
 import {
+  cn,
   CommandItem,
   CommandShortcut,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import { Check, Star } from 'lucide-react';
 import * as React from 'react';
 
@@ -76,7 +76,7 @@ export const ChatModelPickerRow = (
         ) : null}
       </div>
       <Check
-        className={clsx(
+        className={cn(
           'size-4 shrink-0',
           isSelected ? 'opacity-100' : 'opacity-0',
         )}
@@ -97,7 +97,7 @@ export const ChatModelPickerRow = (
           type="button"
         >
           <Star
-            className={clsx(
+            className={cn(
               'size-3.5',
               model.favorite === true && 'fill-current',
             )}

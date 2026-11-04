@@ -7,10 +7,12 @@
 #     - https://nx.dev/recipes/ci/monorepo-ci-github-actions#configuring-ci-using-github-actions-and-nx-
 #
 #
-#   💰 RUNNER COST MODEL — every job here runs on `ubuntu-latest`.
+#   💰 RUNNER COST MODEL — every job here runs on `ubuntu-26.04`, the standard
+#   GitHub-hosted runner, pinned on purpose (see docs/monorepo/ci-cost.md
+#   § Runner label: pinned to `ubuntu-26.04`).
 #
 #   OpenThrottle/monorepo is a PUBLIC repository, and GitHub-hosted standard
-#   runners are free with unlimited minutes on public repos. `ubuntu-latest` is
+#   runners are free with unlimited minutes on public repos. `ubuntu-26.04` is
 #   4 vCPU / 16 GB — the same core count as the `blacksmith-4vcpu-ubuntu-2204`
 #   boxes this workflow used to rent, with double the RAM. Blacksmith bought
 #   wall-clock speed (faster clock, sticky-disk caches); it never bought capacity
@@ -99,7 +101,7 @@ jobs:
   # only those two commits and their trees, not the commit graph between them.
   # `fetch-depth: 1` plus an explicit depth-1 fetch of both SHAs is sufficient.
   changes:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     # runs-on: ${{ github.ref == 'refs/heads/main' && 'blacksmith-4vcpu-ubuntu-2204' || 'ubuntu-latest' }}
     timeout-minutes: 5
     outputs:
@@ -199,8 +201,8 @@ jobs:
   # This job is the check on the other side of that boundary.
   #
   # The pattern set is NOT restated here — it is sourced from
-  # .husky/lib/attribution-patterns.sh, the same file the hook sources, so the
-  # two cannot drift. Same arrangement as .husky/lib/component-shape-gate.sh.
+  # .husky/utils/attribution-patterns.sh, the same file the hook sources, so the
+  # two cannot drift. Same arrangement as .husky/utils/component-shape-gate.sh.
   #
   # 💰 No Nx, no install, no cache, no full clone: a sparse depth-1 checkout of
   # one shell file plus one paginated API call. Runs on draft PRs too, unlike
@@ -208,7 +210,7 @@ jobs:
   # the squash costs an immutable commit on main.
   attribution-guard:
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 5
     # Job-scoped addition to the workflow's least-privilege default: reading
     # `pulls/{n}/commits` needs pull-requests:read.
@@ -220,7 +222,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 1
-          sparse-checkout: .husky/lib/attribution-patterns.sh
+          sparse-checkout: .husky/utils/attribution-patterns.sh
           sparse-checkout-cone-mode: false
 
       - name: '🚫 No tool or model attribution'
@@ -234,7 +236,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          . .husky/lib/attribution-patterns.sh
+          . .husky/utils/attribution-patterns.sh
 
           work="$(mktemp -d)"
           failed=0
@@ -279,7 +281,7 @@ jobs:
             echo "   above and push again."
             echo ""
             echo "   Rule:  AGENTS.md § No agent attribution"
-            echo "   Guard: .husky/lib/attribution-patterns.sh (shared with the commit-msg hook)"
+            echo "   Guard: .husky/utils/attribution-patterns.sh (shared with the commit-msg hook)"
             exit 1
           fi
 
@@ -306,10 +308,10 @@ jobs:
       # non-zero if they disagree, rather than letting projects past the end of
       # the list fall off every shard while CI still reports green.
       jobCount: 3
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     # 🧩 SHARDING — live since OT plan b19377d1. `lint`/`typecheck`/`test` are
-    #   partitioned across 3 `ubuntu-latest` boxes by
+    #   partitioned across 3 `ubuntu-26.04` boxes by
     #   `scripts/parallelize-tasks.ts`, which deals the affected projects
     #   round-robin (applications first, so the heavy Vitest suites spread out)
     #   and prints THIS box's Nx `--exclude` selector.
@@ -397,7 +399,7 @@ jobs:
         run: bash skills/ot-skill-sync/scripts/sync.sh
 
       - name: "🕵️‍♂️ NX Setup SHA's"
-        uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
+        uses: nrwl/nx-set-shas@e602fada7ad5987b0f7b1905e7a99ea1c661514c # v5.1.0
 
       # Runs on EVERY shard, and over the FULL affected set rather than this
       # shard's chunk — generated output is a prerequisite for lint/typecheck, and
@@ -622,7 +624,7 @@ jobs:
     if: |
       needs.changes.outputs.run == 'true' &&
       (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     concurrency:
       cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
@@ -653,7 +655,7 @@ jobs:
       # The Prettier gate below reads NX_BASE/NX_HEAD to scope itself to a PR's
       # diff; without this it would fail closed to a full-tree sweep every run.
       - name: "🕵️‍♂️ NX Setup SHA's"
-        uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
+        uses: nrwl/nx-set-shas@e602fada7ad5987b0f7b1905e7a99ea1c661514c # v5.1.0
 
       # 🧩 No codegen step, deliberately. `build` needs it because lint/typecheck
       # consume generated output; nothing here does. The GraphQL guard below
@@ -685,12 +687,25 @@ jobs:
       - name: '📋 Agent assets frontmatter validation (D5)'
         run: pnpm exec nx run monorepo:validate-agent-assets-frontmatter
 
+      # Whole-tree `git ls-files` scan, so a `gates` job step like its neighbours.
+      # Fails when a tracked path sits under a lib/, helpers/, common/, shared/ or
+      # misc/ directory — ot-folders rule 4. Pre-commit checks only newly added
+      # paths; this is the authoritative whole-tree copy.
+      - name: '🗂️ Folder vocabulary (no junk-drawer folders)'
+        run: pnpm exec nx run monorepo:check-folder-vocabulary
+
       # Whole-tree read of every tracked file's header — a `gates` job step for
       # the same reason as its neighbours. Fails when a generated payload is not
       # marked linguist-generated in the root .gitattributes, the omission that
       # otherwise stays invisible until a PR diff is drowned in bundle churn.
       - name: '🫥 Generated-payload .gitattributes coverage'
         run: pnpm exec nx run monorepo:check-generated-attributes
+
+      # Whole-tree, static. Claude Code skips an unparseable settings file
+      # entirely, so one `//` comment in .claude/settings.json disabled every
+      # project hook for five weeks (2026-09-23) with no visible error.
+      - name: '🧾 Claude config files are strict JSON'
+        run: pnpm exec nx run monorepo:check-claude-config-json
 
       # Static and build-free, so one shard is enough. Catches the `exports`
       # condition pointing into a gitignored build dir on a package whose own
@@ -823,7 +838,7 @@ jobs:
   ci-success:
     needs: [attribution-guard, changes, build, gates]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 2
     steps:
       - name: '✅ Verify CI outcome'
@@ -865,7 +880,7 @@ jobs:
 
   nx-dependency-graph:
     if: ${{ github.ref == 'refs/heads/main' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
 
     steps:
@@ -892,7 +907,7 @@ jobs:
           pnpm exec tsx ./scripts/nx-dependency-graph.ts
 
       - name: '📤 Upload dependency graph artifact'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: dependency-graph
           path: |

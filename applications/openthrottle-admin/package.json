@@ -24,7 +24,6 @@
     "@react-router/node": "catalog:",
     "@tanstack/react-table": "catalog:",
     "@vercel/react-router": "catalog:",
-    "clsx": "catalog:",
     "date-fns": "catalog:",
     "dotenv": "catalog:",
     "isbot": "catalog:",

@@ -154,6 +154,15 @@ describe('authMiddleware', () => {
         expect(result.headers.get('Location')).toBe('/dashboard');
       });
 
+      it('redirects the blog authoring surface when beta preview is disabled', () => {
+        process.env.FEATURE_BETA_PREVIEW = 'false';
+
+        const result = runMiddleware(buildArgs('/blog/new', validToken));
+
+        assertIsRedirectResponse(result);
+        expect(result.headers.get('Location')).toBe('/dashboard');
+      });
+
       it('passes through when beta preview is enabled', () => {
         process.env.FEATURE_BETA_PREVIEW = 'true';
 

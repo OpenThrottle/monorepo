@@ -26,7 +26,7 @@ import {
 } from '../index.ts';
 
 const PROMPT = 'do the thing';
-const BASE = `claude -p --permission-mode acceptEdits "${PROMPT}"`;
+const BASE = `claude -p --permission-mode acceptEdits "${PROMPT}" --output-format stream-json --verbose`;
 const PAYLOAD = '/srv/openthrottle/plugins/openthrottle';
 
 const config = (

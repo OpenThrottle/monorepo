@@ -45,6 +45,7 @@ const DEFAULT_TEST_ENV: Required<OpenThrottleEnv> = {
    * consumers. The runtime length assertion in env.test.ts backstops the count.
    */
   FEATURE_BETA_PREVIEW: 'false',
+  FEATURE_BLOG_ENABLED: 'false',
   FEATURE_CHARLIE_PREVIEW: 'false',
 
   NODE_ENV: 'test',

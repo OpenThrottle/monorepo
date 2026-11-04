@@ -1,6 +1,8 @@
-import { execSync } from 'child_process';
 import { fileURLToPath } from 'node:url';
-import { createLogger } from './lib/index.ts';
+
+import { execSync } from 'child_process';
+
+import { createLogger } from './utils/index.ts';
 
 const logger = createLogger();
 

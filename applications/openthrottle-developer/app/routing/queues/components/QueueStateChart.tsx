@@ -4,10 +4,10 @@ import {
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
+  cn,
   ToggleGroup,
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import * as React from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
@@ -68,7 +68,7 @@ export const QueueStateChart = (
     return (
       <section
         aria-labelledby="queue-state-chart-heading"
-        className={clsx(className)}
+        className={cn(className)}
         data-testid="QueueStateChart"
       >
         <h2 className="text-md" id="queue-state-chart-heading">
@@ -85,7 +85,7 @@ export const QueueStateChart = (
   return (
     <section
       aria-labelledby="queue-state-chart-heading"
-      className={clsx(className)}
+      className={cn(className)}
       data-testid="QueueStateChart"
     >
       <div className="mb-4 flex items-center justify-between">

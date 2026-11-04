@@ -1,4 +1,4 @@
-import { Button } from '@openthrottle/react-router-shadcn';
+import { Button, cn } from '@openthrottle/react-router-shadcn';
 import { GlobalAnimationMesh } from '@openthrottle/react-router-ui-global';
 import { GithubLogoIcon } from '@phosphor-icons/react/dist/ssr/GithubLogo';
 import * as React from 'react';
@@ -71,18 +71,20 @@ export const LandingHero = (props: LandingHeroProps): React.ReactElement => {
             {outgoing ? (
               <span
                 aria-hidden="true"
-                className={`landing-headline-fade col-start-1 row-start-1 ${
-                  incomingVisible ? 'opacity-0' : 'opacity-100'
-                }`}
+                className={cn(
+                  'landing-headline-fade col-start-1 row-start-1',
+                  incomingVisible ? 'opacity-0' : 'opacity-100',
+                )}
               >
                 {outgoing}
               </span>
             ) : null}
             <span
               aria-live="polite"
-              className={`landing-headline-fade col-start-1 row-start-1 ${
-                outgoing && !incomingVisible ? 'opacity-0' : 'opacity-100'
-              }`}
+              className={cn(
+                'landing-headline-fade col-start-1 row-start-1',
+                outgoing && !incomingVisible ? 'opacity-0' : 'opacity-100',
+              )}
             >
               {headline}
             </span>

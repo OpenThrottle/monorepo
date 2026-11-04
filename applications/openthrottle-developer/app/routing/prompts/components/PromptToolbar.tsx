@@ -1,12 +1,12 @@
 import {
   Button,
+  cn,
   Input,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { useDebouncedSearchParam } from '@openthrottle/react-router-ui';
-import clsx from 'clsx';
 import { FilePlusIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link, useSearchParams } from 'react-router';
@@ -125,7 +125,7 @@ export const PromptToolbar = (
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx('w-full', className)} data-testid="PromptToolbar">
+    <div className={cn('w-full', className)} data-testid="PromptToolbar">
       <form
         className="flex w-full flex-wrap items-center gap-2"
         onSubmit={handleSearchSubmit}

@@ -203,7 +203,7 @@ export const registerPlanRunWorktreeCheckoutToolParameters = z
   .strict();
 
 export const registerPlanRunWorktreeCheckoutToolDescription =
-  'Tell a registered plan run which worktree it is running in, by absolute path, so its checkout_id resolves. That is what makes "open in editor" deep-links work for the run and what lets the worktree read as busy while the loop is live. Call it once, after the worktree exists. Best-effort by design: it quietly returns the run unchanged when the path is not a linked worktree or the repository cannot be resolved.';
+  'Tell a registered plan run which worktree it is running in, by absolute path, so its checkout_id and branch point at that worktree (overwriting a scheduling-time primary checkout). That is what makes "open in editor" deep-links work for the run, what lets the worktree read as busy while the loop is live, and what settle/PR attribution uses. Call it once, after the worktree exists. Best-effort by design: it quietly returns the run unchanged when the path is not a linked worktree or the repository cannot be resolved.';
 
 export async function registerPlanRunWorktreeCheckoutToolHandler(
   args: z.infer<typeof registerPlanRunWorktreeCheckoutToolParameters>,
@@ -262,7 +262,7 @@ export const getPlanRunsToolParameters = z
   .strict();
 
 export const getPlanRunsToolDescription =
-  'List the plan runs recorded for a plan, newest first: status, agent backend, model, branch, run kind, timings, and the worktree it ran in. Use it to attribute an executed plan to the agent and model that ran it, and — during a loop — to poll cancelRequestedAt at task boundaries, which is the ONLY way a Kill reaches an interactive run. Read heartbeatExpected next to isStale: on a run that does not heartbeat, isStale false means "nobody knows", not "verified live".';
+  'List the plan runs recorded for a plan, newest first: status, agent backend, model, branch, run kind, timings, and the worktree it ran in. Use it to attribute an executed plan to the agent and model that ran it, and — during a loop — to poll cancelRequestedAt at task boundaries, which is the ONLY way a Kill reaches an interactive run. Read heartbeatExpected next to isStale: on a run that does not heartbeat, isStale false means "nobody knows", not "verified live". A USAGE_LIMITED run stopped cleanly on a subscription usage limit (usageLimitResetsAt says when it lifts); a run whose resumeOfRunId is set is the automatic continuation of that limited run.';
 
 export async function getPlanRunsToolHandler(
   args: z.infer<typeof getPlanRunsToolParameters>,

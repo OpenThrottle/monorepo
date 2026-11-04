@@ -69,6 +69,7 @@ anything, and nothing executes tasks in parallel from it today — see
 - **"What did I work on yesterday / last 7 days"** → `get_activity_by_date`, taking either `date`
   (`YYYY-MM-DD`) for one day or `daysBack` (1–365) for a window.
 - **"The backlog" means `PENDING`** — default `list_plans_by_status` to it when no status is named.
+- **`PROMOTED` is written by `promote_task`, never by hand** — "not finished here; the work continued as its own plan". It is resolved and terminal but not complete, so do not count it as delivered work. [Semantics](../../docs/openthrottle/authoring-plans-via-mcp.md#what-promoted-means).
 
 ## Authoring vs running
 
@@ -78,6 +79,52 @@ fits. Report created ids so the user can act on them.
 **Never start executing a plan or task unless explicitly told to** — authoring and running are
 separate requests. The per-task discipline, when you are told to run one, is canonical in
 [`ot-loop`](../ot-loop/SKILL.md) § The loop; do not restate it here.
+
+## Follow-ups and session kickoff
+
+AGENTS.md and CLAUDE.md state the rule (follow-ups are plans, kickoffs run from a plan). This is
+the how.
+
+**Filing a follow-up plan.**
+
+- `create_plan` with `status: 'PENDING'`. The description names the **originating plan id** (if
+  there is one) and the **evidence** that motivated it — the file and line, the failing output, the
+  review comment. A follow-up with no evidence is a hunch, and the next session cannot check it.
+- Author its tasks in **one** `create_tasks` call with `sortOrder` and `wave` decided per item (see
+  § Task wave above — there is no cheap second pass).
+- Tag it in the same call: `create_plan({ ..., tags: ['follow-up'] })` (or `add_plan_tag(planId,
+'follow-up')` after the fact). `follow-up` is a platform system tag, accepted from any caller
+  without being in your skill-tag vocabulary — do not `add_skill_tag` it (an agent token lacks
+  `settings:write`). Best-effort: a tag that fails comes back in `tagFailures` and never blocks filing.
+- Report the plan id. Filing is not starting: [§ Authoring vs running](#authoring-vs-running) still
+  holds.
+
+**Offering a kickoff.** When the harness lets you propose or hand off a session (a "New task" card,
+a background agent, a handoff), the brief is the plan:
+
+```
+/ot-loop <planUuid>
+<at most one line of context the plan does not carry>
+```
+
+Line 1 is exactly that. Everything else belongs in the plan's description and tasks, not the brief:
+a prose brief that restates or replaces the plan drifts from it the moment either is edited. The
+session that picks it up starts at [`ot-loop` § Setup](../ot-loop/SKILL.md#setup-once-before-the-loop)
+step 1.
+
+**What checks you.** The rule binds every tool; the checks differ by tool. Where a harness gives
+the agent a tool for starting a separate session, a hook denies a brief that is not
+`/ot-loop <planUuid>` — today that is only the Claude desktop app's session tools. Cursor and Codex
+have no such tool (their subagents work inside the current task and are exempt), so nothing blocks
+there. Under every tool, `git push` lists commits with no `Plan-Id:` footer — a warning, never a
+block. Per-tool detail:
+[capability matrix § Session kickoff guard](../../docs/monorepo/agent-cli-hook-capability-matrix.md#session-kickoff-guard).
+
+**When to do it here instead.** If the follow-up acts directly on what this session just found and
+nothing else is in flight here (no unfinished change, no open PR for other work), doing it in this
+session is cheaper than a new one rediscovering it. It still gets a plan first — append tasks to
+the current plan with `create_tasks` when it belongs there, otherwise file a new one — so its
+commits carry `Plan-Id:` / `Task-Id:`.
 
 ## Work ledger
 

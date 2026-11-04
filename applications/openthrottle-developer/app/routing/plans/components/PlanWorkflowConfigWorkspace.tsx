@@ -1,5 +1,6 @@
 import {
   Button,
+  cn,
   Input,
   Label,
   Popover,
@@ -7,7 +8,6 @@ import {
   PopoverTrigger,
 } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
-import clsx from 'clsx';
 import { FolderOpen, History, X } from 'lucide-react';
 import * as React from 'react';
 
@@ -143,7 +143,7 @@ export const PlanWorkflowConfigWorkspace = (
                   {recentPaths.map((path) => (
                     <li
                       aria-selected={path === value.trim()}
-                      className={clsx(
+                      className={cn(
                         'hover:bg-accent flex cursor-pointer items-center gap-2 px-3 py-1.5 text-xs',
                         path === value.trim() && 'bg-accent/50',
                       )}

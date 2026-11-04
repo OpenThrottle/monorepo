@@ -26,6 +26,7 @@ export {
   DEFAULT_PHASE_TAG_VOCABULARY,
   DEFAULT_SKILL_TAG_VOCABULARY,
   DEFAULT_TAG_VOCABULARY_SEED,
+  SYSTEM_TAG_VOCABULARY,
 } from './default-skill-tag-vocabulary.ts';
 
 /** @public */

@@ -15,7 +15,7 @@ import {
   TASK_STATUS,
   TASK_STATUS_VALUES,
   type TaskStatus,
-} from '../../common/plan-task-status.constants.ts';
+} from '../../config/plan-task-status.constants.ts';
 import { Task } from '../tasks/task.entity.ts';
 import {
   RULE_APPLICATION_STATES,
@@ -44,6 +44,7 @@ const IS_TERMINAL_TASK_STATUS: Record<TaskStatus, boolean> = {
   [TASK_STATUS.COMPLETED]: true,
   [TASK_STATUS.IN_PROGRESS]: false,
   [TASK_STATUS.PENDING]: false,
+  [TASK_STATUS.PROMOTED]: true,
   [TASK_STATUS.SKIPPED]: true,
 };
 
@@ -189,7 +190,7 @@ export class RuleApplicationsService {
    * match the plan. Only applied rows flip — pre-satisfied/flagged/orphaned
    * rows are left as-is. Any injected task carried by a flipped row (non-null
    * task_id, an INJECT_TASK result) is soft-closed to SKIPPED in the same
-   * transaction, unless it is already terminal (COMPLETED/SKIPPED/CANCELED) or
+   * transaction, unless it is already terminal (COMPLETED/PROMOTED/SKIPPED/CANCELED) or
    * a human already deleted it (task_id SET NULL). The ledger row is untouched
    * so the rule still never re-injects. Returns the number of rows flipped.
    *

@@ -20,7 +20,7 @@ import {
   ledgerPathForRepo,
   readLedger,
 } from '@openthrottle/openthrottle-agentic-utils';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ForeignSkillInjectionLifecycleService } from './foreign-skill-injection-lifecycle.service.ts';
 
@@ -65,18 +65,40 @@ describe('ForeignSkillInjectionLifecycleService reaper', () => {
     previousLedgerEnv = process.env[FOREIGN_SKILL_LEDGER_DIR_ENV];
     process.env[FOREIGN_SKILL_LEDGER_DIR_ENV] = ledgerDir;
 
+    // Shutdown teardown is owner-only; pin the primary so a shared-worktree shell can't leak in.
+    vi.stubEnv('OT_SCHEDULED_JOBS_OWNER', '');
+    vi.stubEnv('OT_WORKTREE_DB', '');
+
     service = new ForeignSkillInjectionLifecycleService(
       createMock<LoggerService>(),
     );
   });
 
   afterEach(() => {
+    vi.unstubAllEnvs();
     if (previousLedgerEnv === undefined) {
       delete process.env[FOREIGN_SKILL_LEDGER_DIR_ENV];
     } else {
       process.env[FOREIGN_SKILL_LEDGER_DIR_ENV] = previousLedgerEnv;
     }
     rmSync(base, { force: true, recursive: true });
+  });
+
+  it('leaves every ledgered layer in place on a shared-DB worktree’s shutdown', () => {
+    vi.stubEnv('OT_WORKTREE_DB', 'shared');
+    // The primary's live layer: a shared worktree stopping must not tear it down.
+    ensureMaterialized({
+      env: process.env,
+      otCuratedSkillsDir: otSkills,
+      repoPath: repo,
+    });
+
+    service.onApplicationShutdown();
+
+    expect(
+      lstatSync(join(repo, '.agents/skills/ot-plans')).isSymbolicLink(),
+    ).toBe(true);
+    expect(readLedger(ledgerPathForRepo(repo, process.env))).toBeDefined();
   });
 
   it('reaps a layer stranded by a crash (ledger present, process gone)', () => {

@@ -1,8 +1,12 @@
 import { useContext } from 'react';
 
+import type { NotificationsStoreContextValue } from '../data/index';
 import { NotificationsStoreContext } from '../data/index';
 
 export interface UseNotificationsStoreOptions {}
+
+/** @public */
+export type UseNotificationsStoreResult = NotificationsStoreContextValue;
 
 /**
  * @description Returns the notifications store context. Throws when used outside a
@@ -12,7 +16,7 @@ export interface UseNotificationsStoreOptions {}
  */
 export const useNotificationsStore = (
   _options?: UseNotificationsStoreOptions,
-) => {
+): UseNotificationsStoreResult => {
   // const {} = _options;
 
   // Hooks

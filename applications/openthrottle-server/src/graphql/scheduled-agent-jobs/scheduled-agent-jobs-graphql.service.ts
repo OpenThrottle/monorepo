@@ -1,6 +1,6 @@
 /**
  * @description Orchestration + validation for the scheduled-agent-jobs GraphQL surface. Validates
- * cron/driver/capability/settings, then coordinates the repositories service (persistence), the
+ * schedule timing (cron, interval or once)/driver/capability/settings, then coordinates the repositories service (persistence), the
  * scheduler service (BullMQ projection), and the shared queue (run-now enqueue). The DB write and the
  * scheduler upsert are ordered write-then-project (mirroring enqueue-after-commit): a scheduler is
  * only registered after its row exists.
@@ -10,9 +10,11 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
+  SCHEDULED_AGENT_JOB_MISFIRE_POLICIES,
   type ScheduledAgentJob,
   ScheduledAgentJobCheckoutPathService,
   type ScheduledAgentJobDriverId,
+  type ScheduledAgentJobMisfirePolicy,
   type ScheduledAgentJobRun,
   type ScheduledAgentJobRunStatusCount,
   type ScheduledAgentJobSettings,
@@ -32,15 +34,21 @@ import {
   SCHEDULED_AGENT_JOB_OPTIONS,
   SCHEDULED_AGENT_JOBS_QUEUE_NAME,
 } from '../../queues/scheduled-agent-jobs/scheduled-agent-jobs.constants.ts';
+import { SCHEDULED_AGENT_JOB_MISFIRE_MIN_THRESHOLD_MS } from '../../queues/scheduled-agent-jobs/scheduled-agent-jobs.misfire.ts';
 import type { ScheduledAgentJobPayload } from '../../queues/scheduled-agent-jobs/scheduled-agent-jobs.types.ts';
-import { validateScheduledAgentJobCron } from './scheduled-agent-jobs.cron.ts';
+import {
+  resolveScheduleSpec,
+  type ScheduleSpec,
+  type ScheduleSpecRequest,
+} from './scheduled-agent-jobs.schedule-spec.ts';
 
 /** Shape a create request arrives in (settings already validated/parsed). */
-interface CreateArgs {
-  readonly cronPattern: string;
+interface CreateArgs extends ScheduleSpecRequest {
   readonly cwd?: string | null;
   readonly driverId: string;
   readonly enabled?: boolean;
+  readonly misfirePolicy?: string | null;
+  readonly misfireThresholdMs?: number | null;
   readonly model?: string | null;
   readonly name: string;
   readonly ownerUserId: string | null;
@@ -51,10 +59,11 @@ interface CreateArgs {
   readonly timezone?: string | null;
 }
 
-interface UpdateArgs {
-  readonly cronPattern?: string;
+interface UpdateArgs extends ScheduleSpecRequest {
   readonly cwd?: string | null;
   readonly driverId?: string;
+  readonly misfirePolicy?: string | null;
+  readonly misfireThresholdMs?: number | null;
   readonly model?: string | null;
   readonly name?: string;
   readonly prompt?: string;
@@ -117,18 +126,24 @@ export class ScheduledAgentJobsGraphqlService {
       model: args.model,
       settingsJson: args.settingsJson,
     });
-    this.assertValidCron(args.cronPattern);
+    const spec = this.assertValidSchedule(args, undefined);
     const settings = this.parseSettings(args.settingsJson);
+    const misfirePolicy = this.parseMisfirePolicy(args.misfirePolicy);
+    const misfireThresholdMs = this.parseMisfireThreshold(
+      args.misfireThresholdMs,
+    );
     await this.assertResolvableCheckout(
       args.repositoryCheckoutId,
       args.ownerUserId,
     );
 
     const job = await this.jobsService.createJob({
-      cronPattern: args.cronPattern,
+      ...spec,
       cwd: args.cwd ?? null,
       driverId,
       enabled: args.enabled ?? true,
+      misfirePolicy,
+      misfireThresholdMs,
       model: args.model ?? null,
       name: args.name,
       ownerUserId: args.ownerUserId,
@@ -151,9 +166,11 @@ export class ScheduledAgentJobsGraphqlService {
       model: args.model === undefined ? existing.model : args.model,
       settingsJson: args.settingsJson,
     });
-    if (args.cronPattern !== undefined) {
-      this.assertValidCron(args.cronPattern);
-    }
+    const spec = this.assertValidSchedule(args, existing);
+    const misfirePolicy = this.parseMisfirePolicy(args.misfirePolicy);
+    const misfireThresholdMs = this.parseMisfireThreshold(
+      args.misfireThresholdMs,
+    );
     // Validated against the EXISTING owner: ownerUserId is never client-supplied on update.
     await this.assertResolvableCheckout(
       args.repositoryCheckoutId,
@@ -161,9 +178,11 @@ export class ScheduledAgentJobsGraphqlService {
     );
 
     const updated = await this.jobsService.updateJob(id, {
-      cronPattern: args.cronPattern,
+      ...spec,
       cwd: args.cwd,
       driverId: args.driverId === undefined ? undefined : driverId,
+      misfirePolicy,
+      misfireThresholdMs,
       model: args.model,
       name: args.name,
       prompt: args.prompt,
@@ -199,7 +218,7 @@ export class ScheduledAgentJobsGraphqlService {
       return false;
     }
 
-    await this.scheduler.removeScheduler(existing.schedulerKey);
+    await this.scheduler.unschedule(existing);
     return this.jobsService.deleteJob(id);
   }
 
@@ -253,8 +272,45 @@ export class ScheduledAgentJobsGraphqlService {
     await this.jobsService.requestRunCancel(runId);
     this.cancellation.abort(runId);
 
+    if (run.status === 'queued') {
+      await this.cancelQueuedRun(run);
+    }
+
     const refreshed = await this.jobsService.findRunById(runId);
     return refreshed ?? run;
+  }
+
+  /**
+   * @description Cancels a run that has not started: removes its BullMQ job (a run-now job that has
+   * not been picked up yet, or a delayed usage-limit resume) and records the run `cancelled`, so the
+   * job cannot fire later. The job is addressed by the run's `bullmqJobId` (set at creation for a
+   * resume) falling back to the run id (run-now's jobId). A job a worker has already locked cannot be
+   * removed; the durable cancel marker stays as the fallback and the row is left for the processor.
+   * Best-effort — a Redis error is logged, never thrown.
+   */
+  private async cancelQueuedRun(run: ScheduledAgentJobRun): Promise<void> {
+    try {
+      const job = await this.queue.getJob(run.bullmqJobId ?? run.id);
+
+      if (job !== undefined) {
+        const state = await job.getState();
+        if (state === 'active') {
+          return;
+        }
+        await job.remove();
+      }
+
+      await this.jobsService.markRunFinished(run.id, {
+        errorMessage: 'Run cancelled',
+        exitCode: null,
+        status: 'cancelled',
+      });
+    } catch (error) {
+      this.logger.warn(
+        `Could not remove the queued job for scheduled run ${run.id}: ${error instanceof Error ? error.message : String(error)}`,
+        ScheduledAgentJobsGraphqlService.name,
+      );
+    }
   }
 
   private async projectScheduler(job: ScheduledAgentJob): Promise<void> {
@@ -262,7 +318,7 @@ export class ScheduledAgentJobsGraphqlService {
       const next = await this.scheduler.upsertScheduler(job);
       await this.jobsService.updateNextRunAt(job.id, next);
     } else {
-      await this.scheduler.removeScheduler(job.schedulerKey);
+      await this.scheduler.unschedule(job);
       await this.jobsService.updateNextRunAt(job.id, null);
     }
   }
@@ -310,11 +366,61 @@ export class ScheduledAgentJobsGraphqlService {
     }
   }
 
-  private assertValidCron(pattern: string): void {
-    const result = validateScheduledAgentJobCron(pattern);
+  /**
+   * @description The validated schedule kind and timing (cron pattern, interval, or run-once time).
+   * On update, `existing` fills in whatever the request leaves out. Throws on anything invalid.
+   */
+  private assertValidSchedule(
+    request: ScheduleSpecRequest,
+    existing: ScheduledAgentJob | undefined,
+  ): ScheduleSpec {
+    const result = resolveScheduleSpec(request, existing);
     if (!result.ok) {
-      throw new BadRequestException(result.reason ?? 'Invalid cron pattern');
+      throw new BadRequestException(result.reason);
     }
+    return result.spec;
+  }
+
+  /**
+   * @description The misfire policy from a request, or undefined when omitted/null (create keeps the
+   * column default, update leaves the field unchanged). Throws on an unknown policy.
+   */
+  private parseMisfirePolicy(
+    raw: string | null | undefined,
+  ): ScheduledAgentJobMisfirePolicy | undefined {
+    if (raw === null || raw === undefined) return undefined;
+
+    const policy = SCHEDULED_AGENT_JOB_MISFIRE_POLICIES.find(
+      (candidate) => candidate === raw,
+    );
+    if (policy === undefined) {
+      throw new BadRequestException(
+        `Unknown misfire policy "${raw}"; expected one of ${SCHEDULED_AGENT_JOB_MISFIRE_POLICIES.join(', ')}.`,
+      );
+    }
+
+    return policy;
+  }
+
+  /**
+   * @description The misfire threshold from a request, or undefined when omitted/null. Must be a whole
+   * number of ms of at least a minute: below that, ordinary queue jitter would trip the policy.
+   */
+  private parseMisfireThreshold(
+    raw: number | null | undefined,
+  ): number | undefined {
+    if (raw === null || raw === undefined) return undefined;
+
+    if (
+      !Number.isInteger(raw) ||
+      raw < SCHEDULED_AGENT_JOB_MISFIRE_MIN_THRESHOLD_MS
+    ) {
+      throw new BadRequestException(
+        `misfireThresholdMs must be a whole number of at least ${SCHEDULED_AGENT_JOB_MISFIRE_MIN_THRESHOLD_MS} (one minute).`,
+      );
+    }
+
+    return raw;
   }
 
   /**

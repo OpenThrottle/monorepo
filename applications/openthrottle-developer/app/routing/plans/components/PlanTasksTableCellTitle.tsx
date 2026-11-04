@@ -1,11 +1,15 @@
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
-import { Badge } from '@openthrottle/react-router-shadcn';
+import { Badge, cn } from '@openthrottle/react-router-shadcn';
 import type { Row } from '@tanstack/react-table';
 import * as React from 'react';
 import { Link } from 'react-router';
 
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { PlanManagedTaskBadge } from '~/routing/plans/components/PlanManagedTaskBadge';
+import {
+  MOBILE_CARD_BLOCK_CLASS,
+  MOBILE_CARD_TITLE_CLASS,
+} from '~/routing/plans/data/data.mobile-card';
 import { getRequirementsCount } from '~/routing/plans/utils/formatters';
 
 export interface PlanTasksTableCellTitleProps {
@@ -42,8 +46,8 @@ export const PlanTasksTableCellTitle = (
   // 🔌 Short Circuit
 
   return (
-    <div className="space-y-4 overflow-hidden">
-      <div className="flex items-center gap-2">
+    <div className="space-y-4 overflow-hidden max-sm:contents max-sm:space-y-0">
+      <div className={cn('flex items-center gap-2', MOBILE_CARD_TITLE_CLASS)}>
         <h2 className="line-clamp-2 min-w-0 text-sm font-medium text-ellipsis">
           {row.index + 1}.{' '}
           <Link
@@ -60,9 +64,14 @@ export const PlanTasksTableCellTitle = (
       </div>
 
       {hasMeta ? (
-        <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
+        <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs max-sm:contents">
           {category !== '' ? (
-            <Badge aria-label={`Category: ${category}`} color="slate" size="xs">
+            <Badge
+              aria-label={`Category: ${category}`}
+              className="max-sm:order-2"
+              color="slate"
+              size="xs"
+            >
               {category}
             </Badge>
           ) : null}
@@ -70,17 +79,24 @@ export const PlanTasksTableCellTitle = (
           {requirementsCount > 0 ? (
             <span
               aria-label={`${requirementsCount} requirements`}
-              className="tabular-nums"
+              className="tabular-nums max-sm:order-3"
             >
               {requirementsCount}{' '}
               {requirementsCount === 1 ? 'requirement' : 'requirements'}
             </span>
           ) : null}
-          {task.assignee ? <span>Assigned to {task.assignee}</span> : null}
+          {task.assignee ? (
+            <span className="max-sm:order-3">Assigned to {task.assignee}</span>
+          ) : null}
         </div>
       ) : null}
 
-      <div className="pre-wrap flex flex-col gap-2 overflow-hidden">
+      <div
+        className={cn(
+          'pre-wrap flex flex-col gap-2 overflow-hidden',
+          MOBILE_CARD_BLOCK_CLASS.description,
+        )}
+      >
         <MarkdownRenderer
           className="line-clamp-5 overflow-hidden [&_p]:!mb-0 [&_p]:!text-xs"
           source={description || summary}

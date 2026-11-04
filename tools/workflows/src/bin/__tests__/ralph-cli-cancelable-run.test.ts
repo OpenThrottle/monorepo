@@ -317,6 +317,56 @@ describe('Ralph detached-CLI cancelable run', () => {
     );
   });
 
+  it('stops on a usage limit: logs the reset, resets task + plan to PENDING, settles FAILED, exits 1', async () => {
+    runIterationAsyncMock.mockImplementationOnce(
+      async (config: {
+        readonly onUsageLimit?: (limit: {
+          rateLimitType: string | null;
+          resetsAt: string | null;
+        }) => void;
+      }) => {
+        config.onUsageLimit?.({
+          rateLimitType: 'five_hour',
+          resetsAt: '2026-11-01T17:00:00.000Z',
+        });
+
+        return 'limit reached <promise>COMPLETE</promise>';
+      },
+    );
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { main } = await import('../ralph.js');
+
+    await expect(main()).rejects.toThrow(EXIT);
+
+    expect(
+      errorSpy.mock.calls.some((c) =>
+        String(c[0]).includes('2026-11-01T17:00:00.000Z'),
+      ),
+    ).toBe(true);
+    expect(settleCliPlanRunMock).toHaveBeenCalledWith(
+      graphqlConfig,
+      RUN_ID,
+      'FAILED',
+    );
+    expect(settleCliPlanRunMock).not.toHaveBeenCalledWith(
+      graphqlConfig,
+      RUN_ID,
+      'COMPLETED',
+    );
+    expect(updateTaskStatusMock).toHaveBeenCalledWith(
+      graphqlConfig,
+      TASK_ID,
+      'PENDING',
+    );
+    expect(updatePlanStatusMock).toHaveBeenCalledWith(
+      graphqlConfig,
+      PLAN_ID,
+      'PENDING',
+    );
+    expect(exitSpy).toHaveBeenCalledWith(1);
+    errorSpy.mockRestore();
+  });
+
   it('does NOT register or settle on a TTY (interactive) run', async () => {
     process.stdin.isTTY = true;
     const { main } = await import('../ralph.js');

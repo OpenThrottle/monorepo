@@ -162,12 +162,13 @@ describe('cross-job run reads', () => {
     vi.useRealTimers();
   });
 
-  it('scheduledAgentJobRunStats honours an explicit window and keeps no_op out of failures', async () => {
+  it('scheduledAgentJobRunStats honours an explicit window and keeps no_op and usage_limited out of failures', async () => {
     const since = new Date('2026-08-01T00:00:00.000Z');
     const countRunsByStatusSince = vi.fn().mockResolvedValue([
       { count: 4, status: 'succeeded' },
       { count: 2, status: 'no_op' },
       { count: 1, status: 'failed' },
+      { count: 2, status: 'usage_limited' },
     ]);
     // In-flight is unwindowed, so a long-stuck run still counts.
     const countInFlightRunsByStatus = vi
@@ -186,7 +187,8 @@ describe('cross-job run reads', () => {
     expect(stats.failedCount).toBe(1);
     expect(stats.noOpCount).toBe(2);
     expect(stats.succeededCount).toBe(4);
-    expect(stats.windowTotalCount).toBe(7);
+    expect(stats.usageLimitedCount).toBe(2);
+    expect(stats.windowTotalCount).toBe(9);
     expect(stats.inFlightCount).toBe(3);
     expect(stats.queuedCount).toBe(0);
     expect(stats.runningCount).toBe(3);

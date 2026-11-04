@@ -4,8 +4,8 @@ import type { TaskEmbedding } from '@openthrottle/nestjs-repositories';
 import {
   getDefaultPlanRunConfigStorage,
   TaskEmbeddingsService,
-  tasksFactory,
 } from '@openthrottle/nestjs-repositories';
+import { tasksFactory } from '@openthrottle/nestjs-repositories/testing';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { TaskEmbeddingsResolver } from './task-embeddings.resolver.ts';

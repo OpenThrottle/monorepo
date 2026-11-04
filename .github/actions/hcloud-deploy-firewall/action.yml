@@ -1,0 +1,54 @@
+################################################################################
+#
+#   Open or close the Hetzner deploy firewall for THIS runner.
+#
+#   GitHub-hosted runners get a different public IP every run, so they cannot
+#   sit in the box's ssh_allowed_cidrs. Instead the hcloud_server module can
+#   attach a second, otherwise EMPTY firewall (deploy_firewall_enabled), and
+#   this action owns its rules:
+#
+#     open   replace its rules with one inbound tcp/22 rule for this runner's
+#            public IPv4 /32
+#     close  replace its rules with none
+#
+#   Both are a full replace (Hetzner's set_rules), never an append, so a rule a
+#   crashed run failed to close is overwritten by the next run rather than
+#   accumulating. Hetzner merges the rules of every firewall attached to a
+#   server, so the empty firewall adds nothing to the box's surface.
+#
+#   Location: .github/actions/hcloud-deploy-firewall
+#
+#     - https://docs.hetzner.cloud/reference/cloud#firewall-actions
+#
+################################################################################
+
+name: '🧱 Hetzner deploy firewall'
+description: >-
+  Opens the Hetzner deploy firewall to this runner's public IPv4 on port 22, or
+  closes it again. Always a full replace of that firewall's rules.
+
+inputs:
+  firewall:
+    description: >-
+      Name of the deploy firewall — the deploy_firewall_name output of the
+      openthrottle_hcloud application module.
+    required: true
+  hcloud-token:
+    description: >-
+      Hetzner Cloud API token with read/write access to the project. Hetzner
+      tokens cannot be scoped below project level, so this token can manage
+      every resource in that project.
+    required: true
+  mode:
+    description: "'open' or 'close'."
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        FIREWALL_NAME: ${{ inputs.firewall }}
+        HCLOUD_TOKEN: ${{ inputs.hcloud-token }}
+        INPUT_MODE: ${{ inputs.mode }}
+      run: bash "${{ github.action_path }}/hcloud-deploy-firewall.sh" "${INPUT_MODE}"

@@ -1,5 +1,5 @@
+import { cn } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
-import clsx from 'clsx';
 import * as React from 'react';
 
 import type {
@@ -16,7 +16,7 @@ import {
   SKILL_USAGE_COPY,
   type SkillUsageScopeFilter,
 } from '~/routing/usage/data/skill-usage-copy';
-import type { UsageBranchOption } from '~/routing/usage/hooks/useUsageBranchSearch';
+import type { UsageBranchOption } from '~/routing/usage/types';
 import { partitionSkillUsageByPresence } from '~/routing/usage/utils/partition-skill-usage-by-presence';
 
 export interface UsageSkillUsageProps {
@@ -96,7 +96,7 @@ export const UsageSkillUsage = (
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx('mt-8', className)} data-testid="UsageSkillUsage">
+    <div className={cn('mt-8', className)} data-testid="UsageSkillUsage">
       <GlobalHeading
         className="mb-4"
         heading="h2"

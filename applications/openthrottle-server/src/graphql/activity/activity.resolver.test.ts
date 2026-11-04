@@ -4,7 +4,10 @@
 
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
-import { plansFactory, tasksFactory } from '@openthrottle/nestjs-repositories';
+import {
+  plansFactory,
+  tasksFactory,
+} from '@openthrottle/nestjs-repositories/testing';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import {

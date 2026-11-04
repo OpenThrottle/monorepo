@@ -25,7 +25,9 @@
  * There are two remotes — `origin` (canonical) and an `openthrottle` mirror with unrelated history
  * — so an agent deriving owner/repo from `git remote` can pick the wrong one and write an
  * external_key that never verifies. checkout_id -> repository_id -> repositories.name is unambiguous,
- * and `name` is already stored as `owner/repo`.
+ * and `name` is already stored as `owner/repo`. A service-account run has no checkout (nothing
+ * owns one without a user), so it falls back to the snapshot's repositoryId and then to the
+ * working directory's remote matched against registered repositories — see resolveRepoName.
  *
  * Best-effort throughout, like the neighbouring WorkLedgerRunService: ledger bookkeeping must never
  * be the reason a run fails to settle. Every failure is logged and swallowed.
@@ -45,6 +47,7 @@ import {
   WorkSessionSubject,
 } from '@openthrottle/nestjs-repositories';
 
+import { RepositoryInspectionService } from '../repository-inspection/repository-inspection.service.ts';
 import { resolveArtifactForWrite } from './artifact-type-registry.ts';
 
 /** Seeded service account that owns Ralph runs (databases/migrations/045). */
@@ -66,6 +69,7 @@ export class SettleRunLedgerService {
     private readonly logger: LoggerService,
     private readonly repositoriesService: RepositoriesService,
     private readonly repositoryCheckoutsService: RepositoryCheckoutsService,
+    private readonly repositoryInspectionService: RepositoryInspectionService,
     private readonly serviceAccountsService: ServiceAccountsService,
     private readonly workLedgerService: WorkLedgerService,
   ) {}
@@ -218,19 +222,62 @@ export class SettleRunLedgerService {
       });
   }
 
-  /** checkout_id -> repository_id -> repositories.name, which is already stored as `owner/repo`. */
+  /**
+   * @description Resolves `repositories.name` (already stored as `owner/repo`) for the run, most
+   * specific source first:
+   *
+   * 1. `plan_runs.checkout_id` (or the snapshot's) -> repository_id. The user-JWT path, where the
+   *    orchestrator registered the run's worktree checkout.
+   * 2. `run_config_snapshot.workspace.repositoryId`.
+   * 3. `run_config_snapshot.workspace.workingDirectory` -> its git remote -> a registered
+   *    repository. A service-account enqueue (actor_user_id null) can only name a raw path, and no
+   *    worktree checkout is registered without a user to own it, so this is the only anchor it has.
+   *
+   * Every hop is a lookup against registered rows; the repo name is never derived from a remote
+   * string directly, so the wrong remote can only ever miss, not mis-record.
+   */
   private async resolveRepoName(planRun: PlanRun): Promise<string | null> {
-    if (planRun.checkoutId == null) return null;
+    const workspace = planRun.runConfigSnapshot?.workspace;
 
-    const checkout = await this.repositoryCheckoutsService.findById(
-      planRun.checkoutId,
+    const fromCheckout = await this.resolveRepositoryIdFromCheckout(
+      nonEmpty(planRun.checkoutId) ?? nonEmpty(workspace?.checkoutId),
     );
+    const repositoryIds = [fromCheckout, nonEmpty(workspace?.repositoryId)];
 
-    if (checkout == null) return null;
+    for (const repositoryId of repositoryIds) {
+      if (repositoryId == null) continue;
+      // eslint-disable-next-line no-await-in-loop -- deliberate precedence: stop at the first hit
+      const repository = await this.repositoriesService.findById(repositoryId);
+      if (repository != null) return repository.name;
+    }
 
-    const repository = await this.repositoriesService.findById(
-      checkout.repositoryId,
-    );
+    return this.resolveRepoNameFromPath(nonEmpty(workspace?.workingDirectory));
+  }
+
+  private async resolveRepositoryIdFromCheckout(
+    checkoutId: string | null,
+  ): Promise<string | null> {
+    if (checkoutId == null) return null;
+
+    const checkout = await this.repositoryCheckoutsService.findById(checkoutId);
+
+    return checkout?.repositoryId ?? null;
+  }
+
+  /** The working directory's normalized git remote, matched against registered repositories. */
+  private async resolveRepoNameFromPath(
+    workingDirectory: string | null,
+  ): Promise<string | null> {
+    if (workingDirectory == null) return null;
+
+    const inspection =
+      await this.repositoryInspectionService.scan(workingDirectory);
+    const remote = nonEmpty(inspection.git.normalizedRemoteUrl);
+
+    if (remote == null) return null;
+
+    const repository =
+      await this.repositoriesService.findByNormalizedRemoteUrl(remote);
 
     return repository?.name ?? null;
   }
@@ -243,6 +290,11 @@ export class SettleRunLedgerService {
 
     return account?.id ?? null;
   }
+}
+
+function nonEmpty(value: string | null | undefined): string | null {
+  const trimmed = value?.trim();
+  return trimmed === undefined || trimmed === '' ? null : trimmed;
 }
 
 /**

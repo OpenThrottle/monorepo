@@ -37,4 +37,16 @@ describe('folders generator', () => {
       ]),
     );
   });
+
+  test('refuses a junk-drawer area name', async () => {
+    await expect(
+      foldersGenerator(tree, { application, folder, name: 'common' }),
+    ).rejects.toThrow(
+      /"common", a junk-drawer folder name[\s\S]*promotion ladder/,
+    );
+
+    expect(
+      tree.listChanges().some((change) => change.path.includes('/common/')),
+    ).toBe(false);
+  });
 });

@@ -1,4 +1,4 @@
-import { DataTable } from '@openthrottle/react-router-shadcn';
+import { cn, DataTable } from '@openthrottle/react-router-shadcn';
 // import { formatUpdatedAt } from '~/routing/plans/utils/formatters';
 import type { GlobalPopoverAction } from '@openthrottle/react-router-ui-global';
 import {
@@ -6,7 +6,6 @@ import {
   GlobalPopoverActionsHeader,
 } from '@openthrottle/react-router-ui-global';
 import type { ColumnDef } from '@tanstack/react-table';
-import clsx from 'clsx';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -40,7 +39,7 @@ export const ProjectsTable = (
 
   return (
     <div
-      className={clsx('ui-border rounded-lg border', className)}
+      className={cn('ui-border rounded-lg border', className)}
       data-testid="ProjectsTable"
     >
       <DataTable<ProjectCardFragment, string | null | undefined>

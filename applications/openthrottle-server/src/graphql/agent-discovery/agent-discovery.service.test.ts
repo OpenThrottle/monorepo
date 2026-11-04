@@ -27,6 +27,7 @@ const SNAPSHOT: AgentCliDiscoveryResult = {
   agents: [
     {
       attachesWorkspaceMcp: true,
+      auth: null,
       available: true,
       backend: 'cursor',
       chatCapable: true,
@@ -37,6 +38,7 @@ const SNAPSHOT: AgentCliDiscoveryResult = {
     },
     {
       attachesWorkspaceMcp: true,
+      auth: null,
       available: false,
       backend: 'claude',
       chatCapable: true,

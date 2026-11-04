@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import { SkillAvailabilityRuleForm } from '~/routing/skills/components/SkillAvailabilityRuleForm';
@@ -39,7 +39,7 @@ export const SkillAvailabilityRulesEditor = (
 
   return (
     <section
-      className={clsx('flex flex-col gap-4', className)}
+      className={cn('flex flex-col gap-4', className)}
       data-testid="SkillAvailabilityRulesEditor"
     >
       <h2 className="text-lg font-semibold">{COPY.heading}</h2>

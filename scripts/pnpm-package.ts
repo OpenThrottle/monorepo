@@ -4,7 +4,7 @@ import { readFile, writeFile } from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import { createLogger } from './lib/index.ts';
+import { createLogger } from './utils/index.ts';
 
 const logger = createLogger();
 

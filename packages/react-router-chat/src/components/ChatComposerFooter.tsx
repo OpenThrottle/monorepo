@@ -1,5 +1,4 @@
-import { Button } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
+import { Button, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type { ChatTokenUsage } from '../types';
@@ -55,7 +54,7 @@ export const ChatComposerFooter = (
 
   return (
     <div
-      className={clsx(
+      className={cn(
         'flex items-center gap-3',
         toolbar ? 'justify-between' : 'justify-end',
       )}
@@ -66,11 +65,17 @@ export const ChatComposerFooter = (
           <ChatUsageCounter streaming={isStreaming} usage={sessionUsage} />
         ) : null}
         {isStreaming ? (
-          <Button onClick={onStop} size="sm" type="button">
+          <Button
+            className="pointer-coarse:h-11 pointer-coarse:min-w-11"
+            onClick={onStop}
+            size="sm"
+            type="button"
+          >
             {stopLabel}
           </Button>
         ) : (
           <Button
+            className="pointer-coarse:h-11 pointer-coarse:min-w-11"
             disabled={disabled || draft.trim().length === 0}
             size="sm"
             type="submit"

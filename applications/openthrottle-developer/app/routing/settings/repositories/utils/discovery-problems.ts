@@ -11,6 +11,7 @@ type WorktreeDiscoveryProblem = DiscoveredWorktreesResult['problems'][number];
  */
 export const WORKTREE_PROBLEM_GROUP = {
   DEGRADED: 'degraded',
+  ORPHAN: 'orphan',
   STALE: 'stale',
 } as const;
 
@@ -71,6 +72,9 @@ export const summarizeDiscovery = (
   const degraded = problems.filter((problem) =>
     DEGRADED_KINDS.includes(problem.kind),
   );
+  const orphans = problems.filter(
+    (problem) => problem.kind === WorktreeDiscoveryProblemKind.OrphanDirectory,
+  );
 
   const groups: WorktreeProblemGroup[] = [];
 
@@ -87,6 +91,19 @@ export const summarizeDiscovery = (
     });
   }
 
+  if (orphans.length > 0) {
+    groups.push({
+      details: orphans.map(describe),
+      id: WORKTREE_PROBLEM_GROUP.ORPHAN,
+      remedy: WORKTREE_DISCOVERY_COPY.orphanRemedy,
+      summary: counted(
+        orphans.length,
+        WORKTREE_DISCOVERY_COPY.orphanSummarySuffixOne,
+        WORKTREE_DISCOVERY_COPY.orphanSummarySuffixOther,
+      ),
+    });
+  }
+
   if (degraded.length > 0) {
     groups.push({
       details: degraded.map(describe),
@@ -99,7 +116,7 @@ export const summarizeDiscovery = (
   return {
     emptyRootCount: scannedRoots.filter((root) => !root.exists).length,
     groups,
-    problemCount: stale.length + degraded.length,
+    problemCount: stale.length + orphans.length + degraded.length,
   };
 };
 

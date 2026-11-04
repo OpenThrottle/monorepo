@@ -136,9 +136,25 @@ describe('TaskPromotionEnqueueService.enqueuePromotion', () => {
     expect(queue.add).not.toHaveBeenCalled();
   });
 
-  it('rejects a task already promoted (SKIPPED + promoted tag)', async () => {
+  it('rejects a legacy promoted task (SKIPPED + promoted tag, no PROMOTED status)', async () => {
     taskFindOne.mockResolvedValue(buildTask({ status: 'SKIPPED' }));
     tagFindOne.mockResolvedValue(asMock<TaskTag>({ tag: 'promoted' }));
+
+    const result = await service.enqueuePromotion({
+      actorServiceAccountId: null,
+      actorUserId: null,
+      taskId: TASK_ID,
+    });
+
+    expect(result).toEqual({
+      error: 'Task has already been promoted to a plan.',
+    });
+    expect(queue.add).not.toHaveBeenCalled();
+  });
+
+  it('rejects a status-PROMOTED task that has no promoted tag', async () => {
+    taskFindOne.mockResolvedValue(buildTask({ status: 'PROMOTED' }));
+    tagFindOne.mockResolvedValue(null);
 
     const result = await service.enqueuePromotion({
       actorServiceAccountId: null,

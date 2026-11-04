@@ -3,8 +3,9 @@
  *
  * Migrated verbatim from `docs/marketing/scripts/08-promote-task.md`, then
  * corrected against the app (2026-08): promotion is a queued job with no
- * navigation, and the original task keeps a plain-text provenance note plus a
- * `promoted` tag — not a clickable link. The original 0:21/0:31/0:41 beats
+ * navigation, and the original task keeps a plain-text provenance note and the
+ * PROMOTED status (it also carries a `promoted` tag for one release) — not a
+ * clickable link. The original 0:21/0:31/0:41 beats
  * described that nonexistent link UI; these describe what ships. See the audit
  * notes in `./flow.ts`.
  */
@@ -31,7 +32,7 @@ export const episode: VideoEpisode = {
     },
     {
       action:
-        'Back on the original task: SKIPPED, tagged `promoted`, with a note naming the new plan.',
+        'Back on the original task: PROMOTED, with a note naming the new plan.',
       t: '0:31',
     },
     { action: 'Highlight the provenance note.', t: '0:41' },

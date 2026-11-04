@@ -1,6 +1,6 @@
 import { Editor } from '@openthrottle/react-router-editor';
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
@@ -35,7 +35,7 @@ export const SkillDetail = (props: SkillDetailProps): React.ReactElement => {
 
   return (
     <div
-      className={clsx('flex flex-col gap-4', className)}
+      className={cn('flex flex-col gap-4', className)}
       data-testid="SkillDetail"
     >
       {isEditing ? (

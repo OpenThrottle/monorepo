@@ -8,7 +8,7 @@ import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
 import type { SkillAvailabilityRuleValue } from '~/routing/skills/utils/skill-availability';
 
 import type {
-  SkillAvailabilityRuleFormOptions,
+  UseSkillAvailabilityRuleFormOptions,
   UseSkillAvailabilityRuleFormResult,
 } from '../useSkillAvailabilityRuleForm';
 import { useSkillAvailabilityRuleForm } from '../useSkillAvailabilityRuleForm';
@@ -24,7 +24,7 @@ const existingRule: SkillAvailabilityRuleValue = {
   tagDeny: [],
 };
 
-function renderRuleForm(options: SkillAvailabilityRuleFormOptions): {
+function renderRuleForm(options: UseSkillAvailabilityRuleFormOptions): {
   component: RenderResult;
   result: () => UseSkillAvailabilityRuleFormResult;
   submit: () => boolean;

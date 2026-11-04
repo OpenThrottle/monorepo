@@ -1,5 +1,4 @@
-import { Button } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
+import { Button, cn } from '@openthrottle/react-router-shadcn';
 import { ArrowRightIcon, CircleCheckBigIcon, CircleIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
@@ -39,20 +38,20 @@ export const DashboardGetStartedStep = (
 
   return (
     <li
-      className={clsx('flex items-center gap-3 py-3', className)}
+      className={cn('flex items-center gap-3 py-3', className)}
       data-complete={complete}
       data-testid="DashboardGetStartedStep"
     >
       <StatusIcon
         aria-hidden={true}
-        className={clsx(
+        className={cn(
           'h-5 w-5 shrink-0',
           complete ? 'text-primary' : 'text-muted-foreground',
         )}
       />
       <div className="min-w-0 flex-1">
         <p
-          className={clsx(
+          className={cn(
             'text-sm font-medium',
             complete && 'text-muted-foreground line-through',
           )}

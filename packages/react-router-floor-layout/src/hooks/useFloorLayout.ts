@@ -47,26 +47,44 @@ export interface UseFloorLayoutResult {
  * @public
  */
 export function useFloorLayout(initial: FloorLayout): UseFloorLayoutResult {
+  // Hooks
   const [layout, setLayout] = useState<FloorLayout>(initial);
 
+  // Setup
+
+  // Handlers
+  const handleAddElement = useCallback(
+    (element: FloorElement) =>
+      setLayout((current) => addElement(current, element)),
+    [],
+  );
+  const handleMoveElement = useCallback(
+    (id: string, center: Point) =>
+      setLayout((current) => moveElement(current, id, center)),
+    [],
+  );
+  const handleRemoveElement = useCallback(
+    (id: string) => setLayout((current) => removeElement(current, id)),
+    [],
+  );
+  const handleUpdateElement = useCallback(
+    (id: string, patch: ElementPatch) =>
+      setLayout((current) => updateElement(current, id, patch)),
+    [],
+  );
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
   return {
-    addElement: useCallback(
-      (element) => setLayout((current) => addElement(current, element)),
-      [],
-    ),
+    addElement: handleAddElement,
     layout,
-    moveElement: useCallback(
-      (id, center) => setLayout((current) => moveElement(current, id, center)),
-      [],
-    ),
-    removeElement: useCallback(
-      (id) => setLayout((current) => removeElement(current, id)),
-      [],
-    ),
+    moveElement: handleMoveElement,
+    removeElement: handleRemoveElement,
     setLayout,
-    updateElement: useCallback(
-      (id, patch) => setLayout((current) => updateElement(current, id, patch)),
-      [],
-    ),
+    updateElement: handleUpdateElement,
   };
 }

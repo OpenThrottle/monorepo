@@ -9,13 +9,13 @@ import { CheckPolicies } from '@openthrottle/nestjs-core/src/policies/policies.d
 import { <%= namePascal %>Service } from './<%= name %>.service.ts';
 import { <%= singularPascal %> } from '~/services/<%= name %>/entities/<%= singular %>.entity';
 import { <%= namePascal %>Policy } from '~/services/<%= name %>/<%= name %>.policy';
-import { Get<%= namePascal %>Args } from '~/services/<%= name %>/dto/get-<%= name %>.args';
+import { Get<%= namePascal %>Args } from '~/services/<%= name %>/dto/get-<%= name %>.input';
 
 @ObjectType()
 class <%= singularPascal %>Result extends Result(<%= singularPascal %>) {}
 
 @ObjectType()
-export class <%= singularPascal %>PaginatedResult extends PaginatedResult(
+class <%= singularPascal %>PaginatedResult extends PaginatedResult(
   <%= singularPascal %>,
 ) {}
 

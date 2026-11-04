@@ -75,13 +75,13 @@ describe('toSanitizedClientMessage', () => {
   it('surfaces the actionable detail of an application-level GraphQL error', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const error = new Error(
-      'GraphQL errors: Unknown plan status: "DRAFT". Valid statuses: BACKLOG, BLOCKED, CANCELED, COMPLETED, IN_PROGRESS, PENDING, QUEUED, SKIPPED.',
+      'GraphQL errors: Unknown plan status: "DRAFT". Valid statuses: BACKLOG, BLOCKED, CANCELED, COMPLETED, IN_PROGRESS, PENDING, PROMOTED, QUEUED, SKIPPED.',
     );
 
     const message = toSanitizedClientMessage('list_plans_by_status', error);
 
     expect(message).toBe(
-      'Unknown plan status: "DRAFT". Valid statuses: BACKLOG, BLOCKED, CANCELED, COMPLETED, IN_PROGRESS, PENDING, QUEUED, SKIPPED.',
+      'Unknown plan status: "DRAFT". Valid statuses: BACKLOG, BLOCKED, CANCELED, COMPLETED, IN_PROGRESS, PENDING, PROMOTED, QUEUED, SKIPPED.',
     );
     expect(spy).toHaveBeenCalledWith(
       '[openthrottle-mcp] list_plans_by_status failed (validation):',

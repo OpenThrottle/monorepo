@@ -149,10 +149,16 @@
   "targetDefaults": {
     "@nx/js:tsc": {
       "cache": true,
-      "dependsOn": ["^build", "^codegen-graphql", "^codegen-react-router"],
+      "dependsOn": [
+        "^build",
+        "^codegen-graphql",
+        "^codegen-react-router",
+        "codegen-graphql",
+        "codegen-react-router"
+      ],
       "executor": "@nx/js:tsc",
       "metadata": {
-        "description": "Shared @nx/js:tsc compile defaults: emit the package to {projectRoot}/dist from src/index.ts using tsconfig.lib.json (after upstream build + codegen)."
+        "description": "Shared @nx/js:tsc compile defaults: emit the package to {projectRoot}/dist from src/index.ts using tsconfig.lib.json (after upstream build and this project's own codegen, when those targets exist)."
       },
       "options": {
         "generateExportsField": false,
@@ -164,26 +170,45 @@
         "tsConfig": "{projectRoot}/tsconfig.lib.json"
       }
     },
-    "build": {
-      "cache": true,
-      "executor": "@nx/vite:build",
-      "dependsOn": [
-        "^build",
-        "^codegen-graphql",
-        "^codegen-react-router",
-        "^typecheck"
-      ],
-      "inputs": ["noMarkdown", "^noMarkdown"],
-      "metadata": {
-        "description": "Build the project to {projectRoot}/dist via @nx/vite:build; runs after upstream build, codegen, and typecheck."
+    "build": [
+      {
+        "cache": true,
+        "dependsOn": [
+          "^build",
+          "^codegen-graphql",
+          "^codegen-react-router",
+          "^typecheck",
+          "codegen-graphql",
+          "codegen-react-router"
+        ],
+        "executor": "@nx/vite:build",
+        "inputs": ["noMarkdown", "^noMarkdown"],
+        "metadata": {
+          "description": "Build the project to {projectRoot}/dist via @nx/vite:build; runs after upstream build, codegen, and typecheck, and after this project's own codegen when those targets exist."
+        },
+        "options": {
+          "buildLibsFromSource": true,
+          "emptyOutDir": true,
+          "outputPath": "{projectRoot}/dist",
+          "tsConfig": "{projectRoot}/tsconfig.lib.json"
+        }
       },
-      "options": {
-        "buildLibsFromSource": true,
-        "emptyOutDir": true,
-        "outputPath": "{projectRoot}/dist",
-        "tsConfig": "{projectRoot}/tsconfig.lib.json"
+      {
+        "dependsOn": [
+          "...",
+          "^codegen-graphql",
+          "^codegen-react-router",
+          "codegen-graphql",
+          "codegen-react-router"
+        ],
+        "filter": {
+          "plugin": "@nx/react/router-plugin"
+        },
+        "metadata": {
+          "description": "Run this app's codegen-graphql and codegen-react-router before the router plugin's react-router build. A separate entry because the @nx/vite:build default above is incompatible with that command, so Nx drops it — including its dependsOn — and the plugin's own dependsOn is only ^build. '...' keeps that ^build. Targets the project does not define are skipped (website has no codegen-graphql). The watch targets stay on dev: they never exit."
+        }
       }
-    },
+    ],
     "build-package": {
       "cache": true,
       "dependsOn": ["build"],
@@ -221,6 +246,31 @@
         ],
         "cwd": "{workspaceRoot}",
         "parallel": false
+      }
+    },
+    "check-claude-config-json": {
+      "cache": true,
+      "description": "Fail when a tracked file Claude Code reads (.claude/*.json, .mcp.json, .claude-plugin/*.json, plugins/*/hooks/hooks.json) is not strict JSON, via scripts/check-claude-config-json.ts. Claude Code skips an unparseable settings file entirely, so a single `//` comment silently disables every project hook in it — the cause of the 2026-09-23 skill-capture blackout. `inputs` are explicit {workspaceRoot} globs because the root project owns no files.",
+      "executor": "nx:run-commands",
+      "inputs": [
+        "{workspaceRoot}/**/.claude-plugin/*.json",
+        "{workspaceRoot}/.claude/*.json",
+        "{workspaceRoot}/.mcp.json",
+        "{workspaceRoot}/plugins/*/hooks/hooks.json",
+        "{workspaceRoot}/scripts/check-claude-config-json.ts"
+      ],
+      "options": {
+        "command": "tsx ./scripts/check-claude-config-json.ts",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "check-folder-vocabulary": {
+      "cache": false,
+      "description": "Fail when any tracked path has a directory segment named lib, helpers, common, shared or misc (ot-folders rule 4), via scripts/check-folder-vocabulary.ts. Whole-segment matching, so library.ts and common.ts pass; each hit names the folder to use instead. Never cached: the input is the whole tracked file list, which no `inputs` glob short of the entire tree can hash, and `git ls-files` is fast enough not to need it.",
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsx ./scripts/check-folder-vocabulary.ts",
+        "cwd": "{workspaceRoot}"
       }
     },
     "check-generated-attributes": {
@@ -296,13 +346,12 @@
         "{workspaceRoot}/applications/*/src/**/*.{ts,tsx}",
         "{workspaceRoot}/packages/*/package.json",
         "{workspaceRoot}/packages/*/src/**/*.{ts,tsx}",
-        "{workspaceRoot}/scripts/check-package-entrypoints.baseline.txt",
         "{workspaceRoot}/scripts/check-package-entrypoints.ts",
         "{workspaceRoot}/tools/*/package.json",
         "{workspaceRoot}/tools/*/src/**/*.{ts,tsx}"
       ],
       "metadata": {
-        "description": "Verify no workspace package steers Vite or NodeNext into a gitignored build directory while its own main/module names src/, via scripts/check-package-entrypoints.ts. Offenders already listed in scripts/check-package-entrypoints.baseline.txt warn; a package missing from that shrink-only baseline errors, as does a baselined package that no longer offends. Additionally enforces the blanket technology:nestjs invariant: every such type:package points main/module/types and every exports condition at built output and declares live build and dev targets, with no exemptions — the script's NESTJS_BLOCKERS map is empty and shrink-only on the same terms as the baseline. `inputs` MUST be explicit {workspaceRoot} globs — the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever."
+        "description": "Verify no workspace package steers Vite or NodeNext into a gitignored build directory while its own main/module names src/, via scripts/check-package-entrypoints.ts. Error-mode on every resolved condition (import/default for Vite, types for NodeNext), with no warn tier and no baseline — the shrink-only baseline this gate shipped with reached zero and was deleted, which is what promoted types from warn to error. Additionally enforces the blanket technology:nestjs invariant: every such type:package points main/module/types and every exports condition at built output and declares live build and dev targets, with no exemptions — the script's NESTJS_BLOCKERS map is empty and shrink-only, and is now the gate's only exemption mechanism. `inputs` MUST be explicit {workspaceRoot} globs — the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever."
       },
       "options": {
         "command": "tsx ./scripts/check-package-entrypoints.ts",
@@ -327,9 +376,15 @@
     },
     "codegen-graphql-watch": {
       "continuous": true,
+      "dependsOn": [
+        {
+          "projects": ["openthrottle-server"],
+          "target": "graphql-schema-write"
+        }
+      ],
       "executor": "nx:run-commands",
       "metadata": {
-        "description": "Watch mode for graphql-codegen — regenerate GraphQL types on change."
+        "description": "Watch mode for graphql-codegen — regenerate GraphQL types on change. Depends on openthrottle-server:graphql-schema-write so the committed schema.gql the watcher validates documents against already holds this branch's resolver fields: a server boot no longer writes it (autoSchemaFile is in memory), and without this edge a new field plus a document selecting it fails `dev` on codegen before anything could write the schema. Deliberately NOT on `codegen-graphql` (the one-shot target CI and check:local run): that would let check:local:affected-test overwrite the schema before check:local:graphql-schema compares it, and the drift check would pass vacuously."
       },
       "options": {
         "command": "graphql-codegen --watch",
@@ -424,6 +479,38 @@
         "cwd": "{workspaceRoot}"
       }
     },
+    "graphql-schema": {
+      "cache": false,
+      "configurations": {
+        "check": {
+          "command": "node --enable-source-maps --env-file=.env.default ./node_modules/@openthrottle/nestjs-graphql/dist/src/bin.js --module=./build/src/app.module.js --project={projectName} --schema={projectRoot}/schema.gql --check"
+        },
+        "write": {
+          "command": "node --enable-source-maps --env-file=.env.default ./node_modules/@openthrottle/nestjs-graphql/dist/src/bin.js --module=./build/src/app.module.js --project={projectName} --schema={projectRoot}/schema.gql --write"
+        }
+      },
+      "defaultConfiguration": "check",
+      "dependsOn": ["build", "^build"],
+      "executor": "nx:run-commands",
+      "metadata": {
+        "description": "Emit or verify a code-first NestJS API's committed {projectRoot}/schema.gql without booting it (configurations: check, write; default check). Runs the command shipped by @openthrottle/nestjs-graphql (src/bin.ts), so an API needs no script of its own: it opts in by declaring an empty `graphql-schema` target and depending on @openthrottle/nestjs-graphql. The target passes the built root module (--module=./build/src/app.module.js, export AppModule), the schema location and the project name. The command opens that module in Nest preview mode — only GraphQLModule initializes, so no Postgres/Redis/HTTP. `check` emits into a temp dir and fails on drift; `write` regenerates in place. The command names the file through the GRAPHQL_SCHEMA_FILE environment variable, which NestjsGraphqlModule turns into autoSchemaFile; with it unset a boot writes nothing, so this is the only producer of schema.gql. `.env.default` is loaded because some modules read env at import time. Depends on build and ^build: the app's built module and the package's dist. Not cached: the emit depends on the whole decorator graph."
+      },
+      "options": {
+        "cwd": "{projectRoot}"
+      }
+    },
+    "graphql-schema-write": {
+      "cache": false,
+      "dependsOn": ["build", "^build"],
+      "executor": "nx:run-commands",
+      "metadata": {
+        "description": "Regenerate a code-first NestJS API's committed {projectRoot}/schema.gql without booting it: the same command as `graphql-schema` configuration `write` (the only producer of schema.gql; a server boot keeps the schema in memory). A separate target because an Nx dependsOn entry cannot select a configuration, and `graphql-schema` defaults to `check`. Exists for codegen-graphql-watch to depend on, which only `dev` runs; CI and check:local never reach it. Keep the command in step with `graphql-schema` configuration `write`. Not cached: the emit depends on the whole decorator graph."
+      },
+      "options": {
+        "command": "node --enable-source-maps --env-file=.env.default ./node_modules/@openthrottle/nestjs-graphql/dist/src/bin.js --module=./build/src/app.module.js --project={projectName} --schema={projectRoot}/schema.gql --write",
+        "cwd": "{projectRoot}"
+      }
+    },
     "ingest-agent-assets": {
       "cache": false,
       "dependsOn": ["@openthrottle/nodejs-utils:build"],
@@ -463,7 +550,8 @@
       "options": {
         "command": "pnpm exec eslint -c ./eslint.config.ts .",
         "cwd": "{projectRoot}"
-      }
+      },
+      "outputs": ["{options.outputFile}"]
     },
     "nestjs": {
       "configurations": {
@@ -488,9 +576,10 @@
           "command": "nest start --path ./tsconfig.app.json"
         }
       },
+      "defaultConfiguration": "dev",
       "executor": "nx:run-commands",
       "metadata": {
-        "description": "Drive a NestJS app through the Nest CLI (configurations: build, dev, debug, repl, start)."
+        "description": "Drive a NestJS app through the Nest CLI (configurations: build, dev, debug, repl, start; default dev)."
       },
       "options": {
         "cwd": "{projectRoot}"

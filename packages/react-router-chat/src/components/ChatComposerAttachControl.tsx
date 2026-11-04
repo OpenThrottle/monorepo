@@ -56,6 +56,7 @@ export const ChatComposerAttachControl = (
         <TooltipTrigger asChild={true}>
           <Button
             aria-label="Add context"
+            className="pointer-coarse:size-11"
             data-testid="ChatComposerToolbar-attach"
             disabled={true}
             size="icon"
@@ -77,6 +78,7 @@ export const ChatComposerAttachControl = (
           <DropdownMenuTrigger asChild={true}>
             <Button
               aria-label="Add context"
+              className="pointer-coarse:size-11"
               data-testid="ChatComposerToolbar-attach"
               size="icon"
               type="button"

@@ -26,6 +26,7 @@ import {
 } from '../config/nestjs-graphql.plugins.ts';
 import { createQueryDepthLimitRule } from '../config/query-depth-limit.ts';
 import { defaultResponseCacheSessionId } from '../config/response-cache-session.ts';
+import { resolveAutoSchemaFile } from '../schema/auto-schema-file.ts';
 import { createGraphqlWsOnConnect } from '../subscriptions/graphql-ws-auth.ts';
 
 /**
@@ -83,9 +84,12 @@ export interface NestjsGraphqlModuleOptions extends Omit<
   plugins?: ApolloDriverConfig['plugins'];
 }
 
+/**
+ * No `autoSchemaFile` here: it is resolved when `forRoot` runs (see
+ * `resolveAutoSchemaFile`), so a boot keeps the schema in memory and the
+ * `graphql-schema` command can name a file before the app module is imported.
+ */
 const DEFAULT_DRIVER_CONFIG: ApolloDriverConfig = {
-  autoSchemaFile: 'schema.gql',
-
   csrfPrevention: {
     requestHeaders: [HEADER_APP_NAME, HEADER_APP_VERSION],
   },
@@ -268,7 +272,11 @@ export function buildDriverConfig(
     validationRules: userRules,
     ...rest
   } = options;
-  const base = { ...DEFAULT_DRIVER_CONFIG, ...rest };
+  const base = {
+    ...DEFAULT_DRIVER_CONFIG,
+    autoSchemaFile: resolveAutoSchemaFile(),
+    ...rest,
+  };
 
   // Re-apply secure defaults for the nested blocks the shallow spread above
   // would have wholesale-replaced (notably the graphql-ws onConnect auth).
@@ -318,7 +326,7 @@ export class NestjsGraphqlModule {
     return {
       imports: [
         GraphQLModule.forRoot<ApolloDriverConfig>({
-          autoSchemaFile: 'schema.gql',
+          autoSchemaFile: resolveAutoSchemaFile(),
           cache: getRedisCache(),
           ...config,
         }),

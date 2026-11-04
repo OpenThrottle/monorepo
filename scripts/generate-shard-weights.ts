@@ -4,8 +4,8 @@ import { availableParallelism } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { createLogger, flagValue, hasFlag } from './lib/index.ts';
 import { SUITE_SHARDED_PROJECTS } from './parallelize-tasks.ts';
+import { createLogger, flagValue, hasFlag } from './utils/index.ts';
 
 /**
  * @description Regenerate `scripts/shard-weights.json` — the measured

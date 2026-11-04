@@ -13,6 +13,7 @@ export {
 export { planHasCustomRunConfig } from './plan-run-config-storage.compare.ts';
 export {
   DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI,
+  DEFAULT_PLAN_RUN_RALPH_EFFORT,
   DEFAULT_PLAN_RUN_RALPH_ITERATIONS,
   DEFAULT_PLAN_RUN_RALPH_MODEL,
   DEFAULT_PLAN_RUN_RALPH_PROMPT,

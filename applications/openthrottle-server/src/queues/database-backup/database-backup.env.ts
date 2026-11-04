@@ -3,6 +3,7 @@
  * @see docs/openthrottle/database-backup-scheduled-job-spec.md
  */
 
+import { resolveRepeatablesOwner } from '../repeatable-job.owner.ts';
 import {
   DATABASE_BACKUP_JOB_NAME,
   DATABASE_BACKUP_PNPM_SCRIPT,
@@ -93,13 +94,11 @@ export function validateBackupCronPattern(
  * @description Decides whether THIS checkout owns scheduled backups. Multiple
  * openthrottle-server instances share one Redis; without a single owner each
  * worktree registers its own scheduler (a factor in the 2026-07-05 flood). An
- * explicit `OT_BACKUP_OWNER` wins; otherwise a checkout running from under a
- * `*worktrees/` directory (the `~/.openthrottle/worktrees` default and the historical sibling
- * `openthrottle-worktrees` alike) is treated as a non-owner.
+ * explicit `OT_BACKUP_OWNER` wins; otherwise the shared `resolveRepeatablesOwner()`
+ * decides (`OT_SCHEDULED_JOBS_OWNER`, then `OT_WORKTREE_DB`: a shared-DB worktree is
+ * a non-owner, an isolated worktree or the primary checkout owns its backups).
  */
-export function resolveBackupOwnership(
-  workspaceRoot: string,
-):
+export function resolveBackupOwnership():
   | { readonly owner: true }
   | { readonly owner: false; readonly reason: string } {
   const explicit = process.env.OT_BACKUP_OWNER;
@@ -112,14 +111,11 @@ export function resolveBackupOwnership(
         };
   }
 
-  if (/[/\\][^/\\]*worktrees[/\\]/.test(workspaceRoot)) {
-    return {
-      owner: false,
-      reason: `workspace root ${workspaceRoot} is a worktree checkout; only the canonical checkout schedules backups (set OT_BACKUP_OWNER=true to override).`,
-    };
-  }
+  const repeatables = resolveRepeatablesOwner();
 
-  return { owner: true };
+  return repeatables.owner
+    ? { owner: true }
+    : { owner: false, reason: repeatables.reason };
 }
 
 export function parseTruthyEnv(value: string | undefined): boolean {
@@ -194,7 +190,7 @@ export function resolveDatabaseBackupSchedule(): DatabaseBackupScheduleResolutio
   }
 
   const workspaceRoot = getDatabaseBackupWorkspaceRoot();
-  const ownership = resolveBackupOwnership(workspaceRoot);
+  const ownership = resolveBackupOwnership();
   if (!ownership.owner) {
     return { enabled: false, reason: ownership.reason };
   }

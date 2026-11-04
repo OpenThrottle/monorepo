@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 /**
- * Integration coverage for `.husky/lib/attribution-push-gate.sh` — the push-time
+ * Integration coverage for `.husky/utils/attribution-push-gate.sh` — the push-time
  * half of the attribution guards, which catches a commit that got past
  * `.husky/commit-msg` (the `--no-verify` path that put an attribution line on
  * PR #554).
@@ -22,7 +22,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
  */
 
 const REPO_ROOT = join(import.meta.dirname, '..', '..');
-const HUSKY_LIB = join(REPO_ROOT, '.husky', 'lib');
+const HUSKY_UTILS = join(REPO_ROOT, '.husky', 'utils');
 const ZERO = '0'.repeat(40);
 
 interface RunResult {
@@ -71,7 +71,7 @@ const runGate = (repo: string, pushRefs: string): RunResult => {
     return {
       output: execFileSync(
         'sh',
-        ['-c', '. .husky/lib/attribution-push-gate.sh', '.husky/pre-push'],
+        ['-c', '. .husky/utils/attribution-push-gate.sh', '.husky/pre-push'],
         options,
       ),
       status: 0,
@@ -93,12 +93,12 @@ describe('attribution-push-gate.sh', () => {
   beforeEach(() => {
     repo = mkdtempSync(join(tmpdir(), 'ot-attr-push-'));
 
-    mkdirSync(join(repo, '.husky', 'lib'), { recursive: true });
+    mkdirSync(join(repo, '.husky', 'utils'), { recursive: true });
     for (const file of [
       'attribution-patterns.sh',
       'attribution-push-gate.sh',
     ]) {
-      cpSync(join(HUSKY_LIB, file), join(repo, '.husky', 'lib', file));
+      cpSync(join(HUSKY_UTILS, file), join(repo, '.husky', 'utils', file));
     }
 
     execFileSync('git', ['-C', repo, 'init', '-q', '-b', 'main']);

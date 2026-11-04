@@ -1,5 +1,6 @@
 import { createProjectGraphAsync } from '@nx/devkit';
-import { createLogger } from './lib/index.ts';
+
+import { createLogger } from './utils/index.ts';
 
 const logger = createLogger();
 

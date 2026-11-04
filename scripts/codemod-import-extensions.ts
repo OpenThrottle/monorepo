@@ -42,7 +42,7 @@ import path from 'node:path';
 
 import { Node, Project, SyntaxKind } from 'ts-morph';
 
-import { flagValue, hasFlag } from './lib/args.ts';
+import { flagValue, hasFlag } from './utils/args.ts';
 
 /** A specifier the codemod could not resolve to a file on disk. */
 export interface UnresolvedSpecifier {

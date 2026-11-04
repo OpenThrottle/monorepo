@@ -10,7 +10,10 @@ import {
   RuleApplication,
 } from './rule-application.entity.ts';
 import type { OrphanedTaskStatusCaptureParams } from './rule-applications.service.ts';
-import { RuleApplicationsService } from './rule-applications.service.ts';
+import {
+  RuleApplicationsService,
+  SOFT_CLOSED_TASK_STATUS,
+} from './rule-applications.service.ts';
 
 const PLAN_ID = 'plan-1';
 
@@ -126,6 +129,9 @@ describe('RuleApplicationsService.orphanUnmatchedApplications', () => {
       { nonTerminal: ['BACKLOG', 'BLOCKED', 'IN_PROGRESS', 'PENDING'] },
     );
     expect(taskUpdateBuilder.update).toHaveBeenCalledWith(Task);
+    // The orphan soft-close is reversible and is NOT a promotion: it must stay SKIPPED, never
+    // PROMOTED (inject-task.executor revives a task by recognizing exactly this value).
+    expect(SOFT_CLOSED_TASK_STATUS).toBe('SKIPPED');
     expect(taskUpdateBuilder.set).toHaveBeenCalledWith({ status: 'SKIPPED' });
     expect(taskUpdateBuilder.where).toHaveBeenCalledWith('id IN (:...ids)', {
       ids: ['task-1'],

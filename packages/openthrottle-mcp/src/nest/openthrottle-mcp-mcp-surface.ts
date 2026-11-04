@@ -814,6 +814,83 @@ export class McpDeveloperMcpSurface {
   }
 
   @Tool({
+    description: Th.listBlogPostsToolDescription,
+    name: 'list_blog_posts',
+    parameters: asMcpParameters(Th.listBlogPostsToolParameters),
+  })
+  listBlogPosts(
+    args: Parameters<typeof Th.listBlogPostsToolHandler>[0],
+  ): ReturnType<typeof Th.listBlogPostsToolHandler> {
+    return Th.listBlogPostsToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.getBlogPostToolDescription,
+    name: 'get_blog_post',
+    parameters: asMcpParameters(Th.getBlogPostToolParameters),
+  })
+  getBlogPost(
+    args: Parameters<typeof Th.getBlogPostToolHandler>[0],
+  ): ReturnType<typeof Th.getBlogPostToolHandler> {
+    return Th.getBlogPostToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.createBlogPostToolDescription,
+    name: 'create_blog_post',
+    parameters: asMcpParameters(Th.createBlogPostToolParameters),
+  })
+  createBlogPost(
+    args: Parameters<typeof Th.createBlogPostToolHandler>[0],
+  ): ReturnType<typeof Th.createBlogPostToolHandler> {
+    return Th.createBlogPostToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.updateBlogPostToolDescription,
+    name: 'update_blog_post',
+    parameters: asMcpParameters(Th.updateBlogPostToolParameters),
+  })
+  updateBlogPost(
+    args: Parameters<typeof Th.updateBlogPostToolHandler>[0],
+  ): ReturnType<typeof Th.updateBlogPostToolHandler> {
+    return Th.updateBlogPostToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.setBlogPostTagsToolDescription,
+    name: 'set_blog_post_tags',
+    parameters: asMcpParameters(Th.setBlogPostTagsToolParameters),
+  })
+  setBlogPostTags(
+    args: Parameters<typeof Th.setBlogPostTagsToolHandler>[0],
+  ): ReturnType<typeof Th.setBlogPostTagsToolHandler> {
+    return Th.setBlogPostTagsToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.listBlogTagsToolDescription,
+    name: 'list_blog_tags',
+    parameters: asMcpParameters(Th.listBlogTagsToolParameters),
+  })
+  listBlogTags(
+    args: Parameters<typeof Th.listBlogTagsToolHandler>[0],
+  ): ReturnType<typeof Th.listBlogTagsToolHandler> {
+    return Th.listBlogTagsToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.listBlogAuthorsToolDescription,
+    name: 'list_blog_authors',
+    parameters: asMcpParameters(Th.listBlogAuthorsToolParameters),
+  })
+  listBlogAuthors(
+    args: Parameters<typeof Th.listBlogAuthorsToolHandler>[0],
+  ): ReturnType<typeof Th.listBlogAuthorsToolHandler> {
+    return Th.listBlogAuthorsToolHandler(args);
+  }
+
+  @Tool({
     description: Th.promoteTaskToolDescription,
     name: 'promote_task',
     parameters: asMcpParameters(Th.promoteTaskToolParameters),

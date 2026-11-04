@@ -3,8 +3,8 @@ import { toast } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import { useAgenticChatTurn } from '~/routing/home/hooks/useAgenticChatTurn';
-import type { RunSkillPayload } from '~/routing/skills/components/RunSkillDialog';
 import { SKILL_RUN_COPY } from '~/routing/skills/data/data.copy';
+import type { RunSkillPayload } from '~/routing/skills/types';
 
 export interface UseRunSkillResult {
   /** Whether the streaming conversation surface (sheet) is open. */
@@ -62,6 +62,8 @@ export const useRunSkill = (): UseRunSkillResult => {
   const onConversationOpenChange = (open: boolean): void => {
     setConversationOpen(open);
   };
+
+  // Markup
 
   // Life Cycle
   // Surface a turn error as a toast, guarding against an empty message (phantom

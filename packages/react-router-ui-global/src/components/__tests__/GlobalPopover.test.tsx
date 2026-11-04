@@ -51,6 +51,15 @@ describe('GlobalPopover Component', () => {
     cleanup();
   });
 
+  test('default trigger keeps its 28px size and grows to 44px on coarse pointers', () => {
+    const component = renderPopover({ actions: [] });
+
+    expect(component.getByRole('button', { name: 'Row actions' })).toHaveClass(
+      'size-7',
+      'pointer-coarse:size-11',
+    );
+  });
+
   test('opens the menu from the default trigger', async () => {
     const component = renderPopover({
       actions: [

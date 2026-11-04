@@ -1,6 +1,5 @@
-import { Button } from '@openthrottle/react-router-shadcn';
+import { Button, cn } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleEmptyState } from '@openthrottle/react-router-ui';
-import clsx from 'clsx';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -29,7 +28,7 @@ export const PullRequestNotFound = (
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx('p-4', className)} data-testid="PullRequestNotFound">
+    <div className={cn('p-4', className)} data-testid="PullRequestNotFound">
       <OpenThrottleEmptyState
         description="This PR was not found for the selected owner and repo. Try another filter from the list or open the repository on GitHub."
         title="Pull request not found"

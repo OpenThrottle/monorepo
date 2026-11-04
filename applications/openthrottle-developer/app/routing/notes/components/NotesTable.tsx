@@ -1,7 +1,6 @@
-import { DataTable } from '@openthrottle/react-router-shadcn';
+import { cn, DataTable } from '@openthrottle/react-router-shadcn';
 import { readSearchParam } from '@openthrottle/react-router-ui-global';
 import type { ColumnDef } from '@tanstack/react-table';
-import clsx from 'clsx';
 import * as React from 'react';
 import { Link, useSearchParams } from 'react-router';
 
@@ -37,8 +36,8 @@ export const NotesTable = (props: NotesTableProps): React.ReactElement => {
 
   return (
     <div
-      className={clsx('ui-border rounded-lg border', className)}
-      // className={clsx('ui-border rounded-lg border [&_tbody_tr_td]:hover:py-4 [&_tbody_tr_td]:transition-all [&_tbody_tr_td]:duration-500', className)}
+      className={cn('ui-border rounded-lg border', className)}
+      // className={cn('ui-border rounded-lg border [&_tbody_tr_td]:hover:py-4 [&_tbody_tr_td]:transition-all [&_tbody_tr_td]:duration-500', className)}
       data-testid="NotesTable"
     >
       <DataTable<NoteCardFragment, string | number | null | undefined>

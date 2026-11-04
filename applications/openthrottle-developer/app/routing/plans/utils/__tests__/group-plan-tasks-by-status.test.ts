@@ -41,6 +41,18 @@ describe('groupPlanTasksByStatus', () => {
     expect(grouped.get('COMPLETED')?.map((t) => t.id)).toEqual(['c']);
   });
 
+  test('places PROMOTED tasks in their own column, not UNKNOWN', () => {
+    const tasks: PlanTaskRowFragment[] = [
+      { ...baseTask(), id: 'p', status: 'PROMOTED' },
+    ];
+
+    const grouped = groupPlanTasksByStatus(tasks);
+
+    expect(PLAN_TASK_BOARD_COLUMN_ORDER).toContain('PROMOTED');
+    expect(grouped.get('PROMOTED')?.map((t) => t.id)).toEqual(['p']);
+    expect(grouped.get('UNKNOWN')).toEqual([]);
+  });
+
   test('routes unknown status strings to UNKNOWN', () => {
     const tasks: PlanTaskRowFragment[] = [
       { ...baseTask(), id: 'x', status: 'NOT_A_REAL_STATUS' },

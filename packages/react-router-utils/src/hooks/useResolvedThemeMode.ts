@@ -1,18 +1,12 @@
 import { useEffect, useState } from 'react';
 
+import { PREFERS_DARK_QUERY } from '../config/color-scheme';
+import { prefersColorSchemeDark } from '../utils/prefers-color-scheme-dark';
 import {
   type ResolvedThemeMode,
   resolveThemeMode,
   type ThemeMode,
 } from '../utils/theme';
-
-const PREFERS_DARK_QUERY = '(prefers-color-scheme: dark)';
-
-/** Read the current OS dark preference; false on the server (no `matchMedia`). */
-const prefersColorSchemeDark = (): boolean =>
-  typeof window !== 'undefined' &&
-  typeof window.matchMedia === 'function' &&
-  window.matchMedia(PREFERS_DARK_QUERY).matches;
 
 /**
  * @public
@@ -41,13 +35,13 @@ export const useResolvedThemeMode = (theme: ThemeMode): ResolvedThemeMode => {
   );
 
   // Setup
+  const resolved = resolveThemeMode(theme, prefersDark);
 
   // Handlers
 
   // Markup
 
   // Life Cycle
-
   // Keep `prefersDark` in sync with the OS. The change listener is attached
   // only while in system mode — the one mode where the OS preference changes
   // the resolved theme — and removed when leaving system mode or on unmount.
@@ -71,8 +65,6 @@ export const useResolvedThemeMode = (theme: ThemeMode): ResolvedThemeMode => {
       query.removeEventListener('change', handleChange);
     };
   }, [theme]);
-
-  const resolved = resolveThemeMode(theme, prefersDark);
 
   // Apply the resolved mode as the `.dark` class on the document element.
   useEffect(() => {

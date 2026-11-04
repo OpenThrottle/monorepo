@@ -9,7 +9,7 @@
 # Resolution model:
 #   cwd           : applications/openthrottle-developer/tests/e2e
 #   flows glob    : flows/**/*.yaml
-#   shared steps  : helpers/**/*.yaml (subflows referenced via `runFlow`)
+#   shared steps  : subflows/**/*.yaml (subflows referenced via `runFlow`)
 #   artifacts     : output/ (gitignored — recordings, screenshots, reports)
 #
 # Tagging scheme (every flow declares tags; CI scopes with --include-tags):

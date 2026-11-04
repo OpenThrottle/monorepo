@@ -71,12 +71,13 @@ import {
 import { isReconcilePlacementEnabled } from './reconcile-placement-policy.ts';
 
 /**
- * @description Task statuses reconcile never repositions: a completed/skipped/
+ * @description Task statuses reconcile never repositions: a completed/promoted/skipped/
  * canceled injected task is history and stays where it is.
  */
 const TERMINAL_TASK_STATUSES: readonly string[] = [
   'CANCELED',
   'COMPLETED',
+  'PROMOTED',
   'SKIPPED',
 ];
 

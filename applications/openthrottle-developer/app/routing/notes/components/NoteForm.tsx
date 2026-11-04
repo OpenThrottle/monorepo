@@ -1,10 +1,10 @@
 import {
   Button,
+  cn,
   Input,
   Label,
   TextArea,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import * as React from 'react';
 import { Form, Link } from 'react-router';
 
@@ -49,7 +49,7 @@ export const NoteForm = (props: NoteFormProps): React.ReactElement => {
   return (
     <div>
       <Form
-        className={clsx('w-full', className)}
+        className={cn('w-full', className)}
         data-testid="NoteForm"
         method="post"
       >

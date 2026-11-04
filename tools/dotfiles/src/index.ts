@@ -13,6 +13,9 @@ import pluginSimpleImportSort from 'eslint-plugin-simple-import-sort';
 import tslint from 'typescript-eslint';
 
 import { componentPrimitiveShape } from './rules/component-primitive-shape.ts';
+import { hookPrimitiveShape } from './rules/hook-primitive-shape.ts';
+import { nestjsFileExports } from './rules/nestjs-file-exports.ts';
+import { nestjsFileNaming } from './rules/nestjs-file-naming.ts';
 import { planTaskStatusChokepoint } from './rules/plan-task-status-chokepoint.ts';
 import { preHooksUnpack } from './rules/pre-hooks-unpack.ts';
 import { routePrimitiveShape } from './rules/route-primitive-shape.ts';
@@ -61,6 +64,24 @@ export {
 const CODE_POINT_ALPHABET = Array.from({ length: 95 }, (_, index) =>
   String.fromCharCode(32 + index),
 ).join('');
+
+/**
+ * Compose Tailwind classes with `cn` (docs/monorepo/code-style.md#composing-classes-with-cn).
+ * `clsx` and template literals both emit conflicting classes side by side and
+ * leave the winner to stylesheet order; `cn` resolves them so the last wins.
+ */
+const CLASS_COMPOSITION_MESSAGE = `Compose classes with \`cn\` from @openthrottle/react-router-shadcn, never bare \`clsx\` or a template literal — \`cn\` resolves Tailwind conflicts so the last class (the caller's \`className\`) wins. See docs/monorepo/code-style.md#composing-classes-with-cn.`;
+
+/**
+ * The template-literal half of the class-composition rule. Every
+ * `no-restricted-syntax` array below repeats it, because those options replace
+ * rather than merge.
+ */
+const TEMPLATE_LITERAL_CLASS_NAME_RESTRICTION = {
+  message: CLASS_COMPOSITION_MESSAGE,
+  selector:
+    "JSXAttribute[name.name='className'] > JSXExpressionContainer > TemplateLiteral[expressions.length>0]",
+};
 
 const skipEmptyGraphqlProcessor: Linter.Processor = {
   meta: { name: 'skip-empty-graphql', version: '1.0.0' },
@@ -220,6 +241,9 @@ export const eslintConfig = tslint.config([
       openthrottle: {
         rules: {
           'component-primitive-shape': componentPrimitiveShape,
+          'hook-primitive-shape': hookPrimitiveShape,
+          'nestjs-file-exports': nestjsFileExports,
+          'nestjs-file-naming': nestjsFileNaming,
           'plan-task-status-chokepoint': planTaskStatusChokepoint,
           'pre-hooks-unpack': preHooksUnpack,
           'route-primitive-shape': routePrimitiveShape,
@@ -278,6 +302,12 @@ export const eslintConfig = tslint.config([
       'import-x/no-named-as-default-member': 'off',
       'no-await-in-loop': 'error',
       'no-console': 'off',
+      // `cn` is built on clsx, so react-router-shadcn turns this off — in its
+      // own eslint.config.ts for `nx lint`, and in the root-cwd block below.
+      'no-restricted-imports': [
+        'error',
+        { paths: [{ message: CLASS_COMPOSITION_MESSAGE, name: 'clsx' }] },
+      ],
       // Enforce the "no new TypeScript enums — use `as const` objects" rule
       // from CLAUDE.md at the config layer.
       'no-restricted-syntax': [
@@ -286,6 +316,7 @@ export const eslintConfig = tslint.config([
           message: `Avoid TypeScript enums. Use an \`as const\` object instead (existing enums are grandfathered).`,
           selector: 'TSEnumDeclaration',
         },
+        TEMPLATE_LITERAL_CLASS_NAME_RESTRICTION,
       ],
       'no-undef': 'off',
       'no-unused-vars': 'off',
@@ -375,6 +406,7 @@ export const eslintConfig = tslint.config([
           message: `Avoid TypeScript enums. Use an \`as const\` object instead (existing enums are grandfathered).`,
           selector: 'TSEnumDeclaration',
         },
+        TEMPLATE_LITERAL_CLASS_NAME_RESTRICTION,
         {
           message: `Avoid snapshot tests in __tests__. Prefer getByRole/getByText and assertions on visible behavior.`,
           selector: `CallExpression[callee.type="MemberExpression"][callee.property.name="toMatchSnapshot"]`,
@@ -542,6 +574,32 @@ export const eslintConfig = tslint.config([
   },
 
   /**
+   * The hook primitive shape (docs/monorepo/hook-primitive-shape.md). Scoped to
+   * authored `use*` hook files under a `hooks/` folder; tests, stories and the
+   * vendored shadcn package (which carries its own hooks, held to the shadcn
+   * variant standard) are excluded. Enforced repo-wide at `error` now that every
+   * existing hook is at spec — regressions block the build. ESLint owns H1 (one
+   * hook named after the file), H2
+   * (exports), H3 (module-scope values), H4 (markers, autofix scaffolds) and H5
+   * (return type); H6 and the cross-file H3 check belong to the audit script.
+   * Use the first-line `hook-shape: opt-out` block-comment pragma for the
+   * genuinely-irreducible hook.
+   */
+  {
+    files: ['**/hooks/use*.{ts,tsx}'],
+    ignores: [
+      '**/*.stories.tsx',
+      '**/*.test.ts',
+      '**/*.test.tsx',
+      '**/__tests__/**',
+      '**/packages/react-router-shadcn/**',
+    ],
+    rules: {
+      'openthrottle/hook-primitive-shape': 'error',
+    },
+  },
+
+  /**
    * The route primitive shape (docs/monorepo/route-primitive-shape.md).
    * Scoped to React Router route modules under `app/routes/`. Enabled
    * **warn-first** repo-wide during rollout — the baseline inventory found 39
@@ -597,6 +655,19 @@ export const eslintConfig = tslint.config([
         { profile: 'primitive' },
       ],
       'react/no-multi-comp': 'off',
+    },
+  },
+
+  /**
+   * `cn` is implemented on top of clsx, so react-router-shadcn is the one place
+   * a clsx import is legitimate. Root-cwd coverage only, for the same reason as
+   * the block above; the package's own eslint.config.ts carries the `nx lint`
+   * copy.
+   */
+  {
+    files: ['**/packages/react-router-shadcn/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': 'off',
     },
   },
 
@@ -700,11 +771,37 @@ export const sourceFirstEslintConfig = tslint.config([
           message: `Avoid TypeScript enums. Use an \`as const\` object instead (existing enums are grandfathered).`,
           selector: 'TSEnumDeclaration',
         },
+        TEMPLATE_LITERAL_CLASS_NAME_RESTRICTION,
         {
           message: `This package is source-first — its "exports" name ./src/, so consumers get raw TypeScript. A decorator implies a generated call wrapping the declaration, which Node's strip-only loader cannot emit: a consumer resolving this package through Node fails with "SyntaxError: Invalid or unexpected token", naming neither this package nor the "exports" decision. Either drop the decorator, or stop pointing this package's require/default conditions at ./src/. See docs/monorepo/source-first-packages-and-strip-only.md.`,
           selector: 'Decorator',
         },
       ],
+    },
+  },
+]);
+
+/**
+ * The NestJS file contract: a file is `<folder>.<kind>.ts` and exports only
+ * what its kind says (docs/monorepo/code-style.md, "NestJS file names").
+ * `openthrottle/nestjs-file-naming` checks the name and
+ * `openthrottle/nestjs-file-exports` checks the exports.
+ *
+ * Spread this **after** `eslintConfig` in `applications/openthrottle-server`
+ * and every `packages/nestjs-*` config. It scopes itself to `src/` because nx
+ * lints with cwd at the project, so the glob is project-relative. Both rules
+ * are `warn` until the per-area migration (OT plan 3915bc12) reaches zero;
+ * that plan's last task flips them to `error`. A file that must keep its name
+ * goes in the consuming config's `ignores`, where the exception is reviewed.
+ * @public
+ */
+export const nestjsEslintConfig = tslint.config([
+  {
+    files: ['src/**/*.ts'],
+    ignores: ['**/__generated__/**'],
+    rules: {
+      'openthrottle/nestjs-file-exports': 'warn',
+      'openthrottle/nestjs-file-naming': 'warn',
     },
   },
 ]);

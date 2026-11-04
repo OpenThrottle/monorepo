@@ -19,12 +19,8 @@ import { useNavigate } from 'react-router';
 
 import type { RepositoryOption } from '~/routing/home/data/models.server';
 import { SKILL_RUN_COPY } from '~/routing/skills/data/data.copy';
-import {
-  type RunSkillPayload,
-  useRunSkillDialog,
-} from '~/routing/skills/hooks/useRunSkillDialog';
-
-export type { RunSkillPayload };
+import { useRunSkillDialog } from '~/routing/skills/hooks/useRunSkillDialog';
+import type { RunSkillPayload } from '~/routing/skills/types';
 
 export interface RunSkillDialogProps {
   /** Discovered agent+model options (local endpoints + agent CLIs + driver×endpoint). */

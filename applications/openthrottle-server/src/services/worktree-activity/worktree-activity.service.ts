@@ -107,6 +107,7 @@ export class WorktreeActivityService {
 
     return {
       droppedCount: discovery.droppedCount,
+      missingCheckouts: discovery.missingCheckouts,
       problems,
       rootSource: discovery.rootSource,
       scannedAt: discovery.scannedAt,

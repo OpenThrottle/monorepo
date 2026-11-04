@@ -46,6 +46,10 @@ export const WEBSOCKET_DEBUGGER_EVENT_OPTIONS: readonly WebsocketDebuggerEventOp
       value: NOTIFICATION_EVENT_NAMES.QUEUE_JOB_COMPLETED,
     },
     {
+      label: 'Scheduled run failed',
+      value: NOTIFICATION_EVENT_NAMES.SCHEDULED_RUN_FAILED,
+    },
+    {
       label: 'System alerts',
       value: NOTIFICATION_EVENT_NAMES.SYSTEM_ALERT,
     },

@@ -1,7 +1,6 @@
-import { DataTable } from '@openthrottle/react-router-shadcn';
+import { cn, DataTable } from '@openthrottle/react-router-shadcn';
 import { GlobalPopoverActionsHeader } from '@openthrottle/react-router-ui-global';
 import type { ColumnDef } from '@tanstack/react-table';
-import clsx from 'clsx';
 import * as React from 'react';
 
 import type { ServiceAccountCredentialFieldsFragment } from '~/__generated__/graphql';
@@ -49,7 +48,7 @@ export const SettingsKeysTable = (
   if (credentials.length === 0 && !!actionError) {
     return (
       <div
-        className={clsx('space-y-4', className)}
+        className={cn('space-y-4', className)}
         data-testid="SettingsKeysTable"
       >
         <p
@@ -65,10 +64,7 @@ export const SettingsKeysTable = (
   }
 
   return (
-    <div
-      className={clsx('space-y-4', className)}
-      data-testid="SettingsKeysTable"
-    >
+    <div className={cn('space-y-4', className)} data-testid="SettingsKeysTable">
       {actionError ? (
         <p
           className="border-destructive/40 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm"

@@ -3,7 +3,7 @@ import * as React from 'react';
 import { useFetcher, useRevalidator } from 'react-router';
 
 import type { action as agentSetupAction } from '~/routes/resources.agent-setup';
-import type { AgentCliStatus } from '~/routing/settings/data/agent-clis.data';
+import type { AgentCliStatus } from '~/routing/settings/data/data.agent-clis';
 import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/data.copy';
 import { useAgentSetupStream } from '~/routing/settings/hooks/useAgentSetupStream';
 

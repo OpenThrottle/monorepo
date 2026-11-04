@@ -81,6 +81,7 @@ import {
   dataNavigationV2,
 } from '~/global/data/data.navigation';
 import { useCommanderOptions } from '~/global/hooks/useCommanderOptions';
+import { usePermissions } from '~/global/hooks/usePermissions';
 import type { CommanderSearchFields } from '~/global/utils/commander-empty-extras';
 import {
   buildCommanderEmptyStateExtras,
@@ -107,6 +108,8 @@ import {
   callLogoutMutation,
   callRegisterMutation,
 } from '~/global/utils/utils.auth';
+import { filterNavigationByPermission } from '~/global/utils/utils.permissions';
+import { fetchMyPermissions } from '~/global/utils/utils.permissions.server';
 import { useHeaderChatController } from '~/routing/home/hooks/useHeaderChatController';
 import { queueJobDetailPath } from '~/routing/queues/utils/queue-job-detail-path';
 import stylesheet from '~/styles.css?url';
@@ -255,9 +258,12 @@ export const loader = async (args: Route.LoaderArgs) => {
   // Probes return their own failure so the values stay properly typed (a `let`
   // assigned only inside these closures would be narrowed back to `null`,
   // dropping `RootLoaderFailure` from the loader's inferred return type).
-  const [healthFailure, userFailure] = await Promise.all([
+  const [healthFailure, userFailure, permissions] = await Promise.all([
     healthProbe(),
     userProbe(),
+    // Soft-fails to `[]` (never throws), so a permissions hiccup can't raise the
+    // root-loader failure banner or flip `userLoadOk`.
+    fetchMyPermissions(request),
   ]);
 
   // Prefer the user-step failure when both health and user fail so the banner shows the last/most specific error.
@@ -277,6 +283,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   return {
     canonical,
     env,
+    permissions,
     rootLoaderDiagnostics: diagnostics,
     rootLoaderFailure,
     serverHealth,
@@ -337,12 +344,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const envHtml = `window.env = ${JSON.stringify(env)}`;
   const favicon = `${OPENTHROTTLE_BUCKET}/branding/icons/blue/favicon.ico`;
   const manifest = `/manifest.json`;
+  const appleTouchIcon = `/apple-touch-icon.png`;
 
   // `interactive-widget=resizes-content` shrinks the layout viewport when the
   // software keyboard opens, instead of letting it overlay the visual viewport.
   // The home composer is docked with `sticky bottom-0`, so without this the
-  // bar would pin to a bottom edge hidden behind the keyboard.
-  const viewport = `initial-scale=1, interactive-widget=resizes-content, maximum-scale=1, viewport-fit=cover, width=device-width`;
+  // bar would pin to a bottom edge hidden behind the keyboard. No `maximum-scale`:
+  // it blocks pinch-zoom on Android, and inputs are 16px so iOS never focus-zooms.
+  const viewport = `initial-scale=1, interactive-widget=resizes-content, viewport-fit=cover, width=device-width`;
   const _health = data?.serverHealth ?? {};
 
   // Handlers
@@ -400,7 +409,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <link href="https://fonts.gstatic.com" rel="preconnect" />
         <link href="https://s3-us-west-1.amazonaws.com" rel="preconnect" />
         <link href="https://www.googletagmanager.com" rel="preconnect" />
-        <link href={favicon} rel="apple-touch-icon" sizes="48x48" />
+        <link href={appleTouchIcon} rel="apple-touch-icon" sizes="180x180" />
         <link href={favicon} rel="favicon" />
         <link href={favicon} rel="icon" type="image/svg+xml" />
         <link href={favicon} rel="mask-icon" type="image/svg+xml" />
@@ -468,7 +477,14 @@ export default function App(): React.ReactElement {
   const revalidator = useRevalidator();
   const fetcher = useFetcher();
   const planRefFetcher = useFetcher<PlanRefResolverData>();
-  const navigation = data?.user ? dataNavigationV2 : dataNavigationGuest;
+  const permissions = usePermissions();
+  const navigation = React.useMemo(
+    () =>
+      data?.user
+        ? filterNavigationByPermission(dataNavigationV2, permissions)
+        : dataNavigationGuest,
+    [data?.user, permissions],
+  );
   const groups = useCommanderOptions(navigation);
   const { pathname } = useLocation();
   const [commanderOpen, setCommanderOpen] = React.useState(false);

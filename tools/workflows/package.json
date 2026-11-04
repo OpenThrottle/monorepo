@@ -12,7 +12,6 @@
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
     "@openthrottle/openthrottle-agentic-workflow": "workspace:^",
     "@openthrottle/openthrottle-drivers": "workspace:^",
-    "@tools/generators": "workspace:^",
     "async-mutex": "catalog:",
     "chrome-launcher": "catalog:",
     "commander": "catalog:",
@@ -62,23 +61,25 @@
     ],
     "targets": {
       "build": {
-        "cache": false,
+        "cache": true,
         "dependsOn": [
           "build:tsc"
         ],
         "executor": "nx:run-commands",
         "metadata": {
-          "description": "Post-compile step for @tools/workflows: marks the dist bin entrypoints executable. Depends on `build:tsc` as a graph EDGE rather than shelling out to a nested `nx run`. The nested form spawned a second, separate Nx task graph that re-restored this project's `^build` dependencies (notably @openthrottle/openthrottle-agentic-utils:build) from cache with no coordination against the OUTER graph. Because Nx deletes and recopies a task's declared outputs on a cache hit, that rewrote packages/openthrottle-agentic-utils/dist WHILE this project's Vitest run was importing from it — @tools/workflows resolves that package through its `exports` field, which points at dist, not src. The result was an intermittent ERR_MODULE_NOT_FOUND on a different dist file each time. As a real dependsOn edge, those upstream builds are deduplicated nodes in the one graph and can no longer run concurrently with readers of their output."
+          "description": "Post-compile step for @tools/workflows: marks the dist bin entrypoints executable. Depends on `build:tsc` as a graph EDGE rather than shelling out to a nested `nx run`. The nested form spawned a second, separate Nx task graph that re-restored this project's `^build` dependencies (notably @openthrottle/openthrottle-agentic-utils:build) from cache with no coordination against the OUTER graph. Because Nx deletes and recopies a task's declared outputs on a cache hit, that rewrote packages/openthrottle-agentic-utils/dist WHILE this project's Vitest run was importing from it — @tools/workflows resolves that package through its `exports` field, which points at dist, not src. The result was an intermittent ERR_MODULE_NOT_FOUND on a different dist file each time. As a real dependsOn edge, those upstream builds are deduplicated nodes in the one graph and can no longer run concurrently with readers of their output. Cached with `dist/src/bin` as its output: build:tsc restores dist first, then this restores the bin files over it, and Nx's cache keeps their executable mode. Without declared outputs a cache hit would restore nothing and leave build:tsc's non-executable copies."
         },
         "options": {
           "commands": [
             "chmod +x ./dist/src/bin/*.js"
           ],
           "cwd": "{projectRoot}"
-        }
+        },
+        "outputs": [
+          "{projectRoot}/dist/src/bin"
+        ]
       },
       "build:tsc": {
-        "cache": false,
         "executor": "@nx/js:tsc",
         "metadata": {
           "description": "Compile @tools/workflows to dist with @nx/js:tsc."

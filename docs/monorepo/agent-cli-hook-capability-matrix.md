@@ -132,6 +132,33 @@ whether a per-invocation override exists. Treat the row as a starting point for 
 finding. Note also that antigravity shares `~/.gemini` with the Gemini CLI but uses a different
 layout, so gemini's row does not transfer.
 
+### Session kickoff guard
+
+The plan-first kickoff rule (follow-up work starts as `/ot-loop <planUuid>`; see the
+[`ot-plans` skill](../../skills/ot-plans/SKILL.md#follow-ups-and-session-kickoff)) can only be
+_blocked_ where an agent starts a **separate** session through a tool call a `PreToolUse`-style hook
+sees. In-task subagents are exempt by design — `ot-loop` treats them as workers inside one task — so
+they are not that hook point. Measured 2026-10-31 by reading `cursor-agent` 2026.10.22-27dcf5f's
+shipped bundle and the strings of `codex-cli` 0.145.0; no payload was captured live.
+
+| CLI              | separate-session tool the agent calls                                                                                                                                                                                   | guard                                                     |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| **claude**       | the desktop app's `start_session` / `hand_off_to_session` (brief in `prompt` / `remaining_plan`)                                                                                                                        | **shipped** — `.claude/hooks/require-ot-plan-kickoff.cjs` |
+| **cursor-agent** | **none.** `Task` is an in-task subagent. Background agents are started by a person; their `sessionStart` carries `is_background_agent: true` and no prompt, and can return `env` / `additional_context` but cannot deny | nothing to block; `AGENTS.md` already carries the rule    |
+| **codex**        | **none.** `spawn_agent` / `send_input` / `wait_agent` / `close_agent` manage sub-agents under the current task (`/root/task1/task_3`); `codex cloud` is a person's command                                              | nothing to block                                          |
+| others           | unprobed                                                                                                                                                                                                                | —                                                         |
+
+Two things follow. First, the session guard is Claude-only because only Claude has the thing it
+guards, not because the other adapters are missing; the decision itself is tool-neutral
+(`packages/agentic-hooks/src/data/kickoff.ts`), so a CLI that grows such a tool needs only an adapter.
+Second, cursor-agent reads `.claude/settings.json`, so it may load the Claude registration — that is
+harmless: the adapter checks the tool name itself and allows anything that is not a kickoff tool,
+whether or not Cursor applies the `matcher`. The layer that reaches every CLI, and every person, is
+git: the pre-push `Plan-Id:` check.
+
+**Re-probe when** a CLI ships a tool that starts a separate session or background agent from inside
+a turn — grep the bundle for it, as above, then capture one real payload before writing an adapter.
+
 ## What is machine-checked and what is not
 
 This document warns that it goes stale silently, which is a reason to move what can be asserted out

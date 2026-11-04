@@ -88,4 +88,19 @@ describe('ChatComposerFooter Component', () => {
       '1.2k tokens',
     );
   });
+
+  test('Send and Stop grow to 44px on coarse pointers', () => {
+    const send = renderFooter({ draft: 'hello' });
+    expect(send.getByRole('button', { name: 'Send' })).toHaveClass(
+      'pointer-coarse:h-11',
+      'pointer-coarse:min-w-11',
+    );
+    send.unmount();
+
+    const stop = renderFooter({ isStreaming: true });
+    expect(stop.getByRole('button', { name: 'Stop' })).toHaveClass(
+      'pointer-coarse:h-11',
+      'pointer-coarse:min-w-11',
+    );
+  });
 });

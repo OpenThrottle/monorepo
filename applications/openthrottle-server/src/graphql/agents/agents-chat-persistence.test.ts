@@ -8,7 +8,7 @@ import type { AgentConversationsService } from '@openthrottle/nestjs-repositorie
 import {
   agentConversationMessagesFactory,
   agentConversationsFactory,
-} from '@openthrottle/nestjs-repositories';
+} from '@openthrottle/nestjs-repositories/testing';
 import { describe, expect, test, vi } from 'vitest';
 
 import { AgentsChatTurnResult } from './agents.object.ts';

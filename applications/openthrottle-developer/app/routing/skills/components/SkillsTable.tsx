@@ -1,5 +1,4 @@
-import { DataTable } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
+import { cn, DataTable } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
@@ -66,7 +65,7 @@ export const SkillsTable = (props: SkillsTableProps): React.ReactElement => {
 
   return (
     <div
-      className={clsx('ui-border rounded-lg border', className)}
+      className={cn('ui-border rounded-lg border', className)}
       data-testid="SkillsTable"
     >
       <DataTable<RepoSkillEntry, SkillsTableColumnValue>

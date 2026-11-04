@@ -3,7 +3,6 @@ import {
   cn,
   DropdownMenuItem,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import { Check, X } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
@@ -61,7 +60,7 @@ export const NotificationItem = (
       <div className="flex w-full flex-1 items-start items-stretch py-1">
         <div className="min-w-0 flex-1 text-left">
           <p
-            className={clsx(
+            className={cn(
               'mb-1 line-clamp-2 text-xs',
               'text-muted-foreground group-hover/notification-item:text-foreground transition-colors',
               read ? 'text-muted-foreground' : 'font-medium',
@@ -97,7 +96,7 @@ export const NotificationItem = (
         </div>
 
         <div
-          className={clsx(
+          className={cn(
             'space-between flex justify-between',
             '-mr-4 ml-4 w-0 gap-0.5 overflow-hidden transition-all',
             'group-hover/notification-item:mr-0',

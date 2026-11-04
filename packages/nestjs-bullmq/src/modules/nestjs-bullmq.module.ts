@@ -55,24 +55,20 @@ const defaultJobOptions = {
     BullModule.forRootAsync({
       imports: [ConfigModule.forFeature(redisConfig)],
       inject: [redisConfig.KEY],
-      useFactory: (redis: ConfigType<typeof redisConfig>) => ({
-        connection: {
-          db: redis.db,
-          enableReadyCheck: redis.enableReadyCheck,
-          family: redis.family,
-          host: redis.host,
-          maxRetriesPerRequest: redis.maxRetriesPerRequest,
-          password: redis.password,
-          port: redis.port,
-          tls: redis.tls,
-          username: redis.username,
-        },
-        defaultJobOptions,
-        // Environment-scoped key prefix: registerQueue queues, @Processor
-        // workers, and QueueEvents all inherit it from this root config, so
-        // checkouts sharing one Redis cannot consume each other's jobs.
-        prefix: redis.queuePrefix,
-      }),
+      useFactory: (redis: ConfigType<typeof redisConfig>) => {
+        // Everything but the prefix is connection options — the same set
+        // resolveRedisConnection() hands to queues built outside DI.
+        const { queuePrefix, ...connection } = redis;
+
+        return {
+          connection,
+          defaultJobOptions,
+          // Environment-scoped key prefix: registerQueue queues, @Processor
+          // workers, and QueueEvents all inherit it from this root config, so
+          // checkouts sharing one Redis cannot consume each other's jobs.
+          prefix: queuePrefix,
+        };
+      },
     }),
   ],
   providers: [LoggerService],

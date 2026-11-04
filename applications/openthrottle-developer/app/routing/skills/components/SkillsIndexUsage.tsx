@@ -1,5 +1,5 @@
+import { cn } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
-import clsx from 'clsx';
 import * as React from 'react';
 
 import { SkillUsageDailyChart } from '~/global/components/SkillUsageDailyChart';
@@ -73,7 +73,7 @@ export const SkillsIndexUsage = (
   // 🔌 Short Circuit
   if (!usage.available) {
     return (
-      <div className={clsx('mt-8', className)} data-testid="SkillsIndexUsage">
+      <div className={cn('mt-8', className)} data-testid="SkillsIndexUsage">
         {header}
         <p
           className="text-muted-foreground text-sm"
@@ -86,7 +86,7 @@ export const SkillsIndexUsage = (
   }
 
   return (
-    <div className={clsx('mt-8', className)} data-testid="SkillsIndexUsage">
+    <div className={cn('mt-8', className)} data-testid="SkillsIndexUsage">
       {header}
 
       <GlobalHeading

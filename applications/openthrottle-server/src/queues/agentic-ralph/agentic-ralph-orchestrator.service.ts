@@ -73,8 +73,10 @@ const stripAgentCliWorktreeFlags = (
  * orchestrator via {@link AgenticWorkflowBase.createOrchestrator}. The registry indirection is
  * behavior-neutral: id `'ralph'` yields exactly today's `createWorkflowRalphOrchestrator(deps)` wiring
  * from `@openthrottle/openthrottle-agentic-ralph`. After the concrete worktree path is resolved and
- * before the first agent turn, soft-registers a linked worktree checkout when
- * `plan_runs.checkout_id` is still NULL (see {@link PlanRunWorktreeCheckoutService}).
+ * before the first agent turn, soft-registers a linked worktree checkout and
+ * rewrites `plan_runs.checkout_id` + `branch` to that worktree (see
+ * {@link PlanRunWorktreeCheckoutService}) — including when enqueue stamped the
+ * scheduling primary checkout.
  */
 @Injectable()
 export class AgenticRalphOrchestratorService {
@@ -102,7 +104,8 @@ export class AgenticRalphOrchestratorService {
     readonly signal?: AbortSignal;
     /**
      * Work-ledger run session id opened by the plans worker. Forwarded into the orchestrator
-     * context so its status mutations carry X-OT-Session-Id (ambient attribution, G11).
+     * context so its status mutations carry X-OT-Session-Id (ambient attribution; G11 in
+     * docs/monorepo/work-ledger-sessions.md).
      */
     readonly workSessionId?: string | null;
   }): Promise<WorkflowRunResult> {
@@ -455,10 +458,12 @@ export class AgenticRalphOrchestratorService {
   }
 
   /**
-   * @description Once at run-start path resolve: when the plan run still has a NULL
-   * `checkout_id` and an actor user, register the resolved filesystem path as a
-   * linked worktree checkout. Soft-fails (log + continue) so registration never
-   * aborts the orchestrator.
+   * @description Once at run-start path resolve: with an actor user, register the
+   * resolved filesystem path as a linked worktree checkout and point the run at
+   * that checkout + branch — even when enqueue already stamped a primary
+   * `checkout_id`. Soft-fails (log + continue) so registration never aborts the
+   * orchestrator. A non-worktree path is a soft no-op inside the registration
+   * service (leaves the enqueue checkout alone).
    */
   private async maybeRegisterWorktreeCheckout(params: {
     readonly filesystemPath: string;
@@ -467,10 +472,6 @@ export class AgenticRalphOrchestratorService {
     const { filesystemPath, run } = params;
 
     if (run === null) {
-      return;
-    }
-
-    if (run.checkoutId !== null) {
       return;
     }
 

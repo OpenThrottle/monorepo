@@ -1,6 +1,5 @@
 import { PlanDetailCancelPlanRunDocument } from '@openthrottle/openthrottle-developer-codegen';
 import {
-  coerceNumber,
   executeGraphqlWithAuth,
   isJsonString,
   parseFormData,
@@ -8,10 +7,7 @@ import {
 import { z } from 'zod/v3';
 
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
-import type {
-  PlanDetailForceSettlePlanRunMutation,
-  RalphPlanRunTuningInput,
-} from '~/__generated__/graphql';
+import type { PlanDetailForceSettlePlanRunMutation } from '~/__generated__/graphql';
 import {
   PlanDetailAddHookDocument,
   PlanDetailAddPlanTagDocument,
@@ -20,6 +16,8 @@ import {
   PlanDetailEvaluatePlanRulesDocument,
   PlanDetailForceSettlePlanRunDocument,
   PlanDetailRemovePlanTagDocument,
+  PlanDetailRunConfigDocument,
+  PlanDetailSchedulePlanRunDocument,
   PlanDetailSetPlanStatusDocument,
   PlanDetailUpdatePlanJobRunHooksDocument,
   PlanDetailUpdatePlanRunConfigDocument,
@@ -32,17 +30,47 @@ import {
   DetachHookInputSchema,
   EnqueuePlanRunInputSchema,
   ForceSettlePlanRunInputSchema,
-  RalphPlanRunTuningInputSchema,
   RemovePlanTagInputSchema,
+  SchedulePlanRunInputSchema,
   SetPlanStatusInputSchema,
   UpdateTaskInputSchema,
 } from '~/__generated__/schemas';
 import { toErrorMessage } from '~/global/utils/utils.error-message';
 import { parseJobRunHooksJsonFromPlan } from '~/routing/plans/utils/job-run-hooks-ui';
+import type { PlanRunPersistedSelection } from '~/routing/plans/utils/plan-run-form';
+import {
+  mergePersistedSelectionIntoRunConfig,
+  parsePlanRunForm,
+  parseScheduledFor,
+} from '~/routing/plans/utils/plan-run-form';
 
-export const cancelPlanRun = async (args: Route.ActionArgs, planId: string) => {
+/**
+ * Cancels a plan's runs. With no `planRunId` it is the per-plan cancel it always
+ * was. With a `planRunId` form field (a SCHEDULED run of this plan) only that run
+ * is cancelled and live runs are untouched. The same intent serves both because
+ * the server input is one shape with an optional id.
+ */
+export const cancelPlanRun = async (
+  args: Route.ActionArgs,
+  planId: string,
+  formData: FormData,
+) => {
+  const parsed = parseFormData(
+    formData,
+    CancelPlanRunInputSchema().omit({ planId: true }),
+    { strict: false },
+  );
+  if (!parsed.success) {
+    return { cancelPlanRunError: parsed.error };
+  }
+
   try {
-    const input = CancelPlanRunInputSchema().parse({ planId });
+    const input = CancelPlanRunInputSchema().parse({
+      planId,
+      ...(parsed.data.planRunId != null
+        ? { planRunId: parsed.data.planRunId }
+        : {}),
+    });
     const result = await executeGraphqlWithAuth(
       args.request,
       PlanDetailCancelPlanRunDocument,
@@ -432,97 +460,78 @@ export const saveJobRunHooks = async (
   }
 };
 
+/**
+ * Writes the dialog's model/backend/effort to the plan's saved run config
+ * through the same `updatePlan.runConfigJson` mutation the Configuration tab's
+ * save uses. Read-merge-write so nothing else in the saved config changes (and
+ * `iterations`, a per-run override, never lands there). Skips the write when the
+ * saved config already holds the selection. Returns an error message on failure.
+ */
+const persistPlanRunSelection = async (
+  args: Route.ActionArgs,
+  planId: string,
+  persisted: PlanRunPersistedSelection,
+): Promise<string | undefined> => {
+  try {
+    const current = await executeGraphqlWithAuth(
+      args.request,
+      PlanDetailRunConfigDocument,
+      { id: planId },
+    );
+    const merged = mergePersistedSelectionIntoRunConfig({
+      persisted,
+      planId,
+      runConfigJson: current.plan?.runConfigJson,
+    });
+
+    if (!merged.changed) {
+      return undefined;
+    }
+
+    const result = await executeGraphqlWithAuth(
+      args.request,
+      PlanDetailUpdatePlanRunConfigDocument,
+      { input: { id: planId, runConfigJson: merged.runConfigJson } },
+    );
+
+    return result.updatePlan?.id
+      ? undefined
+      : 'Failed to save the model and effort to the plan run configuration.';
+  } catch (error) {
+    return `Could not save the model and effort to the plan run configuration: ${toErrorMessage(error, 'unknown error')}`;
+  }
+};
+
 export const runPlan = async (
   args: Route.ActionArgs,
   planId: string,
   formData: FormData,
 ) => {
-  // Read every kickoff field through parseFormData (no `formData.get`). The
-  // generated `EnqueuePlanRunInputSchema` supplies checkoutId/repositoryId/
-  // workingDirectory/jobRunHooksJson; `planId` and `idempotencyKey` are not from
-  // the form, `branch` is relaxed to attach a friendly required message below,
-  // `priority` is coerced to a number, and `ralph` arrives as the raw
-  // `ralphTuning` JSON string (validated against its schema afterwards to keep
-  // the exact messages). `strict: false` lets the dispatch `intent` pass through.
-  const parsed = parseFormData(
-    formData,
-    EnqueuePlanRunInputSchema()
-      .omit({ idempotencyKey: true, planId: true, ralph: true })
-      .extend({
-        branch: z.string().nullish(),
-        priority: coerceNumber(z.number()).nullish(),
-        ralphTuning: z.string().nullish(),
-      }),
-    { strict: false },
-  );
+  // The kickoff form is read once by `parsePlanRunForm` (see its header): enqueue
+  // fields, the per-run `iterations` override (overlaid onto `ralphTuning`,
+  // never saved), and the model/backend/effort selection to persist.
+  const parsed = parsePlanRunForm(formData);
   if (!parsed.success) {
     return { runPlanError: parsed.error };
   }
-  const fields = parsed.data;
 
-  let ralph: RalphPlanRunTuningInput | undefined;
-  if (fields.ralphTuning != null && fields.ralphTuning !== '') {
-    try {
-      const tuning: unknown = JSON.parse(fields.ralphTuning);
-      const tuningResult = RalphPlanRunTuningInputSchema().safeParse(tuning);
-      if (!tuningResult.success) {
-        const issues = tuningResult.error.issues.map((i) => i.message);
-        return {
-          runPlanError: `Invalid workflow run options: ${issues.join('; ')}`,
-        };
-      }
-
-      ralph = tuningResult.data;
-    } catch {
-      return { runPlanError: 'Invalid workflow run options payload.' };
-    }
-  }
-
-  // Branch is a REQUIRED kickoff input (never inferred server-side). The run
-  // config form pre-fills it from the selected checkout's current branch, but
-  // the value is always sent explicitly; fail loud here when it is blank.
-  //
-  // 🚨 An empty or whitespace-only string is rejected as hard as a missing one.
-  // The toolbar disables Run while `workspaceRepositories` is still resolving,
-  // but client-side disabling is not the boundary: a fast click during that
-  // window must not be able to enqueue a run with no branch.
-  const branch = fields.branch ?? undefined;
-  if (branch === undefined || branch.trim() === '') {
-    return {
-      runPlanError:
-        'A git branch is required to run this plan. Pick or enter the branch this run operates on.',
-    };
-  }
-
-  // Default to interactive priority (1) for UI-triggered runs.
-  const priority = fields.priority ?? 1;
-  const workingDirectory = fields.workingDirectory ?? undefined;
-  const checkoutId = fields.checkoutId ?? undefined;
-  const repositoryId = fields.repositoryId ?? undefined;
-
-  let jobRunHooksJson: string | undefined;
-  if (fields.jobRunHooksJson != null && fields.jobRunHooksJson !== '') {
-    try {
-      parseJobRunHooksJsonFromPlan(fields.jobRunHooksJson);
-      jobRunHooksJson = fields.jobRunHooksJson;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      return {
-        runPlanError: `Invalid job run hooks: ${message}`,
-      };
+  // Persist BEFORE enqueuing so the run and the saved config agree. A failed
+  // save stops here: enqueuing anyway would run a model the plan does not show.
+  if (parsed.persisted !== undefined) {
+    const persistError = await persistPlanRunSelection(
+      args,
+      planId,
+      parsed.persisted,
+    );
+    if (persistError !== undefined) {
+      return { runPlanError: persistError };
     }
   }
 
   try {
     const input = EnqueuePlanRunInputSchema().parse({
-      branch,
+      ...parsed.fields,
       planId,
-      priority,
-      ...(checkoutId !== undefined ? { checkoutId } : {}),
-      ...(ralph !== undefined ? { ralph } : {}),
-      ...(repositoryId !== undefined ? { repositoryId } : {}),
-      ...(workingDirectory !== undefined ? { workingDirectory } : {}),
-      ...(jobRunHooksJson !== undefined ? { jobRunHooksJson } : {}),
     });
 
     const result = await executeGraphqlWithAuth(
@@ -541,5 +550,76 @@ export const runPlan = async (
     const message = isError ? error.message : String(error);
 
     return { runPlanError: message };
+  }
+};
+
+/**
+ * Same kickoff form as `runPlan` plus `scheduledFor` (an ISO instant from the
+ * client). Only "does it parse" is checked here; the server owns "in the future"
+ * and the 30-day cap, and its message is returned as `schedulePlanRunError`.
+ */
+export const schedulePlanRun = async (
+  args: Route.ActionArgs,
+  planId: string,
+  formData: FormData,
+) => {
+  const scheduled = parseFormData(
+    formData,
+    z.object({ scheduledFor: z.string().nullish() }),
+    { strict: false },
+  );
+  if (!scheduled.success) {
+    return { schedulePlanRunError: scheduled.error };
+  }
+
+  const when = parseScheduledFor(scheduled.data.scheduledFor);
+  if (!when.success) {
+    return { schedulePlanRunError: when.error };
+  }
+
+  const parsed = parsePlanRunForm(formData);
+  if (!parsed.success) {
+    return { schedulePlanRunError: parsed.error };
+  }
+
+  if (parsed.persisted !== undefined) {
+    const persistError = await persistPlanRunSelection(
+      args,
+      planId,
+      parsed.persisted,
+    );
+    if (persistError !== undefined) {
+      return { schedulePlanRunError: persistError };
+    }
+  }
+
+  try {
+    const validated = SchedulePlanRunInputSchema().parse({
+      ...parsed.fields,
+      planId,
+      scheduledFor: when.scheduledFor,
+    });
+    // The generated schema types the `DateTime` scalar loosely (optional `any`),
+    // so restate the instant that was just validated to keep the field required.
+    const input = { ...validated, scheduledFor: when.scheduledFor };
+
+    const result = await executeGraphqlWithAuth(
+      args.request,
+      PlanDetailSchedulePlanRunDocument,
+      { input },
+    );
+
+    if (!result.schedulePlanRun) {
+      return { schedulePlanRunError: 'Failed to schedule plan run.' };
+    }
+
+    return { schedulePlanRun: result.schedulePlanRun };
+  } catch (error) {
+    return {
+      schedulePlanRunError: toErrorMessage(
+        error,
+        'Failed to schedule plan run.',
+      ),
+    };
   }
 };

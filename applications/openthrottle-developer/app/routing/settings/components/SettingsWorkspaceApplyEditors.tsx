@@ -1,5 +1,4 @@
-import { Button } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
+import { Button, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { Form, useNavigation } from 'react-router';
 
@@ -38,7 +37,7 @@ export const SettingsWorkspaceApplyEditors = (
 
   return (
     <div
-      className={clsx(
+      className={cn(
         'flex flex-col gap-2 sm:flex-row sm:items-center',
         className,
       )}

@@ -8,6 +8,7 @@
 import { Card } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleTabs } from '@openthrottle/react-router-ui';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
+import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
@@ -75,7 +76,9 @@ export const PlanDetailRoute = (
   });
 
   // Setup
-  const showToolbar = false;
+  // The toolbar (Run / schedule / tags) and the Configuration tab are still
+  // in beta preview.
+  const showToolbar = FEATURE_BETA_PREVIEW;
 
   // Handlers
 
@@ -88,14 +91,15 @@ export const PlanDetailRoute = (
     <>
       <GlobalScreen className="-max-w-5xl flex h-full w-full flex-col gap-4 p-4 md:gap-8 md:p-8 lg:gap-12 lg:p-12">
         <PlanDetailRouteHeader plan={plan} status={status} />
+        {/* No `editors` here: the editor deep links live in the tab row below
+            (PlanDetailTabsList), and rendering them in both places duplicated them. */}
         {showToolbar ? (
           <PlanToolbar
             branch={branch}
             checkoutId={checkoutId}
             className="bg-card border-card-border rounded-lg border p-4"
-            editorWorkingDirectory={editorWorkingDirectory}
-            editors={loaderData.enabledEditors}
             jobRunHooksJson={jobRunHooksJson}
+            models={loaderData.models}
             newestRunIsStale={newestRunIsStale}
             newestUnsupervisedUnsettledRunId={newestUnsupervisedUnsettledRunId}
             onAddTag={(tag) =>
@@ -114,7 +118,11 @@ export const PlanDetailRoute = (
             planStatus={plan.status}
             planTitle={plan.title ?? 'Untitled'}
             ralphTuningJson={ralphTuningJson}
+            repositories={loaderData.workspaceRepositories}
             repositoryId={repositoryId}
+            runConfigJson={plan.runConfigJson}
+            scheduledRunAt={plan.scheduledRunAt}
+            scheduledRunId={plan.scheduledRunId}
             tagVocabulary={tagVocabulary}
             tags={plan.tags}
             tagsPending={tagFetcher.state !== 'idle'}
@@ -149,6 +157,7 @@ export const PlanDetailRoute = (
           <PlanTabOutput chunks={planOutputChunks} />
           {showToolbar ? (
             <PlanTabConfiguration
+              models={loaderData.models}
               onCollapse={() => onToggleExpanded(false)}
               onResetToDefaults={onResetToDefaults}
               onSaveJobRunHooks={onSaveJobRunHooks}

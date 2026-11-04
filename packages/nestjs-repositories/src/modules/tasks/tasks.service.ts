@@ -526,7 +526,8 @@ export class TasksService {
 
   /**
    * @description Whether `planId` still has a non-terminal task (BLOCKED, IN_PROGRESS, PENDING, or
-   * QUEUED). This is the read-only "should the plan complete?" half of the downward reconcile that
+   * QUEUED); COMPLETED, SKIPPED, CANCELED and PROMOTED (the work continued as its own plan) are resolved,
+   * so a plan whose last open task is promoted still completes. This is the read-only "should the plan complete?" half of the downward reconcile that
    * marks a plan COMPLETED when its last task finishes — the guarded write itself lives in
    * `PlanStatusService.completeParentPlanIfTasksDone` (server), the one legal place that writes
    * `plans.status`, so it can attribute the write and capture a status_change artifact. Moved out of

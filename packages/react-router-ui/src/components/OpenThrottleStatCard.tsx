@@ -44,7 +44,7 @@ export const OpenThrottleStatCard = (
       data-testid="OpenThrottleStatCard"
     >
       <CardHeader className="flex items-center gap-2 p-0 pb-2">
-        {color ? <div className={`size-2 rounded-full ${color}`} /> : null}
+        {color ? <div className={cn('size-2 rounded-full', color)} /> : null}
         <CardTitle className="text-muted-foreground text-sm font-medium">
           {title}
         </CardTitle>

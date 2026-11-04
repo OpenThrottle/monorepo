@@ -7,6 +7,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  cn,
   Table,
   TableBody,
   TableCell,
@@ -15,7 +16,6 @@ import {
   TableRow,
 } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
-import clsx from 'clsx';
 import * as React from 'react';
 
 import type {
@@ -23,6 +23,7 @@ import type {
   UsageTokenUsageTotalsFragment,
 } from '~/__generated__/graphql';
 import { UsageTokenUsageFilters } from '~/routing/usage/components/UsageTokenUsageFilters';
+import { UsageTokenUsageSources } from '~/routing/usage/components/UsageTokenUsageSources';
 import {
   TOKEN_USAGE_COPY,
   TOKEN_USAGE_STATS,
@@ -86,7 +87,7 @@ export const UsageTokenUsage = (
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx('mt-8', className)} data-testid="UsageTokenUsage">
+    <div className={cn('mt-8', className)} data-testid="UsageTokenUsage">
       <GlobalHeading
         className="mb-4"
         heading="h2"
@@ -136,6 +137,8 @@ export const UsageTokenUsage = (
         turn{totals.turnCount === 1 ? '' : 's'}.
       </p>
 
+      <UsageTokenUsageSources items={items} />
+
       {groups.length === 0 ? (
         <p
           className="text-muted-foreground mt-6 text-sm"
@@ -177,7 +180,9 @@ export const UsageTokenUsage = (
                     {formatTokenCount(group.totalTokens)}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
-                    {formatUsageCost(group.costUsd) ?? '—'}
+                    {group.pricedTurnCount === 0
+                      ? '—'
+                      : (formatUsageCost(group.costUsd) ?? '—')}
                   </TableCell>
                 </TableRow>
               ))}

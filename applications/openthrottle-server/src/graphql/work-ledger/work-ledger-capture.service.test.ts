@@ -3,11 +3,13 @@ import { BadRequestException } from '@nestjs/common';
 import type { GlobalClsService } from '@openthrottle/nestjs-modules';
 import type { WorkArtifact } from '@openthrottle/nestjs-repositories';
 import {
-  workArtifactsFactory,
   WorkSession,
-  workSessionsFactory,
   WorkSessionSubject,
 } from '@openthrottle/nestjs-repositories';
+import {
+  workArtifactsFactory,
+  workSessionsFactory,
+} from '@openthrottle/nestjs-repositories/testing';
 import type { EntityManager, Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 

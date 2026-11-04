@@ -6,10 +6,14 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
-import { REPOSITORIES_ROW_ACTIONS_COPY } from '~/routing/settings/repositories/data/data.copy';
+import {
+  MISSING_WORKTREES_COPY,
+  REPOSITORIES_ROW_ACTIONS_COPY,
+} from '~/routing/settings/repositories/data/data.copy';
 import {
   mockCheckout,
   mockDiscoveredWorktree,
+  mockMissingCheckout,
   mockRepository,
 } from '~/routing/settings/repositories/data/mock.repositories';
 import { buildRepositoryRows } from '~/routing/settings/repositories/utils/rows';
@@ -301,5 +305,58 @@ describe('RepositoryRowActions on a registered row', () => {
         name: REPOSITORIES_ROW_ACTIONS_COPY.registerWorktreeLabel,
       }),
     ).toBeNull();
+  });
+});
+
+describe('RepositoryRowActions for a registered worktree missing from disk', () => {
+  const [parent] = buildRepositoryRows(
+    [
+      mockRepository({
+        checkouts: [
+          mockCheckout({ id: 'primary-1' }),
+          mockCheckout({
+            displayName: 'wt-gone',
+            id: 'worktree-1',
+            kind: 'worktree',
+          }),
+        ],
+        id: 'repo-1',
+      }),
+    ],
+    [],
+    [],
+    [mockMissingCheckout({ checkoutId: 'worktree-1' })],
+  );
+  const missingRow = parent?.children?.[0];
+  const missingMenuLabel = `${REPOSITORIES_ROW_ACTIONS_COPY.worktreeMenuAriaLabelPrefix} wt-gone`;
+
+  test('offers only Remove record, and confirms before pruning that one id', async () => {
+    if (missingRow === undefined) throw new Error('expected a missing row');
+    const submitted: FormData[] = [];
+    const user = userEvent.setup();
+    const component = renderRowActions({
+      props: { row: missingRow },
+      submitted,
+    });
+
+    await user.click(component.getByRole('button', { name: missingMenuLabel }));
+
+    expect(component.getAllByRole('menuitem')).toHaveLength(1);
+    await user.click(
+      component.getByRole('menuitem', {
+        name: MISSING_WORKTREES_COPY.removeRecordLabel,
+      }),
+    );
+    expect(submitted).toHaveLength(0);
+
+    await user.click(
+      await component.findByRole('button', {
+        name: MISSING_WORKTREES_COPY.removeRecordConfirm,
+      }),
+    );
+
+    await waitFor(() => expect(submitted).toHaveLength(1));
+    expect(submitted[0]?.get('intent')).toBe('pruneWorktreeCheckouts');
+    expect(submitted[0]?.get('checkoutIds')).toBe('worktree-1');
   });
 });

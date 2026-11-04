@@ -21,6 +21,7 @@ import type {
   DriverInvocationConfig,
   DriverWorktreeOptions,
 } from '../types/index.ts';
+import type { UsageLimit } from '../utils/usage-limit.ts';
 
 /**
  * @description The typed subset of driver tuning knobs a generic caller may set. Deliberately NOT a
@@ -85,6 +86,10 @@ export type RunAgentStatus =
  * @description Structured result of {@link runAgentPrompt}. `output` is buffered by `runAgentPrompt`
  * itself (wrapping the caller's `onChunk`), so partial output survives a timeout/cancel — the engine
  * discards its own buffer on those paths. `exitCode` is `null` for any non-`ok`/`failed` status.
+ * For a driver with `parseOutput` (Claude's stream-json) `output` is the parsed result text after a
+ * normal close; after a timeout/cancel it is the partial live-rendered text (see `renderOutputLine`). `usageLimit` is non-null only when the run closed normally and hit a subscription usage
+ * limit; `status` is still exit-code based (a limited run is `failed`), so the caller decides what
+ * a limit means.
  * @public
  */
 export interface RunAgentPromptResult {
@@ -93,6 +98,7 @@ export interface RunAgentPromptResult {
   readonly model?: string;
   readonly output: string;
   readonly status: RunAgentStatus;
+  readonly usageLimit: UsageLimit | null;
 }
 
 /**
@@ -159,18 +165,30 @@ export const runAgentPrompt = async (
 
   let exitCode: number | null = null;
   let exited = false;
+  let usageLimit: UsageLimit | null = null;
+  let finalOutput: string | undefined;
 
   let status: RunAgentStatus;
   try {
-    await runDriverAsync(driver, invocationConfig, {
+    const engineOutput = await runDriverAsync(driver, invocationConfig, {
       logger: options.logger,
       onExit: (code: number | null): void => {
         exited = true;
         exitCode = code;
       },
+      onUsageLimit: (limit: UsageLimit): void => {
+        usageLimit = limit;
+        options.onUsageLimit?.(limit);
+      },
     });
 
     if (exited) {
+      // A driver with `parseOutput` streams RENDERED chunks, so on a normal close the engine's
+      // parsed result is the authoritative output; drivers without it keep the buffered chunks.
+      if (driver.parseOutput !== undefined) {
+        finalOutput = engineOutput.trim();
+      }
+
       status = exitCode === 0 ? RUN_AGENT_STATUS.ok : RUN_AGENT_STATUS.failed;
     } else if (config.signal?.aborted) {
       status = RUN_AGENT_STATUS.cancelled;
@@ -185,7 +203,8 @@ export const runAgentPrompt = async (
     driverId,
     exitCode,
     model: config.model,
-    output: buffered.join('').trim(),
+    output: finalOutput ?? buffered.join('').trim(),
     status,
+    usageLimit,
   };
 };

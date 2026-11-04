@@ -1,4 +1,5 @@
 import {
+  cn,
   Table,
   TableBody,
   TableCaption,
@@ -7,7 +8,6 @@ import {
   TableHeader,
   TableRow,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -47,7 +47,7 @@ export const DashboardRecentActivity = (
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx(className)} data-testid="DashboardRecentActivity">
+    <div className={cn(className)} data-testid="DashboardRecentActivity">
       <h2 className="mb-4">Recent Activity</h2>
 
       {activityRows.length === 0 ? (

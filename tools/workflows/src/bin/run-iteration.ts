@@ -15,7 +15,9 @@ import type {
   AgentDriver,
   DriverChunk,
   DriverInvocationConfig,
+  DriverReasoningEffort,
   DriverWorktreeOptions,
+  UsageLimit,
 } from '@openthrottle/openthrottle-drivers';
 import {
   getDriver,
@@ -43,12 +45,26 @@ export interface RunIterationConfig {
    * (e.g. foreign `workingDirectory` from BullMQ spawn or orchestrator).
    */
   cwd?: string;
+  /**
+   * Reasoning effort, mapped per backend by the drivers' shared helpers (claude `--effort`, codex
+   * `-c model_reasoning_effort=`, grok `--reasoning-effort`, opencode `--variant`). Backends with no
+   * reasoning knob (cursor, gemini, antigravity) ignore it.
+   */
+  effort?: DriverReasoningEffort;
+  /** Extra env for the runner subprocess, merged over `process.env` (e.g. `OT_PR_DRAFT_DIR`). */
+  env?: Readonly<Record<string, string>>;
   /** Iteration number. */
   iteration: number;
   /** Model preset when the backend supports it (Cursor: `--model`; Claude Code: `--model`). */
   model?: string;
   /** Optional callback for each stdout/stderr chunk (async path only). */
   onChunk?: (chunk: CursorAgentChunk) => void;
+  /**
+   * Optional callback fired when the iteration closes normally and the driver detected a
+   * subscription usage limit (Claude `stream-json` only). Sync and async paths; does not change the
+   * returned string. Not fired on timeout, abort or spawn failure.
+   */
+  onUsageLimit?: (usageLimit: UsageLimit) => void;
   /** Optional AbortSignal to cancel the iteration (async path only). */
   signal?: AbortSignal;
   /** Cursor-only: `--skip-worktree-setup`. */
@@ -89,6 +105,8 @@ const toDriverConfig = (
   driver: AgentDriver,
 ): DriverInvocationConfig => ({
   cwd: config.cwd,
+  effort: config.effort,
+  env: config.env,
   iteration: config.iteration,
   model: config.model,
   onChunk: config.onChunk,
@@ -127,6 +145,7 @@ export const runIteration = (config: RunIterationConfig): string => {
 
   return runDriverSync(driver, toDriverConfig(config, driver), {
     logger: ralphDebugLogger,
+    onUsageLimit: config.onUsageLimit,
   });
 };
 
@@ -143,5 +162,6 @@ export const runIterationAsync = (
 
   return runDriverAsync(driver, toDriverConfig(config, driver), {
     logger: ralphDebugLogger,
+    onUsageLimit: config.onUsageLimit,
   });
 };

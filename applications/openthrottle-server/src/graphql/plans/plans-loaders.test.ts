@@ -1,5 +1,6 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type {
+  PlanRunsService,
   ProjectsService,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
@@ -24,6 +25,10 @@ describe('PlansLoaders', () => {
   const projectsService = createMock<ProjectsService>({
     getRepository: vi.fn().mockReturnValue({ find: findProjects }),
   });
+  const findEarliestScheduledForByPlanIds = vi.fn();
+  const planRunsService = createMock<PlanRunsService>({
+    findEarliestScheduledForByPlanIds,
+  });
   const getPlanHooksForPlans = vi.fn();
   const tasksService = createMock<TasksService>({
     getPlanHooksForPlans,
@@ -40,7 +45,7 @@ describe('PlansLoaders', () => {
     taskQueryBuilder.select.mockReturnThis();
     taskQueryBuilder.where.mockReturnThis();
     createQueryBuilder.mockReturnValue(taskQueryBuilder);
-    loaders = new PlansLoaders(projectsService, tasksService);
+    loaders = new PlansLoaders(planRunsService, projectsService, tasksService);
   });
 
   describe('projectLoader', () => {
@@ -86,7 +91,7 @@ describe('PlansLoaders', () => {
   });
 
   describe('tasksCompletedCountByPlanIdLoader', () => {
-    test('filters to COMPLETED/SKIPPED and maps counts in key order', async () => {
+    test('filters to COMPLETED/PROMOTED/SKIPPED and maps counts in key order', async () => {
       getRawMany.mockResolvedValue([
         { count: '2', key: 'plan-a' },
         { count: '1', key: 'plan-c' },
@@ -101,7 +106,7 @@ describe('PlansLoaders', () => {
       expect(createQueryBuilder).toHaveBeenCalledTimes(1);
       expect(taskQueryBuilder.andWhere).toHaveBeenCalledWith(
         'entity.status IN (:...filterValues)',
-        { filterValues: ['COMPLETED', 'SKIPPED'] },
+        { filterValues: ['COMPLETED', 'PROMOTED', 'SKIPPED'] },
       );
       expect(counts).toEqual([2, 0, 1]);
     });
@@ -145,6 +150,53 @@ describe('PlansLoaders', () => {
       // plan-b has no hooks -> empty groups, not undefined
       expect(grouped[1]).toEqual({ after: [], before: [] });
       expect(grouped[2].after).toHaveLength(1);
+    });
+  });
+
+  describe('scheduledRunByPlanIdLoader', () => {
+    test('batches N planIds into one query and maps runs back in key order, null when none', async () => {
+      const soonest = {
+        id: 'run-a',
+        scheduledFor: new Date('2026-08-01T09:00:00Z'),
+      };
+      findEarliestScheduledForByPlanIds.mockResolvedValue(
+        new Map([['plan-a', soonest]]),
+      );
+
+      const result = await Promise.all([
+        loaders.scheduledRunByPlanIdLoader.load('plan-a'),
+        loaders.scheduledRunByPlanIdLoader.load('plan-b'),
+      ]);
+
+      expect(findEarliestScheduledForByPlanIds).toHaveBeenCalledTimes(1);
+      expect(findEarliestScheduledForByPlanIds).toHaveBeenCalledWith([
+        'plan-a',
+        'plan-b',
+      ]);
+      expect(result).toEqual([soonest, null]);
+    });
+
+    test('serves scheduledRunAt and scheduledRunId for one plan from a single query', async () => {
+      findEarliestScheduledForByPlanIds.mockClear();
+      findEarliestScheduledForByPlanIds.mockResolvedValue(
+        new Map([
+          [
+            'plan-a',
+            { id: 'run-a', scheduledFor: new Date('2026-08-01T09:00:00Z') },
+          ],
+        ]),
+      );
+
+      // The two ResolveFields load the same key, so DataLoader dedupes them into one batch.
+      await Promise.all([
+        loaders.scheduledRunByPlanIdLoader.load('plan-a'),
+        loaders.scheduledRunByPlanIdLoader.load('plan-a'),
+      ]);
+
+      expect(findEarliestScheduledForByPlanIds).toHaveBeenCalledTimes(1);
+      expect(findEarliestScheduledForByPlanIds).toHaveBeenCalledWith([
+        'plan-a',
+      ]);
     });
   });
 });

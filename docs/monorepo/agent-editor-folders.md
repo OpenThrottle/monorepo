@@ -50,6 +50,15 @@ repo root
 > **Skills are two-stage and fully generated.** `ot-skill-sync` builds `skills/*` → `.agents/skills/` (stage 1), then `.agents/skills/*` → each agent fan-out — currently `.claude/skills/` **and `.gemini/skills/`** (stage 2). The dedicated `.cursor/skills` fan-out was **dropped**: Cursor reads `.agents/skills/` (and `.claude/skills/`) directly, so it needs no separate copy. Every supported CLI reads the `SKILL.md` standard and they differ only in which dirs they scan — Cursor, Grok Build, and Antigravity (`agy`) read `.agents/skills/` in-repo; Claude Code reads only `.claude/skills/` and the Gemini CLI only `.gemini/skills/`, which is why both are fan-out targets. The verified per-CLI matrix (including codex, which has no in-repo skills dir, and opencode's `.opencode/skill(s)`) lives in [`skills/ot-skill-sync/SKILL.md`](../../skills/ot-skill-sync/SKILL.md). **Never hand-edit** `.agents/skills/`, `.claude/skills/`, or `.gemini/skills/`.
 
 > **Hooks reach child repositories differently from skills — do not copy the skills pattern.** The
+> **`.claude/settings.json` must be strict JSON — no comments, no trailing commas.** Claude Code
+> skips an unparseable settings file entirely, so a single `//` line silently disables every hook,
+> permission and MCP setting in it. That stopped all in-repo skill capture from 2026-09-23 until it
+> was found (OT plan `e7b74d81`). `monorepo:check-claude-config-json` gates it in `check:local` and
+> CI. Put notes here instead: the empty `attribution.commit` / `attribution.pr` strings are
+> deliberate — they turn off the harness's agent credit line, and setting them in
+> `~/.claude/settings.json` applies the same everywhere.
+
+> **Hooks reach child repositories differently from skills — do not copy the skills pattern.** The
 > per-tool hook bundles under `.claude/hooks/` and `.cursor/hooks/` only fire _inside this repo_.
 > Hooks for other repositories ship as the generated plugin payload at `plugins/openthrottle/`,
 > delivered either by a marketplace install or by `--plugin-dir` at spawn time — **never** by writing
@@ -98,6 +107,24 @@ Prompts are flat files in `.agents/prompts/`; the walker derives slug and title 
 **Editor-native** (not generated, not SSOT-mirrored): `.cursor/hooks.json`, local `.cursor/mcp.json` (from `mcp.json`), `.cursor/worktrees.json`, `.cursor/settings.json`. Nx Console may also write a generated Nx rule file into Cursor's own config directory from outside this repo; it is gitignored and harmless.
 
 **Customizing an external skill:** never edit the vendored copy — it stays 1:1 with upstream and a re-sync would overwrite it. Author a companion skill in `skills/`, or layer the OT-specific guidance in a doc that references it. Exemplar: [code-style.md § Frontend design](./code-style.md#frontend-design) overlays the vendored `frontend-design` skill. See [docs/Skills.md](../Skills.md).
+
+### Claude Code: load `AGENTS.md` (global-only setting)
+
+Claude Code reads `CLAUDE.md` natively but only loads a sibling `AGENTS.md` when the built-in `agents-md` plugin is told to. Without it, every `AGENTS.md` in this repo (root and per-folder) is silently ignored. The option is honoured **only in user-global settings** — a checked-in `.claude/settings.json` has no effect — so it cannot be committed and each contributor sets it once in `~/.claude/settings.json` (or `$CLAUDE_CONFIG_DIR/settings.json` if you set that variable). Merge this block in:
+
+```json
+{
+  "pluginConfigs": {
+    "agents-md@builtin": {
+      "options": {
+        "instructionFiles": "claude-md-and-agents-md"
+      }
+    }
+  }
+}
+```
+
+`./scripts/setup.sh` warns at the end when it is missing; run `pnpm run check:claude-settings` any time to re-check (add `-- --strict` to exit 1 on a miss). The check only reads the file and never edits it, and it is deliberately not part of `check:local` because it inspects a per-user file.
 
 ---
 

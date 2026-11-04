@@ -50,6 +50,12 @@ export const EVENT_SUBSCRIPTION_ROWS = [
   },
   {
     defaultSubscribed: true,
+    description: `When one of your scheduled jobs fails, times out, or misses a run.`,
+    id: NOTIFICATION_EVENT_NAMES.SCHEDULED_RUN_FAILED,
+    label: 'Scheduled run failed',
+  },
+  {
+    defaultSubscribed: true,
     description: `System-wide alerts and operational messages.`,
     id: NOTIFICATION_EVENT_NAMES.SYSTEM_ALERT,
     label: 'System alerts',

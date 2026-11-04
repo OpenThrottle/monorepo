@@ -6,7 +6,6 @@ import { HeartHandshakeIcon } from 'lucide-react';
 import * as React from 'react';
 
 import type { JobDetailsCardFragment } from '~/__generated__/graphql';
-// import clsx from 'clsx';
 
 export interface QueueJobResultsProps {
   job: JobDetailsCardFragment;

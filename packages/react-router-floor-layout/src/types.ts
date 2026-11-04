@@ -8,6 +8,8 @@
 
 import { z } from 'zod';
 
+import type { Point } from './utils/geometry';
+
 // ---------------------------------------------------------------------------
 // Const enumerations (no TypeScript enums — as-const objects per repo style)
 // ---------------------------------------------------------------------------
@@ -200,3 +202,21 @@ export type FloorLayout = z.infer<typeof floorLayoutSchema>;
  * @public
  */
 export type TableElement = Extract<FloorElement, { seats: number }>;
+
+/**
+ * The live state passed to every `usePointerDrag` callback.
+ *
+ * @public
+ */
+export interface PointerDragContext {
+  /** `world - startWorld`, in inches (snapped/clamped). */
+  readonly deltaWorld: Point;
+  /** The originating pointer id. */
+  readonly pointerId: number;
+  /** Unsnapped, unclamped world point under the pointer. */
+  readonly rawWorld: Point;
+  /** World point (snapped + clamped) at pointerdown. */
+  readonly startWorld: Point;
+  /** Current world point: snapped to grid, then clamped to bounds. */
+  readonly world: Point;
+}

@@ -468,12 +468,26 @@ export class WorkspaceFoldersService {
    * create/relink the checkout → persist inspection → auto-provision the project.
    * `managed` distinguishes an OT-cloned checkout (true) from a user-registered
    * existing folder (false).
+   *
+   * A checkout is a git work tree, so the path is first resolved to the root of
+   * the work tree containing it: a subdirectory of a repository registers the
+   * repository, and a folder inside no repository at all — a directory that
+   * merely CONTAINS repositories, say — is rejected rather than registered as a
+   * primary checkout nothing can ever run in.
    */
   private async registerCheckout(
     userId: string,
-    hostPath: string,
+    requestedPath: string,
     opts: { displayName?: string | null; managed: boolean },
   ): Promise<AddWorkspaceFolderPayloadObject> {
+    const hostPath =
+      await this.inspectionService.resolveWorkTreeRoot(requestedPath);
+    if (hostPath === null) {
+      throw new BadRequestException(
+        `${requestedPath} is not inside a git repository. Add the repository's own folder instead.`,
+      );
+    }
+
     const snapshot = await this.inspectionService.scan(hostPath);
 
     const displayName =

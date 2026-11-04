@@ -8,6 +8,7 @@
 
 import { defineDriver } from '../registry/index.ts';
 import type { DriverCapabilities, DriverModelListing } from '../types/index.ts';
+import { opencodeVariant } from '../utils/reasoning-effort.ts';
 import {
   escapeForShellDoubleQuoted,
   escapeShellArg,
@@ -78,9 +79,12 @@ export const opencodeDriver = defineDriver({
       ? formatShellEnvPrefix({ OPENCODE_CONFIG: configPath })
       : '';
 
+    const variant = opencodeVariant(config.effort);
+    const variantFlag = variant !== undefined ? ` --variant ${variant}` : '';
+
     const safePrompt = escapeForShellDoubleQuoted(config.prompt);
 
-    return `${endpointPrefix}opencode run --auto "${safePrompt}"${modelFlag}`;
+    return `${endpointPrefix}opencode run --auto "${safePrompt}"${modelFlag}${variantFlag}`;
   },
   capabilities,
   discoverModels,

@@ -4,6 +4,7 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { Queue } from 'bullmq';
 
 import { REPEATABLE_JOB_OPTIONS } from '../repeatable-job.options.ts';
+import { resolveRepeatablesOwner } from '../repeatable-job.owner.ts';
 import { DAILY_STATS_QUEUE_NAME } from './daily-stats.constants.ts';
 import type { AggregateDailyStatsJobData } from './daily-stats.types.ts';
 
@@ -24,6 +25,15 @@ export class DailyStatsRepeatableService implements OnModuleInit {
   ) {}
 
   async onModuleInit(): Promise<void> {
+    const ownership = resolveRepeatablesOwner();
+    if (!ownership.owner) {
+      this.logger.info(
+        `Daily stats repeatable job not registered: ${ownership.reason}`,
+        DailyStatsRepeatableService.name,
+      );
+      return;
+    }
+
     const job = await this.queue.add(
       JOB_NAME,
       {},

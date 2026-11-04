@@ -1,5 +1,5 @@
+import { cn } from '@openthrottle/react-router-shadcn';
 import { OPENTHROTTLE_GITHUB_URL } from '@openthrottle/react-router-utils';
-import clsx from 'clsx';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -35,7 +35,7 @@ export const GlobalScreen = (props: GlobalScreenProps): React.ReactElement => {
     <>
       {beta ? (
         <div
-          className={clsx(
+          className={cn(
             'bg-accent/60 text-foreground',
             'px-4 py-4 md:px-8 lg:px-12',
             'sticky top-[3.3rem] z-10',

@@ -133,6 +133,99 @@ describe('reduceStreamChunk', () => {
     expect(state.retryableIds.has('assistant-1')).toBe(false);
   });
 
+  it('adds a usageLimit turn event from a usage_limit chunk', () => {
+    let state = INITIAL_STREAM_STATE;
+    state = reduceStreamChunk(
+      state,
+      chunk({
+        kind: 'usage_limit',
+        metadataJson: JSON.stringify({
+          rateLimitType: 'five_hour',
+          resetsAt: '2027-01-15T08:00:00.000Z',
+        }),
+        sortOrder: 0,
+      }),
+    );
+
+    expect(state.events.get('assistant-1')).toEqual([
+      {
+        kind: 'usageLimit',
+        rateLimitType: 'five_hour',
+        resetsAt: '2027-01-15T08:00:00.000Z',
+        sortOrder: 0,
+      },
+    ]);
+    expect(state.isStreaming).toBe(true);
+  });
+
+  it('keeps a usage-limited terminal out of retryableIds and keeps the error body', () => {
+    const usageLimit = {
+      rateLimitType: 'five_hour',
+      resetsAt: '2027-01-15T08:00:00.000Z',
+    };
+    let state = INITIAL_STREAM_STATE;
+    state = reduceStreamChunk(
+      state,
+      chunk({
+        kind: 'usage_limit',
+        metadataJson: JSON.stringify(usageLimit),
+        sortOrder: 0,
+      }),
+    );
+    state = reduceStreamChunk(
+      state,
+      chunk({
+        done: true,
+        error: 'limit reached',
+        metadataJson: JSON.stringify({ retryable: false, usageLimit }),
+        sortOrder: 1,
+      }),
+    );
+
+    expect(state.completedIds.has('assistant-1')).toBe(true);
+    expect(state.retryableIds.has('assistant-1')).toBe(false);
+    expect(state.bodies.get('assistant-1')).toContain('_Error: limit reached_');
+    expect(
+      state.events.get('assistant-1')?.filter((e) => e.kind === 'usageLimit'),
+    ).toHaveLength(1);
+  });
+
+  it('never marks a terminal carrying usageLimit retryable, even if the flag says so', () => {
+    const state = reduceStreamChunk(
+      INITIAL_STREAM_STATE,
+      chunk({
+        done: true,
+        error: 'limit reached',
+        metadataJson: JSON.stringify({
+          retryable: true,
+          usageLimit: { rateLimitType: null, resetsAt: null },
+        }),
+        sortOrder: 0,
+      }),
+    );
+
+    expect(state.retryableIds.has('assistant-1')).toBe(false);
+  });
+
+  it('synthesizes a usageLimit event from a bare 429 terminal with no usage_limit chunk', () => {
+    const state = reduceStreamChunk(
+      INITIAL_STREAM_STATE,
+      chunk({
+        done: true,
+        error: 'limit reached',
+        metadataJson: JSON.stringify({
+          retryable: false,
+          usageLimit: { rateLimitType: null, resetsAt: null },
+        }),
+        sortOrder: 0,
+      }),
+    );
+
+    expect(
+      state.events.get('assistant-1')?.find((e) => e.kind === 'usageLimit'),
+    ).toMatchObject({ rateLimitType: null, resetsAt: null });
+  });
+
   it('appends an error note on a terminal error chunk', () => {
     let state = INITIAL_STREAM_STATE;
     state = reduceStreamChunk(state, chunk({ delta: 'partial', sortOrder: 0 }));

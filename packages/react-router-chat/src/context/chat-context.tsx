@@ -2,6 +2,7 @@ import * as React from 'react';
 
 import type { ChatComposerToolbarProps } from '../components/ChatComposerToolbar';
 import type { ChatConversationSidebarProps } from '../components/ChatConversationSidebar';
+import { ChatContext } from '../data/chat-context';
 import type { ChatMessage, ChatTokenUsage } from '../types';
 
 /**
@@ -80,8 +81,6 @@ export interface ChatProviderProps extends React.PropsWithChildren {
   readonly open?: boolean;
 }
 
-const ChatContext = React.createContext<ChatContextValue | null>(null);
-
 /**
  * @description Supplies thread state and send handler to {@link ChatDialog} without prop drilling.
  */
@@ -123,22 +122,3 @@ export const ChatProvider = (props: ChatProviderProps): React.ReactElement => {
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 };
-
-/**
- * @description Reads chat state from {@link ChatProvider}; throws when used outside the provider.
- */
-export const useChat = (): ChatContextValue => {
-  const context = React.useContext(ChatContext);
-
-  if (!context) {
-    throw new Error('useChat must be used within a ChatProvider.');
-  }
-
-  return context;
-};
-
-/**
- * @description Optional {@link useChat} for components that support both props and context.
- */
-export const useChatOptional = (): ChatContextValue | null =>
-  React.useContext(ChatContext);

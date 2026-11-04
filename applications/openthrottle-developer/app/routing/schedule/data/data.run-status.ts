@@ -13,10 +13,12 @@ import type { BadgeProps } from '@openthrottle/react-router-shadcn';
 export const RUN_STATUS_VARIANT: Record<string, BadgeProps['variant']> = {
   cancelled: 'secondary',
   failed: 'destructive',
+  missed: 'secondary',
   no_op: 'secondary',
   queued: 'outline',
   running: 'default',
   succeeded: 'default',
+  usage_limited: 'secondary',
 };
 
 /**
@@ -27,16 +29,24 @@ export const RUN_STATUS_VARIANT: Record<string, BadgeProps['variant']> = {
  * agent reported it did no work (see databases/migrations/095). Colouring it as an error would be as
  * misleading as the green it used to get; amber reads as "needs a look" without claiming a failure.
  *
+ * `usage_limited` is amber for the same reason: the agent stopped on a subscription limit, nothing
+ * broke, and the run usually continues by itself once the limit resets (databases/migrations/139).
+ *
+ * `missed` is amber too: no agent ran, because the fire came due while the server was down (or too
+ * late for the schedule's misfire policy) — worth a look, but nothing failed (migration 141).
+ *
  * Uses the `color` prop rather than `variant` because `Badge` documents these hues as the stable set
  * intended for categorical/status tagging, and because the `variant` classes are presently empty.
  */
 export const RUN_STATUS_COLOR: Record<string, BadgeProps['color']> = {
   cancelled: 'slate',
   failed: 'red',
+  missed: 'amber',
   no_op: 'amber',
   queued: 'slate',
   running: 'blue',
   succeeded: 'green',
+  usage_limited: 'amber',
 };
 
 /**
@@ -44,7 +54,17 @@ export const RUN_STATUS_COLOR: Record<string, BadgeProps['color']> = {
  * presentable need an entry; the raw status is the fallback at the call site.
  */
 export const RUN_STATUS_LABEL: Record<string, string> = {
+  missed: 'Missed',
   no_op: 'no work done',
+  usage_limited: 'Usage limited',
+};
+
+/**
+ * @description Human-readable label per run trigger. `resume` is the delayed continuation the
+ * processor enqueues after a run stops on a usage limit; the others read fine as stored.
+ */
+export const RUN_TRIGGER_LABEL: Record<string, string> = {
+  resume: 'resume (after usage limit)',
 };
 
 /**
@@ -56,8 +76,10 @@ export const RUN_STATUS_LABEL: Record<string, string> = {
 export const RUN_STATUS_DOT_CLASS: Record<string, string> = {
   cancelled: 'bg-slate-300',
   failed: 'bg-red-300',
+  missed: 'bg-amber-300',
   no_op: 'bg-amber-300',
   queued: 'bg-slate-300',
   running: 'bg-blue-300',
   succeeded: 'bg-green-300',
+  usage_limited: 'bg-amber-300',
 };

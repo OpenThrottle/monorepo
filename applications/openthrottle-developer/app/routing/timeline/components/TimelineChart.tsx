@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import { TIMELINE_LANE_ROW_HEIGHT } from '~/routing/timeline/config/layout';
@@ -83,7 +83,7 @@ export const TimelineChart = (
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx('w-full', className)} data-testid="TimelineChart">
+    <div className={cn('w-full', className)} data-testid="TimelineChart">
       <div className="flex w-full" ref={bodyRef}>
         <TimelineLaneGutter
           laneRowHeight={TIMELINE_LANE_ROW_HEIGHT}
@@ -99,7 +99,7 @@ export const TimelineChart = (
         */}
         <div
           aria-label="Workstream timeline chart"
-          className={clsx(
+          className={cn(
             'focus-visible:ring-ring flex-1 overflow-x-auto focus-visible:ring-2 focus-visible:outline-none',
             pan.isPanning ? 'cursor-grabbing select-none' : 'cursor-grab',
           )}

@@ -23,6 +23,7 @@ export const toTokenUsageRowObject = (
   object.cacheReadTokens = row.cachedReadTokens;
   object.cacheWriteTokens = row.cachedWriteTokens;
   object.reasoningTokens = row.reasoningTokens;
+  object.source = row.source;
   object.totalTokens = row.totalTokens;
   object.costUsd = row.costUsd;
   object.createdAt = row.createdAt;

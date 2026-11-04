@@ -3,8 +3,8 @@ import {
   Card,
   CardContent,
   CardFooter,
+  cn,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -45,7 +45,7 @@ export const PlanTaskCard = (props: PlanTaskCardProps): React.ReactElement => {
 
   return (
     <Card
-      className={clsx('shadow-sm', className)}
+      className={cn('shadow-sm', className)}
       data-testid={`PlanTaskCard-${task.id}`}
     >
       <CardContent className="space-y-2 p-3 pb-2">

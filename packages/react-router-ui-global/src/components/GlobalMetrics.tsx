@@ -1,5 +1,6 @@
 import {
   Button,
+  cn,
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
@@ -10,7 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import { ChevronDownIcon } from 'lucide-react';
 import * as React from 'react';
 
@@ -86,7 +86,7 @@ export const GlobalMetrics = (
 
   return (
     <div
-      className={clsx('flex w-full flex-col', 'p-4 md:p-8 lg:p-12', className)}
+      className={cn('flex w-full flex-col', 'p-4 md:p-8 lg:p-12', className)}
       data-testid="GlobalMetrics"
     >
       <Collapsible onOpenChange={handleOpenChange} open={isOpen}>
@@ -105,7 +105,7 @@ export const GlobalMetrics = (
                 >
                   <ChevronDownIcon
                     aria-hidden={true}
-                    className={clsx('size-4', {
+                    className={cn('size-4', {
                       'rotate-180': isOpen,
                       'transition-transform duration-300':
                         !prefersReducedMotion,
@@ -118,7 +118,7 @@ export const GlobalMetrics = (
               <div className="flex-1" />
               <span
                 aria-hidden={isOpen}
-                className={clsx(
+                className={cn(
                   'text-muted-foreground truncate text-sm tabular-nums',
                   {
                     'max-w-0 overflow-hidden opacity-0': isOpen,
@@ -134,7 +134,7 @@ export const GlobalMetrics = (
               {isOpen && (
                 <Label
                   aria-hidden={!isOpen}
-                  className={clsx('flex shrink-0 items-center gap-2', {
+                  className={cn('flex shrink-0 items-center gap-2', {
                     'opacity-100': isOpen,
                     'pointer-events-none opacity-0': !isOpen,
                     'transition-opacity duration-200': !prefersReducedMotion,
@@ -182,7 +182,7 @@ export const GlobalMetrics = (
           )}
 
           <CollapsibleContent
-            className={clsx('overflow-hidden', {
+            className={cn('overflow-hidden', {
               'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-top-2 data-[state=open]:duration-300':
                 !prefersReducedMotion,
             })}

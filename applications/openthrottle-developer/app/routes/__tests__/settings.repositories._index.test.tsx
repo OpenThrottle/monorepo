@@ -48,10 +48,17 @@ const workspaceRepositories = [
 
 const discoveredWorktrees = {
   droppedCount: 0,
-  rootSource: 'DEFAULT',
   scannedAt: '2026-08-24T00:00:00.000Z',
+  scannedRoots: [
+    {
+      baseRoot: '/Users/dev/.openthrottle/worktrees',
+      exists: true,
+      path: '/Users/dev/.openthrottle/worktrees/acme/monorepo',
+      source: 'DEFAULT',
+      worktreeCount: 0,
+    },
+  ],
   warnings: [],
-  worktreeRoot: '/Users/dev/.openthrottle/worktrees/monorepo',
   worktrees: [],
 };
 

@@ -11,17 +11,8 @@
 import { useRouteLoaderData } from 'react-router';
 
 import type { loader } from '~/routes/plans.$planId._index';
-
-/**
- * Auto-generated React Router v7 (`@react-router/fs-routes` flatRoutes) id for
- * app/routes/plans.$planId._index.tsx — the file path under app/ without the
- * extension. Centralized here so every consumer references one string.
- */
-export const PLAN_DETAIL_ROUTE_ID = 'routes/plans.$planId._index' as const;
-
-export type PlanDetailRouteData = NonNullable<
-  ReturnType<typeof useRouteLoaderData<typeof loader>>
->;
+import { PLAN_DETAIL_ROUTE_ID } from '~/routing/plans/data/data.plan-detail-route-id';
+import type { PlanDetailRouteData } from '~/routing/plans/types';
 
 /**
  * Returns the plan detail route's loader data. Throws if called outside the
@@ -29,8 +20,18 @@ export type PlanDetailRouteData = NonNullable<
  * return type non-nullable for the PlanTab* consumers.
  */
 export function usePlanDetailRouteData(): PlanDetailRouteData {
+  // Hooks
   const data = useRouteLoaderData<typeof loader>(PLAN_DETAIL_ROUTE_ID);
 
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
   if (data == null) {
     throw new Error(
       `usePlanDetailRouteData must be used within the "${PLAN_DETAIL_ROUTE_ID}" route.`,

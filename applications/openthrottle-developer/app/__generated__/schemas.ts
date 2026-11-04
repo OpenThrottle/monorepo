@@ -18,6 +18,9 @@ import {
   AssignRoleToServiceAccountInput,
   AssignRoleToUserInput,
   AttachWorkSessionSubjectInput,
+  BlogPostState,
+  BlogPostStatus,
+  BlogReferenceEntity,
   CancelPlanRunInput,
   CleanQueueInput,
   CloneRepositoryInput,
@@ -25,6 +28,7 @@ import {
   CommitsPerPrInput,
   ConnectMcpConnectorInput,
   CreateAgentConversationInput,
+  CreateBlogPostInput,
   CreateCustomPromptInput,
   CreateNoteInput,
   CreatePlanInput,
@@ -48,6 +52,7 @@ import {
   DeleteProjectInput,
   DeleteTagActionRuleInput,
   DeleteTaskInput,
+  DeregisterWorktreeCheckoutInput,
   DetachHookInput,
   DuplicateJobInput,
   EditorPresenceState,
@@ -71,6 +76,7 @@ import {
   ListPlansByStatusInput,
   ListPullsInput,
   LoginInput,
+  MissingWorktreeCheckoutReason,
   OpenToMergedCycleTimeInput,
   PlanEmbeddingsByPlanInput,
   PlanRalphWorkflowMode,
@@ -80,6 +86,9 @@ import {
   PressureLevel,
   PromoteTaskToPlanInput,
   PrsMergedPerPeriodInput,
+  PruneWorktreeCheckoutOutcome,
+  PruneWorktreeCheckoutsInput,
+  PublishBlogPostInput,
   QueueControlInput,
   QueueDetailsInput,
   QueueJobLogLevel,
@@ -89,6 +98,8 @@ import {
   RecordPlanRunHeartbeatInput,
   RecordSkillUsageInput,
   RecordSkillUsageOutcomeInput,
+  RecordTokenUsageInput,
+  RecordTokenUsageRowInput,
   RecordWorkArtifactInput,
   RefreshCheckoutInput,
   RegisterCliPlanRunInput,
@@ -114,8 +125,10 @@ import {
   RolloutFallthroughInput,
   RolloutFlagKind,
   RolloutFlagVariationInput,
+  SchedulePlanRunInput,
   SearchInput,
   SearchPlansInput,
+  SetBlogPostTagsInput,
   SetMcpConnectorEnabledInput,
   SetPlanStatusInput,
   SetScheduledAgentJobEnabledInputType,
@@ -132,6 +145,7 @@ import {
   TimelineSpanKind,
   UnverifiedWorkArtifactsInput,
   UpdateAgentConversationTitleInput,
+  UpdateBlogPostInput,
   UpdateCustomPromptInput,
   UpdateNoteInput,
   UpdatePlanInput,
@@ -145,6 +159,8 @@ import {
   UpdateUserInput,
   UpdateWorkspaceLocalRepositoryInput,
   UpdateWorkspaceProfileInput,
+  UpsertBlogAuthorInput,
+  UpsertBlogTagInput,
   UpsertTagActionRuleInput,
   WallClockInterpretation,
   WorkArtifactsByPlanInput,
@@ -173,15 +189,29 @@ export const definedNonNullAnySchema = z
   .any()
   .refine((v) => isDefinedNonNullAny(v));
 
+export const BlogPostStateSchema = z.nativeEnum(BlogPostState);
+
+export const BlogPostStatusSchema = z.nativeEnum(BlogPostStatus);
+
+export const BlogReferenceEntitySchema = z.nativeEnum(BlogReferenceEntity);
+
 export const CustomPromptTypeSchema = z.nativeEnum(CustomPromptType);
 
 export const EditorPresenceStateSchema = z.nativeEnum(EditorPresenceState);
+
+export const MissingWorktreeCheckoutReasonSchema = z.nativeEnum(
+  MissingWorktreeCheckoutReason,
+);
 
 export const PlanRalphWorkflowModeSchema = z.nativeEnum(PlanRalphWorkflowMode);
 
 export const PlanTaskStatusSchema = z.nativeEnum(PlanTaskStatus);
 
 export const PressureLevelSchema = z.nativeEnum(PressureLevel);
+
+export const PruneWorktreeCheckoutOutcomeSchema = z.nativeEnum(
+  PruneWorktreeCheckoutOutcome,
+);
 
 export const QueueJobLogLevelSchema = z.nativeEnum(QueueJobLogLevel);
 
@@ -397,6 +427,7 @@ export function CancelPlanRunInputSchema(): z.ZodObject<
 > {
   return z.object({
     planId: z.string().min(1),
+    planRunId: z.string().nullish(),
   });
 }
 
@@ -460,6 +491,22 @@ export function CreateAgentConversationInputSchema(): z.ZodObject<
     planId: z.string().nullish(),
     projectId: z.string().nullish(),
     title: z.string().nullish(),
+  });
+}
+
+export function CreateBlogPostInputSchema(): z.ZodObject<
+  Properties<CreateBlogPostInput>
+> {
+  return z.object({
+    authorSlug: z.string().nullish(),
+    bodyMarkdown: z.string().min(1),
+    coverImageAlt: z.string().nullish(),
+    coverImageUrl: z.string().nullish(),
+    excerpt: z.string().nullish(),
+    seoDescription: z.string().nullish(),
+    seoTitle: z.string().nullish(),
+    slug: z.string().min(1),
+    title: z.string().min(1),
   });
 }
 
@@ -562,14 +609,19 @@ export function CreateScheduledAgentJobInputTypeSchema(): z.ZodObject<
   Properties<CreateScheduledAgentJobInputType>
 > {
   return z.object({
-    cronPattern: z.string().min(1),
+    cronPattern: z.string().nullish(),
     cwd: z.string().nullish(),
     driverId: z.string().min(1),
     enabled: z.boolean().nullish(),
+    intervalMs: z.number().nullish(),
+    misfirePolicy: z.string().nullish(),
+    misfireThresholdMs: z.number().nullish(),
     model: z.string().nullish(),
     name: z.string().min(1),
     prompt: z.string().min(1),
     repositoryCheckoutId: z.string().nullish(),
+    runAt: z.string().nullish(),
+    scheduleKind: z.string().nullish(),
     settingsJson: z.string().nullish(),
     timeoutMs: z.number().nullish(),
     timezone: z.string().nullish(),
@@ -709,6 +761,14 @@ export function DeleteTaskInputSchema(): z.ZodObject<
 > {
   return z.object({
     id: z.string().min(1),
+  });
+}
+
+export function DeregisterWorktreeCheckoutInputSchema(): z.ZodObject<
+  Properties<DeregisterWorktreeCheckoutInput>
+> {
+  return z.object({
+    filesystemPath: z.string().min(1),
   });
 }
 
@@ -1000,6 +1060,23 @@ export function PrsMergedPerPeriodInputSchema(): z.ZodObject<
   });
 }
 
+export function PruneWorktreeCheckoutsInputSchema(): z.ZodObject<
+  Properties<PruneWorktreeCheckoutsInput>
+> {
+  return z.object({
+    checkoutIds: z.array(z.string().min(1)),
+  });
+}
+
+export function PublishBlogPostInputSchema(): z.ZodObject<
+  Properties<PublishBlogPostInput>
+> {
+  return z.object({
+    id: z.string().min(1),
+    publishedAt: definedNonNullAnySchema.nullish(),
+  });
+}
+
 export function QueueControlInputSchema(): z.ZodObject<
   Properties<QueueControlInput>
 > {
@@ -1039,6 +1116,7 @@ export function RalphPlanRunTuningInputSchema(): z.ZodObject<
   return z.object({
     backend: z.string().nullish(),
     disableWorktree: z.boolean().nullish(),
+    effort: z.string().nullish(),
     iterationTimeoutSeconds: z.number().nullish(),
     iterations: z.number().nullish(),
     model: z.string().nullish(),
@@ -1096,6 +1174,37 @@ export function RecordSkillUsageOutcomeInputSchema(): z.ZodObject<
     skillName: z.string().min(1),
     source: z.string().nullish(),
     toolUseId: z.string().nullish(),
+  });
+}
+
+export function RecordTokenUsageInputSchema(): z.ZodObject<
+  Properties<RecordTokenUsageInput>
+> {
+  return z.object({
+    rows: z.array(z.lazy(() => RecordTokenUsageRowInputSchema())),
+  });
+}
+
+export function RecordTokenUsageRowInputSchema(): z.ZodObject<
+  Properties<RecordTokenUsageRowInput>
+> {
+  return z.object({
+    cacheReadTokens: z.number().nullish(),
+    cacheWriteTokens: z.number().nullish(),
+    costUsd: z.number().nullish(),
+    cwd: z.string().nullish(),
+    gitBranch: z.string().nullish(),
+    inputTokens: z.number().nullish(),
+    model: z.string().min(1),
+    occurredAt: z.string().min(1),
+    outputTokens: z.number().nullish(),
+    provider: z.string().min(1),
+    rawUsageJson: z.string().nullish(),
+    reasoningTokens: z.number().nullish(),
+    requestId: z.string().nullish(),
+    sessionId: z.string().nullish(),
+    source: z.string().min(1),
+    totalTokens: z.number().nullish(),
   });
 }
 
@@ -1313,6 +1422,23 @@ export function RolloutFlagVariationInputSchema(): z.ZodObject<
   });
 }
 
+export function SchedulePlanRunInputSchema(): z.ZodObject<
+  Properties<SchedulePlanRunInput>
+> {
+  return z.object({
+    branch: z.string().min(1),
+    checkoutId: z.string().nullish(),
+    idempotencyKey: z.string().nullish(),
+    jobRunHooksJson: z.string().nullish(),
+    planId: z.string().min(1),
+    priority: z.number().nullish(),
+    ralph: z.lazy(() => RalphPlanRunTuningInputSchema().nullish()),
+    repositoryId: z.string().nullish(),
+    scheduledFor: definedNonNullAnySchema,
+    workingDirectory: z.string().nullish(),
+  });
+}
+
 export function SearchInputSchema(): z.ZodObject<Properties<SearchInput>> {
   return z.object({
     limit: z.number().nullish(),
@@ -1326,6 +1452,15 @@ export function SearchPlansInputSchema(): z.ZodObject<
   return z.object({
     limit: z.number().nullish(),
     query: z.string().min(1),
+  });
+}
+
+export function SetBlogPostTagsInputSchema(): z.ZodObject<
+  Properties<SetBlogPostTagsInput>
+> {
+  return z.object({
+    postId: z.string().min(1),
+    tagSlugs: z.array(z.string().min(1)),
   });
 }
 
@@ -1469,6 +1604,24 @@ export function UpdateAgentConversationTitleInputSchema(): z.ZodObject<
   });
 }
 
+export function UpdateBlogPostInputSchema(): z.ZodObject<
+  Properties<UpdateBlogPostInput>
+> {
+  return z.object({
+    authorSlug: z.string().nullish(),
+    bodyMarkdown: z.string().nullish(),
+    coverImageAlt: z.string().nullish(),
+    coverImageUrl: z.string().nullish(),
+    excerpt: z.string().nullish(),
+    expectedUpdatedAt: definedNonNullAnySchema.nullish(),
+    id: z.string().min(1),
+    seoDescription: z.string().nullish(),
+    seoTitle: z.string().nullish(),
+    slug: z.string().nullish(),
+    title: z.string().nullish(),
+  });
+}
+
 export function UpdateCustomPromptInputSchema(): z.ZodObject<
   Properties<UpdateCustomPromptInput>
 > {
@@ -1574,10 +1727,15 @@ export function UpdateScheduledAgentJobInputTypeSchema(): z.ZodObject<
     cwd: z.string().nullish(),
     driverId: z.string().nullish(),
     id: z.string().min(1),
+    intervalMs: z.number().nullish(),
+    misfirePolicy: z.string().nullish(),
+    misfireThresholdMs: z.number().nullish(),
     model: z.string().nullish(),
     name: z.string().nullish(),
     prompt: z.string().nullish(),
     repositoryCheckoutId: z.string().nullish(),
+    runAt: z.string().nullish(),
+    scheduleKind: z.string().nullish(),
     settingsJson: z.string().nullish(),
     timeoutMs: z.number().nullish(),
     timezone: z.string().nullish(),
@@ -1645,6 +1803,27 @@ export function UpdateWorkspaceProfileInputSchema(): z.ZodObject<
     contactDisplayName: z.string().nullish(),
     contactEmail: z.string().nullish(),
     enabledEditors: z.array(WorkspaceEditorIdSchema).nullish(),
+  });
+}
+
+export function UpsertBlogAuthorInputSchema(): z.ZodObject<
+  Properties<UpsertBlogAuthorInput>
+> {
+  return z.object({
+    avatarUrl: z.string().nullish(),
+    bio: z.string().nullish(),
+    displayName: z.string().min(1),
+    slug: z.string().min(1),
+  });
+}
+
+export function UpsertBlogTagInputSchema(): z.ZodObject<
+  Properties<UpsertBlogTagInput>
+> {
+  return z.object({
+    description: z.string().nullish(),
+    name: z.string().min(1),
+    slug: z.string().min(1),
   });
 }
 

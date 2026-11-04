@@ -34,6 +34,18 @@ export const PLANS_ONBOARDING = {
   whatItIs: `A plan is OpenThrottle's record of intended work — what you decided to build, broken into tasks with status, assignee, and summaries. Plans can be worked by hand or executed agentically, with commits linked back for traceability.`,
 } satisfies GlobalFeatureOnboardingContent;
 
+/**
+ * @description Copy for the plans index Status filter ({@link PlanStatusFilter}):
+ * the trigger title, the two group headings and the two footer actions.
+ */
+export const PLAN_STATUS_FILTER_COPY = {
+  activeGroup: `Active`,
+  allStatuses: `All statuses`,
+  resetToDefaults: `Reset to defaults`,
+  resolvedGroup: `Resolved`,
+  title: `Status`,
+} as const;
+
 export const PLAN_TASK_NOT_FOUND_COPY = {
   description: `The task you are looking for does not exist.`,
   title: `Task not found`,
@@ -148,6 +160,8 @@ export const OUTPUT_STREAM_COPY = {
  * rather than generic so the reader knows which part of the page is missing.
  */
 export const PLAN_RUN_GATING_COPY = {
+  /** Why Run is disabled while the run branch is blank (the toolbar tooltip and the Run dialog). */
+  branchRequired: `Set the git branch in Configuration → Workspace before running (branch is required).`,
   /** Server-side refusal when a run is submitted with no branch. */
   missingBranch: `Cannot start a run without a branch. Wait for the workspace to finish loading, then try again.`,
   /**
@@ -165,6 +179,87 @@ export const PLAN_DEFERRED_SECTION_COPY = {
   outputError: `Could not load this plan's output stream. Reload to try again.`,
   runHistoryError: `Could not load run history for this plan.`,
   tagVocabularyError: `Could not load the tag vocabulary.`,
+} as const;
+
+/**
+ * @description The plan Details "Runs" card ({@link PlanWorkflowRunTransparency}): what is about
+ * to run, what just ran, the run history, and a collapsed CLI & debug section. `empty` replaces the
+ * three run sections when the plan has never run and nothing is scheduled; `time` backs
+ * `formatRunTime`.
+ */
+export const PLAN_RUN_TRANSPARENCY_COPY = {
+  cli: {
+    configurationLink: `Configuration tab`,
+    copyDebugBundle: `Copy debug bundle`,
+    diffEmpty: `Matches the defaults — the CLI needs only --plan or --task.`,
+    diffHeading: `Differs from defaults`,
+    heading: `CLI & debug`,
+    precedenceLabel: `Precedence:`,
+    precedenceSuffix: `Edit the CLI layer on the`,
+    queueLinkPrefix: `Queue:`,
+  },
+  description: `Scheduled, active and past runs of this plan.`,
+  empty: {
+    description: `Use Run or Schedule in the toolbar to start this plan.`,
+    title: `No runs yet`,
+  },
+  history: {
+    actions: {
+      copiedToast: `Run id copied to clipboard`,
+      copyFailedToast: `Could not copy the run id`,
+      copyRunId: `Copy run id`,
+      menuAriaLabelPrefix: `Run actions for`,
+      openJob: `Open job`,
+    },
+    columns: {
+      branch: `Branch / PR`,
+      expand: `Details`,
+      modelBackend: `Model / backend`,
+      status: `Status`,
+      when: `When`,
+    },
+    detail: {
+      ariaLabel: `Run details`,
+      branch: `Branch / PR`,
+      configDiff: `vs current config`,
+      configMatches: `Matches current config`,
+      effort: `Effort`,
+      finished: `Finished`,
+      jobId: `Job id`,
+      modelBackend: `Model / backend`,
+      noJob: `No job (CLI or orchestrator run)`,
+      none: `—`,
+      rssEnd: `RSS end (MB)`,
+      runKind: `Kind`,
+      workspace: `Workspace`,
+    },
+    /** The chevron keeps one name; `aria-expanded` carries open/closed. */
+    expandAriaLabel: `Run details`,
+    fetchLimitFooter: (limit: number): string =>
+      `Showing the ${limit} most recent runs`,
+    heading: `Run history`,
+    showMore: (count: number): string => `Show ${count} more`,
+    staleBadge: `Stale`,
+  },
+  latest: {
+    heading: `Latest run`,
+    heartbeatLabel: `Last heartbeat`,
+    staleWarning: `No recent heartbeat. This run may have lost contact.`,
+    startedLabel: `Started`,
+  },
+  meta: {
+    ariaLabel: `Run details`,
+  },
+  time: {
+    unknown: `Time unknown`,
+  },
+  title: `Runs`,
+  upcoming: {
+    backstopMeta: `Details appear once this run is in the run history.`,
+    firesLabel: `Fires`,
+    firesUnknown: `Fire time unknown`,
+    heading: `Upcoming`,
+  },
 } as const;
 
 export const LINKED_ARTIFACTS_PANEL_COPY = {
@@ -189,7 +284,7 @@ export const PLAN_TAB_OUTPUT_COPY = {
  * why the mutating actions are disabled. The `*Running*` strings cover an active
  * run (QUEUED / IN_PROGRESS) — Kill run stays available and is the intended
  * mid-run action. The `*Terminal*` strings cover a finished/abandoned plan
- * (COMPLETED / CANCELED / SKIPPED): there is no more work to do here, so the
+ * (COMPLETED / CANCELED / PROMOTED / SKIPPED): there is no more work to do here, so the
  * fix is to fall forward and ship a new plan rather than to unblock the action.
  */
 export const PLAN_EDITOR_ACTIONS_COPY = {
@@ -232,8 +327,23 @@ export const PLAN_TOOLBAR_COPY = {
   evaluateRulesRunningTooltip: `Unavailable while a run is active — kill the run first.`,
   evaluateRulesTerminalTooltip: `This plan is in a terminal state — nothing to evaluate.`,
   markCompleteRunningTooltip: `Unavailable while a run is active — kill the run first.`,
+  runCaretAriaLabel: `More run options`,
+  runDefaultTooltip: `Enqueue a worker run for this plan using tuning from Workflow run options (defaults apply if you have not changed them).`,
+  runQueuedToast: `Plan run queued`,
+  runQueuedToastDescription: (
+    jobId: string,
+    queueName: string,
+    jobPath: string,
+  ): string => `Job ${jobId}. Queue ${queueName}: ${jobPath}`,
   runRunningTooltip: `A run is already active for this plan — kill it before starting another.`,
+  runScheduledToast: `Run scheduled`,
+  runScheduledToastDescription: (localTime: string): string =>
+    `Fires ${localTime}.`,
+  runScheduledTooltip: (localTime: string): string =>
+    `A run is scheduled for ${localTime}; cancel it to run now.`,
   runTerminalTooltip: `This plan is in a terminal state — create a new plan to do more work.`,
+  runWithOptionsLabel: `Run with options…`,
+  scheduleLabel: `Schedule…`,
   settleRunAriaLabel: (planTitle: string): string =>
     `Settle interactive run for ${planTitle}`,
   settleRunCancelLabel: `Keep waiting`,
@@ -246,6 +356,7 @@ export const PLAN_TOOLBAR_COPY = {
   settleRunPendingLabel: `Settling…`,
   settleRunSuccessToast: `Run recorded as STALE — contact lost. Its worktree is released; plan and task status are unchanged.`,
   settleRunTriggerTitle: `Close the books on an interactive run that has lost contact: it cannot be verified or stopped, and until it is settled its worktree stays held.`,
+  workflowRunBlockedFallback: `Fix workflow run options in Configuration (aligned with workflow-ralph argv).`,
 } as const;
 
 /**
@@ -257,7 +368,7 @@ export const PLAN_TASK_TOOLBAR_COPY = {
   markCompleteRunningTooltip: `Unavailable while the plan run is active — kill the run first.`,
   markCompleteTerminalTooltip: `The plan is in a terminal state — create a new plan to change tasks.`,
   promoteConfirmLabel: `Promote`,
-  promoteDialogBody: `This creates a new plan from this task (carrying its title, description, and tags) and closes out this task (marks it SKIPPED and tags it "promoted"). This cannot be undone from here.`,
+  promoteDialogBody: `This creates a new plan from this task (carrying its title, description, and tags) and closes out this task (marks it PROMOTED, meaning the work continued as its own plan). This cannot be undone from here.`,
   promoteDialogTitle: `Promote task to a plan?`,
   promoteLabel: `Promote to Plan`,
   promoteRunningTooltip: `Unavailable while the plan run is active — kill the run first.`,
@@ -293,12 +404,64 @@ export const PLAN_RUN_WORKSPACE_SELECTOR_COPY = {
 } as const;
 
 /**
- * @description Column header and empty value for the worktree the queued run actually used, read
- * from `run_config_snapshot.workspace.workingDirectory`.
+ * @description Copy for the shared plan-run model picker and effort control, used by the
+ * Configuration tab and the Run dialog so both surfaces say the same thing. `effortDisabledReason`
+ * is the tooltip for a backend with no reasoning knob (cursor bakes effort into the model id):
+ * it names the fix rather than just refusing.
  */
-export const PLAN_RUN_AUDIT_WORKSPACE_COPY = {
-  columnLabel: `Worktree`,
-  emptyLabel: `—`,
+export const PLAN_RUN_MODEL_EFFORT_COPY = {
+  effortDisabledLabel: `Effort`,
+  effortDisabledReason: (backendLabel: string): string =>
+    `${backendLabel} has no separate effort setting: effort is part of the model you pick. Choose a different model variant (for example a -high or -low model id) to change it.`,
+  effortHint: `Reasoning effort for the run. Leave unset to use the runner's default.`,
+  effortLabel: `Effort`,
+  modelHint: `Models the selected runner can run. Picking one also selects its runner; the default model is omitted.`,
+  modelLabel: `Model`,
+  modelsError: `Could not load the model list.`,
+  noModelsNotice: `No agent models were discovered. Check Settings → Agents.`,
+} as const;
+
+/**
+ * @description Status cell of the queued-run audit table. `USAGE_LIMITED` is a run that stopped
+ * cleanly on a Claude subscription usage limit; the cell says when it resumes (a continuation run
+ * exists) or when the limit resets (none does). `SCHEDULED` shows when it fires; `MISSED` (not
+ * fired within the 1-hour grace window) and `SUPERSEDED` (another run was active when it was due)
+ * say why the run never started.
+ */
+export const PLAN_RUN_STATUS_CELL_COPY = {
+  columnLabel: `Status`,
+  firesPrefix: `Fires at`,
+  firesUnknown: `Fire time unknown`,
+  missedBadge: `Missed`,
+  missedReason: `Could not fire within the 1-hour grace window after its scheduled time.`,
+  notResumedSuffix: `Not resumed automatically`,
+  resetUnknown: `Reset time unknown`,
+  resetsPrefix: `Resets at`,
+  resumedBadge: `Resumed`,
+  resumedHint: `Continues a run that hit a usage limit`,
+  resumesPrefix: `Resumes after the reset at`,
+  scheduledBadge: `Scheduled`,
+  supersededBadge: `Superseded`,
+  supersededReason: `Another run of this plan was already active when this one was due.`,
+  usageLimitedBadge: `Usage limited`,
+} as const;
+
+/**
+ * @description Run audit table "Actions" column, the {@link PlanRunCancelScheduledButton} on a
+ * SCHEDULED row and the toolbar caret-menu item (`menuItemLabel`) that opens the same dialog.
+ * Cancelling removes only that scheduled run; live runs and plan/task status are untouched. "Keep it scheduled" is the dialog dismissal so it does not read as a second "Cancel".
+ */
+export const PLAN_RUN_CANCEL_SCHEDULED_COPY = {
+  actionsColumnLabel: `Actions`,
+  ariaLabel: `Cancel scheduled run`,
+  confirmLabel: `Cancel run`,
+  dialogBody: `This scheduled run will not fire. The plan, its tasks and any run that is already active are left as they are.`,
+  dialogTitle: `Cancel scheduled run?`,
+  keepLabel: `Keep it scheduled`,
+  menuItemLabel: `Cancel scheduled run`,
+  pendingLabel: `Cancelling…`,
+  triggerLabel: `Cancel`,
+  triggerTitle: `Cancel this scheduled run before it fires.`,
 } as const;
 
 /**
@@ -323,4 +486,50 @@ export const PLANS_ROW_ACTIONS_COPY = {
 export const PLAN_TASK_ROW_ACTIONS_COPY = {
   menuAriaLabelPrefix: `Task actions for`,
   view: `View task`,
+} as const;
+
+/**
+ * @description Copy for {@link PlanRunDialog}: the Run now / Schedule dialog.
+ * Model and effort are PLAN settings (the action saves them to the run config),
+ * iterations is this-run-only, and the workspace is read-only here, so each
+ * section says which of the three it is.
+ */
+export const PLAN_RUN_DIALOG_COPY = {
+  cancelLabel: `Cancel`,
+  checkoutLabel: `Checkout`,
+  checkoutNone: `No checkout selected`,
+  configurationLinkLabel: `Change in Configuration`,
+  description: `Run this plan now, or schedule it for later. The run uses the plan's saved run configuration plus the settings below.`,
+  iterationsHint: (planIterations: number): string =>
+    `Resets to the plan's configured ${planIterations} each time this dialog opens. Not saved to the plan.`,
+  iterationsInvalid: `Iterations must be a whole number of at least 1.`,
+  iterationsLabel: `Iterations`,
+  iterationsScope: `this run only`,
+  modeRunLabel: `Run now`,
+  modeScheduleLabel: `Schedule`,
+  planSettingsHeading: `Plan settings`,
+  planSettingsNotice: `Changing the model or effort changes this plan's run config. They are saved to the plan, not just to this run.`,
+  relativeIn: (count: number, unit: 'day' | 'hour' | 'minute'): string =>
+    `in about ${count} ${unit}${count === 1 ? '' : 's'}`,
+  relativeInLessThanMinute: `in less than a minute`,
+  runSubmitLabel: `Run now`,
+  runSubmittingLabel: `Starting…`,
+  runSummary: `Confirm to enqueue a worker run for this plan right away.`,
+  scheduleDateLabel: `Date`,
+  scheduleDatePlaceholder: `Pick a date`,
+  scheduleInvalid: `Choose a valid date and time for the run.`,
+  schedulePast: `That time has already passed. Choose a time in the future.`,
+  scheduleSubmitLabel: `Schedule run`,
+  scheduleSubmittingLabel: `Scheduling…`,
+  scheduleSummary: (when: string, relative: string): string =>
+    `fires ${when}, ${relative}`,
+  scheduleTimeLabel: `Time`,
+  scheduleTimeZoneLabel: (timeZone: string): string =>
+    `Local time (${timeZone})`,
+  scheduleTooFar: (maxDays: number): string =>
+    `Runs can be scheduled at most ${maxDays} days ahead. Choose an earlier time.`,
+  title: `Run plan`,
+  workspaceBranchLabel: `Branch`,
+  workspaceHeading: `Workspace`,
+  workspaceNotice: `Read-only here. Branch and checkout come from this plan's Configuration.`,
 } as const;

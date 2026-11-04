@@ -18,7 +18,7 @@ Plans and tasks live in **OpenThrottle (OT) only**, accessed through the `openth
 - Re-sequence with `reorder_plan_tasks` rather than delete-and-recreate.
 - If the MCP is unavailable, fail loudly and report the error — do not fall back to writing plan files.
 
-Task states: `BACKLOG`, `BLOCKED`, `CANCELED`, `COMPLETED`, `IN_PROGRESS`, `PENDING`, `QUEUED`, `SKIPPED`.
+Task states: `BACKLOG`, `BLOCKED`, `CANCELED`, `COMPLETED`, `IN_PROGRESS`, `PENDING`, `PROMOTED`, `QUEUED`, `SKIPPED`. `PROMOTED` means the work continued as its own plan: resolved and terminal, but not complete (written by `promote_task`).
 
 ## Git traceability
 

@@ -7,9 +7,10 @@
  * verified in docs/openthrottle/grok-stream-json-schema.md §1.
  */
 
+import { grokReasoningEffort } from '@openthrottle/openthrottle-drivers';
+
 import {
   CONVERSATION_PERMISSION_MODES,
-  CONVERSATION_REASONING_EFFORTS,
   type ConversationPermissionMode,
   type ConversationReasoningEffort,
 } from '../types.ts';
@@ -55,29 +56,6 @@ export interface GrokArgvOptions {
   readonly sessionId?: string;
   /** Persona system prompt → first-class `--system-prompt-override`. */
   readonly systemPrompt?: string;
-}
-
-/**
- * Map the composer reasoning level onto grok's `--reasoning-effort` value
- * (`low`/`medium`/`high`), or `undefined` to omit the flag. grok exposes the
- * low/medium/high triple, so `extraHigh`/`max`/`ultra` clamp to `high`.
- */
-function reasoningEffort(
-  reasoning: ConversationReasoningEffort | undefined,
-): string | undefined {
-  switch (reasoning) {
-    case CONVERSATION_REASONING_EFFORTS.low:
-      return 'low';
-    case CONVERSATION_REASONING_EFFORTS.medium:
-      return 'medium';
-    case CONVERSATION_REASONING_EFFORTS.high:
-    case CONVERSATION_REASONING_EFFORTS.extraHigh:
-    case CONVERSATION_REASONING_EFFORTS.max:
-    case CONVERSATION_REASONING_EFFORTS.ultra:
-      return 'high';
-    default:
-      return undefined;
-  }
 }
 
 /** Map a composer permission posture onto a grok `--permission-mode` value, or undefined to omit. */
@@ -135,7 +113,7 @@ export function buildGrokArgv(options: GrokArgvOptions): string[] {
     argv.push('--permission-mode', permission);
   }
 
-  const effort = reasoningEffort(options.reasoning);
+  const effort = grokReasoningEffort(options.reasoning);
   if (effort !== undefined) {
     argv.push('--reasoning-effort', effort);
   }

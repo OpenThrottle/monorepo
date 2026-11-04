@@ -248,4 +248,51 @@ describe('PlansTable Component', () => {
       });
     });
   });
+
+  describe('mobile card layout (below sm)', () => {
+    test('applies the card layout classes to the table and each row', () => {
+      const { getByTestId, getByText } = renderPlansTable({
+        plans: mockPlans,
+      });
+
+      const table = getByTestId('PlansTable').querySelector('table');
+      expect(table).toHaveClass('max-sm:block', 'max-sm:[&_thead]:hidden');
+
+      for (const title of ['First Plan', 'Second Plan']) {
+        const row = getByText(title).closest('tr');
+        expect(row).toHaveClass(
+          'max-sm:flex',
+          'max-sm:relative',
+          'max-sm:[&>td:nth-child(3)]:absolute',
+        );
+      }
+    });
+
+    test('lets the title wrap to two lines on mobile but stays one line on desktop', () => {
+      const { getByText } = renderPlansTable({ plans: mockPlans });
+
+      const heading = getByText('First Plan').closest('h2');
+      expect(heading).toHaveClass('line-clamp-1', 'max-sm:line-clamp-2');
+    });
+
+    test('keeps every row actions menu inside its own row', () => {
+      const { getByRole } = renderPlansTable({ plans: mockPlans });
+
+      for (const title of ['First Plan', 'Second Plan']) {
+        const menu = getByRole('button', {
+          name: `${PLANS_ROW_ACTIONS_COPY.menuAriaLabelPrefix} ${title}`,
+        });
+        const row = menu.closest('tr');
+        expect(row).toHaveClass('max-sm:flex');
+        expect(row?.querySelectorAll(':scope > td')).toHaveLength(3);
+      }
+    });
+
+    test('does not apply the card layout to the empty state row', () => {
+      const { getByText } = renderPlansTable({ plans: [] });
+
+      const row = getByText(PLANS_INDEX_EMPTY_COPY.emptyTitle).closest('tr');
+      expect(row).not.toHaveClass('max-sm:flex');
+    });
+  });
 });

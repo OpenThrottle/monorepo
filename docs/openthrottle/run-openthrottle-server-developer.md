@@ -46,7 +46,7 @@ GraphQL URL for tools and MCP: **`http://localhost:6021/graphql`** when using th
 1. **Start Postgres + Redis only:**
    **`pnpm run database:start`**
    This runs `docker compose up -d redis postgres` (see root [`package.json`](../../package.json)) using root [`docker-compose.yml`](../../docker-compose.yml). Compose service names: **`postgres`**, **`redis`**.
-2. **GraphQL codegen (developer app):** After schema changes, or on a fresh worktree if generated artifacts are missing:
+2. **GraphQL codegen (developer app):** After schema changes (run **`pnpm nx run openthrottle-server:graphql-schema:write`** first — a server boot never writes `schema.gql`), or on a fresh worktree if generated artifacts are missing:
    **`pnpm nx run openthrottle-developer:codegen-graphql`**
    The **`dev`** target also depends on codegen/watch pipelines; the first successful dev session may take longer while watchers settle.
 3. **Terminal A — API:** **`pnpm nx run openthrottle-server:dev`**

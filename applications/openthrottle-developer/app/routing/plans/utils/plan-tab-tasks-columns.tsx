@@ -23,7 +23,7 @@ export const buildPlanTabTasksColumns = (
       cell: ({ row }) => {
         const status = row.original.status;
         return (
-          <div className="p-2">
+          <div className="p-2 max-sm:p-0">
             {isPlanStatusKey(status) ? (
               <PlanStatusBadge status={status} />
             ) : (
@@ -37,7 +37,7 @@ export const buildPlanTabTasksColumns = (
     {
       accessorKey: 'details',
       cell: ({ row }) => (
-        <div className="p-2">
+        <div className="p-2 max-sm:contents">
           <PlanTasksTableCellTitle
             isManaged={managedTaskIds.has(row.original.id)}
             row={row}

@@ -1,5 +1,4 @@
-import { Button } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
+import { Button, cn } from '@openthrottle/react-router-shadcn';
 import { ArrowDown } from 'lucide-react';
 import * as React from 'react';
 
@@ -49,7 +48,7 @@ export const ChatJumpToLatest = (
   return (
     <Button
       aria-label={JUMP_LABEL}
-      className={clsx('rounded-full shadow-md', className)}
+      className={cn('rounded-full shadow-md', className)}
       data-testid="ChatJumpToLatest"
       onClick={onJump}
       size="sm"

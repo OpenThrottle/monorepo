@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import { Info } from 'lucide-react';
 import * as React from 'react';
 
@@ -45,7 +45,7 @@ export const GlobalMetricsInfoTrigger = (
   return (
     <button
       aria-label="Metrics interpretation help"
-      className={clsx(
+      className={cn(
         'text-muted-foreground hover:text-foreground transition-colors',
         className,
       )}

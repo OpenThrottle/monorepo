@@ -1,6 +1,5 @@
-import { Button } from '@openthrottle/react-router-shadcn';
+import { Button, cn } from '@openthrottle/react-router-shadcn';
 import { GlobalToolbarSearch } from '@openthrottle/react-router-ui-global';
-import clsx from 'clsx';
 import { PlusIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
@@ -28,8 +27,8 @@ export const NotesToolbar = (props: NotesToolbarProps): React.ReactElement => {
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx('w-full', className)} data-testid="NotesToolbar">
-      <div className={clsx('flex w-full flex-wrap items-center', 'gap-2')}>
+    <div className={cn('w-full', className)} data-testid="NotesToolbar">
+      <div className={cn('flex w-full flex-wrap items-center', 'gap-2')}>
         <GlobalToolbarSearch
           aria-label="Search notes"
           placeholder="Search notes"

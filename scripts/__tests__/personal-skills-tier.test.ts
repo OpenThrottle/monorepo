@@ -11,7 +11,6 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
   ensureMaterialized,
@@ -22,6 +21,7 @@ import {
   parseSkillFrontmatterForValidation,
   skillFrontmatterSchema,
 } from '@openthrottle/openthrottle-skills';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 /**
  * Integration coverage for the personal (per-user) skills tier — the shell
@@ -37,7 +37,7 @@ import {
 
 const REPO_ROOT = join(import.meta.dirname, '..', '..');
 const SCRIPTS_SRC = join(REPO_ROOT, 'skills', 'ot-skill-sync', 'scripts');
-const GATE_SRC = join(REPO_ROOT, '.husky', 'lib', 'personal-skills-gate.sh');
+const GATE_SRC = join(REPO_ROOT, '.husky', 'utils', 'personal-skills-gate.sh');
 
 interface Sandbox {
   readonly personalRoot: string;
@@ -153,8 +153,8 @@ describe('personal skills tier', () => {
     cpSync(SCRIPTS_SRC, join(repo, 'skills', 'ot-skill-sync', 'scripts'), {
       recursive: true,
     });
-    mkdirSync(join(repo, '.husky', 'lib'), { recursive: true });
-    cpSync(GATE_SRC, join(repo, '.husky', 'lib', 'personal-skills-gate.sh'));
+    mkdirSync(join(repo, '.husky', 'utils'), { recursive: true });
+    cpSync(GATE_SRC, join(repo, '.husky', 'utils', 'personal-skills-gate.sh'));
     writeSkill(join(repo, 'skills'), 'team-skill');
 
     git(repo, 'init', '--quiet');
@@ -716,7 +716,7 @@ describe('personal skills tier', () => {
     const runGate = (repo: string, personalRoot: string): RunResult =>
       runCommand(
         'sh',
-        ['-c', '. ./.husky/lib/personal-skills-gate.sh'],
+        ['-c', '. ./.husky/utils/personal-skills-gate.sh'],
         repo,
         personalRoot,
       );

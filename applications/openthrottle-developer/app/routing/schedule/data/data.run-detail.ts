@@ -13,7 +13,8 @@ export const SCHEDULED_AGENT_JOBS_QUEUE_NAME = 'Scheduled Agent Jobs';
  *
  * `no_op` maps to `completed`, not `failed`: the process finished cleanly, so the console should stop
  * tailing rather than present the run as an error. Whether work actually happened is conveyed by the
- * status badge (see `RUN_STATUS_COLOR`), not by the log-console state.
+ * status badge (see `RUN_STATUS_COLOR`), not by the log-console state. `usage_limited` likewise: the
+ * run stopped cleanly on a subscription limit and is not an error.
  */
 export const RUN_STATUS_TO_JOB_STATE: Record<string, string> = {
   cancelled: 'failed',
@@ -22,6 +23,7 @@ export const RUN_STATUS_TO_JOB_STATE: Record<string, string> = {
   queued: 'waiting',
   running: 'active',
   succeeded: 'completed',
+  usage_limited: 'completed',
 };
 
 /**
@@ -47,9 +49,11 @@ export const RUN_DETAIL_COPY = {
     finishedAt: 'Finished',
     model: 'Model',
     repository: 'Repository',
+    resumeOfRunId: 'Resumes run',
     startedAt: 'Started',
     status: 'Status',
     trigger: 'Trigger',
+    usageLimitResetsAt: 'Usage limit resets',
   },
   heading: 'Run detail',
   logsHeading: 'Logs',

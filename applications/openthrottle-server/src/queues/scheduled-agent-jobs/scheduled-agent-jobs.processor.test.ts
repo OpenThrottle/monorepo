@@ -19,6 +19,8 @@ import type { BullMqRunOutputRetentionService } from '../bullmq-run-output-reten
 import type { ScheduledAgentJobCancellationService } from './scheduled-agent-job-cancellation.service.ts';
 import type { ScheduledAgentJobDirectoryLockService } from './scheduled-agent-job-directory-lock.service.ts';
 import { type ScheduledAgentJobDirectoryLockResult } from './scheduled-agent-job-directory-lock.service.ts';
+import type { ScheduledAgentJobFailureNotifierService } from './scheduled-agent-job-failure-notifier.service.ts';
+import type { ScheduledAgentJobSchedulerService } from './scheduled-agent-job-scheduler.service.ts';
 import {
   foldRunUsage,
   parseRunOutcome,
@@ -26,6 +28,7 @@ import {
 } from './scheduled-agent-jobs.processor.ts';
 import type { ScheduledAgentJobBullJob } from './scheduled-agent-jobs.types.ts';
 import type { ScheduledAgentRunnerService } from './scheduled-agent-runner.service.ts';
+import type { ScheduledAgentJobUsageLimitResumeService } from './usage-limit-resume/usage-limit-resume.service.ts';
 
 const result = (
   overrides: Partial<RunAgentPromptResult>,
@@ -34,6 +37,7 @@ const result = (
   exitCode: 0,
   output: '',
   status: RUN_AGENT_STATUS.ok,
+  usageLimit: null,
   ...overrides,
 });
 
@@ -91,9 +95,12 @@ describe('ScheduledAgentJobsProcessor', () => {
   let runner: ScheduledAgentRunnerService;
   let cancellation: ScheduledAgentJobCancellationService;
   let directoryLock: ScheduledAgentJobDirectoryLockService;
+  let usageLimitResume: ScheduledAgentJobUsageLimitResumeService;
   let release: Mock<() => Promise<void>>;
   let retention: BullMqRunOutputRetentionService;
+  let scheduler: ScheduledAgentJobSchedulerService;
   let writer: KeyedJsonlWriter;
+  let failureNotifier: ScheduledAgentJobFailureNotifierService;
   let jobRepoUpdate: ReturnType<typeof vi.fn>;
   let runRepoFindOne: ReturnType<typeof vi.fn>;
   let processor: ScheduledAgentJobsProcessor;
@@ -136,8 +143,17 @@ describe('ScheduledAgentJobsProcessor', () => {
         .fn()
         .mockResolvedValue({ lock: { held: true, release }, status: 'held' }),
     });
+    usageLimitResume = createMock<ScheduledAgentJobUsageLimitResumeService>({
+      handle: vi.fn().mockResolvedValue({ outcome: 'held', reason: 'test' }),
+    });
     retention = createMock<BullMqRunOutputRetentionService>();
+    scheduler = createMock<ScheduledAgentJobSchedulerService>({
+      armSelfScheduledFire: vi.fn().mockResolvedValue(null),
+    });
     writer = createMock<KeyedJsonlWriter>();
+    failureNotifier = createMock<ScheduledAgentJobFailureNotifierService>({
+      notify: vi.fn().mockResolvedValue(undefined),
+    });
 
     processor = new ScheduledAgentJobsProcessor(
       createMock<LoggerService>(),
@@ -146,7 +162,10 @@ describe('ScheduledAgentJobsProcessor', () => {
       runner,
       cancellation,
       directoryLock,
+      usageLimitResume,
       retention,
+      scheduler,
+      failureNotifier,
       writer,
     );
   });
@@ -293,7 +312,10 @@ describe('ScheduledAgentJobsProcessor', () => {
       runner,
       cancellation,
       directoryLock,
+      usageLimitResume,
       retention,
+      scheduler,
+      failureNotifier,
       writer,
     );
 
@@ -318,7 +340,10 @@ describe('ScheduledAgentJobsProcessor', () => {
       runner,
       cancellation,
       directoryLock,
+      usageLimitResume,
       retention,
+      scheduler,
+      failureNotifier,
       writer,
     );
 
@@ -347,7 +372,10 @@ describe('ScheduledAgentJobsProcessor', () => {
       runner,
       cancellation,
       directoryLock,
+      usageLimitResume,
       retention,
+      scheduler,
+      failureNotifier,
       writer,
     );
 
@@ -417,6 +445,197 @@ describe('ScheduledAgentJobsProcessor', () => {
     });
   });
 
+  describe('resume of an inactive schedule', () => {
+    const resumeRow = (): ScheduledAgentJobRun => {
+      return createMock<ScheduledAgentJobRun>({
+        id: 'run-resume',
+        trigger: 'resume',
+      });
+    };
+
+    it('cancels a resume run without spawning the agent when the schedule was disabled', async () => {
+      vi.mocked(jobsService.findRunById).mockResolvedValue(resumeRow());
+      vi.mocked(jobsService.findJobById).mockResolvedValue(
+        createMock<ScheduledAgentJob>({ enabled: false }),
+      );
+
+      await processor.process(makeJob({ runId: 'run-resume' }));
+
+      expect(runner.run).not.toHaveBeenCalled();
+      expect(jobsService.markRunStarted).not.toHaveBeenCalled();
+      expect(jobsService.markRunFinished).toHaveBeenCalledExactlyOnceWith(
+        'run-resume',
+        {
+          errorMessage: `The schedule was disabled before the usage-limit resume fired`,
+          exitCode: null,
+          status: 'cancelled',
+        },
+      );
+    });
+
+    it('skips a resume run whose schedule was deleted (the run row cascaded away)', async () => {
+      vi.mocked(jobsService.findRunById).mockResolvedValue(null);
+      vi.mocked(jobsService.findJobById).mockResolvedValue(null);
+
+      await processor.process(makeJob({ runId: 'run-resume' }));
+
+      expect(runner.run).not.toHaveBeenCalled();
+      expect(jobsService.createRun).not.toHaveBeenCalled();
+      expect(jobsService.markRunFinished).not.toHaveBeenCalled();
+    });
+
+    it('cancels a surviving resume run with a deleted-schedule message', async () => {
+      vi.mocked(jobsService.findRunById).mockResolvedValue(resumeRow());
+      vi.mocked(jobsService.findJobById).mockResolvedValue(null);
+
+      await processor.process(makeJob({ runId: 'run-resume' }));
+
+      expect(runner.run).not.toHaveBeenCalled();
+      expect(jobsService.markRunFinished).toHaveBeenCalledWith(
+        'run-resume',
+        expect.objectContaining({
+          errorMessage: `The schedule was deleted before the usage-limit resume fired`,
+          status: 'cancelled',
+        }),
+      );
+    });
+
+    it('runs a resume run normally when the schedule is still enabled', async () => {
+      vi.mocked(jobsService.findRunById).mockResolvedValue(resumeRow());
+      vi.mocked(jobsService.findJobById).mockResolvedValue(
+        createMock<ScheduledAgentJob>({ enabled: true, ownerUserId: 'u1' }),
+      );
+
+      await processor.process(makeJob({ runId: 'run-resume' }));
+
+      expect(runner.run).toHaveBeenCalledOnce();
+      expect(jobsService.markRunStarted).toHaveBeenCalled();
+    });
+
+    it('still lets Run now execute on a disabled schedule', async () => {
+      vi.mocked(jobsService.findRunById).mockResolvedValue(
+        createMock<ScheduledAgentJobRun>({ id: 'run-1', trigger: 'manual' }),
+      );
+      vi.mocked(jobsService.findJobById).mockResolvedValue(
+        createMock<ScheduledAgentJob>({ enabled: false }),
+      );
+
+      await processor.process(makeJob({ runId: 'run-1' }));
+
+      expect(runner.run).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('usage limit', () => {
+    const LIMIT = {
+      rateLimitType: 'five_hour',
+      resetsAt: '2026-11-01T17:00:00.000Z',
+    };
+
+    it('records usage_limited (not failed) with the reset columns and hands the run to the resume service', async () => {
+      vi.mocked(runner.run).mockResolvedValue(
+        result({
+          exitCode: 1,
+          status: RUN_AGENT_STATUS.failed,
+          usageLimit: LIMIT,
+        }),
+      );
+
+      await processor.process(makeJob());
+
+      expect(jobsService.markRunFinished).toHaveBeenCalledWith('run-1', {
+        errorMessage: `Usage limit reached (five_hour); resets at 2026-11-01T17:00:00.000Z`,
+        exitCode: 1,
+        status: 'usage_limited',
+        usageLimitResetsAt: new Date('2026-11-01T17:00:00.000Z'),
+        usageLimitType: 'five_hour',
+        ...NULL_USAGE_COLUMNS,
+      });
+      expect(usageLimitResume.handle).toHaveBeenCalledExactlyOnceWith({
+        limit: LIMIT,
+        limitedRunId: 'run-1',
+        scheduleId: 'sched-1',
+      });
+    });
+
+    it('records the run as limited even when the reset time and window are unknown', async () => {
+      const unknown = { rateLimitType: null, resetsAt: null };
+      vi.mocked(runner.run).mockResolvedValue(
+        result({
+          exitCode: 1,
+          status: RUN_AGENT_STATUS.failed,
+          usageLimit: unknown,
+        }),
+      );
+
+      await processor.process(makeJob());
+
+      expect(jobsService.markRunFinished).toHaveBeenCalledWith(
+        'run-1',
+        expect.objectContaining({
+          errorMessage: 'Usage limit reached; reset time unknown',
+          status: 'usage_limited',
+          usageLimitResetsAt: null,
+          usageLimitType: null,
+        }),
+      );
+      expect(usageLimitResume.handle).toHaveBeenCalledOnce();
+    });
+
+    it('settles the run before asking the resume service to decide (the chain count must include it)', async () => {
+      vi.mocked(runner.run).mockResolvedValue(
+        result({
+          exitCode: 1,
+          status: RUN_AGENT_STATUS.failed,
+          usageLimit: LIMIT,
+        }),
+      );
+
+      await processor.process(makeJob());
+
+      const finishedOrder = vi.mocked(jobsService.markRunFinished).mock
+        .invocationCallOrder[0];
+      const handleOrder = vi.mocked(usageLimitResume.handle).mock
+        .invocationCallOrder[0];
+      expect(finishedOrder).toBeLessThan(handleOrder ?? 0);
+    });
+
+    it('lets a cancel win over a usage limit', async () => {
+      vi.mocked(runner.run).mockResolvedValue(
+        result({
+          exitCode: null,
+          status: RUN_AGENT_STATUS.cancelled,
+          usageLimit: LIMIT,
+        }),
+      );
+
+      await processor.process(makeJob());
+
+      expect(jobsService.markRunFinished).toHaveBeenCalledWith(
+        'run-1',
+        expect.objectContaining({ status: 'cancelled' }),
+      );
+      expect(usageLimitResume.handle).not.toHaveBeenCalled();
+    });
+
+    it('leaves a run with no usage limit on the ordinary exit-code mapping', async () => {
+      await processor.process(makeJob());
+
+      expect(usageLimitResume.handle).not.toHaveBeenCalled();
+    });
+
+    it('treats a usage_limited run as terminal for the crash safety net', async () => {
+      runRepoFindOne.mockResolvedValue({
+        id: 'run-9',
+        status: 'usage_limited',
+      });
+
+      await processor.onJobStalled('bull-9');
+
+      expect(jobsService.markRunFinished).not.toHaveBeenCalled();
+    });
+  });
+
   it('streams the agent output to the JSONL sink keyed by queue + bull job id', async () => {
     vi.mocked(runner.run).mockImplementation(async (config) => {
       config.onChunk?.({ data: 'hello', stream: 'stdout' });
@@ -469,6 +688,106 @@ describe('ScheduledAgentJobsProcessor', () => {
     await processor.onJobStalled('bull-1');
 
     expect(jobsService.markRunFinished).not.toHaveBeenCalled();
+    expect(failureNotifier.notify).not.toHaveBeenCalled();
+  });
+
+  describe('failure notices', () => {
+    it('sends nothing for a successful run', async () => {
+      await processor.process(makeJob());
+
+      expect(failureNotifier.notify).not.toHaveBeenCalled();
+    });
+
+    it('sends a failed notice for a non-zero exit, after the run is settled', async () => {
+      vi.mocked(runner.run).mockResolvedValue(
+        result({ exitCode: 2, status: RUN_AGENT_STATUS.failed }),
+      );
+
+      await processor.process(makeJob());
+
+      expect(failureNotifier.notify).toHaveBeenCalledExactlyOnceWith({
+        errorMessage: 'Agent exited with code 2',
+        reason: 'failed',
+        runCount: 1,
+        runId: 'run-1',
+        scheduledAgentJobId: 'sched-1',
+      });
+      const settledAt =
+        vi.mocked(jobsService.markRunFinished).mock.invocationCallOrder[0] ?? 0;
+      const notifiedAt =
+        vi.mocked(failureNotifier.notify).mock.invocationCallOrder[0] ?? 0;
+      expect(settledAt).toBeLessThan(notifiedAt);
+    });
+
+    it('sends a timed_out notice for a timeout', async () => {
+      vi.mocked(runner.run).mockResolvedValue(
+        result({ exitCode: null, status: RUN_AGENT_STATUS.timeout }),
+      );
+
+      await processor.process(makeJob());
+
+      expect(failureNotifier.notify).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({
+          errorMessage: 'Run timed out',
+          reason: 'timed_out',
+        }),
+      );
+    });
+
+    it('sends nothing for a cancel, a no_op, or a usage limit', async () => {
+      vi.mocked(runner.run)
+        .mockResolvedValueOnce(
+          result({ exitCode: null, status: RUN_AGENT_STATUS.cancelled }),
+        )
+        .mockResolvedValueOnce(result({ output: 'OT_RUN_OUTCOME: no_op' }))
+        .mockResolvedValueOnce(
+          result({
+            exitCode: 1,
+            status: RUN_AGENT_STATUS.failed,
+            usageLimit: { rateLimitType: null, resetsAt: null },
+          }),
+        );
+
+      await processor.process(makeJob());
+      await processor.process(makeJob());
+      await processor.process(makeJob());
+
+      expect(failureNotifier.notify).not.toHaveBeenCalled();
+    });
+
+    it('sends a failed notice when the runner throws', async () => {
+      vi.mocked(runner.run).mockRejectedValue(new Error('unknown driver'));
+
+      await processor.process(makeJob());
+
+      expect(failureNotifier.notify).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({
+          errorMessage: 'unknown driver',
+          reason: 'failed',
+          runId: 'run-1',
+        }),
+      );
+    });
+
+    it('sends a failed notice from the crash safety net', async () => {
+      runRepoFindOne.mockResolvedValue(
+        createMock<ScheduledAgentJobRun>({
+          id: 'run-7',
+          scheduledAgentJobId: 'sched-9',
+          status: 'running',
+        }),
+      );
+
+      await processor.onJobStalled('bull-1');
+
+      expect(failureNotifier.notify).toHaveBeenCalledExactlyOnceWith({
+        errorMessage: 'job stalled',
+        reason: 'failed',
+        runCount: 1,
+        runId: 'run-7',
+        scheduledAgentJobId: 'sched-9',
+      });
+    });
   });
 
   it('captures the settings snapshot from job.data on the created run row', async () => {
@@ -622,6 +941,341 @@ describe('ScheduledAgentJobsProcessor', () => {
 
       expect(runner.run).toHaveBeenCalledTimes(1);
       expect(release).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('misfire policy', () => {
+    const MINUTE = 60_000;
+
+    /** A BullMQ job-scheduler fire for a slot `lateByMs` in the past. */
+    const makeSchedulerJob = (
+      lateByMs: number,
+      data: Partial<ScheduledAgentJobBullJob['data']> = {},
+    ): { readonly job: ScheduledAgentJobBullJob; readonly slot: Date } => {
+      const slot = new Date(Date.now() - lateByMs);
+
+      return {
+        job: createMock<ScheduledAgentJobBullJob>({
+          data: {
+            cwd: process.cwd(),
+            driverId: 'claude',
+            prompt: 'do it',
+            scheduleId: 'sched-1',
+            ...data,
+          },
+          id: `repeat:scheduled-job:sched-1:${slot.getTime()}`,
+        }),
+        slot,
+      };
+    };
+
+    const givenPolicy = (
+      misfirePolicy: ScheduledAgentJob['misfirePolicy'],
+    ): void => {
+      vi.mocked(jobsService.findJobById).mockResolvedValue(
+        createMock<ScheduledAgentJob>({
+          misfirePolicy,
+          misfireThresholdMs: 10 * MINUTE,
+          ownerUserId: 'user-1',
+        }),
+      );
+    };
+
+    beforeEach(() => {
+      vi.mocked(jobsService.claimScheduledSlot).mockResolvedValue(
+        createMock<ScheduledAgentJobRun>({ id: 'run-slot' }),
+      );
+      vi.mocked(jobsService.recordMissedRuns).mockResolvedValue(1);
+    });
+
+    describe('when an on-time fire runs', () => {
+      it('claims its slot and runs, without reading the policy', async () => {
+        const { job, slot } = makeSchedulerJob(2_000);
+
+        await processor.process(job);
+
+        expect(jobsService.findJobById).not.toHaveBeenCalled();
+        expect(jobsService.claimScheduledSlot).toHaveBeenCalledWith(
+          expect.objectContaining({
+            bullmqJobId: job.id,
+            scheduledAgentJobId: 'sched-1',
+            scheduledFor: slot,
+            status: 'running',
+          }),
+        );
+        expect(jobsService.createRun).not.toHaveBeenCalled();
+        expect(jobsService.markRunStarted).toHaveBeenCalledWith(
+          'run-slot',
+          job.id,
+          expect.objectContaining({ settingsSnapshot: expect.any(Object) }),
+        );
+        expect(runner.run).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('when the policy is skip and the fire is beyond the threshold', () => {
+      it('records the slot missed and spawns nothing', async () => {
+        givenPolicy('skip');
+        const { job, slot } = makeSchedulerJob(42 * MINUTE);
+
+        await processor.process(job);
+
+        expect(jobsService.recordMissedRuns).toHaveBeenCalledWith(
+          expect.objectContaining({
+            errorMessage: expect.stringContaining('42 min'),
+            scheduledAgentJobId: 'sched-1',
+            slots: [slot],
+          }),
+        );
+        expect(jobsService.claimScheduledSlot).not.toHaveBeenCalled();
+        expect(runner.run).not.toHaveBeenCalled();
+        expect(jobRepoUpdate).not.toHaveBeenCalled();
+      });
+
+      it('tells the owner the fire was missed', async () => {
+        givenPolicy('skip');
+        const { job } = makeSchedulerJob(42 * MINUTE);
+
+        await processor.process(job);
+
+        expect(failureNotifier.notify).toHaveBeenCalledExactlyOnceWith({
+          errorMessage: expect.stringContaining('42 min'),
+          reason: 'missed',
+          runCount: 1,
+          runId: undefined,
+          scheduledAgentJobId: 'sched-1',
+        });
+      });
+    });
+
+    describe('when the policy is skip and the fire is within the threshold', () => {
+      it('runs it late', async () => {
+        givenPolicy('skip');
+        const { job } = makeSchedulerJob(5 * MINUTE);
+
+        await processor.process(job);
+
+        expect(jobsService.recordMissedRuns).not.toHaveBeenCalled();
+        expect(runner.run).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('when the policy is catch_up_once', () => {
+      it('runs a fire however late it is', async () => {
+        givenPolicy('catch_up_once');
+        const { job } = makeSchedulerJob(3 * 24 * 60 * MINUTE);
+
+        await processor.process(job);
+
+        expect(jobsService.recordMissedRuns).not.toHaveBeenCalled();
+        expect(runner.run).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('when the job is the reconcile catch-up', () => {
+      it('runs without re-gating, for the slot it names', async () => {
+        givenPolicy('skip');
+        const slot = new Date(Date.now() - 2 * 60 * MINUTE);
+
+        await processor.process(
+          makeJob({ catchUpForSlotMs: slot.getTime(), cwd: process.cwd() }),
+        );
+
+        expect(jobsService.recordMissedRuns).not.toHaveBeenCalled();
+        expect(jobsService.claimScheduledSlot).toHaveBeenCalledWith(
+          expect.objectContaining({ scheduledFor: slot }),
+        );
+        expect(runner.run).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('when the slot already has a run', () => {
+      it('does not run the fire a second time', async () => {
+        vi.mocked(jobsService.claimScheduledSlot).mockResolvedValue(null);
+        const { job } = makeSchedulerJob(2_000);
+
+        await processor.process(job);
+
+        expect(runner.run).not.toHaveBeenCalled();
+        expect(jobsService.markRunStarted).not.toHaveBeenCalled();
+        expect(jobsService.markRunFinished).not.toHaveBeenCalled();
+        expect(jobRepoUpdate).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when the job is a run-now', () => {
+      it('never consults the misfire policy', async () => {
+        vi.mocked(jobsService.findRunById).mockResolvedValue(
+          createMock<ScheduledAgentJobRun>({
+            id: 'run-now',
+            trigger: 'manual',
+          }),
+        );
+
+        await processor.process(
+          makeJob({ cwd: process.cwd(), runId: 'run-now' }),
+        );
+
+        expect(jobsService.claimScheduledSlot).not.toHaveBeenCalled();
+        expect(jobsService.recordMissedRuns).not.toHaveBeenCalled();
+        expect(runner.run).toHaveBeenCalledTimes(1);
+      });
+    });
+  });
+
+  describe('interval and once fires', () => {
+    const MINUTE = 60_000;
+
+    const givenSchedule = (overrides: Partial<ScheduledAgentJob>): void => {
+      vi.mocked(jobsService.findJobById).mockResolvedValue(
+        createMock<ScheduledAgentJob>({
+          enabled: true,
+          id: 'sched-1',
+          intervalMs: null,
+          misfirePolicy: 'skip',
+          misfireThresholdMs: 10 * MINUTE,
+          ownerUserId: 'user-1',
+          runAt: null,
+          ...overrides,
+        }),
+      );
+    };
+
+    const fireFor = (slot: Date): ScheduledAgentJobBullJob =>
+      makeJob({ cwd: process.cwd(), slotMs: slot.getTime() });
+
+    beforeEach(() => {
+      vi.mocked(jobsService.claimScheduledSlot).mockResolvedValue(
+        createMock<ScheduledAgentJobRun>({ id: 'run-slot' }),
+      );
+      vi.mocked(jobsService.hasLiveScheduledRun).mockResolvedValue(false);
+      vi.mocked(jobsService.setJobEnabled).mockResolvedValue(null);
+      vi.mocked(jobsService.updateNextRunAt).mockResolvedValue(undefined);
+    });
+
+    describe('when an interval fire runs', () => {
+      it('claims its slot and arms the next fire from completion', async () => {
+        givenSchedule({ intervalMs: 30 * MINUTE, scheduleKind: 'interval' });
+        const slot = new Date(Date.now() - 1_000);
+        const next = new Date(Date.now() + 30 * MINUTE);
+        vi.mocked(scheduler.armSelfScheduledFire).mockResolvedValue(next);
+
+        await processor.process(fireFor(slot));
+
+        expect(jobsService.claimScheduledSlot).toHaveBeenCalledWith(
+          expect.objectContaining({ scheduledFor: slot }),
+        );
+        expect(runner.run).toHaveBeenCalledTimes(1);
+        expect(scheduler.armSelfScheduledFire).toHaveBeenCalledWith(
+          expect.objectContaining({ id: 'sched-1' }),
+          { lastFinishedAt: expect.any(Date) },
+        );
+        expect(jobsService.updateNextRunAt).toHaveBeenCalledWith(
+          'sched-1',
+          next,
+        );
+      });
+    });
+
+    describe('when an interval fire is hours late', () => {
+      it('runs it once, ignoring the misfire policy', async () => {
+        givenSchedule({ intervalMs: 30 * MINUTE, scheduleKind: 'interval' });
+
+        await processor.process(
+          fireFor(new Date(Date.now() - 5 * 60 * MINUTE)),
+        );
+
+        expect(jobsService.recordMissedRuns).not.toHaveBeenCalled();
+        expect(runner.run).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('when another fire of the interval schedule is still running', () => {
+      it('drops this fire without a run row or a re-arm', async () => {
+        givenSchedule({ intervalMs: 30 * MINUTE, scheduleKind: 'interval' });
+        vi.mocked(jobsService.hasLiveScheduledRun).mockResolvedValue(true);
+
+        await processor.process(fireFor(new Date()));
+
+        expect(jobsService.claimScheduledSlot).not.toHaveBeenCalled();
+        expect(runner.run).not.toHaveBeenCalled();
+        expect(scheduler.armSelfScheduledFire).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when the schedule was disabled after the fire was armed', () => {
+      it('drops the fire', async () => {
+        givenSchedule({
+          enabled: false,
+          intervalMs: 30 * MINUTE,
+          scheduleKind: 'interval',
+        });
+
+        await processor.process(fireFor(new Date()));
+
+        expect(runner.run).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when the schedule changed back to cron', () => {
+      it('drops the fire', async () => {
+        givenSchedule({ cronPattern: '0 9 * * *', scheduleKind: 'cron' });
+
+        await processor.process(fireFor(new Date()));
+
+        expect(runner.run).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when a once fire runs at its time', () => {
+      it('runs and then disables the schedule', async () => {
+        const runAt = new Date(Date.now() - 1_000);
+        givenSchedule({ runAt, scheduleKind: 'once' });
+
+        await processor.process(fireFor(runAt));
+
+        expect(runner.run).toHaveBeenCalledTimes(1);
+        expect(jobsService.setJobEnabled).toHaveBeenCalledWith(
+          'sched-1',
+          false,
+        );
+        expect(jobsService.updateNextRunAt).toHaveBeenCalledWith(
+          'sched-1',
+          null,
+        );
+        expect(scheduler.armSelfScheduledFire).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when a once schedule was moved to another time', () => {
+      it('drops the fire for the old time', async () => {
+        givenSchedule({
+          runAt: new Date(Date.now() + 60 * MINUTE),
+          scheduleKind: 'once',
+        });
+
+        await processor.process(fireFor(new Date()));
+
+        expect(runner.run).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when arming the next interval fire fails', () => {
+      it('still finishes the run', async () => {
+        givenSchedule({ intervalMs: 30 * MINUTE, scheduleKind: 'interval' });
+        vi.mocked(scheduler.armSelfScheduledFire).mockRejectedValue(
+          new Error('redis down'),
+        );
+
+        await expect(
+          processor.process(fireFor(new Date())),
+        ).resolves.toBeUndefined();
+
+        expect(jobsService.markRunFinished).toHaveBeenCalledWith(
+          'run-slot',
+          expect.objectContaining({ status: 'succeeded' }),
+        );
+      });
     });
   });
 });

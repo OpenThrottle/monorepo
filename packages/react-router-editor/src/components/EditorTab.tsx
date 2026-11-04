@@ -1,5 +1,5 @@
+import { cn } from '@openthrottle/react-router-shadcn';
 import { XIcon } from '@phosphor-icons/react/dist/ssr/X';
-import clsx from 'clsx';
 import * as React from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
 
@@ -73,7 +73,7 @@ export const EditorTab = (props: EditorTabProps): React.ReactElement => {
 
   return (
     <Link
-      className={clsx(
+      className={cn(
         'group cursor-pointer p-2 pl-4 text-xs',
         'flex items-center justify-between gap-1',
         'hover:bg-gray-100/15',
@@ -95,7 +95,7 @@ export const EditorTab = (props: EditorTabProps): React.ReactElement => {
     >
       {filename}
       <button
-        className={clsx(
+        className={cn(
           'cursor-pointer rounded-md p-1 hover:bg-white/10',
           'border border-transparent',
           'group-hover:ui-border-dark',

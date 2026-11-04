@@ -1,5 +1,7 @@
 import * as React from 'react';
 
+import { TIMELINE_PAN_KEY_STEP } from '~/routing/timeline/config/layout';
+
 export interface UseTimelinePanOptions {
   /** Pixels moved per arrow-key press. */
   readonly keyStep?: number;
@@ -14,8 +16,6 @@ export interface UseTimelinePanResult {
   readonly ref: React.RefObject<HTMLDivElement | null>;
 }
 
-const DEFAULT_KEY_STEP = 80;
-
 /**
  * Drag-to-pan and arrow-key panning over a horizontally scrolling chart body.
  *
@@ -27,7 +27,7 @@ const DEFAULT_KEY_STEP = 80;
 export const useTimelinePan = (
   options: UseTimelinePanOptions = {},
 ): UseTimelinePanResult => {
-  const { keyStep = DEFAULT_KEY_STEP } = options;
+  const { keyStep = TIMELINE_PAN_KEY_STEP } = options;
 
   // Hooks
   const ref = React.useRef<HTMLDivElement | null>(null);

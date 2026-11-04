@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -29,7 +29,7 @@ export const HomeBuiltWith = (
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx('p-4', className)} data-testid="HomeBuiltWith">
+    <div className={cn('p-4', className)} data-testid="HomeBuiltWith">
       <h2 className="text-center text-2xl">
         Everything is built on OpenSource work
       </h2>

@@ -21,8 +21,8 @@ import { usePlanTaskToolbar } from '~/routing/plans/hooks/usePlanTaskToolbar';
 export interface PlanTaskToolbarProps {
   className?: string;
   /**
-   * @description True when the task has already been promoted (SKIPPED +
-   * `promoted` tag); disables the Promote to Plan control.
+   * @description True when the task has already been promoted (PROMOTED status,
+   * or the legacy SKIPPED + `promoted` tag); disables the Promote to Plan control.
    */
   isPromoted: boolean;
   /**
@@ -42,7 +42,7 @@ export interface PlanTaskToolbarProps {
   planIsRunning: boolean;
   /**
    * @description Whether the owning plan is in a terminal state (COMPLETED /
-   * CANCELED / SKIPPED). When true, Mark Complete and Promote to Plan are
+   * CANCELED / PROMOTED / SKIPPED). When true, Mark Complete and Promote to Plan are
    * disabled with explanatory tooltips — there is no more work to do on a
    * finished/abandoned plan, so close-out/promote by shipping a new plan
    * instead. Computed via `getPlanIsTerminal` from the plan status.

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import clsx from 'clsx';
+import { cn } from '@openthrottle/react-router-shadcn';
 
 export interface <%= name %>Props {
   className?: string;
@@ -27,7 +27,7 @@ export const <%= name %> = (props: <%= name %>Props): React.ReactElement => {
 
   return (
     <table
-      className={clsx('w-full', className)}
+      className={cn('w-full', className)}
       data-testid="<%= name %>"
     >
       <thead className="font-semibold text-left sticky top-0 ui-background [&_th]:p-2">

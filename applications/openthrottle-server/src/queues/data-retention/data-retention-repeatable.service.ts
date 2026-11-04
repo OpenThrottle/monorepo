@@ -4,6 +4,7 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { Queue } from 'bullmq';
 
 import { REPEATABLE_JOB_OPTIONS } from '../repeatable-job.options.ts';
+import { resolveRepeatablesOwner } from '../repeatable-job.owner.ts';
 import {
   DATA_RETENTION_JOB_NAME,
   DATA_RETENTION_QUEUE_NAME,
@@ -32,6 +33,15 @@ export class DataRetentionRepeatableService implements OnModuleInit {
   ) {}
 
   async onModuleInit(): Promise<void> {
+    const ownership = resolveRepeatablesOwner();
+    if (!ownership.owner) {
+      this.logger.info(
+        `Data-retention repeatable job not registered: ${ownership.reason}`,
+        DataRetentionRepeatableService.name,
+      );
+      return;
+    }
+
     const { cronPattern, enforce, tz } = resolveDataRetentionConfig();
 
     const job = await this.queue.add(

@@ -4,15 +4,13 @@ import { createStore, Provider } from 'jotai';
 import * as React from 'react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { CHAT_TOOLBAR_SESSION_SENTINEL_KEY } from '../../config/chat-session-permission-decay';
 import {
   CHAT_TOOLBAR_STORAGE_KEY,
   type ChatToolbarState,
   DEFAULT_CHAT_TOOLBAR_STATE,
 } from '../../data/atom.chat-toolbar';
-import {
-  CHAT_TOOLBAR_SESSION_SENTINEL_KEY,
-  useSessionPermissionDecay,
-} from '../useSessionPermissionDecay';
+import { useSessionPermissionDecay } from '../useSessionPermissionDecay';
 
 describe('useSessionPermissionDecay', () => {
   const renderInStore = (): void => {

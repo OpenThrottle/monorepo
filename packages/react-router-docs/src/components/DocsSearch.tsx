@@ -1,5 +1,6 @@
 import {
   Button,
+  cn,
   CommandDialog,
   CommandEmpty,
   CommandGroup,
@@ -9,7 +10,6 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from '@openthrottle/react-router-shadcn';
-import clsx from 'clsx';
 import { SearchIcon } from 'lucide-react';
 import * as React from 'react';
 import { useNavigate } from 'react-router';
@@ -122,7 +122,7 @@ export const DocsSearch = (props: DocsSearchProps): React.ReactElement => {
   // 🔌 Short Circuit
 
   return (
-    <div className={clsx(className)} data-testid="DocsSearch">
+    <div className={cn(className)} data-testid="DocsSearch">
       <Button
         aria-label={triggerLabel}
         className="text-muted-foreground w-full justify-start gap-2"

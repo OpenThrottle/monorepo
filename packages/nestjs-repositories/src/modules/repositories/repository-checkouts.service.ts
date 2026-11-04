@@ -11,8 +11,8 @@ import { Repository as OrmRepository } from 'typeorm';
 import {
   type ListPaginationInput,
   resolveListPagination,
-} from '../../common/list-pagination.ts';
-import { isUniqueViolation } from '../../common/unique-violation.ts';
+} from '../../utils/list-pagination.ts';
+import { isUniqueViolation } from '../../utils/unique-violation.ts';
 import {
   RepositoryCheckout,
   type RepositoryCheckoutKind,
@@ -336,6 +336,23 @@ export class RepositoryCheckoutsService {
    */
   async delete(userId: string, id: string): Promise<boolean> {
     const result = await this.repository.delete({ id, userId });
+    return (result.affected ?? 0) > 0;
+  }
+
+  /**
+   * @description Deletes an owned checkout only when it is a worktree row. The kind is part of the
+   * WHERE clause rather than a prior read, so a primary checkout can never be removed through this
+   * path, whatever the caller checked first. Referencing plan_runs and scheduled-job rows keep
+   * their history: every foreign key to repository_checkouts is ON DELETE SET NULL. Returns false
+   * when no worktree row matched.
+   * @public
+   */
+  async deleteWorktreeCheckout(userId: string, id: string): Promise<boolean> {
+    const result = await this.repository.delete({
+      id,
+      kind: 'worktree',
+      userId,
+    });
     return (result.affected ?? 0) > 0;
   }
 }

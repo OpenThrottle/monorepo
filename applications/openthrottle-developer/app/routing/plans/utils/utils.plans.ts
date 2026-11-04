@@ -14,18 +14,21 @@ export const isPlanStatusKey = (value: string): value is PlanStatusKey => {
 
 /**
  * Terminal task statuses that count as "resolved" for the plan-detail Tasks
- * progress count: COMPLETED (done) and SKIPPED (won't be worked on — e.g.
- * promoted into its own plan). Everything else is still open work.
+ * progress count: COMPLETED (done), SKIPPED (won't be worked on) and PROMOTED
+ * (not finished here — the work continued as its own plan). Everything else is
+ * still open work.
  */
 const RESOLVED_TASK_STATUSES: ReadonlySet<string> = new Set([
   'COMPLETED',
+  'PROMOTED',
   'SKIPPED',
 ]);
 
 /**
- * Count of a plan's tasks that are resolved — COMPLETED or SKIPPED — for the
- * `Tasks (resolved/total)` progress label. SKIPPED tasks are effectively done
- * or won't be worked on, so they count toward progress the same as COMPLETED.
+ * Count of a plan's tasks that are resolved — COMPLETED, PROMOTED or SKIPPED —
+ * for the `Tasks (resolved/total)` progress label. PROMOTED and SKIPPED tasks
+ * have no more work to do here, so they count toward progress the same as
+ * COMPLETED (PROMOTED is resolved but not complete).
  */
 export const getResolvedTaskCount = (
   tasks: readonly PlanTaskRowFragment[],
@@ -59,21 +62,24 @@ export const getPlanIsCancelable = (
 
 /**
  * Terminal plan statuses — the plan is finished or abandoned, so there is no
- * more work to do here: COMPLETED (done), CANCELED (abandoned), SKIPPED (won't
- * be worked on). To do more work, fall forward and ship a new plan.
+ * more work to do here: COMPLETED (done), CANCELED (abandoned), PROMOTED
+ * (continued as its own plan), SKIPPED (won't be worked on). To do more work,
+ * fall forward and ship a new plan.
  */
 const PLAN_TERMINAL_STATUSES: ReadonlySet<string> = new Set([
   'CANCELED',
   'COMPLETED',
+  'PROMOTED',
   'SKIPPED',
 ]);
 
 /**
  * Canonical "the plan is in a terminal state (no more work here)" check: true
- * for COMPLETED / CANCELED / SKIPPED. This is the single predicate the plan and
- * task toolbars gate their mutating actions on when a plan is finished/abandoned
- * (Run/Queue, Evaluate rules, and the task-level Mark Complete + Promote), the
- * terminal-status counterpart to {@link getPlanIsRunning}. The plan-level Mark
+ * for COMPLETED / CANCELED / PROMOTED / SKIPPED. This is the single predicate
+ * the plan and task toolbars gate their mutating actions on when a plan is
+ * finished/abandoned (Run/Queue, Evaluate rules, and the task-level Mark
+ * Complete + Promote), the terminal-status counterpart to
+ * {@link getPlanIsRunning}. The plan-level Mark
  * Complete stays gated on COMPLETED only (the sole recovery path to done for a
  * mis-canceled/skipped plan), so it deliberately does not use this predicate.
  */
@@ -109,6 +115,9 @@ export const getPlanStatusBadgeColor = (
       break;
     case 'PENDING':
       color = `sky`;
+      break;
+    case 'PROMOTED':
+      color = `blue`;
       break;
     case 'QUEUED':
       color = `amber`;

@@ -22,6 +22,7 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   AGENT_ASSET_SLUG_PATTERN,
   DEFAULT_TAG_VOCABULARY_SEED,
+  SYSTEM_TAG_VOCABULARY,
 } from '@openthrottle/openthrottle-skills';
 import { QueryFailedError, Repository } from 'typeorm';
 
@@ -411,11 +412,18 @@ export class TagsService {
    * User callers get seed-on-first-read semantics; service accounts read their
    * own rows and fall back to the committed platform default while they have
    * none (the tagging-jobs slice bootstraps the tagging account's rows).
+   * Platform system tags (`SYSTEM_TAG_VOCABULARY`) resolve for every caller
+   * without a vocabulary lookup.
    */
   private async resolveDimension(
     caller: TagCaller,
     tag: string,
   ): Promise<string> {
+    const systemTag = SYSTEM_TAG_VOCABULARY.find((entry) => entry.tag === tag);
+    if (systemTag != null) {
+      return systemTag.dimension;
+    }
+
     const rows =
       caller.principalKind === 'user'
         ? await this.skillTagsService.listForUser(caller.subjectId)

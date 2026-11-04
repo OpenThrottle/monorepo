@@ -60,8 +60,14 @@ async function bootstrap(role: 'all' | 'api'): Promise<void> {
    * registerParserMiddleware dedupes by middleware function name), so this
    * parser becomes the ONLY json parser — omitting `application/json` leaves
    * /graphql POST bodies unparsed and Apollo rejects them with 400.
+   *
+   * `limit` replaces body-parser's 100 KB default, which answered 413 to any
+   * `recordTokenUsage` batch over ~80 rows although the mutation accepts 500
+   * (~1.2 KB each). 1 MB fits that with headroom and matches a typical proxy's
+   * own cap; the hooks still send far smaller batches.
    */
   app.useBodyParser('json', {
+    limit: '1mb',
     type: [
       'application/csp-report',
       'application/json',

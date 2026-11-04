@@ -18,8 +18,8 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { DataSource } from 'typeorm';
 
-import { createLogger } from './lib/index.ts';
 import { upsertLocalSecrets } from './local-secrets-file';
+import { createLogger } from './utils/index.ts';
 
 const logger = createLogger();
 

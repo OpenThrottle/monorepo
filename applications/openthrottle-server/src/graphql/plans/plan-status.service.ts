@@ -14,6 +14,7 @@ import {
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   Plan,
+  PLAN_RUN_STATUS,
   PlanRunsService,
   PlansService,
   resolveCompletedAtForStatusChange,
@@ -303,7 +304,7 @@ export class PlanStatusService {
    * @description Sets a plan's status with transition validation (the setPlanStatus mutation body).
    * Returns the (possibly unchanged) plan, or null when the plan does not exist. Throws
    * BadRequestException when an IN_PROGRESS transition is forbidden. Runs entirely inside one
-   * transaction so the row save and the status_change capture commit together (G12).
+   * transaction so the row save and the status_change capture commit together.
    */
   async setStatus(
     planId: string,
@@ -439,11 +440,24 @@ export class PlanStatusService {
    * @description Cancels BullMQ plan-run jobs for a plan and signals any active run to stop. When a
    * waiting/delayed job was removed or an active run was signaled, resets the plan to PENDING and the
    * plan's QUEUED tasks to PENDING. Throws NotFoundException when the plan does not exist.
+   *
+   * Also the cancel path for scheduled runs (migration 140): a SCHEDULED run is a delayed job plus a
+   * plan_runs row, and removing the job leaves the row behind, so the plan's SCHEDULED rows are
+   * settled CANCELLED here, after the job removal. The settle is guarded on `status = SCHEDULED`,
+   * which makes a repeat cancel — and a cancel after the run fired (IN_PROGRESS) or settled — a
+   * no-op for the row; a job a worker already holds locked (it is firing right now) is left to the
+   * worker. Without `planRunId` cancelling is per PLAN, as it always was: every delayed job and
+   * SCHEDULED row of the plan goes together. Jobs removed for SCHEDULED rows do not by themselves
+   * reset the plan or its tasks — scheduling never changed their status — so cancelling only a
+   * scheduled run leaves a COMPLETED plan COMPLETED.
+   *
+   * With `planRunId` the cancel is scoped to that one run — see {@link cancelScheduledRun}.
    */
   async cancelRun(
     planId: string,
     requestedByUserId: string | null = null,
     actor: StatusChangeActor,
+    planRunId: string | null = null,
   ): Promise<CancelRunOutcome> {
     const repo = this.plansService.getRepository();
     const plan = await repo.findOne({ where: { id: planId } });
@@ -452,11 +466,22 @@ export class PlanStatusService {
       throw new NotFoundException(`🟡 2 - Plan not found: ${planId}`);
     }
 
+    if (planRunId !== null) {
+      return this.cancelScheduledRun(planId, planRunId);
+    }
+
     const status = normalizePlanStatusForPolicy(plan.status);
     const cancelable = status === 'QUEUED' || status === 'IN_PROGRESS';
     // A run that is actively executing (vs merely queued) — the distinction between
     // "stopping now" and "cancelled from the queue".
     const runIsExecuting = status === 'IN_PROGRESS';
+
+    // Read BEFORE the removal: which of the jobs about to be removed belong to SCHEDULED rows.
+    const scheduledJobIds = new Set(
+      (await this.planRunsService.findScheduledByPlanId(planId)).flatMap(
+        (run) => (run.bullmqJobId === null ? [] : [run.bullmqJobId]),
+      ),
+    );
 
     const queueResult = await cancelPlanRunJobsForPlan(this.plansQueue, planId);
 
@@ -487,7 +512,22 @@ export class PlanStatusService {
       }
     }
 
-    const removedQueuedJob = queueResult.removedJobIds.length > 0;
+    // Settle the SCHEDULED rows whose delayed job is now gone. Runs after the queue removal and
+    // regardless of plan status, so a row whose job was already lost from Redis is not left
+    // SCHEDULED forever. A locked-active job is mid-fire: its row is the worker's to flip.
+    const cancelledScheduledRuns =
+      await this.planRunsService.settleScheduledRunsCancelled(
+        planId,
+        queueResult.lockedActiveJobIds,
+      );
+
+    // Jobs of an ordinary queued run: removing one means the plan's QUEUED status (and its tasks')
+    // no longer has a job behind it, so they reset. A scheduled run's job never set either.
+    const removedOrdinaryQueuedJob = queueResult.removedJobIds.some(
+      (jobId) => !scheduledJobIds.has(jobId),
+    );
+    const removedQueuedJob =
+      queueResult.removedJobIds.length > 0 || cancelledScheduledRuns > 0;
     // An actively-executing run is being stopped when we aborted it locally, or when we
     // published/stamped a cancel against a plan that is currently IN_PROGRESS.
     //
@@ -512,7 +552,7 @@ export class PlanStatusService {
     // Reset the plan (and its QUEUED tasks) to PENDING when we removed a queued job or stopped an
     // actively-executing run. A pure CANCELLATION_REQUESTED (no confirmed active run) leaves status
     // to the owning run's terminal handling — we do not race it to PENDING.
-    const shouldSetPlanPending = removedQueuedJob || activeRunStopping;
+    const shouldSetPlanPending = removedOrdinaryQueuedJob || activeRunStopping;
 
     let planStatusAfter: string | null = null;
 
@@ -579,5 +619,104 @@ export class PlanStatusService {
       removedJobIds: [...queueResult.removedJobIds],
       signaledActiveRunToStop,
     };
+  }
+
+  /**
+   * @description The run-scoped cancel behind `cancelPlanRun({ planId, planRunId })`: cancels exactly
+   * one SCHEDULED run — removes its delayed BullMQ job and settles its row CANCELLED — and nothing
+   * else. No other run of the plan (live or scheduled), no cancel marker, no abort signal, and
+   * neither the plan status nor the tasks are touched, so a live run on the same plan survives it.
+   *
+   * `planRunId` that names no run of `planId` is rejected. A run that is not SCHEDULED:
+   *  - already settled (CANCELLED, COMPLETED, FAILED, ...) -> a no-op `NO_ACTIVE_RUN`, so a repeat or
+   *    double-clicked cancel is idempotent;
+   *  - QUEUED or IN_PROGRESS (it fired, or was never scheduled) -> rejected with a clear message
+   *    rather than falling through to the per-plan cancel, which would stop whatever is live on the
+   *    plan — surprising for a click aimed at one scheduled run. Omit `planRunId` to stop a live run.
+   * A delayed job a worker already holds locked is firing right now: it is reported in
+   * `activeJobIdsCouldNotCancel` and the row is left for the worker to flip.
+   */
+  private async cancelScheduledRun(
+    planId: string,
+    planRunId: string,
+  ): Promise<CancelRunOutcome> {
+    const run = await this.planRunsService.findById(planRunId);
+
+    if (!run || run.planId !== planId) {
+      throw new BadRequestException(
+        `Plan run ${planRunId} was not found for plan ${planId}`,
+      );
+    }
+
+    const outcomeFor = (
+      fields: Pick<
+        CancelRunOutcome,
+        'activeJobIdsCouldNotCancel' | 'noMatchingJob' | 'removedJobIds'
+      > & { readonly outcome: CancelPlanRunOutcome },
+    ): CancelRunOutcome => ({
+      ...fields,
+      cancelRequested: false,
+      planId,
+      // The plan is deliberately untouched by a run-scoped cancel.
+      planStatusAfter: null,
+      signaledActiveRunToStop: false,
+    });
+
+    if (run.status !== PLAN_RUN_STATUS.SCHEDULED) {
+      if (
+        run.status === PLAN_RUN_STATUS.QUEUED ||
+        run.status === PLAN_RUN_STATUS.IN_PROGRESS
+      ) {
+        throw new BadRequestException(
+          `Plan run ${planRunId} is ${run.status}, not SCHEDULED, so it cannot be cancelled on its own; cancel the plan to stop a live run`,
+        );
+      }
+
+      return outcomeFor({
+        activeJobIdsCouldNotCancel: [],
+        noMatchingJob: true,
+        outcome: CANCEL_PLAN_RUN_OUTCOME.NO_ACTIVE_RUN,
+        removedJobIds: [],
+      });
+    }
+
+    const jobId = run.bullmqJobId;
+    const job =
+      jobId === null ? undefined : await this.plansQueue.getJob(jobId);
+    let removedJobIds: string[] = [];
+
+    if (job !== undefined && jobId !== null) {
+      try {
+        await job.remove();
+        removedJobIds = [jobId];
+      } catch (error) {
+        // A locked job is one a worker is running right now (it fired between the read and the
+        // remove); its row is the worker's to flip. Anything else is a real failure.
+        if ((await job.getState()) !== 'active') {
+          throw error;
+        }
+
+        return outcomeFor({
+          activeJobIdsCouldNotCancel: [jobId],
+          noMatchingJob: false,
+          outcome: CANCEL_PLAN_RUN_OUTCOME.NO_ACTIVE_RUN,
+          removedJobIds: [],
+        });
+      }
+    }
+
+    // A job already gone from Redis still gets its row settled, so it is not SCHEDULED forever.
+    const settled =
+      await this.planRunsService.settleScheduledRunCancelled(planRunId);
+
+    return outcomeFor({
+      activeJobIdsCouldNotCancel: [],
+      noMatchingJob: job === undefined,
+      outcome:
+        settled || removedJobIds.length > 0
+          ? CANCEL_PLAN_RUN_OUTCOME.RUN_CANCELLED
+          : CANCEL_PLAN_RUN_OUTCOME.NO_ACTIVE_RUN,
+      removedJobIds,
+    });
   }
 }

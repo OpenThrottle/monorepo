@@ -1,5 +1,5 @@
+import { cn } from '@openthrottle/react-router-shadcn';
 import { GlobalAnimationWaves } from '@openthrottle/react-router-ui-global';
-import clsx from 'clsx';
 import * as React from 'react';
 
 import { LANDING_FLOW } from '~/routing/home/data/data.landing';
@@ -26,7 +26,7 @@ export const LandingFlow = (props: LandingFlowProps): React.ReactElement => {
 
   return (
     <section
-      className={clsx(
+      className={cn(
         'bg-background border-border justify-center border-y px-6 py-[clamp(3.5rem,8vw,6rem)]',
         'flex min-h-svh items-center',
         'relative snap-start',

@@ -1,6 +1,5 @@
-import { Button } from '@openthrottle/react-router-shadcn';
+import { Button, cn } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
-import clsx from 'clsx';
 import { useAtomValue } from 'jotai';
 import { RefreshCcwIcon } from 'lucide-react';
 import * as React from 'react';
@@ -49,7 +48,7 @@ export const PlanWorkflowCommand = (
 
   return (
     <div
-      className={clsx('space-y-2', className)}
+      className={cn('space-y-2', className)}
       data-testid="PlanWorkflowCommand"
     >
       <h2>Canonical CLI (preview)</h2>
