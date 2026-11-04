@@ -1,14 +1,14 @@
 import type { Tree } from '@nx/devkit';
 import prompts from 'prompts';
 
-import { throwGeneratorError } from '../../utils/generator-errors';
-import { isInteractiveArgPresent } from '../../utils/nx-cli';
-import { writeJsonToStdout } from '../../utils/output';
-import { getProjectsByTags } from '../../utils/projects';
-import { componentGenerator } from './generator.component';
-import { hookGenerator } from './generator.hook';
-import { storyGenerator } from './generator.story';
-import { utilGenerator } from './generator.util';
+import { throwGeneratorError } from '../../utils/generator-errors.ts';
+import { isInteractiveArgPresent } from '../../utils/nx-cli.ts';
+import { writeJsonToStdout } from '../../utils/output.ts';
+import { getProjectsByTags } from '../../utils/projects.ts';
+import { componentGenerator } from './generator.component.ts';
+import { hookGenerator } from './generator.hook.ts';
+import { storyGenerator } from './generator.story.ts';
+import { utilGenerator } from './generator.util.ts';
 
 export interface ReactGeneratorSchema {
   readonly describe?: boolean;

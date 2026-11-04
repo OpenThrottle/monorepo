@@ -16,7 +16,7 @@ import { describe, expect, test } from 'vitest';
  * never executed; this suite reads them off disk and lint-checks the source.
  */
 
-const generatorsRoot = __dirname;
+const generatorsRoot = import.meta.dirname;
 
 // Every emitted React/React-Router test template — the `fireEvent`/`screen`
 // guards apply to all of them.

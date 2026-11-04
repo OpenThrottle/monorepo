@@ -3,15 +3,15 @@ import { createProjectGraphAsync, formatFiles, logger } from '@nx/devkit';
 import { join } from 'path';
 import prompts from 'prompts';
 
-import { getCommonVariables, getGeneratorOverview } from '../../utils';
-import { generateFilesSafely } from '../../utils/generate-files-safely';
+import { generateFilesSafely } from '../../utils/generate-files-safely.ts';
+import { getCommonVariables, getGeneratorOverview } from '../../utils/index.ts';
 import {
   getConfigConfirmation,
   getReactHookDestination,
   parsePossibleNames,
-} from '../../utils/questions';
-import { throwInvalidDestinationError } from '../../utils/target-validation';
-import { validateCamelCase } from '../../utils/validation';
+} from '../../utils/questions.ts';
+import { throwInvalidDestinationError } from '../../utils/target-validation.ts';
+import { validateCamelCase } from '../../utils/validation.ts';
 
 export interface ReactUtilGeneratorSchema {
   readonly destination?: string;
@@ -57,7 +57,7 @@ export async function utilGenerator(
 
   for await (const name of names) {
     const destination = join(project.data.root, 'src/utils');
-    const templates = join(__dirname, 'files/util');
+    const templates = join(import.meta.dirname, 'files/util');
     const variables = getCommonVariables(name);
 
     const data = { ...variables, destination, name, templates };

@@ -28,6 +28,14 @@ Local Nx plugin holding the five workspace generators (`folders`, `nestjs`, `pac
 ## Invariants & gotchas
 
 - The plugin is registered via the root `package.json` devDependency, not `nx.json` `plugins` — `pnpm nx g @tools/generators:<name>` resolves through workspace node_modules. Renaming the package or `generators.json` breaks every doc/skill that scaffolds.
+- **Nx loads these sources with Node's native type stripping** (Nx 23 on Node 24), so the package is ESM (`"type": "module"`) and must stay strip-only-loadable:
+  - relative imports carry `.ts` (`nodeEsmEslintConfig`; `eslint --fix` writes them), and directory imports name `index.ts`;
+  - template dirs resolve from `import.meta.dirname`;
+  - `lodash` is default-imported, because it has no static named exports;
+  - no `enum`, parameter properties or decorators.
+
+  Break any of these and every `nx g @tools/generators:*` fails to load. `test` still passes, because Vitest resolves imports itself. Prove a change with a real `--dry-run`.
+
 - Non-interactive is the contract: missing options must throw (`Missing required option: ...`), never silently prompt. `--interactive` opts in to `prompts`.
 - Keep `schema.json`, the `--describe` JSON, and the generator's TS schema interface in sync when adding an option; `--generator` is reserved by Nx, so sub-generator selection stays `--subGenerator`.
 - `src/index.ts` exports only `getNxProjectNames` (used by `@tools/workflows`); generators are reached through `generators.json`, not the package index.

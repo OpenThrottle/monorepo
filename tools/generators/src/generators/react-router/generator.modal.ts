@@ -3,14 +3,17 @@ import { formatFiles, logger } from '@nx/devkit';
 import { join } from 'path';
 import prompts from 'prompts';
 
-import { getCommonVariables, getRemixRoutingFolders } from '../../utils';
-import { generateFilesSafely } from '../../utils/generate-files-safely';
+import { generateFilesSafely } from '../../utils/generate-files-safely.ts';
+import {
+  getCommonVariables,
+  getRemixRoutingFolders,
+} from '../../utils/index.ts';
 import {
   getTargetApplication,
   parsePossibleNames,
-} from '../../utils/questions';
-import { REGEX_PASCAL_CASE } from '../../utils/regex';
-import { throwInvalidFolderError } from '../../utils/target-validation';
+} from '../../utils/questions.ts';
+import { REGEX_PASCAL_CASE } from '../../utils/regex.ts';
+import { throwInvalidFolderError } from '../../utils/target-validation.ts';
 
 export interface ReactRouterModalGeneratorSchema {
   readonly application?: string;
@@ -108,7 +111,7 @@ export const generatorReactRouterModal = async (
     const variables = getCommonVariables(name);
 
     const destination = join('applications', application, 'app', folder);
-    const templates = join(__dirname, 'files/modal');
+    const templates = join(import.meta.dirname, 'files/modal');
 
     generateFilesSafely(tree, templates, destination, variables);
   });

@@ -2,7 +2,7 @@ import type { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { componentGenerator } from './generator.component';
+import { componentGenerator } from './generator.component.ts';
 
 // The generator resolves `destination` through the real Nx project graph, whose
 // first (cold) computation dominated this file's runtime — ~900ms of workspace

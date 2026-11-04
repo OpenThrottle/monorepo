@@ -2,10 +2,10 @@ import type { Tree } from '@nx/devkit';
 import { formatFiles, generateFiles, logger } from '@nx/devkit';
 import { join } from 'path';
 
-import { getCommonVariables } from '../../utils/index';
-import { getNestJSApplication } from '../../utils/projects';
-import { getTargetName } from '../../utils/questions';
-import { REGEX_SLUG } from '../../utils/regex';
+import { getCommonVariables } from '../../utils/index.ts';
+import { getNestJSApplication } from '../../utils/projects.ts';
+import { getTargetName } from '../../utils/questions.ts';
+import { REGEX_SLUG } from '../../utils/regex.ts';
 
 export interface NestJSQueueGeneratorSchema {
   readonly application?: string;
@@ -48,7 +48,7 @@ export const generatorNestJSQueue = async (
   }
 
   // 📂 Define the source and destination paths
-  const source = join(__dirname, `files/queue`);
+  const source = join(import.meta.dirname, `files/queue`);
   const destination = `applications/${application}/src/queues/`;
   const options = { ...getCommonVariables(name), application, name };
 

@@ -1,4 +1,4 @@
-import { REGEX_CAMEL_CASE, REGEX_PASCAL_CASE_V2, REGEX_SLUG } from './regex';
+import { REGEX_CAMEL_CASE, REGEX_PASCAL_CASE_V2, REGEX_SLUG } from './regex.ts';
 
 export const validateSlug = (value: string): string | undefined => {
   if (value.length < 3) return 'Must be at least 3 characters';

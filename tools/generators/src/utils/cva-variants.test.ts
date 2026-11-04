@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { acceptsChildren, extractCvaVariants } from './cva-variants';
+import { acceptsChildren, extractCvaVariants } from './cva-variants.ts';
 
 /**
  * The fixture is trimmed from the real `Button.tsx` — deliberately keeping the

@@ -3,18 +3,18 @@ import { formatFiles, logger } from '@nx/devkit';
 import { join } from 'path';
 import prompts from 'prompts';
 
+import { generateFilesSafely } from '../../utils/generate-files-safely.ts';
 import {
   getCommonVariables,
   getRemixRoutingFolders,
   getRemixServiceFolders,
-} from '../../utils';
-import { generateFilesSafely } from '../../utils/generate-files-safely';
+} from '../../utils/index.ts';
 import {
   getTargetApplication,
   parsePossibleNames,
-} from '../../utils/questions';
-import { throwInvalidFolderError } from '../../utils/target-validation';
-import { validateCamelCase } from '../../utils/validation';
+} from '../../utils/questions.ts';
+import { throwInvalidFolderError } from '../../utils/target-validation.ts';
+import { validateCamelCase } from '../../utils/validation.ts';
 
 export interface ReactRouterHookGeneratorSchema {
   readonly application?: string;
@@ -120,7 +120,7 @@ export const generatorReactRouterHook = async (
       folder,
       'hooks',
     );
-    const templates = join(__dirname, 'files/hook');
+    const templates = join(import.meta.dirname, 'files/hook');
 
     generateFilesSafely(tree, templates, destination, variables);
   });

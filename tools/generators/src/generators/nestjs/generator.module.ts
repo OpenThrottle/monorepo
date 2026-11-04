@@ -7,10 +7,10 @@ import {
 } from '@nx/devkit';
 import { join } from 'path';
 
-import { getCommonVariables } from '../../utils/index';
-import { getNestJSApplication } from '../../utils/projects';
-import { getTargetName } from '../../utils/questions';
-import { REGEX_SLUG } from '../../utils/regex';
+import { getCommonVariables } from '../../utils/index.ts';
+import { getNestJSApplication } from '../../utils/projects.ts';
+import { getTargetName } from '../../utils/questions.ts';
+import { REGEX_SLUG } from '../../utils/regex.ts';
 
 export interface NestJSModuleGeneratorSchema {
   readonly application?: string;
@@ -91,7 +91,7 @@ export const generatorNestJSModule = async (
     name,
   };
 
-  const source = join(__dirname, `files/module`);
+  const source = join(import.meta.dirname, `files/module`);
   generateFiles(tree, source, destinationPath, options);
 
   await formatFiles(tree);

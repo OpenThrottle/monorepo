@@ -2,7 +2,7 @@ import type { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { foldersGenerator } from './generator';
+import { foldersGenerator } from './generator.ts';
 
 describe('folders generator', () => {
   let tree: Tree;

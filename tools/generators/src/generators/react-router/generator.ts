@@ -2,25 +2,25 @@ import type { Tree } from '@nx/devkit';
 import prompts from 'prompts';
 
 import {
+  assertFolderVocabulary,
+  FOLDER_VOCABULARY_RESTRICTION,
+} from '../../utils/folder-vocabulary.ts';
+import { throwGeneratorError } from '../../utils/generator-errors.ts';
+import {
   getMonorepoApplications,
   getRemixRoutingFolders,
   getRemixServiceFolders,
-} from '../../utils';
-import {
-  assertFolderVocabulary,
-  FOLDER_VOCABULARY_RESTRICTION,
-} from '../../utils/folder-vocabulary';
-import { throwGeneratorError } from '../../utils/generator-errors';
-import { isInteractiveArgPresent } from '../../utils/nx-cli';
-import { writeJsonToStdout } from '../../utils/output';
-import { assertReactRouterApplication } from '../../utils/target-validation';
-import { generatorReactRouterApplication } from './generator.application';
-import { generatorReactRouterComponent } from './generator.component';
-import { generatorReactRouterForm } from './generator.form';
-import { generatorReactRouterHook } from './generator.hook';
-import { generatorReactRouterModal } from './generator.modal';
-import { generatorReactRouterRoute } from './generator.route';
-import { generatorReactRouterTable } from './generator.table';
+} from '../../utils/index.ts';
+import { isInteractiveArgPresent } from '../../utils/nx-cli.ts';
+import { writeJsonToStdout } from '../../utils/output.ts';
+import { assertReactRouterApplication } from '../../utils/target-validation.ts';
+import { generatorReactRouterApplication } from './generator.application.ts';
+import { generatorReactRouterComponent } from './generator.component.ts';
+import { generatorReactRouterForm } from './generator.form.ts';
+import { generatorReactRouterHook } from './generator.hook.ts';
+import { generatorReactRouterModal } from './generator.modal.ts';
+import { generatorReactRouterRoute } from './generator.route.ts';
+import { generatorReactRouterTable } from './generator.table.ts';
 
 export interface ReactRouterGeneratorSchema {
   readonly application?: string;

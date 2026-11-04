@@ -2,7 +2,7 @@ import type { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { generatorReactRouterForm } from './generator.form';
+import { generatorReactRouterForm } from './generator.form.ts';
 
 describe('react-router form generator', () => {
   let tree: Tree;

@@ -2,7 +2,7 @@ import type { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { reactRouterGenerator } from './generator';
+import { reactRouterGenerator } from './generator.ts';
 
 // A trimmed graph standing in for the real workspace: one application, one
 // scoped React package, one project that is neither. Mocked for the same reason

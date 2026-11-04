@@ -2,15 +2,15 @@ import type { Tree } from '@nx/devkit';
 import { createProjectGraphAsync, formatFiles, logger } from '@nx/devkit';
 import { join } from 'path';
 
-import { getCommonVariables, getGeneratorOverview } from '../../utils';
-import { generateFilesSafely } from '../../utils/generate-files-safely';
+import { generateFilesSafely } from '../../utils/generate-files-safely.ts';
+import { getCommonVariables, getGeneratorOverview } from '../../utils/index.ts';
 import {
   getComponentNames,
   getConfigConfirmation,
   getReactComponentDestination,
   parsePossibleNames,
-} from '../../utils/questions';
-import { throwInvalidDestinationError } from '../../utils/target-validation';
+} from '../../utils/questions.ts';
+import { throwInvalidDestinationError } from '../../utils/target-validation.ts';
 
 export interface ReactComponentGeneratorSchema {
   readonly destination?: string;
@@ -58,7 +58,7 @@ export async function componentGenerator(
 
   for await (const name of names) {
     const destination = join(project.data.root, 'src/components');
-    const templates = join(__dirname, 'files/component');
+    const templates = join(import.meta.dirname, 'files/component');
     const variables = getCommonVariables(name);
 
     const data = { ...variables, destination, name, templates };

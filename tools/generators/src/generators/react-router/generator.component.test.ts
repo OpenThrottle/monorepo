@@ -2,7 +2,7 @@ import type { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { generatorReactRouterComponent } from './generator.component';
+import { generatorReactRouterComponent } from './generator.component.ts';
 
 describe('generatorReactRouterComponent', () => {
   let tree: Tree;

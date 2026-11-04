@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { getRouteTitleVariables } from './route-title';
+import { getRouteTitleVariables } from './route-title.ts';
 
 describe('getRouteTitleVariables', () => {
   test.each([

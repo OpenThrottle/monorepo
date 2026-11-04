@@ -2,7 +2,7 @@ import type { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { generatorReactRouterModal } from './generator.modal';
+import { generatorReactRouterModal } from './generator.modal.ts';
 
 describe('generatorReactRouterModal', () => {
   let tree: Tree;

@@ -12,17 +12,17 @@ import { readFileSync } from 'fs';
 import * as path from 'path';
 import prompts from 'prompts';
 
-import { throwGeneratorError } from '../../utils/generator-errors';
-import { getCommonVariables } from '../../utils/index';
-import { isInteractiveArgPresent } from '../../utils/nx-cli';
-import { ORGANIZATIONS } from '../../utils/organizations';
-import { writeJsonToStdout } from '../../utils/output';
+import { throwGeneratorError } from '../../utils/generator-errors.ts';
+import { getCommonVariables } from '../../utils/index.ts';
+import { isInteractiveArgPresent } from '../../utils/nx-cli.ts';
+import { ORGANIZATIONS } from '../../utils/organizations.ts';
+import { writeJsonToStdout } from '../../utils/output.ts';
 import {
   getConfigConfirmation,
   getOrganizationName,
   getPackageName,
-} from '../../utils/questions';
-import { REGEX_SLUG } from '../../utils/regex';
+} from '../../utils/questions.ts';
+import { REGEX_SLUG } from '../../utils/regex.ts';
 
 export interface PackageGeneratorSchema {
   readonly describe?: boolean;
@@ -128,8 +128,8 @@ export async function packageGenerator(
   const isTool = org === '@tools';
   const destination = isTool ? `tools/${name}` : `packages/${name}`;
 
-  const common = path.join(__dirname, `files/common`);
-  const source = path.join(__dirname, `files/${type}`);
+  const common = path.join(import.meta.dirname, `files/common`);
+  const source = path.join(import.meta.dirname, `files/${type}`);
   const variables = getCommonVariables(name);
 
   const data = { ...variables, destination, org, orgName, source, type };

@@ -3,8 +3,8 @@ import { formatFiles, generateFiles, logger } from '@nx/devkit';
 import { join } from 'path';
 import prompts from 'prompts';
 
-import { getCommonVariables } from '../../utils/index';
-import { REGEX_SLUG } from '../../utils/regex';
+import { getCommonVariables } from '../../utils/index.ts';
+import { REGEX_SLUG } from '../../utils/regex.ts';
 
 export interface ReactRouterApplicationGeneratorSchema {
   readonly interactive?: boolean;
@@ -45,7 +45,7 @@ export const generatorReactRouterApplication = async (
   }
 
   const destination = join('applications', name);
-  const templates = join(__dirname, 'files/application');
+  const templates = join(import.meta.dirname, 'files/application');
   const variables = {
     ...getCommonVariables(name),
     port: schema.port ?? 6000,

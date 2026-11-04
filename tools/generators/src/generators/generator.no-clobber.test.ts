@@ -2,8 +2,8 @@ import type { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { componentGenerator } from './react/generator.component';
-import { generatorReactRouterComponent } from './react-router/generator.component';
+import { componentGenerator } from './react/generator.component.ts';
+import { generatorReactRouterComponent } from './react-router/generator.component.ts';
 
 vi.mock('@nx/devkit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@nx/devkit')>();
