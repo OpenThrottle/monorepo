@@ -45,10 +45,12 @@ export interface WatchHandle {
   /** Stop watching and fully release the underlying watcher's resources. */
   close: () => Promise<void>;
   /**
-   * Resolves once the watcher has finished its initial scan and is live.
-   * Until then, writes may land before the watcher is listening and go
-   * unreported, so callers that need to observe a specific change should await
-   * this first rather than guessing with a sleep.
+   * Resolves once the watcher has finished its initial scan. Awaiting this is
+   * strictly better than sleeping past the scan, but it is not a delivery
+   * guarantee: on macOS the first change inside a freshly watched directory is
+   * occasionally dropped by the platform even though the directory is watched
+   * and no error is raised. A caller that must observe one specific change
+   * should be prepared to re-apply it rather than wait longer.
    */
   ready: Promise<void>;
 }
