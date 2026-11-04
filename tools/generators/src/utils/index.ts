@@ -7,6 +7,7 @@ import { join } from 'path';
 import pluralize from 'pluralize';
 
 import { getProjectsByTag } from './projects.ts';
+import { toConstantCase } from './strings.ts';
 
 // lodash is CommonJS without static named exports, so native ESM can only
 // default-import it.
@@ -129,6 +130,7 @@ const filterDirectories = (dirs: Dirent[]) => {
 
 /**
  * These are the commonly naming conventions we use in our templates.
+ * `*Uppercase` is CONSTANT_CASE, for use inside identifiers (`DEFAULT_<%= nameUppercase %>`).
  */
 export const getCommonVariables = (name: string) => {
   const plural = pluralize.plural(name);
@@ -139,17 +141,17 @@ export const getCommonVariables = (name: string) => {
     nameCamel: camelCase(name),
     nameKebab: kebabCase(name),
     namePascal: upperFirst(camelCase(name)),
-    nameUppercase: name.toUpperCase(),
+    nameUppercase: toConstantCase(name),
     plural: plural,
     pluralCamel: camelCase(plural),
     pluralKebab: kebabCase(plural),
     pluralPascal: upperFirst(camelCase(plural)),
-    pluralUppercase: plural.toUpperCase(),
+    pluralUppercase: toConstantCase(plural),
     singular: singular,
     singularCamel: camelCase(singular),
     singularKebab: kebabCase(singular),
     singularPascal: upperFirst(camelCase(singular)),
-    singularUppercase: singular.toUpperCase(),
+    singularUppercase: toConstantCase(singular),
   } as const;
 
   return variations;
