@@ -76,6 +76,11 @@ export interface DriverInvocationConfig {
    * `supportsCustomBaseUrl` (see {@link DriverEndpointConfig}). Others ignore it.
    */
   readonly endpoint?: DriverEndpointConfig;
+  /**
+   * Extra environment variables for the subprocess, merged over the inherited `process.env`.
+   * Omitted ⇒ the child inherits `process.env` unchanged.
+   */
+  readonly env?: Readonly<Record<string, string>>;
   /** Iteration number (used only for log attribution). */
   readonly iteration: number;
   /** Model preset; drivers that advertise `supportsModelFlag` emit `--model` (Claude omits `auto`). */

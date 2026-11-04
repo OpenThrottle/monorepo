@@ -14,6 +14,7 @@ import {
 } from '../../__generated__/graphql.ts';
 import type {
   WorkflowExecuteGraphqlV2,
+  WorkflowRalphCommandRunner,
   WorkflowRalphIterationOnChunk,
   WorkflowRalphIterationRunner,
 } from '../../contract/ralph-orchestrator-deps.ts';
@@ -226,6 +227,66 @@ describe('createWorkflowRalphOrchestrator final-iteration prompt line', () => {
     });
 
     expect(prompt).not.toContain(FINAL_ITERATION_FLAG);
+  });
+});
+
+describe('createWorkflowRalphOrchestrator PR draft dir', () => {
+  const runCapturingEnv = async (
+    runCommand: WorkflowRalphCommandRunner | undefined,
+  ): Promise<Readonly<Record<string, string>> | undefined> => {
+    const envs: (Readonly<Record<string, string>> | undefined)[] = [];
+    const run = vi.fn<WorkflowRalphIterationRunner['run']>(async ({ env }) => {
+      envs.push(env);
+      return 'no control marker';
+    });
+    const orchestrator = createWorkflowRalphOrchestrator({
+      executeGraphqlV2: createMockExecute({
+        getTasksByPlanId: () => [baseTask(TASK_A, 'QUEUED')],
+      }),
+      iterationRunner: { run },
+      ...(runCommand === undefined ? {} : { runCommand }),
+    });
+
+    await orchestrator.execute({
+      context: {
+        debug: 'omit',
+        iterationMax: 1,
+        iterationTimeout: 1000,
+        iterations: 1,
+        kind: 'ralph',
+        mode: 'plan',
+        model: 'test-model',
+        planId: PLAN_ID,
+        project: '',
+        prompt: 'Do work',
+        runner: 'cursor',
+        skipWorktreeSetup: false,
+        taskId: '',
+        timeout: 1000,
+        worktree: undefined,
+        worktreeBase: undefined,
+      },
+    });
+
+    return envs[0];
+  };
+
+  it('sets OT_PR_DRAFT_DIR to <git dir>/ot-pr-draft when the host finalizes', async () => {
+    const runCommand = vi.fn<WorkflowRalphCommandRunner>(async ({ args }) =>
+      args[0] === 'rev-parse' && args[1] === '--absolute-git-dir'
+        ? { exitCode: 0, stderr: '', stdout: '/tmp/ot-test-repo/.git\n' }
+        : { exitCode: 1, stderr: 'unexpected', stdout: '' },
+    );
+
+    const env = await runCapturingEnv(runCommand);
+
+    expect(env).toEqual({
+      OT_PR_DRAFT_DIR: '/tmp/ot-test-repo/.git/ot-pr-draft',
+    });
+  });
+
+  it('passes no env when finalize is not wired', async () => {
+    expect(await runCapturingEnv(undefined)).toBeUndefined();
   });
 });
 

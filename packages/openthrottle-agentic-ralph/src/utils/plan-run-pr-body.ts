@@ -5,6 +5,8 @@
  * unit-testable without a stub runner.
  */
 
+import { createHash } from 'node:crypto';
+
 /**
  * @description Opens a host-written PR body; a refresh only rewrites a body still wrapped in these
  * markers.
@@ -328,10 +330,76 @@ export const buildPlanRunPrBody = (
     : `${template.trimEnd()}\n\n## Summary\n\n${summary}\n`;
 
   const filled = fillTesting(withSummary, buildTestingSteps(tasks));
-  const footer = [
-    `Plan-Id: ${planId}`,
-    ...footerTaskIds.map((id) => `Task-Id: ${id}`),
+  const footer = buildPlanRunPrFooter({ footerTaskIds, planId });
+
+  return wrapPlanRunBody(`${filled.trim()}\n\n${footer}`);
+};
+
+/**
+ * @description The authoritative trailer block: one `Plan-Id:` and every delivered `Task-Id:`, in
+ * the github-squash § Footers shape.
+ * @public
+ */
+export const buildPlanRunPrFooter = (params: {
+  readonly footerTaskIds: readonly string[];
+  readonly planId: string;
+}): string =>
+  [
+    `Plan-Id: ${params.planId}`,
+    ...params.footerTaskIds.map((id) => `Task-Id: ${id}`),
   ].join('\n');
 
-  return `${PLAN_RUN_BODY_OPEN_MARKER}\n${filled.trim()}\n\n${footer}\n${PLAN_RUN_BODY_CLOSE_MARKER}\n`;
+const DIGEST_LINE =
+  /^<!-- ot:plan-run-digest sha256:(?<digest>[0-9a-f]{64}) -->$/;
+
+const normalizeBodyText = (text: string): string =>
+  text.replace(/\r\n?/g, '\n').trim();
+
+const digestOf = (inner: string): string =>
+  createHash('sha256').update(normalizeBodyText(inner), 'utf8').digest('hex');
+
+/**
+ * @description Wraps host-written PR text in {@link PLAN_RUN_BODY_OPEN_MARKER} /
+ * {@link PLAN_RUN_BODY_CLOSE_MARKER} with a digest of the wrapped text, so a later refresh can tell
+ * an untouched host body from one a human edited — including an edit made inside the markers.
+ * @public
+ */
+export const wrapPlanRunBody = (inner: string): string => {
+  const trimmed = normalizeBodyText(inner);
+
+  return `${PLAN_RUN_BODY_OPEN_MARKER}\n${trimmed}\n<!-- ot:plan-run-digest sha256:${digestOf(trimmed)} -->\n${PLAN_RUN_BODY_CLOSE_MARKER}\n`;
+};
+
+/**
+ * @description Who owns an existing PR body. `empty` and `host` may be refreshed; `edited` (markers
+ * gone, text outside them, or a digest that no longer matches) must be left alone.
+ * @public
+ */
+export type PlanRunPrBodyOwner = 'edited' | 'empty' | 'host';
+
+/**
+ * @description Classifies an existing PR body for the refresh decision; see {@link PlanRunPrBodyOwner}.
+ * @public
+ */
+export const classifyPlanRunPrBody = (body: string): PlanRunPrBodyOwner => {
+  const normalized = normalizeBodyText(body);
+
+  if (normalized === '') {
+    return 'empty';
+  }
+
+  const lines = normalized.split('\n');
+  const digestLine = lines[lines.length - 2] ?? '';
+  const digest = DIGEST_LINE.exec(digestLine)?.groups?.digest;
+  const inner = lines.slice(1, -2).join('\n');
+  const isWrapped =
+    lines.length >= 4 &&
+    lines[0] === PLAN_RUN_BODY_OPEN_MARKER &&
+    lines[lines.length - 1] === PLAN_RUN_BODY_CLOSE_MARKER &&
+    !inner.includes(PLAN_RUN_BODY_OPEN_MARKER) &&
+    !inner.includes(PLAN_RUN_BODY_CLOSE_MARKER);
+
+  return isWrapped && digest !== undefined && digest === digestOf(inner)
+    ? 'host'
+    : 'edited';
 };

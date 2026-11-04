@@ -16,8 +16,10 @@ import type {
 } from '../../contract/ralph-orchestrator-deps.ts';
 import { finalizePlanRun } from '../finalize-plan-run.ts';
 import {
+  classifyPlanRunPrBody,
   PLAN_RUN_BODY_CLOSE_MARKER,
   PLAN_RUN_BODY_OPEN_MARKER,
+  wrapPlanRunBody,
 } from '../plan-run-pr-body.ts';
 
 const PLAN_ID = '1f4ba44f-8bb8-407c-a0f2-a4bb1f352278';
@@ -146,11 +148,14 @@ const createRunCommand = (
     args: readonly string[],
   ) => WorkflowRalphCommandResult | undefined = () => undefined,
 ) =>
-  vi.fn<WorkflowRalphCommandRunner>(async ({ args, command }) => {
+  vi.fn<WorkflowRalphCommandRunner>(async ({ args, command, cwd }) => {
     if (command === 'git') {
       const [sub, first] = args;
       if (sub === 'rev-parse' && first === '--abbrev-ref') {
         return ok(`${BRANCH}\n`);
+      }
+      if (sub === 'rev-parse' && first === '--absolute-git-dir') {
+        return ok(`${join(cwd, '.git')}\n`);
       }
       if (sub === 'rev-parse' && first === '--verify') {
         return options.remoteBase === false
@@ -206,6 +211,7 @@ describe('finalizePlanRun', () => {
     const result = await finalizePlanRun({
       baseBranch: 'main',
       cwd,
+      draftDir: undefined,
       executeGraphqlV2: createExecuteGraphqlV2(appendCalls),
       onChunk: undefined,
       planId: PLAN_ID,
@@ -233,6 +239,7 @@ describe('finalizePlanRun', () => {
     await finalizePlanRun({
       baseBranch: 'main',
       cwd,
+      draftDir: undefined,
       executeGraphqlV2: createExecuteGraphqlV2([]),
       onChunk: undefined,
       planId: PLAN_ID,
@@ -257,6 +264,7 @@ describe('finalizePlanRun', () => {
     await finalizePlanRun({
       baseBranch: 'main',
       cwd,
+      draftDir: undefined,
       executeGraphqlV2: createExecuteGraphqlV2([]),
       onChunk: undefined,
       planId: PLAN_ID,
@@ -292,6 +300,7 @@ describe('finalizePlanRun', () => {
       const result = await finalizePlanRun({
         baseBranch: 'main',
         cwd,
+        draftDir: undefined,
         executeGraphqlV2: createExecuteGraphqlV2([]),
         onChunk: undefined,
         planId: PLAN_ID,
@@ -379,38 +388,206 @@ describe('finalizePlanRun', () => {
     });
   });
 
-  it('reuses an existing PR and marks it ready', async () => {
-    const cwd = await createCwdWithTemplate();
-    const runCommand = createRunCommand(
-      { aheadCount: '1', existingPrs: '[{"number":99}]\n' },
-      (args) => {
+  describe('when the agent wrote a draft', () => {
+    const runWithDraft = async (draft: {
+      readonly body: string;
+      readonly title: string;
+    }) => {
+      const cwd = await createCwdWithTemplate();
+      const draftDir = join(cwd, '.git', 'ot-pr-draft');
+      await mkdir(draftDir, { recursive: true });
+      await writeFile(join(draftDir, 'title.txt'), draft.title, 'utf8');
+      await writeFile(join(draftDir, 'body.md'), draft.body, 'utf8');
+      const appendCalls: unknown[] = [];
+      const runCommand = createRunCommand({ aheadCount: '1' }, (args) => {
+        if (args[1] === 'create') {
+          return ok('https://github.com/OpenThrottle/monorepo/pull/42\n');
+        }
+        if (args[1] === 'view') {
+          return ok('42\n');
+        }
         if (args[1] === 'ready') {
-          expect(args).toEqual(['pr', 'ready', '99']);
           return ok();
         }
-        if (args[1] === 'create') {
-          throw new Error('should not create a PR when one exists');
-        }
         return undefined;
-      },
-    );
+      });
 
-    const result = await finalizePlanRun({
-      baseBranch: 'main',
-      cwd,
-      executeGraphqlV2: createExecuteGraphqlV2([]),
-      onChunk: undefined,
-      planId: PLAN_ID,
-      priorReason: 'workflow_complete',
-      runCommand,
+      await finalizePlanRun({
+        baseBranch: 'main',
+        cwd,
+        draftDir,
+        executeGraphqlV2: createExecuteGraphqlV2(appendCalls),
+        onChunk: undefined,
+        planId: PLAN_ID,
+        priorReason: 'workflow_complete',
+        runCommand,
+      });
+
+      const createArgs =
+        runCommand.mock.calls.find(
+          ([call]) => call.command === 'gh' && call.args[1] === 'create',
+        )?.[0].args ?? [];
+      const bodyFile = createArgs[createArgs.indexOf('--body-file') + 1];
+
+      return {
+        appendCalls: JSON.stringify(appendCalls),
+        body: bodyFile === undefined ? '' : await readFile(bodyFile, 'utf8'),
+        title: createArgs[createArgs.indexOf('--title') + 1] ?? '',
+      };
+    };
+
+    it('publishes a valid draft with the OT footer swapped in and host markers around it', async () => {
+      const published = await runWithDraft({
+        body: `# Summary\n\nThe settle step now records the repo id.\n\n## Testing\n\n- [ ] Run a plan and check the repo id\n\nPlan-Id: ${PLAN_ID}\nTask-Id: 99999999-9999-4999-8999-999999999999\n`,
+        title:
+          'fix(openthrottle-agentic-ralph): record the repo id on settle\n',
+      });
+
+      expect(published.title).toBe(
+        'fix(openthrottle-agentic-ralph): record the repo id on settle',
+      );
+      expect(published.body).toContain(
+        'The settle step now records the repo id.',
+      );
+      expect(published.body).not.toContain(
+        '99999999-9999-4999-8999-999999999999',
+      );
+      expect(published.body).toContain(`Task-Id: ${TASK_DONE_WITH_COMMIT}`);
+      expect(published.body).toContain(`Task-Id: ${TASK_DONE_NO_COMMIT}`);
+      expect(published.body.startsWith(`${PLAN_RUN_BODY_OPEN_MARKER}\n`)).toBe(
+        true,
+      );
+      expect(classifyPlanRunPrBody(published.body)).toBe('host');
+      expect(published.appendCalls).toContain('source=agent-draft');
     });
 
-    expect(result).toEqual({
-      exitCode: 0,
-      headSha: HEAD_SHA,
-      prNumber: 99,
-      reason: 'workflow_complete',
-      status: 'finished',
+    it('falls back to the host body when the draft title is not conventional', async () => {
+      const published = await runWithDraft({
+        body: '# Summary\n\nA real summary.\n',
+        title: 'Record the repo id',
+      });
+
+      expect(published.title).toBe(
+        'fix(openthrottle-agentic-ralph): settle the repo',
+      );
+      expect(published.body).toContain('**Settle the repo after a plan run**');
+      expect(published.appendCalls).toContain('source=fallback');
+      expect(published.appendCalls).toContain('conventional-commit');
+    });
+
+    it('falls back to the host body when the draft still has template TODO text', async () => {
+      const published = await runWithDraft({
+        body: '# Summary\n\n**TODO:** Describe the changes in this PR.\n',
+        title: 'fix: record the repo id',
+      });
+
+      expect(published.body).not.toContain('TODO');
+      expect(published.appendCalls).toContain('template TODO');
+    });
+  });
+
+  describe('when a PR already exists', () => {
+    const runExisting = async (currentBody: string) => {
+      const cwd = await createCwdWithTemplate();
+      const appendCalls: unknown[] = [];
+      const runCommand = createRunCommand(
+        { aheadCount: '1', existingPrs: '[{"number":99}]\n' },
+        (args) => {
+          if (args[1] === 'view') {
+            expect(args).toEqual([
+              'pr',
+              'view',
+              '99',
+              '--json',
+              'body',
+              '--jq',
+              '.body',
+            ]);
+            return ok(`${currentBody}\n`);
+          }
+          if (args[1] === 'edit' || args[1] === 'ready') {
+            return ok();
+          }
+          if (args[1] === 'create') {
+            throw new Error('should not create a PR when one exists');
+          }
+          return undefined;
+        },
+      );
+
+      const result = await finalizePlanRun({
+        baseBranch: 'main',
+        cwd,
+        draftDir: undefined,
+        executeGraphqlV2: createExecuteGraphqlV2(appendCalls),
+        onChunk: undefined,
+        planId: PLAN_ID,
+        priorReason: 'workflow_complete',
+        runCommand,
+      });
+      const editArgs = runCommand.mock.calls.find(
+        ([call]) => call.command === 'gh' && call.args[1] === 'edit',
+      )?.[0].args;
+
+      return {
+        appendCalls: JSON.stringify(appendCalls),
+        editArgs,
+        result,
+        runCommand,
+      };
+    };
+
+    it('refreshes an untouched host-written body, then marks the PR ready', async () => {
+      const { editArgs, result, runCommand } = await runExisting(
+        wrapPlanRunBody('# Summary\n\nAn older host body.\n\nPlan-Id: x'),
+      );
+
+      expect(editArgs?.slice(0, 4)).toEqual(['pr', 'edit', '99', '--title']);
+      const bodyFile = editArgs?.[editArgs.indexOf('--body-file') + 1] ?? '';
+      expect(await readFile(bodyFile, 'utf8')).toContain(
+        `Task-Id: ${TASK_DONE_NO_COMMIT}`,
+      );
+      expect(runCommand).toHaveBeenCalledWith(
+        expect.objectContaining({ args: ['pr', 'ready', '99'] }),
+      );
+      expect(result).toEqual({
+        exitCode: 0,
+        headSha: HEAD_SHA,
+        prNumber: 99,
+        reason: 'workflow_complete',
+        status: 'finished',
+      });
+    });
+
+    it('refreshes an empty body', async () => {
+      const { editArgs } = await runExisting('');
+
+      expect(editArgs).toBeDefined();
+    });
+
+    it('leaves a human-edited body alone and still marks the PR ready', async () => {
+      const hostBody = wrapPlanRunBody('# Summary\n\nAn older host body.');
+      const { appendCalls, editArgs, result, runCommand } = await runExisting(
+        hostBody.replace('An older host body.', 'A reviewer rewrote this.'),
+      );
+
+      expect(editArgs).toBeUndefined();
+      expect(appendCalls).toContain('edited by a human');
+      expect(runCommand).toHaveBeenCalledWith(
+        expect.objectContaining({ args: ['pr', 'ready', '99'] }),
+      );
+      expect(result).toMatchObject({
+        prNumber: 99,
+        reason: 'workflow_complete',
+      });
+    });
+
+    it('leaves a body with text outside the host markers alone', async () => {
+      const { editArgs } = await runExisting(
+        `${wrapPlanRunBody('# Summary\n\nHost text.')}\nA human note below.`,
+      );
+
+      expect(editArgs).toBeUndefined();
     });
   });
 
@@ -429,6 +606,7 @@ describe('finalizePlanRun', () => {
     const result = await finalizePlanRun({
       baseBranch: 'main',
       cwd,
+      draftDir: undefined,
       executeGraphqlV2: createExecuteGraphqlV2(appendCalls),
       onChunk: undefined,
       planId: PLAN_ID,
@@ -459,6 +637,7 @@ describe('finalizePlanRun', () => {
     const result = await finalizePlanRun({
       baseBranch: 'main',
       cwd,
+      draftDir: undefined,
       executeGraphqlV2: createExecuteGraphqlV2(appendCalls),
       onChunk: undefined,
       planId: PLAN_ID,

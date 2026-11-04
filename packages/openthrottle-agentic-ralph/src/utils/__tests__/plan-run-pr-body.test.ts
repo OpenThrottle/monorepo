@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { PlanRunPrTask } from '../plan-run-pr-body.ts';
 import {
   buildPlanRunPrBody,
+  classifyPlanRunPrBody,
   parseOnelineLog,
   parseTaskIdTrailers,
   PLAN_RUN_BODY_CLOSE_MARKER,
@@ -10,6 +11,7 @@ import {
   PR_TEMPLATE_FALLBACK,
   resolvePlanRunPrTitle,
   selectFooterTaskIds,
+  wrapPlanRunBody,
 } from '../plan-run-pr-body.ts';
 
 const PLAN_ID = '19fceffc-3e3b-4843-8b83-13509573c9f9';
@@ -189,10 +191,40 @@ describe('buildPlanRunPrBody', () => {
     });
 
     expect(body.startsWith(`${PLAN_RUN_BODY_OPEN_MARKER}\n`)).toBe(true);
-    expect(
-      body.endsWith(
-        `\n\nPlan-Id: ${PLAN_ID}\nTask-Id: t1\nTask-Id: t2\n${PLAN_RUN_BODY_CLOSE_MARKER}\n`,
+    expect(body).toMatch(
+      new RegExp(
+        `\\n\\nPlan-Id: ${PLAN_ID}\\nTask-Id: t1\\nTask-Id: t2\\n<!-- ot:plan-run-digest sha256:[0-9a-f]{64} -->\\n${PLAN_RUN_BODY_CLOSE_MARKER.replace('/', '\\/')}\\n$`,
       ),
-    ).toBe(true);
+    );
+    expect(classifyPlanRunPrBody(body)).toBe('host');
+  });
+});
+
+describe('classifyPlanRunPrBody', () => {
+  const hostBody = wrapPlanRunBody('# Summary\n\nHost text.\n\nPlan-Id: p');
+
+  it('treats an empty or whitespace body as empty', () => {
+    expect(classifyPlanRunPrBody('  \n')).toBe('empty');
+  });
+
+  it('recognises an untouched host body, even with CRLF line endings', () => {
+    expect(classifyPlanRunPrBody(hostBody)).toBe('host');
+    expect(classifyPlanRunPrBody(hostBody.replace(/\n/g, '\r\n'))).toBe('host');
+  });
+
+  it('treats an edit inside the markers as human-edited', () => {
+    expect(classifyPlanRunPrBody(hostBody.replace('Host text.', 'Mine.'))).toBe(
+      'edited',
+    );
+  });
+
+  it('treats text outside the markers as human-edited', () => {
+    expect(classifyPlanRunPrBody(`Intro.\n${hostBody}`)).toBe('edited');
+  });
+
+  it('treats a body without markers as human-edited', () => {
+    expect(classifyPlanRunPrBody('# Summary\n\nWritten by hand.')).toBe(
+      'edited',
+    );
   });
 });
