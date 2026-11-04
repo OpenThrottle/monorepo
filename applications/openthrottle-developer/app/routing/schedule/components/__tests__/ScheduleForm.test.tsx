@@ -90,14 +90,14 @@ describe('ScheduleForm Component', () => {
 
     test('renders the cron control blank, with a hint rather than an error', () => {
       expect(component.getByTestId('InputCronExpression')).toBeInTheDocument();
-      expect(component.getByLabelText('Schedule (cron)')).toHaveValue('');
+      expect(component.getByLabelText(SCHEDULE_COPY.cronLabel)).toHaveValue('');
       expect(
         component.getByText(CRON_EXPRESSION_COPY.emptyHint),
       ).toBeInTheDocument();
     });
 
     test('submits the cron control under the cronPattern name', () => {
-      expect(component.getByLabelText('Schedule (cron)')).toHaveAttribute(
+      expect(component.getByLabelText(SCHEDULE_COPY.cronLabel)).toHaveAttribute(
         'name',
         'cronPattern',
       );
@@ -117,7 +117,7 @@ describe('ScheduleForm Component', () => {
       );
       await user.click(component.getByRole('menuitem', { name: preset.label }));
 
-      expect(component.getByLabelText('Schedule (cron)')).toHaveValue(
+      expect(component.getByLabelText(SCHEDULE_COPY.cronLabel)).toHaveValue(
         preset.value,
       );
     });
@@ -133,10 +133,13 @@ describe('ScheduleForm Component', () => {
       enabled: false,
       id: 'job-1',
       lastRunAt: null,
+      misfirePolicy: 'catch_up_once',
+      misfireThresholdMs: 1_800_000,
       model: 'opus',
       name: 'Nightly audit',
       nextRunAt: null,
       prompt: 'Audit dependencies.',
+      scheduleKind: 'cron',
       settingsJson: '{}',
       timeoutMs: 900000,
       timezone: 'America/Los_Angeles',
@@ -153,19 +156,22 @@ describe('ScheduleForm Component', () => {
         'Audit dependencies.',
       );
       expect(component.getByLabelText('Model (optional)')).toHaveValue('opus');
-      expect(component.getByLabelText('Schedule (cron)')).toHaveValue(
+      expect(component.getByLabelText(SCHEDULE_COPY.cronLabel)).toHaveValue(
         '0 9 * * *',
       );
       expect(component.getByLabelText('Timezone (optional)')).toHaveValue(
         'America/Los_Angeles',
       );
       expect(
+        component.getByLabelText(SCHEDULE_COPY.misfireThresholdLabel),
+      ).toHaveValue(30);
+      expect(
         component.getByRole('button', { name: 'Save changes' }),
       ).toBeInTheDocument();
     });
 
     test('describes the pre-filled cron pattern in English', () => {
-      expect(component.getByLabelText('Schedule (cron)')).toHaveValue(
+      expect(component.getByLabelText(SCHEDULE_COPY.cronLabel)).toHaveValue(
         '0 9 * * *',
       );
       expect(component.getByText(/at 09:00/i)).toBeInTheDocument();
@@ -225,10 +231,13 @@ describe('ScheduleForm Component', () => {
         enabled: true,
         id: 'job-codex',
         lastRunAt: null,
+        misfirePolicy: 'skip',
+        misfireThresholdMs: 600_000,
         model: null,
         name: 'Codex job',
         nextRunAt: null,
         prompt: 'File findings in OpenThrottle.',
+        scheduleKind: 'cron',
         settingsJson: '{}',
         timeoutMs: null,
         timezone: null,

@@ -1,6 +1,7 @@
 /**
- * @description TypeORM entity for the scheduled_agent_jobs table (databases/migrations/082): a
- * user-defined "run a prompt with a driver/model/settings on a cron schedule" job. The DB row is
+ * @description TypeORM entity for the scheduled_agent_jobs table (databases/migrations/082, 096,
+ * 141, 142): a user-defined "run a prompt with a driver/model/settings on a schedule" job — a cron
+ * pattern, an interval, or a single run. The DB row is
  * authoritative; a BullMQ repeatable scheduler keyed by `schedulerKey` is a projection reconciled
  * from it. See docs/monorepo/scheduled-agent-jobs-design.md.
  */
@@ -52,6 +53,32 @@ export interface ScheduledAgentJobSettings {
   readonly worktree?: ScheduledAgentJobWorktreeSettings;
 }
 
+/**
+ * What happens to a cron fire that starts more than `misfireThresholdMs` after its slot (migration
+ * 141): `skip` records it as a `missed` run; `catch_up_once` runs the most recent late fire once and
+ * records any earlier ones as `missed`. A fire within the threshold always runs.
+ */
+export const SCHEDULED_AGENT_JOB_MISFIRE_POLICIES = [
+  'catch_up_once',
+  'skip',
+] as const;
+
+export type ScheduledAgentJobMisfirePolicy =
+  (typeof SCHEDULED_AGENT_JOB_MISFIRE_POLICIES)[number];
+
+/**
+ * How a schedule fires (migration 142): `cron` (a pattern in a timezone; the default), `interval`
+ * (elapsed time after the previous fire finishes), or `once` (a single fire at `runAt`).
+ */
+export const SCHEDULED_AGENT_JOB_SCHEDULE_KINDS = [
+  'cron',
+  'interval',
+  'once',
+] as const;
+
+export type ScheduledAgentJobScheduleKind =
+  (typeof SCHEDULED_AGENT_JOB_SCHEDULE_KINDS)[number];
+
 /** Scalar/column fields of ScheduledAgentJob surfaced to the API. */
 export type ScheduledAgentJobData = Pick<
   ScheduledAgentJob,
@@ -61,13 +88,18 @@ export type ScheduledAgentJobData = Pick<
   | 'driverId'
   | 'enabled'
   | 'id'
+  | 'intervalMs'
   | 'lastRunAt'
+  | 'misfirePolicy'
+  | 'misfireThresholdMs'
   | 'model'
   | 'name'
   | 'nextRunAt'
   | 'ownerUserId'
   | 'prompt'
   | 'repositoryCheckoutId'
+  | 'runAt'
+  | 'scheduleKind'
   | 'schedulerKey'
   | 'settings'
   | 'timeoutMs'
@@ -80,9 +112,12 @@ export class ScheduledAgentJob {
   @CreateDateColumn({ name: 'created_at', type: 'timestamp with time zone' })
   createdAt!: Date;
 
-  /** 5- or 6-field cron pattern, validated on write; interpreted in `timezone` or UTC. */
-  @Column({ name: 'cron_pattern', type: 'text' })
-  cronPattern!: string;
+  /**
+   * 5- or 6-field cron pattern, validated on write; interpreted in `timezone` or UTC. Set exactly
+   * when `scheduleKind` is `cron`; null for interval and once schedules.
+   */
+  @Column({ name: 'cron_pattern', nullable: true, type: 'text' })
+  cronPattern!: string | null;
 
   /**
    * Legacy/explicit process cwd for the agent CLI, used only when `repositoryCheckoutId` is null;
@@ -101,6 +136,13 @@ export class ScheduledAgentJob {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
+  /**
+   * For `interval` schedules: elapsed ms from the end of one fire to the start of the next (>= 60000).
+   * Null for other kinds.
+   */
+  @Column({ name: 'interval_ms', nullable: true, type: 'integer' })
+  intervalMs!: number | null;
+
   /** Last time a run started; refreshed by the processor after each fire. */
   @Column({
     name: 'last_run_at',
@@ -108,6 +150,14 @@ export class ScheduledAgentJob {
     type: 'timestamp with time zone',
   })
   lastRunAt!: Date | null;
+
+  /** Misfire policy for late cron fires (migration 141); see {@link ScheduledAgentJobMisfirePolicy}. */
+  @Column({ default: 'skip', name: 'misfire_policy', type: 'text' })
+  misfirePolicy!: ScheduledAgentJobMisfirePolicy;
+
+  /** How late (ms past its slot) a fire may start and still run; >= 60000, default 10 minutes. */
+  @Column({ default: 600_000, name: 'misfire_threshold_ms', type: 'integer' })
+  misfireThresholdMs!: number;
 
   /** Model preset; null uses the driver default. */
   @Column({ name: 'model', nullable: true, type: 'text' })
@@ -138,6 +188,14 @@ export class ScheduledAgentJob {
    */
   @Column({ name: 'repository_checkout_id', nullable: true, type: 'uuid' })
   repositoryCheckoutId!: string | null;
+
+  /** For `once` schedules: the instant the single fire is due. Null for other kinds. */
+  @Column({ name: 'run_at', nullable: true, type: 'timestamp with time zone' })
+  runAt!: Date | null;
+
+  /** How the schedule fires (migration 142); see {@link ScheduledAgentJobScheduleKind}. */
+  @Column({ default: 'cron', name: 'schedule_kind', type: 'text' })
+  scheduleKind!: ScheduledAgentJobScheduleKind;
 
   /** Stable BullMQ upsertJobScheduler id (scheduled-job:<id>); unique. */
   @Column({ name: 'scheduler_key', type: 'text' })

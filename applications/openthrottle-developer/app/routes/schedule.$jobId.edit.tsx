@@ -24,7 +24,10 @@ import {
 import { SITE_TITLE } from '~/global/config/settings';
 import { ScheduleForm } from '~/routing/schedule/components/ScheduleForm';
 import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
-import { parseScheduleForm } from '~/routing/schedule/data/parse-form';
+import {
+  missingScheduleTiming,
+  parseScheduleForm,
+} from '~/routing/schedule/data/parse-form';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -134,8 +137,13 @@ export const action = async (args: Route.ActionArgs) => {
   const form = await args.request.formData();
   const { enabled: _enabled, ...patch } = parseScheduleForm(form);
 
-  if (!patch.name || !patch.prompt || !patch.driverId || !patch.cronPattern) {
+  if (!patch.name || !patch.prompt || !patch.driverId) {
     return { error: 'Name, prompt, provider, and schedule are required.' };
+  }
+
+  const missingTiming = missingScheduleTiming(patch);
+  if (missingTiming !== null) {
+    return { error: missingTiming };
   }
 
   const input: UpdateScheduledAgentJobInputType = { id: jobId, ...patch };

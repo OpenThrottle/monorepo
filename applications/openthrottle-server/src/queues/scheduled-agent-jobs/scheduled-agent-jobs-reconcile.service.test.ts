@@ -4,6 +4,7 @@ import type { ScheduledAgentJobsService } from '@openthrottle/nestjs-repositorie
 import { type ScheduledAgentJob } from '@openthrottle/nestjs-repositories';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { ScheduledAgentJobFailureNotifierService } from './scheduled-agent-job-failure-notifier.service.ts';
 import type { ScheduledAgentJobSchedulerService } from './scheduled-agent-job-scheduler.service.ts';
 import { ScheduledAgentJobsReconcileService } from './scheduled-agent-jobs-reconcile.service.ts';
 
@@ -13,6 +14,7 @@ const job = (id: string): ScheduledAgentJob =>
 describe('ScheduledAgentJobsReconcileService', () => {
   let jobsService: ScheduledAgentJobsService;
   let scheduler: ScheduledAgentJobSchedulerService;
+  let failureNotifier: ScheduledAgentJobFailureNotifierService;
   let service: ScheduledAgentJobsReconcileService;
 
   beforeEach(() => {
@@ -27,10 +29,14 @@ describe('ScheduledAgentJobsReconcileService', () => {
         .fn()
         .mockResolvedValue(new Date('2026-07-01T00:00:00Z')),
     });
+    failureNotifier = createMock<ScheduledAgentJobFailureNotifierService>({
+      notify: vi.fn().mockResolvedValue(undefined),
+    });
     service = new ScheduledAgentJobsReconcileService(
       createMock<LoggerService>(),
       jobsService,
       scheduler,
+      failureNotifier,
     );
   });
 
@@ -93,5 +99,201 @@ describe('ScheduledAgentJobsReconcileService', () => {
     await service.onModuleInit();
 
     expect(spy).not.toHaveBeenCalled();
+  });
+
+  describe('missed fires', () => {
+    // Booted just before noon after a ~3.5h outage; an hourly schedule missed 09:00, 10:00 and 11:00.
+    const BOOT = new Date('2026-11-02T11:59:00Z');
+    const MISSED = [
+      new Date('2026-11-02T09:00:00Z'),
+      new Date('2026-11-02T10:00:00Z'),
+      new Date('2026-11-02T11:00:00Z'),
+    ];
+
+    const hourly = (
+      misfirePolicy: ScheduledAgentJob['misfirePolicy'],
+      updatedAt = new Date('2026-11-02T08:30:00Z'),
+    ): ScheduledAgentJob =>
+      createMock<ScheduledAgentJob>({
+        cronPattern: '0 * * * *',
+        driverId: 'claude',
+        id: 'a',
+        misfirePolicy,
+        misfireThresholdMs: 10 * 60_000,
+        model: null,
+        schedulerKey: 'scheduled-job:a',
+        timezone: null,
+        updatedAt,
+      });
+
+    const missedCall = (index: number): unknown =>
+      vi.mocked(jobsService.recordMissedRuns).mock.calls[index]?.[0];
+
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(BOOT);
+      vi.spyOn(process, 'uptime').mockReturnValue(0);
+      vi.mocked(jobsService.findLatestScheduledFor).mockResolvedValue(null);
+      vi.mocked(jobsService.hasLateRunSince).mockResolvedValue(false);
+      vi.mocked(jobsService.recordMissedRuns).mockImplementation(
+        async (input) => input.slots.length,
+      );
+      vi.mocked(scheduler.enqueueCatchUp).mockResolvedValue(undefined);
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+      vi.restoreAllMocks();
+    });
+
+    describe('when the policy is skip', () => {
+      it('records every missed slot as late, runs none, then re-registers', async () => {
+        vi.mocked(jobsService.listEnabledJobs).mockResolvedValue([
+          hourly('skip'),
+        ]);
+
+        await service.reconcile();
+
+        expect(missedCall(0)).toEqual(
+          expect.objectContaining({
+            errorMessage: expect.stringContaining('more than 10 min late'),
+            scheduledAgentJobId: 'a',
+            slots: MISSED,
+          }),
+        );
+        expect(missedCall(1)).toEqual(expect.objectContaining({ slots: [] }));
+        expect(scheduler.enqueueCatchUp).not.toHaveBeenCalled();
+        expect(scheduler.upsertScheduler).toHaveBeenCalledTimes(1);
+      });
+
+      it('sends the owner one missed notice covering every recorded slot', async () => {
+        vi.mocked(jobsService.listEnabledJobs).mockResolvedValue([
+          hourly('skip'),
+        ]);
+
+        await service.reconcile();
+
+        expect(failureNotifier.notify).toHaveBeenCalledExactlyOnceWith({
+          errorMessage: expect.stringContaining('more than 10 min late'),
+          reason: 'missed',
+          runCount: MISSED.length,
+          runId: undefined,
+          scheduledAgentJobId: 'a',
+        });
+      });
+    });
+
+    describe('when the schedule is an interval', () => {
+      it('records nothing missed and just re-arms it, so an overdue fire runs once, late', async () => {
+        vi.mocked(jobsService.listEnabledJobs).mockResolvedValue([
+          createMock<ScheduledAgentJob>({
+            cronPattern: null,
+            id: 'i',
+            intervalMs: 60 * 60_000,
+            scheduleKind: 'interval',
+            schedulerKey: 'scheduled-job:i',
+          }),
+        ]);
+
+        await service.reconcile();
+
+        expect(jobsService.recordMissedRuns).not.toHaveBeenCalled();
+        expect(scheduler.enqueueCatchUp).not.toHaveBeenCalled();
+        expect(scheduler.upsertScheduler).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('when the policy is catch_up_once', () => {
+      it('enqueues one catch-up for the latest slot and supersedes the rest, before re-registering', async () => {
+        const schedule = hourly('catch_up_once');
+        vi.mocked(jobsService.listEnabledJobs).mockResolvedValue([schedule]);
+
+        await service.reconcile();
+
+        expect(missedCall(1)).toEqual(
+          expect.objectContaining({
+            errorMessage: expect.stringContaining('at most one late run'),
+            slots: MISSED.slice(0, 2),
+          }),
+        );
+        expect(scheduler.enqueueCatchUp).toHaveBeenCalledExactlyOnceWith(
+          schedule,
+          MISSED[2],
+        );
+        const enqueuedAt =
+          vi.mocked(scheduler.enqueueCatchUp).mock.invocationCallOrder[0] ?? 0;
+        const recordedAt =
+          vi.mocked(jobsService.recordMissedRuns).mock.invocationCallOrder[1] ??
+          Infinity;
+        const upsertedAt =
+          vi.mocked(scheduler.upsertScheduler).mock.invocationCallOrder[0] ?? 0;
+        expect(recordedAt).toBeLessThan(enqueuedAt);
+        expect(enqueuedAt).toBeLessThan(upsertedAt);
+      });
+
+      it('enqueues nothing when the worker already ran the surviving overdue job', async () => {
+        vi.mocked(jobsService.listEnabledJobs).mockResolvedValue([
+          hourly('catch_up_once'),
+        ]);
+        vi.mocked(jobsService.hasLateRunSince).mockResolvedValue(true);
+
+        await service.reconcile();
+
+        expect(scheduler.enqueueCatchUp).not.toHaveBeenCalled();
+        expect(missedCall(1)).toEqual(
+          expect.objectContaining({ slots: MISSED }),
+        );
+      });
+    });
+
+    describe('when slots are already on record', () => {
+      it('starts the window after the newest recorded slot', async () => {
+        vi.mocked(jobsService.listEnabledJobs).mockResolvedValue([
+          hourly('skip'),
+        ]);
+        vi.mocked(jobsService.findLatestScheduledFor).mockResolvedValue(
+          MISSED[1] ?? null,
+        );
+
+        await service.reconcile();
+
+        expect(jobsService.findLatestScheduledFor).toHaveBeenCalledWith(
+          'a',
+          BOOT,
+        );
+        expect(missedCall(0)).toEqual(
+          expect.objectContaining({ slots: MISSED.slice(2) }),
+        );
+      });
+    });
+
+    describe('when no fire came due while the server was down', () => {
+      it('records nothing', async () => {
+        vi.mocked(jobsService.listEnabledJobs).mockResolvedValue([
+          hourly('skip', new Date('2026-11-02T11:30:00Z')),
+        ]);
+
+        await service.reconcile();
+
+        expect(jobsService.recordMissedRuns).not.toHaveBeenCalled();
+        expect(failureNotifier.notify).not.toHaveBeenCalled();
+        expect(scheduler.upsertScheduler).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('when settling fails', () => {
+      it('still registers the schedule', async () => {
+        vi.mocked(jobsService.listEnabledJobs).mockResolvedValue([
+          hourly('skip'),
+        ]);
+        vi.mocked(jobsService.findLatestScheduledFor).mockRejectedValue(
+          new Error('db down'),
+        );
+
+        await service.reconcile();
+
+        expect(scheduler.upsertScheduler).toHaveBeenCalledTimes(1);
+      });
+    });
   });
 });

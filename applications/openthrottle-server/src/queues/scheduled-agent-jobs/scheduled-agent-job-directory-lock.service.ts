@@ -171,6 +171,30 @@ export class ScheduledAgentJobDirectoryLockService {
   }
 
   /**
+   * @description Deletes the lock for `key` whoever holds it, and returns whether a key was removed.
+   * Only for crash recovery: the caller must already know that no live run holds `key`, because this
+   * skips the fencing-token check that {@link holdLock}'s release relies on. A null `key` or an
+   * unconfigured Redis is a no-op, and a Redis error is logged and reported as nothing removed. The
+   * TTL frees the directory soon anyway.
+   */
+  async forceRelease(key: string | null): Promise<boolean> {
+    if (key === null || this.redis === null) {
+      return false;
+    }
+
+    try {
+      return (await this.redis.del(this.redisKeyFor(key))) > 0;
+    } catch (error) {
+      this.logger.warn(
+        `Failed to force-release the directory lock for ${key}: ${error instanceof Error ? error.message : String(error)}`,
+        ScheduledAgentJobDirectoryLockService.name,
+      );
+
+      return false;
+    }
+  }
+
+  /**
    * @description Wraps an acquired key in a handle whose heartbeat extends the TTL while the run is in
    * flight. The interval is `unref`'d so it can never hold the process open, and cleared on the first
    * release so a double release cannot resurrect it.

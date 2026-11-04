@@ -14,6 +14,7 @@ fragment ScheduledJobRunRow on ScheduledAgentJobRunObject {
   outputTokens
   reasoningTokens
   resumeOfRunId
+  scheduledFor
   startedAt
   status
   totalTokens
@@ -30,6 +31,8 @@ fragment ScheduledJobRunRow on ScheduledAgentJobRunObject {
 fragment ScheduledJobDetail on ScheduledAgentJobObject {
   createdAt
   cwd
+  misfirePolicy
+  misfireThresholdMs
   prompt
   ...ScheduledJobCard
   settingsJson

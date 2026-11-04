@@ -20,7 +20,10 @@ import {
 } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import { ScheduleForm } from '~/routing/schedule/components/ScheduleForm';
-import { parseScheduleForm } from '~/routing/schedule/data/parse-form';
+import {
+  missingScheduleTiming,
+  parseScheduleForm,
+} from '~/routing/schedule/data/parse-form';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -96,24 +99,29 @@ export const action = async (args: Route.ActionArgs) => {
   const form = await args.request.formData();
   const parsed = parseScheduleForm(form);
 
-  if (
-    !parsed.name ||
-    !parsed.prompt ||
-    !parsed.driverId ||
-    !parsed.cronPattern
-  ) {
+  if (!parsed.name || !parsed.prompt || !parsed.driverId) {
     return { error: 'Name, prompt, provider, and schedule are required.' };
   }
 
+  const missingTiming = missingScheduleTiming(parsed);
+  if (missingTiming !== null) {
+    return { error: missingTiming };
+  }
+
   const input: CreateScheduledAgentJobInputType = {
-    cronPattern: parsed.cronPattern,
+    cronPattern: parsed.cronPattern ?? null,
     cwd: parsed.cwd ?? null,
     driverId: parsed.driverId,
     enabled: parsed.enabled,
+    intervalMs: parsed.intervalMs ?? null,
+    misfirePolicy: parsed.misfirePolicy ?? null,
+    misfireThresholdMs: parsed.misfireThresholdMs ?? null,
     model: parsed.model ?? null,
     name: parsed.name,
     prompt: parsed.prompt,
     repositoryCheckoutId: parsed.repositoryCheckoutId,
+    runAt: parsed.runAt ?? null,
+    scheduleKind: parsed.scheduleKind ?? null,
     settingsJson: parsed.settingsJson ?? null,
     timeoutMs: parsed.timeoutMs ?? null,
     timezone: parsed.timezone ?? null,

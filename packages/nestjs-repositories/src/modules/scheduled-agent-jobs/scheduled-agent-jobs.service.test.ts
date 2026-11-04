@@ -442,4 +442,101 @@ describe('ScheduledAgentJobsService', () => {
       { errorMessage: 'why' },
     );
   });
+
+  describe('slot accounting', () => {
+    const SLOT = new Date('2026-11-02T09:00:00Z');
+
+    /** An `INSERT ... ON CONFLICT DO NOTHING RETURNING id` chain resolving to `raw`. */
+    const givenInsertReturning = (
+      raw: unknown,
+    ): { readonly values: ReturnType<typeof vi.fn> } => {
+      const insertBuilder = {
+        execute: vi.fn().mockResolvedValue({ raw }),
+        insert: vi.fn(() => insertBuilder),
+        into: vi.fn(() => insertBuilder),
+        orIgnore: vi.fn(() => insertBuilder),
+        returning: vi.fn(() => insertBuilder),
+        values: vi.fn(() => insertBuilder),
+      };
+      runRepo.createQueryBuilder.mockReturnValue(insertBuilder);
+
+      return insertBuilder;
+    };
+
+    describe('claimScheduledSlot', () => {
+      it('returns the new run when the slot was free', async () => {
+        const insert = givenInsertReturning([{ id: 'run-9' }]);
+        runRepo.findOne.mockResolvedValue({ id: 'run-9' });
+
+        const claimed = await service.claimScheduledSlot({
+          bullmqJobId: 'repeat:k:1',
+          driverId: 'claude',
+          scheduledAgentJobId: 'job-1',
+          scheduledFor: SLOT,
+          status: 'running',
+        });
+
+        expect(claimed).toEqual({ id: 'run-9' });
+        expect(insert.values).toHaveBeenCalledWith(
+          expect.objectContaining({
+            scheduledFor: SLOT,
+            status: 'running',
+            trigger: 'schedule',
+          }),
+        );
+      });
+
+      it('returns null when the slot already had a row', async () => {
+        givenInsertReturning([]);
+
+        const claimed = await service.claimScheduledSlot({
+          driverId: 'claude',
+          scheduledAgentJobId: 'job-1',
+          scheduledFor: SLOT,
+        });
+
+        expect(claimed).toBeNull();
+        expect(runRepo.findOne).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('recordMissedRuns', () => {
+      it('inserts one terminal missed row per slot and counts the inserted ones', async () => {
+        const insert = givenInsertReturning([{ id: 'm-1' }]);
+
+        const inserted = await service.recordMissedRuns({
+          driverId: 'claude',
+          errorMessage: 'Missed: down',
+          model: null,
+          scheduledAgentJobId: 'job-1',
+          slots: [SLOT, new Date('2026-11-02T10:00:00Z')],
+        });
+
+        expect(inserted).toBe(1);
+        const rows: unknown = insert.values.mock.calls[0]?.[0];
+        expect(rows).toEqual([
+          expect.objectContaining({
+            finishedAt: expect.any(Date),
+            scheduledFor: SLOT,
+            status: 'missed',
+            trigger: 'schedule',
+          }),
+          expect.objectContaining({ status: 'missed' }),
+        ]);
+      });
+
+      it('does not touch the database for no slots', async () => {
+        const inserted = await service.recordMissedRuns({
+          driverId: 'claude',
+          errorMessage: 'Missed: down',
+          model: null,
+          scheduledAgentJobId: 'job-1',
+          slots: [],
+        });
+
+        expect(inserted).toBe(0);
+        expect(runRepo.createQueryBuilder).not.toHaveBeenCalled();
+      });
+    });
+  });
 });

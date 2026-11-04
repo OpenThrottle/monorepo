@@ -23,6 +23,7 @@ export const scheduleJobFixture = (
   model: 'opus',
   name: 'Nightly audit',
   nextRunAt: null,
+  scheduleKind: 'cron',
   timezone: null,
   updatedAt: '2026-07-31T00:00:00.000Z',
   ...overrides,

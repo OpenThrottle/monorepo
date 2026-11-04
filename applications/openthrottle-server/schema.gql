@@ -2100,6 +2100,42 @@ type PlanStatusChangedNotification implements NotificationEvent {
   status: String!
 }
 
+"""
+A scheduled agent job run failed, timed out, or was recorded missed. Sent to alert the schedule's owner.
+"""
+type ScheduledRunFailedNotification implements NotificationEvent {
+  """Well-known event name (e.g. task.completed)."""
+  event: String!
+
+  """ISO 8601 timestamp when the event occurred."""
+  timestamp: String!
+  message: String
+
+  """info | warning | error | success"""
+  severity: String
+
+  """App-relative click-through path."""
+  link: String
+
+  """
+  The schedule's owner, who the notice is for. Null for a schedule with no owner.
+  """
+  actorUserId: ID
+
+  """failed | timed_out | missed"""
+  reason: String!
+
+  """
+  How many runs the notice covers; above 1 only when a server boot records several missed fires at once.
+  """
+  runCount: Int!
+
+  """The run, when the notice covers exactly one run whose id is known."""
+  runId: ID
+  scheduledAgentJobId: ID!
+  scheduleName: String!
+}
+
 type SystemAlertNotification implements NotificationEvent {
   """Well-known event name (e.g. task.completed)."""
   event: String!
@@ -2678,7 +2714,7 @@ type ScheduledAgentJobRepositoryObject {
 }
 
 """
-A user-defined scheduled agent job: a prompt run with a driver/model/settings on a cron schedule via one shared BullMQ queue.
+A user-defined scheduled agent job: a prompt run with a driver/model/settings on a cron, interval or run-once schedule via one shared BullMQ queue.
 """
 type ScheduledAgentJobObject {
   id: ID!
@@ -2700,14 +2736,39 @@ type ScheduledAgentJobObject {
   """
   settingsJson: String!
 
-  """5- or 6-field cron pattern."""
-  cronPattern: String!
+  """
+  How the schedule fires: cron (cronPattern in timezone), interval (intervalMs after the previous run finishes) or once (a single run at runAt, after which the schedule is disabled).
+  """
+  scheduleKind: String!
+
+  """
+  5- or 6-field cron pattern for a cron schedule; null for interval and once schedules.
+  """
+  cronPattern: String
+
+  """
+  For an interval schedule: ms from the end of one run to the start of the next (elapsed time, so DST-safe). Null for other kinds.
+  """
+  intervalMs: Int
+
+  """For a once schedule: when its single run is due. Null for other kinds."""
+  runAt: DateTime
 
   """IANA timezone for the cron pattern; null means UTC."""
   timezone: String
 
   """Per-run timeout override in ms; null uses the queue default."""
   timeoutMs: Int
+
+  """
+  What happens to a fire that starts more than misfireThresholdMs late (server down, or a backed-up queue): skip records it as a missed run; catch_up_once runs the most recent late fire once and records any earlier ones as missed. A fire within the threshold always runs.
+  """
+  misfirePolicy: String!
+
+  """
+  How late (ms after its cron slot) a fire may start and still count as on time; at least 60000.
+  """
+  misfireThresholdMs: Int!
 
   """Whether the schedule is active (registered as a BullMQ scheduler)."""
   enabled: Boolean!
@@ -2752,14 +2813,19 @@ type ScheduledAgentJobRunObject {
   bullmqJobId: String
 
   """
-  queued | running | succeeded | no_op | failed | cancelled | usage_limited. no_op is terminal and NOT an error: the process exited cleanly but the agent reported it did not do the work. usage_limited is terminal and NOT an error: the agent CLI stopped on a Claude subscription usage limit (see usageLimitResetsAt); a continuation run (trigger resume, resumeOfRunId = this run) may have been enqueued.
+  queued | running | succeeded | no_op | failed | cancelled | usage_limited | missed. no_op is terminal and NOT an error: the process exited cleanly but the agent reported it did not do the work. usage_limited is terminal and NOT an error: the agent CLI stopped on a Claude subscription usage limit (see usageLimitResetsAt); a continuation run (trigger resume, resumeOfRunId = this run) may have been enqueued. missed is created terminal: a cron fire the schedule's misfire policy did not run (see scheduledFor and errorMessage); no agent was spawned.
   """
   status: String!
+
+  """
+  The slot this run belongs to, for trigger schedule (missed runs included): the cron slot, or when an interval or once fire was due. Null for manual and resume runs and for runs recorded before slot accounting.
+  """
+  scheduledFor: DateTime
   driverId: String!
   model: String
 
   """
-  schedule (cron fire) | manual (run-now) | resume (delayed continuation of a usage_limited run).
+  schedule (a cron, interval or once fire) | manual (run-now) | resume (delayed continuation of a usage_limited run).
   """
   trigger: String!
 
@@ -7178,14 +7244,37 @@ input CreateScheduledAgentJobInputType {
   """
   settingsJson: String
 
-  """5- or 6-field cron pattern (may not fire every minute or sub-minute)."""
-  cronPattern: String!
+  """How the schedule fires: cron (default), interval or once."""
+  scheduleKind: String
+
+  """
+  5- or 6-field cron pattern (may not fire every minute or sub-minute). Required when scheduleKind is cron (the default); ignored otherwise.
+  """
+  cronPattern: String
+
+  """
+  For scheduleKind interval: ms from the end of one run to the start of the next; at least 60000.
+  """
+  intervalMs: Int
+
+  """
+  For scheduleKind once: when to run, as ISO 8601 with an offset (e.g. 2026-11-03T09:00:00-08:00 or ...Z); must be in the future.
+  """
+  runAt: String
 
   """IANA timezone; omit for UTC."""
   timezone: String
 
   """Per-run timeout override in ms; omit for the queue default."""
   timeoutMs: Int
+
+  """Misfire policy for late fires: skip (default) or catch_up_once."""
+  misfirePolicy: String
+
+  """
+  How late (ms) a fire may start and still run; at least 60000. Omit for 10 minutes.
+  """
+  misfireThresholdMs: Int
 
   """
   Legacy explicit process cwd for the agent CLI; omit for WORKSPACE_ROOT.
@@ -7211,9 +7300,30 @@ input UpdateScheduledAgentJobInputType {
 
   """JSON AgentPromptSettings; no endpoint.apiKey."""
   settingsJson: String
+
+  """
+  How the schedule fires: cron, interval or once. Omit to keep the current kind.
+  """
+  scheduleKind: String
   cronPattern: String
+
+  """
+  For scheduleKind interval: ms from the end of one run to the start of the next; at least 60000.
+  """
+  intervalMs: Int
+
+  """
+  For scheduleKind once: when to run, as ISO 8601 with an offset; a changed time must be in the future.
+  """
+  runAt: String
   timezone: String
   timeoutMs: Int
+
+  """Misfire policy for late fires: skip or catch_up_once."""
+  misfirePolicy: String
+
+  """How late (ms) a fire may start and still run; at least 60000."""
+  misfireThresholdMs: Int
   cwd: String @deprecated(reason: "Use repositoryCheckoutId to target a registered repository checkout; cwd is only consulted when no checkout is set.")
 
   """

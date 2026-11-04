@@ -921,8 +921,8 @@ export type CreateRolloutFlagInput = {
 };
 
 export type CreateScheduledAgentJobInputType = {
-  /** 5- or 6-field cron pattern (may not fire every minute or sub-minute). */
-  cronPattern: Scalars['String']['input'];
+  /** 5- or 6-field cron pattern (may not fire every minute or sub-minute). Required when scheduleKind is cron (the default); ignored otherwise. */
+  cronPattern?: InputMaybe<Scalars['String']['input']>;
   /**
    * Legacy explicit process cwd for the agent CLI; omit for WORKSPACE_ROOT.
    * @deprecated Use repositoryCheckoutId to target a registered repository checkout; cwd is only consulted when no checkout is set.
@@ -932,6 +932,12 @@ export type CreateScheduledAgentJobInputType = {
   driverId: Scalars['String']['input'];
   /** Whether the schedule starts enabled (default true). */
   enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** For scheduleKind interval: ms from the end of one run to the start of the next; at least 60000. */
+  intervalMs?: InputMaybe<Scalars['Int']['input']>;
+  /** Misfire policy for late fires: skip (default) or catch_up_once. */
+  misfirePolicy?: InputMaybe<Scalars['String']['input']>;
+  /** How late (ms) a fire may start and still run; at least 60000. Omit for 10 minutes. */
+  misfireThresholdMs?: InputMaybe<Scalars['Int']['input']>;
   /** Model preset; omit for the driver default. */
   model?: InputMaybe<Scalars['String']['input']>;
   /** Human-friendly schedule name. */
@@ -940,6 +946,10 @@ export type CreateScheduledAgentJobInputType = {
   prompt: Scalars['String']['input'];
   /** Registered repository checkout to run in; must belong to the caller. Takes precedence over cwd. Omit for the legacy cwd / WORKSPACE_ROOT fallback. */
   repositoryCheckoutId?: InputMaybe<Scalars['ID']['input']>;
+  /** For scheduleKind once: when to run, as ISO 8601 with an offset (e.g. 2026-11-03T09:00:00-08:00 or ...Z); must be in the future. */
+  runAt?: InputMaybe<Scalars['String']['input']>;
+  /** How the schedule fires: cron (default), interval or once. */
+  scheduleKind?: InputMaybe<Scalars['String']['input']>;
   /** JSON AgentPromptSettings ({ endpoint?, worktree? }); no endpoint.apiKey. Omit for none. */
   settingsJson?: InputMaybe<Scalars['String']['input']>;
   /** Per-run timeout override in ms; omit for the queue default. */
@@ -4742,12 +4752,12 @@ export type SchedulePlanRunResultObject = {
   scheduledFor: Scalars['DateTime']['output'];
 };
 
-/** A user-defined scheduled agent job: a prompt run with a driver/model/settings on a cron schedule via one shared BullMQ queue. */
+/** A user-defined scheduled agent job: a prompt run with a driver/model/settings on a cron, interval or run-once schedule via one shared BullMQ queue. */
 export type ScheduledAgentJobObject = {
   __typename?: 'ScheduledAgentJobObject';
   createdAt: Scalars['DateTime']['output'];
-  /** 5- or 6-field cron pattern. */
-  cronPattern: Scalars['String']['output'];
+  /** 5- or 6-field cron pattern for a cron schedule; null for interval and once schedules. */
+  cronPattern?: Maybe<Scalars['String']['output']>;
   /**
    * Legacy explicit process cwd for the agent CLI, used only when repositoryCheckoutId is null; null then uses WORKSPACE_ROOT.
    * @deprecated Use repositoryCheckoutId to target a registered repository checkout; cwd is only consulted when no checkout is set.
@@ -4758,8 +4768,14 @@ export type ScheduledAgentJobObject = {
   /** Whether the schedule is active (registered as a BullMQ scheduler). */
   enabled: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
+  /** For an interval schedule: ms from the end of one run to the start of the next (elapsed time, so DST-safe). Null for other kinds. */
+  intervalMs?: Maybe<Scalars['Int']['output']>;
   /** Last time a run started. */
   lastRunAt?: Maybe<Scalars['DateTime']['output']>;
+  /** What happens to a fire that starts more than misfireThresholdMs late (server down, or a backed-up queue): skip records it as a missed run; catch_up_once runs the most recent late fire once and records any earlier ones as missed. A fire within the threshold always runs. */
+  misfirePolicy: Scalars['String']['output'];
+  /** How late (ms after its cron slot) a fire may start and still count as on time; at least 60000. */
+  misfireThresholdMs: Scalars['Int']['output'];
   /** Model preset; null uses the driver default. */
   model?: Maybe<Scalars['String']['output']>;
   /** Human-friendly schedule name. */
@@ -4774,6 +4790,10 @@ export type ScheduledAgentJobObject = {
   repository?: Maybe<ScheduledAgentJobRepositoryObject>;
   /** Registered repository checkout this schedule runs in; the server resolves its cwd from this. Null means the legacy cwd / WORKSPACE_ROOT fallback. */
   repositoryCheckoutId?: Maybe<Scalars['ID']['output']>;
+  /** For a once schedule: when its single run is due. Null for other kinds. */
+  runAt?: Maybe<Scalars['DateTime']['output']>;
+  /** How the schedule fires: cron (cronPattern in timezone), interval (intervalMs after the previous run finishes) or once (a single run at runAt, after which the schedule is disabled). */
+  scheduleKind: Scalars['String']['output'];
   /** JSON-serialized AgentPromptSettings ({ endpoint?, worktree? }); endpoint.apiKey is never present. */
   settingsJson: Scalars['String']['output'];
   /** Per-run timeout override in ms; null uses the queue default. */
@@ -4832,14 +4852,16 @@ export type ScheduledAgentJobRunObject = {
   /** The usage_limited run this run continues (trigger resume); null for every ordinary run. */
   resumeOfRunId?: Maybe<Scalars['ID']['output']>;
   scheduledAgentJobId: Scalars['ID']['output'];
+  /** The slot this run belongs to, for trigger schedule (missed runs included): the cron slot, or when an interval or once fire was due. Null for manual and resume runs and for runs recorded before slot accounting. */
+  scheduledFor?: Maybe<Scalars['DateTime']['output']>;
   /** Effective run settings at execution time (driver/model/run-config), serialized JSON; null for legacy/pre-snapshot runs. Never contains endpoint.apiKey. */
   settingsSnapshotJson?: Maybe<Scalars['String']['output']>;
   startedAt?: Maybe<Scalars['DateTime']['output']>;
-  /** queued | running | succeeded | no_op | failed | cancelled | usage_limited. no_op is terminal and NOT an error: the process exited cleanly but the agent reported it did not do the work. usage_limited is terminal and NOT an error: the agent CLI stopped on a Claude subscription usage limit (see usageLimitResetsAt); a continuation run (trigger resume, resumeOfRunId = this run) may have been enqueued. */
+  /** queued | running | succeeded | no_op | failed | cancelled | usage_limited | missed. no_op is terminal and NOT an error: the process exited cleanly but the agent reported it did not do the work. usage_limited is terminal and NOT an error: the agent CLI stopped on a Claude subscription usage limit (see usageLimitResetsAt); a continuation run (trigger resume, resumeOfRunId = this run) may have been enqueued. missed is created terminal: a cron fire the schedule's misfire policy did not run (see scheduledFor and errorMessage); no agent was spawned. */
   status: Scalars['String']['output'];
   /** Total tokens for the run; null when nothing reported. */
   totalTokens?: Maybe<Scalars['Float']['output']>;
-  /** schedule (cron fire) | manual (run-now) | resume (delayed continuation of a usage_limited run). */
+  /** schedule (a cron, interval or once fire) | manual (run-now) | resume (delayed continuation of a usage_limited run). */
   trigger: Scalars['String']['output'];
   /** When the usage limit that stopped this run lifts, as reported by the agent CLI; null when the run was not usage_limited or no reset time was reported. */
   usageLimitResetsAt?: Maybe<Scalars['DateTime']['output']>;
@@ -4870,6 +4892,30 @@ export type ScheduledAgentJobRunStatsObject = {
   usageLimitedCount: Scalars['Int']['output'];
   /** Every run created inside the window, whatever its status — the "ran today" total. */
   windowTotalCount: Scalars['Int']['output'];
+};
+
+/** A scheduled agent job run failed, timed out, or was recorded missed. Sent to alert the schedule's owner. */
+export type ScheduledRunFailedNotification = NotificationEvent & {
+  __typename?: 'ScheduledRunFailedNotification';
+  /** The schedule's owner, who the notice is for. Null for a schedule with no owner. */
+  actorUserId?: Maybe<Scalars['ID']['output']>;
+  /** Well-known event name (e.g. task.completed). */
+  event: Scalars['String']['output'];
+  /** App-relative click-through path. */
+  link?: Maybe<Scalars['String']['output']>;
+  message?: Maybe<Scalars['String']['output']>;
+  /** failed | timed_out | missed */
+  reason: Scalars['String']['output'];
+  /** How many runs the notice covers; above 1 only when a server boot records several missed fires at once. */
+  runCount: Scalars['Int']['output'];
+  /** The run, when the notice covers exactly one run whose id is known. */
+  runId?: Maybe<Scalars['ID']['output']>;
+  scheduleName: Scalars['String']['output'];
+  scheduledAgentJobId: Scalars['ID']['output'];
+  /** info | warning | error | success */
+  severity?: Maybe<Scalars['String']['output']>;
+  /** ISO 8601 timestamp when the event occurred. */
+  timestamp: Scalars['String']['output'];
 };
 
 export type SearchChunk = {
@@ -5983,11 +6029,21 @@ export type UpdateScheduledAgentJobInputType = {
   driverId?: InputMaybe<Scalars['String']['input']>;
   /** Schedule to update. */
   id: Scalars['ID']['input'];
+  /** For scheduleKind interval: ms from the end of one run to the start of the next; at least 60000. */
+  intervalMs?: InputMaybe<Scalars['Int']['input']>;
+  /** Misfire policy for late fires: skip or catch_up_once. */
+  misfirePolicy?: InputMaybe<Scalars['String']['input']>;
+  /** How late (ms) a fire may start and still run; at least 60000. */
+  misfireThresholdMs?: InputMaybe<Scalars['Int']['input']>;
   model?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   prompt?: InputMaybe<Scalars['String']['input']>;
   /** Registered repository checkout to run in; must belong to the caller. Takes precedence over cwd. */
   repositoryCheckoutId?: InputMaybe<Scalars['ID']['input']>;
+  /** For scheduleKind once: when to run, as ISO 8601 with an offset; a changed time must be in the future. */
+  runAt?: InputMaybe<Scalars['String']['input']>;
+  /** How the schedule fires: cron, interval or once. Omit to keep the current kind. */
+  scheduleKind?: InputMaybe<Scalars['String']['input']>;
   /** JSON AgentPromptSettings; no endpoint.apiKey. */
   settingsJson?: InputMaybe<Scalars['String']['input']>;
   timeoutMs?: InputMaybe<Scalars['Int']['input']>;
@@ -6498,6 +6554,20 @@ type NotificationFields_QueueJobCompletedNotification_Fragment = {
   timestamp: string;
 };
 
+type NotificationFields_ScheduledRunFailedNotification_Fragment = {
+  __typename?: 'ScheduledRunFailedNotification';
+  reason: string;
+  runCount: number;
+  runId?: string | null;
+  scheduledAgentJobId: string;
+  scheduleName: string;
+  event: string;
+  link?: string | null;
+  message?: string | null;
+  severity?: string | null;
+  timestamp: string;
+};
+
 type NotificationFields_SystemAlertNotification_Fragment = {
   __typename?: 'SystemAlertNotification';
   code?: string | null;
@@ -6538,6 +6608,7 @@ export type NotificationFieldsFragment =
   | NotificationFields_PlanUpdatedNotification_Fragment
   | NotificationFields_PlanWaitingForWorktreeNotification_Fragment
   | NotificationFields_QueueJobCompletedNotification_Fragment
+  | NotificationFields_ScheduledRunFailedNotification_Fragment
   | NotificationFields_SystemAlertNotification_Fragment
   | NotificationFields_TaskCompletedNotification_Fragment
   | NotificationFields_TaskStatusChangedNotification_Fragment;
@@ -6802,6 +6873,19 @@ export type NotificationsSubscription = {
         __typename?: 'QueueJobCompletedNotification';
         jobType: string;
         taskId?: string | null;
+        event: string;
+        link?: string | null;
+        message?: string | null;
+        severity?: string | null;
+        timestamp: string;
+      }
+    | {
+        __typename?: 'ScheduledRunFailedNotification';
+        reason: string;
+        runCount: number;
+        runId?: string | null;
+        scheduledAgentJobId: string;
+        scheduleName: string;
         event: string;
         link?: string | null;
         message?: string | null;
@@ -8293,6 +8377,7 @@ export type PlanLifecycleNotificationsSubscription = {
     | { __typename?: 'PlanUpdatedNotification'; event: string }
     | { __typename?: 'PlanWaitingForWorktreeNotification'; event: string }
     | { __typename?: 'QueueJobCompletedNotification'; event: string }
+    | { __typename?: 'ScheduledRunFailedNotification'; event: string }
     | { __typename?: 'SystemAlertNotification'; event: string }
     | { __typename?: 'TaskCompletedNotification'; event: string }
     | {
@@ -9642,6 +9727,7 @@ export type ScheduledJobRunRowFragment = {
   outputTokens?: number | null;
   reasoningTokens?: number | null;
   resumeOfRunId?: string | null;
+  scheduledFor?: any | null;
   startedAt?: any | null;
   status: string;
   totalTokens?: number | null;
@@ -9653,18 +9739,23 @@ export type ScheduledJobDetailFragment = {
   __typename?: 'ScheduledAgentJobObject';
   createdAt: any;
   cwd?: string | null;
+  misfirePolicy: string;
+  misfireThresholdMs: number;
   prompt: string;
   settingsJson: string;
   timeoutMs?: number | null;
-  cronPattern: string;
+  cronPattern?: string | null;
   driverId: string;
   enabled: boolean;
   id: string;
+  intervalMs?: number | null;
   lastRunAt?: any | null;
   model?: string | null;
   name: string;
   nextRunAt?: any | null;
   repositoryCheckoutId?: string | null;
+  runAt?: any | null;
+  scheduleKind: string;
   timezone?: string | null;
   updatedAt: any;
   repository?: {
@@ -9685,18 +9776,23 @@ export type ScheduledAgentJobDetailQuery = {
     __typename?: 'ScheduledAgentJobObject';
     createdAt: any;
     cwd?: string | null;
+    misfirePolicy: string;
+    misfireThresholdMs: number;
     prompt: string;
     settingsJson: string;
     timeoutMs?: number | null;
-    cronPattern: string;
+    cronPattern?: string | null;
     driverId: string;
     enabled: boolean;
     id: string;
+    intervalMs?: number | null;
     lastRunAt?: any | null;
     model?: string | null;
     name: string;
     nextRunAt?: any | null;
     repositoryCheckoutId?: string | null;
+    runAt?: any | null;
+    scheduleKind: string;
     timezone?: string | null;
     updatedAt: any;
     repository?: {
@@ -9723,6 +9819,7 @@ export type ScheduledAgentJobDetailQuery = {
     outputTokens?: number | null;
     reasoningTokens?: number | null;
     resumeOfRunId?: string | null;
+    scheduledFor?: any | null;
     startedAt?: any | null;
     status: string;
     totalTokens?: number | null;
@@ -9739,15 +9836,18 @@ export type UpdateScheduledAgentJobMutation = {
   __typename?: 'Mutation';
   updateScheduledAgentJob: {
     __typename?: 'ScheduledAgentJobObject';
-    cronPattern: string;
+    cronPattern?: string | null;
     driverId: string;
     enabled: boolean;
     id: string;
+    intervalMs?: number | null;
     lastRunAt?: any | null;
     model?: string | null;
     name: string;
     nextRunAt?: any | null;
     repositoryCheckoutId?: string | null;
+    runAt?: any | null;
+    scheduleKind: string;
     timezone?: string | null;
     updatedAt: any;
     repository?: {
@@ -9767,15 +9867,18 @@ export type SetScheduledAgentJobEnabledMutation = {
   __typename?: 'Mutation';
   setScheduledAgentJobEnabled: {
     __typename?: 'ScheduledAgentJobObject';
-    cronPattern: string;
+    cronPattern?: string | null;
     driverId: string;
     enabled: boolean;
     id: string;
+    intervalMs?: number | null;
     lastRunAt?: any | null;
     model?: string | null;
     name: string;
     nextRunAt?: any | null;
     repositoryCheckoutId?: string | null;
+    runAt?: any | null;
+    scheduleKind: string;
     timezone?: string | null;
     updatedAt: any;
     repository?: {
@@ -9810,6 +9913,7 @@ export type RunScheduledAgentJobNowMutation = {
     outputTokens?: number | null;
     reasoningTokens?: number | null;
     resumeOfRunId?: string | null;
+    scheduledFor?: any | null;
     startedAt?: any | null;
     status: string;
     totalTokens?: number | null;
@@ -9954,15 +10058,18 @@ export type CancelScheduledAgentJobRunMutation = {
 
 export type ScheduledJobCardFragment = {
   __typename?: 'ScheduledAgentJobObject';
-  cronPattern: string;
+  cronPattern?: string | null;
   driverId: string;
   enabled: boolean;
   id: string;
+  intervalMs?: number | null;
   lastRunAt?: any | null;
   model?: string | null;
   name: string;
   nextRunAt?: any | null;
   repositoryCheckoutId?: string | null;
+  runAt?: any | null;
+  scheduleKind: string;
   timezone?: string | null;
   updatedAt: any;
   repository?: {
@@ -10039,15 +10146,18 @@ export type ScheduledAgentJobsQuery = {
   };
   scheduledAgentJobs: Array<{
     __typename?: 'ScheduledAgentJobObject';
-    cronPattern: string;
+    cronPattern?: string | null;
     driverId: string;
     enabled: boolean;
     id: string;
+    intervalMs?: number | null;
     lastRunAt?: any | null;
     model?: string | null;
     name: string;
     nextRunAt?: any | null;
     repositoryCheckoutId?: string | null;
+    runAt?: any | null;
+    scheduleKind: string;
     timezone?: string | null;
     updatedAt: any;
     repository?: {
@@ -10106,15 +10216,18 @@ export type CreateScheduledAgentJobMutation = {
   __typename?: 'Mutation';
   createScheduledAgentJob: {
     __typename?: 'ScheduledAgentJobObject';
-    cronPattern: string;
+    cronPattern?: string | null;
     driverId: string;
     enabled: boolean;
     id: string;
+    intervalMs?: number | null;
     lastRunAt?: any | null;
     model?: string | null;
     name: string;
     nextRunAt?: any | null;
     repositoryCheckoutId?: string | null;
+    runAt?: any | null;
+    scheduleKind: string;
     timezone?: string | null;
     updatedAt: any;
     repository?: {
@@ -12434,6 +12547,29 @@ export const NotificationFieldsFragmentDoc = {
             kind: 'InlineFragment',
             typeCondition: {
               kind: 'NamedType',
+              name: { kind: 'Name', value: 'ScheduledRunFailedNotification' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'runCount' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'runId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'scheduledAgentJobId' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'scheduleName' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
               name: { kind: 'Name', value: 'SystemAlertNotification' },
             },
             selectionSet: {
@@ -13854,6 +13990,7 @@ export const ScheduledJobRunRowFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'resumeOfRunId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduledFor' } },
           { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
@@ -13884,6 +14021,7 @@ export const ScheduledJobCardFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'intervalMs' } },
           { kind: 'Field', name: { kind: 'Name', value: 'lastRunAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
@@ -13907,6 +14045,8 @@ export const ScheduledJobCardFragmentDoc = {
             kind: 'Field',
             name: { kind: 'Name', value: 'repositoryCheckoutId' },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'runAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduleKind' } },
           { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
@@ -13929,6 +14069,11 @@ export const ScheduledJobDetailFragmentDoc = {
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'cwd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'misfirePolicy' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'misfireThresholdMs' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'prompt' } },
           {
             kind: 'FragmentSpread',
@@ -13953,6 +14098,7 @@ export const ScheduledJobDetailFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'intervalMs' } },
           { kind: 'Field', name: { kind: 'Name', value: 'lastRunAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
@@ -13976,6 +14122,8 @@ export const ScheduledJobDetailFragmentDoc = {
             kind: 'Field',
             name: { kind: 'Name', value: 'repositoryCheckoutId' },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'runAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduleKind' } },
           { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
@@ -15915,6 +16063,29 @@ export const NotificationsDocument = {
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+              ],
+            },
+          },
+          {
+            kind: 'InlineFragment',
+            typeCondition: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'ScheduledRunFailedNotification' },
+            },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'runCount' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'runId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'scheduledAgentJobId' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'scheduleName' },
+                },
               ],
             },
           },
@@ -24687,6 +24858,7 @@ export const ScheduledAgentJobDetailDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'intervalMs' } },
           { kind: 'Field', name: { kind: 'Name', value: 'lastRunAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
@@ -24710,6 +24882,8 @@ export const ScheduledAgentJobDetailDocument = {
             kind: 'Field',
             name: { kind: 'Name', value: 'repositoryCheckoutId' },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'runAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduleKind' } },
           { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
@@ -24727,6 +24901,11 @@ export const ScheduledAgentJobDetailDocument = {
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'cwd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'misfirePolicy' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'misfireThresholdMs' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'prompt' } },
           {
             kind: 'FragmentSpread',
@@ -24762,6 +24941,7 @@ export const ScheduledAgentJobDetailDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'resumeOfRunId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduledFor' } },
           { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
@@ -24844,6 +25024,7 @@ export const UpdateScheduledAgentJobDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'intervalMs' } },
           { kind: 'Field', name: { kind: 'Name', value: 'lastRunAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
@@ -24867,6 +25048,8 @@ export const UpdateScheduledAgentJobDocument = {
             kind: 'Field',
             name: { kind: 'Name', value: 'repositoryCheckoutId' },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'runAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduleKind' } },
           { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
@@ -24946,6 +25129,7 @@ export const SetScheduledAgentJobEnabledDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'intervalMs' } },
           { kind: 'Field', name: { kind: 'Name', value: 'lastRunAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
@@ -24969,6 +25153,8 @@ export const SetScheduledAgentJobEnabledDocument = {
             kind: 'Field',
             name: { kind: 'Name', value: 'repositoryCheckoutId' },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'runAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduleKind' } },
           { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
@@ -25050,6 +25236,7 @@ export const RunScheduledAgentJobNowDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'reasoningTokens' } },
           { kind: 'Field', name: { kind: 'Name', value: 'resumeOfRunId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduledFor' } },
           { kind: 'Field', name: { kind: 'Name', value: 'startedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'totalTokens' } },
@@ -25502,6 +25689,7 @@ export const ScheduledAgentJobsDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'intervalMs' } },
           { kind: 'Field', name: { kind: 'Name', value: 'lastRunAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
@@ -25525,6 +25713,8 @@ export const ScheduledAgentJobsDocument = {
             kind: 'Field',
             name: { kind: 'Name', value: 'repositoryCheckoutId' },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'runAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduleKind' } },
           { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
@@ -25724,6 +25914,7 @@ export const CreateScheduledAgentJobDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'driverId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'intervalMs' } },
           { kind: 'Field', name: { kind: 'Name', value: 'lastRunAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
@@ -25747,6 +25938,8 @@ export const CreateScheduledAgentJobDocument = {
             kind: 'Field',
             name: { kind: 'Name', value: 'repositoryCheckoutId' },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'runAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scheduleKind' } },
           { kind: 'Field', name: { kind: 'Name', value: 'timezone' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
