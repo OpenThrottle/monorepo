@@ -45,6 +45,17 @@ see [tools/AGENTS.md](../../tools/AGENTS.md)).
   `getServerHealth` preflight. Never open a Postgres connection or spawn the agent CLI from here.
   The host-owned plan-end finalize step (push + PR via injectable `runCommand`) is the deliberate
   exception — see `src/utils/finalize-plan-run.ts`.
+- **PR draft hand-off (agent drafts, host publishes).** On its final iteration the agent runs the
+  `github-pull-request` skill in draft-only mode. That mode writes `title.txt` (a one-line
+  conventional title) and `body.md` (UTF-8, ending in the `Plan-Id:`/`Task-Id:` trailer) into
+  `OT_PR_DRAFT_DIR`, and it never runs `gh` or `git push`. The host should always set
+  `OT_PR_DRAFT_DIR` explicitly to `<worktree git dir>/ot-pr-draft`
+  (`git rev-parse --absolute-git-dir`), which is the skill's own default. That path is untracked and
+  local to each worktree. Finalize treats the draft as untrusted: it checks the conventional title
+  and the absence of template `**TODO:**` text, replaces the trailer with the OT footer set, wraps the
+  body in `<!-- ot:plan-run-body -->` markers, and runs `check-pr-attribution.sh`. If any check fails,
+  it falls back to `plan-run-pr-body.ts`. The contract lives in
+  [`skills/github-pull-request/SKILL.md` § Draft-only (orchestrator) mode](../../skills/github-pull-request/SKILL.md#draft-only-orchestrator-mode).
 - Config precedence is enqueue/GraphQL tuning → env → `.workflow-ralph.json` → built-ins; GraphQL
   URL and auth tokens are **env-only**, never read from the defaults file (`src/utils/context.ts`).
 
