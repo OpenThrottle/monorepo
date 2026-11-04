@@ -53,6 +53,55 @@ describe('auth cookie header builders', () => {
     expect(buildAuthCookie('jwt')).not.toContain('Secure');
   });
 
+  it('refuses insecureCookies in production', () => {
+    process.env.NODE_ENV = 'production';
+
+    expect(() => buildAuthCookie('jwt', { insecureCookies: true })).toThrow(
+      /cannot be enabled in production/,
+    );
+    expect(() => getClearAuthCookieHeader({ insecureCookies: true })).toThrow(
+      /cannot be enabled in production/,
+    );
+  });
+
+  it('sets Secure; HttpOnly; SameSite=Lax by default in production', () => {
+    process.env.NODE_ENV = 'production';
+    const request = new Request('http://openthrottle-developer:3000/auth');
+
+    const header = buildAuthCookie('jwt', { request });
+
+    expect(header).toContain('HttpOnly');
+    expect(header).toContain('SameSite=Lax');
+    expect(header).toContain('; Secure');
+  });
+
+  it('keeps Secure off in dev for a plain-http request', () => {
+    process.env.NODE_ENV = 'development';
+    const request = new Request('http://localhost:6020/auth');
+
+    expect(buildAuthCookie('jwt', { request })).not.toContain('Secure');
+  });
+
+  it('sets Secure in dev when the browser reached the app over https', () => {
+    process.env.NODE_ENV = 'development';
+    const request = new Request('https://mac.tail1234.ts.net/auth');
+
+    expect(buildAuthCookie('jwt', { request })).toContain('; Secure');
+  });
+
+  it('sets Secure in dev behind a TLS-terminating proxy (X-Forwarded-Proto)', () => {
+    process.env.NODE_ENV = 'development';
+    const request = new Request('http://localhost:6020/auth', {
+      headers: {
+        'x-forwarded-host': 'mac.tail1234.ts.net',
+        'x-forwarded-proto': 'https',
+      },
+    });
+
+    expect(buildAuthCookie('jwt', { request })).toContain('; Secure');
+    expect(getClearAuthCookieHeader({ request })).toContain('; Secure');
+  });
+
   it('mirrors attributes between set and clear (Secure)', () => {
     expect(getClearAuthCookieHeader({ insecureCookies: false })).toContain(
       '; Secure',

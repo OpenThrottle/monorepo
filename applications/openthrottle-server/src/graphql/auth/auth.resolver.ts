@@ -4,6 +4,7 @@
 
 import { UseGuards } from '@nestjs/common';
 import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
+import { Throttle } from '@nestjs/throttler';
 import { Public } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { User } from '@openthrottle/nestjs-repositories';
@@ -17,6 +18,16 @@ import { RegisterInput } from './register.input.ts';
 import { RegisterResultObject } from './register-result.object.ts';
 import { SignoutResultObject } from './signout-result.object.ts';
 
+/**
+ * Per-client-IP limit on credential mutations (the global tier allows 1,000 a
+ * minute). Spending it blocks that IP for five minutes. It keys on `req.ip`,
+ * which is the real client behind Caddy / the developer app's SSR hop because
+ * main.ts sets `trust proxy`. The per-account backoff is LoginAttemptsService.
+ */
+export const CREDENTIALS_THROTTLE = {
+  default: { blockDuration: 5 * 60_000, limit: 10, ttl: 60_000 },
+} as const;
+
 @Public()
 @Resolver()
 export class AuthResolver {
@@ -28,6 +39,7 @@ export class AuthResolver {
   /**
    * @description Sign in with email and password. LocalStrategy validates against OpenThrottle users; returns JWT with sub: user.id.
    */
+  @Throttle(CREDENTIALS_THROTTLE)
   @UseGuards(GqlLocalCredentialsGuard, GqlLocalAuthGuard)
   @Mutation(() => LoginResultObject, {
     description: `Sign in with email and password. Returns JWT access token for Authorization header or cookie.`,
@@ -55,6 +67,7 @@ export class AuthResolver {
   /**
    * @description Create a new user with email and password. Returns user id, email, and access token for immediate use.
    */
+  @Throttle(CREDENTIALS_THROTTLE)
   @Mutation(() => RegisterResultObject, {
     description: `Register a new user. Returns id, email, and JWT access token.`,
   })

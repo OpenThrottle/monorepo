@@ -14,6 +14,7 @@ describe('useSettingsEnvironmentDiagnostics', () => {
   test('reports originMatches true when the browser origin matches the configured URL', async () => {
     const { result } = renderHook(() =>
       useSettingsEnvironmentDiagnostics({
+        apiUrlExternal: 'http://localhost:6021',
         appUrlDeveloper: window.location.origin,
         supportBundle: { key: 'value' },
       }),
@@ -28,6 +29,7 @@ describe('useSettingsEnvironmentDiagnostics', () => {
   test('reports originMatches false when the configured URL differs, ignoring a trailing slash', async () => {
     const { result } = renderHook(() =>
       useSettingsEnvironmentDiagnostics({
+        apiUrlExternal: 'http://localhost:6021',
         appUrlDeveloper: 'https://example.invalid',
         supportBundle: {},
       }),
@@ -39,10 +41,51 @@ describe('useSettingsEnvironmentDiagnostics', () => {
     expect(result.current.originMatches).toBe(false);
   });
 
+  test('formatUrlMatrixValue shows what a relative API_URL_EXTERNAL resolves to', async () => {
+    const { result } = renderHook(() =>
+      useSettingsEnvironmentDiagnostics({
+        apiUrlExternal: '/api',
+        appUrlDeveloper: window.location.origin,
+        supportBundle: {},
+      }),
+    );
+
+    await waitFor(() => {
+      expect(result.current.origin).not.toBeNull();
+    });
+    expect(
+      result.current.formatUrlMatrixValue('API_URL_EXTERNAL', '/api'),
+    ).toBe(`/api → ${window.location.origin}/api`);
+    expect(
+      result.current.formatUrlMatrixValue('APP_URL', 'http://localhost:6020'),
+    ).toBe('http://localhost:6020');
+  });
+
+  test('formatUrlMatrixValue leaves an absolute API_URL_EXTERNAL as is', async () => {
+    const { result } = renderHook(() =>
+      useSettingsEnvironmentDiagnostics({
+        apiUrlExternal: 'http://localhost:6021',
+        appUrlDeveloper: window.location.origin,
+        supportBundle: {},
+      }),
+    );
+
+    await waitFor(() => {
+      expect(result.current.origin).not.toBeNull();
+    });
+    expect(
+      result.current.formatUrlMatrixValue(
+        'API_URL_EXTERNAL',
+        'http://localhost:6021',
+      ),
+    ).toBe('http://localhost:6021');
+  });
+
   test('handleCopySupportBundle writes the JSON-serialized bundle to the clipboard', async () => {
     const supportBundle = { appVersion: '1.2.3', environment: 'test' };
     const { result } = renderHook(() =>
       useSettingsEnvironmentDiagnostics({
+        apiUrlExternal: 'http://localhost:6021',
         appUrlDeveloper: window.location.origin,
         supportBundle,
       }),
@@ -67,6 +110,7 @@ describe('useSettingsEnvironmentDiagnostics', () => {
 
     const { result } = renderHook(() =>
       useSettingsEnvironmentDiagnostics({
+        apiUrlExternal: 'http://localhost:6021',
         appUrlDeveloper: window.location.origin,
         supportBundle: {},
       }),

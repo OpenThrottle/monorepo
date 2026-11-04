@@ -13,6 +13,7 @@ import { AuthResolver } from './auth.resolver.ts';
 import { AuthService } from './auth.service.ts';
 import { GqlLocalAuthGuard } from './guards/gql-local-auth.guard.ts';
 import { GqlLocalCredentialsGuard } from './guards/gql-local-credentials.guard.ts';
+import { LoginAttemptsService } from './login-attempts.service.ts';
 import { LocalStrategy } from './strategies/local.strategy.ts';
 import { SubscriptionTokenResolver } from './subscription-token.resolver.ts';
 
@@ -56,6 +57,7 @@ import { SubscriptionTokenResolver } from './subscription-token.resolver.ts';
     GqlLocalAuthGuard,
     GqlLocalCredentialsGuard,
     LocalStrategy,
+    LoginAttemptsService,
     SubscriptionTokenResolver,
   ],
 })

@@ -15,6 +15,7 @@ export * from './hooks/useNonce';
 export * from './hooks/useResolvedThemeMode';
 export * from './types';
 export * from './utils/action-result';
+export * from './utils/api-url';
 export * from './utils/csp';
 export * from './utils/environment';
 export * from './utils/fetcher';

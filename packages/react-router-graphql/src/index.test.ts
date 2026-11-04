@@ -30,6 +30,7 @@ const {
   GraphqlAuthError,
   GraphqlTimeoutError,
   executeGraphqlWithAuth,
+  getForwardedClientHeaders,
   isAuthError,
   isTimeoutError,
 } = await import('./index');
@@ -76,6 +77,7 @@ describe('executeGraphqlWithAuth dispatch', () => {
 
     expect(executeGraphqlMock).toHaveBeenCalledTimes(1);
     expect(executeGraphqlMock).toHaveBeenCalledWith(document, variables, {
+      headers: {},
       timeoutMs: DEFAULT_LOADER_TIMEOUT_MS,
     });
     expect(executeGraphqlWithAuthNodeJSMock).not.toHaveBeenCalled();
@@ -93,9 +95,53 @@ describe('executeGraphqlWithAuth dispatch', () => {
       'a-token',
       document,
       variables,
-      { timeoutMs: DEFAULT_LOADER_TIMEOUT_MS },
+      { headers: {}, timeoutMs: DEFAULT_LOADER_TIMEOUT_MS },
     );
     expect(executeGraphqlMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('executeGraphqlWithAuth client forwarding', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('forwards the X-Forwarded-For the request arrived with', async () => {
+    getAuthTokenFromCookieMock.mockReturnValue('a-token');
+    executeGraphqlWithAuthNodeJSMock.mockResolvedValue({ ok: true });
+    const request = new Request('https://example.test', {
+      headers: { cookie: 'session=abc', 'x-forwarded-for': '203.0.113.7' },
+    });
+
+    await executeGraphqlWithAuth(request, document);
+
+    expect(executeGraphqlWithAuthNodeJSMock).toHaveBeenCalledWith(
+      'a-token',
+      document,
+      undefined,
+      {
+        headers: { 'X-Forwarded-For': '203.0.113.7' },
+        timeoutMs: DEFAULT_LOADER_TIMEOUT_MS,
+      },
+    );
+  });
+});
+
+describe('getForwardedClientHeaders', () => {
+  it('is empty when the request carried no X-Forwarded-For', () => {
+    expect(
+      getForwardedClientHeaders(new Request('https://example.test')),
+    ).toEqual({});
+  });
+
+  it('passes the chain through unchanged', () => {
+    const request = new Request('https://example.test', {
+      headers: { 'x-forwarded-for': ' 203.0.113.7, 10.0.0.2 ' },
+    });
+
+    expect(getForwardedClientHeaders(request)).toEqual({
+      'X-Forwarded-For': '203.0.113.7, 10.0.0.2',
+    });
   });
 });
 
@@ -204,7 +250,7 @@ describe('executeGraphqlWithAuth timeout handling', () => {
       'a-token',
       document,
       undefined,
-      { timeoutMs: DEFAULT_LOADER_TIMEOUT_MS },
+      { headers: {}, timeoutMs: DEFAULT_LOADER_TIMEOUT_MS },
     );
   });
 
@@ -217,6 +263,7 @@ describe('executeGraphqlWithAuth timeout handling', () => {
     });
 
     expect(executeGraphqlMock).toHaveBeenCalledWith(document, undefined, {
+      headers: {},
       timeoutMs: 2_000,
     });
   });

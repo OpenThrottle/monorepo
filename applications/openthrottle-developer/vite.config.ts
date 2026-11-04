@@ -16,6 +16,24 @@ export default (config: ConfigEnv) => {
    */
   Object.assign(process.env, loadEnv(mode, process.cwd(), ''));
 
+  /**
+   * One-origin mode (docs/monorepo/phone-access.md): with API_URL_EXTERNAL="/api"
+   * the browser calls `/api/...` on this dev server, which forwards it — the
+   * graphql-ws upgrade included — to the API with the prefix stripped. SSR
+   * keeps calling API_URL_INTERNAL directly, so that is the proxy target too.
+   */
+  const apiProxyTarget =
+    process.env.API_URL_INTERNAL ?? 'http://localhost:6021';
+  /**
+   * Extra hostnames the dev server answers to, comma-separated — e.g. the
+   * tailnet name `pnpm run remote:serve` prints. HMR needs no matching config:
+   * its client connects to the page's own origin, so behind an HTTPS forward
+   * it already uses `wss://<host>` on 443.
+   */
+  const extraAllowedHosts = (process.env.DEV_ALLOWED_HOSTS ?? '')
+    .split(',')
+    .map((host) => host.trim())
+    .filter(Boolean);
   const shouldAnalyze = process.env.ANALYZE === 'true';
   const useReactRouterDevTools = process.env.REACT_ROUTER_DEV_TOOLS === 'true';
 
@@ -45,11 +63,22 @@ export default (config: ConfigEnv) => {
     },
     root: __dirname,
     server: {
-      allowedHosts: ['developer.local'],
+      allowedHosts: ['developer.local', ...extraAllowedHosts],
       // Unset on the host (Vite default: localhost). The compose dev profile sets
       // HOST=0.0.0.0 so the dev server is reachable through the published port.
       host: process.env.HOST,
       port: process.env.PORT ? Number(process.env.PORT) : 3000,
+      proxy: {
+        // Anchored so a future `/api-*` page route is not swallowed.
+        '^/api(/|$)': {
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, '') || '/',
+          target: apiProxyTarget,
+          ws: true,
+          // X-Forwarded-For lets the server rate-limit per client, not per proxy.
+          xfwd: true,
+        },
+      },
     },
     ssr: {
       // external: ['@openthrottle/openthrottle-notifications'],

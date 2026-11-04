@@ -27,9 +27,17 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { DataSource } from 'typeorm';
 
+import {
+  DEFAULT_BOOTSTRAP_USER_PASSWORD,
+  resolveBootstrapUserPassword,
+} from './config/bootstrap-password.ts';
+
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+
 const USER_EMAIL: string = process.env.OPENTHROTTLE_BOOTSTRAP_USER_EMAIL?.trim() || 'developer@openthrottle.ai'; // prettier-ignore
 const USER_GITHUB: string = process.env.OPENTHROTTLE_BOOTSTRAP_USER_GITHUB?.trim() || 'openthrottle-developer'; // prettier-ignore
-const USER_PASSWORD: string = process.env.OPENTHROTTLE_BOOTSTRAP_USER_PASSWORD?.trim() || 'FullThrottle2026!'; // prettier-ignore
+// Throws in production when unset or the public default — see config/bootstrap-password.ts.
+const USER_PASSWORD: string = resolveBootstrapUserPassword(process.env.OPENTHROTTLE_BOOTSTRAP_USER_PASSWORD, IS_PRODUCTION); // prettier-ignore
 
 const ROLE_NAMES = ['admin', 'user', 'viewer'] as const;
 
@@ -61,6 +69,24 @@ async function ensureDefaultUser(usersService: UsersService): Promise<User> {
     console.log(`Set default password for existing user ${USER_EMAIL}.`);
 
     return updated ?? existing;
+  }
+
+  // A deployed box bootstrapped before the production rule may still carry the
+  // public default password: rotate it to the one passed in.
+  if (
+    IS_PRODUCTION &&
+    (await usersService.validatePassword(
+      DEFAULT_BOOTSTRAP_USER_PASSWORD,
+      existing.passwordHash,
+    ))
+  ) {
+    const rotated = await usersService.update(existing.id, {
+      passwordHash: await usersService.hashPassword(USER_PASSWORD),
+    });
+
+    console.log(`Rotated the default password for ${USER_EMAIL}.`);
+
+    return rotated ?? existing;
   }
 
   console.log(

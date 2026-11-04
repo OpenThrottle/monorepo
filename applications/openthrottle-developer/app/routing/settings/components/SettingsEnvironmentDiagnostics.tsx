@@ -28,11 +28,16 @@ export const SettingsEnvironmentDiagnostics = (
   const { env, idPrefix = 'settings-diagnostics', supportBundle } = props;
 
   // Hooks
-  const { handleCopySupportBundle, origin, originMatches } =
-    useSettingsEnvironmentDiagnostics({
-      appUrlDeveloper: env.APP_URL_DEVELOPER,
-      supportBundle,
-    });
+  const {
+    formatUrlMatrixValue,
+    handleCopySupportBundle,
+    origin,
+    originMatches,
+  } = useSettingsEnvironmentDiagnostics({
+    apiUrlExternal: env.API_URL_EXTERNAL,
+    appUrlDeveloper: env.APP_URL_DEVELOPER,
+    supportBundle,
+  });
 
   // Setup
 
@@ -180,7 +185,9 @@ export const SettingsEnvironmentDiagnostics = (
                   <td className="text-muted-foreground p-2 font-mono">
                     {row.key}
                   </td>
-                  <td className="p-2 font-mono break-all">{env[row.key]}</td>
+                  <td className="p-2 font-mono break-all">
+                    {formatUrlMatrixValue(row.key, env[row.key])}
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -81,6 +81,38 @@ describe('buildCsp', () => {
     );
   });
 
+  test('resolves a relative apiUrl against the request origin, naming the same-origin wss', () => {
+    vi.stubEnv('NODE_ENV', 'production');
+
+    const { reportingEndpoints, value } = buildCsp(NONCE, {
+      apiUrl: '/api',
+      reportOnly: true,
+      requestOrigin: 'https://developer.example.com',
+    });
+
+    expect(getDirective(value, 'connect-src')).toBe(
+      `connect-src 'self' https://developer.example.com wss://developer.example.com`,
+    );
+    expect(getDirective(value, 'report-uri')).toBe(
+      'report-uri https://developer.example.com/api/csp-reports',
+    );
+    expect(reportingEndpoints).toBe(
+      'csp-endpoint="https://developer.example.com/api/csp-reports"',
+    );
+  });
+
+  test('degrades to connect-src self when a relative apiUrl has no request origin', () => {
+    vi.stubEnv('NODE_ENV', 'production');
+
+    const { reportingEndpoints, value } = buildCsp(NONCE, {
+      apiUrl: '/api',
+      reportOnly: true,
+    });
+
+    expect(getDirective(value, 'connect-src')).toBe(`connect-src 'self'`);
+    expect(reportingEndpoints).toBeUndefined();
+  });
+
   test('degrades to connect-src self with no report directives when apiUrl is absent', () => {
     vi.stubEnv('NODE_ENV', 'production');
 

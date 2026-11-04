@@ -210,7 +210,7 @@ export const action = async (args: Route.ActionArgs) => {
   }
 
   try {
-    const token = await callLoginMutation(email.trim(), password);
+    const token = await callLoginMutation(email.trim(), password, args.request);
     if (!token) {
       return data<AuthFetcherData>({ error: 'Login failed' });
     }
@@ -220,7 +220,11 @@ export const action = async (args: Route.ActionArgs) => {
     // The client navigates to /dashboard once the choreography completes.
     return data<AuthFetcherData>(
       { ok: true },
-      { headers: { 'Set-Cookie': buildAuthCookie(token) } },
+      {
+        headers: {
+          'Set-Cookie': buildAuthCookie(token, { request: args.request }),
+        },
+      },
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Login failed';

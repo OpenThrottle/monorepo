@@ -1,4 +1,5 @@
 import { isRecord } from '@openthrottle/nodejs-utils';
+import { getRequestOrigin } from '@openthrottle/react-router-utils';
 
 import {
   AUTH_COOKIE_MAX_AGE_DAYS,
@@ -15,6 +16,7 @@ export interface AuthCookieOptions {
    * When true, omit the `Secure` attribute so the cookie round-trips over
    * plain HTTP (local non-TLS dev). Defaults to false, i.e. `Secure` is set
    * outside of an explicit `NODE_ENV !== 'production'` dev environment.
+   * Throws when set under `NODE_ENV=production`.
    */
   insecureCookies?: boolean;
   /**
@@ -28,6 +30,13 @@ export interface AuthCookieOptions {
    * (`/`). Extension point for per-app divergence.
    */
   path?: string;
+  /**
+   * The request the cookie answers. When the browser reached the app over
+   * https — directly, or through a TLS-terminating proxy such as a tailnet
+   * HTTPS forward — `Secure` is set even in local dev, so the cookie never
+   * leaves that origin over plain http.
+   */
+  request?: Request;
   /**
    * Override the cookie `SameSite` attribute. Defaults to
    * `AUTH_COOKIE_SAME_SITE` (`Lax`). Extension point for an app that needs
@@ -48,15 +57,34 @@ function isInsecureByDefault(): boolean {
 }
 
 /**
+ * @description Whether the browser reached the app over https, honouring
+ * `X-Forwarded-Proto` from a TLS-terminating proxy.
+ */
+function isHttpsRequest(request: Request | undefined): boolean {
+  return request ? getRequestOrigin(request).startsWith('https:') : false;
+}
+
+/**
  * @description Builds the shared cookie attribute string for the auth cookie,
  * so set and clear headers stay in sync. `Secure` is appended unless cookies
- * are explicitly marked insecure (local non-TLS dev).
+ * are explicitly marked insecure, or this is local dev answering a plain-http
+ * request.
  */
 function buildAuthCookieAttributes(
   maxAge: number,
   options?: AuthCookieOptions,
 ): string {
-  const insecure = options?.insecureCookies ?? isInsecureByDefault();
+  // No env var or config turns this on; the guard keeps a future caller from
+  // shipping a non-Secure session cookie to a production (public) origin.
+  if (options?.insecureCookies === true && !isInsecureByDefault()) {
+    throw new Error(
+      'insecureCookies cannot be enabled in production: the auth cookie must be Secure.',
+    );
+  }
+
+  const insecure =
+    options?.insecureCookies ??
+    (isInsecureByDefault() && !isHttpsRequest(options?.request));
   const secure = insecure ? '' : '; Secure';
   const path = options?.path ?? AUTH_COOKIE_PATH;
   const sameSite = options?.sameSite ?? AUTH_COOKIE_SAME_SITE;
