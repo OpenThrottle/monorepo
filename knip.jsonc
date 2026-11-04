@@ -388,6 +388,9 @@
         // Run by the `measure-tool-surface` Nx target (tsx); also reaches
         // measure-tool-surface.ts, which it imports.
         "src/model-facing-text/write-tool-surface.ts",
+        // Run by the on-demand `eval-tool-selection` Nx target (tsx); reaches
+        // the rest of src/evals/tool-selection/, which it imports.
+        "src/evals/tool-selection/cli.ts",
         // Streamable-HTTP MCP surface. Shell-invoked container entrypoints with
         // no in-repo importer, so knip cannot reach them via the import graph:
         // Dockerfile.NestJS `mcp-development` runs `tsx src/bin-http.ts`, and the

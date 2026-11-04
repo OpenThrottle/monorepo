@@ -27,6 +27,13 @@ Nx project name is the full `@openthrottle/openthrottle-mcp` (not the bare direc
   caps live in `scripts/model-facing-text.budget.json`. This package's `measure-tool-surface`
   target feeds it.
 
+- `pnpm nx run @openthrottle/openthrottle-mcp:eval-tool-selection` — **on demand only, spends API
+  tokens** (`ANTHROPIC_API_KEY`). Checks that agents pick the right tool and key arguments for each case
+  in `src/evals/tool-selection/data/data.cases.ts`, compared against the same-model baseline. Run it
+  after rewording a tool description or the instructions block. A fix case must fail before its fix
+  lands. Never wire it into CI; only its grader unit tests run there. See
+  [src/evals/tool-selection/README.md](src/evals/tool-selection/README.md).
+
 ## Fragment coverage (why a tool result can be missing a field)
 
 Plan/task/note/project operations are consumed cross-package from
