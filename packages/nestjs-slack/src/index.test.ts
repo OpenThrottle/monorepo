@@ -26,3 +26,12 @@ describe('@openthrottle/nestjs-slack entrypoint', () => {
     ]);
   });
 });
+
+// Merge-queue probe C (OT plan 10e17c59). Expected to be ejected by the queue.
+const QUEUE_PROBE = 'c';
+
+describe('merge-queue probe c', () => {
+  it('collides with probe b inside the queue', () => {
+    expect(QUEUE_PROBE).toBe('c');
+  });
+});
