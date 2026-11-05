@@ -178,9 +178,18 @@ jobs:
 
           echo "Changed files:"; echo "$changed"
 
+          # Every test below reads "$changed" from a here-string, never from
+          # `echo "$changed" | grep -q`. Under `set -o pipefail` that pipeline
+          # misreports on a large diff: `grep -q` exits at the first match, the
+          # writer upstream takes SIGPIPE on the rest of the list, and the
+          # pipeline returns 141, so a match reads as no match. On #646's
+          # 2,499-file merge-queue entry it set run=false 20 times out of 20,
+          # which skipped `gates` and `build` and let `ci-success` report green.
+
           # Mirror the old paths-ignore (docs/** and **/*.md): if ANY changed file
           # is neither under docs/ nor a .md file, it's real code → run the build.
-          if echo "$changed" | grep -vE '(^docs/|\.md$)' | grep -q .; then
+          non_docs="$(grep -vE '(^docs/|\.md$)' <<<"$changed" || true)"
+          if [ -n "$non_docs" ]; then
             echo "run=true" >> "$GITHUB_OUTPUT"
             echo "→ run=true (non-docs changes present)"
           else
@@ -190,7 +199,7 @@ jobs:
 
           # deps: the installed dependency graph can only change through these.
           # Gates the two uncached full-graph licence scans in `build`.
-          if echo "$changed" | grep -qE '(^|/)package\.json$|^pnpm-lock\.yaml$|^pnpm-workspace\.yaml$|^license-policy\.json$'; then
+          if grep -qE '(^|/)package\.json$|^pnpm-lock\.yaml$|^pnpm-workspace\.yaml$|^license-policy\.json$' <<<"$changed"; then
             echo "deps=true" >> "$GITHUB_OUTPUT"
             echo "→ deps=true (dependency graph or licence policy touched)"
           else
@@ -200,7 +209,7 @@ jobs:
 
           # graph: inputs to the Nx project graph, which the circular-dependency
           # check reads. Nothing else can change its result.
-          if echo "$changed" | grep -qE '(^|/)package\.json$|(^|/)project\.json$|(^|/)tsconfig[^/]*\.json$|^nx\.json$|^pnpm-workspace\.yaml$'; then
+          if grep -qE '(^|/)package\.json$|(^|/)project\.json$|(^|/)tsconfig[^/]*\.json$|^nx\.json$|^pnpm-workspace\.yaml$' <<<"$changed"; then
             echo "graph=true" >> "$GITHUB_OUTPUT"
             echo "→ graph=true (project-graph inputs touched)"
           else
@@ -214,7 +223,7 @@ jobs:
           # exactly the PRs this budget exists to catch. schema.gql and
           # pnpm-lock.yaml are here because MCP tool input schemas are generated
           # from the server schema and serialized by the MCP SDK.
-          if echo "$changed" | grep -qE '^skills/[^/]+/SKILL\.md$|^\.agents/prompts/|^packages/openthrottle-mcp/|^applications/openthrottle-server/schema\.gql$|^scripts/(check-)?model-facing-text|^pnpm-lock\.yaml$|^nx\.json$|^\.github/workflows/continuous-integration\.yml$'; then
+          if grep -qE '^skills/[^/]+/SKILL\.md$|^\.agents/prompts/|^packages/openthrottle-mcp/|^applications/openthrottle-server/schema\.gql$|^scripts/(check-)?model-facing-text|^pnpm-lock\.yaml$|^nx\.json$|^\.github/workflows/continuous-integration\.yml$' <<<"$changed"; then
             echo "model_text=true" >> "$GITHUB_OUTPUT"
             echo "→ model_text=true (model-facing text or its gate touched)"
           else
