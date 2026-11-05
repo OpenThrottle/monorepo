@@ -22,6 +22,7 @@ import {
   BlogPostStatus,
   BlogReferenceEntity,
   CancelPlanRunInput,
+  ClaimPlanMessagesInput,
   CleanQueueInput,
   CloneRepositoryInput,
   CodeSemanticSearchInput,
@@ -72,6 +73,7 @@ import {
   LinesAddedDeletedInput,
   ListAgentConversationsInput,
   ListCustomPromptsInput,
+  ListPlanMessagesInput,
   ListPlanOutputStreamChunksInput,
   ListPlansByStatusInput,
   ListPullsInput,
@@ -79,9 +81,12 @@ import {
   MissingWorktreeCheckoutReason,
   OpenToMergedCycleTimeInput,
   PlanEmbeddingsByPlanInput,
+  PlanMessageKind,
+  PlanMessageStatus,
   PlanRalphWorkflowMode,
   PlanRunsByPlanIdInput,
   PlanTaskStatus,
+  PostPlanMessageInput,
   PrCountByLabelInput,
   PressureLevel,
   PromoteTaskToPlanInput,
@@ -149,6 +154,7 @@ import {
   UpdateCustomPromptInput,
   UpdateNoteInput,
   UpdatePlanInput,
+  UpdatePlanMessageInput,
   UpdateProjectInput,
   UpdateRepositoryInput,
   UpdateRoleInput,
@@ -163,6 +169,7 @@ import {
   UpsertBlogTagInput,
   UpsertTagActionRuleInput,
   WallClockInterpretation,
+  WithdrawPlanMessageInput,
   WorkArtifactsByPlanInput,
   WorkArtifactsBySessionInput,
   WorkArtifactsByTaskInput,
@@ -202,6 +209,10 @@ export const EditorPresenceStateSchema = z.nativeEnum(EditorPresenceState);
 export const MissingWorktreeCheckoutReasonSchema = z.nativeEnum(
   MissingWorktreeCheckoutReason,
 );
+
+export const PlanMessageKindSchema = z.nativeEnum(PlanMessageKind);
+
+export const PlanMessageStatusSchema = z.nativeEnum(PlanMessageStatus);
 
 export const PlanRalphWorkflowModeSchema = z.nativeEnum(PlanRalphWorkflowMode);
 
@@ -428,6 +439,16 @@ export function CancelPlanRunInputSchema(): z.ZodObject<
   return z.object({
     planId: z.string().min(1),
     planRunId: z.string().nullish(),
+  });
+}
+
+export function ClaimPlanMessagesInputSchema(): z.ZodObject<
+  Properties<ClaimPlanMessagesInput>
+> {
+  return z.object({
+    planId: z.string().min(1),
+    planRunId: z.string().nullish(),
+    taskId: z.string().nullish(),
   });
 }
 
@@ -955,6 +976,16 @@ export function ListCustomPromptsInputSchema(): z.ZodObject<
   });
 }
 
+export function ListPlanMessagesInputSchema(): z.ZodObject<
+  Properties<ListPlanMessagesInput>
+> {
+  return z.object({
+    kinds: z.array(PlanMessageKindSchema).nullish(),
+    planId: z.string().min(1),
+    statuses: z.array(PlanMessageStatusSchema).nullish(),
+  });
+}
+
 export function ListPlanOutputStreamChunksInputSchema(): z.ZodObject<
   Properties<ListPlanOutputStreamChunksInput>
 > {
@@ -1028,6 +1059,18 @@ export function PlanRunsByPlanIdInputSchema(): z.ZodObject<
   return z.object({
     limit: z.number().nullish(),
     planId: z.string().min(1),
+  });
+}
+
+export function PostPlanMessageInputSchema(): z.ZodObject<
+  Properties<PostPlanMessageInput>
+> {
+  return z.object({
+    author: z.string().nullish(),
+    body: z.string().min(1),
+    kind: PlanMessageKindSchema,
+    planId: z.string().min(1),
+    taskId: z.string().nullish(),
   });
 }
 
@@ -1668,6 +1711,15 @@ export function UpdatePlanInputSchema(): z.ZodObject<
   });
 }
 
+export function UpdatePlanMessageInputSchema(): z.ZodObject<
+  Properties<UpdatePlanMessageInput>
+> {
+  return z.object({
+    body: z.string().min(1),
+    id: z.string().min(1),
+  });
+}
+
 export function UpdateProjectInputSchema(): z.ZodObject<
   Properties<UpdateProjectInput>
 > {
@@ -1840,6 +1892,14 @@ export function UpsertTagActionRuleInputSchema(): z.ZodObject<
     status: z.string().nullish(),
     tagAll: z.array(z.string().min(1)),
     title: z.string().min(1),
+  });
+}
+
+export function WithdrawPlanMessageInputSchema(): z.ZodObject<
+  Properties<WithdrawPlanMessageInput>
+> {
+  return z.object({
+    id: z.string().min(1),
   });
 }
 

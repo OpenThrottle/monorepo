@@ -15,6 +15,7 @@ import type { Route } from '@/app/routes/+types/plans.$planId._index';
 import type { PlanDetailsFragment } from '~/__generated__/graphql';
 import { PlanDetailRouteHeader } from '~/routing/plans/components/PlanDetailRouteHeader';
 import { PlanDetailTabsList } from '~/routing/plans/components/PlanDetailTabsList';
+import { PlanInboxPanel } from '~/routing/plans/components/PlanInboxPanel';
 import { PlanTabConfiguration } from '~/routing/plans/components/PlanTabConfiguration';
 import { PlanTabDetails } from '~/routing/plans/components/PlanTabDetails';
 import { PlanTabOutput } from '~/routing/plans/components/PlanTabOutput';
@@ -22,11 +23,14 @@ import { PlanTabTasks } from '~/routing/plans/components/PlanTabTasks';
 import { PlanTasksBoard } from '~/routing/plans/components/PlanTasksBoard';
 import { PlanToolbar } from '~/routing/plans/components/PlanToolbar';
 import { usePlanCheckoutSelection } from '~/routing/plans/hooks/usePlanCheckoutSelection';
+import { usePlanDeferredValue } from '~/routing/plans/hooks/usePlanDeferredValue';
 import { usePlanDetailRoute } from '~/routing/plans/hooks/usePlanDetailRoute';
+import { usePlanInbox } from '~/routing/plans/hooks/usePlanInbox';
 import {
   parsePlanDetailTab,
   PLANS_DETAIL_TAB_SEARCH_PARAM,
 } from '~/routing/plans/utils/parsers';
+import { getPlanIsRunning } from '~/routing/plans/utils/utils.plans';
 
 export interface PlanDetailRouteProps {
   readonly loaderData: Route.ComponentProps['loaderData'];
@@ -73,6 +77,11 @@ export const PlanDetailRoute = (
   const { onCheckoutChange } = usePlanCheckoutSelection({
     onSaveRunConfig,
     repositories: loaderData.workspaceRepositories,
+  });
+  const inboxSnapshot = usePlanDeferredValue(loaderData.inboxMessages);
+  const { messages: inboxMessages } = usePlanInbox({
+    planId: plan.id,
+    seedMessages: inboxSnapshot,
   });
 
   // Setup
@@ -133,6 +142,12 @@ export const PlanDetailRoute = (
             workingDirectory={workingDirectory}
           />
         )}
+        <PlanInboxPanel
+          isLive={getPlanIsRunning(status)}
+          messages={inboxMessages}
+          planId={plan.id}
+          tasks={tasks}
+        />
         <OpenThrottleTabs
           urlSync={{
             defaultValue: 'overview',

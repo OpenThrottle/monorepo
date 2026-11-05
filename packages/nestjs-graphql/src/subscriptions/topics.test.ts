@@ -9,6 +9,7 @@ import {
   PLAN_CANCEL_TOPIC_PATTERN,
   planCancelTopic,
   planLifecycleTopic,
+  planMessagesTopic,
   planOutputTopic,
   systemAlertTopic,
   transcriptionStreamTopic,
@@ -32,6 +33,10 @@ describe('globalTopic', () => {
 describe('named topic builders lock the wire-format convention', () => {
   it('planOutputTopic → plan:<planId>:output', () => {
     expect(planOutputTopic('p1')).toBe('plan:p1:output');
+  });
+
+  it('planMessagesTopic → plan:<planId>:messages', () => {
+    expect(planMessagesTopic('p1')).toBe('plan:p1:messages');
   });
 
   it('planLifecycleTopic → plan:<planId>:lifecycle', () => {

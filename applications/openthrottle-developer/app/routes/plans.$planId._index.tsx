@@ -14,6 +14,7 @@ import * as React from 'react';
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
 import {
   PlanDetailCriticalDocument,
+  PlanDetailInboxDocument,
   PlanDetailLedgerDocument,
   PlanDetailOutputChunksDocument,
   PlanDetailRunHistoryDocument,
@@ -29,6 +30,7 @@ import {
   detachHook,
   evaluatePlanRules,
   forceSettlePlanRun,
+  postPlanMessage,
   removePlanTag,
   runPlan,
   saveJobRunHooks,
@@ -36,6 +38,7 @@ import {
   schedulePlanRun,
   setPlanStatus,
   updateTaskStatus,
+  withdrawPlanMessage,
 } from '~/routing/plans/actions/planId';
 import { PlanDetailRoute } from '~/routing/plans/components/PlanDetailRoute';
 import { PlanRunConfigStoreProvider } from '~/routing/plans/components/PlanRunConfigStoreProvider';
@@ -77,6 +80,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   if (!planId) {
     return {
       enabledEditors: Promise.resolve([]),
+      inboxMessages: Promise.resolve([]),
       ledger: Promise.resolve({ linkedArtifacts: [], ruleApplications: [] }),
       models: Promise.resolve([]),
       outputChunks: Promise.resolve([]),
@@ -111,6 +115,17 @@ export const loader = async (args: Route.LoaderArgs) => {
   // probes local model servers (cold-slow); it never rejects (degrades to []), so a failed
   // probe leaves the picker's empty state rather than an error region.
   const models = loadComposerModels(args.request);
+
+  // The inbox has no error region of its own — it is optional chrome above the
+  // tabs — so, like the editor links, a failure degrades it to an empty inbox
+  // rather than rejecting.
+  const inboxMessages = executeGraphqlWithAuth(
+    args.request,
+    PlanDetailInboxDocument,
+    { planId },
+  )
+    .then((result) => result.planMessages)
+    .catch(() => []);
 
   const ledger = executeGraphqlWithAuth(
     args.request,
@@ -152,6 +167,7 @@ export const loader = async (args: Route.LoaderArgs) => {
 
   return {
     enabledEditors,
+    inboxMessages,
     ledger,
     models,
     outputChunks,
@@ -242,6 +258,8 @@ export const action = async (args: Route.ActionArgs) => {
       return evaluatePlanRules(args, planId);
     case 'forceSettlePlanRun':
       return forceSettlePlanRun(args, formData);
+    case 'postPlanMessage':
+      return postPlanMessage(args, planId, formData);
     case 'removePlanTag':
       return removePlanTag(args, planId, formData);
     case 'runPlan':
@@ -256,6 +274,8 @@ export const action = async (args: Route.ActionArgs) => {
       return setPlanStatus(args, planId, formData);
     case 'updateTaskStatus':
       return updateTaskStatus(args, planId, formData);
+    case 'withdrawPlanMessage':
+      return withdrawPlanMessage(args, formData);
     default:
       // 🚨 Default to invalid action error when no intent is provided.
       throw new Error('Invalid intent');

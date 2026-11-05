@@ -157,6 +157,11 @@ Three **read-only** MCP tools expose persisted **web chat** thread history from 
 | ---------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
 | `agent_conversation_*` | `agent_conversation_list`, `agent_conversation_get`, `agent_conversation_get_messages` | Developer UI web chat threads (`agentsRunChatTurn` with `persist: true`) |
 | `plan_output_stream`   | `get_plan_output`, `append_plan_output`, `delete_plan_output`                          | Ralph / workflow iteration logs tied to a plan                           |
+| `plan_messages`        | `post_plan_message`, `claim_plan_messages`                                             | Human STEER / QUEUE messages to a live run, and post-run FEEDBACK        |
+
+`claim_plan_messages` is the only delivery path: at a task boundary it marks every pending
+STEER/QUEUE message DELIVERED and records the delivery on `plan_output_stream` in one
+transaction. Listing and withdrawing messages are developer-UI actions, not MCP tools.
 
 Each tool description ends with: _Web chat threads only — use `get_plan_output` for Ralph/plan iteration logs._
 

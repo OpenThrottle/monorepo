@@ -371,6 +371,48 @@ subscription PlanLifecycleNotifications($planId: ID!) {
   }
 }
 
+# The plan inbox: STEER/QUEUE messages a human sends a live run. FEEDBACK is
+# post-run reflection, so the live-run inbox never selects it.
+fragment PlanInboxMessage on PlanMessageObject {
+  author
+  body
+  createdAt
+  deliveredAt
+  deliveredToTaskId
+  id
+  kind
+  planId
+  status
+  taskId
+  updatedAt
+}
+
+query PlanDetailInbox($planId: ID!) {
+  planMessages(input: { kinds: [QUEUE, STEER], planId: $planId }) {
+    ...PlanInboxMessage
+  }
+}
+
+mutation PlanDetailPostPlanMessage($input: PostPlanMessageInput!) {
+  postPlanMessage(input: $input) {
+    ...PlanInboxMessage
+  }
+}
+
+mutation PlanDetailWithdrawPlanMessage($input: WithdrawPlanMessageInput!) {
+  withdrawPlanMessage(input: $input) {
+    ...PlanInboxMessage
+  }
+}
+
+# Each message as it is posted, edited, withdrawn or delivered — this is how a
+# PENDING row flips to DELIVERED on screen while the run claims it.
+subscription PlanMessageChanged($planId: ID!) {
+  planMessageChanged(planId: $planId) {
+    ...PlanInboxMessage
+  }
+}
+
 mutation PlanDetailAddPlanTag($input: AddPlanTagInput!) {
   addPlanTag(input: $input) {
     ...PlanTagChip

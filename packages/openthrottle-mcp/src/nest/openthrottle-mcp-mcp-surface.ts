@@ -252,6 +252,28 @@ export class McpDeveloperMcpSurface {
   }
 
   @Tool({
+    description: Th.claimPlanMessagesToolDescription,
+    name: 'claim_plan_messages',
+    parameters: asMcpParameters(Th.claimPlanMessagesToolParameters),
+  })
+  claimPlanMessages(
+    args: Parameters<typeof Th.claimPlanMessagesToolHandler>[0],
+  ): ReturnType<typeof Th.claimPlanMessagesToolHandler> {
+    return Th.claimPlanMessagesToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.postPlanMessageToolDescription,
+    name: 'post_plan_message',
+    parameters: asMcpParameters(Th.postPlanMessageToolParameters),
+  })
+  postPlanMessage(
+    args: Parameters<typeof Th.postPlanMessageToolHandler>[0],
+  ): ReturnType<typeof Th.postPlanMessageToolHandler> {
+    return Th.postPlanMessageToolHandler(args);
+  }
+
+  @Tool({
     description: Th.getPlanToolDescription,
     name: 'get_plan',
     parameters: asMcpParameters(Th.getPlanToolParameters),

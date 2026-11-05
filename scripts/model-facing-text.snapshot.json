@@ -15,6 +15,7 @@
     "mcp.tool/attach_session_subject": 878,
     "mcp.tool/auth_status": 697,
     "mcp.tool/begin_task_session": 1409,
+    "mcp.tool/claim_plan_messages": 699,
     "mcp.tool/create_blog_post": 1365,
     "mcp.tool/create_note": 479,
     "mcp.tool/create_plan": 2101,
@@ -56,6 +57,7 @@
     "mcp.tool/list_sources": 330,
     "mcp.tool/list_tag_action_rules": 404,
     "mcp.tool/list_tasks_by_category": 788,
+    "mcp.tool/post_plan_message": 815,
     "mcp.tool/promote_task": 906,
     "mcp.tool/record_artifact": 752,
     "mcp.tool/register_plan_run": 1403,
@@ -91,6 +93,7 @@
     "mcp.toolDescription/attach_session_subject": 166,
     "mcp.toolDescription/auth_status": 485,
     "mcp.toolDescription/begin_task_session": 595,
+    "mcp.toolDescription/claim_plan_messages": 346,
     "mcp.toolDescription/create_blog_post": 739,
     "mcp.toolDescription/create_note": 171,
     "mcp.toolDescription/create_plan": 1349,
@@ -132,6 +135,7 @@
     "mcp.toolDescription/list_sources": 121,
     "mcp.toolDescription/list_tag_action_rules": 186,
     "mcp.toolDescription/list_tasks_by_category": 187,
+    "mcp.toolDescription/post_plan_message": 353,
     "mcp.toolDescription/promote_task": 589,
     "mcp.toolDescription/record_artifact": 348,
     "mcp.toolDescription/register_plan_run": 772,
@@ -166,13 +170,13 @@
     "prompt/Job_Security.md": 9518,
     "prompt/Job_TestHealth.md": 8156,
     "prompt/Job_WorkInFlight.md": 9928,
-    "skill/agents-ralph": 12247,
+    "skill/agents-ralph": 13145,
     "skill/github-commit": 2741,
     "skill/github-pull-request": 13964,
     "skill/github-squash": 8609,
     "skill/ot-folders": 21263,
     "skill/ot-generators": 10250,
-    "skill/ot-loop": 31843,
+    "skill/ot-loop": 30762,
     "skill/ot-onboarding": 24976,
     "skill/ot-plans": 8901,
     "skill/ot-postgres": 6910,
@@ -194,10 +198,10 @@
     "skillDescription/ot-worktree": 364
   },
   "totals": {
-    "alwaysInjected": 63689,
+    "alwaysInjected": 65203,
     "mcpInstructions": 1853,
-    "mcpTools": 57080,
+    "mcpTools": 58594,
     "prompts": 119941,
-    "skills": 180152
+    "skills": 179969
   }
 }

@@ -80,6 +80,18 @@ export const developerMcpToolDefinitions: readonly DeveloperMcpToolDefinition[] 
       Th.deletePlanOutputToolHandler,
     ),
     defineTool(
+      'claim_plan_messages',
+      Th.claimPlanMessagesToolDescription,
+      Th.claimPlanMessagesToolParameters,
+      Th.claimPlanMessagesToolHandler,
+    ),
+    defineTool(
+      'post_plan_message',
+      Th.postPlanMessageToolDescription,
+      Th.postPlanMessageToolParameters,
+      Th.postPlanMessageToolHandler,
+    ),
+    defineTool(
       'agent_conversation_get',
       Th.getAgentConversationToolDescription,
       Th.getAgentConversationToolParameters,

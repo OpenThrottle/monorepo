@@ -139,6 +139,23 @@ export { NotesService } from './modules/notes/notes.service.ts';
 export type { PlanEmbeddingSearchRow } from './modules/plan-embeddings/plan-embedding.entity.ts';
 export { PlanEmbedding } from './modules/plan-embeddings/plan-embedding.entity.ts';
 export { PlanEmbeddingsService } from './modules/plan-embeddings/plan-embeddings.service.ts';
+export { PlanMessage } from './modules/plan-messages/plan-message.entity.ts';
+export {
+  PLAN_MESSAGE_DELIVERABLE_KINDS,
+  PLAN_MESSAGE_KIND,
+  PLAN_MESSAGE_STATUS,
+} from './modules/plan-messages/plan-messages.constants.ts';
+export { PlanMessagesService } from './modules/plan-messages/plan-messages.service.ts';
+export type {
+  ClaimPlanMessagesParams,
+  ClaimPlanMessagesResult,
+  ListPlanMessagesParams,
+  PendingPlanMessageWriteResult,
+  PlanMessageKind,
+  PlanMessageStatus,
+  PostPlanMessageParams,
+  PostPlanMessageResult,
+} from './modules/plan-messages/plan-messages.types.ts';
 export { PlanOutputStreamChunk } from './modules/plan-output-stream/plan-output-stream.entity.ts';
 export { PlanOutputStreamService } from './modules/plan-output-stream/plan-output-stream.service.ts';
 export type {
