@@ -99,7 +99,35 @@
         ]
       },
       "codegen-graphql-watch": {},
+      "eval-tool-selection": {
+        "cache": false,
+        "dependsOn": [
+          "codegen-graphql"
+        ],
+        "executor": "nx:run-commands",
+        "metadata": {
+          "description": "On-demand MCP tool-selection eval: runs every case in src/evals/tool-selection/data/data.cases.ts against the Claude Messages API (needs ANTHROPIC_API_KEY; spends tokens) and compares with the same-model baseline in src/evals/tool-selection/baselines/. Flags after `--`: --model, --effort, --trials, --case <id|area,...>, --tolerance, --write-baseline. Exits 1 on a regression. Never wired into CI or check:local — only its grader unit tests run there, through `test`."
+        },
+        "options": {
+          "command": "tsx ./packages/openthrottle-mcp/src/evals/tool-selection/cli.ts",
+          "cwd": "{workspaceRoot}"
+        }
+      },
       "lint": {},
+      "measure-tool-surface": {
+        "cache": false,
+        "dependsOn": [
+          "codegen-graphql"
+        ],
+        "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Measure the stdio MCP surface (instructions block + every tools/list entry, in UTF-8 bytes) over an in-memory client and write it to tmp/model-facing-text/tool-surface.json for monorepo:check-model-facing-text. Runs from source, so it needs codegen but not a build. Never cached: the tool schemas derive from gitignored __generated__ output that Nx cannot hash."
+        },
+        "options": {
+          "command": "tsx ./packages/openthrottle-mcp/src/model-facing-text/write-tool-surface.ts ./tmp/model-facing-text/tool-surface.json",
+          "cwd": "{workspaceRoot}"
+        }
+      },
       "serve": {
         "cache": false,
         "dependsOn": [

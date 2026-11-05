@@ -111,6 +111,7 @@ jobs:
       # cannot be computed: these are correctness gates, so they fail CLOSED.
       deps: ${{ steps.filter.outputs.deps }}
       graph: ${{ steps.filter.outputs.graph }}
+      model_text: ${{ steps.filter.outputs.model_text }}
       run: ${{ steps.filter.outputs.run }}
     steps:
       - name: '📦 Checkout the code'
@@ -146,8 +147,9 @@ jobs:
                 echo "run=true"
                 echo "deps=true"
                 echo "graph=true"
+                echo "model_text=true"
               } >> "$GITHUB_OUTPUT"
-              echo "event=${{ github.event_name }} → run/deps/graph=true (not a PR or queue entry)"
+              echo "event=${{ github.event_name }} → run/deps/graph/model_text=true (not a PR or queue entry)"
               exit 0
               ;;
           esac
@@ -167,8 +169,9 @@ jobs:
               echo "run=true"
               echo "deps=true"
               echo "graph=true"
+              echo "model_text=true"
             } >> "$GITHUB_OUTPUT"
-            echo "→ run/deps/graph=true (could not compute the diff; failing closed)"
+            echo "→ run/deps/graph/model_text=true (could not compute the diff; failing closed)"
             echo "$changed"
             exit 0
           fi
@@ -203,6 +206,20 @@ jobs:
           else
             echo "graph=false" >> "$GITHUB_OUTPUT"
             echo "→ graph=false"
+          fi
+
+          # model_text: everything the model-facing-text byte budget measures,
+          # plus the gate itself. Deliberately independent of `run`: skill and
+          # prompt edits are .md-only PRs, which `run` treats as docs and skips —
+          # exactly the PRs this budget exists to catch. schema.gql and
+          # pnpm-lock.yaml are here because MCP tool input schemas are generated
+          # from the server schema and serialized by the MCP SDK.
+          if echo "$changed" | grep -qE '^skills/[^/]+/SKILL\.md$|^\.agents/prompts/|^packages/openthrottle-mcp/|^applications/openthrottle-server/schema\.gql$|^scripts/(check-)?model-facing-text|^pnpm-lock\.yaml$|^nx\.json$|^\.github/workflows/continuous-integration\.yml$'; then
+            echo "model_text=true" >> "$GITHUB_OUTPUT"
+            echo "→ model_text=true (model-facing text or its gate touched)"
+          else
+            echo "model_text=false" >> "$GITHUB_OUTPUT"
+            echo "→ model_text=false"
           fi
 
   # Server-side attribution backstop.
@@ -867,6 +884,43 @@ jobs:
       #   env:
       #     MIGRATION_COMMENT_LINT_BASE: ${{ github.base_ref || 'main' }}
 
+  # 🔤 Byte budget for model-facing text (OT plan cb4359d4): openthrottle-mcp
+  # instructions + tools/list, skills/*/SKILL.md, .agents/prompts. Its own job,
+  # NOT a `gates` step, because `gates` skips .md-only PRs and skill/prompt edits
+  # are exactly that — it is path-gated on `model_text` instead. It needs only
+  # the MCP package's codegen (no build), so it is cheap.
+  #
+  # Override: a maintainer applies the `model-facing-text-override` label, which
+  # downgrades failures to a report. `labeled` is deliberately not a workflow
+  # trigger (it would rerun all of CI on every label), so re-run this job after
+  # applying it. Growth under the caps needs no label: regenerate the snapshot
+  # (`pnpm nx run monorepo:check-model-facing-text -- --write`) and commit it.
+  model-facing-text:
+    needs: changes
+    if: |
+      needs.changes.outputs.model_text == 'true' &&
+      (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    concurrency:
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+      group: continuous-integration-${{ github.ref }}-model-facing-text
+    steps:
+      - name: '📦 Checkout the code'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+
+      - name: '🤖 Node Setup'
+        uses: ./.github/actions/node-setup
+        with:
+          cache-suffix: model-facing-text
+
+      - name: '🔤 Model-facing text byte budget'
+        run: pnpm exec nx run monorepo:check-model-facing-text
+        env:
+          MODEL_FACING_TEXT_OVERRIDE: ${{ contains(github.event.pull_request.labels.*.name, 'model-facing-text-override') }}
+
   # Stable required-check target. Branch protection should require THIS job
   # ("ci-success"), not a matrix-suffixed leg like `build (1, lint,typecheck,test)`
   # — there are now THREE such legs and their names change with the shard count,
@@ -879,7 +933,7 @@ jobs:
   # `fail-fast: false` above, a red shard therefore still turns this job red while
   # its siblings run to completion.
   ci-success:
-    needs: [attribution-guard, changes, build, gates]
+    needs: [attribution-guard, changes, build, gates, model-facing-text]
     if: always()
     runs-on: ubuntu-26.04
     timeout-minutes: 2
@@ -890,8 +944,9 @@ jobs:
           changes_result="${{ needs.changes.result }}"
           build_result="${{ needs.build.result }}"
           gates_result="${{ needs.gates.result }}"
+          model_text_result="${{ needs.model-facing-text.result }}"
 
-          echo "attribution-guard: $attribution_result | changes: $changes_result | build: $build_result | gates: $gates_result"
+          echo "attribution-guard: $attribution_result | changes: $changes_result | build: $build_result | gates: $gates_result | model-facing-text: $model_text_result"
 
           if [ "$changes_result" != "success" ]; then
             echo "❌ changes gate did not succeed ($changes_result)"
@@ -910,6 +965,13 @@ jobs:
           # legitimate outcome, anything else is not.
           if [ "$gates_result" != "success" ] && [ "$gates_result" != "skipped" ]; then
             echo "❌ whole-tree gates did not succeed (gates: $gates_result)"
+            exit 1
+          fi
+
+          # Path-gated on `model_text` and skipped on drafts, so 'skipped' is
+          # legitimate; anything else is not.
+          if [ "$model_text_result" != "success" ] && [ "$model_text_result" != "skipped" ]; then
+            echo "❌ model-facing-text byte budget did not succeed ($model_text_result)"
             exit 1
           fi
 
