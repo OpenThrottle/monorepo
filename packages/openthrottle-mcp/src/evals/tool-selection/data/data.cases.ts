@@ -9,11 +9,15 @@ const TASK_ID = '7a1c2d3e-4f5a-4b6c-8d7e-9f0a1b2c3d4e';
 const OTHER_TASK_ID = '9b8a7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d';
 const DOCUMENT_ID = 'c4d5e6f7-a8b9-4c0d-9e1f-2a3b4c5d6e7f';
 
-const equals = (value: boolean | number | string): ArgMatcher => ({
-  kind: 'equals',
-  value,
-});
-const includes = (value: string): ArgMatcher => ({ kind: 'includes', value });
+const equals = (value: boolean | number | string): ArgMatcher => {
+  return {
+    kind: 'equals',
+    value,
+  };
+};
+const includes = (value: string): ArgMatcher => {
+  return { kind: 'includes', value };
+};
 const present: ArgMatcher = { kind: 'present' };
 const SEED: CaseOrigin = { kind: 'seed' };
 const DESTRUCTIVE: readonly string[] = [

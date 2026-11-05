@@ -47,16 +47,15 @@ describe('TOOL_SELECTION_CASES', () => {
         new Set(Object.keys(t.inputSchema.properties ?? {})),
       ]),
     );
-    const unknown = TOOL_SELECTION_CASES.flatMap((c) =>
-      c.expect.kind === 'call'
-        ? Object.keys(c.expect.args).flatMap((arg) =>
-            c.expect.kind === 'call' &&
-            c.expect.tools.every((tool) => !schemaProps.get(tool)?.has(arg))
-              ? [`${c.id}.${arg}`]
-              : [],
-          )
-        : [],
-    );
+    const unknown = TOOL_SELECTION_CASES.flatMap((c) => {
+      if (c.expect.kind !== 'call') return [];
+      const { args, tools } = c.expect;
+      return Object.keys(args)
+        .filter((arg) =>
+          tools.every((tool) => !schemaProps.get(tool)?.has(arg)),
+        )
+        .map((arg) => `${c.id}.${arg}`);
+    });
 
     expect(unknown).toEqual([]);
   });

@@ -12,8 +12,11 @@ import type {
   TrialGrade,
 } from './eval-case.ts';
 
-const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
+const isRecord = (
+  value: unknown,
+): value is Readonly<Record<string, unknown>> => {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+};
 
 const containsText = (haystack: unknown, needle: string): boolean => {
   if (typeof haystack === 'string') {
@@ -60,8 +63,11 @@ const failedArgs = (
     .map(([key]) => key);
 };
 
-const describeCalls = (calls: readonly SelectedCall[]): string =>
-  calls.length === 0 ? 'no tool call' : calls.map((c) => c.name).join(', ');
+const describeCalls = (calls: readonly SelectedCall[]): string => {
+  return calls.length === 0
+    ? 'no tool call'
+    : calls.map((c) => c.name).join(', ');
+};
 
 /**
  * @description Grades one trial. `otToolNames` is the set of OT tools on the surface; a `no-call` case still
@@ -87,12 +93,12 @@ export function gradeCase(
   if (expect.kind === 'no-call') {
     const otCalls = calls.filter((call) => otToolNames.has(call.name));
 
-    return otCalls.length === 0
-      ? { pass: true }
-      : {
-          pass: false,
-          reason: `expected no OT call, got ${describeCalls(otCalls)}`,
-        };
+    if (otCalls.length === 0) return { pass: true };
+
+    return {
+      pass: false,
+      reason: `expected no OT call, got ${describeCalls(otCalls)}`,
+    };
   }
 
   const candidates = calls.filter((call) => expect.tools.includes(call.name));

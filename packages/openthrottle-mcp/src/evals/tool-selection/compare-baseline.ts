@@ -85,15 +85,15 @@ export function compareBaseline(
   const deltas = current.cases.flatMap((result): CaseDelta[] => {
     const before = baselineById.get(result.id);
 
-    return before === undefined
-      ? []
-      : [
-          {
-            baselineRate: passRate(before),
-            currentRate: passRate(result),
-            id: result.id,
-          },
-        ];
+    if (before === undefined) return [];
+
+    return [
+      {
+        baselineRate: passRate(before),
+        currentRate: passRate(result),
+        id: result.id,
+      },
+    ];
   });
 
   return {

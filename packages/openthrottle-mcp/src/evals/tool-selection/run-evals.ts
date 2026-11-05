@@ -46,17 +46,18 @@ const ZERO_USAGE: SelectionUsage = {
 const addUsage = (
   total: SelectionUsage,
   selection: Selection,
-): SelectionUsage =>
-  selection.kind === 'error'
-    ? total
-    : {
-        cacheReadInputTokens:
-          total.cacheReadInputTokens + selection.usage.cacheReadInputTokens,
-        cacheWriteInputTokens:
-          total.cacheWriteInputTokens + selection.usage.cacheWriteInputTokens,
-        inputTokens: total.inputTokens + selection.usage.inputTokens,
-        outputTokens: total.outputTokens + selection.usage.outputTokens,
-      };
+): SelectionUsage => {
+  if (selection.kind === 'error') return total;
+
+  return {
+    cacheReadInputTokens:
+      total.cacheReadInputTokens + selection.usage.cacheReadInputTokens,
+    cacheWriteInputTokens:
+      total.cacheWriteInputTokens + selection.usage.cacheWriteInputTokens,
+    inputTokens: total.inputTokens + selection.usage.inputTokens,
+    outputTokens: total.outputTokens + selection.usage.outputTokens,
+  };
+};
 
 /**
  * @description SHA-256 of the surface (instructions + tools), so a result names the wording it measured.

@@ -53,8 +53,11 @@ export interface HarnessTool {
 const API_VERSION = '2026-10-21';
 const MAX_TOKENS = 16000;
 
-const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
+const isRecord = (
+  value: unknown,
+): value is Readonly<Record<string, unknown>> => {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+};
 
 const numberField = (
   record: Readonly<Record<string, unknown>>,
@@ -81,11 +84,13 @@ function buildSystemPrompt(instructions: string): string {
   ].join('\n');
 }
 
-const toApiTool = (tool: Tool): HarnessTool => ({
-  description: tool.description ?? '',
-  input_schema: tool.inputSchema,
-  name: tool.name,
-});
+const toApiTool = (tool: Tool): HarnessTool => {
+  return {
+    description: tool.description ?? '',
+    input_schema: tool.inputSchema,
+    name: tool.name,
+  };
+};
 
 /**
  * @description The Messages API request body for one prompt.
@@ -140,28 +145,27 @@ export function parseResponseBody(body: unknown): Selection {
   }
 
   const blocks: readonly unknown[] = body['content'];
-  const calls = blocks.flatMap((block): SelectedCall[] =>
-    isRecord(block) &&
-    block['type'] === 'tool_use' &&
-    typeof block['name'] === 'string'
-      ? [{ input: block['input'], name: block['name'] }]
-      : [],
-  );
+  const calls = blocks.flatMap((block): SelectedCall[] => {
+    if (!isRecord(block) || block['type'] !== 'tool_use') return [];
+    const name = block['name'];
+    if (typeof name !== 'string') return [];
+    return [{ input: block['input'], name }];
+  });
   const text = blocks
-    .flatMap((block): string[] =>
-      isRecord(block) &&
-      block['type'] === 'text' &&
-      typeof block['text'] === 'string'
-        ? [block['text']]
-        : [],
-    )
+    .flatMap((block): string[] => {
+      if (!isRecord(block) || block['type'] !== 'text') return [];
+      const blockText = block['text'];
+      if (typeof blockText !== 'string') return [];
+      return [blockText];
+    })
     .join('\n');
 
   return { calls, kind: 'calls', text, usage: parseUsage(body['usage']) };
 }
 
-const isRetryable = (status: number): boolean =>
-  status === 429 || status >= 500;
+const isRetryable = (status: number): boolean => {
+  return status === 429 || status >= 500;
+};
 
 const delay = async (ms: number): Promise<void> => {
   await new Promise((resolve) => setTimeout(resolve, ms));

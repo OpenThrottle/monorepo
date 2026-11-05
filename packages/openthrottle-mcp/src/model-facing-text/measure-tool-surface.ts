@@ -25,7 +25,9 @@ export interface ToolSurfaceMeasurement {
   readonly toolsTotalBytes: number;
 }
 
-const byteLength = (text: string): number => Buffer.byteLength(text, 'utf8');
+const byteLength = (text: string): number => {
+  return Buffer.byteLength(text, 'utf8');
+};
 
 /**
  * @description Lists the stdio tool surface and measures it. Tools arrive sorted by name so the output diffs
