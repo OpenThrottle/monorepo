@@ -86,22 +86,10 @@ export const developerMcpToolDefinitions: readonly DeveloperMcpToolDefinition[] 
       Th.claimPlanMessagesToolHandler,
     ),
     defineTool(
-      'list_plan_messages',
-      Th.listPlanMessagesToolDescription,
-      Th.listPlanMessagesToolParameters,
-      Th.listPlanMessagesToolHandler,
-    ),
-    defineTool(
       'post_plan_message',
       Th.postPlanMessageToolDescription,
       Th.postPlanMessageToolParameters,
       Th.postPlanMessageToolHandler,
-    ),
-    defineTool(
-      'withdraw_plan_message',
-      Th.withdrawPlanMessageToolDescription,
-      Th.withdrawPlanMessageToolParameters,
-      Th.withdrawPlanMessageToolHandler,
     ),
     defineTool(
       'agent_conversation_get',

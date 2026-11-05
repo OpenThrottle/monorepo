@@ -263,17 +263,6 @@ export class McpDeveloperMcpSurface {
   }
 
   @Tool({
-    description: Th.listPlanMessagesToolDescription,
-    name: 'list_plan_messages',
-    parameters: asMcpParameters(Th.listPlanMessagesToolParameters),
-  })
-  listPlanMessages(
-    args: Parameters<typeof Th.listPlanMessagesToolHandler>[0],
-  ): ReturnType<typeof Th.listPlanMessagesToolHandler> {
-    return Th.listPlanMessagesToolHandler(args);
-  }
-
-  @Tool({
     description: Th.postPlanMessageToolDescription,
     name: 'post_plan_message',
     parameters: asMcpParameters(Th.postPlanMessageToolParameters),
@@ -282,17 +271,6 @@ export class McpDeveloperMcpSurface {
     args: Parameters<typeof Th.postPlanMessageToolHandler>[0],
   ): ReturnType<typeof Th.postPlanMessageToolHandler> {
     return Th.postPlanMessageToolHandler(args);
-  }
-
-  @Tool({
-    description: Th.withdrawPlanMessageToolDescription,
-    name: 'withdraw_plan_message',
-    parameters: asMcpParameters(Th.withdrawPlanMessageToolParameters),
-  })
-  withdrawPlanMessage(
-    args: Parameters<typeof Th.withdrawPlanMessageToolHandler>[0],
-  ): ReturnType<typeof Th.withdrawPlanMessageToolHandler> {
-    return Th.withdrawPlanMessageToolHandler(args);
   }
 
   @Tool({

@@ -1,5 +1,5 @@
 /**
- * @description Handler tests for the plan inbox MCP tools (post/list/claim/withdraw_plan_message)
+ * @description Handler tests for the plan inbox MCP tools (post_plan_message, claim_plan_messages)
  * with mocked GraphQL.
  */
 
@@ -13,9 +13,7 @@ import {
 } from '../__generated__/graphql.js';
 import {
   claimPlanMessagesToolHandler,
-  listPlanMessagesToolHandler,
   postPlanMessageToolHandler,
-  withdrawPlanMessageToolHandler,
 } from './plan-messages.ts';
 
 vi.mock('@openthrottle/nodejs-graphql', () => ({
@@ -114,24 +112,6 @@ describe('plan inbox MCP tools', () => {
     });
   });
 
-  describe('listPlanMessagesToolHandler', () => {
-    it('forwards the filters and reports an empty inbox', async () => {
-      vi.mocked(executeGraphqlWithAuth).mockResolvedValue({ planMessages: [] });
-
-      const result = await listPlanMessagesToolHandler({
-        planId,
-        statuses: ['PENDING'],
-      });
-
-      expect(executeGraphqlWithAuth).toHaveBeenCalledWith(
-        serviceAccountToken,
-        expect.anything(),
-        { input: { kinds: null, planId, statuses: ['PENDING'] } },
-      );
-      expect(result.content[0]?.text).toContain('No inbox messages');
-    });
-  });
-
   describe('claimPlanMessagesToolHandler', () => {
     describe('when nothing is pending', () => {
       it('says so', async () => {
@@ -178,36 +158,6 @@ describe('plan inbox MCP tools', () => {
         expect(text.indexOf('[STEER from @bob]')).toBeLessThan(
           text.indexOf('[QUEUE from @alice]'),
         );
-      });
-    });
-  });
-
-  describe('withdrawPlanMessageToolHandler', () => {
-    it('returns an error result when GraphQL rejects the withdraw', async () => {
-      vi.mocked(executeGraphqlWithAuth).mockRejectedValue(
-        new Error(
-          'Plan message m-1 is no longer PENDING and cannot be changed',
-        ),
-      );
-
-      const result = await withdrawPlanMessageToolHandler({ id: 'm-1' });
-
-      expect(result).toMatchObject({ isError: true });
-    });
-
-    it('returns the withdrawn message', async () => {
-      const withdrawn = {
-        ...message('QUEUE', 'alice', 'never mind'),
-        status: 'WITHDRAWN',
-      };
-      vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
-        withdrawPlanMessage: withdrawn,
-      });
-
-      const result = await withdrawPlanMessageToolHandler({ id: withdrawn.id });
-
-      expect(result).toMatchObject({
-        structuredContent: { message: withdrawn },
       });
     });
   });

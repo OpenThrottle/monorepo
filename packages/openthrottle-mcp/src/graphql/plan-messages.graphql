@@ -18,20 +18,8 @@ fragment PlanMessageFields on PlanMessageObject {
   updatedAt
 }
 
-query PlanMessages($input: ListPlanMessagesInput!) {
-  planMessages(input: $input) {
-    ...PlanMessageFields
-  }
-}
-
 mutation PostPlanMessage($input: PostPlanMessageInput!) {
   postPlanMessage(input: $input) {
-    ...PlanMessageFields
-  }
-}
-
-mutation WithdrawPlanMessage($input: WithdrawPlanMessageInput!) {
-  withdrawPlanMessage(input: $input) {
     ...PlanMessageFields
   }
 }
