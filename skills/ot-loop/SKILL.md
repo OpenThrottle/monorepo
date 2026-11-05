@@ -62,7 +62,7 @@ Each `/loop` iteration works exactly one task. Resume the lowest-`sortOrder` `IN
 5. **Commit per task** with `/github-commit` — conventional commit, with `Plan-Id:` and `Task-Id:` footers for traceability. Do **not** record a work-ledger artifact for these per-task work commits; the footers carry the traceability. A task that changes no tracked file (verification-only, gitignored output like `/skill-sync`, OT-only) needs **no** commit — never make an empty or cosmetic one to carry the footer. Its step-4 `COMPLETED` flip is the record; the squash picks it up from OT ([`github-squash` § Footers](../github-squash/SKILL.md#footers)).
    - **💰 Commit per task, but do NOT push per task.** Let the commits accumulate locally and push **once**, when the plan is done (the PR step below does it). Every push to a branch with a ready PR triggers a full CI run, so pushing per task burns N runs validating a branch nobody is reviewing yet. One run at the end validates the whole batch — the same total validation over fewer runs. Push mid-plan only if you must hand off, exit, or the worktree is at risk of being reaped. See [ci-cost.md](../../docs/monorepo/ci-cost.md).
 6. **Add tasks when the work reveals more work** (`create_tasks` appends after the plan max when `sortOrder` is omitted).
-7. **Repeat** — before selecting the next task, confirm the one you just finished is `COMPLETED` (not still `IN_PROGRESS`). Continue until every task is `COMPLETED`.
+7. **Repeat** — before selecting the next task, confirm the one you just finished is `COMPLETED` (not still `IN_PROGRESS`), then poll for a cancel and claim the plan inbox ([§ Your run row](#your-run-row)). Continue until every task is `COMPLETED`.
 
 **Narrate as you go.** Use `append_plan_output(planId, ...)` for decisions and progress, passing `taskId` = the task the log actually describes (omit only for genuinely plan-level notes). One iteration can touch several tasks — tag the right id.
 
@@ -104,7 +104,7 @@ Step 2 is the only delegatable step, because the loop's most common failure is s
 | Validation (step 3)                 |                      |
 | The commit (step 5)                 |                      |
 | `append_plan_output` narration      |                      |
-| The cancel poll                     |                      |
+| The cancel poll and inbox claim     |                      |
 | Settling the run row                |                      |
 
 A subagent must not touch OT status or git history. It reports back; the parent decides. If a
@@ -265,7 +265,9 @@ The two tiers get **different** caps under fan-out:
 
 Everything here is specific to running interactively. It is deliberately outside the canonical
 block above, because the detached `workflow-ralph` CLI already does all of it — it heartbeats on
-a timer and polls the cancel marker itself. Only an agent turn has to do it by hand.
+a timer and polls the cancel marker itself. Only an agent turn has to do it by hand. The one
+exception is the inbox claim: no CLI does it, so the [`agents-ralph`](../agents-ralph/SKILL.md)
+prompt carries the same step for the agent under `workflow-ralph`.
 
 **Poll for a cancel at each task boundary.** Call `get_plan_runs(planId)` and check your run's
 `cancelRequestedAt`. If it is set, stop where you are and settle `CANCELLED`.
@@ -277,6 +279,29 @@ a timer and polls the cancel marker itself. Only an agent turn has to do it by h
 > nothing — the user pressed the button and nothing happened.
 
 Missing a poll only delays a cancel; it corrupts nothing. Best-effort is fine, silence is not.
+
+**Then claim the inbox, at the same boundary.** Right after the cancel poll comes back clear,
+pick the next task and call `claim_plan_messages({ planId, planRunId, taskId })` with the id of
+the task you are about to start — before its step 1. This is how a human talks to a live run
+without killing it.
+
+- **Claiming is delivery.** The call marks every `PENDING` `STEER`/`QUEUE` message `DELIVERED`,
+  stamped with your run and that task, and writes the audit chunk to the plan output stream in the
+  same transaction. Each message reaches exactly one run, once — so never claim speculatively, and
+  never use `list_plan_messages` (read-only) as a substitute: listing delivers nothing.
+- **Apply `STEER`s first, as overrides.** Where a steer conflicts with the task description, the
+  steer wins. A steer may redirect the run, not just the task: "skip the UI task" means `SKIPPED`
+  plus a note; "stop after this one" means finishing the current task and settling `CANCELLED`.
+- **Then `QUEUE`s, as extra requirements** for the task you are starting. One that clearly belongs
+  to a later task becomes a `create_tasks` entry or a note on that task — not silently dropped.
+- **Acknowledge every message in `append_plan_output`** (tagged with the task's `taskId`): what you
+  changed because of it, or why you could not honor it. A message you cannot honor is explained,
+  never ignored — the human is waiting to see that it landed.
+- **Nothing pending is the common case** — an empty result costs one call; carry on.
+
+There is no mid-task interrupt: a message posted while a task is in flight waits for the next
+boundary. A message posted with no run live stays `PENDING` and goes to the plan's next run.
+Like the cancel poll, a failed claim delays delivery and corrupts nothing — log it and keep going.
 
 > **Invariant — every exit path settles the run.** `settle_plan_run(planRunId, status)` with
 > `COMPLETED` when the PR opens, `CANCELLED` on a deliberate stop, `FAILED` when you give up or

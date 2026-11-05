@@ -666,6 +666,24 @@ export type ChildProcessMetrics = {
   sampleCount: Scalars['Int']['output'];
 };
 
+export type ClaimPlanMessagesInput = {
+  /** Plan whose pending inbox to claim. */
+  planId: Scalars['ID']['input'];
+  /** The claiming run (plan_runs.id), stamped on each delivered message. Omit only when no run row exists. */
+  planRunId?: InputMaybe<Scalars['ID']['input']>;
+  /** The task the agent is about to start; delivered messages and the audit chunk are attributed to it. */
+  taskId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+/** The outcome of claimPlanMessages: the messages just delivered, in delivery order (STEERs first), and the audit chunk recorded on the plan output stream. */
+export type ClaimPlanMessagesResultObject = {
+  __typename?: 'ClaimPlanMessagesResultObject';
+  /** The plan output stream chunk that records this delivery. Null when nothing was pending. */
+  auditChunk?: Maybe<PlanOutputStreamChunkObject>;
+  /** Messages delivered by this claim, STEERs first then QUEUEs, oldest first within each kind. Empty when nothing was pending. */
+  messages: Array<PlanMessageObject>;
+};
+
 export type CleanQueueInput = {
   /** Must be true to confirm this destructive action. */
   confirm: Scalars['Boolean']['input'];
@@ -1670,6 +1688,15 @@ export type ListCustomPromptsInput = {
   userId?: InputMaybe<Scalars['ID']['input']>;
 };
 
+export type ListPlanMessagesInput = {
+  /** Return only these kinds. Omit for every kind. */
+  kinds?: InputMaybe<Array<PlanMessageKind>>;
+  /** Plan whose inbox to list. */
+  planId: Scalars['ID']['input'];
+  /** Return only these statuses. Omit for every status. */
+  statuses?: InputMaybe<Array<PlanMessageStatus>>;
+};
+
 export type ListPlanOutputStreamChunksInput = {
   /** Max rows to return (default and hard cap: 1000). */
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -1911,6 +1938,8 @@ export type Mutation = {
   cancelPlanRun: CancelPlanRunResultObject;
   /** Request cancellation of an in-flight run (durable marker + best-effort in-process abort). */
   cancelScheduledAgentJobRun: ScheduledAgentJobRunObject;
+  /** Claim every PENDING STEER/QUEUE message on a plan for delivery at a task boundary. Marks them DELIVERED (stamping the run and task) and records the delivery on the plan output stream in one transaction, so a message is delivered at most once and never unrecorded. Returns STEERs first. */
+  claimPlanMessages: ClaimPlanMessagesResultObject;
   /** Remove finished jobs (completed or failed only) from a queue. Destructive: requires confirm=true. Optional graceMs/limit bound which jobs are removed. */
   cleanQueue: CleanQueueResultObject;
   /** Clone a git repository into OPENTHROTTLE_CHECKOUT_ROOT using ambient host credentials, then register it as a managed checkout via the same pipeline as addWorkspaceFolder. A failed clone leaves no rows and no partial directory; OT stores no credentials. */
@@ -2031,6 +2060,8 @@ export type Mutation = {
   pauseQueue: QueueControlResultObject;
   /** Open the host OS folder dialog and return the chosen absolute server-host path, or null on user-cancel. Guarded by the same same-machine predicate as workspacePickerCapabilities (re-checked before spawning) and bounded by a kill timeout. Does not register anything — the client confirms and calls addWorkspaceFolder. */
   pickFolderNative: PickFolderNativePayloadObject;
+  /** Post a human message to a plan's inbox. STEER and QUEUE start PENDING and are delivered to the plan's live (or next) run at its next task boundary; FEEDBACK is recorded and never delivered. */
+  postPlanMessage: PlanMessageObject;
   /** Promote a task into a new, first-class plan. Validates the task is promotable (exists, not a lifecycle hook, not already promoted) then enqueues an async task-promotion job (enqueue-after-validate, idempotency key doubles as the BullMQ job id). The job creates the plan, carries the task's tags, seeds an initial task, closes out the source task (→ PROMOTED + `promoted` tag), and records provenance. Returns the accepted job id; the new plan surfaces via the task-status subscription once the job completes. */
   promoteTaskToPlan: PromoteTaskToPlanResultObject;
   /** Delete registered worktree checkout rows whose worktree is gone — the cleanup for discoveredWorktrees.missingCheckouts. Rows only: never touches the filesystem and never deletes a primary checkout. Each id is re-checked server-side and skipped, not failed, when its path is a live worktree or an unsettled plan run still points at it. */
@@ -2144,6 +2175,8 @@ export type Mutation = {
   updateNote?: Maybe<NoteObject>;
   /** Update a plan */
   updatePlan?: Maybe<PlanObject>;
+  /** Edit the body of a PENDING plan message. Delivered, withdrawn and recorded messages are immutable. */
+  updatePlanMessage: PlanMessageObject;
   /** Update a project */
   updateProject?: Maybe<ProjectObject>;
   /** Edit an owned repository's name, default branch, and/or project link. Requires the authenticated user to own a checkout of the repository. */
@@ -2177,6 +2210,8 @@ export type Mutation = {
   upsertSkillAvailabilityRuleSet: SkillAvailabilityRuleSetObject;
   /** Create or update a tag→action rule. The JSON payload is validated against the action type's schema. */
   upsertTagActionRule: TagActionRuleObject;
+  /** Withdraw a PENDING plan message so no run receives it. */
+  withdrawPlanMessage: PlanMessageObject;
   /**
    * Deprecated alias for enqueuePlanRun. Enqueues a spawn plan-run job with the same input and result shape.
    * @deprecated Use enqueuePlanRun. Identical spawn enqueue behavior; retained for backward-compatible clients only.
@@ -2265,6 +2300,10 @@ export type MutationCancelPlanRunArgs = {
 
 export type MutationCancelScheduledAgentJobRunArgs = {
   runId: Scalars['ID']['input'];
+};
+
+export type MutationClaimPlanMessagesArgs = {
+  input: ClaimPlanMessagesInput;
 };
 
 export type MutationCleanQueueArgs = {
@@ -2473,6 +2512,10 @@ export type MutationLoginArgs = {
 
 export type MutationPauseQueueArgs = {
   input: QueueControlInput;
+};
+
+export type MutationPostPlanMessageArgs = {
+  input: PostPlanMessageInput;
 };
 
 export type MutationPromoteTaskToPlanArgs = {
@@ -2693,6 +2736,10 @@ export type MutationUpdatePlanArgs = {
   input: UpdatePlanInput;
 };
 
+export type MutationUpdatePlanMessageArgs = {
+  input: UpdatePlanMessageInput;
+};
+
 export type MutationUpdateProjectArgs = {
   input: UpdateProjectInput;
 };
@@ -2753,6 +2800,10 @@ export type MutationUpsertSkillAvailabilityRuleSetArgs = {
 
 export type MutationUpsertTagActionRuleArgs = {
   input: UpsertTagActionRuleInput;
+};
+
+export type MutationWithdrawPlanMessageArgs = {
+  input: WithdrawPlanMessageInput;
 };
 
 export type MutationWorkflowPlanRunArgs = {
@@ -2867,6 +2918,47 @@ export type PlanEnqueuedNotification = NotificationEvent & {
   timestamp: Scalars['String']['output'];
 };
 
+/** What a plan inbox message is for. STEER: a correction that overrides the task description where they conflict, delivered first at the next task boundary. QUEUE: an extra requirement for the upcoming work, delivered after STEERs. FEEDBACK: post-run reflection; recorded, never delivered. */
+export const PlanMessageKind = {
+  Feedback: 'FEEDBACK',
+  Queue: 'QUEUE',
+  Steer: 'STEER',
+} as const;
+
+export type PlanMessageKind =
+  (typeof PlanMessageKind)[keyof typeof PlanMessageKind];
+/** A human message on a plan's inbox: a STEER or QUEUE for a live run, or post-run FEEDBACK. */
+export type PlanMessageObject = {
+  __typename?: 'PlanMessageObject';
+  /** GitHub username of the human who wrote the message. */
+  author: Scalars['String']['output'];
+  body: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  /** When a run claimed the message. Null until DELIVERED. */
+  deliveredAt?: Maybe<Scalars['DateTime']['output']>;
+  /** Task the agent was about to start when the message was applied. Null until DELIVERED. */
+  deliveredToTaskId?: Maybe<Scalars['ID']['output']>;
+  id: Scalars['ID']['output'];
+  kind: PlanMessageKind;
+  planId: Scalars['ID']['output'];
+  /** Run that consumed the message. Null until DELIVERED, or when claimed outside a registered run. */
+  planRunId?: Maybe<Scalars['ID']['output']>;
+  status: PlanMessageStatus;
+  /** Task the human was looking at when they wrote the message. Context only; it does not decide delivery. */
+  taskId?: Maybe<Scalars['ID']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+/** Plan inbox message lifecycle. PENDING: waiting for the next task boundary. DELIVERED: claimed by a run (immutable). WITHDRAWN: retracted before delivery. RECORDED: FEEDBACK messages only. */
+export const PlanMessageStatus = {
+  Delivered: 'DELIVERED',
+  Pending: 'PENDING',
+  Recorded: 'RECORDED',
+  Withdrawn: 'WITHDRAWN',
+} as const;
+
+export type PlanMessageStatus =
+  (typeof PlanMessageStatus)[keyof typeof PlanMessageStatus];
 export type PlanObject = {
   __typename?: 'PlanObject';
   /** Plan-level after-hooks (afterAll, or afterEach when scope='each'), in execution order. */
@@ -3109,6 +3201,19 @@ export type PlanWaitingForWorktreeNotification = NotificationEvent & {
   severity?: Maybe<Scalars['String']['output']>;
   /** ISO 8601 timestamp when the event occurred. */
   timestamp: Scalars['String']['output'];
+};
+
+export type PostPlanMessageInput = {
+  /** GitHub username to attribute the message to. Omit to stamp it from the caller's identity. */
+  author?: InputMaybe<Scalars['String']['input']>;
+  /** Message text. Must not be blank. */
+  body: Scalars['String']['input'];
+  /** STEER or QUEUE for a live run (held PENDING for the next run when none is live); FEEDBACK for post-run reflection. */
+  kind: PlanMessageKind;
+  /** Plan to post the message to. */
+  planId: Scalars['ID']['input'];
+  /** Task the author was looking at, for context. It does not decide delivery. */
+  taskId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type PrCountByLabelInput = {
@@ -3466,6 +3571,8 @@ export type Query = {
   planEmbedding?: Maybe<PlanEmbeddingObject>;
   /** List plan embeddings by plan ID, ordered by createdAt ascending */
   planEmbeddings: Array<PlanEmbeddingObject>;
+  /** List a plan's inbox oldest first, optionally narrowed to some kinds and statuses. */
+  planMessages: Array<PlanMessageObject>;
   /** Get a plan output stream chunk by ID */
   planOutputStreamChunk?: Maybe<PlanOutputStreamChunkObject>;
   /** List plan output stream chunks by plan ID, ordered by createdAt ascending */
@@ -3740,6 +3847,10 @@ export type QueryPlanEmbeddingArgs = {
 
 export type QueryPlanEmbeddingsArgs = {
   input: PlanEmbeddingsByPlanInput;
+};
+
+export type QueryPlanMessagesArgs = {
+  input: ListPlanMessagesInput;
 };
 
 export type QueryPlanOutputStreamChunkArgs = {
@@ -5452,6 +5563,8 @@ export type Subscription = {
   conversationStreamChunkAdded: ConversationStreamChunkObject;
   /** Firehose of all real-time notification events. Identity comes from the authenticated ws connection. */
   notifications: NotificationEvent;
+  /** Live stream of a plan's inbox: each message as it is posted, edited, withdrawn or delivered (topic plan:<planId>:messages). */
+  planMessageChanged: PlanMessageObject;
   /** Lifecycle notifications for a single plan (topic plan:<planId>:lifecycle). */
   planNotifications: NotificationEvent;
   /** Live stream of output chunks appended to a plan (topic plan:<planId>:output). */
@@ -5468,6 +5581,10 @@ export type SubscriptionAgentSetupChunkAddedArgs = {
 
 export type SubscriptionConversationStreamChunkAddedArgs = {
   conversationId: Scalars['ID']['input'];
+};
+
+export type SubscriptionPlanMessageChangedArgs = {
+  planId: Scalars['ID']['input'];
 };
 
 export type SubscriptionPlanNotificationsArgs = {
@@ -5973,6 +6090,13 @@ export type UpdatePlanInput = {
   title?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type UpdatePlanMessageInput = {
+  /** Replacement text. Must not be blank. */
+  body: Scalars['String']['input'];
+  /** A PENDING message to edit. */
+  id: Scalars['ID']['input'];
+};
+
 export type UpdateProjectInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   /** Project id to update */
@@ -6199,6 +6323,11 @@ export type WallClockMetrics = {
   wallClockMs: Scalars['Float']['output'];
   /** Ratio of wall-clock to CPU time. ~1 = CPU-bound, > 5 = I/O-bound. */
   wallClockToCpuRatio: Scalars['Float']['output'];
+};
+
+export type WithdrawPlanMessageInput = {
+  /** A PENDING message to withdraw. */
+  id: Scalars['ID']['input'];
 };
 
 export type WorkArtifactListResult = {

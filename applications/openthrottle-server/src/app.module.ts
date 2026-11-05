@@ -54,6 +54,7 @@ import { NotesGraphqlModule } from './graphql/notes/notes-graphql.module.ts';
 import { NOTIFICATION_EVENT_TYPES } from './graphql/notifications/notification-event.object.ts';
 import { NotificationsGraphqlModule } from './graphql/notifications/notifications-graphql.module.ts';
 import { PlanEmbeddingsGraphqlModule } from './graphql/plan-embeddings/plan-embeddings-graphql.module.ts';
+import { PlanMessagesGraphqlModule } from './graphql/plan-messages/plan-messages.module.ts';
 import { PlanOutputStreamGraphqlModule } from './graphql/plan-output-stream/plan-output-stream-graphql.module.ts';
 import { PlansGraphqlModule } from './graphql/plans/plans-graphql.module.ts';
 import { ProjectSkillsGraphqlModule } from './graphql/project-skills/project-skills-graphql.module.ts';
@@ -292,6 +293,7 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
       NotesGraphqlModule,
       NotificationsGraphqlModule,
       PlanEmbeddingsGraphqlModule,
+      PlanMessagesGraphqlModule,
       PlanOutputStreamGraphqlModule,
       PlansGraphqlModule,
       ProjectSkillsGraphqlModule,

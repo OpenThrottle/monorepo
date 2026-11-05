@@ -40,6 +40,15 @@ export function planOutputTopic(planId: string): string {
 }
 
 /**
+ * Inbox messages posted to or changed on a single plan: `plan:<planId>:messages`.
+ *
+ * @public
+ */
+export function planMessagesTopic(planId: string): string {
+  return instanceTopic('plan', planId, 'messages');
+}
+
+/**
  * Lifecycle notifications for a single plan (status/task changes): `plan:<planId>:lifecycle`.
  *
  * @public

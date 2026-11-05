@@ -7,7 +7,11 @@ import {
 import { z } from 'zod/v3';
 
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
-import type { PlanDetailForceSettlePlanRunMutation } from '~/__generated__/graphql';
+import type {
+  PlanDetailForceSettlePlanRunMutation,
+  PlanDetailPostPlanMessageMutation,
+  PlanDetailWithdrawPlanMessageMutation,
+} from '~/__generated__/graphql';
 import {
   PlanDetailAddHookDocument,
   PlanDetailAddPlanTagDocument,
@@ -15,6 +19,7 @@ import {
   PlanDetailEnqueuePlanRunDocument,
   PlanDetailEvaluatePlanRulesDocument,
   PlanDetailForceSettlePlanRunDocument,
+  PlanDetailPostPlanMessageDocument,
   PlanDetailRemovePlanTagDocument,
   PlanDetailRunConfigDocument,
   PlanDetailSchedulePlanRunDocument,
@@ -22,6 +27,7 @@ import {
   PlanDetailUpdatePlanJobRunHooksDocument,
   PlanDetailUpdatePlanRunConfigDocument,
   PlanDetailUpdateTaskDocument,
+  PlanDetailWithdrawPlanMessageDocument,
 } from '~/__generated__/graphql';
 import {
   AddHookInputSchema,
@@ -30,10 +36,12 @@ import {
   DetachHookInputSchema,
   EnqueuePlanRunInputSchema,
   ForceSettlePlanRunInputSchema,
+  PostPlanMessageInputSchema,
   RemovePlanTagInputSchema,
   SchedulePlanRunInputSchema,
   SetPlanStatusInputSchema,
   UpdateTaskInputSchema,
+  WithdrawPlanMessageInputSchema,
 } from '~/__generated__/schemas';
 import { toErrorMessage } from '~/global/utils/utils.error-message';
 import { parseJobRunHooksJsonFromPlan } from '~/routing/plans/utils/job-run-hooks-ui';
@@ -134,6 +142,80 @@ export const forceSettlePlanRun = async (
       forceSettlePlanRunError: toErrorMessage(
         error,
         'Failed to settle plan run.',
+      ),
+    };
+  }
+};
+
+/**
+ * Posts a STEER or QUEUE message to the plan inbox. `author` is left for the
+ * server to stamp from the caller's identity, so the form cannot attribute a
+ * message to someone else.
+ */
+export const postPlanMessage = async (
+  args: Route.ActionArgs,
+  planId: string,
+  formData: FormData,
+): Promise<
+  | {
+      postPlanMessage: PlanDetailPostPlanMessageMutation['postPlanMessage'];
+    }
+  | { postPlanMessageError: string }
+> => {
+  const parsed = parseFormData(
+    formData,
+    PostPlanMessageInputSchema().omit({ author: true, planId: true }),
+    { labels: { body: 'Message' }, strict: false },
+  );
+  if (!parsed.success) {
+    return { postPlanMessageError: parsed.error };
+  }
+
+  try {
+    const result = await executeGraphqlWithAuth(
+      args.request,
+      PlanDetailPostPlanMessageDocument,
+      { input: { ...parsed.data, planId } },
+    );
+
+    return { postPlanMessage: result.postPlanMessage };
+  } catch (error) {
+    return {
+      postPlanMessageError: toErrorMessage(error, 'Failed to send message.'),
+    };
+  }
+};
+
+/** Withdraws a PENDING inbox message so no run receives it. */
+export const withdrawPlanMessage = async (
+  args: Route.ActionArgs,
+  formData: FormData,
+): Promise<
+  | {
+      withdrawPlanMessage: PlanDetailWithdrawPlanMessageMutation['withdrawPlanMessage'];
+    }
+  | { withdrawPlanMessageError: string }
+> => {
+  const parsed = parseFormData(formData, WithdrawPlanMessageInputSchema(), {
+    strict: false,
+  });
+  if (!parsed.success) {
+    return { withdrawPlanMessageError: parsed.error };
+  }
+
+  try {
+    const result = await executeGraphqlWithAuth(
+      args.request,
+      PlanDetailWithdrawPlanMessageDocument,
+      { input: parsed.data },
+    );
+
+    return { withdrawPlanMessage: result.withdrawPlanMessage };
+  } catch (error) {
+    return {
+      withdrawPlanMessageError: toErrorMessage(
+        error,
+        'Failed to withdraw message.',
       ),
     };
   }

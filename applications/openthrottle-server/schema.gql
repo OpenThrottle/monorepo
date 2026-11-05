@@ -2206,6 +2206,73 @@ type DeletePlanOutputResult {
   deletedCount: Int!
 }
 
+"""
+A human message on a plan's inbox: a STEER or QUEUE for a live run, or post-run FEEDBACK.
+"""
+type PlanMessageObject {
+  """GitHub username of the human who wrote the message."""
+  author: String!
+  body: String!
+  createdAt: DateTime!
+
+  """When a run claimed the message. Null until DELIVERED."""
+  deliveredAt: DateTime
+
+  """
+  Task the agent was about to start when the message was applied. Null until DELIVERED.
+  """
+  deliveredToTaskId: ID
+  id: ID!
+  kind: PlanMessageKind!
+  planId: ID!
+
+  """
+  Run that consumed the message. Null until DELIVERED, or when claimed outside a registered run.
+  """
+  planRunId: ID
+  status: PlanMessageStatus!
+
+  """
+  Task the human was looking at when they wrote the message. Context only; it does not decide delivery.
+  """
+  taskId: ID
+  updatedAt: DateTime!
+}
+
+"""
+What a plan inbox message is for. STEER: a correction that overrides the task description where they conflict, delivered first at the next task boundary. QUEUE: an extra requirement for the upcoming work, delivered after STEERs. FEEDBACK: post-run reflection; recorded, never delivered.
+"""
+enum PlanMessageKind {
+  FEEDBACK
+  QUEUE
+  STEER
+}
+
+"""
+Plan inbox message lifecycle. PENDING: waiting for the next task boundary. DELIVERED: claimed by a run (immutable). WITHDRAWN: retracted before delivery. RECORDED: FEEDBACK messages only.
+"""
+enum PlanMessageStatus {
+  DELIVERED
+  PENDING
+  RECORDED
+  WITHDRAWN
+}
+
+"""
+The outcome of claimPlanMessages: the messages just delivered, in delivery order (STEERs first), and the audit chunk recorded on the plan output stream.
+"""
+type ClaimPlanMessagesResultObject {
+  """
+  The plan output stream chunk that records this delivery. Null when nothing was pending.
+  """
+  auditChunk: PlanOutputStreamChunkObject
+
+  """
+  Messages delivered by this claim, STEERs first then QUEUEs, oldest first within each kind. Empty when nothing was pending.
+  """
+  messages: [PlanMessageObject!]!
+}
+
 type WorkSessionObject {
   actorServiceAccountId: String
   actorUserId: String
@@ -4615,6 +4682,11 @@ type Query {
   """List plan embeddings by plan ID, ordered by createdAt ascending"""
   planEmbeddings(input: PlanEmbeddingsByPlanInput!): [PlanEmbeddingObject!]!
 
+  """
+  List a plan's inbox oldest first, optionally narrowed to some kinds and statuses.
+  """
+  planMessages(input: ListPlanMessagesInput!): [PlanMessageObject!]!
+
   """Get a plan output stream chunk by ID"""
   planOutputStreamChunk(input: GetPlanOutputStreamChunkInput!): PlanOutputStreamChunkObject
 
@@ -5286,6 +5358,17 @@ input PlanEmbeddingsByPlanInput {
   offset: Int
 }
 
+input ListPlanMessagesInput {
+  """Return only these kinds. Omit for every kind."""
+  kinds: [PlanMessageKind!]
+
+  """Plan whose inbox to list."""
+  planId: ID!
+
+  """Return only these statuses. Omit for every status."""
+  statuses: [PlanMessageStatus!]
+}
+
 input GetPlanOutputStreamChunkInput {
   """Chunk id"""
   id: ID!
@@ -5705,6 +5788,24 @@ type Mutation {
 
   """Delete a note by ID"""
   deleteNote(id: ID!): Boolean!
+
+  """
+  Post a human message to a plan's inbox. STEER and QUEUE start PENDING and are delivered to the plan's live (or next) run at its next task boundary; FEEDBACK is recorded and never delivered.
+  """
+  postPlanMessage(input: PostPlanMessageInput!): PlanMessageObject!
+
+  """
+  Edit the body of a PENDING plan message. Delivered, withdrawn and recorded messages are immutable.
+  """
+  updatePlanMessage(input: UpdatePlanMessageInput!): PlanMessageObject!
+
+  """Withdraw a PENDING plan message so no run receives it."""
+  withdrawPlanMessage(input: WithdrawPlanMessageInput!): PlanMessageObject!
+
+  """
+  Claim every PENDING STEER/QUEUE message on a plan for delivery at a task boundary. Marks them DELIVERED (stamping the run and task) and records the delivery on the plan output stream in one transaction, so a message is delivered at most once and never unrecorded. Returns STEERs first.
+  """
+  claimPlanMessages(input: ClaimPlanMessagesInput!): ClaimPlanMessagesResultObject!
 
   """Append a chunk to a plan's output stream (e.g. agent iteration log)."""
   appendPlanOutput(input: AppendPlanOutputInput!): PlanOutputStreamChunkObject!
@@ -6608,6 +6709,57 @@ input UpdateNoteInput {
 
   """Note id to update"""
   id: ID!
+}
+
+input PostPlanMessageInput {
+  """
+  GitHub username to attribute the message to. Omit to stamp it from the caller's identity.
+  """
+  author: String
+
+  """Message text. Must not be blank."""
+  body: String!
+
+  """
+  STEER or QUEUE for a live run (held PENDING for the next run when none is live); FEEDBACK for post-run reflection.
+  """
+  kind: PlanMessageKind!
+
+  """Plan to post the message to."""
+  planId: ID!
+
+  """
+  Task the author was looking at, for context. It does not decide delivery.
+  """
+  taskId: ID
+}
+
+input UpdatePlanMessageInput {
+  """Replacement text. Must not be blank."""
+  body: String!
+
+  """A PENDING message to edit."""
+  id: ID!
+}
+
+input WithdrawPlanMessageInput {
+  """A PENDING message to withdraw."""
+  id: ID!
+}
+
+input ClaimPlanMessagesInput {
+  """Plan whose pending inbox to claim."""
+  planId: ID!
+
+  """
+  The claiming run (plan_runs.id), stamped on each delivered message. Omit only when no run row exists.
+  """
+  planRunId: ID
+
+  """
+  The task the agent is about to start; delivered messages and the audit chunk are attributed to it.
+  """
+  taskId: ID
 }
 
 input AppendPlanOutputInput {
@@ -7947,6 +8099,11 @@ type Subscription {
   Lifecycle notifications for a single plan (topic plan:<planId>:lifecycle).
   """
   planNotifications(planId: ID!): NotificationEvent!
+
+  """
+  Live stream of a plan's inbox: each message as it is posted, edited, withdrawn or delivered (topic plan:<planId>:messages).
+  """
+  planMessageChanged(planId: ID!): PlanMessageObject!
 
   """
   Live stream of output chunks appended to a plan (topic plan:<planId>:output).

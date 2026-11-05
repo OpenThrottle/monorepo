@@ -481,6 +481,40 @@ export const PLANS_ROW_ACTIONS_COPY = {
 } as const;
 
 /**
+ * @description Copy for the plan inbox ({@link PlanInboxPanel}): the composer a
+ * human uses to steer or queue a message to a live run, and the list of what
+ * was sent with its delivery status. The run reads the inbox only at a task
+ * boundary, so the copy never promises an instant effect — "the next task" is
+ * the honest unit of latency.
+ */
+export const PLAN_INBOX_COPY = {
+  bodyLabel: `Message`,
+  bodyPlaceholderQueue: `Something the run should also do, e.g. "Add a test for the empty state."`,
+  bodyPlaceholderSteer: `A correction for the run, e.g. "Use the existing Badge, not a new chip."`,
+  deliveredToTask: (taskTitle: string): string =>
+    `Delivered before ${taskTitle}`,
+  deliveredUnknownTask: `Delivered at a task boundary`,
+  description: `Messages reach the run at its next task boundary. Use a steer to change course, or queue extra work for the next task.`,
+  emptyLive: `Nothing sent yet. Messages you send appear here with their delivery status.`,
+  heading: `Inbox`,
+  kindHintQueue: `Queue adds a requirement to the next task.`,
+  kindHintSteer: `Steer overrides the task description where they conflict.`,
+  kindLabel: `Message type`,
+  kindQueue: `Queue`,
+  kindSteer: `Steer`,
+  notLiveHint: `No run is live. Start a run to send it messages.`,
+  sendLabel: `Send`,
+  sendPendingLabel: `Sending…`,
+  sentToast: `Message sent. The run will pick it up at its next task boundary.`,
+  statusDelivered: `Delivered`,
+  statusPending: `Waiting`,
+  statusWithdrawn: `Withdrawn`,
+  withdrawAriaLabel: `Withdraw message`,
+  withdrawLabel: `Withdraw`,
+  withdrawPendingLabel: `Withdrawing…`,
+} as const;
+
+/**
  * @description Plan tasks table row Actions menu (view + edit the task).
  */
 export const PLAN_TASK_ROW_ACTIONS_COPY = {

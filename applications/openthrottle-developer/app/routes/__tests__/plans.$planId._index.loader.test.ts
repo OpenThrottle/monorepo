@@ -8,6 +8,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
 import {
   PlanDetailCriticalDocument,
+  PlanDetailInboxDocument,
   PlanDetailLedgerDocument,
   PlanDetailOutputChunksDocument,
   PlanDetailRunHistoryDocument,
@@ -32,6 +33,7 @@ const planId = '80864bba-630a-451d-bfd2-4b25ec202381';
 const plan = { __typename: 'PlanObject', id: planId, title: 'Test Plan' };
 const tasks = [{ __typename: 'TaskObject', id: 'task-1' }];
 const outputChunks = [{ __typename: 'PlanOutputStreamChunkObject', id: 'c1' }];
+const inboxMessages = [{ __typename: 'PlanMessageObject', id: 'msg-1' }];
 const auditRows = [{ __typename: 'PlanRunObject', id: 'run-1' }];
 const recentRuns = [{ __typename: 'PlanRunMetricObject', id: 'm-1' }];
 const ruleApplications = [{ __typename: 'RuleApplicationObject', id: 'app-1' }];
@@ -50,6 +52,7 @@ function mockDocuments(
 ): void {
   const responses = new Map<unknown, unknown>([
     [PlanDetailCriticalDocument, { plan, tasksByPlanId: tasks }],
+    [PlanDetailInboxDocument, { planMessages: inboxMessages }],
     [
       PlanDetailLedgerDocument,
       {
@@ -123,6 +126,7 @@ describe('routes/plans.$planId._index loader', () => {
       linkedArtifacts: [],
       ruleApplications: [],
     });
+    await expect(result.inboxMessages).resolves.toEqual([]);
     await expect(result.models).resolves.toEqual([]);
     expect(mockLoadComposerModels).not.toHaveBeenCalled();
     await expect(result.outputChunks).resolves.toEqual([]);
@@ -144,6 +148,7 @@ describe('routes/plans.$planId._index loader', () => {
     expect(result.tasks).toEqual(tasks);
 
     // Everything else is still in flight.
+    expect(result.inboxMessages).toBeInstanceOf(Promise);
     expect(result.ledger).toBeInstanceOf(Promise);
     expect(result.models).toBeInstanceOf(Promise);
     expect(result.outputChunks).toBeInstanceOf(Promise);
@@ -161,6 +166,7 @@ describe('routes/plans.$planId._index loader', () => {
       (call) => call[1],
     );
     expect(documents).toContain(PlanDetailCriticalDocument);
+    expect(documents).toContain(PlanDetailInboxDocument);
     expect(documents).toContain(PlanDetailLedgerDocument);
     expect(documents).toContain(PlanDetailOutputChunksDocument);
     expect(documents).toContain(PlanDetailRunHistoryDocument);
@@ -183,6 +189,7 @@ describe('routes/plans.$planId._index loader', () => {
 
     const result = await callLoader();
 
+    await expect(result.inboxMessages).resolves.toEqual(inboxMessages);
     await expect(result.ledger).resolves.toEqual({
       linkedArtifacts,
       ruleApplications,
@@ -291,6 +298,21 @@ describe('routes/plans.$planId._index loader', () => {
     const result = await callLoader();
 
     await expect(result.enabledEditors).resolves.toEqual([]);
+    expect(result.plan).toEqual(plan);
+  });
+
+  // The inbox is optional chrome with no error region, so a failed read (for
+  // example a server that predates the inbox schema) degrades to an empty inbox.
+  test('degrades to an empty inbox when the inbox query fails', async () => {
+    mockDocuments(
+      new Map<unknown, unknown>([
+        [PlanDetailInboxDocument, new Error('Unknown type "PlanMessageKind"')],
+      ]),
+    );
+
+    const result = await callLoader();
+
+    await expect(result.inboxMessages).resolves.toEqual([]);
     expect(result.plan).toEqual(plan);
   });
 });

@@ -12,6 +12,7 @@ export * from './tools/health.ts';
 export * from './tools/model-discovery.ts';
 export * from './tools/notes.ts';
 export * from './tools/output.ts';
+export * from './tools/plan-messages.ts';
 export * from './tools/plan-runs.ts';
 export * from './tools/plan-task-tags.ts';
 export * from './tools/plans.ts';

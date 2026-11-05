@@ -1,0 +1,52 @@
+# MCP-only GraphQL documents: the plan inbox (plan_messages, migration 144).
+# Humans post STEER / QUEUE messages to a plan; a run claims them at a task
+# boundary (claimPlanMessages marks them DELIVERED and records the delivery on
+# the plan output stream in one transaction). FEEDBACK is post-run reflection.
+
+fragment PlanMessageFields on PlanMessageObject {
+  author
+  body
+  createdAt
+  deliveredAt
+  deliveredToTaskId
+  id
+  kind
+  planId
+  planRunId
+  status
+  taskId
+  updatedAt
+}
+
+query PlanMessages($input: ListPlanMessagesInput!) {
+  planMessages(input: $input) {
+    ...PlanMessageFields
+  }
+}
+
+mutation PostPlanMessage($input: PostPlanMessageInput!) {
+  postPlanMessage(input: $input) {
+    ...PlanMessageFields
+  }
+}
+
+mutation WithdrawPlanMessage($input: WithdrawPlanMessageInput!) {
+  withdrawPlanMessage(input: $input) {
+    ...PlanMessageFields
+  }
+}
+
+mutation ClaimPlanMessages($input: ClaimPlanMessagesInput!) {
+  claimPlanMessages(input: $input) {
+    auditChunk {
+      content
+      createdAt
+      id
+      planId
+      taskId
+    }
+    messages {
+      ...PlanMessageFields
+    }
+  }
+}

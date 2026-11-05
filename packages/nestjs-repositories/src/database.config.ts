@@ -20,6 +20,7 @@ import { DailyStat } from './modules/daily-stats/daily-stat.entity.ts';
 import { McpConnectorConnection } from './modules/mcp-connectors/mcp-connector-connection.entity.ts';
 import { Note } from './modules/notes/note.entity.ts';
 import { PlanEmbedding } from './modules/plan-embeddings/plan-embedding.entity.ts';
+import { PlanMessage } from './modules/plan-messages/plan-message.entity.ts';
 import { PlanOutputStreamChunk } from './modules/plan-output-stream/plan-output-stream.entity.ts';
 import { PlanRun } from './modules/plan-runs/plan-run.entity.ts';
 import { Plan } from './modules/plans/plan.entity.ts';
@@ -93,6 +94,7 @@ export function getTypeOrmOptions(): DataSourceOptions {
       Permission,
       Plan,
       PlanEmbedding,
+      PlanMessage,
       PlanOutputStreamChunk,
       PlanRun,
       PlanTag,

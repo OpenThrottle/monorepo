@@ -14,6 +14,7 @@ import { DailyStatsModule } from './modules/daily-stats/daily-stats.module.ts';
 import { McpConnectorsModule } from './modules/mcp-connectors/mcp-connectors.module.ts';
 import { NotesModule } from './modules/notes/notes.module.ts';
 import { PlanEmbeddingsModule } from './modules/plan-embeddings/plan-embeddings.module.ts';
+import { PlanMessagesModule } from './modules/plan-messages/plan-messages.module.ts';
 import { PlanOutputStreamModule } from './modules/plan-output-stream/plan-output-stream.module.ts';
 import { PlanRunsModule } from './modules/plan-runs/plan-runs.module.ts';
 import { PlansModule } from './modules/plans/plans.module.ts';
@@ -50,6 +51,7 @@ import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-
     McpConnectorsModule,
     NotesModule,
     PlanEmbeddingsModule,
+    PlanMessagesModule,
     PlanOutputStreamModule,
     PlanRunsModule,
     PlansModule,
@@ -93,6 +95,7 @@ import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-
     McpConnectorsModule,
     NotesModule,
     PlanEmbeddingsModule,
+    PlanMessagesModule,
     PlanOutputStreamModule,
     PlanRunsModule,
     PlansModule,

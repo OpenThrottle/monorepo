@@ -76,6 +76,7 @@ export const buildPlanDetailLoaderData = (
 ): PlanDetailRouteData => {
   return asPlanDetailRouteData({
     enabledEditors: Promise.resolve([]),
+    inboxMessages: Promise.resolve([]),
     ledger: Promise.resolve({ linkedArtifacts: [], ruleApplications: [] }),
     models: Promise.resolve([]),
     outputChunks: Promise.resolve([]),
