@@ -3,38 +3,44 @@ import { describe, expect, test } from 'vitest';
 
 import { isFetcherBusy, isFetcherFormPending } from '../fetcher';
 
-const idle = (): Fetcher => ({
-  data: undefined,
-  formAction: undefined,
-  formData: undefined,
-  formEncType: undefined,
-  formMethod: undefined,
-  json: undefined,
-  state: 'idle',
-  text: undefined,
-});
+const idle = (): Fetcher => {
+  return {
+    data: undefined,
+    formAction: undefined,
+    formData: undefined,
+    formEncType: undefined,
+    formMethod: undefined,
+    json: undefined,
+    state: 'idle',
+    text: undefined,
+  };
+};
 
-const loading = (formData?: FormData): Fetcher => ({
-  data: undefined,
-  formAction: undefined,
-  formData,
-  formEncType: undefined,
-  formMethod: undefined,
-  json: undefined,
-  state: 'loading',
-  text: undefined,
-});
+const loading = (formData?: FormData): Fetcher => {
+  return {
+    data: undefined,
+    formAction: undefined,
+    formData,
+    formEncType: undefined,
+    formMethod: undefined,
+    json: undefined,
+    state: 'loading',
+    text: undefined,
+  };
+};
 
-const submitting = (formData: FormData): Fetcher => ({
-  data: undefined,
-  formAction: '/skills/example',
-  formData,
-  formEncType: 'application/x-www-form-urlencoded',
-  formMethod: 'POST',
-  json: undefined,
-  state: 'submitting',
-  text: undefined,
-});
+const submitting = (formData: FormData): Fetcher => {
+  return {
+    data: undefined,
+    formAction: '/skills/example',
+    formData,
+    formEncType: 'application/x-www-form-urlencoded',
+    formMethod: 'POST',
+    json: undefined,
+    state: 'submitting',
+    text: undefined,
+  };
+};
 
 const formDataWith = (entries: Record<string, string>): FormData => {
   const data = new FormData();

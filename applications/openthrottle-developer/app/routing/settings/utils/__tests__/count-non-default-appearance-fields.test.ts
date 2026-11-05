@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { DEFAULT_APPEARANCE_CONFIG } from '~/global/data/atom.config';
+import { DEFAULT_APPEARANCE_CONFIG } from '~/global/data/data.appearance-config';
 
 import { countNonDefaultAppearanceFields } from '../count-non-default-appearance-fields';
 

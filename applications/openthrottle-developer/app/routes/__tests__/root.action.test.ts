@@ -28,8 +28,9 @@ function assertResponse(value: unknown): asserts value is Response {
 /** Type guard for the `data(...)` action result shape (carries a `ResponseInit`). */
 const isDataResult = (
   value: unknown,
-): value is { data: { error?: string }; init?: ResponseInit } =>
-  value != null && typeof value === 'object' && 'init' in value;
+): value is { data: { error?: string }; init?: ResponseInit } => {
+  return value != null && typeof value === 'object' && 'init' in value;
+};
 
 /** Build root action args from a form-encoded body (mirrors the action's `request.formData()`). */
 const actionArgs = (fields: Record<string, string>): Route.ActionArgs => {

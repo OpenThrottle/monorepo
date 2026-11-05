@@ -16,12 +16,14 @@ describe('RepositoriesToolbar Component', () => {
 
   const renderToolbar = (initialEntry = '/'): RenderResult => {
     component?.unmount();
-    const Component = () => (
-      <>
-        <RepositoriesToolbar {...props} />
-        <span data-testid="SearchProbe">{useLocation().search}</span>
-      </>
-    );
+    const Component = () => {
+      return (
+        <>
+          <RepositoriesToolbar {...props} />
+          <span data-testid="SearchProbe">{useLocation().search}</span>
+        </>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     return render(<RoutesStub initialEntries={[initialEntry]} />);

@@ -8,7 +8,9 @@ import type { HomeComposerDockProps } from '../HomeComposerDock';
 import { HomeComposerDock } from '../HomeComposerDock';
 
 const renderDock = (props: HomeComposerDockProps): RenderResult => {
-  const Component = (): React.ReactElement => <HomeComposerDock {...props} />;
+  const Component = (): React.ReactElement => {
+    return <HomeComposerDock {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

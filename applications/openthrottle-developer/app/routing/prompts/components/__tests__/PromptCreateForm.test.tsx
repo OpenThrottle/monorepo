@@ -30,24 +30,26 @@ vi.mock('@openthrottle/react-router-editor', () => ({
 
 const buildForm = (
   overrides: Partial<PromptCreateFormProps['form']> = {},
-): PromptCreateFormProps['form'] => ({
-  canSubmit: true,
-  content: '# Hello',
-  description: '',
-  filePath: '',
-  handleEditorChange: vi.fn(),
-  handleSubmit: vi.fn(),
-  isSubmitting: false,
-  labels: '',
-  promptType: 'prompts',
-  setDescription: vi.fn(),
-  setFilePath: vi.fn(),
-  setLabels: vi.fn(),
-  setPromptType: vi.fn(),
-  setTitle: vi.fn(),
-  title: 'My Prompt',
-  ...overrides,
-});
+): PromptCreateFormProps['form'] => {
+  return {
+    canSubmit: true,
+    content: '# Hello',
+    description: '',
+    filePath: '',
+    handleEditorChange: vi.fn(),
+    handleSubmit: vi.fn(),
+    isSubmitting: false,
+    labels: '',
+    promptType: 'prompts',
+    setDescription: vi.fn(),
+    setFilePath: vi.fn(),
+    setLabels: vi.fn(),
+    setPromptType: vi.fn(),
+    setTitle: vi.fn(),
+    title: 'My Prompt',
+    ...overrides,
+  };
+};
 
 describe('PromptCreateForm Component', () => {
   let component: RenderResult;

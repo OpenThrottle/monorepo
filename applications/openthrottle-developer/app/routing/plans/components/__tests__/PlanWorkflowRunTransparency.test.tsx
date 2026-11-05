@@ -52,11 +52,13 @@ function renderTransparency(
     ...overrides,
   };
 
-  const Component = () => (
-    <TooltipProvider>
-      <PlanWorkflowRunTransparency {...props} />
-    </TooltipProvider>
-  );
+  const Component = () => {
+    return (
+      <TooltipProvider>
+        <PlanWorkflowRunTransparency {...props} />
+      </TooltipProvider>
+    );
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 }

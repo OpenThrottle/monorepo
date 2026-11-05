@@ -14,15 +14,17 @@ const JOB = 'job-1';
 
 const baseInput = (
   overrides: Partial<QueueJobLogsInput> = {},
-): QueueJobLogsInput => ({
-  after: null,
-  jobId: JOB,
-  levelIn: null,
-  limit: null,
-  queueName: QUEUE,
-  since: null,
-  ...overrides,
-});
+): QueueJobLogsInput => {
+  return {
+    after: null,
+    jobId: JOB,
+    levelIn: null,
+    limit: null,
+    queueName: QUEUE,
+    since: null,
+    ...overrides,
+  };
+};
 
 describe('QueueJobLogsService', () => {
   const service = new QueueJobLogsService();

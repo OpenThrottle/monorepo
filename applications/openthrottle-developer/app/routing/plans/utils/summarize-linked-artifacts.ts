@@ -6,7 +6,7 @@
  * deferred ledger boundary on every filter click).
  */
 
-import { LINKED_ARTIFACT_GROUP_ORDER } from '~/routing/plans/data/linked-artifacts-panel-groups';
+import { LINKED_ARTIFACT_GROUP_ORDER } from '~/routing/plans/data/data.linked-artifacts-panel-groups';
 
 export interface SummarizableArtifact {
   type: string;
@@ -89,10 +89,11 @@ export const filterLinkedArtifacts = <T extends SummarizableArtifact>(
   artifacts: readonly T[],
   verification: string,
   type: string,
-): T[] =>
-  artifacts.filter(
+): T[] => {
+  return artifacts.filter(
     (artifact) =>
       (verification === ARTIFACT_FILTER_ALL ||
         artifact.verification === verification) &&
       (type === ARTIFACT_FILTER_ALL || artifact.type === type),
   );
+};

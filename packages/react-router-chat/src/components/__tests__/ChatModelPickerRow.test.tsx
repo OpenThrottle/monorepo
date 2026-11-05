@@ -18,8 +18,8 @@ const MODEL: ChatModelOption = {
 // CommandItem (cmdk) requires a Command/CommandList ancestor to render/filter.
 const renderRow = (
   overrides: Partial<ChatModelPickerRowProps> = {},
-): RenderResult =>
-  render(
+): RenderResult => {
+  return render(
     <Command>
       <CommandList>
         <ChatModelPickerRow
@@ -33,6 +33,7 @@ const renderRow = (
       </CommandList>
     </Command>,
   );
+};
 
 describe('ChatModelPickerRow', () => {
   test('renders the model label', () => {

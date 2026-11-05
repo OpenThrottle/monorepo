@@ -34,6 +34,28 @@ export const BlogMeta = (props: BlogMetaProps): React.ReactElement => {
   // Handlers
 
   // Markup
+  const authorAvatarImage = (
+    <AvatarImage alt="" src={author?.avatarUrl ?? ''} />
+  );
+  const authorMarkup = (
+    <span className="flex items-center gap-2" data-testid="BlogMetaAuthor">
+      <Avatar size="sm">
+        {author?.avatarUrl ? authorAvatarImage : null}
+        <AvatarFallback aria-hidden="true">
+          {getBlogAuthorInitials(author?.displayName ?? '')}
+        </AvatarFallback>
+      </Avatar>
+      <span>
+        {byPrefix}{' '}
+        <span className="text-foreground font-medium">
+          {author?.displayName}
+        </span>
+      </span>
+    </span>
+  );
+  const publishedTime = (
+    <time dateTime={publishedIso ?? ''}>{publishedLabel}</time>
+  );
 
   // Life Cycle
 
@@ -47,27 +69,8 @@ export const BlogMeta = (props: BlogMetaProps): React.ReactElement => {
       )}
       data-testid="BlogMeta"
     >
-      {author ? (
-        <span className="flex items-center gap-2" data-testid="BlogMetaAuthor">
-          <Avatar size="sm">
-            {author.avatarUrl ? (
-              <AvatarImage alt="" src={author.avatarUrl} />
-            ) : null}
-            <AvatarFallback aria-hidden="true">
-              {getBlogAuthorInitials(author.displayName)}
-            </AvatarFallback>
-          </Avatar>
-          <span>
-            {byPrefix}{' '}
-            <span className="text-foreground font-medium">
-              {author.displayName}
-            </span>
-          </span>
-        </span>
-      ) : null}
-      {publishedLabel && publishedIso ? (
-        <time dateTime={publishedIso}>{publishedLabel}</time>
-      ) : null}
+      {author ? authorMarkup : null}
+      {publishedLabel && publishedIso ? publishedTime : null}
       <span>{readingTime(readingTimeMinutes)}</span>
     </div>
   );

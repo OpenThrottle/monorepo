@@ -16,24 +16,28 @@ const {
   toAutocompleteEntry,
 } = await import('../autocomplete-entries');
 type RepoSkillEntryType =
-  import('~/routing/agents/data/repo-skills-registry').RepoSkillEntry;
+  import('~/routing/agents/data/data.repo-skills-registry').RepoSkillEntry;
 
 const mockExecute = vi.mocked(executeGraphqlWithAuth);
 
-const request = (): Request => new Request('http://localhost/');
+const request = (): Request => {
+  return new Request('http://localhost/');
+};
 
 const diskEntry = (
   overrides: Partial<RepoSkillEntryType> = {},
-): RepoSkillEntryType => ({
-  disableModelInvocation: undefined,
-  layout: 'agents',
-  repoRelativePath: '.agents/skills/example/SKILL.md',
-  slug: 'example',
-  source: 'openthrottle',
-  summary: 'An example skill.',
-  tags: ['foo'],
-  ...overrides,
-});
+): RepoSkillEntryType => {
+  return {
+    disableModelInvocation: undefined,
+    layout: 'agents',
+    repoRelativePath: '.agents/skills/example/SKILL.md',
+    slug: 'example',
+    source: 'openthrottle',
+    summary: 'An example skill.',
+    tags: ['foo'],
+    ...overrides,
+  };
+};
 
 describe('loadProjectSkillFlags', () => {
   beforeEach(() => {

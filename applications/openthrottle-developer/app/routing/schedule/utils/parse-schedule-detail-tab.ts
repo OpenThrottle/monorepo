@@ -17,8 +17,9 @@ const SCHEDULE_DETAIL_TAB_VALUES: readonly ScheduleDetailTab[] = [
   'prompt',
 ];
 
-const isScheduleDetailTab = (raw: string): raw is ScheduleDetailTab =>
-  SCHEDULE_DETAIL_TAB_VALUES.some((tab) => tab === raw);
+const isScheduleDetailTab = (raw: string): raw is ScheduleDetailTab => {
+  return SCHEDULE_DETAIL_TAB_VALUES.some((tab) => tab === raw);
+};
 
 /** Parse the `tab` param for schedule detail; `null` for missing/unknown. */
 export const parseScheduleDetailTab = (

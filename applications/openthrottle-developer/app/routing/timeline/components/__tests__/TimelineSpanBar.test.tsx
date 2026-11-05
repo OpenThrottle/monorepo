@@ -19,38 +19,42 @@ const scale = createTimelineScale({
   width: 1440,
 });
 
-const span = (overrides: Partial<TimelineSpan> = {}): TimelineSpan => ({
-  backend: 'claude',
-  branch: null,
-  checkoutId: null,
-  conversationId: null,
-  derivedEnd: false,
-  endsAt: '2026-09-01T03:00:00Z',
-  id: 'span-1',
-  kind: TimelineSpanKind.PlanRun,
-  laneKey: 'plan:plan-1',
-  laneLabel: 'Plan One',
-  model: 'claude-opus-5',
-  planId: 'plan-1',
-  startsAt: '2026-09-01T01:00:00Z',
-  status: 'COMPLETED',
-  title: 'A plan run',
-  ...overrides,
-});
+const span = (overrides: Partial<TimelineSpan> = {}): TimelineSpan => {
+  return {
+    backend: 'claude',
+    branch: null,
+    checkoutId: null,
+    conversationId: null,
+    derivedEnd: false,
+    endsAt: '2026-09-01T03:00:00Z',
+    id: 'span-1',
+    kind: TimelineSpanKind.PlanRun,
+    laneKey: 'plan:plan-1',
+    laneLabel: 'Plan One',
+    model: 'claude-opus-5',
+    planId: 'plan-1',
+    startsAt: '2026-09-01T01:00:00Z',
+    status: 'COMPLETED',
+    title: 'A plan run',
+    ...overrides,
+  };
+};
 
 const renderBar = (
   value: TimelineSpan,
   onSelect?: (selected: TimelineSpan) => void,
 ): RenderResult => {
-  const Component = () => (
-    <svg>
-      <TimelineSpanBar
-        onSelect={onSelect}
-        rect={spanRect({ scale, span: value, subRow: 0 })}
-        span={value}
-      />
-    </svg>
-  );
+  const Component = () => {
+    return (
+      <svg>
+        <TimelineSpanBar
+          onSelect={onSelect}
+          rect={spanRect({ scale, span: value, subRow: 0 })}
+          span={value}
+        />
+      </svg>
+    );
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

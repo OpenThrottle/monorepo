@@ -72,14 +72,17 @@ export interface SkillScanState {
  *
  * @public
  */
-export const createSkillScanState = (): SkillScanState => ({
-  candidates: [],
-  commands: [],
-  localReplies: new Set<string>(),
-});
+export const createSkillScanState = (): SkillScanState => {
+  return {
+    candidates: [],
+    commands: [],
+    localReplies: new Set<string>(),
+  };
+};
 
-const nonEmptyString = (value: unknown): string | null =>
-  typeof value === 'string' && value !== '' ? value : null;
+const nonEmptyString = (value: unknown): string | null => {
+  return typeof value === 'string' && value !== '' ? value : null;
+};
 
 const parseJsonRecord = (line: string): Record<string, unknown> | null => {
   try {
@@ -117,11 +120,13 @@ const baseOf = (
   gitBranch: string;
   occurredAt: string | null;
   session_id: string | null;
-} => ({
-  gitBranch: nonEmptyString(entry.gitBranch) ?? '',
-  occurredAt: nonEmptyString(entry.timestamp),
-  session_id: nonEmptyString(entry.sessionId) ?? fallbackSessionId,
-});
+} => {
+  return {
+    gitBranch: nonEmptyString(entry.gitBranch) ?? '',
+    occurredAt: nonEmptyString(entry.timestamp),
+    session_id: nonEmptyString(entry.sessionId) ?? fallbackSessionId,
+  };
+};
 
 const fromSkillToolUse = (
   entry: Record<string, unknown>,
@@ -280,9 +285,11 @@ export const scanSkillLines = ({
  */
 export const finishSkillScan = (
   state: SkillScanState,
-): readonly SkillCandidate[] => [
-  ...state.candidates,
-  ...state.commands
-    .filter(({ uuid }) => uuid === null || !state.localReplies.has(uuid))
-    .map(({ candidate }) => candidate),
-];
+): readonly SkillCandidate[] => {
+  return [
+    ...state.candidates,
+    ...state.commands
+      .filter(({ uuid }) => uuid === null || !state.localReplies.has(uuid))
+      .map(({ candidate }) => candidate),
+  ];
+};

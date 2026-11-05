@@ -9,11 +9,13 @@ import type { GlobalSidebarFooterProps } from '../GlobalSidebarFooter';
 import { GlobalSidebarFooter } from '../GlobalSidebarFooter';
 
 const renderSidebarFooter = (props: GlobalSidebarFooterProps = {}): void => {
-  const Component = () => (
-    <GlobalProviders>
-      <GlobalSidebarFooter {...props} />
-    </GlobalProviders>
-  );
+  const Component = () => {
+    return (
+      <GlobalProviders>
+        <GlobalSidebarFooter {...props} />
+      </GlobalProviders>
+    );
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   render(<RoutesStub />);
 };

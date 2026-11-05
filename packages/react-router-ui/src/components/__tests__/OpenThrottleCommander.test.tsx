@@ -16,7 +16,9 @@ describe('OpenThrottleCommander Component', () => {
   let props: OpenThrottleCommanderProps;
 
   const renderCommander = (p: OpenThrottleCommanderProps): RenderResult => {
-    const Comp = () => <OpenThrottleCommander {...p} />;
+    const Comp = () => {
+      return <OpenThrottleCommander {...p} />;
+    };
     const RoutesStub = createRoutesStub([{ Component: Comp, path: '/' }]);
     return render(<RoutesStub />);
   };

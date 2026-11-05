@@ -3,18 +3,20 @@ import { describe, expect, test } from 'vitest';
 import type { DocEntry } from '../buildDocsManifest';
 import { groupFaqEntries } from '../groupFaqEntries';
 
-const makeEntry = (overrides: Partial<DocEntry>): DocEntry => ({
-  content: '',
-  description: null,
-  draft: false,
-  group: 'General',
-  order: 1,
-  path: '/faq/question',
-  section: 'faq',
-  slug: 'question',
-  title: 'Question?',
-  ...overrides,
-});
+const makeEntry = (overrides: Partial<DocEntry>): DocEntry => {
+  return {
+    content: '',
+    description: null,
+    draft: false,
+    group: 'General',
+    order: 1,
+    path: '/faq/question',
+    section: 'faq',
+    slug: 'question',
+    title: 'Question?',
+    ...overrides,
+  };
+};
 
 describe('groupFaqEntries', () => {
   test('returns an empty list for no entries', () => {

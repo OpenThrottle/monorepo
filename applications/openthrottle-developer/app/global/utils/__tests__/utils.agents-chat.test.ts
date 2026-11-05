@@ -22,27 +22,31 @@ vi.mock('@openthrottle/react-router-graphql', () => ({
 
 const mockExecute = vi.mocked(executeGraphqlWithAuth);
 
-const baseTurn = (overrides: Partial<ChatTurnResult> = {}): ChatTurnResult => ({
-  assistantText: null,
-  conversationId: null,
-  errorMessage: null,
-  mcpTool: null,
-  readOnlyAgentsChat: true,
-  routingConfidence: null,
-  routingReason: null,
-  structuredPayloadJson: null,
-  toolMetadataJson: null,
-  ...overrides,
-});
+const baseTurn = (overrides: Partial<ChatTurnResult> = {}): ChatTurnResult => {
+  return {
+    assistantText: null,
+    conversationId: null,
+    errorMessage: null,
+    mcpTool: null,
+    readOnlyAgentsChat: true,
+    routingConfidence: null,
+    routingReason: null,
+    structuredPayloadJson: null,
+    toolMetadataJson: null,
+    ...overrides,
+  };
+};
 
 const baseHistory = (
   overrides: Partial<LoadAgentConversationMessagesResult> = {},
-): LoadAgentConversationMessagesResult => ({
-  conversationId: null,
-  errorMessage: null,
-  messages: [],
-  ...overrides,
-});
+): LoadAgentConversationMessagesResult => {
+  return {
+    conversationId: null,
+    errorMessage: null,
+    messages: [],
+    ...overrides,
+  };
+};
 
 describe('callSendAgentMessage', () => {
   const request = new Request('http://localhost/', {

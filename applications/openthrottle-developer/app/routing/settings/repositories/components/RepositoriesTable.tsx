@@ -1,33 +1,27 @@
-import { Badge, cn, DataTable } from '@openthrottle/react-router-shadcn';
+import { cn, DataTable } from '@openthrottle/react-router-shadcn';
 import {
   GlobalFeatureOnboarding,
   GlobalPopoverActionsHeader,
 } from '@openthrottle/react-router-ui-global';
 import type { ColumnDef, ExpandedState } from '@tanstack/react-table';
 import * as React from 'react';
-import { Link } from 'react-router';
 
 import { formatUpdatedAt } from '~/routing/plans/utils/formatters';
-import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
 import { RepositoriesTableEmpty } from '~/routing/settings/repositories/components/RepositoriesTableEmpty';
+import { RepositoryBranchCell } from '~/routing/settings/repositories/components/RepositoryBranchCell';
 import { RepositoryHookTelemetryCell } from '~/routing/settings/repositories/components/RepositoryHookTelemetryCell';
 import { RepositoryInjectionCell } from '~/routing/settings/repositories/components/RepositoryInjectionCell';
 import { RepositoryNameCell } from '~/routing/settings/repositories/components/RepositoryNameCell';
 import { RepositoryRowActions } from '~/routing/settings/repositories/components/RepositoryRowActions';
+import { RepositoryWarningsCell } from '~/routing/settings/repositories/components/RepositoryWarningsCell';
 import {
   REPOSITORIES_ONBOARDING,
   REPOSITORIES_TABLE_COPY,
   REPOSITORY_HOOK_TELEMETRY_COPY,
 } from '~/routing/settings/repositories/data/data.copy';
-import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/data/types';
+import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/types';
 import { toExpandedState } from '~/routing/settings/repositories/utils/expansion';
-import { planDetailPath } from '~/routing/settings/repositories/utils/paths';
-import {
-  deriveWorktreeBadges,
-  WORKTREE_BADGE_COLORS,
-} from '~/routing/settings/repositories/utils/worktree-badges';
 import type { CheckoutDrift } from '~/routing/settings/utils/drift-labels';
-import { driftLabels } from '~/routing/settings/utils/drift-labels';
 
 export interface RepositoriesTableProps {
   /** Parent row ids to open on mount, e.g. groups whose worktree matched the search. */
@@ -61,6 +55,10 @@ export const RepositoriesTable = (
   // Handlers
 
   // Markup
+  const onboarding = (
+    <GlobalFeatureOnboarding content={REPOSITORIES_ONBOARDING} />
+  );
+  const emptyTable = <RepositoriesTableEmpty />;
 
   // Life Cycle
   React.useEffect(() => {
@@ -77,13 +75,7 @@ export const RepositoriesTable = (
       <DataTable<RepositoryCheckoutRow, string | null | undefined>
         columns={columns}
         data={data}
-        emptyState={
-          isUnpopulated ? (
-            <GlobalFeatureOnboarding content={REPOSITORIES_ONBOARDING} />
-          ) : (
-            <RepositoriesTableEmpty />
-          )
-        }
+        emptyState={isUnpopulated ? onboarding : emptyTable}
         expanded={expanded}
         getRowId={(original) => original.id}
         getSubRows={(original) => original.children}
@@ -111,37 +103,7 @@ RepositoriesTable.buildTable = (
       id: 'repository',
     },
     {
-      cell: ({ row }) => (
-        <div className="flex flex-wrap items-center gap-1">
-          {row.original.branch ? (
-            <Badge variant="outline">{row.original.branch}</Badge>
-          ) : null}
-          {row.original.checkout?.managed ? (
-            <Badge variant="secondary">
-              {WORKSPACE_FOLDERS_COPY.managedBadge}
-            </Badge>
-          ) : null}
-          {deriveWorktreeBadges(row.original).map((badge) => (
-            <Badge
-              color={WORKTREE_BADGE_COLORS[badge.tone]}
-              key={badge.id}
-              size="xs"
-              title={badge.title}
-              variant="secondary"
-            >
-              {badge.label}
-            </Badge>
-          ))}
-          {row.original.planId ? (
-            <Link
-              className="hover:text-primary text-xs underline underline-offset-2"
-              to={planDetailPath(row.original.planId)}
-            >
-              {REPOSITORIES_TABLE_COPY.worktreeRunLinkLabel}
-            </Link>
-          ) : null}
-        </div>
-      ),
+      cell: ({ row }) => <RepositoryBranchCell row={row.original} />,
       header: () => REPOSITORIES_TABLE_COPY.branchColumn,
       id: 'branch',
     },
@@ -158,24 +120,12 @@ RepositoriesTable.buildTable = (
       id: 'hookTelemetry',
     },
     {
-      cell: ({ row }) => {
-        const checkoutId = row.original.checkout?.id;
-        const drift =
-          checkoutId === undefined
-            ? undefined
-            : driftByCheckoutId?.[checkoutId];
-        const warnings = drift ? driftLabels(drift) : [];
-
-        return warnings.length === 0 ? null : (
-          <ul className="space-y-1" role="alert">
-            {warnings.map((warning) => (
-              <li className="text-destructive text-xs" key={warning}>
-                {warning}
-              </li>
-            ))}
-          </ul>
-        );
-      },
+      cell: ({ row }) => (
+        <RepositoryWarningsCell
+          driftByCheckoutId={driftByCheckoutId}
+          row={row.original}
+        />
+      ),
       header: () => REPOSITORIES_TABLE_COPY.warningsColumn,
       id: 'warnings',
     },

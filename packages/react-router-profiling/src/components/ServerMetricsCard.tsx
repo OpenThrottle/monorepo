@@ -18,7 +18,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { METRIC_ROWS } from '../data/metric-rows';
+import { METRIC_ROWS } from '../data/data.metric-rows';
 import { useServerMetrics } from '../hooks/useServerMetrics';
 
 export interface ServerMetricsCardProps {

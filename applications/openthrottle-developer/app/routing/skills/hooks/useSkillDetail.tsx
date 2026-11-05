@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 import { SKILL_DETAIL_COPY } from '~/routing/skills/data/data.copy';
 import { getResolvedModelInvocationDisplay } from '~/routing/skills/utils/model-invocation-badge';
 

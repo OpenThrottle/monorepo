@@ -5,21 +5,23 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { getRequestFromExecutionContext } from './get-request-from-execution-context.ts';
 
-const createHttpContext = (httpReq: object): ExecutionContext =>
-  createMock<ExecutionContext>({
+const createHttpContext = (httpReq: object): ExecutionContext => {
+  return createMock<ExecutionContext>({
     getType: vi.fn().mockReturnValue('http'),
     switchToHttp: vi.fn().mockReturnValue({
       getRequest: () => httpReq,
     }),
   });
+};
 
-const createGraphqlContext = (httpReq: object = {}): ExecutionContext =>
-  createMock<ExecutionContext>({
+const createGraphqlContext = (httpReq: object = {}): ExecutionContext => {
+  return createMock<ExecutionContext>({
     getType: vi.fn().mockReturnValue('graphql'),
     switchToHttp: vi.fn().mockReturnValue({
       getRequest: () => httpReq,
     }),
   });
+};
 
 describe('getRequestFromExecutionContext (openthrottle-server)', () => {
   afterEach(() => {

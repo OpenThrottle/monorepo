@@ -12,7 +12,7 @@ import {
   MCP_PROVIDER_DISPLAY,
   MCP_PROVIDER_FALLBACK_LABEL,
   MCP_PROVIDER_FALLBACK_ORDER,
-} from '~/routing/settings/data/mcp-connectors.data';
+} from '~/routing/settings/data/data.mcp-connectors';
 
 /** A connector's connection state from the current user's perspective. */
 export type McpConnectorStatus = 'disabled' | 'disconnected' | 'enabled';
@@ -63,8 +63,9 @@ export function groupConnectorsByProvider(
     byProvider.set(connector.provider, group);
   }
 
-  const providerOrder = (provider: string): number =>
-    MCP_PROVIDER_DISPLAY[provider]?.order ?? MCP_PROVIDER_FALLBACK_ORDER;
+  const providerOrder = (provider: string): number => {
+    return MCP_PROVIDER_DISPLAY[provider]?.order ?? MCP_PROVIDER_FALLBACK_ORDER;
+  };
 
   return [...byProvider.entries()]
     .sort(([a], [b]) => providerOrder(a) - providerOrder(b))

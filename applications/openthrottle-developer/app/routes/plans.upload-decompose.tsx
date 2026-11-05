@@ -75,8 +75,7 @@ export const action = async (
       return { error: 'Invalid proposal payload.', proposal: undefined };
     }
     return {
-      error:
-        'Creating a plan from this preview is not available until the document ingest API is implemented.',
+      error: `Creating a plan from this preview is not available until the document ingest API is implemented.`,
       proposal: undefined,
     };
   }
@@ -98,27 +97,38 @@ export default function Component(
   // Setup
   const isBusy = fetcher.state === 'submitting' || fetcher.state === 'loading';
   const intentRaw = fetcher.formData?.get('intent');
-  const busyMessage =
-    intentRaw === 'commit'
-      ? 'Creating plan from preview…'
-      : 'Parsing document…';
-
-  const progressState = isBusy
-    ? ({
-        kind: 'busy',
-        message: busyMessage,
-        value: 42,
-      } as const)
-    : ({ kind: 'idle' } as const);
-
-  const fetcherError =
-    fetcher.data !== undefined && fetcher.data.error !== undefined
-      ? fetcher.data.error
-      : undefined;
+  const isCommitting = intentRaw === 'commit';
+  const commitMessage = 'Creating plan from preview…';
+  const parseMessage = 'Parsing document…';
+  const busyMessage = isCommitting ? commitMessage : parseMessage;
+  const busyState = { kind: 'busy', message: busyMessage, value: 42 } as const;
+  const idleState = { kind: 'idle' } as const;
+  const progressState = isBusy ? busyState : idleState;
+  const fetcherError = fetcher.data?.error;
+  const hasFetcherError = fetcherError !== undefined;
+  const hasProposal = proposal !== undefined;
 
   // Handlers
 
   // Markup
+  const errorAlert = (
+    <p className="text-destructive text-sm" role="alert">
+      {fetcherError}
+    </p>
+  );
+  const commitForm = (
+    <fetcher.Form className="flex flex-wrap gap-2" method="post">
+      <input name="intent" type="hidden" value="commit" />
+      <input
+        name="proposalJson"
+        type="hidden"
+        value={JSON.stringify(proposal)}
+      />
+      <Button disabled={isBusy} type="submit" variant="secondary">
+        Create plan from preview
+      </Button>
+    </fetcher.Form>
+  );
 
   // Life Cycle
   React.useEffect(() => {
@@ -180,27 +190,11 @@ export default function Component(
 
           <DocumentUploadProgress state={progressState} />
 
-          {fetcherError !== undefined ? (
-            <p className="text-destructive text-sm" role="alert">
-              {fetcherError}
-            </p>
-          ) : null}
+          {hasFetcherError ? errorAlert : null}
 
           <DocumentDecomposePreview proposal={proposal} />
 
-          {proposal !== undefined ? (
-            <fetcher.Form className="flex flex-wrap gap-2" method="post">
-              <input name="intent" type="hidden" value="commit" />
-              <input
-                name="proposalJson"
-                type="hidden"
-                value={JSON.stringify(proposal)}
-              />
-              <Button disabled={isBusy} type="submit" variant="secondary">
-                Create plan from preview
-              </Button>
-            </fetcher.Form>
-          ) : null}
+          {hasProposal ? commitForm : null}
         </div>
       </PlanCreateMcpParityShell>
     </GlobalScreen>

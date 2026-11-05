@@ -26,19 +26,21 @@ import { McpConnectorConnectionResultObject } from './mcp-connector-connection-r
 
 const toConnectionObject = (
   connection: McpConnectorConnection,
-): McpConnectorConnectionObject => ({
-  authType: connection.authType,
-  connectedAt: connection.connectedAt,
-  connectorKey: connection.connectorKey,
-  createdAt: connection.createdAt,
-  credentialLabel: connection.credentialLabel,
-  credentialPrefix: connection.credentialPrefix,
-  enabled: connection.enabled,
-  id: connection.id,
-  lastUsedAt: connection.lastUsedAt,
-  updatedAt: connection.updatedAt,
-  userId: connection.userId,
-});
+): McpConnectorConnectionObject => {
+  return {
+    authType: connection.authType,
+    connectedAt: connection.connectedAt,
+    connectorKey: connection.connectorKey,
+    createdAt: connection.createdAt,
+    credentialLabel: connection.credentialLabel,
+    credentialPrefix: connection.credentialPrefix,
+    enabled: connection.enabled,
+    id: connection.id,
+    lastUsedAt: connection.lastUsedAt,
+    updatedAt: connection.updatedAt,
+    userId: connection.userId,
+  };
+};
 
 @Resolver(() => McpConnectorObject)
 @UseGuards(GqlPermissionsGuard)

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useFetcher } from 'react-router';
 
-import { AGENT_CONVERSATIONS_ACTION } from '../data/chat-conversation-actions';
+import { AGENT_CONVERSATIONS_ACTION } from '../data/data.chat-conversation-actions';
 import type {
   AgentConversationListItem,
   ListAgentConversationsResult,
@@ -72,11 +72,13 @@ export function useConversationList(): UseConversationListResult {
 
   const rename = (conversationId: string, title: string): void => {
     setConversations((previous) =>
-      previous.map((conversation) =>
-        conversation.id === conversationId
-          ? { ...conversation, title }
-          : conversation,
-      ),
+      previous.map((conversation) => {
+        if (conversation.id !== conversationId) {
+          return conversation;
+        }
+
+        return { ...conversation, title };
+      }),
     );
     mutateFetcher.submit(
       { conversationId, intent: 'rename', title },

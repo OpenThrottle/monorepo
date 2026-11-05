@@ -5,9 +5,9 @@ import { describe, expect, test } from 'vitest';
 
 import { useIsHydrated } from '../useIsHydrated';
 
-const Probe = (): React.ReactElement => (
-  <span>{useIsHydrated() ? 'hydrated' : 'server'}</span>
-);
+const Probe = (): React.ReactElement => {
+  return <span>{useIsHydrated() ? 'hydrated' : 'server'}</span>;
+};
 
 describe('useIsHydrated', () => {
   test('is false when rendered on the server', () => {

@@ -15,17 +15,19 @@ import { PlanRunsStaleSweepProcessor } from './plan-runs-stale-sweep.processor.t
 import type { PlanRunsStaleSweepJob } from './plan-runs-stale-sweep.types.ts';
 
 /** Minimal stale-run fixture (only the fields the processor reads). */
-const staleRun = (id: string, planId: string): PlanRun =>
-  createMock<PlanRun>({ id, planId, status: 'IN_PROGRESS' });
+const staleRun = (id: string, planId: string): PlanRun => {
+  return createMock<PlanRun>({ id, planId, status: 'IN_PROGRESS' });
+};
 
 /** An unsupervised run: no timer, so it is judged on age rather than silence. */
-const unsupervisedRun = (id: string, planId: string): PlanRun =>
-  createMock<PlanRun>({
+const unsupervisedRun = (id: string, planId: string): PlanRun => {
+  return createMock<PlanRun>({
     heartbeatExpected: false,
     id,
     planId,
     status: 'IN_PROGRESS',
   });
+};
 
 describe('PlanRunsStaleSweepProcessor', () => {
   let planRunsService: PlanRunsService;

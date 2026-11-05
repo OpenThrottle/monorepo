@@ -105,8 +105,7 @@ describe('sanitizeRalphShellNoise', () => {
   });
 
   it('tolerates leading ANSI color codes before the /bin/sh prefix', () => {
-    const result =
-      '\u001b[0;31m/bin/sh: line 1: foo: command not found\u001b[0m';
+    const result = `\u001b[0;31m/bin/sh: line 1: foo: command not found\u001b[0m`;
     const out = sanitizeRalphShellNoise(result);
 
     expect(out.collapsedBlockCount).toBe(1);

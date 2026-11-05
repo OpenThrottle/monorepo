@@ -7,6 +7,7 @@ import { ResourceTemplate, Tool } from '@rekog/mcp-nest';
 import { z } from 'zod';
 
 import * as Th from '../nest-tool-handlers.ts';
+import { firstStringParam } from '../utils/first-string-param.ts';
 
 /**
  * @description Bridges the codegen tool-parameter schemas to `@rekog/mcp-nest`'s
@@ -20,11 +21,14 @@ import * as Th from '../nest-tool-handlers.ts';
  * callers cannot accidentally satisfy it with a non-schema value.
  */
 
-const isZodSchema = (schema: unknown): schema is z.ZodType =>
-  typeof schema === 'object' &&
-  schema !== null &&
-  'safeParse' in schema &&
-  typeof schema.safeParse === 'function';
+const isZodSchema = (schema: unknown): schema is z.ZodType => {
+  return (
+    typeof schema === 'object' &&
+    schema !== null &&
+    'safeParse' in schema &&
+    typeof schema.safeParse === 'function'
+  );
+};
 
 const asMcpParameters = (schema: unknown): z.ZodType => {
   if (!isZodSchema(schema)) {
@@ -755,17 +759,10 @@ export class McpDeveloperMcpSurface {
     uriTemplate: Th.knowledgeBaseChunkUriTemplate,
   })
   async readKnowledgeBaseChunkResource(params: Record<string, unknown>) {
-    const idRaw = params['id'];
-    const id =
-      typeof idRaw === 'string'
-        ? idRaw
-        : Array.isArray(idRaw)
-          ? idRaw[0]
-          : undefined;
-    const uriStr =
-      id !== undefined && id !== ''
-        ? `knowledge-base://chunk/${id}`
-        : 'knowledge-base://chunk/';
+    const id = firstStringParam(params['id']);
+    const hasId = id !== undefined && id !== '';
+    const chunkBase = 'knowledge-base://chunk/';
+    const uriStr = hasId ? `${chunkBase}${id}` : chunkBase;
     return Th.readKnowledgeBaseChunk(new URL(uriStr), { id });
   }
 

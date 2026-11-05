@@ -32,10 +32,11 @@ const nonBlank = (value: string | null | undefined): string | null => {
 export const getPermissionsForPrincipal = async (
   rolesService: RolesService,
   principal: AuthPrincipal,
-): Promise<readonly string[]> =>
-  principal.kind === AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT
+): Promise<readonly string[]> => {
+  return principal.kind === AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT
     ? rolesService.getPermissionsForServiceAccount(principal.sub)
     : rolesService.getPermissionsForUser(principal.sub);
+};
 
 /**
  * @description A human-readable name for who made an edit, stored as `last_edited_by`. A

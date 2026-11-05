@@ -24,13 +24,14 @@ import {
   getPlanRunDialogInstant,
   parsePlanRunDialogIterations,
 } from '~/routing/plans/utils/plan-run-dialog';
+import { getPlanRunDialogScheduleFeedback } from '~/routing/plans/utils/plan-run-dialog-schedule-feedback';
 import type { PlanRunModelSelection } from '~/routing/plans/utils/plan-run-model-effort';
 import { reconcilePlanRunEffort } from '~/routing/plans/utils/plan-run-model-effort';
 import {
-  describeScheduleInstant,
   getLocalTimeZone,
   getScheduleInstantError,
 } from '~/routing/plans/utils/plan-run-schedule';
+import { readActionError } from '~/routing/plans/utils/read-action-error';
 
 export interface UsePlanRunDialogOptions {
   /** @description Run branch (REQUIRED enqueue input); blank blocks submit. */
@@ -116,12 +117,12 @@ export const usePlanRunDialog = (
   const iterations = parsePlanRunDialogIterations(draft.iterationsText);
   const iterationsError =
     iterations === null ? PLAN_RUN_DIALOG_COPY.iterationsInvalid : undefined;
-  const scheduleError =
-    draft.mode === 'schedule' ? getScheduleInstantError(instant, now) : null;
-  const scheduleSummary =
-    draft.mode === 'schedule' && instant !== undefined && instant > now
-      ? describeScheduleInstant(instant, now)
-      : undefined;
+  const isScheduleMode = draft.mode === 'schedule';
+  const { scheduleError, scheduleSummary } = getPlanRunDialogScheduleFeedback({
+    instant,
+    isScheduleMode,
+    now,
+  });
   const blockedReason =
     getPlanRunDialogBlockedReason({
       branch,
@@ -147,28 +148,24 @@ export const usePlanRunDialog = (
   const data = fetcher.data;
   const runError =
     data != null && 'runPlanError' in data ? data.runPlanError : undefined;
-  const scheduleActionError =
-    data != null && 'schedulePlanRunError' in data
-      ? data.schedulePlanRunError
-      : undefined;
-  const errorMessage = attempted
-    ? draft.mode === 'schedule'
-      ? scheduleActionError
-      : runError
-    : undefined;
+  const scheduleActionError = readActionError(data, 'schedulePlanRunError');
+  const modeError = isScheduleMode ? scheduleActionError : runError;
+  const errorMessage = attempted ? modeError : undefined;
 
   // Handlers
-  const patchDraft = (patch: Partial<PlanRunDialogDraft>): void =>
-    setDraft((previous) => ({ ...previous, ...patch }));
+  const patchDraft = (patch: Partial<PlanRunDialogDraft>): void => {
+    return setDraft((previous) => ({ ...previous, ...patch }));
+  };
 
-  const onModelChange = (selection: PlanRunModelSelection): void =>
-    setDraft((previous) => ({
+  const onModelChange = (selection: PlanRunModelSelection): void => {
+    return setDraft((previous) => ({
       ...previous,
       backend: selection.backend,
       // Drop an effort the new runner would ignore or clamp.
       effort: reconcilePlanRunEffort(selection.backend, previous.effort),
       model: selection.model,
     }));
+  };
 
   const onSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
     // The clock moved since the last render: re-check against it so a schedule

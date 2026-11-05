@@ -11,7 +11,9 @@ import type { BlogDetailsProps } from '../BlogDetails';
 import { BlogDetails } from '../BlogDetails';
 
 const renderDetails = (props: BlogDetailsProps): RenderResult => {
-  const Wrapped = () => <BlogDetails {...props} />;
+  const Wrapped = () => {
+    return <BlogDetails {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component: Wrapped, path: '/' }]);
 
   return render(<RoutesStub />);

@@ -22,8 +22,9 @@ const modules: DocsContentModules = import.meta.glob<string>(
 const manifest = buildDocsManifest({ modules });
 const faqEntries = manifest.filter((entry) => entry.section === 'faq');
 
-const md = (frontmatter: string, body: string): string =>
-  `---\n${frontmatter}\n---\n\n${body}\n`;
+const md = (frontmatter: string, body: string): string => {
+  return `---\n${frontmatter}\n---\n\n${body}\n`;
+};
 
 describe('docs rendering pipeline (fixture)', () => {
   test('the fixture loads into a manifest', () => {

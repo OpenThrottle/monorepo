@@ -7,11 +7,13 @@ import { GlobalProviders } from '../GlobalProviders';
 
 describe('GlobalProviders Component', () => {
   test('renders child content within providers', () => {
-    const Component = () => (
-      <GlobalProviders>
-        <span>provider-child</span>
-      </GlobalProviders>
-    );
+    const Component = () => {
+      return (
+        <GlobalProviders>
+          <span>provider-child</span>
+        </GlobalProviders>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 

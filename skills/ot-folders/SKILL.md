@@ -201,6 +201,16 @@ nearest `data/` folder, named so one file can carry many related values:
 | Mock fixtures              | `mock.<name>.ts`                               |
 | Other static data or lists | `data.<name>.ts` (`.tsx` only if it needs JSX) |
 
+**Every `.ts` file directly under `data/` is `data.<name>.ts` (or `mock.<name>.ts`), and it
+exports values, never functions.** `mcp-connectors.data.ts`, `url-matrix-rows.ts` and
+`chat-run-phase-copy.ts` are all misnamed — they are `data.mcp-connectors.ts`,
+`data.url-matrix-rows.ts` and `data.copy.ts`. A merge, filter, formatter or row builder that
+reads the data lives in the sibling `utils/`, not beside it. Specs under `__tests__/` are
+exempt, and a `data/index.ts` barrel keeps its name. Enforced by `openthrottle/data-file-shape`
+in the React Router apps and `react-router-*` packages (they spread `dataFolderEslintConfig`);
+rationale in
+[`code-style.md` § Data files hold data](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/code-style.md#data-files-hold-data).
+
 The component imports them via the `~/routing/<area>/data/…` alias. Because that is a real
 cross-module use reachable from a route entry, Knip treats the export as used — no `@public`
 tag needed. Rationale, and when a data file does or does not warrant its own spec:

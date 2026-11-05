@@ -14,13 +14,15 @@ describe('SheetTitle Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => (
-      <Sheet open={true}>
-        <SheetContent>
-          <SheetTitle {...props}>Sheet title</SheetTitle>
-        </SheetContent>
-      </Sheet>
-    );
+    const Component = () => {
+      return (
+        <Sheet open={true}>
+          <SheetContent>
+            <SheetTitle {...props}>Sheet title</SheetTitle>
+          </SheetContent>
+        </Sheet>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

@@ -59,37 +59,43 @@ const parseValueJson = (
 
 const toVariationObject = (
   variation: RolloutFlagVariation,
-): RolloutFlagObject['variations'][number] => ({
-  description: variation.description ?? null,
-  name: variation.name ?? null,
-  valueJson: JSON.stringify(variation.value),
-});
+): RolloutFlagObject['variations'][number] => {
+  return {
+    description: variation.description ?? null,
+    name: variation.name ?? null,
+    valueJson: JSON.stringify(variation.value),
+  };
+};
 
 const toFallthroughObject = (
   fallthrough: RolloutFallthrough,
-): RolloutFlagObject['fallthrough'] => ({
-  variations: fallthrough.variations.map((bucket) => ({
-    variation: bucket.variation,
-    weight: bucket.weight,
-  })),
-});
+): RolloutFlagObject['fallthrough'] => {
+  return {
+    variations: fallthrough.variations.map((bucket) => ({
+      variation: bucket.variation,
+      weight: bucket.weight,
+    })),
+  };
+};
 
 /**
  * @description Maps a domain flag entity to the admin GraphQL object.
  */
-export const toRolloutFlagObject = (flag: RolloutFlag): RolloutFlagObject => ({
-  createdAt: flag.createdAt,
-  description: flag.description,
-  enabled: flag.enabled,
-  fallthrough: toFallthroughObject(flag.fallthrough),
-  id: flag.id,
-  key: flag.key,
-  kind: flag.kind,
-  offVariation: flag.offVariation,
-  targetRoles: flag.targetRoles,
-  updatedAt: flag.updatedAt,
-  variations: flag.variations.map(toVariationObject),
-});
+export const toRolloutFlagObject = (flag: RolloutFlag): RolloutFlagObject => {
+  return {
+    createdAt: flag.createdAt,
+    description: flag.description,
+    enabled: flag.enabled,
+    fallthrough: toFallthroughObject(flag.fallthrough),
+    id: flag.id,
+    key: flag.key,
+    kind: flag.kind,
+    offVariation: flag.offVariation,
+    targetRoles: flag.targetRoles,
+    updatedAt: flag.updatedAt,
+    variations: flag.variations.map(toVariationObject),
+  };
+};
 
 /**
  * @description Maps a typed evaluation to the actor-facing FeatureFlagObject.
@@ -98,17 +104,21 @@ export const toRolloutFlagObject = (flag: RolloutFlag): RolloutFlagObject => ({
  */
 export const toFeatureFlagObject = (
   evaluation: RolloutEvaluation,
-): FeatureFlagObject => ({
-  enabled:
-    evaluation.kind === ROLLOUT_FLAG_KIND.BOOLEAN
-      ? evaluation.value === true
-      : evaluation.reason === 'fallthrough',
-  key: evaluation.key,
-  kind: evaluation.kind,
-  reason: evaluation.reason,
-  valueJson: JSON.stringify(evaluation.value),
-  variationIndex: evaluation.variationIndex,
-});
+): FeatureFlagObject => {
+  let enabled = evaluation.reason === 'fallthrough';
+  if (evaluation.kind === ROLLOUT_FLAG_KIND.BOOLEAN) {
+    enabled = evaluation.value === true;
+  }
+
+  return {
+    enabled,
+    key: evaluation.key,
+    kind: evaluation.kind,
+    reason: evaluation.reason,
+    valueJson: JSON.stringify(evaluation.value),
+    variationIndex: evaluation.variationIndex,
+  };
+};
 
 const mapVariationInputs = (
   variations: RolloutFlagVariationInput[] | null | undefined,

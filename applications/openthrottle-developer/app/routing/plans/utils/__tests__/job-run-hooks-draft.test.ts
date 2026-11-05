@@ -10,16 +10,18 @@ const promptRow = (
   draftId: string,
   phase: JobRunHookDraftRow['phase'],
   order: number,
-): JobRunHookDraftRow => ({
-  draftId,
-  kind: 'prompt_profile',
-  onFailure: undefined,
-  order,
-  phase,
-  prompt: '/agents-ralph',
-  promptDelivery: 'named',
-  timeoutSeconds: undefined,
-});
+): JobRunHookDraftRow => {
+  return {
+    draftId,
+    kind: 'prompt_profile',
+    onFailure: undefined,
+    order,
+    phase,
+    prompt: '/agents-ralph',
+    promptDelivery: 'named',
+    timeoutSeconds: undefined,
+  };
+};
 
 describe('updateRow', () => {
   test('patches only the row matching draftId', () => {

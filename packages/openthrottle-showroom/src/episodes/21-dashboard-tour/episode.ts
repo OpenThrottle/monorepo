@@ -33,20 +33,17 @@ export const episode: VideoEpisode = {
   dataRequirements: [
     {
       atLeast: 100,
-      describe:
-        'plans across the whole tour, the number the dashboard counter shows',
+      describe: `plans across the whole tour, the number the dashboard counter shows`,
       sql: `SELECT count(*) AS value FROM plans`,
     },
     {
       atLeast: 14,
-      describe:
-        'days of activity so the dashboard chart has a shape, not a spike',
+      describe: `days of activity so the dashboard chart has a shape, not a spike`,
       sql: `SELECT count(*) AS value FROM daily_stats`,
     },
     {
       atLeast: 50,
-      describe:
-        'completed plans, so the status breakdown is dominated by real work',
+      describe: `completed plans, so the status breakdown is dominated by real work`,
       sql: `SELECT count(*) AS value FROM plans WHERE status = 'COMPLETED'`,
     },
     {

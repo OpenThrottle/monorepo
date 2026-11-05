@@ -23,55 +23,61 @@ const copy = PLAN_RUN_TRANSPARENCY_COPY.history;
 
 const auditRow = (
   overrides: Partial<PlanRunAuditRow> = {},
-): PlanRunAuditRow => ({
-  __typename: 'PlanRunObject',
-  bullmqJobId: 'job-1',
-  createdAt: '2026-11-02T03:04:05.000Z',
-  executionBackend: 'claude',
-  heartbeatExpected: true,
-  id: 'run-1',
-  isStale: false,
-  model: 'claude-opus',
-  runConfigSnapshotJson: null,
-  runKind: 'spawn',
-  scheduledFor: null,
-  status: 'COMPLETED',
-  ...overrides,
-});
+): PlanRunAuditRow => {
+  return {
+    __typename: 'PlanRunObject',
+    bullmqJobId: 'job-1',
+    createdAt: '2026-11-02T03:04:05.000Z',
+    executionBackend: 'claude',
+    heartbeatExpected: true,
+    id: 'run-1',
+    isStale: false,
+    model: 'claude-opus',
+    runConfigSnapshotJson: null,
+    runKind: 'spawn',
+    scheduledFor: null,
+    status: 'COMPLETED',
+    ...overrides,
+  };
+};
 
 /** `count` COMPLETED runs, one minute apart, newest first. */
-const manyRows = (count: number): PlanRunAuditRow[] =>
-  Array.from({ length: count }, (_, index) =>
+const manyRows = (count: number): PlanRunAuditRow[] => {
+  return Array.from({ length: count }, (_, index) =>
     auditRow({
       bullmqJobId: `job-${index}`,
       createdAt: new Date(Date.UTC(2026, 10, 2, 3, 59 - index)).toISOString(),
       id: `run-${index}`,
     }),
   );
+};
 
 const renderTable = (
   rows: PlanRunAuditRow[],
   metrics: readonly PlanRunMetricsEntry[] = [],
 ): RenderResult => {
-  const Component = () => (
-    <TooltipProvider>
-      <PlanWorkflowRunTransparencyAuditTable
-        planRunAuditRows={rows}
-        planRunMetrics={metrics}
-        workflowInput={workflowInput}
-        workingDirectory=""
-      />
-    </TooltipProvider>
-  );
+  const Component = () => {
+    return (
+      <TooltipProvider>
+        <PlanWorkflowRunTransparencyAuditTable
+          planRunAuditRows={rows}
+          planRunMetrics={metrics}
+          workflowInput={workflowInput}
+          workingDirectory=""
+        />
+      </TooltipProvider>
+    );
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 };
 
 /** Summary rows carry `data-status`; expanded detail rows do not. */
-const bodyRowIds = (component: RenderResult): (string | null)[] =>
-  Array.from(component.container.querySelectorAll('tbody tr[data-status]')).map(
-    (element) => element.getAttribute('data-testid'),
-  );
+const bodyRowIds = (component: RenderResult): (string | null)[] => {
+  return Array.from(
+    component.container.querySelectorAll('tbody tr[data-status]'),
+  ).map((element) => element.getAttribute('data-testid'));
+};
 
 describe('PlanWorkflowRunTransparencyAuditTable', () => {
   describe('when there is no history', () => {

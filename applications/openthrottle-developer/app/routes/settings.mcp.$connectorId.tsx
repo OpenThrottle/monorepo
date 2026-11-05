@@ -112,12 +112,12 @@ export default function Component(
           </Link>
         </div>
         <SettingsMcpSetupDocs connector={connector} />
-        {connection ? (
+        {connection && (
           <SettingsMcpConnectionActions
             connection={connection}
             connector={connector}
           />
-        ) : null}
+        )}
         <SettingsMcpConnectForm
           actionError={actionError}
           connector={connector}

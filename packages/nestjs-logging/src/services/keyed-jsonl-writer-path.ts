@@ -17,16 +17,23 @@ const WINDOWS_RESERVED = new Set(
 /**
  * @description First 8 hex chars of SHA-256 of `input` (UTF-8).
  */
-export const keyedJsonlHash8 = (input: string): string =>
-  createHash('sha256').update(input, 'utf8').digest('hex').slice(0, 8);
+export const keyedJsonlHash8 = (input: string): string => {
+  return createHash('sha256').update(input, 'utf8').digest('hex').slice(0, 8);
+};
 
 /**
  * @description Stable pair hash for collision disambiguation (`queueName\0jobId`).
  */
-export const keyedJsonlPairHash8 = (queueName: string, jobId: string): string =>
-  keyedJsonlHash8(`${queueName}\0${jobId}`);
+export const keyedJsonlPairHash8 = (
+  queueName: string,
+  jobId: string,
+): string => {
+  return keyedJsonlHash8(`${queueName}\0${jobId}`);
+};
 
-const utf16Len = (s: string): number => s.length;
+const utf16Len = (s: string): number => {
+  return s.length;
+};
 
 const truncateWithHashSuffix = (
   sanitized: string,
@@ -51,8 +58,9 @@ const truncateWithHashSuffix = (
 /**
  * @description Sanitize a queue name or job id for use as a single path segment.
  */
-const replacePathAndWindowsForbidden = (input: string): string =>
-  input.replace(/[/\\<>:"|?*]/g, '_');
+const replacePathAndWindowsForbidden = (input: string): string => {
+  return input.replace(/[/\\<>:"|?*]/g, '_');
+};
 
 const replaceAsciiControls = (input: string): string => {
   let out = '';
@@ -111,10 +119,9 @@ export const buildKeyedJsonlRelativePath = (
 ): string => {
   const queueSegment = sanitizeKeyedJsonlSegment(params.queueName);
   const jobBase = sanitizeKeyedJsonlSegment(params.jobId);
-  const jobFile =
-    params.collisionJobSuffix === undefined
-      ? `${jobBase}${params.extension}`
-      : `${jobBase}~${params.collisionJobSuffix}${params.extension}`;
+  const suffix = params.collisionJobSuffix;
+  const collisionSuffix = suffix === undefined ? '' : `~${suffix}`;
+  const jobFile = `${jobBase}${collisionSuffix}${params.extension}`;
 
   return `${queueSegment}/${jobFile}`;
 };

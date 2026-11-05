@@ -7,13 +7,14 @@
 /** Full timestamp for a tooltip or popover. */
 export const formatTimelineTimestamp = (
   value: Date | number | string,
-): string =>
-  new Date(value).toLocaleString(undefined, {
+): string => {
+  return new Date(value).toLocaleString(undefined, {
     day: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
     month: 'short',
   });
+};
 
 /** Short axis tick: hours inside a day-scale window, dates above it. */
 export const formatTimelineTick = (
@@ -36,8 +37,9 @@ export const formatTimelineTick = (
  * The viewer's IANA zone (e.g. `America/Los_Angeles`), for the axis label.
  * Falls back to a neutral string where the runtime cannot report one.
  */
-export const timelineZoneLabel = (): string =>
-  Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'local time';
+export const timelineZoneLabel = (): string => {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'local time';
+};
 
 /** Human duration for a span tooltip: `2h 14m`, `45s`. */
 export const formatTimelineDuration = (ms: number): string => {

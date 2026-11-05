@@ -5,7 +5,7 @@ import * as React from 'react';
 import {
   QUEUE_STAT_ROW_COLUMN_CLASS,
   type QueueStatRowColumns,
-} from '~/routing/queues/data/queue-stat-row';
+} from '~/routing/queues/data/data.queue-stat-row';
 
 export interface QueueStatRowItem {
   readonly color?: string;

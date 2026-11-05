@@ -15,27 +15,33 @@ const VOCAB = ['commit', 'git', 'github', 'infra', 'terraform'] as const;
 
 const skill = (
   overrides: Partial<SkillAvailabilityInput> & { slug: string },
-): SkillAvailabilityInput => ({
-  disableModelInvocation: undefined,
-  tags: [],
-  ...overrides,
-});
+): SkillAvailabilityInput => {
+  return {
+    disableModelInvocation: undefined,
+    tags: [],
+    ...overrides,
+  };
+};
 
 const rule = (
   overrides: Partial<SkillAvailabilityRule> & { id: string },
-): SkillAvailabilityRule => ({
-  environment: null,
-  slugAllow: [],
-  slugDeny: [],
-  tagAllow: [],
-  tagDeny: [],
-  ...overrides,
-});
+): SkillAvailabilityRule => {
+  return {
+    environment: null,
+    slugAllow: [],
+    slugDeny: [],
+    tagAllow: [],
+    tagDeny: [],
+    ...overrides,
+  };
+};
 
 const ruleSet = (
   posture: 'allow' | 'deny',
   rules: readonly SkillAvailabilityRule[],
-): SkillAvailabilityRuleSet => ({ posture, rules });
+): SkillAvailabilityRuleSet => {
+  return { posture, rules };
+};
 
 const resolveOne = (
   input: SkillAvailabilityInput,

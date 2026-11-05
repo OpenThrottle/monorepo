@@ -26,11 +26,13 @@ const tabUntilFocused = async (
 const renderHeader = (
   headerProps: GlobalLayoutHeaderProps = {},
 ): ReturnType<typeof render> => {
-  const Component = (): React.ReactElement => (
-    <GlobalProviders>
-      <GlobalLayoutHeader {...headerProps} />
-    </GlobalProviders>
-  );
+  const Component = (): React.ReactElement => {
+    return (
+      <GlobalProviders>
+        <GlobalLayoutHeader {...headerProps} />
+      </GlobalProviders>
+    );
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 };

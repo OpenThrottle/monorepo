@@ -20,8 +20,9 @@ import type {
 import { ChatToolStatus } from './types';
 import { hasUsageCounts, normalizeUsage, sumUsage } from './usage';
 
-const asString = (value: unknown): string | null =>
-  typeof value === 'string' ? value : null;
+const asString = (value: unknown): string | null => {
+  return typeof value === 'string' ? value : null;
+};
 
 const safeParse = (
   json: string | null | undefined,
@@ -141,8 +142,9 @@ const LEGACY_TOOL_CALL_RESERVED_KEYS = new Set([
   'toolCallId',
 ]);
 
-const asNonEmptyString = (value: unknown): string | null =>
-  typeof value === 'string' && value !== '' ? value : null;
+const asNonEmptyString = (value: unknown): string | null => {
+  return typeof value === 'string' && value !== '' ? value : null;
+};
 
 /**
  * Legacy key-sniff for cursor-agent's `{ toolCallId, readToolCall: {…} }`, the
@@ -249,6 +251,15 @@ const toPayloadText = (value: unknown): string | null => {
   return typeof value === 'string' ? value : JSON.stringify(value);
 };
 
+/** A value as JSON, or null when it is absent (undefined or null). */
+const stringifyOrNull = (value: unknown): string | null => {
+  if (value === undefined || value === null) {
+    return null;
+  }
+
+  return JSON.stringify(value);
+};
+
 /** A legacy `tool_result` block's `content`: text blocks joined, else JSON. */
 const toolResultContentText = (content: unknown): string | null => {
   if (!Array.isArray(content)) {
@@ -296,10 +307,7 @@ const normalizeMetadata = (
     toolCallJson: toPayloadText(parsed.toolCall),
     toolName: toolName ?? FALLBACK_TOOL_NAME,
     toolResultBlocks: parseToolResultBlocks(parsed.toolResults),
-    usageJson:
-      parsed.usage === undefined || parsed.usage === null
-        ? null
-        : JSON.stringify(parsed.usage),
+    usageJson: stringifyOrNull(parsed.usage),
     usageResult: asString(parsed.result),
   };
 };
@@ -311,7 +319,9 @@ const normalizeMetadata = (
  */
 export const parseChunkMetadata = (
   metadataJson: string | null | undefined,
-): ParsedChunkMetadata => normalizeMetadata(safeParse(metadataJson));
+): ParsedChunkMetadata => {
+  return normalizeMetadata(safeParse(metadataJson));
+};
 
 /**
  * Best-effort tool name for a one-line activity marker; falls back to 'tool'.
@@ -366,10 +376,23 @@ const patchToolEvent = (
   events: readonly ChatTurnEvent[],
   index: number,
   patch: (event: ChatTurnToolEvent) => ChatTurnToolEvent,
-): readonly ChatTurnEvent[] =>
-  events.map((event, i) =>
+): readonly ChatTurnEvent[] => {
+  return events.map((event, i) =>
     i === index && event.kind === 'tool' ? patch(event) : event,
   );
+};
+
+/** Index of the tool event with `callId`, or -1 when there is none. */
+const findToolIndexByCallId = (
+  events: readonly ChatTurnEvent[],
+  callId: string | null,
+): number => {
+  if (callId === null) {
+    return -1;
+  }
+
+  return events.findIndex((e) => e.kind === 'tool' && e.callId === callId);
+};
 
 /**
  * Start a tool event (status running). A repeated callId is the same call, not
@@ -384,20 +407,18 @@ export const applyTurnToolCall = (
   meta: ParsedChunkMetadata,
   sortOrder: number,
 ): readonly ChatTurnEvent[] => {
-  const existingIndex =
-    meta.callId === null
-      ? -1
-      : events.findIndex((e) => e.kind === 'tool' && e.callId === meta.callId);
+  const existingIndex = findToolIndexByCallId(events, meta.callId);
 
   if (existingIndex >= 0) {
     const argsJson = meta.toolCallJson;
+    if (argsJson === null) {
+      return events;
+    }
 
-    return argsJson === null
-      ? events
-      : patchToolEvent(events, existingIndex, (event) => ({
-          ...event,
-          argsJson,
-        }));
+    return patchToolEvent(events, existingIndex, (event) => ({
+      ...event,
+      argsJson,
+    }));
   }
 
   // Legacy claude argument fragments concatenate onto the open call's args;
@@ -453,10 +474,7 @@ const resolveToolResult = (
   input: ToolResultInput,
   sortOrder: number,
 ): readonly ChatTurnEvent[] => {
-  const byId =
-    input.callId === null
-      ? -1
-      : events.findIndex((e) => e.kind === 'tool' && e.callId === input.callId);
+  const byId = findToolIndexByCallId(events, input.callId);
   const positional =
     input.callId === null ? !input.namesTool : input.positionalFallback;
   const index = byId >= 0 || !positional ? byId : lastRunningToolIndex(events);
@@ -567,10 +585,7 @@ export const applyTurnUsage = (
     error: terminal?.error ?? existing?.error ?? null,
     kind: 'usage',
     result: meta.usageResult ?? existing?.result ?? null,
-    sortOrder:
-      existing === undefined
-        ? sortOrder
-        : Math.max(existing.sortOrder, sortOrder),
+    sortOrder: Math.max(existing?.sortOrder ?? sortOrder, sortOrder),
     ...(usageField !== undefined ? { usage: usageField } : {}),
     usageJson: meta.usageJson ?? existing?.usageJson ?? null,
   };
@@ -590,12 +605,15 @@ export const applyTurnUsage = (
 export const failRunningTurnTools = (
   events: readonly ChatTurnEvent[],
   error: string,
-): readonly ChatTurnEvent[] =>
-  events.map((event) =>
-    event.kind === 'tool' && event.status === 'running'
-      ? { ...event, error, status: 'failed' }
-      : event,
-  );
+): readonly ChatTurnEvent[] => {
+  return events.map((event): ChatTurnEvent => {
+    if (event.kind === 'tool' && event.status === 'running') {
+      return { ...event, error, status: 'failed' };
+    }
+
+    return event;
+  });
+};
 
 /**
  * Fold a persisted `toolMetadata.events` array (saved non-text events) plus the

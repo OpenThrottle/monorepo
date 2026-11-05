@@ -183,6 +183,22 @@ export function decodeChatOption(id: string): DecodedChatOption | null {
   };
 }
 
+function resolveGroupLabel(
+  groupId: string,
+  subLabel: string | null | undefined,
+): string {
+  if (groupId.startsWith(OPENAI_GROUP_PREFIX)) {
+    return groupId.slice(OPENAI_GROUP_PREFIX.length);
+  }
+  if (groupId === CLI_MODEL_GROUP_ID) {
+    return 'Agent CLIs';
+  }
+  if (subLabel != null && subLabel !== '') {
+    return subLabel;
+  }
+  return groupId;
+}
+
 /**
  * Derive the picker's provider/CLI rail groups from a flat option list,
  * preserving first-appearance order. Each distinct `groupId` becomes its own
@@ -205,18 +221,10 @@ export function buildModelGroups(
       continue;
     }
 
-    const label = groupId.startsWith(OPENAI_GROUP_PREFIX)
-      ? groupId.slice(OPENAI_GROUP_PREFIX.length)
-      : groupId === CLI_MODEL_GROUP_ID
-        ? 'Agent CLIs'
-        : model.subLabel != null && model.subLabel !== ''
-          ? model.subLabel
-          : groupId;
-
     groups.set(groupId, {
       icon: resolveProviderIcon(groupId),
       id: groupId,
-      label,
+      label: resolveGroupLabel(groupId, model.subLabel),
     });
   }
 

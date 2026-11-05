@@ -4,16 +4,17 @@ import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
 import {
-  resolveRunningIndicatorCopy,
   RUNNING_INDICATOR_SLOW_HINT,
   RUNNING_INDICATOR_SLOW_HINT_AFTER_MS,
-} from '../../data/chat-run-phase-copy';
+} from '../../data/data.chat-run-phase-copy';
 import { ChatRunPhase } from '../../types';
+import { resolveRunningIndicatorCopy } from '../../utils/resolve-running-indicator-copy';
 import type { RunningIndicatorProps } from '../RunningIndicator';
 import { RunningIndicator } from '../RunningIndicator';
 
-const renderIndicator = (props: RunningIndicatorProps = {}): RenderResult =>
-  render(<RunningIndicator {...props} />);
+const renderIndicator = (props: RunningIndicatorProps = {}): RenderResult => {
+  return render(<RunningIndicator {...props} />);
+};
 
 describe('resolveRunningIndicatorCopy', () => {
   test('maps each phase to a distinct default label', () => {

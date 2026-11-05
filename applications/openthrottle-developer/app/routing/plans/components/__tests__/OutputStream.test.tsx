@@ -6,8 +6,9 @@ import { describe, expect, test } from 'vitest';
 import type { OutputStreamProps } from '../OutputStream';
 import { OutputStream } from '../OutputStream';
 
-const renderStream = (props: OutputStreamProps): RenderResult =>
-  render(<OutputStream {...props} />);
+const renderStream = (props: OutputStreamProps): RenderResult => {
+  return render(<OutputStream {...props} />);
+};
 
 describe('OutputStream Component', () => {
   test('renders one compact time per chunk and keeps the full timestamp on hover', async () => {

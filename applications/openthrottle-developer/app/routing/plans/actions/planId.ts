@@ -124,8 +124,7 @@ export const forceSettlePlanRun = async (
     // it heartbeats (a supervised run the sweeper owns). Nothing was changed.
     if (!result.forceSettlePlanRun) {
       return {
-        forceSettlePlanRunError:
-          'Nothing to settle — this run is no longer an unsettled interactive run.',
+        forceSettlePlanRunError: `Nothing to settle — this run is no longer an unsettled interactive run.`,
       };
     }
 
@@ -292,10 +291,9 @@ export const setPlanStatus = async (
   if (!parsed.success) {
     return { setPlanStatusError: parsed.error };
   }
-  const status =
-    parsed.data.status != null && parsed.data.status !== ''
-      ? parsed.data.status
-      : 'COMPLETED';
+  const requestedStatus = parsed.data.status;
+  const hasRequestedStatus = requestedStatus != null && requestedStatus !== '';
+  const status = hasRequestedStatus ? requestedStatus : 'COMPLETED';
 
   try {
     const result = await executeGraphqlWithAuth(
@@ -421,10 +419,9 @@ export const saveJobRunHooks = async (
   if (!parsed.success) {
     return { saveJobRunHooksError: parsed.error };
   }
+  // `||` (not `??`) on purpose: a blank submission also falls back to no hooks.
   const jobRunHooksJson =
-    parsed.data.jobRunHooksJson != null && parsed.data.jobRunHooksJson !== ''
-      ? parsed.data.jobRunHooksJson
-      : JSON.stringify({ hooks: [] });
+    parsed.data.jobRunHooksJson || JSON.stringify({ hooks: [] });
 
   // Domain-validate (richer than plain JSON validity) and keep the exact
   // user-facing message.

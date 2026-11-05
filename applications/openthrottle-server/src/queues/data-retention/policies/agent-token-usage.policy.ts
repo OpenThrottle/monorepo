@@ -23,7 +23,6 @@ export const agentTokenUsagePolicy = createAgeRetentionPolicy({
   column: 'created_at',
   days: 180,
   name: 'agent-token-usage',
-  rationale:
-    'just past the longest window the Usage UI offers, so every rendered view is still served from raw rows',
+  rationale: `just past the longest window the Usage UI offers, so every rendered view is still served from raw rows`,
   table: 'agent_token_usage',
 });

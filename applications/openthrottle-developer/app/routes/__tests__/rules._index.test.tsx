@@ -41,32 +41,36 @@ const disabledRule: TagActionRuleRowData = {
 
 const matchesFor = (
   rules: TagActionRuleRowData[],
-): Route.ComponentProps['matches'] => [
-  buildRootMatch(),
-  {
-    handle: undefined,
-    id: 'routes/rules._index',
-    loaderData: { rules },
-    params: {},
-    pathname: '/rules',
-  },
-];
+): Route.ComponentProps['matches'] => {
+  return [
+    buildRootMatch(),
+    {
+      handle: undefined,
+      id: 'routes/rules._index',
+      loaderData: { rules },
+      params: {},
+      pathname: '/rules',
+    },
+  ];
+};
 
 const renderIndex = (
   rules: TagActionRuleRowData[],
   initialEntry = '/rules',
 ): ReturnType<typeof render> => {
   // useFetcher + useSearchParams require a data router.
-  const Wrapped = (): React.ReactElement => (
-    <TooltipProvider>
-      <Index
-        actionData={undefined}
-        loaderData={{ rules }}
-        matches={matchesFor(rules)}
-        params={{}}
-      />
-    </TooltipProvider>
-  );
+  const Wrapped = (): React.ReactElement => {
+    return (
+      <TooltipProvider>
+        <Index
+          actionData={undefined}
+          loaderData={{ rules }}
+          matches={matchesFor(rules)}
+          params={{}}
+        />
+      </TooltipProvider>
+    );
+  };
   const RoutesStub = createRoutesStub([{ Component: Wrapped, path: '/rules' }]);
 
   return render(<RoutesStub initialEntries={[initialEntry]} />);

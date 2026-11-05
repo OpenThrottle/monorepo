@@ -23,8 +23,7 @@ export const DEFAULT_ELEVENLABS_VOICE = 'bIHbv24MWmeRgasZH58o';
 /** Quality-tier model, pinned for reproducibility and recorded per take. */
 export const DEFAULT_ELEVENLABS_MODEL = 'eleven_multilingual_v2';
 
-const KEY_HINT =
-  'Set ELEVENLABS_API_KEY in the repo root .env and export it before running (set -a; source .env; set +a). See packages/openthrottle-showroom/NARRATION.md';
+const KEY_HINT = `Set ELEVENLABS_API_KEY in the repo root .env and export it before running (set -a; source .env; set +a). See packages/openthrottle-showroom/NARRATION.md`;
 
 /**
  * @description API key from the environment. Throws when unset — never falls back.

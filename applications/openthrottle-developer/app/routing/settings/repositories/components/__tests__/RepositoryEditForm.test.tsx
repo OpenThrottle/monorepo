@@ -28,7 +28,9 @@ describe('RepositoryEditForm Component', () => {
   let submitted: Record<string, FormDataEntryValue | null>[];
 
   const setup = (): void => {
-    const Component = () => <RepositoryEditForm {...props} />;
+    const Component = () => {
+      return <RepositoryEditForm {...props} />;
+    };
     const RoutesStub = createRoutesStub([
       {
         Component,

@@ -19,8 +19,9 @@ import { join } from 'node:path';
 import type { ForeignSkillLedger } from './types.ts';
 import { FOREIGN_SKILL_LEDGER_DIR_ENV } from './types.ts';
 
-const isErrnoException = (error: unknown): error is NodeJS.ErrnoException =>
-  error instanceof Error && 'code' in error;
+const isErrnoException = (error: unknown): error is NodeJS.ErrnoException => {
+  return error instanceof Error && 'code' in error;
+};
 
 /** Structural guard so JSON.parse output can be narrowed without a cast. */
 const isForeignSkillLedger = (value: unknown): value is ForeignSkillLedger => {

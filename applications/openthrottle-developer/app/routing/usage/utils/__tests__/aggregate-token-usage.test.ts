@@ -6,21 +6,23 @@ import { groupTokenUsage } from '../aggregate-token-usage';
 
 const row = (
   overrides: Partial<UsageTokenUsageRowFragment>,
-): UsageTokenUsageRowFragment => ({
-  cacheReadTokens: null,
-  cacheWriteTokens: null,
-  costUsd: null,
-  createdAt: '2026-07-15T00:00:00.000Z',
-  id: 'r',
-  inputTokens: null,
-  model: null,
-  outputTokens: null,
-  provider: 'claude',
-  reasoningTokens: null,
-  source: 'openthrottle-chat',
-  totalTokens: null,
-  ...overrides,
-});
+): UsageTokenUsageRowFragment => {
+  return {
+    cacheReadTokens: null,
+    cacheWriteTokens: null,
+    costUsd: null,
+    createdAt: '2026-07-15T00:00:00.000Z',
+    id: 'r',
+    inputTokens: null,
+    model: null,
+    outputTokens: null,
+    provider: 'claude',
+    reasoningTokens: null,
+    source: 'openthrottle-chat',
+    totalTokens: null,
+    ...overrides,
+  };
+};
 
 describe('groupTokenUsage', () => {
   test('groups by provider, sums counts (null → 0), sorts by total desc', () => {

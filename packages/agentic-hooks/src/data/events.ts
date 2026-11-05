@@ -168,10 +168,9 @@ export const buildOutcomeEvent = ({
 
   const scope = detectScope(name, repoRoot);
   const resolvedCwd = cwd || repoRoot;
-  const resolvedDuration =
-    durationMs == null || Number.isNaN(Number(durationMs))
-      ? null
-      : Math.max(0, Math.round(Number(durationMs)));
+  const hasDuration = durationMs != null && !Number.isNaN(Number(durationMs));
+  const roundedDuration = Math.max(0, Math.round(Number(durationMs)));
+  const resolvedDuration = hasDuration ? roundedDuration : null;
 
   const event: OutcomeEvent = {
     cwd: resolvedCwd,

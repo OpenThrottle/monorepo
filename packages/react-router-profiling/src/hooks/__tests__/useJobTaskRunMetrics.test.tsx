@@ -1,10 +1,10 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { fetchJobTaskRunMetrics } from '../../data/fetch-job-task-run-metrics';
+import { fetchJobTaskRunMetrics } from '../../utils/fetch-job-task-run-metrics';
 import { useJobTaskRunMetrics } from '../useJobTaskRunMetrics';
 
-vi.mock('../../data/fetch-job-task-run-metrics', () => ({
+vi.mock('../../utils/fetch-job-task-run-metrics', () => ({
   fetchJobTaskRunMetrics: vi.fn(),
 }));
 

@@ -11,11 +11,13 @@ import { buildGeminiPrompt } from '../gemini.ts';
 
 const run = (
   extra: Partial<ConversationBackendRun>,
-): ConversationBackendRun => ({
-  messages: [{ content: 'hello', role: 'user' }],
-  model: 'gemini-2.5-pro',
-  ...extra,
-});
+): ConversationBackendRun => {
+  return {
+    messages: [{ content: 'hello', role: 'user' }],
+    model: 'gemini-2.5-pro',
+    ...extra,
+  };
+};
 
 describe('buildGeminiPrompt', () => {
   it('uses the latest user message alone on a first turn', () => {

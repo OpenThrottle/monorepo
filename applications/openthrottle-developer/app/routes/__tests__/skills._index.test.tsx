@@ -6,12 +6,12 @@ import { createRoutesStub, useLocation } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/skills._index';
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 import {
   SKILLS_EMPTY_COPY,
   SKILLS_ONBOARDING,
 } from '~/routing/skills/data/data.copy';
-import type { SkillsIndexUsageData } from '~/routing/skills/data/skills-index-usage';
+import type { SkillsIndexUsageData } from '~/routing/skills/types';
 import { buildRootMatch } from '~/testing/root-match-fixture';
 
 import Component from '../skills._index';
@@ -19,15 +19,17 @@ import Component from '../skills._index';
 const buildEntry = (
   index: number,
   source: RepoSkillEntry['source'],
-): RepoSkillEntry => ({
-  disableModelInvocation: undefined,
-  layout: 'agents',
-  repoRelativePath: `.agents/skills/skill-${String(index).padStart(3, '0')}/SKILL.md`,
-  slug: `skill-${String(index).padStart(3, '0')}`,
-  source,
-  summary: `Summary for skill ${index}.`,
-  tags: [source],
-});
+): RepoSkillEntry => {
+  return {
+    disableModelInvocation: undefined,
+    layout: 'agents',
+    repoRelativePath: `.agents/skills/skill-${String(index).padStart(3, '0')}/SKILL.md`,
+    slug: `skill-${String(index).padStart(3, '0')}`,
+    source,
+    summary: `Summary for skill ${index}.`,
+    tags: [source],
+  };
+};
 
 // 30 OpenThrottle (000-029) + 10 external (030-039) = 40 total.
 const entries: RepoSkillEntry[] = [
@@ -40,12 +42,14 @@ const unavailableUsage: SkillsIndexUsageData = { available: false };
 const buildLoaderData = (
   usage: SkillsIndexUsageData = unavailableUsage,
   loaderEntries: RepoSkillEntry[] = entries,
-): Route.ComponentProps['loaderData'] => ({
-  entries: loaderEntries,
-  presentSlugs: loaderEntries.map((entry) => entry.slug),
-  tagVocabulary: [],
-  usage: Promise.resolve(usage),
-});
+): Route.ComponentProps['loaderData'] => {
+  return {
+    entries: loaderEntries,
+    presentSlugs: loaderEntries.map((entry) => entry.slug),
+    tagVocabulary: [],
+    usage: Promise.resolve(usage),
+  };
+};
 
 const matches: Route.ComponentProps['matches'] = [
   buildRootMatch(),

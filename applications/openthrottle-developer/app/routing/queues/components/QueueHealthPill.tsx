@@ -1,7 +1,7 @@
 import { Badge, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { QUEUE_HEALTH_DOT_CLASS } from '~/routing/queues/data/queue-health-display';
+import { QUEUE_HEALTH_DOT_CLASS } from '~/routing/queues/data/data.queue-health-display';
 import {
   computeQueueHealth,
   type QueueHealthCounts,

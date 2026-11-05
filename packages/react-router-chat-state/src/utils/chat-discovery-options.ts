@@ -175,6 +175,17 @@ export function toChatModelOptions(
   });
 }
 
+function resolveAgentModelEntries(
+  agent: DiscoveredAgentCli,
+): { favorite: boolean; model: string }[] {
+  if (agent.modelOptions == null) {
+    return (agent.models ?? []).map((model) => ({ favorite: false, model }));
+  }
+  return agent.modelOptions
+    .filter((option) => option.enabled)
+    .map((option) => ({ favorite: option.favorite, model: option.model }));
+}
+
 /**
  * The user-facing models of an agent, resolved to `{ model, favorite }` pairs.
  * Prefers the per-model `modelOptions` (dropping user-disabled models and
@@ -185,12 +196,7 @@ export function toChatModelOptions(
 function resolveAgentModels(
   agent: DiscoveredAgentCli,
 ): { favorite: boolean; model: string }[] {
-  const resolved =
-    agent.modelOptions != null
-      ? agent.modelOptions
-          .filter((option) => option.enabled)
-          .map((option) => ({ favorite: option.favorite, model: option.model }))
-      : (agent.models ?? []).map((model) => ({ favorite: false, model }));
+  const resolved = resolveAgentModelEntries(agent);
 
   // Favorites first, otherwise stable in discovery order.
   return resolved
@@ -254,6 +260,18 @@ export function toAgentChatOptions(
     });
 }
 
+function describeDriverEndpoint(
+  driverLabel: string,
+  vantage: string,
+  host: string,
+): string {
+  const prefix = `${driverLabel} · ${vantage}`;
+  if (host === DOCKER_INTERNAL_HOST) {
+    return `${prefix} (may be unreachable outside Docker)`;
+  }
+  return `${prefix} (local)`;
+}
+
 /**
  * Join discovered agent CLIs with discovered local endpoints into "driver ×
  * local endpoint/model" composer options. Only base-URL-capable, chat-capable
@@ -280,10 +298,11 @@ export function toDriverEndpointChatOptions(
   return capableDrivers.flatMap((agent) =>
     localModels.endpoints.flatMap((endpoint) => {
       const vantage = endpoint.provider ?? endpoint.host;
-      const description =
-        endpoint.host === DOCKER_INTERNAL_HOST
-          ? `${agent.label} · ${vantage} (may be unreachable outside Docker)`
-          : `${agent.label} · ${vantage} (local)`;
+      const description = describeDriverEndpoint(
+        agent.label,
+        vantage,
+        endpoint.host,
+      );
 
       return endpoint.models.map((model) => ({
         description,

@@ -62,10 +62,12 @@ const DEFAULT_TEST_ENV: Required<OpenThrottleEnv> = {
  */
 export const createTestEnv = (
   overrides: Partial<OpenThrottleEnv> = {},
-): OpenThrottleEnv => ({
-  ...DEFAULT_TEST_ENV,
-  ...overrides,
-});
+): OpenThrottleEnv => {
+  return {
+    ...DEFAULT_TEST_ENV,
+    ...overrides,
+  };
+};
 
 /**
  * Assign the test env fixture onto `window.env` (the contract

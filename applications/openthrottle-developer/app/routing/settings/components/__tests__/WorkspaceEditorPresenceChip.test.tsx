@@ -13,7 +13,9 @@ import type { WorkspaceEditorPresenceChipProps } from '../WorkspaceEditorPresenc
 import { WorkspaceEditorPresenceChip } from '../WorkspaceEditorPresenceChip';
 
 const renderChip = (props: WorkspaceEditorPresenceChipProps): RenderResult => {
-  const Component = () => <WorkspaceEditorPresenceChip {...props} />;
+  const Component = () => {
+    return <WorkspaceEditorPresenceChip {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

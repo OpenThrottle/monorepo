@@ -4,4 +4,6 @@
  * drops the usual new-tab/`rel` handling), so callers render a plain anchor
  * instead. Used by `GlobalFeatureOnboardingBody` for its CTA links.
  */
-export const isExternalHref = (to: string): boolean => /^https?:\/\//.test(to);
+export const isExternalHref = (to: string): boolean => {
+  return /^https?:\/\//.test(to);
+};

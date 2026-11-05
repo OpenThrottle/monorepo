@@ -49,10 +49,47 @@ export const ChatMentionPopover = (
   // Hooks
 
   // Setup
+  const isEmpty = !loading && results.length === 0;
+  const hasResults = !loading && results.length > 0;
 
   // Handlers
 
   // Markup
+  const loadingMarkup = (
+    <div className="text-muted-foreground p-3 text-sm" role="status">
+      {loadingLabel}
+    </div>
+  );
+
+  const emptyMarkup = (
+    <div className="text-muted-foreground p-3 text-sm">{emptyLabel}</div>
+  );
+
+  const listMarkup = (
+    <ul aria-label="File mentions" id={listboxId} role="listbox">
+      {results.map((path, index) => (
+        <li
+          aria-selected={index === activeIndex}
+          className={cn(
+            'cursor-pointer px-3 py-1.5 text-sm',
+            index === activeIndex && 'bg-accent text-accent-foreground',
+            index !== activeIndex && 'text-foreground',
+          )}
+          id={optionId(index)}
+          key={path}
+          // mousedown (not click) so the textarea does not blur first.
+          onMouseDown={(event) => {
+            event.preventDefault();
+            onSelectOption(path);
+          }}
+          onMouseEnter={() => onHoverOption(index)}
+          role="option"
+        >
+          {path}
+        </li>
+      ))}
+    </ul>
+  );
 
   // Life Cycle
 
@@ -62,38 +99,9 @@ export const ChatMentionPopover = (
       className="bg-popover text-popover-foreground absolute bottom-full z-50 mb-1 max-h-60 w-full overflow-y-auto rounded-md border shadow-md"
       data-testid="ChatMentionPopover"
     >
-      {loading ? (
-        <div className="text-muted-foreground p-3 text-sm" role="status">
-          {loadingLabel}
-        </div>
-      ) : results.length === 0 ? (
-        <div className="text-muted-foreground p-3 text-sm">{emptyLabel}</div>
-      ) : (
-        <ul aria-label="File mentions" id={listboxId} role="listbox">
-          {results.map((path, index) => (
-            <li
-              aria-selected={index === activeIndex}
-              className={cn(
-                'cursor-pointer px-3 py-1.5 text-sm',
-                index === activeIndex
-                  ? 'bg-accent text-accent-foreground'
-                  : 'text-foreground',
-              )}
-              id={optionId(index)}
-              key={path}
-              // mousedown (not click) so the textarea does not blur first.
-              onMouseDown={(event) => {
-                event.preventDefault();
-                onSelectOption(path);
-              }}
-              onMouseEnter={() => onHoverOption(index)}
-              role="option"
-            >
-              {path}
-            </li>
-          ))}
-        </ul>
-      )}
+      {loading && loadingMarkup}
+      {isEmpty && emptyMarkup}
+      {hasResults && listMarkup}
     </div>
   );
 };

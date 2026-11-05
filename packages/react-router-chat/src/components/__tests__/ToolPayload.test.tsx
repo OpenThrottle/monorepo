@@ -6,8 +6,9 @@ import { describe, expect, test } from 'vitest';
 import type { ToolPayloadProps } from '../ToolPayload';
 import { ToolPayload } from '../ToolPayload';
 
-const renderPayload = (props: ToolPayloadProps): RenderResult =>
-  render(<ToolPayload {...props} />);
+const renderPayload = (props: ToolPayloadProps): RenderResult => {
+  return render(<ToolPayload {...props} />);
+};
 
 describe('ToolPayload', () => {
   test('renders the label', () => {

@@ -23,11 +23,13 @@ import type { GitExcludeOwner } from './types.ts';
  * blocks became per-owner, so exclude files already on disk keep parsing and no repo needs
  * migrating.
  */
-const beginMarkerFor = (owner: GitExcludeOwner): string =>
-  `# BEGIN OpenThrottle ${owner} (managed — do not edit)`;
+const beginMarkerFor = (owner: GitExcludeOwner): string => {
+  return `# BEGIN OpenThrottle ${owner} (managed — do not edit)`;
+};
 
-const endMarkerFor = (owner: GitExcludeOwner): string =>
-  `# END OpenThrottle ${owner} (managed)`;
+const endMarkerFor = (owner: GitExcludeOwner): string => {
+  return `# END OpenThrottle ${owner} (managed)`;
+};
 
 /**
  * @description Resolves the repo's `info/exclude` path via

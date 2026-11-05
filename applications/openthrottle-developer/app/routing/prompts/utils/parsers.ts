@@ -8,11 +8,13 @@ import {
   PROMPTS_SORT_ORDER,
 } from '~/routing/prompts/config/types';
 
-const isPromptsSortBy = (value: string): value is PromptsSortBy =>
-  PROMPTS_SORT_BY.some((candidate) => candidate === value);
+const isPromptsSortBy = (value: string): value is PromptsSortBy => {
+  return PROMPTS_SORT_BY.some((candidate) => candidate === value);
+};
 
-const isPromptsSortOrder = (value: string): value is PromptsSortOrder =>
-  PROMPTS_SORT_ORDER.some((candidate) => candidate === value);
+const isPromptsSortOrder = (value: string): value is PromptsSortOrder => {
+  return PROMPTS_SORT_ORDER.some((candidate) => candidate === value);
+};
 
 /**
  * @description Parses sortBy and sortOrder from URL search params; defaults to updatedAt-desc.

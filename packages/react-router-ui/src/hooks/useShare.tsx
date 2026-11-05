@@ -93,10 +93,12 @@ export function useShare(options: UseShareOptions = {}): UseShareResult {
           return;
         }
 
-        const normalized =
-          shareError instanceof Error
-            ? shareError
-            : new Error(String(shareError));
+        if (shareError instanceof Error) {
+          setError(shareError);
+          throw shareError;
+        }
+
+        const normalized = new Error(String(shareError));
         setError(normalized);
         throw normalized;
       } finally {

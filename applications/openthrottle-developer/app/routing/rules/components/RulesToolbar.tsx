@@ -130,7 +130,7 @@ export const RulesToolbar = (props: RulesToolbarProps): React.ReactElement => {
           </ToggleGroupItem>
         </ToggleGroup>
 
-        {hasActiveFilters ? (
+        {hasActiveFilters && (
           <Button
             data-testid="RulesToolbar-clear-filters"
             onClick={handleClearFilters}
@@ -139,7 +139,7 @@ export const RulesToolbar = (props: RulesToolbarProps): React.ReactElement => {
           >
             {RULES_COPY.clearFiltersAction}
           </Button>
-        ) : null}
+        )}
 
         <div className="min-w-0 flex-1" />
 

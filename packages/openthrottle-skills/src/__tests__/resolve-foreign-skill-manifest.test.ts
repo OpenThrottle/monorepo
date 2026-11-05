@@ -10,8 +10,9 @@ import {
   resolveForeignSkillManifest,
 } from '../resolve-foreign-skill-manifest.ts';
 
-const skillMd = (name: string, description = `The ${name} skill`): string =>
-  `---\nname: ${name}\ndescription: ${description}\n---\n\n# ${name}\n`;
+const skillMd = (name: string, description = `The ${name} skill`): string => {
+  return `---\nname: ${name}\ndescription: ${description}\n---\n\n# ${name}\n`;
+};
 
 /** Writes a valid skill directory (`<root>/<name>/SKILL.md`) under `root`. */
 const writeSkill = (root: string, name: string, description?: string): void => {

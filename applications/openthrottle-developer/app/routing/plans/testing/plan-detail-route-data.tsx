@@ -27,7 +27,9 @@ export const renderWithPlanDetailRouteData = (
   loaderData: PlanDetailRouteDataSeed,
   options?: { readonly initialEntries?: readonly string[] },
 ): RenderResult => {
-  const Component = (): React.ReactElement => element;
+  const Component = (): React.ReactElement => {
+    return element;
+  };
 
   const RoutesStub = createRoutesStub([
     {
@@ -71,8 +73,8 @@ function asPlanDetailRouteData(value: unknown): unknown {
  */
 export const buildPlanDetailLoaderData = (
   overrides: Readonly<Record<string, unknown>> = {},
-): PlanDetailRouteData =>
-  asPlanDetailRouteData({
+): PlanDetailRouteData => {
+  return asPlanDetailRouteData({
     enabledEditors: Promise.resolve([]),
     ledger: Promise.resolve({ linkedArtifacts: [], ruleApplications: [] }),
     models: Promise.resolve([]),
@@ -84,3 +86,4 @@ export const buildPlanDetailLoaderData = (
     workspaceRepositories: Promise.resolve([]),
     ...overrides,
   });
+};

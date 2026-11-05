@@ -61,14 +61,17 @@ export interface BuildDocsManifestOptions {
 
 const CONTENT_ROOT_MARKER = 'docs-content/';
 
-const isDocsSection = (value: string): value is DocsSection =>
-  value === DOCS_SECTION.docs || value === DOCS_SECTION.faq;
+const isDocsSection = (value: string): value is DocsSection => {
+  return value === DOCS_SECTION.docs || value === DOCS_SECTION.faq;
+};
 
-const toOrder = (value: unknown): number =>
-  typeof value === 'number' ? value : Number.MAX_SAFE_INTEGER;
+const toOrder = (value: unknown): number => {
+  return typeof value === 'number' ? value : Number.MAX_SAFE_INTEGER;
+};
 
-const toOptionalString = (value: unknown): string | null =>
-  typeof value === 'string' && value.length > 0 ? value : null;
+const toOptionalString = (value: unknown): string | null => {
+  return typeof value === 'string' && value.length > 0 ? value : null;
+};
 
 const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;
 
@@ -109,10 +112,9 @@ export const buildDocsManifest = (
 
   const entries = Object.entries(modules).map(([key, raw]): DocEntry => {
     const markerIndex = key.indexOf(CONTENT_ROOT_MARKER);
-    const afterRoot =
-      markerIndex === -1
-        ? key
-        : key.slice(markerIndex + CONTENT_ROOT_MARKER.length);
+    const hasMarker = markerIndex !== -1;
+    const afterMarker = key.slice(markerIndex + CONTENT_ROOT_MARKER.length);
+    const afterRoot = hasMarker ? afterMarker : key;
 
     const segments = afterRoot.replace(/\.md$/, '').split('/');
     const [sectionSegment, ...rest] = segments;

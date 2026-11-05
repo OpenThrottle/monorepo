@@ -14,7 +14,9 @@ describe('InputGroupButton Component', () => {
   beforeEach(() => {
     props = { children: 'Action' };
 
-    const Component = () => <InputGroupButton {...props} />;
+    const Component = () => {
+      return <InputGroupButton {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

@@ -16,8 +16,8 @@ import { PlanRunCancelScheduledDialog } from '~/routing/plans/components/PlanRun
 import { PlanRunDialog } from '~/routing/plans/components/PlanRunDialog';
 import { PlanToolbarActiveRunControl } from '~/routing/plans/components/PlanToolbarActiveRunControl';
 import { PlanToolbarRunSplitButton } from '~/routing/plans/components/PlanToolbarRunSplitButton';
-import { PLAN_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
 import { usePlanToolbarRunDialog } from '~/routing/plans/hooks/usePlanToolbarRunDialog';
+import { getEvaluateRulesTooltip } from '~/routing/plans/utils/evaluate-rules-tooltip';
 
 export interface PlanToolbarRunActionsProps {
   readonly branch?: string;
@@ -102,9 +102,13 @@ export const PlanToolbarRunActions = (
   const [cancelOpen, setCancelOpen] = React.useState(false);
 
   // Setup
+  const isEvaluating = fetcherEvaluateRules.state !== 'idle';
+  const evaluateLabel = isEvaluating ? 'Evaluating…' : 'Evaluate rules';
 
   // Handlers
-  const onOpenCancelScheduled = (): void => setCancelOpen(true);
+  const onOpenCancelScheduled = (): void => {
+    return setCancelOpen(true);
+  };
 
   // Markup
 
@@ -139,26 +143,18 @@ export const PlanToolbarRunActions = (
             <Input name="intent" type="hidden" value="evaluatePlanRules" />
             <Input name="planId" type="hidden" value={planId} />
             <Button
-              disabled={
-                fetcherEvaluateRules.state !== 'idle' || isRunning || isTerminal
-              }
+              disabled={isEvaluating || isRunning || isTerminal}
               size="xs"
               type="submit"
               variant="ghost"
             >
               <Gauge />
-              {fetcherEvaluateRules.state !== 'idle'
-                ? 'Evaluating…'
-                : 'Evaluate rules'}
+              {evaluateLabel}
             </Button>
           </fetcherEvaluateRules.Form>
         </TooltipTrigger>
         <TooltipContent className="max-w-xs" side="top">
-          {isTerminal
-            ? PLAN_TOOLBAR_COPY.evaluateRulesTerminalTooltip
-            : isRunning
-              ? PLAN_TOOLBAR_COPY.evaluateRulesRunningTooltip
-              : 'Queue a tag→action rules evaluation pass for this plan (recomputes skills-via-rules; results appear in the rule applications ledger).'}
+          {getEvaluateRulesTooltip({ isRunning, isTerminal })}
         </TooltipContent>
       </Tooltip>
 
@@ -170,7 +166,7 @@ export const PlanToolbarRunActions = (
         planTitle={planTitle}
       />
 
-      {scheduledRunId == null ? null : (
+      {scheduledRunId != null && (
         <PlanRunCancelScheduledDialog
           onOpenChange={setCancelOpen}
           open={cancelOpen}

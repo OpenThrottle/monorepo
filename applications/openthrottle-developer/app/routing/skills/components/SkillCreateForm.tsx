@@ -27,10 +27,33 @@ export const SkillCreateForm = (
   // Hooks
 
   // Setup
+  const hasSlugError = form.slugError !== undefined;
 
   // Handlers
 
   // Markup
+  const slugDescription = (
+    <p
+      className="text-muted-foreground text-xs"
+      id="skill-create-slug-description"
+    >
+      {SKILL_CREATE_COPY.nameFieldDescription}
+    </p>
+  );
+  const slugErrorMessage = (
+    <p
+      className="text-destructive text-xs"
+      id="skill-create-slug-description"
+      role="alert"
+    >
+      {form.slugError}
+    </p>
+  );
+  const errorMessage = (
+    <p className="text-destructive text-sm" role="alert">
+      {error}
+    </p>
+  );
 
   // Life Cycle
 
@@ -62,22 +85,7 @@ export const SkillCreateForm = (
             type="text"
             value={form.slug}
           />
-          {form.slugError === undefined ? (
-            <p
-              className="text-muted-foreground text-xs"
-              id="skill-create-slug-description"
-            >
-              {SKILL_CREATE_COPY.nameFieldDescription}
-            </p>
-          ) : (
-            <p
-              className="text-destructive text-xs"
-              id="skill-create-slug-description"
-              role="alert"
-            >
-              {form.slugError}
-            </p>
-          )}
+          {hasSlugError ? slugErrorMessage : slugDescription}
         </div>
 
         <div className="flex flex-col gap-2 md:col-span-2">
@@ -152,11 +160,7 @@ export const SkillCreateForm = (
         </div>
       </div>
 
-      {error === undefined ? null : (
-        <p className="text-destructive text-sm" role="alert">
-          {error}
-        </p>
-      )}
+      {error === undefined ? null : errorMessage}
 
       <div className="flex items-center justify-end gap-3">
         <Button asChild={true} variant="ghost">

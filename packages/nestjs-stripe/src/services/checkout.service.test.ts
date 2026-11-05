@@ -44,9 +44,11 @@ vi.mock('../config/stripe-config', async () => {
 const createUserPort = (
   email: string | null,
   found: boolean,
-): StripeCheckoutUserPort => ({
-  findById: vi.fn().mockResolvedValue(found ? { email } : null),
-});
+): StripeCheckoutUserPort => {
+  return {
+    findById: vi.fn().mockResolvedValue(found ? { email } : null),
+  };
+};
 
 const buildService = async (
   checkoutUser: StripeCheckoutUserPort,

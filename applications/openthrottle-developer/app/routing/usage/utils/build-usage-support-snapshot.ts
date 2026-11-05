@@ -36,8 +36,7 @@ export const buildUsageSupportSnapshotJson = (
 
   return JSON.stringify(
     {
-      analyticsNote:
-        'OpenThrottle daily plan/task rollups only. Excludes model tokens, per-prompt or per-skill counts, and IDE-only activity.',
+      analyticsNote: `OpenThrottle daily plan/task rollups only. Excludes model tokens, per-prompt or per-skill counts, and IDE-only activity.`,
       dailyRows: input.dailyStats,
       generatedAt: new Date().toISOString(),
       rangeDays: input.rangeDays,

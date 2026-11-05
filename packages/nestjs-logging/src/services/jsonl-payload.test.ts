@@ -263,8 +263,7 @@ describe('parseJsonlLineToStructuredRecord', () => {
   });
 
   it('parses minimal line with only timestamp, level, message (context normalizes to empty)', () => {
-    const line =
-      '{"level":"log","message":"only core","timestamp":"2026-05-02T12:00:00.000Z"}';
+    const line = `{"level":"log","message":"only core","timestamp":"2026-05-02T12:00:00.000Z"}`;
     expect(parseJsonlLineToStructuredRecord(line)).toEqual({
       context: '',
       correlationId: undefined,

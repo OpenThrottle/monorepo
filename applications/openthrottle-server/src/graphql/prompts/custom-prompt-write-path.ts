@@ -60,8 +60,9 @@ const realpathOfNearestExistingAncestor = (target: string): string | null => {
   }
 };
 
-const isInside = (realRoot: string, candidate: string): boolean =>
-  candidate === realRoot || candidate.startsWith(`${realRoot}${sep}`);
+const isInside = (realRoot: string, candidate: string): boolean => {
+  return candidate === realRoot || candidate.startsWith(`${realRoot}${sep}`);
+};
 
 /**
  * @description Validates a client-supplied `filePath` against the workspace

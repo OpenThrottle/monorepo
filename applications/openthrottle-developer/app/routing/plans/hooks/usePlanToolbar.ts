@@ -14,6 +14,7 @@ import {
   PLAN_RUN_BULLMQ_QUEUE_NAME,
   planRunJobDetailPath,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import { readActionError } from '~/routing/plans/utils/read-action-error';
 import {
   getPlanIsRunning,
   getPlanIsTerminal,
@@ -59,32 +60,15 @@ export const usePlanToolbar = (
   // Complete is deliberately excluded (stays gated on isCompleted only) so
   // CANCELED/SKIPPED keep their sole recovery path to done.
   const isTerminal = getPlanIsTerminal(planStatus);
-  const setPlanStatusData = fetcherSetPlanStatus.data;
-  const setPlanStatusError =
-    setPlanStatusData != null &&
-    typeof setPlanStatusData === 'object' &&
-    'setPlanStatusError' in setPlanStatusData &&
-    typeof setPlanStatusData.setPlanStatusError === 'string'
-      ? setPlanStatusData.setPlanStatusError
-      : undefined;
-
-  const runPlanData = fetcherRunPlan.data;
-  const runPlanError =
-    runPlanData != null &&
-    typeof runPlanData === 'object' &&
-    'runPlanError' in runPlanData &&
-    typeof runPlanData.runPlanError === 'string'
-      ? runPlanData.runPlanError
-      : undefined;
-
-  const evaluateRulesData = fetcherEvaluateRules.data;
-  const evaluateRulesError =
-    evaluateRulesData != null &&
-    typeof evaluateRulesData === 'object' &&
-    'evaluatePlanRulesError' in evaluateRulesData &&
-    typeof evaluateRulesData.evaluatePlanRulesError === 'string'
-      ? evaluateRulesData.evaluatePlanRulesError
-      : undefined;
+  const setPlanStatusError = readActionError(
+    fetcherSetPlanStatus.data,
+    'setPlanStatusError',
+  );
+  const runPlanError = readActionError(fetcherRunPlan.data, 'runPlanError');
+  const evaluateRulesError = readActionError(
+    fetcherEvaluateRules.data,
+    'evaluatePlanRulesError',
+  );
 
   // Handlers
 
@@ -100,13 +84,7 @@ export const usePlanToolbar = (
       if (data != null && typeof data === 'object') {
         if ('runPlan' in data && data.runPlan != null) {
           const run = data.runPlan;
-          const jobId =
-            run != null &&
-            typeof run === 'object' &&
-            'jobId' in run &&
-            typeof run.jobId === 'string'
-              ? run.jobId
-              : null;
+          const jobId = readActionError(run, 'jobId') ?? null;
 
           if (workingDirectory != null && workingDirectory.trim() !== '') {
             addRecentWorkspacePath(workingDirectory.trim());

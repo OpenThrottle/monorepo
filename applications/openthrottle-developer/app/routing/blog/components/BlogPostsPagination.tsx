@@ -39,6 +39,20 @@ export const BlogPostsPagination = (
   // Handlers
 
   // Markup
+  const firstPageLink = (
+    <Button asChild={true} size="sm" variant="outline">
+      <Link preventScrollReset={true} to={{ search: firstParams.toString() }}>
+        {BLOG_COPY.firstPage}
+      </Link>
+    </Button>
+  );
+  const nextPageLink = (
+    <Button asChild={true} size="sm" variant="outline">
+      <Link preventScrollReset={true} to={{ search: nextParams.toString() }}>
+        {BLOG_COPY.nextPage}
+      </Link>
+    </Button>
+  );
 
   // Life Cycle
 
@@ -53,28 +67,8 @@ export const BlogPostsPagination = (
       className="flex items-center justify-between gap-2"
       data-testid="BlogPostsPagination"
     >
-      {after === null ? (
-        <span />
-      ) : (
-        <Button asChild={true} size="sm" variant="outline">
-          <Link
-            preventScrollReset={true}
-            to={{ search: firstParams.toString() }}
-          >
-            {BLOG_COPY.firstPage}
-          </Link>
-        </Button>
-      )}
-      {hasNextPage && endCursor !== null ? (
-        <Button asChild={true} size="sm" variant="outline">
-          <Link
-            preventScrollReset={true}
-            to={{ search: nextParams.toString() }}
-          >
-            {BLOG_COPY.nextPage}
-          </Link>
-        </Button>
-      ) : null}
+      {after === null ? <span /> : firstPageLink}
+      {hasNextPage && endCursor !== null ? nextPageLink : null}
     </nav>
   );
 };

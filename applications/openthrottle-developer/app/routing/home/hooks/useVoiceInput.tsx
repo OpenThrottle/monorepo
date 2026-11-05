@@ -10,7 +10,7 @@
  * chunks captured before the session is live are buffered client-side so the
  * user's first words are never clipped.
  */
-import { ChatComposerMicState } from '@openthrottle/react-router-chat';
+import type { ChatComposerMicState } from '@openthrottle/react-router-chat';
 import { useAudioCapture } from '@openthrottle/react-router-ui';
 import * as React from 'react';
 
@@ -18,6 +18,7 @@ import { VOICE_PHASE } from '~/routing/home/data/data.voice';
 import { useTranscriptionStream } from '~/routing/home/hooks/useTranscriptionStream';
 import { encodeFloat32ToInt16Base64 } from '~/routing/home/utils/audio-encoding';
 import { joinDraftParts } from '~/routing/home/utils/join-draft-parts';
+import { resolveMicState } from '~/routing/home/utils/resolve-mic-state';
 
 type VoicePhase = (typeof VOICE_PHASE)[keyof typeof VOICE_PHASE];
 
@@ -87,13 +88,7 @@ export function useVoiceInput(
   captureRef.current = capture;
 
   // Setup
-  const micState: ChatComposerMicState = !capture.isSupported
-    ? ChatComposerMicState.disabled
-    : phase === VOICE_PHASE.finalizing
-      ? ChatComposerMicState.finalizing
-      : phase === VOICE_PHASE.idle
-        ? ChatComposerMicState.idle
-        : ChatComposerMicState.recording;
+  const micState = resolveMicState(capture.isSupported, phase);
   const liveTranscript = transcription.snapshot.transcript;
   const isDone = transcription.snapshot.done;
 

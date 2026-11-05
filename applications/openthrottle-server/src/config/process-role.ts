@@ -20,8 +20,9 @@ export const PROCESS_ROLES = {
 export type ProcessRoleKey = keyof typeof PROCESS_ROLES;
 export type ProcessRole = (typeof PROCESS_ROLES)[keyof typeof PROCESS_ROLES];
 
-const isProcessRole = (value: string): value is ProcessRole =>
-  value in PROCESS_ROLES;
+const isProcessRole = (value: string): value is ProcessRole => {
+  return value in PROCESS_ROLES;
+};
 
 /**
  * @description Resolves PROCESS_ROLE from the environment. Unset/blank

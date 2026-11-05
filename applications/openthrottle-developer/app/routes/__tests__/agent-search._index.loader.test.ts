@@ -10,20 +10,20 @@ vi.mock('@openthrottle/react-router-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),
 }));
 
-vi.mock('~/routing/agent-search/data/disk-fallback.server', () => ({
+vi.mock('~/routing/agent-search/utils/disk-fallback.server', () => ({
   diskFallbackSearch: vi.fn(),
 }));
 
-vi.mock('~/routing/agents/data/resolve-monorepo-root.server', () => ({
+vi.mock('~/routing/agents/utils/resolve-monorepo-root.server', () => ({
   getMonorepoRoot: vi.fn(),
 }));
 
 const { executeGraphqlWithAuth } =
   await import('@openthrottle/react-router-graphql');
 const { diskFallbackSearch } =
-  await import('~/routing/agent-search/data/disk-fallback.server');
+  await import('~/routing/agent-search/utils/disk-fallback.server');
 const { getMonorepoRoot } =
-  await import('~/routing/agents/data/resolve-monorepo-root.server');
+  await import('~/routing/agents/utils/resolve-monorepo-root.server');
 const { loader } = await import('../agent-search._index');
 
 const mockExecute = vi.mocked(executeGraphqlWithAuth);
@@ -49,18 +49,20 @@ const dbChunk = (
     similarity: number;
     title: string;
   }> = {},
-) => ({
-  content: 'chunk content',
-  customPromptId: overrides.customPromptId ?? 'cp-1',
-  description: 'desc',
-  filePath: '.agents/skills/foo/SKILL.md',
-  id: overrides.id ?? 'chunk-1',
-  labels: ['a'],
-  projectId: null,
-  promptType: overrides.promptType ?? CustomPromptType.Skills,
-  similarity: overrides.similarity ?? 0.9,
-  title: overrides.title ?? 'foo',
-});
+) => {
+  return {
+    content: 'chunk content',
+    customPromptId: overrides.customPromptId ?? 'cp-1',
+    description: 'desc',
+    filePath: '.agents/skills/foo/SKILL.md',
+    id: overrides.id ?? 'chunk-1',
+    labels: ['a'],
+    projectId: null,
+    promptType: overrides.promptType ?? CustomPromptType.Skills,
+    similarity: overrides.similarity ?? 0.9,
+    title: overrides.title ?? 'foo',
+  };
+};
 
 describe('routes/agent-search._index loader', () => {
   beforeEach(() => {

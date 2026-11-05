@@ -21,16 +21,18 @@ const loaderArgs: Route.LoaderArgs = {
   url: new URL('http://localhost/blog/rss.xml'),
 };
 
-const feedPost = (slug: string, title: string) => ({
-  author: { displayName: 'Ada Lovelace' },
-  excerpt: `${title} excerpt`,
-  publishedAt: '2026-03-04T10:00:00.000Z',
-  seoDescription: null,
-  slug,
-  tags: [{ name: 'Agents' }],
-  title,
-  updatedAt: '2026-03-06T10:00:00.000Z',
-});
+const feedPost = (slug: string, title: string) => {
+  return {
+    author: { displayName: 'Ada Lovelace' },
+    excerpt: `${title} excerpt`,
+    publishedAt: '2026-03-04T10:00:00.000Z',
+    seoDescription: null,
+    slug,
+    tags: [{ name: 'Agents' }],
+    title,
+    updatedAt: '2026-03-06T10:00:00.000Z',
+  };
+};
 
 describe('routes/blog.rss[.]xml.tsx', () => {
   beforeEach(() => {

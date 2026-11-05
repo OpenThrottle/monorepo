@@ -1,1 +1,1 @@
-export * from './notifications-store.context';
+export * from './data.notifications-store.context';

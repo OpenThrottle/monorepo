@@ -3,4 +3,6 @@
  * starts and ends flat. Hoisted out of `useGlobalAnimationMesh` per
  * hook-primitive-shape H3.
  */
-export const smoothstep = (t: number): number => t * t * (3 - 2 * t);
+export const smoothstep = (t: number): number => {
+  return t * t * (3 - 2 * t);
+};

@@ -20,8 +20,9 @@ export interface RequirementResult {
 }
 
 /** Format one failure the way it should read in a terminal. */
-export const formatFailure = (result: RequirementResult): string =>
-  `${result.episodeId}: expected ${result.requirement.describe} (at least ${result.requirement.atLeast}), got ${result.actual}`;
+export const formatFailure = (result: RequirementResult): string => {
+  return `${result.episodeId}: expected ${result.requirement.describe} (at least ${result.requirement.atLeast}), got ${result.actual}`;
+};
 
 /** Only the fields this check reads, so a caller need not build a full episode. */
 export type EpisodeRequirements = Pick<VideoEpisode, 'dataRequirements' | 'id'>;

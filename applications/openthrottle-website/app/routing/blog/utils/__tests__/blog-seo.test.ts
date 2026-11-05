@@ -13,31 +13,40 @@ import {
   buildBlogTagMeta,
 } from '../blog-seo';
 
-const readField = (entry: MetaDescriptor, field: string): unknown =>
-  Object.entries(entry).find(([key]) => key === field)?.[1];
+const readField = (entry: MetaDescriptor, field: string): unknown => {
+  return Object.entries(entry).find(([key]) => key === field)?.[1];
+};
 
 const findContent = (
   meta: readonly MetaDescriptor[],
   key: 'name' | 'property',
   value: string,
-): unknown =>
-  readField(
+): unknown => {
+  return readField(
     meta.find((entry) => readField(entry, key) === value) ?? {},
     'content',
   );
+};
 
-const findTitle = (meta: readonly MetaDescriptor[]): unknown =>
-  meta.map((entry) => readField(entry, 'title')).find((v) => v !== undefined);
+const findTitle = (meta: readonly MetaDescriptor[]): unknown => {
+  return meta
+    .map((entry) => readField(entry, 'title'))
+    .find((v) => v !== undefined);
+};
 
-const findCanonical = (meta: readonly MetaDescriptor[]): unknown =>
-  readField(
+const findCanonical = (meta: readonly MetaDescriptor[]): unknown => {
+  return readField(
     meta.find((entry) => readField(entry, 'rel') === 'canonical') ?? {},
     'href',
   );
+};
 
-const findFeedLink = (meta: readonly MetaDescriptor[]): MetaDescriptor =>
-  meta.find((entry) => readField(entry, 'type') === 'application/rss+xml') ??
-  {};
+const findFeedLink = (meta: readonly MetaDescriptor[]): MetaDescriptor => {
+  return (
+    meta.find((entry) => readField(entry, 'type') === 'application/rss+xml') ??
+    {}
+  );
+};
 
 describe('blog-seo', () => {
   describe('RSS alternate link', () => {

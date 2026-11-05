@@ -33,7 +33,9 @@ describe('PullRequestGithubCard Component', () => {
       repo: 'monorepo',
     };
 
-    const Component = () => <PullRequestGithubCard {...props} />;
+    const Component = () => {
+      return <PullRequestGithubCard {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
   });

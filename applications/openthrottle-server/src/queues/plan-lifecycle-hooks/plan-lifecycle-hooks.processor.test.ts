@@ -27,26 +27,28 @@ const executeMock = vi.mocked(executeSinglePlanLifecycleHook);
 
 const buildJobData = (
   overrides: Partial<PlanLifecycleHookJobData> = {},
-): PlanLifecycleHookJobData => ({
-  entry: {
-    kind: 'prompt_profile',
+): PlanLifecycleHookJobData => {
+  return {
+    entry: {
+      kind: 'prompt_profile',
+      phase: 'beforeAll',
+      prompt: 'test-prompt',
+      promptDelivery: 'named',
+    },
+    hookIndex: 0,
+    mainRunStarted: true,
+    mainRunSucceeded: false,
+    parentJobId: 'parent-1',
+    parentQueueName: 'Plans',
     phase: 'beforeAll',
-    prompt: 'test-prompt',
-    promptDelivery: 'named',
-  },
-  hookIndex: 0,
-  mainRunStarted: true,
-  mainRunSucceeded: false,
-  parentJobId: 'parent-1',
-  parentQueueName: 'Plans',
-  phase: 'beforeAll',
-  planId: '00000000-0000-4000-8000-000000000001',
-  planRunJobData: {
     planId: '00000000-0000-4000-8000-000000000001',
-    runKind: 'orchestrator',
-  },
-  ...overrides,
-});
+    planRunJobData: {
+      planId: '00000000-0000-4000-8000-000000000001',
+      runKind: 'orchestrator',
+    },
+    ...overrides,
+  };
+};
 
 describe('PlanLifecycleHooksProcessor.process', () => {
   let processor: PlanLifecycleHooksProcessor;

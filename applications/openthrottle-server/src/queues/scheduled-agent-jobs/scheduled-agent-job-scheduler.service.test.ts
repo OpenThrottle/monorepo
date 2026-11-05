@@ -15,8 +15,8 @@ import type { ScheduledAgentJobPayload } from './scheduled-agent-jobs.types.ts';
 
 const makeJob = (
   overrides: Partial<ScheduledAgentJob> = {},
-): ScheduledAgentJob =>
-  createMock<ScheduledAgentJob>({
+): ScheduledAgentJob => {
+  return createMock<ScheduledAgentJob>({
     cronPattern: '0 9 * * *',
     cwd: null,
     driverId: 'claude',
@@ -31,6 +31,7 @@ const makeJob = (
     timezone: 'America/Los_Angeles',
     ...overrides,
   });
+};
 
 describe('ScheduledAgentJobSchedulerService', () => {
   let checkoutPaths: ScheduledAgentJobCheckoutPathService;
@@ -193,8 +194,8 @@ describe('ScheduledAgentJobSchedulerService', () => {
     /** A pending BullMQ job as `getJobs` returns it, with a spy on `remove`. */
     const pendingJob = (
       data: Partial<ScheduledAgentJobPayload>,
-    ): Job<ScheduledAgentJobPayload, void> =>
-      createMock<Job<ScheduledAgentJobPayload, void>>({
+    ): Job<ScheduledAgentJobPayload, void> => {
+      return createMock<Job<ScheduledAgentJobPayload, void>>({
         data: {
           driverId: 'claude',
           prompt: 'p',
@@ -203,6 +204,7 @@ describe('ScheduledAgentJobSchedulerService', () => {
         },
         remove: vi.fn().mockResolvedValue(undefined),
       });
+    };
 
     beforeEach(() => {
       vi.useFakeTimers({ now: NOW, toFake: ['Date'] });

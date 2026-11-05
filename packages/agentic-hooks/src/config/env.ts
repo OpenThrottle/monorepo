@@ -31,8 +31,9 @@ import { logHookError } from '../utils/logging.ts';
  *
  * @public
  */
-export const userConfigDir = (): string =>
-  path.join(os.homedir(), '.openthrottle');
+export const userConfigDir = (): string => {
+  return path.join(os.homedir(), '.openthrottle');
+};
 
 /**
  * Marker identifying an OpenThrottle checkout. The root `package.json` is named
@@ -152,10 +153,11 @@ export const readEnvFile = (envPath: string): Record<string, string> => {
  *
  * @public
  */
-export const readRepoEnvFile = (repoRoot: string): Record<string, string> =>
-  isOpenThrottleCheckout(repoRoot)
+export const readRepoEnvFile = (repoRoot: string): Record<string, string> => {
+  return isOpenThrottleCheckout(repoRoot)
     ? readEnvFile(path.join(repoRoot, '.env'))
     : {};
+};
 
 /**
  * Parse the user-global `~/.openthrottle/.env`. Same key names as the repo
@@ -163,8 +165,9 @@ export const readRepoEnvFile = (repoRoot: string): Record<string, string> =>
  *
  * @public
  */
-export const readUserEnvFile = (): Record<string, string> =>
-  readEnvFile(path.join(userConfigDir(), '.env'));
+export const readUserEnvFile = (): Record<string, string> => {
+  return readEnvFile(path.join(userConfigDir(), '.env'));
+};
 
 /**
  * Load KEY=VALUE pairs from repo `.env` into process.env without overriding
@@ -207,11 +210,13 @@ export interface EnvResolutionOptions {
 const envLayers = (
   repoRoot: string | undefined,
   options: EnvResolutionOptions | undefined,
-): Array<Record<string, string | undefined>> => [
-  repoRoot ? readRepoEnvFile(repoRoot) : {},
-  ...(options?.includeProcessEnv === false ? [] : [process.env]),
-  readUserEnvFile(),
-];
+): Array<Record<string, string | undefined>> => {
+  return [
+    repoRoot ? readRepoEnvFile(repoRoot) : {},
+    ...(options?.includeProcessEnv === false ? [] : [process.env]),
+    readUserEnvFile(),
+  ];
+};
 
 /**
  * Resolve one OT env value by location: this OT checkout's `.env`, then the
@@ -262,8 +267,9 @@ const LOOPBACK_AUTHORITY =
  *
  * @public
  */
-export const normalizeLoopbackHost = (url: string): string =>
-  url.replace(LOOPBACK_AUTHORITY, '$1127.0.0.1');
+export const normalizeLoopbackHost = (url: string): string => {
+  return url.replace(LOOPBACK_AUTHORITY, '$1127.0.0.1');
+};
 
 /**
  * Build a graphql URL from an env map (file or process).
@@ -315,7 +321,10 @@ export const resolveGraphqlUrl = (
 export const resolveAuthToken = (
   repoRoot?: string,
   options?: EnvResolutionOptions,
-): string =>
-  resolveOtEnv(repoRoot, 'OPENTHROTTLE_MCP_AUTH_TOKEN', options) ||
-  resolveOtEnv(repoRoot, 'OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN', options) ||
-  '';
+): string => {
+  return (
+    resolveOtEnv(repoRoot, 'OPENTHROTTLE_MCP_AUTH_TOKEN', options) ||
+    resolveOtEnv(repoRoot, 'OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN', options) ||
+    ''
+  );
+};

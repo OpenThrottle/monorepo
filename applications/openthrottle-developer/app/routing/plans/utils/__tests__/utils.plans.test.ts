@@ -10,22 +10,24 @@ import {
   getResolvedTaskCount,
 } from '../utils.plans';
 
-const taskWithStatus = (status: string): PlanTaskRowFragment => ({
-  __typename: 'TaskObject',
-  assignee: null,
-  category: 'dev',
-  createdAt: '2025-01-01T00:00:00Z',
-  description: null,
-  id: `task-${status}`,
-  planId: 'plan-1',
-  projectRelation: null,
-  requirementsJson: '[]',
-  sortOrder: 1000,
-  status,
-  summary: null,
-  title: `Task ${status}`,
-  updatedAt: '2025-01-02T00:00:00Z',
-});
+const taskWithStatus = (status: string): PlanTaskRowFragment => {
+  return {
+    __typename: 'TaskObject',
+    assignee: null,
+    category: 'dev',
+    createdAt: '2025-01-01T00:00:00Z',
+    description: null,
+    id: `task-${status}`,
+    planId: 'plan-1',
+    projectRelation: null,
+    requirementsJson: '[]',
+    sortOrder: 1000,
+    status,
+    summary: null,
+    title: `Task ${status}`,
+    updatedAt: '2025-01-02T00:00:00Z',
+  };
+};
 
 describe('utils.plans', () => {
   describe('shouldOfferKillPlanRun', () => {

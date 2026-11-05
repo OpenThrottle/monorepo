@@ -404,10 +404,8 @@ export class WorktreeDiscoveryService {
       ]),
     ]);
 
-    const resolvedCommonDir =
-      commonDir === null || commonDir.trim() === ''
-        ? null
-        : realPath(commonDir.trim());
+    const hasCommonDir = commonDir !== null && commonDir.trim() !== '';
+    const resolvedCommonDir = hasCommonDir ? realPath(commonDir.trim()) : null;
 
     return {
       aheadCount: await this.aheadCount(path),
@@ -539,8 +537,8 @@ const isOrphanDirectory = (path: string): boolean => {
 const findMissingCheckouts = (
   checkouts: readonly RepositoryCheckout[],
   livePaths: ReadonlySet<string>,
-): MissingWorktreeCheckout[] =>
-  checkouts
+): MissingWorktreeCheckout[] => {
+  return checkouts
     .filter((checkout) => checkout.kind === WORKTREE_KIND)
     .flatMap((checkout): MissingWorktreeCheckout[] => {
       const path = realPath(checkout.filesystemPath);
@@ -557,6 +555,7 @@ const findMissingCheckouts = (
       ];
     })
     .sort((a, b) => a.path.localeCompare(b.path));
+};
 
 /** Builds one classified problem; `path` and `repositoryId` default to "not applicable". */
 const problem = (
@@ -564,7 +563,9 @@ const problem = (
   detail: string,
   path: string | null = null,
   repositoryId: string | null = null,
-): WorktreeDiscoveryProblem => ({ detail, kind, path, repositoryId });
+): WorktreeDiscoveryProblem => {
+  return { detail, kind, path, repositoryId };
+};
 
 /**
  * The deprecated `warnings` projection: one flat sentence per problem, so existing consumers keep
@@ -594,15 +595,20 @@ const formatWarning = ({
 };
 
 /** git's own wording for "this folder was registered, but it is not a checkout at all". */
-const isNotAGitRepositoryError = (detail: string): boolean =>
-  /not a git repository/i.test(detail);
+const isNotAGitRepositoryError = (detail: string): boolean => {
+  return /not a git repository/i.test(detail);
+};
 
 /** True when an fs error means the directory does not exist, rather than cannot be read. */
-const isAbsentDirectoryError = (error: unknown): boolean =>
-  error instanceof Error &&
-  'code' in error &&
-  typeof error.code === 'string' &&
-  ABSENT_DIRECTORY_ERRNOS.has(error.code);
+const isAbsentDirectoryError = (error: unknown): boolean => {
+  return (
+    error instanceof Error &&
+    'code' in error &&
+    typeof error.code === 'string' &&
+    ABSENT_DIRECTORY_ERRNOS.has(error.code)
+  );
+};
 
-const message = (error: unknown): string =>
-  error instanceof Error ? error.message : String(error);
+const message = (error: unknown): string => {
+  return error instanceof Error ? error.message : String(error);
+};

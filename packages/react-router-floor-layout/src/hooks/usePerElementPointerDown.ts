@@ -62,8 +62,9 @@ export function usePerElementPointerDown(
       const cache = cacheRef.current;
       const existing = cache.get(id);
       if (existing) return existing;
-      const pointerDown = (event: ReactPointerEvent): void =>
-        handlerRef.current(id, event);
+      const pointerDown = (event: ReactPointerEvent): void => {
+        return handlerRef.current(id, event);
+      };
       cache.set(id, pointerDown);
       return pointerDown;
     },

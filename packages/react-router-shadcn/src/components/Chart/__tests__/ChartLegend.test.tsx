@@ -17,13 +17,15 @@ describe('ChartLegend Component', () => {
       content: <span data-testid="legend-content">content</span>,
     };
 
-    const Component = () => (
-      <BarChart data={[{ name: 'a', value: 1 }]}>
-        <XAxis dataKey="name" />
-        <Bar dataKey="value" />
-        <ChartLegend {...props} />
-      </BarChart>
-    );
+    const Component = () => {
+      return (
+        <BarChart data={[{ name: 'a', value: 1 }]}>
+          <XAxis dataKey="name" />
+          <Bar dataKey="value" />
+          <ChartLegend {...props} />
+        </BarChart>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

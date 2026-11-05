@@ -6,4 +6,6 @@
 export const isFullyControlled = (
   value: unknown,
   onValueChange: unknown,
-): boolean => value !== undefined && onValueChange !== undefined;
+): boolean => {
+  return value !== undefined && onValueChange !== undefined;
+};

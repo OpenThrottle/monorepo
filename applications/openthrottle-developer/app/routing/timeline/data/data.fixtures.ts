@@ -21,8 +21,9 @@ export const FIXTURE_WINDOW_FROM = new Date(
 );
 
 /** Hours before the window end, as an ISO string. */
-const hoursAgo = (hours: number): string =>
-  new Date(FIXTURE_WINDOW_TO.getTime() - hours * HOUR).toISOString();
+const hoursAgo = (hours: number): string => {
+  return new Date(FIXTURE_WINDOW_TO.getTime() - hours * HOUR).toISOString();
+};
 
 export const TIMELINE_FIXTURE_SPANS: readonly TimelineSpan[] = [
   // Three overlapping runs in one lane — the case the whole view exists for.

@@ -9,7 +9,7 @@ controller shared by the React Router apps. Sits _above_
 ## Layout
 
 - [src/index.ts](src/index.ts) — public API surface; every export flows through here.
-- [src/data/atom.chat-toolbar.ts](src/data/atom.chat-toolbar.ts) — `chatToolbarStateAtom` (localStorage-backed Jotai atom), `ChatToolbarState`, `CHAT_TOOLBAR_STATE_VERSION`, and `normalizeChatToolbarState`.
+- [src/data/data.atom.chat-toolbar.ts](src/data/data.atom.chat-toolbar.ts) — `chatToolbarStateAtom` (localStorage-backed Jotai atom); [src/data/data.chat-toolbar-state.ts](src/data/data.chat-toolbar-state.ts) — `ChatToolbarState`, `CHAT_TOOLBAR_STATE_VERSION`, defaults; [src/utils/normalize-chat-toolbar-state.ts](src/utils/normalize-chat-toolbar-state.ts) — `normalizeChatToolbarState`.
 - [src/utils/chat-toolbar-reconcile.ts](src/utils/chat-toolbar-reconcile.ts) — pure reconciliation of a persisted blob against current loader options + backend capabilities.
 - [src/utils/chat-toolbar-decay.ts](src/utils/chat-toolbar-decay.ts) + [src/hooks/useSessionPermissionDecay.tsx](src/hooks/useSessionPermissionDecay.tsx) — per-session safety decay of elevated permission modes.
 - [src/hooks/useHeaderChatController.tsx](src/hooks/useHeaderChatController.tsx) — the one stateful export; wires the atom, reconcile, decay, and the shared turn hook together for the header chat.

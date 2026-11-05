@@ -18,19 +18,21 @@ function asStore(value: unknown): unknown {
 describe('setupGlobalCls', () => {
   const cls = ClsServiceManager.getClsService<GlobalClsStore>();
 
-  const runSetup = (headers: Record<string, string | undefined>) =>
-    cls.runWith(asStore<GlobalClsStore>({}), () => {
+  const runSetup = (headers: Record<string, string | undefined>) => {
+    return cls.runWith(asStore<GlobalClsStore>({}), () => {
       setupGlobalCls(cls, { headers });
 
       return cls.get('app');
     });
+  };
 
-  const runSetupSessionId = (headers: Record<string, string | undefined>) =>
-    cls.runWith(asStore<GlobalClsStore>({}), () => {
+  const runSetupSessionId = (headers: Record<string, string | undefined>) => {
+    return cls.runWith(asStore<GlobalClsStore>({}), () => {
       setupGlobalCls(cls, { headers });
 
       return cls.get('sessionId');
     });
+  };
 
   it('stores app name and version from present headers', () => {
     const app = runSetup({

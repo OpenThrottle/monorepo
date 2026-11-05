@@ -64,14 +64,16 @@ const ThemeRoot = (props: ThemeRootProps): React.ReactElement => {
   return <>{children}</>;
 };
 
-const withThemeRegistry: Decorator = (Story, context) => (
-  <ThemeRoot
-    colorScheme={String(context.globals.colorScheme)}
-    themeId={String(context.globals.theme)}
-  >
-    <Story />
-  </ThemeRoot>
-);
+const withThemeRegistry: Decorator = (Story, context) => {
+  return (
+    <ThemeRoot
+      colorScheme={String(context.globals.colorScheme)}
+      themeId={String(context.globals.theme)}
+    >
+      <Story />
+    </ThemeRoot>
+  );
+};
 
 const preview: Preview = {
   decorators: [withThemeRegistry],

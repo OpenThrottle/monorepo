@@ -10,7 +10,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../data/chat-conversation-sidebar.copy';
+import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../data/data.chat-conversation-sidebar.copy';
 
 export interface ChatConversationDeleteDialogProps {
   /** Accept the deletion. */

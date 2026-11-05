@@ -15,35 +15,37 @@ import { ScheduleDetailTabs } from '../ScheduleDetailTabs';
 
 const run = (
   overrides: Partial<ScheduledJobRunRowFragment> = {},
-): ScheduledJobRunRowFragment => ({
-  __typename: 'ScheduledAgentJobRunObject',
-  bullmqJobId: 'run-1',
-  cacheReadTokens: null,
-  cacheWriteTokens: null,
-  costUsd: null,
-  createdAt: '2026-07-31T09:00:00.000Z',
-  driverId: 'claude',
-  errorMessage: null,
-  exitCode: 0,
-  finishedAt: '2026-07-31T09:01:23.000Z',
-  id: 'run-1',
-  inputTokens: null,
-  model: 'opus',
-  outputTokens: null,
-  reasoningTokens: null,
-  resumeOfRunId: null,
-  startedAt: '2026-07-31T09:00:00.000Z',
-  status: 'succeeded',
-  totalTokens: null,
-  trigger: 'manual',
-  usageLimitResetsAt: null,
-  ...overrides,
-});
+): ScheduledJobRunRowFragment => {
+  return {
+    __typename: 'ScheduledAgentJobRunObject',
+    bullmqJobId: 'run-1',
+    cacheReadTokens: null,
+    cacheWriteTokens: null,
+    costUsd: null,
+    createdAt: '2026-07-31T09:00:00.000Z',
+    driverId: 'claude',
+    errorMessage: null,
+    exitCode: 0,
+    finishedAt: '2026-07-31T09:01:23.000Z',
+    id: 'run-1',
+    inputTokens: null,
+    model: 'opus',
+    outputTokens: null,
+    reasoningTokens: null,
+    resumeOfRunId: null,
+    startedAt: '2026-07-31T09:00:00.000Z',
+    status: 'succeeded',
+    totalTokens: null,
+    trigger: 'manual',
+    usageLimitResetsAt: null,
+    ...overrides,
+  };
+};
 
 const renderTabs = (
   props: Partial<ScheduleDetailTabsProps> = {},
-): RenderResult =>
-  renderRoutesStub(
+): RenderResult => {
+  return renderRoutesStub(
     <ScheduleDetailTabs
       jobId="job-1"
       prompt="Ship the nightly digest."
@@ -51,13 +53,14 @@ const renderTabs = (
       {...props}
     />,
   );
+};
 
 /**
  * Mount the tabs at a real URL so the `tab` search param drives the shell, and
  * expose the live search string so tests can assert what the tabs write back.
  */
-const renderTabsAt = (search: string): RenderResult =>
-  renderWithMemoryRouter(
+const renderTabsAt = (search: string): RenderResult => {
+  return renderWithMemoryRouter(
     [
       {
         Component: (): React.ReactElement => {
@@ -79,6 +82,7 @@ const renderTabsAt = (search: string): RenderResult =>
     ],
     { initialEntries: [`/schedule/job-1${search}`] },
   );
+};
 
 describe('ScheduleDetailTabs', () => {
   test('opens on the Prompt tab and shows the prompt', () => {

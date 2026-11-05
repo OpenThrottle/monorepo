@@ -14,7 +14,9 @@ const renderButton = (
   props: PruneMissingWorktreesButtonProps,
   submitted: FormData[],
 ): RenderResult => {
-  const Component = () => <PruneMissingWorktreesButton {...props} />;
+  const Component = () => {
+    return <PruneMissingWorktreesButton {...props} />;
+  };
   const RoutesStub = createRoutesStub([
     {
       Component,

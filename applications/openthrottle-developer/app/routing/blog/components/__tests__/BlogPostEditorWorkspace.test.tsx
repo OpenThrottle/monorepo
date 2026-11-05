@@ -16,15 +16,17 @@ vi.mock('@openthrottle/react-router-editor', () => ({
   EditorWindow: () => <textarea aria-label="Markdown body" />,
 }));
 
-const props = (readOnly: boolean): BlogPostEditorWorkspaceProps => ({
-  authors: MOCK_BLOG_AUTHORS,
-  errors: {},
-  onFieldChange: vi.fn(),
-  postId: MOCK_EDITOR_DRAFT.id,
-  readOnly,
-  tags: MOCK_BLOG_TAGS,
-  values: toBlogPostEditorValues(MOCK_EDITOR_DRAFT),
-});
+const props = (readOnly: boolean): BlogPostEditorWorkspaceProps => {
+  return {
+    authors: MOCK_BLOG_AUTHORS,
+    errors: {},
+    onFieldChange: vi.fn(),
+    postId: MOCK_EDITOR_DRAFT.id,
+    readOnly,
+    tags: MOCK_BLOG_TAGS,
+    values: toBlogPostEditorValues(MOCK_EDITOR_DRAFT),
+  };
+};
 
 describe('BlogPostEditorWorkspace Component', () => {
   test('renders the form and editor beside the preview', () => {

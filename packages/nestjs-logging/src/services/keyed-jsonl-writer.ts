@@ -12,8 +12,9 @@ import {
   keyedJsonlPairHash8,
 } from './keyed-jsonl-writer-path.ts';
 
-const compoundKey = (queueName: string, jobId: string): string =>
-  `${queueName}\0${jobId}`;
+const compoundKey = (queueName: string, jobId: string): string => {
+  return `${queueName}\0${jobId}`;
+};
 
 /**
  * @description Strip C0/C1 control bytes except `\n` (U+000A) and `\t` (U+0009)
@@ -28,8 +29,9 @@ const CONTROL_BYTES_EXCEPT_TAB_NEWLINE = new RegExp(
   'g',
 );
 
-const stripRawControlBytes = (text: string): string =>
-  text.replace(CONTROL_BYTES_EXCEPT_TAB_NEWLINE, '');
+const stripRawControlBytes = (text: string): string => {
+  return text.replace(CONTROL_BYTES_EXCEPT_TAB_NEWLINE, '');
+};
 
 const DEFAULT_MAX_OPEN_FILES = 64;
 

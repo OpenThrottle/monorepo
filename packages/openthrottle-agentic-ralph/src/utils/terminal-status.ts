@@ -19,5 +19,6 @@ export const RALPH_TERMINAL_STATUSES: ReadonlySet<string> = new Set([
  * guard and re-used by the `@tools/workflows` CLI so every effectively-complete check agrees.
  * @public
  */
-export const isRalphTerminalStatus = (status: string): boolean =>
-  RALPH_TERMINAL_STATUSES.has(status);
+export const isRalphTerminalStatus = (status: string): boolean => {
+  return RALPH_TERMINAL_STATUSES.has(status);
+};

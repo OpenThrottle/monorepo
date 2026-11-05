@@ -4,18 +4,19 @@ import { createStore, Provider } from 'jotai';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
-import { workflowRalphRunOptionsAtom } from '~/routing/plans/data/atom.plan';
+import { workflowRalphRunOptionsAtom } from '~/routing/plans/data/data.atom-plan';
 
 import { PlanTabConfigurationValidation } from '../PlanTabConfigurationValidation';
 
 const renderValidation = (
   store: ReturnType<typeof createStore>,
-): RenderResult =>
-  render(
+): RenderResult => {
+  return render(
     <Provider store={store}>
       <PlanTabConfigurationValidation />
     </Provider>,
   );
+};
 
 describe('PlanTabConfigurationValidation Component', () => {
   test('renders nothing when the run options are valid', () => {

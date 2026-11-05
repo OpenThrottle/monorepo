@@ -19,11 +19,13 @@ const config = (
   extra: Omit<DriverInvocationConfig, 'iteration' | 'prompt'> & {
     prompt?: string;
   } = {},
-): DriverInvocationConfig => ({
-  iteration: 1,
-  prompt: extra.prompt ?? 'do the thing',
-  ...extra,
-});
+): DriverInvocationConfig => {
+  return {
+    iteration: 1,
+    prompt: extra.prompt ?? 'do the thing',
+    ...extra,
+  };
+};
 
 describe('gemini driver', () => {
   it('builds the base one-shot command with --approval-mode yolo', () => {

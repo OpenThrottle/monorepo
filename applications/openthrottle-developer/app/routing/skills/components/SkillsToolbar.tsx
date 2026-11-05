@@ -47,6 +47,22 @@ export const SkillsToolbar = (
   };
 
   // Markup
+  const availabilityLink = (
+    <Button asChild={true} size="sm" variant="outline">
+      <Link to="/skills/availability">
+        <SlidersHorizontalIcon className="size-4" />
+        {SKILL_AVAILABILITY_COPY.manageLink}
+      </Link>
+    </Button>
+  );
+  const vocabularyLink = (
+    <Button asChild={true} size="sm" variant="outline">
+      <Link to="/skills/vocabulary">
+        <TagsIcon className="size-4" />
+        {SKILL_VOCABULARY_COPY.manageLink}
+      </Link>
+    </Button>
+  );
 
   // Life Cycle
 
@@ -91,23 +107,9 @@ export const SkillsToolbar = (
 
       <div className="flex-1" />
 
-      {FEATURE_BETA_PREVIEW ? (
-        <Button asChild={true} size="sm" variant="outline">
-          <Link to="/skills/availability">
-            <SlidersHorizontalIcon className="size-4" />
-            {SKILL_AVAILABILITY_COPY.manageLink}
-          </Link>
-        </Button>
-      ) : null}
+      {FEATURE_BETA_PREVIEW ? availabilityLink : null}
 
-      {FEATURE_BETA_PREVIEW ? (
-        <Button asChild={true} size="sm" variant="outline">
-          <Link to="/skills/vocabulary">
-            <TagsIcon className="size-4" />
-            {SKILL_VOCABULARY_COPY.manageLink}
-          </Link>
-        </Button>
-      ) : null}
+      {FEATURE_BETA_PREVIEW ? vocabularyLink : null}
 
       <Button asChild={true} size="sm" variant="outline">
         <Link to="/skills/create">

@@ -10,11 +10,12 @@ import { BlogPostsPagination } from '../BlogPostsPagination';
 const renderPagination = (
   props: BlogPostsPaginationProps,
   url = '/?state=live&q=hi',
-): RenderResult =>
-  renderWithMemoryRouter(
+): RenderResult => {
+  return renderWithMemoryRouter(
     [{ element: <BlogPostsPagination {...props} />, path: '/' }],
     { initialEntries: [url] },
   );
+};
 
 describe('BlogPostsPagination Component', () => {
   test('renders nothing on a single page', () => {

@@ -16,13 +16,3 @@ export const INTRODUCTIONS: readonly Introduction[] = [
     text: 'Plans, semantic search, and agent tooling—without vendor lock-in. Clone the repo, run it locally, and own your planning knowledge base from day one.',
   },
 ] as const;
-
-/**
- * @description Returns one introduction at random from {@link INTRODUCTIONS}.
- */
-export const getRandomIntroduction = (): string => {
-  const index = Math.floor(Math.random() * INTRODUCTIONS.length);
-  const introduction = INTRODUCTIONS[index];
-
-  return introduction?.text ?? INTRODUCTIONS[0]?.text ?? '';
-};

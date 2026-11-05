@@ -39,11 +39,11 @@ export const PlanRunMetaList = (
         key={item.field}
         title={isWorkspace ? item.value : undefined}
       >
-        {index > 0 ? (
+        {index > 0 && (
           <span aria-hidden={true} className="hidden sm:inline">
             ·
           </span>
-        ) : null}
+        )}
         <span className="truncate">{item.value}</span>
       </li>
     );

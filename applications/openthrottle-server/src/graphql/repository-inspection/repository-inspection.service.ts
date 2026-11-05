@@ -365,16 +365,15 @@ export class RepositoryInspectionService {
       '--porcelain',
     ]);
 
+    const trimmedBranch = currentBranch?.trim() ?? '';
+    const branchName = trimmedBranch === '' ? null : trimmedBranch;
+    const defaultBranchName = defaultBranchRef?.trim().split('/').pop() ?? null;
+    const isDirty = status === null ? null : status.trim() !== '';
+
     return {
-      currentBranch:
-        currentBranch === null || currentBranch.trim() === ''
-          ? null
-          : currentBranch.trim(),
-      defaultBranch:
-        defaultBranchRef === null
-          ? null
-          : (defaultBranchRef.trim().split('/').pop() ?? null),
-      dirty: status === null ? null : status.trim() !== '',
+      currentBranch: branchName,
+      defaultBranch: defaultBranchName,
+      dirty: isDirty,
       isLinkedWorktree,
       isRepo: true,
       linkedWorktrees: parseLinkedWorktrees(worktrees),
@@ -420,14 +419,13 @@ export class RepositoryInspectionService {
         warnings.push('OT manifest is not a JSON object');
         return { ...absent, present: true };
       }
+      const { checkoutId, repositoryId } = manifest;
+      const checkout = typeof checkoutId === 'string' ? checkoutId : null;
+      const repository = typeof repositoryId === 'string' ? repositoryId : null;
       return {
-        checkoutId:
-          typeof manifest.checkoutId === 'string' ? manifest.checkoutId : null,
+        checkoutId: checkout,
         present: true,
-        repositoryId:
-          typeof manifest.repositoryId === 'string'
-            ? manifest.repositoryId
-            : null,
+        repositoryId: repository,
       };
     } catch {
       warnings.push('OT manifest could not be read or parsed');

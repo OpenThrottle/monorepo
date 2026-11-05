@@ -10,7 +10,11 @@
 import { defineDriver } from '../registry/index.ts';
 import type { DriverCapabilities } from '../types/index.ts';
 import { codexReasoningEffort } from '../utils/reasoning-effort.ts';
-import { escapeForShellDoubleQuoted, escapeShellArg } from '../utils/shell.ts';
+import {
+  escapeForShellDoubleQuoted,
+  escapeShellArg,
+  formatModelFlag,
+} from '../utils/shell.ts';
 
 const capabilities: DriverCapabilities = {
   /**
@@ -63,11 +67,7 @@ export const codexDriver = defineDriver({
   binEnv: 'OPENTHROTTLE_CODEX_BIN',
   binary: 'codex',
   buildShellCommand: (config) => {
-    const modelNorm = config.model?.trim() ?? '';
-    const modelFlag =
-      modelNorm !== '' && modelNorm !== 'auto'
-        ? ` --model ${escapeShellArg(modelNorm)}`
-        : '';
+    const modelFlag = formatModelFlag(config.model);
 
     let endpointFlags = '';
     if (config.endpoint) {

@@ -8,9 +8,9 @@ import type { SkillUsageDailyChartProps } from '../SkillUsageDailyChart';
 import { SkillUsageDailyChart } from '../SkillUsageDailyChart';
 
 const renderComponent = (props: SkillUsageDailyChartProps): RenderResult => {
-  const Component = (): React.ReactElement => (
-    <SkillUsageDailyChart {...props} />
-  );
+  const Component = (): React.ReactElement => {
+    return <SkillUsageDailyChart {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

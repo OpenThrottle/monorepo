@@ -28,11 +28,12 @@ const dateFieldDoc = typedDocument<{ readonly item: { readonly at: Date } }>(
   'query Q { item { at } }',
 );
 
-const createJsonResponse = (init: ResponseInit, body: unknown): Response =>
-  new Response(JSON.stringify(body), {
+const createJsonResponse = (init: ResponseInit, body: unknown): Response => {
+  return new Response(JSON.stringify(body), {
     headers: { 'Content-Type': 'application/json' },
     ...init,
   });
+};
 
 describe('executeGraphql_v2', () => {
   it('returns data and parses ISO DateTime strings when parseDateTime is default', async () => {
@@ -203,10 +204,12 @@ describe('executeGraphql_v2', () => {
       .fn()
       .mockResolvedValue(createJsonResponse({ status: 200 }, { data: null }));
 
-    const mapFailure = (ctx: GraphqlV2FailureContext): CodeFailure => ({
-      ...ctx.failure,
-      code: 'E_MISSING',
-    });
+    const mapFailure = (ctx: GraphqlV2FailureContext): CodeFailure => {
+      return {
+        ...ctx.failure,
+        code: 'E_MISSING',
+      };
+    };
 
     const result = await executeGraphql_v2(emptyVarsDoc, undefined, {
       fetch: fetchMock,
@@ -348,14 +351,16 @@ describe('executeGraphql_v2', () => {
 describe('defaultRetryOn', () => {
   const failure = (
     overrides: Partial<GraphqlV2Failure> & Pick<GraphqlV2Failure, 'kind'>,
-  ): GraphqlV2Failure => ({
-    cause: undefined,
-    graphqlErrors: undefined,
-    graphqlPath: undefined,
-    httpStatus: undefined,
-    message: 'x',
-    ...overrides,
-  });
+  ): GraphqlV2Failure => {
+    return {
+      cause: undefined,
+      graphqlErrors: undefined,
+      graphqlPath: undefined,
+      httpStatus: undefined,
+      message: 'x',
+      ...overrides,
+    };
+  };
 
   it('retries network failures', () => {
     expect(defaultRetryOn(failure({ kind: 'network' }))).toBe(true);

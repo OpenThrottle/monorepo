@@ -103,29 +103,31 @@ const toWorktreeOptions = (
 const toDriverConfig = (
   config: RunIterationConfig,
   driver: AgentDriver,
-): DriverInvocationConfig => ({
-  cwd: config.cwd,
-  effort: config.effort,
-  env: config.env,
-  iteration: config.iteration,
-  model: config.model,
-  onChunk: config.onChunk,
-  // Leg B of the child-repo hook overlay: drivers that advertise `pluginDir` load OT's hook
-  // payload out-of-repo, so a run in a foreign checkout is observed without a byte being written
-  // into it. Resolution is fail-open — an empty list emits no flag — and gated by
-  // OPENTHROTTLE_HOOK_PLUGIN_ENABLED. Drivers without the capability ignore this outright.
-  // The payload is per-driver: a plugin's hook config names one tool's events, so pointing a
-  // CLI at another tool's payload loads cleanly and records nothing.
-  pluginDirs: resolveHookPluginDirs(
-    driver.pluginDirRel === undefined
-      ? {}
-      : { payloadRel: driver.pluginDirRel },
-  ),
-  prompt: config.agentPrompt,
-  signal: config.signal,
-  timeoutMs: config.timeoutMs,
-  worktree: toWorktreeOptions(config),
-});
+): DriverInvocationConfig => {
+  return {
+    cwd: config.cwd,
+    effort: config.effort,
+    env: config.env,
+    iteration: config.iteration,
+    model: config.model,
+    onChunk: config.onChunk,
+    // Leg B of the child-repo hook overlay: drivers that advertise `pluginDir` load OT's hook
+    // payload out-of-repo, so a run in a foreign checkout is observed without a byte being written
+    // into it. Resolution is fail-open — an empty list emits no flag — and gated by
+    // OPENTHROTTLE_HOOK_PLUGIN_ENABLED. Drivers without the capability ignore this outright.
+    // The payload is per-driver: a plugin's hook config names one tool's events, so pointing a
+    // CLI at another tool's payload loads cleanly and records nothing.
+    pluginDirs: resolveHookPluginDirs(
+      driver.pluginDirRel === undefined
+        ? {}
+        : { payloadRel: driver.pluginDirRel },
+    ),
+    prompt: config.agentPrompt,
+    signal: config.signal,
+    timeoutMs: config.timeoutMs,
+    worktree: toWorktreeOptions(config),
+  };
+};
 
 const logIterationBanner = (iteration: number): void => {
   console.log(`\n${ARTWORK_LINE}\n`);

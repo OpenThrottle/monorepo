@@ -3,13 +3,10 @@
  */
 
 export const AGENT_SEARCH_COPY = {
-  diskFallbackNotice:
-    'Showing on-disk matches — the semantic index is empty or unavailable. Run the agent-assets ingest to enable ranked semantic search.',
+  diskFallbackNotice: `Showing on-disk matches — the semantic index is empty or unavailable. Run the agent-assets ingest to enable ranked semantic search.`,
   emptyHeading: 'No matching agent assets',
-  emptyMessage:
-    'No skills or personas matched your query. Try different terms or a broader tab.',
-  introBody:
-    'Semantic search across your repo skills and personas (read-only; disk is the source of truth).',
+  emptyMessage: `No skills or personas matched your query. Try different terms or a broader tab.`,
+  introBody: `Semantic search across your repo skills and personas (read-only; disk is the source of truth).`,
   introHeading: 'Agent assets search',
   searchPlaceholder: 'Search skills and personas…',
 } as const;

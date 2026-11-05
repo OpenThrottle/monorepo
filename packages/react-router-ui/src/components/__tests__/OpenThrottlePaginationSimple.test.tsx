@@ -11,7 +11,9 @@ const renderPagination = (
   props: OpenThrottlePaginationSimpleProps,
   initialPath = '/',
 ): RenderResult => {
-  const Component = () => <OpenThrottlePaginationSimple {...props} />;
+  const Component = () => {
+    return <OpenThrottlePaginationSimple {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub initialEntries={[initialPath]} />);
 };

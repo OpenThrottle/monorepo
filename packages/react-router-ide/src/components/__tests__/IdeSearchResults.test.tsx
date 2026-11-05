@@ -3,7 +3,10 @@ import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
-import type { IdeRepositoryRef, IdeSearchResult } from '../../data/view-models';
+import type {
+  IdeRepositoryRef,
+  IdeSearchResult,
+} from '../../data/data.view-models';
 import { IdeSearchResults } from '../IdeSearchResults';
 
 const repository: IdeRepositoryRef = {

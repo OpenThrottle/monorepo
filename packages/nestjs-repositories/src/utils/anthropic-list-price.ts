@@ -43,10 +43,12 @@ interface TieredModelPricing {
 
 type ModelPricing = FlatModelPricing | TieredModelPricing;
 
-const flat = (prices: TokenPrices): FlatModelPricing => ({
-  kind: 'flat',
-  prices,
-});
+const flat = (prices: TokenPrices): FlatModelPricing => {
+  return {
+    kind: 'flat',
+    prices,
+  };
+};
 
 /** A Map, not an object, so a model id like `constructor` can never match. */
 const ANTHROPIC_LIST_PRICES: ReadonlyMap<string, ModelPricing> = new Map<
@@ -142,12 +144,14 @@ const TOKENS_PER_MILLION = 1_000_000;
 /** Trims float noise (0.30000000000000004) without losing sub-cent precision. */
 const COST_DECIMALS = 1e10;
 
-const isCount = (value: unknown): value is number =>
-  typeof value === 'number' && Number.isFinite(value) && value >= 0;
+const isCount = (value: unknown): value is number => {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0;
+};
 
 /** Absent or `standard` passes; any other value is a pricing mode we do not model. */
-const isStandardOrAbsent = (value: unknown): boolean =>
-  value === undefined || value === null || value === STANDARD;
+const isStandardOrAbsent = (value: unknown): boolean => {
+  return value === undefined || value === null || value === STANDARD;
+};
 
 const geographyMultiplier = (value: unknown): number | null => {
   if (value === undefined || value === null) {
@@ -156,9 +160,22 @@ const geographyMultiplier = (value: unknown): number | null => {
   if (value === US_GEOGRAPHY) {
     return US_GEOGRAPHY_MULTIPLIER;
   }
-  return typeof value === 'string' && STANDARD_GEOGRAPHIES.includes(value)
-    ? 1
-    : null;
+  const isStandardGeography =
+    typeof value === 'string' && STANDARD_GEOGRAPHIES.includes(value);
+  return isStandardGeography ? 1 : null;
+};
+
+const pricesForPrompt = (
+  pricing: ModelPricing,
+  promptTokens: number,
+): TokenPrices => {
+  if (pricing.kind === 'flat') {
+    return pricing.prices;
+  }
+  if (promptTokens > pricing.thresholdTokens) {
+    return pricing.above;
+  }
+  return pricing.upTo;
 };
 
 /** Cache writes split into 5m / 1h, or null when the split is missing or does not add up. */
@@ -225,12 +242,7 @@ export const estimateAnthropicListPriceUsd = (row: {
   }
 
   const promptTokens = input + cacheRead + writes.fiveMinute + writes.oneHour;
-  const prices =
-    pricing.kind === 'flat'
-      ? pricing.prices
-      : promptTokens > pricing.thresholdTokens
-        ? pricing.above
-        : pricing.upTo;
+  const prices = pricesForPrompt(pricing, promptTokens);
 
   const usd =
     ((input * prices.input +

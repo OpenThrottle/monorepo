@@ -58,17 +58,29 @@ export const MultiSelect = React.forwardRef<
 
   // Setup
   const selectedOptions = options.filter((opt) => value.includes(opt.value));
+  const selectedBox = `border-primary bg-primary text-primary-foreground`;
 
   // Handlers
   const toggleOption = (optionValue: string): void => {
-    const next = value.includes(optionValue)
-      ? value.filter((v) => v !== optionValue)
-      : [...value, optionValue];
+    if (value.includes(optionValue)) {
+      onChange(value.filter((v) => v !== optionValue));
+      return;
+    }
 
-    onChange(next);
+    onChange([...value, optionValue]);
   };
 
   // Markup
+  const hasSelection = selectedOptions.length > 0;
+  const placeholderLabel = (
+    <span className="text-muted-foreground">{placeholder}</span>
+  );
+  const selectedTags = selectedOptions.map((opt) => (
+    <Badge className="gap-1 truncate" key={opt.value} variant="secondary">
+      {opt.adornment}
+      {opt.label}
+    </Badge>
+  ));
 
   // Life Cycle
 
@@ -94,20 +106,7 @@ export const MultiSelect = React.forwardRef<
           ref={ref}
           type="button"
         >
-          {selectedOptions.length === 0 ? (
-            <span className="text-muted-foreground">{placeholder}</span>
-          ) : (
-            selectedOptions.map((opt) => (
-              <Badge
-                className="gap-1 truncate"
-                key={opt.value}
-                variant="secondary"
-              >
-                {opt.adornment}
-                {opt.label}
-              </Badge>
-            ))
-          )}
+          {hasSelection ? selectedTags : placeholderLabel}
         </button>
       </PopoverTrigger>
       <PopoverContent
@@ -121,6 +120,8 @@ export const MultiSelect = React.forwardRef<
             <CommandGroup>
               {options.map((opt) => {
                 const selected = value.includes(opt.value);
+                const boxClass = selected ? selectedBox : 'border-input';
+
                 return (
                   <CommandItem
                     key={opt.value}
@@ -131,12 +132,10 @@ export const MultiSelect = React.forwardRef<
                       aria-hidden={true}
                       className={cn(
                         'mr-2 flex h-4 w-4 items-center justify-center rounded border',
-                        selected
-                          ? 'border-primary bg-primary text-primary-foreground'
-                          : 'border-input',
+                        boxClass,
                       )}
                     >
-                      {selected ? <Check className="h-3 w-3" /> : null}
+                      {selected && <Check className="h-3 w-3" />}
                     </span>
                     {/* `value` above stays the bare label: folding the hint into the
                         cmdk search key would make a shared status word match every
@@ -144,11 +143,11 @@ export const MultiSelect = React.forwardRef<
                     <span className="flex items-center gap-1.5">
                       {opt.adornment}
                       {opt.label}
-                      {opt.hint ? (
+                      {opt.hint && (
                         <span className="text-muted-foreground text-xs">
                           {opt.hint}
                         </span>
-                      ) : null}
+                      )}
                     </span>
                   </CommandItem>
                 );

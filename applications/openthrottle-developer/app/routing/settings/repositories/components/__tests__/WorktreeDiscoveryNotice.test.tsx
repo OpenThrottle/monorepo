@@ -13,8 +13,8 @@ import { WORKTREE_DISCOVERY_COPY } from '~/routing/settings/repositories/data/da
 import {
   mockDiscoveredWorktrees,
   mockScannedRoot,
-} from '~/routing/settings/repositories/data/mock.repositories';
-import type { DiscoveredWorktreesResult } from '~/routing/settings/repositories/data/types';
+} from '~/routing/settings/repositories/testing/mock-repositories';
+import type { DiscoveredWorktreesResult } from '~/routing/settings/repositories/types';
 
 import { WorktreeDiscoveryNotice } from '../WorktreeDiscoveryNotice';
 
@@ -22,9 +22,11 @@ const renderNotice = (
   discoveredWorktrees: DiscoveredWorktreesResult,
   loader?: () => unknown,
 ): RenderResult => {
-  const Component = () => (
-    <WorktreeDiscoveryNotice discoveredWorktrees={discoveredWorktrees} />
-  );
+  const Component = () => {
+    return (
+      <WorktreeDiscoveryNotice discoveredWorktrees={discoveredWorktrees} />
+    );
+  };
   const RoutesStub = createRoutesStub([{ Component, loader, path: '/' }]);
 
   return render(<RoutesStub />);

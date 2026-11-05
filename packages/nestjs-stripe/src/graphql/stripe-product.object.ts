@@ -5,6 +5,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import Stripe from 'stripe';
 
+import { resolveDefaultPriceId } from '../utils/stripe-default-price.utils.ts';
 import { StripePriceObject, stripePriceToGql } from './stripe-price.object.ts';
 
 @ObjectType({ description: `Stripe catalog product.` })
@@ -45,14 +46,9 @@ export const stripeProductToGql = (
   product: Stripe.Product,
   options?: { readonly prices?: readonly Stripe.Price[] },
 ): StripeProductObject => {
-  const dp = product.default_price;
-  const defaultPriceId =
-    dp == null ? null : typeof dp === 'string' ? dp : dp.id;
+  const defaultPriceId = resolveDefaultPriceId(product.default_price);
 
-  const prices =
-    options?.prices != null
-      ? options.prices.map((p) => stripePriceToGql(p))
-      : [];
+  const prices = (options?.prices ?? []).map((p) => stripePriceToGql(p));
 
   return {
     active: product.active,

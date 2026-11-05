@@ -55,11 +55,12 @@ const plan: PlanDetailRouteProps['plan'] = {
 
 const buildLoaderData = (
   overrides: Partial<PlanDetailRouteProps['loaderData']> = {},
-): PlanDetailRouteProps['loaderData'] =>
-  buildPlanDetailLoaderData({
+): PlanDetailRouteProps['loaderData'] => {
+  return buildPlanDetailLoaderData({
     tasks: [],
     ...overrides,
   });
+};
 
 const CHECKOUT_ID = '11111111-1111-4111-8111-111111111111';
 

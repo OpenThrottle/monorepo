@@ -16,20 +16,25 @@ interface HarnessProps {
   readonly result: unknown;
 }
 
-const renderActionToast = (initialProps: HarnessProps) =>
-  renderHook(
+const readBoomMessage = (result: unknown): string | undefined => {
+  if (result != null && typeof result === 'object' && 'boom' in result) {
+    return String(result.boom);
+  }
+  return undefined;
+};
+
+const renderActionToast = (initialProps: HarnessProps) => {
+  return renderHook(
     (props: HarnessProps) =>
       useActionToast(props.result, {
         active: props.active,
-        error: (r) =>
-          r != null && typeof r === 'object' && 'boom' in r
-            ? String(r.boom)
-            : undefined,
+        error: readBoomMessage,
         id: 'test-toast',
         success: 'Saved.',
       }),
     { initialProps },
   );
+};
 
 describe('useActionToast', () => {
   beforeEach(() => {

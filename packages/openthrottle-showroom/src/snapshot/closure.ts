@@ -47,8 +47,9 @@ export interface RowFetcher {
 
 const FETCH_BATCH_SIZE = 1_000;
 
-const rowKey = (table: TableSchema, row: Record<string, unknown>): string =>
-  stableStringify(table.primaryKey.map((column) => row[column]));
+const rowKey = (table: TableSchema, row: Record<string, unknown>): string => {
+  return stableStringify(table.primaryKey.map((column) => row[column]));
+};
 
 const requireTable = (schema: DatabaseSchema, name: string): TableSchema => {
   const table = schema.tables.get(name);

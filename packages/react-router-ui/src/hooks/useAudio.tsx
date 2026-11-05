@@ -45,7 +45,9 @@ export function useAudio(options: UseAudioOptions = {}): UseAudioResult {
   const [error, setError] = React.useState<Error | null>(null);
 
   // Setup
-  const getElement = (): HTMLAudioElement | null => elementRef.current;
+  const getElement = (): HTMLAudioElement | null => {
+    return elementRef.current;
+  };
 
   // Handlers
   const syncFromElement = React.useCallback((): void => {

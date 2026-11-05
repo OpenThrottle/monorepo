@@ -148,14 +148,16 @@ describe('routes/queues.$queueId.tsx', () => {
   });
 
   test('renders empty state when queue has no jobs', () => {
-    const Component = () => (
-      <QueueDetailIndex
-        actionData={undefined}
-        loaderData={mockLoaderData}
-        matches={buildQueueMatches(mockLoaderData)}
-        params={{ queueId: 'plans' }}
-      />
-    );
+    const Component = () => {
+      return (
+        <QueueDetailIndex
+          actionData={undefined}
+          loaderData={mockLoaderData}
+          matches={buildQueueMatches(mockLoaderData)}
+          params={{ queueId: 'plans' }}
+        />
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
 
@@ -165,26 +167,28 @@ describe('routes/queues.$queueId.tsx', () => {
 
   test('renders QueueJobsTable when jobs are present', () => {
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <QueueDetailIndex
-        actionData={undefined}
-        loaderData={{
-          ...mockLoaderData,
-          queue: {
-            ...mockQueue,
-            jobs: { hasNext: false, jobs: [mockJob], total: 1 },
-          },
-        }}
-        matches={buildQueueMatches({
-          ...mockLoaderData,
-          queue: {
-            ...mockQueue,
-            jobs: { hasNext: false, jobs: [mockJob], total: 1 },
-          },
-        })}
-        params={{ queueId: 'plans' }}
-      />
-    );
+    const Component = () => {
+      return (
+        <QueueDetailIndex
+          actionData={undefined}
+          loaderData={{
+            ...mockLoaderData,
+            queue: {
+              ...mockQueue,
+              jobs: { hasNext: false, jobs: [mockJob], total: 1 },
+            },
+          }}
+          matches={buildQueueMatches({
+            ...mockLoaderData,
+            queue: {
+              ...mockQueue,
+              jobs: { hasNext: false, jobs: [mockJob], total: 1 },
+            },
+          })}
+          params={{ queueId: 'plans' }}
+        />
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
 

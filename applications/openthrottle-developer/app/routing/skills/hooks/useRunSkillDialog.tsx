@@ -13,7 +13,7 @@ import {
 import { useAtom } from 'jotai';
 import * as React from 'react';
 
-import type { RepositoryOption } from '~/routing/home/data/models.server';
+import type { RepositoryOption } from '~/routing/home/utils/models.server';
 import type { RunSkillPayload } from '~/routing/skills/types';
 
 export interface UseRunSkillDialogOptions {
@@ -114,13 +114,18 @@ export const useRunSkillDialog = (
       (repositoryId == null || repositoryId === ''));
 
   // Handlers
-  const setModelId = (nextModelId: string): void =>
-    setToolbarState((previous) => ({ ...previous, modelId: nextModelId }));
-  const setRepositoryId = (nextRepositoryId: string): void =>
-    setToolbarState((previous) => ({
+  const setModelId = (nextModelId: string): void => {
+    return setToolbarState((previous) => ({
+      ...previous,
+      modelId: nextModelId,
+    }));
+  };
+  const setRepositoryId = (nextRepositoryId: string): void => {
+    return setToolbarState((previous) => ({
       ...previous,
       repositoryIds: [nextRepositoryId],
     }));
+  };
 
   const buildPayload = React.useCallback((): RunSkillPayload | null => {
     if (decoded === null) {
@@ -141,28 +146,33 @@ export const useRunSkillDialog = (
     // backend (baseUrl + model, no repo) and a CLI backend (its own or a
     // driver×endpoint model) run in a repository, carrying the capability-gated
     // permission/reasoning/tier defaults through.
-    const fields: Record<string, string> =
-      decoded.backend === 'openai'
-        ? {
-            backend: 'openai',
-            baseUrl: decoded.baseUrl ?? '',
-            modelId: decoded.model ?? '',
-            persist: String(persist),
-          }
-        : {
-            backend: decoded.backend,
-            ...(decoded.baseUrl != null ? { baseUrl: decoded.baseUrl } : {}),
-            modelId: decoded.model ?? '',
-            permissionMode: permissionMode ?? '',
-            persist: String(persist),
-            reasoning: reasoning ?? '',
-            repositoryIds: JSON.stringify(
-              repositoryId != null ? [repositoryId] : [],
-            ),
-            serviceTier: serviceTier ?? '',
-          };
+    if (decoded.backend === 'openai') {
+      const openaiFields: Record<string, string> = {
+        backend: 'openai',
+        baseUrl: decoded.baseUrl ?? '',
+        modelId: decoded.model ?? '',
+        persist: String(persist),
+      };
 
-    return { fields, message };
+      return { fields: openaiFields, message };
+    }
+
+    const repositoryIds = repositoryId == null ? [] : [repositoryId];
+    const cliFields: Record<string, string> = {
+      backend: decoded.backend,
+      modelId: decoded.model ?? '',
+      permissionMode: permissionMode ?? '',
+      persist: String(persist),
+      reasoning: reasoning ?? '',
+      repositoryIds: JSON.stringify(repositoryIds),
+      serviceTier: serviceTier ?? '',
+    };
+
+    if (decoded.baseUrl != null) {
+      cliFields.baseUrl = decoded.baseUrl;
+    }
+
+    return { fields: cliFields, message };
   }, [
     args,
     capabilities.requiresRepository,

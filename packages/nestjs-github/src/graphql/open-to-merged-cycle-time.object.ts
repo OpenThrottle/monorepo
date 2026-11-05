@@ -19,8 +19,7 @@ export class OpenToMergedCycleTimeObject {
   p90Days!: number | null;
 
   @Field(() => String, {
-    description:
-      'Period bucket (e.g. YYYY-MM or YYYY-Www in UTC), or null for repo-wide.',
+    description: `Period bucket (e.g. YYYY-MM or YYYY-Www in UTC), or null for repo-wide.`,
     nullable: true,
   })
   period!: string | null;

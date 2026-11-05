@@ -30,12 +30,12 @@ export const OpenThrottleLogo = (
       <span className="font-black text-current">
         Open<span className="-text-accent">Throttle</span>
       </span>
-      {name ? (
+      {name && (
         <>
           <span className="text-muted-foreground/50 font-extralight">|</span>
           <span className="text-accent font-semibold">{name}</span>
         </>
-      ) : null}
+      )}
     </>
   );
 

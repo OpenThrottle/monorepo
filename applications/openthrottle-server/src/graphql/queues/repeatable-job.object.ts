@@ -9,8 +9,7 @@ import { Field, Float, ObjectType } from '@nestjs/graphql';
 @ObjectType()
 export class RepeatableJobObject {
   @Field(() => String, {
-    description:
-      'Unique key for the repeatable job (use with removeRepeatableJob).',
+    description: `Unique key for the repeatable job (use with removeRepeatableJob).`,
   })
   key!: string;
 

@@ -737,15 +737,16 @@ describe('ConversationStreamResolver.startConversationStream', () => {
 
   it("ownership-checks EVERY id, refusing the turn when a secondary is not the caller's", async () => {
     const { repositories, resolver, streamService } = build();
-    vi.mocked(repositories.findByIdForUser).mockImplementation((id: string) =>
-      Promise.resolve(
-        id === 'repo-primary'
-          ? createMock<WorkspaceLocalRepository>({
-              filesystemPath: '/repo/repo-primary',
-            })
-          : null,
-      ),
-    );
+    vi.mocked(repositories.findByIdForUser).mockImplementation((id: string) => {
+      if (id !== 'repo-primary') {
+        return Promise.resolve(null);
+      }
+      return Promise.resolve(
+        createMock<WorkspaceLocalRepository>({
+          filesystemPath: '/repo/repo-primary',
+        }),
+      );
+    });
 
     const result = await resolver.startConversationStream(human, {
       backend: 'claude',

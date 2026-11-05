@@ -24,17 +24,19 @@ const page = (config: {
   readonly endCursor: string | null;
   readonly hasNextPage: boolean;
   readonly slugs: readonly string[];
-}) => ({
-  blogPosts: {
-    endCursor: config.endCursor,
-    hasNextPage: config.hasNextPage,
-    items: config.slugs.map((slug) => ({
-      slug,
-      // executeGraphql returns DateTime fields as Date objects.
-      updatedAt: new Date('2026-03-06T10:00:00.000Z'),
-    })),
-  },
-});
+}) => {
+  return {
+    blogPosts: {
+      endCursor: config.endCursor,
+      hasNextPage: config.hasNextPage,
+      items: config.slugs.map((slug) => ({
+        slug,
+        // executeGraphql returns DateTime fields as Date objects.
+        updatedAt: new Date('2026-03-06T10:00:00.000Z'),
+      })),
+    },
+  };
+};
 
 describe('blog-feeds.server', () => {
   beforeEach(() => {
@@ -57,13 +59,17 @@ describe('blog-feeds.server', () => {
 
   describe('loadBlogSitemapEntries', () => {
     test('returns /blog, every post with lastmod, and every tag', async () => {
-      fetchPublicGraphql.mockImplementation((document: unknown) =>
-        document === BlogSitemapTagsDocument
-          ? Promise.resolve({ blogTags: [{ slug: 'agents' }, { slug: 'git' }] })
-          : Promise.resolve(
-              page({ endCursor: 'c1', hasNextPage: false, slugs: ['a', 'b'] }),
-            ),
-      );
+      fetchPublicGraphql.mockImplementation((document: unknown) => {
+        if (document === BlogSitemapTagsDocument) {
+          return Promise.resolve({
+            blogTags: [{ slug: 'agents' }, { slug: 'git' }],
+          });
+        }
+
+        return Promise.resolve(
+          page({ endCursor: 'c1', hasNextPage: false, slugs: ['a', 'b'] }),
+        );
+      });
 
       await expect(loadBlogSitemapEntries()).resolves.toEqual({
         degraded: false,
@@ -114,13 +120,15 @@ describe('blog-feeds.server', () => {
     });
 
     test('stops at the page cap if the server never reports the last page', async () => {
-      fetchPublicGraphql.mockImplementation((document: unknown) =>
-        document === BlogSitemapTagsDocument
-          ? Promise.resolve({ blogTags: [] })
-          : Promise.resolve(
-              page({ endCursor: 'again', hasNextPage: true, slugs: [] }),
-            ),
-      );
+      fetchPublicGraphql.mockImplementation((document: unknown) => {
+        if (document === BlogSitemapTagsDocument) {
+          return Promise.resolve({ blogTags: [] });
+        }
+
+        return Promise.resolve(
+          page({ endCursor: 'again', hasNextPage: true, slugs: [] }),
+        );
+      });
 
       await loadBlogSitemapEntries();
 

@@ -10,7 +10,7 @@
  * ("Surfacing" — effective-first read view).
  */
 
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 
 /**
  * A resolved skill row from the `skillAvailability` query, narrowed to the

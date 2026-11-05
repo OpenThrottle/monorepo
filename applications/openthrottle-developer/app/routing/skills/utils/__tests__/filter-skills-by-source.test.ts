@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 import {
   filterSkillsBySource,
   getSkillSourceKind,
@@ -12,16 +12,18 @@ const entry = (
   slug: string,
   source: RepoSkillEntry['source'],
   isPersonal?: true,
-): RepoSkillEntry => ({
-  disableModelInvocation: undefined,
-  isPersonal,
-  layout: 'agents',
-  repoRelativePath: `.agents/skills/${slug}/SKILL.md`,
-  slug,
-  source,
-  summary: `${slug} summary`,
-  tags: undefined,
-});
+): RepoSkillEntry => {
+  return {
+    disableModelInvocation: undefined,
+    isPersonal,
+    layout: 'agents',
+    repoRelativePath: `.agents/skills/${slug}/SKILL.md`,
+    slug,
+    source,
+    summary: `${slug} summary`,
+    tags: undefined,
+  };
+};
 
 const entries = [
   entry('ot-plans', 'openthrottle'),

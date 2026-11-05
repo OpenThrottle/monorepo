@@ -5,12 +5,14 @@ import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
 import { SKILL_USAGE_DETAIL_COPY } from '~/routing/skills/data/data.copy';
-import type { SkillDetailUsageData } from '~/routing/skills/data/skill-usage-detail';
+import type { SkillDetailUsageData } from '~/routing/skills/types';
 
 import { SkillUsageTabPanel } from '../SkillUsageTabPanel';
 
 const renderPanel = (usage: Promise<SkillDetailUsageData>): RenderResult => {
-  const Component = () => <SkillUsageTabPanel usage={usage} />;
+  const Component = () => {
+    return <SkillUsageTabPanel usage={usage} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

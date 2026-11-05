@@ -10,8 +10,9 @@ import { ChatThinkingBlock } from '../ChatThinkingBlock';
 describe('ChatThinkingBlock Component', () => {
   let component: RenderResult;
 
-  const renderBlock = (props: ChatThinkingBlockProps): RenderResult =>
-    render(<ChatThinkingBlock {...props} />);
+  const renderBlock = (props: ChatThinkingBlockProps): RenderResult => {
+    return render(<ChatThinkingBlock {...props} />);
+  };
 
   describe('when reasoning is empty or whitespace', () => {
     test('renders nothing for an empty string', () => {

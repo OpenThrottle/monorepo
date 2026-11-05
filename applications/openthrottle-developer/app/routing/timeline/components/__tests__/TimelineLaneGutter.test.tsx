@@ -33,7 +33,9 @@ const baseProps: TimelineLaneGutterProps = {
 };
 
 const renderGutter = (props: TimelineLaneGutterProps): RenderResult => {
-  const Component = () => <TimelineLaneGutter {...props} />;
+  const Component = () => {
+    return <TimelineLaneGutter {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

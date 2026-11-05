@@ -59,8 +59,9 @@ export interface CreateViteConfigOptions {
 /**
  * @description Calculates the cache directory path relative to the package
  */
-const calculateCacheDir = (packagePath: string): string =>
-  calculateOutputDir(packagePath, 'node_modules/.vite');
+const calculateCacheDir = (packagePath: string): string => {
+  return calculateOutputDir(packagePath, 'node_modules/.vite');
+};
 
 /**
  * @description Auto-detects entry points (checks for index.css)
@@ -75,6 +76,22 @@ const detectEntryPoints = (packagePath: string): readonly string[] => {
   }
 
   return entries;
+};
+
+/**
+ * @description Layers `override` onto `base`, merging the two `lib` blocks
+ * key by key rather than letting the override replace the whole block.
+ */
+const mergeBuildOptions = (
+  base: UserConfig['build'],
+  override: UserConfig['build'],
+): UserConfig['build'] => {
+  if (!override) {
+    return base;
+  }
+
+  const lib = override.lib ? { ...base?.lib, ...override.lib } : base?.lib;
+  return { ...base, ...override, lib };
 };
 
 /**
@@ -159,18 +176,7 @@ export const createViteConfig = (
   const mergedConfig: UserConfig = {
     ...config,
     ...overrides,
-    build: overrides?.build
-      ? {
-          ...config.build,
-          ...overrides.build,
-          lib: overrides.build.lib
-            ? {
-                ...config.build?.lib,
-                ...overrides.build.lib,
-              }
-            : config.build?.lib,
-        }
-      : config.build,
+    build: mergeBuildOptions(config.build, overrides?.build),
     plugins: [...(config.plugins ?? []), ...(overrides?.plugins ?? [])],
   };
 

@@ -16,7 +16,9 @@ describe('PlanTaskNotFound Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <PlanTaskNotFound {...props} />;
+    const Component = () => {
+      return <PlanTaskNotFound {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

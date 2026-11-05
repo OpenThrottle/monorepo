@@ -34,6 +34,7 @@ export * from './data/data.artwork';
 export * from './data/data.features';
 export * from './data/data.introductions';
 export * from './data/data.taglines';
+export * from './utils/get-random-introduction';
 
 // 🏷️ Types
 export type { UsePlanRefResolverOptions as UsePlanRefResolverArgs } from './hooks/usePlanRefResolver';

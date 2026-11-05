@@ -75,13 +75,16 @@ export const readRalphPromptFilesUtf8 = (
 export const formatRalphPromptFileProfileLabel = (
   cwd: string,
   userPaths: readonly string[],
-): string =>
-  userPaths.map((userPath) => resolve(cwd, userPath.trim())).join(', ');
+): string => {
+  return userPaths.map((userPath) => resolve(cwd, userPath.trim())).join(', ');
+};
 
 /**
  * @description Reads the entire stdin stream as UTF-8 (fd 0). Use only when stdin is not a TTY.
  */
-export const readRalphPromptStdinUtf8 = (): string => readFileSync(0, 'utf8');
+export const readRalphPromptStdinUtf8 = (): string => {
+  return readFileSync(0, 'utf8');
+};
 
 /**
  * @description Applies seed defaults: optional `promptFile` (read contents) or named `prompt`.

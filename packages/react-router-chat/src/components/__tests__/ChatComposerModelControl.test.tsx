@@ -26,12 +26,13 @@ const MODEL_GROUPS: readonly ChatModelGroup[] = [
 
 const renderControl = (
   props: ChatComposerModelControlProps = {},
-): RenderResult =>
-  render(
+): RenderResult => {
+  return render(
     <TooltipProvider>
       <ChatComposerModelControl {...props} />
     </TooltipProvider>,
   );
+};
 
 describe('ChatComposerModelControl Component', () => {
   test('renders nothing when no models are supplied', () => {

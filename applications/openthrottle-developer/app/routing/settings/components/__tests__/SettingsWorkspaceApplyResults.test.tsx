@@ -21,7 +21,9 @@ const results = [
 const renderResults = (
   props: SettingsWorkspaceApplyResultsProps,
 ): RenderResult => {
-  const Component = () => <SettingsWorkspaceApplyResults {...props} />;
+  const Component = () => {
+    return <SettingsWorkspaceApplyResults {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

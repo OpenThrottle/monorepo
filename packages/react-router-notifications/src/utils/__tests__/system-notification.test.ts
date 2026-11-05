@@ -17,12 +17,10 @@ import {
 } from 'vitest';
 
 import { NOTIFICATIONS_STORAGE_KEY } from '../../config/index';
-import {
-  DEFAULT_NOTIFICATIONS_STORAGE_KEY,
-  loadFromStorage,
-  saveToStorage,
-} from '../../data/notifications-store.context';
+import { DEFAULT_NOTIFICATIONS_STORAGE_KEY } from '../../data/data.notifications-store.context';
 import type { NotificationInstance } from '../../types';
+import { loadFromStorage } from '../load-from-storage';
+import { saveToStorage } from '../save-to-storage';
 import {
   getSystemNotificationsPreference,
   setSystemNotificationsPreference,

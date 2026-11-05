@@ -5,8 +5,8 @@ import * as React from 'react';
 import {
   ACTION_TOUCH_CLASSES,
   ACTION_VISIBILITY_CLASSES,
-} from '../data/chat-conversation-row.classes';
-import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../data/chat-conversation-sidebar.copy';
+} from '../data/data.chat-conversation-row.classes';
+import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../data/data.chat-conversation-sidebar.copy';
 import type { AgentConversationListItem } from '../types';
 import { formatRelativeChatTimestamp } from '../utils/index';
 
@@ -54,10 +54,9 @@ export const ChatConversationRow = (
 
   // Setup
   const copy = CHAT_CONVERSATION_SIDEBAR_COPY;
-  const label =
-    conversation.title != null && conversation.title.trim() !== ''
-      ? conversation.title
-      : copy.untitled;
+  const title = conversation.title ?? '';
+  const hasTitle = title.trim() !== '';
+  const label = hasTitle ? title : copy.untitled;
 
   // Handlers
 

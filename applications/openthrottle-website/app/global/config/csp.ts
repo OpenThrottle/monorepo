@@ -13,11 +13,13 @@ import { ENV_SOURCE } from '@openthrottle/react-router-utils';
  * so the builder degrades to `connect-src 'self'` with no report directives;
  * preview/local (where the API URL exists) is the observation surface.
  */
-export const getCspOptions = (): BuildCspOptions => ({
-  additionalConnectSrc: [],
-  additionalFontSrc: [],
-  additionalImgSrc: [],
-  additionalScriptSrc: [],
-  apiUrl: ENV_SOURCE.API_URL_EXTERNAL,
-  reportOnly: true,
-});
+export const getCspOptions = (): BuildCspOptions => {
+  return {
+    additionalConnectSrc: [],
+    additionalFontSrc: [],
+    additionalImgSrc: [],
+    additionalScriptSrc: [],
+    apiUrl: ENV_SOURCE.API_URL_EXTERNAL,
+    reportOnly: true,
+  };
+};

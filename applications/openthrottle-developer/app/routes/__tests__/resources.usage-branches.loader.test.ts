@@ -14,10 +14,11 @@ const { loader } = await import('../resources.usage-branches');
 
 const mockExecute = vi.mocked(executeGraphqlWithAuth);
 
-const loaderArgs = (search = ''): Route.LoaderArgs =>
-  createLoaderArgs<Route.LoaderArgs>({
+const loaderArgs = (search = ''): Route.LoaderArgs => {
+  return createLoaderArgs<Route.LoaderArgs>({
     url: `http://localhost/resources/usage-branches${search}`,
   });
+};
 
 const RANGE = '?start=2026-07-01&end=2026-07-31';
 

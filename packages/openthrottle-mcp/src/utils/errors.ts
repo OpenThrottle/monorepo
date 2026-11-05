@@ -125,14 +125,10 @@ export const errorCategory = {
 export type ErrorCategory = (typeof errorCategory)[keyof typeof errorCategory];
 
 const sanitizedMessageByCategory: Record<ErrorCategory, string> = {
-  [errorCategory.auth]:
-    'Authentication failed. Verify OPENTHROTTLE_MCP_AUTH_TOKEN is set and valid.',
-  [errorCategory.transport]:
-    'Could not reach the OpenThrottle (OT) server. Confirm the server is running and reachable, then retry.',
-  [errorCategory.unknown]:
-    'The request failed due to an internal error. See server logs for detail.',
-  [errorCategory.validation]:
-    'The request was rejected as invalid. Check the provided arguments and retry.',
+  [errorCategory.auth]: `Authentication failed. Verify OPENTHROTTLE_MCP_AUTH_TOKEN is set and valid.`,
+  [errorCategory.transport]: `Could not reach the OpenThrottle (OT) server. Confirm the server is running and reachable, then retry.`,
+  [errorCategory.unknown]: `The request failed due to an internal error. See server logs for detail.`,
+  [errorCategory.validation]: `The request was rejected as invalid. Check the provided arguments and retry.`,
 };
 
 const transportHints = [

@@ -5,27 +5,30 @@ import { estimateAnthropicListPriceUsd } from './anthropic-list-price.ts';
 /** A real-shaped Claude Code transcript usage object (counts only). */
 const usage = (
   overrides: Record<string, unknown> = {},
-): Record<string, unknown> => ({
-  cache_creation: {
-    ephemeral_1h_input_tokens: 2_000,
-    ephemeral_5m_input_tokens: 1_000,
-  },
-  cache_creation_input_tokens: 3_000,
-  cache_read_input_tokens: 100_000,
-  inference_geo: 'global',
-  input_tokens: 10,
-  output_tokens: 500,
-  service_tier: 'standard',
-  speed: 'standard',
-  ...overrides,
-});
+): Record<string, unknown> => {
+  return {
+    cache_creation: {
+      ephemeral_1h_input_tokens: 2_000,
+      ephemeral_5m_input_tokens: 1_000,
+    },
+    cache_creation_input_tokens: 3_000,
+    cache_read_input_tokens: 100_000,
+    inference_geo: 'global',
+    input_tokens: 10,
+    output_tokens: 500,
+    service_tier: 'standard',
+    speed: 'standard',
+    ...overrides,
+  };
+};
 
 const estimate = (
   rawUsage: Record<string, unknown> | null,
   model: string | null = 'claude-opus-5-5',
   provider = 'claude',
-): number | null =>
-  estimateAnthropicListPriceUsd({ model, provider, rawUsage });
+): number | null => {
+  return estimateAnthropicListPriceUsd({ model, provider, rawUsage });
+};
 
 describe('estimateAnthropicListPriceUsd', () => {
   describe('when the model is in the table', () => {
@@ -72,8 +75,8 @@ describe('estimateAnthropicListPriceUsd', () => {
   });
 
   describe('when the model is priced by prompt length', () => {
-    const haiku = (promptTokens: number): number | null =>
-      estimate(
+    const haiku = (promptTokens: number): number | null => {
+      return estimate(
         usage({
           cache_creation: undefined,
           cache_creation_input_tokens: 0,
@@ -83,6 +86,7 @@ describe('estimateAnthropicListPriceUsd', () => {
         }),
         'claude-haiku-5-5',
       );
+    };
 
     it('uses the lower prices at exactly the threshold', () => {
       expect(haiku(100_000)).toBeCloseTo((100_000 * 0.1) / 1e6, 10);

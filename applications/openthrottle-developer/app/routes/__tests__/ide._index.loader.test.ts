@@ -12,7 +12,7 @@ vi.mock('@openthrottle/react-router-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),
 }));
 
-vi.mock('~/routing/ide/data/ide-engine.server', () => ({
+vi.mock('~/routing/ide/utils/ide-engine.server', () => ({
   listFilesVM: vi.fn(),
   searchVM: vi.fn(),
 }));
@@ -20,7 +20,7 @@ vi.mock('~/routing/ide/data/ide-engine.server', () => ({
 const { executeGraphqlWithAuth } =
   await import('@openthrottle/react-router-graphql');
 const { listFilesVM, searchVM } =
-  await import('~/routing/ide/data/ide-engine.server');
+  await import('~/routing/ide/utils/ide-engine.server');
 const { loader } = await import('../ide._index');
 
 const mockGraphql = vi.mocked(executeGraphqlWithAuth);
@@ -53,13 +53,15 @@ const workspaceSettings = {
   },
 };
 
-const loaderArgs = (url: string): Route.LoaderArgs => ({
-  context: createTestRouterContext(),
-  params: {},
-  pattern: '/ide',
-  request: new Request(url),
-  url: new URL(url),
-});
+const loaderArgs = (url: string): Route.LoaderArgs => {
+  return {
+    context: createTestRouterContext(),
+    params: {},
+    pattern: '/ide',
+    request: new Request(url),
+    url: new URL(url),
+  };
+};
 
 describe('routes/ide._index loader', () => {
   beforeEach(() => {

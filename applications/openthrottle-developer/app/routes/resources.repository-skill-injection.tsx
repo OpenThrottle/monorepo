@@ -45,13 +45,10 @@ export const action = async (
     };
   } catch (error) {
     // Report the pre-toggle state so the optimistic UI can revert.
-    return {
-      enabled: !enabled,
-      errorMessage:
-        error instanceof Error
-          ? error.message
-          : 'Failed to update skill injection.',
-      repositoryId,
-    };
+    const fallbackMessage = 'Failed to update skill injection.';
+    const errorMessage =
+      error instanceof Error ? error.message : fallbackMessage;
+
+    return { enabled: !enabled, errorMessage, repositoryId };
   }
 };

@@ -6,12 +6,14 @@ import type { RolloutFlagFieldsFragment } from '~/__generated__/graphql';
  */
 
 /** Path to a flag's detail route. */
-export const rolloutFlagDetailPath = (id: string): string =>
-  `/settings/rollout/${id}`;
+export const rolloutFlagDetailPath = (id: string): string => {
+  return `/settings/rollout/${id}`;
+};
 
 /** Path to a flag's edit route. */
-export const rolloutFlagEditPath = (id: string): string =>
-  `/settings/rollout/${id}/edit`;
+export const rolloutFlagEditPath = (id: string): string => {
+  return `/settings/rollout/${id}/edit`;
+};
 
 /** Locale timestamp, falling back to the raw value when unparseable. */
 export const formatRolloutTimestamp = (value: string): string => {

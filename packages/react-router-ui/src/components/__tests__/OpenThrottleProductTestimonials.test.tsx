@@ -13,7 +13,9 @@ describe('OpenThrottleProductTestimonials Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <OpenThrottleProductTestimonials {...props} />;
+    const Component = () => {
+      return <OpenThrottleProductTestimonials {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

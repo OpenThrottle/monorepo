@@ -14,12 +14,13 @@ const HEADING_RE = /^(#{2,3})\s+(.*\S)\s*$/u;
 const FENCE_RE = /^(?:```|~~~)/u;
 
 /** Strip the inline Markdown that MDX would render away, leaving plain text. */
-const stripInlineMarkdown = (value: string): string =>
-  value
+const stripInlineMarkdown = (value: string): string => {
+  return value
     .replace(/`([^`]*)`/gu, '$1')
     .replace(/\[([^\]]+)\]\([^)]*\)/gu, '$1')
     .replace(/[*_~]/gu, '')
     .trim();
+};
 
 /**
  * Extract the h2/h3 heading outline from a Markdown source string, in document

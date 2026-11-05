@@ -69,10 +69,16 @@ export class QueuesResolver {
       const effectiveLimit = limit;
       const effectiveOffset = offset ?? DEFAULT_JOBS_OFFSET;
       const effectiveAsc = asc ?? false;
-      const effectiveStates =
-        states && states.length > 0
-          ? states
-          : ['waiting', 'active', 'completed', 'failed', 'delayed'];
+      let effectiveStates = [
+        'waiting',
+        'active',
+        'completed',
+        'failed',
+        'delayed',
+      ];
+      if (states && states.length > 0) {
+        effectiveStates = states;
+      }
 
       const result = await this.queuesService.getJobs(
         name,
@@ -98,10 +104,12 @@ export class QueuesResolver {
         job.returnvalue = dto.returnvalue;
         job.state = dto.state;
         job.timestamp = dto.timestamp;
-        job.taskRunMetrics =
-          name === PLANS_QUEUE_NAME
-            ? parseTaskRunMetricsFromReturnvalue(dto.returnvalue)
-            : null;
+        job.taskRunMetrics = null;
+        if (name === PLANS_QUEUE_NAME) {
+          job.taskRunMetrics = parseTaskRunMetricsFromReturnvalue(
+            dto.returnvalue,
+          );
+        }
         return job;
       });
       details.jobs = jobsResult;
@@ -139,10 +147,10 @@ export class QueuesResolver {
     job.returnvalue = dto.returnvalue;
     job.state = dto.state;
     job.timestamp = dto.timestamp;
-    job.taskRunMetrics =
-      queueName === PLANS_QUEUE_NAME
-        ? parseTaskRunMetricsFromReturnvalue(dto.returnvalue)
-        : null;
+    job.taskRunMetrics = null;
+    if (queueName === PLANS_QUEUE_NAME) {
+      job.taskRunMetrics = parseTaskRunMetricsFromReturnvalue(dto.returnvalue);
+    }
     return job;
   }
 
@@ -269,8 +277,7 @@ export class QueuesResolver {
    * schema change.
    */
   @Mutation(() => EnqueueDocIngestionResultObject, {
-    deprecationReason:
-      'Doc ingestion has been removed; this mutation always returns success: false.',
+    deprecationReason: `Doc ingestion has been removed; this mutation always returns success: false.`,
     description: `Deprecated no-op. Doc ingestion has been removed; always returns success: false with an error.`,
   })
   enqueueDocIngestion(

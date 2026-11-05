@@ -36,7 +36,9 @@ const row = (
   status: BlogPostStatus,
   publishedAt: string | null,
   tagSlugs: readonly string[] = [],
-): FakeRow => ({ id, publishedAt, slug: `slug-${id}`, status, tagSlugs });
+): FakeRow => {
+  return { id, publishedAt, slug: `slug-${id}`, status, tagSlugs };
+};
 
 /**
  * Evaluates one recorded WHERE clause against a row. Only the clauses the service is
@@ -76,8 +78,8 @@ const fakeQueryBuilder = (getRows: () => readonly FakeRow[]) => {
     conditions.push({ params, sql });
     return builder;
   };
-  const visible = () =>
-    [...getRows()]
+  const visible = () => {
+    return [...getRows()]
       .filter((candidate) =>
         conditions.every((condition) => matches(candidate, condition)),
       )
@@ -86,6 +88,7 @@ const fakeQueryBuilder = (getRows: () => readonly FakeRow[]) => {
           (b.publishedAt ?? '').localeCompare(a.publishedAt ?? '') ||
           b.id.localeCompare(a.id),
       );
+  };
   // Sub-queries are built on their own chain; their text is opaque to the fake.
   const subQueryBuilder = {
     andWhere: vi.fn().mockReturnThis(),

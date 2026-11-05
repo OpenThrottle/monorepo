@@ -1,4 +1,4 @@
-import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/data/types';
+import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/types';
 
 /** Search param that reveals registered worktrees the last scan could not find on disk. */
 export const SHOW_MISSING_PARAM = 'showMissing';
@@ -20,8 +20,8 @@ export const PRUNE_WORKTREE_CHECKOUTS_INTENT = 'pruneWorktreeCheckouts';
  */
 export const hideMissingRows = (
   rows: readonly RepositoryCheckoutRow[],
-): RepositoryCheckoutRow[] =>
-  rows.flatMap((row): RepositoryCheckoutRow[] => {
+): RepositoryCheckoutRow[] => {
+  return rows.flatMap((row): RepositoryCheckoutRow[] => {
     const children = (row.children ?? []).filter((child) => !child.missing);
 
     if (!row.missing) {
@@ -33,3 +33,4 @@ export const hideMissingRows = (
 
     return [{ ...promoted, children: rest.length > 0 ? rest : undefined }];
   });
+};

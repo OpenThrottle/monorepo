@@ -16,8 +16,9 @@ import { BLOG_COPY } from '~/routing/blog/data/data.copy';
  * (`?state=scheduled`). {@link parseBlogState} also accepts the upper-case enum
  * spelling, so `?state=SCHEDULED` keeps working.
  */
-export const toBlogStateParam = (state: BlogPostState): string =>
-  state.toLowerCase();
+export const toBlogStateParam = (state: BlogPostState): string => {
+  return state.toLowerCase();
+};
 
 /**
  * @description Resolves the active tab from the `state` param, falling back to

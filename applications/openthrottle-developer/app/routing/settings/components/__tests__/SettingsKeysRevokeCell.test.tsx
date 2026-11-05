@@ -12,18 +12,20 @@ import { SettingsKeysRevokeCell } from '../SettingsKeysRevokeCell';
 
 const credential = (
   overrides: Partial<ServiceAccountCredentialFieldsFragment> = {},
-): ServiceAccountCredentialFieldsFragment => ({
-  __typename: 'ServiceAccountCredentialObject',
-  createdAt: '2026-01-01T00:00:00.000Z',
-  expiresAt: null,
-  id: 'cred-1',
-  label: 'CI deploy',
-  lastUsedAt: null,
-  prefix: 'ot_sa_abc',
-  revokedAt: null,
-  serviceAccountId: 'sa-1',
-  ...overrides,
-});
+): ServiceAccountCredentialFieldsFragment => {
+  return {
+    __typename: 'ServiceAccountCredentialObject',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    expiresAt: null,
+    id: 'cred-1',
+    label: 'CI deploy',
+    lastUsedAt: null,
+    prefix: 'ot_sa_abc',
+    revokedAt: null,
+    serviceAccountId: 'sa-1',
+    ...overrides,
+  };
+};
 
 describe('SettingsKeysRevokeCell Component', () => {
   let component: RenderResult;
@@ -36,7 +38,9 @@ describe('SettingsKeysRevokeCell Component', () => {
   const renderCell = (
     action: () => Promise<unknown> = async () => ({ ok: true }),
   ): RenderResult => {
-    const Component = () => <SettingsKeysRevokeCell {...props} />;
+    const Component = () => {
+      return <SettingsKeysRevokeCell {...props} />;
+    };
     const RoutesStub = createRoutesStub([
       { Component, path: '/' },
       { action, path: '/settings/keys' },

@@ -10,8 +10,9 @@ import {
  */
 export const parseQueueJobsPagination = (
   requestUrl: string,
-): { limit: number; offset: number; page: number } =>
-  parsePagination(new URL(requestUrl).searchParams, {
+): { limit: number; offset: number; page: number } => {
+  return parsePagination(new URL(requestUrl).searchParams, {
     maxLimit: QUEUE_JOBS_LIMIT_MAX,
     minLimit: QUEUE_JOBS_LIMIT_MIN,
   });
+};

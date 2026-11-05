@@ -39,16 +39,18 @@ describe('NotificationItem Component', () => {
       onMarkRead: () => undefined,
     };
 
-    const Component = () => (
-      <DropdownMenu open={true}>
-        <DropdownMenuTrigger asChild={true}>
-          <button type="button">Open</button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          <NotificationItem {...props} />
-        </DropdownMenuContent>
-      </DropdownMenu>
-    );
+    const Component = () => {
+      return (
+        <DropdownMenu open={true}>
+          <DropdownMenuTrigger asChild={true}>
+            <button type="button">Open</button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <NotificationItem {...props} />
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     render(<RoutesStub />);

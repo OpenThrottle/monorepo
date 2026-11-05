@@ -8,7 +8,7 @@ import {
   jobRunHookDraftRowsAtom,
   workflowBranchAtom,
   workflowCheckoutIdAtom,
-} from '~/routing/plans/data/atom.plan';
+} from '~/routing/plans/data/data.atom-plan';
 import { getDefaultWorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import { serializePlanRunConfigUiState } from '~/routing/plans/utils/plan-run-config-ui';
 

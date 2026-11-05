@@ -13,7 +13,7 @@
  * and the source badge switch on.
  */
 
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 
 export const SKILL_SOURCE_KINDS = [
   'external',
@@ -29,8 +29,9 @@ export type SkillSourceFilter = (typeof SKILL_SOURCE_FILTERS)[number];
 
 export const isSkillSourceFilter = (
   value: string,
-): value is SkillSourceFilter =>
-  SKILL_SOURCE_FILTERS.some((filter) => filter === value);
+): value is SkillSourceFilter => {
+  return SKILL_SOURCE_FILTERS.some((filter) => filter === value);
+};
 
 /**
  * @description Coerce a raw `?source=` value into a filter token. Missing,
@@ -41,8 +42,9 @@ export const isSkillSourceFilter = (
  */
 export const parseSkillSourceFilter = (
   value: null | string | undefined,
-): SkillSourceFilter =>
-  value != null && isSkillSourceFilter(value) ? value : 'all';
+): SkillSourceFilter => {
+  return value != null && isSkillSourceFilter(value) ? value : 'all';
+};
 
 /**
  * @description Three-way provenance for display and filtering. Personal

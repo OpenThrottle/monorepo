@@ -5,7 +5,7 @@ import { Link } from 'react-router';
 
 import type { DashboardQueueStatsCardFragment } from '~/__generated__/graphql';
 import { QueueHealthPill } from '~/routing/queues/components/QueueHealthPill';
-import { QUEUE_HEALTH_RANK } from '~/routing/queues/data/queue-health-display';
+import { QUEUE_HEALTH_RANK } from '~/routing/queues/data/data.queue-health-display';
 import { computeQueueHealth } from '~/routing/queues/utils/queue-health';
 
 const TOP_QUEUES = 6;
@@ -58,6 +58,43 @@ export const DashboardQueueHealthCard = (
   // Handlers
 
   // Markup
+  const emptyMarkup = (
+    <p className="text-muted-foreground py-4 text-center text-sm">
+      No queues registered yet.
+    </p>
+  );
+  const listMarkup = (
+    <ul className="divide-border divide-y">
+      {ranked.map(({ health, queue }) => (
+        <li
+          className="flex items-center justify-between gap-2 py-2"
+          key={queue.name}
+        >
+          <Link
+            className="hover:text-primary min-w-0 flex-1 truncate text-sm font-medium underline-offset-2 hover:underline"
+            to={`/queues/${encodeURIComponent(queue.name)}`}
+            viewTransition={true}
+          >
+            {queue.name}
+          </Link>
+          <span
+            className="text-muted-foreground shrink-0 text-xs tabular-nums"
+            title={`${queue.failedCount} failed, ${health.backlog} in backlog`}
+          >
+            {queue.failedCount} failed · {health.backlog} backlog
+          </span>
+          <QueueHealthPill
+            activeCount={queue.activeCount}
+            className="shrink-0"
+            delayedCount={queue.delayedCount}
+            failedCount={queue.failedCount}
+            showLabel={false}
+            waitingCount={queue.waitingCount}
+          />
+        </li>
+      ))}
+    </ul>
+  );
 
   // Life Cycle
 
@@ -77,42 +114,7 @@ export const DashboardQueueHealthCard = (
         </Button>
       </div>
 
-      {isEmpty ? (
-        <p className="text-muted-foreground py-4 text-center text-sm">
-          No queues registered yet.
-        </p>
-      ) : (
-        <ul className="divide-border divide-y">
-          {ranked.map(({ health, queue }) => (
-            <li
-              className="flex items-center justify-between gap-2 py-2"
-              key={queue.name}
-            >
-              <Link
-                className="hover:text-primary min-w-0 flex-1 truncate text-sm font-medium underline-offset-2 hover:underline"
-                to={`/queues/${encodeURIComponent(queue.name)}`}
-                viewTransition={true}
-              >
-                {queue.name}
-              </Link>
-              <span
-                className="text-muted-foreground shrink-0 text-xs tabular-nums"
-                title={`${queue.failedCount} failed, ${health.backlog} in backlog`}
-              >
-                {queue.failedCount} failed · {health.backlog} backlog
-              </span>
-              <QueueHealthPill
-                activeCount={queue.activeCount}
-                className="shrink-0"
-                delayedCount={queue.delayedCount}
-                failedCount={queue.failedCount}
-                showLabel={false}
-                waitingCount={queue.waitingCount}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
+      {isEmpty ? emptyMarkup : listMarkup}
     </Card>
   );
 };

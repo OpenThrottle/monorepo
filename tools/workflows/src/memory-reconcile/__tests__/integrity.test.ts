@@ -7,14 +7,15 @@ const run = (input: {
   fileContents?: ReadonlyMap<string, string>;
   files: readonly string[];
   indexContent: string;
-}) =>
-  checkIndexIntegrity({
+}) => {
+  return checkIndexIntegrity({
     archives: input.archives ?? new Map(),
     fileContents: input.fileContents ?? new Map(),
     files: input.files,
     indexContent: input.indexContent,
     indexName: 'MEMORY.md',
   });
+};
 
 describe('checkIndexIntegrity', () => {
   it('is clean when every file is linked and every link resolves', () => {
@@ -141,8 +142,7 @@ describe('checkIndexIntegrity', () => {
   it('ignores URLs and paths outside the memory directory', () => {
     const report = run({
       files: ['MEMORY.md'],
-      indexContent:
-        '- [Doc](https://example.com/a.md) — x\n- [Repo](../docs/b.md) — y\n',
+      indexContent: `- [Doc](https://example.com/a.md) — x\n- [Repo](../docs/b.md) — y\n`,
     });
 
     expect(report.brokenLinks).toEqual([]);

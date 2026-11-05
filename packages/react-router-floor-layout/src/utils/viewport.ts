@@ -133,19 +133,15 @@ export function zoomViewBoxAt(
 export function fitViewBox(floor: Size, viewport: Size, padding = 0): ViewBox {
   const contentWidth = floor.width + padding * 2;
   const contentHeight = floor.height + padding * 2;
-  const viewportAspect =
-    viewport.width > 0 && viewport.height > 0
-      ? viewport.width / viewport.height
-      : contentWidth / contentHeight;
   const contentAspect = contentWidth / contentHeight;
-  const width =
-    contentAspect > viewportAspect
-      ? contentWidth
-      : contentHeight * viewportAspect;
-  const height =
-    contentAspect > viewportAspect
-      ? contentWidth / viewportAspect
-      : contentHeight;
+  const hasViewport = viewport.width > 0 && viewport.height > 0;
+  const measuredAspect = viewport.width / viewport.height;
+  const viewportAspect = hasViewport ? measuredAspect : contentAspect;
+  const isWiderThanViewport = contentAspect > viewportAspect;
+  const fittedWidth = contentHeight * viewportAspect;
+  const fittedHeight = contentWidth / viewportAspect;
+  const width = isWiderThanViewport ? contentWidth : fittedWidth;
+  const height = isWiderThanViewport ? fittedHeight : contentHeight;
   const centerX = floor.width / 2;
   const centerY = floor.height / 2;
   return {

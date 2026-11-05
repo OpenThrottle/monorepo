@@ -89,6 +89,50 @@ export const RunDetail = (props: RunDetailProps): React.ReactElement => {
   // Handlers
 
   // Markup
+  const usageList = (
+    <dl className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4">
+      {usageRows.map((row) => (
+        <div className="flex flex-col gap-0.5" key={row.label}>
+          <dt className="text-muted-foreground text-xs">{row.label}</dt>
+          <dd className="text-sm tabular-nums">{row.value}</dd>
+        </div>
+      ))}
+      <div className="flex flex-col gap-0.5">
+        <dt className="text-muted-foreground text-xs">
+          {RUN_DETAIL_COPY.usage.cost}
+        </dt>
+        <dd className="text-sm tabular-nums">{formatRunCost(run)}</dd>
+      </div>
+    </dl>
+  );
+  const noUsage = (
+    <p className="text-muted-foreground text-sm">
+      {RUN_DETAIL_COPY.usage.empty}
+    </p>
+  );
+  const snapshotBlock = (
+    <pre className="bg-muted overflow-x-auto rounded-md p-3 font-mono text-xs">
+      {snapshot}
+    </pre>
+  );
+  const noSnapshot = (
+    <p className="text-muted-foreground text-sm">
+      {RUN_DETAIL_COPY.settings.empty}
+    </p>
+  );
+  const cancelNotice = (
+    <p className="text-muted-foreground mt-4 text-xs" role="status">
+      Cancellation requested {formatWhen(run.cancelRequestedAt)}.
+    </p>
+  );
+  const errorBlock = (
+    <div className="mt-4">
+      <p className="text-muted-foreground mb-1 text-xs">{fields.error}</p>
+      <pre className="bg-muted text-destructive overflow-x-auto rounded-md p-3 text-sm whitespace-pre-wrap">
+        {run.errorMessage}
+      </pre>
+    </div>
+  );
 
   // Life Cycle
 
@@ -97,19 +141,23 @@ export const RunDetail = (props: RunDetailProps): React.ReactElement => {
   return (
     <section className="bg-card rounded-md border p-4" data-testid="RunDetail">
       <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-        {rows.map((row) => (
-          <div className="flex flex-col gap-0.5" key={row.label}>
-            <dt className="text-muted-foreground text-xs">{row.label}</dt>
-            <dd className={row.mono ? 'font-mono text-sm' : 'text-sm'}>
-              {row.value}
+        {rows.map((row) => {
+          const hintLine = (
+            <dd className="text-muted-foreground font-mono text-xs break-all">
+              {row.hint}
             </dd>
-            {row.hint ? (
-              <dd className="text-muted-foreground font-mono text-xs break-all">
-                {row.hint}
+          );
+
+          return (
+            <div className="flex flex-col gap-0.5" key={row.label}>
+              <dt className="text-muted-foreground text-xs">{row.label}</dt>
+              <dd className={row.mono ? 'font-mono text-sm' : 'text-sm'}>
+                {row.value}
               </dd>
-            ) : null}
-          </div>
-        ))}
+              {row.hint ? hintLine : null}
+            </div>
+          );
+        })}
       </dl>
 
       <p className="text-muted-foreground mt-2 text-xs">
@@ -120,57 +168,19 @@ export const RunDetail = (props: RunDetailProps): React.ReactElement => {
         <p className="text-muted-foreground mb-1 text-xs">
           {RUN_DETAIL_COPY.usage.heading}
         </p>
-        {showUsage ? (
-          <dl className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4">
-            {usageRows.map((row) => (
-              <div className="flex flex-col gap-0.5" key={row.label}>
-                <dt className="text-muted-foreground text-xs">{row.label}</dt>
-                <dd className="text-sm tabular-nums">{row.value}</dd>
-              </div>
-            ))}
-            <div className="flex flex-col gap-0.5">
-              <dt className="text-muted-foreground text-xs">
-                {RUN_DETAIL_COPY.usage.cost}
-              </dt>
-              <dd className="text-sm tabular-nums">{formatRunCost(run)}</dd>
-            </div>
-          </dl>
-        ) : (
-          <p className="text-muted-foreground text-sm">
-            {RUN_DETAIL_COPY.usage.empty}
-          </p>
-        )}
+        {showUsage ? usageList : noUsage}
       </div>
 
       <div className="mt-4">
         <p className="text-muted-foreground mb-1 text-xs">
           {RUN_DETAIL_COPY.settings.heading}
         </p>
-        {snapshot ? (
-          <pre className="bg-muted overflow-x-auto rounded-md p-3 font-mono text-xs">
-            {snapshot}
-          </pre>
-        ) : (
-          <p className="text-muted-foreground text-sm">
-            {RUN_DETAIL_COPY.settings.empty}
-          </p>
-        )}
+        {snapshot ? snapshotBlock : noSnapshot}
       </div>
 
-      {run.cancelRequestedAt ? (
-        <p className="text-muted-foreground mt-4 text-xs" role="status">
-          Cancellation requested {formatWhen(run.cancelRequestedAt)}.
-        </p>
-      ) : null}
+      {run.cancelRequestedAt ? cancelNotice : null}
 
-      {run.errorMessage ? (
-        <div className="mt-4">
-          <p className="text-muted-foreground mb-1 text-xs">{fields.error}</p>
-          <pre className="bg-muted text-destructive overflow-x-auto rounded-md p-3 text-sm whitespace-pre-wrap">
-            {run.errorMessage}
-          </pre>
-        </div>
-      ) : null}
+      {run.errorMessage ? errorBlock : null}
     </section>
   );
 };

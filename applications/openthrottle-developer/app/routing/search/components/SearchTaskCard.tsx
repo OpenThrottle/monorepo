@@ -32,19 +32,48 @@ export const SearchTaskCard = (
   const hasPlanLink = result.planId != null && result.planId !== '';
   const hasTaskLink =
     hasPlanLink && result.taskId != null && result.taskId !== '';
+  const hasSimilarity = result.similarity != null;
+  const similarityPercent = Math.round((result.similarity ?? 0) * 100);
 
   // Handlers
 
   // Markup
-  const similarityBlock =
-    result.similarity != null ? (
-      <p
-        className="text-muted-foreground text-xs"
-        data-testid="SearchTaskCard-similarity"
+  const similarityText = (
+    <p
+      className="text-muted-foreground text-xs"
+      data-testid="SearchTaskCard-similarity"
+    >
+      Relevance: {similarityPercent}%
+    </p>
+  );
+  const planLink = (
+    <Link
+      className="underline-offset-4 hover:underline"
+      data-testid="SearchTaskCard-planLink"
+      prefetch="intent"
+      to={`/plans/${result.planId}`}
+    >
+      {result.planTitle ?? 'Plan'}
+    </Link>
+  );
+  const planAndTaskLinks = (
+    <>
+      {planLink}
+      {' · '}
+      <Link
+        className="underline-offset-4 hover:underline"
+        data-testid="SearchTaskCard-taskLink"
+        to={planOrTaskDetailHref(result.planId!, result.taskId)}
       >
-        Relevance: {Math.round(result.similarity * 100)}%
-      </p>
-    ) : null;
+        View task
+      </Link>
+    </>
+  );
+  const links = (
+    <span className="text-muted-foreground text-sm font-normal">
+      {hasTaskLink ? planAndTaskLinks : planLink}
+    </span>
+  );
 
   // Life Cycle
 
@@ -68,45 +97,13 @@ export const SearchTaskCard = (
           </Badge>
         </div>
         <span className={titleClass}>{result.taskTitle ?? 'Task'}</span>
-        {hasPlanLink && (
-          <span className="text-muted-foreground text-sm font-normal">
-            {hasTaskLink ? (
-              <>
-                <Link
-                  className="underline-offset-4 hover:underline"
-                  data-testid="SearchTaskCard-planLink"
-                  prefetch="intent"
-                  to={`/plans/${result.planId}`}
-                >
-                  {result.planTitle ?? 'Plan'}
-                </Link>
-                {' · '}
-                <Link
-                  className="underline-offset-4 hover:underline"
-                  data-testid="SearchTaskCard-taskLink"
-                  to={planOrTaskDetailHref(result.planId!, result.taskId)}
-                >
-                  View task
-                </Link>
-              </>
-            ) : (
-              <Link
-                className="underline-offset-4 hover:underline"
-                data-testid="SearchTaskCard-planLink"
-                prefetch="intent"
-                to={`/plans/${result.planId}`}
-              >
-                {result.planTitle ?? 'Plan'}
-              </Link>
-            )}
-          </span>
-        )}
+        {hasPlanLink ? links : null}
       </CardHeader>
       <CardContent className="space-y-3 pt-4">
         <p className="text-muted-foreground text-sm leading-relaxed">
           {result.content}
         </p>
-        {similarityBlock}
+        {hasSimilarity ? similarityText : null}
         <SearchWhyThisResult
           defaultOpen={defaultOpenWhy}
           rankMeta={rankMeta}

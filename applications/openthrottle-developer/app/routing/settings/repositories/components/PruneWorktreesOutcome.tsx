@@ -3,7 +3,7 @@ import * as React from 'react';
 
 import { PruneWorktreeCheckoutOutcome } from '~/__generated__/graphql';
 import { MISSING_WORKTREES_COPY } from '~/routing/settings/repositories/data/data.copy';
-import type { PruneWorktreeCheckoutResult } from '~/routing/settings/repositories/data/types';
+import type { PruneWorktreeCheckoutResult } from '~/routing/settings/repositories/types';
 
 export interface PruneWorktreesOutcomeProps {
   className?: string;
@@ -27,21 +27,37 @@ export const PruneWorktreesOutcome = (
   const prunedCount = results.filter(
     (result) => result.outcome === PruneWorktreeCheckoutOutcome.Pruned,
   ).length;
-  const kept = results.flatMap((result) =>
-    result.outcome === PruneWorktreeCheckoutOutcome.Pruned
-      ? []
-      : [
-          {
-            id: result.checkoutId,
-            label: result.path ?? result.checkoutId,
-            reason: MISSING_WORKTREES_COPY.outcomeReasons[result.outcome],
-          },
-        ],
-  );
+  const kept = results.flatMap((result) => {
+    if (result.outcome === PruneWorktreeCheckoutOutcome.Pruned) {
+      return [];
+    }
+
+    return [
+      {
+        id: result.checkoutId,
+        label: result.path ?? result.checkoutId,
+        reason: MISSING_WORKTREES_COPY.outcomeReasons[result.outcome],
+      },
+    ];
+  });
 
   // Handlers
 
   // Markup
+  const keptList = (
+    <>
+      <p className="text-muted-foreground mt-1">
+        {MISSING_WORKTREES_COPY.outcomeSkipped(kept.length)}
+      </p>
+      <ul className="text-muted-foreground mt-1 list-disc space-y-0.5 pl-5 text-xs">
+        {kept.map((entry) => (
+          <li key={entry.id}>
+            <code className="break-all">{entry.label}</code> {entry.reason}
+          </li>
+        ))}
+      </ul>
+    </>
+  );
 
   // Life Cycle
 
@@ -54,20 +70,7 @@ export const PruneWorktreesOutcome = (
       role="status"
     >
       <p>{MISSING_WORKTREES_COPY.outcomeRemoved(prunedCount)}</p>
-      {kept.length > 0 ? (
-        <>
-          <p className="text-muted-foreground mt-1">
-            {MISSING_WORKTREES_COPY.outcomeSkipped(kept.length)}
-          </p>
-          <ul className="text-muted-foreground mt-1 list-disc space-y-0.5 pl-5 text-xs">
-            {kept.map((entry) => (
-              <li key={entry.id}>
-                <code className="break-all">{entry.label}</code> {entry.reason}
-              </li>
-            ))}
-          </ul>
-        </>
-      ) : null}
+      {kept.length > 0 ? keptList : null}
     </div>
   );
 };

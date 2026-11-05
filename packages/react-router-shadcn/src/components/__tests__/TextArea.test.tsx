@@ -14,7 +14,9 @@ describe('TextArea Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <TextArea {...props} />;
+    const Component = () => {
+      return <TextArea {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

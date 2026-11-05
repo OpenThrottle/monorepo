@@ -192,30 +192,32 @@ describe('serializePlanRunConfigForGraphql', () => {
 });
 
 describe('planRunConfig round-trip', () => {
-  const fullUi = (): PlanWorkflowUiState => ({
-    checkoutId: '11111111-1111-4111-8111-111111111111',
-    iterationTimeoutText: '120',
-    repositoryId: '22222222-2222-4222-8222-222222222222',
-    workflowInput: {
-      debugCli: 'debug',
-      effort: 'max',
-      executionBackend: 'claude',
-      iterations: 7,
-      model: 'fast',
-      planId,
-      project: 'openthrottle-workflows',
-      prompt: '/custom',
-      promptFile: '',
-      promptLayer: 'named',
-      skipWorktreeSetup: false,
-      targetMode: 'plan',
-      taskId: '',
-      worktreeBase: '',
-      worktreeCli: 'named',
-      worktreeName: 'my-worktree',
-    },
-    workingDirectory: '/Users/matt/Development/other-repo',
-  });
+  const fullUi = (): PlanWorkflowUiState => {
+    return {
+      checkoutId: '11111111-1111-4111-8111-111111111111',
+      iterationTimeoutText: '120',
+      repositoryId: '22222222-2222-4222-8222-222222222222',
+      workflowInput: {
+        debugCli: 'debug',
+        effort: 'max',
+        executionBackend: 'claude',
+        iterations: 7,
+        model: 'fast',
+        planId,
+        project: 'openthrottle-workflows',
+        prompt: '/custom',
+        promptFile: '',
+        promptLayer: 'named',
+        skipWorktreeSetup: false,
+        targetMode: 'plan',
+        taskId: '',
+        worktreeBase: '',
+        worktreeCli: 'named',
+        worktreeName: 'my-worktree',
+      },
+      workingDirectory: '/Users/matt/Development/other-repo',
+    };
+  };
 
   it('round-trips UI state without loss', () => {
     const ui = fullUi();
@@ -369,20 +371,22 @@ describe('programmatic run defaults', () => {
 describe('back-compat for plans stored under the old defaults', () => {
   const storedRalph = (
     overrides: Record<string, unknown> = {},
-  ): Record<string, unknown> => ({
-    executionBackend: 'cursor',
-    iterationTimeoutText: '',
-    iterations: 10,
-    model: 'auto',
-    project: '',
-    prompt: '/agents-ralph',
-    promptFile: '',
-    promptLayer: 'named',
-    skipWorktreeSetup: false,
-    worktreeBase: '',
-    worktreeName: '',
-    ...overrides,
-  });
+  ): Record<string, unknown> => {
+    return {
+      executionBackend: 'cursor',
+      iterationTimeoutText: '',
+      iterations: 10,
+      model: 'auto',
+      project: '',
+      prompt: '/agents-ralph',
+      promptFile: '',
+      promptLayer: 'named',
+      skipWorktreeSetup: false,
+      worktreeBase: '',
+      worktreeName: '',
+      ...overrides,
+    };
+  };
 
   it('resolves ABSENT worktree/debug keys to the new defaults', () => {
     const parsed = parsePlanRunConfigStorage({
@@ -444,30 +448,34 @@ describe('buildRalphPlanRunTuningFromPlanRunConfig', () => {
   });
 });
 
-const fullUiForTuning = (): PlanWorkflowUiState => ({
-  iterationTimeoutText: '120',
-  workflowInput: {
-    debugCli: 'debug',
-    effort: 'high',
-    executionBackend: 'claude',
-    iterations: 7,
-    model: 'fast',
-    planId,
-    project: 'openthrottle-workflows',
-    prompt: '/custom',
-    promptFile: '',
-    promptLayer: 'named',
-    skipWorktreeSetup: false,
-    targetMode: 'plan',
-    taskId: '',
-    worktreeBase: '',
-    worktreeCli: 'named',
-    worktreeName: 'my-worktree',
-  },
-  workingDirectory: '',
-});
+const fullUiForTuning = (): PlanWorkflowUiState => {
+  return {
+    iterationTimeoutText: '120',
+    workflowInput: {
+      debugCli: 'debug',
+      effort: 'high',
+      executionBackend: 'claude',
+      iterations: 7,
+      model: 'fast',
+      planId,
+      project: 'openthrottle-workflows',
+      prompt: '/custom',
+      promptFile: '',
+      promptLayer: 'named',
+      skipWorktreeSetup: false,
+      targetMode: 'plan',
+      taskId: '',
+      worktreeBase: '',
+      worktreeCli: 'named',
+      worktreeName: 'my-worktree',
+    },
+    workingDirectory: '',
+  };
+};
 
-const fullUiForCompare = (): PlanWorkflowUiState => fullUiForTuning();
+const fullUiForCompare = (): PlanWorkflowUiState => {
+  return fullUiForTuning();
+};
 
 describe('ralph.effort', () => {
   it('is accepted, trimmed and kept by the storage schema', () => {

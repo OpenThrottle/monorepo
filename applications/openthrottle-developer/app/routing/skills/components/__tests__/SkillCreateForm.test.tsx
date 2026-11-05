@@ -31,33 +31,37 @@ vi.mock('@openthrottle/react-router-editor', () => ({
 
 const buildForm = (
   overrides: Partial<UseSkillCreateFormResult> = {},
-): UseSkillCreateFormResult => ({
-  canSubmit: true,
-  content: '---\nname: my-new-skill\n---\n',
-  description: 'Does a thing.',
-  destination: SKILL_CREATE_DESTINATIONS.personal,
-  editorPath: 'my-new-skill/SKILL.md',
-  error: undefined,
-  handleEditorChange: vi.fn(),
-  handleSubmit: vi.fn(),
-  isDocumentDirty: false,
-  isSubmitting: false,
-  setDescription: vi.fn(),
-  setDestination: vi.fn(),
-  setSlug: vi.fn(),
-  setTags: vi.fn(),
-  slug: 'my-new-skill',
-  slugError: undefined,
-  tags: '',
-  ...overrides,
-});
+): UseSkillCreateFormResult => {
+  return {
+    canSubmit: true,
+    content: '---\nname: my-new-skill\n---\n',
+    description: 'Does a thing.',
+    destination: SKILL_CREATE_DESTINATIONS.personal,
+    editorPath: 'my-new-skill/SKILL.md',
+    error: undefined,
+    handleEditorChange: vi.fn(),
+    handleSubmit: vi.fn(),
+    isDocumentDirty: false,
+    isSubmitting: false,
+    setDescription: vi.fn(),
+    setDestination: vi.fn(),
+    setSlug: vi.fn(),
+    setTags: vi.fn(),
+    slug: 'my-new-skill',
+    slugError: undefined,
+    tags: '',
+    ...overrides,
+  };
+};
 
 const renderForm = (
   form: UseSkillCreateFormResult = buildForm(),
   error?: string,
 ): RenderResult => {
   // eslint-disable-next-line react/no-multi-comp -- test-local harness component
-  const Component = () => <SkillCreateForm error={error} form={form} />;
+  const Component = () => {
+    return <SkillCreateForm error={error} form={form} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

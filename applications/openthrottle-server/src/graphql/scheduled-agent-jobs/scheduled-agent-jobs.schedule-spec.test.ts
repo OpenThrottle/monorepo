@@ -11,14 +11,15 @@ const NOW = new Date('2026-11-01T12:00:00Z');
 
 const existingJob = (
   overrides: Partial<ScheduledAgentJob>,
-): ScheduledAgentJob =>
-  createMock<ScheduledAgentJob>({
+): ScheduledAgentJob => {
+  return createMock<ScheduledAgentJob>({
     cronPattern: null,
     intervalMs: null,
     runAt: null,
     scheduleKind: 'cron',
     ...overrides,
   });
+};
 
 describe('parseRunAtWithOffset', () => {
   it('accepts a Z instant and a numeric offset', () => {

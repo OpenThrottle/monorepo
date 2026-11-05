@@ -19,13 +19,11 @@ registerEnumType(WorktreeActivityEnum, {
   name: 'WorktreeActivity',
   valuesMap: {
     DIRTY: {
-      description:
-        'No live run, but there is uncommitted work or commits ahead of the upstream.',
+      description: `No live run, but there is uncommitted work or commits ahead of the upstream.`,
     },
     IDLE: { description: 'Clean, with nothing running.' },
     RUNNING: {
-      description:
-        'A live IN_PROGRESS plan run is executing here — live meaning its heartbeat is inside the staleness cutoff. A stale IN_PROGRESS run is dead and does NOT read as running.',
+      description: `A live IN_PROGRESS plan run is executing here — live meaning its heartbeat is inside the staleness cutoff. A stale IN_PROGRESS run is dead and does NOT read as running.`,
     },
   },
 });
@@ -44,16 +42,13 @@ registerEnumType(WorktreeRootSourceEnum, {
   name: 'WorktreeRootSource',
   valuesMap: {
     CHECKOUT_ENV: {
-      description:
-        'OPENTHROTTLE_WORKTREE_ROOT in the target repo’s .env file — how a repo customizes where its worktrees go.',
+      description: `OPENTHROTTLE_WORKTREE_ROOT in the target repo’s .env file — how a repo customizes where its worktrees go.`,
     },
     DEFAULT: {
-      description:
-        'The default: ~/.openthrottle/worktrees, the hidden root OpenThrottle owns. OT appends <org>/<repo> beneath it, taken from the checkout’s git remote.',
+      description: `The default: ~/.openthrottle/worktrees, the hidden root OpenThrottle owns. OT appends <org>/<repo> beneath it, taken from the checkout’s git remote.`,
     },
     ENV: {
-      description:
-        "OPENTHROTTLE_WORKTREE_ROOT in the server process's environment.",
+      description: `OPENTHROTTLE_WORKTREE_ROOT in the server process's environment.`,
     },
   },
 });
@@ -76,32 +71,25 @@ registerEnumType(WorktreeDiscoveryProblemKindEnum, {
   name: 'WorktreeDiscoveryProblemKind',
   valuesMap: {
     CAP_EXCEEDED: {
-      description:
-        'More worktrees exist than the hard cap; the overflow is counted in droppedCount and not listed.',
+      description: `More worktrees exist than the hard cap; the overflow is counted in droppedCount and not listed.`,
     },
     CHECKOUT_LIST_FAILED: {
-      description:
-        'The registered checkouts could not be listed, so the scan had nothing to scan from. The whole result is empty.',
+      description: `The registered checkouts could not be listed, so the scan had nothing to scan from. The whole result is empty.`,
     },
     NOT_A_GIT_REPO: {
-      description:
-        'A registered folder is not a git checkout at all. Carries repositoryId — belongs on that repository’s row, not on the page.',
+      description: `A registered folder is not a git checkout at all. Carries repositoryId — belongs on that repository’s row, not on the page.`,
     },
     ORPHAN_DIRECTORY: {
-      description:
-        'A directory in a worktree root with no .git at all — the husk a removed worktree leaves behind. Not a worktree and never probed; nothing deletes it automatically.',
+      description: `A directory in a worktree root with no .git at all — the husk a removed worktree leaves behind. Not a worktree and never probed; nothing deletes it automatically.`,
     },
     PROBE_FAILED: {
-      description:
-        'A read-only git probe against a directory that does exist failed. The genuinely degraded case: worktrees may be missing from the list.',
+      description: `A read-only git probe against a directory that does exist failed. The genuinely degraded case: worktrees may be missing from the list.`,
     },
     ROOT_UNREADABLE: {
-      description:
-        'A worktree root exists but could not be read (EACCES and friends). A root that simply does not exist is NOT this — that is a repository with no worktrees yet, and is silent.',
+      description: `A worktree root exists but could not be read (EACCES and friends). A root that simply does not exist is NOT this — that is a repository with no worktrees yet, and is silent.`,
     },
     STALE_WORKTREE_ENTRY: {
-      description:
-        'git still reports a worktree whose directory is gone. Actionable exactly once, with `git worktree prune`; the path is never probed.',
+      description: `git still reports a worktree whose directory is gone. Actionable exactly once, with \`git worktree prune\`; the path is never probed.`,
     },
   },
 });
@@ -119,8 +107,7 @@ registerEnumType(MissingWorktreeCheckoutReasonEnum, {
   name: 'MissingWorktreeCheckoutReason',
   valuesMap: {
     NOT_A_WORKTREE: {
-      description:
-        'Something exists at the path, but it is not a linked worktree — a husk directory with no .git, or a real clone.',
+      description: `Something exists at the path, but it is not a linked worktree — a husk directory with no .git, or a real clone.`,
     },
     PATH_GONE: { description: 'Nothing exists at the path any more.' },
   },

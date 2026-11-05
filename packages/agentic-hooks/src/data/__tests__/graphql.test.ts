@@ -7,12 +7,12 @@ import { describe, expect, it } from 'vitest';
 import type { HookFetch } from '../../index.ts';
 import { isPermanentHttpStatus, postGraphqlMutation } from '../../index.ts';
 
-const respond =
-  (status: number, payload: unknown): HookFetch =>
-  async () => ({ json: async () => payload, ok: status < 400, status });
+const respond = (status: number, payload: unknown): HookFetch => {
+  return async () => ({ json: async () => payload, ok: status < 400, status });
+};
 
-const post = (fetchImpl: HookFetch) =>
-  postGraphqlMutation({
+const post = (fetchImpl: HookFetch) => {
+  return postGraphqlMutation({
     authToken: 'tok',
     fetchImpl,
     field: 'recordThing',
@@ -21,11 +21,14 @@ const post = (fetchImpl: HookFetch) =>
     timeoutMs: 200,
     variables: {},
   });
+};
 
-const graphqlError = (extensions: Record<string, unknown>) => ({
-  data: null,
-  errors: [{ extensions, message: 'nope' }],
-});
+const graphqlError = (extensions: Record<string, unknown>) => {
+  return {
+    data: null,
+    errors: [{ extensions, message: 'nope' }],
+  };
+};
 
 describe('postGraphqlMutation', () => {
   it('returns the id on success', async () => {

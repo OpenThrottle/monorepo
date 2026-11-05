@@ -37,17 +37,15 @@ export const PlanWorkflowRunHistoryRowActions = (
   };
 
   // Markup
-  const openJob: GlobalPopoverAction[] =
-    bullmqJobId === null
-      ? []
-      : [
-          {
-            id: 'openJob',
-            kind: 'link',
-            label: copy.openJob,
-            to: planRunJobDetailPath(bullmqJobId),
-          },
-        ];
+  const openJob: GlobalPopoverAction[] = [];
+  if (bullmqJobId !== null) {
+    openJob.push({
+      id: 'openJob',
+      kind: 'link',
+      label: copy.openJob,
+      to: planRunJobDetailPath(bullmqJobId),
+    });
+  }
   const actions: GlobalPopoverAction[] = [
     ...openJob,
     {

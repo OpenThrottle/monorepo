@@ -1,6 +1,10 @@
 import * as React from 'react';
 
 import { DEFAULT_GLOBAL_ANIMATION_MESH } from '../config/global-animation-mesh';
+import {
+  createResizeObserver,
+  createVisibilityObserver,
+} from '../utils/create-canvas-observers';
 import { smoothstep } from '../utils/smoothstep';
 
 interface MeshPoint {
@@ -386,30 +390,11 @@ export const useGlobalAnimationMesh = <
     // Draw an immediate first frame so there's no flash before rAF kicks in.
     draw(0);
 
-    const resizeObserver =
-      typeof ResizeObserver === 'function'
-        ? new ResizeObserver(() => {
-            build();
-          })
-        : null;
+    const resizeObserver = createResizeObserver(build);
 
     resizeObserver?.observe(canvas);
 
-    const intersectionObserver =
-      typeof IntersectionObserver === 'function'
-        ? new IntersectionObserver(
-            (entries) => {
-              for (const entry of entries) {
-                if (entry.isIntersecting) {
-                  start();
-                } else {
-                  stop();
-                }
-              }
-            },
-            { threshold: 0 },
-          )
-        : null;
+    const intersectionObserver = createVisibilityObserver(start, stop);
 
     if (intersectionObserver) {
       intersectionObserver.observe(canvas);

@@ -5,8 +5,8 @@
 import * as React from 'react';
 
 import { getMetricsApiBaseUrl } from '../config/metrics-api';
-import { fetchServerMetrics } from '../data/fetch-server-metrics';
-import type { ProcessMetricsSnapshot } from '../data/metrics-types';
+import type { ProcessMetricsSnapshot } from '../types';
+import { fetchServerMetrics } from '../utils/fetch-server-metrics';
 
 export interface UseServerMetricsResult {
   readonly error: Error | null;

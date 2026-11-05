@@ -43,6 +43,7 @@ export const defaultsFromCatalog = <TCatalog extends RolloutFlagCatalog>(
  */
 export const freezeResolvedValues = <TCatalog extends RolloutFlagCatalog>(
   values: MutableResolvedValues,
-): RolloutResolvedValues<TCatalog> =>
+): RolloutResolvedValues<TCatalog> => {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- Object.entries loses key→value generics
-  values as RolloutResolvedValues<TCatalog>;
+  return values as RolloutResolvedValues<TCatalog>;
+};

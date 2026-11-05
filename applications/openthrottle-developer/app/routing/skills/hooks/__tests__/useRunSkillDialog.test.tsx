@@ -7,7 +7,7 @@ import { act, renderHook } from '@testing-library/react';
 import { getDefaultStore } from 'jotai';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import type { RepositoryOption } from '~/routing/home/data/models.server';
+import type { RepositoryOption } from '~/routing/home/utils/models.server';
 
 import {
   useRunSkillDialog,

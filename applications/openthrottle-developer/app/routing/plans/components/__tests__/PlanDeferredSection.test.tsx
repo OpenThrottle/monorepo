@@ -24,7 +24,9 @@ const Harness = (props: HarnessProps): React.ReactElement => {
   // Setup
 
   // Handlers
-  const onRevalidate = () => setValue(new Promise<string>(() => {}));
+  const onRevalidate = () => {
+    return setValue(new Promise<string>(() => {}));
+  };
 
   // Markup
 

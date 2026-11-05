@@ -28,4 +28,6 @@ const WORKSPACE_EDITOR_ID_SET: ReadonlySet<string> = new Set(
  */
 export const isWorkspaceEditorId = (
   value: string,
-): value is WorkspaceEditorId => WORKSPACE_EDITOR_ID_SET.has(value);
+): value is WorkspaceEditorId => {
+  return WORKSPACE_EDITOR_ID_SET.has(value);
+};

@@ -24,7 +24,9 @@ describe('OpenThrottleProductFeatures Component', () => {
       ],
     };
 
-    const Component = () => <OpenThrottleProductFeatures {...props} />;
+    const Component = () => {
+      return <OpenThrottleProductFeatures {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

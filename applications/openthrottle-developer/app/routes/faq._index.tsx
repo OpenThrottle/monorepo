@@ -11,9 +11,12 @@ import * as React from 'react';
 import type { Route } from '@/app/routes/+types/faq._index';
 import { SITE_TITLE } from '~/global/config/settings';
 import { useDocsFeatureFlags } from '~/global/hooks/useDocsFeatureFlags';
-import { docsManifest } from '~/routing/docs/data/docsManifest';
+import { docsManifest } from '~/routing/docs/data/data.docs-manifest';
 import { FAQ_INTRO } from '~/routing/faq/data/data.copy';
-import { faqCategories, faqEntries } from '~/routing/faq/data/faq-navigation';
+import {
+  faqCategories,
+  faqEntries,
+} from '~/routing/faq/data/data.faq-navigation';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -47,6 +50,23 @@ export default function Component(
   // Handlers
 
   // Markup
+  const search = (
+    <DocsSearch
+      className="sm:w-64"
+      entries={docsManifest}
+      triggerLabel="Search FAQ…"
+    />
+  );
+  const hero = (
+    <FaqHero
+      categories={faqCategories}
+      className="mb-6"
+      description={FAQ_INTRO}
+    />
+  );
+  const intro = (
+    <p className="text-muted-foreground mb-6 max-w-3xl text-sm">{FAQ_INTRO}</p>
+  );
 
   // Life Cycle
 
@@ -56,26 +76,10 @@ export default function Component(
     <GlobalScreen>
       <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <GlobalHeading heading="h1" icon={CircleHelpIcon} title="FAQ" />
-        {flags.search ? (
-          <DocsSearch
-            className="sm:w-64"
-            entries={docsManifest}
-            triggerLabel="Search FAQ…"
-          />
-        ) : null}
+        {flags.search ? search : null}
       </div>
 
-      {flags.landing ? (
-        <FaqHero
-          categories={faqCategories}
-          className="mb-6"
-          description={FAQ_INTRO}
-        />
-      ) : (
-        <p className="text-muted-foreground mb-6 max-w-3xl text-sm">
-          {FAQ_INTRO}
-        </p>
-      )}
+      {flags.landing ? hero : intro}
 
       <FaqView className="max-w-3xl" entries={faqEntries} />
     </GlobalScreen>

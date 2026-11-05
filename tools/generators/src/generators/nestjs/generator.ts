@@ -2,6 +2,7 @@ import type { Tree } from '@nx/devkit';
 import type { Choice } from 'prompts';
 import prompts from 'prompts';
 
+import { askWhenInteractive } from '../../utils/ask-when-interactive.ts';
 import { throwGeneratorError } from '../../utils/generator-errors.ts';
 import { isInteractiveArgPresent } from '../../utils/nx-cli.ts';
 import { writeJsonToStdout } from '../../utils/output.ts';
@@ -86,8 +87,7 @@ export async function generatorNestJS(
           values: generators.map((g) => g.value),
         },
         graphqlApplications: {
-          description:
-            'Nx projects matching tags: technology:nestjs + technology:graphql + type:application',
+          description: `Nx projects matching tags: technology:nestjs + technology:graphql + type:application`,
           source: {
             tags: [
               'technology:nestjs',
@@ -98,16 +98,14 @@ export async function generatorNestJS(
           },
         },
         nestjsApplications: {
-          description:
-            'Nx projects matching tags: technology:nestjs + type:application',
+          description: `Nx projects matching tags: technology:nestjs + type:application`,
           source: {
             tags: ['technology:nestjs', 'type:application'],
             type: 'projectGraphTags',
           },
         },
         nestjsPackages: {
-          description:
-            'Nx projects matching tags: technology:nestjs + type:package',
+          description: `Nx projects matching tags: technology:nestjs + type:package`,
           source: {
             tags: ['technology:nestjs', 'type:package'],
             type: 'projectGraphTags',
@@ -199,16 +197,18 @@ export async function generatorNestJS(
   const generator =
     schema.subGenerator ??
     schema.generator ??
-    (interactive
-      ? (
+    (await askWhenInteractive(
+      interactive,
+      async () =>
+        (
           await prompts({
             choices: generators,
             message: 'Select a generator',
             name: 'subGenerator',
             type: 'select',
           })
-        ).subGenerator
-      : undefined);
+        ).subGenerator,
+    ));
 
   if (!generator) {
     throwGeneratorError({

@@ -20,13 +20,14 @@ import { DiscoveredWorktreesResolver } from './discovered-worktrees.resolver.ts'
 
 const ROOT = '/Users/matt/Development/openthrottle-worktrees';
 
-const build = (result: WorktreeActivityResult): DiscoveredWorktreesResolver =>
-  new DiscoveredWorktreesResolver(
+const build = (result: WorktreeActivityResult): DiscoveredWorktreesResolver => {
+  return new DiscoveredWorktreesResolver(
     createMock<WorktreeActivityService>({
       discoverAndClassify: vi.fn().mockResolvedValue(result),
     }),
     createMock<WorktreeCheckoutPruneService>(),
   );
+};
 
 describe('DiscoveredWorktreesResolver', () => {
   it('maps a classified worktree onto the GraphQL object', async () => {

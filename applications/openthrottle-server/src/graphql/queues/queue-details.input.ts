@@ -28,8 +28,7 @@ export class QueueDetailsInput {
   asc?: boolean;
 
   @Field(() => [String], {
-    description:
-      'Job states to include (e.g. waiting, active, completed, failed, delayed). Defaults to all if empty.',
+    description: `Job states to include (e.g. waiting, active, completed, failed, delayed). Defaults to all if empty.`,
     nullable: true,
   })
   states?: string[];

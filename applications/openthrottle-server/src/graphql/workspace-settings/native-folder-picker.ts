@@ -179,7 +179,9 @@ const isErrno = (
 ): error is NodeJS.ErrnoException & {
   killed?: boolean;
   stdout?: Buffer | string;
-} => error instanceof Error;
+} => {
+  return error instanceof Error;
+};
 
 /**
  * @description Default runner: `execFile` (argv, no shell) with a kill timeout.

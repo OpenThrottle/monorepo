@@ -145,11 +145,11 @@ const sanitizeNodeUrls = (node: HastNode): void => {
  * reverse tabnabbing and link abuse. It is synchronous, so it is compatible
  * with both `evaluate` and `evaluateSync`.
  */
-const rehypeSanitizeUrls =
-  () =>
-  (tree: HastNode): void => {
+const rehypeSanitizeUrls = () => {
+  return (tree: HastNode): void => {
     sanitizeNodeUrls(tree);
   };
+};
 
 /**
  * The compiled MDX content component returned by `evaluate`. Derived from the

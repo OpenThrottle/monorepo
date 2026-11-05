@@ -64,7 +64,7 @@ export const PlanWorkflowRunTransparency = (
   // Handlers
 
   // Markup
-  const runSections = hasRuns ? (
+  const runsMarkup = (
     <>
       <PlanWorkflowRunUpcoming
         planId={planId}
@@ -79,7 +79,8 @@ export const PlanWorkflowRunTransparency = (
         workingDirectory={workingDirectory}
       />
     </>
-  ) : (
+  );
+  const emptyMarkup = (
     <Empty
       className="border-border border border-dashed p-6 md:p-8"
       data-testid="PlanWorkflowRunTransparency-empty"
@@ -91,6 +92,7 @@ export const PlanWorkflowRunTransparency = (
       <EmptyDescription>{copy.empty.description}</EmptyDescription>
     </Empty>
   );
+  const runSections = hasRuns ? runsMarkup : emptyMarkup;
 
   // Life Cycle
 

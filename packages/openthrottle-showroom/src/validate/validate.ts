@@ -36,20 +36,19 @@ const run = (): void => {
   }
 
   for (const episode of episodes) {
-    const variant =
-      episode.variants.find(
-        (candidate) => candidate.id === episode.selectedVariant,
-      ) ?? episode.variants[0];
+    const selected = episode.variants.find(
+      (candidate) => candidate.id === episode.selectedVariant,
+    );
+    const variant = selected ?? episode.variants[0];
 
     if (!variant) {
       continue;
     }
 
     const words = spokenWords(variant);
-    const extra =
-      episode.variants.length > 1
-        ? ` (+${String(episode.variants.length - 1)} variant(s))`
-        : '';
+    const extraVariants = episode.variants.length - 1;
+    const extraNote = ` (+${String(extraVariants)} variant(s))`;
+    const extra = extraVariants > 0 ? extraNote : '';
 
     console.log(
       `  ${episode.id.padEnd(30)} ${String(words).padStart(4)} words  ~${String(estimatedSpokenSeconds(variant)).padStart(3)}s  (budget ${String(budgetWords(episode.format))})${extra}`,
@@ -64,10 +63,9 @@ const run = (): void => {
     const episode = episodes.find(
       (candidate) => candidate.id === finding.episodeId,
     );
+    const variantPath = `${finding.episodeId}/${finding.variantId}`;
     const where =
-      finding.variantId === undefined
-        ? finding.episodeId
-        : `${finding.episodeId}/${finding.variantId}`;
+      finding.variantId === undefined ? finding.episodeId : variantPath;
     const line = `${where}: [${finding.rule}] ${finding.message}`;
 
     if (isBlocking(finding, episode)) {

@@ -41,12 +41,15 @@ const LIFECYCLE_INTENTS: readonly string[] = Object.values(
  * @description True when the raw action body names a lifecycle intent, so the
  * action knows to demand `blog:write` before it reads anything else.
  */
-export const isBlogPostLifecycleBody = (body: unknown): boolean =>
-  typeof body === 'object' &&
-  body !== null &&
-  'intent' in body &&
-  typeof body.intent === 'string' &&
-  LIFECYCLE_INTENTS.includes(body.intent);
+export const isBlogPostLifecycleBody = (body: unknown): boolean => {
+  return (
+    typeof body === 'object' &&
+    body !== null &&
+    'intent' in body &&
+    typeof body.intent === 'string' &&
+    LIFECYCLE_INTENTS.includes(body.intent)
+  );
+};
 
 /**
  * @description Validates a lifecycle JSON body. `null` for anything that is not
@@ -66,15 +69,13 @@ export const toBlogPostPublishResult = (
   result: PublishBlogPostEditorMutation['publishBlogPost'],
 ): BlogPostLifecycleResult => {
   switch (result.__typename) {
-    case 'BlogPostAdminObject':
-      return {
-        outcome: 'published',
-        publishedAt:
-          result.publishedAt === null || result.publishedAt === undefined
-            ? null
-            : String(result.publishedAt),
-        state: result.state,
-      };
+    case 'BlogPostAdminObject': {
+      const hasPublishedAt =
+        result.publishedAt !== null && result.publishedAt !== undefined;
+      const publishedAt = hasPublishedAt ? String(result.publishedAt) : null;
+
+      return { outcome: 'published', publishedAt, state: result.state };
+    }
     case 'BlogPostNotFoundError':
       return { message: result.message, outcome: 'lifecycleNotFound' };
   }
@@ -107,26 +108,32 @@ export const toBlogPostArchiveResult = (
 /** @description Narrows an unknown action result to a lifecycle result. */
 export const isBlogPostLifecycleResult = (
   value: unknown,
-): value is BlogPostLifecycleResult =>
-  typeof value === 'object' &&
-  value !== null &&
-  'outcome' in value &&
-  (value.outcome === 'archived' ||
-    value.outcome === 'lifecycleError' ||
-    value.outcome === 'lifecycleNotFound' ||
-    value.outcome === 'published' ||
-    value.outcome === 'unpublished');
+): value is BlogPostLifecycleResult => {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'outcome' in value &&
+    (value.outcome === 'archived' ||
+      value.outcome === 'lifecycleError' ||
+      value.outcome === 'lifecycleNotFound' ||
+      value.outcome === 'published' ||
+      value.outcome === 'unpublished')
+  );
+};
 
 /**
  * @description True when the action changed the post, so the loader must
  * re-read it (new state, `publishedAt` and `updatedAt`). A not-found or failed
  * action wrote nothing.
  */
-export const didBlogPostLifecycleWrite = (value: unknown): boolean =>
-  isBlogPostLifecycleResult(value) &&
-  (value.outcome === 'archived' ||
-    value.outcome === 'published' ||
-    value.outcome === 'unpublished');
+export const didBlogPostLifecycleWrite = (value: unknown): boolean => {
+  return (
+    isBlogPostLifecycleResult(value) &&
+    (value.outcome === 'archived' ||
+      value.outcome === 'published' ||
+      value.outcome === 'unpublished')
+  );
+};
 
 /**
  * @description Raises the one toast a finished lifecycle action owes: success

@@ -41,8 +41,7 @@ export class PlanRunObjectResolver {
    * Null when the run carries no checkout or the checkout was torn down.
    */
   @ResolveField(() => PlanRunCheckoutObject, {
-    description:
-      "The run's on-disk checkout (worktree/primary) joined from checkout_id; its filesystemPath powers editor deep-links. Null when the run has no resolved checkout.",
+    description: `The run's on-disk checkout (worktree/primary) joined from checkout_id; its filesystemPath powers editor deep-links. Null when the run has no resolved checkout.`,
     nullable: true,
   })
   async checkout(
@@ -72,8 +71,7 @@ export class PlanRunObjectResolver {
    * Null when the run has produced no pull_request artifact yet.
    */
   @ResolveField(() => PlanRunPullRequestObject, {
-    description:
-      "The run's linked pull request (via the work-ledger session bridge), with lifecycle state and GitHub URL. Null when no PR has been recorded for the run.",
+    description: `The run's linked pull request (via the work-ledger session bridge), with lifecycle state and GitHub URL. Null when no PR has been recorded for the run.`,
     nullable: true,
   })
   async pullRequest(

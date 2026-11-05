@@ -50,19 +50,21 @@ const disabledAgent: AgentCliStatus = {
 };
 
 const renderRow = (status: AgentCliStatus) => {
-  const Component = () => (
-    <TooltipProvider>
-      <Table>
-        <TableBody>
-          <SettingsAgentsTableRow
-            canManage={true}
-            installEnabled={true}
-            status={status}
-          />
-        </TableBody>
-      </Table>
-    </TooltipProvider>
-  );
+  const Component = () => {
+    return (
+      <TooltipProvider>
+        <Table>
+          <TableBody>
+            <SettingsAgentsTableRow
+              canManage={true}
+              installEnabled={true}
+              status={status}
+            />
+          </TableBody>
+        </Table>
+      </TooltipProvider>
+    );
+  };
   const RoutesStub = createRoutesStub([
     { Component, path: '/' },
     { action: () => ({ ok: true }), path: '/resources/agent-setup' },

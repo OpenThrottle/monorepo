@@ -12,6 +12,16 @@ import {
   sendBackfill,
 } from './transcript-backfill.ts';
 
+const pickEndpoint = (
+  injected: { authToken: string; graphqlUrl: string } | null | undefined,
+  repoRoot: string,
+): { authToken: string; graphqlUrl: string } | null => {
+  if (injected === undefined) {
+    return resolveBackfillEndpoint({ repoRoot });
+  }
+  return injected;
+};
+
 /**
  * Run one backfill and return the process exit code. The plan's counts are
  * written BEFORE any request, so an operator who interrupts has already seen
@@ -42,10 +52,7 @@ export const runBackfill = async ({
     return 0;
   }
 
-  const target =
-    endpoint === undefined
-      ? resolveBackfillEndpoint({ repoRoot: options.repoRoot })
-      : endpoint;
+  const target = pickEndpoint(endpoint, options.repoRoot);
   if (target === null) {
     stderr(
       'no OpenThrottle endpoint to send to (set OPENTHROTTLE_GRAPHQL_URL, and unset OPENTHROTTLE_TELEMETRY_OFFLINE); nothing was sent or buffered\n',

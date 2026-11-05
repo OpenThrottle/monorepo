@@ -97,7 +97,7 @@ export const TaskDetailRoute = (
     <GlobalScreen className="-max-w-5xl flex h-full w-full flex-col gap-4 p-4 md:gap-8 md:p-8 lg:gap-12 lg:p-12">
       <TaskDetailRouteHeader status={task.status ?? ''} title={task.title} />
 
-      {showToolbar ? (
+      {showToolbar && (
         <PlanTaskToolbar
           className="bg-card border-card-border rounded-lg border p-4"
           isPromoted={isPromoted}
@@ -117,7 +117,7 @@ export const TaskDetailRoute = (
           tagsPending={tagFetcher.state !== 'idle'}
           taskStatus={task.status}
         />
-      ) : null}
+      )}
 
       <OpenThrottleTabs
         urlSync={{
@@ -153,7 +153,7 @@ export const TaskDetailRoute = (
             Task Output
           </TabsTrigger>
 
-          {showArtifacts ? (
+          {showArtifacts && (
             <TabsTrigger
               className="flex-0 cursor-pointer"
               id="task-tab-artifacts"
@@ -162,10 +162,10 @@ export const TaskDetailRoute = (
               <PackageIcon />
               Artifacts
             </TabsTrigger>
-          ) : null}
+          )}
 
           <div className="flex-1" />
-          {showHooks ? (
+          {showHooks && (
             <TabsTrigger
               className="flex-0 cursor-pointer"
               id="task-tab-hooks"
@@ -174,7 +174,7 @@ export const TaskDetailRoute = (
               <WebhookIcon />
               Hooks
             </TabsTrigger>
-          ) : null}
+          )}
         </TabsList>
 
         <TabsContent value="details">
@@ -183,13 +183,13 @@ export const TaskDetailRoute = (
 
         <TaskTabOutput chunks={taskOutputChunks} />
 
-        {showArtifacts ? (
+        {showArtifacts && (
           <TabsContent value="artifacts">
             <LinkedArtifactsPanel artifacts={linkedArtifacts} />
           </TabsContent>
-        ) : null}
+        )}
 
-        {showHooks ? (
+        {showHooks && (
           <TabsContent value="hooks">
             <PlanLifecycleHooksSection
               afterHooks={task.afterHooks}
@@ -199,7 +199,7 @@ export const TaskDetailRoute = (
               planId={effectivePlanId}
             />
           </TabsContent>
-        ) : null}
+        )}
       </OpenThrottleTabs>
     </GlobalScreen>
   );

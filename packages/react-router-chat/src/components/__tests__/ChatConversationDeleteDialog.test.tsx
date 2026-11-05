@@ -9,8 +9,8 @@ import { ChatConversationDeleteDialog } from '../ChatConversationDeleteDialog';
 
 const renderDialog = (
   overrides: Partial<ChatConversationDeleteDialogProps> = {},
-): RenderResult =>
-  render(
+): RenderResult => {
+  return render(
     <ChatConversationDeleteDialog
       onConfirm={vi.fn()}
       onDismiss={vi.fn()}
@@ -18,6 +18,7 @@ const renderDialog = (
       {...overrides}
     />,
   );
+};
 
 describe('ChatConversationDeleteDialog', () => {
   test('renders nothing when closed', () => {

@@ -47,6 +47,26 @@ export const ChatComposerFooter = (
   // Handlers
 
   // Markup
+  const stopButton = (
+    <Button
+      className="pointer-coarse:h-11 pointer-coarse:min-w-11"
+      onClick={onStop}
+      size="sm"
+      type="button"
+    >
+      {stopLabel}
+    </Button>
+  );
+  const submitButton = (
+    <Button
+      className="pointer-coarse:h-11 pointer-coarse:min-w-11"
+      disabled={disabled || draft.trim().length === 0}
+      size="sm"
+      type="submit"
+    >
+      {submitLabel}
+    </Button>
+  );
 
   // Life Cycle
 
@@ -61,28 +81,10 @@ export const ChatComposerFooter = (
     >
       {toolbar}
       <div className="flex items-center gap-3">
-        {sessionUsage !== undefined ? (
+        {sessionUsage !== undefined && (
           <ChatUsageCounter streaming={isStreaming} usage={sessionUsage} />
-        ) : null}
-        {isStreaming ? (
-          <Button
-            className="pointer-coarse:h-11 pointer-coarse:min-w-11"
-            onClick={onStop}
-            size="sm"
-            type="button"
-          >
-            {stopLabel}
-          </Button>
-        ) : (
-          <Button
-            className="pointer-coarse:h-11 pointer-coarse:min-w-11"
-            disabled={disabled || draft.trim().length === 0}
-            size="sm"
-            type="submit"
-          >
-            {submitLabel}
-          </Button>
         )}
+        {isStreaming ? stopButton : submitButton}
       </div>
     </div>
   );

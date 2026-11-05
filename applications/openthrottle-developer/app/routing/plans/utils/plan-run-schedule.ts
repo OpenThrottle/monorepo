@@ -24,8 +24,9 @@ export interface ScheduleFormatOptions {
 }
 
 /** @description `HH:mm` (24-hour, local) for a native time input. */
-export const formatScheduleTime = (date: Date): string =>
-  `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+export const formatScheduleTime = (date: Date): string => {
+  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+};
 
 /**
  * @description The instant the Schedule tab opens on: the next whole hour at least 30
@@ -132,8 +133,9 @@ export const describeScheduleInstant = (
   options: ScheduleFormatOptions = {},
 ): string => {
   const { locale, timeZone } = options;
-  const dayKey = (date: Date): string =>
-    date.toLocaleDateString(locale, { dateStyle: 'short', timeZone });
+  const dayKey = (date: Date): string => {
+    return date.toLocaleDateString(locale, { dateStyle: 'short', timeZone });
+  };
   const sameDay = dayKey(instant) === dayKey(now);
 
   const when = instant.toLocaleString(locale, {
@@ -153,8 +155,9 @@ export const describeScheduleInstant = (
 };
 
 /** @description The browser's IANA zone (`America/Los_Angeles`), or `UTC` if it cannot be read. */
-export const getLocalTimeZone = (): string =>
-  Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+export const getLocalTimeZone = (): string => {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+};
 
 /**
  * @description A scheduled fire time for a toast: medium date plus short time in the browser's
@@ -163,9 +166,10 @@ export const getLocalTimeZone = (): string =>
 export const formatScheduledInstant = (
   instant: Date | string,
   options: ScheduleFormatOptions = {},
-): string =>
-  new Date(instant).toLocaleString(options.locale, {
+): string => {
+  return new Date(instant).toLocaleString(options.locale, {
     dateStyle: 'medium',
     timeStyle: 'short',
     timeZone: options.timeZone,
   });
+};

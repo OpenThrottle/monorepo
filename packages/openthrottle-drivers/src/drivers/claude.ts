@@ -17,7 +17,7 @@ import {
   OPENTHROTTLE_PLUGIN_DIR_REL,
 } from '../utils/plugin-dir.ts';
 import { claudeEffortFlag } from '../utils/reasoning-effort.ts';
-import { escapeForShellDoubleQuoted, escapeShellArg } from '../utils/shell.ts';
+import { escapeForShellDoubleQuoted, formatModelFlag } from '../utils/shell.ts';
 import { appendWorktreeShellFlags } from '../utils/worktree.ts';
 
 const capabilities: DriverCapabilities = {
@@ -74,11 +74,7 @@ export const claudeDriver = defineDriver({
   binEnv: 'OPENTHROTTLE_CLAUDE_BIN',
   binary: 'claude',
   buildShellCommand: (config) => {
-    const modelNorm = config.model?.trim() ?? '';
-    const modelFlag =
-      modelNorm !== '' && modelNorm !== 'auto'
-        ? ` --model ${escapeShellArg(modelNorm)}`
-        : '';
+    const modelFlag = formatModelFlag(config.model);
 
     const effort = claudeEffortFlag(config.effort);
     const effortFlag = effort !== undefined ? ` --effort ${effort}` : '';

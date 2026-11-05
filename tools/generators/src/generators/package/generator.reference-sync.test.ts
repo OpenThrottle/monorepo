@@ -15,8 +15,9 @@ vi.mock('fs', () => ({
 const root = '/repo';
 const destination = 'packages/example-xxx-package';
 
-const tsconfigWith = (paths: readonly string[]): string =>
-  JSON.stringify({ references: paths.map((path) => ({ path })) });
+const tsconfigWith = (paths: readonly string[]): string => {
+  return JSON.stringify({ references: paths.map((path) => ({ path })) });
+};
 
 describe('syncProjectReferences', () => {
   afterEach(() => {

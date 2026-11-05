@@ -29,8 +29,9 @@ export const captureCallerWorkspacePath = (path: string | null): void => {
 };
 
 /** @description The captured workspace, or null when nothing captured (the HTTP surface). */
-export const getCapturedWorkspacePath = (): string | null =>
-  capturedWorkspacePath;
+export const getCapturedWorkspacePath = (): string | null => {
+  return capturedWorkspacePath;
+};
 
 /**
  * @description The `workspacePath` to send with a plan create, or undefined to omit the field.

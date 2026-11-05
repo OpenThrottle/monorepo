@@ -30,6 +30,126 @@ import type { PlanStatusKey } from '~/routing/plans/types';
 import { PLANS_DETAIL_TAB_SEARCH_PARAM } from '~/routing/plans/utils/parsers';
 import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
 
+const renderCustomRunConfigIndicator = (
+  plan: PlanCardFragment,
+  configurationHref: string,
+): React.ReactNode => {
+  if (!plan.hasCustomRunConfig) {
+    return null;
+  }
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild={true}>
+        <Link
+          aria-label="Custom workflow run configuration (differs from defaults)"
+          className="text-muted-foreground hover:text-foreground inline-flex shrink-0"
+          prefetch="intent"
+          to={configurationHref}
+          viewTransition={true}
+        >
+          <SlidersHorizontal aria-hidden={true} className="size-3.5" />
+        </Link>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-xs" side="top">
+        Custom workflow run configuration (differs from defaults). Open the
+        Configuration tab to view or edit.
+      </TooltipContent>
+    </Tooltip>
+  );
+};
+
+const renderProjectChip = (plan: PlanCardFragment): React.ReactNode => {
+  if (plan.projectRelation != null) {
+    return (
+      <Link
+        aria-label={`Project: ${plan.projectRelation.name}`}
+        className="underline underline-offset-2"
+        to={`/projects/${plan.projectRelation.id}`}
+        viewTransition={true}
+      >
+        {plan.projectRelation.name}
+      </Link>
+    );
+  }
+
+  if (plan.project != null && plan.project !== '') {
+    return (
+      <span
+        aria-label={`Project: ${plan.project}`}
+        className="border-border rounded border px-1.5 py-0.5"
+      >
+        {plan.project}
+      </span>
+    );
+  }
+
+  return null;
+};
+
+const formatAuthorLabel = (
+  author: string,
+  assignee: string | null | undefined,
+): string => {
+  if (assignee) {
+    return `${author} → ${assignee}`;
+  }
+
+  return author;
+};
+
+const renderAuthorChip = (plan: PlanCardFragment): React.ReactNode => {
+  if (plan.author) {
+    return (
+      <span aria-label={`Author: ${plan.author}`}>
+        {formatAuthorLabel(plan.author, plan.assignee)}
+      </span>
+    );
+  }
+
+  if (plan.assignee) {
+    return (
+      <span aria-label={`Assignee: ${plan.assignee}`}>
+        Assignee: {plan.assignee}
+      </span>
+    );
+  }
+
+  return null;
+};
+
+const getTagBadgeClassName = (dimension: string): string | undefined => {
+  if (dimension === 'phase') {
+    return 'border-amber-500/60 bg-amber-500/10';
+  }
+
+  return undefined;
+};
+
+const renderTagBadges = (
+  tags: NonNullable<PlanCardFragment['tags']>,
+): React.ReactNode => {
+  if (!tags.length) {
+    return null;
+  }
+
+  return (
+    <div className={cn('flex flex-wrap gap-2', MOBILE_CARD_BLOCK_CLASS.tags)}>
+      {tags.map((tag) => (
+        <Badge
+          aria-label={`Tag: ${tag.tag}`}
+          className={getTagBadgeClassName(tag.dimension)}
+          color="slate"
+          key={`${tag.dimension}:${tag.tag}`}
+          size="xs"
+        >
+          {tag.tag}
+        </Badge>
+      ))}
+    </div>
+  );
+};
+
 export const buildPlansTableColumns = (
   _statusFilterUrls: PlansTableProps['statusFilterUrls'],
 ): ColumnDef<PlanCardFragment, string | number | null | undefined>[] => {
@@ -111,87 +231,17 @@ export const buildPlansTableColumns = (
                   {taskCount === 1 ? 'task' : 'tasks'}
                 </span>
 
-                {plan.hasCustomRunConfig ? (
-                  <Tooltip>
-                    <TooltipTrigger asChild={true}>
-                      <Link
-                        aria-label="Custom workflow run configuration (differs from defaults)"
-                        className="text-muted-foreground hover:text-foreground inline-flex shrink-0"
-                        prefetch="intent"
-                        to={configurationHref}
-                        viewTransition={true}
-                      >
-                        <SlidersHorizontal
-                          aria-hidden={true}
-                          className="size-3.5"
-                        />
-                      </Link>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-xs" side="top">
-                      Custom workflow run configuration (differs from defaults).
-                      Open the Configuration tab to view or edit.
-                    </TooltipContent>
-                  </Tooltip>
-                ) : null}
+                {renderCustomRunConfigIndicator(plan, configurationHref)}
 
-                {plan.projectRelation != null ? (
-                  <Link
-                    aria-label={`Project: ${plan.projectRelation.name}`}
-                    className="underline underline-offset-2"
-                    to={`/projects/${plan.projectRelation.id}`}
-                    viewTransition={true}
-                  >
-                    {plan.projectRelation.name}
-                  </Link>
-                ) : plan.project != null && plan.project !== '' ? (
-                  <span
-                    aria-label={`Project: ${plan.project}`}
-                    className="border-border rounded border px-1.5 py-0.5"
-                  >
-                    {plan.project}
-                  </span>
-                ) : null}
+                {renderProjectChip(plan)}
 
-                {plan.author ? (
-                  <span aria-label={`Author: ${plan.author}`}>
-                    {plan.assignee
-                      ? `${plan.author} → ${plan.assignee}`
-                      : plan.author}
-                  </span>
-                ) : plan.assignee ? (
-                  <span aria-label={`Assignee: ${plan.assignee}`}>
-                    Assignee: {plan.assignee}
-                  </span>
-                ) : null}
+                {renderAuthorChip(plan)}
 
                 <span>Updated: {updatedAt}</span>
               </div>
             </div>
 
-            {tags.length ? (
-              <div
-                className={cn(
-                  'flex flex-wrap gap-2',
-                  MOBILE_CARD_BLOCK_CLASS.tags,
-                )}
-              >
-                {tags.map((tag) => (
-                  <Badge
-                    aria-label={`Tag: ${tag.tag}`}
-                    className={
-                      tag.dimension === 'phase'
-                        ? 'border-amber-500/60 bg-amber-500/10'
-                        : undefined
-                    }
-                    color="slate"
-                    key={`${tag.dimension}:${tag.tag}`}
-                    size="xs"
-                  >
-                    {tag.tag}
-                  </Badge>
-                ))}
-              </div>
-            ) : null}
+            {renderTagBadges(tags)}
 
             <div
               className={cn(

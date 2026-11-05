@@ -200,10 +200,9 @@ export function createProfileExecutionFileWriter(
     }
 
     const reason = cause instanceof Error ? cause.message : String(cause);
-    const suffix =
-      suppressedSinceLastLog > 0
-        ? ` (+${suppressedSinceLastLog} similar failures suppressed)`
-        : '';
+    const hasSuppressed = suppressedSinceLastLog > 0;
+    const suppressedNote = ` (+${suppressedSinceLastLog} similar failures suppressed)`;
+    const suffix = hasSuppressed ? suppressedNote : '';
     logger.warn(
       `Failed to append profile execution result to ${outputPath}: ${reason}${suffix}`,
     );

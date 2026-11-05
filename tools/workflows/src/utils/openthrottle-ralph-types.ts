@@ -17,8 +17,9 @@ export interface WorkflowRalphConfig {
 /**
  * @description Normalizes JSONB task requirements from Postgres to a readonly array.
  */
-export const taskRequirementsFromRow = (raw: unknown): readonly unknown[] =>
-  Array.isArray(raw) ? raw : [];
+export const taskRequirementsFromRow = (raw: unknown): readonly unknown[] => {
+  return Array.isArray(raw) ? raw : [];
+};
 
 export interface TaskRow {
   readonly category: string | null;
@@ -46,8 +47,11 @@ export interface TaskRow {
  * CLI loop's terminal reconcile. An empty task set is intentionally NOT considered
  * terminal (a plan with no tasks is not "done").
  */
-export const areAllTasksTerminal = (tasks: readonly TaskRow[]): boolean =>
-  tasks.length > 0 && tasks.every((t) => isRalphTerminalStatus(t.status));
+export const areAllTasksTerminal = (tasks: readonly TaskRow[]): boolean => {
+  return (
+    tasks.length > 0 && tasks.every((t) => isRalphTerminalStatus(t.status))
+  );
+};
 
 export interface PlanRow {
   readonly author: string;

@@ -1,5 +1,5 @@
 import type { GetProjectsQuery } from '~/__generated__/graphql';
-import type { ProjectWithStats } from '~/routing/projects/data/types';
+import type { ProjectWithStats } from '~/routing/projects/types';
 import type {
   ProjectsSortBy,
   ProjectsSortOrder,
@@ -38,11 +38,13 @@ export function parseProjectsBySearch(
   });
 }
 
-const isProjectsSortBy = (value: string): value is ProjectsSortBy =>
-  PROJECTS_SORT_BY.some((option) => option === value);
+const isProjectsSortBy = (value: string): value is ProjectsSortBy => {
+  return PROJECTS_SORT_BY.some((option) => option === value);
+};
 
-const isProjectsSortOrder = (value: string): value is ProjectsSortOrder =>
-  PROJECTS_SORT_ORDER.some((option) => option === value);
+const isProjectsSortOrder = (value: string): value is ProjectsSortOrder => {
+  return PROJECTS_SORT_ORDER.some((option) => option === value);
+};
 
 /**
  * @description Parses sortBy and sortOrder from URL search params;

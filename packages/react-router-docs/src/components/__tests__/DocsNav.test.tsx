@@ -23,12 +23,13 @@ const groups: readonly DocsNavGroup[] = [
 const renderNav = (
   props: React.ComponentProps<typeof DocsNav>,
   initialEntry = '/docs/getting-started',
-) =>
-  render(
+) => {
+  return render(
     <MemoryRouter initialEntries={[initialEntry]}>
       <DocsNav {...props} />
     </MemoryRouter>,
   );
+};
 
 describe('DocsNav', () => {
   test('renders a nav landmark labeled Documentation', () => {

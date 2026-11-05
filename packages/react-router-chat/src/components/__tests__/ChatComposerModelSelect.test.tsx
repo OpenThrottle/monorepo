@@ -14,12 +14,13 @@ const MODELS: readonly ChatModelOption[] = [
   { id: 'sonnet', label: 'Sonnet 4.6' },
 ];
 
-const renderSelect = (props: ChatComposerModelSelectProps): RenderResult =>
-  render(
+const renderSelect = (props: ChatComposerModelSelectProps): RenderResult => {
+  return render(
     <TooltipProvider>
       <ChatComposerModelSelect {...props} />
     </TooltipProvider>,
   );
+};
 
 describe('ChatComposerModelSelect Component', () => {
   test('renders the selected model label on the trigger', () => {

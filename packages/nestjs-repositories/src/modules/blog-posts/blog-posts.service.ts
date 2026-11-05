@@ -159,8 +159,9 @@ interface BlogPostAdminKeyRow {
 }
 
 /** Timestamp at full microsecond precision, as ISO-8601 UTC text. */
-const cursorTimestampSql = (column: string): string =>
-  `to_char(${column} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`;
+const cursorTimestampSql = (column: string): string => {
+  return `to_char(${column} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`;
+};
 
 const CURSOR_PUBLISHED_AT_SQL = cursorTimestampSql('post.publishedAt');
 const CURSOR_UPDATED_AT_SQL = cursorTimestampSql('post.updatedAt');
@@ -447,15 +448,11 @@ export class BlogPostsService {
     const post = await this.blogPostRepository.findOneBy({ id });
     if (post == null) return blogWriteNotFound(BLOG_WRITE_ENTITY.POST, id);
 
+    const isAltUnpatched = patch.coverImageAlt === undefined;
+    const isUrlUnpatched = patch.coverImageUrl === undefined;
     const resulting = {
-      coverImageAlt:
-        patch.coverImageAlt === undefined
-          ? post.coverImageAlt
-          : patch.coverImageAlt,
-      coverImageUrl:
-        patch.coverImageUrl === undefined
-          ? post.coverImageUrl
-          : patch.coverImageUrl,
+      coverImageAlt: isAltUnpatched ? post.coverImageAlt : patch.coverImageAlt,
+      coverImageUrl: isUrlUnpatched ? post.coverImageUrl : patch.coverImageUrl,
     };
     if (isCoverAltMissing(resulting)) return blogWriteCoverAltRequired();
 
@@ -584,10 +581,7 @@ export class BlogPostsService {
     });
     if (post == null) return blogWriteNotFound(BLOG_WRITE_ENTITY.POST, postId);
 
-    const tags =
-      slugs.length === 0
-        ? []
-        : await this.blogTagRepository.findBy({ slug: In(slugs) });
+    const tags = await this.findTagsBySlugs(slugs);
     const missing = slugs.find(
       (slug) => !tags.some((tag) => tag.slug === slug),
     );
@@ -612,9 +606,10 @@ export class BlogPostsService {
     const author = await this.blogAuthorRepository.findOneBy({
       slug: authorSlug,
     });
-    return author == null
-      ? blogWriteNotFound(BLOG_WRITE_ENTITY.AUTHOR, authorSlug)
-      : blogWriteOk(author.id);
+    if (author == null) {
+      return blogWriteNotFound(BLOG_WRITE_ENTITY.AUTHOR, authorSlug);
+    }
+    return blogWriteOk(author.id);
   }
 
   /**
@@ -650,9 +645,18 @@ export class BlogPostsService {
     }
 
     const current = await this.blogPostRepository.findOneBy({ id });
-    return current == null
-      ? blogWriteNotFound(BLOG_WRITE_ENTITY.POST, id)
-      : blogWriteStaleWrite(current.updatedAt);
+    if (current == null) {
+      return blogWriteNotFound(BLOG_WRITE_ENTITY.POST, id);
+    }
+    return blogWriteStaleWrite(current.updatedAt);
+  }
+
+  /** Tags for `slugs`; an empty list skips the query. */
+  private async findTagsBySlugs(slugs: readonly string[]) {
+    if (slugs.length === 0) {
+      return [];
+    }
+    return this.blogTagRepository.findBy({ slug: In([...slugs]) });
   }
 
   /** Posts for `ids` with author and tags, in the order of `ids`. */
@@ -672,8 +676,9 @@ export class BlogPostsService {
       relations: { author: true, tags: true },
       where: { id },
     });
-    return post == null
-      ? blogWriteNotFound(BLOG_WRITE_ENTITY.POST, id)
-      : blogWriteOk(post);
+    if (post == null) {
+      return blogWriteNotFound(BLOG_WRITE_ENTITY.POST, id);
+    }
+    return blogWriteOk(post);
   }
 }

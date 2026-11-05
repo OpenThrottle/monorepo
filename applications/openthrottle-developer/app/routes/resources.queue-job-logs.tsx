@@ -9,7 +9,7 @@ import {
 import {
   EMPTY_PAGE,
   type QueueJobLogsPage,
-} from '~/routing/queues/data/queue-job-logs-page';
+} from '~/routing/queues/data/data.queue-job-logs-page';
 
 /**
  * Resource loader backing the live job-log console's history backfill —
@@ -31,10 +31,8 @@ export const loader = async (
 
   const after = url.searchParams.get('after');
   const limitParsed = parseInt(url.searchParams.get('limit') ?? '', 10);
-  const limit =
-    Number.isFinite(limitParsed) && limitParsed > 0
-      ? Math.min(MAX_LIMIT, limitParsed)
-      : DEFAULT_LIMIT;
+  const isValidLimit = Number.isFinite(limitParsed) && limitParsed > 0;
+  const limit = isValidLimit ? Math.min(MAX_LIMIT, limitParsed) : DEFAULT_LIMIT;
 
   const { queueJobLogs } = await executeGraphqlWithAuth(
     args.request,

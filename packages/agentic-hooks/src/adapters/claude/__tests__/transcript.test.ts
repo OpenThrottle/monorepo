@@ -16,19 +16,21 @@ const fixturesDir = path.join(
   'fixtures',
 );
 
-const fixtureLines = (name: string): string[] =>
-  fs
+const fixtureLines = (name: string): string[] => {
+  return fs
     .readFileSync(path.join(fixturesDir, name), 'utf8')
     .split('\n')
     .filter((line) => line.trim() !== '');
+};
 
 const SESSION = '00000000-0000-4000-8000-000000000001';
 const FANNED_OUT = 'req_011CgX363EH4ZerFdokkUo5g';
 const SECOND = 'req_011CgX32Y1Gy7Y96x6yHPSUS';
 const SUBAGENT_REQUEST = 'req_011CgX4S15DkvVbhqN7exZmg';
 
-const parse = (lines: readonly string[], seen = new Set<string>()) =>
-  parseTranscriptLines({ fallbackSessionId: 'fallback', lines, seen });
+const parse = (lines: readonly string[], seen = new Set<string>()) => {
+  return parseTranscriptLines({ fallbackSessionId: 'fallback', lines, seen });
+};
 
 describe('parseTranscriptLines', () => {
   describe('the main transcript fixture', () => {
@@ -124,7 +126,9 @@ describe('parseTranscriptLines', () => {
   });
 
   describe('lines that are not API requests', () => {
-    const line = (entry: unknown): string => JSON.stringify(entry);
+    const line = (entry: unknown): string => {
+      return JSON.stringify(entry);
+    };
     const usage = { input_tokens: 1, output_tokens: 2 };
 
     it('skips malformed JSON, non-objects and blank lines', () => {

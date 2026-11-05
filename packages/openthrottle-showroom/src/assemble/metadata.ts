@@ -57,6 +57,19 @@ export interface UploadMetadata {
   readonly variant: string;
 }
 
+const describeThumbnail = (episode: VideoEpisode) => {
+  const { thumbnail } = episode.youtube;
+
+  if (thumbnail === undefined) {
+    return null;
+  }
+
+  return {
+    template: 'docs/marketing/assets/thumbnail-template.svg',
+    words: thumbnail.words,
+  };
+};
+
 /**
  * @public Everything an upload needs, from the episode and the render.
  *
@@ -99,13 +112,7 @@ export const buildMetadata = (
     spokenWords: spokenWords(variant),
     status: episode.release.status,
     tags: episode.youtube.tags,
-    thumbnail:
-      episode.youtube.thumbnail === undefined
-        ? null
-        : {
-            template: 'docs/marketing/assets/thumbnail-template.svg',
-            words: episode.youtube.thumbnail.words,
-          },
+    thumbnail: describeThumbnail(episode),
     title: episode.youtube.title,
     variant: variant.id,
   };

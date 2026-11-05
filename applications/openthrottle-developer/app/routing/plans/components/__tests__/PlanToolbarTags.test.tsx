@@ -7,7 +7,9 @@ import type { PlanToolbarTagsProps } from '../PlanToolbarTags';
 import { PlanToolbarTags } from '../PlanToolbarTags';
 
 const renderTags = (props: PlanToolbarTagsProps) => {
-  const Component = () => <PlanToolbarTags {...props} />;
+  const Component = () => {
+    return <PlanToolbarTags {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

@@ -10,13 +10,10 @@
  */
 
 /** Where the rule, and the replacement for each name, is explained. */
-export const FOLDER_VOCABULARY_SKILL_POINTER =
-  'skills/ot-folders/SKILL.md (rule 4, "No junk-drawer folder names")';
+export const FOLDER_VOCABULARY_SKILL_POINTER = `skills/ot-folders/SKILL.md (rule 4, "No junk-drawer folder names")`;
 
-const UTILS_CONFIG_DATA =
-  'utils/ (pure functions), config/ (constants, defaults) or data/ (static data); reusable library code is a package';
-const PROMOTION_LADDER =
-  'the promotion ladder: app/global/ within one app, then a package across apps';
+const UTILS_CONFIG_DATA = `utils/ (pure functions), config/ (constants, defaults) or data/ (static data); reusable library code is a package`;
+const PROMOTION_LADDER = `the promotion ladder: app/global/ within one app, then a package across apps`;
 
 /** Each banned directory name, mapped to what to use instead. */
 export const BANNED_FOLDER_NAMES = {

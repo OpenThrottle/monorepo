@@ -20,6 +20,19 @@ function endpointKey(endpoint: ModelEndpoint): string {
   return `${endpoint.port}|${[...endpoint.models].sort().join(`,`)}`;
 }
 
+/** Sort by host string, then by port within the same host. */
+function compareEndpoints(left: ModelEndpoint, right: ModelEndpoint): number {
+  if (left.host === right.host) {
+    return left.port - right.port;
+  }
+
+  if (left.host < right.host) {
+    return -1;
+  }
+
+  return 1;
+}
+
 /**
  * De-duplicate endpoints by `(port, sorted model ids)`, keeping the
  * most-preferred host for each (localhost > 127.0.0.1 > host.docker.internal >
@@ -48,13 +61,7 @@ export function dedupeEndpoints(
       byKey.set(key, endpoint);
     }
   }
-  return [...byKey.values()].sort((left, right) =>
-    left.host === right.host
-      ? left.port - right.port
-      : left.host < right.host
-        ? -1
-        : 1,
-  );
+  return [...byKey.values()].sort(compareEndpoints);
 }
 
 /**

@@ -17,8 +17,8 @@ describe('ProjectSkillsService', () => {
 
   const makeRow = (
     overrides: Partial<ProjectSkill> & Pick<ProjectSkill, 'slug'>,
-  ): ProjectSkill =>
-    asMock<ProjectSkill>({
+  ): ProjectSkill => {
+    return asMock<ProjectSkill>({
       createdAt: new Date('2026-07-11T12:00:00.000Z'),
       disableModelInvocation: null,
       id: `id-${overrides.slug}`,
@@ -32,6 +32,7 @@ describe('ProjectSkillsService', () => {
       updatedAt: new Date('2026-07-11T12:00:00.000Z'),
       ...overrides,
     });
+  };
 
   const mockRepository = {
     delete: vi.fn(),
@@ -155,15 +156,17 @@ describe('ProjectSkillsService', () => {
   describe('reconcileProjectSkills', () => {
     const input = (
       overrides: Partial<ProjectSkillInput> & Pick<ProjectSkillInput, 'slug'>,
-    ): ProjectSkillInput => ({
-      description: null,
-      disableModelInvocation: undefined,
-      source: 'external',
-      sourcePath: `.agents/skills/${overrides.slug}/SKILL.md`,
-      sourceUrl: undefined,
-      tags: [],
-      ...overrides,
-    });
+    ): ProjectSkillInput => {
+      return {
+        description: null,
+        disableModelInvocation: undefined,
+        source: 'external',
+        sourcePath: `.agents/skills/${overrides.slug}/SKILL.md`,
+        sourceUrl: undefined,
+        tags: [],
+        ...overrides,
+      };
+    };
 
     it('updates existing slugs without overwriting tags and marks vanished slugs as orphans', async () => {
       vi.mocked(mockRepository.find).mockResolvedValue([

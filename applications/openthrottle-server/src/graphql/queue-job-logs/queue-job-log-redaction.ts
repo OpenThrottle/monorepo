@@ -31,4 +31,6 @@ import {
  */
 export const buildRedactedQueueJobLogMessage = (
   data: QueueJobLogSourceRecord['data'],
-): string => DEFAULT_LOG_REDACTOR.redactString(extractQueueJobLogMessage(data));
+): string => {
+  return DEFAULT_LOG_REDACTOR.redactString(extractQueueJobLogMessage(data));
+};

@@ -10,7 +10,9 @@ import type { BlogPaginationProps } from '../BlogPagination';
 import { BlogPagination } from '../BlogPagination';
 
 const renderPagination = (props: BlogPaginationProps): RenderResult => {
-  const Wrapped = () => <BlogPagination {...props} />;
+  const Wrapped = () => {
+    return <BlogPagination {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component: Wrapped, path: '/' }]);
 
   return render(<RoutesStub />);

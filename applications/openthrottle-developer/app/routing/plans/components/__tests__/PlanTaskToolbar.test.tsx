@@ -11,12 +11,13 @@ import { renderRoutesStub } from '~/testing/route-fixtures';
 import type { PlanTaskToolbarProps } from '../PlanTaskToolbar';
 import { PlanTaskToolbar } from '../PlanTaskToolbar';
 
-const renderToolbar = (props: PlanTaskToolbarProps): RenderResult =>
-  renderRoutesStub(
+const renderToolbar = (props: PlanTaskToolbarProps): RenderResult => {
+  return renderRoutesStub(
     <TooltipProvider>
       <PlanTaskToolbar {...props} />
     </TooltipProvider>,
   );
+};
 
 describe('PlanTaskToolbar Component', () => {
   let component: RenderResult;

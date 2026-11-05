@@ -14,11 +14,12 @@ import type { Route } from '@/app/routes/+types/auth.logout';
 import * as RouteModule from '../auth.logout';
 
 // The loader and action under test only need a request (both use POST here).
-const createArgs = <T extends Route.LoaderArgs | Route.ActionArgs>() =>
-  createActionArgs<T>({
+const createArgs = <T extends Route.LoaderArgs | Route.ActionArgs>() => {
+  return createActionArgs<T>({
     headers: { cookie: 'ot_auth=token' },
     url: 'http://localhost/auth/logout',
   });
+};
 
 describe('routes/auth.logout.tsx', () => {
   beforeEach(() => {

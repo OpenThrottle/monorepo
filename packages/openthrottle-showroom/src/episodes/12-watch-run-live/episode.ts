@@ -38,8 +38,7 @@ export const episode: VideoEpisode = {
     },
     {
       atLeast: 1,
-      describe:
-        'the hero run itself, still COMPLETED so the badge cannot change between takes',
+      describe: `the hero run itself, still COMPLETED so the badge cannot change between takes`,
       sql: `SELECT count(*) AS value FROM plan_runs WHERE id = 'd0d0d0d0-0000-4000-8000-00000000ff01' AND status = 'COMPLETED'`,
     },
   ],

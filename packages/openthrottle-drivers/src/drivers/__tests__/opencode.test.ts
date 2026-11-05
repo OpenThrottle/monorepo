@@ -13,11 +13,13 @@ const config = (
   extra: Omit<DriverInvocationConfig, 'iteration' | 'prompt'> & {
     prompt?: string;
   } = {},
-): DriverInvocationConfig => ({
-  iteration: 1,
-  prompt: extra.prompt ?? 'do the thing',
-  ...extra,
-});
+): DriverInvocationConfig => {
+  return {
+    iteration: 1,
+    prompt: extra.prompt ?? 'do the thing',
+    ...extra,
+  };
+};
 
 describe('opencode driver', () => {
   it('builds the base run command with --auto', () => {

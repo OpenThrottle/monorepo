@@ -1472,13 +1472,17 @@ describe('PlanRunsService', () => {
         ...qb.andWhere.mock.calls,
       ];
 
-      return calls.flatMap(([, params]) =>
-        typeof params === 'object' && params !== null
-          ? Object.values(params).flatMap((value) =>
-              Array.isArray(value) ? value : [value],
-            )
-          : [],
-      );
+      return calls.flatMap(([, params]) => {
+        if (typeof params !== 'object' || params === null) {
+          return [];
+        }
+        return Object.values(params).flatMap((value) => {
+          if (Array.isArray(value)) {
+            return value;
+          }
+          return [value];
+        });
+      });
     };
 
     it('the 120s stale sweep (findStaleInProgressRuns) never selects a SCHEDULED run', async () => {

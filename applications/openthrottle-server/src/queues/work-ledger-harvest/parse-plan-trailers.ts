@@ -43,10 +43,8 @@ export function parsePlanTrailers(message: string): readonly PlanTrailerRef[] {
     .filter((value): value is string => value !== undefined);
 
   const uniquePlanRefs = [...new Set(planRefs)];
-  const taskRef =
-    uniquePlanRefs.length === 1 && taskRefs.length === 1
-      ? (taskRefs[0] ?? null)
-      : null;
+  const isUnambiguous = uniquePlanRefs.length === 1 && taskRefs.length === 1;
+  const taskRef = isUnambiguous ? (taskRefs[0] ?? null) : null;
 
   return uniquePlanRefs.map((planRef) => ({ planRef, taskRef }));
 }

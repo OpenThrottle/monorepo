@@ -65,16 +65,18 @@ export const normalizeIdFragment = (input: string): string => {
  * @public
  * @description True when the trimmed input is a complete UUID.
  */
-export const isFullUuid = (input: string): boolean =>
-  REGEX_UUID.test(input.trim());
+export const isFullUuid = (input: string): boolean => {
+  return REGEX_UUID.test(input.trim());
+};
 
 /**
  * @public
  * @description True when the input looks like a short id prefix (resolvable hex
  * fragment) but is not a full UUID.
  */
-export const isShortIdFragment = (input: string): boolean =>
-  !isFullUuid(input) && normalizeIdFragment(input).length > 0;
+export const isShortIdFragment = (input: string): boolean => {
+  return !isFullUuid(input) && normalizeIdFragment(input).length > 0;
+};
 
 /**
  * @public

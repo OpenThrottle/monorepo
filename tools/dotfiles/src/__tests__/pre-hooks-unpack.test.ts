@@ -23,10 +23,8 @@ const getRenderFn = (program: TSESTree.Program): RenderFunction => {
     ) {
       return statement.declaration;
     }
-    const declaration =
-      statement.type === 'ExportNamedDeclaration'
-        ? statement.declaration
-        : statement;
+    const isNamedExport = statement.type === 'ExportNamedDeclaration';
+    const declaration = isNamedExport ? statement.declaration : statement;
     if (declaration?.type === 'VariableDeclaration') {
       const init = declaration.declarations[0]?.init;
       if (

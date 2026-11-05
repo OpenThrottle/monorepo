@@ -8,13 +8,16 @@ import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
  */
 export const sumDailyStatActivity = (
   item: DashboardDailyStatsCardFragment,
-): number =>
-  item.plansCompleted +
-  item.plansCreated +
-  item.plansUpdated +
-  item.tasksCompleted +
-  item.tasksCreated +
-  item.tasksUpdated;
+): number => {
+  return (
+    item.plansCompleted +
+    item.plansCreated +
+    item.plansUpdated +
+    item.tasksCompleted +
+    item.tasksCreated +
+    item.tasksUpdated
+  );
+};
 
 /**
  * Maps `DashboardDailyStatsCardFragment[]` to `ContributionHeatmap` values,
@@ -22,5 +25,9 @@ export const sumDailyStatActivity = (
  */
 export const mapDailyStatsToContributions = (
   items: DashboardDailyStatsCardFragment[],
-): ContributionHeatmapValue[] =>
-  items.map((item) => ({ count: sumDailyStatActivity(item), date: item.date }));
+): ContributionHeatmapValue[] => {
+  return items.map((item) => ({
+    count: sumDailyStatActivity(item),
+    date: item.date,
+  }));
+};

@@ -42,6 +42,17 @@ function countBy<T>(
   return counts;
 }
 
+/** The shortened filesystem path, or undefined when the checkout has none. */
+function shortPathOf(
+  filesystemPath: ChatCheckoutOption['filesystemPath'],
+): string | undefined {
+  if (filesystemPath == null || filesystemPath === '') {
+    return undefined;
+  }
+
+  return shortenFilesystemPath(filesystemPath);
+}
+
 /**
  * Resolve every checkout's label and qualifier against the FULL list, so
  * disambiguation is content-aware rather than a fixed format. The escalation:
@@ -64,10 +75,7 @@ export function describeCheckouts(
 ): ChatCheckoutDescriptor[] {
   const identities = checkouts.map((checkout) => {
     const identity = parseRepositoryRemote(checkout.remoteUrl);
-    const shortPath =
-      checkout.filesystemPath != null && checkout.filesystemPath !== ''
-        ? shortenFilesystemPath(checkout.filesystemPath)
-        : undefined;
+    const shortPath = shortPathOf(checkout.filesystemPath);
 
     return {
       checkout,
@@ -95,14 +103,13 @@ export function describeCheckouts(
     const qualifier =
       ownerName !== undefined && !ownerNameIsAmbiguous ? ownerName : shortPath;
 
+    const ambiguousLabel = qualifier ?? checkout.label;
+
     return {
       id: checkout.id,
       label: checkout.label,
       qualifier: qualifier ?? ownerName,
-      triggerLabel:
-        labelIsAmbiguous && qualifier !== undefined
-          ? qualifier
-          : checkout.label,
+      triggerLabel: labelIsAmbiguous ? ambiguousLabel : checkout.label,
     };
   });
 }

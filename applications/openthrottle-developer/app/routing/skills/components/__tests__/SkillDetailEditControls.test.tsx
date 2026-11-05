@@ -14,12 +14,13 @@ describe('SkillDetailEditControls Component', () => {
   let component: RenderResult;
   let props: SkillDetailEditControlsProps;
 
-  const renderControls = (): RenderResult =>
-    render(
+  const renderControls = (): RenderResult => {
+    return render(
       <TooltipProvider>
         <SkillDetailEditControls {...props} />
       </TooltipProvider>,
     );
+  };
 
   beforeEach(() => {
     props = {

@@ -17,8 +17,9 @@ const MCP_SERVERS = {
 const valueAfter = (
   argv: readonly string[],
   flag: string,
-): string | undefined =>
-  argv.includes(flag) ? argv[argv.indexOf(flag) + 1] : undefined;
+): string | undefined => {
+  return argv.includes(flag) ? argv[argv.indexOf(flag) + 1] : undefined;
+};
 
 describe('buildClaudeArgv', () => {
   it('creates the session with --session-id on the first turn', () => {
@@ -219,8 +220,8 @@ describe('buildClaudeArgv', () => {
   describe('reasoning effort', () => {
     const effortFor = (
       reasoning: (typeof CONVERSATION_REASONING_EFFORTS)[keyof typeof CONVERSATION_REASONING_EFFORTS],
-    ): string | undefined =>
-      valueAfter(
+    ): string | undefined => {
+      return valueAfter(
         buildClaudeArgv({
           prompt: 'do it',
           reasoning,
@@ -229,6 +230,7 @@ describe('buildClaudeArgv', () => {
         }),
         '--effort',
       );
+    };
 
     it('maps low/medium/high straight through to --effort', () => {
       expect(effortFor(CONVERSATION_REASONING_EFFORTS.low)).toBe('low');

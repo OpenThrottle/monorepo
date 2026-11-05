@@ -35,10 +35,17 @@ export const RolloutFlagVariationValueField = (
 
   // Setup
   const ariaLabel = `${ROLLOUT_COPY.variationValueLabel} ${index}`;
+  const encoded = encodeVariationValueJson(kind, editValue);
+  const parseError = 'error' in encoded ? encoded.error : null;
 
   // Handlers
 
   // Markup
+  const parseErrorMarkup = (
+    <p className="text-destructive text-xs" role="alert">
+      {parseError}
+    </p>
+  );
 
   // Life Cycle
 
@@ -61,8 +68,6 @@ export const RolloutFlagVariationValueField = (
   }
 
   if (kind === RolloutFlagKind.Json) {
-    const encoded = encodeVariationValueJson(kind, editValue);
-    const parseError = 'error' in encoded ? encoded.error : null;
     return (
       <div className="space-y-1" data-testid="RolloutFlagVariationValueField">
         <TextArea
@@ -74,11 +79,7 @@ export const RolloutFlagVariationValueField = (
           rows={3}
           value={editValue}
         />
-        {parseError ? (
-          <p className="text-destructive text-xs" role="alert">
-            {parseError}
-          </p>
-        ) : null}
+        {parseError ? parseErrorMarkup : null}
       </div>
     );
   }

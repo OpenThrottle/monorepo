@@ -24,7 +24,7 @@ import type { Route } from '@/app/routes/+types/projects.$projectId._index';
 import type { ProjectPageDetailsFragment } from '~/__generated__/graphql';
 import { PlanTagChips } from '~/routing/plans/components/PlanTagChips';
 import { ProjectTasksTable } from '~/routing/projects/components/ProjectTasksTable';
-import { type ProjectTabValue } from '~/routing/projects/data/tabs';
+import { type ProjectTabValue } from '~/routing/projects/data/data.tabs';
 import { formatProjectDate } from '~/routing/projects/utils/format';
 import { isProjectTabValue } from '~/routing/projects/utils/is-project-tab-value';
 
@@ -55,10 +55,30 @@ export const ProjectDetailTabs = (
 
   // Setup
   const rows = tasks ?? [];
+  const hasTasks = rows.length > 0;
 
   // Handlers
 
   // Markup
+  const tasksMarkup = (
+    <>
+      <ProjectTasksTable tasks={rows} />
+      <OpenThrottlePagination
+        basePath={`/projects/${project.id}`}
+        className="mt-6"
+        limit={limit}
+        page={page}
+        resultLabel="tasks"
+        total={totalTaskCount}
+      />
+    </>
+  );
+  const emptyTasksMarkup = (
+    <Empty className="py-8">
+      <EmptyTitle>No tasks</EmptyTitle>
+      <EmptyDescription>This project has no tasks yet.</EmptyDescription>
+    </Empty>
+  );
 
   // Life Cycle
 
@@ -157,26 +177,7 @@ export const ProjectDetailTabs = (
           <h2 className="text-lg" id="project-tasks-heading">
             Tasks
           </h2>
-          {rows.length > 0 ? (
-            <>
-              <ProjectTasksTable tasks={rows} />
-              <OpenThrottlePagination
-                basePath={`/projects/${project.id}`}
-                className="mt-6"
-                limit={limit}
-                page={page}
-                resultLabel="tasks"
-                total={totalTaskCount}
-              />
-            </>
-          ) : (
-            <Empty className="py-8">
-              <EmptyTitle>No tasks</EmptyTitle>
-              <EmptyDescription>
-                This project has no tasks yet.
-              </EmptyDescription>
-            </Empty>
-          )}
+          {hasTasks ? tasksMarkup : emptyTasksMarkup}
         </section>
       </TabsContent>
     </Tabs>

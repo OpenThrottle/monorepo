@@ -32,7 +32,9 @@ const mockQueues: QueueCardFragment[] = [
 ];
 
 const renderChart = (props: QueueStateChartProps): RenderResult => {
-  const Component = () => <QueueStateChart {...props} />;
+  const Component = () => {
+    return <QueueStateChart {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 };

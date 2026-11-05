@@ -35,13 +35,17 @@ const SKIP_BASENAMES = new Set(['README.md', '_template.md']);
 const toRepoRelativePath = (
   monorepoRoot: string,
   absolutePath: string,
-): string => relative(monorepoRoot, absolutePath).split('\\').join('/');
+): string => {
+  return relative(monorepoRoot, absolutePath).split('\\').join('/');
+};
 
-const describeError = (error: unknown): string =>
-  error instanceof Error ? error.message : String(error);
+const describeError = (error: unknown): string => {
+  return error instanceof Error ? error.message : String(error);
+};
 
-const isErrnoException = (error: unknown): error is NodeJS.ErrnoException =>
-  error instanceof Error && 'code' in error;
+const isErrnoException = (error: unknown): error is NodeJS.ErrnoException => {
+  return error instanceof Error && 'code' in error;
+};
 
 /**
  * Reads a directory's entries, tolerating a missing directory (ENOENT) or a

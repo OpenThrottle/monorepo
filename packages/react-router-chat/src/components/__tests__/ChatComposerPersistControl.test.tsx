@@ -10,12 +10,13 @@ import { ChatComposerPersistControl } from '../ChatComposerPersistControl';
 
 const renderControl = (
   props: ChatComposerPersistControlProps = {},
-): RenderResult =>
-  render(
+): RenderResult => {
+  return render(
     <TooltipProvider>
       <ChatComposerPersistControl {...props} />
     </TooltipProvider>,
   );
+};
 
 describe('ChatComposerPersistControl Component', () => {
   test('renders nothing when no onPersistChange callback is supplied', () => {

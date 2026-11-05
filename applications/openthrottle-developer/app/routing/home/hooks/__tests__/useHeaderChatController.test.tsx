@@ -14,7 +14,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   clearChatOptionsCache,
   writeChatOptionsCache,
-} from '~/routing/home/data/chat-options-cache';
+} from '~/routing/home/utils/chat-options-cache';
 
 import { useHeaderChatController } from '../useHeaderChatController';
 

@@ -8,7 +8,9 @@ import type { DashboardIntroductionProps } from '../DashboardIntroduction';
 import { DashboardIntroduction } from '../DashboardIntroduction';
 
 function renderWithProps(props: DashboardIntroductionProps): RenderResult {
-  const Component = () => <DashboardIntroduction {...props} />;
+  const Component = () => {
+    return <DashboardIntroduction {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 }

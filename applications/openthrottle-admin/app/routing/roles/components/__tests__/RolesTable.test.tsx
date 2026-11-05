@@ -28,7 +28,9 @@ describe('RolesTable Component', () => {
   beforeEach(() => {
     props = { roles: mockRoles };
 
-    const Component = () => <RolesTable {...props} />;
+    const Component = () => {
+      return <RolesTable {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);
@@ -74,7 +76,9 @@ describe('RolesTable Component', () => {
         ],
       };
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const Component = () => <RolesTable {...props} />;
+      const Component = () => {
+        return <RolesTable {...props} />;
+      };
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component.rerender(<RoutesStub />);
     });
@@ -105,7 +109,9 @@ describe('RolesTable Component', () => {
         ],
       };
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const Component = () => <RolesTable {...props} />;
+      const Component = () => {
+        return <RolesTable {...props} />;
+      };
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component.rerender(<RoutesStub />);
     });

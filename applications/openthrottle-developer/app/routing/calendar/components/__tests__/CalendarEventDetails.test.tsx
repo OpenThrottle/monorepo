@@ -21,7 +21,9 @@ describe('CalendarEventDetails Component', () => {
 
     props = { event };
 
-    const Component = () => <CalendarEventDetails {...props} />;
+    const Component = () => {
+      return <CalendarEventDetails {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

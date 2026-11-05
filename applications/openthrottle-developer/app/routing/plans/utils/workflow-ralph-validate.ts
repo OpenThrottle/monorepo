@@ -118,8 +118,7 @@ export const validateWorkflowRalphRunOptionsState = (
     if (input.skipWorktreeSetup) {
       issues.push({
         code: 'skip_worktree_setup_claude',
-        message:
-          '--skip-worktree-setup is only supported when backend is cursor',
+        message: `--skip-worktree-setup is only supported when backend is cursor`,
       });
     }
   }
@@ -135,8 +134,7 @@ export const validateWorkflowRalphRunOptionsState = (
       } else if (!isUuid(plan)) {
         issues.push({
           code: 'plan_uuid',
-          message:
-            'Plan must be a OpenThrottle plan UUID (v4). Example: 77cb14a0-5eb0-4061-87ea-d618b85e8818',
+          message: `Plan must be a OpenThrottle plan UUID (v4). Example: 77cb14a0-5eb0-4061-87ea-d618b85e8818`,
         });
       }
     } else {
@@ -149,8 +147,7 @@ export const validateWorkflowRalphRunOptionsState = (
       } else if (!isUuid(task)) {
         issues.push({
           code: 'task_uuid',
-          message:
-            'Task must be a OpenThrottle task UUID (v4). Example: 45a30762-92a9-42f4-90e0-2437c7ef26a8',
+          message: `Task must be a OpenThrottle task UUID (v4). Example: 45a30762-92a9-42f4-90e0-2437c7ef26a8`,
         });
       }
     }
@@ -160,8 +157,7 @@ export const validateWorkflowRalphRunOptionsState = (
       if (plan !== '' && !isUuid(plan)) {
         issues.push({
           code: 'plan_uuid',
-          message:
-            'Plan must be a OpenThrottle plan UUID (v4). Example: 77cb14a0-5eb0-4061-87ea-d618b85e8818',
+          message: `Plan must be a OpenThrottle plan UUID (v4). Example: 77cb14a0-5eb0-4061-87ea-d618b85e8818`,
         });
       }
     } else {
@@ -169,8 +165,7 @@ export const validateWorkflowRalphRunOptionsState = (
       if (task !== '' && !isUuid(task)) {
         issues.push({
           code: 'task_uuid',
-          message:
-            'Task must be a OpenThrottle task UUID (v4). Example: 45a30762-92a9-42f4-90e0-2437c7ef26a8',
+          message: `Task must be a OpenThrottle task UUID (v4). Example: 45a30762-92a9-42f4-90e0-2437c7ef26a8`,
         });
       }
     }
@@ -211,8 +206,7 @@ export const validateWorkflowRalphRunOptionsState = (
       ) {
         issues.push({
           code: 'enqueue_iterations',
-          message:
-            'Nested Ralph tuning: iterations must be a positive integer (parity with CLI)',
+          message: `Nested Ralph tuning: iterations must be a positive integer (parity with CLI)`,
         });
       }
 
@@ -223,8 +217,7 @@ export const validateWorkflowRalphRunOptionsState = (
       ) {
         issues.push({
           code: 'enqueue_iteration_timeout',
-          message:
-            'Nested Ralph tuning: iterationTimeoutSeconds must be a positive integer (parity with CLI)',
+          message: `Nested Ralph tuning: iterationTimeoutSeconds must be a positive integer (parity with CLI)`,
         });
       }
     }

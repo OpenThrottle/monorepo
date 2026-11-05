@@ -12,7 +12,9 @@ describe('PromptsIntroduction Component', () => {
   let component: RenderResult;
 
   beforeEach(() => {
-    const Component = (): React.ReactElement => <PromptsIntroduction />;
+    const Component = (): React.ReactElement => {
+      return <PromptsIntroduction />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
   });

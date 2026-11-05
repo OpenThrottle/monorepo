@@ -29,12 +29,7 @@ import { SkillsTable } from '~/routing/skills/components/SkillsTable';
 import { SkillsToolbar } from '~/routing/skills/components/SkillsToolbar';
 import { SKILL_USAGE_RANGE_DAYS } from '~/routing/skills/config/skill-usage';
 import { SKILLS_ONBOARDING } from '~/routing/skills/data/data.copy';
-import {
-  loadProjectSkillFlags,
-  loadSkillAvailability,
-  loadSkillTagVocabulary,
-} from '~/routing/skills/data/skill-index-loaders';
-import type { SkillsIndexUsageData } from '~/routing/skills/data/skills-index-usage';
+import type { SkillsIndexUsageData } from '~/routing/skills/types';
 import { filterSkillsByQuery } from '~/routing/skills/utils/filter-skills-by-query';
 import {
   filterSkillsBySource,
@@ -43,6 +38,11 @@ import {
 } from '~/routing/skills/utils/filter-skills-by-source';
 import { mergeRepoSkillsWithProjectSkills } from '~/routing/skills/utils/merge-project-skills';
 import { mergeRepoSkillsWithSkillAvailability } from '~/routing/skills/utils/merge-skill-availability';
+import {
+  loadProjectSkillFlags,
+  loadSkillAvailability,
+  loadSkillTagVocabulary,
+} from '~/routing/skills/utils/skill-index-loaders';
 import { toSkillsIndexUsageData } from '~/routing/skills/utils/to-skills-index-usage-data';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -54,10 +54,10 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
 
 export const loader = async (args: Route.LoaderArgs) => {
   const { discoverRepoSkills } =
-    await import('~/routing/agents/data/discover-repo-skills.server');
+    await import('~/routing/agents/utils/discover-repo-skills.server');
 
   const { getMonorepoRoot } =
-    await import('~/routing/agents/data/resolve-monorepo-root.server');
+    await import('~/routing/agents/utils/resolve-monorepo-root.server');
 
   const monorepoRoot = getMonorepoRoot();
   const diskEntries = discoverRepoSkills(monorepoRoot);
@@ -149,10 +149,9 @@ export default function Component(
   // clear-search affordance.
   const isFiltered = search.trim().length > 0 || sourceFilter !== 'all';
   const isNewUser = entries.length === 0 && !isFiltered;
-  const pendingSlug =
-    tagFetcher.state === 'idle'
-      ? undefined
-      : String(tagFetcher.formData?.get('slug') ?? '');
+  const isTagging = tagFetcher.state !== 'idle';
+  const taggingSlug = String(tagFetcher.formData?.get('slug') ?? '');
+  const pendingSlug = isTagging ? taggingSlug : undefined;
 
   const limit = parsePaginationLimit(searchParams.get('limit'));
   const totalCount = filteredEntries.length;
@@ -204,6 +203,45 @@ export default function Component(
   };
 
   // Markup
+  const onboarding = <GlobalFeatureOnboarding content={SKILLS_ONBOARDING} />;
+  const skillsListing = (
+    <>
+      <div className="flex flex-col gap-4">
+        <SkillsToolbar
+          onSourceFilterChange={handleSourceFilterChange}
+          sourceFilter={sourceFilter}
+        />
+        <SkillsTable
+          entries={pageEntries}
+          isFiltered={isFiltered}
+          onAddTag={(slug, tag) =>
+            submitTagIntent(SKILL_RECORD_TAG_INTENTS.ADD_TAG, slug, tag)
+          }
+          onRemoveOrphan={(slug) =>
+            submitTagIntent(SKILL_RECORD_TAG_INTENTS.REMOVE_ORPHAN, slug)
+          }
+          onRemoveTag={(slug, tag) =>
+            submitTagIntent(SKILL_RECORD_TAG_INTENTS.REMOVE_TAG, slug, tag)
+          }
+          pendingSlug={pendingSlug}
+          vocabulary={tagVocabulary}
+        />
+      </div>
+
+      <OpenThrottlePagination
+        basePath="/skills"
+        className="mt-8"
+        limit={limit}
+        page={page}
+        // The skills list filters client-side on `?search=` and
+        // `?source=`, neither of which the extras contract models — clone
+        // the live query string so a page change keeps the filtered set.
+        preserveSearchParams={true}
+        resultLabel="skills"
+        total={totalCount}
+      />
+    </>
+  );
 
   // Life Cycle
 
@@ -214,51 +252,7 @@ export default function Component(
       <GlobalScreen>
         <SkillsIntroduction />
 
-        {isNewUser ? (
-          <GlobalFeatureOnboarding content={SKILLS_ONBOARDING} />
-        ) : (
-          <>
-            <div className="flex flex-col gap-4">
-              <SkillsToolbar
-                onSourceFilterChange={handleSourceFilterChange}
-                sourceFilter={sourceFilter}
-              />
-              <SkillsTable
-                // className="bg-card"
-                entries={pageEntries}
-                isFiltered={isFiltered}
-                onAddTag={(slug, tag) =>
-                  submitTagIntent(SKILL_RECORD_TAG_INTENTS.ADD_TAG, slug, tag)
-                }
-                onRemoveOrphan={(slug) =>
-                  submitTagIntent(SKILL_RECORD_TAG_INTENTS.REMOVE_ORPHAN, slug)
-                }
-                onRemoveTag={(slug, tag) =>
-                  submitTagIntent(
-                    SKILL_RECORD_TAG_INTENTS.REMOVE_TAG,
-                    slug,
-                    tag,
-                  )
-                }
-                pendingSlug={pendingSlug}
-                vocabulary={tagVocabulary}
-              />
-            </div>
-
-            <OpenThrottlePagination
-              basePath="/skills"
-              className="mt-8"
-              limit={limit}
-              page={page}
-              // The skills list filters client-side on `?search=` and
-              // `?source=`, neither of which the extras contract models — clone
-              // the live query string so a page change keeps the filtered set.
-              preserveSearchParams={true}
-              resultLabel="skills"
-              total={totalCount}
-            />
-          </>
-        )}
+        {isNewUser ? onboarding : skillsListing}
 
         {/* Deferred aggregate usage: RR8 streams the loader promise so the
             skills list above paints first and the chart + leaderboard hydrate

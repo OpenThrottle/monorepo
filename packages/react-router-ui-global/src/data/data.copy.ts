@@ -5,6 +5,13 @@
  * not here.
  */
 
+export const GLOBAL_ERROR_BOUNDARY_COPY = {
+  crashReporting: {
+    active: `When crash reporting is configured, this id is attached to the automated report so support can correlate your session.`,
+    inactive: `Crash reporting is not active in this environment (no usable client reporter token); the reference id still helps support match logs you send manually.`,
+  },
+} as const;
+
 export const GLOBAL_FEATURE_ONBOARDING_SECTION_COPY = {
   internalUsage: `How we use it internally`,
   steps: `Quick start`,

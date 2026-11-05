@@ -52,6 +52,11 @@ export const WorkspaceEditorPresenceHints = (
   // Handlers
 
   // Markup
+  const notFoundCaption = (
+    <p className="text-muted-foreground text-xs">
+      {WORKSPACE_SETTINGS_COPY.presenceNotFoundCaption}
+    </p>
+  );
 
   // Life Cycle
 
@@ -87,11 +92,7 @@ export const WorkspaceEditorPresenceHints = (
           />
         ))}
       </div>
-      {hasNotFound ? (
-        <p className="text-muted-foreground text-xs">
-          {WORKSPACE_SETTINGS_COPY.presenceNotFoundCaption}
-        </p>
-      ) : null}
+      {hasNotFound ? notFoundCaption : null}
     </div>
   );
 };

@@ -12,8 +12,7 @@ import type { QueueJobLogLevel } from './queue-job-log-mapping.ts';
 @InputType()
 export class QueueJobLogsInput {
   @Field(() => String, {
-    description:
-      'Opaque cursor from a prior page. Mutually exclusive with `since`.',
+    description: `Opaque cursor from a prior page. Mutually exclusive with \`since\`.`,
     nullable: true,
   })
   after?: string | null;
@@ -37,8 +36,7 @@ export class QueueJobLogsInput {
   queueName!: string;
 
   @Field(() => Date, {
-    description:
-      'ISO-8601 lower bound (inclusive). Mutually exclusive with `after`.',
+    description: `ISO-8601 lower bound (inclusive). Mutually exclusive with \`after\`.`,
     nullable: true,
   })
   since?: Date | null;

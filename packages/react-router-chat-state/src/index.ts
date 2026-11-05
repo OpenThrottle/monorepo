@@ -13,8 +13,9 @@ export * from './config/chat-capabilities';
 export * from './config/chat-session-permission-decay';
 
 // 📦 Data / Atoms
-export * from './data/atom.chat-toolbar';
-export * from './data/chat-toolbar-seeds';
+export * from './data/data.atom.chat-toolbar';
+export * from './data/data.chat-toolbar-seeds';
+export * from './data/data.chat-toolbar-state';
 
 // 🪝 React Hooks
 export * from './hooks/useHeaderChatController';
@@ -37,4 +38,5 @@ export * from './utils/chat-model-option';
 export * from './utils/chat-toolbar-decay';
 export * from './utils/chat-toolbar-reconcile';
 export * from './utils/chat-turn-fields';
+export * from './utils/normalize-chat-toolbar-state';
 export * from './utils/resolve-provider-icon';

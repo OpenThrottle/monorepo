@@ -9,7 +9,9 @@ import type { ChatRetryNoticeProps } from '../ChatRetryNotice';
 import { ChatRetryNotice } from '../ChatRetryNotice';
 
 const renderNotice = (props: ChatRetryNoticeProps): RenderResult => {
-  const Comp = (): React.ReactElement => <ChatRetryNotice {...props} />;
+  const Comp = (): React.ReactElement => {
+    return <ChatRetryNotice {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component: Comp, path: '/' }]);
   return render(<RoutesStub />);
 };

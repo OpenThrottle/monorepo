@@ -10,7 +10,7 @@ Jotai state, and React Router URL sync.
 
 - [src/components/EditorWindow.tsx](src/components/EditorWindow.tsx) — Monaco wrapper; the `path` prop keys one text model per file.
 - [src/config/loader.ts](src/config/loader.ts) — `configureEditorLoader(monaco)`: points `@monaco-editor/react` at a caller-supplied `monaco-editor` module instead of the CDN.
-- [src/data/atom.editor.ts](src/data/atom.editor.ts) — Jotai editor state (files, tabs, search/type filters) + derived atoms.
+- [src/data/data.atom.editor.ts](src/data/data.atom.editor.ts) — Jotai editor state (files, tabs, search/type filters) + derived atoms.
 - [src/hooks/useEditor.tsx](src/hooks/useEditor.tsx) — state + navigation; navigates to `${basePath}/<encoded filename>` (default `basePath` is `/prompts`).
 
 ## Invariants & gotchas

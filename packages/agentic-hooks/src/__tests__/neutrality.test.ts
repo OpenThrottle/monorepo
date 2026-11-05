@@ -102,8 +102,9 @@ const listTypeScriptFiles = (dir: string): readonly string[] => {
   return out;
 };
 
-const relativeToSrc = (absolute: string): string =>
-  path.relative(srcRoot, absolute).split(path.sep).join('/');
+const relativeToSrc = (absolute: string): string => {
+  return path.relative(srcRoot, absolute).split(path.sep).join('/');
+};
 
 interface Violation {
   readonly file: string;
@@ -112,11 +113,12 @@ interface Violation {
   readonly text: string;
 }
 
-const isAllowed = (file: string, identifier: string): boolean =>
-  ALLOWLIST.some(
+const isAllowed = (file: string, identifier: string): boolean => {
+  return ALLOWLIST.some(
     (allowance) =>
       allowance.file === file && allowance.identifier === identifier,
   );
+};
 
 const findViolations = (): readonly Violation[] => {
   const violations: Violation[] = [];
@@ -141,8 +143,9 @@ const findViolations = (): readonly Violation[] => {
   return violations;
 };
 
-const formatViolation = (violation: Violation): string =>
-  `${violation.file}:${violation.line} matched "${violation.identifier}" — ${violation.text}`;
+const formatViolation = (violation: Violation): string => {
+  return `${violation.file}:${violation.line} matched "${violation.identifier}" — ${violation.text}`;
+};
 
 describe('the neutral core names no specific tool', () => {
   it('finds no tool-specific identifier outside src/adapters/', () => {

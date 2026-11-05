@@ -23,4 +23,6 @@ export const WORKSPACE_EDITOR_AFFILIATE_LINKS: Record<
  */
 export const getWorkspaceEditorAffiliateUrl = (
   editor: WorkspaceEditorId,
-): string | null => WORKSPACE_EDITOR_AFFILIATE_LINKS[editor] ?? null;
+): string | null => {
+  return WORKSPACE_EDITOR_AFFILIATE_LINKS[editor] ?? null;
+};

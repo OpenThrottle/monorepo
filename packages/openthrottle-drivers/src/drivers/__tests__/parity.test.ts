@@ -29,7 +29,9 @@ const CURSOR_CMD = `${CURSOR_BASE}${CURSOR_MCP}`;
 
 const config = (
   extra: Omit<DriverInvocationConfig, 'iteration' | 'prompt'>,
-): DriverInvocationConfig => ({ iteration: 1, prompt: PROMPT, ...extra });
+): DriverInvocationConfig => {
+  return { iteration: 1, prompt: PROMPT, ...extra };
+};
 
 describe('claude driver parity', () => {
   it('base command (no model, no worktree)', () => {

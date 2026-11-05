@@ -39,25 +39,27 @@ afterAll(() => {
 
 const baseContext = (
   overrides: Partial<WorkflowContext> = {},
-): WorkflowContext => ({
-  debug: 'omit',
-  iterationMax: 1,
-  iterationTimeout: 1000,
-  iterations: 1,
-  kind: 'ralph',
-  mode: 'plan',
-  model: 'auto',
-  planId: PLAN_ID,
-  project: '',
-  prompt: '/agents/ralph',
-  runner: 'cursor',
-  skipWorktreeSetup: true,
-  taskId: '',
-  timeout: 1000,
-  worktree: undefined,
-  worktreeBase: undefined,
-  ...overrides,
-});
+): WorkflowContext => {
+  return {
+    debug: 'omit',
+    iterationMax: 1,
+    iterationTimeout: 1000,
+    iterations: 1,
+    kind: 'ralph',
+    mode: 'plan',
+    model: 'auto',
+    planId: PLAN_ID,
+    project: '',
+    prompt: '/agents/ralph',
+    runner: 'cursor',
+    skipWorktreeSetup: true,
+    taskId: '',
+    timeout: 1000,
+    worktree: undefined,
+    worktreeBase: undefined,
+    ...overrides,
+  };
+};
 
 /**
  * Adapts a loosely-typed mock implementation to the generic {@link WorkflowExecuteGraphqlV2}
@@ -74,8 +76,8 @@ function asExecuteGraphqlV2(impl: unknown): unknown {
 /**
  * @description Routes mock GraphQL responses by codegen document reference (same pattern as workflows Ralph tests).
  */
-const createForeignWorkdirMockExecute = (): WorkflowExecuteGraphqlV2 =>
-  asExecuteGraphqlV2(async (document) => {
+const createForeignWorkdirMockExecute = (): WorkflowExecuteGraphqlV2 => {
+  return asExecuteGraphqlV2(async (document) => {
     if (document === GetServerHealthDocument) {
       return {
         serverHealth: {
@@ -133,6 +135,7 @@ const createForeignWorkdirMockExecute = (): WorkflowExecuteGraphqlV2 =>
     }
     throw new Error('unmocked GraphQL document in test');
   });
+};
 
 describe('createWorkflowRalphOrchestrator foreign workingDirectory', () => {
   it('passes foreign cwd to iterationRunner and scopes the prompt to the target repo', async () => {

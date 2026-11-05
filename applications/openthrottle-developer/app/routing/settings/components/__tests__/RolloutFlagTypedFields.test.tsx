@@ -16,7 +16,9 @@ describe('RolloutFlagTypedFields Component', () => {
   beforeEach(() => {
     props = { idPrefix: 'create-rollout-flag' };
 
-    const Component = () => <RolloutFlagTypedFields {...props} />;
+    const Component = () => {
+      return <RolloutFlagTypedFields {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

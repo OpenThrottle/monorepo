@@ -39,7 +39,7 @@ export const PullRequestActionsLinks = (
         Workflow runs (Actions)
       </h3>
       <div className="mb-6 flex flex-wrap gap-2">
-        {pull.headRef !== null ? (
+        {pull.headRef !== null && (
           <Button asChild={true} size="sm" variant="outline">
             <a
               href={githubRepoActionsForBranchUrl(
@@ -53,7 +53,7 @@ export const PullRequestActionsLinks = (
               Actions (branch name)
             </a>
           </Button>
-        ) : null}
+        )}
         <Button asChild={true} size="sm" variant="outline">
           <a
             href={githubRepoActionsForPullRequestHeadRefUrl(

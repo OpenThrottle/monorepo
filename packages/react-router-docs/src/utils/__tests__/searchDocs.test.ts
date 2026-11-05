@@ -3,18 +3,20 @@ import { describe, expect, test } from 'vitest';
 import type { DocEntry } from '../buildDocsManifest';
 import { docEntryHref, searchDocEntries } from '../searchDocs';
 
-const entry = (overrides: Partial<DocEntry>): DocEntry => ({
-  content: '',
-  description: null,
-  draft: false,
-  group: 'General',
-  order: 1,
-  path: '/docs',
-  section: 'docs',
-  slug: '',
-  title: 'Untitled',
-  ...overrides,
-});
+const entry = (overrides: Partial<DocEntry>): DocEntry => {
+  return {
+    content: '',
+    description: null,
+    draft: false,
+    group: 'General',
+    order: 1,
+    path: '/docs',
+    section: 'docs',
+    slug: '',
+    title: 'Untitled',
+    ...overrides,
+  };
+};
 
 const gettingStarted = entry({
   content: 'Run pnpm nx run openthrottle-developer:dev to start.',

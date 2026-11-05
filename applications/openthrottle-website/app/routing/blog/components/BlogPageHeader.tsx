@@ -21,6 +21,14 @@ export const BlogPageHeader = (
   // Handlers
 
   // Markup
+  const eyebrowText = (
+    <p className="text-accent text-xs font-semibold tracking-[0.08em] uppercase">
+      {eyebrow}
+    </p>
+  );
+  const descriptionText = (
+    <p className="text-muted-foreground max-w-2xl text-lg">{description}</p>
+  );
 
   // Life Cycle
 
@@ -31,17 +39,11 @@ export const BlogPageHeader = (
       className={cn('flex flex-col gap-3', className)}
       data-testid="BlogPageHeader"
     >
-      {eyebrow ? (
-        <p className="text-accent text-xs font-semibold tracking-[0.08em] uppercase">
-          {eyebrow}
-        </p>
-      ) : null}
+      {eyebrow ? eyebrowText : null}
       <h1 className="text-[clamp(1.75rem,4vw,2.6rem)] leading-tight">
         {heading}
       </h1>
-      {description ? (
-        <p className="text-muted-foreground max-w-2xl text-lg">{description}</p>
-      ) : null}
+      {description ? descriptionText : null}
     </header>
   );
 };

@@ -259,11 +259,12 @@ export const executePlanJobRunHooks = async (
  */
 export const runAfterAllHooks = async (
   params: Omit<ExecutePlanJobRunHooksParams, 'phase'>,
-): Promise<ExecuteJobRunHooksPhaseResult> =>
-  executePlanJobRunHooks({
+): Promise<ExecuteJobRunHooksPhaseResult> => {
+  return executePlanJobRunHooks({
     ...params,
     phase: 'afterAll',
   });
+};
 
 /** @description Alias for {@link runAfterAllHooks} (legacy name). */
 export const runAfterRunHooks = runAfterAllHooks;

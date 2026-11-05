@@ -53,7 +53,9 @@ const RAW_TEXT_OIDS = new Set([
   114, 199, 1082, 1114, 1115, 1182, 1184, 1185, 3802, 3807,
 ]);
 
-const rawText = (value: string): string => value;
+const rawText = (value: string): string => {
+  return value;
+};
 
 const parseArgs = (argv: string[]): { days: number; outDir: string } => {
   let days = DEFAULT_WINDOW_DAYS;
@@ -114,10 +116,13 @@ const main = async (): Promise<void> => {
           return rawText;
         }
 
-        const parser =
-          format === 'binary'
-            ? pg.types.getTypeParser(oid, format)
-            : pg.types.getTypeParser(oid);
+        if (format === 'binary') {
+          const binaryParser = pg.types.getTypeParser(oid, format);
+
+          return (value: string): unknown => binaryParser(value);
+        }
+
+        const parser = pg.types.getTypeParser(oid);
 
         return (value: string): unknown => parser(value);
       },

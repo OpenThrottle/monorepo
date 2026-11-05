@@ -15,8 +15,8 @@ const CHECKOUTS: readonly ChatCheckoutOption[] = [
 
 const renderSelector = (
   overrides: Partial<ChatCheckoutSelectorProps> = {},
-): RenderResult =>
-  render(
+): RenderResult => {
+  return render(
     <ChatCheckoutSelector
       checkouts={CHECKOUTS}
       onCheckoutChange={vi.fn()}
@@ -24,6 +24,7 @@ const renderSelector = (
       {...overrides}
     />,
   );
+};
 
 describe('ChatCheckoutSelector Component', () => {
   test('shows the selected checkout label and branch on the trigger', () => {
@@ -77,8 +78,8 @@ const CHECKOUTS_THREE: readonly ChatCheckoutOption[] = [
 
 const renderMulti = (
   overrides: Partial<ChatCheckoutSelectorProps> = {},
-): RenderResult =>
-  render(
+): RenderResult => {
+  return render(
     <ChatCheckoutSelector
       checkouts={CHECKOUTS_THREE}
       maxCheckouts={2}
@@ -89,6 +90,7 @@ const renderMulti = (
       {...overrides}
     />,
   );
+};
 
 describe('ChatCheckoutSelector Component — multiple mode', () => {
   test('shows the primary label plus a +N affordance for secondaries', () => {
@@ -227,8 +229,8 @@ const LOOKALIKES: readonly ChatCheckoutOption[] = [
 
 const renderLookalikes = (
   overrides: Partial<ChatCheckoutSelectorProps> = {},
-): RenderResult =>
-  render(
+): RenderResult => {
+  return render(
     <ChatCheckoutSelector
       checkouts={LOOKALIKES}
       onCheckoutChange={vi.fn()}
@@ -236,6 +238,7 @@ const renderLookalikes = (
       {...overrides}
     />,
   );
+};
 
 describe('ChatCheckoutSelector Component — disambiguation', () => {
   test('promotes the trigger to owner/name when two checkouts share a name', () => {
@@ -416,14 +419,15 @@ const SHARED_PATH_PREFIX: readonly ChatCheckoutOption[] = [
   },
 ];
 
-const renderSharedPathPrefix = (): RenderResult =>
-  render(
+const renderSharedPathPrefix = (): RenderResult => {
+  return render(
     <ChatCheckoutSelector
       checkouts={SHARED_PATH_PREFIX}
       onCheckoutChange={vi.fn()}
       selectedCheckoutId="mine"
     />,
   );
+};
 
 /** Open the picker and type `search` into it. */
 const search = async (

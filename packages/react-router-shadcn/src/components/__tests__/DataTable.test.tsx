@@ -22,11 +22,11 @@ const nestedColumns: ColumnDef<DemoRow, unknown>[] = [
   {
     cell: ({ row }) => (
       <div style={{ paddingLeft: row.depth * 8 }}>
-        {row.getCanExpand() ? (
+        {row.getCanExpand() && (
           <button onClick={row.getToggleExpandedHandler()} type="button">
             {row.getIsExpanded() ? 'Collapse' : 'Expand'} {row.original.name}
           </button>
-        ) : null}
+        )}
         <span>{row.original.name}</span>
       </div>
     ),
@@ -46,8 +46,9 @@ const nestedData: DemoRow[] = [
   { id: '2', name: 'Beta', value: 20 },
 ];
 
-const getSubRows = (original: DemoRow): DemoRow[] | undefined =>
-  original.children;
+const getSubRows = (original: DemoRow): DemoRow[] | undefined => {
+  return original.children;
+};
 
 const firstBodyButton = (container: HTMLElement): HTMLButtonElement => {
   const button = container.querySelector('tbody button');

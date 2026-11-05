@@ -19,9 +19,9 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
 
 export const loader = async (_args: Route.LoaderArgs) => {
   const { discoverRepoPersonas } =
-    await import('~/routing/agents/data/discover-repo-personas.server');
+    await import('~/routing/agents/utils/discover-repo-personas.server');
   const { getMonorepoRoot } =
-    await import('~/routing/agents/data/resolve-monorepo-root.server');
+    await import('~/routing/agents/utils/resolve-monorepo-root.server');
 
   const monorepoRoot = getMonorepoRoot();
   const entries = discoverRepoPersonas(monorepoRoot);

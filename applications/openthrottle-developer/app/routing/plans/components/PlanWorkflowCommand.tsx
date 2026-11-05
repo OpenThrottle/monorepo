@@ -4,7 +4,7 @@ import { useAtomValue } from 'jotai';
 import { RefreshCcwIcon } from 'lucide-react';
 import * as React from 'react';
 
-import { workflowRalphCanonicalCommandLineAtom } from '~/routing/plans/data/atom.plan';
+import { workflowRalphCanonicalCommandLineAtom } from '~/routing/plans/data/data.atom-plan';
 
 export interface PlanWorkflowCommandProps {
   className?: string;
@@ -75,7 +75,7 @@ export const PlanWorkflowCommand = (
           {/* Reset to defaults */}
           <RefreshCcwIcon />
         </Button>
-        {onSave != null ? (
+        {onSave != null && (
           <Button
             data-testid="plan-run-config-save"
             disabled={saveDisabled || savePending}
@@ -84,7 +84,7 @@ export const PlanWorkflowCommand = (
           >
             {savePending ? 'Saving…' : 'Save to plan'}
           </Button>
-        ) : null}
+        )}
       </div>
 
       <p className="text-muted-foreground mt-4 text-xs" role="note">

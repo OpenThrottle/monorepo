@@ -27,10 +27,24 @@ export const TimelineMarkerGlyph = (
 
   // Setup
   const isCluster = count > 1;
+  const kindLabel = TIMELINE_MARKER_KIND_LABEL[kind];
+  const clusterLabel = `${count} × ${kindLabel}`;
+  const title = isCluster ? clusterLabel : kindLabel;
 
   // Handlers
 
   // Markup
+  const clusterCount = (
+    <text
+      className="fill-foreground text-[8px] font-medium"
+      data-testid="TimelineMarkerGlyphCount"
+      textAnchor="middle"
+      x={0}
+      y={-radius - 2}
+    >
+      {count}
+    </text>
+  );
 
   // Life Cycle
 
@@ -51,22 +65,8 @@ export const TimelineMarkerGlyph = (
         A cluster keeps its kind's shape and gains a count, rather than becoming
         a generic dot — the shape is what tells you what collapsed in there.
       */}
-      {isCluster ? (
-        <text
-          className="fill-foreground text-[8px] font-medium"
-          data-testid="TimelineMarkerGlyphCount"
-          textAnchor="middle"
-          x={0}
-          y={-radius - 2}
-        >
-          {count}
-        </text>
-      ) : null}
-      <title>
-        {isCluster
-          ? `${count} × ${TIMELINE_MARKER_KIND_LABEL[kind]}`
-          : TIMELINE_MARKER_KIND_LABEL[kind]}
-      </title>
+      {isCluster ? clusterCount : null}
+      <title>{title}</title>
     </g>
   );
 };

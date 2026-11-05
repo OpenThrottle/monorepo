@@ -8,23 +8,25 @@ import { describe, expect, it } from 'vitest';
 import type { TaskListItem } from '../tools/tasks.ts';
 import { filterTasksByCategory } from './filters.ts';
 
-const makeTask = (overrides: Partial<TaskListItem>): TaskListItem => ({
-  assignee: null,
-  category: 'infra',
-  createdAt: '2026-06-25T00:00:00.000Z',
-  description: null,
-  id: 'task-id',
-  planId: 'plan-a',
-  project: null,
-  projectId: null,
-  requirementsJson: '[]',
-  sortOrder: 1000,
-  status: 'PENDING',
-  summary: null,
-  title: 'A task',
-  updatedAt: '2026-06-25T00:00:00.000Z',
-  ...overrides,
-});
+const makeTask = (overrides: Partial<TaskListItem>): TaskListItem => {
+  return {
+    assignee: null,
+    category: 'infra',
+    createdAt: '2026-06-25T00:00:00.000Z',
+    description: null,
+    id: 'task-id',
+    planId: 'plan-a',
+    project: null,
+    projectId: null,
+    requirementsJson: '[]',
+    sortOrder: 1000,
+    status: 'PENDING',
+    summary: null,
+    title: 'A task',
+    updatedAt: '2026-06-25T00:00:00.000Z',
+    ...overrides,
+  };
+};
 
 describe('filterTasksByCategory', () => {
   it('matches category case-insensitively', () => {

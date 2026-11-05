@@ -19,10 +19,15 @@ export const parseAssigneesFromSearchParams = (
  * terse PlanTasksEmpty). Mirrors the signal PlansTable derives for its own empty
  * state so both agree.
  */
-export const hasActivePlansFilters = (searchParams: URLSearchParams): boolean =>
-  (searchParams.get('q') ?? '') !== '' ||
-  searchParams.getAll('status').length > 0 ||
-  searchParams.getAll('assignee').length > 0;
+export const hasActivePlansFilters = (
+  searchParams: URLSearchParams,
+): boolean => {
+  return (
+    (searchParams.get('q') ?? '') !== '' ||
+    searchParams.getAll('status').length > 0 ||
+    searchParams.getAll('assignee').length > 0
+  );
+};
 
 /**
  * @description Build the per-status filter URLs for the plans list (one `/plans?…`
@@ -30,8 +35,8 @@ export const hasActivePlansFilters = (searchParams: URLSearchParams): boolean =>
  */
 export const buildStatusFilterUrls = (
   searchParams: URLSearchParams,
-): Record<string, string> =>
-  Object.fromEntries(
+): Record<string, string> => {
+  return Object.fromEntries(
     PLAN_STATUS_FILTER_OPTIONS.map((option) => {
       const params = new URLSearchParams(searchParams);
 
@@ -42,6 +47,7 @@ export const buildStatusFilterUrls = (
       return [option.value, `/plans?${params.toString()}`] as const;
     }),
   );
+};
 
 /** Valid tab keys for the plan detail page (`/plans/:planId`). */
 export type PlanDetailTab =
@@ -66,8 +72,9 @@ const PLAN_DETAIL_TAB_VALUES: readonly PlanDetailTab[] = [
   'tasks',
 ];
 
-const isPlanDetailTab = (raw: string): raw is PlanDetailTab =>
-  PLAN_DETAIL_TAB_VALUES.some((tab) => tab === raw);
+const isPlanDetailTab = (raw: string): raw is PlanDetailTab => {
+  return PLAN_DETAIL_TAB_VALUES.some((tab) => tab === raw);
+};
 
 /**
  * @description Parses `plansDetailTab` for plan detail primary tabs (Details, Tasks, …).
@@ -92,8 +99,9 @@ const TASK_DETAIL_TAB_VALUES: readonly TaskDetailTab[] = [
   'output',
 ];
 
-const isTaskDetailTab = (raw: string): raw is TaskDetailTab =>
-  TASK_DETAIL_TAB_VALUES.some((tab) => tab === raw);
+const isTaskDetailTab = (raw: string): raw is TaskDetailTab => {
+  return TASK_DETAIL_TAB_VALUES.some((tab) => tab === raw);
+};
 
 /**
  * @description Parses the `tab` search param for task detail primary tabs
@@ -130,11 +138,15 @@ export const parsePlanTasksView = (
 // for sortBy (it never matches a real PlansSortBy and always defaults to
 // `createdAt`), but it is kept as-is here to avoid a behavior change during the
 // as-cast cleanup.
-const isPlansSortByValue = (value: string | null): value is PlansSortBy =>
-  value !== null && PLANS_SORT_ORDER.some((v) => v === value);
+const isPlansSortByValue = (value: string | null): value is PlansSortBy => {
+  return value !== null && PLANS_SORT_ORDER.some((v) => v === value);
+};
 
-const isPlansSortOrderValue = (value: string | null): value is PlansSortOrder =>
-  value !== null && PLANS_SORT_ORDER.some((v) => v === value);
+const isPlansSortOrderValue = (
+  value: string | null,
+): value is PlansSortOrder => {
+  return value !== null && PLANS_SORT_ORDER.some((v) => v === value);
+};
 
 export function parsePlansSortFromSearch(searchParams: URLSearchParams): {
   sortBy: PlansSortBy;

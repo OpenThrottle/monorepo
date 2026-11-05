@@ -67,33 +67,6 @@ function renderHeader(envelope: ReportEnvelope): string {
 
 function renderHeadline(envelope: ReportEnvelope): string {
   const { metrics } = envelope;
-  const plans = isPlansMetrics(metrics.plans) ? metrics.plans : undefined;
-  const tasks = isTasksMetrics(metrics.tasks) ? metrics.tasks : undefined;
-  const skillUsage = isSkillUsageMetrics(metrics.skill_usage)
-    ? metrics.skill_usage
-    : undefined;
-  const modelUsage = isModelTokenUsageMetrics(metrics.model_token_usage)
-    ? metrics.model_token_usage
-    : undefined;
-
-  const topSkills = skillUsage
-    ? skillUsage.bySkill
-        .slice(0, 3)
-        .map((row) => `${row.skillName} (${formatInt(row.count)})`)
-        .join(', ')
-    : undefined;
-  const topModels = modelUsage
-    ? modelUsage.byModel
-        .slice(0, 3)
-        .map(
-          (row) =>
-            `${row.provider}/${row.model} (${formatInt(row.invocationCount)})`,
-        )
-        .join(', ')
-    : undefined;
-  const totalSpend = modelUsage
-    ? modelUsage.byProvider.reduce((sum, row) => sum + row.costUsd, 0)
-    : undefined;
 
   const days = Math.round(
     (new Date(envelope.window.until).getTime() -
@@ -103,32 +76,74 @@ function renderHeadline(envelope: ReportEnvelope): string {
 
   const sentences = [
     `Over the last ${days} days,`,
-    plans
-      ? `${formatInt(plans.completedInWindow.count)} plan(s) and`
-      : 'plan data unavailable and',
-    tasks
-      ? `${formatInt(tasks.completedInWindow.count)} task(s) were completed.`
-      : 'task data unavailable.',
+    describePlansSentence(metrics.plans),
+    describeTasksSentence(metrics.tasks),
   ];
 
-  const paragraph = [sentences.join(' ')];
-  paragraph.push(
-    topSkills
-      ? `Top skills by invocation count: ${topSkills}.`
-      : 'Skill-usage data unavailable for this window.',
-  );
-  paragraph.push(
-    topModels
-      ? `Top models by invocation count: ${topModels}.`
-      : 'Model/token data unavailable for this window.',
-  );
-  paragraph.push(
-    totalSpend !== undefined
-      ? `Total tracked spend in window: ${formatUsd(totalSpend)}.`
-      : 'Spend data unavailable for this window.',
-  );
+  const paragraph = [
+    sentences.join(' '),
+    describeSkillsSentence(metrics.skill_usage),
+    describeModelsSentence(metrics.model_token_usage),
+    describeSpendSentence(metrics.model_token_usage),
+  ];
 
   return ['## Headline', '', paragraph.join(' '), ''].join('\n');
+}
+
+function describePlansSentence(value: unknown): string {
+  if (!isPlansMetrics(value)) {
+    return 'plan data unavailable and';
+  }
+  return `${formatInt(value.completedInWindow.count)} plan(s) and`;
+}
+
+function describeTasksSentence(value: unknown): string {
+  if (!isTasksMetrics(value)) {
+    return 'task data unavailable.';
+  }
+  return `${formatInt(value.completedInWindow.count)} task(s) were completed.`;
+}
+
+function describeSkillsSentence(value: unknown): string {
+  if (!isSkillUsageMetrics(value)) {
+    return 'Skill-usage data unavailable for this window.';
+  }
+  const topSkills = value.bySkill
+    .slice(0, 3)
+    .map((row) => `${row.skillName} (${formatInt(row.count)})`)
+    .join(', ');
+  if (topSkills === '') {
+    return 'Skill-usage data unavailable for this window.';
+  }
+  return `Top skills by invocation count: ${topSkills}.`;
+}
+
+function describeModelsSentence(value: unknown): string {
+  if (!isModelTokenUsageMetrics(value)) {
+    return 'Model/token data unavailable for this window.';
+  }
+  const topModels = value.byModel
+    .slice(0, 3)
+    .map(
+      (row) =>
+        `${row.provider}/${row.model} (${formatInt(row.invocationCount)})`,
+    )
+    .join(', ');
+  if (topModels === '') {
+    return 'Model/token data unavailable for this window.';
+  }
+  return `Top models by invocation count: ${topModels}.`;
+}
+
+function describeSpendSentence(value: unknown): string {
+  if (!isModelTokenUsageMetrics(value)) {
+    return 'Spend data unavailable for this window.';
+  }
+  const totalSpend = value.byProvider.reduce(
+    (sum, row) => sum + row.costUsd,
+    0,
+  );
+  return `Total tracked spend in window: ${formatUsd(totalSpend)}.`;
 }
 
 function renderSkipped(envelope: ReportEnvelope): string {

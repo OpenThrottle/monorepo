@@ -101,10 +101,11 @@ export async function* streamChatCompletion(
   // socket promptly and surfaces a clear error close to the source.
   const { idleMs } = resolveAgentTimeouts();
   const idleController = new AbortController();
-  const signal =
-    options.signal !== undefined
-      ? AbortSignal.any([options.signal, idleController.signal])
-      : idleController.signal;
+  const signals = [idleController.signal];
+  if (options.signal !== undefined) {
+    signals.unshift(options.signal);
+  }
+  const signal = AbortSignal.any(signals);
 
   let idleTimer: NodeJS.Timeout | undefined;
   let idleFired = false;

@@ -11,12 +11,13 @@ import { PlanRunEffortControl } from '../PlanRunEffortControl';
 describe('PlanRunEffortControl Component', () => {
   let props: PlanRunEffortControlProps;
 
-  const renderControl = (): RenderResult =>
-    render(
+  const renderControl = (): RenderResult => {
+    return render(
       <TooltipProvider>
         <PlanRunEffortControl {...props} />
       </TooltipProvider>,
     );
+  };
 
   beforeEach(() => {
     props = {

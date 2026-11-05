@@ -69,6 +69,29 @@ export function SimpleBarChart<T extends Record<string, string | number>>(
   );
 
   // Markup
+  const verticalAxes = (
+    <>
+      <XAxis axisLine={false} tickLine={false} type="number" />
+      <YAxis
+        axisLine={false}
+        dataKey={toDataKey<T>(categoryKey)}
+        tickLine={false}
+        type="category"
+        width={80}
+      />
+    </>
+  );
+  const horizontalAxes = (
+    <>
+      <XAxis
+        axisLine={false}
+        dataKey={toDataKey<T>(categoryKey)}
+        tickLine={false}
+        tickMargin={8}
+      />
+      <YAxis axisLine={false} tickLine={false} tickMargin={4} width={36} />
+    </>
+  );
 
   // Life Cycle
 
@@ -86,33 +109,7 @@ export function SimpleBarChart<T extends Record<string, string | number>>(
           strokeDasharray="3 3"
           vertical={isVertical}
         />
-        {isVertical ? (
-          <>
-            <XAxis axisLine={false} tickLine={false} type="number" />
-            <YAxis
-              axisLine={false}
-              dataKey={toDataKey<T>(categoryKey)}
-              tickLine={false}
-              type="category"
-              width={80}
-            />
-          </>
-        ) : (
-          <>
-            <XAxis
-              axisLine={false}
-              dataKey={toDataKey<T>(categoryKey)}
-              tickLine={false}
-              tickMargin={8}
-            />
-            <YAxis
-              axisLine={false}
-              tickLine={false}
-              tickMargin={4}
-              width={36}
-            />
-          </>
-        )}
+        {isVertical ? verticalAxes : horizontalAxes}
         <ChartTooltip content={<ChartTooltipContent />} />
         <Bar
           dataKey={toDataKey<T>(valueKey)}

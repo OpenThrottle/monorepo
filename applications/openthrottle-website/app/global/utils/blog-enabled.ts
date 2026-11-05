@@ -11,7 +11,9 @@ import { data } from 'react-router';
  */
 
 /** @description True when the blog is published on this deployment. */
-export const isBlogEnabled = (): boolean => FEATURE_BLOG_ENABLED;
+export const isBlogEnabled = (): boolean => {
+  return FEATURE_BLOG_ENABLED;
+};
 
 /**
  * @description Loader guard for the blog routes: throws a 404 `data()` response

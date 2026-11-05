@@ -1,9 +1,10 @@
-import { eslintConfig } from '@tools/dotfiles';
+import { dataFolderEslintConfig, eslintConfig } from '@tools/dotfiles';
 
 export default [
   { ignores: ['!**/*'] },
 
   ...eslintConfig,
+  ...dataFolderEslintConfig,
 
   /**
    * Component primitive shape — enforced hard for this package

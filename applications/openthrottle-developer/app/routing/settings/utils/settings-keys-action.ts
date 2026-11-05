@@ -5,8 +5,7 @@ import { optionalTrimmedString } from '~/routing/settings/utils/workspace-settin
 export const SETTINGS_KEYS_ACCOUNT_SEARCH_PARAM = 'account';
 
 /** Probe id when no account is selected; credentials for unknown accounts return []. */
-export const SETTINGS_KEYS_PROBE_SERVICE_ACCOUNT_ID =
-  '00000000-0000-0000-0000-000000000000';
+export const SETTINGS_KEYS_PROBE_SERVICE_ACCOUNT_ID = `00000000-0000-0000-0000-000000000000`;
 
 export type SettingsKeysActionData =
   | { ok: true }

@@ -4,7 +4,7 @@ import type { Route } from '@/app/routes/+types/sitemap[.]xml';
 import { isBlogEnabled } from '~/global/utils/blog-enabled';
 import { BLOG_SITEMAP_DEGRADED_MAX_AGE_SECONDS } from '~/routing/blog/config/blog-discovery';
 import { loadBlogSitemapEntries } from '~/routing/blog/utils/blog-feeds.server';
-import { STATIC_PATHS } from '~/routing/home/data/sitemap-paths';
+import { STATIC_PATHS } from '~/routing/home/data/data.sitemap-paths';
 
 /**
  * `GET /sitemap.xml` — a resource route (loader-only, no default export) that

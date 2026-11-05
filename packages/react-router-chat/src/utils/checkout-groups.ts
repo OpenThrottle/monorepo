@@ -38,6 +38,22 @@ export function checkoutSearchTerms(
   ].filter((term): term is string => term != null && term !== '');
 }
 
+/** The group heading for one checkout's remote identity. */
+function resolveGroupHeading(
+  identity: ReturnType<typeof parseRepositoryRemote>,
+  qualifyWithHost: boolean,
+): string {
+  if (identity === null) {
+    return LOCAL_ONLY_GROUP_HEADING;
+  }
+
+  if (qualifyWithHost) {
+    return `${identity.host}/${identity.owner}`;
+  }
+
+  return identity.owner;
+}
+
 /**
  * Group checkouts by the owner/org of their git remote, so several look-alike
  * `monorepo` checkouts land under visibly different headings. Checkouts with no
@@ -68,12 +84,7 @@ export function groupCheckoutOptions(
 
   const byHeading = new Map<string, ChatCheckoutOption[]>();
   for (const { checkout, identity } of identities) {
-    const heading =
-      identity === null
-        ? LOCAL_ONLY_GROUP_HEADING
-        : qualifyWithHost
-          ? `${identity.host}/${identity.owner}`
-          : identity.owner;
+    const heading = resolveGroupHeading(identity, qualifyWithHost);
 
     const existing = byHeading.get(heading);
     if (existing === undefined) {

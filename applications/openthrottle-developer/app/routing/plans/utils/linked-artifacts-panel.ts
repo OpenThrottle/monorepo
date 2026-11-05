@@ -8,8 +8,9 @@
 import { formatRelativeFromIso } from '~/routing/prompts/utils/utils.prompts';
 
 /** Coerce the Date scalar (number epoch millis | string) to a Date; matches the TaskDetails pattern. */
-export const toDate = (value: number | string): Date =>
-  typeof value === 'number' ? new Date(value) : new Date(String(value));
+export const toDate = (value: number | string): Date => {
+  return typeof value === 'number' ? new Date(value) : new Date(String(value));
+};
 
 /** Millis for sorting; invalid dates sort as 0. */
 export const toMillis = (value: number | string): number => {

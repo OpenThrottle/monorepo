@@ -52,10 +52,8 @@ function formatChildProcessCompact(metrics: ChildProcessMetrics): string {
  * Example: "ratio 2.5x (mixed)"
  */
 function formatWallClockCompact(metrics: WallClockMetrics): string {
-  const ratio =
-    metrics.wallClockToCpuRatio === Infinity
-      ? '∞'
-      : metrics.wallClockToCpuRatio.toFixed(1);
+  const isUnbounded = metrics.wallClockToCpuRatio === Infinity;
+  const ratio = isUnbounded ? '∞' : metrics.wallClockToCpuRatio.toFixed(1);
 
   return `ratio ${ratio}x (${metrics.interpretation})`;
 }

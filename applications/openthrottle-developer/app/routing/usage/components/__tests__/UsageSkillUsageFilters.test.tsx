@@ -6,38 +6,42 @@ import { describe, expect, test } from 'vitest';
 
 import type { UsageSkillUsageFilterOptionsFragment } from '~/__generated__/graphql';
 
-import { SKILL_USAGE_SCOPES } from '../../data/skill-usage-copy';
+import { SKILL_USAGE_SCOPES } from '../../data/data.skill-usage-copy';
 import type { UsageSkillUsageFiltersProps } from '../UsageSkillUsageFilters';
 import { UsageSkillUsageFilters } from '../UsageSkillUsageFilters';
 
 const buildFilterOptions = (
   overrides: Partial<UsageSkillUsageFilterOptionsFragment> = {},
-): UsageSkillUsageFilterOptionsFragment => ({
-  cwds: [],
-  gitBranches: [],
-  ...overrides,
-});
+): UsageSkillUsageFilterOptionsFragment => {
+  return {
+    cwds: [],
+    gitBranches: [],
+    ...overrides,
+  };
+};
 
 const renderComponent = (props: UsageSkillUsageFiltersProps): RenderResult => {
-  const Component = (): React.ReactElement => (
-    <UsageSkillUsageFilters {...props} />
-  );
+  const Component = (): React.ReactElement => {
+    return <UsageSkillUsageFilters {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);
 };
 
-const baseProps = (): UsageSkillUsageFiltersProps => ({
-  branchOptions: [],
-  branchesHaveMore: false,
-  end: '2026-07-31',
-  filterOptions: buildFilterOptions(),
-  providerParam: null,
-  selectedCwd: null,
-  selectedGitBranch: null,
-  selectedScope: null,
-  start: '2026-07-01',
-});
+const baseProps = (): UsageSkillUsageFiltersProps => {
+  return {
+    branchOptions: [],
+    branchesHaveMore: false,
+    end: '2026-07-31',
+    filterOptions: buildFilterOptions(),
+    providerParam: null,
+    selectedCwd: null,
+    selectedGitBranch: null,
+    selectedScope: null,
+    start: '2026-07-01',
+  };
+};
 
 describe('UsageSkillUsageFilters Component', () => {
   test('renders scope filter chips and marks the active scope', () => {

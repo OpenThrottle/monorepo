@@ -110,8 +110,7 @@ export class TranscriptionStreamService {
     const serviceUrl = process.env.WHISPER_SERVICE_URL?.trim();
     if (serviceUrl === undefined || serviceUrl === '') {
       return {
-        errorMessage:
-          'Voice transcription is not configured (WHISPER_SERVICE_URL is unset).',
+        errorMessage: `Voice transcription is not configured (WHISPER_SERVICE_URL is unset).`,
         sessionId: null,
       };
     }

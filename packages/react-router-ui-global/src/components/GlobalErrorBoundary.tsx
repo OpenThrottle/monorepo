@@ -132,15 +132,15 @@ export const GlobalErrorBoundary = (
         Sorry we&apos;ve encountered an unexpected problem. Please try again
         later.
       </p>
-      {error != null ? (
+      {error != null && (
         <p className="text-muted-foreground mt-2 font-mono text-xs break-all">
           {String(error)}
         </p>
-      ) : null}
+      )}
       {referencePanel}
-      {stackToggleEligible && looseStack ? (
+      {stackToggleEligible && looseStack && (
         <GlobalErrorBoundaryStackToggle stack={looseStack} />
-      ) : null}
+      )}
       {renderActions()}
     </div>
   );

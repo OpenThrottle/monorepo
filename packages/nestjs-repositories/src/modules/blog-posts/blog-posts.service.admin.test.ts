@@ -33,8 +33,9 @@ interface Condition {
   readonly sql: string;
 }
 
-const id = (n: number): string =>
-  `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
+const id = (n: number): string => {
+  return `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
+};
 
 const row = (
   n: number,
@@ -43,7 +44,9 @@ const row = (
   updatedAt: string,
   title = `Post ${n}`,
   slug = `slug-${n}`,
-): FakeRow => ({ id: id(n), publishedAt, slug, status, title, updatedAt });
+): FakeRow => {
+  return { id: id(n), publishedAt, slug, status, title, updatedAt };
+};
 
 /** One atom of the state filter, evaluated against the fake clock. */
 const matchesStateAtom = (candidate: FakeRow, atom: string): boolean => {
@@ -71,8 +74,9 @@ const matchesStateAtom = (candidate: FakeRow, atom: string): boolean => {
 
 const SEARCH_SQL = '(post.title ILIKE :search OR post.slug ILIKE :search)';
 
-const escapeRegExp = (char: string): string =>
-  char.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const escapeRegExp = (char: string): string => {
+  return char.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+};
 
 /** Evaluates a LIKE pattern with `\` escapes, case-insensitively. */
 const ilike = (value: string, pattern: string): boolean => {
@@ -224,8 +228,9 @@ describe('BlogPostsService.findAdminPosts', () => {
     service = app.get<BlogPostsService>(BlogPostsService);
   });
 
-  const ids = (page: { items: readonly BlogPost[] }): string[] =>
-    page.items.map((post) => post.id);
+  const ids = (page: { items: readonly BlogPost[] }): string[] => {
+    return page.items.map((post) => post.id);
+  };
 
   describe('ordering and pagination', () => {
     it('returns every state, most recently updated first, ties broken by id desc', async () => {

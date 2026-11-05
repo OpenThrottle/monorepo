@@ -17,11 +17,13 @@ describe('ToggleGroupItem Component', () => {
       value: 'a',
     };
 
-    const Component = () => (
-      <ToggleGroup aria-label="Test" type="single">
-        <ToggleGroupItem {...props}>A</ToggleGroupItem>
-      </ToggleGroup>
-    );
+    const Component = () => {
+      return (
+        <ToggleGroup aria-label="Test" type="single">
+          <ToggleGroupItem {...props}>A</ToggleGroupItem>
+        </ToggleGroup>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

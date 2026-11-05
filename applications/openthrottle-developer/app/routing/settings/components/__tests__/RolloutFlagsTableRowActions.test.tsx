@@ -40,9 +40,9 @@ describe('RolloutFlagsTableRowActions Component', () => {
 
   const renderActions = (): RenderResult => {
     component?.unmount();
-    const Component = (): React.ReactElement => (
-      <RolloutFlagsTableRowActions {...props} />
-    );
+    const Component = (): React.ReactElement => {
+      return <RolloutFlagsTableRowActions {...props} />;
+    };
     const RoutesStub = createRoutesStub([
       {
         Component,

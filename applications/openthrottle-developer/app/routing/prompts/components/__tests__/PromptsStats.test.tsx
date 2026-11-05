@@ -7,9 +7,9 @@ import { PromptsStats } from '../PromptsStats';
 
 describe('PromptsStats Component', () => {
   test('renders stat cards with titles and numeric values', () => {
-    const Component = () => (
-      <PromptsStats countAgents={2} countSkills={5} total={12} />
-    );
+    const Component = () => {
+      return <PromptsStats countAgents={2} countSkills={5} total={12} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 

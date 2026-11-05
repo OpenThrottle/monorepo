@@ -20,8 +20,9 @@ import {
 } from 'graphql';
 
 /** Introspection meta-fields are exempt from depth counting (codegen/devtools). */
-const isIntrospectionField = (name: string): boolean =>
-  name === '__schema' || name === '__type' || name === '__typename';
+const isIntrospectionField = (name: string): boolean => {
+  return name === '__schema' || name === '__type' || name === '__typename';
+};
 
 /**
  * Walk a selection set, returning the deepest nesting depth reached. Fragment
@@ -101,13 +102,15 @@ function measureDepth(
 
 const isFragmentDefinition = (
   definition: DefinitionNode,
-): definition is FragmentDefinitionNode =>
-  definition.kind === Kind.FRAGMENT_DEFINITION;
+): definition is FragmentDefinitionNode => {
+  return definition.kind === Kind.FRAGMENT_DEFINITION;
+};
 
 const isOperationDefinition = (
   definition: DefinitionNode,
-): definition is OperationDefinitionNode =>
-  definition.kind === Kind.OPERATION_DEFINITION;
+): definition is OperationDefinitionNode => {
+  return definition.kind === Kind.OPERATION_DEFINITION;
+};
 
 /**
  * Build a {@link ValidationRule} that rejects any operation whose selection-set

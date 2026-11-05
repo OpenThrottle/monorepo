@@ -54,7 +54,9 @@ var logHookError = (message, err) => {
 };
 
 // packages/agentic-hooks/src/config/env.ts
-var userConfigDir = () => import_node_path.default.join(import_node_os.default.homedir(), ".openthrottle");
+var userConfigDir = () => {
+  return import_node_path.default.join(import_node_os.default.homedir(), ".openthrottle");
+};
 var OT_MARKER_REL = import_node_path.default.join(
   "applications",
   "openthrottle-server",
@@ -114,13 +116,19 @@ var readEnvFile = (envPath) => {
   }
   return out;
 };
-var readRepoEnvFile = (repoRoot) => isOpenThrottleCheckout(repoRoot) ? readEnvFile(import_node_path.default.join(repoRoot, ".env")) : {};
-var readUserEnvFile = () => readEnvFile(import_node_path.default.join(userConfigDir(), ".env"));
-var envLayers = (repoRoot, options) => [
-  repoRoot ? readRepoEnvFile(repoRoot) : {},
-  ...options?.includeProcessEnv === false ? [] : [process.env],
-  readUserEnvFile()
-];
+var readRepoEnvFile = (repoRoot) => {
+  return isOpenThrottleCheckout(repoRoot) ? readEnvFile(import_node_path.default.join(repoRoot, ".env")) : {};
+};
+var readUserEnvFile = () => {
+  return readEnvFile(import_node_path.default.join(userConfigDir(), ".env"));
+};
+var envLayers = (repoRoot, options) => {
+  return [
+    repoRoot ? readRepoEnvFile(repoRoot) : {},
+    ...options?.includeProcessEnv === false ? [] : [process.env],
+    readUserEnvFile()
+  ];
+};
 var resolveOtEnv = (repoRoot, key, options) => {
   for (const layer of envLayers(repoRoot, options)) {
     const value = layer[key];
@@ -131,7 +139,9 @@ var resolveOtEnv = (repoRoot, key, options) => {
   return "";
 };
 var LOOPBACK_AUTHORITY = /^([a-z][a-z0-9+.-]*:\/\/(?:[^/?#@]*@)?)localhost(?=[:/?#]|$)/i;
-var normalizeLoopbackHost = (url) => url.replace(LOOPBACK_AUTHORITY, "$1127.0.0.1");
+var normalizeLoopbackHost = (url) => {
+  return url.replace(LOOPBACK_AUTHORITY, "$1127.0.0.1");
+};
 var graphqlUrlFromEnvMap = (env) => {
   const explicit = env.OPENTHROTTLE_GRAPHQL_URL?.trim() || env.OPENTHROTTLE_WORKER_GRAPHQL_URL?.trim();
   if (explicit) {
@@ -152,7 +162,9 @@ var resolveGraphqlUrl = (repoRoot, options) => {
   }
   return null;
 };
-var resolveAuthToken = (repoRoot, options) => resolveOtEnv(repoRoot, "OPENTHROTTLE_MCP_AUTH_TOKEN", options) || resolveOtEnv(repoRoot, "OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN", options) || "";
+var resolveAuthToken = (repoRoot, options) => {
+  return resolveOtEnv(repoRoot, "OPENTHROTTLE_MCP_AUTH_TOKEN", options) || resolveOtEnv(repoRoot, "OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN", options) || "";
+};
 
 // packages/agentic-hooks/src/data/chunk.ts
 var chunkByBudget = (items, {
@@ -185,16 +197,28 @@ var TELEMETRY_DIR_BASENAME = "skill-usage";
 var EVENTS_JSONL_BASENAME = "events.jsonl";
 var OUTCOMES_JSONL_BASENAME = "outcomes.jsonl";
 var TOKEN_USAGE_JSONL_BASENAME = "token-usage.jsonl";
-var resolveTelemetryDir = () => process.env.OPENTHROTTLE_TELEMETRY_DIR?.trim() || import_node_path2.default.join(userConfigDir(), TELEMETRY_DIR_BASENAME);
-var defaultJsonlPath = () => import_node_path2.default.join(resolveTelemetryDir(), EVENTS_JSONL_BASENAME);
-var defaultOutcomesJsonlPath = () => import_node_path2.default.join(resolveTelemetryDir(), OUTCOMES_JSONL_BASENAME);
-var defaultTokenUsageJsonlPath = () => import_node_path2.default.join(resolveTelemetryDir(), TOKEN_USAGE_JSONL_BASENAME);
-var deadLetterPathFor = (filePath) => filePath.replace(/\.jsonl$/, "") + ".dead-letter.jsonl";
-var toDeadLetterLine = (record, reason, nowMs) => JSON.stringify({
-  dead_lettered_at: new Date(nowMs).toISOString(),
-  line: record,
-  reason
-});
+var resolveTelemetryDir = () => {
+  return process.env.OPENTHROTTLE_TELEMETRY_DIR?.trim() || import_node_path2.default.join(userConfigDir(), TELEMETRY_DIR_BASENAME);
+};
+var defaultJsonlPath = () => {
+  return import_node_path2.default.join(resolveTelemetryDir(), EVENTS_JSONL_BASENAME);
+};
+var defaultOutcomesJsonlPath = () => {
+  return import_node_path2.default.join(resolveTelemetryDir(), OUTCOMES_JSONL_BASENAME);
+};
+var defaultTokenUsageJsonlPath = () => {
+  return import_node_path2.default.join(resolveTelemetryDir(), TOKEN_USAGE_JSONL_BASENAME);
+};
+var deadLetterPathFor = (filePath) => {
+  return filePath.replace(/\.jsonl$/, "") + ".dead-letter.jsonl";
+};
+var toDeadLetterLine = (record, reason, nowMs) => {
+  return JSON.stringify({
+    dead_lettered_at: new Date(nowMs).toISOString(),
+    line: record,
+    reason
+  });
+};
 var replayDeadLetter = (filePath) => {
   const deadPath = deadLetterPathFor(filePath);
   if (!import_node_fs2.default.existsSync(deadPath)) {
@@ -352,14 +376,16 @@ var drainJsonlFile = async ({
   post,
   deadlineMs,
   nowFn = Date.now
-}) => drainSnapshot({
-  batchBytes: Number.POSITIVE_INFINITY,
-  batchSize: 1,
-  deadlineMs,
-  filePath,
-  nowFn,
-  postBatch: async ([event]) => event === void 0 ? { ok: true } : post(event)
-});
+}) => {
+  return drainSnapshot({
+    batchBytes: Number.POSITIVE_INFINITY,
+    batchSize: 1,
+    deadlineMs,
+    filePath,
+    nowFn,
+    postBatch: async ([event]) => event === void 0 ? { ok: true } : post(event)
+  });
+};
 var drainJsonlFileBatched = async ({
   batchBytes,
   batchSize,
@@ -367,14 +393,16 @@ var drainJsonlFileBatched = async ({
   postBatch,
   deadlineMs,
   nowFn = Date.now
-}) => drainSnapshot({
-  batchBytes,
-  batchSize,
-  deadlineMs,
-  filePath,
-  nowFn,
-  postBatch
-});
+}) => {
+  return drainSnapshot({
+    batchBytes,
+    batchSize,
+    deadlineMs,
+    filePath,
+    nowFn,
+    postBatch
+  });
+};
 
 // packages/agentic-hooks/src/config/describe.ts
 var TELEMETRY_CONFIG_SOURCES = Object.freeze({
@@ -389,7 +417,9 @@ var TELEMETRY_CONFIG_SOURCES = Object.freeze({
 });
 
 // packages/nodejs-utils/src/utils/is-record.ts
-var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
+var isRecord = (value) => {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+};
 
 // packages/agentic-hooks/src/data/checkpoints.ts
 var DEFAULT_STALE_CHECKPOINT_MS = 6 * 60 * 60 * 1e3;
@@ -515,7 +545,9 @@ var PERMANENT_GRAPHQL_CODES = [
   "GRAPHQL_VALIDATION_FAILED"
 ];
 var TRANSIENT_CLIENT_STATUSES = [401, 403, 408, 429];
-var isPermanentHttpStatus = (status) => status >= 400 && status < 500 && !TRANSIENT_CLIENT_STATUSES.includes(status);
+var isPermanentHttpStatus = (status) => {
+  return status >= 400 && status < 500 && !TRANSIENT_CLIENT_STATUSES.includes(status);
+};
 var readStatusCode = (extensions) => {
   const original = extensions.originalError;
   if (isRecord(original) && typeof original.statusCode === "number") {
@@ -543,12 +575,16 @@ var readGraphqlErrors = (payload) => {
   }
   return { message: messages.join("; "), permanent };
 };
-var readMutationData = (payload, field) => isRecord(payload) && isRecord(payload.data) ? payload.data[field] : void 0;
-var transient = (reason) => ({
-  ok: false,
-  permanent: false,
-  reason
-});
+var readMutationData = (payload, field) => {
+  return isRecord(payload) && isRecord(payload.data) ? payload.data[field] : void 0;
+};
+var transient = (reason) => {
+  return {
+    ok: false,
+    permanent: false,
+    reason
+  };
+};
 var postMutation = async ({
   authToken,
   fetchImpl,
@@ -579,8 +615,13 @@ var postMutation = async ({
       signal: AbortSignal.timeout(timeoutMs)
     });
   } catch (err) {
-    const reason = err instanceof Error && err.name === "TimeoutError" ? "timeout" : err instanceof Error ? err.message : String(err);
-    return transient(reason);
+    if (err instanceof Error && err.name === "TimeoutError") {
+      return transient("timeout");
+    }
+    if (err instanceof Error) {
+      return transient(err.message);
+    }
+    return transient(String(err));
   }
   let payload;
   try {
@@ -638,24 +679,26 @@ mutation RecordTokenUsage($input: RecordTokenUsageInput!) {
   }
 }
 `;
-var toRecordTokenUsageRow = (record) => ({
-  cacheReadTokens: record.cache_read_tokens,
-  cacheWriteTokens: record.cache_write_tokens,
-  costUsd: record.cost_usd,
-  cwd: record.cwd,
-  gitBranch: record.git_branch,
-  inputTokens: record.input_tokens,
-  model: record.model,
-  occurredAt: record.occurred_at,
-  outputTokens: record.output_tokens,
-  provider: record.provider,
-  rawUsageJson: record.raw_usage_json,
-  reasoningTokens: record.reasoning_tokens,
-  requestId: record.request_id,
-  sessionId: record.session_id,
-  source: record.source,
-  totalTokens: record.total_tokens
-});
+var toRecordTokenUsageRow = (record) => {
+  return {
+    cacheReadTokens: record.cache_read_tokens,
+    cacheWriteTokens: record.cache_write_tokens,
+    costUsd: record.cost_usd,
+    cwd: record.cwd,
+    gitBranch: record.git_branch,
+    inputTokens: record.input_tokens,
+    model: record.model,
+    occurredAt: record.occurred_at,
+    outputTokens: record.output_tokens,
+    provider: record.provider,
+    rawUsageJson: record.raw_usage_json,
+    reasoningTokens: record.reasoning_tokens,
+    requestId: record.request_id,
+    sessionId: record.session_id,
+    source: record.source,
+    totalTokens: record.total_tokens
+  };
+};
 var postTokenUsageBatch = async ({
   records,
   graphqlUrl,
@@ -733,7 +776,9 @@ var postSkillUsageOutcome = async ({
     variables: { input: toRecordSkillUsageOutcomeInput(event) }
   });
 };
-var resolveTimeout = (timeoutMs) => timeoutMs ?? (Number(process.env.OPENTHROTTLE_TELEMETRY_TIMEOUT_MS) || DEFAULT_POST_TIMEOUT_MS);
+var resolveTimeout = (timeoutMs) => {
+  return timeoutMs ?? (Number(process.env.OPENTHROTTLE_TELEMETRY_TIMEOUT_MS) || DEFAULT_POST_TIMEOUT_MS);
+};
 var drainBufferedUsage = async ({
   repoRoot,
   eventsPath,
@@ -746,13 +791,15 @@ var drainBufferedUsage = async ({
   timeoutMs,
   nowFn = Date.now
 }) => {
-  const empty = () => ({
-    deadLettered: 0,
-    reasons: {},
-    retained: 0,
-    sent: 0,
-    skipped: 0
-  });
+  const empty = () => {
+    return {
+      deadLettered: 0,
+      reasons: {},
+      retained: 0,
+      sent: 0,
+      skipped: 0
+    };
+  };
   if (process.env.OPENTHROTTLE_TELEMETRY_OFFLINE === "1") {
     return { events: empty(), outcomes: empty(), tokenUsage: empty() };
   }
@@ -817,7 +864,9 @@ var formatDrainReasons = (tally) => {
   const entries = Object.entries(tally.reasons).sort((a, b) => b[1] - a[1]);
   return entries.length ? entries.map(([reason, count]) => `${reason} ×${count}`).join("; ") : "none";
 };
-var formatDrainFileResult = (label, tally) => `${label} sent=${tally.sent} retained=${tally.retained} dead-lettered=${tally.deadLettered} skipped=${tally.skipped} reasons: ${formatDrainReasons(tally)}`;
+var formatDrainFileResult = (label, tally) => {
+  return `${label} sent=${tally.sent} retained=${tally.retained} dead-lettered=${tally.deadLettered} skipped=${tally.skipped} reasons: ${formatDrainReasons(tally)}`;
+};
 
 // packages/agentic-hooks/src/data/plan-runs.ts
 var import_node_path4 = __toESM(require("node:path"), 1);

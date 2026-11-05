@@ -8,7 +8,9 @@ import type { QueueHealthPillProps } from '../QueueHealthPill';
 import { QueueHealthPill } from '../QueueHealthPill';
 
 const renderPill = (props: QueueHealthPillProps): RenderResult => {
-  const Component = () => <QueueHealthPill {...props} />;
+  const Component = () => {
+    return <QueueHealthPill {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 };

@@ -15,5 +15,6 @@ export const PLAN_RULES_WORKER_CONCURRENCY = 2;
  * Serializing per plan is what makes the placement-reconcile writes (which
  * touch `UNIQUE(plan_id, sort_order)`) collision-safe across passes.
  */
-export const planRulesEvaluationDedupId = (planId: string): string =>
-  `plan:${planId}`;
+export const planRulesEvaluationDedupId = (planId: string): string => {
+  return `plan:${planId}`;
+};

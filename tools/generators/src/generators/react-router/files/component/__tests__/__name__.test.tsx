@@ -13,7 +13,9 @@ describe('<%= name %> Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <<%= name %> {...props} />;
+    const Component = () => {
+      return <<%= name %> {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

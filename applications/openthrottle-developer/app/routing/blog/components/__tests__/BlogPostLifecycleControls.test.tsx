@@ -41,10 +41,11 @@ const renderControls = (
   return render(<Stub />);
 };
 
-const buttonNames = (component: RenderResult): string[] =>
-  component
+const buttonNames = (component: RenderResult): string[] => {
+  return component
     .getAllByRole('button')
     .map((button) => button.textContent?.trim() ?? '');
+};
 
 describe('BlogPostLifecycleControls Component', () => {
   test('renders nothing without blog:write', () => {

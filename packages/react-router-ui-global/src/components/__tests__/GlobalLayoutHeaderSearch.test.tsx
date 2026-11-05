@@ -8,10 +8,11 @@ import { GlobalLayoutHeaderSearch } from '../GlobalLayoutHeaderSearch';
 
 const renderSearch = (
   overrides: Partial<GlobalLayoutHeaderSearchProps> = {},
-): ReturnType<typeof render> =>
-  render(
+): ReturnType<typeof render> => {
+  return render(
     <GlobalLayoutHeaderSearch searchPlaceholder="Search" {...overrides} />,
   );
+};
 
 describe('GlobalLayoutHeaderSearch Component', () => {
   test('when wired, renders the search form and a labelled icon button', () => {

@@ -16,19 +16,23 @@ import {
 const credential = (
   overrides: Partial<ServiceAccountCredentialFieldsFragment> &
     Pick<ServiceAccountCredentialFieldsFragment, 'id' | 'prefix'>,
-): ServiceAccountCredentialFieldsFragment => ({
-  __typename: 'ServiceAccountCredentialObject',
-  createdAt: '2026-01-01T00:00:00.000Z',
-  expiresAt: null,
-  label: 'CI deploy',
-  lastUsedAt: null,
-  revokedAt: null,
-  serviceAccountId: 'sa-1',
-  ...overrides,
-});
+): ServiceAccountCredentialFieldsFragment => {
+  return {
+    __typename: 'ServiceAccountCredentialObject',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    expiresAt: null,
+    label: 'CI deploy',
+    lastUsedAt: null,
+    revokedAt: null,
+    serviceAccountId: 'sa-1',
+    ...overrides,
+  };
+};
 
 const renderTable = (props: SettingsKeysTableProps = {}): RenderResult => {
-  const Component = () => <SettingsKeysTable {...props} />;
+  const Component = () => {
+    return <SettingsKeysTable {...props} />;
+  };
   const RoutesStub = createRoutesStub([
     {
       Component,

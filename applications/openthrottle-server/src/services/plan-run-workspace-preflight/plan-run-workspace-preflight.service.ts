@@ -120,14 +120,7 @@ export class PlanRunWorkspacePreflightService {
     let servers: Record<string, unknown>;
     try {
       const parsed: unknown = JSON.parse(readFileSync(configPath, 'utf8'));
-      const candidate =
-        typeof parsed === 'object' && parsed !== null && 'mcpServers' in parsed
-          ? parsed.mcpServers
-          : undefined;
-      servers =
-        typeof candidate === 'object' && candidate !== null
-          ? { ...candidate }
-          : {};
+      servers = readMcpServers(parsed);
     } catch (error) {
       return [
         `${relativeConfigPath} in ${workingDirectory} is not readable JSON (${
@@ -163,6 +156,14 @@ export class PlanRunWorkspacePreflightService {
  * @description The relative launcher path an MCP server definition runs (`./scripts/run-x.sh`), or
  * null when it launches something absolute or off PATH that this check cannot verify.
  */
+const readMcpServers = (parsed: unknown): Record<string, unknown> => {
+  if (typeof parsed !== 'object' || parsed === null) return {};
+  if (!('mcpServers' in parsed)) return {};
+  const candidate = parsed.mcpServers;
+  if (typeof candidate !== 'object' || candidate === null) return {};
+  return { ...candidate };
+};
+
 const resolveRelativeLauncher = (definition: unknown): string | null => {
   if (typeof definition !== 'object' || definition === null) return null;
   if (!('args' in definition)) return null;

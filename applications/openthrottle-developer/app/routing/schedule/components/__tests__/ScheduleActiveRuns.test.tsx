@@ -15,7 +15,9 @@ const renderPanel = (
   runs: ScheduleInFlightRunFragment[],
   action?: () => unknown,
 ): RenderResult => {
-  const Component = () => <ScheduleActiveRuns runs={runs} />;
+  const Component = () => {
+    return <ScheduleActiveRuns runs={runs} />;
+  };
   const RoutesStub = createRoutesStub([
     { Component, action: action ?? (() => ({})), path: '/' },
   ]);

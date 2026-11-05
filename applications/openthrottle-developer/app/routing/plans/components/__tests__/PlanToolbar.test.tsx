@@ -14,8 +14,8 @@ import { PlanToolbar } from '../PlanToolbar';
 type ToolbarTestProps = Omit<PlanToolbarProps, 'models' | 'runConfigJson'> &
   Partial<Pick<PlanToolbarProps, 'models' | 'runConfigJson'>>;
 
-const renderToolbar = (toolbarProps: ToolbarTestProps): RenderResult =>
-  renderRoutesStub(
+const renderToolbar = (toolbarProps: ToolbarTestProps): RenderResult => {
+  return renderRoutesStub(
     <TooltipProvider>
       <PlanToolbar
         models={Promise.resolve([])}
@@ -24,6 +24,7 @@ const renderToolbar = (toolbarProps: ToolbarTestProps): RenderResult =>
       />
     </TooltipProvider>,
   );
+};
 
 describe('PlanToolbar Component', () => {
   let component: RenderResult;

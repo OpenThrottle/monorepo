@@ -15,10 +15,19 @@ export const PullRequestDetailHeader = (
   // Hooks
 
   // Setup
+  const hasBranches = pull.baseRef !== null || pull.headRef !== null;
+  const baseRefLabel = pull.baseRef !== null ? pull.baseRef : '—';
+  const headRefLabel = pull.headRef !== null ? pull.headRef : '—';
 
   // Handlers
 
   // Markup
+  const branches = (
+    <p className="text-muted-foreground mt-2 font-mono text-sm">
+      Branches: <span className="text-foreground">{baseRefLabel}</span> ←{' '}
+      <span className="text-foreground">{headRefLabel}</span>
+    </p>
+  );
 
   // Life Cycle
 
@@ -37,22 +46,11 @@ export const PullRequestDetailHeader = (
         {' · '}
         State {pull.state} · Created {formatDate(pull.createdAt, 'MM/dd/yyyy')}{' '}
         — updated {formatDate(pull.updatedAt, 'MM/dd/yyyy')}
-        {pull.mergedAt ? (
+        {pull.mergedAt && (
           <> · Merged {formatDate(pull.mergedAt, 'MM/dd/yyyy')}</>
-        ) : null}
+        )}
       </p>
-      {pull.baseRef !== null || pull.headRef !== null ? (
-        <p className="text-muted-foreground mt-2 font-mono text-sm">
-          Branches:{' '}
-          <span className="text-foreground">
-            {pull.baseRef !== null ? pull.baseRef : '—'}
-          </span>{' '}
-          ←{' '}
-          <span className="text-foreground">
-            {pull.headRef !== null ? pull.headRef : '—'}
-          </span>
-        </p>
-      ) : null}
+      {hasBranches ? branches : null}
     </div>
   );
 };

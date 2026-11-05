@@ -43,13 +43,15 @@ const renderLayer = (
   lane: TimelineLane,
   onSelectCluster?: (cluster: TimelineMarkerCluster) => void,
 ): RenderResult => {
-  const Component = () => (
-    <TimelineMarkerLayer
-      lane={lane}
-      onSelectCluster={onSelectCluster}
-      scale={scale}
-    />
-  );
+  const Component = () => {
+    return (
+      <TimelineMarkerLayer
+        lane={lane}
+        onSelectCluster={onSelectCluster}
+        scale={scale}
+      />
+    );
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

@@ -51,8 +51,9 @@ export interface RunDriverOptions {
  */
 const mergeChildEnv = (
   extra: Readonly<Record<string, string>> | undefined,
-): NodeJS.ProcessEnv | undefined =>
-  extra === undefined ? undefined : { ...process.env, ...extra };
+): NodeJS.ProcessEnv | undefined => {
+  return extra === undefined ? undefined : { ...process.env, ...extra };
+};
 
 /**
  * @description Applies the driver's optional `parseOutput` to the raw collected stdout. Drivers

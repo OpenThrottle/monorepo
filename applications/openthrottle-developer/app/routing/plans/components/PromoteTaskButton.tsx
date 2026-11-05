@@ -20,6 +20,10 @@ import { useFetcher, useRevalidator } from 'react-router';
 
 import type { action as taskDetailAction } from '~/routes/plans.$planId.tasks.$taskId._index';
 import { PLAN_TASK_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
+import {
+  getPromotionQueuedDescription,
+  readPromoteTaskJobId,
+} from '~/routing/plans/utils/promote-task-toast';
 
 export interface PromoteTaskButtonProps {
   /**
@@ -96,17 +100,9 @@ export const PromoteTaskButton = (
 
       if (data != null && typeof data === 'object') {
         if ('promoteTask' in data && data.promoteTask != null) {
-          const jobId =
-            typeof data.promoteTask === 'object' &&
-            'jobId' in data.promoteTask &&
-            typeof data.promoteTask.jobId === 'string'
-              ? data.promoteTask.jobId
-              : null;
+          const jobId = readPromoteTaskJobId(data.promoteTask);
           toast.success('Promotion queued', {
-            description:
-              jobId != null && jobId !== ''
-                ? `Job ${jobId}. The new plan appears on the plans list once the job completes.`
-                : 'The new plan appears on the plans list once the job completes.',
+            description: getPromotionQueuedDescription(jobId),
           });
           revalidator.revalidate();
           setOpen(false);

@@ -18,21 +18,23 @@ const makeSchema = (
     columns: Record<string, string>;
     name: string;
   }[],
-): DatabaseSchema => ({
-  foreignKeys: [],
-  tables: new Map(
-    tables.map((table) => [
-      table.name,
-      {
-        columnTypes: table.columns,
-        columns: Object.keys(table.columns),
-        name: table.name,
-        primaryKey: ['id'],
-      },
-    ]),
-  ),
-  uniqueKeys: [],
-});
+): DatabaseSchema => {
+  return {
+    foreignKeys: [],
+    tables: new Map(
+      tables.map((table) => [
+        table.name,
+        {
+          columnTypes: table.columns,
+          columns: Object.keys(table.columns),
+          name: table.name,
+          primaryKey: ['id'],
+        },
+      ]),
+    ),
+    uniqueKeys: [],
+  };
+};
 
 const manifest: SnapshotManifest = {
   plans: {

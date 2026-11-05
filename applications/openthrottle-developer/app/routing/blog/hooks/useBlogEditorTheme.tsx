@@ -5,7 +5,7 @@ import {
 import { useAtomValue } from 'jotai';
 import * as React from 'react';
 
-import { configAtom } from '~/global/data/atom.config';
+import { configAtom } from '~/global/data/data.atom-config';
 import { subscribeToPrefersDark } from '~/global/utils/external-stores';
 import { BLOG_EDITOR_MONACO_THEMES } from '~/routing/blog/config/defaults';
 

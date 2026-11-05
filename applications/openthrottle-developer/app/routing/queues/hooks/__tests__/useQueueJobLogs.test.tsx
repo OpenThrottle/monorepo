@@ -31,16 +31,18 @@ vi.mock('~/services/graphql-ws-client', () => ({
   getGraphqlWsClient: () => shared.client,
 }));
 
-const event = (cursor: string, timestamp: string): QueueJobLogEvent => ({
-  __typename: 'QueueJobLogEventObject',
-  cursor,
-  jobId: 'job-1',
-  level: QueueJobLogLevel.Info,
-  message: `line-${cursor}`,
-  queueName: 'plans',
-  source: 'plans-queue',
-  timestamp,
-});
+const event = (cursor: string, timestamp: string): QueueJobLogEvent => {
+  return {
+    __typename: 'QueueJobLogEventObject',
+    cursor,
+    jobId: 'job-1',
+    level: QueueJobLogLevel.Info,
+    message: `line-${cursor}`,
+    queueName: 'plans',
+    source: 'plans-queue',
+    timestamp,
+  };
+};
 
 interface HistoryPage {
   events: QueueJobLogEvent[];

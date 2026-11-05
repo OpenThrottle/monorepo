@@ -43,7 +43,9 @@ const parsePositiveInteger = (
 export const parsePaginationPage = (
   raw: string | null | undefined,
   defaultPage: number = DEFAULT_PAGINATION_PAGE,
-): number => parsePositiveInteger(raw) ?? defaultPage;
+): number => {
+  return parsePositiveInteger(raw) ?? defaultPage;
+};
 
 /**
  * @description Parse a raw `?limit=` value. Missing, empty, non-finite, or

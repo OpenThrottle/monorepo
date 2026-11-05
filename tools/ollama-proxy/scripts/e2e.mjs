@@ -51,9 +51,9 @@ async function main() {
 
   if (res.status === 502) {
     const text = await res.text();
-    const msg = text.includes('Upstream request failed')
-      ? 'Proxy is up and forwarding; Ollama is unreachable (start Ollama and/or Caddy at OLLAMA_BASE_URL).'
-      : text;
+    const isUpstreamFailure = text.includes('Upstream request failed');
+    const upstreamDownNote = `Proxy is up and forwarding; Ollama is unreachable (start Ollama and/or Caddy at OLLAMA_BASE_URL).`;
+    const msg = isUpstreamFailure ? upstreamDownNote : text;
     console.warn('E2E proxy check: ' + msg);
     process.exit(0);
   }

@@ -28,7 +28,9 @@ const baseWorkspace: UseIdeWorkspaceResult = {
 };
 
 const renderBody = (props: IdeWorkspaceBodyProps): RenderResult => {
-  const Component = () => <IdeWorkspaceBody {...props} />;
+  const Component = () => {
+    return <IdeWorkspaceBody {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 };

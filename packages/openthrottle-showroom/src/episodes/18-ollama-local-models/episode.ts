@@ -15,8 +15,7 @@ import type { VideoEpisode } from '../types.ts';
 export const episode: VideoEpisode = {
   beats: [
     {
-      action:
-        '`/settings/agents` with local Ollama models listed and one enabled.',
+      action: `\`/settings/agents\` with local Ollama models listed and one enabled.`,
       t: '0:00',
     },
     {
@@ -26,8 +25,7 @@ export const episode: VideoEpisode = {
     { action: 'Home composer; pick the local model.', t: '0:18' },
     { action: 'Ask a question; the response streams.', t: '0:26' },
     {
-      action:
-        'Open the browser network panel; filter shows only localhost traffic.',
+      action: `Open the browser network panel; filter shows only localhost traffic.`,
       t: '0:34',
     },
     {

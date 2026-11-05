@@ -8,7 +8,9 @@ import type { QueueStateBadgeProps } from '../QueueStateBadge';
 import { QueueStateBadge } from '../QueueStateBadge';
 
 const renderBadge = (props: QueueStateBadgeProps): RenderResult => {
-  const Component = () => <QueueStateBadge {...props} />;
+  const Component = () => {
+    return <QueueStateBadge {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 };

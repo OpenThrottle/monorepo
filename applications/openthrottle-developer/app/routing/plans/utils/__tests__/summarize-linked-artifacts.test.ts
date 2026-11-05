@@ -6,7 +6,9 @@ import {
   summarizeLinkedArtifacts,
 } from '../summarize-linked-artifacts';
 
-const row = (type: string, verification: string) => ({ type, verification });
+const row = (type: string, verification: string) => {
+  return { type, verification };
+};
 
 describe('summarizeLinkedArtifacts', () => {
   test('counts the total and every verification state', () => {

@@ -14,8 +14,7 @@ import type { QueueJobLogLevel } from './queue-job-log-mapping.ts';
 @ObjectType()
 export class QueueJobLogEventObject {
   @Field(() => String, {
-    description:
-      'Opaque cursor positioned AFTER this event; pass as `after` to resume.',
+    description: `Opaque cursor positioned AFTER this event; pass as \`after\` to resume.`,
   })
   cursor!: string;
 
@@ -32,8 +31,7 @@ export class QueueJobLogEventObject {
   queueName!: string;
 
   @Field(() => String, {
-    description:
-      'Origin layer, e.g. plans-queue | workflow-queue | ralph-shim.',
+    description: `Origin layer, e.g. plans-queue | workflow-queue | ralph-shim.`,
   })
   source!: string;
 

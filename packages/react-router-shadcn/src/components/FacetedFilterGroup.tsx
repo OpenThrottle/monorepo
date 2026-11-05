@@ -34,32 +34,32 @@ export const FacetedFilterGroup = (
   // Setup
   const values = options.map((option) => option.value);
   const allSelected = values.every((value) => selected.has(value));
-  const rowClass =
-    'data-[selected=true]:bg-muted data-[selected=true]:text-foreground cursor-pointer gap-2';
+  const rowClass = `data-[selected=true]:bg-muted data-[selected=true]:text-foreground cursor-pointer gap-2`;
+
+  const { clearGroup, selectGroup } = FACETED_FILTER_COPY;
+  const toggleLabel = allSelected ? clearGroup : selectGroup;
+  const checkedClass = 'bg-primary text-primary-foreground';
+  const uncheckedClass = 'opacity-50 [&_svg]:invisible';
 
   // Handlers
 
   // Markup
-  const header =
-    heading === undefined ? null : (
-      <CommandItem
-        className={cn(
-          rowClass,
-          'text-muted-foreground justify-between text-xs font-medium',
-        )}
-        data-slot="faceted-group-toggle"
-        keywords={options.map((option) => option.label)}
-        onSelect={() => onToggleGroup(values)}
-        value={`group:${heading}`}
-      >
-        {heading}
-        <span className="text-[11px] opacity-80">
-          {allSelected
-            ? FACETED_FILTER_COPY.clearGroup
-            : FACETED_FILTER_COPY.selectGroup}
-        </span>
-      </CommandItem>
-    );
+  const groupToggle = (
+    <CommandItem
+      className={cn(
+        rowClass,
+        'text-muted-foreground justify-between text-xs font-medium',
+      )}
+      data-slot="faceted-group-toggle"
+      keywords={options.map((option) => option.label)}
+      onSelect={() => onToggleGroup(values)}
+      value={`group:${heading}`}
+    >
+      {heading}
+      <span className="text-[11px] opacity-80">{toggleLabel}</span>
+    </CommandItem>
+  );
+  const header = heading === undefined ? null : groupToggle;
 
   // Life Cycle
 
@@ -83,16 +83,14 @@ export const FacetedFilterGroup = (
               aria-hidden={true}
               className={cn(
                 'border-primary flex size-4 shrink-0 items-center justify-center rounded-sm border',
-                checked
-                  ? 'bg-primary text-primary-foreground'
-                  : 'opacity-50 [&_svg]:invisible',
+                checked ? checkedClass : uncheckedClass,
               )}
             >
               <Check className="size-3" strokeWidth={3} />
             </span>
             {option.adornment}
             <span className="truncate">{option.label}</span>
-            {option.count === undefined ? null : (
+            {option.count !== undefined && (
               <span className="text-muted-foreground ml-auto pl-4 font-mono text-xs tabular-nums">
                 {option.count}
               </span>

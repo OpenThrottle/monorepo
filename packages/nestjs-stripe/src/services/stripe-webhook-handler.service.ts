@@ -32,8 +32,17 @@ import {
  */
 
 /** Converts a Unix-seconds timestamp to a `Date`, or `null` when absent. */
-const toDateOrNull = (unixSeconds: number | undefined): Date | null =>
-  unixSeconds != null ? new Date(unixSeconds * 1000) : null;
+const toDateOrNull = (unixSeconds: number | undefined): Date | null => {
+  return unixSeconds != null ? new Date(unixSeconds * 1000) : null;
+};
+
+/** Reads the id of an expandable Stripe field (id string or expanded object). */
+const expandableId = (
+  value: string | { readonly id: string } | null | undefined,
+): string | undefined => {
+  if (typeof value === 'string') return value;
+  return value?.id;
+};
 
 /**
  * @description Result of successfully processing a verified Stripe webhook payload.
@@ -127,14 +136,8 @@ export class StripeWebhookHandlerService {
     session: Stripe.Checkout.Session,
   ): Promise<void> {
     const userId = session.metadata?.user_id ?? session.client_reference_id;
-    const subscriptionId =
-      typeof session.subscription === 'string'
-        ? session.subscription
-        : session.subscription?.id;
-    const customerId =
-      typeof session.customer === 'string'
-        ? session.customer
-        : session.customer?.id;
+    const subscriptionId = expandableId(session.subscription);
+    const customerId = expandableId(session.customer);
 
     if (!userId || !subscriptionId) {
       return;
@@ -169,15 +172,15 @@ export class StripeWebhookHandlerService {
     const userId = await this.resolveUserIdFromSubscription(subscription);
     if (!userId) return;
 
+    const customer = subscription.customer;
+    const stripeCustomerId = typeof customer === 'string' ? customer : null;
+
     await this.subscriptions.upsertByStripeSubscriptionId(subscription.id, {
       cancelAtPeriodEnd: subscription.cancel_at_period_end,
       currentPeriodEnd: toDateOrNull(item?.current_period_end),
       currentPeriodStart: toDateOrNull(item?.current_period_start),
       status: subscription.status,
-      stripeCustomerId:
-        typeof subscription.customer === 'string'
-          ? subscription.customer
-          : null,
+      stripeCustomerId,
       stripePriceId: priceId,
       userId,
     });

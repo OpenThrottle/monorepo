@@ -24,9 +24,12 @@ describe('AgentConversationsService', () => {
   const isEntityTarget = (
     entity: unknown,
     target: typeof AgentConversation | typeof AgentConversationMessage,
-  ): boolean =>
-    entity === target ||
-    (typeof entity === 'function' && entity.name === target.name);
+  ): boolean => {
+    return (
+      entity === target ||
+      (typeof entity === 'function' && entity.name === target.name)
+    );
+  };
 
   const mockConversation = agentConversationsFactory.build({
     id: conversationId,
@@ -583,8 +586,9 @@ describe('AgentConversationsService', () => {
   });
 });
 
-const fakerId = (index: number): string =>
-  `44444444-4444-4444-8444-4444444444${index.toString().padStart(2, '0')}`.slice(
+const fakerId = (index: number): string => {
+  return `44444444-4444-4444-8444-4444444444${index.toString().padStart(2, '0')}`.slice(
     0,
     36,
   );
+};

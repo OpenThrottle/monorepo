@@ -5,6 +5,12 @@ import type { SearchChunk } from '~/__generated__/graphql';
 import type { SearchRankMeta } from '~/routing/search/types/search-rank-meta';
 import { githubBlobHref } from '~/routing/search/utils/github-blob-href';
 import { planOrTaskDetailHref } from '~/routing/search/utils/plan-or-task-detail-href';
+import {
+  describeSimilarity,
+  describeSource,
+  formatDocSourceMeta,
+  formatEntityIds,
+} from '~/routing/search/utils/search-why-hints';
 import { formatRankSummary } from '~/routing/search/utils/search-why-this-result';
 
 export interface SearchWhyThisResultProps {
@@ -26,37 +32,14 @@ export const SearchWhyThisResult = (
   // Hooks
 
   // Setup
-  const similarityHint =
-    result.similarity != null
-      ? `Cosine similarity to your query embedding is about ${Math.round(result.similarity * 100)}% (higher means closer in vector space).`
-      : 'Ranked by semantic similarity between your query and indexed chunks.';
-
-  const sourceHint =
-    result.source === 'documentation'
-      ? 'This hit came from ingested documentation.'
-      : result.source === 'task'
-        ? 'This hit matches text from a task linked to a plan.'
-        : 'This hit matches text from a plan chunk.';
+  const similarityHint = describeSimilarity(result.similarity);
+  const sourceHint = describeSource(result.source);
 
   const explanationBody = `OpenThrottle search embeds your query and compares it to plan, task, and documentation chunks (vector similarity). ${sourceHint} ${similarityHint}`;
 
-  const entityIds =
+  const hasEntityIds =
     result.source !== 'documentation' &&
-    (result.planId != null ||
-      (result.taskId != null && result.taskId !== '')) ? (
-      <p className="text-muted-foreground/90 font-mono text-[11px]">
-        {[
-          result.planId != null && result.planId !== ''
-            ? `Plan id: ${result.planId}`
-            : null,
-          result.taskId != null && result.taskId !== ''
-            ? `Task id: ${result.taskId}`
-            : null,
-        ]
-          .filter(Boolean)
-          .join(' · ')}
-      </p>
-    ) : null;
+    (result.planId != null || (result.taskId != null && result.taskId !== ''));
 
   const hasDocBlob =
     result.source === 'documentation' &&
@@ -73,53 +56,92 @@ export const SearchWhyThisResult = (
   const hasTaskJump =
     hasPlanJump && result.taskId != null && result.taskId !== '';
 
-  // Handlers
+  const hasDocSourceMeta =
+    result.source === 'documentation' &&
+    (result.sourceRepo != null || result.sourcePath != null);
 
-  // Markup
-  const quickOpenLinks =
-    hasDocBlob && result.sourceRepo != null && result.sourcePath != null ? (
-      <p
-        className="flex flex-wrap gap-x-3 gap-y-1 text-[11px]"
-        data-testid="SearchWhyThisResult-quickOpen"
-      >
-        <a
-          className="text-primary font-medium underline-offset-4 hover:underline"
-          data-testid="SearchWhyThisResult-docGithubLink"
-          href={githubBlobHref(
-            result.sourceRepo,
-            result.sourcePath,
-            result.sourceSha,
-          )}
-          rel="noopener noreferrer"
-          target="_blank"
+  const rankSummaryText = rankMeta == null ? null : formatRankSummary(rankMeta);
+
+  // Handlers
+  const renderQuickOpenLinks = (): React.ReactNode => {
+    const { planId, sourcePath, sourceRepo, sourceSha, taskId } = result;
+
+    if (hasDocBlob && sourceRepo != null && sourcePath != null) {
+      return (
+        <p
+          className="flex flex-wrap gap-x-3 gap-y-1 text-[11px]"
+          data-testid="SearchWhyThisResult-quickOpen"
         >
-          View on GitHub
-        </a>
-      </p>
-    ) : hasPlanJump ? (
-      <p
-        className="flex flex-wrap gap-x-3 gap-y-1 text-[11px]"
-        data-testid="SearchWhyThisResult-quickOpen"
-      >
+          <a
+            className="text-primary font-medium underline-offset-4 hover:underline"
+            data-testid="SearchWhyThisResult-docGithubLink"
+            href={githubBlobHref(sourceRepo, sourcePath, sourceSha)}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            View on GitHub
+          </a>
+        </p>
+      );
+    }
+
+    if (hasPlanJump && planId != null) {
+      const taskJumpLink = (
         <Link
           className="text-primary font-medium underline-offset-4 hover:underline"
-          data-testid="SearchWhyThisResult-planJumpLink"
-          prefetch="intent"
-          to={`/plans/${result.planId}`}
+          data-testid="SearchWhyThisResult-taskJumpLink"
+          to={planOrTaskDetailHref(planId, taskId)}
         >
-          Open plan
+          Open task on plan
         </Link>
-        {hasTaskJump ? (
+      );
+
+      return (
+        <p
+          className="flex flex-wrap gap-x-3 gap-y-1 text-[11px]"
+          data-testid="SearchWhyThisResult-quickOpen"
+        >
           <Link
             className="text-primary font-medium underline-offset-4 hover:underline"
-            data-testid="SearchWhyThisResult-taskJumpLink"
-            to={planOrTaskDetailHref(result.planId!, result.taskId)}
+            data-testid="SearchWhyThisResult-planJumpLink"
+            prefetch="intent"
+            to={`/plans/${planId}`}
           >
-            Open task on plan
+            Open plan
           </Link>
-        ) : null}
-      </p>
-    ) : null;
+          {hasTaskJump ? taskJumpLink : null}
+        </p>
+      );
+    }
+
+    return null;
+  };
+
+  // Markup
+  const quickOpenLinks = renderQuickOpenLinks();
+  const rankSummary = (
+    <p className="text-foreground/90 text-[11px]">{rankSummaryText}</p>
+  );
+  const entityIds = (
+    <p className="text-muted-foreground/90 font-mono text-[11px]">
+      {formatEntityIds(result.planId, result.taskId)}
+    </p>
+  );
+  const quickOpen = (
+    <div className="space-y-1">
+      <p className="text-foreground/90 text-[11px] font-medium">Quick open</p>
+      {quickOpenLinks}
+    </div>
+  );
+  const docSourceMeta = (
+    <p className="text-muted-foreground/90 font-mono text-[11px]">
+      {formatDocSourceMeta(
+        result.sourceRepo,
+        result.sourcePath,
+        result.sourceSha,
+      )}
+    </p>
+  );
 
   // Life Cycle
 
@@ -135,40 +157,12 @@ export const SearchWhyThisResult = (
         Why this result?
       </summary>
       <div className="border-border bg-muted/40 text-muted-foreground mt-2 space-y-2 rounded-md border p-3 text-xs">
-        {rankMeta != null ? (
-          <p className="text-foreground/90 text-[11px]">
-            {formatRankSummary(rankMeta)}
-          </p>
-        ) : null}
+        {rankSummaryText != null ? rankSummary : null}
         <p>{explanationBody}</p>
         <p className="text-muted-foreground/90 font-mono text-[11px]">{`Chunk id: ${result.id}`}</p>
-        {entityIds}
-        {quickOpenLinks != null ? (
-          <div className="space-y-1">
-            <p className="text-foreground/90 text-[11px] font-medium">
-              Quick open
-            </p>
-            {quickOpenLinks}
-          </div>
-        ) : null}
-        {result.source === 'documentation' &&
-          (result.sourceRepo != null || result.sourcePath != null) && (
-            <p className="text-muted-foreground/90 font-mono text-[11px]">
-              {[
-                result.sourceRepo != null && result.sourceRepo !== ''
-                  ? `Repo: ${result.sourceRepo}`
-                  : null,
-                result.sourcePath != null && result.sourcePath !== ''
-                  ? `Path: ${result.sourcePath}`
-                  : null,
-                result.sourceSha != null && result.sourceSha !== ''
-                  ? `SHA: ${result.sourceSha.slice(0, 7)}`
-                  : null,
-              ]
-                .filter(Boolean)
-                .join(' · ')}
-            </p>
-          )}
+        {hasEntityIds ? entityIds : null}
+        {quickOpenLinks != null ? quickOpen : null}
+        {hasDocSourceMeta ? docSourceMeta : null}
         <p className="border-border text-muted-foreground border-t pt-2 text-[11px]">
           <strong className="text-foreground/90 font-medium">Tuning:</strong>{' '}
           the API returns the strongest matches first. Use a tighter query for

@@ -57,8 +57,9 @@ const sleep = async (ms: number): Promise<void> => {
   await new Promise((resolve) => setTimeout(resolve, ms));
 };
 
-const slotOf = (jobId: string | undefined): number =>
-  Number((jobId ?? '').split(':').at(-1) ?? Number.NaN);
+const slotOf = (jobId: string | undefined): number => {
+  return Number((jobId ?? '').split(':').at(-1) ?? Number.NaN);
+};
 
 const runScenario = async (bootOrder: BootOrder): Promise<ScenarioResult> => {
   const prefix = `misfire-probe-${bootOrder}-${Date.now()}`;
@@ -80,8 +81,8 @@ const runScenario = async (bootOrder: BootOrder): Promise<ScenarioResult> => {
     );
   };
 
-  const startWorker = (): Worker<ProbeData, void> =>
-    new Worker<ProbeData, void>(
+  const startWorker = (): Worker<ProbeData, void> => {
+    return new Worker<ProbeData, void>(
       'scheduled-agent-jobs',
       async (job: Job<ProbeData, void>) => {
         const slotMs = slotOf(job.id);
@@ -93,6 +94,7 @@ const runScenario = async (bootOrder: BootOrder): Promise<ScenarioResult> => {
       },
       { connection: CONNECTION, prefix },
     );
+  };
 
   await upsert(1);
   const downAt = Date.now();

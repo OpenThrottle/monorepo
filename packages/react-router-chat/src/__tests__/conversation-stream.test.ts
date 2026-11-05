@@ -15,17 +15,19 @@ const chunk = (overrides: {
   messageId?: string;
   metadataJson?: string | null;
   sortOrder: number;
-}) => ({
-  conversationId: 'conv-1',
-  delta: overrides.delta ?? '',
-  done: overrides.done ?? false,
-  error: overrides.error ?? null,
-  id: `chunk-${overrides.sortOrder}`,
-  kind: overrides.kind ?? 'text',
-  messageId: overrides.messageId ?? 'assistant-1',
-  metadataJson: overrides.metadataJson ?? null,
-  sortOrder: overrides.sortOrder,
-});
+}) => {
+  return {
+    conversationId: 'conv-1',
+    delta: overrides.delta ?? '',
+    done: overrides.done ?? false,
+    error: overrides.error ?? null,
+    id: `chunk-${overrides.sortOrder}`,
+    kind: overrides.kind ?? 'text',
+    messageId: overrides.messageId ?? 'assistant-1',
+    metadataJson: overrides.metadataJson ?? null,
+    sortOrder: overrides.sortOrder,
+  };
+};
 
 describe('reduceStreamChunk', () => {
   it('accumulates deltas in order and marks streaming', () => {
@@ -303,7 +305,9 @@ describe('reduceStreamChunk — structured events', () => {
   const eventsOf = (
     state: ReturnType<typeof reduceStreamChunk>,
     messageId = 'assistant-1',
-  ) => state.events.get(messageId) ?? [];
+  ) => {
+    return state.events.get(messageId) ?? [];
+  };
 
   it('coalesces consecutive text deltas into one ordered text event', () => {
     let state = INITIAL_STREAM_STATE;

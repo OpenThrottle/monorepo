@@ -10,7 +10,9 @@ import type { BlogTagListProps } from '../BlogTagList';
 import { BlogTagList } from '../BlogTagList';
 
 const renderTagList = (props: BlogTagListProps): RenderResult => {
-  const Wrapped = () => <BlogTagList {...props} />;
+  const Wrapped = () => {
+    return <BlogTagList {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component: Wrapped, path: '/' }]);
 
   return render(<RoutesStub />);

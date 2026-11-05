@@ -89,12 +89,13 @@ const RevalidationHarness = (): React.ReactElement => {
   );
 };
 
-const renderPlansTable = (tableProps: PlansTableProps): RenderResult =>
-  renderRoutesStub(
+const renderPlansTable = (tableProps: PlansTableProps): RenderResult => {
+  return renderRoutesStub(
     <TooltipProvider>
       <PlansTable {...tableProps} />
     </TooltipProvider>,
   );
+};
 
 describe('PlansTable Component', () => {
   test('shows empty state when plans is empty', () => {
@@ -205,8 +206,7 @@ describe('PlansTable Component', () => {
   });
 
   describe('custom run configuration indicator', () => {
-    const customConfigLabel =
-      'Custom workflow run configuration (differs from defaults)';
+    const customConfigLabel = `Custom workflow run configuration (differs from defaults)`;
 
     test('shows indicator link when hasCustomRunConfig is true', () => {
       const { getByRole } = renderPlansTable({ plans: [mockPlans[1]] });

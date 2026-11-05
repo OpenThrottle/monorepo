@@ -14,7 +14,9 @@ describe('TableCaption Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <TableCaption {...props} />;
+    const Component = () => {
+      return <TableCaption {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

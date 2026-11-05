@@ -31,8 +31,9 @@ const mockNotes: NoteCardFragment[] = [
   },
 ];
 
-const renderNotesTable = (tableProps: NotesTableProps): RenderResult =>
-  renderRoutesStub(<NotesTable {...tableProps} />);
+const renderNotesTable = (tableProps: NotesTableProps): RenderResult => {
+  return renderRoutesStub(<NotesTable {...tableProps} />);
+};
 
 describe('NotesTable Component', () => {
   afterEach(() => {

@@ -17,19 +17,23 @@ import {
 const loadAverage = (
   perCoreLoad1m: number,
   overrides: Partial<LoadAverageMetrics> = {},
-): LoadAverageMetrics => ({
-  cpuCount: 8,
-  load15m: 1,
-  load1m: 1,
-  load5m: 1,
-  perCoreLoad1m,
-  ...overrides,
-});
+): LoadAverageMetrics => {
+  return {
+    cpuCount: 8,
+    load15m: 1,
+    load1m: 1,
+    load5m: 1,
+    perCoreLoad1m,
+    ...overrides,
+  };
+};
 
-const psi = (some10s: number | null): PsiCpuMetrics => ({
-  ...createEmptyPsiMetrics(),
-  some10s,
-});
+const psi = (some10s: number | null): PsiCpuMetrics => {
+  return {
+    ...createEmptyPsiMetrics(),
+    some10s,
+  };
+};
 
 describe('toLoadAverageMetrics', () => {
   it('rounds load averages to 2 decimals and derives per-core from the raw 1m load', () => {
@@ -120,24 +124,28 @@ describe('formatSystemCpuMetrics', () => {
   const snapshot = (
     psiMetrics: PsiCpuMetrics,
     load: LoadAverageMetrics,
-  ): SystemCpuSnapshot => ({
-    loadAverage: load,
-    psi: psiMetrics,
-    timestamp: 0,
-  });
+  ): SystemCpuSnapshot => {
+    return {
+      loadAverage: load,
+      psi: psiMetrics,
+      timestamp: 0,
+    };
+  };
 
   const metrics = (
     overrides: Partial<SystemCpuMetrics> = {},
-  ): SystemCpuMetrics => ({
-    atEnd: snapshot(createEmptyPsiMetrics(), loadAverage(0.5)),
-    atStart: snapshot(createEmptyPsiMetrics(), loadAverage(0.5)),
-    platform: 'darwin',
-    pressureLevel: 'low',
-    psiAvailable: false,
-    psiFullDeltaUs: null,
-    psiSomeDeltaUs: null,
-    ...overrides,
-  });
+  ): SystemCpuMetrics => {
+    return {
+      atEnd: snapshot(createEmptyPsiMetrics(), loadAverage(0.5)),
+      atStart: snapshot(createEmptyPsiMetrics(), loadAverage(0.5)),
+      platform: 'darwin',
+      pressureLevel: 'low',
+      psiAvailable: false,
+      psiFullDeltaUs: null,
+      psiSomeDeltaUs: null,
+      ...overrides,
+    };
+  };
 
   it('summarizes load, per-core load, cpu count, and pressure level', () => {
     const summary = formatSystemCpuMetrics(metrics());

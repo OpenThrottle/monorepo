@@ -66,8 +66,9 @@ export function validateBackupCronPattern(
     }
   }
 
-  const isFixedValue = (value: string): boolean =>
-    /^\d{1,2}$/.test(value) && Number(value) >= 0 && Number(value) <= 59;
+  const isFixedValue = (value: string): boolean => {
+    return /^\d{1,2}$/.test(value) && Number(value) >= 0 && Number(value) <= 59;
+  };
 
   const hasSeconds = fields.length === 6;
   const secondsField = (hasSeconds ? fields[0] : '0') ?? '';
@@ -103,19 +104,21 @@ export function resolveBackupOwnership():
   | { readonly owner: false; readonly reason: string } {
   const explicit = process.env.OT_BACKUP_OWNER;
   if (explicit !== undefined && explicit.trim() !== '') {
-    return parseTruthyEnv(explicit)
-      ? { owner: true }
-      : {
-          owner: false,
-          reason: `OT_BACKUP_OWNER is false; this checkout does not schedule backups.`,
-        };
+    if (parseTruthyEnv(explicit)) {
+      return { owner: true };
+    }
+    return {
+      owner: false,
+      reason: `OT_BACKUP_OWNER is false; this checkout does not schedule backups.`,
+    };
   }
 
   const repeatables = resolveRepeatablesOwner();
 
-  return repeatables.owner
-    ? { owner: true }
-    : { owner: false, reason: repeatables.reason };
+  if (repeatables.owner) {
+    return { owner: true };
+  }
+  return { owner: false, reason: repeatables.reason };
 }
 
 export function parseTruthyEnv(value: string | undefined): boolean {

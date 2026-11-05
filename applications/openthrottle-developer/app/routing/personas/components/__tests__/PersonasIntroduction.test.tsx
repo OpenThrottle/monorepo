@@ -7,17 +7,19 @@ import { PersonasIntroduction } from '../PersonasIntroduction';
 
 describe('PersonasIntroduction Component', () => {
   test('renders personas heading and intro copy', () => {
-    const Component = () => (
-      <PersonasIntroduction
-        entries={[
-          {
-            repoRelativePath: '.agents/personas/architect.md',
-            slug: 'architect',
-            summary: 'Architecture lens.',
-          },
-        ]}
-      />
-    );
+    const Component = () => {
+      return (
+        <PersonasIntroduction
+          entries={[
+            {
+              repoRelativePath: '.agents/personas/architect.md',
+              slug: 'architect',
+              summary: 'Architecture lens.',
+            },
+          ]}
+        />
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 

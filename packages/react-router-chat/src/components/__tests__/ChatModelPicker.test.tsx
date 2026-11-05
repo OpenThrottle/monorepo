@@ -27,8 +27,8 @@ const MODELS: readonly ChatModelOption[] = [
 
 const renderPicker = (
   overrides: Partial<ChatModelPickerProps> = {},
-): RenderResult =>
-  render(
+): RenderResult => {
+  return render(
     <TooltipProvider>
       <ChatModelPicker
         groups={GROUPS}
@@ -39,6 +39,7 @@ const renderPicker = (
       />
     </TooltipProvider>,
   );
+};
 
 const openPicker = async (
   component: RenderResult,

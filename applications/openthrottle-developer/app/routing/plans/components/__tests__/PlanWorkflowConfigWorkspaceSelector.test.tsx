@@ -16,28 +16,34 @@ const checkout = (
   overrides: Partial<
     PlanRunConfigRepositoryFieldsFragment['checkouts'][number]
   >,
-): PlanRunConfigRepositoryFieldsFragment['checkouts'][number] => ({
-  displayName: 'openthrottle',
-  filesystemPath: '/Users/matt/Development/openthrottle',
-  id: 'checkout-1',
-  inspection: { git: { currentBranch: 'main' } },
-  kind: 'primary',
-  managed: false,
-  ...overrides,
-});
+): PlanRunConfigRepositoryFieldsFragment['checkouts'][number] => {
+  return {
+    displayName: 'openthrottle',
+    filesystemPath: '/Users/matt/Development/openthrottle',
+    id: 'checkout-1',
+    inspection: { git: { currentBranch: 'main' } },
+    kind: 'primary',
+    managed: false,
+    ...overrides,
+  };
+};
 
 const repo = (
   overrides: Partial<PlanRunConfigRepositoryFieldsFragment>,
-): PlanRunConfigRepositoryFieldsFragment => ({
-  checkouts: [checkout({})],
-  id: 'repo-1',
-  name: 'OpenThrottle/monorepo',
-  normalizedRemoteUrl: 'github.com/openthrottle/monorepo',
-  projectId: 'proj-1',
-  ...overrides,
-});
+): PlanRunConfigRepositoryFieldsFragment => {
+  return {
+    checkouts: [checkout({})],
+    id: 'repo-1',
+    name: 'OpenThrottle/monorepo',
+    normalizedRemoteUrl: 'github.com/openthrottle/monorepo',
+    projectId: 'proj-1',
+    ...overrides,
+  };
+};
 
-const noop = (): void => undefined;
+const noop = (): void => {
+  return undefined;
+};
 
 const baseProps: PlanWorkflowConfigWorkspaceSelectorProps = {
   branch: '',
@@ -56,9 +62,9 @@ const baseProps: PlanWorkflowConfigWorkspaceSelectorProps = {
 const renderSelector = (
   props: PlanWorkflowConfigWorkspaceSelectorProps,
 ): ReturnType<typeof render> => {
-  const Component = (): React.ReactElement => (
-    <PlanWorkflowConfigWorkspaceSelector {...props} />
-  );
+  const Component = (): React.ReactElement => {
+    return <PlanWorkflowConfigWorkspaceSelector {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 };

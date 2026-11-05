@@ -22,12 +22,14 @@ function renderIntroduction(
   props: SettingsKeysIntroductionProps = {},
   initialEntries: readonly string[] = ['/'],
 ): RenderResult {
-  const Component = () => (
-    <>
-      <SettingsKeysIntroduction {...props} />
-      <GlobalFeatureOnboardingModal content={SETTINGS_KEYS_ONBOARDING} />
-    </>
-  );
+  const Component = () => {
+    return (
+      <>
+        <SettingsKeysIntroduction {...props} />
+        <GlobalFeatureOnboardingModal content={SETTINGS_KEYS_ONBOARDING} />
+      </>
+    );
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub initialEntries={[...initialEntries]} />);

@@ -73,16 +73,18 @@ describe('routes/settings.workspace._index.tsx', () => {
   });
 
   describe('action', () => {
-    const actionArgs = (formData: FormData): Route.ActionArgs => ({
-      context: createTestRouterContext(),
-      params: {},
-      pattern: '/settings/workspace',
-      request: new Request('http://localhost/settings/workspace', {
-        body: formData,
-        method: 'POST',
-      }),
-      url: new URL('http://localhost/settings/workspace'),
-    });
+    const actionArgs = (formData: FormData): Route.ActionArgs => {
+      return {
+        context: createTestRouterContext(),
+        params: {},
+        pattern: '/settings/workspace',
+        request: new Request('http://localhost/settings/workspace', {
+          body: formData,
+          method: 'POST',
+        }),
+        url: new URL('http://localhost/settings/workspace'),
+      };
+    };
 
     test('updateProfile calls updateWorkspaceProfile mutation', async () => {
       mockExecuteGraphqlWithAuth.mockResolvedValue({

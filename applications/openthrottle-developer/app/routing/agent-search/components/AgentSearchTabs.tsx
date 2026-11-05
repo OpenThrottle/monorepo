@@ -2,7 +2,7 @@ import { Tabs, TabsList, TabsTrigger } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { useSearchParams } from 'react-router';
 
-import { AGENT_SEARCH_TAB_LABEL } from '~/routing/agent-search/data/agent-search-tabs';
+import { AGENT_SEARCH_TAB_LABEL } from '~/routing/agent-search/data/data.agent-search-tabs';
 import {
   AGENT_SEARCH_TABS,
   type AgentSearchCounts,

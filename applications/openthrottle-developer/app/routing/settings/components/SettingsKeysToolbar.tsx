@@ -59,6 +59,48 @@ export const SettingsKeysToolbar = (
   };
 
   // Markup
+  const accountPicker = (
+    <div className="flex min-w-[12rem] flex-col gap-2">
+      <Label htmlFor="settings-keys-service-account">Service account</Label>
+      <Select
+        onValueChange={handleAccountChange}
+        value={selectedServiceAccountId ?? undefined}
+      >
+        <SelectTrigger
+          aria-label="Service account"
+          className="w-full max-w-xs"
+          data-testid="SettingsKeysToolbar-account-select"
+          id="settings-keys-service-account"
+        >
+          <SelectValue placeholder="Select service account" />
+        </SelectTrigger>
+        <SelectContent>
+          {enabledAccounts.map((account) => (
+            <SelectItem key={account.id} value={account.id}>
+              {account.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+  const noAccountsNote = (
+    <p data-testid="SettingsKeysToolbar-no-accounts">
+      No service accounts are available. Bootstrap accounts via{' '}
+      <code className="text-xs">database:bootstrap-service-accounts</code>.
+    </p>
+  );
+  const singleAccountNote = (
+    <p>
+      <span className="text-foreground font-medium">Account:</span>{' '}
+      {enabledAccounts[0]?.name ?? '—'}
+    </p>
+  );
+  const accountNote = (
+    <div className="text-muted-foreground min-w-0 flex-1 text-sm">
+      {noAccounts ? noAccountsNote : singleAccountNote}
+    </div>
+  );
 
   // Life Cycle
 
@@ -72,48 +114,7 @@ export const SettingsKeysToolbar = (
       )}
       data-testid="SettingsKeysToolbar"
     >
-      {showAccountPicker ? (
-        <div className="flex min-w-[12rem] flex-col gap-2">
-          <Label htmlFor="settings-keys-service-account">Service account</Label>
-          <Select
-            onValueChange={handleAccountChange}
-            value={selectedServiceAccountId ?? undefined}
-          >
-            <SelectTrigger
-              aria-label="Service account"
-              className="w-full max-w-xs"
-              data-testid="SettingsKeysToolbar-account-select"
-              id="settings-keys-service-account"
-            >
-              <SelectValue placeholder="Select service account" />
-            </SelectTrigger>
-            <SelectContent>
-              {enabledAccounts.map((account) => (
-                <SelectItem key={account.id} value={account.id}>
-                  {account.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      ) : (
-        <div className="text-muted-foreground min-w-0 flex-1 text-sm">
-          {noAccounts ? (
-            <p data-testid="SettingsKeysToolbar-no-accounts">
-              No service accounts are available. Bootstrap accounts via{' '}
-              <code className="text-xs">
-                database:bootstrap-service-accounts
-              </code>
-              .
-            </p>
-          ) : (
-            <p>
-              <span className="text-foreground font-medium">Account:</span>{' '}
-              {enabledAccounts[0]?.name ?? '—'}
-            </p>
-          )}
-        </div>
-      )}
+      {showAccountPicker ? accountPicker : accountNote}
 
       <Button
         data-testid="SettingsKeysToolbar-create-button"

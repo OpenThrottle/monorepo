@@ -4,8 +4,7 @@ import { Blockquote } from './Blockquote';
 
 const meta = {
   args: {
-    children:
-      'The workbench is the only place the component library can be seen across every theme at once.',
+    children: `The workbench is the only place the component library can be seen across every theme at once.`,
   },
   component: Blockquote,
   title: 'Components/Blockquote',

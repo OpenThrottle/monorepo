@@ -14,10 +14,10 @@
 
 import type { UsageSkillUsageBySkillFragment } from '~/__generated__/graphql';
 import {
-  classifySkillUsagePresence,
   SKILL_PRESENCE,
   type SkillPresence,
-} from '~/routing/usage/data/skill-presence';
+} from '~/routing/usage/data/data.skill-presence';
+import { classifySkillUsagePresence } from '~/routing/usage/utils/classify-skill-usage-presence';
 
 /** A leaderboard row with its presence already resolved by the caller. */
 export interface SkillUsageRowWithPresence extends UsageSkillUsageBySkillFragment {

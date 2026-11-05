@@ -21,18 +21,20 @@ describe('SelectLabel Component', () => {
   });
 
   test('should render label inside SelectGroup when Select is open', () => {
-    const Component = () => (
-      <Select defaultOpen={true}>
-        <SelectTrigger>
-          <SelectValue placeholder="Pick" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            <SelectLabel {...props}>Group label</SelectLabel>
-          </SelectGroup>
-        </SelectContent>
-      </Select>
-    );
+    const Component = () => {
+      return (
+        <Select defaultOpen={true}>
+          <SelectTrigger>
+            <SelectValue placeholder="Pick" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel {...props}>Group label</SelectLabel>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 

@@ -6,44 +6,48 @@ import type {
 } from '../../__generated__/graphql.ts';
 import { formatPlanAndTasksForPrompt } from '../index.ts';
 
-const plan = (): PlanFragment => ({
-  __typename: 'PlanObject',
-  assignee: null,
-  author: 'visormatt',
-  category: 'improvement',
-  completedAt: null,
-  createdAt: '2026-01-01T00:00:00.000Z',
-  description: null,
-  id: 'plan-1',
-  jobRunHooksJson: '[]',
-  project: null,
-  projectId: null,
-  runConfigJson: '{}',
-  status: 'IN_PROGRESS',
-  summary: null,
-  title: 'Test plan',
-  updatedAt: '2026-01-01T00:00:00.000Z',
-});
+const plan = (): PlanFragment => {
+  return {
+    __typename: 'PlanObject',
+    assignee: null,
+    author: 'visormatt',
+    category: 'improvement',
+    completedAt: null,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    description: null,
+    id: 'plan-1',
+    jobRunHooksJson: '[]',
+    project: null,
+    projectId: null,
+    runConfigJson: '{}',
+    status: 'IN_PROGRESS',
+    summary: null,
+    title: 'Test plan',
+    updatedAt: '2026-01-01T00:00:00.000Z',
+  };
+};
 
 const task = (
   overrides: Partial<TaskFragment> & Pick<TaskFragment, 'id'>,
-): TaskFragment => ({
-  __typename: 'TaskObject',
-  assignee: null,
-  category: null,
-  createdAt: '2026-01-01T00:00:00.000Z',
-  description: null,
-  planId: 'plan-1',
-  project: null,
-  projectId: null,
-  requirementsJson: '[]',
-  sortOrder: 1000,
-  status: 'PENDING',
-  summary: null,
-  title: overrides.id,
-  updatedAt: '2026-01-01T00:00:00.000Z',
-  ...overrides,
-});
+): TaskFragment => {
+  return {
+    __typename: 'TaskObject',
+    assignee: null,
+    category: null,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    description: null,
+    planId: 'plan-1',
+    project: null,
+    projectId: null,
+    requirementsJson: '[]',
+    sortOrder: 1000,
+    status: 'PENDING',
+    summary: null,
+    title: overrides.id,
+    updatedAt: '2026-01-01T00:00:00.000Z',
+    ...overrides,
+  };
+};
 
 describe('formatPlanAndTasksForPrompt', () => {
   it('renders a valid JSON array of requirements', () => {
@@ -55,20 +59,22 @@ describe('formatPlanAndTasksForPrompt', () => {
   });
 
   it('does not throw and skips the line when requirementsJson is invalid JSON', () => {
-    const build = () =>
-      formatPlanAndTasksForPrompt(plan(), [
+    const build = () => {
+      return formatPlanAndTasksForPrompt(plan(), [
         task({ id: 'bad', requirementsJson: 'not json' }),
       ]);
+    };
 
     expect(build).not.toThrow();
     expect(build()).not.toContain('Requirements:');
   });
 
   it('does not throw and skips the line when requirementsJson is a non-array', () => {
-    const build = () =>
-      formatPlanAndTasksForPrompt(plan(), [
+    const build = () => {
+      return formatPlanAndTasksForPrompt(plan(), [
         task({ id: 'obj', requirementsJson: '{"foo":"bar"}' }),
       ]);
+    };
 
     expect(build).not.toThrow();
     expect(build()).not.toContain('Requirements:');
@@ -104,8 +110,8 @@ describe('formatPlanAndTasksForPrompt', () => {
   });
 
   it('sorts entity rows with a Date createdAt by sortOrder without throwing', () => {
-    const build = () =>
-      formatPlanAndTasksForPrompt(plan(), [
+    const build = () => {
+      return formatPlanAndTasksForPrompt(plan(), [
         {
           createdAt: new Date('2026-02-01T00:00:00.000Z'),
           id: 'second',
@@ -123,6 +129,7 @@ describe('formatPlanAndTasksForPrompt', () => {
           title: 'first',
         },
       ]);
+    };
 
     expect(build).not.toThrow();
 

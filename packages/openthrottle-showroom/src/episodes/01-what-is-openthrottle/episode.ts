@@ -14,8 +14,7 @@ import type { VideoEpisode } from '../types.ts';
 export const episode: VideoEpisode = {
   beats: [
     {
-      action:
-        'Open `/plans/<seeded-plan-id>` already loaded — plan detail, tasks visible, one IN_PROGRESS.',
+      action: `Open \`/plans/<seeded-plan-id>\` already loaded — plan detail, tasks visible, one IN_PROGRESS.`,
       t: '0:00',
     },
     {
@@ -24,13 +23,11 @@ export const episode: VideoEpisode = {
     },
     { action: 'Click the IN_PROGRESS task → task detail.', t: '0:15' },
     {
-      action:
-        'Back to the plan; scroll to the live output stream, already streaming.',
+      action: `Back to the plan; scroll to the live output stream, already streaming.`,
       t: '0:24',
     },
     {
-      action:
-        'Scroll the output to the commit line, which names the task it closed.',
+      action: `Scroll the output to the commit line, which names the task it closed.`,
       t: '0:33',
     },
     { action: "Back to Details; highlight the plan's description.", t: '0:41' },

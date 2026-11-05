@@ -6,21 +6,23 @@ import { filterJobsBySearch } from '../filter-jobs-by-search';
 
 const buildJob = (
   overrides: Partial<ScheduledJobCardFragment>,
-): ScheduledJobCardFragment => ({
-  cronPattern: '0 9 * * *',
-  driverId: 'claude',
-  enabled: true,
-  id: 'job-1',
-  lastRunAt: null,
-  model: null,
-  name: 'Nightly audit',
-  nextRunAt: null,
-  repositoryCheckoutId: null,
-  scheduleKind: 'cron',
-  timezone: 'UTC',
-  updatedAt: '2026-08-19T00:00:00.000Z',
-  ...overrides,
-});
+): ScheduledJobCardFragment => {
+  return {
+    cronPattern: '0 9 * * *',
+    driverId: 'claude',
+    enabled: true,
+    id: 'job-1',
+    lastRunAt: null,
+    model: null,
+    name: 'Nightly audit',
+    nextRunAt: null,
+    repositoryCheckoutId: null,
+    scheduleKind: 'cron',
+    timezone: 'UTC',
+    updatedAt: '2026-08-19T00:00:00.000Z',
+    ...overrides,
+  };
+};
 
 describe('filterJobsBySearch', () => {
   test('returns every job when the query is empty', () => {

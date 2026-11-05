@@ -57,13 +57,15 @@ const buildArgs = (body: unknown): Route.ActionArgs => {
 
 const saveRequest = (
   overrides: Partial<BlogPostSaveRequest> = {},
-): BlogPostSaveRequest => ({
-  changes: { title: 'New title' },
-  expectedUpdatedAt: UPDATED_AT,
-  intent: 'save',
-  tagSlugs: null,
-  ...overrides,
-});
+): BlogPostSaveRequest => {
+  return {
+    changes: { title: 'New title' },
+    expectedUpdatedAt: UPDATED_AT,
+    intent: 'save',
+    tagSlugs: null,
+    ...overrides,
+  };
+};
 
 const updateResolves = (updateBlogPost: unknown): void => {
   mockExecute.mockResolvedValueOnce({ updateBlogPost });

@@ -8,13 +8,15 @@ const FINISHED_ON = Date.UTC(2026, 2, 14, 12, 0, 0);
 const entry = (
   jobId: string,
   overrides: Partial<PlanRunMetricsEntry> = {},
-): PlanRunMetricsEntry => ({
-  executionBackend: 'local',
-  finishedOn: FINISHED_ON,
-  jobId,
-  taskRunMetrics: { atEnd: { rssMb: 412.5 } },
-  ...overrides,
-});
+): PlanRunMetricsEntry => {
+  return {
+    executionBackend: 'local',
+    finishedOn: FINISHED_ON,
+    jobId,
+    taskRunMetrics: { atEnd: { rssMb: 412.5 } },
+    ...overrides,
+  };
+};
 
 describe('joinPlanRunJobMetrics', () => {
   describe('when a run has a matching job', () => {

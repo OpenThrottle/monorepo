@@ -8,7 +8,9 @@ import type { DashboardRecentActivityProps } from '../DashboardRecentActivity';
 import { DashboardRecentActivity } from '../DashboardRecentActivity';
 
 function renderWithProps(props: DashboardRecentActivityProps): RenderResult {
-  const Component = () => <DashboardRecentActivity {...props} />;
+  const Component = () => {
+    return <DashboardRecentActivity {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 }

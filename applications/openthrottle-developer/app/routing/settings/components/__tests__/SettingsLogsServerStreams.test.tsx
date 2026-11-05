@@ -14,7 +14,9 @@ describe('SettingsLogsServerStreams Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <SettingsLogsServerStreams {...props} />;
+    const Component = () => {
+      return <SettingsLogsServerStreams {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
   });

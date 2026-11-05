@@ -48,18 +48,24 @@ interface ByteaMarker {
   $bytea: string;
 }
 
-const isByteaMarker = (value: unknown): value is ByteaMarker =>
-  typeof value === 'object' &&
-  value !== null &&
-  '$bytea' in value &&
-  typeof Reflect.get(value, '$bytea') === 'string';
+const isByteaMarker = (value: unknown): value is ByteaMarker => {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    '$bytea' in value &&
+    typeof Reflect.get(value, '$bytea') === 'string'
+  );
+};
 
 const DAY_MS = 86_400_000;
 
-const isOffsetMarker = (value: unknown): value is OffsetMarker =>
-  typeof value === 'object' &&
-  value !== null &&
-  ('$offsetMs' in value || '$offsetDays' in value);
+const isOffsetMarker = (value: unknown): value is OffsetMarker => {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    ('$offsetMs' in value || '$offsetDays' in value)
+  );
+};
 
 /**
  * Resolve a rebase marker against seed time. `$offsetMs` becomes a timestamp,
@@ -123,16 +129,55 @@ export interface LoadedTableSummary {
   table: string;
 }
 
+const readProperty = (value: unknown, key: string): unknown => {
+  if (typeof value !== 'object' || value === null) {
+    return undefined;
+  }
+
+  return Reflect.get(value, key);
+};
+
+const buildConflictAction = (
+  table: string,
+  updates: readonly string[],
+  settable: readonly string[],
+): string => {
+  if (updates.length === 0 || settable.length === 0) {
+    return 'NOTHING';
+  }
+
+  const current = settable
+    .map((column) => `${quoteIdentifier(table)}.${quoteIdentifier(column)}`)
+    .join(', ');
+  const incoming = settable
+    .map((column) => `EXCLUDED.${quoteIdentifier(column)}`)
+    .join(', ');
+
+  return `UPDATE SET ${updates.join(', ')}
+               WHERE (${current})
+                 IS DISTINCT FROM (${incoming})`;
+};
+
+const buildOwnerComparison = (others: readonly string[]): string => {
+  if (others.length === 0) {
+    return 'true';
+  }
+
+  const left = others.map((column) => `a.${quoteIdentifier(column)}`);
+  const right = others.map((column) => `b.${quoteIdentifier(column)}`);
+
+  return `(${left.join(', ')})
+             IS NOT DISTINCT FROM
+             (${right.join(', ')})`;
+};
+
 /** Read the committed table manifest — the FK-topological load order. */
 export const readSnapshotTables = async (
   dataDir: string,
 ): Promise<SnapshotTableFile[]> => {
   const raw = await readFile(join(dataDir, SNAPSHOT_TABLES_FILE), 'utf8');
   const parsed: unknown = JSON.parse(raw);
-  const tables =
-    typeof parsed === 'object' && parsed !== null
-      ? Reflect.get(parsed, 'tables')
-      : undefined;
+  const tables = readProperty(parsed, 'tables');
 
   if (!Array.isArray(tables)) {
     throw new Error(
@@ -187,9 +232,11 @@ export const coerceRunStatus = (
     return row;
   }
 
-  return TERMINAL_RUN_STATUSES.has(row.status)
-    ? row
-    : { ...row, status: 'COMPLETED' };
+  if (TERMINAL_RUN_STATUSES.has(row.status)) {
+    return row;
+  }
+
+  return { ...row, status: 'COMPLETED' };
 };
 
 export interface LoadSnapshotOptions {
@@ -243,11 +290,6 @@ const BATCH_SIZE = 200;
 /** Postgres SQLSTATE for a unique violation. */
 const UNIQUE_VIOLATION = '23505';
 
-const readProperty = (value: unknown, key: string): unknown =>
-  typeof value === 'object' && value !== null
-    ? Reflect.get(value, key)
-    : undefined;
-
 /**
  * The name of the constraint a unique violation names, or undefined for any
  * other failure. TypeORM wraps the driver error, so both layers are checked.
@@ -289,10 +331,12 @@ export const applyAliases = (
     }
 
     const parent = foreignKeyParents.get(`${table}.${column}`);
-    const alias =
-      parent === undefined
-        ? undefined
-        : aliases.get(parent)?.get(String(value));
+
+    if (parent === undefined) {
+      continue;
+    }
+
+    const alias = aliases.get(parent)?.get(String(value));
 
     if (alias !== undefined) {
       result = { ...result, [column]: alias };
@@ -342,10 +386,14 @@ const upsertRow = async (
     return undefined;
   } catch (error) {
     const constraint = uniqueViolationConstraint(error);
-    const unique =
-      constraint === undefined
-        ? undefined
-        : options.uniqueByName.get(constraint);
+    const findUnique = (name: string | undefined): UniqueKey | undefined => {
+      if (name === undefined) {
+        return undefined;
+      }
+
+      return options.uniqueByName.get(name);
+    };
+    const unique = findUnique(constraint);
 
     // Aliasing rewrites foreign keys by primary key, so a composite key has
     // nothing to rewrite children with — such a table fails loudly instead.
@@ -499,19 +547,7 @@ export const loadSnapshot = async (
             column !== 'updated_at' &&
             options.ownedColumns?.has(`${table}.${column}`) !== true,
         );
-        const conflictAction =
-          updates.length === 0 || settable.length === 0
-            ? 'NOTHING'
-            : `UPDATE SET ${updates.join(', ')}
-               WHERE (${settable
-                 .map(
-                   (column) =>
-                     `${quoteIdentifier(table)}.${quoteIdentifier(column)}`,
-                 )
-                 .join(', ')})
-                 IS DISTINCT FROM (${settable
-                   .map((column) => `EXCLUDED.${quoteIdentifier(column)}`)
-                   .join(', ')})`;
+        const conflictAction = buildConflictAction(table, updates, settable);
 
         const collision = await upsertRow({
           columns,
@@ -608,12 +644,7 @@ export const remapOwnershipToDemoUser = async (
       const others = unique.columns.filter(
         (column) => column !== edge.childColumn,
       );
-      const comparison =
-        others.length === 0
-          ? 'true'
-          : `(${others.map((column) => `a.${quoteIdentifier(column)}`).join(', ')})
-             IS NOT DISTINCT FROM
-             (${others.map((column) => `b.${quoteIdentifier(column)}`).join(', ')})`;
+      const comparison = buildOwnerComparison(others);
 
       await options.runner.query(
         `DELETE FROM ${quoteIdentifier(edge.childTable)} a

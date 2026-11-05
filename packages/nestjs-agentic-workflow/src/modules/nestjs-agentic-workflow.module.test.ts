@@ -61,10 +61,12 @@ function assertStubWorkflow(value: unknown): asserts value is StubWorkflow {
   }
 }
 
-const workerAuthFixture = (): AgenticWorkflowWorkerGraphqlAuth => ({
-  token: 'worker-test-token',
-  url: 'http://localhost:6021/graphql',
-});
+const workerAuthFixture = (): AgenticWorkflowWorkerGraphqlAuth => {
+  return {
+    token: 'worker-test-token',
+    url: 'http://localhost:6021/graphql',
+  };
+};
 
 /**
  * @description Typed executor stub for DI identity checks (must not be invoked in these tests).

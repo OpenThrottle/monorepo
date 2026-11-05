@@ -27,8 +27,9 @@ import {
   getPlanIsTerminal,
 } from '~/routing/plans/utils/utils.plans';
 
-const isBlank = (value: string | null | undefined): boolean =>
-  value == null || value.trim() === '';
+const isBlank = (value: string | null | undefined): boolean => {
+  return value == null || value.trim() === '';
+};
 
 /**
  * @description Branch is a REQUIRED enqueue input; blank would fail fast at the server
@@ -36,14 +37,17 @@ const isBlank = (value: string | null | undefined): boolean =>
  */
 export const isPlanRunBranchMissing = (
   branch: string | null | undefined,
-): boolean => isBlank(branch);
+): boolean => {
+  return isBlank(branch);
+};
 
 /**
  * @description Link to the plan detail's Configuration tab (the tabs sync to a search
  * param; `parsePlanDetailTab` reads it back). Relative, so it keeps the current plan.
  */
-export const getPlanConfigurationTabHref = (): string =>
-  `?${PLANS_DETAIL_TAB_SEARCH_PARAM}=configuration`;
+export const getPlanConfigurationTabHref = (): string => {
+  return `?${PLANS_DETAIL_TAB_SEARCH_PARAM}=configuration`;
+};
 
 /**
  * @description The plan's configured iterations, read from `runConfigJson` (the default
@@ -52,8 +56,10 @@ export const getPlanConfigurationTabHref = (): string =>
 export const getPlanConfiguredIterations = (
   planId: string,
   runConfigJson: string | null | undefined,
-): number =>
-  hydratePlanRunConfigUiState(planId, runConfigJson).workflowInput.iterations;
+): number => {
+  return hydratePlanRunConfigUiState(planId, runConfigJson).workflowInput
+    .iterations;
+};
 
 /**
  * @description The draft a freshly opened dialog starts from: the plan's saved
@@ -208,8 +214,9 @@ export const buildPlanRunDialogFields = (
 /** @description The Run dialog's schedule instant for a draft, in the browser's local zone. */
 export const getPlanRunDialogInstant = (
   draft: PlanRunDialogDraft,
-): Date | undefined =>
-  composeScheduleInstant(draft.scheduleDate, draft.scheduleTime);
+): Date | undefined => {
+  return composeScheduleInstant(draft.scheduleDate, draft.scheduleTime);
+};
 
 /** @description Submit-button copy per mode and busy state. */
 export const getPlanRunDialogSubmitLabel = (

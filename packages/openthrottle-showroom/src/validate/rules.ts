@@ -170,8 +170,7 @@ const checkVariants = (episode: VideoEpisode): readonly Finding[] => {
     if (episode.variants.length > 1 && !variant.thesis) {
       findings.push({
         episodeId: episode.id,
-        message:
-          'a variant among several must say why it exists, or nobody can choose between them',
+        message: `a variant among several must say why it exists, or nobody can choose between them`,
         rule: 'variant-thesis',
         severity: 'error',
         variantId: variant.id,
@@ -308,8 +307,7 @@ const checkYouTube = (episode: VideoEpisode): readonly Finding[] => {
     if (episode.format === 'short') {
       findings.push({
         episodeId: episode.id,
-        message:
-          'a short has a designed thumbnail — Shorts use a frame from the video, a card reads as an ad',
+        message: `a short has a designed thumbnail — Shorts use a frame from the video, a card reads as an ad`,
         rule: 'thumbnail',
         severity: 'error',
       });
@@ -349,12 +347,14 @@ const checkRelease = (episode: VideoEpisode): readonly Finding[] => {
 /**
  * @public Validate one episode in isolation.
  */
-export const validateEpisode = (episode: VideoEpisode): readonly Finding[] => [
-  ...checkBeats(episode),
-  ...checkVariants(episode),
-  ...checkYouTube(episode),
-  ...checkRelease(episode),
-];
+export const validateEpisode = (episode: VideoEpisode): readonly Finding[] => {
+  return [
+    ...checkBeats(episode),
+    ...checkVariants(episode),
+    ...checkYouTube(episode),
+    ...checkRelease(episode),
+  ];
+};
 
 /**
  * @public Validate the whole season, including the rules that are only visible

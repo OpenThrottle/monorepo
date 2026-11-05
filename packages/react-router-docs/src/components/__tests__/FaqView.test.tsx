@@ -6,18 +6,20 @@ import { describe, expect, test } from 'vitest';
 import type { DocEntry } from '../../utils/buildDocsManifest';
 import { FaqView } from '../FaqView';
 
-const makeEntry = (overrides: Partial<DocEntry>): DocEntry => ({
-  content: 'Answer body.',
-  description: null,
-  draft: false,
-  group: 'General',
-  order: 1,
-  path: '/faq/question',
-  section: 'faq',
-  slug: 'question',
-  title: 'Question?',
-  ...overrides,
-});
+const makeEntry = (overrides: Partial<DocEntry>): DocEntry => {
+  return {
+    content: 'Answer body.',
+    description: null,
+    draft: false,
+    group: 'General',
+    order: 1,
+    path: '/faq/question',
+    section: 'faq',
+    slug: 'question',
+    title: 'Question?',
+    ...overrides,
+  };
+};
 
 describe('FaqView', () => {
   test('renders the root container', () => {

@@ -41,9 +41,9 @@ export const loader = async (args: Route.LoaderArgs) => {
   // `skillName` matches a discovered slug. Reuse it here rather than the
   // `projectSkills` query so links never depend on DB ingest/auth state.
   const { discoverRepoSkills } =
-    await import('~/routing/agents/data/discover-repo-skills.server');
+    await import('~/routing/agents/utils/discover-repo-skills.server');
   const { getMonorepoRoot } =
-    await import('~/routing/agents/data/resolve-monorepo-root.server');
+    await import('~/routing/agents/utils/resolve-monorepo-root.server');
 
   // Slugs actually present in this checkout. Leaderboard rows are classified
   // against this set: it decides both which rows link through to a detail page
@@ -58,10 +58,8 @@ export const loader = async (args: Route.LoaderArgs) => {
 
   const selectedSkillScope = parseSkillScope(searchParams.get('skillScope'));
   const skillBranchParam = searchParams.get('skillBranch');
-  const selectedSkillGitBranch =
-    skillBranchParam !== null && skillBranchParam !== ''
-      ? skillBranchParam
-      : null;
+  const hasSkillBranch = skillBranchParam !== null && skillBranchParam !== '';
+  const selectedSkillGitBranch = hasSkillBranch ? skillBranchParam : null;
   const skillCwdParam = searchParams.get('skillCwd');
   const selectedSkillCwd =
     skillCwdParam !== null && skillCwdParam !== '' ? skillCwdParam : null;

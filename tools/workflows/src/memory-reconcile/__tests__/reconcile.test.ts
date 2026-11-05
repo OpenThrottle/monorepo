@@ -13,16 +13,19 @@ import {
 const pr = (
   number: number,
   overrides: Partial<ObservedPr> = {},
-): ObservedPr => ({
-  isDraft: false,
-  merged: false,
-  number,
-  state: 'OPEN',
-  ...overrides,
-});
+): ObservedPr => {
+  return {
+    isDraft: false,
+    merged: false,
+    number,
+    state: 'OPEN',
+    ...overrides,
+  };
+};
 
-const prMap = (...items: ObservedPr[]): ReadonlyMap<number, ObservedPr> =>
-  new Map(items.map((item) => [item.number, item]));
+const prMap = (...items: ObservedPr[]): ReadonlyMap<number, ObservedPr> => {
+  return new Map(items.map((item) => [item.number, item]));
+};
 
 describe('parseIndexClaims', () => {
   it('reads a PR number with its state word', () => {

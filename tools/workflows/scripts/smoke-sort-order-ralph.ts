@@ -124,7 +124,9 @@ const reorderViaSql = async (
 
 const pickNext = (
   tasks: Awaited<ReturnType<typeof getTasksByPlanId>>,
-): string | null => pickRalphTaskForIteration(tasks)?.id ?? null;
+): string | null => {
+  return pickRalphTaskForIteration(tasks)?.id ?? null;
+};
 
 const runSmokeTest = async (): Promise<SmokeResult> => {
   const connectionString = getPostgresUrl();
@@ -141,8 +143,7 @@ const runSmokeTest = async (): Promise<SmokeResult> => {
   let taskAId = '';
   let taskBId = '';
   let graphqlReorder: SmokeResult['graphqlReorder'] = 'skipped';
-  let graphqlReorderDetail =
-    'GraphQL reorderPlanTasks not attempted (no auth token).';
+  let graphqlReorderDetail = `GraphQL reorderPlanTasks not attempted (no auth token).`;
 
   try {
     const planRes = await client.query<{ id: string }>(
@@ -185,17 +186,15 @@ const runSmokeTest = async (): Promise<SmokeResult> => {
           planId,
           taskIds: [taskAId, taskBId],
         });
-        graphqlReorder =
+        const isExpectedOrder =
           reordered[0]?.id === taskAId &&
           reordered[0]?.sortOrder === 1000 &&
           reordered[1]?.id === taskBId &&
-          reordered[1]?.sortOrder === 2000
-            ? 'pass'
-            : 'fail';
-        graphqlReorderDetail =
-          graphqlReorder === 'pass'
-            ? 'GraphQL reorderPlanTasks returned expected sortOrder values.'
-            : `GraphQL reorderPlanTasks unexpected payload: ${JSON.stringify(reordered)}`;
+          reordered[1]?.sortOrder === 2000;
+        graphqlReorder = isExpectedOrder ? 'pass' : 'fail';
+        const passDetail = `GraphQL reorderPlanTasks returned expected sortOrder values.`;
+        const failDetail = `GraphQL reorderPlanTasks unexpected payload: ${JSON.stringify(reordered)}`;
+        graphqlReorderDetail = isExpectedOrder ? passDetail : failDetail;
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         await reorderViaSql(client, planId, [taskAId, taskBId]);

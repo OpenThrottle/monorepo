@@ -7,7 +7,9 @@ import { DocumentUploadProgress } from '../DocumentUploadProgress';
 
 describe('DocumentUploadProgress Component', () => {
   test('renders nothing when idle', () => {
-    const Component = () => <DocumentUploadProgress state={{ kind: 'idle' }} />;
+    const Component = () => {
+      return <DocumentUploadProgress state={{ kind: 'idle' }} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { queryByTestId } = render(<RoutesStub />);
 
@@ -16,11 +18,13 @@ describe('DocumentUploadProgress Component', () => {
 
   test('renders busy status when parsing', () => {
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <DocumentUploadProgress
-        state={{ kind: 'busy', message: 'Parsing…', value: 50 }}
-      />
-    );
+    const Component = () => {
+      return (
+        <DocumentUploadProgress
+          state={{ kind: 'busy', message: 'Parsing…', value: 50 }}
+        />
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByTestId, getByText } = render(<RoutesStub />);
 

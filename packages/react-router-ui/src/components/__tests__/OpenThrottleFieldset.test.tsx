@@ -17,7 +17,9 @@ describe('OpenThrottleFieldset Component', () => {
       legend: 'Fieldset',
     };
 
-    const Component = () => <OpenThrottleFieldset {...props} />;
+    const Component = () => {
+      return <OpenThrottleFieldset {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

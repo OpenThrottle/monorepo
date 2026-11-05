@@ -66,10 +66,9 @@ const createRule = ESLintUtils.RuleCreator(
 );
 
 const decoratorName = (decorator: TSESTree.Decorator): string | null => {
-  const expression =
-    decorator.expression.type === 'CallExpression'
-      ? decorator.expression.callee
-      : decorator.expression;
+  const { expression: decorated } = decorator;
+  const isCall = decorated.type === 'CallExpression';
+  const expression = isCall ? decorated.callee : decorated;
   if (expression.type === 'Identifier') return expression.name;
   if (
     expression.type === 'MemberExpression' &&
@@ -80,10 +79,13 @@ const decoratorName = (decorator: TSESTree.Decorator): string | null => {
   return null;
 };
 
-const isFunctionInit = (init: TSESTree.Expression | null): boolean =>
-  init !== null &&
-  (init.type === 'ArrowFunctionExpression' ||
-    init.type === 'FunctionExpression');
+const isFunctionInit = (init: TSESTree.Expression | null): boolean => {
+  return (
+    init !== null &&
+    (init.type === 'ArrowFunctionExpression' ||
+      init.type === 'FunctionExpression')
+  );
+};
 
 /** Classifies one top-level declaration into the bindings it declares. */
 const bindingsOf = (
@@ -126,20 +128,18 @@ const bindingsOf = (
         else if (declaration.kind === 'const') shape = 'constant';
         return { decorators: [], name, node, shape };
       });
-    default:
-      return [
-        {
-          decorators: [],
-          name:
-            'id' in declaration &&
-            declaration.id !== null &&
-            declaration.id.type === 'Identifier'
-              ? declaration.id.name
-              : 'default',
-          node,
-          shape: 'other',
-        },
-      ];
+    default: {
+      let name = 'default';
+      if (
+        'id' in declaration &&
+        declaration.id !== null &&
+        declaration.id.type === 'Identifier'
+      ) {
+        name = declaration.id.name;
+      }
+
+      return [{ decorators: [], name, node, shape: 'other' }];
+    }
   }
 };
 
@@ -158,10 +158,8 @@ const DECLARATION_TYPES: ReadonlySet<string> = new Set([
 const collectExports = (program: TSESTree.Program): ExportedBinding[] => {
   const topLevel = new Map<string, TSESTree.Node>();
   for (const statement of program.body) {
-    const declaration =
-      statement.type === 'ExportNamedDeclaration'
-        ? statement.declaration
-        : statement;
+    const isNamedExport = statement.type === 'ExportNamedDeclaration';
+    const declaration = isNamedExport ? statement.declaration : statement;
     if (declaration === null || !DECLARATION_TYPES.has(declaration.type)) {
       continue;
     }
@@ -192,10 +190,9 @@ const collectExports = (program: TSESTree.Program): ExportedBinding[] => {
     }
     // `export { a, b }` / `export type { A } from './x'`.
     for (const specifier of statement.specifiers) {
-      const local =
-        specifier.local.type === 'Identifier'
-          ? specifier.local.name
-          : specifier.local.value;
+      const { local: localNode } = specifier;
+      const isIdentifier = localNode.type === 'Identifier';
+      const local = isIdentifier ? localNode.name : localNode.value;
       const isTypeOnly =
         statement.exportKind === 'type' || specifier.exportKind === 'type';
       const declaration =
@@ -280,14 +277,11 @@ export const nestjsFileExports = createRule<[], MessageIds>({
   defaultOptions: [],
   meta: {
     docs: {
-      description:
-        'A NestJS file exports only what its kind suffix says it does.',
+      description: `A NestJS file exports only what its kind suffix says it does.`,
     },
     messages: {
-      providerCount:
-        'A `.{{kind}}.ts` file exports exactly one `@{{decorator}}()` class; this one exports {{count}}.',
-      wrongExport:
-        '`{{name}}` does not belong in a `.{{kind}}.ts` file, which exports only {{allowed}}. Move it to {{home}}.',
+      providerCount: `A \`.{{kind}}.ts\` file exports exactly one \`@{{decorator}}()\` class; this one exports {{count}}.`,
+      wrongExport: `\`{{name}}\` does not belong in a \`.{{kind}}.ts\` file, which exports only {{allowed}}. Move it to {{home}}.`,
     },
     schema: [],
     type: 'suggestion',

@@ -7,16 +7,18 @@
 export const messageOrFallback = (
   message: string | null | undefined,
   fallback: string,
-): string =>
-  message != null && message.trim().length > 0 ? message : fallback;
+): string => {
+  return message != null && message.trim().length > 0 ? message : fallback;
+};
 
 /**
  * Extracts a non-empty error message from a caught value, falling back to
  * `fallback` when the value is not an `Error` or its message is empty or
  * whitespace-only.
  */
-export const toErrorMessage = (error: unknown, fallback: string): string =>
-  messageOrFallback(
+export const toErrorMessage = (error: unknown, fallback: string): string => {
+  return messageOrFallback(
     error instanceof Error ? error.message : String(error),
     fallback,
   );
+};

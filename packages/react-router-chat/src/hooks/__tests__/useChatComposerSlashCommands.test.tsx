@@ -48,7 +48,7 @@ const SlashCommandsHarness = (props: HarnessProps): React.ReactElement => {
       <div data-testid="slash-enabled">{String(hook.slashEnabled)}</div>
       <div data-testid="popover-open">{String(hook.popoverOpen)}</div>
       <div data-testid="loading">{String(hook.loading)}</div>
-      {hook.popoverOpen ? (
+      {hook.popoverOpen && (
         <ul aria-label="skill results">
           {hook.results.map((skill, index) => (
             <li
@@ -62,7 +62,7 @@ const SlashCommandsHarness = (props: HarnessProps): React.ReactElement => {
             </li>
           ))}
         </ul>
-      ) : null}
+      )}
     </div>
   );
 };
@@ -78,19 +78,22 @@ const improve: ChatSlashCommand = {
 
 const makeProvider = (
   skills: readonly ChatSlashCommand[],
-): ChatSlashCommandProvider => ({
-  onQuerySkills: vi.fn(async (query: string) =>
-    skills.filter(
-      (skill) =>
-        skill.slug.toLowerCase().includes(query.toLowerCase()) ||
-        skill.description.toLowerCase().includes(query.toLowerCase()),
+): ChatSlashCommandProvider => {
+  return {
+    onQuerySkills: vi.fn(async (query: string) =>
+      skills.filter(
+        (skill) =>
+          skill.slug.toLowerCase().includes(query.toLowerCase()) ||
+          skill.description.toLowerCase().includes(query.toLowerCase()),
+      ),
     ),
-  ),
-});
+  };
+};
 
 describe('useChatComposerSlashCommands', () => {
-  const mount = (props: HarnessProps = {}): RenderResult =>
-    render(<SlashCommandsHarness {...props} />);
+  const mount = (props: HarnessProps = {}): RenderResult => {
+    return render(<SlashCommandsHarness {...props} />);
+  };
 
   test('slashEnabled is false without a slashCommandProvider', () => {
     const component = mount();

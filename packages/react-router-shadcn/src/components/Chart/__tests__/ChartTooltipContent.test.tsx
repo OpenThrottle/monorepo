@@ -26,15 +26,17 @@ describe('ChartTooltipContent Component', () => {
       ],
     };
 
-    const Component = () => (
-      <ChartConfigContext.Provider
-        value={{
-          sales: { color: '#111111', label: 'Sales' },
-        }}
-      >
-        <ChartTooltipContent {...props} />
-      </ChartConfigContext.Provider>
-    );
+    const Component = () => {
+      return (
+        <ChartConfigContext.Provider
+          value={{
+            sales: { color: '#111111', label: 'Sales' },
+          }}
+        >
+          <ChartTooltipContent {...props} />
+        </ChartConfigContext.Provider>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

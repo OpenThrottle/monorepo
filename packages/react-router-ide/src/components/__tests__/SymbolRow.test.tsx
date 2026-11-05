@@ -3,7 +3,7 @@ import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
-import type { ExportedSymbol } from '../../data/view-models';
+import type { ExportedSymbol } from '../../data/data.view-models';
 import { SymbolRow } from '../SymbolRow';
 
 const symbol: ExportedSymbol = {

@@ -12,7 +12,9 @@ describe('ScheduleIntroduction Component', () => {
   let component: RenderResult;
 
   beforeEach(() => {
-    const Component = (): React.ReactElement => <ScheduleIntroduction />;
+    const Component = (): React.ReactElement => {
+      return <ScheduleIntroduction />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
   });

@@ -16,12 +16,13 @@ const PERSONAS: readonly ChatPersonaOption[] = [
 
 const renderSelect = (
   props: ChatComposerPersonaSelectProps = {},
-): RenderResult =>
-  render(
+): RenderResult => {
+  return render(
     <TooltipProvider>
       <ChatComposerPersonaSelect {...props} />
     </TooltipProvider>,
   );
+};
 
 describe('ChatComposerPersonaSelect Component', () => {
   test('renders nothing when no personas are supplied', () => {

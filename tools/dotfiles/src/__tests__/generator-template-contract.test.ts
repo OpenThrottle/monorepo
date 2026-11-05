@@ -19,25 +19,22 @@ import { routePrimitiveShape } from '../rules/route-primitive-shape.ts';
 // tools/dotfiles/src/__tests__ -> tools/
 const TOOLS_ROOT = join(__dirname, '..', '..', '..');
 
-const readTemplate = (relativeToTools: string): string =>
-  readFileSync(join(TOOLS_ROOT, relativeToTools), 'utf-8');
+const readTemplate = (relativeToTools: string): string => {
+  return readFileSync(join(TOOLS_ROOT, relativeToTools), 'utf-8');
+};
 
-const REACT_TEMPLATE =
-  'generators/src/generators/react/files/component/__name__.tsx';
-const REACT_ROUTER_TEMPLATE =
-  'generators/src/generators/react-router/files/component/__name__.tsx';
-const ROUTE_TEMPLATE =
-  'generators/src/generators/react-router/files/route/__name__.tsx';
-const REACT_HOOK_TEMPLATE =
-  'generators/src/generators/react/files/hook/__name__.tsx';
-const REACT_ROUTER_HOOK_TEMPLATE =
-  'generators/src/generators/react-router/files/hook/__name__.tsx';
+const REACT_TEMPLATE = `generators/src/generators/react/files/component/__name__.tsx`;
+const REACT_ROUTER_TEMPLATE = `generators/src/generators/react-router/files/component/__name__.tsx`;
+const ROUTE_TEMPLATE = `generators/src/generators/react-router/files/route/__name__.tsx`;
+const REACT_HOOK_TEMPLATE = `generators/src/generators/react/files/hook/__name__.tsx`;
+const REACT_ROUTER_HOOK_TEMPLATE = `generators/src/generators/react-router/files/hook/__name__.tsx`;
 
 /** Fills the hook template's EJS placeholders the way the generator does. */
-const renderHookTemplate = (relativeToTools: string): string =>
-  readTemplate(relativeToTools)
+const renderHookTemplate = (relativeToTools: string): string => {
+  return readTemplate(relativeToTools)
     .replace(/<%= namePascal %>/g, 'UseSampleThing')
     .replace(/<%= name %>/g, 'useSampleThing');
+};
 
 // The two component templates are byte-identical; assert that so the single
 // RuleTester run below genuinely covers both.

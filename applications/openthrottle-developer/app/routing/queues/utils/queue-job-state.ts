@@ -33,17 +33,20 @@ const QUEUE_JOB_STATE_META: Record<QueueJobState, QueueJobStateMeta> = {
   'waiting-children': { color: 'violet', label: 'Waiting on children' },
 };
 
-const isQueueJobState = (state: string): state is QueueJobState =>
-  Object.prototype.hasOwnProperty.call(QUEUE_JOB_STATE_META, state);
+const isQueueJobState = (state: string): state is QueueJobState => {
+  return Object.prototype.hasOwnProperty.call(QUEUE_JOB_STATE_META, state);
+};
 
 /**
  * @description Badge color for a job state; falls back to the neutral default for unknown states.
  */
-export const queueJobStateColor = (state: string): BadgeProps['color'] =>
-  isQueueJobState(state) ? QUEUE_JOB_STATE_META[state].color : 'default';
+export const queueJobStateColor = (state: string): BadgeProps['color'] => {
+  return isQueueJobState(state) ? QUEUE_JOB_STATE_META[state].color : 'default';
+};
 
 /**
  * @description Human-readable label for a job state; unknown states render verbatim.
  */
-export const queueJobStateLabel = (state: string): string =>
-  isQueueJobState(state) ? QUEUE_JOB_STATE_META[state].label : state;
+export const queueJobStateLabel = (state: string): string => {
+  return isQueueJobState(state) ? QUEUE_JOB_STATE_META[state].label : state;
+};

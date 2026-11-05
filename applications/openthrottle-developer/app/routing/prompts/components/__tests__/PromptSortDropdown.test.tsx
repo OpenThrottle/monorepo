@@ -19,7 +19,9 @@ describe('PromptSortDropdown Component', () => {
   });
 
   test('should have data-testid', () => {
-    const Component = () => <PromptSortDropdown {...props} />;
+    const Component = () => {
+      return <PromptSortDropdown {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
     expect(screen.getByTestId('PromptSortDropdown')).toBeInTheDocument();
@@ -27,7 +29,9 @@ describe('PromptSortDropdown Component', () => {
 
   test('should have aria-label', () => {
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <PromptSortDropdown {...props} />;
+    const Component = () => {
+      return <PromptSortDropdown {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
     expect(
@@ -37,7 +41,9 @@ describe('PromptSortDropdown Component', () => {
 
   test('should show "Recently updated" as default selected option', () => {
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <PromptSortDropdown {...props} />;
+    const Component = () => {
+      return <PromptSortDropdown {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
     expect(
@@ -53,7 +59,9 @@ describe('PromptSortDropdown Component', () => {
       sortOrder: 'desc',
     };
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <PromptSortDropdown {...props} />;
+    const Component = () => {
+      return <PromptSortDropdown {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 

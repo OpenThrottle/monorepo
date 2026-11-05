@@ -103,14 +103,12 @@ describe('mapCodexEvent', () => {
       },
       { type: 'turn.started' },
       {
-        message:
-          'Your access token could not be refreshed because your refresh token was already used. Please log out and sign in again.',
+        message: `Your access token could not be refreshed because your refresh token was already used. Please log out and sign in again.`,
         type: 'error',
       },
       {
         error: {
-          message:
-            'Your access token could not be refreshed because your refresh token was already used. Please log out and sign in again.',
+          message: `Your access token could not be refreshed because your refresh token was already used. Please log out and sign in again.`,
         },
         type: 'turn.failed',
       },

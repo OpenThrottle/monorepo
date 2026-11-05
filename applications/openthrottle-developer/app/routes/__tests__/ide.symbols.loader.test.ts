@@ -9,13 +9,13 @@ vi.mock('@openthrottle/react-router-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),
 }));
 
-vi.mock('~/routing/ide/data/ide-engine.server', () => ({
+vi.mock('~/routing/ide/utils/ide-engine.server', () => ({
   exportsVM: vi.fn(),
 }));
 
 const { executeGraphqlWithAuth } =
   await import('@openthrottle/react-router-graphql');
-const { exportsVM } = await import('~/routing/ide/data/ide-engine.server');
+const { exportsVM } = await import('~/routing/ide/utils/ide-engine.server');
 const { loader } = await import('../ide.symbols');
 
 const mockGraphql = vi.mocked(executeGraphqlWithAuth);
@@ -34,11 +34,13 @@ const workspaceSettings = {
   },
 };
 
-const loaderArgs = (url: string): Route.LoaderArgs => ({
-  ...createLoaderArgs<Route.LoaderArgs>({ url }),
-  // The loader reads `url` (supplied by app middleware in production).
-  url: new URL(url),
-});
+const loaderArgs = (url: string): Route.LoaderArgs => {
+  return {
+    ...createLoaderArgs<Route.LoaderArgs>({ url }),
+    // The loader reads `url` (supplied by app middleware in production).
+    url: new URL(url),
+  };
+};
 
 describe('routes/ide.symbols loader', () => {
   beforeEach(() => {

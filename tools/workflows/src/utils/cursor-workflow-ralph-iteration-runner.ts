@@ -106,71 +106,72 @@ export interface CursorWorkflowRalphIterationRunner {
  */
 export const createCursorWorkflowRalphIterationRunner = (
   options?: CreateCursorWorkflowRalphIterationRunnerOptions,
-): CursorWorkflowRalphIterationRunner => ({
-  run: async (
-    params: CursorWorkflowRalphIterationRunParams,
-  ): Promise<string> => {
-    const {
-      appendPlanOutput,
-      onChunk: factoryOnChunk,
-      onUsageLimit: factoryOnUsageLimit,
-    } = options ?? {};
-    const paramsOnUsageLimit = params.onUsageLimit;
-    const hasLimitHooks =
-      factoryOnUsageLimit !== undefined || paramsOnUsageLimit !== undefined;
-    const notifyUsageLimit = (usageLimit: UsageLimit): void => {
-      factoryOnUsageLimit?.(usageLimit);
-      paramsOnUsageLimit?.(usageLimit);
-    };
-    const mergedOnUsageLimit = hasLimitHooks ? notifyUsageLimit : undefined;
-    const paramsOnChunk = params.onChunk;
-    const hasHooks =
-      factoryOnChunk !== undefined ||
-      appendPlanOutput !== undefined ||
-      paramsOnChunk !== undefined;
+): CursorWorkflowRalphIterationRunner => {
+  return {
+    run: async (
+      params: CursorWorkflowRalphIterationRunParams,
+    ): Promise<string> => {
+      const {
+        appendPlanOutput,
+        onChunk: factoryOnChunk,
+        onUsageLimit: factoryOnUsageLimit,
+      } = options ?? {};
+      const paramsOnUsageLimit = params.onUsageLimit;
+      const hasLimitHooks =
+        factoryOnUsageLimit !== undefined || paramsOnUsageLimit !== undefined;
+      const notifyUsageLimit = (usageLimit: UsageLimit): void => {
+        factoryOnUsageLimit?.(usageLimit);
+        paramsOnUsageLimit?.(usageLimit);
+      };
+      const mergedOnUsageLimit = hasLimitHooks ? notifyUsageLimit : undefined;
+      const paramsOnChunk = params.onChunk;
+      const hasHooks =
+        factoryOnChunk !== undefined ||
+        appendPlanOutput !== undefined ||
+        paramsOnChunk !== undefined;
 
-    const mergedOnChunk = !hasHooks
-      ? undefined
-      : (chunk: CursorAgentChunk): void => {
-          if (factoryOnChunk !== undefined) {
-            void Promise.resolve(factoryOnChunk(chunk));
-          }
+      const dispatchChunk = (chunk: CursorAgentChunk): void => {
+        if (factoryOnChunk !== undefined) {
+          void Promise.resolve(factoryOnChunk(chunk));
+        }
 
-          if (paramsOnChunk !== undefined) {
-            void Promise.resolve(
-              paramsOnChunk({
-                data: chunk.data,
-                stream: chunk.stream,
-              }),
-            );
-          }
+        if (paramsOnChunk !== undefined) {
+          void Promise.resolve(
+            paramsOnChunk({
+              data: chunk.data,
+              stream: chunk.stream,
+            }),
+          );
+        }
 
-          if (appendPlanOutput !== undefined) {
-            void Promise.resolve(
-              appendPlanOutput({
-                iteration: params.iteration,
-                stream: chunk.stream,
-                text: chunk.data,
-              }),
-            );
-          }
-        };
+        if (appendPlanOutput !== undefined) {
+          void Promise.resolve(
+            appendPlanOutput({
+              iteration: params.iteration,
+              stream: chunk.stream,
+              text: chunk.data,
+            }),
+          );
+        }
+      };
+      const mergedOnChunk = hasHooks ? dispatchChunk : undefined;
 
-    return runIterationAsync({
-      agentPrompt: params.agentPrompt,
-      backend: params.runner,
-      cwd: params.cwd,
-      effort: params.effort,
-      env: params.env,
-      iteration: params.iteration,
-      model: params.model,
-      onChunk: mergedOnChunk,
-      onUsageLimit: mergedOnUsageLimit,
-      signal: params.signal,
-      skipWorktreeSetup: params.skipWorktreeSetup,
-      timeoutMs: params.timeoutMs,
-      worktree: params.worktree,
-      worktreeBase: params.worktreeBase,
-    });
-  },
-});
+      return runIterationAsync({
+        agentPrompt: params.agentPrompt,
+        backend: params.runner,
+        cwd: params.cwd,
+        effort: params.effort,
+        env: params.env,
+        iteration: params.iteration,
+        model: params.model,
+        onChunk: mergedOnChunk,
+        onUsageLimit: mergedOnUsageLimit,
+        signal: params.signal,
+        skipWorktreeSetup: params.skipWorktreeSetup,
+        timeoutMs: params.timeoutMs,
+        worktree: params.worktree,
+        worktreeBase: params.worktreeBase,
+      });
+    },
+  };
+};

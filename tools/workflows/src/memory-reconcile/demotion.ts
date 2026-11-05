@@ -94,8 +94,9 @@ export const carriesGotcha = (hook: string): boolean => {
   return !REFERENCE_SHAPED.test(last) && last.length >= 12;
 };
 
-export const hasOwedFollowup = (hook: string): boolean =>
-  OWED_FOLLOWUP_PATTERNS.some((pattern) => pattern.test(hook));
+export const hasOwedFollowup = (hook: string): boolean => {
+  return OWED_FOLLOWUP_PATTERNS.some((pattern) => pattern.test(hook));
+};
 
 export interface DemotionInput {
   /** One entry per index line, with its full hook text. */

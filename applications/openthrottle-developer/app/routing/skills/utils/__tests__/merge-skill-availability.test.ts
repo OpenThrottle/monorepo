@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 import {
   mergeRepoSkillsWithSkillAvailability,
   type SkillAvailabilityRow,
@@ -9,16 +9,18 @@ import {
 const diskEntry = (
   slug: string,
   overrides: Partial<RepoSkillEntry> = {},
-): RepoSkillEntry => ({
-  disableModelInvocation: undefined,
-  layout: 'agents',
-  repoRelativePath: `.agents/skills/${slug}/SKILL.md`,
-  slug,
-  source: 'external',
-  summary: `${slug} summary`,
-  tags: undefined,
-  ...overrides,
-});
+): RepoSkillEntry => {
+  return {
+    disableModelInvocation: undefined,
+    layout: 'agents',
+    repoRelativePath: `.agents/skills/${slug}/SKILL.md`,
+    slug,
+    source: 'external',
+    summary: `${slug} summary`,
+    tags: undefined,
+    ...overrides,
+  };
+};
 
 describe('mergeRepoSkillsWithSkillAvailability', () => {
   test('returns entries unchanged when availability is empty (silent fallback)', () => {

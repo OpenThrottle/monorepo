@@ -51,8 +51,7 @@ vi.mock('@openthrottle/node-client', () => ({
   searchPlansBySemanticQuery: vi.fn(),
 }));
 
-const IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE =
-  'Cannot transition to IN_PROGRESS: only PENDING, QUEUED, or already IN_PROGRESS plans may enter this state.';
+const IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE = `Cannot transition to IN_PROGRESS: only PENDING, QUEUED, or already IN_PROGRESS plans may enter this state.`;
 
 describe('PlansResolver', () => {
   let resolver: PlansResolver;
@@ -1811,8 +1810,7 @@ describe('PlansResolver', () => {
 
   describe('registerPlanRunWorktreeCheckout', () => {
     const userId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
-    const filesystemPath =
-      '/Users/matt/.cursor/worktrees/openthrottle/auto-register';
+    const filesystemPath = `/Users/matt/.cursor/worktrees/openthrottle/auto-register`;
 
     beforeEach(() => {
       mockResolveEffectiveUserId.mockReset();
@@ -1938,8 +1936,7 @@ describe('PlansResolver', () => {
 
   describe('deregisterWorktreeCheckout', () => {
     const userId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
-    const filesystemPath =
-      '/Users/matt/.openthrottle/worktrees/OpenThrottle/monorepo/wt-gone';
+    const filesystemPath = `/Users/matt/.openthrottle/worktrees/OpenThrottle/monorepo/wt-gone`;
 
     beforeEach(() => {
       mockResolveEffectiveUserId.mockReset();

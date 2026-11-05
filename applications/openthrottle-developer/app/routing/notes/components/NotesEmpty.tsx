@@ -10,6 +10,8 @@ import { SearchAlertIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
 
+import { NOTES_EMPTY_VARIANTS } from '~/routing/notes/data/data.empty-variants';
+
 export interface NotesEmptyProps {
   className?: string;
   search?: string;
@@ -21,6 +23,7 @@ export const NotesEmpty = (props: NotesEmptyProps): React.ReactElement => {
   // Hooks
 
   // Setup
+  const variant = NOTES_EMPTY_VARIANTS[search ? 'search' : 'default'];
 
   // Handlers
 
@@ -35,20 +38,10 @@ export const NotesEmpty = (props: NotesEmptyProps): React.ReactElement => {
       <EmptyMedia variant="icon">
         <SearchAlertIcon className="size-6" />
       </EmptyMedia>
-      <EmptyTitle>
-        {search ? 'No notes match your search' : 'No notes yet'}
-      </EmptyTitle>
-      <EmptyDescription>
-        {search
-          ? 'Try clearing the search to see all notes.'
-          : 'Create your first note to get started.'}
-      </EmptyDescription>
+      <EmptyTitle>{variant.title}</EmptyTitle>
+      <EmptyDescription>{variant.description}</EmptyDescription>
       <Button asChild={true} variant="secondary">
-        {search ? (
-          <Link to="/notes">Clear search</Link>
-        ) : (
-          <Link to="/notes/create">Create note</Link>
-        )}
+        <Link to={variant.ctaHref}>{variant.cta}</Link>
       </Button>
     </Empty>
   );

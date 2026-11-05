@@ -121,7 +121,9 @@ export interface BackfillPlan {
   readonly until: string;
 }
 
-const dayOf = (iso: string): string => iso.slice(0, 10);
+const dayOf = (iso: string): string => {
+  return iso.slice(0, 10);
+};
 
 const bump = (counts: Record<string, number>, key: string): void => {
   counts[key] = (counts[key] ?? 0) + 1;

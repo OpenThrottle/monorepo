@@ -49,16 +49,18 @@ export class ScheduledAgentJobCheckoutPathService {
   async resolve(
     input: ResolveScheduledAgentJobCheckoutPathInput,
   ): Promise<ResolveScheduledAgentJobCheckoutPathResult> {
-    const checkout =
-      input.ownerUserId === null
-        ? await this.checkouts.findById(input.checkoutId)
-        : await this.checkouts.findByIdForUser(
-            input.checkoutId,
-            input.ownerUserId,
-          );
+    const { checkoutId, ownerUserId } = input;
+    const checkout = await this.findCheckout(checkoutId, ownerUserId);
 
     if (checkout === null) return { error: 'not-found' };
 
     return { path: toContainerPath(checkout.filesystemPath) };
+  }
+
+  private findCheckout(checkoutId: string, ownerUserId: string | null) {
+    if (ownerUserId === null) {
+      return this.checkouts.findById(checkoutId);
+    }
+    return this.checkouts.findByIdForUser(checkoutId, ownerUserId);
   }
 }

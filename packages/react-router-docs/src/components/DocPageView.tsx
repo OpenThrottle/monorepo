@@ -65,14 +65,26 @@ export const DocPageView = (props: DocPageViewProps): React.ReactElement => {
     return Object.keys(merged).length > 0 ? merged : undefined;
   }, [codeCopy, toc]);
 
-  const pager =
-    prevNext && sequence !== undefined
-      ? getDocPager(sequence, entry.path)
-      : null;
+  const hasPager = prevNext && sequence !== undefined;
+  const pager = hasPager ? getDocPager(sequence, entry.path) : null;
+  const hasToc = toc && headings.length > 0;
 
   // Handlers
 
   // Markup
+  const pagerMarkup = (
+    <DocPagePager
+      className="mt-10"
+      next={pager?.next ?? null}
+      prev={pager?.prev ?? null}
+    />
+  );
+  const tocMarkup = (
+    <DocPageToc
+      className="hidden xl:block xl:w-56 xl:shrink-0"
+      headings={headings}
+    />
+  );
 
   // Life Cycle
 
@@ -88,17 +100,10 @@ export const DocPageView = (props: DocPageViewProps): React.ReactElement => {
           <MarkdownRenderer components={components} source={entry.content} />
         </article>
 
-        {pager !== null ? (
-          <DocPagePager className="mt-10" next={pager.next} prev={pager.prev} />
-        ) : null}
+        {pager !== null ? pagerMarkup : null}
       </div>
 
-      {toc && headings.length > 0 ? (
-        <DocPageToc
-          className="hidden xl:block xl:w-56 xl:shrink-0"
-          headings={headings}
-        />
-      ) : null}
+      {hasToc ? tocMarkup : null}
     </div>
   );
 };

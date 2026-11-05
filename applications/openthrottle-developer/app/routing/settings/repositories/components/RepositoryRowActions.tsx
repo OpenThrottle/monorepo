@@ -1,14 +1,13 @@
-import type { GlobalPopoverAction } from '@openthrottle/react-router-ui-global';
 import { GlobalPopover } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
 import { useNavigation } from 'react-router';
 
-import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
+import { RepositoryCheckoutActions } from '~/routing/settings/repositories/components/RepositoryCheckoutActions';
 import {
   MISSING_WORKTREES_COPY,
   REPOSITORIES_ROW_ACTIONS_COPY,
 } from '~/routing/settings/repositories/data/data.copy';
-import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/data/types';
+import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/types';
 import { PRUNE_WORKTREE_CHECKOUTS_INTENT } from '~/routing/settings/repositories/utils/missing-rows';
 
 export interface RepositoryRowActionsProps {
@@ -45,59 +44,10 @@ export const RepositoryRowActions = (
   const navigation = useNavigation();
 
   // Setup
-  const isRefreshing =
-    checkout !== null &&
-    navigation.state === 'submitting' &&
-    navigation.formData?.get('intent') === 'refreshCheckout' &&
-    navigation.formData.get('id') === checkout.id;
-
   const isRegistering =
     navigation.state === 'submitting' &&
     navigation.formData?.get('intent') === 'addFolder' &&
     navigation.formData.get('path') === row.path;
-
-  const actions: GlobalPopoverAction[] =
-    checkout === null
-      ? []
-      : [
-          {
-            fields: { id: checkout.id, intent: 'refreshCheckout' },
-            id: 'refreshCheckout',
-            kind: 'submit',
-            label: WORKSPACE_FOLDERS_COPY.refreshButton,
-            pending: isRefreshing,
-            pendingLabel: REPOSITORIES_ROW_ACTIONS_COPY.refreshingLabel,
-          },
-          {
-            fields: {
-              intent: 'applyEditorConfig',
-              repositoryId: checkout.id,
-            },
-            id: 'applyEditorConfig',
-            kind: 'submit',
-            label: WORKSPACE_FOLDERS_COPY.applyEditorConfigButton,
-          },
-          {
-            confirm: {
-              cancelLabel: REPOSITORIES_ROW_ACTIONS_COPY.cancelButton,
-              confirmLabel: REPOSITORIES_ROW_ACTIONS_COPY.removeConfirmButton,
-              description: (
-                <>
-                  {REPOSITORIES_ROW_ACTIONS_COPY.removeDescriptionPrefix}{' '}
-                  <span className="font-medium">{checkout.displayName}</span>{' '}
-                  {REPOSITORIES_ROW_ACTIONS_COPY.removeDescriptionSuffix}
-                </>
-              ),
-              title: REPOSITORIES_ROW_ACTIONS_COPY.removeTitle,
-            },
-            destructive: true,
-            fields: { id: checkout.id, intent: 'deleteRepo' },
-            id: 'deleteRepo',
-            kind: 'submit',
-            label: WORKSPACE_FOLDERS_COPY.removeButton,
-            separatorBefore: true,
-          },
-        ];
 
   // Handlers
 
@@ -162,11 +112,6 @@ export const RepositoryRowActions = (
   }
 
   return (
-    <GlobalPopover
-      actions={actions}
-      ariaLabel={`${REPOSITORIES_ROW_ACTIONS_COPY.menuAriaLabelPrefix} ${checkout.displayName}`}
-      className={className}
-      testId={`RepositoryRowActions-${checkout.id}`}
-    />
+    <RepositoryCheckoutActions checkout={checkout} className={className} />
   );
 };

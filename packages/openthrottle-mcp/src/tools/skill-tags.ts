@@ -63,12 +63,10 @@ export async function listSkillTagsToolHandler(
         userId: entry.userId,
       }));
 
-      const text =
-        tags.length === 0
-          ? 'Skill-tag vocabulary is empty.'
-          : `Skill-tag vocabulary (${vocabulary.totalCount}): ${tags
-              .map((entry) => entry.tag)
-              .join(', ')}`;
+      const tagList = tags.map((entry) => entry.tag).join(', ');
+      const listText = `Skill-tag vocabulary (${vocabulary.totalCount}): ${tagList}`;
+      const emptyText = 'Skill-tag vocabulary is empty.';
+      const text = tags.length === 0 ? emptyText : listText;
 
       return {
         structuredContent: { tags, totalCount: vocabulary.totalCount },

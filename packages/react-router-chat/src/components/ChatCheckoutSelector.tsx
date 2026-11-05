@@ -115,8 +115,9 @@ export const ChatCheckoutSelector = (
   const selectedCheckout = checkouts.find(
     (checkout) => checkout.id === primaryId,
   );
-  const descriptorFor = (id: string): ChatCheckoutDescriptor | undefined =>
-    descriptors.find((descriptor) => descriptor.id === id);
+  const descriptorFor = (id: string): ChatCheckoutDescriptor | undefined => {
+    return descriptors.find((descriptor) => descriptor.id === id);
+  };
   const primaryDescriptor =
     primaryId === undefined ? undefined : descriptorFor(primaryId);
   const triggerLabel = !hasCheckouts

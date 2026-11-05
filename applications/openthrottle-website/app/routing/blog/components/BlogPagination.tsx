@@ -29,6 +29,18 @@ export const BlogPagination = (
   // Handlers
 
   // Markup
+  const newerLink = (
+    <Button asChild={true} variant="outline">
+      <Link to={buildBlogPageHref({ after: null, basePath })}>{newer}</Link>
+    </Button>
+  );
+  const olderLink = (
+    <Button asChild={true} variant="outline">
+      <Link rel="next" to={buildBlogPageHref({ after: endCursor, basePath })}>
+        {older}
+      </Link>
+    </Button>
+  );
 
   // Life Cycle
 
@@ -46,23 +58,8 @@ export const BlogPagination = (
       )}
       data-testid="BlogPagination"
     >
-      {isFirstPage ? (
-        <span />
-      ) : (
-        <Button asChild={true} variant="outline">
-          <Link to={buildBlogPageHref({ after: null, basePath })}>{newer}</Link>
-        </Button>
-      )}
-      {hasOlder ? (
-        <Button asChild={true} variant="outline">
-          <Link
-            rel="next"
-            to={buildBlogPageHref({ after: endCursor, basePath })}
-          >
-            {older}
-          </Link>
-        </Button>
-      ) : null}
+      {isFirstPage ? <span /> : newerLink}
+      {hasOlder ? olderLink : null}
     </nav>
   );
 };

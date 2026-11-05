@@ -14,7 +14,9 @@ describe('InputGroupTextarea Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <InputGroupTextarea {...props} />;
+    const Component = () => {
+      return <InputGroupTextarea {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

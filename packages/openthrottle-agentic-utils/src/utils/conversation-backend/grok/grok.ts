@@ -25,6 +25,7 @@ import {
   resolveAgentTimeouts,
   terminateChild,
 } from '../cursor-agent/teardown.ts';
+import { describeExit } from '../describe-exit.ts';
 import { withFileMentions } from '../file-mentions.ts';
 import { withKeepalive } from '../keepalive.ts';
 import {
@@ -97,6 +98,30 @@ function latestUserMessage(run: ConversationBackendRun): string {
   return latest;
 }
 
+/**
+ * Child env layered on top of the run's `mcpEnv`: the discovered local
+ * endpoint (when `run.baseUrl` is set) plus a placeholder xAI key.
+ */
+function resolveExtraEnv(
+  run: ConversationBackendRun,
+): Record<string, string> | undefined {
+  const hasEndpoint = run.baseUrl !== undefined && run.baseUrl !== '';
+
+  if (run.mcpEnv === undefined && !hasEndpoint) {
+    return undefined;
+  }
+
+  if (!hasEndpoint) {
+    return { ...run.mcpEnv };
+  }
+
+  return {
+    ...run.mcpEnv,
+    GROK_MODELS_BASE_URL: run.baseUrl,
+    XAI_API_KEY: 'local',
+  };
+}
+
 async function* streamGrok(
   run: ConversationBackendRun,
 ): AsyncGenerator<ConversationStreamChunk> {
@@ -109,14 +134,7 @@ async function* streamGrok(
   // (local servers ignore it — we never forward the host's real xAI key). Merged
   // on top of the run's mcpEnv into the scrubbed child env; `--model` (run.model)
   // selects the discovered id.
-  const endpointEnv =
-    run.baseUrl !== undefined && run.baseUrl !== ''
-      ? { GROK_MODELS_BASE_URL: run.baseUrl, XAI_API_KEY: 'local' }
-      : undefined;
-  const extraEnv =
-    run.mcpEnv !== undefined || endpointEnv !== undefined
-      ? { ...(run.mcpEnv ?? {}), ...(endpointEnv ?? {}) }
-      : undefined;
+  const extraEnv = resolveExtraEnv(run);
 
   // Abort + timeouts are managed explicitly (not via the spawn `signal` option)
   // so teardown escalates SIGTERM→SIGKILL rather than a single signal. stdin is
@@ -163,7 +181,9 @@ async function* streamGrok(
   );
 
   wallTimer.unref();
-  const onAbort = (): void => terminate('cancelled');
+  const onAbort = (): void => {
+    return terminate('cancelled');
+  };
 
   run.signal?.addEventListener('abort', onAbort, { once: true });
   if (run.signal?.aborted === true) {
@@ -222,12 +242,7 @@ async function* streamGrok(
         error !== null ||
         (code !== null && code !== 0);
       const message =
-        terminationReason ??
-        (error !== null
-          ? error.message
-          : stderr.trim() !== ''
-            ? stderr.trim()
-            : `grok exited with code ${code}`);
+        terminationReason ?? describeExit('grok', { code, error, stderr });
       yield {
         delta: '',
         done: true,

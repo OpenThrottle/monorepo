@@ -59,8 +59,7 @@ describe('compileMarkdown', () => {
   // opened an XSS sink.
   test('never emits raw HTML from source as live markup', async () => {
     const options: CompileMarkdownOptions = {
-      source:
-        'Hello <script>alert(1)</script> and <img src=x onerror=alert(1)>.',
+      source: `Hello <script>alert(1)</script> and <img src=x onerror=alert(1)>.`,
     };
 
     const Content = await compileMarkdown(options);
@@ -212,8 +211,7 @@ describe('compileMarkdownSync', () => {
 
   test('never emits raw HTML from source as live markup', () => {
     const options: CompileMarkdownOptions = {
-      source:
-        'Hello <script>alert(1)</script> and <img src=x onerror=alert(1)>.',
+      source: `Hello <script>alert(1)</script> and <img src=x onerror=alert(1)>.`,
     };
 
     const Content = compileMarkdownSync(options);

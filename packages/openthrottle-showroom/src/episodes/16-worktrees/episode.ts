@@ -16,8 +16,7 @@ import type { VideoEpisode } from '../types.ts';
 export const episode: VideoEpisode = {
   beats: [
     {
-      action:
-        'Terminal, two panes, two agents working in two directories at once.',
+      action: `Terminal, two panes, two agents working in two directories at once.`,
       t: '0:00',
     },
     { action: 'Run `pnpm run worktree:new feature-b`.', t: '0:09' },

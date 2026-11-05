@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import type { TagActionRuleRowData } from '~/routing/rules/components/RulesTable';
-import { ANY } from '~/routing/rules/data/rule-form-options';
+import { ANY } from '~/routing/rules/data/data.rule-form-options';
 import {
   parsePayloadField,
   splitList,
@@ -53,6 +53,13 @@ export const useRuleForm = (options: UseRuleFormOptions): UseRuleFormResult => {
   const { initialRule } = options;
 
   // Hooks
+  const readInitialPayloadField = (field: string): string => {
+    if (initialRule == null) {
+      return '';
+    }
+
+    return parsePayloadField(initialRule.actionPayloadJson, field);
+  };
   const [title, setTitle] = React.useState(initialRule?.title ?? '');
   const [actionType, setActionType] = React.useState(
     initialRule?.actionType ?? 'inject-task',
@@ -65,71 +72,66 @@ export const useRuleForm = (options: UseRuleFormOptions): UseRuleFormResult => {
     initialRule?.environment ?? ANY,
   );
   const [skillSlug, setSkillSlug] = React.useState(
-    initialRule != null
-      ? parsePayloadField(initialRule.actionPayloadJson, 'skillSlug')
-      : '',
+    readInitialPayloadField('skillSlug'),
   );
   const [placement, setPlacement] = React.useState(
-    initialRule != null
-      ? parsePayloadField(initialRule.actionPayloadJson, 'placement') || 'first'
-      : 'first',
+    readInitialPayloadField('placement') || 'first',
   );
   const [titleTemplate, setTitleTemplate] = React.useState(
-    initialRule != null
-      ? parsePayloadField(initialRule.actionPayloadJson, 'titleTemplate')
-      : '',
+    readInitialPayloadField('titleTemplate'),
   );
   const [tagAllow, setTagAllow] = React.useState(
-    initialRule != null
-      ? parsePayloadField(initialRule.actionPayloadJson, 'tagAllow')
-      : '',
+    readInitialPayloadField('tagAllow'),
   );
   const [tagDeny, setTagDeny] = React.useState(
-    initialRule != null
-      ? parsePayloadField(initialRule.actionPayloadJson, 'tagDeny')
-      : '',
+    readInitialPayloadField('tagDeny'),
   );
   const [slugAllow, setSlugAllow] = React.useState(
-    initialRule != null
-      ? parsePayloadField(initialRule.actionPayloadJson, 'slugAllow')
-      : '',
+    readInitialPayloadField('slugAllow'),
   );
   const [slugDeny, setSlugDeny] = React.useState(
-    initialRule != null
-      ? parsePayloadField(initialRule.actionPayloadJson, 'slugDeny')
-      : '',
+    readInitialPayloadField('slugDeny'),
   );
 
   // Setup
   const isEdit = initialRule != null;
+  const isInjectTask = actionType === 'inject-task';
 
   // The typed payload is assembled client-side and forwarded to the route
   // action as a single hidden JSON field, preserving the inject-task vs
   // availability-exception shapes the server Zod-validates.
-  const actionPayloadJson =
-    actionType === 'inject-task'
-      ? JSON.stringify({
-          placement,
-          skillSlug,
-          ...(titleTemplate !== '' ? { titleTemplate } : {}),
-        })
-      : JSON.stringify({
-          slugAllow: splitList(slugAllow),
-          slugDeny: splitList(slugDeny),
-          tagAllow: splitList(tagAllow),
-          tagDeny: splitList(tagDeny),
-        });
+  const buildActionPayloadJson = (): string => {
+    if (isInjectTask) {
+      const hasTitleTemplate = titleTemplate !== '';
+
+      return JSON.stringify({
+        placement,
+        skillSlug,
+        ...(hasTitleTemplate ? { titleTemplate } : {}),
+      });
+    }
+
+    return JSON.stringify({
+      slugAllow: splitList(slugAllow),
+      slugDeny: splitList(slugDeny),
+      tagAllow: splitList(tagAllow),
+      tagDeny: splitList(tagDeny),
+    });
+  };
+  const actionPayloadJson = buildActionPayloadJson();
 
   const submitDisabled =
-    title.trim() === '' || (actionType === 'inject-task' && skillSlug === '');
+    title.trim() === '' || (isInjectTask && skillSlug === '');
 
   // Handlers
   const handleToggleTag = (tag: string): void => {
-    setTagAll((current) =>
-      current.includes(tag)
-        ? current.filter((entry) => entry !== tag)
-        : [...current, tag],
-    );
+    setTagAll((current) => {
+      if (current.includes(tag)) {
+        return current.filter((entry) => entry !== tag);
+      }
+
+      return [...current, tag];
+    });
   };
 
   // Markup

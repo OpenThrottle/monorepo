@@ -40,8 +40,11 @@ const HEALTH_META: Record<
   healthy: { color: 'green', label: 'Healthy' },
 };
 
-const safeCount = (value: number | undefined): number =>
-  typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : 0;
+const safeCount = (value: number | undefined): number => {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0
+    ? value
+    : 0;
+};
 
 /**
  * @description Rolls raw queue counts into a green/amber/red health signal with backlog (waiting + delayed).

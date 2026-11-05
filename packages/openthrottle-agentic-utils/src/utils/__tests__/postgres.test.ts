@@ -136,8 +136,7 @@ describe('getPostgresUrl', () => {
   describe('when OPENTHROTTLE_POSTGRES_URL is set', () => {
     it('prefers OPENTHROTTLE_POSTGRES_URL over POSTGRES_URL', () => {
       const conn = getPostgresUrl({
-        [OPENTHROTTLE_POSTGRES_URL_ENV]:
-          'postgresql://openthrottle@db.example:5432/openthrottle',
+        [OPENTHROTTLE_POSTGRES_URL_ENV]: `postgresql://openthrottle@db.example:5432/openthrottle`,
         POSTGRES_URL: 'postgresql://foreign@localhost:5432/wrong_db',
       });
 
@@ -148,8 +147,7 @@ describe('getPostgresUrl', () => {
 
     it('trims whitespace from OPENTHROTTLE_POSTGRES_URL', () => {
       const conn = getPostgresUrl({
-        [OPENTHROTTLE_POSTGRES_URL_ENV]:
-          '  postgresql://openthrottle@db.example:5432/openthrottle  ',
+        [OPENTHROTTLE_POSTGRES_URL_ENV]: `  postgresql://openthrottle@db.example:5432/openthrottle  `,
       });
 
       expect(conn).toBe(

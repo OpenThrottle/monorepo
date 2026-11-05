@@ -38,10 +38,11 @@ export interface PlanOutputStreamer {
   enqueue(content: string): void;
 }
 
-const defaultSleep = (ms: number): Promise<void> =>
-  new Promise((resolve) => {
+const defaultSleep = (ms: number): Promise<void> => {
+  return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
+};
 
 /**
  * @description Creates a streamer that appends chunks strictly in enqueue order: each

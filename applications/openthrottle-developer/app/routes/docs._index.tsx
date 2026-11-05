@@ -10,7 +10,7 @@ import {
   docsNav,
   docsSequence,
   indexEntry,
-} from '~/routing/docs/data/docs-navigation';
+} from '~/routing/docs/data/data.docs-navigation';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

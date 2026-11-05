@@ -62,6 +62,17 @@ const toChatMessageRole = (role: string): ChatMessage['role'] | null => {
   return null;
 };
 
+const foldAssistantEvents = (
+  role: ChatMessage['role'],
+  message: PersistedAgentConversationMessage,
+): ReturnType<typeof foldPersistedTurnEvents> => {
+  if (role !== 'assistant') {
+    return [];
+  }
+
+  return foldPersistedTurnEvents(message.toolMetadataJson, message.content);
+};
+
 /**
  * @description Maps persisted agent conversation rows into local chat thread messages.
  */
@@ -79,10 +90,7 @@ export const mapPersistedAgentConversationMessages = (
 
     // Hydrate the rich timeline for assistant turns that persisted non-text
     // events (thinking/tool). Plain turns fold to [] and keep the flat body.
-    const events =
-      role === 'assistant'
-        ? foldPersistedTurnEvents(message.toolMetadataJson, message.content)
-        : [];
+    const events = foldAssistantEvents(role, message);
 
     mapped.push({
       body: message.content,

@@ -49,7 +49,7 @@ export const TaskDetails = (props: TaskDetailsProps): React.ReactElement => {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_16rem]">
         {/* Main column: the task body reads like an issue description. */}
         <div className="min-w-0 space-y-4">
-          {hasBody ? (
+          {hasBody && (
             <>
               {hasDescription && (
                 <MarkdownRenderer source={task.description ?? ''} />
@@ -70,7 +70,8 @@ export const TaskDetails = (props: TaskDetailsProps): React.ReactElement => {
                 </div>
               )}
             </>
-          ) : (
+          )}
+          {!hasBody && (
             <p className="text-muted-foreground text-sm">
               {TASK_DETAIL_COPY.noDescription}
             </p>

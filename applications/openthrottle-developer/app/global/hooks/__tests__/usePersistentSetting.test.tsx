@@ -5,8 +5,9 @@ import { buildPersistentSettingKey } from '~/global/config/persistent-setting-st
 import { usePersistentSetting } from '~/global/hooks/usePersistentSetting';
 
 type View = 'list' | 'table';
-const isView = (value: unknown): value is View =>
-  value === 'list' || value === 'table';
+const isView = (value: unknown): value is View => {
+  return value === 'list' || value === 'table';
+};
 
 describe('usePersistentSetting', () => {
   beforeEach(() => {

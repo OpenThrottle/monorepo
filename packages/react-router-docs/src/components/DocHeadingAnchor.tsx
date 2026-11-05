@@ -41,6 +41,8 @@ export const DocHeadingAnchor = (
   }, [slug]);
 
   // Markup
+  const copiedIcon = <CheckIcon className="size-3.5" />;
+  const linkIcon = <LinkIcon className="size-3.5" />;
 
   // Life Cycle
   React.useEffect(
@@ -64,11 +66,7 @@ export const DocHeadingAnchor = (
       onClick={handleCopy}
       type="button"
     >
-      {copied ? (
-        <CheckIcon className="size-3.5" />
-      ) : (
-        <LinkIcon className="size-3.5" />
-      )}
+      {copied ? copiedIcon : linkIcon}
     </button>
   );
 };

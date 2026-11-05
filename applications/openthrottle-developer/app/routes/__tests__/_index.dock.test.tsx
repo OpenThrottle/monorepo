@@ -54,16 +54,18 @@ vi.mock('~/routing/home/hooks/useConversationList', () => ({
 
 const buildMatches = (
   loaderData: Route.ComponentProps['loaderData'],
-): Route.ComponentProps['matches'] => [
-  buildRootMatch(),
-  {
-    handle: undefined,
-    id: 'routes/_index',
-    loaderData,
-    params: {},
-    pathname: '/',
-  },
-];
+): Route.ComponentProps['matches'] => {
+  return [
+    buildRootMatch(),
+    {
+      handle: undefined,
+      id: 'routes/_index',
+      loaderData,
+      params: {},
+      pathname: '/',
+    },
+  ];
+};
 
 const renderHome = (
   loaderData: Route.ComponentProps['loaderData'],
@@ -89,18 +91,22 @@ const renderHome = (
   );
 };
 
-const resolvedComposerData = (): Route.ComponentProps['loaderData'] => ({
-  composerData: Promise.resolve({
-    models: [],
-    personas: [],
-    repositories: [],
-  }),
-});
+const resolvedComposerData = (): Route.ComponentProps['loaderData'] => {
+  return {
+    composerData: Promise.resolve({
+      models: [],
+      personas: [],
+      repositories: [],
+    }),
+  };
+};
 
 // A never-resolving promise holds the Suspense boundary in its fallback.
-const pendingComposerData = (): Route.ComponentProps['loaderData'] => ({
-  composerData: new Promise<never>(() => {}),
-});
+const pendingComposerData = (): Route.ComponentProps['loaderData'] => {
+  return {
+    composerData: new Promise<never>(() => {}),
+  };
+};
 
 describe('routes/_index.tsx docked composer', () => {
   test('docks the composer region against the page scroll container', async () => {

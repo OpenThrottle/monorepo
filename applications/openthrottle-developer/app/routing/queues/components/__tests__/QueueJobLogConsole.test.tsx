@@ -34,16 +34,18 @@ const event = (
   level: string,
   message: string,
   timestamp: string,
-) => ({
-  __typename: 'QueueJobLogEventObject',
-  cursor,
-  jobId: 'job-1',
-  level,
-  message,
-  queueName: 'plans',
-  source: 'plans-queue',
-  timestamp,
-});
+) => {
+  return {
+    __typename: 'QueueJobLogEventObject',
+    cursor,
+    jobId: 'job-1',
+    level,
+    message,
+    queueName: 'plans',
+    source: 'plans-queue',
+    timestamp,
+  };
+};
 
 const historyPage = {
   events: [
@@ -55,9 +57,11 @@ const historyPage = {
 };
 
 const renderConsole = (jobState = 'active') => {
-  const Component = () => (
-    <QueueJobLogConsole jobId="job-1" jobState={jobState} queueName="plans" />
-  );
+  const Component = () => {
+    return (
+      <QueueJobLogConsole jobId="job-1" jobState={jobState} queueName="plans" />
+    );
+  };
   const RoutesStub = createRoutesStub([
     { Component, path: '/' },
     { id: 'qjl', loader: () => historyPage, path: '/resources/queue-job-logs' },
@@ -116,9 +120,15 @@ describe('QueueJobLogConsole Component', () => {
 
   test('shows a finished-job empty state when there are no logs', async () => {
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <QueueJobLogConsole jobId="none" jobState="completed" queueName="plans" />
-    );
+    const Component = () => {
+      return (
+        <QueueJobLogConsole
+          jobId="none"
+          jobState="completed"
+          queueName="plans"
+        />
+      );
+    };
     const RoutesStub = createRoutesStub([
       { Component, path: '/' },
       {

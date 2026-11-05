@@ -14,7 +14,9 @@ describe('OpenThrottleEmptyState Component', () => {
   beforeEach(() => {
     props = { description: '', title: '' };
 
-    const Component = () => <OpenThrottleEmptyState {...props} />;
+    const Component = () => {
+      return <OpenThrottleEmptyState {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

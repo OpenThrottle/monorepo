@@ -22,7 +22,9 @@ describe('ChatComposer Component', () => {
   let onSubmit: ReturnType<typeof vi.fn<(message: string) => void>>;
 
   const renderComposer = (p: ChatComposerProps): RenderResult => {
-    const Comp = () => <ChatComposer {...p} />;
+    const Comp = () => {
+      return <ChatComposer {...p} />;
+    };
     const RoutesStub = createRoutesStub([{ Component: Comp, path: '/' }]);
     return render(<RoutesStub />);
   };
@@ -197,13 +199,15 @@ describe('ChatComposer Component', () => {
   });
 
   describe('@-mention file linking', () => {
-    const makeProvider = (paths: readonly string[]) => ({
-      onQueryFiles: vi.fn(async (query: string) =>
-        paths.filter((path) =>
-          path.toLowerCase().includes(query.toLowerCase()),
+    const makeProvider = (paths: readonly string[]) => {
+      return {
+        onQueryFiles: vi.fn(async (query: string) =>
+          paths.filter((path) =>
+            path.toLowerCase().includes(query.toLowerCase()),
+          ),
         ),
-      ),
-    });
+      };
+    };
 
     test('typing @ opens the popover with provider results', async () => {
       const user = userEvent.setup();
@@ -330,15 +334,17 @@ describe('ChatComposer Component', () => {
         readonly disabledForModel?: boolean;
         readonly slug: string;
       }>,
-    ) => ({
-      onQuerySkills: vi.fn(async (query: string) =>
-        skills.filter(
-          (skill) =>
-            skill.slug.toLowerCase().includes(query.toLowerCase()) ||
-            skill.description.toLowerCase().includes(query.toLowerCase()),
+    ) => {
+      return {
+        onQuerySkills: vi.fn(async (query: string) =>
+          skills.filter(
+            (skill) =>
+              skill.slug.toLowerCase().includes(query.toLowerCase()) ||
+              skill.description.toLowerCase().includes(query.toLowerCase()),
+          ),
         ),
-      ),
-    });
+      };
+    };
 
     const graphify = { description: 'Build a graph', slug: 'graphify' };
     const improve = { description: 'Audit the codebase', slug: 'improve' };

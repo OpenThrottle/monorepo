@@ -11,7 +11,7 @@ import { Link } from 'react-router';
 import {
   AGENT_ASSET_LIST_HREF_BY_TYPE,
   AGENT_ASSET_PROMPT_TYPE_LABEL,
-} from '~/routing/agent-search/data/agent-asset-card';
+} from '~/routing/agent-search/data/data.agent-asset-card';
 import type { AgentAssetResult } from '~/routing/agent-search/types';
 
 export interface AgentAssetCardProps {
@@ -35,19 +35,52 @@ export const AgentAssetCard = (
 
   // Setup
   const listHref = AGENT_ASSET_LIST_HREF_BY_TYPE[result.promptType];
+  const isDbSource = result.source === 'db';
+  const sourceColor = isDbSource ? 'green' : 'slate';
+  const sourceLabel = isDbSource ? 'indexed' : 'on disk';
+  const hasSimilarity = result.similarity != null;
+  const similarityPercent = Math.round((result.similarity ?? 0) * 100);
+  const hasContent = result.content !== '';
+  const hasFilePath = result.filePath != null;
 
   // Handlers
+  const renderTitle = (): React.ReactElement => {
+    if (listHref != null) {
+      return (
+        <Link
+          className="underline-offset-4 hover:underline"
+          data-testid="AgentAssetCard-link"
+          to={listHref}
+        >
+          {result.title}
+        </Link>
+      );
+    }
+    return <h3 className={TITLE_CLASS}>{result.title}</h3>;
+  };
 
   // Markup
-  const similarityBlock =
-    result.similarity != null ? (
-      <p
-        className="text-muted-foreground text-xs"
-        data-testid="AgentAssetCard-similarity"
-      >
-        Relevance: {Math.round(result.similarity * 100)}%
-      </p>
-    ) : null;
+  const similarityBlock = (
+    <p
+      className="text-muted-foreground text-xs"
+      data-testid="AgentAssetCard-similarity"
+    >
+      Relevance: {similarityPercent}%
+    </p>
+  );
+  const contentBlock = (
+    <p className="text-muted-foreground text-sm leading-relaxed">
+      {result.content}
+    </p>
+  );
+  const filePathBlock = (
+    <p
+      className="text-muted-foreground font-mono text-xs"
+      data-testid="AgentAssetCard-filePath"
+    >
+      {result.filePath}
+    </p>
+  );
 
   // Life Cycle
 
@@ -61,11 +94,11 @@ export const AgentAssetCard = (
             {AGENT_ASSET_PROMPT_TYPE_LABEL[result.promptType]}
           </Badge>
           <Badge
-            color={result.source === 'db' ? 'green' : 'slate'}
+            color={sourceColor}
             data-testid="AgentAssetCard-sourceBadge"
             size="xs"
           >
-            {result.source === 'db' ? 'indexed' : 'on disk'}
+            {sourceLabel}
           </Badge>
           {result.labels.map((label) => (
             <Badge color="slate" key={label} size="xs">
@@ -73,35 +106,12 @@ export const AgentAssetCard = (
             </Badge>
           ))}
         </div>
-        <CardTitle className={TITLE_CLASS}>
-          {listHref != null ? (
-            <Link
-              className="underline-offset-4 hover:underline"
-              data-testid="AgentAssetCard-link"
-              to={listHref}
-            >
-              {result.title}
-            </Link>
-          ) : (
-            <h3 className={TITLE_CLASS}>{result.title}</h3>
-          )}
-        </CardTitle>
+        <CardTitle className={TITLE_CLASS}>{renderTitle()}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3 pt-4">
-        {result.content !== '' ? (
-          <p className="text-muted-foreground text-sm leading-relaxed">
-            {result.content}
-          </p>
-        ) : null}
-        {result.filePath != null ? (
-          <p
-            className="text-muted-foreground font-mono text-xs"
-            data-testid="AgentAssetCard-filePath"
-          >
-            {result.filePath}
-          </p>
-        ) : null}
-        {similarityBlock}
+        {hasContent ? contentBlock : null}
+        {hasFilePath ? filePathBlock : null}
+        {hasSimilarity ? similarityBlock : null}
       </CardContent>
     </Card>
   );

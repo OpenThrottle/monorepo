@@ -3,7 +3,7 @@ import { ChatPermissionMode } from '@openthrottle/react-router-chat';
 import type {
   ChatToolbarBackendPrefs,
   ChatToolbarState,
-} from '../data/atom.chat-toolbar';
+} from '../data/data.chat-toolbar-state';
 
 /**
  * The permission modes that must not silently survive a browser session: both
@@ -17,7 +17,9 @@ const ELEVATED_PERMISSION_MODES: readonly ChatPermissionMode[] = [
 
 const isElevatedPermissionMode = (
   mode: ChatPermissionMode | undefined,
-): boolean => mode != null && ELEVATED_PERMISSION_MODES.includes(mode);
+): boolean => {
+  return mode != null && ELEVATED_PERMISSION_MODES.includes(mode);
+};
 
 /**
  * @description PURE safety decay: clear any elevated `permissionMode`

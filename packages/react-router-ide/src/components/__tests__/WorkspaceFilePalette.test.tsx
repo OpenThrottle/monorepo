@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { DEFAULT_DEBOUNCE_MS } from '../../config/debounce';
-import type { IdeWorkspaceListing } from '../../data/view-models';
+import type { IdeWorkspaceListing } from '../../data/data.view-models';
 import { WorkspaceFilePalette } from '../WorkspaceFilePalette';
 
 const listing: IdeWorkspaceListing = {

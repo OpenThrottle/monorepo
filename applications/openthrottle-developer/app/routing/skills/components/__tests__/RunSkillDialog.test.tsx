@@ -48,11 +48,13 @@ const renderDialog = (
     slug: 'ot-plans',
     ...overrides,
   };
-  const Wrapped = (): React.ReactElement => (
-    <TooltipProvider>
-      <RunSkillDialog {...props} />
-    </TooltipProvider>
-  );
+  const Wrapped = (): React.ReactElement => {
+    return (
+      <TooltipProvider>
+        <RunSkillDialog {...props} />
+      </TooltipProvider>
+    );
+  };
   const RoutesStub = createRoutesStub([{ Component: Wrapped, path: '/' }]);
 
   return { component: render(<RoutesStub />), onRun };

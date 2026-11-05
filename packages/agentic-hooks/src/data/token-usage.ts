@@ -47,32 +47,38 @@ mutation RecordTokenUsage($input: RecordTokenUsageInput!) {
  */
 export const toRecordTokenUsageRow = (
   record: TokenUsageRecord,
-): Record<string, number | string | null> => ({
-  cacheReadTokens: record.cache_read_tokens,
-  cacheWriteTokens: record.cache_write_tokens,
-  costUsd: record.cost_usd,
-  cwd: record.cwd,
-  gitBranch: record.git_branch,
-  inputTokens: record.input_tokens,
-  model: record.model,
-  occurredAt: record.occurred_at,
-  outputTokens: record.output_tokens,
-  provider: record.provider,
-  rawUsageJson: record.raw_usage_json,
-  reasoningTokens: record.reasoning_tokens,
-  requestId: record.request_id,
-  sessionId: record.session_id,
-  source: record.source,
-  totalTokens: record.total_tokens,
-});
+): Record<string, number | string | null> => {
+  return {
+    cacheReadTokens: record.cache_read_tokens,
+    cacheWriteTokens: record.cache_write_tokens,
+    costUsd: record.cost_usd,
+    cwd: record.cwd,
+    gitBranch: record.git_branch,
+    inputTokens: record.input_tokens,
+    model: record.model,
+    occurredAt: record.occurred_at,
+    outputTokens: record.output_tokens,
+    provider: record.provider,
+    rawUsageJson: record.raw_usage_json,
+    reasoningTokens: record.reasoning_tokens,
+    requestId: record.request_id,
+    sessionId: record.session_id,
+    source: record.source,
+    totalTokens: record.total_tokens,
+  };
+};
 
 /**
  * Wire size of one record, as `postTokenUsageBatch` serializes it.
  *
  * @public
  */
-export const tokenUsageRowBytes = (record: TokenUsageRecord): number =>
-  Buffer.byteLength(JSON.stringify(toRecordTokenUsageRow(record)), 'utf8');
+export const tokenUsageRowBytes = (record: TokenUsageRecord): number => {
+  return Buffer.byteLength(
+    JSON.stringify(toRecordTokenUsageRow(record)),
+    'utf8',
+  );
+};
 
 /**
  * Split records into deliverable batches: at most `size` rows (never more than
@@ -84,12 +90,13 @@ export const chunkTokenUsage = (
   records: readonly TokenUsageRecord[],
   size: number = MAX_TOKEN_USAGE_BATCH,
   maxBytes: number = MAX_TOKEN_USAGE_BATCH_BYTES,
-): TokenUsageRecord[][] =>
-  chunkByBudget(records, {
+): TokenUsageRecord[][] => {
+  return chunkByBudget(records, {
     maxBytes,
     maxItems: Math.min(size, MAX_TOKEN_USAGE_BATCH),
     sizeOf: tokenUsageRowBytes,
   });
+};
 
 /**
  * POST one batch (at most `MAX_TOKEN_USAGE_BATCH` rows) to recordTokenUsage.

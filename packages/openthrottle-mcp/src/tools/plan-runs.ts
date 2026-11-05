@@ -55,8 +55,7 @@ export const registerPlanRunToolParameters = z
   })
   .strict();
 
-export const registerPlanRunToolDescription =
-  'Open a plan_runs row for the interactive loop you are about to drive, so the run is attributable: which agent, which model, which branch, when it started. Call it once at loop setup and carry the returned run id for the rest of the run. Pass the model you are actually running as — or omit it if you cannot determine one, since null is a legible answer and a plausible-looking guess is not. executionBackend is detected from the launching harness and only used if detection finds nothing; do not declare it otherwise. Best-effort: if this fails, say so and keep working. IMPORTANT: nothing server-side will ever settle this row, so you must call settle_plan_run on every exit path — COMPLETED when the PR opens, CANCELLED on a deliberate stop, FAILED when you give up.';
+export const registerPlanRunToolDescription = `Open a plan_runs row for the interactive loop you are about to drive, so the run is attributable: which agent, which model, which branch, when it started. Call it once at loop setup and carry the returned run id for the rest of the run. Pass the model you are actually running as — or omit it if you cannot determine one, since null is a legible answer and a plausible-looking guess is not. executionBackend is detected from the launching harness and only used if detection finds nothing; do not declare it otherwise. Best-effort: if this fails, say so and keep working. IMPORTANT: nothing server-side will ever settle this row, so you must call settle_plan_run on every exit path — COMPLETED when the PR opens, CANCELLED on a deliberate stop, FAILED when you give up.`;
 
 export async function registerPlanRunToolHandler(
   args: z.infer<typeof registerPlanRunToolParameters>,
@@ -136,8 +135,7 @@ export const settlePlanRunToolParameters = z
   })
   .strict();
 
-export const settlePlanRunToolDescription =
-  "Close the plan_runs row opened by register_plan_run. status is COMPLETED (the work shipped), CANCELLED (a deliberate stop) or FAILED (you gave up or crashed out). Call this on EVERY exit path: these rows are exempt from the server's stale sweep, so an unsettled one sits IN_PROGRESS forever, reads as live, and holds its worktree marked busy. Settling an already-settled or unknown run is a safe no-op. On COMPLETED, also pass headSha (the branch head you pushed) and prNumber (the PR you opened): the server records the work-ledger git_commit and pull_request artifacts for you, resolving the repo itself, so there is no separate ledger ritual to remember after the merge. Omit both on any exit that opened no PR.";
+export const settlePlanRunToolDescription = `Close the plan_runs row opened by register_plan_run. status is COMPLETED (the work shipped), CANCELLED (a deliberate stop) or FAILED (you gave up or crashed out). Call this on EVERY exit path: these rows are exempt from the server's stale sweep, so an unsettled one sits IN_PROGRESS forever, reads as live, and holds its worktree marked busy. Settling an already-settled or unknown run is a safe no-op. On COMPLETED, also pass headSha (the branch head you pushed) and prNumber (the PR you opened): the server records the work-ledger git_commit and pull_request artifacts for you, resolving the repo itself, so there is no separate ledger ritual to remember after the merge. Omit both on any exit that opened no PR.`;
 
 export async function settlePlanRunToolHandler(
   args: z.infer<typeof settlePlanRunToolParameters>,
@@ -202,8 +200,7 @@ export const registerPlanRunWorktreeCheckoutToolParameters = z
   })
   .strict();
 
-export const registerPlanRunWorktreeCheckoutToolDescription =
-  'Tell a registered plan run which worktree it is running in, by absolute path, so its checkout_id and branch point at that worktree (overwriting a scheduling-time primary checkout). That is what makes "open in editor" deep-links work for the run, what lets the worktree read as busy while the loop is live, and what settle/PR attribution uses. Call it once, after the worktree exists. Best-effort by design: it quietly returns the run unchanged when the path is not a linked worktree or the repository cannot be resolved.';
+export const registerPlanRunWorktreeCheckoutToolDescription = `Tell a registered plan run which worktree it is running in, by absolute path, so its checkout_id and branch point at that worktree (overwriting a scheduling-time primary checkout). That is what makes "open in editor" deep-links work for the run, what lets the worktree read as busy while the loop is live, and what settle/PR attribution uses. Call it once, after the worktree exists. Best-effort by design: it quietly returns the run unchanged when the path is not a linked worktree or the repository cannot be resolved.`;
 
 export async function registerPlanRunWorktreeCheckoutToolHandler(
   args: z.infer<typeof registerPlanRunWorktreeCheckoutToolParameters>,
@@ -238,10 +235,13 @@ export async function registerPlanRunWorktreeCheckoutToolHandler(
 
       // Distinguish "linked" from "soft-failed" plainly: both return a run, and a caller
       // that cannot tell them apart will assume a deep-link works when it does not.
-      const text =
-        run.checkout == null
-          ? `Plan run ${run.id} has no checkout linked. The path is not a linked worktree, or its repository could not be resolved — this is a soft failure and the run is otherwise unaffected.`
-          : `Plan run ${run.id} is linked to ${run.checkout.kind} checkout "${run.checkout.displayName}" at ${run.checkout.filesystemPath}.`;
+      const { checkout } = run;
+      if (checkout == null) {
+        const softFailureText = `Plan run ${run.id} has no checkout linked. The path is not a linked worktree, or its repository could not be resolved — this is a soft failure and the run is otherwise unaffected.`;
+        return { structuredContent: { run }, text: softFailureText };
+      }
+
+      const text = `Plan run ${run.id} is linked to ${checkout.kind} checkout "${checkout.displayName}" at ${checkout.filesystemPath}.`;
 
       return { structuredContent: { run }, text };
     },
@@ -261,8 +261,7 @@ export const getPlanRunsToolParameters = z
   })
   .strict();
 
-export const getPlanRunsToolDescription =
-  'List the plan runs recorded for a plan, newest first: status, agent backend, model, branch, run kind, timings, and the worktree it ran in. Use it to attribute an executed plan to the agent and model that ran it, and — during a loop — to poll cancelRequestedAt at task boundaries, which is the ONLY way a Kill reaches an interactive run. Read heartbeatExpected next to isStale: on a run that does not heartbeat, isStale false means "nobody knows", not "verified live". A USAGE_LIMITED run stopped cleanly on a subscription usage limit (usageLimitResetsAt says when it lifts); a run whose resumeOfRunId is set is the automatic continuation of that limited run.';
+export const getPlanRunsToolDescription = `List the plan runs recorded for a plan, newest first: status, agent backend, model, branch, run kind, timings, and the worktree it ran in. Use it to attribute an executed plan to the agent and model that ran it, and — during a loop — to poll cancelRequestedAt at task boundaries, which is the ONLY way a Kill reaches an interactive run. Read heartbeatExpected next to isStale: on a run that does not heartbeat, isStale false means "nobody knows", not "verified live". A USAGE_LIMITED run stopped cleanly on a subscription usage limit (usageLimitResetsAt says when it lifts); a run whose resumeOfRunId is set is the automatic continuation of that limited run.`;
 
 export async function getPlanRunsToolHandler(
   args: z.infer<typeof getPlanRunsToolParameters>,
@@ -284,10 +283,9 @@ export async function getPlanRunsToolHandler(
     if (!runs) return null;
 
     const cancelled = runs.filter((run) => run.cancelRequestedAt != null);
-    const cancelNote =
-      cancelled.length === 0
-        ? ''
-        : `\n\n⚠️ Cancel requested on ${cancelled.map((run) => run.id).join(', ')}. If one of these is your run, stop and settle it CANCELLED.`;
+    const cancelledIds = cancelled.map((run) => run.id).join(', ');
+    const cancelWarning = `\n\n⚠️ Cancel requested on ${cancelledIds}. If one of these is your run, stop and settle it CANCELLED.`;
+    const cancelNote = cancelled.length === 0 ? '' : cancelWarning;
 
     const text = `${runs.length} plan run(s) on plan ${parsed.data.planId}, newest first.${cancelNote}\n${JSON.stringify(runs, null, 2)}`;
 

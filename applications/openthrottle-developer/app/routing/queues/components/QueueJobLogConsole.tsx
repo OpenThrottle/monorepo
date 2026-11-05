@@ -13,7 +13,7 @@ import {
   QUEUE_JOB_FINISHED_STATES,
   QUEUE_JOB_LOG_LEVELS,
   QUEUE_JOB_LOG_STATUS_META,
-} from '~/routing/queues/data/queue-job-log-console';
+} from '~/routing/queues/data/data.queue-job-log-console';
 import { useQueueJobLogs } from '~/routing/queues/hooks/useQueueJobLogs';
 import { formatQueueJobLogLine } from '~/routing/queues/utils/queue-job-log-line';
 
@@ -77,11 +77,49 @@ export const QueueJobLogConsole = (
   }, []);
 
   // Markup
-  const emptyMessage = isBackfilling
-    ? 'Loading logs…'
-    : isFinished
-      ? 'No logs were recorded for this job.'
-      : 'Waiting for logs…';
+  const finishedEmptyCopy = 'No logs were recorded for this job.';
+  const idleEmptyMessage = isFinished ? finishedEmptyCopy : 'Waiting for logs…';
+  const emptyMessage = isBackfilling ? 'Loading logs…' : idleEmptyMessage;
+  const lineCountLabel = filtered.length === 1 ? 'line' : 'lines';
+  const logLines = (
+    <pre
+      className="bg-muted/40 max-h-96 overflow-auto rounded-md p-3 font-mono text-xs leading-relaxed"
+      data-testid="queue-job-log-output"
+      onScroll={handleScroll}
+      ref={preRef}
+      tabIndex={0}
+    >
+      {filtered.map((event) => (
+        <div key={event.cursor}>{formatQueueJobLogLine(event)}</div>
+      ))}
+    </pre>
+  );
+  const emptyLogs = (
+    <p
+      className="text-muted-foreground py-6 text-center text-sm"
+      data-testid="queue-job-log-empty"
+    >
+      {emptyMessage}
+    </p>
+  );
+  const copyButton = (
+    <OpenThrottleClipboard
+      className="h-8 text-xs"
+      label="Copy"
+      text={copyText}
+    />
+  );
+  const loadOlderButton = (
+    <Button
+      disabled={isBackfilling}
+      onClick={loadOlder}
+      size="xs"
+      type="button"
+      variant="outline"
+    >
+      Load older
+    </Button>
+  );
 
   // Life Cycle
   React.useEffect(() => {
@@ -134,52 +172,17 @@ export const QueueJobLogConsole = (
           type="search"
           value={search}
         />
-        {copyText !== '' ? (
-          <OpenThrottleClipboard
-            className="h-8 text-xs"
-            label="Copy"
-            text={copyText}
-          />
-        ) : null}
+        {copyText !== '' ? copyButton : null}
       </div>
 
-      {filtered.length === 0 ? (
-        <p
-          className="text-muted-foreground py-6 text-center text-sm"
-          data-testid="queue-job-log-empty"
-        >
-          {emptyMessage}
-        </p>
-      ) : (
-        <pre
-          className="bg-muted/40 max-h-96 overflow-auto rounded-md p-3 font-mono text-xs leading-relaxed"
-          data-testid="queue-job-log-output"
-          onScroll={handleScroll}
-          ref={preRef}
-          tabIndex={0}
-        >
-          {filtered.map((event) => (
-            <div key={event.cursor}>{formatQueueJobLogLine(event)}</div>
-          ))}
-        </pre>
-      )}
+      {filtered.length === 0 ? emptyLogs : logLines}
 
       <div className="flex items-center justify-between">
         <span className="text-muted-foreground text-xs">
-          {filtered.length} {filtered.length === 1 ? 'line' : 'lines'}
+          {filtered.length} {lineCountLabel}
           {autoScroll ? '' : ' · autoscroll paused'}
         </span>
-        {hasMore ? (
-          <Button
-            disabled={isBackfilling}
-            onClick={loadOlder}
-            size="xs"
-            type="button"
-            variant="outline"
-          >
-            Load older
-          </Button>
-        ) : null}
+        {hasMore ? loadOlderButton : null}
       </div>
     </Card>
   );

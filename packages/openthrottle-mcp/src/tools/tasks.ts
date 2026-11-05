@@ -187,6 +187,14 @@ export async function createTaskToolHandler(
   );
 }
 
+function serializeRequirements(requirements: unknown): string | null {
+  if (requirements == null) {
+    return null;
+  }
+
+  return JSON.stringify(requirements);
+}
+
 export async function createTasksToolHandler(
   args: z.infer<typeof createTasksToolParameters>,
 ): Promise<CreateTasksResult> {
@@ -211,10 +219,7 @@ export async function createTasksToolHandler(
           description: item.description ?? null,
           project: item.project ?? null,
           projectId: item.projectId ?? null,
-          requirements:
-            item.requirements != null
-              ? JSON.stringify(item.requirements)
-              : null,
+          requirements: serializeRequirements(item.requirements),
           sortOrder: item.sortOrder ?? null,
           status: item.status ?? null,
           summary: item.summary ?? null,
@@ -236,10 +241,10 @@ export async function createTasksToolHandler(
         result?.createTasks?.tasks ?? [];
       const created = tasks.map((task) => ({ id: task.id, title: task.title }));
 
-      const text =
-        created.length === 0
-          ? 'create_tasks: no tasks were created.'
-          : `Created ${created.length} task(s):\n${created.map((r) => ` - ${r.id} ${r.title}`).join('\n')}`;
+      const createdLines = created.map((r) => ` - ${r.id} ${r.title}`);
+      const emptyText = 'create_tasks: no tasks were created.';
+      const listText = `Created ${created.length} task(s):\n${createdLines.join('\n')}`;
+      const text = created.length === 0 ? emptyText : listText;
 
       return { structuredContent: { created }, text };
     },
@@ -315,10 +320,8 @@ export async function getTasksByPlanIdToolHandler(
     );
 
     const tasks = result?.tasksByPlanId ?? [];
-    const text =
-      tasks.length === 0
-        ? 'No tasks for this plan.'
-        : `Tasks (${tasks.length}):\n${JSON.stringify(tasks, null, 2)}`;
+    const listText = `Tasks (${tasks.length}):\n${JSON.stringify(tasks, null, 2)}`;
+    const text = tasks.length === 0 ? 'No tasks for this plan.' : listText;
 
     return { structuredContent: { tasks }, text };
   });
@@ -343,10 +346,9 @@ export async function getRemainingTasksForPlanToolHandler(
     );
 
     const tasks = result?.remainingTasksByPlanId ?? [];
+    const emptyText = 'No remaining tasks for this plan.';
     const text =
-      tasks.length === 0
-        ? 'No remaining tasks for this plan.'
-        : JSON.stringify(tasks, null, 2);
+      tasks.length === 0 ? emptyText : JSON.stringify(tasks, null, 2);
 
     return { structuredContent: { tasks }, text };
   });
@@ -379,10 +381,9 @@ export async function listTasksByCategoryToolHandler(
         limit ?? undefined,
       );
 
-      const text =
-        tasks.length === 0
-          ? `No tasks found for category "${category}".`
-          : `Tasks (${tasks.length}):\n${JSON.stringify(tasks, null, 2)}`;
+      const emptyText = `No tasks found for category "${category}".`;
+      const listText = `Tasks (${tasks.length}):\n${JSON.stringify(tasks, null, 2)}`;
+      const text = tasks.length === 0 ? emptyText : listText;
 
       return { structuredContent: { tasks }, text };
     },
@@ -410,10 +411,9 @@ export async function reorderPlanTasksToolHandler(
 
       const tasks = result?.reorderPlanTasks ?? [];
 
-      const text =
-        tasks.length === 0
-          ? 'reorder_plan_tasks: no tasks were reordered.'
-          : `Reordered ${tasks.length} task(s):\n${JSON.stringify(tasks, null, 2)}`;
+      const emptyText = 'reorder_plan_tasks: no tasks were reordered.';
+      const listText = `Reordered ${tasks.length} task(s):\n${JSON.stringify(tasks, null, 2)}`;
+      const text = tasks.length === 0 ? emptyText : listText;
 
       return { structuredContent: { tasks }, text };
     },

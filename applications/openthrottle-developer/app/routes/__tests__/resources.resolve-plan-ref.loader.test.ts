@@ -14,10 +14,11 @@ const { loader } = await import('../resources.resolve-plan-ref');
 
 const mockExecute = vi.mocked(executeGraphqlWithAuth);
 
-const loaderArgs = (search = ''): Route.LoaderArgs =>
-  createLoaderArgs<Route.LoaderArgs>({
+const loaderArgs = (search = ''): Route.LoaderArgs => {
+  return createLoaderArgs<Route.LoaderArgs>({
     url: `http://localhost/resources/resolve-plan-ref${search}`,
   });
+};
 
 describe('routes/resources.resolve-plan-ref loader', () => {
   beforeEach(() => {

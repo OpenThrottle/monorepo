@@ -136,13 +136,15 @@ describe('WorkLedgerResolver.workLedgerCompleteness', () => {
     );
   });
 
-  const row = (planId: string, recorded: boolean) => ({
-    artifactCount: 1,
-    planId,
-    planStatus: 'COMPLETED',
-    planTitle: planId,
-    recorded,
-  });
+  const row = (planId: string, recorded: boolean) => {
+    return {
+      artifactCount: 1,
+      planId,
+      planStatus: 'COMPLETED',
+      planTitle: planId,
+      recorded,
+    };
+  };
 
   it('counts a plan as recorded only when the verifier confirmed a landed commit', async () => {
     // The SQL orders unrecorded first; mirror that here.
@@ -248,10 +250,17 @@ describe('WorkLedgerResolver.recordWorkArtifact across sessions', () => {
       createMock<WorkArtifact>({ id: 'artifact-a', sessionId: 'session-a' }),
     );
     subjectRepo.find.mockImplementation(
-      async ({ where }: { where: { sessionId: string } }) =>
-        where.sessionId === 'session-b'
-          ? [{ planId: 'plan-2', sessionId: 'session-b', taskId: null }]
-          : [{ planId: 'plan-1', sessionId: 'session-a', taskId: null }],
+      async ({ where }: { where: { sessionId: string } }) => {
+        const isSessionB = where.sessionId === 'session-b';
+        const sessionBRows = [
+          { planId: 'plan-2', sessionId: 'session-b', taskId: null },
+        ];
+        const sessionARows = [
+          { planId: 'plan-1', sessionId: 'session-a', taskId: null },
+        ];
+
+        return isSessionB ? sessionBRows : sessionARows;
+      },
     );
 
     await resolver.recordWorkArtifact(input);

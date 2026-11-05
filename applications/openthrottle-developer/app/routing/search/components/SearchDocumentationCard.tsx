@@ -24,17 +24,37 @@ export const SearchDocumentationCard = (
   props: SearchDocumentationCardProps,
 ): React.ReactElement => {
   const { className, defaultOpenWhy, rankMeta, result } = props;
+  const { similarity, sourcePath, sourceRepo, sourceSha } = result;
 
   // Hooks
 
   // Setup
   const hasBlobLink =
-    result.sourceRepo != null &&
-    result.sourceRepo !== '' &&
-    result.sourcePath != null &&
-    result.sourcePath !== '';
+    sourceRepo != null &&
+    sourceRepo !== '' &&
+    sourcePath != null &&
+    sourcePath !== '';
+  const hasSimilarity = similarity != null;
+  const similarityPercent = Math.round((similarity ?? 0) * 100);
 
   // Handlers
+  const renderBlobLink = (): React.ReactNode => {
+    if (!hasBlobLink || sourceRepo == null || sourcePath == null) {
+      return null;
+    }
+
+    return (
+      <a
+        className="text-primary text-sm underline-offset-4 hover:underline"
+        data-testid="SearchDocumentationCard-blobLink"
+        href={githubBlobHref(sourceRepo, sourcePath, sourceSha)}
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        {sourceRepo}/{sourcePath}
+      </a>
+    );
+  };
 
   // Markup
   const sourceBadge = (
@@ -46,32 +66,20 @@ export const SearchDocumentationCard = (
     </Badge>
   );
 
-  const similarityBlock =
-    result.similarity != null ? (
-      <p
-        className="text-muted-foreground text-xs"
-        data-testid="SearchDocumentationCard-similarity"
-      >
-        Relevance: {Math.round(result.similarity * 100)}%
-      </p>
-    ) : null;
-
-  const blobLink =
-    hasBlobLink && result.sourceRepo != null && result.sourcePath != null ? (
-      <a
-        className="text-primary text-sm underline-offset-4 hover:underline"
-        data-testid="SearchDocumentationCard-blobLink"
-        href={githubBlobHref(
-          result.sourceRepo,
-          result.sourcePath,
-          result.sourceSha,
-        )}
-        rel="noopener noreferrer"
-        target="_blank"
-      >
-        {result.sourceRepo}/{result.sourcePath}
-      </a>
-    ) : null;
+  const similarityText = (
+    <p
+      className="text-muted-foreground text-xs"
+      data-testid="SearchDocumentationCard-similarity"
+    >
+      Relevance: {similarityPercent}%
+    </p>
+  );
+  const blobLink = renderBlobLink();
+  const blobTitle = (
+    <CardTitle className="text-lg leading-tight tracking-tight">
+      {blobLink}
+    </CardTitle>
+  );
 
   // Life Cycle
 
@@ -85,11 +93,7 @@ export const SearchDocumentationCard = (
     >
       <CardHeader className="space-y-2">
         <div className="flex flex-wrap items-center gap-2">{sourceBadge}</div>
-        {blobLink != null ? (
-          <CardTitle className="text-lg leading-tight tracking-tight">
-            {blobLink}
-          </CardTitle>
-        ) : null}
+        {blobLink != null ? blobTitle : null}
       </CardHeader>
       <Separator />
       <CardContent className="space-y-3 pt-4">
@@ -98,7 +102,7 @@ export const SearchDocumentationCard = (
             {result.content}
           </p>
         </pre>
-        {similarityBlock}
+        {hasSimilarity ? similarityText : null}
         <SearchWhyThisResult
           defaultOpen={defaultOpenWhy}
           rankMeta={rankMeta}

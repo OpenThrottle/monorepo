@@ -8,12 +8,13 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { PlanTasksColumnDropProps } from '../PlanTasksColumnDrop';
 import { PlanTasksColumnDrop } from '../PlanTasksColumnDrop';
 
-const renderColumn = (props: PlanTasksColumnDropProps): RenderResult =>
-  render(
+const renderColumn = (props: PlanTasksColumnDropProps): RenderResult => {
+  return render(
     <DndProvider backend={HTML5Backend}>
       <PlanTasksColumnDrop {...props} />
     </DndProvider>,
   );
+};
 
 describe('PlanTasksColumnDrop Component', () => {
   let component: RenderResult;

@@ -61,8 +61,8 @@ describe('routes/timeline._index.tsx', () => {
   });
 
   describe('shouldRevalidate', () => {
-    const call = (currentSearch: string, nextSearch: string): boolean =>
-      shouldRevalidate({
+    const call = (currentSearch: string, nextSearch: string): boolean => {
+      return shouldRevalidate({
         actionResult: undefined,
         actionStatus: undefined,
         currentParams: {},
@@ -77,6 +77,7 @@ describe('routes/timeline._index.tsx', () => {
         nextUrl: new URL(`https://x.test/timeline${nextSearch}`),
         text: undefined,
       });
+    };
 
     test('revalidates when a param the loader reads changes', () => {
       expect(call('?window=7d', '?window=30d')).toBe(true);

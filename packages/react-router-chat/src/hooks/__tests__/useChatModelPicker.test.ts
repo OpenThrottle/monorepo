@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { FAVORITES_GROUP_ID } from '../../data/chat-model-picker-favorites';
+import { FAVORITES_GROUP_ID } from '../../data/data.chat-model-picker-favorites';
 import type { ChatModelGroup, ChatModelOption } from '../../types';
 import {
   useChatModelPicker,
@@ -22,13 +22,15 @@ const models: readonly ChatModelOption[] = [
 
 const baseOptions = (
   overrides: Partial<UseChatModelPickerOptions> = {},
-): UseChatModelPickerOptions => ({
-  groups,
-  models,
-  onModelChange: vi.fn(),
-  placeholder: 'Select a model',
-  ...overrides,
-});
+): UseChatModelPickerOptions => {
+  return {
+    groups,
+    models,
+    onModelChange: vi.fn(),
+    placeholder: 'Select a model',
+    ...overrides,
+  };
+};
 
 describe('useChatModelPicker', () => {
   test('starts closed with an empty search', () => {

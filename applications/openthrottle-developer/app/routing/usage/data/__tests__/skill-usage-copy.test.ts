@@ -3,12 +3,14 @@ import { describe, expect, test } from 'vitest';
 import {
   SKILL_USAGE_COPY,
   SKILL_USAGE_SCOPE_BADGE_COLORS,
+} from '~/routing/usage/data/data.skill-usage-copy';
+import {
   skillUsageAvgDurationLabel,
   skillUsageCwdLabel,
   skillUsageOutcomesLabel,
   skillUsageScopeBadgeColor,
   skillUsageScopeLabel,
-} from '../skill-usage-copy';
+} from '~/routing/usage/utils/skill-usage-labels';
 
 describe('skillUsageScopeLabel', () => {
   test('maps known scope ids to human labels and echoes unknowns', () => {

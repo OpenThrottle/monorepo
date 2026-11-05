@@ -24,8 +24,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ForeignSkillInjectionLifecycleService } from './foreign-skill-injection-lifecycle.service.ts';
 
-const git = (repo: string, ...args: string[]): string =>
-  execFileSync('git', ['-C', repo, ...args], { encoding: 'utf8' }).trim();
+const git = (repo: string, ...args: string[]): string => {
+  return execFileSync('git', ['-C', repo, ...args], {
+    encoding: 'utf8',
+  }).trim();
+};
 
 const writeSkill = (root: string, name: string): void => {
   const dir = join(root, name);

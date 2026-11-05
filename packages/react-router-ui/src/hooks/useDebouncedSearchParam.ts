@@ -97,11 +97,11 @@ export function useDebouncedSearchParam(
       } else {
         next.delete(paramKey);
       }
-      const navigateOpts =
-        preventScrollReset === undefined
-          ? { replace }
-          : { preventScrollReset, replace };
-      setSearchParams(next, navigateOpts);
+      if (preventScrollReset === undefined) {
+        setSearchParams(next, { replace });
+        return;
+      }
+      setSearchParams(next, { preventScrollReset, replace });
     },
     [
       paramKey,

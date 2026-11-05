@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   LOAD_AGENT_CONVERSATION_MESSAGES_INTENT,
   SEND_AGENT_MESSAGE_INTENT,
-} from '../../data/chat-turn-fetcher-intents';
+} from '../../data/data.chat-turn-fetcher-intents';
 import type {
   ChatTurnResult,
   LoadAgentConversationMessagesResult,
@@ -25,18 +25,20 @@ let historyFetcherData: LoadAgentConversationMessagesResult | undefined;
 
 const sampleTurn = (
   overrides: Partial<ChatTurnResult> = {},
-): ChatTurnResult => ({
-  assistantText: null,
-  conversationId: null,
-  errorMessage: null,
-  mcpTool: null,
-  readOnlyAgentsChat: true,
-  routingConfidence: null,
-  routingReason: null,
-  structuredPayloadJson: null,
-  toolMetadataJson: null,
-  ...overrides,
-});
+): ChatTurnResult => {
+  return {
+    assistantText: null,
+    conversationId: null,
+    errorMessage: null,
+    mcpTool: null,
+    readOnlyAgentsChat: true,
+    routingConfidence: null,
+    routingReason: null,
+    structuredPayloadJson: null,
+    toolMetadataJson: null,
+    ...overrides,
+  };
+};
 
 vi.mock('react-router', () => {
   let fetcherIndex = 0;

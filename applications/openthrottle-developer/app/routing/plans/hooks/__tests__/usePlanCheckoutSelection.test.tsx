@@ -9,7 +9,7 @@ import {
   workflowCheckoutIdAtom,
   workflowRepositoryIdAtom,
   workflowWorkingDirectoryAtom,
-} from '~/routing/plans/data/atom.plan';
+} from '~/routing/plans/data/data.atom-plan';
 
 import type { UsePlanCheckoutSelectionOptions } from '../usePlanCheckoutSelection';
 import { usePlanCheckoutSelection } from '../usePlanCheckoutSelection';
@@ -84,7 +84,9 @@ const renderSelection = (
     children,
   }: {
     readonly children: React.ReactNode;
-  }): React.ReactElement => <Provider store={store}>{children}</Provider>;
+  }): React.ReactElement => {
+    return <Provider store={store}>{children}</Provider>;
+  };
 
   const rendered = renderHook(
     () =>

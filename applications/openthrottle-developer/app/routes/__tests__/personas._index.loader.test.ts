@@ -3,20 +3,20 @@ import { createTestRouterContext } from '@openthrottle/react-router-testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/personas._index';
-import type { RepoPersonaEntry } from '~/routing/agents/data/repo-personas-registry';
+import type { RepoPersonaEntry } from '~/routing/agents/data/data.repo-personas-registry';
 
-vi.mock('~/routing/agents/data/discover-repo-personas.server', () => ({
+vi.mock('~/routing/agents/utils/discover-repo-personas.server', () => ({
   discoverRepoPersonas: vi.fn(),
 }));
 
-vi.mock('~/routing/agents/data/resolve-monorepo-root.server', () => ({
+vi.mock('~/routing/agents/utils/resolve-monorepo-root.server', () => ({
   getMonorepoRoot: vi.fn(),
 }));
 
 const { discoverRepoPersonas } =
-  await import('~/routing/agents/data/discover-repo-personas.server');
+  await import('~/routing/agents/utils/discover-repo-personas.server');
 const { getMonorepoRoot } =
-  await import('~/routing/agents/data/resolve-monorepo-root.server');
+  await import('~/routing/agents/utils/resolve-monorepo-root.server');
 const { loader } = await import('../personas._index');
 
 const mockDiscoverRepoPersonas = vi.mocked(discoverRepoPersonas);

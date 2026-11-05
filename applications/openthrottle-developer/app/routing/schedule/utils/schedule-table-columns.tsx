@@ -32,6 +32,13 @@ export const buildScheduleTableColumns = (
       cell: ({ row }) => {
         const job = row.original;
         const inFlight = inFlightByJob[job.id] ?? 0;
+        const inFlightSuffix = inFlight > 1 ? ` ×${inFlight}` : '';
+        const inFlightBadge = (
+          <Badge color={RUN_STATUS_COLOR.running} variant="default">
+            {SCHEDULE_COPY.tableRunningBadge}
+            {inFlightSuffix}
+          </Badge>
+        );
 
         return (
           <div className="flex flex-wrap items-center gap-1 p-2">
@@ -41,12 +48,7 @@ export const buildScheduleTableColumns = (
             {/* Additive, not a replacement: a disabled schedule with a
                 manual run in flight is a real state, and hiding either half
                 of it would misreport what the row is doing. */}
-            {inFlight ? (
-              <Badge color={RUN_STATUS_COLOR.running} variant="default">
-                {SCHEDULE_COPY.tableRunningBadge}
-                {inFlight > 1 ? ` ×${inFlight}` : ''}
-              </Badge>
-            ) : null}
+            {inFlight ? inFlightBadge : null}
           </div>
         );
       },

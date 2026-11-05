@@ -1,21 +1,23 @@
 import { describe, expect, test } from 'vitest';
 
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 
 import { filterEntries } from '../filter-repo-skill-entries';
 
 const buildEntry = (
   overrides: Partial<RepoSkillEntry> = {},
-): RepoSkillEntry => ({
-  disableModelInvocation: undefined,
-  layout: 'agents',
-  repoRelativePath: '.agents/skills/foo/SKILL.md',
-  slug: 'foo',
-  source: 'external',
-  summary: 'Foo skill summary',
-  tags: undefined,
-  ...overrides,
-});
+): RepoSkillEntry => {
+  return {
+    disableModelInvocation: undefined,
+    layout: 'agents',
+    repoRelativePath: '.agents/skills/foo/SKILL.md',
+    slug: 'foo',
+    source: 'external',
+    summary: 'Foo skill summary',
+    tags: undefined,
+    ...overrides,
+  };
+};
 
 describe('filterEntries', () => {
   const entries: RepoSkillEntry[] = [

@@ -14,7 +14,7 @@ import {
   workflowRalphRunOptionsAtom,
   workflowRunIterationTimeoutTextAtom,
   workflowWorkingDirectoryAtom,
-} from '~/routing/plans/data/atom.plan';
+} from '~/routing/plans/data/data.atom-plan';
 import { PLAN_LIFECYCLE_HOOKS_COPY } from '~/routing/plans/data/data.copy';
 import { PLAN_DEFERRED_SECTION_COPY } from '~/routing/plans/data/data.copy';
 import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
@@ -67,7 +67,7 @@ export const PlanTabDetails = (
             relative: !fullscreen,
           })}
         >
-          {fullscreen ? (
+          {fullscreen && (
             <EditorWindow
               className="flex-1 transition-all duration-300"
               height={fullscreen ? '100vh' : '300px'}
@@ -80,7 +80,8 @@ export const PlanTabDetails = (
               wrapperProps={{ className: 'transition-all duration-300' }}
               // onChange={handleEditorChange}
             />
-          ) : (
+          )}
+          {!fullscreen && (
             <div
             // className="bg-card border-card-border space-y-4 rounded-lg border p-4 md:p-8"
             >
@@ -93,7 +94,7 @@ export const PlanTabDetails = (
               )}
 
               <MarkdownRenderer source={plan.description ?? ''} />
-              {requirements.length > 0 ? (
+              {requirements.length > 0 && (
                 <>
                   <h2 className="mb-4">Requirements</h2>
                   <MarkdownRenderer
@@ -102,12 +103,12 @@ export const PlanTabDetails = (
                       .join('\n')}
                   />
                 </>
-              ) : null}
+              )}
             </div>
           )}
         </div>
 
-        {FEATURE_CHARLIE_PREVIEW ? (
+        {FEATURE_CHARLIE_PREVIEW && (
           <>
             <div className="bg-card border-card-border rounded-lg border p-4 md:p-8">
               <PlanLifecycleHooksSection
@@ -143,7 +144,7 @@ export const PlanTabDetails = (
               )}
             </PlanDeferredSection>
           </>
-        ) : null}
+        )}
       </div>
     </TabsContent>
   );

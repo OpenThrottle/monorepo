@@ -27,11 +27,13 @@ import {
 } from '../../index.ts';
 
 const SENT: PostResult = { id: 'id-1', ok: true };
-const failed = (reason: string, permanent = false): PostResult => ({
-  ok: false,
-  permanent,
-  reason,
-});
+const failed = (reason: string, permanent = false): PostResult => {
+  return {
+    ok: false,
+    permanent,
+    reason,
+  };
+};
 const ZERO = { deadLettered: 0, reasons: {}, retained: 0, sent: 0, skipped: 0 };
 
 describe('telemetry directory resolution', () => {
@@ -102,13 +104,15 @@ describe('drainJsonlFile', () => {
     fs.writeFileSync(p, lines.map((l) => `${l}\n`).join(''), 'utf8');
     return p;
   };
-  const readLines = (p: string): string[] =>
-    fs.existsSync(p)
-      ? fs
-          .readFileSync(p, 'utf8')
-          .split('\n')
-          .filter((l) => l.trim())
-      : [];
+  const readLines = (p: string): string[] => {
+    if (!fs.existsSync(p)) {
+      return [];
+    }
+    return fs
+      .readFileSync(p, 'utf8')
+      .split('\n')
+      .filter((l) => l.trim());
+  };
 
   it('sends every line and removes the file on full success', async () => {
     const filePath = seed('ok.jsonl', ['{"a":1}', '{"a":2}']);
@@ -189,12 +193,15 @@ describe('drainJsonlFile', () => {
       const res = await drainJsonlFile<{ a: number }>({
         filePath,
         nowFn: () => Date.parse('2026-10-29T00:00:00.000Z'),
-        post: async (event) =>
-          event.a === 1
-            ? SENT
-            : event.a === 2
-              ? failed('outcome must be one of: x', true)
-              : failed('timeout'),
+        post: async (event) => {
+          if (event.a === 1) {
+            return SENT;
+          }
+          if (event.a === 2) {
+            return failed('outcome must be one of: x', true);
+          }
+          return failed('timeout');
+        },
       });
 
       expect(res).toEqual({

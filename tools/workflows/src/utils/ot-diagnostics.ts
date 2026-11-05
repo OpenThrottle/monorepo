@@ -15,6 +15,16 @@ export const OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS_ENV = `OPENTHROTTLE_PLANS_SPAW
 const OT_DIAGNOSTICS_LOG_PREFIX = `[workflow-ralph:ot-diagnostics]`;
 const PLANS_SPAWN_DIAGNOSTICS_PREFIX = `[plans-spawn:ot-diagnostics]`;
 
+const describeClientPostgresIdentity = (
+  connectionString: string | undefined,
+): string => {
+  if (connectionString != null && connectionString !== '') {
+    return sanitizePostgresUrlForLogs(connectionString);
+  }
+
+  return '(graphql transport — no POSTGRES_URL on client)';
+};
+
 /**
  * @description One stderr line with cwd, plan id, sanitized Postgres target, and booleans for related env (no token values).
  */
@@ -63,10 +73,7 @@ export function logWorkflowRalphOtDiagnostics(params: {
     home: env.HOME ?? '(unset)',
     note: 'workflow-ralph resolves plans via GraphQL by default (executeWorkflowGraphqlV2 + codegen documents). Set WORKFLOW_RALPH_TRANSPORT=postgres-direct to use direct Postgres (getPostgresConfig → getPlanById). Developer app GraphQL/API_URL_* must match the server Ralph calls. BullMQ spawns inject OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN / OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL from the worker so a foreign cwd cannot override OpenThrottle transport; mismatched auth vs the server where the plan row exists yields Plan not found.',
     planId: params.planId,
-    postgresIdentity:
-      params.connectionString != null && params.connectionString !== ''
-        ? sanitizePostgresUrlForLogs(params.connectionString)
-        : '(graphql transport — no POSTGRES_URL on client)',
+    postgresIdentity: describeClientPostgresIdentity(params.connectionString),
     surface: 'workflow-ralph',
     unixUser: env.USER ?? env.LOGNAME ?? '(unset)',
   };
@@ -111,7 +118,7 @@ export function formatPlansProcessorSpawnOtDiagnosticsMessage(
       githubTokenSet: Boolean(env.GITHUB_TOKEN?.trim()),
       graphqlUrlSet: Boolean(env.GRAPHQL_URL?.trim()),
       jwtSecretSet: Boolean(env.JWT_SECRET?.trim()),
-      postgresqlUrlSet: Boolean(pgUrl),
+      postgresqlUrlSet: Boolean(env.POSTGRES_URL?.trim()),
       spawnHomeOverrideSet: Boolean(env.WORKFLOW_RALPH_SPAWN_HOME?.trim()),
       spawnXdgConfigHomeOverrideSet: Boolean(
         env.WORKFLOW_RALPH_SPAWN_XDG_CONFIG_HOME?.trim(),

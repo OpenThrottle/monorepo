@@ -78,10 +78,10 @@ export class AgentAssetSearchResolver {
       return { chunks: [] };
     }
 
-    const promptTypes =
-      input.promptTypes && input.promptTypes.length > 0
-        ? input.promptTypes
-        : [...DEFAULT_PROMPT_TYPES];
+    let promptTypes = [...DEFAULT_PROMPT_TYPES];
+    if (input.promptTypes && input.promptTypes.length > 0) {
+      promptTypes = input.promptTypes;
+    }
 
     const chunks = await runAgentAssetSearch(
       embedding,

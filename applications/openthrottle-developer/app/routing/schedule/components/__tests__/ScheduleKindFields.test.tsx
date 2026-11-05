@@ -10,8 +10,11 @@ import { SCHEDULE_KIND_OPTIONS } from '~/routing/schedule/data/data.schedule-kin
 import type { ScheduleKindFieldsProps } from '../ScheduleKindFields';
 import { ScheduleKindFields } from '../ScheduleKindFields';
 
-const optionLabel = (value: string): string =>
-  SCHEDULE_KIND_OPTIONS.find((option) => option.value === value)?.label ?? '';
+const optionLabel = (value: string): string => {
+  return (
+    SCHEDULE_KIND_OPTIONS.find((option) => option.value === value)?.label ?? ''
+  );
+};
 
 const baseJob: NonNullable<ScheduleKindFieldsProps['job']> = {
   cronPattern: null,

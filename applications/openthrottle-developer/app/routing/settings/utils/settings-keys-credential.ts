@@ -63,8 +63,12 @@ export const formatCredentialTimestamp = (value: unknown): string => {
 
 export const credentialRowId = (
   credential: ServiceAccountCredentialFieldsFragment,
-): string => credential.id;
+): string => {
+  return credential.id;
+};
 
 export const credentialDisplayName = (
   credential: ServiceAccountCredentialFieldsFragment,
-): string => credential.label?.trim() || credential.prefix;
+): string => {
+  return credential.label?.trim() || credential.prefix;
+};

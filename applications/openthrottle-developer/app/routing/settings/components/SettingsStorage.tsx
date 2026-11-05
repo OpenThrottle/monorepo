@@ -34,6 +34,33 @@ export const SettingsStorage = (
   };
 
   // Markup
+  const renderEntries = (entries: StorageEntryRow[]): React.ReactElement => {
+    if (entries.length === 0) {
+      return <p className="text-muted-foreground">No keys.</p>;
+    }
+    return (
+      <div className="overflow-auto rounded-md border">
+        <table className="w-full text-left text-xs">
+          <thead className="bg-muted/80 sticky top-0">
+            <tr>
+              <th className="p-2 font-medium">Key</th>
+              <th className="p-2 font-medium">Preview</th>
+            </tr>
+          </thead>
+          <tbody>
+            {entries.map((row) => (
+              <tr className="border-t" key={row.key}>
+                <td className="text-muted-foreground p-2 align-top font-mono">
+                  {row.key}
+                </td>
+                <td className="p-2 font-mono break-all">{row.preview}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
 
   // Life Cycle
 
@@ -57,57 +84,11 @@ export const SettingsStorage = (
       <div className="space-y-4 text-sm">
         <div>
           <p className="text-foreground mb-2 font-medium">Local storage</p>
-          {localEntries.length === 0 ? (
-            <p className="text-muted-foreground">No keys.</p>
-          ) : (
-            <div className="overflow-auto rounded-md border">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-muted/80 sticky top-0">
-                  <tr>
-                    <th className="p-2 font-medium">Key</th>
-                    <th className="p-2 font-medium">Preview</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {localEntries.map((row) => (
-                    <tr className="border-t" key={row.key}>
-                      <td className="text-muted-foreground p-2 align-top font-mono">
-                        {row.key}
-                      </td>
-                      <td className="p-2 font-mono break-all">{row.preview}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          {renderEntries(localEntries)}
         </div>
         <div>
           <p className="text-foreground mb-2 font-medium">Session storage</p>
-          {sessionEntries.length === 0 ? (
-            <p className="text-muted-foreground">No keys.</p>
-          ) : (
-            <div className="overflow-auto rounded-md border">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-muted/80 sticky top-0">
-                  <tr>
-                    <th className="p-2 font-medium">Key</th>
-                    <th className="p-2 font-medium">Preview</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sessionEntries.map((row) => (
-                    <tr className="border-t" key={row.key}>
-                      <td className="text-muted-foreground p-2 align-top font-mono">
-                        {row.key}
-                      </td>
-                      <td className="p-2 font-mono break-all">{row.preview}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          {renderEntries(sessionEntries)}
         </div>
       </div>
     </OpenThrottleFieldset>

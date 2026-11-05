@@ -117,10 +117,19 @@ export default function Component(
 
   // Hooks
   const [searchParams] = useSearchParams();
+  const { sortBy, sortOrder } = React.useMemo(
+    () => parsePlansSortFromSearch(searchParams),
+    [searchParams],
+  );
+  const statusFilterUrls = React.useMemo(
+    () => buildStatusFilterUrls(searchParams),
+    [searchParams],
+  );
 
   // Setup
-  const countByStatus = (status: string): number =>
-    statusCounts.find((s) => s.status === status)?.count ?? 0;
+  const countByStatus = (status: string): number => {
+    return statusCounts.find((s) => s.status === status)?.count ?? 0;
+  };
 
   const isCard = searchParams.get('view') === 'card';
   const countInProgress = countByStatus('IN_PROGRESS');
@@ -135,17 +144,36 @@ export default function Component(
   // Handlers
 
   // Markup
+  const onboarding = <GlobalFeatureOnboarding content={PLANS_ONBOARDING} />;
+  const plansListing = (
+    <>
+      <div className="flex flex-col gap-4">
+        <PlansToolbar
+          assigneeOptions={assigneeOptions}
+          assignees={assignees}
+          limit={limit}
+          page={page}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          statuses={statuses}
+          view={view}
+        />
+        <PlansTable plans={plans} statusFilterUrls={statusFilterUrls} />
+      </div>
+      <OpenThrottlePagination
+        assignees={assignees}
+        basePath="/plans"
+        className="mt-8"
+        limit={limit}
+        page={page}
+        resultLabel="plans"
+        statuses={statuses}
+        total={totalCount}
+      />
+    </>
+  );
 
   // Life Cycle
-  const { sortBy, sortOrder } = React.useMemo(
-    () => parsePlansSortFromSearch(searchParams),
-    [searchParams],
-  );
-
-  const statusFilterUrls = React.useMemo(
-    () => buildStatusFilterUrls(searchParams),
-    [searchParams],
-  );
 
   // 🔌 Short Circuit
 
@@ -160,39 +188,7 @@ export default function Component(
         totalCountAll={totalCountAll}
         totalCountQueued={totalCountQueued}
       />
-      {isNewUser ? (
-        <GlobalFeatureOnboarding content={PLANS_ONBOARDING} />
-      ) : (
-        <>
-          <div className="flex flex-col gap-4">
-            <PlansToolbar
-              assigneeOptions={assigneeOptions}
-              assignees={assignees}
-              limit={limit}
-              page={page}
-              sortBy={sortBy}
-              sortOrder={sortOrder}
-              statuses={statuses}
-              view={view}
-            />
-            <PlansTable
-              // className="bg-card"
-              plans={plans}
-              statusFilterUrls={statusFilterUrls}
-            />
-          </div>
-          <OpenThrottlePagination
-            assignees={assignees}
-            basePath="/plans"
-            className="mt-8"
-            limit={limit}
-            page={page}
-            resultLabel="plans"
-            statuses={statuses}
-            total={totalCount}
-          />
-        </>
-      )}
+      {isNewUser ? onboarding : plansListing}
     </GlobalScreen>
   );
 }

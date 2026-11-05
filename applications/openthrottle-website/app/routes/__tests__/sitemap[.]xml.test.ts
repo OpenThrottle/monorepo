@@ -26,10 +26,11 @@ const loaderArgs: Route.LoaderArgs = {
   url: new URL('http://localhost/sitemap.xml'),
 };
 
-const readLocs = async (response: Response): Promise<string[]> =>
-  [...(await response.text()).matchAll(/<loc>([^<]+)<\/loc>/g)].map(
+const readLocs = async (response: Response): Promise<string[]> => {
+  return [...(await response.text()).matchAll(/<loc>([^<]+)<\/loc>/g)].map(
     (match) => new URL(match[1] ?? '').pathname,
   );
+};
 
 describe('routes/sitemap[.]xml.tsx', () => {
   beforeEach(() => {

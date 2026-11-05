@@ -28,7 +28,9 @@ import {
   withTimelineWindow,
 } from '../search-params';
 
-const params = (search: string): URLSearchParams => new URLSearchParams(search);
+const params = (search: string): URLSearchParams => {
+  return new URLSearchParams(search);
+};
 
 describe('parseTimelineWindowPreset', () => {
   it('reads a valid preset', () => {

@@ -32,8 +32,7 @@ interface UpsertWorktreeCheckoutData {
   readonly repositoryId: string;
 }
 
-const DUPLICATE_PATH_MESSAGE =
-  'A local repository with this filesystem path is already registered';
+const DUPLICATE_PATH_MESSAGE = `A local repository with this filesystem path is already registered`;
 
 @Injectable()
 export class RepositoryCheckoutsService {

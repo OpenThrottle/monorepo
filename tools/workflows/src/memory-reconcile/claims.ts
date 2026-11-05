@@ -104,11 +104,12 @@ export interface IndexClaims {
  * `DONE` from the first clause attach to the plan in the second, manufacturing
  * disagreements that were never claimed.
  */
-const splitClauses = (hook: string): readonly string[] =>
-  hook
+const splitClauses = (hook: string): readonly string[] => {
+  return hook
     .split(/[;,]/)
     .map((clause) => clause.trim())
     .filter((clause) => clause !== '');
+};
 
 const firstMatch = <T>(
   clause: string,

@@ -36,8 +36,9 @@ const sortValue = (value: unknown): unknown => {
   return value;
 };
 
-export const stableStringify = (value: unknown): string =>
-  JSON.stringify(sortValue(value));
+export const stableStringify = (value: unknown): string => {
+  return JSON.stringify(sortValue(value));
+};
 
 /**
  * Prettier-compatible serialization for the small `_tables.json` manifest: the

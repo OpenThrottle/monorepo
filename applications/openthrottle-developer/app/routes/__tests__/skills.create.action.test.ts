@@ -7,12 +7,12 @@ import { SKILL_CREATE_COPY } from '~/routing/skills/data/data.copy';
 
 // The action dynamically imports this module; mocking it keeps the action test
 // about parsing, narrowing and the response shape rather than about disk.
-vi.mock('~/routing/skills/data/create-skill-file.server', () => ({
+vi.mock('~/routing/skills/utils/create-skill-file.server', () => ({
   createSkillFile: vi.fn(),
 }));
 
 const { createSkillFile } =
-  await import('~/routing/skills/data/create-skill-file.server');
+  await import('~/routing/skills/utils/create-skill-file.server');
 const { action } = await import('../skills.create');
 
 const mockCreateSkillFile = vi.mocked(createSkillFile);

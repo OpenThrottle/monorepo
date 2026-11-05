@@ -45,8 +45,12 @@ export const SettingsAgentsModelBulkToggle = (
       { action: AGENT_MODELS_ENABLED_ACTION, method: 'post' },
     );
   };
-  const handleEnableAll = (): void => submit(true);
-  const handleDisableAll = (): void => submit(false);
+  const handleEnableAll = (): void => {
+    return submit(true);
+  };
+  const handleDisableAll = (): void => {
+    return submit(false);
+  };
 
   // Markup
 

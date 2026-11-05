@@ -36,8 +36,9 @@ const mockPrompts: PromptCardFragment[] = [
   },
 ];
 
-const renderPromptsTable = (tableProps: PromptsTableProps): RenderResult =>
-  renderRoutesStub(<PromptsTable {...tableProps} />);
+const renderPromptsTable = (tableProps: PromptsTableProps): RenderResult => {
+  return renderRoutesStub(<PromptsTable {...tableProps} />);
+};
 
 describe('PromptsTable Component', () => {
   let component: RenderResult;

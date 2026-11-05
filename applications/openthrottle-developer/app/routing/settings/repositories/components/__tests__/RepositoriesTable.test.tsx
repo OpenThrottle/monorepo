@@ -15,7 +15,7 @@ import {
   mockCheckout,
   mockDiscoveredWorktree,
   mockRepository,
-} from '~/routing/settings/repositories/data/mock.repositories';
+} from '~/routing/settings/repositories/testing/mock-repositories';
 import { buildRepositoryRows } from '~/routing/settings/repositories/utils/rows';
 
 import type { RepositoriesTableProps } from '../RepositoriesTable';
@@ -53,7 +53,9 @@ const rows = buildRepositoryRows([
  * discovered-worktree suite reuses it instead of declaring a second one.
  */
 const renderTable = (props: RepositoriesTableProps): RenderResult => {
-  const Component = () => <RepositoriesTable {...props} />;
+  const Component = () => {
+    return <RepositoriesTable {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);
@@ -249,12 +251,13 @@ describe('RepositoriesTable discovered worktrees', () => {
     ],
   );
 
-  const renderExpanded = (): RenderResult =>
-    renderTable({
+  const renderExpanded = (): RenderResult => {
+    return renderTable({
       autoExpandedIds: ['primary-1'],
       isUnpopulated: false,
       rows: discoveredRows,
     });
+  };
 
   test('renders unregistered worktrees found on disk as children', () => {
     const component = renderExpanded();

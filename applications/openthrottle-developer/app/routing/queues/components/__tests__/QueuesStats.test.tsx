@@ -44,7 +44,9 @@ describe('QueuesStats Component', () => {
   beforeEach(() => {
     props = { queues: [] };
 
-    const Component = () => <QueuesStats {...props} />;
+    const Component = () => {
+      return <QueuesStats {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);
@@ -70,7 +72,9 @@ describe('QueuesStats Component', () => {
     beforeEach(() => {
       props = { queues: mockQueues };
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const StatsComponent = () => <QueuesStats {...props} />;
+      const StatsComponent = () => {
+        return <QueuesStats {...props} />;
+      };
       const RoutesStub = createRoutesStub([
         { Component: StatsComponent, path: '/' },
       ]);
@@ -116,7 +120,9 @@ describe('QueuesStats Component', () => {
     beforeEach(() => {
       props = { queues: [...REPRESENTATIVE_SKEWED_QUEUES] };
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const StatsComponent = () => <QueuesStats {...props} />;
+      const StatsComponent = () => {
+        return <QueuesStats {...props} />;
+      };
       const RoutesStub = createRoutesStub([
         { Component: StatsComponent, path: '/' },
       ]);

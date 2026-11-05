@@ -59,6 +59,17 @@ export const PlanWorkflowRunCliDebug = (
   // Handlers
 
   // Markup
+  const hasTuningDiff = tuningDiffLabels.length > 0;
+  const diffEmpty = (
+    <p className="text-muted-foreground text-xs">{copy.diffEmpty}</p>
+  );
+  const diffList = (
+    <ul className="text-muted-foreground list-inside list-disc text-xs">
+      {tuningDiffLabels.map((line) => (
+        <li key={line}>{line}</li>
+      ))}
+    </ul>
+  );
 
   // Life Cycle
 
@@ -103,15 +114,7 @@ export const PlanWorkflowRunCliDebug = (
           <p className="text-foreground text-xs font-medium">
             {copy.diffHeading}
           </p>
-          {tuningDiffLabels.length === 0 ? (
-            <p className="text-muted-foreground text-xs">{copy.diffEmpty}</p>
-          ) : (
-            <ul className="text-muted-foreground list-inside list-disc text-xs">
-              {tuningDiffLabels.map((line) => (
-                <li key={line}>{line}</li>
-              ))}
-            </ul>
-          )}
+          {hasTuningDiff ? diffList : diffEmpty}
         </div>
         <p className="text-muted-foreground text-xs">
           <span className="text-foreground font-medium">

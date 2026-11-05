@@ -32,9 +32,9 @@ describe('KillPlanRunButton', () => {
   });
 
   test('renders nothing when show is false', () => {
-    const Component = () => (
-      <KillPlanRunButton planId="p1" planTitle="T" show={false} />
-    );
+    const Component = () => {
+      return <KillPlanRunButton planId="p1" planTitle="T" show={false} />;
+    };
     const RoutesStub = createRoutesStub([
       { Component, path: '/plans/:planId' },
     ]);
@@ -47,9 +47,9 @@ describe('KillPlanRunButton', () => {
 
   test('shows Kill run trigger when show is true', () => {
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />
-    );
+    const Component = () => {
+      return <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />;
+    };
     const RoutesStub = createRoutesStub([
       { Component, path: '/plans/:planId' },
     ]);
@@ -62,9 +62,9 @@ describe('KillPlanRunButton', () => {
 
   test('exposes aria-label and title on trigger for assistive tech and hover', () => {
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />
-    );
+    const Component = () => {
+      return <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />;
+    };
     const RoutesStub = createRoutesStub([
       { Component, path: '/plans/:planId' },
     ]);
@@ -85,9 +85,9 @@ describe('KillPlanRunButton', () => {
     let cancelPlanRunPosts = 0;
 
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />
-    );
+    const Component = () => {
+      return <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />;
+    };
     const RoutesStub = createRoutesStub([
       {
         Component,
@@ -126,9 +126,9 @@ describe('KillPlanRunButton', () => {
     const user = userEvent.setup();
 
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />
-    );
+    const Component = () => {
+      return <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />;
+    };
     const RoutesStub = createRoutesStub([
       { Component, path: '/plans/:planId' },
     ]);
@@ -161,9 +161,9 @@ describe('KillPlanRunButton', () => {
     };
 
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />
-    );
+    const Component = () => {
+      return <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />;
+    };
     const RoutesStub = createRoutesStub([
       {
         Component,
@@ -213,9 +213,9 @@ describe('KillPlanRunButton', () => {
     };
 
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />
-    );
+    const Component = () => {
+      return <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />;
+    };
     const RoutesStub = createRoutesStub([
       {
         Component,
@@ -251,9 +251,9 @@ describe('KillPlanRunButton', () => {
     let cancelPlanRunPosts = 0;
 
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />
-    );
+    const Component = () => {
+      return <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />;
+    };
     const RoutesStub = createRoutesStub([
       {
         Component,
@@ -312,9 +312,9 @@ describe('KillPlanRunButton', () => {
     });
 
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />
-    );
+    const Component = () => {
+      return <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />;
+    };
     const RoutesStub = createRoutesStub([
       {
         Component,
@@ -359,9 +359,9 @@ describe('KillPlanRunButton', () => {
     const user = userEvent.setup();
 
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />
-    );
+    const Component = () => {
+      return <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />;
+    };
     const RoutesStub = createRoutesStub([
       {
         Component,
@@ -413,9 +413,9 @@ describe('KillPlanRunButton', () => {
     });
 
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />
-    );
+    const Component = () => {
+      return <KillPlanRunButton planId="p1" planTitle="Alpha" show={true} />;
+    };
     const RoutesStub = createRoutesStub([
       {
         Component,

@@ -27,11 +27,13 @@ function assertTextArea(
 function renderTab(
   generator: GeneratorDetailCardFragment = mockGenerator,
 ): RenderResult {
-  const Component = () => (
-    <Tabs defaultValue="debug">
-      <GeneratorTabDebug generator={generator} />
-    </Tabs>
-  );
+  const Component = () => {
+    return (
+      <Tabs defaultValue="debug">
+        <GeneratorTabDebug generator={generator} />
+      </Tabs>
+    );
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 }

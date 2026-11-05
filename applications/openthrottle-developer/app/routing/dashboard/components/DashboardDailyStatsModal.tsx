@@ -3,13 +3,8 @@ import * as React from 'react';
 import { useSearchParams } from 'react-router';
 
 import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
-import { DashboardDailyStatsDayChart } from '~/routing/dashboard/components/DashboardDailyStatsDayChart';
-import { DAILY_STATS_CHART_CONFIG } from '~/routing/dashboard/data/daily-stats-chart';
-import {
-  DAILY_STATS_METRICS,
-  DAILY_STATS_MODAL_COPY,
-} from '~/routing/dashboard/data/data.copy';
-import { formatChartDate } from '~/routing/dashboard/utils/daily-stats-chart';
+import { DashboardDailyStatsModalDetail } from '~/routing/dashboard/components/DashboardDailyStatsModalDetail';
+import { DAILY_STATS_MODAL_COPY } from '~/routing/dashboard/data/data.copy';
 import {
   parseSelectedStatDate,
   selectDailyStatByDate,
@@ -62,6 +57,21 @@ export const DashboardDailyStatsModal = (
   }, [dailyStats]);
 
   // Handlers
+  const renderBody = (): React.ReactElement => {
+    if (selected === null) {
+      return (
+        <p className="text-muted-foreground text-sm">
+          {DAILY_STATS_MODAL_COPY.emptyDescription}
+        </p>
+      );
+    }
+    return (
+      <DashboardDailyStatsModalDetail
+        isFallback={isFallback}
+        selected={selected}
+      />
+    );
+  };
 
   // Markup
 
@@ -125,48 +135,7 @@ export const DashboardDailyStatsModal = (
     <GlobalModal param="modal" value={DashboardDailyStatsModal.key}>
       <h2>{DAILY_STATS_MODAL_COPY.title}</h2>
 
-      {selected === null ? (
-        <p className="text-muted-foreground text-sm">
-          {DAILY_STATS_MODAL_COPY.emptyDescription}
-        </p>
-      ) : (
-        <div className="flex flex-col gap-4" data-testid="daily-stats-detail">
-          <p className="text-muted-foreground text-sm">
-            {formatChartDate(selected.date)}
-          </p>
-
-          {isFallback ? (
-            <p className="text-muted-foreground text-xs">
-              {DAILY_STATS_MODAL_COPY.mostRecentHint}
-            </p>
-          ) : null}
-
-          <p className="text-muted-foreground text-xs">
-            {DAILY_STATS_MODAL_COPY.completionAttributionCaveat}
-          </p>
-
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-3">
-            {DAILY_STATS_METRICS.map((metric) => (
-              <div className="flex items-center gap-2" key={metric.key}>
-                <span
-                  aria-hidden={true}
-                  className="size-2.5 shrink-0 rounded-[2px]"
-                  style={{
-                    backgroundColor:
-                      DAILY_STATS_CHART_CONFIG[metric.key]?.color,
-                  }}
-                />
-                <dt className="text-muted-foreground">{metric.label}</dt>
-                <dd className="ml-auto font-medium tabular-nums">
-                  {selected[metric.key]}
-                </dd>
-              </div>
-            ))}
-          </dl>
-
-          <DashboardDailyStatsDayChart datum={selected} />
-        </div>
-      )}
+      {renderBody()}
     </GlobalModal>
   );
 };

@@ -36,7 +36,9 @@ describe('SearchDocumentationCard Component', () => {
       result: mockSearchChunk(),
     };
 
-    const Component = () => <SearchDocumentationCard {...props} />;
+    const Component = () => {
+      return <SearchDocumentationCard {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);
@@ -51,7 +53,9 @@ describe('SearchDocumentationCard Component', () => {
   test('should show source badge', () => {
     props.result = mockSearchChunk({ source: 'documentation' });
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <SearchDocumentationCard {...props} />;
+    const Component = () => {
+      return <SearchDocumentationCard {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component.rerender(<RoutesStub />);
 
@@ -66,7 +70,9 @@ describe('SearchDocumentationCard Component', () => {
       similarity: 0.91,
     });
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <SearchDocumentationCard {...props} />;
+    const Component = () => {
+      return <SearchDocumentationCard {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component.rerender(<RoutesStub />);
 
@@ -84,7 +90,9 @@ describe('SearchDocumentationCard Component', () => {
         sourceSha: null,
       });
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const Component = () => <SearchDocumentationCard {...props} />;
+      const Component = () => {
+        return <SearchDocumentationCard {...props} />;
+      };
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component.rerender(<RoutesStub />);
     });
@@ -109,7 +117,9 @@ describe('SearchDocumentationCard Component', () => {
         sourceSha: 'abc123',
       });
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const Component = () => <SearchDocumentationCard {...props} />;
+      const Component = () => {
+        return <SearchDocumentationCard {...props} />;
+      };
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component.rerender(<RoutesStub />);
     });
@@ -131,7 +141,9 @@ describe('SearchDocumentationCard Component', () => {
       sourceSha: null,
     });
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <SearchDocumentationCard {...props} />;
+    const Component = () => {
+      return <SearchDocumentationCard {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component.rerender(<RoutesStub />);
 

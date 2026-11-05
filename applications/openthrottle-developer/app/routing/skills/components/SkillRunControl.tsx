@@ -8,8 +8,8 @@ import {
 import * as React from 'react';
 import { Await } from 'react-router';
 
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
-import type { RepositoryOption } from '~/routing/home/data/models.server';
+import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
+import type { RepositoryOption } from '~/routing/home/utils/models.server';
 import { RunSkillDialog } from '~/routing/skills/components/RunSkillDialog';
 import { SKILL_RUN_COPY } from '~/routing/skills/data/data.copy';
 import type { RunSkillPayload } from '~/routing/skills/types';
@@ -55,6 +55,29 @@ export const SkillRunControl = (
     onRun?.(payload);
   };
 
+  const renderRunDialog = (): React.ReactNode => {
+    if (!open || runOptions == null) {
+      return null;
+    }
+
+    return (
+      <React.Suspense fallback={null}>
+        <Await resolve={runOptions}>
+          {(data) => (
+            <RunSkillDialog
+              models={data.models}
+              onOpenChange={setOpen}
+              onRun={handleRun}
+              open={open}
+              repositories={data.repositories}
+              slug={entry.slug}
+            />
+          )}
+        </Await>
+      </React.Suspense>
+    );
+  };
+
   // Markup
 
   // Life Cycle
@@ -96,22 +119,7 @@ export const SkillRunControl = (
       {/* Deferred: the modal needs the streamed agent+model+repository options.
           Mounted only while open so discovery resolves on demand; once resolved
           it renders instantly (RR8 streams the loader promise at page load). */}
-      {open && runOptions != null ? (
-        <React.Suspense fallback={null}>
-          <Await resolve={runOptions}>
-            {(data) => (
-              <RunSkillDialog
-                models={data.models}
-                onOpenChange={setOpen}
-                onRun={handleRun}
-                open={open}
-                repositories={data.repositories}
-                slug={entry.slug}
-              />
-            )}
-          </Await>
-        </React.Suspense>
-      ) : null}
+      {renderRunDialog()}
     </>
   );
 };

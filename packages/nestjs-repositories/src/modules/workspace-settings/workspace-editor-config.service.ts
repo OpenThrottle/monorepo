@@ -48,22 +48,27 @@ export interface WorkspaceEditorConfigApplication {
   readonly warnings: readonly string[];
 }
 
+const parseMcpServers = (
+  value: unknown,
+): Record<string, Record<string, unknown>> | undefined => {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+  return Object.fromEntries(
+    Object.entries(value).filter(
+      (entry): entry is [string, Record<string, unknown>] => isRecord(entry[1]),
+    ),
+  );
+};
+
 const parseJsonFile = (raw: string): McpServersJson => {
   const parsed: unknown = JSON.parse(raw);
   if (!isRecord(parsed)) {
     return {};
   }
-  const { mcpServers } = parsed;
   return {
     ...parsed,
-    mcpServers: isRecord(mcpServers)
-      ? Object.fromEntries(
-          Object.entries(mcpServers).filter(
-            (entry): entry is [string, Record<string, unknown>] =>
-              isRecord(entry[1]),
-          ),
-        )
-      : undefined,
+    mcpServers: parseMcpServers(parsed.mcpServers),
   };
 };
 
@@ -93,12 +98,12 @@ export class WorkspaceEditorConfigService {
     }
 
     const checkouts = await this.checkoutsService.listByUserId(userId);
-    const targetCheckouts =
-      options.repositoryIds == null || options.repositoryIds.length === 0
-        ? checkouts
-        : checkouts.filter((checkout) =>
-            options.repositoryIds?.includes(checkout.id),
-          );
+    const { repositoryIds } = options;
+    const hasFilter = repositoryIds != null && repositoryIds.length > 0;
+    const filtered = checkouts.filter((checkout) => {
+      return repositoryIds?.includes(checkout.id) === true;
+    });
+    const targetCheckouts = hasFilter ? filtered : checkouts;
 
     const results: WorkspaceEditorConfigApplication[] = [];
 

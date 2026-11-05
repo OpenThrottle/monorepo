@@ -143,10 +143,16 @@ describe('CLI-run postgres helpers', () => {
 
   it('readPlanRunCancelMarkerPostgres returns the newest run (ORDER BY created_at DESC LIMIT 1)', async () => {
     const at = new Date('2026-07-22T00:05:00.000Z');
-    mockState.rowsFor = (sql) =>
-      sql.includes('FROM plan_runs')
-        ? [{ cancel_requested_at: at, id: 'cli-run-2', status: 'IN_PROGRESS' }]
-        : [];
+    const planRunRows = [
+      { cancel_requested_at: at, id: 'cli-run-2', status: 'IN_PROGRESS' },
+    ];
+    mockState.rowsFor = (sql) => {
+      if (sql.includes('FROM plan_runs')) {
+        return planRunRows;
+      }
+
+      return [];
+    };
 
     const { readPlanRunCancelMarkerPostgres } =
       await import('../openthrottle-ralph-postgres.js');

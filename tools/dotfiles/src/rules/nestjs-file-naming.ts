@@ -90,16 +90,12 @@ export const nestjsFileNaming = createRule<[], MessageIds>({
   defaultOptions: [],
   meta: {
     docs: {
-      description:
-        'Name NestJS files `<folder>.<kind>.ts`, with the kind drawn from a fixed set.',
+      description: `Name NestJS files \`<folder>.<kind>.ts\`, with the kind drawn from a fixed set.`,
     },
     messages: {
-      folderMismatch:
-        '`{{basename}}`: a `.{{kind}}.ts` file is named for its folder — expected `{{expected}}`. If this folder already has one, this {{kind}} is a separate unit: move it to `{{subfolder}}`.',
-      missingKind:
-        '`{{basename}}` has no kind suffix. Name it `{{folder}}.<kind>.ts` (or `<subject>.<kind>.ts` for a subject kind), with a kind from: {{kinds}}.',
-      unknownKind:
-        '`{{basename}}`: `.{{kind}}.ts` is not a NestJS file kind. Use one of: {{kinds}}.',
+      folderMismatch: `\`{{basename}}\`: a \`.{{kind}}.ts\` file is named for its folder — expected \`{{expected}}\`. If this folder already has one, this {{kind}} is a separate unit: move it to \`{{subfolder}}\`.`,
+      missingKind: `\`{{basename}}\` has no kind suffix. Name it \`{{folder}}.<kind>.ts\` (or \`<subject>.<kind>.ts\` for a subject kind), with a kind from: {{kinds}}.`,
+      unknownKind: `\`{{basename}}\`: \`.{{kind}}.ts\` is not a NestJS file kind. Use one of: {{kinds}}.`,
     },
     schema: [],
     type: 'suggestion',

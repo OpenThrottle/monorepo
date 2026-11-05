@@ -10,8 +10,8 @@ import { PlanDetailTabsList } from '../PlanDetailTabsList';
 
 const renderTabs = (
   overrides: Partial<PlanDetailTabsListProps> = {},
-): RenderResult =>
-  renderRoutesStub(
+): RenderResult => {
+  return renderRoutesStub(
     <TooltipProvider>
       <Tabs defaultValue="overview">
         <PlanDetailTabsList
@@ -29,6 +29,7 @@ const renderTabs = (
       </Tabs>
     </TooltipProvider>,
   );
+};
 
 describe('PlanDetailTabsList Component', () => {
   test('renders the Details, Tasks and Output tabs with the resolved-task count', () => {

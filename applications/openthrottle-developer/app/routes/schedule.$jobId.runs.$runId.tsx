@@ -84,9 +84,42 @@ export default function Component(
   const cancelRequested = run.cancelRequestedAt != null;
   const canCancel = CANCELABLE_RUN_STATUSES.has(run.status) && !cancelRequested;
 
+  const isCancelable = CANCELABLE_RUN_STATUSES.has(run.status);
+  const showCancelRequested = cancelRequested && isCancelable;
+
   // Handlers
 
   // Markup
+  const cancelForm = (
+    <Form method="post">
+      <input name="intent" type="hidden" value="cancel-run" />
+      <Button type="submit" variant="destructive">
+        {RUN_DETAIL_COPY.cancel}
+      </Button>
+    </Form>
+  );
+  const cancelRequestedButton = (
+    <Button disabled={true} variant="outline">
+      {RUN_DETAIL_COPY.cancelRequested}
+    </Button>
+  );
+  const errorAlert = (
+    <p className="text-destructive text-sm" role="alert">
+      {actionError}
+    </p>
+  );
+  const logConsole = (
+    <QueueJobLogConsole
+      jobId={run.bullmqJobId ?? ''}
+      jobState={RUN_STATUS_TO_JOB_STATE[run.status] ?? 'waiting'}
+      queueName={queueName}
+    />
+  );
+  const logsPendingNotice = (
+    <p className="text-muted-foreground rounded-md border border-dashed p-6 text-center text-sm">
+      {RUN_DETAIL_COPY.logsPending}
+    </p>
+  );
 
   // Life Cycle
 
@@ -104,30 +137,15 @@ export default function Component(
           </div>
 
           <div className="flex gap-2">
-            {canCancel ? (
-              <Form method="post">
-                <input name="intent" type="hidden" value="cancel-run" />
-                <Button type="submit" variant="destructive">
-                  {RUN_DETAIL_COPY.cancel}
-                </Button>
-              </Form>
-            ) : null}
-            {cancelRequested && CANCELABLE_RUN_STATUSES.has(run.status) ? (
-              <Button disabled={true} variant="outline">
-                {RUN_DETAIL_COPY.cancelRequested}
-              </Button>
-            ) : null}
+            {canCancel ? cancelForm : null}
+            {showCancelRequested ? cancelRequestedButton : null}
             <Button asChild={true} variant="outline">
               <Link to={`/schedule/${params.jobId}`}>Back to job</Link>
             </Button>
           </div>
         </div>
 
-        {actionError ? (
-          <p className="text-destructive text-sm" role="alert">
-            {actionError}
-          </p>
-        ) : null}
+        {actionError ? errorAlert : null}
 
         <RunDetail run={run} />
 
@@ -135,17 +153,7 @@ export default function Component(
           <h2 className="mb-2 text-sm font-medium">
             {RUN_DETAIL_COPY.logsHeading}
           </h2>
-          {run.bullmqJobId ? (
-            <QueueJobLogConsole
-              jobId={run.bullmqJobId}
-              jobState={RUN_STATUS_TO_JOB_STATE[run.status] ?? 'waiting'}
-              queueName={queueName}
-            />
-          ) : (
-            <p className="text-muted-foreground rounded-md border border-dashed p-6 text-center text-sm">
-              {RUN_DETAIL_COPY.logsPending}
-            </p>
-          )}
+          {run.bullmqJobId ? logConsole : logsPendingNotice}
         </section>
       </div>
     </GlobalScreen>
@@ -169,9 +177,9 @@ export const action = async (args: Route.ActionArgs) => {
 
     return { error: 'Unknown action.' };
   } catch (error) {
-    return {
-      error: error instanceof Error ? error.message : 'Action failed.',
-    };
+    const message = error instanceof Error ? error.message : 'Action failed.';
+
+    return { error: message };
   }
 };
 

@@ -6,6 +6,7 @@ import type { action as agentSetupAction } from '~/routes/resources.agent-setup'
 import type { AgentCliStatus } from '~/routing/settings/data/data.agent-clis';
 import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/data.copy';
 import { useAgentSetupStream } from '~/routing/settings/hooks/useAgentSetupStream';
+import { getAgentCliActionLabel } from '~/routing/settings/utils/agent-cli-action-label';
 
 /** Resource-route action path backing the install/update controls. */
 const AGENT_SETUP_ACTION = '/resources/agent-setup';
@@ -37,19 +38,38 @@ export const SettingsAgentsCliControls = (
   // The OT_AGENT_CLI_INSTALL_ENABLED explanation lives once at the route level
   // (SettingsAgentsInstallNotice); here we only surface the contextual per-row
   // permission reason. The button is still disabled when the env flag is off.
-  const permissionReason = !canManage
-    ? SETTINGS_AGENTS_COPY.permissionReason
-    : null;
+  const { permissionReason: noPermissionCopy } = SETTINGS_AGENTS_COPY;
+  const permissionReason = canManage ? null : noPermissionCopy;
   const disabled =
     permissionReason != null || !installEnabled || submitting || running;
 
   const serverDisabled = fetcher.data?.disabled === true;
   const errorMessage = stream.error ?? fetcher.data?.errorMessage ?? null;
   const logText = stream.chunks.map((chunk) => chunk.data).join('');
+  const actionLabel = getAgentCliActionLabel({
+    installed: status.installed,
+    running,
+  });
+  const hasLog = runId != null && logText !== '';
+  const showError = errorMessage != null && !serverDisabled;
 
   // Handlers
 
   // Markup
+  const permissionMarkup = (
+    <p className="text-muted-foreground mt-2 text-xs">{permissionReason}</p>
+  );
+  const logMarkup = (
+    <pre
+      className="bg-muted/40 mt-2 max-h-48 overflow-auto rounded-md p-2 font-mono text-xs leading-relaxed"
+      data-testid="SettingsAgentsCliControlsLog"
+    >
+      {logText}
+    </pre>
+  );
+  const errorMarkup = (
+    <p className="text-destructive mt-2 text-xs">{errorMessage}</p>
+  );
 
   // Life Cycle
   const revalidatedRunRef = React.useRef<string | null>(null);
@@ -73,32 +93,15 @@ export const SettingsAgentsCliControls = (
         <input name="intent" type="hidden" value={intent} />
         <Button disabled={disabled} size="sm" type="submit" variant="outline">
           {running ? <Spinner className="mr-2" /> : null}
-          {running
-            ? status.installed
-              ? 'Updating…'
-              : 'Installing…'
-            : status.installed
-              ? 'Update'
-              : 'Install'}
+          {actionLabel}
         </Button>
       </fetcher.Form>
 
-      {permissionReason != null ? (
-        <p className="text-muted-foreground mt-2 text-xs">{permissionReason}</p>
-      ) : null}
+      {permissionReason != null ? permissionMarkup : null}
 
-      {runId != null && logText !== '' ? (
-        <pre
-          className="bg-muted/40 mt-2 max-h-48 overflow-auto rounded-md p-2 font-mono text-xs leading-relaxed"
-          data-testid="SettingsAgentsCliControlsLog"
-        >
-          {logText}
-        </pre>
-      ) : null}
+      {hasLog ? logMarkup : null}
 
-      {errorMessage != null && !serverDisabled ? (
-        <p className="text-destructive mt-2 text-xs">{errorMessage}</p>
-      ) : null}
+      {showError ? errorMarkup : null}
     </div>
   );
 };

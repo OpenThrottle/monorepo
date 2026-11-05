@@ -16,7 +16,9 @@ describe('EventSubscriptionsSection', () => {
 
   beforeEach(() => {
     window.localStorage.removeItem(EVENT_SUBSCRIPTIONS_STORAGE_KEY);
-    const Component = () => <EventSubscriptionsSection />;
+    const Component = () => {
+      return <EventSubscriptionsSection />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
   });
@@ -61,7 +63,9 @@ describe('EventSubscriptionsSection', () => {
       JSON.stringify(stored),
     );
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <EventSubscriptionsSection />;
+    const Component = () => {
+      return <EventSubscriptionsSection />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
     const switchEl = component.getByRole('switch', {

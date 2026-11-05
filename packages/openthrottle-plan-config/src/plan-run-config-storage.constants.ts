@@ -22,7 +22,7 @@ export const DEFAULT_PLAN_RUN_RALPH_EFFORT = '';
  * the agent CLI's reasoning. See docs/openthrottle/plan-run-worktrees.md.
  */
 export const DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI: 'omit' | 'debug' | 'verbose' =
-  'verbose';
+  `verbose`;
 
 /**
  * @description Programmatic plan runs get a named worktree by default. `'named'` (rather than

@@ -13,6 +13,22 @@ import {
   RemoveProjectTagInputSchema,
 } from '~/__generated__/schemas';
 
+const parseProjectTagForm = (
+  intent: 'addProjectTag' | 'removeProjectTag',
+  formData: FormData,
+) => {
+  if (intent === 'addProjectTag') {
+    return parseFormData(
+      formData,
+      AddProjectTagInputSchema().omit({ projectId: true }),
+    );
+  }
+  return parseFormData(
+    formData,
+    RemoveProjectTagInputSchema().omit({ projectId: true }),
+  );
+};
+
 /**
  * @description Project detail tag mutations (add / remove), dispatched by
  * `intent`. Extracted from the route action per route-primitive-shape R4 so the
@@ -30,16 +46,7 @@ export const runProjectDetailAction = async (args: Route.ActionArgs) => {
   if (intent === 'addProjectTag' || intent === 'removeProjectTag') {
     // `projectId` is a route param; validate only `tag` from the generated
     // schema, then inject the id.
-    const parsed =
-      intent === 'addProjectTag'
-        ? parseFormData(
-            formData,
-            AddProjectTagInputSchema().omit({ projectId: true }),
-          )
-        : parseFormData(
-            formData,
-            RemoveProjectTagInputSchema().omit({ projectId: true }),
-          );
+    const parsed = parseProjectTagForm(intent, formData);
     if (!parsed.success) {
       return { projectTagError: parsed.error };
     }

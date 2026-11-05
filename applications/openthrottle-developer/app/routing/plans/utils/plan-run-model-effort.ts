@@ -37,8 +37,8 @@ export interface PlanRunModelSelection {
  */
 export const filterPlanRunnableModels = (
   models: readonly ChatModelOption[],
-): ChatModelOption[] =>
-  models.filter((option) => {
+): ChatModelOption[] => {
+  return models.filter((option) => {
     const decoded = decodeChatOption(option.id);
 
     return (
@@ -47,6 +47,7 @@ export const filterPlanRunnableModels = (
       isExecutionBackend(decoded.backend)
     );
   });
+};
 
 /**
  * @description The option id to highlight for a plan's stored `backend` + `model`,
@@ -105,8 +106,9 @@ export const parsePlanRunModelOptionId = (
  */
 export const parsePlanRunEffort = (
   effort: string,
-): ChatReasoningLevel | undefined =>
-  Object.values(ChatReasoningLevel).find((level) => level === effort);
+): ChatReasoningLevel | undefined => {
+  return Object.values(ChatReasoningLevel).find((level) => level === effort);
+};
 
 /**
  * @description The effort to keep after the runner changes: the current one when
@@ -119,8 +121,10 @@ export const reconcilePlanRunEffort = (
 ): string => {
   const level = parsePlanRunEffort(effort);
 
-  return level !== undefined &&
-    capabilitiesForChatOption({ backend }).reasoningLevels.includes(level)
-    ? level
-    : '';
+  if (level === undefined) {
+    return '';
+  }
+
+  const { reasoningLevels } = capabilitiesForChatOption({ backend });
+  return reasoningLevels.includes(level) ? level : '';
 };

@@ -27,8 +27,7 @@ export const episode: VideoEpisode = {
       t: '0:18',
     },
     {
-      action:
-        'The task flips to COMPLETED; the next task flips to IN_PROGRESS.',
+      action: `The task flips to COMPLETED; the next task flips to IN_PROGRESS.`,
       t: '0:28',
     },
     { action: 'Scroll to the commit for the finished task.', t: '0:38' },

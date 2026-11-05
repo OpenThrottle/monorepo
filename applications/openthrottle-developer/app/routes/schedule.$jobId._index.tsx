@@ -79,6 +79,11 @@ export default function Component(
   // Handlers
 
   // Markup
+  const errorAlert = (
+    <p className="text-destructive text-sm" role="alert">
+      {actionError}
+    </p>
+  );
 
   // Life Cycle
 
@@ -123,11 +128,7 @@ export default function Component(
       </div>
 
       <div className="flex flex-col gap-6" data-testid="ScheduleDetail">
-        {actionError ? (
-          <p className="text-destructive text-sm" role="alert">
-            {actionError}
-          </p>
-        ) : null}
+        {actionError ? errorAlert : null}
 
         <ScheduleDetailTabs jobId={job.id} prompt={job.prompt} runs={runs} />
       </div>

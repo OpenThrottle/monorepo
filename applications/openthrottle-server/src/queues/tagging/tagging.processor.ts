@@ -111,13 +111,17 @@ export class TaggingProcessor
     data: PredictTaggingJob['data'],
   ): Promise<TaggingJobResult> {
     const isPlan = data.entityType === TAGGING_ENTITY_TYPES.PLAN;
-    const entity = isPlan
-      ? await this.plansService
-          .getRepository()
-          .findOne({ where: { id: data.entityId } })
-      : await this.tasksService
+    const findEntity = async () => {
+      if (isPlan) {
+        return this.plansService
           .getRepository()
           .findOne({ where: { id: data.entityId } });
+      }
+      return this.tasksService
+        .getRepository()
+        .findOne({ where: { id: data.entityId } });
+    };
+    const entity = await findEntity();
     if (entity == null) {
       return { added: 0, removed: 0, skipped: 'entity-missing' };
     }
@@ -290,19 +294,31 @@ export class TaggingProcessor
     const isPlan = entityType === TAGGING_ENTITY_TYPES.PLAN;
     const acceptedTags = new Set(accepted.map((prediction) => prediction.tag));
 
+    const addTag = (prediction: TaggingPrediction) => {
+      const tagOptions = { confidence: prediction.confidence };
+      if (isPlan) {
+        return this.tagsService.addPlanTag(
+          caller,
+          entityId,
+          prediction.tag,
+          tagOptions,
+        );
+      }
+      return this.tagsService.addTaskTag(
+        caller,
+        entityId,
+        prediction.tag,
+        tagOptions,
+      );
+    };
+
     let added = 0;
     for (const prediction of accepted) {
       try {
         // Sequential on purpose: phase replacement on plans reads then
         // deletes; concurrent adds would race the ≤1-phase invariant.
         // eslint-disable-next-line no-await-in-loop
-        const row = await (isPlan
-          ? this.tagsService.addPlanTag(caller, entityId, prediction.tag, {
-              confidence: prediction.confidence,
-            })
-          : this.tagsService.addTaskTag(caller, entityId, prediction.tag, {
-              confidence: prediction.confidence,
-            }));
+        const row = await addTag(prediction);
         if (row.source === SOURCE_SERVER_LLM) {
           added += 1;
         }
@@ -316,13 +332,17 @@ export class TaggingProcessor
       }
     }
 
-    const existing: Array<PlanTag | TaskTag> = isPlan
-      ? await this.tagsService
+    const findExisting = async (): Promise<Array<PlanTag | TaskTag>> => {
+      if (isPlan) {
+        return this.tagsService
           .getPlanTagsRepository()
-          .find({ where: { planId: entityId } })
-      : await this.tagsService
-          .getTaskTagsRepository()
-          .find({ where: { taskId: entityId } });
+          .find({ where: { planId: entityId } });
+      }
+      return this.tagsService
+        .getTaskTagsRepository()
+        .find({ where: { taskId: entityId } });
+    };
+    const existing = await findExisting();
     const stale = existing.filter(
       (row) =>
         row.source === SOURCE_SERVER_LLM &&

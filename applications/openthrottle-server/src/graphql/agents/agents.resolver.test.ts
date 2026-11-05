@@ -16,10 +16,11 @@ import type { AgentsMcpRouteDecision } from './agents-mcp-router.ts';
 import { AgentsMcpRouter } from './agents-mcp-router.ts';
 import { AgentsMcpRouterLlmService } from './agents-mcp-router-llm.service.ts';
 
-const createConfigStub = (): ConfigService =>
-  createMock<ConfigService>({
+const createConfigStub = (): ConfigService => {
+  return createMock<ConfigService>({
     get: () => undefined,
   });
+};
 
 /**
  * @description MCP surface stub covering every tool the agents MCP dispatch layer may call; uncalled paths reject.
@@ -55,26 +56,30 @@ const createLlmRouterStub = (): {
   readonly getActiveRouterModelSnapshot: Mock;
   readonly refineRoute: Mock;
   readonly shouldAttemptLlmRefinement: Mock;
-} => ({
-  getActiveRouterModelSnapshot: vi.fn(() => null),
-  refineRoute: vi.fn(async () => null),
-  shouldAttemptLlmRefinement: vi.fn(() => false),
-});
+} => {
+  return {
+    getActiveRouterModelSnapshot: vi.fn(() => null),
+    refineRoute: vi.fn(async () => null),
+    shouldAttemptLlmRefinement: vi.fn(() => false),
+  };
+};
 
 const createAgentConversationsServiceStub = (): {
   readonly appendTurn: Mock;
   readonly createConversation: Mock;
   readonly getConversationForUser: Mock;
-} => ({
-  appendTurn: vi.fn(async () => ({
-    assistantMessage: {},
-    userMessage: {},
-  })),
-  createConversation: vi.fn(async () => ({
-    id: '11111111-1111-4111-8111-111111111111',
-  })),
-  getConversationForUser: vi.fn(async () => ({ id: 'c1' })),
-});
+} => {
+  return {
+    appendTurn: vi.fn(async () => ({
+      assistantMessage: {},
+      userMessage: {},
+    })),
+    createConversation: vi.fn(async () => ({
+      id: '11111111-1111-4111-8111-111111111111',
+    })),
+    getConversationForUser: vi.fn(async () => ({ id: 'c1' })),
+  };
+};
 
 describe('AgentsResolver', () => {
   let resolver: AgentsResolver;

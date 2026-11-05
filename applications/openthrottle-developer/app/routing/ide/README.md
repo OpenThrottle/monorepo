@@ -4,7 +4,7 @@ Wires the headless [`@openthrottle/openthrottle-ide`](../../../../../packages/op
 
 ## Architecture
 
-- **Engine is server-only.** All engine calls live in `data/ide-engine.server.ts`, dynamically `import()`-ed inside loaders/resource routes. Its `.server.ts` suffix keeps it out of the client bundle (verified: the client build contains no `ts-morph`/ripgrep/engine runtime; the engine bundles only under `build/server/`).
+- **Engine is server-only.** All engine calls live in `utils/ide-engine.server.ts`, dynamically `import()`-ed inside loaders/resource routes. Its `.server.ts` suffix keeps it out of the client bundle (verified: the client build contains no `ts-morph`/ripgrep/engine runtime; the engine bundles only under `build/server/`).
 - **Root from a registered repository.** The loader resolves the workspace root from the selected `WorkspaceLocalRepository.filesystemPath` (via the `getWorkspaceSettings` GraphQL query + a `?repositoryId=` param). No monorepo-root fallback — selection is required.
 - **Cost-tiered:**
   - Page loader (`ide._index.tsx`) runs only the cheap ripgrep tier: `listFilesVM` + `searchVM` (when `?q=`).

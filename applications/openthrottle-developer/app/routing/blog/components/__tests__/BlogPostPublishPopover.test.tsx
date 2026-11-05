@@ -9,13 +9,15 @@ import { BlogPostPublishPopover } from '../BlogPostPublishPopover';
 
 const props = (
   overrides: Partial<BlogPostPublishPopoverProps> = {},
-): BlogPostPublishPopoverProps => ({
-  action: 'publish',
-  disabled: false,
-  onPublish: vi.fn(),
-  publishedAt: null,
-  ...overrides,
-});
+): BlogPostPublishPopoverProps => {
+  return {
+    action: 'publish',
+    disabled: false,
+    onPublish: vi.fn(),
+    publishedAt: null,
+    ...overrides,
+  };
+};
 
 describe('BlogPostPublishPopover Component', () => {
   test('Publish now publishes immediately, with no date', async () => {

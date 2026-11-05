@@ -31,14 +31,16 @@ function asMock(value: unknown): unknown {
   return value;
 }
 
-const baseRecord = (): StructuredLogRecord => ({
-  context: 'AppService',
-  correlationId: undefined,
-  level: 'log',
-  message: 'hello',
-  timestampIso: '2026-05-02T12:00:00.000Z',
-  traceId: undefined,
-});
+const baseRecord = (): StructuredLogRecord => {
+  return {
+    context: 'AppService',
+    correlationId: undefined,
+    level: 'log',
+    message: 'hello',
+    timestampIso: '2026-05-02T12:00:00.000Z',
+    traceId: undefined,
+  };
+};
 
 describe('recordMatchesLogSubscriptionFilter', () => {
   it('matches when level and context filters are empty (all)', () => {
@@ -97,14 +99,16 @@ describe('recordMatchesLogSubscriptionFilter', () => {
   });
 });
 
-const hubRecord = (message: string): StructuredLogRecord => ({
-  context: 'WsTest',
-  correlationId: undefined,
-  level: NESTJS_LOGGING_LEVELS.log,
-  message,
-  timestampIso: '2026-05-02T12:00:00.000Z',
-  traceId: undefined,
-});
+const hubRecord = (message: string): StructuredLogRecord => {
+  return {
+    context: 'WsTest',
+    correlationId: undefined,
+    level: NESTJS_LOGGING_LEVELS.log,
+    message,
+    timestampIso: '2026-05-02T12:00:00.000Z',
+    traceId: undefined,
+  };
+};
 
 interface MockLogSocket {
   readonly client: Socket;

@@ -26,6 +26,8 @@ export const DocumentDecomposePreview = (
   // Hooks
 
   // Setup
+  const planDescription = proposal?.planDescription ?? '';
+  const hasPlanDescription = planDescription.trim() !== '';
 
   // Handlers
 
@@ -56,12 +58,11 @@ export const DocumentDecomposePreview = (
       <Card>
         <CardHeader>
           <CardTitle>{proposal.planTitle}</CardTitle>
-          {proposal.planDescription !== undefined &&
-          proposal.planDescription.trim() !== '' ? (
+          {hasPlanDescription && (
             <CardDescription className="whitespace-pre-wrap">
-              {proposal.planDescription}
+              {planDescription}
             </CardDescription>
-          ) : null}
+          )}
         </CardHeader>
       </Card>
       <ul className="space-y-3">

@@ -63,25 +63,25 @@ export const loader = async (args: Route.LoaderArgs) => {
     { input },
   );
 
-  const filteredPulls =
-    authorFilterLower === ''
-      ? pulls
-      : pulls.filter((item) => {
-          const login = item.author.toLowerCase();
+  const hasAuthorFilter = authorFilterLower !== '';
+  const matchesAuthor = (author: string): boolean => {
+    const login = author.toLowerCase();
 
-          return authorExact
-            ? login === authorFilterLower
-            : login.includes(authorFilterLower);
-        });
+    if (authorExact) {
+      return login === authorFilterLower;
+    }
+
+    return login.includes(authorFilterLower);
+  };
+  const authorMatches = pulls.filter((item) => matchesAuthor(item.author));
+  const filteredPulls = hasAuthorFilter ? authorMatches : pulls;
 
   const prPreviewRaw = url.searchParams.get(
     PULL_REQUEST_LIST_PREVIEW_SEARCH_PARAM,
   );
   const prPreviewNumber = parsePullRequestListPreviewNumber(prPreviewRaw);
   const prPreviewPull =
-    prPreviewNumber === null
-      ? null
-      : (filteredPulls.find((item) => item.number === prPreviewNumber) ?? null);
+    filteredPulls.find((item) => item.number === prPreviewNumber) ?? null;
 
   const listSearchParams = new URLSearchParams();
   listSearchParams.set('owner', ownerParam);

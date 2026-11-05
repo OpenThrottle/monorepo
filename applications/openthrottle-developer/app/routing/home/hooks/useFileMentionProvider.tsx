@@ -63,10 +63,12 @@ export const useFileMentionProvider = (
       onQueryFiles: async (query: string): Promise<readonly string[]> => {
         const paths = await loadListing();
         const trimmed = query.trim().toLowerCase();
-        const matches =
-          trimmed === ''
-            ? paths
-            : paths.filter((path) => path.toLowerCase().includes(trimmed));
+        if (trimmed === '') {
+          return paths.slice(0, MAX_MENTION_SUGGESTIONS);
+        }
+        const matches = paths.filter((path) =>
+          path.toLowerCase().includes(trimmed),
+        );
         return matches.slice(0, MAX_MENTION_SUGGESTIONS);
       },
     };

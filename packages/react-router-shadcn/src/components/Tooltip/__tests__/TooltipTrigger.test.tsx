@@ -16,13 +16,15 @@ describe('TooltipTrigger Component', () => {
   beforeEach(() => {
     props = { children: 'Hover me' };
 
-    const Component = () => (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger {...props} />
-        </Tooltip>
-      </TooltipProvider>
-    );
+    const Component = () => {
+      return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger {...props} />
+          </Tooltip>
+        </TooltipProvider>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

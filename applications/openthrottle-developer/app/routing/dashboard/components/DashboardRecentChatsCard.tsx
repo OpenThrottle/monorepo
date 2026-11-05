@@ -14,7 +14,7 @@ import {
   conversationHref,
   conversationLabel,
 } from '~/routing/dashboard/utils/recent-chats';
-import { WORKSPACE_FULL_JUMP_LINKS } from '~/routing/navigation/data/workspace-jump-links';
+import { WORKSPACE_FULL_JUMP_LINKS } from '~/routing/navigation/data/data.workspace-jump-links';
 
 const MAX_ROWS = 3;
 
@@ -49,6 +49,42 @@ export const DashboardRecentChatsCard = (
   // Handlers
 
   // Markup
+  const emptyMarkup = (
+    <p className="text-muted-foreground py-4 text-center text-sm">
+      {copy.empty}
+    </p>
+  );
+  const listMarkup = (
+    <ul className="divide-border divide-y">
+      {rows.map((conversation) => {
+        const label = conversationLabel(conversation);
+        const isActive = conversation.status === 'active';
+        const dotTone = isActive ? 'bg-primary' : 'bg-muted-foreground/40';
+
+        return (
+          <li key={conversation.id}>
+            <Link
+              className="hover:bg-accent/50 -mx-2 flex items-center gap-2 rounded-md px-2 py-2"
+              to={conversationHref(conversation.id)}
+              viewTransition={true}
+            >
+              <span
+                aria-hidden={true}
+                className={cn('size-2 shrink-0 rounded-full', dotTone)}
+                title={conversation.status}
+              />
+              <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                {label}
+              </span>
+              <span className="text-muted-foreground shrink-0 text-xs tabular-nums">
+                {formatRelativeChatTimestamp(conversation.updatedAt)}
+              </span>
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
+  );
 
   // Life Cycle
 
@@ -63,43 +99,7 @@ export const DashboardRecentChatsCard = (
         <h2 className="text-sm font-medium">{copy.title}</h2>
       </div>
 
-      {isEmpty ? (
-        <p className="text-muted-foreground py-4 text-center text-sm">
-          {copy.empty}
-        </p>
-      ) : (
-        <ul className="divide-border divide-y">
-          {rows.map((conversation) => {
-            const label = conversationLabel(conversation);
-            const isActive = conversation.status === 'active';
-
-            return (
-              <li key={conversation.id}>
-                <Link
-                  className="hover:bg-accent/50 -mx-2 flex items-center gap-2 rounded-md px-2 py-2"
-                  to={conversationHref(conversation.id)}
-                  viewTransition={true}
-                >
-                  <span
-                    aria-hidden={true}
-                    className={cn(
-                      'size-2 shrink-0 rounded-full',
-                      isActive ? 'bg-primary' : 'bg-muted-foreground/40',
-                    )}
-                    title={conversation.status}
-                  />
-                  <span className="min-w-0 flex-1 truncate text-sm font-medium">
-                    {label}
-                  </span>
-                  <span className="text-muted-foreground shrink-0 text-xs tabular-nums">
-                    {formatRelativeChatTimestamp(conversation.updatedAt)}
-                  </span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+      {isEmpty ? emptyMarkup : listMarkup}
 
       <div className="border-border flex flex-wrap gap-1.5 border-t pt-3">
         <Button asChild={true} size="xs" variant="ghost">

@@ -76,14 +76,18 @@ export class CodeSearchService {
       hashWorkspace(config),
     ]);
 
-    const result =
-      priorSnapshot === null
-        ? await indexWorkspace(config, { provider, store: this.store })
-        : await indexWorkspace(config, {
-            diff: diffSnapshots(priorSnapshot, nextSnapshot),
-            provider,
-            store: this.store,
-          });
+    const runIndex = async (): Promise<IndexWorkspaceResult> => {
+      if (priorSnapshot === null) {
+        return indexWorkspace(config, { provider, store: this.store });
+      }
+
+      return indexWorkspace(config, {
+        diff: diffSnapshots(priorSnapshot, nextSnapshot),
+        provider,
+        store: this.store,
+      });
+    };
+    const result = await runIndex();
 
     // Persist AFTER a successful index only: if indexWorkspace throws, the baseline is unchanged so
     // the next run re-attempts the same delta instead of skipping the files it failed to embed.

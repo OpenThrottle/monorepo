@@ -7,5 +7,6 @@ import type { Route } from '@/app/routes/+types/robots[.]txt';
  * site: allows all crawlers and advertises the sitemap via the shared
  * {@link buildRobotsResponse} helper.
  */
-export const loader = (_args: Route.LoaderArgs): Response =>
-  buildRobotsResponse({ sitemapPath: '/sitemap.xml' });
+export const loader = (_args: Route.LoaderArgs): Response => {
+  return buildRobotsResponse({ sitemapPath: '/sitemap.xml' });
+};

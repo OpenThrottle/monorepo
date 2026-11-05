@@ -14,8 +14,9 @@ export interface ParsedAgentSearchParams {
   readonly tab: AgentSearchTab;
 }
 
-const isAgentSearchTab = (value: string): value is AgentSearchTab =>
-  AGENT_SEARCH_TABS.some((tab) => tab === value);
+const isAgentSearchTab = (value: string): value is AgentSearchTab => {
+  return AGENT_SEARCH_TABS.some((tab) => tab === value);
+};
 
 /**
  * @description Parses URL search params into typed q, tab (`type`), and projectId.

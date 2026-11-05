@@ -4,7 +4,9 @@ import { PREFERS_DARK_QUERY } from '@openthrottle/react-router-utils';
  * @description `useSyncExternalStore` subscriber for a store that never changes:
  * subscribes to nothing and returns a no-op unsubscribe.
  */
-export const subscribeToNothing = (): (() => void) => () => undefined;
+export const subscribeToNothing = (): (() => void) => {
+  return () => undefined;
+};
 
 /**
  * @description `useSyncExternalStore` subscriber for the OS color-scheme

@@ -29,49 +29,53 @@ function asMock(value: unknown): unknown {
 
 const basePlanInput = (
   overrides: Partial<WorkflowRalphRunOptionsInput> = {},
-): WorkflowRalphRunOptionsInput => ({
-  debugCli: 'omit',
-  effort: '',
-  executionBackend: 'cursor',
-  iterationTimeoutSeconds: undefined,
-  iterations: DEFAULT_RALPH_ITERATIONS,
-  model: DEFAULT_RALPH_MODEL,
-  planId: '0c2720a9-920f-4b16-865a-f803eb444e18',
-  project: '',
-  prompt: DEFAULT_RALPH_PROMPT,
-  promptFile: '',
-  promptLayer: 'named',
-  skipWorktreeSetup: false,
-  targetMode: 'plan',
-  taskId: '',
-  worktreeBase: '',
-  worktreeCli: 'omit',
-  worktreeName: '',
-  ...overrides,
-});
+): WorkflowRalphRunOptionsInput => {
+  return {
+    debugCli: 'omit',
+    effort: '',
+    executionBackend: 'cursor',
+    iterationTimeoutSeconds: undefined,
+    iterations: DEFAULT_RALPH_ITERATIONS,
+    model: DEFAULT_RALPH_MODEL,
+    planId: '0c2720a9-920f-4b16-865a-f803eb444e18',
+    project: '',
+    prompt: DEFAULT_RALPH_PROMPT,
+    promptFile: '',
+    promptLayer: 'named',
+    skipWorktreeSetup: false,
+    targetMode: 'plan',
+    taskId: '',
+    worktreeBase: '',
+    worktreeCli: 'omit',
+    worktreeName: '',
+    ...overrides,
+  };
+};
 
 const baseTaskInput = (
   overrides: Partial<WorkflowRalphRunOptionsInput> = {},
-): WorkflowRalphRunOptionsInput => ({
-  debugCli: 'omit',
-  effort: '',
-  executionBackend: 'cursor',
-  iterationTimeoutSeconds: undefined,
-  iterations: DEFAULT_RALPH_ITERATIONS,
-  model: DEFAULT_RALPH_MODEL,
-  planId: '',
-  project: '',
-  prompt: DEFAULT_RALPH_PROMPT,
-  promptFile: '',
-  promptLayer: 'named',
-  skipWorktreeSetup: false,
-  targetMode: 'task',
-  taskId: '6a8bff52-650b-408b-b77b-ad27064cd9d1',
-  worktreeBase: '',
-  worktreeCli: 'omit',
-  worktreeName: '',
-  ...overrides,
-});
+): WorkflowRalphRunOptionsInput => {
+  return {
+    debugCli: 'omit',
+    effort: '',
+    executionBackend: 'cursor',
+    iterationTimeoutSeconds: undefined,
+    iterations: DEFAULT_RALPH_ITERATIONS,
+    model: DEFAULT_RALPH_MODEL,
+    planId: '',
+    project: '',
+    prompt: DEFAULT_RALPH_PROMPT,
+    promptFile: '',
+    promptLayer: 'named',
+    skipWorktreeSetup: false,
+    targetMode: 'task',
+    taskId: '6a8bff52-650b-408b-b77b-ad27064cd9d1',
+    worktreeBase: '',
+    worktreeCli: 'omit',
+    worktreeName: '',
+    ...overrides,
+  };
+};
 
 describe('isOpenThrottleUuid', () => {
   test('accepts plausible OpenThrottle UUID v4 strings (trimmed)', () => {

@@ -142,6 +142,8 @@ export const buildWorkflowRalphDebugBundleText = (
   const canonicalCommand = formatWorkflowRalphCommandLine(optionArgs);
   const enqueueTuning =
     buildRalphPlanRunTuningInputFromWorkflowRunOptions(merged);
+  const hasTaskTarget =
+    merged.targetMode === 'task' && merged.taskId.trim() !== '';
 
   const payload = {
     argvSegments: optionArgs,
@@ -161,10 +163,7 @@ export const buildWorkflowRalphDebugBundleText = (
       jobListPath: `/queues/${PLAN_RUN_BULLMQ_QUEUE_NAME}`,
       name: PLAN_RUN_BULLMQ_QUEUE_NAME,
     },
-    taskId:
-      merged.targetMode === 'task' && merged.taskId.trim() !== ''
-        ? merged.taskId.trim()
-        : undefined,
+    taskId: hasTaskTarget ? merged.taskId.trim() : undefined,
   };
 
   return `${JSON.stringify(payload, null, 2)}\n`;

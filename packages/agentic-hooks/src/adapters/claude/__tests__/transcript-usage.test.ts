@@ -25,8 +25,9 @@ const SESSION = '00000000-0000-4000-8000-000000000001';
 const AGENT_FILE = 'agent-a39ec7aafbeffa589.jsonl';
 const URL = 'http://example.test/graphql';
 
-const readFixture = (name: string): string =>
-  fs.readFileSync(path.join(fixturesDir, name), 'utf8');
+const readFixture = (name: string): string => {
+  return fs.readFileSync(path.join(fixturesDir, name), 'utf8');
+};
 
 /** The main fixture up to its last COMPLETE line (its tail is a partial write). */
 const completeTranscript = (): string => {
@@ -34,8 +35,9 @@ const completeTranscript = (): string => {
   return raw.slice(0, raw.lastIndexOf('\n') + 1);
 };
 
-const isRecordValue = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
+const isRecordValue = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === 'object' && value !== null;
+};
 
 interface FakeServer {
   readonly fetchImpl: HookFetch;
@@ -43,16 +45,22 @@ interface FakeServer {
   readonly requestIds: string[];
 }
 
+const inputRowsOf = (parsed: unknown): unknown => {
+  if (
+    isRecordValue(parsed) &&
+    isRecordValue(parsed.variables) &&
+    isRecordValue(parsed.variables.input)
+  ) {
+    return parsed.variables.input.rows;
+  }
+  return [];
+};
+
 const fakeServer = (): FakeServer => {
   const requestIds: string[] = [];
   const fetchImpl: HookFetch = async (_url, init) => {
     const parsed: unknown = JSON.parse(init.body);
-    const rows: unknown =
-      isRecordValue(parsed) &&
-      isRecordValue(parsed.variables) &&
-      isRecordValue(parsed.variables.input)
-        ? parsed.variables.input.rows
-        : [];
+    const rows = inputRowsOf(parsed);
     const list = Array.isArray(rows) ? rows : [];
     for (const row of list) {
       if (isRecordValue(row) && typeof row.requestId === 'string') {
@@ -82,8 +90,8 @@ describe('captureTranscriptUsage', () => {
   const stop = (
     server: FakeServer,
     overrides: { agentTranscriptPath?: string | null } = {},
-  ) =>
-    captureTranscriptUsage({
+  ) => {
+    return captureTranscriptUsage({
       agentTranscriptPath: overrides.agentTranscriptPath ?? null,
       authToken: 'tok',
       fetchImpl: server.fetchImpl,
@@ -93,6 +101,7 @@ describe('captureTranscriptUsage', () => {
       timeoutMs: 200,
       transcriptPath,
     });
+  };
 
   /** The fixture as it is while a line is still being written: no final newline. */
   const writeMidWrite = (name: string, filePath: string): number => {

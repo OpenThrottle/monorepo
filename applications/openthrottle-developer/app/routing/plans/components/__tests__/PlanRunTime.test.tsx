@@ -11,12 +11,13 @@ import { PlanRunTime } from '../PlanRunTime';
 
 const ISO = '2026-11-02T17:00:00.000Z';
 
-const renderTime = (value: string | null) =>
-  render(
+const renderTime = (value: string | null) => {
+  return render(
     <TooltipProvider delayDuration={0}>
       <PlanRunTime value={value} />
     </TooltipProvider>,
   );
+};
 
 describe('PlanRunTime', () => {
   describe('on the server render', () => {

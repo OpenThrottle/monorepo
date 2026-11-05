@@ -29,9 +29,9 @@ const baseEnv: OpenThrottleEnv = {
 function renderDiagnostics(
   props: SettingsDiagnosticsLoaderData,
 ): ReturnType<typeof render> {
-  const Component = (): React.ReactElement => (
-    <SettingsEnvironmentDiagnostics {...props} />
-  );
+  const Component = (): React.ReactElement => {
+    return <SettingsEnvironmentDiagnostics {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 }

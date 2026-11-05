@@ -52,7 +52,7 @@ export const PlanTaskInlineActions = (
         View
       </Link>
 
-      {hasDetails ? (
+      {hasDetails && (
         <Popover>
           <PopoverTrigger
             aria-label={`View full details for task: ${title}`}
@@ -65,25 +65,25 @@ export const PlanTaskInlineActions = (
             className="flex max-h-[min(60vh,400px)] w-96 flex-col overflow-hidden"
           >
             <div className="space-y-3 overflow-y-auto pr-1">
-              {description ? (
+              {description && (
                 <section>
                   <h3 className="text-muted-foreground mb-1 text-xs font-semibold tracking-wide uppercase">
                     Description
                   </h3>
                   <p className="text-sm whitespace-pre-wrap">{description}</p>
                 </section>
-              ) : null}
+              )}
 
-              {summary ? (
+              {summary && (
                 <section>
                   <h3 className="text-muted-foreground mb-1 text-xs font-semibold tracking-wide uppercase">
                     Summary
                   </h3>
                   <p className="text-sm whitespace-pre-wrap">{summary}</p>
                 </section>
-              ) : null}
+              )}
 
-              {requirementsList.length > 0 ? (
+              {requirementsList.length > 0 && (
                 <section>
                   <h3 className="text-muted-foreground mb-1 text-xs font-semibold tracking-wide uppercase">
                     Requirements
@@ -94,11 +94,11 @@ export const PlanTaskInlineActions = (
                     ))}
                   </ul>
                 </section>
-              ) : null}
+              )}
             </div>
           </PopoverContent>
         </Popover>
-      ) : null}
+      )}
     </div>
   );
 };

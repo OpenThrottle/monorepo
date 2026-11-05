@@ -8,14 +8,14 @@ import {
 /**
  * @description localStorage key for persisted event subscription toggles (developer app).
  */
-export const EVENT_SUBSCRIPTIONS_STORAGE_KEY =
-  'openthrottle-developer:settings:event-subscriptions:v1';
+export const EVENT_SUBSCRIPTIONS_STORAGE_KEY = `openthrottle-developer:settings:event-subscriptions:v1`;
 
 const isEventSubscriptionId = (
   id: string,
   defaults: Readonly<Record<EventSubscriptionId, boolean>>,
-): id is EventSubscriptionId =>
-  Object.prototype.hasOwnProperty.call(defaults, id);
+): id is EventSubscriptionId => {
+  return Object.prototype.hasOwnProperty.call(defaults, id);
+};
 
 /**
  * @description Reads an own property from a plain object as boolean if present and boolean.

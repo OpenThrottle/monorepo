@@ -15,7 +15,9 @@ describe('RulesEmpty Component', () => {
 
   const renderEmpty = (overrides?: Partial<RulesEmptyProps>): RenderResult => {
     const merged = { ...props, ...overrides };
-    const Component = () => <RulesEmpty {...merged} />;
+    const Component = () => {
+      return <RulesEmpty {...merged} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     return render(<RoutesStub />);
   };

@@ -21,8 +21,8 @@ const matches: Route.ComponentProps['matches'] = [
   },
 ];
 
-const renderDocs = () =>
-  render(
+const renderDocs = () => {
+  return render(
     <MemoryRouter>
       <Component
         actionData={undefined}
@@ -32,6 +32,7 @@ const renderDocs = () =>
       />
     </MemoryRouter>,
   );
+};
 
 describe('routes/docs.tsx', () => {
   beforeEach(() => {

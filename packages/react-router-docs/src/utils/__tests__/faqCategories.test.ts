@@ -3,17 +3,19 @@ import { describe, expect, test } from 'vitest';
 import type { DocEntry } from '../buildDocsManifest';
 import { buildFaqCategories } from '../faqCategories';
 
-const faq = (group: string, slug: string): DocEntry => ({
-  content: '',
-  description: null,
-  draft: false,
-  group,
-  order: 1,
-  path: '/faq',
-  section: 'faq',
-  slug,
-  title: slug,
-});
+const faq = (group: string, slug: string): DocEntry => {
+  return {
+    content: '',
+    description: null,
+    draft: false,
+    group,
+    order: 1,
+    path: '/faq',
+    section: 'faq',
+    slug,
+    title: slug,
+  };
+};
 
 describe('buildFaqCategories', () => {
   test('de-duplicates groups, orders alphabetically, and slugs ids', () => {

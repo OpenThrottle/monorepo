@@ -8,7 +8,7 @@ import {
 import { Star } from 'lucide-react';
 import * as React from 'react';
 
-import { FAVORITES_GROUP_ID } from '../data/chat-model-picker-favorites';
+import { FAVORITES_GROUP_ID } from '../data/data.chat-model-picker-favorites';
 import type { ResolvedGroup } from '../types';
 
 export interface ChatModelPickerRailItemProps {
@@ -35,26 +35,30 @@ export const ChatModelPickerRailItem = (
   // Hooks
 
   // Setup
-  const icon =
-    group.id === FAVORITES_GROUP_ID ? (
-      <Star className="size-4" />
-    ) : group.icon != null ? (
-      <span className="flex size-4 items-center justify-center">
-        {group.icon}
-      </span>
-    ) : (
-      // Letter-avatar fallback for a group that supplied no icon.
-      <span
-        aria-hidden={true}
-        className="flex size-4 items-center justify-center text-xs font-medium"
-      >
-        {group.label.charAt(0).toUpperCase()}
-      </span>
-    );
+  const isFavorites = group.id === FAVORITES_GROUP_ID;
+  const hasGroupIcon = !isFavorites && group.icon != null;
+  const hasLetterIcon = !isFavorites && group.icon == null;
 
   // Handlers
 
   // Markup
+  const starIcon = <Star className="size-4" />;
+
+  const groupIcon = (
+    <span className="flex size-4 items-center justify-center">
+      {group.icon}
+    </span>
+  );
+
+  // Letter-avatar fallback for a group that supplied no icon.
+  const letterIcon = (
+    <span
+      aria-hidden={true}
+      className="flex size-4 items-center justify-center text-xs font-medium"
+    >
+      {group.label.charAt(0).toUpperCase()}
+    </span>
+  );
 
   // Life Cycle
 
@@ -78,7 +82,9 @@ export const ChatModelPickerRailItem = (
           type="button"
           variant="ghost"
         >
-          {icon}
+          {isFavorites && starIcon}
+          {hasGroupIcon && groupIcon}
+          {hasLetterIcon && letterIcon}
         </Button>
       </TooltipTrigger>
       <TooltipContent side="right">{group.label}</TooltipContent>

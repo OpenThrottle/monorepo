@@ -12,23 +12,27 @@ import { ChatActivityGroup } from '../ChatActivityGroup';
 
 const tool = (
   overrides: Partial<ChatTurnToolEvent> = {},
-): ChatTurnToolEvent => ({
-  argsJson: null,
-  callId: null,
-  error: null,
-  kind: 'tool',
-  name: 'read',
-  resultJson: null,
-  sortOrder: 0,
-  status: 'succeeded',
-  ...overrides,
-});
+): ChatTurnToolEvent => {
+  return {
+    argsJson: null,
+    callId: null,
+    error: null,
+    kind: 'tool',
+    name: 'read',
+    resultJson: null,
+    sortOrder: 0,
+    status: 'succeeded',
+    ...overrides,
+  };
+};
 
-const thinking = (sortOrder: number, text = 'hmm'): ChatTurnEvent => ({
-  kind: 'thinking',
-  sortOrder,
-  text,
-});
+const thinking = (sortOrder: number, text = 'hmm'): ChatTurnEvent => {
+  return {
+    kind: 'thinking',
+    sortOrder,
+    text,
+  };
+};
 
 /** Build the group the way the timeline does, so the fold stays the contract. */
 const groupOf = (
@@ -41,8 +45,9 @@ const groupOf = (
   return slot;
 };
 
-const renderGroup = (props: ChatActivityGroupProps): RenderResult =>
-  render(<ChatActivityGroup {...props} />);
+const renderGroup = (props: ChatActivityGroupProps): RenderResult => {
+  return render(<ChatActivityGroup {...props} />);
+};
 
 describe('ChatActivityGroup Component', () => {
   test('starts collapsed and hides the nested sequence', () => {

@@ -59,8 +59,8 @@ const DEFAULT_RESIZE_OBSERVER_SIZE: Readonly<{
  */
 const createTestResizeObserver = (
   size?: Readonly<{ height: number; width: number }>,
-): typeof ResizeObserver =>
-  class TestResizeObserver implements ResizeObserver {
+): typeof ResizeObserver => {
+  return class TestResizeObserver implements ResizeObserver {
     readonly #callback: ResizeObserverCallback;
     readonly #observed = new Set<Element>();
 
@@ -103,6 +103,7 @@ const createTestResizeObserver = (
       this.#observed.clear();
     }
   };
+};
 
 /**
  * Track which globals this module actually installed so {@link uninstallPolyfills}

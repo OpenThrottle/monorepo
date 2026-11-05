@@ -9,8 +9,9 @@ type CancelPayload = PlanDetailCancelPlanRunMutation['cancelPlanRun'];
  */
 export const cancelPlanRunToastTone = (
   payload: CancelPayload,
-): 'info' | 'success' =>
-  payload.outcome === 'NO_ACTIVE_RUN' ? 'info' : 'success';
+): 'info' | 'success' => {
+  return payload.outcome === 'NO_ACTIVE_RUN' ? 'info' : 'success';
+};
 
 /**
  * @description User-facing summary after `cancelPlanRun` (toast or inline message), keyed off the

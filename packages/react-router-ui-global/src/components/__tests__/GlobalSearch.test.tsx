@@ -7,7 +7,9 @@ import { GlobalSearch } from '../GlobalSearch';
 
 describe('GlobalSearch Component', () => {
   test('renders search placeholder heading', () => {
-    const Component = () => <GlobalSearch />;
+    const Component = () => {
+      return <GlobalSearch />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 

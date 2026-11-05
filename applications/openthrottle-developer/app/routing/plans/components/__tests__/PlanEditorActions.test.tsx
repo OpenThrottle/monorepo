@@ -17,12 +17,15 @@ import { PlanEditorActions } from '../PlanEditorActions';
 const PLAN_ID = 'ec3dcee9-36e6-4ecb-876a-f689723f6db4';
 const WORKING_DIRECTORY = '/Users/matt/Development/openthrottle';
 
-const renderActions = (props: PlanEditorActionsProps): RenderResult =>
-  renderRoutesStub(<PlanEditorActions {...props} />);
+const renderActions = (props: PlanEditorActionsProps): RenderResult => {
+  return renderRoutesStub(<PlanEditorActions {...props} />);
+};
 
 const resolvedEditors = (
   editors: readonly WorkspaceEditorId[],
-): Promise<readonly WorkspaceEditorId[]> => Promise.resolve(editors);
+): Promise<readonly WorkspaceEditorId[]> => {
+  return Promise.resolve(editors);
+};
 
 describe('PlanEditorActions Component', () => {
   test('renders one link per enabled editor with the expected href', async () => {

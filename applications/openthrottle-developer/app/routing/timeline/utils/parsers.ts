@@ -23,11 +23,15 @@ export type TimelineWindow = {
   readonly toIso: string;
 };
 
-const isWindowPreset = (value: string): value is TimelineWindowPreset =>
-  TIMELINE_WINDOW_PRESETS.some((preset) => preset === value);
+const isWindowPreset = (value: string): value is TimelineWindowPreset => {
+  return TIMELINE_WINDOW_PRESETS.some((preset) => preset === value);
+};
 
-const isGrouping = (value: string): value is TimelineLaneGrouping =>
-  Object.values(TimelineLaneGrouping).some((grouping) => grouping === value);
+const isGrouping = (value: string): value is TimelineLaneGrouping => {
+  return Object.values(TimelineLaneGrouping).some(
+    (grouping) => grouping === value,
+  );
+};
 
 /** The window preset named in the URL, or the default. */
 export function parseTimelineWindowPreset(
@@ -82,8 +86,9 @@ export function parseTimelineKinds<TKind extends string>(
   const raw = params.get(key);
   if (raw == null) return null;
 
-  const isAllowed = (entry: string): entry is TKind =>
-    allowed.some((kind) => kind === entry);
+  const isAllowed = (entry: string): entry is TKind => {
+    return allowed.some((kind) => kind === entry);
+  };
 
   return raw
     .split(',')

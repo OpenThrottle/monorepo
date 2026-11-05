@@ -15,7 +15,9 @@ describe('SearchForm Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <SearchForm {...props} />;
+    const Component = () => {
+      return <SearchForm {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

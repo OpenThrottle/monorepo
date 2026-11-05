@@ -114,8 +114,9 @@ export const writeStoredMetricsCollapsed = (collapsed: boolean): void => {
   }
 };
 
-const isFiniteNumber = (value: unknown): value is number =>
-  typeof value === 'number' && Number.isFinite(value);
+const isFiniteNumber = (value: unknown): value is number => {
+  return typeof value === 'number' && Number.isFinite(value);
+};
 
 /**
  * @description Validates one chart row (metrics fields + sequential index `i`).

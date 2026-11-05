@@ -23,15 +23,17 @@ const createWrapper = (
     }>
   >,
 ) => {
-  const Wrapper = ({ children }: { children: React.ReactNode }) => (
-    <RolloutProvider
-      applicationKey="hook-app"
-      fetchEvaluations={fetchEvaluations}
-      flags={flags}
-    >
-      {children}
-    </RolloutProvider>
-  );
+  const Wrapper = ({ children }: { children: React.ReactNode }) => {
+    return (
+      <RolloutProvider
+        applicationKey="hook-app"
+        fetchEvaluations={fetchEvaluations}
+        flags={flags}
+      >
+        {children}
+      </RolloutProvider>
+    );
+  };
 
   return Wrapper;
 };

@@ -10,8 +10,9 @@ import { PlanRunDialogSchedule } from '../PlanRunDialogSchedule';
 describe('PlanRunDialogSchedule Component', () => {
   let props: PlanRunDialogScheduleProps;
 
-  const renderSchedule = (): RenderResult =>
-    render(<PlanRunDialogSchedule {...props} />);
+  const renderSchedule = (): RenderResult => {
+    return render(<PlanRunDialogSchedule {...props} />);
+  };
 
   beforeEach(() => {
     props = {

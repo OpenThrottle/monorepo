@@ -17,64 +17,72 @@ import type { ScheduledAgentJobRunStatsObject } from './scheduled-agent-job-run-
 
 export const toScheduledAgentJobObject = (
   job: ScheduledAgentJob,
-): ScheduledAgentJobObject => ({
-  createdAt: job.createdAt,
-  cronPattern: job.cronPattern,
-  cwd: job.cwd,
-  driverId: job.driverId,
-  enabled: job.enabled,
-  id: job.id,
-  intervalMs: job.intervalMs,
-  lastRunAt: job.lastRunAt,
-  misfirePolicy: job.misfirePolicy,
-  misfireThresholdMs: job.misfireThresholdMs,
-  model: job.model,
-  name: job.name,
-  nextRunAt: job.nextRunAt,
-  ownerUserId: job.ownerUserId,
-  prompt: job.prompt,
-  repositoryCheckoutId: job.repositoryCheckoutId,
-  runAt: job.runAt,
-  scheduleKind: job.scheduleKind,
-  settingsJson: JSON.stringify(job.settings ?? {}),
-  timeoutMs: job.timeoutMs,
-  timezone: job.timezone,
-  updatedAt: job.updatedAt,
-});
+): ScheduledAgentJobObject => {
+  return {
+    createdAt: job.createdAt,
+    cronPattern: job.cronPattern,
+    cwd: job.cwd,
+    driverId: job.driverId,
+    enabled: job.enabled,
+    id: job.id,
+    intervalMs: job.intervalMs,
+    lastRunAt: job.lastRunAt,
+    misfirePolicy: job.misfirePolicy,
+    misfireThresholdMs: job.misfireThresholdMs,
+    model: job.model,
+    name: job.name,
+    nextRunAt: job.nextRunAt,
+    ownerUserId: job.ownerUserId,
+    prompt: job.prompt,
+    repositoryCheckoutId: job.repositoryCheckoutId,
+    runAt: job.runAt,
+    scheduleKind: job.scheduleKind,
+    settingsJson: JSON.stringify(job.settings ?? {}),
+    timeoutMs: job.timeoutMs,
+    timezone: job.timezone,
+    updatedAt: job.updatedAt,
+  };
+};
 
 export const toScheduledAgentJobRunObject = (
   run: ScheduledAgentJobRun,
-): ScheduledAgentJobRunObject => ({
-  bullmqJobId: run.bullmqJobId,
-  cacheReadTokens: run.cacheReadTokens,
-  cacheWriteTokens: run.cacheWriteTokens,
-  cancelRequestedAt: run.cancelRequestedAt,
-  costUsd: run.costUsd,
-  createdAt: run.createdAt,
-  driverId: run.driverId,
-  errorMessage: run.errorMessage,
-  exitCode: run.exitCode,
-  finishedAt: run.finishedAt,
-  id: run.id,
-  inputTokens: run.inputTokens,
-  model: run.model,
-  outputTokens: run.outputTokens,
-  reasoningTokens: run.reasoningTokens,
-  repositoryCheckoutId: run.repositoryCheckoutId,
-  resolvedCwd: run.resolvedCwd,
-  resumeOfRunId: run.resumeOfRunId,
-  scheduledAgentJobId: run.scheduledAgentJobId,
-  scheduledFor: run.scheduledFor,
-  // jsonb → JSON string (repo convention); null stays null for legacy/pre-snapshot runs.
-  settingsSnapshotJson:
-    run.settingsSnapshot === null ? null : JSON.stringify(run.settingsSnapshot),
-  startedAt: run.startedAt,
-  status: run.status,
-  totalTokens: run.totalTokens,
-  trigger: run.trigger,
-  usageLimitResetsAt: run.usageLimitResetsAt,
-  usageLimitType: run.usageLimitType,
-});
+): ScheduledAgentJobRunObject => {
+  let settingsSnapshotJson: string | null = null;
+  if (run.settingsSnapshot !== null) {
+    settingsSnapshotJson = JSON.stringify(run.settingsSnapshot);
+  }
+
+  return {
+    bullmqJobId: run.bullmqJobId,
+    cacheReadTokens: run.cacheReadTokens,
+    cacheWriteTokens: run.cacheWriteTokens,
+    cancelRequestedAt: run.cancelRequestedAt,
+    costUsd: run.costUsd,
+    createdAt: run.createdAt,
+    driverId: run.driverId,
+    errorMessage: run.errorMessage,
+    exitCode: run.exitCode,
+    finishedAt: run.finishedAt,
+    id: run.id,
+    inputTokens: run.inputTokens,
+    model: run.model,
+    outputTokens: run.outputTokens,
+    reasoningTokens: run.reasoningTokens,
+    repositoryCheckoutId: run.repositoryCheckoutId,
+    resolvedCwd: run.resolvedCwd,
+    resumeOfRunId: run.resumeOfRunId,
+    scheduledAgentJobId: run.scheduledAgentJobId,
+    scheduledFor: run.scheduledFor,
+    // jsonb → JSON string (repo convention); null stays null for legacy/pre-snapshot runs.
+    settingsSnapshotJson,
+    startedAt: run.startedAt,
+    status: run.status,
+    totalTokens: run.totalTokens,
+    trigger: run.trigger,
+    usageLimitResetsAt: run.usageLimitResetsAt,
+    usageLimitType: run.usageLimitType,
+  };
+};
 
 /**
  * @description Folds grouped status counts into the aggregate stats object.
@@ -94,7 +102,9 @@ export const toScheduledAgentJobRunStatsObject = (
   const countIn = (
     rows: ScheduledAgentJobRunStatusCount[],
     status: string,
-  ): number => rows.find((row) => row.status === status)?.count ?? 0;
+  ): number => {
+    return rows.find((row) => row.status === status)?.count ?? 0;
+  };
 
   const queuedCount = countIn(inFlightCounts, 'queued');
   const runningCount = countIn(inFlightCounts, 'running');

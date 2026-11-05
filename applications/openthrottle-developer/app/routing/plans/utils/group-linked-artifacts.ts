@@ -14,7 +14,7 @@ import {
   LINKED_ARTIFACT_COLLAPSE_THRESHOLD,
   LINKED_ARTIFACT_GROUP_LABELS,
   LINKED_ARTIFACT_GROUP_ORDER,
-} from '~/routing/plans/data/linked-artifacts-panel-groups';
+} from '~/routing/plans/data/data.linked-artifacts-panel-groups';
 import { toMillis } from '~/routing/plans/utils/linked-artifacts-panel';
 
 export interface GroupableArtifact {
@@ -37,12 +37,16 @@ const rankOf = (type: string): number => {
   return index === -1 ? LINKED_ARTIFACT_GROUP_ORDER.length : index;
 };
 
-const labelOf = (type: string): string =>
-  LINKED_ARTIFACT_GROUP_LABELS[type] ?? type;
+const labelOf = (type: string): string => {
+  return LINKED_ARTIFACT_GROUP_LABELS[type] ?? type;
+};
 
-const isCollapsedByDefault = (type: string, count: number): boolean =>
-  LINKED_ARTIFACT_ALWAYS_COLLAPSED.includes(type) ||
-  count > LINKED_ARTIFACT_COLLAPSE_THRESHOLD;
+const isCollapsedByDefault = (type: string, count: number): boolean => {
+  return (
+    LINKED_ARTIFACT_ALWAYS_COLLAPSED.includes(type) ||
+    count > LINKED_ARTIFACT_COLLAPSE_THRESHOLD
+  );
+};
 
 /**
  * @description Bucket artifacts into ordered, counted groups.

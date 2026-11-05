@@ -37,8 +37,8 @@ export const EventSubscriptionsSection = (
   // Setup
 
   // Handlers
-  const handleCheckedChange =
-    (id: EventSubscriptionId) => (checked: boolean) => {
+  const handleCheckedChange = (id: EventSubscriptionId) => {
+    return (checked: boolean) => {
       setSubscribed((prev) => {
         const next = { ...prev, [id]: checked };
 
@@ -47,6 +47,7 @@ export const EventSubscriptionsSection = (
         return next;
       });
     };
+  };
 
   // Markup
 

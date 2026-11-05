@@ -20,8 +20,7 @@ export const AGENT_WALLCLOCK_TIMEOUT_MS_ENV = `OPENTHROTTLE_AGENT_WALLCLOCK_TIME
 /** Env override: grace period before SIGKILL after SIGTERM, in ms. */
 export const AGENT_KILL_GRACE_MS_ENV = 'OPENTHROTTLE_AGENT_KILL_GRACE_MS';
 /** Env override: timeout for minting a CLI session (e.g. cursor create-chat), in ms. */
-export const AGENT_SESSION_TIMEOUT_MS_ENV =
-  'OPENTHROTTLE_AGENT_SESSION_TIMEOUT_MS';
+export const AGENT_SESSION_TIMEOUT_MS_ENV = `OPENTHROTTLE_AGENT_SESSION_TIMEOUT_MS`;
 
 const DEFAULT_IDLE_TIMEOUT_MS = 120_000;
 const DEFAULT_WALLCLOCK_TIMEOUT_MS = 900_000;

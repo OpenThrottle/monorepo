@@ -6,11 +6,13 @@ import {
   type ConversationStreamChunk,
 } from '../types.ts';
 
-const text = (delta: string): ConversationStreamChunk => ({
-  delta,
-  done: false,
-  kind: CONVERSATION_STREAM_CHUNK_KINDS.text,
-});
+const text = (delta: string): ConversationStreamChunk => {
+  return {
+    delta,
+    done: false,
+    kind: CONVERSATION_STREAM_CHUNK_KINDS.text,
+  };
+};
 
 describe('withKeepalive', () => {
   it('passes mapped chunks through unchanged and adds NO keepalive', () => {

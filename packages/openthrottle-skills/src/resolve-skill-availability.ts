@@ -17,8 +17,7 @@ export type SkillAvailabilityEnvironment =
   (typeof SKILL_AVAILABILITY_ENVIRONMENTS)[number];
 
 /** The default environment applied when a context omits `environment`. */
-const DEFAULT_SKILL_AVAILABILITY_ENVIRONMENT: SkillAvailabilityEnvironment =
-  'interactive';
+const DEFAULT_SKILL_AVAILABILITY_ENVIRONMENT: SkillAvailabilityEnvironment = `interactive`;
 
 /** @public */
 export type SkillAvailabilityPosture = 'allow' | 'deny';
@@ -162,16 +161,12 @@ const resolveWinningMatches = <
     return undefined;
   }
 
-  const hasEnvSpecific = matches.some((match) => match.envSpecific);
-  const bySpecificity = hasEnvSpecific
-    ? matches.filter((match) => match.envSpecific)
-    : matches;
+  const envSpecificMatches = matches.filter((match) => match.envSpecific);
+  const hasEnvSpecific = envSpecificMatches.length > 0;
+  const bySpecificity = hasEnvSpecific ? envSpecificMatches : matches;
 
-  const polarity: SkillAvailabilityPosture = bySpecificity.some(
-    (match) => match.polarity === 'deny',
-  )
-    ? 'deny'
-    : 'allow';
+  const hasDeny = bySpecificity.some((match) => match.polarity === 'deny');
+  const polarity: SkillAvailabilityPosture = hasDeny ? 'deny' : 'allow';
 
   const winners = bySpecificity.filter((match) => match.polarity === polarity);
 
@@ -305,13 +300,10 @@ export const resolveSkillAvailability = (
     context.environment ?? DEFAULT_SKILL_AVAILABILITY_ENVIRONMENT;
   const vocabularySet = new Set(vocabulary);
 
-  const applicableRules =
-    ruleSet === undefined
-      ? []
-      : ruleSet.rules.filter(
-          (rule) =>
-            rule.environment === null || rule.environment === environment,
-        );
+  const allRules = ruleSet?.rules ?? [];
+  const applicableRules = allRules.filter((rule) => {
+    return rule.environment === null || rule.environment === environment;
+  });
 
   const warnings = new Set<string>();
   const resolvedSkills: ResolvedSkillAvailability[] = [];

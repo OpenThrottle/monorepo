@@ -7,7 +7,9 @@ import { GlobalHeader } from '../GlobalHeader';
 
 describe('GlobalHeader Component', () => {
   test('renders nothing while header is disabled', () => {
-    const Component = () => <GlobalHeader />;
+    const Component = () => {
+      return <GlobalHeader />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 

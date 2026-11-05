@@ -10,12 +10,14 @@ import {
 } from '../output-stream-chunks';
 
 /** Local-midday timestamps keep the assertions timezone-agnostic. */
-const chunkAt = (id: string, createdAt: unknown): OutputStreamChunk => ({
-  content: `content ${id}`,
-  createdAt,
-  id,
-  iteration: 1,
-});
+const chunkAt = (id: string, createdAt: unknown): OutputStreamChunk => {
+  return {
+    content: `content ${id}`,
+    createdAt,
+    id,
+    iteration: 1,
+  };
+};
 
 describe('output-stream-chunks Utils', () => {
   test('formats a compact local wall-clock time', () => {

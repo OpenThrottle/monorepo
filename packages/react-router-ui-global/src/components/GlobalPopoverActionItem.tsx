@@ -6,6 +6,10 @@ import {
 import * as React from 'react';
 import { Form, Link } from 'react-router';
 
+import {
+  resolveGlobalPopoverActionLabel,
+  resolveGlobalPopoverFieldEntries,
+} from '../utils/global-popover-action-view';
 import type { GlobalPopoverAction } from './GlobalPopover';
 
 /**
@@ -29,16 +33,8 @@ export const GlobalPopoverActionItem = (
   const isDisabled =
     action.disabled === true ||
     (action.kind === 'submit' && action.pending === true);
-  const label =
-    action.kind === 'submit' && action.pending === true
-      ? (action.pendingLabel ?? action.label)
-      : action.label;
-  const fieldEntries =
-    action.kind === 'submit'
-      ? Object.keys(action.fields)
-          .sort()
-          .map((name) => ({ name, value: action.fields[name] ?? '' }))
-      : [];
+  const label = resolveGlobalPopoverActionLabel(action);
+  const fieldEntries = resolveGlobalPopoverFieldEntries(action);
 
   // Handlers
   const handleConfirmSelect = React.useCallback(
@@ -64,18 +60,18 @@ export const GlobalPopoverActionItem = (
 
   return (
     <>
-      {action.separatorBefore === true ? <DropdownMenuSeparator /> : null}
+      {action.separatorBefore === true && <DropdownMenuSeparator />}
 
-      {action.kind === 'link' ? (
+      {action.kind === 'link' && (
         <DropdownMenuItem asChild={true} disabled={isDisabled}>
           <Link className="flex gap-2" to={action.to} viewTransition={true}>
             {icon}
             {label}
           </Link>
         </DropdownMenuItem>
-      ) : null}
+      )}
 
-      {action.kind === 'select' ? (
+      {action.kind === 'select' && (
         <DropdownMenuItem
           className="flex gap-2"
           disabled={isDisabled}
@@ -84,21 +80,18 @@ export const GlobalPopoverActionItem = (
           {icon}
           {label}
         </DropdownMenuItem>
-      ) : null}
+      )}
 
-      {action.kind === 'submit' && action.confirm !== undefined ? (
+      {action.kind === 'submit' && action.confirm !== undefined && (
         <DropdownMenuItem
-          className={cn(
-            'flex gap-2',
-            action.destructive === true ? 'text-destructive' : undefined,
-          )}
+          className={cn('flex gap-2', action.destructive && 'text-destructive')}
           disabled={isDisabled}
           onSelect={handleConfirmSelect}
         >
           {icon}
           {label}
         </DropdownMenuItem>
-      ) : null}
+      )}
 
       {/*
         A real `<Form>` inside the dropdown content, submitted by a menu item
@@ -117,7 +110,7 @@ export const GlobalPopoverActionItem = (
         re-verifying in a browser first — the submit paths are pinned by
         `GlobalPopoverSubmitPaths.test.tsx`. See OT task 0a6d9c4e.
       */}
-      {action.kind === 'submit' && action.confirm === undefined ? (
+      {action.kind === 'submit' && action.confirm === undefined && (
         <Form
           action={action.action}
           method={action.method ?? 'post'}
@@ -142,7 +135,7 @@ export const GlobalPopoverActionItem = (
             </button>
           </DropdownMenuItem>
         </Form>
-      ) : null}
+      )}
     </>
   );
 };

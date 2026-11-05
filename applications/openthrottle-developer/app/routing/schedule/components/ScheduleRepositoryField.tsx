@@ -39,6 +39,42 @@ export const ScheduleRepositoryField = (
   // Handlers
 
   // Markup
+  const repositorySelect = (
+    <Select
+      defaultValue={repositoryCheckoutId ?? SCHEDULE_REPOSITORY_NONE_VALUE}
+      name="repositoryCheckoutId"
+    >
+      <SelectTrigger
+        aria-label={SCHEDULE_COPY.repositoryLabel}
+        id="repositoryCheckoutId"
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value={SCHEDULE_REPOSITORY_NONE_VALUE}>
+          {SCHEDULE_COPY.repositoryNoneOption}
+        </SelectItem>
+        {repositories.map((repository) => (
+          <SelectItem key={repository.id} value={repository.id}>
+            <span className="flex flex-col">
+              <span>{repository.displayName}</span>
+              <span className="text-muted-foreground font-mono text-xs">
+                {repository.filesystemPath}
+              </span>
+            </span>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+  const emptyState = (
+    <p className="text-muted-foreground text-sm">
+      {SCHEDULE_COPY.repositoryEmptyState}{' '}
+      <Link className="underline" to="/settings/repositories">
+        {SCHEDULE_COPY.repositoryEmptyStateAction}
+      </Link>
+    </p>
+  );
 
   // Life Cycle
 
@@ -51,43 +87,7 @@ export const ScheduleRepositoryField = (
           {SCHEDULE_COPY.repositoryLabel}
         </Label>
 
-        {hasRepositories ? (
-          <Select
-            defaultValue={
-              repositoryCheckoutId ?? SCHEDULE_REPOSITORY_NONE_VALUE
-            }
-            name="repositoryCheckoutId"
-          >
-            <SelectTrigger
-              aria-label={SCHEDULE_COPY.repositoryLabel}
-              id="repositoryCheckoutId"
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={SCHEDULE_REPOSITORY_NONE_VALUE}>
-                {SCHEDULE_COPY.repositoryNoneOption}
-              </SelectItem>
-              {repositories.map((repository) => (
-                <SelectItem key={repository.id} value={repository.id}>
-                  <span className="flex flex-col">
-                    <span>{repository.displayName}</span>
-                    <span className="text-muted-foreground font-mono text-xs">
-                      {repository.filesystemPath}
-                    </span>
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ) : (
-          <p className="text-muted-foreground text-sm">
-            {SCHEDULE_COPY.repositoryEmptyState}{' '}
-            <Link className="underline" to="/settings/repositories">
-              {SCHEDULE_COPY.repositoryEmptyStateAction}
-            </Link>
-          </p>
-        )}
+        {hasRepositories ? repositorySelect : emptyState}
 
         <p className="text-muted-foreground mt-1 text-xs">
           {SCHEDULE_COPY.repositoryHelp}

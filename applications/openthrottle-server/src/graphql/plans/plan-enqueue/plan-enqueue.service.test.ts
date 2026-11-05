@@ -91,12 +91,15 @@ describe('PlanEnqueueService', () => {
           }) => unknown,
         ) =>
           cb({
-            getRepository: (entity: unknown) =>
-              entity === Task
-                ? taskRepo
-                : entity === PlanRunEntity
-                  ? planRunRepo
-                  : repo,
+            getRepository: (entity: unknown) => {
+              if (entity === Task) {
+                return taskRepo;
+              }
+              if (entity === PlanRunEntity) {
+                return planRunRepo;
+              }
+              return repo;
+            },
           }),
       ),
     },
@@ -451,10 +454,13 @@ describe('PlanEnqueueService', () => {
       expect(result.executionBackend).toBe('cursor');
       expect(result.jobId).toBe('job-orch-1');
       const enqueueArg = mockEnqueuePlanRalphOrchestrator.mock.calls[0]?.[0];
-      const idempotencyKey =
-        isRecord(enqueueArg) && typeof enqueueArg.idempotencyKey === 'string'
-          ? enqueueArg.idempotencyKey
-          : undefined;
+      let idempotencyKey: string | undefined;
+      if (
+        isRecord(enqueueArg) &&
+        typeof enqueueArg.idempotencyKey === 'string'
+      ) {
+        idempotencyKey = enqueueArg.idempotencyKey;
+      }
       expect(idempotencyKey).toEqual(expect.any(String));
       expect(mockEnqueuePlanRalphOrchestrator).toHaveBeenCalledWith({
         idempotencyKey,
@@ -1100,23 +1106,25 @@ describe('PlanEnqueueService', () => {
       actorKind: 'service_account',
       actorSub: 'status-change-system-account-id',
     };
-    const scheduledRun = (overrides: Partial<PlanRun> = {}): PlanRun =>
-      createMock<PlanRun>({
+    const scheduledRun = (overrides: Partial<PlanRun> = {}): PlanRun => {
+      return createMock<PlanRun>({
         id: 'run-scheduled',
         planId: mockPlan.id,
         scheduledFor: NOW,
         status: 'SCHEDULED',
         ...overrides,
       });
+    };
     const fire = (
       now: Date = NOW,
-    ): ReturnType<PlanEnqueueService['fireScheduledRun']> =>
-      service.fireScheduledRun({
+    ): ReturnType<PlanEnqueueService['fireScheduledRun']> => {
+      return service.fireScheduledRun({
         ...actor,
         now,
         planId: mockPlan.id,
         planRunId: 'run-scheduled',
       });
+    };
     const expectNoPlanOrTaskWrites = (): void => {
       expect(mockApplyStatusChange).not.toHaveBeenCalled();
       expect(repo.save).not.toHaveBeenCalled();

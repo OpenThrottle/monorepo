@@ -5,7 +5,7 @@ enumeration + hashing, ripgrep text search, ts-morph symbols (definitions/refere
 watch + incremental sync, and pgvector semantic search over arbitrary workspaces.
 
 **Consumed by:** `openthrottle-developer` (runtime, confined to
-`app/routing/ide/data/ide-engine.server.ts`), `@openthrottle/react-router-ide` (**types only**),
+`app/routing/ide/utils/ide-engine.server.ts`), `@openthrottle/react-router-ide` (**types only**),
 `@openthrottle/nestjs-vector-search`.
 
 ## Layout

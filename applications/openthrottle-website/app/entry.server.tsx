@@ -58,21 +58,25 @@ export default function handleRequest(
     responseHeaders.set('Reporting-Endpoints', csp.reportingEndpoints);
   }
 
-  return isbot(request.headers.get('user-agent') || '')
-    ? handleBotRequest(
-        request,
-        responseStatusCode,
-        responseHeaders,
-        reactRouterContext,
-        nonce,
-      )
-    : handleBrowserRequest(
-        request,
-        responseStatusCode,
-        responseHeaders,
-        reactRouterContext,
-        nonce,
-      );
+  const isBotRequest = isbot(request.headers.get('user-agent') || '');
+
+  if (isBotRequest) {
+    return handleBotRequest(
+      request,
+      responseStatusCode,
+      responseHeaders,
+      reactRouterContext,
+      nonce,
+    );
+  }
+
+  return handleBrowserRequest(
+    request,
+    responseStatusCode,
+    responseHeaders,
+    reactRouterContext,
+    nonce,
+  );
 }
 
 function handleBotRequest(

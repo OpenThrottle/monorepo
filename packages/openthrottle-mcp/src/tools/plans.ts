@@ -144,10 +144,9 @@ export async function listPlansByStatusToolHandler(
     if (!listResult) return null;
 
     const { plans, totalCount } = listResult;
-    const text =
-      plans.length === 0
-        ? `No plans found (totalCount: ${totalCount}).`
-        : `Plans (${plans.length} of ${totalCount}):\n${JSON.stringify(plans, null, 2)}`;
+    const emptyText = `No plans found (totalCount: ${totalCount}).`;
+    const listText = `Plans (${plans.length} of ${totalCount}):\n${JSON.stringify(plans, null, 2)}`;
+    const text = plans.length === 0 ? emptyText : listText;
 
     return { structuredContent: { plans, totalCount }, text };
   });
@@ -163,6 +162,14 @@ const withWorkspacePath = (input: CreatePlanInput): CreatePlanInput => {
   const resolved = resolveWorkspacePathArgument(workspacePath);
 
   return resolved === undefined ? rest : { ...rest, workspacePath: resolved };
+};
+
+const describeTagFailure = (outcome: PromiseSettledResult<unknown>): string => {
+  if (outcome.status === 'rejected') {
+    return toSanitizedClientMessage('add_plan_tag', outcome.reason);
+  }
+
+  return 'addPlanTag returned no result';
 };
 
 /**
@@ -188,10 +195,7 @@ const tagCreatedPlan = async (
       if (outcome.status === 'fulfilled' && outcome.value?.addPlanTag) {
         return { ...tagging, tags: [...tagging.tags, tag] };
       }
-      const reason =
-        outcome.status === 'rejected'
-          ? toSanitizedClientMessage('add_plan_tag', outcome.reason)
-          : 'addPlanTag returned no result';
+      const reason = describeTagFailure(outcome);
       return {
         ...tagging,
         tagFailures: [...tagging.tagFailures, { reason, tag }],
@@ -273,10 +277,9 @@ export async function createPlansToolHandler(
     if (!createResult) return null;
 
     const { plans, totalCount } = createResult;
-    const text =
-      plans.length === 0
-        ? 'create_plans: no plans were created.'
-        : `Created ${plans.length} plan(s):\n${JSON.stringify(plans, null, 2)}`;
+    const emptyText = 'create_plans: no plans were created.';
+    const listText = `Created ${plans.length} plan(s):\n${JSON.stringify(plans, null, 2)}`;
+    const text = plans.length === 0 ? emptyText : listText;
 
     return { structuredContent: { plans, totalCount }, text };
   });

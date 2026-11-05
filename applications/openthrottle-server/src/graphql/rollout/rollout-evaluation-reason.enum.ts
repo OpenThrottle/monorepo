@@ -23,7 +23,6 @@ export const RolloutEvaluationReasonEnum: Readonly<
 );
 
 registerEnumType(RolloutEvaluationReasonEnum, {
-  description:
-    'Why a rollout variation was chosen: off | target_roles | fallthrough | flag_not_found.',
+  description: `Why a rollout variation was chosen: off | target_roles | fallthrough | flag_not_found.`,
   name: 'RolloutEvaluationReason',
 });

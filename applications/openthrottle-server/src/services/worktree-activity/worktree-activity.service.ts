@@ -64,12 +64,12 @@ export const classifyWorktree = (
   const hasUncommitted = worktree.dirty === true;
   const isAhead = (worktree.aheadCount ?? 0) > 0;
 
+  const isDirty = hasUncommitted || isAhead;
+  const activity = isDirty ? WORKTREE_ACTIVITY.DIRTY : WORKTREE_ACTIVITY.IDLE;
+
   return {
     ...worktree,
-    activity:
-      hasUncommitted || isAhead
-        ? WORKTREE_ACTIVITY.DIRTY
-        : WORKTREE_ACTIVITY.IDLE,
+    activity,
     planId: null,
     planRunId: null,
     runMonitored: null,

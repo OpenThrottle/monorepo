@@ -62,11 +62,13 @@ const renderSearch = (
   return { loaderCalls, value };
 };
 
-const emptyPage = (query: string): UsageBranchSearchData => ({
-  hasMore: false,
-  items: [],
-  query,
-});
+const emptyPage = (query: string): UsageBranchSearchData => {
+  return {
+    hasMore: false,
+    items: [],
+    query,
+  };
+};
 
 describe('useUsageBranchSearch', () => {
   beforeEach(() => {

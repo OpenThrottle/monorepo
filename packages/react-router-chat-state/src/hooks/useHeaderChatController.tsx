@@ -21,12 +21,12 @@ import * as React from 'react';
 import { useFetcher } from 'react-router';
 
 import { capabilitiesForChatOption } from '../config/chat-capabilities';
+import { chatToolbarStateAtom } from '../data/data.atom.chat-toolbar';
+import { EMPTY_CHAT_OPTIONS } from '../data/data.chat-options';
 import type {
   ChatToolbarBackendPrefs,
   ChatToolbarState,
-} from '../data/atom.chat-toolbar';
-import { chatToolbarStateAtom } from '../data/atom.chat-toolbar';
-import { EMPTY_CHAT_OPTIONS } from '../data/data.chat-options';
+} from '../data/data.chat-toolbar-state';
 import type { HeaderChatOptionsCache } from '../types';
 import type { ChatOptionsResponse } from '../utils/chat-discovery-options';
 import { toCheckoutOptions } from '../utils/chat-discovery-options';
@@ -147,17 +147,19 @@ export function useHeaderChatController(
   const writeBackendPref = (
     previous: ChatToolbarState,
     patch: ChatToolbarBackendPrefs,
-  ): ChatToolbarState =>
-    backendKey == null
-      ? { ...previous, ...patch }
-      : {
-          ...previous,
-          ...patch,
-          perBackend: {
-            ...previous.perBackend,
-            [backendKey]: { ...previous.perBackend[backendKey], ...patch },
-          },
-        };
+  ): ChatToolbarState => {
+    if (backendKey == null) {
+      return { ...previous, ...patch };
+    }
+    return {
+      ...previous,
+      ...patch,
+      perBackend: {
+        ...previous.perBackend,
+        [backendKey]: { ...previous.perBackend[backendKey], ...patch },
+      },
+    };
+  };
 
   const modelGroups = React.useMemo(() => buildModelGroups(models), [models]);
   const checkouts = React.useMemo(
@@ -166,30 +168,43 @@ export function useHeaderChatController(
   );
 
   // Handlers
-  const setMode = (mode: ChatComposerMode): void =>
-    setToolbarState((previous) => ({ ...previous, mode }));
-  const setModelId = (modelId: string): void =>
-    setToolbarState((previous) => ({ ...previous, modelId }));
-  const setPersist = (persist: boolean): void =>
-    setToolbarState((previous) => ({ ...previous, persist }));
-  const setPersonaId = (personaId: string): void =>
-    setToolbarState((previous) => ({ ...previous, personaId }));
-  const setRepositoryId = (repositoryId: string): void =>
-    setToolbarState((previous) => ({
+  const setMode = (mode: ChatComposerMode): void => {
+    return setToolbarState((previous) => ({ ...previous, mode }));
+  };
+  const setModelId = (modelId: string): void => {
+    return setToolbarState((previous) => ({ ...previous, modelId }));
+  };
+  const setPersist = (persist: boolean): void => {
+    return setToolbarState((previous) => ({ ...previous, persist }));
+  };
+  const setPersonaId = (personaId: string): void => {
+    return setToolbarState((previous) => ({ ...previous, personaId }));
+  };
+  const setRepositoryId = (repositoryId: string): void => {
+    return setToolbarState((previous) => ({
       ...previous,
       repositoryIds: [repositoryId],
     }));
-  const setRepositoryIds = (repositoryIds: readonly string[]): void =>
-    setToolbarState((previous) => ({ ...previous, repositoryIds }));
+  };
+  const setRepositoryIds = (repositoryIds: readonly string[]): void => {
+    return setToolbarState((previous) => ({ ...previous, repositoryIds }));
+  };
 
-  const setPermissionMode = (permissionMode: ChatPermissionMode): void =>
-    setToolbarState((previous) =>
+  const setPermissionMode = (permissionMode: ChatPermissionMode): void => {
+    return setToolbarState((previous) =>
       writeBackendPref(previous, { permissionMode }),
     );
-  const setReasoning = (reasoning: ChatReasoningLevel): void =>
-    setToolbarState((previous) => writeBackendPref(previous, { reasoning }));
-  const setServiceTier = (serviceTier: ChatServiceTier): void =>
-    setToolbarState((previous) => writeBackendPref(previous, { serviceTier }));
+  };
+  const setReasoning = (reasoning: ChatReasoningLevel): void => {
+    return setToolbarState((previous) =>
+      writeBackendPref(previous, { reasoning }),
+    );
+  };
+  const setServiceTier = (serviceTier: ChatServiceTier): void => {
+    return setToolbarState((previous) =>
+      writeBackendPref(previous, { serviceTier }),
+    );
+  };
 
   const onSendMessage = (message: string): void => {
     const trimmed = message.trim();

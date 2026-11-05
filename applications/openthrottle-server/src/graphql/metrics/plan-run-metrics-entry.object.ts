@@ -7,8 +7,7 @@ import { Field, Float, ObjectType } from '@nestjs/graphql';
 import { TaskRunMetricsObject } from './task-run-metrics.object.ts';
 
 @ObjectType('PlanRunMetricsEntry', {
-  description:
-    'A single plan run with metrics: job id, finished timestamp, and task-run metrics (memory/CPU at start and end).',
+  description: `A single plan run with metrics: job id, finished timestamp, and task-run metrics (memory/CPU at start and end).`,
 })
 export class PlanRunMetricsEntryObject {
   @Field(() => String, {
@@ -23,15 +22,13 @@ export class PlanRunMetricsEntryObject {
   finishedOn!: number | null;
 
   @Field(() => String, {
-    description:
-      'Execution backend selected once for the whole run: cursor or claude.',
+    description: `Execution backend selected once for the whole run: cursor or claude.`,
     nullable: true,
   })
   executionBackend!: string | null;
 
   @Field(() => TaskRunMetricsObject, {
-    description:
-      'Task-run metrics (process memory/CPU at start and end). Null if job completed without metrics.',
+    description: `Task-run metrics (process memory/CPU at start and end). Null if job completed without metrics.`,
     nullable: true,
   })
   taskRunMetrics!: TaskRunMetricsObject | null;

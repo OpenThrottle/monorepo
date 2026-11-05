@@ -4,12 +4,13 @@ import { buildCsp, generateCspNonce } from '../csp';
 
 const NONCE = 'test-nonce-value';
 
-const getDirective = (value: string, name: string): string | undefined =>
-  value
+const getDirective = (value: string, name: string): string | undefined => {
+  return value
     .split('; ')
     .find(
       (directive) => directive.startsWith(`${name} `) || directive === name,
     );
+};
 
 describe('buildCsp', () => {
   afterEach(() => {

@@ -26,7 +26,9 @@ describe('PlansToolbar Component', () => {
       view: 'table',
     } satisfies PlansToolbarProps;
 
-    const Component = () => <PlansToolbar {...props} />;
+    const Component = () => {
+      return <PlansToolbar {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

@@ -33,14 +33,17 @@ function renderSearch(
   initialEntries: string[] = ['/'],
 ): RenderResult {
   // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-  const Component = () => <Harness {...props} />;
+  const Component = () => {
+    return <Harness {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub initialEntries={initialEntries} />);
 }
 
-const readParams = (component: RenderResult): URLSearchParams =>
-  new URLSearchParams(component.getByTestId('qs').textContent ?? '');
+const readParams = (component: RenderResult): URLSearchParams => {
+  return new URLSearchParams(component.getByTestId('qs').textContent ?? '');
+};
 
 describe('GlobalToolbarSearch Component', () => {
   afterEach(() => {

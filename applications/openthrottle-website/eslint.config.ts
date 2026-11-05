@@ -1,4 +1,4 @@
-import { eslintConfig } from '@tools/dotfiles';
+import { dataFolderEslintConfig, eslintConfig } from '@tools/dotfiles';
 
 export default [
   {
@@ -13,4 +13,5 @@ export default [
   },
 
   ...eslintConfig,
+  ...dataFolderEslintConfig,
 ];

@@ -20,7 +20,9 @@ describe('RulesStats Component', () => {
         totalCount: 7,
       };
 
-      const Component = () => <RulesStats {...props} />;
+      const Component = () => {
+        return <RulesStats {...props} />;
+      };
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
       component = render(<RoutesStub />);
@@ -47,9 +49,9 @@ describe('RulesStats Component', () => {
   describe('when all counts are zero', () => {
     test('should still render three cards with zero values', () => {
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const ZeroStats = () => (
-        <RulesStats disabledCount={0} enabledCount={0} totalCount={0} />
-      );
+      const ZeroStats = () => {
+        return <RulesStats disabledCount={0} enabledCount={0} totalCount={0} />;
+      };
       const RoutesStub = createRoutesStub([
         { Component: ZeroStats, path: '/' },
       ]);

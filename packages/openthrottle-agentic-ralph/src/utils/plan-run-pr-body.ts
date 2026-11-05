@@ -21,8 +21,7 @@ export const PLAN_RUN_BODY_OPEN_MARKER = '<!-- ot:plan-run-body -->';
 export const PLAN_RUN_BODY_CLOSE_MARKER = '<!-- /ot:plan-run-body -->';
 
 /** Used when the repository has no `.github/pull_request_template.md`. */
-export const PR_TEMPLATE_FALLBACK =
-  '# Summary\n\n**TODO:** Describe the changes in this PR.\n\n## Testing\n\n- [ ] Pipelines should be passing\n';
+export const PR_TEMPLATE_FALLBACK = `# Summary\n\n**TODO:** Describe the changes in this PR.\n\n## Testing\n\n- [ ] Pipelines should be passing\n`;
 
 const SUMMARY_TODO = '**TODO:** Describe the changes in this PR.';
 const TODO_MARKER = '**TODO:**';
@@ -86,8 +85,9 @@ export interface SelectFooterTaskIdsParams {
   readonly tasks: readonly PlanRunPrTask[] | undefined;
 }
 
-const truncate = (text: string, max: number): string =>
-  text.length <= max ? text : `${text.slice(0, max - 1).trimEnd()}…`;
+const truncate = (text: string, max: number): string => {
+  return text.length <= max ? text : `${text.slice(0, max - 1).trimEnd()}…`;
+};
 
 /**
  * @description First non-empty line of free prose, with list/heading markers stripped — task
@@ -135,8 +135,8 @@ const bulletWithSummary = (task: PlanRunPrTask, suffix: string): string => {
  * @description Parses `git log --oneline --no-decorate` output (newest first) into commits.
  * @public
  */
-export const parseOnelineLog = (stdout: string): PlanRunPrCommit[] =>
-  stdout
+export const parseOnelineLog = (stdout: string): PlanRunPrCommit[] => {
+  return stdout
     .split('\n')
     .map((line) => line.trim())
     .filter((line) => line !== '')
@@ -146,6 +146,7 @@ export const parseOnelineLog = (stdout: string): PlanRunPrCommit[] =>
         ? { sha: line, subject: '' }
         : { sha: line.slice(0, space), subject: line.slice(space + 1).trim() };
     });
+};
 
 /**
  * @description Collects `Task-Id:` trailer values from `git log --format=%b` output.
@@ -217,13 +218,11 @@ export const resolvePlanRunPrTitle = (
   // `git log` lists newest first; reverse so ties go to the earliest commit on the branch.
   const best = [...parsed]
     .reverse()
-    .reduce<(typeof parsed)[number] | undefined>(
-      (current, candidate) =>
-        current === undefined || rankOf(candidate.type) < rankOf(current.type)
-          ? candidate
-          : current,
-      undefined,
-    );
+    .reduce<(typeof parsed)[number] | undefined>((current, candidate) => {
+      const outranks =
+        current === undefined || rankOf(candidate.type) < rankOf(current.type);
+      return outranks ? candidate : current;
+    }, undefined);
 
   if (best === undefined) {
     return tipSubject !== '' ? tipSubject : fallback;
@@ -268,17 +267,18 @@ const buildSummarySection = (params: BuildPlanRunPrBodyParams): string => {
     blocks.push(`### Not delivered\n\n${notDelivered.join('\n')}`);
   }
 
-  const commitLines =
-    commits.length > 0
-      ? commits.map((commit) => `- ${commit.subject} (\`${commit.sha}\`)`)
-      : ['- No commits on this branch beyond the base.'];
+  const commitBullets = commits.map(
+    (commit) => `- ${commit.subject} (\`${commit.sha}\`)`,
+  );
+  const noCommits = ['- No commits on this branch beyond the base.'];
+  const commitLines = commits.length > 0 ? commitBullets : noCommits;
   blocks.push(`### Commits\n\n${commitLines.join('\n')}`);
 
   return blocks.join('\n\n');
 };
 
-const buildTestingSteps = (tasks: readonly PlanRunPrTask[]): string[] =>
-  tasks
+const buildTestingSteps = (tasks: readonly PlanRunPrTask[]): string[] => {
+  return tasks
     .filter((task) => task.status === 'COMPLETED')
     .flatMap((task) => {
       const detail = firstLine(task.summary);
@@ -286,6 +286,7 @@ const buildTestingSteps = (tasks: readonly PlanRunPrTask[]): string[] =>
         ? []
         : [`- [ ] Check ${task.title}: ${detail}`];
     });
+};
 
 /**
  * @description Replaces the template's Testing TODO with steps from task summaries (or drops it),
@@ -294,10 +295,10 @@ const buildTestingSteps = (tasks: readonly PlanRunPrTask[]): string[] =>
 const fillTesting = (body: string, steps: readonly string[]): string => {
   const lines = body.split('\n');
   const firstTodo = lines.findIndex((line) => line.includes(TODO_MARKER));
-  const filled =
-    firstTodo === -1
-      ? lines
-      : [...lines.slice(0, firstTodo), ...steps, ...lines.slice(firstTodo + 1)];
+  const hasTodo = firstTodo !== -1;
+  const before = lines.slice(0, firstTodo);
+  const after = lines.slice(firstTodo + 1);
+  const filled = hasTodo ? [...before, ...steps, ...after] : lines;
   const withoutTodos = filled.filter((line) => !line.includes(TODO_MARKER));
 
   if (firstTodo !== -1 || steps.length === 0) {
@@ -343,20 +344,25 @@ export const buildPlanRunPrBody = (
 export const buildPlanRunPrFooter = (params: {
   readonly footerTaskIds: readonly string[];
   readonly planId: string;
-}): string =>
-  [
+}): string => {
+  return [
     `Plan-Id: ${params.planId}`,
     ...params.footerTaskIds.map((id) => `Task-Id: ${id}`),
   ].join('\n');
+};
 
 const DIGEST_LINE =
   /^<!-- ot:plan-run-digest sha256:(?<digest>[0-9a-f]{64}) -->$/;
 
-const normalizeBodyText = (text: string): string =>
-  text.replace(/\r\n?/g, '\n').trim();
+const normalizeBodyText = (text: string): string => {
+  return text.replace(/\r\n?/g, '\n').trim();
+};
 
-const digestOf = (inner: string): string =>
-  createHash('sha256').update(normalizeBodyText(inner), 'utf8').digest('hex');
+const digestOf = (inner: string): string => {
+  return createHash('sha256')
+    .update(normalizeBodyText(inner), 'utf8')
+    .digest('hex');
+};
 
 /**
  * @description Wraps host-written PR text in {@link PLAN_RUN_BODY_OPEN_MARKER} /
@@ -389,8 +395,9 @@ export type PlanRunPrBodyRegion =
   | { readonly owner: 'edited' }
   | { readonly owner: 'empty' };
 
-const countOccurrences = (text: string, needle: string): number =>
-  text.split(needle).length - 1;
+const countOccurrences = (text: string, needle: string): number => {
+  return text.split(needle).length - 1;
+};
 
 /**
  * @description True when the marker at `index` starts a line and its line holds nothing else.
@@ -440,21 +447,26 @@ export const locatePlanRunPrBody = (body: string): PlanRunPrBodyRegion => {
     ?.digest;
   const inner = lines.slice(0, -1).join('\n');
 
-  return lines.length >= 2 && digest !== undefined && digest === digestOf(inner)
-    ? {
-        after: body.slice(closeIndex + PLAN_RUN_BODY_CLOSE_MARKER.length),
-        before: body.slice(0, openIndex),
-        owner: 'host',
-      }
-    : { owner: 'edited' };
+  const isHostOwned =
+    lines.length >= 2 && digest !== undefined && digest === digestOf(inner);
+  if (!isHostOwned) {
+    return { owner: 'edited' };
+  }
+
+  return {
+    after: body.slice(closeIndex + PLAN_RUN_BODY_CLOSE_MARKER.length),
+    before: body.slice(0, openIndex),
+    owner: 'host',
+  };
 };
 
 /**
  * @description Classifies an existing PR body for the refresh decision; see {@link PlanRunPrBodyOwner}.
  * @public
  */
-export const classifyPlanRunPrBody = (body: string): PlanRunPrBodyOwner =>
-  locatePlanRunPrBody(body).owner;
+export const classifyPlanRunPrBody = (body: string): PlanRunPrBodyOwner => {
+  return locatePlanRunPrBody(body).owner;
+};
 
 /**
  * @description The body a refresh publishes for a refreshable `region` (from

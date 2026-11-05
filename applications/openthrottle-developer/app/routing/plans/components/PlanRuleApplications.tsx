@@ -1,7 +1,7 @@
 import { Badge } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { PLAN_RULE_APPLICATION_STATE_STYLES } from '~/routing/plans/data/plan-rule-applications-state-styles';
+import { PLAN_RULE_APPLICATION_STATE_STYLES } from '~/routing/plans/data/data.plan-rule-applications-state-styles';
 import {
   attentionRank,
   renderDetails,
@@ -66,14 +66,14 @@ export const PlanRuleApplications = (
               <span className="text-muted-foreground">
                 rule {application.ruleId.slice(0, 8)}…
               </span>
-              {application.taskId != null ? (
+              {application.taskId != null && (
                 <span className="text-muted-foreground">
                   task {application.taskId.slice(0, 8)}…
                 </span>
-              ) : null}
-              {details != null ? (
+              )}
+              {details != null && (
                 <span className="text-muted-foreground">{details}</span>
-              ) : null}
+              )}
             </li>
           );
         })}

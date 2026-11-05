@@ -7,8 +7,9 @@
 
 const CRON_FIELD_PATTERN = /^[0-9*/,\-A-Za-z?]+$/;
 
-const isFixedSecondsMinutes = (value: string): boolean =>
-  /^\d{1,2}$/.test(value) && Number(value) >= 0 && Number(value) <= 59;
+const isFixedSecondsMinutes = (value: string): boolean => {
+  return /^\d{1,2}$/.test(value) && Number(value) >= 0 && Number(value) <= 59;
+};
 
 export interface CronValidationResult {
   readonly ok: boolean;

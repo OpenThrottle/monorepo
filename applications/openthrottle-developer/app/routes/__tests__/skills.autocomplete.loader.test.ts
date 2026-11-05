@@ -3,26 +3,26 @@ import { createTestRouterContext } from '@openthrottle/react-router-testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/skills.autocomplete';
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 
 vi.mock('@openthrottle/react-router-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),
 }));
 
-vi.mock('~/routing/agents/data/discover-repo-skills.server', () => ({
+vi.mock('~/routing/agents/utils/discover-repo-skills.server', () => ({
   discoverRepoSkills: vi.fn(),
 }));
 
-vi.mock('~/routing/agents/data/resolve-monorepo-root.server', () => ({
+vi.mock('~/routing/agents/utils/resolve-monorepo-root.server', () => ({
   getMonorepoRoot: vi.fn(),
 }));
 
 const { executeGraphqlWithAuth } =
   await import('@openthrottle/react-router-graphql');
 const { discoverRepoSkills } =
-  await import('~/routing/agents/data/discover-repo-skills.server');
+  await import('~/routing/agents/utils/discover-repo-skills.server');
 const { getMonorepoRoot } =
-  await import('~/routing/agents/data/resolve-monorepo-root.server');
+  await import('~/routing/agents/utils/resolve-monorepo-root.server');
 const { loader } = await import('../skills.autocomplete');
 
 const mockExecute = vi.mocked(executeGraphqlWithAuth);
@@ -40,18 +40,18 @@ const buildArgs = (search = ''): Route.LoaderArgs => {
   };
 };
 
-const repoSkill = (
-  overrides: Partial<RepoSkillEntry> = {},
-): RepoSkillEntry => ({
-  disableModelInvocation: undefined,
-  layout: 'agents',
-  repoRelativePath: '.agents/skills/foo/SKILL.md',
-  slug: 'foo',
-  source: 'openthrottle',
-  summary: 'Foo skill description',
-  tags: [],
-  ...overrides,
-});
+const repoSkill = (overrides: Partial<RepoSkillEntry> = {}): RepoSkillEntry => {
+  return {
+    disableModelInvocation: undefined,
+    layout: 'agents',
+    repoRelativePath: '.agents/skills/foo/SKILL.md',
+    slug: 'foo',
+    source: 'openthrottle',
+    summary: 'Foo skill description',
+    tags: [],
+    ...overrides,
+  };
+};
 
 describe('routes/skills.autocomplete loader', () => {
   beforeEach(() => {

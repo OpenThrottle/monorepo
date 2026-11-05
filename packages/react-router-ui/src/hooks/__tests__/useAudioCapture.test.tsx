@@ -46,7 +46,9 @@ class MockAudioContext {
   }
 }
 
-const createMockTrack = () => ({ stop: vi.fn() });
+const createMockTrack = () => {
+  return { stop: vi.fn() };
+};
 
 function createMockStream() {
   const track = createMockTrack();

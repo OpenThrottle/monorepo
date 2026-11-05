@@ -20,7 +20,9 @@ describe('buildCustomComponents', () => {
   });
 
   it('only maps the slots that were provided', () => {
-    const Renderer: CalendarEventSlot = () => <div>card</div>;
+    const Renderer: CalendarEventSlot = () => {
+      return <div>card</div>;
+    };
     const result = buildCustomComponents({ timeGridEvent: Renderer });
 
     expect(result).toBeDefined();
@@ -55,7 +57,9 @@ describe('buildCustomComponents', () => {
 
   it('renders a header slot as free content (no event forwarded)', () => {
     // eslint-disable-next-line react/no-multi-comp -- test-local slot renderer component
-    const Header: CalendarHeaderSlot = () => <div>Brand</div>;
+    const Header: CalendarHeaderSlot = () => {
+      return <div>Brand</div>;
+    };
     const result = buildCustomComponents({ headerContent: Header });
     const Wrapper = result?.headerContent;
     expect(Wrapper).toBeDefined();

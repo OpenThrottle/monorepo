@@ -53,42 +53,48 @@ export type SetBlogPostTagsOutcome =
 const unexpected = (
   operation: string,
   result: BlogPostWriteResult,
-): InternalServerErrorException =>
-  new InternalServerErrorException(
+): InternalServerErrorException => {
+  return new InternalServerErrorException(
     `${operation} cannot produce a "${result.kind}" write result.`,
   );
+};
 
 /** The error object for a post that does not exist; `key` is the id or slug looked up. */
-export const blogPostNotFoundError = (key: string): BlogPostNotFoundError =>
-  Object.assign(new BlogPostNotFoundError(), {
+export const blogPostNotFoundError = (key: string): BlogPostNotFoundError => {
+  return Object.assign(new BlogPostNotFoundError(), {
     message: `Blog post "${key}" was not found.`,
   });
+};
 
 /** The error for a non-DRAFT post edited by a caller that holds only `blog:draft`. */
 export const blogPostPublishPermissionRequiredError =
-  (): BlogPostPublishPermissionRequiredError =>
-    Object.assign(new BlogPostPublishPermissionRequiredError(), {
+  (): BlogPostPublishPermissionRequiredError => {
+    return Object.assign(new BlogPostPublishPermissionRequiredError(), {
       message: `This post is no longer a draft. Editing a published, scheduled or archived post requires the blog:write permission.`,
     });
+  };
 
-const blogCoverAltRequiredError = (): BlogCoverAltRequiredError =>
-  Object.assign(new BlogCoverAltRequiredError(), {
+const blogCoverAltRequiredError = (): BlogCoverAltRequiredError => {
+  return Object.assign(new BlogCoverAltRequiredError(), {
     message: `A cover image needs alt text: set coverImageAlt or clear coverImageUrl.`,
   });
+};
 
-const blogSlugConflictError = (slug: string): BlogSlugConflictError =>
-  Object.assign(new BlogSlugConflictError(), {
+const blogSlugConflictError = (slug: string): BlogSlugConflictError => {
+  return Object.assign(new BlogSlugConflictError(), {
     message: `A blog post with the slug "${slug}" already exists.`,
     slug,
   });
+};
 
 const blogPostStaleWriteError = (
   currentUpdatedAt: Date,
-): BlogPostStaleWriteError =>
-  Object.assign(new BlogPostStaleWriteError(), {
+): BlogPostStaleWriteError => {
+  return Object.assign(new BlogPostStaleWriteError(), {
     currentUpdatedAt,
     message: `The blog post changed since it was read; reload it and retry.`,
   });
+};
 
 /** An unknown author or tag slug; `operation` names the caller for the invariant message. */
 const toReferenceNotFound = (
@@ -127,10 +133,11 @@ const toPostNotFound = (
 const toAnyNotFound = (
   operation: string,
   result: BlogWriteNotFound,
-): BlogPostNotFoundError | BlogReferenceNotFoundError =>
-  result.entity === BLOG_WRITE_ENTITY.POST
+): BlogPostNotFoundError | BlogReferenceNotFoundError => {
+  return result.entity === BLOG_WRITE_ENTITY.POST
     ? toPostNotFound(operation, result)
     : toReferenceNotFound(operation, result);
+};
 
 /** `createBlogPost`: slug conflict, missing cover alt, unknown author. */
 export const toCreateBlogPostOutcome = (

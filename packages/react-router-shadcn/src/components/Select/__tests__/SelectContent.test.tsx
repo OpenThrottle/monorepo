@@ -14,14 +14,16 @@ describe('SelectContent Component', () => {
   });
 
   test('should render content when Select is open', () => {
-    const Component = () => (
-      <Select defaultOpen={true}>
-        <SelectTrigger>
-          <SelectValue placeholder="Pick" />
-        </SelectTrigger>
-        <SelectContent {...props}>Options</SelectContent>
-      </Select>
-    );
+    const Component = () => {
+      return (
+        <Select defaultOpen={true}>
+          <SelectTrigger>
+            <SelectValue placeholder="Pick" />
+          </SelectTrigger>
+          <SelectContent {...props}>Options</SelectContent>
+        </Select>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 

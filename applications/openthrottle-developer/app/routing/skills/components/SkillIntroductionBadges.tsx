@@ -6,7 +6,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 import type { ModelInvocationBadge } from '~/routing/skills/utils/model-invocation-badge';
 import { getSkillSourceBadge } from '~/routing/skills/utils/source-badge';
 
@@ -44,6 +44,22 @@ export const SkillIntroductionBadges = (
     </Badge>
   );
 
+  const sourceLink = (
+    <a
+      data-testid="skill-source-link"
+      href={source.href}
+      rel="noreferrer"
+      target="_blank"
+    >
+      {sourceBadge}
+    </a>
+  );
+  const readOnlyTags = (entry.tags ?? []).map((tag) => (
+    <Badge color="blue" key={tag} size="xs">
+      {tag}
+    </Badge>
+  ));
+
   // Life Cycle
 
   // 🔌 Short Circuit
@@ -52,18 +68,7 @@ export const SkillIntroductionBadges = (
     <React.Fragment>
       <Tooltip>
         <TooltipTrigger asChild={true}>
-          {source.href ? (
-            <a
-              data-testid="skill-source-link"
-              href={source.href}
-              rel="noreferrer"
-              target="_blank"
-            >
-              {sourceBadge}
-            </a>
-          ) : (
-            sourceBadge
-          )}
+          {source.href ? sourceLink : sourceBadge}
         </TooltipTrigger>
         <TooltipContent className="max-w-xs" side="top">
           {source.tooltip}
@@ -81,13 +86,7 @@ export const SkillIntroductionBadges = (
         </TooltipContent>
       </Tooltip>
 
-      {showReadOnlyTags
-        ? (entry.tags ?? []).map((tag) => (
-            <Badge color="blue" key={tag} size="xs">
-              {tag}
-            </Badge>
-          ))
-        : null}
+      {showReadOnlyTags ? readOnlyTags : null}
     </React.Fragment>
   );
 };

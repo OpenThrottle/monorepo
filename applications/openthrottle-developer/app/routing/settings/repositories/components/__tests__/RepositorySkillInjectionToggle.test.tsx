@@ -31,7 +31,9 @@ const renderToggle = (
     repositoryId: props.repositoryId,
   }),
 ) => {
-  const Component = () => <RepositorySkillInjectionToggle {...props} />;
+  const Component = () => {
+    return <RepositorySkillInjectionToggle {...props} />;
+  };
   const RoutesStub = createRoutesStub([
     { Component, path: '/' },
     {

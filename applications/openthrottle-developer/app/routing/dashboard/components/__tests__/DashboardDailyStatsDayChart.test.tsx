@@ -2,7 +2,7 @@ import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
-import type { DailyStatsChartDatum } from '~/routing/dashboard/data/daily-stats-chart';
+import type { DailyStatsChartDatum } from '~/routing/dashboard/data/data.daily-stats-chart';
 
 import { DashboardDailyStatsDayChart } from '../DashboardDailyStatsDayChart';
 

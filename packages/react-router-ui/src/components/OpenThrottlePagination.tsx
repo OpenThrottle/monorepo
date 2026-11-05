@@ -62,7 +62,7 @@ export const OpenThrottlePagination = (
     view,
   } = props;
 
-  const extras =
+  const hasExtras =
     (assignees !== undefined && assignees.length > 0) ||
     details !== undefined ||
     search !== undefined ||
@@ -70,18 +70,18 @@ export const OpenThrottlePagination = (
     sortOrder !== undefined ||
     status !== undefined ||
     (statuses !== undefined && statuses.length > 0) ||
-    view !== undefined
-      ? {
-          assignees,
-          details,
-          search,
-          sortBy,
-          sortOrder,
-          status,
-          statuses,
-          view,
-        }
-      : undefined;
+    view !== undefined;
+  const allExtras = {
+    assignees,
+    details,
+    search,
+    sortBy,
+    sortOrder,
+    status,
+    statuses,
+    view,
+  };
+  const extras = hasExtras ? allExtras : undefined;
 
   // Hooks
   const [searchParams] = useSearchParams();
@@ -89,10 +89,11 @@ export const OpenThrottlePagination = (
   // Setup
   const totalPages = Math.ceil(total / limit) || 1;
 
-  const buildParams = (targetPage: number): string =>
-    preserveSearchParams
+  const buildParams = (targetPage: number): string => {
+    return preserveSearchParams
       ? buildPreservedSearchParams(searchParams, targetPage, limit)
       : buildProjectsSearchParams(targetPage, limit, extras);
+  };
 
   const prevPage = page > 1 ? page - 1 : null;
   const nextPage = page < totalPages ? page + 1 : null;
@@ -108,6 +109,42 @@ export const OpenThrottlePagination = (
   // Handlers
 
   // Markup
+  const prevLink = prevUrl && (
+    <Button aria-label="Go to previous page" asChild={true} variant="ghost">
+      <Link className="gap-1 pl-2.5" to={prevUrl}>
+        {/* <span className="sm:inline">Previous</span> */}
+        <ChevronsLeftIcon className="h-4 w-4" />
+      </Link>
+    </Button>
+  );
+  const prevDisabled = (
+    <Button
+      aria-disabled={true}
+      className="pointer-events-none opacity-50"
+      variant="ghost"
+    >
+      {/* <span className="sm:inline">Previous</span> */}
+      <ChevronsLeftIcon className="h-4 w-4" />
+    </Button>
+  );
+  const nextLink = nextUrl && (
+    <Button aria-label="Go to next page" asChild={true} variant="ghost">
+      <Link className="gap-1 pr-2.5" to={nextUrl}>
+        {/* <span className="sm:inline">Next</span> */}
+        <ChevronsRightIcon className="h-4 w-4" />
+      </Link>
+    </Button>
+  );
+  const nextDisabled = (
+    <Button
+      aria-disabled={true}
+      className="pointer-events-none opacity-50"
+      variant="ghost"
+    >
+      {/* <span className="sm:inline">Next</span> */}
+      <ChevronsRightIcon className="h-4 w-4" />
+    </Button>
+  );
 
   // Life Cycle
 
@@ -125,29 +162,7 @@ export const OpenThrottlePagination = (
       {totalPages > 1 && (
         <Pagination data-testid="OpenThrottlePagination">
           <PaginationContent>
-            <PaginationItem>
-              {prevUrl ? (
-                <Button
-                  aria-label="Go to previous page"
-                  asChild={true}
-                  variant="ghost"
-                >
-                  <Link className="gap-1 pl-2.5" to={prevUrl}>
-                    {/* <span className="sm:inline">Previous</span> */}
-                    <ChevronsLeftIcon className="h-4 w-4" />
-                  </Link>
-                </Button>
-              ) : (
-                <Button
-                  aria-disabled={true}
-                  className="pointer-events-none opacity-50"
-                  variant="ghost"
-                >
-                  {/* <span className="sm:inline">Previous</span> */}
-                  <ChevronsLeftIcon className="h-4 w-4" />
-                </Button>
-              )}
-            </PaginationItem>
+            <PaginationItem>{prevUrl ? prevLink : prevDisabled}</PaginationItem>
 
             {pageItems.map((item, index) => {
               if (item.type === 'ellipsis') {
@@ -178,29 +193,7 @@ export const OpenThrottlePagination = (
               );
             })}
 
-            <PaginationItem>
-              {nextUrl ? (
-                <Button
-                  aria-label="Go to next page"
-                  asChild={true}
-                  variant="ghost"
-                >
-                  <Link className="gap-1 pr-2.5" to={nextUrl}>
-                    {/* <span className="sm:inline">Next</span> */}
-                    <ChevronsRightIcon className="h-4 w-4" />
-                  </Link>
-                </Button>
-              ) : (
-                <Button
-                  aria-disabled={true}
-                  className="pointer-events-none opacity-50"
-                  variant="ghost"
-                >
-                  {/* <span className="sm:inline">Next</span> */}
-                  <ChevronsRightIcon className="h-4 w-4" />
-                </Button>
-              )}
-            </PaginationItem>
+            <PaginationItem>{nextUrl ? nextLink : nextDisabled}</PaginationItem>
           </PaginationContent>
         </Pagination>
       )}

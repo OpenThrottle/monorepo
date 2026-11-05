@@ -5,7 +5,7 @@ import { describe, expect, test } from 'vitest';
 import type {
   DefinitionLocation,
   ReferenceLocation,
-} from '../../data/view-models';
+} from '../../data/data.view-models';
 import { LocationTable } from '../LocationTable';
 
 const definitions: DefinitionLocation[] = [

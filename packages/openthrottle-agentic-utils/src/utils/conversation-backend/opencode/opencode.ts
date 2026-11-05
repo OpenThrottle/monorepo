@@ -23,6 +23,7 @@ import {
   resolveAgentTimeouts,
   terminateChild,
 } from '../cursor-agent/teardown.ts';
+import { describeExit } from '../describe-exit.ts';
 import { withFileMentions } from '../file-mentions.ts';
 import { withKeepalive } from '../keepalive.ts';
 import {
@@ -61,9 +62,11 @@ const ALLOWED_ENV_KEYS = [
  */
 function resolveOpencodeBin(env: NodeJS.ProcessEnv = process.env): string {
   const override = env[OPENCODE_BIN_ENV]?.trim();
-  return override !== undefined && override !== ''
-    ? override
-    : OPENCODE_DEFAULT_BIN;
+  if (override !== undefined && override !== '') {
+    return override;
+  }
+
+  return OPENCODE_DEFAULT_BIN;
 }
 
 /**
@@ -103,9 +106,53 @@ function composePrompt(run: ConversationBackendRun): string {
     }
   }
   const systemPrompt = run.systemPrompt?.trim();
-  return systemPrompt !== undefined && systemPrompt !== ''
-    ? `${systemPrompt}\n\n${latestUser}`
-    : latestUser;
+  if (systemPrompt !== undefined && systemPrompt !== '') {
+    return `${systemPrompt}\n\n${latestUser}`;
+  }
+
+  return latestUser;
+}
+
+/** `local/<modelId>` when a custom endpoint provider is defined, else the raw model. */
+function resolveModel(
+  run: ConversationBackendRun,
+  endpoint: LocalEndpoint | undefined,
+): string {
+  if (endpoint === undefined) {
+    return run.model;
+  }
+
+  return `${LOCAL_ENDPOINT_PROVIDER_ID}/${run.model}`;
+}
+
+interface LocalEndpoint {
+  readonly baseUrl: string;
+  readonly model: string;
+}
+
+/** The discovered local endpoint, only when the run names a URL and a model. */
+function resolveEndpoint(
+  run: ConversationBackendRun,
+): LocalEndpoint | undefined {
+  const { baseUrl } = run;
+
+  if (baseUrl === undefined || baseUrl === '' || run.model === '') {
+    return undefined;
+  }
+
+  return { baseUrl, model: run.model };
+}
+
+/** Child env: the run's `mcpEnv` plus `OPENCODE_CONFIG` when a config was written. */
+function resolveChildEnv(
+  run: ConversationBackendRun,
+  mcpConfigFile: OpencodeMcpConfigFile | null,
+): Record<string, string> | undefined {
+  if (mcpConfigFile === null) {
+    return run.mcpEnv === undefined ? undefined : { ...run.mcpEnv };
+  }
+
+  return { ...run.mcpEnv, OPENCODE_CONFIG: mcpConfigFile.path };
 }
 
 async function* streamOpencode(
@@ -126,28 +173,14 @@ async function* streamOpencode(
   // A discovered local endpoint (run.baseUrl) is targeted by defining a custom
   // `@ai-sdk/openai-compatible` provider in the same temp config, keyed
   // `LOCAL_ENDPOINT_PROVIDER_ID`; the model is then `local/<modelId>`.
-  const endpoint =
-    run.baseUrl !== undefined && run.baseUrl !== '' && run.model !== ''
-      ? { baseUrl: run.baseUrl, model: run.model }
-      : undefined;
+  const endpoint = resolveEndpoint(run);
   const mcpConfigFile: OpencodeMcpConfigFile | null = writeOpencodeMcpConfig(
     run.mcpServers ?? {},
     run.permissionMode,
     endpoint,
   );
-  const childEnv =
-    run.mcpEnv !== undefined || mcpConfigFile !== null
-      ? {
-          ...(run.mcpEnv ?? {}),
-          ...(mcpConfigFile !== null
-            ? { OPENCODE_CONFIG: mcpConfigFile.path }
-            : {}),
-        }
-      : undefined;
-  const model =
-    endpoint !== undefined
-      ? `${LOCAL_ENDPOINT_PROVIDER_ID}/${run.model}`
-      : run.model;
+  const childEnv = resolveChildEnv(run, mcpConfigFile);
+  const model = resolveModel(run, endpoint);
 
   // Abort + timeouts are managed explicitly (not via the spawn `signal` option)
   // so teardown escalates SIGTERM→SIGKILL rather than a single signal. sessionId
@@ -192,7 +225,9 @@ async function* streamOpencode(
   );
 
   wallTimer.unref();
-  const onAbort = (): void => terminate('cancelled');
+  const onAbort = (): void => {
+    return terminate('cancelled');
+  };
 
   run.signal?.addEventListener('abort', onAbort, { once: true });
   if (run.signal?.aborted === true) {
@@ -248,12 +283,7 @@ async function* streamOpencode(
       error !== null ||
       (code !== null && code !== 0);
     const message =
-      terminationReason ??
-      (error !== null
-        ? error.message
-        : stderr.trim() !== ''
-          ? stderr.trim()
-          : `opencode exited with code ${code}`);
+      terminationReason ?? describeExit('opencode', { code, error, stderr });
     yield {
       delta: '',
       done: true,

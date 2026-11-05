@@ -59,7 +59,9 @@ var logHookError = (message, err) => {
 };
 
 // packages/agentic-hooks/src/config/env.ts
-var userConfigDir = () => import_node_path.default.join(import_node_os.default.homedir(), ".openthrottle");
+var userConfigDir = () => {
+  return import_node_path.default.join(import_node_os.default.homedir(), ".openthrottle");
+};
 var OT_MARKER_REL = import_node_path.default.join(
   "applications",
   "openthrottle-server",
@@ -131,13 +133,19 @@ var readEnvFile = (envPath) => {
   }
   return out;
 };
-var readRepoEnvFile = (repoRoot) => isOpenThrottleCheckout(repoRoot) ? readEnvFile(import_node_path.default.join(repoRoot, ".env")) : {};
-var readUserEnvFile = () => readEnvFile(import_node_path.default.join(userConfigDir(), ".env"));
-var envLayers = (repoRoot, options) => [
-  repoRoot ? readRepoEnvFile(repoRoot) : {},
-  ...options?.includeProcessEnv === false ? [] : [process.env],
-  readUserEnvFile()
-];
+var readRepoEnvFile = (repoRoot) => {
+  return isOpenThrottleCheckout(repoRoot) ? readEnvFile(import_node_path.default.join(repoRoot, ".env")) : {};
+};
+var readUserEnvFile = () => {
+  return readEnvFile(import_node_path.default.join(userConfigDir(), ".env"));
+};
+var envLayers = (repoRoot, options) => {
+  return [
+    repoRoot ? readRepoEnvFile(repoRoot) : {},
+    ...options?.includeProcessEnv === false ? [] : [process.env],
+    readUserEnvFile()
+  ];
+};
 var resolveOtEnv = (repoRoot, key, options) => {
   for (const layer of envLayers(repoRoot, options)) {
     const value = layer[key];
@@ -148,7 +156,9 @@ var resolveOtEnv = (repoRoot, key, options) => {
   return "";
 };
 var LOOPBACK_AUTHORITY = /^([a-z][a-z0-9+.-]*:\/\/(?:[^/?#@]*@)?)localhost(?=[:/?#]|$)/i;
-var normalizeLoopbackHost = (url) => url.replace(LOOPBACK_AUTHORITY, "$1127.0.0.1");
+var normalizeLoopbackHost = (url) => {
+  return url.replace(LOOPBACK_AUTHORITY, "$1127.0.0.1");
+};
 var graphqlUrlFromEnvMap = (env) => {
   const explicit = env.OPENTHROTTLE_GRAPHQL_URL?.trim() || env.OPENTHROTTLE_WORKER_GRAPHQL_URL?.trim();
   if (explicit) {
@@ -169,22 +179,34 @@ var resolveGraphqlUrl = (repoRoot, options) => {
   }
   return null;
 };
-var resolveAuthToken = (repoRoot, options) => resolveOtEnv(repoRoot, "OPENTHROTTLE_MCP_AUTH_TOKEN", options) || resolveOtEnv(repoRoot, "OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN", options) || "";
+var resolveAuthToken = (repoRoot, options) => {
+  return resolveOtEnv(repoRoot, "OPENTHROTTLE_MCP_AUTH_TOKEN", options) || resolveOtEnv(repoRoot, "OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN", options) || "";
+};
 
 // packages/agentic-hooks/src/data/jsonl.ts
 var TELEMETRY_DIR_BASENAME = "skill-usage";
 var EVENTS_JSONL_BASENAME = "events.jsonl";
 var STARTS_DIR_BASENAME = "starts";
-var resolveTelemetryDir = () => process.env.OPENTHROTTLE_TELEMETRY_DIR?.trim() || import_node_path2.default.join(userConfigDir(), TELEMETRY_DIR_BASENAME);
+var resolveTelemetryDir = () => {
+  return process.env.OPENTHROTTLE_TELEMETRY_DIR?.trim() || import_node_path2.default.join(userConfigDir(), TELEMETRY_DIR_BASENAME);
+};
 var appendJsonl = (jsonlPath, event) => {
   import_node_fs2.default.mkdirSync(import_node_path2.default.dirname(jsonlPath), { recursive: true });
   import_node_fs2.default.appendFileSync(jsonlPath, `${JSON.stringify(event)}
 `, "utf8");
 };
-var defaultJsonlPath = () => import_node_path2.default.join(resolveTelemetryDir(), EVENTS_JSONL_BASENAME);
-var defaultStartsDir = () => import_node_path2.default.join(resolveTelemetryDir(), STARTS_DIR_BASENAME);
-var sanitizeSessionId = (sessionId) => String(sessionId).replace(/[^A-Za-z0-9._-]/g, "-");
-var startsFilePathForSession = (startsDir, sessionId) => import_node_path2.default.join(startsDir, `${sanitizeSessionId(sessionId)}.jsonl`);
+var defaultJsonlPath = () => {
+  return import_node_path2.default.join(resolveTelemetryDir(), EVENTS_JSONL_BASENAME);
+};
+var defaultStartsDir = () => {
+  return import_node_path2.default.join(resolveTelemetryDir(), STARTS_DIR_BASENAME);
+};
+var sanitizeSessionId = (sessionId) => {
+  return String(sessionId).replace(/[^A-Za-z0-9._-]/g, "-");
+};
+var startsFilePathForSession = (startsDir, sessionId) => {
+  return import_node_path2.default.join(startsDir, `${sanitizeSessionId(sessionId)}.jsonl`);
+};
 
 // packages/agentic-hooks/src/config/describe.ts
 var TELEMETRY_CONFIG_SOURCES = Object.freeze({
@@ -199,7 +221,9 @@ var TELEMETRY_CONFIG_SOURCES = Object.freeze({
 });
 
 // packages/nodejs-utils/src/utils/is-record.ts
-var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
+var isRecord = (value) => {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+};
 
 // packages/agentic-hooks/src/data/checkpoints.ts
 var DEFAULT_STALE_CHECKPOINT_MS = 6 * 60 * 60 * 1e3;
@@ -212,7 +236,9 @@ var PRIVACY_LEVELS = Object.freeze({
 });
 var DEFAULT_PRIVACY_LEVEL = PRIVACY_LEVELS.TRUNCATED;
 var FOREIGN_PRIVACY_LEVEL = PRIVACY_LEVELS.NAME_ONLY;
-var resolvePrivacyLevel = (repoRoot) => isOpenThrottleCheckout(repoRoot) ? DEFAULT_PRIVACY_LEVEL : FOREIGN_PRIVACY_LEVEL;
+var resolvePrivacyLevel = (repoRoot) => {
+  return isOpenThrottleCheckout(repoRoot) ? DEFAULT_PRIVACY_LEVEL : FOREIGN_PRIVACY_LEVEL;
+};
 var DEFAULT_ARGS_MAX_LEN = 256;
 var SECRET_PATTERNS = [
   /\bBearer\s+[A-Za-z0-9._\-+=/]+/gi,
@@ -230,18 +256,25 @@ var redactSecrets = (value) => {
   }
   return out;
 };
+var stringifyArgs = (args) => {
+  if (args == null) {
+    return "";
+  }
+  if (typeof args === "string") {
+    return args;
+  }
+  try {
+    return JSON.stringify(args);
+  } catch {
+    return String(args);
+  }
+};
 var applyPrivacy = (level, args, options = {}) => {
   const maxLen = options.maxLen ?? DEFAULT_ARGS_MAX_LEN;
   if (level === PRIVACY_LEVELS.NAME_ONLY) {
     return null;
   }
-  const asString = args == null ? "" : typeof args === "string" ? args : (() => {
-    try {
-      return JSON.stringify(args);
-    } catch {
-      return String(args);
-    }
-  })();
+  const asString = stringifyArgs(args);
   const redacted = redactSecrets(asString);
   if (level === PRIVACY_LEVELS.FULL) {
     return redacted;
@@ -416,7 +449,9 @@ var PERMANENT_GRAPHQL_CODES = [
   "GRAPHQL_VALIDATION_FAILED"
 ];
 var TRANSIENT_CLIENT_STATUSES = [401, 403, 408, 429];
-var isPermanentHttpStatus = (status) => status >= 400 && status < 500 && !TRANSIENT_CLIENT_STATUSES.includes(status);
+var isPermanentHttpStatus = (status) => {
+  return status >= 400 && status < 500 && !TRANSIENT_CLIENT_STATUSES.includes(status);
+};
 var readStatusCode = (extensions) => {
   const original = extensions.originalError;
   if (isRecord(original) && typeof original.statusCode === "number") {
@@ -444,12 +479,16 @@ var readGraphqlErrors = (payload) => {
   }
   return { message: messages.join("; "), permanent };
 };
-var readMutationData = (payload, field) => isRecord(payload) && isRecord(payload.data) ? payload.data[field] : void 0;
-var transient = (reason) => ({
-  ok: false,
-  permanent: false,
-  reason
-});
+var readMutationData = (payload, field) => {
+  return isRecord(payload) && isRecord(payload.data) ? payload.data[field] : void 0;
+};
+var transient = (reason) => {
+  return {
+    ok: false,
+    permanent: false,
+    reason
+  };
+};
 var postMutation = async ({
   authToken,
   fetchImpl,
@@ -480,8 +519,13 @@ var postMutation = async ({
       signal: AbortSignal.timeout(timeoutMs)
     });
   } catch (err) {
-    const reason = err instanceof Error && err.name === "TimeoutError" ? "timeout" : err instanceof Error ? err.message : String(err);
-    return transient(reason);
+    if (err instanceof Error && err.name === "TimeoutError") {
+      return transient("timeout");
+    }
+    if (err instanceof Error) {
+      return transient(err.message);
+    }
+    return transient(String(err));
   }
   let payload;
   try {
@@ -556,7 +600,9 @@ var recordSkillStart = ({
 var MAX_TOKEN_USAGE_BATCH_BYTES = 64 * 1024;
 
 // packages/agentic-hooks/src/data/persist.ts
-var forLog = (graphqlUrl) => graphqlUrl.replace(/^([a-z][a-z0-9+.-]*:\/\/)[^/?#]*@/i, "$1***@");
+var forLog = (graphqlUrl) => {
+  return graphqlUrl.replace(/^([a-z][a-z0-9+.-]*:\/\/)[^/?#]*@/i, "$1***@");
+};
 var DEFAULT_POST_TIMEOUT_MS = 750;
 var DEFAULT_ABANDONED_MS = 6 * 60 * 60 * 1e3;
 var postSkillUsageEvent = async ({
@@ -576,7 +622,9 @@ var postSkillUsageEvent = async ({
     variables: { input: toRecordSkillUsageInput(event) }
   });
 };
-var resolveTimeout = (timeoutMs) => timeoutMs ?? (Number(process.env.OPENTHROTTLE_TELEMETRY_TIMEOUT_MS) || DEFAULT_POST_TIMEOUT_MS);
+var resolveTimeout = (timeoutMs) => {
+  return timeoutMs ?? (Number(process.env.OPENTHROTTLE_TELEMETRY_TIMEOUT_MS) || DEFAULT_POST_TIMEOUT_MS);
+};
 var persistUsageEvent = async ({
   event,
   repoRoot,
@@ -647,7 +695,9 @@ var PLAN_RUN_ABANDONED_MS = 6 * 60 * 60 * 1e3;
 // packages/agentic-hooks/src/adapters/codex/payload.ts
 var CODEX_SOURCE = "codex";
 var SLASH_COMMAND_PATTERN = /^\s*\/([A-Za-z0-9][\w.:-]*)\s*([\s\S]*)$/;
-var readString = (value) => typeof value === "string" && value ? value : null;
+var readString = (value) => {
+  return typeof value === "string" && value ? value : null;
+};
 var normalizeCodexPayload = (raw) => {
   if (!isRecord(raw) || raw.hook_event_name !== "UserPromptSubmit") {
     return null;

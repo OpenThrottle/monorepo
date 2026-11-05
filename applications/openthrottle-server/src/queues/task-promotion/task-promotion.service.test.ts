@@ -54,8 +54,8 @@ describe('TaskPromotionService.promote', () => {
     WorkLedgerCaptureService['recordStatusChange']
   >;
 
-  const buildTask = (overrides: Partial<Task> = {}): Task =>
-    tasksFactory.build({
+  const buildTask = (overrides: Partial<Task> = {}): Task => {
+    return tasksFactory.build({
       assignee: 'visormatt',
       category: 'feature',
       description: 'The body of the task.',
@@ -66,6 +66,7 @@ describe('TaskPromotionService.promote', () => {
       title: 'Do the important thing',
       ...overrides,
     });
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();

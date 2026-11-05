@@ -19,12 +19,14 @@ export const docEntryHref = (entry: DocEntry): string => {
  */
 const SEARCH_FIELDS = ['title', 'description', 'group', 'content'] as const;
 
-const fieldHaystacks = (entry: DocEntry): readonly string[] => [
-  entry.title.toLowerCase(),
-  (entry.description ?? '').toLowerCase(),
-  entry.group.toLowerCase(),
-  entry.content.toLowerCase(),
-];
+const fieldHaystacks = (entry: DocEntry): readonly string[] => {
+  return [
+    entry.title.toLowerCase(),
+    (entry.description ?? '').toLowerCase(),
+    entry.group.toLowerCase(),
+    entry.content.toLowerCase(),
+  ];
+};
 
 /**
  * Filter and rank manifest entries against a free-text query, fully in-memory

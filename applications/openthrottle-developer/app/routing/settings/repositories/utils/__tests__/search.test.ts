@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 import {
   mockCheckout,
   mockRepository,
-} from '~/routing/settings/repositories/data/mock.repositories';
+} from '~/routing/settings/repositories/testing/mock-repositories';
 
 import { buildRepositoryRows } from '../rows';
 import { filterRepositoryRows } from '../search';

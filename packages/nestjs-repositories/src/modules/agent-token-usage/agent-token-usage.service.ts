@@ -100,8 +100,9 @@ const exclusiveEndInstant = (end: string): string => {
 const CAPTURE_SOURCE_EXPRESSION = "COALESCE(NULLIF(u.source, ''), u.provider)";
 
 /** SUM(expr) → number, coalescing NULL (no rows) to 0. */
-const toNumber = (value: unknown): number =>
-  value == null ? 0 : Number(value);
+const toNumber = (value: unknown): number => {
+  return value == null ? 0 : Number(value);
+};
 
 @Injectable()
 export class AgentTokenUsageService {

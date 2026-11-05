@@ -16,9 +16,9 @@ import {
 } from 'react-router';
 
 /** Wrap a tree in the shared app providers used across component tests. */
-const withProviders = (node: React.ReactElement): React.ReactElement => (
-  <TooltipProvider>{node}</TooltipProvider>
-);
+const withProviders = (node: React.ReactElement): React.ReactElement => {
+  return <TooltipProvider>{node}</TooltipProvider>;
+};
 
 /**
  * @description Re-export for tests that need custom stub routes (multiple paths, route-level ErrorBoundary, loaders). Prefer {@link renderRoutesStub} or {@link renderRouteHarness}.

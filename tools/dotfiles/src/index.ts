@@ -13,18 +13,24 @@ import pluginSimpleImportSort from 'eslint-plugin-simple-import-sort';
 import tslint from 'typescript-eslint';
 
 import { componentPrimitiveShape } from './rules/component-primitive-shape.ts';
+import { dataFileShape } from './rules/data-file-shape.ts';
 import { hookPrimitiveShape } from './rules/hook-primitive-shape.ts';
+import { longStringTemplateLiteral } from './rules/long-string-template-literal.ts';
+import { namedFunctionBlockBody } from './rules/named-function-block-body.ts';
 import { nestjsFileExports } from './rules/nestjs-file-exports.ts';
 import { nestjsFileNaming } from './rules/nestjs-file-naming.ts';
 import { planTaskStatusChokepoint } from './rules/plan-task-status-chokepoint.ts';
 import { preHooksUnpack } from './rules/pre-hooks-unpack.ts';
 import { routePrimitiveShape } from './rules/route-primitive-shape.ts';
+import { threeLineTernary } from './rules/three-line-ternary.ts';
 import { getDirname } from './vite-config.ts';
 
 /** @public */
 export type { Config as EslintFlatConfig } from 'eslint/config';
 /** @public */
 export { prettierConfig } from './prettier-config.ts';
+/** @public */
+export { lintReadability, type ReadabilitySource } from './readability-lint.ts';
 /** @public */
 export {
   createViteConfig,
@@ -79,8 +85,7 @@ const CLASS_COMPOSITION_MESSAGE = `Compose classes with \`cn\` from @openthrottl
  */
 const TEMPLATE_LITERAL_CLASS_NAME_RESTRICTION = {
   message: CLASS_COMPOSITION_MESSAGE,
-  selector:
-    "JSXAttribute[name.name='className'] > JSXExpressionContainer > TemplateLiteral[expressions.length>0]",
+  selector: `JSXAttribute[name.name='className'] > JSXExpressionContainer > TemplateLiteral[expressions.length>0]`,
 };
 
 const skipEmptyGraphqlProcessor: Linter.Processor = {
@@ -96,6 +101,18 @@ const skipEmptyGraphqlProcessor: Linter.Processor = {
     return hasContent ? [code] : [];
   },
   supportsAutofix: true,
+};
+
+/**
+ * @description This file's directory: from `import.meta.url` under ESM, else
+ * the CommonJS `__dirname`.
+ */
+const resolveConfigDirname = (): string => {
+  if (typeof import.meta !== 'undefined' && import.meta.url) {
+    return getDirname(import.meta.url);
+  }
+
+  return __dirname;
 };
 
 /**
@@ -223,10 +240,7 @@ export const eslintConfig = tslint.config([
         globals: {
           process: true,
         },
-        tsconfigRootDir:
-          typeof import.meta !== 'undefined' && import.meta.url
-            ? getDirname(import.meta.url)
-            : __dirname,
+        tsconfigRootDir: resolveConfigDirname(),
       },
     },
 
@@ -241,12 +255,16 @@ export const eslintConfig = tslint.config([
       openthrottle: {
         rules: {
           'component-primitive-shape': componentPrimitiveShape,
+          'data-file-shape': dataFileShape,
           'hook-primitive-shape': hookPrimitiveShape,
+          'long-string-template-literal': longStringTemplateLiteral,
+          'named-function-block-body': namedFunctionBlockBody,
           'nestjs-file-exports': nestjsFileExports,
           'nestjs-file-naming': nestjsFileNaming,
           'plan-task-status-chokepoint': planTaskStatusChokepoint,
           'pre-hooks-unpack': preHooksUnpack,
           'route-primitive-shape': routePrimitiveShape,
+          'three-line-ternary': threeLineTernary,
         },
       },
       perfectionist: pluginPerfectionist,
@@ -325,6 +343,21 @@ export const eslintConfig = tslint.config([
       // at `error`, and because a "useless" assignment is occasionally a typo
       // masking a bug, which wants a human read rather than a blind delete.
       'no-useless-assignment': 'warn',
+      // "Long strings are template literals" (code-style.md). A custom rule
+      // rather than `quotes: ['error', 'backtick']`, which would rewrite every
+      // short string in the repo; this reports only a quoted string Prettier
+      // wrapped below its key or `=`. Autofixable. `warn` until migrated.
+      'openthrottle/long-string-template-literal': 'warn',
+      // "Named functions use block bodies" (code-style.md). A custom rule
+      // rather than core `arrow-body-style`, which would also hit every inline
+      // callback — those are exempt by decision. Autofixable; the existing
+      // sites were migrated with `eslint --fix`.
+      'openthrottle/named-function-block-body': 'error',
+      // "A ternary takes at most three lines" (code-style.md), JSX
+      // conditionals included. A custom rule rather than core
+      // `multiline-ternary`, which fights Prettier's width-based wrapping. No
+      // autofix — the fix is a human naming the condition or branches.
+      'openthrottle/three-line-ternary': 'error',
       // Interface-member and enum alphabetization, replacing
       // eslint-plugin-typescript-sort-keys. That plugin is abandoned (peer range
       // `^7 || ^8`) and crashes at rule *load* under ESLint 10 —
@@ -802,6 +835,38 @@ export const nestjsEslintConfig = tslint.config([
     rules: {
       'openthrottle/nestjs-file-exports': 'warn',
       'openthrottle/nestjs-file-naming': 'warn',
+    },
+  },
+]);
+
+/**
+ * The data-folder contract: a file directly under `data/` is `data.<name>.ts`
+ * (or `mock.<name>.ts`) and exports values, never functions
+ * (docs/monorepo/code-style.md, "Data files hold data"), checked by
+ * `openthrottle/data-file-shape`.
+ *
+ * Spread this **after** `eslintConfig` in every React Router application and
+ * `packages/react-router-*` config. It is opt-in rather than part of
+ * `eslintConfig` because nx lints with cwd at the project, so a glob cannot
+ * tell those projects from the Node packages that also have a `data/` folder.
+ * `error` since the migration (plan a8cb40e5, "Migrate the data/ folder
+ * violations") brought every consumer to zero.
+ * @public
+ */
+export const dataFolderEslintConfig = tslint.config([
+  {
+    files: ['**/data/*.ts', '**/data/*.tsx'],
+    ignores: [
+      '**/*.d.ts',
+      '**/*.spec.ts',
+      '**/*.stories.tsx',
+      '**/*.test.ts',
+      '**/*.test.tsx',
+      '**/__generated__/**',
+      '**/__tests__/**',
+    ],
+    rules: {
+      'openthrottle/data-file-shape': 'error',
     },
   },
 ]);

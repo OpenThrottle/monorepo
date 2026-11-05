@@ -31,8 +31,9 @@ const asString = (value: unknown): string | undefined => {
 };
 
 /** The item discriminant, tolerating either serde spelling. */
-const itemType = (item: Record<string, unknown>): string | undefined =>
-  asString(item.item_type) ?? asString(item.type);
+const itemType = (item: Record<string, unknown>): string | undefined => {
+  return asString(item.item_type) ?? asString(item.type);
+};
 
 /**
  * `item.completed` → a chunk for the completed item. `agent_message` → text,

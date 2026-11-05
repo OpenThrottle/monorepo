@@ -8,7 +8,10 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import type { ExportedSymbol, IdeExportsResult } from '../data/view-models';
+import type {
+  ExportedSymbol,
+  IdeExportsResult,
+} from '../data/data.view-models';
 import { groupSymbolsByPath } from '../utils/groupSymbolsByPath';
 import { symbolKey } from '../utils/symbolKey';
 import { SymbolRow } from './SymbolRow';
@@ -54,6 +57,11 @@ export const ExportsList = (props: ExportsListProps): React.ReactElement => {
   // Handlers
 
   // Markup
+  const truncatedNote = (
+    <p className="text-muted-foreground px-3 text-center text-xs">
+      Symbols truncated — narrow the workspace to see more.
+    </p>
+  );
 
   // Life Cycle
 
@@ -108,11 +116,7 @@ export const ExportsList = (props: ExportsListProps): React.ReactElement => {
           })}
         </div>
       ))}
-      {result.truncated ? (
-        <p className="text-muted-foreground px-3 text-center text-xs">
-          Symbols truncated — narrow the workspace to see more.
-        </p>
-      ) : null}
+      {result.truncated ? truncatedNote : null}
     </div>
   );
 };

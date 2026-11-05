@@ -34,7 +34,9 @@ describe('AddFolderDialog Component', () => {
       },
     };
 
-    const Component = () => <AddFolderDialog {...props} />;
+    const Component = () => {
+      return <AddFolderDialog {...props} />;
+    };
     const RoutesStub = createRoutesStub([
       { Component, action: () => ({ ok: true }), path: '/' },
     ]);
@@ -97,16 +99,18 @@ const listingAtRoot = {
 };
 
 const renderPicker = (canUseNativeDialog: boolean): RenderResult => {
-  const Component = () => (
-    <AddFolderDialog
-      discoveredFolders={[]}
-      pickerCapabilities={{
-        canUseNativeDialog,
-        defaultBrowsePath: '/root',
-        roots: ['/root'],
-      }}
-    />
-  );
+  const Component = () => {
+    return (
+      <AddFolderDialog
+        discoveredFolders={[]}
+        pickerCapabilities={{
+          canUseNativeDialog,
+          defaultBrowsePath: '/root',
+          roots: ['/root'],
+        }}
+      />
+    );
+  };
   const action = async ({ request }: { request: Request }) => {
     const formData = await request.formData();
     const intent = formData.get('intent');

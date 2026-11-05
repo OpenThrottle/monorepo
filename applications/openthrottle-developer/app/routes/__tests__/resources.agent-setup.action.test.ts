@@ -14,11 +14,12 @@ const { action } = await import('../resources.agent-setup');
 
 const mockExecute = vi.mocked(executeGraphqlWithAuth);
 
-const buildArgs = (formData: Record<string, string>): Route.ActionArgs =>
-  createActionArgs<Route.ActionArgs>({
+const buildArgs = (formData: Record<string, string>): Route.ActionArgs => {
+  return createActionArgs<Route.ActionArgs>({
     body: formData,
     url: 'http://localhost/resources/agent-setup',
   });
+};
 
 describe('routes/resources.agent-setup action', () => {
   beforeEach(() => {

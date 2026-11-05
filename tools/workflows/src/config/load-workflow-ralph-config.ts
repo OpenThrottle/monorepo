@@ -106,11 +106,13 @@ type WorkflowRalphDefaultsFileV1Draft = Partial<{
   ]: WorkflowRalphDefaultsFileV1Json[K];
 }>;
 
-const isNodeErrno = (error: unknown): error is NodeJS.ErrnoException =>
-  typeof error === 'object' && error !== null && 'code' in error;
+const isNodeErrno = (error: unknown): error is NodeJS.ErrnoException => {
+  return typeof error === 'object' && error !== null && 'code' in error;
+};
 
-const isEnoent = (error: unknown): boolean =>
-  isNodeErrno(error) && error.code === 'ENOENT';
+const isEnoent = (error: unknown): boolean => {
+  return isNodeErrno(error) && error.code === 'ENOENT';
+};
 
 /**
  * @description Parses a positive integer from an env value; returns undefined if missing/invalid.
@@ -628,26 +630,30 @@ export const readWorkflowRalphConfigEnv = (
 const mergeSpawn = (
   file: WorkflowRalphDefaultsSpawnJson | undefined,
   env: WorkflowRalphDefaultsSpawnJson | undefined,
-): WorkflowRalphDefaultsSpawnJson => ({
-  ...(file?.home !== undefined ? { home: file.home } : {}),
-  ...(file?.xdgConfigHome !== undefined
-    ? { xdgConfigHome: file.xdgConfigHome }
-    : {}),
-  ...(file?.otRoot !== undefined ? { otRoot: file.otRoot } : {}),
-  ...(env?.home !== undefined ? { home: env.home } : {}),
-  ...(env?.xdgConfigHome !== undefined
-    ? { xdgConfigHome: env.xdgConfigHome }
-    : {}),
-  ...(env?.otRoot !== undefined ? { otRoot: env.otRoot } : {}),
-});
+): WorkflowRalphDefaultsSpawnJson => {
+  return {
+    ...(file?.home !== undefined ? { home: file.home } : {}),
+    ...(file?.xdgConfigHome !== undefined
+      ? { xdgConfigHome: file.xdgConfigHome }
+      : {}),
+    ...(file?.otRoot !== undefined ? { otRoot: file.otRoot } : {}),
+    ...(env?.home !== undefined ? { home: env.home } : {}),
+    ...(env?.xdgConfigHome !== undefined
+      ? { xdgConfigHome: env.xdgConfigHome }
+      : {}),
+    ...(env?.otRoot !== undefined ? { otRoot: env.otRoot } : {}),
+  };
+};
 
 const mergeDiagnostics = (
   file: WorkflowRalphDefaultsDiagnosticsJson | undefined,
   env: WorkflowRalphDefaultsDiagnosticsJson | undefined,
-): WorkflowRalphDefaultsDiagnosticsJson => ({
-  ot: env?.ot ?? file?.ot ?? false,
-  spawn: env?.spawn ?? file?.spawn ?? false,
-});
+): WorkflowRalphDefaultsDiagnosticsJson => {
+  return {
+    ot: env?.ot ?? file?.ot ?? false,
+    spawn: env?.spawn ?? file?.spawn ?? false,
+  };
+};
 
 const assertPromptLayersCompatible = (
   promptFile: string | undefined,
@@ -682,10 +688,8 @@ export const loadWorkflowRalphConfig = (
   const iterationTimeout = envLayer.iterationTimeout ?? file.iterationTimeout;
   const model = envLayer.model ?? file.model ?? DEFAULT_RALPH_MODEL;
   const projectRaw = envLayer.project ?? file.project;
-  const project =
-    projectRaw !== undefined && projectRaw.trim() !== ''
-      ? projectRaw.trim()
-      : undefined;
+  const projectTrimmed = projectRaw?.trim();
+  const project = projectTrimmed === '' ? undefined : projectTrimmed;
 
   return {
     backend,
@@ -716,7 +720,9 @@ export const loadWorkflowRalphConfig = (
 export const resolveWorkflowRalphTransport = (
   cwd: string = process.cwd(),
   env: NodeJS.ProcessEnv = process.env,
-): WorkflowRalphTransport => loadWorkflowRalphConfig(cwd, env).transport;
+): WorkflowRalphTransport => {
+  return loadWorkflowRalphConfig(cwd, env).transport;
+};
 
 /** @description Maps {@link WorkflowRalphDefaultsDebug} to {@link WorkflowDebugLevel}. */
 export const mapDefaultsDebugToRalphDebugLevel = (

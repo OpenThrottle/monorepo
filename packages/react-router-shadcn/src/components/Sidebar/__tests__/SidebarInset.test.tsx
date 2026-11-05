@@ -21,23 +21,25 @@ describe('SidebarInset Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => (
-      <SidebarProvider>
-        <Sidebar>
-          <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarInset {...props} />
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </SidebarContent>
-        </Sidebar>
-      </SidebarProvider>
-    );
+    const Component = () => {
+      return (
+        <SidebarProvider>
+          <Sidebar>
+            <SidebarContent>
+              <SidebarGroup>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarInset {...props} />
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </SidebarContent>
+          </Sidebar>
+        </SidebarProvider>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

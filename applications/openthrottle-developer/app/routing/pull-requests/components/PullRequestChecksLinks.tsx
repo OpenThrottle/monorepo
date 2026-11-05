@@ -56,7 +56,7 @@ export const PullRequestChecksLinks = (
             Commits (per-SHA checks)
           </a>
         </Button>
-        {pull.headSha !== null ? (
+        {pull.headSha !== null && (
           <>
             <Button asChild={true} size="sm" variant="secondary">
               <a
@@ -78,7 +78,7 @@ export const PullRequestChecksLinks = (
               </a>
             </Button>
           </>
-        ) : null}
+        )}
       </div>
     </>
   );

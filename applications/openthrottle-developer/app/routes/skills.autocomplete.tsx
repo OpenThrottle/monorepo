@@ -27,9 +27,9 @@ export const loader = async (
   const query = args.url.searchParams.get('q') ?? '';
 
   const { discoverRepoSkills } =
-    await import('~/routing/agents/data/discover-repo-skills.server');
+    await import('~/routing/agents/utils/discover-repo-skills.server');
   const { getMonorepoRoot } =
-    await import('~/routing/agents/data/resolve-monorepo-root.server');
+    await import('~/routing/agents/utils/resolve-monorepo-root.server');
 
   const diskEntries = discoverRepoSkills(getMonorepoRoot());
 

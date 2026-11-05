@@ -21,8 +21,8 @@ function writeFakeBin(name: string, body: string): string {
 
 // A successful streamed turn: thread.started (mints session) → a reasoning item
 // → an agent_message item → turn.completed (usage, terminal).
-const successBin = (): string =>
-  writeFakeBin(
+const successBin = (): string => {
+  return writeFakeBin(
     'codex-success.js',
     `const lines = [
       JSON.stringify({ type: 'thread.started', thread_id: 'th_1' }),
@@ -33,22 +33,25 @@ const successBin = (): string =>
     ];
     process.stdout.write(lines.join('\\n') + '\\n');`,
   );
+};
 
 // A startup failure: nothing on stdout, a message on stderr, non-zero exit.
-const errorBin = (): string =>
-  writeFakeBin(
+const errorBin = (): string => {
+  return writeFakeBin(
     'codex-error.js',
     `process.stderr.write('codex: not logged in\\n');
     process.exit(1);`,
   );
+};
 
 // Emits the session event, then hangs (no further output) until killed.
-const hangBin = (): string =>
-  writeFakeBin(
+const hangBin = (): string => {
+  return writeFakeBin(
     'codex-hang.js',
     `process.stdout.write(JSON.stringify({ type: 'thread.started', thread_id: 'th_1' }) + '\\n');
     setInterval(() => {}, 1000000);`,
   );
+};
 
 async function collect(
   run: Parameters<typeof codexConversationBackend.stream>[0],

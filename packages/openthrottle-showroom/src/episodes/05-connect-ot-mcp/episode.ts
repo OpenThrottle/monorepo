@@ -42,28 +42,23 @@ export const episode: VideoEpisode = {
   // column of all five source files, which produced one hash.
   beats: [
     {
-      action:
-        'Terminal. Run `pnpm run setup:mcp-instructions`; the printed block appears.',
+      action: `Terminal. Run \`pnpm run setup:mcp-instructions\`; the printed block appears.`,
       t: '0:00',
     },
     {
-      action:
-        'Highlight the printed `claude mcp add-json … --scope user` line.',
+      action: `Highlight the printed \`claude mcp add-json … --scope user\` line.`,
       t: '0:09',
     },
     {
-      action:
-        'Run that line in the same terminal; it confirms the server was added.',
+      action: `Run that line in the same terminal; it confirms the server was added.`,
       t: '0:15',
     },
     {
-      action:
-        'Restart the agent CLI; its banner shows `openthrottle-mcp` connected.',
+      action: `Restart the agent CLI; its banner shows \`openthrottle-mcp\` connected.`,
       t: '0:24',
     },
     {
-      action:
-        'In the agent, type: `create a plan to add request tracing, with three tasks`.',
+      action: `In the agent, type: \`create a plan to add request tracing, with three tasks\`.`,
       t: '0:31',
     },
     {
@@ -71,8 +66,7 @@ export const episode: VideoEpisode = {
       t: '0:39',
     },
     {
-      action:
-        'Switch to the browser; refresh `/plans`; the new plan is at the top with 3 tasks.',
+      action: `Switch to the browser; refresh \`/plans\`; the new plan is at the top with 3 tasks.`,
       t: '0:44',
     },
     { action: 'Outro card.', t: '0:53' },
@@ -119,10 +113,8 @@ export const episode: VideoEpisode = {
           "And in the dashboard it's more than a document — tasks that run in parallel, with every run tracked.",
         ],
       ],
-      pacingNotes:
-        'Every cue holds 1.8–2.0 words/second so the read stays unhurried with no dead air. The hook promises executable plans up front, and the close pays it off with parallel execution and tracked runs.',
-      thesis:
-        'Payoff first. Promises the outcome up front — in sixty seconds your agent will be filing plans on its own — and closes on what you do with the plan next. Lowest word count of the four, so the slowest and most breathing-room delivery. Pick this one if slowing the pace is the top priority.',
+      pacingNotes: `Every cue holds 1.8–2.0 words/second so the read stays unhurried with no dead air. The hook promises executable plans up front, and the close pays it off with parallel execution and tracked runs.`,
+      thesis: `Payoff first. Promises the outcome up front — in sixty seconds your agent will be filing plans on its own — and closes on what you do with the plan next. Lowest word count of the four, so the slowest and most breathing-room delivery. Pick this one if slowing the pace is the top priority.`,
     },
     {
       id: 'problem-first',
@@ -153,10 +145,8 @@ export const episode: VideoEpisode = {
           'And there they are in the dashboard — agents can execute these tasks in parallel, with every run tracked.',
         ],
       ],
-      pacingNotes:
-        'Every cue holds 1.8–2.2 words/second. The 0:39–0:53 stretch carries the full payoff arc: real records, executable, parallel, tracked.',
-      thesis:
-        'Why this matters. Leads with the pain: agents already make plans, but they evaporate into chat history. Strongest hook of the four; best if the short has to earn attention in the first two seconds.',
+      pacingNotes: `Every cue holds 1.8–2.2 words/second. The 0:39–0:53 stretch carries the full payoff arc: real records, executable, parallel, tracked.`,
+      thesis: `Why this matters. Leads with the pain: agents already make plans, but they evaporate into chat history. Strongest hook of the four; best if the short has to earn attention in the first two seconds.`,
     },
     {
       id: 'how-it-works',
@@ -190,10 +180,8 @@ export const episode: VideoEpisode = {
           "Refresh the dashboard and it's all there — rooted in your source code, executable in parallel, with every run tracked.",
         ],
       ],
-      pacingNotes:
-        'Every cue holds 1.9–2.2 words/second. The 0:44 line does the most connect-the-dots work of any variant: rooted in source, executable in parallel, every run tracked.',
-      thesis:
-        'How it works. Teaches while it demos: what the user scope is, why the restart matters, why the plan appears in the dashboard. Best for a skeptical developer audience that wants to know what is actually happening.',
+      pacingNotes: `Every cue holds 1.9–2.2 words/second. The 0:44 line does the most connect-the-dots work of any variant: rooted in source, executable in parallel, every run tracked.`,
+      thesis: `How it works. Teaches while it demos: what the user scope is, why the restart matters, why the plan appears in the dashboard. Best for a skeptical developer audience that wants to know what is actually happening.`,
     },
     {
       id: 'plainest',
@@ -218,13 +206,11 @@ export const episode: VideoEpisode = {
           'And there they are in the dashboard, a plan and its tasks, rooted in the actual source code.',
         ],
       ],
-      thesis:
-        'The plainest read, and the original. No hook device: it states what the command does and what you get. Carried no pacing notes of its own — it predates the three deliberate rewrites that followed it, and is kept as the baseline they were each trying to beat.',
+      thesis: `The plainest read, and the original. No hook device: it states what the command does and what you get. Carried no pacing notes of its own — it predates the three deliberate rewrites that followed it, and is kept as the baseline they were each trying to beat.`,
     },
   ],
   youtube: {
-    summary:
-      'Connect the OpenThrottle MCP server to Claude Code in one command, then ask your agent for a plan and watch it land in the dashboard.',
+    summary: `Connect the OpenThrottle MCP server to Claude Code in one command, then ask your agent for a plan and watch it land in the dashboard.`,
     tags: [
       'ai agents',
       'claude code',

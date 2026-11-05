@@ -38,7 +38,9 @@ describe('GlobalErrorBoundary Component', () => {
     };
 
     useRouteErrorMock.mockReturnValue(routeError);
-    const Component = () => <GlobalErrorBoundary {...props} />;
+    const Component = () => {
+      return <GlobalErrorBoundary {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
 
@@ -59,9 +61,9 @@ describe('GlobalErrorBoundary Component', () => {
     };
     useRouteErrorMock.mockReturnValue(routeError);
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <GlobalErrorBoundary {...props} homePath="/mail/" />
-    );
+    const Component = () => {
+      return <GlobalErrorBoundary {...props} homePath="/mail/" />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
     expect(
@@ -75,7 +77,9 @@ describe('GlobalErrorBoundary Component', () => {
 
     useRouteErrorMock.mockReturnValue(genericError);
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <GlobalErrorBoundary {...props} />;
+    const Component = () => {
+      return <GlobalErrorBoundary {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
 
@@ -90,7 +94,9 @@ describe('GlobalErrorBoundary Component', () => {
     const genericError = new Error('Refresh me');
     useRouteErrorMock.mockReturnValue(genericError);
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <GlobalErrorBoundary {...props} />;
+    const Component = () => {
+      return <GlobalErrorBoundary {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
 
@@ -104,7 +110,9 @@ describe('GlobalErrorBoundary Component', () => {
   test('renders unknown error fallback when route error is not Error or route response', () => {
     useRouteErrorMock.mockReturnValue('unexpected');
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <GlobalErrorBoundary {...props} />;
+    const Component = () => {
+      return <GlobalErrorBoundary {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
 

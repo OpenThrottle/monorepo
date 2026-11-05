@@ -97,7 +97,9 @@ describe('useGlobalErrorBoundary', () => {
     useRouteErrorMock.mockReturnValue(error);
 
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <Harness />;
+    const Component = () => {
+      return <Harness />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { rerender } = render(<RoutesStub />);
 
@@ -118,7 +120,9 @@ describe('useGlobalErrorBoundary', () => {
     useRouteErrorMock.mockReturnValue(routeError);
 
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <Harness />;
+    const Component = () => {
+      return <Harness />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 
@@ -141,7 +145,9 @@ describe('useGlobalErrorBoundary', () => {
     useRouteErrorMock.mockReturnValue(routeError);
 
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <Harness />;
+    const Component = () => {
+      return <Harness />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 
@@ -152,7 +158,9 @@ describe('useGlobalErrorBoundary', () => {
     useRouteErrorMock.mockReturnValue('unexpected');
 
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <Harness />;
+    const Component = () => {
+      return <Harness />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 
@@ -170,7 +178,9 @@ describe('useGlobalErrorBoundary', () => {
     });
 
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <Harness />;
+    const Component = () => {
+      return <Harness />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByRole } = render(<RoutesStub />);
 
@@ -182,7 +192,9 @@ describe('useGlobalErrorBoundary', () => {
     useRouteErrorMock.mockReturnValue(new Error('boom'));
 
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <Harness />;
+    const Component = () => {
+      return <Harness />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByRole, getByTestId } = render(<RoutesStub />);
 
@@ -202,7 +214,9 @@ describe('useGlobalErrorBoundary', () => {
     useRouteErrorMock.mockReturnValue(error);
 
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <Harness />;
+    const Component = () => {
+      return <Harness />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByRole } = render(<RoutesStub />);
 

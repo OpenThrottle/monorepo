@@ -3,6 +3,7 @@ import { formatFiles, generateFiles, logger } from '@nx/devkit';
 import { join } from 'path';
 import prompts from 'prompts';
 
+import { askWhenInteractive } from '../../utils/ask-when-interactive.ts';
 import { getCommonVariables } from '../../utils/index.ts';
 import { getGraphQLApplications } from '../../utils/projects.ts';
 import { REGEX_SLUG } from '../../utils/regex.ts';
@@ -32,8 +33,10 @@ export const generatorNestJSGraphQLService = async (
 
   const name =
     schema.name ??
-    (interactive
-      ? (
+    (await askWhenInteractive(
+      interactive,
+      async () =>
+        (
           await prompts({
             message: 'What is the service name?',
             name: 'name',
@@ -45,8 +48,8 @@ export const generatorNestJSGraphQLService = async (
               return true;
             },
           })
-        ).name
-      : undefined);
+        ).name,
+    ));
 
   if (!name) {
     throw new Error(

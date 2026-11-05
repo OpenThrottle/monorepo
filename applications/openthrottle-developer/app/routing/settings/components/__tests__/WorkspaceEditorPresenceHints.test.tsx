@@ -19,16 +19,20 @@ type PresenceEntry =
 const buildPresence = (
   editors: readonly PresenceEntry[],
   trusted = true,
-): GetEditorPresenceQuery['editorPresence'] => ({
-  editors: [...editors],
-  scannedAt: '2026-08-28T00:00:00.000Z',
-  trusted,
-});
+): GetEditorPresenceQuery['editorPresence'] => {
+  return {
+    editors: [...editors],
+    scannedAt: '2026-08-28T00:00:00.000Z',
+    trusted,
+  };
+};
 
 const renderHints = (
   props: WorkspaceEditorPresenceHintsProps,
 ): RenderResult => {
-  const Component = () => <WorkspaceEditorPresenceHints {...props} />;
+  const Component = () => {
+    return <WorkspaceEditorPresenceHints {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

@@ -1,6 +1,6 @@
 import { MissingWorktreeCheckoutReason } from '~/__generated__/graphql';
 import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/data.copy';
-import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/data/types';
+import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/types';
 
 /** One badge to render: a label plus the hover text that explains what it means. */
 export interface WorktreeBadge {
@@ -65,13 +65,15 @@ export const deriveWorktreeBadges = (
   const badges: WorktreeBadge[] = [];
 
   if (row.missing) {
+    const isNotAWorktree =
+      row.missingReason === MissingWorktreeCheckoutReason.NotAWorktree;
+    const notAWorktreeTitle =
+      REPOSITORIES_TABLE_COPY.missingBadgeTitleNotAWorktree;
+    const pathGoneTitle = REPOSITORIES_TABLE_COPY.missingBadgeTitlePathGone;
     badges.push({
       id: 'missing',
       label: REPOSITORIES_TABLE_COPY.missingBadge,
-      title:
-        row.missingReason === MissingWorktreeCheckoutReason.NotAWorktree
-          ? REPOSITORIES_TABLE_COPY.missingBadgeTitleNotAWorktree
-          : REPOSITORIES_TABLE_COPY.missingBadgeTitlePathGone,
+      title: isNotAWorktree ? notAWorktreeTitle : pathGoneTitle,
       tone: 'missing',
     });
   }

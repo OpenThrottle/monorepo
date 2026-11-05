@@ -26,7 +26,9 @@ import {
 
 const config = (
   extra: Omit<DriverInvocationConfig, 'iteration' | 'prompt'> = {},
-): DriverInvocationConfig => ({ iteration: 1, prompt: 'fix it', ...extra });
+): DriverInvocationConfig => {
+  return { iteration: 1, prompt: 'fix it', ...extra };
+};
 
 describe('driver reasoning effort', () => {
   it('claude emits --effort after --model, mapping extraHigh → xhigh and ultra → max', () => {

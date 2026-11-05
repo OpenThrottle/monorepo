@@ -988,15 +988,16 @@ export class PlansResolver {
   @Mutation(() => PlanObject, {
     description: `Create a plan`,
   })
-  @EmitNotification(NOTIFICATION_EVENT_NAMES.PLAN_UPDATED, (ret) =>
-    isPlanObject(ret)
-      ? {
-          message: `Plan created: ${ret.title}`,
-          planId: ret.id,
-          severity: 'success' as const,
-        }
-      : null,
-  )
+  @EmitNotification(NOTIFICATION_EVENT_NAMES.PLAN_UPDATED, (ret) => {
+    if (isPlanObject(ret)) {
+      return {
+        message: `Plan created: ${ret.title}`,
+        planId: ret.id,
+        severity: 'success' as const,
+      };
+    }
+    return null;
+  })
   async createPlan(
     @Args('input', { type: () => CreatePlanInput }) input: CreatePlanInput,
     @CurrentUser('sub') actorSub?: string,
@@ -1055,24 +1056,28 @@ export class PlansResolver {
   @EmitNotification([
     {
       event: NOTIFICATION_EVENT_NAMES.PLAN_UPDATED,
-      payload: (ret) =>
-        isPlanObject(ret)
-          ? {
-              message: `Plan updated: ${ret.title}`,
-              planId: ret.id,
-              severity: 'info' as const,
-            }
-          : null,
+      payload: (ret) => {
+        if (isPlanObject(ret)) {
+          return {
+            message: `Plan updated: ${ret.title}`,
+            planId: ret.id,
+            severity: 'info' as const,
+          };
+        }
+        return null;
+      },
     },
     {
       event: NOTIFICATION_EVENT_NAMES.PLAN_STATUS_CHANGED,
-      payload: (ret) =>
-        isPlanObject(ret)
-          ? {
-              planId: ret.id,
-              status: ret.status,
-            }
-          : null,
+      payload: (ret) => {
+        if (isPlanObject(ret)) {
+          return {
+            planId: ret.id,
+            status: ret.status,
+          };
+        }
+        return null;
+      },
     },
   ])
   async updatePlan(
@@ -1094,13 +1099,13 @@ export class PlansResolver {
     // deferred to applyStatusChange inside the transaction below, so this is the only place that
     // decides WHETHER the status changes; entity.status still reads as the pre-transition value
     // until then.
-    const statusChange =
-      input.status != null
-        ? this.planStatusService.resolveStatusChange(
-            entity.status,
-            input.status,
-          )
-        : null;
+    let statusChange: { nextStatus: string } | null = null;
+    if (input.status != null) {
+      statusChange = this.planStatusService.resolveStatusChange(
+        entity.status,
+        input.status,
+      );
+    }
     const statusChanged = statusChange != null;
 
     let touched = false;
@@ -1165,10 +1170,10 @@ export class PlansResolver {
     if (input.runConfigJson !== undefined) {
       const next = parsePlanRunConfigJson(input.runConfigJson);
       if (next !== undefined) {
-        const resolved =
-          input.runConfigJson === null
-            ? getDefaultPlanRunConfigStorage({ planId: entity.id })
-            : next;
+        let resolved = next;
+        if (input.runConfigJson === null) {
+          resolved = getDefaultPlanRunConfigStorage({ planId: entity.id });
+        }
         const prevJson = JSON.stringify(
           planRunConfigFromPlanStorage(entity.runConfig, {
             planId: entity.id,
@@ -1229,24 +1234,28 @@ export class PlansResolver {
   @EmitNotification([
     {
       event: NOTIFICATION_EVENT_NAMES.PLAN_UPDATED,
-      payload: (ret) =>
-        isPlanObject(ret)
-          ? {
-              message: `Plan status updated: ${ret.title} → ${ret.status}`,
-              planId: ret.id,
-              severity: 'info' as const,
-            }
-          : null,
+      payload: (ret) => {
+        if (isPlanObject(ret)) {
+          return {
+            message: `Plan status updated: ${ret.title} → ${ret.status}`,
+            planId: ret.id,
+            severity: 'info' as const,
+          };
+        }
+        return null;
+      },
     },
     {
       event: NOTIFICATION_EVENT_NAMES.PLAN_STATUS_CHANGED,
-      payload: (ret) =>
-        isPlanObject(ret)
-          ? {
-              planId: ret.id,
-              status: ret.status,
-            }
-          : null,
+      payload: (ret) => {
+        if (isPlanObject(ret)) {
+          return {
+            planId: ret.id,
+            status: ret.status,
+          };
+        }
+        return null;
+      },
     },
   ])
   async setPlanStatus(
@@ -1326,24 +1335,28 @@ export class PlansResolver {
   @EmitNotification([
     {
       event: NOTIFICATION_EVENT_NAMES.PLAN_UPDATED,
-      payload: (ret) =>
-        isEnqueuePlanRunResult(ret)
-          ? {
-              message: 'Plan queued for run',
-              planId: ret.planId,
-              severity: 'info' as const,
-            }
-          : null,
+      payload: (ret) => {
+        if (isEnqueuePlanRunResult(ret)) {
+          return {
+            message: 'Plan queued for run',
+            planId: ret.planId,
+            severity: 'info' as const,
+          };
+        }
+        return null;
+      },
     },
     {
       event: NOTIFICATION_EVENT_NAMES.PLAN_STATUS_CHANGED,
-      payload: (ret) =>
-        isEnqueuePlanRunResult(ret)
-          ? {
-              planId: ret.planId,
-              status: 'QUEUED',
-            }
-          : null,
+      payload: (ret) => {
+        if (isEnqueuePlanRunResult(ret)) {
+          return {
+            planId: ret.planId,
+            status: 'QUEUED',
+          };
+        }
+        return null;
+      },
     },
   ])
   async enqueuePlanRun(
@@ -1406,24 +1419,28 @@ export class PlansResolver {
   @EmitNotification([
     {
       event: NOTIFICATION_EVENT_NAMES.PLAN_UPDATED,
-      payload: (ret) =>
-        isEnqueuePlanRunResult(ret)
-          ? {
-              message: 'Plan queued for run (orchestrator)',
-              planId: ret.planId,
-              severity: 'info' as const,
-            }
-          : null,
+      payload: (ret) => {
+        if (isEnqueuePlanRunResult(ret)) {
+          return {
+            message: 'Plan queued for run (orchestrator)',
+            planId: ret.planId,
+            severity: 'info' as const,
+          };
+        }
+        return null;
+      },
     },
     {
       event: NOTIFICATION_EVENT_NAMES.PLAN_STATUS_CHANGED,
-      payload: (ret) =>
-        isEnqueuePlanRunResult(ret)
-          ? {
-              planId: ret.planId,
-              status: 'QUEUED',
-            }
-          : null,
+      payload: (ret) => {
+        if (isEnqueuePlanRunResult(ret)) {
+          return {
+            planId: ret.planId,
+            status: 'QUEUED',
+          };
+        }
+        return null;
+      },
     },
   ])
   async enqueuePlanRalphOrchestrator(
@@ -1434,12 +1451,12 @@ export class PlansResolver {
   ): Promise<EnqueuePlanRunResultObject> {
     const { planId, taskId } = input;
 
-    const mode =
-      input.mode === PlanRalphWorkflowModeGraphQL.task
-        ? ('task' as const)
-        : input.mode === PlanRalphWorkflowModeGraphQL.plan
-          ? ('plan' as const)
-          : null;
+    let mode: 'plan' | 'task' | null = null;
+    if (input.mode === PlanRalphWorkflowModeGraphQL.task) {
+      mode = 'task';
+    } else if (input.mode === PlanRalphWorkflowModeGraphQL.plan) {
+      mode = 'plan';
+    }
 
     if (mode === 'task' && (taskId === null || taskId === undefined)) {
       throw new BadRequestException('taskId is required when mode is task');
@@ -1496,14 +1513,16 @@ export class PlansResolver {
   @EmitNotification([
     {
       event: NOTIFICATION_EVENT_NAMES.PLAN_UPDATED,
-      payload: (ret) =>
-        isSchedulePlanRunResult(ret)
-          ? {
-              message: `Plan run scheduled for ${ret.scheduledFor.toISOString()}`,
-              planId: ret.planId,
-              severity: 'info' as const,
-            }
-          : null,
+      payload: (ret) => {
+        if (isSchedulePlanRunResult(ret)) {
+          return {
+            message: `Plan run scheduled for ${ret.scheduledFor.toISOString()}`,
+            planId: ret.planId,
+            severity: 'info' as const,
+          };
+        }
+        return null;
+      },
     },
   ])
   async schedulePlanRun(
@@ -1571,8 +1590,7 @@ export class PlansResolver {
         // (and pub/sub published) — the owning run stops at its next iteration boundary.
         if (ret.cancelRequested) {
           return {
-            message:
-              'Plan run cancellation requested (stops at next checkpoint)',
+            message: `Plan run cancellation requested (stops at next checkpoint)`,
             planId: ret.planId,
             severity: 'info' as const,
           };
@@ -1582,13 +1600,15 @@ export class PlansResolver {
     },
     {
       event: NOTIFICATION_EVENT_NAMES.PLAN_STATUS_CHANGED,
-      payload: (ret) =>
-        isCancelPlanRunResult(ret) && ret.planStatusAfter != null
-          ? {
-              planId: ret.planId,
-              status: ret.planStatusAfter,
-            }
-          : null,
+      payload: (ret) => {
+        if (isCancelPlanRunResult(ret) && ret.planStatusAfter != null) {
+          return {
+            planId: ret.planId,
+            status: ret.planStatusAfter,
+          };
+        }
+        return null;
+      },
     },
   ])
   async cancelPlanRun(

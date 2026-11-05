@@ -48,7 +48,9 @@ var import_node_fs = __toESM(require("node:fs"), 1);
 var import_node_path4 = __toESM(require("node:path"), 1);
 
 // packages/nodejs-utils/src/utils/is-record.ts
-var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
+var isRecord = (value) => {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+};
 
 // packages/agentic-hooks/src/config/env.ts
 var import_node_path = __toESM(require("node:path"), 1);
@@ -121,7 +123,9 @@ var PLAN_RUNS_DIR_REL = import_node_path3.default.join(".cache", "plan-runs");
 var PLAN_RUN_ABANDONED_MS = 6 * 60 * 60 * 1e3;
 
 // packages/agentic-hooks/src/memory/index-budget.ts
-var measureIndex = (content) => content.length;
+var measureIndex = (content) => {
+  return content.length;
+};
 var INFERRED_INJECTION_CAP = 25e3;
 var DEFAULT_BUDGET = Math.floor(INFERRED_INJECTION_CAP * 0.9);
 var ENTRY_PATTERN = /^\s*[-*]\s*\[([^\]]*)\]\(([^)]*)\)/;
@@ -184,10 +188,12 @@ var formatLostEntries = (lost) => {
   const lines = named.map(
     (entry) => `  - ${entry.title} (${entry.file})  [line ${entry.line}]`
   );
-  return elided > 0 ? [
-    `  …and ${elided} earlier ${elided === 1 ? "entry" : "entries"}, plus these ${named.length} newest:`,
-    ...lines
-  ].join("\n") : lines.join("\n");
+  if (elided === 0) {
+    return lines.join("\n");
+  }
+  const noun = elided === 1 ? "entry" : "entries";
+  const header = `  …and ${elided} earlier ${noun}, plus these ${named.length} newest:`;
+  return [header, ...lines].join("\n");
 };
 var formatBudgetReport = (report) => {
   if (!report.overBudget) return "";
@@ -211,7 +217,9 @@ ${remedy}`;
 };
 
 // packages/agentic-hooks/src/adapters/claude/memory-index-guard.ts
-var isMemoryIndexPath = (filePath) => import_node_path4.default.basename(filePath) === "MEMORY.md" && import_node_path4.default.basename(import_node_path4.default.dirname(filePath)) === "memory";
+var isMemoryIndexPath = (filePath) => {
+  return import_node_path4.default.basename(filePath) === "MEMORY.md" && import_node_path4.default.basename(import_node_path4.default.dirname(filePath)) === "memory";
+};
 var readEditedPath = (raw) => {
   if (!isRecord(raw)) return null;
   const toolInput = isRecord(raw.tool_input) ? raw.tool_input : {};

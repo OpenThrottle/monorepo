@@ -6,8 +6,8 @@ import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/skills.$slug';
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
-import type { SkillDetailUsageData } from '~/routing/skills/data/skill-usage-detail';
+import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
+import type { SkillDetailUsageData } from '~/routing/skills/types';
 import { buildRootMatch } from '~/testing/root-match-fixture';
 
 import Component from '../skills.$slug';
@@ -31,30 +31,34 @@ const emptyUsage: SkillDetailUsageData = {
 const loaderDataFor = (
   content: string,
   usage: SkillDetailUsageData = emptyUsage,
-) => ({
-  content,
-  editable: true,
-  entry,
-  metadata: {},
-  rawContent: content,
-  runOptions: Promise.resolve({ models: [], repositories: [] }),
-  tagVocabulary: [],
-  usage: Promise.resolve(usage),
-});
+) => {
+  return {
+    content,
+    editable: true,
+    entry,
+    metadata: {},
+    rawContent: content,
+    runOptions: Promise.resolve({ models: [], repositories: [] }),
+    tagVocabulary: [],
+    usage: Promise.resolve(usage),
+  };
+};
 
 const matchesFor = (
   content: string,
   usage?: SkillDetailUsageData,
-): Route.ComponentProps['matches'] => [
-  buildRootMatch(),
-  {
-    handle: undefined,
-    id: 'routes/skills.$slug',
-    loaderData: loaderDataFor(content, usage),
-    params: { slug: 'ot-plans' },
-    pathname: '/skills/ot-plans',
-  },
-];
+): Route.ComponentProps['matches'] => {
+  return [
+    buildRootMatch(),
+    {
+      handle: undefined,
+      id: 'routes/skills.$slug',
+      loaderData: loaderDataFor(content, usage),
+      params: { slug: 'ot-plans' },
+      pathname: '/skills/ot-plans',
+    },
+  ];
+};
 
 const renderRoute = (
   content: string,
@@ -66,16 +70,18 @@ const renderRoute = (
   const loaderData = loaderDataFor(content, usage);
   const matches = matchesFor(content, usage);
   // useFetcher in the route component requires a data router.
-  const Wrapped = () => (
-    <TooltipProvider>
-      <Component
-        actionData={undefined}
-        loaderData={loaderData}
-        matches={matches}
-        params={{ slug: 'ot-plans' }}
-      />
-    </TooltipProvider>
-  );
+  const Wrapped = () => {
+    return (
+      <TooltipProvider>
+        <Component
+          actionData={undefined}
+          loaderData={loaderData}
+          matches={matches}
+          params={{ slug: 'ot-plans' }}
+        />
+      </TooltipProvider>
+    );
+  };
   const RoutesStub = createRoutesStub([{ Component: Wrapped, path: '/' }]);
 
   return render(<RoutesStub initialEntries={[initialPath]} />);

@@ -13,15 +13,17 @@ describe('GlobalPopoverConfirmDialog Component', () => {
   });
 
   test('renders title, description, and default action labels', () => {
-    const Component = (): React.ReactElement => (
-      <GlobalPopoverConfirmDialog
-        description="Really delete?"
-        fields={{ id: '1', intent: 'delete' }}
-        onOpenChange={vi.fn()}
-        open={true}
-        title="Delete item"
-      />
-    );
+    const Component = (): React.ReactElement => {
+      return (
+        <GlobalPopoverConfirmDialog
+          description="Really delete?"
+          fields={{ id: '1', intent: 'delete' }}
+          onOpenChange={vi.fn()}
+          open={true}
+          title="Delete item"
+        />
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
 
@@ -46,16 +48,18 @@ describe('GlobalPopoverConfirmDialog Component', () => {
     const state: { submitted: FormData | null } = { submitted: null };
 
     // eslint-disable-next-line react/no-multi-comp -- test-local route wrapper
-    const Component = (): React.ReactElement => (
-      <GlobalPopoverConfirmDialog
-        confirmLabel="Yes, delete"
-        description="Gone forever"
-        fields={{ id: 'row-9', intent: 'deleteRepo' }}
-        onOpenChange={vi.fn()}
-        open={true}
-        title="Delete"
-      />
-    );
+    const Component = (): React.ReactElement => {
+      return (
+        <GlobalPopoverConfirmDialog
+          confirmLabel="Yes, delete"
+          description="Gone forever"
+          fields={{ id: 'row-9', intent: 'deleteRepo' }}
+          onOpenChange={vi.fn()}
+          open={true}
+          title="Delete"
+        />
+      );
+    };
     const RoutesStub = createRoutesStub([
       {
         Component,

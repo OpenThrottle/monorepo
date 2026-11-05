@@ -39,8 +39,7 @@ afterAll(() => {
 describe('resolveOpenThrottlePostgresConnectionStringFromEnv', () => {
   it('prefers OPENTHROTTLE_POSTGRES_URL over POSTGRES_URL', () => {
     const conn = resolveOpenThrottlePostgresConnectionStringFromEnv({
-      [OPENTHROTTLE_POSTGRES_URL_ENV]:
-        'postgresql://openthrottle@db.example:5432/openthrottle',
+      [OPENTHROTTLE_POSTGRES_URL_ENV]: `postgresql://openthrottle@db.example:5432/openthrottle`,
       POSTGRES_URL: 'postgresql://foreign@localhost:5432/wrong_db',
     });
 

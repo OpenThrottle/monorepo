@@ -38,7 +38,9 @@ const installed: AgentCliStatus = {
 const renderControls = (
   props: React.ComponentProps<typeof SettingsAgentsCliControls>,
 ) => {
-  const Component = () => <SettingsAgentsCliControls {...props} />;
+  const Component = () => {
+    return <SettingsAgentsCliControls {...props} />;
+  };
   const RoutesStub = createRoutesStub([
     { Component, path: '/' },
     { action: () => ({ ok: true }), path: '/resources/agent-setup' },

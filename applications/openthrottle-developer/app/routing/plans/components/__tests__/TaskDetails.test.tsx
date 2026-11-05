@@ -32,7 +32,9 @@ const mockTask: PlanTaskRowFragment = {
 };
 
 const renderTaskDetails = (props: TaskDetailsProps): RenderResult => {
-  const Component = (): React.ReactElement => <TaskDetails {...props} />;
+  const Component = (): React.ReactElement => {
+    return <TaskDetails {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

@@ -6,17 +6,19 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
 
-import type { EditorFile } from '../../data/atom.editor';
-import { editorAtom, editorAtomDefaults } from '../../data/atom.editor';
+import type { EditorFile } from '../../data/data.atom.editor';
+import { editorAtom, editorAtomDefaults } from '../../data/data.atom.editor';
 import type { EditorTabProps } from '../EditorTab';
 import { EditorTab } from '../EditorTab';
 
-const file = (overrides: Partial<EditorFile> = {}): EditorFile => ({
-  directory: '.',
-  filename: 'a.md',
-  language: 'markdown',
-  ...overrides,
-});
+const file = (overrides: Partial<EditorFile> = {}): EditorFile => {
+  return {
+    directory: '.',
+    filename: 'a.md',
+    language: 'markdown',
+    ...overrides,
+  };
+};
 
 interface FakeDataTransfer {
   readonly dropEffect: string;
@@ -61,11 +63,13 @@ const renderTab = (
     ...props,
   };
 
-  const Component = (): React.ReactElement => (
-    <Provider store={store}>
-      <EditorTab {...defaultProps} />
-    </Provider>
-  );
+  const Component = (): React.ReactElement => {
+    return (
+      <Provider store={store}>
+        <EditorTab {...defaultProps} />
+      </Provider>
+    );
+  };
 
   const RoutesStub = createRoutesStub([{ Component, path: '/prompts/*' }]);
 

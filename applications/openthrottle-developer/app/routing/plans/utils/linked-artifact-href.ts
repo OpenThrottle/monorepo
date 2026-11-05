@@ -28,15 +28,19 @@ const NO_DESTINATION: LinkedArtifactDestination = { kind: 'none' };
  */
 const GITHUB_ORIGIN = 'https://github.com';
 
-const external = (href: string): LinkedArtifactDestination => ({
-  href,
-  kind: 'external',
-});
+const external = (href: string): LinkedArtifactDestination => {
+  return {
+    href,
+    kind: 'external',
+  };
+};
 
-const internal = (to: string): LinkedArtifactDestination => ({
-  kind: 'internal',
-  to,
-});
+const internal = (to: string): LinkedArtifactDestination => {
+  return {
+    kind: 'internal',
+    to,
+  };
+};
 
 /**
  * @description Destination for one artifact row.

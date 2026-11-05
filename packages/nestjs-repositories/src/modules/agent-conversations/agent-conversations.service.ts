@@ -23,6 +23,7 @@ import {
   capAgentConversationToolMetadata,
   clampAgentConversationListLimit,
   clampAgentConversationMessagesLimit,
+  resolveCurrentMaxSortOrder,
 } from './agent-conversation.util.ts';
 import { AgentConversationMessage } from './agent-conversation-message.entity.ts';
 
@@ -173,10 +174,7 @@ export class AgentConversationsService {
         .where('message.conversationId = :conversationId', { conversationId })
         .getRawOne<{ max: string | null }>();
 
-      const currentMax =
-        maxSortOrderResult?.max != null && maxSortOrderResult.max !== ''
-          ? Number(maxSortOrderResult.max)
-          : 0;
+      const currentMax = resolveCurrentMaxSortOrder(maxSortOrderResult);
 
       const userSortOrder = currentMax + 1;
       const assistantSortOrder = currentMax + 2;
@@ -256,10 +254,7 @@ export class AgentConversationsService {
         .where('message.conversationId = :conversationId', { conversationId })
         .getRawOne<{ max: string | null }>();
 
-      const currentMax =
-        maxSortOrderResult?.max != null && maxSortOrderResult.max !== ''
-          ? Number(maxSortOrderResult.max)
-          : 0;
+      const currentMax = resolveCurrentMaxSortOrder(maxSortOrderResult);
 
       const entities = messages.map((message, index) => {
         const base = {

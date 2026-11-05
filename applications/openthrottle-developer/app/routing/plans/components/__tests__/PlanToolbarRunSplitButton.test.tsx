@@ -63,10 +63,11 @@ describe('PlanToolbarRunSplitButton Component', () => {
     component = render(<RoutesStub />);
   };
 
-  const getCaret = (): HTMLElement =>
-    component.getByRole('button', {
+  const getCaret = (): HTMLElement => {
+    return component.getByRole('button', {
       name: PLAN_TOOLBAR_COPY.runCaretAriaLabel,
     });
+  };
 
   beforeEach(() => {
     submitted = [];

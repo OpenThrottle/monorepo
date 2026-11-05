@@ -37,19 +37,56 @@ export const SearchPlanCard = (
     result.taskId != null &&
     result.taskId !== '' &&
     result.source === 'plan';
+  const hasSimilarity = result.similarity != null;
+  const similarityPercent = Math.round((result.similarity ?? 0) * 100);
 
   // Handlers
+  const renderTaskLink = (): React.ReactNode => {
+    const { planId, taskId, taskTitle } = result;
+
+    if (!hasTaskOnPlan || planId == null) {
+      return null;
+    }
+
+    const hasTaskTitle = taskTitle != null && taskTitle !== '';
+    const label = hasTaskTitle ? `Task: ${taskTitle}` : 'View related task';
+
+    return (
+      <span className="text-muted-foreground text-sm font-normal">
+        <Link
+          className="underline-offset-4 hover:underline"
+          data-testid="SearchPlanCard-taskLink"
+          to={planOrTaskDetailHref(planId, taskId)}
+        >
+          {label}
+        </Link>
+      </span>
+    );
+  };
 
   // Markup
-  const similarityBlock =
-    result.similarity != null ? (
-      <p
-        className="text-muted-foreground text-xs"
-        data-testid="SearchPlanCard-similarity"
-      >
-        Relevance: {Math.round(result.similarity * 100)}%
-      </p>
-    ) : null;
+  const similarityText = (
+    <p
+      className="text-muted-foreground text-xs"
+      data-testid="SearchPlanCard-similarity"
+    >
+      Relevance: {similarityPercent}%
+    </p>
+  );
+  const planLink = (
+    <Link
+      className="underline-offset-4 hover:underline"
+      data-testid="SearchPlanCard-planLink"
+      prefetch="intent"
+      to={`/plans/${result.planId}`}
+    >
+      {result.planTitle ?? 'Plan'}
+    </Link>
+  );
+  const planHeading = (
+    <h3 className={TITLE_CLASS}>{result.planTitle ?? 'Plan'}</h3>
+  );
+  const taskLink = renderTaskLink();
 
   // Life Cycle
 
@@ -73,31 +110,8 @@ export const SearchPlanCard = (
             TITLE_CLASS,
           )}
         >
-          {hasPlanLink ? (
-            <Link
-              className="underline-offset-4 hover:underline"
-              data-testid="SearchPlanCard-planLink"
-              prefetch="intent"
-              to={`/plans/${result.planId}`}
-            >
-              {result.planTitle ?? 'Plan'}
-            </Link>
-          ) : (
-            <h3 className={TITLE_CLASS}>{result.planTitle ?? 'Plan'}</h3>
-          )}
-          {hasTaskOnPlan && result.planId != null ? (
-            <span className="text-muted-foreground text-sm font-normal">
-              <Link
-                className="underline-offset-4 hover:underline"
-                data-testid="SearchPlanCard-taskLink"
-                to={planOrTaskDetailHref(result.planId, result.taskId)}
-              >
-                {result.taskTitle != null && result.taskTitle !== ''
-                  ? `Task: ${result.taskTitle}`
-                  : 'View related task'}
-              </Link>
-            </span>
-          ) : null}
+          {hasPlanLink ? planLink : planHeading}
+          {taskLink}
         </CardTitle>
       </CardHeader>
       {/* <Separator /> */}
@@ -105,7 +119,7 @@ export const SearchPlanCard = (
         <p className="text-muted-foreground text-sm leading-relaxed">
           {result.content}
         </p>
-        {similarityBlock}
+        {hasSimilarity ? similarityText : null}
         <SearchWhyThisResult
           defaultOpen={defaultOpenWhy}
           rankMeta={rankMeta}

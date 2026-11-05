@@ -43,41 +43,49 @@ export interface PersistedAgentMessageRow {
 /** @public */
 export const emptyLoadAgentConversationMessagesResult = (
   overrides: Partial<LoadAgentConversationMessagesResult>,
-): LoadAgentConversationMessagesResult => ({
-  conversationId: null,
-  errorMessage: null,
-  messages: [],
-  ...overrides,
-});
+): LoadAgentConversationMessagesResult => {
+  return {
+    conversationId: null,
+    errorMessage: null,
+    messages: [],
+    ...overrides,
+  };
+};
 
 /** @public */
 export const emptyListAgentConversationsResult = (
   overrides: Partial<ListAgentConversationsResult>,
-): ListAgentConversationsResult => ({
-  conversations: [],
-  errorMessage: null,
-  totalCount: 0,
-  ...overrides,
-});
+): ListAgentConversationsResult => {
+  return {
+    conversations: [],
+    errorMessage: null,
+    totalCount: 0,
+    ...overrides,
+  };
+};
 
 /** @public */
 export const emptyMutateAgentConversationResult = (
   overrides: Partial<MutateAgentConversationResult>,
-): MutateAgentConversationResult => ({
-  conversation: null,
-  errorMessage: null,
-  ...overrides,
-});
+): MutateAgentConversationResult => {
+  return {
+    conversation: null,
+    errorMessage: null,
+    ...overrides,
+  };
+};
 
 /** Map a persisted conversation row (GraphQL) to the sidebar list-item shape. */
 const toAgentConversationListItem = (
   row: AgentConversationRow,
-): AgentConversationListItem => ({
-  id: row.id,
-  status: row.status,
-  title: row.title ?? null,
-  updatedAt: String(row.updatedAt),
-});
+): AgentConversationListItem => {
+  return {
+    id: row.id,
+    status: row.status,
+    title: row.title ?? null,
+    updatedAt: String(row.updatedAt),
+  };
+};
 
 /** Parse a non-empty trimmed string form field, or null. */
 const trimStringFormField = (
@@ -341,10 +349,8 @@ export function createAgentConversationsApi(
         title,
       });
     } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : 'Failed to rename conversation';
+      const fallback = 'Failed to rename conversation';
+      const errorMessage = error instanceof Error ? error.message : fallback;
 
       return emptyMutateAgentConversationResult({ errorMessage });
     }
@@ -365,10 +371,8 @@ export function createAgentConversationsApi(
     try {
       return await callDeleteAgentConversation(request, { conversationId });
     } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : 'Failed to delete conversation';
+      const fallback = 'Failed to delete conversation';
+      const errorMessage = error instanceof Error ? error.message : fallback;
 
       return emptyMutateAgentConversationResult({ errorMessage });
     }

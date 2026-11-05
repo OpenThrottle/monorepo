@@ -4,8 +4,9 @@ import type { DocsContentModules } from '../buildDocsManifest';
 import { buildDocsManifest } from '../buildDocsManifest';
 import { buildDocsNav } from '../buildDocsNav';
 
-const md = (frontmatter: string, body: string): string =>
-  `---\n${frontmatter}\n---\n\n${body}\n`;
+const md = (frontmatter: string, body: string): string => {
+  return `---\n${frontmatter}\n---\n\n${body}\n`;
+};
 
 const MODULES: DocsContentModules = {
   './docs-content/docs/getting-started.md': md(

@@ -10,7 +10,9 @@ import type { BlogEmptyStateProps } from '../BlogEmptyState';
 import { BlogEmptyState } from '../BlogEmptyState';
 
 const renderEmptyState = (props: BlogEmptyStateProps): RenderResult => {
-  const Wrapped = () => <BlogEmptyState {...props} />;
+  const Wrapped = () => {
+    return <BlogEmptyState {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component: Wrapped, path: '/' }]);
 
   return render(<RoutesStub />);

@@ -8,7 +8,7 @@ Plan: **Dynamic repo skills registry from `.agents/skills`** (`fca6f044-fcb2-48f
 
 ## Problem
 
-`REPO_SKILLS_REGISTRY` in `app/routing/agents/data/repo-skills-registry.ts` is hand-maintained and drifts from on-disk skills (e.g. missing `ot-generators`, `ot-plans`, `workflow-ralph`, `ot-stack`).
+`REPO_SKILLS_REGISTRY` in `app/routing/agents/data/data.repo-skills-registry.ts` is hand-maintained and drifts from on-disk skills (e.g. missing `ot-generators`, `ot-plans`, `workflow-ralph`, `ot-stack`).
 
 ## Goals
 
@@ -148,7 +148,7 @@ which is the author's own private directory linked into the repo and has no
 upstream to diverge from. Only a lockfile-installed external skill is read-only.
 
 - **Enforcement point:** `writeSkillFileBySlug`
-  (`app/routing/skills/data/write-skill-file.server.ts`) refuses when the
+  (`app/routing/skills/utils/write-skill-file.server.ts`) refuses when the
   freshly discovered entry is neither `source === 'openthrottle'` nor
   `isPersonal === true`. Provenance is read from disk-derived discovery, never
   from client input (and never from a frontmatter `source:` key), and the check
@@ -201,7 +201,7 @@ To change a lockfile-installed external skill, change it upstream and re-sync.
   - The absolute target derives **only** from the discovered entry's
     `repoRelativePath` under the resolved root — never from client input.
   - A shared realpath allowlist
-    (`app/routing/agents/data/skill-path-allowlist.server.ts`) admits a resolved
+    (`app/routing/agents/utils/skill-path-allowlist.server.ts`) admits a resolved
     path only under the monorepo root **or** under
     `resolvePersonalSkillsRoot()` from `@openthrottle/openthrottle-agentic-utils`
     (honouring `OPENTHROTTLE_PERSONAL_SKILLS_DIR`). Symlinked `.claude`/`.cursor`

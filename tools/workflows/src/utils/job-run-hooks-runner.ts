@@ -147,6 +147,22 @@ export const resolveJobRunHookLayer1Prompt = (
   return resolved.prompt;
 };
 
+const formatHookTaskBlock = (
+  task: JobRunHookTaskContext | undefined,
+  taskOutcome: JobRunHookTaskOutcome | undefined,
+): string => {
+  if (task === undefined) {
+    return '';
+  }
+
+  const categoryLine =
+    task.category !== undefined ? `\n- category: ${task.category}` : '';
+  const outcomeLine =
+    taskOutcome !== undefined ? `\n- outcome: ${taskOutcome}` : '';
+
+  return `\n\nTask context:\n- id: ${task.id}\n- title: ${task.title}\n- status: ${task.status}${categoryLine}${outcomeLine}\n`;
+};
+
 /**
  * @description Full agent prompt for one hook iteration (layer-1 + injected plan context).
  */
@@ -170,12 +186,7 @@ export const buildJobRunHookAgentPrompt = (params: {
   } = params;
   const phaseLabel = entry.phase;
 
-  const taskBlock =
-    task !== undefined
-      ? `\n\nTask context:\n- id: ${task.id}\n- title: ${task.title}\n- status: ${task.status}${
-          task.category !== undefined ? `\n- category: ${task.category}` : ''
-        }${taskOutcome !== undefined ? `\n- outcome: ${taskOutcome}` : ''}\n`
-      : '';
+  const taskBlock = formatHookTaskBlock(task, taskOutcome);
 
   return (
     `${layer1Text}\n\n` +
@@ -185,10 +196,13 @@ export const buildJobRunHookAgentPrompt = (params: {
   );
 };
 
-const hookFailed = (result: JobRunHookIterationResult): boolean =>
-  result.cancelled === true ||
-  !result.ok ||
-  (result.errorMessage !== undefined && result.errorMessage.trim() !== '');
+const hookFailed = (result: JobRunHookIterationResult): boolean => {
+  return (
+    result.cancelled === true ||
+    !result.ok ||
+    (result.errorMessage !== undefined && result.errorMessage.trim() !== '')
+  );
+};
 
 const applyHookFailurePolicy = (
   phase: JobRunHookPhase,

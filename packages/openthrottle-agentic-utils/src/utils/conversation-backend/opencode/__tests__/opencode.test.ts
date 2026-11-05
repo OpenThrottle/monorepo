@@ -21,8 +21,8 @@ function writeFakeBin(name: string, body: string): string {
 
 // A successful streamed turn: step_start (mints session) → two text snapshots
 // sharing a part id (suffix-dedup) → step_finish → clean exit (no result event).
-const successBin = (): string =>
-  writeFakeBin(
+const successBin = (): string => {
+  return writeFakeBin(
     'opencode-success.js',
     `const lines = [
       JSON.stringify({ type: 'step_start', sessionID: 'ses_1', part: { id: 'prt_s', type: 'step-start', sessionID: 'ses_1' } }),
@@ -32,22 +32,25 @@ const successBin = (): string =>
     ];
     process.stdout.write(lines.join('\\n') + '\\n');`,
   );
+};
 
 // A startup failure: nothing on stdout, a message on stderr, non-zero exit.
-const errorBin = (): string =>
-  writeFakeBin(
+const errorBin = (): string => {
+  return writeFakeBin(
     'opencode-error.js',
     `process.stderr.write('unknown model\\n');
     process.exit(1);`,
   );
+};
 
 // Emits one event, then hangs (no further output) until killed.
-const hangBin = (): string =>
-  writeFakeBin(
+const hangBin = (): string => {
+  return writeFakeBin(
     'opencode-hang.js',
     `process.stdout.write(JSON.stringify({ type: 'step_start', sessionID: 'ses_1', part: { id: 'prt_s', type: 'step-start' } }) + '\\n');
     setInterval(() => {}, 1000000);`,
   );
+};
 
 async function collect(
   run: Parameters<typeof opencodeConversationBackend.stream>[0],

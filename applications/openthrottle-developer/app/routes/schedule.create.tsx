@@ -23,7 +23,7 @@ import { ScheduleForm } from '~/routing/schedule/components/ScheduleForm';
 import {
   missingScheduleTiming,
   parseScheduleForm,
-} from '~/routing/schedule/data/parse-form';
+} from '~/routing/schedule/utils/parse-form';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

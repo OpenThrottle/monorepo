@@ -14,76 +14,88 @@ import type {
 import {
   SKILL_USAGE_COPY,
   SKILL_USAGE_SCOPES,
-} from '../../data/skill-usage-copy';
+} from '../../data/data.skill-usage-copy';
 import type { UsageSkillUsageProps } from '../UsageSkillUsage';
 import { UsageSkillUsage } from '../UsageSkillUsage';
 
 const buildBySkill = (
   overrides: Partial<UsageSkillUsageBySkillFragment>,
-): UsageSkillUsageBySkillFragment => ({
-  abandonedCount: 0,
-  avgDurationMs: null,
-  count: 1,
-  errorCount: 0,
-  outcomeCount: 0,
-  scope: SKILL_USAGE_SCOPES.OURS,
-  sessionEndedCount: 0,
-  skillName: 'ot-plans',
-  successCount: 0,
-  ...overrides,
-});
+): UsageSkillUsageBySkillFragment => {
+  return {
+    abandonedCount: 0,
+    avgDurationMs: null,
+    count: 1,
+    errorCount: 0,
+    outcomeCount: 0,
+    scope: SKILL_USAGE_SCOPES.OURS,
+    sessionEndedCount: 0,
+    skillName: 'ot-plans',
+    successCount: 0,
+    ...overrides,
+  };
+};
 
 const buildByScope = (
   overrides: Partial<UsageSkillUsageByScopeFragment>,
-): UsageSkillUsageByScopeFragment => ({
-  count: 0,
-  scope: SKILL_USAGE_SCOPES.OURS,
-  ...overrides,
-});
+): UsageSkillUsageByScopeFragment => {
+  return {
+    count: 0,
+    scope: SKILL_USAGE_SCOPES.OURS,
+    ...overrides,
+  };
+};
 
 const buildByDay = (
   overrides: Partial<UsageSkillUsageByDayFragment>,
-): UsageSkillUsageByDayFragment => ({
-  date: '2026-07-15',
-  oursCount: 0,
-  personalCount: 0,
-  thirdPartyCount: 0,
-  totalCount: 0,
-  ...overrides,
-});
+): UsageSkillUsageByDayFragment => {
+  return {
+    date: '2026-07-15',
+    oursCount: 0,
+    personalCount: 0,
+    thirdPartyCount: 0,
+    totalCount: 0,
+    ...overrides,
+  };
+};
 
 const buildFilterOptions = (
   overrides: Partial<UsageSkillUsageFilterOptionsFragment> = {},
-): UsageSkillUsageFilterOptionsFragment => ({
-  cwds: [],
-  gitBranches: [],
-  ...overrides,
-});
+): UsageSkillUsageFilterOptionsFragment => {
+  return {
+    cwds: [],
+    gitBranches: [],
+    ...overrides,
+  };
+};
 
 const renderComponent = (props: UsageSkillUsageProps): RenderResult => {
-  const Component = (): React.ReactElement => <UsageSkillUsage {...props} />;
+  const Component = (): React.ReactElement => {
+    return <UsageSkillUsage {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);
 };
 
-const baseProps = (): UsageSkillUsageProps => ({
-  branchOptions: [],
-  branchesHaveMore: false,
-  byDay: [],
-  byScope: [],
-  bySkill: [],
-  end: '2026-07-31',
-  filterOptions: buildFilterOptions(),
-  presentSlugs: [],
-  providerParam: null,
-  rangeDays: 30,
-  selectedCwd: null,
-  selectedGitBranch: null,
-  selectedScope: null,
-  start: '2026-07-01',
-  totalCount: 0,
-});
+const baseProps = (): UsageSkillUsageProps => {
+  return {
+    branchOptions: [],
+    branchesHaveMore: false,
+    byDay: [],
+    byScope: [],
+    bySkill: [],
+    end: '2026-07-31',
+    filterOptions: buildFilterOptions(),
+    presentSlugs: [],
+    providerParam: null,
+    rangeDays: 30,
+    selectedCwd: null,
+    selectedGitBranch: null,
+    selectedScope: null,
+    start: '2026-07-01',
+    totalCount: 0,
+  };
+};
 
 describe('UsageSkillUsage Component', () => {
   test('renders heading, scope split tiles, and empty state', () => {

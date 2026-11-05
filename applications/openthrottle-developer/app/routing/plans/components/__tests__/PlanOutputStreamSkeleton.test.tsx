@@ -14,7 +14,9 @@ describe('PlanOutputStreamSkeleton Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <PlanOutputStreamSkeleton {...props} />;
+    const Component = () => {
+      return <PlanOutputStreamSkeleton {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

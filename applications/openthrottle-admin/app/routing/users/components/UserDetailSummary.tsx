@@ -3,6 +3,7 @@ import { formatDate } from 'date-fns';
 import * as React from 'react';
 
 import type { UserDetailsFragment } from '~/__generated__/graphql';
+import { formatOptionalDate } from '~/routing/users/utils/format-optional-date';
 
 export interface UserDetailSummaryProps {
   isDisabled: boolean;
@@ -17,10 +18,24 @@ export const UserDetailSummary = (
   // Hooks
 
   // Setup
+  const updatedLabel = formatOptionalDate(user.updatedAt);
+  const disabledLabel = formatOptionalDate(user.disabledAt);
 
   // Handlers
 
   // Markup
+  const updatedAt = (
+    <div>
+      <span className="text-muted-foreground text-sm">Updated</span>
+      <p>{updatedLabel}</p>
+    </div>
+  );
+  const disabledAt = (
+    <div>
+      <span className="text-muted-foreground text-sm">Disabled at</span>
+      <p>{disabledLabel}</p>
+    </div>
+  );
 
   // Life Cycle
 
@@ -46,19 +61,9 @@ export const UserDetailSummary = (
           <p>{formatDate(user.createdAt, 'MMM d, yyyy')}</p>
         </div>
 
-        {user.updatedAt ? (
-          <div>
-            <span className="text-muted-foreground text-sm">Updated</span>
-            <p>{formatDate(user.updatedAt, 'MMM d, yyyy')}</p>
-          </div>
-        ) : null}
+        {user.updatedAt ? updatedAt : null}
 
-        {user.disabledAt ? (
-          <div>
-            <span className="text-muted-foreground text-sm">Disabled at</span>
-            <p>{formatDate(user.disabledAt, 'MMM d, yyyy')}</p>
-          </div>
-        ) : null}
+        {user.disabledAt ? disabledAt : null}
       </div>
     </div>
   );

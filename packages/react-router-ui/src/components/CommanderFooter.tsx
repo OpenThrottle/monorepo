@@ -24,6 +24,12 @@ export const CommanderFooter = (
   // Handlers
 
   // Markup
+  const hintSpan = (
+    <span className="line-clamp-2 max-w-[min(100%,18rem)] text-left leading-snug">
+      {footerHint}
+    </span>
+  );
+  const hint = footerHint ? hintSpan : <span />;
 
   // Life Cycle
 
@@ -34,13 +40,7 @@ export const CommanderFooter = (
       className="border-border text-muted-foreground flex items-center justify-between gap-4 border-t px-2 py-2 text-[10px]"
       data-testid="CommanderFooter"
     >
-      {footerHint ? (
-        <span className="line-clamp-2 max-w-[min(100%,18rem)] text-left leading-snug">
-          {footerHint}
-        </span>
-      ) : (
-        <span />
-      )}
+      {hint}
       <div className="flex shrink-0 items-center justify-end gap-4">
         <div className="flex items-center gap-1.5">
           <CommandShortcut className="border-muted-foreground flex w-auto items-center border text-[8px]! whitespace-nowrap">

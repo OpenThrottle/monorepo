@@ -42,12 +42,8 @@ export function SidebarMenuButton({
     return button;
   }
 
-  const tooltipProps =
-    typeof tooltip === 'string'
-      ? {
-          children: tooltip,
-        }
-      : tooltip;
+  const isTextTooltip = typeof tooltip === 'string';
+  const tooltipProps = isTextTooltip ? { children: tooltip } : tooltip;
 
   return (
     <Tooltip>

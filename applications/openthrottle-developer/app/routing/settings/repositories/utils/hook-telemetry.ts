@@ -36,8 +36,9 @@ export interface HookTelemetryPresentation {
 const ENDPOINT_SOURCE_LABELS: Record<string, string> =
   REPOSITORY_HOOK_TELEMETRY_COPY.endpointSourceLabels;
 
-const readEndpointSource = (source: string): string =>
-  ENDPOINT_SOURCE_LABELS[source] ?? source;
+const readEndpointSource = (source: string): string => {
+  return ENDPOINT_SOURCE_LABELS[source] ?? source;
+};
 
 /**
  * @description Turn a checkout's `hookTelemetry` into everything the badge and

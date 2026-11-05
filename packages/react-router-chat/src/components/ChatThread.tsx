@@ -68,6 +68,7 @@ export const ChatThread = (props: ChatThreadProps): React.ReactElement => {
   });
 
   // Setup
+  const isEmpty = messages.length === 0;
 
   // Handlers
 
@@ -102,16 +103,16 @@ export const ChatThread = (props: ChatThreadProps): React.ReactElement => {
       ref={contentRef}
       role="log"
     >
-      {messages.length === 0 ? (
+      {isEmpty && (
         <p className="text-muted-foreground text-sm">{emptyStateLabel}</p>
-      ) : (
+      )}
+      {!isEmpty &&
         messages.map((message) => (
           <ChatThreadMessage key={message.id} message={message} />
-        ))
-      )}
-      {canRetry && onRetry !== undefined ? (
+        ))}
+      {canRetry && onRetry !== undefined && (
         <ChatRetryNotice isRetrying={isRetrying} onRetry={onRetry} />
-      ) : null}
+      )}
     </div>
   );
 };

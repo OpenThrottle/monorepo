@@ -8,12 +8,13 @@ import { DocPagePager } from '../DocPagePager';
 const prev = { path: '/docs/getting-started', title: 'Getting Started' };
 const next = { path: '/docs/architecture', title: 'Architecture' };
 
-const renderPager = (props: React.ComponentProps<typeof DocPagePager>) =>
-  render(
+const renderPager = (props: React.ComponentProps<typeof DocPagePager>) => {
+  return render(
     <MemoryRouter>
       <DocPagePager {...props} />
     </MemoryRouter>,
   );
+};
 
 describe('DocPagePager', () => {
   test('renders both prev and next links', () => {

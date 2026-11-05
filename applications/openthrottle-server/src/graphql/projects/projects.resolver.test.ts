@@ -10,27 +10,29 @@ import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { ProjectsResolver } from './projects.resolver.ts';
 
-const buildMockPlan = (projectId: string): Plan => ({
-  assignee: null,
-  author: 'visormatt',
-  category: 'infra',
-  completedAt: null,
-  createdAt: new Date('2026-02-03T10:00:00.000Z'),
-  description: null,
-  id: 'plan-1',
-  jobRunHooks: { hooks: [] },
-  planEmbeddings: [],
-  planOutputChunks: [],
-  project: null,
-  projectId,
-  projectRelation: null,
-  runConfig: getDefaultPlanRunConfigStorage(),
-  status: 'completed',
-  summary: null,
-  tasks: [],
-  title: 'Plan One',
-  updatedAt: new Date('2026-02-03T10:00:00.000Z'),
-});
+const buildMockPlan = (projectId: string): Plan => {
+  return {
+    assignee: null,
+    author: 'visormatt',
+    category: 'infra',
+    completedAt: null,
+    createdAt: new Date('2026-02-03T10:00:00.000Z'),
+    description: null,
+    id: 'plan-1',
+    jobRunHooks: { hooks: [] },
+    planEmbeddings: [],
+    planOutputChunks: [],
+    project: null,
+    projectId,
+    projectRelation: null,
+    runConfig: getDefaultPlanRunConfigStorage(),
+    status: 'completed',
+    summary: null,
+    tasks: [],
+    title: 'Plan One',
+    updatedAt: new Date('2026-02-03T10:00:00.000Z'),
+  };
+};
 
 describe('ProjectsResolver', () => {
   let resolver: ProjectsResolver;

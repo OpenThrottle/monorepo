@@ -68,8 +68,7 @@ describe('DatabaseBackupRepeatableService', () => {
     beforeEach(() => {
       scheduleMock.mockReturnValue({
         enabled: false,
-        reason:
-          'DATABASE_BACKUP_CRON not set; skipping repeatable database-backup registration.',
+        reason: `DATABASE_BACKUP_CRON not set; skipping repeatable database-backup registration.`,
       });
     });
 

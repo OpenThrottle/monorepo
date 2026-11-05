@@ -19,7 +19,9 @@ describe('GlobalErrorBoundaryStackToggle Component', () => {
   beforeEach(() => {
     props = { stack: 'Error: boom\n  at Foo (file.ts:1:1)' };
 
-    const Component = () => <GlobalErrorBoundaryStackToggle {...props} />;
+    const Component = () => {
+      return <GlobalErrorBoundaryStackToggle {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
   });
@@ -72,7 +74,9 @@ describe('GlobalErrorBoundaryStackToggle Component', () => {
     cleanup();
     props = {};
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <GlobalErrorBoundaryStackToggle {...props} />;
+    const Component = () => {
+      return <GlobalErrorBoundaryStackToggle {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
 

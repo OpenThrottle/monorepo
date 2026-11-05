@@ -95,11 +95,10 @@ describe('WorkLedgerCaptureService', () => {
   });
 
   it('records the calling client from x-app-name as the instant session tool_name', async () => {
-    vi.mocked(cls.get).mockImplementation((key?: unknown) =>
-      key === 'app'
-        ? { name: 'openthrottle-developer', version: '1.2.3' }
-        : undefined,
-    );
+    const developerApp = { name: 'openthrottle-developer', version: '1.2.3' };
+    vi.mocked(cls.get).mockImplementation((key?: unknown) => {
+      return key === 'app' ? developerApp : undefined;
+    });
 
     await service.recordStatusChange(manager, params);
 
@@ -109,11 +108,13 @@ describe('WorkLedgerCaptureService', () => {
   });
 
   it('falls back to unknown when x-app-name is only the sentinel', async () => {
-    vi.mocked(cls.get).mockImplementation((key?: unknown) =>
-      key === 'app'
-        ? { name: 'x-app-name - unknown', version: 'x-app-version - unknown' }
-        : undefined,
-    );
+    const sentinelApp = {
+      name: 'x-app-name - unknown',
+      version: 'x-app-version - unknown',
+    };
+    vi.mocked(cls.get).mockImplementation((key?: unknown) => {
+      return key === 'app' ? sentinelApp : undefined;
+    });
 
     await service.recordStatusChange(manager, params);
 

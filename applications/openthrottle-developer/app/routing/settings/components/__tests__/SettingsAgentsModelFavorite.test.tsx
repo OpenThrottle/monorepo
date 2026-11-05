@@ -11,11 +11,13 @@ const renderFavorite = (
   props: React.ComponentProps<typeof SettingsAgentsModelFavorite>,
   action: (formData: FormData) => void = () => {},
 ) => {
-  const Component = () => (
-    <TooltipProvider>
-      <SettingsAgentsModelFavorite {...props} />
-    </TooltipProvider>
-  );
+  const Component = () => {
+    return (
+      <TooltipProvider>
+        <SettingsAgentsModelFavorite {...props} />
+      </TooltipProvider>
+    );
+  };
   const RoutesStub = createRoutesStub([
     { Component, path: '/' },
     {

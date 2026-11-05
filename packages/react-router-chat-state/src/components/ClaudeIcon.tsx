@@ -12,18 +12,31 @@ export interface ClaudeIconProps extends ProviderIconProps {}
  */
 export const ClaudeIcon = ({
   className,
-}: ClaudeIconProps): React.ReactElement => (
-  <svg {...BASE_SVG_PROPS} className={className} fill="currentColor">
-    {Array.from({ length: 8 }, (_, index) => (
-      <rect
-        height="9"
-        key={index}
-        rx="0.9"
-        transform={`rotate(${index * 45} 12 12)`}
-        width="1.8"
-        x="11.1"
-        y="3"
-      />
-    ))}
-  </svg>
-);
+}: ClaudeIconProps): React.ReactElement => {
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+  return (
+    <svg {...BASE_SVG_PROPS} className={className} fill="currentColor">
+      {Array.from({ length: 8 }, (_, index) => (
+        <rect
+          height="9"
+          key={index}
+          rx="0.9"
+          transform={`rotate(${index * 45} 12 12)`}
+          width="1.8"
+          x="11.1"
+          y="3"
+        />
+      ))}
+    </svg>
+  );
+};

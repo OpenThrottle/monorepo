@@ -48,8 +48,12 @@ describe('NestjsLoggingModule', () => {
       websocket: { enabled: true, namespace: '/test-logs' },
     });
 
-    const isWebsocketGatewayProvider = (p: unknown): boolean =>
-      typeof p === 'function' && p.name === 'NestjsLoggingWebsocketGatewayImpl';
+    const isWebsocketGatewayProvider = (p: unknown): boolean => {
+      return (
+        typeof p === 'function' &&
+        p.name === 'NestjsLoggingWebsocketGatewayImpl'
+      );
+    };
 
     expect(dynamic.providers?.some(isWebsocketGatewayProvider)).toBe(true);
     expect(dynamic.exports?.some(isWebsocketGatewayProvider)).toBe(true);
@@ -75,8 +79,12 @@ describe('NestjsLoggingModule', () => {
       }),
     });
 
-    const isWebsocketGatewayProvider = (p: unknown): boolean =>
-      typeof p === 'function' && p.name === 'NestjsLoggingWebsocketGatewayImpl';
+    const isWebsocketGatewayProvider = (p: unknown): boolean => {
+      return (
+        typeof p === 'function' &&
+        p.name === 'NestjsLoggingWebsocketGatewayImpl'
+      );
+    };
 
     expect(dynamic.providers?.some(isWebsocketGatewayProvider)).toBe(true);
 

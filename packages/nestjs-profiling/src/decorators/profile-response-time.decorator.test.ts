@@ -12,8 +12,11 @@ import { ProfileResponseTime } from './profile-response-time.decorator.ts';
 const FUNCTION_META_KEY = 'design:paramtypes';
 const PROTOTYPE_META_KEY = '__routeArguments__';
 
-const isFunction = (value: unknown): value is (...args: unknown[]) => unknown =>
-  typeof value === 'function';
+const isFunction = (
+  value: unknown,
+): value is (...args: unknown[]) => unknown => {
+  return typeof value === 'function';
+};
 
 describe('ProfileResponseTime', () => {
   it('measures and reports sync method execution time', () => {

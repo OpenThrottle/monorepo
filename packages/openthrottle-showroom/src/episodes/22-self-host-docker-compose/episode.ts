@@ -14,8 +14,7 @@ import type { VideoEpisode } from '../types.ts';
 export const episode: VideoEpisode = {
   beats: [
     {
-      action:
-        'Browser showing the running dashboard, then cut to the terminal behind it.',
+      action: `Browser showing the running dashboard, then cut to the terminal behind it.`,
       t: '0:00',
     },
     {

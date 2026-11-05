@@ -14,12 +14,13 @@ import {
 
 const GRAPHQL_URL = 'http://localhost:6021/graphql';
 
-const okFetch = () =>
-  vi.fn().mockResolvedValue({
+const okFetch = () => {
+  return vi.fn().mockResolvedValue({
     json: async () => ({ data: { settleCliPlanRun: { id: 'run-1' } } }),
     ok: true,
     status: 200,
   });
+};
 
 describe('plan-run janitor', () => {
   let repoRoot: string;

@@ -9,7 +9,7 @@ import { ConversationStreamChunkAddedDocument } from '~/__generated__/graphql';
 import {
   readChatOptionsCache,
   writeChatOptionsCache,
-} from '~/routing/home/data/chat-options-cache';
+} from '~/routing/home/utils/chat-options-cache';
 import { getGraphqlWsClient } from '~/services/graphql-ws-client';
 
 export interface UseHeaderChatControllerOptions {

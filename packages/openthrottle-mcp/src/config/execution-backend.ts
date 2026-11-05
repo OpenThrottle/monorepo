@@ -89,8 +89,10 @@ export const captureStdioExecutionBackend = (
 };
 
 /** @description The detected backend, or null (nothing matched, or the HTTP surface). */
-export const getDetectedExecutionBackend = (): PlanRunExecutionBackend | null =>
-  detectedBackend;
+export const getDetectedExecutionBackend =
+  (): PlanRunExecutionBackend | null => {
+    return detectedBackend;
+  };
 
 /**
  * @description The backend to register a run under. A DETECTED value always wins: an

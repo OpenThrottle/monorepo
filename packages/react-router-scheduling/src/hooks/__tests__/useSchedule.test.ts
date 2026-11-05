@@ -5,12 +5,14 @@ import type { CalendarEvent } from '../../types';
 import { CalendarView } from '../../types';
 import { useSchedule } from '../useSchedule';
 
-const event = (id: string, title: string): CalendarEvent => ({
-  end: '2026-06-15T18:30:00.000Z',
-  id,
-  start: '2026-06-15T17:30:00.000Z',
-  title,
-});
+const event = (id: string, title: string): CalendarEvent => {
+  return {
+    end: '2026-06-15T18:30:00.000Z',
+    id,
+    start: '2026-06-15T17:30:00.000Z',
+    title,
+  };
+};
 
 describe('useSchedule', () => {
   it('creates an instance and exposes the initial events (standalone, no view rendered)', () => {

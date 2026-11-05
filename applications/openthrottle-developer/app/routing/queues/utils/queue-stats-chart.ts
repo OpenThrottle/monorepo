@@ -262,8 +262,7 @@ export const QUEUE_STATS_CHART_VIEW_OPTIONS: ReadonlyArray<QueueStatsChartViewOp
         'Minimal vertical space; works on narrow viewports.',
         'Aligns with operator focus: backlog (waiting + delayed) and in-flight (active).',
       ],
-      summary:
-        'Default BarChart uses waiting, delayed, active, failed only; optional toggle adds completed to the grouped bars. Tooltip always lists all five counts.',
+      summary: `Default BarChart uses waiting, delayed, active, failed only; optional toggle adds completed to the grouped bars. Tooltip always lists all five counts.`,
       verdict: 'finalist',
     },
     {
@@ -283,8 +282,7 @@ export const QUEUE_STATS_CHART_VIEW_OPTIONS: ReadonlyArray<QueueStatsChartViewOp
         'Each chart has its own X scale — operations chart compares backlog/active across queues.',
         'Reuses the same ChartContainer + series config twice with different `dataKey` subsets.',
       ],
-      summary:
-        'Top chart: waiting, delayed, active, failed. Bottom chart: completed only (sorted by completed desc). Same row order / queue names for scanability.',
+      summary: `Top chart: waiting, delayed, active, failed. Bottom chart: completed only (sorted by completed desc). Same row order / queue names for scanability.`,
       verdict: 'finalist',
     },
     {
@@ -301,8 +299,7 @@ export const QUEUE_STATS_CHART_VIEW_OPTIONS: ReadonlyArray<QueueStatsChartViewOp
         tooltipParity: true,
       },
       pros: ['Single chart, all series always visible.'],
-      summary:
-        'Compresses large `completed` values on a log X-axis while keeping five grouped series.',
+      summary: `Compresses large \`completed\` values on a log X-axis while keeping five grouped series.`,
       verdict: 'rejected',
     },
     {
@@ -319,8 +316,7 @@ export const QUEUE_STATS_CHART_VIEW_OPTIONS: ReadonlyArray<QueueStatsChartViewOp
         tooltipParity: true,
       },
       pros: ['Each queue readable in isolation.'],
-      summary:
-        'One mini grouped bar chart per queue with an independent X max.',
+      summary: `One mini grouped bar chart per queue with an independent X max.`,
       verdict: 'rejected',
     },
     {
@@ -387,8 +383,7 @@ export type QueueStatsChartFinalistId =
  * @description Primary recommendation: operational default + optional completed toggle.
  * Spike should implement this first; fall back to dual-chart if toggle UX feels too hidden.
  */
-export const QUEUE_STATS_CHART_RECOMMENDED_FINALIST: QueueStatsChartFinalistId =
-  'operational-default-with-completed-toggle';
+export const QUEUE_STATS_CHART_RECOMMENDED_FINALIST: QueueStatsChartFinalistId = `operational-default-with-completed-toggle`;
 
 /**
  * @description Returns chart series keys for the operational vs all-series views.

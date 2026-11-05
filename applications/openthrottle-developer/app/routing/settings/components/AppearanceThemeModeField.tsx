@@ -4,10 +4,8 @@ import type { ThemeMode } from '@openthrottle/react-router-utils';
 import { useAtom } from 'jotai';
 import * as React from 'react';
 
-import {
-  configAtom,
-  DEFAULT_APPEARANCE_CONFIG,
-} from '~/global/data/atom.config';
+import { DEFAULT_APPEARANCE_CONFIG } from '~/global/data/data.appearance-config';
+import { configAtom } from '~/global/data/data.atom-config';
 import { APPEARANCE_COPY } from '~/routing/settings/data/data.copy';
 
 export interface AppearanceThemeModeFieldProps {}

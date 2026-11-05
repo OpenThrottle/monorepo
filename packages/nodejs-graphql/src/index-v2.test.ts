@@ -20,18 +20,20 @@ const doc = typedDocument<{ readonly __typename: string }>('{ __typename }');
 
 const url = 'https://api.example/graphql';
 
-const okResponse = (): Response =>
-  new Response(JSON.stringify({ data: { __typename: 'Query' } }), {
+const okResponse = (): Response => {
+  return new Response(JSON.stringify({ data: { __typename: 'Query' } }), {
     headers: { 'Content-Type': 'application/json' },
     status: 200,
   });
+};
 
-const jsonResponse = (body: unknown, init?: ResponseInit): Response =>
-  new Response(JSON.stringify(body), {
+const jsonResponse = (body: unknown, init?: ResponseInit): Response => {
+  return new Response(JSON.stringify(body), {
     headers: { 'Content-Type': 'application/json' },
     status: 200,
     ...init,
   });
+};
 
 describe('executeGraphqlV2 timeout wiring', () => {
   afterEach(() => {

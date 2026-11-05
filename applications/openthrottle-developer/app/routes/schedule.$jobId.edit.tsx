@@ -27,7 +27,7 @@ import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
 import {
   missingScheduleTiming,
   parseScheduleForm,
-} from '~/routing/schedule/data/parse-form';
+} from '~/routing/schedule/utils/parse-form';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

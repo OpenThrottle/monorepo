@@ -5,8 +5,7 @@
 import { Field, Float, ObjectType } from '@nestjs/graphql';
 
 @ObjectType({
-  description:
-    'Current process metrics: memory (RSS, heap, external in MB) and CPU (user/system in ms).',
+  description: `Current process metrics: memory (RSS, heap, external in MB) and CPU (user/system in ms).`,
 })
 export class ServerMetricsObject {
   @Field(() => Float, {

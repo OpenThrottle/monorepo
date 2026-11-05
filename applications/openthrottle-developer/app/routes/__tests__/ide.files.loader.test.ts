@@ -9,13 +9,13 @@ vi.mock('@openthrottle/react-router-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),
 }));
 
-vi.mock('~/routing/ide/data/ide-engine.server', () => ({
+vi.mock('~/routing/ide/utils/ide-engine.server', () => ({
   listFilesVM: vi.fn(),
 }));
 
 const { executeGraphqlWithAuth } =
   await import('@openthrottle/react-router-graphql');
-const { listFilesVM } = await import('~/routing/ide/data/ide-engine.server');
+const { listFilesVM } = await import('~/routing/ide/utils/ide-engine.server');
 const { loader } = await import('../ide.files');
 const { MAX_FILE_MENTION_RESULTS } =
   await import('~/routing/ide/config/file-mention');
@@ -39,16 +39,20 @@ const workspaceSettings = {
   },
 };
 
-const listing = (paths: readonly string[]): IdeWorkspaceListing => ({
-  paths: [...paths],
-  repository: { displayName: 'OpenThrottle', repositoryId: 'r1' },
-  truncated: false,
-});
+const listing = (paths: readonly string[]): IdeWorkspaceListing => {
+  return {
+    paths: [...paths],
+    repository: { displayName: 'OpenThrottle', repositoryId: 'r1' },
+    truncated: false,
+  };
+};
 
-const loaderArgs = (url: string): Route.LoaderArgs => ({
-  ...createLoaderArgs<Route.LoaderArgs>({ url }),
-  url: new URL(url),
-});
+const loaderArgs = (url: string): Route.LoaderArgs => {
+  return {
+    ...createLoaderArgs<Route.LoaderArgs>({ url }),
+    url: new URL(url),
+  };
+};
 
 describe('routes/ide.files loader', () => {
   beforeEach(() => {

@@ -12,18 +12,20 @@ import { PlanTaskInlineActions } from '../PlanTaskInlineActions';
 
 const task = (
   overrides: Partial<PlanTaskRowFragment> = {},
-): PlanTaskRowFragment => ({
-  __typename: 'TaskObject',
-  createdAt: '2026-01-01T00:00:00.000Z',
-  id: 'task-1',
-  planId: 'plan-1',
-  requirementsJson: '[]',
-  sortOrder: 1000,
-  status: 'PENDING',
-  title: 'Ship the feature',
-  updatedAt: '2026-01-02T00:00:00.000Z',
-  ...overrides,
-});
+): PlanTaskRowFragment => {
+  return {
+    __typename: 'TaskObject',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    id: 'task-1',
+    planId: 'plan-1',
+    requirementsJson: '[]',
+    sortOrder: 1000,
+    status: 'PENDING',
+    title: 'Ship the feature',
+    updatedAt: '2026-01-02T00:00:00.000Z',
+    ...overrides,
+  };
+};
 
 describe('PlanTaskInlineActions Component', () => {
   let component: RenderResult;
@@ -34,7 +36,9 @@ describe('PlanTaskInlineActions Component', () => {
   });
 
   const renderInlineActions = (): RenderResult => {
-    const Component = () => <PlanTaskInlineActions {...props} />;
+    const Component = () => {
+      return <PlanTaskInlineActions {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     return render(<RoutesStub />);
   };

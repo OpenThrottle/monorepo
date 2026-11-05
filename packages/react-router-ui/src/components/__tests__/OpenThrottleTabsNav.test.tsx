@@ -14,7 +14,9 @@ describe('OpenThrottleTabsNav Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <OpenThrottleTabsNav {...props} />;
+    const Component = () => {
+      return <OpenThrottleTabsNav {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

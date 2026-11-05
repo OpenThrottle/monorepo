@@ -65,8 +65,9 @@ const compareJobRunHookEntries = (
   a: Pick<JobRunHookEntry, 'order' | 'phase'>,
   b: Pick<JobRunHookEntry, 'order' | 'phase'>,
 ): number => {
-  const phaseOrder = (p: JobRunHookPhase): number =>
-    p === 'before_run' ? 0 : 1;
+  const phaseOrder = (p: JobRunHookPhase): number => {
+    return p === 'before_run' ? 0 : 1;
+  };
   const byPhase = phaseOrder(a.phase) - phaseOrder(b.phase);
   if (byPhase !== 0) return byPhase;
   return (a.order ?? 0) - (b.order ?? 0);
@@ -74,7 +75,9 @@ const compareJobRunHookEntries = (
 
 const sortJobRunHookEntries = (
   hooks: readonly JobRunHookEntry[],
-): JobRunHookEntry[] => [...hooks].sort(compareJobRunHookEntries);
+): JobRunHookEntry[] => {
+  return [...hooks].sort(compareJobRunHookEntries);
+};
 
 /** Stable React key for an editable hook row. */
 export type JobRunHookDraftRow = JobRunHookEntry & {
@@ -107,13 +110,21 @@ const trimOptional = (value: unknown, field: string): string | undefined => {
   return trimmed;
 };
 
-export const isJobRunHookPhase = (value: unknown): value is JobRunHookPhase =>
-  typeof value === 'string' &&
-  JOB_RUN_HOOK_PHASES.some((phase) => phase === value);
+export const isJobRunHookPhase = (value: unknown): value is JobRunHookPhase => {
+  return (
+    typeof value === 'string' &&
+    JOB_RUN_HOOK_PHASES.some((phase) => phase === value)
+  );
+};
 
-const isJobRunHookOnFailure = (value: unknown): value is JobRunHookOnFailure =>
-  typeof value === 'string' &&
-  JOB_RUN_HOOK_ON_FAILURE.some((onFailure) => onFailure === value);
+const isJobRunHookOnFailure = (
+  value: unknown,
+): value is JobRunHookOnFailure => {
+  return (
+    typeof value === 'string' &&
+    JOB_RUN_HOOK_ON_FAILURE.some((onFailure) => onFailure === value)
+  );
+};
 
 const parsePhase = (value: unknown): JobRunHookPhase => {
   if (!isJobRunHookPhase(value)) {
@@ -132,6 +143,51 @@ const parseOnFailure = (value: unknown): JobRunHookOnFailure | undefined => {
   return value;
 };
 
+const parseOptionalOrder = (
+  value: unknown,
+  label: string,
+): number | undefined => {
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) {
+    throw new Error(`${label}: order must be a non-negative integer`);
+  }
+  return value;
+};
+
+const parseOptionalTimeoutSeconds = (
+  value: unknown,
+  label: string,
+): number | undefined => {
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+  if (
+    typeof value !== 'number' ||
+    !Number.isInteger(value) ||
+    value < 1 ||
+    value > MAX_JOB_RUN_HOOK_TIMEOUT_SECONDS
+  ) {
+    throw new Error(
+      `${label}: timeoutSeconds must be an integer from 1 to ${MAX_JOB_RUN_HOOK_TIMEOUT_SECONDS}`,
+    );
+  }
+  return value;
+};
+
+const parsePromptDelivery = (value: unknown): 'file' | 'named' | undefined => {
+  if (value === 'file') return 'file';
+  if (value === 'named') return 'named';
+  return undefined;
+};
+
+const extractHooksList = (parsed: unknown): unknown[] | null => {
+  if (Array.isArray(parsed)) return parsed;
+  if (isRecord(parsed) && Array.isArray(parsed.hooks)) return parsed.hooks;
+  return null;
+};
+
 const parseHookEntryFromRecord = (
   raw: Record<string, unknown>,
   index: number,
@@ -139,35 +195,8 @@ const parseHookEntryFromRecord = (
   const label = `hook at index ${index}`;
   const phase = parsePhase(raw.phase);
   const onFailure = parseOnFailure(raw.onFailure);
-  const order =
-    raw.order === undefined || raw.order === null
-      ? undefined
-      : (() => {
-          if (
-            typeof raw.order !== 'number' ||
-            !Number.isInteger(raw.order) ||
-            raw.order < 0
-          ) {
-            throw new Error(`${label}: order must be a non-negative integer`);
-          }
-          return raw.order;
-        })();
-  const timeoutSeconds =
-    raw.timeoutSeconds === undefined || raw.timeoutSeconds === null
-      ? undefined
-      : (() => {
-          if (
-            typeof raw.timeoutSeconds !== 'number' ||
-            !Number.isInteger(raw.timeoutSeconds) ||
-            raw.timeoutSeconds < 1 ||
-            raw.timeoutSeconds > MAX_JOB_RUN_HOOK_TIMEOUT_SECONDS
-          ) {
-            throw new Error(
-              `${label}: timeoutSeconds must be an integer from 1 to ${MAX_JOB_RUN_HOOK_TIMEOUT_SECONDS}`,
-            );
-          }
-          return raw.timeoutSeconds;
-        })();
+  const order = parseOptionalOrder(raw.order, label);
+  const timeoutSeconds = parseOptionalTimeoutSeconds(raw.timeoutSeconds, label);
 
   const base = {
     phase,
@@ -204,12 +233,7 @@ const parseHookEntryFromRecord = (
     throw new Error(`${label}: kind must be prompt_profile or skill`);
   }
 
-  const promptDelivery =
-    raw.promptDelivery === 'file'
-      ? 'file'
-      : raw.promptDelivery === 'named'
-        ? 'named'
-        : undefined;
+  const promptDelivery = parsePromptDelivery(raw.promptDelivery);
   const prompt = trimOptional(raw.prompt, 'prompt');
   const promptFile = trimOptional(raw.promptFile, 'promptFile');
   const target = trimOptional(raw.target, 'target');
@@ -254,11 +278,7 @@ export const parseJobRunHooksJsonFromPlan = (
     throw new Error('jobRunHooksJson must be valid JSON');
   }
 
-  const list = Array.isArray(parsed)
-    ? parsed
-    : isRecord(parsed) && Array.isArray(parsed.hooks)
-      ? parsed.hooks
-      : null;
+  const list = extractHooksList(parsed);
 
   if (list === null) {
     throw new Error('job run hooks must be { hooks: [...] }');
@@ -278,19 +298,22 @@ export const parseJobRunHooksJsonFromPlan = (
 
 export const jobRunHookEntriesToDraftRows = (
   hooks: readonly JobRunHookEntry[],
-): JobRunHookDraftRow[] =>
-  hooks.map((entry) => ({
+): JobRunHookDraftRow[] => {
+  return hooks.map((entry) => ({
     ...entry,
     draftId: crypto.randomUUID(),
   }));
+};
 
-export const createDefaultJobRunHookDraftRow = (): JobRunHookDraftRow => ({
-  draftId: crypto.randomUUID(),
-  kind: 'prompt_profile',
-  phase: 'before_run',
-  prompt: DEFAULT_RALPH_PROMPT,
-  promptDelivery: 'named',
-});
+export const createDefaultJobRunHookDraftRow = (): JobRunHookDraftRow => {
+  return {
+    draftId: crypto.randomUUID(),
+    kind: 'prompt_profile',
+    phase: 'before_run',
+    prompt: DEFAULT_RALPH_PROMPT,
+    promptDelivery: 'named',
+  };
+};
 
 /**
  * @description Assigns `order` within each phase from row index (0-based).
@@ -327,7 +350,9 @@ export const normalizeJobRunHookDraftRows = (
 
 export const serializeJobRunHooksConfig = (
   hooks: readonly JobRunHookEntry[],
-): string => JSON.stringify({ hooks: sortJobRunHookEntries([...hooks]) });
+): string => {
+  return JSON.stringify({ hooks: sortJobRunHookEntries([...hooks]) });
+};
 
 export interface JobRunHooksUiValidation {
   readonly issues: readonly string[];
@@ -386,11 +411,14 @@ export const validateJobRunHooksDraftRows = (
   return { issues, ok: issues.length === 0 };
 };
 
-export const jobRunHookKindLabel = (kind: JobRunHookKind): string =>
-  kind === 'skill' ? 'Repo skill' : 'Prompt profile';
+export const jobRunHookKindLabel = (kind: JobRunHookKind): string => {
+  return kind === 'skill' ? 'Repo skill' : 'Prompt profile';
+};
 
-export const jobRunHookPhaseLabel = (phase: JobRunHookPhase): string =>
-  phase === 'before_run' ? 'Before run' : 'After run';
+export const jobRunHookPhaseLabel = (phase: JobRunHookPhase): string => {
+  return phase === 'before_run' ? 'Before run' : 'After run';
+};
 
-export const jobRunHookDefaultTimeoutHint = (): string =>
-  String(DEFAULT_JOB_RUN_HOOK_TIMEOUT_SECONDS);
+export const jobRunHookDefaultTimeoutHint = (): string => {
+  return String(DEFAULT_JOB_RUN_HOOK_TIMEOUT_SECONDS);
+};

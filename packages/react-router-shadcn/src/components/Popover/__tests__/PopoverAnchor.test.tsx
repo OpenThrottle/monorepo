@@ -15,11 +15,13 @@ describe('PopoverAnchor Component', () => {
   beforeEach(() => {
     props = { children: 'Anchor' };
 
-    const Component = () => (
-      <Popover>
-        <PopoverAnchor {...props} />
-      </Popover>
-    );
+    const Component = () => {
+      return (
+        <Popover>
+          <PopoverAnchor {...props} />
+        </Popover>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

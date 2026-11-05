@@ -41,12 +41,13 @@ const IMPLEMENTING_TREES = [
   'applications/openthrottle-server/src',
 ];
 
-const read = (relativePath: string): string =>
-  readFileSync(join(REPO_ROOT, relativePath), 'utf-8');
+const read = (relativePath: string): string => {
+  return readFileSync(join(REPO_ROOT, relativePath), 'utf-8');
+};
 
-const namesIn = (relativePath: string): readonly string[] => [
-  ...new Set(read(relativePath).match(WORKTREE_ENV_PATTERN) ?? []),
-];
+const namesIn = (relativePath: string): readonly string[] => {
+  return [...new Set(read(relativePath).match(WORKTREE_ENV_PATTERN) ?? [])];
+};
 
 const implementedNames = (): ReadonlySet<string> => {
   const found = new Set<string>();

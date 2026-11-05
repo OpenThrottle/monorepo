@@ -1,29 +1,15 @@
 import {
-  Badge,
   cn,
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import { Link } from 'react-router';
 
-import {
-  SKILL_PRESENCE_BADGED,
-  SKILL_PRESENCE_LABELS,
-  SKILL_PRESENCE_LINKABLE,
-  SKILL_PRESENCE_TOOLTIPS,
-} from '~/routing/usage/data/skill-presence';
-import {
-  SKILL_USAGE_COPY,
-  SKILL_USAGE_SCOPES,
-  skillUsageAvgDurationLabel,
-  skillUsageOutcomesLabel,
-  skillUsageScopeLabel,
-} from '~/routing/usage/data/skill-usage-copy';
+import { SkillUsageLeaderboardRow } from '~/routing/usage/components/SkillUsageLeaderboardRow';
+import { SKILL_USAGE_COPY } from '~/routing/usage/data/data.skill-usage-copy';
 import type { SkillUsageRowWithPresence } from '~/routing/usage/utils/partition-skill-usage-by-presence';
 
 export interface SkillUsageLeaderboardProps {
@@ -87,58 +73,10 @@ export const SkillUsageLeaderboard = (
         </TableHeader>
         <TableBody>
           {bySkill.map((row) => (
-            <TableRow key={`${row.skillName}:${row.scope}`}>
-              <TableCell className="font-medium">
-                <span className="flex flex-wrap items-center gap-2">
-                  {SKILL_PRESENCE_LINKABLE[row.presence] ? (
-                    <Link
-                      className="hover:underline"
-                      to={`/skills/${encodeURIComponent(row.skillName)}`}
-                    >
-                      {row.skillName}
-                    </Link>
-                  ) : (
-                    <span>{row.skillName}</span>
-                  )}
-                  {SKILL_PRESENCE_BADGED[row.presence] ? (
-                    <Badge
-                      color="yellow"
-                      data-testid="skill-presence-badge"
-                      size="xs"
-                      title={SKILL_PRESENCE_TOOLTIPS[row.presence]}
-                    >
-                      {SKILL_PRESENCE_LABELS[row.presence]}
-                    </Badge>
-                  ) : null}
-                </span>
-              </TableCell>
-              <TableCell>
-                <Badge
-                  color={
-                    row.scope === SKILL_USAGE_SCOPES.OURS ? 'green' : 'orange'
-                  }
-                  size="xs"
-                >
-                  {skillUsageScopeLabel(row.scope)}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-right tabular-nums">
-                {row.count}
-              </TableCell>
-              <TableCell
-                className="text-right tabular-nums"
-                title={
-                  row.outcomeCount > 0
-                    ? `${row.successCount} success · ${row.errorCount} error — plus ${row.sessionEndedCount} session ended · ${row.abandonedCount} abandoned, which are not outcomes`
-                    : `No outcome reported by this skill. ${row.sessionEndedCount} session ended · ${row.abandonedCount} abandoned — those describe the process, not the work.`
-                }
-              >
-                {skillUsageOutcomesLabel(row.outcomeCount, row.count)}
-              </TableCell>
-              <TableCell className="text-right tabular-nums">
-                {skillUsageAvgDurationLabel(row.avgDurationMs)}
-              </TableCell>
-            </TableRow>
+            <SkillUsageLeaderboardRow
+              key={`${row.skillName}:${row.scope}`}
+              row={row}
+            />
           ))}
         </TableBody>
       </Table>

@@ -80,8 +80,9 @@ interface GhPr {
   readonly state?: string;
 }
 
-const isGhPr = (value: unknown): value is GhPr =>
-  typeof value === 'object' && value !== null;
+const isGhPr = (value: unknown): value is GhPr => {
+  return typeof value === 'object' && value !== null;
+};
 
 /**
  * Fetch every PR once rather than per reference. One `gh` call is both faster and

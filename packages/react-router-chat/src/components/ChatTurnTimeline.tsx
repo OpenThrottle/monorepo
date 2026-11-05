@@ -3,6 +3,7 @@ import * as React from 'react';
 import { deriveRunPhaseFromEvents } from '../run-phase';
 import { buildTurnTimeline, foldTurnActivity } from '../turn-tool-groups';
 import type { ChatTurnEvent } from '../types';
+import { activityGroupAnchor } from '../utils/activity-group-anchor';
 import { ChatActivityGroup } from './ChatActivityGroup';
 import { ChatMessageBody } from './ChatMessageBody';
 import { ChatThinkingBlock } from './ChatThinkingBlock';
@@ -66,13 +67,7 @@ export const ChatTurnTimeline = (
     <div className="flex flex-col gap-1" data-testid="ChatTurnTimeline">
       {items.map((item) => {
         if (item.kind === 'activity') {
-          const first = item.items[0];
-          const anchor =
-            first === undefined
-              ? 0
-              : first.kind === 'tools'
-                ? (first.tools[0]?.sortOrder ?? 0)
-                : first.event.sortOrder;
+          const anchor = activityGroupAnchor(item);
 
           return <ChatActivityGroup group={item} key={`activity-${anchor}`} />;
         }
@@ -82,11 +77,11 @@ export const ChatTurnTimeline = (
           const key = `tools-${first?.sortOrder ?? 0}`;
 
           // A lone tool renders as a single card; a run of ≥2 folds into a group.
-          return item.tools.length === 1 && first !== undefined ? (
-            <ChatToolCall event={first} key={key} />
-          ) : (
-            <ChatToolCallGroup key={key} tools={item.tools} />
-          );
+          if (item.tools.length === 1 && first !== undefined) {
+            return <ChatToolCall event={first} key={key} />;
+          }
+
+          return <ChatToolCallGroup key={key} tools={item.tools} />;
         }
 
         const { event } = item;

@@ -56,18 +56,17 @@ export async function discoverLocalModelsToolHandler(
         }),
       );
 
-      const text =
-        endpoints.length === 0
-          ? `No local model servers found (scanned ${discovered.scannedHosts.length} host(s) at ${discovered.scannedAt}).`
-          : [
-              `Discovered ${discovered.totalCount} local model server(s) at ${discovered.scannedAt}:`,
-              ...endpoints.map(
-                (endpoint) =>
-                  `  ${endpoint.baseUrl} [${endpoint.provider ?? 'openai-compatible'}] — ${
-                    endpoint.models.length
-                  } model(s): ${endpoint.models.join(', ') || '(none)'}`,
-              ),
-            ].join('\n');
+      const emptyText = `No local model servers found (scanned ${discovered.scannedHosts.length} host(s) at ${discovered.scannedAt}).`;
+      const listText = [
+        `Discovered ${discovered.totalCount} local model server(s) at ${discovered.scannedAt}:`,
+        ...endpoints.map(
+          (endpoint) =>
+            `  ${endpoint.baseUrl} [${endpoint.provider ?? 'openai-compatible'}] — ${
+              endpoint.models.length
+            } model(s): ${endpoint.models.join(', ') || '(none)'}`,
+        ),
+      ].join('\n');
+      const text = endpoints.length === 0 ? emptyText : listText;
 
       return {
         structuredContent: {

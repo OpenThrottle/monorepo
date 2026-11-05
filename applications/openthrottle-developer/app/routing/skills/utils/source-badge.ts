@@ -5,7 +5,7 @@
  * `external | openthrottle`; personal is a local `isPersonal` overlay.
  */
 
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 import { SKILLS_SOURCE_COPY } from '~/routing/skills/data/data.copy';
 import type { SkillSourceKind } from '~/routing/skills/utils/filter-skills-by-source';
 import { getSkillSourceKind } from '~/routing/skills/utils/filter-skills-by-source';

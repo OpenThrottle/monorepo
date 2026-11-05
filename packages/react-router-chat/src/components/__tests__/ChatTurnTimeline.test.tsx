@@ -7,8 +7,9 @@ import { describe, expect, test } from 'vitest';
 import type { ChatTurnEvent } from '../../types';
 import { ChatTurnTimeline } from '../ChatTurnTimeline';
 
-const renderTimeline = (events: readonly ChatTurnEvent[]): RenderResult =>
-  render(<ChatTurnTimeline events={events} />);
+const renderTimeline = (events: readonly ChatTurnEvent[]): RenderResult => {
+  return render(<ChatTurnTimeline events={events} />);
+};
 
 describe('ChatTurnTimeline Component', () => {
   test('interleaves thinking, tool, and text in sortOrder regardless of input order', async () => {

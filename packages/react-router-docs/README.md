@@ -35,7 +35,7 @@ app/docs-content/
 ```
 
 **3. Build the manifest** (this is where the app owns the glob) —
-`app/routing/docs/data/docsManifest.ts`:
+`app/routing/docs/data/data.docs-manifest.ts`:
 
 ```ts
 import { buildDocsManifest } from '@openthrottle/react-router-docs';
@@ -55,7 +55,7 @@ export const docsManifest: readonly DocEntry[] = buildDocsManifest({ modules });
 ```tsx
 // app/routes/faq._index.tsx
 import { FaqView } from '@openthrottle/react-router-docs';
-import { docsManifest } from '~/routing/docs/data/docsManifest';
+import { docsManifest } from '~/routing/docs/data/data.docs-manifest';
 
 const faqEntries = docsManifest.filter((e) => e.section === 'faq');
 
@@ -68,7 +68,7 @@ export default function Component() {
 // app/routes/docs.tsx (layout)
 import { Outlet } from 'react-router';
 import { DocsNav, buildDocsNav } from '@openthrottle/react-router-docs';
-import { docsManifest } from '~/routing/docs/data/docsManifest';
+import { docsManifest } from '~/routing/docs/data/data.docs-manifest';
 
 const docsNav = buildDocsNav(docsManifest, 'docs');
 
@@ -89,7 +89,7 @@ export default function Component() {
 ```tsx
 // app/routes/docs._index.tsx -> renders the /docs page
 import { DocPageView } from '@openthrottle/react-router-docs';
-import { docsManifest } from '~/routing/docs/data/docsManifest';
+import { docsManifest } from '~/routing/docs/data/data.docs-manifest';
 
 const entry = docsManifest.find((e) => e.path === '/docs');
 export default function Component() {
@@ -100,7 +100,7 @@ export default function Component() {
 ```tsx
 // app/routes/docs.$.tsx -> looks up `/docs/${params['*']}` and renders it
 import { DocPageView } from '@openthrottle/react-router-docs';
-import { docsManifest } from '~/routing/docs/data/docsManifest';
+import { docsManifest } from '~/routing/docs/data/data.docs-manifest';
 import type { Route } from '@/app/routes/+types/docs.$';
 
 // Build the lookup once at module scope, not per render.

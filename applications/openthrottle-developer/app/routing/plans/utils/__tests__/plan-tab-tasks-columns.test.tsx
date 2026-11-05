@@ -17,35 +17,42 @@ type Header = HeaderContext<PlanTaskRowFragment, string | null | undefined>;
 
 const buildTask = (
   overrides: Partial<PlanTaskRowFragment> = {},
-): PlanTaskRowFragment => ({
-  __typename: 'TaskObject',
-  assignee: null,
-  category: null,
-  createdAt: '2026-01-01T00:00:00.000Z',
-  description: null,
-  hookRole: null,
-  id: 'task-1',
-  planId: 'plan-1',
-  projectRelation: null,
-  requirementsJson: '[]',
-  sortOrder: 1000,
-  status: 'PENDING',
-  summary: null,
-  title: 'First task',
-  updatedAt: '2026-01-02T00:00:00.000Z',
-  ...overrides,
-});
+): PlanTaskRowFragment => {
+  return {
+    __typename: 'TaskObject',
+    assignee: null,
+    category: null,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    description: null,
+    hookRole: null,
+    id: 'task-1',
+    planId: 'plan-1',
+    projectRelation: null,
+    requirementsJson: '[]',
+    sortOrder: 1000,
+    status: 'PENDING',
+    summary: null,
+    title: 'First task',
+    updatedAt: '2026-01-02T00:00:00.000Z',
+    ...overrides,
+  };
+};
 
-const buildCellContext = (task: PlanTaskRowFragment, index = 0): Cell =>
-  asMock<Cell>({
+const buildCellContext = (task: PlanTaskRowFragment, index = 0): Cell => {
+  return asMock<Cell>({
     row: { index, original: task },
   });
+};
 
-const buildHeaderContext = (): Header => asMock<Header>({});
+const buildHeaderContext = (): Header => {
+  return asMock<Header>({});
+};
 
 const renderWithRoutes = (
   ui: React.ReactElement | null,
-): ReturnType<typeof renderRoutesStub> => renderRoutesStub(ui ?? <></>);
+): ReturnType<typeof renderRoutesStub> => {
+  return renderRoutesStub(ui ?? <></>);
+};
 
 describe('buildPlanTabTasksColumns', () => {
   const columns = buildPlanTabTasksColumns(new Set(['managed-task']));

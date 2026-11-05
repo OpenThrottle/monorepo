@@ -9,8 +9,8 @@ import { ChatComposerFooter } from '../ChatComposerFooter';
 
 const renderFooter = (
   overrides: Partial<ChatComposerFooterProps> = {},
-): RenderResult =>
-  render(
+): RenderResult => {
+  return render(
     <ChatComposerFooter
       disabled={false}
       draft=""
@@ -20,6 +20,7 @@ const renderFooter = (
       {...overrides}
     />,
   );
+};
 
 describe('ChatComposerFooter Component', () => {
   test('renders a disabled Send button when the draft is empty', () => {

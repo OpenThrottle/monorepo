@@ -2,7 +2,7 @@ import type { RenderResult } from '@testing-library/react';
 import { render } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
-import type { IdeSemanticResult } from '../../data/view-models';
+import type { IdeSemanticResult } from '../../data/data.view-models';
 import { SemanticSearchResults } from '../SemanticSearchResults';
 
 const repository = { displayName: 'Repo One', repositoryId: 'r1' };

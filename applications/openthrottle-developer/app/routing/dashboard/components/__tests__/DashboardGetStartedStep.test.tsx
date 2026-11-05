@@ -19,11 +19,13 @@ const renderStep = (
   overrides: Partial<DashboardGetStartedStepProps> = {},
 ): RenderResult => {
   const props = { ...baseProps, ...overrides };
-  const Component = () => (
-    <ul>
-      <DashboardGetStartedStep {...props} />
-    </ul>
-  );
+  const Component = () => {
+    return (
+      <ul>
+        <DashboardGetStartedStep {...props} />
+      </ul>
+    );
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 };

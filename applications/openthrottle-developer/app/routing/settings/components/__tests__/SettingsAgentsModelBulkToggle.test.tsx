@@ -10,7 +10,9 @@ const renderBulk = (
   props: React.ComponentProps<typeof SettingsAgentsModelBulkToggle>,
   action: (formData: FormData) => void = () => {},
 ) => {
-  const Component = () => <SettingsAgentsModelBulkToggle {...props} />;
+  const Component = () => {
+    return <SettingsAgentsModelBulkToggle {...props} />;
+  };
   const RoutesStub = createRoutesStub([
     { Component, path: '/' },
     {

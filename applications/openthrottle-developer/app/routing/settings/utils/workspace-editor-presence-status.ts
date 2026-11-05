@@ -93,7 +93,9 @@ export const WORKSPACE_EDITOR_PRESENCE_STATUS: Record<
  */
 export const getEditorPresenceStatus = (
   state: EditorPresenceState,
-): EditorPresenceStatusDescriptor => WORKSPACE_EDITOR_PRESENCE_STATUS[state];
+): EditorPresenceStatusDescriptor => {
+  return WORKSPACE_EDITOR_PRESENCE_STATUS[state];
+};
 
 /**
  * @description Indexes a probe result by editor so any surface can look up a state in O(1),
@@ -121,4 +123,6 @@ export const buildEditorPresenceIndex = (
 export const readEditorPresence = (
   index: ReadonlyMap<WorkspaceEditorId, EditorPresenceState> | null | undefined,
   editor: WorkspaceEditorId,
-): EditorPresenceState => index?.get(editor) ?? EditorPresenceState.Unknown;
+): EditorPresenceState => {
+  return index?.get(editor) ?? EditorPresenceState.Unknown;
+};

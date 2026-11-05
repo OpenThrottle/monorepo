@@ -8,6 +8,7 @@ import { useFetcher } from 'react-router';
 
 import { useActionToast } from '~/global/hooks/useActionToast';
 import type { action } from '~/routes/plans.$planId.tasks.$taskId._index';
+import { readActionError } from '~/routing/plans/utils/read-action-error';
 
 export interface UsePlanTaskToolbarOptions {
   /**
@@ -31,14 +32,10 @@ export const usePlanTaskToolbar = (
 
   // Setup
   const isCompleted = taskStatus === 'COMPLETED';
-  const setStatusData = fetcherSetStatus.data;
-  const setStatusError =
-    setStatusData != null &&
-    typeof setStatusData === 'object' &&
-    'setTaskStatusError' in setStatusData &&
-    typeof setStatusData.setTaskStatusError === 'string'
-      ? setStatusData.setTaskStatusError
-      : undefined;
+  const setStatusError = readActionError(
+    fetcherSetStatus.data,
+    'setTaskStatusError',
+  );
 
   // Handlers
 

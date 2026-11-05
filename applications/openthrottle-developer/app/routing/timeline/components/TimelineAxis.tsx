@@ -79,7 +79,7 @@ export const TimelineAxis = (props: TimelineAxisProps): React.ReactElement => {
           />
         </g>
       ))}
-      {nowX != null ? (
+      {nowX != null && (
         <line
           className="stroke-rose-500"
           data-testid="TimelineAxisNowLine"
@@ -89,7 +89,7 @@ export const TimelineAxis = (props: TimelineAxisProps): React.ReactElement => {
           y1={AXIS_HEIGHT - 6}
           y2={AXIS_HEIGHT + ruleHeight}
         />
-      ) : null}
+      )}
     </svg>
   );
 };

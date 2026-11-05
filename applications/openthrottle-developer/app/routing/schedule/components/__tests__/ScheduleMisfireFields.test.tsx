@@ -8,9 +8,11 @@ import { SCHEDULE_MISFIRE_POLICY_OPTIONS } from '~/routing/schedule/data/data.mi
 
 import { ScheduleMisfireFields } from '../ScheduleMisfireFields';
 
-const optionLabel = (value: string): string | undefined =>
-  SCHEDULE_MISFIRE_POLICY_OPTIONS.find((option) => option.value === value)
-    ?.label;
+const optionLabel = (value: string): string | undefined => {
+  return SCHEDULE_MISFIRE_POLICY_OPTIONS.find(
+    (option) => option.value === value,
+  )?.label;
+};
 
 describe('ScheduleMisfireFields Component', () => {
   let component: RenderResult;

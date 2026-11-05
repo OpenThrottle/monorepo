@@ -39,6 +39,11 @@ export const PlanTasksColumn = (
   // Handlers
 
   // Markup
+  const emptyState = (
+    <p className="text-muted-foreground py-6 text-center text-sm">
+      {emptyLabel}
+    </p>
+  );
 
   // Life Cycle
 
@@ -65,13 +70,7 @@ export const PlanTasksColumn = (
           </h3>
         </CardHeader>
         <CardContent className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-3 pt-0 pb-3">
-          {isEmpty ? (
-            <p className="text-muted-foreground py-6 text-center text-sm">
-              {emptyLabel}
-            </p>
-          ) : (
-            children
-          )}
+          {isEmpty ? emptyState : children}
         </CardContent>
       </Card>
     </section>

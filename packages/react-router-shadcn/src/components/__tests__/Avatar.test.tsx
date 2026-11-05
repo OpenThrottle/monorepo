@@ -13,7 +13,9 @@ describe('Avatar Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <Avatar {...props} />;
+    const Component = () => {
+      return <Avatar {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

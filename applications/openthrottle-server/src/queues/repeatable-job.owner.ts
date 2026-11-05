@@ -58,8 +58,7 @@ export const resolveRepeatablesOwner = (): RepeatablesOwnership => {
   if (worktreeDb === 'shared') {
     return {
       owner: false,
-      reason:
-        'OT_WORKTREE_DB=shared: this worktree shares the primary database, so only the primary registers repeatables (set OT_SCHEDULED_JOBS_OWNER=true to override)',
+      reason: `OT_WORKTREE_DB=shared: this worktree shares the primary database, so only the primary registers repeatables (set OT_SCHEDULED_JOBS_OWNER=true to override)`,
     };
   }
   if (worktreeDb === 'isolated') {

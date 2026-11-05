@@ -13,16 +13,20 @@ import { SettingsKeysToolbar } from '../SettingsKeysToolbar';
 const account = (
   overrides: Partial<ServiceAccountListItemFragment> &
     Pick<ServiceAccountListItemFragment, 'id' | 'name'>,
-): ServiceAccountListItemFragment => ({
-  __typename: 'ServiceAccountObject',
-  createdAt: '2026-01-01T00:00:00.000Z',
-  description: null,
-  disabledAt: null,
-  ...overrides,
-});
+): ServiceAccountListItemFragment => {
+  return {
+    __typename: 'ServiceAccountObject',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    description: null,
+    disabledAt: null,
+    ...overrides,
+  };
+};
 
 const renderToolbar = (props: SettingsKeysToolbarProps = {}): RenderResult => {
-  const Component = () => <SettingsKeysToolbar {...props} />;
+  const Component = () => {
+    return <SettingsKeysToolbar {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 };

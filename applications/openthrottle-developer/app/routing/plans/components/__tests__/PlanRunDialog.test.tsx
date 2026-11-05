@@ -92,10 +92,13 @@ describe('PlanRunDialog Component', () => {
     return component;
   };
 
-  const field = (component: RenderResult, name: string): string | null =>
-    component
-      .queryByTestId(`PlanRunDialog-field-${name}`)
-      ?.getAttribute('value') ?? null;
+  const field = (component: RenderResult, name: string): string | null => {
+    return (
+      component
+        .queryByTestId(`PlanRunDialog-field-${name}`)
+        ?.getAttribute('value') ?? null
+    );
+  };
 
   beforeAll(() => {
     process.env.TZ = 'America/Los_Angeles';

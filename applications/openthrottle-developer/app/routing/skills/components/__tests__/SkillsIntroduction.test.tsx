@@ -12,7 +12,9 @@ describe('SkillsIntroduction Component', () => {
   let component: RenderResult;
 
   beforeEach(() => {
-    const Component = () => <SkillsIntroduction />;
+    const Component = () => {
+      return <SkillsIntroduction />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
   });

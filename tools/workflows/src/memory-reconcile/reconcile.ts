@@ -103,8 +103,9 @@ export const prClaimConflicts = (
 };
 
 /** Match an index plan reference (8-hex short form or full UUID) to an observed plan id. */
-const matchesPlanId = (claimId: string, observedId: string): boolean =>
-  observedId.toLowerCase().startsWith(claimId.toLowerCase());
+const matchesPlanId = (claimId: string, observedId: string): boolean => {
+  return observedId.toLowerCase().startsWith(claimId.toLowerCase());
+};
 
 const planClaimConflicts = (
   claimed: PlanStatusClaim,
@@ -116,7 +117,9 @@ const planClaimConflicts = (
   return claimed !== observed;
 };
 
-const describePr = (claim: PrReferenceClaim): string => `PR #${claim.number}`;
+const describePr = (claim: PrReferenceClaim): string => {
+  return `PR #${claim.number}`;
+};
 
 export interface ReconcileInput {
   readonly claims: IndexClaims;

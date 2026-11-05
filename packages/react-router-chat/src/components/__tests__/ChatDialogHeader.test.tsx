@@ -23,12 +23,13 @@ const CONVERSATIONS: readonly AgentConversationListItem[] = [
 // GlobalProviders).
 const renderHeader = (
   overrides: Partial<ChatDialogHeaderProps> = {},
-): RenderResult =>
-  render(
+): RenderResult => {
+  return render(
     <TooltipProvider>
       <ChatDialogHeader title="Chat" {...overrides} />
     </TooltipProvider>,
   );
+};
 
 describe('ChatDialogHeader', () => {
   test('renders the title', () => {

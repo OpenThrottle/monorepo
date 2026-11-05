@@ -1,4 +1,3 @@
-import { editorHref } from '@openthrottle/react-router-ide';
 import { Badge } from '@openthrottle/react-router-shadcn';
 import {
   ExternalLink,
@@ -7,6 +6,8 @@ import {
   GitPullRequest,
 } from 'lucide-react';
 import * as React from 'react';
+
+import { getCheckoutEditorLink } from '~/routing/plans/utils/checkout-editor-link';
 
 export interface PlanRunProvenanceCheckout {
   readonly displayName: string;
@@ -46,10 +47,7 @@ export const PlanRunProvenanceCell = (
 
   // Setup
   // Only build a deep-link when a filesystem path is actually present.
-  const editorLink =
-    checkout != null
-      ? editorHref({ absolutePath: checkout.filesystemPath })
-      : null;
+  const editorLink = getCheckoutEditorLink(checkout);
 
   // Handlers
 
@@ -64,16 +62,16 @@ export const PlanRunProvenanceCell = (
 
   return (
     <div className="flex flex-col gap-1">
-      {branch != null ? (
+      {branch != null && (
         <span className="flex items-center gap-1">
           <GitBranch aria-hidden={true} className="size-3 shrink-0" />
           <span className="truncate font-mono" title={branch}>
             {branch}
           </span>
         </span>
-      ) : null}
+      )}
 
-      {editorLink != null && checkout != null ? (
+      {editorLink != null && checkout != null && (
         <a
           className="text-primary flex items-center gap-1 underline-offset-2 hover:underline"
           href={editorLink}
@@ -85,9 +83,9 @@ export const PlanRunProvenanceCell = (
             {checkout.kind === 'worktree' ? ' (worktree)' : ''}
           </span>
         </a>
-      ) : null}
+      )}
 
-      {pullRequest != null ? (
+      {pullRequest != null && (
         <a
           className="text-primary flex items-center gap-1 underline-offset-2 hover:underline"
           href={pullRequest.url}
@@ -98,14 +96,14 @@ export const PlanRunProvenanceCell = (
           <span className="truncate">
             {pullRequest.repo}#{pullRequest.number}
           </span>
-          {pullRequest.state != null ? (
+          {pullRequest.state != null && (
             <Badge size="xs" variant="outline">
               {pullRequest.state}
             </Badge>
-          ) : null}
+          )}
           <ExternalLink aria-hidden={true} className="size-3 shrink-0" />
         </a>
-      ) : null}
+      )}
     </div>
   );
 };

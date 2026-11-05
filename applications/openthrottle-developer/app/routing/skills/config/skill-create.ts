@@ -33,9 +33,12 @@ export const DEFAULT_SKILL_CREATE_DESTINATION: SkillCreateDestination =
  */
 export const isSkillCreateDestination = (
   value: unknown,
-): value is SkillCreateDestination =>
-  value === SKILL_CREATE_DESTINATIONS.personal ||
-  value === SKILL_CREATE_DESTINATIONS.repo;
+): value is SkillCreateDestination => {
+  return (
+    value === SKILL_CREATE_DESTINATIONS.personal ||
+    value === SKILL_CREATE_DESTINATIONS.repo
+  );
+};
 
 /** Form field names, shared by the form and the action that parses it. */
 export const SKILL_CREATE_FIELDS = {

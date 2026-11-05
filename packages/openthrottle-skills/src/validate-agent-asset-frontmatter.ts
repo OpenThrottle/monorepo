@@ -15,13 +15,14 @@ const zodIssuesToValidationIssues = (
   path: string,
   severity: 'error' | 'warning',
   error: ZodError,
-): AgentAssetValidationIssue[] =>
-  error.issues.map((issue) => ({
+): AgentAssetValidationIssue[] => {
+  return error.issues.map((issue) => ({
     field: issue.path.join('.') || '(root)',
     message: issue.message,
     path,
     severity,
   }));
+};
 
 const validateSkillFrontmatterWarnings = (
   path: string,
@@ -36,8 +37,7 @@ const validateSkillFrontmatterWarnings = (
   ) {
     warnings.push({
       field: 'disable-model-invocation',
-      message:
-        'disable-model-invocation must be true or false; a non-boolean value is ignored and the intent is lost',
+      message: `disable-model-invocation must be true or false; a non-boolean value is ignored and the intent is lost`,
       path,
       severity: 'warning',
     });

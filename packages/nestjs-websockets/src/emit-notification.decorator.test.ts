@@ -42,7 +42,9 @@ describe('EmitNotification', () => {
   });
 
   it('sets metadata with event and payload mapper when given string and mapper', () => {
-    const payloadFn = (ret: unknown): unknown => ret;
+    const payloadFn = (ret: unknown): unknown => {
+      return ret;
+    };
     class Test {
       @EmitNotification('task.completed', payloadFn)
       completeTask(): unknown {
@@ -58,7 +60,9 @@ describe('EmitNotification', () => {
   });
 
   it('sets metadata when given object form', () => {
-    const payloadFn = (ret: unknown): unknown => ret ?? null;
+    const payloadFn = (ret: unknown): unknown => {
+      return ret ?? null;
+    };
     class Test {
       @EmitNotification({
         event: 'plan.status_changed',
@@ -75,11 +79,14 @@ describe('EmitNotification', () => {
   });
 
   it('sets metadata as array when given array form', () => {
-    const payload1 = (ret: unknown): unknown => ret ?? null;
-    const payload2 = (ret: unknown): unknown =>
-      ret != null && typeof ret === 'object' && 'id' in ret
+    const payload1 = (ret: unknown): unknown => {
+      return ret ?? null;
+    };
+    const payload2 = (ret: unknown): unknown => {
+      return ret != null && typeof ret === 'object' && 'id' in ret
         ? { planId: ret.id, status: 'COMPLETED' }
         : null;
+    };
     class Test {
       @EmitNotification([
         { event: 'plan.updated', payload: payload1 },

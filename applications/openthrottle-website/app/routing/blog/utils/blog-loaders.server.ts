@@ -65,8 +65,9 @@ export interface BlogTagData {
 }
 
 /** @description Reads the `after` cursor from a list request URL. */
-export const readBlogCursor = (url: URL): string | null =>
-  url.searchParams.get('after') || null;
+export const readBlogCursor = (url: URL): string | null => {
+  return url.searchParams.get('after') || null;
+};
 
 /** @description One page of visible posts for `/blog`. */
 export const loadBlogIndex = async (config: {

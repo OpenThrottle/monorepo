@@ -25,12 +25,13 @@ const sequence: readonly DocsNavItem[] = [
   { path: '/docs/architecture', title: 'Architecture' },
 ];
 
-const renderPage = (props: React.ComponentProps<typeof DocPageView>) =>
-  render(
+const renderPage = (props: React.ComponentProps<typeof DocPageView>) => {
+  return render(
     <MemoryRouter>
       <DocPageView {...props} />
     </MemoryRouter>,
   );
+};
 
 describe('DocPageView', () => {
   test('renders the root container and the Markdown body', () => {

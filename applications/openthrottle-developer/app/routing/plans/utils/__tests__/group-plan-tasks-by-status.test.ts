@@ -9,22 +9,24 @@ import {
   PLAN_TASK_BOARD_COLUMN_ORDER,
 } from '../group-plan-tasks-by-status';
 
-const baseTask = (): PlanTaskRowFragment => ({
-  __typename: 'TaskObject',
-  assignee: null,
-  category: 'dev',
-  createdAt: '2025-01-01T00:00:00Z',
-  description: null,
-  id: 't1',
-  planId: 'p1',
-  projectRelation: null,
-  requirementsJson: '[]',
-  sortOrder: 1000,
-  status: 'PENDING',
-  summary: null,
-  title: 'A',
-  updatedAt: '2025-01-02T00:00:00Z',
-});
+const baseTask = (): PlanTaskRowFragment => {
+  return {
+    __typename: 'TaskObject',
+    assignee: null,
+    category: 'dev',
+    createdAt: '2025-01-01T00:00:00Z',
+    description: null,
+    id: 't1',
+    planId: 'p1',
+    projectRelation: null,
+    requirementsJson: '[]',
+    sortOrder: 1000,
+    status: 'PENDING',
+    summary: null,
+    title: 'A',
+    updatedAt: '2025-01-02T00:00:00Z',
+  };
+};
 
 describe('groupPlanTasksByStatus', () => {
   test('places tasks in the column matching their status', () => {

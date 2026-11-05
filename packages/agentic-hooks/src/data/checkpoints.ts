@@ -32,16 +32,20 @@ export interface OffsetCheckpoint {
   readonly updated_at: string;
 }
 
-const checkpointFilePath = (dir: string, sessionId: string): string =>
-  path.join(dir, `${sanitizeSessionId(sessionId)}.json`);
+const checkpointFilePath = (dir: string, sessionId: string): string => {
+  return path.join(dir, `${sanitizeSessionId(sessionId)}.json`);
+};
 
-const isCheckpoint = (value: unknown): value is OffsetCheckpoint =>
-  isRecord(value) &&
-  typeof value.path === 'string' &&
-  typeof value.offset === 'number' &&
-  Number.isFinite(value.offset) &&
-  value.offset >= 0 &&
-  typeof value.updated_at === 'string';
+const isCheckpoint = (value: unknown): value is OffsetCheckpoint => {
+  return (
+    isRecord(value) &&
+    typeof value.path === 'string' &&
+    typeof value.offset === 'number' &&
+    Number.isFinite(value.offset) &&
+    value.offset >= 0 &&
+    typeof value.updated_at === 'string'
+  );
+};
 
 const readSessionFile = (
   dir: string,
@@ -61,8 +65,9 @@ const readSessionFile = (
 
 const hasSessionId = (
   sessionId: string | null | undefined,
-): sessionId is string =>
-  typeof sessionId === 'string' && sessionId.trim() !== '';
+): sessionId is string => {
+  return typeof sessionId === 'string' && sessionId.trim() !== '';
+};
 
 /**
  * The checkpoint recorded for one file of a session, or null when there is

@@ -104,6 +104,8 @@ export default function Component(
   );
 }
 
-export const action = (args: Route.ActionArgs) => runProjectDetailAction(args);
+export const action = (args: Route.ActionArgs) => {
+  return runProjectDetailAction(args);
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

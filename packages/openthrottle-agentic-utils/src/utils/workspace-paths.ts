@@ -36,8 +36,9 @@ export interface WorkspacePathMapping {
 }
 
 /** Drops a trailing `/` so prefix comparisons are boundary-exact (`/` itself stays). */
-const stripTrailingSlash = (dir: string): string =>
-  dir.length > 1 && dir.endsWith(`/`) ? dir.slice(0, -1) : dir;
+const stripTrailingSlash = (dir: string): string => {
+  return dir.length > 1 && dir.endsWith(`/`) ? dir.slice(0, -1) : dir;
+};
 
 /** Swaps `from` for `to` only on a whole path-segment boundary, else identity. */
 const swapPrefix = (path: string, from: string, to: string): string => {

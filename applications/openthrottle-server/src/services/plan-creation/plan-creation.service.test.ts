@@ -289,18 +289,20 @@ describe('PlanCreationService', () => {
   });
 
   describe('createPlansFromInput', () => {
-    const validInput = (title: string): CreatePlanInput => ({
-      assignee: null,
-      author: 'visormatt',
-      category: 'feature',
-      description: null,
-      project: null,
-      projectId: null,
-      runConfigJson: null,
-      status: null,
-      summary: null,
-      title,
-    });
+    const validInput = (title: string): CreatePlanInput => {
+      return {
+        assignee: null,
+        author: 'visormatt',
+        category: 'feature',
+        description: null,
+        project: null,
+        projectId: null,
+        runConfigJson: null,
+        status: null,
+        summary: null,
+        title,
+      };
+    };
 
     it('returns empty without a transaction when no inputs are given', async () => {
       const result = await service.createPlansFromInput([]);
@@ -346,18 +348,20 @@ describe('PlanCreationService', () => {
     /** Only the fields these assertions read; the rest of the input stays at its defaults. */
     const input = (
       overrides: Partial<CreatePlanInput> = {},
-    ): CreatePlanInput => ({
-      assignee: null,
-      author: 'visormatt',
-      category: 'feature',
-      description: null,
-      project: null,
-      projectId: null,
-      status: null,
-      summary: null,
-      title: 'Plan',
-      ...overrides,
-    });
+    ): CreatePlanInput => {
+      return {
+        assignee: null,
+        author: 'visormatt',
+        category: 'feature',
+        description: null,
+        project: null,
+        projectId: null,
+        status: null,
+        summary: null,
+        title: 'Plan',
+        ...overrides,
+      };
+    };
 
     /** Asserts the `workspace` block the service actually handed to the repository. */
     const expectWorkspace = (

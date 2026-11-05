@@ -25,6 +25,17 @@ export const EditorSidebar = (
   // Handlers
 
   // Markup
+  const emptyState = (
+    <div className="py-4 text-center text-gray-500">No files found</div>
+  );
+  const fileRows = filteredFiles.map((file) => (
+    <EditorSidebarFile
+      basePath={basePath}
+      filename={file.filename}
+      id={file.id}
+      key={file.id ?? file.filename}
+    />
+  ));
 
   // Life Cycle
 
@@ -43,18 +54,7 @@ export const EditorSidebar = (
         fontFamily: 'Menlo, Monaco, "Courier New", monospace',
       }}
     >
-      {filteredFiles.length === 0 ? (
-        <div className="py-4 text-center text-gray-500">No files found</div>
-      ) : (
-        filteredFiles.map((file) => (
-          <EditorSidebarFile
-            basePath={basePath}
-            filename={file.filename}
-            id={file.id}
-            key={file.id ?? file.filename}
-          />
-        ))
-      )}
+      {filteredFiles.length === 0 ? emptyState : fileRows}
     </div>
   );
 };

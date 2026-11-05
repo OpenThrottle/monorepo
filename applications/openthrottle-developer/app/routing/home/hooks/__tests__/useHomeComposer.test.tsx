@@ -12,9 +12,9 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { RepositoryOption } from '~/routing/home/data/models.server';
 import type { UseAgenticChatTurnResult } from '~/routing/home/hooks/useAgenticChatTurn';
 import type { UseConversationListResult } from '~/routing/home/hooks/useConversationList';
+import type { RepositoryOption } from '~/routing/home/utils/models.server';
 
 import {
   useHomeComposer,
@@ -55,35 +55,39 @@ const repositoryB: RepositoryOption = {
 
 const makeTurn = (
   overrides: Partial<UseAgenticChatTurnResult> = {},
-): UseAgenticChatTurnResult => ({
-  canRetry: false,
-  conversationId: null,
-  error: null,
-  isStreaming: false,
-  messages: [],
-  onRetry: vi.fn(),
-  onStop: vi.fn(),
-  reset: vi.fn(),
-  restore: vi.fn(),
-  sessionUsage: {},
-  setError: vi.fn(),
-  submitTurn: vi.fn(),
-  ...overrides,
-});
+): UseAgenticChatTurnResult => {
+  return {
+    canRetry: false,
+    conversationId: null,
+    error: null,
+    isStreaming: false,
+    messages: [],
+    onRetry: vi.fn(),
+    onStop: vi.fn(),
+    reset: vi.fn(),
+    restore: vi.fn(),
+    sessionUsage: {},
+    setError: vi.fn(),
+    submitTurn: vi.fn(),
+    ...overrides,
+  };
+};
 
 const makeConversationList = (
   overrides: Partial<UseConversationListResult> = {},
-): UseConversationListResult => ({
-  conversations: [],
-  isLoading: false,
-  isLoadingMore: false,
-  loadMore: vi.fn(),
-  refresh: vi.fn(),
-  remove: vi.fn(),
-  rename: vi.fn(),
-  totalCount: 0,
-  ...overrides,
-});
+): UseConversationListResult => {
+  return {
+    conversations: [],
+    isLoading: false,
+    isLoadingMore: false,
+    loadMore: vi.fn(),
+    refresh: vi.fn(),
+    remove: vi.fn(),
+    rename: vi.fn(),
+    totalCount: 0,
+    ...overrides,
+  };
+};
 
 const value: {
   current: ReturnType<typeof useHomeComposer> | null;

@@ -9,11 +9,13 @@ import { GlobalScreen } from '../GlobalScreen';
 
 describe('GlobalScreen Component', () => {
   const setup = (props: GlobalScreenProps = {}): RenderResult => {
-    const Component = () => (
-      <GlobalScreen {...props}>
-        <span>screen-child</span>
-      </GlobalScreen>
-    );
+    const Component = () => {
+      return (
+        <GlobalScreen {...props}>
+          <span>screen-child</span>
+        </GlobalScreen>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     return render(<RoutesStub />);

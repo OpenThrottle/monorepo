@@ -49,7 +49,9 @@ describe('ProjectDetailTabs Component', () => {
       totalTaskCount: 1,
     };
 
-    const Component = () => <ProjectDetailTabs {...props} />;
+    const Component = () => {
+      return <ProjectDetailTabs {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
   });
@@ -72,9 +74,9 @@ describe('ProjectDetailTabs Component', () => {
   test('renders an empty state when there are no tasks', async () => {
     component.unmount();
     // eslint-disable-next-line react/no-multi-comp
-    const Component = () => (
-      <ProjectDetailTabs {...props} tasks={[]} totalTaskCount={0} />
-    );
+    const Component = () => {
+      return <ProjectDetailTabs {...props} tasks={[]} totalTaskCount={0} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
     const user = userEvent.setup();

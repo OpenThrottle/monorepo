@@ -15,11 +15,13 @@ describe('Sidebar Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => (
-      <SidebarProvider>
-        <Sidebar {...props} />
-      </SidebarProvider>
-    );
+    const Component = () => {
+      return (
+        <SidebarProvider>
+          <Sidebar {...props} />
+        </SidebarProvider>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

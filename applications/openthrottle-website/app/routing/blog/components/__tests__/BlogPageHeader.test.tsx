@@ -8,7 +8,9 @@ import type { BlogPageHeaderProps } from '../BlogPageHeader';
 import { BlogPageHeader } from '../BlogPageHeader';
 
 const renderHeader = (props: BlogPageHeaderProps): RenderResult => {
-  const Wrapped = () => <BlogPageHeader {...props} />;
+  const Wrapped = () => {
+    return <BlogPageHeader {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component: Wrapped, path: '/' }]);
 
   return render(<RoutesStub />);

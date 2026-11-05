@@ -21,21 +21,17 @@ registerEnumType(PruneWorktreeCheckoutOutcomeEnum, {
   name: 'PruneWorktreeCheckoutOutcome',
   valuesMap: {
     NOT_FOUND: {
-      description:
-        'No checkout with that id is owned by the caller, or it was deleted concurrently.',
+      description: `No checkout with that id is owned by the caller, or it was deleted concurrently.`,
     },
     PRUNED: { description: 'The row was deleted.' },
     SKIPPED_ACTIVE_RUN: {
-      description:
-        'An unsettled (QUEUED or IN_PROGRESS) plan run still points at this checkout. Settle the run first.',
+      description: `An unsettled (QUEUED or IN_PROGRESS) plan run still points at this checkout. Settle the run first.`,
     },
     SKIPPED_LIVE: {
-      description:
-        'The path is a live linked worktree right now, so the row is not stale.',
+      description: `The path is a live linked worktree right now, so the row is not stale.`,
     },
     SKIPPED_PRIMARY: {
-      description:
-        'The row is a primary checkout. Prune only ever deletes worktree rows.',
+      description: `The row is a primary checkout. Prune only ever deletes worktree rows.`,
     },
   },
 });

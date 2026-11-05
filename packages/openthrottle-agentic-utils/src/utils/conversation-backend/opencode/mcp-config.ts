@@ -105,8 +105,11 @@ export interface OpencodeMcpConfigFile {
   readonly path: string;
 }
 
-const isStringArray = (value: unknown): value is string[] =>
-  Array.isArray(value) && value.every((item) => typeof item === 'string');
+const isStringArray = (value: unknown): value is string[] => {
+  return (
+    Array.isArray(value) && value.every((item) => typeof item === 'string')
+  );
+};
 
 const toStringRecord = (value: unknown): Record<string, string> | undefined => {
   if (!isRecord(value)) {

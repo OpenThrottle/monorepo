@@ -46,7 +46,9 @@ const humanizeParamSegment = (segment: string): string => {
   return humanizeSegment(withoutId === '' ? withoutParam : withoutId);
 };
 
-const isParamSegment = (segment: string) => segment.startsWith('$');
+const isParamSegment = (segment: string) => {
+  return segment.startsWith('$');
+};
 
 /**
  * Derives human-facing title parts from a flat-route filename, so a generated

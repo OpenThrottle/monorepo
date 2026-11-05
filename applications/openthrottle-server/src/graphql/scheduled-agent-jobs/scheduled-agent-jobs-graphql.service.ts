@@ -177,20 +177,26 @@ export class ScheduledAgentJobsGraphqlService {
       existing.ownerUserId,
     );
 
+    let nextDriverId: typeof driverId | undefined;
+    if (args.driverId !== undefined) {
+      nextDriverId = driverId;
+    }
+    let nextSettings: ScheduledAgentJobSettings | undefined;
+    if (args.settingsJson !== undefined) {
+      nextSettings = this.parseSettings(args.settingsJson);
+    }
+
     const updated = await this.jobsService.updateJob(id, {
       ...spec,
       cwd: args.cwd,
-      driverId: args.driverId === undefined ? undefined : driverId,
+      driverId: nextDriverId,
       misfirePolicy,
       misfireThresholdMs,
       model: args.model,
       name: args.name,
       prompt: args.prompt,
       repositoryCheckoutId: args.repositoryCheckoutId,
-      settings:
-        args.settingsJson === undefined
-          ? undefined
-          : this.parseSettings(args.settingsJson),
+      settings: nextSettings,
       timeoutMs: args.timeoutMs,
       timezone: args.timezone,
     });
@@ -454,10 +460,10 @@ export class ScheduledAgentJobsGraphqlService {
       );
     }
 
-    const settings =
-      opts.settingsJson === undefined || opts.settingsJson === null
-        ? opts.existingSettings
-        : this.parseSettings(opts.settingsJson);
+    let settings = opts.existingSettings;
+    if (opts.settingsJson !== undefined && opts.settingsJson !== null) {
+      settings = this.parseSettings(opts.settingsJson);
+    }
     if (settings?.endpoint && !driver.capabilities.supportsCustomBaseUrl) {
       throw new BadRequestException(
         `Driver "${driverId}" does not support a custom endpoint`,
@@ -547,17 +553,21 @@ export class ScheduledAgentJobsGraphqlService {
       throw new BadRequestException('settings.endpoint.baseUrl is required');
     }
 
-    return {
+    let endpoint: NonNullable<ScheduledAgentJobSettings['endpoint']> = {
       baseUrl: record.baseUrl,
-      ...(record.provider === 'lmstudio' ||
+    };
+    if (
+      record.provider === 'lmstudio' ||
       record.provider === 'ollama' ||
       record.provider === null
-        ? { provider: record.provider }
-        : {}),
-      ...(typeof record.configFilePath === 'string'
-        ? { configFilePath: record.configFilePath }
-        : {}),
-    };
+    ) {
+      endpoint = { ...endpoint, provider: record.provider };
+    }
+    if (typeof record.configFilePath === 'string') {
+      endpoint = { ...endpoint, configFilePath: record.configFilePath };
+    }
+
+    return endpoint;
   }
 
   private parseWorktree(

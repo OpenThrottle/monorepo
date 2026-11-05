@@ -37,11 +37,12 @@ export const SettingsAgentsModelFavorite = (
 
   // Setup
   const submittedFavorite = fetcher.formData?.get('favorite');
-  const optimisticFavorite =
-    fetcher.state !== 'idle' && submittedFavorite != null
-      ? submittedFavorite === 'true'
-      : favorite;
+  const isOptimistic = fetcher.state !== 'idle' && submittedFavorite != null;
+  const submittedValue = submittedFavorite === 'true';
+  const optimisticFavorite = isOptimistic ? submittedValue : favorite;
   const disabled = !canManage || fetcher.state !== 'idle';
+  const favoredStarClass = 'fill-yellow-400 text-yellow-400';
+  const idleStarClass = 'text-muted-foreground';
 
   // Handlers
   const handleClick = (): void => {
@@ -52,6 +53,36 @@ export const SettingsAgentsModelFavorite = (
   };
 
   // Markup
+  const control = (
+    <Button
+      aria-label={SETTINGS_AGENTS_COPY.modelFavoriteLabel}
+      aria-pressed={optimisticFavorite}
+      className="size-6"
+      data-testid={`SettingsAgentsModelFavorite-${backend}-${model}`}
+      disabled={disabled}
+      onClick={handleClick}
+      size="icon"
+      type="button"
+      variant="ghost"
+    >
+      <StarIcon
+        className={cn(
+          'size-3.5',
+          optimisticFavorite ? favoredStarClass : idleStarClass,
+        )}
+      />
+    </Button>
+  );
+  const lockedControl = (
+    <Tooltip>
+      <TooltipTrigger asChild={true}>
+        <span className="inline-flex">{control}</span>
+      </TooltipTrigger>
+      <TooltipContent>
+        {SETTINGS_AGENTS_COPY.toggleDisabledReason}
+      </TooltipContent>
+    </Tooltip>
+  );
 
   // Life Cycle
   const revalidatedRef = React.useRef(false);
@@ -68,39 +99,5 @@ export const SettingsAgentsModelFavorite = (
 
   // 🔌 Short Circuit
 
-  const control = (
-    <Button
-      aria-label={SETTINGS_AGENTS_COPY.modelFavoriteLabel}
-      aria-pressed={optimisticFavorite}
-      className="size-6"
-      data-testid={`SettingsAgentsModelFavorite-${backend}-${model}`}
-      disabled={disabled}
-      onClick={handleClick}
-      size="icon"
-      type="button"
-      variant="ghost"
-    >
-      <StarIcon
-        className={cn(
-          'size-3.5',
-          optimisticFavorite
-            ? 'fill-yellow-400 text-yellow-400'
-            : 'text-muted-foreground',
-        )}
-      />
-    </Button>
-  );
-
-  return canManage ? (
-    control
-  ) : (
-    <Tooltip>
-      <TooltipTrigger asChild={true}>
-        <span className="inline-flex">{control}</span>
-      </TooltipTrigger>
-      <TooltipContent>
-        {SETTINGS_AGENTS_COPY.toggleDisabledReason}
-      </TooltipContent>
-    </Tooltip>
-  );
+  return canManage ? control : lockedControl;
 };

@@ -7,7 +7,9 @@ import { GlobalLogging } from '../GlobalLogging';
 
 describe('GlobalLogging Component', () => {
   test('renders logging placeholder heading', () => {
-    const Component = () => <GlobalLogging />;
+    const Component = () => {
+      return <GlobalLogging />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 

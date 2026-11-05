@@ -61,7 +61,7 @@ export const OutputStream = (props: OutputStreamProps): React.ReactElement => {
                   key={chunk.id}
                 >
                   <span className="text-muted-foreground/80 flex items-baseline gap-1.5 font-mono text-[11px] whitespace-nowrap tabular-nums">
-                    {time === null ? null : (
+                    {time !== null && (
                       <time
                         dateTime={dateTime ?? undefined}
                         title={timestamp ?? undefined}
@@ -69,7 +69,7 @@ export const OutputStream = (props: OutputStreamProps): React.ReactElement => {
                         {time}
                       </time>
                     )}
-                    {chunk.iteration == null ? null : (
+                    {chunk.iteration != null && (
                       <span title={OUTPUT_STREAM_COPY.iterationTitle}>
                         {`${OUTPUT_STREAM_COPY.iterationPrefix}${chunk.iteration}`}
                       </span>

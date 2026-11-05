@@ -29,9 +29,9 @@ export const loader = async (args: Route.LoaderArgs) => {
 
   const slug = decodeURIComponent(personaId);
   const { findRepoPersonaBySlug, readRepoPersonaFileContent } =
-    await import('~/routing/agents/data/discover-repo-personas.server');
+    await import('~/routing/agents/utils/discover-repo-personas.server');
   const { getMonorepoRoot } =
-    await import('~/routing/agents/data/resolve-monorepo-root.server');
+    await import('~/routing/agents/utils/resolve-monorepo-root.server');
 
   const monorepoRoot = getMonorepoRoot();
   const persona = findRepoPersonaBySlug(monorepoRoot, slug);
@@ -69,6 +69,16 @@ export default function Component(
   // Handlers
 
   // Markup
+  const personaFile = (
+    <pre className="ui-border bg-card overflow-x-auto rounded-lg border p-4 text-xs whitespace-pre-wrap">
+      {content}
+    </pre>
+  );
+  const unreadableNotice = (
+    <p className="text-muted-foreground text-sm">
+      Persona file could not be read from disk.
+    </p>
+  );
 
   // Life Cycle
 
@@ -98,15 +108,7 @@ export default function Component(
           text={persona.repoRelativePath}
         />
       </div>
-      {content ? (
-        <pre className="ui-border bg-card overflow-x-auto rounded-lg border p-4 text-xs whitespace-pre-wrap">
-          {content}
-        </pre>
-      ) : (
-        <p className="text-muted-foreground text-sm">
-          Persona file could not be read from disk.
-        </p>
-      )}
+      {content ? personaFile : unreadableNotice}
     </GlobalScreen>
   );
 }

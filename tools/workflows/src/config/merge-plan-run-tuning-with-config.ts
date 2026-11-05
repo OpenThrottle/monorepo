@@ -39,8 +39,9 @@ const mapDefaultsDebugToNestedCli = (
   }
 };
 
-const hasString = (value: string | null | undefined): value is string =>
-  value != null && value.trim() !== '';
+const hasString = (value: string | null | undefined): value is string => {
+  return value != null && value.trim() !== '';
+};
 
 /**
  * @description Applies enqueue / job tuning over merged file + env defaults. Omitted tuning

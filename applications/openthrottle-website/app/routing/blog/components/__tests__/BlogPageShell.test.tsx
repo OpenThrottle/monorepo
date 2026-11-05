@@ -8,7 +8,9 @@ import type { BlogPageShellProps } from '../BlogPageShell';
 import { BlogPageShell } from '../BlogPageShell';
 
 const renderShell = (props: BlogPageShellProps): RenderResult => {
-  const Wrapped = () => <BlogPageShell {...props} />;
+  const Wrapped = () => {
+    return <BlogPageShell {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component: Wrapped, path: '/' }]);
 
   return render(<RoutesStub />);

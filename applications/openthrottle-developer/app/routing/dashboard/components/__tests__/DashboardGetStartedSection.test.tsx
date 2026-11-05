@@ -11,19 +11,22 @@ const onboarding = (
   overrides: Partial<
     Awaited<DashboardGetStartedSectionProps['onboarding']>
   > = {},
-): DashboardGetStartedSectionProps['onboarding'] =>
-  Promise.resolve({
+): DashboardGetStartedSectionProps['onboarding'] => {
+  return Promise.resolve({
     discoverAgentClis: { totalCount: 0 },
     githubTokenConfigured: false,
     planCountsByStatus: [],
     workspaceLocalRepositories: [],
     ...overrides,
   });
+};
 
 const renderSection = (
   props: DashboardGetStartedSectionProps,
 ): RenderResult => {
-  const Component = () => <DashboardGetStartedSection {...props} />;
+  const Component = () => {
+    return <DashboardGetStartedSection {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 };

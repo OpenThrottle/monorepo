@@ -11,10 +11,11 @@ import {
 
 const createConfigService = (
   values: Readonly<Record<string, string | undefined>>,
-): ConfigService =>
-  asMock<ConfigService>({
+): ConfigService => {
+  return asMock<ConfigService>({
     get: (key: string): string | undefined => values[key],
   });
+};
 
 const STRONG_SECRET = 'a'.repeat(JWT_SECRET_MIN_BYTES);
 

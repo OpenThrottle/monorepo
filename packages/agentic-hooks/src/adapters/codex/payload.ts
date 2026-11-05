@@ -31,8 +31,9 @@ export const CODEX_SOURCE = 'codex';
 /** Matches a prompt that opens with `/<command-name>`, capturing the name. */
 const SLASH_COMMAND_PATTERN = /^\s*\/([A-Za-z0-9][\w.:-]*)\s*([\s\S]*)$/;
 
-const readString = (value: unknown): string | null =>
-  typeof value === 'string' && value ? value : null;
+const readString = (value: unknown): string | null => {
+  return typeof value === 'string' && value ? value : null;
+};
 
 /**
  * Parse a Codex hook payload into a NormalizedInvocation, or null when the

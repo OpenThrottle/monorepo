@@ -6,18 +6,18 @@ import { Link } from 'react-router';
 import { SkillUsageDailyChart } from '~/global/components/SkillUsageDailyChart';
 import { SkillUsageStatTile } from '~/routing/skills/components/SkillUsageStatTile';
 import { SKILL_USAGE_DETAIL_COPY } from '~/routing/skills/data/data.copy';
+import type { SkillDetailUsageData } from '~/routing/skills/types';
 import {
-  type SkillDetailUsageData,
   skillUsageLastUsedLabel,
   skillUsageSuccessRateLabel,
-} from '~/routing/skills/data/skill-usage-detail';
+} from '~/routing/skills/utils/skill-usage-detail';
+import { SKILL_USAGE_COPY } from '~/routing/usage/data/data.skill-usage-copy';
 import {
-  SKILL_USAGE_COPY,
   skillUsageAvgDurationLabel,
   skillUsageOutcomesLabel,
   skillUsageScopeBadgeColor,
   skillUsageScopeLabel,
-} from '~/routing/usage/data/skill-usage-copy';
+} from '~/routing/usage/utils/skill-usage-labels';
 
 export interface SkillDetailUsageProps {
   className?: string;

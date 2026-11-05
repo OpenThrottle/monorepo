@@ -27,10 +27,25 @@ export const AddFolderCandidate = (
   // Hooks
 
   // Setup
+  const { addEntryButton, addingLabel, alreadyRegisteredBadge } =
+    WORKSPACE_FOLDERS_COPY;
+  const addLabel = isAdding ? addingLabel : addEntryButton;
 
   // Handlers
 
   // Markup
+  const registeredBadge = (
+    <Badge variant="secondary">{alreadyRegisteredBadge}</Badge>
+  );
+  const addForm = (
+    <Form method="post">
+      <input name="intent" type="hidden" value="addFolder" />
+      <input name="path" type="hidden" value={candidate.path} />
+      <Button disabled={isAdding} size="sm" type="submit">
+        {addLabel}
+      </Button>
+    </Form>
+  );
 
   // Life Cycle
 
@@ -47,21 +62,7 @@ export const AddFolderCandidate = (
           </p>
         </div>
       </div>
-      {candidate.alreadyRegistered ? (
-        <Badge variant="secondary">
-          {WORKSPACE_FOLDERS_COPY.alreadyRegisteredBadge}
-        </Badge>
-      ) : (
-        <Form method="post">
-          <input name="intent" type="hidden" value="addFolder" />
-          <input name="path" type="hidden" value={candidate.path} />
-          <Button disabled={isAdding} size="sm" type="submit">
-            {isAdding
-              ? WORKSPACE_FOLDERS_COPY.addingLabel
-              : WORKSPACE_FOLDERS_COPY.addEntryButton}
-          </Button>
-        </Form>
-      )}
+      {candidate.alreadyRegistered ? registeredBadge : addForm}
     </li>
   );
 };

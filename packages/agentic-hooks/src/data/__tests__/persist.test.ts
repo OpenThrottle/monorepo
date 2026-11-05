@@ -304,9 +304,8 @@ describe('completeOpenStartsForSession', () => {
     fs.rmSync(tmpRoot, { force: true, recursive: true });
   });
 
-  const recordingFetch =
-    (sink: Array<Record<string, unknown>>): HookFetch =>
-    async (_url, init) => {
+  const recordingFetch = (sink: Array<Record<string, unknown>>): HookFetch => {
+    return async (_url, init) => {
       const body = JSON.parse(init.body);
       sink.push(body.variables.input);
       return {
@@ -317,6 +316,7 @@ describe('completeOpenStartsForSession', () => {
         status: 200,
       };
     };
+  };
 
   it('emits one session_ended outcome per open start with no duration, then drains', async () => {
     const sessionId = 'sess-complete';

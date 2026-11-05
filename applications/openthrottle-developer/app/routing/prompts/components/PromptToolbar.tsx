@@ -159,7 +159,7 @@ export const PromptToolbar = (
           sortBy={sortBy}
           sortOrder={sortOrder}
         />
-        {hasActiveFilters ? (
+        {hasActiveFilters && (
           <Button
             data-testid="PromptToolbar-clear-filters"
             onClick={handleClearFilters}
@@ -168,7 +168,7 @@ export const PromptToolbar = (
           >
             Clear filters
           </Button>
-        ) : null}
+        )}
         <div className="min-w-0 flex-1" />
 
         <Tooltip delayDuration={1_000}>

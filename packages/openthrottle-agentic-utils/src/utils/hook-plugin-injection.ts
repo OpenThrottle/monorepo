@@ -123,11 +123,13 @@ export const resolveHookPluginDirs = (
 
   const override = env[HOOK_PLUGIN_DIR_ENV]?.trim();
   if (override !== undefined && override !== '') {
-    return isPluginPayload(override)
-      ? [override]
-      : warnOnce(
-          `${HOOK_PLUGIN_DIR_ENV}=${override} has no .claude-plugin/plugin.json; skipping hook injection.`,
-        );
+    if (isPluginPayload(override)) {
+      return [override];
+    }
+
+    return warnOnce(
+      `${HOOK_PLUGIN_DIR_ENV}=${override} has no .claude-plugin/plugin.json; skipping hook injection.`,
+    );
   }
 
   const otRoot = getOpenThrottleRoot(env);
@@ -141,11 +143,13 @@ export const resolveHookPluginDirs = (
     otRoot,
     options.payloadRel ?? OPENTHROTTLE_PLUGIN_DIR_REL,
   );
-  return isPluginPayload(payload)
-    ? [payload]
-    : warnOnce(
-        `no plugin payload at ${payload}; skipping hook injection. Run: pnpm nx run @openthrottle/agentic-hooks:bundle-hooks`,
-      );
+  if (isPluginPayload(payload)) {
+    return [payload];
+  }
+
+  return warnOnce(
+    `no plugin payload at ${payload}; skipping hook injection. Run: pnpm nx run @openthrottle/agentic-hooks:bundle-hooks`,
+  );
 };
 
 /**

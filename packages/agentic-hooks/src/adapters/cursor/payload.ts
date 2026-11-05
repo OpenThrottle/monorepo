@@ -46,16 +46,18 @@ const SKILL_FILE_PATTERN = /(?:^|\/)([^/]+)\/SKILL\.md$/;
 /** Matches a prompt that opens with `/<command-name>`, capturing the name. */
 const SLASH_COMMAND_PATTERN = /^\s*\/([A-Za-z0-9][\w.:-]*)\s*([\s\S]*)$/;
 
-const readString = (value: unknown): string | null =>
-  typeof value === 'string' && value ? value : null;
+const readString = (value: unknown): string | null => {
+  return typeof value === 'string' && value ? value : null;
+};
 
 /**
  * Cursor's envelope is identical on every event: a `session_id` plus a
  * `workspace_roots` array. `cwd` is NOT an envelope field — it appears only on
  * the Shell tool's events — so the workspace root is the general answer.
  */
-const resolveSessionId = (payload: Record<string, unknown>): string | null =>
-  readString(payload.session_id) ?? readString(payload.conversation_id);
+const resolveSessionId = (payload: Record<string, unknown>): string | null => {
+  return readString(payload.session_id) ?? readString(payload.conversation_id);
+};
 
 const resolveCwd = (payload: Record<string, unknown>): string | null => {
   const cwd = readString(payload.cwd);

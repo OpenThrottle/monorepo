@@ -31,8 +31,9 @@ export type ActionSuccess<TData = unknown> = { readonly ok: true } & TData;
 export type ActionResult<TData = unknown> =
   ActionFailure | ActionSuccess<TData>;
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  value != null && typeof value === 'object';
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return value != null && typeof value === 'object';
+};
 
 /**
  * @public
@@ -55,11 +56,14 @@ export const getActionError = (data: unknown): string | undefined => {
  * @description Narrows an action result to {@link ActionFailure} — an object
  * with `ok === false` carrying a non-empty string `error`.
  */
-export const isActionFailure = (data: unknown): data is ActionFailure =>
-  isRecord(data) &&
-  data.ok === false &&
-  typeof data.error === 'string' &&
-  data.error.length > 0;
+export const isActionFailure = (data: unknown): data is ActionFailure => {
+  return (
+    isRecord(data) &&
+    data.ok === false &&
+    typeof data.error === 'string' &&
+    data.error.length > 0
+  );
+};
 
 /**
  * @public
@@ -67,5 +71,6 @@ export const isActionFailure = (data: unknown): data is ActionFailure =>
  * (`ok === true`). Mirrors the `'ok' in data && data.ok === true` checks that
  * gate revalidation / success toasts.
  */
-export const isActionSuccess = (data: unknown): boolean =>
-  isRecord(data) && data.ok === true;
+export const isActionSuccess = (data: unknown): boolean => {
+  return isRecord(data) && data.ok === true;
+};

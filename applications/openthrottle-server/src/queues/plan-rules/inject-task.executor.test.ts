@@ -32,32 +32,38 @@ const ruleId = '00000000-0000-4000-8000-000000000002';
 const taskId = '00000000-0000-4000-8000-000000000003';
 const ownerUserId = '00000000-0000-4000-8000-000000000004';
 
-const buildPlan = (overrides: Partial<Plan> = {}): Plan =>
-  asMock<Plan>({
+const buildPlan = (overrides: Partial<Plan> = {}): Plan => {
+  return asMock<Plan>({
     id: planId,
     projectId: null,
     status: 'PENDING',
     title: 'My breakdown plan',
     ...overrides,
   });
+};
 
 const buildAction = (
   payload: Record<string, unknown> = { skillSlug: 'grilling' },
-): MatchedTagAction => ({
-  actionPayload: payload,
-  actionType: 'inject-task',
-  matchedTags: ['breakdown'],
-  ruleId,
-});
+): MatchedTagAction => {
+  return {
+    actionPayload: payload,
+    actionType: 'inject-task',
+    matchedTags: ['breakdown'],
+    ruleId,
+  };
+};
 
-const buildRule = (): TagActionRule => asMock<TagActionRule>({ id: ruleId });
+const buildRule = (): TagActionRule => {
+  return asMock<TagActionRule>({ id: ruleId });
+};
 
-const sortOrderViolation = (): QueryFailedError =>
-  new QueryFailedError(
+const sortOrderViolation = (): QueryFailedError => {
+  return new QueryFailedError(
     'INSERT',
     [],
     Object.assign(new Error('duplicate'), { code: '23505' }),
   );
+};
 
 describe('InjectTaskExecutor', () => {
   let executor: InjectTaskExecutor;
@@ -476,16 +482,18 @@ describe('InjectTaskExecutor', () => {
     const buildReconcile = (
       payload: Record<string, unknown>,
       application: Partial<RuleApplication> = { taskId },
-    ) => ({
-      action: buildAction(payload),
-      application: asMock<RuleApplication>({
-        state: 'applied',
-        ...application,
-      }),
-      ownerUserId,
-      plan: buildPlan(),
-      rule: buildRule(),
-    });
+    ) => {
+      return {
+        action: buildAction(payload),
+        application: asMock<RuleApplication>({
+          state: 'applied',
+          ...application,
+        }),
+        ownerUserId,
+        plan: buildPlan(),
+        rule: buildRule(),
+      };
+    };
 
     it("moves a 'last' task below a newer max back above it", async () => {
       taskFindOne.mockResolvedValue(
@@ -786,13 +794,15 @@ describe('InjectTaskExecutor', () => {
   });
 
   describe('reinject', () => {
-    const buildReinject = (application: Partial<RuleApplication>) => ({
-      action: buildAction({ placement: 'first', skillSlug: 'grilling' }),
-      application: asMock<RuleApplication>(application),
-      ownerUserId,
-      plan: buildPlan(),
-      rule: buildRule(),
-    });
+    const buildReinject = (application: Partial<RuleApplication>) => {
+      return {
+        action: buildAction({ placement: 'first', skillSlug: 'grilling' }),
+        application: asMock<RuleApplication>(application),
+        ownerUserId,
+        plan: buildPlan(),
+        rule: buildRule(),
+      };
+    };
 
     it('re-injects a fresh task for a delete-to-reset row (applied, task_id NULL)', async () => {
       await executor.reinject(

@@ -51,10 +51,10 @@ export function composeCursorStartupErrorText(rawMessage: string): string {
     return copy;
   }
 
-  const detail =
-    cleaned.length > MAX_RAW_DETAIL_CHARS
-      ? `${cleaned.slice(0, MAX_RAW_DETAIL_CHARS)}…`
-      : cleaned;
+  let detail = cleaned;
+  if (cleaned.length > MAX_RAW_DETAIL_CHARS) {
+    detail = `${cleaned.slice(0, MAX_RAW_DETAIL_CHARS)}…`;
+  }
 
   return `${copy}\n\nDetails: ${detail}`;
 }

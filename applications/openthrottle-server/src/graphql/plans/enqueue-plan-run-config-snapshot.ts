@@ -37,6 +37,44 @@ interface ResolvedWorkspaceIds {
   readonly repositoryId?: string | null;
 }
 
+type SnapshotBackend = PlanRunConfigSnapshot['ralph']['executionBackend'];
+
+const nonDefaultBackend = (
+  backend: SnapshotBackend,
+): SnapshotBackend | null => {
+  if (backend === DEFAULT_PLAN_RUN_RALPH_RUNNER) {
+    return null;
+  }
+  return backend;
+};
+
+const workingDirectoryOrNull = (workingDirectory: string): string | null => {
+  if (workingDirectory === '') {
+    return null;
+  }
+  return workingDirectory;
+};
+
+const toRalphSnapshot = (ralph: RunPlanJobData['ralph'] | null) => {
+  if (!ralph) {
+    return null;
+  }
+
+  return {
+    debug: ralph.debug ?? null,
+    effort: ralph.effort ?? null,
+    iterationTimeoutSeconds: ralph.iterationTimeoutSeconds ?? null,
+    iterations: ralph.iterations ?? null,
+    model: ralph.model ?? null,
+    project: ralph.project ?? null,
+    prompt: ralph.prompt ?? null,
+    promptFile: ralph.promptFile ?? null,
+    skipWorktreeSetup: ralph.skipWorktreeSetup ?? null,
+    worktree: ralph.worktree ?? null,
+    worktreeBase: ralph.worktreeBase ?? null,
+  };
+};
+
 /**
  * @description Captures the resolved configuration enqueued for audit on `plan_runs.run_config_snapshot`.
  */
@@ -49,7 +87,7 @@ export const buildPlanRunConfigSnapshotFromJobData = (
   const checkoutId = workspaceIds?.checkoutId ?? null;
   const repositoryId = workspaceIds?.repositoryId ?? null;
   const jobRunHooks = jobData.jobRunHooks ?? null;
-  const ralph = jobData.ralph ?? null;
+  const ralphSnapshot = toRalphSnapshot(jobData.ralph ?? null);
 
   if (isRunPlanOrchestratorJobData(jobData)) {
     const mode = jobData.mode === 'task' ? 'task' : 'plan';
@@ -58,21 +96,7 @@ export const buildPlanRunConfigSnapshotFromJobData = (
       executionBackend,
       jobRunHooks,
       mode,
-      ralph: ralph
-        ? {
-            debug: ralph.debug ?? null,
-            effort: ralph.effort ?? null,
-            iterationTimeoutSeconds: ralph.iterationTimeoutSeconds ?? null,
-            iterations: ralph.iterations ?? null,
-            model: ralph.model ?? null,
-            project: ralph.project ?? null,
-            prompt: ralph.prompt ?? null,
-            promptFile: ralph.promptFile ?? null,
-            skipWorktreeSetup: ralph.skipWorktreeSetup ?? null,
-            worktree: ralph.worktree ?? null,
-            worktreeBase: ralph.worktreeBase ?? null,
-          }
-        : null,
+      ralph: ralphSnapshot,
       repositoryId,
       taskId: jobData.taskId ?? null,
       workingDirectory,
@@ -84,21 +108,7 @@ export const buildPlanRunConfigSnapshotFromJobData = (
     executionBackend,
     jobRunHooks,
     mode: 'plan',
-    ralph: ralph
-      ? {
-          debug: ralph.debug ?? null,
-          effort: ralph.effort ?? null,
-          iterationTimeoutSeconds: ralph.iterationTimeoutSeconds ?? null,
-          iterations: ralph.iterations ?? null,
-          model: ralph.model ?? null,
-          project: ralph.project ?? null,
-          prompt: ralph.prompt ?? null,
-          promptFile: ralph.promptFile ?? null,
-          skipWorktreeSetup: ralph.skipWorktreeSetup ?? null,
-          worktree: ralph.worktree ?? null,
-          worktreeBase: ralph.worktreeBase ?? null,
-        }
-      : null,
+    ralph: ralphSnapshot,
     repositoryId,
     workingDirectory,
   });
@@ -136,10 +146,7 @@ export const orchestratorJobInputFromSnapshot = (
     planId,
     planJobRunHooks: snapshot.jobRunHooks ?? null,
     ralph: {
-      backend:
-        ralph.executionBackend === DEFAULT_PLAN_RUN_RALPH_RUNNER
-          ? null
-          : ralph.executionBackend,
+      backend: nonDefaultBackend(ralph.executionBackend),
       disableWorktree: ralph.worktree === undefined,
       effort: ralph.effort ?? null,
       iterationTimeoutSeconds: ralph.iterationTimeoutSeconds ?? null,
@@ -154,7 +161,6 @@ export const orchestratorJobInputFromSnapshot = (
       worktreeBase: ralph.worktreeBase ?? null,
     },
     taskId: isTaskMode ? target.taskId : null,
-    workingDirectory:
-      workspace.workingDirectory === '' ? null : workspace.workingDirectory,
+    workingDirectory: workingDirectoryOrNull(workspace.workingDirectory),
   };
 };

@@ -7,7 +7,9 @@ import { DocumentDecomposePreview } from '../DocumentDecomposePreview';
 
 describe('DocumentDecomposePreview Component', () => {
   test('renders empty state when proposal is undefined', () => {
-    const Component = () => <DocumentDecomposePreview proposal={undefined} />;
+    const Component = () => {
+      return <DocumentDecomposePreview proposal={undefined} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByTestId, getByText } = render(<RoutesStub />);
 
@@ -29,7 +31,9 @@ describe('DocumentDecomposePreview Component', () => {
       ],
     };
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <DocumentDecomposePreview proposal={proposal} />;
+    const Component = () => {
+      return <DocumentDecomposePreview proposal={proposal} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByText } = render(<RoutesStub />);
 

@@ -20,7 +20,9 @@ describe('PlansStats Component', () => {
       totalCountQueued: 2,
     };
 
-    const Component = () => <PlansStats {...props} />;
+    const Component = () => {
+      return <PlansStats {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

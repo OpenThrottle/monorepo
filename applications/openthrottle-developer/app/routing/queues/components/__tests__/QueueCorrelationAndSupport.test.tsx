@@ -7,28 +7,30 @@ import type { JobDetailsCardFragment } from '~/__generated__/graphql';
 
 import { QueueCorrelationAndSupport } from '../QueueCorrelationAndSupport';
 
-const baseJob = (): JobDetailsCardFragment => ({
-  data: null,
-  executionBackend: null,
-  failedReason: null,
-  finishedOn: null,
-  id: 'bull-job-1',
-  name: null,
-  processedOn: null,
-  progress: null,
-  returnvalue: null,
-  state: 'completed',
-  taskRunMetrics: null,
-  timestamp: 1_700_000_000_000,
-});
+const baseJob = (): JobDetailsCardFragment => {
+  return {
+    data: null,
+    executionBackend: null,
+    failedReason: null,
+    finishedOn: null,
+    id: 'bull-job-1',
+    name: null,
+    processedOn: null,
+    progress: null,
+    returnvalue: null,
+    state: 'completed',
+    taskRunMetrics: null,
+    timestamp: 1_700_000_000_000,
+  };
+};
 
 const renderCorrelation = (
   job: JobDetailsCardFragment,
   queueName = 'Plans',
 ): ReturnType<typeof render> => {
-  const Component = () => (
-    <QueueCorrelationAndSupport job={job} queueName={queueName} />
-  );
+  const Component = () => {
+    return <QueueCorrelationAndSupport job={job} queueName={queueName} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 };

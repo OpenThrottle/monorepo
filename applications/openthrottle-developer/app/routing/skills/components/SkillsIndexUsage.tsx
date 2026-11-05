@@ -4,9 +4,9 @@ import * as React from 'react';
 
 import { SkillUsageDailyChart } from '~/global/components/SkillUsageDailyChart';
 import { SKILLS_INDEX_USAGE_COPY } from '~/routing/skills/data/data.copy';
-import type { SkillsIndexUsageData } from '~/routing/skills/data/skills-index-usage';
+import type { SkillsIndexUsageData } from '~/routing/skills/types';
 import { SkillUsageLeaderboard } from '~/routing/usage/components/SkillUsageLeaderboard';
-import { SKILL_USAGE_COPY } from '~/routing/usage/data/skill-usage-copy';
+import { SKILL_USAGE_COPY } from '~/routing/usage/data/data.skill-usage-copy';
 import { partitionSkillUsageByPresence } from '~/routing/usage/utils/partition-skill-usage-by-presence';
 
 export interface SkillsIndexUsageProps {
@@ -68,6 +68,31 @@ export const SkillsIndexUsage = (
     </>
   );
 
+  const emptyActive = (
+    <p
+      className="text-muted-foreground text-sm"
+      data-testid="SkillsIndexUsageEmpty"
+    >
+      {SKILL_USAGE_COPY.empty}
+    </p>
+  );
+  const activeLeaderboard = (
+    <SkillUsageLeaderboard bySkill={partitioned.active} />
+  );
+  const missingSection = (
+    <div className="mt-8" data-testid="SkillsIndexUsageMissing">
+      <GlobalHeading
+        className="text-muted-foreground mb-2"
+        heading="h3"
+        title={SKILL_USAGE_COPY.missingHeading}
+      />
+      <p className="text-muted-foreground mb-3 text-sm">
+        {SKILL_USAGE_COPY.missingIntro}
+      </p>
+      <SkillUsageLeaderboard bySkill={partitioned.missing} />
+    </div>
+  );
+
   // Life Cycle
 
   // 🔌 Short Circuit
@@ -101,30 +126,9 @@ export const SkillsIndexUsage = (
         heading="h3"
         title={SKILL_USAGE_COPY.leaderboardHeading}
       />
-      {partitioned.active.length === 0 ? (
-        <p
-          className="text-muted-foreground text-sm"
-          data-testid="SkillsIndexUsageEmpty"
-        >
-          {SKILL_USAGE_COPY.empty}
-        </p>
-      ) : (
-        <SkillUsageLeaderboard bySkill={partitioned.active} />
-      )}
+      {partitioned.active.length === 0 ? emptyActive : activeLeaderboard}
 
-      {partitioned.missing.length > 0 ? (
-        <div className="mt-8" data-testid="SkillsIndexUsageMissing">
-          <GlobalHeading
-            className="text-muted-foreground mb-2"
-            heading="h3"
-            title={SKILL_USAGE_COPY.missingHeading}
-          />
-          <p className="text-muted-foreground mb-3 text-sm">
-            {SKILL_USAGE_COPY.missingIntro}
-          </p>
-          <SkillUsageLeaderboard bySkill={partitioned.missing} />
-        </div>
-      ) : null}
+      {partitioned.missing.length > 0 ? missingSection : null}
     </div>
   );
 };

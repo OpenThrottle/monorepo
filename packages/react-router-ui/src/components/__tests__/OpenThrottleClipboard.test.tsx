@@ -14,7 +14,9 @@ describe('OpenThrottleClipboard Component', () => {
   beforeEach(() => {
     props = { text: '' };
 
-    const Component = () => <OpenThrottleClipboard {...props} />;
+    const Component = () => {
+      return <OpenThrottleClipboard {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

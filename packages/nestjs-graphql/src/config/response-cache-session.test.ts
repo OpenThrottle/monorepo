@@ -8,8 +8,9 @@ import {
   type ResponseCacheSessionRequestContext,
 } from './response-cache-session.ts';
 
-const sha256 = (value: string): string =>
-  createHash('sha256').update(value).digest('hex');
+const sha256 = (value: string): string => {
+  return createHash('sha256').update(value).digest('hex');
+};
 
 /**
  * Build the minimal request-context surface the helper reads: the resolved

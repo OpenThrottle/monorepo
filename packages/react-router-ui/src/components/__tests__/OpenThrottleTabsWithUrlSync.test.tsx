@@ -50,12 +50,14 @@ function renderTabs(
 ) {
   const { initialEntry = '/', tabsProps = {} } = options;
   // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-  const Component = () => (
-    <>
-      <SearchParamsReader />
-      <TabsFixture {...tabsProps} />
-    </>
-  );
+  const Component = () => {
+    return (
+      <>
+        <SearchParamsReader />
+        <TabsFixture {...tabsProps} />
+      </>
+    );
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub initialEntries={[initialEntry]} />);
 }

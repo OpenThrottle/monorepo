@@ -43,11 +43,13 @@ export const BlogPostMetadataPanel = (
   // Setup
 
   // Handlers
-  const handleAuthorChange = (authorSlug: string): void =>
-    onFieldChange('authorSlug', authorSlug);
+  const handleAuthorChange = (authorSlug: string): void => {
+    return onFieldChange('authorSlug', authorSlug);
+  };
 
-  const handleTagsChange = (tagSlugs: readonly string[]): void =>
-    onFieldChange('tagSlugs', tagSlugs);
+  const handleTagsChange = (tagSlugs: readonly string[]): void => {
+    return onFieldChange('tagSlugs', tagSlugs);
+  };
 
   // Markup
 

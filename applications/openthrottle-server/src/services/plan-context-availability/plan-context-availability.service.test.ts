@@ -41,8 +41,8 @@ const vocabularyRows = ['backend', 'breakdown', 'github', 'terraform'].map(
 
 const availabilityExceptionRule = (
   payload: Record<string, unknown>,
-): TagActionRule =>
-  asMock<TagActionRule>({
+): TagActionRule => {
+  return asMock<TagActionRule>({
     actionPayload: payload,
     actionType: 'availability-exception',
     enabled: true,
@@ -53,6 +53,7 @@ const availabilityExceptionRule = (
     tagAll: ['breakdown'],
     userId: ownerId,
   });
+};
 
 describe('PlanContextAvailabilityService', () => {
   let service: PlanContextAvailabilityService;

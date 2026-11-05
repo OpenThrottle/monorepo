@@ -30,9 +30,9 @@ const CONVERSATIONS: readonly AgentConversationListItem[] = [
 ];
 
 const renderCard = (conversations: readonly AgentConversationListItem[]) => {
-  const Component = () => (
-    <DashboardRecentChatsCard conversations={conversations} />
-  );
+  const Component = () => {
+    return <DashboardRecentChatsCard conversations={conversations} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);
@@ -100,8 +100,9 @@ describe('DashboardRecentChatsCard Component', () => {
   test('renders footer quick links with the expected hrefs', () => {
     const component = renderCard(CONVERSATIONS);
 
-    const hrefFor = (label: string): string | null =>
-      component.getByRole('link', { name: label }).getAttribute('href');
+    const hrefFor = (label: string): string | null => {
+      return component.getByRole('link', { name: label }).getAttribute('href');
+    };
 
     expect(hrefFor(RECENT_CHATS_CARD_COPY.viewAll)).toBe('/');
     expect(hrefFor(RECENT_CHATS_CARD_COPY.newChat)).toBe('/');

@@ -8,8 +8,9 @@ import type { DocEntry, DocsSection } from './buildDocsManifest';
  *
  * @public
  */
-export const formatGroupLabel = (label: string): string =>
-  label.replace(/^\d+\.\s*/u, '');
+export const formatGroupLabel = (label: string): string => {
+  return label.replace(/^\d+\.\s*/u, '');
+};
 
 /**
  * A single navigable link within a nav group. @public
@@ -69,7 +70,9 @@ export interface DocPager {
  */
 export const flattenDocsNav = (
   groups: readonly DocsNavGroup[],
-): readonly DocsNavItem[] => groups.flatMap((group) => group.items);
+): readonly DocsNavItem[] => {
+  return groups.flatMap((group) => group.items);
+};
 
 /**
  * Resolve the previous/next pages for `currentPath` within an ordered

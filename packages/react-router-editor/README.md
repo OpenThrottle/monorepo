@@ -53,7 +53,7 @@ Monaco editor wrapper with sensible defaults for prompt editing.
 
 `value` is the content of the **currently active file only** — it is not an
 aggregate of every open tab. When editing multiple files (the tab model in
-`atom.editor.ts`), you must also pass `path` (the active file's unique path)
+`data.atom.editor.ts`), you must also pass `path` (the active file's unique path)
 so Monaco keys one text model per file. Swapping `value` without `path` reuses
 a single shared model, which causes the undo/redo stack, cursor, and scroll
 state to bleed across tabs. Change `value` and `path` together whenever the

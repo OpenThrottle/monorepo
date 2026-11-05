@@ -116,7 +116,9 @@ describe('plan-run-schedule', () => {
 
   describe('formatScheduledInstant', () => {
     // Newer ICU puts a narrow no-break space before AM/PM; normalize it.
-    const normalize = (text: string): string => text.replaceAll(/\s/g, ' ');
+    const normalize = (text: string): string => {
+      return text.replaceAll(/\s/g, ' ');
+    };
 
     test('renders a medium date and short time in the given zone', () => {
       expect(

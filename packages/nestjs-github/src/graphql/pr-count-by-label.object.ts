@@ -7,8 +7,7 @@ import { Field, Int, ObjectType } from '@nestjs/graphql';
 @ObjectType()
 export class PrCountByLabelObject {
   @Field(() => Int, {
-    description:
-      'Number of PRs that have this label (a PR with multiple labels is counted under each).',
+    description: `Number of PRs that have this label (a PR with multiple labels is counted under each).`,
   })
   count!: number;
 

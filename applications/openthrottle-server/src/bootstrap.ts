@@ -121,10 +121,10 @@ async function provisionServiceAccount(
     );
   }
 
-  const detail =
-    result.action === 'noop'
-      ? 'credential already matches (no change)'
-      : `${result.action} credential`;
+  let detail = `${result.action} credential`;
+  if (result.action === 'noop') {
+    detail = 'credential already matches (no change)';
+  }
 
   console.log(`${account.name}: ${detail} from ${account.envVar}.`);
 }

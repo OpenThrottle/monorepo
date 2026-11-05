@@ -17,7 +17,9 @@ describe('SidebarMenuSkeleton Component', () => {
 
   test('should render skeleton text with deterministic width', () => {
     const props: SidebarMenuSkeletonProps = {};
-    const Component = () => <SidebarMenuSkeleton {...props} />;
+    const Component = () => {
+      return <SidebarMenuSkeleton {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { container } = render(<RoutesStub />);
 

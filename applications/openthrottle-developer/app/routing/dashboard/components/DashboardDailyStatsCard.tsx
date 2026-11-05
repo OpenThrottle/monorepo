@@ -8,7 +8,7 @@ import * as React from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
 import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
-import { DAILY_STATS_CHART_CONFIG } from '~/routing/dashboard/data/daily-stats-chart';
+import { DAILY_STATS_CHART_CONFIG } from '~/routing/dashboard/data/data.daily-stats-chart';
 import {
   formatChartDate,
   mapToChartData,

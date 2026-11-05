@@ -4,7 +4,7 @@
  * gating. See docs/monorepo/skill-availability-design.md ("Surfacing").
  */
 
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 
 export interface ModelInvocationBadge {
   readonly color: 'amber' | 'green' | 'slate';
@@ -24,8 +24,7 @@ export const getModelInvocationBadge = (
     return {
       color: 'amber',
       label: 'Manual only',
-      tooltip:
-        'disable-model-invocation: true — automatic (model-initiated) invocation is suppressed. A human can still run /<skill> explicitly.',
+      tooltip: `disable-model-invocation: true — automatic (model-initiated) invocation is suppressed. A human can still run /<skill> explicitly.`,
     };
   }
 
@@ -33,16 +32,14 @@ export const getModelInvocationBadge = (
     return {
       color: 'green',
       label: 'Auto enabled',
-      tooltip:
-        'disable-model-invocation: false — automatic (model-initiated) invocation is explicitly enabled.',
+      tooltip: `disable-model-invocation: false — automatic (model-initiated) invocation is explicitly enabled.`,
     };
   }
 
   return {
     color: 'slate',
     label: 'Default (auto)',
-    tooltip:
-      'disable-model-invocation is unset — defaults to model-invocable (automatic invocation allowed).',
+    tooltip: `disable-model-invocation is unset — defaults to model-invocable (automatic invocation allowed).`,
   };
 };
 

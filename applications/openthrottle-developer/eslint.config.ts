@@ -1,4 +1,4 @@
-import { eslintConfig } from '@tools/dotfiles';
+import { dataFolderEslintConfig, eslintConfig } from '@tools/dotfiles';
 
 export default [
   {
@@ -13,6 +13,7 @@ export default [
   },
 
   ...eslintConfig,
+  ...dataFolderEslintConfig,
 
   /**
    * Component primitive shape — enforced hard for this app

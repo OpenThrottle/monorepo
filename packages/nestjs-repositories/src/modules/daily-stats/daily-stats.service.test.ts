@@ -10,6 +10,13 @@ import { DailyStat } from './daily-stat.entity.ts';
 import { dailyStatsFactory } from './daily-stats.factory.ts';
 import { DailyStatsService } from './daily-stats.service.ts';
 
+const wantedDateTime = (where: unknown): number => {
+  if (isRecord(where) && where.date instanceof Date) {
+    return where.date.getTime();
+  }
+  return Number.NaN;
+};
+
 describe('DailyStatsService', () => {
   let service: DailyStatsService;
 
@@ -52,10 +59,7 @@ describe('DailyStatsService', () => {
               ...d,
             }),
             findOne: async ({ where }) => {
-              const wanted =
-                isRecord(where) && where.date instanceof Date
-                  ? where.date.getTime()
-                  : Number.NaN;
+              const wanted = wantedDateTime(where);
               return (
                 saved.find((r) => new Date(r.date).getTime() === wanted) ?? null
               );
@@ -173,10 +177,7 @@ describe('DailyStatsService', () => {
           ...d,
         }),
         findOne: async ({ where }) => {
-          const wanted =
-            isRecord(where) && where.date instanceof Date
-              ? where.date.getTime()
-              : Number.NaN;
+          const wanted = wantedDateTime(where);
           return (
             store.find((r) => new Date(r.date).getTime() === wanted) ?? null
           );
@@ -184,16 +185,18 @@ describe('DailyStatsService', () => {
         upsert: upsertSpy,
       });
 
-      const payload = (plansCreated: number) => ({
-        plansByStatus: {},
-        plansCompleted: 0,
-        plansCreated,
-        plansUpdated: 0,
-        tasksByStatus: {},
-        tasksCompleted: 0,
-        tasksCreated: 0,
-        tasksUpdated: 0,
-      });
+      const payload = (plansCreated: number) => {
+        return {
+          plansByStatus: {},
+          plansCompleted: 0,
+          plansCreated,
+          plansUpdated: 0,
+          tasksByStatus: {},
+          tasksCompleted: 0,
+          tasksCreated: 0,
+          tasksUpdated: 0,
+        };
+      };
 
       const [first, second] = await Promise.all([
         localService.upsertForDate('2026-02-10', payload(1)),

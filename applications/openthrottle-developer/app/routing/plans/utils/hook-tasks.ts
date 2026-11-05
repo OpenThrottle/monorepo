@@ -11,10 +11,13 @@ interface HookRoleBearing {
 }
 
 /** @description True when a task row is a materialized lifecycle hook (has a hookRole). */
-export const isHookTask = (task: HookRoleBearing): boolean =>
-  task.hookRole != null;
+export const isHookTask = (task: HookRoleBearing): boolean => {
+  return task.hookRole != null;
+};
 
 /** @description Drops materialized hook tasks, keeping only regular tasks. */
 export const filterOutHookTasks = <T extends HookRoleBearing>(
   tasks: readonly T[],
-): T[] => tasks.filter((task) => !isHookTask(task));
+): T[] => {
+  return tasks.filter((task) => !isHookTask(task));
+};

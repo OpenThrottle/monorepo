@@ -21,22 +21,26 @@ import { TimelineScreen } from '../TimelineScreen';
 
 const baseProps = (
   overrides: Partial<TimelineScreenProps> = {},
-): TimelineScreenProps => ({
-  grouping: TimelineLaneGrouping.ByPlan,
-  markers: TIMELINE_FIXTURE_MARKERS,
-  selectedBranch: null,
-  selectedMarkerKinds: null,
-  selectedSpanKinds: null,
-  spans: TIMELINE_FIXTURE_SPANS,
-  truncation: [],
-  windowFromIso: FIXTURE_WINDOW_FROM.toISOString(),
-  windowPreset: '7d',
-  windowToIso: FIXTURE_WINDOW_TO.toISOString(),
-  ...overrides,
-});
+): TimelineScreenProps => {
+  return {
+    grouping: TimelineLaneGrouping.ByPlan,
+    markers: TIMELINE_FIXTURE_MARKERS,
+    selectedBranch: null,
+    selectedMarkerKinds: null,
+    selectedSpanKinds: null,
+    spans: TIMELINE_FIXTURE_SPANS,
+    truncation: [],
+    windowFromIso: FIXTURE_WINDOW_FROM.toISOString(),
+    windowPreset: '7d',
+    windowToIso: FIXTURE_WINDOW_TO.toISOString(),
+    ...overrides,
+  };
+};
 
 const renderScreen = (props: TimelineScreenProps): RenderResult => {
-  const Component = () => <TimelineScreen {...props} />;
+  const Component = () => {
+    return <TimelineScreen {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

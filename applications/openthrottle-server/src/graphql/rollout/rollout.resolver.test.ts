@@ -63,8 +63,12 @@ const userPrincipal: AuthPrincipal = {
   sub: 'user-1',
 };
 
-const permissionsFor = (method: keyof RolloutResolver): unknown =>
-  Reflect.getMetadata(PERMISSIONS_KEY, RolloutResolver.prototype[method]);
+const permissionsFor = (method: keyof RolloutResolver): unknown => {
+  return Reflect.getMetadata(
+    PERMISSIONS_KEY,
+    RolloutResolver.prototype[method],
+  );
+};
 
 describe('RolloutResolver', () => {
   let resolver: RolloutResolver;

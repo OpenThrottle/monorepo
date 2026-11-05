@@ -27,7 +27,6 @@ import { DOGFOOD_NX_PROJECT_NAME } from '~/routing/skills/config/availability';
 import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
 import {
   isSkillAvailabilityPosture,
-  type SkillAvailabilityPosture,
   type SkillAvailabilityRuleValue,
   type SkillTagValue,
 } from '~/routing/skills/utils/skill-availability';
@@ -66,11 +65,10 @@ export const loader = async (args: Route.LoaderArgs) => {
       ),
     ]);
 
-  const posture: SkillAvailabilityPosture | null =
-    skillAvailabilityRuleSet != null &&
-    isSkillAvailabilityPosture(skillAvailabilityRuleSet.posture)
-      ? skillAvailabilityRuleSet.posture
-      : null;
+  const savedPosture = skillAvailabilityRuleSet?.posture;
+  const hasValidPosture =
+    savedPosture != null && isSkillAvailabilityPosture(savedPosture);
+  const posture = hasValidPosture ? savedPosture : null;
 
   const rules: SkillAvailabilityRuleValue[] = (
     skillAvailabilityRuleSet?.rules ?? []
@@ -119,6 +117,22 @@ export default function Component(
   // Handlers
 
   // Markup
+  const missingProjectNotice = (
+    <p className="text-muted-foreground text-sm" role="alert">
+      No dogfood project (nx_project_name = &quot;
+      {DOGFOOD_NX_PROJECT_NAME}&quot;) is provisioned, so there is no project to
+      author rules for yet.
+    </p>
+  );
+  const authoring = (
+    <>
+      <SkillAvailabilityPostureCard
+        hasRuleSet={posture != null}
+        posture={posture}
+      />
+      <SkillAvailabilityRulesEditor rules={rules} vocabulary={tagNames} />
+    </>
+  );
 
   // Life Cycle
 
@@ -145,26 +159,14 @@ export default function Component(
           </Button>
         </div>
 
-        {projectId == null ? (
-          <p className="text-muted-foreground text-sm" role="alert">
-            No dogfood project (nx_project_name = &quot;
-            {DOGFOOD_NX_PROJECT_NAME}&quot;) is provisioned, so there is no
-            project to author rules for yet.
-          </p>
-        ) : (
-          <>
-            <SkillAvailabilityPostureCard
-              hasRuleSet={posture != null}
-              posture={posture}
-            />
-            <SkillAvailabilityRulesEditor rules={rules} vocabulary={tagNames} />
-          </>
-        )}
+        {projectId == null ? missingProjectNotice : authoring}
       </div>
     </GlobalScreen>
   );
 }
 
-export const action = (args: Route.ActionArgs) => runAvailabilityAction(args);
+export const action = (args: Route.ActionArgs) => {
+  return runAvailabilityAction(args);
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

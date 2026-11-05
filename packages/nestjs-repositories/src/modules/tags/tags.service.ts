@@ -70,7 +70,9 @@ const isPostgresError = (error: unknown, code: string): boolean => {
   );
 };
 
-const normalizeTag = (tag: string): string => tag.trim();
+const normalizeTag = (tag: string): string => {
+  return tag.trim();
+};
 
 const assertKebabCaseTag = (tag: string): void => {
   if (!AGENT_ASSET_SLUG_PATTERN.test(tag)) {
@@ -150,8 +152,11 @@ export class TagsService {
       await this.displaceExistingPhaseTag(planId, normalized, source);
     }
 
-    const findExisting = async (): Promise<PlanTag | null> =>
-      this.planTagsRepository.findOne({ where: { planId, tag: normalized } });
+    const findExisting = async (): Promise<PlanTag | null> => {
+      return this.planTagsRepository.findOne({
+        where: { planId, tag: normalized },
+      });
+    };
 
     const existing = await findExisting();
     if (existing != null) {
@@ -202,8 +207,11 @@ export class TagsService {
     const source = deriveTagSource(caller);
     const confidence = options.confidence ?? null;
 
-    const findExisting = async (): Promise<TaskTag | null> =>
-      this.taskTagsRepository.findOne({ where: { tag: normalized, taskId } });
+    const findExisting = async (): Promise<TaskTag | null> => {
+      return this.taskTagsRepository.findOne({
+        where: { tag: normalized, taskId },
+      });
+    };
 
     const existing = await findExisting();
     if (existing != null) {
@@ -298,10 +306,11 @@ export class TagsService {
     const source = deriveTagSource(caller);
     const confidence = options.confidence ?? null;
 
-    const findExisting = async (): Promise<ProjectTag | null> =>
-      this.projectTagsRepository.findOne({
+    const findExisting = async (): Promise<ProjectTag | null> => {
+      return this.projectTagsRepository.findOne({
         where: { projectId, tag: normalized },
       });
+    };
 
     const existing = await findExisting();
     if (existing != null) {
@@ -424,12 +433,7 @@ export class TagsService {
       return systemTag.dimension;
     }
 
-    const rows =
-      caller.principalKind === 'user'
-        ? await this.skillTagsService.listForUser(caller.subjectId)
-        : await this.skillTagsService
-            .getRepository()
-            .find({ where: { userId: caller.subjectId } });
+    const rows = await this.listVocabularyRows(caller);
 
     const entries: readonly { dimension: string; tag: string }[] =
       rows.length > 0 ? rows : DEFAULT_TAG_VOCABULARY_SEED;
@@ -444,6 +448,15 @@ export class TagsService {
       );
     }
     return dimension;
+  }
+
+  private listVocabularyRows(caller: TagCaller) {
+    if (caller.principalKind === 'user') {
+      return this.skillTagsService.listForUser(caller.subjectId);
+    }
+    return this.skillTagsService
+      .getRepository()
+      .find({ where: { userId: caller.subjectId } });
   }
 
   /**

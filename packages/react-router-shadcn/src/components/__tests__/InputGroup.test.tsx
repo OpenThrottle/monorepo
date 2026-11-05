@@ -14,7 +14,9 @@ describe('InputGroup Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <InputGroup {...props} />;
+    const Component = () => {
+      return <InputGroup {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

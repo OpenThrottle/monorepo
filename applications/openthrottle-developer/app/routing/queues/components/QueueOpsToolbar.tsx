@@ -9,7 +9,7 @@ import { QUEUE_STATE_FILTER_COPY } from '~/routing/queues/data/data.copy';
 import {
   QUEUE_JOB_STATE_DOT_COLOR,
   QUEUE_JOB_STATE_DOT_FALLBACK,
-} from '~/routing/queues/data/queue-job-state-dot-color';
+} from '~/routing/queues/data/data.queue-job-state-dot-color';
 import { queueJobStateLabel } from '~/routing/queues/utils/queue-job-state';
 
 export interface QueueOpsToolbarProps {
@@ -99,7 +99,7 @@ export const QueueOpsToolbar = (
           }}
         />
 
-        {filterOptions.length > 0 ? (
+        {filterOptions.length > 0 && (
           <div data-testid="QueueOpsToolbar-state-filter">
             <FacetedFilter
               footerActions={[
@@ -117,7 +117,7 @@ export const QueueOpsToolbar = (
               value={states}
             />
           </div>
-        ) : null}
+        )}
 
         <Button
           aria-label="Refresh"

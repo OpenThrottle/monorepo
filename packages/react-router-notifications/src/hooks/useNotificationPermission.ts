@@ -52,10 +52,8 @@ export const useNotificationPermission =
           return 'unsupported';
         }
         const result = await window.Notification.requestPermission();
-        const next: NotificationPermissionState =
-          result === 'granted' || result === 'denied' || result === 'default'
-            ? result
-            : 'unsupported';
+        const isKnown = ['default', 'denied', 'granted'].includes(result);
+        const next = isKnown ? result : 'unsupported';
         setPermission(next);
         return next;
       }, []);

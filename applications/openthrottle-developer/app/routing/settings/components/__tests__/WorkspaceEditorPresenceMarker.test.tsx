@@ -12,7 +12,9 @@ import { WorkspaceEditorPresenceMarker } from '../WorkspaceEditorPresenceMarker'
 const renderMarker = (
   props: WorkspaceEditorPresenceMarkerProps,
 ): RenderResult => {
-  const Component = () => <WorkspaceEditorPresenceMarker {...props} />;
+  const Component = () => {
+    return <WorkspaceEditorPresenceMarker {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

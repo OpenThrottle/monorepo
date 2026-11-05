@@ -26,7 +26,9 @@ const mockGithubStats = {
 function renderCard(
   cardProps: DashboardOpenPrsByAuthorCardProps,
 ): RenderResult {
-  const Component = () => <DashboardOpenPrsByAuthorCard {...cardProps} />;
+  const Component = () => {
+    return <DashboardOpenPrsByAuthorCard {...cardProps} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 }

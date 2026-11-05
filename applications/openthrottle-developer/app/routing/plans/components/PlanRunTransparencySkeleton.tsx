@@ -36,22 +36,24 @@ export const PlanRunTransparencySkeleton = (
   // Markup
   const sectionHeading = <Skeleton className="h-3 w-20" />;
 
-  const historyRow = (rowKey: string, cellClassName: string) => (
-    <div className="flex items-center gap-4 px-2 py-3" key={rowKey}>
-      <Skeleton className="size-4 shrink-0" />
-      {PLAN_RUN_TRANSPARENCY_SKELETON_HISTORY_COLUMNS.map((column) => (
-        <Skeleton
-          className={cn(
-            cellClassName,
-            column.widthClassName,
-            column.hiddenOnNarrow && 'hidden sm:block',
-          )}
-          key={column.key}
-        />
-      ))}
-      <Skeleton className="ml-auto size-4 shrink-0" />
-    </div>
-  );
+  const historyRow = (rowKey: string, cellClassName: string) => {
+    return (
+      <div className="flex items-center gap-4 px-2 py-3" key={rowKey}>
+        <Skeleton className="size-4 shrink-0" />
+        {PLAN_RUN_TRANSPARENCY_SKELETON_HISTORY_COLUMNS.map((column) => (
+          <Skeleton
+            className={cn(
+              cellClassName,
+              column.widthClassName,
+              column.hiddenOnNarrow && 'hidden sm:block',
+            )}
+            key={column.key}
+          />
+        ))}
+        <Skeleton className="ml-auto size-4 shrink-0" />
+      </div>
+    );
+  };
 
   // Life Cycle
 

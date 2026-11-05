@@ -13,13 +13,15 @@ const task = (
   sortOrder: number,
   createdAt: string,
   status: string,
-) => ({
-  createdAt,
-  id,
-  sortOrder,
-  status,
-  title: id,
-});
+) => {
+  return {
+    createdAt,
+    id,
+    sortOrder,
+    status,
+    title: id,
+  };
+};
 
 describe('comparePlanTaskListOrder', () => {
   it('orders by sortOrder ascending', () => {

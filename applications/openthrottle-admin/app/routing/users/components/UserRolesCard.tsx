@@ -33,6 +33,42 @@ export const UserRolesCard = (
   // Handlers
 
   // Markup
+  const assignRoleForm = (
+    <AssignRoleSelectForm availableRoles={availableRoles} fetcher={fetcher} />
+  );
+  const emptyRoles = (
+    <p className="text-muted-foreground text-sm">
+      No roles assigned. Assign one above.
+    </p>
+  );
+  const roleList = (
+    <ul className="flex flex-wrap gap-2">
+      {rolesForUser.map((r) => (
+        <li className="flex items-center gap-1" key={r.id}>
+          <Link
+            className="hover:text-primary font-medium underline underline-offset-2"
+            to={`/roles/${r.id}`}
+            viewTransition={true}
+          >
+            {r.name}
+          </Link>
+          <fetcher.Form method="post">
+            <input name="intent" type="hidden" value="removeRole" />
+            <input name="roleId" type="hidden" value={r.id} />
+            <Button
+              aria-label={`Remove role ${r.name}`}
+              disabled={fetcher.state !== 'idle'}
+              size="icon"
+              type="submit"
+              variant="ghost"
+            >
+              ×
+            </Button>
+          </fetcher.Form>
+        </li>
+      ))}
+    </ul>
+  );
 
   // Life Cycle
 
@@ -42,46 +78,10 @@ export const UserRolesCard = (
     <Card data-testid="user-roles">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg">Roles</CardTitle>
-        {availableRoles.length > 0 ? (
-          <AssignRoleSelectForm
-            availableRoles={availableRoles}
-            fetcher={fetcher}
-          />
-        ) : null}
+        {availableRoles.length > 0 ? assignRoleForm : null}
       </CardHeader>
       <CardContent>
-        {rolesForUser.length === 0 ? (
-          <p className="text-muted-foreground text-sm">
-            No roles assigned. Assign one above.
-          </p>
-        ) : (
-          <ul className="flex flex-wrap gap-2">
-            {rolesForUser.map((r) => (
-              <li className="flex items-center gap-1" key={r.id}>
-                <Link
-                  className="hover:text-primary font-medium underline underline-offset-2"
-                  to={`/roles/${r.id}`}
-                  viewTransition={true}
-                >
-                  {r.name}
-                </Link>
-                <fetcher.Form method="post">
-                  <input name="intent" type="hidden" value="removeRole" />
-                  <input name="roleId" type="hidden" value={r.id} />
-                  <Button
-                    aria-label={`Remove role ${r.name}`}
-                    disabled={fetcher.state !== 'idle'}
-                    size="icon"
-                    type="submit"
-                    variant="ghost"
-                  >
-                    ×
-                  </Button>
-                </fetcher.Form>
-              </li>
-            ))}
-          </ul>
-        )}
+        {rolesForUser.length === 0 ? emptyRoles : roleList}
       </CardContent>
     </Card>
   );

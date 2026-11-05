@@ -12,7 +12,7 @@ import * as React from 'react';
 import type {
   DefinitionLocation,
   ReferenceLocation,
-} from '../data/view-models';
+} from '../data/data.view-models';
 
 export interface LocationTableProps {
   rows: (DefinitionLocation | ReferenceLocation)[];
@@ -35,6 +35,11 @@ export const LocationTable = (
   // Handlers
 
   // Markup
+  const writeBadge = (
+    <Badge className="ml-2" color="amber" size="xs">
+      write
+    </Badge>
+  );
 
   // Life Cycle
 
@@ -53,21 +58,21 @@ export const LocationTable = (
           </TableRow>
         </TableHeader>
         <TableBody>
-          {rows.map((row, index) => (
-            <TableRow key={`${row.path}:${row.line}:${row.column}:${index}`}>
-              <TableCell className="font-mono text-xs">
-                {row.path}
-                {'isWrite' in row && row.isWrite ? (
-                  <Badge className="ml-2" color="amber" size="xs">
-                    write
-                  </Badge>
-                ) : null}
-              </TableCell>
-              <TableCell className="text-muted-foreground text-right text-xs">
-                {row.line}:{row.column}
-              </TableCell>
-            </TableRow>
-          ))}
+          {rows.map((row, index) => {
+            const isWrite = 'isWrite' in row && row.isWrite;
+
+            return (
+              <TableRow key={`${row.path}:${row.line}:${row.column}:${index}`}>
+                <TableCell className="font-mono text-xs">
+                  {row.path}
+                  {isWrite ? writeBadge : null}
+                </TableCell>
+                <TableCell className="text-muted-foreground text-right text-xs">
+                  {row.line}:{row.column}
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>

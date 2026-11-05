@@ -98,18 +98,18 @@ export const useSkillCreateForm = (): UseSkillCreateFormResult => {
 
   const content = isDocumentDirty ? draft : seededContent;
 
-  const livePath =
-    destination === SKILL_CREATE_DESTINATIONS.repo
-      ? `skills/${scaffoldName}/SKILL.md`
-      : `${scaffoldName}/SKILL.md`;
+  const isRepoDestination = destination === SKILL_CREATE_DESTINATIONS.repo;
+  const repoPath = `skills/${scaffoldName}/SKILL.md`;
+  const personalPath = `${scaffoldName}/SKILL.md`;
+  const livePath = isRepoDestination ? repoPath : personalPath;
   const editorPath = frozenPathRef.current ?? livePath;
 
   // A slug is only wrong once something has been typed — an untouched field
   // should not greet the author with an error.
-  const slugError =
-    trimmedSlug.length > 0 && !SKILL_CREATE_SLUG_PATTERN.test(trimmedSlug)
-      ? SKILL_CREATE_COPY.invalidSlugError
-      : undefined;
+  const hasInvalidSlug =
+    trimmedSlug.length > 0 && !SKILL_CREATE_SLUG_PATTERN.test(trimmedSlug);
+  const invalidSlugError = SKILL_CREATE_COPY.invalidSlugError;
+  const slugError = hasInvalidSlug ? invalidSlugError : undefined;
 
   const isSubmitting = fetcher.state === 'submitting';
   const error = fetcher.data?.error;

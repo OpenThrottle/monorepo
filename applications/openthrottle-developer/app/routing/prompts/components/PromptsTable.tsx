@@ -132,7 +132,7 @@ PromptsTable.buildTable = (): ColumnDef<
             ) : null} */}
 
             <div className="text-muted-foreground flex w-full flex-wrap gap-x-4 gap-y-1 text-xs">
-              {fileBasename ? (
+              {fileBasename && (
                 <span
                   className="flex items-center gap-1"
                   title={prompt.filePath ?? undefined}
@@ -140,7 +140,7 @@ PromptsTable.buildTable = (): ColumnDef<
                   <FileText className="h-3 w-3 shrink-0" />
                   <span className="truncate">{fileBasename}</span>
                 </span>
-              ) : null}
+              )}
 
               <span className="flex items-center gap-1">
                 <Clock className="h-3 w-3 shrink-0" />

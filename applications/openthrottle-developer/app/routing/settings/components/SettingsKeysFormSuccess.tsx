@@ -34,10 +34,17 @@ export const SettingsKeysFormSuccess = (
   // Hooks
 
   // Setup
+  const trimmedLabel = payload.credential.label?.trim();
 
   // Handlers
 
   // Markup
+  const labelMarkup = (
+    <p className="text-muted-foreground text-sm">
+      <span className="text-foreground font-medium">Label:</span>{' '}
+      {payload.credential.label}
+    </p>
+  );
 
   // Life Cycle
 
@@ -88,12 +95,7 @@ export const SettingsKeysFormSuccess = (
           </InputGroup>
         </div>
 
-        {payload.credential.label?.trim() ? (
-          <p className="text-muted-foreground text-sm">
-            <span className="text-foreground font-medium">Label:</span>{' '}
-            {payload.credential.label}
-          </p>
-        ) : null}
+        {trimmedLabel ? labelMarkup : null}
         <p className="text-muted-foreground font-mono text-xs">
           Prefix: {payload.credential.prefix}
         </p>

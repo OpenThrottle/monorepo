@@ -20,14 +20,16 @@ const COPY = PLAN_RUN_CANCEL_SCHEDULED_COPY;
 
 describe('PlanRunCancelScheduledDialog Component', () => {
   test('opens from the open prop alone, with no trigger, and renders the confirm copy', async () => {
-    const Component = () => (
-      <PlanRunCancelScheduledDialog
-        onOpenChange={vi.fn()}
-        open={true}
-        planId="plan-1"
-        planRunId="run-9"
-      />
-    );
+    const Component = () => {
+      return (
+        <PlanRunCancelScheduledDialog
+          onOpenChange={vi.fn()}
+          open={true}
+          planId="plan-1"
+          planRunId="run-9"
+        />
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
 
@@ -44,14 +46,16 @@ describe('PlanRunCancelScheduledDialog Component', () => {
     const onOpenChange = vi.fn();
     const submissions: FormData[] = [];
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <PlanRunCancelScheduledDialog
-        onOpenChange={onOpenChange}
-        open={true}
-        planId="plan-1"
-        planRunId="run-9"
-      />
-    );
+    const Component = () => {
+      return (
+        <PlanRunCancelScheduledDialog
+          onOpenChange={onOpenChange}
+          open={true}
+          planId="plan-1"
+          planRunId="run-9"
+        />
+      );
+    };
     const RoutesStub = createRoutesStub([
       { Component, path: '/' },
       {

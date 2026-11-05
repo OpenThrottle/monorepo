@@ -14,7 +14,9 @@ describe('TableBody Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <TableBody {...props} />;
+    const Component = () => {
+      return <TableBody {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

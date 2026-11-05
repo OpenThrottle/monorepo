@@ -25,11 +25,12 @@ export interface ResolvedIdeRepository {
 /** Map registered local repositories to the selector's plain `{ id, label }` options. */
 export const toRepositoryOptions = (
   repositories: IdeWorkspaceRepository[],
-): IdeRepositoryOption[] =>
-  repositories.map((repository) => ({
+): IdeRepositoryOption[] => {
+  return repositories.map((repository) => ({
     id: repository.id,
     label: repository.displayName,
   }));
+};
 
 /**
  * Resolve the selected repository into a {@link WorkspaceConfig} (rooted at its

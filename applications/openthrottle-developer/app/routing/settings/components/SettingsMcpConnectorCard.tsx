@@ -18,7 +18,7 @@ import type {
 import {
   MCP_AUTH_TYPE_LABEL,
   MCP_TRANSPORT_LABEL,
-} from '~/routing/settings/data/mcp-connectors.data';
+} from '~/routing/settings/data/data.mcp-connectors';
 import { getConnectorStatus } from '~/routing/settings/utils/settings-mcp-connection';
 
 import { SettingsMcpConnectionStatusBadge } from './SettingsMcpConnectionStatusBadge';

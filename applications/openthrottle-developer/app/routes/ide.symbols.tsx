@@ -27,7 +27,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     throw new Response('A valid repositoryId is required', { status: 400 });
   }
 
-  const { exportsVM } = await import('~/routing/ide/data/ide-engine.server');
+  const { exportsVM } = await import('~/routing/ide/utils/ide-engine.server');
 
   return exportsVM(resolved.config, resolved.repository);
 };

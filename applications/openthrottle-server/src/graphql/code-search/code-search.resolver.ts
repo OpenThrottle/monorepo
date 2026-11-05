@@ -24,6 +24,7 @@ import type {
   CodeIndexJobPayload,
   CodeIndexJobResult,
 } from '../../queues/code-index/code-index.types.ts';
+import type { CodeIndexStatus } from './code-index-status.ts';
 import { CODE_INDEX_STATUS } from './code-index-status.ts';
 import { CodeSemanticSearchInput } from './code-search.input.ts';
 import {
@@ -109,11 +110,12 @@ export class CodeSearchResolver {
     const indexedChunks =
       await this.codeSearch.indexedChunkCount(filesystemPath);
     const isPending = await this.isIndexJobPending(repositoryId);
-    const status = isPending
-      ? CODE_INDEX_STATUS.indexing
-      : indexedChunks > 0
-        ? CODE_INDEX_STATUS.ready
-        : CODE_INDEX_STATUS.notIndexed;
+    let status: CodeIndexStatus = CODE_INDEX_STATUS.notIndexed;
+    if (isPending) {
+      status = CODE_INDEX_STATUS.indexing;
+    } else if (indexedChunks > 0) {
+      status = CODE_INDEX_STATUS.ready;
+    }
 
     return { indexedChunks, repositoryId, status };
   }

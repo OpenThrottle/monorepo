@@ -16,13 +16,15 @@ const COLLAPSING_CLASSES = [
 ];
 
 const renderGroup = (props: ToggleGroupProps): RenderResult => {
-  const Component = () => (
-    <ToggleGroup {...props}>
-      <ToggleGroupItem value="a">A</ToggleGroupItem>
-      <ToggleGroupItem value="b">B</ToggleGroupItem>
-      <ToggleGroupItem value="c">C</ToggleGroupItem>
-    </ToggleGroup>
-  );
+  const Component = () => {
+    return (
+      <ToggleGroup {...props}>
+        <ToggleGroupItem value="a">A</ToggleGroupItem>
+        <ToggleGroupItem value="b">B</ToggleGroupItem>
+        <ToggleGroupItem value="c">C</ToggleGroupItem>
+      </ToggleGroup>
+    );
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

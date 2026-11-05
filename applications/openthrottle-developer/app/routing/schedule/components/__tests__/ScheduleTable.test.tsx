@@ -15,21 +15,23 @@ import { ScheduleTable } from '../ScheduleTable';
 
 const job = (
   overrides: Partial<ScheduledJobCardFragment> = {},
-): ScheduledJobCardFragment => ({
-  __typename: 'ScheduledAgentJobObject',
-  cronPattern: '0 9 * * *',
-  driverId: 'claude',
-  enabled: true,
-  id: 'job-1',
-  lastRunAt: null,
-  model: 'opus',
-  name: 'Nightly digest',
-  nextRunAt: '2026-08-13T09:00:00.000Z',
-  scheduleKind: 'cron',
-  timezone: 'UTC',
-  updatedAt: '2026-08-12T00:00:00.000Z',
-  ...overrides,
-});
+): ScheduledJobCardFragment => {
+  return {
+    __typename: 'ScheduledAgentJobObject',
+    cronPattern: '0 9 * * *',
+    driverId: 'claude',
+    enabled: true,
+    id: 'job-1',
+    lastRunAt: null,
+    model: 'opus',
+    name: 'Nightly digest',
+    nextRunAt: '2026-08-13T09:00:00.000Z',
+    scheduleKind: 'cron',
+    timezone: 'UTC',
+    updatedAt: '2026-08-12T00:00:00.000Z',
+    ...overrides,
+  };
+};
 
 describe('ScheduleTable Component', () => {
   let component: RenderResult;
@@ -40,7 +42,9 @@ describe('ScheduleTable Component', () => {
   });
 
   const renderTable = (): RenderResult => {
-    const Component = () => <ScheduleTable {...props} />;
+    const Component = () => {
+      return <ScheduleTable {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     return render(<RoutesStub />);
   };

@@ -69,15 +69,24 @@ export interface PlanRunRecord {
 }
 
 /** @public */
-export const planRunsDir = (repoRoot: string): string =>
-  path.join(repoRoot, PLAN_RUNS_DIR_REL);
+export const planRunsDir = (repoRoot: string): string => {
+  return path.join(repoRoot, PLAN_RUNS_DIR_REL);
+};
 
-const sanitizeSessionId = (sessionId: string): string =>
-  String(sessionId).replace(/[^A-Za-z0-9._-]/g, '-');
+const sanitizeSessionId = (sessionId: string): string => {
+  return String(sessionId).replace(/[^A-Za-z0-9._-]/g, '-');
+};
 
 /** @public */
-export const planRunFilePath = (repoRoot: string, sessionId: string): string =>
-  path.join(planRunsDir(repoRoot), `${sanitizeSessionId(sessionId)}.json`);
+export const planRunFilePath = (
+  repoRoot: string,
+  sessionId: string,
+): string => {
+  return path.join(
+    planRunsDir(repoRoot),
+    `${sanitizeSessionId(sessionId)}.json`,
+  );
+};
 
 /**
  * @description Records the run this session opened, so a later session can settle it
@@ -242,17 +251,17 @@ export const settleAbandonedPlanRuns = async ({
     return { settled: 0 };
   }
 
-  const currentFile =
-    typeof currentSessionId === 'string' && currentSessionId.trim() !== ''
-      ? `${sanitizeSessionId(currentSessionId.trim())}.json`
-      : null;
+  let currentFile: string | null = null;
+  if (typeof currentSessionId === 'string' && currentSessionId.trim() !== '') {
+    currentFile = `${sanitizeSessionId(currentSessionId.trim())}.json`;
+  }
 
   // `undefined` means "resolve it"; an explicit null means "there is none" — the two
   // are different answers, and `??` would collapse them.
-  const graphqlUrl =
-    graphqlUrlOverride === undefined
-      ? resolveGraphqlUrl(repoRoot)
-      : graphqlUrlOverride;
+  let graphqlUrl = graphqlUrlOverride;
+  if (graphqlUrlOverride === undefined) {
+    graphqlUrl = resolveGraphqlUrl(repoRoot);
+  }
   if (!graphqlUrl) return { settled: 0 };
   const authToken = authTokenOverride ?? resolveAuthToken(repoRoot);
 

@@ -18,7 +18,9 @@ describe('OpenThrottleThemeToggle Component', () => {
     onValueChange = vi.fn<(mode: ThemeMode) => void>();
     props = { onValueChange, value: 'system' };
 
-    const Component = () => <OpenThrottleThemeToggle {...props} />;
+    const Component = () => {
+      return <OpenThrottleThemeToggle {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

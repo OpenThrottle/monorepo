@@ -9,8 +9,9 @@ import { IS_BROWSER } from '@openthrottle/react-router-utils';
 const PERSISTENT_SETTING_KEY_PREFIX = 'openthrottle-developer:setting:';
 
 /** Builds the namespaced localStorage key for a setting name. */
-export const buildPersistentSettingKey = (name: string): string =>
-  `${PERSISTENT_SETTING_KEY_PREFIX}${name}`;
+export const buildPersistentSettingKey = (name: string): string => {
+  return `${PERSISTENT_SETTING_KEY_PREFIX}${name}`;
+};
 
 /**
  * Per-key snapshot cache. `useSyncExternalStore` requires `getSnapshot` to

@@ -19,23 +19,25 @@ import type {
 /**
  * @description Default Ralph subsection for v1 `run_config` (matches Configuration tab defaults).
  */
-export const getDefaultPlanRunConfigRalphV1 = (): PlanRunConfigRalphV1 => ({
-  debugCli: DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI,
-  effort: DEFAULT_PLAN_RUN_RALPH_EFFORT,
-  executionBackend: DEFAULT_PLAN_RUN_RALPH_RUNNER,
-  iterationTimeoutText: '',
-  iterations: DEFAULT_PLAN_RUN_RALPH_ITERATIONS,
-  model: DEFAULT_PLAN_RUN_RALPH_MODEL,
-  project: '',
-  prompt: DEFAULT_PLAN_RUN_RALPH_PROMPT,
-  promptFile: '',
-  promptLayer: 'named',
-  skipWorktreeSetup: false,
-  worktreeBase: '',
-  worktreeCli: DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLI,
-  // Blank name means "derive it at enqueue", not "no worktree".
-  worktreeName: '',
-});
+export const getDefaultPlanRunConfigRalphV1 = (): PlanRunConfigRalphV1 => {
+  return {
+    debugCli: DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI,
+    effort: DEFAULT_PLAN_RUN_RALPH_EFFORT,
+    executionBackend: DEFAULT_PLAN_RUN_RALPH_RUNNER,
+    iterationTimeoutText: '',
+    iterations: DEFAULT_PLAN_RUN_RALPH_ITERATIONS,
+    model: DEFAULT_PLAN_RUN_RALPH_MODEL,
+    project: '',
+    prompt: DEFAULT_PLAN_RUN_RALPH_PROMPT,
+    promptFile: '',
+    promptLayer: 'named',
+    skipWorktreeSetup: false,
+    worktreeBase: '',
+    worktreeCli: DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLI,
+    // Blank name means "derive it at enqueue", not "no worktree".
+    worktreeName: '',
+  };
+};
 
 /**
  * @description Resolves target mode the same way as `getDefaultWorkflowRalphRunOptionsInput`.
@@ -55,19 +57,21 @@ const resolveDefaultTargetMode = (options?: {
 export const getDefaultPlanRunConfigStorage = (options?: {
   readonly planId?: string;
   readonly taskId?: string;
-}): PlanRunConfigStorage => ({
-  ralph: getDefaultPlanRunConfigRalphV1(),
-  target: {
-    mode: resolveDefaultTargetMode(options),
-    taskId: options?.taskId?.trim() ?? '',
-  },
-  version: PLAN_RUN_CONFIG_VERSION,
-  workspace: {
-    checkoutId: '',
-    repositoryId: '',
-    workingDirectory: '',
-  },
-});
+}): PlanRunConfigStorage => {
+  return {
+    ralph: getDefaultPlanRunConfigRalphV1(),
+    target: {
+      mode: resolveDefaultTargetMode(options),
+      taskId: options?.taskId?.trim() ?? '',
+    },
+    version: PLAN_RUN_CONFIG_VERSION,
+    workspace: {
+      checkoutId: '',
+      repositoryId: '',
+      workingDirectory: '',
+    },
+  };
+};
 
 /**
  * @description Default Plan Configuration UI state for a plan route.

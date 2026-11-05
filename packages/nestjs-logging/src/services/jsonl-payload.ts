@@ -68,14 +68,18 @@ export const orderJsonlRootObjectKeys = (
 
 const ALLOWED_LEVELS = new Set<string>(ALL_NESTJS_LOGGING_LEVELS);
 
-const isNestjsLoggingLevel = (value: unknown): value is NestjsLoggingLevel =>
-  typeof value === 'string' && ALLOWED_LEVELS.has(value);
+const isNestjsLoggingLevel = (value: unknown): value is NestjsLoggingLevel => {
+  return typeof value === 'string' && ALLOWED_LEVELS.has(value);
+};
 
-const isJsonPrimitive = (value: unknown): value is JsonPrimitive =>
-  value === null ||
-  typeof value === 'boolean' ||
-  typeof value === 'number' ||
-  typeof value === 'string';
+const isJsonPrimitive = (value: unknown): value is JsonPrimitive => {
+  return (
+    value === null ||
+    typeof value === 'boolean' ||
+    typeof value === 'number' ||
+    typeof value === 'string'
+  );
+};
 
 /**
  * @description Validates JSON-serializable values for {@link StructuredLogRecord.extra}. Tracks
@@ -113,11 +117,14 @@ const isJsonValue = (
  */
 const isJsonRecord = (
   value: unknown,
-): value is Readonly<Record<string, JsonValue>> =>
-  typeof value === 'object' &&
-  value !== null &&
-  !Array.isArray(value) &&
-  isJsonValue(value);
+): value is Readonly<Record<string, JsonValue>> => {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    isJsonValue(value)
+  );
+};
 
 /**
  * @description Parses wire `extra` when present; returns undefined if absent or invalid.
@@ -152,6 +159,25 @@ const normalizeExtraForEmit = (
   }
 
   return Object.keys(normalized).length > 0 ? normalized : undefined;
+};
+
+const resolveTimestampIso = (
+  raw: Record<string, unknown>,
+): string | undefined => {
+  if (typeof raw.timestamp === 'string') {
+    return raw.timestamp;
+  }
+  if (typeof raw.timestampIso === 'string') {
+    return raw.timestampIso;
+  }
+  return undefined;
+};
+
+const parseIntegerPid = (pidRaw: unknown): number | undefined => {
+  if (typeof pidRaw === 'number' && Number.isInteger(pidRaw)) {
+    return pidRaw;
+  }
+  return undefined;
 };
 
 /**
@@ -214,8 +240,9 @@ export const structuredLogRecordToJsonlPayload = (
 export const serializeStructuredLogLine = (
   record: StructuredLogRecord,
   redactor: LogRedactor = DEFAULT_LOG_REDACTOR,
-): string =>
-  `${JSON.stringify(structuredLogRecordToJsonlPayload(record, redactor))}\n`;
+): string => {
+  return `${JSON.stringify(structuredLogRecordToJsonlPayload(record, redactor))}\n`;
+};
 
 /**
  * @description Parses one JSONL object line into {@link StructuredLogRecord}; returns undefined for empty or invalid lines. Extra top-level keys are ignored (see `docs/openclaw-style-contract.md` §4).
@@ -247,12 +274,7 @@ export const parseJsonlLineToStructuredRecord = (
 
     const level = raw.level;
     const message = raw.message;
-    const timestamp =
-      typeof raw.timestamp === 'string'
-        ? raw.timestamp
-        : typeof raw.timestampIso === 'string'
-          ? raw.timestampIso
-          : undefined;
+    const timestamp = resolveTimestampIso(raw);
 
     if (
       typeof message !== 'string' ||
@@ -269,12 +291,7 @@ export const parseJsonlLineToStructuredRecord = (
     const pidRaw = raw.pid;
     const extra = parseExtraField(raw.extra);
 
-    const parsedPid =
-      typeof pidRaw === 'number' &&
-      Number.isFinite(pidRaw) &&
-      Number.isInteger(pidRaw)
-        ? pidRaw
-        : undefined;
+    const parsedPid = parseIntegerPid(pidRaw);
 
     return {
       context,

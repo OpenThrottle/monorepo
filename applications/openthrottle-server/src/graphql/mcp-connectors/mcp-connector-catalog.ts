@@ -54,8 +54,7 @@ export const MCP_CONNECTOR_CATALOG: readonly McpConnectorCatalogEntry[] = [
   {
     authType: 'oauth',
     category: 'Project management',
-    description:
-      'Jira and Confluence — issues, pages, and project context from Atlassian.',
+    description: `Jira and Confluence — issues, pages, and project context from Atlassian.`,
     docsUrl: 'https://www.atlassian.com/platform/remote-mcp-server',
     endpointUrl: 'https://mcp.atlassian.com/v1/sse',
     iconHint: 'atlassian',
@@ -67,8 +66,7 @@ export const MCP_CONNECTOR_CATALOG: readonly McpConnectorCatalogEntry[] = [
   {
     authType: 'oauth',
     category: 'Design',
-    description:
-      'Read Figma designs and Dev Mode context for design-to-code workflows.',
+    description: `Read Figma designs and Dev Mode context for design-to-code workflows.`,
     docsUrl: 'https://help.figma.com/hc/en-us/articles/32132100833559',
     endpointUrl: 'https://mcp.figma.com/mcp',
     iconHint: 'figma',
@@ -80,8 +78,7 @@ export const MCP_CONNECTOR_CATALOG: readonly McpConnectorCatalogEntry[] = [
   {
     authType: 'oauth',
     category: 'Development',
-    description:
-      'Repositories, issues, and pull requests via the official GitHub MCP server.',
+    description: `Repositories, issues, and pull requests via the official GitHub MCP server.`,
     docsUrl: 'https://github.com/github/github-mcp-server',
     endpointUrl: 'https://api.githubcopilot.com/mcp/',
     iconHint: 'github',
@@ -93,10 +90,8 @@ export const MCP_CONNECTOR_CATALOG: readonly McpConnectorCatalogEntry[] = [
   {
     authType: 'oauth',
     category: 'Storage',
-    description:
-      'Search and read Google Drive files via the reference Drive MCP server.',
-    docsUrl:
-      'https://github.com/modelcontextprotocol/servers/tree/main/src/gdrive',
+    description: `Search and read Google Drive files via the reference Drive MCP server.`,
+    docsUrl: `https://github.com/modelcontextprotocol/servers/tree/main/src/gdrive`,
     endpointUrl: null,
     iconHint: 'google-drive',
     key: 'google-drive',
@@ -107,8 +102,7 @@ export const MCP_CONNECTOR_CATALOG: readonly McpConnectorCatalogEntry[] = [
   {
     authType: 'oauth',
     category: 'Project management',
-    description:
-      'Linear issues, projects, and cycles from the hosted Linear MCP.',
+    description: `Linear issues, projects, and cycles from the hosted Linear MCP.`,
     docsUrl: 'https://linear.app/docs/mcp',
     endpointUrl: 'https://mcp.linear.app/sse',
     iconHint: 'linear',
@@ -120,8 +114,7 @@ export const MCP_CONNECTOR_CATALOG: readonly McpConnectorCatalogEntry[] = [
   {
     authType: 'oauth',
     category: 'Knowledge base',
-    description:
-      'Search and read Notion pages and databases via the hosted Notion MCP.',
+    description: `Search and read Notion pages and databases via the hosted Notion MCP.`,
     docsUrl: 'https://developers.notion.com/docs/mcp',
     endpointUrl: 'https://mcp.notion.com/mcp',
     iconHint: 'notion',
@@ -133,10 +126,8 @@ export const MCP_CONNECTOR_CATALOG: readonly McpConnectorCatalogEntry[] = [
   {
     authType: 'api_token',
     category: 'Database',
-    description:
-      'Read-only SQL over a Postgres database via the reference Postgres MCP server.',
-    docsUrl:
-      'https://github.com/modelcontextprotocol/servers/tree/main/src/postgres',
+    description: `Read-only SQL over a Postgres database via the reference Postgres MCP server.`,
+    docsUrl: `https://github.com/modelcontextprotocol/servers/tree/main/src/postgres`,
     endpointUrl: null,
     iconHint: 'postgres',
     key: 'postgres',
@@ -159,8 +150,7 @@ export const MCP_CONNECTOR_CATALOG: readonly McpConnectorCatalogEntry[] = [
   {
     authType: 'oauth',
     category: 'Communication',
-    description:
-      'Slack channels, messages, and search — brokered via the Anthropic connector directory.',
+    description: `Slack channels, messages, and search — brokered via the Anthropic connector directory.`,
     docsUrl: 'https://api.slack.com',
     endpointUrl: null,
     iconHint: 'slack',
@@ -172,8 +162,7 @@ export const MCP_CONNECTOR_CATALOG: readonly McpConnectorCatalogEntry[] = [
   {
     authType: 'api_token',
     category: 'Payments',
-    description:
-      'Stripe payments, customers, and billing via the hosted Stripe MCP (restricted API key).',
+    description: `Stripe payments, customers, and billing via the hosted Stripe MCP (restricted API key).`,
     docsUrl: 'https://docs.stripe.com/mcp',
     endpointUrl: 'https://mcp.stripe.com',
     iconHint: 'stripe',

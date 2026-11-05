@@ -16,7 +16,9 @@ describe('formatChatTimestamp', () => {
 
 describe('formatRelativeChatTimestamp', () => {
   const now = new Date('2026-07-29T12:00:00.000Z').getTime();
-  const at = (iso: string): string => formatRelativeChatTimestamp(iso, now);
+  const at = (iso: string): string => {
+    return formatRelativeChatTimestamp(iso, now);
+  };
 
   test('renders "just now" under a minute', () => {
     expect(at('2026-07-29T11:59:30.000Z')).toBe('just now');

@@ -9,16 +9,18 @@ import { BlogPostEditorActions } from '../BlogPostEditorActions';
 
 const props = (
   overrides: Partial<BlogPostEditorActionsProps> = {},
-): BlogPostEditorActionsProps => ({
-  canSave: true,
-  isDirty: true,
-  isSaved: false,
-  isSaving: false,
-  lifecycle: null,
-  onSave: vi.fn(),
-  saveError: null,
-  ...overrides,
-});
+): BlogPostEditorActionsProps => {
+  return {
+    canSave: true,
+    isDirty: true,
+    isSaved: false,
+    isSaving: false,
+    lifecycle: null,
+    onSave: vi.fn(),
+    saveError: null,
+    ...overrides,
+  };
+};
 
 describe('BlogPostEditorActions Component', () => {
   test('saves on click and flags unsaved changes', async () => {

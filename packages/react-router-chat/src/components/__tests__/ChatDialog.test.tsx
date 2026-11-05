@@ -23,7 +23,9 @@ describe('ChatDialog Component', () => {
   ];
 
   const renderDialog = (p: ChatDialogProps): RenderResult => {
-    const Comp = () => <ChatDialog {...p} />;
+    const Comp = () => {
+      return <ChatDialog {...p} />;
+    };
     const RoutesStub = createRoutesStub([{ Component: Comp, path: '/' }]);
     return render(<RoutesStub />);
   };
@@ -145,17 +147,19 @@ describe('ChatDialog Component', () => {
       const user = userEvent.setup();
       const onStartNewChat = vi.fn();
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const Comp = () => (
-        <TooltipProvider>
-          <ChatProvider
-            messages={messages}
-            onSendMessage={onSendMessage}
-            onStartNewChat={onStartNewChat}
-          >
-            <ChatDialog triggerLabel="Open assistant" />
-          </ChatProvider>
-        </TooltipProvider>
-      );
+      const Comp = () => {
+        return (
+          <TooltipProvider>
+            <ChatProvider
+              messages={messages}
+              onSendMessage={onSendMessage}
+              onStartNewChat={onStartNewChat}
+            >
+              <ChatDialog triggerLabel="Open assistant" />
+            </ChatProvider>
+          </TooltipProvider>
+        );
+      };
       const RoutesStub = createRoutesStub([{ Component: Comp, path: '/' }]);
       component = render(<RoutesStub />);
 
@@ -186,28 +190,32 @@ describe('ChatDialog Component', () => {
   describe('when a composer selection surface is provided', () => {
     const buildComposer = (
       overrides: Partial<ChatComposerControls> = {},
-    ): ChatComposerControls => ({
-      mode: ChatComposerMode.plan,
-      modelId: 'm1',
-      models: [{ id: 'm1', label: 'Model One' }],
-      ...overrides,
-    });
+    ): ChatComposerControls => {
+      return {
+        mode: ChatComposerMode.plan,
+        modelId: 'm1',
+        models: [{ id: 'm1', label: 'Model One' }],
+        ...overrides,
+      };
+    };
 
     const mountWithComposer = (
       composer: ChatComposerControls,
     ): RenderResult => {
       component?.unmount();
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const Comp = () => (
-        <TooltipProvider>
-          <ChatDialog
-            composer={composer}
-            messages={messages}
-            onSendMessage={onSendMessage}
-            triggerLabel="Open assistant"
-          />
-        </TooltipProvider>
-      );
+      const Comp = () => {
+        return (
+          <TooltipProvider>
+            <ChatDialog
+              composer={composer}
+              messages={messages}
+              onSendMessage={onSendMessage}
+              triggerLabel="Open assistant"
+            />
+          </TooltipProvider>
+        );
+      };
       const RoutesStub = createRoutesStub([{ Component: Comp, path: '/' }]);
       component = render(<RoutesStub />);
       return component;
@@ -266,16 +274,18 @@ describe('ChatDialog Component', () => {
       conversationSidebar?: ChatDialogProps['conversationSidebar'],
     ): RenderResult => {
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const Comp = (): React.ReactElement => (
-        <TooltipProvider>
-          <ChatDialog
-            conversationSidebar={conversationSidebar}
-            messages={messages}
-            onSendMessage={onSendMessage}
-            triggerLabel="Open assistant"
-          />
-        </TooltipProvider>
-      );
+      const Comp = (): React.ReactElement => {
+        return (
+          <TooltipProvider>
+            <ChatDialog
+              conversationSidebar={conversationSidebar}
+              messages={messages}
+              onSendMessage={onSendMessage}
+              triggerLabel="Open assistant"
+            />
+          </TooltipProvider>
+        );
+      };
       const RoutesStub = createRoutesStub([{ Component: Comp, path: '/' }]);
       component = render(<RoutesStub />);
       return component;
@@ -398,9 +408,9 @@ describe('ChatDialog Component', () => {
   describe('when messages and onSendMessage are missing', () => {
     test('should surface error without ChatProvider', () => {
       // eslint-disable-next-line react/no-multi-comp -- test-local mock component
-      const Broken = (): React.ReactElement => (
-        <ChatDialog triggerLabel="Broken" />
-      );
+      const Broken = (): React.ReactElement => {
+        return <ChatDialog triggerLabel="Broken" />;
+      };
       const RoutesStub = createRoutesStub([{ Component: Broken, path: '/' }]);
       component = render(<RoutesStub />);
       expect(

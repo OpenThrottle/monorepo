@@ -35,10 +35,12 @@ export const REPOSITORIES_SORT_OPTIONS: readonly {
 
 export const isRepositoriesSortBy = (
   value: string,
-): value is RepositoriesSortBy =>
-  REPOSITORIES_SORT_BY.some((candidate) => candidate === value);
+): value is RepositoriesSortBy => {
+  return REPOSITORIES_SORT_BY.some((candidate) => candidate === value);
+};
 
 export const isRepositoriesSortOrder = (
   value: string,
-): value is RepositoriesSortOrder =>
-  REPOSITORIES_SORT_ORDER.some((candidate) => candidate === value);
+): value is RepositoriesSortOrder => {
+  return REPOSITORIES_SORT_ORDER.some((candidate) => candidate === value);
+};

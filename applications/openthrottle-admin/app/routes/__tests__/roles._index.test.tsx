@@ -23,18 +23,20 @@ import type { Route } from '@/app/routes/+types/roles._index';
 
 import * as RouteModule from '../roles._index';
 
-const createLoaderArgs = () =>
-  buildLoaderArgs<Route.LoaderArgs>({
+const createLoaderArgs = () => {
+  return buildLoaderArgs<Route.LoaderArgs>({
     headers: { cookie: 'ot_auth=token' },
     url: 'http://localhost/roles',
   });
+};
 
-const createActionArgs = (body: Record<string, string>) =>
-  buildActionArgs<Route.ActionArgs>({
+const createActionArgs = (body: Record<string, string>) => {
+  return buildActionArgs<Route.ActionArgs>({
     body,
     headers: { cookie: 'ot_auth=token' },
     url: 'http://localhost/roles',
   });
+};
 
 describe('routes/roles._index.tsx', () => {
   beforeEach(() => {

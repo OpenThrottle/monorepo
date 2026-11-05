@@ -10,8 +10,9 @@ import { dirname, join } from 'path';
  * `require` does not exist. It resolves through the same `exports` map and
  * returns a `file://` URL, so the result is converted back to a path.
  */
-const resolveGeneratorsPackageJson = (): string =>
-  fileURLToPath(import.meta.resolve('@tools/generators/package.json'));
+const resolveGeneratorsPackageJson = (): string => {
+  return fileURLToPath(import.meta.resolve('@tools/generators/package.json'));
+};
 
 interface GeneratorMeta {
   readonly description: string;

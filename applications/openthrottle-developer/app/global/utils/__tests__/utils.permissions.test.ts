@@ -8,7 +8,9 @@ import {
   hasPermission,
 } from '../utils.permissions';
 
-const Icon = (): null => null;
+const Icon = (): null => {
+  return null;
+};
 
 const navigation: PermissionGatedNavigation = {
   Drafts: [

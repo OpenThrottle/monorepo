@@ -55,6 +55,29 @@ export const PlanToolbarActiveRunControl = (
   // Handlers
 
   // Markup
+  const showStale = isCancelable && newestRunIsStale === true;
+  const staleBadge = (
+    <Tooltip delayDuration={1_000}>
+      <TooltipTrigger asChild={true}>
+        <Badge color="amber" size="xs">
+          Stale
+        </Badge>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-xs" side="top">
+        This run lost contact (its heartbeat went quiet) — the owning process
+        likely crashed. Kill is unavailable because there is nothing live to
+        stop; a background sweeper will settle it.
+      </TooltipContent>
+    </Tooltip>
+  );
+  const killButton = (
+    <KillPlanRunButton
+      planId={planId}
+      planTitle={planTitle}
+      show={isCancelable}
+      size="xs"
+    />
+  );
 
   // Life Cycle
 
@@ -65,38 +88,18 @@ export const PlanToolbarActiveRunControl = (
       {/* Only the Stale badge depends on run history. While it is undefined we
           render Kill — the normal control — rather than nothing: an operator
           mid-run needs Kill, and "not stale" is the claim we cannot yet make. */}
-      {isCancelable && newestRunIsStale === true ? (
-        <Tooltip delayDuration={1_000}>
-          <TooltipTrigger asChild={true}>
-            <Badge color="amber" size="xs">
-              Stale
-            </Badge>
-          </TooltipTrigger>
-          <TooltipContent className="max-w-xs" side="top">
-            This run lost contact (its heartbeat went quiet) — the owning
-            process likely crashed. Kill is unavailable because there is nothing
-            live to stop; a background sweeper will settle it.
-          </TooltipContent>
-        </Tooltip>
-      ) : (
-        <KillPlanRunButton
-          planId={planId}
-          planTitle={planTitle}
-          show={isCancelable}
-          size="xs"
-        />
-      )}
+      {showStale ? staleBadge : killButton}
 
       {/* Not gated on plan status: the stuck row holds its worktree regardless
           of where the plan itself has moved on to. */}
-      {newestUnsupervisedUnsettledRunId != null ? (
+      {newestUnsupervisedUnsettledRunId != null && (
         <SettlePlanRunButton
           planId={planId}
           planRunId={newestUnsupervisedUnsettledRunId}
           planTitle={planTitle}
           size="xs"
         />
-      ) : null}
+      )}
     </>
   );
 };

@@ -7,7 +7,9 @@ import { PersonasStats } from '../PersonasStats';
 
 describe('PersonasStats Component', () => {
   test('renders stats region', () => {
-    const Component = () => <PersonasStats />;
+    const Component = () => {
+      return <PersonasStats />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 

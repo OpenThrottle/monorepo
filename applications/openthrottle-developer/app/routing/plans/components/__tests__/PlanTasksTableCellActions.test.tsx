@@ -36,19 +36,22 @@ function asMock(value: unknown): unknown {
 
 const createMockRow = (
   overrides: Partial<typeof mockTask> = {},
-): PlanTasksTableCellActionsProps['row'] =>
-  asMock<PlanTasksTableCellActionsProps['row']>({
+): PlanTasksTableCellActionsProps['row'] => {
+  return asMock<PlanTasksTableCellActionsProps['row']>({
     original: {
       ...mockTask,
       ...overrides,
     },
   });
+};
 
 describe('PlanTasksTableCellActions Component', () => {
   let component: RenderResult;
   let props: PlanTasksTableCellActionsProps;
   const renderComponent = (): void => {
-    const Component = () => <PlanTasksTableCellActions {...props} />;
+    const Component = () => {
+      return <PlanTasksTableCellActions {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

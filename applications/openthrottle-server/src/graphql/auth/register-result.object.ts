@@ -13,8 +13,7 @@ export class RegisterResultObject {
   email!: string;
 
   @Field(() => String, {
-    description:
-      'JWT access token so the client can stay logged in without calling login',
+    description: `JWT access token so the client can stay logged in without calling login`,
   })
   accessToken!: string;
 }

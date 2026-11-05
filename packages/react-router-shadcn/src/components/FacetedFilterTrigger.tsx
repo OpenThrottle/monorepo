@@ -18,8 +18,7 @@ export interface FacetedFilterTriggerProps extends React.ComponentProps<
   readonly title: string;
 }
 
-const SUMMARY_BADGE_CLASS =
-  'bg-secondary text-secondary-foreground hover:bg-secondary gap-1.5 rounded-md border-transparent px-2 py-0.5 font-medium';
+const SUMMARY_BADGE_CLASS = `bg-secondary text-secondary-foreground hover:bg-secondary gap-1.5 rounded-md border-transparent px-2 py-0.5 font-medium`;
 
 /**
  * @description The faceted-filter trigger: a dashed outline button reading
@@ -42,20 +41,21 @@ export const FacetedFilterTrigger = (
   // Handlers
 
   // Markup
-  const summary = showsAll ? (
+  const allBadge = (
     <Badge className={SUMMARY_BADGE_CLASS}>{FACETED_FILTER_COPY.all}</Badge>
-  ) : collapsed ? (
+  );
+  const countBadge = (
     <Badge className={SUMMARY_BADGE_CLASS}>
       {FACETED_FILTER_COPY.selectedCount(selected.length)}
     </Badge>
-  ) : (
-    selected.map((option) => (
-      <Badge className={SUMMARY_BADGE_CLASS} key={option.value}>
-        {option.adornment}
-        {option.label}
-      </Badge>
-    ))
   );
+  const optionBadges = selected.map((option) => (
+    <Badge className={SUMMARY_BADGE_CLASS} key={option.value}>
+      {option.adornment}
+      {option.label}
+    </Badge>
+  ));
+  const summary = showsAll ? allBadge : collapsed ? countBadge : optionBadges;
 
   // Life Cycle
 

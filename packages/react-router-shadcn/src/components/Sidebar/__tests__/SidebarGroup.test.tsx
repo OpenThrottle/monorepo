@@ -20,23 +20,25 @@ describe('SidebarGroup Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => (
-      <SidebarProvider>
-        <Sidebar>
-          <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarGroup {...props} />
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </SidebarContent>
-        </Sidebar>
-      </SidebarProvider>
-    );
+    const Component = () => {
+      return (
+        <SidebarProvider>
+          <Sidebar>
+            <SidebarContent>
+              <SidebarGroup>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarGroup {...props} />
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </SidebarContent>
+          </Sidebar>
+        </SidebarProvider>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

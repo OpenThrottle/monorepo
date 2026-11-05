@@ -9,7 +9,9 @@ import { planRunConfigFromPlanStorage } from './plan-run-config-storage.validati
 const planRunConfigStorageDeepEqual = (
   left: PlanRunConfigStorage,
   right: PlanRunConfigStorage,
-): boolean => JSON.stringify(left) === JSON.stringify(right);
+): boolean => {
+  return JSON.stringify(left) === JSON.stringify(right);
+};
 
 /**
  * @description Returns true when stored run configuration differs from defaults

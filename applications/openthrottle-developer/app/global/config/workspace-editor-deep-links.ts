@@ -35,11 +35,13 @@ export interface WorkspaceEditorDeepLink {
  * literal `+` back. Percent-encoding is unambiguous under both readings, so
  * normalize after building — never hand-roll the encoding itself.
  */
-const toQueryString = (params: URLSearchParams): string =>
-  params.toString().replaceAll('+', '%20');
+const toQueryString = (params: URLSearchParams): string => {
+  return params.toString().replaceAll('+', '%20');
+};
 
-const buildClaudeHref = (params: URLSearchParams): string =>
-  `claude://code/new?${toQueryString(params)}`;
+const buildClaudeHref = (params: URLSearchParams): string => {
+  return `claude://code/new?${toQueryString(params)}`;
+};
 
 /**
  * Plain-language, not `/ot-loop <planId>`: the Claude desktop app defuses a
@@ -47,8 +49,45 @@ const buildClaudeHref = (params: URLSearchParams): string =>
  * never arm a slash command. Naming the skill lets the model invoke it instead,
  * which requires `ot-loop` to keep `disable-model-invocation: false`.
  */
-const buildClaudePlanPrompt = (planId: string): string =>
-  `Run OpenThrottle plan ${planId} with the ot-loop skill`;
+const buildClaudePlanPrompt = (planId: string): string => {
+  return `Run OpenThrottle plan ${planId} with the ot-loop skill`;
+};
+
+const buildClaudeFolderHref = (workingDirectory: string): string | null => {
+  if (workingDirectory === '') {
+    return null;
+  }
+  return buildClaudeHref(new URLSearchParams({ folder: workingDirectory }));
+};
+
+const buildClaudePlanHref = (
+  input: WorkspaceEditorLaunchInput,
+): string | null => {
+  const { planId, workingDirectory } = input;
+  if (workingDirectory === '') {
+    return null;
+  }
+  return buildClaudeHref(
+    new URLSearchParams({
+      folder: `${workingDirectory}/`,
+      q: buildClaudePlanPrompt(planId),
+    }),
+  );
+};
+
+const buildCursorFolderHref = (workingDirectory: string): string | null => {
+  if (workingDirectory === '') {
+    return null;
+  }
+  return editorHref({ absolutePath: workingDirectory, scheme: 'cursor' });
+};
+
+const buildVscodeFolderHref = (workingDirectory: string): string | null => {
+  if (workingDirectory === '') {
+    return null;
+  }
+  return editorHref({ absolutePath: workingDirectory, scheme: 'vscode' });
+};
 
 /**
  * Deep-link metadata per supported editor. Exhaustive over `WorkspaceEditorId`
@@ -76,31 +115,13 @@ export const WORKSPACE_EDITOR_DEEP_LINKS: Record<
   WorkspaceEditorDeepLink
 > = {
   [WorkspaceEditorId.Claude]: {
-    buildFolderHref: (workingDirectory) =>
-      workingDirectory === ''
-        ? null
-        : buildClaudeHref(
-            new URLSearchParams({
-              folder: workingDirectory,
-            }),
-          ),
-    buildPlanHref: ({ planId, workingDirectory }) =>
-      workingDirectory === ''
-        ? null
-        : buildClaudeHref(
-            new URLSearchParams({
-              folder: `${workingDirectory}/`,
-              q: buildClaudePlanPrompt(planId),
-            }),
-          ),
+    buildFolderHref: buildClaudeFolderHref,
+    buildPlanHref: buildClaudePlanHref,
     label: 'Claude Code',
     promptTargetsFocusedWindow: false,
   },
   [WorkspaceEditorId.Cursor]: {
-    buildFolderHref: (workingDirectory) =>
-      workingDirectory === ''
-        ? null
-        : editorHref({ absolutePath: workingDirectory, scheme: 'cursor' }),
+    buildFolderHref: buildCursorFolderHref,
     buildPlanHref: ({ planId }) =>
       `cursor://anysphere.cursor-deeplink/prompt?${toQueryString(
         new URLSearchParams({
@@ -111,14 +132,9 @@ export const WORKSPACE_EDITOR_DEEP_LINKS: Record<
     promptTargetsFocusedWindow: true,
   },
   [WorkspaceEditorId.Vscode]: {
-    buildFolderHref: (workingDirectory) =>
-      workingDirectory === ''
-        ? null
-        : editorHref({ absolutePath: workingDirectory, scheme: 'vscode' }),
+    buildFolderHref: buildVscodeFolderHref,
     buildPlanHref: ({ workingDirectory }) =>
-      workingDirectory === ''
-        ? null
-        : editorHref({ absolutePath: workingDirectory, scheme: 'vscode' }),
+      buildVscodeFolderHref(workingDirectory),
     label: 'VS Code',
     promptTargetsFocusedWindow: false,
   },

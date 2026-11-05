@@ -1,8 +1,8 @@
 import * as React from 'react';
 
-import { resolveRunningIndicatorCopy } from '../data/chat-run-phase-copy';
 import type { ChatRunPhase as ChatRunPhaseType } from '../types';
 import { ChatRunPhase } from '../types';
+import { resolveRunningIndicatorCopy } from '../utils/resolve-running-indicator-copy';
 
 export interface RunningIndicatorProps {
   /**

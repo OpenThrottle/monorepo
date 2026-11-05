@@ -17,8 +17,7 @@ describe('buildCommanderEmptyStateExtras', () => {
 
   test('parses queue id / job id and offers queue job and plan task routes via POST fields', () => {
     const submit = vi.fn();
-    const q =
-      'a1b2c3d4-e5f6-4789-a012-3456789abcde/b2c3d4e5-f6a7-4890-b123-456789abcdef';
+    const q = `a1b2c3d4-e5f6-4789-a012-3456789abcde/b2c3d4e5-f6a7-4890-b123-456789abcdef`;
     const items = buildCommanderEmptyStateExtras(q, {
       submitCommanderSearch: submit,
     });

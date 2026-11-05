@@ -21,14 +21,16 @@ import { FileLogJsonlSink } from './file-log-jsonl-sink.service.ts';
 const baseRecord = (
   message: string,
   level: NestjsLoggingLevel = NESTJS_LOGGING_LEVELS.log,
-): StructuredLogRecord => ({
-  context: 'HubTest',
-  correlationId: undefined,
-  level,
-  message,
-  timestampIso: '2026-05-02T12:00:00.000Z',
-  traceId: undefined,
-});
+): StructuredLogRecord => {
+  return {
+    context: 'HubTest',
+    correlationId: undefined,
+    level,
+    message,
+    timestampIso: '2026-05-02T12:00:00.000Z',
+    traceId: undefined,
+  };
+};
 
 describe('FileBackedLogStreamHub', () => {
   let logDirectory: string;

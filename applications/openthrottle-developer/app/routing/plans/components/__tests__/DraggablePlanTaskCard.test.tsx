@@ -38,11 +38,13 @@ describe('DraggablePlanTaskCard Component', () => {
       task: mockTask,
     };
 
-    const Component = () => (
-      <DndProvider backend={HTML5Backend}>
-        <DraggablePlanTaskCard {...props} />
-      </DndProvider>
-    );
+    const Component = () => {
+      return (
+        <DndProvider backend={HTML5Backend}>
+          <DraggablePlanTaskCard {...props} />
+        </DndProvider>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
   });

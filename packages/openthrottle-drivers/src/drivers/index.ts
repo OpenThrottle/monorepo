@@ -56,5 +56,6 @@ export const ALL_DRIVERS: readonly AgentDriver[] = DRIVER_IDS.map(
  * @description Resolves the driver registered for `id`, or throws `UnknownDriverError`.
  * @public
  */
-export const getDriver = (id: DriverId): AgentDriver =>
-  lookupDriver(DRIVER_REGISTRY, id);
+export const getDriver = (id: DriverId): AgentDriver => {
+  return lookupDriver(DRIVER_REGISTRY, id);
+};

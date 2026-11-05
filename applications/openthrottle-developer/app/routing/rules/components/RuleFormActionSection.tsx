@@ -63,10 +63,88 @@ export const RuleFormActionSection = (
   // Hooks
 
   // Setup
+  const isInjectTask = actionType === 'inject-task';
 
   // Handlers
 
   // Markup
+  const injectTaskFields = (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="space-y-1.5">
+        <Label htmlFor="rule-skill-slug">{RULES_COPY.skillLabel}</Label>
+        <Select onValueChange={onSkillSlugChange} value={skillSlug}>
+          <SelectTrigger
+            aria-label={RULES_COPY.skillLabel}
+            id="rule-skill-slug"
+          >
+            <SelectValue placeholder={RULES_COPY.skillPlaceholder} />
+          </SelectTrigger>
+          <SelectContent>
+            {skillSlugs.map((slug) => (
+              <SelectItem key={slug} value={slug}>
+                {slug}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor="rule-placement">{RULES_COPY.placementLabel}</Label>
+        <Select onValueChange={onPlacementChange} value={placement}>
+          <SelectTrigger
+            aria-label={RULES_COPY.placementLabel}
+            id="rule-placement"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="first">first</SelectItem>
+            <SelectItem value="last">last</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-1.5 sm:col-span-2">
+        <Label htmlFor="rule-title-template">Title template</Label>
+        <Input
+          aria-label="Title template"
+          id="rule-title-template"
+          onChange={(event) => onTitleTemplateChange(event.target.value)}
+          placeholder={RULES_COPY.titleTemplatePlaceholder}
+          value={titleTemplate}
+        />
+      </div>
+    </div>
+  );
+  const availabilityFields = (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <Input
+        aria-label="Tag allow list"
+        onChange={(event) => onTagAllowChange(event.target.value)}
+        placeholder={RULES_COPY.tagAllowPlaceholder}
+        value={tagAllow}
+      />
+      <Input
+        aria-label="Tag deny list"
+        onChange={(event) => onTagDenyChange(event.target.value)}
+        placeholder={RULES_COPY.tagDenyPlaceholder}
+        value={tagDeny}
+      />
+      <Input
+        aria-label="Slug allow list"
+        onChange={(event) => onSlugAllowChange(event.target.value)}
+        placeholder={RULES_COPY.slugAllowPlaceholder}
+        value={slugAllow}
+      />
+      <Input
+        aria-label="Slug deny list"
+        onChange={(event) => onSlugDenyChange(event.target.value)}
+        placeholder={RULES_COPY.slugDenyPlaceholder}
+        value={slugDeny}
+      />
+    </div>
+  );
 
   // Life Cycle
 
@@ -102,82 +180,7 @@ export const RuleFormActionSection = (
         </Select>
       </div>
 
-      {actionType === 'inject-task' ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="rule-skill-slug">{RULES_COPY.skillLabel}</Label>
-            <Select onValueChange={onSkillSlugChange} value={skillSlug}>
-              <SelectTrigger
-                aria-label={RULES_COPY.skillLabel}
-                id="rule-skill-slug"
-              >
-                <SelectValue placeholder={RULES_COPY.skillPlaceholder} />
-              </SelectTrigger>
-              <SelectContent>
-                {skillSlugs.map((slug) => (
-                  <SelectItem key={slug} value={slug}>
-                    {slug}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="rule-placement">{RULES_COPY.placementLabel}</Label>
-            <Select onValueChange={onPlacementChange} value={placement}>
-              <SelectTrigger
-                aria-label={RULES_COPY.placementLabel}
-                id="rule-placement"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="first">first</SelectItem>
-                <SelectItem value="last">last</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="rule-title-template">Title template</Label>
-            <Input
-              aria-label="Title template"
-              id="rule-title-template"
-              onChange={(event) => onTitleTemplateChange(event.target.value)}
-              placeholder={RULES_COPY.titleTemplatePlaceholder}
-              value={titleTemplate}
-            />
-          </div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Input
-            aria-label="Tag allow list"
-            onChange={(event) => onTagAllowChange(event.target.value)}
-            placeholder={RULES_COPY.tagAllowPlaceholder}
-            value={tagAllow}
-          />
-          <Input
-            aria-label="Tag deny list"
-            onChange={(event) => onTagDenyChange(event.target.value)}
-            placeholder={RULES_COPY.tagDenyPlaceholder}
-            value={tagDeny}
-          />
-          <Input
-            aria-label="Slug allow list"
-            onChange={(event) => onSlugAllowChange(event.target.value)}
-            placeholder={RULES_COPY.slugAllowPlaceholder}
-            value={slugAllow}
-          />
-          <Input
-            aria-label="Slug deny list"
-            onChange={(event) => onSlugDenyChange(event.target.value)}
-            placeholder={RULES_COPY.slugDenyPlaceholder}
-            value={slugDeny}
-          />
-        </div>
-      )}
+      {isInjectTask ? injectTaskFields : availabilityFields}
     </section>
   );
 };

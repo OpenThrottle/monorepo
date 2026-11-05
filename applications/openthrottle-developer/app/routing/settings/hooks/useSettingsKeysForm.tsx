@@ -46,10 +46,9 @@ export const useSettingsKeysForm = (
   const isSubmitting =
     navigation.state === 'submitting' &&
     navigation.formData?.get('intent') === 'createCredential';
-  const successPayload =
-    actionData?.token != null && actionData.credential != null
-      ? actionData
-      : null;
+  const hasIssuedToken =
+    actionData?.token != null && actionData.credential != null;
+  const successPayload = hasIssuedToken ? actionData : null;
   const showSuccess =
     successPayload != null &&
     successPayload.credential.id !== dismissedCredentialId;

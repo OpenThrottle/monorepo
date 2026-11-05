@@ -188,24 +188,26 @@ describe('routes/plans.$planId.tsx', () => {
 
   test('should render empty state when plan not found', () => {
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <TooltipProvider>
-        <PlanDetail
-          actionData={undefined}
-          loaderData={buildPlanDetailLoaderData({
-            plan: null,
-            tasks: [],
-          })}
-          matches={buildPlanDetailMatches(
-            buildPlanDetailLoaderData({
+    const Component = () => {
+      return (
+        <TooltipProvider>
+          <PlanDetail
+            actionData={undefined}
+            loaderData={buildPlanDetailLoaderData({
               plan: null,
               tasks: [],
-            }),
-          )}
-          params={{ planId: mockPlan.id }}
-        />
-      </TooltipProvider>
-    );
+            })}
+            matches={buildPlanDetailMatches(
+              buildPlanDetailLoaderData({
+                plan: null,
+                tasks: [],
+              }),
+            )}
+            params={{ planId: mockPlan.id }}
+          />
+        </TooltipProvider>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
     expect(component.getByTestId('OpenThrottleEmptyState')).toBeInTheDocument();

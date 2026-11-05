@@ -67,10 +67,9 @@ export default function Component(
   const isFiltered = search.trim().length > 0 || enabledFilter !== 'all';
   const filteredRules = filterRulesList(rules, { enabledFilter, search });
   const pending = fetcher.state !== 'idle';
-  const ruleError =
-    fetcher.data != null && 'ruleError' in fetcher.data
-      ? fetcher.data.ruleError
-      : null;
+  const fetcherData = fetcher.data;
+  const hasRuleError = fetcherData != null && 'ruleError' in fetcherData;
+  const ruleError = hasRuleError ? fetcherData.ruleError : null;
   const totalCount = rules.length;
   const enabledCount = rules.filter((rule) => rule.enabled).length;
   const disabledCount = totalCount - enabledCount;
@@ -88,6 +87,33 @@ export default function Component(
   };
 
   // Markup
+  const onboarding = <GlobalFeatureOnboarding content={RULES_ONBOARDING} />;
+  const errorAlert = (
+    <p className="text-destructive text-sm" role="alert">
+      {ruleError}
+    </p>
+  );
+  const rulesListing = (
+    <>
+      <RulesStats
+        disabledCount={disabledCount}
+        enabledCount={enabledCount}
+        totalCount={totalCount}
+      />
+
+      {ruleError != null ? errorAlert : null}
+
+      <div className="flex flex-col gap-4">
+        <RulesToolbar />
+        <RulesTable
+          isFiltered={isFiltered}
+          onToggleEnabled={handleToggleEnabled}
+          pending={pending}
+          rules={filteredRules}
+        />
+      </div>
+    </>
+  );
 
   // Life Cycle
 
@@ -98,33 +124,7 @@ export default function Component(
       <GlobalScreen>
         <RulesIntroduction />
 
-        {isNewUser ? (
-          <GlobalFeatureOnboarding content={RULES_ONBOARDING} />
-        ) : (
-          <>
-            <RulesStats
-              disabledCount={disabledCount}
-              enabledCount={enabledCount}
-              totalCount={totalCount}
-            />
-
-            {ruleError != null ? (
-              <p className="text-destructive text-sm" role="alert">
-                {ruleError}
-              </p>
-            ) : null}
-
-            <div className="flex flex-col gap-4">
-              <RulesToolbar />
-              <RulesTable
-                isFiltered={isFiltered}
-                onToggleEnabled={handleToggleEnabled}
-                pending={pending}
-                rules={filteredRules}
-              />
-            </div>
-          </>
-        )}
+        {isNewUser ? onboarding : rulesListing}
       </GlobalScreen>
 
       <GlobalFeatureOnboardingModal content={RULES_ONBOARDING} />

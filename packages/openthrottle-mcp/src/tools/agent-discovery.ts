@@ -104,19 +104,18 @@ export async function discoverAgentClisToolHandler(
         version: agent.version ?? null,
       }));
 
-      const text =
-        agents.length === 0
-          ? `No agent CLIs found (scanned at ${discovered.scannedAt}).`
-          : [
-              `Discovered ${discovered.totalCount} agent CLI(s) at ${discovered.scannedAt}:`,
-              ...agents.map(
-                (agent) =>
-                  `  ${agent.label} [${agent.backend}]${agent.chatCapable ? '' : ' (plan-run only)'} ${
-                    agent.version ?? '(version unknown)'
-                  } — ${agent.models.length} model(s): ${agent.models.join(', ') || '(none)'}`,
-              ),
-              ...agents.flatMap((agent) => describeAuth(agent)),
-            ].join('\n');
+      const emptyText = `No agent CLIs found (scanned at ${discovered.scannedAt}).`;
+      const listText = [
+        `Discovered ${discovered.totalCount} agent CLI(s) at ${discovered.scannedAt}:`,
+        ...agents.map(
+          (agent) =>
+            `  ${agent.label} [${agent.backend}]${agent.chatCapable ? '' : ' (plan-run only)'} ${
+              agent.version ?? '(version unknown)'
+            } — ${agent.models.length} model(s): ${agent.models.join(', ') || '(none)'}`,
+        ),
+        ...agents.flatMap((agent) => describeAuth(agent)),
+      ].join('\n');
+      const text = agents.length === 0 ? emptyText : listText;
 
       return {
         structuredContent: {

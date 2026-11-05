@@ -23,18 +23,20 @@ const ROWS_PER_KIND = 500;
 
 const baseInput = (
   overrides: Partial<WorkstreamTimelineInput> = {},
-): WorkstreamTimelineInput => ({
-  backend: null,
-  checkoutId: null,
-  from: new Date('2026-09-01T00:00:00Z'),
-  gitBranch: null,
-  grouping: null,
-  markerKinds: [],
-  planId: null,
-  spanKinds: [],
-  to: new Date('2026-09-08T00:00:00Z'),
-  ...overrides,
-});
+): WorkstreamTimelineInput => {
+  return {
+    backend: null,
+    checkoutId: null,
+    from: new Date('2026-09-01T00:00:00Z'),
+    gitBranch: null,
+    grouping: null,
+    markerKinds: [],
+    planId: null,
+    spanKinds: [],
+    to: new Date('2026-09-08T00:00:00Z'),
+    ...overrides,
+  };
+};
 
 describe('TimelineResolver.workstreamTimeline', () => {
   let query: ReturnType<typeof vi.fn<QueryFn>>;
@@ -368,17 +370,19 @@ describe('TimelineResolver.workstreamTimeline', () => {
   });
 
   describe('grilling attribution', () => {
-    const grillingRow = (userId: string | null) => ({
-      at: '2026-09-02T00:00:00Z',
-      branch: 'feat/x',
-      id: 'skill-1',
-      plan_id: null,
-      plan_title: null,
-      task_id: null,
-      title: 'feat/x',
-      url: null,
-      user_id: userId,
-    });
+    const grillingRow = (userId: string | null) => {
+      return {
+        at: '2026-09-02T00:00:00Z',
+        branch: 'feat/x',
+        id: 'skill-1',
+        plan_id: null,
+        plan_title: null,
+        task_id: null,
+        title: 'feat/x',
+        url: null,
+        user_id: userId,
+      };
+    };
 
     it('selects user_id so an attributed event can be told from an unattributed one', async () => {
       await resolver.workstreamTimeline(
@@ -427,43 +431,43 @@ describe('TimelineResolver.workstreamTimeline', () => {
 
   describe('ordering', () => {
     it('returns spans oldest first regardless of leg order', async () => {
-      query.mockImplementation((sql) =>
-        Promise.resolve(
-          sql.includes('plan_runs')
-            ? [
-                {
-                  backend: null,
-                  branch: null,
-                  checkout_id: null,
-                  conversation_id: null,
-                  ends_at: '2026-09-05T00:00:00Z',
-                  id: 'later',
-                  model: null,
-                  plan_id: 'plan-1',
-                  plan_title: 'Plan One',
-                  starts_at: '2026-09-04T00:00:00Z',
-                  status: null,
-                  title: 'later',
-                },
-              ]
-            : [
-                {
-                  backend: null,
-                  branch: null,
-                  checkout_id: null,
-                  conversation_id: null,
-                  ends_at: '2026-09-02T00:00:00Z',
-                  id: 'earlier',
-                  model: null,
-                  plan_id: 'plan-1',
-                  plan_title: 'Plan One',
-                  starts_at: '2026-09-01T00:00:00Z',
-                  status: null,
-                  title: 'earlier',
-                },
-              ],
-        ),
-      );
+      const planRunRows = [
+        {
+          backend: null,
+          branch: null,
+          checkout_id: null,
+          conversation_id: null,
+          ends_at: '2026-09-05T00:00:00Z',
+          id: 'later',
+          model: null,
+          plan_id: 'plan-1',
+          plan_title: 'Plan One',
+          starts_at: '2026-09-04T00:00:00Z',
+          status: null,
+          title: 'later',
+        },
+      ];
+      const otherRows = [
+        {
+          backend: null,
+          branch: null,
+          checkout_id: null,
+          conversation_id: null,
+          ends_at: '2026-09-02T00:00:00Z',
+          id: 'earlier',
+          model: null,
+          plan_id: 'plan-1',
+          plan_title: 'Plan One',
+          starts_at: '2026-09-01T00:00:00Z',
+          status: null,
+          title: 'earlier',
+        },
+      ];
+      query.mockImplementation((sql) => {
+        const isPlanRunQuery = sql.includes('plan_runs');
+
+        return Promise.resolve(isPlanRunQuery ? planRunRows : otherRows);
+      });
 
       const result = await resolver.workstreamTimeline(
         baseInput({

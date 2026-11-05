@@ -106,6 +106,47 @@ export const OpenThrottleCommander = (
   // Handlers
 
   // Markup
+  const noMatchHeading = 'No match in palette — open a route or search';
+  const escapeHeading = extraItems.length > 0 ? noMatchHeading : 'Search';
+  const escapeHatch = (
+    <CommandGroup forceMount={true} heading={escapeHeading}>
+      {extraItems.map((item) => (
+        <CommandItem
+          forceMount={true}
+          key={item.id}
+          onSelect={() => handleSelect(item)}
+          value={item.value ?? item.id}
+        >
+          {item.icon ?? null}
+          <span>{item.label}</span>
+          {item.shortcut && (
+            <CommandShortcut className="w-auto whitespace-nowrap">
+              {item.shortcut}
+            </CommandShortcut>
+          )}
+        </CommandItem>
+      ))}
+      {onEmptyStateSearch && (
+        <CommandItem
+          forceMount={true}
+          onSelect={handleEmptyStateSearch}
+          value={`__empty_state_search__ ${trimmedSearch}`}
+        >
+          Search for &quot;{trimmedSearch}&quot;
+        </CommandItem>
+      )}
+    </CommandGroup>
+  );
+  const emptyState = (
+    <CommandEmpty data-testid="OpenThrottleCommander-empty">
+      {emptyStateMessage ?? (
+        <>
+          No matching commands. Type to filter, or paste a UUID / queueId/jobId
+          when nothing matches.
+        </>
+      )}
+    </CommandEmpty>
+  );
 
   // Life Cycle
 
@@ -146,62 +187,18 @@ export const OpenThrottleCommander = (
                 >
                   {item.icon ?? null}
                   <span>{item.label}</span>
-                  {item.shortcut ? (
+                  {item.shortcut && (
                     <CommandShortcut className="w-auto whitespace-nowrap">
                       {item.shortcut}
                     </CommandShortcut>
-                  ) : null}
+                  )}
                 </CommandItem>
               ))}
             </CommandGroup>
           </React.Fragment>
         ))}
 
-        {showEmptyEscapeHatch ? (
-          <CommandGroup
-            forceMount={true}
-            heading={
-              extraItems.length > 0
-                ? 'No match in palette — open a route or search'
-                : 'Search'
-            }
-          >
-            {extraItems.map((item) => (
-              <CommandItem
-                forceMount={true}
-                key={item.id}
-                onSelect={() => handleSelect(item)}
-                value={item.value ?? item.id}
-              >
-                {item.icon ?? null}
-                <span>{item.label}</span>
-                {item.shortcut ? (
-                  <CommandShortcut className="w-auto whitespace-nowrap">
-                    {item.shortcut}
-                  </CommandShortcut>
-                ) : null}
-              </CommandItem>
-            ))}
-            {onEmptyStateSearch ? (
-              <CommandItem
-                forceMount={true}
-                onSelect={handleEmptyStateSearch}
-                value={`__empty_state_search__ ${trimmedSearch}`}
-              >
-                Search for &quot;{trimmedSearch}&quot;
-              </CommandItem>
-            ) : null}
-          </CommandGroup>
-        ) : (
-          <CommandEmpty data-testid="OpenThrottleCommander-empty">
-            {emptyStateMessage ?? (
-              <>
-                No matching commands. Type to filter, or paste a UUID /
-                queueId/jobId when nothing matches.
-              </>
-            )}
-          </CommandEmpty>
-        )}
+        {showEmptyEscapeHatch ? escapeHatch : emptyState}
       </CommandList>
 
       <CommanderFooter footerHint={footerHint} />

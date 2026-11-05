@@ -12,7 +12,9 @@ vi.mock('~/global/utils/blog-enabled', () => ({ isBlogEnabled }));
 const { GlobalFooter } = await import('../GlobalFooter');
 
 const renderFooter = (props: GlobalFooterProps = {}) => {
-  const Component = () => <GlobalFooter {...props} />;
+  const Component = () => {
+    return <GlobalFooter {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

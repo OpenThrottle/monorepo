@@ -93,20 +93,26 @@ const mulberry32 = (seed: number): (() => number) => {
   };
 };
 
-const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
+const lerp = (a: number, b: number, t: number): number => {
+  return a + (b - a) * t;
+};
 
-const clamp11 = (value: number): number => Math.min(1, Math.max(-1, value));
+const clamp11 = (value: number): number => {
+  return Math.min(1, Math.max(-1, value));
+};
 
-const jitter = (rand: () => number, amount: number): number =>
-  (rand() * 2 - 1) * amount;
+const jitter = (rand: () => number, amount: number): number => {
+  return (rand() * 2 - 1) * amount;
+};
 
 /**
  * @description Stack coordinate in [-1, 1]. The lead path sits at 0 so
  * distribution = 0 collapses every arc onto it, ±1 pushes the first/last
  * to the full start/end span (sign chooses which side of the lead path).
  */
-const stackU = (index: number, n: number): number =>
-  n === 1 ? 0 : (index / (n - 1)) * 2 - 1;
+const stackU = (index: number, n: number): number => {
+  return n === 1 ? 0 : (index / (n - 1)) * 2 - 1;
+};
 
 /**
  * @description Build `n` stacked arcs (default 3) with independent left/right

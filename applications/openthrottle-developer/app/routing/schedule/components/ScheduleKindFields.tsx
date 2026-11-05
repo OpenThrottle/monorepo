@@ -53,10 +53,9 @@ export const ScheduleKindFields = (
   );
 
   // Setup
-  const intervalMinutes =
-    job?.intervalMs == null
-      ? SCHEDULE_INTERVAL_DEFAULT_MINUTES
-      : job.intervalMs / 60_000;
+  const intervalMs = job?.intervalMs;
+  const storedMinutes = intervalMs == null ? undefined : intervalMs / 60_000;
+  const intervalMinutes = storedMinutes ?? SCHEDULE_INTERVAL_DEFAULT_MINUTES;
   const runAt = typeof job?.runAt === 'string' ? job.runAt : '';
 
   // Handlers
@@ -97,7 +96,7 @@ export const ScheduleKindFields = (
           </Select>
         </div>
 
-        {kind === SCHEDULE_KIND.cron ? (
+        {kind === SCHEDULE_KIND.cron && (
           <div>
             <Label htmlFor="cronPattern">{SCHEDULE_COPY.cronLabel}</Label>
             <InputCronExpression
@@ -108,9 +107,9 @@ export const ScheduleKindFields = (
               required={true}
             />
           </div>
-        ) : null}
+        )}
 
-        {kind === SCHEDULE_KIND.interval ? (
+        {kind === SCHEDULE_KIND.interval && (
           <div>
             <Label htmlFor="intervalMinutes">
               {SCHEDULE_COPY.intervalLabel}
@@ -128,9 +127,9 @@ export const ScheduleKindFields = (
               {SCHEDULE_COPY.intervalHelp}
             </p>
           </div>
-        ) : null}
+        )}
 
-        {kind === SCHEDULE_KIND.once ? (
+        {kind === SCHEDULE_KIND.once && (
           <div>
             <Label htmlFor="runAt">{SCHEDULE_COPY.runAtLabel}</Label>
             <Input
@@ -144,15 +143,15 @@ export const ScheduleKindFields = (
               {SCHEDULE_COPY.runAtHelp}
             </p>
           </div>
-        ) : null}
+        )}
       </div>
 
-      {kind === SCHEDULE_KIND.cron ? (
+      {kind === SCHEDULE_KIND.cron && (
         <ScheduleMisfireFields
           misfirePolicy={job?.misfirePolicy}
           misfireThresholdMs={job?.misfireThresholdMs}
         />
-      ) : null}
+      )}
     </div>
   );
 };

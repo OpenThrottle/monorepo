@@ -68,10 +68,22 @@ export default function Component(
   // Hooks
 
   // Setup
+  const hasPosts = posts.length > 0;
 
   // Handlers
 
   // Markup
+  const emptyState = <BlogPostsEmpty search={search} state={state} />;
+  const postsList = (
+    <>
+      <BlogPostsTable posts={posts} />
+      <BlogPostsPagination
+        after={after}
+        endCursor={endCursor}
+        hasNextPage={hasNextPage}
+      />
+    </>
+  );
 
   // Life Cycle
 
@@ -83,18 +95,7 @@ export default function Component(
       <div className="mt-6 flex flex-col gap-4">
         <BlogPostsToolbar />
         <BlogPostStateTabs state={state} />
-        {posts.length === 0 ? (
-          <BlogPostsEmpty search={search} state={state} />
-        ) : (
-          <>
-            <BlogPostsTable posts={posts} />
-            <BlogPostsPagination
-              after={after}
-              endCursor={endCursor}
-              hasNextPage={hasNextPage}
-            />
-          </>
-        )}
+        {hasPosts ? postsList : emptyState}
       </div>
     </GlobalScreen>
   );

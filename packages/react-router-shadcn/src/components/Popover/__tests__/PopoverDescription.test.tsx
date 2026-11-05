@@ -16,13 +16,15 @@ describe('PopoverDescription Component', () => {
   beforeEach(() => {
     props = { children: 'Popover description' };
 
-    const Component = () => (
-      <Popover open={true}>
-        <PopoverContent>
-          <PopoverDescription {...props} />
-        </PopoverContent>
-      </Popover>
-    );
+    const Component = () => {
+      return (
+        <Popover open={true}>
+          <PopoverContent>
+            <PopoverDescription {...props} />
+          </PopoverContent>
+        </Popover>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

@@ -49,7 +49,9 @@ export const DEFAULT_DRIVER_ID: DriverId = 'cursor';
  * concrete `id`/`label` narrow at the call site. Every driver module is one `defineDriver(...)` call.
  * @public
  */
-export const defineDriver = (driver: AgentDriver): AgentDriver => driver;
+export const defineDriver = (driver: AgentDriver): AgentDriver => {
+  return driver;
+};
 
 /**
  * @description Registry map from driver id to driver.
@@ -68,8 +70,9 @@ export type DriverRegistry = Partial<Record<DriverId, AgentDriver>>;
  * @description True when `value` is a supported {@link DriverId}.
  * @public
  */
-export const isDriverId = (value: string): value is DriverId =>
-  DRIVER_ID_SET.has(value);
+export const isDriverId = (value: string): value is DriverId => {
+  return DRIVER_ID_SET.has(value);
+};
 
 /**
  * @description Normalizes (trim + lowercase) and validates a driver id from CLI, env, or defaults

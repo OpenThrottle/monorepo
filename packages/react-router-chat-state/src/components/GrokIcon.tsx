@@ -10,15 +10,28 @@ export interface GrokIconProps extends ProviderIconProps {}
  * @description Grok / xAI — a circle with a diagonal slash.
  * @public
  */
-export const GrokIcon = ({ className }: GrokIconProps): React.ReactElement => (
-  <svg
-    {...BASE_SVG_PROPS}
-    className={className}
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.8"
-  >
-    <circle cx="12" cy="12" r="8.5" />
-    <line strokeLinecap="round" x1="7" x2="17" y1="17" y2="7" />
-  </svg>
-);
+export const GrokIcon = ({ className }: GrokIconProps): React.ReactElement => {
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+  return (
+    <svg
+      {...BASE_SVG_PROPS}
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+    >
+      <circle cx="12" cy="12" r="8.5" />
+      <line strokeLinecap="round" x1="7" x2="17" y1="17" y2="7" />
+    </svg>
+  );
+};

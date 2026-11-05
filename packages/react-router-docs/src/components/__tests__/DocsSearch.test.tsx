@@ -7,18 +7,20 @@ import { describe, expect, test } from 'vitest';
 import type { DocEntry } from '../../utils/buildDocsManifest';
 import { DocsSearch } from '../DocsSearch';
 
-const entry = (overrides: Partial<DocEntry>): DocEntry => ({
-  content: '',
-  description: null,
-  draft: false,
-  group: 'General',
-  order: 1,
-  path: '/docs',
-  section: 'docs',
-  slug: '',
-  title: 'Untitled',
-  ...overrides,
-});
+const entry = (overrides: Partial<DocEntry>): DocEntry => {
+  return {
+    content: '',
+    description: null,
+    draft: false,
+    group: 'General',
+    order: 1,
+    path: '/docs',
+    section: 'docs',
+    slug: '',
+    title: 'Untitled',
+    ...overrides,
+  };
+};
 
 const entries: readonly DocEntry[] = [
   entry({
@@ -35,12 +37,13 @@ const entries: readonly DocEntry[] = [
   }),
 ];
 
-const renderSearch = () =>
-  render(
+const renderSearch = () => {
+  return render(
     <MemoryRouter>
       <DocsSearch entries={entries} />
     </MemoryRouter>,
   );
+};
 
 describe('DocsSearch', () => {
   test('renders a visible trigger', () => {

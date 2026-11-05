@@ -36,7 +36,7 @@ export interface EditorWindowProps extends MonacoEditorProps {
    * model per distinct `path`.
    *
    * REQUIRED for multi-tab / multi-file editing. The editor's tab model
-   * (`atom.editor.ts` `tabs` / `filename`) implies several open files, but
+   * (`data.atom.editor.ts` `tabs` / `filename`) implies several open files, but
    * `value` alone describes only the *active* file. If you swap `value`
    * without also swapping `path` when the active tab changes, Monaco keeps a
    * single shared model — so the undo/redo stack, cursor position, view

@@ -18,8 +18,9 @@ import type {
 } from '../types';
 import type { TimelineScale } from './scale';
 
-const toMillis = (value: Date | number | string): number =>
-  value instanceof Date ? value.getTime() : new Date(value).getTime();
+const toMillis = (value: Date | number | string): number => {
+  return value instanceof Date ? value.getTime() : new Date(value).getTime();
+};
 
 /**
  * Greedy interval packing: each span takes the lowest sub-row whose last span

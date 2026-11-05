@@ -14,25 +14,21 @@ import type { VideoEpisode } from '../types.ts';
 export const episode: VideoEpisode = {
   beats: [
     {
-      action:
-        'Plan detail; add the tag `needs-review`; re-open the plan — the seeded rule has injected a review task.',
+      action: `Plan detail; add the tag \`needs-review\`; re-open the plan — the seeded rule has injected a review task.`,
       t: '0:00',
     },
     { action: 'Navigate to `/rules`; the rule list is visible.', t: '0:09' },
     {
-      action:
-        'Open the rule that just fired (its edit form — rules have no detail page).',
+      action: `Open the rule that just fired (its edit form — rules have no detail page).`,
       t: '0:16',
     },
     {
-      action:
-        'Click **New rule**; name it, toggle the tag to watch, pick the skill to inject.',
+      action: `Click **New rule**; name it, toggle the tag to watch, pick the skill to inject.`,
       t: '0:25',
     },
     { action: 'Save; the rule appears in the list, enabled.', t: '0:35' },
     {
-      action:
-        'A different plan gets the tag; re-open it — the new rule has injected its task.',
+      action: `A different plan gets the tag; re-open it — the new rule has injected its task.`,
       t: '0:42',
     },
     { action: 'Hold on the injected task.', t: '0:50' },
@@ -41,20 +37,17 @@ export const episode: VideoEpisode = {
   dataRequirements: [
     {
       atLeast: 10,
-      describe:
-        'distinct plan tags, so the tag filter has something to filter by',
+      describe: `distinct plan tags, so the tag filter has something to filter by`,
       sql: `SELECT count(DISTINCT tag) AS value FROM plan_tags`,
     },
     {
       atLeast: 1,
-      describe:
-        'a tag rule that has actually fired, so the applications list is not empty',
+      describe: `a tag rule that has actually fired, so the applications list is not empty`,
       sql: `SELECT count(*) AS value FROM tag_action_rules r JOIN rule_applications a ON a.rule_id = r.id`,
     },
     {
       atLeast: 5,
-      describe:
-        'plans carrying at least three tags, so a chip row looks lived-in',
+      describe: `plans carrying at least three tags, so a chip row looks lived-in`,
       sql: `SELECT count(*) AS value FROM (SELECT p.id FROM plans p JOIN plan_tags pt ON pt.plan_id = p.id GROUP BY p.id HAVING count(DISTINCT pt.tag) >= 3) x`,
     },
   ],

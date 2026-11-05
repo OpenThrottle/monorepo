@@ -8,8 +8,8 @@ import { ChatCheckoutSelectorTrigger } from '../ChatCheckoutSelectorTrigger';
 
 const renderTrigger = (
   overrides: Partial<ChatCheckoutSelectorTriggerProps> = {},
-): RenderResult =>
-  render(
+): RenderResult => {
+  return render(
     <ChatCheckoutSelectorTrigger
       branch="main"
       enabled={true}
@@ -18,6 +18,7 @@ const renderTrigger = (
       {...overrides}
     />,
   );
+};
 
 describe('ChatCheckoutSelectorTrigger Component', () => {
   test('renders the label, overflow count and branch by default', () => {

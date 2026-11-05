@@ -19,8 +19,9 @@
  * unmistakable in a database dump, so a demo row can never be confused for a real
  * one. Suffixes must be hex too.
  */
-const id = (suffix: string): string =>
-  `d0d0d0d0-0000-4000-8000-${suffix.padStart(12, '0')}`;
+const id = (suffix: string): string => {
+  return `d0d0d0d0-0000-4000-8000-${suffix.padStart(12, '0')}`;
+};
 
 export const DEMO_USER = {
   email: 'ada@atlasworks.example',
@@ -369,8 +370,7 @@ export const DEMO_PLANS: readonly DemoPlan[] = [
         id: id('0402'),
         sortOrder: 2000,
         status: 'PENDING',
-        summary:
-          'Sharing, permissions, discovery and audit — scoped as one task.',
+        summary: `Sharing, permissions, discovery and audit — scoped as one task.`,
         title: 'Share saved views across the team',
       },
     ],

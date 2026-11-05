@@ -23,7 +23,9 @@ describe('PlanWorkflowConfigExecution Component', () => {
       setInput: () => {},
     };
 
-    const Component = () => <PlanWorkflowConfigExecution {...props} />;
+    const Component = () => {
+      return <PlanWorkflowConfigExecution {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

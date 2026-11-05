@@ -7,7 +7,7 @@ import {
 import { ChevronDown, Wrench } from 'lucide-react';
 import * as React from 'react';
 
-import { STATUS_CONFIG } from '../data/chat-tool-call-status-config';
+import { STATUS_CONFIG } from '../data/data.chat-tool-call-status-config';
 import type { ChatTurnToolEvent } from '../types';
 import { ChatToolStatus } from '../types';
 import { formatJsonPayload } from '../utils/index';
@@ -44,6 +44,11 @@ export const ChatToolCall = (props: ChatToolCallProps): React.ReactElement => {
   const result = formatJsonPayload(event.resultJson);
   const hasError = event.error !== null && event.error.trim() !== '';
   const startOpen = defaultOpen ?? event.status === ChatToolStatus.failed;
+  const hasNoPayload = args === null && result === null;
+  const isRunning = event.status === ChatToolStatus.running;
+  const emptyLabel = isRunning ? 'Awaiting result…' : 'No payload.';
+  const spinClassName = 'animate-spin motion-reduce:animate-none';
+  const iconClassName = status.spin ? spinClassName : undefined;
 
   // Handlers
 
@@ -72,44 +77,29 @@ export const ChatToolCall = (props: ChatToolCallProps): React.ReactElement => {
           <span className="truncate font-mono">{event.name}</span>
         </span>
         <Badge color={status.color} size="xs">
-          <status.Icon
-            aria-hidden="true"
-            className={
-              status.spin
-                ? 'animate-spin motion-reduce:animate-none'
-                : undefined
-            }
-          />
+          <status.Icon aria-hidden="true" className={iconClassName} />
           {status.label}
         </Badge>
       </CollapsibleTrigger>
 
-      {hasError ? (
+      {hasError && (
         <p
           className="text-destructive px-2 pb-1 text-xs break-words"
           role="alert"
         >
           {event.error}
         </p>
-      ) : null}
+      )}
 
       <CollapsibleContent
         className="space-y-2 px-2 pb-2"
         data-testid="ChatToolCall-content"
       >
-        {args !== null ? (
-          <ToolPayload content={args} label="Arguments" />
-        ) : null}
-        {result !== null ? (
-          <ToolPayload content={result} label="Result" />
-        ) : null}
-        {args === null && result === null ? (
-          <p className="text-muted-foreground text-xs italic">
-            {event.status === ChatToolStatus.running
-              ? 'Awaiting result…'
-              : 'No payload.'}
-          </p>
-        ) : null}
+        {args !== null && <ToolPayload content={args} label="Arguments" />}
+        {result !== null && <ToolPayload content={result} label="Result" />}
+        {hasNoPayload && (
+          <p className="text-muted-foreground text-xs italic">{emptyLabel}</p>
+        )}
       </CollapsibleContent>
     </Collapsible>
   );

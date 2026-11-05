@@ -67,9 +67,11 @@ describe('detectScope — the personal tier', () => {
   let personalRoot: string;
 
   /** The env a hook would see with the personal root pointed at our fixture. */
-  const env = (): NodeJS.ProcessEnv => ({
-    OPENTHROTTLE_PERSONAL_SKILLS_DIR: personalRoot,
-  });
+  const env = (): NodeJS.ProcessEnv => {
+    return {
+      OPENTHROTTLE_PERSONAL_SKILLS_DIR: personalRoot,
+    };
+  };
 
   /** Reproduce what ot-skill-sync writes: a link under `.agents/skills`. */
   const link = (name: string, target: string) => {

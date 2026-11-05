@@ -32,6 +32,21 @@ export const SettingsAgentsTable = (
   // Handlers
 
   // Markup
+  const emptyRow = (
+    <TableRow>
+      <TableCell className="text-muted-foreground text-sm" colSpan={5}>
+        {SETTINGS_AGENTS_COPY.emptyState}
+      </TableCell>
+    </TableRow>
+  );
+  const agentRows = statuses.map((status) => (
+    <SettingsAgentsTableRow
+      canManage={canManage}
+      installEnabled={installEnabled}
+      key={status.backend}
+      status={status}
+    />
+  ));
 
   // Life Cycle
 
@@ -52,24 +67,7 @@ export const SettingsAgentsTable = (
             <TableHead>{SETTINGS_AGENTS_COPY.columnActions}</TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
-          {statuses.length === 0 ? (
-            <TableRow>
-              <TableCell className="text-muted-foreground text-sm" colSpan={5}>
-                {SETTINGS_AGENTS_COPY.emptyState}
-              </TableCell>
-            </TableRow>
-          ) : (
-            statuses.map((status) => (
-              <SettingsAgentsTableRow
-                canManage={canManage}
-                installEnabled={installEnabled}
-                key={status.backend}
-                status={status}
-              />
-            ))
-          )}
-        </TableBody>
+        <TableBody>{statuses.length === 0 ? emptyRow : agentRows}</TableBody>
       </Table>
     </div>
   );

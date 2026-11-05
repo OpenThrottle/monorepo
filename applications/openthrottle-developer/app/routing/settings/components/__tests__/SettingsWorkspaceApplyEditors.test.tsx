@@ -14,7 +14,9 @@ const renderApplyEditors = (
     async () => null,
   ),
 ): RenderResult => {
-  const Component = () => <SettingsWorkspaceApplyEditors {...props} />;
+  const Component = () => {
+    return <SettingsWorkspaceApplyEditors {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, action, path: '/' }]);
   return render(<RoutesStub />);
 };

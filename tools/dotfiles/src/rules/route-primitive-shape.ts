@@ -126,13 +126,15 @@ export const routePrimitiveShape = createRule<[], MessageIds>({
           // Auto-scaffold the full marker block only when the body has no
           // markers at all (inserting into a partially-marked body risks the
           // wrong placement) and only once, on the first missing marker.
-          fix:
-            found.length === 0 && marker === missing[0] && openBrace !== null
-              ? (fixer) => {
-                  const block = MARKERS.map((m) => `  // ${m}`).join('\n\n');
-                  return fixer.insertTextAfter(openBrace, `\n${block}\n`);
-                }
-              : undefined,
+          fix: (fixer) => {
+            const canScaffold = found.length === 0 && marker === missing[0];
+            if (!canScaffold || openBrace === null) {
+              return null;
+            }
+
+            const block = MARKERS.map((m) => `  // ${m}`).join('\n\n');
+            return fixer.insertTextAfter(openBrace, `\n${block}\n`);
+          },
           messageId: 'missingMarker',
           node: body,
         });
@@ -274,21 +276,15 @@ export const routePrimitiveShape = createRule<[], MessageIds>({
   defaultOptions: [],
   meta: {
     docs: {
-      description:
-        'Enforce the OpenThrottle route primitive shape (only the RR framework exports; hoist module-scope helpers/config/data into app/routing/<area>).',
+      description: `Enforce the OpenThrottle route primitive shape (only the RR framework exports; hoist module-scope helpers/config/data into app/routing/<area>).`,
     },
     fixable: 'code',
     messages: {
-      disallowedExport:
-        '`{{name}}` is not a React Router route export. Move it under {{hint}} and import it back (R1).',
-      markerMissingBlankLine:
-        'The `// {{marker}}` marker must be preceded by exactly one blank line (R2).',
-      markerOutOfOrder:
-        'Section markers must appear in the canonical order: {{order}} (R2).',
-      missingMarker:
-        'The default Component is missing the `// {{marker}}` section marker (R2). Keep every marker even when its section is empty.',
-      moduleScopeDeclaration:
-        '`{{name}}` is a module-scope declaration in a route file. Move it under {{hint}} and import it back (R3).',
+      disallowedExport: `\`{{name}}\` is not a React Router route export. Move it under {{hint}} and import it back (R1).`,
+      markerMissingBlankLine: `The \`// {{marker}}\` marker must be preceded by exactly one blank line (R2).`,
+      markerOutOfOrder: `Section markers must appear in the canonical order: {{order}} (R2).`,
+      missingMarker: `The default Component is missing the \`// {{marker}}\` section marker (R2). Keep every marker even when its section is empty.`,
+      moduleScopeDeclaration: `\`{{name}}\` is a module-scope declaration in a route file. Move it under {{hint}} and import it back (R3).`,
     },
     schema: [],
     type: 'problem',

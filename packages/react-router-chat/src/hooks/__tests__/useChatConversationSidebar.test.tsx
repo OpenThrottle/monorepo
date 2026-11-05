@@ -23,16 +23,18 @@ interface RenameHarnessProps {
 }
 
 /** Minimal input harness exercising `onRenameKeyDown` via real keyboard events. */
-const RenameHarness = (props: RenameHarnessProps): React.ReactElement => (
-  <input
-    aria-label="Rename"
-    onChange={() => {}}
-    onKeyDown={(event) => {
-      props.onRenameKeyDown(event, props.conversationId);
-    }}
-    value={props.draftTitle}
-  />
-);
+const RenameHarness = (props: RenameHarnessProps): React.ReactElement => {
+  return (
+    <input
+      aria-label="Rename"
+      onChange={() => {}}
+      onKeyDown={(event) => {
+        props.onRenameKeyDown(event, props.conversationId);
+      }}
+      value={props.draftTitle}
+    />
+  );
+};
 
 describe('useChatConversationSidebar', () => {
   test('starts with no editing, no draft, and no pending delete', () => {

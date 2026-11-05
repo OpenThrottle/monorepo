@@ -24,7 +24,9 @@ describe('RuleForm Component', () => {
       ],
     };
 
-    const Component = () => <RuleForm {...props} />;
+    const Component = () => {
+      return <RuleForm {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

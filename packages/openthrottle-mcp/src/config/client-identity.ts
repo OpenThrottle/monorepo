@@ -52,15 +52,17 @@ export const getClientIdentity = (): ClientIdentity | null => {
  * @description `toolName` for a new work session: the connected client's name when the handshake
  * gave one, else this server's own name.
  */
-export const resolveSessionToolName = (): string =>
-  getClientIdentity()?.name ?? MCP_TOOL_NAME;
+export const resolveSessionToolName = (): string => {
+  return getClientIdentity()?.name ?? MCP_TOOL_NAME;
+};
 
 /**
  * @description `toolVersion` for a new work session: the connected client's version when known,
  * else the fallback (this server's version) so the field is never empty.
  */
-export const resolveSessionToolVersion = (fallback: string): string =>
-  getClientIdentity()?.version ?? fallback;
+export const resolveSessionToolVersion = (fallback: string): string => {
+  return getClientIdentity()?.version ?? fallback;
+};
 
 /**
  * @description `model` for a new work session, or null. Three rungs, highest first:

@@ -91,11 +91,16 @@ export function EmitNotification(
     | EmitNotificationMetadata
     | readonly (string | EmitNotificationMetadata)[] = eventOrOptions;
 
-  const metadata: EmitNotificationMetadataValue = isMetadataEntryArray(
-    singleOrArray,
-  )
-    ? singleOrArray.map((e) => normalizeOne(e))
-    : normalizeOne(singleOrArray, payload);
+  if (isMetadataEntryArray(singleOrArray)) {
+    const arrayMetadata: EmitNotificationMetadataValue = singleOrArray.map(
+      (e) => normalizeOne(e),
+    );
+    return SetMetadata(EMIT_NOTIFICATION_KEY, arrayMetadata);
+  }
 
+  const metadata: EmitNotificationMetadataValue = normalizeOne(
+    singleOrArray,
+    payload,
+  );
   return SetMetadata(EMIT_NOTIFICATION_KEY, metadata);
 }

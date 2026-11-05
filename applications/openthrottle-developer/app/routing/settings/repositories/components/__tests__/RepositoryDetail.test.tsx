@@ -55,7 +55,9 @@ describe('RepositoryDetail Component', () => {
   let props: RepositoryDetailProps;
 
   const setup = (): void => {
-    const Component = () => <RepositoryDetail {...props} />;
+    const Component = () => {
+      return <RepositoryDetail {...props} />;
+    };
     const RoutesStub = createRoutesStub([
       { Component, path: '/' },
       { path: '/edit' },

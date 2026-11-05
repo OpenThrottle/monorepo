@@ -15,15 +15,18 @@ export interface Finding {
 }
 
 /** Trim a match for display so a wall of base64 does not bury the report. */
-const preview = (value: string): string =>
-  value.length > 48 ? `${value.slice(0, 45)}…` : value;
+const preview = (value: string): string => {
+  return value.length > 48 ? `${value.slice(0, 45)}…` : value;
+};
 
-const isAllowedUrl = (url: string): boolean =>
-  ALLOWED_HOSTS.some((host) => url.includes(host));
+const isAllowedUrl = (url: string): boolean => {
+  return ALLOWED_HOSTS.some((host) => url.includes(host));
+};
 
 /** URLs are checked by their own rule; strip them so they do not also read as entropy. */
-const withoutUrls = (text: string): string =>
-  text.replaceAll(/https?:\/\/\S+/g, ' ');
+const withoutUrls = (text: string): string => {
+  return text.replaceAll(/https?:\/\/\S+/g, ' ');
+};
 
 export const scanText = (
   source: string,
@@ -62,8 +65,7 @@ export const scanText = (
   for (const term of DENYLIST) {
     if (text.toLowerCase().includes(term.toLowerCase())) {
       findings.push({
-        because:
-          'The demo fixture is entirely fictional, so a real name on screen means the recording ran against the wrong database.',
+        because: `The demo fixture is entirely fictional, so a real name on screen means the recording ran against the wrong database.`,
         match: term,
         rule: 'denylist',
         severity: 'error',

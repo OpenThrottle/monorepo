@@ -21,6 +21,7 @@ import {
   resolveAgentTimeouts,
   terminateChild,
 } from '../cursor-agent/teardown.ts';
+import { describeExit } from '../describe-exit.ts';
 import { withFileMentions } from '../file-mentions.ts';
 import { withKeepalive } from '../keepalive.ts';
 import {
@@ -165,6 +166,10 @@ async function* streamClaude(
   }
 
   const claudeConfigDir = resolveClaudeConfigDirOverride();
+  const configDirEnv: Record<string, string> = {};
+  if (claudeConfigDir !== undefined) {
+    configDirEnv[CLAUDE_CONFIG_DIR_KEY] = claudeConfigDir;
+  }
 
   // Abort + timeouts are managed explicitly (not via the spawn `signal` option)
   // so teardown escalates SIGTERM→SIGKILL rather than a single signal. stdin is
@@ -221,7 +226,9 @@ async function* streamClaude(
   );
 
   wallTimer.unref();
-  const onAbort = (): void => terminate('cancelled');
+  const onAbort = (): void => {
+    return terminate('cancelled');
+  };
 
   run.signal?.addEventListener('abort', onAbort, { once: true });
   if (run.signal?.aborted === true) {
@@ -279,12 +286,7 @@ async function* streamClaude(
         error !== null ||
         (code !== null && code !== 0);
       const message =
-        terminationReason ??
-        (error !== null
-          ? error.message
-          : stderr.trim() !== ''
-            ? stderr.trim()
-            : `claude exited with code ${code}`);
+        terminationReason ?? describeExit('claude', { code, error, stderr });
       yield {
         delta: '',
         done: true,

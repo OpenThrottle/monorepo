@@ -12,7 +12,7 @@ export * from './types';
 
 // Hardcoded element catalog (default sizes/seats/layer + palette copy)
 export * from './data/data.demo';
-export * from './data/elements';
+export * from './data/data.elements';
 
 // Components (editor + canvas, grid, element views, palette, panel, handles, toolbar)
 export * from './components/ElementPalette';
@@ -32,6 +32,7 @@ export * from './hooks/useSelectionKeyboard';
 export * from './hooks/useViewport';
 
 // Geometry, model operations, serialization (world-space math, inches)
+export * from './utils/build-demo-layout';
 export * from './utils/elements';
 export * from './utils/geometry';
 export * from './utils/layout-operations';

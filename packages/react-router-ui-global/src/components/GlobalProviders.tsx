@@ -45,6 +45,17 @@ export const GlobalProviders = (
   // Handlers
 
   // Markup
+  const renderChatProvider = () => {
+    if (chat) {
+      return <ChatProvider {...chat}>{children}</ChatProvider>;
+    }
+
+    return (
+      <LegacyChatTurnProvider chatPersist={chatPersist}>
+        {children}
+      </LegacyChatTurnProvider>
+    );
+  };
 
   // Life Cycle
 
@@ -53,15 +64,7 @@ export const GlobalProviders = (
   return (
     <DndProvider backend={HTML5Backend}>
       <SidebarProvider>
-        <TooltipProvider>
-          {chat ? (
-            <ChatProvider {...chat}>{children}</ChatProvider>
-          ) : (
-            <LegacyChatTurnProvider chatPersist={chatPersist}>
-              {children}
-            </LegacyChatTurnProvider>
-          )}
-        </TooltipProvider>
+        <TooltipProvider>{renderChatProvider()}</TooltipProvider>
       </SidebarProvider>
     </DndProvider>
   );

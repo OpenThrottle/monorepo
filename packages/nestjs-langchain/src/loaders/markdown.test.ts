@@ -3,10 +3,12 @@ import { describe, expect, it } from 'vitest';
 
 import { getMarkdownDocumentStats } from './markdown.ts';
 
-const makeDoc = (pageContent: string, source: string): Document => ({
-  metadata: { source },
-  pageContent,
-});
+const makeDoc = (pageContent: string, source: string): Document => {
+  return {
+    metadata: { source },
+    pageContent,
+  };
+};
 
 describe('getMarkdownDocumentStats', () => {
   it('returns zeroed stats for an empty list', () => {

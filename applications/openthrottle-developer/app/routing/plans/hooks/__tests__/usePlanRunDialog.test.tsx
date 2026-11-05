@@ -27,8 +27,8 @@ describe('usePlanRunDialog', () => {
   // useFetcher needs a router; the stub renders the hook's probe inside one.
   const renderDialogHook = (
     hookOptions: UsePlanRunDialogOptions,
-  ): RenderHookResult<UsePlanRunDialogResult, unknown> =>
-    renderHook(() => usePlanRunDialog(hookOptions), {
+  ): RenderHookResult<UsePlanRunDialogResult, unknown> => {
+    return renderHook(() => usePlanRunDialog(hookOptions), {
       wrapper: ({ children }) => {
         const RoutesStub = createRoutesStub([
           { Component: () => <>{children}</>, path: '/' },
@@ -37,6 +37,7 @@ describe('usePlanRunDialog', () => {
         return <RoutesStub />;
       },
     });
+  };
 
   beforeAll(() => {
     process.env.TZ = 'America/Los_Angeles';

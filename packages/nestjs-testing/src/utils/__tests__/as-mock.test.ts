@@ -18,7 +18,9 @@ describe('asMock', () => {
   });
 
   it('retypes a factory-style partial without a runtime transform', () => {
-    const fn = (): number => 42;
+    const fn = (): number => {
+      return 42;
+    };
     const mocked = asMock<() => number>(fn);
 
     expect(mocked).toBe(fn);

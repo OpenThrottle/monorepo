@@ -78,8 +78,9 @@ import { WorkLedgerRunService } from './work-ledger-run.service.ts';
 const CONCURRENCY = 1;
 
 /** Whether a worker may claim a run in `status` (see `PLAN_RUN_STARTABLE_STATUSES`). */
-const isStartableRunStatus = (status: string): boolean =>
-  PLAN_RUN_STARTABLE_STATUSES.some((startable) => startable === status);
+const isStartableRunStatus = (status: string): boolean => {
+  return PLAN_RUN_STARTABLE_STATUSES.some((startable) => startable === status);
+};
 
 /**
  * Processes plan-run jobs for the plans queue. Concurrency is derived from the number
@@ -620,35 +621,29 @@ export class PlansProcessor
         abortSignal,
       );
 
-      const blockedByBeforeRunHook =
-        lifecycleDispatcher !== undefined
-          ? await runBeforeAllHooksWithDispatcher({
-              dispatcher: lifecycleDispatcher,
-              hooks: job.data.jobRunHooks,
-              jobData: job.data,
-              logLabel: PlansProcessor.name,
-              logger: this.logger,
-              notifications: this.notifications,
-              planOutputStreamService: this.planOutputStreamService,
-              planStatusService: this.planStatusService,
-              plansService: this.plansService,
-              signal: abortSignal,
-              statusChangeSystemAccount: this.statusChangeSystemAccount,
-              tasksService: this.tasksService,
-            })
-          : await runBeforeRunHooksAndHandleBlock({
-              hooks: job.data.jobRunHooks,
-              jobData: job.data,
-              logLabel: PlansProcessor.name,
-              logger: this.logger,
-              notifications: this.notifications,
-              planOutputStreamService: this.planOutputStreamService,
-              planStatusService: this.planStatusService,
-              plansService: this.plansService,
-              signal: abortSignal,
-              statusChangeSystemAccount: this.statusChangeSystemAccount,
-              tasksService: this.tasksService,
-            });
+      const beforeRunHookInput = {
+        hooks: job.data.jobRunHooks,
+        jobData: job.data,
+        logLabel: PlansProcessor.name,
+        logger: this.logger,
+        notifications: this.notifications,
+        planOutputStreamService: this.planOutputStreamService,
+        planStatusService: this.planStatusService,
+        plansService: this.plansService,
+        signal: abortSignal,
+        statusChangeSystemAccount: this.statusChangeSystemAccount,
+        tasksService: this.tasksService,
+      };
+      const runBeforeRunHooks = async () => {
+        if (lifecycleDispatcher !== undefined) {
+          return runBeforeAllHooksWithDispatcher({
+            dispatcher: lifecycleDispatcher,
+            ...beforeRunHookInput,
+          });
+        }
+        return runBeforeRunHooksAndHandleBlock(beforeRunHookInput);
+      };
+      const blockedByBeforeRunHook = await runBeforeRunHooks();
 
       if (blockedByBeforeRunHook) {
         const metricsAtEnd = this.processMetrics.getCurrentSnapshot();
@@ -879,14 +874,19 @@ export class PlansProcessor
       atStart: this.processMetrics.getCurrentSnapshot(),
     };
 
+    const pickChildProcessMetrics = () => {
+      if ('childProcessMetrics' in result) return result.childProcessMetrics;
+      return undefined;
+    };
+    const pickWallClockMetrics = () => {
+      if ('wallClockMetrics' in result) return result.wallClockMetrics;
+      return undefined;
+    };
+
     const enhanced: EnhancedTaskRunMetrics = {
       ...base,
-      childProcessMetrics:
-        'childProcessMetrics' in result
-          ? result.childProcessMetrics
-          : undefined,
-      wallClockMetrics:
-        'wallClockMetrics' in result ? result.wallClockMetrics : undefined,
+      childProcessMetrics: pickChildProcessMetrics(),
+      wallClockMetrics: pickWallClockMetrics(),
     };
 
     return enhanced;

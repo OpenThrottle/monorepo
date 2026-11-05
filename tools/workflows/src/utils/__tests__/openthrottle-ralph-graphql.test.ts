@@ -23,10 +23,12 @@ const executeWorkflowGraphqlV2Mock = vi.hoisted(() => vi.fn());
  * @description Wraps mock data in a successful {@link GraphqlV2Result} envelope, matching the
  * non-throwing shape `executeWorkflowGraphqlV2` now returns.
  */
-const ok = <TData>(data: TData): { data: TData; ok: true } => ({
-  data,
-  ok: true,
-});
+const ok = <TData>(data: TData): { data: TData; ok: true } => {
+  return {
+    data,
+    ok: true,
+  };
+};
 
 vi.mock('@openthrottle/openthrottle-agentic-ralph', async () => {
   const actual = await vi.importActual<

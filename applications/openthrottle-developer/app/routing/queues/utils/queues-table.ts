@@ -10,5 +10,9 @@ export function queueDetailHref(name: string): string {
   return `/queues/${encodeURIComponent(name)}`;
 }
 
-export const queueRowId = (queue: QueueCardFragment, _index: number): string =>
-  queue.name;
+export const queueRowId = (
+  queue: QueueCardFragment,
+  _index: number,
+): string => {
+  return queue.name;
+};

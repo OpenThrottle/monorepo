@@ -2,6 +2,10 @@ import * as React from 'react';
 
 import { DEFAULT_GLOBAL_ANIMATION_WAVES } from '../config/global-animation-waves';
 import { buildSoundArcs } from '../utils/build-sound-arcs';
+import {
+  createResizeObserver,
+  createVisibilityObserver,
+} from '../utils/create-canvas-observers';
 import { cubicAt } from '../utils/cubic-at';
 import { cubicDerivativeAt } from '../utils/cubic-derivative-at';
 
@@ -323,28 +327,11 @@ export const useGlobalAnimationWaves = <
 
     render(0, 0);
 
-    const resizeObserver =
-      typeof ResizeObserver === 'function'
-        ? new ResizeObserver(() => build())
-        : null;
+    const resizeObserver = createResizeObserver(build);
 
     resizeObserver?.observe(canvas);
 
-    const intersectionObserver =
-      typeof IntersectionObserver === 'function'
-        ? new IntersectionObserver(
-            (entries) => {
-              for (const entry of entries) {
-                if (entry.isIntersecting) {
-                  start();
-                } else {
-                  stop();
-                }
-              }
-            },
-            { threshold: 0 },
-          )
-        : null;
+    const intersectionObserver = createVisibilityObserver(start, stop);
 
     if (intersectionObserver) {
       intersectionObserver.observe(canvas);

@@ -70,10 +70,11 @@ describe('EmitNotificationInterceptor', () => {
   });
 
   it('emits with payload mapper result when metadata has payload mapper returning non-null', async () => {
-    const payloadMapper = (ret: unknown): unknown =>
-      ret != null && typeof ret === 'object' && 'plan' in ret
+    const payloadMapper = (ret: unknown): unknown => {
+      return ret != null && typeof ret === 'object' && 'plan' in ret
         ? asMock<{ plan: unknown }>(ret).plan
         : null;
+    };
     const metadata: EmitNotificationMetadata = {
       event: 'plan.updated',
       payload: payloadMapper,
@@ -96,7 +97,9 @@ describe('EmitNotificationInterceptor', () => {
   });
 
   it('does not emit when payload mapper returns null', async () => {
-    const payloadMapper = (): null => null;
+    const payloadMapper = (): null => {
+      return null;
+    };
     const metadata: EmitNotificationMetadata = {
       event: 'plan.updated',
       payload: payloadMapper,
@@ -155,23 +158,29 @@ describe('EmitNotificationInterceptor', () => {
     const metadata: EmitNotificationMetadata[] = [
       {
         event: 'plan.updated',
-        payload: (ret: unknown) =>
-          ret != null
-            ? { message: 'Updated', planId: asMock<{ id: string }>(ret).id }
-            : null,
+        payload: (ret: unknown) => {
+          if (ret == null) {
+            return null;
+          }
+          return { message: 'Updated', planId: asMock<{ id: string }>(ret).id };
+        },
       },
       {
         event: 'plan.status_changed',
-        payload: (ret: unknown) =>
-          ret != null &&
-          typeof ret === 'object' &&
-          'id' in ret &&
-          'status' in ret
-            ? {
-                planId: asMock<{ id: string }>(ret).id,
-                status: asMock<{ status: string }>(ret).status,
-              }
-            : null,
+        payload: (ret: unknown) => {
+          if (
+            ret != null &&
+            typeof ret === 'object' &&
+            'id' in ret &&
+            'status' in ret
+          ) {
+            return {
+              planId: asMock<{ id: string }>(ret).id,
+              status: asMock<{ status: string }>(ret).status,
+            };
+          }
+          return null;
+        },
       },
     ];
     const reflector = asMock<Reflector>({

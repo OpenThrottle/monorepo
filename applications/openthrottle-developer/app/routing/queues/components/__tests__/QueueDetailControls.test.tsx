@@ -9,7 +9,9 @@ import type { QueueDetailControlsProps } from '../QueueDetailControls';
 import { QueueDetailControls } from '../QueueDetailControls';
 
 const renderControls = (props: QueueDetailControlsProps): RenderResult => {
-  const Component = () => <QueueDetailControls {...props} />;
+  const Component = () => {
+    return <QueueDetailControls {...props} />;
+  };
   const RoutesStub = createRoutesStub([
     { Component, action: () => ({}), path: '/' },
   ]);

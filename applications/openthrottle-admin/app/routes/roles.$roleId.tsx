@@ -144,7 +144,8 @@ export default function Component(
   );
 }
 
-export const action = async (args: Route.ActionArgs) =>
-  runRoleDetailAction(args.request, args.params.roleId);
+export const action = async (args: Route.ActionArgs) => {
+  return runRoleDetailAction(args.request, args.params.roleId);
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

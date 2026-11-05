@@ -53,16 +53,13 @@ export function buildWorkflowExecuteGraphqlV2Options(
 ): ExecuteGraphqlOptionsV2 {
   const override = config.graphqlUrl?.trim();
   const url = override != null && override !== '' ? override : getGraphQLUrl();
-  const token =
-    config.token != null && config.token.trim() !== ''
-      ? config.token.trim()
-      : undefined;
+  const trimmedToken = config.token?.trim();
+  const hasToken = trimmedToken != null && trimmedToken !== '';
+  const token = hasToken ? trimmedToken : undefined;
 
   const rawHeaders = config.additionalHeaders;
-  const headers =
-    rawHeaders != null && Object.keys(rawHeaders).length > 0
-      ? { ...rawHeaders }
-      : undefined;
+  const hasHeaders = rawHeaders != null && Object.keys(rawHeaders).length > 0;
+  const headers = hasHeaders ? { ...rawHeaders } : undefined;
 
   if (headers != null && token != null) {
     return { headers, token, url };
@@ -94,10 +91,8 @@ function buildWorkflowExecuteGraphql_v2Options(
   const rawToken = config.token?.trim();
   const token = rawToken != null && rawToken !== '' ? rawToken : undefined;
   const rawHeaders = config.additionalHeaders;
-  const headers =
-    rawHeaders != null && Object.keys(rawHeaders).length > 0
-      ? { ...rawHeaders }
-      : undefined;
+  const hasHeaders = rawHeaders != null && Object.keys(rawHeaders).length > 0;
+  const headers = hasHeaders ? { ...rawHeaders } : undefined;
 
   return {
     headers,

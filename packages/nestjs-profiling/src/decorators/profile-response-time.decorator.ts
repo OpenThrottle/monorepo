@@ -21,11 +21,14 @@ interface ReflectWithKeys {
   ) => (string | symbol)[];
 }
 
-const isReflectWithKeys = (value: unknown): value is ReflectWithKeys =>
-  isRecord(value) &&
-  typeof value['defineMetadata'] === 'function' &&
-  typeof value['getMetadata'] === 'function' &&
-  typeof value['getMetadataKeys'] === 'function';
+const isReflectWithKeys = (value: unknown): value is ReflectWithKeys => {
+  return (
+    isRecord(value) &&
+    typeof value['defineMetadata'] === 'function' &&
+    typeof value['getMetadata'] === 'function' &&
+    typeof value['getMetadataKeys'] === 'function'
+  );
+};
 
 function getReflectWithKeys(): ReflectWithKeys | undefined {
   const candidate: unknown =

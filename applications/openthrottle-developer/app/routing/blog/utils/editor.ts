@@ -36,18 +36,20 @@ const SAVE_REQUEST_SCHEMA = z.object({
  */
 export const toBlogPostEditorValues = (
   post: BlogEditorPost,
-): BlogPostEditorValues => ({
-  authorSlug: post.author?.slug ?? '',
-  bodyMarkdown: post.bodyMarkdown,
-  coverImageAlt: post.coverImageAlt ?? '',
-  coverImageUrl: post.coverImageUrl ?? '',
-  excerpt: post.excerpt ?? '',
-  seoDescription: post.seoDescription ?? '',
-  seoTitle: post.seoTitle ?? '',
-  slug: post.slug,
-  tagSlugs: post.tags.map((tag) => tag.slug),
-  title: post.title,
-});
+): BlogPostEditorValues => {
+  return {
+    authorSlug: post.author?.slug ?? '',
+    bodyMarkdown: post.bodyMarkdown,
+    coverImageAlt: post.coverImageAlt ?? '',
+    coverImageUrl: post.coverImageUrl ?? '',
+    excerpt: post.excerpt ?? '',
+    seoDescription: post.seoDescription ?? '',
+    seoTitle: post.seoTitle ?? '',
+    slug: post.slug,
+    tagSlugs: post.tags.map((tag) => tag.slug),
+    title: post.title,
+  };
+};
 
 /** @description True when both lists hold the same slugs, in any order. */
 export const isSameTagSet = (
@@ -64,8 +66,9 @@ export const isSameTagSet = (
 };
 
 /** `''` clears a nullable field on the server, which expects `null`. */
-const toNullable = (value: string): string | null =>
-  value === '' ? null : value;
+const toNullable = (value: string): string | null => {
+  return value === '' ? null : value;
+};
 
 /**
  * @description What a save must send: only the fields that differ from the
@@ -80,8 +83,9 @@ export const diffBlogPostEditorValues = (
   readonly tagSlugs: string[] | null;
 } => {
   const base = toBlogPostEditorValues(post);
-  const changed = (field: keyof BlogPostChanges): boolean =>
-    base[field] !== values[field];
+  const changed = (field: keyof BlogPostChanges): boolean => {
+    return base[field] !== values[field];
+  };
 
   const changes: BlogPostChanges = {
     ...(changed('authorSlug') && { authorSlug: toNullable(values.authorSlug) }),
@@ -215,20 +219,26 @@ export const toBlogPostTagsResult = (
 /** @description Narrows an unknown action result to a {@link BlogPostSaveResult}. */
 export const isBlogPostSaveResult = (
   value: unknown,
-): value is BlogPostSaveResult =>
-  typeof value === 'object' &&
-  value !== null &&
-  'outcome' in value &&
-  typeof value.outcome === 'string';
+): value is BlogPostSaveResult => {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'outcome' in value &&
+    typeof value.outcome === 'string'
+  );
+};
 
 /**
  * @description True when the save wrote the post, so the loader must re-read
  * it (new `updatedAt`, new `lastEditedBy`). Failed saves wrote nothing; keeping
  * the loaded post is what lets a stale write stay detectable.
  */
-export const didBlogPostSaveWrite = (value: unknown): boolean =>
-  isBlogPostSaveResult(value) &&
-  (value.outcome === 'saved' || value.outcome === 'tagsNotSaved');
+export const didBlogPostSaveWrite = (value: unknown): boolean => {
+  return (
+    isBlogPostSaveResult(value) &&
+    (value.outcome === 'saved' || value.outcome === 'tagsNotSaved')
+  );
+};
 
 /**
  * @description The inline field error a save outcome maps to, if any: a taken

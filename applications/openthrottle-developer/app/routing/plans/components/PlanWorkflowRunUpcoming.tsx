@@ -43,8 +43,24 @@ export const PlanWorkflowRunUpcoming = (
   // Handlers
 
   // Markup
+  const renderMeta = (item: (typeof items)[number]): React.ReactNode => {
+    if (item.kind === 'run') {
+      return (
+        <PlanRunMetaList
+          items={buildPlanRunMetaItems(item.run, PLAN_RUN_UPCOMING_META_FIELDS)}
+        />
+      );
+    }
+    return <p className="text-muted-foreground text-xs">{copy.backstopMeta}</p>;
+  };
   const blocks = items.map((item) => {
     const hasFireTime = parseDate(item.scheduledFor) !== null;
+    const knownFireTime = <PlanRunTime value={item.scheduledFor} />;
+    const unknownFireTime = (
+      <span data-testid="PlanWorkflowRunUpcoming-fires-unknown">
+        {copy.firesUnknown}
+      </span>
+    );
 
     return (
       <li
@@ -58,25 +74,10 @@ export const PlanWorkflowRunUpcoming = (
             <span className="text-muted-foreground font-normal">
               {copy.firesLabel}
             </span>
-            {hasFireTime ? (
-              <PlanRunTime value={item.scheduledFor} />
-            ) : (
-              <span data-testid="PlanWorkflowRunUpcoming-fires-unknown">
-                {copy.firesUnknown}
-              </span>
-            )}
+            {hasFireTime ? knownFireTime : unknownFireTime}
             <PlanRunStatusBadge status="SCHEDULED" />
           </div>
-          {item.kind === 'run' ? (
-            <PlanRunMetaList
-              items={buildPlanRunMetaItems(
-                item.run,
-                PLAN_RUN_UPCOMING_META_FIELDS,
-              )}
-            />
-          ) : (
-            <p className="text-muted-foreground text-xs">{copy.backstopMeta}</p>
-          )}
+          {renderMeta(item)}
         </div>
         <div className="shrink-0">
           <PlanRunCancelScheduledButton planId={planId} planRunId={item.id} />

@@ -26,13 +26,11 @@ export const episode: VideoEpisode = {
       t: '0:24',
     },
     {
-      action:
-        'Click **Add task**; type `Add a token bucket to the gateway`; save.',
+      action: `Click **Add task**; type \`Add a token bucket to the gateway\`; save.`,
       t: '0:31',
     },
     {
-      action:
-        'Add a second task the same way; the list now shows two, ordered.',
+      action: `Add a second task the same way; the list now shows two, ordered.`,
       t: '0:41',
     },
     { action: 'Hold on the two-task plan.', t: '0:49' },

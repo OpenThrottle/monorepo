@@ -146,10 +146,7 @@ export const action = async (args: Route.ActionArgs) => {
   if (intent === 'cancelPlanRun') {
     try {
       const planIdField = formData.get('planId');
-      const planId =
-        typeof planIdField === 'string' && planIdField.trim() !== ''
-          ? planIdField.trim()
-          : '';
+      const planId = typeof planIdField === 'string' ? planIdField.trim() : '';
 
       const input = CancelPlanRunInputSchema().parse({ planId });
       const result = await executeGraphqlWithAuth(

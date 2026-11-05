@@ -14,7 +14,9 @@ describe('PullRequestStatus Component', () => {
   describe('when state is open', () => {
     beforeEach(() => {
       props = { state: 'open' };
-      const Component = () => <PullRequestStatus {...props} />;
+      const Component = () => {
+        return <PullRequestStatus {...props} />;
+      };
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component = render(<RoutesStub />);
     });
@@ -28,7 +30,9 @@ describe('PullRequestStatus Component', () => {
     beforeEach(() => {
       props = { state: 'closed' };
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const Component = () => <PullRequestStatus {...props} />;
+      const Component = () => {
+        return <PullRequestStatus {...props} />;
+      };
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component = render(<RoutesStub />);
     });
@@ -42,7 +46,9 @@ describe('PullRequestStatus Component', () => {
     beforeEach(() => {
       props = { state: 'merged' };
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const Component = () => <PullRequestStatus {...props} />;
+      const Component = () => {
+        return <PullRequestStatus {...props} />;
+      };
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component = render(<RoutesStub />);
     });
@@ -56,7 +62,9 @@ describe('PullRequestStatus Component', () => {
     beforeEach(() => {
       props = { state: 'draft' };
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const Component = () => <PullRequestStatus {...props} />;
+      const Component = () => {
+        return <PullRequestStatus {...props} />;
+      };
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component = render(<RoutesStub />);
     });
@@ -70,7 +78,9 @@ describe('PullRequestStatus Component', () => {
     beforeEach(() => {
       props = { state: 'reopened' };
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const Component = () => <PullRequestStatus {...props} />;
+      const Component = () => {
+        return <PullRequestStatus {...props} />;
+      };
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component = render(<RoutesStub />);
     });
@@ -84,7 +94,9 @@ describe('PullRequestStatus Component', () => {
     beforeEach(() => {
       props = { state: 'syncing' };
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const Component = () => <PullRequestStatus {...props} />;
+      const Component = () => {
+        return <PullRequestStatus {...props} />;
+      };
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component = render(<RoutesStub />);
     });
@@ -98,7 +110,9 @@ describe('PullRequestStatus Component', () => {
     beforeEach(() => {
       props = { state: 'unknown' };
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const Component = () => <PullRequestStatus {...props} />;
+      const Component = () => {
+        return <PullRequestStatus {...props} />;
+      };
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component = render(<RoutesStub />);
     });

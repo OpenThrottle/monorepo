@@ -7,11 +7,13 @@ import { GlobalModal } from '../GlobalModal';
 
 describe('GlobalModal Component', () => {
   test('does not show dialog when URL param is absent', () => {
-    const Component = () => (
-      <GlobalModal param="modal" value="open">
-        <span>modal-content</span>
-      </GlobalModal>
-    );
+    const Component = () => {
+      return (
+        <GlobalModal param="modal" value="open">
+          <span>modal-content</span>
+        </GlobalModal>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 

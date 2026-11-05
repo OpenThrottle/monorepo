@@ -12,15 +12,17 @@ import { GlobalScreen } from '../GlobalScreen';
  */
 describe('Global shell composition', () => {
   test('mounts GlobalProviders wrapping GlobalLayout and GlobalScreen with minimal children', () => {
-    const ShellRoute = (): React.ReactElement => (
-      <GlobalProviders>
-        <GlobalLayout>
-          <GlobalScreen>
-            <p>Shell smoke content</p>
-          </GlobalScreen>
-        </GlobalLayout>
-      </GlobalProviders>
-    );
+    const ShellRoute = (): React.ReactElement => {
+      return (
+        <GlobalProviders>
+          <GlobalLayout>
+            <GlobalScreen>
+              <p>Shell smoke content</p>
+            </GlobalScreen>
+          </GlobalLayout>
+        </GlobalProviders>
+      );
+    };
 
     const RoutesStub = createRoutesStub([{ Component: ShellRoute, path: '/' }]);
 

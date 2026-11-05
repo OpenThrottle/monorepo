@@ -243,7 +243,9 @@ function mapResult(event: Record<string, unknown>): ConversationStreamChunk {
 /** A nullable single chunk as the zero-or-one list {@link mapClaudeEvent} returns. */
 const listOf = (
   chunk: ConversationStreamChunk | null,
-): readonly ConversationStreamChunk[] => (chunk === null ? [] : [chunk]);
+): readonly ConversationStreamChunk[] => {
+  return chunk === null ? [] : [chunk];
+};
 
 /**
  * Map a single claude event to its chunks — usually zero or one; a `user` event

@@ -13,13 +13,14 @@ import type { MutexWorktreeTargetsTracker } from './mutex-worktree-targets.ts';
 import { createMutexWorktreeTargetsTracker } from './mutex-worktree-targets.ts';
 import { WorktreeTargetsTracker } from './worktree-targets.ts';
 
-const buildTracker = (count: number): WorktreeTargetsTracker =>
-  new WorktreeTargetsTracker(
+const buildTracker = (count: number): WorktreeTargetsTracker => {
+  return new WorktreeTargetsTracker(
     Array.from({ length: count }, (_unused, i) => ({
       id: `wt${i + 1}`,
       path: `/tmp/wt${i + 1}`,
     })),
   );
+};
 
 describe('MutexWorktreeTargetsTracker', () => {
   let mutexTracker: MutexWorktreeTargetsTracker;

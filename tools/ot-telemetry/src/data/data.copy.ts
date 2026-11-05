@@ -18,8 +18,7 @@ export const REPORT_TITLE = '# OpenThrottle Usage Report';
  */
 export const DETAIL_LEVEL_DESCRIPTIONS: Readonly<Record<DetailLevel, string>> =
   {
-    [DETAIL_LEVELS.AGGREGATE]:
-      'aggregate: counts, sums, and distributions only — no titles, paths, or branch names.',
+    [DETAIL_LEVELS.AGGREGATE]: `aggregate: counts, sums, and distributions only — no titles, paths, or branch names.`,
     [DETAIL_LEVELS.FULL]:
       'full: reserved for identifiers plus plan/task titles. No metric currently varies by ' +
       'detail level, so this run’s output is identical to aggregate.',
@@ -51,13 +50,11 @@ export const WHAT_IS_IN_THIS_FILE_COPY = {
 } as const;
 
 /** Wording shared by both connection failure paths so callers/tests can match on a stable prefix. */
-export const POSTGRES_CONNECTION_FAILURE_PREFIX =
-  '🚨 ot-telemetry could not reach a read-only Postgres connection.';
+export const POSTGRES_CONNECTION_FAILURE_PREFIX = `🚨 ot-telemetry could not reach a read-only Postgres connection.`;
 
 /** Printed to stderr after a successful run. */
 export const RUN_COMPLETE_COPY = {
-  nothingUploaded:
-    'ot-telemetry: nothing was uploaded — this is a local-only read.',
+  nothingUploaded: `ot-telemetry: nothing was uploaded — this is a local-only read.`,
   wrote: (outDir: string): string =>
     `ot-telemetry: wrote report(s) to ${outDir}`,
 } as const;

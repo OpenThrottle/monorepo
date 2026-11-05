@@ -19,8 +19,9 @@ export interface RulesListFilterable {
 
 export const isRulesEnabledFilter = (
   value: string,
-): value is RulesEnabledFilter =>
-  RULES_ENABLED_FILTERS.some((filter) => filter === value);
+): value is RulesEnabledFilter => {
+  return RULES_ENABLED_FILTERS.some((filter) => filter === value);
+};
 
 /**
  * @description Reads `q` from URL search params; empty string when missing.

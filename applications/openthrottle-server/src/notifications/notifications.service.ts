@@ -127,10 +127,9 @@ export class NotificationsService {
     queueTotal: number;
     severity?: NotificationSeverity;
   }): void {
-    const message =
-      payload.queueTotal === 1
-        ? 'Your plan is next in queue'
-        : `Your plan is #${payload.queuePosition} of ${payload.queueTotal} in queue`;
+    const isNext = payload.queueTotal === 1;
+    const queuedMessage = `Your plan is #${payload.queuePosition} of ${payload.queueTotal} in queue`;
+    const message = isNext ? 'Your plan is next in queue' : queuedMessage;
 
     const data: PlanEnqueuedPayload = {
       link: payload.link ?? planLink(payload.planId),

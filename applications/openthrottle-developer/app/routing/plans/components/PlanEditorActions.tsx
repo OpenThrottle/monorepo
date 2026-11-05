@@ -12,10 +12,8 @@ import type { WorkspaceEditorId } from '~/__generated__/graphql';
 import { getWorkspaceEditorDeepLink } from '~/global/config/workspace-editor-deep-links';
 import { PlanDeferredSection } from '~/routing/plans/components/PlanDeferredSection';
 import { PlanToolbarTagsSkeleton } from '~/routing/plans/components/PlanToolbarTagsSkeleton';
-import {
-  PLAN_DEFERRED_SECTION_COPY,
-  PLAN_EDITOR_ACTIONS_COPY,
-} from '~/routing/plans/data/data.copy';
+import { PLAN_DEFERRED_SECTION_COPY } from '~/routing/plans/data/data.copy';
+import { getPlanEditorTooltip } from '~/routing/plans/utils/plan-editor-tooltip';
 
 export interface PlanEditorActionsProps {
   className?: string;
@@ -62,6 +60,33 @@ export const PlanEditorActions = (
   // Handlers
 
   // Markup
+  const renderTrigger = (
+    href: string | null,
+    editorLabel: string,
+    label: React.ReactNode,
+  ): React.ReactElement => {
+    if (href === null) {
+      // The span carries the pointer events a disabled button cannot, so the
+      // tooltip explaining WHY still opens.
+      return (
+        <span
+          className="inline-flex"
+          data-testid={`PlanEditorActions-disabled-${editorLabel}`}
+        >
+          <Button disabled={true} size="xs" variant="outline">
+            {label}
+          </Button>
+        </span>
+      );
+    }
+
+    return (
+      <Button asChild={true} size="xs" variant="outline">
+        <a href={href}>{label}</a>
+      </Button>
+    );
+  };
+
   const renderResolved = (
     resolvedEditors: readonly WorkspaceEditorId[],
   ): React.ReactNode => {
@@ -103,31 +128,14 @@ export const PlanEditorActions = (
           return (
             <Tooltip delayDuration={1_000} key={target.label}>
               <TooltipTrigger asChild={true}>
-                {href === null ? (
-                  // The span carries the pointer events a disabled button cannot,
-                  // so the tooltip explaining WHY still opens.
-                  <span
-                    className="inline-flex"
-                    data-testid={`PlanEditorActions-disabled-${target.label}`}
-                  >
-                    <Button disabled={true} size="xs" variant="outline">
-                      {label}
-                    </Button>
-                  </span>
-                ) : (
-                  <Button asChild={true} size="xs" variant="outline">
-                    <a href={href}>{label}</a>
-                  </Button>
-                )}
+                {renderTrigger(href, target.label, label)}
               </TooltipTrigger>
               <TooltipContent className="max-w-xs" side="top">
-                {href === null
-                  ? PLAN_EDITOR_ACTIONS_COPY.needsCheckoutTooltip(target.label)
-                  : target.promptTargetsFocusedWindow
-                    ? PLAN_EDITOR_ACTIONS_COPY.focusedWindowTooltip(
-                        target.label,
-                      )
-                    : PLAN_EDITOR_ACTIONS_COPY.openTooltip(target.label)}
+                {getPlanEditorTooltip({
+                  href,
+                  label: target.label,
+                  promptTargetsFocusedWindow: target.promptTargetsFocusedWindow,
+                })}
               </TooltipContent>
             </Tooltip>
           );

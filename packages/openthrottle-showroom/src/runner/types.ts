@@ -159,32 +159,42 @@ export interface RecordingManifest {
   readonly width: number;
 }
 
-export const navigate = (path: string, beat?: string): DemoStep => ({
-  beat,
-  kind: 'navigate',
-  path,
-});
-export const click = (selector: string, beat?: string): DemoStep => ({
-  beat,
-  kind: 'click',
-  selector,
-});
+export const navigate = (path: string, beat?: string): DemoStep => {
+  return {
+    beat,
+    kind: 'navigate',
+    path,
+  };
+};
+export const click = (selector: string, beat?: string): DemoStep => {
+  return {
+    beat,
+    kind: 'click',
+    selector,
+  };
+};
 // eslint-disable-next-line @typescript-eslint/naming-convention -- `type` is a reserved word; the trailing underscore is what makes this callable name possible
 export const type_ = (
   selector: string,
   text: string,
   beat?: string,
-): DemoStep => ({ beat, kind: 'type', selector, text });
-export const dwell = (ms: number, beat?: string): DemoStep => ({
-  beat,
-  kind: 'dwell',
-  ms,
-});
-export const waitFor = (selector: string, beat?: string): DemoStep => ({
-  beat,
-  kind: 'waitFor',
-  selector,
-});
+): DemoStep => {
+  return { beat, kind: 'type', selector, text };
+};
+export const dwell = (ms: number, beat?: string): DemoStep => {
+  return {
+    beat,
+    kind: 'dwell',
+    ms,
+  };
+};
+export const waitFor = (selector: string, beat?: string): DemoStep => {
+  return {
+    beat,
+    kind: 'waitFor',
+    selector,
+  };
+};
 /**
  * @public Flow-vocabulary constructors below this line.
  *
@@ -193,64 +203,82 @@ export const waitFor = (selector: string, beat?: string): DemoStep => ({
  * happens to use yet. Tagged `@public` so knip keeps them rather than reporting a
  * vocabulary as dead code.
  */
-export const waitForUrl = (pattern: string, beat?: string): DemoStep => ({
-  beat,
-  kind: 'waitForUrl',
-  pattern,
-});
+export const waitForUrl = (pattern: string, beat?: string): DemoStep => {
+  return {
+    beat,
+    kind: 'waitForUrl',
+    pattern,
+  };
+};
 /** @public */
-export const hover = (selector: string, beat?: string): DemoStep => ({
-  beat,
-  kind: 'hover',
-  selector,
-});
+export const hover = (selector: string, beat?: string): DemoStep => {
+  return {
+    beat,
+    kind: 'hover',
+    selector,
+  };
+};
 /** @public */
-export const moveTo = (selector: string, beat?: string): DemoStep => ({
-  beat,
-  kind: 'moveTo',
-  selector,
-});
+export const moveTo = (selector: string, beat?: string): DemoStep => {
+  return {
+    beat,
+    kind: 'moveTo',
+    selector,
+  };
+};
 /** @public */
 export const highlight = (
   selector: string,
   ms?: number,
   beat?: string,
-): DemoStep => ({ beat, kind: 'highlight', ms, selector });
+): DemoStep => {
+  return { beat, kind: 'highlight', ms, selector };
+};
 /** @public */
-export const scrollTo = (selector: string, beat?: string): DemoStep => ({
-  beat,
-  kind: 'scrollTo',
-  selector,
-});
+export const scrollTo = (selector: string, beat?: string): DemoStep => {
+  return {
+    beat,
+    kind: 'scrollTo',
+    selector,
+  };
+};
 /** @public */
 export const zoomTo = (
   selector: string,
   scale?: number,
   beat?: string,
-): DemoStep => ({ beat, kind: 'zoomTo', scale, selector });
+): DemoStep => {
+  return { beat, kind: 'zoomTo', scale, selector };
+};
 /** @public */
-export const press = (key: string, beat?: string): DemoStep => ({
-  beat,
-  key,
-  kind: 'press',
-});
+export const press = (key: string, beat?: string): DemoStep => {
+  return {
+    beat,
+    key,
+    kind: 'press',
+  };
+};
 /** @public */
 export const select = (
   selector: string,
   value: string,
   beat?: string,
-): DemoStep => ({ beat, kind: 'select', selector, value });
+): DemoStep => {
+  return { beat, kind: 'select', selector, value };
+};
 /**
  * @public Put a typeset surface on camera.
  *
  * Not a `navigate`: `navigate` waits on `#ot-env` for app hydration, which a static
  * surface has no reason to have. The named surface comes from `DemoFlow.surfaces`.
  */
-export const stage = (surface: string, beat?: string): DemoStep => ({
-  beat,
-  kind: 'stage',
-  surface,
-});
+export const stage = (surface: string, beat?: string): DemoStep => {
+  return {
+    beat,
+    kind: 'stage',
+    surface,
+  };
+};
 /**
  * @public Un-hide an element a surface staged with `data-demo-hidden`.
  *
@@ -259,8 +287,10 @@ export const stage = (surface: string, beat?: string): DemoStep => ({
  * they are absent from `innerText` — and therefore from the beat's leak-scan dump —
  * until the beat that actually puts them on screen.
  */
-export const reveal = (selector: string, beat?: string): DemoStep => ({
-  beat,
-  kind: 'reveal',
-  selector,
-});
+export const reveal = (selector: string, beat?: string): DemoStep => {
+  return {
+    beat,
+    kind: 'reveal',
+    selector,
+  };
+};

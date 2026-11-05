@@ -7,18 +7,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@openthrottle/react-router-shadcn';
-import { formatDate } from 'date-fns';
-import { GitPullRequestIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link, useSearchParams } from 'react-router';
 
-import { PullRequestStatus } from '~/routing/pull-requests/components/PullRequestStatus';
+import { PullRequestPreviewDetails } from '~/routing/pull-requests/components/PullRequestPreviewDetails';
 import { PULL_REQUEST_LIST_PREVIEW_SEARCH_PARAM } from '~/routing/pull-requests/constants/pull-request-list-url';
 import type { PullRequestsListFilters } from '~/routing/pull-requests/types/pull-requests-list-filters';
-import {
-  githubPullChecksUrl,
-  githubPullConversationUrl,
-} from '~/routing/pull-requests/utils/github-pr-links';
 
 export interface PullRequestPreviewSheetProps {
   filters: PullRequestsListFilters;
@@ -41,10 +35,9 @@ export const PullRequestPreviewSheet = (
   // Setup
   const isOpen = prPreviewNumber !== null;
 
+  const fullPageBase = `/pull-requests/${prPreviewNumber ?? ''}`;
   const fullPagePath =
-    listQuery === ''
-      ? `/pull-requests/${prPreviewNumber ?? ''}`
-      : `/pull-requests/${prPreviewNumber ?? ''}?${listQuery}`;
+    listQuery === '' ? fullPageBase : `${fullPageBase}?${listQuery}`;
 
   // Handlers
   const onOpenChange = (open: boolean): void => {
@@ -73,71 +66,15 @@ export const PullRequestPreviewSheet = (
           </SheetDescription>
         </SheetHeader>
 
-        {prPreviewNumber !== null && prPreviewPull !== null ? (
-          <div
-            className="flex flex-col gap-4"
-            data-testid="PullRequestPreviewSheet-body"
-          >
-            <div className="flex flex-wrap items-center gap-2">
-              <PullRequestStatus state={prPreviewPull.state} />
-              <span className="text-muted-foreground text-sm">
-                #{prPreviewPull.number}
-              </span>
-            </div>
-            <h3 className="text-lg leading-snug">{prPreviewPull.title}</h3>
-            <p className="text-muted-foreground text-sm">
-              <span className="text-foreground font-medium">
-                {prPreviewPull.author}
-              </span>{' '}
-              · Created {formatDate(prPreviewPull.createdAt, 'MM/dd/yyyy')} —
-              updated {formatDate(prPreviewPull.updatedAt, 'MM/dd/yyyy')}
-            </p>
-            {prPreviewPull.baseRef !== null ||
-            prPreviewPull.headRef !== null ? (
-              <p className="text-muted-foreground font-mono text-xs">
-                {prPreviewPull.baseRef !== null ? prPreviewPull.baseRef : '—'} ←{' '}
-                {prPreviewPull.headRef !== null ? prPreviewPull.headRef : '—'}
-              </p>
-            ) : null}
+        {prPreviewNumber !== null && prPreviewPull !== null && (
+          <PullRequestPreviewDetails
+            filters={filters}
+            fullPagePath={fullPagePath}
+            pull={prPreviewPull}
+          />
+        )}
 
-            <div className="flex flex-wrap gap-2">
-              <Button asChild={true} size="sm" variant="default">
-                <Link to={fullPagePath} viewTransition={true}>
-                  Open full page
-                </Link>
-              </Button>
-              <Button asChild={true} size="sm" variant="outline">
-                <a
-                  href={githubPullConversationUrl(
-                    filters.owner,
-                    filters.repo,
-                    prPreviewPull.number,
-                  )}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  <GitPullRequestIcon className="mr-1 inline size-4" />
-                  GitHub
-                </a>
-              </Button>
-              <Button asChild={true} size="sm" variant="secondary">
-                <a
-                  href={githubPullChecksUrl(
-                    filters.owner,
-                    filters.repo,
-                    prPreviewPull.number,
-                  )}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  Checks (CI)
-                </a>
-              </Button>
-            </div>
-          </div>
-        ) : null}
-
-        {prPreviewNumber !== null && prPreviewPull === null ? (
+        {prPreviewNumber !== null && prPreviewPull === null && (
           <div
             className="flex flex-col gap-3 text-sm"
             data-testid="PullRequestPreviewSheet-missing"
@@ -152,7 +89,7 @@ export const PullRequestPreviewSheet = (
               </Link>
             </Button>
           </div>
-        ) : null}
+        )}
       </SheetContent>
     </Sheet>
   );

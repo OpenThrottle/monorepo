@@ -39,13 +39,18 @@ export const PlanTagChips = (props: PlanTagChipsProps): React.ReactElement => {
   const availablePhase = available.filter(
     (option) => option.dimension === 'phase',
   );
-  const sorted = [...tags].sort((a, b) =>
-    a.dimension === b.dimension
-      ? a.tag.localeCompare(b.tag)
-      : a.dimension === 'phase'
-        ? -1
-        : 1,
-  );
+  const sorted = [...tags].sort((a, b) => {
+    if (a.dimension === b.dimension) {
+      return a.tag.localeCompare(b.tag);
+    }
+
+    if (a.dimension === 'phase') {
+      return -1;
+    }
+
+    return 1;
+  });
+  const phaseChipClass = 'gap-1 border-amber-500/60 bg-amber-500/10';
 
   // Handlers
   const handleAdd = (): void => {
@@ -65,38 +70,39 @@ export const PlanTagChips = (props: PlanTagChipsProps): React.ReactElement => {
       className="flex flex-wrap items-center gap-2"
       data-testid="PlanTagChips"
     >
-      {sorted.length === 0 ? (
+      {sorted.length === 0 && (
         <span className="text-muted-foreground text-xs">No tags yet</span>
-      ) : null}
-      {sorted.map((tag) => (
-        <Badge
-          className={
-            tag.dimension === 'phase'
-              ? 'gap-1 border-amber-500/60 bg-amber-500/10'
-              : 'gap-1'
-          }
-          key={tag.tag}
-          title={formatPlanTagProvenance(tag)}
-        >
-          <span>{tag.tag}</span>
-          {tag.dimension === 'phase' ? (
-            <span className="text-muted-foreground text-[10px] uppercase">
-              phase
-            </span>
-          ) : null}
-          {/* The signed-in developer is a human caller: the provenance ladder
-              lets humans remove any row, so removal is always offered here. */}
-          <button
-            aria-label={`Remove tag ${tag.tag}`}
-            className="hover:text-destructive ml-0.5 cursor-pointer"
-            disabled={pending}
-            onClick={() => onRemoveTag(tag.tag)}
-            type="button"
+      )}
+      {sorted.map((tag) => {
+        const isPhase = tag.dimension === 'phase';
+        const chipClass = isPhase ? phaseChipClass : 'gap-1';
+
+        return (
+          <Badge
+            className={chipClass}
+            key={tag.tag}
+            title={formatPlanTagProvenance(tag)}
           >
-            ×
-          </button>
-        </Badge>
-      ))}
+            <span>{tag.tag}</span>
+            {isPhase && (
+              <span className="text-muted-foreground text-[10px] uppercase">
+                phase
+              </span>
+            )}
+            {/* The signed-in developer is a human caller: the provenance ladder
+              lets humans remove any row, so removal is always offered here. */}
+            <button
+              aria-label={`Remove tag ${tag.tag}`}
+              className="hover:text-destructive ml-0.5 cursor-pointer"
+              disabled={pending}
+              onClick={() => onRemoveTag(tag.tag)}
+              type="button"
+            >
+              ×
+            </button>
+          </Badge>
+        );
+      })}
       <div className="flex items-center gap-1">
         <select
           aria-label="Add a tag"

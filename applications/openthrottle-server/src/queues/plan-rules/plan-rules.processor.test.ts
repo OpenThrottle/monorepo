@@ -34,21 +34,23 @@ import type { PlanRulesEvaluateJob } from './plan-rules.types.ts';
 const planId = '00000000-0000-4000-8000-000000000001';
 const userId = '00000000-0000-4000-8000-000000000002';
 
-const buildJob = (): PlanRulesEvaluateJob =>
-  asMock<PlanRulesEvaluateJob>({
+const buildJob = (): PlanRulesEvaluateJob => {
+  return asMock<PlanRulesEvaluateJob>({
     data: { planId, triggerKind: 'tag-changed' },
   });
+};
 
-const buildPlan = (): Plan =>
-  asMock<Plan>({
+const buildPlan = (): Plan => {
+  return asMock<Plan>({
     author: 'visormatt',
     id: planId,
     projectId: null,
     status: 'PENDING',
   });
+};
 
-const buildRule = (overrides: Partial<TagActionRule> = {}): TagActionRule =>
-  asMock<TagActionRule>({
+const buildRule = (overrides: Partial<TagActionRule> = {}): TagActionRule => {
+  return asMock<TagActionRule>({
     actionPayload: { placement: 'first', skillSlug: 'grilling' },
     actionType: 'inject-task',
     enabled: true,
@@ -60,6 +62,7 @@ const buildRule = (overrides: Partial<TagActionRule> = {}): TagActionRule =>
     userId,
     ...overrides,
   });
+};
 
 describe('PlanRulesProcessor.process', () => {
   let processor: PlanRulesProcessor;

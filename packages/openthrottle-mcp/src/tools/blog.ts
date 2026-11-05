@@ -90,16 +90,19 @@ type UpdateBlogPostResult = GenericResult<{
 
 const DRAFT_ONLY_BOUNDARY = `Draft-only: this MCP cannot publish, schedule, unpublish or archive a post, and cannot create or edit blog tags or authors; there is no tool for any of that. A human does those in the developer app at /blog. Editing a post that is not a DRAFT is refused with BlogPostPublishPermissionRequiredError.`;
 
-const toIsoString = (value: unknown): string =>
-  value instanceof Date ? value.toISOString() : String(value);
+const toIsoString = (value: unknown): string => {
+  return value instanceof Date ? value.toISOString() : String(value);
+};
 
-const withEditorLink = (text: string, editorUrl: string | null): string =>
-  editorUrl === null ? text : `${text} Editor: ${editorUrl}`;
+const withEditorLink = (text: string, editorUrl: string | null): string => {
+  return editorUrl === null ? text : `${text} Editor: ${editorUrl}`;
+};
 
-const describeMissingReference = (entity: string, key: string): string =>
-  entity === 'AUTHOR'
+const describeMissingReference = (entity: string, key: string): string => {
+  return entity === 'AUTHOR'
     ? `unknown author slug "${key}". See list_blog_authors; a human creates authors in the developer app.`
     : `unknown tag slug "${key}". See list_blog_tags; a human creates tags in the developer app.`;
+};
 
 /**
  * The editor link for a write outcome: the saved post's own id, else the id the caller passed
@@ -240,10 +243,10 @@ export async function listBlogPostsToolHandler(
       (item) =>
         `- [${item.state}] ${item.title} (${item.id}, slug ${item.slug}), updatedAt ${toIsoString(item.updatedAt)}`,
     );
-    const text =
-      items.length === 0
-        ? 'No blog posts matched.'
-        : `Blog posts (${items.length}${page.hasNextPage ? ', more available: pass endCursor as after' : ''}):\n${lines.join('\n')}`;
+    const moreAvailableHint = ', more available: pass endCursor as after';
+    const moreHint = page.hasNextPage ? moreAvailableHint : '';
+    const listText = `Blog posts (${items.length}${moreHint}):\n${lines.join('\n')}`;
+    const text = items.length === 0 ? 'No blog posts matched.' : listText;
 
     return {
       structuredContent: {
@@ -440,10 +443,9 @@ export async function listBlogTagsToolHandler(
       const tags = result?.blogAdminTags;
       if (!tags) return null;
 
-      const text =
-        tags.length === 0
-          ? 'No blog tags exist yet. A human creates tags in the developer app.'
-          : `Blog tags (${tags.length}): ${tags.map((tag) => tag.slug).join(', ')}`;
+      const emptyText = `No blog tags exist yet. A human creates tags in the developer app.`;
+      const listText = `Blog tags (${tags.length}): ${tags.map((tag) => tag.slug).join(', ')}`;
+      const text = tags.length === 0 ? emptyText : listText;
 
       return { structuredContent: { tags }, text };
     },
@@ -472,12 +474,12 @@ export async function listBlogAuthorsToolHandler(
       const authors = result?.blogAdminAuthors;
       if (!authors) return null;
 
-      const text =
-        authors.length === 0
-          ? 'No blog authors exist yet. A human creates authors in the developer app.'
-          : `Blog authors (${authors.length}): ${authors
-              .map((author) => `${author.slug} (${author.displayName})`)
-              .join(', ')}`;
+      const emptyText = `No blog authors exist yet. A human creates authors in the developer app.`;
+      const authorList = authors
+        .map((author) => `${author.slug} (${author.displayName})`)
+        .join(', ');
+      const listText = `Blog authors (${authors.length}): ${authorList}`;
+      const text = authors.length === 0 ? emptyText : listText;
 
       return { structuredContent: { authors }, text };
     },

@@ -61,10 +61,16 @@ export const SettingsWorkspaceEditorsForm = (
   const isSubmitting =
     navigation.state === 'submitting' &&
     navigation.formData?.get('intent') === 'updateProfile';
+  const { saveBusyLabel, saveEditorsButton } = WORKSPACE_SETTINGS_COPY;
 
   // Handlers
 
   // Markup
+  const actionErrorMarkup = (
+    <p className="text-destructive text-sm" role="alert">
+      {actionError}
+    </p>
+  );
 
   // Life Cycle
   React.useEffect(() => {
@@ -111,16 +117,10 @@ export const SettingsWorkspaceEditorsForm = (
 
         <WorkspaceEditorPresenceHints presence={editorPresence} />
 
-        {actionError ? (
-          <p className="text-destructive text-sm" role="alert">
-            {actionError}
-          </p>
-        ) : null}
+        {actionError ? actionErrorMarkup : null}
 
         <Button disabled={isSubmitting} type="submit" variant="outline">
-          {isSubmitting
-            ? WORKSPACE_SETTINGS_COPY.saveBusyLabel
-            : WORKSPACE_SETTINGS_COPY.saveEditorsButton}
+          {isSubmitting ? saveBusyLabel : saveEditorsButton}
         </Button>
 
         {/* <WorkspaceEditorAffiliateLinks className="border-t pt-3" /> */}

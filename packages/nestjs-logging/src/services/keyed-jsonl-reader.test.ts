@@ -14,8 +14,9 @@ import {
 const QUEUE = 'Plans';
 const JOB = 'job-1';
 
-const ts = (n: number): string =>
-  `2026-01-01T00:00:${String(n).padStart(2, '0')}.000Z`;
+const ts = (n: number): string => {
+  return `2026-01-01T00:00:${String(n).padStart(2, '0')}.000Z`;
+};
 
 describe('readKeyedJsonlRun', () => {
   let baseDir: string;

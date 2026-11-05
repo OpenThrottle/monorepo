@@ -13,13 +13,11 @@ import type { VideoEpisode } from '../types.ts';
 export const episode: VideoEpisode = {
   beats: [
     {
-      action:
-        'A freshly generated component file open, correct structure and imports.',
+      action: `A freshly generated component file open, correct structure and imports.`,
       t: '0:00',
     },
     {
-      action:
-        'Navigate to `/generators`; the catalogue lists what is available.',
+      action: `Navigate to \`/generators\`; the catalogue lists what is available.`,
       t: '0:08',
     },
     {

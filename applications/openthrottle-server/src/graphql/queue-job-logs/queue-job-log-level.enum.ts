@@ -25,7 +25,6 @@ export const QueueJobLogLevelEnum: Readonly<Record<string, QueueJobLogLevel>> =
   );
 
 registerEnumType(QueueJobLogLevelEnum, {
-  description:
-    'Severity bucket for a keyed run-output log event (derived; see field semantics).',
+  description: `Severity bucket for a keyed run-output log event (derived; see field semantics).`,
   name: 'QueueJobLogLevel',
 });

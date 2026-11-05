@@ -156,13 +156,10 @@ export const foldRunUsage = (output: string): NormalizedTokenUsage | null => {
   try {
     const folded = output
       .split('\n')
-      .reduce<NormalizedTokenUsage>(
-        (accumulated, line) =>
-          line.trim() === ''
-            ? accumulated
-            : sumUsage(accumulated, normalizeUsage(line)),
-        {},
-      );
+      .reduce<NormalizedTokenUsage>((accumulated, line) => {
+        if (line.trim() === '') return accumulated;
+        return sumUsage(accumulated, normalizeUsage(line));
+      }, {});
 
     return hasUsageCounts(folded) ? folded : null;
   } catch {
@@ -182,16 +179,18 @@ const usageColumns = (
   readonly rawUsage: Record<string, unknown> | null;
   readonly reasoningTokens: number | null;
   readonly totalTokens: number | null;
-} => ({
-  cacheReadTokens: usage?.cacheReadTokens ?? null,
-  cacheWriteTokens: usage?.cacheWriteTokens ?? null,
-  costUsd: usage?.costUsd ?? null,
-  inputTokens: usage?.inputTokens ?? null,
-  outputTokens: usage?.outputTokens ?? null,
-  rawUsage: usage === null ? null : { ...usage },
-  reasoningTokens: usage?.reasoningTokens ?? null,
-  totalTokens: usage?.totalTokens ?? null,
-});
+} => {
+  return {
+    cacheReadTokens: usage?.cacheReadTokens ?? null,
+    cacheWriteTokens: usage?.cacheWriteTokens ?? null,
+    costUsd: usage?.costUsd ?? null,
+    inputTokens: usage?.inputTokens ?? null,
+    outputTokens: usage?.outputTokens ?? null,
+    rawUsage: usage === null ? null : { ...usage },
+    reasoningTokens: usage?.reasoningTokens ?? null,
+    totalTokens: usage?.totalTokens ?? null,
+  };
+};
 
 /** @description Human error detail for a non-ok agent status; null for a clean run. */
 const errorMessageForAgentStatus = (
@@ -406,12 +405,11 @@ export class ScheduledAgentJobsProcessor
             ...usageColumns(foldRunUsage(result.output)),
           });
           if (status === 'failed') {
+            const isTimeout = result.status === RUN_AGENT_STATUS.timeout;
+            const { FAILED, TIMED_OUT } = SCHEDULED_RUN_FAILURE_REASONS;
             await this.failureNotifier.notify({
               errorMessage,
-              reason:
-                result.status === RUN_AGENT_STATUS.timeout
-                  ? SCHEDULED_RUN_FAILURE_REASONS.TIMED_OUT
-                  : SCHEDULED_RUN_FAILURE_REASONS.FAILED,
+              reason: isTimeout ? TIMED_OUT : FAILED,
               runCount: 1,
               runId: runRowId,
               scheduledAgentJobId: scheduleId,
@@ -508,10 +506,8 @@ export class ScheduledAgentJobsProcessor
       return false;
     }
 
-    const deletedReason =
-      'The schedule was deleted before the usage-limit resume fired';
-    const disabledReason =
-      'The schedule was disabled before the usage-limit resume fired';
+    const deletedReason = `The schedule was deleted before the usage-limit resume fired`;
+    const disabledReason = `The schedule was disabled before the usage-limit resume fired`;
     const reason = schedule === null ? deletedReason : disabledReason;
 
     this.logger.info(
@@ -736,10 +732,9 @@ export class ScheduledAgentJobsProcessor
     readonly cwd: string;
     readonly repositoryCheckoutId: string | null;
   }> {
-    const checkoutId =
-      typeof repositoryCheckoutId === 'string' && repositoryCheckoutId !== ''
-        ? repositoryCheckoutId
-        : null;
+    const hasCheckoutId =
+      typeof repositoryCheckoutId === 'string' && repositoryCheckoutId !== '';
+    const checkoutId = hasCheckoutId ? repositoryCheckoutId : null;
 
     if (checkoutId === null) {
       return {

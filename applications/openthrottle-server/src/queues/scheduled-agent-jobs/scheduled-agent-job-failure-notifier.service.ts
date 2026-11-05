@@ -64,8 +64,9 @@ export const scheduledRunFailureMessage = (input: {
 /** @description A missed fire is a warning (nothing broke); a failure or timeout is an error. */
 const severityFor = (
   reason: ScheduledRunFailureReason,
-): NotificationSeverity =>
-  reason === SCHEDULED_RUN_FAILURE_REASONS.MISSED ? 'warning' : 'error';
+): NotificationSeverity => {
+  return reason === SCHEDULED_RUN_FAILURE_REASONS.MISSED ? 'warning' : 'error';
+};
 
 /**
  * @description Tells a schedule's owner that a scheduled run failed, timed out, or was recorded

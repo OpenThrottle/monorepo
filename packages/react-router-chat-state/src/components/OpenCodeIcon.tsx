@@ -12,18 +12,31 @@ export interface OpenCodeIconProps extends ProviderIconProps {}
  */
 export const OpenCodeIcon = ({
   className,
-}: OpenCodeIconProps): React.ReactElement => (
-  <svg
-    {...BASE_SVG_PROPS}
-    className={className}
-    fill="none"
-    stroke="currentColor"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    strokeWidth="1.8"
-  >
-    <rect height="16" rx="2.5" width="20" x="2" y="4" />
-    <path d="m6.5 9.5 3 2.5-3 2.5" />
-    <line x1="12" x2="16.5" y1="15" y2="15" />
-  </svg>
-);
+}: OpenCodeIconProps): React.ReactElement => {
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+  return (
+    <svg
+      {...BASE_SVG_PROPS}
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.8"
+    >
+      <rect height="16" rx="2.5" width="20" x="2" y="4" />
+      <path d="m6.5 9.5 3 2.5-3 2.5" />
+      <line x1="12" x2="16.5" y1="15" y2="15" />
+    </svg>
+  );
+};

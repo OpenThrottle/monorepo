@@ -39,6 +39,11 @@ export const CloneRepoDialog = (
   // Handlers
 
   // Markup
+  const errorAlert = (
+    <p className="text-destructive text-sm" role="alert">
+      {actionError}
+    </p>
+  );
 
   // Life Cycle
 
@@ -89,11 +94,7 @@ export const CloneRepoDialog = (
           </Button>
         </Form>
 
-        {actionError ? (
-          <p className="text-destructive text-sm" role="alert">
-            {actionError}
-          </p>
-        ) : null}
+        {actionError ? errorAlert : null}
       </DialogContent>
     </Dialog>
   );

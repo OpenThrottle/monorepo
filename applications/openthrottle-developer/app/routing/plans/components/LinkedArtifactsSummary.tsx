@@ -2,7 +2,10 @@ import { Badge, Button, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import { LINKED_ARTIFACTS_PANEL_COPY } from '~/routing/plans/data/data.copy';
-import { LINKED_ARTIFACT_GROUP_LABELS } from '~/routing/plans/data/linked-artifacts-panel-groups';
+import {
+  getTypeFilterLabel,
+  getVerificationFilterLabel,
+} from '~/routing/plans/utils/linked-artifacts-filter-labels';
 import type { LinkedArtifactsSummaryModel } from '~/routing/plans/utils/summarize-linked-artifacts';
 import {
   ARTIFACT_FILTER_ALL,
@@ -32,6 +35,7 @@ export const LinkedArtifactsSummary = (
 
   // Setup
   const orphaned = summary.byVerification.orphaned ?? 0;
+  const hasTypeFilter = summary.presentTypes.length > 1;
 
   // Handlers
 
@@ -78,15 +82,13 @@ export const LinkedArtifactsSummary = (
             size="xs"
             variant={verificationFilter === value ? 'secondary' : 'ghost'}
           >
-            {value === ARTIFACT_FILTER_ALL
-              ? LINKED_ARTIFACTS_PANEL_COPY.allVerificationsLabel
-              : value}
+            {getVerificationFilterLabel(value)}
           </Button>
         ))}
       </div>
 
       {/* Type filter is driven by the types actually present, never a hardcoded set. */}
-      {summary.presentTypes.length > 1 ? (
+      {hasTypeFilter && (
         <div className="flex flex-wrap items-center gap-1">
           {[ARTIFACT_FILTER_ALL, ...summary.presentTypes].map((value) => (
             <Badge
@@ -96,13 +98,11 @@ export const LinkedArtifactsSummary = (
               size="xs"
               variant={typeFilter === value ? 'secondary' : 'outline'}
             >
-              {value === ARTIFACT_FILTER_ALL
-                ? LINKED_ARTIFACTS_PANEL_COPY.allTypesLabel
-                : (LINKED_ARTIFACT_GROUP_LABELS[value] ?? value)}
+              {getTypeFilterLabel(value)}
             </Badge>
           ))}
         </div>
-      ) : null}
+      )}
     </div>
   );
 };

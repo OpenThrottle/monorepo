@@ -51,14 +51,14 @@ export const ChatDialogHeader = (
         />
         <span className="truncate">{title}</span>
       </span>
-      {conversationSidebar != null ? (
+      {conversationSidebar != null && (
         <ChatConversationSheet
           {...conversationSidebar}
           side="right"
           triggerTestId="ChatDialog-conversations-trigger"
         />
-      ) : null}
-      {onStartNewChat != null ? (
+      )}
+      {onStartNewChat != null && (
         <Tooltip delayDuration={300}>
           <TooltipTrigger asChild={true}>
             <Button
@@ -74,7 +74,7 @@ export const ChatDialogHeader = (
           </TooltipTrigger>
           <TooltipContent>New chat</TooltipContent>
         </Tooltip>
-      ) : null}
+      )}
     </>
   );
 };

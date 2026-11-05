@@ -8,13 +8,15 @@ import { describe, expect, test } from 'vitest';
 import {
   type ChatToolbarState,
   DEFAULT_CHAT_TOOLBAR_STATE,
-} from '../../data/atom.chat-toolbar';
+} from '../../data/data.chat-toolbar-state';
 import { decayElevatedPermissionModes } from '../chat-toolbar-decay';
 
-const state = (overrides: Partial<ChatToolbarState>): ChatToolbarState => ({
-  ...DEFAULT_CHAT_TOOLBAR_STATE,
-  ...overrides,
-});
+const state = (overrides: Partial<ChatToolbarState>): ChatToolbarState => {
+  return {
+    ...DEFAULT_CHAT_TOOLBAR_STATE,
+    ...overrides,
+  };
+};
 
 describe('decayElevatedPermissionModes', () => {
   test('clears Full access in the global field', () => {

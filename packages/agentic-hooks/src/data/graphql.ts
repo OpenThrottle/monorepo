@@ -32,8 +32,11 @@ const TRANSIENT_CLIENT_STATUSES: readonly number[] = [401, 403, 408, 429];
  *
  * @public
  */
-export const isPermanentHttpStatus = (status: number): boolean =>
-  status >= 400 && status < 500 && !TRANSIENT_CLIENT_STATUSES.includes(status);
+export const isPermanentHttpStatus = (status: number): boolean => {
+  return (
+    status >= 400 && status < 500 && !TRANSIENT_CLIENT_STATUSES.includes(status)
+  );
+};
 
 const readStatusCode = (extensions: Record<string, unknown>): number | null => {
   const original = extensions.originalError;
@@ -82,14 +85,19 @@ export const readGraphqlErrors = (
 };
 
 /** Read `data.<field>` from a JSON payload (undefined when absent). */
-const readMutationData = (payload: unknown, field: string): unknown =>
-  isRecord(payload) && isRecord(payload.data) ? payload.data[field] : undefined;
+const readMutationData = (payload: unknown, field: string): unknown => {
+  return isRecord(payload) && isRecord(payload.data)
+    ? payload.data[field]
+    : undefined;
+};
 
-const transient = (reason: string): PostFailure => ({
-  ok: false,
-  permanent: false,
-  reason,
-});
+const transient = (reason: string): PostFailure => {
+  return {
+    ok: false,
+    permanent: false,
+    reason,
+  };
+};
 
 /**
  * The arguments every mutation POST takes.
@@ -143,13 +151,13 @@ const postMutation = async ({
       signal: AbortSignal.timeout(timeoutMs),
     });
   } catch (err) {
-    const reason =
-      err instanceof Error && err.name === 'TimeoutError'
-        ? 'timeout'
-        : err instanceof Error
-          ? err.message
-          : String(err);
-    return transient(reason);
+    if (err instanceof Error && err.name === 'TimeoutError') {
+      return transient('timeout');
+    }
+    if (err instanceof Error) {
+      return transient(err.message);
+    }
+    return transient(String(err));
   }
 
   let payload: unknown;

@@ -52,22 +52,17 @@ const toDateOrNull = (value: unknown): Date | null => {
 export const toCaptureHealthRows = (
   stream: CaptureHealthStream,
   rows: ReadonlyArray<Record<string, unknown>>,
-): CaptureHealthRow[] =>
-  rows.flatMap((row) => {
+): CaptureHealthRow[] => {
+  return rows.flatMap((row) => {
     const lastCapturedAt = toDateOrNull(row.lastCapturedAt);
 
     if (lastCapturedAt === null) {
       return [];
     }
 
-    return [
-      {
-        lastCapturedAt,
-        source:
-          row.source == null
-            ? CAPTURE_HEALTH_UNKNOWN_SOURCE
-            : String(row.source),
-        stream,
-      },
-    ];
+    const unknown = CAPTURE_HEALTH_UNKNOWN_SOURCE;
+    const source = row.source == null ? unknown : String(row.source);
+
+    return [{ lastCapturedAt, source, stream }];
   });
+};

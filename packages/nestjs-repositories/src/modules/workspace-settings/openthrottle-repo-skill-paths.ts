@@ -1,6 +1,6 @@
 /**
  * @description Repo-relative skill paths for OpenThrottle editor configuration.
- * Keep aligned with `applications/openthrottle-developer/app/routing/agents/data/repo-skills-registry.ts`.
+ * Keep aligned with `applications/openthrottle-developer/app/routing/agents/data/data.repo-skills-registry.ts`.
  *
  * Skills live under `.agents/skills` — the SSOT view that combines authored
  * `skills/*` and lockfile-installed external skills. Per-editor fan-out is

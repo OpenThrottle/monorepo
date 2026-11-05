@@ -10,11 +10,11 @@ import {
   SelectValue,
 } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
-import { GitBranch } from 'lucide-react';
 import * as React from 'react';
 
 import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
 import { PlanWorkflowConfigWorkspace } from '~/routing/plans/components/PlanWorkflowConfigWorkspace';
+import { PlanWorkflowConfigWorkspaceHint } from '~/routing/plans/components/PlanWorkflowConfigWorkspaceHint';
 import { PLAN_RUN_WORKSPACE_SELECTOR_COPY } from '~/routing/plans/data/data.copy';
 import { usePlanWorkflowConfigWorkspaceSelector } from '~/routing/plans/hooks/usePlanWorkflowConfigWorkspaceSelector';
 import { resolveDefaultRunBranch } from '~/routing/plans/utils/plan-run-branch';
@@ -162,23 +162,11 @@ export const PlanWorkflowConfigWorkspaceSelector = (
           </SelectContent>
         </Select>
 
-        {selectedCheckout != null ? (
-          <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
-            <GitBranch aria-hidden={true} className="size-3.5 shrink-0" />
-            <span className="truncate font-mono">
-              {selectedCheckout.filesystemPath}
-            </span>
-          </p>
-        ) : selectedCheckoutMissing ? (
-          <p className="text-destructive text-xs">
-            {PLAN_RUN_WORKSPACE_SELECTOR_COPY.staleCheckout}
-          </p>
-        ) : repositoryId !== '' ? (
-          <p className="text-muted-foreground text-xs">
-            Resolves to your checkout of this repository on enqueue — errors if
-            you have none, or more than one.
-          </p>
-        ) : null}
+        <PlanWorkflowConfigWorkspaceHint
+          checkoutPath={selectedCheckout?.filesystemPath}
+          hasRepository={repositoryId !== ''}
+          selectedCheckoutMissing={selectedCheckoutMissing}
+        />
       </div>
 
       <div className="space-y-2">
@@ -197,13 +185,13 @@ export const PlanWorkflowConfigWorkspaceSelector = (
         </p>
       </div>
 
-      {selectedValue === CUSTOM_VALUE ? (
+      {selectedValue === CUSTOM_VALUE && (
         <PlanWorkflowConfigWorkspace
           heading="Custom path"
           onChange={onWorkingDirectoryChange}
           value={workingDirectory}
         />
-      ) : null}
+      )}
     </OpenThrottleFieldset>
   );
 };

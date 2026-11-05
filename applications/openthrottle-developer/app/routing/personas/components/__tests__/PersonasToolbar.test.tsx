@@ -7,7 +7,9 @@ import { PersonasToolbar } from '../PersonasToolbar';
 
 describe('PersonasToolbar Component', () => {
   test('renders toolbar region and heading', () => {
-    const Component = () => <PersonasToolbar />;
+    const Component = () => {
+      return <PersonasToolbar />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 

@@ -6,9 +6,9 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
 
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 import { SKILL_DETAIL_COPY } from '~/routing/skills/data/data.copy';
-import type { SkillDetailUsageData } from '~/routing/skills/data/skill-usage-detail';
+import type { SkillDetailUsageData } from '~/routing/skills/types';
 
 import type { SkillDetailTabsProps } from '../SkillDetailTabs';
 import { SkillDetailTabs } from '../SkillDetailTabs';
@@ -68,11 +68,13 @@ const renderTabs = (
     ...props,
   };
   // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-  const Component = () => (
-    <TooltipProvider>
-      <SkillDetailTabs {...merged} />
-    </TooltipProvider>
-  );
+  const Component = () => {
+    return (
+      <TooltipProvider>
+        <SkillDetailTabs {...merged} />
+      </TooltipProvider>
+    );
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

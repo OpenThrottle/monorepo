@@ -54,7 +54,9 @@ const JOB_RUN_HOOK_PROMPT_DELIVERY: readonly JobRunHookPromptDelivery[] = [
 const isOneOf = <T extends string>(
   allowed: readonly T[],
   value: string,
-): value is T => allowed.some((entry) => entry === value);
+): value is T => {
+  return allowed.some((entry) => entry === value);
+};
 
 const normalizeOptionalString = (
   value: unknown,
@@ -511,10 +513,11 @@ export const parseJobRunHooksConfig = (
  */
 export const resolveJobRunHookTimeoutSeconds = (
   entry: Pick<JobRunHookEntry, 'timeoutSeconds'>,
-): number =>
-  entry.timeoutSeconds !== undefined && entry.timeoutSeconds >= 1
+): number => {
+  return entry.timeoutSeconds !== undefined && entry.timeoutSeconds >= 1
     ? entry.timeoutSeconds
     : DEFAULT_JOB_RUN_HOOK_TIMEOUT_SECONDS;
+};
 
 /**
  * @description Whether a hook should run for the current job context.

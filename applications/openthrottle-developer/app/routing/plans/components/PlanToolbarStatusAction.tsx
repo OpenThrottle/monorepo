@@ -10,7 +10,7 @@ import * as React from 'react';
 import type { useFetcher } from 'react-router';
 
 import type { action } from '~/routes/plans.$planId._index';
-import { PLAN_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
+import { getPlanMarkCompleteTooltip } from '~/routing/plans/utils/plan-mark-complete-tooltip';
 
 export interface PlanToolbarStatusActionProps {
   readonly fetcherSetPlanStatus: ReturnType<typeof useFetcher<typeof action>>;
@@ -32,6 +32,8 @@ export const PlanToolbarStatusAction = (
   // Hooks
 
   // Setup
+  const isSubmitting = fetcherSetPlanStatus.state !== 'idle';
+  const submitLabel = isSubmitting ? 'Marking…' : 'Mark Complete';
 
   // Handlers
 
@@ -49,26 +51,18 @@ export const PlanToolbarStatusAction = (
           <Input name="planId" type="hidden" value={planId} />
           <Input name="status" type="hidden" value="COMPLETED" />
           <Button
-            disabled={
-              fetcherSetPlanStatus.state !== 'idle' || isCompleted || isRunning
-            }
+            disabled={isSubmitting || isCompleted || isRunning}
             size="xs"
             type="submit"
             variant="ghost"
           >
             <CheckCircle />
-            {fetcherSetPlanStatus.state !== 'idle'
-              ? 'Marking…'
-              : 'Mark Complete'}
+            {submitLabel}
           </Button>
         </fetcherSetPlanStatus.Form>
       </TooltipTrigger>
       <TooltipContent side="top">
-        {isCompleted
-          ? 'Plan is already completed'
-          : isRunning
-            ? PLAN_TOOLBAR_COPY.markCompleteRunningTooltip
-            : 'Mark this plan as completed'}
+        {getPlanMarkCompleteTooltip({ isCompleted, isRunning })}
       </TooltipContent>
     </Tooltip>
   );

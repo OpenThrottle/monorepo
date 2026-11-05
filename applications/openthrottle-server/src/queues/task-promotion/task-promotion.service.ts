@@ -257,8 +257,7 @@ export class TaskPromotionService {
     await taskRepo.save(
       taskRepo.create({
         category: task.category ?? 'feature',
-        description:
-          'This plan was promoted from a task. Break the brief above into concrete, scoped tasks before running it.',
+        description: `This plan was promoted from a task. Break the brief above into concrete, scoped tasks before running it.`,
         planId,
         sortOrder: TASK_SORT_ORDER_GAP,
         status: 'PENDING',
@@ -280,10 +279,9 @@ export class TaskPromotionService {
   ): Promise<void> {
     const previousStatus = task.status;
     const note = `Promoted into plan ${newPlanId}.`;
-    const summary =
-      task.summary == null || task.summary.trim() === ''
-        ? note
-        : `${task.summary}\n\n${note}`;
+    const previousSummary = task.summary;
+    const hasSummary = previousSummary != null && previousSummary.trim() !== '';
+    const summary = hasSummary ? `${previousSummary}\n\n${note}` : note;
 
     await manager
       .getRepository(Task)
@@ -342,10 +340,10 @@ export class TaskPromotionService {
       return;
     }
 
-    const actorKind =
-      params.actorUserId != null
-        ? AUTH_PRINCIPAL_KIND_USER
-        : AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT;
+    const userKind = AUTH_PRINCIPAL_KIND_USER;
+    const serviceKind = AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT;
+    const hasActorUser = params.actorUserId != null;
+    const actorKind = hasActorUser ? userKind : serviceKind;
     const actorSub =
       params.actorUserId ?? params.actorServiceAccountId ?? undefined;
 

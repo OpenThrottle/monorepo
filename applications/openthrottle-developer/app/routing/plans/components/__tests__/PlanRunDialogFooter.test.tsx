@@ -11,14 +11,15 @@ import { PlanRunDialogFooter } from '../PlanRunDialogFooter';
 describe('PlanRunDialogFooter Component', () => {
   let props: PlanRunDialogFooterProps;
 
-  const renderFooter = (): RenderResult =>
-    render(
+  const renderFooter = (): RenderResult => {
+    return render(
       <Dialog open={true}>
         <DialogContent>
           <PlanRunDialogFooter {...props} />
         </DialogContent>
       </Dialog>,
     );
+  };
 
   beforeEach(() => {
     props = {

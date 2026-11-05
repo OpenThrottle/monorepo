@@ -9,7 +9,9 @@ import { PlanWorkflowConfigHooksValidation } from '../PlanWorkflowConfigHooksVal
 const renderValidation = (
   props: PlanWorkflowConfigHooksValidationProps,
 ): ReturnType<typeof render> => {
-  const Component = () => <PlanWorkflowConfigHooksValidation {...props} />;
+  const Component = () => {
+    return <PlanWorkflowConfigHooksValidation {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 };

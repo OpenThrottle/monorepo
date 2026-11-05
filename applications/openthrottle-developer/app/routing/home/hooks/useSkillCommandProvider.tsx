@@ -69,14 +69,14 @@ export const useSkillCommandProvider = (): ChatSlashCommandProvider => {
       ): Promise<readonly ChatSlashCommand[]> => {
         const skills = await loadListing();
         const trimmed = query.trim().toLowerCase();
-        const matches =
-          trimmed === ''
-            ? skills
-            : skills.filter(
-                (skill) =>
-                  skill.slug.toLowerCase().includes(trimmed) ||
-                  skill.description.toLowerCase().includes(trimmed),
-              );
+        if (trimmed === '') {
+          return skills.slice(0, MAX_SKILL_SUGGESTIONS);
+        }
+        const matches = skills.filter(
+          (skill) =>
+            skill.slug.toLowerCase().includes(trimmed) ||
+            skill.description.toLowerCase().includes(trimmed),
+        );
         return matches.slice(0, MAX_SKILL_SUGGESTIONS);
       },
     };

@@ -25,8 +25,7 @@ export const DATA_RETENTION_JOB_NAME = 'data-retention-sweep';
  * Stable BullMQ jobId for the repeatable scheduler so redeploys upsert one
  * schedule instead of accumulating duplicates.
  */
-export const DATA_RETENTION_REPEATABLE_JOB_ID =
-  'openthrottle-data-retention-repeatable';
+export const DATA_RETENTION_REPEATABLE_JOB_ID = `openthrottle-data-retention-repeatable`;
 
 /**
  * Rows deleted per statement. Retention deletes are bulk operations against

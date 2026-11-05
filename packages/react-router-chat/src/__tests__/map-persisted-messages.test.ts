@@ -7,16 +7,18 @@ import {
 describe('mapPersistedAgentConversationMessages', () => {
   const baseMessage = (
     overrides: Partial<PersistedAgentConversationMessage> = {},
-  ): PersistedAgentConversationMessage => ({
-    content: 'Hello',
-    createdAt: '2026-06-07T00:00:00.000Z',
-    id: 'msg-1',
-    role: 'user',
-    routingConfidence: null,
-    routingReason: null,
-    toolMetadataJson: null,
-    ...overrides,
-  });
+  ): PersistedAgentConversationMessage => {
+    return {
+      content: 'Hello',
+      createdAt: '2026-06-07T00:00:00.000Z',
+      id: 'msg-1',
+      role: 'user',
+      routingConfidence: null,
+      routingReason: null,
+      toolMetadataJson: null,
+      ...overrides,
+    };
+  };
 
   test('maps user and assistant rows', () => {
     const messages = mapPersistedAgentConversationMessages([

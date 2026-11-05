@@ -12,7 +12,7 @@ export * from './components/EditorWindow';
 export * from './config';
 
 // 📦 Data / Atoms
-export * from './data/atom.editor';
+export * from './data/data.atom.editor';
 
 // 🪝 React Hooks
 export * from './hooks/useEditor';

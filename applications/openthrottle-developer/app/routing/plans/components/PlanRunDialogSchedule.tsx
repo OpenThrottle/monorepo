@@ -95,7 +95,7 @@ export const PlanRunDialogSchedule = (
           />
         </div>
       </div>
-      {summary !== undefined ? (
+      {summary !== undefined && (
         <p
           aria-live="polite"
           className="text-sm font-medium"
@@ -103,8 +103,8 @@ export const PlanRunDialogSchedule = (
         >
           {summary}
         </p>
-      ) : null}
-      {error !== null ? (
+      )}
+      {error !== null && (
         <p
           className="text-destructive text-sm"
           data-testid="PlanRunDialogSchedule-error"
@@ -112,7 +112,7 @@ export const PlanRunDialogSchedule = (
         >
           {error}
         </p>
-      ) : null}
+      )}
     </div>
   );
 };

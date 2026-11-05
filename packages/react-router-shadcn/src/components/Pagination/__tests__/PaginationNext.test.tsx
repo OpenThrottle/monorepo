@@ -7,7 +7,9 @@ import { PaginationNext } from '../PaginationNext';
 
 describe('PaginationNext', () => {
   test('renders a link with its aria-label', () => {
-    const Component = () => <PaginationNext href="/page" />;
+    const Component = () => {
+      return <PaginationNext href="/page" />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { container } = render(<RoutesStub />);
     const link = container.querySelector('a[aria-label="Go to next page"]');

@@ -15,12 +15,10 @@ import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
 
 import type { UsageCaptureHealthRowFragment } from '~/__generated__/graphql';
-import { CAPTURE_HEALTH_STALE_AFTER_MS } from '~/routing/usage/data/capture-health';
-import {
-  CAPTURE_HEALTH_COPY,
-  captureHealthStreamLabel,
-} from '~/routing/usage/data/capture-health-copy';
+import { CAPTURE_HEALTH_STALE_AFTER_MS } from '~/routing/usage/data/data.capture-health';
+import { CAPTURE_HEALTH_COPY } from '~/routing/usage/data/data.capture-health-copy';
 import { buildCaptureHealthEntries } from '~/routing/usage/utils/capture-health';
+import { captureHealthStreamLabel } from '~/routing/usage/utils/capture-health-labels';
 
 export interface UsageCaptureHealthProps {
   className?: string;
@@ -49,6 +47,29 @@ export const UsageCaptureHealth = (
   // Handlers
 
   // Markup
+  const hasStaleEntries = staleEntries.length > 0;
+  const staleAlerts = (
+    <div className="mb-4 flex flex-col gap-2">
+      {staleEntries.map((entry) => {
+        const streamLabel = captureHealthStreamLabel(entry.stream);
+
+        return (
+          <Alert key={entry.key} variant="destructive">
+            <AlertTitle>
+              {CAPTURE_HEALTH_COPY.staleTitle(streamLabel, entry.source)}
+            </AlertTitle>
+            <AlertDescription>
+              {CAPTURE_HEALTH_COPY.staleDescription(
+                streamLabel,
+                entry.source,
+                formatRelativeChatTimestamp(entry.lastCapturedAt, nowMs),
+              )}
+            </AlertDescription>
+          </Alert>
+        );
+      })}
+    </div>
+  );
 
   // Life Cycle
 
@@ -82,28 +103,7 @@ export const UsageCaptureHealth = (
         {CAPTURE_HEALTH_COPY.intro}
       </p>
 
-      {staleEntries.length > 0 ? (
-        <div className="mb-4 flex flex-col gap-2">
-          {staleEntries.map((entry) => {
-            const streamLabel = captureHealthStreamLabel(entry.stream);
-
-            return (
-              <Alert key={entry.key} variant="destructive">
-                <AlertTitle>
-                  {CAPTURE_HEALTH_COPY.staleTitle(streamLabel, entry.source)}
-                </AlertTitle>
-                <AlertDescription>
-                  {CAPTURE_HEALTH_COPY.staleDescription(
-                    streamLabel,
-                    entry.source,
-                    formatRelativeChatTimestamp(entry.lastCapturedAt, nowMs),
-                  )}
-                </AlertDescription>
-              </Alert>
-            );
-          })}
-        </div>
-      ) : null}
+      {hasStaleEntries ? staleAlerts : null}
 
       <div className="overflow-x-auto">
         <Table>

@@ -43,20 +43,24 @@ export const PlanWorkflowConfigHookRowPrompt = (
 
   // 🔌 Short Circuit
 
-  return (
-    <>
-      {row.kind === 'skill' ? (
-        <div className="space-y-2">
-          <Label htmlFor={`hook-skill-${row.draftId}`}>Skill path</Label>
-          <Input
-            id={`hook-skill-${row.draftId}`}
-            onChange={onSkillPathChange}
-            placeholder=".agents/skills/workflow-ralph/SKILL.md"
-            spellCheck={false}
-            value={row.skillPath}
-          />
-        </div>
-      ) : row.promptDelivery === 'file' ? (
+  if (row.kind === 'skill') {
+    return (
+      <div className="space-y-2">
+        <Label htmlFor={`hook-skill-${row.draftId}`}>Skill path</Label>
+        <Input
+          id={`hook-skill-${row.draftId}`}
+          onChange={onSkillPathChange}
+          placeholder=".agents/skills/workflow-ralph/SKILL.md"
+          spellCheck={false}
+          value={row.skillPath}
+        />
+      </div>
+    );
+  }
+
+  if (row.promptDelivery === 'file') {
+    return (
+      <>
         <div className="space-y-2">
           <Label htmlFor={`hook-prompt-file-${row.draftId}`}>Prompt file</Label>
           <Input
@@ -67,34 +71,7 @@ export const PlanWorkflowConfigHookRowPrompt = (
             value={row.promptFile}
           />
         </div>
-      ) : (
-        <div className="space-y-2">
-          <div className="flex flex-wrap items-end gap-2">
-            <div className="min-w-0 flex-1 space-y-2">
-              <Label htmlFor={`hook-prompt-${row.draftId}`}>
-                Named prompt (--prompt)
-              </Label>
-              <Input
-                id={`hook-prompt-${row.draftId}`}
-                onChange={onPromptChange}
-                placeholder={DEFAULT_RALPH_PROMPT}
-                spellCheck={false}
-                value={row.prompt}
-              />
-            </div>
-            <Button
-              onClick={onUseFileDelivery}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              Use file
-            </Button>
-          </div>
-        </div>
-      )}
 
-      {row.kind === 'prompt_profile' && row.promptDelivery === 'file' ? (
         <Button
           onClick={onUseNamedProfile}
           size="sm"
@@ -103,7 +80,34 @@ export const PlanWorkflowConfigHookRowPrompt = (
         >
           Use named profile
         </Button>
-      ) : null}
-    </>
+      </>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-end gap-2">
+        <div className="min-w-0 flex-1 space-y-2">
+          <Label htmlFor={`hook-prompt-${row.draftId}`}>
+            Named prompt (--prompt)
+          </Label>
+          <Input
+            id={`hook-prompt-${row.draftId}`}
+            onChange={onPromptChange}
+            placeholder={DEFAULT_RALPH_PROMPT}
+            spellCheck={false}
+            value={row.prompt}
+          />
+        </div>
+        <Button
+          onClick={onUseFileDelivery}
+          size="sm"
+          type="button"
+          variant="outline"
+        >
+          Use file
+        </Button>
+      </div>
+    </div>
   );
 };

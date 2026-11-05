@@ -21,14 +21,15 @@ import { UserSkillTag } from './user-skill-tag.entity.ts';
 describe('SkillTagsService', () => {
   const userId = '11111111-1111-4111-8111-111111111111';
 
-  const makeTag = (tag: string): UserSkillTag =>
-    asMock<UserSkillTag>({
+  const makeTag = (tag: string): UserSkillTag => {
+    return asMock<UserSkillTag>({
       createdAt: new Date('2026-05-18T12:00:00.000Z'),
       id: `id-${tag}`,
       tag,
       updatedAt: new Date('2026-05-18T12:00:00.000Z'),
       userId,
     });
+  };
 
   const insertBuilder = {
     execute: vi.fn(),

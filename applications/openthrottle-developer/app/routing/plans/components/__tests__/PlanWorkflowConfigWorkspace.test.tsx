@@ -28,7 +28,9 @@ describe('PlanWorkflowConfigWorkspace Component', () => {
       ...overrides,
     };
 
-    const Component = () => <PlanWorkflowConfigWorkspace {...props} />;
+    const Component = () => {
+      return <PlanWorkflowConfigWorkspace {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     return render(<RoutesStub />);

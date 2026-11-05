@@ -42,8 +42,9 @@ export interface SanitizeRalphShellNoiseResult {
 /**
  * @description Builds the single summary line that replaces a collapsed run of `/bin/sh` errors.
  */
-const buildSummaryLine = (lineCount: number): string =>
-  `[workflow-ralph] suppressed ${lineCount} /bin/sh command-misparse line(s) (cursor-agent Shell tool passed multiline prose to the shell; see plan 65a8dd25 finding #1)`;
+const buildSummaryLine = (lineCount: number): string => {
+  return `[workflow-ralph] suppressed ${lineCount} /bin/sh command-misparse line(s) (cursor-agent Shell tool passed multiline prose to the shell; see plan 65a8dd25 finding #1)`;
+};
 
 /**
  * @description Collapses consecutive `/bin/sh` / `/bin/bash` misparse error lines into a single

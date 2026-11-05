@@ -25,7 +25,9 @@ describe('ChartContainer Component', () => {
       },
     };
 
-    const Component = () => <ChartContainer {...props} />;
+    const Component = () => {
+      return <ChartContainer {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

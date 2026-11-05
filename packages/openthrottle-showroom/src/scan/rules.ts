@@ -59,8 +59,7 @@ export const ALLOWED_HOSTS: readonly string[] = [
 export const RULES: readonly LeakRule[] = [
   {
     appliesTo: ['frame', 'shipped'],
-    because:
-      'A real address in the account menu or an assignee field identifies a person.',
+    because: `A real address in the account menu or an assignee field identifies a person.`,
     id: 'email-address',
     pattern:
       /\b[A-Za-z0-9._%+-]+@(?!atlasworks\.example)[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g,
@@ -68,16 +67,14 @@ export const RULES: readonly LeakRule[] = [
   },
   {
     appliesTo: ['frame', 'shipped'],
-    because:
-      'A home directory leaks a username and the shape of someone’s machine.',
+    because: `A home directory leaks a username and the shape of someone’s machine.`,
     id: 'home-path',
     pattern: /\/(?:Users|home)\/[a-z0-9._-]+/gi,
     severity: 'error',
   },
   {
     appliesTo: ['frame', 'shipped'],
-    because:
-      'Provider token prefixes are unambiguous: if one is on screen it is live.',
+    because: `Provider token prefixes are unambiguous: if one is on screen it is live.`,
     id: 'token-prefix',
     pattern:
       /\b(?:sk-[A-Za-z0-9-]{16,}|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|AKIA[0-9A-Z]{12,}|xox[baprs]-[A-Za-z0-9-]{10,})\b/g,
@@ -93,24 +90,21 @@ export const RULES: readonly LeakRule[] = [
   },
   {
     appliesTo: ['frame'],
-    because:
-      'A long unbroken high-entropy string is usually a key, a token or a session id. Sometimes it is a hash or a uuid, which is why this warns rather than fails.',
+    because: `A long unbroken high-entropy string is usually a key, a token or a session id. Sometimes it is a hash or a uuid, which is why this warns rather than fails.`,
     id: 'high-entropy',
     pattern: /\b(?![0-9a-f]{8}-)[A-Za-z0-9+/_-]{32,}={0,2}\b/g,
     severity: 'warn',
   },
   {
     appliesTo: ['frame'],
-    because:
-      'A private URL on screen tells viewers where your infrastructure lives, and a query string can carry a token.',
+    because: `A private URL on screen tells viewers where your infrastructure lives, and a query string can carry a token.`,
     id: 'external-url',
     pattern: /\bhttps?:\/\/[^\s"'<>)]+/g,
     severity: 'warn',
   },
   {
     appliesTo: ['frame'],
-    because:
-      'Developer diagnostics are not a disclosure, so this warns rather than fails — but the server-metrics strip sat across the bottom of every shot of the 04-mental-model masters, and its numbers differ on every take. The runner hides it via HIDE_FOR_RECORDING; a hit here means that stopped working.',
+    because: `Developer diagnostics are not a disclosure, so this warns rather than fails — but the server-metrics strip sat across the bottom of every shot of the 04-mental-model masters, and its numbers differ on every take. The runner hides it via HIDE_FOR_RECORDING; a hit here means that stopped working.`,
     id: 'dev-diagnostics',
     pattern: /Server metrics|RSS \d|Heap \d/g,
     severity: 'warn',

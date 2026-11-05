@@ -52,49 +52,53 @@ const serverHealthOk = {
   websocket: 'ok',
 };
 
-const basePlan = (overrides: Partial<PlanRow> = {}): PlanRow => ({
-  __typename: 'PlanObject',
-  assignee: null,
-  author: 'tester',
-  category: 'test',
-  completedAt: null,
-  createdAt: ISO,
-  description: null,
-  id: PLAN_ID,
-  jobRunHooksJson: '{"hooks":[]}',
-  project: null,
-  projectId: null,
-  runConfigJson: '{}',
-  status: 'IN_PROGRESS',
-  summary: null,
-  tags: [],
-  title: 'Test plan',
-  updatedAt: ISO,
-  ...overrides,
-});
+const basePlan = (overrides: Partial<PlanRow> = {}): PlanRow => {
+  return {
+    __typename: 'PlanObject',
+    assignee: null,
+    author: 'tester',
+    category: 'test',
+    completedAt: null,
+    createdAt: ISO,
+    description: null,
+    id: PLAN_ID,
+    jobRunHooksJson: '{"hooks":[]}',
+    project: null,
+    projectId: null,
+    runConfigJson: '{}',
+    status: 'IN_PROGRESS',
+    summary: null,
+    tags: [],
+    title: 'Test plan',
+    updatedAt: ISO,
+    ...overrides,
+  };
+};
 
 const baseTask = (
   id: string,
   status: string,
   overrides: Partial<TaskRow> = {},
-): TaskRow => ({
-  __typename: 'TaskObject',
-  assignee: null,
-  category: null,
-  createdAt: ISO,
-  description: null,
-  id,
-  planId: PLAN_ID,
-  project: null,
-  projectId: null,
-  requirementsJson: '[]',
-  sortOrder: 1000,
-  status,
-  summary: null,
-  title: 'Task',
-  updatedAt: ISO,
-  ...overrides,
-});
+): TaskRow => {
+  return {
+    __typename: 'TaskObject',
+    assignee: null,
+    category: null,
+    createdAt: ISO,
+    description: null,
+    id,
+    planId: PLAN_ID,
+    project: null,
+    projectId: null,
+    requirementsJson: '[]',
+    sortOrder: 1000,
+    status,
+    summary: null,
+    title: 'Task',
+    updatedAt: ISO,
+    ...overrides,
+  };
+};
 
 /** Reads the `{ input: { id?, status } }` payload from a mocked GraphQL call's variables. */
 const readUpdateInput = (
@@ -115,8 +119,8 @@ const readUpdateInput = (
 
 const createMockExecute = (opts: {
   readonly getTasksByPlanId?: () => GetTasksByPlanIdQuery['tasksByPlanId'];
-}): WorkflowExecuteGraphqlV2 =>
-  asExecuteGraphqlV2(async (document) => {
+}): WorkflowExecuteGraphqlV2 => {
+  return asExecuteGraphqlV2(async (document) => {
     if (document === GetServerHealthDocument) {
       return { serverHealth: serverHealthOk };
     }
@@ -134,6 +138,7 @@ const createMockExecute = (opts: {
     }
     throw new Error('unmocked GraphQL document in test');
   });
+};
 
 const FINAL_ITERATION_FLAG = 'OT_FINAL_ITERATION=1';
 
@@ -250,12 +255,14 @@ describe('createWorkflowRalphOrchestrator PR draft dir', () => {
     await rm(repoRoot, { force: true, recursive: true });
   });
 
-  const topLevelRunner = (): WorkflowRalphCommandRunner =>
-    vi.fn<WorkflowRalphCommandRunner>(async ({ args }) =>
-      args[0] === 'rev-parse' && args[1] === '--show-toplevel'
-        ? { exitCode: 0, stderr: '', stdout: `${repoRoot}\n` }
-        : { exitCode: 1, stderr: 'unexpected', stdout: '' },
-    );
+  const topLevelRunner = (): WorkflowRalphCommandRunner => {
+    return vi.fn<WorkflowRalphCommandRunner>(async ({ args }) => {
+      if (args[0] === 'rev-parse' && args[1] === '--show-toplevel') {
+        return { exitCode: 0, stderr: '', stdout: `${repoRoot}\n` };
+      }
+      return { exitCode: 1, stderr: 'unexpected', stdout: '' };
+    });
+  };
 
   const runCapturing = async (
     runCommand: WorkflowRalphCommandRunner | undefined,
@@ -1322,8 +1329,8 @@ describe('createWorkflowRalphOrchestrator lifecycle beforeEach blocking', () => 
 describe('createWorkflowRalphOrchestrator X-OT-Session-Id propagation', () => {
   const collectMutationOptions = (
     sink: Array<{ header: string | undefined; status: string }>,
-  ): WorkflowExecuteGraphqlV2 =>
-    asExecuteGraphqlV2(
+  ): WorkflowExecuteGraphqlV2 => {
+    return asExecuteGraphqlV2(
       async (
         document,
         variables,
@@ -1354,6 +1361,7 @@ describe('createWorkflowRalphOrchestrator X-OT-Session-Id propagation', () => {
         throw new Error('unmocked GraphQL document in test');
       },
     );
+  };
 
   it('sends the run session id on every status mutation when workSessionId is set', async () => {
     const mutations: Array<{ header: string | undefined; status: string }> = [];

@@ -31,19 +31,21 @@ describe('GlobalPopoverActionItem Component', () => {
       label: 'Remove',
     };
 
-    const Component = (): React.ReactElement => (
-      <DropdownMenu defaultOpen={true}>
-        <DropdownMenuTrigger asChild={true}>
-          <button type="button">Open</button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          <GlobalPopoverActionItem
-            action={action}
-            onConfirmRequest={onConfirmRequest}
-          />
-        </DropdownMenuContent>
-      </DropdownMenu>
-    );
+    const Component = (): React.ReactElement => {
+      return (
+        <DropdownMenu defaultOpen={true}>
+          <DropdownMenuTrigger asChild={true}>
+            <button type="button">Open</button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <GlobalPopoverActionItem
+              action={action}
+              onConfirmRequest={onConfirmRequest}
+            />
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
 

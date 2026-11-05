@@ -74,8 +74,9 @@ import { GlobalServerHealthBanner } from '~/global/components/GlobalServerHealth
 import { NotificationsSubscriptionBridge } from '~/global/components/NotificationsSubscriptionBridge';
 import { PROTECTED_PATH_PREFIXES } from '~/global/config/config.app';
 import { SITE_TITLE } from '~/global/config/settings';
-import { CONFIG_STORAGE_KEY, configAtom } from '~/global/data/atom.config';
-import { userAtom } from '~/global/data/atom.user';
+import { CONFIG_STORAGE_KEY } from '~/global/data/data.appearance-config';
+import { configAtom } from '~/global/data/data.atom-config';
+import { userAtom } from '~/global/data/data.atom-user';
 import {
   dataNavigationGuest,
   dataNavigationV2,
@@ -89,6 +90,7 @@ import {
   REGEX_UUID,
 } from '~/global/utils/commander-empty-extras';
 import { handleGlobalLayoutHeaderSearchChromeEvent } from '~/global/utils/handle-global-layout-header-search-chrome-event';
+import { readTrimmedFormString } from '~/global/utils/read-trimmed-form-string';
 import type {
   RootLoaderDiagnostics,
   RootLoaderFailure,
@@ -340,6 +342,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   // Setup
   const appearanceRootCss = buildAppearanceRootCssBlock(config.brand);
+  const hasAppearanceCss = Boolean(appearanceRootCss);
   const env = data?.env ?? {};
   const envHtml = `window.env = ${JSON.stringify(env)}`;
   const favicon = `${OPENTHROTTLE_BUCKET}/branding/icons/blue/favicon.ico`;
@@ -357,6 +360,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
   // Handlers
 
   // Markup
+  const appearanceStyleMarkup = (
+    <style type="text/css">{`
+            :root {
+              ${appearanceRootCss}
+            }
+          `}</style>
+  );
 
   // Life Cycle
   React.useEffect(() => {
@@ -418,13 +428,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* crossOrigin is set to use-credentials to make use of the nonce. */}
         <Links crossOrigin="use-credentials" nonce={nonce} />
 
-        {appearanceRootCss ? (
-          <style type="text/css">{`
-            :root {
-              ${appearanceRootCss}
-            }
-          `}</style>
-        ) : null}
+        {hasAppearanceCss ? appearanceStyleMarkup : null}
 
         <script
           crossOrigin="use-credentials"
@@ -478,13 +482,12 @@ export default function App(): React.ReactElement {
   const fetcher = useFetcher();
   const planRefFetcher = useFetcher<PlanRefResolverData>();
   const permissions = usePermissions();
-  const navigation = React.useMemo(
-    () =>
-      data?.user
-        ? filterNavigationByPermission(dataNavigationV2, permissions)
-        : dataNavigationGuest,
-    [data?.user, permissions],
-  );
+  const navigation = React.useMemo(() => {
+    if (data?.user) {
+      return filterNavigationByPermission(dataNavigationV2, permissions);
+    }
+    return dataNavigationGuest;
+  }, [data?.user, permissions]);
   const groups = useCommanderOptions(navigation);
   const { pathname } = useLocation();
   const [commanderOpen, setCommanderOpen] = React.useState(false);
@@ -607,6 +610,16 @@ export default function App(): React.ReactElement {
   );
 
   // Markup
+  const headerMarkup = (
+    <GlobalLayoutHeader onSearchChromeEvent={handleSearchChromeEvent} />
+  );
+  const metricsMarkup = (
+    <GlobalMetrics
+      defaultOpen={false}
+      definitionsHref="/settings/debug#server-metrics-definitions"
+      diagnosticsHref="/settings/debug#graphql-endpoint-health"
+    />
+  );
 
   // Life Cycle
 
@@ -643,21 +656,11 @@ export default function App(): React.ReactElement {
                   suppress={data?.rootLoaderFailure?.step === 'health'}
                 />
 
-                {!isHeaderHidden ? (
-                  <GlobalLayoutHeader
-                    onSearchChromeEvent={handleSearchChromeEvent}
-                  />
-                ) : null}
+                {isHeaderHidden ? null : headerMarkup}
 
                 <Outlet />
 
-                {!isMetricsHidden ? (
-                  <GlobalMetrics
-                    defaultOpen={false}
-                    definitionsHref="/settings/debug#server-metrics-definitions"
-                    diagnosticsHref="/settings/debug#graphql-endpoint-health"
-                  />
-                ) : null}
+                {isMetricsHidden ? null : metricsMarkup}
 
                 <OpenThrottleCommander
                   className="m-0! p-0!"
@@ -719,14 +722,8 @@ export const action = async (args: Route.ActionArgs) => {
     if (jump === 'queues-index') return redirect('/queues');
     if (jump === 'generators-index') return redirect('/generators');
 
-    const idRaw = formData.get('id');
-    const id2Raw = formData.get('id2');
-    const id =
-      typeof idRaw === 'string' && idRaw.trim().length > 0 ? idRaw.trim() : '';
-    const id2 =
-      typeof id2Raw === 'string' && id2Raw.trim().length > 0
-        ? id2Raw.trim()
-        : '';
+    const id = readTrimmedFormString(formData.get('id'));
+    const id2 = readTrimmedFormString(formData.get('id2'));
 
     if (jump === 'plan-detail' && REGEX_UUID.test(id)) {
       return redirect(`/plans/${id}`);

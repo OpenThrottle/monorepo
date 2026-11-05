@@ -12,10 +12,10 @@ const messages: readonly ChatMessage[] = [
   { body: 'Hi', id: '1', role: 'user' },
 ];
 
-const makeWrapper =
-  (providerProps: Omit<ChatProviderProps, 'children'>) =>
-  ({ children }: PropsWithChildren): ReactElement =>
+const makeWrapper = (providerProps: Omit<ChatProviderProps, 'children'>) => {
+  return ({ children }: PropsWithChildren): ReactElement =>
     React.createElement(ChatProvider, providerProps, children);
+};
 
 describe('useChatDialog', () => {
   test('throws when neither props nor a provider supply messages/onSendMessage', () => {

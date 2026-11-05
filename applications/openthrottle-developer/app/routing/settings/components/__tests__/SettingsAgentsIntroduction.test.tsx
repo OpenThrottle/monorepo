@@ -14,7 +14,9 @@ describe('SettingsAgentsIntroduction Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <SettingsAgentsIntroduction {...props} />;
+    const Component = () => {
+      return <SettingsAgentsIntroduction {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

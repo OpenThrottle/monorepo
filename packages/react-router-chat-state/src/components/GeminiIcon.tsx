@@ -12,8 +12,21 @@ export interface GeminiIconProps extends ProviderIconProps {}
  */
 export const GeminiIcon = ({
   className,
-}: GeminiIconProps): React.ReactElement => (
-  <svg {...BASE_SVG_PROPS} className={className} fill="currentColor">
-    <path d="M12 2.5c.6 5.2 4.3 8.9 9.5 9.5-5.2.6-8.9 4.3-9.5 9.5-.6-5.2-4.3-8.9-9.5-9.5 5.2-.6 8.9-4.3 9.5-9.5Z" />
-  </svg>
-);
+}: GeminiIconProps): React.ReactElement => {
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+  return (
+    <svg {...BASE_SVG_PROPS} className={className} fill="currentColor">
+      <path d="M12 2.5c.6 5.2 4.3 8.9 9.5 9.5-5.2.6-8.9 4.3-9.5 9.5-.6-5.2-4.3-8.9-9.5-9.5 5.2-.6 8.9-4.3 9.5-9.5Z" />
+    </svg>
+  );
+};

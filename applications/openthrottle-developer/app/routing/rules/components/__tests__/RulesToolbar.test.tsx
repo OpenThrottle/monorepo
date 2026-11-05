@@ -24,7 +24,9 @@ function renderToolbar(
   props: RulesToolbarProps = {},
 ): RenderResult {
   // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-  const Component = () => <RulesToolbarWithQueryString {...props} />;
+  const Component = () => {
+    return <RulesToolbarWithQueryString {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub initialEntries={[initialEntry]} />);
 }

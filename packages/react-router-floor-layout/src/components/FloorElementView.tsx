@@ -49,6 +49,7 @@ const FloorElementViewImpl = (
   const isZone = type === FloorElementType.ZONE;
   const isRound = type === FloorElementType.TABLE_ROUND;
   const isStool = type === FloorElementType.STOOL;
+  const isEllipse = isRound || isStool;
 
   const shapeClass = cn(
     'transition-[stroke,fill] [vector-effect:non-scaling-stroke]',
@@ -65,6 +66,40 @@ const FloorElementViewImpl = (
   // Handlers
 
   // Markup
+  const ellipseShape = (
+    <ellipse
+      className={shapeClass}
+      cx={x}
+      cy={y}
+      rx={width / 2}
+      ry={height / 2}
+      strokeWidth={isSelected ? 3 : 2}
+    />
+  );
+  const rectShape = (
+    <rect
+      className={shapeClass}
+      height={height}
+      rx={isZone ? 4 : 2}
+      strokeWidth={isSelected ? 3 : 2}
+      width={width}
+      x={left}
+      y={top}
+    />
+  );
+  const labelText = (
+    <text
+      className="fill-foreground"
+      dominantBaseline="middle"
+      fontSize={12}
+      pointerEvents="none"
+      textAnchor="middle"
+      x={x}
+      y={isZone ? top + 14 : y}
+    >
+      {label}
+    </text>
+  );
 
   // Life Cycle
 
@@ -93,39 +128,8 @@ const FloorElementViewImpl = (
           vectorEffect="non-scaling-stroke"
         />
       ))}
-      {isRound || isStool ? (
-        <ellipse
-          className={shapeClass}
-          cx={x}
-          cy={y}
-          rx={width / 2}
-          ry={height / 2}
-          strokeWidth={isSelected ? 3 : 2}
-        />
-      ) : (
-        <rect
-          className={shapeClass}
-          height={height}
-          rx={isZone ? 4 : 2}
-          strokeWidth={isSelected ? 3 : 2}
-          width={width}
-          x={left}
-          y={top}
-        />
-      )}
-      {label ? (
-        <text
-          className="fill-foreground"
-          dominantBaseline="middle"
-          fontSize={12}
-          pointerEvents="none"
-          textAnchor="middle"
-          x={x}
-          y={isZone ? top + 14 : y}
-        >
-          {label}
-        </text>
-      ) : null}
+      {isEllipse ? ellipseShape : rectShape}
+      {label ? labelText : null}
     </g>
   );
 };

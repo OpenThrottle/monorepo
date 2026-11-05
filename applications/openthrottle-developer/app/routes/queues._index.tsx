@@ -62,10 +62,11 @@ export default function Component(
 
   // Setup
   const query = readSearchParam(searchParams).toLowerCase();
-  const filteredQueues =
-    query === ''
-      ? queues
-      : queues.filter((queue) => queue.name.toLowerCase().includes(query));
+  const hasQuery = query !== '';
+  const matchingQueues = queues.filter((queue) => {
+    return queue.name.toLowerCase().includes(query);
+  });
+  const filteredQueues = hasQuery ? matchingQueues : queues;
   const summary = summarizeQueues(queues);
 
   // Handlers
@@ -125,10 +126,7 @@ export const action = async (args: Route.ActionArgs) => {
   const formData = await args.request.formData();
   const intent = formData.get('intent');
   const queueNameRaw = formData.get('queueName');
-  const queueName =
-    typeof queueNameRaw === 'string' && queueNameRaw.trim() !== ''
-      ? queueNameRaw.trim()
-      : '';
+  const queueName = typeof queueNameRaw === 'string' ? queueNameRaw.trim() : '';
 
   if (queueName === '') {
     return { error: 'Queue name is required.' };

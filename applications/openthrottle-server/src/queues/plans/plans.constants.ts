@@ -25,8 +25,12 @@ const PLAN_RALPH_BULL_JOB_NAMES = [
  */
 export const isPlanRalphBullJobName = (
   name: string | null | undefined,
-): boolean =>
-  name != null && PLAN_RALPH_BULL_JOB_NAMES.some((jobName) => jobName === name);
+): boolean => {
+  return (
+    name != null &&
+    PLAN_RALPH_BULL_JOB_NAMES.some((jobName) => jobName === name)
+  );
+};
 
 /**
  * Worker options for stalled-job recovery after server restart.

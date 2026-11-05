@@ -10,7 +10,9 @@ describe('<%= name %> Component', () => {
 
   // Declared once for the whole file: `react/no-multi-comp` rejects a second
   // component declaration, and both cases render the same one.
-  const Component = () => <<%= name %> {...props} />;
+  const Component = () => {
+    return <<%= name %> {...props} />;
+  };
 
   describe('modal is open', () => {
     let component: RenderResult;

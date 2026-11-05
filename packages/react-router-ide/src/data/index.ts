@@ -1,1 +1,1 @@
-export * from './view-models';
+export * from './data.view-models';

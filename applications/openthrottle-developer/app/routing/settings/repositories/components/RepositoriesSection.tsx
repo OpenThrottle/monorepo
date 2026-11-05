@@ -1,7 +1,6 @@
 import { cn } from '@openthrottle/react-router-shadcn';
 import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
 import {
-  GlobalFeatureOnboarding,
   GlobalFeatureOnboardingModal,
   GlobalFeatureOnboardingTrigger,
   GlobalHeading,
@@ -21,6 +20,7 @@ import { CloneRepoDialog } from '~/routing/settings/repositories/components/Clon
 import { MissingWorktreesToggle } from '~/routing/settings/repositories/components/MissingWorktreesToggle';
 import { PruneMissingWorktreesButton } from '~/routing/settings/repositories/components/PruneMissingWorktreesButton';
 import { PruneWorktreesOutcome } from '~/routing/settings/repositories/components/PruneWorktreesOutcome';
+import { RepositoriesEmptyState } from '~/routing/settings/repositories/components/RepositoriesEmptyState';
 import { RepositoriesTable } from '~/routing/settings/repositories/components/RepositoriesTable';
 import { RepositoriesToolbar } from '~/routing/settings/repositories/components/RepositoriesToolbar';
 import { WorktreeDiscoveryNotice } from '~/routing/settings/repositories/components/WorktreeDiscoveryNotice';
@@ -29,7 +29,7 @@ import type {
   DiscoveredWorktreesResult,
   PruneWorktreeCheckoutResult,
   RepositoryCheckoutRow,
-} from '~/routing/settings/repositories/data/types';
+} from '~/routing/settings/repositories/types';
 import type { CheckoutDrift } from '~/routing/settings/utils/drift-labels';
 
 export interface RepositoriesSectionProps {
@@ -103,6 +103,66 @@ export const RepositoriesSection = (
   // Handlers
 
   // Markup
+  const mergedNotice = (
+    <p className="text-muted-foreground text-sm" role="status">
+      {WORKSPACE_FOLDERS_COPY.mergedNotice}
+    </p>
+  );
+  const errorAlert = (
+    <p className="text-destructive text-sm" role="alert">
+      {actionError}
+    </p>
+  );
+  const emptyState = (
+    <RepositoriesEmptyState
+      actionError={actionError}
+      discoveredFolders={discoveredFolders}
+      pickerCapabilities={pickerCapabilities}
+    />
+  );
+  const populatedBody = (
+    <div className="flex flex-col gap-4">
+      <RepositoriesToolbar
+        limit={limit}
+        page={page}
+        search={search}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+      >
+        <>
+          <MissingWorktreesToggle
+            count={missingCheckoutIds.length}
+            showMissing={showMissing}
+          />
+          <PruneMissingWorktreesButton checkoutIds={missingCheckoutIds} />
+          <CloneRepoDialog actionError={actionError} />
+          <AddFolderDialog
+            actionError={actionError}
+            discoveredFolders={discoveredFolders}
+            pickerCapabilities={pickerCapabilities}
+          />
+        </>
+      </RepositoriesToolbar>
+      <RepositoriesTable
+        autoExpandedIds={autoExpandedIds}
+        // className="bg-card"
+        driftByCheckoutId={driftByCheckoutId}
+        isUnpopulated={isUnpopulated}
+        rows={rows}
+      />
+      <WorktreeDiscoveryNotice discoveredWorktrees={discoveredWorktrees} />
+      <OpenThrottlePagination
+        className="mt-8"
+        limit={limit}
+        page={page}
+        resultLabel="repositories"
+        search={search}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        total={totalCount}
+      />
+    </div>
+  );
 
   // Life Cycle
 
@@ -133,72 +193,11 @@ export const RepositoriesSection = (
 
         {pruned ? <PruneWorktreesOutcome results={pruned} /> : null}
 
-        {refreshed?.merged ? (
-          <p className="text-muted-foreground text-sm" role="status">
-            {WORKSPACE_FOLDERS_COPY.mergedNotice}
-          </p>
-        ) : null}
+        {refreshed?.merged ? mergedNotice : null}
 
-        {actionError && !addedFolder ? (
-          <p className="text-destructive text-sm" role="alert">
-            {actionError}
-          </p>
-        ) : null}
+        {actionError && !addedFolder ? errorAlert : null}
 
-        {isUnpopulated ? (
-          <>
-            <AddFolderDialog
-              actionError={actionError}
-              discoveredFolders={discoveredFolders}
-              pickerCapabilities={pickerCapabilities}
-            />
-            <GlobalFeatureOnboarding content={REPOSITORIES_ONBOARDING} />
-          </>
-        ) : (
-          <div className="flex flex-col gap-4">
-            <RepositoriesToolbar
-              limit={limit}
-              page={page}
-              search={search}
-              sortBy={sortBy}
-              sortOrder={sortOrder}
-            >
-              <>
-                <MissingWorktreesToggle
-                  count={missingCheckoutIds.length}
-                  showMissing={showMissing}
-                />
-                <PruneMissingWorktreesButton checkoutIds={missingCheckoutIds} />
-                <CloneRepoDialog actionError={actionError} />
-                <AddFolderDialog
-                  actionError={actionError}
-                  discoveredFolders={discoveredFolders}
-                  pickerCapabilities={pickerCapabilities}
-                />
-              </>
-            </RepositoriesToolbar>
-            <RepositoriesTable
-              autoExpandedIds={autoExpandedIds}
-              // className="bg-card"
-              driftByCheckoutId={driftByCheckoutId}
-              isUnpopulated={isUnpopulated}
-              rows={rows}
-            />
-            <WorktreeDiscoveryNotice
-              discoveredWorktrees={discoveredWorktrees}
-            />
-            <OpenThrottlePagination
-              className="mt-8"
-              limit={limit}
-              page={page}
-              resultLabel="repositories"
-              search={search}
-              sortBy={sortBy}
-              sortOrder={sortOrder}
-              total={totalCount}
-            />
-          </div>
-        )}
+        {isUnpopulated ? emptyState : populatedBody}
       </section>
 
       <GlobalFeatureOnboardingModal content={REPOSITORIES_ONBOARDING} />

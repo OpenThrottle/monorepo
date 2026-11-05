@@ -8,13 +8,17 @@ import type {
   JobRunHookOnFailure,
 } from '~/routing/plans/utils/job-run-hooks-ui';
 
-export const isJobRunHookKind = (value: string): value is JobRunHookKind =>
-  value === 'prompt_profile' || value === 'skill';
+export const isJobRunHookKind = (value: string): value is JobRunHookKind => {
+  return value === 'prompt_profile' || value === 'skill';
+};
 
 export const isJobRunHookOnFailureValue = (
   value: string,
-): value is JobRunHookOnFailure | 'default' =>
-  value === 'block' ||
-  value === 'default' ||
-  value === 'ignore' ||
-  value === 'warn';
+): value is JobRunHookOnFailure | 'default' => {
+  return (
+    value === 'block' ||
+    value === 'default' ||
+    value === 'ignore' ||
+    value === 'warn'
+  );
+};

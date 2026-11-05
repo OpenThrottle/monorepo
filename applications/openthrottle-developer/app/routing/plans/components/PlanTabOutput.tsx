@@ -57,8 +57,12 @@ export const PlanTabOutput = (
         fallback={<PlanOutputStreamSkeleton />}
         resolve={outputChunks}
       >
-        {() =>
-          chunks.length === 0 ? (
+        {() => {
+          if (chunks.length > 0) {
+            return <OutputStream chunks={chunks} />;
+          }
+
+          return (
             <div>
               <GlobalHeading
                 className="mb-4"
@@ -71,10 +75,8 @@ export const PlanTabOutput = (
                 instead.
               </p>
             </div>
-          ) : (
-            <OutputStream chunks={chunks} />
-          )
-        }
+          );
+        }}
       </PlanDeferredSection>
       <OpenThrottleFieldset
         id="output-artifacts"
@@ -85,15 +87,17 @@ export const PlanTabOutput = (
           fallback={<LinkedArtifactsPanelSkeleton />}
           resolve={ledger}
         >
-          {(data) =>
-            data.linkedArtifacts.length === 0 ? (
+          {(data) => {
+            if (data.linkedArtifacts.length > 0) {
+              return <LinkedArtifactsPanel artifacts={data.linkedArtifacts} />;
+            }
+
+            return (
               <p className="text-muted-foreground text-xs">
                 {PLAN_TAB_OUTPUT_COPY.linkedArtifactsEmpty}
               </p>
-            ) : (
-              <LinkedArtifactsPanel artifacts={data.linkedArtifacts} />
-            )
-          }
+            );
+          }}
         </PlanDeferredSection>
       </OpenThrottleFieldset>
     </TabsContent>

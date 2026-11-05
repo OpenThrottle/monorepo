@@ -53,8 +53,9 @@ import {
  * operator-supplied and could carry `user:password@`, and a diagnostic is not
  * worth leaking a credential into stderr or a CI log.
  */
-const forLog = (graphqlUrl: string): string =>
-  graphqlUrl.replace(/^([a-z][a-z0-9+.-]*:\/\/)[^/?#]*@/i, '$1***@');
+const forLog = (graphqlUrl: string): string => {
+  return graphqlUrl.replace(/^([a-z][a-z0-9+.-]*:\/\/)[^/?#]*@/i, '$1***@');
+};
 
 /** Short enough that a dead server never stalls Skill tool use. @public */
 export const DEFAULT_POST_TIMEOUT_MS = 750;
@@ -127,10 +128,13 @@ export const postSkillUsageOutcome = async ({
   });
 };
 
-const resolveTimeout = (timeoutMs?: number): number =>
-  timeoutMs ??
-  (Number(process.env.OPENTHROTTLE_TELEMETRY_TIMEOUT_MS) ||
-    DEFAULT_POST_TIMEOUT_MS);
+const resolveTimeout = (timeoutMs?: number): number => {
+  return (
+    timeoutMs ??
+    (Number(process.env.OPENTHROTTLE_TELEMETRY_TIMEOUT_MS) ||
+      DEFAULT_POST_TIMEOUT_MS)
+  );
+};
 
 /**
  * Persist a usage event to OT; on any failure append events JSONL. Always
@@ -599,10 +603,10 @@ export const sweepAbandonedStarts = async ({
     return { swept: 0 };
   }
 
-  const currentFile =
-    typeof currentSessionId === 'string' && currentSessionId.trim()
-      ? `${sanitizeSessionId(currentSessionId.trim())}.jsonl`
-      : null;
+  let currentFile: string | null = null;
+  if (typeof currentSessionId === 'string' && currentSessionId.trim()) {
+    currentFile = `${sanitizeSessionId(currentSessionId.trim())}.jsonl`;
+  }
 
   // Collect abandoned outcomes across all stale files (no I/O awaits here), then
   // persist concurrently and drain each stale session file.
@@ -723,13 +727,15 @@ export const drainBufferedUsage = async ({
   outcomes: DrainFileResult;
   tokenUsage: DrainFileResult;
 }> => {
-  const empty = (): DrainFileResult => ({
-    deadLettered: 0,
-    reasons: {},
-    retained: 0,
-    sent: 0,
-    skipped: 0,
-  });
+  const empty = (): DrainFileResult => {
+    return {
+      deadLettered: 0,
+      reasons: {},
+      retained: 0,
+      sent: 0,
+      skipped: 0,
+    };
+  };
 
   if (process.env.OPENTHROTTLE_TELEMETRY_OFFLINE === '1') {
     return { events: empty(), outcomes: empty(), tokenUsage: empty() };
@@ -826,5 +832,6 @@ export const formatDrainReasons = (tally: DrainFileResult): string => {
 export const formatDrainFileResult = (
   label: string,
   tally: DrainFileResult,
-): string =>
-  `${label} sent=${tally.sent} retained=${tally.retained} dead-lettered=${tally.deadLettered} skipped=${tally.skipped} reasons: ${formatDrainReasons(tally)}`;
+): string => {
+  return `${label} sent=${tally.sent} retained=${tally.retained} dead-lettered=${tally.deadLettered} skipped=${tally.skipped} reasons: ${formatDrainReasons(tally)}`;
+};

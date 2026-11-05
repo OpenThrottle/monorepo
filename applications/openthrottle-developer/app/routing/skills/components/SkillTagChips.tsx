@@ -39,6 +39,11 @@ export const SkillTagChips = (
   };
 
   // Markup
+  const emptyTags = (
+    <span className="text-muted-foreground text-xs">
+      {SKILL_RECORD_TAGS_COPY.emptyTags}
+    </span>
+  );
 
   // Life Cycle
 
@@ -49,11 +54,7 @@ export const SkillTagChips = (
       className="flex flex-wrap items-center gap-2"
       data-testid="SkillTagChips"
     >
-      {sorted.length === 0 ? (
-        <span className="text-muted-foreground text-xs">
-          {SKILL_RECORD_TAGS_COPY.emptyTags}
-        </span>
-      ) : null}
+      {sorted.length === 0 ? emptyTags : null}
       {sorted.map((tag) => (
         <Badge className="gap-1" key={tag}>
           <span>{tag}</span>

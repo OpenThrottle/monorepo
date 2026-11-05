@@ -9,13 +9,15 @@ const chunk = (overrides: {
   error?: string | null;
   sortOrder: number;
   transcript?: string;
-}) => ({
-  done: overrides.done ?? false,
-  error: overrides.error ?? null,
-  sessionId: 'session-1',
-  sortOrder: overrides.sortOrder,
-  transcript: overrides.transcript ?? '',
-});
+}) => {
+  return {
+    done: overrides.done ?? false,
+    error: overrides.error ?? null,
+    sessionId: 'session-1',
+    sortOrder: overrides.sortOrder,
+    transcript: overrides.transcript ?? '',
+  };
+};
 
 describe('reduceTranscriptionChunk', () => {
   it('replaces the transcript wholesale with each newer snapshot', () => {

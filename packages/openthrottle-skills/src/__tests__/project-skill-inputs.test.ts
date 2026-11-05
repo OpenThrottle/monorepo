@@ -5,18 +5,20 @@ import { toProjectSkillInputs } from '../project-skill-inputs.ts';
 
 const skillRecord = (
   overrides: Partial<AgentAssetIngestRecord>,
-): AgentAssetIngestRecord => ({
-  authored: false,
-  content: '# body',
-  description: 'A skill.',
-  disableModelInvocation: undefined,
-  filePath: '.agents/skills/example/SKILL.md',
-  labels: ['example'],
-  promptType: 'skills',
-  tags: undefined,
-  title: 'example',
-  ...overrides,
-});
+): AgentAssetIngestRecord => {
+  return {
+    authored: false,
+    content: '# body',
+    description: 'A skill.',
+    disableModelInvocation: undefined,
+    filePath: '.agents/skills/example/SKILL.md',
+    labels: ['example'],
+    promptType: 'skills',
+    tags: undefined,
+    title: 'example',
+    ...overrides,
+  };
+};
 
 describe('toProjectSkillInputs', () => {
   test('projects a tagged skill with its flag and source path', () => {

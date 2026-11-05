@@ -121,10 +121,11 @@ export const PlanTasksBoard = (
 
   // Setup
   const unknownTasks = grouped.get('UNKNOWN') ?? [];
-  const columnKeys: PlanTaskBoardGroupKey[] =
-    unknownTasks.length > 0
-      ? [...PLAN_TASK_BOARD_COLUMN_ORDER, 'UNKNOWN']
-      : [...PLAN_TASK_BOARD_COLUMN_ORDER];
+  const columnKeys: PlanTaskBoardGroupKey[] = [...PLAN_TASK_BOARD_COLUMN_ORDER];
+
+  if (unknownTasks.length > 0) {
+    columnKeys.push('UNKNOWN');
+  }
 
   // Handlers
 

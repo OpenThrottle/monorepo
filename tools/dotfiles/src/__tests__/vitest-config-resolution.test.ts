@@ -30,10 +30,9 @@ describe('@tools/dotfiles vitest-config package resolution', () => {
       packagePath: getDirname(import.meta.url),
     });
 
-    const resolved =
-      typeof config === 'function'
-        ? await config({ command: 'serve', isSsrBuild: false, mode: 'test' })
-        : config;
+    const env = { command: 'serve', isSsrBuild: false, mode: 'test' } as const;
+    const isConfigFactory = typeof config === 'function';
+    const resolved = isConfigFactory ? await config(env) : config;
 
     expect(resolved).toBeDefined();
     // expect(resolved.test?.environment).toBe('node');

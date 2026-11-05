@@ -8,8 +8,9 @@ import {
 } from '../persistent-setting-storage';
 
 type View = 'list' | 'table';
-const isView = (value: unknown): value is View =>
-  value === 'list' || value === 'table';
+const isView = (value: unknown): value is View => {
+  return value === 'list' || value === 'table';
+};
 
 describe('persistent-setting-storage', () => {
   beforeEach(() => {
@@ -50,8 +51,9 @@ describe('persistent-setting-storage', () => {
   });
 
   test('returns a referentially-stable snapshot for object values', () => {
-    const isObj = (value: unknown): value is { open: boolean } =>
-      typeof value === 'object' && value !== null && 'open' in value;
+    const isObj = (value: unknown): value is { open: boolean } => {
+      return typeof value === 'object' && value !== null && 'open' in value;
+    };
     writePersistentSetting('t.obj', { open: true });
 
     const first = getPersistentSettingSnapshot('t.obj', isObj, { open: false });

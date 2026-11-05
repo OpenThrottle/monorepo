@@ -71,8 +71,9 @@ const createRule = ESLintUtils.RuleCreator(
     'https://github.com/OpenThrottle/monorepo/blob/main/docs/monorepo/work-ledger-sessions.md#status-write-chokepoint',
 );
 
-const tableForEntity = (entity: Entity): string =>
-  entity === 'plan' ? 'plans' : 'tasks';
+const tableForEntity = (entity: Entity): string => {
+  return entity === 'plan' ? 'plans' : 'tasks';
+};
 
 /** The two DI service field names this codebase consistently uses for the Plan/Task repositories. */
 const entityForServiceBindingName = (name: string): Entity | null => {
@@ -89,18 +90,20 @@ const entityForImportedName = (name: string): Entity | null => {
 };
 
 /** Unwraps `await <expr>` to `<expr>`. */
-const unwrapAwait = (node: TSESTree.Node): TSESTree.Node =>
-  node.type === 'AwaitExpression' ? unwrapAwait(node.argument) : node;
+const unwrapAwait = (node: TSESTree.Node): TSESTree.Node => {
+  return node.type === 'AwaitExpression' ? unwrapAwait(node.argument) : node;
+};
 
 /** True when an object-literal has a (non-computed) `status` key. */
-const hasStatusKey = (object: TSESTree.ObjectExpression): boolean =>
-  object.properties.some(
+const hasStatusKey = (object: TSESTree.ObjectExpression): boolean => {
+  return object.properties.some(
     (property) =>
       property.type === 'Property' &&
       !property.computed &&
       ((property.key.type === 'Identifier' && property.key.name === 'status') ||
         (property.key.type === 'Literal' && property.key.value === 'status')),
   );
+};
 
 /**
  * Walks outward from `node` to the nearest NAMED enclosing function or method
@@ -338,10 +341,9 @@ export const planTaskStatusChokepoint = createRule<[RuleOptions?], MessageIds>({
       ): void {
         for (const param of node.params) {
           if (param.type === 'TSParameterProperty') {
-            const inner =
-              param.parameter.type === 'AssignmentPattern'
-                ? param.parameter.left
-                : param.parameter;
+            const { parameter } = param;
+            const hasDefault = parameter.type === 'AssignmentPattern';
+            const inner = hasDefault ? parameter.left : parameter;
             const annotation = inner.typeAnnotation?.typeAnnotation;
             if (annotation === undefined) continue;
             const entity = entityFromTypeNode(annotation);
@@ -378,10 +380,9 @@ export const planTaskStatusChokepoint = createRule<[RuleOptions?], MessageIds>({
         if (left.property.type !== 'Identifier') return;
         if (left.property.name !== 'status') return;
 
-        const bindingKey =
-          left.object.type === 'Identifier'
-            ? left.object.name
-            : thisFieldKey(left.object);
+        const { object } = left;
+        const isIdentifier = object.type === 'Identifier';
+        const bindingKey = isIdentifier ? object.name : thisFieldKey(object);
         if (bindingKey === null) return;
 
         const entity = bindings.get(bindingKey);
@@ -470,10 +471,8 @@ export const planTaskStatusChokepoint = createRule<[RuleOptions?], MessageIds>({
           // A `TSInterfaceDeclaration` at the top level, OR the far more
           // common `export interface Foo { … }` — an `ExportNamedDeclaration`
           // wrapping one.
-          const declaration =
-            statement.type === 'ExportNamedDeclaration'
-              ? statement.declaration
-              : statement;
+          const isNamedExport = statement.type === 'ExportNamedDeclaration';
+          const declaration = isNamedExport ? statement.declaration : statement;
           if (declaration?.type !== 'TSInterfaceDeclaration') continue;
 
           const propertyEntities = new Map<string, Entity>();
@@ -534,14 +533,11 @@ export const planTaskStatusChokepoint = createRule<[RuleOptions?], MessageIds>({
   defaultOptions: [{ allowedFunctionNames: [] }],
   meta: {
     docs: {
-      description:
-        'Guard plans.status/tasks.status writes: route status transitions through the chokepoint (PlanStatusService, applyBulkTaskStatusChange, or an inline-capturing writer) instead of a bare assignment or repo/query-builder update.',
+      description: `Guard plans.status/tasks.status writes: route status transitions through the chokepoint (PlanStatusService, applyBulkTaskStatusChange, or an inline-capturing writer) instead of a bare assignment or repo/query-builder update.`,
     },
     messages: {
-      bareStatusAssignment:
-        "Direct assignment to `{{table}}.status` bypasses the status chokepoint, so no `status_change` work-ledger artifact is recorded. Route this transition through PlanStatusService.applyStatusChange/writeGuardedStatus (plans) or applyBulkTaskStatusChange / an inline-capturing writer (tasks) — or, if this function IS the chokepoint, add its name to this rule's `allowedFunctionNames` option where it is configured for this file.",
-      bareStatusWrite:
-        "This `.update(...)`/`.set(...)` writes `{{table}}.status` outside the status chokepoint, so no `status_change` work-ledger artifact is recorded. Route this transition through PlanStatusService.applyStatusChange/writeGuardedStatus (plans) or applyBulkTaskStatusChange / an inline-capturing writer (tasks) — or, if this function IS the chokepoint, add its name to this rule's `allowedFunctionNames` option where it is configured for this file.",
+      bareStatusAssignment: `Direct assignment to \`{{table}}.status\` bypasses the status chokepoint, so no \`status_change\` work-ledger artifact is recorded. Route this transition through PlanStatusService.applyStatusChange/writeGuardedStatus (plans) or applyBulkTaskStatusChange / an inline-capturing writer (tasks) — or, if this function IS the chokepoint, add its name to this rule's \`allowedFunctionNames\` option where it is configured for this file.`,
+      bareStatusWrite: `This \`.update(...)\`/\`.set(...)\` writes \`{{table}}.status\` outside the status chokepoint, so no \`status_change\` work-ledger artifact is recorded. Route this transition through PlanStatusService.applyStatusChange/writeGuardedStatus (plans) or applyBulkTaskStatusChange / an inline-capturing writer (tasks) — or, if this function IS the chokepoint, add its name to this rule's \`allowedFunctionNames\` option where it is configured for this file.`,
     },
     schema: [
       {

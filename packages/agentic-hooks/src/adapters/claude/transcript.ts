@@ -28,20 +28,23 @@ export const CLAUDE_PROVIDER = 'claude';
 
 const SYNTHETIC_MODEL = '<synthetic>';
 
-const nonEmptyString = (value: unknown): string | null =>
-  typeof value === 'string' && value !== '' ? value : null;
+const nonEmptyString = (value: unknown): string | null => {
+  return typeof value === 'string' && value !== '' ? value : null;
+};
 
-const finiteNumber = (value: unknown): number | null =>
-  typeof value === 'number' && Number.isFinite(value) ? value : null;
+const finiteNumber = (value: unknown): number | null => {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+};
 
 /**
  * Claude reports thinking tokens as `output_tokens_details.thinking_tokens`,
  * which `normalizeUsage` does not read (it only knows `reasoning_tokens`).
  */
-const thinkingTokens = (usage: Record<string, unknown>): number | null =>
-  isRecord(usage.output_tokens_details)
+const thinkingTokens = (usage: Record<string, unknown>): number | null => {
+  return isRecord(usage.output_tokens_details)
     ? finiteNumber(usage.output_tokens_details.thinking_tokens)
     : null;
+};
 
 const parseJsonRecord = (line: string): Record<string, unknown> | null => {
   try {

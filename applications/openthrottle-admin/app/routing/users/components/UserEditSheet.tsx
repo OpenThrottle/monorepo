@@ -12,6 +12,7 @@ import * as React from 'react';
 import type { useFetcher } from 'react-router';
 
 import type { UserDetailsFragment } from '~/__generated__/graphql';
+import { readActionError } from '~/global/utils/read-action-error';
 import type { action as userDetailAction } from '~/routes/users.$userId';
 
 export interface UserEditSheetProps {
@@ -30,10 +31,16 @@ export const UserEditSheet = (
 
   // Setup
   const UpdateForm = fetcher.Form;
+  const updateError = readActionError(fetcher.data);
 
   // Handlers
 
   // Markup
+  const updateErrorMarkup = (
+    <p className="text-destructive text-sm" role="alert">
+      {updateError}
+    </p>
+  );
 
   // Life Cycle
 
@@ -71,11 +78,7 @@ export const UserEditSheet = (
               />
             </div>
           </div>
-          {fetcher.data != null && 'error' in fetcher.data ? (
-            <p className="text-destructive text-sm" role="alert">
-              {fetcher.data.error}
-            </p>
-          ) : null}
+          {updateError === null ? null : updateErrorMarkup}
           <div className="flex justify-end gap-2">
             <Button
               onClick={() => onOpenChange(false)}

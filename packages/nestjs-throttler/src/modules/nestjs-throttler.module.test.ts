@@ -78,8 +78,8 @@ describe('validateNestjsThrottlerModuleOptions', () => {
 
 const bindsThrottlerGuard = (
   providers: ReadonlyArray<Provider> | undefined,
-): boolean =>
-  (providers ?? []).some(
+): boolean => {
+  return (providers ?? []).some(
     (provider) =>
       typeof provider === 'object' &&
       'provide' in provider &&
@@ -87,6 +87,7 @@ const bindsThrottlerGuard = (
       'useClass' in provider &&
       provider.useClass === GqlThrottlerGuard,
   );
+};
 
 describe('NestjsThrottlerModule', () => {
   it('compiles when imported directly (default tier)', async () => {

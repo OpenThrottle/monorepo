@@ -5,8 +5,9 @@ import { describe, expect, test } from 'vitest';
 
 import { BlogEditorBadge } from '../BlogEditorBadge';
 
-const renderBadge = (lastEditedBy: string | null): RenderResult =>
-  render(<BlogEditorBadge lastEditedBy={lastEditedBy} />);
+const renderBadge = (lastEditedBy: string | null): RenderResult => {
+  return render(<BlogEditorBadge lastEditedBy={lastEditedBy} />);
+};
 
 describe('BlogEditorBadge Component', () => {
   test('shows an Agent badge and the account name for a service account', () => {

@@ -56,10 +56,12 @@ const buildFixtureModule = (): Type => {
   return CommandFixtureModule;
 };
 
-const loadFixture: RootModuleLoader = async () => ({
-  ok: true,
-  value: buildFixtureModule(),
-});
+const loadFixture: RootModuleLoader = async () => {
+  return {
+    ok: true,
+    value: buildFixtureModule(),
+  };
+};
 
 const SCHEMA = 'applications/api/schema.gql';
 const BASE_ARGS = [
@@ -68,7 +70,9 @@ const BASE_ARGS = [
   `--schema=${SCHEMA}`,
 ];
 
-const errors = (): string => vi.mocked(console.error).mock.calls.join('\n');
+const errors = (): string => {
+  return vi.mocked(console.error).mock.calls.join('\n');
+};
 
 describe('runGraphqlSchemaCommand', () => {
   let workspace: string;
@@ -92,7 +96,9 @@ describe('runGraphqlSchemaCommand', () => {
   const run = (
     argv: readonly string[],
     load: RootModuleLoader = loadFixture,
-  ): Promise<number> => runGraphqlSchemaCommand(argv, env, '/cwd', load);
+  ): Promise<number> => {
+    return runGraphqlSchemaCommand(argv, env, '/cwd', load);
+  };
 
   describe('arguments', () => {
     it('resolves --module against cwd and defaults the export to AppModule', async () => {

@@ -26,10 +26,24 @@ export const SettingsWorkspaceApplyEditors = (
     navigation.formData.get('repositoryId') === null;
 
   // Setup
+  const { applyAllButton, applyBusyLabel } = WORKSPACE_SETTINGS_COPY;
 
   // Handlers
 
   // Markup
+  const disabledReason = (
+    <p
+      className="text-muted-foreground text-sm"
+      id="settings-workspace-apply-disabled-reason"
+    >
+      {WORKSPACE_SETTINGS_COPY.applyDisabledReason}
+    </p>
+  );
+  const actionErrorMarkup = (
+    <p className="text-destructive text-sm" role="alert">
+      {actionError}
+    </p>
+  );
 
   // Life Cycle
 
@@ -53,24 +67,11 @@ export const SettingsWorkspaceApplyEditors = (
           type="submit"
           variant="secondary"
         >
-          {isSubmitting
-            ? WORKSPACE_SETTINGS_COPY.applyBusyLabel
-            : WORKSPACE_SETTINGS_COPY.applyAllButton}
+          {isSubmitting ? applyBusyLabel : applyAllButton}
         </Button>
       </Form>
-      {disabled ? (
-        <p
-          className="text-muted-foreground text-sm"
-          id="settings-workspace-apply-disabled-reason"
-        >
-          {WORKSPACE_SETTINGS_COPY.applyDisabledReason}
-        </p>
-      ) : null}
-      {actionError ? (
-        <p className="text-destructive text-sm" role="alert">
-          {actionError}
-        </p>
-      ) : null}
+      {disabled ? disabledReason : null}
+      {actionError ? actionErrorMarkup : null}
     </div>
   );
 };

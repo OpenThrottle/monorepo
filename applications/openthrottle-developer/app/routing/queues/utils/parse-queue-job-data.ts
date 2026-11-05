@@ -15,6 +15,14 @@ interface ParsedQueueJobData {
   readonly taskId: string | undefined;
 }
 
+const readOptionalString = (value: unknown): string | undefined => {
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  return undefined;
+};
+
 /**
  * @description Parses optional JSON job payload; surfaces copy-friendly formatting for operators.
  */
@@ -36,17 +44,11 @@ export const parseQueueJobDataString = (
   try {
     const parsed: unknown = JSON.parse(data);
     const record: Record<string, unknown> = isRecord(parsed) ? parsed : {};
-    const planId =
-      typeof record.planId === 'string' ? record.planId : undefined;
-    const taskId =
-      typeof record.taskId === 'string' ? record.taskId : undefined;
-    const runKind =
-      typeof record.runKind === 'string' ? record.runKind : undefined;
-    const mode = typeof record.mode === 'string' ? record.mode : undefined;
-    const correlationId =
-      typeof record.correlationId === 'string'
-        ? record.correlationId
-        : undefined;
+    const planId = readOptionalString(record.planId);
+    const taskId = readOptionalString(record.taskId);
+    const runKind = readOptionalString(record.runKind);
+    const mode = readOptionalString(record.mode);
+    const correlationId = readOptionalString(record.correlationId);
 
     return {
       correlationId,

@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
+import { PLAN_STATUS_DOT_COLOR } from '~/routing/plans/data/data.plan-status-dot-color';
 import { PLAN_STATUS_FILTER_GROUPS } from '~/routing/plans/data/data.plan-status-filter-groups';
-import { PLAN_STATUS_DOT_COLOR } from '~/routing/plans/data/plan-status-dot-color';
 import { planStatusValues } from '~/routing/plans/types';
 
 import {

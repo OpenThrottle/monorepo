@@ -17,8 +17,9 @@ import {
  */
 export const action = (
   args: Route.ActionArgs,
-): Promise<ChatStartActionResult | { cancelled: boolean }> =>
-  createConversationStreamAction({
+): Promise<ChatStartActionResult | { cancelled: boolean }> => {
+  return createConversationStreamAction({
     cancelDocument: CancelConversationStreamDocument,
     startDocument: StartConversationStreamDocument,
   })(args);
+};

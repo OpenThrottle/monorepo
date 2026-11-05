@@ -13,8 +13,9 @@ import type { Page } from 'playwright';
 const CURSOR_ID = '__demo_cursor';
 
 /** Cubic ease-in-out. Linear movement is the tell. */
-const ease = (t: number): number =>
-  t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+const ease = (t: number): number => {
+  return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+};
 
 declare global {
   var __demoCursor: { x: number; y: number } | undefined;
@@ -28,10 +29,8 @@ export const installCursor = async (
   page: Page,
   hideSelectors: readonly string[],
 ): Promise<void> => {
-  const hidden =
-    hideSelectors.length > 0
-      ? `${hideSelectors.join(',')}{display:none !important}`
-      : '';
+  const hideRule = `${hideSelectors.join(',')}{display:none !important}`;
+  const hidden = hideSelectors.length > 0 ? hideRule : '';
 
   await page.addStyleTag({
     content: `

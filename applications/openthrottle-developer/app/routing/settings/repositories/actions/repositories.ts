@@ -18,6 +18,7 @@ import {
   AddWorkspaceFolderInputSchema,
   CloneRepositoryInputSchema,
 } from '~/__generated__/schemas';
+import { errorMessageOr } from '~/routing/settings/repositories/utils/error-message';
 
 export const addFolder = async (args: Route.ActionArgs, formData: FormData) => {
   const parsed = parseFormData(formData, AddWorkspaceFolderInputSchema(), {
@@ -106,11 +107,9 @@ export const pickFolderNative = async (args: Route.ActionArgs) => {
     );
     return { picked: { path: data.pickFolderNative.path } };
   } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : 'Failed to open the folder dialog.';
-    return { error: message };
+    return {
+      error: errorMessageOr(error, 'Failed to open the folder dialog.'),
+    };
   }
 };
 
@@ -177,11 +176,9 @@ export const pruneWorktreeCheckouts = async (
     );
     return { pruned: data.pruneWorktreeCheckouts.results };
   } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : 'Failed to remove worktree records.';
-    return { error: message };
+    return {
+      error: errorMessageOr(error, 'Failed to remove worktree records.'),
+    };
   }
 };
 

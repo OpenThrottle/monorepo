@@ -7,5 +7,6 @@ import type { Route } from '@/app/routes/+types/robots[.]txt';
  * crawlers (noindex) via the shared helper. See the per-app SEO policy in OT
  * plan 49a1efae.
  */
-export const loader = (_args: Route.LoaderArgs): Response =>
-  buildRobotsResponse({ disallowAll: true });
+export const loader = (_args: Route.LoaderArgs): Response => {
+  return buildRobotsResponse({ disallowAll: true });
+};

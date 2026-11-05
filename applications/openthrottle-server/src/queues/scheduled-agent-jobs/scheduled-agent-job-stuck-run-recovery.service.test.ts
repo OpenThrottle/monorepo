@@ -20,8 +20,8 @@ import type { ScheduledAgentJobPayload } from './scheduled-agent-jobs.types.ts';
 const run = (
   id: string,
   overrides: Partial<ScheduledAgentJobRun> = {},
-): ScheduledAgentJobRun =>
-  createMock<ScheduledAgentJobRun>({
+): ScheduledAgentJobRun => {
+  return createMock<ScheduledAgentJobRun>({
     bullmqJobId: `job-${id}`,
     driverId: 'claude',
     id,
@@ -31,6 +31,7 @@ const run = (
     status: 'running',
     ...overrides,
   });
+};
 
 describe('ScheduledAgentJobStuckRunRecoveryService', () => {
   let runRepository: Repository<ScheduledAgentJobRun>;

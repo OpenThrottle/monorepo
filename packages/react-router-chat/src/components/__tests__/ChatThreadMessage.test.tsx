@@ -6,8 +6,9 @@ import { describe, expect, test } from 'vitest';
 import type { ChatMessage } from '../../types';
 import { ChatThreadMessage } from '../ChatThreadMessage';
 
-const renderMessage = (message: ChatMessage): RenderResult =>
-  render(<ChatThreadMessage message={message} />);
+const renderMessage = (message: ChatMessage): RenderResult => {
+  return render(<ChatThreadMessage message={message} />);
+};
 
 describe('ChatThreadMessage Component', () => {
   test('renders an assistant turn with structured events as a timeline', () => {

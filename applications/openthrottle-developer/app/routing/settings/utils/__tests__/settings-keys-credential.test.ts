@@ -13,18 +13,20 @@ import {
 
 const credential = (
   overrides: Partial<ServiceAccountCredentialFieldsFragment> = {},
-): ServiceAccountCredentialFieldsFragment => ({
-  __typename: 'ServiceAccountCredentialObject',
-  createdAt: '2025-01-01T00:00:00Z',
-  expiresAt: null,
-  id: 'cred-1',
-  label: 'CI key',
-  lastUsedAt: null,
-  prefix: 'sk_live_abcd',
-  revokedAt: null,
-  serviceAccountId: 'sa-1',
-  ...overrides,
-});
+): ServiceAccountCredentialFieldsFragment => {
+  return {
+    __typename: 'ServiceAccountCredentialObject',
+    createdAt: '2025-01-01T00:00:00Z',
+    expiresAt: null,
+    id: 'cred-1',
+    label: 'CI key',
+    lastUsedAt: null,
+    prefix: 'sk_live_abcd',
+    revokedAt: null,
+    serviceAccountId: 'sa-1',
+    ...overrides,
+  };
+};
 
 describe('getSettingsKeysCredentialStatus', () => {
   test('returns "revoked" when revokedAt is set', () => {

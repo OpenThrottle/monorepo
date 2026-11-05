@@ -1,7 +1,7 @@
 import { cn, DataTable } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 import { SkillsEmpty } from '~/routing/skills/components/SkillsEmpty';
 import type { SkillTagVocabularyOption } from '~/routing/skills/components/SkillTagChips';
 import type { SkillsTableColumnValue } from '~/routing/skills/config/skills-table-columns';

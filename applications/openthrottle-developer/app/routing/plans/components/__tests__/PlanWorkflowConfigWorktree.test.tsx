@@ -21,7 +21,9 @@ describe('PlanWorkflowConfigWorktree Component', () => {
   });
 
   test('renders the worktree fieldset, on by default', () => {
-    const Component = () => <PlanWorkflowConfigWorktree {...props} />;
+    const Component = () => {
+      return <PlanWorkflowConfigWorktree {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
 
@@ -41,7 +43,9 @@ describe('PlanWorkflowConfigWorktree Component', () => {
       setInput: vi.fn(),
     };
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <PlanWorkflowConfigWorktree {...props} />;
+    const Component = () => {
+      return <PlanWorkflowConfigWorktree {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
 
@@ -64,7 +68,9 @@ describe('PlanWorkflowConfigWorktree Component', () => {
       setInput: vi.fn(),
     };
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <PlanWorkflowConfigWorktree {...props} />;
+    const Component = () => {
+      return <PlanWorkflowConfigWorktree {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
 
@@ -88,7 +94,9 @@ describe('PlanWorkflowConfigWorktree Component', () => {
       setInput,
     };
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <PlanWorkflowConfigWorktree {...props} />;
+    const Component = () => {
+      return <PlanWorkflowConfigWorktree {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByLabelText } = render(<RoutesStub />);
 
@@ -111,7 +119,9 @@ describe('PlanWorkflowConfigWorktree Component', () => {
       setInput: vi.fn(),
     };
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <PlanWorkflowConfigWorktree {...props} />;
+    const Component = () => {
+      return <PlanWorkflowConfigWorktree {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByLabelText } = render(<RoutesStub />);
 
@@ -133,7 +143,9 @@ describe('PlanWorkflowConfigWorktree Component', () => {
       setInput: vi.fn(),
     };
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <PlanWorkflowConfigWorktree {...props} />;
+    const Component = () => {
+      return <PlanWorkflowConfigWorktree {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { queryByLabelText } = render(<RoutesStub />);
 

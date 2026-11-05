@@ -40,6 +40,11 @@ export const RolloutFlagCreateDialog = (
   // Handlers
 
   // Markup
+  const actionErrorMarkup = (
+    <p className="text-destructive text-sm" role="alert">
+      {actionError}
+    </p>
+  );
 
   // Life Cycle
   React.useEffect(() => {
@@ -70,11 +75,7 @@ export const RolloutFlagCreateDialog = (
         <Form className="space-y-4" method="post">
           <input name="intent" type="hidden" value="createRolloutFlag" />
           <RolloutFlagFormFields idPrefix="create-rollout-flag" />
-          {actionError ? (
-            <p className="text-destructive text-sm" role="alert">
-              {actionError}
-            </p>
-          ) : null}
+          {actionError ? actionErrorMarkup : null}
           <DialogFooter>
             <Button disabled={submitting} type="submit">
               {submitting ? 'Creating…' : ROLLOUT_COPY.createButton}

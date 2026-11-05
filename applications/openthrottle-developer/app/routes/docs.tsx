@@ -7,8 +7,8 @@ import { Outlet } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/docs';
 import { useDocsFeatureFlags } from '~/global/hooks/useDocsFeatureFlags';
-import { docsNav } from '~/routing/docs/data/docs-navigation';
-import { docsManifest } from '~/routing/docs/data/docsManifest';
+import { docsManifest } from '~/routing/docs/data/data.docs-manifest';
+import { docsNav } from '~/routing/docs/data/data.docs-navigation';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

@@ -25,8 +25,9 @@ const memoryStore = new Map<string, RolloutEvaluationCacheEntry>();
 export const rolloutEvaluationCacheKey = (
   applicationKey: string,
   identityKey?: string | null,
-): string =>
-  `${ROLLOUT_CACHE_KEY_PREFIX}:${applicationKey}:${identityKey ?? 'anon'}`;
+): string => {
+  return `${ROLLOUT_CACHE_KEY_PREFIX}:${applicationKey}:${identityKey ?? 'anon'}`;
+};
 
 const isEvaluation = (value: unknown): value is RolloutEvaluation => {
   if (!isRecord(value)) {

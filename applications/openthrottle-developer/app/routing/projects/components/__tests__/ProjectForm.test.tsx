@@ -14,7 +14,9 @@ describe('ProjectForm Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <ProjectForm {...props} />;
+    const Component = () => {
+      return <ProjectForm {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

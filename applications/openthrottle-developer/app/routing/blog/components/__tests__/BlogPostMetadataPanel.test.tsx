@@ -12,8 +12,8 @@ import { renderWithProviders } from '~/testing/route-fixtures';
 
 import { BlogPostMetadataPanel } from '../BlogPostMetadataPanel';
 
-const renderPanel = (onFieldChange = vi.fn()) =>
-  renderWithProviders(
+const renderPanel = (onFieldChange = vi.fn()) => {
+  return renderWithProviders(
     <BlogPostMetadataPanel
       authors={MOCK_BLOG_AUTHORS}
       errors={{ slug: 'Taken' }}
@@ -22,6 +22,7 @@ const renderPanel = (onFieldChange = vi.fn()) =>
       values={toBlogPostEditorValues(MOCK_EDITOR_DRAFT)}
     />,
   );
+};
 
 describe('BlogPostMetadataPanel Component', () => {
   test('renders every metadata field with its value and error', () => {

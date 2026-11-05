@@ -124,10 +124,8 @@ export function buildHeatmapColumns(
 
     // Label the column when its first row crosses into a new month.
     const columnMonth = addDays(gridStart, week * 7).getUTCMonth();
-    const monthLabel =
-      columnMonth !== previousMonth
-        ? (MONTH_LABELS[columnMonth] ?? null)
-        : null;
+    const isNewMonth = columnMonth !== previousMonth;
+    const monthLabel = isNewMonth ? (MONTH_LABELS[columnMonth] ?? null) : null;
     previousMonth = columnMonth;
 
     result.push({ cells, monthLabel });

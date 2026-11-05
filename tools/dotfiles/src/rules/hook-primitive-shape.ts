@@ -48,18 +48,24 @@ const createRule = ESLintUtils.RuleCreator(
     `https://github.com/OpenThrottle/monorepo/blob/main/docs/monorepo/hook-primitive-shape.md#${name}`,
 );
 
-const isHookName = (name: string): boolean => HOOK_NAME.test(name);
+const isHookName = (name: string): boolean => {
+  return HOOK_NAME.test(name);
+};
 
 /** `useFoo` → `UseFoo`. */
-const toPascalCase = (name: string): string =>
-  `${name.slice(0, 1).toUpperCase()}${name.slice(1)}`;
+const toPascalCase = (name: string): string => {
+  return `${name.slice(0, 1).toUpperCase()}${name.slice(1)}`;
+};
 
 const isFunctionInit = (
   node: TSESTree.Expression | null,
-): node is TSESTree.ArrowFunctionExpression | TSESTree.FunctionExpression =>
-  node !== null &&
-  (node.type === 'ArrowFunctionExpression' ||
-    node.type === 'FunctionExpression');
+): node is TSESTree.ArrowFunctionExpression | TSESTree.FunctionExpression => {
+  return (
+    node !== null &&
+    (node.type === 'ArrowFunctionExpression' ||
+      node.type === 'FunctionExpression')
+  );
+};
 
 /** Type-only declarations carry no runtime value, so module scope may hold them. */
 const isTypeOnlyStatement = (stmt: TSESTree.ProgramStatement): boolean => {
@@ -139,17 +145,18 @@ export const hookPrimitiveShape = createRule<[], MessageIds>({
             node: stmt,
           });
           return;
-        default:
+        default: {
+          let name = 'this value';
+          if ('id' in declaration && declaration.id?.type === 'Identifier') {
+            name = declaration.id.name;
+          }
+
           context.report({
-            data: {
-              name:
-                'id' in declaration && declaration.id?.type === 'Identifier'
-                  ? declaration.id.name
-                  : 'this value',
-            },
+            data: { name },
             messageId: 'exportedValue',
             node: stmt,
           });
+        }
       }
     };
 
@@ -364,37 +371,23 @@ export const hookPrimitiveShape = createRule<[], MessageIds>({
   defaultOptions: [],
   meta: {
     docs: {
-      description:
-        'Enforce the OpenThrottle hook primitive shape (one exported hook named after the file, only its Options/Result exports, no module-scope values, the ordered section markers, an explicit return type).',
+      description: `Enforce the OpenThrottle hook primitive shape (one exported hook named after the file, only its Options/Result exports, no module-scope values, the ordered section markers, an explicit return type).`,
     },
     fixable: 'code',
     messages: {
-      exportedFunction:
-        'Do not export `{{name}}` from a hook file — a pure function belongs in the sibling `utils/` (H2/H3).',
-      exportedType:
-        'Do not export `{{name}}` from a hook file — only `{{options}}` (an interface) and `{{result}}` (an interface or type alias) may be exported. Move any other type or interface to the sibling `types.ts` (H2).',
-      exportedValue:
-        'Do not export `{{name}}` from a hook file — static data or a lookup table belongs in the sibling `data/`, a tunable (timeout, threshold, page size) in `config/` (H2/H3).',
-      extraHook:
-        'A hook file holds one hook: move `{{name}}` to its own file in `hooks/` (H1). A helper hook that is not public is still a hook — just leave it out of `index.ts`.',
-      markerMissingBlankLine:
-        'The `// {{marker}}` marker must be preceded by exactly one blank line (H4).',
-      markerOutOfOrder:
-        'Section markers must appear in the canonical order: {{order}} (H4).',
-      misnamedHook:
-        'The exported hook `{{actual}}` must be named after the file: rename it to `{{name}}` (H1).',
-      missingHook:
-        'Expected an exported `{{name}}` hook matching the file name (H1).',
-      missingMarker:
-        'Missing the `// {{marker}}` section marker (H4). Keep every marker even when its section is empty.',
-      missingReturnType:
-        'Give `{{name}}` an explicit return type: `(): UseFooResult`, `(): boolean`, or `(): void` for an effect-only hook (H5).',
-      moduleScopeValue:
-        'A hook file may hold only imports, type declarations and the hook — move this {{kind}} out of module scope (H3). If only this hook uses it, declare it inside the hook under `// Setup`; if several files share it, move it to {{where}} and import it.',
-      nonExportedHook:
-        'Give the module-scope hook `{{name}}` its own file in `hooks/` (H1/H3); a hook only used internally is simply left out of `index.ts`.',
-      reExport:
-        'Do not re-export from a hook file — `export { … }`, `export { … } from` and `export *` belong in the package `index.ts` (H2).',
+      exportedFunction: `Do not export \`{{name}}\` from a hook file — a pure function belongs in the sibling \`utils/\` (H2/H3).`,
+      exportedType: `Do not export \`{{name}}\` from a hook file — only \`{{options}}\` (an interface) and \`{{result}}\` (an interface or type alias) may be exported. Move any other type or interface to the sibling \`types.ts\` (H2).`,
+      exportedValue: `Do not export \`{{name}}\` from a hook file — static data or a lookup table belongs in the sibling \`data/\`, a tunable (timeout, threshold, page size) in \`config/\` (H2/H3).`,
+      extraHook: `A hook file holds one hook: move \`{{name}}\` to its own file in \`hooks/\` (H1). A helper hook that is not public is still a hook — just leave it out of \`index.ts\`.`,
+      markerMissingBlankLine: `The \`// {{marker}}\` marker must be preceded by exactly one blank line (H4).`,
+      markerOutOfOrder: `Section markers must appear in the canonical order: {{order}} (H4).`,
+      misnamedHook: `The exported hook \`{{actual}}\` must be named after the file: rename it to \`{{name}}\` (H1).`,
+      missingHook: `Expected an exported \`{{name}}\` hook matching the file name (H1).`,
+      missingMarker: `Missing the \`// {{marker}}\` section marker (H4). Keep every marker even when its section is empty.`,
+      missingReturnType: `Give \`{{name}}\` an explicit return type: \`(): UseFooResult\`, \`(): boolean\`, or \`(): void\` for an effect-only hook (H5).`,
+      moduleScopeValue: `A hook file may hold only imports, type declarations and the hook — move this {{kind}} out of module scope (H3). If only this hook uses it, declare it inside the hook under \`// Setup\`; if several files share it, move it to {{where}} and import it.`,
+      nonExportedHook: `Give the module-scope hook \`{{name}}\` its own file in \`hooks/\` (H1/H3); a hook only used internally is simply left out of \`index.ts\`.`,
+      reExport: `Do not re-export from a hook file — \`export { … }\`, \`export { … } from\` and \`export *\` belong in the package \`index.ts\` (H2).`,
     },
     schema: [],
     type: 'problem',

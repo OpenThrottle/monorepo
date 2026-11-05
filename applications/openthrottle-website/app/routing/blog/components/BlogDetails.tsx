@@ -31,6 +31,31 @@ export const BlogDetails = (props: BlogDetailsProps): React.ReactElement => {
   // Handlers
 
   // Markup
+  const excerptText = (
+    <p className="text-muted-foreground text-lg">{excerpt}</p>
+  );
+  const updatedNote = (
+    <p className="text-muted-foreground text-sm">
+      {updatedPrefix} {updatedLabel}
+    </p>
+  );
+  const coverImage = (
+    <img
+      alt={coverImageAlt ?? ''}
+      className="border-border my-8 aspect-video w-full rounded-xl border object-cover"
+      decoding="async"
+      src={coverImageUrl ?? ''}
+    />
+  );
+  const authorBio = (
+    <aside className="border-border mt-12 border-t pt-6">
+      <h2 className="text-muted-foreground mb-2 text-xs font-semibold tracking-[0.08em] uppercase">
+        {authorHeading}
+      </h2>
+      <p className="font-medium">{author?.displayName}</p>
+      <p className="text-muted-foreground mt-1">{author?.bio}</p>
+    </aside>
+  );
 
   // Life Cycle
 
@@ -51,45 +76,24 @@ export const BlogDetails = (props: BlogDetailsProps): React.ReactElement => {
         <h1 className="text-[clamp(1.75rem,4vw,2.6rem)] leading-tight">
           {post.title}
         </h1>
-        {excerpt ? (
-          <p className="text-muted-foreground text-lg">{excerpt}</p>
-        ) : null}
+        {excerpt ? excerptText : null}
         <BlogMeta
           author={author}
           publishedAt={post.publishedAt}
           readingTimeMinutes={post.readingTimeMinutes}
         />
-        {showUpdated ? (
-          <p className="text-muted-foreground text-sm">
-            {updatedPrefix} {updatedLabel}
-          </p>
-        ) : null}
+        {showUpdated ? updatedNote : null}
         <BlogTagList tags={post.tags} />
       </header>
 
-      {coverImageUrl ? (
-        <img
-          alt={coverImageAlt ?? ''}
-          className="border-border my-8 aspect-video w-full rounded-xl border object-cover"
-          decoding="async"
-          src={coverImageUrl}
-        />
-      ) : null}
+      {coverImageUrl ? coverImage : null}
 
       <MarkdownRenderer
         className="text-foreground/90! mt-8 text-base! leading-relaxed! [&_h2]:mt-10! [&_h2]:text-2xl! [&_h2]:font-semibold! [&_h3]:mt-8! [&_h3]:text-lg! [&_h3]:font-semibold! [&_ol]:pl-4 [&_ul]:pl-2"
         source={bodyMarkdown}
       />
 
-      {author?.bio ? (
-        <aside className="border-border mt-12 border-t pt-6">
-          <h2 className="text-muted-foreground mb-2 text-xs font-semibold tracking-[0.08em] uppercase">
-            {authorHeading}
-          </h2>
-          <p className="font-medium">{author.displayName}</p>
-          <p className="text-muted-foreground mt-1">{author.bio}</p>
-        </aside>
-      ) : null}
+      {author?.bio ? authorBio : null}
     </article>
   );
 };

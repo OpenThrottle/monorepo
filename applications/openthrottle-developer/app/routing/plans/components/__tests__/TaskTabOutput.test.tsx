@@ -11,24 +11,27 @@ import { TaskTabOutput } from '../TaskTabOutput';
 
 type Chunk = TaskOutputStreamChunksQuery['planOutputStreamChunks'][number];
 
-const chunk = (overrides: Partial<Chunk>): Chunk => ({
-  __typename: 'PlanOutputStreamChunkObject',
-  content: 'Chunk content',
-  createdAt: '2026-02-01T22:00:00.000Z',
-  id: 'chunk-1',
-  iteration: 1,
-  planId: 'plan-1',
-  taskId: 'task-1',
-  ...overrides,
-});
+const chunk = (overrides: Partial<Chunk>): Chunk => {
+  return {
+    __typename: 'PlanOutputStreamChunkObject',
+    content: 'Chunk content',
+    createdAt: '2026-02-01T22:00:00.000Z',
+    id: 'chunk-1',
+    iteration: 1,
+    planId: 'plan-1',
+    taskId: 'task-1',
+    ...overrides,
+  };
+};
 
-const renderTab = (props: TaskTabOutputProps): RenderResult =>
+const renderTab = (props: TaskTabOutputProps): RenderResult => {
   // TabsContent must render inside a Tabs context with the matching value active.
-  renderRoutesStub(
+  return renderRoutesStub(
     <Tabs defaultValue="output">
       <TaskTabOutput {...props} />
     </Tabs>,
   );
+};
 
 describe('TaskTabOutput Component', () => {
   test('renders the empty state and plan-output link when there are no chunks', () => {

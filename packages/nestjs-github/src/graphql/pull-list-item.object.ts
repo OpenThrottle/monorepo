@@ -19,8 +19,7 @@ export class PullListItemObject {
   headRef!: string | null;
 
   @Field(() => String, {
-    description:
-      'Head commit SHA when GitHub returns head.sha (for commit/checks drill-down).',
+    description: `Head commit SHA when GitHub returns head.sha (for commit/checks drill-down).`,
     nullable: true,
   })
   headSha!: string | null;

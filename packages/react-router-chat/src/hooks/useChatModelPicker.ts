@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import { FAVORITES_GROUP_ID } from '../data/chat-model-picker-favorites';
+import { FAVORITES_GROUP_ID } from '../data/data.chat-model-picker-favorites';
 import type { ChatModelGroup, ChatModelOption, ResolvedGroup } from '../types';
 
 export interface UseChatModelPickerOptions {

@@ -11,7 +11,7 @@ import { useAtomValue } from 'jotai';
 import * as React from 'react';
 
 import { NotificationsDocument } from '~/__generated__/graphql';
-import { userAtom } from '~/global/data/atom.user';
+import { userAtom } from '~/global/data/data.atom-user';
 import { getGraphqlWsClient } from '~/services/graphql-ws-client';
 
 export interface NotificationsSubscriptionBridgeProps {

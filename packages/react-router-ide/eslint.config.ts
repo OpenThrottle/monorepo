@@ -1,9 +1,10 @@
-import { eslintConfig } from '@tools/dotfiles';
+import { dataFolderEslintConfig, eslintConfig } from '@tools/dotfiles';
 
 export default [
   { ignores: ['!**/*'] },
 
   ...eslintConfig,
+  ...dataFolderEslintConfig,
 
   /**
    * Engine boundary guard.
@@ -29,8 +30,7 @@ export default [
           paths: [
             {
               allowTypeImports: true,
-              message:
-                'Import only TYPES from @openthrottle/openthrottle-ide (use `import type`). It is a server-only Node library; a value import drags @vscode/ripgrep, chokidar and ts-morph into the client bundle.',
+              message: `Import only TYPES from @openthrottle/openthrottle-ide (use \`import type\`). It is a server-only Node library; a value import drags @vscode/ripgrep, chokidar and ts-morph into the client bundle.`,
               name: '@openthrottle/openthrottle-ide',
             },
           ],

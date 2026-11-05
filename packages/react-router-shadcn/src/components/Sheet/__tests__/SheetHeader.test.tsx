@@ -14,13 +14,15 @@ describe('SheetHeader Component', () => {
   beforeEach(() => {
     props = { children: 'Sheet header' };
 
-    const Component = () => (
-      <Sheet open={true}>
-        <SheetContent>
-          <SheetHeader {...props} />
-        </SheetContent>
-      </Sheet>
-    );
+    const Component = () => {
+      return (
+        <Sheet open={true}>
+          <SheetContent>
+            <SheetHeader {...props} />
+          </SheetContent>
+        </Sheet>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

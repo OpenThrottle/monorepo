@@ -11,20 +11,24 @@ const location: Location = {
   state: null,
 };
 
-const buildMatch = (meta: MetaDescriptor[]): MetaArgs['matches'][number] => ({
-  id: 'root',
-  loaderData: undefined,
-  meta,
-  params: {},
-  pathname: '/',
-});
+const buildMatch = (meta: MetaDescriptor[]): MetaArgs['matches'][number] => {
+  return {
+    id: 'root',
+    loaderData: undefined,
+    meta,
+    params: {},
+    pathname: '/',
+  };
+};
 
-const buildArgs = (matches: MetaArgs['matches']): MetaArgs => ({
-  loaderData: undefined,
-  location,
-  matches,
-  params: {},
-});
+const buildArgs = (matches: MetaArgs['matches']): MetaArgs => {
+  return {
+    loaderData: undefined,
+    location,
+    matches,
+    params: {},
+  };
+};
 
 describe('mergeMeta', () => {
   test('keeps leaf meta and appends a unique parent meta', () => {
@@ -131,7 +135,9 @@ describe('mergeRouteModuleMeta', () => {
     // against this rather than dereferencing it when appending parent meta.
     // `JSON.parse` is typed as `any`, so the contract-violating return value
     // flows through without a type assertion.
-    const undefinedLeaf: () => MetaDescriptor[] = () => JSON.parse('null');
+    const undefinedLeaf: () => MetaDescriptor[] = () => {
+      return JSON.parse('null');
+    };
     const meta = mergeRouteModuleMeta(undefinedLeaf);
 
     expect(() =>

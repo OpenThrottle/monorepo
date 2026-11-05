@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import type { ExportedSymbol } from '../../data/view-models';
+import type { ExportedSymbol } from '../../data/data.view-models';
 import { groupSymbolsByPath } from '../groupSymbolsByPath';
 
 const alpha: ExportedSymbol = {

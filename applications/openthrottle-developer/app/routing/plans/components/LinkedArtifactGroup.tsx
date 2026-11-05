@@ -9,7 +9,7 @@ import * as React from 'react';
 
 import type { LinkedArtifactRow } from '~/routing/plans/components/LinkedArtifactsPanel';
 import { LINKED_ARTIFACTS_PANEL_COPY } from '~/routing/plans/data/data.copy';
-import { LINKED_ARTIFACT_COLLAPSED_PREVIEW_COUNT } from '~/routing/plans/data/linked-artifacts-panel-groups';
+import { LINKED_ARTIFACT_COLLAPSED_PREVIEW_COUNT } from '~/routing/plans/data/data.linked-artifacts-panel-groups';
 
 export interface LinkedArtifactGroupProps {
   /** Render closed on first paint (high-volume event types, e.g. status_change). */
@@ -33,10 +33,13 @@ export const LinkedArtifactGroup = (
   const Chevron = isOpen ? ChevronDownIcon : ChevronRightIcon;
   // While closed, a couple of rows stay visible so the group still says
   // something — a bare header would hide the most recent transition entirely.
-  const preview = collapsedByDefault
-    ? rows.slice(0, LINKED_ARTIFACT_COLLAPSED_PREVIEW_COUNT)
-    : rows;
+  const collapsedPreview = rows.slice(
+    0,
+    LINKED_ARTIFACT_COLLAPSED_PREVIEW_COUNT,
+  );
+  const preview = collapsedByDefault ? collapsedPreview : rows;
   const hidden = rows.length - preview.length;
+  const hasHidden = hidden > 0;
 
   // Handlers
 
@@ -67,16 +70,16 @@ export const LinkedArtifactGroup = (
         </Badge>
       </CollapsibleTrigger>
 
-      {isOpen ? null : (
+      {!isOpen && (
         <ul className="flex flex-col gap-2 pl-5">
           {preview.map((artifact) => (
             <li key={artifact.id}>{renderRow(artifact)}</li>
           ))}
-          {hidden > 0 ? (
+          {hasHidden && (
             <li className="text-muted-foreground text-xs">
               +{hidden} {LINKED_ARTIFACTS_PANEL_COPY.collapsedMoreSuffix}
             </li>
-          ) : null}
+          )}
         </ul>
       )}
 

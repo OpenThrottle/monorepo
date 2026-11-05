@@ -12,22 +12,26 @@ const NOW_ISO = '2026-10-29T12:00:00.000Z';
 const HOUR_MS = 60 * 60 * 1000;
 
 /** ISO instant `hours` before {@link NOW_ISO}. */
-const hoursAgo = (hours: number): string =>
-  new Date(new Date(NOW_ISO).getTime() - hours * HOUR_MS).toISOString();
+const hoursAgo = (hours: number): string => {
+  return new Date(new Date(NOW_ISO).getTime() - hours * HOUR_MS).toISOString();
+};
 
 const buildRow = (
   overrides: Partial<UsageCaptureHealthRowFragment>,
-): UsageCaptureHealthRowFragment => ({
-  lastCapturedAt: hoursAgo(1),
-  source: 'claude-code',
-  stream: 'skill_events',
-  ...overrides,
-});
+): UsageCaptureHealthRowFragment => {
+  return {
+    lastCapturedAt: hoursAgo(1),
+    source: 'claude-code',
+    stream: 'skill_events',
+    ...overrides,
+  };
+};
 
 const renderComponent = (
   props: Partial<UsageCaptureHealthProps> = {},
-): RenderResult =>
-  render(<UsageCaptureHealth nowIso={NOW_ISO} rows={[]} {...props} />);
+): RenderResult => {
+  return render(<UsageCaptureHealth nowIso={NOW_ISO} rows={[]} {...props} />);
+};
 
 describe('UsageCaptureHealth Component', () => {
   describe('when every source captured within 24 hours', () => {

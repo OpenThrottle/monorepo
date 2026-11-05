@@ -114,7 +114,7 @@ export const PlanDetailTabsList = (
         onCheckoutChange={onCheckoutChange}
         repositories={repositories}
       />
-      {showConfiguration ? (
+      {showConfiguration && (
         <TabsTrigger
           className="flex-0 cursor-pointer"
           id="plan-tab-configuration"
@@ -123,7 +123,7 @@ export const PlanDetailTabsList = (
           <CogIcon />
           Configuration
         </TabsTrigger>
-      ) : null}
+      )}
     </TabsList>
   );
 };

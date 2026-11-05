@@ -14,8 +14,8 @@ import type { ServiceAccountAuthService } from '../auth/service-account-auth.ser
 import { GlobalAuthGuard } from './global-auth.guard.ts';
 import type { GqlJwtAuthGuard } from './gql-jwt-auth.guard.ts';
 
-const createHttpExecutionContext = (req: object): ExecutionContext =>
-  createMock<ExecutionContext>({
+const createHttpExecutionContext = (req: object): ExecutionContext => {
+  return createMock<ExecutionContext>({
     getClass: vi.fn().mockImplementation(() => class {}),
     getHandler: vi.fn().mockReturnValue(() => undefined),
     getType: vi.fn().mockReturnValue('http'),
@@ -23,6 +23,7 @@ const createHttpExecutionContext = (req: object): ExecutionContext =>
       getRequest: () => req,
     }),
   });
+};
 
 describe('GlobalAuthGuard', () => {
   let guard: GlobalAuthGuard;

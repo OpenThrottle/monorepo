@@ -52,17 +52,20 @@ type RuleFragment = {
   tagDeny: string[];
 };
 
-const toRule = (rule: RuleFragment): SkillAvailabilityRule => ({
-  environment: rule.environment ?? null,
-  id: rule.id,
-  slugAllow: rule.slugAllow,
-  slugDeny: rule.slugDeny,
-  tagAllow: rule.tagAllow,
-  tagDeny: rule.tagDeny,
-});
+const toRule = (rule: RuleFragment): SkillAvailabilityRule => {
+  return {
+    environment: rule.environment ?? null,
+    id: rule.id,
+    slugAllow: rule.slugAllow,
+    slugDeny: rule.slugDeny,
+    tagAllow: rule.tagAllow,
+    tagDeny: rule.tagDeny,
+  };
+};
 
-const describeRuleSet = (ruleSet: SkillAvailabilityRuleSet): string =>
-  `posture=${ruleSet.posture}, ${ruleSet.rules.length} rule(s)`;
+const describeRuleSet = (ruleSet: SkillAvailabilityRuleSet): string => {
+  return `posture=${ruleSet.posture}, ${ruleSet.rules.length} rule(s)`;
+};
 
 // ── get_skill_availability_rule_set ──────────────────────────────────────────
 

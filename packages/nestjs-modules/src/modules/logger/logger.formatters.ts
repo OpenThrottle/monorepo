@@ -56,5 +56,6 @@ const formatterNames: readonly string[] = Object.keys(formatters);
 /**
  * @description Type guard: is the given string a known formatter name?
  */
-export const isFormatterName = (value: string): value is FormatterName =>
-  formatterNames.includes(value);
+export const isFormatterName = (value: string): value is FormatterName => {
+  return formatterNames.includes(value);
+};

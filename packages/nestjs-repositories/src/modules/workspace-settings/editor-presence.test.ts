@@ -42,11 +42,12 @@ const errnoError = (code: string, path: string): NodeJS.ErrnoException => {
  * container markers — rejects ENOENT, which is what a plain host looks like.
  */
 const filesystem = (existing: readonly string[]): void => {
-  mockAccess.mockImplementation((path: string) =>
-    existing.includes(path)
-      ? Promise.resolve(undefined)
-      : Promise.reject(errnoError('ENOENT', path)),
-  );
+  mockAccess.mockImplementation((path: string) => {
+    if (existing.includes(path)) {
+      return Promise.resolve(undefined);
+    }
+    return Promise.reject(errnoError('ENOENT', path));
+  });
 };
 
 type SpawnOutcome =
@@ -97,8 +98,9 @@ const spawnReturns = (outcomeFor: (bundleId: string) => SpawnOutcome): void => {
 };
 
 /** Spotlight finds nothing for anything — the ordinary "genuinely absent" reply. */
-const spotlightEmpty = (): void =>
-  spawnReturns(() => ({ code: 0, kind: 'close', stdout: '' }));
+const spotlightEmpty = (): void => {
+  return spawnReturns(() => ({ code: 0, kind: 'close', stdout: '' }));
+};
 
 const presenceOf = (
   result: {
@@ -108,16 +110,18 @@ const presenceOf = (
     }[];
   },
   editor: string,
-): EditorPresenceState | undefined =>
-  result.editors.find((entry) => entry.editor === editor)?.presence;
+): EditorPresenceState | undefined => {
+  return result.editors.find((entry) => entry.editor === editor)?.presence;
+};
 
-const detect = (overrides: Parameters<typeof detectEditorPresence>[0] = {}) =>
-  detectEditorPresence({
+const detect = (overrides: Parameters<typeof detectEditorPresence>[0] = {}) => {
+  return detectEditorPresence({
     env: HOST_ENV,
     platform: 'darwin',
     scannedAt: '2026-08-27T00:00:00.000Z',
     ...overrides,
   });
+};
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -182,15 +186,16 @@ describe('detectEditorPresence — trusted host', () => {
 
   it('falls back to Spotlight and reports installed for a non-standard location', async () => {
     filesystem([]);
-    spawnReturns((query) =>
-      query.includes('com.microsoft.VSCode')
-        ? {
-            code: 0,
-            kind: 'close',
-            stdout: '/Users/jane/Tools/Visual Studio Code.app\n',
-          }
-        : { code: 0, kind: 'close', stdout: '' },
-    );
+    spawnReturns((query) => {
+      if (query.includes('com.microsoft.VSCode')) {
+        return {
+          code: 0,
+          kind: 'close',
+          stdout: '/Users/jane/Tools/Visual Studio Code.app\n',
+        };
+      }
+      return { code: 0, kind: 'close', stdout: '' };
+    });
 
     const result = await detect();
 
@@ -294,11 +299,12 @@ describe('detectEditorPresence — untrusted, must never claim not_found', () =>
   it('returns unknown when a container marker is unreadable', async () => {
     // Not knowing whether we are in a container is itself disqualifying: an EACCES on
     // /.dockerenv must not be read as "no container, go ahead and claim not_found".
-    mockAccess.mockImplementation((path: string) =>
-      path === '/.dockerenv'
-        ? Promise.reject(errnoError('EACCES', path))
-        : Promise.reject(errnoError('ENOENT', path)),
-    );
+    mockAccess.mockImplementation((path: string) => {
+      if (path === '/.dockerenv') {
+        return Promise.reject(errnoError('EACCES', path));
+      }
+      return Promise.reject(errnoError('ENOENT', path));
+    });
     spotlightEmpty();
 
     expectAllUnknown(await detect());
@@ -333,11 +339,12 @@ describe('detectEditorPresence — a failed probe is not evidence of absence', (
   it('degrades one editor to unknown without failing the sweep', async () => {
     filesystem([VSCODE_BUNDLE]);
     // Only Cursor's fallback breaks; VS Code was already found by the stat sweep.
-    spawnReturns((query) =>
-      query.includes('com.todesktop')
-        ? { kind: 'error' }
-        : { code: 0, kind: 'close', stdout: '' },
-    );
+    spawnReturns((query) => {
+      if (query.includes('com.todesktop')) {
+        return { kind: 'error' };
+      }
+      return { code: 0, kind: 'close', stdout: '' };
+    });
 
     const result = await detect();
 

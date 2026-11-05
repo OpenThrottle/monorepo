@@ -6,8 +6,8 @@ import { useNavigate } from 'react-router';
 import {
   BRANCH_FILTER_ALL_VALUE,
   BRANCH_FILTER_COPY,
-} from '~/routing/usage/data/branch-filter-copy';
-import type { SkillUsageScopeFilter } from '~/routing/usage/data/skill-usage-copy';
+} from '~/routing/usage/data/data.branch-filter-copy';
+import type { SkillUsageScopeFilter } from '~/routing/usage/data/data.skill-usage-copy';
 import { useUsageBranchSearch } from '~/routing/usage/hooks/useUsageBranchSearch';
 import type { UsageBranchOption } from '~/routing/usage/types';
 import { buildUsageSearch } from '~/routing/usage/utils/usage-search';
@@ -88,12 +88,13 @@ export const UsageBranchFilter = (
   };
 
   // Markup
-  const footer =
-    search.hasMore && search.options.length > 0 ? (
-      <div className="text-muted-foreground border-t px-3 py-2 text-xs">
-        {BRANCH_FILTER_COPY.truncated(search.options.length)}
-      </div>
-    ) : null;
+  const hasTruncatedOptions = search.hasMore && search.options.length > 0;
+  const truncatedNotice = (
+    <div className="text-muted-foreground border-t px-3 py-2 text-xs">
+      {BRANCH_FILTER_COPY.truncated(search.options.length)}
+    </div>
+  );
+  const footer = hasTruncatedOptions ? truncatedNotice : null;
 
   // Life Cycle
 

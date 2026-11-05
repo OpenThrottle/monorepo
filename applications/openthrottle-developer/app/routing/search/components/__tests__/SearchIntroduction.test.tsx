@@ -14,7 +14,9 @@ describe('SearchIntroduction Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <SearchIntroduction {...props} />;
+    const Component = () => {
+      return <SearchIntroduction {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);
@@ -42,7 +44,9 @@ describe('SearchIntroduction Component', () => {
     };
 
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <SearchIntroduction {...props} />;
+    const Component = () => {
+      return <SearchIntroduction {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
 

@@ -82,24 +82,48 @@ export const loader = async (args: Route.LoaderArgs) => {
     of stacking three more round-trips behind the first. The server filters
     output chunks by both planId and taskId.
   */
+  const taskPlanId = task?.planId;
+
+  const fetchPlan = async () => {
+    if (taskPlanId == null) {
+      return null;
+    }
+
+    return executeGraphqlWithAuth(args.request, GetPlanByIdDocument, {
+      id: taskPlanId,
+    });
+  };
+
+  const fetchLinkedArtifacts = async () => {
+    if (task == null) {
+      return null;
+    }
+
+    return executeGraphqlWithAuth(args.request, TaskLinkedArtifactsDocument, {
+      taskId,
+    });
+  };
+
+  const fetchPlanOutputChunks = async () => {
+    if (taskPlanId == null) {
+      return null;
+    }
+
+    return executeGraphqlWithAuth(
+      args.request,
+      TaskOutputStreamChunksDocument,
+      {
+        planId: taskPlanId,
+        taskId,
+      },
+    );
+  };
+
   const [planResult, linkedArtifactsResult, planOutputChunksResult] =
     await Promise.all([
-      task?.planId != null
-        ? executeGraphqlWithAuth(args.request, GetPlanByIdDocument, {
-            id: task.planId,
-          })
-        : null,
-      task != null
-        ? executeGraphqlWithAuth(args.request, TaskLinkedArtifactsDocument, {
-            taskId,
-          })
-        : null,
-      task?.planId != null
-        ? executeGraphqlWithAuth(args.request, TaskOutputStreamChunksDocument, {
-            planId: task.planId,
-            taskId,
-          })
-        : null,
+      fetchPlan(),
+      fetchLinkedArtifacts(),
+      fetchPlanOutputChunks(),
     ]);
 
   const plan = planResult?.plan ?? null;

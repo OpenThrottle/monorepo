@@ -41,8 +41,9 @@ interface PlanRawRow {
 /**
  * @description Normalizes TypeORM query result (array or pg-style { rows, rowCount }) to { rows, rowCount }.
  */
-const toRecord = (value: unknown): Record<string, unknown> =>
-  isRecord(value) ? value : {};
+const toRecord = (value: unknown): Record<string, unknown> => {
+  return isRecord(value) ? value : {};
+};
 
 function normalizeQueryResult<T>(raw: unknown): {
   rowCount: number;
@@ -581,16 +582,12 @@ export async function listPlansByStatus(
   const orderDir = sortOrder === 'asc' ? 'ASC' : 'DESC';
   const orderClause = `ORDER BY ${orderColumn} ${orderDir}`;
   const showAllStatuses = status === '' || status === 'all';
-  const titlePattern =
-    titleSubstring?.trim() != null && titleSubstring.trim() !== ''
-      ? `%${titleSubstring.trim()}%`
-      : null;
-  const projectFilter =
-    project?.trim() != null && project.trim() !== '' ? project.trim() : null;
-  const projectIdFilter =
-    projectId?.trim() != null && projectId.trim() !== ''
-      ? projectId.trim()
-      : null;
+  const trimmedTitle = titleSubstring?.trim() ?? '';
+  const titlePattern = trimmedTitle === '' ? null : `%${trimmedTitle}%`;
+  const trimmedProject = project?.trim() ?? '';
+  const projectFilter = trimmedProject === '' ? null : trimmedProject;
+  const trimmedProjectId = projectId?.trim() ?? '';
+  const projectIdFilter = trimmedProjectId === '' ? null : trimmedProjectId;
 
   const conditions: string[] = [];
   const params: (string | number)[] = [];
@@ -832,22 +829,23 @@ function _mapTaskRow(r: {
  */
 function toIsoOrNull(value: Date | string | null | undefined): string | null {
   if (value == null) return null;
-  const date = value instanceof Date ? value : new Date(String(value));
-  return date.toISOString();
+  return toDate(value).toISOString();
+}
+
+/**
+ * @description Coerces a Date or date-like value to a Date.
+ */
+function toDate(value: Date | string): Date {
+  if (value instanceof Date) return value;
+  return new Date(String(value));
 }
 
 /**
  * @description Maps a Plan entity to {@link PlanRow} (dates to ISO strings).
  */
 function mapPlanEntityToRow(plan: Plan): PlanRow {
-  const createdAt =
-    plan.createdAt instanceof Date
-      ? plan.createdAt
-      : new Date(String(plan.createdAt));
-  const updatedAt =
-    plan.updatedAt instanceof Date
-      ? plan.updatedAt
-      : new Date(String(plan.updatedAt));
+  const createdAt = toDate(plan.createdAt);
+  const updatedAt = toDate(plan.updatedAt);
   return {
     assignee: plan.assignee,
     author: plan.author,
@@ -869,14 +867,8 @@ function mapPlanEntityToRow(plan: Plan): PlanRow {
  * @description Maps a Task entity to {@link TaskRow} (dates to ISO strings).
  */
 function mapTaskEntityToRow(task: Task): TaskRow {
-  const createdAt =
-    task.createdAt instanceof Date
-      ? task.createdAt
-      : new Date(String(task.createdAt));
-  const updatedAt =
-    task.updatedAt instanceof Date
-      ? task.updatedAt
-      : new Date(String(task.updatedAt));
+  const createdAt = toDate(task.createdAt);
+  const updatedAt = toDate(task.updatedAt);
   return {
     assignee: task.assignee,
     category: task.category,
@@ -903,18 +895,17 @@ function mapTaskEntityToRow(task: Task): TaskRow {
 export async function createPlan(input: CreatePlanInput): Promise<PlanRow> {
   const ds = await getOrCreateDataSource();
   const repo = ds.getRepository(Plan);
+  const normalizedStatus = (input.status ?? 'PENDING').toUpperCase();
+  const isCompleted = normalizedStatus === 'COMPLETED';
   const plan = repo.create({
     assignee: normalizeAssignee(input.assignee),
     author: input.author,
     category: input.category,
-    completedAt:
-      (input.status ?? 'PENDING').toUpperCase() === 'COMPLETED'
-        ? new Date()
-        : null,
+    completedAt: isCompleted ? new Date() : null,
     description: input.description ?? null,
     project: input.project ?? null,
     projectId: input.projectId ?? null,
-    status: (input.status ?? 'PENDING').toUpperCase(),
+    status: normalizedStatus,
     summary: input.summary ?? null,
     title: input.title,
   });
@@ -1960,25 +1951,24 @@ export async function listNotes(
 ): Promise<readonly NoteRow[]> {
   const ds = await getOrCreateDataSource();
   const limit = Math.min(Math.max(options.limit ?? 50, 1), 200);
+  const filterByAuthor = options.author != null;
+  const noteQueryByAuthor = `SELECT id, content, author, created_at, updated_at
+         FROM notes WHERE author = $1
+         ORDER BY created_at DESC
+         LIMIT $2`;
+  const noteQueryAll = `SELECT id, content, author, created_at, updated_at
+         FROM notes
+         ORDER BY created_at DESC
+         LIMIT $1`;
+  const noteQuery = filterByAuthor ? noteQueryByAuthor : noteQueryAll;
+  const noteParams = filterByAuthor ? [options.author, limit] : [limit];
   const res = await runQuery<{
     author: string | null;
     content: string;
     created_at: string;
     id: string;
     updated_at: string;
-  }>(
-    ds,
-    options.author != null
-      ? `SELECT id, content, author, created_at, updated_at
-         FROM notes WHERE author = $1
-         ORDER BY created_at DESC
-         LIMIT $2`
-      : `SELECT id, content, author, created_at, updated_at
-         FROM notes
-         ORDER BY created_at DESC
-         LIMIT $1`,
-    options.author != null ? [options.author, limit] : [limit],
-  );
+  }>(ds, noteQuery, noteParams);
   return res.rows.map(mapNoteRow);
 }
 

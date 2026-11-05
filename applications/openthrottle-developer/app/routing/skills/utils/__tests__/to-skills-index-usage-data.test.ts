@@ -6,14 +6,16 @@ import { toSkillsIndexUsageData } from '../to-skills-index-usage-data';
 
 const skillUsage = (
   overrides: Partial<GetUsageSkillUsageQuery['skillUsage']> = {},
-): GetUsageSkillUsageQuery['skillUsage'] => ({
-  byDay: [],
-  byScope: [],
-  bySkill: [],
-  filterOptions: { cwds: [], gitBranches: [] },
-  totalCount: 0,
-  ...overrides,
-});
+): GetUsageSkillUsageQuery['skillUsage'] => {
+  return {
+    byDay: [],
+    byScope: [],
+    bySkill: [],
+    filterOptions: { cwds: [], gitBranches: [] },
+    totalCount: 0,
+    ...overrides,
+  };
+};
 
 describe('toSkillsIndexUsageData', () => {
   test('maps byDay to the chart datum shape and passes bySkill through', () => {

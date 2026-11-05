@@ -12,7 +12,9 @@ vi.mock('~/global/utils/blog-enabled', () => ({ isBlogEnabled }));
 const { LandingNav } = await import('../LandingNav');
 
 const renderNav = () => {
-  const Wrapped = () => <LandingNav />;
+  const Wrapped = () => {
+    return <LandingNav />;
+  };
   const RoutesStub = createRoutesStub([{ Component: Wrapped, path: '/' }]);
 
   return render(<RoutesStub />);

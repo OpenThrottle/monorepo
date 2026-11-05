@@ -11,12 +11,8 @@ import * as React from 'react';
 
 import type { PromptDetailsFragment } from '~/__generated__/graphql';
 import { githubOpenThrottleMainBlob } from '~/routing/agents/constants/github-repo-paths';
+import { buildPromptMetadataRows } from '~/routing/prompts/utils/build-prompt-metadata-rows';
 import { buildPromptDebugSnapshotJson } from '~/routing/prompts/utils/prompt-debug-snapshot';
-import {
-  fnv1a32Hex,
-  formatIso,
-  formatRelativeFromIso,
-} from '~/routing/prompts/utils/utils.prompts';
 
 export interface PromptDetailMetadataPanelProps {
   contentLength: number;
@@ -39,51 +35,9 @@ export const PromptDetailMetadataPanel = (
 
   // Setup
   const Chevron = open ? ChevronDown : ChevronRight;
+  const filePath = prompt.filePath;
 
-  const labelsJoined =
-    prompt.labels.length > 0 ? prompt.labels.join(', ') : '(none)';
-
-  const rows: { label: string; value: string }[] = [
-    { label: 'Prompt ID', value: prompt.id },
-    { label: 'promptType', value: String(prompt.promptType) },
-    { label: 'Labels', value: labelsJoined },
-    ...(prompt.description
-      ? [{ label: 'Description', value: prompt.description }]
-      : []),
-    { label: 'Created', value: formatIso(prompt.createdAt) },
-    {
-      label: 'Created (relative)',
-      value: formatRelativeFromIso(prompt.createdAt) || '—',
-    },
-    { label: 'Updated', value: formatIso(prompt.updatedAt) },
-    {
-      label: 'Updated (relative)',
-      value: formatRelativeFromIso(prompt.updatedAt) || '—',
-    },
-    {
-      label: 'Content length',
-      value: `${contentLength.toLocaleString()} characters`,
-    },
-    {
-      label: 'Content fingerprint (FNV-1a)',
-      value: fnv1a32Hex(debugContent),
-    },
-    ...(debugContent !== prompt.content
-      ? [
-          {
-            label: 'Saved fingerprint (API)',
-            value: fnv1a32Hex(prompt.content),
-          },
-        ]
-      : []),
-    ...(prompt.filePath
-      ? [{ label: 'filePath (repo)', value: prompt.filePath }]
-      : []),
-    ...(prompt.projectId
-      ? [{ label: 'projectId', value: prompt.projectId }]
-      : []),
-    ...(prompt.userId ? [{ label: 'userId', value: prompt.userId }] : []),
-  ];
+  const rows = buildPromptMetadataRows({ contentLength, debugContent, prompt });
 
   // Handlers
   const handleCopy = async (value: string): Promise<void> => {
@@ -99,6 +53,58 @@ export const PromptDetailMetadataPanel = (
   };
 
   // Markup
+  const details = (
+    <CardContent className="space-y-3 pt-0">
+      <dl className="grid gap-2 text-sm sm:grid-cols-2">
+        {rows.map((row) => (
+          <div className="min-w-0" key={row.label}>
+            <dt className="text-muted-foreground">{row.label}</dt>
+            <dd className="font-mono text-xs break-all">{row.value}</dd>
+          </div>
+        ))}
+      </dl>
+      <div className="flex flex-wrap gap-2">
+        <Button
+          onClick={() => handleCopy(prompt.id)}
+          size="sm"
+          type="button"
+          variant="outline"
+        >
+          Copy prompt ID
+        </Button>
+        <Button
+          onClick={handleCopySnapshot}
+          size="sm"
+          type="button"
+          variant="outline"
+        >
+          Copy debug snapshot (JSON)
+        </Button>
+        {filePath && (
+          <Button
+            onClick={() => handleCopy(filePath)}
+            size="sm"
+            type="button"
+            variant="outline"
+          >
+            Copy filePath
+          </Button>
+        )}
+        {filePath && (
+          <Button asChild={true} size="sm" type="button" variant="secondary">
+            <a
+              href={githubOpenThrottleMainBlob(filePath)}
+              rel="noreferrer"
+              target="_blank"
+            >
+              <ExternalLink className="mr-1 h-3.5 w-3.5" />
+              View file on GitHub
+            </a>
+          </Button>
+        )}
+      </div>
+    </CardContent>
+  );
 
   // Life Cycle
 
@@ -128,63 +134,7 @@ export const PromptDetailMetadataPanel = (
         </button>
       </CardHeader>
 
-      {open ? (
-        <CardContent className="space-y-3 pt-0">
-          <dl className="grid gap-2 text-sm sm:grid-cols-2">
-            {rows.map((row) => (
-              <div className="min-w-0" key={row.label}>
-                <dt className="text-muted-foreground">{row.label}</dt>
-                <dd className="font-mono text-xs break-all">{row.value}</dd>
-              </div>
-            ))}
-          </dl>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              onClick={() => handleCopy(prompt.id)}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              Copy prompt ID
-            </Button>
-            <Button
-              onClick={handleCopySnapshot}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              Copy debug snapshot (JSON)
-            </Button>
-            {prompt.filePath ? (
-              <Button
-                onClick={() => handleCopy(prompt.filePath ?? '')}
-                size="sm"
-                type="button"
-                variant="outline"
-              >
-                Copy filePath
-              </Button>
-            ) : null}
-            {prompt.filePath ? (
-              <Button
-                asChild={true}
-                size="sm"
-                type="button"
-                variant="secondary"
-              >
-                <a
-                  href={githubOpenThrottleMainBlob(prompt.filePath)}
-                  rel="noreferrer"
-                  target="_blank"
-                >
-                  <ExternalLink className="mr-1 h-3.5 w-3.5" />
-                  View file on GitHub
-                </a>
-              </Button>
-            ) : null}
-          </div>
-        </CardContent>
-      ) : null}
+      {open ? details : null}
     </Card>
   );
 };

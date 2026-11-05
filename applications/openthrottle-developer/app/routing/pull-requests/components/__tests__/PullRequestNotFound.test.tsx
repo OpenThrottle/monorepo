@@ -19,7 +19,9 @@ describe('PullRequestNotFound Component', () => {
         repo: 'demo',
       };
 
-      const Component = () => <PullRequestNotFound {...props} />;
+      const Component = () => {
+        return <PullRequestNotFound {...props} />;
+      };
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
       component = render(<RoutesStub />);
@@ -63,7 +65,9 @@ describe('PullRequestNotFound Component', () => {
         repo: 'demo',
       };
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const Component = () => <PullRequestNotFound {...props} />;
+      const Component = () => {
+        return <PullRequestNotFound {...props} />;
+      };
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       const component = render(<RoutesStub />);
 

@@ -42,6 +42,11 @@ export const ProjectForm = (props: ProjectFormProps): React.ReactElement => {
   // Handlers
 
   // Markup
+  const errorMarkup = (
+    <p className="text-destructive text-sm" role="alert">
+      {error}
+    </p>
+  );
 
   // Life Cycle
 
@@ -87,11 +92,7 @@ export const ProjectForm = (props: ProjectFormProps): React.ReactElement => {
             />
           </div>
 
-          {error ? (
-            <p className="text-destructive text-sm" role="alert">
-              {error}
-            </p>
-          ) : null}
+          {error ? errorMarkup : null}
 
           <CardFooter className="flex justify-end gap-3 p-0 pt-4">
             <Button asChild={true} variant="ghost">

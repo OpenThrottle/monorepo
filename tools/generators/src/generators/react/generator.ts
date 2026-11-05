@@ -1,6 +1,7 @@
 import type { Tree } from '@nx/devkit';
 import prompts from 'prompts';
 
+import { askWhenInteractive } from '../../utils/ask-when-interactive.ts';
 import { throwGeneratorError } from '../../utils/generator-errors.ts';
 import { isInteractiveArgPresent } from '../../utils/nx-cli.ts';
 import { writeJsonToStdout } from '../../utils/output.ts';
@@ -81,8 +82,10 @@ export async function reactGenerator(
   const generator =
     schema.subGenerator ??
     schema.generator ??
-    (interactive
-      ? (
+    (await askWhenInteractive(
+      interactive,
+      async () =>
+        (
           await prompts({
             choices: ['component', 'hook', 'story', 'util'].map((option) => ({
               title: option,
@@ -92,8 +95,8 @@ export async function reactGenerator(
             name: 'subGenerator',
             type: 'select',
           })
-        ).subGenerator
-      : undefined);
+        ).subGenerator,
+    ));
 
   if (!generator) {
     throwGeneratorError({

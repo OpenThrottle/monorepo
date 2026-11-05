@@ -25,7 +25,7 @@ export type AgentCliBackend =
   (typeof AGENT_CLI_BACKENDS)[keyof typeof AGENT_CLI_BACKENDS];
 
 /** One agent CLI the setup page can display, keyed by the driver-id backend discriminator. */
-interface AgentCliCatalogEntry {
+export interface AgentCliCatalogEntry {
   /**
    * Installer URL (shown as a reference link; the actual install runs server-side). Matches the
    * driver's own `install.url`, except `gemini`, which installs via npm and has no install script
@@ -43,36 +43,37 @@ interface AgentCliCatalogEntry {
  * Display metadata per backend. Exhaustive over {@link AgentCliBackend}: a backend cannot be
  * listed without a label and an install link.
  */
-const AGENT_CLI_CATALOG: Record<AgentCliBackend, AgentCliCatalogEntry> = {
-  antigravity: {
-    installUrl: 'https://antigravity.google/cli/install.sh',
-    label: 'Antigravity',
-  },
-  claude: {
-    installUrl: 'https://claude.ai/install.sh',
-    label: 'Claude Code',
-  },
-  codex: {
-    installUrl: 'https://chatgpt.com/codex/install.sh',
-    label: 'Codex',
-  },
-  cursor: {
-    installUrl: 'https://cursor.com/install',
-    label: 'Cursor Agent',
-  },
-  gemini: {
-    installUrl: 'https://geminicli.com',
-    label: 'Gemini CLI',
-  },
-  grok: {
-    installUrl: 'https://x.ai/cli/install.sh',
-    label: 'Grok',
-  },
-  opencode: {
-    installUrl: 'https://opencode.ai/install',
-    label: 'OpenCode',
-  },
-};
+export const AGENT_CLI_CATALOG: Record<AgentCliBackend, AgentCliCatalogEntry> =
+  {
+    antigravity: {
+      installUrl: 'https://antigravity.google/cli/install.sh',
+      label: 'Antigravity',
+    },
+    claude: {
+      installUrl: 'https://claude.ai/install.sh',
+      label: 'Claude Code',
+    },
+    codex: {
+      installUrl: 'https://chatgpt.com/codex/install.sh',
+      label: 'Codex',
+    },
+    cursor: {
+      installUrl: 'https://cursor.com/install',
+      label: 'Cursor Agent',
+    },
+    gemini: {
+      installUrl: 'https://geminicli.com',
+      label: 'Gemini CLI',
+    },
+    grok: {
+      installUrl: 'https://x.ai/cli/install.sh',
+      label: 'Grok',
+    },
+    opencode: {
+      installUrl: 'https://opencode.ai/install',
+      label: 'OpenCode',
+    },
+  };
 
 /** One model of an agent CLI with the current user's per-model preferences. */
 export interface AgentCliModelStatus {
@@ -112,59 +113,11 @@ export interface AgentCliStatus {
   readonly version: string | null;
 }
 
-/**
- * Merge the display catalog with the available (installed) CLIs from discoverAgentClis into one
- * status row per catalog entry, ordered by the catalog. An installed CLI carries its probed version
- * + per-model options (enabled + favorite) + per-user `enabled`; an absent one is marked
- * `installed: false` and defaults to enabled with no models.
- */
-export const mergeAgentCliStatuses = (
-  available: readonly AvailableAgentCli[],
-): readonly AgentCliStatus[] => {
-  const byBackend = new Map(available.map((agent) => [agent.backend, agent]));
-
-  return Object.values(AGENT_CLI_BACKENDS).map((backend) => {
-    const entry = AGENT_CLI_CATALOG[backend];
-    const agent = byBackend.get(backend);
-    const modelOptions = agent?.modelOptions ?? [];
-
-    return {
-      backend,
-      enabled: agent?.enabled ?? true,
-      installUrl: entry.installUrl,
-      installed: agent !== undefined,
-      label: entry.label,
-      modelOptions,
-      models: modelOptions.map((option) => option.model),
-      version: agent?.version ?? null,
-    };
-  });
-};
-
 /** Toolbar filter for the setup table: all rows, only enabled, or only installed. */
 export const AGENT_CLI_FILTERS = ['all', 'enabled', 'installed'] as const;
 
 /** One of the {@link AGENT_CLI_FILTERS} values. */
 export type AgentCliFilter = (typeof AGENT_CLI_FILTERS)[number];
-
-/**
- * Narrow the merged status list to the active toolbar filter. `all` passes everything; `installed`
- * keeps detected CLIs; `enabled` keeps the ones the user has not disabled. Pure — the route owns the
- * filter state and applies this before handing rows to the table.
- */
-export const filterAgentCliStatuses = (
-  statuses: readonly AgentCliStatus[],
-  filter: AgentCliFilter,
-): readonly AgentCliStatus[] => {
-  switch (filter) {
-    case 'enabled':
-      return statuses.filter((status) => status.enabled);
-    case 'installed':
-      return statuses.filter((status) => status.installed);
-    default:
-      return statuses;
-  }
-};
 
 /** One agent CLI whose credential setup needs attention (from `claude auth status`). */
 export interface AgentCliAuthWarning {
@@ -179,24 +132,3 @@ export interface AgentCliAuthSource {
   readonly backend: string;
   readonly label: string;
 }
-
-/**
- * Collect the loud credential warnings (e.g. an API key overriding the subscription) from the
- * discovered agents, in discovery order. Agents without an auth report or warning contribute nothing.
- */
-export const collectAgentCliAuthWarnings = (
-  agents: readonly AgentCliAuthSource[],
-): readonly AgentCliAuthWarning[] => {
-  const warnings: AgentCliAuthWarning[] = [];
-
-  for (const agent of agents) {
-    const warning = agent.auth?.warning;
-    const hasWarning = typeof warning === 'string' && warning !== '';
-
-    if (hasWarning) {
-      warnings.push({ backend: agent.backend, label: agent.label, warning });
-    }
-  }
-
-  return warnings;
-};

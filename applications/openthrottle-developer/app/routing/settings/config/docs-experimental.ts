@@ -19,8 +19,7 @@ export const DOCS_EXPERIMENTAL_ROWS: readonly DocsExperimentalRow[] = [
     label: 'Search',
   },
   {
-    description:
-      'Right-rail table of contents with scroll-spy and copy-anchor links.',
+    description: `Right-rail table of contents with scroll-spy and copy-anchor links.`,
     key: 'toc',
     label: 'On-page contents',
   },

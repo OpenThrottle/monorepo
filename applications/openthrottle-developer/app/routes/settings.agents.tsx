@@ -18,12 +18,12 @@ import { SettingsAgentsInstallNotice } from '~/routing/settings/components/Setti
 import { SettingsAgentsIntroduction } from '~/routing/settings/components/SettingsAgentsIntroduction';
 import { SettingsAgentsTable } from '~/routing/settings/components/SettingsAgentsTable';
 import { SettingsAgentsToolbar } from '~/routing/settings/components/SettingsAgentsToolbar';
+import type { AgentCliFilter } from '~/routing/settings/data/data.agent-clis';
 import {
-  type AgentCliFilter,
   collectAgentCliAuthWarnings,
   filterAgentCliStatuses,
   mergeAgentCliStatuses,
-} from '~/routing/settings/data/data.agent-clis';
+} from '~/routing/settings/utils/agent-cli-statuses';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

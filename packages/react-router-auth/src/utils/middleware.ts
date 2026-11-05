@@ -8,19 +8,19 @@ import {
   isJwtExpired,
 } from '../utils/index';
 
-const BETA_ROUTE_PREFIXES = FEATURE_BETA_PREVIEW
-  ? []
-  : [
-      '/blog',
-      '/generators',
-      '/ide',
-      '/personas',
-      '/profile',
-      '/prompts',
-      '/pull-requests',
-      '/search',
-      '/timeline',
-    ];
+const GATED_PREFIXES = [
+  '/blog',
+  '/generators',
+  '/ide',
+  '/personas',
+  '/profile',
+  '/prompts',
+  '/pull-requests',
+  '/search',
+  '/timeline',
+];
+
+const BETA_ROUTE_PREFIXES = FEATURE_BETA_PREVIEW ? [] : GATED_PREFIXES;
 
 const PUBLIC_ROUTE_PREFIXES = ['/about', '/auth', '/legal'];
 

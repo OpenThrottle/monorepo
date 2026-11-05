@@ -8,12 +8,16 @@ import { createPlanOutputStreamer } from '../plan-output-streamer';
  * ultimately-lost output instead of silently succeeding.
  */
 
-const noopSleep = (): Promise<void> => Promise.resolve();
+const noopSleep = (): Promise<void> => {
+  return Promise.resolve();
+};
 
-const silentLogger = () => ({
-  error: vi.fn<(...args: unknown[]) => void>(),
-  warn: vi.fn<(...args: unknown[]) => void>(),
-});
+const silentLogger = () => {
+  return {
+    error: vi.fn<(...args: unknown[]) => void>(),
+    warn: vi.fn<(...args: unknown[]) => void>(),
+  };
+};
 
 describe('createPlanOutputStreamer', () => {
   beforeEach(() => {

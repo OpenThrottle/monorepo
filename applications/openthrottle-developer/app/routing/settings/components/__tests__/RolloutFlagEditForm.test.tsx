@@ -35,7 +35,9 @@ describe('RolloutFlagEditForm Component', () => {
   let submitted: Record<string, FormDataEntryValue | null>[];
 
   const setup = (): void => {
-    const Component = () => <RolloutFlagEditForm {...props} />;
+    const Component = () => {
+      return <RolloutFlagEditForm {...props} />;
+    };
     const RoutesStub = createRoutesStub([
       {
         Component,

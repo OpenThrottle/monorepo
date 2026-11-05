@@ -1,5 +1,4 @@
 import {
-  Badge,
   Card,
   CardContent,
   CardFooter,
@@ -10,10 +9,9 @@ import { Link } from 'react-router';
 
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { PlanManagedTaskBadge } from '~/routing/plans/components/PlanManagedTaskBadge';
-import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
+import { PlanTaskCardStatusBadge } from '~/routing/plans/components/PlanTaskCardStatusBadge';
 import { PlanTaskInlineActions } from '~/routing/plans/components/PlanTaskInlineActions';
-import { formatPlanTaskStatus } from '~/routing/plans/utils/format-status';
-import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
+import { getTaskCardContext } from '~/routing/plans/utils/task-card-context';
 
 const TASK_CARD_CONTEXT_TRUNCATE = 120;
 
@@ -34,10 +32,48 @@ export const PlanTaskCard = (props: PlanTaskCardProps): React.ReactElement => {
   const taskHref = `/plans/${task.planId}/tasks/${task.id}`;
   const description = task.description?.trim() ?? '';
   const summary = task.summary?.trim() ?? '';
+  const descriptionContext = getTaskCardContext(
+    description,
+    TASK_CARD_CONTEXT_TRUNCATE,
+  );
+  const summaryContext = getTaskCardContext(
+    summary,
+    TASK_CARD_CONTEXT_TRUNCATE,
+  );
 
   // Handlers
 
   // Markup
+  const assigneeLine = task.assignee && (
+    <p className="text-muted-foreground text-xs">Assigned to {task.assignee}</p>
+  );
+  const projectLine = task.projectRelation && (
+    <p className="text-xs">
+      <Link
+        className="text-muted-foreground hover:text-primary underline underline-offset-2"
+        to={`/projects/${task.projectRelation.id}`}
+        viewTransition={true}
+      >
+        {task.projectRelation.name}
+      </Link>
+    </p>
+  );
+  const descriptionLine = description && (
+    <p
+      className="text-muted-foreground line-clamp-2 text-xs"
+      title={descriptionContext.title}
+    >
+      {descriptionContext.display}
+    </p>
+  );
+  const summaryLine = summary && (
+    <p
+      className="text-muted-foreground line-clamp-1 text-xs"
+      title={summaryContext.title}
+    >
+      {summaryContext.display}
+    </p>
+  );
 
   // Life Cycle
 
@@ -50,18 +86,7 @@ export const PlanTaskCard = (props: PlanTaskCardProps): React.ReactElement => {
     >
       <CardContent className="space-y-2 p-3 pb-2">
         <div className="flex flex-wrap items-center gap-2">
-          {isPlanStatusKey(task.status) ? (
-            <PlanStatusBadge status={task.status} />
-          ) : (
-            <Badge
-              className="text-foreground"
-              data-testid="PlanTaskCard-unknown-status"
-              size="xs"
-              variant="outline"
-            >
-              {formatPlanTaskStatus(task.status)}
-            </Badge>
-          )}
+          <PlanTaskCardStatusBadge status={task.status} />
           {isManaged ? <PlanManagedTaskBadge /> : null}
         </div>
         <h4 className="text-sm leading-snug font-medium">
@@ -74,48 +99,10 @@ export const PlanTaskCard = (props: PlanTaskCardProps): React.ReactElement => {
             {title}
           </Link>
         </h4>
-        {task.assignee ? (
-          <p className="text-muted-foreground text-xs">
-            Assigned to {task.assignee}
-          </p>
-        ) : null}
-        {task.projectRelation ? (
-          <p className="text-xs">
-            <Link
-              className="text-muted-foreground hover:text-primary underline underline-offset-2"
-              to={`/projects/${task.projectRelation.id}`}
-              viewTransition={true}
-            >
-              {task.projectRelation.name}
-            </Link>
-          </p>
-        ) : null}
-        {description ? (
-          <p
-            className="text-muted-foreground line-clamp-2 text-xs"
-            title={
-              description.length > TASK_CARD_CONTEXT_TRUNCATE
-                ? description
-                : undefined
-            }
-          >
-            {description.length > TASK_CARD_CONTEXT_TRUNCATE
-              ? `${description.slice(0, TASK_CARD_CONTEXT_TRUNCATE)}…`
-              : description}
-          </p>
-        ) : null}
-        {summary ? (
-          <p
-            className="text-muted-foreground line-clamp-1 text-xs"
-            title={
-              summary.length > TASK_CARD_CONTEXT_TRUNCATE ? summary : undefined
-            }
-          >
-            {summary.length > TASK_CARD_CONTEXT_TRUNCATE
-              ? `${summary.slice(0, TASK_CARD_CONTEXT_TRUNCATE)}…`
-              : summary}
-          </p>
-        ) : null}
+        {assigneeLine}
+        {projectLine}
+        {descriptionLine}
+        {summaryLine}
       </CardContent>
       <CardFooter className="border-border/50 flex justify-end border-t px-3 py-2">
         <PlanTaskInlineActions task={task} />

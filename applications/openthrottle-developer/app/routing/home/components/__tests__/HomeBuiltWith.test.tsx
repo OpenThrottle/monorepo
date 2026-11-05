@@ -12,7 +12,9 @@ describe('HomeBuiltWith Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <HomeBuiltWith {...props} />;
+    const Component = () => {
+      return <HomeBuiltWith {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     render(<RoutesStub />);

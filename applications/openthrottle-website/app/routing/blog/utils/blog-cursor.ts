@@ -4,5 +4,9 @@
  * cursor.')`; `executeGraphql` surfaces it as an `Error` whose message carries
  * that text (either as a `GraphQL errors:` body or a `GraphQL error 400:` status).
  */
-export const isInvalidBlogCursorError = (error: unknown): boolean =>
-  error instanceof Error && error.message.includes('Invalid pagination cursor');
+export const isInvalidBlogCursorError = (error: unknown): boolean => {
+  return (
+    error instanceof Error &&
+    error.message.includes('Invalid pagination cursor')
+  );
+};

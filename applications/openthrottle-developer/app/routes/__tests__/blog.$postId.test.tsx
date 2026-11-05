@@ -69,15 +69,14 @@ const STALE: BlogPostSaveResult = {
   outcome: 'staleWrite',
 };
 
-const loaderDataFor = (
-  post: BlogEditorPost,
-  canWrite: boolean,
-): LoaderData => ({
-  authors: MOCK_BLOG_AUTHORS,
-  canWrite,
-  post: { ...post, __typename: 'BlogPostAdminObject' },
-  tags: MOCK_BLOG_TAGS,
-});
+const loaderDataFor = (post: BlogEditorPost, canWrite: boolean): LoaderData => {
+  return {
+    authors: MOCK_BLOG_AUTHORS,
+    canWrite,
+    post: { ...post, __typename: 'BlogPostAdminObject' },
+    tags: MOCK_BLOG_TAGS,
+  };
+};
 
 const renderEditor = (options: {
   readonly canWrite?: boolean;
@@ -149,8 +148,9 @@ const editTitle = async (
   return user;
 };
 
-const saveButton = (component: RenderResult): HTMLElement =>
-  component.getByRole('button', { name: /Save draft/ });
+const saveButton = (component: RenderResult): HTMLElement => {
+  return component.getByRole('button', { name: /Save draft/ });
+};
 
 describe('routes/blog.$postId.tsx', () => {
   test('Save draft sends only the changes plus the loaded updatedAt', async () => {
@@ -303,8 +303,8 @@ describe('routes/blog.$postId.tsx', () => {
   });
 
   describe('lifecycle controls', () => {
-    const lifecycleButtons = (component: RenderResult): string[] =>
-      component
+    const lifecycleButtons = (component: RenderResult): string[] => {
+      return component
         .getAllByRole('button')
         .map((button) => button.textContent?.trim() ?? '')
         .filter((name) =>
@@ -316,6 +316,7 @@ describe('routes/blog.$postId.tsx', () => {
             'Unpublish',
           ].includes(name),
         );
+    };
 
     test('are hidden without blog:write', async () => {
       const { component } = renderEditor({ canWrite: false });

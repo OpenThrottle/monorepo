@@ -74,10 +74,14 @@ export class AgentSetupResolver {
 
     let canManage = false;
     if (principal != null) {
-      const permissions =
-        principal.kind === AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT
-          ? await this.roles.getPermissionsForServiceAccount(principal.sub)
-          : await this.roles.getPermissionsForUser(principal.sub);
+      let permissions: string[];
+      if (principal.kind === AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT) {
+        permissions = await this.roles.getPermissionsForServiceAccount(
+          principal.sub,
+        );
+      } else {
+        permissions = await this.roles.getPermissionsForUser(principal.sub);
+      }
       canManage = permissions.includes(PERMISSIONS.SETTINGS_WRITE);
     }
 

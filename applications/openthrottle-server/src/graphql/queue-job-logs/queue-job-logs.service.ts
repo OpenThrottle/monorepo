@@ -77,15 +77,13 @@ export class QueueJobLogsService {
       queueName: input.queueName,
     });
 
-    const levelFilter =
-      input.levelIn != null && input.levelIn.length > 0
-        ? new Set(input.levelIn)
-        : undefined;
+    // An empty (or absent) `levelIn` means "no level filtering".
+    const levelFilter = new Set(input.levelIn ?? []);
 
     const events: QueueJobLogEventObject[] = [];
     for (const { lineNumber, record } of result.lines) {
       if (
-        levelFilter !== undefined &&
+        levelFilter.size > 0 &&
         !levelFilter.has(deriveQueueJobLogLevel(record))
       ) {
         continue;

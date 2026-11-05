@@ -23,8 +23,7 @@ import {
   WORK_LEDGER_CAPTURE_FAILED_MARKER,
 } from './plan-status.service.ts';
 
-const IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE =
-  'Cannot transition to IN_PROGRESS: only PENDING, QUEUED, or already IN_PROGRESS plans may enter this state.';
+const IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE = `Cannot transition to IN_PROGRESS: only PENDING, QUEUED, or already IN_PROGRESS plans may enter this state.`;
 
 const mockPlan = createMock<Plan>({
   id: '80864bba-630a-451d-bfd2-4b25ec202381',
@@ -908,13 +907,15 @@ describe('PlanStatusService', () => {
       const delayedJob = (
         remove: () => Promise<void>,
         id = 'scheduled-plan-run-abc',
-      ) => ({
-        data: { planId: mockPlan.id },
-        getState: vi.fn().mockResolvedValue('delayed'),
-        id,
-        name: RUN_PLAN_ORCHESTRATOR_JOB_NAME,
-        remove,
-      });
+      ) => {
+        return {
+          data: { planId: mockPlan.id },
+          getState: vi.fn().mockResolvedValue('delayed'),
+          id,
+          name: RUN_PLAN_ORCHESTRATOR_JOB_NAME,
+          remove,
+        };
+      };
 
       test('removes the delayed job and settles the row CANCELLED without resetting the plan or its tasks', async () => {
         // Scheduling never changed the plan or task statuses, so cancelling it must not either:
@@ -1030,8 +1031,14 @@ describe('PlanStatusService', () => {
         mockPlanRunCancellationAbort.mockClear();
       });
 
-      const cancelScoped = (): ReturnType<typeof service.cancelRun> =>
-        service.cancelRun(mockPlan.id, 'user-42', testActor, 'run-scheduled');
+      const cancelScoped = (): ReturnType<typeof service.cancelRun> => {
+        return service.cancelRun(
+          mockPlan.id,
+          'user-42',
+          testActor,
+          'run-scheduled',
+        );
+      };
 
       const expectPlanAndLiveRunUntouched = (): void => {
         // No per-plan scan, no abort, no cancel marker, no pub/sub: a live run is never signalled.

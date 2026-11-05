@@ -78,6 +78,18 @@ export const RolloutFlagVariationsEditor = (
   };
 
   // Markup
+  const renderRemoveButton = (index: number): React.ReactElement => {
+    return (
+      <Button
+        onClick={() => handleRemove(index)}
+        size="sm"
+        type="button"
+        variant="ghost"
+      >
+        {ROLLOUT_COPY.removeVariationButton}
+      </Button>
+    );
+  };
 
   // Life Cycle
 
@@ -103,16 +115,7 @@ export const RolloutFlagVariationsEditor = (
                 {ROLLOUT_COPY.variationIndexPrefix}
                 {index}
               </p>
-              {canRemove ? (
-                <Button
-                  onClick={() => handleRemove(index)}
-                  size="sm"
-                  type="button"
-                  variant="ghost"
-                >
-                  {ROLLOUT_COPY.removeVariationButton}
-                </Button>
-              ) : null}
+              {canRemove ? renderRemoveButton(index) : null}
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">

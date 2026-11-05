@@ -91,8 +91,9 @@ export type LinkedArtifactView =
 /** Length of the abbreviated sha shown in a commit label. */
 const SHORT_SHA_LENGTH = 7;
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+};
 
 const readString = (
   source: Record<string, unknown>,
@@ -123,16 +124,17 @@ const parseRecord = (json: string): Record<string, unknown> | undefined => {
 };
 
 /** The pre-payload rendering: type plus the raw external key. */
-const unknownView = (
-  type: string,
-  externalKey: string,
-): LinkedArtifactView => ({
-  iconKey: ARTIFACT_ICON_KEY.UNKNOWN,
-  kind: 'unknown',
-  label: `${type} ${externalKey}`.trim(),
-});
+const unknownView = (type: string, externalKey: string): LinkedArtifactView => {
+  return {
+    iconKey: ARTIFACT_ICON_KEY.UNKNOWN,
+    kind: 'unknown',
+    label: `${type} ${externalKey}`.trim(),
+  };
+};
 
-const shortSha = (sha: string): string => sha.slice(0, SHORT_SHA_LENGTH);
+const shortSha = (sha: string): string => {
+  return sha.slice(0, SHORT_SHA_LENGTH);
+};
 
 const gitCommitView = (
   payload: Record<string, unknown>,

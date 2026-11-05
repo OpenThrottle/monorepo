@@ -23,8 +23,11 @@ export const SCHEDULED_AGENT_JOB_MIN_INTERVAL_MS = 60_000;
 type SelfScheduledKind = Exclude<ScheduledAgentJobScheduleKind, 'cron'>;
 
 /** @description Whether a schedule kind arms its own delayed job (interval, once) rather than cron. */
-export const isSelfScheduledKind = (kind: unknown): kind is SelfScheduledKind =>
-  kind === 'interval' || kind === 'once';
+export const isSelfScheduledKind = (
+  kind: unknown,
+): kind is SelfScheduledKind => {
+  return kind === 'interval' || kind === 'once';
+};
 
 /** Inputs to {@link nextSelfScheduledSlot}. */
 export interface NextSelfScheduledSlotInput {
@@ -61,4 +64,6 @@ export const nextSelfScheduledSlot = (
 export const selfScheduledFireJobId = (
   scheduleId: string,
   slot: Date,
-): string => `scheduled-job-fire-${scheduleId}-${slot.getTime()}`;
+): string => {
+  return `scheduled-job-fire-${scheduleId}-${slot.getTime()}`;
+};

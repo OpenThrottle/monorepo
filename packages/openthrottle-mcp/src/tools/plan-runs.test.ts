@@ -81,24 +81,26 @@ function expectInput(callIndex: number): Record<string, unknown> {
   return { ...input };
 }
 
-const planRunRow = (overrides: Record<string, unknown> = {}) => ({
-  branch: 'feat/thing',
-  bullmqJobId: null,
-  cancelRequestedAt: null,
-  createdAt: '2026-09-05T00:00:00.000Z',
-  executionBackend: 'claude',
-  heartbeatExpected: false,
-  id: RUN_ID,
-  isStale: false,
-  lastHeartbeatAt: null,
-  model: 'claude-opus-5',
-  planId: PLAN_ID,
-  queueName: 'plans',
-  runKind: 'orchestrator',
-  status: 'IN_PROGRESS',
-  updatedAt: '2026-09-05T00:00:00.000Z',
-  ...overrides,
-});
+const planRunRow = (overrides: Record<string, unknown> = {}) => {
+  return {
+    branch: 'feat/thing',
+    bullmqJobId: null,
+    cancelRequestedAt: null,
+    createdAt: '2026-09-05T00:00:00.000Z',
+    executionBackend: 'claude',
+    heartbeatExpected: false,
+    id: RUN_ID,
+    isStale: false,
+    lastHeartbeatAt: null,
+    model: 'claude-opus-5',
+    planId: PLAN_ID,
+    queueName: 'plans',
+    runKind: 'orchestrator',
+    status: 'IN_PROGRESS',
+    updatedAt: '2026-09-05T00:00:00.000Z',
+    ...overrides,
+  };
+};
 
 describe('execution-backend detection', () => {
   afterEach(() => {

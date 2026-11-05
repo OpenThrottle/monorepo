@@ -7,8 +7,9 @@ import { DEFAULT_BACKFILL_SINCE } from '../transcript-backfill.ts';
 
 const NOW = new Date('2026-10-29T12:00:00.000Z');
 
-const parse = (argv: string[], env: Record<string, string> = {}) =>
-  parseBackfillArgs({ argv, cwd: '/work/repo', env, now: NOW });
+const parse = (argv: string[], env: Record<string, string> = {}) => {
+  return parseBackfillArgs({ argv, cwd: '/work/repo', env, now: NOW });
+};
 
 describe('parseBackfillArgs', () => {
   it('defaults to the dead-capture window ending now, sending for real', () => {

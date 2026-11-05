@@ -9,29 +9,33 @@ import {
 
 const buildRepository = (
   overrides: Partial<PlanRunConfigRepositoryFieldsFragment> = {},
-): PlanRunConfigRepositoryFieldsFragment => ({
-  checkouts: [],
-  defaultBranch: null,
-  id: 'repo-1',
-  name: 'monorepo',
-  normalizedRemoteUrl: null,
-  projectId: null,
-  ...overrides,
-});
+): PlanRunConfigRepositoryFieldsFragment => {
+  return {
+    checkouts: [],
+    defaultBranch: null,
+    id: 'repo-1',
+    name: 'monorepo',
+    normalizedRemoteUrl: null,
+    projectId: null,
+    ...overrides,
+  };
+};
 
 const buildCheckout = (
   currentBranch: string | null,
   gitDefaultBranch: string | null = null,
-): PlanRunConfigRepositoryFieldsFragment['checkouts'][number] => ({
-  displayName: 'monorepo',
-  filesystemPath: '/Users/me/monorepo',
-  id: 'checkout-1',
-  inspection: {
-    git: { currentBranch, defaultBranch: gitDefaultBranch },
-  },
-  kind: 'PRIMARY',
-  managed: false,
-});
+): PlanRunConfigRepositoryFieldsFragment['checkouts'][number] => {
+  return {
+    displayName: 'monorepo',
+    filesystemPath: '/Users/me/monorepo',
+    id: 'checkout-1',
+    inspection: {
+      git: { currentBranch, defaultBranch: gitDefaultBranch },
+    },
+    kind: 'PRIMARY',
+    managed: false,
+  };
+};
 
 describe('resolveDefaultRunBranch', () => {
   test('falls back to main when nothing is selected', () => {

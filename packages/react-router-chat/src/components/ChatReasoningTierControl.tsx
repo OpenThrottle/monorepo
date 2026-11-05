@@ -14,7 +14,7 @@ import * as React from 'react';
 import {
   DEFAULT_REASONING_LABELS,
   DEFAULT_SERVICE_TIER_LABELS,
-} from '../data/chat-reasoning-tier-labels';
+} from '../data/data.chat-reasoning-tier-labels';
 import type { ChatReasoningLevel, ChatServiceTier } from '../types';
 import type { ChatBackendCapabilities } from '../types';
 
@@ -67,10 +67,12 @@ export const ChatReasoningTierControl = (
   const showReasoning = reasoningLevels.length > 0;
   const showTier = serviceTiers.length > 0;
 
-  const reasoningLabelFor = (level: ChatReasoningLevel): string =>
-    reasoningLabels?.[level] ?? DEFAULT_REASONING_LABELS[level];
-  const serviceTierLabelFor = (tier: ChatServiceTier): string =>
-    serviceTierLabels?.[tier] ?? DEFAULT_SERVICE_TIER_LABELS[tier];
+  const reasoningLabelFor = (level: ChatReasoningLevel): string => {
+    return reasoningLabels?.[level] ?? DEFAULT_REASONING_LABELS[level];
+  };
+  const serviceTierLabelFor = (tier: ChatServiceTier): string => {
+    return serviceTierLabels?.[tier] ?? DEFAULT_SERVICE_TIER_LABELS[tier];
+  };
 
   const triggerParts: string[] = [];
   if (showReasoning) {
@@ -127,7 +129,7 @@ export const ChatReasoningTierControl = (
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-52">
-        {showReasoning ? (
+        {showReasoning && (
           <>
             <DropdownMenuLabel>Reasoning</DropdownMenuLabel>
             {reasoningLevels.map((level) => {
@@ -150,9 +152,9 @@ export const ChatReasoningTierControl = (
               );
             })}
           </>
-        ) : null}
+        )}
         {showReasoning && showTier ? <DropdownMenuSeparator /> : null}
-        {showTier ? (
+        {showTier && (
           <>
             <DropdownMenuLabel>Service Tier</DropdownMenuLabel>
             {serviceTiers.map((tier) => {
@@ -175,7 +177,7 @@ export const ChatReasoningTierControl = (
               );
             })}
           </>
-        ) : null}
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

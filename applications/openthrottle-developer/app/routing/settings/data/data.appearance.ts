@@ -5,7 +5,7 @@ import type * as React from 'react';
 import {
   REDUCED_MOTION_MODES,
   type ReducedMotionMode,
-} from '~/global/data/atom.config';
+} from '~/global/data/data.appearance-config';
 import { AppearanceBrandColorField } from '~/routing/settings/components/AppearanceBrandColorField';
 import { AppearanceMotionField } from '~/routing/settings/components/AppearanceMotionField';
 import { AppearancePaletteField } from '~/routing/settings/components/AppearancePaletteField';

@@ -12,7 +12,9 @@ describe('GlobalPopoverActionsHeader Component', () => {
   });
 
   test('renders the shared Actions header copy centered', () => {
-    const Component = (): React.ReactElement => <GlobalPopoverActionsHeader />;
+    const Component = (): React.ReactElement => {
+      return <GlobalPopoverActionsHeader />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
 

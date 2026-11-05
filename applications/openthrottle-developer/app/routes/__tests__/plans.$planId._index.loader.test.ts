@@ -15,12 +15,12 @@ import {
   PlanDetailWorkspaceEditorsDocument,
   PlanDetailWorkspaceRepositoriesDocument,
 } from '~/__generated__/graphql';
-import * as modelsServer from '~/routing/home/data/models.server';
+import * as modelsServer from '~/routing/home/utils/models.server';
 
 import { loader } from '../plans.$planId._index';
 
 vi.mock('@openthrottle/react-router-graphql');
-vi.mock('~/routing/home/data/models.server');
+vi.mock('~/routing/home/utils/models.server');
 
 const mockExecuteGraphqlWithAuth = vi.mocked(
   graphqlWithAuth.executeGraphqlWithAuth,

@@ -42,8 +42,9 @@ const componentRenderingTemplates = [
   'react-router/files/table/__tests__/__name__.test.tsx',
 ];
 
-const read = (relative: string): string =>
-  readFileSync(join(generatorsRoot, relative), 'utf8');
+const read = (relative: string): string => {
+  return readFileSync(join(generatorsRoot, relative), 'utf8');
+};
 
 describe('emitted test templates follow testing conventions', () => {
   test.each(emittedTestTemplates)('does not use fireEvent: %s', (relative) => {
@@ -74,8 +75,7 @@ describe('emitted test templates follow testing conventions', () => {
 });
 
 describe('form template uses Title-Case labels and userEvent', () => {
-  const formTest =
-    'react-router/files/form/components/__tests__/__name__.test.tsx';
+  const formTest = `react-router/files/form/components/__tests__/__name__.test.tsx`;
 
   test('interacts via userEvent rather than fireEvent', () => {
     const source = read(formTest);

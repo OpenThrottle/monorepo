@@ -79,10 +79,11 @@ const mixedPresence = buildEditorPresenceIndex([
 
 const renderPicker = (
   props: Partial<WorkspaceEditorMultiSelectProps> = {},
-): RenderResult =>
-  render(
+): RenderResult => {
+  return render(
     <WorkspaceEditorMultiSelect onChange={vi.fn()} value={[]} {...props} />,
   );
+};
 
 describe('WorkspaceEditorMultiSelect availability', () => {
   test('states each editor availability on its own option', async () => {

@@ -38,6 +38,88 @@ import {
 import { PERMISSIONS } from '~/global/config/permissions';
 import type { PermissionGatedNavigationLink } from '~/global/utils/utils.permissions';
 
+const BETA_NAVIGATION_LINKS: PermissionGatedNavigationLink[] = [
+  {
+    beta: true,
+    children: 'Application',
+    icon: BinaryIcon,
+    to: '/settings/application',
+  },
+  {
+    beta: true,
+    children: 'Calendar',
+    icon: CalendarDaysIcon,
+    to: '/calendar',
+  },
+  {
+    beta: true,
+    children: 'Debug',
+    icon: BugIcon,
+    to: '/settings/debug',
+  },
+  {
+    beta: true,
+    children: 'Generators',
+    icon: WrenchIcon,
+    to: '/generators',
+  },
+  {
+    beta: true,
+    children: 'IDE',
+    icon: CodeIcon,
+    to: '/ide',
+  },
+  {
+    beta: true,
+    children: 'Logs',
+    icon: TerminalSquareIcon,
+    to: '/settings/logs',
+  },
+  {
+    beta: true,
+    children: 'MCP',
+    icon: BlocksIcon,
+    to: '/settings/mcp',
+  },
+  {
+    beta: true,
+    children: 'Notifications',
+    disabled: false,
+    icon: BellIcon,
+    to: '/notifications',
+  },
+  {
+    beta: true,
+    children: 'Personas',
+    icon: BrainCircuitIcon,
+    to: '/personas',
+  },
+  {
+    beta: true,
+    children: 'Pull Requests',
+    icon: GitPullRequest,
+    to: '/pull-requests',
+  },
+  {
+    beta: true,
+    children: 'Rollout',
+    icon: ToggleRightIcon,
+    to: '/settings/rollout',
+  },
+  {
+    beta: true,
+    children: 'Search',
+    icon: Search,
+    to: '/search',
+  },
+  {
+    beta: true,
+    children: 'Timeline',
+    icon: TimelineIcon,
+    to: '/timeline',
+  },
+];
+
 /* eslint-disable sort-keys */
 export const dataNavigationV2: Record<string, PermissionGatedNavigationLink[]> =
   {
@@ -98,91 +180,7 @@ export const dataNavigationV2: Record<string, PermissionGatedNavigationLink[]> =
       },
     ],
 
-    ...(FEATURE_BETA_PREVIEW
-      ? {
-          Beta: [
-            {
-              beta: true,
-              children: 'Application',
-              icon: BinaryIcon,
-              to: '/settings/application',
-            },
-            {
-              beta: true,
-              children: 'Calendar',
-              icon: CalendarDaysIcon,
-              to: '/calendar',
-            },
-            {
-              beta: true,
-              children: 'Debug',
-              icon: BugIcon,
-              to: '/settings/debug',
-            },
-            {
-              beta: true,
-              children: 'Generators',
-              icon: WrenchIcon,
-              to: '/generators',
-            },
-            {
-              beta: true,
-              children: 'IDE',
-              icon: CodeIcon,
-              to: '/ide',
-            },
-            {
-              beta: true,
-              children: 'Logs',
-              icon: TerminalSquareIcon,
-              to: '/settings/logs',
-            },
-            {
-              beta: true,
-              children: 'MCP',
-              icon: BlocksIcon,
-              to: '/settings/mcp',
-            },
-            {
-              beta: true,
-              children: 'Notifications',
-              disabled: false,
-              icon: BellIcon,
-              to: '/notifications',
-            },
-            {
-              beta: true,
-              children: 'Personas',
-              icon: BrainCircuitIcon,
-              to: '/personas',
-            },
-            {
-              beta: true,
-              children: 'Pull Requests',
-              icon: GitPullRequest,
-              to: '/pull-requests',
-            },
-            {
-              beta: true,
-              children: 'Rollout',
-              icon: ToggleRightIcon,
-              to: '/settings/rollout',
-            },
-            {
-              beta: true,
-              children: 'Search',
-              icon: Search,
-              to: '/search',
-            },
-            {
-              beta: true,
-              children: 'Timeline',
-              icon: TimelineIcon,
-              to: '/timeline',
-            },
-          ],
-        }
-      : {}),
+    ...(FEATURE_BETA_PREVIEW ? { Beta: BETA_NAVIGATION_LINKS } : {}),
 
     Settings: [
       {

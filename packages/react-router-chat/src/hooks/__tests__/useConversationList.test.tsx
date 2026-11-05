@@ -4,7 +4,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { AGENT_CONVERSATIONS_ACTION } from '../../data/chat-conversation-actions';
+import { AGENT_CONVERSATIONS_ACTION } from '../../data/data.chat-conversation-actions';
 import {
   useConversationList,
   type UseConversationListResult,

@@ -101,11 +101,14 @@ interface OpenAiEmbeddingsResponse {
 
 const isOpenAiEmbeddingsResponse = (
   value: unknown,
-): value is OpenAiEmbeddingsResponse =>
-  typeof value === 'object' &&
-  value !== null &&
-  'data' in value &&
-  Array.isArray(value.data);
+): value is OpenAiEmbeddingsResponse => {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'data' in value &&
+    Array.isArray(value.data)
+  );
+};
 
 function createOpenAiProvider(
   config: Extract<EmbeddingsConfig, { kind: 'openai' }>,
@@ -162,11 +165,14 @@ interface OllamaEmbeddingsResponse {
 
 const isOllamaEmbeddingsResponse = (
   value: unknown,
-): value is OllamaEmbeddingsResponse =>
-  typeof value === 'object' &&
-  value !== null &&
-  'embedding' in value &&
-  Array.isArray(value.embedding);
+): value is OllamaEmbeddingsResponse => {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'embedding' in value &&
+    Array.isArray(value.embedding)
+  );
+};
 
 function createOllamaProvider(
   config: Extract<EmbeddingsConfig, { kind: 'ollama' }>,
@@ -207,4 +213,6 @@ function createOllamaProvider(
   };
 }
 
-const globalFetch: FetchLike = (input, init) => fetch(input, init);
+const globalFetch: FetchLike = (input, init) => {
+  return fetch(input, init);
+};

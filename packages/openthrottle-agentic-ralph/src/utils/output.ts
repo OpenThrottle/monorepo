@@ -18,11 +18,13 @@ export interface RalphOutputMarkerFlags {
  */
 export const getRalphOutputMarkerFlags = (
   result: string,
-): RalphOutputMarkerFlags => ({
-  hasComplete: result.includes(PROMISE_COMPLETE),
-  hasError: result.includes(PROMISE_ERROR),
-  hasInputRequired: result.includes(PROMISE_INPUT_REQUIRED),
-});
+): RalphOutputMarkerFlags => {
+  return {
+    hasComplete: result.includes(PROMISE_COMPLETE),
+    hasError: result.includes(PROMISE_ERROR),
+    hasInputRequired: result.includes(PROMISE_INPUT_REQUIRED),
+  };
+};
 
 /**
  * @description Parses `<ralph:task-complete>uuid</ralph:task-complete>`; returns the unique task ids

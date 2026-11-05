@@ -289,12 +289,15 @@ interface GraphqlV2AttemptOutcome<TData, TFailure extends GraphqlV2Failure> {
 /**
  * @description Sleep for `ms` milliseconds (no-op when `ms <= 0`).
  */
-const delay = (ms: number): Promise<void> =>
-  ms > 0
-    ? new Promise((resolve) => {
-        setTimeout(resolve, ms);
-      })
-    : Promise.resolve();
+const delay = (ms: number): Promise<void> => {
+  const shouldWait = ms > 0;
+  if (!shouldWait) {
+    return Promise.resolve();
+  }
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+};
 
 /**
  * @description Resolve the returned failure to `TFailure`: apply the caller's
@@ -387,6 +390,10 @@ const executeGraphqlV2Once = async <
   try {
     rawBody = await response.text();
   } catch (cause) {
+    let message = 'Failed to read response body';
+    if (cause instanceof Error) {
+      message = cause.message;
+    }
     return finishFailure(
       {
         cause,
@@ -394,10 +401,7 @@ const executeGraphqlV2Once = async <
         graphqlPath: undefined,
         httpStatus: response.status,
         kind: 'network',
-        message:
-          cause instanceof Error
-            ? cause.message
-            : 'Failed to read response body',
+        message,
       },
       null,
       undefined,
@@ -497,10 +501,8 @@ const executeGraphqlV2Once = async <
     );
   }
 
-  const data =
-    options.parseDateTime === false
-      ? parsed.data
-      : parseDateTimeInResponse(parsed.data);
+  const parseDates = options.parseDateTime !== false;
+  const data = parseDates ? parseDateTimeInResponse(parsed.data) : parsed.data;
 
   return {
     rawFailure: null,

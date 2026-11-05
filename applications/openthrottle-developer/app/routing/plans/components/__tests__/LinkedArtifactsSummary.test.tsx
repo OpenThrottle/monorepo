@@ -24,7 +24,9 @@ const renderSummary = (
     ...overrides,
   };
 
-  const Component = () => <LinkedArtifactsSummary {...props} />;
+  const Component = () => {
+    return <LinkedArtifactsSummary {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

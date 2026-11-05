@@ -107,13 +107,13 @@ export const PlanToolbarRunSplitButton = (
             {branch != null && branch !== '' && (
               <Input name="branch" type="hidden" value={branch} />
             )}
-            {jobRunHooksJson !== '' ? (
+            {jobRunHooksJson !== '' && (
               <Input
                 name="jobRunHooksJson"
                 type="hidden"
                 value={jobRunHooksJson}
               />
-            ) : null}
+            )}
             {workingDirectory != null && workingDirectory !== '' && (
               <Input
                 name="workingDirectory"
@@ -188,12 +188,12 @@ export const PlanToolbarRunSplitButton = (
             <CalendarClock />
             {PLAN_TOOLBAR_COPY.scheduleLabel}
           </DropdownMenuItem>
-          {canCancelScheduled ? (
+          {canCancelScheduled && (
             <DropdownMenuItem onSelect={onOpenCancelScheduled}>
               <XCircle />
               {PLAN_RUN_CANCEL_SCHEDULED_COPY.menuItemLabel}
             </DropdownMenuItem>
-          ) : null}
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </ButtonGroup>

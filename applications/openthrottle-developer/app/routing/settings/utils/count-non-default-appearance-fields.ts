@@ -1,7 +1,7 @@
 import {
   type ConfigObject,
   DEFAULT_APPEARANCE_CONFIG,
-} from '~/global/data/atom.config';
+} from '~/global/data/data.appearance-config';
 
 /**
  * @description How many appearance fields differ from

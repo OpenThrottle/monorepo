@@ -47,17 +47,19 @@ const defineTool = <TParams extends RegisterToolInputSchema>(
   description: string,
   parameters: TParams,
   handler: ToolCallback<TParams>,
-): DeveloperMcpToolDefinition => ({
-  description,
-  name,
-  parameters,
-  register: (server) =>
-    server.registerTool(
-      name,
-      { description, inputSchema: parameters },
-      handler,
-    ),
-});
+): DeveloperMcpToolDefinition => {
+  return {
+    description,
+    name,
+    parameters,
+    register: (server) =>
+      server.registerTool(
+        name,
+        { description, inputSchema: parameters },
+        handler,
+      ),
+  };
+};
 
 /**
  * @description The canonical developer MCP tool list. Add a tool here once; `registerDeveloperMcpTools` exposes it on the stdio server and the parity test forces `McpDeveloperMcpSurface` to mirror it.

@@ -10,7 +10,9 @@ import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
 import type { ScheduleRepositoryFieldProps } from '../ScheduleRepositoryField';
 import { ScheduleRepositoryField } from '../ScheduleRepositoryField';
 
-const SettingsStub = (): React.ReactElement => <p>Repository settings</p>;
+const SettingsStub = (): React.ReactElement => {
+  return <p>Repository settings</p>;
+};
 
 const renderField = (
   fieldProps: ScheduleRepositoryFieldProps,
@@ -18,11 +20,13 @@ const renderField = (
   // Rendered inside a form, as ScheduleForm does: Radix only bubbles a hidden native
   // select (the thing that puts the value into FormData) when it is inside one.
   // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-  const Component = () => (
-    <form>
-      <ScheduleRepositoryField {...fieldProps} />
-    </form>
-  );
+  const Component = () => {
+    return (
+      <form>
+        <ScheduleRepositoryField {...fieldProps} />
+      </form>
+    );
+  };
   const RoutesStub = createRoutesStub([
     { Component, path: '/' },
     { Component: SettingsStub, path: '/settings/repositories' },

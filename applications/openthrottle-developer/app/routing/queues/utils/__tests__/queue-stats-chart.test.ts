@@ -24,15 +24,17 @@ import {
 
 const queue = (
   overrides: Partial<QueueCardFragment> & Pick<QueueCardFragment, 'name'>,
-): QueueCardFragment => ({
-  __typename: 'QueueStatsObject',
-  activeCount: 0,
-  completedCount: 0,
-  delayedCount: 0,
-  failedCount: 0,
-  waitingCount: 0,
-  ...overrides,
-});
+): QueueCardFragment => {
+  return {
+    __typename: 'QueueStatsObject',
+    activeCount: 0,
+    completedCount: 0,
+    delayedCount: 0,
+    failedCount: 0,
+    waitingCount: 0,
+    ...overrides,
+  };
+};
 
 describe('backlogForQueue', () => {
   test('sums waiting and delayed counts', () => {

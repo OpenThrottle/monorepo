@@ -141,34 +141,36 @@ export const createSpawnRunOutputHandlers = (params: {
 }): {
   readonly onStderr: (chunk: string) => void;
   readonly onStdout: (chunk: string) => void;
-} => ({
-  onStderr: (chunk: string): void => {
-    const source = classifyRunOutputSource({ data: chunk, stream: 'stderr' });
+} => {
+  return {
+    onStderr: (chunk: string): void => {
+      const source = classifyRunOutputSource({ data: chunk, stream: 'stderr' });
 
-    params.writer?.appendRunChunk(params.queueName, params.jobId, {
-      data: chunk,
-      source,
-      type: 'stderr',
-    });
-    params.logger.warn(
-      chunk.trimEnd(),
-      runOutputLogContext(params.logContext, source),
-    );
-  },
-  onStdout: (chunk: string): void => {
-    const source = classifyRunOutputSource({ data: chunk, stream: 'stdout' });
+      params.writer?.appendRunChunk(params.queueName, params.jobId, {
+        data: chunk,
+        source,
+        type: 'stderr',
+      });
+      params.logger.warn(
+        chunk.trimEnd(),
+        runOutputLogContext(params.logContext, source),
+      );
+    },
+    onStdout: (chunk: string): void => {
+      const source = classifyRunOutputSource({ data: chunk, stream: 'stdout' });
 
-    params.writer?.appendRunChunk(params.queueName, params.jobId, {
-      data: chunk,
-      source,
-      type: 'stdout',
-    });
-    params.logger.info(
-      chunk.trimEnd(),
-      runOutputLogContext(params.logContext, source),
-    );
-  },
-});
+      params.writer?.appendRunChunk(params.queueName, params.jobId, {
+        data: chunk,
+        source,
+        type: 'stdout',
+      });
+      params.logger.info(
+        chunk.trimEnd(),
+        runOutputLogContext(params.logContext, source),
+      );
+    },
+  };
+};
 
 /**
  * @description Flush+close the job file after the processor finishes (success, failure, or cancel).

@@ -34,9 +34,9 @@ describe('PlanRunDialogWorkspace Component', () => {
   let props: PlanRunDialogWorkspaceProps;
 
   const renderWorkspace = (): RenderResult => {
-    const Component = (): React.ReactElement => (
-      <PlanRunDialogWorkspace {...props} />
-    );
+    const Component = (): React.ReactElement => {
+      return <PlanRunDialogWorkspace {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     return render(<RoutesStub />);

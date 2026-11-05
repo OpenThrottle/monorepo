@@ -48,12 +48,13 @@ const ALLOWED_TITLE_COLLISIONS: readonly (readonly string[])[] = [
   ['docs.$', 'docs._index'],
 ];
 
-const isAllowedCollision = (names: readonly string[]) =>
-  ALLOWED_TITLE_COLLISIONS.some(
+const isAllowedCollision = (names: readonly string[]) => {
+  return ALLOWED_TITLE_COLLISIONS.some(
     (allowed) =>
       allowed.length === names.length &&
       allowed.every((name, index) => name === names[index]),
   );
+};
 
 interface RouteModule {
   readonly meta?: (args: unknown) => readonly { readonly title?: string }[];

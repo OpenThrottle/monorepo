@@ -24,8 +24,8 @@ const FULL_CAPS: ChatBackendCapabilities = {
 
 const renderControl = (
   overrides: Partial<ChatReasoningTierControlProps> = {},
-): RenderResult =>
-  render(
+): RenderResult => {
+  return render(
     <ChatReasoningTierControl
       capabilities={FULL_CAPS}
       reasoning={ChatReasoningLevel.low}
@@ -33,6 +33,7 @@ const renderControl = (
       {...overrides}
     />,
   );
+};
 
 describe('ChatReasoningTierControl Component', () => {
   test('reflects the current reasoning · tier on the trigger', () => {

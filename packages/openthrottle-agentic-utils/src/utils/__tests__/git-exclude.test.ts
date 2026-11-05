@@ -38,8 +38,9 @@ describe('managed exclude blocks — per owner', () => {
   let base: string;
   let repo: string;
 
-  const excludeContents = (): string =>
-    readFileSync(resolveGitExcludePath(repo) ?? '', 'utf8');
+  const excludeContents = (): string => {
+    return readFileSync(resolveGitExcludePath(repo) ?? '', 'utf8');
+  };
 
   beforeEach(() => {
     base = mkdtempSync(join(tmpdir(), 'ot-git-exclude-'));

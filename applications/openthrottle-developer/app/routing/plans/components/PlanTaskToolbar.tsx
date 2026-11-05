@@ -15,8 +15,8 @@ import type {
 } from '~/routing/plans/components/PlanTagChips';
 import { PlanTagChips } from '~/routing/plans/components/PlanTagChips';
 import { PromoteTaskButton } from '~/routing/plans/components/PromoteTaskButton';
-import { PLAN_TASK_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
 import { usePlanTaskToolbar } from '~/routing/plans/hooks/usePlanTaskToolbar';
+import { getTaskMarkCompleteTooltip } from '~/routing/plans/utils/task-mark-complete-tooltip';
 
 export interface PlanTaskToolbarProps {
   className?: string;
@@ -93,6 +93,8 @@ export const PlanTaskToolbar = (
   const { fetcherSetStatus, isCompleted } = usePlanTaskToolbar({ taskStatus });
 
   // Setup
+  const isSubmitting = fetcherSetStatus.state !== 'idle';
+  const submitLabel = isSubmitting ? 'Marking…' : 'Mark Complete';
 
   // Handlers
 
@@ -121,30 +123,23 @@ export const PlanTaskToolbar = (
               <Input name="status" type="hidden" value="COMPLETED" />
               <Button
                 disabled={
-                  fetcherSetStatus.state !== 'idle' ||
-                  isCompleted ||
-                  planIsRunning ||
-                  planIsTerminal
+                  isSubmitting || isCompleted || planIsRunning || planIsTerminal
                 }
                 size="xs"
                 type="submit"
                 variant="ghost"
               >
                 <CheckCircle />
-                {fetcherSetStatus.state !== 'idle'
-                  ? 'Marking…'
-                  : 'Mark Complete'}
+                {submitLabel}
               </Button>
             </fetcherSetStatus.Form>
           </TooltipTrigger>
           <TooltipContent side="top">
-            {isCompleted
-              ? 'Task is already completed'
-              : planIsTerminal
-                ? PLAN_TASK_TOOLBAR_COPY.markCompleteTerminalTooltip
-                : planIsRunning
-                  ? PLAN_TASK_TOOLBAR_COPY.markCompleteRunningTooltip
-                  : 'Mark this task as completed'}
+            {getTaskMarkCompleteTooltip({
+              isCompleted,
+              planIsRunning,
+              planIsTerminal,
+            })}
           </TooltipContent>
         </Tooltip>
       }

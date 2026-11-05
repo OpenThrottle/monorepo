@@ -8,8 +8,7 @@ import { DEFAULT_BACKFILL_SINCE } from './transcript-backfill.ts';
 import { defaultClaudeProjectsDir } from './transcript-projects.ts';
 
 /** The CLI's usage line, printed on `--help` and after a bad flag. @public */
-export const BACKFILL_USAGE =
-  'node .claude/hooks/skill-usage-backfill.cjs [--dry-run] [--since <ISO>] [--until <ISO>] [--projects-dir <path>] [--repo-root <path>] [--no-worktrees] [--timeout-ms <n>]';
+export const BACKFILL_USAGE = `node .claude/hooks/skill-usage-backfill.cjs [--dry-run] [--since <ISO>] [--until <ISO>] [--projects-dir <path>] [--repo-root <path>] [--no-worktrees] [--timeout-ms <n>]`;
 
 /**
  * A validated backfill invocation.

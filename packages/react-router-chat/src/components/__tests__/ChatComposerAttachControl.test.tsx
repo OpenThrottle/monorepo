@@ -14,12 +14,13 @@ const SOURCES: readonly ChatContextSource[] = [
   { id: 'project', label: 'Project' },
 ];
 
-const renderControl = (props: ChatComposerAttachControlProps): RenderResult =>
-  render(
+const renderControl = (props: ChatComposerAttachControlProps): RenderResult => {
+  return render(
     <TooltipProvider>
       <ChatComposerAttachControl {...props} />
     </TooltipProvider>,
   );
+};
 
 describe('ChatComposerAttachControl Component', () => {
   test('renders nothing when no onAddContext callback is supplied', () => {

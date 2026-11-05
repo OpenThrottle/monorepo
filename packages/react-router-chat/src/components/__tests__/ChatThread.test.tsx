@@ -35,7 +35,9 @@ describe('ChatThread Component', () => {
   });
 
   const renderThread = (p: ChatThreadProps): RenderResult => {
-    const Comp = () => <ChatThread {...p} />;
+    const Comp = () => {
+      return <ChatThread {...p} />;
+    };
     const RoutesStub = createRoutesStub([{ Component: Comp, path: '/' }]);
     return render(<RoutesStub />);
   };
@@ -440,12 +442,9 @@ describe('ChatThread Component', () => {
     // reaches the UI as a plain system-message body — there is no typed field
     // on the terminal chunk to branch on — so this pins that the actionable
     // copy actually renders, and that the turn stays retryable.
-    const authRequiredCopy =
-      'Your cursor-agent login has expired or is unavailable. Run `cursor-agent login` in a terminal, then send this message again.\n\nDetails: Error: Authentication required.';
-    const notInstalledCopy =
-      'cursor-agent is not installed, or is not on this server’s PATH. Install it with `curl https://cursor.com/install -fsS | bash`, or set OPENTHROTTLE_CURSOR_AGENT_BIN to its full path.';
-    const timeoutCopy =
-      'cursor-agent did not start in time. This is usually a cold start — send the message again and it will normally succeed.';
+    const authRequiredCopy = `Your cursor-agent login has expired or is unavailable. Run \`cursor-agent login\` in a terminal, then send this message again.\n\nDetails: Error: Authentication required.`;
+    const notInstalledCopy = `cursor-agent is not installed, or is not on this server’s PATH. Install it with \`curl https://cursor.com/install -fsS | bash\`, or set OPENTHROTTLE_CURSOR_AGENT_BIN to its full path.`;
+    const timeoutCopy = `cursor-agent did not start in time. This is usually a cold start — send the message again and it will normally succeed.`;
 
     test('should render the auth-required copy with its next step', async () => {
       component = renderThread({

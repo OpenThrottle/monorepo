@@ -14,11 +14,13 @@ describe('SelectTrigger Component', () => {
   });
 
   test('should render trigger inside Select', () => {
-    const Component = () => (
-      <Select>
-        <SelectTrigger {...props}>Choose</SelectTrigger>
-      </Select>
-    );
+    const Component = () => {
+      return (
+        <Select>
+          <SelectTrigger {...props}>Choose</SelectTrigger>
+        </Select>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { container } = render(<RoutesStub />);
 

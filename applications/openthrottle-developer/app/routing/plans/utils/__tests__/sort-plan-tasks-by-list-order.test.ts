@@ -9,23 +9,25 @@ import {
 
 const baseTask = (
   overrides: Partial<PlanTaskRowFragment>,
-): PlanTaskRowFragment => ({
-  __typename: 'TaskObject',
-  assignee: null,
-  category: null,
-  createdAt: '2025-01-01T00:00:00Z',
-  description: null,
-  id: 'task-id',
-  planId: 'plan-id',
-  projectRelation: null,
-  requirementsJson: '[]',
-  sortOrder: 1000,
-  status: 'PENDING',
-  summary: null,
-  title: 'Task',
-  updatedAt: '2025-01-01T00:00:00Z',
-  ...overrides,
-});
+): PlanTaskRowFragment => {
+  return {
+    __typename: 'TaskObject',
+    assignee: null,
+    category: null,
+    createdAt: '2025-01-01T00:00:00Z',
+    description: null,
+    id: 'task-id',
+    planId: 'plan-id',
+    projectRelation: null,
+    requirementsJson: '[]',
+    sortOrder: 1000,
+    status: 'PENDING',
+    summary: null,
+    title: 'Task',
+    updatedAt: '2025-01-01T00:00:00Z',
+    ...overrides,
+  };
+};
 
 describe('comparePlanTasksByListOrder', () => {
   test('orders by sortOrder ascending', () => {

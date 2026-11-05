@@ -15,7 +15,9 @@ describe('RulesIntroduction Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <RulesIntroduction {...props} />;
+    const Component = () => {
+      return <RulesIntroduction {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

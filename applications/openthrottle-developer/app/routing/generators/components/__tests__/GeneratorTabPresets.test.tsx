@@ -19,11 +19,13 @@ const mockGenerator: GeneratorDetailCardFragment = {
 function renderTab(
   generator: GeneratorDetailCardFragment = mockGenerator,
 ): RenderResult {
-  const Component = () => (
-    <Tabs defaultValue="presets">
-      <GeneratorTabPresets generator={generator} />
-    </Tabs>
-  );
+  const Component = () => {
+    return (
+      <Tabs defaultValue="presets">
+        <GeneratorTabPresets generator={generator} />
+      </Tabs>
+    );
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 }

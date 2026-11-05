@@ -15,7 +15,7 @@ import { UsageSkillUsageSummary } from '~/routing/usage/components/UsageSkillUsa
 import {
   SKILL_USAGE_COPY,
   type SkillUsageScopeFilter,
-} from '~/routing/usage/data/skill-usage-copy';
+} from '~/routing/usage/data/data.skill-usage-copy';
 import type { UsageBranchOption } from '~/routing/usage/types';
 import { partitionSkillUsageByPresence } from '~/routing/usage/utils/partition-skill-usage-by-presence';
 
@@ -83,13 +83,38 @@ export const UsageSkillUsage = (
   // filter can legitimately narrow the window down to nothing but missing rows,
   // and that must still explain itself rather than leave a bare heading over an
   // empty table.
-  const emptyMessage = hasFilters
-    ? SKILL_USAGE_COPY.emptyFiltered
-    : SKILL_USAGE_COPY.empty;
+  const { empty, emptyFiltered } = SKILL_USAGE_COPY;
+  const emptyMessage = hasFilters ? emptyFiltered : empty;
+  const hasActiveRows = partitioned.active.length > 0;
+  const hasMissingRows = partitioned.missing.length > 0;
 
   // Handlers
 
   // Markup
+  const emptyLeaderboard = (
+    <p
+      className="text-muted-foreground text-sm"
+      data-testid="UsageSkillUsageEmpty"
+    >
+      {emptyMessage}
+    </p>
+  );
+  const activeLeaderboard = (
+    <SkillUsageLeaderboard bySkill={partitioned.active} />
+  );
+  const missingSection = (
+    <div className="mt-8" data-testid="UsageSkillUsageMissing">
+      <GlobalHeading
+        className="text-muted-foreground mb-2"
+        heading="h3"
+        title={SKILL_USAGE_COPY.missingHeading}
+      />
+      <p className="text-muted-foreground mb-3 text-sm">
+        {SKILL_USAGE_COPY.missingIntro}
+      </p>
+      <SkillUsageLeaderboard bySkill={partitioned.missing} />
+    </div>
+  );
 
   // Life Cycle
 
@@ -132,30 +157,9 @@ export const UsageSkillUsage = (
         heading="h3"
         title={SKILL_USAGE_COPY.leaderboardHeading}
       />
-      {partitioned.active.length === 0 ? (
-        <p
-          className="text-muted-foreground text-sm"
-          data-testid="UsageSkillUsageEmpty"
-        >
-          {emptyMessage}
-        </p>
-      ) : (
-        <SkillUsageLeaderboard bySkill={partitioned.active} />
-      )}
+      {hasActiveRows ? activeLeaderboard : emptyLeaderboard}
 
-      {partitioned.missing.length > 0 ? (
-        <div className="mt-8" data-testid="UsageSkillUsageMissing">
-          <GlobalHeading
-            className="text-muted-foreground mb-2"
-            heading="h3"
-            title={SKILL_USAGE_COPY.missingHeading}
-          />
-          <p className="text-muted-foreground mb-3 text-sm">
-            {SKILL_USAGE_COPY.missingIntro}
-          </p>
-          <SkillUsageLeaderboard bySkill={partitioned.missing} />
-        </div>
-      ) : null}
+      {hasMissingRows ? missingSection : null}
     </div>
   );
 };

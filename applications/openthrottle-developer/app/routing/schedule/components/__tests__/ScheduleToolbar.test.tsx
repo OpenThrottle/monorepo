@@ -22,7 +22,9 @@ function ScheduleToolbarWithQueryString(props: ScheduleToolbarProps) {
 
 function renderToolbar(initialEntry = '/'): RenderResult {
   // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-  const Component = () => <ScheduleToolbarWithQueryString />;
+  const Component = () => {
+    return <ScheduleToolbarWithQueryString />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub initialEntries={[initialEntry]} />);
 }

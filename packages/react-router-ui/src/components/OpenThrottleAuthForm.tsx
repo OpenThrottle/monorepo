@@ -54,6 +54,9 @@ export const OpenThrottleAuthForm = (
 
   // Setup
   const isLogin = intent === 'login';
+  const signInHint = 'Enter your email and password to sign in.';
+  const signUpHint = 'Enter your email and password to register.';
+  const description = isLogin ? signInHint : signUpHint;
 
   // Handlers
   const handleSubmit = React.useCallback(
@@ -92,19 +95,15 @@ export const OpenThrottleAuthForm = (
             <CardTitle className="text-lg font-normal">
               {isLogin ? 'Sign in' : 'Sign up'}
             </CardTitle>
-            <CardDescription className="text-xs">
-              {isLogin
-                ? 'Enter your email and password to sign in.'
-                : 'Enter your email and password to register.'}
-            </CardDescription>
+            <CardDescription className="text-xs">{description}</CardDescription>
           </CardHeader>
 
           <CardContent className="my-8 flex flex-col gap-4">
-            {error ? (
+            {error && (
               <p className="text-destructive text-sm" role="alert">
                 {error}
               </p>
-            ) : null}
+            )}
             <div className="grid gap-2">
               <Label htmlFor="auth-email">Email</Label>
               <Input

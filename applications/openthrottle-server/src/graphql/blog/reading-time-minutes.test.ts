@@ -2,7 +2,9 @@ import { describe, expect, test } from 'vitest';
 
 import { readingTimeMinutes } from './reading-time-minutes.ts';
 
-const words = (count: number): string => Array(count).fill('word').join(' ');
+const words = (count: number): string => {
+  return Array(count).fill('word').join(' ');
+};
 
 describe('readingTimeMinutes', () => {
   describe('when the body is empty or whitespace', () => {

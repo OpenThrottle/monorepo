@@ -198,7 +198,9 @@ function createUpstreamSignal(
   res: http.ServerResponse,
 ): AbortSignal {
   const controller = new AbortController();
-  const onClose = (): void => controller.abort();
+  const onClose = (): void => {
+    return controller.abort();
+  };
 
   req.once('close', onClose);
   res.once('close', onClose);
@@ -338,17 +340,17 @@ async function handleModels(
     object: 'model' as const,
   }));
 
+  const fallbackModels = [
+    {
+      created: Math.floor(Date.now() / 1000),
+      id: TARGET_MODEL,
+      object: 'model' as const,
+    },
+  ];
+  const hasModels = models.length > 0;
+
   writeJson(res, 200, {
-    data:
-      models.length > 0
-        ? models
-        : [
-            {
-              created: Math.floor(Date.now() / 1000),
-              id: TARGET_MODEL,
-              object: 'model' as const,
-            },
-          ],
+    data: hasModels ? models : fallbackModels,
     object: 'list',
   });
 }

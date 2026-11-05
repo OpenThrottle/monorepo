@@ -21,11 +21,13 @@ describe('sidebar-context', () => {
       state: 'expanded',
       toggleSidebar: () => {},
     };
-    const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <SidebarContext.Provider value={value}>
-        {children}
-      </SidebarContext.Provider>
-    );
+    const wrapper = ({ children }: { children: React.ReactNode }) => {
+      return (
+        <SidebarContext.Provider value={value}>
+          {children}
+        </SidebarContext.Provider>
+      );
+    };
     const { result } = renderHook(() => React.useContext(SidebarContext), {
       wrapper,
     });

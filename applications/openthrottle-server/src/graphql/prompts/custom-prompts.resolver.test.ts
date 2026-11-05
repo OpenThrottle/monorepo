@@ -279,18 +279,20 @@ describe('CustomPromptsResolver', () => {
   });
 
   describe('filesystem write gate', () => {
-    const writeInput = (filePath: string) => ({
-      content: '# Written\n',
-      description: null,
-      filePath,
-      id: mockCustomPrompt.id,
-      labels: null,
-      projectId: null,
-      promptType: null,
-      title: null,
-      userId: null,
-      writeToFileSystem: true,
-    });
+    const writeInput = (filePath: string) => {
+      return {
+        content: '# Written\n',
+        description: null,
+        filePath,
+        id: mockCustomPrompt.id,
+        labels: null,
+        projectId: null,
+        promptType: null,
+        title: null,
+        userId: null,
+        writeToFileSystem: true,
+      };
+    };
 
     test('writes an ordinary workspace-relative path', async () => {
       const repo = customPromptsService.getRepository();

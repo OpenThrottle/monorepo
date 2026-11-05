@@ -30,8 +30,7 @@ describe('generatorReactRouterComponent', () => {
       'applications/openthrottle-website/app/global/components/__tests__/TestComponent.test.tsx',
     ]);
 
-    const componentPath =
-      'applications/openthrottle-website/app/global/components/TestComponent.tsx';
+    const componentPath = `applications/openthrottle-website/app/global/components/TestComponent.tsx`;
     const source = tree.read(componentPath, 'utf-8');
 
     expect(source).toBeDefined();

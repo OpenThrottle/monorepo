@@ -35,6 +35,13 @@ export const BlogEmptyState = (
   // Handlers
 
   // Markup
+  const action = (
+    <EmptyContent>
+      <Button asChild={true} variant="outline">
+        <Link to={BLOG_BASE_PATH}>{actionLabel}</Link>
+      </Button>
+    </EmptyContent>
+  );
 
   // Life Cycle
 
@@ -49,13 +56,7 @@ export const BlogEmptyState = (
         <EmptyTitle>{title}</EmptyTitle>
         <EmptyDescription>{description}</EmptyDescription>
       </EmptyHeader>
-      {actionLabel ? (
-        <EmptyContent>
-          <Button asChild={true} variant="outline">
-            <Link to={BLOG_BASE_PATH}>{actionLabel}</Link>
-          </Button>
-        </EmptyContent>
-      ) : null}
+      {actionLabel ? action : null}
     </Empty>
   );
 };

@@ -187,11 +187,12 @@ export function buildAgentSetupCommand(
   return { args: ['-c', shellCommand], file: 'sh' };
 }
 
-const defaultSpawn: AgentSetupSpawn = (file, args, options) =>
-  spawn(file, [...args], {
+const defaultSpawn: AgentSetupSpawn = (file, args, options) => {
+  return spawn(file, [...args], {
     env: options.env,
     stdio: ['ignore', 'pipe', 'pipe'],
   });
+};
 
 /**
  * Run an install/update for an allowlisted agent CLI, streaming output via `onChunk`. Fails closed
@@ -211,14 +212,16 @@ export function runAgentSetup(
   const fail = (
     reason: AgentSetupFailureReason,
     exitCode: number | null = null,
-  ): AgentSetupResult => ({
-    backend,
-    durationMs: Date.now() - startedAt,
-    exitCode,
-    mode,
-    ok: false,
-    reason,
-  });
+  ): AgentSetupResult => {
+    return {
+      backend,
+      durationMs: Date.now() - startedAt,
+      exitCode,
+      mode,
+      ok: false,
+      reason,
+    };
+  };
 
   if (!isDriverId(backend)) {
     return Promise.resolve(fail('unknown-backend'));

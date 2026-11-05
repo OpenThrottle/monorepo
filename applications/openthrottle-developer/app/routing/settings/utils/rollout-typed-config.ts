@@ -9,7 +9,7 @@ import type { RolloutFlagFieldsFragment } from '~/__generated__/graphql';
 import { RolloutFlagKind } from '~/__generated__/graphql';
 import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
 import type { RolloutFlagKindOption } from '~/routing/settings/data/data.rollout-kinds';
-import { isRolloutFlagKind } from '~/routing/settings/data/data.rollout-kinds';
+import { isRolloutFlagKind } from '~/routing/settings/utils/is-rollout-flag-kind';
 
 /** Form-facing variation row (valueJson is already JSON-serialized). */
 export interface RolloutFormVariation {
@@ -45,11 +45,13 @@ const equalSplitWeights = (count: number): RolloutFormFallthroughBucket[] => {
   }));
 };
 
-const blankVariation = (valueJson: string): RolloutFormVariation => ({
-  description: '',
-  name: '',
-  valueJson,
-});
+const blankVariation = (valueJson: string): RolloutFormVariation => {
+  return {
+    description: '',
+    name: '',
+    valueJson,
+  };
+};
 
 /** Default editable raw string when adding a variation of the given kind. */
 export const defaultRawValueForKind = (kind: RolloutFlagKindOption): string => {
@@ -144,11 +146,15 @@ export const typedConfigFromFlag = (
 /** Integer percent weights for fallthrough; must sum to 100. */
 export const sumFallthroughWeights = (
   buckets: readonly RolloutFormFallthroughBucket[],
-): number => buckets.reduce((sum, bucket) => sum + bucket.weight, 0);
+): number => {
+  return buckets.reduce((sum, bucket) => sum + bucket.weight, 0);
+};
 
 export const fallthroughWeightsAreValid = (
   buckets: readonly RolloutFormFallthroughBucket[],
-): boolean => sumFallthroughWeights(buckets) === 100;
+): boolean => {
+  return sumFallthroughWeights(buckets) === 100;
+};
 
 /**
  * Serialize a raw UI string into valueJson for the given kind.
@@ -321,6 +327,13 @@ const parseFallthroughJson = (
   return { fallthrough: { variations: buckets } };
 };
 
+const parseOffVariation = (raw: FormDataEntryValue | null): number => {
+  if (typeof raw === 'string' && raw.trim().length > 0) {
+    return Number(raw);
+  }
+  return Number.NaN;
+};
+
 /**
  * Parse typed config from create/update FormData fields:
  * `kind`, `offVariation`, `variationsJson`, `fallthroughJson`.
@@ -334,10 +347,7 @@ export const parseRolloutTypedConfig = (
   }
 
   const offRaw = formData.get('offVariation');
-  const offVariation =
-    typeof offRaw === 'string' && offRaw.trim().length > 0
-      ? Number(offRaw)
-      : Number.NaN;
+  const offVariation = parseOffVariation(offRaw);
   if (!Number.isInteger(offVariation) || offVariation < 0) {
     return { error: ROLLOUT_COPY.offVariationError, ok: false };
   }
@@ -390,13 +400,15 @@ export const toRolloutGraphqlTypedInput = (
     name?: string | null;
     valueJson: string;
   }>;
-} => ({
-  fallthrough: config.fallthrough,
-  kind: config.kind,
-  offVariation: config.offVariation,
-  variations: config.variations.map((variation) => ({
-    description: variation.description.trim() || null,
-    name: variation.name.trim() || null,
-    valueJson: variation.valueJson,
-  })),
-});
+} => {
+  return {
+    fallthrough: config.fallthrough,
+    kind: config.kind,
+    offVariation: config.offVariation,
+    variations: config.variations.map((variation) => ({
+      description: variation.description.trim() || null,
+      name: variation.name.trim() || null,
+      valueJson: variation.valueJson,
+    })),
+  };
+};

@@ -9,8 +9,9 @@ import { MOCK_BLOG_POST_SUMMARY } from '~/routing/blog/testing/mock.blog-posts';
 import type { BlogMetaProps } from '../BlogMeta';
 import { BlogMeta } from '../BlogMeta';
 
-const renderMeta = (props: BlogMetaProps): RenderResult =>
-  render(<BlogMeta {...props} />);
+const renderMeta = (props: BlogMetaProps): RenderResult => {
+  return render(<BlogMeta {...props} />);
+};
 
 describe('BlogMeta Component', () => {
   let component: RenderResult;

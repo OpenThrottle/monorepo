@@ -8,7 +8,7 @@ import {
 import { MessageSquarePlus } from 'lucide-react';
 import * as React from 'react';
 
-import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../data/chat-conversation-sidebar.copy';
+import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../data/data.chat-conversation-sidebar.copy';
 import { useChatConversationSidebar } from '../hooks/useChatConversationSidebar';
 import type { AgentConversationListItem } from '../types';
 import { ChatConversationDeleteDialog } from './ChatConversationDeleteDialog';
@@ -156,7 +156,10 @@ export const ChatConversationSidebar = (
     />
   ));
 
-  const loadMore = hasMore ? (
+  const list = <div className="flex flex-col gap-px pb-1">{rows}</div>;
+  const listOrEmpty = isEmpty ? empty : list;
+
+  const loadMore = (
     <div className="px-2 py-1">
       <Button
         className="w-full"
@@ -170,7 +173,7 @@ export const ChatConversationSidebar = (
         {copy.loadMore}
       </Button>
     </div>
-  ) : null;
+  );
 
   // Life Cycle
 
@@ -183,14 +186,8 @@ export const ChatConversationSidebar = (
     >
       {hideHeader ? null : header}
       <ScrollArea className="min-h-0 flex-1">
-        {isLoading ? (
-          skeletons
-        ) : isEmpty ? (
-          empty
-        ) : (
-          <div className="flex flex-col gap-px pb-1">{rows}</div>
-        )}
-        {loadMore}
+        {isLoading ? skeletons : listOrEmpty}
+        {hasMore ? loadMore : null}
       </ScrollArea>
 
       <ChatConversationDeleteDialog

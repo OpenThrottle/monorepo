@@ -12,7 +12,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import type { IdeSymbolDetails } from '../data/view-models';
+import type { IdeSymbolDetails } from '../data/data.view-models';
 import { LocationTable } from './LocationTable';
 
 export interface DefinitionReferencesPanelProps {

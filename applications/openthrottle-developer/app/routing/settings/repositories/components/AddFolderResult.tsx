@@ -32,9 +32,44 @@ export const AddFolderResult = (
   const { detectedAgentConfig, detectedStack } =
     deriveCheckoutInspectionBadges(inspection);
 
+  const hasStack = detectedStack.length > 0;
+  const hasAgentConfig = detectedAgentConfig.length > 0;
+  const { projectCreatedSuffix, projectLinkedPrefix } = WORKSPACE_FOLDERS_COPY;
+  const createdSuffix = projectCreated ? projectCreatedSuffix : null;
+
   // Handlers
 
   // Markup
+  const stackRow = (
+    <div className="flex gap-2">
+      <dt className="text-muted-foreground w-24 shrink-0">Stack</dt>
+      <dd className="flex flex-wrap gap-1">
+        {detectedStack.map((item) => (
+          <Badge key={item} variant="outline">
+            {item}
+          </Badge>
+        ))}
+      </dd>
+    </div>
+  );
+  const agentConfigRow = (
+    <div className="flex gap-2">
+      <dt className="text-muted-foreground w-24 shrink-0">Agent config</dt>
+      <dd className="flex flex-wrap gap-1">
+        {detectedAgentConfig.map((item) => (
+          <Badge key={item} variant="outline">
+            {item}
+          </Badge>
+        ))}
+      </dd>
+    </div>
+  );
+  const projectLink = (
+    <p>
+      {projectLinkedPrefix} <span className="font-medium">{project?.name}</span>{' '}
+      {createdSuffix}
+    </p>
+  );
 
   // Life Cycle
 
@@ -67,43 +102,11 @@ export const AddFolderResult = (
                 'Unknown'}
             </dd>
           </div>
-          {detectedStack.length > 0 ? (
-            <div className="flex gap-2">
-              <dt className="text-muted-foreground w-24 shrink-0">Stack</dt>
-              <dd className="flex flex-wrap gap-1">
-                {detectedStack.map((item) => (
-                  <Badge key={item} variant="outline">
-                    {item}
-                  </Badge>
-                ))}
-              </dd>
-            </div>
-          ) : null}
-          {detectedAgentConfig.length > 0 ? (
-            <div className="flex gap-2">
-              <dt className="text-muted-foreground w-24 shrink-0">
-                Agent config
-              </dt>
-              <dd className="flex flex-wrap gap-1">
-                {detectedAgentConfig.map((item) => (
-                  <Badge key={item} variant="outline">
-                    {item}
-                  </Badge>
-                ))}
-              </dd>
-            </div>
-          ) : null}
+          {hasStack ? stackRow : null}
+          {hasAgentConfig ? agentConfigRow : null}
         </dl>
 
-        {project ? (
-          <p>
-            {WORKSPACE_FOLDERS_COPY.projectLinkedPrefix}{' '}
-            <span className="font-medium">{project.name}</span>{' '}
-            {projectCreated
-              ? WORKSPACE_FOLDERS_COPY.projectCreatedSuffix
-              : null}
-          </p>
-        ) : null}
+        {project ? projectLink : null}
 
         <Form method="post">
           <input name="intent" type="hidden" value="applyEditorConfig" />

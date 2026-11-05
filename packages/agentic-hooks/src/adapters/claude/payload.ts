@@ -30,12 +30,12 @@ export const normalizeClaudePayload = (
 
   if (hookEvent === 'PreToolUse' || payload.tool_name === 'Skill') {
     const toolInput = isRecord(payload.tool_input) ? payload.tool_input : {};
-    const skillName =
-      typeof toolInput.skill === 'string'
-        ? toolInput.skill
-        : typeof toolInput.name === 'string'
-          ? toolInput.name
-          : null;
+    let skillName: string | null = null;
+    if (typeof toolInput.skill === 'string') {
+      skillName = toolInput.skill;
+    } else if (typeof toolInput.name === 'string') {
+      skillName = toolInput.name;
+    }
     if (!skillName) {
       return null;
     }
@@ -107,8 +107,9 @@ export interface ClaudeStopPayload {
   readonly transcript_path: string | null;
 }
 
-const nonEmptyString = (value: unknown): string | null =>
-  typeof value === 'string' && value.trim() !== '' ? value : null;
+const nonEmptyString = (value: unknown): string | null => {
+  return typeof value === 'string' && value.trim() !== '' ? value : null;
+};
 
 /**
  * Parse a Claude Code `Stop`/`SubagentStop` payload into the fields the

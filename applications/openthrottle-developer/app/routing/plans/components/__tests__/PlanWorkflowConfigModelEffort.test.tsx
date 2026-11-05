@@ -25,12 +25,13 @@ describe('PlanWorkflowConfigModelEffort Component', () => {
   let props: PlanWorkflowConfigModelEffortProps;
   const setInput = vi.fn();
 
-  const renderFields = (): RenderResult =>
-    render(
+  const renderFields = (): RenderResult => {
+    return render(
       <TooltipProvider>
         <PlanWorkflowConfigModelEffort {...props} />
       </TooltipProvider>,
     );
+  };
 
   beforeEach(() => {
     setInput.mockReset();

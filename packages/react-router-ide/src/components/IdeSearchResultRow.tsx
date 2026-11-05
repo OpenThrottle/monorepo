@@ -1,7 +1,7 @@
 import { Badge, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import type { SearchMatch } from '../data/view-models';
+import type { SearchMatch } from '../data/data.view-models';
 import { splitMatchHighlight } from '../utils/splitMatchHighlight';
 
 export interface IdeSearchResultRowProps {

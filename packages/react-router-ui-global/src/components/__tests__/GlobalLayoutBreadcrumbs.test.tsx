@@ -7,7 +7,9 @@ import { GlobalLayoutBreadcrumbs } from '../GlobalLayoutBreadcrumbs';
 
 describe('GlobalLayoutBreadcrumbs Component', () => {
   test('renders breadcrumb navigation', () => {
-    const Component = () => <GlobalLayoutBreadcrumbs />;
+    const Component = () => {
+      return <GlobalLayoutBreadcrumbs />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 

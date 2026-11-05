@@ -8,18 +8,21 @@ import { defineCodegen } from './index';
  * tests assert the emitted Zod block's plugin knobs directly.
  */
 describe('defineCodegen', () => {
-  const build = (overrides?: Partial<Parameters<typeof defineCodegen>[0]>) =>
-    defineCodegen({
+  const build = (overrides?: Partial<Parameters<typeof defineCodegen>[0]>) => {
+    return defineCodegen({
       dirname: '/workspace/applications/example',
       documents: ['app/**/*.graphql'],
       ...overrides,
     });
+  };
 
-  const zodBlock = (config: ReturnType<typeof defineCodegen>) =>
-    config.generates['./app/__generated__/schemas.ts'];
+  const zodBlock = (config: ReturnType<typeof defineCodegen>) => {
+    return config.generates['./app/__generated__/schemas.ts'];
+  };
 
-  const clientBlock = (config: ReturnType<typeof defineCodegen>) =>
-    config.generates['./app/__generated__/'];
+  const clientBlock = (config: ReturnType<typeof defineCodegen>) => {
+    return config.generates['./app/__generated__/'];
+  };
 
   it('emits the typescript-validation-schema (Zod) block by default', () => {
     const config = build();

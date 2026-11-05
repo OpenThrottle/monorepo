@@ -1,33 +1,35 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 import { SKILL_DETAIL_COPY } from '~/routing/skills/data/data.copy';
 
 import { useSkillDetail, type UseSkillDetailOptions } from '../useSkillDetail';
 
-const baseEntry = (
-  overrides: Partial<RepoSkillEntry> = {},
-): RepoSkillEntry => ({
-  disableModelInvocation: undefined,
-  layout: 'agents',
-  repoRelativePath: 'skills/my-skill/SKILL.md',
-  slug: 'my-skill',
-  source: 'openthrottle',
-  summary: 'A test skill.',
-  tags: undefined,
-  ...overrides,
-});
+const baseEntry = (overrides: Partial<RepoSkillEntry> = {}): RepoSkillEntry => {
+  return {
+    disableModelInvocation: undefined,
+    layout: 'agents',
+    repoRelativePath: 'skills/my-skill/SKILL.md',
+    slug: 'my-skill',
+    source: 'openthrottle',
+    summary: 'A test skill.',
+    tags: undefined,
+    ...overrides,
+  };
+};
 
 const baseOptions = (
   overrides: Partial<UseSkillDetailOptions> = {},
-): UseSkillDetailOptions => ({
-  content: 'original content',
-  editable: true,
-  entry: baseEntry(),
-  saving: false,
-  ...overrides,
-});
+): UseSkillDetailOptions => {
+  return {
+    content: 'original content',
+    editable: true,
+    entry: baseEntry(),
+    saving: false,
+    ...overrides,
+  };
+};
 
 describe('useSkillDetail', () => {
   test('starts read-only with the pristine content as the draft', () => {

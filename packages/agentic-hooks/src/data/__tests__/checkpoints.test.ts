@@ -75,14 +75,22 @@ describe('checkpoints', () => {
     });
 
     it('tracks several files per session and replaces a path in place', () => {
-      const write = (filePath: string, offset: number) =>
-        writeCheckpoint({ checkpointsDir, filePath, offset, sessionId: 's1' });
+      const write = (filePath: string, offset: number) => {
+        return writeCheckpoint({
+          checkpointsDir,
+          filePath,
+          offset,
+          sessionId: 's1',
+        });
+      };
       write('/t/main.jsonl', 10);
       write('/t/sub.jsonl', 5);
       write('/t/main.jsonl', 40);
 
-      const read = (filePath: string) =>
-        readCheckpoint({ checkpointsDir, filePath, sessionId: 's1' })?.offset;
+      const read = (filePath: string) => {
+        return readCheckpoint({ checkpointsDir, filePath, sessionId: 's1' })
+          ?.offset;
+      };
       expect(read('/t/main.jsonl')).toBe(40);
       expect(read('/t/sub.jsonl')).toBe(5);
     });

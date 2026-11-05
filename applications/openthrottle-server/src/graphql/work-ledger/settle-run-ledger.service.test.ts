@@ -119,11 +119,12 @@ describe('SettleRunLedgerService', () => {
     );
   });
 
-  const artifacts = (): Array<{ payload: unknown; type: string }> =>
-    saved.WorkArtifact.flat().filter(
+  const artifacts = (): Array<{ payload: unknown; type: string }> => {
+    return saved.WorkArtifact.flat().filter(
       (row): row is { payload: unknown; type: string } =>
         typeof row === 'object' && row !== null && 'type' in row,
     );
+  };
 
   it('records a git_commit and a pull_request with the server-resolved repo', async () => {
     await service.recordSettledRunArtifacts({
