@@ -342,6 +342,17 @@ jobs:
     concurrency:
       cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
       group: continuous-integration-${{ github.ref }}-build-${{ matrix.target }}-${{ matrix.jobIndex }}
+    # Job-scoped addition to the workflow's least-privilege default:
+    # `actions: write` lets the ⏏️ step at the end of this job cancel a red
+    # merge-queue run (see that step). Job-level `permissions` REPLACES the
+    # workflow block rather than merging with it, so the other two scopes are
+    # restated. Permissions cannot be gated on the event, so ready PRs from
+    # same-repo branches get this too. Fork PRs never do (their token is
+    # read-only), and an author with push access can already cancel runs.
+    permissions:
+      actions: write
+      contents: read
+      packages: read
     env:
       # ⚠️ MUST equal the length of `matrix.jobIndex` below. The partitioner exits
       # non-zero if they disagree, rather than letting projects past the end of
@@ -388,9 +399,16 @@ jobs:
     # count is wall-clock and queue contention, never spend. If the canonical repo
     # ever goes private, every box here starts billing — reprice before widening.
     strategy:
-      # One red shard must not cancel its siblings: a partial matrix tells you
-      # far less about a failing PR than three complete results do.
-      fail-fast: false
+      # On a PR, one red shard must not cancel its siblings: a partial matrix
+      # tells you far less about a failing PR than three complete results do.
+      #
+      # ⏏️ A merge-queue entry is the exception. Nobody reads its partial
+      # results, and every entry queued behind a red one rebuilds only once it
+      # is ejected, so there the first red shard should end the run. fail-fast
+      # alone cannot do that: it cancels sibling legs but not `gates`, which
+      # `ci-success` also waits for. The ⏏️ step at the end of this job cancels
+      # the whole run; fail-fast stays on as the backstop if that API call fails.
+      fail-fast: ${{ github.event_name == 'merge_group' }}
       matrix:
         jobIndex: [1, 2, 3] # ⚠️ must be in sync with "env.jobCount"
         # 💰 Ready PRs are the ordinary contributor gate, and merge-queue entries
@@ -609,6 +627,32 @@ jobs:
             pnpm exec nx run-many --projects="$suiteShardProjects" --target=test --shard="$suiteShard" --outputStyle=stream ${{ env.OUTPUT_DEBUG }}
           fi
 
+      # ⏏️ MERGE QUEUE ONLY: eject a red entry now, not when the slowest job ends.
+      # The queue removes an entry only once the required `ci-success` reports,
+      # and that job waits for every shard AND `gates`. Probe C (run
+      # 41931301776) failed at 23:09:50 and reported at 23:11:58, all of it
+      # spent waiting on `gates`. Cancelling the run ends every sibling at once.
+      #
+      # Why this cannot turn `ci-success` green: the job running this step has
+      # already failed, so its result is `failure` (or `cancelled`, if the cancel
+      # reaches it first). `ci-success` accepts only `success` or `skipped`, so
+      # either one is red. `ci-success` is `if: always()`, which a cancel does not
+      # stop, so the required check still reports rather than going missing.
+      #
+      # A second cancel from another red leg is refused or ignored. Only the
+      # separate force-cancel endpoint skips `always()` jobs, and nothing here
+      # calls it. `|| echo` keeps a refused call quiet; this job is red regardless.
+      # The same step ends `gates` below. Keep the two in sync.
+      - name: '⏏️ Cancel this merge-queue run (fast ejection)'
+        if: failure() && github.event_name == 'merge_group'
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          echo "❌ A gate failed in a merge-queue entry; cancelling run $RUN_ID so ci-success reports red now."
+          gh run cancel "$RUN_ID" || echo "⚠️ cancel request refused (run already cancelling?); this job is red either way"
+
       # The skill-usage hook core + per-tool adapters now live in the Nx package
       # @openthrottle/agentic-hooks (authored in TS, bundled to committed .cjs),
       # so `nx affected --target=test` above covers them and the drift check runs
@@ -668,6 +712,11 @@ jobs:
     concurrency:
       cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
       group: continuous-integration-${{ github.ref }}-gates
+    # Same job-scoped grant as `build`, for the same ⏏️ step; see the note there.
+    permissions:
+      actions: write
+      contents: read
+      packages: read
 
     steps:
       - name: '📦 Checkout the code'
@@ -854,6 +903,20 @@ jobs:
       - name: '🧩 Strict audits (audit:strict)'
         run: pnpm run audit:strict
 
+      # ⏏️ MERGE QUEUE ONLY. Identical to the last step of `build`, which
+      # explains why it is safe for the required check. Keep the two in sync.
+      # Without it a red gate waits out every build shard before the entry
+      # ejects, just as a red shard used to wait out `gates`.
+      - name: '⏏️ Cancel this merge-queue run (fast ejection)'
+        if: failure() && github.event_name == 'merge_group'
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          echo "❌ A gate failed in a merge-queue entry; cancelling run $RUN_ID so ci-success reports red now."
+          gh run cancel "$RUN_ID" || echo "⚠️ cancel request refused (run already cancelling?); this job is red either way"
+
       # 💰 The warn-only test-coverage audit MOVED OUT of the per-PR path to
       # .github/workflows/test-coverage-audit-scheduled.yml (weekly). It is
       # `continue-on-error` and excluded from the blocking `audit:strict`
@@ -875,9 +938,15 @@ jobs:
   # (docs-only PR / draft), and red only when the build failed or was cancelled.
   #
   # `needs.build.result` AGGREGATES the matrix: it is 'success' only when every
-  # shard succeeded, and 'failure' if any one of them failed. With
-  # `fail-fast: false` above, a red shard therefore still turns this job red while
+  # shard succeeded, and 'failure' if any one of them failed. On a PR
+  # (`fail-fast: false`), a red shard therefore still turns this job red while
   # its siblings run to completion.
+  #
+  # ⏏️ On `merge_group`, a red shard or a red `gates` cancels the whole run
+  # instead (the ⏏️ steps). This job still runs, because `always()` survives a
+  # cancel, and it reads the canceller as `failure`/`cancelled` and the rest as
+  # `cancelled`. NEVER accept `cancelled` below, or a cancelled queue entry
+  # could read green on the one required check.
   ci-success:
     needs: [attribution-guard, changes, build, gates]
     if: always()
