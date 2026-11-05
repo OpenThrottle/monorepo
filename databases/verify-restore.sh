@@ -129,16 +129,16 @@ fi
 ################################################################################
 # 3. Migration ledger
 #
-# ⚠️ The ledger only governs `pnpm run database:migrate`
-# (scripts/openthrottle-database-migrations.ts). The CONTAINERIZED runner baked
-# into Dockerfile.Migrations — the one that actually runs on a deployed box — is
-# databases/run-migrations.mjs, which has NO ledger and re-applies every
-# migration on every deploy. See databases/SEEDING.md.
+# The ledger governs every entrypoint: `pnpm run database:migrate` and the
+# containerized runner baked into Dockerfile.Migrations (databases/migrate.ts)
+# share databases/migration-runner.ts. A missing or empty ledger means the next
+# deploy runs the one-time cut-over, re-applying every migration once. See
+# databases/SEEDING.md.
 ################################################################################
 echo "== migration ledger =="
 has_ledger="$(psql_q "SELECT count(*) FROM pg_tables WHERE schemaname='public' AND tablename='schema_migrations';")"
 if [[ "${has_ledger}" != "1" ]]; then
-  fail "schema_migrations table is missing. A dump from a ledger-tracked database should carry it; without it 'database:migrate' will re-stamp every migration."
+  fail "schema_migrations table is missing. A dump from a ledger-tracked database should carry it; without it the next migrate run (or deploy) re-applies every migration once."
 else
   applied="$(psql_q "SELECT count(*) FROM schema_migrations;")"
   on_disk="$(find "$(dirname "${BASH_SOURCE[0]}")/migrations" -name '*.sql' | wc -l | tr -d ' ')"

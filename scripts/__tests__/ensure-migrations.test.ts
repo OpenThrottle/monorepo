@@ -1,10 +1,11 @@
 import { describe, expect, test, vi } from 'vitest';
+
 import {
   type AppliedMigration,
   type MigrationSource,
   type MigrationStore,
   runMigrations,
-} from '../openthrottle-database-migrations';
+} from '../../databases/migration-runner.ts';
 import {
   DEFAULT_ATTEMPTS,
   PostgresUnreachableError,
@@ -47,10 +48,6 @@ class FakeStore implements MigrationStore {
 
   async coreTablesExist(): Promise<boolean> {
     return false;
-  }
-
-  async bootstrap(filenames: readonly string[]): Promise<void> {
-    for (const f of filenames) this.ledger.set(f, null);
   }
 
   async apply(filename: string, _sql: string, checksum: string): Promise<void> {

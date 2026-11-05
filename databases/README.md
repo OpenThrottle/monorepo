@@ -40,7 +40,7 @@ Postgres database for OpenThrottle plans, tasks, and documentation, with pgvecto
    pnpm run database:migrate
    ```
 
-   **Dev/start auto-migrates.** Booting the server locally (`openthrottle-server` `dev`/`dev-api`/`worker`/`start`) runs the `monorepo:ensure-migrations` Nx gate first: it waits briefly for Postgres, then applies any pending migrations (the same idempotent runner as `database:migrate`) against the DB the server connects to. If Postgres is unreachable it fails fast and tells you to run `pnpm run database:start`. `pnpm run database:migrate` above remains the manual/standalone entrypoint. The Docker path is unchanged and stays authoritative for container installs — migrations there are guaranteed by `Dockerfile.Migrations` + the compose `migrations` init service; the gate is dev/start-only.
+   **Dev/start auto-migrates.** Booting the server locally (`openthrottle-server` `dev`/`dev-api`/`worker`/`start`) runs the `monorepo:ensure-migrations` Nx gate first: it waits briefly for Postgres, then applies any pending migrations (the same idempotent runner as `database:migrate`) against the DB the server connects to. If Postgres is unreachable it fails fast and tells you to run `pnpm run database:start`. `pnpm run database:migrate` above remains the manual/standalone entrypoint. The Docker path stays authoritative for container installs — migrations there are guaranteed by `Dockerfile.Migrations` + the compose `migrations` init service, which runs the same ledger (see [Run-once / idempotent](#run-once--idempotent-schema_migrations-ledger)); the gate is dev/start-only.
 
    **Service account bootstrap:** Migration `045_seed_service_accounts_bootstrap.sql` creates `openthrottle-mcp` and `workflow-ralph` service accounts with roles `mcp` and `workflow-ralph` (`plans:read`, `plans:write`). Mint bearer tokens once:
 
@@ -540,10 +540,11 @@ SQL migrations live in `databases/migrations/` and are applied in filename order
 
 ### Run-once / idempotent (schema_migrations ledger)
 
-`pnpm run database:migrate` is **run-once and idempotent** — running it repeatedly is safe and, once the database is up to date, a no-op. Applied migrations are tracked in a `schema_migrations` ledger (`filename` PRIMARY KEY, `applied_at`, `checksum`):
+Every entrypoint — `pnpm run database:migrate`, the `monorepo:ensure-migrations` dev gate, and the `openthrottle/migrations` container image — is **run-once and idempotent**: running it repeatedly is safe and, once the database is up to date, a no-op. All three share one implementation, [`databases/migration-runner.ts`](./migration-runner.ts) (the image runs it through [`databases/migrate.ts`](./migrate.ts)). Applied migrations are tracked in a `schema_migrations` ledger (`filename` PRIMARY KEY, `applied_at`, `checksum`):
 
 - **Skip / apply:** On each run the runner reads the ledger, skips any file already recorded, and applies only new files in filename order. Each migration and its ledger insert run in a **single transaction**, so a failed migration rolls back cleanly (recorded as _not_ applied) and is retried on the next run.
-- **Bootstrap (existing DBs):** The first run against a database that already has the schema (empty ledger **and** core tables like `plans`/`tasks` present) seeds the ledger with all current migration filenames as already-applied and runs nothing — historical data migrations are never re-executed against populated data. A genuinely fresh database (no core tables) applies every migration normally.
+- **One-time cut-over (existing DBs without a ledger):** The first run against a database that already has the schema (empty ledger **and** core tables like `plans`/`tasks` present) applies **every** migration once, in order, and records each. That is what the container image did on every deploy before it adopted the ledger, so it is one last run of the old behavior. It deliberately never marks files applied without running them: a volume last migrated by an older image has not run the files new in this one. Earlier versions of the workspace runner did seed the ledger that way, which is why some ledgers carry rows with a null `checksum`. A genuinely fresh database (no core tables) applies every migration normally.
+- **Retired migrations:** `010_normalize_author_to_visormatt.sql` and `013_normalize_assignee_to_visormatt.sql` were one-off personal data fixes whose bodies are now commented no-ops. They keep their filenames (the ledger key) and are listed in `RETIRED_MIGRATIONS`, which exempts them from drift warnings.
 - **No-op guarantee:** Two `database:migrate` runs in a row leave data untouched — in particular `plans`/`tasks` `updated_at`, `author`, and `assignee` are unchanged. (This closes the previous non-idempotent behavior, where re-running re-stamped `updated_at` across all rows via the `BEFORE UPDATE` triggers and skewed `daily_stats` completion dates.)
 - **Adding a migration:** Drop a new `NNN_*.sql` file into `databases/migrations/`; it is picked up and applied exactly once on the next `database:migrate`. Do **not** edit an already-applied migration in place — the runner warns (does not fail) on checksum drift; revert the edit or add a new migration instead.
 
@@ -778,7 +779,7 @@ pnpm exec tsx ./scripts/check-migration-hygiene.ts --all
 
 `schema_migrations` declares `filename TEXT PRIMARY KEY`. The filename **is** the ledger key.
 
-Renaming `110_add_user_id_to_skill_usage_events.sql` to `112_…` therefore does two things at once: the runner stops recognizing the file as applied and re-runs it, and the original ledger row survives forever naming a file that no longer exists. Migrations here are written idempotent so the re-run is probably survivable — but "probably survivable" is not a migration strategy, and the orphan row is permanent. The runner also checksums applied migrations and fails on drift, so editing one in place is not an escape either.
+Renaming `110_add_user_id_to_skill_usage_events.sql` to `112_…` therefore does two things at once: the runner stops recognizing the file as applied and re-runs it, and the original ledger row survives forever naming a file that no longer exists. Migrations here are written idempotent so the re-run is probably survivable — but "probably survivable" is not a migration strategy, and the orphan row is permanent. The runner also checksums applied migrations and warns on drift, so editing one in place is not an escape either.
 
 Renumber **before** the migration is applied anywhere. After that, grandfather it and record why.
 
@@ -797,4 +798,4 @@ A timestamp prefix (`20260909T1200_…`) is the only scheme that makes a collisi
 - The duplicate-prefix rule fires more than about three times in a quarter, i.e. the renumbering tax is real rather than theoretical.
 - The numeric sequence approaches **`190`**, which is the point at which the mixed-scheme sort break at `202_` stops being comfortably far away.
 
-If it is revisited, the migration is new-files-only by construction, and the runner (`scripts/openthrottle-database-migrations.ts`) needs an explicit comparator rather than a bare `.sort()` before the first timestamped file lands.
+If it is revisited, the migration is new-files-only by construction, and the shared runner (`filterSortSqlFiles` in `databases/migration-runner.ts`) needs an explicit comparator rather than a bare `.sort()` before the first timestamped file lands.

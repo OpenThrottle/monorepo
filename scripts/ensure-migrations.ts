@@ -8,10 +8,10 @@ import { Client } from 'pg';
 
 import {
   createFsMigrationSource,
-  guardSharedMigrations,
   PgMigrationStore,
   runMigrations,
-} from './openthrottle-database-migrations';
+} from '../databases/migration-runner.ts';
+import { guardSharedMigrations } from './openthrottle-database-migrations.ts';
 import { createLogger } from './utils/index.ts';
 
 const logger = createLogger();
@@ -32,7 +32,8 @@ const logger = createLogger();
  *  4. On unreachable after the window: fail fast with actionable guidance and exit 1.
  *
  * The Docker path (Dockerfile.Migrations + compose `migrations` init service) stays
- * authoritative for container installs; this gate is dev/start-only.
+ * authoritative for container installs and runs the same shared ledger
+ * (databases/migration-runner.ts); this gate is dev/start-only.
  */
 
 /** Number of reachability attempts before giving up (probe + retries). */
@@ -139,6 +140,8 @@ async function main(): Promise<void> {
       await runMigrations(
         new PgMigrationStore(client),
         createFsMigrationSource(),
+        logger.info,
+        logger.warn,
       );
     } finally {
       await client.end();

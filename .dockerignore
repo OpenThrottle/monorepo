@@ -59,4 +59,5 @@ tools/**/node_modules/
 # Migrations runner image (Dockerfile.Migrations) needs these from the context.
 !databases/migrations
 !databases/migrations/**
-!databases/run-migrations.mjs
+!databases/migrate.ts
+!databases/migration-runner.ts

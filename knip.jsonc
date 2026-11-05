@@ -167,6 +167,8 @@
         "scripts/check-model-facing-text.ts",
         "scripts/openthrottle-database-backup.ts",
         "scripts/openthrottle-database-migrations.ts",
+        // Run by the migrations image (Dockerfile.Migrations CMD), not imported.
+        "databases/migrate.ts",
         "scripts/openthrottle-database-reset.ts",
         "scripts/openthrottle-database-seed-blog.ts",
         "scripts/nx-validate-confgurations.ts",

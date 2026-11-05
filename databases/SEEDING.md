@@ -110,8 +110,8 @@ It checks four things, and the fourth is the one that matters most:
    yields an empty cluster.
 2. **`vector` and `pg_trgm` are usable**, by running a distance operator and `similarity()` rather
    than trusting `pg_extension`.
-3. **The `schema_migrations` ledger** came across, so `database:migrate` is a no-op rather than
-   re-stamping.
+3. **The `schema_migrations` ledger** came across, so `database:migrate` and the migrations image
+   are a no-op rather than re-applying every migration once.
 4. **Embeddings survived** — non-null, with the expected dimensionality, and answering a real
    nearest-neighbour query. **A row count cannot catch this.** Rows restore with the right count and
    `NULL` embeddings, every table matches, and `semantic_search` then returns nothing. The script
@@ -148,44 +148,40 @@ database. See
 [`infra/applications/openthrottle_hcloud/SECRETS.md`](../infra/applications/openthrottle_hcloud/SECRETS.md)
 for passing tokens into that one invocation without putting them in `user_data`.
 
-## ⚠️ The deployed migrations runner has no ledger
+## ⚠️ The ledger decides what the first deploy re-applies
 
 **Read this before restoring into anything you care about.**
 
-There are two migration runners, and they behave differently:
+Every migration entrypoint runs the same `schema_migrations` ledger
+([`databases/migration-runner.ts`](./migration-runner.ts)):
 
-| Runner                                        | Used by                           | Ledger?                                  |
+| Entrypoint                                    | Used by                           | Ledger?                                  |
 | --------------------------------------------- | --------------------------------- | ---------------------------------------- |
 | `scripts/openthrottle-database-migrations.ts` | `pnpm run database:migrate`       | **Yes** — `schema_migrations`, once each |
-| `databases/run-migrations.mjs`                | `Dockerfile.Migrations` → the box | **No** — re-runs all 118 every deploy    |
+| `databases/migrate.ts`                        | `Dockerfile.Migrations` → the box | **Yes** — the same ledger                |
 
-The containerized runner — the one that actually runs on every deployment — reads no ledger. It
-applies every migration in filename order on every single deploy, relying entirely on each migration
-being written to converge.
+So whether the next `docker compose up` touches restored data depends only on whether the dump
+carried the ledger:
 
-They mostly are. Schema changes use `IF NOT EXISTS`, and data backfills such as
-`069_backfill_work_ledger_from_commit_links.sql` guard with `WHERE NOT EXISTS`, so re-running is a
-no-op. But a handful of **data-normalising `UPDATE`s** are genuinely re-applied every time, and at
-least one is destructive against future data:
+- **Dump with a ledger** (any database migrated by `database:migrate` or a ledger-era image): the
+  runner applies only the files the ledger does not record. Nothing already applied runs again.
+- **Dump without a ledger, or with an empty one**: the first run is the one-time cut-over. It applies
+  **every** migration once, in order, records each, and from then on applies only new files. That
+  is one last run of what the old ledgerless image did on every deploy.
 
-```sql
--- 010_normalize_author_to_visormatt.sql
-UPDATE plans SET author = 'visormatt' WHERE author IS DISTINCT FROM 'visormatt';
-UPDATE notes SET author = 'visormatt' WHERE author IS DISTINCT FROM 'visormatt';
-```
+Migrations are written to converge, so the cut-over is safe for schema: DDL uses `IF NOT EXISTS`,
+and data backfills such as `069_backfill_work_ledger_from_commit_links.sql` guard with
+`WHERE NOT EXISTS`. Two things still change on that one run:
 
-That converges, so it is "idempotent" in the narrow sense — but it also means **every deploy forces
-every plan's author back to `visormatt`.** The moment a second contributor authors a plan, the next
-deploy silently rewrites them.
+- **Default RBAC grants come back.** The permission seeds (`034`, `045`, `085`, `092`, …) insert
+  `role_permissions` rows with `ON CONFLICT DO NOTHING`, so a default grant an admin had revoked is
+  re-inserted once. Re-check role permissions after the first deploy against restored data.
+- The one-off `visormatt` author/assignee normalizations (`010`, `013`) used to reset every plan's
+  author and assignee on each run. They are retired as no-ops, so the cut-over no longer touches
+  them.
 
-Two consequences for this runbook:
-
-- After restoring a dataset, the next `docker compose up` re-applies all 118 migrations to it. Take a
-  snapshot **before** the first deploy against restored data, not after.
-- `CLAUDE.md`'s description of migrations as "run-once/idempotent via `schema_migrations` ledger; safe
-  to re-run, no data re-stamp" is accurate for `database:migrate` and **not** for the deployed
-  container. Do not rely on it when reasoning about a deployment.
+Take a snapshot **before** the first deploy against restored data, not after, and run
+`verify-restore.sh` first: its ledger check tells you which of the two cases you are in.
 
 Date-scoped backfills are fine — `057_redate_completed_at_from_plan_output_stream.sql` is pinned to
-`DATE '2026-07-10'`, so it cannot touch anything else. The hazard is specifically the unscoped
-normalising updates.
+`DATE '2026-07-10'`, so it cannot touch anything else.

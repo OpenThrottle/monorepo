@@ -77,7 +77,7 @@ export const POSTGRES_ENV_VARS_TRIED = [
 ] as const;
 
 /**
- * `schema_migrations` (see `scripts/openthrottle-database-migrations.ts`) has no numeric id
+ * `schema_migrations` (see `databases/migration-runner.ts`) has no numeric id
  * column — `filename` (e.g. `125_...sql`) is the ledger's primary key and, thanks to the
  * zero-padded numeric prefix convention, sorts lexically in applied order. `max(filename)` is
  * therefore the migration high-water mark.

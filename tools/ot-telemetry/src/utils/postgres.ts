@@ -17,7 +17,7 @@ import type {
  * read-only connection, the one-round-trip capability probe, and the migration high-water mark.
  *
  * Env precedence is delegated to `getPostgresUrl` (from `@openthrottle/openthrottle-agentic-utils`)
- * so it stays byte-for-byte in sync with `databases/run-migrations.mjs` and the server's own
+ * so it stays byte-for-byte in sync with `databases/migrate.ts` and the server's own
  * resolution: `OPENTHROTTLE_POSTGRES_URL` → `POSTGRES_URL` → `POSTGRES_*` pieces.
  *
  * Every pooled connection is opened read-only at the wire-protocol level (`options:
