@@ -22,15 +22,20 @@ import { runEvals } from './run-evals.ts';
 const BASELINE_DIR = join(dirname(fileURLToPath(import.meta.url)), 'baselines');
 const RESULTS_DIR = resolve('tmp/evals/tool-selection');
 
-const fileStem = (model: string): string => model.replace(/[^a-z0-9.-]/gi, '-');
+const fileStem = (model: string): string => {
+  return model.replace(/[^a-z0-9.-]/gi, '-');
+};
 
-const isRunResult = (value: unknown): value is RunResult =>
-  typeof value === 'object' &&
-  value !== null &&
-  'model' in value &&
-  typeof value.model === 'string' &&
-  'cases' in value &&
-  Array.isArray(value.cases);
+const isRunResult = (value: unknown): value is RunResult => {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'model' in value &&
+    typeof value.model === 'string' &&
+    'cases' in value &&
+    Array.isArray(value.cases)
+  );
+};
 
 const selectCases = (
   filter: string | undefined,
@@ -60,7 +65,9 @@ const readBaseline = (
   return { ...parsed, cases: parsed.cases.filter((c) => ids.has(c.id)) };
 };
 
-const percent = (rate: number): string => `${Math.round(rate * 100)}%`;
+const percent = (rate: number): string => {
+  return `${Math.round(rate * 100)}%`;
+};
 
 const printComparison = (comparison: BaselineComparison): void => {
   if (comparison.kind === 'model-mismatch') {

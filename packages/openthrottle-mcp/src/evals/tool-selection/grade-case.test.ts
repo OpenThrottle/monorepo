@@ -9,17 +9,19 @@ import { gradeCase, matchesArg } from './grade-case.ts';
 
 const OT_TOOLS = new Set(['create_plan', 'delete_plan', 'update_task']);
 
-const calls = (...selected: SelectedCall[]): Selection => ({
-  calls: selected,
-  kind: 'calls',
-  text: '',
-  usage: {
-    cacheReadInputTokens: 0,
-    cacheWriteInputTokens: 0,
-    inputTokens: 0,
-    outputTokens: 0,
-  },
-});
+const calls = (...selected: SelectedCall[]): Selection => {
+  return {
+    calls: selected,
+    kind: 'calls',
+    text: '',
+    usage: {
+      cacheReadInputTokens: 0,
+      cacheWriteInputTokens: 0,
+      inputTokens: 0,
+      outputTokens: 0,
+    },
+  };
+};
 
 const callCase: ToolSelectionCase = {
   area: 'task-crud',

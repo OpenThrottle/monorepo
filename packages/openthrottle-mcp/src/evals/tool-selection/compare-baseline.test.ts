@@ -3,25 +3,29 @@ import { describe, expect, it } from 'vitest';
 import type { CaseResult, RunResult } from './compare-baseline.ts';
 import { compareBaseline, passRate } from './compare-baseline.ts';
 
-const result = (id: string, passes: number, trials = 1): CaseResult => ({
-  failures: [],
-  id,
-  passes,
-  trials,
-});
+const result = (id: string, passes: number, trials = 1): CaseResult => {
+  return {
+    failures: [],
+    id,
+    passes,
+    trials,
+  };
+};
 
-const run = (model: string, cases: readonly CaseResult[]): RunResult => ({
-  cases,
-  effort: 'medium',
-  model,
-  surfaceSha256: 'abc',
-  usage: {
-    cacheReadInputTokens: 0,
-    cacheWriteInputTokens: 0,
-    inputTokens: 0,
-    outputTokens: 0,
-  },
-});
+const run = (model: string, cases: readonly CaseResult[]): RunResult => {
+  return {
+    cases,
+    effort: 'medium',
+    model,
+    surfaceSha256: 'abc',
+    usage: {
+      cacheReadInputTokens: 0,
+      cacheWriteInputTokens: 0,
+      inputTokens: 0,
+      outputTokens: 0,
+    },
+  };
+};
 
 describe('passRate', () => {
   it('divides passes by trials, and is 0 with no trials', () => {

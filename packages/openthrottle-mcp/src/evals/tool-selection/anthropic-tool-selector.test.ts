@@ -36,11 +36,12 @@ const okBody = {
   },
 };
 
-const jsonResponse = (status: number, body: unknown): Response =>
-  new Response(JSON.stringify(body), {
+const jsonResponse = (status: number, body: unknown): Response => {
+  return new Response(JSON.stringify(body), {
     headers: { 'content-type': 'application/json' },
     status,
   });
+};
 
 describe('buildRequestBody', () => {
   it('offers OT and harness tools with auto choice, caching the system prefix', () => {
