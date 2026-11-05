@@ -426,13 +426,19 @@ What a queue entry runs, in `continuous-integration.yml` on the `merge_group` ev
   the whole tree.
 - **A red `build` shard or a red `gates` cancels the whole run** (merge_group only). The queue
   ejects an entry only once `ci-success` reports, and that job waits for every shard and `gates`.
-  Probe run 41931301776 failed a shard at 23:09:50 and ejected at 23:12:02, all of it spent waiting
-  for `gates`, and every entry behind it waited too. So the last step of each of those jobs runs
-  `gh run cancel` when the job has failed (job-scoped `actions: write`), and the matrix fails fast
-  on this event as a backstop. `ci-success` still runs, because `if: always()` survives a cancel,
-  and still reports red: the cancelling job is `failure` or `cancelled`, and `ci-success` accepts
-  only `success` or `skipped`. Ready PRs keep `fail-fast: false`, because three complete shard
-  results tell an author more than one.
+  So the last step of each of those jobs runs `gh run cancel` when the job has failed (job-scoped
+  `actions: write`), and the matrix fails fast on this event as a backstop. `ci-success` still
+  runs, because `if: always()` survives a cancel, and still reports red: the cancelling job is
+  `failure` or `cancelled`, and `ci-success` accepts only `success` or `skipped`. Ready PRs keep
+  `fail-fast: false`, because three complete shard results tell an author more than one.
+
+  Measured in the live queue (OT plan 10e17c59, probes #655/#656), from the failing step to the
+  removal event. **At the head of the queue** this cut ejection from 2m17s (run 41932015636) to
+  31s (run 41946224662). **Behind another entry** it changes nothing: 2m12s before, 2m13s after.
+  The queue holds a red entry until every entry ahead of it resolves, because the failure might be
+  theirs, and removes it the moment the one ahead lands. The cancel still frees that entry's
+  runners about two minutes sooner.
+
 - **`attribution-guard`** checks the squash commits in `base_sha..head_sha`. The queue fast-forwards
   `main` to `head_sha`, so those exact server-composed messages are what land, and no local hook can
   see them. A hit ejects the PR before it becomes immutable history.
