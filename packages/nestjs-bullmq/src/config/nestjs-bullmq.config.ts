@@ -26,9 +26,12 @@ export const configValidationSchema = Joi.object({
 /**
  * Truthy env-string check. Accepts `1`, `true`, `yes`, `on` (case-insensitive).
  */
-const isEnvTrue = (value: string | undefined): boolean =>
-  value !== undefined &&
-  ['1', 'on', 'true', 'yes'].includes(value.toLowerCase());
+const isEnvTrue = (value: string | undefined): boolean => {
+  return (
+    value !== undefined &&
+    ['1', 'on', 'true', 'yes'].includes(value.toLowerCase())
+  );
+};
 
 /** BullMQ's default key prefix; the main checkout keeps it so existing Redis state stays reachable. */
 const DEFAULT_QUEUE_PREFIX = 'bull';

@@ -40,7 +40,9 @@ describe('NotificationsStoreProvider Component', () => {
   });
 
   test('renders only the visually-hidden announcer when children is null', () => {
-    const Component = () => <NotificationsStoreProvider {...props} />;
+    const Component = () => {
+      return <NotificationsStoreProvider {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { container, getByTestId } = render(<RoutesStub />);
 
@@ -61,11 +63,13 @@ describe('NotificationsStoreProvider Component', () => {
     );
     const renders: number[] = [];
 
-    const Component = () => (
-      <NotificationsStoreProvider>
-        <UnreadProbe renders={renders} />
-      </NotificationsStoreProvider>
-    );
+    const Component = () => {
+      return (
+        <NotificationsStoreProvider>
+          <UnreadProbe renders={renders} />
+        </NotificationsStoreProvider>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
 
@@ -85,11 +89,13 @@ describe('NotificationsStoreProvider Component', () => {
       JSON.stringify([STORED_NOTIFICATION]),
     );
 
-    const Component = () => (
-      <NotificationsStoreProvider>
-        <UnreadProbe renders={[]} />
-      </NotificationsStoreProvider>
-    );
+    const Component = () => {
+      return (
+        <NotificationsStoreProvider>
+          <UnreadProbe renders={[]} />
+        </NotificationsStoreProvider>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
 

@@ -16,7 +16,9 @@ describe('CalendarTable Component', () => {
   beforeEach(() => {
     props = { events: CALENDAR_EVENTS };
 
-    const Component = () => <CalendarTable {...props} />;
+    const Component = () => {
+      return <CalendarTable {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

@@ -15,8 +15,7 @@ export class AgenticWorkflowResolver {
   ) {}
 
   @Mutation(() => EnqueueAgenticWorkflowMockResultObject, {
-    description:
-      'Enqueue a deterministic mock payload on the agentic-test queue (agentic-workflow smoke path). Returns job metadata or error.',
+    description: `Enqueue a deterministic mock payload on the agentic-test queue (agentic-workflow smoke path). Returns job metadata or error.`,
   })
   async enqueueAgenticWorkflowMock(): Promise<EnqueueAgenticWorkflowMockResultObject> {
     const result = await this.agenticWorkflowService.enqueueMockAgenticTest();

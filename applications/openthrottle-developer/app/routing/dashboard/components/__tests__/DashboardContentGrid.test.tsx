@@ -45,7 +45,9 @@ describe('DashboardContentGrid Component', () => {
       recentChats: mockRecentChats,
     };
 
-    const Component = () => <DashboardContentGrid {...props} />;
+    const Component = () => {
+      return <DashboardContentGrid {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
   });
@@ -85,17 +87,19 @@ describe('DashboardContentGrid Component', () => {
 
   test('shows the configure-GITHUB_TOKEN empty state when unconfigured', async () => {
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <DashboardContentGrid
-        {...props}
-        githubStats={Promise.resolve({
-          closedPrCountByAuthor: [],
-          githubTokenConfigured: false,
-          openPrCountByAuthor: [],
-          prTimeInStateSummary: [],
-        })}
-      />
-    );
+    const Component = () => {
+      return (
+        <DashboardContentGrid
+          {...props}
+          githubStats={Promise.resolve({
+            closedPrCountByAuthor: [],
+            githubTokenConfigured: false,
+            openPrCountByAuthor: [],
+            prTimeInStateSummary: [],
+          })}
+        />
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const local = render(<RoutesStub />);
     // Scope queries to this render's container — the beforeEach (configured)

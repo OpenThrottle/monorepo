@@ -13,8 +13,9 @@ export const SKILLS_DETAIL_TAB_SEARCH_PARAM = 'tab';
 
 const SKILL_DETAIL_TAB_VALUES: readonly SkillDetailTab[] = ['skill', 'usage'];
 
-const isSkillDetailTab = (raw: string): raw is SkillDetailTab =>
-  SKILL_DETAIL_TAB_VALUES.some((tab) => tab === raw);
+const isSkillDetailTab = (raw: string): raw is SkillDetailTab => {
+  return SKILL_DETAIL_TAB_VALUES.some((tab) => tab === raw);
+};
 
 /** Parse the `tab` param for skill detail; `null` for missing/unknown. */
 export const parseSkillDetailTab = (

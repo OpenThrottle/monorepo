@@ -76,14 +76,15 @@ describe('artifact-type-registry', () => {
   describe('shouldFireLifecycleTriggers', () => {
     const landing = (
       overrides: Partial<Parameters<typeof shouldFireLifecycleTriggers>[0]>,
-    ) =>
-      shouldFireLifecycleTriggers({
+    ) => {
+      return shouldFireLifecycleTriggers({
         fireTriggers: undefined,
         lifecycle: 'landed',
         source: 'agent',
         type: 'git_commit',
         ...overrides,
       });
+    };
 
     it('fires for live agent-reported work', () => {
       expect(landing({})).toBe(true);

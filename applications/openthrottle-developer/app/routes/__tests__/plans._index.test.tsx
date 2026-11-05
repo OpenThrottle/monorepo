@@ -97,14 +97,16 @@ const matches: Route.ComponentProps['matches'] = [
 
 describe('routes/plans._index.tsx', () => {
   test('should render with distinct stat cards: Total, In progress (all), Completed (all)', () => {
-    const Component = () => (
-      <Index
-        actionData={undefined}
-        loaderData={mockLoaderDataWithStats}
-        matches={matches}
-        params={{}}
-      />
-    );
+    const Component = () => {
+      return (
+        <Index
+          actionData={undefined}
+          loaderData={mockLoaderDataWithStats}
+          matches={matches}
+          params={{}}
+        />
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
 
@@ -122,14 +124,16 @@ describe('routes/plans._index.tsx', () => {
 
   test('should render empty state with zero counts in stat cards', () => {
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <Index
-        actionData={undefined}
-        loaderData={mockLoaderDataEmpty}
-        matches={matches}
-        params={{}}
-      />
-    );
+    const Component = () => {
+      return (
+        <Index
+          actionData={undefined}
+          loaderData={mockLoaderDataEmpty}
+          matches={matches}
+          params={{}}
+        />
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
     expect(component.getByText('Matching / Total plans')).toBeInTheDocument();
@@ -140,14 +144,16 @@ describe('routes/plans._index.tsx', () => {
 
   test('shows the onboarding pitch for a new user (no plans, unfiltered)', () => {
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <Index
-        actionData={undefined}
-        loaderData={mockLoaderDataEmpty}
-        matches={matches}
-        params={{}}
-      />
-    );
+    const Component = () => {
+      return (
+        <Index
+          actionData={undefined}
+          loaderData={mockLoaderDataEmpty}
+          matches={matches}
+          params={{}}
+        />
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
 
@@ -167,14 +173,16 @@ describe('routes/plans._index.tsx', () => {
 
   test('renders the onboarding trigger in the header when populated', () => {
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <Index
-        actionData={undefined}
-        loaderData={mockLoaderDataWithStats}
-        matches={matches}
-        params={{}}
-      />
-    );
+    const Component = () => {
+      return (
+        <Index
+          actionData={undefined}
+          loaderData={mockLoaderDataWithStats}
+          matches={matches}
+          params={{}}
+        />
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
 
@@ -189,14 +197,16 @@ describe('routes/plans._index.tsx', () => {
 
   test('reveals the onboarding modal over a populated list via ?modal=onboarding', () => {
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <Index
-        actionData={undefined}
-        loaderData={mockLoaderDataWithStats}
-        matches={matches}
-        params={{}}
-      />
-    );
+    const Component = () => {
+      return (
+        <Index
+          actionData={undefined}
+          loaderData={mockLoaderDataWithStats}
+          matches={matches}
+          params={{}}
+        />
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/plans' }]);
     const component = render(
       <RoutesStub initialEntries={['/plans?modal=onboarding']} />,
@@ -214,17 +224,19 @@ describe('routes/plans._index.tsx', () => {
     // Plans exist in the workspace (totalCountAll > 0) but this filtered page
     // returned none — the terse filtered-empty state, not the new-user pitch.
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <Index
-        actionData={undefined}
-        loaderData={{
-          ...mockLoaderDataEmpty,
-          totalCountAll: 11,
-        }}
-        matches={matches}
-        params={{}}
-      />
-    );
+    const Component = () => {
+      return (
+        <Index
+          actionData={undefined}
+          loaderData={{
+            ...mockLoaderDataEmpty,
+            totalCountAll: 11,
+          }}
+          matches={matches}
+          params={{}}
+        />
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/plans' }]);
     const component = render(<RoutesStub initialEntries={['/plans?q=zzzz']} />);
 
@@ -239,21 +251,23 @@ describe('routes/plans._index.tsx', () => {
 
   test('should render pagination on /plans with assignee and status filters in links', () => {
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <Index
-        actionData={undefined}
-        loaderData={{
-          ...mockLoaderDataWithStats,
-          assignees: ['visormatt'],
-          limit: 10,
-          page: 3,
-          statuses: ['IN_PROGRESS', 'PENDING'],
-          totalCount: 100,
-        }}
-        matches={matches}
-        params={{}}
-      />
-    );
+    const Component = () => {
+      return (
+        <Index
+          actionData={undefined}
+          loaderData={{
+            ...mockLoaderDataWithStats,
+            assignees: ['visormatt'],
+            limit: 10,
+            page: 3,
+            statuses: ['IN_PROGRESS', 'PENDING'],
+            totalCount: 100,
+          }}
+          matches={matches}
+          params={{}}
+        />
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const view = render(<RoutesStub />);
 

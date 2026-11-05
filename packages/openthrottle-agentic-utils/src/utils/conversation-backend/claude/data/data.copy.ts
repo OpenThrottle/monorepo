@@ -6,8 +6,7 @@
 /**
  * Shown when no credential at all (no login, no API key) is available.
  */
-export const CLAUDE_NOT_LOGGED_IN_WARNING =
-  'Claude is not logged in and no API key is set. Run `claude auth login` (or set ANTHROPIC_API_KEY) before starting a Claude run.';
+export const CLAUDE_NOT_LOGGED_IN_WARNING = `Claude is not logged in and no API key is set. Run \`claude auth login\` (or set ANTHROPIC_API_KEY) before starting a Claude run.`;
 
 /**
  * Shown when an API key would override a logged-in subscription.

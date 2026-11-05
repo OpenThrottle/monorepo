@@ -11,14 +11,16 @@ import {
 
 const rule = (
   overrides: Partial<RulesListFilterable> & Pick<RulesListFilterable, 'title'>,
-): RulesListFilterable => ({
-  actionType: 'inject-task',
-  enabled: true,
-  environment: null,
-  status: null,
-  tagAll: ['breakdown'],
-  ...overrides,
-});
+): RulesListFilterable => {
+  return {
+    actionType: 'inject-task',
+    enabled: true,
+    environment: null,
+    status: null,
+    tagAll: ['breakdown'],
+    ...overrides,
+  };
+};
 
 const sample: RulesListFilterable[] = [
   rule({

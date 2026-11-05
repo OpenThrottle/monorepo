@@ -29,10 +29,16 @@ export const SettingsWorkspaceProfileForm = (
   const isSubmitting =
     navigation.state === 'submitting' &&
     navigation.formData?.get('intent') === 'updateProfile';
+  const { saveBusyLabel, saveButton } = WORKSPACE_SETTINGS_COPY;
 
   // Handlers
 
   // Markup
+  const actionErrorMarkup = (
+    <p className="text-destructive text-sm" role="alert">
+      {actionError}
+    </p>
+  );
 
   // Life Cycle
 
@@ -89,16 +95,10 @@ export const SettingsWorkspaceProfileForm = (
             />
           </div>
 
-          {actionError ? (
-            <p className="text-destructive text-sm" role="alert">
-              {actionError}
-            </p>
-          ) : null}
+          {actionError ? actionErrorMarkup : null}
 
           <Button disabled={isSubmitting} type="submit" variant="outline">
-            {isSubmitting
-              ? WORKSPACE_SETTINGS_COPY.saveBusyLabel
-              : WORKSPACE_SETTINGS_COPY.saveButton}
+            {isSubmitting ? saveBusyLabel : saveButton}
           </Button>
         </Form>
       </div>

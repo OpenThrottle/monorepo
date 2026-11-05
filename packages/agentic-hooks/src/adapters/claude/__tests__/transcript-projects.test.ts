@@ -50,7 +50,9 @@ describe('parseWorktreeList', () => {
 
 describe('resolveCheckouts', () => {
   it('adds git worktrees only when asked', () => {
-    const listWorktrees = () => ['/repo', '/wt/one'];
+    const listWorktrees = () => {
+      return ['/repo', '/wt/one'];
+    };
     expect(
       resolveCheckouts({
         includeWorktrees: true,

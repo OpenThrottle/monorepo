@@ -59,9 +59,11 @@ export const LinkedArtifactsPanel = (
   const groups = groupLinkedArtifacts(visible);
 
   // Handlers
-  const renderRow = (artifact: LinkedArtifactRow): React.ReactNode => (
-    <LinkedArtifactRowItem artifact={artifact} planId={planId ?? null} />
-  );
+  const renderRow = (artifact: LinkedArtifactRow): React.ReactNode => {
+    return (
+      <LinkedArtifactRowItem artifact={artifact} planId={planId ?? null} />
+    );
+  };
 
   // Markup
 
@@ -83,11 +85,11 @@ export const LinkedArtifactsPanel = (
       />
 
       {/* A filter emptying the list is NOT the empty ledger — that returns null. */}
-      {visible.length === 0 ? (
+      {visible.length === 0 && (
         <p className="text-muted-foreground text-xs">
           {LINKED_ARTIFACTS_PANEL_COPY.filteredEmpty}
         </p>
-      ) : null}
+      )}
 
       {groups.map((group) => (
         <LinkedArtifactGroup

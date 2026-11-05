@@ -11,8 +11,9 @@ const PANEL_TEXT = 'Panel body content';
  * @description Radix nests **Trigger → Header (`h3`) → Item root** (Collapsible root with
  * `data-state`, `border-b`, etc.). Resolves the item wrapper for assertions on the item component.
  */
-const getAccordionItemRoot = (trigger: HTMLElement): HTMLElement | null =>
-  trigger.parentElement?.parentElement ?? null;
+const getAccordionItemRoot = (trigger: HTMLElement): HTMLElement | null => {
+  return trigger.parentElement?.parentElement ?? null;
+};
 
 describe('AccordionItem', () => {
   it('renders the item wrapper with border-b and closed data-state by default', () => {

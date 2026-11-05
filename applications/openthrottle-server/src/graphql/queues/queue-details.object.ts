@@ -20,8 +20,7 @@ export class JobsResultObject {
   hasNext!: boolean;
 
   @Field(() => Int, {
-    description:
-      'Total jobs across the requested states (state-filtered), for accurate pagination.',
+    description: `Total jobs across the requested states (state-filtered), for accurate pagination.`,
   })
   total!: number;
 }
@@ -29,8 +28,7 @@ export class JobsResultObject {
 @ObjectType()
 export class QueueDetailsObject extends QueueStatsObject {
   @Field(() => JobsResultObject, {
-    description:
-      'Paginated jobs for this queue (optional; omit for stats-only).',
+    description: `Paginated jobs for this queue (optional; omit for stats-only).`,
     nullable: true,
   })
   jobs!: JobsResultObject | null;

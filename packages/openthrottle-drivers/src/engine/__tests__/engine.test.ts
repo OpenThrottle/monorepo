@@ -55,12 +55,14 @@ const testDriver: AgentDriver = defineDriver({
 
 /** Stand-in structured driver: `LIMIT:<text>` marks a usage limit, anything else is passthrough. */
 const parseTestOutput = (stdout: string): DriverParsedOutput => {
-  return stdout.startsWith('LIMIT:')
-    ? {
-        text: stdout.slice('LIMIT:'.length),
-        usageLimit: { rateLimitType: 'five_hour', resetsAt: null },
-      }
-    : { text: `parsed(${stdout})`, usageLimit: null };
+  if (stdout.startsWith('LIMIT:')) {
+    return {
+      text: stdout.slice('LIMIT:'.length),
+      usageLimit: { rateLimitType: 'five_hour', resetsAt: null },
+    };
+  }
+
+  return { text: `parsed(${stdout})`, usageLimit: null };
 };
 
 const structuredDriver: AgentDriver = defineDriver({

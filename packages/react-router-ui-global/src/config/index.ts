@@ -69,11 +69,9 @@ export type GlobalMetricsChartLineKey =
 export const GLOBAL_METRICS_LINE_DEFINITIONS: Readonly<
   Record<GlobalMetricsChartLineKey, string>
 > = {
-  cpuUserMs:
-    'Cumulative user-mode CPU time for this Node process (chart series; system CPU stays on the stat card only).',
+  cpuUserMs: `Cumulative user-mode CPU time for this Node process (chart series; system CPU stays on the stat card only).`,
   heapUsedMb: 'V8 heap bytes currently used for JavaScript objects.',
-  rssMb:
-    'Resident set size — total process memory the OS attributes to the API process.',
+  rssMb: `Resident set size — total process memory the OS attributes to the API process.`,
 };
 
 export interface GlobalMetricsStatCardDoc {

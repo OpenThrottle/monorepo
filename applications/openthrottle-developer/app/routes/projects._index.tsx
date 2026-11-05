@@ -24,7 +24,7 @@ import { ProjectsTable } from '~/routing/projects/components/ProjectsTable';
 import { ProjectsToolbar } from '~/routing/projects/components/ProjectsToolbar';
 import type { SortBy, SortOrder, View } from '~/routing/projects/config';
 import { PROJECTS_DEFAULT_LIMIT } from '~/routing/projects/config/projects.defaults';
-import type { ProjectWithStats } from '~/routing/projects/data/types';
+import type { ProjectWithStats } from '~/routing/projects/types';
 import {
   parseProjectsBySearch,
   parseProjectWithStats,

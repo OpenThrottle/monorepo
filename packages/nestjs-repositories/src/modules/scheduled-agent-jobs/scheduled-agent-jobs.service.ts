@@ -159,8 +159,9 @@ export interface ScheduledAgentJobRunStatusCount {
 }
 
 /** Stable BullMQ scheduler id for a schedule row. */
-export const schedulerKeyForJob = (jobId: string): string =>
-  `scheduled-job:${jobId}`;
+export const schedulerKeyForJob = (jobId: string): string => {
+  return `scheduled-job:${jobId}`;
+};
 
 @Injectable()
 export class ScheduledAgentJobsService {

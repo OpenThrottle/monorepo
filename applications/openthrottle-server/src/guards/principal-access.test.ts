@@ -29,10 +29,12 @@ const serviceAccountPrincipal = {
 const userNamed = (
   githubUsername: string,
   email: string | null,
-): ReturnType<typeof usersFactory.build> & { roles: never[] } => ({
-  ...usersFactory.build({ email, githubUsername }),
-  roles: [],
-});
+): ReturnType<typeof usersFactory.build> & { roles: never[] } => {
+  return {
+    ...usersFactory.build({ email, githubUsername }),
+    roles: [],
+  };
+};
 
 const serviceAccount: ServiceAccount = {
   actingUserId: null,
@@ -90,7 +92,9 @@ describe('principal-access', () => {
     const services = (): {
       serviceAccountsService: ServiceAccountsService;
       usersService: UsersService;
-    } => ({ serviceAccountsService, usersService });
+    } => {
+      return { serviceAccountsService, usersService };
+    };
 
     describe('service account principal', () => {
       it('uses the service account name', async () => {

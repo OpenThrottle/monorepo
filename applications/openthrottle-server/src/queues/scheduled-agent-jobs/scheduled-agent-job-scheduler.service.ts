@@ -32,16 +32,18 @@ import type { ScheduledAgentJobPayload } from './scheduled-agent-jobs.types.ts';
 export const buildScheduledAgentJobPayload = (
   job: ScheduledAgentJob,
   resolvedCheckoutPath?: string | null,
-): ScheduledAgentJobPayload => ({
-  cwd: resolvedCheckoutPath ?? job.cwd,
-  driverId: job.driverId,
-  model: job.model,
-  prompt: job.prompt,
-  repositoryCheckoutId: job.repositoryCheckoutId,
-  scheduleId: job.id,
-  settings: job.settings,
-  timeoutMs: job.timeoutMs,
-});
+): ScheduledAgentJobPayload => {
+  return {
+    cwd: resolvedCheckoutPath ?? job.cwd,
+    driverId: job.driverId,
+    model: job.model,
+    prompt: job.prompt,
+    repositoryCheckoutId: job.repositoryCheckoutId,
+    scheduleId: job.id,
+    settings: job.settings,
+    timeoutMs: job.timeoutMs,
+  };
+};
 
 /**
  * @description Owns the DB→BullMQ projection for scheduled agent jobs: idempotent upsert/remove of a

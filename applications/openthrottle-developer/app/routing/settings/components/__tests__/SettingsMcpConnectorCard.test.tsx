@@ -14,35 +14,39 @@ import { SettingsMcpConnectorCard } from '../SettingsMcpConnectorCard';
 
 const connector = (
   overrides: Partial<McpConnectorFieldsFragment> = {},
-): McpConnectorFieldsFragment => ({
-  __typename: 'McpConnectorObject',
-  authType: 'oauth',
-  category: 'productivity',
-  description: 'Manage issues and pull requests.',
-  docsUrl: 'https://docs.github.com',
-  endpointUrl: null,
-  iconHint: 'github',
-  key: 'github',
-  name: 'GitHub',
-  provider: 'anthropic-directory',
-  transport: 'remote-http',
-  ...overrides,
-});
+): McpConnectorFieldsFragment => {
+  return {
+    __typename: 'McpConnectorObject',
+    authType: 'oauth',
+    category: 'productivity',
+    description: 'Manage issues and pull requests.',
+    docsUrl: 'https://docs.github.com',
+    endpointUrl: null,
+    iconHint: 'github',
+    key: 'github',
+    name: 'GitHub',
+    provider: 'anthropic-directory',
+    transport: 'remote-http',
+    ...overrides,
+  };
+};
 
 const connection = (
   overrides: Partial<McpConnectorConnectionFieldsFragment> = {},
-): McpConnectorConnectionFieldsFragment => ({
-  __typename: 'McpConnectorConnectionObject',
-  authType: 'oauth',
-  connectedAt: '2026-01-01T00:00:00.000Z',
-  connectorKey: 'github',
-  credentialLabel: null,
-  credentialPrefix: null,
-  enabled: true,
-  id: 'connection-1',
-  lastUsedAt: null,
-  ...overrides,
-});
+): McpConnectorConnectionFieldsFragment => {
+  return {
+    __typename: 'McpConnectorConnectionObject',
+    authType: 'oauth',
+    connectedAt: '2026-01-01T00:00:00.000Z',
+    connectorKey: 'github',
+    credentialLabel: null,
+    credentialPrefix: null,
+    enabled: true,
+    id: 'connection-1',
+    lastUsedAt: null,
+    ...overrides,
+  };
+};
 
 describe('SettingsMcpConnectorCard Component', () => {
   let component: RenderResult;
@@ -53,7 +57,9 @@ describe('SettingsMcpConnectorCard Component', () => {
   });
 
   const renderCard = (): RenderResult => {
-    const Component = () => <SettingsMcpConnectorCard {...props} />;
+    const Component = () => {
+      return <SettingsMcpConnectorCard {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     return render(<RoutesStub />);
   };

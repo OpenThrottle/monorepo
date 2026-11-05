@@ -24,8 +24,8 @@ export interface RenderCacheKeyParts {
  * @description Stable key for one sentence render. 16 hex chars of sha256.
  * @public
  */
-export const renderCacheKey = (parts: RenderCacheKeyParts): string =>
-  createHash('sha256')
+export const renderCacheKey = (parts: RenderCacheKeyParts): string => {
+  return createHash('sha256')
     .update(
       JSON.stringify([
         parts.backendId,
@@ -36,6 +36,7 @@ export const renderCacheKey = (parts: RenderCacheKeyParts): string =>
     )
     .digest('hex')
     .slice(0, 16);
+};
 
 /**
  * @description Path of the cached render for a key, or undefined on a miss.

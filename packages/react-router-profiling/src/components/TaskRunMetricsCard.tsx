@@ -18,9 +18,9 @@ import {
 import * as React from 'react';
 
 import { TASK_RUN_INTERPRETATION_HINTS } from '../data/data.copy';
-import { METRIC_ROWS } from '../data/metric-rows';
-import { computeTaskRunDeltas } from '../data/task-run-metrics-deltas';
+import { METRIC_ROWS } from '../data/data.metric-rows';
 import { useJobTaskRunMetrics } from '../hooks/useJobTaskRunMetrics';
+import { computeTaskRunDeltas } from '../utils/task-run-metrics-deltas';
 
 export interface TaskRunMetricsCardProps {
   /** API base URL for openthrottle-server. Defaults to config. */
@@ -45,10 +45,14 @@ export const TaskRunMetricsCard = (
   const hasJobNoMetrics =
     !loading && error == null && job != null && job.taskRunMetrics == null;
   const metrics = job?.taskRunMetrics ?? null;
-  const deltas =
-    metrics != null
-      ? computeTaskRunDeltas(metrics.atStart, metrics.atEnd)
-      : null;
+  const resolveDeltas = (): ReturnType<typeof computeTaskRunDeltas> | null => {
+    if (metrics == null) {
+      return null;
+    }
+
+    return computeTaskRunDeltas(metrics.atStart, metrics.atEnd);
+  };
+  const deltas = resolveDeltas();
 
   // Handlers
 

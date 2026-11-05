@@ -19,8 +19,8 @@ import { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs-graphql
 
 const jobFixture = (
   overrides: Partial<ScheduledAgentJob> = {},
-): ScheduledAgentJob =>
-  createMock<ScheduledAgentJob>({
+): ScheduledAgentJob => {
+  return createMock<ScheduledAgentJob>({
     cronPattern: '0 9 * * *',
     cwd: null,
     driverId: 'claude',
@@ -34,6 +34,7 @@ const jobFixture = (
     timezone: null,
     ...overrides,
   });
+};
 
 describe('ScheduledAgentJobsGraphqlService', () => {
   let jobsService: ScheduledAgentJobsService;

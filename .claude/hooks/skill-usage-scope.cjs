@@ -37,7 +37,9 @@ var import_node_fs2 = __toESM(require("node:fs"), 1);
 var import_node_path4 = __toESM(require("node:path"), 1);
 
 // packages/nodejs-utils/src/utils/is-record.ts
-var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
+var isRecord = (value) => {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+};
 
 // packages/agentic-hooks/src/config/env.ts
 var import_node_path = __toESM(require("node:path"), 1);

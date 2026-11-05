@@ -26,6 +26,19 @@ export function escapeForShellDoubleQuoted(prompt: string): string {
 }
 
 /**
+ * @description Builds the ` --model <id>` flag, or `''` when the model is blank or `auto`.
+ * @public
+ */
+export function formatModelFlag(model: string | null | undefined): string {
+  const modelNorm = model?.trim() ?? '';
+  if (modelNorm === '' || modelNorm === 'auto') {
+    return '';
+  }
+
+  return ` --model ${escapeShellArg(modelNorm)}`;
+}
+
+/**
  * @description Escapes an arbitrary value for safe use as a single argument inside a `shell: true`
  * command string. Values matching the safe charset pass through verbatim; anything else is wrapped
  * in double quotes with every shell-special character (`\`, `` ` ``, `$`, `"`) escaped, so a value
@@ -60,10 +73,11 @@ export function formatShellEnvPrefix(
     .sort()
     .flatMap((key) => {
       const value = env[key];
+      if (value === undefined || value === '') {
+        return [];
+      }
 
-      return value === undefined || value === ''
-        ? []
-        : [`${key}=${escapeShellArg(value)}`];
+      return [`${key}=${escapeShellArg(value)}`];
     });
 
   return parts.length > 0 ? `${parts.join(' ')} ` : '';

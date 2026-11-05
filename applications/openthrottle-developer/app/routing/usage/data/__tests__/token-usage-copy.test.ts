@@ -6,9 +6,11 @@ import {
   TOKEN_USAGE_SOURCE_LABELS,
   TOKEN_USAGE_SOURCES,
   TOKEN_USAGE_STATS,
+} from '~/routing/usage/data/data.token-usage-copy';
+import {
   tokenUsageProviderLabel,
   tokenUsageSourceLabel,
-} from '../token-usage-copy';
+} from '~/routing/usage/utils/token-usage-labels';
 
 describe('tokenUsageProviderLabel', () => {
   test('maps every registered provider id to its label', () => {

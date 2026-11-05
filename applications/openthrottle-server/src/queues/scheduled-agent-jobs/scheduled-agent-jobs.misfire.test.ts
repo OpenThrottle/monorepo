@@ -7,7 +7,9 @@ import {
   slotMillisFromJobId,
 } from './scheduled-agent-jobs.misfire.ts';
 
-const at = (iso: string): Date => new Date(iso);
+const at = (iso: string): Date => {
+  return new Date(iso);
+};
 const TEN_MIN = 10 * 60_000;
 
 describe('slotMillisFromJobId', () => {

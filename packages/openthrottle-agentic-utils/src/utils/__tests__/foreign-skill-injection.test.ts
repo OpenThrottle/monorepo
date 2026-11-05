@@ -29,10 +29,15 @@ import {
   HOST_WORKSPACES_DIR_ENV,
 } from '../workspace-paths.ts';
 
-const git = (repo: string, ...args: string[]): string =>
-  execFileSync('git', ['-C', repo, ...args], { encoding: 'utf8' }).trim();
+const git = (repo: string, ...args: string[]): string => {
+  return execFileSync('git', ['-C', repo, ...args], {
+    encoding: 'utf8',
+  }).trim();
+};
 
-const porcelain = (repo: string): string => git(repo, 'status', '--porcelain');
+const porcelain = (repo: string): string => {
+  return git(repo, 'status', '--porcelain');
+};
 
 const writeSkill = (root: string, name: string): void => {
   const dir = join(root, name);

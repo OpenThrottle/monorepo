@@ -32,14 +32,15 @@ import { PRUNE_WORKTREE_CHECKOUT_OUTCOME } from './worktree-checkout-prune.types
 const USER = 'user-1';
 const ROOT = '/Users/matt/.openthrottle/worktrees/acme/monorepo';
 
-const worktree = (name: string): RepositoryCheckout =>
-  createMock<RepositoryCheckout>({
+const worktree = (name: string): RepositoryCheckout => {
+  return createMock<RepositoryCheckout>({
     filesystemPath: `${ROOT}/${name}`,
     id: `checkout-${name}`,
     kind: 'worktree',
     repositoryId: 'repo-1',
     userId: USER,
   });
+};
 
 /** Paths listed in `live` are linked worktrees (`.git` is a file); everything else is gone. */
 const withDisk = (live: readonly string[]): void => {

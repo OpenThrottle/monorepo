@@ -40,8 +40,7 @@ describe('generators do not clobber existing files', () => {
   const handWritten = `// hand-written, must survive regeneration\n`;
 
   test('react-router component leaves an existing test file alone', async () => {
-    const testPath =
-      'applications/openthrottle-website/app/global/components/__tests__/TestComponent.test.tsx';
+    const testPath = `applications/openthrottle-website/app/global/components/__tests__/TestComponent.test.tsx`;
     tree.write(testPath, handWritten);
 
     await generatorReactRouterComponent(tree, {
@@ -59,8 +58,7 @@ describe('generators do not clobber existing files', () => {
   });
 
   test('react component leaves an existing test file alone', async () => {
-    const testPath =
-      'packages/react-router-shadcn/src/components/__tests__/TestComponent.test.tsx';
+    const testPath = `packages/react-router-shadcn/src/components/__tests__/TestComponent.test.tsx`;
     tree.write(testPath, handWritten);
 
     await componentGenerator(tree, {
@@ -77,8 +75,7 @@ describe('generators do not clobber existing files', () => {
   });
 
   test('an existing component file is preserved too', async () => {
-    const componentPath =
-      'packages/react-router-shadcn/src/components/TestComponent.tsx';
+    const componentPath = `packages/react-router-shadcn/src/components/TestComponent.tsx`;
     tree.write(componentPath, handWritten);
 
     await componentGenerator(tree, {

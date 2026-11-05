@@ -62,6 +62,13 @@ const savedConsole: Partial<Record<ClientLogLevel, ConsoleImpl>> = {};
 let errorListener: ((ev: ErrorEvent) => void) | undefined;
 let rejectionListener: ((ev: PromiseRejectionEvent) => void) | undefined;
 
+const describeRejectionReason = (reason: unknown): string => {
+  if (reason instanceof Error) {
+    return reason.stack ?? reason.message;
+  }
+  return String(reason);
+};
+
 export const notify = (): void => {
   for (const listener of listeners) {
     listener();
@@ -193,10 +200,7 @@ export const installClientLogSink = (): void => {
   window.addEventListener('error', errorListener);
 
   rejectionListener = (ev: PromiseRejectionEvent) => {
-    const reason =
-      ev.reason instanceof Error
-        ? (ev.reason.stack ?? ev.reason.message)
-        : String(ev.reason);
+    const reason = describeRejectionReason(ev.reason);
     push('error', [`unhandledrejection: ${reason}`]);
   };
   window.addEventListener('unhandledrejection', rejectionListener);

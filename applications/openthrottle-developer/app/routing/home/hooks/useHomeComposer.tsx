@@ -25,7 +25,6 @@ import {
 import { useAtom } from 'jotai';
 import * as React from 'react';
 
-import type { RepositoryOption } from '~/routing/home/data/models.server';
 import type { UseAgenticChatTurnResult } from '~/routing/home/hooks/useAgenticChatTurn';
 import type { UseConversationListResult } from '~/routing/home/hooks/useConversationList';
 import { useFileMentionProvider } from '~/routing/home/hooks/useFileMentionProvider';
@@ -34,6 +33,7 @@ import {
   useVoiceInput,
   type UseVoiceInputResult,
 } from '~/routing/home/hooks/useVoiceInput';
+import type { RepositoryOption } from '~/routing/home/utils/models.server';
 
 export interface UseHomeComposerOptions {
   /** Sidebar-backing conversation list; the composer refreshes it on new persisted turns. */
@@ -178,27 +178,36 @@ export const useHomeComposer = (
   );
 
   // Handlers
-  const setMode = (mode: ChatComposerMode): void =>
-    setToolbarState((previous) => ({ ...previous, mode }));
-  const setModelId = (modelId: string): void =>
-    setToolbarState((previous) => ({ ...previous, modelId }));
-  const setPermissionMode = (permissionMode: ChatPermissionMode): void =>
-    setToolbarState((previous) => ({ ...previous, permissionMode }));
-  const setPersist = (persist: boolean): void =>
-    setToolbarState((previous) => ({ ...previous, persist }));
-  const setPersonaId = (personaId: string): void =>
-    setToolbarState((previous) => ({ ...previous, personaId }));
-  const setReasoning = (reasoning: ChatReasoningLevel): void =>
-    setToolbarState((previous) => ({ ...previous, reasoning }));
-  const setRepositoryId = (repositoryId: string): void =>
-    setToolbarState((previous) => ({
+  const setMode = (mode: ChatComposerMode): void => {
+    return setToolbarState((previous) => ({ ...previous, mode }));
+  };
+  const setModelId = (modelId: string): void => {
+    return setToolbarState((previous) => ({ ...previous, modelId }));
+  };
+  const setPermissionMode = (permissionMode: ChatPermissionMode): void => {
+    return setToolbarState((previous) => ({ ...previous, permissionMode }));
+  };
+  const setPersist = (persist: boolean): void => {
+    return setToolbarState((previous) => ({ ...previous, persist }));
+  };
+  const setPersonaId = (personaId: string): void => {
+    return setToolbarState((previous) => ({ ...previous, personaId }));
+  };
+  const setReasoning = (reasoning: ChatReasoningLevel): void => {
+    return setToolbarState((previous) => ({ ...previous, reasoning }));
+  };
+  const setRepositoryId = (repositoryId: string): void => {
+    return setToolbarState((previous) => ({
       ...previous,
       repositoryIds: [repositoryId],
     }));
-  const setRepositoryIds = (repositoryIds: readonly string[]): void =>
-    setToolbarState((previous) => ({ ...previous, repositoryIds }));
-  const setServiceTier = (serviceTier: ChatServiceTier): void =>
-    setToolbarState((previous) => ({ ...previous, serviceTier }));
+  };
+  const setRepositoryIds = (repositoryIds: readonly string[]): void => {
+    return setToolbarState((previous) => ({ ...previous, repositoryIds }));
+  };
+  const setServiceTier = (serviceTier: ChatServiceTier): void => {
+    return setToolbarState((previous) => ({ ...previous, serviceTier }));
+  };
 
   const onSubmit = (message: string): void => {
     const trimmed = message.trim();

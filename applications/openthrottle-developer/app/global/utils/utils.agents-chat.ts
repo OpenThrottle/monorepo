@@ -63,18 +63,20 @@ export interface CallSendAgentMessageParams {
 
 export const emptyTurn = (
   overrides: Partial<ChatTurnResult>,
-): ChatTurnResult => ({
-  assistantText: null,
-  conversationId: null,
-  errorMessage: null,
-  mcpTool: null,
-  readOnlyAgentsChat: true,
-  routingConfidence: null,
-  routingReason: null,
-  structuredPayloadJson: null,
-  toolMetadataJson: null,
-  ...overrides,
-});
+): ChatTurnResult => {
+  return {
+    assistantText: null,
+    conversationId: null,
+    errorMessage: null,
+    mcpTool: null,
+    readOnlyAgentsChat: true,
+    routingConfidence: null,
+    routingReason: null,
+    structuredPayloadJson: null,
+    toolMetadataJson: null,
+    ...overrides,
+  };
+};
 
 const parsePersistFormFlag = (value: FormDataEntryValue | null): boolean => {
   if (typeof value !== 'string') {
@@ -84,6 +86,19 @@ const parsePersistFormFlag = (value: FormDataEntryValue | null): boolean => {
   const normalized = value.trim().toLowerCase();
 
   return normalized === 'true' || normalized === '1' || normalized === 'yes';
+};
+
+const readOptionalFormString = (
+  value: FormDataEntryValue | null,
+): string | null => {
+  if (typeof value !== 'string') {
+    return null;
+  }
+  const trimmed = value.trim();
+  if (trimmed.length === 0) {
+    return null;
+  }
+  return trimmed;
 };
 
 /**
@@ -97,11 +112,9 @@ export async function handleSendAgentMessageIntent(
   const messageRaw = formData.get('message');
   const message = typeof messageRaw === 'string' ? messageRaw.trim() : '';
 
-  const conversationIdRaw = formData.get('conversationId');
-  const conversationIdFromForm =
-    typeof conversationIdRaw === 'string' && conversationIdRaw.trim().length > 0
-      ? conversationIdRaw.trim()
-      : null;
+  const conversationIdFromForm = readOptionalFormString(
+    formData.get('conversationId'),
+  );
 
   const persist = parsePersistFormFlag(formData.get('persist'));
 

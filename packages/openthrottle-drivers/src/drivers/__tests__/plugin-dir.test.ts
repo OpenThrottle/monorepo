@@ -31,7 +31,9 @@ const PAYLOAD = '/srv/openthrottle/plugins/openthrottle';
 
 const config = (
   extra: Omit<DriverInvocationConfig, 'iteration' | 'prompt'>,
-): DriverInvocationConfig => ({ iteration: 1, prompt: PROMPT, ...extra });
+): DriverInvocationConfig => {
+  return { iteration: 1, prompt: PROMPT, ...extra };
+};
 
 describe('claude driver --plugin-dir', () => {
   it('emits the flag for a resolved payload directory', () => {

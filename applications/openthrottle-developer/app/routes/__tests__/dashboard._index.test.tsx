@@ -206,14 +206,16 @@ describe('routes/dashboard._index.tsx', () => {
   });
 
   test('renders the intro banner + grid scaffold synchronously', () => {
-    const Component = () => (
-      <Index
-        actionData={undefined}
-        loaderData={mockLoaderData}
-        matches={matches}
-        params={{}}
-      />
-    );
+    const Component = () => {
+      return (
+        <Index
+          actionData={undefined}
+          loaderData={mockLoaderData}
+          matches={matches}
+          params={{}}
+        />
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
 
@@ -230,14 +232,16 @@ describe('routes/dashboard._index.tsx', () => {
 
   test('streams the deferred chart + PR cards into the grid', async () => {
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <Index
-        actionData={undefined}
-        loaderData={mockLoaderData}
-        matches={matches}
-        params={{}}
-      />
-    );
+    const Component = () => {
+      return (
+        <Index
+          actionData={undefined}
+          loaderData={mockLoaderData}
+          matches={matches}
+          params={{}}
+        />
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
 
@@ -259,21 +263,23 @@ describe('routes/dashboard._index.tsx', () => {
 
   test('renders PRs by author empty state when both series are empty', async () => {
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <Index
-        actionData={undefined}
-        loaderData={{
-          ...mockLoaderData,
-          githubStats: Promise.resolve({
-            ...mockGithubStatsLoaded,
-            closedPrCountByAuthor: [],
-            openPrCountByAuthor: [],
-          }),
-        }}
-        matches={matches}
-        params={{}}
-      />
-    );
+    const Component = () => {
+      return (
+        <Index
+          actionData={undefined}
+          loaderData={{
+            ...mockLoaderData,
+            githubStats: Promise.resolve({
+              ...mockGithubStatsLoaded,
+              closedPrCountByAuthor: [],
+              openPrCountByAuthor: [],
+            }),
+          }}
+          matches={matches}
+          params={{}}
+        />
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
 
@@ -287,14 +293,16 @@ describe('routes/dashboard._index.tsx', () => {
 
   test('streams recent activity outside the content grid', async () => {
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <Index
-        actionData={undefined}
-        loaderData={mockLoaderData}
-        matches={matches}
-        params={{}}
-      />
-    );
+    const Component = () => {
+      return (
+        <Index
+          actionData={undefined}
+          loaderData={mockLoaderData}
+          matches={matches}
+          params={{}}
+        />
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
 
@@ -305,17 +313,19 @@ describe('routes/dashboard._index.tsx', () => {
 
   test('degrades the PR cards inline when githubStats rejects', async () => {
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <Index
-        actionData={undefined}
-        loaderData={{
-          ...mockLoaderData,
-          githubStats: Promise.reject(new Error('github boom')),
-        }}
-        matches={matches}
-        params={{}}
-      />
-    );
+    const Component = () => {
+      return (
+        <Index
+          actionData={undefined}
+          loaderData={{
+            ...mockLoaderData,
+            githubStats: Promise.reject(new Error('github boom')),
+          }}
+          matches={matches}
+          params={{}}
+        />
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
 
@@ -335,8 +345,12 @@ describe('routes/dashboard._index.tsx', () => {
 });
 
 describe('routes/dashboard._index shouldRevalidate', () => {
-  const call = (current: string, next: string, formMethod?: 'POST'): boolean =>
-    shouldRevalidate({
+  const call = (
+    current: string,
+    next: string,
+    formMethod?: 'POST',
+  ): boolean => {
+    return shouldRevalidate({
       currentParams: {},
       currentUrl: new URL(current),
       defaultShouldRevalidate: true,
@@ -344,6 +358,7 @@ describe('routes/dashboard._index shouldRevalidate', () => {
       nextParams: {},
       nextUrl: new URL(next),
     });
+  };
 
   const DASHBOARD = 'http://localhost/dashboard';
 

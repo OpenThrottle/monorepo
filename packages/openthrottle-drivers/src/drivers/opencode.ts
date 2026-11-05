@@ -11,7 +11,7 @@ import type { DriverCapabilities, DriverModelListing } from '../types/index.ts';
 import { opencodeVariant } from '../utils/reasoning-effort.ts';
 import {
   escapeForShellDoubleQuoted,
-  escapeShellArg,
+  formatModelFlag,
   formatShellEnvPrefix,
 } from '../utils/shell.ts';
 
@@ -68,16 +68,13 @@ export const opencodeDriver = defineDriver({
   binEnv: 'OPENTHROTTLE_OPENCODE_BIN',
   binary: 'opencode',
   buildShellCommand: (config) => {
-    const modelNorm = config.model?.trim() ?? '';
-    const modelFlag =
-      modelNorm !== '' && modelNorm !== 'auto'
-        ? ` --model ${escapeShellArg(modelNorm)}`
-        : '';
+    const modelFlag = formatModelFlag(config.model);
 
     const configPath = config.endpoint?.configFilePath?.trim();
-    const endpointPrefix = configPath
-      ? formatShellEnvPrefix({ OPENCODE_CONFIG: configPath })
-      : '';
+    let endpointPrefix = '';
+    if (configPath) {
+      endpointPrefix = formatShellEnvPrefix({ OPENCODE_CONFIG: configPath });
+    }
 
     const variant = opencodeVariant(config.effort);
     const variantFlag = variant !== undefined ? ` --variant ${variant}` : '';

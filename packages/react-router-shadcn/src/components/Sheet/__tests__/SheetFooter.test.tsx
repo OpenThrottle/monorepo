@@ -14,13 +14,15 @@ describe('SheetFooter Component', () => {
   beforeEach(() => {
     props = { children: 'Sheet footer' };
 
-    const Component = () => (
-      <Sheet open={true}>
-        <SheetContent>
-          <SheetFooter {...props} />
-        </SheetContent>
-      </Sheet>
-    );
+    const Component = () => {
+      return (
+        <Sheet open={true}>
+          <SheetContent>
+            <SheetFooter {...props} />
+          </SheetContent>
+        </Sheet>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

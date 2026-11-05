@@ -21,19 +21,21 @@ interface TestGraphqlInfo {
   readonly operation: { readonly operation: string };
 }
 
-const createGuard = (): GqlThrottlerGuard =>
+const createGuard = (): GqlThrottlerGuard => {
   // Constructor deps are unused by `shouldSkip` for the GraphQL branches under
   // test; the http fall-through path is covered by the integration suites.
-  new GqlThrottlerGuard(
+  return new GqlThrottlerGuard(
     { throttlers: [] },
     asMock<never>({}),
     asMock<never>({}),
   );
+};
 
-const createGraphqlContext = (): ExecutionContext =>
-  asMock<ExecutionContext>({
+const createGraphqlContext = (): ExecutionContext => {
+  return asMock<ExecutionContext>({
     getType: vi.fn().mockReturnValue('graphql'),
   });
+};
 
 const mockGqlContext = (
   context: TestGraphqlContext,

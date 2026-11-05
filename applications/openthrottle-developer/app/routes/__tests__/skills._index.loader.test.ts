@@ -3,13 +3,13 @@ import { createTestRouterContext } from '@openthrottle/react-router-testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/skills._index';
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 
-vi.mock('~/routing/agents/data/discover-repo-skills.server', () => ({
+vi.mock('~/routing/agents/utils/discover-repo-skills.server', () => ({
   discoverRepoSkills: vi.fn(),
 }));
 
-vi.mock('~/routing/agents/data/resolve-monorepo-root.server', () => ({
+vi.mock('~/routing/agents/utils/resolve-monorepo-root.server', () => ({
   getMonorepoRoot: vi.fn(),
 }));
 
@@ -18,9 +18,9 @@ vi.mock('@openthrottle/react-router-graphql', () => ({
 }));
 
 const { discoverRepoSkills } =
-  await import('~/routing/agents/data/discover-repo-skills.server');
+  await import('~/routing/agents/utils/discover-repo-skills.server');
 const { getMonorepoRoot } =
-  await import('~/routing/agents/data/resolve-monorepo-root.server');
+  await import('~/routing/agents/utils/resolve-monorepo-root.server');
 const { executeGraphqlWithAuth } =
   await import('@openthrottle/react-router-graphql');
 const { ProjectSkillsDocument, SkillAvailabilityDocument } =
@@ -52,23 +52,27 @@ const loaderArgs: Route.LoaderArgs = {
   url: new URL(loaderRequest.url),
 };
 
-const projectSkillsResult = (skills: unknown): unknown => ({
-  projectSkills: {
-    skills,
-    totalCount: Array.isArray(skills) ? skills.length : 0,
-  },
-});
+const projectSkillsResult = (skills: unknown): unknown => {
+  return {
+    projectSkills: {
+      skills,
+      totalCount: Array.isArray(skills) ? skills.length : 0,
+    },
+  };
+};
 
 const skillAvailabilityResult = (
   skills: unknown,
   warnings: readonly string[] = [],
-): unknown => ({
-  skillAvailability: {
-    skills,
-    totalCount: Array.isArray(skills) ? skills.length : 0,
-    warnings,
-  },
-});
+): unknown => {
+  return {
+    skillAvailability: {
+      skills,
+      totalCount: Array.isArray(skills) ? skills.length : 0,
+      warnings,
+    },
+  };
+};
 
 function asMock<T>(value: unknown): T;
 function asMock(value: unknown): unknown {

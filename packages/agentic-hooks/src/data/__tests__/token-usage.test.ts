@@ -23,37 +23,43 @@ import {
 
 const URL = 'http://example.test/graphql';
 
-const makeRecord = (n: number): TokenUsageRecord => ({
-  cache_read_tokens: null,
-  cache_write_tokens: 3,
-  cost_usd: 0.25,
-  cwd: '/work',
-  git_branch: 'main',
-  input_tokens: 10,
-  model: 'model-x',
-  occurred_at: '2026-10-29T10:00:00.000Z',
-  output_tokens: 20,
-  provider: 'provider-x',
-  raw_usage_json: '{"a":1}',
-  reasoning_tokens: null,
-  request_id: `req-${n}`,
-  session_id: 'sess-1',
-  source: 'test-source',
-  total_tokens: 33,
-});
+const makeRecord = (n: number): TokenUsageRecord => {
+  return {
+    cache_read_tokens: null,
+    cache_write_tokens: 3,
+    cost_usd: 0.25,
+    cwd: '/work',
+    git_branch: 'main',
+    input_tokens: 10,
+    model: 'model-x',
+    occurred_at: '2026-10-29T10:00:00.000Z',
+    output_tokens: 20,
+    provider: 'provider-x',
+    raw_usage_json: '{"a":1}',
+    reasoning_tokens: null,
+    request_id: `req-${n}`,
+    session_id: 'sess-1',
+    source: 'test-source',
+    total_tokens: 33,
+  };
+};
 
-const makeRecords = (count: number): TokenUsageRecord[] =>
-  Array.from({ length: count }, (_, index) => makeRecord(index));
+const makeRecords = (count: number): TokenUsageRecord[] => {
+  return Array.from({ length: count }, (_, index) => makeRecord(index));
+};
 
 /** A row the size of a real transcript-derived one (~1.2 KB on the wire). */
-const makeRealisticRecord = (n: number): TokenUsageRecord => ({
-  ...makeRecord(n),
-  cwd: '/Users/someone/Library/Application Support/SomeTool/scratch-workspaces/2cd3e03a/ab06c320/scratch-2026-10-30-d2de16',
-  raw_usage_json: JSON.stringify({ padding: 'x'.repeat(900) }),
-});
+const makeRealisticRecord = (n: number): TokenUsageRecord => {
+  return {
+    ...makeRecord(n),
+    cwd: '/Users/someone/Library/Application Support/SomeTool/scratch-workspaces/2cd3e03a/ab06c320/scratch-2026-10-30-d2de16',
+    raw_usage_json: JSON.stringify({ padding: 'x'.repeat(900) }),
+  };
+};
 
-const rowsPerBatch = (records: readonly TokenUsageRecord[]): number[] =>
-  chunkTokenUsage(records).map((batch) => batch.length);
+const rowsPerBatch = (records: readonly TokenUsageRecord[]): number[] => {
+  return chunkTokenUsage(records).map((batch) => batch.length);
+};
 
 /** Bytes of the GraphQL envelope around the rows (query + wrapper keys). */
 const ENVELOPE_BYTES = 512;
@@ -62,6 +68,25 @@ interface FakeServer {
   readonly calls: Array<{ bytes: number; rows: number }>;
   readonly fetchImpl: HookFetch;
 }
+
+/** Row count of a request body's `variables.input.rows`, or -1 when absent. */
+const countRows = (parsed: unknown): number => {
+  if (
+    typeof parsed === 'object' &&
+    parsed !== null &&
+    'variables' in parsed &&
+    typeof parsed.variables === 'object' &&
+    parsed.variables !== null &&
+    'input' in parsed.variables &&
+    typeof parsed.variables.input === 'object' &&
+    parsed.variables.input !== null &&
+    'rows' in parsed.variables.input &&
+    Array.isArray(parsed.variables.input.rows)
+  ) {
+    return parsed.variables.input.rows.length;
+  }
+  return -1;
+};
 
 /** A fetch that answers each call from `respond`, recording row counts. */
 const fakeServer = (
@@ -73,19 +98,7 @@ const fakeServer = (
   const calls: Array<{ bytes: number; rows: number }> = [];
   const fetchImpl: HookFetch = async (_url, init) => {
     const parsed: unknown = JSON.parse(init.body);
-    const rows =
-      typeof parsed === 'object' &&
-      parsed !== null &&
-      'variables' in parsed &&
-      typeof parsed.variables === 'object' &&
-      parsed.variables !== null &&
-      'input' in parsed.variables &&
-      typeof parsed.variables.input === 'object' &&
-      parsed.variables.input !== null &&
-      'rows' in parsed.variables.input &&
-      Array.isArray(parsed.variables.input.rows)
-        ? parsed.variables.input.rows.length
-        : -1;
+    const rows = countRows(parsed);
     calls.push({ bytes: Buffer.byteLength(init.body, 'utf8'), rows });
     const answer = respond(calls.length, rows);
     if (answer instanceof Error) {
@@ -97,9 +110,11 @@ const fakeServer = (
   return { calls, fetchImpl };
 };
 
-const accepted = (rows: number) => ({
-  body: { data: { recordTokenUsage: { inserted: rows, skipped: 0 } } },
-});
+const accepted = (rows: number) => {
+  return {
+    body: { data: { recordTokenUsage: { inserted: rows, skipped: 0 } } },
+  };
+};
 
 const rejected = {
   body: {
@@ -113,14 +128,16 @@ const rejected = {
   },
 };
 
-const readLines = (filePath: string): unknown[] =>
-  fs.existsSync(filePath)
-    ? fs
-        .readFileSync(filePath, 'utf8')
-        .split('\n')
-        .filter(Boolean)
-        .map((line): unknown => JSON.parse(line))
-    : [];
+const readLines = (filePath: string): unknown[] => {
+  if (!fs.existsSync(filePath)) {
+    return [];
+  }
+  return fs
+    .readFileSync(filePath, 'utf8')
+    .split('\n')
+    .filter(Boolean)
+    .map((line): unknown => JSON.parse(line));
+};
 
 describe('token usage', () => {
   let tmpRoot: string;
@@ -157,8 +174,8 @@ describe('token usage', () => {
   const persist = (
     records: readonly TokenUsageRecord[],
     fetchImpl: HookFetch,
-  ) =>
-    persistTokenUsage({
+  ) => {
+    return persistTokenUsage({
       authToken: 'tok',
       fetchImpl,
       graphqlUrl: URL,
@@ -166,6 +183,7 @@ describe('token usage', () => {
       repoRoot,
       timeoutMs: 200,
     });
+  };
 
   describe('toRecordTokenUsageRow', () => {
     it('maps every snake_case field to its camelCase GraphQL key', () => {
@@ -380,8 +398,8 @@ describe('token usage', () => {
   });
 
   describe('drainBufferedUsage (token usage)', () => {
-    const drain = (fetchImpl: HookFetch) =>
-      drainBufferedUsage({
+    const drain = (fetchImpl: HookFetch) => {
+      return drainBufferedUsage({
         authToken: 'tok',
         budgetMs: null,
         fetchImpl,
@@ -389,6 +407,7 @@ describe('token usage', () => {
         repoRoot,
         timeoutMs: 200,
       });
+    };
 
     it('delivers what a server-down run buffered, in batches, on a later drain', async () => {
       const down = fakeServer(() => new Error('ECONNREFUSED'));

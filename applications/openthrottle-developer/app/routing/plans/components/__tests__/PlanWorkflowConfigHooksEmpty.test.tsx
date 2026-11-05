@@ -7,7 +7,9 @@ import { PlanWorkflowConfigHooksEmpty } from '../PlanWorkflowConfigHooksEmpty';
 
 describe('PlanWorkflowConfigHooksEmpty Component', () => {
   test('renders empty hooks message', () => {
-    const Component = () => <PlanWorkflowConfigHooksEmpty />;
+    const Component = () => {
+      return <PlanWorkflowConfigHooksEmpty />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 

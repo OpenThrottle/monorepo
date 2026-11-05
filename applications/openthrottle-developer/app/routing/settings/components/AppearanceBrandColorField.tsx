@@ -6,7 +6,7 @@ import {
 import { useAtom } from 'jotai';
 import * as React from 'react';
 
-import { configAtom } from '~/global/data/atom.config';
+import { configAtom } from '~/global/data/data.atom-config';
 import { APPEARANCE_COPY } from '~/routing/settings/data/data.copy';
 
 export interface AppearanceBrandColorFieldProps {}
@@ -38,6 +38,25 @@ export const AppearanceBrandColorField = (
   };
 
   // Markup
+  const resetButton = (
+    <Button onClick={handleResetBrand} size="sm" variant="outline">
+      {APPEARANCE_COPY.brandResetButton}
+    </Button>
+  );
+  const defaultBrandHelp = (
+    <>
+      {APPEARANCE_COPY.brandDefaultHelpPrefix}
+      {DEFAULT_BRAND_HSL}
+      {APPEARANCE_COPY.brandDefaultHelpSuffix}
+    </>
+  );
+  const customBrandHelp = (
+    <>
+      {APPEARANCE_COPY.brandCustomHelpPrefix}
+      {config.brand}
+      {APPEARANCE_COPY.brandCustomHelpSuffix}
+    </>
+  );
 
   // Life Cycle
 
@@ -54,26 +73,10 @@ export const AppearanceBrandColorField = (
           type="color"
           value={brandColorInputValue}
         />
-        {isDefaultBrand ? null : (
-          <Button onClick={handleResetBrand} size="sm" variant="outline">
-            {APPEARANCE_COPY.brandResetButton}
-          </Button>
-        )}
+        {isDefaultBrand ? null : resetButton}
       </div>
       <p className="text-muted-foreground text-sm">
-        {isDefaultBrand ? (
-          <>
-            {APPEARANCE_COPY.brandDefaultHelpPrefix}
-            {DEFAULT_BRAND_HSL}
-            {APPEARANCE_COPY.brandDefaultHelpSuffix}
-          </>
-        ) : (
-          <>
-            {APPEARANCE_COPY.brandCustomHelpPrefix}
-            {config.brand}
-            {APPEARANCE_COPY.brandCustomHelpSuffix}
-          </>
-        )}
+        {isDefaultBrand ? defaultBrandHelp : customBrandHelp}
       </p>
     </div>
   );

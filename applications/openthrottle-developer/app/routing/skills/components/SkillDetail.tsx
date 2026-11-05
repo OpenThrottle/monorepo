@@ -3,7 +3,7 @@ import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 import { SKILL_DETAIL_COPY } from '~/routing/skills/data/data.copy';
 
 export interface SkillDetailProps {
@@ -28,6 +28,33 @@ export const SkillDetail = (props: SkillDetailProps): React.ReactElement => {
   // Handlers
 
   // Markup
+  const editor = (
+    <div
+      className="ui-border flex h-[70vh] flex-col overflow-hidden rounded-lg border"
+      data-testid="skill-editor"
+    >
+      <Editor
+        language="markdown"
+        onChange={onDraftChange}
+        path={entry.repoRelativePath}
+        showSidebar={false}
+        showTabs={false}
+        showToolbar={false}
+        value={draft}
+      />
+    </div>
+  );
+  const renderedContent = <MarkdownRenderer source={content} />;
+  const emptyNotice = (
+    <p className="text-muted-foreground text-sm">
+      {SKILL_DETAIL_COPY.emptyContentNotice}
+    </p>
+  );
+  const readView = (
+    <div className="bg-card ui-border rounded-lg border p-6">
+      {content.length > 0 ? renderedContent : emptyNotice}
+    </div>
+  );
 
   // Life Cycle
 
@@ -38,32 +65,7 @@ export const SkillDetail = (props: SkillDetailProps): React.ReactElement => {
       className={cn('flex flex-col gap-4', className)}
       data-testid="SkillDetail"
     >
-      {isEditing ? (
-        <div
-          className="ui-border flex h-[70vh] flex-col overflow-hidden rounded-lg border"
-          data-testid="skill-editor"
-        >
-          <Editor
-            language="markdown"
-            onChange={onDraftChange}
-            path={entry.repoRelativePath}
-            showSidebar={false}
-            showTabs={false}
-            showToolbar={false}
-            value={draft}
-          />
-        </div>
-      ) : (
-        <div className="bg-card ui-border rounded-lg border p-6">
-          {content.length > 0 ? (
-            <MarkdownRenderer source={content} />
-          ) : (
-            <p className="text-muted-foreground text-sm">
-              {SKILL_DETAIL_COPY.emptyContentNotice}
-            </p>
-          )}
-        </div>
-      )}
+      {isEditing ? editor : readView}
     </div>
   );
 };

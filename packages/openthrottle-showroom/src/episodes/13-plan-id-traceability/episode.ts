@@ -14,8 +14,7 @@ import type { VideoEpisode } from '../types.ts';
 export const episode: VideoEpisode = {
   beats: [
     {
-      action:
-        "A git log in a terminal, one commit's footer visible with the plan and task ids.",
+      action: `A git log in a terminal, one commit's footer visible with the plan and task ids.`,
       t: '0:00',
     },
     { action: 'Zoom on the footer lines.', t: '0:07' },
@@ -32,8 +31,7 @@ export const episode: VideoEpisode = {
   dataRequirements: [
     {
       atLeast: 100,
-      describe:
-        'tasks whose parent plan resolves, so the task-to-plan walk works',
+      describe: `tasks whose parent plan resolves, so the task-to-plan walk works`,
       sql: `SELECT count(*) AS value FROM tasks t JOIN plans p ON p.id = t.plan_id`,
     },
     {
@@ -43,8 +41,7 @@ export const episode: VideoEpisode = {
     },
     {
       atLeast: 20,
-      describe:
-        'recorded work artifacts, the ledger rows the traceability story ends on',
+      describe: `recorded work artifacts, the ledger rows the traceability story ends on`,
       sql: `SELECT count(*) AS value FROM work_artifacts`,
     },
   ],

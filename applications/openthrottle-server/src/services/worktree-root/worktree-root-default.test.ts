@@ -17,8 +17,9 @@ import { DEFAULT_WORKTREE_ROOT_RELATIVE_PATH } from './worktree-root.resolver.ts
 
 const REPO_ROOT = join(import.meta.dirname, '../../../../..');
 
-const read = (relativePath: string): string =>
-  readFileSync(join(REPO_ROOT, relativePath), 'utf-8');
+const read = (relativePath: string): string => {
+  return readFileSync(join(REPO_ROOT, relativePath), 'utf-8');
+};
 
 describe('the default worktree root', () => {
   it('matches the value shipped in .env.default, exactly', () => {

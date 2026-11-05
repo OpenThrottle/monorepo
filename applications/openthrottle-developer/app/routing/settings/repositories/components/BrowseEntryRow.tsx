@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Form } from 'react-router';
 
 import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
-import type { WorkspaceBrowseEntry } from '~/routing/settings/repositories/data/types';
+import type { WorkspaceBrowseEntry } from '~/routing/settings/repositories/types';
 
 export interface BrowseEntryRowProps {
   entry: WorkspaceBrowseEntry;
@@ -27,10 +27,26 @@ export const BrowseEntryRow = (
 
   // Setup
   const Icon = entry.isGitRepo ? FolderGit2Icon : FolderIcon;
+  const { addEntryButton, addingLabel, alreadyRegisteredBadge, gitRepoBadge } =
+    WORKSPACE_FOLDERS_COPY;
+  const addLabel = isAdding ? addingLabel : addEntryButton;
 
   // Handlers
 
   // Markup
+  const gitBadge = <Badge variant="outline">{gitRepoBadge}</Badge>;
+  const registeredBadge = (
+    <Badge variant="secondary">{alreadyRegisteredBadge}</Badge>
+  );
+  const addForm = (
+    <Form method="post">
+      <input name="intent" type="hidden" value="addFolder" />
+      <input name="path" type="hidden" value={entry.path} />
+      <Button disabled={isAdding} size="sm" type="submit" variant="outline">
+        {addLabel}
+      </Button>
+    </Form>
+  );
 
   // Life Cycle
 
@@ -47,29 +63,8 @@ export const BrowseEntryRow = (
         <span className="truncate">{entry.name}</span>
       </button>
       <div className="flex shrink-0 items-center gap-2">
-        {entry.isGitRepo ? (
-          <Badge variant="outline">{WORKSPACE_FOLDERS_COPY.gitRepoBadge}</Badge>
-        ) : null}
-        {entry.alreadyRegistered ? (
-          <Badge variant="secondary">
-            {WORKSPACE_FOLDERS_COPY.alreadyRegisteredBadge}
-          </Badge>
-        ) : (
-          <Form method="post">
-            <input name="intent" type="hidden" value="addFolder" />
-            <input name="path" type="hidden" value={entry.path} />
-            <Button
-              disabled={isAdding}
-              size="sm"
-              type="submit"
-              variant="outline"
-            >
-              {isAdding
-                ? WORKSPACE_FOLDERS_COPY.addingLabel
-                : WORKSPACE_FOLDERS_COPY.addEntryButton}
-            </Button>
-          </Form>
-        )}
+        {entry.isGitRepo ? gitBadge : null}
+        {entry.alreadyRegistered ? registeredBadge : addForm}
       </div>
     </li>
   );

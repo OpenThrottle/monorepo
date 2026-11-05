@@ -29,6 +29,15 @@ export const PlanStatusBadge = (
   // Handlers
 
   // Markup
+  const linkedLabel = to != null && (
+    <Link
+      title={`View plans filtered by status: ${label}`}
+      to={to}
+      viewTransition={true}
+    >
+      {label}
+    </Link>
+  );
 
   // Life Cycle
 
@@ -42,17 +51,7 @@ export const PlanStatusBadge = (
       data-testid="PlanStatusBadge"
       size="xs"
     >
-      {to != null ? (
-        <Link
-          title={`View plans filtered by status: ${label}`}
-          to={to}
-          viewTransition={true}
-        >
-          {label}
-        </Link>
-      ) : (
-        label
-      )}
+      {linkedLabel || label}
     </Badge>
   );
 };

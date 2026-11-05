@@ -37,8 +37,9 @@ const REPO_ID = 'rrrrrrrr-rrrr-4rrr-8rrr-rrrrrrrrrrrr';
 const PATH_A = '/Users/dev/foreign/repo-a';
 const PATH_B = '/Users/dev/foreign/repo-b';
 
-const checkoutAt = (filesystemPath: string): RepositoryCheckout =>
-  createMock<RepositoryCheckout>({ filesystemPath, userId: USER_ID });
+const checkoutAt = (filesystemPath: string): RepositoryCheckout => {
+  return createMock<RepositoryCheckout>({ filesystemPath, userId: USER_ID });
+};
 
 describe('ForeignSkillMaterializationService', () => {
   const mockFindByRepositoryIdForUser = vi.fn();

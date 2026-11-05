@@ -29,6 +29,31 @@ export const DocPagePager = (props: DocPagePagerProps): React.ReactElement => {
   // Handlers
 
   // Markup
+  const spacer = <span className="hidden sm:block" />;
+  const prevLink = (
+    <Link
+      className="hover:border-foreground group flex flex-col rounded-md border px-4 py-3 sm:items-start"
+      to={prev?.path ?? ''}
+    >
+      <span className="text-muted-foreground flex items-center gap-1 text-xs">
+        <ArrowLeftIcon className="size-3" />
+        Previous
+      </span>
+      <span className="text-sm font-medium">{prev?.title}</span>
+    </Link>
+  );
+  const nextLink = (
+    <Link
+      className="hover:border-foreground group flex flex-col rounded-md border px-4 py-3 sm:items-end sm:text-right"
+      to={next?.path ?? ''}
+    >
+      <span className="text-muted-foreground flex items-center gap-1 text-xs">
+        Next
+        <ArrowRightIcon className="size-3" />
+      </span>
+      <span className="text-sm font-medium">{next?.title}</span>
+    </Link>
+  );
 
   // Life Cycle
 
@@ -46,35 +71,9 @@ export const DocPagePager = (props: DocPagePagerProps): React.ReactElement => {
       )}
       data-testid="DocPagePager"
     >
-      {prev !== null ? (
-        <Link
-          className="hover:border-foreground group flex flex-col rounded-md border px-4 py-3 sm:items-start"
-          to={prev.path}
-        >
-          <span className="text-muted-foreground flex items-center gap-1 text-xs">
-            <ArrowLeftIcon className="size-3" />
-            Previous
-          </span>
-          <span className="text-sm font-medium">{prev.title}</span>
-        </Link>
-      ) : (
-        <span className="hidden sm:block" />
-      )}
+      {prev !== null ? prevLink : spacer}
 
-      {next !== null ? (
-        <Link
-          className="hover:border-foreground group flex flex-col rounded-md border px-4 py-3 sm:items-end sm:text-right"
-          to={next.path}
-        >
-          <span className="text-muted-foreground flex items-center gap-1 text-xs">
-            Next
-            <ArrowRightIcon className="size-3" />
-          </span>
-          <span className="text-sm font-medium">{next.title}</span>
-        </Link>
-      ) : (
-        <span className="hidden sm:block" />
-      )}
+      {next !== null ? nextLink : spacer}
     </nav>
   );
 };

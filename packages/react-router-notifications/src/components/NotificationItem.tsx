@@ -44,6 +44,27 @@ export const NotificationItem = (
   // Handlers
 
   // Markup
+  const viewPlanLink = (
+    <Link
+      className="text-muted-foreground mt-1 flex-1 text-xs font-medium"
+      data-testid={`notification-item-link-${notification.id}`}
+      onClick={(e) => e.stopPropagation()}
+      to={payload.link ?? ''}
+    >
+      View plan
+    </Link>
+  );
+  const markReadButton = (
+    <Button
+      aria-label="Mark as read"
+      className="text-muted-foreground hover:text-foreground size-5"
+      onClick={onMarkRead}
+      size="icon"
+      variant="link"
+    >
+      <Check className="size-4" />
+    </Button>
+  );
 
   // Life Cycle
 
@@ -78,16 +99,7 @@ export const NotificationItem = (
               )}
             />
 
-            {payload.link ? (
-              <Link
-                className="text-muted-foreground mt-1 flex-1 text-xs font-medium"
-                data-testid={`notification-item-link-${notification.id}`}
-                onClick={(e) => e.stopPropagation()}
-                to={payload.link}
-              >
-                View plan
-              </Link>
-            ) : null}
+            {payload.link ? viewPlanLink : null}
 
             <p className="text-muted-foreground text-xs">
               {formatRelativeTime(notification.createdAt)}
@@ -104,17 +116,7 @@ export const NotificationItem = (
           )}
         >
           <div className="flex flex-col justify-between gap-2">
-            {!read ? (
-              <Button
-                aria-label="Mark as read"
-                className="text-muted-foreground hover:text-foreground size-5"
-                onClick={onMarkRead}
-                size="icon"
-                variant="link"
-              >
-                <Check className="size-4" />
-              </Button>
-            ) : null}
+            {read ? null : markReadButton}
 
             <Button
               aria-label="Dismiss"

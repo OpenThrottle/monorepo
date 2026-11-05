@@ -10,10 +10,13 @@ const quiet = {
 const yAt = (
   arcs: ReturnType<typeof buildSoundArcs>,
   pointIndex: 0 | 3,
-): number[] => arcs.map((arc) => arc.points[pointIndex][1]);
+): number[] => {
+  return arcs.map((arc) => arc.points[pointIndex][1]);
+};
 
-const spread = (values: number[]): number =>
-  Math.max(...values) - Math.min(...values);
+const spread = (values: number[]): number => {
+  return Math.max(...values) - Math.min(...values);
+};
 
 describe('buildSoundArcs', () => {
   describe('when n is omitted', () => {

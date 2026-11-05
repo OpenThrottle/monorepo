@@ -118,11 +118,11 @@ export function ContributionHeatmap(
             >
               {/* Month label sits above the top cell of the column. */}
               <div className="text-muted-foreground relative h-3 text-[9px] leading-none">
-                {column.monthLabel != null ? (
+                {column.monthLabel != null && (
                   <span className="absolute whitespace-nowrap">
                     {column.monthLabel}
                   </span>
-                ) : null}
+                )}
               </div>
 
               {column.cells.map((cell) => {

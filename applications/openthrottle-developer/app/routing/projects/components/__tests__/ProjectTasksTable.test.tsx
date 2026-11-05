@@ -45,7 +45,9 @@ describe('ProjectTasksTable Component', () => {
   beforeEach(() => {
     props = { tasks: [] };
 
-    const Component = () => <ProjectTasksTable {...props} />;
+    const Component = () => {
+      return <ProjectTasksTable {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);
@@ -60,7 +62,9 @@ describe('ProjectTasksTable Component', () => {
   test('renders task rows when tasks provided', () => {
     props.tasks = mockTasks;
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <ProjectTasksTable {...props} />;
+    const Component = () => {
+      return <ProjectTasksTable {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component.rerender(<RoutesStub />);
 
@@ -73,7 +77,9 @@ describe('ProjectTasksTable Component', () => {
   test('renders View plan link when task has planId', () => {
     props.tasks = mockTasks;
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <ProjectTasksTable {...props} />;
+    const Component = () => {
+      return <ProjectTasksTable {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component.rerender(<RoutesStub />);
 

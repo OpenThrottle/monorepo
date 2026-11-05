@@ -13,8 +13,9 @@ describe('createAgeRetentionPolicy', () => {
     table: 'agent_token_usage',
   };
 
-  const makeDataSource = (result: unknown): DataSource =>
-    createMock<DataSource>({ query: vi.fn().mockResolvedValue(result) });
+  const makeDataSource = (result: unknown): DataSource => {
+    return createMock<DataSource>({ query: vi.fn().mockResolvedValue(result) });
+  };
 
   it('counts expired rows without deleting anything', async () => {
     const dataSource = makeDataSource([{ count: '42' }]);

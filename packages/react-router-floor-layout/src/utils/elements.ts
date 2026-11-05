@@ -2,7 +2,7 @@
  * Pure element helpers — layering and floor bounds. No React, no DOM.
  */
 
-import { ELEMENT_DEFAULTS, ELEMENT_LAYER } from '../data/elements';
+import { ELEMENT_DEFAULTS, ELEMENT_LAYER } from '../data/data.elements';
 import {
   type FloorElement,
   FloorElementType,

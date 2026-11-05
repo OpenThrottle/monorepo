@@ -6,7 +6,9 @@ import { FloorElementType } from '../../types';
 import { type Point } from '../../utils/geometry';
 import { ElementPalette } from '../ElementPalette';
 
-const identity = (client: Point): Point => client;
+const identity = (client: Point): Point => {
+  return client;
+};
 
 describe('ElementPalette', () => {
   it('renders a toolbar with a button per palette item', () => {

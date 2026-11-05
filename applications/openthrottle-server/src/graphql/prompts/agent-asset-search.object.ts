@@ -8,8 +8,7 @@ import { Field, Float, ObjectType } from '@nestjs/graphql';
 import { CustomPromptTypeEnum } from './custom-prompt.object.ts';
 
 @ObjectType({
-  description:
-    'A ranked agent-asset match from semantic search over custom_prompt embeddings.',
+  description: `A ranked agent-asset match from semantic search over custom_prompt embeddings.`,
 })
 export class AgentAssetChunk {
   @Field(() => String, {

@@ -123,14 +123,14 @@ function resolveBinary(
   descriptor: AgentCliDescriptor,
   env: NodeJS.ProcessEnv,
 ): string {
-  const override =
-    descriptor.binEnv !== undefined
-      ? env[descriptor.binEnv]?.trim()
-      : undefined;
+  const { binEnv } = descriptor;
+  const override = binEnv === undefined ? undefined : env[binEnv]?.trim();
 
-  return override !== undefined && override !== ''
-    ? override
-    : descriptor.binary;
+  if (override !== undefined && override !== '') {
+    return override;
+  }
+
+  return descriptor.binary;
 }
 
 /**

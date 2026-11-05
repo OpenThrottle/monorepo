@@ -17,15 +17,18 @@ import { queueJobDetailPath } from '~/routing/queues/utils/queue-job-detail-path
 const JOB_ID_DISPLAY_MAX = 24;
 const FAILED_REASON_MAX = 72;
 
-const truncateText = (text: string, max: number): string =>
-  text.length <= max ? text : `${text.slice(0, max)}…`;
+const truncateText = (text: string, max: number): string => {
+  return text.length <= max ? text : `${text.slice(0, max)}…`;
+};
 
 const formatTs = (unix?: number | null): string => {
   if (unix == null) return '—';
   return new Date(unix).toISOString();
 };
 
-export const queueJobRowId = (job: QueueJobDetailsFragment): string => job.id;
+export const queueJobRowId = (job: QueueJobDetailsFragment): string => {
+  return job.id;
+};
 
 export function buildQueueJobsTableColumns(
   queueName: string,

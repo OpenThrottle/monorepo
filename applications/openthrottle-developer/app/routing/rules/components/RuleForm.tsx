@@ -18,7 +18,7 @@ import { RuleFormActionSection } from '~/routing/rules/components/RuleFormAction
 import { RuleFormMatchSection } from '~/routing/rules/components/RuleFormMatchSection';
 import type { TagActionRuleRowData } from '~/routing/rules/components/RulesTable';
 import { RULES_COPY } from '~/routing/rules/data/data.copy';
-import { ANY } from '~/routing/rules/data/rule-form-options';
+import { ANY } from '~/routing/rules/data/data.rule-form-options';
 import { useRuleForm } from '~/routing/rules/hooks/useRuleForm';
 
 export interface RuleFormVocabularyOption {
@@ -173,11 +173,11 @@ export const RuleForm = (props: RuleFormProps): React.ReactElement => {
               titleTemplate={form.titleTemplate}
             />
 
-            {error != null ? (
+            {error != null && (
               <p className="text-destructive text-sm" role="alert">
                 {error}
               </p>
-            ) : null}
+            )}
           </CardContent>
 
           <CardFooter className="justify-end gap-3 pt-6">

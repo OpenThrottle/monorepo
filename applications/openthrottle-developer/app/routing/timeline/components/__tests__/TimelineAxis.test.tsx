@@ -10,7 +10,9 @@ import type { TimelineAxisProps } from '../TimelineAxis';
 import { TimelineAxis } from '../TimelineAxis';
 
 const renderAxis = (props: TimelineAxisProps): RenderResult => {
-  const Component = () => <TimelineAxis {...props} />;
+  const Component = () => {
+    return <TimelineAxis {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

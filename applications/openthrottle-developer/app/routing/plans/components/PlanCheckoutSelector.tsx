@@ -13,6 +13,7 @@ import {
   PLAN_CHECKOUT_SELECTOR_COPY,
   PLAN_DEFERRED_SECTION_COPY,
 } from '~/routing/plans/data/data.copy';
+import { getPlanCheckoutHint } from '~/routing/plans/utils/plan-checkout-hint';
 import { toPlanCheckoutOptions } from '~/routing/plans/utils/plan-checkout-options';
 
 export interface PlanCheckoutSelectorProps {
@@ -99,14 +100,12 @@ export const PlanCheckoutSelector = (
       />
     );
 
-    const hint =
-      options.length === 0
-        ? PLAN_CHECKOUT_SELECTOR_COPY.emptyRegistryHint
-        : selectionMissing
-          ? PLAN_CHECKOUT_SELECTOR_COPY.staleCheckoutHint
-          : minimal
-            ? (minimalHint ?? PLAN_CHECKOUT_SELECTOR_COPY.minimalHint)
-            : undefined;
+    const hint = getPlanCheckoutHint({
+      minimal,
+      minimalHint,
+      optionCount: options.length,
+      selectionMissing,
+    });
 
     // A healthy full-size selector says what it is on its own face, so it gets
     // no tooltip — one would only end up hovering over its own open popover.

@@ -116,8 +116,7 @@ export function validateNestjsSlackOptions(
     options === undefined ||
     typeof options !== 'object'
   ) {
-    const message =
-      'options are required. Pass NestjsSlackModuleOptions (e.g. { webhookUrl }) to forRoot().';
+    const message = `options are required. Pass NestjsSlackModuleOptions (e.g. { webhookUrl }) to forRoot().`;
 
     throw new NestjsSlackError(message);
   }
@@ -125,8 +124,7 @@ export function validateNestjsSlackOptions(
   const opts: Record<string, unknown> = { ...options };
   const webhookUrl = opts.webhookUrl;
   if (typeof webhookUrl !== 'string' || webhookUrl.trim() === '') {
-    const message =
-      'webhookUrl is required and must be a non-empty string. Pass it in NestjsSlackModuleOptions.';
+    const message = `webhookUrl is required and must be a non-empty string. Pass it in NestjsSlackModuleOptions.`;
 
     throw new NestjsSlackError(message);
   }

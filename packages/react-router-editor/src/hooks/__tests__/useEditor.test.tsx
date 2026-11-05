@@ -3,8 +3,8 @@ import { createStore, Provider } from 'jotai';
 import * as React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { EditorAtom, EditorFile } from '../../data/atom.editor';
-import { editorAtom, editorAtomDefaults } from '../../data/atom.editor';
+import type { EditorAtom, EditorFile } from '../../data/data.atom.editor';
+import { editorAtom, editorAtomDefaults } from '../../data/data.atom.editor';
 import { useEditor } from '../useEditor';
 
 const mockNavigate = vi.fn();
@@ -13,12 +13,14 @@ vi.mock('react-router', () => ({
   useNavigate: () => mockNavigate,
 }));
 
-const file = (overrides: Partial<EditorFile> = {}): EditorFile => ({
-  directory: '.',
-  filename: 'readme.md',
-  language: 'markdown',
-  ...overrides,
-});
+const file = (overrides: Partial<EditorFile> = {}): EditorFile => {
+  return {
+    directory: '.',
+    filename: 'readme.md',
+    language: 'markdown',
+    ...overrides,
+  };
+};
 
 const renderUseEditor = (
   initial: Partial<EditorAtom> = {},
@@ -27,9 +29,9 @@ const renderUseEditor = (
   const store = createStore();
   store.set(editorAtom, { ...editorAtomDefaults, ...initial });
 
-  const wrapper = ({ children }: { readonly children: React.ReactNode }) => (
-    <Provider store={store}>{children}</Provider>
-  );
+  const wrapper = ({ children }: { readonly children: React.ReactNode }) => {
+    return <Provider store={store}>{children}</Provider>;
+  };
 
   const view = renderHook(() => useEditor(options), { wrapper });
 

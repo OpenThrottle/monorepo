@@ -667,8 +667,8 @@ describe('WorkspaceFoldersService', () => {
   });
 
   describe('workspaceRepository', () => {
-    const ownedCheckout = (repository: Repository): RepositoryCheckout =>
-      asMock<RepositoryCheckout>({
+    const ownedCheckout = (repository: Repository): RepositoryCheckout => {
+      return asMock<RepositoryCheckout>({
         displayName: 'monorepo',
         filesystemPath: join(workspaceRoot, 'gone'),
         id: 'checkout-detail',
@@ -685,6 +685,7 @@ describe('WorkspaceFoldersService', () => {
         scannedAt: new Date(),
         userId,
       });
+    };
 
     it('returns the repository with the user checkouts for an owned repo', async () => {
       const repository = asMock<Repository>({
@@ -721,8 +722,8 @@ describe('WorkspaceFoldersService', () => {
   });
 
   describe('updateRepository', () => {
-    const ownedCheckout = (repository: Repository): RepositoryCheckout =>
-      asMock<RepositoryCheckout>({
+    const ownedCheckout = (repository: Repository): RepositoryCheckout => {
+      return asMock<RepositoryCheckout>({
         displayName: 'monorepo',
         filesystemPath: join(workspaceRoot, 'gone'),
         id: 'checkout-edit',
@@ -732,6 +733,7 @@ describe('WorkspaceFoldersService', () => {
         scannedAt: null,
         userId,
       });
+    };
 
     it('updates name, default branch, and project link for an owned repo', async () => {
       const before = asMock<Repository>({

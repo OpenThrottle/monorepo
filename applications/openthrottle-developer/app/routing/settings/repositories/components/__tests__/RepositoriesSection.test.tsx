@@ -16,7 +16,7 @@ import {
   mockDiscoveredWorktrees,
   mockMissingCheckout,
   mockRepository,
-} from '~/routing/settings/repositories/data/mock.repositories';
+} from '~/routing/settings/repositories/testing/mock-repositories';
 import { buildRepositoryRows } from '~/routing/settings/repositories/utils/rows';
 
 import type { RepositoriesSectionProps } from '../RepositoriesSection';

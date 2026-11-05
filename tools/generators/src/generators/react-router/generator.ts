@@ -1,6 +1,7 @@
 import type { Tree } from '@nx/devkit';
 import prompts from 'prompts';
 
+import { askWhenInteractive } from '../../utils/ask-when-interactive.ts';
 import {
   assertFolderVocabulary,
   FOLDER_VOCABULARY_RESTRICTION,
@@ -210,8 +211,10 @@ export async function reactRouterGenerator(
 
   const generator =
     schema.subGenerator ??
-    (interactive
-      ? (
+    (await askWhenInteractive(
+      interactive,
+      async () =>
+        (
           await prompts({
             choices: [
               'application',
@@ -229,8 +232,8 @@ export async function reactRouterGenerator(
             name: 'subGenerator',
             type: 'select',
           })
-        ).subGenerator
-      : undefined);
+        ).subGenerator,
+    ));
 
   if (!generator) {
     throwGeneratorError({

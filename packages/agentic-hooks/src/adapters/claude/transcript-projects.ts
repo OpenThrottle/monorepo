@@ -29,15 +29,18 @@ import path from 'node:path';
  *
  * @public
  */
-export const claudeProjectSlug = (absolutePath: string): string =>
-  absolutePath.replace(/[^a-zA-Z0-9]/g, '-');
+export const claudeProjectSlug = (absolutePath: string): string => {
+  return absolutePath.replace(/[^a-zA-Z0-9]/g, '-');
+};
 
-const narrowSlug = (absolutePath: string): string =>
-  absolutePath.replace(/[/.]/g, '-');
+const narrowSlug = (absolutePath: string): string => {
+  return absolutePath.replace(/[/.]/g, '-');
+};
 
 /** @public */
-export const defaultClaudeProjectsDir = (): string =>
-  path.join(os.homedir(), '.claude', 'projects');
+export const defaultClaudeProjectsDir = (): string => {
+  return path.join(os.homedir(), '.claude', 'projects');
+};
 
 /**
  * Parse `git worktree list --porcelain` output into worktree paths. Bare and
@@ -166,14 +169,15 @@ export const resolveCheckouts = ({
   includeWorktrees: boolean;
   listWorktrees?: (repoRoot: string) => readonly string[];
   repoRoot: string;
-}): readonly string[] =>
-  [
+}): readonly string[] => {
+  return [
     ...new Set(
       [repoRoot, ...(includeWorktrees ? listWorktrees(repoRoot) : [])].map(
         (checkout) => path.resolve(checkout),
       ),
     ),
   ].sort();
+};
 
 /**
  * Is a transcript's recorded working directory inside one of the checkouts?

@@ -95,8 +95,9 @@ const failed = (errorMessage: string): StartConversationStreamResult => {
 
 const resolveHumanUserId = (
   principal: AuthPrincipal | undefined,
-): string | null =>
-  principal?.kind === AUTH_PRINCIPAL_KIND_USER ? principal.sub : null;
+): string | null => {
+  return principal?.kind === AUTH_PRINCIPAL_KIND_USER ? principal.sub : null;
+};
 
 /**
  * Supported backends. `openai` is the HTTP path; every CLI backend comes from
@@ -128,10 +129,13 @@ const BASE_URL_CAPABLE_BACKENDS = new Set<string>(
 );
 
 /** Conversation-metadata key holding a backend's persisted session id. */
-const sessionMetadataKey = (backend: string): string => `${backend}SessionId`;
+const sessionMetadataKey = (backend: string): string => {
+  return `${backend}SessionId`;
+};
 /** Conversation-metadata key holding a backend's persisted repository id. */
-const repositoryMetadataKey = (backend: string): string =>
-  `${backend}RepositoryId`;
+const repositoryMetadataKey = (backend: string): string => {
+  return `${backend}RepositoryId`;
+};
 
 /**
  * Env var holding a dev-only working directory for CLI backends. Honored ONLY
@@ -186,7 +190,9 @@ interface ResolvedBackendRun {
   readonly systemPrompt: string | null;
 }
 
-const isProduction = (): boolean => process.env.NODE_ENV === 'production';
+const isProduction = (): boolean => {
+  return process.env.NODE_ENV === 'production';
+};
 
 /**
  * The base URL a spawned MCP server uses to reach this OpenThrottle server.
@@ -321,13 +327,12 @@ export class ConversationStreamResolver {
     // preserves today's persisted behavior exactly.
     const persist = input.persist ?? true;
 
-    const conversationId = persist
-      ? await this.resolveConversationId(
-          userId,
-          input.conversationId ?? null,
-          message,
-        )
-      : randomUUID();
+    const conversationId = await this.conversationIdForTurn(
+      persist,
+      userId,
+      input.conversationId ?? null,
+      message,
+    );
 
     if (conversationId == null) {
       return failed('Conversation not found.');
@@ -575,15 +580,13 @@ export class ConversationStreamResolver {
     });
     const hasMcp = Object.keys(managedMcp).length > 0;
     const mcpToken = process.env.OPENTHROTTLE_MCP_AUTH_TOKEN?.trim();
-    const mcpEnv: Record<string, string> | null = hasMcp
-      ? {
-          API_URL: apiBaseUrl,
-          API_URL_INTERNAL: apiBaseUrl,
-          ...(mcpToken !== undefined && mcpToken !== ''
-            ? { OPENTHROTTLE_MCP_AUTH_TOKEN: mcpToken }
-            : {}),
-        }
-      : null;
+    let mcpEnv: Record<string, string> | null = null;
+    if (hasMcp) {
+      mcpEnv = { API_URL: apiBaseUrl, API_URL_INTERNAL: apiBaseUrl };
+      if (mcpToken !== undefined && mcpToken !== '') {
+        mcpEnv.OPENTHROTTLE_MCP_AUTH_TOKEN = mcpToken;
+      }
+    }
 
     return {
       additionalDirectories,
@@ -744,6 +747,18 @@ export class ConversationStreamResolver {
   }
 
   /** Resolve an owned conversation id, or create a new one. Returns null when a given id is not owned. */
+  private async conversationIdForTurn(
+    persist: boolean,
+    userId: string,
+    conversationId: string | null,
+    message: string,
+  ): Promise<string | null> {
+    if (!persist) {
+      return randomUUID();
+    }
+    return this.resolveConversationId(userId, conversationId, message);
+  }
+
   private async resolveConversationId(
     userId: string,
     conversationId: string | null,

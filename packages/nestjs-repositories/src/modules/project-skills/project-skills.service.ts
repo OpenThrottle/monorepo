@@ -56,17 +56,21 @@ export interface ProjectSkillReconciliation {
 
 const PHASE_DIMENSION = 'phase';
 
-const toView = (row: ProjectSkill): ProjectSkillView => ({
-  description: row.description ?? undefined,
-  orphanedAt: row.orphanedAt ?? undefined,
-  slug: row.slug,
-  source: row.source === 'openthrottle' ? 'openthrottle' : 'external',
-  sourceUrl: row.sourceUrl ?? undefined,
-  staticDisableModelInvocation: row.disableModelInvocation ?? undefined,
-  tags: row.tags,
-});
+const toView = (row: ProjectSkill): ProjectSkillView => {
+  return {
+    description: row.description ?? undefined,
+    orphanedAt: row.orphanedAt ?? undefined,
+    slug: row.slug,
+    source: row.source === 'openthrottle' ? 'openthrottle' : 'external',
+    sourceUrl: row.sourceUrl ?? undefined,
+    staticDisableModelInvocation: row.disableModelInvocation ?? undefined,
+    tags: row.tags,
+  };
+};
 
-const normalizeTag = (tag: string): string => tag.trim();
+const normalizeTag = (tag: string): string => {
+  return tag.trim();
+};
 
 const assertKebabCaseTag = (tag: string): void => {
   if (!AGENT_ASSET_SLUG_PATTERN.test(tag)) {
@@ -132,15 +136,17 @@ export class ProjectSkillsService {
       readonly source: SkillSource;
       readonly sourcePath: string;
       readonly sourceUrl: string | null;
-    } => ({
-      description: input.description ?? null,
-      disableModelInvocation: input.disableModelInvocation ?? null,
-      ingestedAt,
-      orphanedAt: null,
-      source: input.source,
-      sourcePath: input.sourcePath,
-      sourceUrl: input.sourceUrl ?? null,
-    });
+    } => {
+      return {
+        description: input.description ?? null,
+        disableModelInvocation: input.disableModelInvocation ?? null,
+        ingestedAt,
+        orphanedAt: null,
+        source: input.source,
+        sourcePath: input.sourcePath,
+        sourceUrl: input.sourceUrl ?? null,
+      };
+    };
 
     const inserts = inputs
       .filter((input) => !existingSlugs.has(input.slug))
@@ -268,13 +274,17 @@ export class ProjectSkillsService {
     return row;
   }
 
+  private async listVocabularyRows(caller: TagCaller) {
+    if (caller.principalKind === 'user') {
+      return this.skillTagsService.listForUser(caller.subjectId);
+    }
+    return this.skillTagsService
+      .getRepository()
+      .find({ where: { userId: caller.subjectId } });
+  }
+
   private async assertDomainTag(caller: TagCaller, tag: string): Promise<void> {
-    const rows =
-      caller.principalKind === 'user'
-        ? await this.skillTagsService.listForUser(caller.subjectId)
-        : await this.skillTagsService
-            .getRepository()
-            .find({ where: { userId: caller.subjectId } });
+    const rows = await this.listVocabularyRows(caller);
 
     const entries: readonly { dimension: string; tag: string }[] =
       rows.length > 0 ? rows : DEFAULT_TAG_VOCABULARY_SEED;

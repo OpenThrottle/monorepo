@@ -42,10 +42,11 @@ export const FOREIGN_PRIVACY_LEVEL: PrivacyLevel = PRIVACY_LEVELS.NAME_ONLY;
  */
 export const resolvePrivacyLevel = (
   repoRoot: string | undefined,
-): PrivacyLevel =>
-  isOpenThrottleCheckout(repoRoot)
+): PrivacyLevel => {
+  return isOpenThrottleCheckout(repoRoot)
     ? DEFAULT_PRIVACY_LEVEL
     : FOREIGN_PRIVACY_LEVEL;
+};
 
 /** @public */
 export const DEFAULT_ARGS_MAX_LEN = 256;
@@ -73,6 +74,20 @@ export const redactSecrets = (value: string): string => {
   return out;
 };
 
+const stringifyArgs = (args: unknown): string => {
+  if (args == null) {
+    return '';
+  }
+  if (typeof args === 'string') {
+    return args;
+  }
+  try {
+    return JSON.stringify(args);
+  } catch {
+    return String(args);
+  }
+};
+
 /**
  * Apply the privacy level to raw args. `name-only` drops args entirely; `full`
  * keeps redacted args; `truncated` (default) additionally caps length.
@@ -89,18 +104,7 @@ export const applyPrivacy = (
     return null;
   }
 
-  const asString =
-    args == null
-      ? ''
-      : typeof args === 'string'
-        ? args
-        : (() => {
-            try {
-              return JSON.stringify(args);
-            } catch {
-              return String(args);
-            }
-          })();
+  const asString = stringifyArgs(args);
 
   const redacted = redactSecrets(asString);
 

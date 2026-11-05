@@ -63,10 +63,11 @@ const ORGANISATION_PATTERNS = Object.entries(ORGANISATION_ALIASES).map(
 );
 
 /** Copy the case of the matched text onto the replacement's first letter. */
-const matchCase = (matched: string, replacement: string): string =>
-  matched[0] === matched[0]?.toUpperCase()
+const matchCase = (matched: string, replacement: string): string => {
+  return matched[0] === matched[0]?.toUpperCase()
     ? replacement[0]?.toUpperCase() + replacement.slice(1)
     : replacement;
+};
 
 /** The identity scrub applied to every `scrub`-classified string. */
 export const scrubIdentity = (text: string): string => {
@@ -114,10 +115,13 @@ const CONNECTION_STRING_PATTERN =
  * passwords (`openthrottle_password`, `{{password}}`, `<your-password>`, …).
  * A placeholder is not a credential; anything else in the password slot is.
  */
-const isPlaceholderPassword = (password: string): boolean =>
-  /^[{$<[]/.test(password) ||
-  /password|passwd|example|changeme|change-me|xxx/i.test(password) ||
-  /^(?:pass|pwd|secret|postgres|root|admin|test|guest)$/i.test(password);
+const isPlaceholderPassword = (password: string): boolean => {
+  return (
+    /^[{$<[]/.test(password) ||
+    /password|passwd|example|changeme|change-me|xxx/i.test(password) ||
+    /^(?:pass|pwd|secret|postgres|root|admin|test|guest)$/i.test(password)
+  );
+};
 
 /**
  * Candidate charset deliberately EXCLUDES '/', '.' and '=': with them included
@@ -136,13 +140,17 @@ const UUID_PATTERN =
  * Tokens the entropy heuristic must NOT flag: pure hex (git SHAs, content
  * hashes), UUIDs, and integrity-hash prefixes (`sha512-…` in lockfile talk).
  */
-const isKnownSafeToken = (token: string): boolean =>
-  /^[0-9a-fA-F]+$/.test(token) ||
-  UUID_PATTERN.test(token) ||
-  /^sha\d+-/.test(token);
+const isKnownSafeToken = (token: string): boolean => {
+  return (
+    /^[0-9a-fA-F]+$/.test(token) ||
+    UUID_PATTERN.test(token) ||
+    /^sha\d+-/.test(token)
+  );
+};
 
-const hasMixedCharacterClasses = (token: string): boolean =>
-  /[a-z]/.test(token) && /[A-Z]/.test(token) && /[0-9]/.test(token);
+const hasMixedCharacterClasses = (token: string): boolean => {
+  return /[a-z]/.test(token) && /[A-Z]/.test(token) && /[0-9]/.test(token);
+};
 
 /**
  * Returns a description of the first secret-looking match, or null. Known key
@@ -229,8 +237,9 @@ export const parsePostgresTimestamp = (value: string): number => {
   return ms;
 };
 
-const isTimestampType = (columnType: string): boolean =>
-  columnType.startsWith('timestamp');
+const isTimestampType = (columnType: string): boolean => {
+  return columnType.startsWith('timestamp');
+};
 
 export interface SanitizeContext {
   /** Newest timestamp in the export; offsets are relative to it. */
@@ -243,6 +252,17 @@ export type RowTransform = (
   table: string,
   row: Record<string, unknown>,
 ) => Record<string, unknown> | null;
+
+const scrubWhenClassified = (
+  action: string | undefined,
+  value: unknown,
+): unknown => {
+  if (action === 'scrub' && typeof value === 'string') {
+    return scrubIdentity(value);
+  }
+
+  return value;
+};
 
 export const createSanitizer = (context: SanitizeContext): RowTransform => {
   const anchorMs = parsePostgresTimestamp(context.anchorIso);
@@ -305,10 +325,7 @@ export const createSanitizer = (context: SanitizeContext): RowTransform => {
         continue;
       }
 
-      const scrubbed =
-        action === 'scrub' && typeof value === 'string'
-          ? scrubIdentity(value)
-          : value;
+      const scrubbed = scrubWhenClassified(action, value);
 
       if (typeof scrubbed === 'string') {
         const secret = detectSecret(scrubbed);

@@ -39,8 +39,9 @@ import { SkillAvailabilityRule } from './skill-availability-rule.entity.ts';
 import { SkillAvailabilityRuleSet } from './skill-availability-rule-set.entity.ts';
 
 /** Narrows a stored posture string to the resolver's tri-safe posture (defaults to allow). */
-const toPosture = (value: string): SkillAvailabilityPosture =>
-  value === 'deny' ? 'deny' : 'allow';
+const toPosture = (value: string): SkillAvailabilityPosture => {
+  return value === 'deny' ? 'deny' : 'allow';
+};
 
 /** Narrows a stored environment string (or null) to the resolver's environment union. */
 const toEnvironment = (

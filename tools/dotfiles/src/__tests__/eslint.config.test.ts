@@ -9,28 +9,30 @@ interface FlatConfigEntry {
 
 const entries: readonly FlatConfigEntry[] = eslintConfig;
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === 'object' && value !== null;
+};
 
 const flattenFiles = (
   files: ReadonlyArray<string | readonly string[]> | undefined,
-): readonly string[] =>
-  (files ?? []).flatMap((pattern) =>
+): readonly string[] => {
+  return (files ?? []).flatMap((pattern) =>
     Array.isArray(pattern) ? pattern : [pattern],
   );
+};
 
 const selectorsFromRestrictedSyntax = (value: unknown): readonly string[] => {
   if (!Array.isArray(value)) {
     return [];
   }
 
-  return value
-    .slice(1)
-    .map((option) =>
-      isRecord(option) && typeof option.selector === 'string'
-        ? option.selector
-        : '',
-    );
+  return value.slice(1).map((option) => {
+    if (isRecord(option) && typeof option.selector === 'string') {
+      return option.selector;
+    }
+
+    return '';
+  });
 };
 
 const ruleEntry = (ruleName: string): unknown => {
@@ -104,9 +106,12 @@ describe('eslintConfig flat config', () => {
         pattern.includes('__tests__'),
       ),
     );
-    const isTemplateLiteralSelector = (selector: string): boolean =>
-      selector.includes("JSXAttribute[name.name='className']") &&
-      selector.includes('TemplateLiteral');
+    const isTemplateLiteralSelector = (selector: string): boolean => {
+      return (
+        selector.includes("JSXAttribute[name.name='className']") &&
+        selector.includes('TemplateLiteral')
+      );
+    };
 
     expect(
       selectorsFromRestrictedSyntax(ruleEntry('no-restricted-syntax')).some(

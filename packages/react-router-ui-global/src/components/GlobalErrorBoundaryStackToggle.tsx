@@ -40,12 +40,12 @@ export const GlobalErrorBoundaryStackToggle = (
       <Button onClick={onToggleStack} type="button" variant="secondary">
         {showStack ? 'Hide stack trace' : 'Show stack trace'}
       </Button>
-      {showStack ? (
+      {showStack && (
         <>
           <h2 className="text-subtitle my-4">Stack trace</h2>
           <Markdown content={stack} />
         </>
-      ) : null}
+      )}
     </div>
   );
 };

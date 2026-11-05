@@ -8,7 +8,9 @@ import type { QueueStatRowProps } from '../QueueStatRow';
 import { QueueStatRow } from '../QueueStatRow';
 
 const renderRow = (props: QueueStatRowProps): RenderResult => {
-  const Component = () => <QueueStatRow {...props} />;
+  const Component = () => {
+    return <QueueStatRow {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 };

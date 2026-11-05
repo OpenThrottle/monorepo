@@ -2,30 +2,32 @@ import { act, renderHook } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
 import type { TagActionRuleRowData } from '~/routing/rules/components/RulesTable';
-import { ANY } from '~/routing/rules/data/rule-form-options';
+import { ANY } from '~/routing/rules/data/data.rule-form-options';
 
 import { useRuleForm } from '../useRuleForm';
 
 const buildInitialRule = (
   overrides: Partial<TagActionRuleRowData> = {},
-): TagActionRuleRowData => ({
-  actionPayloadJson: JSON.stringify({
-    placement: 'first',
-    skillSlug: 'grilling',
-  }),
-  actionType: 'inject-task',
-  createdAt: '2026-01-01T00:00:00.000Z',
-  enabled: true,
-  environment: 'ci',
-  id: 'rule-1',
-  projectId: null,
-  status: 'IN_PROGRESS',
-  tagAll: ['breakdown'],
-  title: 'Grill breakdowns',
-  updatedAt: '2026-01-01T00:00:00.000Z',
-  userId: 'user-1',
-  ...overrides,
-});
+): TagActionRuleRowData => {
+  return {
+    actionPayloadJson: JSON.stringify({
+      placement: 'first',
+      skillSlug: 'grilling',
+    }),
+    actionType: 'inject-task',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    enabled: true,
+    environment: 'ci',
+    id: 'rule-1',
+    projectId: null,
+    status: 'IN_PROGRESS',
+    tagAll: ['breakdown'],
+    title: 'Grill breakdowns',
+    updatedAt: '2026-01-01T00:00:00.000Z',
+    userId: 'user-1',
+    ...overrides,
+  };
+};
 
 describe('useRuleForm', () => {
   test('defaults to empty create-mode state', () => {

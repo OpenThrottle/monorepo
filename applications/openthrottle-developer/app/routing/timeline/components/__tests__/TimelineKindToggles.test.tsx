@@ -23,12 +23,14 @@ const renderToggles = (
     selectedSpanKinds: null,
     ...overrides,
   };
-  const Component = () => (
-    <>
-      <TimelineKindToggles {...props} />
-      <SearchParamsProbe />
-    </>
-  );
+  const Component = () => {
+    return (
+      <>
+        <TimelineKindToggles {...props} />
+        <SearchParamsProbe />
+      </>
+    );
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/timeline' }]);
 
   render(<RoutesStub initialEntries={['/timeline']} />);

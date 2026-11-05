@@ -2,7 +2,6 @@ import {
   executeGraphqlWithAuth,
   parseFormData,
 } from '@openthrottle/react-router-graphql';
-import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import { Button } from '@openthrottle/react-router-shadcn';
 import {
   OpenThrottleClipboard,
@@ -27,7 +26,7 @@ import {
 import { UpdateNoteInputSchema } from '~/__generated__/schemas';
 import { SITE_TITLE } from '~/global/config/settings';
 import { useActionToast } from '~/global/hooks/useActionToast';
-import { NoteForm } from '~/routing/notes/components/NoteForm';
+import { NoteDetailBody } from '~/routing/notes/components/NoteDetailBody';
 import {
   NOTE_EDIT_MODE,
   NOTE_MODE_PARAM,
@@ -84,6 +83,7 @@ export default function Component(
   // Setup
   const isEditing = searchParams.get(NOTE_MODE_PARAM) === NOTE_EDIT_MODE;
   const actionError = getActionError(actionData);
+  const authorName = note?.author;
 
   // Handlers
   const onSetMode = (edit: boolean): void => {
@@ -102,6 +102,9 @@ export default function Component(
   };
 
   // Markup
+  const knownAuthor = (
+    <span className="text-foreground font-medium">{authorName}</span>
+  );
 
   // Life Cycle
   useActionToast(actionData, {
@@ -127,11 +130,7 @@ export default function Component(
     <GlobalScreen>
       <div className="flex items-center justify-between gap-4">
         <span className="text-muted-foreground text-sm">
-          {note.author ? (
-            <span className="text-foreground font-medium">{note.author}</span>
-          ) : (
-            'No author'
-          )}
+          {authorName ? knownAuthor : 'No author'}
         </span>
 
         <div className="flex gap-2" role="group">
@@ -154,11 +153,7 @@ export default function Component(
         </div>
       </div>
 
-      {isEditing ? (
-        <NoteForm action="update" error={actionError} note={note} />
-      ) : (
-        <MarkdownRenderer source={note.content} />
-      )}
+      <NoteDetailBody error={actionError} isEditing={isEditing} note={note} />
     </GlobalScreen>
   );
 }

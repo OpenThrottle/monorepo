@@ -202,8 +202,9 @@ export class ActivityResolver {
   ): Promise<LastActivityResultObject | null> {
     const { planId, taskId } = input;
     const repo = this.plansService.getRepository();
-    const q = <T>(sql: string, params?: unknown[]): Promise<T> =>
-      repo.manager.query(sql, params);
+    const q = <T>(sql: string, params?: unknown[]): Promise<T> => {
+      return repo.manager.query(sql, params);
+    };
 
     type Candidate = {
       at: string;
@@ -356,18 +357,27 @@ export class ActivityResolver {
     result.planId = planId;
     result.taskId = taskId ?? null;
     result.summary = latest.summary;
-    result.commit = latest.commit
-      ? Object.assign(new LastActivityCommitPartObject(), latest.commit)
-      : null;
-    result.outputChunk = latest.outputChunk
-      ? Object.assign(
-          new LastActivityOutputChunkPartObject(),
-          latest.outputChunk,
-        )
-      : null;
-    result.taskUpdate = latest.taskUpdate
-      ? Object.assign(new LastActivityTaskUpdatePartObject(), latest.taskUpdate)
-      : null;
+    result.commit = null;
+    if (latest.commit) {
+      result.commit = Object.assign(
+        new LastActivityCommitPartObject(),
+        latest.commit,
+      );
+    }
+    result.outputChunk = null;
+    if (latest.outputChunk) {
+      result.outputChunk = Object.assign(
+        new LastActivityOutputChunkPartObject(),
+        latest.outputChunk,
+      );
+    }
+    result.taskUpdate = null;
+    if (latest.taskUpdate) {
+      result.taskUpdate = Object.assign(
+        new LastActivityTaskUpdatePartObject(),
+        latest.taskUpdate,
+      );
+    }
     return result;
   }
 
@@ -378,8 +388,9 @@ export class ActivityResolver {
     offset?: number,
   ): Promise<ActivityByDateResultObject> {
     const repo = this.plansService.getRepository();
-    const q = <T>(sql: string, params?: unknown[]): Promise<T> =>
-      repo.manager.query(sql, params);
+    const q = <T>(sql: string, params?: unknown[]): Promise<T> => {
+      return repo.manager.query(sql, params);
+    };
 
     const usePagination = limit != null && limit > 0;
     const effectiveLimit = usePagination

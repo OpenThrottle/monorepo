@@ -37,17 +37,19 @@ interface UpdateWorkspaceLocalRepositoryData {
 const toView = (
   checkout: RepositoryCheckout,
   repository: Repository,
-): WorkspaceLocalRepository => ({
-  createdAt: checkout.createdAt,
-  displayName: checkout.displayName,
-  filesystemPath: checkout.filesystemPath,
-  gitDefaultBranch: repository.defaultBranch,
-  gitRemoteUrl: repository.normalizedRemoteUrl,
-  id: checkout.id,
-  projectId: repository.projectId,
-  updatedAt: checkout.updatedAt,
-  userId: checkout.userId,
-});
+): WorkspaceLocalRepository => {
+  return {
+    createdAt: checkout.createdAt,
+    displayName: checkout.displayName,
+    filesystemPath: checkout.filesystemPath,
+    gitDefaultBranch: repository.defaultBranch,
+    gitRemoteUrl: repository.normalizedRemoteUrl,
+    id: checkout.id,
+    projectId: repository.projectId,
+    updatedAt: checkout.updatedAt,
+    userId: checkout.userId,
+  };
+};
 
 @Injectable()
 export class WorkspaceLocalRepositoriesService {

@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'vitest';
 
 import type { UsageSkillUsageBySkillFragment } from '~/__generated__/graphql';
-import { SKILL_PRESENCE } from '~/routing/usage/data/skill-presence';
-import { SKILL_USAGE_SCOPES } from '~/routing/usage/data/skill-usage-copy';
+import { SKILL_PRESENCE } from '~/routing/usage/data/data.skill-presence';
+import { SKILL_USAGE_SCOPES } from '~/routing/usage/data/data.skill-usage-copy';
 
 import { partitionSkillUsageByPresence } from '../partition-skill-usage-by-presence';
 
@@ -10,18 +10,20 @@ const row = (
   skillName: string,
   scope: string,
   count: number,
-): UsageSkillUsageBySkillFragment => ({
-  __typename: 'SkillUsageBySkillObject',
-  abandonedCount: 0,
-  avgDurationMs: null,
-  count,
-  errorCount: 0,
-  outcomeCount: 0,
-  scope,
-  sessionEndedCount: 0,
-  skillName,
-  successCount: 0,
-});
+): UsageSkillUsageBySkillFragment => {
+  return {
+    __typename: 'SkillUsageBySkillObject',
+    abandonedCount: 0,
+    avgDurationMs: null,
+    count,
+    errorCount: 0,
+    outcomeCount: 0,
+    scope,
+    sessionEndedCount: 0,
+    skillName,
+    successCount: 0,
+  };
+};
 
 describe('partitionSkillUsageByPresence', () => {
   test('splits installed, external, and missing rows into the right buckets', () => {

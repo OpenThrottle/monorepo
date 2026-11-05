@@ -13,8 +13,7 @@ import { cn } from '@openthrottle/react-router-shadcn';
  */
 
 /** Applied to the `<table>` via `DataTable`'s `className`. */
-export const MOBILE_CARD_TABLE_CLASS =
-  'max-sm:block max-sm:[&_tbody]:block max-sm:[&_thead]:hidden';
+export const MOBILE_CARD_TABLE_CLASS = `max-sm:block max-sm:[&_tbody]:block max-sm:[&_thead]:hidden`;
 
 /** Applied to each body row via `DataTable`'s `getRowProps`. */
 export const MOBILE_CARD_ROW_CLASS = cn(
@@ -26,8 +25,7 @@ export const MOBILE_CARD_ROW_CLASS = cn(
 );
 
 /** Title row: first, full width, clear of the pinned actions menu. */
-export const MOBILE_CARD_TITLE_CLASS =
-  'max-sm:order-1 max-sm:w-full max-sm:min-w-0 max-sm:pr-9';
+export const MOBILE_CARD_TITLE_CLASS = `max-sm:order-1 max-sm:w-full max-sm:min-w-0 max-sm:pr-9`;
 
 /** Full-width block that follows the status line (tags, description, meta). */
 export const MOBILE_CARD_BLOCK_CLASS = {

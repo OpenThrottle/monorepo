@@ -183,8 +183,9 @@ interface SkillUsageOutcomeStats {
  * Composite key for the outcome-stats lookup. Outcomes and starts are both
  * grouped by (skill_name, scope), so they must be joined on the same tuple.
  */
-const outcomeStatsKey = (skillName: string, scope: SkillUsageScope): string =>
-  `${skillName}\u0000${scope}`;
+const outcomeStatsKey = (skillName: string, scope: SkillUsageScope): string => {
+  return `${skillName}\u0000${scope}`;
+};
 
 const EMPTY_OUTCOME_STATS: SkillUsageOutcomeStats = {
   abandonedCount: 0,
@@ -302,8 +303,9 @@ const resolveBranchSearchLimit = (limit?: number | null): number => {
  * Source label for capture health: NULL and blank collapse to `unknown`.
  * Shared by SELECT, GROUP BY and ORDER BY so Postgres sees one expression.
  */
-const captureSourceExpression = (alias: string): string =>
-  `COALESCE(NULLIF(${alias}.source, ''), '${CAPTURE_HEALTH_UNKNOWN_SOURCE}')`;
+const captureSourceExpression = (alias: string): string => {
+  return `COALESCE(NULLIF(${alias}.source, ''), '${CAPTURE_HEALTH_UNKNOWN_SOURCE}')`;
+};
 
 @Injectable()
 export class SkillUsageEventsService {
@@ -367,25 +369,27 @@ export class SkillUsageEventsService {
 
     // Conflict: NULLs never conflict in a unique index, so every key column
     // is non-null here and plain equality finds the surviving row.
+    if (row.toolUseId !== null) {
+      return this.eventsRepository.findOneOrFail({
+        where: {
+          duplicateOfId: IsNull(),
+          hookEventName: row.hookEventName ?? IsNull(),
+          sessionId: row.sessionId ?? IsNull(),
+          source: row.source ?? IsNull(),
+          toolUseId: row.toolUseId,
+        },
+      });
+    }
     return this.eventsRepository.findOneOrFail({
-      where:
-        row.toolUseId !== null
-          ? {
-              duplicateOfId: IsNull(),
-              hookEventName: row.hookEventName ?? IsNull(),
-              sessionId: row.sessionId ?? IsNull(),
-              source: row.source ?? IsNull(),
-              toolUseId: row.toolUseId,
-            }
-          : {
-              duplicateOfId: IsNull(),
-              hookEventName: row.hookEventName ?? IsNull(),
-              promptId: row.promptId ?? IsNull(),
-              sessionId: row.sessionId ?? IsNull(),
-              skillName: row.skillName,
-              source: row.source ?? IsNull(),
-              toolUseId: IsNull(),
-            },
+      where: {
+        duplicateOfId: IsNull(),
+        hookEventName: row.hookEventName ?? IsNull(),
+        promptId: row.promptId ?? IsNull(),
+        sessionId: row.sessionId ?? IsNull(),
+        skillName: row.skillName,
+        source: row.source ?? IsNull(),
+        toolUseId: IsNull(),
+      },
     });
   }
 

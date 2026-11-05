@@ -16,8 +16,9 @@ import { basename } from '~/routing/plans/utils/plan-workflow-config-workspace-s
 
 const firstNonEmpty = (
   ...values: readonly (string | null | undefined)[]
-): string | undefined =>
-  values.find((value) => (value ?? '').trim() !== '')?.trim();
+): string | undefined => {
+  return values.find((value) => (value ?? '').trim() !== '')?.trim();
+};
 
 /**
  * @description One option per registered checkout, carrying the identity fields
@@ -30,8 +31,8 @@ const firstNonEmpty = (
  */
 export const toPlanCheckoutOptions = (
   repositories: readonly PlanRunConfigRepositoryFieldsFragment[],
-): ChatCheckoutOption[] =>
-  repositories.flatMap((repository) =>
+): ChatCheckoutOption[] => {
+  return repositories.flatMap((repository) =>
     repository.checkouts.map((checkout) => ({
       branch: firstNonEmpty(
         checkout.inspection?.git?.currentBranch,
@@ -48,3 +49,4 @@ export const toPlanCheckoutOptions = (
       remoteUrl: firstNonEmpty(repository.normalizedRemoteUrl),
     })),
   );
+};

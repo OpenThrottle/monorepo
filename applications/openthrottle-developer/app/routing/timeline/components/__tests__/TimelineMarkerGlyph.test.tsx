@@ -11,11 +11,13 @@ import type { TimelineMarkerGlyphProps } from '../TimelineMarkerGlyph';
 import { TimelineMarkerGlyph } from '../TimelineMarkerGlyph';
 
 const renderGlyph = (props: TimelineMarkerGlyphProps): RenderResult => {
-  const Component = () => (
-    <svg>
-      <TimelineMarkerGlyph {...props} />
-    </svg>
-  );
+  const Component = () => {
+    return (
+      <svg>
+        <TimelineMarkerGlyph {...props} />
+      </svg>
+    );
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

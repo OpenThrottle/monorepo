@@ -316,13 +316,15 @@ export class AgenticRalphOrchestratorService {
     // subdirectory such as `applications/openthrottle-server` when nothing named a checkout), which
     // is not necessarily a repo root and must not be handed to the script.
     const explicitWorkingDirectory = jobData.workingDirectory?.trim();
-    const baseCheckoutPath =
-      explicitWorkingDirectory !== undefined && explicitWorkingDirectory !== ''
-        ? baseCheckoutCwd
-        : this.resolveRepoRootForWorktreeProvisioning(
-            jobData.planId,
-            worktreeName,
-          );
+    const hasExplicitWorkingDirectory =
+      explicitWorkingDirectory !== undefined && explicitWorkingDirectory !== '';
+    let baseCheckoutPath = baseCheckoutCwd;
+    if (!hasExplicitWorkingDirectory) {
+      baseCheckoutPath = this.resolveRepoRootForWorktreeProvisioning(
+        jobData.planId,
+        worktreeName,
+      );
+    }
 
     const worktreePath = await this.planRunWorktreeProvisionService.provision({
       baseCheckoutPath,

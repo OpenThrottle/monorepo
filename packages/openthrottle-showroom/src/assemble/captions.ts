@@ -95,10 +95,11 @@ const srtTime = (seconds: number): string => {
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')},${String(millis).padStart(3, '0')}`;
 };
 
-export const toSrt = (cues: readonly Cue[]): string =>
-  `${cues
+export const toSrt = (cues: readonly Cue[]): string => {
+  return `${cues
     .map(
       (cue, index) =>
         `${String(index + 1)}\n${srtTime(cue.startSeconds)} --> ${srtTime(cue.endSeconds)}\n${cue.text}`,
     )
     .join('\n\n')}\n`;
+};

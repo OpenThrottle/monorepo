@@ -147,15 +147,16 @@ export const DashboardContentGrid = (
             fallback={<DashboardPrCardsSkeleton />}
             resolve={githubStats}
           >
-            {(stats) =>
-              stats.githubTokenConfigured ? (
-                <DashboardPrTimeInStateCard
-                  prTimeInStateSummary={stats.prTimeInStateSummary}
-                />
-              ) : (
-                <DashboardGithubTokenEmptyState />
-              )
-            }
+            {(stats) => {
+              if (stats.githubTokenConfigured) {
+                return (
+                  <DashboardPrTimeInStateCard
+                    prTimeInStateSummary={stats.prTimeInStateSummary}
+                  />
+                );
+              }
+              return <DashboardGithubTokenEmptyState />;
+            }}
           </DashboardDeferredCard>
         </div>
 
@@ -166,13 +167,12 @@ export const DashboardContentGrid = (
             fallback={<DashboardPrCardsSkeleton />}
             resolve={githubStats}
           >
-            {(stats) =>
-              stats.githubTokenConfigured ? (
-                <DashboardOpenPrsByAuthorCard githubStats={stats} />
-              ) : (
-                <DashboardGithubTokenEmptyState />
-              )
-            }
+            {(stats) => {
+              if (stats.githubTokenConfigured) {
+                return <DashboardOpenPrsByAuthorCard githubStats={stats} />;
+              }
+              return <DashboardGithubTokenEmptyState />;
+            }}
           </DashboardDeferredCard>
         </div>
 

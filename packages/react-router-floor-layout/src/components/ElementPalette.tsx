@@ -1,7 +1,7 @@
 import { Button, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { PALETTE_ITEMS, type PaletteItem } from '../data/elements';
+import { PALETTE_ITEMS, type PaletteItem } from '../data/data.elements';
 import { usePointerDrag } from '../hooks/usePointerDrag';
 import { type FloorElementType } from '../types';
 import { type Point, type Rect } from '../utils/geometry';

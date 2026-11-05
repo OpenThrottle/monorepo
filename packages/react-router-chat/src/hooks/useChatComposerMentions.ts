@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import { CARET_MOVEMENT_KEYS } from '../data/chat-caret-movement-keys';
+import { CARET_MOVEMENT_KEYS } from '../data/data.chat-caret-movement-keys';
 import {
   type ActiveFileMention,
   detectActiveMention,
@@ -78,7 +78,9 @@ export const useChatComposerMentions = (
   const popoverOpen = mentionEnabled && mention !== null;
 
   // Handlers
-  const optionId = (index: number): string => `${listboxId}-opt-${index}`;
+  const optionId = (index: number): string => {
+    return `${listboxId}-opt-${index}`;
+  };
 
   const reset = (): void => {
     querySeq.current += 1;

@@ -11,13 +11,13 @@ import type { Route } from '@/app/routes/+types/_index';
 import { SITE_TITLE } from '~/global/config/settings';
 import { HomeConversationToolbar } from '~/routing/home/components/HomeConversationToolbar';
 import { HomeThreadColumn } from '~/routing/home/components/HomeThreadColumn';
+import { useAgenticChatTurn } from '~/routing/home/hooks/useAgenticChatTurn';
+import { useConversationList } from '~/routing/home/hooks/useConversationList';
 import {
   loadComposerModels,
   loadPersonas,
   loadRepositories,
-} from '~/routing/home/data/models.server';
-import { useAgenticChatTurn } from '~/routing/home/hooks/useAgenticChatTurn';
-import { useConversationList } from '~/routing/home/hooks/useConversationList';
+} from '~/routing/home/utils/models.server';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

@@ -7,10 +7,8 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { stripWorkspaceTypes } from './workspace-type-stripping.ts';
 
-const WORKSPACE_URL =
-  'file:///app/node_modules/.pnpm/@openthrottle+nodejs-utils@file+packages+nodejs-utils/node_modules/@openthrottle/nodejs-utils/src/index.ts';
-const TYPED_SOURCE =
-  'export const double = (value: number): number => value * 2;\n';
+const WORKSPACE_URL = `file:///app/node_modules/.pnpm/@openthrottle+nodejs-utils@file+packages+nodejs-utils/node_modules/@openthrottle/nodejs-utils/src/index.ts`;
+const TYPED_SOURCE = `export const double = (value: number): number => value * 2;\n`;
 
 describe('stripWorkspaceTypes', () => {
   const scratchDirs: string[] = [];

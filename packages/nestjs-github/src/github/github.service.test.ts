@@ -64,18 +64,20 @@ describe('GitHubService', () => {
   });
 
   test('listAllPulls paginates until a short page and concatenates results', async () => {
-    const makePull = (n: number, mergedAt: string | null) => ({
-      base: { ref: 'main' },
-      created_at: '2025-01-01T00:00:00Z',
-      head: { ref: `feat/${n}`, sha: 'a'.repeat(40) },
-      html_url: `https://github.com/owner/repo/pull/${n}`,
-      merged_at: mergedAt,
-      number: n,
-      state: 'closed' as const,
-      title: `feat: ${n}`,
-      updated_at: '2025-01-02T00:00:00Z',
-      user: { login: 'octocat' },
-    });
+    const makePull = (n: number, mergedAt: string | null) => {
+      return {
+        base: { ref: 'main' },
+        created_at: '2025-01-01T00:00:00Z',
+        head: { ref: `feat/${n}`, sha: 'a'.repeat(40) },
+        html_url: `https://github.com/owner/repo/pull/${n}`,
+        merged_at: mergedAt,
+        number: n,
+        state: 'closed' as const,
+        title: `feat: ${n}`,
+        updated_at: '2025-01-02T00:00:00Z',
+        user: { login: 'octocat' },
+      };
+    };
     const page1 = Array.from({ length: 100 }, (_, i) =>
       makePull(i + 1, '2025-02-01T00:00:00Z'),
     );
@@ -131,18 +133,20 @@ describe('GitHubService', () => {
   });
 
   test('listAllPulls applies the merged filter across pages', async () => {
-    const makePull = (n: number, mergedAt: string | null) => ({
-      base: { ref: 'main' },
-      created_at: '2025-01-01T00:00:00Z',
-      head: { ref: `feat/${n}`, sha: 'c'.repeat(40) },
-      html_url: `https://github.com/owner/repo/pull/${n}`,
-      merged_at: mergedAt,
-      number: n,
-      state: 'closed' as const,
-      title: `feat: ${n}`,
-      updated_at: '2025-01-02T00:00:00Z',
-      user: { login: 'octocat' },
-    });
+    const makePull = (n: number, mergedAt: string | null) => {
+      return {
+        base: { ref: 'main' },
+        created_at: '2025-01-01T00:00:00Z',
+        head: { ref: `feat/${n}`, sha: 'c'.repeat(40) },
+        html_url: `https://github.com/owner/repo/pull/${n}`,
+        merged_at: mergedAt,
+        number: n,
+        state: 'closed' as const,
+        title: `feat: ${n}`,
+        updated_at: '2025-01-02T00:00:00Z',
+        user: { login: 'octocat' },
+      };
+    };
     const page = [makePull(1, '2025-02-01T00:00:00Z'), makePull(2, null)];
     vi.stubGlobal(
       'fetch',
@@ -429,14 +433,18 @@ describe('GitHubService', () => {
   });
 
   test('getPullReviews returns reviews with state and submittedAt and paginates', async () => {
-    const page1 = Array.from({ length: 100 }, (_, i) =>
-      i === 0
-        ? {
-            state: 'CHANGES_REQUESTED' as const,
-            submitted_at: '2026-01-02T00:00:00Z',
-          }
-        : { state: 'COMMENT' as const, submitted_at: '2026-01-03T00:00:00Z' },
-    );
+    const page1 = Array.from({ length: 100 }, (_, i) => {
+      if (i === 0) {
+        return {
+          state: 'CHANGES_REQUESTED' as const,
+          submitted_at: '2026-01-02T00:00:00Z',
+        };
+      }
+      return {
+        state: 'COMMENT' as const,
+        submitted_at: '2026-01-03T00:00:00Z',
+      };
+    });
     const page2 = [
       { state: 'APPROVED' as const, submitted_at: '2026-01-05T00:00:00Z' },
     ];

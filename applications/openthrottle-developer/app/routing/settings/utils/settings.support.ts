@@ -36,7 +36,9 @@ interface SupportBundlePayload {
   };
 }
 
-export const getEmptyServerSnapshot = (): readonly ClientLogEntry[] => [];
+export const getEmptyServerSnapshot = (): readonly ClientLogEntry[] => {
+  return [];
+};
 
 /**
  * @description Builds a JSON payload safe to paste in support tickets (sanitized env).
@@ -90,12 +92,14 @@ export const formatEntryLine = (entry: ClientLogEntry): string => {
   return `${iso} [${entry.level}] ${entry.message}`;
 };
 
-export const entryToJsonRecord = (entry: ClientLogEntry): ClientLog => ({
-  isoTime: new Date(entry.t).toISOString(),
-  level: entry.level,
-  message: entry.message,
-  t: entry.t,
-});
+export const entryToJsonRecord = (entry: ClientLogEntry): ClientLog => {
+  return {
+    isoTime: new Date(entry.t).toISOString(),
+    level: entry.level,
+    message: entry.message,
+    t: entry.t,
+  };
+};
 
 export const downloadJson = (payload: SupportBundlePayload): void => {
   const stamp = payload.generatedAt.replace(/[:.]/g, '-').slice(0, 19);

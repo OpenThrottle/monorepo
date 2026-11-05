@@ -34,7 +34,9 @@ const renderPopover = (
     span: null,
     ...overrides,
   };
-  const Component = () => <TimelineDetailPopover {...props} />;
+  const Component = () => {
+    return <TimelineDetailPopover {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

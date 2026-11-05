@@ -3,18 +3,20 @@ import { describe, expect, test } from 'vitest';
 import type { DocEntry } from '../buildDocsManifest';
 import { docEntryKey } from '../docEntryKey';
 
-const makeEntry = (overrides: Partial<DocEntry>): DocEntry => ({
-  content: '',
-  description: null,
-  draft: false,
-  group: 'General',
-  order: 1,
-  path: '/docs/example',
-  section: 'docs',
-  slug: 'example',
-  title: 'Title',
-  ...overrides,
-});
+const makeEntry = (overrides: Partial<DocEntry>): DocEntry => {
+  return {
+    content: '',
+    description: null,
+    draft: false,
+    group: 'General',
+    order: 1,
+    path: '/docs/example',
+    section: 'docs',
+    slug: 'example',
+    title: 'Title',
+    ...overrides,
+  };
+};
 
 describe('docEntryKey', () => {
   test('joins the section and slug with a colon', () => {

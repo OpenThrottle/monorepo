@@ -165,12 +165,14 @@ const ARTIFACT_TYPE_REGISTRY: Readonly<Record<string, ArtifactTypeDefinition>> =
   };
 
 /** @description True when `type` is a registered artifact type. */
-export const isRegisteredArtifactType = (type: string): boolean =>
-  Object.prototype.hasOwnProperty.call(ARTIFACT_TYPE_REGISTRY, type);
+export const isRegisteredArtifactType = (type: string): boolean => {
+  return Object.prototype.hasOwnProperty.call(ARTIFACT_TYPE_REGISTRY, type);
+};
 
 /** @description Registered artifact type names (for error messages / introspection). */
-export const registeredArtifactTypes = (): readonly string[] =>
-  Object.keys(ARTIFACT_TYPE_REGISTRY);
+export const registeredArtifactTypes = (): readonly string[] => {
+  return Object.keys(ARTIFACT_TYPE_REGISTRY);
+};
 
 export interface ResolvedArtifact {
   readonly externalKey: string;
@@ -200,10 +202,8 @@ export const resolveArtifactForWrite = (
 
   const payload = definition.validatePayload(rawPayload);
   const baseKey = definition.deriveExternalKey(payload);
-  const externalKey =
-    definition.identity === ARTIFACT_IDENTITY.EVENT
-      ? `${baseKey}:${randomUUID()}`
-      : baseKey;
+  const isEvent = definition.identity === ARTIFACT_IDENTITY.EVENT;
+  const externalKey = isEvent ? `${baseKey}:${randomUUID()}` : baseKey;
 
   return {
     externalKey,

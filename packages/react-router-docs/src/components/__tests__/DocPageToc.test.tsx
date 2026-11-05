@@ -69,14 +69,15 @@ describe('DocPageToc', () => {
     vi.unstubAllGlobals();
   });
 
-  const renderToc = () =>
-    render(
+  const renderToc = () => {
+    return render(
       <>
         <h2 id="intro">Intro</h2>
         <h2 id="setup">Setup</h2>
         <DocPageToc headings={headings} />
       </>,
     );
+  };
 
   test('renders an accessible in-page link per heading', () => {
     const component = renderToc();

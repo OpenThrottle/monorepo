@@ -19,7 +19,9 @@ describe('OpenThrottleProductGetStarted Component', () => {
       stars: '100',
     };
 
-    const Component = () => <OpenThrottleProductGetStarted {...props} />;
+    const Component = () => {
+      return <OpenThrottleProductGetStarted {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

@@ -23,8 +23,11 @@ const fixturesDir = path.join(
   'fixtures',
 );
 
-const fixture = (name: string): unknown =>
-  JSON.parse(fs.readFileSync(path.join(fixturesDir, `${name}.json`), 'utf8'));
+const fixture = (name: string): unknown => {
+  return JSON.parse(
+    fs.readFileSync(path.join(fixturesDir, `${name}.json`), 'utf8'),
+  );
+};
 
 describe('normalizeCodexPayload', () => {
   it('returns null for a captured plain prompt', () => {
@@ -34,10 +37,9 @@ describe('normalizeCodexPayload', () => {
 
   it('maps a slash command on the captured envelope', () => {
     const captured = fixture('user-prompt-submit');
-    const payload =
-      typeof captured === 'object' && captured !== null
-        ? { ...captured, prompt: '/ot-plans list the open plans' }
-        : {};
+    const isObject = typeof captured === 'object' && captured !== null;
+    const slashPrompt = { prompt: '/ot-plans list the open plans' };
+    const payload = isObject ? { ...captured, ...slashPrompt } : {};
     expect(normalizeCodexPayload(payload)).toEqual({
       args: 'list the open plans',
       cwd: '/tmp/probe-repo',

@@ -21,9 +21,9 @@ const renderWithAction = (
   action: GlobalPopoverAction,
   routeAction: () => unknown,
 ): ReturnType<typeof render> => {
-  const Component = (): React.ReactElement => (
-    <GlobalPopover actions={[action]} ariaLabel="Row actions" />
-  );
+  const Component = (): React.ReactElement => {
+    return <GlobalPopover actions={[action]} ariaLabel="Row actions" />;
+  };
   const RoutesStub = createRoutesStub([
     { Component, action: routeAction, path: '/' },
   ]);

@@ -48,9 +48,12 @@ export const CHECKPOINTS_DIR_BASENAME = 'checkpoints';
  *
  * @public
  */
-export const resolveTelemetryDir = (): string =>
-  process.env.OPENTHROTTLE_TELEMETRY_DIR?.trim() ||
-  path.join(userConfigDir(), TELEMETRY_DIR_BASENAME);
+export const resolveTelemetryDir = (): string => {
+  return (
+    process.env.OPENTHROTTLE_TELEMETRY_DIR?.trim() ||
+    path.join(userConfigDir(), TELEMETRY_DIR_BASENAME)
+  );
+};
 
 /**
  * Append one event as a JSONL line, creating parent dirs as needed.
@@ -63,20 +66,24 @@ export const appendJsonl = (jsonlPath: string, event: object): void => {
 };
 
 /** @public */
-export const defaultJsonlPath = (): string =>
-  path.join(resolveTelemetryDir(), EVENTS_JSONL_BASENAME);
+export const defaultJsonlPath = (): string => {
+  return path.join(resolveTelemetryDir(), EVENTS_JSONL_BASENAME);
+};
 
 /** @public */
-export const defaultOutcomesJsonlPath = (): string =>
-  path.join(resolveTelemetryDir(), OUTCOMES_JSONL_BASENAME);
+export const defaultOutcomesJsonlPath = (): string => {
+  return path.join(resolveTelemetryDir(), OUTCOMES_JSONL_BASENAME);
+};
 
 /** @public */
-export const defaultTokenUsageJsonlPath = (): string =>
-  path.join(resolveTelemetryDir(), TOKEN_USAGE_JSONL_BASENAME);
+export const defaultTokenUsageJsonlPath = (): string => {
+  return path.join(resolveTelemetryDir(), TOKEN_USAGE_JSONL_BASENAME);
+};
 
 /** @public */
-export const defaultCheckpointsDir = (): string =>
-  path.join(resolveTelemetryDir(), CHECKPOINTS_DIR_BASENAME);
+export const defaultCheckpointsDir = (): string => {
+  return path.join(resolveTelemetryDir(), CHECKPOINTS_DIR_BASENAME);
+};
 
 /**
  * The dead-letter sibling of a buffer file: `events.jsonl` →
@@ -86,20 +93,22 @@ export const defaultCheckpointsDir = (): string =>
  *
  * @public
  */
-export const deadLetterPathFor = (filePath: string): string =>
-  filePath.replace(/\.jsonl$/, '') + '.dead-letter.jsonl';
+export const deadLetterPathFor = (filePath: string): string => {
+  return filePath.replace(/\.jsonl$/, '') + '.dead-letter.jsonl';
+};
 
 /** One dead-letter line: the original record wrapped with when and why. */
 const toDeadLetterLine = (
   record: unknown,
   reason: string,
   nowMs: number,
-): string =>
-  JSON.stringify({
+): string => {
+  return JSON.stringify({
     dead_lettered_at: new Date(nowMs).toISOString(),
     line: record,
     reason,
   });
+};
 
 /**
  * Append records straight to a buffer's dead-letter file — for a payload the
@@ -180,22 +189,26 @@ export const replayDeadLetter = (filePath: string): number => {
 };
 
 /** @public */
-export const defaultStartsDir = (): string =>
-  path.join(resolveTelemetryDir(), STARTS_DIR_BASENAME);
+export const defaultStartsDir = (): string => {
+  return path.join(resolveTelemetryDir(), STARTS_DIR_BASENAME);
+};
 
 /**
  * A session id is used as a filename; keep it filesystem-safe.
  *
  * @public
  */
-export const sanitizeSessionId = (sessionId: unknown): string =>
-  String(sessionId).replace(/[^A-Za-z0-9._-]/g, '-');
+export const sanitizeSessionId = (sessionId: unknown): string => {
+  return String(sessionId).replace(/[^A-Za-z0-9._-]/g, '-');
+};
 
 /** @public */
 export const startsFilePathForSession = (
   startsDir: string,
   sessionId: string,
-): string => path.join(startsDir, `${sanitizeSessionId(sessionId)}.jsonl`);
+): string => {
+  return path.join(startsDir, `${sanitizeSessionId(sessionId)}.jsonl`);
+};
 
 /**
  * Stable key for a start entry — the dedupe / drain unit. Prefers tool_use_id
@@ -401,8 +414,8 @@ export const drainJsonlFile = async <
   filePath: string;
   nowFn?: () => number;
   post: (event: T) => Promise<PostResult>;
-}): Promise<DrainFileResult> =>
-  drainSnapshot<T>({
+}): Promise<DrainFileResult> => {
+  return drainSnapshot<T>({
     batchBytes: Number.POSITIVE_INFINITY,
     batchSize: 1,
     deadlineMs,
@@ -411,6 +424,7 @@ export const drainJsonlFile = async <
     postBatch: async ([event]) =>
       event === undefined ? { ok: true } : post(event),
   });
+};
 
 /**
  * `drainJsonlFile` for a stream whose server mutation takes many rows at once:
@@ -438,8 +452,8 @@ export const drainJsonlFileBatched = async <
   filePath: string;
   nowFn?: () => number;
   postBatch: (events: readonly T[]) => Promise<BatchPostResult>;
-}): Promise<DrainFileResult> =>
-  drainSnapshot<T>({
+}): Promise<DrainFileResult> => {
+  return drainSnapshot<T>({
     batchBytes,
     batchSize,
     deadlineMs,
@@ -447,3 +461,4 @@ export const drainJsonlFileBatched = async <
     nowFn,
     postBatch,
   });
+};

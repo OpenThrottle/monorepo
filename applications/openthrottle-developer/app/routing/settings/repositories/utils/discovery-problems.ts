@@ -1,6 +1,6 @@
 import { WorktreeDiscoveryProblemKind } from '~/__generated__/graphql';
 import { WORKTREE_DISCOVERY_COPY } from '~/routing/settings/repositories/data/data.copy';
-import type { DiscoveredWorktreesResult } from '~/routing/settings/repositories/data/types';
+import type { DiscoveredWorktreesResult } from '~/routing/settings/repositories/types';
 
 type WorktreeDiscoveryProblem = DiscoveredWorktreesResult['problems'][number];
 
@@ -49,8 +49,9 @@ const DEGRADED_KINDS: readonly WorktreeDiscoveryProblemKind[] = [
 ];
 
 /** `n one` / `n other`, so the copy file holds whole clauses rather than fragments. */
-const counted = (count: number, one: string, other: string): string =>
-  `${count} ${count === 1 ? one : other}`;
+const counted = (count: number, one: string, other: string): string => {
+  return `${count} ${count === 1 ? one : other}`;
+};
 
 /**
  * @description Turns a scan payload into what the notice renders: a group per
@@ -121,7 +122,8 @@ export const summarizeDiscovery = (
 };
 
 /** One raw line: the path it is about, then the underlying message. */
-const describe = (problem: WorktreeDiscoveryProblem): string =>
-  problem.path === null
+const describe = (problem: WorktreeDiscoveryProblem): string => {
+  return problem.path === null
     ? problem.detail
     : `${problem.path} — ${problem.detail}`;
+};

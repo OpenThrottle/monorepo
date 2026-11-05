@@ -7,21 +7,23 @@ import { buildPromptDebugSnapshotJson } from '../prompt-debug-snapshot';
 
 const customPrompt = (
   overrides: Partial<PromptDetailsFragment> = {},
-): PromptDetailsFragment => ({
-  __typename: 'CustomPromptObject',
-  content: 'hello world',
-  createdAt: '2025-01-01T00:00:00Z',
-  description: null,
-  filePath: null,
-  id: 'prompt-1',
-  labels: ['alpha', 'beta'],
-  projectId: null,
-  promptType: CustomPromptType.Prompts,
-  title: 'My Prompt',
-  updatedAt: '2025-01-02T00:00:00Z',
-  userId: null,
-  ...overrides,
-});
+): PromptDetailsFragment => {
+  return {
+    __typename: 'CustomPromptObject',
+    content: 'hello world',
+    createdAt: '2025-01-01T00:00:00Z',
+    description: null,
+    filePath: null,
+    id: 'prompt-1',
+    labels: ['alpha', 'beta'],
+    projectId: null,
+    promptType: CustomPromptType.Prompts,
+    title: 'My Prompt',
+    updatedAt: '2025-01-02T00:00:00Z',
+    userId: null,
+    ...overrides,
+  };
+};
 
 describe('buildPromptDebugSnapshotJson', () => {
   test('produces a stable, alphabetized JSON snapshot when buffer matches saved content', () => {

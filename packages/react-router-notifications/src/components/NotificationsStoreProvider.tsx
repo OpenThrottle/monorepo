@@ -7,11 +7,11 @@ import * as React from 'react';
 import type { NotificationsStoreContextValue } from '../data';
 import {
   DEFAULT_NOTIFICATIONS_STORAGE_KEY,
-  loadFromStorage,
   NotificationsStoreContext,
-  reducer,
-  saveToStorage,
 } from '../data';
+import { loadFromStorage } from '../utils/load-from-storage';
+import { reducer } from '../utils/notifications-reducer';
+import { saveToStorage } from '../utils/save-to-storage';
 import { NotificationsAnnouncer } from './NotificationsAnnouncer';
 
 export interface NotificationsStoreProviderProps {

@@ -112,13 +112,14 @@ describe('ScheduledAgentJobsResolver.createScheduledAgentJob', () => {
 describe('cross-job run reads', () => {
   const runsResolver = (
     service: ScheduledAgentJobsGraphqlService,
-  ): ScheduledAgentJobsResolver =>
-    new ScheduledAgentJobsResolver(
+  ): ScheduledAgentJobsResolver => {
+    return new ScheduledAgentJobsResolver(
       createMock<AgentCliPreferencesService>(),
       createMock<ScheduledAgentJobsLoaders>(),
       createMock<LoggerService>(),
       service,
     );
+  };
 
   it('scheduledAgentJobRunsInFlight passes the limit straight through and maps the rows', async () => {
     const listInFlightRuns = vi.fn().mockResolvedValue([

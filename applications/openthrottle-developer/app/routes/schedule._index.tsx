@@ -87,9 +87,41 @@ export default function Component(
   // the onboarding pitch.
   const isNewUser = jobs.length === 0 && search.length === 0;
 
+  const hasNoJobs = jobs.length === 0;
+
   // Handlers
 
   // Markup
+  const onboarding = <GlobalFeatureOnboarding content={SCHEDULE_ONBOARDING} />;
+  const noSearchResults = (
+    <div className="flex flex-col gap-4">
+      <ScheduleToolbar />
+      <p className="text-muted-foreground text-sm">
+        {SCHEDULE_COPY.noSearchResults}
+      </p>
+    </div>
+  );
+  const jobsListing = (
+    <>
+      <ScheduleStats
+        enabledCount={jobs.filter((job) => job.enabled).length}
+        failedCount={runStats.failedCount}
+        queuedCount={runStats.queuedCount}
+        ranCount={runStats.windowTotalCount}
+        runningCount={runStats.runningCount}
+        succeededCount={runStats.succeededCount}
+        totalCount={jobs.length}
+      />
+
+      <ScheduleActiveRuns runs={inFlightRuns} />
+
+      <div className="flex flex-col gap-4">
+        <ScheduleToolbar />
+        <ScheduleTable inFlightByJob={inFlightByJob} jobs={jobs} />
+      </div>
+    </>
+  );
+  const emptyOrListing = hasNoJobs ? noSearchResults : jobsListing;
 
   // Life Cycle
 
@@ -101,39 +133,7 @@ export default function Component(
         <ScheduleIntroduction />
 
         <div className="flex flex-col gap-4 md:gap-8 lg:gap-12">
-          {isNewUser ? (
-            <GlobalFeatureOnboarding content={SCHEDULE_ONBOARDING} />
-          ) : jobs.length === 0 ? (
-            <div className="flex flex-col gap-4">
-              <ScheduleToolbar />
-              <p className="text-muted-foreground text-sm">
-                {SCHEDULE_COPY.noSearchResults}
-              </p>
-            </div>
-          ) : (
-            <>
-              <ScheduleStats
-                enabledCount={jobs.filter((job) => job.enabled).length}
-                failedCount={runStats.failedCount}
-                queuedCount={runStats.queuedCount}
-                ranCount={runStats.windowTotalCount}
-                runningCount={runStats.runningCount}
-                succeededCount={runStats.succeededCount}
-                totalCount={jobs.length}
-              />
-
-              <ScheduleActiveRuns runs={inFlightRuns} />
-
-              <div className="flex flex-col gap-4">
-                <ScheduleToolbar />
-                <ScheduleTable
-                  // className="bg-card"
-                  inFlightByJob={inFlightByJob}
-                  jobs={jobs}
-                />
-              </div>
-            </>
-          )}
+          {isNewUser ? onboarding : emptyOrListing}
         </div>
       </GlobalScreen>
       <GlobalFeatureOnboardingModal content={SCHEDULE_ONBOARDING} />

@@ -2,7 +2,7 @@ import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { BrainCircuitIcon } from 'lucide-react';
 import * as React from 'react';
 
-import type { RepoPersonaEntry } from '~/routing/agents/data/repo-personas-registry';
+import type { RepoPersonaEntry } from '~/routing/agents/data/data.repo-personas-registry';
 
 export interface PersonasIntroductionProps {
   entries?: RepoPersonaEntry[];

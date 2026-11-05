@@ -37,6 +37,14 @@ export const TimelineLegend = (
   // Handlers
 
   // Markup
+  const grillingScopeNotice = (
+    <p
+      className="text-muted-foreground text-xs"
+      data-testid="TimelineLegendGrillingScope"
+    >
+      {TIMELINE_DISCLOSURE_COPY.grillingScope}
+    </p>
+  );
 
   // Life Cycle
 
@@ -127,14 +135,7 @@ export const TimelineLegend = (
       <p className="text-muted-foreground mt-3 text-xs">
         {TIMELINE_DISCLOSURE_COPY.derivedEnd}
       </p>
-      {hasUnattributedGrilling ? (
-        <p
-          className="text-muted-foreground text-xs"
-          data-testid="TimelineLegendGrillingScope"
-        >
-          {TIMELINE_DISCLOSURE_COPY.grillingScope}
-        </p>
-      ) : null}
+      {hasUnattributedGrilling ? grillingScopeNotice : null}
       <p className="text-muted-foreground text-xs">
         {TIMELINE_DISCLOSURE_COPY.taskUpdated}
       </p>

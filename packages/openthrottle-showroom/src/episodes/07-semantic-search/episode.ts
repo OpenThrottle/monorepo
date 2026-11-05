@@ -21,14 +21,12 @@ import type { VideoEpisode } from '../types.ts';
 export const episode: VideoEpisode = {
   beats: [
     {
-      action:
-        '`/search` open with results already on screen for `rate limiting`.',
+      action: `\`/search\` open with results already on screen for \`rate limiting\`.`,
       t: '0:00',
     },
     { action: 'Clear the field; type `how did we handle retries`.', t: '0:08' },
     {
-      action:
-        'Results render — plans, tasks and notes, none of which contain that phrase.',
+      action: `Results render — plans, tasks and notes, none of which contain that phrase.`,
       t: '0:18',
     },
     { action: 'Hover the top result; the match reason shows.', t: '0:27' },
@@ -42,8 +40,7 @@ export const episode: VideoEpisode = {
   dataRequirements: [
     {
       atLeast: 25,
-      describe:
-        'plan embeddings so semantic search has a corpus to match against',
+      describe: `plan embeddings so semantic search has a corpus to match against`,
       sql: `SELECT count(*) AS value FROM plan_embeddings`,
     },
     {

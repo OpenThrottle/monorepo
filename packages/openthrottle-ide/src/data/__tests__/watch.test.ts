@@ -61,8 +61,9 @@ describe('watchWorkspace', () => {
   const find = (
     type: WatchEvent['type'],
     path: string,
-  ): WatchEvent | undefined =>
-    events.find((event) => event.type === type && event.path === path);
+  ): WatchEvent | undefined => {
+    return events.find((event) => event.type === type && event.path === path);
+  };
 
   it('emits add/change/unlink events with workspace-relative POSIX paths', async () => {
     await start();
@@ -128,8 +129,9 @@ describe('createWorkspaceIndex', () => {
     index.subscribe((delta) => deltas.push(delta));
   };
 
-  const pathsIn = (key: keyof SnapshotDiff): string[] =>
-    deltas.flatMap((delta) => delta[key]);
+  const pathsIn = (key: keyof SnapshotDiff): string[] => {
+    return deltas.flatMap((delta) => delta[key]);
+  };
 
   it('seeds the snapshot from hashWorkspace', async () => {
     await start();

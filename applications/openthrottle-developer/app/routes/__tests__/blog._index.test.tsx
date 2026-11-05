@@ -43,8 +43,8 @@ const matches: Route.ComponentProps['matches'] = [
   },
 ];
 
-const renderBlog = (loaderData: BlogIndexLoaderData) =>
-  renderRoutesStub(
+const renderBlog = (loaderData: BlogIndexLoaderData) => {
+  return renderRoutesStub(
     <Component
       actionData={undefined}
       loaderData={loaderData}
@@ -52,6 +52,7 @@ const renderBlog = (loaderData: BlogIndexLoaderData) =>
       params={{}}
     />,
   );
+};
 
 describe('routes/blog._index.tsx', () => {
   test('renders the heading, tabs, search and New post button', () => {

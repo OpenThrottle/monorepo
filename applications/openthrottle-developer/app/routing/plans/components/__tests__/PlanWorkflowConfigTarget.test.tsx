@@ -13,13 +13,15 @@ const PLAN_ID_FIXTURE = '0c2720a9-920f-4b16-865a-f803eb444e18';
 describe('PlanWorkflowConfigTarget Component', () => {
   test('renders run target fieldset with legend and stable ids', () => {
     const input = getDefaultWorkflowRalphRunOptionsInput();
-    const Component = () => (
-      <PlanWorkflowConfigTarget
-        heading="01. Target"
-        input={input}
-        setInput={() => {}}
-      />
-    );
+    const Component = () => {
+      return (
+        <PlanWorkflowConfigTarget
+          heading="01. Target"
+          input={input}
+          setInput={() => {}}
+        />
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
 
@@ -36,13 +38,15 @@ describe('PlanWorkflowConfigTarget Component', () => {
       planId: PLAN_ID_FIXTURE,
     });
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <PlanWorkflowConfigTarget
-        heading="01. Target"
-        input={input}
-        setInput={() => {}}
-      />
-    );
+    const Component = () => {
+      return (
+        <PlanWorkflowConfigTarget
+          heading="01. Target"
+          input={input}
+          setInput={() => {}}
+        />
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
 

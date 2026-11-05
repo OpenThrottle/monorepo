@@ -40,8 +40,9 @@ export type AuthPrincipal = UserAuthPrincipal | ServiceAccountAuthPrincipal;
 /**
  * @description Stable subject id for permission lookups (user id or service account id).
  */
-export const getAuthPrincipalSub = (principal: AuthPrincipal): string =>
-  principal.sub;
+export const getAuthPrincipalSub = (principal: AuthPrincipal): string => {
+  return principal.sub;
+};
 
 /**
  * @description Maps a validated JWT payload to a user {@link AuthPrincipal}.
@@ -51,21 +52,25 @@ export const getAuthPrincipalSub = (principal: AuthPrincipal): string =>
  */
 export const authPrincipalFromServiceAccountId = (
   serviceAccountId: string,
-): ServiceAccountAuthPrincipal => ({
-  kind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
-  sub: serviceAccountId,
-});
+): ServiceAccountAuthPrincipal => {
+  return {
+    kind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+    sub: serviceAccountId,
+  };
+};
 
 export const authPrincipalFromJwtPayload = (
   payload: JwtPayload,
-): UserAuthPrincipal => ({
-  kind: AUTH_PRINCIPAL_KIND_USER,
-  ...(payload.email !== undefined ? { email: payload.email } : {}),
-  ...(payload.exp !== undefined ? { exp: payload.exp } : {}),
-  ...(payload.iat !== undefined ? { iat: payload.iat } : {}),
-  ...(payload.roles !== undefined ? { roles: payload.roles } : {}),
-  sub: payload.sub,
-});
+): UserAuthPrincipal => {
+  return {
+    kind: AUTH_PRINCIPAL_KIND_USER,
+    ...(payload.email !== undefined ? { email: payload.email } : {}),
+    ...(payload.exp !== undefined ? { exp: payload.exp } : {}),
+    ...(payload.iat !== undefined ? { iat: payload.iat } : {}),
+    ...(payload.roles !== undefined ? { roles: payload.roles } : {}),
+    sub: payload.sub,
+  };
+};
 
 const parseOptionalStringArray = (
   value: unknown,

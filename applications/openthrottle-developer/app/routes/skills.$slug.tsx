@@ -17,7 +17,7 @@ import { SITE_TITLE } from '~/global/config/settings';
 import {
   loadComposerModels,
   loadRepositories,
-} from '~/routing/home/data/models.server';
+} from '~/routing/home/utils/models.server';
 import {
   runSkillRecordTagAction,
   SKILL_RECORD_TAG_INTENTS,
@@ -29,13 +29,13 @@ import {
   SKILL_RUN_COPY,
   SKILL_WRITE_COPY,
 } from '~/routing/skills/data/data.copy';
+import { useRunSkill } from '~/routing/skills/hooks/useRunSkill';
+import type { SkillDetailUsageData } from '~/routing/skills/types';
+import { mergeRepoSkillsWithProjectSkills } from '~/routing/skills/utils/merge-project-skills';
 import {
   loadProjectSkillFlags,
   loadSkillTagVocabulary,
-} from '~/routing/skills/data/skill-index-loaders';
-import type { SkillDetailUsageData } from '~/routing/skills/data/skill-usage-detail';
-import { useRunSkill } from '~/routing/skills/hooks/useRunSkill';
-import { mergeRepoSkillsWithProjectSkills } from '~/routing/skills/utils/merge-project-skills';
+} from '~/routing/skills/utils/skill-index-loaders';
 import { toSkillDetailUsageData } from '~/routing/skills/utils/to-skill-detail-usage-data';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -53,7 +53,7 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
 
 export const loader = async (args: Route.LoaderArgs) => {
   const { readSkillFileBySlug } =
-    await import('~/routing/skills/data/read-skill-file.server');
+    await import('~/routing/skills/utils/read-skill-file.server');
 
   const disk = readSkillFileBySlug(args.params.slug);
   const [projectSkills, tagVocabulary] = await Promise.all([
@@ -221,7 +221,7 @@ export const action = async (args: Route.ActionArgs) => {
   }
 
   const { writeSkillFileBySlug } =
-    await import('~/routing/skills/data/write-skill-file.server');
+    await import('~/routing/skills/utils/write-skill-file.server');
 
   const content = formData.get('content');
 

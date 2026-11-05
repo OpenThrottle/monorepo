@@ -28,7 +28,9 @@ export const NumberField = (props: NumberFieldProps): React.ReactElement => {
   // Setup
 
   // Handlers
-  const handleBlur = (): void => setDraft(null);
+  const handleBlur = (): void => {
+    return setDraft(null);
+  };
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     const raw = event.target.value;

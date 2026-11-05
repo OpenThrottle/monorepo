@@ -5,7 +5,7 @@ import {
   mockDiscoveredWorktree,
   mockMissingCheckout,
   mockRepository,
-} from '~/routing/settings/repositories/data/mock.repositories';
+} from '~/routing/settings/repositories/testing/mock-repositories';
 
 import { hideMissingRows } from '../missing-rows';
 import { buildRepositoryRows } from '../rows';

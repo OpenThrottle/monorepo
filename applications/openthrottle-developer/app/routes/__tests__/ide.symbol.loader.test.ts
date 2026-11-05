@@ -8,13 +8,14 @@ vi.mock('@openthrottle/react-router-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),
 }));
 
-vi.mock('~/routing/ide/data/ide-engine.server', () => ({
+vi.mock('~/routing/ide/utils/ide-engine.server', () => ({
   symbolTargetVM: vi.fn(),
 }));
 
 const { executeGraphqlWithAuth } =
   await import('@openthrottle/react-router-graphql');
-const { symbolTargetVM } = await import('~/routing/ide/data/ide-engine.server');
+const { symbolTargetVM } =
+  await import('~/routing/ide/utils/ide-engine.server');
 const { loader } = await import('../ide.symbol');
 
 const mockExecute = vi.mocked(executeGraphqlWithAuth);

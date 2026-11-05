@@ -79,6 +79,12 @@ RolesTable.buildTable = (): ColumnDef<
         if (perms.length === 0) {
           return <span className="text-muted-foreground text-sm">None</span>;
         }
+        const hasOverflow = perms.length > 3;
+        const overflowBadge = (
+          <Badge color="red" size="xs">
+            +{perms.length - 3}
+          </Badge>
+        );
         return (
           <div className="flex flex-wrap gap-1">
             {perms.slice(0, 3).map((p) => (
@@ -86,11 +92,7 @@ RolesTable.buildTable = (): ColumnDef<
                 {p.name}
               </Badge>
             ))}
-            {perms.length > 3 ? (
-              <Badge color="red" size="xs">
-                +{perms.length - 3}
-              </Badge>
-            ) : null}
+            {hasOverflow ? overflowBadge : null}
           </div>
         );
       },

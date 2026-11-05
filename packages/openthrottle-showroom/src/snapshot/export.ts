@@ -92,33 +92,35 @@ export interface SnapshotExportOptions {
   ) => SnapshotRowTransform;
 }
 
-const createPgRowFetcher = (runner: QueryRunner): RowFetcher => ({
-  fetchAll: async (table) => {
-    const result = await runner.query(
-      `SELECT * FROM ${quoteIdentifier(table)}`,
-    );
+const createPgRowFetcher = (runner: QueryRunner): RowFetcher => {
+  return {
+    fetchAll: async (table) => {
+      const result = await runner.query(
+        `SELECT * FROM ${quoteIdentifier(table)}`,
+      );
 
-    return result.rows;
-  },
-  fetchByColumn: async (table, column, values) => {
-    const result = await runner.query(
-      `SELECT * FROM ${quoteIdentifier(table)}
+      return result.rows;
+    },
+    fetchByColumn: async (table, column, values) => {
+      const result = await runner.query(
+        `SELECT * FROM ${quoteIdentifier(table)}
         WHERE ${quoteIdentifier(column)}::text = ANY($1::text[])`,
-      [values.map((value) => String(value))],
-    );
+        [values.map((value) => String(value))],
+      );
 
-    return result.rows;
-  },
-  fetchSince: async (table, column, cutoffIso) => {
-    const result = await runner.query(
-      `SELECT * FROM ${quoteIdentifier(table)}
+      return result.rows;
+    },
+    fetchSince: async (table, column, cutoffIso) => {
+      const result = await runner.query(
+        `SELECT * FROM ${quoteIdentifier(table)}
         WHERE ${quoteIdentifier(column)} >= $1::timestamptz`,
-      [cutoffIso],
-    );
+        [cutoffIso],
+      );
 
-    return result.rows;
-  },
-});
+      return result.rows;
+    },
+  };
+};
 
 const comparePrimaryKeys = (left: unknown[], right: unknown[]): number => {
   for (let i = 0; i < left.length; i += 1) {
@@ -181,14 +183,18 @@ export const exportSnapshot = async (
   );
   const ordered = orderTablesTopologically(schema, exportedTables);
 
-  const transformRow: SnapshotRowTransform =
-    options.transformFactory === undefined
-      ? (_table, row) => row
-      : options.transformFactory({
-          anchorIso: options.anchorIso,
-          manifest,
-          schema,
-        });
+  const buildRowTransform = (): SnapshotRowTransform => {
+    if (options.transformFactory === undefined) {
+      return (_table, row) => row;
+    }
+
+    return options.transformFactory({
+      anchorIso: options.anchorIso,
+      manifest,
+      schema,
+    });
+  };
+  const transformRow = buildRowTransform();
 
   await clearSnapshotDir(options.outDir);
 

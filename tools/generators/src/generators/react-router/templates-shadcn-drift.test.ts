@@ -81,8 +81,8 @@ const resolveSpecifier = (
  * yields `A`, `C`, `D` — the name a consumer imports, which for an aliased
  * export is the alias.
  */
-const parseNamedClause = (clause: string): readonly string[] =>
-  clause
+const parseNamedClause = (clause: string): readonly string[] => {
+  return clause
     .split(',')
     .map((entry) => entry.trim().replace(/^type\s+/, ''))
     .filter((entry) => entry.length > 0)
@@ -91,6 +91,7 @@ const parseNamedClause = (clause: string): readonly string[] =>
       return (parts[1] ?? parts[0] ?? '').trim();
     })
     .filter((name) => name.length > 0 && name !== 'default');
+};
 
 /** Every named export reachable from `entryFile`, following barrels. */
 const collectModuleExports = (entryFile: string): ReadonlySet<string> => {
@@ -125,12 +126,13 @@ const collectModuleExports = (entryFile: string): ReadonlySet<string> => {
   return names;
 };
 
-const listTemplateFiles = (directory: string): readonly string[] =>
-  readdirSync(directory).flatMap((entry) => {
+const listTemplateFiles = (directory: string): readonly string[] => {
+  return readdirSync(directory).flatMap((entry) => {
     const path = join(directory, entry);
     if (statSync(path).isDirectory()) return listTemplateFiles(path);
     return /\.tsx?$/.test(path) ? [path] : [];
   });
+};
 
 /**
  * Named bindings of every `import … from '<shadcn>'` clause in a template.

@@ -20,11 +20,13 @@ const row = (
   type: string,
   producedAt: number | string,
   id = `${type}-${producedAt}`,
-) => ({
-  id,
-  producedAt,
-  type,
-});
+) => {
+  return {
+    id,
+    producedAt,
+    type,
+  };
+};
 
 describe('groupLinkedArtifacts', () => {
   test('orders groups by human value, not by count or arrival', () => {

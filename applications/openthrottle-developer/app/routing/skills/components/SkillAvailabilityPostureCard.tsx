@@ -56,8 +56,9 @@ export const SkillAvailabilityPostureCard = (
   // Setup
   const isSubmitting = fetcher.state !== 'idle';
   const error = getActionError(fetcher.data);
-  const postureNote =
-    selected === 'deny' ? COPY.postureDenyNote : COPY.postureAllowNote;
+  const { postureAllowNote, postureDenyNote } = COPY;
+  const saveLabel = isSubmitting ? 'Saving…' : COPY.saveLabel;
+  const postureNote = selected === 'deny' ? postureDenyNote : postureAllowNote;
 
   // Handlers
   const handleValueChange = (value: string): void => {
@@ -67,6 +68,42 @@ export const SkillAvailabilityPostureCard = (
   };
 
   // Markup
+  const savedPostureBadge = <Badge variant="secondary">{posture}</Badge>;
+  const passthroughBadge = <Badge variant="outline">passthrough</Badge>;
+  const passthroughNote = (
+    <p className="text-muted-foreground text-sm">{COPY.passthroughNote}</p>
+  );
+  const errorMessage = (
+    <p className="text-destructive text-sm" role="alert">
+      {error}
+    </p>
+  );
+  const resetDialog = (
+    <AlertDialog>
+      <AlertDialogTrigger asChild={true}>
+        <Button type="button" variant="outline">
+          {COPY.resetLabel}
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{COPY.resetConfirmTitle}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {COPY.resetConfirmBody}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <fetcher.Form method="post">
+          <Input name="intent" type="hidden" value="deleteRuleSet" />
+          <AlertDialogFooter>
+            <AlertDialogCancel type="button">Cancel</AlertDialogCancel>
+            <Button disabled={isSubmitting} type="submit" variant="destructive">
+              {COPY.resetLabel}
+            </Button>
+          </AlertDialogFooter>
+        </fetcher.Form>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
 
   // Life Cycle
 
@@ -79,16 +116,10 @@ export const SkillAvailabilityPostureCard = (
     >
       <div className="flex items-center gap-2">
         <h2 className="text-lg font-semibold">{COPY.heading}</h2>
-        {hasRuleSet ? (
-          <Badge variant="secondary">{posture}</Badge>
-        ) : (
-          <Badge variant="outline">passthrough</Badge>
-        )}
+        {hasRuleSet ? savedPostureBadge : passthroughBadge}
       </div>
 
-      {hasRuleSet ? null : (
-        <p className="text-muted-foreground text-sm">{COPY.passthroughNote}</p>
-      )}
+      {hasRuleSet ? null : passthroughNote}
 
       <fetcher.Form className="flex flex-col gap-3" method="post">
         <input name="intent" type="hidden" value="upsertRuleSet" />
@@ -107,49 +138,16 @@ export const SkillAvailabilityPostureCard = (
 
         <p className="text-muted-foreground text-sm">{postureNote}</p>
 
-        {error ? (
-          <p className="text-destructive text-sm" role="alert">
-            {error}
-          </p>
-        ) : null}
+        {error ? errorMessage : null}
 
         <div>
           <Button disabled={isSubmitting} type="submit">
-            {isSubmitting ? 'Saving…' : COPY.saveLabel}
+            {saveLabel}
           </Button>
         </div>
       </fetcher.Form>
 
-      {hasRuleSet ? (
-        <AlertDialog>
-          <AlertDialogTrigger asChild={true}>
-            <Button type="button" variant="outline">
-              {COPY.resetLabel}
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>{COPY.resetConfirmTitle}</AlertDialogTitle>
-              <AlertDialogDescription>
-                {COPY.resetConfirmBody}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <fetcher.Form method="post">
-              <Input name="intent" type="hidden" value="deleteRuleSet" />
-              <AlertDialogFooter>
-                <AlertDialogCancel type="button">Cancel</AlertDialogCancel>
-                <Button
-                  disabled={isSubmitting}
-                  type="submit"
-                  variant="destructive"
-                >
-                  {COPY.resetLabel}
-                </Button>
-              </AlertDialogFooter>
-            </fetcher.Form>
-          </AlertDialogContent>
-        </AlertDialog>
-      ) : null}
+      {hasRuleSet ? resetDialog : null}
     </Card>
   );
 };

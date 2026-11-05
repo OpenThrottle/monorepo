@@ -33,7 +33,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   }
 
   const { symbolTargetVM } =
-    await import('~/routing/ide/data/ide-engine.server');
+    await import('~/routing/ide/utils/ide-engine.server');
 
   return symbolTargetVM(resolved.config, resolved.repository, {
     line,

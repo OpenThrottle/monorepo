@@ -113,6 +113,17 @@ export const overlayPlanRunTuning = (
  * already holds the selection, so the caller can skip the write.
  * @throws Error when `runConfigJson` is present but not valid JSON.
  */
+const loadStoredRunConfig = (
+  runConfigJson: string | null | undefined,
+  options: { readonly planId: string },
+): ReturnType<typeof planRunConfigFromPlanStorage> => {
+  if (runConfigJson == null || runConfigJson.trim() === '') {
+    return getDefaultPlanRunConfigStorage(options);
+  }
+
+  return planRunConfigFromPlanStorage(JSON.parse(runConfigJson), options);
+};
+
 export const mergePersistedSelectionIntoRunConfig = (input: {
   readonly persisted: PlanRunPersistedSelection;
   readonly planId: string;
@@ -120,10 +131,7 @@ export const mergePersistedSelectionIntoRunConfig = (input: {
 }): { readonly changed: boolean; readonly runConfigJson: string } => {
   const { persisted, planId, runConfigJson } = input;
   const options = { planId };
-  const stored =
-    runConfigJson != null && runConfigJson.trim() !== ''
-      ? planRunConfigFromPlanStorage(JSON.parse(runConfigJson), options)
-      : getDefaultPlanRunConfigStorage(options);
+  const stored = loadStoredRunConfig(runConfigJson, options);
 
   const model = persisted.model.trim();
   const effort = persisted.effort.trim();
@@ -164,12 +172,14 @@ const parsePersistedSelection = (fields: {
   const { backend, effort, model } = fields;
 
   if (backend == null && model == null) {
-    return effort == null
-      ? { persisted: undefined, success: true }
-      : {
-          error: 'A reasoning effort can only be saved together with a model.',
-          success: false,
-        };
+    if (effort == null) {
+      return { persisted: undefined, success: true };
+    }
+
+    return {
+      error: 'A reasoning effort can only be saved together with a model.',
+      success: false,
+    };
   }
 
   if (backend == null || model == null) {
@@ -267,8 +277,7 @@ export const parsePlanRunForm = (formData: FormData): PlanRunFormResult => {
   const branch = fields.branch ?? undefined;
   if (branch === undefined || branch.trim() === '') {
     return {
-      error:
-        'A git branch is required to run this plan. Pick or enter the branch this run operates on.',
+      error: `A git branch is required to run this plan. Pick or enter the branch this run operates on.`,
       success: false,
     };
   }

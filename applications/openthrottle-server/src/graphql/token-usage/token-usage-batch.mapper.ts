@@ -6,8 +6,9 @@ import type { RecordTokenUsageRowInput } from './token-usage.input.ts';
 /** Largest batch one recordTokenUsage call accepts. */
 export const MAX_TOKEN_USAGE_BATCH_SIZE = 500;
 
-const isPlainRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
+const isPlainRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+};
 
 /** Trimmed value, or null when absent/blank. */
 const toOptionalTrimmed = (value: string | null | undefined): string | null => {
@@ -101,28 +102,38 @@ const toRawUsage = (
 const toBatchRow = (
   row: RecordTokenUsageRowInput,
   index: number,
-): TokenUsageBatchRow => ({
-  cachedReadTokens: toTokenCount(index, 'cacheReadTokens', row.cacheReadTokens),
-  cachedWriteTokens: toTokenCount(
-    index,
-    'cacheWriteTokens',
-    row.cacheWriteTokens,
-  ),
-  costUsd: toCostUsd(index, row.costUsd),
-  cwd: row.cwd ?? null,
-  gitBranch: row.gitBranch ?? null,
-  inputTokens: toTokenCount(index, 'inputTokens', row.inputTokens),
-  model: requireNonBlank(index, 'model', row.model),
-  occurredAt: toOccurredAt(index, row.occurredAt),
-  outputTokens: toTokenCount(index, 'outputTokens', row.outputTokens),
-  provider: requireNonBlank(index, 'provider', row.provider),
-  rawUsage: toRawUsage(index, row.rawUsageJson),
-  reasoningTokens: toTokenCount(index, 'reasoningTokens', row.reasoningTokens),
-  requestId: toOptionalTrimmed(row.requestId),
-  sessionId: toOptionalTrimmed(row.sessionId),
-  source: requireNonBlank(index, 'source', row.source),
-  totalTokens: toTokenCount(index, 'totalTokens', row.totalTokens),
-});
+): TokenUsageBatchRow => {
+  return {
+    cachedReadTokens: toTokenCount(
+      index,
+      'cacheReadTokens',
+      row.cacheReadTokens,
+    ),
+    cachedWriteTokens: toTokenCount(
+      index,
+      'cacheWriteTokens',
+      row.cacheWriteTokens,
+    ),
+    costUsd: toCostUsd(index, row.costUsd),
+    cwd: row.cwd ?? null,
+    gitBranch: row.gitBranch ?? null,
+    inputTokens: toTokenCount(index, 'inputTokens', row.inputTokens),
+    model: requireNonBlank(index, 'model', row.model),
+    occurredAt: toOccurredAt(index, row.occurredAt),
+    outputTokens: toTokenCount(index, 'outputTokens', row.outputTokens),
+    provider: requireNonBlank(index, 'provider', row.provider),
+    rawUsage: toRawUsage(index, row.rawUsageJson),
+    reasoningTokens: toTokenCount(
+      index,
+      'reasoningTokens',
+      row.reasoningTokens,
+    ),
+    requestId: toOptionalTrimmed(row.requestId),
+    sessionId: toOptionalTrimmed(row.sessionId),
+    source: requireNonBlank(index, 'source', row.source),
+    totalTokens: toTokenCount(index, 'totalTokens', row.totalTokens),
+  };
+};
 
 /**
  * Validate a recordTokenUsage batch and map it to repository rows. Any invalid

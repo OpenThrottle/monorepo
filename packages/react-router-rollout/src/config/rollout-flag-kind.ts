@@ -26,5 +26,6 @@ const ROLLOUT_FLAG_KINDS = new Set<string>(Object.values(ROLLOUT_FLAG_KIND));
  *
  * @public
  */
-export const isRolloutFlagKind = (value: unknown): value is RolloutFlagKind =>
-  typeof value === 'string' && ROLLOUT_FLAG_KINDS.has(value);
+export const isRolloutFlagKind = (value: unknown): value is RolloutFlagKind => {
+  return typeof value === 'string' && ROLLOUT_FLAG_KINDS.has(value);
+};

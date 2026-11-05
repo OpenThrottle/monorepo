@@ -209,11 +209,21 @@ export class RolloutService {
         variationIndex: -1,
       };
     }
-    const roleNames =
-      flag.enabled && flag.targetRoles.length > 0
-        ? new Set(await this.resolveActorRoleNames(principal))
-        : new Set<string>();
+    const needsRoles = flag.enabled && flag.targetRoles.length > 0;
+    const roleNames = await this.resolveRoleSet(needsRoles, principal);
     return this.evaluateFlag(flag, roleNames, principal.sub);
+  }
+
+  /**
+   * @description Resolves the actor's role names only when needed; otherwise an
+   * empty set without touching the roles service.
+   */
+  private async resolveRoleSet(
+    needsRoles: boolean,
+    principal: AuthPrincipal,
+  ): Promise<Set<string>> {
+    if (!needsRoles) return new Set<string>();
+    return new Set(await this.resolveActorRoleNames(principal));
   }
 
   /**
@@ -287,12 +297,11 @@ export class RolloutService {
     variationIndex: number,
     reason: RolloutEvaluation['reason'],
   ): RolloutEvaluation {
-    const safeIndex =
-      variationIndex >= 0 && variationIndex < flag.variations.length
-        ? variationIndex
-        : flag.offVariation >= 0 && flag.offVariation < flag.variations.length
-          ? flag.offVariation
-          : 0;
+    const count = flag.variations.length;
+    const isIndexValid = variationIndex >= 0 && variationIndex < count;
+    const isOffValid = flag.offVariation >= 0 && flag.offVariation < count;
+    const offOrZero = isOffValid ? flag.offVariation : 0;
+    const safeIndex = isIndexValid ? variationIndex : offOrZero;
     const variation = flag.variations[safeIndex];
     return {
       key: flag.key,

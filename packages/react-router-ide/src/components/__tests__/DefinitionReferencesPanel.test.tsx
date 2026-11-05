@@ -3,7 +3,7 @@ import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test } from 'vitest';
 
-import type { IdeSymbolDetails } from '../../data/view-models';
+import type { IdeSymbolDetails } from '../../data/data.view-models';
 import { DefinitionReferencesPanel } from '../DefinitionReferencesPanel';
 
 const details: IdeSymbolDetails = {

@@ -7,7 +7,9 @@ import { NotesIntroduction } from '../NotesIntroduction';
 
 describe('NotesIntroduction Component', () => {
   test('renders notes heading and intro copy', () => {
-    const Component = () => <NotesIntroduction />;
+    const Component = () => {
+      return <NotesIntroduction />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 

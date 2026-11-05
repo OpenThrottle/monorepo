@@ -61,10 +61,13 @@ export function deriveBlogPostState(
     case BLOG_POST_STATUS.ARCHIVED:
       return BLOG_POST_STATE.ARCHIVED;
     case BLOG_POST_STATUS.PUBLISHED:
-      return post.publishedAt != null &&
+      if (
+        post.publishedAt != null &&
         post.publishedAt.getTime() <= now.getTime()
-        ? BLOG_POST_STATE.LIVE
-        : BLOG_POST_STATE.SCHEDULED;
+      ) {
+        return BLOG_POST_STATE.LIVE;
+      }
+      return BLOG_POST_STATE.SCHEDULED;
   }
 }
 

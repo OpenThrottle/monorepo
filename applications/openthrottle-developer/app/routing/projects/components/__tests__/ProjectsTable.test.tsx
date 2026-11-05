@@ -49,7 +49,9 @@ describe('ProjectsTable Component', () => {
   beforeEach(() => {
     props = { projects: [] };
 
-    const Component = () => <ProjectsTable {...props} />;
+    const Component = () => {
+      return <ProjectsTable {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);
@@ -77,7 +79,9 @@ describe('ProjectsTable Component', () => {
   test('renders projects from props when provided', () => {
     const propsWithProjects: ProjectsTableProps = { projects: mockProjects };
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <ProjectsTable {...propsWithProjects} />;
+    const Component = () => {
+      return <ProjectsTable {...propsWithProjects} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByRole, getByText } = render(<RoutesStub />);
 
@@ -95,7 +99,9 @@ describe('ProjectsTable Component', () => {
   test('renders a row actions menu for each project', () => {
     const propsWithProjects: ProjectsTableProps = { projects: mockProjects };
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <ProjectsTable {...propsWithProjects} />;
+    const Component = () => {
+      return <ProjectsTable {...propsWithProjects} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByRole } = render(<RoutesStub />);
 

@@ -163,6 +163,20 @@ const DEFAULT_DRIVER_CONFIG: ApolloDriverConfig = {
 };
 
 /**
+ * Expand `responseCache: true` into the default options (hashed user-id
+ * sessionId); pass a caller-supplied options object through untouched.
+ */
+function resolveResponseCacheOptions(
+  responseCache: true | ApolloServerPluginResponseCacheOptions<BaseContext>,
+): ApolloServerPluginResponseCacheOptions<BaseContext> {
+  if (responseCache === true) {
+    return { sessionId: defaultResponseCacheSessionId };
+  }
+
+  return responseCache;
+}
+
+/**
  * Assemble the opt-in Apollo cache plugins (Cache-Control, then response-cache)
  * in a fixed order. Exported for unit testing of the assembly/order behavior;
  * not part of the package public API (no `@public`), so consume via forRoot.
@@ -184,12 +198,11 @@ export function buildCachePlugins(
     // Default to a sessionId derived from the verified user id (hashed), not the
     // raw Authorization header — see defaultResponseCacheSessionId. Callers can
     // override by passing their own response-cache options object.
-    const opts: ApolloServerPluginResponseCacheOptions<BaseContext> =
-      cache.responseCache === true
-        ? { sessionId: defaultResponseCacheSessionId }
-        : cache.responseCache;
-
-    plugins.push(createResponseCachePlugin(opts));
+    plugins.push(
+      createResponseCachePlugin(
+        resolveResponseCacheOptions(cache.responseCache),
+      ),
+    );
   }
 
   return plugins;
@@ -248,11 +261,14 @@ function mergeSecureDefaults(
   }
 
   if (rest.csrfPrevention !== undefined) {
-    base.csrfPrevention =
-      typeof rest.csrfPrevention === 'object' &&
-      typeof DEFAULT_DRIVER_CONFIG.csrfPrevention === 'object'
-        ? { ...DEFAULT_DRIVER_CONFIG.csrfPrevention, ...rest.csrfPrevention }
-        : rest.csrfPrevention;
+    const defaultCsrf = DEFAULT_DRIVER_CONFIG.csrfPrevention;
+    const callerCsrf = rest.csrfPrevention;
+
+    if (typeof callerCsrf === 'object' && typeof defaultCsrf === 'object') {
+      base.csrfPrevention = { ...defaultCsrf, ...callerCsrf };
+    } else {
+      base.csrfPrevention = callerCsrf;
+    }
   }
 }
 

@@ -16,16 +16,20 @@ import { TimelineChart } from '../TimelineChart';
 
 const baseProps = (
   overrides: Partial<TimelineChartProps> = {},
-): TimelineChartProps => ({
-  markers: TIMELINE_FIXTURE_MARKERS,
-  spans: TIMELINE_FIXTURE_SPANS,
-  windowFromIso: FIXTURE_WINDOW_FROM.toISOString(),
-  windowToIso: FIXTURE_WINDOW_TO.toISOString(),
-  ...overrides,
-});
+): TimelineChartProps => {
+  return {
+    markers: TIMELINE_FIXTURE_MARKERS,
+    spans: TIMELINE_FIXTURE_SPANS,
+    windowFromIso: FIXTURE_WINDOW_FROM.toISOString(),
+    windowToIso: FIXTURE_WINDOW_TO.toISOString(),
+    ...overrides,
+  };
+};
 
 const renderChart = (props: TimelineChartProps): RenderResult => {
-  const Component = () => <TimelineChart {...props} />;
+  const Component = () => {
+    return <TimelineChart {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

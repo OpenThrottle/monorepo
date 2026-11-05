@@ -15,34 +15,38 @@ import {
 const connector = (
   key: string,
   provider: string,
-): McpConnectorFieldsFragment => ({
-  __typename: 'McpConnectorObject',
-  authType: 'oauth',
-  category: 'Development',
-  description: 'desc',
-  docsUrl: 'https://example.com',
-  endpointUrl: null,
-  iconHint: key,
-  key,
-  name: key,
-  provider,
-  transport: 'remote-http',
-});
+): McpConnectorFieldsFragment => {
+  return {
+    __typename: 'McpConnectorObject',
+    authType: 'oauth',
+    category: 'Development',
+    description: 'desc',
+    docsUrl: 'https://example.com',
+    endpointUrl: null,
+    iconHint: key,
+    key,
+    name: key,
+    provider,
+    transport: 'remote-http',
+  };
+};
 
 const connection = (
   connectorKey: string,
   enabled: boolean,
-): McpConnectorConnectionFieldsFragment => ({
-  __typename: 'McpConnectorConnectionObject',
-  authType: 'oauth',
-  connectedAt: '2026-02-02T10:00:00.000Z',
-  connectorKey,
-  credentialLabel: null,
-  credentialPrefix: null,
-  enabled,
-  id: connectorKey,
-  lastUsedAt: null,
-});
+): McpConnectorConnectionFieldsFragment => {
+  return {
+    __typename: 'McpConnectorConnectionObject',
+    authType: 'oauth',
+    connectedAt: '2026-02-02T10:00:00.000Z',
+    connectorKey,
+    credentialLabel: null,
+    credentialPrefix: null,
+    enabled,
+    id: connectorKey,
+    lastUsedAt: null,
+  };
+};
 
 describe('getConnectorStatus', () => {
   it('is disconnected without a connection', () => {

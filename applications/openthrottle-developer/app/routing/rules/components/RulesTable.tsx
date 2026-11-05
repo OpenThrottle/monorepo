@@ -102,7 +102,7 @@ RulesTable.buildTable = (
                   {rule.title}
                 </Link>
               </h2>
-              {rule.enabled ? null : (
+              {!rule.enabled && (
                 <Badge className="border-amber-500/60 bg-amber-500/10">
                   {RULES_COPY.filterDisabledLabel}
                 </Badge>
@@ -114,16 +114,16 @@ RulesTable.buildTable = (
               <span>
                 {summarizeRuleAction(rule.actionType, rule.actionPayloadJson)}
               </span>
-              {rule.status != null && rule.status !== '' ? (
+              {rule.status != null && rule.status !== '' && (
                 <span>
                   {RULES_COPY.statusLabel}: {rule.status}
                 </span>
-              ) : null}
-              {rule.environment != null && rule.environment !== '' ? (
+              )}
+              {rule.environment != null && rule.environment !== '' && (
                 <span>
                   {RULES_COPY.environmentLabel}: {rule.environment}
                 </span>
-              ) : null}
+              )}
             </div>
           </div>
         );
@@ -134,20 +134,21 @@ RulesTable.buildTable = (
       accessorKey: 'tagAll',
       cell: ({ row }) => {
         const tags = row.original.tagAll;
+        const hasTags = tags.length > 0;
+        const matchesEveryPlan = (
+          <span className="text-muted-foreground text-xs italic">
+            {RULES_COPY.matchesEveryPlan}
+          </span>
+        );
+        const tagBadges = tags.map((tag) => (
+          <Badge className="bg-muted" key={tag}>
+            {tag}
+          </Badge>
+        ));
 
         return (
           <div className="flex flex-wrap items-center gap-1.5 p-2">
-            {tags.length === 0 ? (
-              <span className="text-muted-foreground text-xs italic">
-                {RULES_COPY.matchesEveryPlan}
-              </span>
-            ) : (
-              tags.map((tag) => (
-                <Badge className="bg-muted" key={tag}>
-                  {tag}
-                </Badge>
-              ))
-            )}
+            {hasTags ? tagBadges : matchesEveryPlan}
           </div>
         );
       },

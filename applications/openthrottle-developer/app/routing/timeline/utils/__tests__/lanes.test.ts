@@ -25,47 +25,53 @@ const span = (
   startsAt: string,
   endsAt: string,
   overrides: Partial<TimelineSpan> = {},
-): TimelineSpan => ({
-  backend: null,
-  branch: null,
-  checkoutId: null,
-  conversationId: null,
-  derivedEnd: false,
-  endsAt,
-  id,
-  kind: TimelineSpanKind.PlanRun,
-  laneKey: 'plan:plan-1',
-  laneLabel: 'Plan One',
-  model: null,
-  planId: 'plan-1',
-  startsAt,
-  status: null,
-  title: id,
-  ...overrides,
-});
+): TimelineSpan => {
+  return {
+    backend: null,
+    branch: null,
+    checkoutId: null,
+    conversationId: null,
+    derivedEnd: false,
+    endsAt,
+    id,
+    kind: TimelineSpanKind.PlanRun,
+    laneKey: 'plan:plan-1',
+    laneLabel: 'Plan One',
+    model: null,
+    planId: 'plan-1',
+    startsAt,
+    status: null,
+    title: id,
+    ...overrides,
+  };
+};
 
 const marker = (
   id: string,
   at: string,
   overrides: Partial<TimelineMarker> = {},
-): TimelineMarker => ({
-  at,
-  branch: null,
-  id,
-  kind: TimelineMarkerKind.GitCommit,
-  laneKey: 'plan:plan-1',
-  laneLabel: 'Plan One',
-  planId: 'plan-1',
-  taskId: null,
-  title: id,
-  url: null,
-  ...overrides,
-});
+): TimelineMarker => {
+  return {
+    at,
+    branch: null,
+    id,
+    kind: TimelineMarkerKind.GitCommit,
+    laneKey: 'plan:plan-1',
+    laneLabel: 'Plan One',
+    planId: 'plan-1',
+    taskId: null,
+    title: id,
+    url: null,
+    ...overrides,
+  };
+};
 
 const subRowOf = (
   placed: ReturnType<typeof packSpansIntoSubRows>,
   id: string,
-): number | undefined => placed.find((entry) => entry.span.id === id)?.subRow;
+): number | undefined => {
+  return placed.find((entry) => entry.span.id === id)?.subRow;
+};
 
 describe('packSpansIntoSubRows', () => {
   it('keeps non-overlapping spans on one sub-row', () => {

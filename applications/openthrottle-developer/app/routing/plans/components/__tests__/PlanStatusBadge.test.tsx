@@ -16,7 +16,9 @@ describe('PlanStatusBadge Component', () => {
       status: 'IN_PROGRESS',
     };
 
-    const Component = () => <PlanStatusBadge {...props} />;
+    const Component = () => {
+      return <PlanStatusBadge {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);
@@ -32,7 +34,9 @@ describe('PlanStatusBadge Component', () => {
     };
 
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <PlanStatusBadge {...props} />;
+    const Component = () => {
+      return <PlanStatusBadge {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByText } = render(<RoutesStub />);
 

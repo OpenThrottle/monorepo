@@ -27,14 +27,16 @@ const matches: Route.ComponentProps['matches'] = [
 
 // A data router, not MemoryRouter: the form hook uses `useFetcher`.
 // eslint-disable-next-line react/no-multi-comp -- test-local harness component
-const Component = (): React.ReactElement => (
-  <SkillsCreate
-    actionData={undefined}
-    loaderData={{}}
-    matches={matches}
-    params={{}}
-  />
-);
+const Component = (): React.ReactElement => {
+  return (
+    <SkillsCreate
+      actionData={undefined}
+      loaderData={{}}
+      matches={matches}
+      params={{}}
+    />
+  );
+};
 
 describe('routes/skills.create.tsx', () => {
   test('renders the create-skill screen', () => {

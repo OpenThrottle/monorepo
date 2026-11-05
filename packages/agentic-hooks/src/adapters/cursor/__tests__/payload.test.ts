@@ -28,8 +28,11 @@ const fixturesDir = path.join(
   'fixtures',
 );
 
-const fixture = (name: string): unknown =>
-  JSON.parse(fs.readFileSync(path.join(fixturesDir, `${name}.json`), 'utf8'));
+const fixture = (name: string): unknown => {
+  return JSON.parse(
+    fs.readFileSync(path.join(fixturesDir, `${name}.json`), 'utf8'),
+  );
+};
 
 describe('normalizeCursorPayload', () => {
   it('maps a captured preToolUse Read of a SKILL.md', () => {

@@ -318,15 +318,17 @@ export class BlogAdminResolver {
   private async editorName(
     principal: AuthPrincipal | undefined,
   ): Promise<string | null> {
-    return principal == null
-      ? null
-      : getEditorNameForPrincipal(
-          {
-            serviceAccountsService: this.serviceAccountsService,
-            usersService: this.usersService,
-          },
-          principal,
-        );
+    if (principal == null) {
+      return null;
+    }
+
+    return getEditorNameForPrincipal(
+      {
+        serviceAccountsService: this.serviceAccountsService,
+        usersService: this.usersService,
+      },
+      principal,
+    );
   }
 
   /**

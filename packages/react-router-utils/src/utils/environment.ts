@@ -86,7 +86,9 @@ export const getServerEnv = (): OpenThrottleServerEnv => {
  * {@link getPublicEnv} for the browser payload.
  * @public
  */
-export const getEnvironment = (): OpenThrottleEnv => ({
-  ...getPublicEnv(),
-  ...getServerEnv(),
-});
+export const getEnvironment = (): OpenThrottleEnv => {
+  return {
+    ...getPublicEnv(),
+    ...getServerEnv(),
+  };
+};

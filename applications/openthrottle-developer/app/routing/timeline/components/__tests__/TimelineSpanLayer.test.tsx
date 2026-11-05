@@ -35,7 +35,9 @@ const laneByKey = (key: string): TimelineLane => {
 };
 
 const renderLayer = (lane: TimelineLane): RenderResult => {
-  const Component = () => <TimelineSpanLayer lane={lane} scale={scale} />;
+  const Component = () => {
+    return <TimelineSpanLayer lane={lane} scale={scale} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

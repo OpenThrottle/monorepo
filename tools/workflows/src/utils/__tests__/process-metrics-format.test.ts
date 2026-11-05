@@ -13,81 +13,87 @@ import {
 
 const createMockChildProcessMetrics = (
   overrides: Partial<ChildProcessMetrics> = {},
-): ChildProcessMetrics => ({
-  avgCpuPercent: 42.5,
-  avgRssMb: 256,
-  peakCpuPercent: 85.3,
-  peakRssMb: 512,
-  pid: 12345,
-  pollIntervalMs: 5000,
-  sampleCount: 15,
-  ...overrides,
-});
+): ChildProcessMetrics => {
+  return {
+    avgCpuPercent: 42.5,
+    avgRssMb: 256,
+    peakCpuPercent: 85.3,
+    peakRssMb: 512,
+    pid: 12345,
+    pollIntervalMs: 5000,
+    sampleCount: 15,
+    ...overrides,
+  };
+};
 
 const createMockWallClockMetrics = (
   overrides: Partial<WallClockMetrics> = {},
-): WallClockMetrics => ({
-  cpuSystemMs: 200,
-  cpuTimeMs: 1000,
-  cpuUserMs: 800,
-  endTimestamp: 46000,
-  interpretation: 'cpu_bound',
-  startTimestamp: 1000,
-  wallClockMs: 45000,
-  wallClockToCpuRatio: 1.2,
-  ...overrides,
-});
+): WallClockMetrics => {
+  return {
+    cpuSystemMs: 200,
+    cpuTimeMs: 1000,
+    cpuUserMs: 800,
+    endTimestamp: 46000,
+    interpretation: 'cpu_bound',
+    startTimestamp: 1000,
+    wallClockMs: 45000,
+    wallClockToCpuRatio: 1.2,
+    ...overrides,
+  };
+};
 
 const createMockSystemCpuMetrics = (
   overrides: Partial<SystemCpuMetrics> = {},
-): SystemCpuMetrics => ({
-  atEnd: {
-    loadAverage: {
-      cpuCount: 8,
-      load15m: 1.5,
-      load1m: 2.1,
-      load5m: 1.8,
-      perCoreLoad1m: 0.26,
+): SystemCpuMetrics => {
+  return {
+    atEnd: {
+      loadAverage: {
+        cpuCount: 8,
+        load15m: 1.5,
+        load1m: 2.1,
+        load5m: 1.8,
+        perCoreLoad1m: 0.26,
+      },
+      psi: {
+        full10s: null,
+        full300s: null,
+        full60s: null,
+        fullTotalUs: null,
+        some10s: 2.5,
+        some300s: 1.2,
+        some60s: 1.8,
+        someTotalUs: 150000,
+      },
+      timestamp: 46000,
     },
-    psi: {
-      full10s: null,
-      full300s: null,
-      full60s: null,
-      fullTotalUs: null,
-      some10s: 2.5,
-      some300s: 1.2,
-      some60s: 1.8,
-      someTotalUs: 150000,
+    atStart: {
+      loadAverage: {
+        cpuCount: 8,
+        load15m: 1.4,
+        load1m: 1.8,
+        load5m: 1.6,
+        perCoreLoad1m: 0.23,
+      },
+      psi: {
+        full10s: null,
+        full300s: null,
+        full60s: null,
+        fullTotalUs: null,
+        some10s: 2.0,
+        some300s: 1.1,
+        some60s: 1.5,
+        someTotalUs: 100000,
+      },
+      timestamp: 1000,
     },
-    timestamp: 46000,
-  },
-  atStart: {
-    loadAverage: {
-      cpuCount: 8,
-      load15m: 1.4,
-      load1m: 1.8,
-      load5m: 1.6,
-      perCoreLoad1m: 0.23,
-    },
-    psi: {
-      full10s: null,
-      full300s: null,
-      full60s: null,
-      fullTotalUs: null,
-      some10s: 2.0,
-      some300s: 1.1,
-      some60s: 1.5,
-      someTotalUs: 100000,
-    },
-    timestamp: 1000,
-  },
-  platform: 'linux',
-  pressureLevel: 'low',
-  psiAvailable: true,
-  psiFullDeltaUs: null,
-  psiSomeDeltaUs: 50000,
-  ...overrides,
-});
+    platform: 'linux',
+    pressureLevel: 'low',
+    psiAvailable: true,
+    psiFullDeltaUs: null,
+    psiSomeDeltaUs: 50000,
+    ...overrides,
+  };
+};
 
 describe('formatChildProcessMetrics', () => {
   test('formats child process metrics with all fields', () => {

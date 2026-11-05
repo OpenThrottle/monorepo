@@ -19,20 +19,24 @@ const EDITOR_ID_TO_ENUM: Record<WorkspaceEditorId, WorkspaceEditorIdEnum> = {
  */
 export const toWorkspaceEditorIdEnum = (
   editorId: WorkspaceEditorId,
-): WorkspaceEditorIdEnum => EDITOR_ID_TO_ENUM[editorId];
+): WorkspaceEditorIdEnum => {
+  return EDITOR_ID_TO_ENUM[editorId];
+};
 
 /**
  * @description Converts stored editor ids to GraphQL enum values.
  */
 export const toUserWorkspaceProfileObject = (
   settings: UserWorkspaceSettings,
-): UserWorkspaceProfileObject => ({
-  contactDisplayName: settings.contactDisplayName,
-  contactEmail: settings.contactEmail,
-  createdAt: settings.createdAt,
-  enabledEditors: settings.enabledEditors.map(
-    (id: WorkspaceEditorId) => EDITOR_ID_TO_ENUM[id],
-  ),
-  updatedAt: settings.updatedAt,
-  userId: settings.userId,
-});
+): UserWorkspaceProfileObject => {
+  return {
+    contactDisplayName: settings.contactDisplayName,
+    contactEmail: settings.contactEmail,
+    createdAt: settings.createdAt,
+    enabledEditors: settings.enabledEditors.map(
+      (id: WorkspaceEditorId) => EDITOR_ID_TO_ENUM[id],
+    ),
+    updatedAt: settings.updatedAt,
+    userId: settings.userId,
+  };
+};

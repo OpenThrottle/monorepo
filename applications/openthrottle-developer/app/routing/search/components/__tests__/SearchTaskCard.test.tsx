@@ -34,7 +34,9 @@ describe('SearchTaskCard Component', () => {
       result: mockSearchChunk(),
     };
 
-    const Component = () => <SearchTaskCard {...props} />;
+    const Component = () => {
+      return <SearchTaskCard {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);
@@ -52,7 +54,9 @@ describe('SearchTaskCard Component', () => {
     props.result = mockSearchChunk({ taskTitle: 'Implement feature X' });
 
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <SearchTaskCard {...props} />;
+    const Component = () => {
+      return <SearchTaskCard {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component.rerender(<RoutesStub />);
 
@@ -67,7 +71,9 @@ describe('SearchTaskCard Component', () => {
         taskId: null,
       });
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const Component = () => <SearchTaskCard {...props} />;
+      const Component = () => {
+        return <SearchTaskCard {...props} />;
+      };
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component.rerender(<RoutesStub />);
     });
@@ -92,7 +98,9 @@ describe('SearchTaskCard Component', () => {
         taskTitle: 'Polish SearchTaskCard',
       });
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const Component = () => <SearchTaskCard {...props} />;
+      const Component = () => {
+        return <SearchTaskCard {...props} />;
+      };
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component.rerender(<RoutesStub />);
     });
@@ -115,7 +123,9 @@ describe('SearchTaskCard Component', () => {
       similarity: 0.95,
     });
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <SearchTaskCard {...props} />;
+    const Component = () => {
+      return <SearchTaskCard {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component.rerender(<RoutesStub />);
 
@@ -128,7 +138,9 @@ describe('SearchTaskCard Component', () => {
   test('should show source badge', () => {
     props.result = mockSearchChunk({ source: 'task' });
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <SearchTaskCard {...props} />;
+    const Component = () => {
+      return <SearchTaskCard {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component.rerender(<RoutesStub />);
 

@@ -9,20 +9,22 @@ import type { LinkedArtifactGroupProps } from '../LinkedArtifactGroup';
 import { LinkedArtifactGroup } from '../LinkedArtifactGroup';
 import type { LinkedArtifactRow } from '../LinkedArtifactsPanel';
 
-const artifact = (id: string): LinkedArtifactRow => ({
-  createdAt: '2026-07-13T00:00:00.000Z',
-  externalKey: `key:${id}`,
-  id,
-  lifecycle: null,
-  message: null,
-  payloadJson: '{}',
-  producedAt: '2026-07-13T00:00:00.000Z',
-  sessionId: 'sess-1',
-  source: 'agent',
-  type: 'status_change',
-  verification: 'verified',
-  verifiedAt: null,
-});
+const artifact = (id: string): LinkedArtifactRow => {
+  return {
+    createdAt: '2026-07-13T00:00:00.000Z',
+    externalKey: `key:${id}`,
+    id,
+    lifecycle: null,
+    message: null,
+    payloadJson: '{}',
+    producedAt: '2026-07-13T00:00:00.000Z',
+    sessionId: 'sess-1',
+    source: 'agent',
+    type: 'status_change',
+    verification: 'verified',
+    verifiedAt: null,
+  };
+};
 
 const renderGroup = (
   overrides: Partial<LinkedArtifactGroupProps> = {},
@@ -37,7 +39,9 @@ const renderGroup = (
     ...overrides,
   };
 
-  const Component = () => <LinkedArtifactGroup {...props} />;
+  const Component = () => {
+    return <LinkedArtifactGroup {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

@@ -21,27 +21,34 @@ interface VarReference {
 
 const require = createRequire(import.meta.url);
 
-const readCss = (path: string): string => readFileSync(path, 'utf8');
+const readCss = (path: string): string => {
+  return readFileSync(path, 'utf8');
+};
 
 // Blank out comments but keep their newlines, so reported line numbers stay true.
-const stripComments = (css: string): string =>
-  css.replace(/\/\*[\s\S]*?\*\//g, (comment) => comment.replace(/[^\n]/g, ' '));
+const stripComments = (css: string): string => {
+  return css.replace(/\/\*[\s\S]*?\*\//g, (comment) =>
+    comment.replace(/[^\n]/g, ' '),
+  );
+};
 
-const collectReferences = (css: string): readonly VarReference[] =>
-  [...stripComments(css).matchAll(/var\(\s*(--[\w-]+)\s*(,)?/g)].map(
+const collectReferences = (css: string): readonly VarReference[] => {
+  return [...stripComments(css).matchAll(/var\(\s*(--[\w-]+)\s*(,)?/g)].map(
     (match) => ({
       hasFallback: match[2] !== undefined,
       line: css.slice(0, match.index).split('\n').length,
       name: match[1] ?? '',
     }),
   );
+};
 
-const collectDefinitions = (css: string): ReadonlySet<string> =>
-  new Set(
+const collectDefinitions = (css: string): ReadonlySet<string> => {
+  return new Set(
     [...stripComments(css).matchAll(/(--[\w-]+)\s*:/g)].map(
       (match) => match[1] ?? '',
     ),
   );
+};
 
 const markdownCss = readCss(
   join(dirname(fileURLToPath(import.meta.url)), '..', 'index.css'),
@@ -56,8 +63,9 @@ const defined = new Set([
   ...collectDefinitions(readCss(require.resolve('tailwindcss/theme.css'))),
 ]);
 
-const describeReference = (reference: VarReference): string =>
-  `index.css:${reference.line} ${reference.name}`;
+const describeReference = (reference: VarReference): string => {
+  return `index.css:${reference.line} ${reference.name}`;
+};
 
 describe('react-router-markdown index.css custom properties', () => {
   test('references at least one var(), so the checks below are not vacuous', () => {

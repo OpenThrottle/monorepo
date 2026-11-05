@@ -39,10 +39,15 @@ export type ScheduleSpecResult =
 const ISO_WITH_OFFSET =
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
 
-const fail = (reason: string): ScheduleSpecResult => ({ ok: false, reason });
+const fail = (reason: string): ScheduleSpecResult => {
+  return { ok: false, reason };
+};
 
-const supplied = <TValue>(value: TValue | null | undefined): value is TValue =>
-  value !== null && value !== undefined;
+const supplied = <TValue>(
+  value: TValue | null | undefined,
+): value is TValue => {
+  return value !== null && value !== undefined;
+};
 
 /** @description Parses an ISO 8601 instant that names its offset, or null when it does not. */
 export const parseRunAtWithOffset = (raw: string): Date | null => {

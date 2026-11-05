@@ -14,7 +14,9 @@ describe('CalendarForm Component', () => {
   beforeEach(() => {
     props = { action: 'create' };
 
-    const Component = () => <CalendarForm {...props} />;
+    const Component = () => {
+      return <CalendarForm {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

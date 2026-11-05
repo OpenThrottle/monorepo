@@ -44,7 +44,9 @@ const failedJob: QueueJobsTableJob = {
 };
 
 function renderTable(props: QueueJobsTableProps): RenderResult {
-  const Component = () => <QueueJobsTable {...props} />;
+  const Component = () => {
+    return <QueueJobsTable {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 }
@@ -71,7 +73,9 @@ describe('QueueJobsTable Component', () => {
   test('renders column headers when jobs are provided', () => {
     props = { jobs: [jobWithPlan, failedJob], queueName: 'plans' };
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const TableComponent = () => <QueueJobsTable {...props} />;
+    const TableComponent = () => {
+      return <QueueJobsTable {...props} />;
+    };
     const RoutesStub = createRoutesStub([
       { Component: TableComponent, path: '/' },
     ]);

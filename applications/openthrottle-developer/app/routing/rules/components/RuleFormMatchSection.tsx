@@ -15,7 +15,7 @@ import {
   ANY,
   ENVIRONMENTS,
   PLAN_STATUSES,
-} from '~/routing/rules/data/rule-form-options';
+} from '~/routing/rules/data/data.rule-form-options';
 
 export interface RuleFormMatchSectionProps {
   environment: string;
@@ -103,11 +103,11 @@ export const RuleFormMatchSection = (
         </div>
       </div>
 
-      {tagAll.length === 0 ? (
+      {tagAll.length === 0 && (
         <p className="text-muted-foreground text-xs italic">
           {RULES_COPY.noTagsHint}
         </p>
-      ) : null}
+      )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">

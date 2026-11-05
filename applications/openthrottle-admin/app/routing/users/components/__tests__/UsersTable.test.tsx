@@ -32,7 +32,9 @@ describe('UsersTable Component', () => {
   let component: RenderResult;
 
   beforeEach(() => {
-    const Component = () => <UsersTable users={mockUsers} />;
+    const Component = () => {
+      return <UsersTable users={mockUsers} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

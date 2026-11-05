@@ -128,14 +128,14 @@ export const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
               value={searchValue}
             />
             <CommandList>
-              {showLoadingRow ? (
+              {showLoadingRow && (
                 <div
                   className="text-muted-foreground py-6 text-center text-sm"
                   role="status"
                 >
                   {loadingText}
                 </div>
-              ) : null}
+              )}
               {loading ? null : <CommandEmpty>{emptyText}</CommandEmpty>}
               <CommandGroup>
                 {normalizedOptions.map((opt) => (
@@ -154,7 +154,7 @@ export const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
                       )}
                     />
                     <span className="truncate">{opt.label}</span>
-                    {opt.hint == null ? null : (
+                    {opt.hint != null && (
                       <span className="text-muted-foreground ml-auto pl-2 text-xs tabular-nums">
                         {opt.hint}
                       </span>

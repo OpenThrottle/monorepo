@@ -25,7 +25,9 @@ describe('TimelineLegend Component', () => {
   // One component declaration for the whole file (react/no-multi-comp). The
   // disclosure cases vary this instead of declaring a second component.
   let legendProps: TimelineLegendProps = {};
-  const Component = () => <TimelineLegend {...legendProps} />;
+  const Component = () => {
+    return <TimelineLegend {...legendProps} />;
+  };
 
   const renderLegend = (props: TimelineLegendProps = {}): RenderResult => {
     legendProps = props;

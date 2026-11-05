@@ -43,6 +43,11 @@ export const RolloutFlagEditForm = (
   // Handlers
 
   // Markup
+  const actionErrorMarkup = (
+    <p className="text-destructive text-sm" role="alert">
+      {actionError}
+    </p>
+  );
 
   // Life Cycle
 
@@ -72,11 +77,7 @@ export const RolloutFlagEditForm = (
             <input name="id" type="hidden" value={flag.id} />
             <RolloutFlagFormFields flag={flag} idPrefix="edit-rollout-flag" />
 
-            {actionError ? (
-              <p className="text-destructive text-sm" role="alert">
-                {actionError}
-              </p>
-            ) : null}
+            {actionError ? actionErrorMarkup : null}
 
             <div className="flex items-center gap-2">
               <Button disabled={updating} type="submit">

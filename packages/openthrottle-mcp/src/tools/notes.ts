@@ -145,10 +145,8 @@ export async function listNotesToolHandler(
     const result = await executeGraphqlWithAuth(token, GetNotesDocument, {});
 
     const notes = result?.notes ?? [];
-    const text =
-      notes.length === 0
-        ? 'No notes found.'
-        : `Notes (${notes.length}):\n${JSON.stringify(notes, null, 2)}`;
+    const listText = `Notes (${notes.length}):\n${JSON.stringify(notes, null, 2)}`;
+    const text = notes.length === 0 ? 'No notes found.' : listText;
 
     return { structuredContent: { notes }, text };
   });

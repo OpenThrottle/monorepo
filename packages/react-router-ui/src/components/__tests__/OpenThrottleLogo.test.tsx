@@ -14,7 +14,9 @@ describe('OpenThrottleLogo Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <OpenThrottleLogo {...props} />;
+    const Component = () => {
+      return <OpenThrottleLogo {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

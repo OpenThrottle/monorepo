@@ -8,11 +8,13 @@ import { ENV_SOURCE } from '@openthrottle/react-router-utils';
  * report-only flag live here. The builder forces Report-Only outside
  * `NODE_ENV=production`, so flipping `reportOnly` only affects production.
  */
-export const getCspOptions = (): BuildCspOptions => ({
-  additionalConnectSrc: [],
-  additionalFontSrc: [],
-  additionalImgSrc: [],
-  additionalScriptSrc: [],
-  apiUrl: ENV_SOURCE.API_URL_EXTERNAL,
-  reportOnly: false,
-});
+export const getCspOptions = (): BuildCspOptions => {
+  return {
+    additionalConnectSrc: [],
+    additionalFontSrc: [],
+    additionalImgSrc: [],
+    additionalScriptSrc: [],
+    apiUrl: ENV_SOURCE.API_URL_EXTERNAL,
+    reportOnly: false,
+  };
+};

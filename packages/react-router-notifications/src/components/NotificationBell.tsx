@@ -1,13 +1,10 @@
 import {
-  Badge,
   Button,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  Label,
-  Switch,
 } from '@openthrottle/react-router-shadcn';
 import { Bell } from 'lucide-react';
 import * as React from 'react';
@@ -16,10 +13,9 @@ import { useNotificationPermission } from '../hooks/useNotificationPermission';
 import { useNotificationsStoreOptional } from '../hooks/useNotificationsStoreOptional';
 import { useNotificationsSystemPreferences } from '../hooks/useNotificationsSystemPreferences';
 import { NotificationActions } from './NotificationActions';
-import { NotificationEmpty } from './NotificationEmpty';
-import { NotificationItem } from './NotificationItem';
-import { NotificationPermissionDenied } from './NotificationPermissionDenied';
-import { NotificationPermissionUnsupported } from './NotificationPermissionUnsupported';
+import { NotificationBellBadge } from './NotificationBellBadge';
+import { NotificationList } from './NotificationList';
+import { NotificationSystemPreferences } from './NotificationSystemPreferences';
 
 export interface NotificationBellProps {}
 
@@ -39,11 +35,13 @@ export const NotificationBell = (
   const { permission, requestPermission } = useNotificationPermission();
   const { preference, setPreference } = useNotificationsSystemPreferences();
   const [open, setOpen] = React.useState(false);
-  const [requesting, setRequesting] = React.useState(false);
 
   // Setup
 
   // Handlers
+  const handleClose = (): void => {
+    setOpen(false);
+  };
 
   // Markup
 
@@ -64,32 +62,21 @@ export const NotificationBell = (
   } = store;
 
   const hasAny = visibleNotifications.length > 0;
+  const unreadLabel = `${unreadCount} unread notifications`;
+  const bellLabel = unreadCount > 0 ? unreadLabel : 'Notifications';
 
   return (
     <DropdownMenu onOpenChange={setOpen} open={open}>
       <DropdownMenuTrigger asChild={true}>
         <Button
-          aria-label={
-            unreadCount > 0
-              ? `${unreadCount} unread notifications`
-              : 'Notifications'
-          }
+          aria-label={bellLabel}
           className="relative size-6 shrink-0 rounded-full pointer-coarse:size-11"
           data-testid="notification-bell-trigger"
           variant="ghost"
         >
           <Bell className="size-4" />
 
-          {unreadCount > 0 ? (
-            <Badge
-              className="absolute -top-1 -right-1 size-4 rounded-full p-0 text-[10px]"
-              color="orange"
-              data-testid="notification-bell-badge"
-              size="xs"
-            >
-              {unreadCount > 99 ? '99+' : unreadCount}
-            </Badge>
-          ) : null}
+          <NotificationBellBadge unreadCount={unreadCount} />
         </Button>
       </DropdownMenuTrigger>
 
@@ -109,100 +96,24 @@ export const NotificationBell = (
 
         <DropdownMenuSeparator />
 
-        {hasAny ? (
-          visibleNotifications.map((n) => (
-            <NotificationItem
-              key={n.id}
-              notification={n}
-              onDismiss={() => {
-                dismiss(n.id);
-              }}
-              onDismissAndClose={() => {
-                dismiss(n.id);
-                setOpen(false);
-              }}
-              onMarkRead={() => markAsRead(n.id)}
-            />
-          ))
-        ) : (
-          <NotificationEmpty />
-        )}
+        <NotificationList
+          dismiss={dismiss}
+          markAsRead={markAsRead}
+          notifications={visibleNotifications}
+          onClose={handleClose}
+        />
         <DropdownMenuSeparator />
         <div
           className="space-y-3 px-2 py-3"
           data-testid="notification-bell-system-prefs"
           onClick={(e) => e.stopPropagation()}
         >
-          {permission === 'unsupported' ? (
-            <NotificationPermissionUnsupported />
-          ) : permission === 'denied' ? (
-            <NotificationPermissionDenied />
-          ) : permission === 'default' ? (
-            <div className="space-y-2">
-              <Button
-                className="w-full"
-                data-testid="notification-bell-enable-desktop"
-                disabled={requesting}
-                onClick={async () => {
-                  setRequesting(true);
-                  await requestPermission();
-                  setRequesting(false);
-                }}
-                size="sm"
-                variant="secondary"
-              >
-                {requesting ? 'Requesting…' : 'Enable desktop notifications'}
-              </Button>
-              <p className="text-muted-foreground text-xs">
-                Allow in the browser prompt to receive notifications when the
-                tab is in the background.
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="flex items-center justify-between gap-2">
-                <Label
-                  className="cursor-pointer text-sm font-normal"
-                  htmlFor="system-notifications-enabled"
-                >
-                  Desktop notifications
-                </Label>
-                <Switch
-                  checked={preference.enabled}
-                  id="system-notifications-enabled"
-                  onCheckedChange={(checked) =>
-                    setPreference({
-                      ...preference,
-                      enabled: checked === true,
-                      onlyWhenBackground: checked
-                        ? preference.onlyWhenBackground
-                        : undefined,
-                    })
-                  }
-                />
-              </div>
-              {preference.enabled ? (
-                <div className="flex items-center justify-between gap-2 pl-1">
-                  <Label
-                    className="text-muted-foreground cursor-pointer text-sm font-normal"
-                    htmlFor="system-notifications-only-background"
-                  >
-                    Only when tab in background
-                  </Label>
-                  <Switch
-                    checked={preference.onlyWhenBackground === true}
-                    id="system-notifications-only-background"
-                    onCheckedChange={(checked) =>
-                      setPreference({
-                        ...preference,
-                        onlyWhenBackground: checked === true ? true : undefined,
-                      })
-                    }
-                  />
-                </div>
-              ) : null}
-            </>
-          )}
+          <NotificationSystemPreferences
+            permission={permission}
+            preference={preference}
+            requestPermission={requestPermission}
+            setPreference={setPreference}
+          />
         </div>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -84,19 +84,22 @@ export default function Component(
   // Life Cycle
 
   // 🔌 Short Circuit
+  if (!pull) {
+    return (
+      <GlobalScreen beta={true}>
+        <PullRequestNotFound listQuery={listQuery} owner={owner} repo={repo} />
+      </GlobalScreen>
+    );
+  }
 
   return (
     <GlobalScreen beta={true}>
-      {!pull ? (
-        <PullRequestNotFound listQuery={listQuery} owner={owner} repo={repo} />
-      ) : (
-        <PullRequestDetail
-          listQuery={listQuery}
-          owner={owner}
-          pull={pull}
-          repo={repo}
-        />
-      )}
+      <PullRequestDetail
+        listQuery={listQuery}
+        owner={owner}
+        pull={pull}
+        repo={repo}
+      />
     </GlobalScreen>
   );
 }

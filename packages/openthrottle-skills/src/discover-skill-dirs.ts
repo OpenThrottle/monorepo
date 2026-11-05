@@ -28,11 +28,13 @@ export interface DiscoverSkillDirsResult {
 
 const SKILL_FILENAME = 'SKILL.md';
 
-const describeError = (error: unknown): string =>
-  error instanceof Error ? error.message : String(error);
+const describeError = (error: unknown): string => {
+  return error instanceof Error ? error.message : String(error);
+};
 
-const isErrnoException = (error: unknown): error is NodeJS.ErrnoException =>
-  error instanceof Error && 'code' in error;
+const isErrnoException = (error: unknown): error is NodeJS.ErrnoException => {
+  return error instanceof Error && 'code' in error;
+};
 
 /**
  * True when `dirent` is a directory, or a symlink whose target resolves to a

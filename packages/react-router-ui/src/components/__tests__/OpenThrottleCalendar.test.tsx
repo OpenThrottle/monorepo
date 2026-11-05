@@ -14,7 +14,9 @@ describe('OpenThrottleCalendar Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <OpenThrottleCalendar {...props} />;
+    const Component = () => {
+      return <OpenThrottleCalendar {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

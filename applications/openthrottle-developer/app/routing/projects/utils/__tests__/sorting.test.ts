@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import type { SortBy } from '~/routing/projects/config';
-import type { ProjectWithStats } from '~/routing/projects/data/types';
+import type { ProjectWithStats } from '~/routing/projects/types';
 
 import { sortProjects } from '../sorting';
 

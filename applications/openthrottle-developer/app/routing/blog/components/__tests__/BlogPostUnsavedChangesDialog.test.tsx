@@ -7,18 +7,20 @@ import { renderWithProviders } from '~/testing/route-fixtures';
 
 import { BlogPostUnsavedChangesDialog } from '../BlogPostUnsavedChangesDialog';
 
-const blocked = (): Blocker & { readonly state: 'blocked' } => ({
-  location: {
-    hash: '',
-    key: 'next',
-    pathname: '/blog',
-    search: '',
-    state: null,
-  },
-  proceed: vi.fn(),
-  reset: vi.fn(),
-  state: 'blocked',
-});
+const blocked = (): Blocker & { readonly state: 'blocked' } => {
+  return {
+    location: {
+      hash: '',
+      key: 'next',
+      pathname: '/blog',
+      search: '',
+      state: null,
+    },
+    proceed: vi.fn(),
+    reset: vi.fn(),
+    state: 'blocked',
+  };
+};
 
 describe('BlogPostUnsavedChangesDialog Component', () => {
   test('stays closed while nothing is blocked', () => {

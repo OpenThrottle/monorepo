@@ -8,11 +8,13 @@ export const BLOG_BASE_PATH = '/blog';
 /** The RSS 2.0 feed (`app/routes/blog.rss[.]xml.tsx`). */
 export const BLOG_FEED_PATH = `${BLOG_BASE_PATH}/rss.xml`;
 
-export const buildBlogPostPath = (slug: string): string =>
-  `${BLOG_BASE_PATH}/${encodeURIComponent(slug)}`;
+export const buildBlogPostPath = (slug: string): string => {
+  return `${BLOG_BASE_PATH}/${encodeURIComponent(slug)}`;
+};
 
-export const buildBlogTagPath = (slug: string): string =>
-  `${BLOG_BASE_PATH}/tags/${encodeURIComponent(slug)}`;
+export const buildBlogTagPath = (slug: string): string => {
+  return `${BLOG_BASE_PATH}/tags/${encodeURIComponent(slug)}`;
+};
 
 /**
  * @description Builds a list-page href. `after: null | undefined` yields the

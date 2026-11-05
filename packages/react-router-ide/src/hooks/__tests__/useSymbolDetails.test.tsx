@@ -4,7 +4,10 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import type { ExportedSymbol, IdeSymbolDetails } from '../../data/view-models';
+import type {
+  ExportedSymbol,
+  IdeSymbolDetails,
+} from '../../data/data.view-models';
 import { useSymbolDetails } from '../useSymbolDetails';
 
 const symbol: ExportedSymbol = {
@@ -22,9 +25,11 @@ const details: IdeSymbolDetails = {
   symbol: { line: 42, name: 'searchText', path: 'src/data/search.ts' },
 };
 
-const makeConsumer =
-  (options: { endpoint: string; symbol: ExportedSymbol }) =>
-  (): React.ReactElement => {
+const makeConsumer = (options: {
+  endpoint: string;
+  symbol: ExportedSymbol;
+}) => {
+  return (): React.ReactElement => {
     const {
       details: resolved,
       loading,
@@ -43,6 +48,7 @@ const makeConsumer =
       </div>
     );
   };
+};
 
 const Consumer = makeConsumer({ endpoint: '/ide/symbol', symbol });
 

@@ -7,5 +7,6 @@ import type { DocEntry } from './buildDocsManifest';
  *
  * @public
  */
-export const docEntryKey = (entry: DocEntry): string =>
-  `${entry.section}:${entry.slug.length > 0 ? entry.slug : 'index'}`;
+export const docEntryKey = (entry: DocEntry): string => {
+  return `${entry.section}:${entry.slug.length > 0 ? entry.slug : 'index'}`;
+};

@@ -11,11 +11,13 @@ import type { GeneratorDetailCardFragment } from '~/__generated__/graphql';
 import { GeneratorTabSchema } from '../GeneratorTabSchema';
 
 function renderTab(generator: GeneratorDetailCardFragment): RenderResult {
-  const Component = () => (
-    <Tabs defaultValue="schema">
-      <GeneratorTabSchema generator={generator} />
-    </Tabs>
-  );
+  const Component = () => {
+    return (
+      <Tabs defaultValue="schema">
+        <GeneratorTabSchema generator={generator} />
+      </Tabs>
+    );
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 }

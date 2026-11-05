@@ -24,8 +24,7 @@ import * as React from 'react';
  */
 export { REGEX_UUID };
 
-const UUID_GROUP =
-  '([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})';
+const UUID_GROUP = `([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})`;
 
 const ICON_SM = 'w-3! h-3! shrink-0 opacity-80';
 
@@ -127,15 +126,17 @@ const buildNonUuidDebugIndexItems = (
 const buildWorkspaceSearchItem = (
   q: string,
   submit: CommanderEmptyStateExtrasHandlers['submitCommanderSearch'],
-): CommanderItem => ({
-  icon: <SearchIcon aria-hidden={true} className={ICON_SM} />,
-  id: `jump-search-fragment-${q}`,
-  label: `Search workspace for “${q}” (tasks, plans, chunks)`,
-  onSelect: () => {
-    submit({ q });
-  },
-  value: `${q} search workspace fragment`,
-});
+): CommanderItem => {
+  return {
+    icon: <SearchIcon aria-hidden={true} className={ICON_SM} />,
+    id: `jump-search-fragment-${q}`,
+    label: `Search workspace for “${q}” (tasks, plans, chunks)`,
+    onSelect: () => {
+      submit({ q });
+    },
+    value: `${q} search workspace fragment`,
+  };
+};
 
 /**
  * @description Rows for a typed short id fragment: a confident `Open plan` row

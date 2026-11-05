@@ -12,19 +12,20 @@ import type { DriverInvocationConfig } from '../../types/index.ts';
 import { antigravityDriver } from '../antigravity.ts';
 import { getDriver } from '../index.ts';
 
-const BASE =
-  'agy -p "do the thing" --dangerously-skip-permissions --add-dir "$PWD"';
+const BASE = `agy -p "do the thing" --dangerously-skip-permissions --add-dir "$PWD"`;
 const STDIN = ' < /dev/null';
 
 const config = (
   extra: Omit<DriverInvocationConfig, 'iteration' | 'prompt'> & {
     prompt?: string;
   } = {},
-): DriverInvocationConfig => ({
-  iteration: 1,
-  prompt: extra.prompt ?? 'do the thing',
-  ...extra,
-});
+): DriverInvocationConfig => {
+  return {
+    iteration: 1,
+    prompt: extra.prompt ?? 'do the thing',
+    ...extra,
+  };
+};
 
 describe('antigravity driver', () => {
   it('builds the base one-shot command with -p, skip-permissions, and --add-dir', () => {

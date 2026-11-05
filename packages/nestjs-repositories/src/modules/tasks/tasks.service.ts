@@ -445,14 +445,11 @@ export class TasksService {
       .select(`${aggregate}(task.sortOrder)`, 'value')
       .where('task.planId = :planId', { planId })
       .getRawOne<{ value: string | null }>();
-    const value =
-      result?.value != null && result.value !== ''
-        ? Number(result.value)
-        : null;
-    if (value == null) return TASK_SORT_ORDER_GAP;
-    return role === 'before'
-      ? value - TASK_SORT_ORDER_GAP
-      : value + TASK_SORT_ORDER_GAP;
+    const hasValue = result?.value != null && result.value !== '';
+    if (!hasValue) return TASK_SORT_ORDER_GAP;
+    const value = Number(result?.value);
+    const isBefore = role === 'before';
+    return isBefore ? value - TASK_SORT_ORDER_GAP : value + TASK_SORT_ORDER_GAP;
   }
 
   /**
@@ -489,15 +486,10 @@ export class TasksService {
         .select('MAX(task.sortOrder)', 'max')
         .where('task.planId = :planId', { planId })
         .getRawOne<{ max: string | null }>();
-      const existingMax =
-        maxResult?.max != null && maxResult.max !== ''
-          ? Number(maxResult.max)
-          : null;
+      const hasExistingMax = maxResult?.max != null && maxResult.max !== '';
+      const existingMax = hasExistingMax ? Number(maxResult?.max) : 0;
 
-      let nextAuto =
-        existingMax != null
-          ? existingMax + TASK_SORT_ORDER_GAP
-          : TASK_SORT_ORDER_GAP;
+      let nextAuto = existingMax + TASK_SORT_ORDER_GAP;
 
       const entities = items.map((item) => {
         const sortOrder = item.sortOrder != null ? item.sortOrder : nextAuto;

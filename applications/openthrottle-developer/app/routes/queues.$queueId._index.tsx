@@ -21,7 +21,7 @@ import { QueueHealthPill } from '~/routing/queues/components/QueueHealthPill';
 import { QueueJobsTable } from '~/routing/queues/components/QueueJobsTable';
 import { QueueOpsToolbar } from '~/routing/queues/components/QueueOpsToolbar';
 import { QueueStatRow } from '~/routing/queues/components/QueueStatRow';
-import { QUEUE_JOB_STATE_FILTER_OPTIONS } from '~/routing/queues/data/job-state-filter-options';
+import { QUEUE_JOB_STATE_FILTER_OPTIONS } from '~/routing/queues/data/data.job-state-filter-options';
 import { parseQueueJobsPagination } from '~/routing/queues/utils/parse-queue-jobs-pagination';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -42,10 +42,9 @@ export const loader = async (args: Route.LoaderArgs) => {
   const selectedStates = new URL(args.url.toString()).searchParams.getAll(
     'state',
   );
-  const states =
-    selectedStates.length > 0
-      ? selectedStates
-      : [...QUEUE_JOB_STATE_FILTER_OPTIONS];
+  const hasSelectedStates = selectedStates.length > 0;
+  const allStates = [...QUEUE_JOB_STATE_FILTER_OPTIONS];
+  const states = hasSelectedStates ? selectedStates : allStates;
 
   const { queue } = await executeGraphqlWithAuth(
     args.request,
@@ -91,14 +90,14 @@ export default function Component(
   const allJobs = queue.jobs?.jobs ?? [];
   const total = queue.jobs?.total ?? 0;
   const query = readSearchParam(searchParams).toLowerCase();
-  const jobs =
-    query === ''
-      ? allJobs
-      : allJobs.filter(
-          (job) =>
-            job.id.toLowerCase().includes(query) ||
-            (job.name ?? '').toLowerCase().includes(query),
-        );
+  const hasQuery = query !== '';
+  const matchingJobs = allJobs.filter((job) => {
+    const matchesId = job.id.toLowerCase().includes(query);
+    const matchesName = (job.name ?? '').toLowerCase().includes(query);
+
+    return matchesId || matchesName;
+  });
+  const jobs = hasQuery ? matchingJobs : allJobs;
 
   // Handlers
 
@@ -160,6 +159,8 @@ export default function Component(
   );
 }
 
-export const action = (args: Route.ActionArgs) => runQueueDetailAction(args);
+export const action = (args: Route.ActionArgs) => {
+  return runQueueDetailAction(args);
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

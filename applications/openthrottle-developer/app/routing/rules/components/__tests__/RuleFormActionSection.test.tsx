@@ -11,26 +11,28 @@ import { RuleFormActionSection } from '../RuleFormActionSection';
 
 const buildProps = (
   overrides: Partial<RuleFormActionSectionProps> = {},
-): RuleFormActionSectionProps => ({
-  actionType: 'inject-task',
-  onActionTypeChange: vi.fn(),
-  onPlacementChange: vi.fn(),
-  onSkillSlugChange: vi.fn(),
-  onSlugAllowChange: vi.fn(),
-  onSlugDenyChange: vi.fn(),
-  onTagAllowChange: vi.fn(),
-  onTagDenyChange: vi.fn(),
-  onTitleTemplateChange: vi.fn(),
-  placement: 'first',
-  skillSlug: 'my-skill',
-  skillSlugs: ['my-skill', 'other-skill'],
-  slugAllow: '',
-  slugDeny: '',
-  tagAllow: '',
-  tagDeny: '',
-  titleTemplate: '',
-  ...overrides,
-});
+): RuleFormActionSectionProps => {
+  return {
+    actionType: 'inject-task',
+    onActionTypeChange: vi.fn(),
+    onPlacementChange: vi.fn(),
+    onSkillSlugChange: vi.fn(),
+    onSlugAllowChange: vi.fn(),
+    onSlugDenyChange: vi.fn(),
+    onTagAllowChange: vi.fn(),
+    onTagDenyChange: vi.fn(),
+    onTitleTemplateChange: vi.fn(),
+    placement: 'first',
+    skillSlug: 'my-skill',
+    skillSlugs: ['my-skill', 'other-skill'],
+    slugAllow: '',
+    slugDeny: '',
+    tagAllow: '',
+    tagDeny: '',
+    titleTemplate: '',
+    ...overrides,
+  };
+};
 
 describe('RuleFormActionSection Component', () => {
   let component: RenderResult;

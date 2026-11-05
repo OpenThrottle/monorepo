@@ -3,10 +3,8 @@ import { createStore, Provider } from 'jotai';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
-import {
-  configAtom,
-  DEFAULT_APPEARANCE_CONFIG,
-} from '~/global/data/atom.config';
+import { DEFAULT_APPEARANCE_CONFIG } from '~/global/data/data.appearance-config';
+import { configAtom } from '~/global/data/data.atom-config';
 
 import { useBlogEditorTheme } from '../useBlogEditorTheme';
 

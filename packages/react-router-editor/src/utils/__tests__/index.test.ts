@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import type { EditorFile } from '../../data/atom.editor';
+import type { EditorFile } from '../../data/data.atom.editor';
 import {
   areFilesUpdated,
   getFilenameError,
@@ -10,12 +10,14 @@ import {
   validateFilename,
 } from '../index';
 
-const file = (overrides: Partial<EditorFile> = {}): EditorFile => ({
-  directory: '.',
-  filename: 'readme.md',
-  language: 'markdown',
-  ...overrides,
-});
+const file = (overrides: Partial<EditorFile> = {}): EditorFile => {
+  return {
+    directory: '.',
+    filename: 'readme.md',
+    language: 'markdown',
+    ...overrides,
+  };
+};
 
 describe('utils/getLanguageFromExt', () => {
   test('maps known extensions to their Monaco language', () => {

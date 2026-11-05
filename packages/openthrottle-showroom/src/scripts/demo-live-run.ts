@@ -73,8 +73,9 @@ const assertDemoDatabase = (): string => {
 const TERMINAL = ['COMPLETED', 'FAILED', 'CANCELED', 'STALE'];
 
 /** @public Is this run still one the heartbeat should keep alive? */
-export const isLive = (status: string | undefined): boolean =>
-  status !== undefined && !TERMINAL.includes(status);
+export const isLive = (status: string | undefined): boolean => {
+  return status !== undefined && !TERMINAL.includes(status);
+};
 
 const main = async (): Promise<void> => {
   const database = assertDemoDatabase();

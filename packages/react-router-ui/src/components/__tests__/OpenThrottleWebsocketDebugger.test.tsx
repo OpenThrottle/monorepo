@@ -56,18 +56,21 @@ describe('OpenThrottleWebsocketDebugger Component', () => {
   const renderDebugger = (
     override: Partial<OpenThrottleWebsocketDebuggerProps> = {},
   ) => {
-    const Component = () => (
-      <TooltipProvider>
-        <OpenThrottleWebsocketDebugger {...props} {...override} />
-      </TooltipProvider>
-    );
+    const Component = () => {
+      return (
+        <TooltipProvider>
+          <OpenThrottleWebsocketDebugger {...props} {...override} />
+        </TooltipProvider>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     return render(<RoutesStub />);
   };
 
-  const getLogRegion = () =>
-    within(screen.getByTestId('OpenThrottleWebsocketDebugger-log'));
+  const getLogRegion = () => {
+    return within(screen.getByTestId('OpenThrottleWebsocketDebugger-log'));
+  };
 
   test('renders connection status and log entries from initialEntries', () => {
     renderDebugger();

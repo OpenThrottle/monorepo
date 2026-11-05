@@ -20,8 +20,7 @@ import {
 import type { ScheduledAgentJobPayload } from './scheduled-agent-jobs.types.ts';
 
 /** The error_message a recovered run carries, so run history says why it stopped. */
-export const SCHEDULED_AGENT_JOB_SERVER_RESTARTED_MESSAGE =
-  'Server restarted while this run was in progress; the run was abandoned.';
+export const SCHEDULED_AGENT_JOB_SERVER_RESTARTED_MESSAGE = `Server restarted while this run was in progress; the run was abandoned.`;
 
 /** Upper bound on runs examined per boot, so a corrupt table cannot stall startup. */
 const STUCK_RUN_RECOVERY_BATCH_SIZE = 200;
@@ -34,8 +33,11 @@ export interface ScheduledAgentJobStuckRunRecoverySummary {
   readonly skippedLive: number;
 }
 
-const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
-  typeof value === 'object' && value !== null;
+const isRecord = (
+  value: unknown,
+): value is Readonly<Record<string, unknown>> => {
+  return typeof value === 'object' && value !== null;
+};
 
 /**
  * @description The `settings.worktree.worktree` value the processor keyed the run's directory lock

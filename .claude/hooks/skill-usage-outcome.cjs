@@ -58,7 +58,9 @@ var logHookError = (message, err) => {
 };
 
 // packages/agentic-hooks/src/config/env.ts
-var userConfigDir = () => import_node_path.default.join(import_node_os.default.homedir(), ".openthrottle");
+var userConfigDir = () => {
+  return import_node_path.default.join(import_node_os.default.homedir(), ".openthrottle");
+};
 var OT_MARKER_REL = import_node_path.default.join(
   "applications",
   "openthrottle-server",
@@ -130,13 +132,19 @@ var readEnvFile = (envPath) => {
   }
   return out;
 };
-var readRepoEnvFile = (repoRoot) => isOpenThrottleCheckout(repoRoot) ? readEnvFile(import_node_path.default.join(repoRoot, ".env")) : {};
-var readUserEnvFile = () => readEnvFile(import_node_path.default.join(userConfigDir(), ".env"));
-var envLayers = (repoRoot, options) => [
-  repoRoot ? readRepoEnvFile(repoRoot) : {},
-  ...options?.includeProcessEnv === false ? [] : [process.env],
-  readUserEnvFile()
-];
+var readRepoEnvFile = (repoRoot) => {
+  return isOpenThrottleCheckout(repoRoot) ? readEnvFile(import_node_path.default.join(repoRoot, ".env")) : {};
+};
+var readUserEnvFile = () => {
+  return readEnvFile(import_node_path.default.join(userConfigDir(), ".env"));
+};
+var envLayers = (repoRoot, options) => {
+  return [
+    repoRoot ? readRepoEnvFile(repoRoot) : {},
+    ...options?.includeProcessEnv === false ? [] : [process.env],
+    readUserEnvFile()
+  ];
+};
 var resolveOtEnv = (repoRoot, key, options) => {
   for (const layer of envLayers(repoRoot, options)) {
     const value = layer[key];
@@ -147,7 +155,9 @@ var resolveOtEnv = (repoRoot, key, options) => {
   return "";
 };
 var LOOPBACK_AUTHORITY = /^([a-z][a-z0-9+.-]*:\/\/(?:[^/?#@]*@)?)localhost(?=[:/?#]|$)/i;
-var normalizeLoopbackHost = (url) => url.replace(LOOPBACK_AUTHORITY, "$1127.0.0.1");
+var normalizeLoopbackHost = (url) => {
+  return url.replace(LOOPBACK_AUTHORITY, "$1127.0.0.1");
+};
 var graphqlUrlFromEnvMap = (env) => {
   const explicit = env.OPENTHROTTLE_GRAPHQL_URL?.trim() || env.OPENTHROTTLE_WORKER_GRAPHQL_URL?.trim();
   if (explicit) {
@@ -168,18 +178,24 @@ var resolveGraphqlUrl = (repoRoot, options) => {
   }
   return null;
 };
-var resolveAuthToken = (repoRoot, options) => resolveOtEnv(repoRoot, "OPENTHROTTLE_MCP_AUTH_TOKEN", options) || resolveOtEnv(repoRoot, "OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN", options) || "";
+var resolveAuthToken = (repoRoot, options) => {
+  return resolveOtEnv(repoRoot, "OPENTHROTTLE_MCP_AUTH_TOKEN", options) || resolveOtEnv(repoRoot, "OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN", options) || "";
+};
 
 // packages/agentic-hooks/src/data/jsonl.ts
 var TELEMETRY_DIR_BASENAME = "skill-usage";
 var OUTCOMES_JSONL_BASENAME = "outcomes.jsonl";
-var resolveTelemetryDir = () => process.env.OPENTHROTTLE_TELEMETRY_DIR?.trim() || import_node_path2.default.join(userConfigDir(), TELEMETRY_DIR_BASENAME);
+var resolveTelemetryDir = () => {
+  return process.env.OPENTHROTTLE_TELEMETRY_DIR?.trim() || import_node_path2.default.join(userConfigDir(), TELEMETRY_DIR_BASENAME);
+};
 var appendJsonl = (jsonlPath, event) => {
   import_node_fs2.default.mkdirSync(import_node_path2.default.dirname(jsonlPath), { recursive: true });
   import_node_fs2.default.appendFileSync(jsonlPath, `${JSON.stringify(event)}
 `, "utf8");
 };
-var defaultOutcomesJsonlPath = () => import_node_path2.default.join(resolveTelemetryDir(), OUTCOMES_JSONL_BASENAME);
+var defaultOutcomesJsonlPath = () => {
+  return import_node_path2.default.join(resolveTelemetryDir(), OUTCOMES_JSONL_BASENAME);
+};
 
 // packages/agentic-hooks/src/config/describe.ts
 var TELEMETRY_CONFIG_SOURCES = Object.freeze({
@@ -194,7 +210,9 @@ var TELEMETRY_CONFIG_SOURCES = Object.freeze({
 });
 
 // packages/nodejs-utils/src/utils/is-record.ts
-var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
+var isRecord = (value) => {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+};
 
 // packages/agentic-hooks/src/data/checkpoints.ts
 var DEFAULT_STALE_CHECKPOINT_MS = 6 * 60 * 60 * 1e3;
@@ -295,7 +313,9 @@ var buildOutcomeEvent = ({
   }
   const scope = detectScope(name, repoRoot);
   const resolvedCwd = cwd || repoRoot;
-  const resolvedDuration = durationMs == null || Number.isNaN(Number(durationMs)) ? null : Math.max(0, Math.round(Number(durationMs)));
+  const hasDuration = durationMs != null && !Number.isNaN(Number(durationMs));
+  const roundedDuration = Math.max(0, Math.round(Number(durationMs)));
+  const resolvedDuration = hasDuration ? roundedDuration : null;
   const event = {
     cwd: resolvedCwd,
     duration_ms: resolvedDuration,
@@ -351,7 +371,9 @@ var PERMANENT_GRAPHQL_CODES = [
   "GRAPHQL_VALIDATION_FAILED"
 ];
 var TRANSIENT_CLIENT_STATUSES = [401, 403, 408, 429];
-var isPermanentHttpStatus = (status) => status >= 400 && status < 500 && !TRANSIENT_CLIENT_STATUSES.includes(status);
+var isPermanentHttpStatus = (status) => {
+  return status >= 400 && status < 500 && !TRANSIENT_CLIENT_STATUSES.includes(status);
+};
 var readStatusCode = (extensions) => {
   const original = extensions.originalError;
   if (isRecord(original) && typeof original.statusCode === "number") {
@@ -379,12 +401,16 @@ var readGraphqlErrors = (payload) => {
   }
   return { message: messages.join("; "), permanent };
 };
-var readMutationData = (payload, field) => isRecord(payload) && isRecord(payload.data) ? payload.data[field] : void 0;
-var transient = (reason) => ({
-  ok: false,
-  permanent: false,
-  reason
-});
+var readMutationData = (payload, field) => {
+  return isRecord(payload) && isRecord(payload.data) ? payload.data[field] : void 0;
+};
+var transient = (reason) => {
+  return {
+    ok: false,
+    permanent: false,
+    reason
+  };
+};
 var postMutation = async ({
   authToken,
   fetchImpl,
@@ -415,8 +441,13 @@ var postMutation = async ({
       signal: AbortSignal.timeout(timeoutMs)
     });
   } catch (err) {
-    const reason = err instanceof Error && err.name === "TimeoutError" ? "timeout" : err instanceof Error ? err.message : String(err);
-    return transient(reason);
+    if (err instanceof Error && err.name === "TimeoutError") {
+      return transient("timeout");
+    }
+    if (err instanceof Error) {
+      return transient(err.message);
+    }
+    return transient(String(err));
   }
   let payload;
   try {
@@ -457,7 +488,9 @@ var postGraphqlMutation = async (args) => {
 var MAX_TOKEN_USAGE_BATCH_BYTES = 64 * 1024;
 
 // packages/agentic-hooks/src/data/persist.ts
-var forLog = (graphqlUrl) => graphqlUrl.replace(/^([a-z][a-z0-9+.-]*:\/\/)[^/?#]*@/i, "$1***@");
+var forLog = (graphqlUrl) => {
+  return graphqlUrl.replace(/^([a-z][a-z0-9+.-]*:\/\/)[^/?#]*@/i, "$1***@");
+};
 var DEFAULT_POST_TIMEOUT_MS = 750;
 var DEFAULT_ABANDONED_MS = 6 * 60 * 60 * 1e3;
 var postSkillUsageOutcome = async ({
@@ -477,7 +510,9 @@ var postSkillUsageOutcome = async ({
     variables: { input: toRecordSkillUsageOutcomeInput(event) }
   });
 };
-var resolveTimeout = (timeoutMs) => timeoutMs ?? (Number(process.env.OPENTHROTTLE_TELEMETRY_TIMEOUT_MS) || DEFAULT_POST_TIMEOUT_MS);
+var resolveTimeout = (timeoutMs) => {
+  return timeoutMs ?? (Number(process.env.OPENTHROTTLE_TELEMETRY_TIMEOUT_MS) || DEFAULT_POST_TIMEOUT_MS);
+};
 var persistOutcomeEvent = async ({
   event,
   repoRoot,

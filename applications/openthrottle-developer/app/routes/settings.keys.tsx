@@ -107,12 +107,11 @@ export default function Component(
 
   // Setup
   const actionError = getActionError(actionData) ?? null;
-  const createActionData =
-    actionData &&
+  const isCreateAction =
+    actionData != null &&
     'intent' in actionData &&
-    actionData.intent === 'createCredential'
-      ? actionData
-      : null;
+    actionData.intent === 'createCredential';
+  const createActionData = isCreateAction ? actionData : null;
   const canManageCredentials = selectedServiceAccountId != null;
 
   // Handlers

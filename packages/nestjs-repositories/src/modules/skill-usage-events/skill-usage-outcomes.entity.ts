@@ -49,8 +49,9 @@ const SKILL_USAGE_OUTCOME_VALUES: readonly string[] =
  */
 export const isSkillUsageOutcome = (
   value: string,
-): value is SkillUsageOutcomeValue =>
-  SKILL_USAGE_OUTCOME_VALUES.includes(value);
+): value is SkillUsageOutcomeValue => {
+  return SKILL_USAGE_OUTCOME_VALUES.includes(value);
+};
 
 /**
  * Which capture contract wrote a row. `LEGACY_ASSUMED_SUCCESS` rows predate

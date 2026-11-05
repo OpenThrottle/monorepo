@@ -20,6 +20,19 @@ import {
   LOG_STREAM_HUB,
 } from './tokens/nestjs-logging.tokens.ts';
 
+type GatewayClassBuilder = typeof buildNestjsLoggingWebsocketGatewayClass;
+
+const buildGatewayProviders = (
+  enabled: boolean,
+  namespace: Parameters<GatewayClassBuilder>[0],
+  allowedOrigins: Parameters<GatewayClassBuilder>[1],
+): ReturnType<GatewayClassBuilder>[] => {
+  if (!enabled) {
+    return [];
+  }
+  return [buildNestjsLoggingWebsocketGatewayClass(namespace, allowedOrigins)];
+};
+
 @Module({})
 export class NestjsLoggingModule {
   /**
@@ -28,16 +41,11 @@ export class NestjsLoggingModule {
   static forRoot(options: NestjsLoggingModuleOptions): DynamicModule {
     validateNestjsLoggingModuleOptions(options);
     const resolved = applyNestjsLoggingModuleDefaults(options);
-    const websocketGatewayProviders =
-      resolved.websocket.enabled === true
-        ? [
-            buildNestjsLoggingWebsocketGatewayClass(
-              resolved.websocket.namespace ??
-                DEFAULT_NESTJS_LOGGING_WS_NAMESPACE,
-              resolved.websocket.allowedOrigins ?? [],
-            ),
-          ]
-        : [];
+    const websocketGatewayProviders = buildGatewayProviders(
+      resolved.websocket.enabled === true,
+      resolved.websocket.namespace ?? DEFAULT_NESTJS_LOGGING_WS_NAMESPACE,
+      resolved.websocket.allowedOrigins ?? [],
+    );
 
     return {
       exports: [
@@ -69,16 +77,11 @@ export class NestjsLoggingModule {
    */
   static forRootAsync(options: NestjsLoggingModuleAsyncOptions): DynamicModule {
     validateNestjsLoggingModuleAsyncOptions(options);
-    const websocketGatewayProviders =
-      options.registerWebsocketGateway === true
-        ? [
-            buildNestjsLoggingWebsocketGatewayClass(
-              options.websocketGatewayNamespace ??
-                DEFAULT_NESTJS_LOGGING_WS_NAMESPACE,
-              options.websocketGatewayAllowedOrigins ?? [],
-            ),
-          ]
-        : [];
+    const websocketGatewayProviders = buildGatewayProviders(
+      options.registerWebsocketGateway === true,
+      options.websocketGatewayNamespace ?? DEFAULT_NESTJS_LOGGING_WS_NAMESPACE,
+      options.websocketGatewayAllowedOrigins ?? [],
+    );
 
     return {
       exports: [

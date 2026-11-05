@@ -59,10 +59,11 @@ export const readNewBytes = ({
     }
 
     const remaining = size - start;
-    let window =
-      maxBytes !== undefined && maxBytes > 0
-        ? Math.min(remaining, Math.floor(maxBytes))
-        : remaining;
+    const hasMaxBytes = maxBytes !== undefined && maxBytes > 0;
+    let window = remaining;
+    if (hasMaxBytes) {
+      window = Math.min(remaining, Math.floor(maxBytes));
+    }
     let buffer = Buffer.alloc(0);
     let lastNewline = -1;
     while (lastNewline < 0) {

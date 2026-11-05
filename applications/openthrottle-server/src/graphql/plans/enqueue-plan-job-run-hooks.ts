@@ -14,10 +14,11 @@ const MAX_JOB_RUN_HOOKS_JSON_LEN = 512_000;
  * @description Dedup key for a hook entry. Skill entries collapse on phase+skillPath so a hook that
  * exists both as a materialized hook-task and in jobRunHooksJson runs once; other kinds never collide.
  */
-const hookEntryDedupeKey = (entry: JobRunHookEntry): string =>
-  entry.kind === 'skill'
+const hookEntryDedupeKey = (entry: JobRunHookEntry): string => {
+  return entry.kind === 'skill'
     ? `skill::${entry.phase}::${entry.skillPath}`
     : `other::${entry.phase}::${String(entry.order ?? '')}::${entry.kind}`;
+};
 
 /**
  * @description Unions config-authored hooks (jobRunHooksJson / plan column) with entries derived from
@@ -46,7 +47,9 @@ const mergeHookEntries = (
  */
 export const serializeJobRunHooksForGraphql = (
   stored: PlanJobRunHooksStorage | null | undefined,
-): string => JSON.stringify(parseJobRunHooksConfig(stored ?? { hooks: [] }));
+): string => {
+  return JSON.stringify(parseJobRunHooksConfig(stored ?? { hooks: [] }));
+};
 
 /**
  * @description Parses GraphQL JSON into canonical {@link JobRunHooksConfig} for DB or enqueue.
@@ -83,7 +86,9 @@ export const parseJobRunHooksJsonInput = (
  */
 export const jobRunHooksFromPlanStorage = (
   stored: PlanJobRunHooksStorage | null | undefined,
-): JobRunHooksConfig => parseJobRunHooksConfig(stored ?? { hooks: [] });
+): JobRunHooksConfig => {
+  return parseJobRunHooksConfig(stored ?? { hooks: [] });
+};
 
 /**
  * @description Resolves hooks for a queued run: enqueue override wins over the persisted plan column,
@@ -105,10 +110,10 @@ export const resolveJobRunHooksForEnqueue = (params: {
     params.enqueueHooksJson,
     validateOpts,
   );
-  const configHooks =
-    override !== undefined
-      ? override.hooks
-      : jobRunHooksFromPlanStorage(params.planHooks).hooks;
+  const planHooks = (): readonly JobRunHookEntry[] => {
+    return jobRunHooksFromPlanStorage(params.planHooks).hooks;
+  };
+  const configHooks = override !== undefined ? override.hooks : planHooks();
 
   const merged = mergeHookEntries(
     configHooks,
@@ -123,5 +128,6 @@ export const resolveJobRunHooksForEnqueue = (params: {
  */
 export const jobRunHooksForJobPayload = (
   config: JobRunHooksConfig | undefined,
-): JobRunHooksConfig | undefined =>
-  config !== undefined && config.hooks.length > 0 ? config : undefined;
+): JobRunHooksConfig | undefined => {
+  return config !== undefined && config.hooks.length > 0 ? config : undefined;
+};

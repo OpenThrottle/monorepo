@@ -41,6 +41,11 @@ export const ScheduleForm = (props: ScheduleFormProps): React.ReactElement => {
   // Handlers
 
   // Markup
+  const errorAlert = (
+    <p className="text-destructive text-sm" role="alert">
+      {error}
+    </p>
+  );
 
   // Life Cycle
 
@@ -166,11 +171,7 @@ export const ScheduleForm = (props: ScheduleFormProps): React.ReactElement => {
         Enabled
       </label>
 
-      {error ? (
-        <p className="text-destructive text-sm" role="alert">
-          {error}
-        </p>
-      ) : null}
+      {error ? errorAlert : null}
 
       <div className="flex justify-end gap-3 pt-2">
         <Button asChild={true} variant="outline">

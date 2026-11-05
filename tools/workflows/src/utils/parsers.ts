@@ -57,13 +57,15 @@ export const getRalphOutputMarkerFlags = (
   readonly hasPromiseComplete: boolean;
   readonly hasPromiseError: boolean;
   readonly hasPromiseInputRequired: boolean;
-} => ({
-  hasCompleteTaskClose: result.includes(RALPH_COMPLETE_TASK_CLOSE),
-  hasCompleteTaskOpen: result.includes(RALPH_COMPLETE_TASK_OPEN),
-  hasPromiseComplete: result.includes(PROMISE_COMPLETE),
-  hasPromiseError: result.includes(PROMISE_ERROR),
-  hasPromiseInputRequired: result.includes(PROMISE_INPUT_REQUIRED),
-});
+} => {
+  return {
+    hasCompleteTaskClose: result.includes(RALPH_COMPLETE_TASK_CLOSE),
+    hasCompleteTaskOpen: result.includes(RALPH_COMPLETE_TASK_OPEN),
+    hasPromiseComplete: result.includes(PROMISE_COMPLETE),
+    hasPromiseError: result.includes(PROMISE_ERROR),
+    hasPromiseInputRequired: result.includes(PROMISE_INPUT_REQUIRED),
+  };
+};
 
 /** @public */
 export const isOpenThrottlePlanId = (plan: string): boolean => {
@@ -154,6 +156,24 @@ export interface RalphArgs {
   /** Cursor-only: `--worktree-base`. */
   worktreeBase: string | undefined;
 }
+
+/**
+ * @description CLI `--debug` / `--verbose` win over the merged file + env default level.
+ */
+const resolveEffectiveDebugLevel = (
+  cliDebug: 'none' | 'debug' | 'verbose',
+  defaultLevel: RalphDebugLevel,
+): RalphDebugLevel => {
+  if (cliDebug === 'verbose') {
+    return 'verbose';
+  }
+
+  if (cliDebug === 'debug') {
+    return 'debug';
+  }
+
+  return defaultLevel;
+};
 
 /**
  * @description Parses command-line arguments from process.argv
@@ -388,12 +408,10 @@ export const parseRalphArgs = (): RalphArgs => {
    * file + env defaults ({@link loadWorkflowRalphConfig}).
    */
   const mergedDefaults = loadWorkflowRalphConfig(cwd);
-  const effectiveDebugLevel: RalphDebugLevel =
-    cliDebug === 'verbose'
-      ? 'verbose'
-      : cliDebug === 'debug'
-        ? 'debug'
-        : mapDefaultsDebugToRalphDebugLevel(mergedDefaults.debug);
+  const effectiveDebugLevel = resolveEffectiveDebugLevel(
+    cliDebug,
+    mapDefaultsDebugToRalphDebugLevel(mergedDefaults.debug),
+  );
 
   setRalphDebugLevel(effectiveDebugLevel);
 
@@ -453,16 +471,17 @@ export const parseRalphResponse = (
   const needsInput = markers.hasPromiseInputRequired;
   const complete = markers.hasPromiseComplete;
 
+  const hasTerminalMarker = hasErr || needsInput || complete;
+  const terminal = 'terminal_marker';
+  const parseOutcome = hasTerminalMarker ? terminal : 'continue_next_iteration';
+
   ralphDebugLogger.debug('parseRalphResponse: after output', {
     ...markers,
     hasErr,
     hasInputRequired: needsInput,
     isComplete: complete,
     iteration,
-    parseOutcome:
-      hasErr || needsInput || complete
-        ? 'terminal_marker'
-        : 'continue_next_iteration',
+    parseOutcome,
     plan,
     resultLen: result.length,
   });
@@ -498,8 +517,7 @@ export const parseRalphResponse = (
     'parseRalphResponse: continue (no terminal promise marker)',
     {
       iteration,
-      stillExpected:
-        'one of <promise>ERROR</promise>, INPUT_REQUIRED, COMPLETE, or next iteration',
+      stillExpected: `one of <promise>ERROR</promise>, INPUT_REQUIRED, COMPLETE, or next iteration`,
     },
   );
   ralphDebugLogger.verbose('parseRalphResponse: tail (no exit)', {

@@ -28,6 +28,25 @@ export const FaqHero = (props: FaqHeroProps): React.ReactElement => {
   // Handlers
 
   // Markup
+  const descriptionMarkup = (
+    <p className="text-muted-foreground max-w-3xl text-sm">{description}</p>
+  );
+  const categoryChips = (
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+        Browse by category
+      </span>
+      {categories.map((category) => (
+        <a
+          className="bg-muted text-foreground hover:bg-accent rounded-full px-3 py-1 text-xs font-medium"
+          href={`#${category.id}`}
+          key={category.id}
+        >
+          {formatGroupLabel(category.label)}
+        </a>
+      ))}
+    </div>
+  );
 
   // Life Cycle
 
@@ -35,26 +54,9 @@ export const FaqHero = (props: FaqHeroProps): React.ReactElement => {
 
   return (
     <div className={cn('flex flex-col gap-4', className)} data-testid="FaqHero">
-      {description !== undefined ? (
-        <p className="text-muted-foreground max-w-3xl text-sm">{description}</p>
-      ) : null}
+      {description !== undefined ? descriptionMarkup : null}
 
-      {categories.length > 0 ? (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-            Browse by category
-          </span>
-          {categories.map((category) => (
-            <a
-              className="bg-muted text-foreground hover:bg-accent rounded-full px-3 py-1 text-xs font-medium"
-              href={`#${category.id}`}
-              key={category.id}
-            >
-              {formatGroupLabel(category.label)}
-            </a>
-          ))}
-        </div>
-      ) : null}
+      {categories.length > 0 ? categoryChips : null}
     </div>
   );
 };

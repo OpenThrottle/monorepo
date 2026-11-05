@@ -6,11 +6,11 @@ import type { UsageSkillUsageFilterOptionsFragment } from '~/__generated__/graph
 import { UsageBranchFilter } from '~/routing/usage/components/UsageBranchFilter';
 import {
   SKILL_USAGE_SCOPES,
-  skillUsageCwdLabel,
   type SkillUsageScopeFilter,
-} from '~/routing/usage/data/skill-usage-copy';
+} from '~/routing/usage/data/data.skill-usage-copy';
 import type { UsageBranchOption } from '~/routing/usage/types';
 import { skillUsageChipClass } from '~/routing/usage/utils/skill-usage-chip-class';
+import { skillUsageCwdLabel } from '~/routing/usage/utils/skill-usage-labels';
 import { buildUsageSearch } from '~/routing/usage/utils/usage-search';
 
 export interface UsageSkillUsageFiltersProps {

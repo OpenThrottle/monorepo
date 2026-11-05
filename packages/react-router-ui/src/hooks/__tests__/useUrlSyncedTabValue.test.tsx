@@ -13,8 +13,9 @@ type PlanDetailTab = 'overview' | 'tasks' | 'output';
 
 const PLAN_DETAIL_TABS = new Set<string>(['overview', 'tasks', 'output']);
 
-const isPlanDetailTab = (raw: string): raw is PlanDetailTab =>
-  PLAN_DETAIL_TABS.has(raw);
+const isPlanDetailTab = (raw: string): raw is PlanDetailTab => {
+  return PLAN_DETAIL_TABS.has(raw);
+};
 
 function parsePlanDetailTab(raw: string | null): PlanDetailTab | undefined {
   if (raw === null || raw === '') {

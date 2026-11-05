@@ -24,7 +24,7 @@ import {
   workflowRepositoryIdAtom,
   workflowWorkingDirectoryAtom,
   workspaceRepositoriesReadyAtom,
-} from '~/routing/plans/data/atom.plan';
+} from '~/routing/plans/data/data.atom-plan';
 import { PLAN_RUN_GATING_COPY } from '~/routing/plans/data/data.copy';
 import { usePlanDeferredValue } from '~/routing/plans/hooks/usePlanDeferredValue';
 import { usePlanLifecycleRevalidation } from '~/routing/plans/hooks/usePlanLifecycleRevalidation';
@@ -33,8 +33,10 @@ import { usePlanRunConfigEditor } from '~/routing/plans/hooks/usePlanRunConfigEd
 import type { PlanStatusKey } from '~/routing/plans/types';
 import { parsePlanTasksView } from '~/routing/plans/utils/parsers';
 import { resolvePlanWorkingDirectory } from '~/routing/plans/utils/resolve-plan-working-directory';
+import { getUnsupervisedUnsettledRunId } from '~/routing/plans/utils/unsupervised-unsettled-run-id';
 import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
 import { getResolvedTaskCount } from '~/routing/plans/utils/utils.plans';
+import { getWorkflowRunBlockedReason } from '~/routing/plans/utils/workflow-run-blocked-reason';
 
 export interface UsePlanDetailRouteOptions {
   readonly loaderData: Route.ComponentProps['loaderData'];
@@ -99,24 +101,18 @@ export const usePlanDetailRoute = (
 
   // The newest run is first (planRunsByPlanId is newest-first); a stale newest run means the
   // active run is dead, so the toolbar shows a 'Stale' badge instead of an unusable Kill.
-  const newestRunIsStale =
-    runHistory === undefined
-      ? undefined
-      : (runHistory.planRunAuditRows[0]?.isStale ?? false);
+  const hasRunHistory = runHistory !== undefined;
+  const newestRun = runHistory?.planRunAuditRows[0];
+  const newestRowIsStale = newestRun?.isStale ?? false;
+  const newestRunIsStale = hasRunHistory ? newestRowIsStale : undefined;
 
   // An interactive run (heartbeatExpected false) can never read as stale — there
   // is no heartbeat to expire — and Kill only stamps a marker its agent must
   // poll. Once that agent is gone the row sits IN_PROGRESS forever, so the
   // toolbar offers Settle for it. Same three states as the stale badge.
-  const newestRun = runHistory?.planRunAuditRows[0];
-  const newestUnsupervisedUnsettledRunId =
-    runHistory === undefined
-      ? undefined
-      : newestRun !== undefined &&
-          newestRun.heartbeatExpected === false &&
-          newestRun.status === 'IN_PROGRESS'
-        ? newestRun.id
-        : null;
+  const newestUnsupervisedUnsettledRunId = getUnsupervisedUnsettledRunId(
+    runHistory?.planRunAuditRows,
+  );
 
   // The loader snapshot is deferred too, and is passed through as `undefined`
   // until it resolves. The subscription still starts at mount, so output written
@@ -188,12 +184,13 @@ export const usePlanDetailRoute = (
   // is still loading. The config is not invalid then — it is merely incomplete —
   // and reporting a validation error on a page that is still loading reads as a
   // bug rather than as progress.
-  const workflowRunBlockedReason = !workspaceRepositoriesReady
-    ? PLAN_RUN_GATING_COPY.resolvingWorkspace
-    : jobRunHooksBlocked
-      ? (jobRunHooksValidation.issues[0] ??
-        'Fix job run lifecycle hooks in Configuration.')
-      : runConfigSaveBlockedReason;
+  const workflowRunBlockedReason = getWorkflowRunBlockedReason({
+    jobRunHooksBlocked,
+    jobRunHooksIssue: jobRunHooksValidation.issues[0],
+    resolvingWorkspaceReason: PLAN_RUN_GATING_COPY.resolvingWorkspace,
+    runConfigSaveBlockedReason,
+    workspaceRepositoriesReady,
+  });
 
   // Handlers
 

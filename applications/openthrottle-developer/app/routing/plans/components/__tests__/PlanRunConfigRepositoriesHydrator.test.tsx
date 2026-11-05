@@ -8,7 +8,7 @@ import {
   workflowBranchDirtyAtom,
   workflowCheckoutIdAtom,
   workspaceRepositoriesReadyAtom,
-} from '~/routing/plans/data/atom.plan';
+} from '~/routing/plans/data/data.atom-plan';
 import { FALLBACK_RUN_BRANCH } from '~/routing/plans/utils/plan-run-branch';
 
 import type { PlanRunConfigRepositoriesHydratorProps } from '../PlanRunConfigRepositoriesHydrator';

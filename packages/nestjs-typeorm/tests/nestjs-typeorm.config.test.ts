@@ -111,8 +111,9 @@ describe('schema (Joi env validation)', () => {
  * present keys are returned, absent ones throw (`NODE_ENV=test` keeps the
  * Postgres vars out of `process.env`, so a missing key has no fallback).
  */
-const buildConfigService = (values: Partial<Schema>): ConfigService =>
-  new ConfigService({ ...values });
+const buildConfigService = (values: Partial<Schema>): ConfigService => {
+  return new ConfigService({ ...values });
+};
 
 const fullConfig: Schema = {
   ...validEnv,

@@ -21,17 +21,19 @@ describe('AgentCliPreferencesService', () => {
     save: ReturnType<typeof vi.fn>;
   };
 
-  const makeRepo = (): MockRepo => ({
-    create: vi.fn((data: Record<string, unknown>) => data),
-    delete: vi.fn().mockResolvedValue({ affected: 1 }),
-    find: vi.fn().mockResolvedValue([]),
-    findOne: vi.fn().mockResolvedValue(null),
-    save: vi.fn(async (entity: Record<string, unknown>) => ({
-      ...entity,
-      createdAt: new Date(),
-      id: rowId,
-    })),
-  });
+  const makeRepo = (): MockRepo => {
+    return {
+      create: vi.fn((data: Record<string, unknown>) => data),
+      delete: vi.fn().mockResolvedValue({ affected: 1 }),
+      find: vi.fn().mockResolvedValue([]),
+      findOne: vi.fn().mockResolvedValue(null),
+      save: vi.fn(async (entity: Record<string, unknown>) => ({
+        ...entity,
+        createdAt: new Date(),
+        id: rowId,
+      })),
+    };
+  };
 
   let service: AgentCliPreferencesService;
   let disabledRepository: MockRepo;

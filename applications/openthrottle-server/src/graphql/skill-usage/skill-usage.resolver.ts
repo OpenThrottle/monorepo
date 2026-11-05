@@ -44,10 +44,13 @@ import {
 
 const isSkillUsagePrivacyLevel = (
   value: string,
-): value is SkillUsagePrivacyLevel =>
-  value === SKILL_USAGE_PRIVACY_LEVELS.FULL ||
-  value === SKILL_USAGE_PRIVACY_LEVELS.NAME_ONLY ||
-  value === SKILL_USAGE_PRIVACY_LEVELS.TRUNCATED;
+): value is SkillUsagePrivacyLevel => {
+  return (
+    value === SKILL_USAGE_PRIVACY_LEVELS.FULL ||
+    value === SKILL_USAGE_PRIVACY_LEVELS.NAME_ONLY ||
+    value === SKILL_USAGE_PRIVACY_LEVELS.TRUNCATED
+  );
+};
 
 const YYYY_MM_DD = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -102,10 +105,12 @@ export class SkillUsageResolver {
       );
     }
 
-    const occurredAt =
-      input.occurredAt instanceof Date
-        ? input.occurredAt
-        : new Date(input.occurredAt);
+    let occurredAt: Date;
+    if (input.occurredAt instanceof Date) {
+      occurredAt = input.occurredAt;
+    } else {
+      occurredAt = new Date(input.occurredAt);
+    }
     if (Number.isNaN(occurredAt.getTime())) {
       throw new BadRequestException('occurredAt must be a valid date');
     }
@@ -180,10 +185,12 @@ export class SkillUsageResolver {
       throw new BadRequestException('durationMs must be a non-negative number');
     }
 
-    const occurredAt =
-      input.occurredAt instanceof Date
-        ? input.occurredAt
-        : new Date(input.occurredAt);
+    let occurredAt: Date;
+    if (input.occurredAt instanceof Date) {
+      occurredAt = input.occurredAt;
+    } else {
+      occurredAt = new Date(input.occurredAt);
+    }
     if (Number.isNaN(occurredAt.getTime())) {
       throw new BadRequestException('occurredAt must be a valid date');
     }
@@ -227,15 +234,13 @@ export class SkillUsageResolver {
     })
     gitBranch?: string | null,
     @Args('cwd', {
-      description:
-        'Restrict to one working directory (project path proxy); omit for all.',
+      description: `Restrict to one working directory (project path proxy); omit for all.`,
       nullable: true,
       type: () => String,
     })
     cwd?: string | null,
     @Args('skillName', {
-      description:
-        'Restrict every aggregate to a single skill (detail view); omit for all skills. Trimmed; empty string is treated as omitted.',
+      description: `Restrict every aggregate to a single skill (detail view); omit for all skills. Trimmed; empty string is treated as omitted.`,
       nullable: true,
       type: () => String,
     })
@@ -280,22 +285,19 @@ export class SkillUsageResolver {
     @Args('end', { description: 'End date (inclusive), YYYY-MM-DD' })
     end: string,
     @Args('query', {
-      description:
-        'Case-insensitive substring to match against the branch name. Trimmed; empty string is treated as omitted.',
+      description: `Case-insensitive substring to match against the branch name. Trimmed; empty string is treated as omitted.`,
       nullable: true,
       type: () => String,
     })
     query?: string | null,
     @Args('limit', {
-      description:
-        'Maximum branches to return. Defaults to 20 and is capped at 50.',
+      description: `Maximum branches to return. Defaults to 20 and is capped at 50.`,
       nullable: true,
       type: () => Int,
     })
     limit?: number | null,
     @Args('skillName', {
-      description:
-        'Restrict to branches that used a single skill (detail view); omit for all skills. Trimmed; empty string is treated as omitted.',
+      description: `Restrict to branches that used a single skill (detail view); omit for all skills. Trimmed; empty string is treated as omitted.`,
       nullable: true,
       type: () => String,
     })

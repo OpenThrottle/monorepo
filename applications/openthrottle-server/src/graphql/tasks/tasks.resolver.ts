@@ -67,8 +67,7 @@ const DEFAULT_TASKS_LIMIT = 100;
 /** Hard ceiling for tasks() even when an explicit limit is supplied. */
 const MAX_TASKS_LIMIT = 500;
 
-const SORT_ORDER_UNIQUE_VIOLATION_MESSAGE =
-  'A task with this sortOrder already exists for the plan';
+const SORT_ORDER_UNIQUE_VIOLATION_MESSAGE = `A task with this sortOrder already exists for the plan`;
 
 const isSortOrderUniqueViolation = (error: unknown): boolean => {
   if (!(error instanceof QueryFailedError)) return false;
@@ -82,7 +81,9 @@ const isSortOrderUniqueViolation = (error: unknown): boolean => {
 };
 
 /** Type guard for the {@link EmitNotification} payload mappers, whose `ret` is typed `unknown`. */
-const isTask = (ret: unknown): ret is Task => ret instanceof Task;
+const isTask = (ret: unknown): ret is Task => {
+  return ret instanceof Task;
+};
 
 /**
  * Defensively parse the user-supplied requirements JSON string into an array.
@@ -303,16 +304,16 @@ export class TasksResolver {
   @Mutation(() => TaskObject, {
     description: `Create a task`,
   })
-  @EmitNotification(NOTIFICATION_EVENT_NAMES.PLAN_UPDATED, (ret) =>
-    isTask(ret) && ret.planId != null
-      ? {
-          message: `Task created: ${ret.title}`,
-          planId: ret.planId,
-          severity: 'info' as const,
-          taskId: ret.id,
-        }
-      : null,
-  )
+  @EmitNotification(NOTIFICATION_EVENT_NAMES.PLAN_UPDATED, (ret) => {
+    if (!isTask(ret) || ret.planId == null) return null;
+
+    return {
+      message: `Task created: ${ret.title}`,
+      planId: ret.planId,
+      severity: 'info' as const,
+      taskId: ret.id,
+    };
+  })
   async createTask(
     @Args('input', { type: () => CreateTaskInput }) input: CreateTaskInput,
     @CurrentUser('sub') actorSub?: string,
@@ -322,9 +323,8 @@ export class TasksResolver {
     const requirementsArr = parseRequirements(input.requirements);
 
     const sortOrder =
-      input.sortOrder != null
-        ? input.sortOrder
-        : await this.tasksService.resolveNextSortOrder(input.planId);
+      input.sortOrder ??
+      (await this.tasksService.resolveNextSortOrder(input.planId));
 
     const status = (input.status ?? 'PENDING').toUpperCase();
     const entity = repo.create({
@@ -461,27 +461,29 @@ export class TasksResolver {
       payload: (ret) => {
         if (!isTask(ret) || ret.planId == null) return null;
 
+        const isCompleted = ret.status === 'COMPLETED';
+        const completedMessage = `Task completed: ${ret.title}`;
+        const updatedMessage = `Task updated: ${ret.title}`;
+
         return {
-          message:
-            ret.status === 'COMPLETED'
-              ? `Task completed: ${ret.title}`
-              : `Task updated: ${ret.title}`,
+          message: isCompleted ? completedMessage : updatedMessage,
           planId: ret.planId,
-          severity: ret.status === 'COMPLETED' ? 'success' : 'info',
+          severity: isCompleted ? 'success' : 'info',
           taskId: ret.id,
         };
       },
     },
     {
       event: NOTIFICATION_EVENT_NAMES.TASK_STATUS_CHANGED,
-      payload: (ret) =>
-        isTask(ret) && ret.planId != null
-          ? {
-              planId: ret.planId,
-              status: ret.status,
-              taskId: ret.id,
-            }
-          : null,
+      payload: (ret) => {
+        if (!isTask(ret) || ret.planId == null) return null;
+
+        return {
+          planId: ret.planId,
+          status: ret.status,
+          taskId: ret.id,
+        };
+      },
     },
   ])
   async updateTask(
@@ -678,10 +680,11 @@ export class TasksResolver {
     const scope = parseHookScope(input.scope);
     const anchorTaskId = input.anchorTaskId ?? null;
 
-    const attach =
-      role === 'before'
-        ? this.tasksService.addBeforeHook.bind(this.tasksService)
-        : this.tasksService.addAfterHook.bind(this.tasksService);
+    const attachBefore = this.tasksService.addBeforeHook.bind(
+      this.tasksService,
+    );
+    const attachAfter = this.tasksService.addAfterHook.bind(this.tasksService);
+    const attach = role === 'before' ? attachBefore : attachAfter;
 
     try {
       return await attach(input.planId, anchorTaskId, {

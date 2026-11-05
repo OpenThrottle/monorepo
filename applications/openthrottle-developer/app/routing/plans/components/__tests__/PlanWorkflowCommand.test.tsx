@@ -4,7 +4,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { resetWorkflowRunToDefaultsAtom } from '~/routing/plans/data/atom.plan';
+import { resetWorkflowRunToDefaultsAtom } from '~/routing/plans/data/data.atom-plan';
 
 import type { PlanWorkflowCommandProps } from '../PlanWorkflowCommand';
 import { PlanWorkflowCommand } from '../PlanWorkflowCommand';
@@ -39,7 +39,9 @@ describe('PlanWorkflowCommand Component', () => {
     getDefaultStore().set(resetWorkflowRunToDefaultsAtom, { planId });
 
     const props: PlanWorkflowCommandProps = {};
-    const Component = () => <PlanWorkflowCommand {...props} />;
+    const Component = () => {
+      return <PlanWorkflowCommand {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByTestId, getByRole } = render(<RoutesStub />);
 
@@ -67,11 +69,12 @@ describe('PlanWorkflowCommand Component', () => {
 
   test('should use canonicalCommandLineOverride when provided', () => {
     const props: PlanWorkflowCommandProps = {
-      command:
-        'pnpm exec workflow-ralph --plan 11111111-1111-4111-8111-111111111111 --model fast',
+      command: `pnpm exec workflow-ralph --plan 11111111-1111-4111-8111-111111111111 --model fast`,
     };
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <PlanWorkflowCommand {...props} />;
+    const Component = () => {
+      return <PlanWorkflowCommand {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByTestId } = render(<RoutesStub />);
 
@@ -81,13 +84,14 @@ describe('PlanWorkflowCommand Component', () => {
   });
 
   test('should copy canonical CLI when copy is activated', () => {
-    const line =
-      'pnpm exec workflow-ralph --plan 0c2720a9-920f-4b16-865a-f803eb444e18';
+    const line = `pnpm exec workflow-ralph --plan 0c2720a9-920f-4b16-865a-f803eb444e18`;
     const props: PlanWorkflowCommandProps = {
       command: line,
     };
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <PlanWorkflowCommand {...props} />;
+    const Component = () => {
+      return <PlanWorkflowCommand {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByRole } = render(<RoutesStub />);
 

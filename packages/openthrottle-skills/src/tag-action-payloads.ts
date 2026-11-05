@@ -153,14 +153,18 @@ export const parseTagActionPayload = (
 ):
   | InjectTaskActionPayload
   | AvailabilityExceptionActionPayload
-  | PromoteTaskToPlanActionPayload =>
-  PAYLOAD_SCHEMAS[actionType].parse(payload);
+  | PromoteTaskToPlanActionPayload => {
+  return PAYLOAD_SCHEMAS[actionType].parse(payload);
+};
 
 /**
  * @description Type guard for {@link TagActionType}.
  * @public
  */
-export const isTagActionType = (value: string): value is TagActionType =>
-  value === TAG_ACTION_TYPES.INJECT_TASK ||
-  value === TAG_ACTION_TYPES.AVAILABILITY_EXCEPTION ||
-  value === TAG_ACTION_TYPES.PROMOTE_TASK_TO_PLAN;
+export const isTagActionType = (value: string): value is TagActionType => {
+  return (
+    value === TAG_ACTION_TYPES.INJECT_TASK ||
+    value === TAG_ACTION_TYPES.AVAILABILITY_EXCEPTION ||
+    value === TAG_ACTION_TYPES.PROMOTE_TASK_TO_PLAN
+  );
+};

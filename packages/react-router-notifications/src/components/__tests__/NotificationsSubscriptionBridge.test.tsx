@@ -50,17 +50,19 @@ function StoreProbe(): React.ReactElement {
 const renderBridge = (options: { enabled?: boolean } = {}): void => {
   const { enabled } = options;
   // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-  const Component = (): React.ReactElement => (
-    <NotificationsStoreProvider persist={false}>
-      <NotificationsSubscriptionBridge
-        client={null}
-        document={testDocument}
-        enabled={enabled}
-      >
-        <StoreProbe />
-      </NotificationsSubscriptionBridge>
-    </NotificationsStoreProvider>
-  );
+  const Component = (): React.ReactElement => {
+    return (
+      <NotificationsStoreProvider persist={false}>
+        <NotificationsSubscriptionBridge
+          client={null}
+          document={testDocument}
+          enabled={enabled}
+        >
+          <StoreProbe />
+        </NotificationsSubscriptionBridge>
+      </NotificationsStoreProvider>
+    );
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   render(<RoutesStub />);
 };

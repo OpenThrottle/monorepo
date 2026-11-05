@@ -14,7 +14,9 @@ describe('PlanConfigurationTabSkeleton Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <PlanConfigurationTabSkeleton {...props} />;
+    const Component = () => {
+      return <PlanConfigurationTabSkeleton {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

@@ -27,8 +27,9 @@ import type { WorkflowContext } from '../types.ts';
  * canonical `WORKFLOW_RUNNER_IDS` (= drivers `DRIVER_IDS`) — a local literal here previously
  * drifted to a three-runner subset, silently downgrading codex/grok runs to the default runner.
  */
-const isWorkflowRunnerId = (value: string): value is WorkflowConfigRunner =>
-  WORKFLOW_RUNNER_IDS.some((id) => id === value);
+const isWorkflowRunnerId = (value: string): value is WorkflowConfigRunner => {
+  return WORKFLOW_RUNNER_IDS.some((id) => id === value);
+};
 
 /**
  * Maps GraphQL / queue job backend strings to {@link WorkflowConfigRunner}.

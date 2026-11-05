@@ -27,6 +27,26 @@ const DEFAULT_ALLOWED_METHODS = [
   'PUT',
 ];
 
+/** Splits a comma-separated env value, normalizing and dropping empty items. */
+const splitCsv = (
+  raw: string | undefined,
+  normalize: (item: string) => string,
+): string[] => {
+  if (!raw) return [];
+  return raw.split(',').map(normalize).filter(Boolean);
+};
+
+/** Explicit `CORS_CREDENTIALS` wins; otherwise credentials follow the origin allowlist. */
+const resolveCredentials = (
+  credentialsRaw: string | undefined,
+  originIsAllowAll: boolean,
+): boolean => {
+  if (credentialsRaw === undefined || credentialsRaw === '') {
+    return !originIsAllowAll;
+  }
+  return credentialsRaw === 'true';
+};
+
 /**
  * @description Builds CORS options from environment variables for use with app.enableCors().
  * Env: CORS_ORIGINS (comma-separated origins; omit or "*" for allow-all), CORS_CREDENTIALS (true|false), CORS_ALLOWED_METHODS (comma-separated; optional).
@@ -36,12 +56,7 @@ export function getCorsOptions(): CorsOptions {
   const credentialsRaw = process.env.CORS_CREDENTIALS?.trim().toLowerCase();
   const methodsRaw = process.env.CORS_ALLOWED_METHODS?.trim();
 
-  const originList = originsRaw
-    ? originsRaw
-        .split(',')
-        .map((o) => o.trim())
-        .filter(Boolean)
-    : [];
+  const originList = splitCsv(originsRaw, (o) => o.trim());
 
   const originIsAllowAll =
     originsRaw === undefined ||
@@ -56,18 +71,9 @@ export function getCorsOptions(): CorsOptions {
   // "allow any origin with credentials," which is an unsafe default. Require an
   // explicit CORS_CREDENTIALS=true opt-in to enable credentials when the origin
   // is allow-all. With an explicit origin allowlist, credentials default to true.
-  const credentials =
-    credentialsRaw === undefined || credentialsRaw === ''
-      ? !originIsAllowAll
-      : credentialsRaw === 'true';
+  const credentials = resolveCredentials(credentialsRaw, originIsAllowAll);
 
-  const methods =
-    methodsRaw === undefined || methodsRaw === ''
-      ? DEFAULT_ALLOWED_METHODS
-      : methodsRaw
-          .split(',')
-          .map((m) => m.trim().toUpperCase())
-          .filter(Boolean);
+  const methods = splitCsv(methodsRaw, (m) => m.trim().toUpperCase());
 
   return {
     credentials,

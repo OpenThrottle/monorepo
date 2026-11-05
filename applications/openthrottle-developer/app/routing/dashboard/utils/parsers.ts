@@ -22,6 +22,13 @@ function isRepoForOrg(org: GithubOrg, repo: string): repo is GithubRepo {
   return GITHUB_REPOSITORIES[org].includes(repo);
 }
 
+function defaultRepoFor(owner: GithubOrg): GithubRepo {
+  if (owner === DEFAULT_OWNER) {
+    return DEFAULT_REPO;
+  }
+  return GITHUB_REPOSITORIES[owner][0];
+}
+
 /**
  * @description Parses and validates `owner` and `repo` from URL search params.
  */
@@ -32,11 +39,7 @@ export function parseDashboardGithubParams(
   const owner = isGithubOrg(ownerRaw) ? ownerRaw : DEFAULT_OWNER;
 
   const repoRaw = searchParams.get('repo') ?? '';
-  const repo = isRepoForOrg(owner, repoRaw)
-    ? repoRaw
-    : owner === DEFAULT_OWNER
-      ? DEFAULT_REPO
-      : GITHUB_REPOSITORIES[owner][0];
+  const repo = isRepoForOrg(owner, repoRaw) ? repoRaw : defaultRepoFor(owner);
 
   return { owner, repo };
 }

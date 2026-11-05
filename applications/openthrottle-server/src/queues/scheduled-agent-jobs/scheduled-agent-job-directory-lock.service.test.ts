@@ -75,12 +75,13 @@ const fakeRedis = (): {
   };
 };
 
-const fakeLogger = (): LoggerService =>
-  asMock<LoggerService>({
+const fakeLogger = (): LoggerService => {
+  return asMock<LoggerService>({
     error: vi.fn(),
     info: vi.fn(),
     warn: vi.fn(),
   });
+};
 
 describe('ScheduledAgentJobDirectoryLockService', () => {
   afterEach(() => {

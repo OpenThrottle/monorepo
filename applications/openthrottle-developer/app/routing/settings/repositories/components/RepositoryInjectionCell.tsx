@@ -2,7 +2,7 @@ import * as React from 'react';
 
 import { RepositorySkillInjectionToggle } from '~/routing/settings/repositories/components/RepositorySkillInjectionToggle';
 import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/data.copy';
-import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/data/types';
+import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/types';
 
 export interface RepositoryInjectionCellProps {
   /** Tree depth of the row; only depth-0 repository rows own the switch. */

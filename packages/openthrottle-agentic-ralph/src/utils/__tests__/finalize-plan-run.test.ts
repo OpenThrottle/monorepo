@@ -35,8 +35,7 @@ const TASK_DONE_WITH_COMMIT = '11111111-1111-4111-8111-111111111111';
 const TASK_DONE_NO_COMMIT = '22222222-2222-4222-8222-222222222222';
 const TASK_BLOCKED = '33333333-3333-4333-8333-333333333333';
 const TASK_ON_MAIN = '44444444-4444-4444-8444-444444444444';
-const TEMPLATE =
-  '# Summary\n\n**TODO:** Describe the changes in this PR.\n\n## Testing\n\n- [ ] Pipelines should be passing\n- [ ] **TODO:** Provide steps to test the changes fully\n';
+const TEMPLATE = `# Summary\n\n**TODO:** Describe the changes in this PR.\n\n## Testing\n\n- [ ] Pipelines should be passing\n- [ ] **TODO:** Provide steps to test the changes fully\n`;
 
 /** Twenty commits already on main sit below the branch's single commit. */
 const BASE_COMMITS = Array.from(
@@ -44,8 +43,7 @@ const BASE_COMMITS = Array.from(
   (_, index) =>
     `b${String(index).padStart(6, '0')} feat: landed on main #${600 + index}`,
 );
-const BRANCH_COMMIT =
-  'a1b2c3d fix(openthrottle-agentic-ralph): settle the repo';
+const BRANCH_COMMIT = `a1b2c3d fix(openthrottle-agentic-ralph): settle the repo`;
 
 function asExecuteGraphqlV2(
   impl: (document: unknown, variables?: unknown) => Promise<unknown>,
@@ -54,11 +52,13 @@ function asExecuteGraphqlV2(impl: unknown): unknown {
   return impl;
 }
 
-const ok = (stdout = ''): WorkflowRalphCommandResult => ({
-  exitCode: 0,
-  stderr: '',
-  stdout,
-});
+const ok = (stdout = ''): WorkflowRalphCommandResult => {
+  return {
+    exitCode: 0,
+    stderr: '',
+    stdout,
+  };
+};
 
 const createCwdWithTemplate = async (): Promise<string> => {
   const cwd = await mkdtemp(join(tmpdir(), 'ralph-finalize-'));
@@ -78,8 +78,8 @@ const createCwdWithTemplate = async (): Promise<string> => {
   return cwd;
 };
 
-const createExecuteGraphqlV2 = (appendCalls: unknown[]) =>
-  asExecuteGraphqlV2(async (document, variables) => {
+const createExecuteGraphqlV2 = (appendCalls: unknown[]) => {
+  return asExecuteGraphqlV2(async (document, variables) => {
     if (document === AppendPlanOutputDocument) {
       appendCalls.push(variables);
       return { appendPlanOutput: { id: 'chunk-1' } };
@@ -102,8 +102,7 @@ const createExecuteGraphqlV2 = (appendCalls: unknown[]) =>
             id: TASK_DONE_WITH_COMMIT,
             sortOrder: 1000,
             status: 'COMPLETED',
-            summary:
-              'Run settle against a fresh worktree and confirm the repo id.',
+            summary: `Run settle against a fresh worktree and confirm the repo id.`,
             title: 'Settle the repo',
           },
           {
@@ -135,6 +134,7 @@ const createExecuteGraphqlV2 = (appendCalls: unknown[]) =>
     }
     throw new Error('unexpected document');
   });
+};
 
 interface StubOptions {
   readonly aheadCount: string;
@@ -155,8 +155,8 @@ const createRunCommand = (
   onGh: (
     args: readonly string[],
   ) => WorkflowRalphCommandResult | undefined = () => undefined,
-) =>
-  vi.fn<WorkflowRalphCommandRunner>(async ({ args, command, cwd }) => {
+) => {
+  return vi.fn<WorkflowRalphCommandRunner>(async ({ args, command, cwd }) => {
     if (command === 'git') {
       const [sub, first] = args;
       if (sub === 'rev-parse' && first === '--abbrev-ref') {
@@ -213,6 +213,7 @@ const createRunCommand = (
     }
     throw new Error(`unexpected ${command} ${args.join(' ')}`);
   });
+};
 
 const execFileAsync = promisify(execFile);
 
@@ -580,8 +581,7 @@ describe('finalizePlanRun', () => {
     it('publishes a valid draft with the OT footer swapped in and host markers around it', async () => {
       const published = await runWithDraft({
         body: `# Summary\n\nThe settle step now records the repo id.\n\n## Testing\n\n- [ ] Run a plan and check the repo id\n\nPlan-Id: ${PLAN_ID}\nTask-Id: 99999999-9999-4999-8999-999999999999\n`,
-        title:
-          'fix(openthrottle-agentic-ralph): record the repo id on settle\n',
+        title: `fix(openthrottle-agentic-ralph): record the repo id on settle\n`,
       });
 
       expect(published.title).toBe(
@@ -675,15 +675,16 @@ describe('finalizePlanRun', () => {
         ([call]) => call.command === 'gh' && call.args[1] === 'edit',
       )?.[0].args;
       const editedBodyFile = editArgs?.[editArgs.indexOf('--body-file') + 1];
+      let editedBody: string | undefined;
+      if (editedBodyFile !== undefined) {
+        editedBody = await readFile(editedBodyFile, 'utf8');
+      }
 
       return {
         appendCalls: JSON.stringify(appendCalls),
         attributionBodies,
         editArgs,
-        editedBody:
-          editedBodyFile === undefined
-            ? undefined
-            : await readFile(editedBodyFile, 'utf8'),
+        editedBody,
         result,
         runCommand,
       };
@@ -739,8 +740,7 @@ describe('finalizePlanRun', () => {
     });
 
     it('refreshes a host body followed by a bot footer and keeps the footer', async () => {
-      const footer =
-        '\n<!-- codesmith:footer -->\n🤖 Made with a CI bot.\n<!-- /codesmith:footer -->';
+      const footer = `\n<!-- codesmith:footer -->\n🤖 Made with a CI bot.\n<!-- /codesmith:footer -->`;
       const { attributionBodies, editedBody } = await runExisting(
         `${olderHostBody}${footer}`,
       );
@@ -754,8 +754,7 @@ describe('finalizePlanRun', () => {
     });
 
     it('refreshes a host body under an unknown bot block, so no vendor list is involved', async () => {
-      const botBlock =
-        '<!-- some-future-bot:report -->\nAll checks green.\n<!-- /some-future-bot:report -->\n\n';
+      const botBlock = `<!-- some-future-bot:report -->\nAll checks green.\n<!-- /some-future-bot:report -->\n\n`;
       const { editedBody } = await runExisting(`${botBlock}${olderHostBody}`);
 
       expect(

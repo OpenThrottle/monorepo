@@ -14,8 +14,9 @@ export type ResolvedThemeMode = 'dark' | 'light';
 /**
  * @description Type guard for a persisted {@link ThemeMode} (accepts `'system'`).
  */
-export const isThemeMode = (value: unknown): value is ThemeMode =>
-  value === 'dark' || value === 'light' || value === 'system';
+export const isThemeMode = (value: unknown): value is ThemeMode => {
+  return value === 'dark' || value === 'light' || value === 'system';
+};
 
 /**
  * @description Resolve a stored {@link ThemeMode} to a concrete light/dark value.
@@ -45,13 +46,15 @@ export const DEFAULT_BRAND_HEX = '#0088ff';
 
 const HEX_COLOR_PATTERN = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
 
-const clampByte = (value: number): number =>
-  Math.min(255, Math.max(0, Math.round(value)));
+const clampByte = (value: number): number => {
+  return Math.min(255, Math.max(0, Math.round(value)));
+};
 
-const rgbToHex = (r: number, g: number, b: number): string =>
-  `#${[clampByte(r), clampByte(g), clampByte(b)]
+const rgbToHex = (r: number, g: number, b: number): string => {
+  return `#${[clampByte(r), clampByte(g), clampByte(b)]
     .map((channel) => channel.toString(16).padStart(2, '0'))
     .join('')}`;
+};
 
 const expandShortHex = (hex: string): string => {
   if (hex.length !== 4) {
@@ -227,7 +230,8 @@ export const buildAppearanceRootCssBlock = (
  *
  * @param storageKey localStorage key holding the serialized appearance config.
  */
-export const buildThemePrehydrationScript = (storageKey: string): string =>
-  `(function(){try{var d=document.documentElement;var raw=window.localStorage.getItem(${JSON.stringify(
+export const buildThemePrehydrationScript = (storageKey: string): string => {
+  return `(function(){try{var d=document.documentElement;var raw=window.localStorage.getItem(${JSON.stringify(
     storageKey,
   )});var c=raw?JSON.parse(raw):null;if(c&&typeof c.themeId==='string'){d.setAttribute('data-theme',c.themeId);}var t=(c&&c.theme)||'system';var dark=t==='dark'||(t==='system'&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(dark){d.classList.add('dark');}else{d.classList.remove('dark');}}catch(e){}})();`;
+};

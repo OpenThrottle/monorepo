@@ -14,14 +14,12 @@ import type { VideoEpisode } from '../types.ts';
 export const episode: VideoEpisode = {
   beats: [
     {
-      action:
-        '`/schedule` with seeded jobs listed, one showing a last-run time.',
+      action: `\`/schedule\` with seeded jobs listed, one showing a last-run time.`,
       t: '0:00',
     },
     { action: 'Click **New job**; pick a plan from the picker.', t: '0:08' },
     {
-      action:
-        'Set the schedule with the cron toolbar; the human-readable summary updates.',
+      action: `Set the schedule with the cron toolbar; the human-readable summary updates.`,
       t: '0:16',
     },
     { action: 'Choose the repository checkout for the job.', t: '0:26' },
@@ -41,8 +39,7 @@ export const episode: VideoEpisode = {
     },
     {
       atLeast: 3,
-      describe:
-        'scheduled jobs with run history, so a job detail page has a list',
+      describe: `scheduled jobs with run history, so a job detail page has a list`,
       sql: `SELECT count(*) AS value FROM (SELECT j.id FROM scheduled_agent_jobs j JOIN scheduled_agent_job_runs r ON r.scheduled_agent_job_id = j.id GROUP BY j.id) x`,
     },
   ],

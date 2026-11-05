@@ -11,8 +11,8 @@ import {
   parseDriverId,
 } from '../index.ts';
 
-const fakeDriver = (id: string): AgentDriver =>
-  defineDriver({
+const fakeDriver = (id: string): AgentDriver => {
+  return defineDriver({
     binary: id,
     buildShellCommand: (config) => `${id} ${config.prompt}`,
     capabilities: {
@@ -31,6 +31,7 @@ const fakeDriver = (id: string): AgentDriver =>
     label: id,
     versionArgs: ['--version'],
   });
+};
 
 describe('DRIVER_IDS / DEFAULT_DRIVER_ID', () => {
   it('contains the seven driver ids', () => {

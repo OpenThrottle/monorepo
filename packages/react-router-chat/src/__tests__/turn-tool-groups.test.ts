@@ -10,37 +10,45 @@ import type { ChatTurnEvent, ChatTurnToolEvent } from '../types';
 
 const tool = (
   overrides: Partial<ChatTurnToolEvent> = {},
-): ChatTurnToolEvent => ({
-  argsJson: null,
-  callId: null,
-  error: null,
-  kind: 'tool',
-  name: 'read',
-  resultJson: null,
-  sortOrder: 0,
-  status: 'succeeded',
-  ...overrides,
-});
+): ChatTurnToolEvent => {
+  return {
+    argsJson: null,
+    callId: null,
+    error: null,
+    kind: 'tool',
+    name: 'read',
+    resultJson: null,
+    sortOrder: 0,
+    status: 'succeeded',
+    ...overrides,
+  };
+};
 
-const text = (sortOrder: number): ChatTurnEvent => ({
-  kind: 'text',
-  sortOrder,
-  text: 'hi',
-});
+const text = (sortOrder: number): ChatTurnEvent => {
+  return {
+    kind: 'text',
+    sortOrder,
+    text: 'hi',
+  };
+};
 
-const thinking = (sortOrder: number, body = 'hmm'): ChatTurnEvent => ({
-  kind: 'thinking',
-  sortOrder,
-  text: body,
-});
+const thinking = (sortOrder: number, body = 'hmm'): ChatTurnEvent => {
+  return {
+    kind: 'thinking',
+    sortOrder,
+    text: body,
+  };
+};
 
-const usage = (sortOrder: number): ChatTurnEvent => ({
-  error: null,
-  kind: 'usage',
-  result: null,
-  sortOrder,
-  usageJson: null,
-});
+const usage = (sortOrder: number): ChatTurnEvent => {
+  return {
+    error: null,
+    kind: 'usage',
+    result: null,
+    sortOrder,
+    usageJson: null,
+  };
+};
 
 describe('buildTurnTimeline', () => {
   test('folds a run of consecutive tools into one group', () => {

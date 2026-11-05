@@ -46,8 +46,9 @@ export interface CreateWorkflowLifecycleDispatcherParams {
   readonly signal?: AbortSignal;
 }
 
-const runKindFromJobData = (jobData: RunPlanJobData): JobRunHookRunKind =>
-  isRunPlanOrchestratorJobData(jobData) ? 'orchestrator' : 'spawn';
+const runKindFromJobData = (jobData: RunPlanJobData): JobRunHookRunKind => {
+  return isRunPlanOrchestratorJobData(jobData) ? 'orchestrator' : 'spawn';
+};
 
 /**
  * @description Factory for a per-plan-run {@link WorkflowLifecycleDispatcher} backed by BullMQ child jobs.

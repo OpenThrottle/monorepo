@@ -96,14 +96,15 @@ const applyTemplate = (
   template: string,
   plan: Plan,
   action: MatchedTagAction,
-): string =>
-  template
+): string => {
+  return template
     .split('{{plan.id}}')
     .join(plan.id)
     .split('{{plan.title}}')
     .join(plan.title)
     .split('{{matchedTags}}')
     .join(action.matchedTags.join(', '));
+};
 
 @Injectable()
 export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
@@ -405,15 +406,13 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
         task.id,
       ]);
       if (extent == null) return; // only task in the plan — nothing to be after/before.
-      const inPosition =
-        placement === 'first'
-          ? currentSortOrder < extent
-          : currentSortOrder > extent;
-      if (inPosition) return;
-      const target =
-        placement === 'first'
-          ? extent - TASK_SORT_ORDER_GAP
-          : extent + TASK_SORT_ORDER_GAP;
+      if (placement === 'first') {
+        if (currentSortOrder < extent) return;
+      } else if (currentSortOrder > extent) {
+        return;
+      }
+      const gap = TASK_SORT_ORDER_GAP;
+      const target = placement === 'first' ? extent - gap : extent + gap;
       await repository.update({ id: task.id }, { sortOrder: target });
       this.logger.debug(
         `Reconciled injected task ${task.id} to sort_order ${target} (placement '${placement}', plan ${planId})`,
@@ -457,12 +456,13 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
     );
     const base = extent ?? 0;
     const count = siblings.length;
+    const slotTarget = (rank: number): number => {
+      if (placement === 'last') return base + (rank + 1) * TASK_SORT_ORDER_GAP;
+      return base - (count - rank) * TASK_SORT_ORDER_GAP;
+    };
     const planned = siblings.map((sibling, rank) => ({
       current: sibling.sortOrder,
-      target:
-        placement === 'last'
-          ? base + (rank + 1) * TASK_SORT_ORDER_GAP
-          : base - (count - rank) * TASK_SORT_ORDER_GAP,
+      target: slotTarget(rank),
       taskId: sibling.taskId,
     }));
 
@@ -610,25 +610,21 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
     side: 'after' | 'before',
   ): Promise<boolean> {
     const repository = this.tasksService.getRepository();
+    const isAfter = side === 'after';
+    const aggregateFn = isAfter ? 'MIN' : 'MAX';
+    const comparator = isAfter ? '>' : '<';
+    const selectExpression = `${aggregateFn}(task.sortOrder)`;
+    const anchorCondition = `task.sortOrder ${comparator} :anchor`;
     const neighbor = await repository
       .createQueryBuilder('task')
-      .select(
-        side === 'after' ? 'MIN(task.sortOrder)' : 'MAX(task.sortOrder)',
-        'value',
-      )
+      .select(selectExpression, 'value')
       .where('task.planId = :planId', { planId })
       .andWhere('task.id != :taskId', { taskId: task.id })
-      .andWhere(
-        side === 'after'
-          ? 'task.sortOrder > :anchor'
-          : 'task.sortOrder < :anchor',
-        { anchor: anchor.sortOrder },
-      )
+      .andWhere(anchorCondition, { anchor: anchor.sortOrder })
       .getRawOne<{ value: string | null }>();
-    const neighborValue =
-      neighbor?.value != null && neighbor.value !== ''
-        ? Number(neighbor.value)
-        : null;
+    const rawNeighbor = neighbor?.value;
+    const hasNeighbor = rawNeighbor != null && rawNeighbor !== '';
+    const neighborValue = hasNeighbor ? Number(rawNeighbor) : null;
 
     if (side === 'after') {
       if (task.sortOrder <= anchor.sortOrder) return false;
@@ -643,14 +639,21 @@ export class InjectTaskExecutor implements ActionExecutor, OnModuleInit {
     action: MatchedTagAction,
     payload: InjectTaskActionPayload,
   ): Promise<Task> {
-    const title =
-      payload.titleTemplate != null
-        ? applyTemplate(payload.titleTemplate, plan, action)
-        : `Run /${payload.skillSlug} (required by rule)`;
-    const bodyDescription =
-      payload.descriptionTemplate != null
-        ? applyTemplate(payload.descriptionTemplate, plan, action)
-        : `Run the /${payload.skillSlug} skill for this plan before continuing.`;
+    const render = (
+      template: string | null | undefined,
+      fallback: string,
+    ): string => {
+      if (template == null) return fallback;
+      return applyTemplate(template, plan, action);
+    };
+    const title = render(
+      payload.titleTemplate,
+      `Run /${payload.skillSlug} (required by rule)`,
+    );
+    const bodyDescription = render(
+      payload.descriptionTemplate,
+      `Run the /${payload.skillSlug} skill for this plan before continuing.`,
+    );
     const provenanceFooter = `---\nInjected by tag→action rule ${action.ruleId} (matched tags: [${action.matchedTags.join(', ')}]; fingerprint: ${action.ruleId}/${plan.id}).`;
     const description = `${bodyDescription}\n\n${provenanceFooter}`;
 

@@ -25,7 +25,9 @@ describe('PlanWorkflowConfigPrompt Component', () => {
   });
 
   test('should render prompt profile fieldset', () => {
-    const Component = () => <PlanWorkflowConfigPrompt {...props} />;
+    const Component = () => {
+      return <PlanWorkflowConfigPrompt {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
 
@@ -56,7 +58,9 @@ describe('PlanWorkflowConfigPrompt Component', () => {
     };
 
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <PlanWorkflowConfigPrompt {...props} />;
+    const Component = () => {
+      return <PlanWorkflowConfigPrompt {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByLabelText } = render(<RoutesStub />);
 
@@ -83,7 +87,9 @@ describe('PlanWorkflowConfigPrompt Component', () => {
     };
 
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <PlanWorkflowConfigPrompt {...props} />;
+    const Component = () => {
+      return <PlanWorkflowConfigPrompt {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByLabelText } = render(<RoutesStub />);
 
@@ -105,7 +111,9 @@ describe('PlanWorkflowConfigPrompt Component', () => {
     };
 
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <PlanWorkflowConfigPrompt {...props} />;
+    const Component = () => {
+      return <PlanWorkflowConfigPrompt {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByLabelText, queryByLabelText } = render(<RoutesStub />);
 

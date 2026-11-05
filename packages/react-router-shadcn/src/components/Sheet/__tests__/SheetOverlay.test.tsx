@@ -14,13 +14,15 @@ describe('SheetOverlay Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => (
-      <Sheet open={true}>
-        <SheetContent {...props}>
-          <span>Body</span>
-        </SheetContent>
-      </Sheet>
-    );
+    const Component = () => {
+      return (
+        <Sheet open={true}>
+          <SheetContent {...props}>
+            <span>Body</span>
+          </SheetContent>
+        </Sheet>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

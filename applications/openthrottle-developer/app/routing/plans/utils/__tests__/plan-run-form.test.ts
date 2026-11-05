@@ -73,8 +73,8 @@ describe('overlayPlanRunTuning', () => {
 });
 
 describe('mergePersistedSelectionIntoRunConfig', () => {
-  const stored = (): string =>
-    serializePlanRunConfigForGraphql(
+  const stored = (): string => {
+    return serializePlanRunConfigForGraphql(
       (() => {
         const defaults = getDefaultPlanRunConfigStorage({ planId });
         return {
@@ -84,6 +84,7 @@ describe('mergePersistedSelectionIntoRunConfig', () => {
       })(),
       { planId },
     );
+  };
 
   test('writes model, backend and effort and preserves everything else', () => {
     const merged = mergePersistedSelectionIntoRunConfig({

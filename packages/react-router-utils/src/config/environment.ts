@@ -21,8 +21,9 @@ type RawEnv = Readonly<Record<string, string | undefined>>;
  * narrowed to the raw string record without assuming any key is present.
  * `window` is referenced only when `IS_BROWSER`, so this stays SSR-safe.
  */
-const isRawEnv = (value: unknown): value is RawEnv =>
-  typeof value === 'object' && value !== null;
+const isRawEnv = (value: unknown): value is RawEnv => {
+  return typeof value === 'object' && value !== null;
+};
 
 const readBrowserEnv = (): RawEnv => {
   if (!('env' in window)) {

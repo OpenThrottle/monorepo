@@ -62,6 +62,7 @@ export const TimelineScreen = (
   // Setup
   const isEmpty = spans.length === 0 && markers.length === 0;
   const truncatedKinds = truncation.filter((entry) => entry.truncated);
+  const hasTruncation = truncatedKinds.length > 0;
 
   // Handlers
   const handleSelectSpan = (span: TimelineSpan): void => {
@@ -82,6 +83,39 @@ export const TimelineScreen = (
   };
 
   // Markup
+  const emptyState = (
+    <div
+      className="rounded-lg border border-dashed p-8 text-center"
+      data-testid="TimelineScreenEmpty"
+    >
+      <p className="font-medium">{TIMELINE_EMPTY_COPY.title}</p>
+      <p className="text-muted-foreground mt-2 text-sm">
+        {TIMELINE_EMPTY_COPY.description}
+      </p>
+    </div>
+  );
+  const chart = (
+    <TimelineChart
+      // Every timeline window is built as "the last N hours up to now", so
+      // the now line always belongs at the right edge.
+      isLiveWindow={true}
+      markers={markers}
+      onSelectMarkerCluster={handleSelectCluster}
+      onSelectSpan={handleSelectSpan}
+      spans={spans}
+      windowFromIso={windowFromIso}
+      windowToIso={windowToIso}
+    />
+  );
+  const truncationNotice = (
+    <p
+      className="text-muted-foreground mt-3 text-xs"
+      data-testid="TimelineScreenTruncation"
+    >
+      {truncatedKinds.map((entry) => entry.kind).join(', ')}{' '}
+      {TIMELINE_TRUNCATION_COPY.suffix}
+    </p>
+  );
 
   // Life Cycle
 
@@ -110,41 +144,11 @@ export const TimelineScreen = (
         windowToIso={windowToIso}
       />
 
-      {isEmpty ? (
-        <div
-          className="rounded-lg border border-dashed p-8 text-center"
-          data-testid="TimelineScreenEmpty"
-        >
-          <p className="font-medium">{TIMELINE_EMPTY_COPY.title}</p>
-          <p className="text-muted-foreground mt-2 text-sm">
-            {TIMELINE_EMPTY_COPY.description}
-          </p>
-        </div>
-      ) : (
-        <TimelineChart
-          // Every timeline window is built as "the last N hours up to now", so
-          // the now line always belongs at the right edge.
-          isLiveWindow={true}
-          markers={markers}
-          onSelectMarkerCluster={handleSelectCluster}
-          onSelectSpan={handleSelectSpan}
-          spans={spans}
-          windowFromIso={windowFromIso}
-          windowToIso={windowToIso}
-        />
-      )}
+      {isEmpty ? emptyState : chart}
 
       {/* Truncation is stated, never implied: a capped lane must not read as a
           complete one. */}
-      {truncatedKinds.length > 0 ? (
-        <p
-          className="text-muted-foreground mt-3 text-xs"
-          data-testid="TimelineScreenTruncation"
-        >
-          {truncatedKinds.map((entry) => entry.kind).join(', ')}{' '}
-          {TIMELINE_TRUNCATION_COPY.suffix}
-        </p>
-      ) : null}
+      {hasTruncation ? truncationNotice : null}
 
       <TimelineLegend
         className="mt-6"

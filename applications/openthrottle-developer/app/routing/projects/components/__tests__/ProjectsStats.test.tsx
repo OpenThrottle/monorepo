@@ -17,7 +17,9 @@ describe('ProjectsStats Component', () => {
         totalProjects: 3,
       };
 
-      const Component = () => <ProjectsStats {...props} />;
+      const Component = () => {
+        return <ProjectsStats {...props} />;
+      };
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
       component = render(<RoutesStub />);
@@ -39,9 +41,9 @@ describe('ProjectsStats Component', () => {
   describe('when plansLinkedCount is provided', () => {
     test('should show plans linked card when plansLinkedCount is provided', () => {
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const WithPlans = () => (
-        <ProjectsStats plansLinkedCount={5} totalProjects={2} />
-      );
+      const WithPlans = () => {
+        return <ProjectsStats plansLinkedCount={5} totalProjects={2} />;
+      };
       const RoutesStubWithPlans = createRoutesStub([
         { Component: WithPlans, path: '/' },
       ]);
@@ -57,13 +59,15 @@ describe('ProjectsStats Component', () => {
   describe('when tasksLinkedCount is provided', () => {
     test('should show the real tasks linked count', () => {
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const WithBoth = () => (
-        <ProjectsStats
-          plansLinkedCount={10}
-          tasksLinkedCount={13}
-          totalProjects={2}
-        />
-      );
+      const WithBoth = () => {
+        return (
+          <ProjectsStats
+            plansLinkedCount={10}
+            tasksLinkedCount={13}
+            totalProjects={2}
+          />
+        );
+      };
       const RoutesStubWithBoth = createRoutesStub([
         { Component: WithBoth, path: '/' },
       ]);

@@ -2,7 +2,7 @@
  * @description Run-config / workflow-ralph save actions for the plan detail route:
  * the two save fetchers (with pending flags + success/error toasts), reset-to-defaults,
  * and the expand/collapse handler. All form STATE lives in the route-scoped Jotai
- * atoms (`app/routing/plans/data/atom.plan.ts`); this hook reads the derived
+ * atoms (`app/routing/plans/data/data.atom-plan.ts`); this hook reads the derived
  * serialize/validation atoms to gate and build the save payloads.
  *
  * Must be called inside {@link PlanRunConfigStoreProvider} so the atom reads resolve
@@ -20,8 +20,9 @@ import {
   resetWorkflowRunToDefaultsAtom,
   runConfigJsonAtom,
   runConfigSaveBlockedAtom,
-} from '~/routing/plans/data/atom.plan';
+} from '~/routing/plans/data/data.atom-plan';
 import type { PlanRunConfigEditorPlan } from '~/routing/plans/types';
+import { readActionError } from '~/routing/plans/utils/read-action-error';
 import {
   WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE,
   WORKFLOW_RUN_OPTIONS_SEARCH_PARAM,
@@ -53,22 +54,15 @@ export function usePlanRunConfigEditor(
 
   // Setup
   const saveJobRunHooksData = fetcherSaveJobRunHooks.data;
-  const saveJobRunHooksError =
-    saveJobRunHooksData != null &&
-    typeof saveJobRunHooksData === 'object' &&
-    'saveJobRunHooksError' in saveJobRunHooksData &&
-    typeof saveJobRunHooksData.saveJobRunHooksError === 'string'
-      ? saveJobRunHooksData.saveJobRunHooksError
-      : undefined;
-
+  const saveJobRunHooksError = readActionError(
+    saveJobRunHooksData,
+    'saveJobRunHooksError',
+  );
   const saveRunConfigData = fetcherSaveRunConfig.data;
-  const saveRunConfigError =
-    saveRunConfigData != null &&
-    typeof saveRunConfigData === 'object' &&
-    'saveRunConfigError' in saveRunConfigData &&
-    typeof saveRunConfigData.saveRunConfigError === 'string'
-      ? saveRunConfigData.saveRunConfigError
-      : undefined;
+  const saveRunConfigError = readActionError(
+    saveRunConfigData,
+    'saveRunConfigError',
+  );
 
   // Handlers
   const onResetToDefaults = (): void => {

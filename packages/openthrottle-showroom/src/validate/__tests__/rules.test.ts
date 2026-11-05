@@ -44,8 +44,9 @@ const base: VideoEpisode = {
   },
 };
 
-const rulesFired = (episode: VideoEpisode): readonly string[] =>
-  validateEpisode(episode).map((finding) => finding.rule);
+const rulesFired = (episode: VideoEpisode): readonly string[] => {
+  return validateEpisode(episode).map((finding) => finding.rule);
+};
 
 describe('a well-formed episode', () => {
   test('fires no rules at all', () => {

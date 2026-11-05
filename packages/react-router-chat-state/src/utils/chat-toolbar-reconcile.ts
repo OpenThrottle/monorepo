@@ -5,7 +5,7 @@ import type {
 } from '@openthrottle/react-router-chat';
 
 import { capabilitiesForChatOption } from '../config/chat-capabilities';
-import type { ChatToolbarState } from '../data/atom.chat-toolbar';
+import type { ChatToolbarState } from '../data/data.chat-toolbar-state';
 import { decodeChatOption } from './chat-model-option';
 
 /**
@@ -150,6 +150,38 @@ function resolveRepositoryIds(
   return seed != null ? [seed] : [];
 }
 
+function resolvePersistedModelId(
+  persistedId: string | undefined,
+  models: readonly ChatModelOption[],
+): string | undefined {
+  if (persistedId == null) {
+    return models[0]?.id;
+  }
+  return resolveModelId(persistedId, models);
+}
+
+function resolvePersonaId(
+  persistedId: string | undefined,
+  personas: readonly ChatPersonaOption[],
+): string | undefined {
+  const isStillListed = personas.some((persona) => persona.id === persistedId);
+  if (persistedId != null && isStillListed) {
+    return persistedId;
+  }
+  return personas[0]?.id;
+}
+
+/** Keep a capability-gated value only when the effective backend permits it. */
+function keepIfAllowed<T>(
+  value: T | null | undefined,
+  allowed: readonly T[],
+): T | undefined {
+  if (value != null && allowed.includes(value)) {
+    return value;
+  }
+  return undefined;
+}
+
 /**
  * @description Derive the *effective* toolbar selections from the persisted
  * blob and the current loader data. PURE and derive-only: it never mutates its
@@ -181,16 +213,8 @@ export function reconcileChatToolbarState(
 ): ChatToolbarState {
   const { models, personas, repositories } = options;
 
-  const modelId =
-    persisted.modelId != null
-      ? resolveModelId(persisted.modelId, models)
-      : models[0]?.id;
-
-  const personaId =
-    persisted.personaId != null &&
-    personas.some((persona) => persona.id === persisted.personaId)
-      ? persisted.personaId
-      : personas[0]?.id;
+  const modelId = resolvePersistedModelId(persisted.modelId, models);
+  const personaId = resolvePersonaId(persisted.personaId, personas);
 
   const decoded = modelId != null ? decodeChatOption(modelId) : null;
   const capabilities = capabilitiesForChatOption(decoded);
@@ -208,26 +232,23 @@ export function reconcileChatToolbarState(
 
   const effectivePermissionMode =
     backendPrefs?.permissionMode ?? persisted.permissionMode;
-  const permissionMode =
-    effectivePermissionMode != null &&
-    capabilities.permissionModes.includes(effectivePermissionMode)
-      ? effectivePermissionMode
-      : undefined;
+  const permissionMode = keepIfAllowed(
+    effectivePermissionMode,
+    capabilities.permissionModes,
+  );
 
   const effectiveReasoning = backendPrefs?.reasoning ?? persisted.reasoning;
-  const reasoning =
-    effectiveReasoning != null &&
-    capabilities.reasoningLevels.includes(effectiveReasoning)
-      ? effectiveReasoning
-      : undefined;
+  const reasoning = keepIfAllowed(
+    effectiveReasoning,
+    capabilities.reasoningLevels,
+  );
 
   const effectiveServiceTier =
     backendPrefs?.serviceTier ?? persisted.serviceTier;
-  const serviceTier =
-    effectiveServiceTier != null &&
-    capabilities.serviceTiers.includes(effectiveServiceTier)
-      ? effectiveServiceTier
-      : undefined;
+  const serviceTier = keepIfAllowed(
+    effectiveServiceTier,
+    capabilities.serviceTiers,
+  );
 
   return {
     mode: persisted.mode,

@@ -13,9 +13,3 @@ export const ROLLOUT_FLAG_KINDS = [
 ] as const;
 
 export type RolloutFlagKindOption = (typeof ROLLOUT_FLAG_KINDS)[number];
-
-export const isRolloutFlagKind = (
-  value: string,
-): value is RolloutFlagKindOption => {
-  return ROLLOUT_FLAG_KINDS.some((kind) => kind === value);
-};

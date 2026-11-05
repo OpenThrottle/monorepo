@@ -4,8 +4,8 @@ import {
   WorktreeDiscoveryProblemKind,
   WorktreeRootSource,
 } from '~/__generated__/graphql';
-import { mockDiscoveredWorktrees } from '~/routing/settings/repositories/data/mock.repositories';
-import type { DiscoveredWorktreesResult } from '~/routing/settings/repositories/data/types';
+import { mockDiscoveredWorktrees } from '~/routing/settings/repositories/testing/mock-repositories';
+import type { DiscoveredWorktreesResult } from '~/routing/settings/repositories/types';
 
 import {
   summarizeDiscovery,
@@ -15,24 +15,28 @@ import {
 const problem = (
   kind: WorktreeDiscoveryProblemKind,
   overrides: Partial<DiscoveredWorktreesResult['problems'][number]> = {},
-): DiscoveredWorktreesResult['problems'][number] => ({
-  detail: 'something happened',
-  kind,
-  path: '/srv/worktrees/wt-a',
-  repositoryId: null,
-  ...overrides,
-});
+): DiscoveredWorktreesResult['problems'][number] => {
+  return {
+    detail: 'something happened',
+    kind,
+    path: '/srv/worktrees/wt-a',
+    repositoryId: null,
+    ...overrides,
+  };
+};
 
 const root = (
   overrides: Partial<DiscoveredWorktreesResult['scannedRoots'][number]> = {},
-): DiscoveredWorktreesResult['scannedRoots'][number] => ({
-  baseRoot: '/srv/worktrees',
-  exists: true,
-  path: '/srv/worktrees/org/repo',
-  source: WorktreeRootSource.Default,
-  worktreeCount: 1,
-  ...overrides,
-});
+): DiscoveredWorktreesResult['scannedRoots'][number] => {
+  return {
+    baseRoot: '/srv/worktrees',
+    exists: true,
+    path: '/srv/worktrees/org/repo',
+    source: WorktreeRootSource.Default,
+    worktreeCount: 1,
+    ...overrides,
+  };
+};
 
 describe('summarizeDiscovery', () => {
   test('produces no groups for a healthy scan', () => {

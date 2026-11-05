@@ -4,8 +4,11 @@ import {
   type ThemeTokens,
 } from './theme-contract';
 
-const renderTokenBlock = (tokens: ThemeTokens): string =>
-  THEME_TOKEN_NAMES.map((name) => `  --${name}: ${tokens[name]};`).join('\n');
+const renderTokenBlock = (tokens: ThemeTokens): string => {
+  return THEME_TOKEN_NAMES.map((name) => `  --${name}: ${tokens[name]};`).join(
+    '\n',
+  );
+};
 
 /**
  * @public
@@ -17,11 +20,12 @@ const renderTokenBlock = (tokens: ThemeTokens): string =>
  * present on first paint (no flash), then set `data-theme` / `.dark` on
  * `<html>` to activate a theme.
  */
-export const buildThemeStylesheet = (themes: readonly Theme[]): string =>
-  themes
+export const buildThemeStylesheet = (themes: readonly Theme[]): string => {
+  return themes
     .map(
       (theme) =>
         `html[data-theme="${theme.id}"] {\n${renderTokenBlock(theme.light)}\n}\n` +
         `html[data-theme="${theme.id}"].dark {\n${renderTokenBlock(theme.dark)}\n}`,
     )
     .join('\n\n');
+};

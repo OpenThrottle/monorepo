@@ -1,11 +1,13 @@
 export function formatIso(iso: string): string {
   const d = new Date(iso);
-  return Number.isNaN(d.getTime())
-    ? iso
-    : d.toLocaleString(undefined, {
-        dateStyle: 'medium',
-        timeStyle: 'short',
-      });
+  if (Number.isNaN(d.getTime())) {
+    return iso;
+  }
+
+  return d.toLocaleString(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
 }
 
 /**

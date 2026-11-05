@@ -36,10 +36,10 @@ export const SkillCreateDestinationField = (
   // Hooks
 
   // Setup
-  const consequence =
-    value === SKILL_CREATE_DESTINATIONS.repo
-      ? SKILL_CREATE_COPY.destinationRepoDescription
-      : SKILL_CREATE_COPY.destinationPersonalDescription;
+  const repoNote = SKILL_CREATE_COPY.destinationRepoDescription;
+  const personalNote = SKILL_CREATE_COPY.destinationPersonalDescription;
+  const isRepo = value === SKILL_CREATE_DESTINATIONS.repo;
+  const consequence = isRepo ? repoNote : personalNote;
 
   // Handlers
   const handleValueChange = (next: string): void => {

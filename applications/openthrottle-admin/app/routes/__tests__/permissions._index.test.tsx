@@ -28,11 +28,12 @@ import type { Route } from '@/app/routes/+types/permissions._index';
 
 import * as RouteModule from '../permissions._index';
 
-const createArgs = () =>
-  createLoaderArgs<Route.LoaderArgs>({
+const createArgs = () => {
+  return createLoaderArgs<Route.LoaderArgs>({
     headers: { cookie: 'ot_auth=token' },
     url: 'http://localhost/permissions',
   });
+};
 
 describe('routes/permissions._index.tsx', () => {
   beforeEach(() => {

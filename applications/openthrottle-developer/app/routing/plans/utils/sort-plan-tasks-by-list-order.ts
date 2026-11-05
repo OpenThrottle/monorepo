@@ -24,4 +24,6 @@ export const comparePlanTasksByListOrder = (
  */
 export const sortPlanTasksByListOrder = (
   tasks: readonly PlanTaskRowFragment[],
-): PlanTaskRowFragment[] => [...tasks].sort(comparePlanTasksByListOrder);
+): PlanTaskRowFragment[] => {
+  return [...tasks].sort(comparePlanTasksByListOrder);
+};

@@ -47,7 +47,9 @@ import { outputRoot } from './format.ts';
 const MARKER = '.demo-seeded-at';
 
 /** Where the seed records that it ran. */
-export const seedMarkerPath = (): string => join(outputRoot(), MARKER);
+export const seedMarkerPath = (): string => {
+  return join(outputRoot(), MARKER);
+};
 
 /**
  * @public Stamp the demo workspace as freshly seeded.
@@ -61,8 +63,9 @@ export const writeSeedMarker = (now: Date): void => {
   writeFileSync(seedMarkerPath(), `${now.toISOString()}\n`, 'utf8');
 };
 
-const modifiedAt = (path: string): number | null =>
-  existsSync(path) ? statSync(path).mtimeMs : null;
+const modifiedAt = (path: string): number | null => {
+  return existsSync(path) ? statSync(path).mtimeMs : null;
+};
 
 export interface DirtyVerdict {
   /** True when a take of this flow has landed since the last seed. */
@@ -86,8 +89,7 @@ export const isDemoDataDirty = (flowId: string): DirtyVerdict => {
   if (seededAt === null) {
     return {
       dirty: false,
-      reason:
-        'no seed marker — the demo workspace predates this check, so its state cannot be judged',
+      reason: `no seed marker — the demo workspace predates this check, so its state cannot be judged`,
     };
   }
 

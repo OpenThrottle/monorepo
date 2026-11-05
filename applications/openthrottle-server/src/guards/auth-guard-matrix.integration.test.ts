@@ -34,8 +34,8 @@ const credentialId = '22222222-2222-4222-8222-222222222222';
 const createHttpExecutionContext = (req: {
   headers?: { authorization?: string };
   user?: unknown;
-}): ExecutionContext =>
-  createMock<ExecutionContext>({
+}): ExecutionContext => {
+  return createMock<ExecutionContext>({
     getClass: vi.fn().mockImplementation(() => class {}),
     getHandler: vi.fn().mockReturnValue(() => undefined),
     getType: vi.fn().mockReturnValue('http'),
@@ -43,6 +43,7 @@ const createHttpExecutionContext = (req: {
       getRequest: () => req,
     }),
   });
+};
 
 describe('auth guard matrix (GlobalAuthGuard + GqlPermissionsGuard)', () => {
   let globalAuthGuard: GlobalAuthGuard;

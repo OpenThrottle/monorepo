@@ -14,16 +14,14 @@ import type { VideoEpisode } from '../types.ts';
 export const episode: VideoEpisode = {
   beats: [
     {
-      action:
-        'Home composer, model picker open showing several CLIs grouped by provider.',
+      action: `Home composer, model picker open showing several CLIs grouped by provider.`,
       t: '0:00',
     },
     { action: 'Pick one; the toolbar updates.', t: '0:09' },
     { action: 'Type a question in the composer.', t: '0:17' },
     { action: 'Send; the response streams in.', t: '0:25' },
     {
-      action:
-        'Switch the model picker to a different CLI; ask the same question.',
+      action: `Switch the model picker to a different CLI; ask the same question.`,
       t: '0:34',
     },
     {

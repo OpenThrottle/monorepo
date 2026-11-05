@@ -87,7 +87,7 @@ export const GlobalMetricsInfoModal = (
               legend under the chart.
             </li>
           </ul>
-          {definitionsHref ? (
+          {definitionsHref && (
             <p className="border-border mt-3 border-t pt-3 text-xs leading-snug font-normal">
               <a
                 className="text-primary font-medium underline underline-offset-2"
@@ -98,7 +98,7 @@ export const GlobalMetricsInfoModal = (
               </a>{' '}
               (stable reference for support tickets).
             </p>
-          ) : null}
+          )}
         </div>
       </div>
     </GlobalModal>

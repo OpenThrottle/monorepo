@@ -6,8 +6,9 @@ import { describe, expect, test } from 'vitest';
 import { GlobalAnimationWaves } from '../GlobalAnimationWaves';
 
 describe('GlobalAnimationWaves Component', () => {
-  const renderArcs = (element: React.ReactElement): RenderResult =>
-    render(element);
+  const renderArcs = (element: React.ReactElement): RenderResult => {
+    return render(element);
+  };
 
   test('renders a decorative, non-interactive canvas', () => {
     const component = renderArcs(<GlobalAnimationWaves />);

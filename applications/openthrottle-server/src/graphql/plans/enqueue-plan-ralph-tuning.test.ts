@@ -20,21 +20,23 @@ const makeNxWorkspaceDir = (): string => {
   return dir;
 };
 
-const emptyTuningInput = (): RalphPlanRunTuningInput => ({
-  backend: null,
-  disableWorktree: null,
-  effort: null,
-  iterationTimeoutSeconds: null,
-  iterations: null,
-  model: null,
-  project: null,
-  prompt: null,
-  promptFile: null,
-  ralphDebugCli: null,
-  skipWorktreeSetup: null,
-  worktree: null,
-  worktreeBase: null,
-});
+const emptyTuningInput = (): RalphPlanRunTuningInput => {
+  return {
+    backend: null,
+    disableWorktree: null,
+    effort: null,
+    iterationTimeoutSeconds: null,
+    iterations: null,
+    model: null,
+    project: null,
+    prompt: null,
+    promptFile: null,
+    ralphDebugCli: null,
+    skipWorktreeSetup: null,
+    worktree: null,
+    worktreeBase: null,
+  };
+};
 
 describe('parseEnqueueRalphTuning', () => {
   test('returns undefined for null or undefined input', () => {

@@ -7,10 +7,8 @@ import {
 } from '../errors.ts';
 
 // Captured verbatim off cursor-agent 2026.08.11 during the task 1 evidence gate.
-const REAL_AUTH_REQUIRED =
-  "Error: Authentication required. Please run 'agent login' first, or set CURSOR_API_KEY environment variable.";
-const REAL_INVALID_KEY =
-  '[33m! Warning: The provided API key is invalid.[0m\nThe API key was loaded from the CURSOR_API_KEY environment variable.\nPlease check you have the right key, create a new one, or authenticate without it.';
+const REAL_AUTH_REQUIRED = `Error: Authentication required. Please run 'agent login' first, or set CURSOR_API_KEY environment variable.`;
+const REAL_INVALID_KEY = `[33m! Warning: The provided API key is invalid.[0m\nThe API key was loaded from the CURSOR_API_KEY environment variable.\nPlease check you have the right key, create a new one, or authenticate without it.`;
 
 describe('classifyCursorFailure', () => {
   it('classifies the real "authentication required" stderr', () => {

@@ -12,23 +12,36 @@ export interface OpenAiIconProps extends ProviderIconProps {}
  */
 export const OpenAiIcon = ({
   className,
-}: OpenAiIconProps): React.ReactElement => (
-  <svg
-    {...BASE_SVG_PROPS}
-    className={className}
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.6"
-  >
-    {Array.from({ length: 6 }, (_, index) => (
-      <ellipse
-        cx="12"
-        cy="12"
-        key={index}
-        rx="4"
-        ry="8.5"
-        transform={`rotate(${index * 30} 12 12)`}
-      />
-    ))}
-  </svg>
-);
+}: OpenAiIconProps): React.ReactElement => {
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+  return (
+    <svg
+      {...BASE_SVG_PROPS}
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+    >
+      {Array.from({ length: 6 }, (_, index) => (
+        <ellipse
+          cx="12"
+          cy="12"
+          key={index}
+          rx="4"
+          ry="8.5"
+          transform={`rotate(${index * 30} 12 12)`}
+        />
+      ))}
+    </svg>
+  );
+};

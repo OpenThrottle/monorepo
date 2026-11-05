@@ -14,7 +14,9 @@ const SECRET = 'test-secret';
 const sign = (
   payload: Record<string, unknown>,
   opts?: jwt.SignOptions,
-): string => jwt.sign(payload, SECRET, { algorithm: 'HS256', ...opts });
+): string => {
+  return jwt.sign(payload, SECRET, { algorithm: 'HS256', ...opts });
+};
 
 describe('extractConnectionToken', () => {
   it('returns null when params are absent or empty', () => {
@@ -81,7 +83,9 @@ describe('verifyConnectionToken', () => {
 describe('createGraphqlWsOnConnect', () => {
   const ctxWith = (
     params?: Record<string, unknown>,
-  ): GraphqlWsConnectionContext => ({ connectionParams: params, extra: {} });
+  ): GraphqlWsConnectionContext => {
+    return { connectionParams: params, extra: {} };
+  };
 
   it('accepts a valid token and stashes userId on extra', () => {
     const onConnect = createGraphqlWsOnConnect({ jwtSecret: SECRET });

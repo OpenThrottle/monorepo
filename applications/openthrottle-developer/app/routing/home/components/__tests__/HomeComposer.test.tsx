@@ -10,41 +10,45 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { RepositoryOption } from '~/routing/home/data/models.server';
 import type { UseAgenticChatTurnResult } from '~/routing/home/hooks/useAgenticChatTurn';
 import type { UseConversationListResult } from '~/routing/home/hooks/useConversationList';
+import type { RepositoryOption } from '~/routing/home/utils/models.server';
 
 import type { HomeComposerProps } from '../HomeComposer';
 import { HomeComposer } from '../HomeComposer';
 
-const buildConversationList = (): UseConversationListResult => ({
-  conversations: [],
-  isLoading: false,
-  isLoadingMore: false,
-  loadMore: vi.fn(),
-  refresh: vi.fn(),
-  remove: vi.fn(),
-  rename: vi.fn(),
-  totalCount: 0,
-});
+const buildConversationList = (): UseConversationListResult => {
+  return {
+    conversations: [],
+    isLoading: false,
+    isLoadingMore: false,
+    loadMore: vi.fn(),
+    refresh: vi.fn(),
+    remove: vi.fn(),
+    rename: vi.fn(),
+    totalCount: 0,
+  };
+};
 
 const buildTurn = (
   overrides: Partial<UseAgenticChatTurnResult> = {},
-): UseAgenticChatTurnResult => ({
-  canRetry: false,
-  conversationId: null,
-  error: null,
-  isStreaming: false,
-  messages: [],
-  onRetry: vi.fn(),
-  onStop: vi.fn(),
-  reset: vi.fn(),
-  restore: vi.fn(),
-  sessionUsage: {},
-  setError: vi.fn(),
-  submitTurn: vi.fn(),
-  ...overrides,
-});
+): UseAgenticChatTurnResult => {
+  return {
+    canRetry: false,
+    conversationId: null,
+    error: null,
+    isStreaming: false,
+    messages: [],
+    onRetry: vi.fn(),
+    onStop: vi.fn(),
+    reset: vi.fn(),
+    restore: vi.fn(),
+    sessionUsage: {},
+    setError: vi.fn(),
+    submitTurn: vi.fn(),
+    ...overrides,
+  };
+};
 
 const models: ChatModelOption[] = [
   { id: 'openai::http://localhost:11434/v1::llama3', label: 'llama3' },
@@ -57,11 +61,13 @@ const repositories: RepositoryOption[] = [
 ];
 
 const renderComposer = (composerProps: HomeComposerProps): RenderResult => {
-  const Wrapped = (): React.ReactElement => (
-    <TooltipProvider>
-      <HomeComposer {...composerProps} />
-    </TooltipProvider>
-  );
+  const Wrapped = (): React.ReactElement => {
+    return (
+      <TooltipProvider>
+        <HomeComposer {...composerProps} />
+      </TooltipProvider>
+    );
+  };
   const RoutesStub = createRoutesStub([{ Component: Wrapped, path: '/' }]);
 
   return render(<RoutesStub />);

@@ -36,6 +36,10 @@ export const ChatModelPickerRow = (
   // Hooks
 
   // Setup
+  const isFavorite = model.favorite === true;
+  const favoriteVerb = isFavorite ? 'Unfavorite' : 'Favorite';
+  const hasSubLabel = model.subLabel != null && model.subLabel !== '';
+  const hasShortcut = model.shortcut != null && model.shortcut !== '';
 
   // Handlers
   const onFavoriteClick = (
@@ -69,11 +73,11 @@ export const ChatModelPickerRow = (
     >
       <div className="flex min-w-0 flex-col">
         <span className="truncate">{model.label}</span>
-        {model.subLabel != null && model.subLabel !== '' ? (
+        {hasSubLabel && (
           <span className="text-muted-foreground truncate text-xs">
             {model.subLabel}
           </span>
-        ) : null}
+        )}
       </div>
       <Check
         className={cn(
@@ -82,33 +86,24 @@ export const ChatModelPickerRow = (
         )}
       />
 
-      {onToggleFavorite != null ? (
+      {onToggleFavorite != null && (
         <button
-          aria-label={
-            model.favorite === true
-              ? `Unfavorite ${model.label}`
-              : `Favorite ${model.label}`
-          }
-          aria-pressed={model.favorite === true}
+          aria-label={`${favoriteVerb} ${model.label}`}
+          aria-pressed={isFavorite}
           className="ml-auto shrink-0 rounded p-0.5 opacity-60 hover:opacity-100"
           data-testid={`ChatModelPicker-favorite-${groupId}-${model.id}`}
           onClick={onFavoriteClick}
           onPointerDown={(event) => event.stopPropagation()}
           type="button"
         >
-          <Star
-            className={cn(
-              'size-3.5',
-              model.favorite === true && 'fill-current',
-            )}
-          />
+          <Star className={cn('size-3.5', isFavorite && 'fill-current')} />
         </button>
-      ) : null}
-      {model.shortcut != null && model.shortcut !== '' ? (
+      )}
+      {hasShortcut && (
         <CommandShortcut className={onToggleFavorite != null ? '' : 'ml-auto'}>
           {model.shortcut}
         </CommandShortcut>
-      ) : null}
+      )}
     </CommandItem>
   );
 };

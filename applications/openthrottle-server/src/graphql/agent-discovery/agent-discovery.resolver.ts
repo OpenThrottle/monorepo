@@ -36,14 +36,8 @@ export class AgentDiscoveryResolver {
     // are resolved per request from the caller's disabled-agent set, disabled-model
     // map and favorite-model map (all empty → all enabled, none favorited). An
     // agent-level OFF hard-overrides every model (all modelOptions enabled:false).
-    const [disabled, disabledModels, favoriteModels] =
-      principal != null
-        ? await Promise.all([
-            this.preferences.getDisabledBackends(principal.sub),
-            this.preferences.getDisabledModels(principal.sub),
-            this.preferences.getFavoriteModels(principal.sub),
-          ])
-        : [new Set<string>(), null, null];
+    const { disabled, disabledModels, favoriteModels } =
+      await this.loadPreferenceOverlay(principal);
 
     const agents = result.agents
       .filter((agent) => agent.available)
@@ -74,5 +68,21 @@ export class AgentDiscoveryResolver {
       scannedAt: result.scannedAt,
       totalCount: agents.length,
     };
+  }
+
+  private async loadPreferenceOverlay(principal: AuthPrincipal | undefined) {
+    if (principal == null) {
+      return {
+        disabled: new Set<string>(),
+        disabledModels: null,
+        favoriteModels: null,
+      };
+    }
+    const [disabled, disabledModels, favoriteModels] = await Promise.all([
+      this.preferences.getDisabledBackends(principal.sub),
+      this.preferences.getDisabledModels(principal.sub),
+      this.preferences.getFavoriteModels(principal.sub),
+    ]);
+    return { disabled, disabledModels, favoriteModels };
   }
 }

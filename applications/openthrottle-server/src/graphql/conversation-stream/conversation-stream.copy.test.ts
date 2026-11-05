@@ -3,10 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { composeCursorStartupErrorText } from './conversation-stream.copy.ts';
 
 // Captured verbatim off cursor-agent 2026.08.11 during the task 1 evidence gate.
-const REAL_AUTH_REQUIRED =
-  "Error: Authentication required. Please run 'agent login' first, or set CURSOR_API_KEY environment variable.";
-const REAL_INVALID_KEY =
-  '\u001b[33m! Warning: The provided API key is invalid.\u001b[0m\nThe API key was loaded from the CURSOR_API_KEY environment variable.';
+const REAL_AUTH_REQUIRED = `Error: Authentication required. Please run 'agent login' first, or set CURSOR_API_KEY environment variable.`;
+const REAL_INVALID_KEY = `\u001b[33m! Warning: The provided API key is invalid.\u001b[0m\nThe API key was loaded from the CURSOR_API_KEY environment variable.`;
 
 describe('composeCursorStartupErrorText', () => {
   it('tells an unauthenticated user to log in, naming the command', () => {

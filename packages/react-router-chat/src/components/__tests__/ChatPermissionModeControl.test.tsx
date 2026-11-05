@@ -24,14 +24,15 @@ const ALL_MODES: ChatBackendCapabilities = {
 
 const renderControl = (
   overrides: Partial<ChatPermissionModeControlProps> = {},
-): RenderResult =>
-  render(
+): RenderResult => {
+  return render(
     <ChatPermissionModeControl
       capabilities={ALL_MODES}
       permissionMode={ChatPermissionMode.supervised}
       {...overrides}
     />,
   );
+};
 
 describe('ChatPermissionModeControl Component', () => {
   test('reflects the active mode on the trigger', () => {

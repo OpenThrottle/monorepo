@@ -16,7 +16,7 @@ import {
   workflowCheckoutIdAtom,
   workflowRepositoryIdAtom,
   workflowWorkingDirectoryAtom,
-} from '~/routing/plans/data/atom.plan';
+} from '~/routing/plans/data/data.atom-plan';
 import { usePlanDeferredValue } from '~/routing/plans/hooks/usePlanDeferredValue';
 import { resolveDefaultRunBranch } from '~/routing/plans/utils/plan-run-branch';
 

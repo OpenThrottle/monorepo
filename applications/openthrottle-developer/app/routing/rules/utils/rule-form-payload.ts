@@ -20,8 +20,9 @@ export const parsePayloadField = (json: string, field: string): string => {
 };
 
 /** Splits a comma-separated list into trimmed, non-empty entries. */
-export const splitList = (value: string): string[] =>
-  value
+export const splitList = (value: string): string[] => {
+  return value
     .split(',')
     .map((entry) => entry.trim())
     .filter((entry) => entry.length > 0);
+};

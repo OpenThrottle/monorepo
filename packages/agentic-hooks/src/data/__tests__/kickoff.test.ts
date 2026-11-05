@@ -9,11 +9,13 @@ import {
 
 const PLAN_ID = '586bcff7-dbef-4e2c-ae22-d3f9210b2a39';
 
-const lookupReturning = (result: OtIdLookup) =>
-  vi.fn(async (_id: string): Promise<OtIdLookup> => result);
+const lookupReturning = (result: OtIdLookup) => {
+  return vi.fn(async (_id: string): Promise<OtIdLookup> => result);
+};
 
-const jsonResponse = (body: unknown, ok = true): Response =>
-  new Response(JSON.stringify(body), { status: ok ? 200 : 500 });
+const jsonResponse = (body: unknown, ok = true): Response => {
+  return new Response(JSON.stringify(body), { status: ok ? 200 : 500 });
+};
 
 describe('parseKickoffPlanId', () => {
   it('reads the uuid from a leading /ot-loop line', () => {
@@ -104,14 +106,15 @@ describe('decideKickoffBrief', () => {
 });
 
 describe('lookupOtId', () => {
-  const lookup = (fetchImpl: typeof globalThis.fetch, graphqlUrl = 'u') =>
-    lookupOtId({
+  const lookup = (fetchImpl: typeof globalThis.fetch, graphqlUrl = 'u') => {
+    return lookupOtId({
       authToken: 't',
       fetchImpl,
       graphqlUrl,
       id: PLAN_ID,
       timeoutMs: 50,
     });
+  };
 
   it('finds a plan', async () => {
     const fetchImpl = vi.fn(async () =>

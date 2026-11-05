@@ -256,7 +256,9 @@ export type ResolvedNestjsLoggingModuleOptions = ReturnType<
   typeof applyNestjsLoggingModuleDefaults
 >;
 
-const isPositiveInt = (n: number): boolean => Number.isInteger(n) && n > 0;
+const isPositiveInt = (n: number): boolean => {
+  return Number.isInteger(n) && n > 0;
+};
 
 /**
  * @description Validates module options at bootstrap.

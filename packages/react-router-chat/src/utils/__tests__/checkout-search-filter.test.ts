@@ -38,13 +38,14 @@ const CHECKOUTS: readonly [
 ];
 
 /** Ids of the checkouts a query keeps visible, in list order. */
-const matching = (search: string): readonly string[] =>
-  CHECKOUTS.filter(
+const matching = (search: string): readonly string[] => {
+  return CHECKOUTS.filter(
     (checkout) =>
       checkoutSearchFilter(checkout.id, search, [
         ...checkoutSearchTerms(checkout),
       ]) > 0,
   ).map((checkout) => checkout.label);
+};
 
 describe('checkoutSearchFilter', () => {
   it('matches only the owner that actually contains the query', () => {

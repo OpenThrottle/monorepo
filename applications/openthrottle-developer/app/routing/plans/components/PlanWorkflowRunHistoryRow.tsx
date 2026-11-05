@@ -53,7 +53,9 @@ export const PlanWorkflowRunHistoryRow = (
   const copy = PLAN_RUN_TRANSPARENCY_COPY.history;
 
   // Handlers
-  const handleToggleExpanded = (): void => setExpanded((prev) => !prev);
+  const handleToggleExpanded = (): void => {
+    return setExpanded((prev) => !prev);
+  };
 
   // Markup
 
@@ -98,7 +100,7 @@ export const PlanWorkflowRunHistoryRow = (
               status={row.status}
               usageLimitResetsAt={row.usageLimitResetsAt ?? null}
             />
-            {row.isStale ? (
+            {row.isStale && (
               <Badge
                 color="red"
                 data-testid="PlanWorkflowRunHistoryRow-stale"
@@ -106,7 +108,7 @@ export const PlanWorkflowRunHistoryRow = (
               >
                 {copy.staleBadge}
               </Badge>
-            ) : null}
+            )}
           </div>
         </TableCell>
         <TableCell className="hidden align-top sm:table-cell">
@@ -131,7 +133,7 @@ export const PlanWorkflowRunHistoryRow = (
         </TableCell>
       </TableRow>
 
-      {expanded ? (
+      {expanded && (
         <TableRow
           className="hover:bg-transparent"
           data-testid={`PlanWorkflowRunHistoryRow-${row.id}-detail`}
@@ -146,7 +148,7 @@ export const PlanWorkflowRunHistoryRow = (
             />
           </TableCell>
         </TableRow>
-      ) : null}
+      )}
     </>
   );
 };

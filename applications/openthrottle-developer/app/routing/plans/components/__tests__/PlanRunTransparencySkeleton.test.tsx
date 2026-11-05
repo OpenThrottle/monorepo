@@ -16,7 +16,9 @@ describe('PlanRunTransparencySkeleton Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <PlanRunTransparencySkeleton {...props} />;
+    const Component = () => {
+      return <PlanRunTransparencySkeleton {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

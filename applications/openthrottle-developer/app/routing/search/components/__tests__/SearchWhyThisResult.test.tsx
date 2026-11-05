@@ -31,7 +31,9 @@ describe('SearchWhyThisResult', () => {
   test('should expand details with chunk id and similarity explanation', async () => {
     const user = userEvent.setup();
     const chunk = mockChunk();
-    const Component = () => <SearchWhyThisResult result={chunk} />;
+    const Component = () => {
+      return <SearchWhyThisResult result={chunk} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 
@@ -47,9 +49,9 @@ describe('SearchWhyThisResult', () => {
   test('should start open when defaultOpen is true', () => {
     const chunk = mockChunk();
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <SearchWhyThisResult defaultOpen={true} result={chunk} />
-    );
+    const Component = () => {
+      return <SearchWhyThisResult defaultOpen={true} result={chunk} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 
@@ -66,13 +68,15 @@ describe('SearchWhyThisResult', () => {
       total: 3,
     };
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <SearchWhyThisResult
-        defaultOpen={true}
-        rankMeta={rankMeta}
-        result={chunk}
-      />
-    );
+    const Component = () => {
+      return (
+        <SearchWhyThisResult
+          defaultOpen={true}
+          rankMeta={rankMeta}
+          result={chunk}
+        />
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 
@@ -90,7 +94,9 @@ describe('SearchWhyThisResult', () => {
       sourceSha: 'abc1234567890',
     });
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <SearchWhyThisResult result={chunk} />;
+    const Component = () => {
+      return <SearchWhyThisResult result={chunk} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 
@@ -107,9 +113,9 @@ describe('SearchWhyThisResult', () => {
       taskTitle: 'T',
     });
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <SearchWhyThisResult defaultOpen={true} result={chunk} />
-    );
+    const Component = () => {
+      return <SearchWhyThisResult defaultOpen={true} result={chunk} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 
@@ -128,9 +134,9 @@ describe('SearchWhyThisResult', () => {
       sourceSha: 'deadbeef',
     });
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <SearchWhyThisResult defaultOpen={true} result={chunk} />
-    );
+    const Component = () => {
+      return <SearchWhyThisResult defaultOpen={true} result={chunk} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 

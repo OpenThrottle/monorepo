@@ -41,10 +41,37 @@ export const GeneratorNxBridge = (
   }, [generator.schemaJson]);
 
   // Setup
+  const hasSchema = formattedSchema != null;
 
   // Handlers
 
   // Markup
+  const schemaCard = (
+    <Card>
+      <CardHeader>
+        <CardTitle>Generator schema (JSON)</CardTitle>
+        <CardDescription>
+          Snapshot from the GraphQL API; use{' '}
+          <code className="bg-muted rounded px-1 py-0.5 text-xs">
+            --describe
+          </code>{' '}
+          locally for the live schema.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Collapsible>
+          <CollapsibleTrigger className="hover:bg-muted/50 flex w-full items-center justify-between rounded-md border px-3 py-2 text-left text-sm font-medium">
+            Show schema
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-3">
+            <pre className="bg-muted max-h-96 overflow-auto rounded-md p-3 text-xs leading-relaxed">
+              <code>{formattedSchema}</code>
+            </pre>
+          </CollapsibleContent>
+        </Collapsible>
+      </CardContent>
+    </Card>
+  );
 
   // Life Cycle
   React.useEffect(() => {
@@ -56,32 +83,7 @@ export const GeneratorNxBridge = (
 
   return (
     <div className={cn('space-y-8', className)} data-testid="GeneratorNxBridge">
-      {formattedSchema != null ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Generator schema (JSON)</CardTitle>
-            <CardDescription>
-              Snapshot from the GraphQL API; use{' '}
-              <code className="bg-muted rounded px-1 py-0.5 text-xs">
-                --describe
-              </code>{' '}
-              locally for the live schema.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Collapsible>
-              <CollapsibleTrigger className="hover:bg-muted/50 flex w-full items-center justify-between rounded-md border px-3 py-2 text-left text-sm font-medium">
-                Show schema
-              </CollapsibleTrigger>
-              <CollapsibleContent className="mt-3">
-                <pre className="bg-muted max-h-96 overflow-auto rounded-md p-3 text-xs leading-relaxed">
-                  <code>{formattedSchema}</code>
-                </pre>
-              </CollapsibleContent>
-            </Collapsible>
-          </CardContent>
-        </Card>
-      ) : null}
+      {hasSchema ? schemaCard : null}
     </div>
   );
 };

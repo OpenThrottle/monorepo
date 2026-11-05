@@ -5,8 +5,9 @@ import { describe, expect, it } from 'vitest';
 
 import { chunkByBudget } from '../../index.ts';
 
-const ones = (count: number): number[] =>
-  Array.from({ length: count }, () => 1);
+const ones = (count: number): number[] => {
+  return Array.from({ length: count }, () => 1);
+};
 
 describe('chunkByBudget', () => {
   it('returns no batches for no items', () => {

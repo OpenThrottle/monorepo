@@ -16,26 +16,28 @@ import {
 
 const basePlanInput = (
   overrides: Partial<WorkflowRalphRunOptionsInput> = {},
-): WorkflowRalphRunOptionsInput => ({
-  debugCli: 'omit',
-  effort: '',
-  executionBackend: 'cursor',
-  iterationTimeoutSeconds: undefined,
-  iterations: DEFAULT_RALPH_ITERATIONS,
-  model: DEFAULT_RALPH_MODEL,
-  planId: '0c2720a9-920f-4b16-865a-f803eb444e18',
-  project: '',
-  prompt: DEFAULT_RALPH_PROMPT,
-  promptFile: '',
-  promptLayer: 'named',
-  skipWorktreeSetup: false,
-  targetMode: 'plan',
-  taskId: '',
-  worktreeBase: '',
-  worktreeCli: 'omit',
-  worktreeName: '',
-  ...overrides,
-});
+): WorkflowRalphRunOptionsInput => {
+  return {
+    debugCli: 'omit',
+    effort: '',
+    executionBackend: 'cursor',
+    iterationTimeoutSeconds: undefined,
+    iterations: DEFAULT_RALPH_ITERATIONS,
+    model: DEFAULT_RALPH_MODEL,
+    planId: '0c2720a9-920f-4b16-865a-f803eb444e18',
+    project: '',
+    prompt: DEFAULT_RALPH_PROMPT,
+    promptFile: '',
+    promptLayer: 'named',
+    skipWorktreeSetup: false,
+    targetMode: 'plan',
+    taskId: '',
+    worktreeBase: '',
+    worktreeCli: 'omit',
+    worktreeName: '',
+    ...overrides,
+  };
+};
 
 describe('buildRalphPlanRunTuningInputFromWorkflowRunOptions', () => {
   test('returns undefined when every field matches worktree/CLI defaults', () => {

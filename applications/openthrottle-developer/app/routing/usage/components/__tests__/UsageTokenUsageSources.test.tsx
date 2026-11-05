@@ -6,33 +6,35 @@ import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
 import type { UsageTokenUsageRowFragment } from '~/__generated__/graphql';
-import { TOKEN_USAGE_SOURCES } from '~/routing/usage/data/token-usage-copy';
+import { TOKEN_USAGE_SOURCES } from '~/routing/usage/data/data.token-usage-copy';
 
 import type { UsageTokenUsageSourcesProps } from '../UsageTokenUsageSources';
 import { UsageTokenUsageSources } from '../UsageTokenUsageSources';
 
 const buildRow = (
   overrides: Partial<UsageTokenUsageRowFragment>,
-): UsageTokenUsageRowFragment => ({
-  cacheReadTokens: null,
-  cacheWriteTokens: null,
-  costUsd: null,
-  createdAt: '2026-07-15T00:00:00.000Z',
-  id: overrides.id ?? 'row-1',
-  inputTokens: 0,
-  model: null,
-  outputTokens: 0,
-  provider: 'claude',
-  reasoningTokens: null,
-  source: TOKEN_USAGE_SOURCES.CHAT,
-  totalTokens: 0,
-  ...overrides,
-});
+): UsageTokenUsageRowFragment => {
+  return {
+    cacheReadTokens: null,
+    cacheWriteTokens: null,
+    costUsd: null,
+    createdAt: '2026-07-15T00:00:00.000Z',
+    id: overrides.id ?? 'row-1',
+    inputTokens: 0,
+    model: null,
+    outputTokens: 0,
+    provider: 'claude',
+    reasoningTokens: null,
+    source: TOKEN_USAGE_SOURCES.CHAT,
+    totalTokens: 0,
+    ...overrides,
+  };
+};
 
 const renderComponent = (props: UsageTokenUsageSourcesProps): RenderResult => {
-  const Component = (): React.ReactElement | null => (
-    <UsageTokenUsageSources {...props} />
-  );
+  const Component = (): React.ReactElement | null => {
+    return <UsageTokenUsageSources {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);
@@ -92,8 +94,9 @@ describe('UsageTokenUsageSources Component', () => {
         ],
       });
 
-      const costCell = (source: string): HTMLElement | undefined =>
-        within(sourceRow(component, source)).getAllByRole('cell')[5];
+      const costCell = (source: string): HTMLElement | undefined => {
+        return within(sourceRow(component, source)).getAllByRole('cell')[5];
+      };
 
       expect(costCell(TOKEN_USAGE_SOURCES.CHAT)).toHaveTextContent('$0.500');
       expect(costCell(TOKEN_USAGE_SOURCES.CLAUDE_CODE)).toHaveTextContent('—');

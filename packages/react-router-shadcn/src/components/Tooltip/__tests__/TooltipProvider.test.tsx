@@ -14,7 +14,9 @@ describe('TooltipProvider Component', () => {
   beforeEach(() => {
     props = { children: <span>Provider child</span> };
 
-    const Component = () => <TooltipProvider {...props} />;
+    const Component = () => {
+      return <TooltipProvider {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

@@ -37,7 +37,9 @@ const planTagRow = (
   tag: string,
   source: string,
   dimension = 'domain',
-): PlanTag => asMock<PlanTag>({ dimension, planId, source, tag });
+): PlanTag => {
+  return asMock<PlanTag>({ dimension, planId, source, tag });
+};
 
 describe('TaggingProcessor', () => {
   let processor: TaggingProcessor;
@@ -48,17 +50,19 @@ describe('TaggingProcessor', () => {
   let planRulesEvaluationService: PlanRulesEvaluationService;
   let getCommitDetail: Mock<GitHubService['getCommitDetail']>;
 
-  const predictJob = (): PredictTaggingJob =>
-    asMock<PredictTaggingJob>({
+  const predictJob = (): PredictTaggingJob => {
+    return asMock<PredictTaggingJob>({
       data: { entityId: planId, entityType: 'plan' },
       name: 'predict',
     });
+  };
 
-  const refineJob = (): RefineTaggingJob =>
-    asMock<RefineTaggingJob>({
+  const refineJob = (): RefineTaggingJob => {
+    return asMock<RefineTaggingJob>({
       data: { planId, repo: 'OpenThrottle/monorepo', sha: 'abc123' },
       name: 'refine',
     });
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();

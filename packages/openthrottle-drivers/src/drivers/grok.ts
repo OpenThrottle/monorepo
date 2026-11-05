@@ -13,7 +13,7 @@ import type { DriverCapabilities, DriverModelListing } from '../types/index.ts';
 import { grokReasoningEffort } from '../utils/reasoning-effort.ts';
 import {
   escapeForShellDoubleQuoted,
-  escapeShellArg,
+  formatModelFlag,
   formatShellEnvPrefix,
 } from '../utils/shell.ts';
 import { appendWorktreeShellFlags } from '../utils/worktree.ts';
@@ -84,22 +84,21 @@ export const grokDriver = defineDriver({
   binEnv: 'OPENTHROTTLE_GROK_BIN',
   binary: 'grok',
   buildShellCommand: (config) => {
-    const modelNorm = config.model?.trim() ?? '';
-    const modelFlag =
-      modelNorm !== '' && modelNorm !== 'auto'
-        ? ` --model ${escapeShellArg(modelNorm)}`
-        : '';
+    const modelFlag = formatModelFlag(config.model);
 
-    const endpointPrefix = config.endpoint
-      ? formatShellEnvPrefix({
-          GROK_MODELS_BASE_URL: config.endpoint.baseUrl,
-          XAI_API_KEY: config.endpoint.apiKey?.trim() || 'local',
-        })
-      : '';
+    let endpointPrefix = '';
+    if (config.endpoint) {
+      endpointPrefix = formatShellEnvPrefix({
+        GROK_MODELS_BASE_URL: config.endpoint.baseUrl,
+        XAI_API_KEY: config.endpoint.apiKey?.trim() || 'local',
+      });
+    }
 
     const effort = grokReasoningEffort(config.effort);
-    const effortFlag =
-      effort !== undefined ? ` --reasoning-effort ${effort}` : '';
+    let effortFlag = '';
+    if (effort !== undefined) {
+      effortFlag = ` --reasoning-effort ${effort}`;
+    }
 
     const safePrompt = escapeForShellDoubleQuoted(config.prompt);
     const base = `${endpointPrefix}grok -p "${safePrompt}" --permission-mode acceptEdits${modelFlag}${effortFlag}`;

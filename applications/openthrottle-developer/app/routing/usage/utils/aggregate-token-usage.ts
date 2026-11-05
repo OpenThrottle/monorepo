@@ -6,7 +6,7 @@
  */
 
 import type { UsageTokenUsageRowFragment } from '~/__generated__/graphql';
-import { TOKEN_USAGE_SOURCES } from '~/routing/usage/data/token-usage-copy';
+import { TOKEN_USAGE_SOURCES } from '~/routing/usage/data/data.token-usage-copy';
 
 /** What {@link groupTokenUsage} buckets rows by. */
 export type TokenUsageGrouping = 'model' | 'provider' | 'source';
@@ -30,10 +30,11 @@ export interface TokenUsageGroup {
 const UNKNOWN_MODEL = '(unknown model)';
 
 /** Legacy rows written before sources were recorded (NULL or blank) are chat. */
-const sourceKey = (source: string | null | undefined): string =>
-  source === null || source === undefined || source.trim() === ''
+const sourceKey = (source: string | null | undefined): string => {
+  return source === null || source === undefined || source.trim() === ''
     ? TOKEN_USAGE_SOURCES.CHAT
     : source;
+};
 
 const groupKey = (
   row: UsageTokenUsageRowFragment,
@@ -46,7 +47,9 @@ const groupKey = (
   return by === 'source' ? sourceKey(row.source) : (row.model ?? UNKNOWN_MODEL);
 };
 
-const add = (value: number | null | undefined): number => value ?? 0;
+const add = (value: number | null | undefined): number => {
+  return value ?? 0;
+};
 
 /**
  * Group rows by `provider`, `model` or `source` and sum each group's counts + cost.

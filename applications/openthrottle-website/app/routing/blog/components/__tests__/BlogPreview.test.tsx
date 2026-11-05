@@ -16,7 +16,9 @@ const renderPreview = (
   props: BlogPreviewProps,
   extraRoutes: readonly StubRoute[] = [],
 ): RenderResult => {
-  const Wrapped = () => <BlogPreview {...props} />;
+  const Wrapped = () => {
+    return <BlogPreview {...props} />;
+  };
   const RoutesStub = createRoutesStub([
     { Component: Wrapped, path: '/' },
     ...extraRoutes,

@@ -53,13 +53,16 @@ export const useRolloutProvider = <TCatalog extends RolloutFlagCatalog>(
 
   // Hooks
   const [values, setValues] = React.useState<RolloutResolvedValues<TCatalog>>(
-    () =>
-      initialEvaluations !== undefined
-        ? mergeRolloutEvaluations(flags, initialEvaluations, {
-            onWarn: () => undefined,
-            strict,
-          })
-        : defaultsFromCatalog(flags),
+    () => {
+      if (initialEvaluations === undefined) {
+        return defaultsFromCatalog(flags);
+      }
+
+      return mergeRolloutEvaluations(flags, initialEvaluations, {
+        onWarn: () => undefined,
+        strict,
+      });
+    },
   );
   const [hydration, setHydration] = React.useState<RolloutHydrationState>({
     status: 'idle',

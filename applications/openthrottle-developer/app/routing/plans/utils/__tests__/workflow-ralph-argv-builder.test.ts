@@ -15,12 +15,14 @@ import { getDefaultWorkflowRalphRunOptionsInput } from '../workflow-ralph-config
  */
 const baseInput = (
   overrides: Partial<WorkflowRalphRunOptionsInput> = {},
-): WorkflowRalphRunOptionsInput => ({
-  ...getDefaultWorkflowRalphRunOptionsInput({ planId: 'plan-1' }),
-  debugCli: 'omit',
-  worktreeCli: 'omit',
-  ...overrides,
-});
+): WorkflowRalphRunOptionsInput => {
+  return {
+    ...getDefaultWorkflowRalphRunOptionsInput({ planId: 'plan-1' }),
+    debugCli: 'omit',
+    worktreeCli: 'omit',
+    ...overrides,
+  };
+};
 
 describe('resolveWorkflowRalphWorktreeArgvValue', () => {
   test('returns the flag-only sentinel for flag-only mode', () => {

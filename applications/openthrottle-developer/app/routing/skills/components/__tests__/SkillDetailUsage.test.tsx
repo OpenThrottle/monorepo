@@ -5,28 +5,32 @@ import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
 import { SKILL_USAGE_DETAIL_COPY } from '../../data/data.copy';
-import type { SkillDetailUsageSkillStats } from '../../data/skill-usage-detail';
+import type { SkillDetailUsageSkillStats } from '../../types';
 import type { SkillDetailUsageProps } from '../SkillDetailUsage';
 import { SkillDetailUsage } from '../SkillDetailUsage';
 
 const buildSkill = (
   overrides: Partial<SkillDetailUsageSkillStats> = {},
-): SkillDetailUsageSkillStats => ({
-  abandonedCount: 1,
-  avgDurationMs: 1500,
-  count: 12,
-  errorCount: 0,
-  lastUsedAt: '2026-08-05T12:00:00.000Z',
-  outcomeCount: 3,
-  scope: 'ours',
-  sessionEndedCount: 0,
-  skillName: 'ot-plans',
-  successCount: 2,
-  ...overrides,
-});
+): SkillDetailUsageSkillStats => {
+  return {
+    abandonedCount: 1,
+    avgDurationMs: 1500,
+    count: 12,
+    errorCount: 0,
+    lastUsedAt: '2026-08-05T12:00:00.000Z',
+    outcomeCount: 3,
+    scope: 'ours',
+    sessionEndedCount: 0,
+    skillName: 'ot-plans',
+    successCount: 2,
+    ...overrides,
+  };
+};
 
 const renderComponent = (props: SkillDetailUsageProps): RenderResult => {
-  const Component = (): React.ReactElement => <SkillDetailUsage {...props} />;
+  const Component = (): React.ReactElement => {
+    return <SkillDetailUsage {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

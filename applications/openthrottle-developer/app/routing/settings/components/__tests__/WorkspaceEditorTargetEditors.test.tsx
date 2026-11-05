@@ -26,8 +26,9 @@ const mixedPresence = buildEditorPresenceIndex([
 
 const renderEditors = (
   props: Partial<WorkspaceEditorTargetEditorsProps> = {},
-): RenderResult =>
-  render(<WorkspaceEditorTargetEditors editors={editors} {...props} />);
+): RenderResult => {
+  return render(<WorkspaceEditorTargetEditors editors={editors} {...props} />);
+};
 
 describe('WorkspaceEditorTargetEditors Component', () => {
   test('marks each badge with its detection state', () => {

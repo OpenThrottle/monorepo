@@ -21,7 +21,7 @@ import {
   PlanDetailWorkspaceRepositoriesDocument,
 } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
-import { loadComposerModels } from '~/routing/home/data/models.server';
+import { loadComposerModels } from '~/routing/home/utils/models.server';
 import {
   addHook,
   addPlanTag,

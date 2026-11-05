@@ -441,14 +441,16 @@ export const buildNestjsLoggingWebsocketGatewayClass = (
 
       const payload = body;
       const fromRaw = payload.fromByteOffset;
-      const fromByteOffset =
-        fromRaw === undefined
-          ? 0
-          : typeof fromRaw === 'number' &&
-              Number.isInteger(fromRaw) &&
-              fromRaw >= 0
-            ? fromRaw
-            : undefined;
+      const resolveFromByteOffset = (raw: unknown): number | undefined => {
+        if (raw === undefined) {
+          return 0;
+        }
+        if (typeof raw === 'number' && Number.isInteger(raw) && raw >= 0) {
+          return raw;
+        }
+        return undefined;
+      };
+      const fromByteOffset = resolveFromByteOffset(fromRaw);
 
       if (fromByteOffset === undefined) {
         return {

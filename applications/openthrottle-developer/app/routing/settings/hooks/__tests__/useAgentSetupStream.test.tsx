@@ -36,14 +36,16 @@ const chunk = (
   id: string,
   sortOrder: number,
   options?: { readonly done?: boolean; readonly error?: string | null },
-): Chunk => ({
-  content: `c-${id}`,
-  done: options?.done ?? false,
-  error: options?.error ?? null,
-  id,
-  runId: 'run-1',
-  sortOrder,
-});
+): Chunk => {
+  return {
+    content: `c-${id}`,
+    done: options?.done ?? false,
+    error: options?.error ?? null,
+    id,
+    runId: 'run-1',
+    sortOrder,
+  };
+};
 
 function Harness(props: { readonly runId: string | null }): React.ReactElement {
   const state = useAgentSetupStream(props.runId);

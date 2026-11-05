@@ -9,6 +9,7 @@ import {
   AppendPlanOutputDocument,
   type AppendPlanOutputMutation,
   DeletePlanOutputDocument,
+  type DeletePlanOutputInput,
   type DeletePlanOutputMutation,
   GetPlanOutputStreamChunksDocument,
   type GetPlanOutputStreamChunksQuery,
@@ -79,8 +80,7 @@ export async function appendPlanOutputToolHandler(
 export const getPlanOutputToolParameters =
   ListPlanOutputStreamChunksInputSchema().strict();
 
-export const getPlanOutputToolDescription =
-  'Fetch streaming output chunks for a plan, ordered by created_at ascending (stream order). Pass taskId to return only the narration attributed to that task; omit it for the whole plan stream. limit (default and hard cap 1000) and offset page the result.';
+export const getPlanOutputToolDescription = `Fetch streaming output chunks for a plan, ordered by created_at ascending (stream order). Pass taskId to return only the narration attributed to that task; omit it for the whole plan stream. limit (default and hard cap 1000) and offset page the result.`;
 
 export async function getPlanOutputToolHandler(
   args: z.infer<typeof getPlanOutputToolParameters>,
@@ -124,8 +124,19 @@ export async function getPlanOutputToolHandler(
 export const deletePlanOutputToolParameters =
   DeletePlanOutputInputSchema().strict();
 
-export const deletePlanOutputToolDescription =
-  'Delete plan output stream chunks. With chunkId, delete that single chunk (it must belong to planId). Without chunkId, clear all chunks for planId, optionally scoped to taskId. Returns the number of chunks deleted. Use to remove stale or incorrect output (e.g. when resetting a plan back to PENDING). GraphQL-only: delegates to the deletePlanOutput mutation.';
+export const deletePlanOutputToolDescription = `Delete plan output stream chunks. With chunkId, delete that single chunk (it must belong to planId). Without chunkId, clear all chunks for planId, optionally scoped to taskId. Returns the number of chunks deleted. Use to remove stale or incorrect output (e.g. when resetting a plan back to PENDING). GraphQL-only: delegates to the deletePlanOutput mutation.`;
+
+function describeDeleteScope(data: DeletePlanOutputInput): string {
+  if (data.chunkId) {
+    return `chunk ${data.chunkId} (plan ${data.planId})`;
+  }
+
+  if (data.taskId) {
+    return `task ${data.taskId} on plan ${data.planId}`;
+  }
+
+  return `plan ${data.planId}`;
+}
 
 export async function deletePlanOutputToolHandler(
   args: z.infer<typeof deletePlanOutputToolParameters>,
@@ -152,11 +163,7 @@ export async function deletePlanOutputToolHandler(
     const deletedCount = result?.deletePlanOutput?.deletedCount ?? null;
     if (deletedCount === null) return null;
 
-    const scope = parsed.data.chunkId
-      ? `chunk ${parsed.data.chunkId} (plan ${parsed.data.planId})`
-      : parsed.data.taskId
-        ? `task ${parsed.data.taskId} on plan ${parsed.data.planId}`
-        : `plan ${parsed.data.planId}`;
+    const scope = describeDeleteScope(parsed.data);
     const text = `Deleted ${deletedCount} plan output chunk(s) for ${scope}.`;
     return { structuredContent: { deletedCount }, text };
   });

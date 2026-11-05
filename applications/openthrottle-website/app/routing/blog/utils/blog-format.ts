@@ -40,10 +40,11 @@ export const toBlogIsoDate = (value: unknown): string | null => {
 };
 
 /** @description First letters of up to two name parts, for avatar fallbacks. */
-export const getBlogAuthorInitials = (displayName: string): string =>
-  displayName
+export const getBlogAuthorInitials = (displayName: string): string => {
+  return displayName
     .split(/\s+/)
     .filter((part) => part.length > 0)
     .slice(0, 2)
     .map((part) => part.charAt(0).toUpperCase())
     .join('');
+};

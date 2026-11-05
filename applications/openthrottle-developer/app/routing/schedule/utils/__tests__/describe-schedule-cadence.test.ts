@@ -7,8 +7,8 @@ import {
   type ScheduleCadenceFields,
 } from '../describe-schedule-cadence';
 
-const cadence = (overrides: Partial<ScheduleCadenceFields>): string =>
-  describeScheduleCadence({
+const cadence = (overrides: Partial<ScheduleCadenceFields>): string => {
+  return describeScheduleCadence({
     cronPattern: null,
     intervalMs: null,
     runAt: null,
@@ -16,6 +16,7 @@ const cadence = (overrides: Partial<ScheduleCadenceFields>): string =>
     timezone: null,
     ...overrides,
   });
+};
 
 describe('describeScheduleCadence', () => {
   describe('when the schedule is cron', () => {

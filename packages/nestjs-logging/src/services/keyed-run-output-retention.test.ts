@@ -6,8 +6,9 @@ import { describe, expect, it } from 'vitest';
 
 import { pruneKeyedRunOutputDirectory } from './keyed-run-output-retention.ts';
 
-const mkBase = async (): Promise<string> =>
-  mkdtemp(path.join(os.tmpdir(), 'keyed-ret-'));
+const mkBase = async (): Promise<string> => {
+  return mkdtemp(path.join(os.tmpdir(), 'keyed-ret-'));
+};
 
 describe('pruneKeyedRunOutputDirectory', () => {
   it('returns zeros when neither maxAgeMs nor maxTotalBytes is set', async () => {

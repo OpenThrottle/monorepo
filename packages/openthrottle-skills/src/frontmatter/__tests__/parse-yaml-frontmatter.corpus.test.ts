@@ -70,11 +70,13 @@ const oldParseBooleanScalar = (
   return undefined;
 };
 
-const oldIsBlockContinuationLine = (line: string): boolean =>
-  line.trim() === '' || /^\s{2,}/.test(line);
+const oldIsBlockContinuationLine = (line: string): boolean => {
+  return line.trim() === '' || /^\s{2,}/.test(line);
+};
 
-const oldStripBlockIndent = (line: string): string =>
-  line.replace(/^\s{2,}/, '');
+const oldStripBlockIndent = (line: string): string => {
+  return line.replace(/^\s{2,}/, '');
+};
 
 const oldParseIndentedBlock = (
   lines: readonly string[],
@@ -210,11 +212,12 @@ const listPersonaFiles = (): string[] => {
 
 const corpusFiles = [...listSkillFiles(), ...listPersonaFiles()];
 
-const toRepoRelativePath = (absolutePath: string): string =>
-  absolutePath
+const toRepoRelativePath = (absolutePath: string): string => {
+  return absolutePath
     .slice(monorepoRoot.length + 1)
     .split('\\')
     .join('/');
+};
 
 function assertIsString(value: unknown): asserts value is string {
   if (typeof value !== 'string') {
@@ -323,10 +326,8 @@ const canonicalizeTagsValue = (value: unknown): unknown => {
   }
   if (typeof value === 'string') {
     const trimmed = value.trim();
-    const inner =
-      trimmed.startsWith('[') && trimmed.endsWith(']')
-        ? trimmed.slice(1, -1)
-        : trimmed;
+    const isBracketed = trimmed.startsWith('[') && trimmed.endsWith(']');
+    const inner = isBracketed ? trimmed.slice(1, -1) : trimmed;
     return inner
       .split(',')
       .map((item) => item.trim())

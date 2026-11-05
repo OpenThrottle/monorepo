@@ -14,7 +14,9 @@ describe('OpenThrottlePlanStatusBadge Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <OpenThrottlePlanStatusBadge {...props} />;
+    const Component = () => {
+      return <OpenThrottlePlanStatusBadge {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

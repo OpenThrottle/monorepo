@@ -108,6 +108,7 @@ export const ChatModelPicker = (
   });
 
   // Setup
+  const hasSubLabel = triggerSubLabel != null && triggerSubLabel !== '';
 
   // Handlers
 
@@ -134,11 +135,11 @@ export const ChatModelPicker = (
         >
           <span className="flex min-w-0 items-baseline gap-1.5">
             <span className="truncate">{triggerLabel}</span>
-            {triggerSubLabel != null && triggerSubLabel !== '' ? (
+            {hasSubLabel && (
               <span className="text-muted-foreground truncate text-xs">
                 {triggerSubLabel}
               </span>
-            ) : null}
+            )}
           </span>
           <ChevronsUpDown className="size-4 shrink-0 opacity-50" />
         </Button>
@@ -177,19 +178,18 @@ export const ChatModelPicker = (
           />
           <CommandList className="max-h-72">
             <CommandEmpty>{emptyLabel}</CommandEmpty>
-            {activeGroup != null
-              ? activeGroup.models.map((model) => (
-                  <ChatModelPickerRow
-                    groupId={activeGroup.id}
-                    isDisabled={disabledSet.has(model.id)}
-                    isSelected={model.id === selectedModelId}
-                    key={`${activeGroup.id}:${model.id}`}
-                    model={model}
-                    onSelect={onSelectModel}
-                    onToggleFavorite={onToggleFavorite}
-                  />
-                ))
-              : null}
+            {activeGroup != null &&
+              activeGroup.models.map((model) => (
+                <ChatModelPickerRow
+                  groupId={activeGroup.id}
+                  isDisabled={disabledSet.has(model.id)}
+                  isSelected={model.id === selectedModelId}
+                  key={`${activeGroup.id}:${model.id}`}
+                  model={model}
+                  onSelect={onSelectModel}
+                  onToggleFavorite={onToggleFavorite}
+                />
+              ))}
           </CommandList>
         </Command>
       </PopoverContent>

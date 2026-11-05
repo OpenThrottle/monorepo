@@ -7,11 +7,11 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import { DashboardGetStartedCard } from '~/routing/dashboard/components/DashboardGetStartedCard';
+import { GET_STARTED_RESTORE_COPY } from '~/routing/dashboard/data/data.copy';
 import {
   ONBOARDING_STATE_VERSION,
   ONBOARDING_STORAGE_KEY,
-} from '~/routing/dashboard/data/atom.onboarding';
-import { GET_STARTED_RESTORE_COPY } from '~/routing/dashboard/data/data.copy';
+} from '~/routing/dashboard/data/data.onboarding-state';
 import {
   ONBOARDING_STEP_ID,
   type OnboardingCompletion,
@@ -37,7 +37,9 @@ const seedDismissed = (): void => {
 // Fresh Jotai Provider per render so the persisted atom does not leak; children
 // share one store so the restore control and the card react to the same state.
 const renderWithProvider = (node: React.ReactNode): RenderResult => {
-  const Component = () => <Provider>{node}</Provider>;
+  const Component = () => {
+    return <Provider>{node}</Provider>;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 };

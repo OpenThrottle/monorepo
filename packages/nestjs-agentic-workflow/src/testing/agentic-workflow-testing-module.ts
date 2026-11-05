@@ -28,7 +28,8 @@ export class GlobalLoggerStubModule {}
  */
 export const compileAgenticWorkflowTestingModule = async (
   imports: NonNullable<ModuleMetadata['imports']>,
-): Promise<TestingModule> =>
-  Test.createTestingModule({
+): Promise<TestingModule> => {
+  return Test.createTestingModule({
     imports: [GlobalLoggerStubModule, ...(imports ?? [])],
   }).compile();
+};

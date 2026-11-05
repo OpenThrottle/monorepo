@@ -115,10 +115,11 @@ async function startReadySession(
 
 const publishedChunks = (
   publish: ReturnType<typeof vi.fn>,
-): Array<Record<string, unknown>> =>
-  publish.mock.calls.map(
+): Array<Record<string, unknown>> => {
+  return publish.mock.calls.map(
     ([, payload]) => payload.transcriptionStreamChunkAdded,
   );
+};
 
 beforeEach(() => {
   vi.useFakeTimers();

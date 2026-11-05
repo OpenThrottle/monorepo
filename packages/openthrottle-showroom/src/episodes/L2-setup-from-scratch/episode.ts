@@ -42,8 +42,7 @@ export const episode: VideoEpisode = {
       t: '04:30',
     },
     {
-      action:
-        'Browser to the dashboard port; the login form is prefilled; submit.',
+      action: `Browser to the dashboard port; the login form is prefilled; submit.`,
       t: '05:20',
     },
     { action: 'Dashboard loads, mostly empty.', t: '05:50' },

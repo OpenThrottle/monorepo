@@ -16,9 +16,10 @@ export const parseCommaSeparatedValues = (value: string): string[] => {
  * keeps the hyphen (`PROBE-AREA`), which is not a valid identifier. Unlike
  * lodash `snakeCase`, digits stay attached to their word (`v2`, not `v_2`).
  */
-export const toConstantCase = (value: string): string =>
-  value
+export const toConstantCase = (value: string): string => {
+  return value
     .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
     .replace(/[^A-Za-z0-9]+/g, '_')
     .replace(/^_+|_+$/g, '')
     .toUpperCase();
+};

@@ -13,11 +13,13 @@ const config = (
   extra: Omit<DriverInvocationConfig, 'iteration' | 'prompt'> & {
     prompt?: string;
   } = {},
-): DriverInvocationConfig => ({
-  iteration: 1,
-  prompt: extra.prompt ?? 'fix it',
-  ...extra,
-});
+): DriverInvocationConfig => {
+  return {
+    iteration: 1,
+    prompt: extra.prompt ?? 'fix it',
+    ...extra,
+  };
+};
 
 describe('codex driver', () => {
   it('builds the base exec command with a workspace-write sandbox', () => {

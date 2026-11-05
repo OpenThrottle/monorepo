@@ -72,8 +72,9 @@ export interface CreateVitestConfigOptions {
 /**
  * @description Calculates the coverage directory path relative to the package
  */
-const calculateCoverageDirectory = (packagePath: string): string =>
-  calculateOutputDir(packagePath, 'coverage');
+const calculateCoverageDirectory = (packagePath: string): string => {
+  return calculateOutputDir(packagePath, 'coverage');
+};
 
 /**
  * @description Base configuration options for environment-specific configs

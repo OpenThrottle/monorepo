@@ -34,8 +34,9 @@ const getGraphqlWs = (
   return ws;
 };
 
-const getOnConnect = (config: ApolloDriverConfig): unknown =>
-  getGraphqlWs(config).onConnect;
+const getOnConnect = (config: ApolloDriverConfig): unknown => {
+  return getGraphqlWs(config).onConnect;
+};
 
 describe('buildDriverConfig — secure-default preservation', () => {
   it('keeps every secure default when forRoot passes an empty options object', () => {
@@ -95,7 +96,9 @@ describe('buildDriverConfig — validation rules / maxDepth', () => {
   });
 
   it('appends the depth-limit rule after caller-supplied validationRules', () => {
-    const userRule: ValidationRule = () => ({});
+    const userRule: ValidationRule = () => {
+      return {};
+    };
     const config = buildDriverConfig({
       maxDepth: 5,
       validationRules: [userRule],

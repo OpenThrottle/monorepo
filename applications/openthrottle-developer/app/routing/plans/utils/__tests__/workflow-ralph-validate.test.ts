@@ -21,10 +21,12 @@ function asType(value: unknown): unknown {
 
 const baseInput = (
   overrides?: Partial<WorkflowRalphRunOptionsInput>,
-): WorkflowRalphRunOptionsInput => ({
-  ...getDefaultWorkflowRalphRunOptionsInput({ planId: VALID_PLAN_ID }),
-  ...overrides,
-});
+): WorkflowRalphRunOptionsInput => {
+  return {
+    ...getDefaultWorkflowRalphRunOptionsInput({ planId: VALID_PLAN_ID }),
+    ...overrides,
+  };
+};
 
 /** Extracts the codes from a failed validation result for concise assertions. */
 const issueCodes = (
@@ -82,8 +84,7 @@ describe('validateWorkflowRalphRunOptionsState', () => {
       // The same non-positive value also fails the nested enqueue-tuning parity check.
       expect(result.issues).toContainEqual({
         code: 'enqueue_iterations',
-        message:
-          'Nested Ralph tuning: iterations must be a positive integer (parity with CLI)',
+        message: `Nested Ralph tuning: iterations must be a positive integer (parity with CLI)`,
       });
     }
   });

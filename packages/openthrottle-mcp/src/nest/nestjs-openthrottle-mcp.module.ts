@@ -9,16 +9,18 @@ import { McpDeveloperMcpSurface } from './openthrottle-mcp-mcp-surface.ts';
 
 const buildMcpRootOptions = (
   options: NestjsMcpDeveloperBootstrapOptions,
-): McpOptions => ({
-  apiPrefix: options.apiPrefix,
-  capabilities: options.capabilities,
-  description: options.description,
-  instructions: options.instructions,
-  name: options.name,
-  title: options.title,
-  transport: options.transport ?? McpTransportType.STDIO,
-  version: options.version,
-});
+): McpOptions => {
+  return {
+    apiPrefix: options.apiPrefix,
+    capabilities: options.capabilities,
+    description: options.description,
+    instructions: options.instructions,
+    name: options.name,
+    title: options.title,
+    transport: options.transport ?? McpTransportType.STDIO,
+    version: options.version,
+  };
+};
 
 /**
  * @description OpenThrottle Nest module that composes {@link LoggerModule} and `@rekog/mcp-nest` {@link McpModule} for the developer MCP surface.

@@ -15,8 +15,9 @@ const { runBlogPostCreateAction } = await import('../new');
 
 const mockExecute = vi.mocked(executeGraphqlWithAuth);
 
-const request = (): Request =>
-  new Request('http://localhost/blog/new', { method: 'POST' });
+const request = (): Request => {
+  return new Request('http://localhost/blog/new', { method: 'POST' });
+};
 
 const conflict = {
   createBlogPost: {

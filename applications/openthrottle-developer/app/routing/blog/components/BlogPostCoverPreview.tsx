@@ -24,7 +24,9 @@ export const BlogPostCoverPreview = (
   // Setup
 
   // Handlers
-  const handleError = (): void => setFailed(true);
+  const handleError = (): void => {
+    return setFailed(true);
+  };
 
   // Markup
 

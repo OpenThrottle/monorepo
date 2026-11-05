@@ -1,4 +1,4 @@
-import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/data/types';
+import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/types';
 
 export interface FilterRepositoryRowsResult {
   /**
@@ -10,14 +10,15 @@ export interface FilterRepositoryRowsResult {
   rows: RepositoryCheckoutRow[];
 }
 
-const matchesRow = (row: RepositoryCheckoutRow, term: string): boolean =>
-  [
+const matchesRow = (row: RepositoryCheckoutRow, term: string): boolean => {
+  return [
     row.branch,
     row.displayName,
     row.path,
     row.remoteUrl,
     row.repositoryName,
   ].some((field) => field?.toLowerCase().includes(term));
+};
 
 /**
  * @description Case-insensitive filter over the nested row model, matching

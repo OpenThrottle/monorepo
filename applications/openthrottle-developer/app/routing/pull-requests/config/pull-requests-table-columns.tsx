@@ -103,7 +103,7 @@ export const createPullRequestsTableColumns = (
               {row.original.author}
             </span>
 
-            {pull.headSha !== null && pull.headSha !== undefined ? (
+            {pull.headSha !== null && pull.headSha !== undefined && (
               <Button asChild={true} size="xs" variant="secondary">
                 <a
                   href={githubCommitUrl(owner, repo, pull.headSha)}
@@ -114,7 +114,7 @@ export const createPullRequestsTableColumns = (
                   <span className="font-mono">{pull.headSha.slice(0, 7)}</span>
                 </a>
               </Button>
-            ) : null}
+            )}
           </div>
         );
       },
@@ -128,10 +128,10 @@ export const createPullRequestsTableColumns = (
           pull.number,
         );
         const previewPath = `/pull-requests?${previewSearch}`;
-        const portalPath =
-          context.listQuery === ''
-            ? `/pull-requests/${pull.number}`
-            : `/pull-requests/${pull.number}?${context.listQuery}`;
+        const portalBase = `/pull-requests/${pull.number}`;
+        const portalWithQuery = `${portalBase}?${context.listQuery}`;
+        const hasListQuery = context.listQuery !== '';
+        const portalPath = hasListQuery ? portalWithQuery : portalBase;
         const githubHref = githubPullConversationUrl(
           context.filters.owner,
           context.filters.repo,

@@ -22,20 +22,22 @@ const episode = (
   id: string,
   order: number,
   variantIds: readonly string[],
-): VideoEpisode => ({
-  beats: [{ action: 'Terminal.', t: '0:00' }],
-  format: 'short',
-  id,
-  production: { blockedOn: [], recording: 'live', titleCard: ['One', 'Two'] },
-  release: { order, playlist: 'getting-started', status: 'draft' },
-  selectedVariant: variantIds[0] ?? 'only',
-  variants: variantIds.map((variantId) => ({
-    id: variantId,
-    narration: [['0:00', 'Words.'] as const],
-    thesis: 'fixture',
-  })),
-  youtube: { summary: 'A fixture.', tags: [], title: 'A fixture' },
-});
+): VideoEpisode => {
+  return {
+    beats: [{ action: 'Terminal.', t: '0:00' }],
+    format: 'short',
+    id,
+    production: { blockedOn: [], recording: 'live', titleCard: ['One', 'Two'] },
+    release: { order, playlist: 'getting-started', status: 'draft' },
+    selectedVariant: variantIds[0] ?? 'only',
+    variants: variantIds.map((variantId) => ({
+      id: variantId,
+      narration: [['0:00', 'Words.'] as const],
+      thesis: 'fixture',
+    })),
+    youtube: { summary: 'A fixture.', tags: [], title: 'A fixture' },
+  };
+};
 
 describe('getEpisode', () => {
   test('names what is registered when the id is unknown', () => {

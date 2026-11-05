@@ -31,6 +31,13 @@ export const DashboardGetStartedStep = (
   // Handlers
 
   // Markup
+  const ctaButton = (
+    <Button asChild={true} className="shrink-0" size="xs" variant="outline">
+      <Link to={href} viewTransition={true}>
+        {cta} <ArrowRightIcon className="h-3.5 w-3.5" />
+      </Link>
+    </Button>
+  );
 
   // Life Cycle
 
@@ -60,13 +67,7 @@ export const DashboardGetStartedStep = (
         </p>
         <p className="text-muted-foreground text-xs">{description}</p>
       </div>
-      {complete ? null : (
-        <Button asChild={true} className="shrink-0" size="xs" variant="outline">
-          <Link to={href} viewTransition={true}>
-            {cta} <ArrowRightIcon className="h-3.5 w-3.5" />
-          </Link>
-        </Button>
-      )}
+      {complete ? null : ctaButton}
     </li>
   );
 };

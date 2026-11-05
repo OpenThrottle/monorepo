@@ -12,14 +12,15 @@ import {
 import type { BlogPostRowProps } from '../BlogPostRow';
 import { BlogPostRow } from '../BlogPostRow';
 
-const renderRow = (props: BlogPostRowProps): RenderResult =>
-  renderRoutesStub(
+const renderRow = (props: BlogPostRowProps): RenderResult => {
+  return renderRoutesStub(
     <table>
       <tbody>
         <BlogPostRow {...props} />
       </tbody>
     </table>,
   );
+};
 
 describe('BlogPostRow Component', () => {
   test('shows title, slug, state, author and editor, linking to the post', () => {

@@ -7,8 +7,9 @@ import { describe, expect, test, vi } from 'vitest';
 import type { ChatJumpToLatestProps } from '../ChatJumpToLatest';
 import { ChatJumpToLatest } from '../ChatJumpToLatest';
 
-const renderControl = (props: ChatJumpToLatestProps): RenderResult =>
-  render(<ChatJumpToLatest {...props} />);
+const renderControl = (props: ChatJumpToLatestProps): RenderResult => {
+  return render(<ChatJumpToLatest {...props} />);
+};
 
 describe('ChatJumpToLatest Component', () => {
   test('renders nothing while the view is following the bottom', () => {

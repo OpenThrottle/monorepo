@@ -10,9 +10,9 @@ describe('TimelineDetailRow Component', () => {
   let component: RenderResult;
 
   beforeEach(() => {
-    const Component = () => (
-      <TimelineDetailRow label="Duration" value="2h 14m" />
-    );
+    const Component = () => {
+      return <TimelineDetailRow label="Duration" value="2h 14m" />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

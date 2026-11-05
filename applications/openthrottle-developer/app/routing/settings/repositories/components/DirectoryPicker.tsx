@@ -12,7 +12,8 @@ import { BrowseEntryRow } from '~/routing/settings/repositories/components/Brows
 import type {
   WorkspaceBreadcrumbSegment,
   WorkspaceBrowseEntry,
-} from '~/routing/settings/repositories/data/types';
+} from '~/routing/settings/repositories/types';
+import { deriveBrowseListState } from '~/routing/settings/repositories/utils/browse-list-state';
 
 export interface DirectoryPickerProps {
   breadcrumbs: WorkspaceBreadcrumbSegment[];
@@ -58,10 +59,87 @@ export const DirectoryPicker = (
   // Hooks
 
   // Setup
+  const listState = deriveBrowseListState({
+    browseError,
+    entryCount: entries.length,
+    isBrowsing,
+  });
 
   // Handlers
+  const renderCrumbLabel = (
+    segment: WorkspaceBreadcrumbSegment,
+  ): React.ReactElement => {
+    if (segment.navigable) {
+      return (
+        <button
+          className="hover:text-foreground truncate"
+          onClick={() => onNavigateTo(segment.path)}
+          type="button"
+        >
+          {segment.label}
+        </button>
+      );
+    }
+
+    return (
+      <span className="text-muted-foreground truncate">{segment.label}</span>
+    );
+  };
 
   // Markup
+  const gitRepoBadge = (
+    <Badge variant="outline">
+      <FolderGit2Icon aria-hidden={true} className="mr-1 size-3" />
+      {WORKSPACE_FOLDERS_COPY.gitRepoBadge}
+    </Badge>
+  );
+  const currentPathBar = (
+    <div className="flex items-center justify-between gap-2 border-b pb-2">
+      <p className="text-muted-foreground min-w-0 truncate font-mono text-xs">
+        {currentPath}
+      </p>
+      <div className="flex shrink-0 items-center gap-2">
+        {currentIsGitRepo ? gitRepoBadge : null}
+        <Button
+          disabled={isAdding}
+          onClick={onAddCurrent}
+          size="sm"
+          type="button"
+        >
+          {WORKSPACE_FOLDERS_COPY.addThisFolder}
+        </Button>
+      </div>
+    </div>
+  );
+  const listBodies = {
+    empty: (
+      <p className="text-muted-foreground text-sm">
+        {WORKSPACE_FOLDERS_COPY.browseEmpty}
+      </p>
+    ),
+    entries: (
+      <ul className="max-h-56 space-y-0.5 overflow-y-auto">
+        {entries.map((entry) => (
+          <BrowseEntryRow
+            entry={entry}
+            isAdding={isAdding}
+            key={entry.path}
+            onOpen={onOpen}
+          />
+        ))}
+      </ul>
+    ),
+    error: (
+      <p className="text-destructive text-sm" role="alert">
+        {browseError}
+      </p>
+    ),
+    loading: (
+      <p className="text-muted-foreground text-sm">
+        {WORKSPACE_FOLDERS_COPY.pickerLoading}
+      </p>
+    ),
+  };
 
   // Life Cycle
 
@@ -91,19 +169,7 @@ export const DirectoryPicker = (
                 aria-hidden={true}
                 className="text-muted-foreground size-3"
               />
-              {segment.navigable ? (
-                <button
-                  className="hover:text-foreground truncate"
-                  onClick={() => onNavigateTo(segment.path)}
-                  type="button"
-                >
-                  {segment.label}
-                </button>
-              ) : (
-                <span className="text-muted-foreground truncate">
-                  {segment.label}
-                </span>
-              )}
+              {renderCrumbLabel(segment)}
             </span>
           ))}
         </nav>
@@ -120,54 +186,9 @@ export const DirectoryPicker = (
         </Button>
       </div>
 
-      {currentPath ? (
-        <div className="flex items-center justify-between gap-2 border-b pb-2">
-          <p className="text-muted-foreground min-w-0 truncate font-mono text-xs">
-            {currentPath}
-          </p>
-          <div className="flex shrink-0 items-center gap-2">
-            {currentIsGitRepo ? (
-              <Badge variant="outline">
-                <FolderGit2Icon aria-hidden={true} className="mr-1 size-3" />
-                {WORKSPACE_FOLDERS_COPY.gitRepoBadge}
-              </Badge>
-            ) : null}
-            <Button
-              disabled={isAdding}
-              onClick={onAddCurrent}
-              size="sm"
-              type="button"
-            >
-              {WORKSPACE_FOLDERS_COPY.addThisFolder}
-            </Button>
-          </div>
-        </div>
-      ) : null}
+      {currentPath ? currentPathBar : null}
 
-      {isBrowsing ? (
-        <p className="text-muted-foreground text-sm">
-          {WORKSPACE_FOLDERS_COPY.pickerLoading}
-        </p>
-      ) : browseError ? (
-        <p className="text-destructive text-sm" role="alert">
-          {browseError}
-        </p>
-      ) : entries.length === 0 ? (
-        <p className="text-muted-foreground text-sm">
-          {WORKSPACE_FOLDERS_COPY.browseEmpty}
-        </p>
-      ) : (
-        <ul className="max-h-56 space-y-0.5 overflow-y-auto">
-          {entries.map((entry) => (
-            <BrowseEntryRow
-              entry={entry}
-              isAdding={isAdding}
-              key={entry.path}
-              onOpen={onOpen}
-            />
-          ))}
-        </ul>
-      )}
+      {listBodies[listState]}
     </div>
   );
 };

@@ -37,6 +37,10 @@ export const PlanTasksEmpty = (
   // Hooks
 
   // Setup
+  const { emptyDescription, emptyTitle } = PLANS_INDEX_EMPTY_COPY;
+  const { filteredDescription, filteredTitle } = PLANS_INDEX_EMPTY_COPY;
+  const title = filtered ? filteredTitle : emptyTitle;
+  const description = filtered ? filteredDescription : emptyDescription;
 
   // Handlers
 
@@ -63,24 +67,16 @@ export const PlanTasksEmpty = (
       <EmptyMedia variant="icon">
         <SearchAlertIcon className="size-6" />
       </EmptyMedia>
-      <EmptyTitle>
-        {filtered
-          ? PLANS_INDEX_EMPTY_COPY.filteredTitle
-          : PLANS_INDEX_EMPTY_COPY.emptyTitle}
-      </EmptyTitle>
-      <EmptyDescription>
-        {filtered
-          ? PLANS_INDEX_EMPTY_COPY.filteredDescription
-          : PLANS_INDEX_EMPTY_COPY.emptyDescription}
-      </EmptyDescription>
+      <EmptyTitle>{title}</EmptyTitle>
+      <EmptyDescription>{description}</EmptyDescription>
       {/* Only the filtered variant offers an action. A genuinely empty
           workspace gets none: plans are authored through the OpenThrottle
           MCP, so there is nothing here to link to. */}
-      {filtered ? (
+      {filtered && (
         <Button asChild={true} variant="secondary">
           <Link to="/plans">{PLANS_INDEX_EMPTY_COPY.filteredAction}</Link>
         </Button>
-      ) : null}
+      )}
     </Empty>
   );
 };

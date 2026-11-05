@@ -2,7 +2,7 @@ import * as React from 'react';
 
 import type { ChatComposerToolbarProps } from '../components/ChatComposerToolbar';
 import type { ChatConversationSidebarProps } from '../components/ChatConversationSidebar';
-import { ChatContext } from '../data/chat-context';
+import { ChatContext } from '../data/data.chat-context';
 import type { ChatMessage, ChatTokenUsage } from '../types';
 
 /**

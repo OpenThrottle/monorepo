@@ -7,13 +7,15 @@ import { conversationHref, conversationLabel } from '../recent-chats';
 
 const conversation = (
   overrides: Partial<AgentConversationListItem>,
-): AgentConversationListItem => ({
-  id: 'convo-1',
-  status: 'active',
-  title: null,
-  updatedAt: '2026-01-01T00:00:00.000Z',
-  ...overrides,
-});
+): AgentConversationListItem => {
+  return {
+    id: 'convo-1',
+    status: 'active',
+    title: null,
+    updatedAt: '2026-01-01T00:00:00.000Z',
+    ...overrides,
+  };
+};
 
 describe('conversationHref', () => {
   test('builds a deep link with the conversationId query param', () => {

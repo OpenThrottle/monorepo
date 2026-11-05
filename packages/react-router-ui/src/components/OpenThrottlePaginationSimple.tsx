@@ -48,6 +48,40 @@ export const OpenThrottlePaginationSimple = (
   };
 
   // Markup
+  const prevLink = (
+    <Button asChild={true} size="sm" variant="outline">
+      <Link rel="prev" to={hrefForPage(page - 1)}>
+        Previous
+      </Link>
+    </Button>
+  );
+  const prevDisabled = (
+    <Button
+      className="pointer-events-none opacity-50"
+      disabled={true}
+      size="sm"
+      variant="outline"
+    >
+      Previous
+    </Button>
+  );
+  const nextLink = (
+    <Button asChild={true} size="sm" variant="outline">
+      <Link rel="next" to={hrefForPage(page + 1)}>
+        Next
+      </Link>
+    </Button>
+  );
+  const nextDisabled = (
+    <Button
+      className="pointer-events-none opacity-50"
+      disabled={true}
+      size="sm"
+      variant="outline"
+    >
+      Next
+    </Button>
+  );
 
   // Life Cycle
 
@@ -70,38 +104,8 @@ export const OpenThrottlePaginationSimple = (
         Page {page} of {totalPages} · {total.toLocaleString()} {resultLabel}
       </p>
       <div className="flex flex-wrap gap-2">
-        {hasPrev ? (
-          <Button asChild={true} size="sm" variant="outline">
-            <Link rel="prev" to={hrefForPage(page - 1)}>
-              Previous
-            </Link>
-          </Button>
-        ) : (
-          <Button
-            className="pointer-events-none opacity-50"
-            disabled={true}
-            size="sm"
-            variant="outline"
-          >
-            Previous
-          </Button>
-        )}
-        {hasNext ? (
-          <Button asChild={true} size="sm" variant="outline">
-            <Link rel="next" to={hrefForPage(page + 1)}>
-              Next
-            </Link>
-          </Button>
-        ) : (
-          <Button
-            className="pointer-events-none opacity-50"
-            disabled={true}
-            size="sm"
-            variant="outline"
-          >
-            Next
-          </Button>
-        )}
+        {hasPrev ? prevLink : prevDisabled}
+        {hasNext ? nextLink : nextDisabled}
       </div>
     </div>
   );

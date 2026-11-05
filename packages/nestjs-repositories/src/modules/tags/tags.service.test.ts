@@ -68,8 +68,9 @@ describe('TagsService', () => {
     subjectId: '55555555-5555-4555-8555-555555555555',
   };
 
-  const vocabularyRow = (tag: string, dimension: string): UserSkillTag =>
-    asMock<UserSkillTag>({ dimension, tag });
+  const vocabularyRow = (tag: string, dimension: string): UserSkillTag => {
+    return asMock<UserSkillTag>({ dimension, tag });
+  };
 
   const defaultVocabulary = [
     vocabularyRow('backend', 'domain'),
@@ -78,8 +79,8 @@ describe('TagsService', () => {
     vocabularyRow('github', 'domain'),
   ];
 
-  const planTagRow = (tag: string, source: TagSource): PlanTag =>
-    asMock<PlanTag>({
+  const planTagRow = (tag: string, source: TagSource): PlanTag => {
+    return asMock<PlanTag>({
       confidence: null,
       dimension: tag === 'breakdown' || tag === 'design' ? 'phase' : 'domain',
       id: `plan-tag-${tag}-${source}`,
@@ -87,9 +88,10 @@ describe('TagsService', () => {
       source,
       tag,
     });
+  };
 
-  const taskTagRow = (tag: string, source: TagSource): TaskTag =>
-    asMock<TaskTag>({
+  const taskTagRow = (tag: string, source: TagSource): TaskTag => {
+    return asMock<TaskTag>({
       confidence: null,
       dimension: 'domain',
       id: `task-tag-${tag}-${source}`,
@@ -97,9 +99,10 @@ describe('TagsService', () => {
       tag,
       taskId,
     });
+  };
 
-  const projectTagRow = (tag: string, source: TagSource): ProjectTag =>
-    asMock<ProjectTag>({
+  const projectTagRow = (tag: string, source: TagSource): ProjectTag => {
+    return asMock<ProjectTag>({
       confidence: null,
       dimension: tag === 'breakdown' || tag === 'design' ? 'phase' : 'domain',
       id: `project-tag-${tag}-${source}`,
@@ -107,6 +110,7 @@ describe('TagsService', () => {
       source,
       tag,
     });
+  };
 
   const taskTagsSelectBuilder = {
     andWhere: vi.fn(),

@@ -47,6 +47,16 @@ export const SemanticSearchForm = (
   };
 
   // Markup
+  const indexButton = (
+    <Button
+      disabled={indexing}
+      onClick={onIndex}
+      type="button"
+      variant="outline"
+    >
+      {indexing ? 'Indexing…' : 'Index'}
+    </Button>
+  );
 
   // Life Cycle
   // Sync from `defaultQuery` only when the user isn't mid-type: a route
@@ -85,16 +95,7 @@ export const SemanticSearchForm = (
       <Button disabled={disabled} type="submit">
         Search
       </Button>
-      {onIndex ? (
-        <Button
-          disabled={indexing}
-          onClick={onIndex}
-          type="button"
-          variant="outline"
-        >
-          {indexing ? 'Indexing…' : 'Index'}
-        </Button>
-      ) : null}
+      {onIndex ? indexButton : null}
     </form>
   );
 };

@@ -50,15 +50,14 @@ export const useOpenThrottleCommander = (
   // Setup
   const isControlled = openProp !== undefined && onOpenChange !== undefined;
   const open = isControlled ? openProp : internalOpen;
-  const setOpen = isControlled
-    ? (value: boolean) => onOpenChange?.(value)
-    : setInternalOpen;
+  const setControlledOpen = (value: boolean): void => {
+    onOpenChange?.(value);
+  };
+  const setOpen = isControlled ? setControlledOpen : setInternalOpen;
 
   const trimmedSearch = search.trim();
-  const extraItems =
-    trimmedSearch.length > 0 && emptyStateExtras != null
-      ? emptyStateExtras(trimmedSearch)
-      : [];
+  const canExtend = trimmedSearch.length > 0 && emptyStateExtras != null;
+  const extraItems = canExtend ? emptyStateExtras(trimmedSearch) : [];
 
   const showSearchEscape =
     Boolean(onEmptyStateSearch) && trimmedSearch.length > 0;

@@ -17,11 +17,13 @@ const buildOptions = (
     readonly isBetaEnabled?: boolean;
     readonly isCharlieEnabled?: boolean;
   } = {},
-) => ({
-  isBetaEnabled: overrides.isBetaEnabled ?? false,
-  isCharlieEnabled: overrides.isCharlieEnabled ?? false,
-  navigate: vi.fn(),
-});
+) => {
+  return {
+    isBetaEnabled: overrides.isBetaEnabled ?? false,
+    isCharlieEnabled: overrides.isCharlieEnabled ?? false,
+    navigate: vi.fn(),
+  };
+};
 
 /**
  * @description Mirrors the mapper's visibility rules so expectations are derived
@@ -33,14 +35,15 @@ const expectedLinks = (
     readonly isBetaEnabled: boolean;
     readonly isCharlieEnabled: boolean;
   },
-): readonly GlobalSidebarContentLinkProps[] =>
-  Object.values(navigation)
+): readonly GlobalSidebarContentLinkProps[] => {
+  return Object.values(navigation)
     .flat()
     .filter(
       (link) =>
         (link.beta !== true || flags.isBetaEnabled) &&
         (link.disabled !== true || flags.isCharlieEnabled),
     );
+};
 
 describe('getCommanderIdFromPath', () => {
   test('slugifies nested paths and special-cases the index route', () => {

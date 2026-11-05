@@ -37,6 +37,11 @@ export const PlanWorkflowConfigWorktree = (
   // Setup
   const derivedWorktreeName =
     input.planId.trim() === '' ? '' : buildPlanRunWorktreeName(input.planId);
+  const hasDerivedName = derivedWorktreeName !== '';
+  const exampleName = 'e.g. plan-5e172b67';
+  const namePlaceholder = hasDerivedName ? derivedWorktreeName : exampleName;
+  const fallbackLabel = 'a name derived from the plan id';
+  const autoNameLabel = hasDerivedName ? derivedWorktreeName : fallbackLabel;
 
   // Handlers
   const handleWorktreeCliChange = (value: WorkflowRalphWorktreeCli): void => {
@@ -109,15 +114,13 @@ export const PlanWorkflowConfigWorktree = (
           className="text-muted-foreground text-xs"
           id="workflow-run-worktree-cli-hint"
         >
-          {input.worktreeCli === 'omit'
-            ? PLAN_CONFIG_WORKTREE_COPY.offWarning
-            : null}{' '}
+          {input.worktreeCli === 'omit' && PLAN_CONFIG_WORKTREE_COPY.offWarning}{' '}
           Env:{' '}
           <code className="text-xs">{WORKFLOW_RALPH_ENV_VARS.worktree}</code>.
           Flag-only is a local CLI preview mode; it is not sent on enqueue.
         </p>
       </div>
-      {input.worktreeCli === 'named' ? (
+      {input.worktreeCli === 'named' && (
         <div className="space-y-2">
           <Label htmlFor="workflow-run-worktree-name">
             {PLAN_CONFIG_WORKTREE_COPY.nameLabel}
@@ -133,11 +136,7 @@ export const PlanWorkflowConfigWorktree = (
                 worktreeName: e.target.value,
               }))
             }
-            placeholder={
-              derivedWorktreeName === ''
-                ? 'e.g. plan-5e172b67'
-                : derivedWorktreeName
-            }
+            placeholder={namePlaceholder}
             spellCheck={false}
             value={input.worktreeName}
           />
@@ -145,14 +144,10 @@ export const PlanWorkflowConfigWorktree = (
             className="text-muted-foreground text-xs"
             id="workflow-run-worktree-name-hint"
           >
-            {derivedWorktreeName === ''
-              ? PLAN_CONFIG_WORKTREE_COPY.autoNameHint(
-                  'a name derived from the plan id',
-                )
-              : PLAN_CONFIG_WORKTREE_COPY.autoNameHint(derivedWorktreeName)}
+            {PLAN_CONFIG_WORKTREE_COPY.autoNameHint(autoNameLabel)}
           </p>
         </div>
-      ) : null}
+      )}
       <PlanWorkflowConfigWorktreeCursorFields
         input={input}
         setInput={setInput}

@@ -55,8 +55,9 @@ describe('buildPlanRunSnapshotDiffLabels', () => {
   });
 });
 
-const snapshotWith = (ralph: Record<string, unknown>): string =>
-  JSON.stringify({ ralph, workspace: { workingDirectory: '' } });
+const snapshotWith = (ralph: Record<string, unknown>): string => {
+  return JSON.stringify({ ralph, workspace: { workingDirectory: '' } });
+};
 
 describe('readPlanRunSnapshotEffort', () => {
   test('reads ralph.effort from the snapshot', () => {

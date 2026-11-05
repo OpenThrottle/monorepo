@@ -209,6 +209,17 @@ const resolveWorkflowGraphqlUrlFromSpawnEnv = (
   return undefined;
 };
 
+const withOptionalOtRoot = (
+  env: NodeJS.ProcessEnv,
+  otRoot: string | undefined,
+): NodeJS.ProcessEnv => {
+  if (otRoot === undefined) {
+    return env;
+  }
+
+  return { ...env, [WORKFLOW_RALPH_OT_ROOT_ENV]: otRoot };
+};
+
 /**
  * @description Env passed to nested `pnpm exec workflow-ralph`: GraphQL auth/URL (default) or canonical Postgres URL (rollback), plus PATH with OpenThrottle `node_modules/.bin` for deterministic `workflow-ralph` resolution from a foreign `cwd` (see {@link prependOpenThrottleBinToPath}).
  */
@@ -243,10 +254,10 @@ export function buildWorkflowRalphSpawnEnv(
     }
   } else {
     const trimmed = options?.canonicalPostgresUrl?.trim();
-    const conn =
-      trimmed !== undefined && trimmed !== ''
-        ? trimmed
-        : resolveOpenThrottlePostgresConnectionStringFromEnv(workerEnv);
+    const hasCanonicalUrl = trimmed !== undefined && trimmed !== '';
+    const envUrl =
+      resolveOpenThrottlePostgresConnectionStringFromEnv(workerEnv);
+    const conn = hasCanonicalUrl ? trimmed : envUrl;
 
     if (conn !== undefined) {
       env = {
@@ -258,10 +269,7 @@ export function buildWorkflowRalphSpawnEnv(
   }
 
   const otRoot = resolveEffectiveOpenThrottleRoot(workerEnv, merged);
-  const envWithOtRoot =
-    otRoot !== undefined
-      ? { ...env, [WORKFLOW_RALPH_OT_ROOT_ENV]: otRoot }
-      : env;
+  const envWithOtRoot = withOptionalOtRoot(env, otRoot);
 
   const withBinPath = prependOpenThrottleBinToPath(envWithOtRoot);
 

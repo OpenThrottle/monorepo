@@ -15,7 +15,7 @@ import {
   mockDiscoveredWorktree,
   mockMissingCheckout,
   mockRepository,
-} from '~/routing/settings/repositories/data/mock.repositories';
+} from '~/routing/settings/repositories/testing/mock-repositories';
 import { buildRepositoryRows } from '~/routing/settings/repositories/utils/rows';
 
 import type { RepositoryRowActionsProps } from '../RepositoryRowActions';
@@ -71,7 +71,9 @@ const renderRowActions = (options: {
   readonly props: RepositoryRowActionsProps;
   readonly submitted: FormData[];
 }): RenderResult => {
-  const Component = () => <RepositoryRowActions {...options.props} />;
+  const Component = () => {
+    return <RepositoryRowActions {...options.props} />;
+  };
   const RoutesStub = createRoutesStub([
     {
       Component,
@@ -198,7 +200,9 @@ describe('RepositoryRowActions Component', () => {
 
   test('disables refresh while that checkout is refreshing', async () => {
     const user = userEvent.setup();
-    let releaseAction: () => void = () => undefined;
+    let releaseAction: () => void = () => {
+      return undefined;
+    };
     actionGate = new Promise<void>((resolve) => {
       releaseAction = resolve;
     });

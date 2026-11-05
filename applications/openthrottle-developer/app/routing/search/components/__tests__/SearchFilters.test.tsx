@@ -30,7 +30,9 @@ describe('SearchFilters Component', () => {
     props = {};
 
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <SearchFiltersWithQueryString {...props} />;
+    const Component = () => {
+      return <SearchFiltersWithQueryString {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);
@@ -59,7 +61,9 @@ describe('SearchFilters Component', () => {
     cleanup();
     const user = userEvent.setup();
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <SearchFiltersWithQueryString {...props} />;
+    const Component = () => {
+      return <SearchFiltersWithQueryString {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const view = render(
       <RoutesStub initialEntries={['/?q=alpha&limit=10&page=3']} />,

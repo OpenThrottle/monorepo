@@ -37,8 +37,9 @@ export const BlogPostEditorWorkspace = (
   // Setup
 
   // Handlers
-  const handleBodyChange = (bodyMarkdown: string): void =>
-    onFieldChange('bodyMarkdown', bodyMarkdown);
+  const handleBodyChange = (bodyMarkdown: string): void => {
+    return onFieldChange('bodyMarkdown', bodyMarkdown);
+  };
 
   // Markup
 

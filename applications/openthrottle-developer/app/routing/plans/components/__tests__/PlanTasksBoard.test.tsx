@@ -75,29 +75,31 @@ const BoardHarness = (): React.ReactElement => {
 
 const mockTask = (
   overrides: Partial<PlanTaskRowFragment>,
-): PlanTaskRowFragment => ({
-  __typename: 'TaskObject',
-  assignee: null,
-  category: 'dev',
-  createdAt: '2025-01-01T00:00:00Z',
-  description: null,
-  id: 'task-1',
-  planId: 'plan-1',
-  projectRelation: null,
-  requirementsJson: '[]',
-  sortOrder: 1000,
-  status: 'PENDING',
-  summary: null,
-  title: 'Board task',
-  updatedAt: '2025-01-02T00:00:00Z',
-  ...overrides,
-});
+): PlanTaskRowFragment => {
+  return {
+    __typename: 'TaskObject',
+    assignee: null,
+    category: 'dev',
+    createdAt: '2025-01-01T00:00:00Z',
+    description: null,
+    id: 'task-1',
+    planId: 'plan-1',
+    projectRelation: null,
+    requirementsJson: '[]',
+    sortOrder: 1000,
+    status: 'PENDING',
+    summary: null,
+    title: 'Board task',
+    updatedAt: '2025-01-02T00:00:00Z',
+    ...overrides,
+  };
+};
 
 const renderBoard = (args: {
   planId: string;
   tasks: PlanTaskRowFragment[];
-}): RenderResult =>
-  renderWithPlanDetailRouteData(
+}): RenderResult => {
+  return renderWithPlanDetailRouteData(
     <DndProvider backend={HTML5Backend}>
       <PlanTasksBoard />
     </DndProvider>,
@@ -106,6 +108,7 @@ const renderBoard = (args: {
       tasks: args.tasks,
     }),
   );
+};
 
 describe('PlanTasksBoard Component', () => {
   test('exposes a live region for drag-and-drop announcements', () => {

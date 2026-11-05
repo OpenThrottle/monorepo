@@ -4,6 +4,10 @@ import * as React from 'react';
 import type { UseChatComposerMentionsResult } from '../hooks/useChatComposerMentions';
 import type { UseChatComposerSlashCommandsResult } from '../hooks/useChatComposerSlashCommands';
 import type { ChatMentionProvider, ChatSlashCommandProvider } from '../types';
+import {
+  getActiveDescendant,
+  pickOpenAutocomplete,
+} from '../utils/chat-composer-input';
 import { ChatMentionPopover } from './ChatMentionPopover';
 import { ChatSlashCommandPopover } from './ChatSlashCommandPopover';
 
@@ -50,16 +54,9 @@ export const ChatComposerInput = (
 
   // Setup
   // The open popover (if any) owns the aria wiring; at most one is ever open.
-  const open = mentions.popoverOpen
-    ? mentions
-    : slash.popoverOpen
-      ? slash
-      : null;
+  const open = pickOpenAutocomplete(mentions, slash);
   const autocompleteEnabled = mentions.mentionEnabled || slash.slashEnabled;
-  const activeDescendant =
-    open && open.results.length > 0
-      ? open.optionId(open.activeIndex)
-      : undefined;
+  const activeDescendant = getActiveDescendant(open);
 
   // Handlers
   const onChange = (event: React.ChangeEvent<HTMLTextAreaElement>): void => {
@@ -80,6 +77,32 @@ export const ChatComposerInput = (
   };
 
   // Markup
+  const mentionPopover = (
+    <ChatMentionPopover
+      activeIndex={mentions.activeIndex}
+      emptyLabel={mentionProvider?.emptyLabel ?? 'No matching files.'}
+      listboxId={mentions.listboxId}
+      loading={mentions.loading}
+      loadingLabel={mentionProvider?.loadingLabel ?? 'Searching files…'}
+      onHoverOption={mentions.setActiveIndex}
+      onSelectOption={mentions.selectOption}
+      optionId={mentions.optionId}
+      results={mentions.results}
+    />
+  );
+  const slashPopover = (
+    <ChatSlashCommandPopover
+      activeIndex={slash.activeIndex}
+      emptyLabel={slashCommandProvider?.emptyLabel ?? 'No matching skills.'}
+      listboxId={slash.listboxId}
+      loading={slash.loading}
+      loadingLabel={slashCommandProvider?.loadingLabel ?? 'Searching skills…'}
+      onHoverOption={slash.setActiveIndex}
+      onSelectOption={slash.selectOption}
+      optionId={slash.optionId}
+      results={slash.results}
+    />
+  );
 
   // Life Cycle
 
@@ -104,34 +127,8 @@ export const ChatComposerInput = (
         rows={3}
         value={draft}
       />
-      {mentions.popoverOpen ? (
-        <ChatMentionPopover
-          activeIndex={mentions.activeIndex}
-          emptyLabel={mentionProvider?.emptyLabel ?? 'No matching files.'}
-          listboxId={mentions.listboxId}
-          loading={mentions.loading}
-          loadingLabel={mentionProvider?.loadingLabel ?? 'Searching files…'}
-          onHoverOption={mentions.setActiveIndex}
-          onSelectOption={mentions.selectOption}
-          optionId={mentions.optionId}
-          results={mentions.results}
-        />
-      ) : null}
-      {slash.popoverOpen ? (
-        <ChatSlashCommandPopover
-          activeIndex={slash.activeIndex}
-          emptyLabel={slashCommandProvider?.emptyLabel ?? 'No matching skills.'}
-          listboxId={slash.listboxId}
-          loading={slash.loading}
-          loadingLabel={
-            slashCommandProvider?.loadingLabel ?? 'Searching skills…'
-          }
-          onHoverOption={slash.setActiveIndex}
-          onSelectOption={slash.selectOption}
-          optionId={slash.optionId}
-          results={slash.results}
-        />
-      ) : null}
+      {mentions.popoverOpen ? mentionPopover : null}
+      {slash.popoverOpen ? slashPopover : null}
     </div>
   );
 };

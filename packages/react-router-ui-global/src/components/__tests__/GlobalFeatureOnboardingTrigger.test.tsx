@@ -33,7 +33,9 @@ describe('GlobalFeatureOnboardingTrigger Component', () => {
     props = {};
 
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <Harness {...props} />;
+    const Component = () => {
+      return <Harness {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
   });
@@ -62,7 +64,9 @@ describe('GlobalFeatureOnboardingTrigger Component', () => {
     cleanup();
     const user = userEvent.setup();
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <Harness {...props} />;
+    const Component = () => {
+      return <Harness {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByTestId } = render(
       <RoutesStub initialEntries={['/?keep=1']} />,
@@ -79,7 +83,9 @@ describe('GlobalFeatureOnboardingTrigger Component', () => {
     cleanup();
     props = { label: 'Learn Rules' };
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <Harness {...props} />;
+    const Component = () => {
+      return <Harness {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByTestId } = render(<RoutesStub />);
 

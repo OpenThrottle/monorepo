@@ -11,29 +11,35 @@ import { ChatRunPhase } from '../types';
 
 const tool = (
   overrides: Partial<ChatTurnToolEvent> = {},
-): ChatTurnToolEvent => ({
-  argsJson: null,
-  callId: 'c1',
-  error: null,
-  kind: 'tool',
-  name: 'read',
-  resultJson: null,
-  sortOrder: 0,
-  status: 'running',
-  ...overrides,
-});
+): ChatTurnToolEvent => {
+  return {
+    argsJson: null,
+    callId: 'c1',
+    error: null,
+    kind: 'tool',
+    name: 'read',
+    resultJson: null,
+    sortOrder: 0,
+    status: 'running',
+    ...overrides,
+  };
+};
 
-const thinking = (sortOrder: number): ChatTurnEvent => ({
-  kind: 'thinking',
-  sortOrder,
-  text: 'hmm',
-});
+const thinking = (sortOrder: number): ChatTurnEvent => {
+  return {
+    kind: 'thinking',
+    sortOrder,
+    text: 'hmm',
+  };
+};
 
-const text = (sortOrder: number): ChatTurnEvent => ({
-  kind: 'text',
-  sortOrder,
-  text: 'hello',
-});
+const text = (sortOrder: number): ChatTurnEvent => {
+  return {
+    kind: 'text',
+    sortOrder,
+    text: 'hello',
+  };
+};
 
 describe('deriveRunPhaseFromEvents', () => {
   test('a running tool wins and names the tool', () => {

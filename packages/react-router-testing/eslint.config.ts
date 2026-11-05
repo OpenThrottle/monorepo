@@ -1,3 +1,7 @@
-import { eslintConfig } from '@tools/dotfiles';
+import { dataFolderEslintConfig, eslintConfig } from '@tools/dotfiles';
 
-export default [{ ignores: ['!**/*'] }, ...eslintConfig];
+export default [
+  { ignores: ['!**/*'] },
+  ...eslintConfig,
+  ...dataFolderEslintConfig,
+];

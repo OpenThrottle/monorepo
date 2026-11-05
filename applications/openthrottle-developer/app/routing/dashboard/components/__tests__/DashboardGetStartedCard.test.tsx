@@ -16,14 +16,16 @@ import { DashboardGetStartedCard } from '../DashboardGetStartedCard';
 
 const completion = (
   overrides: Partial<OnboardingCompletion> = {},
-): OnboardingCompletion => ({
-  [ONBOARDING_STEP_ID.agentCli]: false,
-  [ONBOARDING_STEP_ID.firstPlan]: false,
-  [ONBOARDING_STEP_ID.firstRun]: false,
-  [ONBOARDING_STEP_ID.githubToken]: false,
-  [ONBOARDING_STEP_ID.workspaceRepo]: false,
-  ...overrides,
-});
+): OnboardingCompletion => {
+  return {
+    [ONBOARDING_STEP_ID.agentCli]: false,
+    [ONBOARDING_STEP_ID.firstPlan]: false,
+    [ONBOARDING_STEP_ID.firstRun]: false,
+    [ONBOARDING_STEP_ID.githubToken]: false,
+    [ONBOARDING_STEP_ID.workspaceRepo]: false,
+    ...overrides,
+  };
+};
 
 const ALL_COMPLETE: OnboardingCompletion = {
   [ONBOARDING_STEP_ID.agentCli]: true,
@@ -38,11 +40,13 @@ const ALL_COMPLETE: OnboardingCompletion = {
 const renderCard = (props: {
   completion: OnboardingCompletion;
 }): RenderResult => {
-  const Component = () => (
-    <Provider>
-      <DashboardGetStartedCard {...props} />
-    </Provider>
-  );
+  const Component = () => {
+    return (
+      <Provider>
+        <DashboardGetStartedCard {...props} />
+      </Provider>
+    );
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 };

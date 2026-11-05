@@ -9,20 +9,20 @@ import {
 
 type CancelPayload = PlanDetailCancelPlanRunMutation['cancelPlanRun'];
 
-const basePayload = (
-  overrides: Partial<CancelPayload> = {},
-): CancelPayload => ({
-  __typename: 'CancelPlanRunResultObject',
-  activeJobIdsCouldNotCancel: [],
-  cancelRequested: false,
-  noMatchingJob: false,
-  outcome: 'NO_ACTIVE_RUN',
-  planId: 'p1',
-  planStatusAfter: null,
-  removedJobIds: [],
-  signaledActiveRunToStop: false,
-  ...overrides,
-});
+const basePayload = (overrides: Partial<CancelPayload> = {}): CancelPayload => {
+  return {
+    __typename: 'CancelPlanRunResultObject',
+    activeJobIdsCouldNotCancel: [],
+    cancelRequested: false,
+    noMatchingJob: false,
+    outcome: 'NO_ACTIVE_RUN',
+    planId: 'p1',
+    planStatusAfter: null,
+    removedJobIds: [],
+    signaledActiveRunToStop: false,
+    ...overrides,
+  };
+};
 
 describe('describeCancelPlanRunResult', () => {
   test('RUN_CANCELLED describes a single removed job', () => {

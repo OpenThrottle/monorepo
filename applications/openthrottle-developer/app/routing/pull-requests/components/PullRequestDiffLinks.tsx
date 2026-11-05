@@ -38,7 +38,7 @@ export const PullRequestDiffLinks = (
         Diff, conversation, and repo
       </h3>
       <div className="mb-6 flex flex-wrap gap-2">
-        {pull.baseRef !== null && pull.headRef !== null ? (
+        {pull.baseRef !== null && pull.headRef !== null && (
           <Button asChild={true} size="sm" variant="outline">
             <a
               href={githubPullCompareUrl(
@@ -53,7 +53,7 @@ export const PullRequestDiffLinks = (
               Compare base…head
             </a>
           </Button>
-        ) : null}
+        )}
         <Button asChild={true} size="sm" variant="outline">
           <a
             href={githubPullConversationUrl(owner, repo, pull.number)}

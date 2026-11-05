@@ -8,9 +8,11 @@ import { GlobalProviders } from '../GlobalProviders';
 import type { GlobalSidebarProps } from '../GlobalSidebar';
 import { GlobalSidebar } from '../GlobalSidebar';
 
-const StubIcon = (iconProps: { className?: string }) => (
-  <span className={iconProps.className} data-testid="sidebar-stub-icon" />
-);
+const StubIcon = (iconProps: { className?: string }) => {
+  return (
+    <span className={iconProps.className} data-testid="sidebar-stub-icon" />
+  );
+};
 
 describe('GlobalSidebar Component', () => {
   let props: GlobalSidebarProps;
@@ -29,11 +31,13 @@ describe('GlobalSidebar Component', () => {
     };
 
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <GlobalProviders>
-        <GlobalSidebar {...props} />
-      </GlobalProviders>
-    );
+    const Component = () => {
+      return (
+        <GlobalProviders>
+          <GlobalSidebar {...props} />
+        </GlobalProviders>
+      );
+    };
     const RoutesStub = createRoutesStub([
       { Component, path: '/' },
       // eslint-disable-next-line react/no-multi-comp -- test-local mock component

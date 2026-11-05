@@ -7,8 +7,7 @@ import { Field, ID, InputType, Int } from '@nestjs/graphql';
 import { CustomPromptTypeEnum } from './custom-prompt.object.ts';
 
 @InputType({
-  description:
-    'Input for semantic search over agent-asset (custom_prompt) embeddings.',
+  description: `Input for semantic search over agent-asset (custom_prompt) embeddings.`,
 })
 export class AgentAssetSearchInput {
   @Field(() => String, {
@@ -23,8 +22,7 @@ export class AgentAssetSearchInput {
   limit!: number | null;
 
   @Field(() => [CustomPromptTypeEnum], {
-    description:
-      'Filter by prompt types (default: skills, rules, personas). Empty/null uses the default set.',
+    description: `Filter by prompt types (default: skills, rules, personas). Empty/null uses the default set.`,
     nullable: true,
   })
   promptTypes!: CustomPromptTypeEnum[] | null;

@@ -31,13 +31,12 @@ function build(
 } {
   const start = vi.fn().mockReturnValue('run-123');
   const config = createMock<ConfigService>({
-    get: vi.fn((key: string) =>
-      key === AGENT_CLI_INSTALL_ENABLED_ENV
-        ? enabled
-          ? 'true'
-          : ''
-        : undefined,
-    ),
+    get: vi.fn((key: string) => {
+      if (key !== AGENT_CLI_INSTALL_ENABLED_ENV) {
+        return undefined;
+      }
+      return enabled ? 'true' : '';
+    }),
   });
   const roles = createMock<RolesService>({
     getPermissionsForUser: vi.fn().mockResolvedValue([...permissions]),

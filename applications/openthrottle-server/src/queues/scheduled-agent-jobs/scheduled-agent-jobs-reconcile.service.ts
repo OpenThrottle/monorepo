@@ -138,10 +138,10 @@ export class ScheduledAgentJobsReconcileService implements OnModuleInit {
         plan.catchUpSlot !== null &&
         (await this.jobsService.hasLateRunSince(job.id, bootAt));
       const catchUpSlot = catchUpAlreadyRan ? null : plan.catchUpSlot;
-      const supersededSlots =
-        catchUpAlreadyRan && plan.catchUpSlot !== null
-          ? [...plan.supersededSlots, plan.catchUpSlot]
-          : plan.supersededSlots;
+      let supersededSlots = plan.supersededSlots;
+      if (catchUpAlreadyRan && plan.catchUpSlot !== null) {
+        supersededSlots = [...plan.supersededSlots, plan.catchUpSlot];
+      }
       const base = {
         driverId: job.driverId,
         model: job.model,
@@ -169,23 +169,24 @@ export class ScheduledAgentJobsReconcileService implements OnModuleInit {
 
       // One notice per schedule per boot, however long the outage, so a week down is not a week of
       // toasts. The run history carries each slot's own reason.
+      let errorMessage = missedSupersededMessage(policy);
+      if (lateCount > 0) {
+        errorMessage = missedLateMessage(policy);
+      }
       await this.failureNotifier.notify({
-        errorMessage:
-          lateCount > 0
-            ? missedLateMessage(policy)
-            : missedSupersededMessage(policy),
+        errorMessage,
         reason: SCHEDULED_RUN_FAILURE_REASONS.MISSED,
         runCount: lateCount + supersededCount,
         runId: undefined,
         scheduledAgentJobId: job.id,
       });
 
-      const dropped =
-        droppedCount > 0 ? ` (${droppedCount} older not recorded)` : '';
-      const catchUp =
-        catchUpSlot === null
-          ? 'none'
-          : `enqueued for ${catchUpSlot.toISOString()}`;
+      const hasDropped = droppedCount > 0;
+      const dropped = hasDropped ? ` (${droppedCount} older not recorded)` : '';
+      let catchUp = 'none';
+      if (catchUpSlot !== null) {
+        catchUp = `enqueued for ${catchUpSlot.toISOString()}`;
+      }
       this.logger.info(
         `Scheduled agent job ${job.id}: ${slots.length + droppedCount} fire(s) came due while the server was down; recorded ${lateCount + supersededCount} missed${dropped}, catch-up ${catchUp} (policy ${job.misfirePolicy})`,
         ScheduledAgentJobsReconcileService.name,

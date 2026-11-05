@@ -6,6 +6,18 @@ import type {
 } from '../types';
 import { nullableString } from './nullable-string';
 
+const parseFooter = (value: unknown): string | null | undefined => {
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  if (value === null) {
+    return null;
+  }
+
+  return undefined;
+};
+
 const parseChatMessage = (value: unknown): ChatMessage | null => {
   if (!isRecord(value)) {
     return null;
@@ -33,12 +45,7 @@ const parseChatMessage = (value: unknown): ChatMessage | null => {
     body: message.body,
     createdAt:
       typeof message.createdAt === 'string' ? message.createdAt : undefined,
-    footer:
-      typeof message.footer === 'string'
-        ? message.footer
-        : message.footer === null
-          ? null
-          : undefined,
+    footer: parseFooter(message.footer),
     id: message.id,
     role: message.role,
   };

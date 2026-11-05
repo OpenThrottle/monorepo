@@ -5,7 +5,7 @@ import { ClipboardIcon, DollarSignIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { getRandomIntroduction } from '../data/data.introductions';
+import { getRandomIntroduction } from '../utils/get-random-introduction';
 import { OpenThrottleClipboard } from './OpenThrottleClipboard';
 import { OpenThrottleLogo } from './OpenThrottleLogo';
 

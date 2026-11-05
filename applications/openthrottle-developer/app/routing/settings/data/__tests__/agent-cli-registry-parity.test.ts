@@ -19,7 +19,8 @@
 import { ALL_DRIVERS } from '@openthrottle/openthrottle-drivers';
 import { describe, expect, it } from 'vitest';
 
-import { AGENT_CLI_BACKENDS, mergeAgentCliStatuses } from '../data.agent-clis';
+import { AGENT_CLI_BACKENDS } from '~/routing/settings/data/data.agent-clis';
+import { mergeAgentCliStatuses } from '~/routing/settings/utils/agent-cli-statuses';
 
 /**
  * Gemini is the one backend whose catalog link is NOT its driver's `install.url`: it installs via

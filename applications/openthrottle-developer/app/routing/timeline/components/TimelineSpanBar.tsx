@@ -62,6 +62,37 @@ export const TimelineSpanBar = (
   };
 
   // Markup
+  const derivedEndHatch = (
+    <rect
+      data-testid="TimelineSpanBarDerivedEnd"
+      fill={`url(#${TIMELINE_DERIVED_PATTERN_ID})`}
+      height={rect.height}
+      rx={2}
+      width={Math.min(rect.width, 12)}
+      x={rect.x + rect.width - Math.min(rect.width, 12)}
+      y={rect.y}
+    />
+  );
+  const clippedStartRule = (
+    <rect
+      className="fill-foreground"
+      data-testid="TimelineSpanBarClipStart"
+      height={rect.height}
+      width={EDGE_MARKER_WIDTH}
+      x={rect.x}
+      y={rect.y}
+    />
+  );
+  const clippedEndRule = (
+    <rect
+      className="fill-foreground"
+      data-testid="TimelineSpanBarClipEnd"
+      height={rect.height}
+      width={EDGE_MARKER_WIDTH}
+      x={rect.x + rect.width - EDGE_MARKER_WIDTH}
+      y={rect.y}
+    />
+  );
 
   // Life Cycle
 
@@ -93,38 +124,10 @@ export const TimelineSpanBar = (
         last-activity bar is visually indistinguishable from a measured run,
         which is the single most misleading thing this chart could do.
       */}
-      {span.derivedEnd ? (
-        <rect
-          data-testid="TimelineSpanBarDerivedEnd"
-          fill={`url(#${TIMELINE_DERIVED_PATTERN_ID})`}
-          height={rect.height}
-          rx={2}
-          width={Math.min(rect.width, 12)}
-          x={rect.x + rect.width - Math.min(rect.width, 12)}
-          y={rect.y}
-        />
-      ) : null}
+      {span.derivedEnd ? derivedEndHatch : null}
       {/* Clipped ends get a solid rule, so a cut span never looks finished. */}
-      {rect.clippedStart ? (
-        <rect
-          className="fill-foreground"
-          data-testid="TimelineSpanBarClipStart"
-          height={rect.height}
-          width={EDGE_MARKER_WIDTH}
-          x={rect.x}
-          y={rect.y}
-        />
-      ) : null}
-      {rect.clippedEnd ? (
-        <rect
-          className="fill-foreground"
-          data-testid="TimelineSpanBarClipEnd"
-          height={rect.height}
-          width={EDGE_MARKER_WIDTH}
-          x={rect.x + rect.width - EDGE_MARKER_WIDTH}
-          y={rect.y}
-        />
-      ) : null}
+      {rect.clippedStart ? clippedStartRule : null}
+      {rect.clippedEnd ? clippedEndRule : null}
     </g>
   );
 };

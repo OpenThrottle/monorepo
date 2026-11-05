@@ -79,11 +79,13 @@ describe('LegacyChatTurnProvider Component', () => {
     props = { chatPersist: false };
 
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <LegacyChatTurnProvider {...props}>
-        <ContextProbe />
-      </LegacyChatTurnProvider>
-    );
+    const Component = () => {
+      return (
+        <LegacyChatTurnProvider {...props}>
+          <ContextProbe />
+        </LegacyChatTurnProvider>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
   });
@@ -107,11 +109,13 @@ describe('LegacyChatTurnProvider Component', () => {
     cleanup();
     props = { chatPersist: true };
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <LegacyChatTurnProvider {...props}>
-        <ContextProbe />
-      </LegacyChatTurnProvider>
-    );
+    const Component = () => {
+      return (
+        <LegacyChatTurnProvider {...props}>
+          <ContextProbe />
+        </LegacyChatTurnProvider>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByTestId } = render(<RoutesStub />);
 

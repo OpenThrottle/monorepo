@@ -18,11 +18,9 @@ import type { AgentsRouterModelSnapshot } from './agents-mcp-router-llm.service.
 
 export type { AgentsRouterModelSnapshot };
 
-export const PERSISTED_CONVERSATION_AUTH_ERROR =
-  'Authentication required for persisted conversations.';
+export const PERSISTED_CONVERSATION_AUTH_ERROR = `Authentication required for persisted conversations.`;
 
-export const PERSISTED_CONVERSATION_NOT_FOUND_ERROR =
-  'Agent conversation not found.';
+export const PERSISTED_CONVERSATION_NOT_FOUND_ERROR = `Agent conversation not found.`;
 
 /**
  * @description Returns the human JWT principal when present; otherwise null.
@@ -139,10 +137,8 @@ export const persistSuccessfulAgentsChatTurn = async (
   const toolMetadata = parseAgentsChatTurnToolMetadata(
     input.turn.toolMetadataJson,
   );
-  const routerModelSnapshot =
-    input.llmRouterUsed && input.routerModelSnapshot != null
-      ? input.routerModelSnapshot
-      : null;
+  const requestedSnapshot = input.routerModelSnapshot ?? null;
+  const routerModelSnapshot = input.llmRouterUsed ? requestedSnapshot : null;
 
   await input.agentConversationsService.appendTurn(
     input.userId,

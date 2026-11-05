@@ -10,23 +10,26 @@ import { PlanWorkflowRunLatest } from '../PlanWorkflowRunLatest';
 
 type Row = PlanWorkflowRunLatestProps['planRunAuditRows'][number];
 
-const row = (overrides: Partial<Row> & Pick<Row, 'id' | 'status'>): Row => ({
-  __typename: 'PlanRunObject',
-  createdAt: '2026-11-01T00:00:00.000Z',
-  executionBackend: 'claude',
-  heartbeatExpected: true,
-  isStale: false,
-  model: 'claude-opus',
-  runKind: 'spawn',
-  ...overrides,
-});
+const row = (overrides: Partial<Row> & Pick<Row, 'id' | 'status'>): Row => {
+  return {
+    __typename: 'PlanRunObject',
+    createdAt: '2026-11-01T00:00:00.000Z',
+    executionBackend: 'claude',
+    heartbeatExpected: true,
+    isStale: false,
+    model: 'claude-opus',
+    runKind: 'spawn',
+    ...overrides,
+  };
+};
 
-const renderLatest = (planRunAuditRows: Row[]) =>
-  render(
+const renderLatest = (planRunAuditRows: Row[]) => {
+  return render(
     <TooltipProvider>
       <PlanWorkflowRunLatest planRunAuditRows={planRunAuditRows} />
     </TooltipProvider>,
   );
+};
 
 describe('PlanWorkflowRunLatest', () => {
   describe('when an active run exists alongside a newer finished one', () => {

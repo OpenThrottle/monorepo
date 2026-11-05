@@ -1,4 +1,4 @@
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 
 /**
  * @description Case-insensitive filter over repo skill entries by slug, path,

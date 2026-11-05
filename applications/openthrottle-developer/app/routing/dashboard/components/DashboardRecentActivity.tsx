@@ -3,25 +3,15 @@ import {
   Table,
   TableBody,
   TableCaption,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import { Link } from 'react-router';
 
 import type { DashboardActivityCardFragment } from '~/__generated__/graphql';
-import {
-  activityDetailHref,
-  commitLinkAriaLabel,
-  outputLinkAriaLabel,
-  planCellContent,
-  taskLinkAriaLabel,
-  toActivityRows,
-} from '~/routing/dashboard/utils/recent-activity';
-import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
-import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
+import { DashboardRecentActivityRow } from '~/routing/dashboard/components/DashboardRecentActivityRow';
+import { toActivityRows } from '~/routing/dashboard/utils/recent-activity';
 
 export interface DashboardRecentActivityProps {
   className?: string;
@@ -37,10 +27,41 @@ export const DashboardRecentActivity = (
 
   // Setup
   const activityRows = toActivityRows(data);
+  const isEmpty = activityRows.length === 0;
 
   // Handlers
 
   // Markup
+  const emptyMarkup = (
+    <p
+      className="text-muted-foreground text-sm"
+      data-testid="DashboardRecentActivity-empty"
+    >
+      No recent activity.
+    </p>
+  );
+  const tableMarkup = (
+    <Table className="[&_tr]:hover:text-accent">
+      <TableCaption className="sr-only">
+        Recent activity: type, date, and plan
+      </TableCaption>
+      <TableHeader>
+        <TableRow>
+          <TableHead align="left" className="pb-2" scope="col">
+            Status
+          </TableHead>
+          <TableHead align="left" className="pb-2" scope="col">
+            Plan
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {activityRows.map((row) => (
+          <DashboardRecentActivityRow key={row.id} row={row} />
+        ))}
+      </TableBody>
+    </Table>
+  );
 
   // Life Cycle
 
@@ -50,87 +71,7 @@ export const DashboardRecentActivity = (
     <div className={cn(className)} data-testid="DashboardRecentActivity">
       <h2 className="mb-4">Recent Activity</h2>
 
-      {activityRows.length === 0 ? (
-        <p
-          className="text-muted-foreground text-sm"
-          data-testid="DashboardRecentActivity-empty"
-        >
-          No recent activity.
-        </p>
-      ) : (
-        <Table className="[&_tr]:hover:text-accent">
-          <TableCaption className="sr-only">
-            Recent activity: type, date, and plan
-          </TableCaption>
-          <TableHeader>
-            <TableRow>
-              <TableHead align="left" className="pb-2" scope="col">
-                Status
-              </TableHead>
-              <TableHead align="left" className="pb-2" scope="col">
-                Plan
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {activityRows.map((row) => {
-              const href = activityDetailHref(row);
-              const isCommitWithLink = row.type === 'commit' && href != null;
-              const isOutputWithLink = row.type === 'output' && href != null;
-              const isTaskWithLink = row.type === 'task' && href != null;
-              const content = planCellContent(row);
-
-              const planCell = isCommitWithLink ? (
-                <Link
-                  aria-label={commitLinkAriaLabel(row)}
-                  className="line-clamp-2"
-                  to={href}
-                  viewTransition={true}
-                >
-                  {content}
-                </Link>
-              ) : isTaskWithLink ? (
-                <Link
-                  aria-label={taskLinkAriaLabel(row)}
-                  className="line-clamp-2"
-                  to={href}
-                  viewTransition={true}
-                >
-                  {content}
-                </Link>
-              ) : isOutputWithLink ? (
-                <Link
-                  aria-label={outputLinkAriaLabel(row)}
-                  className="line-clamp-2"
-                  to={href}
-                  viewTransition={true}
-                >
-                  {content}
-                </Link>
-              ) : (
-                content
-              );
-
-              const statusBadge =
-                row.type === 'task' &&
-                row.status != null &&
-                isPlanStatusKey(row.status) ? (
-                  <PlanStatusBadge status={row.status} />
-                ) : null;
-
-              return (
-                <TableRow key={row.id}>
-                  <TableCell className="align-top">{statusBadge}</TableCell>
-                  <TableCell className="overflow-hidden text-xs">
-                    {planCell}
-                    {/* {formatActivityDate(row.date)} */}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      )}
+      {isEmpty ? emptyMarkup : tableMarkup}
     </div>
   );
 };

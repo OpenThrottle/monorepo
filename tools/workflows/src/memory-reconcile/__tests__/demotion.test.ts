@@ -13,12 +13,14 @@ const DONE_PLAN: ObservedPlan = {
   status: 'COMPLETED',
 };
 
-const mergedPr = (number: number): ObservedPr => ({
-  isDraft: false,
-  merged: true,
-  number,
-  state: 'MERGED',
-});
+const mergedPr = (number: number): ObservedPr => {
+  return {
+    isDraft: false,
+    merged: true,
+    number,
+    state: 'MERGED',
+  };
+};
 
 /** Run the rule over a single index line, the way the CLI does. */
 const judge = (

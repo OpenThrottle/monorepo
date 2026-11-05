@@ -64,8 +64,7 @@ const userMessage = {
 
 describe('agent conversation tool descriptions', () => {
   it('includes boundary warning on all three tools', () => {
-    const boundary =
-      'Web chat threads only — use `get_plan_output` for Ralph/plan iteration logs.';
+    const boundary = `Web chat threads only — use \`get_plan_output\` for Ralph/plan iteration logs.`;
 
     expect(listAgentConversationsToolDescription).toContain(boundary);
     expect(getAgentConversationToolDescription).toContain(boundary);

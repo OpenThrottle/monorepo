@@ -8,8 +8,8 @@ import { REPOSITORY_HOOK_TELEMETRY_COPY } from '~/routing/settings/repositories/
 import {
   mockCheckout,
   mockRepository,
-} from '~/routing/settings/repositories/data/mock.repositories';
-import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/data/types';
+} from '~/routing/settings/repositories/testing/mock-repositories';
+import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/types';
 import { buildRepositoryRows } from '~/routing/settings/repositories/utils/rows';
 
 import { RepositoryHookTelemetryCell } from '../RepositoryHookTelemetryCell';
@@ -46,16 +46,18 @@ const rowWith = (
   return row;
 };
 
-const telemetry = (overrides: Partial<HookTelemetry>): HookTelemetry => ({
-  authTokenConfigured: false,
-  endpointConfigured: false,
-  endpointSource: 'none',
-  producers: [],
-  reason: null,
-  status: 'recording',
-  telemetryDir: '/Users/dev/.openthrottle/skill-usage',
-  ...overrides,
-});
+const telemetry = (overrides: Partial<HookTelemetry>): HookTelemetry => {
+  return {
+    authTokenConfigured: false,
+    endpointConfigured: false,
+    endpointSource: 'none',
+    producers: [],
+    reason: null,
+    status: 'recording',
+    telemetryDir: '/Users/dev/.openthrottle/skill-usage',
+    ...overrides,
+  };
+};
 
 describe('RepositoryHookTelemetryCell Component', () => {
   let component: RenderResult;

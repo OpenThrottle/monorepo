@@ -17,8 +17,8 @@ import { TaskPromotionProcessor } from './task-promotion.processor.ts';
 import type { TaskPromotionService } from './task-promotion.service.ts';
 import type { PromoteTaskJob } from './task-promotion.types.ts';
 
-const buildJob = (): PromoteTaskJob =>
-  asMock<PromoteTaskJob>({
+const buildJob = (): PromoteTaskJob => {
+  return asMock<PromoteTaskJob>({
     data: {
       actorServiceAccountId: null,
       actorUserId: null,
@@ -27,6 +27,7 @@ const buildJob = (): PromoteTaskJob =>
     },
     name: 'promote',
   });
+};
 
 describe('TaskPromotionProcessor', () => {
   it('registers on the task-promotion queue with the configured concurrency', () => {

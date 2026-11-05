@@ -117,10 +117,10 @@ export class CustomPromptsResolver {
     const repo = this.customPromptsService.getRepository();
 
     // Gate BEFORE the save so a refused write never persists a row.
-    const writeTarget =
-      input.writeToFileSystem && input.filePath
-        ? await this.resolveWriteTarget(principal, input.filePath)
-        : null;
+    let writeTarget: string | null = null;
+    if (input.writeToFileSystem && input.filePath) {
+      writeTarget = await this.resolveWriteTarget(principal, input.filePath);
+    }
 
     const entity = repo.create({
       content: input.content,
@@ -160,10 +160,10 @@ export class CustomPromptsResolver {
 
     // Gate BEFORE the save so a refused write never persists the edit.
     const filePathToWrite = input.filePath ?? entity.filePath;
-    const writeTarget =
-      input.writeToFileSystem && filePathToWrite
-        ? await this.resolveWriteTarget(principal, filePathToWrite)
-        : null;
+    let writeTarget: string | null = null;
+    if (input.writeToFileSystem && filePathToWrite) {
+      writeTarget = await this.resolveWriteTarget(principal, filePathToWrite);
+    }
 
     if (input.title != null) entity.title = input.title;
     if (input.content != null) entity.content = input.content;
@@ -236,8 +236,7 @@ export class CustomPromptsResolver {
   }
 
   @Mutation(() => Boolean, {
-    description:
-      'Write a custom prompt to the file system at its configured filePath',
+    description: `Write a custom prompt to the file system at its configured filePath`,
   })
   async writeCustomPromptToFileSystem(
     @CurrentUser() principal: AuthPrincipal | undefined,
@@ -275,10 +274,16 @@ export class CustomPromptsResolver {
       );
     }
 
-    const permissions =
-      principal.kind === AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT
-        ? await this.rolesService.getPermissionsForServiceAccount(principal.sub)
-        : await this.rolesService.getPermissionsForUser(principal.sub);
+    let permissions: string[];
+    if (principal.kind === AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT) {
+      permissions = await this.rolesService.getPermissionsForServiceAccount(
+        principal.sub,
+      );
+    } else {
+      permissions = await this.rolesService.getPermissionsForUser(
+        principal.sub,
+      );
+    }
 
     if (!permissions.includes(PERMISSIONS.SETTINGS_WRITE)) {
       throw new ForbiddenException(

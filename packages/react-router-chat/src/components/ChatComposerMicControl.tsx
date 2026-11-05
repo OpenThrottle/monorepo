@@ -9,6 +9,7 @@ import { Loader2, Mic } from 'lucide-react';
 import * as React from 'react';
 
 import { ChatComposerMicState } from '../types';
+import { getChatComposerMicLabel } from '../utils/chat-composer-mic-label';
 
 export interface ChatComposerMicControlProps {
   readonly micState: ChatComposerMicState;
@@ -35,17 +36,15 @@ export const ChatComposerMicControl = (
   // Setup
   const isMicFinalizing = micState === ChatComposerMicState.finalizing;
   const isMicRecording = micState === ChatComposerMicState.recording;
-  const micLabel = isMicRecording
-    ? 'Stop voice input'
-    : isMicFinalizing
-      ? 'Transcribing…'
-      : micState === ChatComposerMicState.disabled
-        ? 'Voice input unavailable'
-        : 'Start voice input';
+  const micLabel = getChatComposerMicLabel(micState);
 
   // Handlers
 
   // Markup
+  const spinnerIcon = <Loader2 className="size-4 animate-spin" />;
+  const micIcon = (
+    <Mic className={cn('size-4', { 'animate-pulse': isMicRecording })} />
+  );
 
   // Life Cycle
 
@@ -73,15 +72,7 @@ export const ChatComposerMicControl = (
           type="button"
           variant="ghost"
         >
-          {isMicFinalizing ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            <Mic
-              className={cn('size-4', {
-                'animate-pulse': isMicRecording,
-              })}
-            />
-          )}
+          {isMicFinalizing ? spinnerIcon : micIcon}
         </Button>
       </TooltipTrigger>
       <TooltipContent side="top">{micLabel}</TooltipContent>

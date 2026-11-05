@@ -9,29 +9,33 @@ import type { LinkedArtifactRow } from '../LinkedArtifactsPanel';
 
 const artifact = (
   overrides: Partial<LinkedArtifactRow> = {},
-): LinkedArtifactRow => ({
-  createdAt: '2026-07-13T00:00:00.000Z',
-  externalKey: 'github:o/r@abc1234',
-  id: 'art-1',
-  lifecycle: 'created',
-  message: null,
-  payloadJson: JSON.stringify({ repo: 'o/r', sha: 'abc1234def' }),
-  producedAt: '2026-07-13T00:00:00.000Z',
-  sessionId: 'sess-1',
-  source: 'agent',
-  type: 'git_commit',
-  verification: 'verified',
-  verifiedAt: null,
-  ...overrides,
-});
+): LinkedArtifactRow => {
+  return {
+    createdAt: '2026-07-13T00:00:00.000Z',
+    externalKey: 'github:o/r@abc1234',
+    id: 'art-1',
+    lifecycle: 'created',
+    message: null,
+    payloadJson: JSON.stringify({ repo: 'o/r', sha: 'abc1234def' }),
+    producedAt: '2026-07-13T00:00:00.000Z',
+    sessionId: 'sess-1',
+    source: 'agent',
+    type: 'git_commit',
+    verification: 'verified',
+    verifiedAt: null,
+    ...overrides,
+  };
+};
 
 const renderRow = (
   overrides: Partial<LinkedArtifactRow> = {},
   planId: string | null = 'plan-1',
 ): RenderResult => {
-  const Component = () => (
-    <LinkedArtifactRowItem artifact={artifact(overrides)} planId={planId} />
-  );
+  const Component = () => {
+    return (
+      <LinkedArtifactRowItem artifact={artifact(overrides)} planId={planId} />
+    );
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

@@ -7,7 +7,9 @@ import { NotificationPermissionUnsupported } from '../NotificationPermissionUnsu
 
 describe('NotificationPermissionUnsupported Component', () => {
   test('explains HTTPS and browser requirements', () => {
-    const Component = () => <NotificationPermissionUnsupported />;
+    const Component = () => {
+      return <NotificationPermissionUnsupported />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 

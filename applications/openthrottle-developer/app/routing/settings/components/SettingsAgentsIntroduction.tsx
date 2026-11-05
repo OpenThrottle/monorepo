@@ -15,10 +15,16 @@ export const SettingsAgentsIntroduction = (
   // Hooks
 
   // Setup
+  const hasScannedAt = scannedAt != null && scannedAt !== '';
 
   // Handlers
 
   // Markup
+  const lastChecked = (
+    <p className="text-muted-foreground mt-1 text-xs">
+      Last checked {new Date(scannedAt ?? '').toLocaleString()}
+    </p>
+  );
 
   // Life Cycle
 
@@ -37,11 +43,7 @@ export const SettingsAgentsIntroduction = (
         installed and, when available, its version and the models it can run.
       </p>
 
-      {scannedAt != null && scannedAt !== '' ? (
-        <p className="text-muted-foreground mt-1 text-xs">
-          Last checked {new Date(scannedAt).toLocaleString()}
-        </p>
-      ) : null}
+      {hasScannedAt ? lastChecked : null}
     </div>
   );
 };

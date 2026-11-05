@@ -5,8 +5,9 @@
  */
 
 /** Flagged/orphaned rows are the attention queue; rank them first. */
-export const attentionRank = (state: string): number =>
-  state === 'flagged' ? 0 : state === 'orphaned' ? 1 : 2;
+export const attentionRank = (state: string): number => {
+  return state === 'flagged' ? 0 : state === 'orphaned' ? 1 : 2;
+};
 
 /** Render a rule application's detailsJson as a compact `key: value` line; falls back to the raw string. */
 export const renderDetails = (

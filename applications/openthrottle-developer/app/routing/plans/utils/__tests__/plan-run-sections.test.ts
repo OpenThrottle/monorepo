@@ -15,7 +15,9 @@ const run = (
   status: string,
   createdAt: string,
   scheduledFor: string | null = null,
-) => ({ createdAt, id, scheduledFor, status });
+) => {
+  return { createdAt, id, scheduledFor, status };
+};
 
 const NO_PLAN_SCHEDULE = { scheduledRunAt: null, scheduledRunId: null };
 

@@ -298,10 +298,9 @@ const readPluginVersion = (): string => {
   const pkg: unknown = JSON.parse(
     readFileSync(path.join(packageRoot, 'package.json'), 'utf8'),
   );
-  const version =
-    typeof pkg === 'object' && pkg !== null && 'version' in pkg
-      ? Reflect.get(pkg, 'version')
-      : undefined;
+  const hasVersion =
+    typeof pkg === 'object' && pkg !== null && 'version' in pkg;
+  const version = hasVersion ? Reflect.get(pkg, 'version') : undefined;
   if (typeof version !== 'string' || !version) {
     throw new Error('agentic-hooks package.json has no version');
   }
@@ -309,8 +308,9 @@ const readPluginVersion = (): string => {
 };
 
 /** Stable JSON: two-space indent + trailing newline, matching prettier. */
-const renderJson = (value: unknown): string =>
-  `${JSON.stringify(value, null, 2)}\n`;
+const renderJson = (value: unknown): string => {
+  return `${JSON.stringify(value, null, 2)}\n`;
+};
 
 /**
  * The canonical Agent Plugins 1.0.0 identifier. The spec requires this exact
@@ -318,23 +318,28 @@ const renderJson = (value: unknown): string =>
  * `https://agent-plugins.org/schemas/1.0.0/plugin.schema.json`." Clients use it
  * to select validation rules, so it is a version pin, not a docs link.
  */
-const AGENT_PLUGINS_SCHEMA =
-  'https://agent-plugins.org/schemas/1.0.0/plugin.schema.json';
+const AGENT_PLUGINS_SCHEMA = `https://agent-plugins.org/schemas/1.0.0/plugin.schema.json`;
 
-const pluginManifest = (payload: PluginPayload): Record<string, unknown> => ({
-  author: { name: 'OpenThrottle', url: 'https://github.com/OpenThrottle' },
-  description: `Records which agent skills run under ${payload.label}, so OpenThrottle can report skill usage. Telemetry only — it never modifies your repository and never blocks a tool call.`,
-  name: 'openthrottle',
-  version: readPluginVersion(),
-});
+const pluginManifest = (payload: PluginPayload): Record<string, unknown> => {
+  return {
+    author: { name: 'OpenThrottle', url: 'https://github.com/OpenThrottle' },
+    description: `Records which agent skills run under ${payload.label}, so OpenThrottle can report skill usage. Telemetry only — it never modifies your repository and never blocks a tool call.`,
+    name: 'openthrottle',
+    version: readPluginVersion(),
+  };
+};
 
 /**
  * Agent Plugins 1.0.0 §5.1: "Clients MUST check for a manifest at
  * `plugin.json` in the plugin root." `$schema` and `name` are the only
  * required fields.
  */
-const renderRootManifest = (payload: PluginPayload): string =>
-  renderJson({ $schema: AGENT_PLUGINS_SCHEMA, ...pluginManifest(payload) });
+const renderRootManifest = (payload: PluginPayload): string => {
+  return renderJson({
+    $schema: AGENT_PLUGINS_SCHEMA,
+    ...pluginManifest(payload),
+  });
+};
 
 /**
  * The same manifest at `.claude-plugin/plugin.json`, which is a Claude Code
@@ -343,25 +348,29 @@ const renderRootManifest = (payload: PluginPayload): string =>
  * then the root). Duplicated deliberately, generated from one source so the
  * two can never disagree. See `docs/monorepo/agentic-hooks-standards-adr.md`.
  */
-const renderClientManifest = (payload: PluginPayload): string =>
-  renderJson(pluginManifest(payload));
+const renderClientManifest = (payload: PluginPayload): string => {
+  return renderJson(pluginManifest(payload));
+};
 
-const renderPluginHooks = (payload: PluginPayload): string =>
-  renderJson(
+const renderPluginHooks = (payload: PluginPayload): string => {
+  return renderJson(
     payload.renderHooks((file) => `\${${payload.rootVar}}/hooks/${file}`),
   );
+};
 
 const renderTable = (
   header: readonly [string, string],
   rows: readonly (readonly [string, string])[],
-): readonly string[] => [
-  `| ${header[0]} | ${header[1]} |`,
-  '| --- | --- |',
-  ...rows.map(([left, right]) => `| ${left} | ${right} |`),
-];
+): readonly string[] => {
+  return [
+    `| ${header[0]} | ${header[1]} |`,
+    '| --- | --- |',
+    ...rows.map(([left, right]) => `| ${left} | ${right} |`),
+  ];
+};
 
-const renderPluginReadme = (payload: PluginPayload): string =>
-  [
+const renderPluginReadme = (payload: PluginPayload): string => {
+  return [
     '<!-- GENERATED — DO NOT EDIT. Source: packages/agentic-hooks/scripts/bundle-hooks.ts -->',
     '',
     `# OpenThrottle skill-usage plugin (${payload.label})`,
@@ -464,10 +473,11 @@ const renderPluginReadme = (payload: PluginPayload): string =>
     'repository root.',
     '',
   ].join('\n');
+};
 
 /** Generated non-bundle files across every payload, keyed by workspace path. */
-const pluginFiles = (): ReadonlyMap<string, string> =>
-  new Map(
+const pluginFiles = (): ReadonlyMap<string, string> => {
+  return new Map(
     PLUGIN_PAYLOADS.flatMap((payload): readonly [string, string][] => [
       [`${payload.root}/plugin.json`, renderRootManifest(payload)],
       [
@@ -478,18 +488,20 @@ const pluginFiles = (): ReadonlyMap<string, string> =>
       [`${payload.root}/README.md`, renderPluginReadme(payload)],
     ]),
   );
+};
 
 /** Every payload's adapter bundles, as ordinary BundleSpec rows. */
-const pluginBundleSpecs = (): readonly BundleSpec[] =>
-  PLUGIN_PAYLOADS.flatMap((payload) =>
+const pluginBundleSpecs = (): readonly BundleSpec[] => {
+  return PLUGIN_PAYLOADS.flatMap((payload) =>
     payload.bundles.map((bundle): BundleSpec => ({
       entry: bundle.entry,
       outFile: `${payload.root}/hooks/${bundle.file}`,
     })),
   );
+};
 
-const bannerFor = (spec: BundleSpec): string =>
-  [
+const bannerFor = (spec: BundleSpec): string => {
+  return [
     '#!/usr/bin/env node',
     '',
     '/**',
@@ -501,6 +513,7 @@ const bannerFor = (spec: BundleSpec): string =>
     ' */',
     '',
   ].join('\n');
+};
 
 const renderBundle = async (spec: BundleSpec): Promise<string> => {
   const result = await build({
@@ -541,7 +554,9 @@ const renderAllArtifacts = async (): Promise<ReadonlyMap<string, string>> => {
 };
 
 /** Only bundles are executables; the generated JSON/MD are plain files. */
-const isExecutable = (outFile: string): boolean => outFile.endsWith('.cjs');
+const isExecutable = (outFile: string): boolean => {
+  return outFile.endsWith('.cjs');
+};
 
 const writeBundles = async (): Promise<void> => {
   const artifacts = await renderAllArtifacts();

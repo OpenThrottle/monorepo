@@ -22,8 +22,8 @@ const CONVERSATIONS: readonly AgentConversationListItem[] = [
 // real usage via GlobalProviders).
 const renderSheet = (
   overrides: Partial<ChatConversationSheetProps> = {},
-): RenderResult =>
-  render(
+): RenderResult => {
+  return render(
     <TooltipProvider>
       <ChatConversationSheet
         conversations={CONVERSATIONS}
@@ -36,6 +36,7 @@ const renderSheet = (
       />
     </TooltipProvider>,
   );
+};
 
 describe('ChatConversationSheet', () => {
   test('keeps the conversation list closed until the trigger is clicked', async () => {

@@ -38,8 +38,9 @@ const draftPost = {
   updatedAt,
 };
 
-const firstText = (result: { content: { text: string }[] }): string =>
-  result.content[0]?.text ?? '';
+const firstText = (result: { content: { text: string }[] }): string => {
+  return result.content[0]?.text ?? '';
+};
 
 beforeEach(() => {
   vi.mocked(executeGraphqlWithAuth).mockReset();

@@ -7,11 +7,7 @@ import {
   OpenThrottleAuthForm,
   OpenThrottleLogo,
 } from '@openthrottle/react-router-ui';
-import {
-  GlobalAnimationMesh,
-  GlobalAnimationWaves,
-  GlobalScreen,
-} from '@openthrottle/react-router-ui-global';
+import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { animate, useReducedMotion } from 'framer-motion';
 import { useAtom } from 'jotai';
@@ -21,8 +17,10 @@ import { data, redirect, useFetcher } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/_index';
 import { SITE_SUBDOMAIN, SITE_TITLE } from '~/global/config/settings';
-import { configAtom, REDUCED_MOTION_MODES } from '~/global/data/atom.config';
+import { REDUCED_MOTION_MODES } from '~/global/data/data.appearance-config';
+import { configAtom } from '~/global/data/data.atom-config';
 import { callLoginMutation } from '~/global/utils/utils.auth';
+import { AuthBackground } from '~/routing/auth/components/AuthBackground';
 import {
   FORM_FADE_MS,
   GRAIN_REST,
@@ -48,7 +46,9 @@ export const loader = async (args: Route.LoaderArgs) => {
 // revalidation would re-run the loader above, see the token, and redirect to
 // /dashboard immediately — cutting off the exit animation. Skip revalidation so
 // the client stays put and navigates on its own timer.
-export const shouldRevalidate: ShouldRevalidateFunction = () => false;
+export const shouldRevalidate: ShouldRevalidateFunction = () => {
+  return false;
+};
 
 export const links: Route.LinksFunction = () => {
   return [];
@@ -103,6 +103,17 @@ export default function Component(
   };
 
   // Markup
+  const authForm = (
+    <div className="shimmer-border w-full max-w-md">
+      <OpenThrottleAuthForm
+        action="/"
+        className="w-full"
+        error={fetcher.data?.error}
+        isLoading={isSubmitting || isExiting}
+        onSubmit={onSubmit}
+      />
+    </div>
+  );
 
   // Life Cycle
   React.useEffect(() => {
@@ -157,20 +168,7 @@ export default function Component(
       className="relative isolate flex w-full flex-1 flex-col justify-center p-4 md:p-8 lg:p-12"
       onClick={onIncrementCount}
     >
-      {isChaotic ? (
-        <GlobalAnimationWaves
-          attack={0.21}
-          colorEnd="0, 0, 300"
-          colorMid="0, 200, 0"
-          colorStart="0, 0, 300"
-          distributionEnd={-0.6}
-          distributionStart={0.6}
-          enabled={isMotionEnabled}
-          n={100}
-        />
-      ) : (
-        <GlobalAnimationMesh enabled={isMotionEnabled} />
-      )}
+      <AuthBackground isChaotic={isChaotic} isMotionEnabled={isMotionEnabled} />
 
       <div
         className={cn(
@@ -184,17 +182,7 @@ export default function Component(
             name={SITE_SUBDOMAIN}
           />
         </button>
-        {isFormEnabled ? (
-          <div className="shimmer-border w-full max-w-md">
-            <OpenThrottleAuthForm
-              action="/"
-              className="w-full"
-              error={fetcher.data?.error}
-              isLoading={isSubmitting || isExiting}
-              onSubmit={onSubmit}
-            />
-          </div>
-        ) : null}
+        {isFormEnabled ? authForm : null}
       </div>
     </GlobalScreen>
   );

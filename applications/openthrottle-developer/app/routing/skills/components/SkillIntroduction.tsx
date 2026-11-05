@@ -4,7 +4,7 @@ import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { BrainCircuitIcon } from 'lucide-react';
 import * as React from 'react';
 
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 import { SkillDetailEditControls } from '~/routing/skills/components/SkillDetailEditControls';
 import { SkillIntroductionBadges } from '~/routing/skills/components/SkillIntroductionBadges';
 import { SkillOrphanRemoveButton } from '~/routing/skills/components/SkillOrphanRemoveButton';
@@ -92,8 +92,56 @@ export const SkillIntroduction = (
   const showPath = entry.repoRelativePath !== '';
 
   // Handlers
+  const renderTagChips = (): React.ReactNode => {
+    if (onAddTag == null || onRemoveTag == null || tagVocabulary == null) {
+      return null;
+    }
+
+    return (
+      <SkillTagChips
+        onAddTag={onAddTag}
+        onRemoveTag={onRemoveTag}
+        pending={tagPending}
+        tags={entry.tags ?? []}
+        vocabulary={tagVocabulary}
+      />
+    );
+  };
+
+  const renderOrphanRemove = (): React.ReactNode => {
+    if (!isOrphaned || onRemoveOrphan == null) {
+      return null;
+    }
+
+    return (
+      <SkillOrphanRemoveButton
+        disabled={tagPending}
+        onRemove={onRemoveOrphan}
+      />
+    );
+  };
 
   // Markup
+  const orphanBadge = (
+    <Badge color="yellow" data-testid="skill-orphan-badge" size="xs">
+      {SKILL_RECORD_TAGS_COPY.orphanBadge}
+    </Badge>
+  );
+  const pathRow = (
+    <div className="flex items-center gap-2">
+      <code className="text-muted-foreground text-xs">
+        {entry.repoRelativePath}
+      </code>
+      {/* asChild — OpenThrottleClipboard renders its own <button>, so a
+          wrapping Button would nest one inside another and break hydration. */}
+      <Button asChild={true} size="xs" variant="outline">
+        <OpenThrottleClipboard
+          label={SKILL_DETAIL_COPY.pathCopyLabel}
+          text={entry.repoRelativePath}
+        />
+      </Button>
+    </div>
+  );
 
   // Life Cycle
 
@@ -103,12 +151,7 @@ export const SkillIntroduction = (
     <div className="flex flex-col gap-2" data-testid="SkillIntroduction">
       <GlobalHeading heading="h1" icon={BrainCircuitIcon} title={entry.slug}>
         <div className="flex flex-wrap items-center gap-2">
-          {isOrphaned && onRemoveOrphan != null ? (
-            <SkillOrphanRemoveButton
-              disabled={tagPending}
-              onRemove={onRemoveOrphan}
-            />
-          ) : null}
+          {renderOrphanRemove()}
 
           <SkillRunControl
             entry={entry}
@@ -141,38 +184,12 @@ export const SkillIntroduction = (
           showReadOnlyTags={showReadOnlyTags}
         />
 
-        {isOrphaned ? (
-          <Badge color="yellow" data-testid="skill-orphan-badge" size="xs">
-            {SKILL_RECORD_TAGS_COPY.orphanBadge}
-          </Badge>
-        ) : null}
+        {isOrphaned ? orphanBadge : null}
 
-        {onAddTag != null && onRemoveTag != null && tagVocabulary != null ? (
-          <SkillTagChips
-            onAddTag={onAddTag}
-            onRemoveTag={onRemoveTag}
-            pending={tagPending}
-            tags={entry.tags ?? []}
-            vocabulary={tagVocabulary}
-          />
-        ) : null}
+        {renderTagChips()}
       </div>
 
-      {showPath ? (
-        <div className="flex items-center gap-2">
-          <code className="text-muted-foreground text-xs">
-            {entry.repoRelativePath}
-          </code>
-          {/* asChild — OpenThrottleClipboard renders its own <button>, so a
-              wrapping Button would nest one inside another and break hydration. */}
-          <Button asChild={true} size="xs" variant="outline">
-            <OpenThrottleClipboard
-              label={SKILL_DETAIL_COPY.pathCopyLabel}
-              text={entry.repoRelativePath}
-            />
-          </Button>
-        </div>
-      ) : null}
+      {showPath ? pathRow : null}
     </div>
   );
 };

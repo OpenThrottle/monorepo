@@ -16,13 +16,16 @@ function asMock(value: unknown): unknown {
 
 const cellContext = (
   plan: PlanCardFragment,
-): CellContext<PlanCardFragment, string | number | null | undefined> =>
-  asMock({ row: { original: plan } });
+): CellContext<PlanCardFragment, string | number | null | undefined> => {
+  return asMock({ row: { original: plan } });
+};
 
 const headerContext = (): HeaderContext<
   PlanCardFragment,
   string | number | null | undefined
-> => asMock({});
+> => {
+  return asMock({});
+};
 
 interface PlainPlanColumn {
   readonly accessorKey?: string;
@@ -42,30 +45,34 @@ interface PlainPlanColumn {
 
 const asPlainColumn = (
   column: ReturnType<typeof buildPlansTableColumns>[number],
-): PlainPlanColumn => asMock(column);
+): PlainPlanColumn => {
+  return asMock(column);
+};
 
 const buildPlan = (
   overrides: Partial<PlanCardFragment> = {},
-): PlanCardFragment => ({
-  __typename: 'PlanObject',
-  assignee: null,
-  author: 'visormatt',
-  category: 'general',
-  createdAt: '2026-01-01T00:00:00Z',
-  description: null,
-  hasCustomRunConfig: false,
-  id: 'plan-1',
-  project: null,
-  projectRelation: null,
-  status: 'PENDING',
-  summary: null,
-  tags: [],
-  taskCount: 3,
-  tasksCompletedCount: 0,
-  title: 'My Plan',
-  updatedAt: '2026-01-02T00:00:00Z',
-  ...overrides,
-});
+): PlanCardFragment => {
+  return {
+    __typename: 'PlanObject',
+    assignee: null,
+    author: 'visormatt',
+    category: 'general',
+    createdAt: '2026-01-01T00:00:00Z',
+    description: null,
+    hasCustomRunConfig: false,
+    id: 'plan-1',
+    project: null,
+    projectRelation: null,
+    status: 'PENDING',
+    summary: null,
+    tags: [],
+    taskCount: 3,
+    tasksCompletedCount: 0,
+    title: 'My Plan',
+    updatedAt: '2026-01-02T00:00:00Z',
+    ...overrides,
+  };
+};
 
 interface HarnessProps {
   readonly plan: PlanCardFragment;

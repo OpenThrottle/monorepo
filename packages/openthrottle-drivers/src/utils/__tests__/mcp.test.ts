@@ -13,18 +13,20 @@ import { appendMcpShellFlags } from '../mcp.ts';
 const BASE = 'some-cli -p "prompt"';
 const FLAGS = ['--approve-mcps', '--trust'] as const;
 
-const capabilities = (mcpAutoApprove: boolean): DriverCapabilities => ({
-  attachesWorkspaceMcp: false,
-  chatStreaming: false,
-  mcpAutoApprove,
-  permissionMode: false,
-  pluginDir: false,
-  skipWorktreeSetup: false,
-  supportsCustomBaseUrl: false,
-  supportsModelFlag: false,
-  worktree: false,
-  worktreeBase: false,
-});
+const capabilities = (mcpAutoApprove: boolean): DriverCapabilities => {
+  return {
+    attachesWorkspaceMcp: false,
+    chatStreaming: false,
+    mcpAutoApprove,
+    permissionMode: false,
+    pluginDir: false,
+    skipWorktreeSetup: false,
+    supportsCustomBaseUrl: false,
+    supportsModelFlag: false,
+    worktree: false,
+    worktreeBase: false,
+  };
+};
 
 describe('appendMcpShellFlags', () => {
   it('appends the flags when the driver advertises mcpAutoApprove', () => {

@@ -39,8 +39,7 @@ export const FOREIGN_SKILL_TARGET_DIRS = [
  *
  * @public
  */
-export const FOREIGN_SKILL_LEDGER_DIR_ENV =
-  'OPENTHROTTLE_FOREIGN_SKILL_LEDGER_DIR';
+export const FOREIGN_SKILL_LEDGER_DIR_ENV = `OPENTHROTTLE_FOREIGN_SKILL_LEDGER_DIR`;
 
 /**
  * Markers bracketing our managed block inside the repo-local
@@ -48,12 +47,10 @@ export const FOREIGN_SKILL_LEDGER_DIR_ENV =
  *
  * @public
  */
-export const GIT_EXCLUDE_BEGIN_MARKER =
-  '# BEGIN OpenThrottle foreign-skill-injection (managed — do not edit)';
+export const GIT_EXCLUDE_BEGIN_MARKER = `# BEGIN OpenThrottle foreign-skill-injection (managed — do not edit)`;
 
 /** @public */
-export const GIT_EXCLUDE_END_MARKER =
-  '# END OpenThrottle foreign-skill-injection (managed)';
+export const GIT_EXCLUDE_END_MARKER = `# END OpenThrottle foreign-skill-injection (managed)`;
 
 /**
  * Features that write a managed block into a foreign repo's `.git/info/exclude`. Each owns exactly

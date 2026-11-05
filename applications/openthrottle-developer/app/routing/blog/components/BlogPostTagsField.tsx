@@ -29,6 +29,11 @@ export const BlogPostTagsField = (
   // Handlers
 
   // Markup
+  const errorMessage = (
+    <p className="text-destructive text-xs" role="alert">
+      {error}
+    </p>
+  );
 
   // Life Cycle
 
@@ -46,11 +51,7 @@ export const BlogPostTagsField = (
         searchPlaceholder={BLOG_EDITOR_COPY.tagsSearch}
         value={value}
       />
-      {error ? (
-        <p className="text-destructive text-xs" role="alert">
-          {error}
-        </p>
-      ) : null}
+      {error ? errorMessage : null}
     </div>
   );
 };

@@ -16,7 +16,9 @@ describe('OpenThrottleStatCard Component', () => {
   });
 
   test('should render with title and value only', () => {
-    const Component = () => <OpenThrottleStatCard {...props} />;
+    const Component = () => {
+      return <OpenThrottleStatCard {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
     expect(component.getByText('12')).toBeInTheDocument();
@@ -27,7 +29,9 @@ describe('OpenThrottleStatCard Component', () => {
   test('should render value and subValue as "value / subValue" when subValue is passed', () => {
     props = { subValue: 512, title: 'Heap (MB)', value: 450.2 };
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <OpenThrottleStatCard {...props} />;
+    const Component = () => {
+      return <OpenThrottleStatCard {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
     expect(component.getByText('450.2')).toBeInTheDocument();

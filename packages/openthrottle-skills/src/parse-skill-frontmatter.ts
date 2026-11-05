@@ -19,7 +19,9 @@ const toOptionalString = (value: unknown): string | undefined => {
 
 const toOptionalStringArray = (
   value: unknown,
-): readonly string[] | undefined => (Array.isArray(value) ? value : undefined);
+): readonly string[] | undefined => {
+  return Array.isArray(value) ? value : undefined;
+};
 
 /**
  * @description Parses `name`, `description`, optional `disable-model-invocation`, and optional `tags` from SKILL.md frontmatter. Provenance is NOT frontmatter — it is derived from the ot-skill-sync layout (see `walk-agent-assets-on-disk.ts` and `parse-skills-lock.ts`).
@@ -29,13 +31,13 @@ export const parseSkillFrontmatter = (
   fileContent: string,
 ): ParsedSkillFrontmatter => {
   const { fields } = parseYamlFrontmatter(fileContent);
+  const rawFlag = fields['disable-model-invocation'];
+  const isBoolean = typeof rawFlag === 'boolean';
+  const disableModelInvocation = isBoolean ? rawFlag : undefined;
 
   return {
     description: toOptionalString(fields.description),
-    disableModelInvocation:
-      typeof fields['disable-model-invocation'] === 'boolean'
-        ? fields['disable-model-invocation']
-        : undefined,
+    disableModelInvocation,
     name: toOptionalString(fields.name),
     tags: toOptionalStringArray(fields.tags),
   };

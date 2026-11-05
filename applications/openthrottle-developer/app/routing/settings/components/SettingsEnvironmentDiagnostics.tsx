@@ -4,7 +4,7 @@ import { MonitorCloudIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { URL_MATRIX_ROWS } from '../data/url-matrix-rows';
+import { URL_MATRIX_ROWS } from '../data/data.url-matrix-rows';
 import { useSettingsEnvironmentDiagnostics } from '../hooks/useSettingsEnvironmentDiagnostics';
 import type { SettingsDiagnosticsLoaderData } from '../utils/settings-diagnostics-loader-data';
 import {
@@ -35,10 +35,23 @@ export const SettingsEnvironmentDiagnostics = (
     });
 
   // Setup
+  const matchedClass = 'text-muted-foreground text-sm';
+  const mismatchedClass = 'text-sm text-amber-600 dark:text-amber-500';
+  const originClassName = originMatches ? matchedClass : mismatchedClass;
 
   // Handlers
 
   // Markup
+  const matchNote = <span> (matches APP_URL_DEVELOPER)</span>;
+  const mismatchNote = (
+    <span>
+      {' '}
+      — does not match <code className="text-xs">
+        {env.APP_URL_DEVELOPER}
+      </code>{' '}
+      (check host, port, or reverse proxy)
+    </span>
+  );
 
   // Life Cycle
 
@@ -143,25 +156,10 @@ export const SettingsEnvironmentDiagnostics = (
           .
         </p>
         {origin !== null && (
-          <p
-            className={
-              originMatches
-                ? 'text-muted-foreground text-sm'
-                : 'text-sm text-amber-600 dark:text-amber-500'
-            }
-          >
+          <p className={originClassName}>
             <span className="text-foreground font-medium">Browser origin:</span>{' '}
             <code className="text-xs">{origin}</code>
-            {originMatches ? (
-              <span> (matches APP_URL_DEVELOPER)</span>
-            ) : (
-              <span>
-                {' '}
-                — does not match{' '}
-                <code className="text-xs">{env.APP_URL_DEVELOPER}</code> (check
-                host, port, or reverse proxy)
-              </span>
-            )}
+            {originMatches ? matchNote : mismatchNote}
           </p>
         )}
         <div className="mt-8 overflow-auto rounded-md border">

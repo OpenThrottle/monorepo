@@ -28,6 +28,7 @@ import type { Route } from '@/app/routes/+types/users._index';
 import { CreateUserDocument, GetUsersDocument } from '~/__generated__/graphql';
 import { CreateUserInputSchema } from '~/__generated__/schemas';
 import { SITE_TITLE } from '~/global/config/settings';
+import { readActionError } from '~/global/utils/read-action-error';
 import { UsersTable } from '~/routing/users/components/UsersTable';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -73,6 +74,7 @@ export default function Component(
   // Setup
   const users = loaderData?.users ?? [];
   const CreateUserForm = fetcher.Form;
+  const createError = readActionError(fetcher.data);
 
   const createSuccess =
     actionData != null && 'ok' in actionData && actionData.ok === true;
@@ -80,6 +82,11 @@ export default function Component(
   // Handlers
 
   // Markup
+  const createErrorMarkup = (
+    <p className="text-destructive text-sm" role="alert">
+      {createError}
+    </p>
+  );
 
   // Life Cycle
   React.useEffect(() => {
@@ -136,11 +143,7 @@ export default function Component(
                   />
                 </div>
               </div>
-              {fetcher.data != null && 'error' in fetcher.data ? (
-                <p className="text-destructive text-sm" role="alert">
-                  {fetcher.data.error}
-                </p>
-              ) : null}
+              {createError === null ? null : createErrorMarkup}
               <div className="flex justify-end gap-2">
                 <Button
                   onClick={() => setOpen(false)}

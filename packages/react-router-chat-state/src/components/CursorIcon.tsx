@@ -12,8 +12,21 @@ export interface CursorIconProps extends ProviderIconProps {}
  */
 export const CursorIcon = ({
   className,
-}: CursorIconProps): React.ReactElement => (
-  <svg {...BASE_SVG_PROPS} className={className} fill="currentColor">
-    <path d="M5 3.2 19.4 12 12.6 13.2 9.9 19.6 5 3.2Z" />
-  </svg>
-);
+}: CursorIconProps): React.ReactElement => {
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+  return (
+    <svg {...BASE_SVG_PROPS} className={className} fill="currentColor">
+      <path d="M5 3.2 19.4 12 12.6 13.2 9.9 19.6 5 3.2Z" />
+    </svg>
+  );
+};

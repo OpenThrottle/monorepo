@@ -22,8 +22,8 @@ const scheduledRun = (
   id: string,
   scheduledFor: Date,
   overrides: Partial<PlanRun> = {},
-): PlanRun =>
-  createMock<PlanRun>({
+): PlanRun => {
+  return createMock<PlanRun>({
     bullmqJobId: `scheduled-plan-run-${id}`,
     id,
     planId: `plan-${id}`,
@@ -31,6 +31,7 @@ const scheduledRun = (
     status: 'SCHEDULED',
     ...overrides,
   });
+};
 
 describe('ScheduledPlanRunService', () => {
   const mockEmitQueueJobCompleted = vi.fn();
@@ -100,8 +101,7 @@ describe('ScheduledPlanRunService', () => {
 
       expect(mockEmitQueueJobCompleted).toHaveBeenCalledWith({
         jobType: 'plans',
-        message:
-          'Scheduled plan run missed: it was due at 2026-11-01T12:00:00.000Z and it was 75 minutes late, past the 60-minute grace window, so it was not started.',
+        message: `Scheduled plan run missed: it was due at 2026-11-01T12:00:00.000Z and it was 75 minutes late, past the 60-minute grace window, so it was not started.`,
         planId: 'plan-a',
         severity: 'warning',
       });
@@ -117,8 +117,7 @@ describe('ScheduledPlanRunService', () => {
 
       expect(mockEmitQueueJobCompleted).toHaveBeenCalledWith({
         jobType: 'plans',
-        message:
-          'Scheduled plan run superseded: the plan already had an active run at 2026-11-01T12:00:00.000Z, so the scheduled run was not started.',
+        message: `Scheduled plan run superseded: the plan already had an active run at 2026-11-01T12:00:00.000Z, so the scheduled run was not started.`,
         planId: 'plan-a',
         severity: 'warning',
       });

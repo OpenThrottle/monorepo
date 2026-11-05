@@ -17,7 +17,7 @@ import {
 import * as React from 'react';
 import { useNavigate } from 'react-router';
 
-import type { RepositoryOption } from '~/routing/home/data/models.server';
+import type { RepositoryOption } from '~/routing/home/utils/models.server';
 import { SKILL_RUN_COPY } from '~/routing/skills/data/data.copy';
 import { useRunSkillDialog } from '~/routing/skills/hooks/useRunSkillDialog';
 import type { RunSkillPayload } from '~/routing/skills/types';
@@ -79,6 +79,36 @@ export const RunSkillDialog = (
   };
 
   // Markup
+  const modelPicker = (
+    <div>
+      <ChatModelPicker
+        groups={modelGroups}
+        models={models}
+        onModelChange={setModelId}
+        onOpenSettings={() => {
+          onOpenChange(false);
+          navigate('/settings/agents');
+        }}
+        selectedModelId={modelId}
+      />
+    </div>
+  );
+  const noModelsNotice = (
+    <p className="text-muted-foreground text-sm">{copy.noModelsNotice}</p>
+  );
+  const repositoryPicker = (
+    <div className="flex flex-col gap-1.5">
+      <Label>{copy.repositoryLabel}</Label>
+      <div>
+        <ChatCheckoutSelector
+          checkouts={checkouts}
+          onCheckoutChange={setRepositoryId}
+          selectedCheckoutId={repositoryId}
+        />
+      </div>
+      <p className="text-muted-foreground text-xs">{copy.repositoryHint}</p>
+    </div>
+  );
 
   // Life Cycle
 
@@ -97,41 +127,10 @@ export const RunSkillDialog = (
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
             <Label>{copy.modelLabel}</Label>
-            {hasModels ? (
-              <div>
-                <ChatModelPicker
-                  groups={modelGroups}
-                  models={models}
-                  onModelChange={setModelId}
-                  onOpenSettings={() => {
-                    onOpenChange(false);
-                    navigate('/settings/agents');
-                  }}
-                  selectedModelId={modelId}
-                />
-              </div>
-            ) : (
-              <p className="text-muted-foreground text-sm">
-                {copy.noModelsNotice}
-              </p>
-            )}
+            {hasModels ? modelPicker : noModelsNotice}
           </div>
 
-          {isCliBackend ? (
-            <div className="flex flex-col gap-1.5">
-              <Label>{copy.repositoryLabel}</Label>
-              <div>
-                <ChatCheckoutSelector
-                  checkouts={checkouts}
-                  onCheckoutChange={setRepositoryId}
-                  selectedCheckoutId={repositoryId}
-                />
-              </div>
-              <p className="text-muted-foreground text-xs">
-                {copy.repositoryHint}
-              </p>
-            </div>
-          ) : null}
+          {isCliBackend ? repositoryPicker : null}
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="run-skill-arguments">{copy.argumentsLabel}</Label>

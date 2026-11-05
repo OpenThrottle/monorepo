@@ -31,13 +31,14 @@ describe('ScheduledAgentJobFailureNotifierService', () => {
 
   const build = (
     channels: readonly ScheduledRunFailureChannel[],
-  ): ScheduledAgentJobFailureNotifierService =>
-    new ScheduledAgentJobFailureNotifierService(
+  ): ScheduledAgentJobFailureNotifierService => {
+    return new ScheduledAgentJobFailureNotifierService(
       logger,
       jobsService,
       notifications,
       channels,
     );
+  };
 
   beforeEach(() => {
     jobsService = createMock<ScheduledAgentJobsService>({
@@ -64,8 +65,7 @@ describe('ScheduledAgentJobFailureNotifierService', () => {
       ).toHaveBeenCalledExactlyOnceWith(
         expect.objectContaining({
           link: '/schedule/sched-1/runs/run-1',
-          message:
-            'Scheduled job "Nightly triage" failed: Agent exited with code 2',
+          message: `Scheduled job "Nightly triage" failed: Agent exited with code 2`,
           ownerUserId: 'user-1',
           reason: 'failed',
           runCount: 1,
@@ -118,8 +118,7 @@ describe('ScheduledAgentJobFailureNotifierService', () => {
       expect(notifications.emitScheduledRunFailed).toHaveBeenCalledWith(
         expect.objectContaining({
           link: '/schedule/sched-1',
-          message:
-            'Scheduled job "Nightly triage" missed 3 runs: the server was not running.',
+          message: `Scheduled job "Nightly triage" missed 3 runs: the server was not running.`,
           runCount: 3,
           severity: 'warning',
         }),

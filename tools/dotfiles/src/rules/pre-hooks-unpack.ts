@@ -172,12 +172,10 @@ export const preHooksUnpack = createRule<[], 'unpackAfterHooks'>({
   defaultOptions: [],
   meta: {
     docs: {
-      description:
-        'Unpack `props` (and nested identity destructures of props-derived bindings) in the pre-Hooks block, not after `// Hooks`.',
+      description: `Unpack \`props\` (and nested identity destructures of props-derived bindings) in the pre-Hooks block, not after \`// Hooks\`.`,
     },
     messages: {
-      unpackAfterHooks:
-        'Unpack `props` (and nested identity destructures of props-derived bindings) in the pre-Hooks block, above `// Hooks` — not here, and never after `// 🔌 Short Circuit`. See the pre-Hooks unpack block in component-primitive-shape.md (route R2 aliases it).',
+      unpackAfterHooks: `Unpack \`props\` (and nested identity destructures of props-derived bindings) in the pre-Hooks block, above \`// Hooks\` — not here, and never after \`// 🔌 Short Circuit\`. See the pre-Hooks unpack block in component-primitive-shape.md (route R2 aliases it).`,
     },
     schema: [],
     type: 'problem',

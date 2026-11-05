@@ -5,7 +5,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
 
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 import { SKILL_DETAIL_COPY } from '~/routing/skills/data/data.copy';
 
 import type { SkillDetailProps } from '../SkillDetail';
@@ -46,7 +46,9 @@ const renderDetail = (props: Partial<SkillDetailProps> = {}): RenderResult => {
     ...props,
   };
   // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-  const Component = () => <SkillDetail {...merged} />;
+  const Component = () => {
+    return <SkillDetail {...merged} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

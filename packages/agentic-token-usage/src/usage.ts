@@ -51,11 +51,15 @@ export interface NormalizedTokenUsage {
   readonly totalTokens?: number;
 }
 
-const asFiniteNumber = (value: unknown): number | undefined =>
-  typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+const asFiniteNumber = (value: unknown): number | undefined => {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? value
+    : undefined;
+};
 
-const asNonEmptyString = (value: unknown): string | undefined =>
-  typeof value === 'string' && value !== '' ? value : undefined;
+const asNonEmptyString = (value: unknown): string | undefined => {
+  return typeof value === 'string' && value !== '' ? value : undefined;
+};
 
 /** First finite number among the candidates, else undefined. */
 const firstNumber = (...candidates: readonly unknown[]): number | undefined => {
@@ -83,6 +87,18 @@ const safeParseRecord = (json: string): Record<string, unknown> | null => {
   }
 };
 
+const toMetaRecord = (input: unknown): Record<string, unknown> | null => {
+  if (typeof input === 'string') {
+    return safeParseRecord(input);
+  }
+
+  if (isRecord(input)) {
+    return input;
+  }
+
+  return null;
+};
+
 /**
  * Normalize a backend's usage metadata into a typed {@link NormalizedTokenUsage}.
  * Accepts either the parsed metadata record or its JSON string; anything else
@@ -91,12 +107,7 @@ const safeParseRecord = (json: string): Record<string, unknown> | null => {
  * @public
  */
 export const normalizeUsage = (input: unknown): NormalizedTokenUsage => {
-  const meta =
-    typeof input === 'string'
-      ? safeParseRecord(input)
-      : isRecord(input)
-        ? input
-        : null;
+  const meta = toMetaRecord(input);
 
   if (meta === null) {
     return {};
@@ -182,14 +193,17 @@ export const normalizeUsage = (input: unknown): NormalizedTokenUsage => {
 };
 
 /** True when the usage carries no reported numbers (all token/cost fields absent). */
-const hasNoCounts = (usage: NormalizedTokenUsage): boolean =>
-  usage.inputTokens === undefined &&
-  usage.outputTokens === undefined &&
-  usage.cacheReadTokens === undefined &&
-  usage.cacheWriteTokens === undefined &&
-  usage.reasoningTokens === undefined &&
-  usage.totalTokens === undefined &&
-  usage.costUsd === undefined;
+const hasNoCounts = (usage: NormalizedTokenUsage): boolean => {
+  return (
+    usage.inputTokens === undefined &&
+    usage.outputTokens === undefined &&
+    usage.cacheReadTokens === undefined &&
+    usage.cacheWriteTokens === undefined &&
+    usage.reasoningTokens === undefined &&
+    usage.totalTokens === undefined &&
+    usage.costUsd === undefined
+  );
+};
 
 /**
  * True when a {@link NormalizedTokenUsage} has at least one reported numeric
@@ -200,7 +214,9 @@ const hasNoCounts = (usage: NormalizedTokenUsage): boolean =>
  */
 export const hasUsageCounts = (
   usage: NormalizedTokenUsage | undefined,
-): boolean => usage !== undefined && !hasNoCounts(usage);
+): boolean => {
+  return usage !== undefined && !hasNoCounts(usage);
+};
 
 const addOptional = (
   a: number | undefined,

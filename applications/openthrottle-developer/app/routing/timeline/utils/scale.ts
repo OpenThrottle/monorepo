@@ -27,8 +27,9 @@ export type TimelineScale = {
   readonly xUnclamped: (value: Date | number | string) => number;
 };
 
-const toMillis = (value: Date | number | string): number =>
-  value instanceof Date ? value.getTime() : new Date(value).getTime();
+const toMillis = (value: Date | number | string): number => {
+  return value instanceof Date ? value.getTime() : new Date(value).getTime();
+};
 
 /**
  * Build the scale for a window and a drawable width.
@@ -48,8 +49,9 @@ export function createTimelineScale(args: {
   const span = toMs - fromMs;
   const usable = span > 0 ? span : 1;
 
-  const xUnclamped = (value: Date | number | string): number =>
-    ((toMillis(value) - fromMs) / usable) * width;
+  const xUnclamped = (value: Date | number | string): number => {
+    return ((toMillis(value) - fromMs) / usable) * width;
+  };
 
   const x = (value: Date | number | string): number => {
     const raw = xUnclamped(value);

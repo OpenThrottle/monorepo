@@ -9,21 +9,25 @@ import { GlobalProviders } from '../GlobalProviders';
 import type { GlobalSidebarContentProps } from '../GlobalSidebarContent';
 import { GlobalSidebarContent } from '../GlobalSidebarContent';
 
-const StubIcon = (iconProps: { className?: string }) => (
-  <span
-    className={iconProps.className}
-    data-testid="sidebar-content-stub-icon"
-  />
-);
+const StubIcon = (iconProps: { className?: string }) => {
+  return (
+    <span
+      className={iconProps.className}
+      data-testid="sidebar-content-stub-icon"
+    />
+  );
+};
 
 describe('GlobalSidebarContent Component', () => {
   test('renders empty sidebar when no navigation data is provided', () => {
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <GlobalProviders>
-        <GlobalSidebarContent />
-      </GlobalProviders>
-    );
+    const Component = () => {
+      return (
+        <GlobalProviders>
+          <GlobalSidebarContent />
+        </GlobalProviders>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 
@@ -41,14 +45,16 @@ describe('GlobalSidebarContent collapsible sections', () => {
   test('should toggle section links when section trigger is activated', async () => {
     const user = userEvent.setup();
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <GlobalProviders>
-        <GlobalSidebarContent
-          data={navigationData}
-          defaultSectionsExpanded={false}
-        />
-      </GlobalProviders>
-    );
+    const Component = () => {
+      return (
+        <GlobalProviders>
+          <GlobalSidebarContent
+            data={navigationData}
+            defaultSectionsExpanded={false}
+          />
+        </GlobalProviders>
+      );
+    };
     const RoutesStub = createRoutesStub([
       { Component, path: '/' },
       // eslint-disable-next-line react/no-multi-comp -- test-local mock component
@@ -88,11 +94,13 @@ describe('GlobalSidebarContent collapsible sections', () => {
   test('should navigate when a section link is activated while expanded', async () => {
     const user = userEvent.setup();
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <GlobalProviders>
-        <GlobalSidebarContent data={navigationData} />
-      </GlobalProviders>
-    );
+    const Component = () => {
+      return (
+        <GlobalProviders>
+          <GlobalSidebarContent data={navigationData} />
+        </GlobalProviders>
+      );
+    };
     const RoutesStub = createRoutesStub([
       { Component, path: '/' },
       // eslint-disable-next-line react/no-multi-comp -- test-local mock component
@@ -119,16 +127,20 @@ describe('GlobalSidebarContent on phones', () => {
     window.innerWidth = 375;
     const user = userEvent.setup();
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <GlobalProviders>
-        <SidebarTrigger />
-        <Sidebar>
-          <GlobalSidebarContent
-            data={{ Alpha: [{ children: 'Link A', icon: StubIcon, to: '/' }] }}
-          />
-        </Sidebar>
-      </GlobalProviders>
-    );
+    const Component = () => {
+      return (
+        <GlobalProviders>
+          <SidebarTrigger />
+          <Sidebar>
+            <GlobalSidebarContent
+              data={{
+                Alpha: [{ children: 'Link A', icon: StubIcon, to: '/' }],
+              }}
+            />
+          </Sidebar>
+        </GlobalProviders>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 

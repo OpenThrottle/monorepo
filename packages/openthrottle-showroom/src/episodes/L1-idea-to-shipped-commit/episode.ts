@@ -22,8 +22,7 @@ import type { VideoEpisode } from '../types.ts';
 export const episode: VideoEpisode = {
   beats: [
     {
-      action:
-        'A finished plan with six completed tasks and six linked commits.',
+      action: `A finished plan with six completed tasks and six linked commits.`,
       t: '00:00',
     },
     { action: 'Cut to an empty plans list.', t: '00:20' },
@@ -166,7 +165,6 @@ export const episode: VideoEpisode = {
       'developer tools',
       'open source',
     ],
-    title:
-      'OpenThrottle in 10 minutes: idea to plan to tasks to shipped commit',
+    title: `OpenThrottle in 10 minutes: idea to plan to tasks to shipped commit`,
   },
 };

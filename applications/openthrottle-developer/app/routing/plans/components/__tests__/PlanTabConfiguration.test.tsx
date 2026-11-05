@@ -9,20 +9,22 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import {
   resetWorkflowRunToDefaultsAtom,
   workflowRalphRunOptionsAtom,
-} from '~/routing/plans/data/atom.plan';
+} from '~/routing/plans/data/data.atom-plan';
 import { MOCK_PLAN_RUN_MODELS } from '~/routing/plans/data/mock.plan-run-models';
 
 import type { PlanTabConfigurationProps } from '../PlanTabConfiguration';
 import { PlanTabConfiguration } from '../PlanTabConfiguration';
 
 const renderTab = (props: PlanTabConfigurationProps) => {
-  const Component = () => (
-    <TooltipProvider>
-      <Tabs value="configuration">
-        <PlanTabConfiguration {...props} />
-      </Tabs>
-    </TooltipProvider>
-  );
+  const Component = () => {
+    return (
+      <TooltipProvider>
+        <Tabs value="configuration">
+          <PlanTabConfiguration {...props} />
+        </Tabs>
+      </TooltipProvider>
+    );
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

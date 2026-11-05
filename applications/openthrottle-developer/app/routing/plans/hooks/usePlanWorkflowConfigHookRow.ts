@@ -100,30 +100,30 @@ export const usePlanWorkflowConfigHookRow = (
 
     if (value === 'skill') {
       onChange(
-        hooks.map((r) =>
-          r.draftId === row.draftId
-            ? {
-                ...shared,
-                kind: 'skill' as const,
-                skillPath: '.agents/skills/workflow-ralph/SKILL.md',
-              }
-            : r,
-        ),
+        hooks.map((r) => {
+          if (r.draftId !== row.draftId) return r;
+
+          return {
+            ...shared,
+            kind: 'skill' as const,
+            skillPath: '.agents/skills/workflow-ralph/SKILL.md',
+          };
+        }),
       );
       return;
     }
 
     onChange(
-      hooks.map((r) =>
-        r.draftId === row.draftId
-          ? {
-              ...shared,
-              kind: 'prompt_profile' as const,
-              prompt: DEFAULT_RALPH_PROMPT,
-              promptDelivery: 'named' as const,
-            }
-          : r,
-      ),
+      hooks.map((r) => {
+        if (r.draftId !== row.draftId) return r;
+
+        return {
+          ...shared,
+          kind: 'prompt_profile' as const,
+          prompt: DEFAULT_RALPH_PROMPT,
+          promptDelivery: 'named' as const,
+        };
+      }),
     );
   };
 
@@ -180,39 +180,39 @@ export const usePlanWorkflowConfigHookRow = (
 
   const handleUseFileDelivery = (): void => {
     onChange(
-      hooks.map((r) =>
-        r.draftId === row.draftId
-          ? {
-              draftId: r.draftId,
-              kind: 'prompt_profile' as const,
-              onFailure: r.onFailure,
-              order: r.order,
-              phase: r.phase,
-              promptDelivery: 'file' as const,
-              promptFile: '',
-              timeoutSeconds: r.timeoutSeconds,
-            }
-          : r,
-      ),
+      hooks.map((r) => {
+        if (r.draftId !== row.draftId) return r;
+
+        return {
+          draftId: r.draftId,
+          kind: 'prompt_profile' as const,
+          onFailure: r.onFailure,
+          order: r.order,
+          phase: r.phase,
+          promptDelivery: 'file' as const,
+          promptFile: '',
+          timeoutSeconds: r.timeoutSeconds,
+        };
+      }),
     );
   };
 
   const handleUseNamedProfile = (): void => {
     onChange(
-      hooks.map((r) =>
-        r.draftId === row.draftId
-          ? {
-              draftId: r.draftId,
-              kind: 'prompt_profile' as const,
-              onFailure: r.onFailure,
-              order: r.order,
-              phase: r.phase,
-              prompt: DEFAULT_RALPH_PROMPT,
-              promptDelivery: 'named' as const,
-              timeoutSeconds: r.timeoutSeconds,
-            }
-          : r,
-      ),
+      hooks.map((r) => {
+        if (r.draftId !== row.draftId) return r;
+
+        return {
+          draftId: r.draftId,
+          kind: 'prompt_profile' as const,
+          onFailure: r.onFailure,
+          order: r.order,
+          phase: r.phase,
+          prompt: DEFAULT_RALPH_PROMPT,
+          promptDelivery: 'named' as const,
+          timeoutSeconds: r.timeoutSeconds,
+        };
+      }),
     );
   };
 

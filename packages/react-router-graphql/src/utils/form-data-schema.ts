@@ -337,13 +337,10 @@ export const parseFormData = <TSchema extends z.ZodTypeAny>(
   // humanized (or author-supplied — the map never overrides those) copy; then
   // aggregate directly rather than re-running the map (which, on a raw error,
   // can't tell an author message from a default and would clobber the former).
-  const errorMap =
-    options?.labels === undefined && options?.messages === undefined
-      ? zodErrorMap
-      : createZodErrorMap({
-          labels: options.labels,
-          messages: options.messages,
-        });
+  const errorMap = createZodErrorMap({
+    labels: options?.labels,
+    messages: options?.messages,
+  });
   const result = schema.safeParse(raw, { errorMap });
   if (result.success) {
     return { data: result.data, success: true };

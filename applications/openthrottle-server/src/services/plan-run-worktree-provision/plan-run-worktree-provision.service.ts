@@ -30,6 +30,13 @@ export interface ProvisionPlanRunWorktreeParams {
   readonly worktreeName: string;
 }
 
+const readStderrTail = (error: unknown): string => {
+  if (typeof error !== 'object' || error === null) return '';
+  if (!('stderr' in error)) return '';
+  if (typeof error.stderr !== 'string') return '';
+  return error.stderr.trim().slice(-2000);
+};
+
 @Injectable()
 export class PlanRunWorktreeProvisionService {
   private readonly name = 'plan-run-worktree-provision';
@@ -168,13 +175,7 @@ export class PlanRunWorktreeProvisionService {
       return path;
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
-      const stderr =
-        typeof error === 'object' &&
-        error !== null &&
-        'stderr' in error &&
-        typeof error.stderr === 'string'
-          ? error.stderr.trim().slice(-2000)
-          : '';
+      const stderr = readStderrTail(error);
 
       throw new Error(
         `Failed to provision worktree "${worktreeName}" from ${baseCheckoutPath}: ${detail}${

@@ -62,16 +62,22 @@ const readJson = <T>(
   return parsed;
 };
 
-const isManifest = (value: unknown): value is RecordingManifest =>
-  typeof value === 'object' &&
-  value !== null &&
-  Array.isArray(Reflect.get(value, 'steps')) &&
-  Array.isArray(Reflect.get(value, 'regions'));
+const isManifest = (value: unknown): value is RecordingManifest => {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    Array.isArray(Reflect.get(value, 'steps')) &&
+    Array.isArray(Reflect.get(value, 'regions'))
+  );
+};
 
-const isTimings = (value: unknown): value is NarrationTimings =>
-  typeof value === 'object' &&
-  value !== null &&
-  Array.isArray(Reflect.get(value, 'segments'));
+const isTimings = (value: unknown): value is NarrationTimings => {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    Array.isArray(Reflect.get(value, 'segments'))
+  );
+};
 
 const main = async (): Promise<void> => {
   const slug = argValue('script');
@@ -131,13 +137,17 @@ const main = async (): Promise<void> => {
   const hasPortraitCapture =
     existsSync(join(portraitDir, 'frames.concat')) &&
     existsSync(join(portraitDir, 'manifest.json'));
-  const portraitManifest = hasPortraitCapture
-    ? readJson(
-        join(portraitDir, 'manifest.json'),
-        isManifest,
-        'portrait manifest',
-      )
-    : manifest;
+  const loadPortraitManifest = () => {
+    if (!hasPortraitCapture) {
+      return manifest;
+    }
+    return readJson(
+      join(portraitDir, 'manifest.json'),
+      isManifest,
+      'portrait manifest',
+    );
+  };
+  const portraitManifest = loadPortraitManifest();
 
   const landscape = format.formats.short;
   const portrait = format.formats.short;

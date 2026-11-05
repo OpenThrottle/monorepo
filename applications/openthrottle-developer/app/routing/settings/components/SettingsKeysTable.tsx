@@ -41,6 +41,15 @@ export const SettingsKeysTable = (
   // Handlers
 
   // Markup
+  const actionErrorMarkup = (
+    <p
+      className="border-destructive/40 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm"
+      data-testid="SettingsKeysTable-action-error"
+      role="alert"
+    >
+      {actionError}
+    </p>
+  );
 
   // Life Cycle
 
@@ -51,13 +60,7 @@ export const SettingsKeysTable = (
         className={cn('space-y-4', className)}
         data-testid="SettingsKeysTable"
       >
-        <p
-          className="border-destructive/40 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm"
-          data-testid="SettingsKeysTable-action-error"
-          role="alert"
-        >
-          {actionError}
-        </p>
+        {actionErrorMarkup}
         <SettingsKeysTableEmpty />
       </div>
     );
@@ -65,15 +68,7 @@ export const SettingsKeysTable = (
 
   return (
     <div className={cn('space-y-4', className)} data-testid="SettingsKeysTable">
-      {actionError ? (
-        <p
-          className="border-destructive/40 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm"
-          data-testid="SettingsKeysTable-action-error"
-          role="alert"
-        >
-          {actionError}
-        </p>
-      ) : null}
+      {actionError ? actionErrorMarkup : null}
       <div className="ui-border rounded-lg border">
         <DataTable<ServiceAccountCredentialFieldsFragment, string | null>
           columns={columns}
@@ -95,15 +90,17 @@ SettingsKeysTable.buildTable = (
       cell: ({ row }) => {
         const credential = row.original;
         const name = credentialDisplayName(credential);
+        const trimmedLabel = credential.label?.trim();
+        const prefixLine = (
+          <p className="text-muted-foreground mt-0.5 font-mono text-xs">
+            {credential.prefix}
+          </p>
+        );
 
         return (
           <div className="min-w-0 px-3 py-2">
             <p className="text-sm font-medium">{name}</p>
-            {credential.label?.trim() ? (
-              <p className="text-muted-foreground mt-0.5 font-mono text-xs">
-                {credential.prefix}
-              </p>
-            ) : null}
+            {trimmedLabel ? prefixLine : null}
           </div>
         );
       },

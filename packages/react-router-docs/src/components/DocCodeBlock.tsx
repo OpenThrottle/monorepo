@@ -38,6 +38,8 @@ export const DocCodeBlock = (props: DocCodeBlockProps): React.ReactElement => {
   }, []);
 
   // Markup
+  const copiedIcon = <CheckIcon className="size-3.5" />;
+  const copyIcon = <CopyIcon className="size-3.5" />;
 
   // Life Cycle
   React.useEffect(
@@ -66,11 +68,7 @@ export const DocCodeBlock = (props: DocCodeBlockProps): React.ReactElement => {
         onClick={handleCopy}
         type="button"
       >
-        {copied ? (
-          <CheckIcon className="size-3.5" />
-        ) : (
-          <CopyIcon className="size-3.5" />
-        )}
+        {copied ? copiedIcon : copyIcon}
       </button>
     </div>
   );

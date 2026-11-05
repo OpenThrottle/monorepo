@@ -9,7 +9,7 @@ import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/da
 import {
   mockCheckout,
   mockRepository,
-} from '~/routing/settings/repositories/data/mock.repositories';
+} from '~/routing/settings/repositories/testing/mock-repositories';
 import { buildRepositoryRows } from '~/routing/settings/repositories/utils/rows';
 
 import type { RepositoryNameCellProps } from '../RepositoryNameCell';
@@ -44,7 +44,9 @@ describe('RepositoryNameCell Component', () => {
   let props: RepositoryNameCellProps;
 
   const setup = (): void => {
-    const Component = () => <RepositoryNameCell {...props} />;
+    const Component = () => {
+      return <RepositoryNameCell {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
   };

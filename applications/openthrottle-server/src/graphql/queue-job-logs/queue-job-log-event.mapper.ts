@@ -39,12 +39,14 @@ export const mapRecordToQueueJobLogEvent = (params: {
   readonly jobId: string;
   readonly queueName: string;
   readonly record: QueueJobLogRecordForEvent;
-}): QueueJobLogEventObject => ({
-  cursor: params.cursor,
-  jobId: params.jobId,
-  level: deriveQueueJobLogLevel(params.record),
-  message: buildRedactedQueueJobLogMessage(params.record.data),
-  queueName: params.queueName,
-  source: params.record.source ?? params.queueName,
-  timestamp: new Date(params.record.timestamp),
-});
+}): QueueJobLogEventObject => {
+  return {
+    cursor: params.cursor,
+    jobId: params.jobId,
+    level: deriveQueueJobLogLevel(params.record),
+    message: buildRedactedQueueJobLogMessage(params.record.data),
+    queueName: params.queueName,
+    source: params.record.source ?? params.queueName,
+    timestamp: new Date(params.record.timestamp),
+  };
+};

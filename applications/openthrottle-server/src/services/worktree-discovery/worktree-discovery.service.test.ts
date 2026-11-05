@@ -63,8 +63,8 @@ type CheckoutOverrides = Partial<
   Pick<RepositoryCheckout, 'filesystemPath' | 'id' | 'kind' | 'repositoryId'>
 >;
 
-const checkout = (overrides: CheckoutOverrides = {}): RepositoryCheckout =>
-  createMock<RepositoryCheckout>({
+const checkout = (overrides: CheckoutOverrides = {}): RepositoryCheckout => {
+  return createMock<RepositoryCheckout>({
     filesystemPath: PRIMARY,
     id: 'checkout-primary',
     kind: 'primary',
@@ -72,6 +72,7 @@ const checkout = (overrides: CheckoutOverrides = {}): RepositoryCheckout =>
     userId: USER,
     ...overrides,
   });
+};
 
 /** Git responses keyed by the first meaningful arg after `-C <cwd>`. */
 interface GitScript {
@@ -143,8 +144,9 @@ const withSymlinks = (map: Readonly<Record<string, string>> = {}): void => {
 };
 
 /** An fs error carrying an errno, the way node throws them — the signal the scan branches on. */
-const errnoError = (code: string, text: string): Error =>
-  Object.assign(new Error(text), { code });
+const errnoError = (code: string, text: string): Error => {
+  return Object.assign(new Error(text), { code });
+};
 
 /** `entries` are the root's children; `directories` are real clones (`.git` is a dir). */
 const withRoot = (options: {
@@ -570,12 +572,13 @@ describe('WorktreeDiscoveryService', () => {
   });
 
   describe('missing registered checkouts', () => {
-    const registeredWorktree = (name: string): RepositoryCheckout =>
-      checkout({
+    const registeredWorktree = (name: string): RepositoryCheckout => {
+      return checkout({
         filesystemPath: `${ROOT}/${name}`,
         id: `checkout-${name}`,
         kind: 'worktree',
       });
+    };
 
     describe('when the registered worktree is live', () => {
       it('does not report it', async () => {

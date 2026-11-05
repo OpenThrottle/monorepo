@@ -100,6 +100,37 @@ const argValue = (name: string): string | undefined => {
   return index === -1 ? undefined : process.argv[index + 1];
 };
 
+const spawnLiveRunHeartbeat = (flow: DemoFlow) => {
+  const { liveRun } = flow;
+
+  if (liveRun === undefined) {
+    return null;
+  }
+
+  const { runId, taskId } = liveRun;
+  const taskArgs = taskId === undefined ? [] : ['--task', taskId];
+
+  return spawn(
+    'pnpm',
+    [
+      'exec',
+      'tsx',
+      join(
+        repositoryRoot(),
+        'packages',
+        'openthrottle-showroom',
+        'src',
+        'scripts',
+        'demo-live-run.ts',
+      ),
+      '--run',
+      runId,
+      ...taskArgs,
+    ],
+    { cwd: repositoryRoot(), stdio: 'inherit' },
+  );
+};
+
 const main = async (): Promise<void> => {
   const flowId = argValue('flow');
 
@@ -153,30 +184,7 @@ const main = async (): Promise<void> => {
   // real heartbeat for exactly the length of the take and settles the run back
   // afterwards — a child process rather than a database dependency in the
   // recorder, and rather than a demo-only branch in the server's stale sweep.
-  const heartbeat =
-    flow.liveRun === undefined
-      ? null
-      : spawn(
-          'pnpm',
-          [
-            'exec',
-            'tsx',
-            join(
-              repositoryRoot(),
-              'packages',
-              'openthrottle-showroom',
-              'src',
-              'scripts',
-              'demo-live-run.ts',
-            ),
-            '--run',
-            flow.liveRun.runId,
-            ...(flow.liveRun.taskId === undefined
-              ? []
-              : ['--task', flow.liveRun.taskId]),
-          ],
-          { cwd: repositoryRoot(), stdio: 'inherit' },
-        );
+  const heartbeat = spawnLiveRunHeartbeat(flow);
 
   // Give it the one round trip it needs to flip the run before frame 1 — the
   // opening beat is the run in progress, and a badge that changes two seconds in
@@ -244,7 +252,9 @@ const main = async (): Promise<void> => {
 
   const steps: ManifestStep[] = [];
   const started = process.hrtime.bigint();
-  const elapsed = (): number => Number(process.hrtime.bigint() - started) / 1e9;
+  const elapsed = (): number => {
+    return Number(process.hrtime.bigint() - started) / 1e9;
+  };
 
   await capture.start();
 

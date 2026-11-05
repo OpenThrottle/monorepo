@@ -15,22 +15,24 @@ import { PlanWorkflowRunUpcoming } from '../PlanWorkflowRunUpcoming';
 
 type Row = PlanWorkflowRunUpcomingProps['planRunAuditRows'][number];
 
-const scheduledRow = (id: string, scheduledFor: string | null): Row => ({
-  __typename: 'PlanRunObject',
-  createdAt: '2026-11-01T00:00:00.000Z',
-  executionBackend: 'claude',
-  heartbeatExpected: true,
-  id,
-  isStale: false,
-  model: 'claude-opus',
-  runConfigSnapshotJson: JSON.stringify({
-    ralph: { effort: 'high' },
-    workspace: { workingDirectory: '/tmp/wt' },
-  }),
-  runKind: 'spawn',
-  scheduledFor,
-  status: 'SCHEDULED',
-});
+const scheduledRow = (id: string, scheduledFor: string | null): Row => {
+  return {
+    __typename: 'PlanRunObject',
+    createdAt: '2026-11-01T00:00:00.000Z',
+    executionBackend: 'claude',
+    heartbeatExpected: true,
+    id,
+    isStale: false,
+    model: 'claude-opus',
+    runConfigSnapshotJson: JSON.stringify({
+      ralph: { effort: 'high' },
+      workspace: { workingDirectory: '/tmp/wt' },
+    }),
+    runKind: 'spawn',
+    scheduledFor,
+    status: 'SCHEDULED',
+  };
+};
 
 const NO_PLAN_SCHEDULE = { scheduledRunAt: null, scheduledRunId: null };
 
@@ -41,12 +43,14 @@ const renderUpcoming = (overrides: Partial<PlanWorkflowRunUpcomingProps>) => {
     scheduledRun: NO_PLAN_SCHEDULE,
     ...overrides,
   };
-  const Component = () => (
-    <TooltipProvider>
-      <span data-testid="route-rendered" />
-      <PlanWorkflowRunUpcoming {...props} />
-    </TooltipProvider>
-  );
+  const Component = () => {
+    return (
+      <TooltipProvider>
+        <span data-testid="route-rendered" />
+        <PlanWorkflowRunUpcoming {...props} />
+      </TooltipProvider>
+    );
+  };
   const RoutesStub = createRoutesStub([
     {
       Component,

@@ -18,7 +18,9 @@ describe('OpenThrottleAuthForm Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <OpenThrottleAuthForm {...props} />;
+    const Component = () => {
+      return <OpenThrottleAuthForm {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

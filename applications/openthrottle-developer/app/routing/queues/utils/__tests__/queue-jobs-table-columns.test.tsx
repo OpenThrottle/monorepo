@@ -17,13 +17,16 @@ function asMock(value: unknown): unknown {
 
 const cellContext = (
   job: QueueJobDetailsFragment,
-): CellContext<QueueJobDetailsFragment, string | number | null | undefined> =>
-  asMock({ row: { original: job } });
+): CellContext<QueueJobDetailsFragment, string | number | null | undefined> => {
+  return asMock({ row: { original: job } });
+};
 
 const headerContext = (): HeaderContext<
   QueueJobDetailsFragment,
   string | number | null | undefined
-> => asMock({});
+> => {
+  return asMock({});
+};
 
 interface PlainJobColumn {
   readonly cell?: (
@@ -45,24 +48,28 @@ interface PlainJobColumn {
 
 const asPlainColumn = (
   column: ReturnType<typeof buildQueueJobsTableColumns>[number],
-): PlainJobColumn => asMock(column);
+): PlainJobColumn => {
+  return asMock(column);
+};
 
 const buildJob = (
   overrides: Partial<QueueJobDetailsFragment> = {},
-): QueueJobDetailsFragment => ({
-  __typename: 'JobObject',
-  data: null,
-  failedReason: null,
-  finishedOn: null,
-  id: 'job-1',
-  name: null,
-  processedOn: null,
-  progress: null,
-  returnvalue: null,
-  state: 'completed',
-  timestamp: null,
-  ...overrides,
-});
+): QueueJobDetailsFragment => {
+  return {
+    __typename: 'JobObject',
+    data: null,
+    failedReason: null,
+    finishedOn: null,
+    id: 'job-1',
+    name: null,
+    processedOn: null,
+    progress: null,
+    returnvalue: null,
+    state: 'completed',
+    timestamp: null,
+    ...overrides,
+  };
+};
 
 interface HarnessProps {
   readonly job: QueueJobDetailsFragment;
@@ -110,11 +117,13 @@ describe('buildQueueJobsTableColumns', () => {
 
   test('renders header labels for every column', () => {
     const columns = buildQueueJobsTableColumns('my-queue');
-    const headers = columns.map((column) =>
-      typeof column.header === 'function'
-        ? column.header(headerContext())
-        : column.header,
-    );
+    const headers = columns.map((column) => {
+      if (typeof column.header === 'function') {
+        return column.header(headerContext());
+      }
+
+      return column.header;
+    });
 
     const rendered = renderRoutesStub(
       <div>

@@ -15,9 +15,11 @@ export const parseRolloutTargetRoles = (
 };
 
 /** Render a role-name list back into the comma-separated input value. */
-export const formatRolloutTargetRoles = (roles: readonly string[]): string =>
-  roles.join(', ');
+export const formatRolloutTargetRoles = (roles: readonly string[]): string => {
+  return roles.join(', ');
+};
 
 /** Path to a rollout flag's detail page (`/settings/rollout/:flagId`). */
-export const rolloutFlagDetailPath = (flagId: string): string =>
-  `/settings/rollout/${flagId}`;
+export const rolloutFlagDetailPath = (flagId: string): string => {
+  return `/settings/rollout/${flagId}`;
+};

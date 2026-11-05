@@ -64,7 +64,19 @@ export default function Component(
 
   // Handlers
 
+  const hasNotes = notes.length > 0;
+
   // Markup
+  const emptyState = <NotesEmpty search={search} />;
+  const cardGrid = (
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
+      {notes.map((note) => (
+        <NoteCard key={note.id} note={note} />
+      ))}
+    </div>
+  );
+  const cardView = hasNotes ? cardGrid : emptyState;
+  const tableView = <NotesTable notes={notes} />;
 
   // Life Cycle
 
@@ -76,22 +88,7 @@ export default function Component(
 
       <div className="flex flex-col gap-4">
         <NotesToolbar />
-        {view === 'card' ? (
-          notes.length === 0 ? (
-            <NotesEmpty search={search} />
-          ) : (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
-              {notes.map((note) => (
-                <NoteCard key={note.id} note={note} />
-              ))}
-            </div>
-          )
-        ) : (
-          <NotesTable
-            // className="bg-card"
-            notes={notes}
-          />
-        )}
+        {view === 'card' ? cardView : tableView}
       </div>
     </GlobalScreen>
   );

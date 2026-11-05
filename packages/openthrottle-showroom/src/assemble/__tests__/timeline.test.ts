@@ -19,46 +19,54 @@ import { beatIndexForCue, beatSeconds, planTimeline } from '../timeline.ts';
 
 const BEATS = ['0:00', '0:09', '0:15', '0:24'];
 
-const step = (beat: string, tStart: number, tEnd: number): ManifestStep => ({
-  beat,
-  kind: 'dwell',
-  narrationCue: '',
-  tEnd,
-  tStart,
-});
+const step = (beat: string, tStart: number, tEnd: number): ManifestStep => {
+  return {
+    beat,
+    kind: 'dwell',
+    narrationCue: '',
+    tEnd,
+    tStart,
+  };
+};
 
-const manifest = (steps: readonly ManifestStep[]): RecordingManifest => ({
-  flowId: 'fixture',
-  fps: 30,
-  frames: 0,
-  height: 1080,
-  portraitStrategy: 'crop',
-  regionOfInterest: {},
-  regions: [],
-  steps,
-  wallSeconds: 0,
-  width: 1920,
-});
+const manifest = (steps: readonly ManifestStep[]): RecordingManifest => {
+  return {
+    flowId: 'fixture',
+    fps: 30,
+    frames: 0,
+    height: 1080,
+    portraitStrategy: 'crop',
+    regionOfInterest: {},
+    regions: [],
+    steps,
+    wallSeconds: 0,
+    width: 1920,
+  };
+};
 
-const segment = (beat: string, durationSeconds: number): SegmentTiming => ({
-  beat,
-  durationSeconds,
-  endSeconds: 0,
-  file: 'x.wav',
-  index: 0,
-  startSeconds: 0,
-  written: 'words',
-});
+const segment = (beat: string, durationSeconds: number): SegmentTiming => {
+  return {
+    beat,
+    durationSeconds,
+    endSeconds: 0,
+    file: 'x.wav',
+    index: 0,
+    startSeconds: 0,
+    written: 'words',
+  };
+};
 
-const timings = (segments: readonly SegmentTiming[]): NarrationTimings => ({
-  backend: 'fixture',
-  integratedLufsTarget: -14,
-  segments,
-  slug: 'fixture',
-  totalSeconds: 0,
-  variant: 'only',
-  voice: 'fixture',
-});
+const timings = (segments: readonly SegmentTiming[]): NarrationTimings => {
+  return {
+    backend: 'fixture',
+    integratedLufsTarget: -14,
+    segments,
+    slug: 'fixture',
+    totalSeconds: 0,
+    variant: 'only',
+    voice: 'fixture',
+  };
+};
 
 describe('beatSeconds', () => {
   test('reads mm:ss', () => {

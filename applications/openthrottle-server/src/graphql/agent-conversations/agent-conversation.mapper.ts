@@ -12,45 +12,51 @@ import type { AgentConversationObject } from './agent-conversation.object.ts';
 
 const stringifyJsonField = (
   value: Record<string, unknown> | null,
-): string | null => (value == null ? null : JSON.stringify(value));
+): string | null => {
+  return value == null ? null : JSON.stringify(value);
+};
 
 /**
  * @description Maps an {@link AgentConversation} entity to {@link AgentConversationObject}.
  */
 export const toAgentConversationObject = (
   entity: AgentConversation,
-): AgentConversationObject => ({
-  createdAt: entity.createdAt,
-  id: entity.id,
-  metadataJson: stringifyJsonField(entity.metadata),
-  modelName: entity.modelName,
-  modelProvider: entity.modelProvider,
-  planId: entity.planId,
-  projectId: entity.projectId,
-  status: entity.status,
-  title: entity.title,
-  updatedAt: entity.updatedAt,
-  userId: entity.userId,
-});
+): AgentConversationObject => {
+  return {
+    createdAt: entity.createdAt,
+    id: entity.id,
+    metadataJson: stringifyJsonField(entity.metadata),
+    modelName: entity.modelName,
+    modelProvider: entity.modelProvider,
+    planId: entity.planId,
+    projectId: entity.projectId,
+    status: entity.status,
+    title: entity.title,
+    updatedAt: entity.updatedAt,
+    userId: entity.userId,
+  };
+};
 
 /**
  * @description Maps an {@link AgentConversationMessage} entity to {@link AgentConversationMessageObject}.
  */
 export const toAgentConversationMessageObject = (
   entity: AgentConversationMessage,
-): AgentConversationMessageObject => ({
-  content: entity.content,
-  conversationId: entity.conversationId,
-  createdAt: entity.createdAt,
-  id: entity.id,
-  role: entity.role,
-  routingConfidence: entity.routingConfidence,
-  routingModel: entity.routingModel,
-  routingReason: entity.routingReason,
-  routingTier: entity.routingTier,
-  sortOrder: entity.sortOrder,
-  toolMetadataJson: stringifyJsonField(entity.toolMetadata),
-});
+): AgentConversationMessageObject => {
+  return {
+    content: entity.content,
+    conversationId: entity.conversationId,
+    createdAt: entity.createdAt,
+    id: entity.id,
+    role: entity.role,
+    routingConfidence: entity.routingConfidence,
+    routingModel: entity.routingModel,
+    routingReason: entity.routingReason,
+    routingTier: entity.routingTier,
+    sortOrder: entity.sortOrder,
+    toolMetadataJson: stringifyJsonField(entity.toolMetadata),
+  };
+};
 
 /**
  * @description Parses optional metadata JSON from GraphQL input.

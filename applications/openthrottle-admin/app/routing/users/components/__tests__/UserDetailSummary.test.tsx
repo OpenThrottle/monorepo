@@ -21,7 +21,9 @@ const user: UserDetailSummaryProps['user'] = {
 };
 
 const renderSummary = (props: UserDetailSummaryProps): RenderResult => {
-  const Component = () => <UserDetailSummary {...props} />;
+  const Component = () => {
+    return <UserDetailSummary {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

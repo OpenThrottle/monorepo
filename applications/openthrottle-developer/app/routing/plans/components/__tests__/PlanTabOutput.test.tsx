@@ -29,13 +29,14 @@ const chunk: PlanTabOutputProps['chunks'][number] = {
 const renderOutput = (
   props: PlanTabOutputProps,
   outputChunks: Promise<unknown[]> = Promise.resolve([]),
-): ReturnType<typeof render> =>
-  renderWithPlanDetailRouteData(
+): ReturnType<typeof render> => {
+  return renderWithPlanDetailRouteData(
     <Tabs value="output">
       <PlanTabOutput {...props} />
     </Tabs>,
     buildPlanDetailLoaderData({ outputChunks }),
   );
+};
 
 describe('PlanTabOutput Component', () => {
   test('renders the empty hint once the snapshot resolves as empty', async () => {

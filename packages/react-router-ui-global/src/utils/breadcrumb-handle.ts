@@ -10,5 +10,8 @@ export type BreadcrumbMatch = UIMatch<string, GlobalLayoutBreadcrumbsHandle>;
  * Route handles are typed `unknown` by `useMatches`, so this guard replaces the
  * former blanket cast — only matches with an object handle flow downstream.
  */
-export const hasBreadcrumbHandle = (match: UIMatch): match is BreadcrumbMatch =>
-  typeof match.handle === 'object' && match.handle !== null;
+export const hasBreadcrumbHandle = (
+  match: UIMatch,
+): match is BreadcrumbMatch => {
+  return typeof match.handle === 'object' && match.handle !== null;
+};

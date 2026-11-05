@@ -31,16 +31,18 @@ const routeParams = {
   queueId: 'Plans',
 } as const;
 
-const actionArgs = (formData: FormData): Route.ActionArgs => ({
-  context: createTestRouterContext(),
-  params: routeParams,
-  pattern: '/queues/Plans/job-1',
-  request: new Request('http://localhost/queues/Plans/job-1', {
-    body: formData,
-    method: 'POST',
-  }),
-  url: new URL('http://localhost/queues/Plans/job-1'),
-});
+const actionArgs = (formData: FormData): Route.ActionArgs => {
+  return {
+    context: createTestRouterContext(),
+    params: routeParams,
+    pattern: '/queues/Plans/job-1',
+    request: new Request('http://localhost/queues/Plans/job-1', {
+      body: formData,
+      method: 'POST',
+    }),
+    url: new URL('http://localhost/queues/Plans/job-1'),
+  };
+};
 
 describe('routes/queues.$queueId.$jobId.tsx', () => {
   beforeEach(() => {

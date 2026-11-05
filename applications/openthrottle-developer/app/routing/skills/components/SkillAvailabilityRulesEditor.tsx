@@ -32,6 +32,22 @@ export const SkillAvailabilityRulesEditor = (
   // Handlers
 
   // Markup
+  const emptyNote = (
+    <p className="text-muted-foreground text-sm">{COPY.emptyNote}</p>
+  );
+  const ruleList = (
+    <ul className="flex flex-col gap-3">
+      {rules.map((rule) => (
+        <li key={rule.id}>
+          <SkillAvailabilityRuleForm
+            mode="edit"
+            rule={rule}
+            vocabulary={vocabulary}
+          />
+        </li>
+      ))}
+    </ul>
+  );
 
   // Life Cycle
 
@@ -44,21 +60,7 @@ export const SkillAvailabilityRulesEditor = (
     >
       <h2 className="text-lg font-semibold">{COPY.heading}</h2>
 
-      {rules.length === 0 ? (
-        <p className="text-muted-foreground text-sm">{COPY.emptyNote}</p>
-      ) : (
-        <ul className="flex flex-col gap-3">
-          {rules.map((rule) => (
-            <li key={rule.id}>
-              <SkillAvailabilityRuleForm
-                mode="edit"
-                rule={rule}
-                vocabulary={vocabulary}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
+      {rules.length === 0 ? emptyNote : ruleList}
 
       <div className="flex flex-col gap-2">
         <h3 className="text-muted-foreground text-sm font-medium">

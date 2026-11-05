@@ -43,7 +43,9 @@ function renderWithProps(
     dailyStats: [...twoDayStats],
     ...props,
   };
-  const Component = () => <DashboardDailyStatsModal {...merged} />;
+  const Component = () => {
+    return <DashboardDailyStatsModal {...merged} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub initialEntries={[...initialEntries]} />);
 }

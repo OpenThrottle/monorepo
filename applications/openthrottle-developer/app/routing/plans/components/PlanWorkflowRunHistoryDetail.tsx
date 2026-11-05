@@ -63,29 +63,38 @@ export const PlanWorkflowRunHistoryDetail = (
   // Handlers
 
   // Markup
-  const jobValue =
-    row.bullmqJobId == null ? (
-      <span className="text-muted-foreground">{copy.noJob}</span>
-    ) : (
+  const renderJobValue = (
+    jobId: PlanRunAuditRow['bullmqJobId'],
+  ): React.ReactNode => {
+    if (jobId == null) {
+      return <span className="text-muted-foreground">{copy.noJob}</span>;
+    }
+    return (
       <Link
         className="text-primary font-mono text-xs underline-offset-2 hover:underline"
-        to={planRunJobDetailPath(row.bullmqJobId)}
+        to={planRunJobDetailPath(jobId)}
       >
-        {row.bullmqJobId}
+        {jobId}
       </Link>
     );
-  const diffValue =
-    row.runConfigSnapshotJson == null ? (
-      copy.none
-    ) : diffLabels.length === 0 ? (
-      copy.configMatches
-    ) : (
+  };
+  const renderDiffValue = (): React.ReactNode => {
+    if (row.runConfigSnapshotJson == null) {
+      return copy.none;
+    }
+    if (diffLabels.length === 0) {
+      return copy.configMatches;
+    }
+    return (
       <ul className="list-inside list-disc">
         {diffLabels.map((line) => (
           <li key={line}>{line}</li>
         ))}
       </ul>
     );
+  };
+  const jobValue = renderJobValue(row.bullmqJobId);
+  const diffValue = renderDiffValue();
   const entries: readonly DetailEntry[] = [
     {
       key: 'modelBackend',

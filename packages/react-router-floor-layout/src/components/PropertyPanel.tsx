@@ -57,6 +57,23 @@ export const PropertyPanel = (
   // Handlers
 
   // Markup
+  const renderSeatsField = (): React.ReactElement | null => {
+    if (!element || !('seats' in element)) {
+      return null;
+    }
+
+    return (
+      <NumberField
+        id={`${fieldId}-seats`}
+        integer={true}
+        key={`${element.id}-seats`}
+        label="Seats"
+        min={0}
+        onCommit={(value) => onChange({ seats: value })}
+        value={element.seats}
+      />
+    );
+  };
 
   // Life Cycle
 
@@ -82,17 +99,7 @@ export const PropertyPanel = (
         />
       </div>
 
-      {'seats' in element ? (
-        <NumberField
-          id={`${fieldId}-seats`}
-          integer={true}
-          key={`${element.id}-seats`}
-          label="Seats"
-          min={0}
-          onCommit={(value) => onChange({ seats: value })}
-          value={element.seats}
-        />
-      ) : null}
+      {renderSeatsField()}
 
       <NumberField
         id={`${fieldId}-rotation`}

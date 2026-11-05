@@ -20,14 +20,15 @@ import Index, { shouldRevalidate } from '../_index';
  * the sidebar's mount-time conversation list fetch resolves (empty) instead of
  * 404-ing into the router error boundary.
  */
-const renderHome = (element: React.ReactElement): RenderResult =>
-  renderRouteHarness([
+const renderHome = (element: React.ReactElement): RenderResult => {
+  return renderRouteHarness([
     { Component: (): React.ReactElement => element, path: '/' },
     {
       action: () => ({ conversations: [], errorMessage: null, totalCount: 0 }),
       path: '/resources/agent-conversations',
     },
   ]);
+};
 
 const matches: Route.ComponentProps['matches'] = [
   buildRootMatch(),
@@ -194,8 +195,12 @@ describe('routes/_index.tsx toolbar persistence', () => {
 });
 
 describe('routes/_index shouldRevalidate', () => {
-  const call = (current: string, next: string, formMethod?: 'POST'): boolean =>
-    shouldRevalidate({
+  const call = (
+    current: string,
+    next: string,
+    formMethod?: 'POST',
+  ): boolean => {
+    return shouldRevalidate({
       currentParams: {},
       currentUrl: new URL(current),
       defaultShouldRevalidate: true,
@@ -203,6 +208,7 @@ describe('routes/_index shouldRevalidate', () => {
       nextParams: {},
       nextUrl: new URL(next),
     });
+  };
 
   test('skips revalidation for a same-path navigation (search-param change)', () => {
     expect(call('http://localhost/?a=1', 'http://localhost/?a=2')).toBe(false);

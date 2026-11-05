@@ -6,7 +6,7 @@
  */
 
 import type { GetSkillDetailUsageQuery } from '~/__generated__/graphql';
-import type { SkillDetailUsageData } from '~/routing/skills/data/skill-usage-detail';
+import type { SkillDetailUsageData } from '~/routing/skills/types';
 
 /** Map the deferred usage query → the component's discriminated prop. */
 export const toSkillDetailUsageData = (
@@ -14,28 +14,30 @@ export const toSkillDetailUsageData = (
 ): SkillDetailUsageData => {
   const row = skillUsage.bySkill[0];
 
-  return {
-    available: true,
-    byDay: skillUsage.byDay.map((day) => ({
-      date: day.date,
-      oursCount: day.oursCount,
-      personalCount: day.personalCount,
-      thirdPartyCount: day.thirdPartyCount,
-      totalCount: day.totalCount,
-    })),
-    skill: row
-      ? {
-          abandonedCount: row.abandonedCount,
-          avgDurationMs: row.avgDurationMs ?? null,
-          count: row.count,
-          errorCount: row.errorCount,
-          lastUsedAt: row.lastUsedAt == null ? null : String(row.lastUsedAt),
-          outcomeCount: row.outcomeCount,
-          scope: row.scope,
-          sessionEndedCount: row.sessionEndedCount,
-          skillName: row.skillName,
-          successCount: row.successCount,
-        }
-      : null,
+  const byDay = skillUsage.byDay.map((day) => ({
+    date: day.date,
+    oursCount: day.oursCount,
+    personalCount: day.personalCount,
+    thirdPartyCount: day.thirdPartyCount,
+    totalCount: day.totalCount,
+  }));
+
+  if (!row) {
+    return { available: true, byDay, skill: null };
+  }
+
+  const skill = {
+    abandonedCount: row.abandonedCount,
+    avgDurationMs: row.avgDurationMs ?? null,
+    count: row.count,
+    errorCount: row.errorCount,
+    lastUsedAt: row.lastUsedAt == null ? null : String(row.lastUsedAt),
+    outcomeCount: row.outcomeCount,
+    scope: row.scope,
+    sessionEndedCount: row.sessionEndedCount,
+    skillName: row.skillName,
+    successCount: row.successCount,
   };
+
+  return { available: true, byDay, skill };
 };

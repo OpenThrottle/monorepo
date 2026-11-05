@@ -10,7 +10,7 @@ import { CalendarSearchIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { CALENDAR_EMPTY_COPY } from '~/routing/calendar/data/data.copy';
+import { CALENDAR_EMPTY_VARIANTS } from '~/routing/calendar/data/data.empty-variants';
 
 export interface CalendarEmptyProps {
   className?: string;
@@ -25,6 +25,7 @@ export const CalendarEmpty = (
   // Hooks
 
   // Setup
+  const variant = CALENDAR_EMPTY_VARIANTS[search ? 'search' : 'default'];
 
   // Handlers
 
@@ -39,20 +40,10 @@ export const CalendarEmpty = (
       <EmptyMedia variant="icon">
         <CalendarSearchIcon className="size-6" />
       </EmptyMedia>
-      <EmptyTitle>
-        {search ? CALENDAR_EMPTY_COPY.searchTitle : CALENDAR_EMPTY_COPY.title}
-      </EmptyTitle>
-      <EmptyDescription>
-        {search
-          ? CALENDAR_EMPTY_COPY.searchDescription
-          : CALENDAR_EMPTY_COPY.description}
-      </EmptyDescription>
+      <EmptyTitle>{variant.title}</EmptyTitle>
+      <EmptyDescription>{variant.description}</EmptyDescription>
       <Button asChild={true} variant="secondary">
-        {search ? (
-          <Link to="/calendar/list">{CALENDAR_EMPTY_COPY.searchCta}</Link>
-        ) : (
-          <Link to="/calendar/create">{CALENDAR_EMPTY_COPY.cta}</Link>
-        )}
+        <Link to={variant.ctaHref}>{variant.cta}</Link>
       </Button>
     </Empty>
   );

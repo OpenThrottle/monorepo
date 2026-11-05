@@ -115,8 +115,9 @@ export const PlanRunDialog = (
   const copy = PLAN_RUN_DIALOG_COPY;
 
   // Handlers
-  const handleModeChange = (value: string): void =>
-    dialog.onModeChange(value === 'schedule' ? 'schedule' : 'run');
+  const handleModeChange = (value: string): void => {
+    return dialog.onModeChange(value === 'schedule' ? 'schedule' : 'run');
+  };
 
   // Markup
 

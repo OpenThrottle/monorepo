@@ -143,15 +143,13 @@ describe('slugifyForBranch', () => {
 
   describe('truncation at 50 chars', () => {
     it('truncates titles longer than 50 characters', () => {
-      const longTitle =
-        'This is a very long plan title that exceeds fifty characters easily';
+      const longTitle = `This is a very long plan title that exceeds fifty characters easily`;
       const result = slugifyForBranch(longTitle);
       expect(result.length).toBeLessThanOrEqual(50);
     });
 
     it('does not leave trailing hyphen after truncation', () => {
-      const longTitle =
-        'This is a very long plan title that exceeds fifty characters easily';
+      const longTitle = `This is a very long plan title that exceeds fifty characters easily`;
       const result = slugifyForBranch(longTitle);
       expect(result).not.toMatch(/-$/);
     });
@@ -249,8 +247,7 @@ describe('deriveBranchName', () => {
     });
 
     it('keeps total branch name length under 100 chars for safety margin', () => {
-      const longTitle =
-        'This is a very long plan title that exceeds fifty characters easily and should be truncated';
+      const longTitle = `This is a very long plan title that exceeds fifty characters easily and should be truncated`;
       const name = deriveBranchName('job-1', longTitle);
       expect(name.length).toBeLessThan(100);
       expect(name).toMatch(/^ralph\/.+-[a-z0-9]{6}$/);

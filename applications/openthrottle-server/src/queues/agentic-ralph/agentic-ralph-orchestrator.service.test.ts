@@ -100,11 +100,9 @@ const USER_ID = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
 const CHECKOUT_ID = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
 const QUEUE_NAME = 'Plans';
 const QUEUE_JOB_ID = 'job-orch-1';
-const WORKTREE_PATH =
-  '/Users/matt/.cursor/worktrees/openthrottle/auto-register';
+const WORKTREE_PATH = `/Users/matt/.cursor/worktrees/openthrottle/auto-register`;
 
-const PROVISIONED_WORKTREE_PATH =
-  '/Users/matt/Development/openthrottle-worktrees/plan-aaaaaaaa';
+const PROVISIONED_WORKTREE_PATH = `/Users/matt/Development/openthrottle-worktrees/plan-aaaaaaaa`;
 
 const mockProvision = vi.fn(async () => PROVISIONED_WORKTREE_PATH);
 const mockPreflightCheck = vi.fn((): readonly string[] => []);
@@ -112,22 +110,23 @@ const mockOutputCreate = vi.fn((entity: unknown) => entity);
 const mockOutputSave = vi.fn(async (entity: unknown) => entity);
 
 // Narrow partial repository: the orchestrator only ever calls create + save on it.
-const planOutputStreamServiceMock = (): PlanOutputStreamService =>
-  createMock<PlanOutputStreamService>({
+const planOutputStreamServiceMock = (): PlanOutputStreamService => {
+  return createMock<PlanOutputStreamService>({
     getRepository: () =>
       asMock<Repository<PlanOutputStreamChunk>>({
         create: mockOutputCreate,
         save: mockOutputSave,
       }),
   });
+};
 const mockGetOrCreateForUser = vi.fn(async () =>
   createMock<UserWorkspaceSettings>({
     userId: USER_ID,
   }),
 );
 
-const buildRun = (overrides: Partial<PlanRun> = {}): PlanRun =>
-  createMock<PlanRun>({
+const buildRun = (overrides: Partial<PlanRun> = {}): PlanRun => {
+  return createMock<PlanRun>({
     actorUserId: USER_ID,
     bullmqJobId: QUEUE_JOB_ID,
     checkoutId: null,
@@ -136,6 +135,7 @@ const buildRun = (overrides: Partial<PlanRun> = {}): PlanRun =>
     queueName: QUEUE_NAME,
     ...overrides,
   });
+};
 
 describe('AgenticRalphOrchestratorService worktree checkout registration', () => {
   const mockFindByQueueNameAndBullmqJobId = vi.fn();
@@ -212,8 +212,8 @@ describe('AgenticRalphOrchestratorService worktree checkout registration', () =>
     Awaited<
       ReturnType<AgenticRalphOrchestratorService['runPlanOrchestratorJob']>
     >
-  > =>
-    service.runPlanOrchestratorJob({
+  > => {
+    return service.runPlanOrchestratorJob({
       correlation: {
         correlationId: QUEUE_JOB_ID,
         queueJobId: QUEUE_JOB_ID,
@@ -225,6 +225,7 @@ describe('AgenticRalphOrchestratorService worktree checkout registration', () =>
         workingDirectory: WORKTREE_PATH,
       },
     });
+  };
 
   describe('when checkout_id is NULL', () => {
     it('invokes register once with the resolved path and actor before execute', async () => {
@@ -313,12 +314,13 @@ describe('AgenticRalphOrchestratorService foreign-skill injection gate', () => {
 
   let service: AgenticRalphOrchestratorService;
 
-  const checkout = (enabled: boolean): RepositoryCheckout =>
-    createMock<RepositoryCheckout>({
+  const checkout = (enabled: boolean): RepositoryCheckout => {
+    return createMock<RepositoryCheckout>({
       filesystemPath: WORKTREE_PATH,
       foreignSkillInjectionEnabled: enabled,
       userId: USER_ID,
     });
+  };
 
   beforeEach(() => {
     mockExecute.mockReset();
@@ -515,8 +517,8 @@ describe('AgenticRalphOrchestratorService worktree provisioning', () => {
 
   const runWithWorktree = async (
     ralph: Record<string, unknown> = { worktree: 'plan-aaaaaaaa' },
-  ): Promise<unknown> =>
-    service.runPlanOrchestratorJob({
+  ): Promise<unknown> => {
+    return service.runPlanOrchestratorJob({
       correlation: {
         correlationId: QUEUE_JOB_ID,
         queueJobId: QUEUE_JOB_ID,
@@ -529,6 +531,7 @@ describe('AgenticRalphOrchestratorService worktree provisioning', () => {
         workingDirectory: WORKTREE_PATH,
       },
     });
+  };
 
   it('provisions the named worktree from the base checkout and runs the agent inside it', async () => {
     await runWithWorktree();
@@ -717,8 +720,8 @@ describe('AgenticRalphOrchestratorService default-path worktree root resolution'
    * workingDirectory — the case `PlanEnqueueService.resolveWorkspace` leaves `workingDirectory`
    * `undefined` on the job payload.
    */
-  const runWithoutExplicitWorkingDirectory = async (): Promise<unknown> =>
-    service.runPlanOrchestratorJob({
+  const runWithoutExplicitWorkingDirectory = async (): Promise<unknown> => {
+    return service.runPlanOrchestratorJob({
       correlation: {
         correlationId: QUEUE_JOB_ID,
         queueJobId: QUEUE_JOB_ID,
@@ -730,6 +733,7 @@ describe('AgenticRalphOrchestratorService default-path worktree root resolution'
         runKind: 'orchestrator',
       },
     });
+  };
 
   it('resolves baseCheckoutPath to a genuine repo root, not the server process cwd', async () => {
     const expectedRoot = getOpenThrottleRoot(process.env);

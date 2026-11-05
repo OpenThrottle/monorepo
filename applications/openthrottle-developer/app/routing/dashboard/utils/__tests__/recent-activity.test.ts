@@ -14,14 +14,16 @@ import {
 
 const baseData = (
   overrides: Partial<DashboardActivityCardFragment> = {},
-): DashboardActivityCardFragment => ({
-  commits: [],
-  hasNext: false,
-  outputChunks: [],
-  tasksUpdated: [],
-  totalCount: 0,
-  ...overrides,
-});
+): DashboardActivityCardFragment => {
+  return {
+    commits: [],
+    hasNext: false,
+    outputChunks: [],
+    tasksUpdated: [],
+    totalCount: 0,
+    ...overrides,
+  };
+};
 
 describe('toActivityRows', () => {
   test('maps commits, output chunks, and tasks updated into rows', () => {

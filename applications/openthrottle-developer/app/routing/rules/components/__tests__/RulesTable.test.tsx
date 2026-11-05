@@ -17,7 +17,9 @@ describe('RulesTable Component', () => {
 
   const renderTable = (overrides?: Partial<RulesTableProps>): RenderResult => {
     const merged = { ...props, ...overrides };
-    const Component = () => <RulesTable {...merged} />;
+    const Component = () => {
+      return <RulesTable {...merged} />;
+    };
     const RoutesStub = createRoutesStub([
       { Component, action: () => null, path: '/' },
     ]);

@@ -90,9 +90,11 @@ export function toggleTimelineKind<TKind extends string>(
 ): TKind[] {
   const current = selected ?? allKinds;
 
-  return current.includes(kind)
-    ? current.filter((entry) => entry !== kind)
-    : // Preserve the canonical order rather than appending, so the URL is
-      // stable however the boxes were clicked.
-      allKinds.filter((entry) => current.includes(entry) || entry === kind);
+  if (current.includes(kind)) {
+    return current.filter((entry) => entry !== kind);
+  }
+
+  // Preserve the canonical order rather than appending, so the URL is
+  // stable however the boxes were clicked.
+  return allKinds.filter((entry) => current.includes(entry) || entry === kind);
 }

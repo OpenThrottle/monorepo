@@ -4,7 +4,7 @@ import * as React from 'react';
 
 import type { Route } from '@/app/routes/+types/docs.$';
 import { SITE_TITLE } from '~/global/config/settings';
-import { docsBySlug } from '~/routing/docs/data/docs-navigation';
+import { docsBySlug } from '~/routing/docs/data/data.docs-navigation';
 
 export const loader = async (args: Route.LoaderArgs) => {
   const entry = docsBySlug.get(`/docs/${args.params['*']}`);

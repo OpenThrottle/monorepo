@@ -32,14 +32,16 @@ import type { ScheduledAgentJobUsageLimitResumeService } from './usage-limit-res
 
 const result = (
   overrides: Partial<RunAgentPromptResult>,
-): RunAgentPromptResult => ({
-  driverId: 'claude',
-  exitCode: 0,
-  output: '',
-  status: RUN_AGENT_STATUS.ok,
-  usageLimit: null,
-  ...overrides,
-});
+): RunAgentPromptResult => {
+  return {
+    driverId: 'claude',
+    exitCode: 0,
+    output: '',
+    status: RUN_AGENT_STATUS.ok,
+    usageLimit: null,
+    ...overrides,
+  };
+};
 
 /** The usage columns a run with no parseable usage persists (all null). */
 const NULL_USAGE_COLUMNS = {
@@ -78,8 +80,8 @@ const CLAUDE_JSONL = [
 
 const makeJob = (
   data: Partial<ScheduledAgentJobBullJob['data']> = {},
-): ScheduledAgentJobBullJob =>
-  createMock<ScheduledAgentJobBullJob>({
+): ScheduledAgentJobBullJob => {
+  return createMock<ScheduledAgentJobBullJob>({
     data: {
       driverId: 'claude',
       prompt: 'do it',
@@ -88,6 +90,7 @@ const makeJob = (
     },
     id: 'bull-1',
   });
+};
 
 describe('ScheduledAgentJobsProcessor', () => {
   let jobsService: ScheduledAgentJobsService;
@@ -1141,8 +1144,9 @@ describe('ScheduledAgentJobsProcessor', () => {
       );
     };
 
-    const fireFor = (slot: Date): ScheduledAgentJobBullJob =>
-      makeJob({ cwd: process.cwd(), slotMs: slot.getTime() });
+    const fireFor = (slot: Date): ScheduledAgentJobBullJob => {
+      return makeJob({ cwd: process.cwd(), slotMs: slot.getTime() });
+    };
 
     beforeEach(() => {
       vi.mocked(jobsService.claimScheduledSlot).mockResolvedValue(

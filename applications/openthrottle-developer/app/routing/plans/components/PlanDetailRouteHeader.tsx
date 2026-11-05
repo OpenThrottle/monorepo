@@ -36,6 +36,16 @@ export const PlanDetailRouteHeader = (
   // Handlers
 
   // Markup
+  const assigneeSuffix = plan.assignee ? ` → ${plan.assignee}` : '';
+  const authorLabel = `${plan.author}${assigneeSuffix}`;
+  const authorLine = plan.author && (
+    <span aria-label={`Author: ${plan.author}`}>{authorLabel}</span>
+  );
+  const assigneeOnlyLine = !plan.author && plan.assignee && (
+    <span aria-label={`Assignee: ${plan.assignee}`}>
+      Assignee: {plan.assignee}
+    </span>
+  );
 
   // Life Cycle
 
@@ -67,17 +77,8 @@ export const PlanDetailRouteHeader = (
             </Badge>
           ) : null} */}
 
-          {plan.author ? (
-            <span aria-label={`Author: ${plan.author}`}>
-              {plan.assignee
-                ? `${plan.author} → ${plan.assignee}`
-                : plan.author}
-            </span>
-          ) : plan.assignee ? (
-            <span aria-label={`Assignee: ${plan.assignee}`}>
-              Assignee: {plan.assignee}
-            </span>
-          ) : null}
+          {authorLine}
+          {assigneeOnlyLine}
         </div>
       </div>
 

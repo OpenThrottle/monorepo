@@ -43,13 +43,14 @@ const getCurrentUserFactory = (): ParamFactory => {
   return first.factory;
 };
 
-const createHttpContext = (httpReq: { user?: unknown }): ExecutionContext =>
-  asMock<ExecutionContext>({
+const createHttpContext = (httpReq: { user?: unknown }): ExecutionContext => {
+  return asMock<ExecutionContext>({
     getType: vi.fn().mockReturnValue('http'),
     switchToHttp: vi.fn().mockReturnValue({
       getRequest: () => httpReq,
     }),
   });
+};
 
 describe('CurrentUser', () => {
   const factory = getCurrentUserFactory();

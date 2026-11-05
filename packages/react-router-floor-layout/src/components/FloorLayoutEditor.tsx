@@ -98,6 +98,32 @@ export const FloorLayoutEditor = (
   // Handlers
 
   // Markup
+  const renderSelectionHandles = (): React.ReactElement | null => {
+    if (!selected) {
+      return null;
+    }
+
+    return (
+      <SelectionHandles
+        element={selected}
+        gridSize={layout.gridSize}
+        onTransform={handleTransform}
+        snapEnabled={snapEnabled}
+        viewport={viewport}
+      />
+    );
+  };
+  const renderPreview = (): React.ReactElement | null => {
+    if (!preview) {
+      return null;
+    }
+
+    return (
+      <g opacity={0.5} pointerEvents="none">
+        <FloorElementView element={preview} />
+      </g>
+    );
+  };
 
   // Life Cycle
 
@@ -140,20 +166,8 @@ export const FloorLayoutEditor = (
             snapEnabled={snapEnabled}
             viewport={viewport}
           >
-            {selected ? (
-              <SelectionHandles
-                element={selected}
-                gridSize={layout.gridSize}
-                onTransform={handleTransform}
-                snapEnabled={snapEnabled}
-                viewport={viewport}
-              />
-            ) : null}
-            {preview ? (
-              <g opacity={0.5} pointerEvents="none">
-                <FloorElementView element={preview} />
-              </g>
-            ) : null}
+            {renderSelectionHandles()}
+            {renderPreview()}
           </FloorCanvas>
         </div>
         <PropertyPanel

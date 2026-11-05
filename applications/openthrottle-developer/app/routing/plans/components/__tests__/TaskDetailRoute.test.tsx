@@ -38,44 +38,49 @@ const mockTask: TaskDetailsFragment = {
   updatedAt: '2025-01-02T00:00:00Z',
 };
 
-const buildPlan = (status: string): PlanDetailsFragment => ({
-  __typename: 'PlanObject',
-  afterHooks: [],
-  assignee: null,
-  author: 'visormatt',
-  beforeHooks: [],
-  category: 'feature',
-  createdAt: '2025-01-01T00:00:00Z',
-  description: null,
-  id: 'plan-1',
-  jobRunHooksJson: '{"hooks":[]}',
-  project: null,
-  projectId: null,
-  runConfigJson: '{}',
-  status,
-  summary: null,
-  tags: [],
-  title: 'Parent Plan',
-  updatedAt: '2025-01-02T00:00:00Z',
-});
+const buildPlan = (status: string): PlanDetailsFragment => {
+  return {
+    __typename: 'PlanObject',
+    afterHooks: [],
+    assignee: null,
+    author: 'visormatt',
+    beforeHooks: [],
+    category: 'feature',
+    createdAt: '2025-01-01T00:00:00Z',
+    description: null,
+    id: 'plan-1',
+    jobRunHooksJson: '{"hooks":[]}',
+    project: null,
+    projectId: null,
+    runConfigJson: '{}',
+    status,
+    summary: null,
+    tags: [],
+    title: 'Parent Plan',
+    updatedAt: '2025-01-02T00:00:00Z',
+  };
+};
 
 const buildProps = (
   task: TaskDetailsFragment = mockTask,
   plan: PlanDetailsFragment | null = null,
-): TaskDetailRouteProps => ({
-  loaderData: {
-    linkedArtifacts: [],
-    plan,
-    planOutputChunks: [],
-    tagVocabulary: [],
+): TaskDetailRouteProps => {
+  return {
+    loaderData: {
+      linkedArtifacts: [],
+      plan,
+      planOutputChunks: [],
+      tagVocabulary: [],
+      task,
+    },
+    params: { planId: 'plan-1', taskId: 'task-1' },
     task,
-  },
-  params: { planId: 'plan-1', taskId: 'task-1' },
-  task,
-});
+  };
+};
 
-const renderRoute = (props: TaskDetailRouteProps): RenderResult =>
-  renderRoutesStub(<TaskDetailRoute {...props} />);
+const renderRoute = (props: TaskDetailRouteProps): RenderResult => {
+  return renderRoutesStub(<TaskDetailRoute {...props} />);
+};
 
 describe('TaskDetailRoute Component', () => {
   let component: RenderResult;

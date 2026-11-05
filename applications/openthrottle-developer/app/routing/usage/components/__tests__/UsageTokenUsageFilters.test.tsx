@@ -8,9 +8,9 @@ import type { UsageTokenUsageFiltersProps } from '../UsageTokenUsageFilters';
 import { UsageTokenUsageFilters } from '../UsageTokenUsageFilters';
 
 const renderComponent = (props: UsageTokenUsageFiltersProps): RenderResult => {
-  const Component = (): React.ReactElement => (
-    <UsageTokenUsageFilters {...props} />
-  );
+  const Component = (): React.ReactElement => {
+    return <UsageTokenUsageFilters {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

@@ -17,7 +17,9 @@ const AGENTS_CHAT_MUTATION_ROUTED_TOOLS: readonly AgentsMcpRoutedToolName[] =
  */
 export const isAgentsChatMutationRoutedTool = (
   tool: AgentsMcpRoutedToolName,
-): boolean => AGENTS_CHAT_MUTATION_ROUTED_TOOLS.includes(tool);
+): boolean => {
+  return AGENTS_CHAT_MUTATION_ROUTED_TOOLS.includes(tool);
+};
 
 /**
  * @description Reads `AGENTS_CHAT_ALLOW_MUTATIONS` (opt-in for future routed write tools).

@@ -98,7 +98,9 @@ export class TimelineResolver {
     const markerKinds = input.markerKinds ?? Object.values(TimelineMarkerKind);
 
     const repo = this.plansService.getRepository();
-    const q: QueryFn = (sql, params) => repo.manager.query(sql, params);
+    const q: QueryFn = (sql, params) => {
+      return repo.manager.query(sql, params);
+    };
 
     const [spanLegs, markerLegs] = await Promise.all([
       Promise.all(

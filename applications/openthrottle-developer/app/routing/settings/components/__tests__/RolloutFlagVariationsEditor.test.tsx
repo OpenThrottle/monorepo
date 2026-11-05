@@ -30,7 +30,9 @@ describe('RolloutFlagVariationsEditor Component', () => {
       variations: latest,
     };
 
-    const Component = () => <RolloutFlagVariationsEditor {...props} />;
+    const Component = () => {
+      return <RolloutFlagVariationsEditor {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
   });

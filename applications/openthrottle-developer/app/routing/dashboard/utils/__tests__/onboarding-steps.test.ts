@@ -10,13 +10,15 @@ import {
 
 const onboarding = (
   overrides: Partial<GetDashboardOnboardingQuery> = {},
-): GetDashboardOnboardingQuery => ({
-  discoverAgentClis: { totalCount: 0 },
-  githubTokenConfigured: false,
-  planCountsByStatus: [],
-  workspaceLocalRepositories: [],
-  ...overrides,
-});
+): GetDashboardOnboardingQuery => {
+  return {
+    discoverAgentClis: { totalCount: 0 },
+    githubTokenConfigured: false,
+    planCountsByStatus: [],
+    workspaceLocalRepositories: [],
+    ...overrides,
+  };
+};
 
 describe('deriveOnboardingCompletion', () => {
   test('an empty/first-run workspace has every step incomplete', () => {

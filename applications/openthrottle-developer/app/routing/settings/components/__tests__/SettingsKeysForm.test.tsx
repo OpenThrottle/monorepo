@@ -25,19 +25,23 @@ vi.mock('sonner', () => ({
 const credential = (
   overrides: Partial<ServiceAccountCredentialFieldsFragment> &
     Pick<ServiceAccountCredentialFieldsFragment, 'id' | 'prefix'>,
-): ServiceAccountCredentialFieldsFragment => ({
-  __typename: 'ServiceAccountCredentialObject',
-  createdAt: '2026-01-01T00:00:00.000Z',
-  expiresAt: null,
-  label: 'CI deploy',
-  lastUsedAt: null,
-  revokedAt: null,
-  serviceAccountId: 'sa-1',
-  ...overrides,
-});
+): ServiceAccountCredentialFieldsFragment => {
+  return {
+    __typename: 'ServiceAccountCredentialObject',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    expiresAt: null,
+    label: 'CI deploy',
+    lastUsedAt: null,
+    revokedAt: null,
+    serviceAccountId: 'sa-1',
+    ...overrides,
+  };
+};
 
 const renderForm = (props: SettingsKeysFormProps = {}): RenderResult => {
-  const Component = () => <SettingsKeysForm {...props} />;
+  const Component = () => {
+    return <SettingsKeysForm {...props} />;
+  };
   const RoutesStub = createRoutesStub([
     { Component, path: '/' },
     {

@@ -20,6 +20,7 @@ const OPT_OUT = /component-shape:\s*opt-out/;
 type Profile = 'authored' | 'primitive';
 
 type MessageIds =
+  | 'jsxConstAfterShortCircuit'
   | 'markerMissingBlankLine'
   | 'markerOutOfOrder'
   | 'missingComponentExport'
@@ -71,7 +72,31 @@ const isForwardRefCall = (node: TSESTree.Expression): boolean => {
   return false;
 };
 
-const isPascalCase = (name: string): boolean => /^[A-Z]/.test(name);
+const isPascalCase = (name: string): boolean => {
+  return /^[A-Z]/.test(name);
+};
+
+const SHORT_CIRCUIT_MARKER = '🔌 Short Circuit';
+
+/**
+ * True when an initializer evaluates to JSX: an element or fragment, or a
+ * conditional / logical expression with a JSX operand (`cond ? <A /> : null`,
+ * `cond && <A />`). Parentheses leave no AST node, so `(<A />)` is covered.
+ */
+const isJsxInitializer = (node: TSESTree.Expression): boolean => {
+  if (node.type === 'JSXElement' || node.type === 'JSXFragment') {
+    return true;
+  }
+  if (node.type === 'ConditionalExpression') {
+    return (
+      isJsxInitializer(node.consequent) || isJsxInitializer(node.alternate)
+    );
+  }
+  if (node.type === 'LogicalExpression') {
+    return isJsxInitializer(node.left) || isJsxInitializer(node.right);
+  }
+  return false;
+};
 
 /** An exported component part discovered in the module body. */
 interface ComponentPart {
@@ -147,6 +172,42 @@ export const componentPrimitiveShape = createRule<
         allowScaffold,
       )) {
         context.report(descriptor);
+      }
+    };
+
+    // R3 — `// 🔌 Short Circuit` holds only early `if (…) return …;`
+    // statements. JSX held in a const is markup and belongs under `// Markup`,
+    // so a top-level `const` with a JSX initializer after the marker is
+    // reported. Nested scopes (callbacks, `if` blocks) are not inspected.
+    const checkShortCircuitJsx = (
+      componentFn:
+        TSESTree.ArrowFunctionExpression | TSESTree.FunctionExpression,
+    ): void => {
+      if (componentFn.body.type !== 'BlockStatement') return;
+      const marker = sourceCode
+        .getCommentsInside(componentFn.body)
+        .find(
+          (c) => c.type === 'Line' && c.value.trim() === SHORT_CIRCUIT_MARKER,
+        );
+      if (marker === undefined) return;
+      for (const stmt of componentFn.body.body) {
+        if (
+          stmt.type !== 'VariableDeclaration' ||
+          stmt.range[0] < marker.range[1]
+        ) {
+          continue;
+        }
+        for (const d of stmt.declarations) {
+          if (d.init !== null && isJsxInitializer(d.init)) {
+            context.report({
+              data: {
+                name: d.id.type === 'Identifier' ? d.id.name : 'this const',
+              },
+              messageId: 'jsxConstAfterShortCircuit',
+              node: d,
+            });
+          }
+        }
       }
     };
 
@@ -293,6 +354,7 @@ export const componentPrimitiveShape = createRule<
             if (part.fn === null) continue;
             checkReturnType(part.fn, part.name);
             checkMarkers(part.fn, false);
+            checkShortCircuitJsx(part.fn);
           }
           return;
         }
@@ -337,14 +399,16 @@ export const componentPrimitiveShape = createRule<
         if (!exportedInterfaces.has(`${name}Props`)) {
           context.report({
             data: { name },
-            fix:
-              componentExport === null
-                ? undefined
-                : (fixer) =>
-                    fixer.insertTextBefore(
-                      componentExport,
-                      `export interface ${name}Props {}\n\n`,
-                    ),
+            fix: (fixer) => {
+              if (componentExport === null) {
+                return null;
+              }
+
+              return fixer.insertTextBefore(
+                componentExport,
+                `export interface ${name}Props {}\n\n`,
+              );
+            },
             messageId: 'missingPropsInterface',
             node: componentExport ?? program,
           });
@@ -354,35 +418,27 @@ export const componentPrimitiveShape = createRule<
 
         checkReturnType(componentFn, name);
         checkMarkers(componentFn, true);
+        checkShortCircuitJsx(componentFn);
       },
     };
   },
   defaultOptions: [{ profile: 'authored' }],
   meta: {
     docs: {
-      description:
-        'Enforce the OpenThrottle component primitive shape (exported Foo + FooProps and the ordered section markers).',
+      description: `Enforce the OpenThrottle component primitive shape (exported Foo + FooProps and the ordered section markers).`,
     },
     fixable: 'code',
     messages: {
-      markerMissingBlankLine:
-        'The `// {{marker}}` marker must be preceded by exactly one blank line (R3).',
-      markerOutOfOrder:
-        'Section markers must appear in the canonical order: {{order}} (R3).',
-      missingComponentExport:
-        'Expected an exported `{{name}}` component matching the file name (R1).',
-      missingDisplayName:
-        '`{{name}}` is wrapped in `forwardRef` — set `{{name}}.displayName` (VR2).',
-      missingMarker:
-        'Missing the `// {{marker}}` section marker (R3). Keep every marker even when its section is empty.',
-      missingPropsInterface:
-        'Export an interface named `{{name}}Props` (an empty interface is required) (R1/VR1).',
-      missingReturnType:
-        'Give `{{name}}` an explicit `React.ReactElement` return type (R2/VR2).',
-      namedReExportBlock:
-        'Export each primitive at its declaration; the trailing `export { … }` re-export block is banned (VR5).',
-      returnTypeNotReactElement:
-        '`{{name}}` should return `React.ReactElement` (or `React.ReactElement | null`) (R2/VR2).',
+      jsxConstAfterShortCircuit: `\`{{name}}\` holds JSX — declare it under \`// Markup\`. \`// 🔌 Short Circuit\` holds only early \`if (…) return …;\` statements (R3).`,
+      markerMissingBlankLine: `The \`// {{marker}}\` marker must be preceded by exactly one blank line (R3).`,
+      markerOutOfOrder: `Section markers must appear in the canonical order: {{order}} (R3).`,
+      missingComponentExport: `Expected an exported \`{{name}}\` component matching the file name (R1).`,
+      missingDisplayName: `\`{{name}}\` is wrapped in \`forwardRef\` — set \`{{name}}.displayName\` (VR2).`,
+      missingMarker: `Missing the \`// {{marker}}\` section marker (R3). Keep every marker even when its section is empty.`,
+      missingPropsInterface: `Export an interface named \`{{name}}Props\` (an empty interface is required) (R1/VR1).`,
+      missingReturnType: `Give \`{{name}}\` an explicit \`React.ReactElement\` return type (R2/VR2).`,
+      namedReExportBlock: `Export each primitive at its declaration; the trailing \`export { … }\` re-export block is banned (VR5).`,
+      returnTypeNotReactElement: `\`{{name}}\` should return \`React.ReactElement\` (or \`React.ReactElement | null\`) (R2/VR2).`,
     },
     schema: [
       {

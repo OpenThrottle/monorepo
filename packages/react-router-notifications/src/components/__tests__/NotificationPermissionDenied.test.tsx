@@ -7,7 +7,9 @@ import { NotificationPermissionDenied } from '../NotificationPermissionDenied';
 
 describe('NotificationPermissionDenied Component', () => {
   test('explains how to re-enable blocked notifications', () => {
-    const Component = () => <NotificationPermissionDenied />;
+    const Component = () => {
+      return <NotificationPermissionDenied />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 

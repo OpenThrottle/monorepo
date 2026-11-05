@@ -35,10 +35,9 @@ export const SettingsAgentsAgentToggle = (
   // While a toggle is in flight, reflect the submitted value optimistically;
   // otherwise show the loader's server truth.
   const submittedEnabled = fetcher.formData?.get('enabled');
-  const optimisticEnabled =
-    fetcher.state !== 'idle' && submittedEnabled != null
-      ? submittedEnabled === 'true'
-      : enabled;
+  const isOptimistic = fetcher.state !== 'idle' && submittedEnabled != null;
+  const submittedValue = submittedEnabled === 'true';
+  const optimisticEnabled = isOptimistic ? submittedValue : enabled;
   const disabled = !canManage || fetcher.state !== 'idle';
   const errorMessage = fetcher.data?.errorMessage ?? null;
 
@@ -51,6 +50,29 @@ export const SettingsAgentsAgentToggle = (
   };
 
   // Markup
+  const control = (
+    <Switch
+      aria-label={SETTINGS_AGENTS_COPY.enabledToggleLabel}
+      checked={optimisticEnabled}
+      data-testid={`SettingsAgentsAgentToggle-${backend}`}
+      disabled={disabled}
+      onCheckedChange={handleCheckedChange}
+    />
+  );
+  const lockedControl = (
+    <Tooltip>
+      <TooltipTrigger asChild={true}>
+        {/* A disabled Switch swallows pointer events, so wrap it to keep the tooltip reachable. */}
+        <span className="inline-flex">{control}</span>
+      </TooltipTrigger>
+      <TooltipContent>
+        {SETTINGS_AGENTS_COPY.toggleDisabledReason}
+      </TooltipContent>
+    </Tooltip>
+  );
+  const errorMarkup = (
+    <p className="text-destructive text-xs">{errorMessage}</p>
+  );
 
   // Life Cycle
   const revalidatedRef = React.useRef(false);
@@ -70,34 +92,10 @@ export const SettingsAgentsAgentToggle = (
 
   // 🔌 Short Circuit
 
-  const control = (
-    <Switch
-      aria-label={SETTINGS_AGENTS_COPY.enabledToggleLabel}
-      checked={optimisticEnabled}
-      data-testid={`SettingsAgentsAgentToggle-${backend}`}
-      disabled={disabled}
-      onCheckedChange={handleCheckedChange}
-    />
-  );
-
   return (
     <div className="flex flex-col items-start gap-1">
-      {canManage ? (
-        control
-      ) : (
-        <Tooltip>
-          <TooltipTrigger asChild={true}>
-            {/* A disabled Switch swallows pointer events, so wrap it to keep the tooltip reachable. */}
-            <span className="inline-flex">{control}</span>
-          </TooltipTrigger>
-          <TooltipContent>
-            {SETTINGS_AGENTS_COPY.toggleDisabledReason}
-          </TooltipContent>
-        </Tooltip>
-      )}
-      {errorMessage != null ? (
-        <p className="text-destructive text-xs">{errorMessage}</p>
-      ) : null}
+      {canManage ? control : lockedControl}
+      {errorMessage != null ? errorMarkup : null}
     </div>
   );
 };

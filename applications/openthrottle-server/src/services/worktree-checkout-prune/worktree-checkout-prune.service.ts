@@ -129,7 +129,9 @@ export class WorktreeCheckoutPruneService {
     const path = checkout.filesystemPath;
     const result = (
       outcome: PruneWorktreeCheckoutResult['outcome'],
-    ): PruneWorktreeCheckoutResult => ({ checkoutId: id, outcome, path });
+    ): PruneWorktreeCheckoutResult => {
+      return { checkoutId: id, outcome, path };
+    };
 
     if (checkout.kind !== WORKTREE_KIND) {
       return result(PRUNE_WORKTREE_CHECKOUT_OUTCOME.SKIPPED_PRIMARY);

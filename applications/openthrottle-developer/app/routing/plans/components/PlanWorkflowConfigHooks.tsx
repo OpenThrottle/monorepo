@@ -94,9 +94,8 @@ export const PlanWorkflowConfigHooks = (
         data-testid="PlanWorkflowConfigHooks"
       >
         <PlanWorkflowConfigHooksValidation validation={validation} />
-        {hooks.length === 0 ? (
-          <PlanWorkflowConfigHooksEmpty />
-        ) : (
+        {hooks.length === 0 && <PlanWorkflowConfigHooksEmpty />}
+        {hooks.length > 0 && (
           <ul className="space-y-4">
             {hooks.map((row, index) => (
               <PlanWorkflowConfigHookRow

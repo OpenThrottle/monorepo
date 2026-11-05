@@ -2,7 +2,7 @@ import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { technologies } from '~/routing/home/data/technology';
+import { technologies } from '~/routing/home/data/data.technology';
 
 /**
  * @deprecated Temporarily removed from home index; restore when re-enabling commented JSX in `app/routes/_index.tsx`.

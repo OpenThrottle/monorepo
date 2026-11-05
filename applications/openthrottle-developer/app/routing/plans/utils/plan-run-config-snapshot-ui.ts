@@ -18,8 +18,20 @@ interface PlanRunSnapshotRalphShape {
   readonly model: string | undefined;
 }
 
-const readNonEmptyString = (value: unknown): string | undefined =>
-  typeof value === 'string' && value.trim() !== '' ? value.trim() : undefined;
+const readNonEmptyString = (value: unknown): string | undefined => {
+  if (typeof value !== 'string' || value.trim() === '') {
+    return undefined;
+  }
+  return value.trim();
+};
+
+const readString = (value: unknown): string | undefined => {
+  return typeof value === 'string' ? value : undefined;
+};
+
+const readNumber = (value: unknown): number | undefined => {
+  return typeof value === 'number' ? value : undefined;
+};
 
 interface PlanRunSnapshotShape {
   readonly ralph?: PlanRunSnapshotRalphShape;
@@ -27,6 +39,31 @@ interface PlanRunSnapshotShape {
     readonly workingDirectory?: string;
   };
 }
+
+const parseSnapshotRalph = (
+  raw: unknown,
+): PlanRunSnapshotRalphShape | undefined => {
+  if (!isRecord(raw)) {
+    return undefined;
+  }
+
+  return {
+    effort: readNonEmptyString(raw.effort),
+    executionBackend: readString(raw.executionBackend),
+    iterations: readNumber(raw.iterations),
+    model: readNonEmptyString(raw.model),
+  };
+};
+
+const parseSnapshotWorkspace = (
+  raw: unknown,
+): PlanRunSnapshotShape['workspace'] => {
+  if (!isRecord(raw)) {
+    return undefined;
+  }
+
+  return { workingDirectory: readString(raw.workingDirectory) };
+};
 
 const parseSnapshot = (
   runConfigSnapshotJson: string | null | undefined,
@@ -46,31 +83,8 @@ const parseSnapshot = (
     return null;
   }
 
-  const ralphRaw = parsed.ralph;
-  const ralph: PlanRunSnapshotRalphShape | undefined = isRecord(ralphRaw)
-    ? {
-        effort: readNonEmptyString(ralphRaw.effort),
-        executionBackend:
-          typeof ralphRaw.executionBackend === 'string'
-            ? ralphRaw.executionBackend
-            : undefined,
-        iterations:
-          typeof ralphRaw.iterations === 'number'
-            ? ralphRaw.iterations
-            : undefined,
-        model: readNonEmptyString(ralphRaw.model),
-      }
-    : undefined;
-
-  const workspaceRaw = parsed.workspace;
-  const workspace = isRecord(workspaceRaw)
-    ? {
-        workingDirectory:
-          typeof workspaceRaw.workingDirectory === 'string'
-            ? workspaceRaw.workingDirectory
-            : undefined,
-      }
-    : undefined;
+  const ralph = parseSnapshotRalph(parsed.ralph);
+  const workspace = parseSnapshotWorkspace(parsed.workspace);
 
   return { ralph, workspace };
 };
@@ -147,7 +161,9 @@ export const readPlanRunSnapshotWorkspacePath = (
  */
 export const readPlanRunSnapshotEffort = (
   runConfigSnapshotJson: string | null | undefined,
-): string | null => parseSnapshot(runConfigSnapshotJson)?.ralph?.effort ?? null;
+): string | null => {
+  return parseSnapshot(runConfigSnapshotJson)?.ralph?.effort ?? null;
+};
 
 /**
  * @description The model a run used: the row's own `model` column when set, else the

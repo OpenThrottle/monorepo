@@ -12,32 +12,36 @@ import { PlanCheckoutSelector } from '../PlanCheckoutSelector';
 
 type Checkout = PlanRunConfigRepositoryFieldsFragment['checkouts'][number];
 
-const buildCheckout = (overrides: Partial<Checkout> = {}): Checkout => ({
-  displayName: 'monorepo',
-  filesystemPath: '/Users/me/monorepo',
-  id: 'checkout-1',
-  inspection: { git: { currentBranch: 'main', defaultBranch: 'main' } },
-  kind: 'PRIMARY',
-  managed: false,
-  ...overrides,
-});
+const buildCheckout = (overrides: Partial<Checkout> = {}): Checkout => {
+  return {
+    displayName: 'monorepo',
+    filesystemPath: '/Users/me/monorepo',
+    id: 'checkout-1',
+    inspection: { git: { currentBranch: 'main', defaultBranch: 'main' } },
+    kind: 'PRIMARY',
+    managed: false,
+    ...overrides,
+  };
+};
 
 const buildRepository = (
   overrides: Partial<PlanRunConfigRepositoryFieldsFragment> = {},
-): PlanRunConfigRepositoryFieldsFragment => ({
-  checkouts: [buildCheckout()],
-  defaultBranch: null,
-  id: 'repo-1',
-  name: 'monorepo',
-  normalizedRemoteUrl: 'github.com/OpenThrottle/monorepo',
-  projectId: null,
-  ...overrides,
-});
+): PlanRunConfigRepositoryFieldsFragment => {
+  return {
+    checkouts: [buildCheckout()],
+    defaultBranch: null,
+    id: 'repo-1',
+    name: 'monorepo',
+    normalizedRemoteUrl: 'github.com/OpenThrottle/monorepo',
+    projectId: null,
+    ...overrides,
+  };
+};
 
 const renderSelector = (
   overrides: Partial<PlanCheckoutSelectorProps> = {},
-): RenderResult =>
-  renderRoutesStub(
+): RenderResult => {
+  return renderRoutesStub(
     <PlanCheckoutSelector
       checkoutId=""
       onCheckoutChange={vi.fn()}
@@ -45,6 +49,7 @@ const renderSelector = (
       {...overrides}
     />,
   );
+};
 
 describe('PlanCheckoutSelector Component', () => {
   test('renders the picker once the deferred repositories resolve', async () => {

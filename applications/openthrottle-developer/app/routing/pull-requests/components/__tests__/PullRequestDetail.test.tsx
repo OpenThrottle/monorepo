@@ -11,21 +11,23 @@ import { PullRequestDetail } from '../PullRequestDetail';
 
 const pull = (
   overrides: Partial<PullRequestDetailFragment> = {},
-): PullRequestDetailFragment => ({
-  __typename: 'PullListItemObject',
-  author: 'visormatt',
-  baseRef: 'main',
-  createdAt: '2026-01-01T00:00:00.000Z',
-  headRef: 'feature-branch',
-  headSha: 'abc1234',
-  htmlUrl: 'https://github.com/OpenThrottle/monorepo/pull/1',
-  mergedAt: null,
-  number: 1,
-  state: 'open',
-  title: 'Add feature',
-  updatedAt: '2026-01-02T00:00:00.000Z',
-  ...overrides,
-});
+): PullRequestDetailFragment => {
+  return {
+    __typename: 'PullListItemObject',
+    author: 'visormatt',
+    baseRef: 'main',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    headRef: 'feature-branch',
+    headSha: 'abc1234',
+    htmlUrl: 'https://github.com/OpenThrottle/monorepo/pull/1',
+    mergedAt: null,
+    number: 1,
+    state: 'open',
+    title: 'Add feature',
+    updatedAt: '2026-01-02T00:00:00.000Z',
+    ...overrides,
+  };
+};
 
 describe('PullRequestDetail Component', () => {
   let component: RenderResult;
@@ -41,7 +43,9 @@ describe('PullRequestDetail Component', () => {
   });
 
   const renderDetail = (): RenderResult => {
-    const Component = () => <PullRequestDetail {...props} />;
+    const Component = () => {
+      return <PullRequestDetail {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     return render(<RoutesStub />);
   };

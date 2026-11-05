@@ -16,12 +16,14 @@ describe('RepositoriesTableEmpty Component', () => {
 
   const renderEmpty = (initialEntry: string): RenderResult => {
     component?.unmount();
-    const Component = () => (
-      <>
-        <RepositoriesTableEmpty {...props} />
-        <span data-testid="SearchProbe">{useLocation().search}</span>
-      </>
-    );
+    const Component = () => {
+      return (
+        <>
+          <RepositoriesTableEmpty {...props} />
+          <span data-testid="SearchProbe">{useLocation().search}</span>
+        </>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     return render(<RoutesStub initialEntries={[initialEntry]} />);

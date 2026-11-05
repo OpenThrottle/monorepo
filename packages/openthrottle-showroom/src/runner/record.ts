@@ -93,8 +93,9 @@ export const createCapture = async (
 
       const lines: string[] = [];
 
-      const at = (index: number): number =>
-        Math.max(frames[index]?.timestamp ?? 0, startedAt);
+      const at = (index: number): number => {
+        return Math.max(frames[index]?.timestamp ?? 0, startedAt);
+      };
 
       for (const [index, frame] of frames.entries()) {
         // The last frame is held until capture stopped, not for a nominal 40ms. A

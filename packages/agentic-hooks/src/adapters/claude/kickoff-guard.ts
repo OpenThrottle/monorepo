@@ -30,12 +30,15 @@ const KICKOFF_TOOL_SUFFIXES = [
 const BRIEF_KEYS = ['prompt', 'remaining_plan'] as const;
 
 /** True when the payload is a session kickoff this guard applies to. */
-export const isKickoffTool = (raw: unknown): boolean =>
-  isRecord(raw) &&
-  typeof raw.tool_name === 'string' &&
-  KICKOFF_TOOL_SUFFIXES.some((suffix) =>
-    String(raw.tool_name).endsWith(suffix),
+export const isKickoffTool = (raw: unknown): boolean => {
+  return (
+    isRecord(raw) &&
+    typeof raw.tool_name === 'string' &&
+    KICKOFF_TOOL_SUFFIXES.some((suffix) =>
+      String(raw.tool_name).endsWith(suffix),
+    )
   );
+};
 
 /** The session brief in a kickoff payload, or null when there is none. */
 export const readKickoffBrief = (raw: unknown): string | null => {
@@ -52,7 +55,8 @@ export const readKickoffBrief = (raw: unknown): string | null => {
 export const decideKickoff = async (
   raw: unknown,
   lookup: (id: string) => Promise<OtIdLookup>,
-): Promise<KickoffDecision> =>
-  isKickoffTool(raw)
+): Promise<KickoffDecision> => {
+  return isKickoffTool(raw)
     ? decideKickoffBrief(readKickoffBrief(raw), lookup)
     : KICKOFF_ALLOW;
+};

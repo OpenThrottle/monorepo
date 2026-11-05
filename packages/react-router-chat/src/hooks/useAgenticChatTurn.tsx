@@ -12,11 +12,11 @@ import type {
   ConversationStreamSubscriptionData,
   ConversationStreamSubscriptionVariables,
 } from '../conversation-stream';
-import { EMPTY_CHAT_SEED } from '../data/chat-agentic-turn-seed';
+import { EMPTY_CHAT_SEED } from '../data/data.chat-agentic-turn-seed';
 import {
   AGENT_CONVERSATIONS_ACTION,
   CONVERSATION_STREAM_ACTION,
-} from '../data/chat-conversation-actions';
+} from '../data/data.chat-conversation-actions';
 import { deriveRunPhaseFromElapsed } from '../run-phase';
 import type {
   ChatMessage,
@@ -25,6 +25,10 @@ import type {
   LoadAgentConversationMessagesResult,
 } from '../types';
 import { sumUsage } from '../usage';
+import {
+  appendAssistantPlaceholder,
+  overlayStreamedMessage,
+} from '../utils/agentic-chat-turn-messages';
 import { useConversationStream } from './useConversationStream';
 
 /**
@@ -166,12 +170,7 @@ export function useAgenticChatTurn(
   const messagesView = React.useMemo(() => {
     return messages.map((message) => {
       const streamed = streamedById.get(message.id);
-      const base =
-        streamed === undefined
-          ? message
-          : streamed.events !== undefined
-            ? { ...message, body: streamed.body, events: streamed.events }
-            : { ...message, body: streamed.body };
+      const base = overlayStreamedMessage(message, streamed);
 
       const hasTimeline = base.events !== undefined && base.events.length > 0;
       const stillEmpty = (base.body?.trim() ?? '') === '' && !hasTimeline;
@@ -399,9 +398,7 @@ export function useAgenticChatTurn(
       const assistantId = result.assistantMessageId;
       setPendingAssistantId(assistantId);
       setMessages((previous) =>
-        previous.some((message) => message.id === assistantId)
-          ? previous
-          : [...previous, { body: '', id: assistantId, role: 'assistant' }],
+        appendAssistantPlaceholder(previous, assistantId),
       );
     }
   }, [startFetcher.data]);

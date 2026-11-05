@@ -7,8 +7,9 @@ import {
   type PlanRunProvenanceCellProps,
 } from '../PlanRunProvenanceCell';
 
-const renderCell = (props: PlanRunProvenanceCellProps): RenderResult =>
-  render(<PlanRunProvenanceCell {...props} />);
+const renderCell = (props: PlanRunProvenanceCellProps): RenderResult => {
+  return render(<PlanRunProvenanceCell {...props} />);
+};
 
 describe('PlanRunProvenanceCell Component', () => {
   test('renders an em dash when there is no provenance', () => {

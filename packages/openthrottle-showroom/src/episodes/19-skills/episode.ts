@@ -35,8 +35,7 @@ export const episode: VideoEpisode = {
   dataRequirements: [
     {
       atLeast: 8,
-      describe:
-        'distinct skills with recorded usage, so the catalogue is not empty',
+      describe: `distinct skills with recorded usage, so the catalogue is not empty`,
       sql: `SELECT count(DISTINCT skill_name) AS value FROM skill_usage_events`,
     },
     {

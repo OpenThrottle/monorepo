@@ -89,15 +89,14 @@ export async function listTagActionRulesToolHandler(
         userId: rule.userId,
       }));
 
-      const text =
-        rules.length === 0
-          ? 'No tag→action rules.'
-          : `Tag→action rules (${rules.length}): ${rules
-              .map(
-                (rule) =>
-                  `${rule.id} "${rule.title}" [${rule.actionType}] tagAll=[${rule.tagAll.join(', ')}]${rule.enabled ? '' : ' (disabled)'}`,
-              )
-              .join('; ')}`;
+      const ruleList = rules
+        .map(
+          (rule) =>
+            `${rule.id} "${rule.title}" [${rule.actionType}] tagAll=[${rule.tagAll.join(', ')}]${rule.enabled ? '' : ' (disabled)'}`,
+        )
+        .join('; ');
+      const listText = `Tag→action rules (${rules.length}): ${ruleList}`;
+      const text = rules.length === 0 ? 'No tag→action rules.' : listText;
 
       return {
         structuredContent: { rules, totalCount: rules.length },
@@ -151,14 +150,12 @@ export async function listRuleApplicationsToolHandler(
         updatedAt: application.updatedAt,
       }));
 
-      const text =
-        applications.length === 0
-          ? `No rule applications for plan ${parsed.data.planId}.`
-          : `Rule applications (${applications.length}): ${applications
-              .map(
-                (application) => `${application.ruleId} → ${application.state}`,
-              )
-              .join('; ')}`;
+      const applicationList = applications
+        .map((application) => `${application.ruleId} → ${application.state}`)
+        .join('; ');
+      const emptyText = `No rule applications for plan ${parsed.data.planId}.`;
+      const listText = `Rule applications (${applications.length}): ${applicationList}`;
+      const text = applications.length === 0 ? emptyText : listText;
 
       return {
         structuredContent: { applications, totalCount: applications.length },

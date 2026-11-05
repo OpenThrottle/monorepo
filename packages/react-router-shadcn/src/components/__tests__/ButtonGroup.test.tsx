@@ -14,7 +14,9 @@ describe('ButtonGroup Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <ButtonGroup {...props} />;
+    const Component = () => {
+      return <ButtonGroup {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

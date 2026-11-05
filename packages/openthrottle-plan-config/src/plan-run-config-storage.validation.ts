@@ -23,11 +23,12 @@ import {
 import { getDefaultPlanRunConfigStorage } from './plan-run-config-storage.defaults.ts';
 import type { PlanRunConfigStorage } from './plan-run-config-storage.types.ts';
 
-const trimToMax = (max: number) =>
-  z
+const trimToMax = (max: number) => {
+  return z
     .string()
     .max(max)
     .transform((s) => s.trim());
+};
 
 const planRunConfigRalphV1Schema = z
   .object({
@@ -85,8 +86,7 @@ const planRunConfigStorageV1Schema = z
       if (Number.isNaN(n) || n < 1) {
         ctx.addIssue({
           code: 'custom',
-          message:
-            'ralph.iterationTimeoutText must be empty or a positive integer (seconds)',
+          message: `ralph.iterationTimeoutText must be empty or a positive integer (seconds)`,
           path: ['ralph', 'iterationTimeoutText'],
         });
       }
@@ -107,8 +107,7 @@ const planRunConfigStorageV1Schema = z
     if (wd !== '' && !wd.startsWith('/')) {
       ctx.addIssue({
         code: 'custom',
-        message:
-          'workspace.workingDirectory must be empty (monorepo root) or an absolute path',
+        message: `workspace.workingDirectory must be empty (monorepo root) or an absolute path`,
         path: ['workspace', 'workingDirectory'],
       });
     }
@@ -206,9 +205,10 @@ export const planRunConfigFromPlanStorage = (
 export const serializePlanRunConfigForGraphql = (
   stored: PlanRunConfigStorage | null | undefined,
   options?: { readonly planId?: string },
-): string =>
-  JSON.stringify(
+): string => {
+  return JSON.stringify(
     stored !== undefined && stored !== null
       ? planRunConfigFromPlanStorage(stored, options)
       : getDefaultPlanRunConfigStorage(options),
   );
+};

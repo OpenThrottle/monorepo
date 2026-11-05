@@ -79,8 +79,9 @@ interface GraphqlResult {
   readonly errors?: ReadonlyArray<{ readonly message: string }>;
 }
 
-const isGraphqlResult = (value: unknown): value is GraphqlResult =>
-  typeof value === 'object' && value !== null;
+const isGraphqlResult = (value: unknown): value is GraphqlResult => {
+  return typeof value === 'object' && value !== null;
+};
 
 const queryHealth = async (
   url: string,

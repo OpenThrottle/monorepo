@@ -26,7 +26,9 @@ describe('PermissionsTable Component', () => {
   let component: RenderResult;
 
   beforeEach(() => {
-    const Component = () => <PermissionsTable permissions={mockPermissions} />;
+    const Component = () => {
+      return <PermissionsTable permissions={mockPermissions} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

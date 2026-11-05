@@ -41,34 +41,38 @@ const requireUserPrincipal = (principal: AuthPrincipal): string => {
   return principal.sub;
 };
 
-const toRuleObject = (rule: TagActionRule): TagActionRuleObject => ({
-  actionPayloadJson: JSON.stringify(rule.actionPayload),
-  actionType: rule.actionType,
-  createdAt: rule.createdAt,
-  enabled: rule.enabled,
-  environment: rule.environment,
-  id: rule.id,
-  projectId: rule.projectId,
-  status: rule.status,
-  tagAll: rule.tagAll,
-  title: rule.title,
-  updatedAt: rule.updatedAt,
-  userId: rule.userId,
-});
+const toRuleObject = (rule: TagActionRule): TagActionRuleObject => {
+  return {
+    actionPayloadJson: JSON.stringify(rule.actionPayload),
+    actionType: rule.actionType,
+    createdAt: rule.createdAt,
+    enabled: rule.enabled,
+    environment: rule.environment,
+    id: rule.id,
+    projectId: rule.projectId,
+    status: rule.status,
+    tagAll: rule.tagAll,
+    title: rule.title,
+    updatedAt: rule.updatedAt,
+    userId: rule.userId,
+  };
+};
 
 const toApplicationObject = (
   application: RuleApplication,
-): RuleApplicationObject => ({
-  createdAt: application.createdAt,
-  detailsJson:
-    application.details == null ? null : JSON.stringify(application.details),
-  id: application.id,
-  planId: application.planId,
-  ruleId: application.ruleId,
-  state: application.state,
-  taskId: application.taskId,
-  updatedAt: application.updatedAt,
-});
+): RuleApplicationObject => {
+  return {
+    createdAt: application.createdAt,
+    detailsJson:
+      application.details == null ? null : JSON.stringify(application.details),
+    id: application.id,
+    planId: application.planId,
+    ruleId: application.ruleId,
+    state: application.state,
+    taskId: application.taskId,
+    updatedAt: application.updatedAt,
+  };
+};
 
 @Resolver(() => TagActionRuleObject)
 @UseGuards(GqlPermissionsGuard)

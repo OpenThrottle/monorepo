@@ -180,21 +180,6 @@ export const SETTINGS_AGENTS_COPY = {
   toggleDisabledReason: `Requires the settings:write permission.`,
 } as const;
 
-/** Title of the credential warning alert shown above the agents table. */
-export const settingsAgentsAuthWarningTitle = (label: string): string => {
-  return `${label}: check which credential is active`;
-};
-
-/** Pluralize the compact models summary shown in the table cell. */
-export const settingsAgentsModelsSummary = (count: number): string =>
-  count === 1 ? `1 model` : `${count} models`;
-
-/** "N of M enabled" hint shown next to the model-expansion affordance. */
-export const settingsAgentsModelsEnabledSummary = (
-  enabled: number,
-  total: number,
-): string => `${enabled} of ${total} enabled`;
-
 /** Human labels for each setup-table filter value, keyed by the filter id. */
 export const SETTINGS_AGENTS_FILTER_LABELS = {
   all: SETTINGS_AGENTS_COPY.filterAllLabel,

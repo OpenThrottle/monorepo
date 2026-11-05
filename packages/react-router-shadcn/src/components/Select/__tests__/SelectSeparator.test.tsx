@@ -21,18 +21,20 @@ describe('SelectSeparator Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => (
-      <Select open={true}>
-        <SelectTrigger aria-label="Choose">
-          <SelectValue placeholder="Pick one" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="a">A</SelectItem>
-          <SelectSeparator {...props} />
-          <SelectItem value="b">B</SelectItem>
-        </SelectContent>
-      </Select>
-    );
+    const Component = () => {
+      return (
+        <Select open={true}>
+          <SelectTrigger aria-label="Choose">
+            <SelectValue placeholder="Pick one" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="a">A</SelectItem>
+            <SelectSeparator {...props} />
+            <SelectItem value="b">B</SelectItem>
+          </SelectContent>
+        </Select>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

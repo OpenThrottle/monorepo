@@ -43,6 +43,15 @@ export const ScheduleDetailTabs = (
   // Handlers
 
   // Markup
+  const hasRuns = runs.length > 0;
+  const noRuns = (
+    <p className="text-muted-foreground rounded-md border border-dashed p-6 text-center text-sm">
+      No runs yet. Use “Run now” to trigger one.
+    </p>
+  );
+  const runsTable = (
+    <ScheduleRunsTable className="bg-card" jobId={jobId} runs={runs} />
+  );
 
   // Life Cycle
 
@@ -87,13 +96,7 @@ export const ScheduleDetailTabs = (
           <span className="text-muted-foreground text-xs">
             Logs stream to the queue console keyed by each run.
           </span>
-          {runs.length === 0 ? (
-            <p className="text-muted-foreground rounded-md border border-dashed p-6 text-center text-sm">
-              No runs yet. Use “Run now” to trigger one.
-            </p>
-          ) : (
-            <ScheduleRunsTable className="bg-card" jobId={jobId} runs={runs} />
-          )}
+          {hasRuns ? runsTable : noRuns}
         </div>
       </TabsContent>
     </OpenThrottleTabs>

@@ -1,5 +1,5 @@
 import type { Tree } from '@nx/devkit';
-import { createProjectGraphAsync, formatFiles, logger } from '@nx/devkit';
+import { formatFiles, logger } from '@nx/devkit';
 import { join } from 'path';
 
 import { generateFilesSafely } from '../../utils/generate-files-safely.ts';
@@ -10,6 +10,7 @@ import {
   getReactComponentDestination,
   parsePossibleNames,
 } from '../../utils/questions.ts';
+import { resolveReactDestination } from '../../utils/resolve-react-destination.ts';
 import { throwInvalidDestinationError } from '../../utils/target-validation.ts';
 
 export interface ReactComponentGeneratorSchema {
@@ -31,11 +32,11 @@ export async function componentGenerator(
 
   const destination = schema.destination;
 
-  const project = destination
-    ? (await createProjectGraphAsync()).nodes[destination]
-    : interactive
-      ? await getReactComponentDestination()
-      : undefined;
+  const project = await resolveReactDestination(
+    destination,
+    interactive,
+    getReactComponentDestination,
+  );
 
   if (!project) {
     if (destination) await throwInvalidDestinationError(destination);

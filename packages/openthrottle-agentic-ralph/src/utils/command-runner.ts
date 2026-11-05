@@ -8,6 +8,23 @@ import type {
 
 const execFileAsync = promisify(execFile);
 
+const readFailureStdout = (error: object): string => {
+  if ('stdout' in error && typeof error.stdout === 'string') {
+    return error.stdout;
+  }
+  return '';
+};
+
+const readFailureStderr = (error: object): string => {
+  if ('stderr' in error && typeof error.stderr === 'string') {
+    return error.stderr;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
+};
+
 /**
  * @description Default host command runner for plan-end finalize: `execFile` with no shell, argv
  * array only. Non-zero exits and spawn failures become {@link WorkflowRalphCommandResult} with a
@@ -40,16 +57,8 @@ export const createDefaultWorkflowRalphCommandRunner =
           'code' in error &&
           typeof error.code === 'number'
         ) {
-          const stdout =
-            'stdout' in error && typeof error.stdout === 'string'
-              ? error.stdout
-              : '';
-          const stderr =
-            'stderr' in error && typeof error.stderr === 'string'
-              ? error.stderr
-              : error instanceof Error
-                ? error.message
-                : String(error);
+          const stdout = readFailureStdout(error);
+          const stderr = readFailureStderr(error);
 
           return { exitCode: error.code, stderr, stdout };
         }

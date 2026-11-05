@@ -97,9 +97,13 @@ export const THEMES: readonly Theme[] = [OPENTHROTTLE_THEME, ...CURSOR_THEMES];
 export const THEME_IDS: readonly string[] = THEMES.map((theme) => theme.id);
 
 /** @public Looks up a theme by id. */
-export const getTheme = (id: string): Theme | undefined =>
-  THEMES.find((theme) => theme.id === id);
+export const getTheme = (id: string): Theme | undefined => {
+  return THEMES.find((theme) => theme.id === id);
+};
 
 /** @public Type guard: whether `value` is a registered theme id. */
-export const isThemeId = (value: unknown): value is string =>
-  typeof value === 'string' && THEMES.some((theme) => theme.id === value);
+export const isThemeId = (value: unknown): value is string => {
+  return (
+    typeof value === 'string' && THEMES.some((theme) => theme.id === value)
+  );
+};

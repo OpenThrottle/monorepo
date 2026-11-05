@@ -3,7 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // AUTH_COOKIE_NAME is computed from APP_NAME at module-load time, so each case
 // resets the module registry and re-imports after arranging the environment.
 
-const importConfig = async () => await import('../index');
+const importConfig = async () => {
+  return await import('../index');
+};
 
 describe('react-router-auth config', () => {
   const originalAppName = process.env.APP_NAME;

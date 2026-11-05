@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { AgentsSkillsRegistry } from '~/routing/agents/components/AgentsSkillsRegistry';
 import { githubOpenThrottleMainBlob } from '~/routing/agents/constants/github-repo-paths';
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 
 const SAMPLE_ENTRIES: readonly RepoSkillEntry[] = [
   {

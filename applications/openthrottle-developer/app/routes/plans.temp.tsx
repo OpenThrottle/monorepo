@@ -91,10 +91,9 @@ export const action = async (args: Route.ActionArgs) => {
   const planId = typeof planIdEntry === 'string' ? planIdEntry : '';
 
   const branchEntry = formData.get('branch');
-  const branch =
-    typeof branchEntry === 'string' && branchEntry.trim() !== ''
-      ? branchEntry.trim()
-      : 'main';
+  const trimmedBranch =
+    typeof branchEntry === 'string' ? branchEntry.trim() : '';
+  const branch = trimmedBranch === '' ? 'main' : trimmedBranch;
 
   const result = await executeGraphqlWithAuth(
     args.request,

@@ -132,6 +132,13 @@ const stripTrailingSlashes = (value: string): string => {
   return stripped === '' ? '/' : stripped;
 };
 
+/** The quote character a value opens with, or null when it is unquoted. */
+const leadingQuote = (value: string): '"' | "'" | null => {
+  if (value.startsWith('"')) return '"';
+  if (value.startsWith("'")) return "'";
+  return null;
+};
+
 /**
  * @description Reduces a raw `.env` right-hand side to its value, mirroring `_ot_dotenv_value` in
  * the script. A quoted value ends at its closing quote and anything after it is a comment; an
@@ -141,17 +148,12 @@ const stripTrailingSlashes = (value: string): string => {
 const cleanEnvValue = (raw: string): string => {
   const withoutCr = raw.replace(/\r$/, '').trim();
 
-  const quote = withoutCr.startsWith('"')
-    ? '"'
-    : withoutCr.startsWith("'")
-      ? "'"
-      : null;
+  const quote = leadingQuote(withoutCr);
 
   if (quote !== null) {
     const closing = withoutCr.indexOf(quote, 1);
-    return closing === -1
-      ? withoutCr.slice(1).trim()
-      : withoutCr.slice(1, closing);
+    if (closing === -1) return withoutCr.slice(1).trim();
+    return withoutCr.slice(1, closing);
   }
 
   return withoutCr.replace(/\s+#.*$/, '').trim();

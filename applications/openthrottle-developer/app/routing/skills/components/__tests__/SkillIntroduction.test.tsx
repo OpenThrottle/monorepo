@@ -5,7 +5,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 import {
   SKILL_DETAIL_COPY,
   SKILLS_SOURCE_COPY,
@@ -30,11 +30,13 @@ describe('SkillIntroduction Component', () => {
   let props: SkillIntroductionProps;
 
   const renderIntroduction = (): RenderResult => {
-    const Component = () => (
-      <TooltipProvider>
-        <SkillIntroduction {...props} />
-      </TooltipProvider>
-    );
+    const Component = () => {
+      return (
+        <TooltipProvider>
+          <SkillIntroduction {...props} />
+        </TooltipProvider>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     return render(<RoutesStub />);

@@ -1,6 +1,7 @@
 /** Splits a comma-separated tag field into trimmed, non-empty tags. */
-export const splitTags = (raw: string): readonly string[] =>
-  raw
+export const splitTags = (raw: string): readonly string[] => {
+  return raw
     .split(',')
     .map((tag) => tag.trim())
     .filter((tag) => tag.length > 0);
+};

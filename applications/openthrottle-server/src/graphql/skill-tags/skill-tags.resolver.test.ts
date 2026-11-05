@@ -10,14 +10,16 @@ import { SkillTagsResolver } from './skill-tags.resolver.ts';
 describe('SkillTagsResolver', () => {
   const userId = '11111111-1111-4111-8111-111111111111';
 
-  const makeTag = (tag: string): UserSkillTag => ({
-    createdAt: new Date('2026-05-18T12:00:00.000Z'),
-    dimension: 'domain',
-    id: `id-${tag}`,
-    tag,
-    updatedAt: new Date('2026-05-18T12:00:00.000Z'),
-    userId,
-  });
+  const makeTag = (tag: string): UserSkillTag => {
+    return {
+      createdAt: new Date('2026-05-18T12:00:00.000Z'),
+      dimension: 'domain',
+      id: `id-${tag}`,
+      tag,
+      updatedAt: new Date('2026-05-18T12:00:00.000Z'),
+      userId,
+    };
+  };
 
   const mockSkillTagsService = createMock<SkillTagsService>({
     addTag: vi.fn(),

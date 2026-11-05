@@ -28,11 +28,13 @@ const URL = 'http://example.test/graphql';
 const SINCE = '2026-09-23T00:00:00.000Z';
 const UNTIL = '2026-10-29T00:00:00.000Z';
 
-const isRecordValue = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
+const isRecordValue = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === 'object' && value !== null;
+};
 
-const asRows = (value: unknown): readonly Record<string, unknown>[] =>
-  Array.isArray(value) ? value.filter(isRecordValue) : [];
+const asRows = (value: unknown): readonly Record<string, unknown>[] => {
+  return Array.isArray(value) ? value.filter(isRecordValue) : [];
+};
 
 interface FakeServer {
   readonly fetchImpl: HookFetch;
@@ -42,12 +44,23 @@ interface FakeServer {
   readonly tokens: Set<string>;
 }
 
-const skillKey = (input: Record<string, unknown>): string | null =>
-  typeof input.toolUseId === 'string'
-    ? `${input.source}|${input.sessionId}|${input.hookEventName}|${input.toolUseId}`
-    : typeof input.promptId === 'string'
-      ? `${input.source}|${input.sessionId}|${input.hookEventName}|${input.promptId}|${input.skillName}`
-      : null;
+const skillKey = (input: Record<string, unknown>): string | null => {
+  const head = `${input.source}|${input.sessionId}|${input.hookEventName}`;
+  if (typeof input.toolUseId === 'string') {
+    return `${head}|${input.toolUseId}`;
+  }
+  if (typeof input.promptId === 'string') {
+    return `${head}|${input.promptId}|${input.skillName}`;
+  }
+  return null;
+};
+
+const variablesOf = (body: unknown): Record<string, unknown> => {
+  if (isRecordValue(body) && isRecordValue(body.variables)) {
+    return body.variables;
+  }
+  return {};
+};
 
 const fakeServer = (): FakeServer => {
   const skills = new Map<string, Record<string, unknown>>();
@@ -56,10 +69,7 @@ const fakeServer = (): FakeServer => {
     fetchImpl: async (_url, init) => {
       server.requests += 1;
       const body: unknown = JSON.parse(init.body);
-      const variables =
-        isRecordValue(body) && isRecordValue(body.variables)
-          ? body.variables
-          : {};
+      const variables = variablesOf(body);
       const input = isRecordValue(variables.input) ? variables.input : {};
 
       if (
@@ -116,8 +126,8 @@ const toolCall = (input: {
   id: string;
   session?: string;
   skill: string;
-}): string =>
-  JSON.stringify({
+}): string => {
+  return JSON.stringify({
     cwd: REPO_PLACEHOLDER,
     gitBranch: 'feat/example',
     message: {
@@ -135,14 +145,15 @@ const toolCall = (input: {
     timestamp: input.at,
     type: 'assistant',
   });
+};
 
 const slash = (input: {
   at: string;
   name: string;
   promptId: string;
   uuid: string;
-}): string =>
-  JSON.stringify({
+}): string => {
+  return JSON.stringify({
     cwd: REPO_PLACEHOLDER,
     gitBranch: 'feat/example',
     message: {
@@ -155,6 +166,7 @@ const slash = (input: {
     type: 'user',
     uuid: input.uuid,
   });
+};
 
 /** Stand-in swapped for the temp repo path when a transcript is written. */
 const REPO_PLACEHOLDER = '__REPO__';
@@ -168,13 +180,15 @@ describe('the backfill', () => {
   let prevDir: string | undefined;
   let prevOffline: string | undefined;
 
-  const fixture = (name: string): string =>
-    fs
+  const fixture = (name: string): string => {
+    return fs
       .readFileSync(path.join(fixturesDir, name), 'utf8')
       .replaceAll('"cwd":"/repo"', `"cwd":${JSON.stringify(repoRoot)}`);
+  };
 
-  const withRepo = (lines: readonly string[]): string =>
-    `${lines.join('\n').replaceAll(JSON.stringify(REPO_PLACEHOLDER), JSON.stringify(repoRoot))}\n`;
+  const withRepo = (lines: readonly string[]): string => {
+    return `${lines.join('\n').replaceAll(JSON.stringify(REPO_PLACEHOLDER), JSON.stringify(repoRoot))}\n`;
+  };
 
   /** The sanitized token fixture, minus its deliberately truncated tail line. */
   const completeFixture = (name: string): string => {
@@ -184,16 +198,18 @@ describe('the backfill', () => {
 
   const options = (
     overrides: Partial<BackfillOptions> = {},
-  ): BackfillOptions => ({
-    dryRun: false,
-    includeWorktrees: false,
-    projectsDir,
-    repoRoot,
-    since: SINCE,
-    timeoutMs: 500,
-    until: UNTIL,
-    ...overrides,
-  });
+  ): BackfillOptions => {
+    return {
+      dryRun: false,
+      includeWorktrees: false,
+      projectsDir,
+      repoRoot,
+      since: SINCE,
+      timeoutMs: 500,
+      until: UNTIL,
+      ...overrides,
+    };
+  };
 
   const run = async (
     server: FakeServer,
@@ -476,7 +492,9 @@ describe('the backfill', () => {
   });
 
   describe('a foreign project', () => {
-    const foreignRoot = (): string => path.join(tmp, 'work', 'other-repo');
+    const foreignRoot = (): string => {
+      return path.join(tmp, 'work', 'other-repo');
+    };
 
     it("is never read: only this repo's directory is opened", async () => {
       const foreignDir = path.join(
@@ -548,7 +566,9 @@ describe('the backfill', () => {
           type: 'assistant',
         })}\n`,
       );
-      const listWorktrees = () => [repoRoot, worktree];
+      const listWorktrees = () => {
+        return [repoRoot, worktree];
+      };
 
       expect(
         scanBackfill(options({ includeWorktrees: false })).projects,

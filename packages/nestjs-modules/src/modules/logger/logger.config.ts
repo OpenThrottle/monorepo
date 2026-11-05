@@ -6,24 +6,25 @@ import { formatters, isFormatterName } from './logger.formatters.ts';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const formatterEnv = process.env.LOG_FORMAT;
-const formatterDefault = isProduction
-  ? formatters.production
-  : formatters.development;
+const defaultFormatterName = isProduction ? 'production' : 'development';
+const formatterDefault = formatters[defaultFormatterName];
 
 if (formatterEnv && !isFormatterName(formatterEnv)) {
   // Surface misconfigured LOG_FORMAT (e.g. a typo like `prodction`) instead of
   // silently falling back to the env default.
   console.warn(
-    `[LoggerService] Unknown LOG_FORMAT="${formatterEnv}"; falling back to the ${
-      isProduction ? 'production' : 'development'
-    } formatter.`,
+    `[LoggerService] Unknown LOG_FORMAT="${formatterEnv}"; falling back to the ${defaultFormatterName} formatter.`,
   );
 }
 
-const activeFormat: ReturnType<typeof format.combine> =
-  formatterEnv && isFormatterName(formatterEnv)
-    ? formatters[formatterEnv]
-    : formatterDefault;
+const resolveActiveFormat = (): ReturnType<typeof format.combine> => {
+  if (formatterEnv && isFormatterName(formatterEnv)) {
+    return formatters[formatterEnv];
+  }
+  return formatterDefault;
+};
+
+const activeFormat = resolveActiveFormat();
 
 const transportConsole = new transports.Console({
   format: activeFormat,

@@ -22,14 +22,16 @@ const matches: Route.ComponentProps['matches'] = [
 
 describe('routes/calendar.create.tsx', () => {
   test('renders the calendar create form', () => {
-    const RouteComponent = () => (
-      <Component
-        actionData={undefined}
-        loaderData={{}}
-        matches={matches}
-        params={{}}
-      />
-    );
+    const RouteComponent = () => {
+      return (
+        <Component
+          actionData={undefined}
+          loaderData={{}}
+          matches={matches}
+          params={{}}
+        />
+      );
+    };
     const RoutesStub = createRoutesStub([
       { Component: RouteComponent, path: '/' },
     ]);

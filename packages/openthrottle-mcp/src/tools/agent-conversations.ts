@@ -28,8 +28,7 @@ const LIST_MAX_LIMIT = 100;
 const MESSAGES_DEFAULT_LIMIT = 100;
 const MESSAGES_MAX_LIMIT = 500;
 
-const AGENT_CONVERSATION_BOUNDARY_WARNING =
-  'Web chat threads only — use `get_plan_output` for Ralph/plan iteration logs.';
+const AGENT_CONVERSATION_BOUNDARY_WARNING = `Web chat threads only — use \`get_plan_output\` for Ralph/plan iteration logs.`;
 
 type ListAgentConversationsResult = GenericResult<{
   conversations: ListAgentConversationsQuery['listAgentConversations']['conversations'];
@@ -66,14 +65,16 @@ export const getAgentConversationMessagesToolDescription = `List messages for an
 /**
  * @description Resolves list pagination with grill-me defaults (20 default, 100 max).
  */
-const resolveListLimit = (limit: number | null | undefined): number =>
-  Math.min(limit ?? LIST_DEFAULT_LIMIT, LIST_MAX_LIMIT);
+const resolveListLimit = (limit: number | null | undefined): number => {
+  return Math.min(limit ?? LIST_DEFAULT_LIMIT, LIST_MAX_LIMIT);
+};
 
 /**
  * @description Resolves message pagination with grill-me defaults (100 default, 500 max).
  */
-const resolveMessagesLimit = (limit: number | null | undefined): number =>
-  Math.min(limit ?? MESSAGES_DEFAULT_LIMIT, MESSAGES_MAX_LIMIT);
+const resolveMessagesLimit = (limit: number | null | undefined): number => {
+  return Math.min(limit ?? MESSAGES_DEFAULT_LIMIT, MESSAGES_MAX_LIMIT);
+};
 
 export async function listAgentConversationsToolHandler(
   args: z.infer<typeof listAgentConversationsToolParameters>,
@@ -104,10 +105,9 @@ export async function listAgentConversationsToolHandler(
     if (!listResult) return null;
 
     const { conversations, totalCount } = listResult;
-    const text =
-      conversations.length === 0
-        ? `No conversations found (totalCount: ${totalCount}).`
-        : `Conversations (${conversations.length} of ${totalCount}):\n${JSON.stringify(conversations, null, 2)}`;
+    const emptyText = `No conversations found (totalCount: ${totalCount}).`;
+    const listText = `Conversations (${conversations.length} of ${totalCount}):\n${JSON.stringify(conversations, null, 2)}`;
+    const text = conversations.length === 0 ? emptyText : listText;
 
     return { structuredContent: { conversations, totalCount }, text };
   });
@@ -132,10 +132,9 @@ export async function getAgentConversationToolHandler(
     );
 
     const conversation = result?.getAgentConversation ?? null;
-    const text =
-      conversation === null
-        ? `Conversation not found or not owned: ${parsed.data.id}`
-        : `Conversation: ${conversation.id}\n${JSON.stringify(conversation, null, 2)}`;
+    const missingText = `Conversation not found or not owned: ${parsed.data.id}`;
+    const foundText = `Conversation: ${conversation?.id}\n${JSON.stringify(conversation, null, 2)}`;
+    const text = conversation === null ? missingText : foundText;
 
     return { structuredContent: { conversation }, text };
   });
@@ -173,10 +172,9 @@ export async function getAgentConversationMessagesToolHandler(
     if (!messagesResult) return null;
 
     const { messages, totalCount } = messagesResult;
-    const text =
-      messages.length === 0
-        ? `No messages found for conversation ${parsed.data.conversationId} (totalCount: ${totalCount}).`
-        : `Messages (${messages.length} of ${totalCount}):\n${JSON.stringify(messages, null, 2)}`;
+    const emptyText = `No messages found for conversation ${parsed.data.conversationId} (totalCount: ${totalCount}).`;
+    const listText = `Messages (${messages.length} of ${totalCount}):\n${JSON.stringify(messages, null, 2)}`;
+    const text = messages.length === 0 ? emptyText : listText;
 
     return { structuredContent: { messages, totalCount }, text };
   });

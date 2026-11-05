@@ -15,33 +15,37 @@ const PLAN_ID = '9207a6b7-4de7-4e06-8d10-779503b497ae';
 const TASK_ID = '45a2adf6-b915-45d1-9537-03d51873341c';
 const ISO = '2026-06-08T12:00:00.000Z';
 
-const basePlan = (overrides: Partial<PlanRow> = {}): PlanRow => ({
-  author: 'visormatt',
-  category: 'infra',
-  createdAt: ISO,
-  description: 'Plan description',
-  id: PLAN_ID,
-  status: 'IN_PROGRESS',
-  summary: null,
-  title: 'Test plan',
-  updatedAt: ISO,
-  ...overrides,
-});
+const basePlan = (overrides: Partial<PlanRow> = {}): PlanRow => {
+  return {
+    author: 'visormatt',
+    category: 'infra',
+    createdAt: ISO,
+    description: 'Plan description',
+    id: PLAN_ID,
+    status: 'IN_PROGRESS',
+    summary: null,
+    title: 'Test plan',
+    updatedAt: ISO,
+    ...overrides,
+  };
+};
 
-const baseTask = (overrides: Partial<TaskRow> = {}): TaskRow => ({
-  category: null,
-  createdAt: ISO,
-  description: 'Task description',
-  id: TASK_ID,
-  planId: PLAN_ID,
-  requirements: [],
-  sortOrder: 1000,
-  status: 'PENDING',
-  title: 'Test task',
-  updatedAt: ISO,
-  wave: null,
-  ...overrides,
-});
+const baseTask = (overrides: Partial<TaskRow> = {}): TaskRow => {
+  return {
+    category: null,
+    createdAt: ISO,
+    description: 'Task description',
+    id: TASK_ID,
+    planId: PLAN_ID,
+    requirements: [],
+    sortOrder: 1000,
+    status: 'PENDING',
+    title: 'Test task',
+    updatedAt: ISO,
+    wave: null,
+    ...overrides,
+  };
+};
 
 describe('areAllTasksTerminal', () => {
   it('returns false for an empty task set', () => {

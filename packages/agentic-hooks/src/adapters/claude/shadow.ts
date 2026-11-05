@@ -64,5 +64,6 @@ export const isShadowedByRepoHooks = ({
   env?: NodeJS.ProcessEnv;
   repoRoot: string;
   scriptPath?: string;
-}): boolean =>
-  runningFromPlugin(env, scriptPath) && repoRegistersCapture(repoRoot);
+}): boolean => {
+  return runningFromPlugin(env, scriptPath) && repoRegistersCapture(repoRoot);
+};

@@ -108,25 +108,31 @@ export const GlobalFeatureOnboarding = (
   // Eyebrow / title / tagline. In dialog mode the title/tagline use
   // `DialogTitle`/`DialogDescription` so Radix's accessible-title invariant is
   // met without a duplicate header; otherwise a plain `<h2>`/`<p>`.
+  const dialogTitle = (
+    <DialogTitle className="text-lg tracking-tight">{title}</DialogTitle>
+  );
+  const plainTitle = <h2 className="text-lg tracking-tight">{title}</h2>;
+  const titleNode = isDialog ? dialogTitle : plainTitle;
+
+  const dialogTagline = (
+    <DialogDescription className="text-muted-foreground text-base">
+      {tagline}
+    </DialogDescription>
+  );
+  const plainTagline = (
+    <p className="text-muted-foreground text-base">{tagline}</p>
+  );
+  const taglineNode = isDialog ? dialogTagline : plainTagline;
+
   const header = (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-3">
         <span className="bg-muted text-foreground flex size-10 shrink-0 items-center justify-center rounded-lg">
           <Icon className="size-4" />
         </span>
-        {isDialog ? (
-          <DialogTitle className="text-lg tracking-tight">{title}</DialogTitle>
-        ) : (
-          <h2 className="text-lg tracking-tight">{title}</h2>
-        )}
+        {titleNode}
       </div>
-      {isDialog ? (
-        <DialogDescription className="text-muted-foreground text-base">
-          {tagline}
-        </DialogDescription>
-      ) : (
-        <p className="text-muted-foreground text-base">{tagline}</p>
-      )}
+      {taglineNode}
     </div>
   );
 

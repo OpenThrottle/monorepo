@@ -39,9 +39,12 @@ import {
  * matching the day that layout changes — reintroducing the exact class of silent
  * failure this guard exists to close.
  */
-export const isMemoryIndexPath = (filePath: string): boolean =>
-  path.basename(filePath) === 'MEMORY.md' &&
-  path.basename(path.dirname(filePath)) === 'memory';
+export const isMemoryIndexPath = (filePath: string): boolean => {
+  return (
+    path.basename(filePath) === 'MEMORY.md' &&
+    path.basename(path.dirname(filePath)) === 'memory'
+  );
+};
 
 /** Pull the written file's path out of a PostToolUse payload. */
 export const readEditedPath = (raw: unknown): string | null => {

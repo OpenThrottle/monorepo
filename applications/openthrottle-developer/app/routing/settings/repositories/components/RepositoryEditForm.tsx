@@ -50,6 +50,14 @@ export const RepositoryEditForm = (
   // Handlers
 
   // Markup
+  const errorAlert = (
+    <p
+      className="border-destructive/50 bg-destructive/10 text-destructive rounded-md border p-3 text-sm"
+      role="alert"
+    >
+      {actionError}
+    </p>
+  );
 
   // Life Cycle
 
@@ -167,14 +175,7 @@ export const RepositoryEditForm = (
               </div>
             </section>
 
-            {actionError ? (
-              <p
-                className="border-destructive/50 bg-destructive/10 text-destructive rounded-md border p-3 text-sm"
-                role="alert"
-              >
-                {actionError}
-              </p>
-            ) : null}
+            {actionError ? errorAlert : null}
 
             <Separator />
 

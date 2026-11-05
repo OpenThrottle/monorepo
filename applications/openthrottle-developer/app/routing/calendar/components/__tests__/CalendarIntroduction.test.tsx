@@ -14,7 +14,9 @@ describe('CalendarIntroduction Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <CalendarIntroduction {...props} />;
+    const Component = () => {
+      return <CalendarIntroduction {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

@@ -23,7 +23,9 @@ describe('GlobalMetricsStatCards Component', () => {
       },
     };
 
-    const Component = () => <GlobalMetricsStatCards {...props} />;
+    const Component = () => {
+      return <GlobalMetricsStatCards {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
   });

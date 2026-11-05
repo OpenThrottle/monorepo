@@ -14,7 +14,9 @@ describe('DialogHeader Component', () => {
   beforeEach(() => {
     props = { children: 'Header content' };
 
-    const Component = () => <DialogHeader {...props} />;
+    const Component = () => {
+      return <DialogHeader {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

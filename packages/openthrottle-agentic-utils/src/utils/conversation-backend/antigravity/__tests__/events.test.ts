@@ -20,13 +20,15 @@ const INIT = {
   },
 };
 
-const step = (payload: Record<string, unknown>) => ({
-  event: 'step_update',
-  step_update: {
-    conversation_id: '0da4b6ff-9d67-4d0e-a715-2d8bb8d9d895',
-    ...payload,
-  },
-});
+const step = (payload: Record<string, unknown>) => {
+  return {
+    event: 'step_update',
+    step_update: {
+      conversation_id: '0da4b6ff-9d67-4d0e-a715-2d8bb8d9d895',
+      ...payload,
+    },
+  };
+};
 
 describe('createAntigravityEventMapper', () => {
   it('emits a session chunk from init (agy resumes by id, unlike gemini)', () => {

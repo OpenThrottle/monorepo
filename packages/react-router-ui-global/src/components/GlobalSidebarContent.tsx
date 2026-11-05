@@ -21,6 +21,7 @@ import type { NavLinkProps } from 'react-router';
 import { NavLink, useLocation } from 'react-router';
 
 import { useCloseMobileSidebar } from '../hooks/useCloseMobileSidebar';
+import { resolveSectionDefaultOpen } from '../utils/resolve-section-default-open';
 import { getPathFromTo } from '../utils/utils.global';
 
 export interface GlobalSidebarContentLinkProps extends NavLinkProps {
@@ -165,12 +166,11 @@ export const GlobalSidebarContent = (
         const items = data?.[section] ?? [];
         const hasActiveLinkInSection = items.some(isLinkActive);
 
-        const defaultOpen =
-          sectionDefaultExpanded?.[section] !== undefined
-            ? sectionDefaultExpanded[section]!
-            : defaultSectionsExpanded !== false
-              ? true
-              : hasActiveLinkInSection;
+        const defaultOpen = resolveSectionDefaultOpen(
+          sectionDefaultExpanded?.[section],
+          defaultSectionsExpanded,
+          hasActiveLinkInSection,
+        );
 
         return (
           <Collapsible

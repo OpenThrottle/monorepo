@@ -56,13 +56,14 @@ describe('ScheduledAgentJobUsageLimitResumeService', () => {
   const handle = (
     overrides: { resetsAt?: string | null; now?: Date } = {},
   ): ReturnType<ScheduledAgentJobUsageLimitResumeService['handle']> => {
+    const resolveResetsAt = (): string | null => {
+      if (overrides.resetsAt === undefined) return at(2 * HOUR_MS);
+      return overrides.resetsAt;
+    };
     return service.handle({
       limit: {
         rateLimitType: 'five_hour',
-        resetsAt:
-          overrides.resetsAt === undefined
-            ? at(2 * HOUR_MS)
-            : overrides.resetsAt,
+        resetsAt: resolveResetsAt(),
       },
       limitedRunId: 'run-limited',
       now: overrides.now ?? NOW,

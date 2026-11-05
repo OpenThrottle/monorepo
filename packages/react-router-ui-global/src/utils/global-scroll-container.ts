@@ -16,5 +16,8 @@ export const GLOBAL_SCROLL_CONTAINER_ATTRIBUTE = 'data-global-scroll-container';
  *
  * @public
  */
-export const getGlobalScrollElement = (): HTMLElement | null =>
-  document.querySelector<HTMLElement>(`[${GLOBAL_SCROLL_CONTAINER_ATTRIBUTE}]`);
+export const getGlobalScrollElement = (): HTMLElement | null => {
+  return document.querySelector<HTMLElement>(
+    `[${GLOBAL_SCROLL_CONTAINER_ATTRIBUTE}]`,
+  );
+};

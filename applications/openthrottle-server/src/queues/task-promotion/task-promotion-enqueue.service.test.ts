@@ -31,13 +31,14 @@ describe('TaskPromotionEnqueueService.enqueuePromotion', () => {
   let taskFindOne: ReturnType<typeof vi.fn>;
   let tagFindOne: ReturnType<typeof vi.fn>;
 
-  const buildTask = (overrides: Partial<Task> = {}): Task =>
-    asMock<Task>({
+  const buildTask = (overrides: Partial<Task> = {}): Task => {
+    return asMock<Task>({
       hookRole: null,
       id: TASK_ID,
       status: 'PENDING',
       ...overrides,
     });
+  };
 
   beforeEach(() => {
     taskFindOne = vi.fn().mockResolvedValue(buildTask());

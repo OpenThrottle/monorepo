@@ -57,8 +57,7 @@ export const beginTaskSessionToolParameters = z
   })
   .strict();
 
-export const beginTaskSessionToolDescription =
-  "Start a work session for ONE task, declaring the model that does its work, and attach it to (planId, taskId). Closes the previous session first so each task gets its own — a session's model is fixed when it opens and cannot be changed later, so this is the only way different tasks in one run can record different models. Call it as you start each task. `model` is whatever actually did the work (the subagent's model when you delegated, your own otherwise); it is a declaration you own, never a guess — omit it and the session honestly records no model. Read it back with get_work_sessions.";
+export const beginTaskSessionToolDescription = `Start a work session for ONE task, declaring the model that does its work, and attach it to (planId, taskId). Closes the previous session first so each task gets its own — a session's model is fixed when it opens and cannot be changed later, so this is the only way different tasks in one run can record different models. Call it as you start each task. \`model\` is whatever actually did the work (the subagent's model when you delegated, your own otherwise); it is a declaration you own, never a guess — omit it and the session honestly records no model. Read it back with get_work_sessions.`;
 
 export async function beginTaskSessionToolHandler(
   // `z.input`, not `z.infer`: `model` uses `.catch(null)`, so what a caller may pass is wider
@@ -130,8 +129,7 @@ export const recordArtifactToolParameters = z
   })
   .strict();
 
-export const recordArtifactToolDescription =
-  'Record an output you produced in the current work session (opened automatically): a git_commit, pull_request, document, or deployment. payloadJson is the JSON payload for the type, e.g. git_commit {"repo":"owner/repo","sha":"<sha>"}, pull_request {"repo":"owner/repo","number":123}, document {"url":"..."}. Self-report artifacts as you create them.';
+export const recordArtifactToolDescription = `Record an output you produced in the current work session (opened automatically): a git_commit, pull_request, document, or deployment. payloadJson is the JSON payload for the type, e.g. git_commit {"repo":"owner/repo","sha":"<sha>"}, pull_request {"repo":"owner/repo","number":123}, document {"url":"..."}. Self-report artifacts as you create them.`;
 
 export async function recordArtifactToolHandler(
   args: z.infer<typeof recordArtifactToolParameters>,
@@ -185,8 +183,7 @@ export const attachSessionSubjectToolParameters = z
   })
   .strict();
 
-export const attachSessionSubjectToolDescription =
-  'Attach the current work session to a plan (and optionally a task), so the artifacts you record are tied to that work. Opens a session automatically if none is active.';
+export const attachSessionSubjectToolDescription = `Attach the current work session to a plan (and optionally a task), so the artifacts you record are tied to that work. Opens a session automatically if none is active.`;
 
 export async function attachSessionSubjectToolHandler(
   args: z.infer<typeof attachSessionSubjectToolParameters>,
@@ -238,8 +235,7 @@ export const endSessionToolParameters = z
   })
   .strict();
 
-export const endSessionToolDescription =
-  'Close the current work session, optionally with a summary of what was done. No-op if no session is active.';
+export const endSessionToolDescription = `Close the current work session, optionally with a summary of what was done. No-op if no session is active.`;
 
 export async function endSessionToolHandler(
   args: z.infer<typeof endSessionToolParameters>,
@@ -296,8 +292,7 @@ export const getWorkSessionsToolParameters = z
   })
   .strict();
 
-export const getWorkSessionsToolDescription =
-  'List the work sessions attached to a plan, newest first: which tool and version connected, which model (when the launcher reported one), the actor, and when the session started and ended. Use it to attribute an executed plan to the agent that ran it — especially for interactive runs, which record no plan_run. Bounded; pass limit to widen or narrow (default 25, max 100).';
+export const getWorkSessionsToolDescription = `List the work sessions attached to a plan, newest first: which tool and version connected, which model (when the launcher reported one), the actor, and when the session started and ended. Use it to attribute an executed plan to the agent that ran it — especially for interactive runs, which record no plan_run. Bounded; pass limit to widen or narrow (default 25, max 100).`;
 
 export async function getWorkSessionsToolHandler(
   args: z.infer<typeof getWorkSessionsToolParameters>,
@@ -329,10 +324,9 @@ export async function getWorkSessionsToolHandler(
       const sessions = list.sessions.slice(0, limit);
       const { totalCount } = list;
 
-      const shown =
-        sessions.length < totalCount
-          ? ` (showing ${sessions.length} most recent)`
-          : '';
+      const isTruncated = sessions.length < totalCount;
+      const truncatedNote = ` (showing ${sessions.length} most recent)`;
+      const shown = isTruncated ? truncatedNote : '';
       const text = `${totalCount} work session(s) on plan ${parsed.data.planId}${shown}.\n${JSON.stringify(sessions, null, 2)}`;
       return { structuredContent: { sessions, totalCount }, text };
     },

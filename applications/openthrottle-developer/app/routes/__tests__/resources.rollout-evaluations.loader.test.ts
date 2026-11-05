@@ -14,10 +14,11 @@ const { loader } = await import('../resources.rollout-evaluations');
 
 const mockExecute = vi.mocked(executeGraphqlWithAuth);
 
-const loaderArgs = (search = ''): Route.LoaderArgs =>
-  createLoaderArgs<Route.LoaderArgs>({
+const loaderArgs = (search = ''): Route.LoaderArgs => {
+  return createLoaderArgs<Route.LoaderArgs>({
     url: `http://localhost/resources/rollout-evaluations${search}`,
   });
+};
 
 describe('routes/resources.rollout-evaluations loader', () => {
   beforeEach(() => {

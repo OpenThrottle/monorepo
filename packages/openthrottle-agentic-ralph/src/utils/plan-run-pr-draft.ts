@@ -81,14 +81,11 @@ export const validatePlanRunPrDraft = (
     .filter((line) => line !== '');
   const title = titleLines[0] ?? '';
 
+  if (titleLines.length === 0) {
+    return { ok: false, reason: 'title.txt is empty' };
+  }
   if (titleLines.length !== 1) {
-    return {
-      ok: false,
-      reason:
-        titleLines.length === 0
-          ? 'title.txt is empty'
-          : 'title.txt is not one line',
-    };
+    return { ok: false, reason: 'title.txt is not one line' };
   }
   if (title.length > TITLE_MAX || !CONVENTIONAL_TITLE.test(title)) {
     return { ok: false, reason: 'title is not a conventional-commit title' };

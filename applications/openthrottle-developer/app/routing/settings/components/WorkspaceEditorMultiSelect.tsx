@@ -43,13 +43,15 @@ export const WorkspaceEditorMultiSelect = (
     // no presence data at all, which is the point: silence, not a placeholder.
     const isSilent = status.tone === 'neutral';
 
+    const marker = (
+      <WorkspaceEditorPresenceMarker
+        editorLabel={option.label}
+        presence={state}
+      />
+    );
+
     return {
-      adornment: isSilent ? undefined : (
-        <WorkspaceEditorPresenceMarker
-          editorLabel={option.label}
-          presence={state}
-        />
-      ),
+      adornment: isSilent ? undefined : marker,
       hint: isSilent ? undefined : status.label,
       label: option.label,
       value: option.value,

@@ -13,12 +13,13 @@ import { PlanRunModelPicker } from '../PlanRunModelPicker';
 describe('PlanRunModelPicker Component', () => {
   let props: PlanRunModelPickerProps;
 
-  const renderPicker = (): RenderResult =>
-    render(
+  const renderPicker = (): RenderResult => {
+    return render(
       <TooltipProvider>
         <PlanRunModelPicker {...props} />
       </TooltipProvider>,
     );
+  };
 
   beforeEach(() => {
     props = {

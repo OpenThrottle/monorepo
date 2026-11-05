@@ -11,50 +11,54 @@ import { ChatComposerInput } from '../ChatComposerInput';
 
 const buildMentions = (
   overrides: Partial<UseChatComposerMentionsResult> = {},
-): UseChatComposerMentionsResult => ({
-  activeIndex: 0,
-  handleKeyDown: vi.fn(() => false),
-  listboxId: 'mentions-listbox',
-  loading: false,
-  mentionEnabled: false,
-  onChange: vi.fn(),
-  onClick: vi.fn(),
-  onKeyUp: vi.fn(),
-  optionId: (index: number) => `mentions-listbox-opt-${index}`,
-  popoverOpen: false,
-  reset: vi.fn(),
-  results: [],
-  selectOption: vi.fn(),
-  setActiveIndex: vi.fn(),
-  setRefs: vi.fn(),
-  ...overrides,
-});
+): UseChatComposerMentionsResult => {
+  return {
+    activeIndex: 0,
+    handleKeyDown: vi.fn(() => false),
+    listboxId: 'mentions-listbox',
+    loading: false,
+    mentionEnabled: false,
+    onChange: vi.fn(),
+    onClick: vi.fn(),
+    onKeyUp: vi.fn(),
+    optionId: (index: number) => `mentions-listbox-opt-${index}`,
+    popoverOpen: false,
+    reset: vi.fn(),
+    results: [],
+    selectOption: vi.fn(),
+    setActiveIndex: vi.fn(),
+    setRefs: vi.fn(),
+    ...overrides,
+  };
+};
 
 const buildSlash = (
   overrides: Partial<UseChatComposerSlashCommandsResult> = {},
-): UseChatComposerSlashCommandsResult => ({
-  activeIndex: 0,
-  handleKeyDown: vi.fn(() => false),
-  listboxId: 'slash-listbox',
-  loading: false,
-  onChange: vi.fn(),
-  onClick: vi.fn(),
-  onKeyUp: vi.fn(),
-  optionId: (index: number) => `slash-listbox-opt-${index}`,
-  popoverOpen: false,
-  reset: vi.fn(),
-  results: [],
-  selectOption: vi.fn(),
-  setActiveIndex: vi.fn(),
-  setRefs: vi.fn(),
-  slashEnabled: false,
-  ...overrides,
-});
+): UseChatComposerSlashCommandsResult => {
+  return {
+    activeIndex: 0,
+    handleKeyDown: vi.fn(() => false),
+    listboxId: 'slash-listbox',
+    loading: false,
+    onChange: vi.fn(),
+    onClick: vi.fn(),
+    onKeyUp: vi.fn(),
+    optionId: (index: number) => `slash-listbox-opt-${index}`,
+    popoverOpen: false,
+    reset: vi.fn(),
+    results: [],
+    selectOption: vi.fn(),
+    setActiveIndex: vi.fn(),
+    setRefs: vi.fn(),
+    slashEnabled: false,
+    ...overrides,
+  };
+};
 
 const renderInput = (
   overrides: Partial<ChatComposerInputProps> = {},
-): RenderResult =>
-  render(
+): RenderResult => {
+  return render(
     <ChatComposerInput
       disabled={false}
       draft=""
@@ -66,6 +70,7 @@ const renderInput = (
       {...overrides}
     />,
   );
+};
 
 describe('ChatComposerInput Component', () => {
   test('renders the textarea with the given draft and placeholder', () => {

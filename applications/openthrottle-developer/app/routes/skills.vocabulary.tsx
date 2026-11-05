@@ -95,6 +95,8 @@ export default function Component(
   );
 }
 
-export const action = (args: Route.ActionArgs) => runVocabularyAction(args);
+export const action = (args: Route.ActionArgs) => {
+  return runVocabularyAction(args);
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

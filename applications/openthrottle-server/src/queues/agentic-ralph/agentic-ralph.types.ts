@@ -48,4 +48,6 @@ export interface RunPlanOrchestratorJobData {
 export const isRunPlanOrchestratorJobData = (data: {
   readonly planId: string;
   readonly runKind?: string;
-}): data is RunPlanOrchestratorJobData => data.runKind === 'orchestrator';
+}): data is RunPlanOrchestratorJobData => {
+  return data.runKind === 'orchestrator';
+};

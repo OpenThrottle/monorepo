@@ -7,14 +7,16 @@ import { ChatTurnUsageSummary } from '../ChatTurnUsageSummary';
 
 const usageEvent = (
   overrides: Partial<ChatTurnUsageEvent>,
-): ChatTurnUsageEvent => ({
-  error: null,
-  kind: 'usage',
-  result: null,
-  sortOrder: 0,
-  usageJson: null,
-  ...overrides,
-});
+): ChatTurnUsageEvent => {
+  return {
+    error: null,
+    kind: 'usage',
+    result: null,
+    sortOrder: 0,
+    usageJson: null,
+    ...overrides,
+  };
+};
 
 describe('ChatTurnUsageSummary Component', () => {
   test('renders a compact badge of input/output tokens with a full breakdown aria-label', () => {

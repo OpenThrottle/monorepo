@@ -9,8 +9,9 @@ import {
   toolLabelFromMetadataJson,
 } from '../turn-events';
 
-const persisted = (events: ReadonlyArray<Record<string, unknown>>): string =>
-  JSON.stringify({ events });
+const persisted = (events: ReadonlyArray<Record<string, unknown>>): string => {
+  return JSON.stringify({ events });
+};
 
 describe('foldPersistedTurnEvents', () => {
   it('returns no events when there is nothing persisted', () => {
@@ -314,8 +315,9 @@ describe('tool-name resolution', () => {
  * is what made a five-file read render 31 cards, 26 of them headed `tool`.
  */
 describe('applyTurnToolCall with identity-less chunks', () => {
-  const meta = (metadata: Record<string, unknown>) =>
-    parseMeta(JSON.stringify(metadata));
+  const meta = (metadata: Record<string, unknown>) => {
+    return parseMeta(JSON.stringify(metadata));
+  };
 
   it('folds claude partial-args chunks into the open call instead of new cards', () => {
     // content_block_start(tool_use) then five input_json_delta chunks.
@@ -363,8 +365,9 @@ describe('applyTurnToolCall with identity-less chunks', () => {
 });
 
 describe('applyTurnToolResult with identity-less chunks', () => {
-  const meta = (metadata: Record<string, unknown>) =>
-    parseMeta(JSON.stringify(metadata));
+  const meta = (metadata: Record<string, unknown>) => {
+    return parseMeta(JSON.stringify(metadata));
+  };
 
   it('resolves the open call rather than synthesizing a placeholder card', () => {
     // claude's `user` event: the id sits on each block, not on the chunk.
@@ -405,31 +408,38 @@ describe('applyTurnToolResult with identity-less chunks', () => {
 /** The tool events' fields only, for compact assertions. */
 const toolCards = (
   events: ReturnType<typeof applyTurnToolCall>,
-): ReadonlyArray<Record<string, unknown>> =>
-  events.flatMap((event) =>
-    event.kind === 'tool'
-      ? [
-          {
-            argsJson: event.argsJson,
-            callId: event.callId,
-            error: event.error,
-            name: event.name,
-            resultJson: event.resultJson,
-            status: event.status,
-          },
-        ]
-      : [],
-  );
+): ReadonlyArray<Record<string, unknown>> => {
+  const cards: Array<Record<string, unknown>> = [];
+
+  for (const event of events) {
+    if (event.kind === 'tool') {
+      cards.push({
+        argsJson: event.argsJson,
+        callId: event.callId,
+        error: event.error,
+        name: event.name,
+        resultJson: event.resultJson,
+        status: event.status,
+      });
+    }
+  }
+
+  return cards;
+};
 
 describe('claude tool cards (callId-keyed wire shape)', () => {
-  const meta = (metadata: Record<string, unknown>) =>
-    parseMeta(JSON.stringify(metadata));
-  const start = (callId: string, toolName: string) =>
-    meta({ callId, index: 0, name: toolName, toolName });
-  const args = (callId: string, toolName: string, toolCall: unknown) =>
-    meta({ callId, name: toolName, toolCall, toolName });
-  const result = (callId: string, toolCall: unknown, isError = false) =>
-    meta({ callId, isError, toolCall });
+  const meta = (metadata: Record<string, unknown>) => {
+    return parseMeta(JSON.stringify(metadata));
+  };
+  const start = (callId: string, toolName: string) => {
+    return meta({ callId, index: 0, name: toolName, toolName });
+  };
+  const args = (callId: string, toolName: string, toolCall: unknown) => {
+    return meta({ callId, name: toolName, toolCall, toolName });
+  };
+  const result = (callId: string, toolCall: unknown, isError = false) => {
+    return meta({ callId, isError, toolCall });
+  };
 
   it('fills in arguments that arrive after the card opened, without a second card', () => {
     const opened = applyTurnToolCall([], start('toolu_1', 'Bash'), 0);
@@ -555,16 +565,20 @@ describe('claude tool cards (callId-keyed wire shape)', () => {
 
 describe('legacy persisted claude turns (toolUseId / partialJson / toolResults)', () => {
   it('rebuilds arguments and correlates a parallel batch of results by tool_use_id', () => {
-    const startChunk = (id: string, index: number) => ({
-      delta: '',
-      kind: 'tool_call',
-      metadata: { index, name: 'Bash', toolName: 'Bash', toolUseId: id },
-    });
-    const fragment = (index: number, partialJson: string) => ({
-      delta: '',
-      kind: 'tool_call',
-      metadata: { index, partialJson },
-    });
+    const startChunk = (id: string, index: number) => {
+      return {
+        delta: '',
+        kind: 'tool_call',
+        metadata: { index, name: 'Bash', toolName: 'Bash', toolUseId: id },
+      };
+    };
+    const fragment = (index: number, partialJson: string) => {
+      return {
+        delta: '',
+        kind: 'tool_call',
+        metadata: { index, partialJson },
+      };
+    };
 
     const replayed = foldPersistedTurnEvents(
       persisted([

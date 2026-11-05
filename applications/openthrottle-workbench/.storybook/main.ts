@@ -71,12 +71,18 @@ const config: StorybookConfig = {
        * inherited DOM attributes while keeping `value`, `orientation`,
        * `onValueChange` and friends.
        */
-      propFilter: (prop) =>
-        prop.parent
-          ? !/node_modules\/(@types\/react|@types\/react-dom)\//.test(
-              prop.parent.fileName,
-            )
-          : true,
+      propFilter: (prop) => {
+        if (!prop.parent) {
+          return true;
+        }
+
+        const isReactDomTyping =
+          /node_modules\/(@types\/react|@types\/react-dom)\//.test(
+            prop.parent.fileName,
+          );
+
+        return !isReactDomTyping;
+      },
       shouldExtractLiteralValuesFromEnum: true,
       tsconfigPath: SHADCN_TSCONFIG,
     },

@@ -14,11 +14,12 @@ import {
   PLAN_RUN_KNOWN_BACKENDS,
 } from './plan-run-config-storage.constants.ts';
 
-const trimToMax = (max: number) =>
-  z
+const trimToMax = (max: number) => {
+  return z
     .string()
     .max(max)
     .transform((s) => s.trim());
+};
 
 const planRunConfigSnapshotRalphV1Schema = z
   .object({

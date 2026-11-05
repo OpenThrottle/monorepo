@@ -56,8 +56,7 @@ const CONNECT_OT_MCP: Variant = {
       "And in the dashboard it's more than a document — tasks that run in parallel, with every run tracked.",
     ],
   ],
-  thesis:
-    'Payoff first. Promises the outcome up front and closes on what you do with the plan next.',
+  thesis: `Payoff first. Promises the outcome up front and closes on what you do with the plan next.`,
 };
 
 describe('spokenWords', () => {

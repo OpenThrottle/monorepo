@@ -13,30 +13,32 @@ import { ScheduleRunsTable } from '../ScheduleRunsTable';
 
 const run = (
   overrides: Partial<ScheduledJobRunRowFragment> = {},
-): ScheduledJobRunRowFragment => ({
-  __typename: 'ScheduledAgentJobRunObject',
-  bullmqJobId: 'run-1',
-  cacheReadTokens: 20,
-  cacheWriteTokens: 10,
-  costUsd: 0.0123,
-  createdAt: '2026-07-31T09:00:00.000Z',
-  driverId: 'claude',
-  errorMessage: null,
-  exitCode: 0,
-  finishedAt: '2026-07-31T09:01:23.000Z',
-  id: 'run-1',
-  inputTokens: 100,
-  model: 'opus',
-  outputTokens: 50,
-  reasoningTokens: null,
-  resumeOfRunId: null,
-  startedAt: '2026-07-31T09:00:00.000Z',
-  status: 'succeeded',
-  totalTokens: 150,
-  trigger: 'manual',
-  usageLimitResetsAt: null,
-  ...overrides,
-});
+): ScheduledJobRunRowFragment => {
+  return {
+    __typename: 'ScheduledAgentJobRunObject',
+    bullmqJobId: 'run-1',
+    cacheReadTokens: 20,
+    cacheWriteTokens: 10,
+    costUsd: 0.0123,
+    createdAt: '2026-07-31T09:00:00.000Z',
+    driverId: 'claude',
+    errorMessage: null,
+    exitCode: 0,
+    finishedAt: '2026-07-31T09:01:23.000Z',
+    id: 'run-1',
+    inputTokens: 100,
+    model: 'opus',
+    outputTokens: 50,
+    reasoningTokens: null,
+    resumeOfRunId: null,
+    startedAt: '2026-07-31T09:00:00.000Z',
+    status: 'succeeded',
+    totalTokens: 150,
+    trigger: 'manual',
+    usageLimitResetsAt: null,
+    ...overrides,
+  };
+};
 
 describe('ScheduleRunsTable', () => {
   test('links each row to its run detail and renders duration', () => {

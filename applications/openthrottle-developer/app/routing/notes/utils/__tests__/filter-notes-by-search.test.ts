@@ -4,14 +4,16 @@ import type { NoteCardFragment } from '~/__generated__/graphql';
 
 import { filterNotesBySearch } from '../filter-notes-by-search';
 
-const note = (over: Partial<NoteCardFragment>): NoteCardFragment => ({
-  author: null,
-  content: '',
-  createdAt: '2026-01-01T00:00:00.000Z',
-  id: 'n',
-  updatedAt: '2026-01-01T00:00:00.000Z',
-  ...over,
-});
+const note = (over: Partial<NoteCardFragment>): NoteCardFragment => {
+  return {
+    author: null,
+    content: '',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    id: 'n',
+    updatedAt: '2026-01-01T00:00:00.000Z',
+    ...over,
+  };
+};
 
 describe('filterNotesBySearch', () => {
   const notes = [

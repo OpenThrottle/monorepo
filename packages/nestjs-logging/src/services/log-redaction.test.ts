@@ -41,8 +41,7 @@ describe('createLogRedactor (default-on)', () => {
   });
 
   it('redacts value patterns (bearer token, JWT, email) under non-deny keys', () => {
-    const jwt =
-      'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U';
+    const jwt = `eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U`;
     const extra: Record<string, JsonValue> = {
       header: 'Bearer abc123.def',
       jwt,

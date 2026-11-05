@@ -53,16 +53,24 @@ export const SettingsWorkspaceEditorTargets = (
   const [showAll, setShowAll] = React.useState(false);
 
   // Setup
-  const applyingRepositoryId =
+  const isApplying =
     navigation.state === 'submitting' &&
-    navigation.formData?.get('intent') === 'applyEditorConfig'
-      ? navigation.formData.get('repositoryId')
-      : null;
+    navigation.formData?.get('intent') === 'applyEditorConfig';
+  const submittedRepositoryId =
+    navigation.formData?.get('repositoryId') ?? null;
+  const applyingRepositoryId = isApplying ? submittedRepositoryId : null;
   const isCollapsible = targets.length > COLLAPSED_TARGET_COUNT;
-  const visibleTargets =
-    isCollapsible && !showAll
-      ? targets.slice(0, COLLAPSED_TARGET_COUNT)
-      : targets;
+  const isCapped = isCollapsible && !showAll;
+  const collapsedTargets = targets.slice(0, COLLAPSED_TARGET_COUNT);
+  const visibleTargets = isCapped ? collapsedTargets : targets;
+  const {
+    applyBusyLabel,
+    applyRowButton,
+    targetsNoEditors,
+    targetsNoRepositories,
+    targetsShowFewer,
+  } = WORKSPACE_SETTINGS_COPY;
+  const emptyCopy = hasRepositories ? targetsNoEditors : targetsNoRepositories;
 
   // Handlers
   const handleToggleShowAll = (): void => {
@@ -70,6 +78,70 @@ export const SettingsWorkspaceEditorTargets = (
   };
 
   // Markup
+  const addRepositoryButton = (
+    <Button asChild={true} variant="outline">
+      <Link to="/settings/repositories">
+        {WORKSPACE_SETTINGS_COPY.targetsAddRepositoryLink}
+      </Link>
+    </Button>
+  );
+  const showAllLabel = (
+    <>
+      {WORKSPACE_SETTINGS_COPY.targetsShowAllPrefix}
+      {targets.length}
+      {WORKSPACE_SETTINGS_COPY.targetsShowAllSuffix}
+    </>
+  );
+  const toggleButton = (
+    <Button
+      onClick={handleToggleShowAll}
+      size="sm"
+      type="button"
+      variant="ghost"
+    >
+      {showAll ? targetsShowFewer : showAllLabel}
+    </Button>
+  );
+  const targetRows = visibleTargets.map((target) => {
+    const isApplyingRow = applyingRepositoryId === target.id;
+    const rowLabel = isApplyingRow ? applyBusyLabel : applyRowButton;
+
+    return (
+      <TableRow key={target.id}>
+        <TableCell>
+          <Link
+            className="underline-offset-4 hover:underline"
+            to={`/settings/repositories/${target.id}`}
+          >
+            {target.displayName}
+          </Link>
+        </TableCell>
+        <TableCell className="text-muted-foreground font-mono text-xs">
+          {target.filesystemPath}
+        </TableCell>
+        <TableCell>
+          <WorkspaceEditorTargetEditors
+            editors={target.editors}
+            presence={presence}
+          />
+        </TableCell>
+        <TableCell className="text-right">
+          <Form className="inline-flex" method="post">
+            <input name="intent" type="hidden" value="applyEditorConfig" />
+            <input name="repositoryId" type="hidden" value={target.id} />
+            <Button
+              disabled={isApplyingRow}
+              size="xs"
+              type="submit"
+              variant="outline"
+            >
+              {rowLabel}
+            </Button>
+          </Form>
+        </TableCell>
+      </TableRow>
+    );
+  });
 
   // Life Cycle
 
@@ -82,19 +154,9 @@ export const SettingsWorkspaceEditorTargets = (
       >
         <EmptyHeader>
           <EmptyTitle>{WORKSPACE_SETTINGS_COPY.targetsEmptyTitle}</EmptyTitle>
-          <EmptyDescription>
-            {hasRepositories
-              ? WORKSPACE_SETTINGS_COPY.targetsNoEditors
-              : WORKSPACE_SETTINGS_COPY.targetsNoRepositories}
-          </EmptyDescription>
+          <EmptyDescription>{emptyCopy}</EmptyDescription>
         </EmptyHeader>
-        {hasRepositories ? null : (
-          <Button asChild={true} variant="outline">
-            <Link to="/settings/repositories">
-              {WORKSPACE_SETTINGS_COPY.targetsAddRepositoryLink}
-            </Link>
-          </Button>
-        )}
+        {hasRepositories ? null : addRepositoryButton}
       </Empty>
     );
   }
@@ -119,68 +181,9 @@ export const SettingsWorkspaceEditorTargets = (
             </TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
-          {visibleTargets.map((target) => (
-            <TableRow key={target.id}>
-              <TableCell>
-                <Link
-                  className="underline-offset-4 hover:underline"
-                  to={`/settings/repositories/${target.id}`}
-                >
-                  {target.displayName}
-                </Link>
-              </TableCell>
-              <TableCell className="text-muted-foreground font-mono text-xs">
-                {target.filesystemPath}
-              </TableCell>
-              <TableCell>
-                <WorkspaceEditorTargetEditors
-                  editors={target.editors}
-                  presence={presence}
-                />
-              </TableCell>
-              <TableCell className="text-right">
-                <Form className="inline-flex" method="post">
-                  <input
-                    name="intent"
-                    type="hidden"
-                    value="applyEditorConfig"
-                  />
-                  <input name="repositoryId" type="hidden" value={target.id} />
-                  <Button
-                    disabled={applyingRepositoryId === target.id}
-                    size="xs"
-                    type="submit"
-                    variant="outline"
-                  >
-                    {applyingRepositoryId === target.id
-                      ? WORKSPACE_SETTINGS_COPY.applyBusyLabel
-                      : WORKSPACE_SETTINGS_COPY.applyRowButton}
-                  </Button>
-                </Form>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
+        <TableBody>{targetRows}</TableBody>
       </Table>
-      {isCollapsible ? (
-        <Button
-          onClick={handleToggleShowAll}
-          size="sm"
-          type="button"
-          variant="ghost"
-        >
-          {showAll ? (
-            WORKSPACE_SETTINGS_COPY.targetsShowFewer
-          ) : (
-            <>
-              {WORKSPACE_SETTINGS_COPY.targetsShowAllPrefix}
-              {targets.length}
-              {WORKSPACE_SETTINGS_COPY.targetsShowAllSuffix}
-            </>
-          )}
-        </Button>
-      ) : null}
+      {isCollapsible ? toggleButton : null}
     </div>
   );
 };

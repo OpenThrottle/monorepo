@@ -23,7 +23,9 @@ export type PermissionGatedNavigation = Record<
 export const hasPermission = (
   permissions: readonly string[],
   permission: Permission,
-): boolean => permissions.includes(permission);
+): boolean => {
+  return permissions.includes(permission);
+};
 
 /**
  * @description Drops links whose `requiredPermission` the viewer lacks, and
@@ -34,8 +36,8 @@ export const hasPermission = (
 export const filterNavigationByPermission = (
   navigation: PermissionGatedNavigation,
   permissions: readonly string[],
-): Record<string, PermissionGatedNavigationLink[]> =>
-  Object.entries(navigation).reduce<
+): Record<string, PermissionGatedNavigationLink[]> => {
+  return Object.entries(navigation).reduce<
     Record<string, PermissionGatedNavigationLink[]>
   >((visible, [section, links]) => {
     const allowed = links.filter(
@@ -46,3 +48,4 @@ export const filterNavigationByPermission = (
 
     return allowed.length === 0 ? visible : { ...visible, [section]: allowed };
   }, {});
+};

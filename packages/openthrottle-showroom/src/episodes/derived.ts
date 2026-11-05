@@ -23,8 +23,9 @@ export const WORDS_PER_MINUTE = 145;
  * Words that carry sound. A cell of "—" or "…" is punctuation, not narration,
  * so a token has to contain a letter or a digit to count.
  */
-const countWords = (text: string): number =>
-  text.split(/\s+/).filter((word) => /[a-z0-9]/i.test(word)).length;
+const countWords = (text: string): number => {
+  return text.split(/\s+/).filter((word) => /[a-z0-9]/i.test(word)).length;
+};
 
 /**
  * Split on sentence-ending punctuation followed by a space and a capital.
@@ -33,17 +34,22 @@ const countWords = (text: string): number =>
  * sentences with no abbreviations precisely so this remains predictable. Changing
  * it changes where the audio is cut, and therefore every caption timing.
  */
-const splitSentences = (text: string): readonly string[] =>
-  text
+const splitSentences = (text: string): readonly string[] => {
+  return text
     .split(/(?<=[.!?])\s+(?=[A-Z"'])/)
     .map((sentence) => sentence.trim())
     .filter((sentence) => sentence.length > 0);
+};
 
 /**
  * @public Total spoken words in a variant.
  */
-export const spokenWords = (variant: Variant): number =>
-  variant.narration.reduce((total, [, text]) => total + countWords(text), 0);
+export const spokenWords = (variant: Variant): number => {
+  return variant.narration.reduce(
+    (total, [, text]) => total + countWords(text),
+    0,
+  );
+};
 
 /**
  * @public Estimated speech duration, rounded as the validator rounds it.
@@ -52,8 +58,9 @@ export const spokenWords = (variant: Variant): number =>
  * and lands in `timings.json`. This is what tells you a script is over budget
  * before you spend a hosted render finding out.
  */
-export const estimatedSpokenSeconds = (variant: Variant): number =>
-  Math.round((spokenWords(variant) / WORDS_PER_MINUTE) * 60);
+export const estimatedSpokenSeconds = (variant: Variant): number => {
+  return Math.round((spokenWords(variant) / WORDS_PER_MINUTE) * 60);
+};
 
 /**
  * @public The spoken-word ceiling for a format, derived from `format.json`.
@@ -67,11 +74,10 @@ export const estimatedSpokenSeconds = (variant: Variant): number =>
  */
 export const budgetWords = (format: EpisodeFormat): number => {
   const spec = loadFormat();
+  const { longform, short } = spec.formats;
+  const shortSeconds = short.targetDurationSeconds ?? short.maxDurationSeconds;
   const seconds =
-    format === 'short'
-      ? (spec.formats.short.targetDurationSeconds ??
-        spec.formats.short.maxDurationSeconds)
-      : spec.formats.longform.maxDurationSeconds;
+    format === 'short' ? shortSeconds : longform.maxDurationSeconds;
 
   return Math.floor((seconds / 60) * WORDS_PER_MINUTE);
 };

@@ -5,7 +5,6 @@ import {
   type ExpandedState,
   flexRender,
   getCoreRowModel,
-  getExpandedRowModel,
   type OnChangeFn,
   type Row,
   useReactTable,
@@ -13,6 +12,7 @@ import {
 import clsx from 'clsx';
 import * as React from 'react';
 
+import { getExpansionOptions } from '../utils/get-expansion-options';
 import {
   Table,
   TableBody,
@@ -95,14 +95,11 @@ export function DataTable<TData, TValue>(
     data,
     getCoreRowModel: getCoreRowModel(),
     getRowId: getRowId ?? undefined,
-    ...(getSubRows
-      ? {
-          getExpandedRowModel: getExpandedRowModel(),
-          getSubRows,
-          onExpandedChange: handleExpandedChange,
-          state: { expanded: expandedState },
-        }
-      : {}),
+    ...getExpansionOptions({
+      expandedState,
+      getSubRows,
+      onExpandedChange: handleExpandedChange,
+    }),
   });
 
   // Setup
@@ -111,6 +108,27 @@ export function DataTable<TData, TValue>(
   // Handlers
 
   // Markup
+  const hasRows = rows.length > 0;
+  const bodyRows = rows.map((row) => (
+    <TableRow
+      data-state={row.getIsSelected() ? 'selected' : undefined}
+      key={row.id}
+      {...getRowProps?.(row)}
+    >
+      {row.getVisibleCells().map((cell) => (
+        <TableCell key={cell.id}>
+          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+        </TableCell>
+      ))}
+    </TableRow>
+  ));
+  const emptyRow = (
+    <TableRow>
+      <TableCell className="h-24 text-center" colSpan={columns.length}>
+        {emptyState}
+      </TableCell>
+    </TableRow>
+  );
 
   // Life Cycle
 
@@ -123,40 +141,17 @@ export function DataTable<TData, TValue>(
           <TableRow key={headerGroup.id}>
             {headerGroup.headers.map((header) => (
               <TableHead key={header.id}>
-                {header.isPlaceholder
-                  ? null
-                  : flexRender(
-                      header.column.columnDef.header,
-                      header.getContext(),
-                    )}
+                {!header.isPlaceholder &&
+                  flexRender(
+                    header.column.columnDef.header,
+                    header.getContext(),
+                  )}
               </TableHead>
             ))}
           </TableRow>
         ))}
       </TableHeader>
-      <TableBody>
-        {rows?.length ? (
-          rows.map((row) => (
-            <TableRow
-              data-state={row.getIsSelected() ? 'selected' : undefined}
-              key={row.id}
-              {...getRowProps?.(row)}
-            >
-              {row.getVisibleCells().map((cell) => (
-                <TableCell key={cell.id}>
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </TableCell>
-              ))}
-            </TableRow>
-          ))
-        ) : (
-          <TableRow>
-            <TableCell className="h-24 text-center" colSpan={columns.length}>
-              {emptyState}
-            </TableCell>
-          </TableRow>
-        )}
-      </TableBody>
+      <TableBody>{hasRows ? bodyRows : emptyRow}</TableBody>
     </Table>
   );
 }

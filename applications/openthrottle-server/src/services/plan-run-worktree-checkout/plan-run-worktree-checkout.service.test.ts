@@ -20,11 +20,10 @@ const PLAN_RUN_ID = '11111111-1111-4111-8111-111111111111';
 const USER_ID = '22222222-2222-4222-8222-222222222222';
 const REPOSITORY_ID = '33333333-3333-4333-8333-333333333333';
 const CHECKOUT_ID = '44444444-4444-4444-8444-444444444444';
-const WORKTREE_PATH =
-  '/Users/matt/.cursor/worktrees/openthrottle/auto-register';
+const WORKTREE_PATH = `/Users/matt/.cursor/worktrees/openthrottle/auto-register`;
 
-const buildRun = (overrides: Partial<PlanRun> = {}): PlanRun =>
-  createMock<PlanRun>({
+const buildRun = (overrides: Partial<PlanRun> = {}): PlanRun => {
+  return createMock<PlanRun>({
     actorUserId: USER_ID,
     branch: 'main',
     bullmqJobId: 'job-1',
@@ -47,6 +46,7 @@ const buildRun = (overrides: Partial<PlanRun> = {}): PlanRun =>
     workerId: null,
     ...overrides,
   });
+};
 
 const buildSnapshot = (
   overrides: {
@@ -54,44 +54,52 @@ const buildSnapshot = (
     readonly isLinkedWorktree?: boolean;
     readonly normalizedRemoteUrl?: string | null;
   } = {},
-): RepositoryInspectionSnapshot => ({
-  agentConfig: {
-    agentsMd: false,
-    claudeMd: false,
-    cursorRules: false,
-    mcpJson: false,
-    skillsDir: false,
-  },
-  git: {
-    currentBranch:
-      overrides.currentBranch === undefined ? 'main' : overrides.currentBranch,
-    defaultBranch: 'main',
-    dirty: false,
-    isLinkedWorktree: overrides.isLinkedWorktree ?? true,
-    isRepo: true,
-    linkedWorktrees: [],
-    normalizedRemoteUrl:
-      overrides.normalizedRemoteUrl === undefined
-        ? 'https://github.com/openthrottle/monorepo'
-        : overrides.normalizedRemoteUrl,
-    remotes: [],
-  },
-  hookTelemetry: undefined,
-  manifest: {
-    checkoutId: null,
-    present: false,
-    repositoryId: null,
-  },
-  scannedAt: '2026-08-02T00:00:00.000Z',
-  stack: {
-    languages: [],
-    nxWorkspace: false,
-    packageManager: null,
-    pnpmWorkspace: false,
-    turbo: false,
-  },
-  warnings: [],
-});
+): RepositoryInspectionSnapshot => {
+  const resolveCurrentBranch = (): string | null => {
+    if (overrides.currentBranch === undefined) return 'main';
+    return overrides.currentBranch;
+  };
+  const resolveRemoteUrl = (): string | null => {
+    if (overrides.normalizedRemoteUrl === undefined) {
+      return 'https://github.com/openthrottle/monorepo';
+    }
+    return overrides.normalizedRemoteUrl;
+  };
+  return {
+    agentConfig: {
+      agentsMd: false,
+      claudeMd: false,
+      cursorRules: false,
+      mcpJson: false,
+      skillsDir: false,
+    },
+    git: {
+      currentBranch: resolveCurrentBranch(),
+      defaultBranch: 'main',
+      dirty: false,
+      isLinkedWorktree: overrides.isLinkedWorktree ?? true,
+      isRepo: true,
+      linkedWorktrees: [],
+      normalizedRemoteUrl: resolveRemoteUrl(),
+      remotes: [],
+    },
+    hookTelemetry: undefined,
+    manifest: {
+      checkoutId: null,
+      present: false,
+      repositoryId: null,
+    },
+    scannedAt: '2026-08-02T00:00:00.000Z',
+    stack: {
+      languages: [],
+      nxWorkspace: false,
+      packageManager: null,
+      pnpmWorkspace: false,
+      turbo: false,
+    },
+    warnings: [],
+  };
+};
 
 describe('PlanRunWorktreeCheckoutService', () => {
   const mockFindById = vi.fn();

@@ -19,7 +19,9 @@ describe('NotificationActions Component', () => {
   });
 
   test('exposes mark-all-read and dismiss-all actions', () => {
-    const Component = () => <NotificationActions {...props} />;
+    const Component = () => {
+      return <NotificationActions {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 

@@ -88,9 +88,12 @@ interface PendingCheckpoint {
 const accountedFor = (
   result: PersistTokenUsageResult,
   records: number,
-): boolean =>
-  result.buffered + result.deadLettered + result.inserted + result.skipped >=
-  records;
+): boolean => {
+  return (
+    result.buffered + result.deadLettered + result.inserted + result.skipped >=
+    records
+  );
+};
 
 /**
  * Read the new transcript bytes for a session, send the usage rows, and move

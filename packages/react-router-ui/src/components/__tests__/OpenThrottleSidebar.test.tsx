@@ -14,7 +14,9 @@ describe('OpenThrottleSidebar Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <OpenThrottleSidebar {...props} />;
+    const Component = () => {
+      return <OpenThrottleSidebar {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

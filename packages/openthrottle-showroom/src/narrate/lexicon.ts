@@ -49,8 +49,9 @@ export const PRONUNCIATIONS: ReadonlyArray<readonly [string, string]> = [
 ];
 
 /** Escape a literal for use inside a RegExp. */
-const escape = (value: string): string =>
-  value.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+const escape = (value: string): string => {
+  return value.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+};
 
 /**
  * @description Match for one lexicon key. `read` must not eat `ready`.

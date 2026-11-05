@@ -13,26 +13,26 @@ import { LinkedArtifactsPanel } from '../LinkedArtifactsPanel';
 
 const PLAN_ID = 'plan-1';
 
-const artifact = (
-  overrides: Partial<LinkedArtifactRow>,
-): LinkedArtifactRow => ({
-  createdAt: '2026-07-13T00:00:00.000Z',
-  externalKey: 'github:o/r@abc',
-  id: 'art-1',
-  lifecycle: 'created',
-  message: null,
-  payloadJson: JSON.stringify({ repo: 'o/r', sha: 'abc1234def' }),
-  producedAt: '2026-07-13T00:00:00.000Z',
-  sessionId: 'sess-1',
-  source: 'agent',
-  type: 'git_commit',
-  verification: 'unverified',
-  verifiedAt: null,
-  ...overrides,
-});
+const artifact = (overrides: Partial<LinkedArtifactRow>): LinkedArtifactRow => {
+  return {
+    createdAt: '2026-07-13T00:00:00.000Z',
+    externalKey: 'github:o/r@abc',
+    id: 'art-1',
+    lifecycle: 'created',
+    message: null,
+    payloadJson: JSON.stringify({ repo: 'o/r', sha: 'abc1234def' }),
+    producedAt: '2026-07-13T00:00:00.000Z',
+    sessionId: 'sess-1',
+    source: 'agent',
+    type: 'git_commit',
+    verification: 'unverified',
+    verifiedAt: null,
+    ...overrides,
+  };
+};
 
-const statusChange = (id: string, to: string): LinkedArtifactRow =>
-  artifact({
+const statusChange = (id: string, to: string): LinkedArtifactRow => {
+  return artifact({
     externalKey: `status_change:task:t-${id}:${to}:uuid`,
     id,
     lifecycle: null,
@@ -44,10 +44,13 @@ const statusChange = (id: string, to: string): LinkedArtifactRow =>
     }),
     type: 'status_change',
   });
+};
 
 /** The panel reads planId from route params, so the stub must supply one. */
 const renderPanel = (props: LinkedArtifactsPanelProps): RenderResult => {
-  const Component = () => <LinkedArtifactsPanel {...props} />;
+  const Component = () => {
+    return <LinkedArtifactsPanel {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/plans/:planId' }]);
 
   return render(<RoutesStub initialEntries={[`/plans/${PLAN_ID}`]} />);

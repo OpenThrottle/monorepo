@@ -14,7 +14,9 @@ describe('DialogFooter Component', () => {
   beforeEach(() => {
     props = { children: 'Footer content' };
 
-    const Component = () => <DialogFooter {...props} />;
+    const Component = () => {
+      return <DialogFooter {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

@@ -35,7 +35,9 @@ describe('GlobalMetricsChart Component', () => {
   beforeEach(() => {
     props = { data: [sample] };
 
-    const Component = () => <GlobalMetricsChart {...props} />;
+    const Component = () => {
+      return <GlobalMetricsChart {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
   });
@@ -55,7 +57,9 @@ describe('GlobalMetricsChart Component', () => {
     ];
 
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <GlobalMetricsChart data={data} />;
+    const Component = () => {
+      return <GlobalMetricsChart data={data} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByTestId } = render(<RoutesStub />);
 
@@ -65,7 +69,9 @@ describe('GlobalMetricsChart Component', () => {
   test('renders without throwing when given an empty data array', () => {
     cleanup();
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <GlobalMetricsChart data={[]} />;
+    const Component = () => {
+      return <GlobalMetricsChart data={[]} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByTestId } = render(<RoutesStub />);
 

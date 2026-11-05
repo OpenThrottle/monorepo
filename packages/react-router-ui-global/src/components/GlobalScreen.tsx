@@ -33,7 +33,7 @@ export const GlobalScreen = (props: GlobalScreenProps): React.ReactElement => {
 
   return (
     <>
-      {beta ? (
+      {beta && (
         <div
           className={cn(
             'bg-accent/60 text-foreground',
@@ -55,7 +55,7 @@ export const GlobalScreen = (props: GlobalScreenProps): React.ReactElement => {
             .
           </p>
         </div>
-      ) : null}
+      )}
 
       <div className={className} {...rest}>
         {children}

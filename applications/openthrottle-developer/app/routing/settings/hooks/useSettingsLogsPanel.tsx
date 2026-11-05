@@ -17,6 +17,7 @@ import {
   formatEntryLine,
   getEmptyServerSnapshot,
 } from '~/routing/settings/utils/settings.support';
+import { getViewerEmptyReason } from '~/routing/settings/utils/viewer-empty-reason';
 
 export interface UseSettingsLogsPanelOptions {}
 
@@ -84,14 +85,11 @@ export const useSettingsLogsPanel = (
     });
   }, [entries, searchQuery, selectedLevelSet]);
 
-  const viewerEmptyReason =
-    entries.length === 0
-      ? 'empty-buffer'
-      : levelsDisabled
-        ? 'levels-none'
-        : filteredEntries.length === 0
-          ? 'no-match'
-          : 'none';
+  const viewerEmptyReason = getViewerEmptyReason({
+    entryCount: entries.length,
+    filteredCount: filteredEntries.length,
+    levelsDisabled,
+  });
 
   const logText = React.useMemo(
     () => filteredEntries.map(formatEntryLine).join('\n'),

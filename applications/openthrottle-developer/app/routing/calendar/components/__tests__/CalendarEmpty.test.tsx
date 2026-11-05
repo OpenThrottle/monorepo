@@ -14,7 +14,9 @@ describe('CalendarEmpty Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <CalendarEmpty {...props} />;
+    const Component = () => {
+      return <CalendarEmpty {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

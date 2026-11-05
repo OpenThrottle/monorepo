@@ -9,7 +9,7 @@ import {
   CHAT_TOOLBAR_STORAGE_KEY,
   type ChatToolbarState,
   DEFAULT_CHAT_TOOLBAR_STATE,
-} from '../../data/atom.chat-toolbar';
+} from '../../data/data.chat-toolbar-state';
 import { useSessionPermissionDecay } from '../useSessionPermissionDecay';
 
 describe('useSessionPermissionDecay', () => {
@@ -28,8 +28,9 @@ describe('useSessionPermissionDecay', () => {
     );
   };
 
-  const readPersisted = (): ChatToolbarState =>
-    JSON.parse(localStorage.getItem(CHAT_TOOLBAR_STORAGE_KEY) ?? '{}');
+  const readPersisted = (): ChatToolbarState => {
+    return JSON.parse(localStorage.getItem(CHAT_TOOLBAR_STORAGE_KEY) ?? '{}');
+  };
 
   beforeEach(() => {
     localStorage.clear();

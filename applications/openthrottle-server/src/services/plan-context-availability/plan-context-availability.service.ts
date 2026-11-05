@@ -148,13 +148,12 @@ export class PlanContextAvailabilityService {
     // Ephemeral exception rules append AFTER the stored rules for this
     // evaluation only. A plan with neither stored nor ephemeral rules keeps
     // pure passthrough (undefined rule set).
-    const ruleSet: SkillAvailabilityRuleSet | undefined =
-      storedRuleSet == null && ephemeralRules.length === 0
-        ? undefined
-        : {
-            posture: storedRuleSet?.posture ?? 'allow',
-            rules: [...(storedRuleSet?.rules ?? []), ...ephemeralRules],
-          };
+    const hasNoRules = storedRuleSet == null && ephemeralRules.length === 0;
+    const mergedRuleSet: SkillAvailabilityRuleSet = {
+      posture: storedRuleSet?.posture ?? 'allow',
+      rules: [...(storedRuleSet?.rules ?? []), ...ephemeralRules],
+    };
+    const ruleSet = hasNoRules ? undefined : mergedRuleSet;
 
     const result = resolveSkillAvailability(
       { environment: input.environment },

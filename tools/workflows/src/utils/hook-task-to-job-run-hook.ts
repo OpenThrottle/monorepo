@@ -56,8 +56,9 @@ export const hookTaskPhase = (
  * @description Resolves a skill slug to a repo-relative SKILL.md path under the
  * default allowed prefix (`.agents/skills/<slug>/SKILL.md`).
  */
-export const skillSlugToSkillPath = (skillSlug: string): string =>
-  `${DEFAULT_SKILL_PREFIX}${skillSlug}/SKILL.md`;
+export const skillSlugToSkillPath = (skillSlug: string): string => {
+  return `${DEFAULT_SKILL_PREFIX}${skillSlug}/SKILL.md`;
+};
 
 /**
  * @description Projects a materialized hook-task into a runtime
@@ -90,7 +91,8 @@ export const projectHookTaskToJobRunHookEntry = (
  */
 export const projectHookTasksToJobRunHookEntries = (
   tasks: readonly MaterializedHookTask[],
-): JobRunHookSkill[] =>
-  tasks
+): JobRunHookSkill[] => {
+  return tasks
     .map(projectHookTaskToJobRunHookEntry)
     .filter((entry): entry is JobRunHookSkill => entry != null);
+};

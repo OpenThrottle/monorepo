@@ -17,14 +17,16 @@ import {
 
 const hookTask = (
   overrides: Partial<MaterializedHookTask> = {},
-): MaterializedHookTask => ({
-  hookRole: 'before',
-  hookScope: 'once',
-  hookSource: 'skill',
-  parentTaskId: null,
-  skillSlug: 'github-commit',
-  ...overrides,
-});
+): MaterializedHookTask => {
+  return {
+    hookRole: 'before',
+    hookScope: 'once',
+    hookSource: 'skill',
+    parentTaskId: null,
+    skillSlug: 'github-commit',
+    ...overrides,
+  };
+};
 
 describe('skillSlugToSkillPath', () => {
   it('resolves under the .agents/skills prefix', () => {

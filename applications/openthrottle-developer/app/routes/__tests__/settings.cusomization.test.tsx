@@ -13,10 +13,10 @@ import { beforeEach, describe, expect, test } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/settings.appearance';
 import {
-  configAtom,
   type ConfigObject,
   DEFAULT_APPEARANCE_CONFIG,
-} from '~/global/data/atom.config';
+} from '~/global/data/data.appearance-config';
+import { configAtom } from '~/global/data/data.atom-config';
 import { buildRootMatch } from '~/testing/root-match-fixture';
 
 import SettingsAppearance from '../settings.appearance';

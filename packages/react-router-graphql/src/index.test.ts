@@ -39,10 +39,11 @@ const document: TypedDocumentNode<unknown, Record<string, unknown>> = {
   kind: Kind.DOCUMENT,
 };
 
-const makeRequest = (): Request =>
-  new Request('https://example.test', {
+const makeRequest = (): Request => {
+  return new Request('https://example.test', {
     headers: { cookie: 'session=abc' },
   });
+};
 
 describe('executeGraphqlWithAuth dispatch', () => {
   beforeEach(() => {

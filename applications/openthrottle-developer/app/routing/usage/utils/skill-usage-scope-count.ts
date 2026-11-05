@@ -9,4 +9,6 @@ import type { UsageSkillUsageByScopeFragment } from '~/__generated__/graphql';
 export const skillUsageScopeCount = (
   byScope: readonly UsageSkillUsageByScopeFragment[],
   scope: string,
-): number => byScope.find((row) => row.scope === scope)?.count ?? 0;
+): number => {
+  return byScope.find((row) => row.scope === scope)?.count ?? 0;
+};

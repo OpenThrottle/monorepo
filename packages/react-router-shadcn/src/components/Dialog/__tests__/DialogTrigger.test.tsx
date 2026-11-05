@@ -15,11 +15,13 @@ describe('DialogTrigger Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => (
-      <Dialog>
-        <DialogTrigger {...props}>Open dialog</DialogTrigger>
-      </Dialog>
-    );
+    const Component = () => {
+      return (
+        <Dialog>
+          <DialogTrigger {...props}>Open dialog</DialogTrigger>
+        </Dialog>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

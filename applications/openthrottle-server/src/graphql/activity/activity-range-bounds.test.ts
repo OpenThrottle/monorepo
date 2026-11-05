@@ -30,10 +30,11 @@ describe('ActivityResolver.activityByDateRange row bounds', () => {
   };
 
   /** SQL issued for the three row legs, in call order (the count leg excluded). */
-  const rowLegCalls = (): Array<{ params: unknown[]; sql: string }> =>
-    query.mock.calls
+  const rowLegCalls = (): Array<{ params: unknown[]; sql: string }> => {
+    return query.mock.calls
       .map(([sql, params]) => ({ params: params ?? [], sql }))
       .filter((call) => !call.sql.includes('AS total'));
+  };
 
   beforeEach(() => {
     query = vi.fn();

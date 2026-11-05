@@ -4,6 +4,7 @@ import * as React from 'react';
 import { Form, Link } from 'react-router';
 
 import type { PullRequestsListFilters } from '~/routing/pull-requests/types/pull-requests-list-filters';
+import { mergedFilterValue } from '~/routing/pull-requests/utils/merged-filter-value';
 
 export interface PullRequestsToolbarProps {
   className?: string;
@@ -157,13 +158,7 @@ export const PullRequestsToolbar = (
           <Label htmlFor="pr-filter-merged">Merged (optional)</Label>
           <select
             className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:outline-none"
-            defaultValue={
-              filters.merged === true
-                ? 'true'
-                : filters.merged === false
-                  ? 'false'
-                  : ''
-            }
+            defaultValue={mergedFilterValue(filters.merged)}
             id="pr-filter-merged"
             name="merged"
           >

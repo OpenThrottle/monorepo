@@ -9,8 +9,8 @@ const destinationFor = (
   type: string,
   payload: unknown,
   planId: string | null = PLAN_ID,
-) =>
-  toLinkedArtifactDestination(
+) => {
+  return toLinkedArtifactDestination(
     toLinkedArtifactView({
       externalKey: 'key:1',
       payloadJson: JSON.stringify(payload),
@@ -18,6 +18,7 @@ const destinationFor = (
     }),
     planId,
   );
+};
 
 describe('toLinkedArtifactDestination', () => {
   describe('git_commit', () => {

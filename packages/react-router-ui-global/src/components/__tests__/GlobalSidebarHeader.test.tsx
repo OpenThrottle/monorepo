@@ -7,7 +7,9 @@ import { GlobalSidebarHeader } from '../GlobalSidebarHeader';
 
 describe('GlobalSidebarHeader Component', () => {
   test('renders logo link to home', () => {
-    const Component = () => <GlobalSidebarHeader name="" />;
+    const Component = () => {
+      return <GlobalSidebarHeader name="" />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 

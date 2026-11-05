@@ -52,25 +52,30 @@ export function buildChatTurnFields(
     serviceTier,
   } = params;
 
-  return decoded.backend === 'openai'
-    ? {
-        backend: 'openai',
-        baseUrl: decoded.baseUrl ?? '',
-        modelId: decoded.model ?? '',
-        persist: String(persist),
-      }
-    : {
-        backend: decoded.backend,
-        ...(decoded.baseUrl != null ? { baseUrl: decoded.baseUrl } : {}),
-        fileMentions: JSON.stringify(fileMentions),
-        modelId: decoded.model ?? '',
-        permissionMode: permissionMode ?? '',
-        persist: String(persist),
-        personaId: personaId ?? '',
-        reasoning: reasoning ?? '',
-        // JSON, mirroring `fileMentions` above: the form stays flat and the
-        // action already has a tested decode pattern to copy.
-        repositoryIds: JSON.stringify(repositoryIds),
-        serviceTier: serviceTier ?? '',
-      };
+  if (decoded.backend === 'openai') {
+    return {
+      backend: 'openai',
+      baseUrl: decoded.baseUrl ?? '',
+      modelId: decoded.model ?? '',
+      persist: String(persist),
+    };
+  }
+
+  const fields: Record<string, string> = {
+    backend: decoded.backend,
+    fileMentions: JSON.stringify(fileMentions),
+    modelId: decoded.model ?? '',
+    permissionMode: permissionMode ?? '',
+    persist: String(persist),
+    personaId: personaId ?? '',
+    reasoning: reasoning ?? '',
+    // JSON, mirroring `fileMentions` above: the form stays flat and the
+    // action already has a tested decode pattern to copy.
+    repositoryIds: JSON.stringify(repositoryIds),
+    serviceTier: serviceTier ?? '',
+  };
+  if (decoded.baseUrl != null) {
+    fields.baseUrl = decoded.baseUrl;
+  }
+  return fields;
 }

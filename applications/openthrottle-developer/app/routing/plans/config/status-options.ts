@@ -100,13 +100,16 @@ const isSameStatusSet = (
  * @description True when a selection means "every status": nothing selected
  * (an empty filter narrows nothing) or every status selected.
  */
-export const isAllStatusSelection = (statuses: readonly string[]): boolean =>
-  statuses.length === 0 || isSameStatusSet(statuses, STATUS_OPTIONS);
+export const isAllStatusSelection = (statuses: readonly string[]): boolean => {
+  return statuses.length === 0 || isSameStatusSet(statuses, STATUS_OPTIONS);
+};
 
 /** True when a selection is exactly {@link DEFAULT_STATUSES}, in any order. */
 export const isDefaultStatusSelection = (
   statuses: readonly string[],
-): boolean => isSameStatusSet(statuses, DEFAULT_STATUSES);
+): boolean => {
+  return isSameStatusSet(statuses, DEFAULT_STATUSES);
+};
 
 /**
  * @description The `status` param values that round-trip a selection through

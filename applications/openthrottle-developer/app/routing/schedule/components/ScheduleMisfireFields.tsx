@@ -36,10 +36,10 @@ export const ScheduleMisfireFields = (
   // Hooks
 
   // Setup
+  const storedMinutes =
+    misfireThresholdMs === undefined ? undefined : misfireThresholdMs / 60_000;
   const thresholdMinutes =
-    misfireThresholdMs === undefined
-      ? SCHEDULE_MISFIRE_DEFAULT_THRESHOLD_MINUTES
-      : misfireThresholdMs / 60_000;
+    storedMinutes ?? SCHEDULE_MISFIRE_DEFAULT_THRESHOLD_MINUTES;
 
   // Handlers
 

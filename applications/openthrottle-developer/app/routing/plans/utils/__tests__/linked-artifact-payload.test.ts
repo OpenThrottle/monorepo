@@ -2,12 +2,13 @@ import { describe, expect, test } from 'vitest';
 
 import { toLinkedArtifactView } from '../linked-artifact-payload';
 
-const view = (type: string, payload: unknown, externalKey = 'key:1') =>
-  toLinkedArtifactView({
+const view = (type: string, payload: unknown, externalKey = 'key:1') => {
+  return toLinkedArtifactView({
     externalKey,
     payloadJson: JSON.stringify(payload),
     type,
   });
+};
 
 describe('toLinkedArtifactView', () => {
   describe('git_commit', () => {

@@ -42,6 +42,11 @@ export const BlogPostAuthorField = (
   };
 
   // Markup
+  const errorMessage = (
+    <p className="text-destructive text-xs" id={errorId} role="alert">
+      {error}
+    </p>
+  );
 
   // Life Cycle
 
@@ -73,11 +78,7 @@ export const BlogPostAuthorField = (
           ))}
         </SelectContent>
       </Select>
-      {error ? (
-        <p className="text-destructive text-xs" id={errorId} role="alert">
-          {error}
-        </p>
-      ) : null}
+      {error ? errorMessage : null}
     </div>
   );
 };

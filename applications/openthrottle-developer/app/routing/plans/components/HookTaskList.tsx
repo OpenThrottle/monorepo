@@ -43,6 +43,7 @@ export const HookTaskList = (props: HookTaskListProps): React.ReactElement => {
     role === 'before' ? HOOK_LIST_COPY.addBefore : HOOK_LIST_COPY.addAfter;
   const emptyLabel =
     role === 'before' ? HOOK_LIST_COPY.emptyBefore : HOOK_LIST_COPY.emptyAfter;
+  const hasHooks = hooks.length > 0;
 
   // Handlers
 
@@ -82,9 +83,10 @@ export const HookTaskList = (props: HookTaskListProps): React.ReactElement => {
         )}
       </header>
 
-      {hooks.length === 0 ? (
+      {!hasHooks && (
         <p className="text-muted-foreground text-xs italic">{emptyLabel}</p>
-      ) : (
+      )}
+      {hasHooks && (
         <ul className="flex flex-col gap-1.5">
           {hooks.map((hook) => (
             <li

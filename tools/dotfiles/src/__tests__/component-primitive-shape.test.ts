@@ -198,9 +198,136 @@ export const Foo = (props: FooProps): React.ReactElement => {
       errors: [{ messageId: 'markerMissingBlankLine' }],
       filename: 'Foo.tsx',
     },
+    // A JSX const declared under Short Circuit — markup belongs under Markup.
+    {
+      code: `import * as React from 'react';
+
+export interface FooProps {}
+
+export const Foo = (props: FooProps): React.ReactElement => {
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
+  const emptyState = <span>Nothing yet</span>;
+
+  return <div>{emptyState}</div>;
+};
+`,
+      errors: [
+        {
+          data: { name: 'emptyState' },
+          messageId: 'jsxConstAfterShortCircuit',
+        },
+      ],
+      filename: 'Foo.tsx',
+    },
+    // Conditional and logical JSX initializers count as JSX too.
+    {
+      code: `import * as React from 'react';
+
+export interface FooProps {
+  readonly isEmpty: boolean;
+}
+
+export const Foo = (props: FooProps): React.ReactElement => {
+  const { isEmpty } = props;
+
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
+  if (isEmpty) return <span>Empty</span>;
+
+  const badge = isEmpty ? null : <b>New</b>;
+  const hint = isEmpty && <i>Add one</i>;
+
+  return <div>{badge}{hint}</div>;
+};
+`,
+      errors: [
+        { data: { name: 'badge' }, messageId: 'jsxConstAfterShortCircuit' },
+        { data: { name: 'hint' }, messageId: 'jsxConstAfterShortCircuit' },
+      ],
+      filename: 'Foo.tsx',
+    },
   ],
   valid: [
     { code: CONFORMANT, filename: 'Foo.tsx' },
+    // The same JSX const under Markup, plus an early return under Short Circuit.
+    {
+      code: `import * as React from 'react';
+
+export interface FooProps {
+  readonly isLoading: boolean;
+}
+
+export const Foo = (props: FooProps): React.ReactElement => {
+  const { isLoading } = props;
+
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  const emptyState = <span>Nothing yet</span>;
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
+  if (isLoading) return <span>Loading</span>;
+
+  return <div>{emptyState}</div>;
+};
+`,
+      filename: 'Foo.tsx',
+    },
+    // A non-JSX const after Short Circuit is not this check's concern.
+    {
+      code: `import * as React from 'react';
+
+export interface FooProps {}
+
+export const Foo = (props: FooProps): React.ReactElement => {
+  // Hooks
+
+  // Setup
+
+  // Handlers
+
+  // Markup
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
+  const label = 'Foo';
+
+  return <div>{label}</div>;
+};
+`,
+      filename: 'Foo.tsx',
+    },
     // Opt-out pragma on line 1 disables every check.
     {
       code: `/* component-shape: opt-out — third-party wrapper */
@@ -212,7 +339,8 @@ export const whatever = 1;
 });
 
 // A conformant single primitive part (forwardRef + Props + markers + displayName).
-const part = (nameArg: string): string => `export interface ${nameArg}Props {}
+const part = (nameArg: string): string => {
+  return `export interface ${nameArg}Props {}
 
 export const ${nameArg} = React.forwardRef<HTMLDivElement, ${nameArg}Props>(
   (props, ref): React.ReactElement => {
@@ -235,6 +363,7 @@ export const ${nameArg} = React.forwardRef<HTMLDivElement, ${nameArg}Props>(
 );
 
 ${nameArg}.displayName = '${nameArg}';`;
+};
 
 // A multi-export compound family — the shape the base standard can't map.
 const CONFORMANT_FAMILY = `import * as React from 'react';
@@ -395,6 +524,38 @@ Foo.displayName = 'Foo';
           { messageId: 'missingMarker' },
           { messageId: 'missingMarker' },
         ],
+        filename: 'Foo.tsx',
+        options: [{ profile: 'primitive' }],
+      },
+      // The Short Circuit JSX check applies to each primitive part too.
+      {
+        code: `import * as React from 'react';
+
+export interface FooProps {}
+
+export const Foo = React.forwardRef<HTMLDivElement, FooProps>(
+  (props, ref): React.ReactElement => {
+    // Hooks
+
+    // Setup
+
+    // Handlers
+
+    // Markup
+
+    // Life Cycle
+
+    // 🔌 Short Circuit
+
+    const inner = <span />;
+
+    return <div ref={ref}>{inner}</div>;
+  },
+);
+
+Foo.displayName = 'Foo';
+`,
+        errors: [{ messageId: 'jsxConstAfterShortCircuit' }],
         filename: 'Foo.tsx',
         options: [{ profile: 'primitive' }],
       },

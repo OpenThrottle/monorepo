@@ -94,8 +94,9 @@ describe('the captured workspace reaches create_plan / create_plans', () => {
   const WORKSPACE = '/Users/matt/Development/openthrottle';
 
   /** The `input` variables the handler actually sent to GraphQL. */
-  const sentInput = (): unknown =>
-    vi.mocked(executeGraphqlWithAuth).mock.calls[0]?.[2];
+  const sentInput = (): unknown => {
+    return vi.mocked(executeGraphqlWithAuth).mock.calls[0]?.[2];
+  };
 
   beforeEach(async () => {
     await primeWorkSession();

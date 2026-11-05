@@ -52,6 +52,14 @@ export interface ForeignWorkspacePromptLayerOptions {
   readonly injectedSkillNames?: readonly string[];
 }
 
+const describeOpenThrottleRoot = (root: string | undefined): string => {
+  if (root === undefined) {
+    return '';
+  }
+
+  return ` (the OpenThrottle monorepo lives at ${root} and is NOT this repository)`;
+};
+
 /**
  * @description Builds repository-scope prompt text for foreign-cwd runs, or undefined when inside OT.
  *
@@ -67,19 +75,16 @@ export const buildForeignWorkspacePromptLayer = (
     return undefined;
   }
 
-  const otRootNote =
-    context.openThrottleRoot !== undefined
-      ? ` (the OpenThrottle monorepo lives at ${context.openThrottleRoot} and is NOT this repository)`
-      : '';
+  const otRootNote = describeOpenThrottleRoot(context.openThrottleRoot);
 
   const injected = options.injectedSkillNames ?? [];
   const hasInjectedSkills = injected.length > 0;
 
   // With curated skills injected, `/skills` is legitimately available here, so it is dropped from
   // the denylist; the OT-monorepo-specific paths/generators/tooling remain forbidden.
-  const forbidden = hasInjectedSkills
-    ? `Do NOT reference, list, or run OpenThrottle-monorepo-specific paths, commands, rules, generators, or tooling (e.g. applications/openthrottle-developer, tools/workflows, @tools/generators, /settings/debug, ralphTuning). Use only the conventions, scripts, and structure of the target repository — plus the OpenThrottle skills noted below.`
-    : `Do NOT reference, list, or run OpenThrottle-specific paths, commands, rules, generators, or tooling (e.g. applications/openthrottle-developer, tools/workflows, @tools/generators, /skills, /settings/debug, ralphTuning). Use only the conventions, scripts, and structure of the target repository.`;
+  const forbiddenWithSkills = `Do NOT reference, list, or run OpenThrottle-monorepo-specific paths, commands, rules, generators, or tooling (e.g. applications/openthrottle-developer, tools/workflows, @tools/generators, /settings/debug, ralphTuning). Use only the conventions, scripts, and structure of the target repository — plus the OpenThrottle skills noted below.`;
+  const forbiddenBase = `Do NOT reference, list, or run OpenThrottle-specific paths, commands, rules, generators, or tooling (e.g. applications/openthrottle-developer, tools/workflows, @tools/generators, /skills, /settings/debug, ralphTuning). Use only the conventions, scripts, and structure of the target repository.`;
+  const forbidden = hasInjectedSkills ? forbiddenWithSkills : forbiddenBase;
 
   const lines = [
     `IMPORTANT — Repository scope: You are operating in the repository at ${context.workingDirectory}, NOT the OpenThrottle monorepo${otRootNote}.`,
@@ -113,8 +118,9 @@ export const resolveForeignWorkspacePromptLayer = (
   cwd: string = process.cwd(),
   env: NodeJS.ProcessEnv = process.env,
   options: ForeignWorkspacePromptLayerOptions = {},
-): string | undefined =>
-  buildForeignWorkspacePromptLayer(
+): string | undefined => {
+  return buildForeignWorkspacePromptLayer(
     resolveForeignWorkspaceContext(cwd, env),
     options,
   );
+};

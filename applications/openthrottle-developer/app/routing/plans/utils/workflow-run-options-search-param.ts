@@ -10,6 +10,9 @@ export const WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE = '1' as const;
  */
 export const isWorkflowRunOptionsExpandedFromSearchParams = (
   searchParams: URLSearchParams,
-): boolean =>
-  searchParams.get(WORKFLOW_RUN_OPTIONS_SEARCH_PARAM) ===
-  WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE;
+): boolean => {
+  return (
+    searchParams.get(WORKFLOW_RUN_OPTIONS_SEARCH_PARAM) ===
+    WORKFLOW_RUN_OPTIONS_EXPANDED_VALUE
+  );
+};

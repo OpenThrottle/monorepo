@@ -82,14 +82,16 @@ CalendarTable.buildTable = (): ColumnDef<
       accessorKey: 'location',
       cell: ({ row }) => {
         const location = row.original.location.trim();
+        const locationMarkup = (
+          <span aria-label={`Location: ${location}`}>{location}</span>
+        );
+        const emptyLocationMarkup = (
+          <span className="text-muted-foreground">—</span>
+        );
 
         return (
           <div className="text-muted-foreground p-2 text-sm">
-            {location ? (
-              <span aria-label={`Location: ${location}`}>{location}</span>
-            ) : (
-              <span className="text-muted-foreground">—</span>
-            )}
+            {location ? locationMarkup : emptyLocationMarkup}
           </div>
         );
       },

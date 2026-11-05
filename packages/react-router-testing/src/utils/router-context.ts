@@ -10,5 +10,6 @@ import { RouterContextProvider } from 'react-router';
  *
  * @public
  */
-export const createTestRouterContext = (): RouterContextProvider =>
-  new RouterContextProvider();
+export const createTestRouterContext = (): RouterContextProvider => {
+  return new RouterContextProvider();
+};

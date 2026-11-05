@@ -59,10 +59,8 @@ export async function profileExecution<T>(
   const redactor: ProfileExecutionRedactor =
     options?.redactor ?? defaultProfileExecutionRedactor;
   const metadata = options?.metadata;
-  const inputs =
-    captureInputs && options?.inputs !== undefined
-      ? options.inputs.map((input) => redactor(input))
-      : undefined;
+  const rawInputs = captureInputs ? options?.inputs : undefined;
+  const inputs = rawInputs?.map((input) => redactor(input));
 
   let output: T;
 

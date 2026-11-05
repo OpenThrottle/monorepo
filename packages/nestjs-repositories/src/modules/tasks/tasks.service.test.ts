@@ -143,10 +143,12 @@ describe('TasksService', () => {
         (
           isolationOrRun:
             IsolationLevel | ((manager: EntityManager) => Promise<unknown>),
-        ) =>
-          typeof isolationOrRun === 'function'
-            ? isolationOrRun(txManager)
-            : Promise.resolve(undefined),
+        ) => {
+          if (typeof isolationOrRun === 'function') {
+            return isolationOrRun(txManager);
+          }
+          return Promise.resolve(undefined);
+        },
       );
     });
 
@@ -349,10 +351,12 @@ describe('TasksService', () => {
         (
           isolationOrRun:
             IsolationLevel | ((manager: EntityManager) => Promise<unknown>),
-        ) =>
-          typeof isolationOrRun === 'function'
-            ? isolationOrRun(txManager)
-            : Promise.resolve(undefined),
+        ) => {
+          if (typeof isolationOrRun === 'function') {
+            return isolationOrRun(txManager);
+          }
+          return Promise.resolve(undefined);
+        },
       );
     });
 

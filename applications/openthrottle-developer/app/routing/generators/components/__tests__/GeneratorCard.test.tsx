@@ -19,7 +19,9 @@ describe('GeneratorCard Component', () => {
       },
     };
 
-    const Component = () => <GeneratorCard {...props} />;
+    const Component = () => {
+      return <GeneratorCard {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

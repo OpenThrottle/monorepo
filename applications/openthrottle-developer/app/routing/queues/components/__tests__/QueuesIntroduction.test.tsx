@@ -8,7 +8,9 @@ import type { QueuesIntroductionProps } from '../QueuesIntroduction';
 import { QueuesIntroduction } from '../QueuesIntroduction';
 
 const renderIntroduction = (props: QueuesIntroductionProps): RenderResult => {
-  const Component = () => <QueuesIntroduction {...props} />;
+  const Component = () => {
+    return <QueuesIntroduction {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 };

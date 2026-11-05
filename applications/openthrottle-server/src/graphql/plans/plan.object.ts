@@ -124,15 +124,13 @@ export class PlanRefObject {
 @ObjectType()
 export class PlanRunObject implements PlanRunData {
   @Field(() => String, {
-    description:
-      'BullMQ job id for this run. Null for detached-CLI runs that carry no queue job.',
+    description: `BullMQ job id for this run. Null for detached-CLI runs that carry no queue job.`,
     nullable: true,
   })
   bullmqJobId!: string | null;
 
   @Field(() => Date, {
-    description:
-      'Durable cancel-request marker: when a stop was requested for this run. Null when no cancel was requested. The run loop polls this and stops at the next iteration boundary.',
+    description: `Durable cancel-request marker: when a stop was requested for this run. Null when no cancel was requested. The run loop polls this and stops at the next iteration boundary.`,
     nullable: true,
   })
   cancelRequestedAt!: Date | null;
@@ -146,15 +144,13 @@ export class PlanRunObject implements PlanRunData {
   executionBackend!: PlanRunExecutionBackend;
 
   @Field(() => String, {
-    description:
-      'Host the worker executing this run is on. Null when the run is not actively executing. Diagnostic only — cross-host OS kill is out of scope.',
+    description: `Host the worker executing this run is on. Null when the run is not actively executing. Diagnostic only — cross-host OS kill is out of scope.`,
     nullable: true,
   })
   hostname!: string | null;
 
   @Field(() => Boolean, {
-    description:
-      'Whether this run’s owner bumps its heartbeat on a timer. True for every queued and detached-CLI run — heartbeat-based liveness applies as before. False marks an owner with no timer (an interactive /ot-loop agent turn), so heartbeat says nothing about it: such runs are exempt from the stale sweep and always report isStale false. Read it alongside isStale — isStale false on such a run means "unknown", not "verified live".',
+    description: `Whether this run’s owner bumps its heartbeat on a timer. True for every queued and detached-CLI run — heartbeat-based liveness applies as before. False marks an owner with no timer (an interactive /ot-loop agent turn), so heartbeat says nothing about it: such runs are exempt from the stale sweep and always report isStale false. Read it alongside isStale — isStale false on such a run means "unknown", not "verified live".`,
   })
   heartbeatExpected!: boolean;
 
@@ -162,21 +158,18 @@ export class PlanRunObject implements PlanRunData {
   id!: string;
 
   @Field(() => Boolean, {
-    description:
-      'Derived: true when this run is IN_PROGRESS but its heartbeat is older than the staleness cutoff — i.e. the owning process crashed hard (SIGKILL/power-loss) and the row is stranded. The UI hides Kill for a stale run; a sweeper settles it to STALE. False for healthy or already-terminal runs — and always false when heartbeatExpected is false, where liveness is unknown rather than verified.',
+    description: `Derived: true when this run is IN_PROGRESS but its heartbeat is older than the staleness cutoff — i.e. the owning process crashed hard (SIGKILL/power-loss) and the row is stranded. The UI hides Kill for a stale run; a sweeper settles it to STALE. False for healthy or already-terminal runs — and always false when heartbeatExpected is false, where liveness is unknown rather than verified.`,
   })
   isStale!: boolean;
 
   @Field(() => Date, {
-    description:
-      'Liveness heartbeat: last time the owning run process reported it is alive (bumped ~every 15s, stamped at start). Null for legacy rows / rows that never started heartbeating. Drives isStale.',
+    description: `Liveness heartbeat: last time the owning run process reported it is alive (bumped ~every 15s, stamped at start). Null for legacy rows / rows that never started heartbeating. Drives isStale.`,
     nullable: true,
   })
   lastHeartbeatAt!: Date | null;
 
   @Field(() => Int, {
-    description:
-      'OS process id of the worker executing this run. Null when not actively executing.',
+    description: `OS process id of the worker executing this run. Null when not actively executing.`,
     nullable: true,
   })
   pid!: number | null;
@@ -188,8 +181,7 @@ export class PlanRunObject implements PlanRunData {
   queueName!: string;
 
   @Field(() => String, {
-    description:
-      'Identifier of the worker instance executing this run. Null when not actively executing.',
+    description: `Identifier of the worker instance executing this run. Null when not actively executing.`,
     nullable: true,
   })
   workerId!: string | null;
@@ -236,15 +228,13 @@ export class PlanRunObject implements PlanRunData {
   usageLimitType!: string | null;
 
   @Field(() => String, {
-    description:
-      'Git branch this run operates on, captured at kickoff (run provenance). Powers branch↔PR mapping. Null for legacy/backfilled rows that predate branch capture.',
+    description: `Git branch this run operates on, captured at kickoff (run provenance). Powers branch↔PR mapping. Null for legacy/backfilled rows that predate branch capture.`,
     nullable: true,
   })
   branch!: string | null;
 
   @Field(() => String, {
-    description:
-      'Resolved agent model id for this run (e.g. claude-fable-5), captured at kickoff. Null for legacy rows lacking snapshot data.',
+    description: `Resolved agent model id for this run (e.g. claude-fable-5), captured at kickoff. Null for legacy rows lacking snapshot data.`,
     nullable: true,
   })
   model!: string | null;

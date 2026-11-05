@@ -44,8 +44,9 @@ export interface NavigationCommanderOptions {
 /**
  * @description Normalizes a `NavLink` `to` into a plain pathname string.
  */
-const getPathFromTo = (to: LinkProps['to']): string =>
-  typeof to === 'string' ? to : (to.pathname ?? '/');
+const getPathFromTo = (to: LinkProps['to']): string => {
+  return typeof to === 'string' ? to : (to.pathname ?? '/');
+};
 
 /**
  * @description Stable commander id from a path: `/settings/agents` →
@@ -115,8 +116,8 @@ const toCommanderItem = (
 export const buildCommanderGroupsFromNavigation = (
   navigation: NavigationRecord,
   options: NavigationCommanderOptions,
-): CommanderGroup[] =>
-  Object.entries(navigation).reduce<CommanderGroup[]>(
+): CommanderGroup[] => {
+  return Object.entries(navigation).reduce<CommanderGroup[]>(
     (groups, [heading, links]) => {
       const items = links
         .filter((link) => isLinkVisible(link, options))
@@ -130,3 +131,4 @@ export const buildCommanderGroupsFromNavigation = (
     },
     [],
   );
+};

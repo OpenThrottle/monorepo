@@ -13,7 +13,9 @@ import type { InputCronExpressionProps } from '../InputCronExpression';
 import { InputCronExpression } from '../InputCronExpression';
 
 const renderInput = (props: InputCronExpressionProps = {}): RenderResult => {
-  const Component = () => <InputCronExpression {...props} />;
+  const Component = () => {
+    return <InputCronExpression {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

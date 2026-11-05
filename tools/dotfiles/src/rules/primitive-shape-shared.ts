@@ -30,10 +30,11 @@ export interface ExpectedNameOptions {
 }
 
 /** `use-foo-bar` → `useFooBar`; names without a hyphen are returned as-is. */
-const toCamelCase = (name: string): string =>
-  name.replace(/-+([a-zA-Z0-9])/g, (_match, char: string) =>
+const toCamelCase = (name: string): string => {
+  return name.replace(/-+([a-zA-Z0-9])/g, (_match, char: string) =>
     char.toUpperCase(),
   );
+};
 
 /**
  * Derives the expected component/hook name from the file path: the basename
@@ -45,10 +46,8 @@ export const expectedName = (
 ): string => {
   const parts = filename.split('/');
   const base = (parts[parts.length - 1] ?? '').replace(/\.tsx?$/, '');
-  const name =
-    base === 'index' && parts.length >= 2
-      ? (parts[parts.length - 2] ?? base)
-      : base;
+  const isIndexFile = base === 'index' && parts.length >= 2;
+  const name = isIndexFile ? (parts[parts.length - 2] ?? base) : base;
   return options.camelCase === true ? toCamelCase(name) : name;
 };
 
@@ -80,16 +79,16 @@ export const collectMarkerViolations = (
   for (const marker of missing) {
     descriptors.push({
       data: { marker },
-      fix:
-        allowScaffold &&
-        found.length === 0 &&
-        marker === missing[0] &&
-        openBrace !== null
-          ? (fixer) => {
-              const markerBlock = MARKERS.map((m) => `  // ${m}`).join('\n\n');
-              return fixer.insertTextAfter(openBrace, `\n${markerBlock}\n`);
-            }
-          : undefined,
+      fix: (fixer) => {
+        const canScaffold =
+          allowScaffold && found.length === 0 && marker === missing[0];
+        if (!canScaffold || openBrace === null) {
+          return null;
+        }
+
+        const markerBlock = MARKERS.map((m) => `  // ${m}`).join('\n\n');
+        return fixer.insertTextAfter(openBrace, `\n${markerBlock}\n`);
+      },
       messageId: 'missingMarker',
       node: body,
     });

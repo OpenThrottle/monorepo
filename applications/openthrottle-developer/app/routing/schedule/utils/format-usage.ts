@@ -30,22 +30,29 @@ export interface RunUsageRow {
 const EM_DASH = '—';
 
 /** True when the run reported at least one token count or a cost. */
-export const hasRunUsage = (usage: RunUsage): boolean =>
-  usage.inputTokens != null ||
-  usage.outputTokens != null ||
-  usage.cacheReadTokens != null ||
-  usage.cacheWriteTokens != null ||
-  usage.reasoningTokens != null ||
-  usage.totalTokens != null ||
-  usage.costUsd != null;
+export const hasRunUsage = (usage: RunUsage): boolean => {
+  return (
+    usage.inputTokens != null ||
+    usage.outputTokens != null ||
+    usage.cacheReadTokens != null ||
+    usage.cacheWriteTokens != null ||
+    usage.reasoningTokens != null ||
+    usage.totalTokens != null ||
+    usage.costUsd != null
+  );
+};
 
 /** Compact total-token display for the runs table; em dash when unreported. */
-export const formatRunTotalTokens = (usage: RunUsage): string =>
-  usage.totalTokens == null ? EM_DASH : formatTokenCount(usage.totalTokens);
+export const formatRunTotalTokens = (usage: RunUsage): string => {
+  return usage.totalTokens == null
+    ? EM_DASH
+    : formatTokenCount(usage.totalTokens);
+};
 
 /** Cost display for the runs table + detail; em dash when unpriced. */
-export const formatRunCost = (usage: RunUsage): string =>
-  formatUsageCost(usage.costUsd ?? undefined) ?? EM_DASH;
+export const formatRunCost = (usage: RunUsage): string => {
+  return formatUsageCost(usage.costUsd ?? undefined) ?? EM_DASH;
+};
 
 /** Per-kind token rows, only for the kinds the backend actually reported (for the detail breakdown). */
 export const runUsageRows = (usage: RunUsage): RunUsageRow[] => {

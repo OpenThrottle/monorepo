@@ -6,6 +6,7 @@ import { Injectable } from '@nestjs/common';
 import Stripe from 'stripe';
 
 import { createLazyStripeClient } from '../config/stripe-config.ts';
+import { resolveDefaultPriceId } from '../utils/stripe-default-price.utils.ts';
 
 /**
  * @description Active prices for a product split into the catalog default (when present in the list) and any other active prices.
@@ -22,12 +23,7 @@ export const partitionPricesByDefault = (
   product: Stripe.Product,
   prices: readonly Stripe.Price[],
 ): PartitionedProductPrices => {
-  const defaultId =
-    product.default_price == null
-      ? null
-      : typeof product.default_price === 'string'
-        ? product.default_price
-        : product.default_price.id;
+  const defaultId = resolveDefaultPriceId(product.default_price);
 
   if (defaultId == null) {
     return { additionalPrices: prices, defaultPrice: null };

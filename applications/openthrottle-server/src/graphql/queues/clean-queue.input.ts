@@ -22,8 +22,7 @@ export class CleanQueueInput {
   confirm!: boolean;
 
   @Field(() => Int, {
-    description:
-      'Only remove jobs finished at least this many milliseconds ago (0 = any age).',
+    description: `Only remove jobs finished at least this many milliseconds ago (0 = any age).`,
     nullable: true,
   })
   graceMs?: number;

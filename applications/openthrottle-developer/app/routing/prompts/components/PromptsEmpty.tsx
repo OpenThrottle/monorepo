@@ -23,10 +23,17 @@ export const PromptsEmpty = (props: PromptsEmptyProps): React.ReactElement => {
   // Hooks
 
   // Setup
+  const { description, searchDescription, searchTitle, title } =
+    PROMPTS_EMPTY_COPY;
+  const isSearching = Boolean(search);
+  const heading = isSearching ? searchTitle : title;
+  const body = isSearching ? searchDescription : description;
 
   // Handlers
 
   // Markup
+  const clearFiltersLink = <Link to="/prompts">Clear filters</Link>;
+  const newPromptLink = <Link to="/prompts/create">New prompt</Link>;
 
   // Life Cycle
 
@@ -37,20 +44,10 @@ export const PromptsEmpty = (props: PromptsEmptyProps): React.ReactElement => {
       <EmptyMedia variant="icon">
         <SearchAlertIcon className="size-6" />
       </EmptyMedia>
-      <EmptyTitle>
-        {search ? PROMPTS_EMPTY_COPY.searchTitle : PROMPTS_EMPTY_COPY.title}
-      </EmptyTitle>
-      <EmptyDescription>
-        {search
-          ? PROMPTS_EMPTY_COPY.searchDescription
-          : PROMPTS_EMPTY_COPY.description}
-      </EmptyDescription>
+      <EmptyTitle>{heading}</EmptyTitle>
+      <EmptyDescription>{body}</EmptyDescription>
       <Button asChild={true} variant="secondary">
-        {search ? (
-          <Link to="/prompts">Clear filters</Link>
-        ) : (
-          <Link to="/prompts/create">New prompt</Link>
-        )}
+        {isSearching ? clearFiltersLink : newPromptLink}
       </Button>
     </Empty>
   );

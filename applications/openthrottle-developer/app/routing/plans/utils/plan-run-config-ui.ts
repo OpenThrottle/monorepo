@@ -21,6 +21,17 @@ export interface PlanRunConfigUiState {
   readonly workingDirectory: string;
 }
 
+const parseSavedOrDefaultRunConfig = (
+  runConfigJson: string | null | undefined,
+  planId: string,
+): unknown => {
+  if (runConfigJson == null || runConfigJson.trim() === '') {
+    return getDefaultPlanRunConfigStorage({ planId });
+  }
+
+  return JSON.parse(runConfigJson);
+};
+
 /**
  * @description Parses plan `runConfigJson` into Configuration tab state.
  * Falls back to defaults when JSON is missing or invalid.
@@ -32,10 +43,7 @@ export const hydratePlanRunConfigUiState = (
   const trimmedPlanId = planId.trim();
 
   try {
-    const parsed: unknown =
-      runConfigJson != null && runConfigJson.trim() !== ''
-        ? JSON.parse(runConfigJson)
-        : getDefaultPlanRunConfigStorage({ planId: trimmedPlanId });
+    const parsed = parseSavedOrDefaultRunConfig(runConfigJson, trimmedPlanId);
 
     const stored = planRunConfigFromPlanStorage(parsed, {
       planId: trimmedPlanId,

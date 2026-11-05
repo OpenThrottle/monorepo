@@ -16,7 +16,9 @@ describe('GlobalCollapsible Component', () => {
       title: 'Section title',
     };
 
-    const Component = () => <GlobalCollapsible {...props} />;
+    const Component = () => {
+      return <GlobalCollapsible {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     render(<RoutesStub />);

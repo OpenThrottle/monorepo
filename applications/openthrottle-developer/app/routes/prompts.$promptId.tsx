@@ -155,6 +155,8 @@ export default function Component(
   );
 }
 
-export const action = (args: Route.ActionArgs) => runPromptDetailAction(args);
+export const action = (args: Route.ActionArgs) => {
+  return runPromptDetailAction(args);
+};
 
 export const ErrorBoundary = GlobalErrorBoundary;

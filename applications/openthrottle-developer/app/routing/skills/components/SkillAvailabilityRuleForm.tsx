@@ -67,10 +67,33 @@ export const SkillAvailabilityRuleForm = (
   } = useSkillAvailabilityRuleForm({ rule, vocabulary });
 
   // Setup
+  const ruleId = rule?.id;
+  const isEditingRule = mode === 'edit' && ruleId != null;
+  const intent = mode === 'add' ? 'addRule' : 'updateRule';
+  const submitLabel = mode === 'add' ? COPY.addLabel : COPY.updateLabel;
 
   // Handlers
+  const renderRemoveButton = (): React.ReactNode => {
+    if (mode !== 'edit' || ruleId == null) {
+      return null;
+    }
+
+    return <SkillAvailabilityRuleRemoveButton ruleId={ruleId} />;
+  };
 
   // Markup
+  const ruleIdInput = <input name="ruleId" type="hidden" value={ruleId} />;
+  const clientErrorMessage = (
+    <p className="text-destructive text-sm" role="alert">
+      {clientError}
+    </p>
+  );
+  const serverErrorMessage = (
+    <p className="text-destructive text-sm" role="alert">
+      {serverError}
+    </p>
+  );
+  const removeButton = renderRemoveButton();
 
   // Life Cycle
 
@@ -86,14 +109,8 @@ export const SkillAvailabilityRuleForm = (
         method="post"
         onSubmit={handleSubmit}
       >
-        <input
-          name="intent"
-          type="hidden"
-          value={mode === 'add' ? 'addRule' : 'updateRule'}
-        />
-        {mode === 'edit' && rule?.id != null ? (
-          <input name="ruleId" type="hidden" value={rule.id} />
-        ) : null}
+        <input name="intent" type="hidden" value={intent} />
+        {isEditingRule ? ruleIdInput : null}
         <input
           name="environment"
           type="hidden"
@@ -175,27 +192,17 @@ export const SkillAvailabilityRuleForm = (
         </div>
         <p className="text-muted-foreground text-xs">{COPY.slugHelp}</p>
 
-        {clientError ? (
-          <p className="text-destructive text-sm" role="alert">
-            {clientError}
-          </p>
-        ) : null}
-        {serverError ? (
-          <p className="text-destructive text-sm" role="alert">
-            {serverError}
-          </p>
-        ) : null}
+        {clientError ? clientErrorMessage : null}
+        {serverError ? serverErrorMessage : null}
 
         <div>
           <Button disabled={isSubmitting} type="submit">
-            {mode === 'add' ? COPY.addLabel : COPY.updateLabel}
+            {submitLabel}
           </Button>
         </div>
       </fetcher.Form>
 
-      {mode === 'edit' && rule?.id != null ? (
-        <SkillAvailabilityRuleRemoveButton ruleId={rule.id} />
-      ) : null}
+      {removeButton}
     </div>
   );
 };

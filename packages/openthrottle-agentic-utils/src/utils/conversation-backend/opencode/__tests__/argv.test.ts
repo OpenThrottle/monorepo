@@ -7,8 +7,9 @@ import { buildOpencodeArgv } from '../argv.ts';
 const valueAfter = (
   argv: readonly string[],
   flag: string,
-): string | undefined =>
-  argv.includes(flag) ? argv[argv.indexOf(flag) + 1] : undefined;
+): string | undefined => {
+  return argv.includes(flag) ? argv[argv.indexOf(flag) + 1] : undefined;
+};
 
 describe('buildOpencodeArgv', () => {
   it('builds a first-turn run with no -s (opencode mints the session)', () => {
@@ -78,11 +79,12 @@ describe('buildOpencodeArgv', () => {
   describe('reasoning effort → --variant', () => {
     const variantFor = (
       reasoning: (typeof CONVERSATION_REASONING_EFFORTS)[keyof typeof CONVERSATION_REASONING_EFFORTS],
-    ): string | undefined =>
-      valueAfter(
+    ): string | undefined => {
+      return valueAfter(
         buildOpencodeArgv({ cwd: '/repo', prompt: 'hi', reasoning }),
         '--variant',
       );
+    };
 
     it('maps low/medium/high straight through', () => {
       expect(variantFor(CONVERSATION_REASONING_EFFORTS.low)).toBe('low');

@@ -96,7 +96,7 @@ export const GlobalLayoutHeader = (
         searchPlaceholder={searchPlaceholder}
         searchValue={searchValue}
       />
-      {showProfile ? (
+      {showProfile && (
         <>
           <Link className="text-foreground" to="/profile">
             <Avatar className="size-6">
@@ -108,7 +108,7 @@ export const GlobalLayoutHeader = (
             <SignOutIcon className="size-5" />
           </Link>
         </>
-      ) : null}
+      )}
       <NotificationBell />
       <GlobalLayoutHeaderLinks />
     </nav>

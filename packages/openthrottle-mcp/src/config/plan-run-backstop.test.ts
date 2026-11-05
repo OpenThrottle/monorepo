@@ -32,8 +32,9 @@ describe('plan-run backstop note', () => {
     fs.rmSync(repoRoot, { force: true, recursive: true });
   });
 
-  const notePath = (sessionId = SESSION_ID): string =>
-    path.join(repoRoot, '.cache', 'plan-runs', `${sessionId}.json`);
+  const notePath = (sessionId = SESSION_ID): string => {
+    return path.join(repoRoot, '.cache', 'plan-runs', `${sessionId}.json`);
+  };
 
   it('writes the note where the janitor looks, in the shape it reads', () => {
     // This file IS the contract between the MCP and the Stop-hook janitor — they share

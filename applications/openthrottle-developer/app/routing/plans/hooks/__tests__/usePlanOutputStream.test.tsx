@@ -31,13 +31,15 @@ type Chunk = {
   planId: string;
 };
 
-const chunk = (id: string, createdAt: string): Chunk => ({
-  content: `c-${id}`,
-  createdAt,
-  id,
-  iteration: null,
-  planId: 'p1',
-});
+const chunk = (id: string, createdAt: string): Chunk => {
+  return {
+    content: `c-${id}`,
+    createdAt,
+    id,
+    iteration: null,
+    planId: 'p1',
+  };
+};
 
 function Harness(props: { seed: Chunk[] | undefined }): React.ReactElement {
   const chunks = usePlanOutputStream('p1', props.seed);
@@ -161,10 +163,12 @@ describe('usePlanOutputStream', () => {
   });
 
   test('orders by iteration first, falling back to createdAt', () => {
-    const numbered = (id: string, iteration: number, createdAt: string) => ({
-      ...chunk(id, createdAt),
-      iteration,
-    });
+    const numbered = (id: string, iteration: number, createdAt: string) => {
+      return {
+        ...chunk(id, createdAt),
+        iteration,
+      };
+    };
 
     // createdAt alone would order these third,first,second — iteration wins.
     const component = render(

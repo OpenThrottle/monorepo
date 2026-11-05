@@ -64,10 +64,10 @@
     "applications/openthrottle-developer/app/routing/dashboard/components/DashboardQueueStats.tsx",
     "applications/openthrottle-developer/app/routing/dashboard/components/DashboardQuickNavigation.tsx",
     "applications/openthrottle-developer/app/routing/home/components/HomeBuiltWith.tsx",
-    "applications/openthrottle-developer/app/routing/home/data/technology.ts",
+    "applications/openthrottle-developer/app/routing/home/data/data.technology.ts",
     "applications/openthrottle-developer/app/routing/queues/components/QueuesToolbar.tsx",
     // Shared jump-link data for DashboardQuickNavigation (commented on dashboard; unit tests cover routes)
-    "applications/openthrottle-developer/app/routing/navigation/data/workspace-jump-links.ts",
+    "applications/openthrottle-developer/app/routing/navigation/data/data.workspace-jump-links.ts",
     // Vitest / route test harness (entry globs do not satisfy knip file graph yet)
     "applications/openthrottle-developer/app/testing/route-fixtures.tsx",
     "applications/openthrottle-developer/app/testing/search-route-fixtures.ts",

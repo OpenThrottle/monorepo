@@ -1,16 +1,17 @@
 import { Badge } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
-import { Link } from 'react-router';
 
+import { LinkedArtifactRowLabel } from '~/routing/plans/components/LinkedArtifactRowLabel';
 import type { LinkedArtifactRow } from '~/routing/plans/components/LinkedArtifactsPanel';
 import {
   LINKED_ARTIFACT_FALLBACK_ICON,
   LINKED_ARTIFACT_ICONS,
-} from '~/routing/plans/data/linked-artifacts-panel-icons';
-import { LINKED_ARTIFACT_LIFECYCLE_STYLES } from '~/routing/plans/data/linked-artifacts-panel-lifecycle-styles';
-import { LINKED_ARTIFACT_VERIFICATION_STYLES } from '~/routing/plans/data/linked-artifacts-panel-verification-styles';
+} from '~/routing/plans/data/data.linked-artifacts-panel-icons';
+import { LINKED_ARTIFACT_LIFECYCLE_STYLES } from '~/routing/plans/data/data.linked-artifacts-panel-lifecycle-styles';
+import { LINKED_ARTIFACT_VERIFICATION_STYLES } from '~/routing/plans/data/data.linked-artifacts-panel-verification-styles';
 import { toLinkedArtifactDestination } from '~/routing/plans/utils/linked-artifact-href';
 import { toLinkedArtifactView } from '~/routing/plans/utils/linked-artifact-payload';
+import { getLinkedArtifactVerifiedWhen } from '~/routing/plans/utils/linked-artifact-verified-when';
 import {
   formatProducedAt,
   formatProducedAtRelative,
@@ -37,44 +38,26 @@ export const LinkedArtifactRowItem = (
   const destination = toLinkedArtifactDestination(view, planId);
   const Icon =
     LINKED_ARTIFACT_ICONS[view.iconKey] ?? LINKED_ARTIFACT_FALLBACK_ICON;
-  // "verified" is only meaningful with a when; without one the badge says so.
-  const verifiedWhen =
-    artifact.verifiedAt == null
-      ? 'not yet verified'
-      : formatProducedAt(artifact.verifiedAt);
+  const verifiedWhen = getLinkedArtifactVerifiedWhen(artifact.verifiedAt);
+  const lifecycleStyle =
+    LINKED_ARTIFACT_LIFECYCLE_STYLES[artifact.lifecycle ?? ''];
 
   // Handlers
 
   // Markup
-  // Only the sha / PR number is machine identity, so only it gets monospace —
-  // setting the whole row in mono would make the repo name harder to scan.
-  const label =
-    'monoToken' in view ? (
-      <span className="font-medium">
-        {view.labelPrefix}
-        <span className="font-mono">{view.monoToken}</span>
-      </span>
-    ) : (
-      <span className="font-medium">{view.label}</span>
-    );
-
-  const linkedLabel =
-    destination.kind === 'external' ? (
-      <a
-        className="underline-offset-2 hover:underline"
-        href={destination.href}
-        rel="noreferrer"
-        target="_blank"
-      >
-        {label}
-      </a>
-    ) : destination.kind === 'internal' ? (
-      <Link className="underline-offset-2 hover:underline" to={destination.to}>
-        {label}
-      </Link>
-    ) : (
-      label
-    );
+  const lifecycleBadge = artifact.lifecycle != null && (
+    <Badge className={lifecycleStyle ?? ''} size="xs" variant="outline">
+      {artifact.lifecycle}
+    </Badge>
+  );
+  const messageText = artifact.message != null && artifact.message !== '' && (
+    <span
+      className="text-muted-foreground max-w-[28rem] truncate"
+      title={artifact.message}
+    >
+      {artifact.message}
+    </span>
+  );
 
   // Life Cycle
 
@@ -87,26 +70,11 @@ export const LinkedArtifactRowItem = (
     >
       <Icon className="text-muted-foreground size-3.5 shrink-0" />
 
-      {linkedLabel}
+      <LinkedArtifactRowLabel destination={destination} view={view} />
 
-      {artifact.lifecycle != null ? (
-        <Badge
-          className={LINKED_ARTIFACT_LIFECYCLE_STYLES[artifact.lifecycle] ?? ''}
-          size="xs"
-          variant="outline"
-        >
-          {artifact.lifecycle}
-        </Badge>
-      ) : null}
+      {lifecycleBadge}
 
-      {artifact.message != null && artifact.message !== '' ? (
-        <span
-          className="text-muted-foreground max-w-[28rem] truncate"
-          title={artifact.message}
-        >
-          {artifact.message}
-        </span>
-      ) : null}
+      {messageText}
 
       <Badge
         className={

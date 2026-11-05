@@ -154,7 +154,9 @@ describe('createLoaderFromFindByIds', () => {
     // Build the malformed row without a type assertion: the helper is typed to
     // hand back a NoId, but the literal it returns omits `id`, mirroring a
     // repository row that is missing the keyed field at runtime.
-    const makeOrphan = (): NoId => JSON.parse('{"name":"orphan"}');
+    const makeOrphan = (): NoId => {
+      return JSON.parse('{"name":"orphan"}');
+    };
     const loader = createLoaderFromFindByIds<string, NoId>(async () => [
       makeOrphan(),
     ]);

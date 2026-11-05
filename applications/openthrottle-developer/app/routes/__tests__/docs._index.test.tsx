@@ -28,8 +28,8 @@ const matches: Route.ComponentProps['matches'] = [
   },
 ];
 
-const renderIndex = () =>
-  render(
+const renderIndex = () => {
+  return render(
     <MemoryRouter>
       <Component
         actionData={undefined}
@@ -39,6 +39,7 @@ const renderIndex = () =>
       />
     </MemoryRouter>,
   );
+};
 
 describe('routes/docs._index.tsx', () => {
   beforeEach(() => {

@@ -22,9 +22,9 @@ vi.mock('@monaco-editor/react', () => ({
 // state graph (`@phosphor-icons/react`, jotai atoms, the sidebar tree), which
 // dominated this file's runtime. Stub them with visible markers so a regression
 // that drops the short-circuit still surfaces as a rendered node.
-const stub = (testId: string) => (): React.ReactElement => (
-  <div data-testid={testId} />
-);
+const stub = (testId: string) => {
+  return (): React.ReactElement => <div data-testid={testId} />;
+};
 
 vi.mock('../EditorSidebar', () => ({ EditorSidebar: stub('editor-sidebar') }));
 vi.mock('../EditorTabs', () => ({ EditorTabs: stub('editor-tabs') }));

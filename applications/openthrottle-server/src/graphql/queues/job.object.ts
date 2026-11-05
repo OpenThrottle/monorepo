@@ -15,8 +15,7 @@ export class JobObject {
   data!: string | null;
 
   @Field(() => String, {
-    description:
-      'Execution backend selected once for this plan run. Present for plans queue jobs.',
+    description: `Execution backend selected once for this plan run. Present for plans queue jobs.`,
     nullable: true,
   })
   executionBackend!: string | null;
@@ -39,8 +38,7 @@ export class JobObject {
   id!: string;
 
   @Field(() => String, {
-    description:
-      'Job type name (e.g. run-plan). Future workflows may add more types; the queues schema is extensible per queue.',
+    description: `Job type name (e.g. run-plan). Future workflows may add more types; the queues schema is extensible per queue.`,
     nullable: true,
   })
   name!: string | null;
@@ -69,8 +67,7 @@ export class JobObject {
   state!: string;
 
   @Field(() => TaskRunMetricsObject, {
-    description:
-      'Task-run metrics (process memory/CPU at start and end). Present only for plans-queue jobs that completed with metrics.',
+    description: `Task-run metrics (process memory/CPU at start and end). Present only for plans-queue jobs that completed with metrics.`,
     nullable: true,
   })
   taskRunMetrics!: TaskRunMetricsObject | null;

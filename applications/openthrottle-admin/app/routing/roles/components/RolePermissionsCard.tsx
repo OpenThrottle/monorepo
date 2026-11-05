@@ -35,6 +35,39 @@ export const RolePermissionsCard = (
   // Handlers
 
   // Markup
+  const addPermissionForm = (
+    <AddPermissionSelectForm
+      availablePermissions={availablePermissions}
+      fetcher={fetcher}
+    />
+  );
+  const emptyPermissions = (
+    <p className="text-muted-foreground text-sm">
+      No permissions assigned. Add one above.
+    </p>
+  );
+  const permissionBadges = (
+    <div className="flex flex-wrap gap-2">
+      {permissions.map((p) => (
+        <div className="flex items-center gap-1" key={p.id}>
+          <Badge variant="secondary">{p.name}</Badge>
+          <RemovePermissionForm method="post">
+            <input name="permissionId" type="hidden" value={p.id} />
+            <input name="intent" type="hidden" value="removePermission" />
+            <Button
+              aria-label={`Remove ${p.name}`}
+              disabled={fetcher.state !== 'idle'}
+              size="icon"
+              type="submit"
+              variant="ghost"
+            >
+              ×
+            </Button>
+          </RemovePermissionForm>
+        </div>
+      ))}
+    </div>
+  );
 
   // Life Cycle
 
@@ -44,40 +77,10 @@ export const RolePermissionsCard = (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg">Permissions</CardTitle>
-        {availablePermissions.length > 0 ? (
-          <AddPermissionSelectForm
-            availablePermissions={availablePermissions}
-            fetcher={fetcher}
-          />
-        ) : null}
+        {availablePermissions.length > 0 ? addPermissionForm : null}
       </CardHeader>
       <CardContent>
-        {permissions.length === 0 ? (
-          <p className="text-muted-foreground text-sm">
-            No permissions assigned. Add one above.
-          </p>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {permissions.map((p) => (
-              <div className="flex items-center gap-1" key={p.id}>
-                <Badge variant="secondary">{p.name}</Badge>
-                <RemovePermissionForm method="post">
-                  <input name="permissionId" type="hidden" value={p.id} />
-                  <input name="intent" type="hidden" value="removePermission" />
-                  <Button
-                    aria-label={`Remove ${p.name}`}
-                    disabled={fetcher.state !== 'idle'}
-                    size="icon"
-                    type="submit"
-                    variant="ghost"
-                  >
-                    ×
-                  </Button>
-                </RemovePermissionForm>
-              </div>
-            ))}
-          </div>
-        )}
+        {permissions.length === 0 ? emptyPermissions : permissionBadges}
       </CardContent>
     </Card>
   );

@@ -56,16 +56,18 @@ export const PlanWorkflowRunTransparencyAuditTable = (
   const resumedRunIds = collectResumedRunIds(planRunAuditRows);
   const historyRows = selectHistoryRuns(planRunAuditRows);
   const metricsByRunId = joinPlanRunJobMetrics(historyRows, planRunMetrics);
-  const visibleRows = showAll
-    ? historyRows
-    : historyRows.slice(0, PLAN_RUN_HISTORY_INITIAL_ROWS);
+  const collapsedRows = historyRows.slice(0, PLAN_RUN_HISTORY_INITIAL_ROWS);
+  const visibleRows = showAll ? historyRows : collapsedRows;
   const hiddenCount = historyRows.length - visibleRows.length;
   // The limit caps every run, SCHEDULED included, so it is reached on the raw row count.
   const reachedFetchLimit =
     planRunAuditRows.length >= PLAN_RUN_HISTORY_FETCH_LIMIT;
+  const showsFetchLimitFooter = reachedFetchLimit && hiddenCount === 0;
 
   // Handlers
-  const handleShowAll = (): void => setShowAll(true);
+  const handleShowAll = (): void => {
+    return setShowAll(true);
+  };
 
   // Markup
 
@@ -112,7 +114,7 @@ export const PlanWorkflowRunTransparencyAuditTable = (
           </TableBody>
         </Table>
       </div>
-      {hiddenCount > 0 ? (
+      {hiddenCount > 0 && (
         <Button
           className="self-start"
           data-testid="PlanWorkflowRunTransparencyAuditTable-show-more"
@@ -123,15 +125,15 @@ export const PlanWorkflowRunTransparencyAuditTable = (
         >
           {copy.showMore(hiddenCount)}
         </Button>
-      ) : null}
-      {reachedFetchLimit && hiddenCount === 0 ? (
+      )}
+      {showsFetchLimitFooter && (
         <p
           className="text-muted-foreground text-xs"
           data-testid="PlanWorkflowRunTransparencyAuditTable-limit"
         >
           {copy.fetchLimitFooter(PLAN_RUN_HISTORY_FETCH_LIMIT)}
         </p>
-      ) : null}
+      )}
     </PlanWorkflowRunSection>
   );
 };

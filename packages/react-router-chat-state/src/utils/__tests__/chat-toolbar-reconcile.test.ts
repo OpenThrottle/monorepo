@@ -14,7 +14,7 @@ import {
   CHAT_TOOLBAR_STATE_VERSION,
   type ChatToolbarState,
   DEFAULT_CHAT_TOOLBAR_STATE,
-} from '../../data/atom.chat-toolbar';
+} from '../../data/data.chat-toolbar-state';
 import {
   reconcileChatToolbarState,
   type ReconcileRepositoryOption,
@@ -50,10 +50,12 @@ const repoC: ReconcileRepositoryOption = { id: 'repo-c' };
 const personaA: ChatPersonaOption = { id: 'persona-a', label: 'Persona A' };
 const personaB: ChatPersonaOption = { id: 'persona-b', label: 'Persona B' };
 
-const persisted = (overrides: Partial<ChatToolbarState>): ChatToolbarState => ({
-  ...DEFAULT_CHAT_TOOLBAR_STATE,
-  ...overrides,
-});
+const persisted = (overrides: Partial<ChatToolbarState>): ChatToolbarState => {
+  return {
+    ...DEFAULT_CHAT_TOOLBAR_STATE,
+    ...overrides,
+  };
+};
 
 describe('reconcileChatToolbarState', () => {
   describe('modelId', () => {
@@ -91,12 +93,14 @@ describe('reconcileChatToolbarState', () => {
   });
 
   describe('modelId re-resolution (v2)', () => {
-    const openai = (baseUrl: string, model: string): ChatModelOption => ({
-      description: 'ollama',
-      groupId: 'openai:ollama',
-      id: `${baseUrl}::${model}`,
-      label: model,
-    });
+    const openai = (baseUrl: string, model: string): ChatModelOption => {
+      return {
+        description: 'ollama',
+        groupId: 'openai:ollama',
+        id: `${baseUrl}::${model}`,
+        label: model,
+      };
+    };
     const claudeModel: ChatModelOption = {
       description: 'Agent CLI',
       groupId: 'agent-clis',

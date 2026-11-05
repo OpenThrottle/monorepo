@@ -9,8 +9,7 @@ import { Field, InputType } from '@nestjs/graphql';
 @InputType()
 export class EnqueueDocIngestionInput {
   @Field(() => [String], {
-    description:
-      'Paths relative to workspace root; each directory is expanded to all .md files (recursive).',
+    description: `Paths relative to workspace root; each directory is expanded to all .md files (recursive).`,
     nullable: true,
   })
   directories!: string[] | null;
@@ -22,8 +21,7 @@ export class EnqueueDocIngestionInput {
   files!: string[] | null;
 
   @Field(() => String, {
-    description:
-      'Ingestion scope for prior-state (default: "default"). Use different scopes to keep state separate.',
+    description: `Ingestion scope for prior-state (default: "default"). Use different scopes to keep state separate.`,
     nullable: true,
   })
   scope!: string | null;

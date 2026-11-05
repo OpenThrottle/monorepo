@@ -48,7 +48,7 @@ const MentionsHarness = (props: HarnessProps): React.ReactElement => {
       <div data-testid="mention-enabled">{String(hook.mentionEnabled)}</div>
       <div data-testid="popover-open">{String(hook.popoverOpen)}</div>
       <div data-testid="loading">{String(hook.loading)}</div>
-      {hook.popoverOpen ? (
+      {hook.popoverOpen && (
         <ul aria-label="mention results">
           {hook.results.map((path, index) => (
             <li
@@ -62,20 +62,23 @@ const MentionsHarness = (props: HarnessProps): React.ReactElement => {
             </li>
           ))}
         </ul>
-      ) : null}
+      )}
     </div>
   );
 };
 
-const makeProvider = (paths: readonly string[]): ChatMentionProvider => ({
-  onQueryFiles: vi.fn(async (query: string) =>
-    paths.filter((path) => path.toLowerCase().includes(query.toLowerCase())),
-  ),
-});
+const makeProvider = (paths: readonly string[]): ChatMentionProvider => {
+  return {
+    onQueryFiles: vi.fn(async (query: string) =>
+      paths.filter((path) => path.toLowerCase().includes(query.toLowerCase())),
+    ),
+  };
+};
 
 describe('useChatComposerMentions', () => {
-  const mount = (props: HarnessProps = {}): RenderResult =>
-    render(<MentionsHarness {...props} />);
+  const mount = (props: HarnessProps = {}): RenderResult => {
+    return render(<MentionsHarness {...props} />);
+  };
 
   test('mentionEnabled is false without a mentionProvider', () => {
     const component = mount();

@@ -9,12 +9,13 @@ import { ChatComposerMicState } from '../../types';
 import type { ChatComposerMicControlProps } from '../ChatComposerMicControl';
 import { ChatComposerMicControl } from '../ChatComposerMicControl';
 
-const renderControl = (props: ChatComposerMicControlProps): RenderResult =>
-  render(
+const renderControl = (props: ChatComposerMicControlProps): RenderResult => {
+  return render(
     <TooltipProvider>
       <ChatComposerMicControl {...props} />
     </TooltipProvider>,
   );
+};
 
 describe('ChatComposerMicControl Component', () => {
   test('renders nothing when no onMicToggle callback is supplied', () => {

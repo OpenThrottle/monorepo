@@ -8,7 +8,9 @@ import type { GlobalFooterProps } from '../GlobalFooter';
 import { GlobalFooter } from '../GlobalFooter';
 
 const renderFooter = (props: GlobalFooterProps = {}): void => {
-  const Component = () => <GlobalFooter {...props} />;
+  const Component = () => {
+    return <GlobalFooter {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   render(<RoutesStub />);
 };

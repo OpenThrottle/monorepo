@@ -17,7 +17,7 @@ import {
  * in Postgres by `skill_usage_events_scope_check`, mirrored (deliberately, to
  * avoid a React Router app importing from a NestJS package) by
  * `SKILL_USAGE_SCOPES` in
- * `applications/openthrottle-developer/app/routing/usage/data/skill-usage-copy.ts`,
+ * `applications/openthrottle-developer/app/routing/usage/data/data.skill-usage-copy.ts`,
  * and by the `Scope` union in `packages/agentic-hooks/src/types.ts` which the
  * capture hooks bundle. Widening the vocabulary means touching all three.
  *
@@ -50,8 +50,9 @@ const SKILL_USAGE_SCOPE_VALUES: readonly string[] =
  *
  * @public
  */
-export const isSkillUsageScope = (value: string): value is SkillUsageScope =>
-  SKILL_USAGE_SCOPE_VALUES.includes(value);
+export const isSkillUsageScope = (value: string): value is SkillUsageScope => {
+  return SKILL_USAGE_SCOPE_VALUES.includes(value);
+};
 
 /**
  * Human-readable member list for validation messages, e.g.

@@ -2,8 +2,9 @@
  * @description Client-only persistence for pasted generator CLI output (support bundles).
  */
 
-const storageKey = (generatorName: string): string =>
-  `openthrottle-developer:generator-cli-last-run:${generatorName}`;
+const storageKey = (generatorName: string): string => {
+  return `openthrottle-developer:generator-cli-last-run:${generatorName}`;
+};
 
 /**
  * @description Returns saved CLI text for a generator, or empty string if missing / unavailable.

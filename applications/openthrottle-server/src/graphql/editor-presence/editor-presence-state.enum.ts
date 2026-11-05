@@ -28,12 +28,10 @@ registerEnumType(EditorPresenceStateEnum, {
       description: 'The probe found the editor on the host.',
     },
     NOT_FOUND: {
-      description:
-        "The probe ran on the user's own machine and did not find the editor. Safe to show as an advisory; still never a reason to disable the editor.",
+      description: `The probe ran on the user's own machine and did not find the editor. Safe to show as an advisory; still never a reason to disable the editor.`,
     },
     UNKNOWN: {
-      description:
-        "The probe could not be trusted, so nothing is claimed either way — the server is containerized (its filesystem is not the user's), the platform has no verified probe, or the probe failed. Clients must render no hint for this state.",
+      description: `The probe could not be trusted, so nothing is claimed either way — the server is containerized (its filesystem is not the user's), the platform has no verified probe, or the probe failed. Clients must render no hint for this state.`,
     },
   },
 });

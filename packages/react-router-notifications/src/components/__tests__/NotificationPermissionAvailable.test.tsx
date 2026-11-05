@@ -7,7 +7,9 @@ import { NotificationPermissionAvailable } from '../NotificationPermissionAvaila
 
 describe('NotificationPermissionAvailable Component', () => {
   test('renders available-permission placeholder', () => {
-    const Component = () => <NotificationPermissionAvailable />;
+    const Component = () => {
+      return <NotificationPermissionAvailable />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 

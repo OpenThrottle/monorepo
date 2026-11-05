@@ -32,7 +32,9 @@ export const comparePlanTaskListOrder = (
  */
 export const sortTasksByPlanListOrder = <T extends PlanTaskSortFields>(
   tasks: readonly T[],
-): T[] => [...tasks].sort(comparePlanTaskListOrder);
+): T[] => {
+  return [...tasks].sort(comparePlanTaskListOrder);
+};
 
 const RALPH_NEXT_TASK_STATUSES = new Set(['PENDING', 'QUEUED']);
 
@@ -58,10 +60,15 @@ export interface RalphTaskHookFields {
  * dispatcher, so the orchestrator must not also pick them as ordinary tasks (double execution).
  * Task-level hooks and template hooks are NOT runner-executed — they run as materialized tasks.
  */
-export const isRunnerExecutedHookTask = (task: RalphTaskHookFields): boolean =>
-  task.hookRole != null &&
-  task.hookSource === 'skill' &&
-  (task.parentTaskId === null || task.parentTaskId === undefined);
+export const isRunnerExecutedHookTask = (
+  task: RalphTaskHookFields,
+): boolean => {
+  return (
+    task.hookRole != null &&
+    task.hookSource === 'skill' &&
+    (task.parentTaskId === null || task.parentTaskId === undefined)
+  );
+};
 
 /**
  * @description True when a task should be picked and worked by the Ralph agent loop: a remaining
@@ -69,9 +76,12 @@ export const isRunnerExecutedHookTask = (task: RalphTaskHookFields): boolean =>
  */
 export const isRunnableRalphTask = (
   task: RalphTaskHookFields & { readonly status: string },
-): boolean =>
-  RALPH_REMAINING_TASK_STATUSES.has(task.status) &&
-  !isRunnerExecutedHookTask(task);
+): boolean => {
+  return (
+    RALPH_REMAINING_TASK_STATUSES.has(task.status) &&
+    !isRunnerExecutedHookTask(task)
+  );
+};
 
 /**
  * @description Picks the Ralph iteration task: lowest sortOrder among IN_PROGRESS, else among PENDING/QUEUED.

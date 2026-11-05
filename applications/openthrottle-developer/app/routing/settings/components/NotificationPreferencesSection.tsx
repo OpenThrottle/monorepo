@@ -33,10 +33,11 @@ export const NotificationPreferencesSection = (
   // Handlers
   // Local-state only until a user-settings API + action handlers exist; toggling
   // must not fire a toast (no real action is taken yet).
-  const handleCheckedChange =
-    (id: NotificationPreferenceId) => (checked: boolean) => {
+  const handleCheckedChange = (id: NotificationPreferenceId) => {
+    return (checked: boolean) => {
       setToggles((prev) => ({ ...prev, [id]: checked }));
     };
+  };
 
   // Markup
 

@@ -34,10 +34,12 @@ vi.mock('~/routing/home/hooks/useAgenticChatTurn', () => ({
   useAgenticChatTurn: () => turnState,
 }));
 
-const payload = (fields: Record<string, string>): RunSkillPayload => ({
-  fields,
-  message: '/deploy staging',
-});
+const payload = (fields: Record<string, string>): RunSkillPayload => {
+  return {
+    fields,
+    message: '/deploy staging',
+  };
+};
 
 describe('useRunSkill', () => {
   beforeEach(() => {

@@ -20,16 +20,18 @@ describe('SelectItem Component', () => {
   });
 
   test('should render item with role option when Select is open', () => {
-    const Component = () => (
-      <Select defaultOpen={true}>
-        <SelectTrigger>
-          <SelectValue placeholder="Pick" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem {...props}>Option A</SelectItem>
-        </SelectContent>
-      </Select>
-    );
+    const Component = () => {
+      return (
+        <Select defaultOpen={true}>
+          <SelectTrigger>
+            <SelectValue placeholder="Pick" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem {...props}>Option A</SelectItem>
+          </SelectContent>
+        </Select>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 

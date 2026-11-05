@@ -8,17 +8,19 @@ import type { UsageSkillUsageByScopeFragment } from '~/__generated__/graphql';
 import {
   SKILL_USAGE_COPY,
   SKILL_USAGE_SCOPES,
-} from '../../data/skill-usage-copy';
+} from '../../data/data.skill-usage-copy';
 import type { UsageSkillUsageSummaryProps } from '../UsageSkillUsageSummary';
 import { UsageSkillUsageSummary } from '../UsageSkillUsageSummary';
 
 const buildByScope = (
   overrides: Partial<UsageSkillUsageByScopeFragment>,
-): UsageSkillUsageByScopeFragment => ({
-  count: 0,
-  scope: SKILL_USAGE_SCOPES.OURS,
-  ...overrides,
-});
+): UsageSkillUsageByScopeFragment => {
+  return {
+    count: 0,
+    scope: SKILL_USAGE_SCOPES.OURS,
+    ...overrides,
+  };
+};
 
 const renderComponent = (props: UsageSkillUsageSummaryProps): RenderResult => {
   return render(<UsageSkillUsageSummary {...props} />);

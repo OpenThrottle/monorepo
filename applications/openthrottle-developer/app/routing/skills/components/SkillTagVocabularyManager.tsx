@@ -60,6 +60,34 @@ export const SkillTagVocabularyManager = (
   };
 
   // Markup
+  const clientErrorMessage = (
+    <p className="text-destructive text-sm" role="alert">
+      {clientError}
+    </p>
+  );
+  const serverErrorMessage = (
+    <p className="text-destructive text-sm" role="alert">
+      {serverError}
+    </p>
+  );
+  const emptyNote = (
+    <p className="text-muted-foreground text-sm">{COPY.emptyNote}</p>
+  );
+  const tagTable = (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>{COPY.tagColumn}</TableHead>
+          <TableHead className="text-right">{COPY.removeLabel}</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {tags.map((tag) => (
+          <SkillTagVocabularyRow key={tag.id} tag={tag} />
+        ))}
+      </TableBody>
+    </Table>
+  );
 
   // Life Cycle
 
@@ -87,35 +115,11 @@ export const SkillTagVocabularyManager = (
           />
           <Button type="submit">{COPY.addLabel}</Button>
         </div>
-        {clientError ? (
-          <p className="text-destructive text-sm" role="alert">
-            {clientError}
-          </p>
-        ) : null}
-        {serverError ? (
-          <p className="text-destructive text-sm" role="alert">
-            {serverError}
-          </p>
-        ) : null}
+        {clientError ? clientErrorMessage : null}
+        {serverError ? serverErrorMessage : null}
       </addFetcher.Form>
 
-      {tags.length === 0 ? (
-        <p className="text-muted-foreground text-sm">{COPY.emptyNote}</p>
-      ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{COPY.tagColumn}</TableHead>
-              <TableHead className="text-right">{COPY.removeLabel}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {tags.map((tag) => (
-              <SkillTagVocabularyRow key={tag.id} tag={tag} />
-            ))}
-          </TableBody>
-        </Table>
-      )}
+      {tags.length === 0 ? emptyNote : tagTable}
     </div>
   );
 };

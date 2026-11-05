@@ -15,13 +15,15 @@ export interface McpServersJson {
 export const mergeManagedMcpServers = (
   existing: McpServersJson,
   managed: Record<string, Record<string, unknown>>,
-): McpServersJson => ({
-  ...existing,
-  mcpServers: {
-    ...(existing.mcpServers ?? {}),
-    ...managed,
-  },
-});
+): McpServersJson => {
+  return {
+    ...existing,
+    mcpServers: {
+      ...(existing.mcpServers ?? {}),
+      ...managed,
+    },
+  };
+};
 
 /**
  * @description Returns MCP server definitions OpenThrottle manages for a repository.
@@ -58,8 +60,7 @@ export const buildManagedMcpServers = (options: {
     'openthrottle-mcp': {
       args: ['./scripts/run-openthrottle-mcp.sh'],
       command: 'bash',
-      description:
-        'OpenThrottle (OT) plans knowledge base (GraphQL). Plans, tasks, notes, commit links, activity, output stream, semantic search, health.',
+      description: `OpenThrottle (OT) plans knowledge base (GraphQL). Plans, tasks, notes, commit links, activity, output stream, semantic search, health.`,
       env: {
         API_URL: options.apiBaseUrl,
         API_URL_INTERNAL: options.apiBaseUrl,

@@ -15,8 +15,7 @@ export const DEFAULT_GRAPHQL_TIMEOUT_MS = 15_000;
  * as a distinct timeout kind rather than a generic network error.
  * @public
  */
-export const GRAPHQL_TIMEOUT_ERROR_PREFIX =
-  'openthrottle-server GraphQL request timed out';
+export const GRAPHQL_TIMEOUT_ERROR_PREFIX = `openthrottle-server GraphQL request timed out`;
 
 /**
  * @description Build the `AbortSignal` enforcing the per-request timeout.
@@ -162,8 +161,9 @@ export interface GraphqlPayload<TData> {
   readonly errors?: ReadonlyArray<GraphqlErrorItem>;
 }
 
-const isGraphqlPathSegment = (p: unknown): p is string | number =>
-  typeof p === 'string' || typeof p === 'number';
+const isGraphqlPathSegment = (p: unknown): p is string | number => {
+  return typeof p === 'string' || typeof p === 'number';
+};
 
 /**
  * @description Narrow arbitrary JSON to a {@link GraphqlPayload} when its shape

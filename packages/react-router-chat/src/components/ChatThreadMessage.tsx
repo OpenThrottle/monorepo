@@ -1,7 +1,7 @@
 import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { CHAT_ROLE_LABEL } from '../data/chat-thread-message-role-labels';
+import { CHAT_ROLE_LABEL } from '../data/data.chat-thread-message-role-labels';
 import type { ChatMessage } from '../types';
 import { formatChatTimestamp } from '../utils/index';
 import { ChatMessageBody } from './ChatMessageBody';
@@ -35,6 +35,8 @@ const ChatThreadMessageComponent = (
     message.pending === true &&
     !hasTimeline &&
     message.body.trim() === '';
+  const showBody = !hasTimeline && !isPending;
+  const hasFooter = message.footer != null && message.footer.trim() !== '';
 
   // Handlers
 
@@ -61,14 +63,14 @@ const ChatThreadMessageComponent = (
         <span className="text-muted-foreground text-xs font-medium">
           {CHAT_ROLE_LABEL[message.role]}
         </span>
-        {message.createdAt ? (
+        {message.createdAt && (
           <time
             className="text-muted-foreground text-xs"
             dateTime={message.createdAt}
           >
             {formatChatTimestamp(message.createdAt)}
           </time>
-        ) : null}
+        )}
       </div>
       <div
         className={cn('max-w-[85%] rounded-lg', {
@@ -79,21 +81,23 @@ const ChatThreadMessageComponent = (
             message.role === 'system',
         })}
       >
-        {hasTimeline && message.events !== undefined ? (
+        {hasTimeline && message.events !== undefined && (
           <ChatTurnTimeline events={message.events} />
-        ) : isPending ? (
+        )}
+        {isPending && (
           <RunningIndicator
             detail={message.phaseDetail}
             phase={message.phase}
           />
-        ) : (
+        )}
+        {showBody && (
           <ChatMessageBody body={message.body} role={message.role} />
         )}
-        {message.footer != null && message.footer.trim() !== '' ? (
+        {hasFooter && (
           <p className="text-muted-foreground border-border/60 mt-2 border-t pt-2 font-mono text-xs">
             {message.footer}
           </p>
-        ) : null}
+        )}
       </div>
     </article>
   );

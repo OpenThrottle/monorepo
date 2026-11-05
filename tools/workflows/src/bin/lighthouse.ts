@@ -134,6 +134,37 @@ const getCWVStatus = (
 };
 
 /**
+ * @description Maps a CWV status to the emoji shown in the console report
+ */
+const getCWVStatusEmoji = (status: LighthouseCWVStatus): string => {
+  if (status === 'good') {
+    return '✅';
+  }
+
+  if (status === 'needs-improvement') {
+    return '⚠️';
+  }
+
+  return '❌';
+};
+
+/**
+ * @description Extracts byte / millisecond savings from an audit's details
+ */
+const toAuditSavings = (
+  details: LighthouseAuditIssue['details'],
+): LighthouseActionableInsight['savings'] => {
+  if (!details) {
+    return undefined;
+  }
+
+  return {
+    bytes: details.overallSavingsBytes,
+    ms: details.overallSavingsMs,
+  };
+};
+
+/**
  * @description Gets the baseline results file path
  */
 const getBaselineResultsPath = (): string => {
@@ -533,11 +564,16 @@ interface LighthouseAuditLike {
   readonly title: string;
 }
 
-const isLighthouseAuditLike = (value: unknown): value is LighthouseAuditLike =>
-  typeof value === 'object' &&
-  value !== null &&
-  'score' in value &&
-  'title' in value;
+const isLighthouseAuditLike = (
+  value: unknown,
+): value is LighthouseAuditLike => {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'score' in value &&
+    'title' in value
+  );
+};
 
 const extractAuditIssues = (
   audits: Record<string, unknown>,
@@ -599,12 +635,7 @@ const generateActionableInsights =
           displayValue: audit.displayValue,
           priority,
           recommendation,
-          savings: audit.details
-            ? {
-                bytes: audit.details.overallSavingsBytes,
-                ms: audit.details.overallSavingsMs,
-              }
-            : undefined,
+          savings: toAuditSavings(audit.details),
           title: audit.title,
           url: result.url,
         });
@@ -857,12 +888,7 @@ const displayCWVReport = (report: LighthouseCWVSummaryReport): void => {
 
     // LCP
     if (pageReport.lcp.value !== null) {
-      const lcpEmoji =
-        pageReport.lcp.status === 'good'
-          ? '✅'
-          : pageReport.lcp.status === 'needs-improvement'
-            ? '⚠️'
-            : '❌';
+      const lcpEmoji = getCWVStatusEmoji(pageReport.lcp.status);
       console.log(
         `   ${lcpEmoji} LCP: ${pageReport.lcp.value.toFixed(2)}s (${pageReport.lcp.status}) [Good: ≤${thresholds.lcp.good}s, Poor: >${thresholds.lcp.poor}s]`,
       );
@@ -872,12 +898,7 @@ const displayCWVReport = (report: LighthouseCWVSummaryReport): void => {
 
     // INP (stored in milliseconds)
     if (pageReport.inp.value !== null) {
-      const inpEmoji =
-        pageReport.inp.status === 'good'
-          ? '✅'
-          : pageReport.inp.status === 'needs-improvement'
-            ? '⚠️'
-            : '❌';
+      const inpEmoji = getCWVStatusEmoji(pageReport.inp.status);
       console.log(
         `   ${inpEmoji} INP: ${Math.round(pageReport.inp.value)}ms (${pageReport.inp.status}) [Good: ≤${thresholds.inp.good}ms, Poor: >${thresholds.inp.poor}ms]`,
       );
@@ -887,12 +908,7 @@ const displayCWVReport = (report: LighthouseCWVSummaryReport): void => {
 
     // CLS
     if (pageReport.cls.value !== null) {
-      const clsEmoji =
-        pageReport.cls.status === 'good'
-          ? '✅'
-          : pageReport.cls.status === 'needs-improvement'
-            ? '⚠️'
-            : '❌';
+      const clsEmoji = getCWVStatusEmoji(pageReport.cls.status);
       console.log(
         `   ${clsEmoji} CLS: ${pageReport.cls.value.toFixed(3)} (${pageReport.cls.status}) [Good: ≤${thresholds.cls.good}, Poor: >${thresholds.cls.poor}]`,
       );
@@ -976,12 +992,7 @@ const generateImageOptimizationReport =
               description: audit.description,
               deviceType: result.deviceType,
               displayValue: audit.displayValue,
-              savings: audit.details
-                ? {
-                    bytes: audit.details.overallSavingsBytes,
-                    ms: audit.details.overallSavingsMs,
-                  }
-                : undefined,
+              savings: toAuditSavings(audit.details),
               score: audit.score,
               title: audit.title,
               url: result.url,
@@ -1214,12 +1225,7 @@ const generateCachingHeadersReport =
               description: audit.description,
               deviceType: result.deviceType,
               displayValue: audit.displayValue,
-              savings: audit.details
-                ? {
-                    bytes: audit.details.overallSavingsBytes,
-                    ms: audit.details.overallSavingsMs,
-                  }
-                : undefined,
+              savings: toAuditSavings(audit.details),
               score: audit.score,
               title: audit.title,
               url: result.url,
@@ -1435,8 +1441,9 @@ interface LighthouseOptions {
 
 const isDeviceOption = (
   value: string,
-): value is 'both' | 'desktop' | 'mobile' =>
-  value === 'both' || value === 'desktop' || value === 'mobile';
+): value is 'both' | 'desktop' | 'mobile' => {
+  return value === 'both' || value === 'desktop' || value === 'mobile';
+};
 
 /**
  * @description Main entry point

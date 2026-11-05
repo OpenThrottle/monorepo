@@ -19,6 +19,11 @@ export const QueueForm = (props: QueueFormProps): React.ReactElement => {
   // Handlers
 
   // Markup
+  const errorAlert = (
+    <p className="text-destructive text-sm" role="alert">
+      {error}
+    </p>
+  );
 
   // Life Cycle
 
@@ -41,11 +46,7 @@ export const QueueForm = (props: QueueFormProps): React.ReactElement => {
           </p>
         </div>
 
-        {error ? (
-          <p className="text-destructive text-sm" role="alert">
-            {error}
-          </p>
-        ) : null}
+        {error ? errorAlert : null}
 
         <div className="flex justify-end gap-3">
           <Button asChild={true} type="submit" variant="outline">

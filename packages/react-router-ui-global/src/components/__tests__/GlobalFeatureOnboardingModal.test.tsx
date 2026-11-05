@@ -22,9 +22,9 @@ const CONTENT: GlobalFeatureOnboardingContent = {
 };
 
 const renderModal = (initialEntry: string): RenderResult => {
-  const Component = (): React.ReactElement => (
-    <GlobalFeatureOnboardingModal content={CONTENT} />
-  );
+  const Component = (): React.ReactElement => {
+    return <GlobalFeatureOnboardingModal content={CONTENT} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub initialEntries={[initialEntry]} />);
 };

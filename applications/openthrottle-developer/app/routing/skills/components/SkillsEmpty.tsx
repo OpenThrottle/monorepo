@@ -21,10 +21,14 @@ export const SkillsEmpty = (props: SkillsEmptyProps): React.ReactElement => {
   // Hooks
 
   // Setup
+  const { searchTitle, title } = SKILLS_EMPTY_COPY;
+  const emptyTitle = isFiltered ? searchTitle : title;
 
   // Handlers
 
   // Markup
+  const clearFiltersLink = <Link to="/skills">Clear filters</Link>;
+  const newSkillLink = <Link to="/skills/create">New skill</Link>;
 
   // Life Cycle
 
@@ -32,18 +36,9 @@ export const SkillsEmpty = (props: SkillsEmptyProps): React.ReactElement => {
 
   return (
     <Empty className={cn('my-8', className)}>
-      <GlobalHeading
-        heading="h3"
-        title={
-          isFiltered ? SKILLS_EMPTY_COPY.searchTitle : SKILLS_EMPTY_COPY.title
-        }
-      />
+      <GlobalHeading heading="h3" title={emptyTitle} />
       <Button asChild={true} variant="secondary">
-        {isFiltered ? (
-          <Link to="/skills">Clear filters</Link>
-        ) : (
-          <Link to="/skills/create">New skill</Link>
-        )}
+        {isFiltered ? clearFiltersLink : newSkillLink}
       </Button>
     </Empty>
   );

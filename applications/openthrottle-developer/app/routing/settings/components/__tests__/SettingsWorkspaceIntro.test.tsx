@@ -7,7 +7,9 @@ import { SettingsWorkspaceIntro } from '../SettingsWorkspaceIntro';
 
 describe('SettingsWorkspaceIntro Component', () => {
   test('renders workspace heading and intro copy', () => {
-    const Component = () => <SettingsWorkspaceIntro />;
+    const Component = () => {
+      return <SettingsWorkspaceIntro />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 

@@ -83,9 +83,9 @@ describe('MarkdownRenderer Component — components prop', () => {
   test('passes component overrides through MDXProvider to the compiled output', () => {
     const Heading = (
       heading: React.ComponentProps<'h1'>,
-    ): React.ReactElement => (
-      <h1 data-testid="custom-heading">{heading.children}</h1>
-    );
+    ): React.ReactElement => {
+      return <h1 data-testid="custom-heading">{heading.children}</h1>;
+    };
 
     const component = render(
       <MarkdownRenderer components={{ h1: Heading }} source="# Overridden" />,

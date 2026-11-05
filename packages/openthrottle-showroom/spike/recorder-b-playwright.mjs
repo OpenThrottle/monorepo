@@ -34,12 +34,18 @@ rmSync(OUT, { force: true, recursive: true });
 mkdirSync(join(OUT, 'frames'), { recursive: true });
 
 const manifest = [];
-const t0 = () => Number(process.hrtime.bigint() / 1_000_000n);
+const t0 = () => {
+  return Number(process.hrtime.bigint() / 1_000_000n);
+};
 let start = 0;
-const at = () => (t0() - start) / 1000;
+const at = () => {
+  return (t0() - start) / 1000;
+};
 
 /** Cubic ease-in-out: the difference between a screencast and a robot. */
-const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+const ease = (t) => {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+};
 
 const installCursor = async (page) => {
   await page.addStyleTag({

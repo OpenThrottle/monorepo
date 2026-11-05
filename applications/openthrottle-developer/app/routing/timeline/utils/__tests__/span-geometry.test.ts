@@ -25,24 +25,26 @@ const span = (
   startsAt: string,
   endsAt: string,
   overrides: Partial<TimelineSpan> = {},
-): TimelineSpan => ({
-  backend: null,
-  branch: null,
-  checkoutId: null,
-  conversationId: null,
-  derivedEnd: false,
-  endsAt,
-  id: 'span-1',
-  kind: TimelineSpanKind.PlanRun,
-  laneKey: 'plan:plan-1',
-  laneLabel: 'Plan One',
-  model: null,
-  planId: 'plan-1',
-  startsAt,
-  status: null,
-  title: 'A span',
-  ...overrides,
-});
+): TimelineSpan => {
+  return {
+    backend: null,
+    branch: null,
+    checkoutId: null,
+    conversationId: null,
+    derivedEnd: false,
+    endsAt,
+    id: 'span-1',
+    kind: TimelineSpanKind.PlanRun,
+    laneKey: 'plan:plan-1',
+    laneLabel: 'Plan One',
+    model: null,
+    planId: 'plan-1',
+    startsAt,
+    status: null,
+    title: 'A span',
+    ...overrides,
+  };
+};
 
 describe('spanRect', () => {
   it('positions and sizes a span inside the window', () => {

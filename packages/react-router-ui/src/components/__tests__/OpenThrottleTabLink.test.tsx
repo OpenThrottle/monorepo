@@ -14,7 +14,9 @@ describe('OpenThrottleTabLink Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <OpenThrottleTabLink {...props} />;
+    const Component = () => {
+      return <OpenThrottleTabLink {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

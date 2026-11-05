@@ -15,11 +15,15 @@ import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
 import type { ScheduleFormProps } from '../ScheduleForm';
 import { ScheduleForm } from '../ScheduleForm';
 
-const ScheduleListStub = (): React.ReactElement => <p>Schedule list</p>;
+const ScheduleListStub = (): React.ReactElement => {
+  return <p>Schedule list</p>;
+};
 
 const renderForm = (formProps: ScheduleFormProps): RenderResult => {
   // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-  const Component = () => <ScheduleForm {...formProps} />;
+  const Component = () => {
+    return <ScheduleForm {...formProps} />;
+  };
   const RoutesStub = createRoutesStub([
     { Component, path: '/' },
     { Component: ScheduleListStub, path: '/schedule' },

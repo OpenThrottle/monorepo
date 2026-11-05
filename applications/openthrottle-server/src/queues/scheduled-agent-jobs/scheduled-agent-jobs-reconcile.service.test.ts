@@ -8,8 +8,12 @@ import type { ScheduledAgentJobFailureNotifierService } from './scheduled-agent-
 import type { ScheduledAgentJobSchedulerService } from './scheduled-agent-job-scheduler.service.ts';
 import { ScheduledAgentJobsReconcileService } from './scheduled-agent-jobs-reconcile.service.ts';
 
-const job = (id: string): ScheduledAgentJob =>
-  createMock<ScheduledAgentJob>({ id, schedulerKey: `scheduled-job:${id}` });
+const job = (id: string): ScheduledAgentJob => {
+  return createMock<ScheduledAgentJob>({
+    id,
+    schedulerKey: `scheduled-job:${id}`,
+  });
+};
 
 describe('ScheduledAgentJobsReconcileService', () => {
   let jobsService: ScheduledAgentJobsService;
@@ -113,8 +117,8 @@ describe('ScheduledAgentJobsReconcileService', () => {
     const hourly = (
       misfirePolicy: ScheduledAgentJob['misfirePolicy'],
       updatedAt = new Date('2026-11-02T08:30:00Z'),
-    ): ScheduledAgentJob =>
-      createMock<ScheduledAgentJob>({
+    ): ScheduledAgentJob => {
+      return createMock<ScheduledAgentJob>({
         cronPattern: '0 * * * *',
         driverId: 'claude',
         id: 'a',
@@ -125,9 +129,11 @@ describe('ScheduledAgentJobsReconcileService', () => {
         timezone: null,
         updatedAt,
       });
+    };
 
-    const missedCall = (index: number): unknown =>
-      vi.mocked(jobsService.recordMissedRuns).mock.calls[index]?.[0];
+    const missedCall = (index: number): unknown => {
+      return vi.mocked(jobsService.recordMissedRuns).mock.calls[index]?.[0];
+    };
 
     beforeEach(() => {
       vi.useFakeTimers({ toFake: ['Date'] });

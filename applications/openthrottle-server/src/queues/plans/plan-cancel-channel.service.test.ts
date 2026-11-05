@@ -18,12 +18,13 @@ describe('PlanCancelChannelService', () => {
   const subscriber = createMock<Redis>();
   const redis = createMock<Redis>();
 
-  const build = (): PlanCancelChannelService =>
-    new PlanCancelChannelService(
+  const build = (): PlanCancelChannelService => {
+    return new PlanCancelChannelService(
       createMock<LoggerService>(),
       createMock<PlanRunCancellationService>({ abort: mockAbort }),
       redis,
     );
+  };
 
   beforeEach(() => {
     mockAbort.mockClear();

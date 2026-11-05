@@ -26,8 +26,8 @@ function writeFakeBin(name: string, body: string): string {
 }
 
 // A successful streamed turn: init → two text deltas → final echo → result.
-const successBin = (): string =>
-  writeFakeBin(
+const successBin = (): string => {
+  return writeFakeBin(
     'cursor-success.js',
     `const lines = [
       JSON.stringify({ type: 'system', subtype: 'init', session_id: 'sess-1', cwd: '/x', model: 'Auto' }),
@@ -38,29 +38,33 @@ const successBin = (): string =>
     ];
     process.stdout.write(lines.join('\\n') + '\\n');`,
   );
+};
 
 // A startup failure: nothing on stdout, a message on stderr, non-zero exit.
-const errorBin = (): string =>
-  writeFakeBin(
+const errorBin = (): string => {
+  return writeFakeBin(
     'cursor-error.js',
     `process.stderr.write('Workspace Trust Required\\n');
     process.exit(1);`,
   );
+};
 
 // create-chat: prints a bare session id on stdout.
-const createChatBin = (): string =>
-  writeFakeBin(
+const createChatBin = (): string => {
+  return writeFakeBin(
     'cursor-create.js',
     `process.stdout.write('new-session-id\\n');`,
   );
+};
 
 // Emits one event, then hangs (no result, no further output) until killed.
-const hangBin = (): string =>
-  writeFakeBin(
+const hangBin = (): string => {
+  return writeFakeBin(
     'cursor-hang.js',
     `process.stdout.write(JSON.stringify({ type: 'system', subtype: 'init', session_id: 'sess-1' }) + '\\n');
     setInterval(() => {}, 1000000);`,
   );
+};
 
 async function collect(
   run: Parameters<typeof cursorAgentConversationBackend.stream>[0],

@@ -25,10 +25,8 @@ export const OpenThrottleClipboard = (
 
   // Handlers
   const onClick = (): void => {
-    const method =
-      typeof navigator?.clipboard === 'undefined'
-        ? onCopyFallback
-        : onCopyModern;
+    const hasClipboard = typeof navigator?.clipboard !== 'undefined';
+    const method = hasClipboard ? onCopyModern : onCopyFallback;
 
     try {
       method(text);

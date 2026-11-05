@@ -1,7 +1,7 @@
 import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { PLAN_STATUS_DOT_COLOR } from '~/routing/plans/data/plan-status-dot-color';
+import { PLAN_STATUS_DOT_COLOR } from '~/routing/plans/data/data.plan-status-dot-color';
 import { planStatusValues } from '~/routing/plans/types';
 import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
 

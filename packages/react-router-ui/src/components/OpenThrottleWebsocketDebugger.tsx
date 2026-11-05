@@ -82,6 +82,16 @@ export const OpenThrottleWebsocketDebugger = (
   // Handlers
 
   // Markup
+  const hasEntries = displayEntries.length > 0;
+  const logRows = displayEntries.map((entry) => (
+    <WebsocketDebuggerLogRow entry={entry} key={entry.id} />
+  ));
+  const emptyLog = (
+    <p className="text-muted-foreground text-sm">
+      No events yet. Change a plan status or wait for queue activity when
+      connected.
+    </p>
+  );
 
   // Life Cycle
 
@@ -148,16 +158,7 @@ export const OpenThrottleWebsocketDebugger = (
           className="max-h-96 space-y-2 overflow-y-auto"
           data-testid="OpenThrottleWebsocketDebugger-log"
         >
-          {displayEntries.length === 0 ? (
-            <p className="text-muted-foreground text-sm">
-              No events yet. Change a plan status or wait for queue activity
-              when connected.
-            </p>
-          ) : (
-            displayEntries.map((entry) => (
-              <WebsocketDebuggerLogRow entry={entry} key={entry.id} />
-            ))
-          )}
+          {hasEntries ? logRows : emptyLog}
         </div>
       </div>
     </div>

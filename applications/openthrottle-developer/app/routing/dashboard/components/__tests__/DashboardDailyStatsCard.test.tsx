@@ -39,7 +39,9 @@ describe('DashboardDailyStatsCard Component', () => {
       dailyStats: [...twoDayStats],
     };
 
-    const Component = () => <DashboardDailyStatsCard {...props} />;
+    const Component = () => {
+      return <DashboardDailyStatsCard {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);
@@ -55,7 +57,9 @@ describe('DashboardDailyStatsCard Component', () => {
       dailyStats: [twoDayStats[0]!],
     };
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <DashboardDailyStatsCard {...singleDayProps} />;
+    const Component = () => {
+      return <DashboardDailyStatsCard {...singleDayProps} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const result = render(<RoutesStub />);
     const cards = result.getAllByTestId('DashboardDailyStatsCard');
@@ -77,7 +81,9 @@ describe('DashboardDailyStatsCard Component', () => {
       dailyStats: [...twoDayStats],
     };
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const CustomComponent = () => <DashboardDailyStatsCard {...customProps} />;
+    const CustomComponent = () => {
+      return <DashboardDailyStatsCard {...customProps} />;
+    };
     const RoutesStub = createRoutesStub([
       { Component: CustomComponent, path: '/' },
     ]);
@@ -94,7 +100,9 @@ describe('DashboardDailyStatsCard Component', () => {
 describe('DashboardDailyStatsCard Component interactivity', () => {
   function renderCard(props: DashboardDailyStatsCardProps): RenderResult {
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <DashboardDailyStatsCard {...props} />;
+    const Component = () => {
+      return <DashboardDailyStatsCard {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     return render(<RoutesStub />);
   }
@@ -121,7 +129,9 @@ describe('DashboardDailyStatsCard Component empty state', () => {
       dailyStats: [],
     };
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => <DashboardDailyStatsCard {...props} />;
+    const Component = () => {
+      return <DashboardDailyStatsCard {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const result = render(<RoutesStub />);
     expect(result.getByTestId('DashboardDailyStatsCard')).toBeInTheDocument();

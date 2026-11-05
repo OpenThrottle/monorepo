@@ -160,25 +160,27 @@ describe('TokenUsageResolver', () => {
   describe('recordTokenUsage', () => {
     const buildRow = (
       overrides: Partial<RecordTokenUsageRowInput> = {},
-    ): RecordTokenUsageRowInput => ({
-      cacheReadTokens: 900,
-      cacheWriteTokens: 300,
-      costUsd: null,
-      cwd: '/work/repo',
-      gitBranch: 'main',
-      inputTokens: 1200,
-      model: 'claude-opus-4-8',
-      occurredAt: '2026-10-01T08:30:00.000Z',
-      outputTokens: 340,
-      provider: 'claude',
-      rawUsageJson: '{"service_tier":"standard"}',
-      reasoningTokens: null,
-      requestId: 'req-1',
-      sessionId: 'sess-1',
-      source: 'claude-code',
-      totalTokens: 2740,
-      ...overrides,
-    });
+    ): RecordTokenUsageRowInput => {
+      return {
+        cacheReadTokens: 900,
+        cacheWriteTokens: 300,
+        costUsd: null,
+        cwd: '/work/repo',
+        gitBranch: 'main',
+        inputTokens: 1200,
+        model: 'claude-opus-4-8',
+        occurredAt: '2026-10-01T08:30:00.000Z',
+        outputTokens: 340,
+        provider: 'claude',
+        rawUsageJson: '{"service_tier":"standard"}',
+        reasoningTokens: null,
+        requestId: 'req-1',
+        sessionId: 'sess-1',
+        source: 'claude-code',
+        totalTokens: 2740,
+        ...overrides,
+      };
+    };
 
     beforeEach(() => {
       recordTokenUsageBatch.mockReset();

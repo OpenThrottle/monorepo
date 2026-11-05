@@ -51,6 +51,17 @@ export function fromEngineViewName(name: string): CalendarView {
   return ENGINE_NAME_TO_VIEW[name] ?? DEFAULT_VIEW;
 }
 
+const orderViews = (
+  views: readonly CalendarView[],
+  defaultView: CalendarView | undefined,
+): CalendarView[] => {
+  if (defaultView === undefined) {
+    return [...views];
+  }
+
+  return [defaultView, ...views.filter((v) => v !== defaultView)];
+};
+
 /**
  * Resolve the enabled {@link CalendarView}s into the non-empty Schedule-X view
  * tuple `createCalendar` requires, putting `defaultView` first when provided.
@@ -61,10 +72,7 @@ export function resolveViews(
   views: readonly CalendarView[] = DEFAULT_VIEWS,
   defaultView?: CalendarView,
 ): [EngineView, ...EngineView[]] {
-  const ordered =
-    defaultView !== undefined
-      ? [defaultView, ...views.filter((v) => v !== defaultView)]
-      : [...views];
+  const ordered = orderViews(views, defaultView);
 
   const resolved = ordered.map(toEngineView);
   const first = resolved[0] ?? toEngineView(DEFAULT_VIEW);

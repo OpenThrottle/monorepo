@@ -23,8 +23,9 @@ const WORKSPACE_PACKAGE_UNDER_NODE_MODULES =
 
 const isTypeScriptFormat = (
   format: LoadFnOutput['format'],
-): format is TypeScriptFormat =>
-  format === 'commonjs-typescript' || format === 'module-typescript';
+): format is TypeScriptFormat => {
+  return format === 'commonjs-typescript' || format === 'module-typescript';
+};
 
 const decodeSource = (
   url: string,

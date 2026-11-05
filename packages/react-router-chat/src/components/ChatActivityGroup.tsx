@@ -7,7 +7,7 @@ import {
 import { Activity, ChevronDown } from 'lucide-react';
 import * as React from 'react';
 
-import { STATUS_CONFIG } from '../data/chat-tool-call-status-config';
+import { STATUS_CONFIG } from '../data/data.chat-tool-call-status-config';
 import type { TurnTimelineActivityGroup } from '../turn-tool-groups';
 import { activeToolOf } from '../turn-tool-groups';
 import { ChatThinkingBlock } from './ChatThinkingBlock';
@@ -22,6 +22,7 @@ export interface ChatActivityGroupProps {
 }
 
 const ACTIVITY_LABEL = 'Activity';
+const SPIN_CLASS = 'animate-spin motion-reduce:animate-none';
 
 /**
  * @description Everything an assistant did between two pieces of visible prose —
@@ -47,18 +48,24 @@ export const ChatActivityGroup = (
   const active = activeToolOf(
     group.items.flatMap((item) => (item.kind === 'tools' ? item.tools : [])),
   );
-  const countLabel = [
-    `${group.toolCount} ${group.toolCount === 1 ? 'tool call' : 'tool calls'}`,
-    group.thinkingCount > 0
-      ? `${group.thinkingCount} thinking ${group.thinkingCount === 1 ? 'step' : 'steps'}`
-      : null,
-  ]
+  const statusIconClass = status.spin ? SPIN_CLASS : undefined;
+  const toolNoun = group.toolCount === 1 ? 'tool call' : 'tool calls';
+  const stepNoun = group.thinkingCount === 1 ? 'step' : 'steps';
+  const hasThinking = group.thinkingCount > 0;
+  const stepsText = `${group.thinkingCount} thinking ${stepNoun}`;
+  const thinkingLabel = hasThinking ? stepsText : null;
+  const countLabel = [`${group.toolCount} ${toolNoun}`, thinkingLabel]
     .filter((part) => part !== null)
     .join(' · ');
 
   // Handlers
 
   // Markup
+  const activeStep = (
+    <span className="text-muted-foreground truncate font-mono">
+      · {active?.name}
+    </span>
+  );
 
   // Life Cycle
 
@@ -81,22 +88,11 @@ export const ChatActivityGroup = (
           />
           <Activity aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
           <span className="shrink-0">{ACTIVITY_LABEL}</span>
-          {active !== null ? (
-            <span className="text-muted-foreground truncate font-mono">
-              · {active.name}
-            </span>
-          ) : null}
+          {active === null ? null : activeStep}
           <span className="text-muted-foreground shrink-0">· {countLabel}</span>
         </span>
         <Badge color={status.color} size="xs">
-          <status.Icon
-            aria-hidden="true"
-            className={
-              status.spin
-                ? 'animate-spin motion-reduce:animate-none'
-                : undefined
-            }
-          />
+          <status.Icon aria-hidden="true" className={statusIconClass} />
           {status.label}
         </Badge>
       </CollapsibleTrigger>
@@ -110,21 +106,25 @@ export const ChatActivityGroup = (
             const first = item.tools[0];
             const key = `tools-${first?.sortOrder ?? 0}`;
 
-            return item.tools.length === 1 && first !== undefined ? (
-              <ChatToolCall event={first} key={key} />
-            ) : (
-              <ChatToolCallGroup key={key} tools={item.tools} />
-            );
+            if (item.tools.length === 1 && first !== undefined) {
+              return <ChatToolCall event={first} key={key} />;
+            }
+
+            return <ChatToolCallGroup key={key} tools={item.tools} />;
           }
 
           const { event } = item;
 
-          return event.kind === 'thinking' ? (
+          if (event.kind !== 'thinking') {
+            return null;
+          }
+
+          return (
             <ChatThinkingBlock
               key={`thinking-${event.sortOrder}`}
               text={event.text}
             />
-          ) : null;
+          );
         })}
       </CollapsibleContent>
     </Collapsible>

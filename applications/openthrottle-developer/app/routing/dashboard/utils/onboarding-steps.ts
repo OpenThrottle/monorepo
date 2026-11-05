@@ -47,13 +47,11 @@ const totalPlanCount = (
 const runStartedPlanCount = (
   counts: GetDashboardOnboardingQuery['planCountsByStatus'],
 ): number => {
-  return counts.reduce(
-    (sum, entry) =>
-      RUN_STARTED_PLAN_STATUSES.includes(entry.status.toUpperCase())
-        ? sum + entry.count
-        : sum,
-    0,
-  );
+  return counts
+    .filter((entry) =>
+      RUN_STARTED_PLAN_STATUSES.includes(entry.status.toUpperCase()),
+    )
+    .reduce((sum, entry) => sum + entry.count, 0);
 };
 
 /**
@@ -83,4 +81,6 @@ export const deriveOnboardingCompletion = (
  */
 export const isOnboardingComplete = (
   completion: OnboardingCompletion,
-): boolean => Object.values(completion).every(Boolean);
+): boolean => {
+  return Object.values(completion).every(Boolean);
+};

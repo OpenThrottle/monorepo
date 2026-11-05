@@ -43,8 +43,9 @@ const createSubmitEvent = (): {
   return { event, preventDefault };
 };
 
-const renderUseForm = () =>
-  renderHook(() => useForm({ initialValues: {}, onSubmit: vi.fn() }));
+const renderUseForm = () => {
+  return renderHook(() => useForm({ initialValues: {}, onSubmit: vi.fn() }));
+};
 
 describe('useForm', () => {
   beforeEach(() => {

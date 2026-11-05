@@ -33,8 +33,9 @@ export function createDataLoader<TKey, TValue>(
   batchLoadFn: BatchLoadFn<TKey, TValue>,
   options?: CreateDataLoaderOptions<TKey, TValue>,
 ): DataLoader<TKey, TValue | null> {
-  const fn: DataLoader.BatchLoadFn<TKey, TValue | null> = (keys) =>
-    batchLoadFn(keys);
+  const fn: DataLoader.BatchLoadFn<TKey, TValue | null> = (keys) => {
+    return batchLoadFn(keys);
+  };
   return new DataLoader(fn, options);
 }
 

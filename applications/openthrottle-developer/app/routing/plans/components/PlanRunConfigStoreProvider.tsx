@@ -12,17 +12,19 @@ import * as React from 'react';
 import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
 import { PlanRunConfigRepositoriesHydrator } from '~/routing/plans/components/PlanRunConfigRepositoriesHydrator';
 import {
-  getWorkflowRunSeedValues,
   jobRunHookDraftRowsAtom,
   workflowBranchAtom,
   workflowCheckoutIdAtom,
   workflowRalphRunOptionsAtom,
   workflowRepositoryIdAtom,
   workflowRunIterationTimeoutTextAtom,
-  type WorkflowRunSeedPlan,
   workflowWorkingDirectoryAtom,
-} from '~/routing/plans/data/atom.plan';
+} from '~/routing/plans/data/data.atom-plan';
 import { resolveDefaultRunBranch } from '~/routing/plans/utils/plan-run-branch';
+import {
+  getWorkflowRunSeedValues,
+  type WorkflowRunSeedPlan,
+} from '~/routing/plans/utils/workflow-run-atom-state';
 
 export interface PlanRunConfigStoreProviderProps {
   readonly children: React.ReactNode;

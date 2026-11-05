@@ -29,11 +29,13 @@ describe('PlanWorkflowConfigTuning Component', () => {
   });
 
   test('should render run tuning fieldset with tuning controls', async () => {
-    const Component = () => (
-      <TooltipProvider>
-        <PlanWorkflowConfigTuning {...props} />
-      </TooltipProvider>
-    );
+    const Component = () => {
+      return (
+        <TooltipProvider>
+          <PlanWorkflowConfigTuning {...props} />
+        </TooltipProvider>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
 
@@ -72,11 +74,13 @@ describe('PlanWorkflowConfigTuning Component', () => {
       setIterationTimeoutText,
     };
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <TooltipProvider>
-        <PlanWorkflowConfigTuning {...props} />
-      </TooltipProvider>
-    );
+    const Component = () => {
+      return (
+        <TooltipProvider>
+          <PlanWorkflowConfigTuning {...props} />
+        </TooltipProvider>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByLabelText } = render(<RoutesStub />);
 
@@ -97,11 +101,13 @@ describe('PlanWorkflowConfigTuning Component', () => {
     const setInput = vi.fn();
     props = { ...props, setInput };
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <TooltipProvider>
-        <PlanWorkflowConfigTuning {...props} />
-      </TooltipProvider>
-    );
+    const Component = () => {
+      return (
+        <TooltipProvider>
+          <PlanWorkflowConfigTuning {...props} />
+        </TooltipProvider>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const component = render(<RoutesStub />);
 
@@ -138,11 +144,13 @@ describe('PlanWorkflowConfigTuning Component', () => {
         setIterationTimeoutText: vi.fn(),
       };
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const Component = () => (
-        <TooltipProvider>
-          <PlanWorkflowConfigTuning {...props} />
-        </TooltipProvider>
-      );
+      const Component = () => {
+        return (
+          <TooltipProvider>
+            <PlanWorkflowConfigTuning {...props} />
+          </TooltipProvider>
+        );
+      };
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       const { getByLabelText } = render(<RoutesStub />);
 

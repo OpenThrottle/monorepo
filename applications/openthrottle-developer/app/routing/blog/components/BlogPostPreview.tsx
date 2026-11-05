@@ -28,10 +28,34 @@ export const BlogPostPreview = (
 
   // Setup
   const hasBody = bodyMarkdown.trim() !== '';
+  const hasCoverImage = coverImageUrl.trim() !== '';
+  const hasExcerpt = excerpt.trim() !== '';
 
   // Handlers
 
   // Markup
+  const coverImage = (
+    <img
+      alt={coverImageAlt}
+      className="border-border mb-8 aspect-video w-full rounded-xl border object-cover"
+      decoding="async"
+      src={coverImageUrl}
+    />
+  );
+  const excerptText = (
+    <p className="text-muted-foreground mt-4 text-lg">{excerpt}</p>
+  );
+  const body = (
+    <MarkdownRenderer
+      className="text-foreground/90! text-base! leading-relaxed! [&_h2]:mt-10! [&_h2]:text-2xl! [&_h2]:font-semibold! [&_h3]:mt-8! [&_h3]:text-lg! [&_h3]:font-semibold! [&_ol]:pl-4 [&_ul]:pl-2"
+      source={bodyMarkdown}
+    />
+  );
+  const emptyBody = (
+    <p className="text-muted-foreground text-sm italic">
+      {BLOG_EDITOR_COPY.previewEmptyBody}
+    </p>
+  );
 
   // Life Cycle
 
@@ -54,31 +78,13 @@ export const BlogPostPreview = (
         {BLOG_EDITOR_COPY.preview}
       </div>
       <div className="mx-auto flex w-[min(44rem,100%)] flex-col px-6 py-8">
-        {coverImageUrl.trim() !== '' ? (
-          <img
-            alt={coverImageAlt}
-            className="border-border mb-8 aspect-video w-full rounded-xl border object-cover"
-            decoding="async"
-            src={coverImageUrl}
-          />
-        ) : null}
+        {hasCoverImage ? coverImage : null}
         <h2 className="text-[clamp(1.6rem,3vw,2.3rem)] leading-tight font-semibold tracking-tight">
           {title}
         </h2>
-        {excerpt.trim() !== '' ? (
-          <p className="text-muted-foreground mt-4 text-lg">{excerpt}</p>
-        ) : null}
+        {hasExcerpt ? excerptText : null}
         <hr className="border-border my-8" />
-        {hasBody ? (
-          <MarkdownRenderer
-            className="text-foreground/90! text-base! leading-relaxed! [&_h2]:mt-10! [&_h2]:text-2xl! [&_h2]:font-semibold! [&_h3]:mt-8! [&_h3]:text-lg! [&_h3]:font-semibold! [&_ol]:pl-4 [&_ul]:pl-2"
-            source={bodyMarkdown}
-          />
-        ) : (
-          <p className="text-muted-foreground text-sm italic">
-            {BLOG_EDITOR_COPY.previewEmptyBody}
-          </p>
-        )}
+        {hasBody ? body : emptyBody}
       </div>
     </article>
   );

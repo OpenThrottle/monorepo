@@ -24,6 +24,26 @@ export const BlogPreview = (props: BlogPreviewProps): React.ReactElement => {
   // Handlers
 
   // Markup
+  const coverImage = (
+    <img
+      alt={coverImageAlt ?? ''}
+      className="aspect-video w-full object-cover"
+      decoding="async"
+      loading="lazy"
+      src={coverImageUrl ?? ''}
+    />
+  );
+  const coverPlaceholder = (
+    <div
+      aria-hidden="true"
+      className="landing-close-ground border-border aspect-video w-full border-b"
+    />
+  );
+  const excerptText = (
+    <p className="text-muted-foreground line-clamp-3 text-[0.975rem]">
+      {excerpt}
+    </p>
+  );
 
   // Life Cycle
 
@@ -39,20 +59,7 @@ export const BlogPreview = (props: BlogPreviewProps): React.ReactElement => {
       data-testid="BlogPreview"
     >
       <article className="flex flex-1 flex-col">
-        {coverImageUrl ? (
-          <img
-            alt={coverImageAlt ?? ''}
-            className="aspect-video w-full object-cover"
-            decoding="async"
-            loading="lazy"
-            src={coverImageUrl}
-          />
-        ) : (
-          <div
-            aria-hidden="true"
-            className="landing-close-ground border-border aspect-video w-full border-b"
-          />
-        )}
+        {coverImageUrl ? coverImage : coverPlaceholder}
         <CardContent className="flex flex-1 flex-col gap-3 p-5">
           <BlogMeta
             author={author}
@@ -67,11 +74,7 @@ export const BlogPreview = (props: BlogPreviewProps): React.ReactElement => {
               {title}
             </Link>
           </h2>
-          {excerpt ? (
-            <p className="text-muted-foreground line-clamp-3 text-[0.975rem]">
-              {excerpt}
-            </p>
-          ) : null}
+          {excerpt ? excerptText : null}
           <BlogTagList className="relative z-10 mt-auto pt-2" tags={tags} />
         </CardContent>
       </article>

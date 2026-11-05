@@ -22,13 +22,13 @@ export const buildPlanTabTasksColumns = (
       accessorKey: 'status',
       cell: ({ row }) => {
         const status = row.original.status;
+        if (!isPlanStatusKey(status)) {
+          return <div className="p-2 max-sm:p-0">{status}</div>;
+        }
+
         return (
           <div className="p-2 max-sm:p-0">
-            {isPlanStatusKey(status) ? (
-              <PlanStatusBadge status={status} />
-            ) : (
-              status
-            )}
+            <PlanStatusBadge status={status} />
           </div>
         );
       },

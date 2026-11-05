@@ -23,7 +23,9 @@
  * against a character cap can equally pass a file that still truncates. The
  * loader measures characters, so this measures characters.
  */
-export const measureIndex = (content: string): number => content.length;
+export const measureIndex = (content: string): number => {
+  return content.length;
+};
 
 /**
  * The injection cap, in characters.
@@ -186,12 +188,13 @@ const formatLostEntries = (lost: readonly IndexEntry[]): string => {
     (entry) => `  - ${entry.title} (${entry.file})  [line ${entry.line}]`,
   );
 
-  return elided > 0
-    ? [
-        `  …and ${elided} earlier ${elided === 1 ? 'entry' : 'entries'}, plus these ${named.length} newest:`,
-        ...lines,
-      ].join('\n')
-    : lines.join('\n');
+  if (elided === 0) {
+    return lines.join('\n');
+  }
+
+  const noun = elided === 1 ? 'entry' : 'entries';
+  const header = `  …and ${elided} earlier ${noun}, plus these ${named.length} newest:`;
+  return [header, ...lines].join('\n');
 };
 
 /**

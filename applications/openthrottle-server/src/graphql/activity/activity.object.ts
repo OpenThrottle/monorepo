@@ -76,8 +76,7 @@ export class ActivityOutputChunkRowObject {
   planTitle!: string;
 
   @Field(() => String, {
-    description:
-      'Task this chunk is attributed to; null for plan-scoped chunks and historical rows.',
+    description: `Task this chunk is attributed to; null for plan-scoped chunks and historical rows.`,
     nullable: true,
   })
   taskId!: string | null;
@@ -161,8 +160,7 @@ export class LastActivityOutputChunkPartObject {
   iteration!: number | null;
 
   @Field(() => String, {
-    description:
-      'Task this chunk is attributed to; null for plan-scoped chunks and historical rows.',
+    description: `Task this chunk is attributed to; null for plan-scoped chunks and historical rows.`,
     nullable: true,
   })
   taskId!: string | null;

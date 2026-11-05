@@ -37,7 +37,9 @@ describe('DeveloperRolloutProvider Component', () => {
       identityKey: null,
     };
 
-    const Component = () => <DeveloperRolloutProvider {...props} />;
+    const Component = () => {
+      return <DeveloperRolloutProvider {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

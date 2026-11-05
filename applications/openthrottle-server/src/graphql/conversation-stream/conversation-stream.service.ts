@@ -64,7 +64,9 @@ const CLI_BACKENDS: Readonly<Record<string, ConversationBackend>> =
   CONVERSATION_CLI_BACKENDS;
 
 /** Conversation-metadata key holding a backend's persisted session id. */
-const sessionMetadataKey = (backend: string): string => `${backend}SessionId`;
+const sessionMetadataKey = (backend: string): string => {
+  return `${backend}SessionId`;
+};
 
 /**
  * Serialized `metadataJson` for a turn's terminal chunk: the retryable timeout
@@ -385,11 +387,13 @@ export class ConversationStreamService {
     const backend: ConversationBackend =
       CLI_BACKENDS[run.backend] ?? openAiConversationBackend;
 
+    let additionalDirectories: typeof run.additionalDirectories | undefined;
+    if (run.additionalDirectories.length > 0) {
+      additionalDirectories = run.additionalDirectories;
+    }
+
     const backendRun: ConversationBackendRun = {
-      additionalDirectories:
-        run.additionalDirectories.length > 0
-          ? run.additionalDirectories
-          : undefined,
+      additionalDirectories,
       baseUrl: run.baseUrl ?? undefined,
       cwd: run.cwd ?? undefined,
       fileMentions: run.fileMentions.length > 0 ? run.fileMentions : undefined,
@@ -516,6 +520,11 @@ export class ConversationStreamService {
           await this.maybePersistMintedSession(run, chunk.metadata);
         }
 
+        let chunkMetadataJson: string | null = null;
+        if (chunk.metadata !== undefined) {
+          chunkMetadataJson = JSON.stringify(chunk.metadata);
+        }
+
         await this.publishChunk({
           conversationId: run.conversationId,
           delta: chunk.delta,
@@ -524,10 +533,7 @@ export class ConversationStreamService {
           id: randomUUID(),
           kind: chunk.kind,
           messageId: run.assistantMessageId,
-          metadataJson:
-            chunk.metadata === undefined
-              ? null
-              : JSON.stringify(chunk.metadata),
+          metadataJson: chunkMetadataJson,
           sortOrder: sortOrder,
         });
 

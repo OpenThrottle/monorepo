@@ -30,15 +30,16 @@ const PAST = new Date('2026-09-01T00:00:00.000Z');
 
 const EDITOR = 'Ada Lovelace';
 
-const uniqueViolation = (): QueryFailedError =>
-  new QueryFailedError(
+const uniqueViolation = (): QueryFailedError => {
+  return new QueryFailedError(
     'INSERT INTO blog_posts',
     [],
     Object.assign(new Error('duplicate key value'), { code: '23505' }),
   );
+};
 
-const buildPost = (overrides: Partial<BlogPost> = {}): BlogPost =>
-  Object.assign(
+const buildPost = (overrides: Partial<BlogPost> = {}): BlogPost => {
+  return Object.assign(
     new BlogPost(),
     blogPostsFactory.build({
       publishedAt: null,
@@ -48,6 +49,7 @@ const buildPost = (overrides: Partial<BlogPost> = {}): BlogPost =>
     { author: null, tags: [] },
     overrides,
   );
+};
 
 describe('BlogPostsService write path', () => {
   const postRepository = createMock<Repository<BlogPost>>();
@@ -273,7 +275,9 @@ describe('BlogPostsService write path', () => {
 
   describe('updatePost', () => {
     /** Returns the columns the single UPDATE was asked to write. */
-    const written = (): unknown => set.mock.calls[0]?.[0];
+    const written = (): unknown => {
+      return set.mock.calls[0]?.[0];
+    };
 
     it('returns not-found for an unknown post id', async () => {
       postRepository.findOneBy.mockResolvedValue(null);
@@ -404,8 +408,9 @@ describe('BlogPostsService write path', () => {
 
     describe('cover alt rule on the resulting post', () => {
       const COVER = 'https://cdn.example.test/cover.png';
-      const withCover = (): BlogPost =>
-        buildPost({ coverImageAlt: 'A chart', coverImageUrl: COVER });
+      const withCover = (): BlogPost => {
+        return buildPost({ coverImageAlt: 'A chart', coverImageUrl: COVER });
+      };
 
       it('rejects a patch that clears the alt while the stored cover URL stays', async () => {
         postRepository.findOneBy.mockResolvedValue(withCover());
@@ -562,7 +567,9 @@ describe('BlogPostsService write path', () => {
         // updated_at, exactly what the WHERE clause does server-side. Both writers read the
         // row BEFORE either writes, so a read-then-write check would let both through.
         const stored = buildPost({ title: 'Original', updatedAt: READ_AT });
-        const snapshot = (): BlogPost => Object.assign(new BlogPost(), stored);
+        const snapshot = (): BlogPost => {
+          return Object.assign(new BlogPost(), stored);
+        };
         postRepository.findOneBy.mockImplementation(() =>
           Promise.resolve(snapshot()),
         );
@@ -570,13 +577,15 @@ describe('BlogPostsService write path', () => {
 
         let expected: Date | null = null;
         andWhere.mockImplementation((_sql: string, params: unknown) => {
-          expected =
+          expected = null;
+          if (
             typeof params === 'object' &&
             params !== null &&
             'expectedUpdatedAt' in params &&
             params.expectedUpdatedAt instanceof Date
-              ? params.expectedUpdatedAt
-              : null;
+          ) {
+            expected = params.expectedUpdatedAt;
+          }
           return updateBuilder;
         });
         set.mockImplementation((columns: Partial<BlogPost>) => {
@@ -613,7 +622,9 @@ describe('BlogPostsService write path', () => {
   });
 
   describe('publishPost', () => {
-    const written = (): unknown => set.mock.calls[0]?.[0];
+    const written = (): unknown => {
+      return set.mock.calls[0]?.[0];
+    };
 
     it('stamps now() when no publishedAt is given', async () => {
       const post = buildPost();
@@ -730,7 +741,9 @@ describe('BlogPostsService write path', () => {
   });
 
   describe('unpublishPost / archivePost', () => {
-    const written = (): unknown => set.mock.calls[0]?.[0];
+    const written = (): unknown => {
+      return set.mock.calls[0]?.[0];
+    };
 
     it('unpublish returns the post to DRAFT, clears published_at and records the editor', async () => {
       const post = buildPost({

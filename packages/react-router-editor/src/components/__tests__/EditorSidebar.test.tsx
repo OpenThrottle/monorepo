@@ -5,17 +5,19 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import type { EditorAtom, EditorFile } from '../../data/atom.editor';
-import { editorAtom, editorAtomDefaults } from '../../data/atom.editor';
+import type { EditorAtom, EditorFile } from '../../data/data.atom.editor';
+import { editorAtom, editorAtomDefaults } from '../../data/data.atom.editor';
 import type { EditorSidebarProps } from '../EditorSidebar';
 import { EditorSidebar } from '../EditorSidebar';
 
-const file = (overrides: Partial<EditorFile> = {}): EditorFile => ({
-  directory: '.',
-  filename: 'readme.md',
-  language: 'markdown',
-  ...overrides,
-});
+const file = (overrides: Partial<EditorFile> = {}): EditorFile => {
+  return {
+    directory: '.',
+    filename: 'readme.md',
+    language: 'markdown',
+    ...overrides,
+  };
+};
 
 const renderSidebar = (
   initial: Partial<EditorAtom> = {},
@@ -24,11 +26,13 @@ const renderSidebar = (
   const store = createStore();
   store.set(editorAtom, { ...editorAtomDefaults, ...initial });
 
-  const Component = (): React.ReactElement => (
-    <Provider store={store}>
-      <EditorSidebar {...props} />
-    </Provider>
-  );
+  const Component = (): React.ReactElement => {
+    return (
+      <Provider store={store}>
+        <EditorSidebar {...props} />
+      </Provider>
+    );
+  };
 
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 

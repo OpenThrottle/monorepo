@@ -19,8 +19,9 @@ import type { TimelineMarker } from '../types';
  */
 export const hasUnattributedGrilling = (
   markers: readonly TimelineMarker[],
-): boolean =>
-  markers.some(
+): boolean => {
+  return markers.some(
     (marker) =>
       marker.kind === TimelineMarkerKind.Grilling && marker.userId == null,
   );
+};

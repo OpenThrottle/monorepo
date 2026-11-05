@@ -8,10 +8,10 @@ export const getMediaError = (target: HTMLMediaElement): Error | null => {
     return null;
   }
 
-  const message =
-    typeof mediaError.message === 'string' && mediaError.message.length > 0
-      ? mediaError.message
-      : `Media error code ${mediaError.code}`;
+  const hasMessage =
+    typeof mediaError.message === 'string' && mediaError.message.length > 0;
+  const fallback = `Media error code ${mediaError.code}`;
+  const message = hasMessage ? mediaError.message : fallback;
 
   return new Error(message);
 };

@@ -3,8 +3,9 @@ import { describe, expect, test } from 'vitest';
 import type { DocsContentModules } from '../buildDocsManifest';
 import { buildDocsManifest } from '../buildDocsManifest';
 
-const md = (frontmatter: string, body: string): string =>
-  `---\n${frontmatter}\n---\n\n${body}\n`;
+const md = (frontmatter: string, body: string): string => {
+  return `---\n${frontmatter}\n---\n\n${body}\n`;
+};
 
 const MODULES: DocsContentModules = {
   './docs-content/docs/getting-started.md': md(
@@ -132,8 +133,7 @@ describe('buildDocsManifest', () => {
     expect(() =>
       buildDocsManifest({
         modules: {
-          './docs-content/docs/scalar.md':
-            '---\njust a scalar\n---\n\n# Body\n',
+          './docs-content/docs/scalar.md': `---\njust a scalar\n---\n\n# Body\n`,
         },
       }),
     ).toThrow(/missing a required string "title"/);

@@ -34,7 +34,7 @@ Presentational + client-only UI for the [`@openthrottle/openthrottle-ide`](../op
 The engine runs in a server module; the route maps its results to view-models and renders these components.
 
 ```ts
-// app/routing/ide/data/ide-engine.server.ts  (server-only)
+// app/routing/ide/utils/ide-engine.server.ts  (server-only)
 import { listFiles, searchText } from '@openthrottle/openthrottle-ide';
 import type {
   IdeSearchResult,

@@ -48,12 +48,16 @@ export const loader = async (args: Route.LoaderArgs) => {
   }
 
   const { listFilesVM, searchVM } =
-    await import('~/routing/ide/data/ide-engine.server');
+    await import('~/routing/ide/utils/ide-engine.server');
   const listing = await listFilesVM(resolved.config, resolved.repository);
-  const search =
-    query.trim() === ''
-      ? null
-      : await searchVM(resolved.config, resolved.repository, query);
+  const runSearch = async () => {
+    if (query.trim() === '') {
+      return null;
+    }
+
+    return searchVM(resolved.config, resolved.repository, query);
+  };
+  const search = await runSearch();
 
   return {
     listing,

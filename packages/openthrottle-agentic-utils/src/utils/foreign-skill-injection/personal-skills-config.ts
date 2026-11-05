@@ -15,8 +15,7 @@ import { join } from 'node:path';
  *
  * @public
  */
-export const PERSONAL_SKILLS_ENABLED_ENV =
-  'OPENTHROTTLE_PERSONAL_SKILLS_ENABLED';
+export const PERSONAL_SKILLS_ENABLED_ENV = `OPENTHROTTLE_PERSONAL_SKILLS_ENABLED`;
 
 /**
  * Env var overriding the personal skills directory. Defaults to `~/.openthrottle/skills`.
@@ -71,5 +70,6 @@ export const resolvePersonalSkillsRoot = (
  */
 export const resolvePersonalSkillsDir = (
   env: NodeJS.ProcessEnv = process.env,
-): string | undefined =>
-  isEnabled(env) ? resolvePersonalSkillsRoot(env) : undefined;
+): string | undefined => {
+  return isEnabled(env) ? resolvePersonalSkillsRoot(env) : undefined;
+};

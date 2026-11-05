@@ -36,7 +36,7 @@
 
 import { defineDriver } from '../registry/index.ts';
 import type { DriverCapabilities, DriverModelListing } from '../types/index.ts';
-import { escapeForShellDoubleQuoted, escapeShellArg } from '../utils/shell.ts';
+import { escapeForShellDoubleQuoted, formatModelFlag } from '../utils/shell.ts';
 
 const capabilities: DriverCapabilities = {
   /**
@@ -113,11 +113,7 @@ export const antigravityDriver = defineDriver({
   binEnv: 'OPENTHROTTLE_ANTIGRAVITY_BIN',
   binary: 'agy',
   buildShellCommand: (config) => {
-    const modelNorm = config.model?.trim() ?? '';
-    const modelFlag =
-      modelNorm !== '' && modelNorm !== 'auto'
-        ? ` --model ${escapeShellArg(modelNorm)}`
-        : '';
+    const modelFlag = formatModelFlag(config.model);
 
     const safePrompt = escapeForShellDoubleQuoted(config.prompt);
 

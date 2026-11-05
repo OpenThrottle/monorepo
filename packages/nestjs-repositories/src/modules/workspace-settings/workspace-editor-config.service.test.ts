@@ -233,12 +233,15 @@ describe('WorkspaceEditorConfigService — foreign repo cleanliness', () => {
   const mockCheckoutsService = createMock<RepositoryCheckoutsService>();
   let service: WorkspaceEditorConfigService;
 
-  const git = (...args: string[]): string =>
-    execFileSync('git', ['-C', repositoryRoot, ...args], {
+  const git = (...args: string[]): string => {
+    return execFileSync('git', ['-C', repositoryRoot, ...args], {
       encoding: 'utf8',
     }).trim();
+  };
 
-  const porcelain = (): string => git('status', '--porcelain');
+  const porcelain = (): string => {
+    return git('status', '--porcelain');
+  };
 
   beforeEach(() => {
     repositoryRoot = mkdtempSync(join(tmpdir(), 'ot-ws-editor-git-'));
@@ -284,9 +287,17 @@ describe('WorkspaceEditorConfigService — foreign repo cleanliness', () => {
   });
 
   /** True when git ignores `relativePath` (check-ignore exits 0 for ignored, 1 for not). */
-  const isIgnored = (relativePath: string): boolean =>
-    spawnSync('git', ['-C', repositoryRoot, 'check-ignore', '-q', relativePath])
-      .status === 0;
+  const isIgnored = (relativePath: string): boolean => {
+    return (
+      spawnSync('git', [
+        '-C',
+        repositoryRoot,
+        'check-ignore',
+        '-q',
+        relativePath,
+      ]).status === 0
+    );
+  };
 
   test("OT's own manifest never shows up in the user's git status", async () => {
     // A meaningful baseline: anything dirty here would invalidate the assertions below.
@@ -481,25 +492,35 @@ describe('workspace-editors + foreign-skill injection — one repo, two exclude 
   const mockCheckoutsService = createMock<RepositoryCheckoutsService>();
   let service: WorkspaceEditorConfigService;
 
-  const git = (...args: string[]): string =>
-    execFileSync('git', ['-C', repositoryRoot, ...args], {
+  const git = (...args: string[]): string => {
+    return execFileSync('git', ['-C', repositoryRoot, ...args], {
       encoding: 'utf8',
     }).trim();
+  };
 
-  const isIgnored = (relativePath: string): boolean =>
-    spawnSync('git', ['-C', repositoryRoot, 'check-ignore', '-q', relativePath])
-      .status === 0;
+  const isIgnored = (relativePath: string): boolean => {
+    return (
+      spawnSync('git', [
+        '-C',
+        repositoryRoot,
+        'check-ignore',
+        '-q',
+        relativePath,
+      ]).status === 0
+    );
+  };
 
   const applyEditors = async (): Promise<void> => {
     await service.applyForUser(userId, { apiBaseUrl: 'http://localhost:6021' });
   };
 
-  const injectSkills = (): { readonly injectedNames: readonly string[] } =>
-    ensureMaterialized({
+  const injectSkills = (): { readonly injectedNames: readonly string[] } => {
+    return ensureMaterialized({
       env: injectionEnv,
       otCuratedSkillsDir: otSkills,
       repoPath: repositoryRoot,
     });
+  };
 
   beforeEach(() => {
     base = mkdtempSync(join(tmpdir(), 'ot-two-blocks-'));

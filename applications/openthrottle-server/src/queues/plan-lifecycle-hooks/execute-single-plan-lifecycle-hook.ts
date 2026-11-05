@@ -36,10 +36,13 @@ const hookFailed = (result: {
   readonly cancelled?: boolean;
   readonly errorMessage?: string;
   readonly ok: boolean;
-}): boolean =>
-  result.cancelled === true ||
-  !result.ok ||
-  (result.errorMessage !== undefined && result.errorMessage.trim() !== '');
+}): boolean => {
+  return (
+    result.cancelled === true ||
+    !result.ok ||
+    (result.errorMessage !== undefined && result.errorMessage.trim() !== '')
+  );
+};
 
 const applyHookFailurePolicy = (
   phase: JobRunHookPhase,
@@ -61,11 +64,15 @@ const applyHookFailurePolicy = (
   return { blocked: false };
 };
 
-const getWorkspaceRoot = (jobData: RunPlanJobData): string =>
-  jobData.workingDirectory ?? process.env.WORKSPACE_ROOT ?? process.cwd();
+const getWorkspaceRoot = (jobData: RunPlanJobData): string => {
+  return (
+    jobData.workingDirectory ?? process.env.WORKSPACE_ROOT ?? process.cwd()
+  );
+};
 
-const runKindFromJobData = (jobData: RunPlanJobData): JobRunHookRunKind =>
-  isRunPlanOrchestratorJobData(jobData) ? 'orchestrator' : 'spawn';
+const runKindFromJobData = (jobData: RunPlanJobData): JobRunHookRunKind => {
+  return isRunPlanOrchestratorJobData(jobData) ? 'orchestrator' : 'spawn';
+};
 
 const executionBackendFromJobData = (
   jobData: RunPlanJobData,
@@ -158,10 +165,10 @@ export const executeSinglePlanLifecycleHook = async (
   await appendPlanOutput(`[job-run-hook] Starting ${label}\n`);
 
   const layer1Text = resolveJobRunHookLayer1Prompt(entry, cwd);
-  const layer1Suffix =
-    phase === 'beforeAll' || phase === 'beforeEach'
-      ? 'Complete configured preflight work for this hook phase.'
-      : 'Complete configured post-run work for this hook phase.';
+  const isPreflightPhase = phase === 'beforeAll' || phase === 'beforeEach';
+  const preflightSuffix = `Complete configured preflight work for this hook phase.`;
+  const postRunSuffix = `Complete configured post-run work for this hook phase.`;
+  const layer1Suffix = isPreflightPhase ? preflightSuffix : postRunSuffix;
 
   const agentPrompt = buildJobRunHookAgentPrompt({
     entry,

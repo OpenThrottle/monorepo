@@ -18,8 +18,7 @@ export const BLOG_COPY = {
     },
     notFound: {
       actionLabel: 'Browse all posts',
-      description:
-        'That post or tag does not exist, or it has not been published yet.',
+      description: `That post or tag does not exist, or it has not been published yet.`,
       title: 'Not found',
     },
     tag: {
@@ -29,8 +28,7 @@ export const BLOG_COPY = {
     },
   },
   feed: {
-    description:
-      'Notes from the OpenThrottle team on plans, agents and shipping software with AI.',
+    description: `Notes from the OpenThrottle team on plans, agents and shipping software with AI.`,
     language: 'en-us',
     linkTitle: 'OpenThrottle blog (RSS)',
     title: 'OpenThrottle Blog',
@@ -49,8 +47,7 @@ export const BLOG_COPY = {
   },
   routes: {
     index: {
-      description:
-        'Notes from the OpenThrottle team on plans, agents and shipping software with AI.',
+      description: `Notes from the OpenThrottle team on plans, agents and shipping software with AI.`,
       heading: 'Blog',
       lede: 'Notes from the team on plans, agents and shipping software with AI.',
       title: 'Blog',

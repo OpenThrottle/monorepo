@@ -4,21 +4,23 @@ import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 
 import type { AgentsSkillsRegistryGridProps } from '../AgentsSkillsRegistryGrid';
 import { AgentsSkillsRegistryGrid } from '../AgentsSkillsRegistryGrid';
 
-const entry = (overrides: Partial<RepoSkillEntry> = {}): RepoSkillEntry => ({
-  disableModelInvocation: undefined,
-  layout: 'agents',
-  repoRelativePath: 'skills/ot-plans/SKILL.md',
-  slug: 'ot-plans',
-  source: 'openthrottle',
-  summary: 'Manage OpenThrottle plans and tasks.',
-  tags: undefined,
-  ...overrides,
-});
+const entry = (overrides: Partial<RepoSkillEntry> = {}): RepoSkillEntry => {
+  return {
+    disableModelInvocation: undefined,
+    layout: 'agents',
+    repoRelativePath: 'skills/ot-plans/SKILL.md',
+    slug: 'ot-plans',
+    source: 'openthrottle',
+    summary: 'Manage OpenThrottle plans and tasks.',
+    tags: undefined,
+    ...overrides,
+  };
+};
 
 describe('AgentsSkillsRegistryGrid Component', () => {
   let component: RenderResult;

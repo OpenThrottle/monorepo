@@ -35,10 +35,17 @@ const YAML_NON_STRING_PATTERN = /^(?:true|false|null|~|[-+]?\d+(?:\.\d+)?)$/i;
  * @description Emits `value` as a YAML scalar: plain when unambiguous, else
  * double-quoted via JSON's (identical) escape grammar.
  */
-const toYamlScalar = (value: string): string =>
-  YAML_PLAIN_UNSAFE_PATTERN.test(value) || YAML_NON_STRING_PATTERN.test(value)
-    ? JSON.stringify(value)
-    : value;
+const toYamlScalar = (value: string): string => {
+  const needsQuotes =
+    YAML_PLAIN_UNSAFE_PATTERN.test(value) ||
+    YAML_NON_STRING_PATTERN.test(value);
+
+  if (needsQuotes) {
+    return JSON.stringify(value);
+  }
+
+  return value;
+};
 
 export interface BuildSkillScaffoldInput {
   /** The `description` key — the only thing a model sees when deciding to fire the skill. */
@@ -69,10 +76,9 @@ export const buildSkillScaffold = (input: BuildSkillScaffoldInput): string => {
   const { description, disableModelInvocation, name, tags } = input;
 
   const trimmedDescription = description.trim();
-  const resolvedDescription =
-    trimmedDescription.length > 0
-      ? trimmedDescription
-      : SKILL_SCAFFOLD_DESCRIPTION_PLACEHOLDER;
+  const hasDescription = trimmedDescription.length > 0;
+  const placeholder = SKILL_SCAFFOLD_DESCRIPTION_PLACEHOLDER;
+  const resolvedDescription = hasDescription ? trimmedDescription : placeholder;
 
   const cleanedTags = (tags ?? [])
     .map((tag) => tag.trim())

@@ -1,5 +1,5 @@
 import type { Tree } from '@nx/devkit';
-import { createProjectGraphAsync, formatFiles, logger } from '@nx/devkit';
+import { formatFiles, logger } from '@nx/devkit';
 import { join } from 'path';
 import prompts from 'prompts';
 
@@ -10,6 +10,7 @@ import {
   getReactHookDestination,
   parsePossibleNames,
 } from '../../utils/questions.ts';
+import { resolveReactDestination } from '../../utils/resolve-react-destination.ts';
 import { throwInvalidDestinationError } from '../../utils/target-validation.ts';
 import { validateCamelCase } from '../../utils/validation.ts';
 
@@ -31,11 +32,11 @@ export async function utilGenerator(
   }
 
   const destination = schema.destination;
-  const project = destination
-    ? (await createProjectGraphAsync()).nodes[destination]
-    : interactive
-      ? await getReactHookDestination()
-      : undefined;
+  const project = await resolveReactDestination(
+    destination,
+    interactive,
+    getReactHookDestination,
+  );
 
   if (!project) {
     if (destination) await throwInvalidDestinationError(destination);

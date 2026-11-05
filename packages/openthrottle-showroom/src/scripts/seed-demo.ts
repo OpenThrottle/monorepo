@@ -87,8 +87,9 @@ const assertDemoDatabase = (): string => {
  * renders relative time. An absolute fixture would drift on every take and
  * eventually read "8 months ago".
  */
-const at = (now: Date, offsetMinutes: number): Date =>
-  new Date(now.getTime() + offsetMinutes * 60_000);
+const at = (now: Date, offsetMinutes: number): Date => {
+  return new Date(now.getTime() + offsetMinutes * 60_000);
+};
 
 // The repository services take the real LoggerService. It is a class with a
 // private member, so a structural stand-in cannot satisfy the type — instantiate
@@ -399,8 +400,9 @@ const seed = async (dataSource: DataSource, reset: boolean): Promise<void> => {
   // defaults to gen_random_uuid(), so the previous delete-and-reinsert minted
   // fresh ids on every run — the rows were identical but the table never was,
   // which is exactly the kind of drift `--reset` exists to remove.
-  const chunkId = (index: number): string =>
-    `d0d0d0d0-0000-4000-8000-0000000${String(index).padStart(5, '0')}`;
+  const chunkId = (index: number): string => {
+    return `d0d0d0d0-0000-4000-8000-0000000${String(index).padStart(5, '0')}`;
+  };
 
   await dataSource.query(
     'DELETE FROM plan_output_stream WHERE plan_id = $1 AND id <> ALL($2::uuid[])',

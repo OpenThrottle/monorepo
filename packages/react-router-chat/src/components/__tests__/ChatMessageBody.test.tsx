@@ -34,7 +34,9 @@ describe('ChatMessageBody Component', () => {
   });
 
   const renderBody = (p: ChatMessageBodyProps): RenderResult => {
-    const Comp = () => <ChatMessageBody {...p} />;
+    const Comp = () => {
+      return <ChatMessageBody {...p} />;
+    };
     const RoutesStub = createRoutesStub([{ Component: Comp, path: '/' }]);
     return render(<RoutesStub />);
   };

@@ -570,8 +570,7 @@ describe('routes/plans.$planId._index action (forceSettlePlanRun)', () => {
     const { result } = await post(formData);
 
     expect(result).toEqual({
-      forceSettlePlanRunError:
-        'Nothing to settle — this run is no longer an unsettled interactive run.',
+      forceSettlePlanRunError: `Nothing to settle — this run is no longer an unsettled interactive run.`,
     });
   });
 });
@@ -684,8 +683,9 @@ describe('routes/plans.$planId._index action (runPlan iterations + persisted mod
     return { request, result };
   };
 
-  const documentsCalled = () =>
-    mockExecuteGraphqlWithAuth.mock.calls.map((call) => call[1]);
+  const documentsCalled = () => {
+    return mockExecuteGraphqlWithAuth.mock.calls.map((call) => call[1]);
+  };
 
   beforeEach(() => {
     mockExecuteGraphqlWithAuth.mockReset();
@@ -824,8 +824,7 @@ describe('routes/plans.$planId._index action (runPlan iterations + persisted mod
     });
 
     expect(result).toEqual({
-      runPlanError:
-        'Could not save the model and effort to the plan run configuration: config rejected',
+      runPlanError: `Could not save the model and effort to the plan run configuration: config rejected`,
     });
     expect(documentsCalled()).not.toContain(PlanDetailEnqueuePlanRunDocument);
   });

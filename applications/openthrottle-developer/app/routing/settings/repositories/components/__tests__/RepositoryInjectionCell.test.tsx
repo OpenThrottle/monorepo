@@ -8,7 +8,7 @@ import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/da
 import {
   mockCheckout,
   mockRepository,
-} from '~/routing/settings/repositories/data/mock.repositories';
+} from '~/routing/settings/repositories/testing/mock-repositories';
 import { buildRepositoryRows } from '~/routing/settings/repositories/utils/rows';
 
 import type { RepositoryInjectionCellProps } from '../RepositoryInjectionCell';
@@ -47,7 +47,9 @@ describe('RepositoryInjectionCell Component', () => {
   let props: RepositoryInjectionCellProps;
 
   const setup = (): void => {
-    const Component = () => <RepositoryInjectionCell {...props} />;
+    const Component = () => {
+      return <RepositoryInjectionCell {...props} />;
+    };
     const RoutesStub = createRoutesStub([
       { Component, path: '/' },
       {

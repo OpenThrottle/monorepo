@@ -61,12 +61,11 @@ export const getRedisCache = (logger?: RedisCacheLogger) => {
   const { host, password, port, tls, username } = redisConfig();
 
   const scheme = tls ? 'rediss' : 'redis';
-  const credentials =
-    username || password
-      ? `${encodeURIComponent(username ?? '')}:${encodeURIComponent(
-          password ?? '',
-        )}@`
-      : '';
+  const hasCredentials = Boolean(username || password);
+  const encodedUsername = encodeURIComponent(username ?? '');
+  const encodedPassword = encodeURIComponent(password ?? '');
+  const userInfo = `${encodedUsername}:${encodedPassword}@`;
+  const credentials = hasCredentials ? userInfo : '';
   const redisUri = `${scheme}://${credentials}${host}:${port}`;
 
   const cacheRedis = new KeyvRedis(redisUri, { namespace });
@@ -91,14 +90,14 @@ export const getRedisCache = (logger?: RedisCacheLogger) => {
   // condition, and Node's `require(esm)` covers the reverse.
   const cacheKV = new Keyv(cacheRedis);
 
-  const logConnectionError =
-    (source: string) =>
-    (error: unknown): void => {
+  const logConnectionError = (source: string) => {
+    return (error: unknown): void => {
       logger?.error(`Redis cache connection error (${source})`, {
         error,
         namespace,
       });
     };
+  };
 
   cacheRedis.on('error', logConnectionError('store'));
   cacheKV.on('error', logConnectionError('keyv'));

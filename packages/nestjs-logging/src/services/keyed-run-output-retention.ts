@@ -190,8 +190,9 @@ export const pruneKeyedRunOutputDirectory = async (
   const remainingAfterAge = rows.filter((r) => !toDelete.has(r.absPath));
 
   if (maxTotalBytes !== undefined) {
-    const sumSize = (list: FileStatRow[]): number =>
-      list.reduce((acc, r) => acc + r.size, 0);
+    const sumSize = (list: FileStatRow[]): number => {
+      return list.reduce((acc, r) => acc + r.size, 0);
+    };
 
     let candidates = [...remainingAfterAge].sort(
       (a, b) => a.mtimeMs - b.mtimeMs,

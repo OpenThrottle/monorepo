@@ -286,5 +286,5 @@ Developer UI: Settings → Workspace → **Apply editor configuration** (after e
 
 - Path validation (Ralph): `applications/openthrottle-server/src/graphql/plans/enqueue-plan-ralph-tuning.ts` — `validateWorkingDirectory`
 - Client path validation: `applications/openthrottle-developer/app/routing/plans/utils/workspace-path.ts`
-- Skill registry (UI): `applications/openthrottle-developer/app/routing/agents/data/repo-skills-registry.ts`
+- Skill registry (UI): `applications/openthrottle-developer/app/routing/agents/data/data.repo-skills-registry.ts`
 - Skill paths (apply): `packages/nestjs-repositories/.../openthrottle-repo-skill-paths.ts`

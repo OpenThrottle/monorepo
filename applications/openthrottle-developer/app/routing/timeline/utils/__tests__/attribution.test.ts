@@ -8,19 +8,21 @@ const marker = (
   id: string,
   kind: TimelineMarkerKind,
   userId: string | null,
-): TimelineMarker => ({
-  at: '2026-09-02T00:00:00.000Z',
-  branch: 'feat/x',
-  id,
-  kind,
-  laneKey: 'skills',
-  laneLabel: 'Skills',
-  planId: null,
-  taskId: null,
-  title: 'feat/x',
-  url: null,
-  userId,
-});
+): TimelineMarker => {
+  return {
+    at: '2026-09-02T00:00:00.000Z',
+    branch: 'feat/x',
+    id,
+    kind,
+    laneKey: 'skills',
+    laneLabel: 'Skills',
+    planId: null,
+    taskId: null,
+    title: 'feat/x',
+    url: null,
+    userId,
+  };
+};
 
 describe('hasUnattributedGrilling', () => {
   test('should return false for an empty window', () => {

@@ -33,16 +33,18 @@ import { ServiceAccountCredentialObject } from './service-account-credential.obj
 
 const toCredentialObject = (
   credential: ServiceAccountCredential,
-): ServiceAccountCredentialObject => ({
-  createdAt: credential.createdAt,
-  expiresAt: credential.expiresAt,
-  id: credential.id,
-  label: credential.label,
-  lastUsedAt: credential.lastUsedAt,
-  prefix: credential.prefix,
-  revokedAt: credential.revokedAt,
-  serviceAccountId: credential.serviceAccountId,
-});
+): ServiceAccountCredentialObject => {
+  return {
+    createdAt: credential.createdAt,
+    expiresAt: credential.expiresAt,
+    id: credential.id,
+    label: credential.label,
+    lastUsedAt: credential.lastUsedAt,
+    prefix: credential.prefix,
+    revokedAt: credential.revokedAt,
+    serviceAccountId: credential.serviceAccountId,
+  };
+};
 
 @Resolver(() => ServiceAccountObject)
 @UseGuards(GqlPermissionsGuard)

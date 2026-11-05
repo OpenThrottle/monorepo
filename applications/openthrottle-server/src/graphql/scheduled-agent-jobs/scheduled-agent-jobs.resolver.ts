@@ -56,8 +56,9 @@ import { ScheduledAgentJobsLoaders } from './scheduled-agent-jobs-loaders.ts';
 /** Default window for the run-stats query: the trailing 24 hours. */
 const RUN_STATS_WINDOW_MS = 24 * 60 * 60 * 1000;
 
-const ownerUserIdFor = (principal: AuthPrincipal): string | null =>
-  principal.kind === AUTH_PRINCIPAL_KIND_USER ? principal.sub : null;
+const ownerUserIdFor = (principal: AuthPrincipal): string | null => {
+  return principal.kind === AUTH_PRINCIPAL_KIND_USER ? principal.sub : null;
+};
 
 @Resolver(() => ScheduledAgentJobObject)
 @UseGuards(GqlPermissionsGuard)

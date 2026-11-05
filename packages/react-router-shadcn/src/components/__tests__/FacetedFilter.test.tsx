@@ -15,13 +15,15 @@ const opt = (
   value: string,
   group: string | undefined,
   count: number | undefined = undefined,
-): FacetedFilterOption => ({
-  adornment: <span data-testid={`dot-${value}`} />,
-  count,
-  group,
-  label: value.toUpperCase(),
-  value,
-});
+): FacetedFilterOption => {
+  return {
+    adornment: <span data-testid={`dot-${value}`} />,
+    count,
+    group,
+    label: value.toUpperCase(),
+    value,
+  };
+};
 
 const OPTIONS: readonly FacetedFilterOption[] = [
   opt('a', 'Active'),
@@ -55,8 +57,11 @@ const setup = (overrides: Partial<Overrides>) => {
   return { component, onChange, user };
 };
 
-const badgesIn = (trigger: HTMLElement): NodeListOf<Element> =>
-  trigger.querySelectorAll('[data-slot="faceted-summary"] [data-slot="badge"]');
+const badgesIn = (trigger: HTMLElement): NodeListOf<Element> => {
+  return trigger.querySelectorAll(
+    '[data-slot="faceted-summary"] [data-slot="badge"]',
+  );
+};
 
 describe('FacetedFilter', () => {
   describe('trigger', () => {

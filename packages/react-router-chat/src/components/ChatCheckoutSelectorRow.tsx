@@ -58,10 +58,43 @@ export const ChatCheckoutSelectorRow = (
   // At the cap, unselected rows are inert but selected ones stay toggleable —
   // otherwise the list traps the user with no way back under the cap.
   const disabled = multiple && atCap && !isSelected;
+  const hasQualifier = qualifier != null;
+  const showPrimary = multiple && isPrimary;
+  const showContext = multiple && isSelected && !isPrimary;
 
   // Handlers
 
   // Markup
+  const qualifierNode = (
+    <span
+      className="text-muted-foreground truncate text-xs"
+      data-testid={`ChatCheckoutSelector-qualifier-${checkout.id}`}
+    >
+      {qualifier}
+    </span>
+  );
+  const branchNode = (
+    <div className="flex flex-1 items-center gap-2">
+      <GitBranch className="size-3" />
+      {checkout.branch}
+    </div>
+  );
+  const primaryNode = (
+    <span
+      className="shrink-0"
+      data-testid={`ChatCheckoutSelector-primary-${checkout.id}`}
+    >
+      Primary
+    </span>
+  );
+  const contextNode = (
+    <span
+      className="shrink-0"
+      data-testid={`ChatCheckoutSelector-context-${checkout.id}`}
+    >
+      Context only
+    </span>
+  );
 
   // Life Cycle
 
@@ -80,14 +113,7 @@ export const ChatCheckoutSelectorRow = (
         <div className="flex w-full items-center gap-2">
           <span className="flex flex-1 flex-col">
             <span className="truncate">{label}</span>
-            {qualifier != null ? (
-              <span
-                className="text-muted-foreground truncate text-xs"
-                data-testid={`ChatCheckoutSelector-qualifier-${checkout.id}`}
-              >
-                {qualifier}
-              </span>
-            ) : null}
+            {hasQualifier ? qualifierNode : null}
           </span>
           <Check
             className={cn(
@@ -98,30 +124,9 @@ export const ChatCheckoutSelectorRow = (
         </div>
 
         <div className="text-muted-foreground/60 flex items-center gap-2 text-xs italic">
-          {hasBranch ? (
-            <div className="flex flex-1 items-center gap-2">
-              <GitBranch className="size-3" />
-              {checkout.branch}
-            </div>
-          ) : null}
-
-          {multiple && isPrimary ? (
-            <span
-              className="shrink-0"
-              data-testid={`ChatCheckoutSelector-primary-${checkout.id}`}
-            >
-              Primary
-            </span>
-          ) : null}
-
-          {multiple && isSelected && !isPrimary ? (
-            <span
-              className="shrink-0"
-              data-testid={`ChatCheckoutSelector-context-${checkout.id}`}
-            >
-              Context only
-            </span>
-          ) : null}
+          {hasBranch ? branchNode : null}
+          {showPrimary ? primaryNode : null}
+          {showContext ? contextNode : null}
         </div>
       </div>
     </CommandItem>

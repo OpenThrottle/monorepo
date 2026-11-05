@@ -35,11 +35,17 @@ const LOCAL_HOSTNAME_PATTERN = /\b[A-Za-z0-9][A-Za-z0-9-]*\.local\b/g;
  * npm scopes read like emails to a naive pattern (`@scope/pkg`) — they are
  * not addresses. An email match immediately followed by `/` is a scope.
  */
-const isNpmScope = (text: string, matchIndex: number, match: string): boolean =>
-  text[matchIndex + match.length] === '/';
+const isNpmScope = (
+  text: string,
+  matchIndex: number,
+  match: string,
+): boolean => {
+  return text[matchIndex + match.length] === '/';
+};
 
-const preview = (value: string): string =>
-  value.length > 48 ? `${value.slice(0, 45)}…` : value;
+const preview = (value: string): string => {
+  return value.length > 48 ? `${value.slice(0, 45)}…` : value;
+};
 
 /** Scan one snapshot line (or any text) for committed-data leaks. */
 export const scanSnapshotText = (

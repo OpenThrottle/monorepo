@@ -9,8 +9,8 @@ import { ChatMentionPopover } from '../ChatMentionPopover';
 
 const renderPopover = (
   overrides: Partial<ChatMentionPopoverProps> = {},
-): RenderResult =>
-  render(
+): RenderResult => {
+  return render(
     <ChatMentionPopover
       activeIndex={0}
       emptyLabel="No files found"
@@ -24,6 +24,7 @@ const renderPopover = (
       {...overrides}
     />,
   );
+};
 
 describe('ChatMentionPopover', () => {
   test('renders the root container', () => {

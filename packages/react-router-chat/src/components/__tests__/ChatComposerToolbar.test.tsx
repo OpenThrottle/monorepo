@@ -58,12 +58,13 @@ const PERSONAS: readonly ChatPersonaOption[] = [
   { id: 'builder', label: 'Builder' },
 ];
 
-const renderToolbar = (props: ChatComposerToolbarProps): RenderResult =>
-  render(
+const renderToolbar = (props: ChatComposerToolbarProps): RenderResult => {
+  return render(
     <TooltipProvider>
       <ChatComposerToolbar {...props} />
     </TooltipProvider>,
   );
+};
 
 describe('ChatComposerToolbar Component', () => {
   test('renders an empty bar when no controls are supplied', () => {

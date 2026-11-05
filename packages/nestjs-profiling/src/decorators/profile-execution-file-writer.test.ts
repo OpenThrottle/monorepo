@@ -10,7 +10,9 @@ import type { ProfileExecutionResult } from './profile-execution.types.ts';
 import { profileExecution } from './profile-execution.util.ts';
 import { createProfileExecutionFileWriter } from './profile-execution-file-writer.ts';
 
-const parseRecord = (text: string): Record<string, unknown> => JSON.parse(text);
+const parseRecord = (text: string): Record<string, unknown> => {
+  return JSON.parse(text);
+};
 
 describe('createProfileExecutionFileWriter', () => {
   let outputPath: string;
@@ -196,12 +198,14 @@ describe('createProfileExecutionFileWriter', () => {
     warnSpy.mockRestore();
   });
 
-  const makeResult = (label: string): ProfileExecutionResult => ({
-    durationMs: 1,
-    endTime: 2,
-    label,
-    startTime: 1,
-  });
+  const makeResult = (label: string): ProfileExecutionResult => {
+    return {
+      durationMs: 1,
+      endTime: 2,
+      label,
+      startTime: 1,
+    };
+  };
 
   it('drops results that miss the sample rate (sampleRate 0 records nothing)', async () => {
     const writer = createProfileExecutionFileWriter({

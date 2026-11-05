@@ -8,7 +8,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import type { IdeSearchResult, SearchMatch } from '../data/view-models';
+import type { IdeSearchResult, SearchMatch } from '../data/data.view-models';
 import { IdeSearchResultRow } from './IdeSearchResultRow';
 
 export interface IdeSearchResultsProps {
@@ -42,6 +42,11 @@ export const IdeSearchResults = (
   // Handlers
 
   // Markup
+  const truncatedNote = (
+    <p className="text-muted-foreground px-3 py-2 text-center text-xs">
+      Results truncated — refine your query to narrow them.
+    </p>
+  );
 
   // Life Cycle
 
@@ -98,11 +103,7 @@ export const IdeSearchResults = (
           onSelect={onSelectMatch}
         />
       ))}
-      {result.truncated ? (
-        <p className="text-muted-foreground px-3 py-2 text-center text-xs">
-          Results truncated — refine your query to narrow them.
-        </p>
-      ) : null}
+      {result.truncated ? truncatedNote : null}
     </div>
   );
 };

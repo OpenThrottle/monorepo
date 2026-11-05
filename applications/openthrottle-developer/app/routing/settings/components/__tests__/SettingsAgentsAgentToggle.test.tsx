@@ -11,11 +11,13 @@ const renderToggle = (
   props: React.ComponentProps<typeof SettingsAgentsAgentToggle>,
   action: (formData: FormData) => void = () => {},
 ) => {
-  const Component = () => (
-    <TooltipProvider>
-      <SettingsAgentsAgentToggle {...props} />
-    </TooltipProvider>
-  );
+  const Component = () => {
+    return (
+      <TooltipProvider>
+        <SettingsAgentsAgentToggle {...props} />
+      </TooltipProvider>
+    );
+  };
   const RoutesStub = createRoutesStub([
     { Component, path: '/' },
     {

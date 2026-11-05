@@ -17,8 +17,8 @@ const CONVERSATION: AgentConversationListItem = {
 
 const renderRow = (
   overrides: Partial<ChatConversationRowProps> = {},
-): RenderResult =>
-  render(
+): RenderResult => {
+  return render(
     <ChatConversationRow
       conversation={CONVERSATION}
       draftTitle=""
@@ -33,6 +33,7 @@ const renderRow = (
       {...overrides}
     />,
   );
+};
 
 describe('ChatConversationRow', () => {
   test('renders the conversation title', () => {

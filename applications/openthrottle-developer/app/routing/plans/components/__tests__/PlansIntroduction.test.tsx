@@ -14,7 +14,9 @@ describe('PlansIntroduction Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <PlansIntroduction {...props} />;
+    const Component = () => {
+      return <PlansIntroduction {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

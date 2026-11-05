@@ -80,22 +80,26 @@ export const DocsSearch = (props: DocsSearchProps): React.ReactElement => {
 
     return (
       <CommandGroup heading={SECTION_HEADINGS[section]}>
-        {groupEntries.map((entry) => (
-          <CommandItem
-            key={docEntryKey(entry)}
-            onSelect={() => handleSelect(entry)}
-            value={docEntryKey(entry)}
-          >
-            <div className="flex min-w-0 flex-col">
-              <span className="truncate">{entry.title}</span>
-              {entry.description ? (
-                <span className="text-muted-foreground truncate text-xs">
-                  {entry.description}
-                </span>
-              ) : null}
-            </div>
-          </CommandItem>
-        ))}
+        {groupEntries.map((entry) => {
+          const description = (
+            <span className="text-muted-foreground truncate text-xs">
+              {entry.description}
+            </span>
+          );
+
+          return (
+            <CommandItem
+              key={docEntryKey(entry)}
+              onSelect={() => handleSelect(entry)}
+              value={docEntryKey(entry)}
+            >
+              <div className="flex min-w-0 flex-col">
+                <span className="truncate">{entry.title}</span>
+                {entry.description ? description : null}
+              </div>
+            </CommandItem>
+          );
+        })}
       </CommandGroup>
     );
   };

@@ -51,17 +51,21 @@ export class StripePriceObject {
   recurring!: StripePriceRecurringObject | null;
 }
 
+const toRecurringObject = (
+  recurring: Stripe.Price.Recurring | null,
+): StripePriceRecurringObject | null => {
+  if (recurring == null) return null;
+  return {
+    interval: recurring.interval,
+    intervalCount: recurring.interval_count,
+  };
+};
+
 /**
  * @description Maps a Stripe API price to {@link StripePriceObject}.
  */
 export const stripePriceToGql = (price: Stripe.Price): StripePriceObject => {
-  const recurring =
-    price.recurring == null
-      ? null
-      : {
-          interval: price.recurring.interval,
-          intervalCount: price.recurring.interval_count,
-        };
+  const recurring = toRecurringObject(price.recurring);
 
   return {
     active: price.active,

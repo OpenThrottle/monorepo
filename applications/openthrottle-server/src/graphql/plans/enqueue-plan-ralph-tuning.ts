@@ -45,8 +45,9 @@ const UUID_REGEX =
 /**
  * Returns true when `value` is a plausible OpenThrottle plan/task UUID.
  */
-const isOpenThrottlePlanTaskUuid = (value: string): boolean =>
-  UUID_REGEX.test(value.trim());
+const isOpenThrottlePlanTaskUuid = (value: string): boolean => {
+  return UUID_REGEX.test(value.trim());
+};
 
 /**
  * Upper bound to avoid abuse; aligns with positive-int expectations in workflow-ralph.
@@ -341,7 +342,9 @@ export const parseEnqueueRalphTuning = (
  */
 const resolvePlanRunExecutionBackend = (
   ralph: RalphNestedRunTuningInput | undefined,
-): WorkflowConfigRunner => ralph?.backend ?? DEFAULT_PLAN_RUN_RALPH_RUNNER;
+): WorkflowConfigRunner => {
+  return ralph?.backend ?? DEFAULT_PLAN_RUN_RALPH_RUNNER;
+};
 
 /**
  * Builds {@link RunPlanOrchestratorJobData} for in-process Ralph (plans queue, `run-plan-orchestrator`).
@@ -363,10 +366,7 @@ export const buildRunPlanOrchestratorJobData = (input: {
   }
 
   const mode = input.mode ?? null;
-  const taskRaw =
-    input.taskId !== undefined && input.taskId !== null
-      ? input.taskId.trim()
-      : '';
+  const taskRaw = input.taskId?.trim() ?? '';
   const workingDirectory = validateWorkingDirectory(input.workingDirectory);
   const jobRunHooks = jobRunHooksForJobPayload(
     resolveJobRunHooksForEnqueue({

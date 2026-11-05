@@ -8,8 +8,9 @@ import { authMiddleware } from '../middleware';
 
 /** Build a JWT with the given payload (header + signature are dummies). */
 const makeJwt = (payload: Record<string, unknown>): string => {
-  const seg = (value: unknown): string =>
-    Buffer.from(JSON.stringify(value), 'utf8').toString('base64url');
+  const seg = (value: unknown): string => {
+    return Buffer.from(JSON.stringify(value), 'utf8').toString('base64url');
+  };
   return `${seg({ alg: 'HS256', typ: 'JWT' })}.${seg(payload)}.sig`;
 };
 
@@ -24,7 +25,9 @@ const expiredToken = makeJwt({
 });
 
 /** A no-op downstream `next` matching `MiddlewareNextFunction`. */
-const next = (): Promise<unknown> => Promise.resolve(undefined);
+const next = (): Promise<unknown> => {
+  return Promise.resolve(undefined);
+};
 
 /** Builds middleware args for a given pathname and optional cookie token. */
 const buildArgs = (

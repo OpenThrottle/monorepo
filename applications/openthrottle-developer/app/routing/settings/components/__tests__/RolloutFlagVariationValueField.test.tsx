@@ -15,7 +15,9 @@ describe('RolloutFlagVariationValueField Component', () => {
   let props: RolloutFlagVariationValueFieldProps;
 
   const setup = (): void => {
-    const Component = () => <RolloutFlagVariationValueField {...props} />;
+    const Component = () => {
+      return <RolloutFlagVariationValueField {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
   };

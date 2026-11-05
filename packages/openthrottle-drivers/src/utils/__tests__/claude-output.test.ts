@@ -213,8 +213,7 @@ describe('parseClaudeStreamJsonOutput', () => {
   });
 
   it('preserves multi-line result text and embedded JSON-looking content', () => {
-    const text =
-      'line one\n\nline three {"type":"result"}\n<promise>COMPLETE</promise>';
+    const text = `line one\n\nline three {"type":"result"}\n<promise>COMPLETE</promise>`;
     const stdout = ndjson(initEvent, {
       is_error: false,
       result: text,

@@ -26,23 +26,27 @@ import { GlobalClsAuthHook } from './global-cls-auth-hook.service.ts';
 
 const userRow = (
   fields: Pick<User, 'disabledAt' | 'email' | 'githubUsername' | 'id'>,
-): User => ({
-  createdAt: new Date('2019-01-01T00:00:00.000Z'),
-  passwordHash: null,
-  roles: [],
-  updatedAt: new Date('2019-01-01T00:00:00.000Z'),
-  ...fields,
-});
+): User => {
+  return {
+    createdAt: new Date('2019-01-01T00:00:00.000Z'),
+    passwordHash: null,
+    roles: [],
+    updatedAt: new Date('2019-01-01T00:00:00.000Z'),
+    ...fields,
+  };
+};
 
 const serviceAccountRow = (
   fields: Pick<ServiceAccount, 'disabledAt' | 'description' | 'id' | 'name'>,
-): ServiceAccount => ({
-  actingUserId: null,
-  createdAt: new Date('2019-01-01T00:00:00.000Z'),
-  credentials: [],
-  roles: [],
-  ...fields,
-});
+): ServiceAccount => {
+  return {
+    actingUserId: null,
+    createdAt: new Date('2019-01-01T00:00:00.000Z'),
+    credentials: [],
+    roles: [],
+    ...fields,
+  };
+};
 
 describe('GlobalClsAuthHook', () => {
   let hook: GlobalClsAuthHook;

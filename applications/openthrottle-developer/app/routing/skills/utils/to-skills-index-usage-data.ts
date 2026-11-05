@@ -7,7 +7,7 @@
  */
 
 import type { GetUsageSkillUsageQuery } from '~/__generated__/graphql';
-import type { SkillsIndexUsageData } from '~/routing/skills/data/skills-index-usage';
+import type { SkillsIndexUsageData } from '~/routing/skills/types';
 
 /** Map the deferred aggregate usage query → the sections' discriminated prop. */
 export const toSkillsIndexUsageData = (

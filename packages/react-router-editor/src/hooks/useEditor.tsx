@@ -3,8 +3,8 @@ import type { Dispatch, SetStateAction } from 'react';
 import { useNavigate } from 'react-router';
 
 import type { PromptType } from '../config';
-import type { EditorAtom, EditorFile } from '../data/atom.editor';
-import { editorAtom, filteredFilesAtom } from '../data/atom.editor';
+import type { EditorAtom, EditorFile } from '../data/data.atom.editor';
+import { editorAtom, filteredFilesAtom } from '../data/data.atom.editor';
 import { getLanguageFromExt } from '../utils';
 
 export interface UseEditorOptions {

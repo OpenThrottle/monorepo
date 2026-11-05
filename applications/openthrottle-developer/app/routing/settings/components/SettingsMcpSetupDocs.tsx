@@ -13,7 +13,7 @@ import type { McpConnectorFieldsFragment } from '~/__generated__/graphql';
 import {
   MCP_AUTH_TYPE_LABEL,
   MCP_TRANSPORT_LABEL,
-} from '~/routing/settings/data/mcp-connectors.data';
+} from '~/routing/settings/data/data.mcp-connectors';
 import { getProviderLabel } from '~/routing/settings/utils/settings-mcp-connection';
 
 export interface SettingsMcpSetupDocsProps {

@@ -13,8 +13,9 @@ const write = (relativePath: string, content = ''): void => {
   fs.writeFileSync(absolute, content, 'utf-8');
 };
 
-const relative = (files: string[]): string[] =>
-  files.map((file) => path.relative(root, file)).sort();
+const relative = (files: string[]): string[] => {
+  return files.map((file) => path.relative(root, file)).sort();
+};
 
 beforeEach(() => {
   root = fs.mkdtempSync(path.join(os.tmpdir(), 'nestjs-langchain-files-'));

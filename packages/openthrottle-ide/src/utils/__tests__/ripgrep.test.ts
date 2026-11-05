@@ -9,13 +9,15 @@ import { runRipgrep, workspaceRipgrepArgs } from '../ripgrep.ts';
 
 const resolved = (
   overrides: Partial<ResolvedWorkspaceConfig> = {},
-): ResolvedWorkspaceConfig => ({
-  exclude: [],
-  followSymlinks: false,
-  respectGitignore: true,
-  root: '/tmp/does-not-matter',
-  ...overrides,
-});
+): ResolvedWorkspaceConfig => {
+  return {
+    exclude: [],
+    followSymlinks: false,
+    respectGitignore: true,
+    root: '/tmp/does-not-matter',
+    ...overrides,
+  };
+};
 
 describe('workspaceRipgrepArgs', () => {
   it('always surfaces hidden files', () => {

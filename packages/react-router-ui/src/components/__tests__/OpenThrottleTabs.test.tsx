@@ -47,12 +47,14 @@ function renderUrlSyncedTabs(
 ) {
   const { initialEntry = '/', tabsProps = {} } = options;
   // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-  const Component = () => (
-    <>
-      <SearchParamsReader />
-      <UrlSyncedTabsFixture {...tabsProps} />
-    </>
-  );
+  const Component = () => {
+    return (
+      <>
+        <SearchParamsReader />
+        <UrlSyncedTabsFixture {...tabsProps} />
+      </>
+    );
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub initialEntries={[initialEntry]} />);
 }

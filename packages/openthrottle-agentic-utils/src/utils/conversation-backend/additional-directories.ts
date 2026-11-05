@@ -34,8 +34,9 @@ const ADDITIONAL_DIRECTORY_CAPS: Readonly<Record<string, number>> = {
  *
  * @public
  */
-export const maxDirectoriesForBackend = (backend: string): number =>
-  ADDITIONAL_DIRECTORY_CAPS[backend] ?? SINGLE_DIRECTORY_CAP;
+export const maxDirectoriesForBackend = (backend: string): number => {
+  return ADDITIONAL_DIRECTORY_CAPS[backend] ?? SINGLE_DIRECTORY_CAP;
+};
 
 /**
  * Warn that `backend` was handed extra directories it cannot grant, and ignore

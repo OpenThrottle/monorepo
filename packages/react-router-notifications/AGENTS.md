@@ -7,7 +7,7 @@ In-app notifications for React Router apps: store provider/context, bell + list 
 ## Layout
 
 - [src/components/NotificationsSubscriptionBridge.tsx](src/components/NotificationsSubscriptionBridge.tsx) — subscribes to the `notifications` firehose via `useSubscription` from `@openthrottle/react-router-graphql`; feeds store → toast → system notification.
-- [src/data/notifications-store.context.tsx](src/data/notifications-store.context.tsx) — store context + `toastForNotification`.
+- [src/data/data.notifications-store.context.ts](src/data/data.notifications-store.context.ts) — store context + value/action types; the reducer, storage helpers and `toastForNotification` live in [src/utils/](src/utils/).
 - [src/config/index.ts](src/config/index.ts) — limits, dedup window, localStorage keys (well-commented; read before changing persistence).
 - [src/utils/system-notification.ts](src/utils/system-notification.ts) — desktop Notification API wrapper + preference reads.
 

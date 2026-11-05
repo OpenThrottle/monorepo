@@ -36,8 +36,8 @@ interface WorkspaceApplyRepository {
 export const buildWorkspaceApplyResults = (
   applications: readonly WorkspaceApplyApplication[],
   repositories: readonly WorkspaceApplyRepository[],
-): WorkspaceApplyResult[] =>
-  applications.map((application) => ({
+): WorkspaceApplyResult[] => {
+  return applications.map((application) => ({
     displayName:
       repositories.find(
         (repository) => repository.id === application.repositoryId,
@@ -51,3 +51,4 @@ export const buildWorkspaceApplyResults = (
     repositoryId: application.repositoryId,
     warnings: application.warnings,
   }));
+};

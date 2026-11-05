@@ -83,12 +83,10 @@ export const updateTaskTag = async (
   add: boolean,
 ) => {
   // `taskId` is a route param; validate only `tag` from the generated schema.
-  const parsed = add
-    ? parseFormData(formData, AddTaskTagInputSchema().omit({ taskId: true }))
-    : parseFormData(
-        formData,
-        RemoveTaskTagInputSchema().omit({ taskId: true }),
-      );
+  const addSchema = AddTaskTagInputSchema().omit({ taskId: true });
+  const removeSchema = RemoveTaskTagInputSchema().omit({ taskId: true });
+  const schema = add ? addSchema : removeSchema;
+  const parsed = parseFormData(formData, schema);
   if (!parsed.success) {
     return { taskTagError: parsed.error };
   }

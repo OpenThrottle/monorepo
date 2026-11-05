@@ -12,12 +12,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PlanRunObject } from './plan.object.ts';
 import { PlanRunObjectResolver } from './plan-run-object.resolver.ts';
 
-const run = (overrides: Partial<PlanRunObject> = {}): PlanRunObject =>
-  asMock<PlanRunObject>({
+const run = (overrides: Partial<PlanRunObject> = {}): PlanRunObject => {
+  return asMock<PlanRunObject>({
     checkoutId: 'checkout-1',
     id: 'run-1',
     ...overrides,
   });
+};
 
 describe('PlanRunObjectResolver', () => {
   const checkoutFindById = vi.fn();

@@ -141,13 +141,11 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
   },
   code_embeddings: {
     classification: 'denied',
-    reason:
-      'the code index spans arbitrary local workspaces, including private repositories — never export; the demo re-indexes its own checkout',
+    reason: `the code index spans arbitrary local workspaces, including private repositories — never export; the demo re-indexes its own checkout`,
   },
   code_index_snapshots: {
     classification: 'ignored',
-    reason:
-      'code-index bookkeeping — the demo re-indexes from its own checkout',
+    reason: `code-index bookkeeping — the demo re-indexes from its own checkout`,
   },
   custom_prompt_embeddings: {
     classification: 'exported',
@@ -163,8 +161,7 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
       custom_prompt_id: { action: 'keep', reason: 'structural (uuid)' },
       embedding: {
         action: 'keep',
-        reason:
-          'embedding vector — embedded text is kept, so the vector stays valid',
+        reason: `embedding vector — embedded text is kept, so the vector stays valid`,
         vectorDimension: 1536,
       },
       id: { action: 'keep', reason: 'structural (uuid)' },
@@ -290,8 +287,7 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
       documentation_id: { action: 'keep', reason: 'structural (uuid)' },
       embedding: {
         action: 'keep',
-        reason:
-          'embedding vector — embedded text is kept, so the vector stays valid',
+        reason: `embedding vector — embedded text is kept, so the vector stays valid`,
         vectorDimension: 1536,
       },
       id: { action: 'keep', reason: 'structural (uuid)' },
@@ -304,18 +300,15 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
   },
   mcp_connector_connections: {
     classification: 'denied',
-    reason:
-      'stores per-user MCP connector credentials/config — never leaves the workspace',
+    reason: `stores per-user MCP connector credentials/config — never leaves the workspace`,
   },
   notes: {
     classification: 'ignored',
-    reason:
-      'not FK-reachable from the export roots; the hero seed authors its own notes',
+    reason: `not FK-reachable from the export roots; the hero seed authors its own notes`,
   },
   permissions: {
     classification: 'ignored',
-    reason:
-      'auth plumbing — migrations create permissions, the demo seed assigns roles',
+    reason: `auth plumbing — migrations create permissions, the demo seed assigns roles`,
   },
   plan_embeddings: {
     classification: 'exported',
@@ -330,8 +323,7 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
       },
       embedding: {
         action: 'keep',
-        reason:
-          'embedding vector — embedded text is kept, so the vector stays valid',
+        reason: `embedding vector — embedded text is kept, so the vector stays valid`,
         vectorDimension: 1536,
       },
       id: { action: 'keep', reason: 'structural (uuid)' },
@@ -591,8 +583,7 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
   },
   roles: {
     classification: 'ignored',
-    reason:
-      'auth plumbing — migrations create roles, the demo seed assigns them',
+    reason: `auth plumbing — migrations create roles, the demo seed assigns them`,
   },
   rollout_flags: {
     classification: 'ignored',
@@ -765,8 +756,7 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
   },
   service_account_credentials: {
     classification: 'denied',
-    reason:
-      'hashed service-account credentials — credential-adjacent, never exported',
+    reason: `hashed service-account credentials — credential-adjacent, never exported`,
   },
   service_account_roles: {
     classification: 'ignored',
@@ -847,8 +837,7 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
   },
   skill_usage_outcomes: {
     classification: 'ignored',
-    reason:
-      'no FK to skill_usage_events, so unreachable mechanically — revisit if an episode needs outcomes',
+    reason: `no FK to skill_usage_events, so unreachable mechanically — revisit if an episode needs outcomes`,
   },
   subscriptions: {
     classification: 'denied',
@@ -903,8 +892,7 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
       },
       embedding: {
         action: 'keep',
-        reason:
-          'embedding vector — embedded text is kept, so the vector stays valid',
+        reason: `embedding vector — embedded text is kept, so the vector stays valid`,
         vectorDimension: 1536,
       },
       id: { action: 'keep', reason: 'structural (uuid)' },
@@ -1038,8 +1026,7 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
       },
       github_username: {
         action: 'keep',
-        reason:
-          'kept deliberately — the repo is public and the workspace is expected to become public',
+        reason: `kept deliberately — the repo is public and the workspace is expected to become public`,
       },
       id: { action: 'keep', reason: 'structural (uuid)' },
       password_hash: {

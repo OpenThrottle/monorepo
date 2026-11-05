@@ -64,6 +64,16 @@ export const SkillTagVocabularyRow = (
   };
 
   // Markup
+  const clientErrorMessage = (
+    <p className="text-destructive mt-1 text-sm" role="alert">
+      {clientError}
+    </p>
+  );
+  const serverErrorMessage = (
+    <p className="text-destructive mt-1 text-sm" role="alert">
+      {serverError}
+    </p>
+  );
 
   // Life Cycle
 
@@ -93,16 +103,8 @@ export const SkillTagVocabularyRow = (
             {COPY.renameLabel}
           </Button>
         </renameFetcher.Form>
-        {clientError ? (
-          <p className="text-destructive mt-1 text-sm" role="alert">
-            {clientError}
-          </p>
-        ) : null}
-        {serverError ? (
-          <p className="text-destructive mt-1 text-sm" role="alert">
-            {serverError}
-          </p>
-        ) : null}
+        {clientError ? clientErrorMessage : null}
+        {serverError ? serverErrorMessage : null}
       </TableCell>
       <TableCell className="text-right">
         <AlertDialog>

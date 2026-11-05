@@ -3,23 +3,25 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { showConfiguration } from '../index';
 import type { RalphArgs } from '../parsers';
 
-const baseArgs = (): RalphArgs => ({
-  backend: 'cursor',
-  iterationTimeoutMs: undefined,
-  iterations: 1,
-  model: undefined,
-  plan: '80864bba-630a-451d-bfd2-4b25ec202381',
-  project: undefined,
-  prompt: '/agents/ralph',
-  promptProfileKind: 'named',
-  promptProfileLabel: '/agents/ralph',
-  ralphDebugLevel: 'off',
-  skipWorktreeSetup: undefined,
-  task: undefined,
-  taskIterations: undefined,
-  worktree: undefined,
-  worktreeBase: undefined,
-});
+const baseArgs = (): RalphArgs => {
+  return {
+    backend: 'cursor',
+    iterationTimeoutMs: undefined,
+    iterations: 1,
+    model: undefined,
+    plan: '80864bba-630a-451d-bfd2-4b25ec202381',
+    project: undefined,
+    prompt: '/agents/ralph',
+    promptProfileKind: 'named',
+    promptProfileLabel: '/agents/ralph',
+    ralphDebugLevel: 'off',
+    skipWorktreeSetup: undefined,
+    task: undefined,
+    taskIterations: undefined,
+    worktree: undefined,
+    worktreeBase: undefined,
+  };
+};
 
 describe('showConfiguration', () => {
   let logSpy: ReturnType<typeof vi.spyOn>;

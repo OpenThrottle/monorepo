@@ -53,7 +53,9 @@ export interface CreateFormatErrorOptions {
   maskInternalErrors?: boolean;
 }
 
-const isProduction = (): boolean => process.env.NODE_ENV === 'production';
+const isProduction = (): boolean => {
+  return process.env.NODE_ENV === 'production';
+};
 
 /**
  * Build a stripped copy of an error's `extensions`, removing the keys that leak
@@ -89,6 +91,21 @@ function isInternalError(formattedError: GraphQLFormattedError): boolean {
 }
 
 /**
+ * Re-attach `extensions` only when something survived the strip, so we never
+ * emit an empty `extensions: {}`.
+ */
+function attachExtensions(
+  withoutExtensions: Omit<GraphQLFormattedError, 'extensions'>,
+  extensions: GraphQLFormattedError['extensions'],
+): GraphQLFormattedError {
+  if (extensions === undefined) {
+    return withoutExtensions;
+  }
+
+  return { ...withoutExtensions, extensions };
+}
+
+/**
  * Create an Apollo `formatError` that scrubs sensitive error details before they
  * reach the client, logging the original error server-side when masking.
  *
@@ -115,10 +132,7 @@ export function createFormatError(
 
     // Re-attach extensions only when something survived the strip, so we never
     // emit an empty `extensions: {}` (and never include `exception`/stacktrace).
-    const base: GraphQLFormattedError =
-      extensions === undefined
-        ? withoutExtensions
-        : { ...withoutExtensions, extensions };
+    const base = attachExtensions(withoutExtensions, extensions);
 
     if (maskInternalErrors && isInternalError(formattedError)) {
       logger.error('Unhandled GraphQL error', error ?? formattedError);

@@ -16,8 +16,9 @@ import { PlanStatusFilter } from '../PlanStatusFilter';
 const renderFilter = (
   value: readonly string[],
   onChange: (value: string[]) => void = vi.fn(),
-): RenderResult =>
-  render(<PlanStatusFilter onChange={onChange} value={value} />);
+): RenderResult => {
+  return render(<PlanStatusFilter onChange={onChange} value={value} />);
+};
 
 const openFilter = async (component: RenderResult): Promise<HTMLElement> => {
   await userEvent.click(
@@ -26,10 +27,11 @@ const openFilter = async (component: RenderResult): Promise<HTMLElement> => {
   return component.findByRole('listbox');
 };
 
-const rowsWithSlot = (listbox: HTMLElement, slot: string): HTMLElement[] =>
-  within(listbox)
+const rowsWithSlot = (listbox: HTMLElement, slot: string): HTMLElement[] => {
+  return within(listbox)
     .getAllByRole('option')
     .filter((row) => row.dataset['slot'] === slot);
+};
 
 describe('PlanStatusFilter', () => {
   test('trigger is a collapsed combobox', () => {

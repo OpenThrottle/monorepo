@@ -26,7 +26,9 @@ describe('PullRequestsToolbar Component', () => {
   beforeEach(() => {
     props = { filters: baseFilters };
 
-    const Component = () => <PullRequestsToolbar {...props} />;
+    const Component = () => {
+      return <PullRequestsToolbar {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

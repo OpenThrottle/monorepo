@@ -55,8 +55,9 @@ const ACTIVE_RUN_STATUSES: ReadonlySet<string> = new Set([
 ]);
 
 /** Epoch ms for sorting; unparseable times sort as +Infinity (last). */
-const toSortTime = (value: string | null | undefined): number =>
-  parseDate(value)?.getTime() ?? Number.POSITIVE_INFINITY;
+const toSortTime = (value: string | null | undefined): number => {
+  return parseDate(value)?.getTime() ?? Number.POSITIVE_INFINITY;
+};
 
 /**
  * @description SCHEDULED runs, soonest first (an unparseable `scheduledFor` sorts last), plus a
@@ -99,15 +100,18 @@ export const selectUpcomingRuns = <TRun extends SectionRun>(
  */
 export const selectHistoryRuns = <TRun extends SectionRun>(
   runs: readonly TRun[],
-): TRun[] =>
-  runs
-    .filter((run) => run.status !== 'SCHEDULED')
-    // `filter` already returned a fresh array, so sorting it in place is safe.
-    .sort(
-      (a, b) =>
-        (parseDate(b.createdAt)?.getTime() ?? 0) -
-        (parseDate(a.createdAt)?.getTime() ?? 0),
-    );
+): TRun[] => {
+  return (
+    runs
+      .filter((run) => run.status !== 'SCHEDULED')
+      // `filter` already returned a fresh array, so sorting it in place is safe.
+      .sort(
+        (a, b) =>
+          (parseDate(b.createdAt)?.getTime() ?? 0) -
+          (parseDate(a.createdAt)?.getTime() ?? 0),
+      )
+  );
+};
 
 /**
  * @description The run Latest run shows: the newest QUEUED or IN_PROGRESS run when one exists,
@@ -146,10 +150,11 @@ export const buildPlanRunMetaItems = (
   run: MetaRun,
   fields: readonly PlanRunMetaField[],
 ): PlanRunMetaItem[] => {
-  const backend =
-    run.executionBackend == null || run.executionBackend === ''
-      ? null
-      : formatWorkflowRalphExecutionBackendLabel(run.executionBackend);
+  const { executionBackend } = run;
+  let backend: string | null = null;
+  if (executionBackend) {
+    backend = formatWorkflowRalphExecutionBackendLabel(executionBackend);
+  }
   const values: Record<PlanRunMetaField, string | null> = {
     backend,
     effort: readPlanRunSnapshotEffort(run.runConfigSnapshotJson),
@@ -170,5 +175,6 @@ export const buildPlanRunMetaItems = (
 };
 
 /** @description True while a run is QUEUED or IN_PROGRESS, the only time a heartbeat line means anything. */
-export const isActivePlanRunStatus = (status: string): boolean =>
-  ACTIVE_RUN_STATUSES.has(status);
+export const isActivePlanRunStatus = (status: string): boolean => {
+  return ACTIVE_RUN_STATUSES.has(status);
+};

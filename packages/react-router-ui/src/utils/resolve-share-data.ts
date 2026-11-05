@@ -5,4 +5,6 @@
 export const resolveShareData = (
   override: ShareData | undefined,
   fallback: ShareData | undefined,
-): ShareData | undefined => override ?? fallback;
+): ShareData | undefined => {
+  return override ?? fallback;
+};

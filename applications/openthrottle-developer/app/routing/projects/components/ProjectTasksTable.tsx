@@ -70,13 +70,14 @@ ProjectTasksTable.buildTable = (): ColumnDef<
       accessorKey: 'category',
       cell: ({ row }) => {
         const category = row.original.category;
-        return category ? (
-          <Badge color="slate" size="xs" variant="secondary">
-            {category}
-          </Badge>
-        ) : (
-          <span className="text-muted-foreground text-xs">—</span>
-        );
+        if (category) {
+          return (
+            <Badge color="slate" size="xs" variant="secondary">
+              {category}
+            </Badge>
+          );
+        }
+        return <span className="text-muted-foreground text-xs">—</span>;
       },
       header: () => 'Category',
     },

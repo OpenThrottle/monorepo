@@ -18,4 +18,6 @@ export class BlogSlugConflictError {
 /** @description Type guard distinguishing the error member of {@link BlogPostMutationResult}. */
 export const isBlogSlugConflictError = (
   value: unknown,
-): value is BlogSlugConflictError => value instanceof BlogSlugConflictError;
+): value is BlogSlugConflictError => {
+  return value instanceof BlogSlugConflictError;
+};

@@ -18,8 +18,9 @@ export interface ResolveDefaultRunBranchOptions {
 
 const firstNonEmpty = (
   ...values: readonly (string | null | undefined)[]
-): string | undefined =>
-  values.find((value) => (value ?? '').trim() !== '')?.trim();
+): string | undefined => {
+  return values.find((value) => (value ?? '').trim() !== '')?.trim();
+};
 
 /**
  * @description Precedence: the selected checkout's current branch → its

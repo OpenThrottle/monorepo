@@ -40,8 +40,9 @@ const MESSAGE_METHODS = new Set([
  * — the single source of truth also consumed by the in-app notifications store —
  * so both surfaces stay in lockstep.
  */
-const hasRenderableMessage = (args: readonly unknown[]): boolean =>
-  isRenderableMessage(args[0]);
+const hasRenderableMessage = (args: readonly unknown[]): boolean => {
+  return isRenderableMessage(args[0]);
+};
 
 /**
  * @public
@@ -63,10 +64,11 @@ export const toast: typeof sonnerToast = new Proxy(sonnerToast, {
       typeof property === 'string' &&
       MESSAGE_METHODS.has(property)
     ) {
-      return (...args: unknown[]): unknown =>
-        hasRenderableMessage(args)
-          ? Reflect.apply(value, target, args)
-          : undefined;
+      return (...args: unknown[]): unknown => {
+        if (!hasRenderableMessage(args)) return undefined;
+
+        return Reflect.apply(value, target, args);
+      };
     }
 
     return value;
@@ -101,8 +103,9 @@ const typedToastClassNames: NonNullable<
   warning: 'border-amber-500/50! bg-card/80!',
 };
 
-const isToasterTheme = (value: string): value is ToasterTheme =>
-  value === 'dark' || value === 'light' || value === 'system';
+const isToasterTheme = (value: string): value is ToasterTheme => {
+  return value === 'dark' || value === 'light' || value === 'system';
+};
 
 export interface ToasterProps extends SonnerToasterProps {}
 

@@ -131,11 +131,13 @@ const parseGraphqlSchemaArgs = (
   };
 };
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === 'object' && value !== null;
+};
 
-const isModuleClass = (value: unknown): value is Type =>
-  typeof value === 'function';
+const isModuleClass = (value: unknown): value is Type => {
+  return typeof value === 'function';
+};
 
 /**
  * @description Import the built module file and pick out the root module
@@ -179,13 +181,14 @@ const describeFirstDifference = (
 
   const start = Math.max(0, index - CONTEXT_LINES);
   const end = index + CONTEXT_LINES + 1;
-  const show = (lines: readonly string[], marker: string): string =>
-    lines
+  const show = (lines: readonly string[], marker: string): string => {
+    return lines
       .slice(start, end)
       .map((line, offset) =>
         start + offset === index ? `${marker} ${line}` : `  ${line}`,
       )
       .join('\n');
+  };
 
   return [
     `First difference at line ${index + 1}:`,

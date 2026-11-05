@@ -87,6 +87,11 @@ export const BlogPostPublishPopover = (
   };
 
   // Markup
+  const errorMessage = (
+    <p className="text-destructive text-xs" id={errorId} role="alert">
+      {error}
+    </p>
+  );
 
   // Life Cycle
 
@@ -128,11 +133,7 @@ export const BlogPostPublishPopover = (
           <p className="text-muted-foreground text-xs">
             {copy.timeZoneHint(formatTimeZoneName(now, undefined))}
           </p>
-          {error ? (
-            <p className="text-destructive text-xs" id={errorId} role="alert">
-              {error}
-            </p>
-          ) : null}
+          {error ? errorMessage : null}
           <Button
             onClick={handleSchedule}
             size="sm"

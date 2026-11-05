@@ -53,6 +53,30 @@ const withOneRetry = async (
   }
 };
 
+const readAnthropicContentBlocks = (body: unknown): unknown[] => {
+  if (typeof body !== 'object' || body === null) return [];
+  if (!('content' in body)) return [];
+  if (!Array.isArray(body.content)) return [];
+  return body.content;
+};
+
+const readAnthropicBlockText = (block: unknown): string => {
+  if (typeof block !== 'object' || block === null) return '';
+  if (!('text' in block)) return '';
+  if (typeof block.text !== 'string') return '';
+  return block.text;
+};
+
+const readOllamaMessageText = (body: unknown): string => {
+  if (typeof body !== 'object' || body === null) return '';
+  if (!('message' in body)) return '';
+  const { message } = body;
+  if (typeof message !== 'object' || message === null) return '';
+  if (!('content' in message)) return '';
+  if (typeof message.content !== 'string') return '';
+  return message.content;
+};
+
 export class HostedTaggingModelProvider implements TaggingModelProvider {
   readonly name = 'hosted';
 
@@ -91,23 +115,8 @@ export class HostedTaggingModelProvider implements TaggingModelProvider {
         );
       }
       const body: unknown = await response.json();
-      const content =
-        typeof body === 'object' &&
-        body !== null &&
-        'content' in body &&
-        Array.isArray(body.content)
-          ? body.content
-          : [];
-      const text = content
-        .map((block: unknown) =>
-          typeof block === 'object' &&
-          block !== null &&
-          'text' in block &&
-          typeof block.text === 'string'
-            ? block.text
-            : '',
-        )
-        .join('');
+      const content = readAnthropicContentBlocks(body);
+      const text = content.map(readAnthropicBlockText).join('');
       return parseTaggingResponse(text);
     });
   }
@@ -145,17 +154,7 @@ export class OllamaTaggingModelProvider implements TaggingModelProvider {
         );
       }
       const body: unknown = await response.json();
-      const message =
-        typeof body === 'object' && body !== null && 'message' in body
-          ? body.message
-          : null;
-      const text =
-        typeof message === 'object' &&
-        message !== null &&
-        'content' in message &&
-        typeof message.content === 'string'
-          ? message.content
-          : '';
+      const text = readOllamaMessageText(body);
       return parseTaggingResponse(text);
     });
   }

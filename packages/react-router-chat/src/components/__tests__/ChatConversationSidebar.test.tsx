@@ -25,8 +25,8 @@ const CONVERSATIONS: readonly AgentConversationListItem[] = [
 
 const renderSidebar = (
   overrides: Partial<ChatConversationSidebarProps> = {},
-): RenderResult =>
-  render(
+): RenderResult => {
+  return render(
     <ChatConversationSidebar
       conversations={CONVERSATIONS}
       onDelete={vi.fn()}
@@ -37,6 +37,7 @@ const renderSidebar = (
       {...overrides}
     />,
   );
+};
 
 describe('ChatConversationSidebar', () => {
   test('renders a row per conversation with an Untitled fallback', () => {

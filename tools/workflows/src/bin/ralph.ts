@@ -495,14 +495,16 @@ export const main = async (): Promise<void> => {
     // the in-flight agent child mid-iteration (run-iteration wires signal → escalateKill).
     let result: string;
     try {
-      result = isDetached
-        ? // eslint-disable-next-line no-await-in-loop -- iterations must run sequentially
-          await runIterationAsync({
-            ...iterationConfig,
-            signal: abortController.signal,
-            timeoutMs: parsedArgs.iterationTimeoutMs,
-          })
-        : runIteration(iterationConfig);
+      if (isDetached) {
+        // eslint-disable-next-line no-await-in-loop -- iterations must run sequentially
+        result = await runIterationAsync({
+          ...iterationConfig,
+          signal: abortController.signal,
+          timeoutMs: parsedArgs.iterationTimeoutMs,
+        });
+      } else {
+        result = runIteration(iterationConfig);
+      }
     } catch (error) {
       // Iteration threw (not an abort): settle the tracked run FAILED, then rethrow.
       // eslint-disable-next-line no-await-in-loop
@@ -538,7 +540,9 @@ export const main = async (): Promise<void> => {
     );
 
     const completeTaskIds = parseRalphCompleteTaskSignals(result);
-    const taskIdLower = (id: string): string => id.toLowerCase();
+    const taskIdLower = (id: string): string => {
+      return id.toLowerCase();
+    };
 
     // Task-centric fallback: if agent emitted COMPLETE but no signal, mark the task COMPLETED.
     if (

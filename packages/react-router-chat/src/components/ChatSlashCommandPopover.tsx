@@ -53,10 +53,60 @@ export const ChatSlashCommandPopover = (
   // Hooks
 
   // Setup
+  const isEmpty = !loading && results.length === 0;
+  const hasResults = !loading && results.length > 0;
 
   // Handlers
 
   // Markup
+  const loadingMarkup = (
+    <div className="text-muted-foreground p-3 text-sm" role="status">
+      {loadingLabel}
+    </div>
+  );
+
+  const emptyMarkup = (
+    <div className="text-muted-foreground p-3 text-sm">{emptyLabel}</div>
+  );
+
+  const listMarkup = (
+    <ul aria-label="Slash commands" id={listboxId} role="listbox">
+      {results.map((command, index) => (
+        <li
+          aria-selected={index === activeIndex}
+          className={cn(
+            'flex cursor-pointer items-baseline gap-2 px-3 py-1.5 text-sm',
+            index === activeIndex && 'bg-accent text-accent-foreground',
+            index !== activeIndex && 'text-foreground',
+          )}
+          id={optionId(index)}
+          key={command.slug}
+          // mousedown (not click) so the textarea does not blur first.
+          onMouseDown={(event) => {
+            event.preventDefault();
+            onSelectOption(command.slug);
+          }}
+          onMouseEnter={() => onHoverOption(index)}
+          role="option"
+        >
+          <span className="font-medium whitespace-nowrap">/{command.slug}</span>
+          {command.description && (
+            <span className="text-muted-foreground truncate">
+              {command.description}
+            </span>
+          )}
+          {command.disabledForModel && (
+            <span
+              className="text-muted-foreground border-border ml-auto shrink-0 rounded border px-1 text-[10px] tracking-wide uppercase"
+              title="The model cannot auto-invoke this skill; you can still run it."
+            >
+              Manual
+            </span>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
 
   // Life Cycle
 
@@ -66,53 +116,9 @@ export const ChatSlashCommandPopover = (
       className="bg-popover text-popover-foreground absolute bottom-full z-50 mb-1 max-h-60 w-full overflow-y-auto rounded-md border shadow-md"
       data-testid="ChatSlashCommandPopover"
     >
-      {loading ? (
-        <div className="text-muted-foreground p-3 text-sm" role="status">
-          {loadingLabel}
-        </div>
-      ) : results.length === 0 ? (
-        <div className="text-muted-foreground p-3 text-sm">{emptyLabel}</div>
-      ) : (
-        <ul aria-label="Slash commands" id={listboxId} role="listbox">
-          {results.map((command, index) => (
-            <li
-              aria-selected={index === activeIndex}
-              className={cn(
-                'flex cursor-pointer items-baseline gap-2 px-3 py-1.5 text-sm',
-                index === activeIndex
-                  ? 'bg-accent text-accent-foreground'
-                  : 'text-foreground',
-              )}
-              id={optionId(index)}
-              key={command.slug}
-              // mousedown (not click) so the textarea does not blur first.
-              onMouseDown={(event) => {
-                event.preventDefault();
-                onSelectOption(command.slug);
-              }}
-              onMouseEnter={() => onHoverOption(index)}
-              role="option"
-            >
-              <span className="font-medium whitespace-nowrap">
-                /{command.slug}
-              </span>
-              {command.description ? (
-                <span className="text-muted-foreground truncate">
-                  {command.description}
-                </span>
-              ) : null}
-              {command.disabledForModel ? (
-                <span
-                  className="text-muted-foreground border-border ml-auto shrink-0 rounded border px-1 text-[10px] tracking-wide uppercase"
-                  title="The model cannot auto-invoke this skill; you can still run it."
-                >
-                  Manual
-                </span>
-              ) : null}
-            </li>
-          ))}
-        </ul>
-      )}
+      {loading && loadingMarkup}
+      {isEmpty && emptyMarkup}
+      {hasResults && listMarkup}
     </div>
   );
 };

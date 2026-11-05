@@ -2,17 +2,21 @@ import { describe, expect, it } from 'vitest';
 
 import { createOpencodeEventMapper } from '../events.ts';
 
-const step = (sessionID: string) => ({
-  part: { id: 'prt_s', messageID: 'msg_1', sessionID, type: 'step-start' },
-  sessionID,
-  type: 'step_start',
-});
+const step = (sessionID: string) => {
+  return {
+    part: { id: 'prt_s', messageID: 'msg_1', sessionID, type: 'step-start' },
+    sessionID,
+    type: 'step_start',
+  };
+};
 
-const text = (id: string, text: string, sessionID = 'ses_1') => ({
-  part: { id, messageID: 'msg_1', text, type: 'text' },
-  sessionID,
-  type: 'text',
-});
+const text = (id: string, text: string, sessionID = 'ses_1') => {
+  return {
+    part: { id, messageID: 'msg_1', text, type: 'text' },
+    sessionID,
+    type: 'text',
+  };
+};
 
 describe('createOpencodeEventMapper', () => {
   it('surfaces the minted session id exactly once, from the first event', () => {

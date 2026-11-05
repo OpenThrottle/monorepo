@@ -17,15 +17,17 @@ describe('ChartLegendContent Component', () => {
       payload: [{ color: '#222222', dataKey: 'sales', value: 'sales' }],
     };
 
-    const Component = () => (
-      <ChartConfigContext.Provider
-        value={{
-          sales: { color: '#111111', label: 'Sales' },
-        }}
-      >
-        <ChartLegendContent {...props} />
-      </ChartConfigContext.Provider>
-    );
+    const Component = () => {
+      return (
+        <ChartConfigContext.Provider
+          value={{
+            sales: { color: '#111111', label: 'Sales' },
+          }}
+        >
+          <ChartLegendContent {...props} />
+        </ChartConfigContext.Provider>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

@@ -29,10 +29,18 @@ export const RulesEmpty = (props: RulesEmptyProps): React.ReactElement => {
   // Hooks
 
   // Setup
+  const { emptyBody, emptyTitle, filteredEmptyBody, filteredEmptyTitle } =
+    RULES_COPY;
+  const title = isFiltered ? filteredEmptyTitle : emptyTitle;
+  const body = isFiltered ? filteredEmptyBody : emptyBody;
 
   // Handlers
 
   // Markup
+  const clearFiltersLink = (
+    <Link to="/rules">{RULES_COPY.clearFiltersAction}</Link>
+  );
+  const newRuleLink = <Link to="/rules/new">{RULES_COPY.newRuleAction}</Link>;
 
   // Life Cycle
 
@@ -43,18 +51,10 @@ export const RulesEmpty = (props: RulesEmptyProps): React.ReactElement => {
       <EmptyMedia variant="icon">
         <SearchAlertIcon className="size-6" />
       </EmptyMedia>
-      <EmptyTitle>
-        {isFiltered ? RULES_COPY.filteredEmptyTitle : RULES_COPY.emptyTitle}
-      </EmptyTitle>
-      <EmptyDescription>
-        {isFiltered ? RULES_COPY.filteredEmptyBody : RULES_COPY.emptyBody}
-      </EmptyDescription>
+      <EmptyTitle>{title}</EmptyTitle>
+      <EmptyDescription>{body}</EmptyDescription>
       <Button asChild={true} variant="secondary">
-        {isFiltered ? (
-          <Link to="/rules">{RULES_COPY.clearFiltersAction}</Link>
-        ) : (
-          <Link to="/rules/new">{RULES_COPY.newRuleAction}</Link>
-        )}
+        {isFiltered ? clearFiltersLink : newRuleLink}
       </Button>
     </Empty>
   );

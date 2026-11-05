@@ -27,16 +27,18 @@ vi.mock('@openthrottle/openthrottle-agentic-ralph', async (importOriginal) => {
  * @description Minimal deps double; the concrete workflow only forwards this object to the mocked
  * `createWorkflowRalphOrchestrator`, so the runner/executor never run here.
  */
-const createDepsStub = (): WorkflowRalphOrchestratorDeps => ({
-  executeGraphqlV2: async () => {
-    throw new Error('executeGraphqlV2 stub should not run in this test');
-  },
-  iterationRunner: {
-    run: async () => {
-      throw new Error('iterationRunner stub should not run in this test');
+const createDepsStub = (): WorkflowRalphOrchestratorDeps => {
+  return {
+    executeGraphqlV2: async () => {
+      throw new Error('executeGraphqlV2 stub should not run in this test');
     },
-  },
-});
+    iterationRunner: {
+      run: async () => {
+        throw new Error('iterationRunner stub should not run in this test');
+      },
+    },
+  };
+};
 
 describe('AgenticWorkflowRalph', () => {
   beforeEach(() => {

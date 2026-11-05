@@ -52,14 +52,14 @@ export const OpenThrottleStatCard = (
 
       <CardContent className="flex gap-1 p-0">
         <p className="text-2xl font-bold">{formattedValue}</p>
-        {formattedSubValue ? (
+        {formattedSubValue && (
           <>
             <span className="text-muted-foreground text-2xl">/</span>
             <p className="text-muted-foreground text-2xl">
               {formattedSubValue}
             </p>
           </>
-        ) : null}
+        )}
       </CardContent>
     </Card>
   );

@@ -6,11 +6,13 @@ export const formatRulesDate = (date: string): string => {
   return new Date(date).toLocaleString();
 };
 
-const countList = (value: unknown): number =>
-  Array.isArray(value) ? value.length : 0;
+const countList = (value: unknown): number => {
+  return Array.isArray(value) ? value.length : 0;
+};
 
-const asString = (value: unknown): string =>
-  typeof value === 'string' ? value : '';
+const asString = (value: unknown): string => {
+  return typeof value === 'string' ? value : '';
+};
 
 /**
  * Builds a concise, human-readable one-line summary of a rule's action payload

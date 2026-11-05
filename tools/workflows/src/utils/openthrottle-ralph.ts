@@ -110,8 +110,9 @@ export const RALPH_FATAL_REQUIRED_POSTGRES = `${RALPH_FATAL_PREFIX}OpenThrottle 
 /** @deprecated Use {@link RALPH_FATAL_REQUIRED_GRAPHQL} or {@link RALPH_FATAL_REQUIRED_POSTGRES}. */
 export const RALPH_FATAL_REQUIRED = RALPH_FATAL_REQUIRED_GRAPHQL;
 
-const isPostgresTransport = (config: WorkflowRalphConfig): boolean =>
-  config.transport === 'postgres-direct';
+const isPostgresTransport = (config: WorkflowRalphConfig): boolean => {
+  return config.transport === 'postgres-direct';
+};
 
 /**
  * @description Resolves Ralph config from env without exiting. Returns null when required env is missing.
@@ -191,58 +192,65 @@ export const ensureOpenThrottleReachable = async (
 export const getTaskById = async (
   config: WorkflowRalphConfig,
   id: string,
-): Promise<TaskRow | null> =>
-  isPostgresTransport(config)
+): Promise<TaskRow | null> => {
+  return isPostgresTransport(config)
     ? getTaskByIdPostgres(config, id)
     : getTaskByIdGraphql(id);
+};
 
 export const listPlansByStatus = async (
   config: WorkflowRalphConfig,
   status: string,
-): Promise<ListPlansByStatusRow[]> =>
-  isPostgresTransport(config)
+): Promise<ListPlansByStatusRow[]> => {
+  return isPostgresTransport(config)
     ? listPlansByStatusPostgres(config, status)
     : listPlansByStatusGraphql(status);
+};
 
 export const getPlanById = async (
   config: WorkflowRalphConfig,
   id: string,
-): Promise<PlanRow | null> =>
-  isPostgresTransport(config)
+): Promise<PlanRow | null> => {
+  return isPostgresTransport(config)
     ? getPlanByIdPostgres(config, id)
     : getPlanByIdGraphql(id);
+};
 
 export const listProjects = async (
   config: WorkflowRalphConfig,
-): Promise<ProjectRow[]> =>
-  isPostgresTransport(config)
+): Promise<ProjectRow[]> => {
+  return isPostgresTransport(config)
     ? listProjectsPostgres(config)
     : listProjectsGraphql();
+};
 
 export const ensureProjectForNxName = async (
   config: WorkflowRalphConfig,
   nxProjectName: string,
-): Promise<string> =>
-  isPostgresTransport(config)
+): Promise<string> => {
+  return isPostgresTransport(config)
     ? ensureProjectForNxNamePostgres(config, nxProjectName)
     : ensureProjectForNxNameGraphql(nxProjectName);
+};
 
 export const updatePlanProjectId = async (
   config: WorkflowRalphConfig,
   planId: string,
   projectId: string | null,
-): Promise<boolean> =>
-  isPostgresTransport(config)
+): Promise<boolean> => {
+  return isPostgresTransport(config)
     ? updatePlanProjectIdPostgres(config, planId, projectId)
     : updatePlanProjectIdGraphql(planId, projectId);
+};
 
 export const getTasksByPlanId = async (
   config: WorkflowRalphConfig,
   planId: string,
-): Promise<TaskRow[]> =>
-  isPostgresTransport(config)
+): Promise<TaskRow[]> => {
+  return isPostgresTransport(config)
     ? getTasksByPlanIdPostgres(config, planId)
     : getTasksByPlanIdGraphql(planId);
+};
 
 /**
  * @description Promotes a plan to `IN_PROGRESS` when its status is not already `IN_PROGRESS`.
@@ -259,19 +267,21 @@ export const updateTaskStatus = async (
   config: WorkflowRalphConfig,
   id: string,
   status: string,
-): Promise<TaskRow | null> =>
-  isPostgresTransport(config)
+): Promise<TaskRow | null> => {
+  return isPostgresTransport(config)
     ? updateTaskStatusPostgres(config, id, status)
     : updateTaskStatusGraphql(id, status);
+};
 
 export const updatePlanStatus = async (
   config: WorkflowRalphConfig,
   planId: string,
   status: string,
-): Promise<PlanRow | null> =>
-  isPostgresTransport(config)
+): Promise<PlanRow | null> => {
+  return isPostgresTransport(config)
     ? updatePlanStatusPostgres(config, planId, status)
     : updatePlanStatusGraphql(planId, status);
+};
 
 /**
  * @description Terminal reconcile for plan completion. Re-fetches the plan's tasks and,
@@ -299,18 +309,20 @@ export const appendPlanOutput = async (
   planId: string,
   content: string,
   iteration?: number | null,
-): Promise<void> =>
-  isPostgresTransport(config)
+): Promise<void> => {
+  return isPostgresTransport(config)
     ? appendPlanOutputPostgres(config, planId, content, iteration)
     : appendPlanOutputGraphql(planId, content, iteration);
+};
 
 export const insertCommitLink = async (
   config: WorkflowRalphConfig,
   input: CommitLinkInput,
-): Promise<CommitLinkRow> =>
-  isPostgresTransport(config)
+): Promise<CommitLinkRow> => {
+  return isPostgresTransport(config)
     ? insertCommitLinkPostgres(config, input)
     : insertCommitLinkGraphql(input);
+};
 
 /**
  * @description Captures where this CLI run is executing ({ hostname, pid, workerId }), mirroring the
@@ -318,11 +330,13 @@ export const insertCommitLink = async (
  * in the UI run-audit view. `workerId` is optional (the CLI has no BullMQ worker id); pass a stable
  * run identifier or leave it null.
  */
-export const captureRunLocation = (workerId?: string | null): RunLocation => ({
-  hostname: os.hostname(),
-  pid: process.pid,
-  workerId: workerId ?? null,
-});
+export const captureRunLocation = (workerId?: string | null): RunLocation => {
+  return {
+    hostname: os.hostname(),
+    pid: process.pid,
+    workerId: workerId ?? null,
+  };
+};
 
 /**
  * @description Registers a detached CLI run as a first-class plan_runs row so the UI Kill has a row
@@ -331,10 +345,11 @@ export const captureRunLocation = (workerId?: string | null): RunLocation => ({
 export const registerCliPlanRun = async (
   config: WorkflowRalphConfig,
   input: RegisterCliRunInput,
-): Promise<string> =>
-  isPostgresTransport(config)
+): Promise<string> => {
+  return isPostgresTransport(config)
     ? registerCliPlanRunPostgres(config, input)
     : registerCliPlanRunGraphql(input);
+};
 
 /**
  * @description Reads the newest plan_runs row's cancel marker for a plan (the CLI loop polls this at
@@ -343,10 +358,11 @@ export const registerCliPlanRun = async (
 export const readPlanRunCancelMarker = async (
   config: WorkflowRalphConfig,
   planId: string,
-): Promise<CliPlanRunCancelMarker | null> =>
-  isPostgresTransport(config)
+): Promise<CliPlanRunCancelMarker | null> => {
+  return isPostgresTransport(config)
     ? readPlanRunCancelMarkerPostgres(config, planId)
     : readPlanRunCancelMarkerGraphql(planId);
+};
 
 /**
  * @description Settles a detached CLI run row on exit: terminal status (COMPLETED/CANCELLED/FAILED)
@@ -356,10 +372,11 @@ export const settleCliPlanRun = async (
   config: WorkflowRalphConfig,
   planRunId: string,
   status: string,
-): Promise<void> =>
-  isPostgresTransport(config)
+): Promise<void> => {
+  return isPostgresTransport(config)
     ? settleCliPlanRunPostgres(config, planRunId, status)
     : settleCliPlanRunGraphql(planRunId, status);
+};
 
 /**
  * @description How often the detached CLI loop bumps its plan_runs heartbeat. Mirrors the server's
@@ -377,10 +394,11 @@ export const HEARTBEAT_INTERVAL_MS = 15_000;
 export const bumpCliPlanRunHeartbeat = async (
   config: WorkflowRalphConfig,
   planRunId: string,
-): Promise<void> =>
-  isPostgresTransport(config)
+): Promise<void> => {
+  return isPostgresTransport(config)
     ? bumpCliPlanRunHeartbeatPostgres(config, planRunId)
     : bumpCliPlanRunHeartbeatGraphql(planRunId);
+};
 
 /** Service-account bearer prefix (see GlobalAuthGuard: `ot_sa_` first, then JWT). */
 const SERVICE_ACCOUNT_TOKEN_PREFIX = 'ot_sa_';

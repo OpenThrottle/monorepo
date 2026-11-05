@@ -91,11 +91,12 @@ describe('symlink escape with followSymlinks', () => {
 });
 
 describe('diffSnapshots', () => {
-  const snapshot = (entries: Record<string, string>): WorkspaceFileHash[] =>
-    Object.entries(entries).map(([path, content]) => ({
+  const snapshot = (entries: Record<string, string>): WorkspaceFileHash[] => {
+    return Object.entries(entries).map(([path, content]) => ({
       hash: hashContent(content),
       path,
     }));
+  };
 
   it('reports added, changed, and removed paths', () => {
     const prev = snapshot({

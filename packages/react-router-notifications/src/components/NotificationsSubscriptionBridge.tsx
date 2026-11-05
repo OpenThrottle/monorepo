@@ -5,13 +5,13 @@ import { IS_BROWSER } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 import { useNavigate } from 'react-router';
 
-import { toastForNotification } from '../data/notifications-store.context';
 import { useNotificationsStore } from '../hooks/useNotificationsStore';
 import {
   getSystemNotificationsPreference,
   showSystemNotification,
 } from '../utils/system-notification';
 import { toStorePayload } from '../utils/to-store-payload';
+import { toastForNotification } from '../utils/toast-for-notification';
 
 /**
  * @description Minimum shape the injected subscription document's payload must

@@ -27,7 +27,9 @@ describe('route-fixtures', () => {
   });
 
   test('renderRouteHarness mounts a custom stub route array', () => {
-    const Inner = (): React.ReactElement => <div>multi-route-harness</div>;
+    const Inner = (): React.ReactElement => {
+      return <div>multi-route-harness</div>;
+    };
     renderRouteHarness([{ Component: Inner, path: '/' }]);
 
     expect(screen.getByText('multi-route-harness')).toBeInTheDocument();

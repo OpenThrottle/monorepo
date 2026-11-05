@@ -32,8 +32,8 @@ describe('PlanRunsStaleSweepRepeatableService.onModuleInit', () => {
     return 1;
   });
 
-  const build = (): PlanRunsStaleSweepRepeatableService =>
-    new PlanRunsStaleSweepRepeatableService(
+  const build = (): PlanRunsStaleSweepRepeatableService => {
+    return new PlanRunsStaleSweepRepeatableService(
       createMock<Queue>({ add }),
       createMock<LoggerService>(),
       createMock<ForeignSkillInjectionLifecycleService>({
@@ -46,6 +46,7 @@ describe('PlanRunsStaleSweepRepeatableService.onModuleInit', () => {
         reconcileManifestExclusions,
       }),
     );
+  };
 
   beforeEach(() => {
     vi.stubEnv('OT_SCHEDULED_JOBS_OWNER', '');

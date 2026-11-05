@@ -17,11 +17,13 @@ describe('NotificationsSubscriptionBridge Component', () => {
       children: <div data-testid="bridge-child">Child content</div>,
     };
 
-    const Component = () => (
-      <NotificationsStoreProvider persist={false}>
-        <NotificationsSubscriptionBridge {...props} />
-      </NotificationsStoreProvider>
-    );
+    const Component = () => {
+      return (
+        <NotificationsStoreProvider persist={false}>
+          <NotificationsSubscriptionBridge {...props} />
+        </NotificationsStoreProvider>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
   });

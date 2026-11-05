@@ -23,8 +23,7 @@ import type { VideoEpisode } from '../types.ts';
 export const episode: VideoEpisode = {
   beats: [
     {
-      action:
-        'Plan detail, run active, output looping on the same failing command.',
+      action: `Plan detail, run active, output looping on the same failing command.`,
       t: '0:00',
     },
     { action: 'Scroll the repeating output.', t: '0:09' },

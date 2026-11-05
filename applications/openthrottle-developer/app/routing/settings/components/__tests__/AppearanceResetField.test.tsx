@@ -5,11 +5,9 @@ import { createStore, Provider } from 'jotai';
 import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import type { ConfigObject } from '~/global/data/atom.config';
-import {
-  configAtom,
-  DEFAULT_APPEARANCE_CONFIG,
-} from '~/global/data/atom.config';
+import type { ConfigObject } from '~/global/data/data.appearance-config';
+import { DEFAULT_APPEARANCE_CONFIG } from '~/global/data/data.appearance-config';
+import { configAtom } from '~/global/data/data.atom-config';
 
 import type { AppearanceResetFieldProps } from '../AppearanceResetField';
 import { AppearanceResetField } from '../AppearanceResetField';

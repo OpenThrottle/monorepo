@@ -64,8 +64,11 @@ export interface LateFireInput {
  * @description Whether a single fire that started `latenessMs` after its slot should still run: always
  * within the threshold, and beyond it only under `catch_up_once`.
  */
-export const shouldRunLateFire = (input: LateFireInput): boolean =>
-  input.latenessMs <= input.thresholdMs || input.policy === 'catch_up_once';
+export const shouldRunLateFire = (input: LateFireInput): boolean => {
+  return (
+    input.latenessMs <= input.thresholdMs || input.policy === 'catch_up_once'
+  );
+};
 
 /** Inputs to {@link listCronSlotsBetween}. */
 export interface CronSlotWindow {
@@ -168,12 +171,16 @@ export const planBootMisfire = (input: BootMisfireInput): BootMisfirePlan => {
 };
 
 /** @description A duration as "N min" when it is whole minutes, else "N s". */
-export const formatMisfireDuration = (ms: number): string =>
-  ms % 60_000 === 0 ? `${ms / 60_000} min` : `${Math.round(ms / 1_000)} s`;
+export const formatMisfireDuration = (ms: number): string => {
+  return ms % 60_000 === 0
+    ? `${ms / 60_000} min`
+    : `${Math.round(ms / 1_000)} s`;
+};
 
 /** @description Human label for a policy, as run history shows it. */
-const policyLabel = (policy: ScheduledAgentJobMisfirePolicy): string =>
-  policy === 'skip' ? 'skip' : 'catch up once';
+const policyLabel = (policy: ScheduledAgentJobMisfirePolicy): string => {
+  return policy === 'skip' ? 'skip' : 'catch up once';
+};
 
 /** Inputs to the missed-run messages. */
 export interface MissedMessageInput {
@@ -182,12 +189,14 @@ export interface MissedMessageInput {
 }
 
 /** @description Message on a slot the server was down for, too late to run under the policy. */
-export const missedLateMessage = (input: MissedMessageInput): string =>
-  `Missed: the server was not running when this fire came due, and it is more than ${formatMisfireDuration(input.thresholdMs)} late (misfire policy: ${policyLabel(input.policy)}).`;
+export const missedLateMessage = (input: MissedMessageInput): string => {
+  return `Missed: the server was not running when this fire came due, and it is more than ${formatMisfireDuration(input.thresholdMs)} late (misfire policy: ${policyLabel(input.policy)}).`;
+};
 
 /** @description Message on a slot of an outage that a later late run stands in for. */
-export const missedSupersededMessage = (input: MissedMessageInput): string =>
-  `Missed: the server was not running when this fire came due. An outage gets at most one late run, and a later fire stood in for this one (misfire policy: ${policyLabel(input.policy)}).`;
+export const missedSupersededMessage = (input: MissedMessageInput): string => {
+  return `Missed: the server was not running when this fire came due. An outage gets at most one late run, and a later fire stood in for this one (misfire policy: ${policyLabel(input.policy)}).`;
+};
 
 /** Inputs to {@link missedOnPickupMessage}. */
 export interface MissedOnPickupMessageInput extends MissedMessageInput {
@@ -197,5 +206,6 @@ export interface MissedOnPickupMessageInput extends MissedMessageInput {
 /** @description Message on a fire the worker picked up too late to run under the policy. */
 export const missedOnPickupMessage = (
   input: MissedOnPickupMessageInput,
-): string =>
-  `Missed: this fire was picked up ${formatMisfireDuration(Math.round(input.latenessMs / 60_000) * 60_000)} after it came due, beyond the ${formatMisfireDuration(input.thresholdMs)} misfire threshold (misfire policy: ${policyLabel(input.policy)}).`;
+): string => {
+  return `Missed: this fire was picked up ${formatMisfireDuration(Math.round(input.latenessMs / 60_000) * 60_000)} after it came due, beyond the ${formatMisfireDuration(input.thresholdMs)} misfire threshold (misfire policy: ${policyLabel(input.policy)}).`;
+};

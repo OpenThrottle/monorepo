@@ -53,7 +53,9 @@ var logHookError = (message, err) => {
 };
 
 // packages/agentic-hooks/src/config/env.ts
-var userConfigDir = () => import_node_path.default.join(import_node_os.default.homedir(), ".openthrottle");
+var userConfigDir = () => {
+  return import_node_path.default.join(import_node_os.default.homedir(), ".openthrottle");
+};
 var OT_MARKER_REL = import_node_path.default.join(
   "applications",
   "openthrottle-server",
@@ -113,13 +115,19 @@ var readEnvFile = (envPath) => {
   }
   return out;
 };
-var readRepoEnvFile = (repoRoot) => isOpenThrottleCheckout(repoRoot) ? readEnvFile(import_node_path.default.join(repoRoot, ".env")) : {};
-var readUserEnvFile = () => readEnvFile(import_node_path.default.join(userConfigDir(), ".env"));
-var envLayers = (repoRoot, options) => [
-  repoRoot ? readRepoEnvFile(repoRoot) : {},
-  ...options?.includeProcessEnv === false ? [] : [process.env],
-  readUserEnvFile()
-];
+var readRepoEnvFile = (repoRoot) => {
+  return isOpenThrottleCheckout(repoRoot) ? readEnvFile(import_node_path.default.join(repoRoot, ".env")) : {};
+};
+var readUserEnvFile = () => {
+  return readEnvFile(import_node_path.default.join(userConfigDir(), ".env"));
+};
+var envLayers = (repoRoot, options) => {
+  return [
+    repoRoot ? readRepoEnvFile(repoRoot) : {},
+    ...options?.includeProcessEnv === false ? [] : [process.env],
+    readUserEnvFile()
+  ];
+};
 var resolveOtEnv = (repoRoot, key, options) => {
   for (const layer of envLayers(repoRoot, options)) {
     const value = layer[key];
@@ -130,7 +138,9 @@ var resolveOtEnv = (repoRoot, key, options) => {
   return "";
 };
 var LOOPBACK_AUTHORITY = /^([a-z][a-z0-9+.-]*:\/\/(?:[^/?#@]*@)?)localhost(?=[:/?#]|$)/i;
-var normalizeLoopbackHost = (url) => url.replace(LOOPBACK_AUTHORITY, "$1127.0.0.1");
+var normalizeLoopbackHost = (url) => {
+  return url.replace(LOOPBACK_AUTHORITY, "$1127.0.0.1");
+};
 var graphqlUrlFromEnvMap = (env) => {
   const explicit = env.OPENTHROTTLE_GRAPHQL_URL?.trim() || env.OPENTHROTTLE_WORKER_GRAPHQL_URL?.trim();
   if (explicit) {
@@ -151,7 +161,9 @@ var resolveGraphqlUrl = (repoRoot, options) => {
   }
   return null;
 };
-var resolveAuthToken = (repoRoot, options) => resolveOtEnv(repoRoot, "OPENTHROTTLE_MCP_AUTH_TOKEN", options) || resolveOtEnv(repoRoot, "OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN", options) || "";
+var resolveAuthToken = (repoRoot, options) => {
+  return resolveOtEnv(repoRoot, "OPENTHROTTLE_MCP_AUTH_TOKEN", options) || resolveOtEnv(repoRoot, "OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN", options) || "";
+};
 
 // packages/agentic-hooks/src/config/describe.ts
 var TELEMETRY_CONFIG_SOURCES = Object.freeze({
@@ -166,7 +178,9 @@ var TELEMETRY_CONFIG_SOURCES = Object.freeze({
 });
 
 // packages/nodejs-utils/src/utils/is-record.ts
-var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
+var isRecord = (value) => {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+};
 
 // packages/agentic-hooks/src/data/checkpoints.ts
 var DEFAULT_STALE_CHECKPOINT_MS = 6 * 60 * 60 * 1e3;
@@ -275,9 +289,11 @@ var KICKOFF_TOOL_SUFFIXES = [
   "__start_session"
 ];
 var BRIEF_KEYS = ["prompt", "remaining_plan"];
-var isKickoffTool = (raw) => isRecord(raw) && typeof raw.tool_name === "string" && KICKOFF_TOOL_SUFFIXES.some(
-  (suffix) => String(raw.tool_name).endsWith(suffix)
-);
+var isKickoffTool = (raw) => {
+  return isRecord(raw) && typeof raw.tool_name === "string" && KICKOFF_TOOL_SUFFIXES.some(
+    (suffix) => String(raw.tool_name).endsWith(suffix)
+  );
+};
 var readKickoffBrief = (raw) => {
   if (!isRecord(raw) || !isRecord(raw.tool_input)) return null;
   const toolInput = raw.tool_input;
@@ -287,7 +303,9 @@ var readKickoffBrief = (raw) => {
   }
   return null;
 };
-var decideKickoff = async (raw, lookup) => isKickoffTool(raw) ? decideKickoffBrief(readKickoffBrief(raw), lookup) : KICKOFF_ALLOW;
+var decideKickoff = async (raw, lookup) => {
+  return isKickoffTool(raw) ? decideKickoffBrief(readKickoffBrief(raw), lookup) : KICKOFF_ALLOW;
+};
 
 // packages/agentic-hooks/src/adapters/claude/require-ot-plan-kickoff.ts
 var LOOKUP_TIMEOUT_MS = 1500;

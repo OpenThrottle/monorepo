@@ -39,7 +39,9 @@ describe('QueuesTable Component', () => {
   beforeEach(() => {
     props = { queues: [] };
 
-    const Component = () => <QueuesTable {...props} />;
+    const Component = () => {
+      return <QueuesTable {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);
@@ -56,7 +58,9 @@ describe('QueuesTable Component', () => {
   test('renders table with column headers when queues provided', () => {
     props = { queues: mockQueues };
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const TableComponent = () => <QueuesTable {...props} />;
+    const TableComponent = () => {
+      return <QueuesTable {...props} />;
+    };
     const RoutesStub = createRoutesStub([
       { Component: TableComponent, path: '/' },
     ]);
@@ -85,7 +89,9 @@ describe('QueuesTable Component', () => {
   test('renders one row per queue with name link and View in the actions menu', async () => {
     props = { queues: mockQueues };
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const TableComponent = () => <QueuesTable {...props} />;
+    const TableComponent = () => {
+      return <QueuesTable {...props} />;
+    };
     const RoutesStub = createRoutesStub([
       { Component: TableComponent, path: '/' },
     ]);
@@ -116,7 +122,9 @@ describe('QueuesTable Component', () => {
   test('renders queue counts in table cells', () => {
     props = { queues: mockQueues };
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const TableComponent = () => <QueuesTable {...props} />;
+    const TableComponent = () => {
+      return <QueuesTable {...props} />;
+    };
     const RoutesStub = createRoutesStub([
       { Component: TableComponent, path: '/' },
     ]);
@@ -133,7 +141,9 @@ describe('QueuesTable Component', () => {
   test('exposes accessible labels for zero-count backlog and failed', () => {
     props = { queues: mockQueues };
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const TableComponent = () => <QueuesTable {...props} />;
+    const TableComponent = () => {
+      return <QueuesTable {...props} />;
+    };
     const RoutesStub = createRoutesStub([
       { Component: TableComponent, path: '/' },
     ]);
@@ -150,7 +160,9 @@ describe('QueuesTable Component', () => {
   test('renders a health pill and queue-controls menu per row', async () => {
     props = { queues: mockQueues };
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const TableComponent = () => <QueuesTable {...props} />;
+    const TableComponent = () => {
+      return <QueuesTable {...props} />;
+    };
     const RoutesStub = createRoutesStub([
       { Component: TableComponent, path: '/' },
     ]);
@@ -186,7 +198,9 @@ describe('QueuesTable Component', () => {
   test('queue name links and actions trigger receive keyboard focus in row order', async () => {
     props = { queues: mockQueues };
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const TableComponent = () => <QueuesTable {...props} />;
+    const TableComponent = () => {
+      return <QueuesTable {...props} />;
+    };
     const RoutesStub = createRoutesStub([
       { Component: TableComponent, path: '/' },
     ]);

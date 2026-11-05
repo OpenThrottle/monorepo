@@ -35,7 +35,9 @@ describe('NotificationPreferencesSection', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    const Component = () => <NotificationPreferencesSection />;
+    const Component = () => {
+      return <NotificationPreferencesSection />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
   });

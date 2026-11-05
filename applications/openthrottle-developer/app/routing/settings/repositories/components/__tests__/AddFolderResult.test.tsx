@@ -76,7 +76,9 @@ describe('AddFolderResult Component', () => {
       },
     };
 
-    const Component = () => <AddFolderResult {...props} />;
+    const Component = () => {
+      return <AddFolderResult {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

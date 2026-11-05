@@ -37,10 +37,8 @@ function formatChildProcessCompact(
 function formatWallClockCompact(
   metrics: NonNullable<EnhancedTaskRunMetrics['wallClockMetrics']>,
 ): string {
-  const ratio =
-    metrics.wallClockToCpuRatio === Infinity
-      ? '∞'
-      : metrics.wallClockToCpuRatio.toFixed(1);
+  const isInfinite = metrics.wallClockToCpuRatio === Infinity;
+  const ratio = isInfinite ? '∞' : metrics.wallClockToCpuRatio.toFixed(1);
   return `ratio ${ratio}x (${metrics.interpretation})`;
 }
 

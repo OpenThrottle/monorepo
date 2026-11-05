@@ -40,17 +40,19 @@ describe('PromoteTaskToPlanExecutor', () => {
   let tagFindOne: ReturnType<typeof vi.fn>;
   let taskFindOne: ReturnType<typeof vi.fn>;
 
-  const buildContext = (): ActionExecutorContext => ({
-    action: asMock<MatchedTagAction>({
-      actionPayload: {},
-      actionType: 'promote-task-to-plan',
-      matchedTags: ['promote'],
-      ruleId: 'rule-1',
-    }),
-    ownerUserId: OWNER_ID,
-    plan: asMock<Plan>({ id: PLAN_ID }),
-    rule: asMock<TagActionRule>({ id: 'rule-1' }),
-  });
+  const buildContext = (): ActionExecutorContext => {
+    return {
+      action: asMock<MatchedTagAction>({
+        actionPayload: {},
+        actionType: 'promote-task-to-plan',
+        matchedTags: ['promote'],
+        ruleId: 'rule-1',
+      }),
+      ownerUserId: OWNER_ID,
+      plan: asMock<Plan>({ id: PLAN_ID }),
+      rule: asMock<TagActionRule>({ id: 'rule-1' }),
+    };
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();

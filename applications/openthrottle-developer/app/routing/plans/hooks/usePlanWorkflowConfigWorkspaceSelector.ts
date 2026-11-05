@@ -11,6 +11,7 @@ import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/grap
 import {
   CHECKOUT_PREFIX,
   CUSTOM_VALUE,
+  getWorkspaceSelectedValue,
   REPOSITORY_PREFIX,
   ROOT_VALUE,
 } from '~/routing/plans/utils/plan-workflow-config-workspace-selector';
@@ -57,14 +58,11 @@ export const usePlanWorkflowConfigWorkspaceSelector = (
   const prefilledRef = React.useRef(false);
 
   // Setup
-  const selectedValue =
-    checkoutId !== ''
-      ? `${CHECKOUT_PREFIX}${checkoutId}`
-      : repositoryId !== ''
-        ? `${REPOSITORY_PREFIX}${repositoryId}`
-        : workingDirectory.trim() !== ''
-          ? CUSTOM_VALUE
-          : ROOT_VALUE;
+  const selectedValue = getWorkspaceSelectedValue({
+    checkoutId,
+    repositoryId,
+    workingDirectory,
+  });
 
   const selectedCheckout = React.useMemo(() => {
     if (checkoutId === '') return undefined;

@@ -5,7 +5,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 import { SKILLS_SOURCE_COPY } from '~/routing/skills/data/data.copy';
 import { getModelInvocationBadge } from '~/routing/skills/utils/model-invocation-badge';
 
@@ -27,11 +27,13 @@ describe('SkillIntroductionBadges Component', () => {
   let props: SkillIntroductionBadgesProps;
 
   const renderBadges = (): RenderResult => {
-    const Component = () => (
-      <TooltipProvider>
-        <SkillIntroductionBadges {...props} />
-      </TooltipProvider>
-    );
+    const Component = () => {
+      return (
+        <TooltipProvider>
+          <SkillIntroductionBadges {...props} />
+        </TooltipProvider>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     return render(<RoutesStub />);

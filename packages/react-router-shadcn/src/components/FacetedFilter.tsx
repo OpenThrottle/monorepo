@@ -136,6 +136,7 @@ export const FacetedFilter = (
   };
 
   // Markup
+  const hasFooterActions = footerActions.length > 0;
   const groupNodes = [...groups.entries()].map(
     ([heading, groupOptions], index) => (
       <React.Fragment key={heading ?? '__ungrouped'}>
@@ -173,16 +174,16 @@ export const FacetedFilter = (
         onOpenAutoFocus={handleOpenAutoFocus}
       >
         <Command onKeyDown={handleKeyDown} ref={commandRef}>
-          {searchable ? (
+          {searchable && (
             <CommandInput
               placeholder={FACETED_FILTER_COPY.searchPlaceholder(title)}
             />
-          ) : null}
+          )}
           <CommandList aria-multiselectable={true} label={title}>
             <CommandEmpty>{FACETED_FILTER_COPY.noResults}</CommandEmpty>
             {groupNodes}
           </CommandList>
-          {footerActions.length === 0 ? null : (
+          {hasFooterActions && (
             <div className="flex gap-1 border-t p-1" data-slot="faceted-footer">
               {footerActions.map((action) => (
                 <Button

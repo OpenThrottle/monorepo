@@ -85,14 +85,16 @@ NotesTable.buildTable = (): ColumnDef<
       accessorKey: 'author',
       cell: ({ row }) => {
         const author = row.original.author?.trim();
+        const authorMarkup = (
+          <span aria-label={`Author: ${author}`}>{author}</span>
+        );
+        const emptyAuthorMarkup = (
+          <span className="text-muted-foreground">—</span>
+        );
 
         return (
           <div className="text-muted-foreground p-2 text-sm">
-            {author ? (
-              <span aria-label={`Author: ${author}`}>{author}</span>
-            ) : (
-              <span className="text-muted-foreground">—</span>
-            )}
+            {author ? authorMarkup : emptyAuthorMarkup}
           </div>
         );
       },

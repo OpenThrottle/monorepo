@@ -12,7 +12,9 @@ import type {
 import type { UsePlanWorkflowConfigHookRowResult } from '../usePlanWorkflowConfigHookRow';
 import { usePlanWorkflowConfigHookRow } from '../usePlanWorkflowConfigHookRow';
 
-const createOnChangeMock = () => vi.fn<(next: JobRunHookDraftRow[]) => void>();
+const createOnChangeMock = () => {
+  return vi.fn<(next: JobRunHookDraftRow[]) => void>();
+};
 
 interface SkillRowOverrides {
   draftId?: string;
@@ -21,14 +23,16 @@ interface SkillRowOverrides {
   skillPath?: string;
 }
 
-const skillRow = (overrides: SkillRowOverrides = {}) => ({
-  draftId: 'row-1',
-  kind: 'skill' as const,
-  order: 0,
-  phase: 'before_run' as const,
-  skillPath: '.agents/skills/foo/SKILL.md',
-  ...overrides,
-});
+const skillRow = (overrides: SkillRowOverrides = {}) => {
+  return {
+    draftId: 'row-1',
+    kind: 'skill' as const,
+    order: 0,
+    phase: 'before_run' as const,
+    skillPath: '.agents/skills/foo/SKILL.md',
+    ...overrides,
+  };
+};
 
 interface PromptRowOverrides {
   draftId?: string;
@@ -36,15 +40,17 @@ interface PromptRowOverrides {
   prompt?: string;
 }
 
-const promptRow = (overrides: PromptRowOverrides = {}) => ({
-  draftId: 'row-2',
-  kind: 'prompt_profile' as const,
-  order: 0,
-  phase: 'before_run' as const,
-  prompt: 'do the thing',
-  promptDelivery: 'named' as const,
-  ...overrides,
-});
+const promptRow = (overrides: PromptRowOverrides = {}) => {
+  return {
+    draftId: 'row-2',
+    kind: 'prompt_profile' as const,
+    order: 0,
+    phase: 'before_run' as const,
+    prompt: 'do the thing',
+    promptDelivery: 'named' as const,
+    ...overrides,
+  };
+};
 
 interface PromptFileRowOverrides {
   draftId?: string;
@@ -52,15 +58,17 @@ interface PromptFileRowOverrides {
   promptFile?: string;
 }
 
-const promptFileRow = (overrides: PromptFileRowOverrides = {}) => ({
-  draftId: 'row-3',
-  kind: 'prompt_profile' as const,
-  order: 0,
-  phase: 'before_run' as const,
-  promptDelivery: 'file' as const,
-  promptFile: '',
-  ...overrides,
-});
+const promptFileRow = (overrides: PromptFileRowOverrides = {}) => {
+  return {
+    draftId: 'row-3',
+    kind: 'prompt_profile' as const,
+    order: 0,
+    phase: 'before_run' as const,
+    promptDelivery: 'file' as const,
+    promptFile: '',
+    ...overrides,
+  };
+};
 
 /** Renders a controlled input wired to one of the hook's field handlers, so
  * a real DOM change event (via userEvent) drives it without a cast. */

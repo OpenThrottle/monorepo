@@ -34,13 +34,15 @@ const option = (
   group: string,
   dot: string,
   count: number | undefined,
-): FacetedFilterOption => ({
-  adornment: <Dot className={dot} />,
-  count,
-  group,
-  label,
-  value,
-});
+): FacetedFilterOption => {
+  return {
+    adornment: <Dot className={dot} />,
+    count,
+    group,
+    label,
+    value,
+  };
+};
 
 const STATUSES: readonly FacetedFilterOption[] = [
   option('BACKLOG', 'Backlog', 'Active', 'bg-violet-500', undefined),

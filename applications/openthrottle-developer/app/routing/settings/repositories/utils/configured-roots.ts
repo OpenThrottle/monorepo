@@ -1,6 +1,6 @@
 import { WorktreeRootSource } from '~/__generated__/graphql';
 import { WORKTREE_DISCOVERY_COPY } from '~/routing/settings/repositories/data/data.copy';
-import type { ScannedWorktreeRoot } from '~/routing/settings/repositories/data/types';
+import type { ScannedWorktreeRoot } from '~/routing/settings/repositories/types';
 
 /** One configured worktree root, as a person set it, plus where the value came from. */
 export interface ConfiguredWorktreeRoot {

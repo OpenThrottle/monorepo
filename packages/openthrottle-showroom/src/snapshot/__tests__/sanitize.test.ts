@@ -105,8 +105,9 @@ describe('detectSecret', () => {
   });
 });
 
-const isOffsetMarker = (value: unknown): value is { $offsetMs: number } =>
-  typeof value === 'object' && value !== null && '$offsetMs' in value;
+const isOffsetMarker = (value: unknown): value is { $offsetMs: number } => {
+  return typeof value === 'object' && value !== null && '$offsetMs' in value;
+};
 
 const offsetMsOf = (value: unknown): number => {
   if (!isOffsetMarker(value)) {

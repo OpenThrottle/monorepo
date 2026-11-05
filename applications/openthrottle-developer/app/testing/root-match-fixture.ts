@@ -14,24 +14,26 @@ import type { Route as RootRoute } from '@/app/+types/root';
 type RootMatch = RootRoute.ComponentProps['matches'][0];
 
 /** Builds a minimal-but-valid `root` route match entry for `matches` tuples. */
-export const buildRootMatch = (): RootMatch => ({
-  handle: undefined,
-  id: 'root',
-  loaderData: {
-    canonical: 'http://localhost/',
-    env: getPublicEnv(),
-    permissions: [],
-    rootLoaderDiagnostics: {},
-    rootLoaderFailure: null,
-    serverHealth: {
-      api: 'unconfigured',
-      database: 'unconfigured',
-      redis: 'unconfigured',
-      websocket: 'unconfigured',
+export const buildRootMatch = (): RootMatch => {
+  return {
+    handle: undefined,
+    id: 'root',
+    loaderData: {
+      canonical: 'http://localhost/',
+      env: getPublicEnv(),
+      permissions: [],
+      rootLoaderDiagnostics: {},
+      rootLoaderFailure: null,
+      serverHealth: {
+        api: 'unconfigured',
+        database: 'unconfigured',
+        redis: 'unconfigured',
+        websocket: 'unconfigured',
+      },
+      user: null,
+      userLoadOk: true,
     },
-    user: null,
-    userLoadOk: true,
-  },
-  params: {},
-  pathname: '/',
-});
+    params: {},
+    pathname: '/',
+  };
+};

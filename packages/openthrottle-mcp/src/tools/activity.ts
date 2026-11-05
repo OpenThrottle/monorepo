@@ -29,6 +29,17 @@ type GetLastActivityResult = GenericResult<{
   result: GetLastActivityQuery['lastActivity'];
 }>;
 
+function toLinesOrNone<TItem>(
+  items: readonly TItem[],
+  toLine: (item: TItem) => string,
+): string[] {
+  if (items.length === 0) {
+    return ['  (none)'];
+  }
+
+  return items.map(toLine);
+}
+
 /** Exactly one of date (YYYY-MM-DD) or daysBack (1–365). */
 export const getActivityByDateToolParameters = ActivityByDateInputSchema()
   // `.strict()` BEFORE `.refine()`: refine returns a ZodEffects wrapper with no
@@ -77,28 +88,19 @@ export async function getActivityByDateToolHandler(
         `Activity (totalCount: ${activity.totalCount}, hasNext: ${activity.hasNext}):`,
         '',
         `Commits (${activity.commits.length}):`,
-        ...(activity.commits.length === 0
-          ? ['  (none)']
-          : activity.commits.map(
-              (c) =>
-                `  ${c.createdAt} | ${c.planTitle}${c.taskTitle ? ` / ${c.taskTitle}` : ''} | ${c.repo} ${c.sha.slice(0, 7)} | ${c.message ?? '(no message)'}`,
-            )),
+        ...toLinesOrNone(activity.commits, (c) => {
+          return `  ${c.createdAt} | ${c.planTitle}${c.taskTitle ? ` / ${c.taskTitle}` : ''} | ${c.repo} ${c.sha.slice(0, 7)} | ${c.message ?? '(no message)'}`;
+        }),
         '',
         `Plan output chunks (${activity.outputChunks.length}):`,
-        ...(activity.outputChunks.length === 0
-          ? ['  (none)']
-          : activity.outputChunks.map(
-              (o) =>
-                `  ${o.createdAt} | ${o.planTitle} | ${o.content.slice(0, 80)}${o.content.length > 80 ? '…' : ''}`,
-            )),
+        ...toLinesOrNone(activity.outputChunks, (o) => {
+          return `  ${o.createdAt} | ${o.planTitle} | ${o.content.slice(0, 80)}${o.content.length > 80 ? '…' : ''}`;
+        }),
         '',
         `Tasks updated (${activity.tasksUpdated.length}):`,
-        ...(activity.tasksUpdated.length === 0
-          ? ['  (none)']
-          : activity.tasksUpdated.map(
-              (t) =>
-                `  ${t.updatedAt} | ${t.planTitle} | ${t.title} → ${t.status}`,
-            )),
+        ...toLinesOrNone(activity.tasksUpdated, (t) => {
+          return `  ${t.updatedAt} | ${t.planTitle} | ${t.title} → ${t.status}`;
+        }),
       ];
 
       const text = lines.join('\n');
@@ -132,10 +134,9 @@ export async function getLastActivityToolHandler(
       );
 
       const last = result?.lastActivity ?? null;
+      const noActivityText = 'No activity found for this plan or task.';
       const text =
-        last === null
-          ? 'No activity found for this plan or task.'
-          : JSON.stringify(last, null, 2);
+        last === null ? noActivityText : JSON.stringify(last, null, 2);
 
       return { structuredContent: { result: last }, text };
     },

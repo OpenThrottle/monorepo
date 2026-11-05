@@ -78,10 +78,9 @@ export async function embedWithOllama(
     }
 
     const data: unknown = await response.json();
-    const embedding =
-      typeof data === 'object' && data !== null && 'embedding' in data
-        ? data.embedding
-        : undefined;
+    const hasEmbeddingField =
+      typeof data === 'object' && data !== null && 'embedding' in data;
+    const embedding = hasEmbeddingField ? data.embedding : undefined;
 
     if (!Array.isArray(embedding) || embedding.length === 0) {
       console.error(

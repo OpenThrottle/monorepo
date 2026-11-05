@@ -17,13 +17,15 @@ describe('ChartTooltip Component', () => {
       content: <span data-testid="tooltip-content">content</span>,
     };
 
-    const Component = () => (
-      <BarChart data={[{ name: 'a', value: 1 }]}>
-        <XAxis dataKey="name" />
-        <Bar dataKey="value" />
-        <ChartTooltip {...props} />
-      </BarChart>
-    );
+    const Component = () => {
+      return (
+        <BarChart data={[{ name: 'a', value: 1 }]}>
+          <XAxis dataKey="name" />
+          <Bar dataKey="value" />
+          <ChartTooltip {...props} />
+        </BarChart>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

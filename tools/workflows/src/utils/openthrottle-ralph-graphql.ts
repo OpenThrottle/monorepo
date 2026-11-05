@@ -47,29 +47,38 @@ import type {
 import { taskRequirementsFromRow } from './openthrottle-ralph-types';
 import { ralphDebugLogger } from './ralph-debug-logger';
 
-const normalizeStatus = (status: string): string => status.trim().toUpperCase();
+const normalizeStatus = (status: string): string => {
+  return status.trim().toUpperCase();
+};
 
-const toIsoString = (value: unknown): string =>
-  value instanceof Date
-    ? value.toISOString()
-    : typeof value === 'string'
-      ? value
-      : String(value);
+const toIsoString = (value: unknown): string => {
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  return String(value);
+};
 
 /**
  * @description Maps a GraphQL plan fragment to the legacy {@link PlanRow} shape.
  */
-export const planFragmentToRow = (plan: PlanFragment): PlanRow => ({
-  author: plan.author,
-  category: plan.category,
-  createdAt: toIsoString(plan.createdAt),
-  description: plan.description ?? null,
-  id: plan.id,
-  status: plan.status,
-  summary: plan.summary ?? null,
-  title: plan.title,
-  updatedAt: toIsoString(plan.updatedAt),
-});
+export const planFragmentToRow = (plan: PlanFragment): PlanRow => {
+  return {
+    author: plan.author,
+    category: plan.category,
+    createdAt: toIsoString(plan.createdAt),
+    description: plan.description ?? null,
+    id: plan.id,
+    status: plan.status,
+    summary: plan.summary ?? null,
+    title: plan.title,
+    updatedAt: toIsoString(plan.updatedAt),
+  };
+};
 
 /**
  * @description Maps a GraphQL task fragment to the legacy {@link TaskRow} shape.
@@ -141,10 +150,9 @@ export async function ensureGraphqlIsReachable(): Promise<void> {
     return;
   }
 
-  const detail =
-    database === 'unconfigured'
-      ? 'OpenThrottle database is not configured on the server.'
-      : `OpenThrottle database is unreachable (serverHealth.database=${outcome.data.serverHealth.database}).`;
+  const unreachable = `OpenThrottle database is unreachable (serverHealth.database=${outcome.data.serverHealth.database}).`;
+  const unconfigured = 'OpenThrottle database is not configured on the server.';
+  const detail = database === 'unconfigured' ? unconfigured : unreachable;
 
   throw new Error(
     `${detail} Check API_URL_INTERNAL / OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL and server connectivity.`,

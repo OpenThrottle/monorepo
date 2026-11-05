@@ -7,7 +7,9 @@ import { NotificationEmpty } from '../NotificationEmpty';
 
 describe('NotificationEmpty Component', () => {
   test('shows empty-state message', () => {
-    const Component = () => <NotificationEmpty />;
+    const Component = () => {
+      return <NotificationEmpty />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 

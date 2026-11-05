@@ -9,7 +9,7 @@ import {
   loadDiscoveredModels,
   loadPersonas,
   loadRepositories,
-} from '~/routing/home/data/models.server';
+} from '~/routing/home/utils/models.server';
 
 /**
  * The response contract is single-sourced in
@@ -31,10 +31,11 @@ export type { ChatOptionsResponse };
  */
 export const loader = async (
   args: Route.LoaderArgs,
-): Promise<ChatOptionsResponse> =>
-  buildChatOptionsResponse({
+): Promise<ChatOptionsResponse> => {
+  return buildChatOptionsResponse({
     loadAgentClis: () => loadAgentClis(args.request),
     loadDiscoveredModels: () => loadDiscoveredModels(args.request),
     loadPersonas: () => loadPersonas(args.request),
     loadRepositories: () => loadRepositories(args.request),
   });
+};

@@ -548,10 +548,11 @@ describe('ConversationStreamService', () => {
     vi.useFakeTimers();
     process.env.OPENTHROTTLE_CHAT_IDLE_TIMEOUT_MS = '5000';
 
-    const sleep = (ms: number): Promise<void> =>
-      new Promise((resolve) => {
+    const sleep = (ms: number): Promise<void> => {
+      return new Promise((resolve) => {
         setTimeout(resolve, ms);
       });
+    };
 
     // A backend that is ALIVE the whole time but only surfaces keepalive
     // liveness chunks for four idle-length stretches (4s < 5s each) before it

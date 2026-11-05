@@ -53,6 +53,15 @@ export const SkillDetailEditControls = (
   // Handlers
 
   // Markup
+  const saveErrorMessage = (
+    <p
+      className="text-destructive text-xs"
+      data-testid="skill-save-error"
+      role="alert"
+    >
+      {saveError}
+    </p>
+  );
 
   // Life Cycle
 
@@ -60,15 +69,7 @@ export const SkillDetailEditControls = (
   if (isEditing) {
     return (
       <div className="flex items-center gap-2">
-        {saveError ? (
-          <p
-            className="text-destructive text-xs"
-            data-testid="skill-save-error"
-            role="alert"
-          >
-            {saveError}
-          </p>
-        ) : null}
+        {saveError ? saveErrorMessage : null}
         <Button
           data-testid="skill-save-button"
           disabled={!isDirty || saving}

@@ -19,13 +19,15 @@ import { GqlThrottlerGuard } from '../guards/gql-throttler.guard.ts';
 
 const toThrottlerModuleOptions = (
   resolved: ResolvedNestjsThrottlerModuleOptions,
-): ThrottlerModuleOptions => ({
-  throttlers: resolved.throttlers.map((tier) => ({
-    limit: tier.limit,
-    ...(tier.name === undefined ? {} : { name: tier.name }),
-    ttl: tier.ttl,
-  })),
-});
+): ThrottlerModuleOptions => {
+  return {
+    throttlers: resolved.throttlers.map((tier) => ({
+      limit: tier.limit,
+      ...(tier.name === undefined ? {} : { name: tier.name }),
+      ttl: tier.ttl,
+    })),
+  };
+};
 
 /**
  * @description Host module for {@link NestjsThrottlerModule.forRoot} /

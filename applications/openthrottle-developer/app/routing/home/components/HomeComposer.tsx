@@ -10,10 +10,10 @@ import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 import { useNavigate } from 'react-router';
 
-import type { RepositoryOption } from '~/routing/home/data/models.server';
 import type { UseAgenticChatTurnResult } from '~/routing/home/hooks/useAgenticChatTurn';
 import type { UseConversationListResult } from '~/routing/home/hooks/useConversationList';
 import { useHomeComposer } from '~/routing/home/hooks/useHomeComposer';
+import type { RepositoryOption } from '~/routing/home/utils/models.server';
 
 export interface HomeComposerProps {
   /** Sidebar-backing conversation list; the composer refreshes it on new persisted turns. */
@@ -83,10 +83,16 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
   });
 
   // Setup
+  const needsRepositoryHint = isCliBackend && !hasRepositories;
 
   // Handlers
 
   // Markup
+  const repositoryHint = (
+    <p className="text-muted-foreground text-xs">
+      Register a local repository in Settings to run an agent CLI.
+    </p>
+  );
   const toolbar = (
     <div className="flex flex-col gap-2">
       <ChatComposerToolbar
@@ -123,12 +129,14 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
         selectedCheckoutIds={repositoryIds}
         serviceTier={serviceTier}
       />
-      {isCliBackend && !hasRepositories ? (
-        <p className="text-muted-foreground text-xs">
-          Register a local repository in Settings to run an agent CLI.
-        </p>
-      ) : null}
+      {needsRepositoryHint ? repositoryHint : null}
     </div>
+  );
+  const noModelsNotice = (
+    <p className="text-muted-foreground mb-2 text-center text-sm">
+      No local models discovered. Start a local OpenAI-compatible server (e.g.
+      Ollama) and reload.
+    </p>
   );
 
   // Life Cycle
@@ -138,12 +146,7 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
   return (
     <>
       <InlineErrors errors={[turn.error, voice.error]} />
-      {!hasModels ? (
-        <p className="text-muted-foreground mb-2 text-center text-sm">
-          No local models discovered. Start a local OpenAI-compatible server
-          (e.g. Ollama) and reload.
-        </p>
-      ) : null}
+      {hasModels ? null : noModelsNotice}
       <ChatComposer
         className="border-t-0"
         disabled={!hasModels}

@@ -44,12 +44,15 @@ export const useBlogPostLifecycle = (): UseBlogPostLifecycleResult => {
     );
   };
 
-  const archive = (): void =>
-    submit({ intent: BLOG_POST_LIFECYCLE_INTENT.ARCHIVE });
-  const unpublish = (): void =>
-    submit({ intent: BLOG_POST_LIFECYCLE_INTENT.UNPUBLISH });
-  const publish = (publishedAt: string | null): void =>
-    submit({ intent: BLOG_POST_LIFECYCLE_INTENT.PUBLISH, publishedAt });
+  const archive = (): void => {
+    return submit({ intent: BLOG_POST_LIFECYCLE_INTENT.ARCHIVE });
+  };
+  const unpublish = (): void => {
+    return submit({ intent: BLOG_POST_LIFECYCLE_INTENT.UNPUBLISH });
+  };
+  const publish = (publishedAt: string | null): void => {
+    return submit({ intent: BLOG_POST_LIFECYCLE_INTENT.PUBLISH, publishedAt });
+  };
 
   // Markup
 

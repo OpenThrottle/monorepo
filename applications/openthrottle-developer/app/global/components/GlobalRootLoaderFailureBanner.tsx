@@ -7,11 +7,7 @@ import type {
   RootLoaderDiagnostics,
   RootLoaderFailure,
 } from '~/global/utils/root-loader-diagnostics';
-import {
-  rootLoaderFailureKindLabel,
-  rootLoaderStepLabel,
-  truncateForBanner,
-} from '~/global/utils/root-loader-diagnostics';
+import { buildRootLoaderFailureBannerCopy } from '~/global/utils/root-loader-failure-banner-copy';
 
 export interface GlobalRootLoaderFailureBannerProps {
   readonly diagnostics?: RootLoaderDiagnostics | null;
@@ -35,25 +31,14 @@ export const GlobalRootLoaderFailureBanner = (
   const wasRevalidating = React.useRef(false);
 
   // Setup
-  const failureKey = failure
-    ? `${failure.step}:${failure.kind}:${failure.message}`
-    : null;
+  const { detail, failureKey, stepLine, title } =
+    buildRootLoaderFailureBannerCopy(failure);
   const userSessionAmbiguous = !userLoadOk;
   const visible = (failure != null || userSessionAmbiguous) && !dismissed;
 
-  const title = failure
-    ? rootLoaderFailureKindLabel(failure.kind)
-    : 'Session could not be verified';
   const rawMessage = failure?.message ?? '';
   const isTruncated =
     rawMessage.trim().length > ROOT_LOADER_FAILURE_SNIPPET_MAX;
-  const detail = failure
-    ? truncateForBanner(failure.message, ROOT_LOADER_FAILURE_SNIPPET_MAX)
-    : 'The request to load your account failed. You may be offline or the API may be unreachable. Retry after checking the network and server.';
-
-  const stepLine = failure
-    ? `Failed while loading: ${rootLoaderStepLabel(failure.step)}.`
-    : null;
 
   const timingParts: string[] = [];
   if (diagnostics?.healthLatencyMs != null) {
@@ -64,6 +49,9 @@ export const GlobalRootLoaderFailureBanner = (
   }
 
   const graphqlBase = diagnostics?.graphQlRequestBaseUrl?.trim();
+  const httpStatusText = failure?.httpStatus?.toString();
+  const hasFullError = failure != null && isTruncated;
+  const hasTiming = timingParts.length > 0;
 
   // Handlers
   const handleDismiss = React.useCallback(() => {
@@ -71,6 +59,37 @@ export const GlobalRootLoaderFailureBanner = (
   }, []);
 
   // Markup
+  const httpStatusBadge = (
+    <span className="border-border/80 bg-muted/50 text-muted-foreground rounded border px-1.5 py-0 font-mono text-[11px] font-normal">
+      HTTP {httpStatusText}
+    </span>
+  );
+  const stepLineMarkup = (
+    <span className="text-muted-foreground text-xs">{stepLine}</span>
+  );
+  const graphqlBaseMarkup = (
+    <span className="text-muted-foreground text-xs">
+      GraphQL base (server):{' '}
+      <code className="bg-muted/50 rounded px-1 py-0 text-[11px]">
+        {graphqlBase}
+      </code>
+    </span>
+  );
+  const fullErrorMarkup = (
+    <details className="text-muted-foreground text-xs">
+      <summary className="cursor-pointer underline decoration-dotted select-none">
+        Full error message
+      </summary>
+      <pre className="border-border/60 bg-muted/40 mt-1 max-h-40 overflow-auto rounded border p-2 font-mono text-[11px] leading-snug break-words whitespace-pre-wrap">
+        {rawMessage}
+      </pre>
+    </details>
+  );
+  const timingMarkup = (
+    <span className="text-muted-foreground text-xs">
+      {timingParts.join(' · ')}
+    </span>
+  );
 
   // Life Cycle
   // Reset dismiss when the failure payload changes (new diagnosis) or after a retry completes.
@@ -105,39 +124,13 @@ export const GlobalRootLoaderFailureBanner = (
       <span className="flex min-w-0 flex-1 flex-col gap-0.5 text-left">
         <span className="flex flex-wrap items-center gap-2">
           <span className="font-semibold">{title}</span>
-          {failure?.httpStatus != null ? (
-            <span className="border-border/80 bg-muted/50 text-muted-foreground rounded border px-1.5 py-0 font-mono text-[11px] font-normal">
-              HTTP {failure.httpStatus.toString()}
-            </span>
-          ) : null}
+          {httpStatusText ? httpStatusBadge : null}
         </span>
-        {stepLine ? (
-          <span className="text-muted-foreground text-xs">{stepLine}</span>
-        ) : null}
-        {graphqlBase ? (
-          <span className="text-muted-foreground text-xs">
-            GraphQL base (server):{' '}
-            <code className="bg-muted/50 rounded px-1 py-0 text-[11px]">
-              {graphqlBase}
-            </code>
-          </span>
-        ) : null}
+        {stepLine ? stepLineMarkup : null}
+        {graphqlBase ? graphqlBaseMarkup : null}
         <span className="text-muted-foreground break-words">{detail}</span>
-        {failure && isTruncated ? (
-          <details className="text-muted-foreground text-xs">
-            <summary className="cursor-pointer underline decoration-dotted select-none">
-              Full error message
-            </summary>
-            <pre className="border-border/60 bg-muted/40 mt-1 max-h-40 overflow-auto rounded border p-2 font-mono text-[11px] leading-snug break-words whitespace-pre-wrap">
-              {failure.message}
-            </pre>
-          </details>
-        ) : null}
-        {timingParts.length > 0 ? (
-          <span className="text-muted-foreground text-xs">
-            {timingParts.join(' · ')}
-          </span>
-        ) : null}
+        {hasFullError ? fullErrorMarkup : null}
+        {hasTiming ? timingMarkup : null}
       </span>
       <Button
         className="shrink-0 gap-1"

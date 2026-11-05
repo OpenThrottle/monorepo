@@ -4,13 +4,15 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { WORKSPACE_FULL_JUMP_LINKS } from '~/routing/navigation/data/workspace-jump-links';
+import { WORKSPACE_FULL_JUMP_LINKS } from '~/routing/navigation/data/data.workspace-jump-links';
 
 import type { DashboardQuickNavigationProps } from '../DashboardQuickNavigation';
 import { DashboardQuickNavigation } from '../DashboardQuickNavigation';
 
 function renderWithProps(props: DashboardQuickNavigationProps): RenderResult {
-  const Component = () => <DashboardQuickNavigation {...props} />;
+  const Component = () => {
+    return <DashboardQuickNavigation {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 }

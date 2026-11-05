@@ -86,30 +86,39 @@ export const getWorkspaceRoots = (
 /** Structural check for snapshots read back from the JSONB cache. */
 const isInspectionSnapshot = (
   value: unknown,
-): value is RepositoryInspectionSnapshot =>
-  isRecord(value) &&
-  isRecord(value.agentConfig) &&
-  isRecord(value.git) &&
-  isRecord(value.stack) &&
-  typeof value.scannedAt === 'string';
+): value is RepositoryInspectionSnapshot => {
+  return (
+    isRecord(value) &&
+    isRecord(value.agentConfig) &&
+    isRecord(value.git) &&
+    isRecord(value.stack) &&
+    typeof value.scannedAt === 'string'
+  );
+};
+
+/** The checkout's cached snapshot, or null when absent or malformed. */
 
 const toInspectionObject = (
   snapshot: RepositoryInspectionSnapshot,
-): RepositoryInspectionObject => ({
-  agentConfig: { ...snapshot.agentConfig },
-  git: {
-    currentBranch: snapshot.git.currentBranch,
-    defaultBranch: snapshot.git.defaultBranch,
-    dirty: snapshot.git.dirty,
-    isRepo: snapshot.git.isRepo,
-    linkedWorktrees: snapshot.git.linkedWorktrees,
-    normalizedRemoteUrl: snapshot.git.normalizedRemoteUrl,
-  },
-  hookTelemetry: snapshot.hookTelemetry ? { ...snapshot.hookTelemetry } : null,
-  scannedAt: new Date(snapshot.scannedAt),
-  stack: { ...snapshot.stack },
-  warnings: snapshot.warnings,
-});
+): RepositoryInspectionObject => {
+  return {
+    agentConfig: { ...snapshot.agentConfig },
+    git: {
+      currentBranch: snapshot.git.currentBranch,
+      defaultBranch: snapshot.git.defaultBranch,
+      dirty: snapshot.git.dirty,
+      isRepo: snapshot.git.isRepo,
+      linkedWorktrees: snapshot.git.linkedWorktrees,
+      normalizedRemoteUrl: snapshot.git.normalizedRemoteUrl,
+    },
+    hookTelemetry: snapshot.hookTelemetry
+      ? { ...snapshot.hookTelemetry }
+      : null,
+    scannedAt: new Date(snapshot.scannedAt),
+    stack: { ...snapshot.stack },
+    warnings: snapshot.warnings,
+  };
+};
 
 /**
  * @description Owner/repo name from a normalized remote URL — the last two
@@ -176,11 +185,33 @@ const sanitizeCloneDirName = (name: string): string | null => {
   return safe !== '' && safe !== '.' && safe !== '..' ? safe : null;
 };
 
+/**
+ * @description Safe clone folder name: an explicit name wins, then the remote's
+ * owner/repo, then the raw git URL's owner/repo.
+ */
+const deriveCloneDirName = (
+  name: string | null | undefined,
+  normalizedRemoteUrl: string | null,
+  gitUrl: string,
+): string | null => {
+  const explicitName = name?.trim() ?? '';
+  let derivedName: string | null = null;
+  if (explicitName !== '') {
+    derivedName = explicitName;
+  } else if (normalizedRemoteUrl !== null) {
+    derivedName = repositoryNameFromRemote(normalizedRemoteUrl);
+  }
+  derivedName = derivedName ?? repositoryNameFromGitUrl(gitUrl);
+  if (derivedName === null) return null;
+  return sanitizeCloneDirName(derivedName);
+};
+
 /** Plausible git clone URL: ssh (scp-like or ssh://), https, git, or file protocol. */
-const isPlausibleGitUrl = (gitUrl: string): boolean =>
-  /^(https?:\/\/|git:\/\/|ssh:\/\/|file:\/\/|git@|[\w.-]+@[\w.-]+:)/.test(
+const isPlausibleGitUrl = (gitUrl: string): boolean => {
+  return /^(https?:\/\/|git:\/\/|ssh:\/\/|file:\/\/|git@|[\w.-]+@[\w.-]+:)/.test(
     gitUrl.trim(),
   );
+};
 
 @Injectable()
 export class WorkspaceFoldersService {
@@ -367,10 +398,11 @@ export class WorkspaceFoldersService {
       throw new Error(`browseDirectory path does not exist: ${trimmed}`);
     }
 
-    const isUnderRoot = (candidate: string): boolean =>
-      resolvedRoots.some(
+    const isUnderRoot = (candidate: string): boolean => {
+      return resolvedRoots.some(
         (root) => candidate === root || candidate.startsWith(`${root}/`),
       );
+    };
     if (!isUnderRoot(resolved)) {
       throw new Error(
         'browseDirectory path is not within the configured workspace roots',
@@ -490,10 +522,8 @@ export class WorkspaceFoldersService {
 
     const snapshot = await this.inspectionService.scan(hostPath);
 
-    const displayName =
-      opts.displayName == null || opts.displayName.trim() === ''
-        ? basename(hostPath)
-        : opts.displayName.trim();
+    const trimmedName = opts.displayName?.trim() ?? '';
+    const displayName = trimmedName === '' ? basename(hostPath) : trimmedName;
 
     let checkout: RepositoryCheckout | null = null;
     let repository: Repository | null = null;
@@ -508,14 +538,15 @@ export class WorkspaceFoldersService {
         userId,
       );
       if (existing) {
-        checkout =
-          existing.filesystemPath === hostPath
-            ? existing
-            : ((await this.checkoutsService.updateFilesystemPath(
-                userId,
-                existing.id,
-                hostPath,
-              )) ?? existing);
+        checkout = existing;
+        if (existing.filesystemPath !== hostPath) {
+          const moved = await this.checkoutsService.updateFilesystemPath(
+            userId,
+            existing.id,
+            hostPath,
+          );
+          checkout = moved ?? existing;
+        }
         repository = await this.repositoryFor(checkout);
         reconciliation =
           WorkspaceFolderReconciliationEnum.MATCHED_MANIFEST_CHECKOUT;
@@ -600,10 +631,7 @@ export class WorkspaceFoldersService {
     // link untouched (task 108bca14 / plan decision 1). `nx_project_name` is
     // seeded to the same repo name so dogfood anchor lookups (projectSkills,
     // plan-context availability) resolve the imported monorepo project.
-    let project =
-      repository.projectId === null
-        ? null
-        : await this.projectsService.findById(repository.projectId);
+    let project = await this.findLinkedProject(repository.projectId);
     let projectCreated = false;
     if (createdRepository && repository.projectId === null) {
       project = await this.projectsService.create({
@@ -652,14 +680,7 @@ export class WorkspaceFoldersService {
     }
 
     const normalized = normalizeRemoteUrl(gitUrl);
-    const derivedName =
-      (input.name != null && input.name.trim() !== ''
-        ? input.name.trim()
-        : normalized !== null
-          ? repositoryNameFromRemote(normalized)
-          : null) ?? repositoryNameFromGitUrl(gitUrl);
-    const safeName =
-      derivedName !== null ? sanitizeCloneDirName(derivedName) : null;
+    const safeName = deriveCloneDirName(input.name, normalized, gitUrl);
     if (safeName === null) {
       throw new BadRequestException(
         'Could not derive a folder name from the git URL; pass an explicit name',
@@ -894,10 +915,8 @@ export class WorkspaceFoldersService {
       projectId?: string | null;
     } = {};
     if (input.defaultBranch !== undefined) {
-      data.defaultBranch =
-        input.defaultBranch === null || input.defaultBranch.trim() === ''
-          ? null
-          : input.defaultBranch.trim();
+      const trimmedBranch = input.defaultBranch?.trim() ?? '';
+      data.defaultBranch = trimmedBranch === '' ? null : trimmedBranch;
     }
     if (input.name != null) {
       const trimmed = input.name.trim();
@@ -913,11 +932,13 @@ export class WorkspaceFoldersService {
     // Only touch the shared repository row when a repository-level field changed;
     // a flag-only edit must not depend on `repositories.update` accepting an empty
     // patch. Re-read owned checkouts so the response reflects the new flag.
-    const repository =
-      Object.keys(data).length > 0
-        ? await this.repositoriesService.update(input.id, data)
-        : (owned[0]?.repository ??
-          (await this.repositoriesService.findById(input.id)));
+    const hasRepositoryPatch = Object.keys(data).length > 0;
+    let repository: Repository | null | undefined = owned[0]?.repository;
+    if (hasRepositoryPatch) {
+      repository = await this.repositoriesService.update(input.id, data);
+    } else if (repository == null) {
+      repository = await this.repositoriesService.findById(input.id);
+    }
     if (repository == null) {
       throw new NotFoundException('Repository not found');
     }
@@ -927,6 +948,12 @@ export class WorkspaceFoldersService {
       userId,
     );
     return this.buildRepositoryObject(repository, refreshed);
+  }
+
+  /** The project a repository is linked to, or null when it has none. */
+  private async findLinkedProject(projectId: string | null) {
+    if (projectId === null) return null;
+    return this.projectsService.findById(projectId);
   }
 
   /**

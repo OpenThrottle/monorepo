@@ -11,6 +11,7 @@ import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { GetDocumentDocument } from '../__generated__/graphql.js';
 import { getAuthToken } from '../auth/get-auth-token.ts';
 import { toSanitizedClientMessage } from '../utils/errors.ts';
+import { firstStringParam } from '../utils/first-string-param.ts';
 
 type ChunkResult = {
   contents: Array<{ text: string; type: 'text'; uri: string }>;
@@ -20,8 +21,7 @@ export const knowledgeBaseChunkUriTemplate = 'knowledge-base://chunk/{id}';
 
 export const knowledgeBaseChunkResourceName = 'knowledge-base-chunk';
 
-export const knowledgeBaseChunkResourceDescription =
-  'Read a single chunk by id (UUID). URI format: knowledge-base://chunk/{id}. Uses GraphQL getDocument only.';
+export const knowledgeBaseChunkResourceDescription = `Read a single chunk by id (UUID). URI format: knowledge-base://chunk/{id}. Uses GraphQL getDocument only.`;
 
 export const knowledgeBaseChunkMimeType = 'text/plain';
 
@@ -37,13 +37,7 @@ export async function readKnowledgeBaseChunk(
     contents: [{ text: '', type: 'text' as const, uri: uriStr }],
   };
 
-  const idRaw = variables.id;
-  const id: string | undefined =
-    typeof idRaw === 'string'
-      ? idRaw
-      : Array.isArray(idRaw)
-        ? idRaw[0]
-        : undefined;
+  const id = firstStringParam(variables.id);
 
   if (!id) {
     result = {

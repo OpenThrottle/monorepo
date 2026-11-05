@@ -167,7 +167,7 @@ export const ChatComposerToolbar = (
         onOpenSettings={onOpenSettings}
         onToggleFavorite={onToggleFavorite}
       />
-      {capabilities != null ? (
+      {capabilities != null && (
         <ChatReasoningTierControl
           capabilities={capabilities}
           onReasoningChange={onReasoningChange}
@@ -175,14 +175,14 @@ export const ChatComposerToolbar = (
           reasoning={reasoning}
           serviceTier={serviceTier}
         />
-      ) : null}
-      {capabilities != null ? (
+      )}
+      {capabilities != null && (
         <ChatPermissionModeControl
           capabilities={capabilities}
           onPermissionModeChange={onPermissionModeChange}
           permissionMode={permissionMode}
         />
-      ) : null}
+      )}
       <ChatComposerCheckoutControl
         capabilities={capabilities}
         checkouts={checkouts}

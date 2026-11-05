@@ -15,11 +15,12 @@ const CURSOR_SEPARATOR = '|';
 const ISO_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export const encodeBlogPostCursor = (cursor: BlogPostCursor): string =>
-  Buffer.from(
+export const encodeBlogPostCursor = (cursor: BlogPostCursor): string => {
+  return Buffer.from(
     `${cursor.publishedAt}${CURSOR_SEPARATOR}${cursor.id}`,
     'utf8',
   ).toString('base64url');
+};
 
 /** Returns `null` for anything that is not a cursor this module produced. */
 export const decodeBlogPostCursor = (value: string): BlogPostCursor | null => {
@@ -43,8 +44,9 @@ export interface BlogPostAdminCursor {
 
 export const encodeBlogPostAdminCursor = (
   cursor: BlogPostAdminCursor,
-): string =>
-  encodeBlogPostCursor({ id: cursor.id, publishedAt: cursor.updatedAt });
+): string => {
+  return encodeBlogPostCursor({ id: cursor.id, publishedAt: cursor.updatedAt });
+};
 
 /** Returns `null` for anything that is not a cursor this module produced. */
 export const decodeBlogPostAdminCursor = (

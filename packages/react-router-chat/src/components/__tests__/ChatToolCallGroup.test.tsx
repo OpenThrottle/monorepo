@@ -10,20 +10,23 @@ import { ChatToolCallGroup } from '../ChatToolCallGroup';
 
 const tool = (
   overrides: Partial<ChatTurnToolEvent> = {},
-): ChatTurnToolEvent => ({
-  argsJson: null,
-  callId: null,
-  error: null,
-  kind: 'tool',
-  name: 'read',
-  resultJson: null,
-  sortOrder: 0,
-  status: 'succeeded',
-  ...overrides,
-});
+): ChatTurnToolEvent => {
+  return {
+    argsJson: null,
+    callId: null,
+    error: null,
+    kind: 'tool',
+    name: 'read',
+    resultJson: null,
+    sortOrder: 0,
+    status: 'succeeded',
+    ...overrides,
+  };
+};
 
-const renderGroup = (props: ChatToolCallGroupProps): RenderResult =>
-  render(<ChatToolCallGroup {...props} />);
+const renderGroup = (props: ChatToolCallGroupProps): RenderResult => {
+  return render(<ChatToolCallGroup {...props} />);
+};
 
 describe('ChatToolCallGroup Component', () => {
   test('summarizes the count and the active (running) step in the header', () => {

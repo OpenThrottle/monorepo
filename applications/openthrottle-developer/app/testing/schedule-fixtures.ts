@@ -13,58 +13,64 @@ import type {
 
 export const scheduleJobFixture = (
   overrides: Partial<ScheduledJobCardFragment> = {},
-): ScheduledJobCardFragment => ({
-  __typename: 'ScheduledAgentJobObject',
-  cronPattern: '0 9 * * *',
-  driverId: 'claude',
-  enabled: true,
-  id: 'job-1',
-  lastRunAt: null,
-  model: 'opus',
-  name: 'Nightly audit',
-  nextRunAt: null,
-  scheduleKind: 'cron',
-  timezone: null,
-  updatedAt: '2026-07-31T00:00:00.000Z',
-  ...overrides,
-});
+): ScheduledJobCardFragment => {
+  return {
+    __typename: 'ScheduledAgentJobObject',
+    cronPattern: '0 9 * * *',
+    driverId: 'claude',
+    enabled: true,
+    id: 'job-1',
+    lastRunAt: null,
+    model: 'opus',
+    name: 'Nightly audit',
+    nextRunAt: null,
+    scheduleKind: 'cron',
+    timezone: null,
+    updatedAt: '2026-07-31T00:00:00.000Z',
+    ...overrides,
+  };
+};
 
 export const scheduleInFlightRunFixture = (
   overrides: Partial<ScheduleInFlightRunFragment> = {},
-): ScheduleInFlightRunFragment => ({
-  __typename: 'ScheduledAgentJobRunObject',
-  bullmqJobId: 'bull-1',
-  cancelRequestedAt: null,
-  driverId: 'claude',
-  id: 'run-1',
-  job: {
-    __typename: 'ScheduledAgentJobObject',
-    id: 'job-1',
-    name: 'Nightly audit',
-  },
-  model: 'opus',
-  scheduledAgentJobId: 'job-1',
-  startedAt: '2026-07-31T00:00:00.000Z',
-  status: 'running',
-  trigger: 'schedule',
-  ...overrides,
-});
+): ScheduleInFlightRunFragment => {
+  return {
+    __typename: 'ScheduledAgentJobRunObject',
+    bullmqJobId: 'bull-1',
+    cancelRequestedAt: null,
+    driverId: 'claude',
+    id: 'run-1',
+    job: {
+      __typename: 'ScheduledAgentJobObject',
+      id: 'job-1',
+      name: 'Nightly audit',
+    },
+    model: 'opus',
+    scheduledAgentJobId: 'job-1',
+    startedAt: '2026-07-31T00:00:00.000Z',
+    status: 'running',
+    trigger: 'schedule',
+    ...overrides,
+  };
+};
 
 export const scheduleRunStatsFixture = (
   overrides: Partial<ScheduleRunStatsFragment> = {},
-): ScheduleRunStatsFragment => ({
-  __typename: 'ScheduledAgentJobRunStatsObject',
-  cancelledCount: 0,
-  failedCount: 0,
-  inFlightCount: 0,
-  noOpCount: 0,
-  queuedCount: 0,
-  runningCount: 0,
-  since: '2026-07-30T00:00:00.000Z',
-  succeededCount: 0,
-  windowTotalCount: 0,
-  ...overrides,
-});
+): ScheduleRunStatsFragment => {
+  return {
+    __typename: 'ScheduledAgentJobRunStatsObject',
+    cancelledCount: 0,
+    failedCount: 0,
+    inFlightCount: 0,
+    noOpCount: 0,
+    queuedCount: 0,
+    runningCount: 0,
+    since: '2026-07-30T00:00:00.000Z',
+    succeededCount: 0,
+    windowTotalCount: 0,
+    ...overrides,
+  };
+};
 
 /**
  * @description The /schedule loader shape, defaulting to "nothing in flight" so a spec asserting on
@@ -72,11 +78,13 @@ export const scheduleRunStatsFixture = (
  */
 export const scheduleLoaderDataFixture = (
   overrides: Partial<Route.ComponentProps['loaderData']> = {},
-): Route.ComponentProps['loaderData'] => ({
-  inFlightByJob: {},
-  inFlightRuns: [],
-  jobs: [],
-  runStats: scheduleRunStatsFixture(),
-  search: '',
-  ...overrides,
-});
+): Route.ComponentProps['loaderData'] => {
+  return {
+    inFlightByJob: {},
+    inFlightRuns: [],
+    jobs: [],
+    runStats: scheduleRunStatsFixture(),
+    search: '',
+    ...overrides,
+  };
+};

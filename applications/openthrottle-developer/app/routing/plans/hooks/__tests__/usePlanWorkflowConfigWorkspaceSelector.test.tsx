@@ -16,41 +16,47 @@ import {
 
 type Checkout = PlanRunConfigRepositoryFieldsFragment['checkouts'][number];
 
-const checkout = (id: string, displayName: string): Checkout => ({
-  __typename: 'RepositoryCheckoutObject',
-  displayName,
-  filesystemPath: `/repos/${displayName}`,
-  id,
-  kind: 'worktree',
-  managed: true,
-});
+const checkout = (id: string, displayName: string): Checkout => {
+  return {
+    __typename: 'RepositoryCheckoutObject',
+    displayName,
+    filesystemPath: `/repos/${displayName}`,
+    id,
+    kind: 'worktree',
+    managed: true,
+  };
+};
 
 const repository = (
   id: string,
   checkouts: readonly Checkout[],
   projectId?: string | null,
-): PlanRunConfigRepositoryFieldsFragment => ({
-  __typename: 'RepositoryObject',
-  checkouts: [...checkouts],
-  id,
-  name: id,
-  normalizedRemoteUrl: null,
-  projectId: projectId ?? null,
-});
+): PlanRunConfigRepositoryFieldsFragment => {
+  return {
+    __typename: 'RepositoryObject',
+    checkouts: [...checkouts],
+    id,
+    name: id,
+    normalizedRemoteUrl: null,
+    projectId: projectId ?? null,
+  };
+};
 
 const baseOptions = (
   overrides: Partial<UsePlanWorkflowConfigWorkspaceSelectorOptions> = {},
-): UsePlanWorkflowConfigWorkspaceSelectorOptions => ({
-  checkoutId: '',
-  onCheckoutIdChange: vi.fn(),
-  onRepositoryIdChange: vi.fn(),
-  onWorkingDirectoryChange: vi.fn(),
-  planProjectId: null,
-  repositories: [],
-  repositoryId: '',
-  workingDirectory: '',
-  ...overrides,
-});
+): UsePlanWorkflowConfigWorkspaceSelectorOptions => {
+  return {
+    checkoutId: '',
+    onCheckoutIdChange: vi.fn(),
+    onRepositoryIdChange: vi.fn(),
+    onWorkingDirectoryChange: vi.fn(),
+    planProjectId: null,
+    repositories: [],
+    repositoryId: '',
+    workingDirectory: '',
+    ...overrides,
+  };
+};
 
 describe('usePlanWorkflowConfigWorkspaceSelector', () => {
   test('defaults to ROOT_VALUE when nothing is selected', () => {

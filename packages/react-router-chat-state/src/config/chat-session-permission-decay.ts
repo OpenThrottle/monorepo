@@ -1,4 +1,4 @@
-import { CHAT_TOOLBAR_STORAGE_KEY } from '../data/atom.chat-toolbar';
+import { CHAT_TOOLBAR_STORAGE_KEY } from '../data/data.chat-toolbar-state';
 
 /**
  * sessionStorage key whose presence marks that the elevated-permission decay

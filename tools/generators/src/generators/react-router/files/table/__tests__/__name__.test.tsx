@@ -15,7 +15,9 @@ describe('<%= name %> Component', () => {
       data: [],
     };
 
-    const Component = () => <<%= name %> {...props} />;
+    const Component = () => {
+      return <<%= name %> {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

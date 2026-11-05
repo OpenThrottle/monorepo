@@ -37,33 +37,38 @@ Every convention inherited from the retired rules tree — 15 of the 16 relocate
 [Corrections](#corrections-made-in-the-move)) — plus the rules that were already enforced by
 lint but never had a rule file of their own:
 
-| Convention                                                            | Enforcement                            | Mechanism                                                             |
-| --------------------------------------------------------------------- | -------------------------------------- | --------------------------------------------------------------------- |
-| [No new enums](#no-new-enums)                                         | **Enforced**                           | `no-restricted-syntax` → `TSEnumDeclaration`                          |
-| [Component and data boundaries](#component-and-data-boundaries)       | **Enforced**                           | `openthrottle/component-primitive-shape` + `audit:component-shape`    |
-| [No default exports](#no-default-exports)                             | **Enforced**                           | `import-x/no-default-export`                                          |
-| [`import type`](#import-type)                                         | **Enforced**                           | `@typescript-eslint/consistent-type-imports`                          |
-| [Naming conventions](#naming-conventions)                             | **Enforced** (file names honor system) | `@typescript-eslint/naming-convention`                                |
-| [NestJS file names](#nestjs-file-names)                               | **Warned**                             | `openthrottle/nestjs-file-naming`, `openthrottle/nestjs-file-exports` |
-| [Indexed access is `\| undefined`](#indexed-access-returns-undefined) | **Enforced**                           | `noUncheckedIndexedAccess` compiler flag                              |
-| [No `as` casts](#no-as-casts)                                         | **Enforced**                           | `consistent-type-assertions`, `assertionStyle: 'never'`               |
-| [No `any`](#no-any)                                                   | **Enforced**                           | `@typescript-eslint/no-explicit-any`                                  |
-| [Alphabetize keys](#alphabetize-arrays-and-object-keys)               | **Enforced**                           | `sort-keys`, `perfectionist/*`, `@graphql-eslint/alphabetize`         |
-| [File length caps](#file-length-caps)                                 | **Enforced**                           | `max-lines` (210 components / 210 routes)                             |
-| [No `await` in loops](#no-await-in-loops)                             | **Enforced**                           | `no-await-in-loop`                                                    |
-| [Composing classes with `cn`](#composing-classes-with-cn)             | **Enforced**                           | `no-restricted-imports` (`clsx`) + `no-restricted-syntax`             |
-| [Return types](#return-types)                                         | **Warned**                             | `explicit-module-boundary-types`                                      |
-| [Route primitive shape](#route-and-component-shape)                   | **Warned**                             | `openthrottle/route-primitive-shape`, `openthrottle/pre-hooks-unpack` |
-| [Hook primitive shape](#hook-shape)                                   | **Enforced**                           | `openthrottle/hook-primitive-shape` + `audit:hook-shape`              |
-| [Import order](#import-order)                                         | **Warned**                             | `simple-import-sort/imports`, `simple-import-sort/exports`            |
-| [Discriminated unions](#discriminated-unions)                         | Honor system                           | —                                                                     |
-| [`interface extends` over `&`](#interface-extends-over-)              | Honor system                           | —                                                                     |
-| [`readonly` by default](#readonly-properties)                         | Honor system                           | —                                                                     |
-| [Optional properties sparingly](#optional-properties)                 | Honor system                           | —                                                                     |
-| [Prefer results over throwing](#prefer-results-over-throwing)         | Honor system                           | —                                                                     |
-| [JSDoc](#jsdoc-comments)                                              | Honor system                           | —                                                                     |
-| [Installing libraries](#installing-libraries)                         | Honor system                           | —                                                                     |
-| [Frontend design](#frontend-design)                                   | Honor system                           | —                                                                     |
+| Convention                                                                  | Enforcement                            | Mechanism                                                             |
+| --------------------------------------------------------------------------- | -------------------------------------- | --------------------------------------------------------------------- |
+| [No new enums](#no-new-enums)                                               | **Enforced**                           | `no-restricted-syntax` → `TSEnumDeclaration`                          |
+| [Component and data boundaries](#component-and-data-boundaries)             | **Enforced**                           | `openthrottle/component-primitive-shape` + `audit:component-shape`    |
+| [No default exports](#no-default-exports)                                   | **Enforced**                           | `import-x/no-default-export`                                          |
+| [`import type`](#import-type)                                               | **Enforced**                           | `@typescript-eslint/consistent-type-imports`                          |
+| [Naming conventions](#naming-conventions)                                   | **Enforced** (file names honor system) | `@typescript-eslint/naming-convention`                                |
+| [NestJS file names](#nestjs-file-names)                                     | **Warned**                             | `openthrottle/nestjs-file-naming`, `openthrottle/nestjs-file-exports` |
+| [Indexed access is `\| undefined`](#indexed-access-returns-undefined)       | **Enforced**                           | `noUncheckedIndexedAccess` compiler flag                              |
+| [No `as` casts](#no-as-casts)                                               | **Enforced**                           | `consistent-type-assertions`, `assertionStyle: 'never'`               |
+| [No `any`](#no-any)                                                         | **Enforced**                           | `@typescript-eslint/no-explicit-any`                                  |
+| [Alphabetize keys](#alphabetize-arrays-and-object-keys)                     | **Enforced**                           | `sort-keys`, `perfectionist/*`, `@graphql-eslint/alphabetize`         |
+| [File length caps](#file-length-caps)                                       | **Enforced**                           | `max-lines` (210 components / 210 routes)                             |
+| [No `await` in loops](#no-await-in-loops)                                   | **Enforced**                           | `no-await-in-loop`                                                    |
+| [Composing classes with `cn`](#composing-classes-with-cn)                   | **Enforced**                           | `no-restricted-imports` (`clsx`) + `no-restricted-syntax`             |
+| [Return types](#return-types)                                               | **Warned**                             | `explicit-module-boundary-types`                                      |
+| [Route primitive shape](#route-and-component-shape)                         | **Warned**                             | `openthrottle/route-primitive-shape`, `openthrottle/pre-hooks-unpack` |
+| [Hook primitive shape](#hook-shape)                                         | **Enforced**                           | `openthrottle/hook-primitive-shape` + `audit:hook-shape`              |
+| [Import order](#import-order)                                               | **Warned**                             | `simple-import-sort/imports`, `simple-import-sort/exports`            |
+| [Discriminated unions](#discriminated-unions)                               | Honor system                           | —                                                                     |
+| [`interface extends` over `&`](#interface-extends-over-)                    | Honor system                           | —                                                                     |
+| [`readonly` by default](#readonly-properties)                               | Honor system                           | —                                                                     |
+| [Optional properties sparingly](#optional-properties)                       | Honor system                           | —                                                                     |
+| [Prefer results over throwing](#prefer-results-over-throwing)               | Honor system                           | —                                                                     |
+| [JSDoc](#jsdoc-comments)                                                    | Honor system                           | —                                                                     |
+| [Installing libraries](#installing-libraries)                               | Honor system                           | —                                                                     |
+| [Frontend design](#frontend-design)                                         | Honor system                           | —                                                                     |
+| [Data files hold data](#data-files-hold-data)                               | **Enforced** (React Router projects)   | `openthrottle/data-file-shape`                                        |
+| [Named functions use block bodies](#named-functions-use-block-bodies)       | **Enforced** (autofix)                 | `openthrottle/named-function-block-body`                              |
+| [A ternary takes at most three lines](#a-ternary-takes-at-most-three-lines) | **Enforced**                           | `openthrottle/three-line-ternary`                                     |
+| [Long strings are template literals](#long-strings-are-template-literals)   | **Warned** (autofix)                   | `openthrottle/long-string-template-literal`                           |
+| [JSX consts live under `// Markup`](#jsx-consts-live-under-markup)          | **Enforced** (components)              | `openthrottle/component-primitive-shape`                              |
 
 ## Corrections made in the move
 
@@ -588,12 +593,16 @@ use `@link` to reference other functions and types in the same file.
 /**
  * @description Subtracts two numbers
  */
-const subtract = (a: number, b: number): number => a - b;
+const subtract = (a: number, b: number): number => {
+  return a - b;
+};
 
 /**
  * @description Does the opposite to {@link subtract}
  */
-const add = (a: number, b: number): number => a + b;
+const add = (a: number, b: number): number => {
+  return a + b;
+};
 ```
 
 Separately: exports that are a package's public API need a JSDoc `@public` tag so Knip does
@@ -737,6 +746,8 @@ conformant.
   - User-facing copy → `data.copy.ts`
   - Mock fixtures → `mock.<name>.ts`
   - Other static data and lists → `data.<name>.ts`
+  - Functions never — they go to the sibling `utils/`. See
+    [Data files hold data](#data-files-hold-data).
 - The component imports the data via the `~/routing/<area>/data/…` alias and renders it.
   Because the component imports it (a real cross-module use reachable from a route entry),
   Knip treats it as used — no `@public` tag needed on data exports.
@@ -802,6 +813,266 @@ primitives under `packages/react-router-shadcn` are exempt (`max-lines: 'off'`) 
 
 A caveat worth knowing: the repo's formatting hook runs **after** lint, so a file that
 measures 210 before Prettier can land at 211 after. Check the cap on the formatted file.
+
+## Readability
+
+All five have a lint rule (OT plan `a8cb40e5`). "JSX consts live under `// Markup`" is an
+error in components; the other four warn until their migrations land, then flip to `error`.
+
+**We write code for humans.** The compiler and the minifier make code concise; the source
+does not have to be. These five conventions came out of the PR #622 review, and the
+reference fixes are in that PR's review commit: `ScheduleRunStatusCell.tsx`,
+`PlanRunStatusCell.tsx`, `routing/schedule/utils/run-usage-limit-rows.ts` and
+`global/utils/utils.usage-limit.ts` in `openthrottle-developer`.
+
+### Data files hold data
+
+A `.ts` file directly under a `data/` folder is named `data.<name>.ts` (`.tsx` only when it
+needs JSX), and it exports **values, not functions**. User-facing copy goes in
+`data.copy.ts` and mock fixtures in `mock.<name>.ts`, as
+[Component and data boundaries](#component-and-data-boundaries) already says. A function —
+a merge, a filter, a formatter, a row builder — belongs in the sibling `utils/`, even when
+it only ever reads that data. Spec files under `__tests__/` are exempt.
+
+**Why.** The prefix makes every data file sort together and say what it is, so
+`data/` is greppable by name alone. A function in `data/` is logic hiding where nobody
+looks for it, and it is exactly the case [Testing data files](#component-and-data-boundaries)
+says _does_ need a spec.
+
+```text
+// BAD
+routing/settings/data/mcp-connectors.data.ts
+routing/settings/data/url-matrix-rows.ts
+routing/settings/data/data.agent-clis.ts   ← exports mergeAgentClis()
+
+// GOOD
+routing/settings/data/data.mcp-connectors.ts
+routing/settings/data/data.url-matrix-rows.ts
+routing/settings/data/data.agent-clis.ts   ← values only
+routing/settings/utils/merge-agent-clis.ts ← the function
+```
+
+A `data/index.ts` barrel keeps its name — it re-exports data files rather than being one —
+but it may not export a function either.
+
+**Enforcement.** `openthrottle/data-file-shape` is on at `error` in the React Router apps
+(`openthrottle-developer`, `-admin`, `-website`) and every `react-router-*` package. It
+landed at `warn` with 180 reports — 95 misnamed files and 85 exported functions (developer
+129, admin 8, website 1, packages 42) — and went to `error` once those were migrated. It is opt-in, via `dataFolderEslintConfig` from
+`@tools/dotfiles` spread after `eslintConfig`, rather than part of the base config: nx lints
+with cwd at the project, so a path glob cannot tell those projects from the Node packages
+that also keep a `data/` folder. It reports a function declaration, a `const` bound to an
+arrow or function expression, or a local function exported by specifier or `default`; a
+re-export (`export … from`) is left to the file it names.
+
+### Named functions use block bodies
+
+A function bound to a name — a `const` declarator or a class property — has a block body
+and an explicit `return`. Never a concise `=> expr`.
+
+```ts
+// BAD
+const formatResetTime = (date: Date): string => date.toLocaleString();
+const toRow = (run: Run): Row => ({
+  label: run.id,
+  mono: true,
+  value: run.status,
+});
+
+// GOOD
+const formatResetTime = (date: Date): string => {
+  return date.toLocaleString();
+};
+const toRow = (run: Run): Row => {
+  return { label: run.id, mono: true, value: run.status };
+};
+```
+
+**Why.** A named function is a unit a reader navigates to; the block body gives it one
+shape everywhere, a place to add a line without restructuring, and a `return` to set a
+breakpoint on. The parenthesised object-literal body (`=> ({ … })`) is the one people
+misread most.
+
+**Scope decision: inline callbacks are exempt.** A function passed straight into a call or a
+JSX attribute — `rows.map((row) => row.id)`, `onClick={() => setOpen(true)}`,
+`.filter(isActive)` — is an argument, not a named unit, and wrapping it in a block makes
+the call site longer without making it clearer. This matches the PR #622 fixes. Object
+literal methods (`{ onSelect: () => … }`) count as inline. The rule that enforces this
+reports a concise arrow whose parent is a `VariableDeclarator` or a `PropertyDefinition`,
+nothing else — which is why it is a custom rule and not core `arrow-body-style`, which
+would hit every callback.
+
+**Enforcement.** `openthrottle/named-function-block-body` is on at `error` repo-wide. It
+raised 2,227 warnings across the 72 lint targets when it landed; they were migrated with
+`eslint --fix`, which rewrites `=> expr` to `=> { return expr; }`, drops the parentheses
+around an object-literal body, and skips any site with a comment between the arrow and the
+body (fix those by hand). The generator templates are held to it by
+`tools/generators/src/generators/generated-readability.test.ts`, which lints a freshly
+generated component, hook and route with every readability rule.
+
+### A ternary takes at most three lines
+
+A ternary stays on one line, or wraps into exactly three: the condition on the line that
+introduces it, then `? …`, then `: …`. Anything longer asks the reader to hold too much.
+
+```ts
+// GOOD — one line
+const label = hasResetTime ? knownResetLabel : resetUnknown;
+
+// GOOD — three lines, condition on the `=` line
+const label = hasResetTime
+  ? `${resetsPrefix} ${formatWhen(run.usageLimitResetsAt)}`
+  : resetUnknown;
+
+// BAD — four lines: the condition wrapped below the `=`
+const label =
+  run.usageLimitResetsAt !== null
+    ? `${resetsPrefix} ${formatWhen(run.usageLimitResetsAt)}`
+    : resetUnknown;
+
+// GOOD — name the condition and the ternary starts on the `=` line
+const hasResetTime = run.usageLimitResetsAt !== null;
+const label = hasResetTime
+  ? `${resetsPrefix} ${formatWhen(run.usageLimitResetsAt)}`
+  : resetUnknown;
+```
+
+**Prettier decides where the condition goes, not you.** Prettier keeps a bare name, a
+member access, a call or a `!x` on the `=` line, but pushes a binary condition
+(`a === b`, `a && b`, `a ?? b`) below the `=` whenever the ternary wraps. So
+`const x = item === false` followed by `? … : …` on two lines cannot be written: Prettier
+turns it into the four-line BAD shape. Name the condition. The same applies after an
+object key's `:` and an arrow's `=>`. A `return` keeps even a binary condition on its line,
+and a wrapped call argument starts on its own line by argument layout, so neither counts
+as wrapped.
+
+Past three lines (a wrapped chain, or a branch that wraps), name the branches, extract a
+well-named util, or use `if`/`else`. A **spread-ternary** whose branch wraps becomes a
+util that pushes rows. See `runUsageLimitRows` in
+`routing/schedule/utils/run-usage-limit-rows.ts`:
+
+```ts
+// BAD
+const rows = [
+  ...baseRows,
+  ...(run.status === 'usage_limited'
+    ? [{ label: fields.usageLimitResetsAt, mono: false, value: resetsAt }]
+    : []),
+];
+
+// GOOD
+const rows = [...baseRows, ...runUsageLimitRows(run)];
+```
+
+**Why.** Condition, yes-branch and no-branch on three lines reads as a sentence. A fourth
+line means one of them did not fit, and the reader has to reassemble it. Naming the
+unnamed piece puts it back.
+
+**Scope decision: JSX conditionals are in scope.** A `{cond ? (<A …/>) : (<B …/>)}` whose
+branches are whole subtrees runs past three lines, and it is the worst offender. Hold each
+branch in a `// Markup` const and the ternary fits:
+
+```tsx
+// GOOD — ScheduleRunStatusCell.tsx
+return (
+  <>
+    {hasResetTime ? knownResetTime : unknownResetTime}
+    {resumeScheduled ? null : notResumedNote}
+  </>
+);
+```
+
+`{cond && <A />}` is not a ternary and is out of scope, and so is a conditional _type_
+(`T extends U ? X : Y`).
+
+**Enforcement.** `openthrottle/three-line-ternary` is on at `error` repo-wide. It reports
+a `ConditionalExpression` that spans more than three lines (`tooManyLines`), and a wrapped
+one whose condition starts on a later line than the `=`, `:` or `=>` that introduces it
+(`wrappedCondition`). The introducer is identified by the parent node (a variable, an
+assignment, a property, a default value, an arrow body), so `return`, call arguments and
+`case` labels are never mistaken for one. A wrapped chain (`a ? b : c ? d : e`) is reported
+once, on its outermost link. It has no autofix, because the fix is a human choosing a name.
+It is a custom rule rather than core `multiline-ternary`, which fights Prettier's
+width-based wrapping.
+
+### Long strings are template literals
+
+A string value long enough that Prettier would move it onto its own line under its key is
+written as a template literal, which Prettier leaves on the key's line.
+
+```ts
+// BAD — Prettier wraps the quoted string under its key
+const COPY = {
+  notResumedSuffix:
+    'Not resumed automatically — the next scheduled fire picks it up.',
+};
+
+// GOOD
+const COPY = {
+  notResumedSuffix: `Not resumed automatically — the next scheduled fire picks it up.`,
+};
+```
+
+**Why.** Copy reads as `key: value` on one line, and a diff that edits the string touches one
+line, not two. `data.copy.ts` files already use backticks throughout. Short strings keep
+single quotes: the convention is about strings that wrap, not about quote style.
+
+**Enforcement.** `openthrottle/long-string-template-literal` is on at `warn` repo-wide. It
+raised 420 warnings across the 72 lint targets when it landed. It reports a quoted string
+that starts on a later line than the `:` or `=` before it, which is exactly what Prettier
+prints when it moves a string below its key. It checks three positions: an object property
+value, a class property value, and a `const x =` initializer. Call arguments are out of
+scope, because Prettier puts every argument on its own line once a call outgrows the print
+width; a string alone on its line there is no signal, and backticks would not change the
+layout. The autofix rewrites the string as a template literal on the key's line. It drops
+the quote escape and escapes `` ` `` and `${`. It skips the fix when a comment sits between
+key and value, or when the string has a legacy octal escape. The rule goes to `error` once
+the existing sites are migrated.
+
+Two alternatives were measured and rejected (plan `a8cb40e5`, task `1cc27f78`):
+
+- **`quotes: ['error', 'backtick']` repo-wide** raised **109,423** warnings over the same 72
+  targets. That is every short string in the repo, so its churn would bury `git blame`, and
+  it enforces a quote style when the convention is about wrapping. Import specifiers,
+  directives and JSX attribute values are exempt by design, so the interaction cost is low;
+  the churn is what rules it out. Core `quotes` is also deprecated (a formatting rule, frozen
+  since ESLint 8.53), and its `@stylistic` replacement is not installed.
+- **Honor system only** was the status quo, and the PR #622 review showed it does not hold.
+
+### JSX consts live under `// Markup`
+
+A `const` whose value is JSX is markup, so it is declared under `// Markup`.
+`// 🔌 Short Circuit` holds only early `if (…) return …;` statements before the final
+`return`.
+
+```tsx
+// BAD
+// 🔌 Short Circuit
+const badge = <Badge>{label}</Badge>;
+if (!isUsageLimited) {
+  return badge;
+}
+
+// GOOD
+// Markup
+const badge = <Badge>{label}</Badge>;
+
+// Life Cycle
+
+// 🔌 Short Circuit
+if (!isUsageLimited) {
+  return badge;
+}
+```
+
+**Why.** The section markers are a map. A reader looking for what a component renders reads
+`// Markup`; a reader looking for when it bails out reads `// 🔌 Short Circuit`. Markup
+declared below the bail-outs is in neither place anyone looks.
+
+**Enforcement.** `openthrottle/component-primitive-shape` reports a top-level `const` in a
+component body that is declared after `// 🔌 Short Circuit` and whose initializer is JSX
+(an element, a fragment, or a `?:` / `&&` / `||` / `??` with a JSX operand). Nested
+scopes are not inspected, and route modules are not covered yet.
 
 ## Where code goes
 

@@ -24,8 +24,7 @@ export class CreateCustomPromptInput {
   labels!: string[];
 
   @Field(() => String, {
-    description:
-      'File path relative to workspace root for file system persistence',
+    description: `File path relative to workspace root for file system persistence`,
     nullable: true,
   })
   filePath!: string | null;

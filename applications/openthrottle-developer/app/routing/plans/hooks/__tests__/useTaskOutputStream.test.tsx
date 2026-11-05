@@ -32,14 +32,16 @@ interface Chunk {
   taskId: string;
 }
 
-const chunk = (id: string, createdAt: string, taskId: string): Chunk => ({
-  content: `c-${id}`,
-  createdAt,
-  id,
-  iteration: null,
-  planId: 'p1',
-  taskId,
-});
+const chunk = (id: string, createdAt: string, taskId: string): Chunk => {
+  return {
+    content: `c-${id}`,
+    createdAt,
+    id,
+    iteration: null,
+    planId: 'p1',
+    taskId,
+  };
+};
 
 function Harness(props: {
   readonly planId: string;

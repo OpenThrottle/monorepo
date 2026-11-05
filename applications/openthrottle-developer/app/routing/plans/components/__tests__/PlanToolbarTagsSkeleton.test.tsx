@@ -14,7 +14,9 @@ describe('PlanToolbarTagsSkeleton Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <PlanToolbarTagsSkeleton {...props} />;
+    const Component = () => {
+      return <PlanToolbarTagsSkeleton {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

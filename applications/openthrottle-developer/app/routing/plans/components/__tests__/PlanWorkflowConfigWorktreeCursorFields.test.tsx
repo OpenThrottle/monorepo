@@ -12,7 +12,9 @@ import { PlanWorkflowConfigWorktreeCursorFields } from '../PlanWorkflowConfigWor
 const renderFields = (
   props: PlanWorkflowConfigWorktreeCursorFieldsProps,
 ): RenderResult => {
-  const Component = () => <PlanWorkflowConfigWorktreeCursorFields {...props} />;
+  const Component = () => {
+    return <PlanWorkflowConfigWorktreeCursorFields {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 };

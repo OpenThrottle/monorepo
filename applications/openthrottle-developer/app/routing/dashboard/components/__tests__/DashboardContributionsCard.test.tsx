@@ -21,19 +21,23 @@ const RECENT_DATE = daysAgoIso(3);
 
 const dailyStat = (
   overrides: Partial<DashboardDailyStatsCardFragment> & { date: string },
-): DashboardDailyStatsCardFragment => ({
-  __typename: 'DailyStatsObject',
-  plansCompleted: 0,
-  plansCreated: 0,
-  plansUpdated: 0,
-  tasksCompleted: 0,
-  tasksCreated: 0,
-  tasksUpdated: 0,
-  ...overrides,
-});
+): DashboardDailyStatsCardFragment => {
+  return {
+    __typename: 'DailyStatsObject',
+    plansCompleted: 0,
+    plansCreated: 0,
+    plansUpdated: 0,
+    tasksCompleted: 0,
+    tasksCreated: 0,
+    tasksUpdated: 0,
+    ...overrides,
+  };
+};
 
 const renderCard = (props: DashboardContributionsCardProps): RenderResult => {
-  const Component = () => <DashboardContributionsCard {...props} />;
+  const Component = () => {
+    return <DashboardContributionsCard {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 };

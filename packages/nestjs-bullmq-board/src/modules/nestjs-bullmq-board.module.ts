@@ -26,8 +26,9 @@ import {
  *
  * @public
  */
-export const isBullBoardEnabled = (): boolean =>
-  process.env.NODE_ENV !== 'production';
+export const isBullBoardEnabled = (): boolean => {
+  return process.env.NODE_ENV !== 'production';
+};
 
 export interface NestjsBullmqBoardModuleOptions {
   /**
@@ -54,36 +55,38 @@ export class NestjsBullmqBoardModule {
   static forRoot(options: NestjsBullmqBoardModuleOptions = {}): DynamicModule {
     const enabled = options.enabled ?? false;
 
+    if (!enabled) {
+      return { imports: [], module: NestjsBullmqBoardModule };
+    }
+
     return {
-      imports: enabled
-        ? [
-            ConfigModule.forRoot({
-              cache: true,
-              load: [bullmqBoardConfig],
-              validationSchema: configValidationSchema,
+      imports: [
+        ConfigModule.forRoot({
+          cache: true,
+          load: [bullmqBoardConfig],
+          validationSchema: configValidationSchema,
+        }),
+        BullBoardModule.forRootAsync({
+          // forRootAsync builds its own BullBoardRootModule, which is a
+          // separate injector scope from this module. Import the namespaced
+          // config there so its options factory can resolve the
+          // `bullmqBoard` config token (the sibling ConfigModule.forRoot
+          // below is not visible across the module boundary).
+          imports: [ConfigModule.forFeature(bullmqBoardConfig)],
+          inject: [bullmqBoardConfig.KEY],
+          useFactory: (config: ConfigType<typeof bullmqBoardConfig>) => ({
+            adapter: ExpressAdapter,
+            middleware: basicAuth({
+              challenge: true,
+              users: {
+                [config.username]: config.password,
+              },
             }),
-            BullBoardModule.forRootAsync({
-              // forRootAsync builds its own BullBoardRootModule, which is a
-              // separate injector scope from this module. Import the namespaced
-              // config there so its options factory can resolve the
-              // `bullmqBoard` config token (the sibling ConfigModule.forRoot
-              // below is not visible across the module boundary).
-              imports: [ConfigModule.forFeature(bullmqBoardConfig)],
-              inject: [bullmqBoardConfig.KEY],
-              useFactory: (config: ConfigType<typeof bullmqBoardConfig>) => ({
-                adapter: ExpressAdapter,
-                middleware: basicAuth({
-                  challenge: true,
-                  users: {
-                    [config.username]: config.password,
-                  },
-                }),
-                route: '/queues',
-              }),
-            }),
-            LoggerModule,
-          ]
-        : [],
+            route: '/queues',
+          }),
+        }),
+        LoggerModule,
+      ],
       module: NestjsBullmqBoardModule,
     };
   }

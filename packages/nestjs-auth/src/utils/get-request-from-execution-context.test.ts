@@ -11,24 +11,28 @@ const jwtUser: JwtPayload = {
   sub: 'user-uuid-1',
 };
 
-const createHttpContext = (httpReq: { user?: JwtPayload }): ExecutionContext =>
-  asMock<ExecutionContext>({
+const createHttpContext = (httpReq: {
+  user?: JwtPayload;
+}): ExecutionContext => {
+  return asMock<ExecutionContext>({
     getType: vi.fn().mockReturnValue('http'),
     switchToHttp: vi.fn().mockReturnValue({
       getRequest: () => httpReq,
     }),
   });
+};
 
 const createGraphqlContext = (
   _gqlReq: { user?: JwtPayload },
   httpReq: { user?: JwtPayload } = {},
-): ExecutionContext =>
-  asMock<ExecutionContext>({
+): ExecutionContext => {
+  return asMock<ExecutionContext>({
     getType: vi.fn().mockReturnValue('graphql'),
     switchToHttp: vi.fn().mockReturnValue({
       getRequest: () => httpReq,
     }),
   });
+};
 
 describe('getRequestFromExecutionContext', () => {
   afterEach(() => {

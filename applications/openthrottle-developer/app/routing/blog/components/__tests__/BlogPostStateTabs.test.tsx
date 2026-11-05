@@ -10,8 +10,11 @@ import { SearchParamsProbe } from '~/testing/SearchParamsProbe';
 import type { BlogPostStateTabsProps } from '../BlogPostStateTabs';
 import { BlogPostStateTabs } from '../BlogPostStateTabs';
 
-const renderTabs = (props: BlogPostStateTabsProps, url: string): RenderResult =>
-  renderWithMemoryRouter(
+const renderTabs = (
+  props: BlogPostStateTabsProps,
+  url: string,
+): RenderResult => {
+  return renderWithMemoryRouter(
     [
       {
         element: (
@@ -25,6 +28,7 @@ const renderTabs = (props: BlogPostStateTabsProps, url: string): RenderResult =>
     ],
     { initialEntries: [url] },
   );
+};
 
 describe('BlogPostStateTabs Component', () => {
   let component: RenderResult;

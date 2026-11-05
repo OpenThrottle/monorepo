@@ -161,7 +161,7 @@ export const GlobalPopover = (
         </DropdownMenuTrigger>
 
         <DropdownMenuContent align={align}>
-          {heading ? <DropdownMenuLabel>{heading}</DropdownMenuLabel> : null}
+          {heading && <DropdownMenuLabel>{heading}</DropdownMenuLabel>}
           {actions.map((action) => (
             <GlobalPopoverActionItem
               action={action}
@@ -172,7 +172,7 @@ export const GlobalPopover = (
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {confirmSubmit?.confirm ? (
+      {confirmSubmit && (
         <GlobalPopoverConfirmDialog
           action={confirmSubmit.action}
           cancelLabel={confirmSubmit.confirm.cancelLabel}
@@ -186,7 +186,7 @@ export const GlobalPopover = (
           open={true}
           title={confirmSubmit.confirm.title}
         />
-      ) : null}
+      )}
     </div>
   );
 };

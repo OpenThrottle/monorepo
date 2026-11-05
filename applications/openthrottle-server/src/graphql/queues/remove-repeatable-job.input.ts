@@ -10,8 +10,7 @@ export class RemoveRepeatableJobInput {
   queueName!: string;
 
   @Field(() => String, {
-    description:
-      'Repeatable job key (from repeatableJobs query). Required to remove a repeatable job.',
+    description: `Repeatable job key (from repeatableJobs query). Required to remove a repeatable job.`,
   })
   key!: string;
 }

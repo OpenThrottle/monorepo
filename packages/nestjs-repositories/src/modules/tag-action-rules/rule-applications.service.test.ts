@@ -21,14 +21,15 @@ const appliedRow = (
   id: string,
   ruleId: string,
   taskId: string | null,
-): RuleApplication =>
-  createMock<RuleApplication>({
+): RuleApplication => {
+  return createMock<RuleApplication>({
     id,
     planId: PLAN_ID,
     ruleId,
     state: RULE_APPLICATION_STATES.APPLIED,
     taskId,
   });
+};
 
 describe('RuleApplicationsService.orphanUnmatchedApplications', () => {
   const find = vi.fn();

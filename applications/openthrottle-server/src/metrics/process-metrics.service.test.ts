@@ -50,8 +50,9 @@ describe('ProcessMetricsService', () => {
       service = app.get(ProcessMetricsService);
       const snapshot = service.getCurrentSnapshot();
 
-      const hasAtMostTwoDecimals = (n: number): boolean =>
-        Number.isInteger(n * 100) || Math.round(n * 100) / 100 === n;
+      const hasAtMostTwoDecimals = (n: number): boolean => {
+        return Number.isInteger(n * 100) || Math.round(n * 100) / 100 === n;
+      };
       expect(hasAtMostTwoDecimals(snapshot.rssMb)).toBe(true);
       expect(hasAtMostTwoDecimals(snapshot.heapUsedMb)).toBe(true);
     });

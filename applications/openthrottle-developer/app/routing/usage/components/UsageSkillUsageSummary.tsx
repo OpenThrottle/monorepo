@@ -11,7 +11,7 @@ import type { UsageSkillUsageByScopeFragment } from '~/__generated__/graphql';
 import {
   SKILL_USAGE_COPY,
   SKILL_USAGE_SCOPES,
-} from '~/routing/usage/data/skill-usage-copy';
+} from '~/routing/usage/data/data.skill-usage-copy';
 import { skillUsageScopeCount } from '~/routing/usage/utils/skill-usage-scope-count';
 
 export interface UsageSkillUsageSummaryProps {

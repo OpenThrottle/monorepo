@@ -53,6 +53,12 @@ export const PlanWorkflowConfigWorkspace = (
   };
 
   // Markup
+  const filledHint = `Must be an existing directory; server validates on enqueue.`;
+  const emptyHint = `Empty = OpenThrottle monorepo root (default).`;
+  const idleHint = hasValue ? filledHint : emptyHint;
+  const errorHint = validationError != null && (
+    <span className="text-destructive">{validationError}</span>
+  );
 
   // Life Cycle
   React.useEffect(() => {
@@ -134,11 +140,12 @@ export const PlanWorkflowConfigWorkspace = (
               </Button>
             </PopoverTrigger>
             <PopoverContent align="end" className="w-96 max-w-[90vw] p-0">
-              {recentPaths.length === 0 ? (
+              {recentPaths.length === 0 && (
                 <p className="text-muted-foreground p-3 text-center text-xs">
                   No recent workspace paths
                 </p>
-              ) : (
+              )}
+              {recentPaths.length > 0 && (
                 <ul className="max-h-60 overflow-y-auto py-1" role="listbox">
                   {recentPaths.map((path) => (
                     <li
@@ -178,13 +185,7 @@ export const PlanWorkflowConfigWorkspace = (
           className="text-muted-foreground text-xs"
           id="workflow-run-workspace-path-hint"
         >
-          {validationError != null ? (
-            <span className="text-destructive">{validationError}</span>
-          ) : hasValue ? (
-            'Must be an existing directory; server validates on enqueue.'
-          ) : (
-            'Empty = OpenThrottle monorepo root (default).'
-          )}
+          {errorHint || idleHint}
         </p>
       </div>
     </OpenThrottleFieldset>

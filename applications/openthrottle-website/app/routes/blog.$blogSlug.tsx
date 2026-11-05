@@ -15,12 +15,14 @@ export const loader = async (
   return loadBlogPost({ slug: args.params.blogSlug });
 };
 
-export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) =>
+export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
   // `loaderData` is undefined when the loader threw (the 404 case).
-  args.loaderData
-    ? buildBlogPostMeta(args.loaderData.post)
-    : [{ title: BLOG_COPY.emptyState.notFound.title }],
-);
+  if (!args.loaderData) {
+    return [{ title: BLOG_COPY.emptyState.notFound.title }];
+  }
+
+  return buildBlogPostMeta(args.loaderData.post);
+});
 
 export default function Component(
   props: Route.ComponentProps,

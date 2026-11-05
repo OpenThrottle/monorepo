@@ -773,10 +773,8 @@ export class QueuesService implements OnModuleDestroy {
       }
 
       const name = queues[index]?.name ?? 'unknown';
-      const reason =
-        result.reason instanceof Error
-          ? result.reason.message
-          : String(result.reason);
+      const err: unknown = result.reason;
+      const reason = err instanceof Error ? err.message : String(err);
       this.logger.warn(`Queue "${name}" stats unavailable: ${reason}`);
 
       return [];
@@ -822,10 +820,9 @@ export class QueuesService implements OnModuleDestroy {
 
   private async mapJobToDto(job: Job<AnyJobData, void>): Promise<JobDto> {
     const state = await job.getState();
-    const data =
-      job.data !== undefined && job.data !== null
-        ? JSON.stringify(job.data)
-        : null;
+    const data = job.data != null ? JSON.stringify(job.data) : null;
+    const hasReturnvalue = job.returnvalue != null;
+    const returnvalue = hasReturnvalue ? JSON.stringify(job.returnvalue) : null;
 
     return {
       data,
@@ -839,10 +836,7 @@ export class QueuesService implements OnModuleDestroy {
       name: job.name ?? null,
       processedOn: job.processedOn ?? null,
       progress: typeof job.progress === 'number' ? job.progress : null,
-      returnvalue:
-        job.returnvalue !== undefined && job.returnvalue !== null
-          ? JSON.stringify(job.returnvalue)
-          : null,
+      returnvalue,
       state,
       timestamp: job.timestamp ?? null,
     };

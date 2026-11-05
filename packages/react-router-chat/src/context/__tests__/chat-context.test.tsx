@@ -18,11 +18,13 @@ describe('ChatProvider', () => {
   ];
 
   const renderWithProvider = (): RenderResult => {
-    const Comp = () => (
-      <ChatProvider messages={messages} onSendMessage={onSendMessage}>
-        <ChatDialog triggerLabel="Context chat" />
-      </ChatProvider>
-    );
+    const Comp = () => {
+      return (
+        <ChatProvider messages={messages} onSendMessage={onSendMessage}>
+          <ChatDialog triggerLabel="Context chat" />
+        </ChatProvider>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component: Comp, path: '/' }]);
     return render(<RoutesStub />);
   };
@@ -54,17 +56,19 @@ describe('ChatProvider', () => {
       const onStartNewChat = vi.fn();
       const user = userEvent.setup();
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const Comp = () => (
-        <TooltipProvider>
-          <ChatProvider
-            messages={messages}
-            onSendMessage={onSendMessage}
-            onStartNewChat={onStartNewChat}
-          >
-            <ChatDialog triggerLabel="Context chat" />
-          </ChatProvider>
-        </TooltipProvider>
-      );
+      const Comp = () => {
+        return (
+          <TooltipProvider>
+            <ChatProvider
+              messages={messages}
+              onSendMessage={onSendMessage}
+              onStartNewChat={onStartNewChat}
+            >
+              <ChatDialog triggerLabel="Context chat" />
+            </ChatProvider>
+          </TooltipProvider>
+        );
+      };
       const RoutesStub = createRoutesStub([{ Component: Comp, path: '/' }]);
       const component = render(<RoutesStub />);
 

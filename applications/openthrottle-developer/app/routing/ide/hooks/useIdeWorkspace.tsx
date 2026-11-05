@@ -8,6 +8,8 @@ import { useSymbolDetails } from '@openthrottle/react-router-ide';
 import * as React from 'react';
 import { useFetcher, useSearchParams } from 'react-router';
 
+import { buildSymbolEndpoint } from '~/routing/ide/utils/build-symbol-endpoint';
+
 export interface UseIdeWorkspaceResult {
   readonly details: IdeSymbolDetails | undefined;
   readonly detailsLoading: boolean;
@@ -50,10 +52,7 @@ export const useIdeWorkspace = (
     loading: detailsLoading,
     selectSymbol,
   } = useSymbolDetails({
-    endpoint:
-      selectedId === null
-        ? '/ide/symbol'
-        : `/ide/symbol?repositoryId=${selectedId}`,
+    endpoint: buildSymbolEndpoint(selectedId),
   });
 
   // Setup

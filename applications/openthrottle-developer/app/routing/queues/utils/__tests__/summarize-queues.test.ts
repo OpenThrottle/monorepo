@@ -6,15 +6,17 @@ import { summarizeQueues } from '../summarize-queues';
 
 const queue = (
   overrides: Partial<QueueCardFragment> & { name: string },
-): QueueCardFragment => ({
-  __typename: 'QueueStatsObject',
-  activeCount: 0,
-  completedCount: 0,
-  delayedCount: 0,
-  failedCount: 0,
-  waitingCount: 0,
-  ...overrides,
-});
+): QueueCardFragment => {
+  return {
+    __typename: 'QueueStatsObject',
+    activeCount: 0,
+    completedCount: 0,
+    delayedCount: 0,
+    failedCount: 0,
+    waitingCount: 0,
+    ...overrides,
+  };
+};
 
 describe('summarizeQueues', () => {
   test('returns all zeros for no queues', () => {

@@ -8,16 +8,18 @@ import {
 
 const dailyStat = (
   overrides: Partial<DashboardDailyStatsCardFragment> & { date: string },
-): DashboardDailyStatsCardFragment => ({
-  __typename: 'DailyStatsObject',
-  plansCompleted: 0,
-  plansCreated: 0,
-  plansUpdated: 0,
-  tasksCompleted: 0,
-  tasksCreated: 0,
-  tasksUpdated: 0,
-  ...overrides,
-});
+): DashboardDailyStatsCardFragment => {
+  return {
+    __typename: 'DailyStatsObject',
+    plansCompleted: 0,
+    plansCreated: 0,
+    plansUpdated: 0,
+    tasksCompleted: 0,
+    tasksCreated: 0,
+    tasksUpdated: 0,
+    ...overrides,
+  };
+};
 
 describe('sumDailyStatActivity', () => {
   test('sums all six plan and task counts', () => {

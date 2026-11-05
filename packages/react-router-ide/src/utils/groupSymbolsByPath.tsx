@@ -1,4 +1,4 @@
-import type { ExportedSymbol } from '../data/view-models';
+import type { ExportedSymbol } from '../data/data.view-models';
 
 /** Group symbols by their declaring file, with paths sorted. */
 export const groupSymbolsByPath = (

@@ -68,13 +68,15 @@ export const applyNestjsThrottlerModuleDefaults = (
 ): Readonly<
   Required<Pick<NestjsThrottlerModuleOptions, 'throttlers'>> &
     NestjsThrottlerModuleOptions
-> => ({
-  ...options,
-  throttlers:
-    options.throttlers !== undefined && options.throttlers.length > 0
-      ? options.throttlers
-      : DEFAULT_THROTTLERS,
-});
+> => {
+  const { throttlers } = options;
+
+  if (throttlers !== undefined && throttlers.length > 0) {
+    return { ...options, throttlers };
+  }
+
+  return { ...options, throttlers: DEFAULT_THROTTLERS };
+};
 
 /**
  * Options after {@link applyNestjsThrottlerModuleDefaults}.
@@ -83,7 +85,9 @@ export type ResolvedNestjsThrottlerModuleOptions = ReturnType<
   typeof applyNestjsThrottlerModuleDefaults
 >;
 
-const isPositiveInt = (n: number): boolean => Number.isInteger(n) && n > 0;
+const isPositiveInt = (n: number): boolean => {
+  return Number.isInteger(n) && n > 0;
+};
 
 /**
  * Validates module options at bootstrap.

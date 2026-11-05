@@ -22,8 +22,8 @@ const scan = (lines: readonly string[]) => {
 
 const skillCall = (
   overrides: { agentId?: string; id?: string | null; input?: unknown } = {},
-): string =>
-  JSON.stringify({
+): string => {
+  return JSON.stringify({
     ...(overrides.agentId === undefined ? {} : { agentId: overrides.agentId }),
     cwd: '/repo',
     gitBranch: 'feat/example',
@@ -45,11 +45,12 @@ const skillCall = (
     timestamp: '2026-10-01T10:00:00.000Z',
     type: 'assistant',
   });
+};
 
 const command = (
   overrides: { promptId?: string; uuid?: string; text?: string } = {},
-): string =>
-  JSON.stringify({
+): string => {
+  return JSON.stringify({
     cwd: '/repo',
     gitBranch: 'feat/example',
     message: {
@@ -66,6 +67,7 @@ const command = (
     type: 'user',
     uuid: overrides.uuid ?? 'user-line-1',
   });
+};
 
 describe('a Skill tool call', () => {
   it('becomes the invocation the live PreToolUse hook would have produced', () => {

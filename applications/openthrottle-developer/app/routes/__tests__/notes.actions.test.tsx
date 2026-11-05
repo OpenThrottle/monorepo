@@ -21,8 +21,9 @@ function asMock(value: unknown): unknown {
   return value;
 }
 
-const request = (formData: FormData, url: string): Request =>
-  new Request(url, { body: formData, method: 'POST' });
+const request = (formData: FormData, url: string): Request => {
+  return new Request(url, { body: formData, method: 'POST' });
+};
 
 describe('routes/notes.create action', () => {
   beforeEach(() => {

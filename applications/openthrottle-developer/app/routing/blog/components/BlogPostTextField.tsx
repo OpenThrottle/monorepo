@@ -48,6 +48,7 @@ export const BlogPostTextField = (
   const describedBy =
     [error ? errorId : null, hint ? hintId : null].filter(Boolean).join(' ') ||
     undefined;
+  const showHint = hint && !error;
   const shared = {
     'aria-describedby': describedBy,
     'aria-invalid': error ? true : undefined,
@@ -65,6 +66,39 @@ export const BlogPostTextField = (
   };
 
   // Markup
+  const prefixLabel = (
+    <span className="border-input bg-muted text-muted-foreground flex h-9 items-center rounded-l-md border border-r-0 px-2 font-mono text-xs">
+      {prefix}
+    </span>
+  );
+  const textArea = (
+    <TextArea
+      {...shared}
+      className={cn('min-h-[72px] resize-y', inputClassName)}
+      onChange={handleChange}
+      rows={2}
+    />
+  );
+  const input = (
+    <div className="flex items-center">
+      {prefix ? prefixLabel : null}
+      <Input
+        {...shared}
+        className={cn(prefix && 'rounded-l-none', inputClassName)}
+        onChange={handleChange}
+      />
+    </div>
+  );
+  const hintText = (
+    <p className="text-muted-foreground text-xs" id={hintId}>
+      {hint}
+    </p>
+  );
+  const errorMessage = (
+    <p className="text-destructive text-xs" id={errorId} role="alert">
+      {error}
+    </p>
+  );
 
   // Life Cycle
 
@@ -76,37 +110,9 @@ export const BlogPostTextField = (
       data-testid="BlogPostTextField"
     >
       <Label htmlFor={id}>{label}</Label>
-      {multiline ? (
-        <TextArea
-          {...shared}
-          className={cn('min-h-[72px] resize-y', inputClassName)}
-          onChange={handleChange}
-          rows={2}
-        />
-      ) : (
-        <div className="flex items-center">
-          {prefix ? (
-            <span className="border-input bg-muted text-muted-foreground flex h-9 items-center rounded-l-md border border-r-0 px-2 font-mono text-xs">
-              {prefix}
-            </span>
-          ) : null}
-          <Input
-            {...shared}
-            className={cn(prefix && 'rounded-l-none', inputClassName)}
-            onChange={handleChange}
-          />
-        </div>
-      )}
-      {hint && !error ? (
-        <p className="text-muted-foreground text-xs" id={hintId}>
-          {hint}
-        </p>
-      ) : null}
-      {error ? (
-        <p className="text-destructive text-xs" id={errorId} role="alert">
-          {error}
-        </p>
-      ) : null}
+      {multiline ? textArea : input}
+      {showHint ? hintText : null}
+      {error ? errorMessage : null}
     </div>
   );
 };

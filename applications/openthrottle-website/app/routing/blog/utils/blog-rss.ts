@@ -20,8 +20,9 @@ const XML_ENTITIES: Readonly<Record<string, string>> = {
  * @description Escapes text for use in XML element content or an attribute
  * value: `& < > " '` become the five predefined entities.
  */
-export const escapeXml = (value: string): string =>
-  value.replace(/["&'<>]/g, (char) => XML_ENTITIES[char] ?? char);
+export const escapeXml = (value: string): string => {
+  return value.replace(/["&'<>]/g, (char) => XML_ENTITIES[char] ?? char);
+};
 
 /**
  * `executeGraphql` revives `DateTime` fields into `Date` objects, so values
@@ -34,8 +35,9 @@ const toRfc822 = (value: unknown): string | null => {
   return iso ? new Date(iso).toUTCString() : null;
 };
 
-const buildTag = (name: string, text: string): string =>
-  `<${name}>${escapeXml(text)}</${name}>`;
+const buildTag = (name: string, text: string): string => {
+  return `<${name}>${escapeXml(text)}</${name}>`;
+};
 
 const buildItem = (post: BlogFeedPost): string => {
   const link = buildCanonicalUrl(buildBlogPostPath(post.slug));

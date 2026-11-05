@@ -19,7 +19,6 @@ export const RolloutFlagKindEnum: Readonly<Record<string, RolloutFlagKind>> =
   );
 
 registerEnumType(RolloutFlagKindEnum, {
-  description:
-    'Typed rollout flag kind: boolean | string | number | json. Variation values must match.',
+  description: `Typed rollout flag kind: boolean | string | number | json. Variation values must match.`,
   name: 'RolloutFlagKind',
 });

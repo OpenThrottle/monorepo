@@ -116,18 +116,25 @@ export type TurnTimelineSlot = TurnTimelineActivityGroup | TurnTimelineItem;
  */
 export const ACTIVITY_GROUP_MIN_SLOTS = 2;
 
-const isActivitySlot = (item: TurnTimelineItem): boolean =>
-  item.kind === 'tools' || item.event.kind === 'thinking';
+const isActivitySlot = (item: TurnTimelineItem): boolean => {
+  return item.kind === 'tools' || item.event.kind === 'thinking';
+};
 
 // A thinking event with no reasoning renders nothing (see ChatThinkingBlock),
 // so it must not pad a run toward the fold threshold either.
-const isRenderableSlot = (item: TurnTimelineItem): boolean =>
-  item.kind === 'tools' ||
-  item.event.kind !== 'thinking' ||
-  item.event.text.trim() !== '';
+const isRenderableSlot = (item: TurnTimelineItem): boolean => {
+  return (
+    item.kind === 'tools' ||
+    item.event.kind !== 'thinking' ||
+    item.event.text.trim() !== ''
+  );
+};
 
-const toolsOf = (items: readonly TurnTimelineItem[]): ChatTurnToolEvent[] =>
-  items.flatMap((item) => (item.kind === 'tools' ? [...item.tools] : []));
+const toolsOf = (items: readonly TurnTimelineItem[]): ChatTurnToolEvent[] => {
+  return items.flatMap((item) =>
+    item.kind === 'tools' ? [...item.tools] : [],
+  );
+};
 
 /**
  * Second-level fold over {@link buildTurnTimeline}'s output: any run of adjacent

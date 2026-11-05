@@ -10,8 +10,9 @@ import { buildCodexArgv } from '../argv.ts';
 const valueAfter = (
   argv: readonly string[],
   flag: string,
-): string | undefined =>
-  argv.includes(flag) ? argv[argv.indexOf(flag) + 1] : undefined;
+): string | undefined => {
+  return argv.includes(flag) ? argv[argv.indexOf(flag) + 1] : undefined;
+};
 
 describe('buildCodexArgv', () => {
   it('starts a fresh `exec` turn with --json and a read-only sandbox by default', () => {
@@ -124,11 +125,12 @@ describe('buildCodexArgv', () => {
   describe('reasoning effort → -c model_reasoning_effort', () => {
     const effortFor = (
       reasoning: (typeof CONVERSATION_REASONING_EFFORTS)[keyof typeof CONVERSATION_REASONING_EFFORTS],
-    ): string | undefined =>
-      valueAfter(
+    ): string | undefined => {
+      return valueAfter(
         buildCodexArgv({ prompt: 'p', reasoning, resume: false }),
         '-c',
       );
+    };
 
     it('maps low/medium straight through', () => {
       expect(effortFor(CONVERSATION_REASONING_EFFORTS.low)).toBe(

@@ -34,15 +34,15 @@ export const applyPlanRunProgrammaticDefaults = (input: {
 
   const debug = ralph?.debug ?? DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI;
 
-  const callerWorktree =
-    typeof ralph?.worktree === 'string' && ralph.worktree.trim() !== ''
-      ? ralph.worktree.trim()
-      : undefined;
+  let callerWorktree: string | undefined;
+  if (typeof ralph?.worktree === 'string' && ralph.worktree.trim() !== '') {
+    callerWorktree = ralph.worktree.trim();
+  }
 
-  const worktree =
-    disableWorktree === true
-      ? undefined
-      : (callerWorktree ?? buildPlanRunWorktreeName(planId));
+  let worktree: string | undefined;
+  if (disableWorktree !== true) {
+    worktree = callerWorktree ?? buildPlanRunWorktreeName(planId);
+  }
 
   return {
     ...(ralph ?? {}),

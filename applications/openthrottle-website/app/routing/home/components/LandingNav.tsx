@@ -24,6 +24,31 @@ export const LandingNav = (props: LandingNavProps): React.ReactElement => {
   // Handlers
 
   // Markup
+  const linkItems = links.map((link) => {
+    if (link.external) {
+      return (
+        <a
+          className="no-underline opacity-80 transition-opacity hover:text-white hover:opacity-100"
+          href={link.href}
+          key={link.href}
+          rel="noreferrer"
+          target="_blank"
+        >
+          {link.label}
+        </a>
+      );
+    }
+
+    return (
+      <Link
+        className="no-underline opacity-80 transition-opacity hover:text-white hover:opacity-100"
+        key={link.href}
+        to={link.href}
+      >
+        {link.label}
+      </Link>
+    );
+  });
 
   // Life Cycle
 
@@ -45,27 +70,7 @@ export const LandingNav = (props: LandingNavProps): React.ReactElement => {
         aria-label="Primary"
         className="flex items-center gap-5 text-sm font-medium"
       >
-        {links.map((link) =>
-          link.external ? (
-            <a
-              className="no-underline opacity-80 transition-opacity hover:text-white hover:opacity-100"
-              href={link.href}
-              key={link.href}
-              rel="noreferrer"
-              target="_blank"
-            >
-              {link.label}
-            </a>
-          ) : (
-            <Link
-              className="no-underline opacity-80 transition-opacity hover:text-white hover:opacity-100"
-              key={link.href}
-              to={link.href}
-            >
-              {link.label}
-            </Link>
-          ),
-        )}
+        {linkItems}
       </nav>
     </header>
   );

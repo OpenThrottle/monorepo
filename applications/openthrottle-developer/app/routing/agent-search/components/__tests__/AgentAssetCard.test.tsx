@@ -32,12 +32,13 @@ const diskPersona: AgentAssetResult = {
   title: 'architect',
 };
 
-const renderCard = (result: AgentAssetResult) =>
-  render(
+const renderCard = (result: AgentAssetResult) => {
+  return render(
     <MemoryRouter>
       <AgentAssetCard result={result} />
     </MemoryRouter>,
   );
+};
 
 describe('AgentAssetCard', () => {
   test('renders an indexed (db) skill with similarity and a link to /skills', () => {

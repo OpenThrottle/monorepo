@@ -20,8 +20,8 @@ function writeFakeBin(name: string, body: string): string {
 }
 
 // A successful streamed turn: thought → text deltas → terminal `end` (session + usage).
-const successBin = (): string =>
-  writeFakeBin(
+const successBin = (): string => {
+  return writeFakeBin(
     'grok-success.js',
     `const lines = [
       JSON.stringify({ type: 'thought', data: 'thinking' }),
@@ -31,22 +31,25 @@ const successBin = (): string =>
     ];
     process.stdout.write(lines.join('\\n') + '\\n');`,
   );
+};
 
 // A startup failure: nothing on stdout, a message on stderr, non-zero exit.
-const errorBin = (): string =>
-  writeFakeBin(
+const errorBin = (): string => {
+  return writeFakeBin(
     'grok-error.js',
     `process.stderr.write('grok: not logged in\\n');
     process.exit(1);`,
   );
+};
 
 // Emits one event, then hangs (no further output) until killed.
-const hangBin = (): string =>
-  writeFakeBin(
+const hangBin = (): string => {
+  return writeFakeBin(
     'grok-hang.js',
     `process.stdout.write(JSON.stringify({ type: 'thought', data: 'x' }) + '\\n');
     setInterval(() => {}, 1000000);`,
   );
+};
 
 async function collect(
   run: Parameters<typeof grokConversationBackend.stream>[0],

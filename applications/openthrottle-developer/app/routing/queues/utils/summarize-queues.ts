@@ -12,8 +12,8 @@ export interface QueuesSummary {
  */
 export const summarizeQueues = (
   queues: readonly QueueCardFragment[],
-): QueuesSummary =>
-  queues.reduce<QueuesSummary>(
+): QueuesSummary => {
+  return queues.reduce<QueuesSummary>(
     (acc, queue) => ({
       backlog: acc.backlog + queue.waitingCount + queue.delayedCount,
       completed: acc.completed + queue.completedCount,
@@ -22,3 +22,4 @@ export const summarizeQueues = (
     }),
     { backlog: 0, completed: 0, failed: 0, inFlight: 0 },
   );
+};

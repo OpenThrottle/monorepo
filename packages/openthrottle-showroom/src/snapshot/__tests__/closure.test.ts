@@ -156,10 +156,11 @@ describe('collectSnapshotRows', () => {
       '2026-01-01T00:00:00Z',
     );
 
-    const ids = (table: string): string[] =>
-      [...(selected.get(table)?.values() ?? [])]
+    const ids = (table: string): string[] => {
+      return [...(selected.get(table)?.values() ?? [])]
         .map((row) => String(row.id))
         .sort();
+    };
 
     expect(ids('plans')).toEqual(['pl-new']);
     expect(ids('tasks')).toEqual(['t1', 't2']);

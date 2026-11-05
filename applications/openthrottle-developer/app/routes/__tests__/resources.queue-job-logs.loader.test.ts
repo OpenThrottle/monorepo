@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/resources.queue-job-logs';
 import { QueueJobLogsDocument } from '~/__generated__/graphql';
-import { EMPTY_PAGE } from '~/routing/queues/data/queue-job-logs-page';
+import { EMPTY_PAGE } from '~/routing/queues/data/data.queue-job-logs-page';
 
 vi.mock('@openthrottle/react-router-graphql', () => ({
   executeGraphqlWithAuth: vi.fn(),

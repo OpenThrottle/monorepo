@@ -17,14 +17,16 @@ const NOW = new Date('2026-11-02T20:00:00.000Z');
 
 const gating = (
   overrides: Partial<PlanRunDialogGatingInput> = {},
-): PlanRunDialogGatingInput => ({
-  branch: 'feat/x',
-  mode: 'run',
-  planStatus: 'PENDING',
-  workflowRunBlocked: false,
-  workflowRunBlockedReason: undefined,
-  ...overrides,
-});
+): PlanRunDialogGatingInput => {
+  return {
+    branch: 'feat/x',
+    mode: 'run',
+    planStatus: 'PENDING',
+    workflowRunBlocked: false,
+    workflowRunBlockedReason: undefined,
+    ...overrides,
+  };
+};
 
 describe('plan-run-dialog utils', () => {
   beforeAll(() => {

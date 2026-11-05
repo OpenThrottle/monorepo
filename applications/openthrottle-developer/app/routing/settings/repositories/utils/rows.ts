@@ -7,7 +7,7 @@ import type {
   MissingWorktreeCheckout,
   RepositoryCheckout,
   RepositoryCheckoutRow,
-} from '~/routing/settings/repositories/data/types';
+} from '~/routing/settings/repositories/types';
 
 /** The `kind` discriminator the server writes for worktree checkouts. */
 const WORKTREE_CHECKOUT_KIND = 'worktree';
@@ -23,32 +23,34 @@ const toRow = (
   missing: MissingWorktreeCheckout | null,
   notAGitRepository: boolean,
   children: RepositoryCheckoutRow[] = [],
-): RepositoryCheckoutRow => ({
-  activity: discovered?.activity ?? null,
-  branch:
-    discovered?.branch ??
-    checkout.inspection?.git.currentBranch ??
-    repository.defaultBranch ??
-    null,
-  checkout,
-  children: children.length > 0 ? children : undefined,
-  displayName: checkout.displayName,
-  foreignSkillInjectionEnabled,
-  id: checkout.id,
-  isWorktree: checkout.kind === WORKTREE_CHECKOUT_KIND,
-  missing: missing !== null,
-  missingReason: missing?.reason ?? null,
-  notAGitRepository,
-  path: checkout.filesystemPath,
-  planId: discovered?.planId ?? null,
-  planRunId: discovered?.planRunId ?? null,
-  remoteUrl: repository.normalizedRemoteUrl ?? null,
-  repositoryId: repository.id,
-  repositoryName: repository.name,
-  runMonitored: discovered?.runMonitored ?? null,
-  unregistered: false,
-  updatedAt: checkout.updatedAt ?? null,
-});
+): RepositoryCheckoutRow => {
+  return {
+    activity: discovered?.activity ?? null,
+    branch:
+      discovered?.branch ??
+      checkout.inspection?.git.currentBranch ??
+      repository.defaultBranch ??
+      null,
+    checkout,
+    children: children.length > 0 ? children : undefined,
+    displayName: checkout.displayName,
+    foreignSkillInjectionEnabled,
+    id: checkout.id,
+    isWorktree: checkout.kind === WORKTREE_CHECKOUT_KIND,
+    missing: missing !== null,
+    missingReason: missing?.reason ?? null,
+    notAGitRepository,
+    path: checkout.filesystemPath,
+    planId: discovered?.planId ?? null,
+    planRunId: discovered?.planRunId ?? null,
+    remoteUrl: repository.normalizedRemoteUrl ?? null,
+    repositoryId: repository.id,
+    repositoryName: repository.name,
+    runMonitored: discovered?.runMonitored ?? null,
+    unregistered: false,
+    updatedAt: checkout.updatedAt ?? null,
+  };
+};
 
 /**
  * A worktree found on disk with no `repository_checkouts` row. There is no checkout to
@@ -59,30 +61,33 @@ const toDiscoveredRow = (
   repository: WorkspaceRepositoryFieldsFragment | null,
   foreignSkillInjectionEnabled: boolean,
   children: RepositoryCheckoutRow[] = [],
-): RepositoryCheckoutRow => ({
-  activity: discovered.activity,
-  branch: discovered.branch ?? null,
-  checkout: null,
-  children: children.length > 0 ? children : undefined,
-  displayName: discovered.name,
-  foreignSkillInjectionEnabled,
-  id: `${UNREGISTERED_ROW_ID_PREFIX}${discovered.path}`,
-  isWorktree: true,
-  // Found on disk, so by definition not missing from it.
-  missing: false,
-  missingReason: null,
-  // A worktree found on disk is by definition inside a git repository.
-  notAGitRepository: false,
-  path: discovered.path,
-  planId: discovered.planId ?? null,
-  planRunId: discovered.planRunId ?? null,
-  remoteUrl: repository?.normalizedRemoteUrl ?? null,
-  repositoryId: repository?.id ?? null,
-  repositoryName: repository?.name ?? REPOSITORIES_TABLE_COPY.unlinkedGroupName,
-  runMonitored: discovered.runMonitored ?? null,
-  unregistered: true,
-  updatedAt: null,
-});
+): RepositoryCheckoutRow => {
+  return {
+    activity: discovered.activity,
+    branch: discovered.branch ?? null,
+    checkout: null,
+    children: children.length > 0 ? children : undefined,
+    displayName: discovered.name,
+    foreignSkillInjectionEnabled,
+    id: `${UNREGISTERED_ROW_ID_PREFIX}${discovered.path}`,
+    isWorktree: true,
+    // Found on disk, so by definition not missing from it.
+    missing: false,
+    missingReason: null,
+    // A worktree found on disk is by definition inside a git repository.
+    notAGitRepository: false,
+    path: discovered.path,
+    planId: discovered.planId ?? null,
+    planRunId: discovered.planRunId ?? null,
+    remoteUrl: repository?.normalizedRemoteUrl ?? null,
+    repositoryId: repository?.id ?? null,
+    repositoryName:
+      repository?.name ?? REPOSITORIES_TABLE_COPY.unlinkedGroupName,
+    runMonitored: discovered.runMonitored ?? null,
+    unregistered: true,
+    updatedAt: null,
+  };
+};
 
 /**
  * @description Turn the flat `workspaceRepositories` payload plus the on-disk
@@ -174,8 +179,8 @@ export function buildRepositoryRows(
     const row = (
       checkout: RepositoryCheckout,
       children: RepositoryCheckoutRow[] = [],
-    ): RepositoryCheckoutRow =>
-      toRow(
+    ): RepositoryCheckoutRow => {
+      return toRow(
         repository,
         checkout,
         injectionEnabled,
@@ -184,6 +189,7 @@ export function buildRepositoryRows(
         notGitRepositoryIds.has(repository.id),
         children,
       );
+    };
 
     const primaries = checkouts.filter(
       (checkout) => checkout.kind !== WORKTREE_CHECKOUT_KIND,
@@ -213,12 +219,13 @@ export function buildRepositoryRows(
     }
 
     primaries.forEach((primary, index) => {
-      const children =
-        index === 0
-          ? [...worktrees.map((worktree) => row(worktree)), ...discoveredOnly]
-          : [];
+      if (index !== 0) {
+        rows.push(row(primary, []));
+        return;
+      }
 
-      rows.push(row(primary, children));
+      const worktreeRows = worktrees.map((worktree) => row(worktree));
+      rows.push(row(primary, [...worktreeRows, ...discoveredOnly]));
     });
   }
 

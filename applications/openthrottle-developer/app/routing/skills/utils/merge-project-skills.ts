@@ -9,7 +9,7 @@
  * docs/monorepo/skill-availability-design.md ("Surfacing").
  */
 
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 
 /**
  * A per-project skill row from the `projectSkills` query, narrowed to the fields
@@ -62,20 +62,22 @@ export const mergeRepoSkillsWithProjectSkills = (
     // The ingested row wins for provenance when it carries a recognized
     // value; the disk-parsed source stays otherwise. The `row.source` checks
     // stay inline so TypeScript narrows the string to the `SkillSource` union.
-    return {
+    const merged: RepoSkillEntry = {
       ...entry,
       disableModelInvocation: row.staticDisableModelInvocation ?? undefined,
       orphanedAt: undefined,
-      source:
-        row.source === 'external' || row.source === 'openthrottle'
-          ? row.source
-          : entry.source,
-      sourceUrl:
-        row.source === 'external' || row.source === 'openthrottle'
-          ? (row.sourceUrl ?? undefined)
-          : entry.sourceUrl,
       tags: row.tags,
     };
+
+    if (row.source === 'external' || row.source === 'openthrottle') {
+      return {
+        ...merged,
+        source: row.source,
+        sourceUrl: row.sourceUrl ?? undefined,
+      };
+    }
+
+    return merged;
   });
 
   const diskSlugs = new Set(entries.map((entry) => entry.slug));
@@ -87,14 +89,16 @@ export const mergeRepoSkillsWithProjectSkills = (
   return orphans.length === 0 ? mergedDisk : [...mergedDisk, ...orphans];
 };
 
-const toOrphanEntry = (row: ProjectSkillFlagRow): RepoSkillEntry => ({
-  disableModelInvocation: row.staticDisableModelInvocation ?? undefined,
-  layout: 'agents',
-  orphanedAt: row.orphanedAt ?? new Date(0),
-  repoRelativePath: '',
-  slug: row.slug,
-  source: row.source === 'openthrottle' ? 'openthrottle' : 'external',
-  sourceUrl: row.sourceUrl ?? undefined,
-  summary: row.description ?? '',
-  tags: row.tags,
-});
+const toOrphanEntry = (row: ProjectSkillFlagRow): RepoSkillEntry => {
+  return {
+    disableModelInvocation: row.staticDisableModelInvocation ?? undefined,
+    layout: 'agents',
+    orphanedAt: row.orphanedAt ?? new Date(0),
+    repoRelativePath: '',
+    slug: row.slug,
+    source: row.source === 'openthrottle' ? 'openthrottle' : 'external',
+    sourceUrl: row.sourceUrl ?? undefined,
+    summary: row.description ?? '',
+    tags: row.tags,
+  };
+};

@@ -10,20 +10,23 @@ import { ChatToolCall } from '../ChatToolCall';
 
 const toolEvent = (
   overrides: Partial<ChatTurnToolEvent> = {},
-): ChatTurnToolEvent => ({
-  argsJson: null,
-  callId: 'c1',
-  error: null,
-  kind: 'tool',
-  name: 'read',
-  resultJson: null,
-  sortOrder: 0,
-  status: 'running',
-  ...overrides,
-});
+): ChatTurnToolEvent => {
+  return {
+    argsJson: null,
+    callId: 'c1',
+    error: null,
+    kind: 'tool',
+    name: 'read',
+    resultJson: null,
+    sortOrder: 0,
+    status: 'running',
+    ...overrides,
+  };
+};
 
-const renderToolCall = (props: ChatToolCallProps): RenderResult =>
-  render(<ChatToolCall {...props} />);
+const renderToolCall = (props: ChatToolCallProps): RenderResult => {
+  return render(<ChatToolCall {...props} />);
+};
 
 describe('ChatToolCall Component', () => {
   test('always shows the tool name in the header', () => {

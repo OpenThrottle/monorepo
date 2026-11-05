@@ -83,14 +83,16 @@ const COOKIE_WITH_TOKEN = buildAuthCookie('jwt-token-value');
 const loaderArgs = (
   url: string,
   options?: { readonly cookie?: string },
-): Route.LoaderArgs => ({
-  ...createLoaderArgs<Route.LoaderArgs>({
-    headers: options?.cookie ? { cookie: options.cookie } : undefined,
-    url,
-  }),
-  // The root loader reads `url` (supplied by app middleware in production).
-  url: new URL(url),
-});
+): Route.LoaderArgs => {
+  return {
+    ...createLoaderArgs<Route.LoaderArgs>({
+      headers: options?.cookie ? { cookie: options.cookie } : undefined,
+      url,
+    }),
+    // The root loader reads `url` (supplied by app middleware in production).
+    url: new URL(url),
+  };
+};
 
 /** Narrows a loader result to a `Response` (redirect) without a cast. */
 function assertIsResponse(value: unknown): asserts value is Response {

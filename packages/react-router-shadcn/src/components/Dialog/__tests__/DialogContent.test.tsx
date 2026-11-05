@@ -15,11 +15,13 @@ describe('DialogContent Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => (
-      <Dialog open={true}>
-        <DialogContent {...props}>Dialog body</DialogContent>
-      </Dialog>
-    );
+    const Component = () => {
+      return (
+        <Dialog open={true}>
+          <DialogContent {...props}>Dialog body</DialogContent>
+        </Dialog>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

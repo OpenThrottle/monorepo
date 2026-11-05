@@ -14,11 +14,13 @@ const POST: BlogFeedPost = {
   updatedAt: '2026-03-06T10:00:00.000Z',
 };
 
-const parse = (xml: string): Document =>
-  new DOMParser().parseFromString(xml, 'application/xml');
+const parse = (xml: string): Document => {
+  return new DOMParser().parseFromString(xml, 'application/xml');
+};
 
-const text = (parent: Element | null, selector: string): string | undefined =>
-  parent?.querySelector(selector)?.textContent ?? undefined;
+const text = (parent: Element | null, selector: string): string | undefined => {
+  return parent?.querySelector(selector)?.textContent ?? undefined;
+};
 
 describe('blog-rss', () => {
   describe('escapeXml', () => {

@@ -112,13 +112,14 @@ export interface OrganizationJsonLdOptions {
 export function buildOrganizationJsonLd(
   options: OrganizationJsonLdOptions,
 ): Record<string, unknown> {
+  const { founderName } = options;
+  const founder =
+    founderName == null ? undefined : { '@type': 'Person', name: founderName };
+
   return {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    founder:
-      options.founderName != null
-        ? { '@type': 'Person', name: options.founderName }
-        : undefined,
+    founder,
     logo: options.logo,
     name: options.name,
     sameAs: options.sameAs,
@@ -167,8 +168,9 @@ export interface SitemapEntry {
   readonly path: string;
 }
 
-const toSitemapEntry = (input: string | SitemapEntry): SitemapEntry =>
-  typeof input === 'string' ? { path: input } : input;
+const toSitemapEntry = (input: string | SitemapEntry): SitemapEntry => {
+  return typeof input === 'string' ? { path: input } : input;
+};
 
 /**
  * @public

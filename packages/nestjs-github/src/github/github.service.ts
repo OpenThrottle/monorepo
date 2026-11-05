@@ -138,9 +138,12 @@ const GITHUB_COMPARE_STATUSES: readonly GitHubCompareStatus[] = [
   'identical',
 ];
 
-const isCompareStatus = (value: unknown): value is GitHubCompareStatus =>
-  typeof value === 'string' &&
-  GITHUB_COMPARE_STATUSES.some((status) => status === value);
+const isCompareStatus = (value: unknown): value is GitHubCompareStatus => {
+  return (
+    typeof value === 'string' &&
+    GITHUB_COMPARE_STATUSES.some((status) => status === value)
+  );
+};
 
 @Injectable()
 export class GitHubService {
@@ -771,18 +774,19 @@ function readHeader(res: Response, name: string): string | null {
   return null;
 }
 
+function parseHeaderInt(raw: string | null): number {
+  if (raw !== null && raw.trim() !== '') {
+    return Number.parseInt(raw, 10);
+  }
+  return Number.NaN;
+}
+
 /** Parses `X-RateLimit-Remaining` / `X-RateLimit-Reset` into structured info. */
 function parseRateLimit(res: Response): GitHubRateLimitInfo {
   const remainingRaw = readHeader(res, 'x-ratelimit-remaining');
   const resetRaw = readHeader(res, 'x-ratelimit-reset');
-  const remaining =
-    remainingRaw !== null && remainingRaw.trim() !== ''
-      ? Number.parseInt(remainingRaw, 10)
-      : Number.NaN;
-  const reset =
-    resetRaw !== null && resetRaw.trim() !== ''
-      ? Number.parseInt(resetRaw, 10)
-      : Number.NaN;
+  const remaining = parseHeaderInt(remainingRaw);
+  const reset = parseHeaderInt(resetRaw);
   return {
     remaining: Number.isFinite(remaining) ? remaining : null,
     resetEpochSeconds: Number.isFinite(reset) ? reset : null,
@@ -1039,22 +1043,23 @@ export interface CommitDetailDto {
   readonly sha: string;
 }
 
+function toRecordOrEmpty(value: unknown): Record<string, unknown> {
+  if (typeof value === 'object' && value !== null) {
+    return { ...value };
+  }
+  return {};
+}
+
 function parseCommitDetail(data: unknown): CommitDetailDto | null {
   if (typeof data !== 'object' || data === null) return null;
   const record: Record<string, unknown> = { ...data };
   const sha = record.sha;
   if (typeof sha !== 'string') return null;
 
-  const commit: Record<string, unknown> =
-    typeof record.commit === 'object' && record.commit !== null
-      ? { ...record.commit }
-      : {};
+  const commit = toRecordOrEmpty(record.commit);
   const message = typeof commit.message === 'string' ? commit.message : '';
 
-  const stats: Record<string, unknown> =
-    typeof record.stats === 'object' && record.stats !== null
-      ? { ...record.stats }
-      : {};
+  const stats = toRecordOrEmpty(record.stats);
   const additions = typeof stats.additions === 'number' ? stats.additions : 0;
   const deletions = typeof stats.deletions === 'number' ? stats.deletions : 0;
 

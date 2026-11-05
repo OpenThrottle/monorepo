@@ -114,23 +114,25 @@ export default function Component(
   // Handlers
 
   // Markup
-  const actions = editor.isReadOnly ? null : (
+  const lifecycleControls = (
+    <BlogPostLifecycleControls
+      canWrite={canWrite}
+      isDirty={editor.isDirty}
+      post={post}
+    />
+  );
+  const editableActions = (
     <BlogPostEditorActions
       canSave={editor.canSave}
       isDirty={editor.isDirty}
       isSaved={editor.isSaved}
       isSaving={editor.isSaving}
-      lifecycle={
-        <BlogPostLifecycleControls
-          canWrite={canWrite}
-          isDirty={editor.isDirty}
-          post={post}
-        />
-      }
+      lifecycle={lifecycleControls}
       onSave={editor.save}
       saveError={editor.saveError}
     />
   );
+  const actions = editor.isReadOnly ? null : editableActions;
 
   // Life Cycle
 

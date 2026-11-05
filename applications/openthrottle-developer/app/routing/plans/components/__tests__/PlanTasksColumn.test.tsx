@@ -17,7 +17,9 @@ describe('PlanTasksColumn Component', () => {
         title: 'Pending',
       };
 
-      const Component = () => <PlanTasksColumn {...props} />;
+      const Component = () => {
+        return <PlanTasksColumn {...props} />;
+      };
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
       render(<RoutesStub />);
@@ -49,7 +51,9 @@ describe('PlanTasksColumn Component', () => {
       };
 
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const Component = () => <PlanTasksColumn {...props} />;
+      const Component = () => {
+        return <PlanTasksColumn {...props} />;
+      };
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
       render(<RoutesStub />);

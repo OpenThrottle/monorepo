@@ -22,12 +22,13 @@ export interface FormatRunTimeResult {
   readonly utcLabel: string;
 }
 
-const formatWeekdayTime = (date: Date): string =>
-  new Intl.DateTimeFormat('en-US', {
+const formatWeekdayTime = (date: Date): string => {
+  return new Intl.DateTimeFormat('en-US', {
     hour: 'numeric',
     minute: '2-digit',
     weekday: 'short',
   }).format(date);
+};
 
 /**
  * @description Formats a plan-run timestamp. Before hydration it is absolute UTC with the zone

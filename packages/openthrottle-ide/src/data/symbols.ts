@@ -341,13 +341,18 @@ export async function findReferences(
   // surface; the file cap keeps a single request from scanning the whole tree.
   const sourceFiles = await addWorkspaceSourceFiles(project, resolved, options);
 
-  const targets = isPositionTarget(target)
-    ? identifierAtPosition(project, resolved, target)
-    : sourceFiles.flatMap((sourceFile) =>
-        namedDeclarations(sourceFile).filter(
-          (declaration) => getDeclaredName(declaration) === target.name,
-        ),
-      );
+  const findTargets = () => {
+    if (isPositionTarget(target)) {
+      return identifierAtPosition(project, resolved, target);
+    }
+
+    return sourceFiles.flatMap((sourceFile) =>
+      namedDeclarations(sourceFile).filter(
+        (declaration) => getDeclaredName(declaration) === target.name,
+      ),
+    );
+  };
+  const targets = findTargets();
 
   const locations: ReferenceLocation[] = [];
 
@@ -428,15 +433,14 @@ function toExportedSymbol(
   // `export { default as Foo }` must produce the same entry as the declaring
   // module's `default`, so the two dedupe instead of racing on file order.
   const isDefault = exportName === 'default' || isDefaultExport(declaration);
+  const declaredName = getDeclaredName(declaration) ?? 'default';
+  const name = exportName === 'default' ? declaredName : exportName;
 
   return {
     isDefault,
     kind: resolveKind(declaration),
     line: declaration.getStartLineNumber(),
-    name:
-      exportName === 'default'
-        ? (getDeclaredName(declaration) ?? 'default')
-        : exportName,
+    name,
     path: toRelativePath(declaration.getSourceFile().getFilePath(), resolved),
   };
 }

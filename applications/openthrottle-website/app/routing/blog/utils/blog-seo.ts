@@ -32,13 +32,15 @@ interface BlogPageMetaConfig {
 }
 
 /** @description `<link rel="alternate">` that advertises the RSS feed. */
-const buildBlogFeedLink = (): MetaDescriptor => ({
-  href: buildCanonicalUrl(BLOG_FEED_PATH),
-  rel: 'alternate',
-  tagName: 'link',
-  title: BLOG_COPY.feed.linkTitle,
-  type: 'application/rss+xml',
-});
+const buildBlogFeedLink = (): MetaDescriptor => {
+  return {
+    href: buildCanonicalUrl(BLOG_FEED_PATH),
+    rel: 'alternate',
+    tagName: 'link',
+    title: BLOG_COPY.feed.linkTitle,
+    type: 'application/rss+xml',
+  };
+};
 
 const buildBlogPageMeta = (config: BlogPageMetaConfig): MetaDescriptor[] => {
   const { description, image, pathname, publishedTime, title, type } = config;
@@ -61,8 +63,8 @@ const buildBlogPageMeta = (config: BlogPageMetaConfig): MetaDescriptor[] => {
 };
 
 /** @description Meta descriptors for `/blog`. */
-export const buildBlogIndexMeta = (): MetaDescriptor[] =>
-  buildBlogPageMeta({
+export const buildBlogIndexMeta = (): MetaDescriptor[] => {
+  return buildBlogPageMeta({
     description: BLOG_COPY.routes.index.description,
     image: null,
     pathname: BLOG_BASE_PATH,
@@ -70,10 +72,11 @@ export const buildBlogIndexMeta = (): MetaDescriptor[] =>
     title: `${BLOG_COPY.routes.index.title} | ${SITE_TITLE}`,
     type: 'website',
   });
+};
 
 /** @description Meta descriptors for `/blog/tags/<slug>`. */
-export const buildBlogTagMeta = (tag: BlogTag): MetaDescriptor[] =>
-  buildBlogPageMeta({
+export const buildBlogTagMeta = (tag: BlogTag): MetaDescriptor[] => {
+  return buildBlogPageMeta({
     description: tag.description || BLOG_COPY.routes.tag.description(tag.name),
     image: null,
     pathname: buildBlogTagPath(tag.slug),
@@ -81,6 +84,7 @@ export const buildBlogTagMeta = (tag: BlogTag): MetaDescriptor[] =>
     title: `${BLOG_COPY.routes.tag.title(tag.name)} | ${SITE_TITLE}`,
     type: 'website',
   });
+};
 
 /**
  * @description Meta descriptors for `/blog/<slug>`. The title is the
@@ -88,8 +92,8 @@ export const buildBlogTagMeta = (tag: BlogTag): MetaDescriptor[] =>
  * `<title> | <site>`. The description prefers `seoDescription`, then the
  * excerpt, then the blog default.
  */
-export const buildBlogPostMeta = (post: BlogPost): MetaDescriptor[] =>
-  buildBlogPageMeta({
+export const buildBlogPostMeta = (post: BlogPost): MetaDescriptor[] => {
+  return buildBlogPageMeta({
     description:
       post.seoDescription || post.excerpt || BLOG_COPY.routes.index.description,
     image: post.coverImageUrl,
@@ -98,3 +102,4 @@ export const buildBlogPostMeta = (post: BlogPost): MetaDescriptor[] =>
     title: post.seoTitle || `${post.title} | ${SITE_TITLE}`,
     type: 'article',
   });
+};

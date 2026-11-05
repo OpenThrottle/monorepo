@@ -6,7 +6,7 @@ import {
 import * as React from 'react';
 
 import type { AgentCliAuthWarning } from '~/routing/settings/data/data.agent-clis';
-import { settingsAgentsAuthWarningTitle } from '~/routing/settings/data/data.copy';
+import { settingsAgentsAuthWarningTitle } from '~/routing/settings/utils/settings-agents-copy';
 
 export interface SettingsAgentsAuthWarningsProps {
   /** Per-agent credential warnings from discovery (`claude auth status`); empty renders nothing. */

@@ -52,7 +52,9 @@ const renderTargets = (
     async () => null,
   ),
 ): RenderResult => {
-  const Component = () => <SettingsWorkspaceEditorTargets {...props} />;
+  const Component = () => {
+    return <SettingsWorkspaceEditorTargets {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, action, path: '/' }]);
 
   return render(<RoutesStub />);

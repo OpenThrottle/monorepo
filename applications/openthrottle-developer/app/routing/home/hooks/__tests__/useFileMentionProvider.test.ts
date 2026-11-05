@@ -5,14 +5,15 @@ import { useFileMentionProvider } from '../useFileMentionProvider';
 
 const paths = ['src/App.tsx', 'src/app-shell.ts', 'lib/util.ts'];
 
-const okResponse = (): Response =>
-  new Response(
+const okResponse = (): Response => {
+  return new Response(
     JSON.stringify({ paths, query: '', repositoryId: 'r1', truncated: false }),
     {
       headers: { 'content-type': 'application/json' },
       status: 200,
     },
   );
+};
 
 describe('useFileMentionProvider', () => {
   let fetchMock: ReturnType<typeof vi.fn>;

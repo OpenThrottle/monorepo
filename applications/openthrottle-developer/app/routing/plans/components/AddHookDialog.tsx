@@ -85,6 +85,29 @@ export const AddHookDialog = (
   }, [open]);
 
   // Markup
+  const isSkillSource = source === 'skill';
+  const skillSlugField = (
+    <div className="flex flex-col gap-1.5">
+      <Label htmlFor="add-hook-skill-slug">{copy.skillSlugLabel}</Label>
+      <Input
+        id="add-hook-skill-slug"
+        onChange={(event) => setSkillSlug(event.target.value)}
+        placeholder={copy.skillSlugPlaceholder}
+        value={skillSlug}
+      />
+    </div>
+  );
+  const titleField = (
+    <div className="flex flex-col gap-1.5">
+      <Label htmlFor="add-hook-title">{copy.titleLabel}</Label>
+      <Input
+        id="add-hook-title"
+        onChange={(event) => setTitle(event.target.value)}
+        placeholder={copy.titlePlaceholder}
+        value={title}
+      />
+    </div>
+  );
 
   // Life Cycle
 
@@ -148,27 +171,7 @@ export const AddHookDialog = (
             </div>
           )}
 
-          {source === 'skill' ? (
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="add-hook-skill-slug">{copy.skillSlugLabel}</Label>
-              <Input
-                id="add-hook-skill-slug"
-                onChange={(event) => setSkillSlug(event.target.value)}
-                placeholder={copy.skillSlugPlaceholder}
-                value={skillSlug}
-              />
-            </div>
-          ) : (
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="add-hook-title">{copy.titleLabel}</Label>
-              <Input
-                id="add-hook-title"
-                onChange={(event) => setTitle(event.target.value)}
-                placeholder={copy.titlePlaceholder}
-                value={title}
-              />
-            </div>
-          )}
+          {isSkillSource ? skillSlugField : titleField}
         </div>
 
         <DialogFooter>

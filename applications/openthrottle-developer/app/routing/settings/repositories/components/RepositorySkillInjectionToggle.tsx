@@ -30,18 +30,18 @@ export const RepositorySkillInjectionToggle = (
   // While a flip is in flight, reflect the submitted value optimistically;
   // otherwise show the loader's server truth.
   const submittedEnabled = fetcher.formData?.get('enabled');
-  const optimisticEnabled =
-    fetcher.state !== 'idle' && submittedEnabled != null
-      ? submittedEnabled === 'true'
-      : enabled;
+  const isSubmitting = fetcher.state !== 'idle';
+  const showSubmitted = isSubmitting && submittedEnabled != null;
+  const submittedValue = submittedEnabled === 'true';
+  const optimisticEnabled = showSubmitted ? submittedValue : enabled;
   // Flipping this does real filesystem work in the checkout, so block a second
   // submission until the first settles rather than queueing rapid double-flips.
-  const disabled = fetcher.state !== 'idle';
-  const errorMessage =
-    fetcher.data != null && fetcher.data.errorMessage != null
-      ? fetcher.data.errorMessage ||
-        REPOSITORIES_TABLE_COPY.injectionUpdateFailed
-      : null;
+  const disabled = isSubmitting;
+  const failureMessage = fetcher.data?.errorMessage;
+  const hasFailure = failureMessage != null;
+  const { injectionUpdateFailed } = REPOSITORIES_TABLE_COPY;
+  const failureText = failureMessage || injectionUpdateFailed;
+  const errorMessage = hasFailure ? failureText : null;
 
   // Handlers
   const handleCheckedChange = (next: boolean): void => {

@@ -68,13 +68,13 @@ export const ChatUsageCounter = (
       data-testid="ChatUsageCounter"
       title={intent}
     >
-      {streaming ? (
+      {streaming && (
         <span
           aria-hidden="true"
           className="size-1.5 shrink-0 rounded-full bg-current opacity-70 motion-safe:animate-pulse"
           data-testid="ChatUsageCounter-live"
         />
-      ) : null}
+      )}
       <span>{label}</span>
     </span>
   );

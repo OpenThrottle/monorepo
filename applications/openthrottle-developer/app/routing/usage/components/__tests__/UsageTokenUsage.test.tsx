@@ -14,38 +14,44 @@ import { UsageTokenUsage } from '../UsageTokenUsage';
 
 const buildRow = (
   overrides: Partial<UsageTokenUsageRowFragment>,
-): UsageTokenUsageRowFragment => ({
-  cacheReadTokens: 0,
-  cacheWriteTokens: 0,
-  costUsd: 0,
-  createdAt: '2026-07-15T00:00:00.000Z',
-  id: overrides.id ?? 'row-1',
-  inputTokens: 0,
-  model: null,
-  outputTokens: 0,
-  provider: 'claude',
-  reasoningTokens: 0,
-  source: 'openthrottle-chat',
-  totalTokens: 0,
-  ...overrides,
-});
+): UsageTokenUsageRowFragment => {
+  return {
+    cacheReadTokens: 0,
+    cacheWriteTokens: 0,
+    costUsd: 0,
+    createdAt: '2026-07-15T00:00:00.000Z',
+    id: overrides.id ?? 'row-1',
+    inputTokens: 0,
+    model: null,
+    outputTokens: 0,
+    provider: 'claude',
+    reasoningTokens: 0,
+    source: 'openthrottle-chat',
+    totalTokens: 0,
+    ...overrides,
+  };
+};
 
 const buildTotals = (
   overrides: Partial<UsageTokenUsageTotalsFragment>,
-): UsageTokenUsageTotalsFragment => ({
-  cacheReadTokens: 0,
-  cacheWriteTokens: 0,
-  costUsd: 0,
-  inputTokens: 0,
-  outputTokens: 0,
-  reasoningTokens: 0,
-  totalTokens: 0,
-  turnCount: 0,
-  ...overrides,
-});
+): UsageTokenUsageTotalsFragment => {
+  return {
+    cacheReadTokens: 0,
+    cacheWriteTokens: 0,
+    costUsd: 0,
+    inputTokens: 0,
+    outputTokens: 0,
+    reasoningTokens: 0,
+    totalTokens: 0,
+    turnCount: 0,
+    ...overrides,
+  };
+};
 
 const renderComponent = (props: UsageTokenUsageProps): RenderResult => {
-  const Component = (): React.ReactElement => <UsageTokenUsage {...props} />;
+  const Component = (): React.ReactElement => {
+    return <UsageTokenUsage {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

@@ -28,8 +28,7 @@ import {
  * (or was) actually driving the plan — a scheduled row created after a live run must not stand in
  * for it. Expects the query alias `run`.
  */
-const STARTED_OR_STARTABLE_RUN_SQL =
-  'NOT (run.scheduled_for IS NOT NULL AND run.last_heartbeat_at IS NULL AND run.status NOT IN (:...startableStatuses))';
+const STARTED_OR_STARTABLE_RUN_SQL = `NOT (run.scheduled_for IS NOT NULL AND run.last_heartbeat_at IS NULL AND run.status NOT IN (:...startableStatuses))`;
 
 interface RecordQueuedPlanRunInput {
   /** User who enqueued the run (auth sub for a user principal); null for service-account/system. */
@@ -127,6 +126,16 @@ export class PlanRunsService {
    */
   getRepository(): Repository<PlanRun> {
     return this.planRunRepository;
+  }
+
+  /** The caller-owned transaction's plan_runs repository when `manager` is given, else the default one. */
+  private resolveRepository(
+    manager: EntityManager | undefined,
+  ): Repository<PlanRun> {
+    if (manager) {
+      return manager.getRepository(PlanRun);
+    }
+    return this.getRepository();
   }
 
   /**
@@ -299,10 +308,9 @@ export class PlanRunsService {
     },
   ): Promise<PlanRun | null> {
     const branch = params.branch?.trim() ?? '';
-    const patch =
-      branch === ''
-        ? { checkoutId: params.checkoutId }
-        : { branch, checkoutId: params.checkoutId };
+    const checkoutOnlyPatch = { checkoutId: params.checkoutId };
+    const branchPatch = { branch, checkoutId: params.checkoutId };
+    const patch = branch === '' ? checkoutOnlyPatch : branchPatch;
 
     await this.getRepository().update({ id: planRunId }, patch);
 

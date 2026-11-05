@@ -12,11 +12,13 @@ describe('chart-config-context', () => {
 
   test('useChartConfig returns the provided config', () => {
     const config = { sales: { label: 'Sales' } };
-    const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <ChartConfigContext.Provider value={config}>
-        {children}
-      </ChartConfigContext.Provider>
-    );
+    const wrapper = ({ children }: { children: React.ReactNode }) => {
+      return (
+        <ChartConfigContext.Provider value={config}>
+          {children}
+        </ChartConfigContext.Provider>
+      );
+    };
     const { result } = renderHook(() => useChartConfig(), { wrapper });
     expect(result.current).toEqual(config);
   });

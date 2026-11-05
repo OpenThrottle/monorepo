@@ -54,10 +54,10 @@ export const BlogPostLifecycleControls = (
   } as const;
   const disabled = isDirty || lifecycle.isPending;
   const actions = BLOG_LIFECYCLE_ACTIONS[post.state];
-  const publishedAt =
-    post.publishedAt === null || post.publishedAt === undefined
-      ? null
-      : String(post.publishedAt);
+  const hasPublishedAt =
+    post.publishedAt !== null && post.publishedAt !== undefined;
+  const publishedAt = hasPublishedAt ? String(post.publishedAt) : null;
+  const isScheduled = post.state === BlogPostState.Scheduled;
 
   // Handlers
   const handleConfirm = (): void => {
@@ -68,6 +68,14 @@ export const BlogPostLifecycleControls = (
     }
 
     setConfirming(null);
+  };
+
+  const renderScheduledFor = (): React.ReactNode => {
+    if (isScheduled && publishedAt !== null) {
+      return <BlogPostScheduledFor publishedAt={publishedAt} />;
+    }
+
+    return null;
   };
 
   const renderAction = (action: BlogPostLifecycleAction): React.ReactNode => {
@@ -101,6 +109,11 @@ export const BlogPostLifecycleControls = (
   };
 
   // Markup
+  const saveFirstHint = (
+    <span className="text-muted-foreground text-xs">
+      {BLOG_LIFECYCLE_COPY.saveFirst}
+    </span>
+  );
 
   // Life Cycle
 
@@ -114,14 +127,8 @@ export const BlogPostLifecycleControls = (
       className="flex flex-wrap items-center justify-end gap-2"
       data-testid="BlogPostLifecycleControls"
     >
-      {post.state === BlogPostState.Scheduled && publishedAt !== null ? (
-        <BlogPostScheduledFor publishedAt={publishedAt} />
-      ) : null}
-      {isDirty ? (
-        <span className="text-muted-foreground text-xs">
-          {BLOG_LIFECYCLE_COPY.saveFirst}
-        </span>
-      ) : null}
+      {renderScheduledFor()}
+      {isDirty ? saveFirstHint : null}
       {actions.map(renderAction)}
       <BlogPostLifecycleConfirmDialog
         action={confirming}

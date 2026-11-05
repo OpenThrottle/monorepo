@@ -35,7 +35,9 @@ const isUniqueViolation = (error: unknown): boolean => {
   );
 };
 
-const normalizeTag = (tag: string): string => tag.trim();
+const normalizeTag = (tag: string): string => {
+  return tag.trim();
+};
 
 const assertKebabCaseTag = (tag: string): void => {
   if (!AGENT_ASSET_SLUG_PATTERN.test(tag)) {

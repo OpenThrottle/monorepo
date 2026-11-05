@@ -10,23 +10,27 @@ import type { UseConversationListResult } from '~/routing/home/hooks/useConversa
 import type { HomeConversationToolbarProps } from '../HomeConversationToolbar';
 import { HomeConversationToolbar } from '../HomeConversationToolbar';
 
-const buildConversationList = (): UseConversationListResult => ({
-  conversations: [],
-  isLoading: false,
-  isLoadingMore: false,
-  loadMore: vi.fn(),
-  refresh: vi.fn(),
-  remove: vi.fn(),
-  rename: vi.fn(),
-  totalCount: 0,
-});
+const buildConversationList = (): UseConversationListResult => {
+  return {
+    conversations: [],
+    isLoading: false,
+    isLoadingMore: false,
+    loadMore: vi.fn(),
+    refresh: vi.fn(),
+    remove: vi.fn(),
+    rename: vi.fn(),
+    totalCount: 0,
+  };
+};
 
 const renderToolbar = (props: HomeConversationToolbarProps): RenderResult => {
-  const Component = (): React.ReactElement => (
-    <TooltipProvider>
-      <HomeConversationToolbar {...props} />
-    </TooltipProvider>
-  );
+  const Component = (): React.ReactElement => {
+    return (
+      <TooltipProvider>
+        <HomeConversationToolbar {...props} />
+      </TooltipProvider>
+    );
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

@@ -53,7 +53,9 @@ var logHookError = (message, err) => {
 };
 
 // packages/agentic-hooks/src/config/env.ts
-var userConfigDir = () => import_node_path.default.join(import_node_os.default.homedir(), ".openthrottle");
+var userConfigDir = () => {
+  return import_node_path.default.join(import_node_os.default.homedir(), ".openthrottle");
+};
 var OT_MARKER_REL = import_node_path.default.join(
   "applications",
   "openthrottle-server",
@@ -113,13 +115,19 @@ var readEnvFile = (envPath) => {
   }
   return out;
 };
-var readRepoEnvFile = (repoRoot) => isOpenThrottleCheckout(repoRoot) ? readEnvFile(import_node_path.default.join(repoRoot, ".env")) : {};
-var readUserEnvFile = () => readEnvFile(import_node_path.default.join(userConfigDir(), ".env"));
-var envLayers = (repoRoot, options) => [
-  repoRoot ? readRepoEnvFile(repoRoot) : {},
-  ...options?.includeProcessEnv === false ? [] : [process.env],
-  readUserEnvFile()
-];
+var readRepoEnvFile = (repoRoot) => {
+  return isOpenThrottleCheckout(repoRoot) ? readEnvFile(import_node_path.default.join(repoRoot, ".env")) : {};
+};
+var readUserEnvFile = () => {
+  return readEnvFile(import_node_path.default.join(userConfigDir(), ".env"));
+};
+var envLayers = (repoRoot, options) => {
+  return [
+    repoRoot ? readRepoEnvFile(repoRoot) : {},
+    ...options?.includeProcessEnv === false ? [] : [process.env],
+    readUserEnvFile()
+  ];
+};
 var resolveOtEnv = (repoRoot, key, options) => {
   for (const layer of envLayers(repoRoot, options)) {
     const value = layer[key];
@@ -130,7 +138,9 @@ var resolveOtEnv = (repoRoot, key, options) => {
   return "";
 };
 var LOOPBACK_AUTHORITY = /^([a-z][a-z0-9+.-]*:\/\/(?:[^/?#@]*@)?)localhost(?=[:/?#]|$)/i;
-var normalizeLoopbackHost = (url) => url.replace(LOOPBACK_AUTHORITY, "$1127.0.0.1");
+var normalizeLoopbackHost = (url) => {
+  return url.replace(LOOPBACK_AUTHORITY, "$1127.0.0.1");
+};
 var graphqlUrlFromEnvMap = (env) => {
   const explicit = env.OPENTHROTTLE_GRAPHQL_URL?.trim() || env.OPENTHROTTLE_WORKER_GRAPHQL_URL?.trim();
   if (explicit) {
@@ -151,7 +161,9 @@ var resolveGraphqlUrl = (repoRoot, options) => {
   }
   return null;
 };
-var resolveAuthToken = (repoRoot, options) => resolveOtEnv(repoRoot, "OPENTHROTTLE_MCP_AUTH_TOKEN", options) || resolveOtEnv(repoRoot, "OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN", options) || "";
+var resolveAuthToken = (repoRoot, options) => {
+  return resolveOtEnv(repoRoot, "OPENTHROTTLE_MCP_AUTH_TOKEN", options) || resolveOtEnv(repoRoot, "OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN", options) || "";
+};
 
 // packages/agentic-hooks/src/config/describe.ts
 var TELEMETRY_CONFIG_SOURCES = Object.freeze({
@@ -166,7 +178,9 @@ var TELEMETRY_CONFIG_SOURCES = Object.freeze({
 });
 
 // packages/nodejs-utils/src/utils/is-record.ts
-var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
+var isRecord = (value) => {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+};
 
 // packages/agentic-hooks/src/data/checkpoints.ts
 var DEFAULT_STALE_CHECKPOINT_MS = 6 * 60 * 60 * 1e3;
@@ -212,8 +226,12 @@ mutation SettlePlanRunFromHook($input: SettleCliPlanRunInput!) {
   }
 }
 `;
-var planRunsDir = (repoRoot) => import_node_path3.default.join(repoRoot, PLAN_RUNS_DIR_REL);
-var sanitizeSessionId2 = (sessionId) => String(sessionId).replace(/[^A-Za-z0-9._-]/g, "-");
+var planRunsDir = (repoRoot) => {
+  return import_node_path3.default.join(repoRoot, PLAN_RUNS_DIR_REL);
+};
+var sanitizeSessionId2 = (sessionId) => {
+  return String(sessionId).replace(/[^A-Za-z0-9._-]/g, "-");
+};
 var readPlanRunRecord = (filePath) => {
   try {
     const parsed = JSON.parse(import_node_fs2.default.readFileSync(filePath, "utf8"));
@@ -276,8 +294,14 @@ var settleAbandonedPlanRuns = async ({
   } catch {
     return { settled: 0 };
   }
-  const currentFile = typeof currentSessionId === "string" && currentSessionId.trim() !== "" ? `${sanitizeSessionId2(currentSessionId.trim())}.json` : null;
-  const graphqlUrl = graphqlUrlOverride === void 0 ? resolveGraphqlUrl(repoRoot) : graphqlUrlOverride;
+  let currentFile = null;
+  if (typeof currentSessionId === "string" && currentSessionId.trim() !== "") {
+    currentFile = `${sanitizeSessionId2(currentSessionId.trim())}.json`;
+  }
+  let graphqlUrl = graphqlUrlOverride;
+  if (graphqlUrlOverride === void 0) {
+    graphqlUrl = resolveGraphqlUrl(repoRoot);
+  }
   if (!graphqlUrl) return { settled: 0 };
   const authToken = authTokenOverride ?? resolveAuthToken(repoRoot);
   const candidates = [];
@@ -315,7 +339,9 @@ var settleAbandonedPlanRuns = async ({
 };
 
 // packages/agentic-hooks/src/adapters/claude/payload.ts
-var nonEmptyString = (value) => typeof value === "string" && value.trim() !== "" ? value : null;
+var nonEmptyString = (value) => {
+  return typeof value === "string" && value.trim() !== "" ? value : null;
+};
 var normalizeClaudeStopPayload = (raw) => {
   if (!isRecord(raw)) {
     return null;

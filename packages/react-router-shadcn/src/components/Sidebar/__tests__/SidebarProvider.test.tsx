@@ -14,7 +14,9 @@ describe('SidebarProvider Component', () => {
   beforeEach(() => {
     props = { children: <span>Sidebar child</span> };
 
-    const Component = () => <SidebarProvider {...props} />;
+    const Component = () => {
+      return <SidebarProvider {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

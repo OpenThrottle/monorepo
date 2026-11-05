@@ -16,27 +16,31 @@ import { TimelineControls } from '../TimelineControls';
 
 const baseProps = (
   overrides: Partial<TimelineControlsProps> = {},
-): TimelineControlsProps => ({
-  grouping: TimelineLaneGrouping.ByPlan,
-  selectedMarkerKinds: null,
-  selectedSpanKinds: null,
-  windowFromIso: '2026-09-01T00:00:00.000Z',
-  windowPreset: '7d',
-  windowToIso: '2026-09-08T00:00:00.000Z',
-  ...overrides,
-});
+): TimelineControlsProps => {
+  return {
+    grouping: TimelineLaneGrouping.ByPlan,
+    selectedMarkerKinds: null,
+    selectedSpanKinds: null,
+    windowFromIso: '2026-09-01T00:00:00.000Z',
+    windowPreset: '7d',
+    windowToIso: '2026-09-08T00:00:00.000Z',
+    ...overrides,
+  };
+};
 
 /** Renders at `path`, so the stub router has search params to read and write. */
 const renderControls = (
   props: TimelineControlsProps,
   initialEntry = '/timeline',
 ): void => {
-  const Component = () => (
-    <>
-      <TimelineControls {...props} />
-      <SearchParamsProbe />
-    </>
-  );
+  const Component = () => {
+    return (
+      <>
+        <TimelineControls {...props} />
+        <SearchParamsProbe />
+      </>
+    );
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/timeline' }]);
 
   render(<RoutesStub initialEntries={[initialEntry]} />);

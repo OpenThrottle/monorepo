@@ -31,7 +31,9 @@ describe('PlanTaskCard Component', () => {
       task: mockTask,
     };
 
-    const Component = () => <PlanTaskCard {...props} />;
+    const Component = () => {
+      return <PlanTaskCard {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     render(<RoutesStub />);

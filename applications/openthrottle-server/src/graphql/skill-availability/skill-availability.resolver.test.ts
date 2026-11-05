@@ -17,14 +17,16 @@ describe('SkillAvailabilityResolver', () => {
   const userId = '11111111-1111-4111-8111-111111111111';
   const projectId = '22222222-2222-4222-8222-222222222222';
 
-  const makeTag = (tag: string): UserSkillTag => ({
-    createdAt: new Date('2026-07-11T12:00:00.000Z'),
-    dimension: 'domain',
-    id: `id-${tag}`,
-    tag,
-    updatedAt: new Date('2026-07-11T12:00:00.000Z'),
-    userId,
-  });
+  const makeTag = (tag: string): UserSkillTag => {
+    return {
+      createdAt: new Date('2026-07-11T12:00:00.000Z'),
+      dimension: 'domain',
+      id: `id-${tag}`,
+      tag,
+      updatedAt: new Date('2026-07-11T12:00:00.000Z'),
+      userId,
+    };
+  };
 
   const mockSkillAvailabilityService = createMock<SkillAvailabilityService>({
     addRule: vi.fn(),

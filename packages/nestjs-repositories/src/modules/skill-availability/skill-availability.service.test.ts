@@ -17,8 +17,8 @@ describe('SkillAvailabilityService', () => {
 
   const makeRuleSet = (
     overrides: Partial<SkillAvailabilityRuleSet> = {},
-  ): SkillAvailabilityRuleSet =>
-    asMock<SkillAvailabilityRuleSet>({
+  ): SkillAvailabilityRuleSet => {
+    return asMock<SkillAvailabilityRuleSet>({
       createdAt: new Date('2026-07-11T12:00:00.000Z'),
       id: ruleSetId,
       posture: 'allow',
@@ -26,12 +26,13 @@ describe('SkillAvailabilityService', () => {
       updatedAt: new Date('2026-07-11T12:00:00.000Z'),
       ...overrides,
     });
+  };
 
   const makeRule = (
     overrides: Partial<SkillAvailabilityRule> &
       Pick<SkillAvailabilityRule, 'id'>,
-  ): SkillAvailabilityRule =>
-    asMock<SkillAvailabilityRule>({
+  ): SkillAvailabilityRule => {
+    return asMock<SkillAvailabilityRule>({
       createdAt: new Date('2026-07-11T12:00:00.000Z'),
       editor: null,
       environment: null,
@@ -44,6 +45,7 @@ describe('SkillAvailabilityService', () => {
       updatedAt: new Date('2026-07-11T12:00:00.000Z'),
       ...overrides,
     });
+  };
 
   const ruleSetRepository = {
     create: vi.fn((data: Partial<SkillAvailabilityRuleSet>) => ({ ...data })),

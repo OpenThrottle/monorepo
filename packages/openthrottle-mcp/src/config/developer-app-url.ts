@@ -19,14 +19,18 @@ const readUrl = (name: string): string | null => {
  * @description The developer app origin with no trailing slash.
  * @public
  */
-export const getDeveloperAppBaseUrl = (): string =>
-  readUrl('OPENTHROTTLE_DEVELOPER_URL') ??
-  readUrl('APP_URL_DEVELOPER') ??
-  DEFAULT_DEVELOPER_APP_URL;
+export const getDeveloperAppBaseUrl = (): string => {
+  return (
+    readUrl('OPENTHROTTLE_DEVELOPER_URL') ??
+    readUrl('APP_URL_DEVELOPER') ??
+    DEFAULT_DEVELOPER_APP_URL
+  );
+};
 
 /**
  * @description The developer-app blog editor URL for a post: `<developer base URL>/blog/<postId>`.
  * @public
  */
-export const getBlogPostEditorUrl = (postId: string): string =>
-  `${getDeveloperAppBaseUrl()}/blog/${encodeURIComponent(postId)}`;
+export const getBlogPostEditorUrl = (postId: string): string => {
+  return `${getDeveloperAppBaseUrl()}/blog/${encodeURIComponent(postId)}`;
+};

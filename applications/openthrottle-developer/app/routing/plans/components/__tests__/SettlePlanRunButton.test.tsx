@@ -39,9 +39,11 @@ interface RenderOptions {
 }
 
 const renderButton = (options: RenderOptions = {}): RenderResult => {
-  const Component = () => (
-    <SettlePlanRunButton planId="p1" planRunId="run-1" planTitle="Alpha" />
-  );
+  const Component = () => {
+    return (
+      <SettlePlanRunButton planId="p1" planRunId="run-1" planTitle="Alpha" />
+    );
+  };
   const RoutesStub = createRoutesStub([
     {
       Component,
@@ -267,8 +269,7 @@ describe('SettlePlanRunButton', () => {
     const user = userEvent.setup();
     const component = renderButton({
       action: async () => ({
-        forceSettlePlanRunError:
-          'Nothing to settle — this run is no longer an unsettled interactive run.',
+        forceSettlePlanRunError: `Nothing to settle — this run is no longer an unsettled interactive run.`,
       }),
     });
 

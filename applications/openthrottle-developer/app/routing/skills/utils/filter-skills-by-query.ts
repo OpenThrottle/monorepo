@@ -5,7 +5,7 @@
  * list — no re-query — and composes after {@link filterSkillsBySource}.
  */
 
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 
 export const filterSkillsByQuery = (
   entries: readonly RepoSkillEntry[],

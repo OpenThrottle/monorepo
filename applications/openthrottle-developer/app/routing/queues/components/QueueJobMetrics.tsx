@@ -3,6 +3,7 @@ import { HeartHandshakeIcon } from 'lucide-react';
 import * as React from 'react';
 
 import type { JobDetailsCardFragment } from '~/__generated__/graphql';
+import { buildQueueJobMetricLines } from '~/routing/queues/utils/queue-job-metric-lines';
 
 export interface QueueJobMetricsProps {
   job: JobDetailsCardFragment;
@@ -16,10 +17,22 @@ export const QueueJobMetrics = (
   // Hooks
 
   // Setup
+  const metricLines = buildQueueJobMetricLines(job.taskRunMetrics);
+  const hasMetrics = metricLines.length > 0;
 
   // Handlers
 
   // Markup
+  const metricsList = (
+    <ul className="space-y-1">
+      {metricLines.map((line) => (
+        <li key={line}>{line}</li>
+      ))}
+    </ul>
+  );
+  const noMetrics = (
+    <p className="text-muted-foreground">No metrics recorded.</p>
+  );
 
   // Life Cycle
 
@@ -34,22 +47,7 @@ export const QueueJobMetrics = (
       <p className="text-muted-foreground text-sm">
         Present when the worker recorded task-run metrics for this job.
       </p>
-      <div className="text-sm">
-        {job.taskRunMetrics != null ? (
-          <ul className="space-y-1">
-            <li>
-              Start RSS: {job.taskRunMetrics.atStart.rssMb.toFixed(1)} MB / heap{' '}
-              {job.taskRunMetrics.atStart.heapUsedMb.toFixed(1)} MB
-            </li>
-            <li>
-              End RSS: {job.taskRunMetrics.atEnd.rssMb.toFixed(1)} MB / heap{' '}
-              {job.taskRunMetrics.atEnd.heapUsedMb.toFixed(1)} MB
-            </li>
-          </ul>
-        ) : (
-          <p className="text-muted-foreground">No metrics recorded.</p>
-        )}
-      </div>
+      <div className="text-sm">{hasMetrics ? metricsList : noMetrics}</div>
     </OpenThrottleFieldset>
   );
 };

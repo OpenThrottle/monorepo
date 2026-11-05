@@ -6,7 +6,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 import { SKILL_RUN_COPY } from '~/routing/skills/data/data.copy';
 
 import type { SkillRunControlProps } from '../SkillRunControl';
@@ -23,11 +23,13 @@ const mockEntry: RepoSkillEntry = {
 };
 
 const renderSkillRunControl = (props: SkillRunControlProps): RenderResult => {
-  const Component = () => (
-    <TooltipProvider>
-      <SkillRunControl {...props} />
-    </TooltipProvider>
-  );
+  const Component = () => {
+    return (
+      <TooltipProvider>
+        <SkillRunControl {...props} />
+      </TooltipProvider>
+    );
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 };

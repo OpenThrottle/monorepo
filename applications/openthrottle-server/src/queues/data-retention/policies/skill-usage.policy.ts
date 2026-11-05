@@ -30,8 +30,7 @@ import { createAgeRetentionPolicy } from './create-age-retention-policy.ts';
 
 const RETENTION_DAYS = 90;
 
-const RATIONALE =
-  'an observability signal about recent agent behaviour, not a record anything references';
+const RATIONALE = `an observability signal about recent agent behaviour, not a record anything references`;
 
 export const skillUsageEventsPolicy = createAgeRetentionPolicy({
   column: 'received_at',

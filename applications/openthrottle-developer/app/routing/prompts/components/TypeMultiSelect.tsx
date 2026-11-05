@@ -127,7 +127,7 @@ export const TypeMultiSelect = (
         </PopoverContent>
       </Popover>
 
-      {!compact && value.length > 0 ? (
+      {!compact && value.length > 0 && (
         <div className="flex flex-wrap gap-1.5 pt-1">
           {value.map((v) => {
             const opt = selectOptions.find((o) => o.value === v);
@@ -156,7 +156,7 @@ export const TypeMultiSelect = (
             );
           })}
         </div>
-      ) : null}
+      )}
     </Label>
   );
 };

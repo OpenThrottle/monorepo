@@ -78,6 +78,14 @@ export const ScheduleActiveRuns = (
         <TableBody>
           {runs.map((run) => {
             const cancelRequested = run.cancelRequestedAt != null;
+            const hasStarted = run.startedAt !== null;
+            const runDuration = formatDuration(run.startedAt, now);
+            const queuedBadge = (
+              <span className="text-muted-foreground">
+                {SCHEDULE_COPY.activeRunsQueued}
+              </span>
+            );
+            const elapsed = hasStarted ? runDuration : queuedBadge;
 
             return (
               <TableRow key={run.id}>
@@ -104,15 +112,7 @@ export const ScheduleActiveRuns = (
                   {run.driverId}
                   {run.model ? ` · ${run.model}` : ''}
                 </TableCell>
-                <TableCell className="tabular-nums">
-                  {run.startedAt === null ? (
-                    <span className="text-muted-foreground">
-                      {SCHEDULE_COPY.activeRunsQueued}
-                    </span>
-                  ) : (
-                    formatDuration(run.startedAt, now)
-                  )}
-                </TableCell>
+                <TableCell className="tabular-nums">{elapsed}</TableCell>
                 <TableCell className="text-right">
                   <fetcher.Form method="post">
                     <input name="intent" type="hidden" value="cancel-run" />

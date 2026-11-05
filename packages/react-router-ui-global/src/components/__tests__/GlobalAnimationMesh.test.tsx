@@ -6,8 +6,9 @@ import { describe, expect, test } from 'vitest';
 import { GlobalAnimationMesh } from '../GlobalAnimationMesh';
 
 describe('GlobalAnimationMesh Component', () => {
-  const renderMesh = (element: React.ReactElement): RenderResult =>
-    render(element);
+  const renderMesh = (element: React.ReactElement): RenderResult => {
+    return render(element);
+  };
 
   test('renders a decorative, non-interactive canvas', () => {
     const component = renderMesh(<GlobalAnimationMesh />);

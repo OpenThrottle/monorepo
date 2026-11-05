@@ -162,13 +162,15 @@ describe('dedupeEndpoints', () => {
     host: string,
     port: number,
     models: string[],
-  ): ModelEndpoint => ({
-    baseUrl: `http://${host}:${port}/v1`,
-    host,
-    models,
-    port,
-    provider: null,
-  });
+  ): ModelEndpoint => {
+    return {
+      baseUrl: `http://${host}:${port}/v1`,
+      host,
+      models,
+      port,
+      provider: null,
+    };
+  };
 
   it('collapses the same machine seen via multiple IPs, preferring localhost', () => {
     const result = dedupeEndpoints([

@@ -7,11 +7,11 @@ import { SettingsAgentsCliControls } from '~/routing/settings/components/Setting
 import { SettingsAgentsModelBulkToggle } from '~/routing/settings/components/SettingsAgentsModelBulkToggle';
 import { SettingsAgentsModelRow } from '~/routing/settings/components/SettingsAgentsModelRow';
 import type { AgentCliStatus } from '~/routing/settings/data/data.agent-clis';
+import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/data.copy';
 import {
-  SETTINGS_AGENTS_COPY,
   settingsAgentsModelsEnabledSummary,
   settingsAgentsModelsSummary,
-} from '~/routing/settings/data/data.copy';
+} from '~/routing/settings/utils/settings-agents-copy';
 
 /** Column count of the setup table — the expansion row spans all of it. */
 const SETTINGS_AGENTS_COLUMN_COUNT = 5;
@@ -37,22 +37,29 @@ export const SettingsAgentsTableRow = (
     status;
   const hasModels = installed && modelOptions.length > 0;
   const enabledCount = modelOptions.filter((model) => model.enabled).length;
+  const hasNoModelOptions = modelOptions.length === 0;
+  const showModels = hasModels && expanded;
+  const ChevronIcon = expanded ? ChevronDownIcon : ChevronRightIcon;
 
   // Handlers
-  const handleToggleExpanded = (): void => setExpanded((prev) => !prev);
+  const handleToggleExpanded = (): void => {
+    return setExpanded((prev) => !prev);
+  };
 
   // Markup
-  const modelsCell = !installed ? (
+  const notInstalledModelsCell = (
     <span className="text-muted-foreground">
       {SETTINGS_AGENTS_COPY.modelsNotInstalled}
     </span>
-  ) : modelOptions.length === 0 ? (
+  );
+  const noModelsCell = (
     <span className="text-muted-foreground text-sm">
       {SETTINGS_AGENTS_COPY.modelsEmpty}
     </span>
-  ) : (
-    // Compact: a count that expands an inline per-model control list (enable +
-    // favorite), never an unbounded badge cloud that stretches the row.
+  );
+  // Compact: a count that expands an inline per-model control list (enable +
+  // favorite), never an unbounded badge cloud that stretches the row.
+  const expandButton = (
     <button
       aria-expanded={expanded}
       className="flex items-center gap-1.5 text-sm underline-offset-4 hover:underline"
@@ -60,16 +67,58 @@ export const SettingsAgentsTableRow = (
       onClick={handleToggleExpanded}
       type="button"
     >
-      {expanded ? (
-        <ChevronDownIcon className="size-4" />
-      ) : (
-        <ChevronRightIcon className="size-4" />
-      )}
+      <ChevronIcon className="size-4" />
       {settingsAgentsModelsSummary(models.length)}
       <span className="text-muted-foreground text-xs">
         ({settingsAgentsModelsEnabledSummary(enabledCount, models.length)})
       </span>
     </button>
+  );
+  const installedModelsCell = hasNoModelOptions ? noModelsCell : expandButton;
+  const modelsCell = installed ? installedModelsCell : notInstalledModelsCell;
+  const versionLabel = (
+    <span className="text-muted-foreground text-xs">{version}</span>
+  );
+  const installedStatus = (
+    <div className="flex items-center gap-2">
+      <Badge variant="secondary">{SETTINGS_AGENTS_COPY.installedBadge}</Badge>
+      {version != null ? versionLabel : null}
+    </div>
+  );
+  const notInstalledBadge = (
+    <Badge variant="outline">{SETTINGS_AGENTS_COPY.notInstalledBadge}</Badge>
+  );
+  const modelsRow = (
+    <TableRow
+      className={enabled ? undefined : 'opacity-60'}
+      data-testid={`SettingsAgentsTableRow-${backend}-models`}
+    >
+      <TableCell colSpan={SETTINGS_AGENTS_COLUMN_COUNT}>
+        <div className="bg-muted/30 rounded-md px-3 py-1">
+          <div className="flex items-center justify-between gap-3 border-b py-1">
+            <span className="text-muted-foreground text-xs">
+              {settingsAgentsModelsEnabledSummary(enabledCount, models.length)}
+            </span>
+            <SettingsAgentsModelBulkToggle
+              agentDisabled={!enabled}
+              backend={backend}
+              canManage={canManage}
+              enabledCount={enabledCount}
+              models={models}
+            />
+          </div>
+          {modelOptions.map((model) => (
+            <SettingsAgentsModelRow
+              agentDisabled={!enabled}
+              backend={backend}
+              canManage={canManage}
+              key={model.model}
+              model={model}
+            />
+          ))}
+        </div>
+      </TableCell>
+    </TableRow>
   );
 
   // Life Cycle
@@ -88,22 +137,7 @@ export const SettingsAgentsTableRow = (
           <code className="text-muted-foreground text-xs">{backend}</code>
         </TableCell>
 
-        <TableCell>
-          {installed ? (
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary">
-                {SETTINGS_AGENTS_COPY.installedBadge}
-              </Badge>
-              {version != null ? (
-                <span className="text-muted-foreground text-xs">{version}</span>
-              ) : null}
-            </div>
-          ) : (
-            <Badge variant="outline">
-              {SETTINGS_AGENTS_COPY.notInstalledBadge}
-            </Badge>
-          )}
-        </TableCell>
+        <TableCell>{installed ? installedStatus : notInstalledBadge}</TableCell>
 
         <TableCell>{modelsCell}</TableCell>
 
@@ -124,41 +158,7 @@ export const SettingsAgentsTableRow = (
         </TableCell>
       </TableRow>
 
-      {hasModels && expanded ? (
-        <TableRow
-          className={enabled ? undefined : 'opacity-60'}
-          data-testid={`SettingsAgentsTableRow-${backend}-models`}
-        >
-          <TableCell colSpan={SETTINGS_AGENTS_COLUMN_COUNT}>
-            <div className="bg-muted/30 rounded-md px-3 py-1">
-              <div className="flex items-center justify-between gap-3 border-b py-1">
-                <span className="text-muted-foreground text-xs">
-                  {settingsAgentsModelsEnabledSummary(
-                    enabledCount,
-                    models.length,
-                  )}
-                </span>
-                <SettingsAgentsModelBulkToggle
-                  agentDisabled={!enabled}
-                  backend={backend}
-                  canManage={canManage}
-                  enabledCount={enabledCount}
-                  models={models}
-                />
-              </div>
-              {modelOptions.map((model) => (
-                <SettingsAgentsModelRow
-                  agentDisabled={!enabled}
-                  backend={backend}
-                  canManage={canManage}
-                  key={model.model}
-                  model={model}
-                />
-              ))}
-            </div>
-          </TableCell>
-        </TableRow>
-      ) : null}
+      {showModels ? modelsRow : null}
     </>
   );
 };

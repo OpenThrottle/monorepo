@@ -8,12 +8,6 @@ import {
   CardHeader,
   CardTitle,
   cn,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
 } from '@openthrottle/react-router-shadcn';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
@@ -24,12 +18,13 @@ import type {
 } from '~/__generated__/graphql';
 import { UsageTokenUsageFilters } from '~/routing/usage/components/UsageTokenUsageFilters';
 import { UsageTokenUsageSources } from '~/routing/usage/components/UsageTokenUsageSources';
+import { UsageTokenUsageTable } from '~/routing/usage/components/UsageTokenUsageTable';
 import {
   TOKEN_USAGE_COPY,
   TOKEN_USAGE_STATS,
-  tokenUsageProviderLabel,
-} from '~/routing/usage/data/token-usage-copy';
+} from '~/routing/usage/data/data.token-usage-copy';
 import { groupTokenUsage } from '~/routing/usage/utils/aggregate-token-usage';
+import { tokenUsageEmptyMessage } from '~/routing/usage/utils/token-usage-empty-message';
 
 export interface UsageTokenUsageProps {
   className?: string;
@@ -70,17 +65,24 @@ export const UsageTokenUsage = (
     [items, selectedProvider],
   );
 
-  const breakdownLabel = selectedProvider === null ? 'Provider' : 'Model';
-  const emptyMessage =
-    selectedProvider === null
-      ? TOKEN_USAGE_COPY.emptyAllProviders
-      : TOKEN_USAGE_COPY.emptyForProvider(
-          tokenUsageProviderLabel(selectedProvider),
-        );
+  const isByProvider = selectedProvider === null;
+  const hasGroups = groups.length > 0;
+  const turnSuffix = totals.turnCount === 1 ? '' : 's';
 
   // Handlers
 
   // Markup
+  const emptyState = (
+    <p
+      className="text-muted-foreground mt-6 text-sm"
+      data-testid="UsageTokenUsageEmpty"
+    >
+      {tokenUsageEmptyMessage(selectedProvider)}
+    </p>
+  );
+  const breakdownTable = (
+    <UsageTokenUsageTable groups={groups} isByProvider={isByProvider} />
+  );
 
   // Life Cycle
 
@@ -99,10 +101,9 @@ export const UsageTokenUsage = (
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {TOKEN_USAGE_STATS.map((stat) => {
           const value = totals[stat.field];
-          const display =
-            stat.kind === 'cost'
-              ? (formatUsageCost(value) ?? '$0')
-              : formatTokenCount(value);
+          const isCost = stat.kind === 'cost';
+          const costDisplay = formatUsageCost(value) ?? '$0';
+          const display = isCost ? costDisplay : formatTokenCount(value);
 
           return (
             <Card className="gap-0 py-4" key={stat.field}>
@@ -134,62 +135,12 @@ export const UsageTokenUsage = (
 
       <p className="text-muted-foreground mt-3 text-xs">
         {formatTokenCount(totals.totalTokens)} tokens across {totals.turnCount}{' '}
-        turn{totals.turnCount === 1 ? '' : 's'}.
+        turn{turnSuffix}.
       </p>
 
       <UsageTokenUsageSources items={items} />
 
-      {groups.length === 0 ? (
-        <p
-          className="text-muted-foreground mt-6 text-sm"
-          data-testid="UsageTokenUsageEmpty"
-        >
-          {emptyMessage}
-        </p>
-      ) : (
-        <div className="mt-6 overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{breakdownLabel}</TableHead>
-                <TableHead className="text-right">Turns</TableHead>
-                <TableHead className="text-right">Input</TableHead>
-                <TableHead className="text-right">Output</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-                <TableHead className="text-right">Cost</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {groups.map((group) => (
-                <TableRow key={group.key}>
-                  <TableCell className="font-medium">
-                    {selectedProvider === null
-                      ? tokenUsageProviderLabel(group.key)
-                      : group.key}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {group.turnCount}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatTokenCount(group.inputTokens)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatTokenCount(group.outputTokens)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatTokenCount(group.totalTokens)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {group.pricedTurnCount === 0
-                      ? '—'
-                      : (formatUsageCost(group.costUsd) ?? '—')}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+      {hasGroups ? breakdownTable : emptyState}
     </div>
   );
 };

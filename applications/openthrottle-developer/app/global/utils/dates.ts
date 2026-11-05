@@ -3,7 +3,9 @@ import type { FormatDateTimeOptions } from '~/global/types';
 /** What an unparseable or missing date renders as. */
 const NO_DATE = '—';
 
-const pad = (value: number): string => String(value).padStart(2, '0');
+const pad = (value: number): string => {
+  return String(value).padStart(2, '0');
+};
 
 /**
  * @description The one place a date string becomes a `Date`. Accepts an ISO
@@ -57,17 +59,21 @@ export const formatDateTime = (
 export const formatTimeZoneName = (
   date: Date,
   timeZone: string | undefined,
-): string =>
-  new Intl.DateTimeFormat('en-US', { timeZone, timeZoneName: 'short' })
-    .formatToParts(date)
-    .find((part) => part.type === 'timeZoneName')?.value ?? '';
+): string => {
+  return (
+    new Intl.DateTimeFormat('en-US', { timeZone, timeZoneName: 'short' })
+      .formatToParts(date)
+      .find((part) => part.type === 'timeZoneName')?.value ?? ''
+  );
+};
 
 /**
  * @description Formats a date as a `datetime-local` value in the viewer's zone
  * (`2026-11-01T10:00`), for an input's `value` and `min`.
  */
-export const toDateTimeLocalValue = (date: Date): string =>
-  `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+export const toDateTimeLocalValue = (date: Date): string => {
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
 
 /**
  * @description The `datetime-local` value for an ISO timestamp, or `''` when it
@@ -86,5 +92,6 @@ export const isoToDateTimeLocalValue = (
  * viewer's zone) to a UTC ISO timestamp. `null` when the value is empty or
  * unparseable.
  */
-export const localDateTimeToUtcIso = (local: string): string | null =>
-  parseDate(local)?.toISOString() ?? null;
+export const localDateTimeToUtcIso = (local: string): string | null => {
+  return parseDate(local)?.toISOString() ?? null;
+};

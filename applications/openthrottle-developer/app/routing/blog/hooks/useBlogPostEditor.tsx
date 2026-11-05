@@ -18,6 +18,7 @@ import {
   toBlogPostSaveFieldErrors,
   validateBlogPostEditorValues,
 } from '~/routing/blog/utils/editor';
+import { resolveSaveError } from '~/routing/blog/utils/resolve-save-error';
 
 export interface UseBlogPostEditorOptions {
   /** The caller holds `blog:write` (may edit posts that are not drafts). */
@@ -91,10 +92,7 @@ export const useBlogPostEditor = (
     Object.keys(clientErrors).length === 0;
   const isStaleWriteOpen =
     result?.outcome === 'staleWrite' && result !== dismissed;
-  const saveError =
-    result?.outcome === 'error' || result?.outcome === 'notFound'
-      ? result.message
-      : null;
+  const saveError = resolveSaveError(result);
 
   // Handlers
   const saveIfAllowed = (): void => {
@@ -103,7 +101,9 @@ export const useBlogPostEditor = (
     }
   };
 
-  const dismissStaleWrite = (): void => setDismissed(result);
+  const dismissStaleWrite = (): void => {
+    return setDismissed(result);
+  };
 
   const reload = (): void => {
     setDismissed(result);

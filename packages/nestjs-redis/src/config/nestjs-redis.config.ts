@@ -1,7 +1,8 @@
 import { registerAs } from '@nestjs/config';
 
-const parseBoolean = (value: string | undefined): boolean =>
-  value === 'true' || value === '1';
+const parseBoolean = (value: string | undefined): boolean => {
+  return value === 'true' || value === '1';
+};
 
 interface RedisConfig {
   host: string;

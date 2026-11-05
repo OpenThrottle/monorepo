@@ -14,7 +14,9 @@ describe('PullRequestStats Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <PullRequestStats {...props} />;
+    const Component = () => {
+      return <PullRequestStats {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

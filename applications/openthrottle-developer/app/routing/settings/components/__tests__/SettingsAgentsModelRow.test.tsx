@@ -9,11 +9,13 @@ import { SettingsAgentsModelRow } from '../SettingsAgentsModelRow';
 const renderRow = (
   props: React.ComponentProps<typeof SettingsAgentsModelRow>,
 ) => {
-  const Component = () => (
-    <TooltipProvider>
-      <SettingsAgentsModelRow {...props} />
-    </TooltipProvider>
-  );
+  const Component = () => {
+    return (
+      <TooltipProvider>
+        <SettingsAgentsModelRow {...props} />
+      </TooltipProvider>
+    );
+  };
   const RoutesStub = createRoutesStub([
     { Component, path: '/' },
     { action: () => ({ ok: true }), path: '/resources/agent-model-enabled' },

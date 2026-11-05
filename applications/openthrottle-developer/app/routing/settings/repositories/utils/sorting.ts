@@ -2,10 +2,11 @@ import type {
   RepositoriesSortBy,
   RepositoriesSortOrder,
 } from '~/routing/settings/repositories/config/repositories.defaults';
-import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/data/types';
+import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/types';
 
-const checkoutCount = (row: RepositoryCheckoutRow): number =>
-  1 + (row.children?.length ?? 0);
+const checkoutCount = (row: RepositoryCheckoutRow): number => {
+  return 1 + (row.children?.length ?? 0);
+};
 
 const compareRows = (
   a: RepositoryCheckoutRow,
@@ -51,14 +52,15 @@ export function sortRepositoryRows(
     (a, b) => direction * compareRows(a, b, sortBy),
   );
 
-  return sorted.map((row) =>
-    row.children
-      ? {
-          ...row,
-          children: [...row.children].sort(
-            (a, b) => direction * compareRows(a, b, sortBy),
-          ),
-        }
-      : row,
-  );
+  return sorted.map((row) => {
+    if (!row.children) {
+      return row;
+    }
+
+    const children = [...row.children].sort(
+      (a, b) => direction * compareRows(a, b, sortBy),
+    );
+
+    return { ...row, children };
+  });
 }

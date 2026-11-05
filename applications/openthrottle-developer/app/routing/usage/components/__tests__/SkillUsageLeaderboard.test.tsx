@@ -8,35 +8,37 @@ import {
   SKILL_PRESENCE,
   SKILL_PRESENCE_LABELS,
   SKILL_PRESENCE_TOOLTIPS,
-} from '../../data/skill-presence';
+} from '../../data/data.skill-presence';
 import {
   SKILL_USAGE_COPY,
   SKILL_USAGE_SCOPES,
-} from '../../data/skill-usage-copy';
+} from '../../data/data.skill-usage-copy';
 import type { SkillUsageRowWithPresence } from '../../utils/partition-skill-usage-by-presence';
 import type { SkillUsageLeaderboardProps } from '../SkillUsageLeaderboard';
 import { SkillUsageLeaderboard } from '../SkillUsageLeaderboard';
 
 const buildBySkill = (
   overrides: Partial<SkillUsageRowWithPresence>,
-): SkillUsageRowWithPresence => ({
-  abandonedCount: 0,
-  avgDurationMs: null,
-  count: 1,
-  errorCount: 0,
-  outcomeCount: 0,
-  presence: SKILL_PRESENCE.INSTALLED,
-  scope: SKILL_USAGE_SCOPES.OURS,
-  sessionEndedCount: 0,
-  skillName: 'ot-plans',
-  successCount: 0,
-  ...overrides,
-});
+): SkillUsageRowWithPresence => {
+  return {
+    abandonedCount: 0,
+    avgDurationMs: null,
+    count: 1,
+    errorCount: 0,
+    outcomeCount: 0,
+    presence: SKILL_PRESENCE.INSTALLED,
+    scope: SKILL_USAGE_SCOPES.OURS,
+    sessionEndedCount: 0,
+    skillName: 'ot-plans',
+    successCount: 0,
+    ...overrides,
+  };
+};
 
 const renderComponent = (props: SkillUsageLeaderboardProps): RenderResult => {
-  const Component = (): React.ReactElement => (
-    <SkillUsageLeaderboard {...props} />
-  );
+  const Component = (): React.ReactElement => {
+    return <SkillUsageLeaderboard {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

@@ -28,10 +28,11 @@ export const resolveNoteAuthor = (
   inputAuthor: string | null | undefined,
   clsUser: GlobalClsUser | undefined,
   principal: AuthPrincipal | undefined,
-): string | null =>
-  firstNonBlank(
+): string | null => {
+  return firstNonBlank(
     inputAuthor,
     clsUser?.displayName,
     principal != null && 'email' in principal ? principal.email : null,
     principal?.sub,
   );
+};

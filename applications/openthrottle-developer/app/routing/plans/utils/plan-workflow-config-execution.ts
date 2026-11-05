@@ -8,5 +8,6 @@ export const EXECUTION_BACKENDS = [
 
 export const isExecutionBackend = (
   value: string,
-): value is WorkflowRalphExecutionBackendUi =>
-  EXECUTION_BACKENDS.some((backend) => backend === value);
+): value is WorkflowRalphExecutionBackendUi => {
+  return EXECUTION_BACKENDS.some((backend) => backend === value);
+};

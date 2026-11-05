@@ -69,10 +69,14 @@ export default function Component(
   // Hooks
 
   // Setup
+  const hasDescription = generator.description !== '';
 
   // Handlers
 
   // Markup
+  const description = (
+    <p className="text-muted-foreground text-sm">{generator.description}</p>
+  );
 
   // Life Cycle
 
@@ -88,11 +92,7 @@ export default function Component(
           title={generator.name}
         />
 
-        {generator.description !== '' ? (
-          <p className="text-muted-foreground text-sm">
-            {generator.description}
-          </p>
-        ) : null}
+        {hasDescription ? description : null}
       </div>
 
       <Tabs className="w-full" defaultValue="documentation">

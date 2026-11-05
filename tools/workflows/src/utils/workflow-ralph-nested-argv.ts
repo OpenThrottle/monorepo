@@ -139,18 +139,13 @@ export const buildWorkflowRalphRunTuningArgv = (
       break;
   }
 
-  const worktree =
-    input.worktree === null || input.worktree === undefined
-      ? undefined
-      : input.worktree;
+  const worktree = input.worktree ?? undefined;
+  const worktreeBase = input.worktreeBase ?? undefined;
 
   ralphArgs.push(
     ...buildWorktreeNestedArgv(worktree, {
       skipWorktreeSetup: input.skipWorktreeSetup === true,
-      worktreeBase:
-        input.worktreeBase === null || input.worktreeBase === undefined
-          ? undefined
-          : input.worktreeBase,
+      worktreeBase,
     }),
   );
 

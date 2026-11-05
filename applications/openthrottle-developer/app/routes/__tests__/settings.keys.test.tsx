@@ -50,13 +50,15 @@ describe('routes/settings.keys.tsx', () => {
   });
 
   describe('loader', () => {
-    const loaderArgs = (url: string): Route.LoaderArgs => ({
-      context: createTestRouterContext(),
-      params: {},
-      pattern: '/settings/keys',
-      request: new Request(url),
-      url: new URL(url),
-    });
+    const loaderArgs = (url: string): Route.LoaderArgs => {
+      return {
+        context: createTestRouterContext(),
+        params: {},
+        pattern: '/settings/keys',
+        request: new Request(url),
+        url: new URL(url),
+      };
+    };
 
     test('returns empty data when no service accounts exist', async () => {
       mockExecuteGraphqlWithAuth.mockResolvedValue({
@@ -117,16 +119,18 @@ describe('routes/settings.keys.tsx', () => {
   });
 
   describe('action', () => {
-    const actionArgs = (formData: FormData): Route.ActionArgs => ({
-      context: createTestRouterContext(),
-      params: {},
-      pattern: '/settings/keys',
-      request: new Request('http://localhost/settings/keys', {
-        body: formData,
-        method: 'POST',
-      }),
-      url: new URL('http://localhost/settings/keys'),
-    });
+    const actionArgs = (formData: FormData): Route.ActionArgs => {
+      return {
+        context: createTestRouterContext(),
+        params: {},
+        pattern: '/settings/keys',
+        request: new Request('http://localhost/settings/keys', {
+          body: formData,
+          method: 'POST',
+        }),
+        url: new URL('http://localhost/settings/keys'),
+      };
+    };
 
     test('createCredential passes optional label and expiresAt to mutation', async () => {
       mockExecuteGraphqlWithAuth.mockResolvedValue({

@@ -6,17 +6,19 @@ import {
 } from './agents-chat-footer';
 import type { ChatTurnResult } from './types';
 
-const baseTurn = (): ChatTurnResult => ({
-  assistantText: 'ok',
-  conversationId: null,
-  errorMessage: null,
-  mcpTool: null,
-  readOnlyAgentsChat: true,
-  routingConfidence: null,
-  routingReason: null,
-  structuredPayloadJson: null,
-  toolMetadataJson: null,
-});
+const baseTurn = (): ChatTurnResult => {
+  return {
+    assistantText: 'ok',
+    conversationId: null,
+    errorMessage: null,
+    mcpTool: null,
+    readOnlyAgentsChat: true,
+    routingConfidence: null,
+    routingReason: null,
+    structuredPayloadJson: null,
+    toolMetadataJson: null,
+  };
+};
 
 describe('buildAgentsChatAssistantFooter', () => {
   test('returns null when there is no routing metadata', () => {

@@ -35,20 +35,22 @@ describe('SelectScrollDownButton Component', () => {
   });
 
   test('should render inside SelectContent when the viewport can scroll', async () => {
-    const Component = () => (
-      <Select defaultOpen={true}>
-        <SelectTrigger>
-          <SelectValue placeholder="Pick" />
-        </SelectTrigger>
-        <SelectContent>
-          {Array.from({ length: 20 }, (_, index) => (
-            <SelectItem key={index} value={String(index)}>
-              Option {index}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    );
+    const Component = () => {
+      return (
+        <Select defaultOpen={true}>
+          <SelectTrigger>
+            <SelectValue placeholder="Pick" />
+          </SelectTrigger>
+          <SelectContent>
+            {Array.from({ length: 20 }, (_, index) => (
+              <SelectItem key={index} value={String(index)}>
+                Option {index}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 

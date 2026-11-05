@@ -14,7 +14,9 @@ describe('RolloutFlagAllocationEditor Component', () => {
   let props: RolloutFlagAllocationEditorProps;
 
   const setup = (): void => {
-    const Component = () => <RolloutFlagAllocationEditor {...props} />;
+    const Component = () => {
+      return <RolloutFlagAllocationEditor {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
   };

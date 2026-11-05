@@ -14,4 +14,6 @@ const KNOWN_EVENT_NAMES = new Set<string>(
 
 export const isNotificationEventName = (
   value: string,
-): value is NotificationEventName => KNOWN_EVENT_NAMES.has(value);
+): value is NotificationEventName => {
+  return KNOWN_EVENT_NAMES.has(value);
+};

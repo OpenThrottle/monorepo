@@ -119,8 +119,9 @@ export const resolveVariant = (
 /**
  * @public Resolve a variant by episode id, defaulting to the one that ships.
  */
-export const getVariant = (id: string, variantId?: string): Variant =>
-  resolveVariant(getEpisode(id), variantId);
+export const getVariant = (id: string, variantId?: string): Variant => {
+  return resolveVariant(getEpisode(id), variantId);
+};
 
 /**
  * @public Episodes in release order — the order the season ships in.
@@ -128,7 +129,8 @@ export const getVariant = (id: string, variantId?: string): Variant =>
  * `release.order` is the authority; any human-readable list of the running order
  * is a copy of this and can be wrong.
  */
-export const episodesInReleaseOrder = (): readonly VideoEpisode[] =>
-  Object.values(EPISODES).sort(
+export const episodesInReleaseOrder = (): readonly VideoEpisode[] => {
+  return Object.values(EPISODES).sort(
     (left, right) => left.release.order - right.release.order,
   );
+};

@@ -33,10 +33,42 @@ export const NativeBrowse = (props: NativeBrowseProps): React.ReactElement => {
   // Hooks
 
   // Setup
+  const { browseButton, pickerLoading } = WORKSPACE_FOLDERS_COPY;
+  const browseLabel = isPicking ? pickerLoading : browseButton;
 
   // Handlers
 
   // Markup
+  const errorAlert = (
+    <p className="text-destructive text-sm" role="alert">
+      {pickError}
+    </p>
+  );
+  const pickedPanel = (
+    <>
+      <div className="flex flex-col gap-2 rounded-md border p-3">
+        <div className="min-w-0">
+          <p className="text-muted-foreground text-xs">
+            {WORKSPACE_FOLDERS_COPY.nativePickedPrefix}
+          </p>
+          <p className="truncate font-mono text-sm">{pickedPath}</p>
+        </div>
+      </div>
+
+      <div className="flex shrink-0 flex-wrap items-center gap-2">
+        <Button onClick={onClearPicked} size="sm" type="button" variant="ghost">
+          {WORKSPACE_FOLDERS_COPY.nativePickAgain}
+        </Button>
+        <Form method="post">
+          <input name="intent" type="hidden" value="addFolder" />
+          <input name="path" type="hidden" value={pickedPath ?? ''} />
+          <Button disabled={isAdding} size="sm" type="submit">
+            {WORKSPACE_FOLDERS_COPY.addFolderButton}
+          </Button>
+        </Form>
+      </div>
+    </>
+  );
 
   // Life Cycle
 
@@ -46,50 +78,15 @@ export const NativeBrowse = (props: NativeBrowseProps): React.ReactElement => {
     <div className="space-y-2" data-testid="NativeBrowse">
       <Button disabled={isPicking} onClick={onPickNative} type="button">
         <FolderSearchIcon aria-hidden={true} className="size-4" />
-        {isPicking
-          ? WORKSPACE_FOLDERS_COPY.pickerLoading
-          : WORKSPACE_FOLDERS_COPY.browseButton}
+        {browseLabel}
       </Button>
       <p className="text-muted-foreground text-xs">
         {WORKSPACE_FOLDERS_COPY.browseNativeHint}
       </p>
 
-      {pickError ? (
-        <p className="text-destructive text-sm" role="alert">
-          {pickError}
-        </p>
-      ) : null}
+      {pickError ? errorAlert : null}
 
-      {pickedPath ? (
-        <>
-          <div className="flex flex-col gap-2 rounded-md border p-3">
-            <div className="min-w-0">
-              <p className="text-muted-foreground text-xs">
-                {WORKSPACE_FOLDERS_COPY.nativePickedPrefix}
-              </p>
-              <p className="truncate font-mono text-sm">{pickedPath}</p>
-            </div>
-          </div>
-
-          <div className="flex shrink-0 flex-wrap items-center gap-2">
-            <Button
-              onClick={onClearPicked}
-              size="sm"
-              type="button"
-              variant="ghost"
-            >
-              {WORKSPACE_FOLDERS_COPY.nativePickAgain}
-            </Button>
-            <Form method="post">
-              <input name="intent" type="hidden" value="addFolder" />
-              <input name="path" type="hidden" value={pickedPath} />
-              <Button disabled={isAdding} size="sm" type="submit">
-                {WORKSPACE_FOLDERS_COPY.addFolderButton}
-              </Button>
-            </Form>
-          </div>
-        </>
-      ) : null}
+      {pickedPath ? pickedPanel : null}
     </div>
   );
 };

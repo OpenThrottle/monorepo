@@ -45,6 +45,17 @@ export const LandingHero = (props: LandingHeroProps): React.ReactElement => {
   // Handlers
 
   // Markup
+  const outgoingHeadline = (
+    <span
+      aria-hidden="true"
+      className={cn(
+        'landing-headline-fade col-start-1 row-start-1',
+        incomingVisible ? 'opacity-0' : 'opacity-100',
+      )}
+    >
+      {outgoing}
+    </span>
+  );
 
   // Life Cycle
 
@@ -68,17 +79,7 @@ export const LandingHero = (props: LandingHeroProps): React.ReactElement => {
             style={headlineButtonStyle}
             type="button"
           >
-            {outgoing ? (
-              <span
-                aria-hidden="true"
-                className={cn(
-                  'landing-headline-fade col-start-1 row-start-1',
-                  incomingVisible ? 'opacity-0' : 'opacity-100',
-                )}
-              >
-                {outgoing}
-              </span>
-            ) : null}
+            {outgoing ? outgoingHeadline : null}
             <span
               aria-live="polite"
               className={cn(

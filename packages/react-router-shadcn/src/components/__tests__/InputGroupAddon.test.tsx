@@ -14,7 +14,9 @@ describe('InputGroupAddon Component', () => {
   beforeEach(() => {
     props = { children: 'Addon' };
 
-    const Component = () => <InputGroupAddon {...props} />;
+    const Component = () => {
+      return <InputGroupAddon {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

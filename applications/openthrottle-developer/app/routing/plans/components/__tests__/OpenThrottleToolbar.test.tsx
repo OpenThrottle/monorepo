@@ -6,8 +6,9 @@ import { describe, expect, test } from 'vitest';
 import type { OpenThrottleToolbarProps } from '../OpenThrottleToolbar';
 import { OpenThrottleToolbar } from '../OpenThrottleToolbar';
 
-const renderToolbar = (props: OpenThrottleToolbarProps): RenderResult =>
-  render(<OpenThrottleToolbar {...props} />);
+const renderToolbar = (props: OpenThrottleToolbarProps): RenderResult => {
+  return render(<OpenThrottleToolbar {...props} />);
+};
 
 describe('OpenThrottleToolbar Component', () => {
   test('renders each provided slot', () => {

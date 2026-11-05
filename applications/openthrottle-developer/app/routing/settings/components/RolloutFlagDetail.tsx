@@ -34,10 +34,23 @@ export const RolloutFlagDetail = (
   // Hooks
 
   // Setup
+  const hasTargetRoles = flag.targetRoles.length > 0;
 
   // Handlers
 
   // Markup
+  const untargetedRoles = (
+    <span className="text-sm">Everyone (untargeted)</span>
+  );
+  const targetRoleBadges = (
+    <div className="flex flex-wrap gap-1">
+      {flag.targetRoles.map((role) => (
+        <Badge key={role} variant="outline">
+          {role}
+        </Badge>
+      ))}
+    </div>
+  );
 
   // Life Cycle
 
@@ -97,17 +110,7 @@ export const RolloutFlagDetail = (
           <p className="text-muted-foreground text-xs">
             {ROLLOUT_COPY.targetRolesLabel}
           </p>
-          {flag.targetRoles.length === 0 ? (
-            <span className="text-sm">Everyone (untargeted)</span>
-          ) : (
-            <div className="flex flex-wrap gap-1">
-              {flag.targetRoles.map((role) => (
-                <Badge key={role} variant="outline">
-                  {role}
-                </Badge>
-              ))}
-            </div>
-          )}
+          {hasTargetRoles ? targetRoleBadges : untargetedRoles}
         </div>
 
         <div className="text-muted-foreground text-xs">

@@ -2,8 +2,8 @@ import { cn } from '@openthrottle/react-router-shadcn';
 import { useAtom } from 'jotai';
 import * as React from 'react';
 
-import type { EditorFile } from '../data/atom.editor';
-import { editorAtom } from '../data/atom.editor';
+import type { EditorFile } from '../data/data.atom.editor';
+import { editorAtom } from '../data/data.atom.editor';
 import { useEditor } from '../hooks/useEditor';
 import { EditorTab } from './EditorTab';
 

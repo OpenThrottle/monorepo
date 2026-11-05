@@ -45,11 +45,13 @@ const plan: PlanCardFragment = {
 };
 
 const renderRowActions = (actionResult: unknown): RenderResult => {
-  const Component = (): React.ReactElement => (
-    <TooltipProvider>
-      <PlansTableRowActions plan={plan} />
-    </TooltipProvider>
-  );
+  const Component = (): React.ReactElement => {
+    return (
+      <TooltipProvider>
+        <PlansTableRowActions plan={plan} />
+      </TooltipProvider>
+    );
+  };
   const RoutesStub = createRoutesStub([
     { Component, path: '/plans' },
     { action: () => actionResult, path: '/plans/:planId' },

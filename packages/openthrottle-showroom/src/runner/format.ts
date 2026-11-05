@@ -108,8 +108,9 @@ export interface SafeArea {
 }
 
 /** packages/openthrottle-showroom/src/runner -> repository root. */
-export const repositoryRoot = (): string =>
-  join(import.meta.dirname, '..', '..', '..', '..');
+export const repositoryRoot = (): string => {
+  return join(import.meta.dirname, '..', '..', '..', '..');
+};
 
 /**
  * Where every stage writes: `packages/openthrottle-showroom/output/<slug>/`.
@@ -123,8 +124,9 @@ export const repositoryRoot = (): string =>
  *
  * @public
  */
-export const outputRoot = (): string =>
-  join(import.meta.dirname, '..', '..', 'output');
+export const outputRoot = (): string => {
+  return join(import.meta.dirname, '..', '..', 'output');
+};
 
 /**
  * Where an episode's **picture** lives: `output/<slug>/`.
@@ -137,7 +139,9 @@ export const outputRoot = (): string =>
  *
  * @public
  */
-export const captureDir = (slug: string): string => join(outputRoot(), slug);
+export const captureDir = (slug: string): string => {
+  return join(outputRoot(), slug);
+};
 
 /**
  * Where one **take** lives: `output/<slug>/<variant>/`.
@@ -153,8 +157,9 @@ export const captureDir = (slug: string): string => join(outputRoot(), slug);
  *
  * @public
  */
-export const takeDir = (slug: string, variant: string): string =>
-  join(outputRoot(), slug, variant);
+export const takeDir = (slug: string, variant: string): string => {
+  return join(outputRoot(), slug, variant);
+};
 
 /**
  * Structural check on the parsed spec. A malformed or half-edited format.json

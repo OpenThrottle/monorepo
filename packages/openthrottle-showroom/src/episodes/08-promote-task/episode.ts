@@ -15,30 +15,25 @@ import type { VideoEpisode } from '../types.ts';
 export const episode: VideoEpisode = {
   beats: [
     {
-      action:
-        'Task detail open on a seeded task whose description has visibly outgrown one task.',
+      action: `Task detail open on a seeded task whose description has visibly outgrown one task.`,
       t: '0:00',
     },
     { action: 'Scroll the long description.', t: '0:08' },
     {
-      action:
-        'Click **Promote to Plan** in the task toolbar; confirm in the dialog; the queued toast shows.',
+      action: `Click **Promote to Plan** in the task toolbar; confirm in the dialog; the queued toast shows.`,
       t: '0:16',
     },
     {
-      action:
-        "Cut to `/plans`; the new plan is the top row. Open it — the task's title and description carried over.",
+      action: `Cut to \`/plans\`; the new plan is the top row. Open it — the task's title and description carried over.`,
       t: '0:21',
     },
     {
-      action:
-        'Back on the original task: PROMOTED, with a note naming the new plan.',
+      action: `Back on the original task: PROMOTED, with a note naming the new plan.`,
       t: '0:31',
     },
     { action: 'Highlight the provenance note.', t: '0:41' },
     {
-      action:
-        'Open the new plan\'s tasks: the seed task "Break down and scope this plan" is already waiting.',
+      action: `Open the new plan's tasks: the seed task "Break down and scope this plan" is already waiting.`,
       t: '0:48',
     },
     { action: 'Outro card.', t: '0:54' },

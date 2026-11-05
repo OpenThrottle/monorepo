@@ -121,3 +121,15 @@ export const clampAgentConversationMessagesLimit = (
   const resolved = limit ?? AGENT_CONVERSATION_MESSAGES_DEFAULT_LIMIT;
   return Math.min(Math.max(resolved, 1), AGENT_CONVERSATION_MESSAGES_MAX_LIMIT);
 };
+
+/**
+ * @description Reads the `MAX(sortOrder)` raw query result as a number; a missing row, `null` or empty string is 0.
+ */
+export const resolveCurrentMaxSortOrder = (
+  result: { max: string | null } | undefined,
+): number => {
+  if (result?.max == null || result.max === '') {
+    return 0;
+  }
+  return Number(result.max);
+};

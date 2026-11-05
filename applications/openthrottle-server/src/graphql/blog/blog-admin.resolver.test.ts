@@ -210,8 +210,8 @@ describe('BlogAdminResolver', () => {
     const contextFor = (
       method: (typeof OPERATIONS)[number],
       req: { headers?: object; user?: unknown },
-    ): ExecutionContext =>
-      createMock<ExecutionContext>({
+    ): ExecutionContext => {
+      return createMock<ExecutionContext>({
         getClass: vi.fn().mockReturnValue(BlogAdminResolver),
         getHandler: vi
           .fn()
@@ -219,6 +219,7 @@ describe('BlogAdminResolver', () => {
         getType: vi.fn().mockReturnValue('http'),
         switchToHttp: vi.fn().mockReturnValue({ getRequest: () => req }),
       });
+    };
 
     /** What the app's `APP_GUARD` + the resolver's `@UseGuards` do, in order. */
     const runGuards = async (

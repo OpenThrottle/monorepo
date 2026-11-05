@@ -28,6 +28,7 @@ import type { Route } from '@/app/routes/+types/roles._index';
 import { CreateRoleDocument, GetRolesDocument } from '~/__generated__/graphql';
 import { CreateRoleInputSchema } from '~/__generated__/schemas';
 import { SITE_TITLE } from '~/global/config/settings';
+import { readActionError } from '~/global/utils/read-action-error';
 import { RolesTable } from '~/routing/roles/components/RolesTable';
 
 type HandleData = Route.ComponentProps['loaderData'];
@@ -72,6 +73,7 @@ export default function Component(
   // Setup
   const roles = loaderData?.roles ?? [];
   const CreateRoleForm = createFetcher.Form;
+  const createError = readActionError(createFetcher.data);
 
   const createSuccess =
     actionData != null && 'ok' in actionData && actionData.ok === true;
@@ -79,6 +81,11 @@ export default function Component(
   // Handlers
 
   // Markup
+  const createErrorMarkup = (
+    <p className="text-destructive text-sm" role="alert">
+      {createError}
+    </p>
+  );
 
   // Life Cycle
   React.useEffect(() => {
@@ -137,11 +144,7 @@ export default function Component(
                   />
                 </div>
               </div>
-              {createFetcher.data != null && 'error' in createFetcher.data ? (
-                <p className="text-destructive text-sm" role="alert">
-                  {createFetcher.data.error}
-                </p>
-              ) : null}
+              {createError === null ? null : createErrorMarkup}
               <div className="flex justify-end gap-2">
                 <Button
                   onClick={() => setCreateOpen(false)}

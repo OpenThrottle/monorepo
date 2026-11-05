@@ -31,8 +31,7 @@ export const episode: VideoEpisode = {
       t: '0:31',
     },
     {
-      action:
-        'Cut to the dashboard, authenticated, seeded data already visible.',
+      action: `Cut to the dashboard, authenticated, seeded data already visible.`,
       t: '0:39',
     },
     { action: 'Hold on the dashboard.', t: '0:48' },

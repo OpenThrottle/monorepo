@@ -23,7 +23,9 @@ const renderStats = (
     ...overrides,
   };
 
-  const Component = () => <ScheduleStats {...props} />;
+  const Component = () => {
+    return <ScheduleStats {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

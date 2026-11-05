@@ -4,7 +4,7 @@ import * as React from 'react';
 
 import type { Route } from '@/app/routes/+types/docs._index';
 import { SITE_TITLE } from '~/global/config/settings';
-import { indexEntry } from '~/routing/docs/data/docs-navigation';
+import { indexEntry } from '~/routing/docs/data/data.docs-navigation';
 
 export const meta = (_args: Route.MetaArgs) => {
   return [{ title: `Docs | ${SITE_TITLE}` }];

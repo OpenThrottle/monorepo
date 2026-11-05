@@ -1,6 +1,7 @@
 export const MESSAGE_ON_CANCEL = `\n 👋 Operation canceled, another time maybe 👋\n`;
 
-export const onApplicationSuccess = (name: string) => `
+export const onApplicationSuccess = (name: string) => {
+  return `
 ----------------------------------------------------------------------
 
 🚀 Application created 🚀
@@ -20,3 +21,4 @@ export const onApplicationSuccess = (name: string) => `
 
 ----------------------------------------------------------------------
 `;
+};

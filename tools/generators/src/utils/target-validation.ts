@@ -93,10 +93,8 @@ export const throwInvalidDestinationError = async (
   const destinations = listProjectsByTag(nodes, TAG_REACT);
   const match = resolveProject(nodes, destination);
 
-  const didYouMean =
-    match && match.tags.includes(TAG_REACT)
-      ? ` Did you mean "${match.name}"?`
-      : '';
+  const isReactMatch = match !== undefined && match.tags.includes(TAG_REACT);
+  const didYouMean = isReactMatch ? ` Did you mean "${match.name}"?` : '';
 
   return throwGeneratorError({
     code: 'invalid_option',
@@ -128,11 +126,13 @@ export const throwInvalidFolderError = ({
   const isRepoRelative =
     folder.startsWith('applications/') || folder.startsWith('/');
 
-  const hint = isPackagePath
-    ? `"${folder}" is a path inside packages/. @tools/generators:react-router only writes under applications/${application}/app. Use: ${PREFIX}:react --subGenerator=component --destination=<package> --name=<Name>`
-    : isRepoRelative
-      ? `--folder is relative to applications/${application}/app, not the repo root. Enumerate valid values with: ${PREFIX}:react-router --list=${listKey} --application=${application}`
-      : `Enumerate valid values with: ${PREFIX}:react-router --list=${listKey} --application=${application}`;
+  const listHint = `Enumerate valid values with: ${PREFIX}:react-router --list=${listKey} --application=${application}`;
+  let hint = listHint;
+  if (isPackagePath) {
+    hint = `"${folder}" is a path inside packages/. @tools/generators:react-router only writes under applications/${application}/app. Use: ${PREFIX}:react --subGenerator=component --destination=<package> --name=<Name>`;
+  } else if (isRepoRelative) {
+    hint = `--folder is relative to applications/${application}/app, not the repo root. ${listHint}`;
+  }
 
   return throwGeneratorError({
     code: isPackagePath ? 'wrong_generator' : 'invalid_option',

@@ -58,10 +58,29 @@ export const ChatCheckoutSelectorTrigger = React.forwardRef<
 
   // Setup
   const hasBranch = branch != null && branch !== '';
+  const showOverflow = !minimal && secondaryCount > 0;
+  const showBranch = !minimal && hasBranch;
 
   // Handlers
 
   // Markup
+  const overflowNode = (
+    <span
+      className="text-muted-foreground shrink-0 text-xs"
+      data-testid="ChatCheckoutSelector-overflow"
+    >
+      {`+${secondaryCount}`}
+    </span>
+  );
+  const branchNode = (
+    <span
+      className="text-muted-foreground flex shrink-0 items-center gap-1 text-xs"
+      data-testid="ChatCheckoutSelector-branch"
+    >
+      <GitBranch className="size-3" />
+      {branch}
+    </span>
+  );
 
   // Life Cycle
 
@@ -86,23 +105,8 @@ export const ChatCheckoutSelectorTrigger = React.forwardRef<
     >
       <FolderGit2 className="size-4 shrink-0 opacity-70" />
       {minimal ? null : <span className="truncate">{label}</span>}
-      {!minimal && secondaryCount > 0 ? (
-        <span
-          className="text-muted-foreground shrink-0 text-xs"
-          data-testid="ChatCheckoutSelector-overflow"
-        >
-          {`+${secondaryCount}`}
-        </span>
-      ) : null}
-      {!minimal && hasBranch ? (
-        <span
-          className="text-muted-foreground flex shrink-0 items-center gap-1 text-xs"
-          data-testid="ChatCheckoutSelector-branch"
-        >
-          <GitBranch className="size-3" />
-          {branch}
-        </span>
-      ) : null}
+      {showOverflow ? overflowNode : null}
+      {showBranch ? branchNode : null}
     </Button>
   );
 });

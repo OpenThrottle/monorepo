@@ -3,6 +3,7 @@ import { formatFiles, logger } from '@nx/devkit';
 import { join } from 'path';
 import prompts from 'prompts';
 
+import { askWhenInteractive } from '../../utils/ask-when-interactive.ts';
 import { generateFilesSafely } from '../../utils/generate-files-safely.ts';
 import {
   getCommonVariables,
@@ -62,8 +63,10 @@ export const generatorReactRouterModal = async (
 
   const folder =
     schema.folder ??
-    (interactive
-      ? (
+    (await askWhenInteractive(
+      interactive,
+      async () =>
+        (
           await prompts({
             choices: [...choicesGlobal, ...choicesRouting],
             // choices: [...choicesGlobal, ...choicesRouting, ...choicesServices],
@@ -71,8 +74,8 @@ export const generatorReactRouterModal = async (
             name: 'folder',
             type: 'select',
           })
-        ).folder
-      : undefined);
+        ).folder,
+    ));
 
   if (!folder) throw new Error('No folder selected');
   if (!allowedFolders.includes(folder)) {

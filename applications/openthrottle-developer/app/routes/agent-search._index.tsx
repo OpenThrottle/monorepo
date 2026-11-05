@@ -18,11 +18,11 @@ import { AgentSearchIntroduction } from '~/routing/agent-search/components/Agent
 import { AgentSearchTabs } from '~/routing/agent-search/components/AgentSearchTabs';
 import { AGENT_SEARCH_LIMIT } from '~/routing/agent-search/config';
 import { AGENT_SEARCH_COPY } from '~/routing/agent-search/data/data.copy';
-import { EMPTY_COUNTS } from '~/routing/agent-search/data/empty-counts';
+import { EMPTY_COUNTS } from '~/routing/agent-search/data/data.empty-counts';
 import {
   GQL_TO_PROMPT_TYPE,
   PROMPT_TYPE_TO_GQL,
-} from '~/routing/agent-search/data/prompt-type-maps';
+} from '~/routing/agent-search/data/data.prompt-type-maps';
 import {
   AGENT_ASSET_PROMPT_TYPES,
   type AgentAssetResult,
@@ -90,9 +90,9 @@ export const loader = async (args: Route.LoaderArgs) => {
   let usedDiskFallback = false;
   if (results.length === 0) {
     const { diskFallbackSearch } =
-      await import('~/routing/agent-search/data/disk-fallback.server');
+      await import('~/routing/agent-search/utils/disk-fallback.server');
     const { getMonorepoRoot } =
-      await import('~/routing/agents/data/resolve-monorepo-root.server');
+      await import('~/routing/agents/utils/resolve-monorepo-root.server');
 
     results = diskFallbackSearch(
       trimmed,
@@ -147,6 +147,17 @@ export default function Component(
   // Handlers
 
   // Markup
+  const diskNotice = (
+    <p
+      className="text-muted-foreground px-4 text-xs"
+      data-testid="AgentSearch-diskNotice"
+    >
+      {AGENT_SEARCH_COPY.diskFallbackNotice}
+    </p>
+  );
+  const resultCards = results.map((result) => (
+    <AgentAssetCard className="bg-card" key={result.id} result={result} />
+  ));
 
   // Life Cycle
 
@@ -161,26 +172,9 @@ export default function Component(
         tab={tab}
       />
       <AgentSearchTabs counts={counts} tab={tab} />
-      {usedDiskFallback ? (
-        <p
-          className="text-muted-foreground px-4 text-xs"
-          data-testid="AgentSearch-diskNotice"
-        >
-          {AGENT_SEARCH_COPY.diskFallbackNotice}
-        </p>
-      ) : null}
+      {usedDiskFallback ? diskNotice : null}
       <div className="flex flex-col gap-4 p-4">
-        {showEmpty ? (
-          <AgentSearchEmpty />
-        ) : (
-          results.map((result) => (
-            <AgentAssetCard
-              className="bg-card"
-              key={result.id}
-              result={result}
-            />
-          ))
-        )}
+        {showEmpty ? <AgentSearchEmpty /> : resultCards}
       </div>
     </GlobalScreen>
   );

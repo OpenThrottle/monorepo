@@ -28,8 +28,9 @@ const INSTALL_HINT = `Install with: uv tool install piper-tts\nDownload the voic
 /**
  * @description Default directory for onnx + json voice files (outside git).
  */
-export const defaultPiperDataDir = (): string =>
-  join(homedir(), '.local', 'share', 'piper', 'voices');
+export const defaultPiperDataDir = (): string => {
+  return join(homedir(), '.local', 'share', 'piper', 'voices');
+};
 
 /**
  * @description Binary used to render. `PIPER_BIN` wins; otherwise `piper` on PATH.

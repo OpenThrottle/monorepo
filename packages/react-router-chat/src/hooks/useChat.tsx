@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import type { ChatContextValue } from '../context/chat-context';
-import { ChatContext } from '../data/chat-context';
+import { ChatContext } from '../data/data.chat-context';
 
 /**
  * @description Reads chat state from {@link ChatProvider}; throws when used outside the provider.

@@ -20,6 +20,7 @@ import { SITE_TITLE } from '~/global/config/settings';
 import { PromptCreateForm } from '~/routing/prompts/components/PromptCreateForm';
 import { PROMPTS_BASE_PATH } from '~/routing/prompts/config';
 import { usePromptCreateForm } from '~/routing/prompts/hooks/usePromptCreateForm';
+import { splitCommaLabels } from '~/routing/prompts/utils/split-comma-labels';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -77,16 +78,7 @@ export const action = async (args: Route.ActionArgs) => {
     CreateCustomPromptInputSchema()
       .omit({ promptType: true, writeToFileSystem: true })
       .extend({
-        labels: z.preprocess(
-          (value) =>
-            typeof value === 'string'
-              ? value
-                  .split(',')
-                  .map((label) => label.trim())
-                  .filter((label) => label.length > 0)
-              : [],
-          z.array(z.string().min(1)),
-        ),
+        labels: z.preprocess(splitCommaLabels, z.array(z.string().min(1))),
       }),
     { allow: ['intent', 'promptType'] },
   );

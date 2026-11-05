@@ -1,7 +1,7 @@
 import { Badge, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import type { ExportedSymbol } from '../data/view-models';
+import type { ExportedSymbol } from '../data/data.view-models';
 
 export interface SymbolRowProps {
   className?: string;

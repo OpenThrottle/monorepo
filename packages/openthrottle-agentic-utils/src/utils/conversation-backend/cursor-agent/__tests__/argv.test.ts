@@ -7,8 +7,9 @@ import { buildCursorAgentArgv } from '../argv.ts';
 const valueAfter = (
   argv: readonly string[],
   flag: string,
-): string | undefined =>
-  argv.includes(flag) ? argv[argv.indexOf(flag) + 1] : undefined;
+): string | undefined => {
+  return argv.includes(flag) ? argv[argv.indexOf(flag) + 1] : undefined;
+};
 
 describe('buildCursorAgentArgv', () => {
   it('emits the verified headless+stream+resume flags with the prompt last', () => {

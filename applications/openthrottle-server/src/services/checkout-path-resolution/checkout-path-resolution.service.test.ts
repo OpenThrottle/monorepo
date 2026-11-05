@@ -30,8 +30,8 @@ type CheckoutOverrides = Partial<
   Pick<RepositoryCheckout, 'filesystemPath' | 'id' | 'kind' | 'repositoryId'>
 >;
 
-const checkout = (overrides: CheckoutOverrides = {}): RepositoryCheckout =>
-  createMock<RepositoryCheckout>({
+const checkout = (overrides: CheckoutOverrides = {}): RepositoryCheckout => {
+  return createMock<RepositoryCheckout>({
     filesystemPath: PRIMARY,
     id: 'checkout-primary',
     kind: 'primary',
@@ -39,6 +39,7 @@ const checkout = (overrides: CheckoutOverrides = {}): RepositoryCheckout =>
     userId: USER,
     ...overrides,
   });
+};
 
 /** Only checkouts owned by `userId` are ever returned, exactly like the real user-scoped query. */
 const buildService = (

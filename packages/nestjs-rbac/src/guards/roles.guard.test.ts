@@ -115,7 +115,9 @@ describe('RolesGuard', () => {
     });
 
     it('honors class-level metadata when the handler has none', () => {
-      const handler = (): void => undefined;
+      const handler = (): void => {
+        return undefined;
+      };
       const allowCtx = createMockContext(
         { roles: [ROLES.ADMIN] },
         handler,

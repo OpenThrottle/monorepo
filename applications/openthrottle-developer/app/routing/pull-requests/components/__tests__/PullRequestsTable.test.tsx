@@ -47,7 +47,9 @@ describe('PullRequestsTable Component', () => {
       pulls: [],
     };
 
-    const Component = () => <PullRequestsTable {...props} />;
+    const Component = () => {
+      return <PullRequestsTable {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);
@@ -85,7 +87,9 @@ describe('PullRequestsTable Component', () => {
         pulls: [mockPull],
       };
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const Component = () => <PullRequestsTable {...props} />;
+      const Component = () => {
+        return <PullRequestsTable {...props} />;
+      };
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component = render(<RoutesStub />);
     });
@@ -161,7 +165,9 @@ describe('PullRequestsTable Component', () => {
         pulls: [mockPull],
       };
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const Component = () => <PullRequestsTable {...props} />;
+      const Component = () => {
+        return <PullRequestsTable {...props} />;
+      };
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component = render(<RoutesStub />);
 

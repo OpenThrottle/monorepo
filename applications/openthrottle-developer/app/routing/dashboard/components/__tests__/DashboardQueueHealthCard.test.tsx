@@ -11,18 +11,22 @@ import { DashboardQueueHealthCard } from '../DashboardQueueHealthCard';
 
 const queue = (
   overrides: Partial<DashboardQueueStatsCardFragment> & { name: string },
-): DashboardQueueStatsCardFragment => ({
-  __typename: 'QueueStatsObject',
-  activeCount: 0,
-  completedCount: 0,
-  delayedCount: 0,
-  failedCount: 0,
-  waitingCount: 0,
-  ...overrides,
-});
+): DashboardQueueStatsCardFragment => {
+  return {
+    __typename: 'QueueStatsObject',
+    activeCount: 0,
+    completedCount: 0,
+    delayedCount: 0,
+    failedCount: 0,
+    waitingCount: 0,
+    ...overrides,
+  };
+};
 
 const renderCard = (props: DashboardQueueHealthCardProps): RenderResult => {
-  const Component = () => <DashboardQueueHealthCard {...props} />;
+  const Component = () => {
+    return <DashboardQueueHealthCard {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 };

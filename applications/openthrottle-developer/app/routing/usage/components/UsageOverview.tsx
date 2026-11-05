@@ -21,6 +21,21 @@ export const UsageOverview = (
   // Handlers
 
   // Markup
+  const betaPromptBadges = (
+    <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 md:mt-8">
+      <Badge color="yellow" size="xs">
+        <Link to="/prompts?type=AGENTS">Agents-type prompts</Link>
+      </Badge>
+      {' · '}
+      <Badge color="orange" size="xs">
+        <Link to="/prompts?type=SKILLS">Skills-type prompts</Link>
+      </Badge>
+      {' · '}
+      <Badge color="red" size="xs">
+        <Link to="/skills">Repo skill paths</Link>
+      </Badge>
+    </div>
+  );
 
   // Life Cycle
 
@@ -45,21 +60,7 @@ export const UsageOverview = (
         </p>
       </div>
 
-      {FEATURE_BETA_PREVIEW ? (
-        <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 md:mt-8">
-          <Badge color="yellow" size="xs">
-            <Link to="/prompts?type=AGENTS">Agents-type prompts</Link>
-          </Badge>
-          {' · '}
-          <Badge color="orange" size="xs">
-            <Link to="/prompts?type=SKILLS">Skills-type prompts</Link>
-          </Badge>
-          {' · '}
-          <Badge color="red" size="xs">
-            <Link to="/skills">Repo skill paths</Link>
-          </Badge>
-        </div>
-      ) : null}
+      {FEATURE_BETA_PREVIEW ? betaPromptBadges : null}
     </div>
   );
 };

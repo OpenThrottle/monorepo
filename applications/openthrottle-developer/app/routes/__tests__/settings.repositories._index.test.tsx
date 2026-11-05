@@ -7,7 +7,7 @@ import {
   mockCheckout,
   mockDiscoveredWorktree,
   mockRepository,
-} from '~/routing/settings/repositories/data/mock.repositories';
+} from '~/routing/settings/repositories/testing/mock-repositories';
 
 import { action, loader } from '../settings.repositories._index';
 
@@ -230,16 +230,18 @@ describe('routes/settings.repositories._index.tsx', () => {
   });
 
   describe('action', () => {
-    const actionArgs = (formData: FormData): Route.ActionArgs => ({
-      context: createTestRouterContext(),
-      params: {},
-      pattern: '/settings/repositories',
-      request: new Request('http://localhost/settings/repositories', {
-        body: formData,
-        method: 'POST',
-      }),
-      url: new URL('http://localhost/settings/repositories'),
-    });
+    const actionArgs = (formData: FormData): Route.ActionArgs => {
+      return {
+        context: createTestRouterContext(),
+        params: {},
+        pattern: '/settings/repositories',
+        request: new Request('http://localhost/settings/repositories', {
+          body: formData,
+          method: 'POST',
+        }),
+        url: new URL('http://localhost/settings/repositories'),
+      };
+    };
 
     test('addFolder returns error when path is missing', async () => {
       const formData = new FormData();

@@ -158,7 +158,7 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
   const isApiLike = role !== PROCESS_ROLES.worker;
   const isWorkerLike = role !== PROCESS_ROLES.api;
 
-  return [
+  const imports: AppModuleImports = [
     ConfigModule.forRoot({
       envFilePath: ['.env'],
       isGlobal: true,
@@ -178,133 +178,149 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
     NestjsBullmqBoardModule.forRoot({
       enabled: isBullBoardEnabled(),
     }),
-    ...(isApiLike
-      ? [
-          NestjsGraphqlModule.forRoot({
-            // Subscriptions return the NotificationEvent interface, so its
-            // concrete implementing types are orphaned — register them
-            // explicitly so they make it into the schema.
-            buildSchemaOptions: {
-              orphanedTypes: [...NOTIFICATION_EVENT_TYPES],
-            },
-            cachePlugins: {
-              cacheControl: true,
-              responseCache: true,
-            },
-            // HTTP requests carry identity on `req` (set by the global auth
-            // guard). graphql-ws subscriptions carry it on the connection:
-            // onConnect validated the token and stashed the user id on
-            // `extra`, so surface it as `userId`.
-            context: (ctx: { req?: unknown }) =>
-              isGraphqlWsContext(ctx)
-                ? { req: undefined, userId: resolveGraphqlWsUserId(ctx) }
-                : { req: ctx.req },
-          }),
-        ]
-      : []),
+  ];
+
+  if (isApiLike) {
+    imports.push(
+      NestjsGraphqlModule.forRoot({
+        // Subscriptions return the NotificationEvent interface, so its
+        // concrete implementing types are orphaned — register them
+        // explicitly so they make it into the schema.
+        buildSchemaOptions: {
+          orphanedTypes: [...NOTIFICATION_EVENT_TYPES],
+        },
+        cachePlugins: {
+          cacheControl: true,
+          responseCache: true,
+        },
+        // HTTP requests carry identity on `req` (set by the global auth
+        // guard). graphql-ws subscriptions carry it on the connection:
+        // onConnect validated the token and stashed the user id on
+        // `extra`, so surface it as `userId`.
+        context: (ctx: { req?: unknown }) => {
+          if (isGraphqlWsContext(ctx)) {
+            return { req: undefined, userId: resolveGraphqlWsUserId(ctx) };
+          }
+          return { req: ctx.req };
+        },
+      }),
+    );
+  }
+
+  imports.push(
     NestjsProfilingModule,
     NestjsRbacModule,
     NestjsRepositoriesModule,
     NestjsThrottlerModule,
     NotificationsModule,
     PubSubModule,
-    ...(isOpenthrottleServerDevJsonlLoggingEnabled()
-      ? [
-          NestjsLoggingModule.forRoot({
-            fileBasename: 'openthrottle-server',
-            isGlobal: true,
-            logDirectory: getOpenthrottleServerDevJsonlLogDirectory(),
-            websocket: {
-              enabled: true,
-              namespace: '/openthrottle-server',
-            },
-          }),
-        ]
-      : []),
+  );
 
-    // 🧩 Application Modules (queue processors are worker/all; HTTP-facing
-    // modules are api/all — interleaved to preserve the pre-split order)
-    ...(isWorkerLike
-      ? [
-          AgenticTestQueueModule,
-          CodeIndexQueueModule,
-          CspReportsModule,
-          DailyStatsQueueModule,
-          DatabaseBackupQueueModule,
-          DataRetentionQueueModule,
-        ]
-      : []),
-    ...(isApiLike ? [DevelopmentModule] : []),
-    ...(isApiLike ? [GeneratorsModule, McpDeveloperModule] : []),
-    ...(isWorkerLike
-      ? [
-          PlanLifecycleHooksQueueModule,
-          PlanRulesQueueModule,
-          PlanRunsStaleSweepQueueModule,
-          PlansQueueModule,
-          ScheduledAgentJobsQueueModule,
-          TaggingQueueModule,
-          TaskPromotionQueueModule,
-          WorkLedgerHarvestQueueModule,
-          WorkLedgerSweepQueueModule,
-          WorkLedgerVerifyQueueModule,
-        ]
-      : []),
+  if (isOpenthrottleServerDevJsonlLoggingEnabled()) {
+    imports.push(
+      NestjsLoggingModule.forRoot({
+        fileBasename: 'openthrottle-server',
+        isGlobal: true,
+        logDirectory: getOpenthrottleServerDevJsonlLogDirectory(),
+        websocket: {
+          enabled: true,
+          namespace: '/openthrottle-server',
+        },
+      }),
+    );
+  }
 
-    // 🧩 GraphQL Modules
-    ...(isApiLike
-      ? [
-          ActivityGraphqlModule,
-          AgenticWorkflowGraphqlModule,
-          AgentConversationsGraphqlModule,
-          AgentDiscoveryGraphqlModule,
-          AgentSetupGraphqlModule,
-          AgentsGraphqlModule,
-          AuthGraphqlModule,
-          BlogGraphqlModule,
-          CaptureHealthGraphqlModule,
-          CodeSearchGraphqlModule,
-          ConversationStreamGraphqlModule,
-          CustomPromptsGraphqlModule,
-          DailyStatsGraphqlModule,
-          EditorPresenceGraphqlModule,
-          GeneratorsGraphqlModule,
-          GithubGraphqlModule,
-          HealthGraphqlModule,
-          McpConnectorsGraphqlModule,
-          MetricsGraphqlModule,
-          ModelDiscoveryGraphqlModule,
-          NotesGraphqlModule,
-          NotificationsGraphqlModule,
-          PlanEmbeddingsGraphqlModule,
-          PlanOutputStreamGraphqlModule,
-          PlansGraphqlModule,
-          ProjectSkillsGraphqlModule,
-          ProjectsGraphqlModule,
-          QueueJobLogsGraphqlModule,
-          QueuesGraphqlModule,
-          RepositoryInspectionModule,
-          RolesGraphqlModule,
-          RolloutGraphqlModule,
-          ScheduledAgentJobsGraphqlModule,
-          ServiceAccountsGraphqlModule,
-          SearchGraphqlModule,
-          SkillAvailabilityGraphqlModule,
-          SkillTagsGraphqlModule,
-          SkillUsageGraphqlModule,
-          TagActionRulesGraphqlModule,
-          TagsGraphqlModule,
-          TaskEmbeddingsGraphqlModule,
-          TasksGraphqlModule,
-          TimelineGraphqlModule,
-          TokenUsageGraphqlModule,
-          TranscriptionStreamGraphqlModule,
-          UsersGraphqlModule,
-          WorkLedgerGraphqlModule,
-          WorkspaceSettingsGraphqlModule,
-        ]
-      : []),
-  ];
+  // 🧩 Application Modules (queue processors are worker/all; HTTP-facing
+  // modules are api/all — interleaved to preserve the pre-split order)
+  if (isWorkerLike) {
+    imports.push(
+      AgenticTestQueueModule,
+      CodeIndexQueueModule,
+      CspReportsModule,
+      DailyStatsQueueModule,
+      DatabaseBackupQueueModule,
+      DataRetentionQueueModule,
+    );
+  }
+
+  if (isApiLike) {
+    imports.push(DevelopmentModule);
+  }
+
+  if (isApiLike) {
+    imports.push(GeneratorsModule, McpDeveloperModule);
+  }
+
+  if (isWorkerLike) {
+    imports.push(
+      PlanLifecycleHooksQueueModule,
+      PlanRulesQueueModule,
+      PlanRunsStaleSweepQueueModule,
+      PlansQueueModule,
+      ScheduledAgentJobsQueueModule,
+      TaggingQueueModule,
+      TaskPromotionQueueModule,
+      WorkLedgerHarvestQueueModule,
+      WorkLedgerSweepQueueModule,
+      WorkLedgerVerifyQueueModule,
+    );
+  }
+
+  // 🧩 GraphQL Modules
+  if (isApiLike) {
+    imports.push(
+      ActivityGraphqlModule,
+      AgenticWorkflowGraphqlModule,
+      AgentConversationsGraphqlModule,
+      AgentDiscoveryGraphqlModule,
+      AgentSetupGraphqlModule,
+      AgentsGraphqlModule,
+      AuthGraphqlModule,
+      BlogGraphqlModule,
+      CaptureHealthGraphqlModule,
+      CodeSearchGraphqlModule,
+      ConversationStreamGraphqlModule,
+      CustomPromptsGraphqlModule,
+      DailyStatsGraphqlModule,
+      EditorPresenceGraphqlModule,
+      GeneratorsGraphqlModule,
+      GithubGraphqlModule,
+      HealthGraphqlModule,
+      McpConnectorsGraphqlModule,
+      MetricsGraphqlModule,
+      ModelDiscoveryGraphqlModule,
+      NotesGraphqlModule,
+      NotificationsGraphqlModule,
+      PlanEmbeddingsGraphqlModule,
+      PlanOutputStreamGraphqlModule,
+      PlansGraphqlModule,
+      ProjectSkillsGraphqlModule,
+      ProjectsGraphqlModule,
+      QueueJobLogsGraphqlModule,
+      QueuesGraphqlModule,
+      RepositoryInspectionModule,
+      RolesGraphqlModule,
+      RolloutGraphqlModule,
+      ScheduledAgentJobsGraphqlModule,
+      ServiceAccountsGraphqlModule,
+      SearchGraphqlModule,
+      SkillAvailabilityGraphqlModule,
+      SkillTagsGraphqlModule,
+      SkillUsageGraphqlModule,
+      TagActionRulesGraphqlModule,
+      TagsGraphqlModule,
+      TaskEmbeddingsGraphqlModule,
+      TasksGraphqlModule,
+      TimelineGraphqlModule,
+      TokenUsageGraphqlModule,
+      TranscriptionStreamGraphqlModule,
+      UsersGraphqlModule,
+      WorkLedgerGraphqlModule,
+      WorkspaceSettingsGraphqlModule,
+    );
+  }
+
+  return imports;
 };
 
 /**

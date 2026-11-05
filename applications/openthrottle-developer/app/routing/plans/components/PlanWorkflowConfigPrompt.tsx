@@ -114,7 +114,7 @@ export const PlanWorkflowConfigPrompt = (
           </p>
         </div>
 
-        {promptLayer === 'named' ? (
+        {promptLayer === 'named' && (
           <div className="space-y-2">
             <Label htmlFor="workflow-run-prompt">--prompt</Label>
             <Input
@@ -134,7 +134,8 @@ export const PlanWorkflowConfigPrompt = (
               Omitted from the command when equal to the default.
             </p>
           </div>
-        ) : (
+        )}
+        {promptLayer !== 'named' && (
           <div className="space-y-2">
             <Label htmlFor="workflow-run-prompt-file">--prompt-file</Label>
             <Input

@@ -17,7 +17,9 @@ const openMenu = async (
   await user.click(component.getByRole('button', { name: ariaLabel }));
 };
 
-const DetailRoute = (): React.ReactElement => <div>Detail</div>;
+const DetailRoute = (): React.ReactElement => {
+  return <div>Detail</div>;
+};
 
 const renderPopover = (
   props: Partial<GlobalPopoverProps> & {
@@ -30,7 +32,9 @@ const renderPopover = (
   };
 
   // eslint-disable-next-line react/no-multi-comp -- test-local route wrapper
-  const Component = (): React.ReactElement => <GlobalPopover {...merged} />;
+  const Component = (): React.ReactElement => {
+    return <GlobalPopover {...merged} />;
+  };
   const RoutesStub = createRoutesStub([
     {
       Component,
@@ -223,29 +227,31 @@ describe('GlobalPopover Component', () => {
     const state: { submitted: FormData | null } = { submitted: null };
 
     // eslint-disable-next-line react/no-multi-comp -- test-local route wrapper
-    const Component = (): React.ReactElement => (
-      <GlobalPopover
-        actions={[
-          {
-            confirm: {
-              confirmLabel: 'Remove now',
-              description: (
-                <>
-                  Remove <span className="font-medium">acme</span>?
-                </>
-              ),
-              title: 'Remove checkout',
+    const Component = (): React.ReactElement => {
+      return (
+        <GlobalPopover
+          actions={[
+            {
+              confirm: {
+                confirmLabel: 'Remove now',
+                description: (
+                  <>
+                    Remove <span className="font-medium">acme</span>?
+                  </>
+                ),
+                title: 'Remove checkout',
+              },
+              destructive: true,
+              fields: { id: 'row-1', intent: 'deleteRepo' },
+              id: 'delete',
+              kind: 'submit',
+              label: 'Remove',
             },
-            destructive: true,
-            fields: { id: 'row-1', intent: 'deleteRepo' },
-            id: 'delete',
-            kind: 'submit',
-            label: 'Remove',
-          },
-        ]}
-        ariaLabel="Row actions"
-      />
-    );
+          ]}
+          ariaLabel="Row actions"
+        />
+      );
+    };
 
     const RoutesStub = createRoutesStub([
       {
@@ -326,23 +332,25 @@ describe('GlobalPopover Component', () => {
     const state = { submitted: false };
 
     // eslint-disable-next-line react/no-multi-comp -- test-local route wrapper
-    const Component = (): React.ReactElement => (
-      <GlobalPopover
-        actions={[
-          {
-            confirm: {
-              description: 'Really?',
-              title: 'Confirm',
+    const Component = (): React.ReactElement => {
+      return (
+        <GlobalPopover
+          actions={[
+            {
+              confirm: {
+                description: 'Really?',
+                title: 'Confirm',
+              },
+              fields: { intent: 'deleteRepo' },
+              id: 'delete',
+              kind: 'submit',
+              label: 'Remove',
             },
-            fields: { intent: 'deleteRepo' },
-            id: 'delete',
-            kind: 'submit',
-            label: 'Remove',
-          },
-        ]}
-        ariaLabel="Row actions"
-      />
-    );
+          ]}
+          ariaLabel="Row actions"
+        />
+      );
+    };
 
     const RoutesStub = createRoutesStub([
       {

@@ -5,8 +5,8 @@ import * as React from 'react';
 import { createRoutesStub, useLocation } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
 
-import { BRANCH_FILTER_COPY } from '../../data/branch-filter-copy';
-import { SKILL_USAGE_SCOPES } from '../../data/skill-usage-copy';
+import { BRANCH_FILTER_COPY } from '../../data/data.branch-filter-copy';
+import { SKILL_USAGE_SCOPES } from '../../data/data.skill-usage-copy';
 import type { UsageBranchFilterProps } from '../UsageBranchFilter';
 import { UsageBranchFilter } from '../UsageBranchFilter';
 
@@ -15,16 +15,18 @@ const BRANCH_OPTIONS = [
   { branch: 'feat/usage-branch-filter', count: 3 },
 ];
 
-const baseProps = (): UsageBranchFilterProps => ({
-  end: '2026-07-31',
-  hasMore: false,
-  initialOptions: BRANCH_OPTIONS,
-  providerParam: null,
-  selectedCwd: null,
-  selectedGitBranch: null,
-  selectedScope: null,
-  start: '2026-07-01',
-});
+const baseProps = (): UsageBranchFilterProps => {
+  return {
+    end: '2026-07-31',
+    hasMore: false,
+    initialOptions: BRANCH_OPTIONS,
+    providerParam: null,
+    selectedCwd: null,
+    selectedGitBranch: null,
+    selectedScope: null,
+    start: '2026-07-01',
+  };
+};
 
 interface Rendered {
   readonly component: RenderResult;

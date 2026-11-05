@@ -14,7 +14,9 @@ describe('QueueForm Component', () => {
   beforeEach(() => {
     props = {};
 
-    const Component = () => <QueueForm {...props} />;
+    const Component = () => {
+      return <QueueForm {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);
@@ -36,7 +38,9 @@ describe('QueueForm Component', () => {
     beforeEach(() => {
       props = { actionData: { error: 'Queue name already exists' } };
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const Component = () => <QueueForm {...props} />;
+      const Component = () => {
+        return <QueueForm {...props} />;
+      };
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       component.rerender(<RoutesStub />);
     });

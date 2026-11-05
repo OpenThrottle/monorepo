@@ -68,10 +68,8 @@ export const applyEditorConfig = async (
       message: formatEditorConfigApplyMessage(data),
     };
   } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : 'Failed to apply editor configuration.';
+    const fallbackMessage = 'Failed to apply editor configuration.';
+    const message = error instanceof Error ? error.message : fallbackMessage;
     return { error: message };
   }
 };

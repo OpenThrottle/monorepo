@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/resources.chat-options';
 
-vi.mock('~/routing/home/data/models.server', () => ({
+vi.mock('~/routing/home/utils/models.server', () => ({
   loadAgentClis: vi.fn(),
   loadDiscoveredModels: vi.fn(),
   loadPersonas: vi.fn(),
@@ -12,7 +12,7 @@ vi.mock('~/routing/home/data/models.server', () => ({
 }));
 
 const { loadAgentClis, loadDiscoveredModels, loadPersonas, loadRepositories } =
-  await import('~/routing/home/data/models.server');
+  await import('~/routing/home/utils/models.server');
 const { loader } = await import('../resources.chat-options');
 
 const mockAgentClis = vi.mocked(loadAgentClis);
@@ -20,10 +20,11 @@ const mockDiscoveredModels = vi.mocked(loadDiscoveredModels);
 const mockPersonas = vi.mocked(loadPersonas);
 const mockRepositories = vi.mocked(loadRepositories);
 
-const loaderArgs = (): Route.LoaderArgs =>
-  createLoaderArgs<Route.LoaderArgs>({
+const loaderArgs = (): Route.LoaderArgs => {
+  return createLoaderArgs<Route.LoaderArgs>({
     url: 'http://localhost/resources/chat-options',
   });
+};
 
 describe('routes/resources.chat-options loader', () => {
   beforeEach(() => {

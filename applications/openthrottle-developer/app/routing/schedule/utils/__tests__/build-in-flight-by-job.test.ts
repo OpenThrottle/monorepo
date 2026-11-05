@@ -6,18 +6,20 @@ import { buildInFlightByJob } from '~/routing/schedule/utils/build-in-flight-by-
 const run = (
   id: string,
   scheduledAgentJobId: string,
-): ScheduleInFlightRunFragment => ({
-  bullmqJobId: id,
-  cancelRequestedAt: null,
-  driverId: 'claude',
-  id,
-  job: { id: scheduledAgentJobId, name: `schedule ${scheduledAgentJobId}` },
-  model: null,
-  scheduledAgentJobId,
-  startedAt: null,
-  status: 'running',
-  trigger: 'schedule',
-});
+): ScheduleInFlightRunFragment => {
+  return {
+    bullmqJobId: id,
+    cancelRequestedAt: null,
+    driverId: 'claude',
+    id,
+    job: { id: scheduledAgentJobId, name: `schedule ${scheduledAgentJobId}` },
+    model: null,
+    scheduledAgentJobId,
+    startedAt: null,
+    status: 'running',
+    trigger: 'schedule',
+  };
+};
 
 describe('buildInFlightByJob', () => {
   it('returns an empty map for no runs', () => {

@@ -31,9 +31,9 @@ const CONTENT: GlobalFeatureOnboardingContent = {
 };
 
 const renderComponent = (props: GlobalFeatureOnboardingProps): RenderResult => {
-  const Component = (): React.ReactElement => (
-    <GlobalFeatureOnboarding {...props} />
-  );
+  const Component = (): React.ReactElement => {
+    return <GlobalFeatureOnboarding {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 };
@@ -158,13 +158,15 @@ describe('GlobalFeatureOnboarding Component', () => {
 
 const renderDialog = (props: GlobalFeatureOnboardingProps): RenderResult => {
   // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-  const Component = (): React.ReactElement => (
-    <Dialog open={true}>
-      <DialogContent>
-        <GlobalFeatureOnboarding {...props} />
-      </DialogContent>
-    </Dialog>
-  );
+  const Component = (): React.ReactElement => {
+    return (
+      <Dialog open={true}>
+        <DialogContent>
+          <GlobalFeatureOnboarding {...props} />
+        </DialogContent>
+      </Dialog>
+    );
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 };

@@ -3,6 +3,7 @@ import { formatFiles, generateFiles, logger } from '@nx/devkit';
 import { join } from 'path';
 import prompts from 'prompts';
 
+import { askWhenInteractive } from '../../utils/ask-when-interactive.ts';
 import { getCommonVariables } from '../../utils/index.ts';
 import { REGEX_SLUG } from '../../utils/regex.ts';
 
@@ -21,8 +22,10 @@ export const generatorReactRouterApplication = async (
 
   const name =
     schema.name ??
-    (interactive
-      ? (
+    (await askWhenInteractive(
+      interactive,
+      async () =>
+        (
           await prompts({
             message: 'What would you like to name this application?',
             name: 'name',
@@ -33,8 +36,8 @@ export const generatorReactRouterApplication = async (
               return true;
             },
           })
-        ).name
-      : undefined);
+        ).name,
+    ));
 
   if (!name) throw new Error('Application name is required.');
   if (name.length < 3) {

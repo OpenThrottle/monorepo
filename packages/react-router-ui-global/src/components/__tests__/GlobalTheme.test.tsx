@@ -7,7 +7,9 @@ import { GlobalTheme } from '../GlobalTheme';
 
 describe('GlobalTheme Component', () => {
   test('renders theme placeholder heading', () => {
-    const Component = () => <GlobalTheme />;
+    const Component = () => {
+      return <GlobalTheme />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 

@@ -42,12 +42,14 @@ export const SettingsAgentsModelToggle = (
   // While a toggle is in flight, reflect the submitted value optimistically;
   // otherwise show the loader's server truth.
   const submittedEnabled = fetcher.formData?.get('enabled');
-  const optimisticEnabled =
-    fetcher.state !== 'idle' && submittedEnabled != null
-      ? submittedEnabled === 'true'
-      : enabled;
+  const isOptimistic = fetcher.state !== 'idle' && submittedEnabled != null;
+  const submittedValue = submittedEnabled === 'true';
+  const optimisticEnabled = isOptimistic ? submittedValue : enabled;
   const disabled = !canManage || agentDisabled || fetcher.state !== 'idle';
   const errorMessage = fetcher.data?.errorMessage ?? null;
+  const { modelsAgentOffReason, toggleDisabledReason } = SETTINGS_AGENTS_COPY;
+  const reason = agentDisabled ? modelsAgentOffReason : toggleDisabledReason;
+  const isEditable = canManage && !agentDisabled;
 
   // Handlers
   const handleCheckedChange = (next: boolean): void => {
@@ -58,6 +60,28 @@ export const SettingsAgentsModelToggle = (
   };
 
   // Markup
+  const control = (
+    <Switch
+      aria-label={SETTINGS_AGENTS_COPY.modelToggleLabel}
+      checked={optimisticEnabled}
+      data-testid={`SettingsAgentsModelToggle-${backend}-${model}`}
+      disabled={disabled}
+      onCheckedChange={handleCheckedChange}
+      size="sm"
+    />
+  );
+  const lockedControl = (
+    <Tooltip>
+      <TooltipTrigger asChild={true}>
+        {/* A disabled Switch swallows pointer events, so wrap it to keep the tooltip reachable. */}
+        <span className="inline-flex">{control}</span>
+      </TooltipTrigger>
+      <TooltipContent>{reason}</TooltipContent>
+    </Tooltip>
+  );
+  const errorMarkup = (
+    <p className="text-destructive text-xs">{errorMessage}</p>
+  );
 
   // Life Cycle
   const revalidatedRef = React.useRef(false);
@@ -76,37 +100,10 @@ export const SettingsAgentsModelToggle = (
 
   // 🔌 Short Circuit
 
-  const control = (
-    <Switch
-      aria-label={SETTINGS_AGENTS_COPY.modelToggleLabel}
-      checked={optimisticEnabled}
-      data-testid={`SettingsAgentsModelToggle-${backend}-${model}`}
-      disabled={disabled}
-      onCheckedChange={handleCheckedChange}
-      size="sm"
-    />
-  );
-
-  const reason = agentDisabled
-    ? SETTINGS_AGENTS_COPY.modelsAgentOffReason
-    : SETTINGS_AGENTS_COPY.toggleDisabledReason;
-
   return (
     <div className="flex flex-col items-start gap-1">
-      {canManage && !agentDisabled ? (
-        control
-      ) : (
-        <Tooltip>
-          <TooltipTrigger asChild={true}>
-            {/* A disabled Switch swallows pointer events, so wrap it to keep the tooltip reachable. */}
-            <span className="inline-flex">{control}</span>
-          </TooltipTrigger>
-          <TooltipContent>{reason}</TooltipContent>
-        </Tooltip>
-      )}
-      {errorMessage != null ? (
-        <p className="text-destructive text-xs">{errorMessage}</p>
-      ) : null}
+      {isEditable ? control : lockedControl}
+      {errorMessage != null ? errorMarkup : null}
     </div>
   );
 };

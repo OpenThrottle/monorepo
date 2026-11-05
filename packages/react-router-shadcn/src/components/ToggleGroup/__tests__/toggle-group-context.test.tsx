@@ -11,11 +11,13 @@ describe('toggle-group-context', () => {
   });
 
   test('exposes the provided variant to consumers', () => {
-    const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <ToggleGroupContext.Provider value={{ size: 'sm', variant: 'outline' }}>
-        {children}
-      </ToggleGroupContext.Provider>
-    );
+    const wrapper = ({ children }: { children: React.ReactNode }) => {
+      return (
+        <ToggleGroupContext.Provider value={{ size: 'sm', variant: 'outline' }}>
+          {children}
+        </ToggleGroupContext.Provider>
+      );
+    };
     const { result } = renderHook(() => React.useContext(ToggleGroupContext), {
       wrapper,
     });

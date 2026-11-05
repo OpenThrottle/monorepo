@@ -48,12 +48,14 @@ ${MARKER_BLOCK}
 `;
 
 /** A conformant hook body with the given declarations around it. */
-const hookFile = (before: string, after = ''): string => `${before}
+const hookFile = (before: string, after = ''): string => {
+  return `${before}
 export const useFoo = (): boolean => {
 ${MARKER_BLOCK}
   return true;
 };
 ${after}`;
+};
 
 ruleTester.run('hook-primitive-shape', hookPrimitiveShape, {
   invalid: [

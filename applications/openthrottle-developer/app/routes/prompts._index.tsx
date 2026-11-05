@@ -121,6 +121,30 @@ export default function Component(
   // Handlers
 
   // Markup
+  const onboarding = <GlobalFeatureOnboarding content={PROMPTS_ONBOARDING} />;
+  const promptsListing = (
+    <div className="flex flex-col gap-4">
+      <PromptToolbar
+        limit={limit}
+        page={page}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        types={types}
+      />
+      <PromptsTable prompts={prompts ?? []} search={search ?? undefined} />
+      <OpenThrottlePagination
+        basePath="/prompts"
+        className="mt-8"
+        limit={limit}
+        page={page}
+        resultLabel="prompts"
+        search={search ?? undefined}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        total={total}
+      />
+    </div>
+  );
 
   // Life Cycle
 
@@ -138,35 +162,7 @@ export default function Component(
         )}
         <PromptsIntroduction />
 
-        {isNewUser ? (
-          <GlobalFeatureOnboarding content={PROMPTS_ONBOARDING} />
-        ) : (
-          <div className="flex flex-col gap-4">
-            <PromptToolbar
-              limit={limit}
-              page={page}
-              sortBy={sortBy}
-              sortOrder={sortOrder}
-              types={types}
-            />
-            <PromptsTable
-              // className="bg-card"
-              prompts={prompts ?? []}
-              search={search ?? undefined}
-            />
-            <OpenThrottlePagination
-              basePath="/prompts"
-              className="mt-8"
-              limit={limit}
-              page={page}
-              resultLabel="prompts"
-              search={search ?? undefined}
-              sortBy={sortBy}
-              sortOrder={sortOrder}
-              total={total}
-            />
-          </div>
-        )}
+        {isNewUser ? onboarding : promptsListing}
       </GlobalScreen>
 
       <GlobalFeatureOnboardingModal content={PROMPTS_ONBOARDING} />

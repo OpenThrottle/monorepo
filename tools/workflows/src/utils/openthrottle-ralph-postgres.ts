@@ -23,8 +23,7 @@ import { taskRequirementsFromRow } from './openthrottle-ralph-types';
 import { ralphDebugLogger } from './ralph-debug-logger';
 
 /** Suffix for unreachable message (detail is interpolated). Used in thrown Error and README. */
-export const RALPH_FATAL_UNREACHABLE_SUFFIX =
-  '\n   Check POSTGRES_URL (or POSTGRES_*) and network connectivity. See tools/workflows/README.md.\n';
+export const RALPH_FATAL_UNREACHABLE_SUFFIX = `\n   Check POSTGRES_URL (or POSTGRES_*) and network connectivity. See tools/workflows/README.md.\n`;
 
 const requireConnectionString = (config: WorkflowRalphConfig): string => {
   const connectionString = config.connectionString?.trim();
@@ -485,11 +484,15 @@ export async function readPlanRunCancelMarkerPostgres(
     );
     const row = res.rows[0];
     if (!row) return null;
+    const cancelAt = row.cancel_requested_at;
+    let cancelRequestedAt: string | null;
+    if (cancelAt instanceof Date) {
+      cancelRequestedAt = cancelAt.toISOString();
+    } else {
+      cancelRequestedAt = cancelAt ?? null;
+    }
     return {
-      cancelRequestedAt:
-        row.cancel_requested_at instanceof Date
-          ? row.cancel_requested_at.toISOString()
-          : (row.cancel_requested_at ?? null),
+      cancelRequestedAt,
       planRunId: row.id,
       status: row.status,
     };

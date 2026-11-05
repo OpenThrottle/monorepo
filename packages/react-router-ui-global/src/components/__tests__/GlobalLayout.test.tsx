@@ -8,13 +8,15 @@ import { GlobalProviders } from '../GlobalProviders';
 
 describe('GlobalLayout Component', () => {
   test('renders sidebar chrome and main content', () => {
-    const Component = () => (
-      <GlobalProviders>
-        <GlobalLayout>
-          <span>layout-child</span>
-        </GlobalLayout>
-      </GlobalProviders>
-    );
+    const Component = () => {
+      return (
+        <GlobalProviders>
+          <GlobalLayout>
+            <span>layout-child</span>
+          </GlobalLayout>
+        </GlobalProviders>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 

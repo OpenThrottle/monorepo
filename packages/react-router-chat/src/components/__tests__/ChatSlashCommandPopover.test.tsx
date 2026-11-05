@@ -15,8 +15,8 @@ const COMMANDS: readonly ChatSlashCommand[] = [
 
 const renderPopover = (
   overrides: Partial<ChatSlashCommandPopoverProps> = {},
-): RenderResult =>
-  render(
+): RenderResult => {
+  return render(
     <ChatSlashCommandPopover
       activeIndex={0}
       emptyLabel="No skills found"
@@ -30,6 +30,7 @@ const renderPopover = (
       {...overrides}
     />,
   );
+};
 
 describe('ChatSlashCommandPopover', () => {
   test('renders the root container', () => {

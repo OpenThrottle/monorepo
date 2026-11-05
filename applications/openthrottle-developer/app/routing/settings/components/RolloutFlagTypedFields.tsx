@@ -13,10 +13,8 @@ import { RolloutFlagKind } from '~/__generated__/graphql';
 import { RolloutFlagAllocationEditor } from '~/routing/settings/components/RolloutFlagAllocationEditor';
 import { RolloutFlagVariationsEditor } from '~/routing/settings/components/RolloutFlagVariationsEditor';
 import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
-import {
-  isRolloutFlagKind,
-  ROLLOUT_FLAG_KINDS,
-} from '~/routing/settings/data/data.rollout-kinds';
+import { ROLLOUT_FLAG_KINDS } from '~/routing/settings/data/data.rollout-kinds';
+import { isRolloutFlagKind } from '~/routing/settings/utils/is-rollout-flag-kind';
 import type { RolloutFormTypedConfig } from '~/routing/settings/utils/rollout-typed-config';
 import {
   defaultTypedConfigForKind,
@@ -42,11 +40,12 @@ export const RolloutFlagTypedFields = (
   const { flag, idPrefix } = props;
 
   // Hooks
-  const [config, setConfig] = React.useState<RolloutFormTypedConfig>(() =>
-    flag
-      ? typedConfigFromFlag(flag)
-      : defaultTypedConfigForKind(RolloutFlagKind.Boolean),
-  );
+  const [config, setConfig] = React.useState<RolloutFormTypedConfig>(() => {
+    if (flag) {
+      return typedConfigFromFlag(flag);
+    }
+    return defaultTypedConfigForKind(RolloutFlagKind.Boolean);
+  });
 
   // Setup
   const variationLabels = config.variations.map((variation, index) =>

@@ -9,44 +9,48 @@ type HookTelemetry = NonNullable<Inspection['hookTelemetry']>;
 
 const inspectionWith = (
   hookTelemetry: HookTelemetry | undefined,
-): Inspection => ({
-  agentConfig: {
-    agentsMd: false,
-    claudeMd: false,
-    cursorRules: false,
-    mcpJson: false,
-    skillsDir: false,
-  },
-  git: {
-    currentBranch: 'main',
-    defaultBranch: 'main',
-    dirty: false,
-    isRepo: true,
-    linkedWorktrees: [],
-    normalizedRemoteUrl: null,
-  },
-  hookTelemetry,
-  scannedAt: '2026-09-13T00:00:00.000Z',
-  stack: {
-    languages: [],
-    nxWorkspace: false,
-    packageManager: null,
-    pnpmWorkspace: false,
-    turbo: false,
-  },
-  warnings: [],
-});
+): Inspection => {
+  return {
+    agentConfig: {
+      agentsMd: false,
+      claudeMd: false,
+      cursorRules: false,
+      mcpJson: false,
+      skillsDir: false,
+    },
+    git: {
+      currentBranch: 'main',
+      defaultBranch: 'main',
+      dirty: false,
+      isRepo: true,
+      linkedWorktrees: [],
+      normalizedRemoteUrl: null,
+    },
+    hookTelemetry,
+    scannedAt: '2026-09-13T00:00:00.000Z',
+    stack: {
+      languages: [],
+      nxWorkspace: false,
+      packageManager: null,
+      pnpmWorkspace: false,
+      turbo: false,
+    },
+    warnings: [],
+  };
+};
 
-const telemetry = (overrides: Partial<HookTelemetry>): HookTelemetry => ({
-  authTokenConfigured: false,
-  endpointConfigured: false,
-  endpointSource: 'none',
-  producers: [],
-  reason: null,
-  status: 'recording',
-  telemetryDir: '/Users/dev/.openthrottle/skill-usage',
-  ...overrides,
-});
+const telemetry = (overrides: Partial<HookTelemetry>): HookTelemetry => {
+  return {
+    authTokenConfigured: false,
+    endpointConfigured: false,
+    endpointSource: 'none',
+    producers: [],
+    reason: null,
+    status: 'recording',
+    telemetryDir: '/Users/dev/.openthrottle/skill-usage',
+    ...overrides,
+  };
+};
 
 describe('deriveHookTelemetry', () => {
   test('returns null when the checkout has never been inspected', () => {

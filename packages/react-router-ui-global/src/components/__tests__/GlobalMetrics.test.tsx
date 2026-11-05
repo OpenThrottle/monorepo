@@ -62,11 +62,13 @@ describe('GlobalMetrics Component', () => {
       },
     });
 
-    const Component = () => (
-      <GlobalProviders>
-        <GlobalMetrics {...props} />
-      </GlobalProviders>
-    );
+    const Component = () => {
+      return (
+        <GlobalProviders>
+          <GlobalMetrics {...props} />
+        </GlobalProviders>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);
@@ -97,11 +99,13 @@ describe('GlobalMetrics Component', () => {
         serverMetrics: null,
       });
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const Component = () => (
-        <GlobalProviders>
-          <GlobalMetrics {...props} />
-        </GlobalProviders>
-      );
+      const Component = () => {
+        return (
+          <GlobalProviders>
+            <GlobalMetrics {...props} />
+          </GlobalProviders>
+        );
+      };
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       const { getByTestId } = render(<RoutesStub />);
       expect(getByTestId('GlobalMetrics-loading')).toBeInTheDocument();
@@ -118,11 +122,13 @@ describe('GlobalMetrics Component', () => {
       serverMetrics: null,
     });
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <GlobalProviders>
-        <GlobalMetrics {...props} />
-      </GlobalProviders>
-    );
+    const Component = () => {
+      return (
+        <GlobalProviders>
+          <GlobalMetrics {...props} />
+        </GlobalProviders>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByTestId } = render(<RoutesStub />);
     expect(getByTestId('GlobalMetrics-error')).toHaveTextContent(
@@ -134,11 +140,13 @@ describe('GlobalMetrics Component', () => {
     cleanup();
     mockUsePollServerMetrics.mockClear();
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <GlobalProviders>
-        <GlobalMetrics {...props} pollIntervalMs={15_000} />
-      </GlobalProviders>
-    );
+    const Component = () => {
+      return (
+        <GlobalProviders>
+          <GlobalMetrics {...props} pollIntervalMs={15_000} />
+        </GlobalProviders>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
     expect(mockUsePollServerMetrics).toHaveBeenCalledWith(
@@ -171,14 +179,16 @@ describe('GlobalMetrics Component', () => {
   test('should render metrics chart when data is available', () => {
     cleanup();
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <GlobalProviders>
-        <GlobalMetrics
-          definitionsHref="/settings/debug#server-metrics-definitions"
-          diagnosticsHref="/settings/debug#graphql-endpoint-health"
-        />
-      </GlobalProviders>
-    );
+    const Component = () => {
+      return (
+        <GlobalProviders>
+          <GlobalMetrics
+            definitionsHref="/settings/debug#server-metrics-definitions"
+            diagnosticsHref="/settings/debug#graphql-endpoint-health"
+          />
+        </GlobalProviders>
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 
@@ -293,11 +303,13 @@ describe('GlobalMetrics Component', () => {
       localStorageStub[GLOBAL_METRICS_COLLAPSED_KEY] = 'true';
 
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const Component = () => (
-        <GlobalProviders>
-          <GlobalMetrics />
-        </GlobalProviders>
-      );
+      const Component = () => {
+        return (
+          <GlobalProviders>
+            <GlobalMetrics />
+          </GlobalProviders>
+        );
+      };
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       const { getByTestId, queryByTestId } = render(<RoutesStub />);
 
@@ -336,11 +348,13 @@ describe('GlobalMetrics Component', () => {
     beforeEach(() => {
       cleanup();
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const Component = () => (
-        <GlobalProviders>
-          <GlobalMetrics definitionsHref="/settings/debug#server-metrics-definitions" />
-        </GlobalProviders>
-      );
+      const Component = () => {
+        return (
+          <GlobalProviders>
+            <GlobalMetrics definitionsHref="/settings/debug#server-metrics-definitions" />
+          </GlobalProviders>
+        );
+      };
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       render(<RoutesStub initialEntries={['/?modal=ServerMetricsInfo']} />);
     });
@@ -367,11 +381,13 @@ describe('GlobalMetrics Component', () => {
     beforeEach(() => {
       cleanup();
       // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const Component = () => (
-        <GlobalProviders>
-          <GlobalMetrics />
-        </GlobalProviders>
-      );
+      const Component = () => {
+        return (
+          <GlobalProviders>
+            <GlobalMetrics />
+          </GlobalProviders>
+        );
+      };
       const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
       render(<RoutesStub initialEntries={['/?modal=ServerMetricsInfo']} />);
     });
@@ -411,11 +427,13 @@ describe('GlobalMetrics Component', () => {
 
       try {
         // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-        const Component = () => (
-          <GlobalProviders>
-            <GlobalMetrics pollIntervalMs={1_000} />
-          </GlobalProviders>
-        );
+        const Component = () => {
+          return (
+            <GlobalProviders>
+              <GlobalMetrics pollIntervalMs={1_000} />
+            </GlobalProviders>
+          );
+        };
         const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
         const { unmount } = render(<RoutesStub />);
 

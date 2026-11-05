@@ -9,7 +9,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import type { IdeWorkspaceListing } from '../data/view-models';
+import type { IdeWorkspaceListing } from '../data/data.view-models';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 
 /** Default cap on rendered matches to keep the DOM bounded on large repos. */
@@ -73,6 +73,43 @@ export const WorkspaceFilePalette = (
   // Handlers
 
   // Markup
+  const typePrompt = (
+    <div className="text-muted-foreground p-4 text-sm">
+      Type to filter {listing.paths.length} files in{' '}
+      {listing.repository.displayName}.
+    </div>
+  );
+  const noMatches = <CommandEmpty>No files match “{query}”.</CommandEmpty>;
+  const fileGroup = (
+    <CommandGroup>
+      {visible.map((path) => (
+        <CommandItem
+          key={path}
+          onSelect={() => onSelectFile?.(path)}
+          value={path}
+        >
+          {path}
+        </CommandItem>
+      ))}
+    </CommandGroup>
+  );
+  const hiddenNote = (
+    <div className="text-muted-foreground p-2 text-center text-xs">
+      Showing {visible.length} of {matches.length} — narrow your filter to see
+      more.
+    </div>
+  );
+  const renderContent = (): React.ReactElement => {
+    if (debouncedTrimmed === '') {
+      return typePrompt;
+    }
+
+    if (visible.length === 0) {
+      return noMatches;
+    }
+
+    return fileGroup;
+  };
 
   // Life Cycle
 
@@ -89,32 +126,8 @@ export const WorkspaceFilePalette = (
         value={query}
       />
       <CommandList>
-        {debouncedTrimmed === '' ? (
-          <div className="text-muted-foreground p-4 text-sm">
-            Type to filter {listing.paths.length} files in{' '}
-            {listing.repository.displayName}.
-          </div>
-        ) : visible.length === 0 ? (
-          <CommandEmpty>No files match “{query}”.</CommandEmpty>
-        ) : (
-          <CommandGroup>
-            {visible.map((path) => (
-              <CommandItem
-                key={path}
-                onSelect={() => onSelectFile?.(path)}
-                value={path}
-              >
-                {path}
-              </CommandItem>
-            ))}
-          </CommandGroup>
-        )}
-        {hiddenCount > 0 ? (
-          <div className="text-muted-foreground p-2 text-center text-xs">
-            Showing {visible.length} of {matches.length} — narrow your filter to
-            see more.
-          </div>
-        ) : null}
+        {renderContent()}
+        {hiddenCount > 0 ? hiddenNote : null}
       </CommandList>
     </Command>
   );

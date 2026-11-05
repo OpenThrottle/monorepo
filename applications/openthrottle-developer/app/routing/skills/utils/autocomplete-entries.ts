@@ -4,7 +4,7 @@ import {
   ProjectSkillsDocument,
   SkillAvailabilityDocument,
 } from '~/__generated__/graphql';
-import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 import {
   mergeRepoSkillsWithProjectSkills,
   type ProjectSkillFlagRow,
@@ -82,16 +82,18 @@ export const loadSkillAvailability = async (
 /** Map a merged repo-skill entry to the compact autocomplete shape. */
 export const toAutocompleteEntry = (
   entry: RepoSkillEntry,
-): SkillAutocompleteEntry => ({
-  description: entry.summary,
-  // Human `/` invocation is never gated; this flag only marks model auto-invoke.
-  disabledForModel:
-    entry.effectiveDisableModelInvocation ??
-    entry.disableModelInvocation ??
-    false,
-  slug: entry.slug,
-  tags: entry.tags ?? [],
-});
+): SkillAutocompleteEntry => {
+  return {
+    description: entry.summary,
+    // Human `/` invocation is never gated; this flag only marks model auto-invoke.
+    disabledForModel:
+      entry.effectiveDisableModelInvocation ??
+      entry.disableModelInvocation ??
+      false,
+    slug: entry.slug,
+    tags: entry.tags ?? [],
+  };
+};
 
 /**
  * Build the autocomplete list from the GraphQL `projectSkills` rows (description
@@ -127,10 +129,18 @@ export const composeAutocompleteSkills = (
   diskEntries: readonly RepoSkillEntry[],
   projectSkills: readonly ProjectSkillFlagRow[],
   availability: readonly SkillAvailabilityRow[],
-): readonly SkillAutocompleteEntry[] =>
-  diskEntries.length === 0
-    ? fromProjectSkills(projectSkills, availability)
-    : mergeRepoSkillsWithSkillAvailability(
-        mergeRepoSkillsWithProjectSkills(diskEntries, projectSkills),
-        availability,
-      ).map(toAutocompleteEntry);
+): readonly SkillAutocompleteEntry[] => {
+  if (diskEntries.length === 0) {
+    return fromProjectSkills(projectSkills, availability);
+  }
+
+  const withProjectSkills = mergeRepoSkillsWithProjectSkills(
+    diskEntries,
+    projectSkills,
+  );
+
+  return mergeRepoSkillsWithSkillAvailability(
+    withProjectSkills,
+    availability,
+  ).map(toAutocompleteEntry);
+};

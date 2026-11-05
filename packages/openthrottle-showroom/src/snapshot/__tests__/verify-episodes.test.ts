@@ -7,15 +7,19 @@ import type { EpisodeRequirements } from '../verify-episodes.ts';
 import { formatFailure, verifyEpisodeData } from '../verify-episodes.ts';
 
 /** A runner that answers each SQL string with a canned `value`. */
-const runnerReturning = (values: Record<string, number>): QueryRunner => ({
-  query: (sql: string) =>
-    Promise.resolve({ rows: [{ value: values[sql] ?? 0 }] }),
-});
+const runnerReturning = (values: Record<string, number>): QueryRunner => {
+  return {
+    query: (sql: string) =>
+      Promise.resolve({ rows: [{ value: values[sql] ?? 0 }] }),
+  };
+};
 
 const episode = (
   id: string,
   dataRequirements: VideoEpisode['dataRequirements'],
-): EpisodeRequirements => ({ dataRequirements, id });
+): EpisodeRequirements => {
+  return { dataRequirements, id };
+};
 
 describe('verifyEpisodeData', () => {
   const requirement = {

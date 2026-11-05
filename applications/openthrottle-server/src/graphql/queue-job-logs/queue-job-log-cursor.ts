@@ -13,10 +13,12 @@ const CURSOR_VERSION = 1;
 /**
  * @description Encode a 0-based line index as an opaque cursor token.
  */
-export const encodeQueueJobLogCursor = (line: number): string =>
-  Buffer.from(JSON.stringify({ line, v: CURSOR_VERSION }), 'utf8').toString(
-    'base64url',
-  );
+export const encodeQueueJobLogCursor = (line: number): string => {
+  return Buffer.from(
+    JSON.stringify({ line, v: CURSOR_VERSION }),
+    'utf8',
+  ).toString('base64url');
+};
 
 /**
  * @description Decode an opaque cursor token back to its line index, or

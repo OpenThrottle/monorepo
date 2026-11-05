@@ -10,7 +10,9 @@ import { OpenThrottleBreadcrumbs } from '../OpenThrottleBreadcrumbs';
 describe('OpenThrottleBreadcrumbs Component', () => {
   let props: OpenThrottleBreadcrumbsProps;
 
-  const Component = () => <OpenThrottleBreadcrumbs {...props} />;
+  const Component = () => {
+    return <OpenThrottleBreadcrumbs {...props} />;
+  };
 
   const renderBreadcrumbs = (): RenderResult => {
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);

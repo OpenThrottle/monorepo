@@ -28,15 +28,43 @@ export const SettingsMcpConnectForm = (
 
   // Setup
   const isApiToken = connector.authType === 'api_token';
-  const submitLabel = isConnected
-    ? isApiToken
-      ? 'Update token'
-      : 'Reconnect'
-    : 'Connect';
+  const updateLabel = isApiToken ? 'Update token' : 'Reconnect';
+  const submitLabel = isConnected ? updateLabel : 'Connect';
 
   // Handlers
 
   // Markup
+  const apiTokenFields = (
+    <>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="settings-mcp-api-token">API token</Label>
+        <Input
+          autoComplete="off"
+          data-testid="SettingsMcpConnectForm-token"
+          id="settings-mcp-api-token"
+          name="apiToken"
+          type="password"
+        />
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="settings-mcp-label">Label (optional)</Label>
+        <Input
+          data-testid="SettingsMcpConnectForm-label"
+          id="settings-mcp-label"
+          name="label"
+          type="text"
+        />
+      </div>
+    </>
+  );
+  const errorMarkup = (
+    <p
+      className="text-destructive text-sm"
+      data-testid="SettingsMcpConnectForm-error"
+    >
+      {actionError}
+    </p>
+  );
 
   // Life Cycle
 
@@ -60,37 +88,8 @@ export const SettingsMcpConnectForm = (
         >
           <input name="intent" type="hidden" value="connect" />
           <input name="connectorKey" type="hidden" value={connector.key} />
-          {isApiToken ? (
-            <>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="settings-mcp-api-token">API token</Label>
-                <Input
-                  autoComplete="off"
-                  data-testid="SettingsMcpConnectForm-token"
-                  id="settings-mcp-api-token"
-                  name="apiToken"
-                  type="password"
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="settings-mcp-label">Label (optional)</Label>
-                <Input
-                  data-testid="SettingsMcpConnectForm-label"
-                  id="settings-mcp-label"
-                  name="label"
-                  type="text"
-                />
-              </div>
-            </>
-          ) : null}
-          {actionError ? (
-            <p
-              className="text-destructive text-sm"
-              data-testid="SettingsMcpConnectForm-error"
-            >
-              {actionError}
-            </p>
-          ) : null}
+          {isApiToken ? apiTokenFields : null}
+          {actionError ? errorMarkup : null}
           <div>
             <Button
               data-testid="SettingsMcpConnectForm-submit"

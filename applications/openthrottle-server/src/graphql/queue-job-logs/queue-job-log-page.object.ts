@@ -17,8 +17,7 @@ export class QueueJobLogPageObject {
   hasMore!: boolean;
 
   @Field(() => String, {
-    description:
-      'Opaque cursor for the next page; null when caught up to end-of-file.',
+    description: `Opaque cursor for the next page; null when caught up to end-of-file.`,
     nullable: true,
   })
   nextCursor!: string | null;

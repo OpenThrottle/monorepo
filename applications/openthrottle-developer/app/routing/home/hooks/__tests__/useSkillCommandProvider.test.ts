@@ -24,11 +24,12 @@ const skills = [
   },
 ];
 
-const okResponse = (): Response =>
-  new Response(JSON.stringify({ query: '', skills, truncated: false }), {
+const okResponse = (): Response => {
+  return new Response(JSON.stringify({ query: '', skills, truncated: false }), {
     headers: { 'content-type': 'application/json' },
     status: 200,
   });
+};
 
 describe('useSkillCommandProvider', () => {
   let fetchMock: ReturnType<typeof vi.fn>;

@@ -19,14 +19,16 @@ const required = (
   return value;
 };
 
-export const toBlogPostPatch = (input: UpdateBlogPostInput): BlogPostPatch => ({
-  authorSlug: input.authorSlug,
-  bodyMarkdown: required('bodyMarkdown', input.bodyMarkdown),
-  coverImageAlt: input.coverImageAlt,
-  coverImageUrl: input.coverImageUrl,
-  excerpt: input.excerpt,
-  seoDescription: input.seoDescription,
-  seoTitle: input.seoTitle,
-  slug: required('slug', input.slug),
-  title: required('title', input.title),
-});
+export const toBlogPostPatch = (input: UpdateBlogPostInput): BlogPostPatch => {
+  return {
+    authorSlug: input.authorSlug,
+    bodyMarkdown: required('bodyMarkdown', input.bodyMarkdown),
+    coverImageAlt: input.coverImageAlt,
+    coverImageUrl: input.coverImageUrl,
+    excerpt: input.excerpt,
+    seoDescription: input.seoDescription,
+    seoTitle: input.seoTitle,
+    slug: required('slug', input.slug),
+    title: required('title', input.title),
+  };
+};

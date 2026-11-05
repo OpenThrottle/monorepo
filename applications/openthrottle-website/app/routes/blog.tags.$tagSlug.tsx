@@ -24,12 +24,14 @@ export const loader = async (
   });
 };
 
-export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) =>
+export const meta: Route.MetaFunction = mergeRouteModuleMeta((args) => {
   // `loaderData` is undefined when the loader threw (the 404 case).
-  args.loaderData
-    ? buildBlogTagMeta(args.loaderData.tag)
-    : [{ title: BLOG_COPY.emptyState.notFound.title }],
-);
+  if (!args.loaderData) {
+    return [{ title: BLOG_COPY.emptyState.notFound.title }];
+  }
+
+  return buildBlogTagMeta(args.loaderData.tag);
+});
 
 export default function Component(
   props: Route.ComponentProps,

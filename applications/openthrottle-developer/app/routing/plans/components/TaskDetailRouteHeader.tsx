@@ -32,6 +32,14 @@ export const TaskDetailRouteHeader = (
   // Handlers
 
   // Markup
+  const knownBadge = isPlanStatusKey(status) && (
+    <PlanStatusBadge status={status} />
+  );
+  const rawBadge = (
+    <Badge color={parseTaskStatusColor(status)} size="xs">
+      {status}
+    </Badge>
+  );
 
   // Life Cycle
 
@@ -42,13 +50,7 @@ export const TaskDetailRouteHeader = (
       <GlobalHeading className="mb-4" icon={ListOrderedIcon} title={title} />
 
       <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
-        {isPlanStatusKey(status) ? (
-          <PlanStatusBadge status={status} />
-        ) : (
-          <Badge color={parseTaskStatusColor(status)} size="xs">
-            {status}
-          </Badge>
-        )}
+        {knownBadge || rawBadge}
       </div>
     </div>
   );

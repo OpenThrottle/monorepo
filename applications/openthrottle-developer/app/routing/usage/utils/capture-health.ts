@@ -36,8 +36,8 @@ export const buildCaptureHealthEntries = (
   rows: readonly UsageCaptureHealthRowFragment[],
   nowMs: number,
   staleAfterMs: number,
-): CaptureHealthEntry[] =>
-  rows
+): CaptureHealthEntry[] => {
+  return rows
     .map((row) => ({
       key: `${row.stream}:${row.source}`,
       lastCapturedAt: row.lastCapturedAt,
@@ -51,3 +51,4 @@ export const buildCaptureHealthEntries = (
         a.stream.localeCompare(b.stream) ||
         a.source.localeCompare(b.source),
     );
+};

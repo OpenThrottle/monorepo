@@ -41,6 +41,7 @@ export const CalendarMonth = (
 
   // Setup
   const pending = selection.selection.dateTime;
+  const pendingLabel = pending ? new Date(pending).toLocaleString() : '';
 
   // Handlers
   const handleCreate = (): void => {
@@ -62,6 +63,27 @@ export const CalendarMonth = (
   };
 
   // Markup
+  const pendingPrompt = (
+    <>
+      <span className="text-sm">Create an event at {pendingLabel}?</span>
+      <Button onClick={handleCreate} size="sm" type="button">
+        Add event
+      </Button>
+      <Button
+        onClick={selection.clear}
+        size="sm"
+        type="button"
+        variant="outline"
+      >
+        Cancel
+      </Button>
+    </>
+  );
+  const idleHint = (
+    <span className="text-muted-foreground text-sm">
+      Click an empty time slot to create an event.
+    </span>
+  );
 
   // Life Cycle
 
@@ -73,28 +95,7 @@ export const CalendarMonth = (
   return (
     <div className={className}>
       <div className="mb-2 flex min-h-9 items-center gap-2">
-        {pending ? (
-          <>
-            <span className="text-sm">
-              Create an event at {new Date(pending).toLocaleString()}?
-            </span>
-            <Button onClick={handleCreate} size="sm" type="button">
-              Add event
-            </Button>
-            <Button
-              onClick={selection.clear}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              Cancel
-            </Button>
-          </>
-        ) : (
-          <span className="text-muted-foreground text-sm">
-            Click an empty time slot to create an event.
-          </span>
-        )}
+        {pending ? pendingPrompt : idleHint}
       </div>
       <div className="overflow relative overflow-clip">
         <Calendar

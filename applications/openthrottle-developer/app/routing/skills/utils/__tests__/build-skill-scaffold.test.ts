@@ -6,13 +6,14 @@ import {
   SKILL_SCAFFOLD_DESCRIPTION_PLACEHOLDER,
 } from '~/routing/skills/utils/build-skill-scaffold';
 
-const errorsFor = (content: string, slug: string): readonly string[] =>
-  validateAgentAssetFrontmatter({
+const errorsFor = (content: string, slug: string): readonly string[] => {
+  return validateAgentAssetFrontmatter({
     content,
     expectedSlug: slug,
     kind: 'skill',
     path: `skills/${slug}/SKILL.md`,
   }).errors.map((issue) => `${issue.field}: ${issue.message}`);
+};
 
 describe('buildSkillScaffold', () => {
   // The whole point of the scaffold: it must be savable the instant it is

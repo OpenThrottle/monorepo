@@ -20,7 +20,9 @@ describe('GlobalErrorBoundaryReferencePanel Component', () => {
       onCopyReferenceId: vi.fn().mockResolvedValue(undefined),
     };
 
-    const Component = () => <GlobalErrorBoundaryReferencePanel {...props} />;
+    const Component = () => {
+      return <GlobalErrorBoundaryReferencePanel {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
   });

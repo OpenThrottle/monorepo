@@ -28,41 +28,46 @@ const USER = 'user-1';
 
 const worktree = (
   overrides: Partial<DiscoveredWorktree> = {},
-): DiscoveredWorktree => ({
-  aheadCount: 0,
-  branch: 'openthrottle/wt-a',
-  checkoutId: 'checkout-wt-a',
-  commonDir: '/Users/matt/Development/openthrottle/.git',
-  dirty: false,
-  name: 'wt-a',
-  path: `${ROOT}/wt-a`,
-  repositoryId: 'repo-1',
-  sources: [WORKTREE_DISCOVERY_SOURCE.ROOT_SCAN],
-  ...overrides,
-});
+): DiscoveredWorktree => {
+  return {
+    aheadCount: 0,
+    branch: 'openthrottle/wt-a',
+    checkoutId: 'checkout-wt-a',
+    commonDir: '/Users/matt/Development/openthrottle/.git',
+    dirty: false,
+    name: 'wt-a',
+    path: `${ROOT}/wt-a`,
+    repositoryId: 'repo-1',
+    sources: [WORKTREE_DISCOVERY_SOURCE.ROOT_SCAN],
+    ...overrides,
+  };
+};
 
 const discovery = (
   worktrees: readonly DiscoveredWorktree[],
   warnings: readonly string[] = [],
-): WorktreeDiscoveryResult => ({
-  droppedCount: 0,
-  missingCheckouts: [],
-  problems: [],
-  rootSource: 'default',
-  scannedAt: '2026-08-24T00:00:00.000Z',
-  scannedRoots: [],
-  warnings,
-  worktreeRoot: ROOT,
-  worktrees,
-});
+): WorktreeDiscoveryResult => {
+  return {
+    droppedCount: 0,
+    missingCheckouts: [],
+    problems: [],
+    rootSource: 'default',
+    scannedAt: '2026-08-24T00:00:00.000Z',
+    scannedRoots: [],
+    warnings,
+    worktreeRoot: ROOT,
+    worktrees,
+  };
+};
 
-const run = (overrides: Partial<PlanRun> = {}): PlanRun =>
-  createMock<PlanRun>({
+const run = (overrides: Partial<PlanRun> = {}): PlanRun => {
+  return createMock<PlanRun>({
     checkoutId: 'checkout-wt-a',
     id: 'run-1',
     status: 'IN_PROGRESS',
     ...overrides,
   });
+};
 
 const build = (options: {
   readonly discovered: WorktreeDiscoveryResult;
@@ -72,10 +77,13 @@ const build = (options: {
   readonly findLiveRunsByCheckoutIds: ReturnType<typeof vi.fn>;
   readonly service: WorktreeActivityService;
 } => {
-  const findLiveRunsByCheckoutIds =
-    options.runsError === undefined
-      ? vi.fn().mockResolvedValue([...(options.liveRuns ?? [])])
-      : vi.fn().mockRejectedValue(options.runsError);
+  const liveRuns = [...(options.liveRuns ?? [])];
+  const findLiveRunsByCheckoutIds = vi.fn();
+  if (options.runsError === undefined) {
+    findLiveRunsByCheckoutIds.mockResolvedValue(liveRuns);
+  } else {
+    findLiveRunsByCheckoutIds.mockRejectedValue(options.runsError);
+  }
 
   return {
     findLiveRunsByCheckoutIds,

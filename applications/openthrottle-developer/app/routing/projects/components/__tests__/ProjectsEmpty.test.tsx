@@ -7,7 +7,9 @@ import { ProjectsEmpty } from '../ProjectsEmpty';
 
 describe('ProjectsEmpty Component', () => {
   test('renders empty state and new project link', () => {
-    const Component = () => <ProjectsEmpty />;
+    const Component = () => {
+      return <ProjectsEmpty />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 

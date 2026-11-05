@@ -79,6 +79,8 @@ export const PlanDetailRoute = (
   // The toolbar (Run / schedule / tags) and the Configuration tab are still
   // in beta preview.
   const showToolbar = FEATURE_BETA_PREVIEW;
+  const showBlockedNote =
+    runConfigSaveBlocked && runConfigSaveBlockedReason != null;
 
   // Handlers
 
@@ -93,7 +95,7 @@ export const PlanDetailRoute = (
         <PlanDetailRouteHeader plan={plan} status={status} />
         {/* No `editors` here: the editor deep links live in the tab row below
             (PlanDetailTabsList), and rendering them in both places duplicated them. */}
-        {showToolbar ? (
+        {showToolbar && (
           <PlanToolbar
             branch={branch}
             checkoutId={checkoutId}
@@ -130,7 +132,7 @@ export const PlanDetailRoute = (
             workflowRunBlockedReason={workflowRunBlockedReason}
             workingDirectory={workingDirectory}
           />
-        ) : null}
+        )}
         <OpenThrottleTabs
           urlSync={{
             defaultValue: 'overview',
@@ -155,7 +157,7 @@ export const PlanDetailRoute = (
           />
           <PlanTabTasks />
           <PlanTabOutput chunks={planOutputChunks} />
-          {showToolbar ? (
+          {showToolbar && (
             <PlanTabConfiguration
               models={loaderData.models}
               onCollapse={() => onToggleExpanded(false)}
@@ -169,19 +171,19 @@ export const PlanDetailRoute = (
               saveRunConfigDisabled={runConfigSaveBlocked}
               saveRunConfigPending={saveRunConfigPending}
             />
-          ) : null}
-          {runConfigSaveBlocked && runConfigSaveBlockedReason != null ? (
+          )}
+          {showBlockedNote && (
             <p className="text-muted-foreground px-4 text-xs" role="note">
               Save configuration blocked: {runConfigSaveBlockedReason}
             </p>
-          ) : null}
+          )}
         </OpenThrottleTabs>
       </GlobalScreen>
-      {isBoardView ? (
+      {isBoardView && (
         <Card className="mx-4 overflow-hidden">
           <PlanTasksBoard />
         </Card>
-      ) : null}
+      )}
     </>
   );
 };

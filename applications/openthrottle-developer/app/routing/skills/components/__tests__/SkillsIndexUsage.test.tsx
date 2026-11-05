@@ -6,32 +6,36 @@ import { describe, expect, test } from 'vitest';
 
 import type { UsageSkillUsageBySkillFragment } from '~/__generated__/graphql';
 import { SKILLS_INDEX_USAGE_COPY } from '~/routing/skills/data/data.copy';
-import { SKILL_PRESENCE_LABELS } from '~/routing/usage/data/skill-presence';
+import { SKILL_PRESENCE_LABELS } from '~/routing/usage/data/data.skill-presence';
 import {
   SKILL_USAGE_COPY,
   SKILL_USAGE_SCOPES,
-} from '~/routing/usage/data/skill-usage-copy';
+} from '~/routing/usage/data/data.skill-usage-copy';
 
 import type { SkillsIndexUsageProps } from '../SkillsIndexUsage';
 import { SkillsIndexUsage } from '../SkillsIndexUsage';
 
 const buildBySkill = (
   overrides: Partial<UsageSkillUsageBySkillFragment>,
-): UsageSkillUsageBySkillFragment => ({
-  abandonedCount: 0,
-  avgDurationMs: null,
-  count: 1,
-  errorCount: 0,
-  outcomeCount: 0,
-  scope: SKILL_USAGE_SCOPES.OURS,
-  sessionEndedCount: 0,
-  skillName: 'ot-plans',
-  successCount: 0,
-  ...overrides,
-});
+): UsageSkillUsageBySkillFragment => {
+  return {
+    abandonedCount: 0,
+    avgDurationMs: null,
+    count: 1,
+    errorCount: 0,
+    outcomeCount: 0,
+    scope: SKILL_USAGE_SCOPES.OURS,
+    sessionEndedCount: 0,
+    skillName: 'ot-plans',
+    successCount: 0,
+    ...overrides,
+  };
+};
 
 const renderComponent = (props: SkillsIndexUsageProps): RenderResult => {
-  const Component = (): React.ReactElement => <SkillsIndexUsage {...props} />;
+  const Component = (): React.ReactElement => {
+    return <SkillsIndexUsage {...props} />;
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
   return render(<RoutesStub />);

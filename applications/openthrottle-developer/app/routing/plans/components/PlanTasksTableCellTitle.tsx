@@ -63,9 +63,9 @@ export const PlanTasksTableCellTitle = (
         {isManaged ? <PlanManagedTaskBadge className="shrink-0" /> : null}
       </div>
 
-      {hasMeta ? (
+      {hasMeta && (
         <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs max-sm:contents">
-          {category !== '' ? (
+          {category !== '' && (
             <Badge
               aria-label={`Category: ${category}`}
               className="max-sm:order-2"
@@ -74,9 +74,9 @@ export const PlanTasksTableCellTitle = (
             >
               {category}
             </Badge>
-          ) : null}
+          )}
 
-          {requirementsCount > 0 ? (
+          {requirementsCount > 0 && (
             <span
               aria-label={`${requirementsCount} requirements`}
               className="tabular-nums max-sm:order-3"
@@ -84,12 +84,12 @@ export const PlanTasksTableCellTitle = (
               {requirementsCount}{' '}
               {requirementsCount === 1 ? 'requirement' : 'requirements'}
             </span>
-          ) : null}
-          {task.assignee ? (
+          )}
+          {task.assignee && (
             <span className="max-sm:order-3">Assigned to {task.assignee}</span>
-          ) : null}
+          )}
         </div>
-      ) : null}
+      )}
 
       <div
         className={cn(

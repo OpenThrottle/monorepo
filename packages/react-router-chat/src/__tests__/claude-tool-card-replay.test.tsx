@@ -18,22 +18,28 @@ import { foldPersistedTurnEvents } from '../turn-events';
 import type { ChatTurnEvent, ChatTurnToolEvent } from '../types';
 
 /** A persisted `toolMetadata` blob holding the server's saved event array. */
-const persisted = (events: ReadonlyArray<Record<string, unknown>>): string =>
-  JSON.stringify({ events });
+const persisted = (events: ReadonlyArray<Record<string, unknown>>): string => {
+  return JSON.stringify({ events });
+};
 
-const isToolEvent = (event: ChatTurnEvent): event is ChatTurnToolEvent =>
-  event.kind === 'tool';
+const isToolEvent = (event: ChatTurnEvent): event is ChatTurnToolEvent => {
+  return event.kind === 'tool';
+};
 
 /** Replay a persisted turn and keep only its tool cards, in timeline order. */
 const replayToolEvents = (
   toolMetadataJson: string,
-): readonly ChatTurnToolEvent[] =>
-  foldPersistedTurnEvents(toolMetadataJson, '').filter(isToolEvent);
+): readonly ChatTurnToolEvent[] => {
+  return foldPersistedTurnEvents(toolMetadataJson, '').filter(isToolEvent);
+};
 
 /** The text a single card renders when fully expanded. */
-const cardText = (event: ChatTurnToolEvent): string =>
-  render(<ChatToolCall defaultOpen={true} event={event} />).container
-    .textContent ?? '';
+const cardText = (event: ChatTurnToolEvent): string => {
+  return (
+    render(<ChatToolCall defaultOpen={true} event={event} />).container
+      .textContent ?? ''
+  );
+};
 
 // --- The shape the claude mapper emits today -------------------------------
 
@@ -42,33 +48,39 @@ const toolCallStart = (
   callId: string,
   toolName: string,
   index: number,
-): Record<string, unknown> => ({
-  delta: '',
-  kind: 'tool_call',
-  metadata: { callId, index, name: toolName, toolName },
-});
+): Record<string, unknown> => {
+  return {
+    delta: '',
+    kind: 'tool_call',
+    metadata: { callId, index, name: toolName, toolName },
+  };
+};
 
 /** The consolidated `assistant` event carries the complete arguments. */
 const toolCallArgs = (
   callId: string,
   toolName: string,
   input: Record<string, unknown>,
-): Record<string, unknown> => ({
-  delta: '',
-  kind: 'tool_call',
-  metadata: { callId, name: toolName, toolCall: input, toolName },
-});
+): Record<string, unknown> => {
+  return {
+    delta: '',
+    kind: 'tool_call',
+    metadata: { callId, name: toolName, toolCall: input, toolName },
+  };
+};
 
 /** One `tool_result` block, correlated to its call by `tool_use_id`. */
 const toolResult = (
   callId: string,
   content: string,
   isError = false,
-): Record<string, unknown> => ({
-  delta: '',
-  kind: 'tool_result',
-  metadata: { callId, isError, toolCall: content },
-});
+): Record<string, unknown> => {
+  return {
+    delta: '',
+    kind: 'tool_result',
+    metadata: { callId, isError, toolCall: content },
+  };
+};
 
 describe('claude tool cards (persisted replay)', () => {
   describe('current wire shape', () => {

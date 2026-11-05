@@ -3,6 +3,7 @@ import { formatFiles, generateFiles, logger } from '@nx/devkit';
 import { join } from 'path';
 import prompts from 'prompts';
 
+import { askWhenInteractive } from '../../utils/ask-when-interactive.ts';
 import {
   assertFolderVocabulary,
   describeBannedFolder,
@@ -102,8 +103,10 @@ export async function foldersGenerator(
 
   const folder =
     schema.folder ??
-    (interactive
-      ? (
+    (await askWhenInteractive(
+      interactive,
+      async () =>
+        (
           await prompts({
             choices: [
               { title: 'routing', value: 'routing' },
@@ -113,8 +116,8 @@ export async function foldersGenerator(
             name: 'folder',
             type: 'select',
           })
-        ).folder
-      : undefined);
+        ).folder,
+    ));
 
   if (!folder) {
     throw new Error(
@@ -124,8 +127,10 @@ export async function foldersGenerator(
 
   const name =
     schema.name ??
-    (interactive
-      ? (
+    (await askWhenInteractive(
+      interactive,
+      async () =>
+        (
           await prompts({
             message: `What is the name of the "${folder}" folder?`,
             name: 'name',
@@ -137,8 +142,8 @@ export async function foldersGenerator(
               return true;
             },
           })
-        ).name
-      : undefined);
+        ).name,
+    ));
 
   if (!name) {
     throw new Error(

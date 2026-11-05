@@ -16,11 +16,13 @@ import {
 import { GeneratorTabDocumentation } from '../GeneratorTabDocumentation';
 
 function renderTab(): RenderResult {
-  const Component = () => (
-    <Tabs defaultValue="documentation">
-      <GeneratorTabDocumentation />
-    </Tabs>
-  );
+  const Component = () => {
+    return (
+      <Tabs defaultValue="documentation">
+        <GeneratorTabDocumentation />
+      </Tabs>
+    );
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 }

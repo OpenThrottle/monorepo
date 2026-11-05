@@ -44,8 +44,11 @@ const FINALIZE_REASONS = [
 
 type FinalizePriorReason = (typeof FINALIZE_REASONS)[number];
 
-const isFinalizePriorReason = (reason: string): reason is FinalizePriorReason =>
-  FINALIZE_REASONS.some((candidate) => candidate === reason);
+const isFinalizePriorReason = (
+  reason: string,
+): reason is FinalizePriorReason => {
+  return FINALIZE_REASONS.some((candidate) => candidate === reason);
+};
 
 export interface FinalizePlanRunParams {
   readonly baseBranch: string;
@@ -96,13 +99,17 @@ const runGit = async (
   runCommand: WorkflowRalphCommandRunner,
   cwd: string,
   args: readonly string[],
-) => runCommand({ args, command: 'git', cwd });
+) => {
+  return runCommand({ args, command: 'git', cwd });
+};
 
 const runGh = async (
   runCommand: WorkflowRalphCommandRunner,
   cwd: string,
   args: readonly string[],
-) => runCommand({ args, command: 'gh', cwd });
+) => {
+  return runCommand({ args, command: 'gh', cwd });
+};
 
 /**
  * @description Best-effort plan_output diagnostic naming the owed finalize step. Never throws.
@@ -235,10 +242,11 @@ const resolveBaseRef = async (params: {
 
 const toOptionalText = (
   value: string | null | undefined,
-): string | undefined =>
-  value === null || value === undefined || value.trim() === ''
+): string | undefined => {
+  return value === null || value === undefined || value.trim() === ''
     ? undefined
     : value;
+};
 
 /**
  * @description Plan and task rows for the PR body. Best-effort: an unreachable OT yields
@@ -257,31 +265,31 @@ const loadPlanAndTasks = async (params: {
     executeGraphqlV2(GetTasksByPlanIdDocument, { input: { planId } }),
   ]);
 
+  let plan: PlanRunPrPlan | undefined;
   const planRow =
-    planResult.status === 'fulfilled'
-      ? (planResult.value.plan ?? undefined)
-      : undefined;
-  const plan =
-    planRow === undefined
-      ? undefined
-      : {
-          description: toOptionalText(planRow.description),
-          summary: toOptionalText(planRow.summary),
-          title: planRow.title,
-        };
+    planResult.status === 'fulfilled' ? planResult.value.plan : undefined;
+  if (planRow !== undefined && planRow !== null) {
+    plan = {
+      description: toOptionalText(planRow.description),
+      summary: toOptionalText(planRow.summary),
+      title: planRow.title,
+    };
+  }
 
-  const tasks =
+  let tasks: readonly PlanRunPrTask[] | undefined;
+  if (
     tasksResult.status === 'fulfilled' &&
     Array.isArray(tasksResult.value.tasksByPlanId)
-      ? sortTasksByPlanListOrder(tasksResult.value.tasksByPlanId).map(
-          (task) => ({
-            id: task.id,
-            status: task.status,
-            summary: toOptionalText(task.summary),
-            title: task.title,
-          }),
-        )
-      : undefined;
+  ) {
+    tasks = sortTasksByPlanListOrder(tasksResult.value.tasksByPlanId).map(
+      (task) => ({
+        id: task.id,
+        status: task.status,
+        summary: toOptionalText(task.summary),
+        title: task.title,
+      }),
+    );
+  }
 
   return { plan, tasks };
 };
@@ -477,45 +485,49 @@ const resolvePrContent = async (params: {
 }): Promise<{ readonly body: string; readonly title: string }> => {
   const { draftDir, executeGraphqlV2, onChunk, planId } = params;
   const draftDirPath = draftDir ?? (await resolvePlanRunPrDraftDir(params));
+  const readDraftFile = async (name: string): Promise<string | undefined> => {
+    if (draftDirPath === undefined) {
+      return undefined;
+    }
+
+    return readOptionalFile(join(draftDirPath, name));
+  };
   const [fallback, draftTitle, draftBody] = await Promise.all([
     buildFallbackPr(params),
-    draftDirPath === undefined
-      ? Promise.resolve(undefined)
-      : readOptionalFile(join(draftDirPath, PLAN_RUN_PR_DRAFT_FILES.title)),
-    draftDirPath === undefined
-      ? Promise.resolve(undefined)
-      : readOptionalFile(join(draftDirPath, PLAN_RUN_PR_DRAFT_FILES.body)),
+    readDraftFile(PLAN_RUN_PR_DRAFT_FILES.title),
+    readDraftFile(PLAN_RUN_PR_DRAFT_FILES.body),
   ]);
 
-  const validation =
-    draftTitle === undefined || draftBody === undefined
-      ? undefined
-      : validatePlanRunPrDraft({
-          body: draftBody,
-          footer: fallback.footer,
-          title: draftTitle,
-        });
+  let validation: ReturnType<typeof validatePlanRunPrDraft> | undefined;
+  if (draftTitle !== undefined && draftBody !== undefined) {
+    validation = validatePlanRunPrDraft({
+      body: draftBody,
+      footer: fallback.footer,
+      title: draftTitle,
+    });
+  }
 
-  const reason =
-    validation === undefined
-      ? `no agent draft in ${draftDirPath ?? '(not a git checkout)'}`
-      : validation.ok
-        ? undefined
-        : `agent draft rejected: ${validation.reason}`;
+  let reason: string | undefined;
+  if (validation === undefined) {
+    reason = `no agent draft in ${draftDirPath ?? '(not a git checkout)'}`;
+  } else if (!validation.ok) {
+    reason = `agent draft rejected: ${validation.reason}`;
+  }
 
+  const draftSource = `[ralph-orchestrator] finalize: PR body source=agent-draft (${draftDirPath ?? ''})\n`;
+  const fallbackSource = `[ralph-orchestrator] finalize: PR body source=fallback — ${reason}\n`;
   await appendFinalizeNote({
-    content:
-      reason === undefined
-        ? `[ralph-orchestrator] finalize: PR body source=agent-draft (${draftDirPath ?? ''})\n`
-        : `[ralph-orchestrator] finalize: PR body source=fallback — ${reason}\n`,
+    content: reason === undefined ? draftSource : fallbackSource,
     executeGraphqlV2,
     onChunk,
     planId,
   });
 
-  return validation?.ok === true
-    ? { body: validation.body, title: validation.title }
-    : { body: fallback.body, title: fallback.title };
+  if (validation?.ok === true) {
+    return { body: validation.body, title: validation.title };
+  }
+
+  return { body: fallback.body, title: fallback.title };
 };
 
 interface PrStepFailure {
@@ -527,7 +539,9 @@ interface PrStepFailure {
 const commandDetail = (
   result: WorkflowRalphCommandResult,
   fallback: string,
-): string => result.stderr.trim() || result.stdout.trim() || fallback;
+): string => {
+  return result.stderr.trim() || result.stdout.trim() || fallback;
+};
 
 /**
  * @description Writes the title and body to a temp dir and runs `check-pr-attribution.sh` on them.
@@ -709,13 +723,15 @@ const refreshExistingPr = async (params: {
     `body=@${guarded.bodyPath}`,
   ]);
 
-  return patched.exitCode === 0
-    ? { ok: true }
-    : {
-        detail: `${commandDetail(edited, 'gh pr edit failed')}; REST fallback: ${commandDetail(patched, 'gh api PATCH failed')}`,
-        ok: false,
-        owedStep: 'pr-edit',
-      };
+  if (patched.exitCode === 0) {
+    return { ok: true };
+  }
+
+  return {
+    detail: `${commandDetail(edited, 'gh pr edit failed')}; REST fallback: ${commandDetail(patched, 'gh api PATCH failed')}`,
+    ok: false,
+    owedStep: 'pr-edit',
+  };
 };
 
 /**
@@ -821,6 +837,8 @@ export const finalizePlanRun = async (
     priorReason,
     runCommand,
   } = params;
+  const isHandoffRetry = priorReason === 'workflow_complete_handoff_owed';
+  const settledReason = isHandoffRetry ? 'workflow_complete' : priorReason;
 
   const branchResult = await runGit(runCommand, cwd, [
     'rev-parse',
@@ -903,10 +921,9 @@ export const finalizePlanRun = async (
   }
 
   const head = await runGit(runCommand, cwd, ['rev-parse', 'HEAD']);
-  const headSha =
-    head.exitCode === 0 && head.stdout.trim() !== ''
-      ? head.stdout.trim()
-      : undefined;
+  const headOut = head.stdout.trim();
+  const hasHead = head.exitCode === 0 && headOut !== '';
+  const headSha = hasHead ? headOut : undefined;
 
   if (headSha === undefined) {
     return handoffOwed({
@@ -973,10 +990,7 @@ export const finalizePlanRun = async (
     return finished({
       headSha,
       prNumber: existingPr,
-      reason:
-        priorReason === 'workflow_complete_handoff_owed'
-          ? 'workflow_complete'
-          : priorReason,
+      reason: settledReason,
     });
   }
 
@@ -1004,10 +1018,7 @@ export const finalizePlanRun = async (
   return finished({
     headSha,
     prNumber: created.prNumber,
-    reason:
-      priorReason === 'workflow_complete_handoff_owed'
-        ? 'workflow_complete'
-        : priorReason,
+    reason: settledReason,
   });
 };
 
@@ -1017,4 +1028,6 @@ export const finalizePlanRun = async (
  */
 export const shouldFinalizePlanRun = (
   reason: string,
-): reason is FinalizePriorReason => isFinalizePriorReason(reason);
+): reason is FinalizePriorReason => {
+  return isFinalizePriorReason(reason);
+};

@@ -14,7 +14,9 @@ describe('InputGroupText Component', () => {
   beforeEach(() => {
     props = { children: 'Prefix' };
 
-    const Component = () => <InputGroupText {...props} />;
+    const Component = () => {
+      return <InputGroupText {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);

@@ -17,8 +17,8 @@ const serviceAccountId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 
 const createHttpExecutionContext = (req: {
   user?: unknown;
-}): ExecutionContext =>
-  createMock<ExecutionContext>({
+}): ExecutionContext => {
+  return createMock<ExecutionContext>({
     getClass: vi.fn().mockImplementation(() => class {}),
     getHandler: vi.fn().mockReturnValue(() => undefined),
     getType: vi.fn().mockReturnValue('http'),
@@ -26,6 +26,7 @@ const createHttpExecutionContext = (req: {
       getRequest: () => req,
     }),
   });
+};
 
 describe('GqlPermissionsGuard', () => {
   let guard: GqlPermissionsGuard;

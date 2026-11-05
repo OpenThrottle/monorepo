@@ -5,7 +5,10 @@ import { Link } from 'react-router';
 
 import { GLOBAL_FEATURE_ONBOARDING_SECTION_COPY } from '../data/data.copy';
 import { isExternalHref } from '../utils/external-href';
-import type { GlobalFeatureOnboardingContent } from './GlobalFeatureOnboarding';
+import type {
+  GlobalFeatureOnboardingContent,
+  GlobalFeatureOnboardingLink,
+} from './GlobalFeatureOnboarding';
 
 export interface GlobalFeatureOnboardingBodyProps {
   content: GlobalFeatureOnboardingContent;
@@ -30,6 +33,19 @@ export const GlobalFeatureOnboardingBody = (
   // Handlers
 
   // Markup
+  const hasCtas = cta != null || secondary != null;
+
+  const renderCtaLink = (link: GlobalFeatureOnboardingLink) => {
+    if (isExternalHref(link.to)) {
+      return (
+        <a href={link.to} rel="noreferrer" target="_blank">
+          {link.label}
+        </a>
+      );
+    }
+
+    return <Link to={link.to}>{link.label}</Link>;
+  };
 
   // Life Cycle
 
@@ -92,32 +108,16 @@ export const GlobalFeatureOnboardingBody = (
       {/* CTAs — an absolute http(s) target renders as a plain new-tab anchor,
           anything else as a react-router `Link`. Both keep the Button styling
           via `asChild`. A feature with neither link emits no row at all. */}
-      {cta != null || secondary != null ? (
+      {hasCtas && (
         <div className="flex flex-wrap items-center gap-3">
-          {cta != null ? (
-            <Button asChild={true}>
-              {isExternalHref(cta.to) ? (
-                <a href={cta.to} rel="noreferrer" target="_blank">
-                  {cta.label}
-                </a>
-              ) : (
-                <Link to={cta.to}>{cta.label}</Link>
-              )}
-            </Button>
-          ) : null}
-          {secondary != null ? (
+          {cta != null && <Button asChild={true}>{renderCtaLink(cta)}</Button>}
+          {secondary != null && (
             <Button asChild={true} variant="ghost">
-              {isExternalHref(secondary.to) ? (
-                <a href={secondary.to} rel="noreferrer" target="_blank">
-                  {secondary.label}
-                </a>
-              ) : (
-                <Link to={secondary.to}>{secondary.label}</Link>
-              )}
+              {renderCtaLink(secondary)}
             </Button>
-          ) : null}
+          )}
         </div>
-      ) : null}
+      )}
     </>
   );
 };

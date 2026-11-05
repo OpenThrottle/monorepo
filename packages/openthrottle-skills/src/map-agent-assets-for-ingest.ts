@@ -95,8 +95,9 @@ export const mapAgentAssetFileToIngestRecord = (
  */
 export const mapAgentAssetFilesToIngestRecords = (
   entries: readonly AgentAssetFileEntry[],
-): readonly AgentAssetIngestRecord[] =>
-  entries.map((entry) => mapAgentAssetFileToIngestRecord(entry));
+): readonly AgentAssetIngestRecord[] => {
+  return entries.map((entry) => mapAgentAssetFileToIngestRecord(entry));
+};
 
 /**
  * @description Repo-relative path prefixes ingested into `custom_prompts`.

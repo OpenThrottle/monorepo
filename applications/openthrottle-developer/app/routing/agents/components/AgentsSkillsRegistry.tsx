@@ -10,11 +10,9 @@ import {
 import * as React from 'react';
 
 import { AgentsSkillsRegistryGrid } from '~/routing/agents/components/AgentsSkillsRegistryGrid';
-import {
-  getRepoSkillsRegistryCounts,
-  type RepoSkillEntry,
-} from '~/routing/agents/data/repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 import { filterEntries } from '~/routing/agents/utils/filter-repo-skill-entries';
+import { getRepoSkillsRegistryCounts } from '~/routing/agents/utils/repo-skills-registry';
 
 export interface AgentsSkillsRegistryProps {
   className?: string;
@@ -44,9 +42,17 @@ export const AgentsSkillsRegistry = (
     [entries],
   );
 
+  const hasMatches = filtered.length > 0;
+
   // Handlers
 
   // Markup
+  const gridMarkup = <AgentsSkillsRegistryGrid entries={filtered} />;
+  const emptyMarkup = (
+    <p className="text-muted-foreground text-sm">
+      No matching entries in this section.
+    </p>
+  );
 
   // Life Cycle
 
@@ -101,13 +107,7 @@ export const AgentsSkillsRegistry = (
           Primary registry for automation tied to this monorepo—use when a model
           picks the wrong skill slug or path.
         </p>
-        {filtered.length > 0 ? (
-          <AgentsSkillsRegistryGrid entries={filtered} />
-        ) : (
-          <p className="text-muted-foreground text-sm">
-            No matching entries in this section.
-          </p>
-        )}
+        {hasMatches ? gridMarkup : emptyMarkup}
       </section>
     </div>
   );

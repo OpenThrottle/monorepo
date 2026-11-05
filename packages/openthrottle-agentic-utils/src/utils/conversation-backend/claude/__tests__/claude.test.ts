@@ -26,8 +26,8 @@ function writeFakeBin(name: string, body: string): string {
 
 // A successful streamed turn: init → two nested text deltas → consolidated
 // assistant echo (skipped) → result.
-const successBin = (): string =>
-  writeFakeBin(
+const successBin = (): string => {
+  return writeFakeBin(
     'claude-success.js',
     `const lines = [
       JSON.stringify({ type: 'system', subtype: 'init', session_id: 'sess-1', cwd: '/x', model: 'claude-opus-4-8' }),
@@ -38,22 +38,24 @@ const successBin = (): string =>
     ];
     process.stdout.write(lines.join('\\n') + '\\n');`,
   );
+};
 
 // A startup failure: nothing on stdout, a message on stderr, non-zero exit.
-const errorBin = (): string =>
-  writeFakeBin(
+const errorBin = (): string => {
+  return writeFakeBin(
     'claude-error.js',
     `process.stderr.write('Input must be provided\\n');
     process.exit(1);`,
   );
+};
 
 // Simulates an MCP tool call whose outcome depends on the permission grant in
 // argv: with a grant (--allowedTools or bypassPermissions) it succeeds; without
 // one it returns the headless "user declined the approval" is_error result —
 // exactly the reported symptom. Lets a backend-level test prove the grant flips
 // the outcome without invoking a real CLI.
-const mcpToolBin = (): string =>
-  writeFakeBin(
+const mcpToolBin = (): string => {
+  return writeFakeBin(
     'claude-mcp-tool.js',
     `const argv = process.argv.slice(2).join(' ');
     const granted = argv.includes('--allowedTools') || argv.includes('bypassPermissions');
@@ -67,6 +69,7 @@ const mcpToolBin = (): string =>
     ];
     process.stdout.write(lines.join('\\n') + '\\n');`,
   );
+};
 
 /** The metadata of the first tool_result chunk, if any. */
 function firstToolResult(
@@ -86,20 +89,21 @@ const MCP_SERVERS = {
 };
 
 // Emits one event, then hangs (no result, no further output) until killed.
-const hangBin = (): string =>
-  writeFakeBin(
+const hangBin = (): string => {
+  return writeFakeBin(
     'claude-hang.js',
     `process.stdout.write(JSON.stringify({ type: 'system', subtype: 'init', session_id: 'sess-1' }) + '\\n');
     setInterval(() => {}, 1000000);`,
   );
+};
 
 // Emits ONLY null-mapped liveness events (system/hook_*, rate_limit_event) —
 // each on its own stdout write (own data event) — before finally streaming text
 // and a terminal result. Models the reported defect: `claude` is alive and
 // emitting stdout (its own 120s idle never fires), but mapClaudeEvent returns
 // null for these events, so nothing reaches the server's chunk-based idle timer.
-const keepaliveBin = (): string =>
-  writeFakeBin(
+const keepaliveBin = (): string => {
+  return writeFakeBin(
     'claude-keepalive.js',
     `const emit = (o) => process.stdout.write(JSON.stringify(o) + '\\n');
     emit({ type: 'system', subtype: 'hook_started', hook: 'SessionStart' });
@@ -111,6 +115,7 @@ const keepaliveBin = (): string =>
       }, 25);
     }, 25);`,
   );
+};
 
 // A usage-limited turn: a rejected rate_limit_event (carries the reset), then a
 // terminal 429 error result (carries none).
@@ -127,12 +132,13 @@ const usageLimitBin = (): string => {
 
 // Echoes the CLAUDE_CONFIG_DIR the child was spawned with (or 'none'), so a test
 // can assert whether the headless turn was isolated onto a dedicated config dir.
-const configDirBin = (): string =>
-  writeFakeBin(
+const configDirBin = (): string => {
+  return writeFakeBin(
     'claude-configdir.js',
     `const configDir = process.env.CLAUDE_CONFIG_DIR || 'none';
     process.stdout.write(JSON.stringify({ type: 'result', subtype: 'success', is_error: false, result: configDir }) + '\\n');`,
   );
+};
 
 async function collect(
   run: Parameters<typeof claudeConversationBackend.stream>[0],

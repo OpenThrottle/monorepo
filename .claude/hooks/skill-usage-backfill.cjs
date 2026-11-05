@@ -55,7 +55,9 @@ var logHookError = (message, err) => {
 };
 
 // packages/agentic-hooks/src/config/env.ts
-var userConfigDir = () => import_node_path.default.join(import_node_os.default.homedir(), ".openthrottle");
+var userConfigDir = () => {
+  return import_node_path.default.join(import_node_os.default.homedir(), ".openthrottle");
+};
 var OT_MARKER_REL = import_node_path.default.join(
   "applications",
   "openthrottle-server",
@@ -127,13 +129,19 @@ var readEnvFile = (envPath) => {
   }
   return out;
 };
-var readRepoEnvFile = (repoRoot) => isOpenThrottleCheckout(repoRoot) ? readEnvFile(import_node_path.default.join(repoRoot, ".env")) : {};
-var readUserEnvFile = () => readEnvFile(import_node_path.default.join(userConfigDir(), ".env"));
-var envLayers = (repoRoot, options) => [
-  repoRoot ? readRepoEnvFile(repoRoot) : {},
-  ...options?.includeProcessEnv === false ? [] : [process.env],
-  readUserEnvFile()
-];
+var readRepoEnvFile = (repoRoot) => {
+  return isOpenThrottleCheckout(repoRoot) ? readEnvFile(import_node_path.default.join(repoRoot, ".env")) : {};
+};
+var readUserEnvFile = () => {
+  return readEnvFile(import_node_path.default.join(userConfigDir(), ".env"));
+};
+var envLayers = (repoRoot, options) => {
+  return [
+    repoRoot ? readRepoEnvFile(repoRoot) : {},
+    ...options?.includeProcessEnv === false ? [] : [process.env],
+    readUserEnvFile()
+  ];
+};
 var resolveOtEnv = (repoRoot, key, options) => {
   for (const layer of envLayers(repoRoot, options)) {
     const value = layer[key];
@@ -144,7 +152,9 @@ var resolveOtEnv = (repoRoot, key, options) => {
   return "";
 };
 var LOOPBACK_AUTHORITY = /^([a-z][a-z0-9+.-]*:\/\/(?:[^/?#@]*@)?)localhost(?=[:/?#]|$)/i;
-var normalizeLoopbackHost = (url) => url.replace(LOOPBACK_AUTHORITY, "$1127.0.0.1");
+var normalizeLoopbackHost = (url) => {
+  return url.replace(LOOPBACK_AUTHORITY, "$1127.0.0.1");
+};
 var graphqlUrlFromEnvMap = (env) => {
   const explicit = env.OPENTHROTTLE_GRAPHQL_URL?.trim() || env.OPENTHROTTLE_WORKER_GRAPHQL_URL?.trim();
   if (explicit) {
@@ -165,7 +175,9 @@ var resolveGraphqlUrl = (repoRoot, options) => {
   }
   return null;
 };
-var resolveAuthToken = (repoRoot, options) => resolveOtEnv(repoRoot, "OPENTHROTTLE_MCP_AUTH_TOKEN", options) || resolveOtEnv(repoRoot, "OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN", options) || "";
+var resolveAuthToken = (repoRoot, options) => {
+  return resolveOtEnv(repoRoot, "OPENTHROTTLE_MCP_AUTH_TOKEN", options) || resolveOtEnv(repoRoot, "OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN", options) || "";
+};
 
 // packages/agentic-hooks/src/data/chunk.ts
 var chunkByBudget = (items, {
@@ -197,20 +209,30 @@ var chunkByBudget = (items, {
 var TELEMETRY_DIR_BASENAME = "skill-usage";
 var EVENTS_JSONL_BASENAME = "events.jsonl";
 var TOKEN_USAGE_JSONL_BASENAME = "token-usage.jsonl";
-var resolveTelemetryDir = () => process.env.OPENTHROTTLE_TELEMETRY_DIR?.trim() || import_node_path2.default.join(userConfigDir(), TELEMETRY_DIR_BASENAME);
+var resolveTelemetryDir = () => {
+  return process.env.OPENTHROTTLE_TELEMETRY_DIR?.trim() || import_node_path2.default.join(userConfigDir(), TELEMETRY_DIR_BASENAME);
+};
 var appendJsonl = (jsonlPath, event) => {
   import_node_fs2.default.mkdirSync(import_node_path2.default.dirname(jsonlPath), { recursive: true });
   import_node_fs2.default.appendFileSync(jsonlPath, `${JSON.stringify(event)}
 `, "utf8");
 };
-var defaultJsonlPath = () => import_node_path2.default.join(resolveTelemetryDir(), EVENTS_JSONL_BASENAME);
-var defaultTokenUsageJsonlPath = () => import_node_path2.default.join(resolveTelemetryDir(), TOKEN_USAGE_JSONL_BASENAME);
-var deadLetterPathFor = (filePath) => filePath.replace(/\.jsonl$/, "") + ".dead-letter.jsonl";
-var toDeadLetterLine = (record, reason, nowMs) => JSON.stringify({
-  dead_lettered_at: new Date(nowMs).toISOString(),
-  line: record,
-  reason
-});
+var defaultJsonlPath = () => {
+  return import_node_path2.default.join(resolveTelemetryDir(), EVENTS_JSONL_BASENAME);
+};
+var defaultTokenUsageJsonlPath = () => {
+  return import_node_path2.default.join(resolveTelemetryDir(), TOKEN_USAGE_JSONL_BASENAME);
+};
+var deadLetterPathFor = (filePath) => {
+  return filePath.replace(/\.jsonl$/, "") + ".dead-letter.jsonl";
+};
+var toDeadLetterLine = (record, reason, nowMs) => {
+  return JSON.stringify({
+    dead_lettered_at: new Date(nowMs).toISOString(),
+    line: record,
+    reason
+  });
+};
 var appendDeadLetters = ({
   filePath,
   nowMs = Date.now(),
@@ -243,7 +265,9 @@ var TELEMETRY_CONFIG_SOURCES = Object.freeze({
 });
 
 // packages/nodejs-utils/src/utils/is-record.ts
-var isRecord = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
+var isRecord = (value) => {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+};
 
 // packages/agentic-hooks/src/data/checkpoints.ts
 var DEFAULT_STALE_CHECKPOINT_MS = 6 * 60 * 60 * 1e3;
@@ -256,7 +280,9 @@ var PRIVACY_LEVELS = Object.freeze({
 });
 var DEFAULT_PRIVACY_LEVEL = PRIVACY_LEVELS.TRUNCATED;
 var FOREIGN_PRIVACY_LEVEL = PRIVACY_LEVELS.NAME_ONLY;
-var resolvePrivacyLevel = (repoRoot) => isOpenThrottleCheckout(repoRoot) ? DEFAULT_PRIVACY_LEVEL : FOREIGN_PRIVACY_LEVEL;
+var resolvePrivacyLevel = (repoRoot) => {
+  return isOpenThrottleCheckout(repoRoot) ? DEFAULT_PRIVACY_LEVEL : FOREIGN_PRIVACY_LEVEL;
+};
 var DEFAULT_ARGS_MAX_LEN = 256;
 var SECRET_PATTERNS = [
   /\bBearer\s+[A-Za-z0-9._\-+=/]+/gi,
@@ -274,18 +300,25 @@ var redactSecrets = (value) => {
   }
   return out;
 };
+var stringifyArgs = (args) => {
+  if (args == null) {
+    return "";
+  }
+  if (typeof args === "string") {
+    return args;
+  }
+  try {
+    return JSON.stringify(args);
+  } catch {
+    return String(args);
+  }
+};
 var applyPrivacy = (level, args, options = {}) => {
   const maxLen = options.maxLen ?? DEFAULT_ARGS_MAX_LEN;
   if (level === PRIVACY_LEVELS.NAME_ONLY) {
     return null;
   }
-  const asString = args == null ? "" : typeof args === "string" ? args : (() => {
-    try {
-      return JSON.stringify(args);
-    } catch {
-      return String(args);
-    }
-  })();
+  const asString = stringifyArgs(args);
   const redacted = redactSecrets(asString);
   if (level === PRIVACY_LEVELS.FULL) {
     return redacted;
@@ -460,7 +493,9 @@ var PERMANENT_GRAPHQL_CODES = [
   "GRAPHQL_VALIDATION_FAILED"
 ];
 var TRANSIENT_CLIENT_STATUSES = [401, 403, 408, 429];
-var isPermanentHttpStatus = (status) => status >= 400 && status < 500 && !TRANSIENT_CLIENT_STATUSES.includes(status);
+var isPermanentHttpStatus = (status) => {
+  return status >= 400 && status < 500 && !TRANSIENT_CLIENT_STATUSES.includes(status);
+};
 var readStatusCode = (extensions) => {
   const original = extensions.originalError;
   if (isRecord(original) && typeof original.statusCode === "number") {
@@ -488,12 +523,16 @@ var readGraphqlErrors = (payload) => {
   }
   return { message: messages.join("; "), permanent };
 };
-var readMutationData = (payload, field) => isRecord(payload) && isRecord(payload.data) ? payload.data[field] : void 0;
-var transient = (reason) => ({
-  ok: false,
-  permanent: false,
-  reason
-});
+var readMutationData = (payload, field) => {
+  return isRecord(payload) && isRecord(payload.data) ? payload.data[field] : void 0;
+};
+var transient = (reason) => {
+  return {
+    ok: false,
+    permanent: false,
+    reason
+  };
+};
 var postMutation = async ({
   authToken,
   fetchImpl,
@@ -524,8 +563,13 @@ var postMutation = async ({
       signal: AbortSignal.timeout(timeoutMs)
     });
   } catch (err) {
-    const reason = err instanceof Error && err.name === "TimeoutError" ? "timeout" : err instanceof Error ? err.message : String(err);
-    return transient(reason);
+    if (err instanceof Error && err.name === "TimeoutError") {
+      return transient("timeout");
+    }
+    if (err instanceof Error) {
+      return transient(err.message);
+    }
+    return transient(String(err));
   }
   let payload;
   try {
@@ -583,30 +627,39 @@ mutation RecordTokenUsage($input: RecordTokenUsageInput!) {
   }
 }
 `;
-var toRecordTokenUsageRow = (record) => ({
-  cacheReadTokens: record.cache_read_tokens,
-  cacheWriteTokens: record.cache_write_tokens,
-  costUsd: record.cost_usd,
-  cwd: record.cwd,
-  gitBranch: record.git_branch,
-  inputTokens: record.input_tokens,
-  model: record.model,
-  occurredAt: record.occurred_at,
-  outputTokens: record.output_tokens,
-  provider: record.provider,
-  rawUsageJson: record.raw_usage_json,
-  reasoningTokens: record.reasoning_tokens,
-  requestId: record.request_id,
-  sessionId: record.session_id,
-  source: record.source,
-  totalTokens: record.total_tokens
-});
-var tokenUsageRowBytes = (record) => Buffer.byteLength(JSON.stringify(toRecordTokenUsageRow(record)), "utf8");
-var chunkTokenUsage = (records, size = MAX_TOKEN_USAGE_BATCH, maxBytes = MAX_TOKEN_USAGE_BATCH_BYTES) => chunkByBudget(records, {
-  maxBytes,
-  maxItems: Math.min(size, MAX_TOKEN_USAGE_BATCH),
-  sizeOf: tokenUsageRowBytes
-});
+var toRecordTokenUsageRow = (record) => {
+  return {
+    cacheReadTokens: record.cache_read_tokens,
+    cacheWriteTokens: record.cache_write_tokens,
+    costUsd: record.cost_usd,
+    cwd: record.cwd,
+    gitBranch: record.git_branch,
+    inputTokens: record.input_tokens,
+    model: record.model,
+    occurredAt: record.occurred_at,
+    outputTokens: record.output_tokens,
+    provider: record.provider,
+    rawUsageJson: record.raw_usage_json,
+    reasoningTokens: record.reasoning_tokens,
+    requestId: record.request_id,
+    sessionId: record.session_id,
+    source: record.source,
+    totalTokens: record.total_tokens
+  };
+};
+var tokenUsageRowBytes = (record) => {
+  return Buffer.byteLength(
+    JSON.stringify(toRecordTokenUsageRow(record)),
+    "utf8"
+  );
+};
+var chunkTokenUsage = (records, size = MAX_TOKEN_USAGE_BATCH, maxBytes = MAX_TOKEN_USAGE_BATCH_BYTES) => {
+  return chunkByBudget(records, {
+    maxBytes,
+    maxItems: Math.min(size, MAX_TOKEN_USAGE_BATCH),
+    sizeOf: tokenUsageRowBytes
+  });
+};
 var postTokenUsageBatch = async ({
   records,
   graphqlUrl,
@@ -648,7 +701,9 @@ var postTokenUsageBatch = async ({
 };
 
 // packages/agentic-hooks/src/data/persist.ts
-var forLog = (graphqlUrl) => graphqlUrl.replace(/^([a-z][a-z0-9+.-]*:\/\/)[^/?#]*@/i, "$1***@");
+var forLog = (graphqlUrl) => {
+  return graphqlUrl.replace(/^([a-z][a-z0-9+.-]*:\/\/)[^/?#]*@/i, "$1***@");
+};
 var DEFAULT_POST_TIMEOUT_MS = 750;
 var DEFAULT_ABANDONED_MS = 6 * 60 * 60 * 1e3;
 var postSkillUsageEvent = async ({
@@ -668,7 +723,9 @@ var postSkillUsageEvent = async ({
     variables: { input: toRecordSkillUsageInput(event) }
   });
 };
-var resolveTimeout = (timeoutMs) => timeoutMs ?? (Number(process.env.OPENTHROTTLE_TELEMETRY_TIMEOUT_MS) || DEFAULT_POST_TIMEOUT_MS);
+var resolveTimeout = (timeoutMs) => {
+  return timeoutMs ?? (Number(process.env.OPENTHROTTLE_TELEMETRY_TIMEOUT_MS) || DEFAULT_POST_TIMEOUT_MS);
+};
 var persistTokenUsage = async ({
   records,
   repoRoot,
@@ -780,7 +837,11 @@ var readNewBytes = ({
       return { lines: [], nextOffset: start };
     }
     const remaining = size - start;
-    let window = maxBytes !== void 0 && maxBytes > 0 ? Math.min(remaining, Math.floor(maxBytes)) : remaining;
+    const hasMaxBytes = maxBytes !== void 0 && maxBytes > 0;
+    let window = remaining;
+    if (hasMaxBytes) {
+      window = Math.min(remaining, Math.floor(maxBytes));
+    }
     let buffer = Buffer.alloc(0);
     let lastNewline = -1;
     while (lastNewline < 0) {
@@ -829,7 +890,12 @@ var normalizeClaudePayload = (raw) => {
   const hookEvent = typeof payload.hook_event_name === "string" ? payload.hook_event_name : "";
   if (hookEvent === "PreToolUse" || payload.tool_name === "Skill") {
     const toolInput = isRecord(payload.tool_input) ? payload.tool_input : {};
-    const skillName = typeof toolInput.skill === "string" ? toolInput.skill : typeof toolInput.name === "string" ? toolInput.name : null;
+    let skillName = null;
+    if (typeof toolInput.skill === "string") {
+      skillName = toolInput.skill;
+    } else if (typeof toolInput.name === "string") {
+      skillName = toolInput.name;
+    }
     if (!skillName) {
       return null;
     }
@@ -877,8 +943,12 @@ var normalizeClaudePayload = (raw) => {
 };
 
 // packages/agentic-token-usage/src/usage.ts
-var asFiniteNumber = (value) => typeof value === "number" && Number.isFinite(value) ? value : void 0;
-var asNonEmptyString = (value) => typeof value === "string" && value !== "" ? value : void 0;
+var asFiniteNumber = (value) => {
+  return typeof value === "number" && Number.isFinite(value) ? value : void 0;
+};
+var asNonEmptyString = (value) => {
+  return typeof value === "string" && value !== "" ? value : void 0;
+};
 var firstNumber = (...candidates) => {
   for (const candidate of candidates) {
     const parsed = asFiniteNumber(candidate);
@@ -899,8 +969,17 @@ var safeParseRecord = (json) => {
     return null;
   }
 };
+var toMetaRecord = (input) => {
+  if (typeof input === "string") {
+    return safeParseRecord(input);
+  }
+  if (isRecord(input)) {
+    return input;
+  }
+  return null;
+};
 var normalizeUsage = (input) => {
-  const meta = typeof input === "string" ? safeParseRecord(input) : isRecord(input) ? input : null;
+  const meta = toMetaRecord(input);
   if (meta === null) {
     return {};
   }
@@ -974,15 +1053,25 @@ var normalizeUsage = (input) => {
     ...totalTokens !== void 0 ? { totalTokens } : {}
   };
 };
-var hasNoCounts = (usage) => usage.inputTokens === void 0 && usage.outputTokens === void 0 && usage.cacheReadTokens === void 0 && usage.cacheWriteTokens === void 0 && usage.reasoningTokens === void 0 && usage.totalTokens === void 0 && usage.costUsd === void 0;
-var hasUsageCounts = (usage) => usage !== void 0 && !hasNoCounts(usage);
+var hasNoCounts = (usage) => {
+  return usage.inputTokens === void 0 && usage.outputTokens === void 0 && usage.cacheReadTokens === void 0 && usage.cacheWriteTokens === void 0 && usage.reasoningTokens === void 0 && usage.totalTokens === void 0 && usage.costUsd === void 0;
+};
+var hasUsageCounts = (usage) => {
+  return usage !== void 0 && !hasNoCounts(usage);
+};
 
 // packages/agentic-hooks/src/adapters/claude/transcript.ts
 var CLAUDE_PROVIDER = "claude";
 var SYNTHETIC_MODEL = "<synthetic>";
-var nonEmptyString = (value) => typeof value === "string" && value !== "" ? value : null;
-var finiteNumber = (value) => typeof value === "number" && Number.isFinite(value) ? value : null;
-var thinkingTokens = (usage) => isRecord(usage.output_tokens_details) ? finiteNumber(usage.output_tokens_details.thinking_tokens) : null;
+var nonEmptyString = (value) => {
+  return typeof value === "string" && value !== "" ? value : null;
+};
+var finiteNumber = (value) => {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+};
+var thinkingTokens = (usage) => {
+  return isRecord(usage.output_tokens_details) ? finiteNumber(usage.output_tokens_details.thinking_tokens) : null;
+};
 var parseJsonRecord = (line) => {
   try {
     const parsed = JSON.parse(line);
@@ -1060,9 +1149,15 @@ var import_node_child_process2 = require("node:child_process");
 var import_node_fs5 = __toESM(require("node:fs"), 1);
 var import_node_os3 = __toESM(require("node:os"), 1);
 var import_node_path5 = __toESM(require("node:path"), 1);
-var claudeProjectSlug = (absolutePath) => absolutePath.replace(/[^a-zA-Z0-9]/g, "-");
-var narrowSlug = (absolutePath) => absolutePath.replace(/[/.]/g, "-");
-var defaultClaudeProjectsDir = () => import_node_path5.default.join(import_node_os3.default.homedir(), ".claude", "projects");
+var claudeProjectSlug = (absolutePath) => {
+  return absolutePath.replace(/[^a-zA-Z0-9]/g, "-");
+};
+var narrowSlug = (absolutePath) => {
+  return absolutePath.replace(/[/.]/g, "-");
+};
+var defaultClaudeProjectsDir = () => {
+  return import_node_path5.default.join(import_node_os3.default.homedir(), ".claude", "projects");
+};
 var parseWorktreeList = (porcelain) => {
   const paths = [];
   for (const block of porcelain.split(/\r?\n\r?\n/)) {
@@ -1131,13 +1226,15 @@ var resolveCheckouts = ({
   includeWorktrees,
   listWorktrees = listGitWorktrees,
   repoRoot
-}) => [
-  ...new Set(
-    [repoRoot, ...includeWorktrees ? listWorktrees(repoRoot) : []].map(
-      (checkout) => import_node_path5.default.resolve(checkout)
+}) => {
+  return [
+    ...new Set(
+      [repoRoot, ...includeWorktrees ? listWorktrees(repoRoot) : []].map(
+        (checkout) => import_node_path5.default.resolve(checkout)
+      )
     )
-  )
-].sort();
+  ].sort();
+};
 var transcriptBelongsTo = ({
   checkouts,
   cwd
@@ -1158,12 +1255,16 @@ var COMMAND_HEAD = /^\s*<command-(?:message|name)>/;
 var COMMAND_NAME = /<command-name>\s*([^<]*?)\s*<\/command-name>/;
 var COMMAND_ARGS = /<command-args>([\s\S]*?)<\/command-args>/;
 var LOCAL_STDOUT = "<local-command-stdout>";
-var createSkillScanState = () => ({
-  candidates: [],
-  commands: [],
-  localReplies: /* @__PURE__ */ new Set()
-});
-var nonEmptyString2 = (value) => typeof value === "string" && value !== "" ? value : null;
+var createSkillScanState = () => {
+  return {
+    candidates: [],
+    commands: [],
+    localReplies: /* @__PURE__ */ new Set()
+  };
+};
+var nonEmptyString2 = (value) => {
+  return typeof value === "string" && value !== "" ? value : null;
+};
 var parseJsonRecord2 = (line) => {
   try {
     const parsed = JSON.parse(line);
@@ -1188,11 +1289,13 @@ var userText = (entry) => {
     (block) => isRecord(block) && typeof block.text === "string" ? block.text : ""
   ).join("\n");
 };
-var baseOf = (entry, fallbackSessionId) => ({
-  gitBranch: nonEmptyString2(entry.gitBranch) ?? "",
-  occurredAt: nonEmptyString2(entry.timestamp),
-  session_id: nonEmptyString2(entry.sessionId) ?? fallbackSessionId
-});
+var baseOf = (entry, fallbackSessionId) => {
+  return {
+    gitBranch: nonEmptyString2(entry.gitBranch) ?? "",
+    occurredAt: nonEmptyString2(entry.timestamp),
+    session_id: nonEmptyString2(entry.sessionId) ?? fallbackSessionId
+  };
+};
 var fromSkillToolUse = (entry, fallbackSessionId) => {
   const { message } = entry;
   if (!isRecord(message) || !Array.isArray(message.content)) {
@@ -1308,10 +1411,12 @@ var scanSkillLines = ({
     }
   }
 };
-var finishSkillScan = (state) => [
-  ...state.candidates,
-  ...state.commands.filter(({ uuid }) => uuid === null || !state.localReplies.has(uuid)).map(({ candidate }) => candidate)
-];
+var finishSkillScan = (state) => {
+  return [
+    ...state.candidates,
+    ...state.commands.filter(({ uuid }) => uuid === null || !state.localReplies.has(uuid)).map(({ candidate }) => candidate)
+  ];
+};
 
 // packages/agentic-hooks/src/adapters/claude/transcript-usage.ts
 var import_node_fs6 = __toESM(require("node:fs"), 1);
@@ -1335,7 +1440,9 @@ var DEFAULT_BACKFILL_SINCE = "2026-09-23T00:00:00.000Z";
 var CHUNK_BYTES = 8 * 1024 * 1024;
 var SKILL_CONCURRENCY = 8;
 var MAIN_FILE = /\.jsonl$/;
-var dayOf = (iso) => iso.slice(0, 10);
+var dayOf = (iso) => {
+  return iso.slice(0, 10);
+};
 var bump = (counts, key) => {
   counts[key] = (counts[key] ?? 0) + 1;
 };
@@ -1624,7 +1731,7 @@ var sendBackfill = async ({
 };
 
 // packages/agentic-hooks/src/adapters/claude/backfill-args.ts
-var BACKFILL_USAGE = "node .claude/hooks/skill-usage-backfill.cjs [--dry-run] [--since <ISO>] [--until <ISO>] [--projects-dir <path>] [--repo-root <path>] [--no-worktrees] [--timeout-ms <n>]";
+var BACKFILL_USAGE = `node .claude/hooks/skill-usage-backfill.cjs [--dry-run] [--since <ISO>] [--until <ISO>] [--projects-dir <path>] [--repo-root <path>] [--no-worktrees] [--timeout-ms <n>]`;
 var DEFAULT_TIMEOUT_MS = 15e3;
 var VALUE_FLAGS = /* @__PURE__ */ new Set([
   "--projects-dir",
@@ -1774,6 +1881,12 @@ var formatBackfillResult = (result) => {
 };
 
 // packages/agentic-hooks/src/adapters/claude/backfill-run.ts
+var pickEndpoint = (injected, repoRoot) => {
+  if (injected === void 0) {
+    return resolveBackfillEndpoint({ repoRoot });
+  }
+  return injected;
+};
 var runBackfill = async ({
   endpoint,
   fetchImpl,
@@ -1786,7 +1899,7 @@ var runBackfill = async ({
   if (options.dryRun) {
     return 0;
   }
-  const target = endpoint === void 0 ? resolveBackfillEndpoint({ repoRoot: options.repoRoot }) : endpoint;
+  const target = pickEndpoint(endpoint, options.repoRoot);
   if (target === null) {
     stderr(
       "no OpenThrottle endpoint to send to (set OPENTHROTTLE_GRAPHQL_URL, and unset OPENTHROTTLE_TELEMETRY_OFFLINE); nothing was sent or buffered\n"

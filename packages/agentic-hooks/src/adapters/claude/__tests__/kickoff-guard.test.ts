@@ -5,15 +5,18 @@ import { decideKickoff, readKickoffBrief } from '../kickoff-guard.ts';
 
 const PLAN_ID = '586bcff7-dbef-4e2c-ae22-d3f9210b2a39';
 
-const startSession = (toolInput: Record<string, unknown>) => ({
-  hook_event_name: 'PreToolUse',
-  session_id: 'session-1',
-  tool_input: toolInput,
-  tool_name: 'mcp__ccd_session__start_session',
-});
+const startSession = (toolInput: Record<string, unknown>) => {
+  return {
+    hook_event_name: 'PreToolUse',
+    session_id: 'session-1',
+    tool_input: toolInput,
+    tool_name: 'mcp__ccd_session__start_session',
+  };
+};
 
-const lookupReturning = (result: OtIdLookup) =>
-  vi.fn(async (_id: string): Promise<OtIdLookup> => result);
+const lookupReturning = (result: OtIdLookup) => {
+  return vi.fn(async (_id: string): Promise<OtIdLookup> => result);
+};
 
 describe('readKickoffBrief', () => {
   it('reads a start_session prompt', () => {

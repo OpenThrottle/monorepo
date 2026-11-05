@@ -27,7 +27,9 @@ const task = (
   id: string,
   status: string,
   summary: string | undefined = undefined,
-): PlanRunPrTask => ({ id, status, summary, title: `Task ${id}` });
+): PlanRunPrTask => {
+  return { id, status, summary, title: `Task ${id}` };
+};
 
 describe('parseOnelineLog', () => {
   it('splits sha and subject and skips blank lines', () => {
@@ -229,8 +231,7 @@ describe('classifyPlanRunPrBody', () => {
   });
 
   it('ignores any unknown bot block above or below the markers', () => {
-    const botBlock =
-      '<!-- some-future-bot:summary -->\n🤖 Made with a tool.\n<!-- /some-future-bot:summary -->';
+    const botBlock = `<!-- some-future-bot:summary -->\n🤖 Made with a tool.\n<!-- /some-future-bot:summary -->`;
 
     expect(classifyPlanRunPrBody(`${botBlock}\n\n${hostBody}`)).toBe('host');
     expect(classifyPlanRunPrBody(`${hostBody}\n${botBlock}`)).toBe('host');
@@ -301,8 +302,7 @@ describe('replacePlanRunPrBodyRegion', () => {
   });
 
   it('replaces only the marked region, keeping a bot footer byte for byte', () => {
-    const footer =
-      '\n<!-- codesmith:footer -->\r\nReviewed.  \n<!-- /codesmith:footer -->\n';
+    const footer = `\n<!-- codesmith:footer -->\r\nReviewed.  \n<!-- /codesmith:footer -->\n`;
 
     expect(refresh(`${oldBlock}${footer}`)).toBe(
       `${newBlock.trimEnd()}\n${footer}`,

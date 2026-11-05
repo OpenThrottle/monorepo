@@ -13,8 +13,9 @@
  */
 import jwt from 'jsonwebtoken';
 
-const isMutableRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
+const isMutableRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === 'object' && value !== null;
+};
 
 /**
  * connectionParams key the browser client puts the ws token under.

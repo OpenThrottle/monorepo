@@ -21,23 +21,26 @@ describe('DataRetentionProcessor', () => {
 
   const makePolicy = (
     overrides: Partial<RetentionPolicy> = {},
-  ): RetentionPolicy => ({
-    countExpired: vi.fn().mockResolvedValue(0),
-    deleteBatch: vi.fn().mockResolvedValue(0),
-    description: 'test policy',
-    name: 'test',
-    table: 'test_table',
-    ...overrides,
-  });
+  ): RetentionPolicy => {
+    return {
+      countExpired: vi.fn().mockResolvedValue(0),
+      deleteBatch: vi.fn().mockResolvedValue(0),
+      description: 'test policy',
+      name: 'test',
+      table: 'test_table',
+      ...overrides,
+    };
+  };
 
   const makeProcessor = (
     policies: readonly RetentionPolicy[],
-  ): DataRetentionProcessor =>
-    new DataRetentionProcessor(
+  ): DataRetentionProcessor => {
+    return new DataRetentionProcessor(
       dataSource,
       createMock<LoggerService>(),
       policies,
     );
+  };
 
   beforeEach(() => {
     dataSource = createMock<DataSource>();

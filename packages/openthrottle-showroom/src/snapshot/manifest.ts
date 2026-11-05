@@ -64,8 +64,7 @@ export type TableManifestEntry =
 /** table name → classification. */
 export type SnapshotManifest = Record<string, TableManifestEntry>;
 
-const MANIFEST_PATH =
-  'packages/openthrottle-showroom/src/snapshot/manifest.data.ts';
+const MANIFEST_PATH = `packages/openthrottle-showroom/src/snapshot/manifest.data.ts`;
 
 const VECTOR_TYPE_PATTERN = /^vector\((\d+)\)$/;
 

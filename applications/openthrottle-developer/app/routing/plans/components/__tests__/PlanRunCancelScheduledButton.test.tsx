@@ -29,9 +29,9 @@ type ActionResult = Record<string, unknown>;
 const renderButton = (respond: (form: FormData) => ActionResult) => {
   const submissions: FormData[] = [];
   const loader = vi.fn(() => null);
-  const Component = () => (
-    <PlanRunCancelScheduledButton planId="plan-1" planRunId="run-9" />
-  );
+  const Component = () => {
+    return <PlanRunCancelScheduledButton planId="plan-1" planRunId="run-9" />;
+  };
   const RoutesStub = createRoutesStub([
     {
       Component,

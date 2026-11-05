@@ -5,7 +5,7 @@ import { describe, expect, test } from 'vitest';
 import {
   USAGE_COMPLETION_ATTRIBUTION_CAVEAT,
   USAGE_DAILY_STATS_SERIES,
-} from '~/routing/usage/data/daily-stats-series-glossary';
+} from '~/routing/usage/data/data.daily-stats-series-glossary';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
 import { UsageDailyActivityOverview } from '../UsageDailyActivityOverview';

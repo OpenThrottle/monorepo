@@ -6,16 +6,18 @@ import { filterCalendarEventsBySearch, getCalendarEventById } from '../events';
 
 const buildEvent = (
   overrides: Partial<CalendarListEvent> = {},
-): CalendarListEvent => ({
-  allDay: false,
-  description: 'Quarterly planning session',
-  endsAt: '2026-08-12T13:00:00.000Z',
-  id: 'event-1',
-  location: 'Conference Room A',
-  startsAt: '2026-08-12T12:00:00.000Z',
-  title: 'Team Sync',
-  ...overrides,
-});
+): CalendarListEvent => {
+  return {
+    allDay: false,
+    description: 'Quarterly planning session',
+    endsAt: '2026-08-12T13:00:00.000Z',
+    id: 'event-1',
+    location: 'Conference Room A',
+    startsAt: '2026-08-12T12:00:00.000Z',
+    title: 'Team Sync',
+    ...overrides,
+  };
+};
 
 describe('filterCalendarEventsBySearch', () => {
   const events = [

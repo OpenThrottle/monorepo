@@ -15,16 +15,18 @@ const renderWithEvaluations = (
     typeof RolloutProvider
   >['initialEvaluations'],
 ): RenderResult => {
-  const Component = () => (
-    <RolloutProvider
-      applicationKey="openthrottle-developer"
-      fetchEvaluations={vi.fn(async () => [])}
-      flags={developerRolloutFlags}
-      initialEvaluations={initialEvaluations}
-    >
-      <RolloutSdkHydrationStatus />
-    </RolloutProvider>
-  );
+  const Component = () => {
+    return (
+      <RolloutProvider
+        applicationKey="openthrottle-developer"
+        fetchEvaluations={vi.fn(async () => [])}
+        flags={developerRolloutFlags}
+        initialEvaluations={initialEvaluations}
+      >
+        <RolloutSdkHydrationStatus />
+      </RolloutProvider>
+    );
+  };
   const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
   return render(<RoutesStub />);
 };

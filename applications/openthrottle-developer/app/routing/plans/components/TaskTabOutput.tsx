@@ -41,14 +41,13 @@ export const TaskTabOutput = (
       data-testid="TaskLoggerOutput"
       value="output"
     >
-      {chunks.length === 0 ? (
+      {chunks.length === 0 && (
         <OpenThrottleEmptyState
           description="This task has no output yet. Iterations that tag this task with its id will appear here."
           title="No task output yet"
         />
-      ) : (
-        <OutputStream chunks={chunks} />
       )}
+      {chunks.length > 0 && <OutputStream chunks={chunks} />}
     </TabsContent>
   );
 };

@@ -15,7 +15,9 @@ describe('OpenThrottleModal Component', () => {
   beforeEach(() => {
     props = { param: 'modal', value: 'open' };
 
-    const Component = () => <OpenThrottleModal {...props} />;
+    const Component = () => {
+      return <OpenThrottleModal {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     component = render(<RoutesStub />);
@@ -27,9 +29,11 @@ describe('OpenThrottleModal Component', () => {
 
   test('shows dialog with an accessible name when search param matches', () => {
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <OpenThrottleModal param="modal" title="Edit settings" value="open" />
-    );
+    const Component = () => {
+      return (
+        <OpenThrottleModal param="modal" title="Edit settings" value="open" />
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     const result = render(<RoutesStub initialEntries={['/?modal=open']} />);
@@ -44,9 +48,11 @@ describe('OpenThrottleModal Component', () => {
   test('closes the dialog when onOpenChange(false) fires (Esc)', async () => {
     const user = userEvent.setup();
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-    const Component = () => (
-      <OpenThrottleModal param="modal" title="Edit settings" value="open" />
-    );
+    const Component = () => {
+      return (
+        <OpenThrottleModal param="modal" title="Edit settings" value="open" />
+      );
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
 
     const result = render(<RoutesStub initialEntries={['/?modal=open']} />);

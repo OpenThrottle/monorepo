@@ -27,6 +27,7 @@
 import { spawn } from 'node:child_process';
 
 import { warnUnsupportedAdditionalDirectories } from '../additional-directories.ts';
+import { describeExit } from '../describe-exit.ts';
 import { withFileMentions } from '../file-mentions.ts';
 import { withKeepalive } from '../keepalive.ts';
 import {
@@ -296,8 +297,8 @@ export async function createCursorAgentSession(
     return earlyId;
   }
 
-  const failure = (reason: string): Error =>
-    new Error(
+  const failure = (reason: string): Error => {
+    return new Error(
       formatCursorMintFailure({
         bin,
         cwd: options.cwd,
@@ -307,6 +308,7 @@ export async function createCursorAgentSession(
         stdout,
       }),
     );
+  };
 
   if (timedOut) {
     throw failure(`timed out after ${timeoutMs}ms`);
@@ -387,7 +389,9 @@ async function* streamCursorAgent(
   );
 
   wallTimer.unref();
-  const onAbort = (): void => terminate('cancelled');
+  const onAbort = (): void => {
+    return terminate('cancelled');
+  };
 
   run.signal?.addEventListener('abort', onAbort, { once: true });
   if (run.signal?.aborted === true) {
@@ -442,11 +446,7 @@ async function* streamCursorAgent(
         (code !== null && code !== 0);
       const message =
         terminationReason ??
-        (error !== null
-          ? error.message
-          : stderr.trim() !== ''
-            ? stderr.trim()
-            : `cursor-agent exited with code ${code}`);
+        describeExit('cursor-agent', { code, error, stderr });
       yield {
         delta: '',
         done: true,

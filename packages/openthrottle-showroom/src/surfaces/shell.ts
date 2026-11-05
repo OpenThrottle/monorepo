@@ -91,12 +91,13 @@ export interface ShellSurfaceOptions {
   readonly title: string;
 }
 
-const escapeHtml = (value: string): string =>
-  value
+const escapeHtml = (value: string): string => {
+  return value
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;');
+};
 
 /**
  * The window chrome and type scale.
@@ -105,7 +106,8 @@ const escapeHtml = (value: string): string =>
  * than a real terminal's default: a 9:16 crop of this is the constraint, and text
  * that is comfortable on a desktop is unreadable on a phone.
  */
-const stylesheet = (brand: FormatSpec['brand']): string => `
+const stylesheet = (brand: FormatSpec['brand']): string => {
+  return `
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;height:100%;background:${brand.background};
     color:${brand.foreground};font-family:${brand.sans}}
@@ -139,21 +141,29 @@ const stylesheet = (brand: FormatSpec['brand']): string => `
     font-family:${brand.mono};font-size:23px;line-height:1.45;
     border-bottom:1px solid ${brand.border}}
 `;
+};
+
+const renderOutputParts = (
+  output: NonNullable<ShellBlock['output']>,
+): string[] => {
+  if (typeof output === 'string') {
+    return [`<pre class="output">${escapeHtml(output)}</pre>`];
+  }
+
+  return output.map(
+    (part) =>
+      `<pre class="output" id="${part.id}"${
+        part.hidden ? ' data-demo-hidden' : ''
+      }>${escapeHtml(part.text)}</pre>`,
+  );
+};
 
 const renderOutput = (block: ShellBlock): string => {
   if (block.output === undefined) {
     return '';
   }
 
-  const parts =
-    typeof block.output === 'string'
-      ? [`<pre class="output">${escapeHtml(block.output)}</pre>`]
-      : block.output.map(
-          (part) =>
-            `<pre class="output" id="${part.id}"${
-              part.hidden ? ' data-demo-hidden' : ''
-            }>${escapeHtml(part.text)}</pre>`,
-        );
+  const parts = renderOutputParts(block.output);
 
   // The wrapper always carries `<id>-output`, so `reveal('#<id>-output')` reads the
   // same in a flow whether the output was split into parts or not.

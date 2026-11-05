@@ -12,6 +12,7 @@ import * as React from 'react';
 
 import type { DeveloperRolloutFlags } from '~/global/data/data.rollout-flags';
 import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
+import { getRolloutHydrationStatusLabel } from '~/routing/settings/utils/rollout-hydration-status-label';
 
 export interface RolloutSdkHydrationStatusProps {}
 
@@ -23,14 +24,7 @@ export const RolloutSdkHydrationStatus = (
   const { applicationKey, hydration } = useRollout<DeveloperRolloutFlags>();
 
   // Setup
-  const statusLabel =
-    hydration.status === 'error'
-      ? ROLLOUT_COPY.sdkHydrationError
-      : hydration.status === 'ready'
-        ? ROLLOUT_COPY.sdkHydrationReady
-        : hydration.status === 'loading'
-          ? ROLLOUT_COPY.sdkHydrationLoading
-          : ROLLOUT_COPY.sdkHydrationIdle;
+  const statusLabel = getRolloutHydrationStatusLabel(hydration.status);
 
   // Handlers
 

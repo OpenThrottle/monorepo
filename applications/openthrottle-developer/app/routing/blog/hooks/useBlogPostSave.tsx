@@ -69,8 +69,12 @@ export const useBlogPostSave = (
     );
   };
 
-  const save = (): void => submit(BLOG_POST_SAVE_INTENT.SAVE);
-  const overwrite = (): void => submit(BLOG_POST_SAVE_INTENT.OVERWRITE);
+  const save = (): void => {
+    return submit(BLOG_POST_SAVE_INTENT.SAVE);
+  };
+  const overwrite = (): void => {
+    return submit(BLOG_POST_SAVE_INTENT.OVERWRITE);
+  };
 
   // Markup
 

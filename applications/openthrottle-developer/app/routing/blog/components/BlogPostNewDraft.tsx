@@ -26,10 +26,17 @@ export const BlogPostNewDraft = (
 
   // Setup
   const isCreating = navigation.state === 'submitting';
+  const { createDraft, creating } = BLOG_NEW_COPY;
+  const createLabel = isCreating ? creating : createDraft;
 
   // Handlers
 
   // Markup
+  const errorMessage = (
+    <p className="text-destructive text-sm" role="alert">
+      {error}
+    </p>
+  );
 
   // Life Cycle
 
@@ -48,15 +55,11 @@ export const BlogPostNewDraft = (
       <p className="text-muted-foreground text-sm">
         {BLOG_NEW_COPY.description}
       </p>
-      {error ? (
-        <p className="text-destructive text-sm" role="alert">
-          {error}
-        </p>
-      ) : null}
+      {error ? errorMessage : null}
       <Form method="post">
         <Button disabled={isCreating} type="submit">
           {isCreating ? <Spinner /> : null}
-          {isCreating ? BLOG_NEW_COPY.creating : BLOG_NEW_COPY.createDraft}
+          {createLabel}
         </Button>
       </Form>
     </div>

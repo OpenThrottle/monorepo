@@ -7,7 +7,9 @@ import { GlobalHeading } from '../GlobalHeading';
 
 describe('GlobalHeading Component', () => {
   test('renders title in heading element', () => {
-    const Component = () => <GlobalHeading title="Page title" />;
+    const Component = () => {
+      return <GlobalHeading title="Page title" />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     render(<RoutesStub />);
 

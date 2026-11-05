@@ -128,10 +128,10 @@ export class DailyStatsProcessor
     );
 
     const latestYmd = await this.dailyStatsService.getLatestDate();
-    const startYmd =
-      latestYmd == null
-        ? flooredStartYmd
-        : maxYmd(addUtcDaysToYmd(latestYmd, 1), flooredStartYmd);
+    let startYmd = flooredStartYmd;
+    if (latestYmd != null) {
+      startYmd = maxYmd(addUtcDaysToYmd(latestYmd, 1), flooredStartYmd);
+    }
 
     // Already current (or ahead): nothing to aggregate.
     if (startYmd > yesterdayYmd) {
@@ -196,10 +196,10 @@ export class DailyStatsProcessor
       DailyStatsProcessor.name,
     );
 
-    const message =
-      backfilled.length === 1
-        ? `Daily stats aggregated for ${backfilled[0]}`
-        : `Daily stats backfilled ${backfilled.length} days (${backfilled[0]}..${backfilled[backfilled.length - 1]})`;
+    const isSingleDay = backfilled.length === 1;
+    const singleMessage = `Daily stats aggregated for ${backfilled[0]}`;
+    const rangeMessage = `Daily stats backfilled ${backfilled.length} days (${backfilled[0]}..${backfilled[backfilled.length - 1]})`;
+    const message = isSingleDay ? singleMessage : rangeMessage;
 
     this.notifications.emitQueueJobCompleted({
       jobType: 'daily-stats',

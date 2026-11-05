@@ -46,12 +46,12 @@ export const PlanRunDialogFooter = (
 
   return (
     <>
-      {errorMessage !== undefined ? (
+      {errorMessage !== undefined && (
         <Alert data-testid="PlanRunDialog-error" variant="destructive">
           <AlertDescription>{errorMessage}</AlertDescription>
         </Alert>
-      ) : null}
-      {blocked ? (
+      )}
+      {blocked && (
         <p
           className="text-muted-foreground text-sm"
           data-testid="PlanRunDialog-blocked-reason"
@@ -59,7 +59,7 @@ export const PlanRunDialogFooter = (
         >
           {blockedReason}
         </p>
-      ) : null}
+      )}
       <DialogFooter>
         <Button onClick={onCancel} type="button" variant="ghost">
           {PLAN_RUN_DIALOG_COPY.cancelLabel}

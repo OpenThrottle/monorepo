@@ -39,7 +39,9 @@ describe('RolloutFlagDetail Component', () => {
       flag: mockFlag,
     };
 
-    const Component = () => <RolloutFlagDetail {...props} />;
+    const Component = () => {
+      return <RolloutFlagDetail {...props} />;
+    };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
   });

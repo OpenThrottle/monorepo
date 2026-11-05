@@ -6,12 +6,13 @@ import { QUEUE_STATE_CHART_LABEL_MAX_CHARS } from '~/routing/queues/utils/queue-
 
 import { QueueStateChartAxisTick } from '../QueueStateChartAxisTick';
 
-const renderTick = (value: string) =>
-  render(
+const renderTick = (value: string) => {
+  return render(
     <svg>
       <QueueStateChartAxisTick payload={{ value }} x={100} y={20} />
     </svg>,
   );
+};
 
 describe('QueueStateChartAxisTick', () => {
   test('renders a short queue name in full on a single line', () => {

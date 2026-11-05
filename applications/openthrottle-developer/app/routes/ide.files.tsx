@@ -53,7 +53,7 @@ export const loader = async (
     throw new Response('A valid repositoryId is required', { status: 400 });
   }
 
-  const { listFilesVM } = await import('~/routing/ide/data/ide-engine.server');
+  const { listFilesVM } = await import('~/routing/ide/utils/ide-engine.server');
   const listing = await listFilesVM(resolved.config, resolved.repository);
 
   const trimmed = query.trim().toLowerCase();

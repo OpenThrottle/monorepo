@@ -26,6 +26,23 @@ export const QueueJobPayload = (
   // Handlers
 
   // Markup
+  const hasPayload = parsed.prettyJson != null;
+  const prettyJson = parsed.prettyJson ?? '';
+  const payloadBlock = (
+    <>
+      <pre className="bg-muted/40 max-h-80 overflow-auto rounded-md border p-3 text-xs">
+        {prettyJson}
+      </pre>
+      <OpenThrottleClipboard
+        className="absolute top-1 right-3 h-8 shrink-0 text-sm"
+        label="Copy JSON"
+        text={prettyJson}
+      />
+    </>
+  );
+  const noPayload = (
+    <p className="text-muted-foreground text-sm">No payload on this job.</p>
+  );
 
   // Life Cycle
 
@@ -42,24 +59,7 @@ export const QueueJobPayload = (
         sensitive in shared environments.
       </p>
 
-      <div className="relative">
-        {parsed.prettyJson != null ? (
-          <>
-            <pre className="bg-muted/40 max-h-80 overflow-auto rounded-md border p-3 text-xs">
-              {parsed.prettyJson}
-            </pre>
-            <OpenThrottleClipboard
-              className="absolute top-1 right-3 h-8 shrink-0 text-sm"
-              label="Copy JSON"
-              text={parsed.prettyJson}
-            />
-          </>
-        ) : (
-          <p className="text-muted-foreground text-sm">
-            No payload on this job.
-          </p>
-        )}
-      </div>
+      <div className="relative">{hasPayload ? payloadBlock : noPayload}</div>
     </OpenThrottleFieldset>
   );
 };

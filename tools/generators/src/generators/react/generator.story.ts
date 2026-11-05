@@ -1,5 +1,5 @@
 import type { Tree } from '@nx/devkit';
-import { createProjectGraphAsync, formatFiles, logger } from '@nx/devkit';
+import { formatFiles, logger } from '@nx/devkit';
 import { join } from 'path';
 
 import type { CvaVariantGroup } from '../../utils/cva-variants.ts';
@@ -15,6 +15,7 @@ import {
   getReactComponentDestination,
   parsePossibleNames,
 } from '../../utils/questions.ts';
+import { resolveReactDestination } from '../../utils/resolve-react-destination.ts';
 import { throwInvalidDestinationError } from '../../utils/target-validation.ts';
 
 export interface ReactStoryGeneratorSchema {
@@ -32,8 +33,9 @@ interface TemplateVariantGroup extends CvaVariantGroup {
  * `size` -> `SIZES`, `variant` -> `VARIANTS`. Any cva prop name yields a valid
  * identifier; the plural is cosmetic.
  */
-const toConstName = (propName: string): string =>
-  `${propName.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()}S`;
+const toConstName = (propName: string): string => {
+  return `${propName.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()}S`;
+};
 
 /**
  * Components take one of two shapes: a flat `<Name>.tsx`, or a compound family
@@ -113,11 +115,11 @@ export async function storyGenerator(
 
   const destination = schema.destination;
 
-  const project = destination
-    ? (await createProjectGraphAsync()).nodes[destination]
-    : interactive
-      ? await getReactComponentDestination()
-      : undefined;
+  const project = await resolveReactDestination(
+    destination,
+    interactive,
+    getReactComponentDestination,
+  );
 
   if (!project) {
     if (destination) await throwInvalidDestinationError(destination);

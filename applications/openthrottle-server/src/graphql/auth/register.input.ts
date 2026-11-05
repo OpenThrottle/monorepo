@@ -15,8 +15,7 @@ export class RegisterInput {
   password!: string;
 
   @Field(() => String, {
-    description:
-      'GitHub username for display; defaults to email local part if omitted',
+    description: `GitHub username for display; defaults to email local part if omitted`,
     nullable: true,
   })
   githubUsername?: string | null;

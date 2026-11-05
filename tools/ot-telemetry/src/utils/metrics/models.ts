@@ -189,10 +189,9 @@ export const modelTokenUsageMetricQuery: MetricQuery<ModelTokenUsageMetrics> = {
     );
     const totalPromptInput =
       cacheTotals.cachedReadTokens + cacheTotals.inputTokens;
-    const cacheHitRatio =
-      totalPromptInput > 0
-        ? cacheTotals.cachedReadTokens / totalPromptInput
-        : null;
+    const hasPromptInput = totalPromptInput > 0;
+    const hitRatio = cacheTotals.cachedReadTokens / totalPromptInput;
+    const cacheHitRatio = hasPromptInput ? hitRatio : null;
 
     return {
       byModel,

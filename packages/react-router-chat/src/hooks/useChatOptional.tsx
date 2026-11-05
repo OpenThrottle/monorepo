@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import type { ChatContextValue } from '../context/chat-context';
-import { ChatContext } from '../data/chat-context';
+import { ChatContext } from '../data/data.chat-context';
 
 /**
  * @description Optional {@link useChat} for components that support both props and context.

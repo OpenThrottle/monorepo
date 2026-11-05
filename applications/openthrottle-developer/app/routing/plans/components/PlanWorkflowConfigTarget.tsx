@@ -89,7 +89,7 @@ export const PlanWorkflowConfigTarget = (
         </Select>
       </div>
 
-      {input.targetMode === 'plan' ? (
+      {isPlanMode && (
         <div className="space-y-2">
           <Label htmlFor="workflow-run-plan-id">--plan</Label>
           <Input
@@ -112,7 +112,8 @@ export const PlanWorkflowConfigTarget = (
             Example: 77cb14a0-5eb0-4061-87ea-d618b85e8818
           </p>
         </div>
-      ) : (
+      )}
+      {!isPlanMode && (
         <div className="space-y-2">
           <Label htmlFor="workflow-run-task-id">--task</Label>
           <Input
@@ -137,11 +138,11 @@ export const PlanWorkflowConfigTarget = (
         </div>
       )}
 
-      {targetIdWarning ? (
+      {targetIdWarning && (
         <p className="text-destructive text-xs" role="alert">
           Value does not match a UUID (v4) pattern; CLI validation may fail.
         </p>
-      ) : null}
+      )}
     </OpenThrottleFieldset>
   );
 };

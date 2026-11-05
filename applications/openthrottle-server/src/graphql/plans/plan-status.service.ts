@@ -541,13 +541,14 @@ export class PlanStatusService {
       signaledActiveRunToStop ||
       (cancelRequested && runIsExecuting && markedRunPollsForCancel);
 
-    const outcome: CancelPlanRunOutcome = activeRunStopping
-      ? CANCEL_PLAN_RUN_OUTCOME.RUN_STOPPING
-      : removedQueuedJob
-        ? CANCEL_PLAN_RUN_OUTCOME.RUN_CANCELLED
-        : cancelRequested
-          ? CANCEL_PLAN_RUN_OUTCOME.CANCELLATION_REQUESTED
-          : CANCEL_PLAN_RUN_OUTCOME.NO_ACTIVE_RUN;
+    let outcome: CancelPlanRunOutcome = CANCEL_PLAN_RUN_OUTCOME.NO_ACTIVE_RUN;
+    if (activeRunStopping) {
+      outcome = CANCEL_PLAN_RUN_OUTCOME.RUN_STOPPING;
+    } else if (removedQueuedJob) {
+      outcome = CANCEL_PLAN_RUN_OUTCOME.RUN_CANCELLED;
+    } else if (cancelRequested) {
+      outcome = CANCEL_PLAN_RUN_OUTCOME.CANCELLATION_REQUESTED;
+    }
 
     // Reset the plan (and its QUEUED tasks) to PENDING when we removed a queued job or stopped an
     // actively-executing run. A pure CANCELLATION_REQUESTED (no confirmed active run) leaves status
@@ -653,14 +654,16 @@ export class PlanStatusService {
         CancelRunOutcome,
         'activeJobIdsCouldNotCancel' | 'noMatchingJob' | 'removedJobIds'
       > & { readonly outcome: CancelPlanRunOutcome },
-    ): CancelRunOutcome => ({
-      ...fields,
-      cancelRequested: false,
-      planId,
-      // The plan is deliberately untouched by a run-scoped cancel.
-      planStatusAfter: null,
-      signaledActiveRunToStop: false,
-    });
+    ): CancelRunOutcome => {
+      return {
+        ...fields,
+        cancelRequested: false,
+        planId,
+        // The plan is deliberately untouched by a run-scoped cancel.
+        planStatusAfter: null,
+        signaledActiveRunToStop: false,
+      };
+    };
 
     if (run.status !== PLAN_RUN_STATUS.SCHEDULED) {
       if (
@@ -709,13 +712,13 @@ export class PlanStatusService {
     const settled =
       await this.planRunsService.settleScheduledRunCancelled(planRunId);
 
+    const wasCancelled = settled || removedJobIds.length > 0;
+    const { NO_ACTIVE_RUN, RUN_CANCELLED } = CANCEL_PLAN_RUN_OUTCOME;
+
     return outcomeFor({
       activeJobIdsCouldNotCancel: [],
       noMatchingJob: job === undefined,
-      outcome:
-        settled || removedJobIds.length > 0
-          ? CANCEL_PLAN_RUN_OUTCOME.RUN_CANCELLED
-          : CANCEL_PLAN_RUN_OUTCOME.NO_ACTIVE_RUN,
+      outcome: wasCancelled ? RUN_CANCELLED : NO_ACTIVE_RUN,
       removedJobIds,
     });
   }

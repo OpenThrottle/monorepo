@@ -254,14 +254,15 @@ export class GitHubStatsService {
       state: string,
       count: number,
       dayValues: number[],
-    ): PrTimeInStateSummary => ({
-      avgDaysInState:
-        dayValues.length > 0
-          ? dayValues.reduce((a, b) => a + b, 0) / dayValues.length
-          : null,
-      count,
-      state,
-    });
+    ): PrTimeInStateSummary => {
+      const hasDays = dayValues.length > 0;
+      const totalDays = dayValues.reduce((a, b) => a + b, 0);
+      return {
+        avgDaysInState: hasDays ? totalDays / dayValues.length : null,
+        count,
+        state,
+      };
+    };
 
     return [
       buildSummary('open', openPulls.length, openDays),
@@ -486,10 +487,7 @@ export class GitHubStatsService {
       const startIso = sorted[lastChangesRequestedIdx]?.submittedAt ?? '';
       const after = sorted.slice(lastChangesRequestedIdx + 1);
       const firstApproval = after.find((r) => r.state === 'APPROVED');
-      const endIso =
-        firstApproval?.submittedAt !== undefined
-          ? firstApproval.submittedAt
-          : mergedAt;
+      const endIso = firstApproval?.submittedAt ?? mergedAt;
 
       const days = daysBetween(startIso, endIso);
       withDuration.push({ days, mergedAt });
@@ -564,10 +562,8 @@ export class GitHubStatsService {
           p.number,
         );
         const mergedAt = p.mergedAt ?? null;
-        const period =
-          periodKind !== undefined && mergedAt !== null
-            ? toPeriodBucket(mergedAt, periodKind)
-            : null;
+        const canBucket = periodKind !== undefined && mergedAt !== null;
+        const period = canBucket ? toPeriodBucket(mergedAt, periodKind) : null;
         return {
           commits,
           mergedAt,

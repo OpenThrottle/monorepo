@@ -47,8 +47,9 @@ const FIXED_LANES: Record<'scheduled' | 'skills', TimelineLane> = {
   skills: { key: SKILLS_LANE_KEY, label: 'Skills' },
 };
 
-const isPresent = (value: string | null | undefined): value is string =>
-  value != null && value !== '';
+const isPresent = (value: string | null | undefined): value is string => {
+  return value != null && value !== '';
+};
 
 const byPlan = (facts: TimelineLaneFacts): TimelineLane => {
   if (!isPresent(facts.planId)) return UNATTRIBUTED_LANE;

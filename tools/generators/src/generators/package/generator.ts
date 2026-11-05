@@ -190,16 +190,15 @@ export const syncProjectReferences = (
     readFileSync(tsconfigPath, 'utf8'),
   )?.references;
 
-  const paths = Array.isArray(references)
-    ? references.flatMap((reference) =>
-        typeof reference === 'object' &&
-        reference !== null &&
-        'path' in reference &&
-        typeof reference.path === 'string'
-          ? [reference.path]
-          : [],
-      )
-    : [];
+  const referenceList: unknown[] = Array.isArray(references) ? references : [];
+  const paths = referenceList.flatMap((reference) => {
+    const hasPath =
+      typeof reference === 'object' &&
+      reference !== null &&
+      'path' in reference &&
+      typeof reference.path === 'string';
+    return hasPath ? [reference.path] : [];
+  });
 
   if (!paths.includes(expected)) {
     throwGeneratorError({
