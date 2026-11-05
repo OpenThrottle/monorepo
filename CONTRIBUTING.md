@@ -73,7 +73,7 @@ mechanics, see [MONOREPO.md](./MONOREPO.md) and [docs/monorepo/](./docs/monorepo
 6. **Land through the merge queue.** `main` merges every PR through GitHub's
    merge queue (see
    [docs/monorepo/ci-cost.md](./docs/monorepo/ci-cost.md#merge-queue-on-main)).
-   `gh pr merge --squash --auto` **enqueues** the PR once `ci-success` is green.
+   `gh pr merge --auto` **enqueues** the PR once `ci-success` is green.
    The queue then tests it against the tree `main` will have after it lands and
    squashes it in, so you never rebase onto a moving `main` by hand. Enqueuing is
    not merging: the landed commit is the squash the queue creates, so any

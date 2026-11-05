@@ -388,11 +388,20 @@ payload that can be `PUT` as-is. Classic branch protection still owns the one re
 (`ci-success`). That split is deliberate: the queue and the required-check surface change
 independently, so a stall has one candidate cause at a time.
 
-**Why it is on.** Plan runs open PRs in parallel. Without a queue, `strict` up-to-date protection
-makes every merge invalidate every other ready PR, which then has to rebase and re-run CI before it
-can merge. That is O(N²) rebases for N concurrent PRs. The queue instead tests each entry once,
-against the tree `main` will actually have after it lands, and lands entries in order without a
-manual rebase.
+Classic protection's `strict` (require branches to be up to date) is **off** since 2026-11-04. The
+queue made it redundant: OT plan e702d884's task 5 saw a PR two commits behind `main` report
+`mergeStateStatus=CLEAN` and enter the queue directly, which is correct, because the queue re-tests
+every entry on top of the current `main` anyway. With `strict` on, that PR would first have needed a
+rebase and a full CI run that the queue was about to repeat. `ci-success` is still the only required
+context.
+
+**Why it is on.** Plan runs open PRs in parallel. A PR that passed CI on its own branch says nothing
+about the tree `main` will have after another PR lands first. Two branches that each pass alone can
+break `main` together: probe #652 redeclared a `const` that #651 also added, both PR runs went green,
+and only the queue's build of the two together failed (TS2451). The old guard against that was
+`strict`, which makes every merge invalidate every other ready PR until it rebases and re-runs CI:
+O(N²) rebases for N concurrent PRs. The queue instead tests each entry once, against the tree `main`
+will actually have after it lands, and lands entries in order without a manual rebase.
 
 | Setting                             | Value      | Why                                                                                                                                                                                                                                                                                                          |
 | ----------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -415,6 +424,15 @@ What a queue entry runs, in `continuous-integration.yml` on the `merge_group` ev
   group, so an entry builds only its own change, on a tree that already holds the entries ahead of it.
   Under ALLGREEN those entries are covered by their own runs. Prettier and migration hygiene sweep
   the whole tree.
+- **A red `build` shard or a red `gates` cancels the whole run** (merge_group only). The queue
+  ejects an entry only once `ci-success` reports, and that job waits for every shard and `gates`.
+  Probe run 41931301776 failed a shard at 23:09:50 and ejected at 23:12:02, all of it spent waiting
+  for `gates`, and every entry behind it waited too. So the last step of each of those jobs runs
+  `gh run cancel` when the job has failed (job-scoped `actions: write`), and the matrix fails fast
+  on this event as a backstop. `ci-success` still runs, because `if: always()` survives a cancel,
+  and still reports red: the cancelling job is `failure` or `cancelled`, and `ci-success` accepts
+  only `success` or `skipped`. Ready PRs keep `fail-fast: false`, because three complete shard
+  results tell an author more than one.
 - **`attribution-guard`** checks the squash commits in `base_sha..head_sha`. The queue fast-forwards
   `main` to `head_sha`, so those exact server-composed messages are what land, and no local hook can
   see them. A hit ejects the PR before it becomes immutable history.
@@ -431,17 +449,26 @@ reports it also triggers on `merge_group`.** Otherwise the queue waits for a sta
 report, and dequeues the PR when the timeout runs out. `ci-success` is safe: it is the stable,
 non-matrix job in `continuous-integration.yml`, and that workflow runs on `merge_group`.
 
-Landing a PR: `gh pr merge --squash --auto` **enqueues** it. Do not call a PR merged, or read a
-landed SHA, until `gh pr view --json mergedAt,mergeCommitSha` shows one.
+Landing a PR: `gh pr merge --auto` **enqueues** it. Leave out `--squash`: the ruleset's
+`merge_method` decides, and gh ignores the flag with "The merge strategy for main is set by the
+merge queue". Do not call a PR merged, or read a landed SHA, until
+`gh pr view --json mergedAt,mergeCommitSha` shows one.
 
 Applying or changing the queue:
 
 1. Edit the payload, then `gh api -X PUT repos/OpenThrottle/monorepo/rulesets/14604876 --input docs/monorepo/rulesets/main-ruleset-with-merge-queue.json`.
-2. Re-read the ruleset and classic branch protection to confirm the `merge_queue` values, and that
-   `ci-success` is still the only required status check.
+2. Re-read the ruleset and classic branch protection to confirm the `merge_queue` values, that
+   `ci-success` is still the only required status check, and that `strict` is still off.
 
-Turning it off: `PUT` the same payload without the `merge_queue` rule, touching nothing else. Keep
-the workflow's `merge_group` trigger either way.
+Turning it off takes **two** changes, and the second is not optional:
+
+1. `PUT` the same payload without the `merge_queue` rule, touching nothing else.
+2. Turn `strict` back on:
+   `gh api -X PATCH repos/OpenThrottle/monorepo/branches/main/protection/required_status_checks -F strict=true`.
+
+With neither the queue nor `strict`, nothing stops two PRs that each pass alone from breaking `main`
+together, which is exactly what probe #652 did. Keep the workflow's `merge_group` trigger either
+way.
 
 ---
 
