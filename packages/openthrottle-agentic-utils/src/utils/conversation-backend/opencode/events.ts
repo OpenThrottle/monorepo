@@ -5,8 +5,8 @@
  * incremental delta), so the mapper tracks the emitted length per part and emits
  * only the newly-appended suffix — this is opencode's double-count guard. It
  * also surfaces the minted session id (from the first event's top-level
- * `sessionID`) exactly once. The rules are the empirically-verified ones in
- * docs/openthrottle/opencode-stream-json-schema.md §9.
+ * `sessionID`) exactly once. A real opencode 1.18.16 stream is captured in
+ * `__tests__/opencode-1-18-tool-use.fixture.ts`.
  *
  * There is NO terminal event: opencode signals turn completion by process exit,
  * so the mapper never emits `done:true` — the stream driver does, on close.
@@ -48,38 +48,77 @@ function mapText(
   };
 }
 
-/** A `tool` part → tool_call while running, tool_result once completed/errored. */
+/**
+ * Event types that carry a tool part. opencode 1.18 names them `tool_use`;
+ * earlier builds used `tool`, which stays accepted for replaying old streams.
+ */
+const TOOL_EVENT_TYPES: ReadonlySet<unknown> = new Set(['tool', 'tool_use']);
+
+/**
+ * A tool part → a tool_call chunk carrying the call's input, then a tool_result
+ * chunk once the part is completed/errored, carrying its output (or error text).
+ *
+ * @description opencode 1.18 emits ONE `tool_use` per call, already terminal,
+ * with no running event before it. The chat timeline only learns a call's
+ * arguments from a tool_call chunk, so the first sighting of a call id that is
+ * already terminal emits both chunks — otherwise the card would have a result
+ * but no arguments.
+ */
 function mapTool(
   part: Record<string, unknown>,
-): ConversationStreamChunk | null {
+  startedCallIds: Set<string>,
+): ConversationStreamChunk[] {
   const state = isRecord(part.state) ? part.state : undefined;
   const status = asString(state?.status);
   const callId = asString(part.callID) ?? null;
   const toolName = asString(part.tool) ?? null;
+  // The raw part is deliberately NOT forwarded: it holds the output twice
+  // (state.output and state.metadata.output) on top of the `toolCall` copy, and
+  // the persisted turn is capped at 64 KB — one large read pushed a whole turn
+  // over it and every tool card was lost on reload.
   const metadata = {
     callId,
     tool: toolName,
     toolName,
-    toolPart: part,
   };
+  const isTerminal = status === 'completed' || status === 'error';
+  const isStarted = callId !== null && startedCallIds.has(callId);
 
-  if (status === 'completed' || status === 'error') {
-    return {
+  const chunks: ConversationStreamChunk[] = [];
+
+  if (!isTerminal || !isStarted) {
+    if (callId !== null) {
+      startedCallIds.add(callId);
+    }
+
+    chunks.push({
       delta: '',
       done: false,
-      error:
-        status === 'error' ? (asString(state?.error) ?? 'tool error') : null,
-      kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
-      metadata,
-    };
+      kind: CONVERSATION_STREAM_CHUNK_KINDS.toolCall,
+      metadata: { ...metadata, toolCall: state?.input ?? null },
+    });
   }
 
-  return {
-    delta: '',
-    done: false,
-    kind: CONVERSATION_STREAM_CHUNK_KINDS.toolCall,
-    metadata,
-  };
+  if (isTerminal) {
+    const isError = status === 'error';
+    const errorText = isError ? (asString(state?.error) ?? 'tool error') : null;
+
+    // The chat timeline marks a card failed only on `metadata.isError`; the
+    // chunk-level `error` is read on the terminal `done` chunk alone.
+    chunks.push({
+      delta: '',
+      done: false,
+      error: errorText,
+      kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
+      metadata: {
+        ...metadata,
+        isError,
+        toolCall: errorText ?? state?.output ?? null,
+      },
+    });
+  }
+
+  return chunks;
 }
 
 /** A `step_finish` part → a usage chunk carrying tokens + cost. */
@@ -110,6 +149,7 @@ export interface OpencodeEventMapper {
  */
 export function createOpencodeEventMapper(): OpencodeEventMapper {
   const emittedLen = new Map<string, number>();
+  const startedCallIds = new Set<string>();
   let sessionEmitted = false;
 
   return {
@@ -138,11 +178,8 @@ export function createOpencodeEventMapper(): OpencodeEventMapper {
         if (chunk !== null) {
           chunks.push(chunk);
         }
-      } else if (event.type === 'tool' && part !== undefined) {
-        const chunk = mapTool(part);
-        if (chunk !== null) {
-          chunks.push(chunk);
-        }
+      } else if (TOOL_EVENT_TYPES.has(event.type) && part !== undefined) {
+        chunks.push(...mapTool(part, startedCallIds));
       } else if (event.type === 'step_finish' && part !== undefined) {
         chunks.push(mapStepFinish(part));
       }
