@@ -58,6 +58,10 @@
   },
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
+  "sideEffects": [
+    "**/*.css",
+    "./src/utils/setup.ts"
+  ],
   "type": "module",
   "types": "./src/index.ts"
 }

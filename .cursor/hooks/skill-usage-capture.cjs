@@ -34,7 +34,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 
 // packages/agentic-hooks/src/adapters/cursor/capture.ts
 var import_node_fs4 = __toESM(require("node:fs"), 1);
-var import_node_path5 = __toESM(require("node:path"), 1);
+var import_node_path4 = __toESM(require("node:path"), 1);
 
 // packages/agentic-hooks/src/data/jsonl.ts
 var import_node_fs2 = __toESM(require("node:fs"), 1);
@@ -208,25 +208,10 @@ var startsFilePathForSession = (startsDir, sessionId) => {
   return import_node_path2.default.join(startsDir, `${sanitizeSessionId(sessionId)}.jsonl`);
 };
 
-// packages/agentic-hooks/src/config/describe.ts
-var TELEMETRY_CONFIG_SOURCES = Object.freeze({
-  /** No layer yielded an endpoint. */
-  NONE: "none",
-  /** The ambient shell. */
-  PROCESS_ENV: "process_env",
-  /** This checkout's own `.env` — only read in an OpenThrottle checkout. */
-  REPO_ENV: "repo_env",
-  /** `~/.openthrottle/.env`. */
-  USER_ENV: "user_env"
-});
-
 // packages/nodejs-utils/src/utils/is-record.ts
 var isRecord = (value) => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };
-
-// packages/agentic-hooks/src/data/checkpoints.ts
-var DEFAULT_STALE_CHECKPOINT_MS = 6 * 60 * 60 * 1e3;
 
 // packages/agentic-hooks/src/utils/privacy.ts
 var PRIVACY_LEVELS = Object.freeze({
@@ -596,9 +581,6 @@ var recordSkillStart = ({
   }
 };
 
-// packages/agentic-hooks/src/data/token-usage.ts
-var MAX_TOKEN_USAGE_BATCH_BYTES = 64 * 1024;
-
 // packages/agentic-hooks/src/data/persist.ts
 var forLog = (graphqlUrl) => {
   return graphqlUrl.replace(/^([a-z][a-z0-9+.-]*:\/\/)[^/?#]*@/i, "$1***@");
@@ -686,11 +668,6 @@ var persistUsageEvent = async ({
     };
   }
 };
-
-// packages/agentic-hooks/src/data/plan-runs.ts
-var import_node_path4 = __toESM(require("node:path"), 1);
-var PLAN_RUNS_DIR_REL = import_node_path4.default.join(".cache", "plan-runs");
-var PLAN_RUN_ABANDONED_MS = 6 * 60 * 60 * 1e3;
 
 // packages/agentic-hooks/src/adapters/cursor/payload.ts
 var CURSOR_SOURCE = "cursor";
@@ -817,7 +794,7 @@ var main = async () => {
     const outPath = defaultJsonlPath();
     await persistUsageEvent({
       event,
-      jsonlPath: import_node_path5.default.resolve(outPath),
+      jsonlPath: import_node_path4.default.resolve(outPath),
       repoRoot
     });
   } catch (err) {

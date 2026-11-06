@@ -59,6 +59,9 @@
   "private": true,
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
+  "sideEffects": [
+    "./src/index.ts"
+  ],
   "type": "module",
   "types": "./src/index.ts"
 }

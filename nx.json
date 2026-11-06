@@ -373,6 +373,27 @@
         "cwd": "{workspaceRoot}"
       }
     },
+    "check-side-effects": {
+      "cache": true,
+      "executor": "nx:run-commands",
+      "inputs": [
+        "{workspaceRoot}/applications/*/app/**/*",
+        "{workspaceRoot}/applications/*/package.json",
+        "{workspaceRoot}/applications/*/src/**/*",
+        "{workspaceRoot}/packages/*/package.json",
+        "{workspaceRoot}/packages/*/src/**/*",
+        "{workspaceRoot}/scripts/check-side-effects.ts",
+        "{workspaceRoot}/tools/*/package.json",
+        "{workspaceRoot}/tools/*/src/**/*"
+      ],
+      "metadata": {
+        "description": "Report whether each workspace project's package.json declares a truthful sideEffects, via scripts/check-side-effects.ts: it parses every tracked source module with the TypeScript compiler API, flags the ones that do something on evaluation (a discarded call, top-level control flow or await, a bare import), and recommends false or an array naming exactly those files. Error-mode (--strict): fails on any project that is missing the field, declares true, leaves a side-effect file unlisted or lists a stale glob, and prints the value to set. Run the script without --strict for the full per-project report. `inputs` MUST be explicit {workspaceRoot} globs — the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever."
+      },
+      "options": {
+        "command": "tsx ./scripts/check-side-effects.ts --strict",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "codegen-graphql": {
       "cache": true,
       "executor": "nx:run-commands",

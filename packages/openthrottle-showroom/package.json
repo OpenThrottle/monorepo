@@ -74,6 +74,20 @@
   },
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
+  "sideEffects": [
+    "./src/assemble/assemble.ts",
+    "./src/episodes/05-connect-ot-mcp/surface.ts",
+    "./src/narrate/narrate.ts",
+    "./src/runner/run.ts",
+    "./src/scan/leak-scan.ts",
+    "./src/scripts/demo-live-run.ts",
+    "./src/scripts/ensure-demo-database.ts",
+    "./src/scripts/resolve-demo-url.ts",
+    "./src/scripts/seed-demo.ts",
+    "./src/scripts/snapshot-export.ts",
+    "./src/scripts/verify-demo-data.ts",
+    "./src/validate/validate.ts"
+  ],
   "type": "module",
   "types": "./src/index.ts",
   "version": "1.0.0"

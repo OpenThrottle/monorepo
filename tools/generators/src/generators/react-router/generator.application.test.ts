@@ -1,4 +1,5 @@
 import type { Tree } from '@nx/devkit';
+import { readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { beforeEach, describe, expect, test } from 'vitest';
 
@@ -12,6 +13,20 @@ describe('generatorReactRouterApplication', () => {
   });
 
   const name = 'application-name';
+
+  test('declares the entry client and stylesheets as its side effects', async () => {
+    await generatorReactRouterApplication(tree, { name });
+    const packageJsonPath = tree
+      .listChanges()
+      .map((change) => change.path)
+      .find((path) => path.startsWith('applications/') && path.endsWith('/package.json')); // prettier-ignore
+
+    expect(packageJsonPath).toBeDefined();
+    expect(readJson(tree, packageJsonPath ?? '').sideEffects).toEqual([
+      '**/*.css',
+      './app/entry.client.tsx',
+    ]);
+  });
 
   test('should run successfully', async () => {
     await generatorReactRouterApplication(tree, { name });

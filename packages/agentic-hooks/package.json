@@ -155,6 +155,21 @@
   },
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
+  "sideEffects": [
+    "./src/adapters/claude/backfill.ts",
+    "./src/adapters/claude/capture.ts",
+    "./src/adapters/claude/complete.ts",
+    "./src/adapters/claude/drain.ts",
+    "./src/adapters/claude/memory-index-guard.ts",
+    "./src/adapters/claude/outcome.ts",
+    "./src/adapters/claude/plan-run-janitor.ts",
+    "./src/adapters/claude/require-ot-plan-kickoff.ts",
+    "./src/adapters/claude/scope.ts",
+    "./src/adapters/codex/capture.ts",
+    "./src/adapters/codex/complete.ts",
+    "./src/adapters/cursor/capture.ts",
+    "./src/adapters/cursor/complete.ts"
+  ],
   "type": "module",
   "types": "./src/index.ts",
   "version": "1.0.0"

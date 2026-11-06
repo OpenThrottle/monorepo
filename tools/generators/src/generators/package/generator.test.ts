@@ -8,6 +8,33 @@ import { packageGenerator } from './generator.ts';
 describe('package generator', () => {
   let tree: Tree;
 
+  describe('sideEffects', () => {
+    // Each value is what `monorepo:check-side-effects` recommends for the
+    // template as shipped: the react template carries src/index.css, which
+    // only does anything when imported for its effect.
+    const cases = [
+      { expected: false, organization: '@tools', root: 'tools', type: 'tools' },
+      { expected: false, organization: '@openthrottle', root: 'packages', type: 'node' },
+      { expected: false, organization: '@openthrottle', root: 'packages', type: 'nestjs' },
+      { expected: ['**/*.css'], organization: '@openthrottle', root: 'packages', type: 'react' },
+    ] as const; // prettier-ignore
+
+    beforeEach(() => {
+      tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
+    });
+
+    test.each(cases)(
+      'declares a truthful sideEffects for a $type package',
+      async ({ expected, organization, root, type }) => {
+        const name = 'example-side-effects';
+        await packageGenerator(tree, { name, organization, type });
+        const packageJson = readJson(tree, `${root}/${name}/package.json`);
+
+        expect(packageJson.sideEffects).toEqual(expected);
+      },
+    );
+  });
+
   describe('@tools', () => {
     const type = 'tools';
     const org = '@tools';

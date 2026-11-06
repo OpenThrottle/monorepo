@@ -33,7 +33,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 
 // packages/agentic-hooks/src/adapters/claude/outcome.ts
-var import_node_path5 = __toESM(require("node:path"), 1);
+var import_node_path4 = __toESM(require("node:path"), 1);
 
 // packages/agentic-hooks/src/data/jsonl.ts
 var import_node_fs2 = __toESM(require("node:fs"), 1);
@@ -197,34 +197,10 @@ var defaultOutcomesJsonlPath = () => {
   return import_node_path2.default.join(resolveTelemetryDir(), OUTCOMES_JSONL_BASENAME);
 };
 
-// packages/agentic-hooks/src/config/describe.ts
-var TELEMETRY_CONFIG_SOURCES = Object.freeze({
-  /** No layer yielded an endpoint. */
-  NONE: "none",
-  /** The ambient shell. */
-  PROCESS_ENV: "process_env",
-  /** This checkout's own `.env` — only read in an OpenThrottle checkout. */
-  REPO_ENV: "repo_env",
-  /** `~/.openthrottle/.env`. */
-  USER_ENV: "user_env"
-});
-
 // packages/nodejs-utils/src/utils/is-record.ts
 var isRecord = (value) => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };
-
-// packages/agentic-hooks/src/data/checkpoints.ts
-var DEFAULT_STALE_CHECKPOINT_MS = 6 * 60 * 60 * 1e3;
-
-// packages/agentic-hooks/src/utils/privacy.ts
-var PRIVACY_LEVELS = Object.freeze({
-  FULL: "full",
-  NAME_ONLY: "name-only",
-  TRUNCATED: "truncated"
-});
-var DEFAULT_PRIVACY_LEVEL = PRIVACY_LEVELS.TRUNCATED;
-var FOREIGN_PRIVACY_LEVEL = PRIVACY_LEVELS.NAME_ONLY;
 
 // packages/agentic-hooks/src/utils/scope.ts
 var import_node_fs3 = __toESM(require("node:fs"), 1);
@@ -484,9 +460,6 @@ var postGraphqlMutation = async (args) => {
   return transient(`missing ${args.field}.id`);
 };
 
-// packages/agentic-hooks/src/data/token-usage.ts
-var MAX_TOKEN_USAGE_BATCH_BYTES = 64 * 1024;
-
 // packages/agentic-hooks/src/data/persist.ts
 var forLog = (graphqlUrl) => {
   return graphqlUrl.replace(/^([a-z][a-z0-9+.-]*:\/\/)[^/?#]*@/i, "$1***@");
@@ -575,11 +548,6 @@ var persistOutcomeEvent = async ({
   }
 };
 
-// packages/agentic-hooks/src/data/plan-runs.ts
-var import_node_path4 = __toESM(require("node:path"), 1);
-var PLAN_RUNS_DIR_REL = import_node_path4.default.join(".cache", "plan-runs");
-var PLAN_RUN_ABANDONED_MS = 6 * 60 * 60 * 1e3;
-
 // packages/agentic-hooks/src/adapters/claude/outcome-args.ts
 var parseOutcomeArgs = (argv) => {
   const out = {};
@@ -640,7 +608,7 @@ var main = async () => {
     const outPath = defaultOutcomesJsonlPath();
     await persistOutcomeEvent({
       event,
-      jsonlPath: import_node_path5.default.resolve(outPath),
+      jsonlPath: import_node_path4.default.resolve(outPath),
       repoRoot
     });
   } catch (err) {

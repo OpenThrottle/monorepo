@@ -163,6 +163,16 @@
   },
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
+  "sideEffects": [
+    "./dist/src/bin-http.js",
+    "./dist/src/bin.js",
+    "./dist/src/evals/tool-selection/cli.js",
+    "./dist/src/model-facing-text/write-tool-surface.js",
+    "./src/bin-http.ts",
+    "./src/bin.ts",
+    "./src/evals/tool-selection/cli.ts",
+    "./src/model-facing-text/write-tool-surface.ts"
+  ],
   "type": "module",
   "types": "./dist/src/index.d.ts",
   "version": "1.0.0"
