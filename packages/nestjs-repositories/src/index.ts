@@ -62,6 +62,14 @@ export type {
   TokenUsageTotals,
 } from './modules/agent-token-usage/agent-token-usage.service.ts';
 export { AgentTokenUsageService } from './modules/agent-token-usage/agent-token-usage.service.ts';
+export { AGENT_TRAJECTORY_SOURCE } from './modules/agent-trajectories/agent-trajectories.constants.ts';
+export { AgentTrajectoriesModule } from './modules/agent-trajectories/agent-trajectories.module.ts';
+export { AgentTrajectoriesService } from './modules/agent-trajectories/agent-trajectories.service.ts';
+export type {
+  AgentTrajectorySource,
+  CreateAgentTrajectoryInput,
+} from './modules/agent-trajectories/agent-trajectories.types.ts';
+export { AgentTrajectory } from './modules/agent-trajectories/agent-trajectory.entity.ts';
 export type { BlogAuthorData } from './modules/blog-authors/blog-author.entity.ts';
 export { BlogAuthor } from './modules/blog-authors/blog-author.entity.ts';
 export { BlogAuthorsModule } from './modules/blog-authors/blog-authors.module.ts';
