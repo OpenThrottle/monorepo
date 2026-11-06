@@ -78,9 +78,10 @@ mechanics, see [MONOREPO.md](./MONOREPO.md) and [docs/monorepo/](./docs/monorepo
    squashes it in, so you never rebase onto a moving `main` by hand. Enqueuing is
    not merging: the landed commit is the squash the queue creates, so any
    post-merge bookkeeping that needs "the merged SHA" must wait for
-   `gh pr view --json mergedAt,mergeCommitSha` to report one, or read it from
-   `main`, never from the branch head you pushed. A PR the queue ejects (a red
-   `merge_group` run) goes back to you: fix it and enqueue it again.
+   `gh pr view <n> --json mergedAt,mergeCommit --jq '{mergedAt, sha: .mergeCommit.oid}'`
+   to report one, or read it from `main`, never from the branch head you pushed.
+   A PR the queue ejects (a red `merge_group` run) goes back to you: fix it and
+   enqueue it again.
 
 ## Documentation
 
