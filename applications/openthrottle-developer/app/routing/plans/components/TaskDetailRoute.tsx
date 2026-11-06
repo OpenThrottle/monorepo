@@ -2,7 +2,7 @@
  * @description Task-detail route body, mirroring {@link PlanDetailRoute}: a
  * heading + status badge, the shared {@link PlanTaskToolbar}, and an
  * {@link OpenThrottleTabs} shell (URL-synced on the `tab` param) with
- * Details / Output / Artifacts / Hooks tabs. The route module's default export
+ * Details / Output / Trajectories / Artifacts / Hooks tabs. The route module's default export
  * is a thin wrapper that delegates to this component for the happy path.
  */
 import {
@@ -25,6 +25,8 @@ import { Link, useFetcher } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/plans.$planId.tasks.$taskId._index';
 import type { TaskDetailsFragment } from '~/__generated__/graphql';
+import { TaskTrajectoriesTab } from '~/routing/evals/components/TaskTrajectoriesTab';
+import { TaskTrajectoriesTabTrigger } from '~/routing/evals/components/TaskTrajectoriesTabTrigger';
 import { LinkedArtifactsPanel } from '~/routing/plans/components/LinkedArtifactsPanel';
 import { PlanLifecycleHooksSection } from '~/routing/plans/components/PlanLifecycleHooksSection';
 import type { PlanTagChipData } from '~/routing/plans/components/PlanTagChips';
@@ -153,6 +155,7 @@ export const TaskDetailRoute = (
             Task Output
           </TabsTrigger>
 
+          <TaskTrajectoriesTabTrigger />
           {showArtifacts && (
             <TabsTrigger
               className="flex-0 cursor-pointer"
@@ -182,6 +185,7 @@ export const TaskDetailRoute = (
         </TabsContent>
 
         <TaskTabOutput chunks={taskOutputChunks} />
+        <TaskTrajectoriesTab trajectories={loaderData.trajectories} />
 
         {showArtifacts && (
           <TabsContent value="artifacts">

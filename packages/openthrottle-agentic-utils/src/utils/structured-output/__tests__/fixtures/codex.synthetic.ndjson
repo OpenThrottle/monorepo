@@ -1,0 +1,6 @@
+{"thread_id":"th_fixture","type":"thread.started"}
+{"type":"turn.started"}
+{"item":{"id":"i0","item_type":"reasoning","text":"I will create the file."},"type":"item.completed"}
+{"item":{"aggregated_output":"","command":"bash -lc 'echo hi > hello.txt'","exit_code":0,"id":"i1","item_type":"command_execution","status":"completed"},"type":"item.completed"}
+{"item":{"id":"i2","item_type":"agent_message","text":"DONE"},"type":"item.completed"}
+{"type":"turn.completed","usage":{"cached_input_tokens":1200,"input_tokens":5400,"output_tokens":42}}

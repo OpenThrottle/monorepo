@@ -13,6 +13,7 @@ const BASE_CAPABILITIES: DriverCapabilities = {
   mcpAutoApprove: false,
   permissionMode: false,
   pluginDir: false,
+  reportsToolCalls: false,
   skipWorktreeSetup: false,
   supportsCustomBaseUrl: false,
   supportsModelFlag: false,

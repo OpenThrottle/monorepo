@@ -7,10 +7,12 @@ import { getTypeOrmOptions } from './database.config.ts';
 import { AgentCliPreferencesModule } from './modules/agent-cli-preferences/agent-cli-preferences.module.ts';
 import { AgentConversationsModule } from './modules/agent-conversations/agent-conversations.module.ts';
 import { AgentTokenUsageModule } from './modules/agent-token-usage/agent-token-usage.module.ts';
+import { AgentTrajectoriesModule } from './modules/agent-trajectories/agent-trajectories.module.ts';
 import { BlogAuthorsModule } from './modules/blog-authors/blog-authors.module.ts';
 import { BlogPostsModule } from './modules/blog-posts/blog-posts.module.ts';
 import { BlogTagsModule } from './modules/blog-tags/blog-tags.module.ts';
 import { DailyStatsModule } from './modules/daily-stats/daily-stats.module.ts';
+import { EvalHumanLabelsModule } from './modules/eval-human-labels/eval-human-labels.module.ts';
 import { McpConnectorsModule } from './modules/mcp-connectors/mcp-connectors.module.ts';
 import { NotesModule } from './modules/notes/notes.module.ts';
 import { PlanEmbeddingsModule } from './modules/plan-embeddings/plan-embeddings.module.ts';
@@ -43,11 +45,13 @@ import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-
     AgentCliPreferencesModule,
     AgentConversationsModule,
     AgentTokenUsageModule,
+    AgentTrajectoriesModule,
     BlogAuthorsModule,
     BlogPostsModule,
     BlogTagsModule,
     CustomPromptsModule,
     DailyStatsModule,
+    EvalHumanLabelsModule,
     McpConnectorsModule,
     NotesModule,
     PlanEmbeddingsModule,
@@ -86,11 +90,13 @@ import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-
     AgentCliPreferencesModule,
     AgentConversationsModule,
     AgentTokenUsageModule,
+    AgentTrajectoriesModule,
     BlogAuthorsModule,
     BlogPostsModule,
     BlogTagsModule,
     CustomPromptsModule,
     DailyStatsModule,
+    EvalHumanLabelsModule,
     LoggerModule,
     McpConnectorsModule,
     NotesModule,

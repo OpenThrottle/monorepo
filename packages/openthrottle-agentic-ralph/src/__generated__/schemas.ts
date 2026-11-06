@@ -69,6 +69,7 @@ import {
   GetPullInput,
   GetTaskEmbeddingInput,
   GitHubRepoInput,
+  LabelAgentTrajectoryInput,
   LastActivityInput,
   LinesAddedDeletedInput,
   ListAgentConversationsInput,
@@ -100,6 +101,7 @@ import {
   QueueJobLogsInput,
   RalphNestedDebugCli,
   RalphPlanRunTuningInput,
+  RecordAgentTrajectoryInput,
   RecordPlanRunHeartbeatInput,
   RecordSkillUsageInput,
   RecordSkillUsageOutcomeInput,
@@ -933,6 +935,17 @@ export function GitHubRepoInputSchema(): z.ZodObject<
   });
 }
 
+export function LabelAgentTrajectoryInputSchema(): z.ZodObject<
+  Properties<LabelAgentTrajectoryInput>
+> {
+  return z.object({
+    failureType: z.string().nullish(),
+    note: z.string().nullish(),
+    trajectoryId: z.string().min(1),
+    verdict: z.string().min(1),
+  });
+}
+
 export function LastActivityInputSchema(): z.ZodObject<
   Properties<LastActivityInput>
 > {
@@ -1170,6 +1183,22 @@ export function RalphPlanRunTuningInputSchema(): z.ZodObject<
     skipWorktreeSetup: z.boolean().nullish(),
     worktree: z.string().nullish(),
     worktreeBase: z.string().nullish(),
+  });
+}
+
+export function RecordAgentTrajectoryInputSchema(): z.ZodObject<
+  Properties<RecordAgentTrajectoryInput>
+> {
+  return z.object({
+    driver: z.string().min(1),
+    durationMs: z.number().nullish(),
+    exitCode: z.number().nullish(),
+    model: z.string().nullish(),
+    outcome: z.string().nullish(),
+    planRunId: z.string().min(1),
+    source: z.string().min(1),
+    taskId: z.string().nullish(),
+    trajectoryJson: z.string().min(1),
   });
 }
 

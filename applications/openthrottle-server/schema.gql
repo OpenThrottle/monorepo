@@ -975,6 +975,85 @@ type StartAgentSetupResult {
   runId: String
 }
 
+"""
+One ATIF trajectory recorded for a plan run: the structured record of what an agent did, plus summary columns derived from it.
+"""
+type AgentTrajectory {
+  """
+  UTF-8 byte length of the stored trajectory JSON, after any server-side capping.
+  """
+  byteSize: Int!
+
+  """
+  Cached prompt tokens (included in inputTokens). Null when the run reported none.
+  """
+  cachedTokens: Int
+
+  """
+  Cost of the run in USD. Null when unpriceable, which is not the same as zero.
+  """
+  costUsd: Float
+
+  """When the trajectory was recorded."""
+  createdAt: DateTime!
+
+  """Agent driver that produced the run, for example claude."""
+  driver: String!
+
+  """Wall-clock duration of the run in milliseconds. Null when unknown."""
+  durationMs: Int
+
+  """Process exit code of the run. Null when unknown."""
+  exitCode: Int
+
+  """Trajectory id."""
+  id: ID!
+
+  """
+  True when the run ended before it could finish, so the trajectory is partial.
+  """
+  incomplete: Boolean!
+
+  """
+  Prompt tokens consumed, including cached tokens. Null when the run reported none.
+  """
+  inputTokens: Int
+
+  """Model that ran, when known."""
+  model: String
+
+  """
+  Free-form result label for the run, for example completed. Null when unknown.
+  """
+  outcome: String
+
+  """Completion tokens produced. Null when the run reported none."""
+  outputTokens: Int
+
+  """Plan run the trajectory belongs to."""
+  planRunId: ID!
+
+  """ATIF schema version of the stored document, for example ATIF-v1.8."""
+  schemaVersion: String!
+
+  """
+  How the trajectory was captured: spawned by the OpenThrottle runner, or session_upload from an interactive session.
+  """
+  source: String!
+
+  """Task the run worked on. Null for a run not scoped to one task."""
+  taskId: ID
+
+  """Number of tool calls across all steps."""
+  toolCallCount: Int!
+
+  """The stored ATIF document serialized with JSON.stringify."""
+  trajectoryJson: String!
+
+  """True when the server elided observation content to fit the size caps."""
+  truncated: Boolean!
+}
+
 type EnqueueAgenticWorkflowMockResultObject {
   """Whether the job was enqueued."""
   success: Boolean!
@@ -1372,6 +1451,37 @@ type EditorPresenceResultObject {
   True when the probe ran against the user's own machine. False means every entry is UNKNOWN — typically a containerized server, which can only see its own filesystem and so must not claim anything about the user's editors. Clients can use this to suppress hinting wholesale.
   """
   trusted: Boolean!
+}
+
+"""
+One rater's verdict on one agent trajectory. Verdicts are the ground truth LLM judges are calibrated against; notes and failure types are error-analysis coding material.
+"""
+type AgentTrajectoryLabel {
+  """When the rater first labelled the trajectory."""
+  createdAt: DateTime!
+
+  """Free-text failure category. Null when not given."""
+  failureType: String
+
+  """Label id."""
+  id: ID!
+
+  """Free-text observation about the trajectory. Null when not given."""
+  note: String
+
+  """
+  Who recorded the label: the GitHub username of the caller, stamped server-side.
+  """
+  rater: String!
+
+  """Trajectory the label is about."""
+  trajectoryId: ID!
+
+  """When the rater last replaced their label."""
+  updatedAt: DateTime!
+
+  """The rater's judgement: pass or fail."""
+  verdict: String!
 }
 
 type GeneratorObject {
@@ -4497,6 +4607,17 @@ type Query {
   agentCliSetupConfig: AgentCliSetupConfigObject!
 
   """
+  Fetch one recorded agent trajectory by id. Null when it does not exist.
+  """
+  agentTrajectory(id: ID!): AgentTrajectory
+
+  """List a plan run's agent trajectories, oldest first."""
+  agentTrajectoriesByPlanRun(planRunId: ID!): [AgentTrajectory!]!
+
+  """List a task's agent trajectories, oldest first."""
+  agentTrajectoriesByTask(taskId: ID!): [AgentTrajectory!]!
+
+  """
   Every blog post in any state, most recently edited first, with cursor pagination. Optionally filtered to one or more derived states and to a case-insensitive title / slug search.
   """
   blogAdminPosts(state: [BlogPostState!], first: Int! = 10, after: String, search: String): BlogAdminPostListResult!
@@ -4578,6 +4699,11 @@ type Query {
   Probe which editors are installed on the machine hosting the server. Returns a cached snapshot (60s TTL); does not probe per request. **Advisory only** — this never gates enabling an editor. An editor reporting NOT_FOUND can still be enabled and will still get a working toolbar button, and UNKNOWN (a containerized server, an unsupported platform, or a failed probe) means nothing is claimed either way and clients should render no hint.
   """
   editorPresence: EditorPresenceResultObject!
+
+  """
+  List every rater's label on an agent trajectory, most recently updated first.
+  """
+  agentTrajectoryLabels(trajectoryId: ID!): [AgentTrajectoryLabel!]!
 
   """List available NX generators from @tools/generators"""
   generators: [GeneratorObject!]!
@@ -5629,6 +5755,11 @@ type Mutation {
   updateAgentCli(backend: String!): StartAgentSetupResult!
 
   """
+  Record an ATIF trajectory for a plan run. The document is validated, capped at 4 MiB server-side (elided observations set truncated) and summarized into token, cost and tool-call columns.
+  """
+  recordAgentTrajectory(input: RecordAgentTrajectoryInput!): AgentTrajectory!
+
+  """
   Agents namespace: run one chat turn against the server-side agents path (OpenThrottle / MCP developer). Returns assistant text, mcpTool, structuredPayloadJson, and toolMetadataJson; uses errorMessage instead of throws for expected validation failures.
   """
   agentsRunChatTurn(input: AgentsRunChatTurnInput!): AgentsChatTurnResult!
@@ -5723,6 +5854,16 @@ type Mutation {
 
   """Write a custom prompt to the file system at its configured filePath"""
   writeCustomPromptToFileSystem(id: ID!): Boolean!
+
+  """
+  Record your verdict (pass or fail), optional failure type and note on an agent trajectory. One label per rater per trajectory: re-labelling replaces your own. The rater is taken from your identity, never from input.
+  """
+  labelAgentTrajectory(input: LabelAgentTrajectoryInput!): AgentTrajectoryLabel!
+
+  """
+  Remove your own label on an agent trajectory. Returns false when you had none; other raters' labels are never touched.
+  """
+  removeAgentTrajectoryLabel(trajectoryId: ID!): Boolean!
 
   """
   Connect (or re-connect) a catalog connector for the authenticated user. For api_token connectors the token is stored as a bcrypt hash + masked hint; the raw token is never persisted.
@@ -6312,6 +6453,37 @@ input UpdateAgentConversationTitleInput {
   title: String!
 }
 
+input RecordAgentTrajectoryInput {
+  """Agent driver that produced the run, for example claude."""
+  driver: String!
+
+  """Wall-clock duration of the run in milliseconds."""
+  durationMs: Int
+
+  """Process exit code of the run."""
+  exitCode: Int
+
+  """Model that ran, when known."""
+  model: String
+
+  """Free-form result label for the run, for example completed."""
+  outcome: String
+
+  """Plan run the trajectory belongs to."""
+  planRunId: ID!
+
+  """How the trajectory was captured: spawned or session_upload."""
+  source: String!
+
+  """Task the run worked on. Omit for a run not scoped to one task."""
+  taskId: ID
+
+  """
+  The ATIF document as a JSON string. Validated, then capped server-side at 4 MiB.
+  """
+  trajectoryJson: String!
+}
+
 input AgentsRunChatTurnInput {
   """
   Opaque client thread id echoed on AgentsChatTurnResult.conversationId for correlation; omit for stateless turns.
@@ -6602,6 +6774,26 @@ input UpdateCustomPromptInput {
 
   """Write content to the file system at filePath if provided"""
   writeToFileSystem: Boolean! = false
+}
+
+input LabelAgentTrajectoryInput {
+  """
+  Free-text failure category, for example wrong-file. Blank is stored as null.
+  """
+  failureType: String
+
+  """
+  Free-text observation about the trajectory, at most 4000 characters. Blank is stored as null.
+  """
+  note: String
+
+  """Trajectory being labelled."""
+  trajectoryId: ID!
+
+  """
+  The verdict: pass or fail. Re-labelling replaces your own earlier label.
+  """
+  verdict: String!
 }
 
 input ConnectMcpConnectorInput {

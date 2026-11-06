@@ -13,6 +13,8 @@ import {
   defaultJsonlPath,
   defaultOutcomesJsonlPath,
   defaultTokenUsageJsonlPath,
+  defaultTrajectoriesJsonlPath,
+  drainBufferedTrajectories,
   drainBufferedUsage,
   formatDrainFileResult,
   logHookError,
@@ -35,7 +37,8 @@ const main = async (): Promise<void> => {
       const replayed =
         replayDeadLetter(defaultJsonlPath()) +
         replayDeadLetter(defaultOutcomesJsonlPath()) +
-        replayDeadLetter(defaultTokenUsageJsonlPath());
+        replayDeadLetter(defaultTokenUsageJsonlPath()) +
+        replayDeadLetter(defaultTrajectoriesJsonlPath());
       process.stderr.write(
         `[skill-usage-drain] replayed ${replayed} dead-lettered line(s)\n`,
       );
@@ -49,10 +52,15 @@ const main = async (): Promise<void> => {
     const budgetMs = budgetRaw === '' ? null : Number(budgetRaw) || null;
 
     const summary = await drainBufferedUsage({ budgetMs, repoRoot });
+    const trajectories = await drainBufferedTrajectories({
+      budgetMs,
+      repoRoot,
+    });
     process.stderr.write(
       `[skill-usage-drain] ${formatDrainFileResult('events', summary.events)}\n` +
         `[skill-usage-drain] ${formatDrainFileResult('outcomes', summary.outcomes)}\n` +
-        `[skill-usage-drain] ${formatDrainFileResult('token-usage', summary.tokenUsage)}\n`,
+        `[skill-usage-drain] ${formatDrainFileResult('token-usage', summary.tokenUsage)}\n` +
+        `[skill-usage-drain] ${formatDrainFileResult('trajectories', trajectories)}\n`,
     );
   } catch (err) {
     logHookError('drain CLI failed', err);

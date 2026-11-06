@@ -27,6 +27,12 @@ export const OUTCOMES_JSONL_BASENAME = 'outcomes.jsonl';
 export const TOKEN_USAGE_JSONL_BASENAME = 'token-usage.jsonl';
 
 /** @public */
+export const TRAJECTORIES_JSONL_BASENAME = 'trajectories.jsonl';
+
+/** @public */
+export const TRAJECTORY_UPLOADS_DIR_BASENAME = 'trajectory-uploads';
+
+/** @public */
 export const STARTS_DIR_BASENAME = 'starts';
 
 /** @public */
@@ -78,6 +84,16 @@ export const defaultOutcomesJsonlPath = (): string => {
 /** @public */
 export const defaultTokenUsageJsonlPath = (): string => {
   return path.join(resolveTelemetryDir(), TOKEN_USAGE_JSONL_BASENAME);
+};
+
+/** @public */
+export const defaultTrajectoriesJsonlPath = (): string => {
+  return path.join(resolveTelemetryDir(), TRAJECTORIES_JSONL_BASENAME);
+};
+
+/** @public */
+export const defaultTrajectoryUploadsDir = (): string => {
+  return path.join(resolveTelemetryDir(), TRAJECTORY_UPLOADS_DIR_BASENAME);
 };
 
 /** @public */

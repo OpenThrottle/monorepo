@@ -1,6 +1,9 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { ExecuteGraphqlOptionsV2 } from '@openthrottle/nodejs-graphql';
-import type { ConversationReasoningEffort } from '@openthrottle/openthrottle-agentic-utils';
+import type {
+  ConversationReasoningEffort,
+  TrajectoryRecord,
+} from '@openthrottle/openthrottle-agentic-utils';
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 
 /**
@@ -72,11 +75,14 @@ export interface WorkflowRalphIterationRunParams {
    * The orchestrator uses it to stop the run cleanly instead of treating the iteration as ordinary
    * (failed) agent output.
    */
+  readonly onTrajectory?: (record: TrajectoryRecord) => void | Promise<void>;
   readonly onUsageLimit?: (usageLimit: WorkflowRalphUsageLimit) => void;
   readonly runner: WorkflowConfigRunner;
   readonly signal: AbortSignal | undefined;
   readonly skipWorktreeSetup?: boolean;
   readonly timeoutMs: number | undefined;
+  /** Plan, run and task ids recorded under the trajectory's `extra.openthrottle`. */
+  readonly trajectoryFacts?: Readonly<Record<string, unknown>>;
   readonly worktree?: string;
   readonly worktreeBase?: string;
 }

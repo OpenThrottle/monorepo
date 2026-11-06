@@ -36,6 +36,7 @@ import { ActivityGraphqlModule } from './graphql/activity/activity-graphql.modul
 import { AgentConversationsGraphqlModule } from './graphql/agent-conversations/agent-conversations-graphql.module.ts';
 import { AgentDiscoveryGraphqlModule } from './graphql/agent-discovery/agent-discovery-graphql.module.ts';
 import { AgentSetupGraphqlModule } from './graphql/agent-setup/agent-setup-graphql.module.ts';
+import { AgentTrajectoriesGraphqlModule } from './graphql/agent-trajectories/agent-trajectories.module.ts';
 import { AgenticWorkflowGraphqlModule } from './graphql/agentic-workflow/agentic-workflow-graphql.module.ts';
 import { AgentsGraphqlModule } from './graphql/agents/agents-graphql.module.ts';
 import { AuthGraphqlModule } from './graphql/auth/auth-graphql.module.ts';
@@ -45,6 +46,7 @@ import { CodeSearchGraphqlModule } from './graphql/code-search/code-search-graph
 import { ConversationStreamGraphqlModule } from './graphql/conversation-stream/conversation-stream-graphql.module.ts';
 import { DailyStatsGraphqlModule } from './graphql/daily-stats/daily-stats-graphql.module.ts';
 import { EditorPresenceGraphqlModule } from './graphql/editor-presence/editor-presence-graphql.module.ts';
+import { EvalHumanLabelsGraphqlModule } from './graphql/eval-human-labels/eval-human-labels.module.ts';
 import { GeneratorsGraphqlModule } from './graphql/generators/generators-graphql.module.ts';
 import { HealthGraphqlModule } from './graphql/health/health-graphql.module.ts';
 import { McpConnectorsGraphqlModule } from './graphql/mcp-connectors/mcp-connectors-graphql.module.ts';
@@ -275,6 +277,7 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
       AgentConversationsGraphqlModule,
       AgentDiscoveryGraphqlModule,
       AgentSetupGraphqlModule,
+      AgentTrajectoriesGraphqlModule,
       AgentsGraphqlModule,
       AuthGraphqlModule,
       BlogGraphqlModule,
@@ -284,6 +287,7 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
       CustomPromptsGraphqlModule,
       DailyStatsGraphqlModule,
       EditorPresenceGraphqlModule,
+      EvalHumanLabelsGraphqlModule,
       GeneratorsGraphqlModule,
       GithubGraphqlModule,
       HealthGraphqlModule,

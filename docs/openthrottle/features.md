@@ -103,6 +103,12 @@ The **Run** control on Plan Details is a split button. It lives in the plan tool
 - **Run plan** enqueues a plan in BullMQ (status → queued, then in_progress when the worker runs). **Daily stats** for dashboard/analytics.
 - **Detailed docs:** [databases/README.md](../../databases/README.md) (queued status, doc tables).
 
+### Evals (preview)
+
+- **Run transcripts for every agent.** Each plan-run iteration, whichever of the seven supported CLIs ran it, is recorded as an open ATIF trajectory: its steps, tool calls, tokens, cost and outcome. So is each OpenThrottle task worked in an interactive Claude Code session. The trajectories are the raw material for evals: datasets built from real failures, graders calibrated against human labels, and paired comparisons between models, drivers and prompts.
+- **Behind `FEATURE_DELTA_PREVIEW`** (default `false`, developer app `.env`). The flag gates the eval UI only. Capture is always on, so data has accumulated by the time the flag is turned on. Interactive-session uploads can be turned off with `OPENTHROTTLE_SESSION_TRAJECTORIES=0`.
+- **Detailed docs:** [eval-system-adr.md](./eval-system-adr.md) (design of record and decisions).
+
 ---
 
 ## For landing pages and marketing

@@ -13,6 +13,7 @@ import {
   GetTaskDocument,
   GetTasksByPlanIdDocument,
   type GetTasksByPlanIdQuery,
+  RecordAgentTrajectoryDocument,
   UpdatePlanDocument,
   UpdateTaskDocument,
 } from '../../__generated__/graphql.ts';
@@ -21,6 +22,7 @@ import type {
   WorkflowRalphCommandRunner,
   WorkflowRalphIterationOnChunk,
   WorkflowRalphIterationRunner,
+  WorkflowRalphIterationRunParams,
 } from '../../contract/ralph-orchestrator-deps.ts';
 import { createWorkflowRalphOrchestrator } from '../orchestrator.ts';
 
@@ -119,8 +121,14 @@ const readUpdateInput = (
 
 const createMockExecute = (opts: {
   readonly getTasksByPlanId?: () => GetTasksByPlanIdQuery['tasksByPlanId'];
+  readonly onRecordTrajectory?: (variables: unknown) => void;
 }): WorkflowExecuteGraphqlV2 => {
-  return asExecuteGraphqlV2(async (document) => {
+  return asExecuteGraphqlV2(async (document, variables) => {
+    if (document === RecordAgentTrajectoryDocument) {
+      opts.onRecordTrajectory?.(variables);
+
+      return { recordAgentTrajectory: { id: 'trajectory-1' } };
+    }
     if (document === GetServerHealthDocument) {
       return { serverHealth: serverHealthOk };
     }
@@ -1406,5 +1414,91 @@ describe('createWorkflowRalphOrchestrator X-OT-Session-Id propagation', () => {
     for (const mutation of mutations) {
       expect(mutation.header).toBeUndefined();
     }
+  });
+});
+
+describe('run transcript capture', () => {
+  const PLAN_RUN_ID = 'c1d2e3f4-0000-4000-8000-000000000001';
+  const record = {
+    durationMs: 1200,
+    exitCode: 0,
+    outcome: 'succeeded',
+    trajectory: {
+      agent: { name: 'cursor', version: '1.0.0' },
+      schema_version: 'ATIF-v1.8',
+      steps: [],
+    },
+    trajectoryJson: '{"schema_version":"ATIF-v1.8"}',
+    truncated: false,
+  };
+
+  const runOnce = async (planRunId: string | undefined) => {
+    const recorded: unknown[] = [];
+    const executeGraphqlV2 = createMockExecute({
+      getTasksByPlanId: () => [baseTask(TASK_A, 'PENDING')],
+      onRecordTrajectory: (variables) => recorded.push(variables),
+    });
+    const run = vi.fn(
+      async (_params: WorkflowRalphIterationRunParams): Promise<string> => {
+        return '<promise>COMPLETE</promise>';
+      },
+    );
+
+    await createWorkflowRalphOrchestrator({
+      executeGraphqlV2,
+      iterationRunner: { run },
+    }).execute({
+      context: {
+        ...baseContext,
+        ...(planRunId === undefined ? {} : { planRunId }),
+      },
+    });
+
+    return { params: run.mock.calls[0]?.[0], recorded };
+  };
+
+  describe('when the host resolved a plan run', () => {
+    it('hands the runner a capture callback and the run facts', async () => {
+      const { params } = await runOnce(PLAN_RUN_ID);
+
+      expect(params).toMatchObject({
+        onTrajectory: expect.any(Function),
+        trajectoryFacts: {
+          planId: PLAN_ID,
+          planRunId: PLAN_RUN_ID,
+          taskId: TASK_A,
+        },
+      });
+    });
+
+    it('records the transcript against the run and the task', async () => {
+      const { params, recorded } = await runOnce(PLAN_RUN_ID);
+
+      await params?.onTrajectory?.(record);
+
+      expect(recorded).toEqual([
+        {
+          input: {
+            driver: 'cursor',
+            durationMs: 1200,
+            exitCode: 0,
+            model: 'test-model',
+            outcome: 'succeeded',
+            planRunId: PLAN_RUN_ID,
+            source: 'spawned',
+            taskId: TASK_A,
+            trajectoryJson: record.trajectoryJson,
+          },
+        },
+      ]);
+    });
+  });
+
+  describe('when the host resolved no plan run', () => {
+    it('captures nothing', async () => {
+      const { params } = await runOnce(undefined);
+
+      expect(params).not.toHaveProperty('onTrajectory');
+    });
   });
 });

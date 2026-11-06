@@ -1,0 +1,6 @@
+{"model":"gemini-2.5-pro","session_id":"ses_fixture","timestamp":"2026-11-06T05:00:00.000Z","type":"init"}
+{"content":"Create a file named hello.txt containing the single word hi. Then reply with exactly: DONE","role":"user","timestamp":"2026-11-06T05:00:00.100Z","type":"message"}
+{"parameters":{"content":"hi","file_path":"hello.txt"},"timestamp":"2026-11-06T05:00:01.000Z","tool_id":"call-1","tool_name":"write_file","type":"tool_use"}
+{"output":"Successfully created hello.txt","status":"success","timestamp":"2026-11-06T05:00:01.200Z","tool_id":"call-1","type":"tool_result"}
+{"content":"DONE","delta":true,"role":"assistant","timestamp":"2026-11-06T05:00:02.000Z","type":"message"}
+{"stats":{"duration_ms":2000,"input_tokens":4100,"output_tokens":12,"total_tokens":4112,"tool_calls":1},"status":"success","timestamp":"2026-11-06T05:00:02.100Z","type":"result"}

@@ -361,6 +361,72 @@ export type AgentSetupStreamChunkObject = {
   stream: Scalars['String']['output'];
 };
 
+/** One ATIF trajectory recorded for a plan run: the structured record of what an agent did, plus summary columns derived from it. */
+export type AgentTrajectory = {
+  __typename?: 'AgentTrajectory';
+  /** UTF-8 byte length of the stored trajectory JSON, after any server-side capping. */
+  byteSize: Scalars['Int']['output'];
+  /** Cached prompt tokens (included in inputTokens). Null when the run reported none. */
+  cachedTokens?: Maybe<Scalars['Int']['output']>;
+  /** Cost of the run in USD. Null when unpriceable, which is not the same as zero. */
+  costUsd?: Maybe<Scalars['Float']['output']>;
+  /** When the trajectory was recorded. */
+  createdAt: Scalars['DateTime']['output'];
+  /** Agent driver that produced the run, for example claude. */
+  driver: Scalars['String']['output'];
+  /** Wall-clock duration of the run in milliseconds. Null when unknown. */
+  durationMs?: Maybe<Scalars['Int']['output']>;
+  /** Process exit code of the run. Null when unknown. */
+  exitCode?: Maybe<Scalars['Int']['output']>;
+  /** Trajectory id. */
+  id: Scalars['ID']['output'];
+  /** True when the run ended before it could finish, so the trajectory is partial. */
+  incomplete: Scalars['Boolean']['output'];
+  /** Prompt tokens consumed, including cached tokens. Null when the run reported none. */
+  inputTokens?: Maybe<Scalars['Int']['output']>;
+  /** Model that ran, when known. */
+  model?: Maybe<Scalars['String']['output']>;
+  /** Free-form result label for the run, for example completed. Null when unknown. */
+  outcome?: Maybe<Scalars['String']['output']>;
+  /** Completion tokens produced. Null when the run reported none. */
+  outputTokens?: Maybe<Scalars['Int']['output']>;
+  /** Plan run the trajectory belongs to. */
+  planRunId: Scalars['ID']['output'];
+  /** ATIF schema version of the stored document, for example ATIF-v1.8. */
+  schemaVersion: Scalars['String']['output'];
+  /** How the trajectory was captured: spawned by the OpenThrottle runner, or session_upload from an interactive session. */
+  source: Scalars['String']['output'];
+  /** Task the run worked on. Null for a run not scoped to one task. */
+  taskId?: Maybe<Scalars['ID']['output']>;
+  /** Number of tool calls across all steps. */
+  toolCallCount: Scalars['Int']['output'];
+  /** The stored ATIF document serialized with JSON.stringify. */
+  trajectoryJson: Scalars['String']['output'];
+  /** True when the server elided observation content to fit the size caps. */
+  truncated: Scalars['Boolean']['output'];
+};
+
+/** One rater's verdict on one agent trajectory. Verdicts are the ground truth LLM judges are calibrated against; notes and failure types are error-analysis coding material. */
+export type AgentTrajectoryLabel = {
+  __typename?: 'AgentTrajectoryLabel';
+  /** When the rater first labelled the trajectory. */
+  createdAt: Scalars['DateTime']['output'];
+  /** Free-text failure category. Null when not given. */
+  failureType?: Maybe<Scalars['String']['output']>;
+  /** Label id. */
+  id: Scalars['ID']['output'];
+  /** Free-text observation about the trajectory. Null when not given. */
+  note?: Maybe<Scalars['String']['output']>;
+  /** Who recorded the label: the GitHub username of the caller, stamped server-side. */
+  rater: Scalars['String']['output'];
+  /** Trajectory the label is about. */
+  trajectoryId: Scalars['ID']['output'];
+  /** When the rater last replaced their label. */
+  updatedAt: Scalars['DateTime']['output'];
+  /** The rater's judgement: pass or fail. */
+  verdict: Scalars['String']['output'];
+};
+
 export type AgentsChatTurnResult = {
   __typename?: 'AgentsChatTurnResult';
   /** Assistant-visible reply text. Null when the turn failed (see errorMessage). */
@@ -1580,6 +1646,17 @@ export type JobsResultObject = {
   total: Scalars['Int']['output'];
 };
 
+export type LabelAgentTrajectoryInput = {
+  /** Free-text failure category, for example wrong-file. Blank is stored as null. */
+  failureType?: InputMaybe<Scalars['String']['input']>;
+  /** Free-text observation about the trajectory, at most 4000 characters. Blank is stored as null. */
+  note?: InputMaybe<Scalars['String']['input']>;
+  /** Trajectory being labelled. */
+  trajectoryId: Scalars['ID']['input'];
+  /** The verdict: pass or fail. Re-labelling replaces your own earlier label. */
+  verdict: Scalars['String']['input'];
+};
+
 export type LastActivityCommitPartObject = {
   __typename?: 'LastActivityCommitPartObject';
   message?: Maybe<Scalars['String']['output']>;
@@ -2052,6 +2129,8 @@ export type Mutation = {
   indexCodeRepository: IndexCodeRepositoryResult;
   /** Install an allowlisted agent CLI on the server host by driver id. Gated by SETTINGS_WRITE and the default-off OT_AGENT_CLI_INSTALL_ENABLED flag; returns a runId to stream via agentSetupChunkAdded. */
   installAgentCli: StartAgentSetupResult;
+  /** Record your verdict (pass or fail), optional failure type and note on an agent trajectory. One label per rater per trajectory: re-labelling replaces your own. The rater is taken from your identity, never from input. */
+  labelAgentTrajectory: AgentTrajectoryLabel;
   /** Sign in with email and password. Returns JWT access token for Authorization header or cookie. */
   login: LoginResultObject;
   /** Mint a short-lived token (scoped to the current user) for authenticating a graphql-ws subscription connection via connectionParams.authToken. */
@@ -2068,6 +2147,8 @@ export type Mutation = {
   pruneWorktreeCheckouts: PruneWorktreeCheckoutsPayloadObject;
   /** Publish a blog post: sets status PUBLISHED and publishedAt. Without publishedAt the post goes live now; a future publishedAt schedules it. Returns BlogPostNotFoundError for an unknown post. */
   publishBlogPost: PublishBlogPostResult;
+  /** Record an ATIF trajectory for a plan run. The document is validated, capped at 4 MiB server-side (elided observations set truncated) and summarized into token, cost and tool-call columns. */
+  recordAgentTrajectory: AgentTrajectory;
   /** Bump the liveness heartbeat on a detached-CLI run row (from registerCliPlanRun). The CLI calls this on a ~15s timer so a hard crash (SIGKILL/power-loss) leaves a stale heartbeat the reader/sweeper can detect. Keyed on the run id. Returns null when the row no longer exists. */
   recordPlanRunHeartbeat?: Maybe<PlanRunObject>;
   /** Record one harness-captured skill invocation. Args must already be privacy-processed by the client; the server stores them as-sent. The event is attributed to the human user the authenticated principal acts as, resolved server-side — a userId is never accepted from the client, and stays null when the principal resolves to no one. */
@@ -2085,6 +2166,8 @@ export type Mutation = {
   registerCliPlanRun: PlanRunObject;
   /** Best-effort register of a linked git worktree as a repository_checkout for the run actor, then point plan_runs.checkout_id and branch at that worktree (overwrites a scheduling-time primary checkout). Soft-fails (returns the run unchanged) when the path is not a linked worktree, repository resolution fails, or upsert errors. The actor resolves through its acting user, so a service-account token (the MCP) works when the account is linked to one; an unlinked account resolves to null and soft-fails like any other unresolvable actor. Returns null when the plan-run row does not exist. */
   registerPlanRunWorktreeCheckout?: Maybe<PlanRunObject>;
+  /** Remove your own label on an agent trajectory. Returns false when you had none; other raters' labels are never touched. */
+  removeAgentTrajectoryLabel: Scalars['Boolean']['output'];
   /** Remove a permission from a role */
   removePermissionFromRole: Scalars['Boolean']['output'];
   /** Remove a tag from a plan under the provenance ladder (an agent cannot remove a human row; server-llm removes only its own). Returns false when the tag was not present. */
@@ -2506,6 +2589,10 @@ export type MutationInstallAgentCliArgs = {
   backend: Scalars['String']['input'];
 };
 
+export type MutationLabelAgentTrajectoryArgs = {
+  input: LabelAgentTrajectoryInput;
+};
+
 export type MutationLoginArgs = {
   input: LoginInput;
 };
@@ -2528,6 +2615,10 @@ export type MutationPruneWorktreeCheckoutsArgs = {
 
 export type MutationPublishBlogPostArgs = {
   input: PublishBlogPostInput;
+};
+
+export type MutationRecordAgentTrajectoryArgs = {
+  input: RecordAgentTrajectoryInput;
 };
 
 export type MutationRecordPlanRunHeartbeatArgs = {
@@ -2564,6 +2655,10 @@ export type MutationRegisterCliPlanRunArgs = {
 
 export type MutationRegisterPlanRunWorktreeCheckoutArgs = {
   input: RegisterPlanRunWorktreeCheckoutInput;
+};
+
+export type MutationRemoveAgentTrajectoryLabelArgs = {
+  trajectoryId: Scalars['ID']['input'];
 };
 
 export type MutationRemovePermissionFromRoleArgs = {
@@ -3456,6 +3551,14 @@ export type Query = {
   activityByDateRange: ActivityByDateResultObject;
   /** Whether server-side agent-CLI install/update is enabled (env flag) and whether the current user may run it (SETTINGS_WRITE). Drives the /settings/agents control gating. */
   agentCliSetupConfig: AgentCliSetupConfigObject;
+  /** List a plan run's agent trajectories, oldest first. */
+  agentTrajectoriesByPlanRun: Array<AgentTrajectory>;
+  /** List a task's agent trajectories, oldest first. */
+  agentTrajectoriesByTask: Array<AgentTrajectory>;
+  /** Fetch one recorded agent trajectory by id. Null when it does not exist. */
+  agentTrajectory?: Maybe<AgentTrajectory>;
+  /** List every rater's label on an agent trajectory, most recently updated first. */
+  agentTrajectoryLabels: Array<AgentTrajectoryLabel>;
   /** Every blog author, ordered by display name. */
   blogAdminAuthors: Array<BlogAuthorObject>;
   /** One blog post in any state, by id or by slug (exactly one of the two is required, otherwise the query is rejected). BlogPostNotFoundError when no such post exists. */
@@ -3718,6 +3821,22 @@ export type QueryActivityByDateArgs = {
 
 export type QueryActivityByDateRangeArgs = {
   input: ActivityByDateRangeInput;
+};
+
+export type QueryAgentTrajectoriesByPlanRunArgs = {
+  planRunId: Scalars['ID']['input'];
+};
+
+export type QueryAgentTrajectoriesByTaskArgs = {
+  taskId: Scalars['ID']['input'];
+};
+
+export type QueryAgentTrajectoryArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type QueryAgentTrajectoryLabelsArgs = {
+  trajectoryId: Scalars['ID']['input'];
 };
 
 export type QueryBlogAdminPostArgs = {
@@ -4247,6 +4366,27 @@ export type RalphPlanRunTuningInput = {
   worktree?: InputMaybe<Scalars['String']['input']>;
   /** Cursor-only: branch/ref for --worktree-base. */
   worktreeBase?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type RecordAgentTrajectoryInput = {
+  /** Agent driver that produced the run, for example claude. */
+  driver: Scalars['String']['input'];
+  /** Wall-clock duration of the run in milliseconds. */
+  durationMs?: InputMaybe<Scalars['Int']['input']>;
+  /** Process exit code of the run. */
+  exitCode?: InputMaybe<Scalars['Int']['input']>;
+  /** Model that ran, when known. */
+  model?: InputMaybe<Scalars['String']['input']>;
+  /** Free-form result label for the run, for example completed. */
+  outcome?: InputMaybe<Scalars['String']['input']>;
+  /** Plan run the trajectory belongs to. */
+  planRunId: Scalars['ID']['input'];
+  /** How the trajectory was captured: spawned or session_upload. */
+  source: Scalars['String']['input'];
+  /** Task the run worked on. Omit for a run not scoped to one task. */
+  taskId?: InputMaybe<Scalars['ID']['input']>;
+  /** The ATIF document as a JSON string. Validated, then capped server-side at 4 MiB. */
+  trajectoryJson: Scalars['String']['input'];
 };
 
 export type RecordPlanRunHeartbeatInput = {
@@ -7198,6 +7338,22 @@ export type DeleteProjectMutation = {
   deleteProject: boolean;
 };
 
+export type RecordAgentTrajectoryMutationVariables = Exact<{
+  input: RecordAgentTrajectoryInput;
+}>;
+
+export type RecordAgentTrajectoryMutation = {
+  __typename?: 'Mutation';
+  recordAgentTrajectory: {
+    __typename?: 'AgentTrajectory';
+    byteSize: number;
+    id: string;
+    incomplete: boolean;
+    toolCallCount: number;
+    truncated: boolean;
+  };
+};
+
 export type GetNoteQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
@@ -9669,6 +9825,67 @@ export const DeleteProjectDocument = {
 } as unknown as DocumentNode<
   DeleteProjectMutation,
   DeleteProjectMutationVariables
+>;
+export const RecordAgentTrajectoryDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'recordAgentTrajectory' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'RecordAgentTrajectoryInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'recordAgentTrajectory' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'byteSize' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'incomplete' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'toolCallCount' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'truncated' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RecordAgentTrajectoryMutation,
+  RecordAgentTrajectoryMutationVariables
 >;
 export const GetNoteDocument = {
   kind: 'Document',

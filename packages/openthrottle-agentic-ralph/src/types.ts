@@ -73,6 +73,11 @@ export interface WorkflowContext extends WorkflowConfigLegacy {
   readonly lifecycleDispatcher?: WorkflowLifecycleDispatcher;
   readonly mode: 'plan' | 'task';
   readonly planId: string;
+  /**
+   * The plan_runs row this execution belongs to, when the host resolved one. Present ⇒ each
+   * iteration's run transcript is recorded against it (fail-open); absent ⇒ nothing is recorded.
+   */
+  readonly planRunId?: string;
   readonly project: string | undefined;
   readonly runner: WorkflowConfigRunner;
   readonly skipWorktreeSetup: boolean | undefined;

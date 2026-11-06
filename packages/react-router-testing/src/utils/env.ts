@@ -47,6 +47,7 @@ const DEFAULT_TEST_ENV: Required<OpenThrottleEnv> = {
   FEATURE_BETA_PREVIEW: 'false',
   FEATURE_BLOG_ENABLED: 'false',
   FEATURE_CHARLIE_PREVIEW: 'false',
+  FEATURE_DELTA_PREVIEW: 'false',
 
   NODE_ENV: 'test',
   ROLLBAR_TOKEN: 'xxxxxxxxxxxxxxxx',

@@ -6,15 +6,19 @@
  * live in the drivers package.
  */
 
+import type { TrajectoryRecord } from '@openthrottle/openthrottle-agentic-utils';
 import {
+  buildTrajectoryRecord,
   DEFAULT_WORKFLOW_RUNNER,
   resolveHookPluginDirs,
+  withStructuredOutput,
 } from '@openthrottle/openthrottle-agentic-utils';
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import type {
   AgentDriver,
   DriverChunk,
   DriverInvocationConfig,
+  DriverRawOutput,
   DriverReasoningEffort,
   DriverWorktreeOptions,
   UsageLimit,
@@ -26,6 +30,7 @@ import {
 } from '@openthrottle/openthrottle-drivers';
 
 import { ARTWORK_LINE, COLORS } from '../config/index';
+import { resolveAgentVersion } from '../utils/agent-version';
 import { ralphDebugLogger } from '../utils/ralph-debug-logger';
 import type { RalphWorktreeCliOptions } from '../utils/ralph-worktree-cli';
 
@@ -60,6 +65,13 @@ export interface RunIterationConfig {
   /** Optional callback for each stdout/stderr chunk (async path only). */
   onChunk?: (chunk: CursorAgentChunk) => void;
   /**
+   * Async path only: receives the iteration's run transcript (an ATIF trajectory, capped for
+   * transport) once the agent has stopped, however it stopped. Capture is fail-open — a throw or
+   * rejection here is logged and never fails the iteration. Not called when the agent printed no
+   * structured events at all (it failed before starting).
+   */
+  onTrajectory?: (record: TrajectoryRecord) => void | Promise<void>;
+  /**
    * Optional callback fired when the iteration closes normally and the driver detected a
    * subscription usage limit (Claude `stream-json` only). Sync and async paths; does not change the
    * returned string. Not fired on timeout, abort or spawn failure.
@@ -71,6 +83,11 @@ export interface RunIterationConfig {
   skipWorktreeSetup?: boolean;
   /** Optional per-iteration timeout in ms (async path only). On expiry, child is killed (SIGTERM then SIGKILL). */
   timeoutMs?: number;
+  /**
+   * Run facts recorded under the trajectory's `extra.openthrottle` (plan, run and task ids) — the
+   * iteration knows only its own number.
+   */
+  trajectoryFacts?: Readonly<Record<string, unknown>>;
   /** Agent CLI worktree (`-w` / `--worktree`); see `docs/workflows/ralph-worktree-flag.md`. */
   worktree?: RalphWorktreeCliOptions['worktree'];
   /** Cursor-only: `--worktree-base`. */
@@ -151,19 +168,83 @@ export const runIteration = (config: RunIterationConfig): string => {
   });
 };
 
+const outcomeOf = (raw: DriverRawOutput): string => {
+  if (raw.termination !== 'exited') {
+    return raw.termination;
+  }
+
+  return raw.exitCode === 0 ? 'succeeded' : 'failed';
+};
+
 /**
- * @description Executes a single iteration using spawn + Promise. Use when non-interactive for streaming and per-iteration timeout/cancel.
+ * @description Builds and hands over the iteration's trajectory. Never throws: a capture failure
+ * is a missing transcript, not a failed iteration.
  */
-export const runIterationAsync = (
+const captureTrajectory = async (
+  config: RunIterationConfig,
+  driver: AgentDriver,
+  raw: DriverRawOutput,
+): Promise<void> => {
+  const { onTrajectory } = config;
+
+  if (onTrajectory === undefined) {
+    return;
+  }
+
+  try {
+    const record = buildTrajectoryRecord({
+      agentVersion: resolveAgentVersion(driver),
+      driverId: driver.id,
+      durationMs: raw.durationMs,
+      exitCode: raw.exitCode,
+      model: config.model,
+      openthrottle: { ...config.trajectoryFacts, iteration: config.iteration },
+      outcome: outcomeOf(raw),
+      prompt: config.agentPrompt,
+      rawStdout: raw.stdout,
+      reportsToolCalls: driver.capabilities.reportsToolCalls,
+    });
+
+    if (record !== undefined) {
+      await onTrajectory(record);
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+
+    console.warn(
+      `⚠️ Could not record the iteration ${config.iteration} trajectory: ${message}`,
+    );
+  }
+};
+
+/**
+ * @description Executes a single iteration using spawn + Promise. Use when non-interactive for
+ * streaming and per-iteration timeout/cancel. The agent runs in its CLI's structured output mode
+ * (rendered back to prose for the stream and the returned text), which is what lets
+ * `onTrajectory` receive a transcript.
+ */
+export const runIterationAsync = async (
   config: RunIterationConfig,
 ): Promise<string> => {
   const { backend = DEFAULT_WORKFLOW_RUNNER, iteration } = config;
   logIterationBanner(iteration);
 
-  const driver = getDriver(backend);
+  const driver = withStructuredOutput(getDriver(backend));
+  const rawOutput: { current: DriverRawOutput | undefined } = {
+    current: undefined,
+  };
 
-  return runDriverAsync(driver, toDriverConfig(config, driver), {
+  const output = await runDriverAsync(driver, toDriverConfig(config, driver), {
     logger: ralphDebugLogger,
+    onRawOutput: (raw) => {
+      rawOutput.current = raw;
+    },
     onUsageLimit: config.onUsageLimit,
   });
+
+  if (rawOutput.current !== undefined) {
+    await captureTrajectory(config, driver, rawOutput.current);
+  }
+
+  return output;
 };

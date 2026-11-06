@@ -62,6 +62,14 @@ export type {
   TokenUsageTotals,
 } from './modules/agent-token-usage/agent-token-usage.service.ts';
 export { AgentTokenUsageService } from './modules/agent-token-usage/agent-token-usage.service.ts';
+export { AGENT_TRAJECTORY_SOURCE } from './modules/agent-trajectories/agent-trajectories.constants.ts';
+export { AgentTrajectoriesModule } from './modules/agent-trajectories/agent-trajectories.module.ts';
+export { AgentTrajectoriesService } from './modules/agent-trajectories/agent-trajectories.service.ts';
+export type {
+  AgentTrajectorySource,
+  CreateAgentTrajectoryInput,
+} from './modules/agent-trajectories/agent-trajectories.types.ts';
+export { AgentTrajectory } from './modules/agent-trajectories/agent-trajectory.entity.ts';
 export type { BlogAuthorData } from './modules/blog-authors/blog-author.entity.ts';
 export { BlogAuthor } from './modules/blog-authors/blog-author.entity.ts';
 export { BlogAuthorsModule } from './modules/blog-authors/blog-authors.module.ts';
@@ -122,6 +130,15 @@ export type { CodeIndexSnapshotEntry } from './modules/code-index-snapshots/code
 export { CodeIndexSnapshot } from './modules/code-index-snapshots/code-index-snapshot.entity.ts';
 export { DailyStat } from './modules/daily-stats/daily-stat.entity.ts';
 export { DailyStatsService } from './modules/daily-stats/daily-stats.service.ts';
+export { EvalHumanLabel } from './modules/eval-human-labels/eval-human-label.entity.ts';
+export { EVAL_LABEL_VERDICT } from './modules/eval-human-labels/eval-human-labels.constants.ts';
+export { EvalHumanLabelsModule } from './modules/eval-human-labels/eval-human-labels.module.ts';
+export { EvalHumanLabelsService } from './modules/eval-human-labels/eval-human-labels.service.ts';
+export type {
+  EvalLabelVerdict,
+  RemoveEvalHumanLabelInput,
+  UpsertEvalHumanLabelInput,
+} from './modules/eval-human-labels/eval-human-labels.types.ts';
 export type {
   McpConnectorAuthType,
   McpConnectorConnectionData,

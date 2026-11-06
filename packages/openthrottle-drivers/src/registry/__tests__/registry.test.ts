@@ -21,6 +21,7 @@ const fakeDriver = (id: string): AgentDriver => {
       mcpAutoApprove: false,
       permissionMode: false,
       pluginDir: false,
+      reportsToolCalls: false,
       skipWorktreeSetup: false,
       supportsCustomBaseUrl: false,
       supportsModelFlag: false,

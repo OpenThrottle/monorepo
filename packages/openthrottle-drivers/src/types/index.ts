@@ -5,6 +5,7 @@
  * package stays a leaf dependency.
  */
 
+import type { DriverOutputFormat } from '../utils/output-format.ts';
 import type { DriverReasoningEffort } from '../utils/reasoning-effort.ts';
 import type { UsageLimit } from '../utils/usage-limit.ts';
 
@@ -88,6 +89,13 @@ export interface DriverInvocationConfig {
   /** Per-chunk stdout/stderr callback (async path only). */
   readonly onChunk?: (chunk: DriverChunk) => void;
   /**
+   * Requested stdout format. Omitted ⇒ the driver's historical format: structured for claude (whose
+   * `parseOutput` already recovers the text), plain text for every other CLI. `structured` is only
+   * safe through `withStructuredOutput` in `@openthrottle/openthrottle-agentic-utils`, which installs
+   * the matching parser and line renderer. Claude ignores it.
+   */
+  readonly outputFormat?: DriverOutputFormat;
+  /**
    * Out-of-repo plugin directories to load for this invocation; honored only by drivers advertising
    * `pluginDir`. Already fully resolved by the caller — existence-checked, container-path-mapped,
    * and gated by the operator's kill switch — because this package never touches the filesystem.
@@ -161,6 +169,13 @@ export interface DriverCapabilities {
    * Gates {@link appendPluginDirShellFlags}.
    */
   readonly pluginDir: boolean;
+  /**
+   * In structured output mode, the CLI's stream carries discrete tool-call events, so a run
+   * transcript can record what the agent did and not only what it said. `false` for grok, whose
+   * headless `streaming-json` emits only `thought` / `text` / `end`; its transcripts are marked
+   * incomplete rather than stored with an empty tool-call list.
+   */
+  readonly reportsToolCalls: boolean;
   /** Emits `--skip-worktree-setup` (Cursor-only today). */
   readonly skipWorktreeSetup: boolean;
   /**

@@ -8,7 +8,10 @@
 import { Card } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleTabs } from '@openthrottle/react-router-ui';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
-import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
+import {
+  FEATURE_BETA_PREVIEW,
+  FEATURE_DELTA_PREVIEW,
+} from '@openthrottle/react-router-utils';
 import * as React from 'react';
 
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
@@ -142,12 +145,14 @@ export const PlanDetailRoute = (
             workingDirectory={workingDirectory}
           />
         )}
-        <PlanInboxPanel
-          isLive={getPlanIsRunning(status)}
-          messages={inboxMessages}
-          planId={plan.id}
-          tasks={tasks}
-        />
+        {FEATURE_DELTA_PREVIEW && (
+          <PlanInboxPanel
+            isLive={getPlanIsRunning(status)}
+            messages={inboxMessages}
+            planId={plan.id}
+            tasks={tasks}
+          />
+        )}
         <OpenThrottleTabs
           urlSync={{
             defaultValue: 'overview',

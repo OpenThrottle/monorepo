@@ -216,6 +216,7 @@ describe('antigravity driver', () => {
       mcpAutoApprove: false,
       permissionMode: true,
       pluginDir: false,
+      reportsToolCalls: true,
       skipWorktreeSetup: false,
       supportsCustomBaseUrl: false,
       supportsModelFlag: true,

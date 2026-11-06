@@ -8,6 +8,7 @@
  * injected prompt string and streaming/timeout behavior.
  */
 
+import type { TrajectoryRecord } from '@openthrottle/openthrottle-agentic-utils';
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import type {
   DriverReasoningEffort,
@@ -57,11 +58,15 @@ export interface CursorWorkflowRalphIterationRunParams {
    * subscription usage limit. Merged with factory
    * `CreateCursorWorkflowRalphIterationRunnerOptions.onUsageLimit`. The returned string is unchanged.
    */
+  /** @description Forwarded to {@link runIterationAsync} `onTrajectory` (fail-open transcript capture). */
+  readonly onTrajectory?: (record: TrajectoryRecord) => void | Promise<void>;
   readonly onUsageLimit?: (usageLimit: UsageLimit) => void;
   readonly runner: WorkflowConfigRunner;
   readonly signal: AbortSignal | undefined;
   readonly skipWorktreeSetup?: boolean;
   readonly timeoutMs: number | undefined;
+  /** @description Forwarded to {@link runIterationAsync} `trajectoryFacts`. */
+  readonly trajectoryFacts?: Readonly<Record<string, unknown>>;
   readonly worktree?: string;
   readonly worktreeBase?: string;
 }
@@ -165,10 +170,12 @@ export const createCursorWorkflowRalphIterationRunner = (
         iteration: params.iteration,
         model: params.model,
         onChunk: mergedOnChunk,
+        onTrajectory: params.onTrajectory,
         onUsageLimit: mergedOnUsageLimit,
         signal: params.signal,
         skipWorktreeSetup: params.skipWorktreeSetup,
         timeoutMs: params.timeoutMs,
+        trajectoryFacts: params.trajectoryFacts,
         worktree: params.worktree,
         worktreeBase: params.worktreeBase,
       });

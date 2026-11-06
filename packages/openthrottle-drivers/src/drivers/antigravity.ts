@@ -36,6 +36,7 @@
 
 import { defineDriver } from '../registry/index.ts';
 import type { DriverCapabilities, DriverModelListing } from '../types/index.ts';
+import { structuredOutputShellFlag } from '../utils/output-format.ts';
 import { escapeForShellDoubleQuoted, formatModelFlag } from '../utils/shell.ts';
 
 const capabilities: DriverCapabilities = {
@@ -71,6 +72,7 @@ const capabilities: DriverCapabilities = {
   permissionMode: true,
   /** Plugins install into Antigravity's own config scope; there is no out-of-repo plugin-dir flag. */
   pluginDir: false,
+  reportsToolCalls: true,
   skipWorktreeSetup: false,
   /**
    * Speaks Google's own backend, not an OpenAI-compatible protocol, and exposes no base-URL flag —
@@ -128,7 +130,12 @@ export const antigravityDriver = defineDriver({
     //   needs no absolute path; a relative `--add-dir .` is NOT honored.
     // - `< /dev/null` keeps an unauthenticated run from sitting on an inherited stdin waiting for a
     //   pasted OAuth code; it bounds the failure but does NOT make it instant (see the module JSDoc).
-    return `agy -p "${safePrompt}" --dangerously-skip-permissions --add-dir "$PWD"${modelFlag} < /dev/null`;
+    const outputFlag = structuredOutputShellFlag(
+      config,
+      '--output-format stream-json',
+    );
+
+    return `agy -p "${safePrompt}"${outputFlag} --dangerously-skip-permissions --add-dir "$PWD"${modelFlag} < /dev/null`;
   },
   capabilities,
   discoverModels,

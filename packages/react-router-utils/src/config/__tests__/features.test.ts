@@ -67,4 +67,27 @@ describe('config/features', () => {
     const one = await loadFeatures({ FEATURE_BLOG_ENABLED: '1' });
     expect(one.FEATURE_BLOG_ENABLED).toBe(true);
   });
+
+  test('FEATURE_DELTA_PREVIEW is off when unset', async () => {
+    const { FEATURE_DELTA_PREVIEW } = await loadFeatures({});
+
+    expect(FEATURE_DELTA_PREVIEW).toBe(false);
+  });
+
+  test('FEATURE_DELTA_PREVIEW can be explicitly enabled', async () => {
+    const { FEATURE_DELTA_PREVIEW } = await loadFeatures({
+      FEATURE_DELTA_PREVIEW: 'true',
+    });
+
+    expect(FEATURE_DELTA_PREVIEW).toBe(true);
+  });
+
+  test('FEATURE_DELTA_PREVIEW is independent of the other previews', async () => {
+    const features = await loadFeatures({
+      FEATURE_BETA_PREVIEW: 'true',
+      FEATURE_CHARLIE_PREVIEW: 'true',
+    });
+
+    expect(features.FEATURE_DELTA_PREVIEW).toBe(false);
+  });
 });

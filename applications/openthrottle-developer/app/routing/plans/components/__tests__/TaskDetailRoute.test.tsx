@@ -72,6 +72,7 @@ const buildProps = (
       planOutputChunks: [],
       tagVocabulary: [],
       task,
+      trajectories: [],
     },
     params: { planId: 'plan-1', taskId: 'task-1' },
     task,

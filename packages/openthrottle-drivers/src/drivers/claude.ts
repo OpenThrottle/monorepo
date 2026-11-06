@@ -46,6 +46,7 @@ const capabilities: DriverCapabilities = {
    * `--bare` would skip hooks and plugins outright; this driver must never emit it.
    */
   pluginDir: true,
+  reportsToolCalls: true,
   skipWorktreeSetup: false,
   supportsCustomBaseUrl: false,
   supportsModelFlag: true,

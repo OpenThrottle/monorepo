@@ -9,6 +9,7 @@
 
 import { defineDriver } from '../registry/index.ts';
 import type { DriverCapabilities } from '../types/index.ts';
+import { structuredOutputShellFlag } from '../utils/output-format.ts';
 import { codexReasoningEffort } from '../utils/reasoning-effort.ts';
 import {
   escapeForShellDoubleQuoted,
@@ -43,6 +44,7 @@ const capabilities: DriverCapabilities = {
   mcpAutoApprove: false,
   permissionMode: true,
   pluginDir: false,
+  reportsToolCalls: true,
   skipWorktreeSetup: false,
   supportsCustomBaseUrl: true,
   supportsModelFlag: true,
@@ -88,7 +90,9 @@ export const codexDriver = defineDriver({
 
     const safePrompt = escapeForShellDoubleQuoted(config.prompt);
 
-    return `codex exec --sandbox workspace-write${endpointFlags}${effortFlag}${modelFlag} "${safePrompt}"`;
+    const outputFlag = structuredOutputShellFlag(config, '--json');
+
+    return `codex exec${outputFlag} --sandbox workspace-write${endpointFlags}${effortFlag}${modelFlag} "${safePrompt}"`;
   },
   capabilities,
   id: 'codex',

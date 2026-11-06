@@ -11,12 +11,14 @@ import { UserFavoriteAgentModel } from './modules/agent-cli-preferences/user-fav
 import { AgentConversation } from './modules/agent-conversations/agent-conversation.entity.ts';
 import { AgentConversationMessage } from './modules/agent-conversations/agent-conversation-message.entity.ts';
 import { AgentTokenUsage } from './modules/agent-token-usage/agent-token-usage.entity.ts';
+import { AgentTrajectory } from './modules/agent-trajectories/agent-trajectory.entity.ts';
 import { BlogAuthor } from './modules/blog-authors/blog-author.entity.ts';
 import { BlogPost } from './modules/blog-posts/blog-post.entity.ts';
 import { BlogTag } from './modules/blog-tags/blog-tag.entity.ts';
 import { CodeEmbedding } from './modules/code-embeddings/code-embedding.entity.ts';
 import { CodeIndexSnapshot } from './modules/code-index-snapshots/code-index-snapshot.entity.ts';
 import { DailyStat } from './modules/daily-stats/daily-stat.entity.ts';
+import { EvalHumanLabel } from './modules/eval-human-labels/eval-human-label.entity.ts';
 import { McpConnectorConnection } from './modules/mcp-connectors/mcp-connector-connection.entity.ts';
 import { Note } from './modules/notes/note.entity.ts';
 import { PlanEmbedding } from './modules/plan-embeddings/plan-embedding.entity.ts';
@@ -82,6 +84,7 @@ export function getTypeOrmOptions(): DataSourceOptions {
       AgentConversation,
       AgentConversationMessage,
       AgentTokenUsage,
+      AgentTrajectory,
       BlogAuthor,
       BlogPost,
       BlogTag,
@@ -89,6 +92,7 @@ export function getTypeOrmOptions(): DataSourceOptions {
       CodeIndexSnapshot,
       CustomPrompt,
       DailyStat,
+      EvalHumanLabel,
       McpConnectorConnection,
       Note,
       Permission,

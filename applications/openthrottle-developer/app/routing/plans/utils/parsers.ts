@@ -90,13 +90,15 @@ export const parsePlanDetailTab = (
 };
 
 /** Valid tab keys for the task detail page (`/plans/:planId/tasks/:taskId`). */
-export type TaskDetailTab = 'artifacts' | 'details' | 'hooks' | 'output';
+export type TaskDetailTab =
+  'artifacts' | 'details' | 'hooks' | 'output' | 'trajectories';
 
 const TASK_DETAIL_TAB_VALUES: readonly TaskDetailTab[] = [
   'artifacts',
   'details',
   'hooks',
   'output',
+  'trajectories',
 ];
 
 const isTaskDetailTab = (raw: string): raw is TaskDetailTab => {
@@ -105,7 +107,7 @@ const isTaskDetailTab = (raw: string): raw is TaskDetailTab => {
 
 /**
  * @description Parses the `tab` search param for task detail primary tabs
- * (Details, Output, Artifacts, Hooks). Shares {@link PLANS_DETAIL_TAB_SEARCH_PARAM}.
+ * (Details, Output, Artifacts, Hooks, Trajectories). Shares {@link PLANS_DETAIL_TAB_SEARCH_PARAM}.
  */
 export const parseTaskDetailTab = (
   raw: string | null,

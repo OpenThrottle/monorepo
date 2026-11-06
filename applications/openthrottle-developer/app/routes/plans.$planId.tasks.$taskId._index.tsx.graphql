@@ -94,3 +94,11 @@ mutation updateTask($input: UpdateTaskInput!) {
     updatedAt
   }
 }
+
+# The task page's Trajectories tab (FEATURE_DELTA_PREVIEW). Summary columns
+# only: the ATIF document itself is fetched by the trajectory viewer route.
+query TaskAgentTrajectories($taskId: ID!) {
+  agentTrajectoriesByTask(taskId: $taskId) {
+    ...AgentTrajectorySummary
+  }
+}

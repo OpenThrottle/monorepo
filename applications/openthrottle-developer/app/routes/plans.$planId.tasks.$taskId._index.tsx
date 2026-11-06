@@ -8,12 +8,7 @@ import * as React from 'react';
 import { redirect } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/plans.$planId.tasks.$taskId._index';
-import {
-  GetPlanByIdDocument,
-  GetTaskByIdDocument,
-  TaskLinkedArtifactsDocument,
-  TaskOutputStreamChunksDocument,
-} from '~/__generated__/graphql';
+import { GetTaskByIdDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import { detachHook } from '~/routing/plans/actions/planId';
 import {
@@ -24,6 +19,7 @@ import {
 } from '~/routing/plans/actions/taskId';
 import { PlanTaskNotFound } from '~/routing/plans/components/PlanTaskNotFound';
 import { TaskDetailRoute } from '~/routing/plans/components/TaskDetailRoute';
+import { loadTaskDetailRelations } from '~/routing/plans/utils/load-task-detail-relations';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -60,6 +56,7 @@ export const loader = async (args: Route.LoaderArgs) => {
       planOutputChunks: [],
       tagVocabulary: [],
       task: null,
+      trajectories: [],
     };
   }
 
@@ -76,62 +73,9 @@ export const loader = async (args: Route.LoaderArgs) => {
     return redirect(`/plans/${task.planId}/tasks/${taskId}`);
   }
 
-  /*
-    The plan, the linked artifacts and the output chunks each depend only on the
-    task we just fetched — never on each other — so they issue together instead
-    of stacking three more round-trips behind the first. The server filters
-    output chunks by both planId and taskId.
-  */
-  const taskPlanId = task?.planId;
+  const relations = await loadTaskDetailRelations(args.request, task, taskId);
 
-  const fetchPlan = async () => {
-    if (taskPlanId == null) {
-      return null;
-    }
-
-    return executeGraphqlWithAuth(args.request, GetPlanByIdDocument, {
-      id: taskPlanId,
-    });
-  };
-
-  const fetchLinkedArtifacts = async () => {
-    if (task == null) {
-      return null;
-    }
-
-    return executeGraphqlWithAuth(args.request, TaskLinkedArtifactsDocument, {
-      taskId,
-    });
-  };
-
-  const fetchPlanOutputChunks = async () => {
-    if (taskPlanId == null) {
-      return null;
-    }
-
-    return executeGraphqlWithAuth(
-      args.request,
-      TaskOutputStreamChunksDocument,
-      {
-        planId: taskPlanId,
-        taskId,
-      },
-    );
-  };
-
-  const [planResult, linkedArtifactsResult, planOutputChunksResult] =
-    await Promise.all([
-      fetchPlan(),
-      fetchLinkedArtifacts(),
-      fetchPlanOutputChunks(),
-    ]);
-
-  const plan = planResult?.plan ?? null;
-  const linkedArtifacts =
-    linkedArtifactsResult?.workArtifactsByTask.artifacts ?? [];
-  const planOutputChunks = planOutputChunksResult?.planOutputStreamChunks ?? [];
-
-  return { linkedArtifacts, plan, planOutputChunks, tagVocabulary, task };
+  return { ...relations, tagVocabulary, task };
 };
 
 export const links: Route.LinksFunction = () => {
