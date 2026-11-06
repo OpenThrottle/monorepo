@@ -14,6 +14,7 @@ export * from './utils/child-kill.ts';
 export * from './utils/claude-output.ts';
 export * from './utils/logger.ts';
 export * from './utils/mcp.ts';
+export * from './utils/output-format.ts';
 export * from './utils/plugin-dir.ts';
 export * from './utils/reasoning-effort.ts';
 export * from './utils/shell.ts';

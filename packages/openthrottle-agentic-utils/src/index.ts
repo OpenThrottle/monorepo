@@ -1,6 +1,7 @@
 export * from './config/index.ts';
 export * from './data/artwork.ts';
 export * from './data/prompts.ts';
+export * from './types/atif.ts';
 export * from './types/index.ts';
 export * from './types/model-discovery.ts';
 export * from './utils/cache/index.ts';
@@ -15,5 +16,7 @@ export * from './utils/metrics.ts';
 export * from './utils/model-discovery/index.ts';
 export * from './utils/nodejs.ts';
 export * from './utils/postgres.ts';
+export * from './utils/structured-output/index.ts';
+export * from './utils/trajectory/index.ts';
 export * from './utils/workflow.ts';
 export * from './utils/workspace-paths.ts';

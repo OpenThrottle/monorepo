@@ -8,6 +8,7 @@
 
 import { defineDriver } from '../registry/index.ts';
 import type { DriverCapabilities, DriverModelListing } from '../types/index.ts';
+import { structuredOutputShellFlag } from '../utils/output-format.ts';
 import { opencodeVariant } from '../utils/reasoning-effort.ts';
 import {
   escapeForShellDoubleQuoted,
@@ -33,6 +34,7 @@ const capabilities: DriverCapabilities = {
   mcpAutoApprove: false,
   permissionMode: true,
   pluginDir: false,
+  reportsToolCalls: true,
   skipWorktreeSetup: false,
   supportsCustomBaseUrl: true,
   supportsModelFlag: true,
@@ -81,7 +83,9 @@ export const opencodeDriver = defineDriver({
 
     const safePrompt = escapeForShellDoubleQuoted(config.prompt);
 
-    return `${endpointPrefix}opencode run --auto "${safePrompt}"${modelFlag}${variantFlag}`;
+    const outputFlag = structuredOutputShellFlag(config, '--format json');
+
+    return `${endpointPrefix}opencode run --auto "${safePrompt}"${outputFlag}${modelFlag}${variantFlag}`;
   },
   capabilities,
   discoverModels,

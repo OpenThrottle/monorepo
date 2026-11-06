@@ -82,6 +82,14 @@ function mapTool(
   };
 }
 
+/**
+ * opencode named its tool event `tool` before 1.18 and `tool_use` from 1.18 on (verified 1.18.16:
+ * `{"type":"tool_use","part":{"type":"tool",…}}`). Accept both so tool cards survive either.
+ */
+function isToolEvent(type: unknown): boolean {
+  return type === 'tool' || type === 'tool_use';
+}
+
 /** A `step_finish` part → a usage chunk carrying tokens + cost. */
 function mapStepFinish(part: Record<string, unknown>): ConversationStreamChunk {
   return {
@@ -138,7 +146,7 @@ export function createOpencodeEventMapper(): OpencodeEventMapper {
         if (chunk !== null) {
           chunks.push(chunk);
         }
-      } else if (event.type === 'tool' && part !== undefined) {
+      } else if (isToolEvent(event.type) && part !== undefined) {
         const chunk = mapTool(part);
         if (chunk !== null) {
           chunks.push(chunk);

@@ -10,6 +10,7 @@
 
 import { defineDriver } from '../registry/index.ts';
 import type { DriverCapabilities, DriverModelListing } from '../types/index.ts';
+import { structuredOutputShellFlag } from '../utils/output-format.ts';
 import { grokReasoningEffort } from '../utils/reasoning-effort.ts';
 import {
   escapeForShellDoubleQuoted,
@@ -49,6 +50,8 @@ const capabilities: DriverCapabilities = {
   mcpAutoApprove: false,
   permissionMode: true,
   pluginDir: false,
+  /** Headless `streaming-json` has no tool events (only `thought` / `text` / `end`). */
+  reportsToolCalls: false,
   skipWorktreeSetup: false,
   supportsCustomBaseUrl: true,
   supportsModelFlag: true,
@@ -101,7 +104,11 @@ export const grokDriver = defineDriver({
     }
 
     const safePrompt = escapeForShellDoubleQuoted(config.prompt);
-    const base = `${endpointPrefix}grok -p "${safePrompt}" --permission-mode acceptEdits${modelFlag}${effortFlag}`;
+    const outputFlag = structuredOutputShellFlag(
+      config,
+      '--output-format streaming-json',
+    );
+    const base = `${endpointPrefix}grok -p "${safePrompt}"${outputFlag} --permission-mode acceptEdits${modelFlag}${effortFlag}`;
 
     return appendWorktreeShellFlags(base, capabilities, config.worktree);
   },

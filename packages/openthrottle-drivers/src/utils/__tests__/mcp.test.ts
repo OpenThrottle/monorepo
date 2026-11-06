@@ -20,6 +20,7 @@ const capabilities = (mcpAutoApprove: boolean): DriverCapabilities => {
     mcpAutoApprove,
     permissionMode: false,
     pluginDir: false,
+    reportsToolCalls: false,
     skipWorktreeSetup: false,
     supportsCustomBaseUrl: false,
     supportsModelFlag: false,

@@ -9,6 +9,7 @@
 import { defineDriver } from '../registry/index.ts';
 import type { DriverCapabilities, DriverModelListing } from '../types/index.ts';
 import { appendMcpShellFlags } from '../utils/mcp.ts';
+import { structuredOutputShellFlag } from '../utils/output-format.ts';
 import {
   appendPluginDirShellFlags,
   OPENTHROTTLE_CURSOR_PLUGIN_DIR_REL,
@@ -49,6 +50,7 @@ const capabilities: DriverCapabilities = {
    * at the CURSOR payload (`pluginDirRel` below), never the Claude one.
    */
   pluginDir: true,
+  reportsToolCalls: true,
   skipWorktreeSetup: true,
   supportsCustomBaseUrl: false,
   supportsModelFlag: true,
@@ -84,7 +86,11 @@ export const cursorDriver = defineDriver({
       : '';
 
     const safePrompt = escapeForShellDoubleQuoted(config.prompt);
-    const base = `cursor-agent --force -p "${safePrompt}"${modelFlag}`;
+    const outputFlag = structuredOutputShellFlag(
+      config,
+      '--output-format stream-json',
+    );
+    const base = `cursor-agent --force -p "${safePrompt}"${outputFlag}${modelFlag}`;
     const withMcp = appendMcpShellFlags(base, capabilities, CURSOR_MCP_FLAGS);
     const withPlugins = appendPluginDirShellFlags(
       withMcp,

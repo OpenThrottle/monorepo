@@ -17,6 +17,7 @@
 
 import { defineDriver } from '../registry/index.ts';
 import type { DriverCapabilities } from '../types/index.ts';
+import { structuredOutputShellFlag } from '../utils/output-format.ts';
 import { escapeForShellDoubleQuoted, formatModelFlag } from '../utils/shell.ts';
 
 const capabilities: DriverCapabilities = {
@@ -39,6 +40,7 @@ const capabilities: DriverCapabilities = {
   permissionMode: true,
   /** Gemini extensions install into `~/.gemini`; there is no out-of-repo plugin-dir flag. */
   pluginDir: false,
+  reportsToolCalls: true,
   skipWorktreeSetup: false,
   /**
    * The Gemini CLI speaks the Gemini API (or Vertex), not an OpenAI-compatible protocol, and
@@ -67,7 +69,12 @@ export const geminiDriver = defineDriver({
     const safePrompt = escapeForShellDoubleQuoted(config.prompt);
 
     // `< /dev/null` is load-bearing: with a non-TTY stdin the CLI blocks reading it to EOF.
-    return `gemini --approval-mode yolo "${safePrompt}"${modelFlag} < /dev/null`;
+    const outputFlag = structuredOutputShellFlag(
+      config,
+      '--output-format stream-json',
+    );
+
+    return `gemini --approval-mode yolo "${safePrompt}"${outputFlag}${modelFlag} < /dev/null`;
   },
   capabilities,
   id: 'gemini',

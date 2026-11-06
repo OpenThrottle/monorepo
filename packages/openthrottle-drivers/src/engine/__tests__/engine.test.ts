@@ -42,6 +42,7 @@ const testDriver: AgentDriver = defineDriver({
     mcpAutoApprove: false,
     permissionMode: false,
     pluginDir: false,
+    reportsToolCalls: false,
     skipWorktreeSetup: false,
     supportsCustomBaseUrl: false,
     supportsModelFlag: false,

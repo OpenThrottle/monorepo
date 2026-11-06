@@ -119,9 +119,30 @@ So capture is:
 3. **One `chunksToAtif` converter** turns the chunk stream plus run metadata into ATIF.
 
 **Placement follows the dependency direction.** `openthrottle-agentic-utils` depends on
-`openthrottle-drivers`, so the converter cannot live in the drivers package. It lives with the eval
-core (Decision 7). `tools/workflows` already depends on `agentic-utils`, so run-iteration can use
-the mappers directly.
+`openthrottle-drivers`, so neither the parsers nor the converter can live in the drivers package.
+
+_As built (task 2, 2026-11-06):_
+
+- **Drivers.** They gained an opt-in `outputFormat: 'structured'` and a `reportsToolCalls`
+  capability. Text stays the default, so a caller that does not opt in can never receive NDJSON it
+  cannot read.
+- **The wrapper.** `withStructuredOutput(driver)` in `agentic-utils`
+  (`src/utils/structured-output/`) switches the flag on and installs the matching `parseOutput` and
+  `renderOutputLine`, both built on the chat mappers.
+- **The converter.** `chunksToAtif` and the ATIF types live in `agentic-utils` as well
+  (`src/utils/trajectory/`, `src/types/atif.ts`), not in the eval package. Capturing a trajectory
+  is not eval-specific, and the server already depends on `agentic-utils`. The eval core
+  (Decision 7) builds on it.
+
+Recording one real run per CLI showed that the chat mappers do not cover plan-run mode on their own:
+
+- **claude and cursor:** their mappers skip the consolidated `assistant` text, which in chat
+  repeats the partial deltas. Plan runs never ask for partials, so the plan-run reader adds that text
+  back.
+- **opencode 1.18:** it renamed its `tool` event to `tool_use`. The mapper now accepts both, which
+  also fixes the chat tool cards.
+- **codex and opencode:** both report a tool only once it finishes. The converter synthesizes the
+  call from the result and marks it `synthesized_from_result`.
 
 A driver whose CLI cannot report tool calls declares that in its capabilities, and its trajectories
 are marked incomplete. They are never silently stored with an empty `tool_calls` array.

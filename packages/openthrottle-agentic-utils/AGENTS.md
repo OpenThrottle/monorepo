@@ -39,6 +39,29 @@ true`. A guard test (`__tests__/registry.test.ts`) enforces (3) ⟺ (4); discove
   the composer, the resolver's accepted-backend allowlist, and server routing all
   light up from there.
 
+## Plan-run transcripts (structured output → ATIF)
+
+Plan runs reuse the conversation backends' per-CLI mappers to read each agent's structured stream.
+Design: `docs/openthrottle/eval-system-adr.md` § Decision 4.
+
+- **`src/utils/structured-output/`:**
+  - `withStructuredOutput(driver)` switches a plan-run driver to structured stdout and installs the
+    matching `parseOutput` and `renderOutputLine`. Call it once per run, because the renderer is
+    stateful.
+  - `readStructuredOutput(driverId, raw)` returns every chunk of a finished run.
+- **The plan-run reader is not the chat reader.** Plan runs never ask for partial messages, so for
+  claude and cursor the reader also adds back the consolidated `assistant` text the chat mappers
+  skip. Never add `--include-partial-messages` or `--stream-partial-output` to a plan-run driver: the
+  text would be counted twice.
+- **`src/utils/trajectory/`:**
+  - `chunksToAtif` builds the ATIF v1.8 document, with the types in `src/types/atif.ts`.
+  - `tool-metadata.ts` is the single table of where each CLI keeps tool arguments and results.
+  - `usage-metrics.ts` handles token accounting. Claude, cursor and opencode report cache tokens
+    alongside the input count; codex reports them as part of it.
+- **Fixtures:** `structured-output/__tests__/fixtures/` holds sanitized real recordings, with
+  `*.synthetic.ndjson` marking the ones built by hand. Re-record with each CLI's plan-run command
+  plus its structured flag.
+
 ## Idle timeouts (stall protection)
 
 Every streaming path is bounded so a wedged backend can't hang a chat turn:
