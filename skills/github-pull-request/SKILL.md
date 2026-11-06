@@ -36,7 +36,7 @@ are replaced by [Draft-only (orchestrator) mode](#draft-only-orchestrator-mode).
 - **ALWAYS** run `scripts/check-pr-attribution.sh` against the drafted title and body before calling `gh pr create`/`gh pr edit` — see [Attribution](#attribution). Fix the offending line(s) and re-run the guard; never bypass it.
 - **NEVER** push directly to `main`; **never** use `--no-verify` or bypass the Husky hooks. Require human confirmation before a `rebase` or a `force push`.
 - This skill only **creates or updates** the PR. If the user also wants to merge it, treat that as a separate step.
-- On a merge-queue-protected branch, do **not** describe a PR as merged just because `gh pr merge` accepted the request. That command may only **enqueue** the PR. Only report "merged" after `gh pr view --json mergedAt,mergeCommitSha` shows a landed merge commit.
+- On a merge-queue-protected branch, do **not** describe a PR as merged just because `gh pr merge` accepted the request. That command may only **enqueue** the PR. Only report "merged" after `gh pr view <n> --json mergedAt,mergeCommit --jq '{mergedAt, sha: .mergeCommit.oid}'` shows a landed merge commit.
 
 ## Draft-only (orchestrator) mode
 

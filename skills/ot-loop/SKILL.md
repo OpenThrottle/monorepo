@@ -365,7 +365,7 @@ it lives in the deprecated `@tools/workflows` package and is not a path worth ke
 
 The merge-queue caveat still holds where it always did: `gh pr merge --auto` can return after
 **enqueuing** a PR, so do not call it merged, or read a landed sha from it, until
-`gh pr view --json mergedAt,mergeCommitSha` shows one. It no longer gates ledger recording.
+`gh pr view <n> --json mergedAt,mergeCommit --jq '{mergedAt, sha: .mergeCommit.oid}'` shows one. It no longer gates ledger recording.
 
 ## Rules
 
