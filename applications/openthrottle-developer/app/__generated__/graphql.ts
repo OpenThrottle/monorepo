@@ -406,6 +406,27 @@ export type AgentTrajectory = {
   truncated: Scalars['Boolean']['output'];
 };
 
+/** One rater's verdict on one agent trajectory. Verdicts are the ground truth LLM judges are calibrated against; notes and failure types are error-analysis coding material. */
+export type AgentTrajectoryLabel = {
+  __typename?: 'AgentTrajectoryLabel';
+  /** When the rater first labelled the trajectory. */
+  createdAt: Scalars['DateTime']['output'];
+  /** Free-text failure category. Null when not given. */
+  failureType?: Maybe<Scalars['String']['output']>;
+  /** Label id. */
+  id: Scalars['ID']['output'];
+  /** Free-text observation about the trajectory. Null when not given. */
+  note?: Maybe<Scalars['String']['output']>;
+  /** Who recorded the label: the GitHub username of the caller, stamped server-side. */
+  rater: Scalars['String']['output'];
+  /** Trajectory the label is about. */
+  trajectoryId: Scalars['ID']['output'];
+  /** When the rater last replaced their label. */
+  updatedAt: Scalars['DateTime']['output'];
+  /** The rater's judgement: pass or fail. */
+  verdict: Scalars['String']['output'];
+};
+
 export type AgentsChatTurnResult = {
   __typename?: 'AgentsChatTurnResult';
   /** Assistant-visible reply text. Null when the turn failed (see errorMessage). */
@@ -1625,6 +1646,17 @@ export type JobsResultObject = {
   total: Scalars['Int']['output'];
 };
 
+export type LabelAgentTrajectoryInput = {
+  /** Free-text failure category, for example wrong-file. Blank is stored as null. */
+  failureType?: InputMaybe<Scalars['String']['input']>;
+  /** Free-text observation about the trajectory, at most 4000 characters. Blank is stored as null. */
+  note?: InputMaybe<Scalars['String']['input']>;
+  /** Trajectory being labelled. */
+  trajectoryId: Scalars['ID']['input'];
+  /** The verdict: pass or fail. Re-labelling replaces your own earlier label. */
+  verdict: Scalars['String']['input'];
+};
+
 export type LastActivityCommitPartObject = {
   __typename?: 'LastActivityCommitPartObject';
   message?: Maybe<Scalars['String']['output']>;
@@ -2097,6 +2129,8 @@ export type Mutation = {
   indexCodeRepository: IndexCodeRepositoryResult;
   /** Install an allowlisted agent CLI on the server host by driver id. Gated by SETTINGS_WRITE and the default-off OT_AGENT_CLI_INSTALL_ENABLED flag; returns a runId to stream via agentSetupChunkAdded. */
   installAgentCli: StartAgentSetupResult;
+  /** Record your verdict (pass or fail), optional failure type and note on an agent trajectory. One label per rater per trajectory: re-labelling replaces your own. The rater is taken from your identity, never from input. */
+  labelAgentTrajectory: AgentTrajectoryLabel;
   /** Sign in with email and password. Returns JWT access token for Authorization header or cookie. */
   login: LoginResultObject;
   /** Mint a short-lived token (scoped to the current user) for authenticating a graphql-ws subscription connection via connectionParams.authToken. */
@@ -2132,6 +2166,8 @@ export type Mutation = {
   registerCliPlanRun: PlanRunObject;
   /** Best-effort register of a linked git worktree as a repository_checkout for the run actor, then point plan_runs.checkout_id and branch at that worktree (overwrites a scheduling-time primary checkout). Soft-fails (returns the run unchanged) when the path is not a linked worktree, repository resolution fails, or upsert errors. The actor resolves through its acting user, so a service-account token (the MCP) works when the account is linked to one; an unlinked account resolves to null and soft-fails like any other unresolvable actor. Returns null when the plan-run row does not exist. */
   registerPlanRunWorktreeCheckout?: Maybe<PlanRunObject>;
+  /** Remove your own label on an agent trajectory. Returns false when you had none; other raters' labels are never touched. */
+  removeAgentTrajectoryLabel: Scalars['Boolean']['output'];
   /** Remove a permission from a role */
   removePermissionFromRole: Scalars['Boolean']['output'];
   /** Remove a tag from a plan under the provenance ladder (an agent cannot remove a human row; server-llm removes only its own). Returns false when the tag was not present. */
@@ -2553,6 +2589,10 @@ export type MutationInstallAgentCliArgs = {
   backend: Scalars['String']['input'];
 };
 
+export type MutationLabelAgentTrajectoryArgs = {
+  input: LabelAgentTrajectoryInput;
+};
+
 export type MutationLoginArgs = {
   input: LoginInput;
 };
@@ -2615,6 +2655,10 @@ export type MutationRegisterCliPlanRunArgs = {
 
 export type MutationRegisterPlanRunWorktreeCheckoutArgs = {
   input: RegisterPlanRunWorktreeCheckoutInput;
+};
+
+export type MutationRemoveAgentTrajectoryLabelArgs = {
+  trajectoryId: Scalars['ID']['input'];
 };
 
 export type MutationRemovePermissionFromRoleArgs = {
@@ -3513,6 +3557,8 @@ export type Query = {
   agentTrajectoriesByTask: Array<AgentTrajectory>;
   /** Fetch one recorded agent trajectory by id. Null when it does not exist. */
   agentTrajectory?: Maybe<AgentTrajectory>;
+  /** List every rater's label on an agent trajectory, most recently updated first. */
+  agentTrajectoryLabels: Array<AgentTrajectoryLabel>;
   /** Every blog author, ordered by display name. */
   blogAdminAuthors: Array<BlogAuthorObject>;
   /** One blog post in any state, by id or by slug (exactly one of the two is required, otherwise the query is rejected). BlogPostNotFoundError when no such post exists. */
@@ -3787,6 +3833,10 @@ export type QueryAgentTrajectoriesByTaskArgs = {
 
 export type QueryAgentTrajectoryArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type QueryAgentTrajectoryLabelsArgs = {
+  trajectoryId: Scalars['ID']['input'];
 };
 
 export type QueryBlogAdminPostArgs = {
@@ -8999,6 +9049,156 @@ export type UpdateTaskMutation = {
   } | null;
 };
 
+export type TaskAgentTrajectoriesQueryVariables = Exact<{
+  taskId: Scalars['ID']['input'];
+}>;
+
+export type TaskAgentTrajectoriesQuery = {
+  __typename?: 'Query';
+  agentTrajectoriesByTask: Array<{
+    __typename?: 'AgentTrajectory';
+    byteSize: number;
+    cachedTokens?: number | null;
+    costUsd?: number | null;
+    createdAt: any;
+    driver: string;
+    durationMs?: number | null;
+    exitCode?: number | null;
+    id: string;
+    incomplete: boolean;
+    inputTokens?: number | null;
+    model?: string | null;
+    outcome?: string | null;
+    outputTokens?: number | null;
+    planRunId: string;
+    schemaVersion: string;
+    source: string;
+    taskId?: string | null;
+    toolCallCount: number;
+    truncated: boolean;
+  }>;
+};
+
+export type TrajectoryViewerQueryVariables = Exact<{
+  planId: Scalars['ID']['input'];
+  taskId: Scalars['ID']['input'];
+  trajectoryId: Scalars['ID']['input'];
+}>;
+
+export type TrajectoryViewerQuery = {
+  __typename?: 'Query';
+  agentTrajectory?: {
+    __typename?: 'AgentTrajectory';
+    trajectoryJson: string;
+    byteSize: number;
+    cachedTokens?: number | null;
+    costUsd?: number | null;
+    createdAt: any;
+    driver: string;
+    durationMs?: number | null;
+    exitCode?: number | null;
+    id: string;
+    incomplete: boolean;
+    inputTokens?: number | null;
+    model?: string | null;
+    outcome?: string | null;
+    outputTokens?: number | null;
+    planRunId: string;
+    schemaVersion: string;
+    source: string;
+    taskId?: string | null;
+    toolCallCount: number;
+    truncated: boolean;
+  } | null;
+  agentTrajectoryLabels: Array<{
+    __typename?: 'AgentTrajectoryLabel';
+    createdAt: any;
+    failureType?: string | null;
+    id: string;
+    note?: string | null;
+    rater: string;
+    trajectoryId: string;
+    updatedAt: any;
+    verdict: string;
+  }>;
+  me?: {
+    __typename?: 'UserObject';
+    email?: string | null;
+    githubUsername: string;
+    id: string;
+  } | null;
+  plan?: { __typename?: 'PlanObject'; id: string; title: string } | null;
+  task?: {
+    __typename?: 'TaskObject';
+    id: string;
+    planId: string;
+    title: string;
+  } | null;
+};
+
+export type AgentTrajectorySummaryFragment = {
+  __typename?: 'AgentTrajectory';
+  byteSize: number;
+  cachedTokens?: number | null;
+  costUsd?: number | null;
+  createdAt: any;
+  driver: string;
+  durationMs?: number | null;
+  exitCode?: number | null;
+  id: string;
+  incomplete: boolean;
+  inputTokens?: number | null;
+  model?: string | null;
+  outcome?: string | null;
+  outputTokens?: number | null;
+  planRunId: string;
+  schemaVersion: string;
+  source: string;
+  taskId?: string | null;
+  toolCallCount: number;
+  truncated: boolean;
+};
+
+export type AgentTrajectoryLabelRowFragment = {
+  __typename?: 'AgentTrajectoryLabel';
+  createdAt: any;
+  failureType?: string | null;
+  id: string;
+  note?: string | null;
+  rater: string;
+  trajectoryId: string;
+  updatedAt: any;
+  verdict: string;
+};
+
+export type TrajectoryViewerLabelMutationVariables = Exact<{
+  input: LabelAgentTrajectoryInput;
+}>;
+
+export type TrajectoryViewerLabelMutation = {
+  __typename?: 'Mutation';
+  labelAgentTrajectory: {
+    __typename?: 'AgentTrajectoryLabel';
+    createdAt: any;
+    failureType?: string | null;
+    id: string;
+    note?: string | null;
+    rater: string;
+    trajectoryId: string;
+    updatedAt: any;
+    verdict: string;
+  };
+};
+
+export type TrajectoryViewerRemoveLabelMutationVariables = Exact<{
+  trajectoryId: Scalars['ID']['input'];
+}>;
+
+export type TrajectoryViewerRemoveLabelMutation = {
+  __typename?: 'Mutation';
+  removeAgentTrajectoryLabel: boolean;
+};
+
 export type PlanCardFragment = {
   __typename?: 'PlanObject';
   assignee?: string | null;
@@ -13756,6 +13956,69 @@ export const TaskDetailsFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<TaskDetailsFragment, unknown>;
+export const AgentTrajectorySummaryFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'AgentTrajectorySummary' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'AgentTrajectory' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'byteSize' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cachedTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'costUsd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'durationMs' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'exitCode' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'incomplete' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'inputTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outcome' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planRunId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'schemaVersion' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'toolCallCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'truncated' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<AgentTrajectorySummaryFragment, unknown>;
+export const AgentTrajectoryLabelRowFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'AgentTrajectoryLabelRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'AgentTrajectoryLabel' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'failureType' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'note' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'rater' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'trajectoryId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'verdict' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<AgentTrajectoryLabelRowFragment, unknown>;
 export const PlanCardFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -22404,6 +22667,429 @@ export const UpdateTaskDocument = {
     },
   ],
 } as unknown as DocumentNode<UpdateTaskMutation, UpdateTaskMutationVariables>;
+export const TaskAgentTrajectoriesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'TaskAgentTrajectories' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'taskId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'agentTrajectoriesByTask' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'taskId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'taskId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'AgentTrajectorySummary' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'AgentTrajectorySummary' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'AgentTrajectory' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'byteSize' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cachedTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'costUsd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'durationMs' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'exitCode' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'incomplete' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'inputTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outcome' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planRunId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'schemaVersion' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'toolCallCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'truncated' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  TaskAgentTrajectoriesQuery,
+  TaskAgentTrajectoriesQueryVariables
+>;
+export const TrajectoryViewerDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'TrajectoryViewer' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'planId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'taskId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'trajectoryId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'agentTrajectory' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'trajectoryId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'AgentTrajectorySummary' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'trajectoryJson' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'agentTrajectoryLabels' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'trajectoryId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'trajectoryId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'AgentTrajectoryLabelRow' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'me' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'githubUsername' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'plan' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'planId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'task' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'taskId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'AgentTrajectorySummary' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'AgentTrajectory' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'byteSize' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cachedTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'costUsd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'durationMs' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'exitCode' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'incomplete' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'inputTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outcome' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'outputTokens' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planRunId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'schemaVersion' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'toolCallCount' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'truncated' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'AgentTrajectoryLabelRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'AgentTrajectoryLabel' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'failureType' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'note' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'rater' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'trajectoryId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'verdict' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  TrajectoryViewerQuery,
+  TrajectoryViewerQueryVariables
+>;
+export const TrajectoryViewerLabelDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'TrajectoryViewerLabel' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'LabelAgentTrajectoryInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'labelAgentTrajectory' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'AgentTrajectoryLabelRow' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'AgentTrajectoryLabelRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'AgentTrajectoryLabel' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'failureType' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'note' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'rater' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'trajectoryId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'verdict' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  TrajectoryViewerLabelMutation,
+  TrajectoryViewerLabelMutationVariables
+>;
+export const TrajectoryViewerRemoveLabelDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'TrajectoryViewerRemoveLabel' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'trajectoryId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'removeAgentTrajectoryLabel' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'trajectoryId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'trajectoryId' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  TrajectoryViewerRemoveLabelMutation,
+  TrajectoryViewerRemoveLabelMutationVariables
+>;
 export const GetPlanAssigneeOptionsDocument = {
   kind: 'Document',
   definitions: [

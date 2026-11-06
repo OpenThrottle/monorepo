@@ -26,6 +26,18 @@ export interface AtifObservationResult {
   readonly content: string;
   readonly extra?: Readonly<Record<string, unknown>>;
   readonly source_call_id?: string;
+  /** Points at the embedded subagent this result delegated to (v1.7+). */
+  readonly subagent_trajectory_ref?: AtifSubagentTrajectoryRef;
+}
+
+/**
+ * @description A reference from an observation result to a subagent trajectory: embedded
+ * (resolved against the root's `subagent_trajectories` by `trajectory_id`) or in another file.
+ * @public
+ */
+export interface AtifSubagentTrajectoryRef {
+  readonly trajectory_id?: string;
+  readonly trajectory_path?: string;
 }
 
 /**

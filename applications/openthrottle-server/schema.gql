@@ -1453,6 +1453,37 @@ type EditorPresenceResultObject {
   trusted: Boolean!
 }
 
+"""
+One rater's verdict on one agent trajectory. Verdicts are the ground truth LLM judges are calibrated against; notes and failure types are error-analysis coding material.
+"""
+type AgentTrajectoryLabel {
+  """When the rater first labelled the trajectory."""
+  createdAt: DateTime!
+
+  """Free-text failure category. Null when not given."""
+  failureType: String
+
+  """Label id."""
+  id: ID!
+
+  """Free-text observation about the trajectory. Null when not given."""
+  note: String
+
+  """
+  Who recorded the label: the GitHub username of the caller, stamped server-side.
+  """
+  rater: String!
+
+  """Trajectory the label is about."""
+  trajectoryId: ID!
+
+  """When the rater last replaced their label."""
+  updatedAt: DateTime!
+
+  """The rater's judgement: pass or fail."""
+  verdict: String!
+}
+
 type GeneratorObject {
   description: String!
   name: String!
@@ -4669,6 +4700,11 @@ type Query {
   """
   editorPresence: EditorPresenceResultObject!
 
+  """
+  List every rater's label on an agent trajectory, most recently updated first.
+  """
+  agentTrajectoryLabels(trajectoryId: ID!): [AgentTrajectoryLabel!]!
+
   """List available NX generators from @tools/generators"""
   generators: [GeneratorObject!]!
 
@@ -5820,6 +5856,16 @@ type Mutation {
   writeCustomPromptToFileSystem(id: ID!): Boolean!
 
   """
+  Record your verdict (pass or fail), optional failure type and note on an agent trajectory. One label per rater per trajectory: re-labelling replaces your own. The rater is taken from your identity, never from input.
+  """
+  labelAgentTrajectory(input: LabelAgentTrajectoryInput!): AgentTrajectoryLabel!
+
+  """
+  Remove your own label on an agent trajectory. Returns false when you had none; other raters' labels are never touched.
+  """
+  removeAgentTrajectoryLabel(trajectoryId: ID!): Boolean!
+
+  """
   Connect (or re-connect) a catalog connector for the authenticated user. For api_token connectors the token is stored as a bcrypt hash + masked hint; the raw token is never persisted.
   """
   connectMcpConnector(input: ConnectMcpConnectorInput!): McpConnectorConnectionResultObject!
@@ -6728,6 +6774,26 @@ input UpdateCustomPromptInput {
 
   """Write content to the file system at filePath if provided"""
   writeToFileSystem: Boolean! = false
+}
+
+input LabelAgentTrajectoryInput {
+  """
+  Free-text failure category, for example wrong-file. Blank is stored as null.
+  """
+  failureType: String
+
+  """
+  Free-text observation about the trajectory, at most 4000 characters. Blank is stored as null.
+  """
+  note: String
+
+  """Trajectory being labelled."""
+  trajectoryId: ID!
+
+  """
+  The verdict: pass or fail. Re-labelling replaces your own earlier label.
+  """
+  verdict: String!
 }
 
 input ConnectMcpConnectorInput {

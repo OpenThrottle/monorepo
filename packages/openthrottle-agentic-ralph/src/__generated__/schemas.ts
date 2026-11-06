@@ -69,6 +69,7 @@ import {
   GetPullInput,
   GetTaskEmbeddingInput,
   GitHubRepoInput,
+  LabelAgentTrajectoryInput,
   LastActivityInput,
   LinesAddedDeletedInput,
   ListAgentConversationsInput,
@@ -931,6 +932,17 @@ export function GitHubRepoInputSchema(): z.ZodObject<
     owner: z.string().min(1),
     repo: z.string().min(1),
     state: z.string().min(1),
+  });
+}
+
+export function LabelAgentTrajectoryInputSchema(): z.ZodObject<
+  Properties<LabelAgentTrajectoryInput>
+> {
+  return z.object({
+    failureType: z.string().nullish(),
+    note: z.string().nullish(),
+    trajectoryId: z.string().min(1),
+    verdict: z.string().min(1),
   });
 }
 

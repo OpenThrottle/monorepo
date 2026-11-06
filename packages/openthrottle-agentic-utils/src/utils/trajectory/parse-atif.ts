@@ -29,6 +29,18 @@ const isOptionalRecord = (value: unknown): boolean => {
   return value === undefined || isRecord(value);
 };
 
+const isSubagentRef = (value: unknown): boolean => {
+  if (value === undefined) {
+    return true;
+  }
+
+  return (
+    isRecord(value) &&
+    isOptionalString(value.trajectory_id) &&
+    isOptionalString(value.trajectory_path)
+  );
+};
+
 const isToolCall = (value: unknown): value is AtifToolCall => {
   return (
     isRecord(value) &&
@@ -49,7 +61,8 @@ const isObservation = (value: unknown): value is AtifObservation => {
       isRecord(result) &&
       typeof result.content === 'string' &&
       isOptionalString(result.source_call_id) &&
-      isOptionalRecord(result.extra)
+      isOptionalRecord(result.extra) &&
+      isSubagentRef(result.subagent_trajectory_ref)
     );
   });
 };

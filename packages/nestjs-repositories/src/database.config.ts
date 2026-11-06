@@ -18,6 +18,7 @@ import { BlogTag } from './modules/blog-tags/blog-tag.entity.ts';
 import { CodeEmbedding } from './modules/code-embeddings/code-embedding.entity.ts';
 import { CodeIndexSnapshot } from './modules/code-index-snapshots/code-index-snapshot.entity.ts';
 import { DailyStat } from './modules/daily-stats/daily-stat.entity.ts';
+import { EvalHumanLabel } from './modules/eval-human-labels/eval-human-label.entity.ts';
 import { McpConnectorConnection } from './modules/mcp-connectors/mcp-connector-connection.entity.ts';
 import { Note } from './modules/notes/note.entity.ts';
 import { PlanEmbedding } from './modules/plan-embeddings/plan-embedding.entity.ts';
@@ -91,6 +92,7 @@ export function getTypeOrmOptions(): DataSourceOptions {
       CodeIndexSnapshot,
       CustomPrompt,
       DailyStat,
+      EvalHumanLabel,
       McpConnectorConnection,
       Note,
       Permission,

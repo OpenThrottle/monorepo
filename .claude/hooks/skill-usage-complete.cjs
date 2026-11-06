@@ -1714,9 +1714,7 @@ var persistTrajectory = async (input, {
       );
       return bufferTrajectory(input, outPath, res.reason);
     }
-    logHookError(
-      `trajectory rejected; moved to dead-letter (${res.reason})`
-    );
+    logHookError(`trajectory rejected; moved to dead-letter (${res.reason})`);
     try {
       appendDeadLetters({
         filePath: outPath,
@@ -1824,7 +1822,10 @@ var writeTrajectoryUploadState = ({
   state
 }) => {
   try {
-    const target = stateFilePath(dir || defaultTrajectoryUploadsDir(), sessionId);
+    const target = stateFilePath(
+      dir || defaultTrajectoryUploadsDir(),
+      sessionId
+    );
     const temp = `${target}.tmp.${process.pid}`;
     import_node_fs10.default.mkdirSync(import_node_path7.default.dirname(target), { recursive: true });
     import_node_fs10.default.writeFileSync(
@@ -3334,6 +3335,33 @@ var timestampsOf = (events) => {
     return Number.isNaN(time) ? [] : [time];
   });
 };
+var spawnedAgentByCallId = (events) => {
+  const byCallId = /* @__PURE__ */ new Map();
+  for (const event of events) {
+    const result = isRecord(event) ? event.toolUseResult : void 0;
+    const agentId = isRecord(result) ? stringOf2(result.agentId) : void 0;
+    const [toolResult] = toolResultsOf(event);
+    if (agentId !== void 0 && toolResult !== void 0) {
+      byCallId.set(toolResult.toolUseId, agentId);
+    }
+  }
+  return byCallId;
+};
+var withSubagentRefs = (trajectory, spawned, embeddedIds) => {
+  const steps = trajectory.steps.map((step) => {
+    if (step.observation === void 0) {
+      return step;
+    }
+    const results = step.observation.results.map((result) => {
+      const callId = result.source_call_id;
+      const agentId = callId === void 0 ? void 0 : spawned.get(callId);
+      const isEmbedded = agentId !== void 0 && embeddedIds.has(agentId);
+      return isEmbedded ? { ...result, subagent_trajectory_ref: { trajectory_id: agentId } } : result;
+    });
+    return { ...step, observation: { results } };
+  });
+  return { ...trajectory, steps };
+};
 var subagentTrajectory = (subagent, agentVersion) => {
   const trajectory = chunksToAtif({
     agentName: "claude",
@@ -3373,8 +3401,13 @@ var buildClaudeSessionTrajectory = (input) => {
   });
   let embedded = main2;
   if (subagents.length > 0) {
+    const embeddedIds = new Set(
+      input.subagents.map((subagent) => {
+        return subagent.agentId;
+      })
+    );
     embedded = {
-      ...main2,
+      ...withSubagentRefs(main2, spawnedAgentByCallId(mainEvents), embeddedIds),
       subagent_trajectories: subagents.map((subagent) => {
         return subagent.trajectory;
       })
@@ -3485,7 +3518,9 @@ var captureSessionTrajectories = async ({
       const offset = scanned[segment.startIndex]?.offset ?? read.nextOffset;
       const isOversized = !segment.closed && read.capped && segment.startIndex === 0;
       if (isOversized) {
-        logHookError(`trajectory segment ${segment.taskId} exceeds scan window`);
+        logHookError(
+          `trajectory segment ${segment.taskId} exceeds scan window`
+        );
         uploaded.add(segment.toolUseId);
         handled += 1;
         continue;

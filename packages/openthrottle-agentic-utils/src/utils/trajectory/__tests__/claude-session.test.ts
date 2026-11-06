@@ -150,6 +150,22 @@ describe('buildClaudeSessionTrajectory', () => {
     expect(JSON.stringify(trajectory)).not.toContain('must be ignored');
   });
 
+  it('points the spawning Agent result at its embedded subagent', () => {
+    const results =
+      trajectory?.steps.flatMap((step) => step.observation?.results ?? []) ??
+      [];
+    const spawning = results.find((result) => {
+      return result.source_call_id === 't-agent';
+    });
+
+    expect(spawning?.subagent_trajectory_ref).toEqual({
+      trajectory_id: 'abc123',
+    });
+    expect(
+      results.filter((result) => result.subagent_trajectory_ref !== undefined),
+    ).toHaveLength(1);
+  });
+
   it('embeds the subagent with its own trajectory id', () => {
     const [embedded] = trajectory?.subagent_trajectories ?? [];
 

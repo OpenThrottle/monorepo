@@ -1,0 +1,75 @@
+# plans.$planId.tasks.$taskId.trajectories.$trajectoryId
+
+# The trajectory viewer: one ATIF document plus every rater's label on it.
+# `me` lets the viewer tell your own label from other raters'; `plan` and
+# `task` feed the breadcrumbs. The server stamps a label's rater, never the
+# client (see labelAgentTrajectory).
+query TrajectoryViewer($planId: ID!, $taskId: ID!, $trajectoryId: ID!) {
+  agentTrajectory(id: $trajectoryId) {
+    ...AgentTrajectorySummary
+    trajectoryJson
+  }
+  agentTrajectoryLabels(trajectoryId: $trajectoryId) {
+    ...AgentTrajectoryLabelRow
+  }
+  me {
+    email
+    githubUsername
+    id
+  }
+  plan(id: $planId) {
+    id
+    title
+  }
+  task(id: $taskId) {
+    id
+    planId
+    title
+  }
+}
+
+# The summary columns of a trajectory, without the (potentially MiB-sized)
+# document. The task page's Trajectories tab lists these; only the viewer
+# selects `trajectoryJson`.
+fragment AgentTrajectorySummary on AgentTrajectory {
+  byteSize
+  cachedTokens
+  costUsd
+  createdAt
+  driver
+  durationMs
+  exitCode
+  id
+  incomplete
+  inputTokens
+  model
+  outcome
+  outputTokens
+  planRunId
+  schemaVersion
+  source
+  taskId
+  toolCallCount
+  truncated
+}
+
+fragment AgentTrajectoryLabelRow on AgentTrajectoryLabel {
+  createdAt
+  failureType
+  id
+  note
+  rater
+  trajectoryId
+  updatedAt
+  verdict
+}
+
+mutation TrajectoryViewerLabel($input: LabelAgentTrajectoryInput!) {
+  labelAgentTrajectory(input: $input) {
+    ...AgentTrajectoryLabelRow
+  }
+}
+
+mutation TrajectoryViewerRemoveLabel($trajectoryId: ID!) {
+  removeAgentTrajectoryLabel(trajectoryId: $trajectoryId)
+}

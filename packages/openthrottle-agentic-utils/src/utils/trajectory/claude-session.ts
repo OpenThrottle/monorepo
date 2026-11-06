@@ -334,6 +334,55 @@ const timestampsOf = (events: readonly unknown[]): readonly number[] => {
   });
 };
 
+/** `tool_use_id → agentId` for every Agent result in these events. */
+const spawnedAgentByCallId = (
+  events: readonly unknown[],
+): ReadonlyMap<string, string> => {
+  const byCallId = new Map<string, string>();
+
+  for (const event of events) {
+    const result = isRecord(event) ? event.toolUseResult : undefined;
+    const agentId = isRecord(result) ? stringOf(result.agentId) : undefined;
+    const [toolResult] = toolResultsOf(event);
+
+    if (agentId !== undefined && toolResult !== undefined) {
+      byCallId.set(toolResult.toolUseId, agentId);
+    }
+  }
+
+  return byCallId;
+};
+
+/**
+ * Stamps ATIF's `subagent_trajectory_ref` on each result that spawned an embedded subagent, so a
+ * reader can place the subagent under the call that started it rather than guessing from text.
+ */
+const withSubagentRefs = (
+  trajectory: AtifTrajectory,
+  spawned: ReadonlyMap<string, string>,
+  embeddedIds: ReadonlySet<string>,
+): AtifTrajectory => {
+  const steps = trajectory.steps.map((step) => {
+    if (step.observation === undefined) {
+      return step;
+    }
+
+    const results = step.observation.results.map((result) => {
+      const callId = result.source_call_id;
+      const agentId = callId === undefined ? undefined : spawned.get(callId);
+      const isEmbedded = agentId !== undefined && embeddedIds.has(agentId);
+
+      return isEmbedded
+        ? { ...result, subagent_trajectory_ref: { trajectory_id: agentId } }
+        : result;
+    });
+
+    return { ...step, observation: { results } };
+  });
+
+  return { ...trajectory, steps };
+};
+
 /**
  * @description A subagent spawned inside the task, with its own transcript events.
  * @public
@@ -423,8 +472,14 @@ export const buildClaudeSessionTrajectory = (
   let embedded: AtifTrajectory = main;
 
   if (subagents.length > 0) {
+    const embeddedIds = new Set(
+      input.subagents.map((subagent) => {
+        return subagent.agentId;
+      }),
+    );
+
     embedded = {
-      ...main,
+      ...withSubagentRefs(main, spawnedAgentByCallId(mainEvents), embeddedIds),
       subagent_trajectories: subagents.map((subagent) => {
         return subagent.trajectory;
       }),

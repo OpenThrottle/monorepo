@@ -45,6 +45,7 @@ const loaderData = {
     { dimension: 'phase', id: 'v-2', tag: 'design' },
   ],
   task: mockTask,
+  trajectories: [],
 };
 
 const renderRoute = (): {

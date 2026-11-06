@@ -130,6 +130,15 @@ export type { CodeIndexSnapshotEntry } from './modules/code-index-snapshots/code
 export { CodeIndexSnapshot } from './modules/code-index-snapshots/code-index-snapshot.entity.ts';
 export { DailyStat } from './modules/daily-stats/daily-stat.entity.ts';
 export { DailyStatsService } from './modules/daily-stats/daily-stats.service.ts';
+export { EvalHumanLabel } from './modules/eval-human-labels/eval-human-label.entity.ts';
+export { EVAL_LABEL_VERDICT } from './modules/eval-human-labels/eval-human-labels.constants.ts';
+export { EvalHumanLabelsModule } from './modules/eval-human-labels/eval-human-labels.module.ts';
+export { EvalHumanLabelsService } from './modules/eval-human-labels/eval-human-labels.service.ts';
+export type {
+  EvalLabelVerdict,
+  RemoveEvalHumanLabelInput,
+  UpsertEvalHumanLabelInput,
+} from './modules/eval-human-labels/eval-human-labels.types.ts';
 export type {
   McpConnectorAuthType,
   McpConnectorConnectionData,

@@ -934,7 +934,10 @@ var main = async () => {
     const budgetRaw = parseArg("--budget-ms") || process.env.OPENTHROTTLE_TELEMETRY_DRAIN_BUDGET_MS || "";
     const budgetMs = budgetRaw === "" ? null : Number(budgetRaw) || null;
     const summary = await drainBufferedUsage({ budgetMs, repoRoot });
-    const trajectories = await drainBufferedTrajectories({ budgetMs, repoRoot });
+    const trajectories = await drainBufferedTrajectories({
+      budgetMs,
+      repoRoot
+    });
     process.stderr.write(
       `[skill-usage-drain] ${formatDrainFileResult("events", summary.events)}
 [skill-usage-drain] ${formatDrainFileResult("outcomes", summary.outcomes)}
