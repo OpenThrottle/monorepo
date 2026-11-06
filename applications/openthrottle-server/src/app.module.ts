@@ -36,6 +36,7 @@ import { ActivityGraphqlModule } from './graphql/activity/activity-graphql.modul
 import { AgentConversationsGraphqlModule } from './graphql/agent-conversations/agent-conversations-graphql.module.ts';
 import { AgentDiscoveryGraphqlModule } from './graphql/agent-discovery/agent-discovery-graphql.module.ts';
 import { AgentSetupGraphqlModule } from './graphql/agent-setup/agent-setup-graphql.module.ts';
+import { AgentTrajectoriesGraphqlModule } from './graphql/agent-trajectories/agent-trajectories.module.ts';
 import { AgenticWorkflowGraphqlModule } from './graphql/agentic-workflow/agentic-workflow-graphql.module.ts';
 import { AgentsGraphqlModule } from './graphql/agents/agents-graphql.module.ts';
 import { AuthGraphqlModule } from './graphql/auth/auth-graphql.module.ts';
@@ -275,6 +276,7 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
       AgentConversationsGraphqlModule,
       AgentDiscoveryGraphqlModule,
       AgentSetupGraphqlModule,
+      AgentTrajectoriesGraphqlModule,
       AgentsGraphqlModule,
       AuthGraphqlModule,
       BlogGraphqlModule,

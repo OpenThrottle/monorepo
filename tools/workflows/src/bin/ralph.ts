@@ -30,6 +30,7 @@ import {
   updatePlanStatus,
   updateTaskStatus,
 } from '../utils/openthrottle-ralph';
+import { recordIterationTrajectoryGraphql } from '../utils/openthrottle-ralph-graphql';
 import { logWorkflowRalphOtDiagnostics } from '../utils/ot-diagnostics';
 import type { RalphArgs } from '../utils/parsers';
 import {
@@ -468,6 +469,34 @@ export const main = async (): Promise<void> => {
       }
     }
 
+    // Run transcript capture (detached runs only: they are the ones with a plan_runs row). Fail-open.
+    const cliTrajectoryCapture = (
+      iterationTaskId: string | undefined,
+    ): Pick<RunIterationConfig, 'onTrajectory' | 'trajectoryFacts'> => {
+      const runId = planRunId;
+
+      if (runId === null) {
+        return {};
+      }
+
+      return {
+        onTrajectory: async (record) => {
+          await recordIterationTrajectoryGraphql({
+            driver: parsedArgs.backend,
+            model: parsedArgs.model,
+            planRunId: runId,
+            record,
+            taskId: iterationTaskId,
+          });
+        },
+        trajectoryFacts: {
+          planId: effectivePlanId,
+          planRunId: runId,
+          taskId: iterationTaskId ?? null,
+        },
+      };
+    };
+
     // Holder object (not a `let`) so the callback's write is not narrowed away at the read below.
     const usageLimitHit: { current: UsageLimit | null } = { current: null };
     const iterationConfig: RunIterationConfig = {
@@ -499,6 +528,7 @@ export const main = async (): Promise<void> => {
         // eslint-disable-next-line no-await-in-loop -- iterations must run sequentially
         result = await runIterationAsync({
           ...iterationConfig,
+          ...cliTrajectoryCapture(task ?? firstPendingForIteration),
           signal: abortController.signal,
           timeoutMs: parsedArgs.iterationTimeoutMs,
         });

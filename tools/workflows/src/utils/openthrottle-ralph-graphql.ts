@@ -5,6 +5,7 @@
 import type {
   GraphqlV2Failure,
   PlanFragment,
+  RecordIterationTrajectoryInput,
   TaskFragment,
 } from '@openthrottle/openthrottle-agentic-ralph';
 import {
@@ -21,6 +22,7 @@ import {
   RalphRecordWorkArtifactDocument,
   RalphStartWorkSessionDocument,
   ReadPlanRunCancelMarkerDocument,
+  RecordAgentTrajectoryDocument,
   RecordPlanRunHeartbeatDocument,
   RegisterCliPlanRunDocument,
   RegisterPlanRunWorktreeCheckoutDocument,
@@ -29,6 +31,7 @@ import {
   UpdateTaskDocument,
 } from '@openthrottle/openthrottle-agentic-ralph';
 import {
+  buildRecordAgentTrajectoryVariables,
   executeWorkflowGraphqlV2,
   unwrapWorkflowGraphqlResult,
   WorkflowGraphqlError,
@@ -512,4 +515,20 @@ export async function insertCommitLinkGraphql(
     sha: input.sha,
     taskId: input.taskId ?? null,
   };
+}
+
+/**
+ * @description Records one detached-CLI iteration's run transcript against its plan run. Throws on
+ * a GraphQL failure; `runIterationAsync`'s capture step catches it, so a failed record never fails
+ * the iteration.
+ */
+export async function recordIterationTrajectoryGraphql(
+  input: RecordIterationTrajectoryInput,
+): Promise<void> {
+  unwrapWorkflowGraphqlResult(
+    await executeWorkflowGraphqlV2(
+      RecordAgentTrajectoryDocument,
+      buildRecordAgentTrajectoryVariables(input),
+    ),
+  );
 }

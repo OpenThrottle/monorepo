@@ -14,6 +14,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineDriver } from '../../registry/index.ts';
 import type { AgentDriver, DriverChunk } from '../../types/index.ts';
 import type { DriverParsedOutput } from '../../types/index.ts';
+import type { DriverRawOutput } from '../index.ts';
 import { runDriverAsync, runDriverSync } from '../index.ts';
 
 /**
@@ -408,6 +409,103 @@ describe('runDriverAsync', () => {
       '<promise>ERROR</promise>\necho-driver iteration timed out after 1000ms',
     );
     expect(onUsageLimit).not.toHaveBeenCalled();
+  });
+
+  describe('onRawOutput', () => {
+    const killableChild = (): ChildProcess => {
+      const child = makeChild();
+      child.kill = vi.fn(() => {
+        queueMicrotask(() => child.emit('close', null));
+        return true;
+      });
+
+      return child;
+    };
+
+    it('hands over raw stdout and stderr, before parseOutput, on a normal close', async () => {
+      const child = makeChild();
+      vi.mocked(spawn).mockReturnValue(child);
+      const outputs: DriverRawOutput[] = [];
+
+      const promise = runDriverAsync(
+        structuredDriver,
+        { iteration: 1, prompt: 'x' },
+        { onRawOutput: (output) => outputs.push(output) },
+      );
+
+      child.stdout?.emit('data', 'raw out');
+      child.stderr?.emit('data', 'raw err');
+      child.emit('close', 3);
+
+      expect(await promise).toBe('parsed(raw out)\nraw err');
+      expect(outputs).toEqual([
+        {
+          durationMs: expect.any(Number),
+          exitCode: 3,
+          stderr: 'raw err',
+          stdout: 'raw out',
+          termination: 'exited',
+        },
+      ]);
+    });
+
+    it('reports a timeout with no exit code', async () => {
+      vi.useFakeTimers();
+      const child = killableChild();
+      vi.mocked(spawn).mockReturnValue(child);
+      const outputs: DriverRawOutput[] = [];
+
+      const promise = runDriverAsync(
+        testDriver,
+        { iteration: 1, prompt: 'x', timeoutMs: 1000 },
+        { onRawOutput: (output) => outputs.push(output) },
+      );
+
+      child.stdout?.emit('data', 'partial');
+      await vi.advanceTimersByTimeAsync(1000);
+      await promise;
+
+      expect(outputs).toMatchObject([
+        { exitCode: null, stdout: 'partial', termination: 'timed-out' },
+      ]);
+    });
+
+    it('reports an abort with no exit code', async () => {
+      const child = killableChild();
+      vi.mocked(spawn).mockReturnValue(child);
+      const outputs: DriverRawOutput[] = [];
+      const controller = new AbortController();
+
+      const promise = runDriverAsync(
+        testDriver,
+        { iteration: 1, prompt: 'x', signal: controller.signal },
+        { onRawOutput: (output) => outputs.push(output) },
+      );
+
+      controller.abort();
+      await promise;
+
+      expect(outputs).toMatchObject([
+        { exitCode: null, termination: 'aborted' },
+      ]);
+    });
+
+    it('does not fire when the child fails to launch', async () => {
+      const child = makeChild();
+      vi.mocked(spawn).mockReturnValue(child);
+      const onRawOutput = vi.fn();
+
+      const promise = runDriverAsync(
+        testDriver,
+        { iteration: 1, prompt: 'x' },
+        { onRawOutput },
+      );
+
+      child.emit('error', new Error('ENOENT'));
+
+      await expect(promise).rejects.toThrow('ENOENT');
+      expect(onRawOutput).not.toHaveBeenCalled();
+    });
   });
 
   it('resolves with a timeout sentinel and kills the child', async () => {

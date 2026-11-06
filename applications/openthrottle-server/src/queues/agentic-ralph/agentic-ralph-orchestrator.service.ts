@@ -202,6 +202,7 @@ export class AgenticRalphOrchestratorService {
         null,
       ...(signal !== undefined ? { abortSignal: signal } : {}),
       ...(correlation !== undefined ? { correlation } : {}),
+      ...(run !== null ? { planRunId: run.id } : {}),
       ...(lifecycleDispatcher !== undefined ? { lifecycleDispatcher } : {}),
       ...(injectedSkillNames.length > 0 ? { injectedSkillNames } : {}),
       ...(workingDirectory !== undefined && workingDirectory !== ''

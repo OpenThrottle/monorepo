@@ -10,6 +10,7 @@
 /* eslint-disable no-await-in-loop */
 
 import type { ExecuteGraphqlOptionsV2 } from '@openthrottle/nodejs-graphql';
+import type { TrajectoryRecord } from '@openthrottle/openthrottle-agentic-utils';
 import { WORKFLOW_PROMPT_SHELL_COMMAND_GUARDRAIL } from '@openthrottle/openthrottle-agentic-utils';
 import {
   buildForeignWorkspacePromptLayer,
@@ -31,6 +32,7 @@ import {
 } from '../config/index.ts';
 import type {
   WorkflowRalphIterationOnChunk,
+  WorkflowRalphIterationRunParams,
   WorkflowRalphOrchestratorDeps,
   WorkflowRalphUsageLimit,
 } from '../contract/ralph-orchestrator-deps.ts';
@@ -58,6 +60,7 @@ import {
   parseAgentOutput,
 } from '../utils/output.ts';
 import { PLAN_RUN_PR_DRAFT_DIR_ENV } from '../utils/plan-run-pr-draft.ts';
+import { recordIterationTrajectory } from './record-iteration-trajectory.ts';
 
 /**
  * @description Clamps the iteration ceiling defensively. `WorkflowContext` is built by paths that
@@ -250,6 +253,51 @@ const buildSessionOptions = (
   return workSessionId != null && workSessionId !== ''
     ? { headers: { 'X-OT-Session-Id': workSessionId } }
     : undefined;
+};
+
+/**
+ * @description The iteration-runner params that turn on run-transcript capture, or none when the
+ * host resolved no plan_runs row (there is nothing to record against). Recording is fail-open:
+ * `runIterationAsync` catches a failed record, so a server outage never fails the iteration.
+ */
+const buildTrajectoryCapture = (params: {
+  readonly context: WorkflowContext;
+  readonly effectivePlanId: string;
+  readonly executeGraphqlV2: WorkflowRalphOrchestratorDeps['executeGraphqlV2'];
+  readonly sessionOptions: ExecuteGraphqlOptionsV2 | undefined;
+  readonly taskId: string | undefined;
+}): Pick<
+  WorkflowRalphIterationRunParams,
+  'onTrajectory' | 'trajectoryFacts'
+> => {
+  const { context, effectivePlanId, executeGraphqlV2, sessionOptions, taskId } =
+    params;
+  const { planRunId } = context;
+
+  if (planRunId === undefined) {
+    return {};
+  }
+
+  return {
+    onTrajectory: async (record: TrajectoryRecord) => {
+      await recordIterationTrajectory(
+        executeGraphqlV2,
+        {
+          driver: context.runner,
+          model: context.model,
+          planRunId,
+          record,
+          taskId,
+        },
+        sessionOptions,
+      );
+    },
+    trajectoryFacts: {
+      planId: effectivePlanId,
+      planRunId,
+      taskId: taskId ?? null,
+    },
+  };
 };
 
 /**
@@ -672,12 +720,21 @@ export const createWorkflowRalphOrchestrator = (
           const usageLimitHit: { current: WorkflowRalphUsageLimit | null } = {
             current: null,
           };
+          // iteration.trajectory — only when the host resolved a plan_runs row to record against.
+          const trajectoryCapture = buildTrajectoryCapture({
+            context,
+            effectivePlanId,
+            executeGraphqlV2,
+            sessionOptions,
+            taskId: taskIdTrim || firstPendingForIteration,
+          });
           try {
             agentOutput = await iterationRunner.run({
               agentPrompt,
               cwd: agentCwd,
               effort: context.effort,
               ...(agentEnv === undefined ? {} : { env: agentEnv }),
+              ...trajectoryCapture,
               iteration,
               model: context.model,
               onChunk,

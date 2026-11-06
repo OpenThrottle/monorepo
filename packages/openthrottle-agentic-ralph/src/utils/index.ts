@@ -36,6 +36,11 @@ export {
   pickRalphTaskForIteration,
   sortTasksByPlanListOrder,
 } from './plan-task-list-order.ts';
+export type { RecordIterationTrajectoryInput } from './record-iteration-trajectory.ts';
+export {
+  buildRecordAgentTrajectoryVariables,
+  recordIterationTrajectory,
+} from './record-iteration-trajectory.ts';
 export {
   isRalphTerminalStatus,
   RALPH_TERMINAL_STATUSES,

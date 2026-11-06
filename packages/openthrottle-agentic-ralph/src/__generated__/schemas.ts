@@ -100,6 +100,7 @@ import {
   QueueJobLogsInput,
   RalphNestedDebugCli,
   RalphPlanRunTuningInput,
+  RecordAgentTrajectoryInput,
   RecordPlanRunHeartbeatInput,
   RecordSkillUsageInput,
   RecordSkillUsageOutcomeInput,
@@ -1170,6 +1171,22 @@ export function RalphPlanRunTuningInputSchema(): z.ZodObject<
     skipWorktreeSetup: z.boolean().nullish(),
     worktree: z.string().nullish(),
     worktreeBase: z.string().nullish(),
+  });
+}
+
+export function RecordAgentTrajectoryInputSchema(): z.ZodObject<
+  Properties<RecordAgentTrajectoryInput>
+> {
+  return z.object({
+    driver: z.string().min(1),
+    durationMs: z.number().nullish(),
+    exitCode: z.number().nullish(),
+    model: z.string().nullish(),
+    outcome: z.string().nullish(),
+    planRunId: z.string().min(1),
+    source: z.string().min(1),
+    taskId: z.string().nullish(),
+    trajectoryJson: z.string().min(1),
   });
 }
 

@@ -171,3 +171,13 @@ mutation createProject($input: CreateProjectInput!) {
 mutation deleteProject($input: DeleteProjectInput!) {
   deleteProject(input: $input)
 }
+
+mutation recordAgentTrajectory($input: RecordAgentTrajectoryInput!) {
+  recordAgentTrajectory(input: $input) {
+    byteSize
+    id
+    incomplete
+    toolCallCount
+    truncated
+  }
+}

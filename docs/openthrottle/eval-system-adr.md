@@ -167,6 +167,22 @@ covered by the existing backups.
 - **Retention:** trajectories referenced by an eval case or a human label are kept indefinitely.
   Everything else is pruned after **90 days**, configurable, by a scheduled sweep.
 - **Capture fails open.** A capture error is logged and never fails or slows the run.
+- **Transport cap.** The client caps each trajectory to **640 KiB** before sending it
+  (`TRAJECTORY_TRANSPORT_BYTES`). The server's JSON request limit is 1 MB, and the document travels
+  as an escaped string inside the body. The 4 MiB storage cap stays on the server as a backstop. If
+  real trajectories are often trimmed, raise the body limit for this mutation rather than the cap.
+- **As built (task 4, 2026-11-06):**
+  - **Capture path.** Every spawned iteration goes through `runIterationAsync` in
+    `tools/workflows`, both from the server's orchestrator and from a detached `workflow-ralph`.
+    It runs the agent through `withStructuredOutput` and gets the raw stdout from the engine's new
+    `onRawOutput` hook, then builds the record (`buildTrajectoryRecord`). It hands the record to an
+    `onTrajectory` callback that sends `recordAgentTrajectory`.
+  - **What's covered.** Only runs with a `plan_runs` row record anything. Interactive TTY runs
+    use the sync path and stay in text mode, and scheduled agent jobs, which have no plan run, are
+    out of scope.
+  - **Server side.** The resolver validates the document (`parseAtifTrajectoryJson`), re-applies
+    the storage cap, and derives the summary columns itself (`summarizeTrajectory`), so a client
+    cannot send a summary that disagrees with its document.
 
 ## Decision 6 — Data model (scoped per project)
 

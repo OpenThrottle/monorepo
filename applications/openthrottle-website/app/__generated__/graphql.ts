@@ -361,6 +361,51 @@ export type AgentSetupStreamChunkObject = {
   stream: Scalars['String']['output'];
 };
 
+/** One ATIF trajectory recorded for a plan run: the structured record of what an agent did, plus summary columns derived from it. */
+export type AgentTrajectory = {
+  __typename?: 'AgentTrajectory';
+  /** UTF-8 byte length of the stored trajectory JSON, after any server-side capping. */
+  byteSize: Scalars['Int']['output'];
+  /** Cached prompt tokens (included in inputTokens). Null when the run reported none. */
+  cachedTokens?: Maybe<Scalars['Int']['output']>;
+  /** Cost of the run in USD. Null when unpriceable, which is not the same as zero. */
+  costUsd?: Maybe<Scalars['Float']['output']>;
+  /** When the trajectory was recorded. */
+  createdAt: Scalars['DateTime']['output'];
+  /** Agent driver that produced the run, for example claude. */
+  driver: Scalars['String']['output'];
+  /** Wall-clock duration of the run in milliseconds. Null when unknown. */
+  durationMs?: Maybe<Scalars['Int']['output']>;
+  /** Process exit code of the run. Null when unknown. */
+  exitCode?: Maybe<Scalars['Int']['output']>;
+  /** Trajectory id. */
+  id: Scalars['ID']['output'];
+  /** True when the run ended before it could finish, so the trajectory is partial. */
+  incomplete: Scalars['Boolean']['output'];
+  /** Prompt tokens consumed, including cached tokens. Null when the run reported none. */
+  inputTokens?: Maybe<Scalars['Int']['output']>;
+  /** Model that ran, when known. */
+  model?: Maybe<Scalars['String']['output']>;
+  /** Free-form result label for the run, for example completed. Null when unknown. */
+  outcome?: Maybe<Scalars['String']['output']>;
+  /** Completion tokens produced. Null when the run reported none. */
+  outputTokens?: Maybe<Scalars['Int']['output']>;
+  /** Plan run the trajectory belongs to. */
+  planRunId: Scalars['ID']['output'];
+  /** ATIF schema version of the stored document, for example ATIF-v1.8. */
+  schemaVersion: Scalars['String']['output'];
+  /** How the trajectory was captured: spawned by the OpenThrottle runner, or session_upload from an interactive session. */
+  source: Scalars['String']['output'];
+  /** Task the run worked on. Null for a run not scoped to one task. */
+  taskId?: Maybe<Scalars['ID']['output']>;
+  /** Number of tool calls across all steps. */
+  toolCallCount: Scalars['Int']['output'];
+  /** The stored ATIF document serialized with JSON.stringify. */
+  trajectoryJson: Scalars['String']['output'];
+  /** True when the server elided observation content to fit the size caps. */
+  truncated: Scalars['Boolean']['output'];
+};
+
 export type AgentsChatTurnResult = {
   __typename?: 'AgentsChatTurnResult';
   /** Assistant-visible reply text. Null when the turn failed (see errorMessage). */
@@ -2068,6 +2113,8 @@ export type Mutation = {
   pruneWorktreeCheckouts: PruneWorktreeCheckoutsPayloadObject;
   /** Publish a blog post: sets status PUBLISHED and publishedAt. Without publishedAt the post goes live now; a future publishedAt schedules it. Returns BlogPostNotFoundError for an unknown post. */
   publishBlogPost: PublishBlogPostResult;
+  /** Record an ATIF trajectory for a plan run. The document is validated, capped at 4 MiB server-side (elided observations set truncated) and summarized into token, cost and tool-call columns. */
+  recordAgentTrajectory: AgentTrajectory;
   /** Bump the liveness heartbeat on a detached-CLI run row (from registerCliPlanRun). The CLI calls this on a ~15s timer so a hard crash (SIGKILL/power-loss) leaves a stale heartbeat the reader/sweeper can detect. Keyed on the run id. Returns null when the row no longer exists. */
   recordPlanRunHeartbeat?: Maybe<PlanRunObject>;
   /** Record one harness-captured skill invocation. Args must already be privacy-processed by the client; the server stores them as-sent. The event is attributed to the human user the authenticated principal acts as, resolved server-side — a userId is never accepted from the client, and stays null when the principal resolves to no one. */
@@ -2528,6 +2575,10 @@ export type MutationPruneWorktreeCheckoutsArgs = {
 
 export type MutationPublishBlogPostArgs = {
   input: PublishBlogPostInput;
+};
+
+export type MutationRecordAgentTrajectoryArgs = {
+  input: RecordAgentTrajectoryInput;
 };
 
 export type MutationRecordPlanRunHeartbeatArgs = {
@@ -3456,6 +3507,12 @@ export type Query = {
   activityByDateRange: ActivityByDateResultObject;
   /** Whether server-side agent-CLI install/update is enabled (env flag) and whether the current user may run it (SETTINGS_WRITE). Drives the /settings/agents control gating. */
   agentCliSetupConfig: AgentCliSetupConfigObject;
+  /** List a plan run's agent trajectories, oldest first. */
+  agentTrajectoriesByPlanRun: Array<AgentTrajectory>;
+  /** List a task's agent trajectories, oldest first. */
+  agentTrajectoriesByTask: Array<AgentTrajectory>;
+  /** Fetch one recorded agent trajectory by id. Null when it does not exist. */
+  agentTrajectory?: Maybe<AgentTrajectory>;
   /** Every blog author, ordered by display name. */
   blogAdminAuthors: Array<BlogAuthorObject>;
   /** One blog post in any state, by id or by slug (exactly one of the two is required, otherwise the query is rejected). BlogPostNotFoundError when no such post exists. */
@@ -3718,6 +3775,18 @@ export type QueryActivityByDateArgs = {
 
 export type QueryActivityByDateRangeArgs = {
   input: ActivityByDateRangeInput;
+};
+
+export type QueryAgentTrajectoriesByPlanRunArgs = {
+  planRunId: Scalars['ID']['input'];
+};
+
+export type QueryAgentTrajectoriesByTaskArgs = {
+  taskId: Scalars['ID']['input'];
+};
+
+export type QueryAgentTrajectoryArgs = {
+  id: Scalars['ID']['input'];
 };
 
 export type QueryBlogAdminPostArgs = {
@@ -4247,6 +4316,27 @@ export type RalphPlanRunTuningInput = {
   worktree?: InputMaybe<Scalars['String']['input']>;
   /** Cursor-only: branch/ref for --worktree-base. */
   worktreeBase?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type RecordAgentTrajectoryInput = {
+  /** Agent driver that produced the run, for example claude. */
+  driver: Scalars['String']['input'];
+  /** Wall-clock duration of the run in milliseconds. */
+  durationMs?: InputMaybe<Scalars['Int']['input']>;
+  /** Process exit code of the run. */
+  exitCode?: InputMaybe<Scalars['Int']['input']>;
+  /** Model that ran, when known. */
+  model?: InputMaybe<Scalars['String']['input']>;
+  /** Free-form result label for the run, for example completed. */
+  outcome?: InputMaybe<Scalars['String']['input']>;
+  /** Plan run the trajectory belongs to. */
+  planRunId: Scalars['ID']['input'];
+  /** How the trajectory was captured: spawned or session_upload. */
+  source: Scalars['String']['input'];
+  /** Task the run worked on. Omit for a run not scoped to one task. */
+  taskId?: InputMaybe<Scalars['ID']['input']>;
+  /** The ATIF document as a JSON string. Validated, then capped server-side at 4 MiB. */
+  trajectoryJson: Scalars['String']['input'];
 };
 
 export type RecordPlanRunHeartbeatInput = {

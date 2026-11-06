@@ -393,3 +393,140 @@ describe('runIterationAsync backend dispatch', () => {
     expect(firstArg).not.toContain('inject $(id) and `whoami`');
   });
 });
+
+describe('runIterationAsync trajectory capture', () => {
+  const CODEX_STREAM = [
+    '{"thread_id":"th_1","type":"thread.started"}',
+    '{"item":{"command":"ls","exit_code":0,"id":"i1","item_type":"command_execution"},"type":"item.completed"}',
+    '{"item":{"id":"i2","item_type":"agent_message","text":"done <promise>COMPLETE</promise>"},"type":"item.completed"}',
+    '{"type":"turn.completed","usage":{"input_tokens":10,"output_tokens":2}}',
+  ].join('\n');
+
+  const spawnEmitting = (stdout: string, exitCode: number): void => {
+    vi.mocked(spawn).mockImplementation((): ChildProcess => {
+      const child = asChildProcess(new EventEmitter());
+      child.stdout = new PassThrough();
+      child.stderr = new PassThrough();
+      child.kill = vi.fn(() => true);
+      Object.assign(child, { killed: false });
+      queueMicrotask(() => {
+        child.stdout?.emit('data', stdout);
+        child.emit('close', exitCode);
+      });
+      return child;
+    });
+  };
+
+  beforeEach(() => {
+    vi.mocked(spawn).mockClear();
+    vi.mocked(spawnSync).mockReturnValue({
+      error: undefined,
+      output: [],
+      pid: 0,
+      signal: null,
+      status: 0,
+      stderr: '',
+      stdout: 'codex-cli 0.145.0\n',
+    });
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('runs the agent in its structured output mode', async () => {
+    spawnEmitting(CODEX_STREAM, 0);
+
+    await runIterationAsync({
+      agentPrompt: 'go',
+      backend: 'codex',
+      iteration: 1,
+    });
+
+    expect(vi.mocked(spawn).mock.calls[0]?.[0]).toMatch(/^codex exec --json /);
+  });
+
+  it('still returns the prose text, Ralph markers included', async () => {
+    spawnEmitting(CODEX_STREAM, 0);
+
+    const output = await runIterationAsync({
+      agentPrompt: 'go',
+      backend: 'codex',
+      iteration: 1,
+    });
+
+    expect(output).toContain('<promise>COMPLETE</promise>');
+    expect(output).not.toContain('"type"');
+  });
+
+  it('hands the transcript to onTrajectory with the run facts', async () => {
+    spawnEmitting(CODEX_STREAM, 0);
+    const onTrajectory = vi.fn();
+
+    await runIterationAsync({
+      agentPrompt: 'go',
+      backend: 'codex',
+      iteration: 4,
+      onTrajectory,
+      trajectoryFacts: { planRunId: 'run-1', taskId: 'task-1' },
+    });
+
+    expect(onTrajectory).toHaveBeenCalledTimes(1);
+    expect(onTrajectory.mock.calls[0]?.[0]).toMatchObject({
+      exitCode: 0,
+      outcome: 'succeeded',
+      trajectory: {
+        agent: { name: 'codex', version: 'codex-cli 0.145.0' },
+        extra: {
+          openthrottle: { iteration: 4, planRunId: 'run-1', taskId: 'task-1' },
+        },
+      },
+    });
+  });
+
+  it('marks a non-zero exit as failed', async () => {
+    spawnEmitting(CODEX_STREAM, 1);
+    const onTrajectory = vi.fn();
+
+    await runIterationAsync({
+      agentPrompt: 'go',
+      backend: 'codex',
+      iteration: 1,
+      onTrajectory,
+    });
+
+    expect(onTrajectory.mock.calls[0]?.[0]).toMatchObject({
+      outcome: 'failed',
+    });
+  });
+
+  it('never fails the iteration when recording fails', async () => {
+    spawnEmitting(CODEX_STREAM, 0);
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const output = await runIterationAsync({
+      agentPrompt: 'go',
+      backend: 'codex',
+      iteration: 1,
+      onTrajectory: () => Promise.reject(new Error('server down')),
+    });
+
+    expect(output).toContain('done');
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('server down'));
+  });
+
+  it('records nothing when the agent printed no structured events', async () => {
+    spawnEmitting('Not logged in\n', 1);
+    const onTrajectory = vi.fn();
+
+    await runIterationAsync({
+      agentPrompt: 'go',
+      backend: 'codex',
+      iteration: 1,
+      onTrajectory,
+    });
+
+    expect(onTrajectory).not.toHaveBeenCalled();
+  });
+});

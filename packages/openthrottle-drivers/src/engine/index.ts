@@ -22,6 +22,25 @@ import { noopDriverLogger } from '../utils/logger.ts';
 import type { UsageLimit } from '../utils/usage-limit.ts';
 
 /**
+ * @description How a driver run ended: the child closed on its own, or the engine killed it.
+ * @public
+ */
+export type DriverRunTermination = 'aborted' | 'exited' | 'timed-out';
+
+/**
+ * @description One run's unprocessed output, for {@link RunDriverOptions.onRawOutput}.
+ * `exitCode` is `null` when the engine killed the child.
+ * @public
+ */
+export interface DriverRawOutput {
+  readonly durationMs: number;
+  readonly exitCode: number | null;
+  readonly stderr: string;
+  readonly stdout: string;
+  readonly termination: DriverRunTermination;
+}
+
+/**
  * @description Optional dependencies for a driver run. `logger` defaults to a no-op.
  * @public
  */
@@ -35,6 +54,13 @@ export interface RunDriverOptions {
    * return is unchanged, so existing callers are unaffected.
    */
   readonly onExit?: (exitCode: number | null) => void;
+  /**
+   * Called by `runDriverAsync` with the run's RAW stdout and stderr — before `parseOutput` and the
+   * merge — on every path that ends the child: a normal close, a timeout and an abort (but not a
+   * launch failure, which rejects). This is what a run transcript is built from. It fires before
+   * the run resolves and never changes the returned string.
+   */
+  readonly onRawOutput?: (output: DriverRawOutput) => void;
   /**
    * Called with the parsed {@link UsageLimit} when a run closes **normally** and the driver's
    * `parseOutput` found a subscription usage limit in its output (today only Claude emits one). Like
@@ -154,6 +180,7 @@ export const runDriverAsync = (
       stdio: ['inherit', 'pipe', 'pipe'],
     });
 
+    const startedAt = Date.now();
     let chunkCount = 0;
     let killReason: 'abort' | 'timeout' | undefined;
     let resolved = false;
@@ -242,6 +269,22 @@ export const runDriverAsync = (
       clearTimeout(timeoutId);
       signal?.removeEventListener('abort', onAbort);
       flushPendingLine();
+
+      let termination: DriverRunTermination = 'exited';
+
+      if (killReason === 'abort') {
+        termination = 'aborted';
+      } else if (killReason === 'timeout') {
+        termination = 'timed-out';
+      }
+
+      options.onRawOutput?.({
+        durationMs: Date.now() - startedAt,
+        exitCode: termination === 'exited' ? status : null,
+        stderr,
+        stdout,
+        termination,
+      });
 
       if (killReason === 'timeout') {
         logger.debug('runDriverAsync: resolved after kill (timeout)', {
