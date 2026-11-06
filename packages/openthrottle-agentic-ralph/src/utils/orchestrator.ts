@@ -264,14 +264,21 @@ const buildTrajectoryCapture = (params: {
   readonly context: WorkflowContext;
   readonly effectivePlanId: string;
   readonly executeGraphqlV2: WorkflowRalphOrchestratorDeps['executeGraphqlV2'];
+  readonly iteration: number;
   readonly sessionOptions: ExecuteGraphqlOptionsV2 | undefined;
   readonly taskId: string | undefined;
 }): Pick<
   WorkflowRalphIterationRunParams,
   'onTrajectory' | 'trajectoryFacts'
 > => {
-  const { context, effectivePlanId, executeGraphqlV2, sessionOptions, taskId } =
-    params;
+  const {
+    context,
+    effectivePlanId,
+    executeGraphqlV2,
+    iteration,
+    sessionOptions,
+    taskId,
+  } = params;
   const { planRunId } = context;
 
   if (planRunId === undefined) {
@@ -284,6 +291,7 @@ const buildTrajectoryCapture = (params: {
         executeGraphqlV2,
         {
           driver: context.runner,
+          iteration,
           model: context.model,
           planRunId,
           record,
@@ -725,6 +733,7 @@ export const createWorkflowRalphOrchestrator = (
             context,
             effectivePlanId,
             executeGraphqlV2,
+            iteration,
             sessionOptions,
             taskId: taskIdTrim || firstPendingForIteration,
           });

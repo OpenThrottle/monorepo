@@ -12,7 +12,10 @@ import { BlogAuthorsModule } from './modules/blog-authors/blog-authors.module.ts
 import { BlogPostsModule } from './modules/blog-posts/blog-posts.module.ts';
 import { BlogTagsModule } from './modules/blog-tags/blog-tags.module.ts';
 import { DailyStatsModule } from './modules/daily-stats/daily-stats.module.ts';
+import { EvalDatasetsModule } from './modules/eval-datasets/eval-datasets.module.ts';
 import { EvalHumanLabelsModule } from './modules/eval-human-labels/eval-human-labels.module.ts';
+import { EvalJudgeCalibrationsModule } from './modules/eval-judge-calibrations/eval-judge-calibrations.module.ts';
+import { EvalRunsModule } from './modules/eval-runs/eval-runs.module.ts';
 import { McpConnectorsModule } from './modules/mcp-connectors/mcp-connectors.module.ts';
 import { NotesModule } from './modules/notes/notes.module.ts';
 import { PlanEmbeddingsModule } from './modules/plan-embeddings/plan-embeddings.module.ts';
@@ -51,7 +54,10 @@ import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-
     BlogTagsModule,
     CustomPromptsModule,
     DailyStatsModule,
+    EvalDatasetsModule,
     EvalHumanLabelsModule,
+    EvalJudgeCalibrationsModule,
+    EvalRunsModule,
     McpConnectorsModule,
     NotesModule,
     PlanEmbeddingsModule,
@@ -96,7 +102,10 @@ import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-
     BlogTagsModule,
     CustomPromptsModule,
     DailyStatsModule,
+    EvalDatasetsModule,
     EvalHumanLabelsModule,
+    EvalJudgeCalibrationsModule,
+    EvalRunsModule,
     LoggerModule,
     McpConnectorsModule,
     NotesModule,

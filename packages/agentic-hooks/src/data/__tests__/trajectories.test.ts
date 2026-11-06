@@ -23,6 +23,7 @@ const input = (taskId: string): TrajectoryInput => {
     driver: 'driver-a',
     durationMs: 10,
     exitCode: null,
+    idempotencyKey: `session:s1:${taskId}`,
     model: 'model-a',
     outcome: 'completed',
     planRunId: 'run-1',

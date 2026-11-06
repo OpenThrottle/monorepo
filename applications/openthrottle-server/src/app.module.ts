@@ -46,7 +46,11 @@ import { CodeSearchGraphqlModule } from './graphql/code-search/code-search-graph
 import { ConversationStreamGraphqlModule } from './graphql/conversation-stream/conversation-stream-graphql.module.ts';
 import { DailyStatsGraphqlModule } from './graphql/daily-stats/daily-stats-graphql.module.ts';
 import { EditorPresenceGraphqlModule } from './graphql/editor-presence/editor-presence-graphql.module.ts';
+import { EvalDatasetsGraphqlModule } from './graphql/eval-datasets/eval-datasets.module.ts';
 import { EvalHumanLabelsGraphqlModule } from './graphql/eval-human-labels/eval-human-labels.module.ts';
+import { EvalJudgeCalibrationsGraphqlModule } from './graphql/eval-judge-calibrations/eval-judge-calibrations.module.ts';
+import { EvalReportsGraphqlModule } from './graphql/eval-reports/eval-reports.module.ts';
+import { EvalRunsGraphqlModule } from './graphql/eval-runs/eval-runs.module.ts';
 import { GeneratorsGraphqlModule } from './graphql/generators/generators-graphql.module.ts';
 import { HealthGraphqlModule } from './graphql/health/health-graphql.module.ts';
 import { McpConnectorsGraphqlModule } from './graphql/mcp-connectors/mcp-connectors-graphql.module.ts';
@@ -287,7 +291,11 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
       CustomPromptsGraphqlModule,
       DailyStatsGraphqlModule,
       EditorPresenceGraphqlModule,
+      EvalDatasetsGraphqlModule,
       EvalHumanLabelsGraphqlModule,
+      EvalJudgeCalibrationsGraphqlModule,
+      EvalReportsGraphqlModule,
+      EvalRunsGraphqlModule,
       GeneratorsGraphqlModule,
       GithubGraphqlModule,
       HealthGraphqlModule,

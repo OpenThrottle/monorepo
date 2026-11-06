@@ -19,6 +19,7 @@
     "@nestjs/platform-express": "catalog:",
     "@nestjs/throttler": "catalog:",
     "@nestjs/typeorm": "catalog:",
+    "@openthrottle/agentic-evals": "workspace:^",
     "@openthrottle/agentic-hooks": "workspace:^",
     "@openthrottle/agentic-token-usage": "workspace:^",
     "@openthrottle/nestjs-agentic-workflow": "workspace:^",

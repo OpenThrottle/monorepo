@@ -107,6 +107,9 @@
       "path": "../../packages/agentic-hooks/tsconfig.lib.json"
     },
     {
+      "path": "../../packages/agentic-evals/tsconfig.lib.json"
+    },
+    {
       "path": "../../packages/nestjs-testing/tsconfig.lib.json"
     },
     {

@@ -50,6 +50,12 @@ export class AgentTrajectoryObject {
   @Field(() => ID, { description: `Trajectory id.` })
   id!: string;
 
+  @Field(() => String, {
+    description: `Idempotency key the trajectory was recorded under. Null when recorded without one.`,
+    nullable: true,
+  })
+  idempotencyKey!: string | null;
+
   @Field(() => Boolean, {
     description: `True when the run ended before it could finish, so the trajectory is partial.`,
   })

@@ -1845,6 +1845,58 @@ var writeTrajectoryUploadState = ({
     return false;
   }
 };
+var DEFAULT_TRAJECTORY_STATE_TTL_DAYS = 30;
+var SWEEP_MARKER_BASENAME = ".last-sweep";
+var MS_PER_DAY = 24 * 60 * 60 * 1e3;
+var resolveTrajectoryStateTtlDays = () => {
+  const raw = Number(
+    process.env.OPENTHROTTLE_SESSION_TRAJECTORY_STATE_TTL_DAYS
+  );
+  return Number.isFinite(raw) && raw > 0 ? raw : DEFAULT_TRAJECTORY_STATE_TTL_DAYS;
+};
+var deleteIfOlder = async (filePath, cutoffMs) => {
+  try {
+    const stat = await import_node_fs10.default.promises.stat(filePath);
+    if (!stat.isFile() || stat.mtimeMs >= cutoffMs) {
+      return false;
+    }
+    await import_node_fs10.default.promises.unlink(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+};
+var sweepTrajectoryUploadState = async ({
+  dir,
+  nowMs = Date.now(),
+  ttlDays = resolveTrajectoryStateTtlDays()
+} = {}) => {
+  try {
+    const target = dir || defaultTrajectoryUploadsDir();
+    const marker = import_node_path7.default.join(target, SWEEP_MARKER_BASENAME);
+    try {
+      const { mtimeMs } = await import_node_fs10.default.promises.stat(marker);
+      if (nowMs - mtimeMs < MS_PER_DAY) {
+        return { deleted: 0, skipped: true };
+      }
+    } catch {
+    }
+    const names = await import_node_fs10.default.promises.readdir(target);
+    const cutoffMs = nowMs - ttlDays * MS_PER_DAY;
+    const results = await Promise.all(
+      names.filter((name) => name.endsWith(".json")).map((name) => deleteIfOlder(import_node_path7.default.join(target, name), cutoffMs))
+    );
+    await import_node_fs10.default.promises.writeFile(marker, `${new Date(nowMs).toISOString()}
+`);
+    await import_node_fs10.default.promises.utimes(marker, new Date(nowMs), new Date(nowMs));
+    return { deleted: results.filter(Boolean).length, skipped: false };
+  } catch (err) {
+    if (!(err instanceof Error && "code" in err && err.code === "ENOENT")) {
+      logHookError("sweepTrajectoryUploadState failed", err);
+    }
+    return { deleted: 0, skipped: false };
+  }
+};
 
 // packages/agentic-hooks/src/adapters/claude/payload.ts
 var CLAUDE_SOURCE = "claude-code";
@@ -3559,6 +3611,7 @@ var captureSessionTrajectories = async ({
           driver: SESSION_TRAJECTORY_DRIVER,
           durationMs: built.durationMs,
           exitCode: null,
+          idempotencyKey: `session:${sessionId}:${segment.toolUseId}`,
           model: built.model ?? null,
           outcome: built.outcome,
           planRunId: segmentRunId,
@@ -3978,6 +4031,7 @@ var main = async () => {
       sessionId: normalized.session_id,
       transcriptPath: normalized.transcript_path
     });
+    await sweepTrajectoryUploadState();
     await drainBufferedUsage({ budgetMs: 500, repoRoot });
     await drainBufferedTrajectories({ budgetMs: 500, repoRoot });
   } catch (err) {

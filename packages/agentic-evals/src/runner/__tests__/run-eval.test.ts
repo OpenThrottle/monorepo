@@ -3,6 +3,7 @@ import { chmod, copyFile, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import type { AtifTrajectory } from '@openthrottle/openthrottle-agentic-utils';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import type {
@@ -12,8 +13,9 @@ import type {
   Grader,
 } from '../../types/index.ts';
 import type { EvalWorkspaceFactory } from '../../workspace/index.ts';
+import { noopWorkspaceFactory } from '../../workspace/index.ts';
 import type {
-  EvalIterationOutput,
+  EvalDriverIterationOutput,
   RunEvalIteration,
 } from '../eval-iteration.ts';
 import { runEval } from '../run-eval.ts';
@@ -49,10 +51,11 @@ const config: EvalRunConfig = {
   model: undefined,
 };
 
-const okOutput: EvalIterationOutput = {
+const okOutput: EvalDriverIterationOutput = {
   durationMs: 10,
   exitCode: 0,
   finalText: 'DONE',
+  kind: 'driver',
   rawStdout: readFileSync(FIXTURE, 'utf8'),
   termination: 'exited',
   usageLimit: null,
@@ -334,6 +337,107 @@ describe('runEval with an injected iteration', () => {
     });
 
     expect(seen).toEqual(['/virtual/a/1:0']);
+  });
+});
+
+const trajectory: AtifTrajectory = {
+  agent: { name: 'fake-model-call', version: '1' },
+  final_metrics: { total_completion_tokens: 3, total_prompt_tokens: 7 },
+  schema_version: 'ATIF-v1.8',
+  steps: [
+    {
+      message: 'DONE',
+      metrics: { completion_tokens: 3, prompt_tokens: 7 },
+      source: 'agent',
+      step_id: 1,
+      tool_calls: [
+        {
+          arguments: { id: 'x' },
+          function_name: 'get_plan',
+          tool_call_id: 'call-1',
+        },
+      ],
+    },
+  ],
+};
+
+describe('runEval with a trajectory iteration', () => {
+  const trajectoryIteration: RunEvalIteration = async () => {
+    return {
+      durationMs: 5,
+      finalText: 'DONE',
+      kind: 'trajectory',
+      trajectory,
+    };
+  };
+
+  it('stores the prebuilt trajectory, counts its tokens and grades it, with no workspace', async () => {
+    const seen: (string | undefined)[] = [];
+    const reader: Grader = {
+      grade: async (trial) => {
+        seen.push(
+          trial.trajectory?.trajectory.steps[0]?.tool_calls?.[0]?.function_name,
+        );
+
+        return { evidence: 'read the call', kind: 'pass' };
+      },
+      id: 'reader',
+      kind: 'code',
+      version: '1',
+    };
+    const result = await runEval({
+      config: { ...config, attempts: 1 },
+      dataset,
+      graders: [reader],
+      runIteration: trajectoryIteration,
+      workspace: noopWorkspaceFactory,
+    });
+
+    expect(seen).toEqual(['get_plan', 'get_plan']);
+    expect(result.trials.map((trial) => trial.status)).toEqual([
+      'completed',
+      'completed',
+    ]);
+    expect(result.trials[0]?.trajectory).toMatchObject({
+      durationMs: 5,
+      outcome: 'succeeded',
+      truncated: false,
+    });
+    expect(result.trials[0]?.trajectory?.trajectoryJson).toBe(
+      JSON.stringify(trajectory),
+    );
+    expect(result.tokensUsed).toBe(2 * 10);
+    expect(result.grades.every((g) => g.verdict.kind === 'pass')).toBe(true);
+  });
+
+  it('records a rejecting iteration as an errored trial, never a fail', async () => {
+    const result = await runEval({
+      config: { ...config, attempts: 1 },
+      dataset,
+      graders: [containsDone],
+      runIteration: async () => {
+        throw new Error('refusal: declined');
+      },
+      workspace: noopWorkspaceFactory,
+    });
+
+    expect(result.trials.map((trial) => trial.status)).toEqual([
+      'errored',
+      'errored',
+    ]);
+    expect(result.grades[0]?.verdict).toEqual({
+      kind: 'error',
+      reason: 'refusal: declined',
+    });
+  });
+});
+
+describe('noopWorkspaceFactory', () => {
+  it('hands out an existing directory and a harmless dispose', async () => {
+    const created = await noopWorkspaceFactory.create(makeCase('c'), 1);
+
+    expect(created.cwd).not.toBe('');
+    await expect(created.dispose()).resolves.toBeUndefined();
   });
 });
 

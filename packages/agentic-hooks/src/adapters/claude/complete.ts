@@ -21,6 +21,7 @@ import {
   drainBufferedUsage,
   logHookError,
   sweepAbandonedStarts,
+  sweepTrajectoryUploadState,
 } from '../../index.ts';
 import { CLAUDE_SOURCE, normalizeClaudeStopPayload } from './payload.ts';
 import { captureSessionTrajectories } from './session-trajectory.ts';
@@ -92,6 +93,10 @@ const main = async (): Promise<void> => {
       sessionId: normalized.session_id,
       transcriptPath: normalized.transcript_path,
     });
+
+    // Reap upload-state files of long-dead sessions (once a day; the server's idempotency key makes a
+    // later re-upload harmless). Fail-open.
+    await sweepTrajectoryUploadState();
 
     // Opportunistic, time-boxed: flush any JSONL buffered while the server was
     // down. Small budget so the turn is never stalled; unsent lines retained.

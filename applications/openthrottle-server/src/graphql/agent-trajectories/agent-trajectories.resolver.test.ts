@@ -56,6 +56,7 @@ const buildRow = (
     durationMs: 1200,
     exitCode: 0,
     id: 'f1f2f3f4-0000-4000-8000-000000000001',
+    idempotencyKey: null,
     incomplete: false,
     inputTokens: 100,
     model: 'claude-sonnet-5-5',
@@ -73,12 +74,17 @@ const buildRow = (
 };
 
 const buildInput = (
-  overrides: Partial<{ source: string; trajectoryJson: string }> = {},
+  overrides: Partial<{
+    idempotencyKey: string | null;
+    source: string;
+    trajectoryJson: string;
+  }> = {},
 ) => {
   return {
     driver: 'claude',
     durationMs: 1200,
     exitCode: 0,
+    idempotencyKey: null,
     model: 'claude-sonnet-5-5',
     outcome: 'completed',
     planRunId,
@@ -162,6 +168,30 @@ describe('AgentTrajectoriesResolver', () => {
     test('rejects an unknown source', async () => {
       await expect(
         resolver.recordAgentTrajectory(buildInput({ source: 'manual' })),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(mockService.create).not.toHaveBeenCalled();
+    });
+
+    test('passes the idempotency key through to the service', async () => {
+      vi.mocked(mockService.create).mockResolvedValue(buildRow());
+
+      await resolver.recordAgentTrajectory(
+        buildInput({ idempotencyKey: 'session:s1:toolu_1' }),
+      );
+
+      expect(mockService.create).toHaveBeenCalledWith(
+        expect.objectContaining({ idempotencyKey: 'session:s1:toolu_1' }),
+      );
+    });
+
+    test('rejects an empty or over-long idempotency key', async () => {
+      await expect(
+        resolver.recordAgentTrajectory(buildInput({ idempotencyKey: '' })),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      await expect(
+        resolver.recordAgentTrajectory(
+          buildInput({ idempotencyKey: 'k'.repeat(201) }),
+        ),
       ).rejects.toBeInstanceOf(BadRequestException);
       expect(mockService.create).not.toHaveBeenCalled();
     });

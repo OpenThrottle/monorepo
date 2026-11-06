@@ -483,6 +483,7 @@ export const main = async (): Promise<void> => {
         onTrajectory: async (record) => {
           await recordIterationTrajectoryGraphql({
             driver: parsedArgs.backend,
+            iteration,
             model: parsedArgs.model,
             planRunId: runId,
             record,

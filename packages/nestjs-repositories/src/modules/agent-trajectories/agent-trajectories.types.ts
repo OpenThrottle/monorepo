@@ -13,7 +13,8 @@ export type AgentTrajectorySource =
 
 /**
  * @description Everything a caller supplies to record a trajectory. `costUsd` is null when the run
- * is unpriceable; that is not the same as zero.
+ * is unpriceable; that is not the same as zero. `idempotencyKey` makes recording idempotent: a
+ * second create with the same non-null key returns the stored row instead of inserting.
  * @public
  */
 export interface CreateAgentTrajectoryInput {
@@ -23,6 +24,7 @@ export interface CreateAgentTrajectoryInput {
   readonly driver: string;
   readonly durationMs: number | null;
   readonly exitCode: number | null;
+  readonly idempotencyKey: string | null;
   readonly incomplete: boolean;
   readonly inputTokens: number | null;
   readonly model: string | null;

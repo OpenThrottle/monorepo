@@ -380,6 +380,8 @@ export type AgentTrajectory = {
   exitCode?: Maybe<Scalars['Int']['output']>;
   /** Trajectory id. */
   id: Scalars['ID']['output'];
+  /** Idempotency key the trajectory was recorded under. Null when recorded without one. */
+  idempotencyKey?: Maybe<Scalars['String']['output']>;
   /** True when the run ended before it could finish, so the trajectory is partial. */
   incomplete: Scalars['Boolean']['output'];
   /** Prompt tokens consumed, including cached tokens. Null when the run reported none. */
@@ -668,6 +670,30 @@ export type BrowseDirectoryEntryObject = {
   path: Scalars['String']['output'];
 };
 
+export type CalibrateJudgeForRunInput = {
+  /** Id of the judge grader to calibrate. */
+  graderId: Scalars['String']['input'];
+  /** Version of the judge grader to calibrate. */
+  graderVersion: Scalars['String']['input'];
+  /** True when calibrating the held-out judge. Defaults to false. */
+  heldOut?: Scalars['Boolean']['input'];
+  /** Run whose judge grades are calibrated. */
+  runId: Scalars['ID']['input'];
+  /** Only use trials whose case is in this split: dev or test. Omit for every trial. */
+  split?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** The recorded calibration of a judge over one run, with the trials that could not be paired. */
+export type CalibrateJudgeForRunResult = {
+  __typename?: 'CalibrateJudgeForRunResult';
+  /** The calibration that was computed and recorded. */
+  calibration: EvalJudgeCalibration;
+  /** Graded trials left out because their human raters disagreed with each other. */
+  nConflicted: Scalars['Int']['output'];
+  /** Graded trials left out because they have no trajectory or no human label. */
+  nUnlabeled: Scalars['Int']['output'];
+};
+
 export type CancelPlanRunInput = {
   /** Plan id whose in-queue run-plan (Ralph) job should be cancelled */
   planId: Scalars['ID']['input'];
@@ -922,6 +948,19 @@ export type CreateCustomPromptInput = {
   userId?: InputMaybe<Scalars['ID']['input']>;
   /** Write content to the file system at filePath if provided */
   writeToFileSystem?: Scalars['Boolean']['input'];
+};
+
+export type CreateEvalDatasetFromTrajectoriesInput = {
+  /** The cases, one per selected trajectory. At least one. */
+  cases: Array<EvalCaseFromTrajectoryInput>;
+  /** Free-text description of what the dataset covers. Blank is stored as null. */
+  description?: InputMaybe<Scalars['String']['input']>;
+  /** Dataset name. Re-using a name in the same repository creates the next version. */
+  name: Scalars['String']['input'];
+  /** Repository the dataset belongs to. */
+  repositoryId: Scalars['ID']['input'];
+  /** What the dataset evaluates: plan_task, skill or mcp_tool_selection. */
+  target: Scalars['String']['input'];
 };
 
 export type CreateNoteInput = {
@@ -1509,6 +1548,379 @@ export type EnqueuePlanRunResultObject = {
   queueTotal: Scalars['Int']['output'];
 };
 
+/** One input for the agent plus what a correct outcome looks like. */
+export type EvalCase = {
+  __typename?: 'EvalCase';
+  /** When the case was added. */
+  createdAt: Scalars['DateTime']['output'];
+  /** Dataset the case belongs to. */
+  datasetId: Scalars['ID']['output'];
+  /** What a correct outcome looks like, serialized with JSON.stringify. */
+  goldJson: Scalars['String']['output'];
+  /** Case id. */
+  id: Scalars['ID']['output'];
+  /** What the agent is asked to do, serialized with JSON.stringify. */
+  inputJson: Scalars['String']['output'];
+  /** The trajectory (a real failure) the case was created from. Null for hand-written cases or a pruned trajectory. */
+  sourceTrajectoryId?: Maybe<Scalars['ID']['output']>;
+  /** Which side of the dataset the case sits on: dev or test. */
+  split: Scalars['String']['output'];
+};
+
+export type EvalCaseFromTrajectoryInput = {
+  /** What a correct outcome looks like, as a JSON string. */
+  goldJson: Scalars['String']['input'];
+  /** What the agent is asked to do, as a JSON string. Omit to derive an object from the trajectory (id, task id, plan run id, driver, model). */
+  inputJson?: InputMaybe<Scalars['String']['input']>;
+  /** Which side of the dataset the case sits on: dev or test. */
+  split: Scalars['String']['input'];
+  /** The recorded trajectory (a real failure) the case is created from. */
+  trajectoryId: Scalars['ID']['input'];
+};
+
+/** A reason the two runs are not strictly comparable. */
+export type EvalComparisonWarning = {
+  __typename?: 'EvalComparisonWarning';
+  /** dataset_differs, auth_mode_differs, k_differs or no_shared_cases. */
+  code: Scalars['String']['output'];
+  /** A sentence for a reader. */
+  message: Scalars['String']['output'];
+};
+
+/** A versioned, per-repository set of eval cases. */
+export type EvalDataset = {
+  __typename?: 'EvalDataset';
+  /** The dataset's cases, oldest first. */
+  cases: Array<EvalCase>;
+  /** When the dataset version was created. */
+  createdAt: Scalars['DateTime']['output'];
+  /** Who created the dataset: the GitHub username of the caller, stamped server-side. */
+  createdBy: Scalars['String']['output'];
+  /** Free-text description of what the dataset covers. */
+  description?: Maybe<Scalars['String']['output']>;
+  /** Dataset id. */
+  id: Scalars['ID']['output'];
+  /** Dataset name, unique per repository together with version. */
+  name: Scalars['String']['output'];
+  /** Repository the dataset belongs to. */
+  repositoryId: Scalars['ID']['output'];
+  /** What the dataset evaluates: plan_task, skill or mcp_tool_selection. */
+  target: Scalars['String']['output'];
+  /** When the dataset row last changed. */
+  updatedAt: Scalars['DateTime']['output'];
+  /** Dataset version, starting at 1. Re-creating a name bumps it. */
+  version: Scalars['Int']['output'];
+};
+
+/** One grader's verdict on one trial, with the grader and judge identity it was produced by. */
+export type EvalGrade = {
+  __typename?: 'EvalGrade';
+  /** Judge-cache key. Null for graders that are not cached. */
+  cacheKey?: Maybe<Scalars['String']['output']>;
+  /** Cost of grading in USD. Null for code graders and unpriceable judges. */
+  costUsd?: Maybe<Scalars['Float']['output']>;
+  /** When the grade was recorded. */
+  createdAt: Scalars['DateTime']['output'];
+  /** Why the grader could not decide. Set exactly when the verdict is error. */
+  errorReason?: Maybe<Scalars['String']['output']>;
+  /** Evidence the grader quoted, serialized with JSON.stringify. Null for an error verdict. */
+  evidenceJson?: Maybe<Scalars['String']['output']>;
+  /** Stable id of the grader. */
+  graderId: Scalars['String']['output'];
+  /** What produced the grade: code, judge or human. */
+  graderKind: Scalars['String']['output'];
+  /** Grader version; it changes whenever the check changes. */
+  graderVersion: Scalars['String']['output'];
+  /** Grade id. */
+  id: Scalars['ID']['output'];
+  /** Driver that ran the judge. Null unless the grader is a judge. */
+  judgeDriver?: Maybe<Scalars['String']['output']>;
+  /** Model that ran the judge. Set for every judge grade. */
+  judgeModel?: Maybe<Scalars['String']['output']>;
+  /** Version or snapshot of the judge model when known. */
+  judgeModelVersion?: Maybe<Scalars['String']['output']>;
+  /** Trial that was graded. */
+  trialId: Scalars['ID']['output'];
+  /** pass, fail, or error (the grader itself could not decide; excluded from pass rates). */
+  verdict: Scalars['String']['output'];
+};
+
+/** One measurement of a judge (or critic) against human labels: kappa with a bootstrap 95% interval, catch rate, false-fail rate and the resulting gating status. */
+export type EvalJudgeCalibration = {
+  __typename?: 'EvalJudgeCalibration';
+  /** P(judge says fail | human says fail). Null when the humans never failed a trial. */
+  catchRate?: Maybe<Scalars['Float']['output']>;
+  /** When the calibration was recorded. */
+  createdAt: Scalars['DateTime']['output'];
+  /** Who recorded the calibration, stamped from the caller's identity. */
+  createdBy: Scalars['String']['output'];
+  /** Dataset whose cases were labelled. Null for an ad hoc calibration. */
+  datasetId?: Maybe<Scalars['ID']['output']>;
+  /** P(judge says fail | human says pass). Null when the humans never passed a trial. */
+  falseFailRate?: Maybe<Scalars['Float']['output']>;
+  /** Id of the grader that was calibrated. */
+  graderId: Scalars['String']['output'];
+  /** Version of the grader that was calibrated. */
+  graderVersion: Scalars['String']['output'];
+  /** True when this is the held-out judge that no loop, critic or prompt optimization sees. */
+  heldOut: Scalars['Boolean']['output'];
+  /** Calibration id. */
+  id: Scalars['ID']['output'];
+  /** Driver that ran the judge. */
+  judgeDriver?: Maybe<Scalars['String']['output']>;
+  /** Model that ran the judge. */
+  judgeModel: Scalars['String']['output'];
+  /** Version or snapshot of the judge model when known. */
+  judgeModelVersion?: Maybe<Scalars['String']['output']>;
+  /** Cohen's kappa. Null when undefined: no pairs, or a constant rater. */
+  kappa?: Maybe<Scalars['Float']['output']>;
+  /** Upper bound of the bootstrap 95% interval of kappa. */
+  kappaCiHigh?: Maybe<Scalars['Float']['output']>;
+  /** Lower bound of the bootstrap 95% interval of kappa. */
+  kappaCiLow?: Maybe<Scalars['Float']['output']>;
+  /** Pairs used for the statistics. Judge error verdicts are not counted. */
+  n: Scalars['Int']['output'];
+  /** Pairs left out because the judge returned an error verdict. */
+  nExcluded: Scalars['Int']['output'];
+  /** Eval run the judge grades were read from. Null when pairs were supplied directly. */
+  runId?: Maybe<Scalars['ID']['output']>;
+  /** Dataset split the labelled cases came from (dev or test). Null when not split-scoped. */
+  split?: Maybe<Scalars['String']['output']>;
+  /** unsupervised (kappa >= 0.8), gating (>= 0.6), non_gating (below) or insufficient (too few pairs). */
+  status: Scalars['String']['output'];
+};
+
+/** McNemar's test on the cases where the two runs disagree. */
+export type EvalMcNemar = {
+  __typename?: 'EvalMcNemar';
+  /** Cases that passed in the baseline and failed in the candidate: got worse. */
+  b: Scalars['Int']['output'];
+  /** Cases that failed in the baseline and passed in the candidate: got better. */
+  c: Scalars['Int']['output'];
+  /** exact or chi_square. */
+  method: Scalars['String']['output'];
+  /** Two-sided p-value. */
+  pValue: Scalars['Float']['output'];
+};
+
+/** One case of the run: counted attempts, passes, and whether the case passed. */
+export type EvalReportCase = {
+  __typename?: 'EvalReportCase';
+  /** Attempts that count. */
+  attemptsCounted: Scalars['Int']['output'];
+  /** Counted attempts that passed. */
+  attemptsPassed: Scalars['Int']['output'];
+  /** Case id. */
+  caseId: Scalars['ID']['output'];
+  /** True when every counted attempt passed. Null when no attempt counted. */
+  passed?: Maybe<Scalars['Boolean']['output']>;
+  /** dev or test. */
+  split: Scalars['String']['output'];
+};
+
+/** How many trials were left out of the pass rate, by reason. */
+export type EvalReportExclusions = {
+  __typename?: 'EvalReportExclusions';
+  /** Trials whose attempt errored. */
+  errored: Scalars['Int']['output'];
+  /** Trials where a counted grader returned an error verdict. */
+  gradeError: Scalars['Int']['output'];
+  /** Trials with no grade that counts (no code grade, no gating judge). */
+  noCountedGrade: Scalars['Int']['output'];
+  /** Trials paused by a usage limit. */
+  usageLimited: Scalars['Int']['output'];
+};
+
+/** A grader that graded the run, with its calibration and whether its grades count toward the pass rate. */
+export type EvalReportGrader = {
+  __typename?: 'EvalReportGrader';
+  /** Calibration status of this judge id and version. Null for code and human graders, and for an uncalibrated judge. */
+  calibrationStatus?: Maybe<Scalars['String']['output']>;
+  /** Whether this grader's grades count: code graders and judges calibrated gating or unsupervised. Human grades never count. */
+  counts: Scalars['Boolean']['output'];
+  /** Stable id of the grader. */
+  graderId: Scalars['String']['output'];
+  /** code, judge or human. */
+  graderKind: Scalars['String']['output'];
+  /** Grader version. */
+  graderVersion: Scalars['String']['output'];
+  /** Judge model. */
+  judgeModel?: Maybe<Scalars['String']['output']>;
+  /** Judge model version when known. */
+  judgeModelVersion?: Maybe<Scalars['String']['output']>;
+  /** Cohen's kappa of the latest calibration. */
+  kappa?: Maybe<Scalars['Float']['output']>;
+  /** Kappa interval upper bound. */
+  kappaCiHigh?: Maybe<Scalars['Float']['output']>;
+  /** Kappa interval lower bound. */
+  kappaCiLow?: Maybe<Scalars['Float']['output']>;
+};
+
+/** A percentile bootstrap interval (10,000 resamples, fixed seed). */
+export type EvalReportInterval = {
+  __typename?: 'EvalReportInterval';
+  /** Confidence level, for example 0.95. */
+  confidence: Scalars['Float']['output'];
+  /** Lower bound. */
+  lower: Scalars['Float']['output'];
+  /** Upper bound. */
+  upper: Scalars['Float']['output'];
+};
+
+/** Agreement with humans (Cohen's kappa) of the weakest calibrated judge that graded the run. */
+export type EvalReportJudgeAgreement = {
+  __typename?: 'EvalReportJudgeAgreement';
+  /** Grader id of that judge. */
+  graderId: Scalars['String']['output'];
+  /** Grader version of that judge. */
+  graderVersion: Scalars['String']['output'];
+  /** Cohen's kappa. */
+  kappa: Scalars['Float']['output'];
+  /** Upper bound of the bootstrap 95% interval. */
+  kappaCiHigh?: Maybe<Scalars['Float']['output']>;
+  /** Lower bound of the bootstrap 95% interval. */
+  kappaCiLow?: Maybe<Scalars['Float']['output']>;
+  /** Calibration status: unsupervised, gating, non_gating or insufficient. */
+  status: Scalars['String']['output'];
+};
+
+/** The headline numbers of one run. Every number is over trials that count: see EvalReportGrader.counts. */
+export type EvalReportNumbers = {
+  __typename?: 'EvalReportNumbers';
+  /** Cases with at least k counted attempts, the cases pass@k and pass^k average over. */
+  casesAtK: Scalars['Int']['output'];
+  /** Cases with at least one counted attempt. */
+  casesCounted: Scalars['Int']['output'];
+  /** Cost of the counted trials divided by their passes. Null when any counted trial is unpriced or nothing passed. */
+  costPerSuccessUsd?: Maybe<Scalars['Float']['output']>;
+  /** The smallest change in pass rate a paired comparison over this many cases can detect (alpha 0.05, power 0.8). Null when no case counted. */
+  detectionFloor?: Maybe<Scalars['Float']['output']>;
+  /** Why trials were left out. */
+  excluded: EvalReportExclusions;
+  /** Judge agreement with humans. Null when no judge with a kappa graded the run. */
+  judgeAgreement?: Maybe<EvalReportJudgeAgreement>;
+  /** pass@k: the chance at least one of k attempts passes, averaged over cases. */
+  passAtK?: Maybe<Scalars['Float']['output']>;
+  /** pass^k: the chance all k attempts pass, averaged over cases. */
+  passHatK?: Maybe<Scalars['Float']['output']>;
+  /** Passing trials over counted trials. Null when nothing counted. */
+  passRate?: Maybe<Scalars['Float']['output']>;
+  /** Bootstrap 95% interval of the pass rate. */
+  passRateCi?: Maybe<EvalReportInterval>;
+  /** Cost of every trial. Null when any trial is unpriced. */
+  totalCostUsd?: Maybe<Scalars['Float']['output']>;
+  /** Trials that count. */
+  trialsCounted: Scalars['Int']['output'];
+  /** Trials left out of the pass rate. */
+  trialsExcluded: Scalars['Int']['output'];
+  /** Counted trials that passed. */
+  trialsPassed: Scalars['Int']['output'];
+};
+
+/** One configuration (driver, model, effort, prompt and skill SHAs, auth mode) executed over a dataset, k attempts per case. */
+export type EvalRun = {
+  __typename?: 'EvalRun';
+  /** How the CLI was billed: api_key or subscription. */
+  authMode: Scalars['String']['output'];
+  /** Token budget for the whole run. Null means unlimited. */
+  budgetTokens?: Maybe<Scalars['Int']['output']>;
+  /** Dollar budget for the whole run. Null means unlimited. */
+  budgetUsd?: Maybe<Scalars['Float']['output']>;
+  /** When the run was recorded. */
+  createdAt: Scalars['DateTime']['output'];
+  /** Who started the run: the GitHub username of the caller, stamped server-side. */
+  createdBy: Scalars['String']['output'];
+  /** Dataset that was run. */
+  datasetId: Scalars['ID']['output'];
+  /** The dataset version the run executed. */
+  datasetVersion: Scalars['Int']['output'];
+  /** Agent driver under test. */
+  driver: Scalars['String']['output'];
+  /** Reasoning effort under test. Null when the driver default was used. */
+  effort?: Maybe<Scalars['String']['output']>;
+  /** When the run reached a terminal status. Null while unfinished. */
+  finishedAt?: Maybe<Scalars['DateTime']['output']>;
+  /** Run id. */
+  id: Scalars['ID']['output'];
+  /** Attempts per case. */
+  k: Scalars['Int']['output'];
+  /** Model under test. Null when the driver default was used. */
+  model?: Maybe<Scalars['String']['output']>;
+  /** Content SHA of the prompt under test. */
+  promptSha?: Maybe<Scalars['String']['output']>;
+  /** Content SHA of the skill under test. */
+  skillSha?: Maybe<Scalars['String']['output']>;
+  /** When the run began executing. Null while pending. */
+  startedAt?: Maybe<Scalars['DateTime']['output']>;
+  /** Run lifecycle: pending, running, usage_limited (a resumable pause), completed, failed or cancelled. */
+  status: Scalars['String']['output'];
+  /** The run's trials ordered by attempt. */
+  trials: Array<EvalTrial>;
+};
+
+/** A candidate run against a baseline run over the cases both have an outcome for. */
+export type EvalRunComparison = {
+  __typename?: 'EvalRunComparison';
+  /** The baseline run's report. */
+  base: EvalRunReport;
+  /** The candidate run's report. */
+  candidate: EvalRunReport;
+  /** Cases that failed in the baseline and pass in the candidate. */
+  improvedCaseIds: Array<Scalars['ID']['output']>;
+  /** McNemar's test. Null when no case is shared. */
+  mcnemar?: Maybe<EvalMcNemar>;
+  /** Cases that passed in the baseline and fail in the candidate. */
+  regressedCaseIds: Array<Scalars['ID']['output']>;
+  /** Cases both runs have a counted outcome for. */
+  sharedCases: Scalars['Int']['output'];
+  /** Why the comparison may not mean what it appears to. */
+  warnings: Array<EvalComparisonWarning>;
+};
+
+/** A run's report: the full config tuple, its graders, the headline numbers and a row per case. */
+export type EvalRunReport = {
+  __typename?: 'EvalRunReport';
+  /** One row per case. */
+  cases: Array<EvalReportCase>;
+  /** Name of the dataset that was run. */
+  datasetName: Scalars['String']['output'];
+  /** Every grader that graded the run. */
+  graders: Array<EvalReportGrader>;
+  /** Headline numbers. */
+  numbers: EvalReportNumbers;
+  /** The run: driver, model, effort, prompt and skill SHAs, auth mode, dataset version, k, budgets and status. */
+  run: EvalRun;
+};
+
+/** One attempt at one case within a run, linked to the trajectory that recorded it. */
+export type EvalTrial = {
+  __typename?: 'EvalTrial';
+  /** Attempt number, starting at 1. */
+  attempt: Scalars['Int']['output'];
+  /** Case the trial attempted. */
+  caseId: Scalars['ID']['output'];
+  /** Cost of the attempt in USD. Null when unpriceable, which is not the same as zero. */
+  costUsd?: Maybe<Scalars['Float']['output']>;
+  /** When the trial was recorded. */
+  createdAt: Scalars['DateTime']['output'];
+  /** Wall-clock duration in milliseconds. Null when unknown. */
+  durationMs?: Maybe<Scalars['Int']['output']>;
+  /** Failure message for an errored trial. */
+  error?: Maybe<Scalars['String']['output']>;
+  /** Every grader's verdict on this trial, oldest first. */
+  grades: Array<EvalGrade>;
+  /** Trial id. */
+  id: Scalars['ID']['output'];
+  /** Human labels on the trial's trajectory, most recently updated first. Empty when the trial has no trajectory. */
+  labels: Array<AgentTrajectoryLabel>;
+  /** Run the trial belongs to. */
+  runId: Scalars['ID']['output'];
+  /** How the attempt ended: completed, errored, or usage_limited (a pause excluded from pass rates). */
+  status: Scalars['String']['output'];
+  /** The trajectory the attempt produced. Null when none was captured. */
+  trajectoryId?: Maybe<Scalars['ID']['output']>;
+};
+
 export type EvaluatePlanRulesResultObject = {
   __typename?: 'EvaluatePlanRulesResultObject';
   /** True when a full plan-rules evaluation pass was enqueued. */
@@ -2009,6 +2421,8 @@ export type Mutation = {
   /** Assign a role to a user */
   assignRoleToUser: Scalars['Boolean']['output'];
   attachWorkSessionSubject: WorkSessionSubjectObject;
+  /** Calibrate a judge over one run in one call: pair its judge grades with human labels on the trials' trajectories, compute kappa (bootstrap 95% CI), catch rate, false-fail rate and gating status, and record the row. Judge error verdicts are excluded and counted separately. */
+  calibrateJudgeForRun: CalibrateJudgeForRunResult;
   /** Abort an in-flight streamed turn for an owned conversation. Returns true when a stream was aborted. */
   cancelConversationStream: Scalars['Boolean']['output'];
   /** Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). Also cancels the plan's SCHEDULED runs (delayed job removed, run settled CANCELLED). With planRunId naming a SCHEDULED run of the plan, cancels ONLY that run (its delayed job and row), leaving any other active run, the plan status and the tasks alone; a planRunId that is already settled is a no-op, and one that is QUEUED or IN_PROGRESS is rejected (omit planRunId to stop a live run). Idempotent: once a scheduled run has fired or settled there is nothing left to cancel. */
@@ -2029,6 +2443,8 @@ export type Mutation = {
   createBlogPost: CreateBlogPostResult;
   /** Create a new custom prompt */
   createCustomPrompt: CustomPromptObject;
+  /** Create an eval dataset from recorded trajectories: each selected trajectory (typically a real failure) becomes a case with its gold answer. Re-using a name in the repository creates the next version. The creator is taken from your identity, never from input. */
+  createEvalDatasetFromTrajectories: EvalDataset;
   /** Create a note */
   createNote: NoteObject;
   /** Create a plan */
@@ -2147,8 +2563,16 @@ export type Mutation = {
   pruneWorktreeCheckouts: PruneWorktreeCheckoutsPayloadObject;
   /** Publish a blog post: sets status PUBLISHED and publishedAt. Without publishedAt the post goes live now; a future publishedAt schedules it. Returns BlogPostNotFoundError for an unknown post. */
   publishBlogPost: PublishBlogPostResult;
-  /** Record an ATIF trajectory for a plan run. The document is validated, capped at 4 MiB server-side (elided observations set truncated) and summarized into token, cost and tool-call columns. */
+  /** Record an ATIF trajectory for a plan run. With an idempotencyKey a duplicate is a successful no-op that returns the stored row. The document is validated, capped at 4 MiB server-side (elided observations set truncated) and summarized into token, cost and tool-call columns. */
   recordAgentTrajectory: AgentTrajectory;
+  /** Record one grader's verdict on a trial with the grader id and version and, for judges, the judge model. An error verdict needs errorReason; a judge needs judgeModel. Re-recording the same trial, grader id and version replaces the earlier row. */
+  recordEvalGrade: EvalGrade;
+  /** Record an eval run over a dataset. The dataset version is read from the dataset and the creator from your identity, never from input. */
+  recordEvalRun: EvalRun;
+  /** Record one attempt at one case. Re-recording the same run, case and attempt replaces the earlier row, so a resumed run can re-record a usage_limited trial. */
+  recordEvalTrial: EvalTrial;
+  /** Record a judge calibration whose statistics were computed elsewhere. History is append-only. The creator is read from your identity, never from input. */
+  recordJudgeCalibration: EvalJudgeCalibration;
   /** Bump the liveness heartbeat on a detached-CLI run row (from registerCliPlanRun). The CLI calls this on a ~15s timer so a hard crash (SIGKILL/power-loss) leaves a stale heartbeat the reader/sweeper can detect. Keyed on the run id. Returns null when the row no longer exists. */
   recordPlanRunHeartbeat?: Maybe<PlanRunObject>;
   /** Record one harness-captured skill invocation. Args must already be privacy-processed by the client; the server stores them as-sent. The event is attributed to the human user the authenticated principal acts as, resolved server-side — a userId is never accepted from the client, and stays null when the principal resolves to no one. */
@@ -2254,6 +2678,8 @@ export type Mutation = {
   updateBlogPost: UpdateBlogPostResult;
   /** Update an existing custom prompt */
   updateCustomPrompt?: Maybe<CustomPromptObject>;
+  /** Move an eval run to a new status. startedAt is stamped the first time it runs; finishedAt on completed, failed or cancelled, and cleared when a paused run resumes. */
+  updateEvalRunStatus: EvalRun;
   /** Update a note */
   updateNote?: Maybe<NoteObject>;
   /** Update a plan */
@@ -2373,6 +2799,10 @@ export type MutationAttachWorkSessionSubjectArgs = {
   input: AttachWorkSessionSubjectInput;
 };
 
+export type MutationCalibrateJudgeForRunArgs = {
+  input: CalibrateJudgeForRunInput;
+};
+
 export type MutationCancelConversationStreamArgs = {
   conversationId: Scalars['ID']['input'];
 };
@@ -2411,6 +2841,10 @@ export type MutationCreateBlogPostArgs = {
 
 export type MutationCreateCustomPromptArgs = {
   input: CreateCustomPromptInput;
+};
+
+export type MutationCreateEvalDatasetFromTrajectoriesArgs = {
+  input: CreateEvalDatasetFromTrajectoriesInput;
 };
 
 export type MutationCreateNoteArgs = {
@@ -2621,6 +3055,22 @@ export type MutationRecordAgentTrajectoryArgs = {
   input: RecordAgentTrajectoryInput;
 };
 
+export type MutationRecordEvalGradeArgs = {
+  input: RecordEvalGradeInput;
+};
+
+export type MutationRecordEvalRunArgs = {
+  input: RecordEvalRunInput;
+};
+
+export type MutationRecordEvalTrialArgs = {
+  input: RecordEvalTrialInput;
+};
+
+export type MutationRecordJudgeCalibrationArgs = {
+  input: RecordJudgeCalibrationInput;
+};
+
 export type MutationRecordPlanRunHeartbeatArgs = {
   input: RecordPlanRunHeartbeatInput;
 };
@@ -2821,6 +3271,10 @@ export type MutationUpdateBlogPostArgs = {
 
 export type MutationUpdateCustomPromptArgs = {
   input: UpdateCustomPromptInput;
+};
+
+export type MutationUpdateEvalRunStatusArgs = {
+  input: UpdateEvalRunStatusInput;
 };
 
 export type MutationUpdateNoteArgs = {
@@ -3605,6 +4059,18 @@ export type Query = {
   discoveredWorktrees: DiscoveredWorktreesObject;
   /** Probe which editors are installed on the machine hosting the server. Returns a cached snapshot (60s TTL); does not probe per request. **Advisory only** — this never gates enabling an editor. An editor reporting NOT_FOUND can still be enabled and will still get a working toolbar button, and UNKNOWN (a containerized server, an unsupported platform, or a failed probe) means nothing is claimed either way and clients should render no hint. */
   editorPresence: EditorPresenceResultObject;
+  /** Fetch one eval dataset by id. Null when it does not exist. */
+  evalDataset?: Maybe<EvalDataset>;
+  /** List a repository's eval datasets, newest first. */
+  evalDatasets: Array<EvalDataset>;
+  /** Fetch one eval run by id. Null when it does not exist. */
+  evalRun?: Maybe<EvalRun>;
+  /** Compare a candidate run with a baseline run: McNemar's test over the cases both have an outcome for, the cases that got worse and better, and warnings when the runs used different datasets, auth modes or k. */
+  evalRunComparison: EvalRunComparison;
+  /** The report of one eval run: config tuple, graders, headline numbers (pass rate with a bootstrap 95% interval, judge agreement, detection floor, pass^k, cost per success) and a row per case. Statistics are computed server-side over trials that count. */
+  evalRunReport: EvalRunReport;
+  /** List a dataset's eval runs, newest first. */
+  evalRuns: Array<EvalRun>;
   /** Evaluated rollout flags for client hydration. Public: no flags:read. Authenticated principal enriches targeting/bucketing when present; otherwise anonymousId (or a degraded shared subject) is used for bucketing. applicationKey is accepted for future app scoping (log/stub today). */
   evaluateFeatureFlags: Array<FeatureFlagObject>;
   /** Get a generator by name (includes schema JSON) */
@@ -3621,6 +4087,8 @@ export type Query = {
   githubTokenConfigured: Scalars['Boolean']['output'];
   /** Single job by id and queue name. Returns null if not found. */
   job?: Maybe<JobObject>;
+  /** List a grader's judge calibrations across versions, newest first. */
+  judgeCalibrations: Array<EvalJudgeCalibration>;
   /** Single most recent activity (commit, plan output chunk, or task update) for a plan or task. Use for "What was the last thing we did for <plan> or <task>?". */
   lastActivity?: Maybe<LastActivityResultObject>;
   /** Lines added/deleted by period (week or month) and author for merged PRs. Lists merged PRs across pages up to 1000 (10 pages) then fetches per-PR diff stats; maxPrs caps the detail requests. */
@@ -3894,6 +4362,31 @@ export type QueryDailyStatsRangeArgs = {
   start: Scalars['String']['input'];
 };
 
+export type QueryEvalDatasetArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type QueryEvalDatasetsArgs = {
+  repositoryId: Scalars['ID']['input'];
+};
+
+export type QueryEvalRunArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type QueryEvalRunComparisonArgs = {
+  baseRunId: Scalars['ID']['input'];
+  candidateRunId: Scalars['ID']['input'];
+};
+
+export type QueryEvalRunReportArgs = {
+  runId: Scalars['ID']['input'];
+};
+
+export type QueryEvalRunsArgs = {
+  datasetId: Scalars['ID']['input'];
+};
+
 export type QueryEvaluateFeatureFlagsArgs = {
   anonymousId?: InputMaybe<Scalars['String']['input']>;
   applicationKey?: InputMaybe<Scalars['String']['input']>;
@@ -3918,6 +4411,10 @@ export type QueryGetDocumentArgs = {
 export type QueryJobArgs = {
   jobId: Scalars['ID']['input'];
   queueName: Scalars['String']['input'];
+};
+
+export type QueryJudgeCalibrationsArgs = {
+  graderId: Scalars['String']['input'];
 };
 
 export type QueryLastActivityArgs = {
@@ -4375,6 +4872,8 @@ export type RecordAgentTrajectoryInput = {
   durationMs?: InputMaybe<Scalars['Int']['input']>;
   /** Process exit code of the run. */
   exitCode?: InputMaybe<Scalars['Int']['input']>;
+  /** Optional key that makes recording idempotent: a second call with the same key returns the stored trajectory instead of inserting another. Clients use session:<sessionId>:<toolUseId> for session uploads and spawned:<planRunId>:<iteration> for spawned runs. At most 200 characters. */
+  idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Model that ran, when known. */
   model?: InputMaybe<Scalars['String']['input']>;
   /** Free-form result label for the run, for example completed. */
@@ -4387,6 +4886,114 @@ export type RecordAgentTrajectoryInput = {
   taskId?: InputMaybe<Scalars['ID']['input']>;
   /** The ATIF document as a JSON string. Validated, then capped server-side at 4 MiB. */
   trajectoryJson: Scalars['String']['input'];
+};
+
+export type RecordEvalGradeInput = {
+  /** Judge-cache key. Omit for graders that are not cached. */
+  cacheKey?: InputMaybe<Scalars['String']['input']>;
+  /** Cost of grading in USD. Omit for code graders and unpriceable judges. */
+  costUsd?: InputMaybe<Scalars['Float']['input']>;
+  /** Why the grader could not decide. Required when the verdict is error, and only then. */
+  errorReason?: InputMaybe<Scalars['String']['input']>;
+  /** Evidence the grader quoted, as a JSON string. Omit for an error verdict. */
+  evidenceJson?: InputMaybe<Scalars['String']['input']>;
+  /** Stable id of the grader. */
+  graderId: Scalars['String']['input'];
+  /** What produced the grade: code, judge or human. */
+  graderKind: Scalars['String']['input'];
+  /** Grader version. */
+  graderVersion: Scalars['String']['input'];
+  /** Driver that ran the judge. */
+  judgeDriver?: InputMaybe<Scalars['String']['input']>;
+  /** Model that ran the judge. Required when graderKind is judge. */
+  judgeModel?: InputMaybe<Scalars['String']['input']>;
+  /** Version or snapshot of the judge model when known. */
+  judgeModelVersion?: InputMaybe<Scalars['String']['input']>;
+  /** Trial being graded. */
+  trialId: Scalars['ID']['input'];
+  /** pass, fail or error. */
+  verdict: Scalars['String']['input'];
+};
+
+export type RecordEvalRunInput = {
+  /** How the CLI is billed: api_key or subscription. */
+  authMode: Scalars['String']['input'];
+  /** Token budget for the whole run. Omit for unlimited. */
+  budgetTokens?: InputMaybe<Scalars['Int']['input']>;
+  /** Dollar budget for the whole run. Omit for unlimited. */
+  budgetUsd?: InputMaybe<Scalars['Float']['input']>;
+  /** Dataset being run. */
+  datasetId: Scalars['ID']['input'];
+  /** Agent driver under test. */
+  driver: Scalars['String']['input'];
+  /** Reasoning effort under test. */
+  effort?: InputMaybe<Scalars['String']['input']>;
+  /** Attempts per case, at least 1. */
+  k: Scalars['Int']['input'];
+  /** Model under test. */
+  model?: InputMaybe<Scalars['String']['input']>;
+  /** Content SHA of the prompt under test. */
+  promptSha?: InputMaybe<Scalars['String']['input']>;
+  /** Content SHA of the skill under test. */
+  skillSha?: InputMaybe<Scalars['String']['input']>;
+  /** Initial status: pending (default) or running. */
+  status?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type RecordEvalTrialInput = {
+  /** Attempt number, starting at 1. */
+  attempt: Scalars['Int']['input'];
+  /** Case that was attempted. */
+  caseId: Scalars['ID']['input'];
+  /** Cost of the attempt in USD. Omit when unpriceable. */
+  costUsd?: InputMaybe<Scalars['Float']['input']>;
+  /** Wall-clock duration in milliseconds. */
+  durationMs?: InputMaybe<Scalars['Int']['input']>;
+  /** Failure message for an errored trial. */
+  error?: InputMaybe<Scalars['String']['input']>;
+  /** Run the trial belongs to. */
+  runId: Scalars['ID']['input'];
+  /** How the attempt ended: completed, errored or usage_limited. */
+  status: Scalars['String']['input'];
+  /** The recorded trajectory the attempt produced. */
+  trajectoryId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type RecordJudgeCalibrationInput = {
+  /** Catch rate in [0, 1]. Omit when undefined. */
+  catchRate?: InputMaybe<Scalars['Float']['input']>;
+  /** Dataset whose cases were labelled. Omit for an ad hoc calibration. */
+  datasetId?: InputMaybe<Scalars['ID']['input']>;
+  /** False-fail rate in [0, 1]. Omit when undefined. */
+  falseFailRate?: InputMaybe<Scalars['Float']['input']>;
+  /** Id of the grader that was calibrated. */
+  graderId: Scalars['String']['input'];
+  /** Version of the grader that was calibrated. */
+  graderVersion: Scalars['String']['input'];
+  /** True for the held-out judge. Defaults to false. */
+  heldOut?: Scalars['Boolean']['input'];
+  /** Driver that ran the judge. */
+  judgeDriver?: InputMaybe<Scalars['String']['input']>;
+  /** Model that ran the judge. */
+  judgeModel: Scalars['String']['input'];
+  /** Version or snapshot of the judge model when known. */
+  judgeModelVersion?: InputMaybe<Scalars['String']['input']>;
+  /** Cohen's kappa. Omit when undefined. */
+  kappa?: InputMaybe<Scalars['Float']['input']>;
+  /** Upper bound of the bootstrap 95% interval of kappa. */
+  kappaCiHigh?: InputMaybe<Scalars['Float']['input']>;
+  /** Lower bound of the bootstrap 95% interval of kappa. */
+  kappaCiLow?: InputMaybe<Scalars['Float']['input']>;
+  /** Pairs used for the statistics. */
+  n: Scalars['Int']['input'];
+  /** Pairs left out because the judge returned an error verdict. */
+  nExcluded?: Scalars['Int']['input'];
+  /** Eval run the grades were read from. Omit when pairs were supplied directly. */
+  runId?: InputMaybe<Scalars['ID']['input']>;
+  /** Dataset split the labelled cases came from: dev or test. Needs datasetId. */
+  split?: InputMaybe<Scalars['String']['input']>;
+  /** unsupervised, gating, non_gating or insufficient. */
+  status: Scalars['String']['input'];
 };
 
 export type RecordPlanRunHeartbeatInput = {
@@ -6202,6 +6809,13 @@ export type UpdateCustomPromptInput = {
   userId?: InputMaybe<Scalars['ID']['input']>;
   /** Write content to the file system at filePath if provided */
   writeToFileSystem?: Scalars['Boolean']['input'];
+};
+
+export type UpdateEvalRunStatusInput = {
+  /** Run to update. */
+  runId: Scalars['ID']['input'];
+  /** New status: pending, running, usage_limited, completed, failed or cancelled. */
+  status: Scalars['String']['input'];
 };
 
 export type UpdateNoteInput = {

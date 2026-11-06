@@ -8,6 +8,11 @@ whether a wording change made agents pick wrongly.
 Modelled on T3 Code's `evals/` (pingdotgg/t3code @ 88f61136): cases fail before their fix, control cases
 are required, and results compare against a same-model baseline. CI runs only the grader.
 
+The suite runs on the shared eval core, `@openthrottle/agentic-evals`, so there is one harness for every
+eval. How suites run in general (the `eval-<suite>` target convention, running across drivers, what CI
+does and does not run) is in
+[docs/openthrottle/evals-running-suites.md](../../../../../docs/openthrottle/evals-running-suites.md).
+
 ## Run it (on demand, never in CI)
 
 ```bash
@@ -18,6 +23,7 @@ pnpm nx run @openthrottle/openthrottle-mcp:eval-tool-selection -- --model claude
 
 | Flag               | Default           | Meaning                                                       |
 | ------------------ | ----------------- | ------------------------------------------------------------- |
+| `--driver`         | `api`             | `api` only; any CLI driver exits 2 (see below)                |
 | `--model`          | `claude-opus-5-5` | Model under test; also picks the baseline file                |
 | `--effort`         | `medium`          | `output_config.effort`                                        |
 | `--trials`         | `1`               | Attempts per case; a case's score is its pass rate            |
@@ -28,21 +34,34 @@ pnpm nx run @openthrottle/openthrottle-mcp:eval-tool-selection -- --model claude
 
 Every run spends tokens: one request per case per trial. The ~60 KB tool surface sits behind a
 prompt-cache breakpoint, so after the first request most input tokens are cache reads. The run prints its
-token totals. Results land in `tmp/evals/tool-selection/<model>.json`. The exit code is 1 when any case
+token totals, the overall pass rate with its bootstrap 95% CI, and the detection floor for the suite size
+(errored trials are excluded from those core stats but count as failures against the baseline). Results land in `tmp/evals/tool-selection/<model>.json`. The exit code is 1 when any case
 regressed against the baseline, 2 on a usage error, and 0 otherwise.
 
 Running it in CI was rejected on cost ([docs/monorepo/ci-cost.md](../../../../../docs/monorepo/ci-cost.md)).
 CI runs only what is free: the grader, baseline comparison, adapter, runner and case-integrity unit tests,
 through the package's ordinary `test` target.
 
+### Why `--driver` takes only `api`
+
+`--driver claude`, `--driver codex,gemini` and the rest exit 2. A CLI driver with the real OpenThrottle
+MCP attached would **execute** the tool it picks, so a case like `plan-create-basic` would call
+`create_plan` on a live server. Driving CLIs needs a **sandboxed MCP** first: a server that records the
+call and returns a canned result, with no database behind it. Until it exists, this suite measures the
+Messages API only.
+
 ## How a trial works
 
 `cli.ts` lists the live surface through `listToolSurface()`, the same path the byte-budget measurement uses,
 with every toolset enabled (`all`, not the lean `core` default) so cases for opt-in tools stay covered.
-It then sends one Messages API request per trial. The request carries every OT tool, four generic harness
+It then runs the cases through the core's `runEval`: the cases are an `EvalDataset` (target
+`mcp_tool_selection`, every case in the `test` split because the suite has no tuning loop), and the system
+under test is a `RunEvalIteration` that sends one Messages API request per trial. The request carries every OT tool, four generic harness
 tools (`bash`, `read_file`, `edit_file`, `write_file`), and the server instructions in the system prompt,
 injected the way an MCP client injects them. `tool_choice` is `auto`. Nothing is executed and there is no
-second turn: the first assistant turn is the selection. `grade-case.ts` grades it:
+second turn: the first assistant turn is the selection, recorded as an ATIF trajectory with one agent step
+whose `tool_calls` are the selected calls (usage rides in its metrics). The `tool-selection` `code` grader
+reads that step and applies `grade-case.ts`:
 
 - A `call` case passes when **any** first-turn call names one of `expect.tools` and satisfies every
   matcher in `expect.args` (`equals`, case-insensitive `includes`, or `present`).
@@ -50,7 +69,9 @@ second turn: the first assistant turn is the selection. `grade-case.ts` grades i
 - Any call to a tool in `forbid` fails the case. For example, `write_file` is forbidden when a plan should
   go to OT rather than into a Markdown file.
 
-A refusal or transport error fails the trial and is reported as `error: …`, separately from a wrong pick.
+A refusal or transport error makes the trial `errored` in the core, which leaves it out of the core pass
+rate. For baselines it is still a non-pass trial reported as `error: …`, separately from a wrong pick, so
+baseline numbers mean what they always did.
 There is deliberately no refusal fallback, because a fallback would answer with a different model and
 contaminate the same-model comparison.
 
@@ -85,13 +106,22 @@ tool or argument that no longer exists, which would otherwise leave a case that 
 
 ## Files
 
-| File                         | Role                                                                       |
-| ---------------------------- | -------------------------------------------------------------------------- |
-| `eval-case.ts`               | Case, selection and selector types                                         |
-| `data/data.cases.ts`         | The cases                                                                  |
-| `data/data.harness-tools.ts` | Generic harness tools offered next to OT                                   |
-| `grade-case.ts`              | Pure grader (unit-tested, runs in CI)                                      |
-| `compare-baseline.ts`        | Same-model baseline comparison                                             |
-| `run-evals.ts`               | Trials, bounded concurrency, aggregation; the selector is injected         |
-| `anthropic-tool-selector.ts` | Messages API adapter (raw HTTP until the package adds `@anthropic-ai/sdk`) |
-| `cli.ts`                     | The Nx target's entry point                                                |
+| File                                 | Role                                                                        |
+| ------------------------------------ | --------------------------------------------------------------------------- |
+| `eval-case.ts`                       | Case, selection and selector types                                          |
+| `data/data.cases.ts`                 | The cases                                                                   |
+| `data/data.dataset.ts`               | Dataset target, grader id and version                                       |
+| `data/data.harness-tools.ts`         | Generic harness tools offered next to OT                                    |
+| `tool-selection-dataset.ts`          | Cases as a core `EvalDataset`                                               |
+| `tool-selection-iteration.ts`        | The system under test: one selector call as a core `RunEvalIteration`       |
+| `selection-trajectory.ts`            | Selection to and from an ATIF trajectory, usage included                    |
+| `tool-selection-grader.ts`           | `gradeCase` as a core `code` grader                                         |
+| `grade-case.ts`                      | Pure grading rules (unit-tested, runs in CI)                                |
+| `run-evals.ts`                       | `runEval` + aggregation back to baseline-shaped results and the core report |
+| `run-evals.characterization.test.ts` | Literal per-case results; proof the port kept baselines compatible          |
+| `compare-baseline.ts`                | Same-model baseline comparison (format unchanged)                           |
+| `anthropic-tool-selector.ts`         | Messages API adapter (raw HTTP until the package adds `@anthropic-ai/sdk`)  |
+| `cli.ts`                             | The Nx target's entry point                                                 |
+
+The evals are not reachable from `bin.ts` or `bin-http.ts`, so the production esbuild bundle does not
+include them or the eval core. Keep it that way.

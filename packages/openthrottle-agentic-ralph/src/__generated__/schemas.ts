@@ -21,6 +21,7 @@ import {
   BlogPostState,
   BlogPostStatus,
   BlogReferenceEntity,
+  CalibrateJudgeForRunInput,
   CancelPlanRunInput,
   ClaimPlanMessagesInput,
   CleanQueueInput,
@@ -31,6 +32,7 @@ import {
   CreateAgentConversationInput,
   CreateBlogPostInput,
   CreateCustomPromptInput,
+  CreateEvalDatasetFromTrajectoriesInput,
   CreateNoteInput,
   CreatePlanInput,
   CreatePlansInput,
@@ -61,6 +63,7 @@ import {
   EnqueueDocIngestionInput,
   EnqueuePlanRalphOrchestratorInput,
   EnqueuePlanRunInput,
+  EvalCaseFromTrajectoryInput,
   ForceSettlePlanRunInput,
   GetAgentConversationMessagesInput,
   GetGeneratorInput,
@@ -102,6 +105,10 @@ import {
   RalphNestedDebugCli,
   RalphPlanRunTuningInput,
   RecordAgentTrajectoryInput,
+  RecordEvalGradeInput,
+  RecordEvalRunInput,
+  RecordEvalTrialInput,
+  RecordJudgeCalibrationInput,
   RecordPlanRunHeartbeatInput,
   RecordSkillUsageInput,
   RecordSkillUsageOutcomeInput,
@@ -154,6 +161,7 @@ import {
   UpdateAgentConversationTitleInput,
   UpdateBlogPostInput,
   UpdateCustomPromptInput,
+  UpdateEvalRunStatusInput,
   UpdateNoteInput,
   UpdatePlanInput,
   UpdatePlanMessageInput,
@@ -435,6 +443,18 @@ export function AttachWorkSessionSubjectInputSchema(): z.ZodObject<
   });
 }
 
+export function CalibrateJudgeForRunInputSchema(): z.ZodObject<
+  Properties<CalibrateJudgeForRunInput>
+> {
+  return z.object({
+    graderId: z.string().min(1),
+    graderVersion: z.string().min(1),
+    heldOut: z.boolean().default(false),
+    runId: z.string().min(1),
+    split: z.string().nullish(),
+  });
+}
+
 export function CancelPlanRunInputSchema(): z.ZodObject<
   Properties<CancelPlanRunInput>
 > {
@@ -546,6 +566,18 @@ export function CreateCustomPromptInputSchema(): z.ZodObject<
     title: z.string().min(1),
     userId: z.string().nullish(),
     writeToFileSystem: z.boolean().default(false),
+  });
+}
+
+export function CreateEvalDatasetFromTrajectoriesInputSchema(): z.ZodObject<
+  Properties<CreateEvalDatasetFromTrajectoriesInput>
+> {
+  return z.object({
+    cases: z.array(z.lazy(() => EvalCaseFromTrajectoryInputSchema())),
+    description: z.string().nullish(),
+    name: z.string().min(1),
+    repositoryId: z.string().min(1),
+    target: z.string().min(1),
   });
 }
 
@@ -864,6 +896,17 @@ export function EnqueuePlanRunInputSchema(): z.ZodObject<
     ralph: z.lazy(() => RalphPlanRunTuningInputSchema().nullish()),
     repositoryId: z.string().nullish(),
     workingDirectory: z.string().nullish(),
+  });
+}
+
+export function EvalCaseFromTrajectoryInputSchema(): z.ZodObject<
+  Properties<EvalCaseFromTrajectoryInput>
+> {
+  return z.object({
+    goldJson: z.string().min(1),
+    inputJson: z.string().nullish(),
+    split: z.string().min(1),
+    trajectoryId: z.string().min(1),
   });
 }
 
@@ -1193,12 +1236,89 @@ export function RecordAgentTrajectoryInputSchema(): z.ZodObject<
     driver: z.string().min(1),
     durationMs: z.number().nullish(),
     exitCode: z.number().nullish(),
+    idempotencyKey: z.string().nullish(),
     model: z.string().nullish(),
     outcome: z.string().nullish(),
     planRunId: z.string().min(1),
     source: z.string().min(1),
     taskId: z.string().nullish(),
     trajectoryJson: z.string().min(1),
+  });
+}
+
+export function RecordEvalGradeInputSchema(): z.ZodObject<
+  Properties<RecordEvalGradeInput>
+> {
+  return z.object({
+    cacheKey: z.string().nullish(),
+    costUsd: z.number().nullish(),
+    errorReason: z.string().nullish(),
+    evidenceJson: z.string().nullish(),
+    graderId: z.string().min(1),
+    graderKind: z.string().min(1),
+    graderVersion: z.string().min(1),
+    judgeDriver: z.string().nullish(),
+    judgeModel: z.string().nullish(),
+    judgeModelVersion: z.string().nullish(),
+    trialId: z.string().min(1),
+    verdict: z.string().min(1),
+  });
+}
+
+export function RecordEvalRunInputSchema(): z.ZodObject<
+  Properties<RecordEvalRunInput>
+> {
+  return z.object({
+    authMode: z.string().min(1),
+    budgetTokens: z.number().nullish(),
+    budgetUsd: z.number().nullish(),
+    datasetId: z.string().min(1),
+    driver: z.string().min(1),
+    effort: z.string().nullish(),
+    k: z.number(),
+    model: z.string().nullish(),
+    promptSha: z.string().nullish(),
+    skillSha: z.string().nullish(),
+    status: z.string().nullish(),
+  });
+}
+
+export function RecordEvalTrialInputSchema(): z.ZodObject<
+  Properties<RecordEvalTrialInput>
+> {
+  return z.object({
+    attempt: z.number(),
+    caseId: z.string().min(1),
+    costUsd: z.number().nullish(),
+    durationMs: z.number().nullish(),
+    error: z.string().nullish(),
+    runId: z.string().min(1),
+    status: z.string().min(1),
+    trajectoryId: z.string().nullish(),
+  });
+}
+
+export function RecordJudgeCalibrationInputSchema(): z.ZodObject<
+  Properties<RecordJudgeCalibrationInput>
+> {
+  return z.object({
+    catchRate: z.number().nullish(),
+    datasetId: z.string().nullish(),
+    falseFailRate: z.number().nullish(),
+    graderId: z.string().min(1),
+    graderVersion: z.string().min(1),
+    heldOut: z.boolean().default(false),
+    judgeDriver: z.string().nullish(),
+    judgeModel: z.string().min(1),
+    judgeModelVersion: z.string().nullish(),
+    kappa: z.number().nullish(),
+    kappaCiHigh: z.number().nullish(),
+    kappaCiLow: z.number().nullish(),
+    n: z.number(),
+    nExcluded: z.number().default(0),
+    runId: z.string().nullish(),
+    split: z.string().nullish(),
+    status: z.string().min(1),
   });
 }
 
@@ -1708,6 +1828,15 @@ export function UpdateCustomPromptInputSchema(): z.ZodObject<
     title: z.string().nullish(),
     userId: z.string().nullish(),
     writeToFileSystem: z.boolean().default(false),
+  });
+}
+
+export function UpdateEvalRunStatusInputSchema(): z.ZodObject<
+  Properties<UpdateEvalRunStatusInput>
+> {
+  return z.object({
+    runId: z.string().min(1),
+    status: z.string().min(1),
   });
 }
 

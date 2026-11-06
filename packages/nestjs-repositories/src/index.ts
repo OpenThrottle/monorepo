@@ -130,6 +130,20 @@ export type { CodeIndexSnapshotEntry } from './modules/code-index-snapshots/code
 export { CodeIndexSnapshot } from './modules/code-index-snapshots/code-index-snapshot.entity.ts';
 export { DailyStat } from './modules/daily-stats/daily-stat.entity.ts';
 export { DailyStatsService } from './modules/daily-stats/daily-stats.service.ts';
+export { EvalCase } from './modules/eval-datasets/eval-case.entity.ts';
+export { EvalDataset } from './modules/eval-datasets/eval-dataset.entity.ts';
+export {
+  EVAL_DATASET_TARGET,
+  EVAL_SPLIT,
+} from './modules/eval-datasets/eval-datasets.constants.ts';
+export { EvalDatasetsModule } from './modules/eval-datasets/eval-datasets.module.ts';
+export { EvalDatasetsService } from './modules/eval-datasets/eval-datasets.service.ts';
+export type {
+  CreateEvalCaseInput,
+  CreateEvalDatasetInput,
+  EvalDatasetTarget,
+  EvalSplit,
+} from './modules/eval-datasets/eval-datasets.types.ts';
 export { EvalHumanLabel } from './modules/eval-human-labels/eval-human-label.entity.ts';
 export { EVAL_LABEL_VERDICT } from './modules/eval-human-labels/eval-human-labels.constants.ts';
 export { EvalHumanLabelsModule } from './modules/eval-human-labels/eval-human-labels.module.ts';
@@ -139,6 +153,42 @@ export type {
   RemoveEvalHumanLabelInput,
   UpsertEvalHumanLabelInput,
 } from './modules/eval-human-labels/eval-human-labels.types.ts';
+export { EvalJudgeCalibration } from './modules/eval-judge-calibrations/eval-judge-calibration.entity.ts';
+export { EVAL_CALIBRATION_STATUS } from './modules/eval-judge-calibrations/eval-judge-calibrations.constants.ts';
+export { EvalJudgeCalibrationsModule } from './modules/eval-judge-calibrations/eval-judge-calibrations.module.ts';
+export { EvalJudgeCalibrationsService } from './modules/eval-judge-calibrations/eval-judge-calibrations.service.ts';
+export type {
+  CreateEvalJudgeCalibrationInput,
+  EvalCalibrationStatus,
+  EvalJudgeIdentity,
+  EvalJudgePair,
+  EvalJudgePairs,
+  FindEvalJudgePairsInput,
+} from './modules/eval-judge-calibrations/eval-judge-calibrations.types.ts';
+export { EvalGrade } from './modules/eval-runs/eval-grade.entity.ts';
+export { EvalRun } from './modules/eval-runs/eval-run.entity.ts';
+export {
+  EVAL_AUTH_MODE,
+  EVAL_GRADE_VERDICT,
+  EVAL_GRADER_KIND,
+  EVAL_RUN_STATUS,
+  EVAL_TRIAL_STATUS,
+} from './modules/eval-runs/eval-runs.constants.ts';
+export { EvalRunsModule } from './modules/eval-runs/eval-runs.module.ts';
+export { EvalRunsService } from './modules/eval-runs/eval-runs.service.ts';
+export type {
+  CreateEvalRunInput,
+  EvalAuthMode,
+  EvalGraderKind,
+  EvalGradeVerdict,
+  EvalJsonValue,
+  EvalRunStatus,
+  EvalTrialStatus,
+  UpdateEvalRunStatusInput,
+  UpsertEvalGradeInput,
+  UpsertEvalTrialInput,
+} from './modules/eval-runs/eval-runs.types.ts';
+export { EvalTrial } from './modules/eval-runs/eval-trial.entity.ts';
 export type {
   McpConnectorAuthType,
   McpConnectorConnectionData,

@@ -1,0 +1,89 @@
+# evals.runs.$runId
+
+# One run's report. The numbers are computed server-side (evalRunReport); the
+# client only formats them. The fragment is shared with the compare route.
+fragment EvalRunReportFields on EvalRunReport {
+  cases {
+    attemptsCounted
+    attemptsPassed
+    caseId
+    passed
+    split
+  }
+  datasetName
+  graders {
+    calibrationStatus
+    counts
+    graderId
+    graderKind
+    graderVersion
+    judgeModel
+    judgeModelVersion
+    kappa
+    kappaCiHigh
+    kappaCiLow
+  }
+  numbers {
+    casesAtK
+    casesCounted
+    costPerSuccessUsd
+    detectionFloor
+    excluded {
+      errored
+      gradeError
+      noCountedGrade
+      usageLimited
+    }
+    judgeAgreement {
+      graderId
+      graderVersion
+      kappa
+      kappaCiHigh
+      kappaCiLow
+      status
+    }
+    passAtK
+    passHatK
+    passRate
+    passRateCi {
+      confidence
+      lower
+      upper
+    }
+    totalCostUsd
+    trialsCounted
+    trialsExcluded
+    trialsPassed
+  }
+  run {
+    authMode
+    budgetTokens
+    budgetUsd
+    createdAt
+    datasetId
+    datasetVersion
+    driver
+    effort
+    finishedAt
+    id
+    k
+    model
+    promptSha
+    skillSha
+    startedAt
+    status
+  }
+}
+
+query EvalRunReportRoute($runId: ID!) {
+  evalRunReport(runId: $runId) {
+    ...EvalRunReportFields
+  }
+}
+
+# The other runs of the same dataset, offered as comparison baselines.
+query EvalRunReportSiblings($datasetId: ID!) {
+  evalRuns(datasetId: $datasetId) {
+    ...EvalRunListRow
+  }
+}

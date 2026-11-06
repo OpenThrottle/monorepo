@@ -4,14 +4,15 @@ Eval core for agent CLIs (ADR: [eval-system-adr.md](../../docs/openthrottle/eval
 Decisions 7, 8, 9, 11). Pure TypeScript — no NestJS, no database. Entities, resolvers and queue
 wiring belong in `nestjs-repositories` / `openthrottle-server`, not here.
 
-**Consumed by:** nothing yet; `openthrottle-server` (via a later task) and the MCP tool-selection
-eval (task 12).
+**Consumed by:** the MCP tool-selection eval (`openthrottle-mcp`, `src/evals/tool-selection`);
+`openthrottle-server` (via a later task). How suites run:
+[evals-running-suites.md](../../docs/openthrottle/evals-running-suites.md).
 
 ## Layout
 
 - `src/types/` — `EvalCase`, `EvalDataset`, `EvalRunConfig`, `EvalTrial`, `Grader`, `GraderVerdict`, `EvalGrade`.
-- `src/runner/` — `runEval` plus `runDriverIteration`, the default (injectable) agent call.
-- `src/workspace/` — `EvalWorkspaceFactory` and the git-worktree implementation.
+- `src/runner/` — `runEval` plus `runDriverIteration`, the default (injectable) agent call. A `RunEvalIteration` returns `kind: 'driver'` (raw stdout the runner parses) or `kind: 'trajectory'` (a prebuilt ATIF trajectory, for a system under test that is not a CLI; token usage goes in `final_metrics`; failure = reject).
+- `src/workspace/` — `EvalWorkspaceFactory`, the git-worktree implementation and `noopWorkspaceFactory` (no filesystem).
 - `src/judge-cache/` — judge-call verdict cache. Judges only; agent trials are never cached.
 - `src/stats/` — pure statistics; every file has a test whose expected values cite a source.
 

@@ -18,6 +18,8 @@ import type { WorkflowExecuteGraphqlV2 } from '../contract/ralph-orchestrator-de
  */
 export interface RecordIterationTrajectoryInput {
   readonly driver: string;
+  /** The loop iteration, unique within a plan run; part of the idempotency key. */
+  readonly iteration: number;
   readonly model: string | undefined;
   readonly planRunId: string;
   readonly record: TrajectoryRecord;
@@ -40,6 +42,7 @@ export const buildRecordAgentTrajectoryVariables = (
       driver: input.driver,
       durationMs: record.durationMs,
       exitCode: record.exitCode,
+      idempotencyKey: `spawned:${input.planRunId}:${input.iteration}`,
       model: input.model ?? null,
       outcome: record.outcome,
       planRunId: input.planRunId,

@@ -1,3 +1,4 @@
+import type { AtifTrajectory } from '@openthrottle/openthrottle-agentic-utils';
 import { withStructuredOutput } from '@openthrottle/openthrottle-agentic-utils';
 import type {
   DriverRawOutput,
@@ -22,21 +23,43 @@ export interface EvalIterationInput {
 }
 
 /**
- * @description What one agent invocation produced: the raw stdout the trajectory is built from,
- * the recovered text, and how the process ended.
+ * @description What one driver-backed invocation produced: the raw stdout the runner parses into a
+ * trajectory, the recovered text, and how the process ended.
  * @public
  */
-export interface EvalIterationOutput {
+export interface EvalDriverIterationOutput {
   readonly durationMs: number;
   readonly exitCode: number | null;
   readonly finalText: string;
+  readonly kind: 'driver';
   readonly rawStdout: string;
   readonly termination: DriverRunTermination;
   readonly usageLimit: UsageLimit | null;
 }
 
 /**
- * @description The injectable agent invocation. Rejects only when the agent could not be launched.
+ * @description What a system under test that is not an agent CLI produced: a prebuilt ATIF
+ * trajectory. Usage and cost travel in the trajectory's own `final_metrics`; the runner stores it as is
+ * and reads its token total from there for the budget. Such an iteration signals failure by rejecting.
+ * @public
+ */
+export interface EvalTrajectoryIterationOutput {
+  readonly durationMs: number;
+  readonly finalText: string;
+  readonly kind: 'trajectory';
+  readonly trajectory: AtifTrajectory;
+}
+
+/**
+ * @description What one invocation produced, discriminated by `kind`: a driver run the runner
+ * parses, or a prebuilt trajectory.
+ * @public
+ */
+export type EvalIterationOutput =
+  EvalDriverIterationOutput | EvalTrajectoryIterationOutput;
+
+/**
+ * @description The injectable agent invocation. Rejects when the agent could not be launched (or, for a trajectory iteration, when the system under test failed); the runner records that as an `errored` trial.
  * @public
  */
 export type RunEvalIteration = (
@@ -80,6 +103,7 @@ export const runDriverIteration: RunEvalIteration = async (input) => {
     durationMs: raw?.durationMs ?? 0,
     exitCode: raw?.exitCode ?? null,
     finalText,
+    kind: 'driver',
     rawStdout: raw?.stdout ?? '',
     termination: raw?.termination ?? 'exited',
     usageLimit,

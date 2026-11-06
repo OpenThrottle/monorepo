@@ -212,6 +212,7 @@ describe('captureSessionTrajectories', () => {
       expect(server.posted[0]?.input).toMatchObject({
         driver: 'claude',
         exitCode: null,
+        idempotencyKey: `session:${SESSION}:t-begin-1`,
         model: 'claude-opus-5-5',
         outcome: 'completed',
         planRunId: 'run-1',
@@ -384,6 +385,7 @@ describe('captureSessionTrajectories', () => {
         .split('\n');
       expect(buffered).toHaveLength(1);
       expect(JSON.parse(buffered[0] ?? '')).toMatchObject({
+        idempotencyKey: `session:${SESSION}:t-begin-1`,
         source: 'session_upload',
         taskId: 'task-1',
       });
@@ -401,7 +403,10 @@ describe('captureSessionTrajectories', () => {
         .readFileSync(deadLetterPathFor(defaultTrajectoriesJsonlPath()), 'utf8')
         .trim();
       expect(JSON.parse(dead)).toMatchObject({
-        line: { taskId: 'task-1' },
+        line: {
+          idempotencyKey: `session:${SESSION}:t-begin-1`,
+          taskId: 'task-1',
+        },
         reason: 'http 413',
       });
     });

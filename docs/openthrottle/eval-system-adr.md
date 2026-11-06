@@ -236,7 +236,8 @@ Entities and repositories go in `packages/nestjs-repositories`; resolvers and qu
 server, so check the server-consumed-packages rule before choosing source-first.
 
 The MCP tool-selection eval moves onto this core last (task 12). Its per-model baselines and its
-"CI runs only the grader" rule are kept.
+"CI runs only the grader" rule are kept. Done: it runs `runEval` with its own `RunEvalIteration` (one
+model call, converted to an ATIF trajectory), `noopWorkspaceFactory` and a `code` grader.
 
 ## Decision 8 — Credentials: subscriptions allowed, with guard rails
 
@@ -310,6 +311,11 @@ session_upload`), after task 4.
 - **New task: add `FEATURE_DELTA_PREVIEW`**, before the first UI task (task 5).
 - Tasks 3 and 8 implement Decisions 5 and 6. Task 6 implements Decisions 7 and 9. Tasks 10 and 11
   implement Decisions 8–10.
+
+## See also
+
+- [evals-running-suites.md](./evals-running-suites.md): how suites are run (the `eval-<suite>` Nx
+  target convention, running across drivers, why live suites never run in CI).
 
 ## When to revisit
 

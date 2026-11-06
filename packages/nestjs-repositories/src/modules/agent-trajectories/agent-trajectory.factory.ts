@@ -22,6 +22,7 @@ export const agentTrajectoryFactory = Factory.define<AgentTrajectory>(() => ({
   durationMs: faker.number.int({ max: 600_000, min: 1_000 }),
   exitCode: 0,
   id: faker.string.uuid(),
+  idempotencyKey: null,
   incomplete: false,
   inputTokens: faker.number.int({ max: 50_000, min: 100 }),
   model: 'claude-sonnet-5-5',
