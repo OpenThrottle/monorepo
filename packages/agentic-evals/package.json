@@ -9,7 +9,9 @@
     "@openthrottle/openthrottle-drivers": "workspace:^"
   },
   "description": "Eval core for agent CLIs: dataset/trial/grader types, a k-attempt runner built on the OpenThrottle drivers, a judge-call cache, and the statistics (bootstrap CI, McNemar, pass@k, kappa, detection floor).",
-  "devDependencies": {},
+  "devDependencies": {
+    "vitest": "catalog:"
+  },
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",
