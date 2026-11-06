@@ -16,16 +16,23 @@
  */
 import { randomUUID } from 'node:crypto';
 
+import type { DynamicModule } from '@nestjs/common';
 import { Module } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { McpModule, McpTransportType } from '@rekog/mcp-nest';
 
 import {
+  buildServerInstructions,
   getServerName,
-  SERVER_INSTRUCTIONS,
   SERVER_VERSION,
 } from './config/index.ts';
+import type { ToolsetName } from './config/toolsets.ts';
+import {
+  enabledToolsetsFromProcess,
+  setActiveToolsets,
+} from './config/toolsets.ts';
 import { mcpHttpAuthMiddleware } from './http/mcp-http-auth.middleware.ts';
+import { mcpToolsetPrunerProvider } from './nest/mcp-toolset-pruner.service.ts';
 import { McpDeveloperMcpSurface } from './nest/openthrottle-mcp-mcp-surface.ts';
 
 const DEFAULT_HTTP_PORT = 6026;
@@ -109,44 +116,60 @@ async function preflightAuth(): Promise<void> {
   }
 }
 
-@Module({
-  imports: [
-    McpModule.forRoot({
-      capabilities: { resources: {}, tools: {} },
-      instructions: SERVER_INSTRUCTIONS,
-      name: SERVER_NAME,
-      // Stateful streamable HTTP: issue an Mcp-Session-Id on initialize and serve
-      // the GET SSE stream. @rekog defaults to stateless (no session id, GET /mcp
-      // → 405), which leaves spec-compliant clients (Claude Code, Cursor) connected
-      // but showing 0 tools because they can't establish the session/notification
-      // channel. `enableJsonResponse` keeps single-shot POSTs returning JSON.
-      streamableHttp: {
-        enableJsonResponse: true,
-        sessionIdGenerator: () => randomUUID(),
-        statelessMode: false,
-      },
-      transport: McpTransportType.STREAMABLE_HTTP,
-      version: SERVER_VERSION,
-    }),
-    McpModule.forFeature([McpDeveloperMcpSurface], SERVER_NAME),
-  ],
-  providers: [McpDeveloperMcpSurface],
-})
-export class McpHttpRootModule {}
+@Module({})
+export class McpHttpRootModule {
+  /**
+   * @description The HTTP app's root module, serving only `toolsets` (process-level: every client of
+   * this service gets the same set; there is no per-request selection).
+   */
+  static forToolsets(toolsets: ReadonlySet<ToolsetName>): DynamicModule {
+    return {
+      imports: [
+        McpModule.forRoot({
+          capabilities: { resources: {}, tools: {} },
+          instructions: buildServerInstructions(toolsets),
+          name: SERVER_NAME,
+          // Stateful streamable HTTP: issue an Mcp-Session-Id on initialize and serve
+          // the GET SSE stream. @rekog defaults to stateless (no session id, GET /mcp
+          // → 405), which leaves spec-compliant clients (Claude Code, Cursor) connected
+          // but showing 0 tools because they can't establish the session/notification
+          // channel. `enableJsonResponse` keeps single-shot POSTs returning JSON.
+          streamableHttp: {
+            enableJsonResponse: true,
+            sessionIdGenerator: () => randomUUID(),
+            statelessMode: false,
+          },
+          transport: McpTransportType.STREAMABLE_HTTP,
+          version: SERVER_VERSION,
+        }),
+        // No McpModule.forFeature: the surface is a provider of this module, which imports
+        // McpModule.forRoot, so rekog's subtree scan already finds it. Registering it again
+        // via forFeature listed every tool twice.
+      ],
+      module: McpHttpRootModule,
+      providers: [McpDeveloperMcpSurface, mcpToolsetPrunerProvider(toolsets)],
+    };
+  }
+}
 
 export async function runServerHttp(): Promise<void> {
+  const toolsets = enabledToolsetsFromProcess();
+  setActiveToolsets(toolsets);
   warnIfAuthTokenMissing();
   await preflightAuth();
   const port = resolvePort();
-  const app = await NestFactory.create(McpHttpRootModule, {
-    logger: ['error', 'warn', 'log'],
-  });
+  const app = await NestFactory.create(
+    McpHttpRootModule.forToolsets(toolsets),
+    {
+      logger: ['error', 'warn', 'log'],
+    },
+  );
   // Per-request identity: Authorization: Bearer <token> → request-scoped store,
   // so machine tools use the env ot_sa token and agent_conversation_* can use a
   // client-supplied human JWT. Registered before listen() so it wraps the routes.
   app.use(mcpHttpAuthMiddleware());
   await app.listen(port);
   console.error(
-    `[openthrottle-mcp:http] STREAMABLE_HTTP listening on http://0.0.0.0:${port}/mcp (server: ${SERVER_NAME})`,
+    `[openthrottle-mcp:http] STREAMABLE_HTTP listening on http://0.0.0.0:${port}/mcp (server: ${SERVER_NAME}, toolsets: ${[...toolsets].join(',')})`,
   );
 }

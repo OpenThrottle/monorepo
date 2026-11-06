@@ -55,8 +55,9 @@ const logger = createLogger({ stream: process.stderr });
  * That literal is non-empty, so a bare emptiness guard would send it as a
  * bearer token → server 401. Treat any value containing "${" as unset.
  */
-export const isUnexpandedPlaceholder = (value: string | undefined): boolean =>
-  value !== undefined && value.includes('${');
+export const isUnexpandedPlaceholder = (value: string | undefined): boolean => {
+  return value !== undefined && value.includes('${');
+};
 
 /**
  * The first published host port of a running container whose name mentions
@@ -302,10 +303,10 @@ const main = async (): Promise<void> => {
 
   // The main/root checkout's .env (the shared STABLE server).
   const rootRepo = primaryCheckoutDir();
-  const rootUrl =
-    rootRepo === undefined
-      ? ''
-      : readEnvValue(join(rootRepo, '.env'), 'OPENTHROTTLE_SERVER_APP_URL');
+  const hasNoRootRepo = rootRepo === undefined;
+  const rootUrl = hasNoRootRepo
+    ? ''
+    : readEnvValue(join(rootRepo, '.env'), 'OPENTHROTTLE_SERVER_APP_URL');
 
   // A running docker "server" container's published host port (covers the
   // case where neither .env matched the only live server).
@@ -367,10 +368,10 @@ const main = async (): Promise<void> => {
   ) {
     // prettier-ignore
     const worktreeToken = readEnvValue(join(root, '.env'), 'OPENTHROTTLE_MCP_AUTH_TOKEN'); // prettier-ignore
-    const rootToken =
-      rootRepo === undefined
-        ? ''
-        : readEnvValue(join(rootRepo, '.env'), 'OPENTHROTTLE_MCP_AUTH_TOKEN');
+    const hasNoRootCheckout = rootRepo === undefined;
+    const rootToken = hasNoRootCheckout
+      ? ''
+      : readEnvValue(join(rootRepo, '.env'), 'OPENTHROTTLE_MCP_AUTH_TOKEN');
 
     if (worktreeToken !== '') {
       env.OPENTHROTTLE_MCP_AUTH_TOKEN = worktreeToken;
@@ -416,10 +417,11 @@ const main = async (): Promise<void> => {
       smoke = undefined;
     }
 
-    const verdict =
-      smoke === undefined
-        ? 'inconclusive'
-        : classifyAuthSmoke(smoke.status, smoke.body);
+    const settledSmoke = smoke;
+    const hasNoSmoke = settledSmoke === undefined;
+    const verdict = hasNoSmoke
+      ? 'inconclusive'
+      : classifyAuthSmoke(settledSmoke.status, settledSmoke.body);
 
     if (verdict === 'rejected') {
       authFailBanner(`server rejected the token: ${smoke?.body.slice(0, 200) ?? `HTTP ${smoke?.status}`}`, apiUrl); // prettier-ignore
@@ -435,7 +437,8 @@ const main = async (): Promise<void> => {
   // Semantic search embeddings are configured on openthrottle-server
   // (OPENAI_API_KEY or OLLAMA_* in applications/openthrottle-server/.env),
   // not in this launcher. See docs/monorepo/Ollama.md § Embeddings for OpenThrottle.
-  const outcome = spawnSync('node', ['packages/openthrottle-mcp/dist/src/bin.js'], { cwd: root, env, stdio: 'inherit' }); // prettier-ignore
+  // Forward the launcher's own arguments (e.g. `--toolsets=blog`) so an MCP config's `args` reach the server.
+  const outcome = spawnSync('node', ['packages/openthrottle-mcp/dist/src/bin.js', ...process.argv.slice(2)], { cwd: root, env, stdio: 'inherit' }); // prettier-ignore
 
   process.exit(outcome.status ?? 1);
 };

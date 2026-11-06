@@ -1,5 +1,5 @@
 {
-  "$comment": "Byte caps for model-facing text (OT plan cb4359d4). Measured 2026-11-04 on 0c138881 by task a92aaa6b; enforced by scripts/check-model-facing-text.ts (task 503936c8). Bytes are UTF-8. MCP tool bytes are the serialized tools/list entry (name + description + JSON input schema). The per-item baseline the gate diffs against lives in model-facing-text.snapshot.json; these caps are the hard ceiling no change may cross without raising the cap here (reviewed) or the model-facing-text-override PR label. Always injected into every session: mcpInstructions, mcpTools, every skillDescription, so totals.alwaysInjected is their sum (~15-17k tokens at 3.5-4 bytes/token). Skill bodies and prompt files load only on demand.",
+  "$comment": "Byte caps for model-facing text (OT plan cb4359d4; policy from plan d7266de7). Enforced by scripts/check-model-facing-text.ts. Bytes are UTF-8. MCP tool bytes are the serialized tools/list entry (name + description + JSON input schema). The per-item baseline the gate diffs against lives in model-facing-text.snapshot.json; these caps are the hard ceiling no change may cross without a reviewed change here or the model-facing-text-override PR label (emergencies only). POLICY: (1) totals.mcpTools caps the DEFAULT toolset (core): the tools an unconfigured client gets. The full surface and each toolset are reported, not capped as totals; every tool keeps its per-item caps whatever its toolset. (2) totals.alwaysInjected = default-config mcpInstructions + default mcpTools + every skillDescription, assuming the worst-case client that injects every schema at session start. (3) A total cap is measured x 1.2 rounded up to 1 KiB whenever it is calibrated (`pnpm nx run monorepo:check-model-facing-text -- --suggest-caps` prints them). Last calibrated 2026-11-06 on feat/mcp-toolsets: alwaysInjected 40698, mcpInstructions 2125, mcpTools 33817 (core, 42 tools; full surface 58628), prompts 119941, skills 179969. (4) Before raising a cap: trim the text, or move an MCP tool out of the default toolset if default workflows don't need it. (5) perItemOverrides lifts ONE item above its class cap, for an item whose own x 1.2 headroom does not fit under that class cap, and needs a reason; the gate reports overrides that are no longer needed. Skill bodies and prompt files load only on demand.",
   "perItem": {
     "mcpToolDescription": 1536,
     "mcpToolEntry": 2560,
@@ -7,11 +7,17 @@
     "skillBody": 32768,
     "skillDescription": 1024
   },
+  "perItemOverrides": {
+    "skill/ot-loop": {
+      "cap": 37888,
+      "reason": "ot-loop is the canonical per-task discipline for running a plan. It deliberately keeps the loop, model routing, fan-out, run-row and finishing rules in one file, so agents never need a second read mid-run. At 30762 B (94% of the 32768 B class cap) any edit tripped the gate. Capped at measured x 1.2 per the headroom policy; it loads only when /ot-loop runs."
+    }
+  },
   "totals": {
-    "alwaysInjected": 68000,
-    "mcpInstructions": 2048,
-    "mcpTools": 60000,
-    "prompts": 128000,
-    "skills": 192000
+    "alwaysInjected": 49152,
+    "mcpInstructions": 3072,
+    "mcpTools": 40960,
+    "prompts": 144384,
+    "skills": 216064
   }
 }

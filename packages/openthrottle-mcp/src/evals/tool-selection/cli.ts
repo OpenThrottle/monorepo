@@ -10,6 +10,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 
+import { TOOLSET_NAMES } from '../../config/toolsets.ts';
 import { listToolSurface } from '../../model-facing-text/list-tool-surface.ts';
 import { createAnthropicToolSelector } from './anthropic-tool-selector.ts';
 import type { BaselineComparison, RunResult } from './compare-baseline.ts';
@@ -171,7 +172,7 @@ export async function main(argv: readonly string[]): Promise<number> {
     return 2;
   }
 
-  const surface = await listToolSurface();
+  const surface = await listToolSurface(new Set(TOOLSET_NAMES));
   const selector = createAnthropicToolSelector({
     apiKey,
     baseUrl: process.env['ANTHROPIC_BASE_URL'] ?? 'https://api.anthropic.com',

@@ -3,8 +3,32 @@ import 'reflect-metadata';
 import { describe, expect, it } from 'vitest';
 import type { z } from 'zod';
 
+import type { ToolsetName } from './config/toolsets.ts';
+import {
+  DEFAULT_TOOLSETS,
+  resolveToolsets,
+  TOOLSET_NAMES,
+} from './config/toolsets.ts';
+import { listToolSurface } from './model-facing-text/list-tool-surface.ts';
 import { McpDeveloperMcpSurface } from './nest/openthrottle-mcp-mcp-surface.ts';
-import { developerMcpToolDefinitions } from './tool-registry.ts';
+import {
+  developerMcpToolDefinitions,
+  developerMcpToolsIn,
+} from './tool-registry.ts';
+
+/**
+ * @description The toolsets a server resolves from an empty command line and the given environment.
+ */
+const enabledToolsetsFromEnv = (
+  env: Readonly<Record<string, string | undefined>>,
+): ReadonlySet<ToolsetName> => {
+  const resolution = resolveToolsets([], env);
+  if (!resolution.ok) {
+    throw new Error(resolution.error);
+  }
+
+  return resolution.toolsets;
+};
 
 /**
  * @description `@rekog/mcp-nest` stores `@Tool` options under this Reflect metadata key on the decorated method.
@@ -72,5 +96,37 @@ describe('developer MCP tool surface parity', () => {
       expect(surfaceTool?.parameters).toBe(registryTool.parameters);
       expect(surfaceTool?.description).toBe(registryTool.description);
     }
+  });
+});
+
+describe('developer MCP toolsets', () => {
+  it('puts every tool in exactly one known toolset', () => {
+    for (const tool of developerMcpToolDefinitions) {
+      expect(TOOLSET_NAMES, `tool "${tool.name}"`).toContain(tool.toolset);
+    }
+
+    const memberships = TOOLSET_NAMES.flatMap((name) =>
+      developerMcpToolsIn(new Set([name])).map((tool) => tool.name),
+    );
+    expect(memberships.sort()).toEqual(
+      developerMcpToolDefinitions.map((tool) => tool.name).sort(),
+    );
+  });
+
+  it('gives every toolset at least one tool', () => {
+    for (const name of TOOLSET_NAMES) {
+      expect(developerMcpToolsIn(new Set([name])).length, name).toBeGreaterThan(0); // prettier-ignore
+    }
+  });
+
+  it('serves only the default toolsets to a client when nothing is configured', async () => {
+    const surface = await listToolSurface(enabledToolsetsFromEnv({}));
+
+    const expected = developerMcpToolDefinitions
+      .filter((tool) => DEFAULT_TOOLSETS.includes(tool.toolset))
+      .map((tool) => tool.name);
+    expect(surface.tools.map((tool) => tool.name).sort()).toEqual(
+      expected.sort(),
+    );
   });
 });

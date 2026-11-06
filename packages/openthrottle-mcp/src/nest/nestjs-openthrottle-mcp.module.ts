@@ -3,6 +3,11 @@ import { LoggerModule } from '@openthrottle/nestjs-modules';
 import type { McpOptions } from '@rekog/mcp-nest';
 import { McpModule, McpTransportType } from '@rekog/mcp-nest';
 
+import {
+  enabledToolsetsFromProcess,
+  setActiveToolsets,
+} from '../config/toolsets.ts';
+import { mcpToolsetPrunerProvider } from './mcp-toolset-pruner.service.ts';
 import { NestjsMcpDeveloperService } from './nestjs-openthrottle-mcp.service.ts';
 import type { NestjsMcpDeveloperBootstrapOptions } from './nestjs-openthrottle-mcp-bootstrap-options.interface.ts';
 import { McpDeveloperMcpSurface } from './openthrottle-mcp-mcp-surface.ts';
@@ -28,19 +33,27 @@ const buildMcpRootOptions = (
 @Module({})
 export class NestjsMcpDeveloperModule {
   /**
-   * @description Registers structured logging and MCP server wiring. Defaults to STDIO; set `transport` for SSE or streamable HTTP when hosting in-process.
+   * @description Registers structured logging and MCP server wiring. Defaults to STDIO; set `transport` for SSE or streamable HTTP when hosting in-process. Serves only `options.toolsets` (default: resolved from the process, which is `core` unless configured).
    */
   static forRoot(options: NestjsMcpDeveloperBootstrapOptions): DynamicModule {
-    const serverName = options.name;
+    const toolsets = options.toolsets ?? enabledToolsetsFromProcess();
+    setActiveToolsets(toolsets);
+
     return {
       exports: [McpModule, McpDeveloperMcpSurface, NestjsMcpDeveloperService],
       imports: [
         LoggerModule,
+        // No McpModule.forFeature: McpDeveloperMcpSurface is a provider of this module, which
+        // imports McpModule.forRoot, so rekog's subtree scan already finds it. Registering it again
+        // via forFeature listed every tool twice in tools/list.
         McpModule.forRoot(buildMcpRootOptions(options)),
-        McpModule.forFeature([McpDeveloperMcpSurface], serverName),
       ],
       module: NestjsMcpDeveloperModule,
-      providers: [McpDeveloperMcpSurface, NestjsMcpDeveloperService],
+      providers: [
+        McpDeveloperMcpSurface,
+        mcpToolsetPrunerProvider(toolsets),
+        NestjsMcpDeveloperService,
+      ],
     };
   }
 }

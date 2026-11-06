@@ -37,7 +37,8 @@ through the package's ordinary `test` target.
 
 ## How a trial works
 
-`cli.ts` lists the live surface through `listToolSurface()`, the same path the byte-budget measurement uses.
+`cli.ts` lists the live surface through `listToolSurface()`, the same path the byte-budget measurement uses,
+with every toolset enabled (`all`, not the lean `core` default) so cases for opt-in tools stay covered.
 It then sends one Messages API request per trial. The request carries every OT tool, four generic harness
 tools (`bash`, `read_file`, `edit_file`, `write_file`), and the server instructions in the system prompt,
 injected the way an MCP client injects them. `tool_choice` is `auto`. Nothing is executed and there is no
