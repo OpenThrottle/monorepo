@@ -694,8 +694,14 @@ queues/usage-limit/
   `queues/plans/plan-cancel-channel.service.ts` or `plans-cancel-channel.service.ts`. A
   folder makes the second unit visible; a qualifier stacked on the name hides it.
 - **Subject-named kinds** — `decorator`, `entity`, `enum`, `executor`, `factory`, `guard`,
-  `input`, `mapper`, `object`, `options`, `policy`, `strategy`, `token` — describe one thing
-  each and sit many to a folder, so their stem is free (`graphql/queues/job.object.ts`).
+  `input`, `mapper`, `object`, `options`, `policy`, `provider`, `strategy`, `token` —
+  describe one thing each and sit many to a folder, so their stem is free
+  (`graphql/queues/job.object.ts`).
+- **A Nest custom provider is a `.provider.ts`**, named for what it provides: the
+  `FactoryProvider` that builds a service sits beside it as
+  `nest/mcp-toolset-pruner.provider.ts` next to `nest/mcp-toolset-pruner.service.ts`. The kind
+  is singular only — `.providers.ts` is reported. (`.factory.ts` is something else: a Fishery
+  test-data factory.)
 - **Every file has a kind.** `reading-time-minutes.ts` is reported; it is a `.utils.ts`.
   Kinds outside the two lists (`.dates.ts`, `.parser.ts`, `.cron.ts`) are reported too —
   they are `.utils.ts` under another name.
@@ -708,19 +714,21 @@ queues/usage-limit/
 
 **The kind is a promise about the exports**, checked by `nestjs-file-exports`:
 
-| Kind                                                | Exports                                                            |
-| --------------------------------------------------- | ------------------------------------------------------------------ |
-| `.module.ts`                                        | exactly one `@Module()` class, nothing else                        |
-| `.service.ts`                                       | exactly one `@Injectable()` class, nothing else                    |
-| `.processor.ts` / `.resolver.ts` / `.controller.ts` | exactly one `@Processor()` / `@Resolver()` / `@Controller()` class |
-| `.utils.ts`                                         | functions only                                                     |
-| `.types.ts`                                         | types and interfaces only                                          |
-| `.constants.ts`                                     | non-function `const` values only                                   |
+| Kind                                                | Exports                                                                                                      |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `.module.ts`                                        | exactly one `@Module()` class, nothing else                                                                  |
+| `.service.ts`                                       | exactly one `@Injectable()` class, nothing else                                                              |
+| `.processor.ts` / `.resolver.ts` / `.controller.ts` | exactly one `@Processor()` / `@Resolver()` / `@Controller()` class                                           |
+| `.utils.ts`                                         | functions only                                                                                               |
+| `.types.ts`                                         | types and interfaces only                                                                                    |
+| `.constants.ts`                                     | non-function `const` values only                                                                             |
+| `.provider.ts`                                      | Nest provider values only: `const` provider objects/arrays or functions returning them; no classes, no types |
 
 So a result type a service returns lives in the folder's `.types.ts`, and a helper it
 exports for a test lives in `.utils.ts` — see
-`queues/scheduled-agent-jobs/usage-limit-resume/` for both. Subject-named kinds and tests
-are not export-checked.
+`queues/scheduled-agent-jobs/usage-limit-resume/` for both. `.provider.ts` is the one
+subject-named kind that is export-checked, so a file of interfaces and an injection token cannot
+pass as a provider on its name alone; the other subject-named kinds and tests are not.
 
 ## Components and files
 

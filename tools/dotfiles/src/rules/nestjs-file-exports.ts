@@ -16,9 +16,14 @@ import { parseNestFile } from './nestjs-file-shared.ts';
  *   - `.utils.ts` exports only functions.
  *   - `.types.ts` exports only types and interfaces.
  *   - `.constants.ts` exports only `const` values that are not functions.
+ *   - `.provider.ts` exports only Nest provider values: `const` provider
+ *     objects or arrays, or functions returning them. An injectable class is a
+ *     `.service.ts`, and a type goes in `.types.ts`.
  *
- * Subject-named kinds (`.object.ts`, `.input.ts`, …) and test files are not
- * checked.
+ * `.provider.ts` is the one subject-named kind with an export check, because
+ * its name alone cannot stop a file of types and tokens from calling itself a
+ * provider. The other subject-named kinds (`.object.ts`, `.input.ts`, …) and
+ * test files are not checked.
  */
 
 type ExportShape = 'class' | 'constant' | 'function' | 'other' | 'type';
@@ -40,13 +45,28 @@ const PROVIDER_DECORATORS: Readonly<Record<string, string>> = {
   service: 'Injectable',
 };
 
-/** What each non-provider kind may export, and how the message names it. */
-const ALLOWED_SHAPES: Readonly<
-  Record<string, { readonly label: string; readonly shape: ExportShape }>
-> = {
-  constants: { label: 'non-function `const` values', shape: 'constant' },
-  types: { label: 'types and interfaces', shape: 'type' },
-  utils: { label: 'functions', shape: 'function' },
+interface AllowedExports {
+  /** Where a misplaced export of a given shape goes, overriding {@link HOME_BY_SHAPE}. */
+  readonly homes: Readonly<Partial<Record<ExportShape, string>>>;
+  /** How the message names what the kind allows. */
+  readonly label: string;
+  readonly shapes: readonly ExportShape[];
+}
+
+/** What each kind without a decorated class may export, and how the message names it. */
+const ALLOWED_SHAPES: Readonly<Record<string, AllowedExports>> = {
+  constants: {
+    homes: {},
+    label: 'non-function `const` values',
+    shapes: ['constant'],
+  },
+  provider: {
+    homes: { class: 'a `.service.ts` in its own folder' },
+    label: `Nest provider values (\`const\` provider objects or arrays, or functions returning them)`,
+    shapes: ['constant', 'function'],
+  },
+  types: { homes: {}, label: 'types and interfaces', shapes: ['type'] },
+  utils: { homes: {}, label: 'functions', shapes: ['function'] },
 };
 
 /** Where a misplaced export belongs, by its shape. */
@@ -259,11 +279,12 @@ export const nestjsFileExports = createRule<[], MessageIds>({
 
         if (allowed === undefined) return;
         for (const binding of exported) {
-          if (binding.shape === allowed.shape) continue;
+          if (allowed.shapes.includes(binding.shape)) continue;
           context.report({
             data: {
               allowed: allowed.label,
-              home: HOME_BY_SHAPE[binding.shape],
+              home:
+                allowed.homes[binding.shape] ?? HOME_BY_SHAPE[binding.shape],
               kind,
               name: binding.name,
             },

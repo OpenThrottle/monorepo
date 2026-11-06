@@ -32,7 +32,7 @@ import {
   setActiveToolsets,
 } from './config/toolsets.ts';
 import { mcpHttpAuthMiddleware } from './http/mcp-http-auth.middleware.ts';
-import { mcpToolsetPrunerProvider } from './nest/mcp-toolset-pruner.service.ts';
+import { mcpToolsetPrunerProvider } from './nest/mcp-toolset-pruner.provider.ts';
 import { McpDeveloperMcpSurface } from './nest/openthrottle-mcp-mcp-surface.ts';
 
 const DEFAULT_HTTP_PORT = 6026;

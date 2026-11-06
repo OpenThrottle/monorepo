@@ -10,10 +10,9 @@ export { McpTransportType } from '@rekog/mcp-nest';
 export type { NestjsMcpDeveloperBootstrapOptions } from './nestjs-openthrottle-mcp-bootstrap-options.interface.ts';
 
 /** @public */
-export {
-  mcpToolsetPrunerProvider,
-  McpToolsetPrunerService,
-} from './mcp-toolset-pruner.service.ts';
+export { mcpToolsetPrunerProvider } from './mcp-toolset-pruner.provider.ts';
+/** @public */
+export { McpToolsetPrunerService } from './mcp-toolset-pruner.service.ts';
 /** @public */
 export { McpDeveloperMcpSurface } from './openthrottle-mcp-mcp-surface.ts';
 /** @public */

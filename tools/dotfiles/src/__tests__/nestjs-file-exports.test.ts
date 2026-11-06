@@ -203,3 +203,112 @@ export const helper = 1;
     },
   ],
 });
+
+// `.provider.ts` is the one subject-named kind with an export check: Nest
+// provider values only.
+const PROVIDER = 'src/nest/mcp-toolset-pruner.provider.ts';
+const PROVIDER_ALLOWED = `Nest provider values (\`const\` provider objects or arrays, or functions returning them)`;
+
+ruleTester.run('nestjs-file-exports: .provider.ts', nestjsFileExports, {
+  invalid: [
+    // An injectable class is a service, not a provider value.
+    {
+      code: `@Injectable()
+export class McpToolsetPrunerService {}
+
+export const mcpToolsetPrunerProvider = (): FactoryProvider => ({
+  provide: McpToolsetPrunerService,
+  useFactory: () => new McpToolsetPrunerService(),
+});
+`,
+      errors: [
+        {
+          data: {
+            allowed: PROVIDER_ALLOWED,
+            home: 'a `.service.ts` in its own folder',
+            kind: 'provider',
+            name: 'McpToolsetPrunerService',
+          },
+          messageId: 'wrongExport',
+        },
+      ],
+      filename: PROVIDER,
+    },
+    // A type beside the provider goes in `.types.ts`: the misuse the check
+    // exists for (a seam's interfaces and token under a provider name).
+    {
+      code: `export interface TaggingModelProvider {
+  readonly tag: (text: string) => Promise<string[]>;
+}
+
+export const TAGGING_MODEL_PROVIDER_TOKEN = Symbol('TaggingModelProvider');
+`,
+      errors: [
+        {
+          data: {
+            allowed: PROVIDER_ALLOWED,
+            home: '`<folder>.types.ts`',
+            kind: 'provider',
+            name: 'TaggingModelProvider',
+          },
+          messageId: 'wrongExport',
+        },
+      ],
+      filename: 'src/queues/tagging/tagging-model.provider.ts',
+    },
+    // Neither an enum nor a re-export of everything is a provider value.
+    {
+      code: `export enum Toolset {
+  Core = 'core',
+}
+
+export * from './mcp-toolset-pruner.service.ts';
+`,
+      errors: [{ messageId: 'wrongExport' }, { messageId: 'wrongExport' }],
+      filename: PROVIDER,
+    },
+  ],
+  valid: [
+    // A factory function returning a FactoryProvider.
+    {
+      code: `import type { FactoryProvider } from '@nestjs/common';
+
+import { McpToolsetPrunerService } from './mcp-toolset-pruner.service.ts';
+
+export const mcpToolsetPrunerProvider = (
+  toolsets: readonly string[],
+): FactoryProvider<McpToolsetPrunerService> => {
+  return {
+    provide: McpToolsetPrunerService,
+    useFactory: () => new McpToolsetPrunerService(toolsets),
+  };
+};
+
+export function legacyPrunerProvider(): FactoryProvider<McpToolsetPrunerService> {
+  return mcpToolsetPrunerProvider([]);
+}
+`,
+      filename: PROVIDER,
+    },
+    // A `const` array of providers, and a single provider object.
+    {
+      code: `export const databaseProviders = [
+  { provide: 'DATA_SOURCE', useFactory: () => ({}) },
+];
+
+export const databaseUrlProvider = { provide: 'DATABASE_URL', useValue: '' };
+`,
+      filename: 'src/modules/database/database.provider.ts',
+    },
+    // A test of a provider is not export-checked.
+    {
+      code: `export class FakePruner {}
+
+export interface Fixture {
+  readonly toolsets: readonly string[];
+}
+`,
+      filename: 'src/nest/mcp-toolset-pruner.provider.test.ts',
+    },
+  ],
+});

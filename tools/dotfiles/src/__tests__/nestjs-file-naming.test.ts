@@ -1,7 +1,8 @@
 import { RuleTester } from '@typescript-eslint/rule-tester';
-import { afterAll, describe, it } from 'vitest';
+import { afterAll, describe, expect, it } from 'vitest';
 
 import { nestjsFileNaming } from '../rules/nestjs-file-naming.ts';
+import { FOLDER_KINDS, SUBJECT_KINDS } from '../rules/nestjs-file-shared.ts';
 
 // Wire the framework hooks the RuleTester calls to Vitest's.
 RuleTester.afterAll = afterAll;
@@ -13,6 +14,21 @@ const ruleTester = new RuleTester();
 
 // The rule reads only the path; the source is irrelevant to it.
 const CODE = 'export const value = 1;\n';
+
+// The kind list both messages print, built the way the rule builds it.
+const KINDS = [...FOLDER_KINDS, ...SUBJECT_KINDS]
+  .map((kind) => `.${kind}.ts`)
+  .join(', ');
+
+describe('the kind list in the messages', () => {
+  it('names the provider kind', () => {
+    expect(KINDS).toContain('.provider.ts');
+  });
+
+  it('does not name a plural providers kind', () => {
+    expect(KINDS).not.toContain('.providers.ts');
+  });
+});
 
 ruleTester.run('nestjs-file-naming', nestjsFileNaming, {
   invalid: [
@@ -27,6 +43,37 @@ ruleTester.run('nestjs-file-naming', nestjsFileNaming, {
       code: CODE,
       errors: [{ messageId: 'unknownKind' }],
       filename: 'src/queues/daily-stats/daily-stats.dates.ts',
+    },
+    // Provider is singular only: the plural spelling is not a kind, and the
+    // message lists `.provider.ts` among the kinds to use instead.
+    {
+      code: CODE,
+      errors: [
+        {
+          data: {
+            basename: 'database.providers.ts',
+            kind: 'providers',
+            kinds: KINDS,
+          },
+          messageId: 'unknownKind',
+        },
+      ],
+      filename: 'src/modules/database/database.providers.ts',
+    },
+    // A kindless file's message lists the provider kind too.
+    {
+      code: CODE,
+      errors: [
+        {
+          data: {
+            basename: 'tagging-model-providers.ts',
+            folder: 'tagging',
+            kinds: KINDS,
+          },
+          messageId: 'missingKind',
+        },
+      ],
+      filename: 'src/queues/tagging/tagging-model-providers.ts',
     },
     // The multi-module folder: a second service stacked on a qualifier. Option
     // (a) — it belongs in its own sub-folder.
@@ -95,6 +142,11 @@ ruleTester.run('nestjs-file-naming', nestjsFileNaming, {
     { code: CODE, filename: 'src/graphql/queues/job.object.ts' },
     { code: CODE, filename: 'src/graphql/queues/retry-job.input.ts' },
     { code: CODE, filename: 'src/guards/global-auth.guard.ts' },
+    // A provider is subject-named: any stem, many per folder, beside the
+    // folder's service.
+    { code: CODE, filename: 'src/nest/mcp-toolset-pruner.provider.ts' },
+    { code: CODE, filename: 'src/modules/database/database.provider.ts' },
+    { code: CODE, filename: 'src/nest/mcp-toolset-pruner.provider.test.ts' },
     // A test mirroring its source, in place or under `__tests__`.
     {
       code: CODE,
