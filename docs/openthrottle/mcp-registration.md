@@ -14,6 +14,7 @@ This doc **consolidates** registration guidance that previously lived (partly) a
 - [Template structure](#template-structure) — shared server set and the launcher
 - [HTTP transport (Docker-native)](#http-transport-docker-native) — the `mcp` container / `openthrottle-mcp-docker`
 - [Editor parity](#editor-parity) — Cursor / VS Code / Claude Code / OpenCode
+- [Toolsets](#toolsets) — the lean `core` default and how each client opts into more
 - [User-provided servers](#user-provided-servers) — github, shadcn, nx-mcp, maestro, fetch
 - [Secondary workspace](#secondary-workspace) — using OT MCP from another repo
 - [Worktrees](#worktrees) — worktree-aware identity and live-server resolution
@@ -144,6 +145,39 @@ Each editor reads its own MCP config file; schemas differ, but the **server set 
 
 **Why schemas differ, not the set:** Cursor and Claude Code share the `mcpServers` shape; VS Code requires `servers` + explicit `type`; OpenCode requires `type: local|remote` and packs command+args into one array. The one invariant: the six named servers above are present wherever OT plans/tasks (and the shared tooling set) are needed.
 
+## Toolsets
+
+`openthrottle-mcp` serves its tools in named toolsets. **With no configuration a client gets `core`**: plans, tasks, notes, plan output and runs, work sessions, the plan inbox, the knowledge base, activity and `health`. That is 42 tools and ~33.8 KB of schemas, against ~58.6 KB for all four toolsets. The other toolsets are opt-in:
+
+| Toolset  | What it adds                                                                                       |
+| -------- | -------------------------------------------------------------------------------------------------- |
+| `admin`  | Skill, plan, task and project tags; tag-action rules; skill availability; `delete_project`         |
+| `agents` | `discover_agent_clis`, `discover_local_models`, `agent_conversation_*` (human JWT)                 |
+| `blog`   | Draft-only blog authoring (`list_blog_posts`, `create_blog_post`, …; `blog:draft` service account) |
+
+The committed configs leave the default alone, so every session in this repo pays only for `core`. To opt in, pass a comma list (or `all`) as `--toolsets=<names>` in the server's arguments, or set `OPENTHROTTLE_MCP_TOOLSETS` in its env. The argument wins if both are set. `core` is always included, and an unknown name stops the server from starting. Put the change in your **user-level** config, or keep it uncommitted, unless the whole team needs it.
+
+**Claude Code** (`.mcp.json`, or `~/.claude.json` for user scope), **Cursor** (`.cursor/mcp.json` / `~/.cursor/mcp.json`). The launcher forwards its arguments to the server:
+
+```json
+{
+  "mcpServers": {
+    "openthrottle-mcp": {
+      "args": ["./scripts/run-openthrottle-mcp.sh", "--toolsets=blog,admin"],
+      "command": "bash"
+    }
+  }
+}
+```
+
+**VS Code** (`.vscode/mcp.json`): the same `args` under `servers`, with `"type": "stdio"`. **OpenCode** (`opencode.json`): append the flag to the `command` array, `["bash", "./scripts/run-openthrottle-mcp.sh", "--toolsets=blog"]`. **Any client with an `env` block** can set `"OPENTHROTTLE_MCP_TOOLSETS": "blog"` there instead. A shell export also reaches the launcher, which inherits its environment. The launcher does **not** read this variable from `.env`.
+
+**Docker HTTP** (`openthrottle-mcp-docker`): set `OPENTHROTTLE_MCP_TOOLSETS` in the root `.env` (`applications/openthrottle/.env` for the consumer install) and restart the `mcp` container. Selection is per process, so every client of that container sees the same toolsets.
+
+**Checking what you got:** `health` reports `toolsets.enabled` and the disabled toolsets with how to enable them, and the server instructions name what is not loaded. Reconnect the server (`/mcp` in Claude Code) after changing its arguments or env.
+
+**Why the default is lean, and when a tool joins it:** the model-facing-text budget caps the bytes of the **default** toolset, assuming the worst-case client that injects every schema at session start. The full surface is reported, not capped. Total caps sit at measured × 1.2, rounded up to 1 KiB. When a change would cross one, trim the text first. Next, keep the tool out of `core` (or split a new toolset) unless default plan/task workflows need it. Only then recalibrate the cap in a reviewed change with a reason. Details: [openthrottle-mcp README § Toolsets](../../packages/openthrottle-mcp/README.md#toolsets).
+
 ## User-provided servers
 
 These are Tier 2 servers — useful in this repo but **not** OT-native and **not** required for OT plans/tasks. They ship in the committed configs; authenticate them yourself. Definitions below match [`.mcp.json`](../../.mcp.json) / [`.cursor/mcp.json`](../../.cursor/mcp.json).
@@ -247,7 +281,7 @@ After registering or changing MCP config, confirm `openthrottle-mcp` works. Ther
 
 1. Ensure `.cursor/mcp.json` (or your editor's equivalent) is loaded, `OPENTHROTTLE_MCP_AUTH_TOKEN` is in `.env`, restart the client.
 2. `OT_MCP_RESOLVE_ONLY=1 bash scripts/run-openthrottle-mcp.sh` resolves a live server.
-3. `health` → all `ok`.
+3. `health` → all `ok`, and `toolsets.enabled` lists what you configured (`core` by default).
 4. One OT tool (e.g. `list_sources` / `semantic_search`) succeeds.
 
 **Secondary workspace (a different repo open):**

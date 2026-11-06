@@ -4,10 +4,14 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { captureClientIdentityProvider } from './config/client-identity.ts';
 import { captureStdioExecutionBackend } from './config/execution-backend.ts';
 import {
+  buildServerInstructions,
   getServerName,
-  SERVER_INSTRUCTIONS,
   SERVER_VERSION,
 } from './config/index.ts';
+import {
+  enabledToolsetsFromProcess,
+  setActiveToolsets,
+} from './config/toolsets.ts';
 import {
   captureCallerWorkspacePath,
   resolveStdioWorkspacePath,
@@ -21,10 +25,12 @@ import { registerDeveloperMcpTools } from './tool-registry.ts';
  * @description Starts the MCP server on stdio via `@rekog/mcp-nest` and the developer Nest MCP module. Used by the CLI bin and `nx run @openthrottle/openthrottle-mcp:serve`.
  */
 export async function runServer(): Promise<void> {
+  const toolsets = enabledToolsetsFromProcess();
   const options: NestjsMcpDeveloperBootstrapOptions = {
     capabilities: { resources: {}, tools: {} },
-    instructions: SERVER_INSTRUCTIONS,
+    instructions: buildServerInstructions(toolsets),
     name: getServerName(),
+    toolsets,
     transport: McpTransportType.STDIO,
     version: SERVER_VERSION,
   };
@@ -51,6 +57,10 @@ function warnIfAuthTokenMissing(): void {
 }
 
 export async function runServerLocal(): Promise<void> {
+  // First, so a bad --toolsets / OPENTHROTTLE_MCP_TOOLSETS refuses to boot before anything else runs.
+  const toolsets = enabledToolsetsFromProcess();
+  setActiveToolsets(toolsets);
+
   warnIfAuthTokenMissing();
 
   // Stdio ONLY: on the HTTP surface this process is the server, so its cwd is not a caller's
@@ -66,7 +76,7 @@ export async function runServerLocal(): Promise<void> {
     { name: getServerName(), version: SERVER_VERSION },
     {
       capabilities: { resources: {}, tools: {} },
-      instructions: SERVER_INSTRUCTIONS,
+      instructions: buildServerInstructions(toolsets),
     },
   );
 
@@ -79,7 +89,7 @@ export async function runServerLocal(): Promise<void> {
       : { name: client.name, version: client.version };
   });
 
-  registerDeveloperMcpTools(server);
+  registerDeveloperMcpTools(server, toolsets);
   registerKnowledgeBaseResource(server);
 
   const transport = new StdioServerTransport();

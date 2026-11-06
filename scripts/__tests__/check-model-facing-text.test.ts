@@ -17,8 +17,10 @@ import type {
 } from '../check-model-facing-text.ts';
 import {
   BUDGET_PATH,
+  calibratedCap,
   diffSnapshot,
   findCapBreaches,
+  findStaleOverrides,
   formatChange,
   measure,
   parseBudget,
@@ -28,10 +30,12 @@ import {
 } from '../check-model-facing-text.ts';
 
 const SURFACE: ToolSurface = {
+  defaultToolNames: ['create_plan', 'get_plan'],
   instructionsBytes: 100,
   tools: [
-    { descriptionBytes: 40, name: 'create_plan', totalBytes: 200 },
-    { descriptionBytes: 10, name: 'get_plan', totalBytes: 80 },
+    { descriptionBytes: 40, name: 'create_plan', toolset: 'core', totalBytes: 200 }, // prettier-ignore
+    { descriptionBytes: 10, name: 'get_plan', toolset: 'core', totalBytes: 80 },
+    { descriptionBytes: 30, name: 'list_blog_posts', toolset: 'blog', totalBytes: 500 }, // prettier-ignore
   ],
 };
 
@@ -43,6 +47,7 @@ const BUDGET: Budget = {
     skillBody: 1000,
     skillDescription: 1000,
   },
+  perItemOverrides: {},
   totals: {
     alwaysInjected: 10_000,
     mcpInstructions: 1000,
@@ -83,8 +88,10 @@ describe('check-model-facing-text', () => {
         'mcp.instructions',
         'mcp.tool/create_plan',
         'mcp.tool/get_plan',
+        'mcp.tool/list_blog_posts',
         'mcp.toolDescription/create_plan',
         'mcp.toolDescription/get_plan',
+        'mcp.toolDescription/list_blog_posts',
         'prompt/Job_A.md',
         'skill/alpha',
         'skillDescription/alpha',
@@ -98,6 +105,17 @@ describe('check-model-facing-text', () => {
         mcpTools: 280,
         prompts: 6,
         skills: measurement.items['skill/alpha'],
+      });
+    });
+
+    it('caps only the default toolset and reports the full surface per toolset', () => {
+      const measurement = measure(root, SURFACE);
+
+      expect(measurement.totals.mcpTools).toBe(280);
+      expect(measurement.reported).toEqual({
+        mcpToolsFull: 780,
+        'mcpToolset/blog': 500,
+        'mcpToolset/core': 280,
       });
     });
 
@@ -135,6 +153,7 @@ describe('check-model-facing-text', () => {
   describe('findCapBreaches', () => {
     const measurement: Measurement = {
       items: { 'mcp.tool/create_plan': 1001, 'skill/alpha': 999 },
+      reported: {},
       totals: { ...BUDGET.totals, mcpTools: 10_001 },
     };
 
@@ -146,7 +165,48 @@ describe('check-model-facing-text', () => {
     });
 
     it('passes when everything is at or under its cap', () => {
-      expect(findCapBreaches({ items: {}, totals: BUDGET.totals }, BUDGET)).toEqual([]); // prettier-ignore
+      expect(findCapBreaches({ items: {}, reported: {}, totals: BUDGET.totals }, BUDGET)).toEqual([]); // prettier-ignore
+    });
+
+    it('applies a per-item override instead of the class cap', () => {
+      const budget: Budget = {
+        ...BUDGET,
+        perItemOverrides: { 'skill/alpha': { cap: 2000, reason: 'r' } },
+      };
+      const items = { 'skill/alpha': 1500, 'skill/beta': 1500 };
+
+      expect(findCapBreaches({ items, reported: {}, totals: BUDGET.totals }, budget)).toEqual([
+        { bytes: 1500, cap: 1000, key: 'skill/beta' },
+      ]); // prettier-ignore
+    });
+  });
+
+  describe('findStaleOverrides', () => {
+    const budget: Budget = {
+      ...BUDGET,
+      perItem: { ...BUDGET.perItem, skillBody: 10_000 },
+      perItemOverrides: {
+        'skill/big': { cap: 12_288, reason: 'r' },
+        'skill/gone': { cap: 12_288, reason: 'r' },
+        'skill/shrunk': { cap: 12_288, reason: 'r' },
+      },
+    };
+
+    it('reports overrides whose item is gone or whose headroom now fits the class cap', () => {
+      // big: 9000 × 1.2 → 11264 > 10000, still needed. shrunk: 5000 × 1.2 → 6144, fits.
+      const items = { 'skill/big': 9000, 'skill/shrunk': 5000 };
+
+      expect(findStaleOverrides({ items, reported: {}, totals: BUDGET.totals }, budget)).toEqual([
+        'skill/gone',
+        'skill/shrunk',
+      ]); // prettier-ignore
+    });
+  });
+
+  describe('calibratedCap', () => {
+    it('adds 20% headroom and rounds up to 1 KiB', () => {
+      expect(calibratedCap(33_817)).toBe(40_960);
+      expect(calibratedCap(1024)).toBe(2048);
     });
   });
 
@@ -157,12 +217,31 @@ describe('check-model-facing-text', () => {
       expect(parseBudget(raw).totals.alwaysInjected).toBeGreaterThan(0);
     });
 
+    it('rejects an override without a reason', () => {
+      const raw = { perItem: BUDGET.perItem, perItemOverrides: { 'skill/alpha': { cap: 2000, reason: ' ' } }, totals: BUDGET.totals }; // prettier-ignore
+
+      expect(() => parseBudget(raw, 'x')).toThrow('perItemOverrides.skill/alpha needs a non-empty "reason"'); // prettier-ignore
+    });
+
+    it('rejects an override that does not exceed its class cap', () => {
+      const raw = { perItem: BUDGET.perItem, perItemOverrides: { 'skill/alpha': { cap: 1000, reason: 'r' } }, totals: BUDGET.totals }; // prettier-ignore
+
+      expect(() => parseBudget(raw, 'x')).toThrow('must exceed its class cap 1000'); // prettier-ignore
+    });
+
+    it('rejects an override for an uncapped key', () => {
+      const raw = { perItem: BUDGET.perItem, perItemOverrides: { 'mcp.instructions': { cap: 5000, reason: 'r' } }, totals: BUDGET.totals }; // prettier-ignore
+
+      expect(() => parseBudget(raw, 'x')).toThrow('names no capped item kind'); // prettier-ignore
+    });
+
     it('rejects a budget missing a cap', () => {
       expect(() => parseBudget({ perItem: {}, totals: {} }, 'x')).toThrow('x: expected a number at "mcpToolDescription"'); // prettier-ignore
     });
 
     it('rejects a malformed tool surface', () => {
       expect(() => parseToolSurface({ tools: 'nope' }, 'surface')).toThrow('surface'); // prettier-ignore
+      expect(() => parseToolSurface({ defaultToolNames: [], instructionsBytes: 1, tools: [{ descriptionBytes: 1, name: 'a', totalBytes: 2 }] }, 'surface')).toThrow('"toolset"'); // prettier-ignore
     });
 
     it('round-trips a rendered snapshot', () => {

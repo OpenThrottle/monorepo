@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 
+import { TOOLSET_NAMES } from '../../config/toolsets.ts';
 import type { ToolSurface } from '../../model-facing-text/list-tool-surface.ts';
 import { listToolSurface } from '../../model-facing-text/list-tool-surface.ts';
 import { TOOL_SELECTION_CASES } from './data/data.cases.ts';
@@ -14,7 +15,7 @@ describe('TOOL_SELECTION_CASES', () => {
   let surface: ToolSurface;
 
   beforeAll(async () => {
-    surface = await listToolSurface();
+    surface = await listToolSurface(new Set(TOOLSET_NAMES));
   });
 
   it('has unique ids', () => {

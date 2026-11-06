@@ -1,6 +1,7 @@
 import { executeGraphql } from '@openthrottle/nodejs-graphql';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { setActiveToolsets } from '../config/toolsets.ts';
 import { healthToolHandler } from './health.ts';
 
 vi.mock('@openthrottle/nodejs-graphql', () => ({
@@ -41,6 +42,53 @@ describe('healthToolHandler', () => {
           },
         },
       });
+    });
+  });
+
+  describe('when only the default toolsets are active', () => {
+    it('reports the disabled toolsets and how to enable them', async () => {
+      setActiveToolsets(new Set(['core']));
+      vi.mocked(executeGraphql).mockResolvedValue({
+        serverHealth: {
+          api: 'ok',
+          database: 'ok',
+          redis: 'ok',
+          websocket: 'ok',
+        },
+      });
+
+      const result = await healthToolHandler({});
+
+      expect(result).toMatchObject({
+        structuredContent: {
+          toolsets: {
+            disabled: [{ name: 'admin' }, { name: 'agents' }, { name: 'blog' }],
+            enableWith: expect.stringContaining('OPENTHROTTLE_MCP_TOOLSETS'),
+            enabled: ['core'],
+          },
+        },
+      });
+    });
+  });
+
+  describe('when every toolset is active', () => {
+    it('reports none disabled', async () => {
+      setActiveToolsets(new Set(['admin', 'agents', 'blog', 'core']));
+      vi.mocked(executeGraphql).mockResolvedValue({
+        serverHealth: {
+          api: 'ok',
+          database: 'ok',
+          redis: 'ok',
+          websocket: 'ok',
+        },
+      });
+
+      const result = await healthToolHandler({});
+
+      expect(result).toMatchObject({
+        structuredContent: { toolsets: { disabled: [] } },
+      });
+      setActiveToolsets(new Set(['core']));
     });
   });
 

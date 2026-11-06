@@ -93,7 +93,7 @@ the how.
 - Author its tasks in **one** `create_tasks` call with `sortOrder` and `wave` decided per item (see
   § Task wave above — there is no cheap second pass).
 - Tag it in the same call: `create_plan({ ..., tags: ['follow-up'] })` (or `add_plan_tag(planId,
-'follow-up')` after the fact). `follow-up` is a platform system tag, accepted from any caller
+'follow-up')` after the fact, which needs the MCP `admin` toolset). `follow-up` is a platform system tag, accepted from any caller
   without being in your skill-tag vocabulary — do not `add_skill_tag` it (an agent token lacks
   `settings:write`). Best-effort: a tag that fails comes back in `tagFailures` and never blocks filing.
 - Report the plan id. Filing is not starting: [§ Authoring vs running](#authoring-vs-running) still

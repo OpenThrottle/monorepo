@@ -114,11 +114,39 @@ Both should report the `.nvmrc` version. MCP servers register when a session sta
 | Plans, tasks, notes, activity, output stream, semantic search | `create_plan`, `get_plan`, `list_plans_by_status`, `get_plan_output`, `append_plan_output`, `delete_plan_output`, … | Service account (recommended) or human JWT |
 | Agent conversations (web chat threads)                        | `agent_conversation_list`, `agent_conversation_get`, `agent_conversation_get_messages`                              | **Human JWT only** (user-scoped)           |
 
-GraphQL-only — no direct Postgres access. Prerequisite for conversation tools: v1 persistence from plan `4fa6d16c-a1d4-4aba-923c-52e35e3deb66` (`agent_conversations` / `agent_conversation_messages` tables, `agentsRunChatTurn` with `persist: true`).
+Which of these a client sees depends on its [toolsets](#toolsets). GraphQL-only — no direct Postgres access. Prerequisite for conversation tools: v1 persistence from plan `4fa6d16c-a1d4-4aba-923c-52e35e3deb66` (`agent_conversations` / `agent_conversation_messages` tables, `agentsRunChatTurn` with `persist: true`).
+
+## Toolsets
+
+Tools are grouped into named toolsets so a session only pays for the schemas it uses. With no configuration a client gets **`core`** (42 tools, ~33.8 KB of `tools/list` schemas, against ~58.6 KB for everything).
+
+| Toolset  | Tools | Contents                                                                                                                                              |
+| -------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `core`   | 42    | Plans, tasks, notes, plan output, plan runs, work sessions and the work ledger, plan inbox, knowledge base (`semantic_search`, …), activity, `health` |
+| `admin`  | 24    | Skill, plan, task and project tags; tag-action rules; skill availability; `delete_project`                                                            |
+| `blog`   | 7     | [Blog authoring tools](#blog-authoring-tools-draft-only)                                                                                              |
+| `agents` | 5     | `discover_agent_clis`, `discover_local_models`, and the [agent conversation read tools](#agent-conversation-read-tools)                               |
+
+Turn more on with a comma list of names, or `all`:
+
+- **Command line:** `--toolsets=blog,admin` on `openthrottle-mcp` or the launcher (`scripts/run-openthrottle-mcp.sh` forwards its arguments). Wins over the env var.
+- **Environment:** `OPENTHROTTLE_MCP_TOOLSETS=blog,admin` in the server's env, i.e. the MCP client's `env` block for stdio or `.env` for the Docker `mcp` service.
+
+`core` is always served, so naming `blog` means core + blog. An unknown name refuses to start the server, rather than quietly serving less than you asked for. The server instructions and the `health` result (`structuredContent.toolsets`) name the toolsets that are not loaded and how to enable them. Selection is per process: every client of one HTTP server sees the same set. Per-client setup: [mcp-registration.md § Toolsets](../../docs/openthrottle/mcp-registration.md#toolsets).
+
+**Adding a tool:** give its `defineTool(...)` entry in [`src/tool-registry.ts`](./src/tool-registry.ts) a toolset. Put it in `core` only if default workflows (driving plans and tasks) need it. `core` is what the byte budget caps (below), so everything else belongs in an opt-in toolset.
+
+### Byte budget
+
+`pnpm nx run monorepo:check-model-facing-text` measures the text this server injects into sessions. The policy lives in [`scripts/model-facing-text.budget.json`](../../scripts/model-facing-text.budget.json) and the script header. In short:
+
+- **What is capped:** the default toolset's `tools/list` bytes (`totals.mcpTools`) and the always-injected total. It assumes the worst-case client, which loads every schema at session start. The full surface and each toolset are reported, not capped. Every tool still has per-item caps and snapshot review.
+- **Headroom:** a total cap is set to measured × 1.2, rounded up to 1 KiB, whenever it is calibrated (`-- --suggest-caps` prints the numbers).
+- **Cap versus toolset:** when a change would cross a cap, first trim the text. Next, if default workflows don't need the tool, put it in (or split out) a non-default toolset. Only then recalibrate the cap, in a reviewed budget change that states why. A single oversized item gets a `perItemOverrides` entry with a `reason`, rather than a raise for its whole class.
 
 ## Blog authoring tools (draft-only)
 
-`list_blog_posts`, `get_blog_post`, `create_blog_post`, `update_blog_post`, `set_blog_post_tags`, `list_blog_tags`, `list_blog_authors`. They need a `blog:draft` service account and work on **DRAFT** posts only. There is deliberately **no** publish, schedule, unpublish, archive, tag-create or author-create tool: a human does those in the developer app at `/blog`, and editing a non-draft post returns `BlogPostPublishPermissionRequiredError`.
+Opt-in: the [`blog` toolset](#toolsets). `list_blog_posts`, `get_blog_post`, `create_blog_post`, `update_blog_post`, `set_blog_post_tags`, `list_blog_tags`, `list_blog_authors`. They need a `blog:draft` service account and work on **DRAFT** posts only. There is deliberately **no** publish, schedule, unpublish, archive, tag-create or author-create tool: a human does those in the developer app at `/blog`, and editing a non-draft post returns `BlogPostPublishPermissionRequiredError`.
 
 - Results carry the server's typed union in `structuredContent.result` (every member has `__typename`) plus one human-readable line. Write results (and `get_blog_post`) also carry `structuredContent.editorUrl`, `<developer app URL>/blog/<postId>`.
 - `update_blog_post` **requires** `expectedUpdatedAt` (the `updatedAt` from your latest `get_blog_post`). On `BlogPostStaleWriteError` nothing was written: re-read with `get_blog_post`, then retry.
@@ -146,6 +174,8 @@ deepest containing checkout wins) and ignores anything it cannot own. It never f
   cannot pick up a bogus path.
 
 ## Agent conversation read tools
+
+Opt-in: the [`agents` toolset](#toolsets).
 
 Three **read-only** MCP tools expose persisted **web chat** thread history from `agent_conversation_*` tables via GraphQL. They mirror the developer UI chat persistence layer — not Ralph iteration logs.
 

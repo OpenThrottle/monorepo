@@ -22,6 +22,7 @@ import type {
   ZodRawShapeCompat,
 } from '@modelcontextprotocol/sdk/server/zod-compat.js';
 
+import type { ToolsetName } from './config/toolsets.ts';
 import * as Th from './nest-tool-handlers.ts';
 
 /**
@@ -30,19 +31,21 @@ import * as Th from './nest-tool-handlers.ts';
 type RegisterToolInputSchema = AnySchema | ZodRawShapeCompat;
 
 /**
- * @description One canonical tool entry. `parameters` is exposed (erased to `unknown`) so the parity test can assert reference identity against the Nest surface's `@Tool` schema; `register` carries the fully-typed schema + handler so a single call site registers it on an `McpServer`.
+ * @description One canonical tool entry. `parameters` is exposed (erased to `unknown`) so the parity test can assert reference identity against the Nest surface's `@Tool` schema; `register` carries the fully-typed schema + handler so a single call site registers it on an `McpServer`. `toolset` is the one named toolset the tool is served in (see `config/toolsets.ts`).
  */
 export type DeveloperMcpToolDefinition = {
   description: string;
   name: string;
   parameters: unknown;
   register: (server: McpServer) => void;
+  toolset: ToolsetName;
 };
 
 /**
  * @description Captures a tool's name, description, parameter schema, and matching handler as one canonical entry. `TParams` is inferred from the positional `parameters` argument, then flows into the `handler` type (`ToolCallback<TParams>`) and `server.registerTool`, so a parameter/handler mismatch fails to type-check — no `as` casts required. Positional (not a single object literal) so inference resolves `TParams` from the schema before checking the handler.
  */
 const defineTool = <TParams extends RegisterToolInputSchema>(
+  toolset: ToolsetName,
   name: string,
   description: string,
   parameters: TParams,
@@ -58,6 +61,7 @@ const defineTool = <TParams extends RegisterToolInputSchema>(
         { description, inputSchema: parameters },
         handler,
       ),
+    toolset,
   };
 };
 
@@ -68,468 +72,546 @@ const defineTool = <TParams extends RegisterToolInputSchema>(
 export const developerMcpToolDefinitions: readonly DeveloperMcpToolDefinition[] =
   [
     defineTool(
+      'core',
       'append_plan_output',
       Th.appendPlanOutputToolDescription,
       Th.appendPlanOutputToolParameters,
       Th.appendPlanOutputToolHandler,
     ),
     defineTool(
+      'core',
       'delete_plan_output',
       Th.deletePlanOutputToolDescription,
       Th.deletePlanOutputToolParameters,
       Th.deletePlanOutputToolHandler,
     ),
     defineTool(
+      'core',
       'claim_plan_messages',
       Th.claimPlanMessagesToolDescription,
       Th.claimPlanMessagesToolParameters,
       Th.claimPlanMessagesToolHandler,
     ),
     defineTool(
+      'core',
       'post_plan_message',
       Th.postPlanMessageToolDescription,
       Th.postPlanMessageToolParameters,
       Th.postPlanMessageToolHandler,
     ),
     defineTool(
+      'agents',
       'agent_conversation_get',
       Th.getAgentConversationToolDescription,
       Th.getAgentConversationToolParameters,
       Th.getAgentConversationToolHandler,
     ),
     defineTool(
+      'agents',
       'agent_conversation_get_messages',
       Th.getAgentConversationMessagesToolDescription,
       Th.getAgentConversationMessagesToolParameters,
       Th.getAgentConversationMessagesToolHandler,
     ),
     defineTool(
+      'agents',
       'agent_conversation_list',
       Th.listAgentConversationsToolDescription,
       Th.listAgentConversationsToolParameters,
       Th.listAgentConversationsToolHandler,
     ),
     defineTool(
+      'core',
       'create_note',
       Th.createNoteToolDescription,
       Th.createNoteToolParameters,
       Th.createNoteToolHandler,
     ),
     defineTool(
+      'core',
       'create_plan',
       Th.createPlanToolDescription,
       Th.createPlanToolParameters,
       Th.createPlanToolHandler,
     ),
     defineTool(
+      'core',
       'create_plans',
       Th.createPlansToolDescription,
       Th.createPlansToolParameters,
       Th.createPlansToolHandler,
     ),
     defineTool(
+      'core',
       'create_task',
       Th.createTaskToolDescription,
       Th.createTaskToolParameters,
       Th.createTaskToolHandler,
     ),
     defineTool(
+      'core',
       'create_tasks',
       Th.createTasksToolDescription,
       Th.createTasksToolParameters,
       Th.createTasksToolHandler,
     ),
     defineTool(
+      'core',
       'delete_note',
       Th.deleteNoteToolDescription,
       Th.deleteNoteToolParameters,
       Th.deleteNoteToolHandler,
     ),
     defineTool(
+      'core',
       'delete_plan',
       Th.deletePlanToolDescription,
       Th.deletePlanToolParameters,
       Th.deletePlanToolHandler,
     ),
     defineTool(
+      'admin',
       'delete_project',
       Th.deleteProjectToolDescription,
       Th.deleteProjectToolParameters,
       Th.deleteProjectToolHandler,
     ),
     defineTool(
+      'core',
       'delete_task',
       Th.deleteTaskToolDescription,
       Th.deleteTaskToolParameters,
       Th.deleteTaskToolHandler,
     ),
     defineTool(
+      'agents',
       'discover_agent_clis',
       Th.discoverAgentClisToolDescription,
       Th.discoverAgentClisToolParameters,
       Th.discoverAgentClisToolHandler,
     ),
     defineTool(
+      'agents',
       'discover_local_models',
       Th.discoverLocalModelsToolDescription,
       Th.discoverLocalModelsToolParameters,
       Th.discoverLocalModelsToolHandler,
     ),
     defineTool(
+      'core',
       'get_activity_by_date',
       Th.getActivityByDateToolDescription,
       Th.getActivityByDateToolParameters,
       Th.getActivityByDateToolHandler,
     ),
     defineTool(
+      'core',
       'get_document',
       Th.getDocumentToolDescription,
       Th.getDocumentToolParameters,
       Th.getDocumentToolHandler,
     ),
     defineTool(
+      'core',
       'get_last_activity',
       Th.getLastActivityToolDescription,
       Th.getLastActivityToolParameters,
       Th.getLastActivityToolHandler,
     ),
     defineTool(
+      'core',
       'get_note',
       Th.getNoteToolDescription,
       Th.getNoteToolParameters,
       Th.getNoteToolHandler,
     ),
     defineTool(
+      'core',
       'get_plan',
       Th.getPlanToolDescription,
       Th.getPlanToolParameters,
       Th.getPlanToolHandler,
     ),
     defineTool(
+      'core',
       'get_plan_output',
       Th.getPlanOutputToolDescription,
       Th.getPlanOutputToolParameters,
       Th.getPlanOutputToolHandler,
     ),
     defineTool(
+      'core',
       'get_remaining_tasks_for_plan',
       Th.getRemainingTasksForPlanToolDescription,
       Th.getRemainingTasksForPlanToolParameters,
       Th.getRemainingTasksForPlanToolHandler,
     ),
     defineTool(
+      'core',
       'get_task',
       Th.getTaskToolDescription,
       Th.getTaskToolParameters,
       Th.getTaskToolHandler,
     ),
     defineTool(
+      'core',
       'get_tasks_by_plan_id',
       Th.getTasksByPlanIdToolDescription,
       Th.getTasksByPlanIdToolParameters,
       Th.getTasksByPlanIdToolHandler,
     ),
     defineTool(
+      'core',
       'health',
       Th.healthToolDescription,
       Th.healthToolParameters,
       Th.healthToolHandler,
     ),
     defineTool(
+      'core',
       'auth_status',
       Th.authStatusToolDescription,
       Th.authStatusToolParameters,
       Th.authStatusToolHandler,
     ),
     defineTool(
+      'core',
       'begin_task_session',
       Th.beginTaskSessionToolDescription,
       Th.beginTaskSessionToolParameters,
       Th.beginTaskSessionToolHandler,
     ),
     defineTool(
+      'core',
       'attach_session_subject',
       Th.attachSessionSubjectToolDescription,
       Th.attachSessionSubjectToolParameters,
       Th.attachSessionSubjectToolHandler,
     ),
     defineTool(
+      'core',
       'end_session',
       Th.endSessionToolDescription,
       Th.endSessionToolParameters,
       Th.endSessionToolHandler,
     ),
     defineTool(
+      'core',
       'record_artifact',
       Th.recordArtifactToolDescription,
       Th.recordArtifactToolParameters,
       Th.recordArtifactToolHandler,
     ),
     defineTool(
+      'core',
       'get_work_sessions',
       Th.getWorkSessionsToolDescription,
       Th.getWorkSessionsToolParameters,
       Th.getWorkSessionsToolHandler,
     ),
     defineTool(
+      'core',
       'register_plan_run',
       Th.registerPlanRunToolDescription,
       Th.registerPlanRunToolParameters,
       Th.registerPlanRunToolHandler,
     ),
     defineTool(
+      'core',
       'settle_plan_run',
       Th.settlePlanRunToolDescription,
       Th.settlePlanRunToolParameters,
       Th.settlePlanRunToolHandler,
     ),
     defineTool(
+      'core',
       'register_plan_run_worktree_checkout',
       Th.registerPlanRunWorktreeCheckoutToolDescription,
       Th.registerPlanRunWorktreeCheckoutToolParameters,
       Th.registerPlanRunWorktreeCheckoutToolHandler,
     ),
     defineTool(
+      'core',
       'get_plan_runs',
       Th.getPlanRunsToolDescription,
       Th.getPlanRunsToolParameters,
       Th.getPlanRunsToolHandler,
     ),
     defineTool(
+      'core',
       'list_notes',
       Th.listNotesToolDescription,
       Th.listNotesToolParameters,
       Th.listNotesToolHandler,
     ),
     defineTool(
+      'core',
       'list_plans_by_status',
       Th.listPlansByStatusToolDescription,
       Th.listPlansByStatusToolParameters,
       Th.listPlansByStatusToolHandler,
     ),
     defineTool(
+      'core',
       'list_sources',
       Th.listSourcesToolDescription,
       Th.listSourcesToolParameters,
       Th.listSourcesToolHandler,
     ),
     defineTool(
+      'core',
       'list_tasks_by_category',
       Th.listTasksByCategoryToolDescription,
       Th.listTasksByCategoryToolParameters,
       Th.listTasksByCategoryToolHandler,
     ),
     defineTool(
+      'core',
       'reorder_plan_tasks',
       Th.reorderPlanTasksToolDescription,
       Th.reorderPlanTasksToolParameters,
       Th.reorderPlanTasksToolHandler,
     ),
     defineTool(
+      'admin',
       'list_skill_tags',
       Th.listSkillTagsToolDescription,
       Th.listSkillTagsToolParameters,
       Th.listSkillTagsToolHandler,
     ),
     defineTool(
+      'admin',
       'add_skill_tag',
       Th.addSkillTagToolDescription,
       Th.addSkillTagToolParameters,
       Th.addSkillTagToolHandler,
     ),
     defineTool(
+      'admin',
       'rename_skill_tag',
       Th.renameSkillTagToolDescription,
       Th.renameSkillTagToolParameters,
       Th.renameSkillTagToolHandler,
     ),
     defineTool(
+      'admin',
       'remove_skill_tag',
       Th.removeSkillTagToolDescription,
       Th.removeSkillTagToolParameters,
       Th.removeSkillTagToolHandler,
     ),
     defineTool(
+      'admin',
       'add_plan_tag',
       Th.addPlanTagToolDescription,
       Th.addPlanTagToolParameters,
       Th.addPlanTagToolHandler,
     ),
     defineTool(
+      'admin',
       'remove_plan_tag',
       Th.removePlanTagToolDescription,
       Th.removePlanTagToolParameters,
       Th.removePlanTagToolHandler,
     ),
     defineTool(
+      'admin',
       'add_project_tag',
       Th.addProjectTagToolDescription,
       Th.addProjectTagToolParameters,
       Th.addProjectTagToolHandler,
     ),
     defineTool(
+      'admin',
       'remove_project_tag',
       Th.removeProjectTagToolDescription,
       Th.removeProjectTagToolParameters,
       Th.removeProjectTagToolHandler,
     ),
     defineTool(
+      'admin',
       'add_project_skill_tag',
       Th.addProjectSkillTagToolDescription,
       Th.addProjectSkillTagToolParameters,
       Th.addProjectSkillTagToolHandler,
     ),
     defineTool(
+      'admin',
       'remove_project_skill_tag',
       Th.removeProjectSkillTagToolDescription,
       Th.removeProjectSkillTagToolParameters,
       Th.removeProjectSkillTagToolHandler,
     ),
     defineTool(
+      'admin',
       'add_task_tag',
       Th.addTaskTagToolDescription,
       Th.addTaskTagToolParameters,
       Th.addTaskTagToolHandler,
     ),
     defineTool(
+      'admin',
       'remove_task_tag',
       Th.removeTaskTagToolDescription,
       Th.removeTaskTagToolParameters,
       Th.removeTaskTagToolHandler,
     ),
     defineTool(
+      'admin',
       'list_tag_action_rules',
       Th.listTagActionRulesToolDescription,
       Th.listTagActionRulesToolParameters,
       Th.listTagActionRulesToolHandler,
     ),
     defineTool(
+      'admin',
       'list_rule_applications',
       Th.listRuleApplicationsToolDescription,
       Th.listRuleApplicationsToolParameters,
       Th.listRuleApplicationsToolHandler,
     ),
     defineTool(
+      'admin',
       'upsert_tag_action_rule',
       Th.upsertTagActionRuleToolDescription,
       Th.upsertTagActionRuleToolParameters,
       Th.upsertTagActionRuleToolHandler,
     ),
     defineTool(
+      'admin',
       'delete_tag_action_rule',
       Th.deleteTagActionRuleToolDescription,
       Th.deleteTagActionRuleToolParameters,
       Th.deleteTagActionRuleToolHandler,
     ),
     defineTool(
+      'admin',
       'get_skill_availability',
       Th.getSkillAvailabilityToolDescription,
       Th.getSkillAvailabilityToolParameters,
       Th.getSkillAvailabilityToolHandler,
     ),
     defineTool(
+      'admin',
       'get_skill_availability_rule_set',
       Th.getSkillAvailabilityRuleSetToolDescription,
       Th.getSkillAvailabilityRuleSetToolParameters,
       Th.getSkillAvailabilityRuleSetToolHandler,
     ),
     defineTool(
+      'admin',
       'upsert_skill_availability_rule_set',
       Th.upsertSkillAvailabilityRuleSetToolDescription,
       Th.upsertSkillAvailabilityRuleSetToolParameters,
       Th.upsertSkillAvailabilityRuleSetToolHandler,
     ),
     defineTool(
+      'admin',
       'delete_skill_availability_rule_set',
       Th.deleteSkillAvailabilityRuleSetToolDescription,
       Th.deleteSkillAvailabilityRuleSetToolParameters,
       Th.deleteSkillAvailabilityRuleSetToolHandler,
     ),
     defineTool(
+      'admin',
       'add_skill_availability_rule',
       Th.addSkillAvailabilityRuleToolDescription,
       Th.addSkillAvailabilityRuleToolParameters,
       Th.addSkillAvailabilityRuleToolHandler,
     ),
     defineTool(
+      'admin',
       'update_skill_availability_rule',
       Th.updateSkillAvailabilityRuleToolDescription,
       Th.updateSkillAvailabilityRuleToolParameters,
       Th.updateSkillAvailabilityRuleToolHandler,
     ),
     defineTool(
+      'admin',
       'remove_skill_availability_rule',
       Th.removeSkillAvailabilityRuleToolDescription,
       Th.removeSkillAvailabilityRuleToolParameters,
       Th.removeSkillAvailabilityRuleToolHandler,
     ),
     defineTool(
+      'core',
       'semantic_search',
       Th.semanticSearchToolDescription,
       Th.semanticSearchToolParameters,
       Th.semanticSearchToolHandler,
     ),
     defineTool(
+      'core',
       'update_note',
       Th.updateNoteToolDescription,
       Th.updateNoteToolParameters,
       Th.updateNoteToolHandler,
     ),
     defineTool(
+      'core',
       'update_plan',
       Th.updatePlanToolDescription,
       Th.updatePlanToolParameters,
       Th.updatePlanToolHandler,
     ),
     defineTool(
+      'core',
       'update_task',
       Th.updateTaskToolDescription,
       Th.updateTaskToolParameters,
       Th.updateTaskToolHandler,
     ),
     defineTool(
+      'blog',
       'list_blog_posts',
       Th.listBlogPostsToolDescription,
       Th.listBlogPostsToolParameters,
       Th.listBlogPostsToolHandler,
     ),
     defineTool(
+      'blog',
       'get_blog_post',
       Th.getBlogPostToolDescription,
       Th.getBlogPostToolParameters,
       Th.getBlogPostToolHandler,
     ),
     defineTool(
+      'blog',
       'create_blog_post',
       Th.createBlogPostToolDescription,
       Th.createBlogPostToolParameters,
       Th.createBlogPostToolHandler,
     ),
     defineTool(
+      'blog',
       'update_blog_post',
       Th.updateBlogPostToolDescription,
       Th.updateBlogPostToolParameters,
       Th.updateBlogPostToolHandler,
     ),
     defineTool(
+      'blog',
       'set_blog_post_tags',
       Th.setBlogPostTagsToolDescription,
       Th.setBlogPostTagsToolParameters,
       Th.setBlogPostTagsToolHandler,
     ),
     defineTool(
+      'blog',
       'list_blog_tags',
       Th.listBlogTagsToolDescription,
       Th.listBlogTagsToolParameters,
       Th.listBlogTagsToolHandler,
     ),
     defineTool(
+      'blog',
       'list_blog_authors',
       Th.listBlogAuthorsToolDescription,
       Th.listBlogAuthorsToolParameters,
       Th.listBlogAuthorsToolHandler,
     ),
     defineTool(
+      'core',
       'promote_task',
       Th.promoteTaskToolDescription,
       Th.promoteTaskToolParameters,
@@ -538,10 +620,24 @@ export const developerMcpToolDefinitions: readonly DeveloperMcpToolDefinition[] 
   ];
 
 /**
- * @description Registers every canonical tool from {@link developerMcpToolDefinitions} on an `McpServer`. Used by the stdio `runServerLocal` entrypoint so it stays in lockstep with the Nest surface.
+ * @description The canonical tools served by `toolsets`, in registry order.
  */
-export function registerDeveloperMcpTools(server: McpServer): void {
-  for (const tool of developerMcpToolDefinitions) {
+export function developerMcpToolsIn(
+  toolsets: ReadonlySet<ToolsetName>,
+): DeveloperMcpToolDefinition[] {
+  return developerMcpToolDefinitions.filter((tool) =>
+    toolsets.has(tool.toolset),
+  );
+}
+
+/**
+ * @description Registers the canonical tools from {@link developerMcpToolDefinitions} that belong to `toolsets` on an `McpServer`. Used by the stdio `runServerLocal` entrypoint so it stays in lockstep with the Nest surface, which prunes to the same toolsets.
+ */
+export function registerDeveloperMcpTools(
+  server: McpServer,
+  toolsets: ReadonlySet<ToolsetName>,
+): void {
+  for (const tool of developerMcpToolsIn(toolsets)) {
     tool.register(server);
   }
 }
