@@ -55,6 +55,11 @@ export type OpenThrottlePublicEnv = {
    */
   FEATURE_BLOG_ENABLED?: string;
   FEATURE_CHARLIE_PREVIEW?: string;
+  /**
+   * Shows the eval surfaces (trajectory viewer, datasets, runs, reports).
+   * String-encoded boolean; absent means off. UI only — capture is ungated.
+   */
+  FEATURE_DELTA_PREVIEW?: string;
 
   /**
    * Authoritative runtime environment tier. The `IS_DEVELOPMENT` /

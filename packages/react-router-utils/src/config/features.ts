@@ -43,6 +43,18 @@ export const FEATURE_CHARLIE_PREVIEW = parseEnvBoolean(
 );
 
 /**
+ * Gates every eval surface in the developer app: the trajectory viewer, eval
+ * datasets, runs and reports (docs/openthrottle/eval-system-adr.md § Decision
+ * 10). UI only — trajectory capture is never gated, so data has accumulated by
+ * the time the flag is turned on. Sourced from `FEATURE_DELTA_PREVIEW`;
+ * defaults to `false`.
+ */
+export const FEATURE_DELTA_PREVIEW = parseEnvBoolean(
+  ENV_SOURCE.FEATURE_DELTA_PREVIEW,
+  false,
+);
+
+/**
  * Publishes the website's blog: the Blog nav/footer links, the sitemap blog
  * entries, the `/blog` routes and the RSS feed (all 404 when off). Sourced from
  * `FEATURE_BLOG_ENABLED`; defaults to `false` so the blog ships dark until the
