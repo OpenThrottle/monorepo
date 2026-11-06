@@ -2585,7 +2585,8 @@ function mapText(part, emittedLen) {
     kind: CONVERSATION_STREAM_CHUNK_KINDS.text
   };
 }
-function mapTool(part) {
+var TOOL_EVENT_TYPES = /* @__PURE__ */ new Set(["tool", "tool_use"]);
+function mapTool(part, startedCallIds) {
   const state = isRecord(part.state) ? part.state : void 0;
   const status = asString7(state?.status);
   const callId = asString7(part.callID) ?? null;
@@ -2593,27 +2594,38 @@ function mapTool(part) {
   const metadata = {
     callId,
     tool: toolName,
-    toolName,
-    toolPart: part
+    toolName
   };
-  if (status === "completed" || status === "error") {
-    return {
+  const isTerminal = status === "completed" || status === "error";
+  const isStarted = callId !== null && startedCallIds.has(callId);
+  const chunks = [];
+  if (!isTerminal || !isStarted) {
+    if (callId !== null) {
+      startedCallIds.add(callId);
+    }
+    chunks.push({
       delta: "",
       done: false,
-      error: status === "error" ? asString7(state?.error) ?? "tool error" : null,
-      kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
-      metadata
-    };
+      kind: CONVERSATION_STREAM_CHUNK_KINDS.toolCall,
+      metadata: { ...metadata, toolCall: state?.input ?? null }
+    });
   }
-  return {
-    delta: "",
-    done: false,
-    kind: CONVERSATION_STREAM_CHUNK_KINDS.toolCall,
-    metadata
-  };
-}
-function isToolEvent(type) {
-  return type === "tool" || type === "tool_use";
+  if (isTerminal) {
+    const isError = status === "error";
+    const errorText = isError ? asString7(state?.error) ?? "tool error" : null;
+    chunks.push({
+      delta: "",
+      done: false,
+      error: errorText,
+      kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
+      metadata: {
+        ...metadata,
+        isError,
+        toolCall: errorText ?? state?.output ?? null
+      }
+    });
+  }
+  return chunks;
 }
 function mapStepFinish(part) {
   return {
@@ -2625,6 +2637,7 @@ function mapStepFinish(part) {
 }
 function createOpencodeEventMapper() {
   const emittedLen = /* @__PURE__ */ new Map();
+  const startedCallIds = /* @__PURE__ */ new Set();
   let sessionEmitted = false;
   return {
     map(event) {
@@ -2648,11 +2661,8 @@ function createOpencodeEventMapper() {
         if (chunk !== null) {
           chunks.push(chunk);
         }
-      } else if (isToolEvent(event.type) && part !== void 0) {
-        const chunk = mapTool(part);
-        if (chunk !== null) {
-          chunks.push(chunk);
-        }
+      } else if (TOOL_EVENT_TYPES.has(event.type) && part !== void 0) {
+        chunks.push(...mapTool(part, startedCallIds));
       } else if (event.type === "step_finish" && part !== void 0) {
         chunks.push(mapStepFinish(part));
       }
@@ -2862,10 +2872,6 @@ var cursorToolBody = (toolCall) => {
   const body = key === void 0 ? void 0 : toolCall[key];
   return isRecord(body) ? body : void 0;
 };
-var opencodeState = (metadata) => {
-  const part = isRecord(metadata.toolPart) ? metadata.toolPart : void 0;
-  return isRecord(part?.state) ? part.state : void 0;
-};
 var codexItem = (metadata) => {
   return isRecord(metadata.item) ? metadata.item : void 0;
 };
@@ -2887,9 +2893,8 @@ var toolArgumentsOf2 = (chunk) => {
       })
     );
   }
-  const state = opencodeState(metadata);
   const cursorBody = cursorToolBody(metadata.toolCall);
-  const candidate = state?.input ?? cursorBody?.args ?? metadata.toolCall;
+  const candidate = cursorBody?.args ?? metadata.toolCall;
   if (isRecord(candidate)) {
     return candidate;
   }
@@ -2900,10 +2905,6 @@ var toolResultContentOf = (chunk) => {
   const item = codexItem(metadata);
   if (item !== void 0) {
     return asText(item.aggregated_output);
-  }
-  const state = opencodeState(metadata);
-  if (state !== void 0) {
-    return asText(state.output ?? state.error);
   }
   const cursorBody = cursorToolBody(metadata.toolCall);
   if (cursorBody !== void 0) {

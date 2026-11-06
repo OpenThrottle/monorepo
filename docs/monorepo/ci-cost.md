@@ -458,7 +458,7 @@ non-matrix job in `continuous-integration.yml`, and that workflow runs on `merge
 Landing a PR: `gh pr merge --auto` **enqueues** it. Leave out `--squash`: the ruleset's
 `merge_method` decides, and gh ignores the flag with "The merge strategy for main is set by the
 merge queue". Do not call a PR merged, or read a landed SHA, until
-`gh pr view --json mergedAt,mergeCommitSha` shows one.
+`gh pr view <n> --json mergedAt,mergeCommit --jq '{mergedAt, sha: .mergeCommit.oid}'` shows one.
 
 Applying or changing the queue:
 

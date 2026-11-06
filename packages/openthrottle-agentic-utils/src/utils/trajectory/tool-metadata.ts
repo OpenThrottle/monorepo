@@ -8,7 +8,7 @@
  * | claude      | `toolCall` (object, on the call)   | `toolCall` (string, on the result) |
  * | gemini, agy | `toolCall` (object, on the call)   | `toolCall.output`                  |
  * | cursor      | `toolCall.<name>ToolCall.args`     | `toolCall.<name>ToolCall.result`   |
- * | opencode    | `toolPart.state.input`             | `toolPart.state.output`            |
+ * | opencode    | `toolCall` (on the call)           | `toolCall` (on the result)         |
  * | codex       | `item` minus bookkeeping           | `item.aggregated_output`           |
  */
 
@@ -56,12 +56,6 @@ const cursorToolBody = (toolCall: unknown): Metadata | undefined => {
   const body = key === undefined ? undefined : toolCall[key];
 
   return isRecord(body) ? body : undefined;
-};
-
-const opencodeState = (metadata: Metadata): Metadata | undefined => {
-  const part = isRecord(metadata.toolPart) ? metadata.toolPart : undefined;
-
-  return isRecord(part?.state) ? part.state : undefined;
 };
 
 const codexItem = (metadata: Metadata): Metadata | undefined => {
@@ -114,9 +108,8 @@ export const toolArgumentsOf = (
     );
   }
 
-  const state = opencodeState(metadata);
   const cursorBody = cursorToolBody(metadata.toolCall);
-  const candidate = state?.input ?? cursorBody?.args ?? metadata.toolCall;
+  const candidate = cursorBody?.args ?? metadata.toolCall;
 
   if (isRecord(candidate)) {
     return candidate;
@@ -137,12 +130,6 @@ export const toolResultContentOf = (chunk: ConversationStreamChunk): string => {
 
   if (item !== undefined) {
     return asText(item.aggregated_output);
-  }
-
-  const state = opencodeState(metadata);
-
-  if (state !== undefined) {
-    return asText(state.output ?? state.error);
   }
 
   const cursorBody = cursorToolBody(metadata.toolCall);

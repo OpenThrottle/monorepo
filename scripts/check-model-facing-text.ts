@@ -16,6 +16,28 @@
  *     maintainer escape hatch, apply the `model-facing-text-override` PR label,
  *     which CI passes in as MODEL_FACING_TEXT_OVERRIDE=true.
  *
+ * Budget policy (OT plan d7266de7):
+ *
+ *   - **The MCP cap is on the default toolset**, the tools a client gets with no
+ *     configuration. `totals.mcpTools` and `totals.alwaysInjected` count only
+ *     those. The full surface and each toolset's bytes are reported, not capped
+ *     as totals. Every tool still has its per-item caps and snapshot review,
+ *     whichever toolset it is in.
+ *   - **Worst-case client.** The budget assumes a client injects every schema it
+ *     loads at session start, as Cursor does. Clients that load schemas on
+ *     demand (Claude Code tool search) cost less, and the budget does not count
+ *     on that.
+ *   - **Headroom.** A total cap is set to measured × 1.2, rounded up to 1 KiB,
+ *     whenever it is calibrated. `--suggest-caps` prints those numbers.
+ *   - **When a change would cross a cap,** in order: trim the text; move an MCP
+ *     tool out of the default toolset if default workflows don't need it;
+ *     recalibrate the cap in a reviewed budget change. The override label is
+ *     for emergencies.
+ *   - **Per-item overrides.** `perItemOverrides` raises one item's cap above its
+ *     class cap (e.g. `skill/ot-loop`), for an item whose own × 1.2 headroom
+ *     does not fit under its class cap. Each needs a non-empty `reason`. An
+ *     override the item no longer needs is reported, so it can be removed.
+ *
  * The MCP numbers come from the JSON the `@openthrottle/openthrottle-mcp:
  * measure-tool-surface` target writes (this target depends on it), so this
  * script never imports that package's source across the package boundary.
@@ -55,24 +77,40 @@ export const TOTAL_KEYS = [
 type ItemCap = (typeof ITEM_KINDS)[number]['cap'];
 type TotalKey = (typeof TOTAL_KEYS)[number];
 
+export interface PerItemOverride {
+  readonly cap: number;
+  readonly reason: string;
+}
+
 export interface Budget {
   readonly perItem: Readonly<Record<ItemCap, number>>;
+  readonly perItemOverrides: Readonly<Record<string, PerItemOverride>>;
   readonly totals: Readonly<Record<TotalKey, number>>;
 }
 
 export interface ToolSurface {
+  /** The tools a client gets with no toolset configuration. */
+  readonly defaultToolNames: readonly string[];
+  /** The instructions block a default-configured server sends. */
   readonly instructionsBytes: number;
+  /** The full surface: every tool in every toolset. */
   readonly tools: readonly {
     readonly descriptionBytes: number;
     readonly name: string;
+    readonly toolset: string;
     readonly totalBytes: number;
   }[];
 }
 
 export interface Measurement {
   readonly items: Readonly<Record<string, number>>;
+  /** Reported, never capped: the full MCP surface and each toolset's bytes. */
+  readonly reported: Readonly<Record<string, number>>;
   readonly totals: Readonly<Record<TotalKey, number>>;
 }
+
+/** Multiplier applied to a measured total when its cap is (re)calibrated. */
+export const CAP_HEADROOM = 1.2;
 
 export interface SnapshotChange {
   readonly after: number | undefined;
@@ -91,16 +129,21 @@ export interface CapBreach {
   readonly key: string;
 }
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+};
 
-const byteLength = (text: string): number => Buffer.byteLength(text, 'utf8');
+const byteLength = (text: string): number => {
+  return Buffer.byteLength(text, 'utf8');
+};
 
-const sum = (values: readonly number[]): number =>
-  values.reduce((total, value) => total + value, 0);
+const sum = (values: readonly number[]): number => {
+  return values.reduce((total, value) => total + value, 0);
+};
 
-const readJson = (path: string): unknown =>
-  JSON.parse(readFileSync(path, 'utf8'));
+const readJson = (path: string): unknown => {
+  return JSON.parse(readFileSync(path, 'utf8'));
+};
 
 const numberAt = (record: Record<string, unknown>, key: string, where: string): number => {
   const value = record[key];
@@ -120,19 +163,59 @@ const recordAt = (value: unknown, key: string, where: string): Record<string, un
   return child;
 }; // prettier-ignore
 
-/** Parse the budget file, failing loudly on any missing cap. */
+/** The class cap that bounds an item key, or undefined for an uncapped key. */
+export const classCapFor = (key: string, perItem: Readonly<Record<ItemCap, number>>): number | undefined => {
+  const kind = ITEM_KINDS.find((candidate) => key.startsWith(candidate.prefix));
+
+  return kind === undefined ? undefined : perItem[kind.cap];
+}; // prettier-ignore
+
+/** Parse `perItemOverrides`: each must name a capped item, carry a reason, and exceed its class cap. */
+const parseOverrides = (raw: unknown, perItem: Readonly<Record<ItemCap, number>>, where: string): Record<string, PerItemOverride> => {
+  const overrides = isRecord(raw) ? raw.perItemOverrides : undefined;
+  if (overrides === undefined) {
+    return {};
+  }
+  if (!isRecord(overrides)) {
+    throw new Error(`${where}: expected an object at "perItemOverrides"`);
+  }
+
+  return Object.fromEntries(
+    Object.keys(overrides).map((key) => {
+      const entry = recordAt(overrides, key, `${where} perItemOverrides`);
+      const cap = numberAt(entry, 'cap', `${where} perItemOverrides.${key}`);
+      const reason = typeof entry.reason === 'string' ? entry.reason.trim() : '';
+      const classCap = classCapFor(key, perItem);
+      if (reason === '') {
+        throw new Error(`${where}: perItemOverrides.${key} needs a non-empty "reason"`);
+      }
+      if (classCap === undefined) {
+        throw new Error(`${where}: perItemOverrides.${key} names no capped item kind`);
+      }
+      if (cap <= classCap) {
+        throw new Error(`${where}: perItemOverrides.${key} cap ${cap} must exceed its class cap ${classCap}`);
+      }
+
+      return [key, { cap, reason }];
+    }),
+  );
+}; // prettier-ignore
+
+/** Parse the budget file, failing loudly on any missing cap or malformed override. */
 export const parseBudget = (raw: unknown, where: string = BUDGET_PATH): Budget => {
-  const perItem = recordAt(raw, 'perItem', where);
+  const perItemRaw = recordAt(raw, 'perItem', where);
   const totals = recordAt(raw, 'totals', where);
+  const perItem = {
+    mcpToolDescription: numberAt(perItemRaw, 'mcpToolDescription', where),
+    mcpToolEntry: numberAt(perItemRaw, 'mcpToolEntry', where),
+    promptFile: numberAt(perItemRaw, 'promptFile', where),
+    skillBody: numberAt(perItemRaw, 'skillBody', where),
+    skillDescription: numberAt(perItemRaw, 'skillDescription', where),
+  };
 
   return {
-    perItem: {
-      mcpToolDescription: numberAt(perItem, 'mcpToolDescription', where),
-      mcpToolEntry: numberAt(perItem, 'mcpToolEntry', where),
-      promptFile: numberAt(perItem, 'promptFile', where),
-      skillBody: numberAt(perItem, 'skillBody', where),
-      skillDescription: numberAt(perItem, 'skillDescription', where),
-    },
+    perItem,
+    perItemOverrides: parseOverrides(raw, perItem, where),
     totals: {
       alwaysInjected: numberAt(totals, 'alwaysInjected', where),
       mcpInstructions: numberAt(totals, 'mcpInstructions', where),
@@ -143,25 +226,36 @@ export const parseBudget = (raw: unknown, where: string = BUDGET_PATH): Budget =
   };
 }; // prettier-ignore
 
+const isStringArray = (value: unknown): value is string[] => {
+  return (
+    Array.isArray(value) && value.every((item) => typeof item === 'string')
+  );
+};
+
 /** Parse the JSON written by `measure-tool-surface`. */
 export const parseToolSurface = (raw: unknown, where: string): ToolSurface => {
-  if (!isRecord(raw) || !Array.isArray(raw.tools)) {
-    throw new Error(`${where}: expected { instructionsBytes, tools[] }`);
-  }
+  if (!isRecord(raw) || !Array.isArray(raw.tools) || !isStringArray(raw.defaultToolNames)) {
+    throw new Error(`${where}: expected { defaultToolNames[], instructionsBytes, tools[] }`);
+  } // prettier-ignore
 
   const tools = raw.tools.map((tool: unknown) => {
-    if (!isRecord(tool) || typeof tool.name !== 'string') {
-      throw new Error(`${where}: every tool needs a string "name"`);
-    }
+    if (!isRecord(tool) || typeof tool.name !== 'string' || typeof tool.toolset !== 'string') {
+      throw new Error(`${where}: every tool needs a string "name" and "toolset"`);
+    } // prettier-ignore
 
     return {
       descriptionBytes: numberAt(tool, 'descriptionBytes', where),
       name: tool.name,
+      toolset: tool.toolset,
       totalBytes: numberAt(tool, 'totalBytes', where),
     };
   });
 
-  return { instructionsBytes: numberAt(raw, 'instructionsBytes', where), tools }; // prettier-ignore
+  return {
+    defaultToolNames: raw.defaultToolNames,
+    instructionsBytes: numberAt(raw, 'instructionsBytes', where),
+    tools,
+  };
 };
 
 /** Parse the snapshot file: a flat `{ items: { key: bytes } }` map. */
@@ -173,8 +267,7 @@ export const parseSnapshot = (raw: unknown, where: string = SNAPSHOT_PATH): Read
   );
 }; // prettier-ignore
 
-const listFiles = (directory: string, predicate: (name: string) => boolean): string[] =>
-  existsSync(directory) ? readdirSync(directory).filter(predicate).sort() : []; // prettier-ignore
+const listFiles = (directory: string, predicate: (name: string) => boolean): string[] => { return existsSync(directory) ? readdirSync(directory).filter(predicate).sort() : []; }; // prettier-ignore
 
 /** Measure every surface into one flat, key-sorted item map plus totals. */
 export const measure = (cwd: string, surface: ToolSurface): Measurement => {
@@ -210,10 +303,19 @@ export const measure = (cwd: string, surface: ToolSurface): Measurement => {
     return bytes;
   }); // prettier-ignore
 
-  const mcpTools = sum(surface.tools.map((tool) => tool.totalBytes));
+  const defaultNames = new Set(surface.defaultToolNames);
+  const mcpTools = sum(surface.tools.filter((tool) => defaultNames.has(tool.name)).map((tool) => tool.totalBytes)); // prettier-ignore
+  const reported: Record<string, number> = {
+    mcpToolsFull: sum(surface.tools.map((tool) => tool.totalBytes)),
+  };
+  for (const tool of surface.tools) {
+    const key = `mcpToolset/${tool.toolset}`;
+    reported[key] = (reported[key] ?? 0) + tool.totalBytes;
+  }
 
   return {
     items: Object.fromEntries(Object.entries(items).sort(([a], [b]) => a.localeCompare(b))), // prettier-ignore
+    reported: Object.fromEntries(Object.entries(reported).sort(([a], [b]) => a.localeCompare(b))), // prettier-ignore
     totals: {
       alwaysInjected: surface.instructionsBytes + mcpTools + sum(descriptionBytes), // prettier-ignore
       mcpInstructions: surface.instructionsBytes,
@@ -237,13 +339,12 @@ export const diffSnapshot = (before: Readonly<Record<string, number>>, after: Re
   };
 }; // prettier-ignore
 
-/** Every per-item and total cap the measurement crosses. */
+/** Every per-item and total cap the measurement crosses. A per-item override replaces its class cap. */
 export const findCapBreaches = (measurement: Measurement, budget: Budget): CapBreach[] => {
   const breaches: CapBreach[] = [];
 
   for (const [key, bytes] of Object.entries(measurement.items)) {
-    const kind = ITEM_KINDS.find((candidate) => key.startsWith(candidate.prefix));
-    const cap = kind === undefined ? undefined : budget.perItem[kind.cap];
+    const cap = budget.perItemOverrides[key]?.cap ?? classCapFor(key, budget.perItem);
     if (cap !== undefined && bytes > cap) {
       breaches.push({ bytes, cap, key });
     }
@@ -259,8 +360,28 @@ export const findCapBreaches = (measurement: Measurement, budget: Budget): CapBr
   return breaches;
 }; // prettier-ignore
 
-const formatBytes = (bytes: number | undefined): string =>
-  bytes === undefined ? '—' : `${bytes} B`;
+/** The cap the headroom policy gives a measured size: × {@link CAP_HEADROOM}, rounded up to 1 KiB. */
+export const calibratedCap = (bytes: number): number => {
+  return Math.ceil((bytes * CAP_HEADROOM) / 1024) * 1024;
+};
+
+/**
+ * Overrides the measurement no longer needs. An override exists to give one item the standard
+ * headroom its class cap cannot, so it is stale once the item is gone or its own calibrated cap
+ * fits under the class cap.
+ */
+export const findStaleOverrides = (measurement: Measurement, budget: Budget): string[] => {
+  return Object.keys(budget.perItemOverrides).filter((key) => {
+    const bytes = measurement.items[key];
+    const classCap = classCapFor(key, budget.perItem);
+
+    return bytes === undefined || (classCap !== undefined && calibratedCap(bytes) <= classCap);
+  });
+}; // prettier-ignore
+
+const formatBytes = (bytes: number | undefined): string => {
+  return bytes === undefined ? '—' : `${bytes} B`;
+};
 
 export const formatChange = (change: SnapshotChange): string => {
   const delta = (change.after ?? 0) - (change.before ?? 0);
@@ -269,19 +390,24 @@ export const formatChange = (change: SnapshotChange): string => {
   return `  ${change.key}: ${formatBytes(change.before)} → ${formatBytes(change.after)} (${sign}${delta} B)`; // prettier-ignore
 };
 
-export const renderSnapshot = (measurement: Measurement): string =>
-  `${JSON.stringify(
+export const renderSnapshot = (measurement: Measurement): string => {
+  return `${JSON.stringify(
     {
       $comment: `Per-item byte baseline for ${BUDGET_PATH}. Generated — regenerate with \`pnpm nx run monorepo:check-model-facing-text -- --write\` and commit; the diff is the review of what grew.`,
       items: measurement.items,
+      reported: measurement.reported,
       totals: measurement.totals,
     },
     null,
     2,
   )}\n`;
+};
 
-const isOverridden = (): boolean =>
-  ['1', 'true'].includes((process.env[OVERRIDE_ENV] ?? '').toLowerCase());
+const isOverridden = (): boolean => {
+  return ['1', 'true'].includes(
+    (process.env[OVERRIDE_ENV] ?? '').toLowerCase(),
+  );
+};
 
 export const main = (cwd: string = process.cwd()): number => {
   const surfacePath = join(cwd, flagValue('tool-surface') ?? DEFAULT_TOOL_SURFACE_PATH); // prettier-ignore
@@ -305,7 +431,18 @@ export const main = (cwd: string = process.cwd()): number => {
   const breaches = findCapBreaches(measurement, budget);
   const { totals } = measurement;
 
-  logger.info(`Model-facing text: always-injected ${totals.alwaysInjected} B (cap ${budget.totals.alwaysInjected}), MCP tools ${totals.mcpTools} B, skills ${totals.skills} B, prompts ${totals.prompts} B`); // prettier-ignore
+  const { reported } = measurement;
+  const toolsets = Object.entries(reported).filter(([key]) => key.startsWith('mcpToolset/')).map(([key, bytes]) => `${key.slice('mcpToolset/'.length)} ${bytes} B`); // prettier-ignore
+
+  logger.info(`Model-facing text: always-injected ${totals.alwaysInjected} B (cap ${budget.totals.alwaysInjected}), MCP tools ${totals.mcpTools} B default (cap ${budget.totals.mcpTools}), skills ${totals.skills} B, prompts ${totals.prompts} B`); // prettier-ignore
+  logger.info(`MCP full surface (reported, not capped): ${reported.mcpToolsFull ?? 0} B — ${toolsets.join(', ')}`); // prettier-ignore
+
+  if (hasFlag('suggest-caps')) {
+    logger.info(`Caps at measured × ${CAP_HEADROOM}, rounded up to 1 KiB:`);
+    TOTAL_KEYS.forEach((key) => logger.info(`  totals.${key}: ${calibratedCap(totals[key])} (now ${budget.totals[key]})`)); // prettier-ignore
+  }
+
+  findStaleOverrides(measurement, budget).forEach((key) => logger.info(`perItemOverrides.${key} is no longer needed — remove it from ${BUDGET_PATH}.`)); // prettier-ignore
 
   if (diff.shrank.length > 0) {
     logger.info(`${diff.shrank.length} item(s) shrank or were removed — rerun with --write to ratchet the snapshot down:`); // prettier-ignore
@@ -326,8 +463,8 @@ export const main = (cwd: string = process.cwd()): number => {
 
   if (breaches.length > 0) {
     logger.fail(`${breaches.length} cap(s) in ${BUDGET_PATH} exceeded:`);
-    breaches.forEach((breach) => logger.info(`  ${breach.key}: ${breach.bytes} B > cap ${breach.cap} B (+${breach.bytes - breach.cap} B)`)); // prettier-ignore
-    logger.info(`Trim the text, raise the cap in ${BUDGET_PATH} with a reason, or have a maintainer apply the \`${OVERRIDE_LABEL}\` PR label.`); // prettier-ignore
+    breaches.forEach((breach) => logger.info(`  ${breach.key}: ${breach.bytes} B > cap ${breach.cap} B (+${breach.bytes - breach.cap} B; recalibrated cap would be ${calibratedCap(breach.bytes)} B)`)); // prettier-ignore
+    logger.info(`In order: trim the text; move an MCP tool out of the default toolset if default workflows don't need it; recalibrate the cap (× ${CAP_HEADROOM}) in ${BUDGET_PATH} with a reason (a perItemOverrides entry for one item). The \`${OVERRIDE_LABEL}\` PR label is for emergencies.`); // prettier-ignore
   }
 
   if (isOverridden()) {

@@ -2,6 +2,13 @@
  * @description MCP server and tool constants.
  */
 
+import type { ToolsetName } from './toolsets.ts';
+import {
+  disabledToolsets,
+  TOOLSET_DESCRIPTIONS,
+  TOOLSETS_ENV,
+} from './toolsets.ts';
+
 const DEFAULT_SERVER_NAME = '@openthrottle/openthrottle-mcp';
 export const SERVER_VERSION = '1.0.0';
 
@@ -24,6 +31,24 @@ When to use which server:
 - Plans & tasks → these OpenThrottle tools (here).
 - Repo docs under docs/ → the docs MCP server.
 - Database schema → databases/README.md.`;
+
+/**
+ * @description The instructions a server serving `enabled` advertises: {@link SERVER_INSTRUCTIONS}, plus
+ * one line naming the toolsets it is NOT serving and how to turn them on. Without that line a client
+ * has no way to learn a disabled tool exists, because a disabled tool is absent from `tools/list`.
+ */
+export function buildServerInstructions(
+  enabled: ReadonlySet<ToolsetName>,
+): string {
+  const off = disabledToolsets(enabled);
+  if (off.length === 0) {
+    return SERVER_INSTRUCTIONS;
+  }
+
+  const list = off.map((name) => `${name} (${TOOLSET_DESCRIPTIONS[name]})`);
+
+  return `${SERVER_INSTRUCTIONS}\n\nToolsets not loaded: ${list.join('; ')}. Enable with ${TOOLSETS_ENV}=<names|all> in this server's env.`;
+}
 
 /**
  * @description MCP server name: from MCP_SERVER_NAME, or @openthrottle/openthrottle-mcp-{WORKTREE_ID}

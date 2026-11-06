@@ -1,7 +1,7 @@
 {
   "$comment": "Per-item byte baseline for scripts/model-facing-text.budget.json. Generated — regenerate with `pnpm nx run monorepo:check-model-facing-text -- --write` and commit; the diff is the review of what grew.",
   "items": {
-    "mcp.instructions": 1853,
+    "mcp.instructions": 2125,
     "mcp.tool/add_plan_tag": 706,
     "mcp.tool/add_project_skill_tag": 619,
     "mcp.tool/add_project_tag": 651,
@@ -46,7 +46,7 @@
     "mcp.tool/get_task": 320,
     "mcp.tool/get_tasks_by_plan_id": 370,
     "mcp.tool/get_work_sessions": 934,
-    "mcp.tool/health": 352,
+    "mcp.tool/health": 386,
     "mcp.tool/list_blog_authors": 640,
     "mcp.tool/list_blog_posts": 1245,
     "mcp.tool/list_blog_tags": 636,
@@ -124,7 +124,7 @@
     "mcp.toolDescription/get_task": 61,
     "mcp.toolDescription/get_tasks_by_plan_id": 91,
     "mcp.toolDescription/get_work_sessions": 374,
-    "mcp.toolDescription/health": 149,
+    "mcp.toolDescription/health": 183,
     "mcp.toolDescription/list_blog_authors": 426,
     "mcp.toolDescription/list_blog_posts": 561,
     "mcp.toolDescription/list_blog_tags": 425,
@@ -170,15 +170,15 @@
     "prompt/Job_Security.md": 9518,
     "prompt/Job_TestHealth.md": 8156,
     "prompt/Job_WorkInFlight.md": 9928,
-    "skill/agents-ralph": 13145,
+    "skill/agents-ralph": 13187,
     "skill/github-commit": 2741,
-    "skill/github-pull-request": 13964,
+    "skill/github-pull-request": 14006,
     "skill/github-squash": 8609,
     "skill/ot-folders": 21263,
     "skill/ot-generators": 10250,
-    "skill/ot-loop": 30762,
+    "skill/ot-loop": 30804,
     "skill/ot-onboarding": 24976,
-    "skill/ot-plans": 8901,
+    "skill/ot-plans": 8938,
     "skill/ot-postgres": 6910,
     "skill/ot-skill-sync": 16123,
     "skill/ot-stack": 9983,
@@ -197,11 +197,18 @@
     "skillDescription/ot-stack": 336,
     "skillDescription/ot-worktree": 364
   },
+  "reported": {
+    "mcpToolset/admin": 14222,
+    "mcpToolset/agents": 3368,
+    "mcpToolset/blog": 7221,
+    "mcpToolset/core": 33817,
+    "mcpToolsFull": 58628
+  },
   "totals": {
-    "alwaysInjected": 65203,
-    "mcpInstructions": 1853,
-    "mcpTools": 58594,
+    "alwaysInjected": 40698,
+    "mcpInstructions": 2125,
+    "mcpTools": 33817,
     "prompts": 119941,
-    "skills": 179969
+    "skills": 180132
   }
 }

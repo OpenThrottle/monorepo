@@ -320,7 +320,7 @@ record_artifact({ "type": "git_commit",
 
 Do not reach for `workflow-link-merge` — it lives in the deprecated `@tools/workflows` package.
 
-The merge-queue caveat still holds where it always did: `gh pr merge --auto` may only _enqueue_ a PR, so do not call it merged, or read a landed sha from it, until `gh pr view --json mergedAt,mergeCommitSha` shows one. It no longer gates ledger recording.
+The merge-queue caveat still holds where it always did: `gh pr merge --auto` may only _enqueue_ a PR, so do not call it merged, or read a landed sha from it, until `gh pr view <n> --json mergedAt,mergeCommit --jq '{mergedAt, sha: .mergeCommit.oid}'` shows one. It no longer gates ledger recording.
 
 > **Why the split?** Footers give you cheap, per-commit traceability while work is in flight; the ledger artifacts give OT a clean record of exactly one commit per PR. Recording every branch commit would pollute that record — so footers during, one ledger artifact when the PR opens. The footers also double as the harvest's input, which is what makes them worth enforcing.
 

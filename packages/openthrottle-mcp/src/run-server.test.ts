@@ -57,6 +57,17 @@ describe('runServerLocal token preflight', () => {
     );
   });
 
+  it('refuses to boot on an unknown toolset, before connecting', async () => {
+    vi.stubEnv('OPENTHROTTLE_MCP_TOOLSETS', 'blgo');
+
+    await expect(runServerLocal()).rejects.toThrow(
+      /Unknown openthrottle-mcp toolset/,
+    );
+    expect(connectMock).not.toHaveBeenCalled();
+
+    vi.unstubAllEnvs();
+  });
+
   it('boots without warning when the auth token is present', async () => {
     process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = 'ot_sa_test_secret';
 
