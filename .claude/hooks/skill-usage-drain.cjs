@@ -197,6 +197,7 @@ var TELEMETRY_DIR_BASENAME = "skill-usage";
 var EVENTS_JSONL_BASENAME = "events.jsonl";
 var OUTCOMES_JSONL_BASENAME = "outcomes.jsonl";
 var TOKEN_USAGE_JSONL_BASENAME = "token-usage.jsonl";
+var TRAJECTORIES_JSONL_BASENAME = "trajectories.jsonl";
 var resolveTelemetryDir = () => {
   return process.env.OPENTHROTTLE_TELEMETRY_DIR?.trim() || import_node_path2.default.join(userConfigDir(), TELEMETRY_DIR_BASENAME);
 };
@@ -208,6 +209,9 @@ var defaultOutcomesJsonlPath = () => {
 };
 var defaultTokenUsageJsonlPath = () => {
   return import_node_path2.default.join(resolveTelemetryDir(), TOKEN_USAGE_JSONL_BASENAME);
+};
+var defaultTrajectoriesJsonlPath = () => {
+  return import_node_path2.default.join(resolveTelemetryDir(), TRAJECTORIES_JSONL_BASENAME);
 };
 var deadLetterPathFor = (filePath) => {
   return filePath.replace(/\.jsonl$/, "") + ".dead-letter.jsonl";
@@ -840,6 +844,78 @@ var formatDrainFileResult = (label, tally) => {
   return `${label} sent=${tally.sent} retained=${tally.retained} dead-lettered=${tally.deadLettered} skipped=${tally.skipped} reasons: ${formatDrainReasons(tally)}`;
 };
 
+// packages/agentic-hooks/src/data/trajectories.ts
+var DEFAULT_TRAJECTORY_POST_TIMEOUT_MS = 3e3;
+var RECORD_AGENT_TRAJECTORY_MUTATION = `
+mutation RecordAgentTrajectoryFromHook($input: RecordAgentTrajectoryInput!) {
+  recordAgentTrajectory(input: $input) {
+    id
+  }
+}
+`;
+var resolveTrajectoryTimeout = (timeoutMs) => {
+  return timeoutMs ?? (Number(process.env.OPENTHROTTLE_TELEMETRY_TIMEOUT_MS) || DEFAULT_TRAJECTORY_POST_TIMEOUT_MS);
+};
+var postTrajectory = async ({
+  authToken = "",
+  fetchImpl = globalThis.fetch,
+  graphqlUrl,
+  input,
+  timeoutMs = DEFAULT_TRAJECTORY_POST_TIMEOUT_MS
+}) => {
+  return postGraphqlMutation({
+    authToken,
+    fetchImpl,
+    field: "recordAgentTrajectory",
+    graphqlUrl,
+    query: RECORD_AGENT_TRAJECTORY_MUTATION,
+    timeoutMs,
+    variables: { input }
+  });
+};
+var emptyDrain = () => {
+  return { deadLettered: 0, reasons: {}, retained: 0, sent: 0, skipped: 0 };
+};
+var drainBufferedTrajectories = async ({
+  authToken: authTokenOverride,
+  budgetMs = 500,
+  fetchImpl,
+  graphqlUrl: graphqlUrlOverride,
+  jsonlPath,
+  nowFn = Date.now,
+  repoRoot,
+  timeoutMs
+}) => {
+  try {
+    if (process.env.OPENTHROTTLE_TELEMETRY_OFFLINE === "1") {
+      return emptyDrain();
+    }
+    const graphqlUrl = graphqlUrlOverride ?? resolveGraphqlUrl(repoRoot);
+    if (!graphqlUrl) {
+      return emptyDrain();
+    }
+    const authToken = authTokenOverride ?? resolveAuthToken(repoRoot);
+    const resolvedTimeout = resolveTrajectoryTimeout(timeoutMs);
+    return await drainJsonlFile({
+      deadlineMs: budgetMs == null ? void 0 : nowFn() + budgetMs,
+      filePath: jsonlPath || defaultTrajectoriesJsonlPath(),
+      nowFn,
+      post: (input) => {
+        return postTrajectory({
+          authToken,
+          fetchImpl,
+          graphqlUrl,
+          input,
+          timeoutMs: resolvedTimeout
+        });
+      }
+    });
+  } catch (err) {
+    logHookError("drainBufferedTrajectories failed", err);
+    return emptyDrain();
+  }
+};
+
 // packages/agentic-hooks/src/adapters/claude/drain.ts
 var parseArg = (flag) => {
   const idx = process.argv.indexOf(flag);
@@ -849,7 +925,7 @@ var main = async () => {
   try {
     const repoRoot = process.env.CLAUDE_PROJECT_DIR || process.env.OPEN_THROTTLE_REPO_ROOT || process.cwd();
     if (process.argv.includes("--replay-dead-letter")) {
-      const replayed = replayDeadLetter(defaultJsonlPath()) + replayDeadLetter(defaultOutcomesJsonlPath()) + replayDeadLetter(defaultTokenUsageJsonlPath());
+      const replayed = replayDeadLetter(defaultJsonlPath()) + replayDeadLetter(defaultOutcomesJsonlPath()) + replayDeadLetter(defaultTokenUsageJsonlPath()) + replayDeadLetter(defaultTrajectoriesJsonlPath());
       process.stderr.write(
         `[skill-usage-drain] replayed ${replayed} dead-lettered line(s)
 `
@@ -858,10 +934,12 @@ var main = async () => {
     const budgetRaw = parseArg("--budget-ms") || process.env.OPENTHROTTLE_TELEMETRY_DRAIN_BUDGET_MS || "";
     const budgetMs = budgetRaw === "" ? null : Number(budgetRaw) || null;
     const summary = await drainBufferedUsage({ budgetMs, repoRoot });
+    const trajectories = await drainBufferedTrajectories({ budgetMs, repoRoot });
     process.stderr.write(
       `[skill-usage-drain] ${formatDrainFileResult("events", summary.events)}
 [skill-usage-drain] ${formatDrainFileResult("outcomes", summary.outcomes)}
 [skill-usage-drain] ${formatDrainFileResult("token-usage", summary.tokenUsage)}
+[skill-usage-drain] ${formatDrainFileResult("trajectories", trajectories)}
 `
     );
   } catch (err) {

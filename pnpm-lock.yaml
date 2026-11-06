@@ -1681,6 +1681,9 @@ importers:
       '@openthrottle/nodejs-utils':
         specifier: workspace:^
         version: link:../nodejs-utils
+      '@openthrottle/openthrottle-agentic-utils':
+        specifier: workspace:^
+        version: link:../openthrottle-agentic-utils
     devDependencies:
       esbuild:
         specifier: 'catalog:'

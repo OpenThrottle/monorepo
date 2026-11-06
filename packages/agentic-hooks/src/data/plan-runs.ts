@@ -175,6 +175,26 @@ const readPlanRunRecord = (filePath: string): PlanRunRecord | null => {
   }
 };
 
+/**
+ * @description The plan run recorded for a session by the backstop file, or
+ * `undefined` when there is none (or it is unreadable).
+ * @public
+ */
+export const readPlanRunIdForSession = ({
+  repoRoot,
+  sessionId,
+}: {
+  readonly repoRoot: string;
+  readonly sessionId: string;
+}): string | undefined => {
+  const sid = sessionId.trim();
+  if (sid === '') {
+    return undefined;
+  }
+
+  return readPlanRunRecord(planRunFilePath(repoRoot, sid))?.planRunId;
+};
+
 const postSettle = async ({
   authToken,
   fetchImpl = globalThis.fetch,

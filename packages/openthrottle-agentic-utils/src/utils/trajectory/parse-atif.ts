@@ -127,9 +127,27 @@ export const isAtifTrajectory = (value: unknown): value is AtifTrajectory => {
       isFinalMetrics(value.final_metrics)) &&
     isOptionalString(value.session_id) &&
     isOptionalString(value.notes) &&
-    isOptionalRecord(value.extra)
+    isOptionalString(value.trajectory_id) &&
+    isOptionalRecord(value.extra) &&
+    hasValidSubagents(value.subagent_trajectories)
   );
 };
+
+/** Embedded subagents must each be a valid trajectory carrying its own `trajectory_id`. */
+function hasValidSubagents(value: unknown): boolean {
+  if (value === undefined) {
+    return true;
+  }
+
+  return (
+    Array.isArray(value) &&
+    value.every((subagent: unknown) => {
+      return (
+        isAtifTrajectory(subagent) && typeof subagent.trajectory_id === 'string'
+      );
+    })
+  );
+}
 
 /**
  * @description Parses a JSON string as an ATIF document; `undefined` for invalid JSON or a

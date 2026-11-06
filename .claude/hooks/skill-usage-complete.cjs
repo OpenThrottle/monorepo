@@ -33,7 +33,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 
 // packages/agentic-hooks/src/adapters/claude/complete.ts
-var import_node_fs10 = __toESM(require("node:fs"), 1);
+var import_node_fs13 = __toESM(require("node:fs"), 1);
 
 // packages/agentic-hooks/src/data/jsonl.ts
 var import_node_fs2 = __toESM(require("node:fs"), 1);
@@ -213,6 +213,8 @@ var TELEMETRY_DIR_BASENAME = "skill-usage";
 var EVENTS_JSONL_BASENAME = "events.jsonl";
 var OUTCOMES_JSONL_BASENAME = "outcomes.jsonl";
 var TOKEN_USAGE_JSONL_BASENAME = "token-usage.jsonl";
+var TRAJECTORIES_JSONL_BASENAME = "trajectories.jsonl";
+var TRAJECTORY_UPLOADS_DIR_BASENAME = "trajectory-uploads";
 var STARTS_DIR_BASENAME = "starts";
 var CHECKPOINTS_DIR_BASENAME = "checkpoints";
 var resolveTelemetryDir = () => {
@@ -231,6 +233,12 @@ var defaultOutcomesJsonlPath = () => {
 };
 var defaultTokenUsageJsonlPath = () => {
   return import_node_path2.default.join(resolveTelemetryDir(), TOKEN_USAGE_JSONL_BASENAME);
+};
+var defaultTrajectoriesJsonlPath = () => {
+  return import_node_path2.default.join(resolveTelemetryDir(), TRAJECTORIES_JSONL_BASENAME);
+};
+var defaultTrajectoryUploadsDir = () => {
+  return import_node_path2.default.join(resolveTelemetryDir(), TRAJECTORY_UPLOADS_DIR_BASENAME);
 };
 var defaultCheckpointsDir = () => {
   return import_node_path2.default.join(resolveTelemetryDir(), CHECKPOINTS_DIR_BASENAME);
@@ -1471,8 +1479,52 @@ var formatDrainReasons = (tally) => {
   return entries.length ? entries.map(([reason, count]) => `${reason} ×${count}`).join("; ") : "none";
 };
 
-// packages/agentic-hooks/src/data/read-new-bytes.ts
+// packages/agentic-hooks/src/data/plan-runs.ts
 var import_node_fs7 = __toESM(require("node:fs"), 1);
+var import_node_path6 = __toESM(require("node:path"), 1);
+var PLAN_RUNS_DIR_REL = import_node_path6.default.join(".cache", "plan-runs");
+var PLAN_RUN_ABANDONED_MS = 6 * 60 * 60 * 1e3;
+var planRunsDir = (repoRoot) => {
+  return import_node_path6.default.join(repoRoot, PLAN_RUNS_DIR_REL);
+};
+var sanitizeSessionId2 = (sessionId) => {
+  return String(sessionId).replace(/[^A-Za-z0-9._-]/g, "-");
+};
+var planRunFilePath = (repoRoot, sessionId) => {
+  return import_node_path6.default.join(
+    planRunsDir(repoRoot),
+    `${sanitizeSessionId2(sessionId)}.json`
+  );
+};
+var readPlanRunRecord = (filePath) => {
+  try {
+    const parsed = JSON.parse(import_node_fs7.default.readFileSync(filePath, "utf8"));
+    if (!isRecord(parsed) || typeof parsed.planRunId !== "string" || parsed.planRunId.trim() === "") {
+      return null;
+    }
+    return {
+      planId: typeof parsed.planId === "string" ? parsed.planId : "",
+      planRunId: parsed.planRunId,
+      recordedAt: typeof parsed.recordedAt === "string" ? parsed.recordedAt : "",
+      sessionId: typeof parsed.sessionId === "string" ? parsed.sessionId : ""
+    };
+  } catch {
+    return null;
+  }
+};
+var readPlanRunIdForSession = ({
+  repoRoot,
+  sessionId
+}) => {
+  const sid = sessionId.trim();
+  if (sid === "") {
+    return void 0;
+  }
+  return readPlanRunRecord(planRunFilePath(repoRoot, sid))?.planRunId;
+};
+
+// packages/agentic-hooks/src/data/read-new-bytes.ts
+var import_node_fs8 = __toESM(require("node:fs"), 1);
 var NEWLINE = 10;
 var readNewBytes = ({
   filePath,
@@ -1482,8 +1534,8 @@ var readNewBytes = ({
   const unchanged = { lines: [], nextOffset: offset };
   let fd = null;
   try {
-    fd = import_node_fs7.default.openSync(filePath, "r");
-    const { size } = import_node_fs7.default.fstatSync(fd);
+    fd = import_node_fs8.default.openSync(filePath, "r");
+    const { size } = import_node_fs8.default.fstatSync(fd);
     const start = offset > size || offset < 0 ? 0 : offset;
     if (size === start) {
       return { lines: [], nextOffset: start };
@@ -1498,7 +1550,7 @@ var readNewBytes = ({
     let lastNewline = -1;
     while (lastNewline < 0) {
       buffer = Buffer.alloc(window);
-      const bytesRead = import_node_fs7.default.readSync(fd, buffer, 0, window, start);
+      const bytesRead = import_node_fs8.default.readSync(fd, buffer, 0, window, start);
       lastNewline = buffer.subarray(0, bytesRead).lastIndexOf(NEWLINE);
       if (window >= remaining) {
         break;
@@ -1518,10 +1570,278 @@ var readNewBytes = ({
   } finally {
     if (fd !== null) {
       try {
-        import_node_fs7.default.closeSync(fd);
+        import_node_fs8.default.closeSync(fd);
       } catch {
       }
     }
+  }
+};
+
+// packages/agentic-hooks/src/data/read-new-lines.ts
+var import_node_fs9 = __toESM(require("node:fs"), 1);
+var NEWLINE2 = 10;
+var readNewLines = ({
+  filePath,
+  maxBytes,
+  offset
+}) => {
+  const unchanged = {
+    capped: false,
+    lines: [],
+    nextOffset: offset
+  };
+  let fd = null;
+  try {
+    fd = import_node_fs9.default.openSync(filePath, "r");
+    const { size } = import_node_fs9.default.fstatSync(fd);
+    const start = offset > size || offset < 0 ? 0 : offset;
+    if (size === start) {
+      return { capped: false, lines: [], nextOffset: start };
+    }
+    const remaining = size - start;
+    let window = Math.min(remaining, Math.max(1, Math.floor(maxBytes)));
+    let buffer = Buffer.alloc(0);
+    let lastNewline = -1;
+    while (lastNewline < 0) {
+      buffer = Buffer.alloc(window);
+      const bytesRead = import_node_fs9.default.readSync(fd, buffer, 0, window, start);
+      lastNewline = buffer.subarray(0, bytesRead).lastIndexOf(NEWLINE2);
+      if (window >= remaining) {
+        break;
+      }
+      window = Math.min(remaining, window * 2);
+    }
+    if (lastNewline < 0) {
+      return { capped: false, lines: [], nextOffset: start };
+    }
+    const lines = [];
+    let lineStart = 0;
+    while (lineStart <= lastNewline) {
+      const lineEnd = buffer.indexOf(NEWLINE2, lineStart);
+      const text = buffer.subarray(lineStart, lineEnd).toString("utf8").replace(/\r$/, "");
+      if (text.trim() !== "") {
+        lines.push({ offset: start + lineStart, text });
+      }
+      lineStart = lineEnd + 1;
+    }
+    const nextOffset = start + lastNewline + 1;
+    return { capped: nextOffset < size, lines, nextOffset };
+  } catch (err) {
+    if (!(err instanceof Error && "code" in err && err.code === "ENOENT")) {
+      logHookError("readNewLines failed", err);
+    }
+    return unchanged;
+  } finally {
+    if (fd !== null) {
+      try {
+        import_node_fs9.default.closeSync(fd);
+      } catch {
+      }
+    }
+  }
+};
+
+// packages/agentic-hooks/src/data/trajectories.ts
+var DEFAULT_TRAJECTORY_POST_TIMEOUT_MS = 3e3;
+var RECORD_AGENT_TRAJECTORY_MUTATION = `
+mutation RecordAgentTrajectoryFromHook($input: RecordAgentTrajectoryInput!) {
+  recordAgentTrajectory(input: $input) {
+    id
+  }
+}
+`;
+var resolveTrajectoryTimeout = (timeoutMs) => {
+  return timeoutMs ?? (Number(process.env.OPENTHROTTLE_TELEMETRY_TIMEOUT_MS) || DEFAULT_TRAJECTORY_POST_TIMEOUT_MS);
+};
+var postTrajectory = async ({
+  authToken = "",
+  fetchImpl = globalThis.fetch,
+  graphqlUrl,
+  input,
+  timeoutMs = DEFAULT_TRAJECTORY_POST_TIMEOUT_MS
+}) => {
+  return postGraphqlMutation({
+    authToken,
+    fetchImpl,
+    field: "recordAgentTrajectory",
+    graphqlUrl,
+    query: RECORD_AGENT_TRAJECTORY_MUTATION,
+    timeoutMs,
+    variables: { input }
+  });
+};
+var bufferTrajectory = (input, jsonlPath, reason) => {
+  try {
+    appendJsonl(jsonlPath, input);
+    return { reason, sink: "buffered" };
+  } catch (err) {
+    logHookError("trajectory jsonl append failed", err);
+    return { reason: `buffer failed: ${reason}`, sink: "dropped" };
+  }
+};
+var persistTrajectory = async (input, {
+  authToken: authTokenOverride,
+  fetchImpl,
+  graphqlUrl: graphqlUrlOverride,
+  jsonlPath,
+  repoRoot,
+  timeoutMs
+}) => {
+  const outPath = jsonlPath || defaultTrajectoriesJsonlPath();
+  try {
+    const offline = process.env.OPENTHROTTLE_TELEMETRY_OFFLINE === "1";
+    const graphqlUrl = offline ? null : graphqlUrlOverride ?? resolveGraphqlUrl(repoRoot);
+    if (offline || !graphqlUrl) {
+      return bufferTrajectory(
+        input,
+        outPath,
+        offline ? "OPENTHROTTLE_TELEMETRY_OFFLINE=1" : "missing graphql url"
+      );
+    }
+    const res = await postTrajectory({
+      authToken: authTokenOverride ?? resolveAuthToken(repoRoot),
+      fetchImpl,
+      graphqlUrl,
+      input,
+      timeoutMs: resolveTrajectoryTimeout(timeoutMs)
+    });
+    if (res.ok) {
+      return { id: res.id, sink: "server" };
+    }
+    if (!res.permanent) {
+      logHookError(
+        `trajectory post failed; falling back to jsonl (${res.reason})`
+      );
+      return bufferTrajectory(input, outPath, res.reason);
+    }
+    logHookError(
+      `trajectory rejected; moved to dead-letter (${res.reason})`
+    );
+    try {
+      appendDeadLetters({
+        filePath: outPath,
+        reason: res.reason,
+        records: [input]
+      });
+      return { reason: res.reason, sink: "dead-letter" };
+    } catch (err) {
+      logHookError("trajectory dead-letter append failed", err);
+      return { reason: `dead-letter failed: ${res.reason}`, sink: "dropped" };
+    }
+  } catch (err) {
+    logHookError("persistTrajectory failed", err);
+    return {
+      reason: err instanceof Error ? err.message : String(err),
+      sink: "dropped"
+    };
+  }
+};
+var emptyDrain = () => {
+  return { deadLettered: 0, reasons: {}, retained: 0, sent: 0, skipped: 0 };
+};
+var drainBufferedTrajectories = async ({
+  authToken: authTokenOverride,
+  budgetMs = 500,
+  fetchImpl,
+  graphqlUrl: graphqlUrlOverride,
+  jsonlPath,
+  nowFn = Date.now,
+  repoRoot,
+  timeoutMs
+}) => {
+  try {
+    if (process.env.OPENTHROTTLE_TELEMETRY_OFFLINE === "1") {
+      return emptyDrain();
+    }
+    const graphqlUrl = graphqlUrlOverride ?? resolveGraphqlUrl(repoRoot);
+    if (!graphqlUrl) {
+      return emptyDrain();
+    }
+    const authToken = authTokenOverride ?? resolveAuthToken(repoRoot);
+    const resolvedTimeout = resolveTrajectoryTimeout(timeoutMs);
+    return await drainJsonlFile({
+      deadlineMs: budgetMs == null ? void 0 : nowFn() + budgetMs,
+      filePath: jsonlPath || defaultTrajectoriesJsonlPath(),
+      nowFn,
+      post: (input) => {
+        return postTrajectory({
+          authToken,
+          fetchImpl,
+          graphqlUrl,
+          input,
+          timeoutMs: resolvedTimeout
+        });
+      }
+    });
+  } catch (err) {
+    logHookError("drainBufferedTrajectories failed", err);
+    return emptyDrain();
+  }
+};
+
+// packages/agentic-hooks/src/data/trajectory-uploads.ts
+var import_node_fs10 = __toESM(require("node:fs"), 1);
+var import_node_path7 = __toESM(require("node:path"), 1);
+var stateFilePath = (dir, sessionId) => {
+  return import_node_path7.default.join(dir, `${sanitizeSessionId(sessionId)}.json`);
+};
+var readTrajectoryUploadState = ({
+  dir,
+  sessionId
+}) => {
+  const fresh = {
+    planRunId: void 0,
+    scanOffset: 0,
+    uploaded: []
+  };
+  try {
+    const parsed = JSON.parse(
+      import_node_fs10.default.readFileSync(
+        stateFilePath(dir || defaultTrajectoryUploadsDir(), sessionId),
+        "utf8"
+      )
+    );
+    if (!isRecord(parsed)) {
+      return fresh;
+    }
+    const isOffset = typeof parsed.scanOffset === "number" && Number.isFinite(parsed.scanOffset) && parsed.scanOffset >= 0;
+    const hasPlanRun = typeof parsed.planRunId === "string" && parsed.planRunId !== "";
+    const uploaded = Array.isArray(parsed.uploaded) ? parsed.uploaded : [];
+    return {
+      planRunId: hasPlanRun ? String(parsed.planRunId) : void 0,
+      scanOffset: isOffset ? Number(parsed.scanOffset) : 0,
+      uploaded: uploaded.filter((key) => {
+        return typeof key === "string";
+      })
+    };
+  } catch {
+    return fresh;
+  }
+};
+var writeTrajectoryUploadState = ({
+  dir,
+  sessionId,
+  state
+}) => {
+  try {
+    const target = stateFilePath(dir || defaultTrajectoryUploadsDir(), sessionId);
+    const temp = `${target}.tmp.${process.pid}`;
+    import_node_fs10.default.mkdirSync(import_node_path7.default.dirname(target), { recursive: true });
+    import_node_fs10.default.writeFileSync(
+      temp,
+      `${JSON.stringify({
+        planRunId: state.planRunId,
+        scanOffset: state.scanOffset,
+        uploaded: state.uploaded
+      })}
+`,
+      "utf8"
+    );
+    import_node_fs10.default.renameSync(temp, target);
+    return true;
+  } catch (err) {
+    logHookError("writeTrajectoryUploadState failed", err);
+    return false;
   }
 };
 
@@ -1547,22 +1867,1710 @@ var normalizeClaudeStopPayload = (raw) => {
   };
 };
 
+// packages/agentic-hooks/src/adapters/claude/session-trajectory.ts
+var import_node_path8 = __toESM(require("node:path"), 1);
+
+// packages/openthrottle-drivers/src/registry/index.ts
+var DRIVERS = {
+  antigravity: "antigravity",
+  claude: "claude",
+  codex: "codex",
+  cursor: "cursor",
+  gemini: "gemini",
+  grok: "grok",
+  opencode: "opencode"
+};
+var DRIVER_IDS = Object.values(DRIVERS);
+var DRIVER_ID_SET = new Set(DRIVER_IDS);
+
+// packages/openthrottle-drivers/src/utils/usage-limit.ts
+var isRecord2 = (value) => {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+};
+var epochSecondsToIso = (value) => {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return null;
+  }
+  const date = new Date(value * 1e3);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+};
+var parseClaudeRateLimitInfo = (value) => {
+  if (!isRecord2(value) || value.status !== "rejected") {
+    return null;
+  }
+  return {
+    rateLimitType: typeof value.rateLimitType === "string" ? value.rateLimitType : null,
+    resetsAt: epochSecondsToIso(value.resetsAt)
+  };
+};
+var isClaudeUsageLimitResult = (event) => {
+  return isRecord2(event) && event.type === "result" && event.is_error === true && event.api_error_status === 429;
+};
+
+// packages/openthrottle-agentic-utils/src/utils/conversation-backend/types.ts
+var CONVERSATION_STREAM_CHUNK_KINDS = {
+  keepalive: "keepalive",
+  session: "session",
+  text: "text",
+  thinking: "thinking",
+  toolCall: "tool_call",
+  toolResult: "tool_result",
+  usage: "usage",
+  usageLimit: "usage_limit"
+};
+
+// packages/openthrottle-agentic-utils/src/utils/conversation-backend/antigravity/events.ts
+var TERMINAL_STEP_STATES = /* @__PURE__ */ new Set(["DONE", "ERROR"]);
+var asString = (value) => {
+  return typeof value === "string" ? value : void 0;
+};
+var toolArgumentsOf = (toolInfo) => {
+  if (isRecord(toolInfo) && isRecord(toolInfo.parameters)) {
+    return toolInfo.parameters;
+  }
+  return toolInfo ?? null;
+};
+var toolOutputOf = (toolInfo) => {
+  if (isRecord(toolInfo) && toolInfo.output !== void 0) {
+    return toolInfo.output;
+  }
+  return toolArgumentsOf(toolInfo);
+};
+function createAntigravityEventMapper() {
+  let model;
+  const toolNameByStep = /* @__PURE__ */ new Map();
+  const mapStepUpdate = (payload) => {
+    const stepType = asString(payload.step_type);
+    const state = asString(payload.state) ?? "";
+    if (stepType === "user_input") {
+      return [];
+    }
+    if (stepType === "agent_response") {
+      const delta = asString(payload.text_delta);
+      if (delta === void 0 || delta === "") {
+        return [];
+      }
+      return [
+        { delta, done: false, kind: CONVERSATION_STREAM_CHUNK_KINDS.text }
+      ];
+    }
+    if (stepType === "tool") {
+      const stepIndex = typeof payload.step_index === "number" ? payload.step_index : -1;
+      const toolName = asString(payload.tool_name);
+      if (toolName !== void 0) {
+        toolNameByStep.set(stepIndex, toolName);
+      }
+      const callId = String(stepIndex);
+      const name = toolNameByStep.get(stepIndex) ?? null;
+      if (!TERMINAL_STEP_STATES.has(state)) {
+        return [
+          {
+            delta: "",
+            done: false,
+            kind: CONVERSATION_STREAM_CHUNK_KINDS.toolCall,
+            metadata: {
+              callId,
+              toolCall: toolArgumentsOf(payload.tool_info),
+              toolName: name
+            }
+          }
+        ];
+      }
+      return [
+        {
+          delta: "",
+          done: false,
+          kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
+          metadata: {
+            callId,
+            toolCall: {
+              // A step-level ERROR is not a turn failure (see rule 3) — surface it on the tool
+              // result and let `result.status` decide the turn.
+              error: state === "ERROR" ? state : null,
+              output: toolOutputOf(payload.tool_info),
+              status: state
+            },
+            toolName: name
+          }
+        }
+      ];
+    }
+    return [];
+  };
+  return (event) => {
+    if (!isRecord(event)) {
+      return [];
+    }
+    const name = asString(event.event);
+    const payload = isRecord(event[name ?? ""]) ? event[name ?? ""] : void 0;
+    if (name === "init") {
+      const init = isRecord(payload) ? payload : {};
+      model = asString(init.model) ?? model;
+      const conversationId = asString(event.conversation_id);
+      if (conversationId === void 0 || conversationId === "") {
+        return [];
+      }
+      return [
+        {
+          delta: "",
+          done: false,
+          kind: CONVERSATION_STREAM_CHUNK_KINDS.session,
+          metadata: { sessionId: conversationId }
+        }
+      ];
+    }
+    if (name === "step_update" && isRecord(payload)) {
+      return mapStepUpdate(payload);
+    }
+    if (name === "result" && isRecord(payload)) {
+      const failed = asString(payload.status) !== "SUCCESS";
+      const errorMessage = asString(payload.error);
+      return [
+        {
+          delta: "",
+          done: true,
+          error: failed ? errorMessage ?? "antigravity reported an error" : null,
+          kind: CONVERSATION_STREAM_CHUNK_KINDS.usage,
+          metadata: { model: model ?? null, usage: payload.usage ?? null }
+        }
+      ];
+    }
+    return [];
+  };
+}
+
+// packages/openthrottle-agentic-utils/src/utils/conversation-backend/claude/events.ts
+var asString2 = (value) => {
+  const isString = typeof value === "string";
+  return isString ? value : void 0;
+};
+function mapSystem(event) {
+  if (event.subtype !== "init") {
+    return null;
+  }
+  return {
+    delta: "",
+    done: false,
+    kind: CONVERSATION_STREAM_CHUNK_KINDS.session,
+    metadata: { sessionId: asString2(event.session_id) ?? null }
+  };
+}
+function mapStreamEvent(inner) {
+  if (!isRecord(inner)) {
+    return null;
+  }
+  if (inner.type === "content_block_delta" && isRecord(inner.delta)) {
+    const delta = inner.delta;
+    if (delta.type === "text_delta") {
+      return {
+        delta: asString2(delta.text) ?? "",
+        done: false,
+        kind: CONVERSATION_STREAM_CHUNK_KINDS.text
+      };
+    }
+    if (delta.type === "thinking_delta") {
+      return {
+        delta: asString2(delta.thinking) ?? "",
+        done: false,
+        kind: CONVERSATION_STREAM_CHUNK_KINDS.thinking
+      };
+    }
+    return null;
+  }
+  if (inner.type === "content_block_start" && isRecord(inner.content_block)) {
+    const block = inner.content_block;
+    if (block.type === "tool_use") {
+      return {
+        delta: "",
+        done: false,
+        kind: CONVERSATION_STREAM_CHUNK_KINDS.toolCall,
+        metadata: {
+          callId: asString2(block.id) ?? null,
+          index: inner.index ?? null,
+          name: asString2(block.name) ?? null,
+          toolName: asString2(block.name) ?? null
+        }
+      };
+    }
+  }
+  return null;
+}
+function mapAssistant(event) {
+  const message = event.message;
+  if (!isRecord(message) || !Array.isArray(message.content)) {
+    return [];
+  }
+  return message.content.filter(
+    (block) => isRecord(block) && block.type === "tool_use"
+  ).map((block) => ({
+    delta: "",
+    done: false,
+    kind: CONVERSATION_STREAM_CHUNK_KINDS.toolCall,
+    metadata: {
+      callId: asString2(block.id) ?? null,
+      name: asString2(block.name) ?? null,
+      toolCall: block.input ?? null,
+      toolName: asString2(block.name) ?? null
+    }
+  }));
+}
+function toolResultText(content) {
+  if (!Array.isArray(content)) {
+    return content ?? null;
+  }
+  return content.map((part) => {
+    if (!isRecord(part)) {
+      return "";
+    }
+    return part.type === "text" ? asString2(part.text) ?? "" : `[${asString2(part.type) ?? "content"}]`;
+  }).join("\n");
+}
+function mapUser(event) {
+  const message = event.message;
+  if (!isRecord(message) || !Array.isArray(message.content)) {
+    return [];
+  }
+  return message.content.filter(
+    (block) => isRecord(block) && block.type === "tool_result"
+  ).map((block) => ({
+    delta: "",
+    done: false,
+    kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
+    metadata: {
+      callId: asString2(block.tool_use_id) ?? null,
+      isError: block.is_error === true,
+      toolCall: toolResultText(block.content)
+    }
+  }));
+}
+function mapRateLimit(event) {
+  const usageLimit = parseClaudeRateLimitInfo(event.rate_limit_info);
+  if (usageLimit === null) {
+    return null;
+  }
+  return {
+    delta: "",
+    done: false,
+    kind: CONVERSATION_STREAM_CHUNK_KINDS.usageLimit,
+    metadata: {
+      rateLimitType: usageLimit.rateLimitType,
+      resetsAt: usageLimit.resetsAt
+    }
+  };
+}
+function mapResult(event) {
+  const isError = event.is_error === true;
+  const hitUsageLimit = isClaudeUsageLimitResult(event);
+  const unknownUsageLimit = {
+    usageLimit: { rateLimitType: null, resetsAt: null }
+  };
+  return {
+    delta: "",
+    done: true,
+    error: isError ? asString2(event.result) ?? "claude reported an error" : null,
+    kind: CONVERSATION_STREAM_CHUNK_KINDS.usage,
+    metadata: {
+      apiErrorStatus: event.api_error_status ?? null,
+      modelUsage: event.modelUsage ?? null,
+      result: asString2(event.result) ?? null,
+      totalCostUsd: event.total_cost_usd ?? null,
+      usage: event.usage ?? null,
+      ...hitUsageLimit ? unknownUsageLimit : {}
+    }
+  };
+}
+var listOf = (chunk) => {
+  return chunk === null ? [] : [chunk];
+};
+function mapClaudeEvent(event) {
+  if (!isRecord(event)) {
+    return [];
+  }
+  switch (event.type) {
+    case "assistant":
+      return mapAssistant(event);
+    case "rate_limit_event":
+      return listOf(mapRateLimit(event));
+    case "result":
+      return [mapResult(event)];
+    case "stream_event":
+      return listOf(mapStreamEvent(event.event));
+    case "system":
+      return listOf(mapSystem(event));
+    case "user":
+      return mapUser(event);
+    default:
+      return [];
+  }
+}
+
+// packages/openthrottle-agentic-utils/src/utils/conversation-backend/codex/events.ts
+var asString3 = (value) => {
+  const isString = typeof value === "string";
+  return isString ? value : void 0;
+};
+var itemType = (item) => {
+  return asString3(item.item_type) ?? asString3(item.type);
+};
+function mapItemCompleted(event) {
+  const item = event.item;
+  if (!isRecord(item)) {
+    return null;
+  }
+  const kind = itemType(item);
+  if (kind === "agent_message") {
+    return {
+      delta: asString3(item.text) ?? "",
+      done: false,
+      kind: CONVERSATION_STREAM_CHUNK_KINDS.text
+    };
+  }
+  if (kind === "reasoning") {
+    return {
+      delta: asString3(item.text) ?? "",
+      done: false,
+      kind: CONVERSATION_STREAM_CHUNK_KINDS.thinking
+    };
+  }
+  if (kind === void 0) {
+    return null;
+  }
+  return {
+    delta: "",
+    done: false,
+    kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
+    // codex has no tool name of its own — the item kind (`command_execution`,
+    // `file_change`, …) IS what the activity was, so it doubles as the name.
+    metadata: { item, itemType: kind, toolName: kind }
+  };
+}
+function mapCodexEvent(event) {
+  if (!isRecord(event)) {
+    return null;
+  }
+  switch (event.type) {
+    case "thread.started":
+      return {
+        delta: "",
+        done: false,
+        kind: CONVERSATION_STREAM_CHUNK_KINDS.session,
+        metadata: { sessionId: asString3(event.thread_id) ?? null }
+      };
+    case "item.completed":
+      return mapItemCompleted(event);
+    case "turn.completed":
+      return {
+        delta: "",
+        done: true,
+        error: null,
+        kind: CONVERSATION_STREAM_CHUNK_KINDS.usage,
+        metadata: { usage: event.usage ?? null }
+      };
+    case "turn.failed": {
+      const error = isRecord(event.error) ? event.error : void 0;
+      return {
+        delta: "",
+        done: true,
+        error: asString3(error?.message) ?? "codex reported a failed turn",
+        kind: CONVERSATION_STREAM_CHUNK_KINDS.text
+      };
+    }
+    case "error":
+      return {
+        delta: "",
+        done: true,
+        error: asString3(event.message) ?? "codex reported an error",
+        kind: CONVERSATION_STREAM_CHUNK_KINDS.text
+      };
+    default:
+      return null;
+  }
+}
+
+// packages/openthrottle-agentic-utils/src/utils/conversation-backend/cursor-agent/events.ts
+var asString4 = (value) => {
+  const isString = typeof value === "string";
+  return isString ? value : void 0;
+};
+function messageText(message) {
+  if (!isRecord(message)) {
+    return "";
+  }
+  const content = message.content;
+  if (!Array.isArray(content) || !isRecord(content[0])) {
+    return "";
+  }
+  return asString4(content[0].text) ?? "";
+}
+function mapSystem2(event) {
+  if (event.subtype !== "init") {
+    return null;
+  }
+  return {
+    delta: "",
+    done: false,
+    kind: CONVERSATION_STREAM_CHUNK_KINDS.session,
+    metadata: { sessionId: asString4(event.session_id) ?? null }
+  };
+}
+function mapAssistant2(event) {
+  if (event.timestamp_ms === void 0) {
+    return null;
+  }
+  return {
+    delta: messageText(event.message),
+    done: false,
+    kind: CONVERSATION_STREAM_CHUNK_KINDS.text
+  };
+}
+function mapThinking(event) {
+  if (event.subtype !== "delta") {
+    return null;
+  }
+  return {
+    delta: asString4(event.text) ?? "",
+    done: false,
+    kind: CONVERSATION_STREAM_CHUNK_KINDS.thinking
+  };
+}
+var TOOL_CALL_RESERVED_KEYS = /* @__PURE__ */ new Set([
+  "hookAdditionalContexts",
+  "toolCallId"
+]);
+function toolNameOf(toolCall) {
+  if (!isRecord(toolCall)) {
+    return null;
+  }
+  const key = Object.keys(toolCall).find(
+    (candidate) => !TOOL_CALL_RESERVED_KEYS.has(candidate) && isRecord(toolCall[candidate])
+  );
+  return key === void 0 ? null : key.replace(/ToolCall$/, "");
+}
+function mapToolCall(event) {
+  const callId = asString4(event.call_id) ?? null;
+  const metadata = {
+    callId,
+    toolCall: event.tool_call ?? null,
+    toolName: toolNameOf(event.tool_call)
+  };
+  if (event.subtype === "started") {
+    return {
+      delta: "",
+      done: false,
+      kind: CONVERSATION_STREAM_CHUNK_KINDS.toolCall,
+      metadata
+    };
+  }
+  if (event.subtype === "completed") {
+    return {
+      delta: "",
+      done: false,
+      kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
+      metadata
+    };
+  }
+  return null;
+}
+function mapResult2(event) {
+  const isError = event.is_error === true;
+  return {
+    delta: "",
+    done: true,
+    error: isError ? asString4(event.result) ?? "cursor-agent reported an error" : null,
+    kind: CONVERSATION_STREAM_CHUNK_KINDS.usage,
+    metadata: {
+      result: asString4(event.result) ?? null,
+      usage: event.usage ?? null
+    }
+  };
+}
+function mapCursorEvent(event) {
+  if (!isRecord(event)) {
+    return null;
+  }
+  switch (event.type) {
+    case "assistant":
+      return mapAssistant2(event);
+    case "result":
+      return mapResult2(event);
+    case "system":
+      return mapSystem2(event);
+    case "thinking":
+      return mapThinking(event);
+    case "tool_call":
+      return mapToolCall(event);
+    default:
+      return null;
+  }
+}
+
+// packages/openthrottle-agentic-utils/src/utils/conversation-backend/gemini/events.ts
+var asString5 = (value) => {
+  return typeof value === "string" ? value : void 0;
+};
+function createGeminiEventMapper() {
+  let model;
+  const toolNameByCallId = /* @__PURE__ */ new Map();
+  return (event) => {
+    if (!isRecord(event)) {
+      return [];
+    }
+    switch (event.type) {
+      case "init": {
+        model = asString5(event.model) ?? model;
+        return [];
+      }
+      case "message": {
+        if (event.role !== "assistant") {
+          return [];
+        }
+        return [
+          {
+            delta: asString5(event.content) ?? "",
+            done: false,
+            kind: CONVERSATION_STREAM_CHUNK_KINDS.text
+          }
+        ];
+      }
+      case "tool_use": {
+        const callId = asString5(event.tool_id) ?? "";
+        const toolName = asString5(event.tool_name) ?? null;
+        if (toolName !== null) {
+          toolNameByCallId.set(callId, toolName);
+        }
+        return [
+          {
+            delta: "",
+            done: false,
+            kind: CONVERSATION_STREAM_CHUNK_KINDS.toolCall,
+            metadata: {
+              // `parameters` is already the tool's own flat argument record (verified against
+              // gemini-cli-core's shipped `ToolUseEvent`), so it IS the payload — wrapping it
+              // beside the name would just repeat what `toolName` carries.
+              callId,
+              toolCall: event.parameters ?? null,
+              toolName
+            }
+          }
+        ];
+      }
+      case "tool_result": {
+        const callId = asString5(event.tool_id) ?? "";
+        return [
+          {
+            delta: "",
+            done: false,
+            kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
+            metadata: {
+              callId,
+              toolCall: {
+                error: event.error ?? null,
+                output: asString5(event.output) ?? null,
+                status: asString5(event.status) ?? null
+              },
+              toolName: toolNameByCallId.get(callId) ?? null
+            }
+          }
+        ];
+      }
+      case "result": {
+        const failed = event.status === "error";
+        const errorMessage = isRecord(event.error) ? asString5(event.error.message) : void 0;
+        return [
+          {
+            delta: "",
+            done: true,
+            error: failed ? errorMessage ?? "gemini reported an error" : null,
+            kind: CONVERSATION_STREAM_CHUNK_KINDS.usage,
+            metadata: {
+              model: model ?? null,
+              usage: event.stats ?? null
+            }
+          }
+        ];
+      }
+      // Non-fatal `error` events (loop detection, max turns) precede the
+      // terminal `result`, which carries the authoritative status — skip them.
+      default:
+        return [];
+    }
+  };
+}
+
+// packages/openthrottle-agentic-utils/src/utils/conversation-backend/grok/events.ts
+var asString6 = (value) => {
+  const isString = typeof value === "string";
+  return isString ? value : void 0;
+};
+function mapGrokEvent(event) {
+  if (!isRecord(event)) {
+    return [];
+  }
+  switch (event.type) {
+    case "thought":
+      return [
+        {
+          delta: asString6(event.data) ?? "",
+          done: false,
+          kind: CONVERSATION_STREAM_CHUNK_KINDS.thinking
+        }
+      ];
+    case "text":
+      return [
+        {
+          delta: asString6(event.data) ?? "",
+          done: false,
+          kind: CONVERSATION_STREAM_CHUNK_KINDS.text
+        }
+      ];
+    case "end": {
+      const chunks = [];
+      const sessionId = asString6(event.sessionId);
+      if (sessionId !== void 0 && sessionId !== "") {
+        chunks.push({
+          delta: "",
+          done: false,
+          kind: CONVERSATION_STREAM_CHUNK_KINDS.session,
+          metadata: { sessionId }
+        });
+      }
+      chunks.push({
+        delta: "",
+        done: true,
+        error: null,
+        kind: CONVERSATION_STREAM_CHUNK_KINDS.usage,
+        metadata: {
+          modelUsage: event.modelUsage ?? null,
+          numTurns: event.num_turns ?? null,
+          stopReason: asString6(event.stopReason) ?? null,
+          usage: event.usage ?? null
+        }
+      });
+      return chunks;
+    }
+    case "error":
+      return [
+        {
+          delta: "",
+          done: true,
+          error: asString6(event.message) ?? "grok reported an error",
+          kind: CONVERSATION_STREAM_CHUNK_KINDS.text
+        }
+      ];
+    default:
+      return [];
+  }
+}
+
+// packages/openthrottle-agentic-utils/src/utils/conversation-backend/opencode/events.ts
+var asString7 = (value) => {
+  const isString = typeof value === "string";
+  return isString ? value : void 0;
+};
+function mapText(part, emittedLen) {
+  const id = asString7(part.id);
+  const full = asString7(part.text);
+  if (id === void 0 || full === void 0) {
+    return null;
+  }
+  const prev = emittedLen.get(id) ?? 0;
+  if (full.length <= prev) {
+    return null;
+  }
+  emittedLen.set(id, full.length);
+  return {
+    delta: full.slice(prev),
+    done: false,
+    kind: CONVERSATION_STREAM_CHUNK_KINDS.text
+  };
+}
+function mapTool(part) {
+  const state = isRecord(part.state) ? part.state : void 0;
+  const status = asString7(state?.status);
+  const callId = asString7(part.callID) ?? null;
+  const toolName = asString7(part.tool) ?? null;
+  const metadata = {
+    callId,
+    tool: toolName,
+    toolName,
+    toolPart: part
+  };
+  if (status === "completed" || status === "error") {
+    return {
+      delta: "",
+      done: false,
+      error: status === "error" ? asString7(state?.error) ?? "tool error" : null,
+      kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
+      metadata
+    };
+  }
+  return {
+    delta: "",
+    done: false,
+    kind: CONVERSATION_STREAM_CHUNK_KINDS.toolCall,
+    metadata
+  };
+}
+function isToolEvent(type) {
+  return type === "tool" || type === "tool_use";
+}
+function mapStepFinish(part) {
+  return {
+    delta: "",
+    done: false,
+    kind: CONVERSATION_STREAM_CHUNK_KINDS.usage,
+    metadata: { cost: part.cost ?? null, tokens: part.tokens ?? null }
+  };
+}
+function createOpencodeEventMapper() {
+  const emittedLen = /* @__PURE__ */ new Map();
+  let sessionEmitted = false;
+  return {
+    map(event) {
+      if (!isRecord(event)) {
+        return [];
+      }
+      const chunks = [];
+      const sessionId = asString7(event.sessionID);
+      if (!sessionEmitted && sessionId !== void 0 && sessionId !== "") {
+        sessionEmitted = true;
+        chunks.push({
+          delta: "",
+          done: false,
+          kind: CONVERSATION_STREAM_CHUNK_KINDS.session,
+          metadata: { sessionId }
+        });
+      }
+      const part = isRecord(event.part) ? event.part : void 0;
+      if (event.type === "text" && part !== void 0) {
+        const chunk = mapText(part, emittedLen);
+        if (chunk !== null) {
+          chunks.push(chunk);
+        }
+      } else if (isToolEvent(event.type) && part !== void 0) {
+        const chunk = mapTool(part);
+        if (chunk !== null) {
+          chunks.push(chunk);
+        }
+      } else if (event.type === "step_finish" && part !== void 0) {
+        chunks.push(mapStepFinish(part));
+      }
+      return chunks;
+    }
+  };
+}
+
+// packages/openthrottle-agentic-utils/src/utils/structured-output/chunk-reader.ts
+var listOf2 = (chunk) => {
+  return chunk === null ? [] : [chunk];
+};
+var textChunk = (delta) => {
+  return { delta, done: false, kind: CONVERSATION_STREAM_CHUNK_KINDS.text };
+};
+var consolidatedText = (event) => {
+  if (!isRecord(event) || event.type !== "assistant") {
+    return [];
+  }
+  const message = isRecord(event.message) ? event.message : void 0;
+  const content = Array.isArray(message?.content) ? message.content : [];
+  return content.flatMap((block) => {
+    const isText = isRecord(block) && block.type === "text";
+    const text = isText ? block.text : void 0;
+    return typeof text === "string" && text !== "" ? [textChunk(text)] : [];
+  });
+};
+var withConsolidatedText = (map) => {
+  return (event) => {
+    const isPartial = isRecord(event) && event.timestamp_ms !== void 0;
+    const text = isPartial ? [] : consolidatedText(event);
+    return [...text, ...map(event)];
+  };
+};
+var opencodeErrorOf = (event) => {
+  if (!isRecord(event) || event.type !== "error") {
+    return void 0;
+  }
+  const error = isRecord(event.error) ? event.error : {};
+  const data = isRecord(error.data) ? error.data : {};
+  const message = data.message ?? error.message ?? error.name;
+  return typeof message === "string" ? message : "opencode reported an error";
+};
+var createStructuredChunkReader = (driverId) => {
+  switch (driverId) {
+    case DRIVERS.antigravity:
+      return createAntigravityEventMapper();
+    case DRIVERS.claude:
+      return withConsolidatedText(mapClaudeEvent);
+    case DRIVERS.codex:
+      return (event) => {
+        return listOf2(mapCodexEvent(event));
+      };
+    case DRIVERS.cursor:
+      return withConsolidatedText((event) => {
+        return listOf2(mapCursorEvent(event));
+      });
+    case DRIVERS.gemini:
+      return createGeminiEventMapper();
+    case DRIVERS.grok:
+      return mapGrokEvent;
+    case DRIVERS.opencode: {
+      const mapper = createOpencodeEventMapper();
+      return (event) => {
+        const error = opencodeErrorOf(event);
+        if (error === void 0) {
+          return mapper.map(event);
+        }
+        return [
+          {
+            delta: "",
+            done: true,
+            error,
+            kind: CONVERSATION_STREAM_CHUNK_KINDS.usage
+          }
+        ];
+      };
+    }
+    default:
+      return void 0;
+  }
+};
+
+// packages/openthrottle-agentic-utils/src/utils/trajectory/cap-trajectory.ts
+var DEFAULT_TRAJECTORY_LIMITS = {
+  observationBytes: 16 * 1024,
+  totalBytes: 4 * 1024 * 1024
+};
+var MARKER_RESERVE_BYTES = 40;
+var encoder = new TextEncoder();
+var decoder = new TextDecoder("utf-8", { fatal: false });
+var byteLength = (value) => {
+  return encoder.encode(value).length;
+};
+var elisionMarker = (elidedBytes) => {
+  return `
+…[${elidedBytes} bytes elided]…
+`;
+};
+var decodeWhole = (bytes) => {
+  return decoder.decode(bytes).replace(/^�+|�+$/g, "");
+};
+var capContent = (content, limit) => {
+  const bytes = encoder.encode(content);
+  if (bytes.length <= limit) return content;
+  const half = Math.max(0, Math.floor((limit - MARKER_RESERVE_BYTES) / 2));
+  const head = decodeWhole(bytes.subarray(0, half));
+  const tail = decodeWhole(bytes.subarray(bytes.length - half));
+  const elided = bytes.length - byteLength(head) - byteLength(tail);
+  return `${head}${elisionMarker(elided)}${tail}`;
+};
+var mapResults = (steps, transform) => {
+  return steps.map((step) => {
+    if (!step.observation) return step;
+    return {
+      ...step,
+      observation: { results: step.observation.results.map(transform) }
+    };
+  });
+};
+var withSteps = (trajectory, steps) => {
+  return { ...trajectory, steps };
+};
+var serializedBytes = (trajectory) => {
+  return byteLength(JSON.stringify(trajectory));
+};
+var capTrajectory = (trajectory, limits = DEFAULT_TRAJECTORY_LIMITS) => {
+  let truncated = false;
+  const perObservation = mapResults(trajectory.steps, (result) => {
+    const capped = capContent(result.content, limits.observationBytes);
+    if (capped !== result.content) truncated = true;
+    return capped === result.content ? result : { ...result, content: capped };
+  });
+  const current = withSteps(trajectory, perObservation);
+  let size = serializedBytes(current);
+  if (size <= limits.totalBytes) {
+    return { byteSize: size, trajectory: current, truncated };
+  }
+  const jsonBytes = (value) => {
+    return byteLength(JSON.stringify(value));
+  };
+  const elisions = /* @__PURE__ */ new Map();
+  const keyOf = (stepIndex, resultIndex) => {
+    return `${stepIndex}:${resultIndex}`;
+  };
+  current.steps.forEach((step, stepIndex) => {
+    (step.observation?.results ?? []).forEach((result, resultIndex) => {
+      if (size <= limits.totalBytes) return;
+      const marker = elisionMarker(byteLength(result.content));
+      const saved = jsonBytes(result.content) - jsonBytes(marker);
+      if (saved <= 0) return;
+      elisions.set(keyOf(stepIndex, resultIndex), marker);
+      size -= saved;
+    });
+  });
+  if (elisions.size === 0) {
+    return { byteSize: size, trajectory: current, truncated };
+  }
+  const elidedSteps = current.steps.map((step, stepIndex) => {
+    if (!step.observation) return step;
+    return {
+      ...step,
+      observation: {
+        results: step.observation.results.map((result, resultIndex) => {
+          const marker = elisions.get(keyOf(stepIndex, resultIndex));
+          return marker === void 0 ? result : { ...result, content: marker };
+        })
+      }
+    };
+  });
+  const elided = withSteps(current, elidedSteps);
+  return {
+    byteSize: serializedBytes(elided),
+    trajectory: elided,
+    truncated: true
+  };
+};
+
+// packages/openthrottle-agentic-utils/src/utils/trajectory/tool-metadata.ts
+var CODEX_ITEM_BOOKKEEPING = /* @__PURE__ */ new Set([
+  "aggregated_output",
+  "exit_code",
+  "id",
+  "item_type",
+  "status",
+  "type"
+]);
+var metadataOf = (chunk) => {
+  return chunk.metadata ?? {};
+};
+var stringOf = (value) => {
+  return typeof value === "string" && value !== "" ? value : void 0;
+};
+var asText = (value) => {
+  if (typeof value === "string") {
+    return value;
+  }
+  return value === void 0 || value === null ? "" : JSON.stringify(value);
+};
+var cursorToolBody = (toolCall) => {
+  if (!isRecord(toolCall)) {
+    return void 0;
+  }
+  const key = Object.keys(toolCall).find((candidate) => {
+    return candidate.endsWith("ToolCall") && isRecord(toolCall[candidate]);
+  });
+  const body = key === void 0 ? void 0 : toolCall[key];
+  return isRecord(body) ? body : void 0;
+};
+var opencodeState = (metadata) => {
+  const part = isRecord(metadata.toolPart) ? metadata.toolPart : void 0;
+  return isRecord(part?.state) ? part.state : void 0;
+};
+var codexItem = (metadata) => {
+  return isRecord(metadata.item) ? metadata.item : void 0;
+};
+var toolCallIdOf = (chunk) => {
+  const metadata = metadataOf(chunk);
+  return stringOf(metadata.callId) ?? stringOf(codexItem(metadata)?.id);
+};
+var toolNameOf2 = (chunk) => {
+  const metadata = metadataOf(chunk);
+  return stringOf(metadata.toolName) ?? stringOf(metadata.name) ?? stringOf(metadata.itemType) ?? "tool";
+};
+var toolArgumentsOf2 = (chunk) => {
+  const metadata = metadataOf(chunk);
+  const item = codexItem(metadata);
+  if (item !== void 0) {
+    return Object.fromEntries(
+      Object.entries(item).filter(([key]) => {
+        return !CODEX_ITEM_BOOKKEEPING.has(key);
+      })
+    );
+  }
+  const state = opencodeState(metadata);
+  const cursorBody = cursorToolBody(metadata.toolCall);
+  const candidate = state?.input ?? cursorBody?.args ?? metadata.toolCall;
+  if (isRecord(candidate)) {
+    return candidate;
+  }
+  return candidate === void 0 || candidate === null ? {} : { value: candidate };
+};
+var toolResultContentOf = (chunk) => {
+  const metadata = metadataOf(chunk);
+  const item = codexItem(metadata);
+  if (item !== void 0) {
+    return asText(item.aggregated_output);
+  }
+  const state = opencodeState(metadata);
+  if (state !== void 0) {
+    return asText(state.output ?? state.error);
+  }
+  const cursorBody = cursorToolBody(metadata.toolCall);
+  if (cursorBody !== void 0) {
+    return asText(cursorBody.result);
+  }
+  const toolCall = metadata.toolCall;
+  if (isRecord(toolCall) && "output" in toolCall) {
+    return asText(toolCall.output ?? toolCall.error);
+  }
+  return asText(toolCall);
+};
+var isToolResultError = (chunk) => {
+  const metadata = metadataOf(chunk);
+  const toolCall = isRecord(metadata.toolCall) ? metadata.toolCall : {};
+  const hasChunkError = typeof chunk.error === "string" && chunk.error !== "";
+  const exitCode = codexItem(metadata)?.exit_code;
+  return hasChunkError || metadata.isError === true || typeof toolCall.error === "string" && toolCall.error !== "" || typeof exitCode === "number" && exitCode !== 0;
+};
+
+// packages/openthrottle-agentic-utils/src/utils/trajectory/usage-metrics.ts
+var EXCLUSIVE_CACHE_DRIVERS = /* @__PURE__ */ new Set([
+  DRIVERS.claude,
+  DRIVERS.cursor,
+  DRIVERS.opencode
+]);
+var numberAt = (record, keys) => {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
+    }
+  }
+  return 0;
+};
+var flattenUsage = (usage) => {
+  if (!isRecord(usage)) {
+    return {};
+  }
+  const cache = isRecord(usage.cache) ? usage.cache : {};
+  return { ...usage, cacheRead: cache.read, cacheWrite: cache.write };
+};
+var costOf = (metadata) => {
+  const cost = metadata.totalCostUsd ?? metadata.cost;
+  return typeof cost === "number" && Number.isFinite(cost) ? cost : void 0;
+};
+var normalizeUsage = (driverId, chunk) => {
+  const metadata = chunk.metadata ?? {};
+  const raw = metadata.usage ?? metadata.tokens;
+  if (!isRecord(raw)) {
+    return void 0;
+  }
+  const usage = flattenUsage(raw);
+  const input = numberAt(usage, ["input_tokens", "inputTokens", "input"]);
+  const output = numberAt(usage, ["output_tokens", "outputTokens", "output"]);
+  const cacheRead = numberAt(usage, [
+    "cache_read_input_tokens",
+    "cached_input_tokens",
+    "cache_read_tokens",
+    "cacheReadTokens",
+    "cacheRead"
+  ]);
+  const cacheWrite = numberAt(usage, [
+    "cache_creation_input_tokens",
+    "cacheWriteTokens",
+    "cacheWrite"
+  ]);
+  const isExclusive = EXCLUSIVE_CACHE_DRIVERS.has(driverId);
+  return {
+    cachedTokens: cacheRead,
+    completionTokens: output,
+    costUsd: costOf(metadata),
+    promptTokens: isExclusive ? input + cacheRead + cacheWrite : input,
+    raw
+  };
+};
+
+// packages/openthrottle-agentic-utils/src/utils/trajectory/chunks-to-atif.ts
+var ATIF_SCHEMA_VERSION = "ATIF-v1.8";
+var emptyDraft = () => {
+  return { calls: [], message: "", reasoning: "", results: [] };
+};
+var isEmptyDraft = (draft) => {
+  return draft.calls.length === 0 && draft.message === "" && draft.reasoning === "" && draft.results.length === 0;
+};
+var toAgentStep = (draft, stepId) => {
+  const reasoning = draft.reasoning.trim();
+  return {
+    message: draft.message.trim(),
+    ...draft.results.length > 0 ? { observation: { results: draft.results } } : {},
+    ...reasoning === "" ? {} : { reasoning_content: reasoning },
+    source: "agent",
+    step_id: stepId,
+    ...draft.calls.length > 0 ? { tool_calls: draft.calls } : {}
+  };
+};
+var sumUsage = (usages) => {
+  if (usages.length === 0) {
+    return void 0;
+  }
+  const costs = usages.map((usage) => {
+    return usage.costUsd;
+  }).filter((cost) => {
+    return cost !== void 0;
+  });
+  const totalCost = costs.reduce((sum, cost) => {
+    return sum + cost;
+  }, 0);
+  const costField = costs.length > 0 ? { total_cost_usd: totalCost } : {};
+  const total = (pick) => {
+    return usages.reduce((sum, usage) => {
+      return sum + pick(usage);
+    }, 0);
+  };
+  return {
+    extra: {
+      raw_usage: usages.map((usage) => {
+        return usage.raw;
+      })
+    },
+    total_cached_tokens: total((usage) => {
+      return usage.cachedTokens;
+    }),
+    total_completion_tokens: total((usage) => {
+      return usage.completionTokens;
+    }),
+    ...costField,
+    total_prompt_tokens: total((usage) => {
+      return usage.promptTokens;
+    })
+  };
+};
+var chunksToAtif = (input) => {
+  const drafts = [];
+  const errors = [];
+  const usages = [];
+  let current = emptyDraft();
+  let sessionId;
+  let synthesized = 0;
+  const draftForAction = () => {
+    if (current.results.length > 0) {
+      drafts.push(current);
+      current = emptyDraft();
+    }
+    return current;
+  };
+  for (const chunk of input.chunks) {
+    if (typeof chunk.error === "string" && chunk.error.trim() !== "") {
+      errors.push(chunk.error.trim());
+    }
+    switch (chunk.kind) {
+      case CONVERSATION_STREAM_CHUNK_KINDS.session: {
+        const id = chunk.metadata?.sessionId;
+        sessionId = typeof id === "string" && id !== "" ? id : sessionId;
+        break;
+      }
+      case CONVERSATION_STREAM_CHUNK_KINDS.text:
+        draftForAction().message += chunk.delta;
+        break;
+      case CONVERSATION_STREAM_CHUNK_KINDS.thinking:
+        draftForAction().reasoning += chunk.delta;
+        break;
+      case CONVERSATION_STREAM_CHUNK_KINDS.toolCall: {
+        const id = toolCallIdOf(chunk);
+        const known = current.calls.some((call) => {
+          return call.tool_call_id === id;
+        });
+        if (!known) {
+          synthesized += id === void 0 ? 1 : 0;
+          draftForAction().calls.push({
+            arguments: toolArgumentsOf2(chunk),
+            function_name: toolNameOf2(chunk),
+            tool_call_id: id ?? `call-${synthesized}`
+          });
+        }
+        break;
+      }
+      case CONVERSATION_STREAM_CHUNK_KINDS.toolResult: {
+        let id = toolCallIdOf(chunk);
+        const hasCall = current.calls.some((call) => {
+          return call.tool_call_id === id;
+        });
+        if (id === void 0 || !hasCall) {
+          synthesized += id === void 0 ? 1 : 0;
+          id = id ?? `call-${synthesized}`;
+          current.calls.push({
+            arguments: toolArgumentsOf2(chunk),
+            extra: { synthesized_from_result: true },
+            function_name: toolNameOf2(chunk),
+            tool_call_id: id
+          });
+        }
+        current.results.push({
+          content: toolResultContentOf(chunk),
+          ...isToolResultError(chunk) ? { extra: { is_error: true } } : {},
+          source_call_id: id
+        });
+        break;
+      }
+      case CONVERSATION_STREAM_CHUNK_KINDS.usage: {
+        const usage = normalizeUsage(input.driverId, chunk);
+        if (usage !== void 0) {
+          usages.push(usage);
+        }
+        break;
+      }
+      default:
+        break;
+    }
+  }
+  if (!isEmptyDraft(current)) {
+    drafts.push(current);
+  }
+  const userSteps = [];
+  if (input.prompt !== void 0) {
+    userSteps.push({ message: input.prompt, source: "user", step_id: 1 });
+  }
+  const steps = [
+    ...userSteps,
+    ...drafts.map((draft, index) => {
+      return toAgentStep(draft, userSteps.length + index + 1);
+    })
+  ];
+  const finalMetrics = sumUsage(usages);
+  return {
+    agent: {
+      name: input.agentName,
+      version: input.agentVersion,
+      ...input.modelName === void 0 ? {} : { model_name: input.modelName }
+    },
+    extra: {
+      openthrottle: {
+        ...input.openthrottle,
+        driver: input.driverId,
+        errors,
+        incomplete: !input.reportsToolCalls
+      }
+    },
+    final_metrics: { ...finalMetrics, total_steps: steps.length },
+    schema_version: ATIF_SCHEMA_VERSION,
+    ...sessionId === void 0 ? {} : { session_id: sessionId },
+    steps
+  };
+};
+
+// packages/openthrottle-agentic-utils/src/utils/trajectory/trajectory-record.ts
+var TRAJECTORY_TRANSPORT_BYTES = 640 * 1024;
+
+// packages/openthrottle-agentic-utils/src/utils/trajectory/claude-session.ts
+var BEGIN_TASK_TOOL = "__begin_task_session";
+var REGISTER_RUN_TOOL = "__register_plan_run";
+var SETTLE_RUN_TOOL = "__settle_plan_run";
+var UPDATE_TASK_TOOL = "__update_task";
+var TERMINAL_TASK_STATUSES = /* @__PURE__ */ new Set([
+  "BLOCKED",
+  "COMPLETED",
+  "SKIPPED"
+]);
+var SUBAGENT_TRANSPORT_BYTES = 160 * 1024;
+var stringOf2 = (value) => {
+  return typeof value === "string" && value !== "" ? value : void 0;
+};
+var isMainLine = (event) => {
+  return isRecord(event) && event.isSidechain !== true;
+};
+var toolUsesOf = (event) => {
+  if (!isRecord(event) || event.type !== "assistant") {
+    return [];
+  }
+  const message = isRecord(event.message) ? event.message : void 0;
+  const content = Array.isArray(message?.content) ? message.content : [];
+  return content.flatMap((block) => {
+    if (!isRecord(block) || block.type !== "tool_use") {
+      return [];
+    }
+    const id = stringOf2(block.id);
+    const name = stringOf2(block.name);
+    const input = isRecord(block.input) ? block.input : {};
+    return id === void 0 || name === void 0 ? [] : [{ id, input, name }];
+  });
+};
+var toolResultText2 = (content) => {
+  if (!Array.isArray(content)) {
+    return content;
+  }
+  return content.map((part) => {
+    const isText = isRecord(part) && typeof part.text === "string";
+    return isText ? part.text : "";
+  }).join("");
+};
+var toolResultsOf = (event) => {
+  if (!isRecord(event) || event.type !== "user") {
+    return [];
+  }
+  const message = isRecord(event.message) ? event.message : void 0;
+  const content = Array.isArray(message?.content) ? message.content : [];
+  return content.flatMap((block) => {
+    if (!isRecord(block) || block.type !== "tool_result") {
+      return [];
+    }
+    const toolUseId = stringOf2(block.tool_use_id);
+    const text = toolResultText2(block.content);
+    const isUsable = toolUseId !== void 0 && typeof text === "string";
+    return isUsable ? [{ content: text, toolUseId }] : [];
+  });
+};
+var findClaudeSessionTaskSegments = (events) => {
+  const boundaries = [];
+  events.forEach((event, index) => {
+    if (!isMainLine(event)) {
+      return;
+    }
+    for (const use of toolUsesOf(event)) {
+      const isBegin = use.name.endsWith(BEGIN_TASK_TOOL);
+      if (isBegin || use.name.endsWith(SETTLE_RUN_TOOL)) {
+        boundaries.push({
+          index,
+          planId: stringOf2(use.input.planId),
+          taskId: isBegin ? stringOf2(use.input.taskId) : void 0,
+          toolUseId: use.id
+        });
+      }
+    }
+  });
+  return boundaries.flatMap((boundary, position) => {
+    const next = boundaries[position + 1];
+    if (boundary.taskId === void 0) {
+      return [];
+    }
+    return [
+      {
+        closed: next !== void 0,
+        endIndex: next?.index ?? events.length,
+        planId: boundary.planId,
+        startIndex: boundary.index,
+        taskId: boundary.taskId,
+        toolUseId: boundary.toolUseId
+      }
+    ];
+  });
+};
+var findClaudeSessionPlanRunId = (events) => {
+  const registerIds = /* @__PURE__ */ new Set();
+  let planRunId;
+  for (const event of events) {
+    for (const use of toolUsesOf(event)) {
+      if (use.name.endsWith(REGISTER_RUN_TOOL)) {
+        registerIds.add(use.id);
+      }
+    }
+    for (const result of toolResultsOf(event)) {
+      if (registerIds.has(result.toolUseId)) {
+        planRunId = runIdOf(result.content) ?? planRunId;
+      }
+    }
+  }
+  return planRunId;
+};
+function runIdOf(content) {
+  try {
+    const parsed = JSON.parse(content);
+    const run = isRecord(parsed) && isRecord(parsed.run) ? parsed.run : {};
+    return stringOf2(run.id);
+  } catch {
+    return void 0;
+  }
+}
+var findClaudeSessionSubagentIds = (events) => {
+  const ids = events.flatMap((event) => {
+    const result = isRecord(event) ? event.toolUseResult : void 0;
+    const agentId = isRecord(result) ? stringOf2(result.agentId) : void 0;
+    return agentId === void 0 ? [] : [agentId];
+  });
+  return [...new Set(ids)];
+};
+var claudeSessionTaskOutcome = (events, taskId) => {
+  let outcome = "unknown";
+  for (const event of events) {
+    for (const use of toolUsesOf(event)) {
+      const status = stringOf2(use.input.status);
+      const isThisTask = stringOf2(use.input.id) === taskId;
+      const isTerminal = status !== void 0 && TERMINAL_TASK_STATUSES.has(status);
+      if (use.name.endsWith(UPDATE_TASK_TOOL) && isThisTask && isTerminal) {
+        outcome = status.toLowerCase();
+      }
+    }
+  }
+  return outcome;
+};
+var claudeSessionEventsToChunks = (events) => {
+  const reader = createStructuredChunkReader("claude");
+  const countedRequests = /* @__PURE__ */ new Set();
+  if (reader === void 0) {
+    return [];
+  }
+  return events.flatMap((event) => {
+    if (!isRecord(event) || event.type !== "assistant" && event.type !== "user") {
+      return [];
+    }
+    const chunks = [...reader(event)];
+    const requestId = stringOf2(event.requestId);
+    const message = isRecord(event.message) ? event.message : void 0;
+    const isNewRequest = requestId !== void 0 && !countedRequests.has(requestId);
+    if (event.type === "assistant" && isNewRequest && isRecord(message?.usage)) {
+      countedRequests.add(requestId);
+      chunks.push({
+        delta: "",
+        done: false,
+        kind: CONVERSATION_STREAM_CHUNK_KINDS.usage,
+        metadata: { usage: message.usage }
+      });
+    }
+    return chunks;
+  });
+};
+var modelOf = (events) => {
+  for (const event of events) {
+    const message = isRecord(event) ? event.message : void 0;
+    const model = isRecord(message) ? stringOf2(message.model) : void 0;
+    if (model !== void 0 && model !== "<synthetic>") {
+      return model;
+    }
+  }
+  return void 0;
+};
+var timestampsOf = (events) => {
+  return events.flatMap((event) => {
+    const raw = isRecord(event) ? stringOf2(event.timestamp) : void 0;
+    const time = raw === void 0 ? Number.NaN : Date.parse(raw);
+    return Number.isNaN(time) ? [] : [time];
+  });
+};
+var subagentTrajectory = (subagent, agentVersion) => {
+  const trajectory = chunksToAtif({
+    agentName: "claude",
+    agentVersion,
+    chunks: claudeSessionEventsToChunks(subagent.events.filter(isRecord)),
+    driverId: "claude",
+    modelName: modelOf(subagent.events),
+    openthrottle: { agentId: subagent.agentId },
+    prompt: void 0,
+    reportsToolCalls: true
+  });
+  const capped = capTrajectory(
+    { ...trajectory, trajectory_id: subagent.agentId },
+    { observationBytes: 16 * 1024, totalBytes: SUBAGENT_TRANSPORT_BYTES }
+  );
+  return { trajectory: capped.trajectory, truncated: capped.truncated };
+};
+var buildClaudeSessionTrajectory = (input) => {
+  const mainEvents = input.segmentEvents.filter(isMainLine);
+  const chunks = claudeSessionEventsToChunks(mainEvents);
+  if (chunks.length === 0) {
+    return void 0;
+  }
+  const model = modelOf(mainEvents);
+  const main2 = chunksToAtif({
+    agentName: "claude",
+    agentVersion: input.agentVersion,
+    chunks,
+    driverId: "claude",
+    modelName: model,
+    openthrottle: input.openthrottle,
+    prompt: void 0,
+    reportsToolCalls: true
+  });
+  const subagents = input.subagents.map((subagent) => {
+    return subagentTrajectory(subagent, input.agentVersion);
+  });
+  let embedded = main2;
+  if (subagents.length > 0) {
+    embedded = {
+      ...main2,
+      subagent_trajectories: subagents.map((subagent) => {
+        return subagent.trajectory;
+      })
+    };
+  }
+  const capped = capTrajectory(embedded, {
+    observationBytes: 16 * 1024,
+    totalBytes: TRAJECTORY_TRANSPORT_BYTES
+  });
+  const times = timestampsOf(mainEvents);
+  const durationMs = times.length < 2 ? null : Math.max(...times) - Math.min(...times);
+  return {
+    durationMs,
+    model,
+    outcome: claudeSessionTaskOutcome(mainEvents, input.taskId),
+    trajectory: capped.trajectory,
+    trajectoryJson: JSON.stringify(capped.trajectory),
+    truncated: capped.truncated || subagents.some((subagent) => {
+      return subagent.truncated;
+    })
+  };
+};
+
+// packages/agentic-hooks/src/adapters/claude/session-trajectory.ts
+var SESSION_TRAJECTORY_SOURCE = "session_upload";
+var SESSION_TRAJECTORY_DRIVER = "claude";
+var MAX_SESSION_SCAN_BYTES_PER_STOP = 32 * 1024 * 1024;
+var MAX_SUBAGENT_TRANSCRIPT_BYTES = 4 * 1024 * 1024;
+var DEFAULT_SESSION_TRAJECTORY_BUDGET_MS = 4e3;
+var SAFE_AGENT_ID = /^[A-Za-z0-9_-]+$/;
+var parseJsonLines = (lines) => {
+  return lines.flatMap((line) => {
+    try {
+      return [JSON.parse(line)];
+    } catch {
+      return [];
+    }
+  });
+};
+var firstVersionOf = (events) => {
+  for (const event of events) {
+    if (isRecord(event) && typeof event.version === "string") {
+      return event.version;
+    }
+  }
+  return "unknown";
+};
+var loadSubagents = (transcriptPath, sessionId, agentIds) => {
+  const subagentsDir = import_node_path8.default.join(
+    import_node_path8.default.dirname(transcriptPath),
+    sessionId,
+    "subagents"
+  );
+  return agentIds.flatMap((agentId) => {
+    if (!SAFE_AGENT_ID.test(agentId)) {
+      return [];
+    }
+    const { lines } = readNewBytes({
+      filePath: import_node_path8.default.join(subagentsDir, `agent-${agentId}.jsonl`),
+      maxBytes: MAX_SUBAGENT_TRANSCRIPT_BYTES,
+      offset: 0
+    });
+    return lines.length === 0 ? [] : [{ agentId, events: parseJsonLines(lines) }];
+  });
+};
+var captureSessionTrajectories = async ({
+  authToken,
+  budgetMs = DEFAULT_SESSION_TRAJECTORY_BUDGET_MS,
+  fetchImpl,
+  graphqlUrl,
+  jsonlPath,
+  nowFn = Date.now,
+  repoRoot,
+  sessionId,
+  timeoutMs,
+  transcriptPath,
+  uploadsDir
+}) => {
+  try {
+    if (process.env.OPENTHROTTLE_SESSION_TRAJECTORIES === "0") {
+      return { handled: 0, skipped: "OPENTHROTTLE_SESSION_TRAJECTORIES=0" };
+    }
+    if (transcriptPath === null) {
+      return { handled: 0, skipped: "no transcript path" };
+    }
+    const state = readTrajectoryUploadState({ dir: uploadsDir, sessionId });
+    const read = readNewLines({
+      filePath: transcriptPath,
+      maxBytes: MAX_SESSION_SCAN_BYTES_PER_STOP,
+      offset: state.scanOffset
+    });
+    const scanned = read.lines.flatMap((line) => {
+      return parseJsonLines([line.text]).map((event) => {
+        return { event, offset: line.offset };
+      });
+    });
+    const events = scanned.map((entry) => entry.event);
+    const planRunId = findClaudeSessionPlanRunId(events) ?? state.planRunId ?? readPlanRunIdForSession({ repoRoot, sessionId });
+    const agentVersion = firstVersionOf(events);
+    const deadline = nowFn() + budgetMs;
+    const uploaded = new Set(state.uploaded);
+    let firstPendingOffset;
+    let handled = 0;
+    for (const segment of findClaudeSessionTaskSegments(events)) {
+      if (uploaded.has(segment.toolUseId)) {
+        continue;
+      }
+      const offset = scanned[segment.startIndex]?.offset ?? read.nextOffset;
+      const isOversized = !segment.closed && read.capped && segment.startIndex === 0;
+      if (isOversized) {
+        logHookError(`trajectory segment ${segment.taskId} exceeds scan window`);
+        uploaded.add(segment.toolUseId);
+        handled += 1;
+        continue;
+      }
+      const segmentRunId = findClaudeSessionPlanRunId(events.slice(0, segment.startIndex)) ?? planRunId;
+      const isReady = segment.closed && segmentRunId !== void 0 && nowFn() <= deadline;
+      if (!isReady) {
+        firstPendingOffset ??= offset;
+        continue;
+      }
+      const segmentEvents = events.slice(segment.startIndex, segment.endIndex);
+      const built = buildClaudeSessionTrajectory({
+        agentVersion,
+        openthrottle: {
+          planId: segment.planId,
+          planRunId: segmentRunId,
+          sessionId,
+          taskId: segment.taskId
+        },
+        segmentEvents,
+        subagents: loadSubagents(
+          transcriptPath,
+          sessionId,
+          findClaudeSessionSubagentIds(segmentEvents)
+        ),
+        taskId: segment.taskId
+      });
+      if (built === void 0) {
+        uploaded.add(segment.toolUseId);
+        handled += 1;
+        continue;
+      }
+      const result = await persistTrajectory(
+        {
+          driver: SESSION_TRAJECTORY_DRIVER,
+          durationMs: built.durationMs,
+          exitCode: null,
+          model: built.model ?? null,
+          outcome: built.outcome,
+          planRunId: segmentRunId,
+          source: SESSION_TRAJECTORY_SOURCE,
+          taskId: segment.taskId,
+          trajectoryJson: built.trajectoryJson
+        },
+        { authToken, fetchImpl, graphqlUrl, jsonlPath, repoRoot, timeoutMs }
+      );
+      if (result.sink === "dropped") {
+        firstPendingOffset ??= offset;
+        continue;
+      }
+      uploaded.add(segment.toolUseId);
+      handled += 1;
+    }
+    writeTrajectoryUploadState({
+      dir: uploadsDir,
+      sessionId,
+      state: {
+        planRunId,
+        scanOffset: firstPendingOffset ?? read.nextOffset,
+        uploaded: [...uploaded]
+      }
+    });
+    return { handled, skipped: void 0 };
+  } catch (err) {
+    logHookError("captureSessionTrajectories failed", err);
+    return { handled: 0, skipped: "error" };
+  }
+};
+
 // packages/agentic-hooks/src/adapters/claude/shadow.ts
-var import_node_fs8 = __toESM(require("node:fs"), 1);
-var import_node_path6 = __toESM(require("node:path"), 1);
+var import_node_fs11 = __toESM(require("node:fs"), 1);
+var import_node_path9 = __toESM(require("node:path"), 1);
 var CAPTURE_BUNDLE = "skill-usage-capture";
 var runningFromPlugin = (env, scriptPath) => {
   const pluginRoot = env.CLAUDE_PLUGIN_ROOT?.trim();
   if (!pluginRoot || !scriptPath) {
     return false;
   }
-  const relative = import_node_path6.default.relative(import_node_path6.default.resolve(pluginRoot), scriptPath);
+  const relative = import_node_path9.default.relative(import_node_path9.default.resolve(pluginRoot), scriptPath);
   return relative !== "" && !relative.startsWith("..");
 };
 var repoRegistersCapture = (repoRoot) => {
   try {
-    const raw = import_node_fs8.default.readFileSync(
-      import_node_path6.default.join(repoRoot, ".claude", "settings.json"),
+    const raw = import_node_fs11.default.readFileSync(
+      import_node_path9.default.join(repoRoot, ".claude", "settings.json"),
       "utf8"
     );
     const parsed = JSON.parse(raw);
@@ -1583,8 +3591,8 @@ var isShadowedByRepoHooks = ({
 };
 
 // packages/agentic-hooks/src/adapters/claude/transcript-usage.ts
-var import_node_fs9 = __toESM(require("node:fs"), 1);
-var import_node_path7 = __toESM(require("node:path"), 1);
+var import_node_fs12 = __toESM(require("node:fs"), 1);
+var import_node_path10 = __toESM(require("node:path"), 1);
 
 // packages/agentic-token-usage/src/usage.ts
 var asFiniteNumber = (value) => {
@@ -1622,7 +3630,7 @@ var toMetaRecord = (input) => {
   }
   return null;
 };
-var normalizeUsage = (input) => {
+var normalizeUsage2 = (input) => {
   const meta = toMetaRecord(input);
   if (meta === null) {
     return {};
@@ -1738,7 +3746,7 @@ var toRecord = (entry, fallbackSessionId) => {
     return null;
   }
   const { usage } = message;
-  const counts = normalizeUsage({ model, usage });
+  const counts = normalizeUsage2({ model, usage });
   if (!hasUsageCounts(counts)) {
     return null;
   }
@@ -1793,10 +3801,10 @@ var MAX_TRANSCRIPT_BYTES_PER_FILE = 4 * 1024 * 1024;
 var MAX_TRANSCRIPT_BYTES_PER_STOP = 16 * 1024 * 1024;
 var SUBAGENT_FILE = /^agent-.+\.jsonl$/;
 var listSubagentTranscripts = (transcriptPath) => {
-  const { dir, name } = import_node_path7.default.parse(transcriptPath);
-  const subagentsDir = import_node_path7.default.join(dir, name, "subagents");
+  const { dir, name } = import_node_path10.default.parse(transcriptPath);
+  const subagentsDir = import_node_path10.default.join(dir, name, "subagents");
   try {
-    return import_node_fs9.default.readdirSync(subagentsDir).filter((entry) => SUBAGENT_FILE.test(entry)).sort().map((entry) => import_node_path7.default.join(subagentsDir, entry));
+    return import_node_fs12.default.readdirSync(subagentsDir).filter((entry) => SUBAGENT_FILE.test(entry)).sort().map((entry) => import_node_path10.default.join(subagentsDir, entry));
   } catch {
     return [];
   }
@@ -1894,7 +3902,7 @@ var main = async () => {
     if (isShadowedByRepoHooks({ repoRoot })) {
       return;
     }
-    const stdinBuf = import_node_fs10.default.readFileSync(0, "utf8");
+    const stdinBuf = import_node_fs13.default.readFileSync(0, "utf8");
     if (!stdinBuf || !stdinBuf.trim()) {
       return;
     }
@@ -1929,7 +3937,13 @@ var main = async () => {
       sessionId: normalized.session_id,
       transcriptPath: normalized.transcript_path
     });
+    await captureSessionTrajectories({
+      repoRoot,
+      sessionId: normalized.session_id,
+      transcriptPath: normalized.transcript_path
+    });
     await drainBufferedUsage({ budgetMs: 500, repoRoot });
+    await drainBufferedTrajectories({ budgetMs: 500, repoRoot });
   } catch (err) {
     logHookError("complete failed", err);
   }

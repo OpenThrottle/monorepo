@@ -3,7 +3,8 @@
  * Resolves the open skill-starts recorded for this session into `session_ended`
  * outcomes, drains them (deduped), sweeps abandoned starts from long-dead
  * sessions, folds the session transcript(s) into per-request token usage rows
- * (see `transcript-usage.ts`), then does a small time-boxed JSONL drain.
+ * (see `transcript-usage.ts`), uploads closed OpenThrottle task trajectories
+ * (see `session-trajectory.ts`), then does a small time-boxed JSONL drain.
  * Additive only; fail-open (always exits 0).
  *
  * A Claude `Stop` payload carries `session_id`, `transcript_path` and `cwd`
@@ -16,11 +17,13 @@ import fs from 'node:fs';
 
 import {
   completeOpenStartsForSession,
+  drainBufferedTrajectories,
   drainBufferedUsage,
   logHookError,
   sweepAbandonedStarts,
 } from '../../index.ts';
 import { CLAUDE_SOURCE, normalizeClaudeStopPayload } from './payload.ts';
+import { captureSessionTrajectories } from './session-trajectory.ts';
 import { isShadowedByRepoHooks } from './shadow.ts';
 import { captureTranscriptUsage } from './transcript-usage.ts';
 
@@ -81,9 +84,19 @@ const main = async (): Promise<void> => {
       transcriptPath: normalized.transcript_path,
     });
 
+    // Task trajectories: each closed OpenThrottle task segment of the session
+    // transcript is sent once (a session with no task segments sends nothing;
+    // `OPENTHROTTLE_SESSION_TRAJECTORIES=0` turns this off). Time-boxed.
+    await captureSessionTrajectories({
+      repoRoot,
+      sessionId: normalized.session_id,
+      transcriptPath: normalized.transcript_path,
+    });
+
     // Opportunistic, time-boxed: flush any JSONL buffered while the server was
     // down. Small budget so the turn is never stalled; unsent lines retained.
     await drainBufferedUsage({ budgetMs: 500, repoRoot });
+    await drainBufferedTrajectories({ budgetMs: 500, repoRoot });
   } catch (err) {
     logHookError('complete failed', err);
   }

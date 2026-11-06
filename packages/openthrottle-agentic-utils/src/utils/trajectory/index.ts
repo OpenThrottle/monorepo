@@ -4,6 +4,7 @@
  */
 export * from './cap-trajectory.ts';
 export * from './chunks-to-atif.ts';
+export * from './claude-session.ts';
 export * from './parse-atif.ts';
 export * from './tool-metadata.ts';
 export * from './trajectory-record.ts';

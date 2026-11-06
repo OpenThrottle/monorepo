@@ -60,6 +60,23 @@ once container isolation exists. Decision 3 keeps that door open at zero cost.
 | **Spawned plan runs** | OT (`runDriverAsync`)              | all 7           | driver stdout, structured mode (Decision 4)                                         | **First dataset**; replayable across a driver × model matrix |
 | **ot-loop sessions**  | the user's own Claude Code session | claude only     | Stop hook uploads the session transcript (`transcript_path` is in the Stop payload) | Real-failure source for error analysis                       |
 
+**Session uploads, as built (2026-11-06; granularity, privacy and subagents chosen by the user):**
+
+- **One row per OpenThrottle task.** The transcript records its own boundaries: each
+  `begin_task_session` call (with its `taskId`) opens a segment, and the next one or
+  `settle_plan_run` closes it. Only closed segments upload. A segment's run is the last
+  `register_plan_run` result before it, falling back to the session's run and then to the MCP's
+  backstop file.
+- **Only task segments leave the machine,** so a session that never began an OpenThrottle task
+  uploads nothing. Upload is on by default, with `OPENTHROTTLE_SESSION_TRAJECTORIES=0` to turn it
+  off.
+- **Subagents** spawned in a segment (`toolUseResult.agentId` → `subagents/agent-<id>.jsonl`)
+  are embedded as ATIF `subagent_trajectories`, each capped at 160 KiB.
+- **Where the code lives.** The reading is pure (`claude-session.ts` in `agentic-utils`). The
+  hook (`agentic-hooks` `adapters/claude/session-trajectory.ts`) owns I/O. It reads incrementally
+  from a per-session offset, keeps an upload state per session, and buffers or dead-letters
+  through the same JSONL machinery as token usage.
+
 Skills (trigger tests, with/without ablation) are the second target, after the first loop works end
 to end.
 

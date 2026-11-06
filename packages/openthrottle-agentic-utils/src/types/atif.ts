@@ -108,4 +108,10 @@ export interface AtifTrajectory {
   readonly schema_version: string;
   readonly session_id?: string;
   readonly steps: readonly AtifStep[];
+  /**
+   * Delegated work (v1.7+): each entry is a complete trajectory with its own `trajectory_id`, which
+   * is REQUIRED on an embedded subagent and unique within this array.
+   */
+  readonly subagent_trajectories?: readonly AtifTrajectory[];
+  readonly trajectory_id?: string;
 }
