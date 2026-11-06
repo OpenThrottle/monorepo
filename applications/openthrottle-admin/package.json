@@ -74,7 +74,11 @@
   },
   "private": true,
   "repository": "git://github.com/OpenThrottle/monorepo.git",
-  "sideEffects": false,
+  "sideEffects": [
+    "**/*.css",
+    "./app/entry.client.tsx",
+    "./app/entry.server.tsx"
+  ],
   "scripts": {},
   "type": "module"
 }

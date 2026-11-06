@@ -430,18 +430,6 @@ var drainJsonlFileBatched = async ({
   });
 };
 
-// packages/agentic-hooks/src/config/describe.ts
-var TELEMETRY_CONFIG_SOURCES = Object.freeze({
-  /** No layer yielded an endpoint. */
-  NONE: "none",
-  /** The ambient shell. */
-  PROCESS_ENV: "process_env",
-  /** This checkout's own `.env` — only read in an OpenThrottle checkout. */
-  REPO_ENV: "repo_env",
-  /** `~/.openthrottle/.env`. */
-  USER_ENV: "user_env"
-});
-
 // packages/agentic-hooks/src/data/checkpoints.ts
 var import_node_fs3 = __toESM(require("node:fs"), 1);
 var import_node_path3 = __toESM(require("node:path"), 1);
@@ -551,15 +539,6 @@ var sweepStaleCheckpoints = ({
   }
   return swept;
 };
-
-// packages/agentic-hooks/src/utils/privacy.ts
-var PRIVACY_LEVELS = Object.freeze({
-  FULL: "full",
-  NAME_ONLY: "name-only",
-  TRUNCATED: "truncated"
-});
-var DEFAULT_PRIVACY_LEVEL = PRIVACY_LEVELS.TRUNCATED;
-var FOREIGN_PRIVACY_LEVEL = PRIVACY_LEVELS.NAME_ONLY;
 
 // packages/agentic-hooks/src/utils/scope.ts
 var import_node_fs4 = __toESM(require("node:fs"), 1);
@@ -1492,11 +1471,6 @@ var formatDrainReasons = (tally) => {
   return entries.length ? entries.map(([reason, count]) => `${reason} ×${count}`).join("; ") : "none";
 };
 
-// packages/agentic-hooks/src/data/plan-runs.ts
-var import_node_path6 = __toESM(require("node:path"), 1);
-var PLAN_RUNS_DIR_REL = import_node_path6.default.join(".cache", "plan-runs");
-var PLAN_RUN_ABANDONED_MS = 6 * 60 * 60 * 1e3;
-
 // packages/agentic-hooks/src/data/read-new-bytes.ts
 var import_node_fs7 = __toESM(require("node:fs"), 1);
 var NEWLINE = 10;
@@ -1575,20 +1549,20 @@ var normalizeClaudeStopPayload = (raw) => {
 
 // packages/agentic-hooks/src/adapters/claude/shadow.ts
 var import_node_fs8 = __toESM(require("node:fs"), 1);
-var import_node_path7 = __toESM(require("node:path"), 1);
+var import_node_path6 = __toESM(require("node:path"), 1);
 var CAPTURE_BUNDLE = "skill-usage-capture";
 var runningFromPlugin = (env, scriptPath) => {
   const pluginRoot = env.CLAUDE_PLUGIN_ROOT?.trim();
   if (!pluginRoot || !scriptPath) {
     return false;
   }
-  const relative = import_node_path7.default.relative(import_node_path7.default.resolve(pluginRoot), scriptPath);
+  const relative = import_node_path6.default.relative(import_node_path6.default.resolve(pluginRoot), scriptPath);
   return relative !== "" && !relative.startsWith("..");
 };
 var repoRegistersCapture = (repoRoot) => {
   try {
     const raw = import_node_fs8.default.readFileSync(
-      import_node_path7.default.join(repoRoot, ".claude", "settings.json"),
+      import_node_path6.default.join(repoRoot, ".claude", "settings.json"),
       "utf8"
     );
     const parsed = JSON.parse(raw);
@@ -1610,7 +1584,7 @@ var isShadowedByRepoHooks = ({
 
 // packages/agentic-hooks/src/adapters/claude/transcript-usage.ts
 var import_node_fs9 = __toESM(require("node:fs"), 1);
-var import_node_path8 = __toESM(require("node:path"), 1);
+var import_node_path7 = __toESM(require("node:path"), 1);
 
 // packages/agentic-token-usage/src/usage.ts
 var asFiniteNumber = (value) => {
@@ -1819,10 +1793,10 @@ var MAX_TRANSCRIPT_BYTES_PER_FILE = 4 * 1024 * 1024;
 var MAX_TRANSCRIPT_BYTES_PER_STOP = 16 * 1024 * 1024;
 var SUBAGENT_FILE = /^agent-.+\.jsonl$/;
 var listSubagentTranscripts = (transcriptPath) => {
-  const { dir, name } = import_node_path8.default.parse(transcriptPath);
-  const subagentsDir = import_node_path8.default.join(dir, name, "subagents");
+  const { dir, name } = import_node_path7.default.parse(transcriptPath);
+  const subagentsDir = import_node_path7.default.join(dir, name, "subagents");
   try {
-    return import_node_fs9.default.readdirSync(subagentsDir).filter((entry) => SUBAGENT_FILE.test(entry)).sort().map((entry) => import_node_path8.default.join(subagentsDir, entry));
+    return import_node_fs9.default.readdirSync(subagentsDir).filter((entry) => SUBAGENT_FILE.test(entry)).sort().map((entry) => import_node_path7.default.join(subagentsDir, entry));
   } catch {
     return [];
   }

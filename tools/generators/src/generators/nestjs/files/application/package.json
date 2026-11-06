@@ -82,6 +82,6 @@
     "langgraph": "npx @langchain/langgraph-cli dev",
     "start:docker": "node -r dotenv/config ./build/src/main.js"
   },
-  "sideEffects": false,
+  "sideEffects": ["./src/main.ts", "./src/repl.ts"],
   "type": "module"
 }

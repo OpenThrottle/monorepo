@@ -252,25 +252,10 @@ var appendDeadLetters = ({
   );
 };
 
-// packages/agentic-hooks/src/config/describe.ts
-var TELEMETRY_CONFIG_SOURCES = Object.freeze({
-  /** No layer yielded an endpoint. */
-  NONE: "none",
-  /** The ambient shell. */
-  PROCESS_ENV: "process_env",
-  /** This checkout's own `.env` — only read in an OpenThrottle checkout. */
-  REPO_ENV: "repo_env",
-  /** `~/.openthrottle/.env`. */
-  USER_ENV: "user_env"
-});
-
 // packages/nodejs-utils/src/utils/is-record.ts
 var isRecord = (value) => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };
-
-// packages/agentic-hooks/src/data/checkpoints.ts
-var DEFAULT_STALE_CHECKPOINT_MS = 6 * 60 * 60 * 1e3;
 
 // packages/agentic-hooks/src/utils/privacy.ts
 var PRIVACY_LEVELS = Object.freeze({
@@ -814,11 +799,6 @@ var persistTokenUsage = async ({
   }
 };
 
-// packages/agentic-hooks/src/data/plan-runs.ts
-var import_node_path4 = __toESM(require("node:path"), 1);
-var PLAN_RUNS_DIR_REL = import_node_path4.default.join(".cache", "plan-runs");
-var PLAN_RUN_ABANDONED_MS = 6 * 60 * 60 * 1e3;
-
 // packages/agentic-hooks/src/data/read-new-bytes.ts
 var import_node_fs4 = __toESM(require("node:fs"), 1);
 var NEWLINE = 10;
@@ -874,11 +854,11 @@ var readNewBytes = ({
 };
 
 // packages/agentic-hooks/src/adapters/claude/backfill-args.ts
-var import_node_path8 = __toESM(require("node:path"), 1);
+var import_node_path7 = __toESM(require("node:path"), 1);
 
 // packages/agentic-hooks/src/adapters/claude/transcript-backfill.ts
 var import_node_fs7 = __toESM(require("node:fs"), 1);
-var import_node_path7 = __toESM(require("node:path"), 1);
+var import_node_path6 = __toESM(require("node:path"), 1);
 
 // packages/agentic-hooks/src/adapters/claude/payload.ts
 var CLAUDE_SOURCE = "claude-code";
@@ -1148,7 +1128,7 @@ var parseTranscriptLines = ({
 var import_node_child_process2 = require("node:child_process");
 var import_node_fs5 = __toESM(require("node:fs"), 1);
 var import_node_os3 = __toESM(require("node:os"), 1);
-var import_node_path5 = __toESM(require("node:path"), 1);
+var import_node_path4 = __toESM(require("node:path"), 1);
 var claudeProjectSlug = (absolutePath) => {
   return absolutePath.replace(/[^a-zA-Z0-9]/g, "-");
 };
@@ -1156,7 +1136,7 @@ var narrowSlug = (absolutePath) => {
   return absolutePath.replace(/[/.]/g, "-");
 };
 var defaultClaudeProjectsDir = () => {
-  return import_node_path5.default.join(import_node_os3.default.homedir(), ".claude", "projects");
+  return import_node_path4.default.join(import_node_os3.default.homedir(), ".claude", "projects");
 };
 var parseWorktreeList = (porcelain) => {
   const paths = [];
@@ -1192,8 +1172,8 @@ var realpathOrNull = (target) => {
   }
 };
 var isInside = (child, parent) => {
-  const relative = import_node_path5.default.relative(parent, child);
-  return relative !== "" && !relative.startsWith("..") && !import_node_path5.default.isAbsolute(relative);
+  const relative = import_node_path4.default.relative(parent, child);
+  return relative !== "" && !relative.startsWith("..") && !import_node_path4.default.isAbsolute(relative);
 };
 var resolveOwnedProjects = ({
   checkouts,
@@ -1205,12 +1185,12 @@ var resolveOwnedProjects = ({
   }
   const found = /* @__PURE__ */ new Map();
   for (const checkout of checkouts) {
-    const absolute = import_node_path5.default.resolve(checkout);
+    const absolute = import_node_path4.default.resolve(checkout);
     for (const slug of /* @__PURE__ */ new Set([
       claudeProjectSlug(absolute),
       narrowSlug(absolute)
     ])) {
-      const dir = import_node_path5.default.join(projectsDir, slug);
+      const dir = import_node_path4.default.join(projectsDir, slug);
       const real = realpathOrNull(dir);
       if (real === null || !isInside(real, root) || found.has(real)) {
         continue;
@@ -1230,7 +1210,7 @@ var resolveCheckouts = ({
   return [
     ...new Set(
       [repoRoot, ...includeWorktrees ? listWorktrees(repoRoot) : []].map(
-        (checkout) => import_node_path5.default.resolve(checkout)
+        (checkout) => import_node_path4.default.resolve(checkout)
       )
     )
   ].sort();
@@ -1242,7 +1222,7 @@ var transcriptBelongsTo = ({
   if (cwd === null) {
     return true;
   }
-  const resolved = import_node_path5.default.resolve(cwd);
+  const resolved = import_node_path4.default.resolve(cwd);
   const roots = checkouts.flatMap((checkout) => {
     const real = realpathOrNull(checkout);
     return real === null ? [checkout] : [checkout, real];
@@ -1420,15 +1400,15 @@ var finishSkillScan = (state) => {
 
 // packages/agentic-hooks/src/adapters/claude/transcript-usage.ts
 var import_node_fs6 = __toESM(require("node:fs"), 1);
-var import_node_path6 = __toESM(require("node:path"), 1);
+var import_node_path5 = __toESM(require("node:path"), 1);
 var MAX_TRANSCRIPT_BYTES_PER_FILE = 4 * 1024 * 1024;
 var MAX_TRANSCRIPT_BYTES_PER_STOP = 16 * 1024 * 1024;
 var SUBAGENT_FILE = /^agent-.+\.jsonl$/;
 var listSubagentTranscripts = (transcriptPath) => {
-  const { dir, name } = import_node_path6.default.parse(transcriptPath);
-  const subagentsDir = import_node_path6.default.join(dir, name, "subagents");
+  const { dir, name } = import_node_path5.default.parse(transcriptPath);
+  const subagentsDir = import_node_path5.default.join(dir, name, "subagents");
   try {
-    return import_node_fs6.default.readdirSync(subagentsDir).filter((entry) => SUBAGENT_FILE.test(entry)).sort().map((entry) => import_node_path6.default.join(subagentsDir, entry));
+    return import_node_fs6.default.readdirSync(subagentsDir).filter((entry) => SUBAGENT_FILE.test(entry)).sort().map((entry) => import_node_path5.default.join(subagentsDir, entry));
   } catch {
     return [];
   }
@@ -1448,14 +1428,14 @@ var bump = (counts, key) => {
 };
 var listMainTranscripts = (projectDir) => {
   try {
-    return import_node_fs7.default.readdirSync(projectDir, { withFileTypes: true }).filter((entry) => entry.isFile() && MAIN_FILE.test(entry.name)).map((entry) => import_node_path7.default.join(projectDir, entry.name)).sort();
+    return import_node_fs7.default.readdirSync(projectDir, { withFileTypes: true }).filter((entry) => entry.isFile() && MAIN_FILE.test(entry.name)).map((entry) => import_node_path6.default.join(projectDir, entry.name)).sort();
   } catch {
     return [];
   }
 };
 var sessionIdOf = (filePath) => {
-  const { dir, name } = import_node_path7.default.parse(filePath);
-  return import_node_path7.default.basename(dir) === "subagents" ? import_node_path7.default.basename(import_node_path7.default.dirname(dir)) : name;
+  const { dir, name } = import_node_path6.default.parse(filePath);
+  return import_node_path6.default.basename(dir) === "subagents" ? import_node_path6.default.basename(import_node_path6.default.dirname(dir)) : name;
 };
 var firstCwd = (lines) => {
   for (const line of lines.slice(0, 200)) {
@@ -1808,10 +1788,10 @@ var parseBackfillArgs = ({
     options: {
       dryRun: switches.has("--dry-run"),
       includeWorktrees: !switches.has("--no-worktrees"),
-      projectsDir: import_node_path8.default.resolve(
+      projectsDir: import_node_path7.default.resolve(
         flags.get("--projects-dir") ?? defaultClaudeProjectsDir()
       ),
-      repoRoot: import_node_path8.default.resolve(
+      repoRoot: import_node_path7.default.resolve(
         flags.get("--repo-root") ?? env.CLAUDE_PROJECT_DIR ?? env.OPEN_THROTTLE_REPO_ROOT ?? cwd
       ),
       since,

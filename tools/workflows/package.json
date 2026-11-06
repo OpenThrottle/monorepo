@@ -98,6 +98,18 @@
   "scripts": {
     "postbuild": "chmod +x ./dist/src/bin/*.js"
   },
+  "sideEffects": [
+    "./dist/src/bin/lighthouse.js",
+    "./dist/src/bin/link-merge.js",
+    "./dist/src/bin/memory-reconcile.js",
+    "./dist/src/bin/ralph.js",
+    "./dist/src/utils/ralph-debug-logger.js",
+    "./src/bin/lighthouse.ts",
+    "./src/bin/link-merge.ts",
+    "./src/bin/memory-reconcile.ts",
+    "./src/bin/ralph.ts",
+    "./src/utils/ralph-debug-logger.ts"
+  ],
   "types": "./dist/src/index.d.ts",
   "version": "1.0.0"
 }

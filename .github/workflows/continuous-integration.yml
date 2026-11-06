@@ -828,6 +828,14 @@ jobs:
       - name: '📦 Package entrypoint consistency'
         run: pnpm exec nx run monorepo:check-package-entrypoints
 
+      # Static and build-free, like the entrypoint check above. Fails when a
+      # project's package.json omits sideEffects, declares true, or declares
+      # false/an array that leaves a module with top-level effects (or a
+      # stylesheet) unlisted. Bundlers drop unlisted modules whose exports go
+      # unused, top-level code included, so an untrue `false` deletes behavior.
+      - name: '🌳 Truthful sideEffects declarations'
+        run: pnpm exec nx run monorepo:check-side-effects
+
       # 🗄️ Static, whole-tree, no database — so one shard is enough.
       #
       # ⚠️ This gate did not exist until 2026-09-10, and its absence is why four

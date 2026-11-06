@@ -69,6 +69,7 @@ lint but never had a rule file of their own:
 | [A ternary takes at most three lines](#a-ternary-takes-at-most-three-lines) | **Enforced**                           | `openthrottle/three-line-ternary`                                     |
 | [Long strings are template literals](#long-strings-are-template-literals)   | **Warned** (autofix)                   | `openthrottle/long-string-template-literal`                           |
 | [JSX consts live under `// Markup`](#jsx-consts-live-under-markup)          | **Enforced** (components)              | `openthrottle/component-primitive-shape`                              |
+| [`sideEffects` is declared and true](#sideeffects-is-declared-and-true)     | **Enforced**                           | `monorepo:check-side-effects` (CI + `check:local`)                    |
 
 ## Corrections made in the move
 
@@ -1212,6 +1213,45 @@ of use:
   `react-router --subGenerator=component --application=<app> --folder=<path>`. Both scaffold
   components; neither is "the component generator". This is the distinction that actually
   gets missed.
+
+## Package metadata
+
+### `sideEffects` is declared and true
+
+**Enforced.** Every `applications/*`, `packages/*` and `tools/*` `package.json` declares
+`sideEffects`, and the value is true of the code: `false` when no module does anything on
+evaluation, otherwise an array naming exactly the files that do. Never `true`.
+
+**Why declare it.** It is bundler metadata (Vite/Rolldown, esbuild, webpack). Without it a
+bundler must assume every module reachable through a barrel `export *` is needed and keep it —
+adding it to the `react-router-*` packages cut the developer app's client JS by 70% (#422).
+
+**Why it must be true.** `false` lets a bundler drop a module whose exports nothing uses,
+**top-level code included**. On a module that registers something, installs a polyfill or
+boots a process, an untrue `false` silently deletes that behavior. `true` is not the safe
+alternative: it switches the optimization off for the whole package.
+
+**What counts as a side effect** — the rules
+[`scripts/check-side-effects.ts`](../../scripts/check-side-effects.ts) applies:
+
+- A discarded expression at module scope (`registerEnumType(...)`, `polyfill()`,
+  `globalThis.X = …`), top-level control flow, top-level `await`, and a bare import of a
+  package (`import 'reflect-metadata'`) make **that module** a side effect.
+- A bare import of a relative module (`import './bootstrap'`) makes the **target** a side
+  effect — it is imported for its effect.
+- Any tracked stylesheet adds `**/*.css` (or its extension). The importing component is never
+  listed — that would pin the component into every bundle that touches its barrel.
+- A bound call (`export const store = createStore()`), a directive, a `/* @__PURE__ */` call
+  and an assignment to a property of a local binding (`Button.displayName = …`) are clean.
+  Decorators are counted, not flagged.
+- A built package (`main` in `./dist/src/…`) lists each flagged module at its source path
+  **and** its emitted `./dist/src/….js` path, because the bundler sees the emitted one.
+
+**How.** Run `pnpm exec tsx scripts/check-side-effects.ts` for the per-project report and
+recommendation (`--project <dir>` narrows it, `--json` for tooling). The gate,
+`pnpm nx run monorepo:check-side-effects`, is the same script with `--strict` and prints the
+value to set. To make a module clean rather than list it, move its top-level effect into a
+function its caller invokes.
 
 ## Installing libraries
 

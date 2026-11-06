@@ -404,38 +404,10 @@ var drainJsonlFileBatched = async ({
   });
 };
 
-// packages/agentic-hooks/src/config/describe.ts
-var TELEMETRY_CONFIG_SOURCES = Object.freeze({
-  /** No layer yielded an endpoint. */
-  NONE: "none",
-  /** The ambient shell. */
-  PROCESS_ENV: "process_env",
-  /** This checkout's own `.env` — only read in an OpenThrottle checkout. */
-  REPO_ENV: "repo_env",
-  /** `~/.openthrottle/.env`. */
-  USER_ENV: "user_env"
-});
-
 // packages/nodejs-utils/src/utils/is-record.ts
 var isRecord = (value) => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };
-
-// packages/agentic-hooks/src/data/checkpoints.ts
-var DEFAULT_STALE_CHECKPOINT_MS = 6 * 60 * 60 * 1e3;
-
-// packages/agentic-hooks/src/utils/privacy.ts
-var PRIVACY_LEVELS = Object.freeze({
-  FULL: "full",
-  NAME_ONLY: "name-only",
-  TRUNCATED: "truncated"
-});
-var DEFAULT_PRIVACY_LEVEL = PRIVACY_LEVELS.TRUNCATED;
-var FOREIGN_PRIVACY_LEVEL = PRIVACY_LEVELS.NAME_ONLY;
-
-// packages/agentic-hooks/src/utils/scope.ts
-var import_node_path3 = __toESM(require("node:path"), 1);
-var SKILL_LINK_DIR = import_node_path3.default.join(".agents", "skills");
 
 // packages/agentic-hooks/src/data/events.ts
 var RECORD_SKILL_USAGE_MUTATION = `
@@ -867,11 +839,6 @@ var formatDrainReasons = (tally) => {
 var formatDrainFileResult = (label, tally) => {
   return `${label} sent=${tally.sent} retained=${tally.retained} dead-lettered=${tally.deadLettered} skipped=${tally.skipped} reasons: ${formatDrainReasons(tally)}`;
 };
-
-// packages/agentic-hooks/src/data/plan-runs.ts
-var import_node_path4 = __toESM(require("node:path"), 1);
-var PLAN_RUNS_DIR_REL = import_node_path4.default.join(".cache", "plan-runs");
-var PLAN_RUN_ABANDONED_MS = 6 * 60 * 60 * 1e3;
 
 // packages/agentic-hooks/src/adapters/claude/drain.ts
 var parseArg = (flag) => {

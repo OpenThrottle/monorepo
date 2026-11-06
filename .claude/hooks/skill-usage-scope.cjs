@@ -34,62 +34,30 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 
 // packages/agentic-hooks/src/adapters/claude/scope.ts
 var import_node_fs2 = __toESM(require("node:fs"), 1);
-var import_node_path4 = __toESM(require("node:path"), 1);
+var import_node_path2 = __toESM(require("node:path"), 1);
 
 // packages/nodejs-utils/src/utils/is-record.ts
 var isRecord = (value) => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };
 
-// packages/agentic-hooks/src/config/env.ts
-var import_node_path = __toESM(require("node:path"), 1);
-var OT_MARKER_REL = import_node_path.default.join(
-  "applications",
-  "openthrottle-server",
-  "package.json"
-);
-
-// packages/agentic-hooks/src/config/describe.ts
-var TELEMETRY_CONFIG_SOURCES = Object.freeze({
-  /** No layer yielded an endpoint. */
-  NONE: "none",
-  /** The ambient shell. */
-  PROCESS_ENV: "process_env",
-  /** This checkout's own `.env` — only read in an OpenThrottle checkout. */
-  REPO_ENV: "repo_env",
-  /** `~/.openthrottle/.env`. */
-  USER_ENV: "user_env"
-});
-
-// packages/agentic-hooks/src/data/checkpoints.ts
-var DEFAULT_STALE_CHECKPOINT_MS = 6 * 60 * 60 * 1e3;
-
-// packages/agentic-hooks/src/utils/privacy.ts
-var PRIVACY_LEVELS = Object.freeze({
-  FULL: "full",
-  NAME_ONLY: "name-only",
-  TRUNCATED: "truncated"
-});
-var DEFAULT_PRIVACY_LEVEL = PRIVACY_LEVELS.TRUNCATED;
-var FOREIGN_PRIVACY_LEVEL = PRIVACY_LEVELS.NAME_ONLY;
-
 // packages/agentic-hooks/src/utils/scope.ts
 var import_node_fs = __toESM(require("node:fs"), 1);
 var import_node_os = __toESM(require("node:os"), 1);
-var import_node_path2 = __toESM(require("node:path"), 1);
+var import_node_path = __toESM(require("node:path"), 1);
 var PERSONAL_SKILLS_DIR_ENV = "OPENTHROTTLE_PERSONAL_SKILLS_DIR";
-var SKILL_LINK_DIR = import_node_path2.default.join(".agents", "skills");
+var SKILL_LINK_DIR = import_node_path.default.join(".agents", "skills");
 var resolvePersonalSkillsRoot = (env) => {
   const override = env[PERSONAL_SKILLS_DIR_ENV]?.trim();
   if (override !== void 0 && override !== "") {
     return override;
   }
-  return import_node_path2.default.join(import_node_os.default.homedir(), ".openthrottle", "skills");
+  return import_node_path.default.join(import_node_os.default.homedir(), ".openthrottle", "skills");
 };
 var isPathInsideRoot = (root, candidate) => {
   try {
     const realRoot = import_node_fs.default.realpathSync(root);
-    return import_node_fs.default.realpathSync(candidate).startsWith(`${realRoot}${import_node_path2.default.sep}`);
+    return import_node_fs.default.realpathSync(candidate).startsWith(`${realRoot}${import_node_path.default.sep}`);
   } catch {
     return false;
   }
@@ -98,14 +66,14 @@ var isPersonalSkill = (skillName2, repoRoot2, env) => {
   const personalRoot = resolvePersonalSkillsRoot(env);
   return isPathInsideRoot(
     personalRoot,
-    import_node_path2.default.join(repoRoot2, SKILL_LINK_DIR, skillName2)
+    import_node_path.default.join(repoRoot2, SKILL_LINK_DIR, skillName2)
   );
 };
 var detectScope = (skillName2, repoRoot2, env = process.env) => {
   if (!skillName2 || skillName2.includes(":")) {
     return "third-party";
   }
-  const authoredDir = import_node_path2.default.join(repoRoot2, "skills", skillName2);
+  const authoredDir = import_node_path.default.join(repoRoot2, "skills", skillName2);
   try {
     if (import_node_fs.default.existsSync(authoredDir) && import_node_fs.default.statSync(authoredDir).isDirectory()) {
       return "ours";
@@ -120,26 +88,6 @@ var detectScope = (skillName2, repoRoot2, env = process.env) => {
   }
   return "third-party";
 };
-
-// packages/agentic-hooks/src/data/events.ts
-var SKILL_USAGE_OUTCOMES = Object.freeze({
-  ABANDONED: "abandoned",
-  ERROR: "error",
-  SESSION_ENDED: "session_ended",
-  SUCCESS: "success"
-});
-var SKILL_USAGE_QUALITY_OUTCOMES = Object.freeze([SKILL_USAGE_OUTCOMES.ERROR, SKILL_USAGE_OUTCOMES.SUCCESS]);
-
-// packages/agentic-hooks/src/data/token-usage.ts
-var MAX_TOKEN_USAGE_BATCH_BYTES = 64 * 1024;
-
-// packages/agentic-hooks/src/data/persist.ts
-var DEFAULT_ABANDONED_MS = 6 * 60 * 60 * 1e3;
-
-// packages/agentic-hooks/src/data/plan-runs.ts
-var import_node_path3 = __toESM(require("node:path"), 1);
-var PLAN_RUNS_DIR_REL = import_node_path3.default.join(".cache", "plan-runs");
-var PLAN_RUN_ABANDONED_MS = 6 * 60 * 60 * 1e3;
 
 // packages/agentic-hooks/src/adapters/claude/scope.ts
 var skillName = process.argv[2];
@@ -157,12 +105,12 @@ if (skillName.includes(":")) {
   reason = "plugin-namespaced (contains :)";
 } else if (scope === "ours") {
   reason = "directory under skills/";
-  registryHit = import_node_path4.default.join(repoRoot, "skills", skillName);
+  registryHit = import_node_path2.default.join(repoRoot, "skills", skillName);
 } else if (scope === "personal") {
   reason = "linked from the personal skills root (outside the repo)";
-  registryHit = import_node_path4.default.join(repoRoot, ".agents", "skills", skillName);
+  registryHit = import_node_path2.default.join(repoRoot, ".agents", "skills", skillName);
 } else {
-  const lockPath = import_node_path4.default.join(repoRoot, "skills-lock.json");
+  const lockPath = import_node_path2.default.join(repoRoot, "skills-lock.json");
   try {
     if (import_node_fs2.default.existsSync(lockPath)) {
       const lock = JSON.parse(import_node_fs2.default.readFileSync(lockPath, "utf8"));

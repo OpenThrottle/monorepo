@@ -65,6 +65,7 @@
   },
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
+  "sideEffects": false,
   "type": "module",
   "types": "./dist/src/index.d.ts"
 }

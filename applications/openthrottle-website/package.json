@@ -68,7 +68,10 @@
   },
   "private": true,
   "repository": "git://github.com/OpenThrottle/website.git",
-  "sideEffects": false,
+  "sideEffects": [
+    "**/*.css",
+    "./app/entry.client.tsx"
+  ],
   "scripts": {},
   "type": "module"
 }

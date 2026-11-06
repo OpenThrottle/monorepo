@@ -1,4 +1,5 @@
 import type { Tree } from '@nx/devkit';
+import { readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 
@@ -13,6 +14,13 @@ describe('nestjs-application generator', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ formatter: 'prettier' });
+  });
+
+  it('declares its process entries as its side effects', async () => {
+    await generatorNestJSApplication(tree, { name, port, username });
+    const packageJson = readJson(tree, `applications/${name}/package.json`);
+
+    expect(packageJson.sideEffects).toEqual(['./src/main.ts', './src/repl.ts']);
   });
 
   it('should run successfully', async () => {
