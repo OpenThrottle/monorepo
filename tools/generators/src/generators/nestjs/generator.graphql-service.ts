@@ -60,9 +60,9 @@ export const generatorNestJSGraphQLService = async (
   if (name.length < 3) throw new Error(`Name must be at least 3 characters.`);
   if (!REGEX_SLUG.test(name)) throw new Error(`Name must be a valid slug.`);
 
-  // 📂 Define the source and destination paths
+  // 📂 Define the source and destination paths (mirrors openthrottle-server src/graphql/)
   const source = join(import.meta.dirname, `files/graphql-service`);
-  const destination = `applications/${application}/src/services/`;
+  const destination = `applications/${application}/src/graphql/`;
   const options = { ...getCommonVariables(name), application, name };
 
   // 📂 Copy "files" into the destination with template support

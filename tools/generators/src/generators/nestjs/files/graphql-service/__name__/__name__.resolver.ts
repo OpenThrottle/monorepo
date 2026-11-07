@@ -1,39 +1,45 @@
-import { Args, ObjectType, Query, Resolver } from '@nestjs/graphql';
+/**
+ * @description GraphQL resolver for <%= name %>.
+ */
+
 import { UseGuards } from '@nestjs/common';
-import { subject } from '@casl/ability';
-import { CacheControl } from 'nestjs-gql-cache-control';
-import { PaginatedResult, Result } from '@openthrottle/nestjs-core/src/entities/result.entity';
-import { AppAbility } from '@openthrottle/nestjs-core/src/policies/types';
-import { PoliciesGuard } from '@openthrottle/nestjs-core/src/policies/policies.guard';
-import { CheckPolicies } from '@openthrottle/nestjs-core/src/policies/policies.decorator';
+import { Args, Query, Resolver } from '@nestjs/graphql';
+import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
+
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { Get<%= singularPascal %>Input } from './<%= name %>.input.ts';
+import {
+  <%= singularPascal %>ListResult,
+  <%= singularPascal %>Object,
+} from './<%= name %>.object.ts';
 import { <%= namePascal %>Service } from './<%= name %>.service.ts';
-import { <%= singularPascal %> } from '~/services/<%= name %>/entities/<%= singular %>.entity';
-import { <%= namePascal %>Policy } from '~/services/<%= name %>/<%= name %>.policy';
-import { Get<%= namePascal %>Args } from '~/services/<%= name %>/dto/get-<%= name %>.input';
 
-@ObjectType()
-class <%= singularPascal %>Result extends Result(<%= singularPascal %>) {}
-
-@ObjectType()
-class <%= singularPascal %>PaginatedResult extends PaginatedResult(
-  <%= singularPascal %>,
-) {}
-
-@UseGuards(PoliciesGuard)
-@Resolver()
+@Resolver(() => <%= singularPascal %>Object)
+@UseGuards(GqlPermissionsGuard)
 export class <%= namePascal %>Resolver {
   constructor(
     private readonly <%= nameCamel %>Service: <%= namePascal %>Service,
   ) {}
 
-  // @CacheControl({ maxAge: 60, scope: 'PRIVATE' })
-  @CheckPolicies((ability: AppAbility) =>
-    ability.can('read', subject(<%= namePascal %>Policy.resourceName, {})),
-  )
-  @Query(() => <%= singularPascal %>Result, {
-    description: 'Get "role" by UUID',
+  @Query(() => <%= singularPascal %>ListResult, {
+    description: `List <%= plural %>`,
   })
-  get<%= namePascal %>(@Args() args: Get<%= namePascal %>Args) {
-    return this.<%= nameCamel %>Service.getRoleById(args.uuid);
+  // TODO: Replace SETTINGS_READ with the permission this feature actually needs.
+  @Permissions(PERMISSIONS.SETTINGS_READ)
+  <%= pluralCamel %>(): Promise<<%= singularPascal %>ListResult> {
+    return this.<%= nameCamel %>Service.findAll();
+  }
+
+  @Query(() => <%= singularPascal %>Object, {
+    description: `Get a <%= singular %> by id`,
+    nullable: true,
+  })
+  // TODO: Replace SETTINGS_READ with the permission this feature actually needs.
+  @Permissions(PERMISSIONS.SETTINGS_READ)
+  <%= singularCamel %>(
+    @Args('input', { type: () => Get<%= singularPascal %>Input })
+    input: Get<%= singularPascal %>Input,
+  ): Promise<<%= singularPascal %>Object | null> {
+    return this.<%= nameCamel %>Service.findById(input.id);
   }
 }
