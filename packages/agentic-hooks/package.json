@@ -57,6 +57,7 @@
           "cwd": "{workspaceRoot}"
         },
         "outputs": [
+          "{workspaceRoot}/.claude/hooks/bash-guard.cjs",
           "{workspaceRoot}/.claude/hooks/memory-index-guard.cjs",
           "{workspaceRoot}/.claude/hooks/plan-run-janitor.cjs",
           "{workspaceRoot}/.claude/hooks/require-ot-plan-kickoff.cjs",
@@ -69,6 +70,7 @@
           "{workspaceRoot}/.claude/hooks/skill-usage-scope.cjs",
           "{workspaceRoot}/.codex/hooks/skill-usage-capture.cjs",
           "{workspaceRoot}/.codex/hooks/skill-usage-complete.cjs",
+          "{workspaceRoot}/.cursor/hooks/bash-guard.cjs",
           "{workspaceRoot}/.cursor/hooks/skill-usage-capture.cjs",
           "{workspaceRoot}/.cursor/hooks/skill-usage-complete.cjs",
           "{workspaceRoot}/plugins/openthrottle-cursor/.claude-plugin/plugin.json",
@@ -96,6 +98,7 @@
           "{projectRoot}/package.json",
           "{projectRoot}/scripts/bundle-hooks.ts",
           "{projectRoot}/src/**/*",
+          "{workspaceRoot}/.claude/hooks/bash-guard.cjs",
           "{workspaceRoot}/.claude/hooks/memory-index-guard.cjs",
           "{workspaceRoot}/.claude/hooks/plan-run-janitor.cjs",
           "{workspaceRoot}/.claude/hooks/require-ot-plan-kickoff.cjs",
@@ -108,6 +111,7 @@
           "{workspaceRoot}/.claude/hooks/skill-usage-scope.cjs",
           "{workspaceRoot}/.codex/hooks/skill-usage-capture.cjs",
           "{workspaceRoot}/.codex/hooks/skill-usage-complete.cjs",
+          "{workspaceRoot}/.cursor/hooks/bash-guard.cjs",
           "{workspaceRoot}/.cursor/hooks/skill-usage-capture.cjs",
           "{workspaceRoot}/.cursor/hooks/skill-usage-complete.cjs",
           "{workspaceRoot}/plugins/openthrottle-cursor/.claude-plugin/plugin.json",
@@ -160,6 +164,7 @@
   "scripts": {},
   "sideEffects": [
     "./src/adapters/claude/backfill.ts",
+    "./src/adapters/claude/bash-guard.ts",
     "./src/adapters/claude/capture.ts",
     "./src/adapters/claude/complete.ts",
     "./src/adapters/claude/drain.ts",
@@ -171,6 +176,7 @@
     "./src/adapters/claude/scope.ts",
     "./src/adapters/codex/capture.ts",
     "./src/adapters/codex/complete.ts",
+    "./src/adapters/cursor/bash-guard.ts",
     "./src/adapters/cursor/capture.ts",
     "./src/adapters/cursor/complete.ts"
   ],

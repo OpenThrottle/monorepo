@@ -2,6 +2,9 @@
   "version": 1,
   "hooks": {
     "afterFileEdit": [{ "command": ".cursor/hooks/format.sh" }],
+    "beforeShellExecution": [
+      { "command": ".cursor/hooks/bash-guard.cjs", "timeout": 10 }
+    ],
     "beforeSubmitPrompt": [
       { "command": ".cursor/hooks/skill-usage-capture.cjs" }
     ],

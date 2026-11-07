@@ -37,6 +37,17 @@
           }
         ],
         "matcher": "mcp__ccd_session__start_session|mcp__ccd_session__hand_off_to_session"
+      },
+      {
+        "hooks": [
+          {
+            "command": "./.claude/hooks/bash-guard.cjs",
+            "statusMessage": "Bash guard (PreToolUse)",
+            "timeout": 10,
+            "type": "command"
+          }
+        ],
+        "matcher": "Bash"
       }
     ],
     "Stop": [

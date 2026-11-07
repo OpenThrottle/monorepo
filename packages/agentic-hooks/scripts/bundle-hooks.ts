@@ -64,6 +64,10 @@ const BUNDLES: readonly BundleSpec[] = [
     outFile: '.claude/hooks/session-trajectory-resegment.cjs',
   },
   {
+    entry: 'adapters/claude/bash-guard.ts',
+    outFile: '.claude/hooks/bash-guard.cjs',
+  },
+  {
     entry: 'adapters/claude/capture.ts',
     outFile: '.claude/hooks/skill-usage-capture.cjs',
   },
@@ -107,6 +111,10 @@ const BUNDLES: readonly BundleSpec[] = [
   {
     entry: 'adapters/codex/complete.ts',
     outFile: '.codex/hooks/skill-usage-complete.cjs',
+  },
+  {
+    entry: 'adapters/cursor/bash-guard.ts',
+    outFile: '.cursor/hooks/bash-guard.cjs',
   },
   {
     entry: 'adapters/cursor/capture.ts',
