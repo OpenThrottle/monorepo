@@ -28,9 +28,20 @@ describe('nestjs-simple-service generator', () => {
       `applications/${application}/src/services/${name}/test-logs.module.ts`,
       `applications/${application}/src/services/${name}/test-logs.service.test.ts`,
       `applications/${application}/src/services/${name}/test-logs.service.ts`,
-      `applications/${application}/src/services/${name}/dto/.gitkeep`,
-      `applications/${application}/src/services/${name}/entities/.gitkeep`,
-      `applications/${application}/src/services/${name}/factories/.gitkeep`,
     ]);
+  });
+
+  it('emits no nestjs-core or deep /src/ imports', async () => {
+    await generatorNestJSSimpleService(tree, { application, name });
+
+    const generated = tree
+      .listChanges()
+      .filter((change) => change.path.endsWith('.ts'))
+      .map((change) => tree.read(change.path, 'utf-8') ?? '');
+
+    for (const source of generated) {
+      expect(source).not.toMatch(/@openthrottle\/nestjs-core/);
+      expect(source).not.toMatch(/@openthrottle\/[^'"]+\/src\//);
+    }
   });
 });

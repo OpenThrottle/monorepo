@@ -61,7 +61,23 @@
         "executor": "@nx/js:tsc"
       },
       "lint": {},
-      "test": {},
+      "test": {
+        "dependsOn": [
+          "^build",
+          "^codegen-graphql",
+          "codegen-graphql",
+          "codegen-react-router",
+          {
+            "projects": [
+              "@openthrottle/nestjs-auth",
+              "@openthrottle/nestjs-modules",
+              "@openthrottle/nestjs-rbac",
+              "@openthrottle/nestjs-repositories"
+            ],
+            "target": "typecheck"
+          }
+        ]
+      },
       "typecheck": {}
     }
   },

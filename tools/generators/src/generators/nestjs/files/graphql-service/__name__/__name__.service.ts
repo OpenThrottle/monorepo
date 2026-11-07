@@ -1,16 +1,26 @@
+/**
+ * @description Application service for <%= name %>. Wire repositories or other
+ * collaborators as the feature grows; keep GraphQL mapping in the resolver.
+ */
+
 import { Injectable } from '@nestjs/common';
-import { LoggerService } from '@openthrottle/nestjs-modules';
-import { RolesRepository } from '@openthrottle/nestjs-core/src/repositories/certs/roles.repository';
-// import { Get<%= namePascal %>Args } from '~/services/<%= name %>/dto/get-<%= name %>.input';
+
+import type {
+  <%= singularPascal %>ListResult,
+  <%= singularPascal %>Object,
+} from './<%= name %>.object.ts';
 
 @Injectable()
 export class <%= namePascal %>Service {
-  constructor(
-    private readonly logger: LoggerService,
-    private readonly repository: RolesRepository,
-  ) {}
+  findAll(): Promise<<%= singularPascal %>ListResult> {
+    return Promise.resolve({
+      items: [],
+      totalCount: 0,
+    });
+  }
 
-  getRoleById(roleId: string) {
-    return this.repository.findByUUID(roleId);
+  findById(id: string): Promise<<%= singularPascal %>Object | null> {
+    void id;
+    return Promise.resolve(null);
   }
 }
