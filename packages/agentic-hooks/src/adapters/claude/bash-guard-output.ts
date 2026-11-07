@@ -5,7 +5,9 @@
  * and how a verdict is rendered back. Kept apart from the entrypoint so it can
  * be tested without the entrypoint's `process.exit`.
  *
- * Payload shape: `{ tool_name: 'Bash', tool_input: { command }, cwd }`.
+ * Payload shape: `{ tool_name: 'Bash', tool_input: { command, run_in_background? }, cwd }`.
+ * `run_in_background: true` is the guard context's `background`: Claude Code
+ * then reports only the exit status, so masked-exit rules deny rather than warn.
  * Rendering: a deny is `hookSpecificOutput.permissionDecision: "deny"` with the
  * reason; a warn is `hookSpecificOutput.additionalContext`, which Claude Code
  * (2.1.x) accepts on PreToolUse and shows the model without blocking the call.
@@ -21,6 +23,7 @@ import {
 
 /** The command and directory of a `Bash` PreToolUse payload. */
 export interface ClaudeBashCall {
+  readonly background: boolean;
   readonly command: string;
   readonly cwd: string | null;
 }
@@ -32,7 +35,8 @@ export const readClaudeBashCall = (raw: unknown): ClaudeBashCall | null => {
   const { command } = raw.tool_input;
   if (typeof command !== 'string') return null;
   const cwd = typeof raw.cwd === 'string' && raw.cwd !== '' ? raw.cwd : null;
-  return { command, cwd };
+  const background = raw.tool_input.run_in_background === true;
+  return { background, command, cwd };
 };
 
 /** The PreToolUse stdout for a guard result, or null to print nothing. */
@@ -63,12 +67,13 @@ export const renderClaudeBashGuard = (
 export const decideClaudeBashGuard = async (
   raw: unknown,
   fallbackCwd: string,
-  context: Omit<BashGuardContext, 'cwd'>,
+  context: Omit<BashGuardContext, 'background' | 'cwd'>,
 ): Promise<string | null> => {
   const call = readClaudeBashCall(raw);
   if (call === null) return null;
   const result = await evaluateBashGuard(call.command, {
     ...context,
+    background: call.background,
     cwd: call.cwd ?? fallbackCwd,
   });
   return renderClaudeBashGuard(result);

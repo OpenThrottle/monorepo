@@ -4,6 +4,7 @@ import { evaluateBashGuard, formatBashGuardFindings } from '../registry.ts';
 import type { BashGuardContext, BashGuardRule } from '../types.ts';
 
 const CONTEXT: BashGuardContext = {
+  background: false,
   cwd: '/repo',
   lookupPullRequest: vi.fn(async () => ({ kind: 'unknown' as const })),
   lookupTimeoutMs: 100,

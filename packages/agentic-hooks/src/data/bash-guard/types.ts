@@ -11,15 +11,33 @@
  */
 
 /**
- * One simple command from a shell line: its words after quote removal, and the
- * directory it will run in when that can be known statically (`null` when an
- * earlier `cd` went somewhere the parser cannot follow, e.g. `cd "$DIR"`).
+ * A shell control operator joining two simple commands. A newline is read as
+ * `;`; subshell parentheses are not operators.
  *
  * @public
  */
-export interface BashSegment {
-  readonly cwd: string | null;
+export type BashOperator = '&&' | '&' | ';' | '|' | '|&' | '||';
+
+/**
+ * One simple command as the lexer sees it: its words after quote removal, and
+ * the operator joining it to the previous command (`null` for the first).
+ *
+ * @public
+ */
+export interface LexedShellSegment {
+  readonly precededBy: BashOperator | null;
   readonly words: readonly string[];
+}
+
+/**
+ * One simple command from a shell line, plus the directory it will run in when
+ * that can be known statically (`null` when an earlier `cd` went somewhere the
+ * parser cannot follow, e.g. `cd "$DIR"`).
+ *
+ * @public
+ */
+export interface BashSegment extends LexedShellSegment {
+  readonly cwd: string | null;
 }
 
 /** @public */
@@ -66,6 +84,12 @@ export type PullRequestLookup = (
  * @public
  */
 export interface BashGuardContext {
+  /**
+   * @description Whether the harness runs the command detached and reports
+   * only its exit status (a background shell call). A masked exit
+   * status is then the only signal anyone sees, so rules may judge it harder.
+   */
+  readonly background: boolean;
   readonly cwd: string;
   readonly lookupPullRequest: PullRequestLookup;
   readonly lookupTimeoutMs: number;

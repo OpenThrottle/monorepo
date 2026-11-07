@@ -38,6 +38,7 @@ import {
 } from '../src/index.ts';
 
 interface BashCall {
+  readonly background: boolean;
   readonly command: string;
   readonly cwd: string;
   readonly file: string;
@@ -100,7 +101,8 @@ const readBashCalls = (file: string): readonly BashCall[] => {
       if (!isBash || !isRecord(block.input)) continue;
       const { command } = block.input;
       if (typeof command !== 'string' || typeof block.id !== 'string') continue;
-      calls.push({ command, cwd, file, id: block.id, timestamp });
+      const background = block.input.run_in_background === true;
+      calls.push({ background, command, cwd, file, id: block.id, timestamp });
     }
   }
   return calls;
@@ -176,6 +178,7 @@ const main = async (): Promise<void> => {
   const results = await Promise.all(
     calls.map(async (call) => {
       const result = await evaluateBashGuard(call.command, {
+        background: call.background,
         cwd: call.cwd || options.fallbackCwd,
         lookupPullRequest: async (query) => {
           if (query.selector === null) {

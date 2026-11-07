@@ -12,6 +12,7 @@
 export * from './config/describe.ts';
 export * from './config/env.ts';
 export * from './data/bash-guard/gh-pr-lookup.ts';
+export * from './data/bash-guard/masked-exit.ts';
 export * from './data/bash-guard/registry.ts';
 export * from './data/bash-guard/shell-words.ts';
 export * from './data/bash-guard/stale-pr-write.ts';

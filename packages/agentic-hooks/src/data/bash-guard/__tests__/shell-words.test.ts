@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  lexShellSegments,
   parseBashCommand,
   splitShellSegments,
   stripCommandPrefixes,
@@ -132,5 +133,28 @@ describe('parseBashCommand', () => {
   it('marks the directory unknown after a bare cd', () => {
     const parsed = parseBashCommand('cd && y', '/r');
     expect(parsed.segments[1]?.cwd).toBeNull();
+  });
+});
+
+describe('lexShellSegments', () => {
+  it('records the operator joining each segment to the previous one', () => {
+    const operators = lexShellSegments('a && b || c; d | e |& f & g\nh').map(
+      (segment) => segment.precededBy,
+    );
+    expect(operators).toEqual([null, '&&', '||', ';', '|', '|&', '&', ';']);
+  });
+
+  it('sees past subshell parentheses to the real operator', () => {
+    const operators = lexShellSegments('(a) | b && (c; d)').map(
+      (segment) => segment.precededBy,
+    );
+    expect(operators).toEqual([null, '|', '&&', ';']);
+  });
+
+  it('does not mistake a 2>&1 redirection for an operator', () => {
+    expect(lexShellSegments('a 2>&1 | tail -5')).toEqual([
+      { precededBy: null, words: ['a'] },
+      { precededBy: '|', words: ['tail', '-5'] },
+    ]);
   });
 });
