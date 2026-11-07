@@ -49,25 +49,7 @@ Use **ot-generators** for scaffolding, **nx-workspace** for graph and targets, *
 
 - **`schema.gql` is only ever written by `pnpm nx run openthrottle-server:graphql-schema:write`** — a server boot keeps the schema in memory. After changing GraphQL types or resolvers: that command, then consumer codegen, then commit both ([root `CLAUDE.md` § GraphQL schema + codegen flow](../../CLAUDE.md)).
 - **Backwards-compatible schema:** when updating `.entity` files the GraphQL schema must stay backwards compatible. Avoid removing fields or changing types on existing ObjectTypes; if a field is no longer needed, mark it **`@deprecated(reason: "...")`** instead of deleting it.
-- **Resolver return types:** there are **no** `Result()` / `PaginatedResult()` / `ListResult()` factory helpers in this repo. They came from the pre-port codebase's `@openthrottle/nestjs-core`, which was never ported. Do not import or extend them. Resolvers return hand-written GraphQL types, declared in the feature's `*.object.ts` and kept separate from the TypeORM entity:
-  - **One item:** the `@ObjectType()` class itself, e.g. `@Query(() => PlanObject)`.
-  - **A plain list:** an array of it, e.g. `@Query(() => [TaskObject])`, when the caller needs nothing but the rows.
-  - **A list with metadata:** a hand-written `<Thing>ListResult` envelope holding a plural field plus `totalCount` and, for cursor paging, `endCursor` / `hasNextPage`. "ListResult" is a naming convention here, not a base class:
-
-    ```typescript
-    @ObjectType()
-    export class WorkSessionListResult {
-      @Field(() => [WorkSessionObject])
-      sessions!: WorkSessionObject[];
-
-      @Field(() => Int)
-      totalCount!: number;
-    }
-    ```
-
-  - **A mutation outcome:** a `*Result` / `*ResultObject` class in its own `*-result.object.ts`, e.g. `auth/login-result.object.ts`.
-
-  Reference implementations: `work-ledger/work-ledger.object.ts` (count envelope) and `blog/blog-post.object.ts` (`BlogPostListResult`, cursor envelope). **The nestjs generator's `graphql-service` and `simple-service` templates are stale.** They still import `Result` / `PaginatedResult` and policy helpers from the nonexistent `@openthrottle/nestjs-core`, so their output does not compile. Do not copy the pattern from them.
+- **Resolver return types:** there are **no** `Result()` / `PaginatedResult()` / `ListResult()` factories (they lived in the never-ported `@openthrottle/nestjs-core`). Return a hand-written `@ObjectType()` from the feature's `*.object.ts`, never a raw entity: the class for one item, `[Thing]` for a plain list, or a hand-written `<Thing>ListResult` envelope (rows plus `totalCount`, and `endCursor` / `hasNextPage` for cursor paging) when the list needs metadata. References: `work-ledger/work-ledger.object.ts`, `blog/blog-post.object.ts`. The nestjs generator's `graphql-service` / `simple-service` templates still import those factories and do not compile — don't copy them.
 
 - **New server surface:** use **`NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs`** (see **ot-generators**); sub-generators include `graphql-service`, `simple-service`, `module`, `queue`, `ai-agent` and `application` — always **`--describe`** first for the required flags per sub-generator. `<SERVICE_NAME>` is kebab-case, often plural for services.
 
