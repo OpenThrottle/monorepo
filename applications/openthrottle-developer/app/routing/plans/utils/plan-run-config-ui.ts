@@ -111,6 +111,7 @@ export const serializePlanRunConfigUiState = (
       targetMode: workflowInput.targetMode,
       taskId: workflowInput.taskId,
       worktreeBase: workflowInput.worktreeBase,
+      worktreeCleanup: workflowInput.worktreeCleanup,
       worktreeCli: workflowInput.worktreeCli,
       worktreeName: workflowInput.worktreeName,
     },

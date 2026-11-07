@@ -47,6 +47,7 @@ const toRow = (
     repositoryId: repository.id,
     repositoryName: repository.name,
     runMonitored: discovered?.runMonitored ?? null,
+    safeToRemove: discovered?.safeToRemove ?? false,
     unregistered: false,
     updatedAt: checkout.updatedAt ?? null,
   };
@@ -84,6 +85,7 @@ const toDiscoveredRow = (
     repositoryName:
       repository?.name ?? REPOSITORIES_TABLE_COPY.unlinkedGroupName,
     runMonitored: discovered.runMonitored ?? null,
+    safeToRemove: discovered.safeToRemove,
     unregistered: true,
     updatedAt: null,
   };

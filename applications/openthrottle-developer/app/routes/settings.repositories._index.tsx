@@ -14,15 +14,7 @@ import * as React from 'react';
 import type { Route } from '@/app/routes/+types/settings.repositories._index';
 import { GetSettingsRepositoriesDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
-import {
-  addFolder,
-  browseDirectory,
-  cloneRepo,
-  deleteRepo,
-  pickFolderNative,
-  pruneWorktreeCheckouts,
-  refreshCheckout,
-} from '~/routing/settings/repositories/actions/repositories';
+import { repositoriesAction } from '~/routing/settings/repositories/actions/repositories';
 import { RepositoriesSection } from '~/routing/settings/repositories/components/RepositoriesSection';
 import {
   isRepositoriesSortBy,
@@ -33,7 +25,6 @@ import {
 } from '~/routing/settings/repositories/config/repositories.defaults';
 import {
   hideMissingRows,
-  PRUNE_WORKTREE_CHECKOUTS_INTENT,
   SHOW_MISSING_PARAM,
   SHOW_MISSING_VALUE,
 } from '~/routing/settings/repositories/utils/missing-rows';
@@ -144,6 +135,8 @@ export default function Component(
     actionData && 'refreshed' in actionData ? actionData.refreshed : null;
   const pruned =
     actionData && 'pruned' in actionData ? actionData.pruned : null;
+  const removal =
+    actionData && 'removal' in actionData ? actionData.removal : null;
 
   // Handlers
 
@@ -167,6 +160,7 @@ export default function Component(
         pickerCapabilities={pickerCapabilities}
         pruned={pruned}
         refreshed={refreshed}
+        removal={removal}
         rows={rows}
         search={search}
         showMissing={showMissing}
@@ -178,29 +172,6 @@ export default function Component(
   );
 }
 
-export const action = async (args: Route.ActionArgs) => {
-  const formData = await args.request.formData();
-  const intent = formData.get('intent');
-
-  switch (intent) {
-    case 'addFolder':
-      return addFolder(args, formData);
-    case 'browseDirectory':
-      return browseDirectory(args, formData);
-    case 'cloneRepo':
-      return cloneRepo(args, formData);
-    case 'deleteRepo':
-      return deleteRepo(args, formData);
-    case 'pickFolderNative':
-      return pickFolderNative(args);
-    case PRUNE_WORKTREE_CHECKOUTS_INTENT:
-      return pruneWorktreeCheckouts(args, formData);
-    case 'refreshCheckout':
-      return refreshCheckout(args, formData);
-
-    default:
-      throw new Error('Invalid intent');
-  }
-};
+export const action = repositoriesAction;
 
 export const ErrorBoundary = GlobalErrorBoundary;

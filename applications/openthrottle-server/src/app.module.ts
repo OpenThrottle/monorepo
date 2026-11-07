@@ -104,6 +104,7 @@ import { DataRetentionQueueModule } from './queues/data-retention/data-retention
 import { DatabaseBackupQueueModule } from './queues/database-backup/database-backup-queue.module.ts';
 import { PlanLifecycleHooksQueueModule } from './queues/plan-lifecycle-hooks/plan-lifecycle-hooks-queue.module.ts';
 import { PlanRulesQueueModule } from './queues/plan-rules/plan-rules-queue.module.ts';
+import { PlanRunWorktreeReaperQueueModule } from './queues/plan-run-worktree-reaper/plan-run-worktree-reaper-queue.module.ts';
 import { PlanRunsStaleSweepQueueModule } from './queues/plan-runs-stale-sweep/plan-runs-stale-sweep-queue.module.ts';
 import { PlansQueueModule } from './queues/plans/plans-queue.module.ts';
 import { ScheduledAgentJobsQueueModule } from './queues/scheduled-agent-jobs/scheduled-agent-jobs-queue.module.ts';
@@ -262,6 +263,7 @@ const buildImports = (role: ProcessRole): AppModuleImports => {
     imports.push(
       PlanLifecycleHooksQueueModule,
       PlanRulesQueueModule,
+      PlanRunWorktreeReaperQueueModule,
       PlanRunsStaleSweepQueueModule,
       PlansQueueModule,
       ScheduledAgentJobsQueueModule,

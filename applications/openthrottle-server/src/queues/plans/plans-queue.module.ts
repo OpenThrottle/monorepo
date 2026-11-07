@@ -8,6 +8,7 @@ import { PlanStatusModule } from '../../graphql/plans/plan-status.module.ts';
 import { WorkLedgerGraphqlModule } from '../../graphql/work-ledger/work-ledger-graphql.module.ts';
 import { MetricsModule } from '../../metrics/metrics.module.ts';
 import { NotificationsModule } from '../../notifications/notifications.module.ts';
+import { PlanRunWorktreeCleanupModule } from '../../services/plan-run-worktree-cleanup/plan-run-worktree-cleanup.module.ts';
 import { AgenticRalphModule } from '../agentic-ralph/agentic-ralph.module.ts';
 import { PlanLifecycleHooksQueueProducerModule } from '../plan-lifecycle-hooks/plan-lifecycle-hooks-queue-producer.module.ts';
 import { PlansProcessor } from './plans.processor.ts';
@@ -46,6 +47,7 @@ import { WorkLedgerRunService } from './work-ledger-run.service.ts';
     NotificationsModule,
     PlanEnqueueModule,
     PlanLifecycleHooksQueueProducerModule,
+    PlanRunWorktreeCleanupModule,
     PlanStatusModule,
     PlansQueueProducerModule,
     WorkLedgerGraphqlModule,

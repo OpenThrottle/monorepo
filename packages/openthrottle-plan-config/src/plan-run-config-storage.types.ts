@@ -15,6 +15,9 @@ export type PlanRunConfigDebugCli = 'omit' | 'debug' | 'verbose';
 
 export type PlanRunConfigWorktreeCli = 'flag-only' | 'named' | 'omit';
 
+/** @description `'on-pr'` tears the worktree down after a clean run with a PR; `'keep'` never does. */
+export type PlanRunConfigWorktreeCleanup = 'keep' | 'on-pr';
+
 export type PlanRunConfigExecutionBackend = 'claude' | 'cursor';
 
 /** @description Stored shape for `plans.job_run_hooks` (validated in openthrottle-server). */
@@ -44,6 +47,7 @@ export interface PlanRunConfigRalphV1 {
   readonly promptLayer: PlanRunConfigPromptLayer;
   readonly skipWorktreeSetup: boolean;
   readonly worktreeBase: string;
+  readonly worktreeCleanup: PlanRunConfigWorktreeCleanup;
   readonly worktreeCli: PlanRunConfigWorktreeCli;
   readonly worktreeName: string;
 }
@@ -91,6 +95,7 @@ export interface PlanWorkflowRalphRunOptions {
   readonly targetMode: PlanRunConfigTargetMode;
   readonly taskId: string;
   readonly worktreeBase: string;
+  readonly worktreeCleanup: PlanRunConfigWorktreeCleanup;
   readonly worktreeCli: PlanRunConfigWorktreeCli;
   readonly worktreeName: string;
 }

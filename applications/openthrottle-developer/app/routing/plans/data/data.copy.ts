@@ -393,6 +393,18 @@ export const PLAN_CONFIG_WORKTREE_COPY = {
 } as const;
 
 /**
+ * @description Copy for the worktree cleanup control under `Worktree` on the plan Configuration
+ * tab. Removal goes through `pnpm run worktree:remove` and always keeps the branch.
+ */
+export const PLAN_CONFIG_WORKTREE_CLEANUP_COPY = {
+  disabledHint: `Turn the worktree on to choose what happens to it after a run.`,
+  hint: `Removing the worktree keeps its branch, so a later run checks it out again. A run that fails, is cancelled, or leaves uncommitted or unpushed work always keeps its worktree.`,
+  keepLabel: `Keep the worktree`,
+  label: `After the run`,
+  onPrLabel: `Remove it once the run opens a PR`,
+} as const;
+
+/**
  * @description Supplementary copy for `02. Workspace` on the plan Configuration tab. A plan now
  * records the workspace it was CREATED in, so the selector opens pre-filled rather than on the
  * monorepo root — `createdInDefault` says so, and `staleCheckout` covers the case where that

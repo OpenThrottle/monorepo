@@ -288,6 +288,7 @@
     "./src/graphql/workspace-settings/discovered-worktrees.object.ts",
     "./src/graphql/workspace-settings/prune-worktree-checkouts.input.ts",
     "./src/graphql/workspace-settings/prune-worktree-checkouts.object.ts",
+    "./src/graphql/workspace-settings/remove-plan-run-worktree.object.ts",
     "./src/graphql/workspace-settings/repository.object.ts",
     "./src/graphql/workspace-settings/user-workspace-profile.object.ts",
     "./src/graphql/workspace-settings/workspace-editor-config-application.object.ts",

@@ -16,6 +16,7 @@ import './workspace-folders.input.ts';
 import './workspace-folders.object.ts';
 import './prune-worktree-checkouts.input.ts';
 import './prune-worktree-checkouts.object.ts';
+import './remove-plan-run-worktree.object.ts';
 
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
@@ -23,6 +24,7 @@ import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { ForeignSkillInjectionModule } from '../../services/foreign-skill-injection/foreign-skill-injection.module.ts';
+import { PlanRunWorktreeTeardownModule } from '../../services/plan-run-worktree-teardown/plan-run-worktree-teardown.module.ts';
 import { WorktreeActivityModule } from '../../services/worktree-activity/worktree-activity.module.ts';
 import { WorktreeCheckoutPruneModule } from '../../services/worktree-checkout-prune/worktree-checkout-prune.module.ts';
 import { RepositoryInspectionModule } from '../repository-inspection/repository-inspection.module.ts';
@@ -37,6 +39,7 @@ import { WorkspaceSettingsLoaders } from './workspace-settings-loaders.ts';
     ForeignSkillInjectionModule,
     LoggerModule,
     NestjsRepositoriesModule,
+    PlanRunWorktreeTeardownModule,
     RepositoryInspectionModule,
     WorktreeActivityModule,
     WorktreeCheckoutPruneModule,

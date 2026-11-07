@@ -165,4 +165,28 @@ describe('deriveWorktreeBadges', () => {
       );
     });
   });
+
+  describe('when the server says a plan-run worktree is safe to remove', () => {
+    test('adds the safe-to-remove hint', () => {
+      const badges = deriveWorktreeBadges(
+        rowFor({ name: 'plan-c34e018b', safeToRemove: true }),
+      );
+
+      expect(badges.map((badge) => badge.id)).toContain('safe-to-remove');
+      expect(
+        badges.find((badge) => badge.id === 'safe-to-remove'),
+      ).toMatchObject({
+        label: REPOSITORIES_TABLE_COPY.safeToRemoveBadge,
+        tone: 'cleanup',
+      });
+    });
+  });
+
+  describe('when it is not safe to remove', () => {
+    test('adds no hint', () => {
+      const badges = deriveWorktreeBadges(rowFor({ name: 'plan-c34e018b' }));
+
+      expect(badges.map((badge) => badge.id)).not.toContain('safe-to-remove');
+    });
+  });
 });

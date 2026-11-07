@@ -639,6 +639,44 @@ describe('AgenticRalphOrchestratorService worktree provisioning', () => {
     );
   });
 
+  it('reports the provisioned worktree to the caller before the agent runs', async () => {
+    const onWorktreeProvisioned = vi.fn();
+
+    await service.runPlanOrchestratorJob({
+      jobData: {
+        planId: PLAN_ID,
+        ralph: { worktree: 'plan-aaaaaaaa' },
+        runKind: 'orchestrator',
+        workingDirectory: WORKTREE_PATH,
+      },
+      onWorktreeProvisioned,
+    });
+
+    expect(onWorktreeProvisioned).toHaveBeenCalledExactlyOnceWith({
+      baseCheckoutPath: WORKTREE_PATH,
+      worktreePath: PROVISIONED_WORKTREE_PATH,
+    });
+    expect(onWorktreeProvisioned.mock.invocationCallOrder[0]).toBeLessThan(
+      mockExecute.mock.invocationCallOrder[0] ?? 0,
+    );
+  });
+
+  it('reports no worktree when the payload opts out of one', async () => {
+    const onWorktreeProvisioned = vi.fn();
+
+    await service.runPlanOrchestratorJob({
+      jobData: {
+        planId: PLAN_ID,
+        ralph: {},
+        runKind: 'orchestrator',
+        workingDirectory: WORKTREE_PATH,
+      },
+      onWorktreeProvisioned,
+    });
+
+    expect(onWorktreeProvisioned).not.toHaveBeenCalled();
+  });
+
   it('never forwards a root — the script owns resolution end to end', async () => {
     await runWithWorktree();
 

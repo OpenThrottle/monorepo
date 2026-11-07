@@ -8,6 +8,7 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
 import {
   MISSING_WORKTREES_COPY,
+  REMOVE_PLAN_RUN_WORKTREE_COPY,
   REPOSITORIES_ROW_ACTIONS_COPY,
 } from '~/routing/settings/repositories/data/data.copy';
 import {
@@ -362,5 +363,97 @@ describe('RepositoryRowActions for a registered worktree missing from disk', () 
     await waitFor(() => expect(submitted).toHaveLength(1));
     expect(submitted[0]?.get('intent')).toBe('pruneWorktreeCheckouts');
     expect(submitted[0]?.get('checkoutIds')).toBe('worktree-1');
+  });
+});
+
+describe('RepositoryRowActions for a registered plan-run worktree', () => {
+  const PLAN_PATH = `/Users/dev/.openthrottle/worktrees/acme/monorepo/plan-c34e018b`;
+
+  const planRunRow = (safeToRemove: boolean) => {
+    const [parent] = buildRepositoryRows(
+      [
+        mockRepository({
+          checkouts: [
+            mockCheckout({ id: 'primary-1' }),
+            mockCheckout({
+              displayName: 'plan-c34e018b',
+              filesystemPath: PLAN_PATH,
+              id: 'worktree-plan',
+              kind: 'worktree',
+            }),
+          ],
+          id: 'repo-1',
+        }),
+      ],
+      [
+        mockDiscoveredWorktree({
+          checkoutId: 'worktree-plan',
+          name: 'plan-c34e018b',
+          path: PLAN_PATH,
+          safeToRemove,
+        }),
+      ],
+    );
+    const child = parent?.children?.[0];
+    if (child === undefined) {
+      throw new Error('expected a plan-run worktree row');
+    }
+    return child;
+  };
+  const planMenuLabel = `${REPOSITORIES_ROW_ACTIONS_COPY.menuAriaLabelPrefix} plan-c34e018b`;
+
+  describe('when the server says it is safe to remove', () => {
+    test('confirms with the path and the kept branch, then posts the checkout id', async () => {
+      const submitted: FormData[] = [];
+      const user = userEvent.setup();
+      const component = renderRowActions({
+        props: { row: planRunRow(true) },
+        submitted,
+      });
+
+      await user.click(component.getByRole('button', { name: planMenuLabel }));
+      await user.click(
+        component.getByRole('menuitem', {
+          name: REMOVE_PLAN_RUN_WORKTREE_COPY.label,
+        }),
+      );
+      expect(submitted).toHaveLength(0);
+
+      const dialog = await component.findByRole('alertdialog');
+      expect(dialog).toHaveTextContent(PLAN_PATH);
+      expect(dialog).toHaveTextContent(
+        REMOVE_PLAN_RUN_WORKTREE_COPY.descriptionBranch(
+          'openthrottle/plan-c34e018b',
+        ),
+      );
+
+      await user.click(
+        await component.findByRole('button', {
+          name: REMOVE_PLAN_RUN_WORKTREE_COPY.confirm,
+        }),
+      );
+
+      await waitFor(() => expect(submitted).toHaveLength(1));
+      expect(submitted[0]?.get('intent')).toBe('removePlanRunWorktree');
+      expect(submitted[0]?.get('checkoutId')).toBe('worktree-plan');
+    });
+  });
+
+  describe('when a guard would keep it', () => {
+    test('does not offer Remove worktree', async () => {
+      const user = userEvent.setup();
+      const component = renderRowActions({
+        props: { row: planRunRow(false) },
+        submitted: [],
+      });
+
+      await user.click(component.getByRole('button', { name: planMenuLabel }));
+
+      expect(
+        component.queryByRole('menuitem', {
+          name: REMOVE_PLAN_RUN_WORKTREE_COPY.label,
+        }),
+      ).toBeNull();
+    });
   });
 });

@@ -247,6 +247,11 @@ export class DiscoveredWorktreeObject {
   runMonitored!: boolean | null;
 
   @Field(() => Boolean, {
+    description: `True when this is a server-provisioned plan-run worktree that removePlanRunWorktree would remove right now: registered, clean, nothing unpushed, and no live run on it. Always false for any other worktree.`,
+  })
+  safeToRemove!: boolean;
+
+  @Field(() => Boolean, {
     description: `True when no repository_checkouts row exists at this path for this user. Orthogonal to activity — an unregistered worktree can be DIRTY.`,
   })
   unregistered!: boolean;

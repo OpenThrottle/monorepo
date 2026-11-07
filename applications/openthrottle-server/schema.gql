@@ -4897,6 +4897,11 @@ type DiscoveredWorktreeObject {
   runMonitored: Boolean
 
   """
+  True when this is a server-provisioned plan-run worktree that removePlanRunWorktree would remove right now: registered, clean, nothing unpushed, and no live run on it. Always false for any other worktree.
+  """
+  safeToRemove: Boolean!
+
+  """
   True when no repository_checkouts row exists at this path for this user. Orthogonal to activity — an unregistered worktree can be DIRTY.
   """
   unregistered: Boolean!
@@ -5104,6 +5109,57 @@ type RefreshCheckoutPayloadObject {
   Project link that was dropped from the provisional repository when the merge kept the canonical link.
   """
   supersededProjectId: String
+}
+
+"""Result of removePlanRunWorktree for one worktree checkout."""
+type RemovePlanRunWorktreePayloadObject {
+  """
+  The branch the worktree had checked out, which survives the removal. Null when nothing was removed.
+  """
+  branch: String
+  checkoutId: ID!
+
+  """Why the worktree was kept, in a sentence. Null when it was removed."""
+  detail: String
+  outcome: PlanRunWorktreeTeardownOutcome!
+
+  """The worktree's path on the server host."""
+  path: String!
+}
+
+"""What a guarded plan-run worktree teardown did."""
+enum PlanRunWorktreeTeardownOutcome {
+  """
+  A guard could not be evaluated or worktree:remove failed. The worktree is still there.
+  """
+  FAILED
+
+  """A queued or in-progress plan run still points at this worktree."""
+  KEPT_ACTIVE_RUN
+
+  """The worktree has uncommitted changes."""
+  KEPT_DIRTY
+
+  """Not a server-provisioned plan-<8> worktree under the worktree root."""
+  KEPT_NOT_PLAN_RUN_WORKTREE
+
+  """The path is the primary checkout."""
+  KEPT_PRIMARY
+
+  """
+  The branch has commits that are not on its upstream or the default branch.
+  """
+  KEPT_UNPUSHED
+
+  """
+  Every guard passes; reported only by an assessment, never by a removal.
+  """
+  REMOVABLE
+
+  """
+  The worktree directory and its checkout record are gone; the branch is kept.
+  """
+  REMOVED
 }
 
 type Query {
@@ -6938,6 +6994,11 @@ type Mutation {
   Delete registered worktree checkout rows whose worktree is gone — the cleanup for discoveredWorktrees.missingCheckouts. Rows only: never touches the filesystem and never deletes a primary checkout. Each id is re-checked server-side and skipped, not failed, when its path is a live worktree or an unsettled plan run still points at it.
   """
   pruneWorktreeCheckouts(input: PruneWorktreeCheckoutsInput!): PruneWorktreeCheckoutsPayloadObject!
+
+  """
+  Remove one server-provisioned plan-run worktree from disk through pnpm run worktree:remove: the repo's teardown hook runs, the directory and its checkout record go, and the branch is kept. Never forced — a primary checkout, a worktree OpenThrottle did not provision, a dirty or unpushed tree, or one an unsettled run still points at is kept and the outcome says why.
+  """
+  removePlanRunWorktree(checkoutId: ID!): RemovePlanRunWorktreePayloadObject!
 
   """
   Open the host OS folder dialog and return the chosen absolute server-host path, or null on user-cancel. Guarded by the same same-machine predicate as workspacePickerCapabilities (re-checked before spawning) and bounded by a kill timeout. Does not register anything — the client confirms and calls addWorkspaceFolder.

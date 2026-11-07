@@ -21,8 +21,9 @@ export interface RepositoryRowActionsProps {
  * record of, the single action is registration, which posts the SAME `addFolder`
  * intent the add-folder dialog posts — the registration pipeline already stamps
  * `kind='worktree'` off `snapshot.git.isLinkedWorktree`, so no new server write
- * exists for this. Nothing here removes or prunes a worktree directory: destructive
- * worktree removal is deliberately out of scope.
+ * exists for this. A registered
+ * plan-run worktree the server reports safe to remove also gets "Remove worktree", which runs the
+ * guarded teardown (branch kept); every other worktree directory is left alone.
  *
  * For a registered worktree the last scan reported missing from disk, refresh and
  * editor config have nothing to act on, so the single action is "Remove record" —
@@ -44,6 +45,9 @@ export const RepositoryRowActions = (
   const navigation = useNavigation();
 
   // Setup
+  const removableWorktree = row.safeToRemove
+    ? { branch: row.branch, path: row.path }
+    : null;
   const isRegistering =
     navigation.state === 'submitting' &&
     navigation.formData?.get('intent') === 'addFolder' &&
@@ -112,6 +116,10 @@ export const RepositoryRowActions = (
   }
 
   return (
-    <RepositoryCheckoutActions checkout={checkout} className={className} />
+    <RepositoryCheckoutActions
+      checkout={checkout}
+      className={className}
+      removableWorktree={removableWorktree}
+    />
   );
 };

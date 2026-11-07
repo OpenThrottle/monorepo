@@ -212,6 +212,7 @@ describe('planRunConfig round-trip', () => {
         targetMode: 'plan',
         taskId: '',
         worktreeBase: '',
+        worktreeCleanup: 'keep',
         worktreeCli: 'named',
         worktreeName: 'my-worktree',
       },
@@ -397,7 +398,30 @@ describe('back-compat for plans stored under the old defaults', () => {
     });
 
     expect(parsed.ralph.debugCli).toBe('verbose');
+    expect(parsed.ralph.worktreeCleanup).toBe('on-pr');
     expect(parsed.ralph.worktreeCli).toBe('named');
+  });
+
+  it('preserves a persisted worktreeCleanup choice', () => {
+    const parsed = parsePlanRunConfigStorage({
+      ralph: storedRalph({ worktreeCleanup: 'keep' }),
+      target: { mode: 'plan', taskId: '' },
+      version: 1,
+      workspace: { workingDirectory: '' },
+    });
+
+    expect(parsed.ralph.worktreeCleanup).toBe('keep');
+  });
+
+  it('rejects an unknown worktreeCleanup value', () => {
+    expect(() =>
+      parsePlanRunConfigStorage({
+        ralph: storedRalph({ worktreeCleanup: 'always' }),
+        target: { mode: 'plan', taskId: '' },
+        version: 1,
+        workspace: { workingDirectory: '' },
+      }),
+    ).toThrow();
   });
 
   it('preserves a persisted explicit opt-out', () => {
@@ -466,6 +490,7 @@ const fullUiForTuning = (): PlanWorkflowUiState => {
       targetMode: 'plan',
       taskId: '',
       worktreeBase: '',
+      worktreeCleanup: 'on-pr',
       worktreeCli: 'named',
       worktreeName: 'my-worktree',
     },

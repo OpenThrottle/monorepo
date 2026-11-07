@@ -24,13 +24,15 @@ import { RepositoriesEmptyState } from '~/routing/settings/repositories/componen
 import { RepositoriesTable } from '~/routing/settings/repositories/components/RepositoriesTable';
 import { RepositoriesToolbar } from '~/routing/settings/repositories/components/RepositoriesToolbar';
 import { WorktreeDiscoveryNotice } from '~/routing/settings/repositories/components/WorktreeDiscoveryNotice';
+import { WorktreeRemovalOutcome } from '~/routing/settings/repositories/components/WorktreeRemovalOutcome';
 import { REPOSITORIES_ONBOARDING } from '~/routing/settings/repositories/data/data.copy';
 import type {
   DiscoveredWorktreesResult,
   PruneWorktreeCheckoutResult,
+  RefreshedCheckout,
+  RemovePlanRunWorktreeResult,
   RepositoryCheckoutRow,
 } from '~/routing/settings/repositories/types';
-import type { CheckoutDrift } from '~/routing/settings/utils/drift-labels';
 
 export interface RepositoriesSectionProps {
   actionError?: string | null;
@@ -52,11 +54,8 @@ export interface RepositoriesSectionProps {
   >;
   /** Per-id outcomes from the last `pruneWorktreeCheckouts`, when that was the last action. */
   pruned?: readonly PruneWorktreeCheckoutResult[] | null;
-  refreshed?: {
-    checkoutId: string;
-    drift: CheckoutDrift;
-    merged: boolean;
-  } | null;
+  refreshed?: RefreshedCheckout | null;
+  removal?: RemovePlanRunWorktreeResult | null;
   rows: RepositoryCheckoutRow[];
   search: string;
   /** Whether registered worktrees missing from disk are listed. */
@@ -82,6 +81,7 @@ export const RepositoriesSection = (
     pickerCapabilities,
     pruned,
     refreshed,
+    removal,
     rows,
     search,
     showMissing,
@@ -192,6 +192,7 @@ export const RepositoriesSection = (
         {addedFolder ? <AddFolderResult payload={addedFolder} /> : null}
 
         {pruned ? <PruneWorktreesOutcome results={pruned} /> : null}
+        {removal ? <WorktreeRemovalOutcome result={removal} /> : null}
 
         {refreshed?.merged ? mergedNotice : null}
 

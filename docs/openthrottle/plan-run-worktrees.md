@@ -23,6 +23,11 @@ Opting out is per plan, on the Configuration tab:
   the run works directly in the base checkout.
 - **Logging → omit** persists `ralph.debugCli: 'omit'`, which travels explicitly in the enqueue
   payload precisely so the server default cannot override it.
+- **Worktree → After the run → Keep the worktree** persists `ralph.worktreeCleanup: 'keep'`, so a
+  clean run that opens a PR leaves its worktree in place (see [Teardown](#teardown)). The default,
+  `'on-pr'`, removes it. Unlike the two above it does not travel in the enqueue payload: the worker
+  reads it from the plan when the run ends, so it holds for every enqueue path and a switch to
+  `'keep'` made mid-run is honoured.
 
 **Existing plans.** An absent key resolves to the _current_ default; a persisted value — including
 `'omit'` — is a choice and is kept. Because the old defaults wrote `'omit'` into every new plan,
@@ -30,9 +35,10 @@ migration `098` re-points only those plans whose entire `ralph` block still equa
 block (demonstrably never configured) and leaves every customized plan alone. It is idempotent: a
 re-run matches zero rows.
 
-**Disk.** Worktree-by-default means one worktree per plan that has ever run programmatically, each
-with its own `node_modules` — on the order of 1–2 GB apiece. Nothing is removed automatically (see
-the cleanup decision below); prune with `git worktree remove` when a plan's work has landed.
+**Disk.** Worktree-by-default means one worktree per plan with a run in flight or work still owed,
+each with its own `node_modules` — on the order of 1–2 GB apiece. A run that finishes cleanly with a
+PR removes its own worktree, and a guarded backstop sweep catches the rest once they are safe (see
+[Teardown](#teardown)). What stays on disk is exactly what holds work nobody has pushed.
 
 ## Why the server creates the worktree
 
@@ -53,14 +59,14 @@ and only self-heals on the first `:dev`.
 
 ## Decisions
 
-| Decision           | Choice                                                                                              | Rationale                                                                                                                                                                                                                                                                                                                                                                |
-| ------------------ | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Naming**         | `plan-<first 8 chars of the plan UUID>` — e.g. `plan-5e172b67`, branch `openthrottle/plan-5e172b67` | Deterministic (survives a plan retitle), collision-free within a repo, already inside the `[A-Za-z0-9._-]` set the `ot-worktree` skill sanitizes to, and short enough to read in `git branch` and a PR title.                                                                                                                                                            |
-| **Lifecycle**      | One worktree per **plan**, reused across runs                                                       | Ralph runs are iterations of the same work landing as one branch and one PR; reuse preserves that branch history and keeps disk flat. Per-run worktrees would multiply ~2 GB `node_modules` trees per iteration.                                                                                                                                                         |
-| **Cleanup**        | No automatic removal. Removal is explicit: `pnpm worktree:remove <name>`                            | A worktree may hold uncommitted or unpushed work — the only safe automatic removal requires a clean tree, no unpushed commits, no active run, and an age floor. The destroy action gives removal a safe front door (see "Removing a worktree"); an automatic sweep on top of it is still a follow-up. Ceiling: one worktree per plan that has ever run programmatically. |
-| **Failure policy** | Fail the run fast                                                                                   | A fallback to the process cwd silently drops the agent into the primary checkout — the exact bug this design fixes. The provisioner's stderr goes to the plan output stream so the failure is legible.                                                                                                                                                                   |
-| **Timing**         | At job start, in the orchestrator — not at enqueue                                                  | A run queued for hours should not hold a worktree. It also keeps `validateWorkingDirectory`'s existence check honest: the enqueue payload carries a worktree _name_, and only an explicit caller-supplied `workingDirectory` is existence-checked.                                                                                                                       |
-| **Concurrency**    | Idempotent provisioning + per-path serialization                                                    | The provisioner reuses an existing linked worktree at the target path instead of recreating it, and serializes concurrent provisioning of the same path in-process. The plans worker is `concurrency: 1`, so this only guards re-runs after a stall and multi-instance deployments.                                                                                      |
+| Decision           | Choice                                                                                                       | Rationale                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ------------------ | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Naming**         | `plan-<first 8 chars of the plan UUID>` — e.g. `plan-5e172b67`, branch `openthrottle/plan-5e172b67`          | Deterministic (survives a plan retitle), collision-free within a repo, already inside the `[A-Za-z0-9._-]` set the `ot-worktree` skill sanitizes to, and short enough to read in `git branch` and a PR title.                                                                                                                                                                                                                                                                                                                      |
+| **Lifecycle**      | One worktree per **plan**, reused across runs                                                                | Ralph runs are iterations of the same work landing as one branch and one PR; reuse preserves that branch history and keeps disk flat. Per-run worktrees would multiply ~2 GB `node_modules` trees per iteration.                                                                                                                                                                                                                                                                                                                   |
+| **Cleanup**        | Teardown-on-PR by default, a guarded reaper as backstop, a per-row action for discovery (OT plan `0414a40b`) | Parity with `/ot-loop`, which already tears its worktree down once the PR is open. Removing at PR time frees the branch for `git checkout` in the primary right away (git refuses a branch checked out in another worktree), and re-provisioning is cheap and safe: `worktree:new` checks out the existing `openthrottle/plan-<8>` branch. Everything teardown-on-PR skips — handoff owed, failed, cancelled, opted out — falls to the reaper once it is safe. Every path goes through the same guards; see [Teardown](#teardown). |
+| **Failure policy** | Fail the run fast                                                                                            | A fallback to the process cwd silently drops the agent into the primary checkout — the exact bug this design fixes. The provisioner's stderr goes to the plan output stream so the failure is legible.                                                                                                                                                                                                                                                                                                                             |
+| **Timing**         | At job start, in the orchestrator — not at enqueue                                                           | A run queued for hours should not hold a worktree. It also keeps `validateWorkingDirectory`'s existence check honest: the enqueue payload carries a worktree _name_, and only an explicit caller-supplied `workingDirectory` is existence-checked.                                                                                                                                                                                                                                                                                 |
+| **Concurrency**    | Idempotent provisioning + per-path serialization                                                             | The provisioner reuses an existing linked worktree at the target path instead of recreating it, and serializes concurrent provisioning of the same path in-process. The plans worker is `concurrency: 1`, so this only guards re-runs after a stall and multi-instance deployments.                                                                                                                                                                                                                                                |
 
 ## Worktree root
 
@@ -136,6 +142,51 @@ Changing the root affects **new** worktrees only: `git worktree` stores absolute
 See [worktree-port-allocation.md](../monorepo/worktree-port-allocation.md) for the port
 block each worktree gets.
 
+## Teardown
+
+Two paths remove a plan's worktree, and they must stay in step:
+
+| Run kind                 | Who tears down                                                                                              | When                                     |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| `/ot-loop` (interactive) | The agent, following [`skills/ot-loop/references/teardown.md`](../../skills/ot-loop/references/teardown.md) | After the PR is open and the run settled |
+| Queued plan run (BullMQ) | The host: `PlanRunWorktreeCleanupService` → `PlanRunWorktreeTeardownService`                                | After settle **and** the afterAll hooks  |
+
+The host path attempts a teardown only when the run was provisioned into its own worktree, finished
+`workflow_complete` or `workflow_tasks_exhausted`, the finalize step opened a PR, and the plan's
+`ralph.worktreeCleanup` is not `'keep'`. A handoff-owed, failed, cancelled or max-iterations run
+keeps its worktree; a usage-limited run is left alone entirely, because its continuation reuses it.
+Either way the run's plan output gets **one** `[plan-run-worktree-teardown]` line: the removed path
+and the branch that survived, or why the worktree was kept. A teardown never changes the run's
+settled status.
+
+**Invariants — every removal path.** The worker, the reaper and the settings-page action all call
+`PlanRunWorktreeTeardownService`, so they share one set of guards, checked in this order:
+
+1. Never the primary checkout.
+2. Only a server-provisioned worktree: a linked worktree named `plan-<8 hex>` directly under the
+   resolved root. A hand-made, `/ot-loop`, Claude or Cursor session worktree is never touched.
+3. No unsettled (`QUEUED` / `IN_PROGRESS`) `plan_runs` row points at its checkout.
+4. A clean tree (`git status --porcelain` empty).
+5. Nothing unpushed: the upstream exists with nothing ahead of it, or `HEAD` is already contained in
+   `origin/<default>`.
+
+Then a path-scoped `pnpm worktree:serve --stop`, then `pnpm run worktree:remove <path>` from the
+primary — never a bare `git worktree remove`, never `--force`, never `--delete-branch` — and any
+checkout row the destroy action's fail-open deregistration missed is deleted. A guard that cannot be
+evaluated keeps the worktree. What the destroy action itself does is the
+[`ot-worktree`](../../skills/ot-worktree/SKILL.md) skill's to describe, not this page's.
+
+**The reaper.** A repeatable job (`Plan Run Worktree Reaper`, every 30 minutes, owner-only exactly
+like the stale-run sweep — a shared-DB worktree server neither registers nor runs it) nominates
+plan-run worktrees from discovery when their PR is merged or closed, their plan no longer exists, or
+their plan is terminal — or the worktree holds nothing beyond the default branch — and has been idle
+for seven days. Nominating is all it does: every nominee goes through the guards above, so a dirty
+or unpushed worktree is nominated and kept. It removes at most five per tick.
+
+It ships in **dry run**: it only logs, and raises as a system alert, what it would remove and why
+each nominee would be kept. Set `OPENTHROTTLE_WORKTREE_REAPER_DRY_RUN=false` on the server to let it
+remove, once its candidate list matches what you expect.
+
 ## Worktrees on /settings/repositories
 
 `/settings/repositories` lists the worktrees that exist **on disk** for the user's
@@ -182,13 +233,19 @@ a run records where it executes — and the provisioning path always registers w
 An unregistered worktree gets a one-click **Register this worktree** row action, which posts
 the same `addFolder` intent the add-folder dialog posts.
 
+### Removing a plan-run worktree from the page
+
+A registered plan-run worktree that every [teardown guard](#teardown) passes right now carries a
+**Safe to remove** badge and a **Remove worktree** row action. The action confirms with the path and
+the branch that survives, then calls `removePlanRunWorktree`, which re-runs every guard: a worktree
+that picked up work since the page loaded comes back as kept, with the reason. No other worktree is
+offered for removal.
+
 ### Deliberately out of scope
 
-The page **never** creates, prunes, or deletes a worktree. No "new worktree" button, no
-`git worktree prune`, no directory removal — a worktree may hold uncommitted or unpushed
-work, so destructive removal needs its own design (see the Cleanup row in Decisions above).
-Registering a discovered worktree is the only write this surface performs, and it only adds
-a database row.
+The page never creates a worktree, never runs `git worktree prune`, and never removes any
+worktree except through the guarded action above. Registering a discovered worktree, pruning
+records of missing ones and that action are the only writes this surface performs.
 
 ## Run-start preflight
 

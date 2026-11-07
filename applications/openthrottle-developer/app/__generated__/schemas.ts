@@ -88,6 +88,7 @@ import {
   PlanMessageKind,
   PlanMessageStatus,
   PlanRalphWorkflowMode,
+  PlanRunWorktreeTeardownOutcome,
   PlanRunsByPlanIdInput,
   PlanTaskStatus,
   PostPlanMessageInput,
@@ -226,6 +227,10 @@ export const PlanMessageKindSchema = z.nativeEnum(PlanMessageKind);
 export const PlanMessageStatusSchema = z.nativeEnum(PlanMessageStatus);
 
 export const PlanRalphWorkflowModeSchema = z.nativeEnum(PlanRalphWorkflowMode);
+
+export const PlanRunWorktreeTeardownOutcomeSchema = z.nativeEnum(
+  PlanRunWorktreeTeardownOutcome,
+);
 
 export const PlanTaskStatusSchema = z.nativeEnum(PlanTaskStatus);
 

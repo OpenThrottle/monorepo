@@ -5,6 +5,7 @@ import {
   DEFAULT_PLAN_RUN_RALPH_MODEL,
   DEFAULT_PLAN_RUN_RALPH_PROMPT,
   DEFAULT_PLAN_RUN_RALPH_RUNNER,
+  DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLEANUP,
   DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLI,
   PLAN_RUN_CONFIG_VERSION,
 } from './plan-run-config-storage.constants.ts';
@@ -33,6 +34,7 @@ export const getDefaultPlanRunConfigRalphV1 = (): PlanRunConfigRalphV1 => {
     promptLayer: 'named',
     skipWorktreeSetup: false,
     worktreeBase: '',
+    worktreeCleanup: DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLEANUP,
     worktreeCli: DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLI,
     // Blank name means "derive it at enqueue", not "no worktree".
     worktreeName: '',
@@ -99,6 +101,7 @@ export const getDefaultPlanWorkflowUiState = (options?: {
     targetMode,
     taskId,
     worktreeBase: '',
+    worktreeCleanup: DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLEANUP,
     worktreeCli: DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLI,
     worktreeName: '',
   };
