@@ -189,6 +189,7 @@ export const SETTINGS_AGENTS_COPY = {
   setupLogSucceeded: `Finished successfully`,
   setupLogTitleInstallPrefix: `Installing`,
   setupLogTitleUpdatePrefix: `Updating`,
+  setupLogViewButton: `View log`,
   toggleDisabledReason: `Requires the settings:write permission.`,
 } as const;
 
