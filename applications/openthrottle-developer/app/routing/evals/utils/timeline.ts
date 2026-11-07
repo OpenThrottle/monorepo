@@ -60,8 +60,14 @@ const findSpawningCallId = (
     return undefined;
   }
 
+  // Prefer a ref that still names a call: hand-back / system turns also stamp
+  // `subagent_trajectory_ref` with no `source_call_id`, and must not steal
+  // placement from the Agent call that spawned the subagent.
   const referenced = results.find((result) => {
-    return result.subagent_trajectory_ref?.trajectory_id === subagentId;
+    return (
+      result.subagent_trajectory_ref?.trajectory_id === subagentId &&
+      result.source_call_id !== undefined
+    );
   });
   const mentioned = results.find((result) => {
     return (
@@ -106,13 +112,40 @@ export const correlateSubagents = (
 };
 
 /**
+ * @description The embedded-subagent id a step names: hand-back
+ * `extra.openthrottle.subagent_trajectory_id`, else the first observation
+ * result's `subagent_trajectory_ref.trajectory_id`.
+ */
+export const readLinkedSubagentId = (step: AtifStep): string | undefined => {
+  const openthrottle = step.extra?.openthrottle;
+
+  if (isRecord(openthrottle) && openthrottle.kind === 'subagent_hand_back') {
+    const handBackId = openthrottle.subagent_trajectory_id;
+
+    if (typeof handBackId === 'string' && handBackId.trim() !== '') {
+      return handBackId;
+    }
+  }
+
+  const referenced = (step.observation?.results ?? []).find((result) => {
+    const id = result.subagent_trajectory_ref?.trajectory_id;
+
+    return typeof id === 'string' && id.trim() !== '';
+  });
+
+  return referenced?.subagent_trajectory_ref?.trajectory_id;
+};
+
+/**
  * @description Pairs a step's tool calls with the observation results that
  * answer them (`source_call_id` → `tool_call_id`), keeping any result that
- * names no call of this step so it is never hidden.
+ * names no call of this step so it is never hidden. Hand-back turns also
+ * resolve the embedded subagent they name so the viewer can expand it.
  */
 export const buildStepView = (
   step: AtifStep,
   subagentsByCallId: ReadonlyMap<string, readonly AtifTrajectory[]>,
+  subagentsById: ReadonlyMap<string, AtifTrajectory>,
 ): TrajectoryStepView => {
   const calls = step.tool_calls ?? [];
   const results = step.observation?.results ?? [];
@@ -142,7 +175,16 @@ export const buildStepView = (
     );
   });
 
-  return { step, toolCalls, unmatchedResults };
+  const linkedId = readLinkedSubagentId(step);
+  const linked =
+    linkedId === undefined ? undefined : subagentsById.get(linkedId);
+
+  return {
+    linkedSubagents: linked === undefined ? [] : [linked],
+    step,
+    toolCalls,
+    unmatchedResults,
+  };
 };
 
 /**
@@ -154,8 +196,16 @@ export const buildTrajectoryTimeline = (
   trajectory: AtifTrajectory,
 ): TrajectoryTimelineView => {
   const { byCallId, unplaced } = correlateSubagents(trajectory);
+  const subagentsById = new Map<string, AtifTrajectory>();
+
+  for (const subagent of trajectory.subagent_trajectories ?? []) {
+    if (subagent.trajectory_id !== undefined) {
+      subagentsById.set(subagent.trajectory_id, subagent);
+    }
+  }
+
   const steps = trajectory.steps.map((step) => {
-    return buildStepView(step, byCallId);
+    return buildStepView(step, byCallId, subagentsById);
   });
 
   return { steps, unplacedSubagents: unplaced };

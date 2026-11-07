@@ -22,14 +22,14 @@ describe('TrajectoryTimeline Component', () => {
         />,
       );
 
-      expect(component.getAllByTestId('TrajectoryStep')).toHaveLength(4);
+      expect(component.getAllByTestId('TrajectoryStep')).toHaveLength(6);
       expect(
         component.queryByRole('button', {
           name: TRAJECTORY_TIMELINE_COPY.showMoreSteps,
         }),
       ).not.toBeInTheDocument();
-      // One subagent sits under its Agent call, the orphan in its own section.
-      expect(component.getAllByTestId('TrajectorySubagent')).toHaveLength(2);
+      // Spawn under Agent, again under the hand-back, plus the orphan section.
+      expect(component.getAllByTestId('TrajectorySubagent')).toHaveLength(3);
       expect(
         component.getByRole('heading', {
           name: TRAJECTORY_TIMELINE_COPY.subagentsHeading,

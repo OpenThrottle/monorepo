@@ -65,6 +65,7 @@ export const TRAJECTORY_TIMELINE_COPY = {
   emptyResult: `(empty result)`,
   error: `Error`,
   expand: `Show all`,
+  handBackSubagent: `Open subagent trajectory`,
   lines: `lines`,
   noResult: `No result recorded for this call.`,
   noSteps: `This trajectory has no steps.`,
