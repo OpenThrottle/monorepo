@@ -34,6 +34,25 @@ interface UpdateWorkspaceLocalRepositoryData {
   readonly projectId?: string | null;
 }
 
+/**
+ * @description The current branch from a checkout's cached inspection snapshot
+ * (`inspection.git.currentBranch`). The column is untyped jsonb, so every level
+ * is narrowed rather than trusted; anything unexpected reads as "not scanned".
+ */
+const currentBranchOf = (
+  inspection: RepositoryCheckout['inspection'],
+): string | null => {
+  const git = inspection?.['git'];
+  if (typeof git !== 'object' || git === null || !('currentBranch' in git)) {
+    return null;
+  }
+
+  const { currentBranch } = git;
+  return typeof currentBranch === 'string' && currentBranch !== ''
+    ? currentBranch
+    : null;
+};
+
 const toView = (
   checkout: RepositoryCheckout,
   repository: Repository,
@@ -42,9 +61,11 @@ const toView = (
     createdAt: checkout.createdAt,
     displayName: checkout.displayName,
     filesystemPath: checkout.filesystemPath,
+    gitCurrentBranch: currentBranchOf(checkout.inspection),
     gitDefaultBranch: repository.defaultBranch,
     gitRemoteUrl: repository.normalizedRemoteUrl,
     id: checkout.id,
+    kind: checkout.kind,
     projectId: repository.projectId,
     updatedAt: checkout.updatedAt,
     userId: checkout.userId,

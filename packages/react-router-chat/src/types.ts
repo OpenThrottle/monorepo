@@ -348,6 +348,21 @@ export interface ResolvedGroup {
  *
  * @public
  */
+/**
+ * Whether a checkout is a repository's primary clone or a linked git worktree.
+ * As-const object (no enum, repo rule).
+ *
+ * @public
+ */
+export const ChatCheckoutKind = {
+  primary: 'primary',
+  worktree: 'worktree',
+} as const;
+
+/** Union of {@link ChatCheckoutKind} values. @public */
+export type ChatCheckoutKind =
+  (typeof ChatCheckoutKind)[keyof typeof ChatCheckoutKind];
+
 export interface ChatCheckoutOption {
   /** Current branch shown alongside the checkout (e.g. `main`), when known. */
   readonly branch?: string;
@@ -358,6 +373,12 @@ export interface ChatCheckoutOption {
    */
   readonly filesystemPath?: string;
   readonly id: string;
+  /**
+   * Primary clone or linked worktree. Absent reads as primary: the picker
+   * only nests a row under its repository when it positively knows the row
+   * is a worktree.
+   */
+  readonly kind?: ChatCheckoutKind;
   readonly label: string;
   /** Linked project name. Searchable, never rendered as the qualifier. */
   readonly projectName?: string;

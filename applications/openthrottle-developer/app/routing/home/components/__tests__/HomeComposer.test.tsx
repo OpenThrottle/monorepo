@@ -149,12 +149,15 @@ describe('HomeComposer Component', () => {
 
     await user.click(component.getByTestId('ChatCheckoutSelector-trigger'));
 
+    // The remote's owner becomes the group heading; the path the row location.
+    expect(component.getByText('openthrottle')).toBeInTheDocument();
+    expect(component.getByText('shiftsmart')).toBeInTheDocument();
     expect(
       component.getByTestId('ChatCheckoutSelector-qualifier-repo-1'),
-    ).toHaveTextContent('openthrottle/monorepo');
+    ).toHaveTextContent('~/Development/openthrottle');
     expect(
       component.getByTestId('ChatCheckoutSelector-qualifier-repo-2'),
-    ).toHaveTextContent('shiftsmart/monorepo');
+    ).toHaveTextContent('~/Work/monorepo');
   });
 
   test('hints to register a repository when a CLI backend has none registered', () => {

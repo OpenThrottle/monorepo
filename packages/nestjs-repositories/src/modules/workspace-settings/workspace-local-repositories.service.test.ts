@@ -111,14 +111,46 @@ describe('WorkspaceLocalRepositoriesService', () => {
           createdAt: mockCheckoutEntity.createdAt,
           displayName: 'OpenThrottle',
           filesystemPath: '/Users/dev/openthrottle',
+          gitCurrentBranch: null,
           gitDefaultBranch: 'main',
           gitRemoteUrl: 'https://github.com/openthrottle/monorepo',
           id: checkoutId,
+          kind: 'primary',
           projectId: null,
           updatedAt: mockCheckoutEntity.updatedAt,
           userId,
         },
       ]);
+    });
+  });
+
+  describe('listByUserId with an inspected worktree', () => {
+    it('carries the kind and the inspected current branch', async () => {
+      vi.mocked(mockCheckoutsService.listByUserId).mockResolvedValue([
+        asMock<RepositoryCheckout>({
+          ...mockCheckoutEntity,
+          inspection: { git: { currentBranch: 'openthrottle/plan-1234' } },
+          kind: 'worktree',
+        }),
+      ]);
+
+      const [view] = await service.listByUserId(userId);
+
+      expect(view?.kind).toBe('worktree');
+      expect(view?.gitCurrentBranch).toBe('openthrottle/plan-1234');
+    });
+
+    it('reads a malformed inspection snapshot as not scanned', async () => {
+      vi.mocked(mockCheckoutsService.listByUserId).mockResolvedValue([
+        asMock<RepositoryCheckout>({
+          ...mockCheckoutEntity,
+          inspection: { git: { currentBranch: 42 } },
+        }),
+      ]);
+
+      const [view] = await service.listByUserId(userId);
+
+      expect(view?.gitCurrentBranch).toBeNull();
     });
   });
 

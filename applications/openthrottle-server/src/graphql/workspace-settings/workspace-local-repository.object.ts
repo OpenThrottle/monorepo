@@ -31,9 +31,20 @@ export class WorkspaceLocalRepositoryObject {
   gitRemoteUrl!: string | null;
 
   @Field(() => String, {
+    description: `Branch the checkout is on per its last inspection scan; null until scanned or when HEAD is detached.`,
+    nullable: true,
+  })
+  gitCurrentBranch!: string | null;
+
+  @Field(() => String, {
     nullable: true,
   })
   gitDefaultBranch!: string | null;
+
+  @Field(() => String, {
+    description: `Checkout kind: 'primary' (the repository's main clone) or 'worktree' (a linked git worktree).`,
+  })
+  kind!: string;
 
   @Field(() => ID, {
     description: `Optional OpenThrottle project linked to this checkout.`,

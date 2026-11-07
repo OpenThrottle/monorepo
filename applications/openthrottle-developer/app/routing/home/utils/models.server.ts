@@ -2,6 +2,7 @@ import type {
   ChatModelOption,
   ChatPersonaOption,
 } from '@openthrottle/react-router-chat';
+import { toCheckoutKind } from '@openthrottle/react-router-chat';
 import type { RepositoryOption } from '@openthrottle/react-router-chat-state';
 import {
   composeModelOptions,
@@ -127,10 +128,15 @@ export async function loadRepositories(
     );
 
     return data.workspaceLocalRepositories.map((repository) => ({
-      branch: repository.gitDefaultBranch ?? undefined,
+      // The branch the checkout is actually on; the repository's default only
+      // until the first inspection scan lands. Showing the default for every
+      // row made a worktree on `feat/x` read as `main`.
+      branch:
+        repository.gitCurrentBranch ?? repository.gitDefaultBranch ?? undefined,
       displayName: repository.displayName,
       filesystemPath: repository.filesystemPath,
       id: repository.id,
+      kind: toCheckoutKind(repository.kind),
       projectName: repository.project?.name ?? undefined,
       remoteUrl: repository.gitRemoteUrl ?? undefined,
     }));

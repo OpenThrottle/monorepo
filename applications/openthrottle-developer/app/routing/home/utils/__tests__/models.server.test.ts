@@ -167,6 +167,28 @@ describe('loadRepositories', () => {
     ]);
   });
 
+  test('prefers the inspected current branch and carries the checkout kind', async () => {
+    mockExecute.mockResolvedValue({
+      workspaceLocalRepositories: [
+        {
+          displayName: 'plan-0b6dfaf8',
+          filesystemPath: '/wt/plan-0b6dfaf8',
+          gitCurrentBranch: 'openthrottle/plan-0b6dfaf8',
+          gitDefaultBranch: 'main',
+          gitRemoteUrl: 'git@github.com:openthrottle/monorepo.git',
+          id: 'wt-1',
+          kind: 'worktree',
+          project: null,
+        },
+      ],
+    });
+
+    const [option] = await loadRepositories(request());
+
+    expect(option?.branch).toBe('openthrottle/plan-0b6dfaf8');
+    expect(option?.kind).toBe('worktree');
+  });
+
   test('returns an empty list when the query fails', async () => {
     mockExecute.mockRejectedValue(new Error('unauthorized'));
 

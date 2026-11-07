@@ -160,9 +160,13 @@ export const ChatCheckoutSelector = (
   return (
     <Popover onOpenChange={setOpen} open={open}>
       <PopoverTrigger asChild={true}>{trigger}</PopoverTrigger>
-      {/* Wide enough that `owner/repo` — the text doing the disambiguating —
-          is not the thing that gets truncated. */}
-      <PopoverContent align="start" className="w-96 p-0">
+      {/* Width is coupled to CHECKOUT_ROW_MAX_CHARS (data.checkout-row.ts):
+          the row's branch and path caps are sized to fit this column. The
+          max-w keeps it on screen on a phone. */}
+      <PopoverContent
+        align="start"
+        className="w-[26rem] max-w-[calc(100vw-2rem)] p-0"
+      >
         <Command filter={checkoutSearchFilter}>
           <CommandInput
             className="border-0 border-b px-3 py-2.5 focus:ring-0"
@@ -173,7 +177,7 @@ export const ChatCheckoutSelector = (
             <CommandEmpty>No matching checkouts.</CommandEmpty>
             {groups.map((group) => (
               <CommandGroup heading={group.heading} key={group.heading}>
-                {group.options.map((checkout, _index) => {
+                {group.entries.map(({ checkout, nested }) => {
                   return (
                     <ChatCheckoutSelectorRow
                       atCap={atCap}
@@ -187,6 +191,7 @@ export const ChatCheckoutSelector = (
                       }
                       key={checkout.id}
                       multiple={isMultiple}
+                      nested={nested}
                       onSelect={onSelectRow}
                     />
                   );

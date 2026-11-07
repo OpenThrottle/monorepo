@@ -2,6 +2,8 @@ import { Button, cn } from '@openthrottle/react-router-shadcn';
 import { FolderGit2, GitBranch } from 'lucide-react';
 import * as React from 'react';
 
+import { shortenBranchName } from '../utils/checkout-display';
+
 export interface ChatCheckoutSelectorTriggerProps extends Omit<
   React.ComponentPropsWithoutRef<typeof Button>,
   'className'
@@ -74,11 +76,13 @@ export const ChatCheckoutSelectorTrigger = React.forwardRef<
   );
   const branchNode = (
     <span
-      className="text-muted-foreground flex shrink-0 items-center gap-1 text-xs"
+      className="text-muted-foreground flex max-w-32 shrink-0 items-center gap-1 text-xs"
       data-testid="ChatCheckoutSelector-branch"
+      title={branch}
     >
-      <GitBranch className="size-3" />
-      {branch}
+      <GitBranch className="size-3 shrink-0" />
+      {/* 13 chars ≈ 94px at text-xs, inside max-w-32 (128px) minus the icon. */}
+      <span className="truncate">{shortenBranchName(branch ?? '', 13)}</span>
     </span>
   );
 
