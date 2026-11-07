@@ -300,7 +300,7 @@ Sub-generators per generator:
 - **react** — PascalCase components and hooks, camelCase utils; kebab-case file names except React
   components. All generated output uses **named** exports.
 - **nestjs** — **kebab-case** services, modules and applications; named exports. Resolvers return
-  `ListResult` / `PaginatedResult` / `Result`; entity changes stay backwards compatible — deprecate
+  hand-written `@ObjectType()` classes (see the `ot-stack` skill); entity changes stay backwards compatible — deprecate
   rather than remove. Mock providers in `beforeEach`; model/entity factories for tests.
 - **package** — **kebab-case** package names; `throwing.mdc` applies to `node`, `nestjs` and `tools`
   package types.

@@ -181,7 +181,7 @@
     "skill/ot-plans": 8938,
     "skill/ot-postgres": 6910,
     "skill/ot-skill-sync": 16123,
-    "skill/ot-stack": 9983,
+    "skill/ot-stack": 10159,
     "skill/ot-worktree": 12342,
     "skillDescription/agents-ralph": 291,
     "skillDescription/github-commit": 240,
@@ -209,6 +209,6 @@
     "mcpInstructions": 2125,
     "mcpTools": 33817,
     "prompts": 119941,
-    "skills": 180783
+    "skills": 180959
   }
 }

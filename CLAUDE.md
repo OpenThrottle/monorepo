@@ -122,8 +122,8 @@ examples. The subset that bites most often:
 - Tests: use `component`, not `screen`, to get elements; `userEvent` instead of `fireEvent`. React Router apps share one Vitest setup — `tests/setup.ts` is a single `setupReactRouterTest({ env: { APP_NAME: '<app>' } })` call from `@openthrottle/react-router-testing` (jsdom polyfills + `window.env` fixture + baked-in `afterEach(cleanup)`); don't re-add those shared shims per app.
 - Exports that are package public API need a JSDoc `@public` tag so Knip keeps them.
 
-Server/GraphQL conventions (resolver `Result()` / `ListResult()` return types, deprecate-don't-remove)
-live in the `ot-stack` skill; file placement and naming in `ot-folders`.
+Server/GraphQL conventions (resolvers return hand-written `@ObjectType()` classes — there are no
+`Result()` / `ListResult()` factories — deprecate-don't-remove) live in the `ot-stack` skill; file placement and naming in `ot-folders`.
 
 ## Git and agent behavior
 
