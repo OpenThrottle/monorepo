@@ -57,6 +57,11 @@ export class PlanObject implements PlanData {
   })
   projectRelation!: ProjectObject | null;
 
+  @Field(() => Int, {
+    description: `Number of tasks a whole-plan run would pick up (status PENDING, IN_PROGRESS, BLOCKED, BACKLOG, SKIPPED, CANCELED or QUEUED): the count enqueuePlanRun and schedulePlanRun require to be above zero. Resolved through a batched loader; select it in plan-detail documents rather than list documents.`,
+  })
+  runnableTaskCount?: number;
+
   @Field(() => Date, {
     description: `The soonest instant a SCHEDULED run of this plan fires at (plan_runs.scheduled_for of its earliest SCHEDULED run); null when none is waiting. Lets the UI explain why a run is already pending ("a run is scheduled for <local time>; cancel it to run now"). Resolved from plan_runs; a run that fired, was cancelled or was settled MISSED/SUPERSEDED no longer counts.`,
     nullable: true,
@@ -208,6 +213,12 @@ export class PlanRunObject implements PlanRunData {
     nullable: true,
   })
   scheduledFor!: Date | null;
+
+  @Field(() => String, {
+    description: `Why a scheduled run settled without starting: the fire-time policy's reason for a MISSED, SUPERSEDED or SKIPPED run. Null for every other run.`,
+    nullable: true,
+  })
+  settledReason!: string | null;
 
   @Field(() => String)
   status!: string;

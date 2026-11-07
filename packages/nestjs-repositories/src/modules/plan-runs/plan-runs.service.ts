@@ -585,8 +585,9 @@ export class PlanRunsService {
 
   /**
    * @description Moves ONE SCHEDULED run to `toStatus` — the single race point of the fire-time
-   * policy: QUEUED when the run fires (claimed for the worker), MISSED / SUPERSEDED / COMPLETED when
-   * the policy settles it instead. An atomic conditional UPDATE guarded on `id` AND
+   * policy: QUEUED when the run fires (claimed for the worker), MISSED / SUPERSEDED / SKIPPED when
+   * the policy settles it instead. `settledReason` (the decision's human reason) is persisted to
+   * `settled_reason` on those settles; a QUEUED claim passes none and leaves it null. An atomic conditional UPDATE guarded on `id` AND
    * `status = SCHEDULED`, so of a concurrent cancel ({@link settleScheduledRunCancelled} /
    * {@link settleScheduledRunsCancelled}, guarded the same way) and a fire, exactly one wins and the
    * loser's update matches no row. Nulls the run-location columns; keeps `scheduled_for`. Pass
@@ -596,6 +597,7 @@ export class PlanRunsService {
     planRunId: string,
     toStatus: PlanRunStatus,
     manager?: EntityManager,
+    settledReason?: string,
   ): Promise<boolean> {
     const repo = manager
       ? manager.getRepository(PlanRun)
@@ -603,12 +605,39 @@ export class PlanRunsService {
     const result = await repo
       .createQueryBuilder()
       .update(PlanRun)
-      .set({ hostname: null, pid: null, status: toStatus, workerId: null })
+      .set({
+        hostname: null,
+        pid: null,
+        ...(settledReason === undefined ? {} : { settledReason }),
+        status: toStatus,
+        workerId: null,
+      })
       .where('id = :planRunId', { planRunId })
       .andWhere('status = :status', { status: PLAN_RUN_STATUS.SCHEDULED })
       .execute();
 
     return (result.affected ?? 0) > 0;
+  }
+
+  /**
+   * @description Whether the plan has any unsettled run: QUEUED, IN_PROGRESS or SCHEDULED. Unlike
+   * {@link hasActiveRun} it also counts a SCHEDULED run that has not fired yet, so a caller that
+   * would close the plan never strands a pending scheduled run that would then fire into nothing.
+   * Backs the downward reconcile that auto-closes an idle (PENDING/QUEUED) plan.
+   */
+  async hasUnsettledRun(planId: string): Promise<boolean> {
+    const count = await this.getRepository().count({
+      where: {
+        planId,
+        status: In([
+          PLAN_RUN_STATUS.IN_PROGRESS,
+          PLAN_RUN_STATUS.QUEUED,
+          PLAN_RUN_STATUS.SCHEDULED,
+        ]),
+      },
+    });
+
+    return count > 0;
   }
 
   /**

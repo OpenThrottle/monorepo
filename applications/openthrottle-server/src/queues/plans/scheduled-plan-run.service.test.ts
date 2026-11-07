@@ -1,6 +1,7 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
+  PlanOutputStreamService,
   PlanRun,
   PlanRunsService,
 } from '@openthrottle/nestjs-repositories';
@@ -40,6 +41,8 @@ describe('ScheduledPlanRunService', () => {
   const mockFindScheduledRunsWithJob = vi.fn();
   const mockTransitionScheduledRun = vi.fn();
   const mockGetJob = vi.fn();
+  const mockOutputCreate = vi.fn((chunk: object) => chunk);
+  const mockOutputSave = vi.fn();
 
   const service = new ScheduledPlanRunService(
     createMock<LoggerService>(),
@@ -49,6 +52,12 @@ describe('ScheduledPlanRunService', () => {
     createMock<PlanEnqueueService>({
       fireScheduledRun: mockFireScheduledRun,
       reprojectScheduledRun: mockReprojectScheduledRun,
+    }),
+    createMock<PlanOutputStreamService>({
+      getRepository: vi.fn().mockReturnValue({
+        create: mockOutputCreate,
+        save: mockOutputSave,
+      }),
     }),
     createMock<PlanRunsService>({
       findScheduledRunsWithJob: mockFindScheduledRunsWithJob,
@@ -69,6 +78,7 @@ describe('ScheduledPlanRunService', () => {
     mockFindScheduledRunsWithJob.mockResolvedValue([]);
     mockTransitionScheduledRun.mockResolvedValue(true);
     mockGetJob.mockResolvedValue(undefined);
+    mockOutputSave.mockResolvedValue(undefined);
   });
 
   describe('fire', () => {
@@ -136,6 +146,43 @@ describe('ScheduledPlanRunService', () => {
       );
     });
 
+    it('nothing to run: appends the same line to the plan output stream', async () => {
+      mockFireScheduledRun.mockResolvedValueOnce({
+        kind: 'nothing_to_run',
+        reason: 'the plan had no tasks left to run',
+      });
+
+      await service.fire({ now: NOW, run });
+
+      expect(mockOutputSave).toHaveBeenCalledWith({
+        content: `Scheduled plan run skipped: the plan had no tasks left to run at 2026-11-01T12:00:00.000Z.`,
+        iteration: null,
+        planId: 'plan-a',
+      });
+    });
+
+    it('a failed output append is swallowed: the settle still reports its outcome and notifies', async () => {
+      mockFireScheduledRun.mockResolvedValueOnce({
+        kind: 'nothing_to_run',
+        reason: 'the plan had no tasks left to run',
+      });
+      mockOutputSave.mockRejectedValueOnce(new Error('db down'));
+
+      await expect(service.fire({ now: NOW, run })).resolves.toEqual({
+        kind: 'nothing_to_run',
+        reason: 'the plan had no tasks left to run',
+      });
+      expect(mockEmitQueueJobCompleted).toHaveBeenCalledTimes(1);
+    });
+
+    it('fire and not_scheduled append nothing to the plan output', async () => {
+      await service.fire({ now: NOW, run });
+      mockFireScheduledRun.mockResolvedValueOnce({ kind: 'not_scheduled' });
+      await service.fire({ now: NOW, run });
+
+      expect(mockOutputSave).not.toHaveBeenCalled();
+    });
+
     it('not_scheduled (a cancel won the race): no notification — the cancel was the user own action', async () => {
       mockFireScheduledRun.mockResolvedValueOnce({ kind: 'not_scheduled' });
 
@@ -193,6 +240,11 @@ describe('ScheduledPlanRunService', () => {
       expect(mockTransitionScheduledRun).toHaveBeenCalledWith(
         'stale',
         'MISSED',
+        undefined,
+        expect.stringMatching(/\S/),
+      );
+      expect(mockOutputSave).toHaveBeenCalledWith(
+        expect.objectContaining({ planId: 'plan-stale' }),
       );
       expect(mockReprojectScheduledRun).not.toHaveBeenCalled();
       expect(mockEmitQueueJobCompleted).toHaveBeenCalledWith({

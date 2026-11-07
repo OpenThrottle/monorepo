@@ -40,6 +40,8 @@ export interface PlanToolbarRunSplitButtonProps {
   readonly planStatus?: string;
   readonly ralphTuningJson: string;
   readonly repositoryId?: string;
+  /** @description Tasks a whole-plan run would pick up; 0 disables Run and Schedule (the server refuses both). `undefined` = unknown, not gated. */
+  readonly runnableTaskCount?: number;
   /** @description The soonest SCHEDULED run's fire time; non-null gates every run-now path. */
   readonly scheduledRunAt?: Date | string | null;
   /** @description Id of that same scheduled run; non-null adds "Cancel scheduled run" to the caret menu. */
@@ -72,6 +74,7 @@ export const PlanToolbarRunSplitButton = (
     planStatus,
     ralphTuningJson,
     repositoryId,
+    runnableTaskCount,
     scheduledRunAt,
     scheduledRunId,
     workflowRunBlocked,
@@ -85,6 +88,7 @@ export const PlanToolbarRunSplitButton = (
   // Branch is a REQUIRED enqueue input; with it blank the run would fail fast at
   // the server boundary, so gate the Run control and surface the reason.
   const branchMissing = isPlanRunBranchMissing(branch);
+  const noRunnableTasks = runnableTaskCount === 0;
   const isScheduled = scheduledRunAt != null;
   const canCancelScheduled = scheduledRunId != null;
   const isSubmitting = fetcherRunPlan.state !== 'idle';
@@ -135,6 +139,7 @@ export const PlanToolbarRunSplitButton = (
                 branchMissing ||
                 isRunning ||
                 isTerminal ||
+                noRunnableTasks ||
                 isScheduled
               }
               size="xs"
@@ -152,6 +157,7 @@ export const PlanToolbarRunSplitButton = (
             isRunning,
             isSubmitting,
             isTerminal,
+            noRunnableTasks,
             scheduledRunAt,
             workflowRunBlocked,
             workflowRunBlockedReason,
@@ -165,7 +171,7 @@ export const PlanToolbarRunSplitButton = (
         <DropdownMenuTrigger asChild={true}>
           <Button
             aria-label={PLAN_TOOLBAR_COPY.runCaretAriaLabel}
-            disabled={isTerminal && !canCancelScheduled}
+            disabled={(isTerminal || noRunnableTasks) && !canCancelScheduled}
             size="xs"
             type="button"
             variant="ghost"
@@ -175,14 +181,14 @@ export const PlanToolbarRunSplitButton = (
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem
-            disabled={isRunning || isScheduled || isTerminal}
+            disabled={isRunning || isScheduled || isTerminal || noRunnableTasks}
             onSelect={() => onOpenDialog('run')}
           >
             <PlayCircle />
             {PLAN_TOOLBAR_COPY.runWithOptionsLabel}
           </DropdownMenuItem>
           <DropdownMenuItem
-            disabled={isTerminal}
+            disabled={isTerminal || noRunnableTasks}
             onSelect={() => onOpenDialog('schedule')}
           >
             <CalendarClock />

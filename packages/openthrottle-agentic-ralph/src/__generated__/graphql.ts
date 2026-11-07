@@ -3548,6 +3548,8 @@ export type PlanObject = {
   projectRelation?: Maybe<ProjectObject>;
   /** Workflow-ralph run configuration stored on the plan (PlanRunConfigStorage v1). */
   runConfigJson: Scalars['String']['output'];
+  /** Number of tasks a whole-plan run would pick up (status PENDING, IN_PROGRESS, BLOCKED, BACKLOG, SKIPPED, CANCELED or QUEUED): the count enqueuePlanRun and schedulePlanRun require to be above zero. Resolved through a batched loader; select it in plan-detail documents rather than list documents. */
+  runnableTaskCount: Scalars['Int']['output'];
   /** The soonest instant a SCHEDULED run of this plan fires at (plan_runs.scheduled_for of its earliest SCHEDULED run); null when none is waiting. Lets the UI explain why a run is already pending ("a run is scheduled for <local time>; cancel it to run now"). Resolved from plan_runs; a run that fired, was cancelled or was settled MISSED/SUPERSEDED no longer counts. */
   scheduledRunAt?: Maybe<Scalars['DateTime']['output']>;
   /** The id of the SCHEDULED run behind scheduledRunAt (the same soonest run: earliest scheduled_for, then id); null when none is waiting. Pass it as planRunId to cancelPlanRun to cancel just that run, so the UI can offer Cancel without listing run history. */
@@ -3655,6 +3657,8 @@ export type PlanRunObject = {
   runKind: Scalars['String']['output'];
   /** The absolute UTC instant a scheduled run fires at. Set only on runs created by schedulePlanRun (status SCHEDULED while waiting) and kept once the run settles, so history still shows when it was meant to fire. Null for every run that was enqueued to run now. */
   scheduledFor?: Maybe<Scalars['DateTime']['output']>;
+  /** Why a scheduled run settled without starting: the fire-time policy's reason for a MISSED, SUPERSEDED or SKIPPED run. Null for every other run. */
+  settledReason?: Maybe<Scalars['String']['output']>;
   status: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
   /** When the usage limit that stopped this run lifts, as reported by the agent CLI. Null unless status is USAGE_LIMITED, or when the CLI reported no reset time. */
@@ -7520,6 +7524,7 @@ export type PlanRunFragment = {
   queueName: string;
   resumeOfRunId?: string | null;
   runKind: string;
+  settledReason?: string | null;
   status: string;
   updatedAt: any;
   usageLimitResetsAt?: any | null;
@@ -7913,6 +7918,7 @@ export type RegisterCliPlanRunMutation = {
     queueName: string;
     resumeOfRunId?: string | null;
     runKind: string;
+    settledReason?: string | null;
     status: string;
     updatedAt: any;
     usageLimitResetsAt?: any | null;
@@ -7945,6 +7951,7 @@ export type SettleCliPlanRunMutation = {
     queueName: string;
     resumeOfRunId?: string | null;
     runKind: string;
+    settledReason?: string | null;
     status: string;
     updatedAt: any;
     usageLimitResetsAt?: any | null;
@@ -7988,6 +7995,7 @@ export type RegisterPlanRunWorktreeCheckoutMutation = {
     queueName: string;
     resumeOfRunId?: string | null;
     runKind: string;
+    settledReason?: string | null;
     status: string;
     updatedAt: any;
     usageLimitResetsAt?: any | null;
@@ -8549,6 +8557,7 @@ export type GetPlanRunsQuery = {
     queueName: string;
     resumeOfRunId?: string | null;
     runKind: string;
+    settledReason?: string | null;
     status: string;
     updatedAt: any;
     usageLimitResetsAt?: any | null;
@@ -8740,6 +8749,7 @@ export const PlanRunFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'queueName' } },
           { kind: 'Field', name: { kind: 'Name', value: 'resumeOfRunId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'runKind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'settledReason' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
           {
@@ -10111,6 +10121,7 @@ export const RegisterCliPlanRunDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'queueName' } },
           { kind: 'Field', name: { kind: 'Name', value: 'resumeOfRunId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'runKind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'settledReason' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
           {
@@ -10205,6 +10216,7 @@ export const SettleCliPlanRunDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'queueName' } },
           { kind: 'Field', name: { kind: 'Name', value: 'resumeOfRunId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'runKind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'settledReason' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
           {
@@ -10376,6 +10388,7 @@ export const RegisterPlanRunWorktreeCheckoutDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'queueName' } },
           { kind: 'Field', name: { kind: 'Name', value: 'resumeOfRunId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'runKind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'settledReason' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
           {
@@ -12211,6 +12224,7 @@ export const GetPlanRunsDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'queueName' } },
           { kind: 'Field', name: { kind: 'Name', value: 'resumeOfRunId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'runKind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'settledReason' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
           {

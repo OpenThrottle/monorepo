@@ -32,6 +32,7 @@ const mockPlan: PlanDetailsFragment = {
     name: 'Test Project',
   },
   runConfigJson: '{}',
+  runnableTaskCount: 1,
   status: 'IN_PROGRESS',
   summary: 'Plan summary',
   tags: [],

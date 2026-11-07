@@ -289,4 +289,54 @@ describe('PlanToolbarRunSplitButton Component', () => {
     ).toBeDisabled();
     expect(getCaret()).toBeDisabled();
   });
+
+  describe('with no runnable tasks', () => {
+    test('disables the primary Run button', () => {
+      renderSplitButton({ runnableTaskCount: 0 });
+
+      expect(
+        component.getByRole('button', { name: /add to queue/i }),
+      ).toBeDisabled();
+    });
+
+    test('disables Run with options and Schedule in the caret menu', async () => {
+      const user = userEvent.setup();
+      renderSplitButton({ runnableTaskCount: 0 });
+
+      expect(getCaret()).toBeDisabled();
+      renderSplitButton({
+        runnableTaskCount: 0,
+        scheduledRunAt: SCHEDULED_AT,
+        scheduledRunId: 'run-9',
+      });
+      await user.click(getCaret());
+
+      expect(
+        await component.findByRole('menuitem', {
+          name: PLAN_TOOLBAR_COPY.runWithOptionsLabel,
+        }),
+      ).toHaveAttribute('aria-disabled', 'true');
+      expect(
+        component.getByRole('menuitem', {
+          name: PLAN_TOOLBAR_COPY.scheduleLabel,
+        }),
+      ).toHaveAttribute('aria-disabled', 'true');
+    });
+
+    test('keeps Run and Schedule enabled with one runnable task', async () => {
+      const user = userEvent.setup();
+      renderSplitButton({ runnableTaskCount: 1 });
+
+      expect(
+        component.getByRole('button', { name: /add to queue/i }),
+      ).toBeEnabled();
+      await user.click(getCaret());
+
+      expect(
+        await component.findByRole('menuitem', {
+          name: PLAN_TOOLBAR_COPY.scheduleLabel,
+        }),
+      ).not.toHaveAttribute('aria-disabled', 'true');
+    });
+  });
 });

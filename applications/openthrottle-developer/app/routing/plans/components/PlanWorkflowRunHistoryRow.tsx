@@ -97,6 +97,7 @@ export const PlanWorkflowRunHistoryRow = (
               resumeOfRunId={row.resumeOfRunId ?? null}
               resumeScheduled={resumeScheduled}
               scheduledFor={row.scheduledFor ?? null}
+              settledReason={row.settledReason ?? null}
               status={row.status}
               usageLimitResetsAt={row.usageLimitResetsAt ?? null}
             />

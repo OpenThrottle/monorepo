@@ -18,6 +18,10 @@ describe('getPlanRunStatusBadgeVariant', () => {
       color: 'slate',
       label: PLAN_RUN_STATUS_CELL_COPY.supersededBadge,
     });
+    expect(getPlanRunStatusBadgeVariant('SKIPPED')).toEqual({
+      color: 'slate',
+      label: PLAN_RUN_STATUS_CELL_COPY.skippedBadge,
+    });
     expect(getPlanRunStatusBadgeVariant('USAGE_LIMITED')).toEqual({
       color: 'amber',
       label: PLAN_RUN_STATUS_CELL_COPY.usageLimitedBadge,

@@ -329,6 +329,7 @@ export const PLAN_TOOLBAR_COPY = {
   markCompleteRunningTooltip: `Unavailable while a run is active — kill the run first.`,
   runCaretAriaLabel: `More run options`,
   runDefaultTooltip: `Enqueue a worker run for this plan using tuning from Workflow run options (defaults apply if you have not changed them).`,
+  runNoRunnableTasksTooltip: `Every task on this plan is already done — add or reopen a task to run or schedule it.`,
   runQueuedToast: `Plan run queued`,
   runQueuedToastDescription: (
     jobId: string,
@@ -438,7 +439,8 @@ export const PLAN_RUN_MODEL_EFFORT_COPY = {
  * cleanly on a Claude subscription usage limit; the cell says when it resumes (a continuation run
  * exists) or when the limit resets (none does). `SCHEDULED` shows when it fires; `MISSED` (not
  * fired within the 1-hour grace window) and `SUPERSEDED` (another run was active when it was due)
- * say why the run never started.
+ * say why the run never started. `SKIPPED` (settled at fire time) shows only the server's
+ * `settledReason`; MISSED and SUPERSEDED prefer it and fall back to the generic lines below.
  */
 export const PLAN_RUN_STATUS_CELL_COPY = {
   columnLabel: `Status`,
@@ -453,6 +455,7 @@ export const PLAN_RUN_STATUS_CELL_COPY = {
   resumedHint: `Continues a run that hit a usage limit`,
   resumesPrefix: `Resumes after the reset at`,
   scheduledBadge: `Scheduled`,
+  skippedBadge: `Skipped`,
   supersededBadge: `Superseded`,
   supersededReason: `Another run of this plan was already active when this one was due.`,
   usageLimitedBadge: `Usage limited`,

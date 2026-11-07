@@ -31,6 +31,7 @@ const buildRun = (overrides: Partial<PlanRun> = {}): PlanRun => {
     runConfigSnapshot: null,
     runKind: 'orchestrator',
     scheduledFor: null,
+    settledReason: null,
     status: 'QUEUED',
     updatedAt: new Date('2026-07-21T00:00:00Z'),
     usageLimitResetsAt: null,
@@ -601,7 +602,7 @@ describe('PlanRunsService', () => {
   });
 
   describe('transitionScheduledRun', () => {
-    it.each(['QUEUED', 'MISSED', 'SUPERSEDED', 'COMPLETED'] as const)(
+    it.each(['QUEUED', 'MISSED', 'SUPERSEDED', 'SKIPPED'] as const)(
       'moves one SCHEDULED run to %s in a conditional update guarded on id AND status SCHEDULED',
       async (toStatus) => {
         qbExecute.mockResolvedValueOnce({ affected: 1 });
@@ -624,6 +625,35 @@ describe('PlanRunsService', () => {
         expect(won).toBe(true);
       },
     );
+
+    it('persists the settled reason on the settle, and writes none on a plain claim', async () => {
+      qbExecute.mockResolvedValue({ affected: 1 });
+
+      await service.transitionScheduledRun(
+        'run-9',
+        'SKIPPED',
+        undefined,
+        'the plan had no tasks left to run',
+      );
+      await service.transitionScheduledRun('run-9', 'QUEUED');
+
+      const [skipped, queued] = repo.createQueryBuilder.mock.results.map(
+        (result) => result.value,
+      );
+      expect(skipped.set).toHaveBeenCalledWith({
+        hostname: null,
+        pid: null,
+        settledReason: 'the plan had no tasks left to run',
+        status: 'SKIPPED',
+        workerId: null,
+      });
+      expect(queued.set).toHaveBeenCalledWith({
+        hostname: null,
+        pid: null,
+        status: 'QUEUED',
+        workerId: null,
+      });
+    });
 
     it('returns false when a concurrent cancel already settled the row (the loser backs off)', async () => {
       qbExecute.mockResolvedValueOnce({ affected: 0 });
@@ -673,6 +703,26 @@ describe('PlanRunsService', () => {
       repo.count.mockResolvedValueOnce(0);
 
       expect(await service.hasActiveRun('plan-1', 'run-firing')).toBe(false);
+    });
+  });
+
+  describe('hasUnsettledRun', () => {
+    it('counts the plan QUEUED/IN_PROGRESS/SCHEDULED rows', async () => {
+      repo.count.mockResolvedValueOnce(1);
+
+      expect(await service.hasUnsettledRun('plan-1')).toBe(true);
+      expect(repo.count).toHaveBeenCalledWith({
+        where: {
+          planId: 'plan-1',
+          status: In(['IN_PROGRESS', 'QUEUED', 'SCHEDULED']),
+        },
+      });
+    });
+
+    it('is false when every run of the plan is settled', async () => {
+      repo.count.mockResolvedValueOnce(0);
+
+      expect(await service.hasUnsettledRun('plan-1')).toBe(false);
     });
   });
 

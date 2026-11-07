@@ -35,6 +35,7 @@ export interface PlanToolbarRunTooltipOptions {
   readonly isRunning: boolean;
   readonly isSubmitting: boolean;
   readonly isTerminal: boolean;
+  readonly noRunnableTasks: boolean;
   readonly scheduledRunAt: Date | string | null | undefined;
   readonly workflowRunBlocked: boolean;
   readonly workflowRunBlockedReason: string | undefined;
@@ -42,7 +43,7 @@ export interface PlanToolbarRunTooltipOptions {
 
 /**
  * @description The primary Run button's tooltip. Precedence: submitting > terminal > running >
- * scheduled > blocked > branch missing > default (terminal and running are mutually exclusive).
+ * scheduled > no runnable tasks > blocked > branch missing > default (terminal and running are mutually exclusive).
  * A scheduled run outranks the workflow/branch gates because it is the reason the button is
  * disabled whatever else is true, and the only one the user can resolve from this toolbar.
  */
@@ -62,6 +63,9 @@ export const getPlanToolbarRunTooltip = (
   }
   if (scheduledReason !== null) {
     return scheduledReason;
+  }
+  if (options.noRunnableTasks) {
+    return PLAN_TOOLBAR_COPY.runNoRunnableTasksTooltip;
   }
   if (options.workflowRunBlocked) {
     return (

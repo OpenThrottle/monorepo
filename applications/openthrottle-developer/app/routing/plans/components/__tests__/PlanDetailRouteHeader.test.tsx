@@ -21,6 +21,7 @@ const basePlan: PlanDetailsFragment = {
   projectId: null,
   projectRelation: null,
   runConfigJson: '{}',
+  runnableTaskCount: 1,
   status: 'IN_PROGRESS',
   summary: null,
   tags: [

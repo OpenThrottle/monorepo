@@ -22,11 +22,7 @@ export interface PlanToolbarProps {
   /** @description Optional registered checkout id, submitted to the enqueuePlanRun mutation. */
   checkoutId?: string;
   className?: string;
-  /**
-   * @description Absolute path the editor deep links open. Separate from
-   * {@link workingDirectory} (submitted to enqueuePlanRun, so it must stay what
-   * the user configured): this one may fall back to the selected checkout.
-   */
+  /** @description Path the editor deep links open; unlike {@link workingDirectory} (as configured) it may fall back to the checkout. */
   editorWorkingDirectory?: string;
   /**
    * @description Editors enabled in workspace settings, as the loader's deferred
@@ -72,6 +68,7 @@ export interface PlanToolbarProps {
   repositoryId?: string;
   /** @description The plan's saved run config the Run dialog seeds from. */
   runConfigJson: string | null | undefined;
+  runnableTaskCount?: number;
   /** @description The soonest scheduled run's fire time; non-null disables run-now. */
   scheduledRunAt?: Date | string | null;
   scheduledRunId?: string | null;
@@ -117,6 +114,7 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
     ralphTuningJson = '',
     repositories,
     runConfigJson,
+    runnableTaskCount,
     scheduledRunAt,
     scheduledRunId,
     tags,
@@ -179,6 +177,7 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
           repositories={repositories}
           repositoryId={repositoryId}
           runConfigJson={runConfigJson}
+          runnableTaskCount={runnableTaskCount}
           scheduledRunAt={scheduledRunAt}
           scheduledRunId={scheduledRunId}
           workflowRunBlocked={workflowRunBlocked}

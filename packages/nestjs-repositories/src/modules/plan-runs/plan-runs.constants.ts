@@ -44,6 +44,12 @@ export const PLAN_RUN_STATUS = {
    * CANCELLED. The run holds no worktree until it fires.
    */
   SCHEDULED: 'SCHEDULED',
+  /**
+   * Terminal: a scheduled run that fired but found nothing runnable (no task left to pick up), so
+   * it was skipped rather than run. The run never started and `settled_reason` says why. Distinct
+   * from COMPLETED, which means a run did work, and from SUPERSEDED, which means another run was active.
+   */
+  SKIPPED: 'SKIPPED',
   STALE: 'STALE',
   /**
    * Terminal: a scheduled run held at fire time because the plan already had an active

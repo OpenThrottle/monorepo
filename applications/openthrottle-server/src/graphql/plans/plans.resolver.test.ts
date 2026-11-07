@@ -141,6 +141,7 @@ describe('PlansResolver', () => {
   });
 
   const mockProjectLoad = vi.fn().mockResolvedValue(null);
+  const mockRunnableTaskCountLoad = vi.fn().mockResolvedValue(0);
   const mockScheduledRunLoad = vi.fn().mockResolvedValue(null);
   const mockTaskCountLoad = vi.fn().mockResolvedValue(0);
   const mockTasksCompletedCountLoad = vi.fn().mockResolvedValue(0);
@@ -150,6 +151,7 @@ describe('PlansResolver', () => {
   const mockPlansLoaders = createMock<PlansLoaders>({
     planHooksByPlanIdLoader: { load: mockPlanHooksLoad },
     projectLoader: { load: mockProjectLoad },
+    runnableTaskCountByPlanIdLoader: { load: mockRunnableTaskCountLoad },
     scheduledRunByPlanIdLoader: { load: mockScheduledRunLoad },
     taskCountByPlanIdLoader: { load: mockTaskCountLoad },
     tasksCompletedCountByPlanIdLoader: { load: mockTasksCompletedCountLoad },
@@ -620,6 +622,15 @@ describe('PlansResolver', () => {
       mockScheduledRunLoad.mockResolvedValueOnce(null);
 
       await expect(resolver.scheduledRunId(mockPlan)).resolves.toBeNull();
+    });
+
+    test('runnableTaskCount resolves through runnableTaskCountByPlanIdLoader', async () => {
+      mockRunnableTaskCountLoad.mockResolvedValueOnce(3);
+
+      const result = await resolver.runnableTaskCount(mockPlan);
+
+      expect(mockRunnableTaskCountLoad).toHaveBeenCalledWith(mockPlan.id);
+      expect(result).toBe(3);
     });
 
     test('tasksCompletedCount resolves through tasksCompletedCountByPlanIdLoader', async () => {

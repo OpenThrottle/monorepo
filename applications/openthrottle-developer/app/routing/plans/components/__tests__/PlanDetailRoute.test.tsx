@@ -47,6 +47,7 @@ const plan: PlanDetailRouteProps['plan'] = {
   projectId: null,
   projectRelation: null,
   runConfigJson: '{}',
+  runnableTaskCount: 1,
   status: 'PENDING',
   tags: [],
   title: 'Ship the issue-tracker UX',
