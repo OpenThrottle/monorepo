@@ -10,6 +10,7 @@
  * @public
  */
 import { logHookError } from '../../utils/logging.ts';
+import { bsdSedInPlaceRule } from './bsd-sed-inplace.ts';
 import {
   maskedExitPipelineRule,
   maskedExitTrailingRule,
@@ -23,12 +24,17 @@ import type {
   BashGuardRule,
   BashRuleVerdict,
 } from './types.ts';
+import { zshUnquotedGlobRule } from './zsh-unquoted-glob.ts';
+import { zshVarModifierRule } from './zsh-var-modifier.ts';
 
 /** @public */
 export const BASH_GUARD_RULES: readonly BashGuardRule[] = [
+  bsdSedInPlaceRule,
   maskedExitPipelineRule,
   maskedExitTrailingRule,
   stalePrWriteRule,
+  zshUnquotedGlobRule,
+  zshVarModifierRule,
 ];
 
 const runRule = async (

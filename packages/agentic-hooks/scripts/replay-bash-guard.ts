@@ -15,6 +15,9 @@
  * write with no selector (the current branch then is not the branch now), and
  * a PR that was closed and later reopened (gh keeps no state history).
  *
+ * The portability rules replay as if every command ran under zsh on this
+ * machine's platform, which is how the transcripts were recorded here.
+ *
  * Usage:
  *   pnpm exec tsx packages/agentic-hooks/scripts/replay-bash-guard.ts \
  *     [--projects-dir <dir>] [--fallback-cwd <dir>]
@@ -31,6 +34,7 @@ import { isRecord } from '@openthrottle/nodejs-utils';
 
 import {
   BASH_GUARD_RULES,
+  createFsGlobMatcher,
   createGhPrLookup,
   evaluateBashGuard,
   type PullRequestQuery,
@@ -142,6 +146,15 @@ const isInGitCheckout = (dir: string): boolean => {
   }
 };
 
+/** The directories before a glob's first wildcard segment (`a/b/*.ts` → `a/b`). */
+const literalGlobBase = (pattern: string): string => {
+  const segments = pattern.split('/');
+  const firstGlob = segments.findIndex((segment) => /[*?[]/.test(segment));
+  const literal =
+    firstGlob === -1 ? segments.slice(0, -1) : segments.slice(0, firstGlob);
+  return literal.join('/') || '.';
+};
+
 const oneLine = (text: string, max: number): string => {
   const flat = text.replace(/\s+/g, ' ').trim();
   return flat.length > max ? `${flat.slice(0, max - 1)}…` : flat;
@@ -158,6 +171,20 @@ const main = async (): Promise<void> => {
     }
   }
   const calls = [...byId.values()];
+
+  // Path globs are checked against the filesystem as it is NOW, which can
+  // differ from when the command ran. A glob whose literal leading directory
+  // no longer exists (a reaped worktree, a moved repo root) is answered
+  // "matches", so drift cannot produce a hit.
+  const fsGlob = createFsGlobMatcher({ maxEntries: 20_000, timeoutMs: 5000 });
+  const replayGlobMatches = async (
+    pattern: string,
+    cwd: string,
+  ): Promise<boolean> => {
+    const base = path.resolve(cwd, literalGlobBase(pattern));
+    if (!fs.existsSync(base)) return true;
+    return fsGlob(pattern, cwd);
+  };
 
   const ghLookup = createGhPrLookup({ timeoutMs: 15_000 });
   const cache = new Map<string, Promise<PullRequestState>>();
@@ -180,6 +207,7 @@ const main = async (): Promise<void> => {
       const result = await evaluateBashGuard(call.command, {
         background: call.background,
         cwd: call.cwd || options.fallbackCwd,
+        globMatches: replayGlobMatches,
         lookupPullRequest: async (query) => {
           if (query.selector === null) {
             lookups.push({
@@ -198,6 +226,8 @@ const main = async (): Promise<void> => {
           return replayed.state;
         },
         lookupTimeoutMs: 30_000,
+        platform: process.platform,
+        shell: 'zsh',
       });
       return { call, result };
     }),

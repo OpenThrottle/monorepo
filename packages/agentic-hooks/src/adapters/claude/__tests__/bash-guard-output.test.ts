@@ -7,6 +7,13 @@ import {
   renderClaudeBashGuard,
 } from '../bash-guard-output.ts';
 
+/** Portability rules off, so these tests exercise only the stale-PR rule. */
+const INERT_SHELL = {
+  globMatches: async (): Promise<boolean> => true,
+  platform: 'linux',
+  shell: null,
+} as const;
+
 const bashPayload = (command: string, cwd: string | null = '/repo') => {
   return {
     ...(cwd === null ? {} : { cwd }),
@@ -85,7 +92,7 @@ describe('decideClaudeBashGuard', () => {
         'gh pr view 661 --json headRefName,state && gh pr comment 661 --body hi',
       ),
       '/fallback',
-      { lookupPullRequest, lookupTimeoutMs: 3000 },
+      { lookupPullRequest, lookupTimeoutMs: 3000, ...INERT_SHELL },
     );
     expect(out).toContain('"permissionDecision":"deny"');
     expect(out).toContain('MERGED');
@@ -101,7 +108,7 @@ describe('decideClaudeBashGuard', () => {
     const out = await decideClaudeBashGuard(
       bashPayload('pnpm nx run foo:test && git status'),
       '/fallback',
-      { lookupPullRequest, lookupTimeoutMs: 3000 },
+      { lookupPullRequest, lookupTimeoutMs: 3000, ...INERT_SHELL },
     );
     expect(out).toBeNull();
     expect(lookupPullRequest).not.toHaveBeenCalled();
@@ -112,7 +119,7 @@ describe('decideClaudeBashGuard', () => {
     await decideClaudeBashGuard(
       bashPayload('gh pr merge --squash', null),
       '/fallback',
-      { lookupPullRequest, lookupTimeoutMs: 3000 },
+      { lookupPullRequest, lookupTimeoutMs: 3000, ...INERT_SHELL },
     );
     expect(lookupPullRequest).toHaveBeenCalledWith({
       cwd: '/fallback',
@@ -127,6 +134,7 @@ describe('decideClaudeBashGuard with run_in_background', () => {
   const context = {
     lookupPullRequest: lookupReturning({ kind: 'unknown' }),
     lookupTimeoutMs: 3000,
+    ...INERT_SHELL,
   };
 
   it('denies a masked exit when the call runs in the background', async () => {

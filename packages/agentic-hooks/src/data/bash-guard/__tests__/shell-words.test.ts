@@ -153,8 +153,8 @@ describe('lexShellSegments', () => {
 
   it('does not mistake a 2>&1 redirection for an operator', () => {
     expect(lexShellSegments('a 2>&1 | tail -5')).toEqual([
-      { precededBy: null, words: ['a'] },
-      { precededBy: '|', words: ['tail', '-5'] },
+      { precededBy: null, rawWords: ['a'], words: ['a'] },
+      { precededBy: '|', rawWords: ['tail', '-5'], words: ['tail', '-5'] },
     ]);
   });
 });
