@@ -438,16 +438,14 @@ var drainJsonlFileBatched = async ({
   });
 };
 
-// packages/agentic-hooks/src/data/checkpoints.ts
-var import_node_fs3 = __toESM(require("node:fs"), 1);
-var import_node_path3 = __toESM(require("node:path"), 1);
-
 // packages/nodejs-utils/src/utils/is-record.ts
 var isRecord = (value) => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };
 
 // packages/agentic-hooks/src/data/checkpoints.ts
+var import_node_fs3 = __toESM(require("node:fs"), 1);
+var import_node_path3 = __toESM(require("node:path"), 1);
 var DEFAULT_STALE_CHECKPOINT_MS = 6 * 60 * 60 * 1e3;
 var checkpointFilePath = (dir, sessionId) => {
   return import_node_path3.default.join(dir, `${sanitizeSessionId(sessionId)}.json`);
