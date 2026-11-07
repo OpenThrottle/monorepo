@@ -7,6 +7,7 @@ import { In, IsNull, Not } from 'typeorm';
 import type { IsolationLevel } from 'typeorm/driver/types/IsolationLevel.js';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { REMAINING_TASK_STATUSES } from '../../config/plan-task-status.constants.ts';
 import { Task } from './task.entity.ts';
 import { tasksFactory } from './tasks.factory.ts';
 import {
@@ -217,7 +218,7 @@ describe('TasksService', () => {
       expect(mockTaskRepo.count).toHaveBeenCalledWith({
         where: {
           planId,
-          status: In(['BLOCKED', 'IN_PROGRESS', 'PENDING', 'QUEUED']),
+          status: In([...REMAINING_TASK_STATUSES]),
         },
       });
     });

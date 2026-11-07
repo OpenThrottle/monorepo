@@ -2431,6 +2431,28 @@ describe('PlansResolver', () => {
     });
 
     describe('completedAt write path', () => {
+      test('surfaces BadRequestException when COMPLETED is requested over unresolved tasks', async () => {
+        const repo = plansService.getRepository();
+        const pending: Plan = {
+          ...mockPlan,
+          completedAt: null,
+          status: 'IN_PROGRESS',
+        };
+        vi.mocked(repo.findOne).mockResolvedValue(pending);
+        vi.mocked(taskRepo.find).mockResolvedValueOnce([
+          createMock<Task>({ id: 'task-blocked-8', status: 'BLOCKED' }),
+        ]);
+        vi.mocked(repo.save).mockClear();
+
+        await expect(
+          resolver.updatePlan({
+            id: mockPlan.id,
+            status: 'COMPLETED',
+          }),
+        ).rejects.toBeInstanceOf(BadRequestException);
+        expect(repo.save).not.toHaveBeenCalled();
+      });
+
       test('stamps completedAt when transitioning into COMPLETED', async () => {
         const repo = plansService.getRepository();
         const pending: Plan = {
@@ -2445,6 +2467,7 @@ describe('PlansResolver', () => {
         };
         vi.mocked(repo.findOne).mockResolvedValue(pending);
         vi.mocked(repo.save).mockResolvedValue(saved);
+        vi.mocked(taskRepo.find).mockResolvedValue([]);
 
         await resolver.updatePlan({
           id: mockPlan.id,

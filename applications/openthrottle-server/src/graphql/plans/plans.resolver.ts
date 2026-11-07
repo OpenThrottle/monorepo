@@ -1209,7 +1209,9 @@ export class PlansResolver {
           captureFailureIsFatal: true,
           entity,
           requestedStatus: statusChange.nextStatus,
-          throwOnForbiddenInProgress: false,
+          // true so COMPLETED-with-unresolved-tasks throws (the IN_PROGRESS forbidden case never
+          // reaches here — resolveStatusChange returns null for it first).
+          throwOnForbiddenInProgress: true,
         });
       }
 

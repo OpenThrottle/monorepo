@@ -5,6 +5,8 @@ export {
   PLAN_STATUS_LIST,
   PLAN_STATUS_VALUES,
   type PlanStatus,
+  REMAINING_TASK_STATUSES,
+  type RemainingTaskStatus,
   TASK_STATUS,
   TASK_STATUS_LIST,
   TASK_STATUS_VALUES,

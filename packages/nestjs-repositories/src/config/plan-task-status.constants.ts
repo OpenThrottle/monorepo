@@ -103,3 +103,21 @@ export const PLAN_STATUS_LIST = PLAN_STATUS_VALUES.join(', ');
  * @public
  */
 export const TASK_STATUS_LIST = TASK_STATUS_VALUES.join(', ');
+
+/**
+ * @description Task statuses that still count as unresolved for plan completion —
+ * BLOCKED, IN_PROGRESS, PENDING, and QUEUED. COMPLETED, SKIPPED, CANCELED and
+ * PROMOTED are terminal. Shared by `TasksService.hasRemainingTasks` and the
+ * `PlanStatusService.applyStatusChange` COMPLETED guard so the two never drift.
+ * QUEUED is included even though tasks rarely hold it (plans-only in practice).
+ * @public
+ */
+export const REMAINING_TASK_STATUSES = [
+  PLAN_STATUS.BLOCKED,
+  PLAN_STATUS.IN_PROGRESS,
+  PLAN_STATUS.PENDING,
+  PLAN_STATUS.QUEUED,
+] as const;
+
+/** @public */
+export type RemainingTaskStatus = (typeof REMAINING_TASK_STATUSES)[number];
