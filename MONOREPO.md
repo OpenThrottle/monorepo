@@ -211,22 +211,65 @@ packages:
 
 ### Installing Dependencies
 
-**Root-level dependencies** (shared tooling, dev dependencies):
+Adding a dependency must change exactly two things: the consuming `package.json`, and that
+importer's entry in `pnpm-lock.yaml` (plus the new package's own snapshots, for an external
+dependency). If the lockfile diff touches anything else, **stop and do not hand-edit it** — see
+[The lockfile is a fixed point](#the-lockfile-is-a-fixed-point) below.
+
+**A workspace package** (`@openthrottle/*` → another project):
 
 ```bash
-pnpm add -w -D <package-name>
+pnpm add '@openthrottle/<package>@workspace:^' --filter <project-name> --config.catalog-mode=manual
 ```
 
-**Project-specific dependencies**:
+Both flags matter. Without the `@workspace:^` spec pnpm looks the name up on GitHub Packages and
+fails with `ERR_PNPM_PACKAGE_MANAGER_ADD_RESOLVE_LATEST`. Without `--config.catalog-mode=manual`,
+the workspace's `catalogMode: strict` makes `pnpm add` save **every** new dependency through the
+catalog, workspace packages included: it writes `"catalog:"` into the manifest and appends
+`'@openthrottle/<package>': workspace:^` to `pnpm-workspace.yaml`'s catalog. Neither is wanted.
+Equivalent and just as clean: add `"@openthrottle/<package>": "workspace:^"` to the manifest by
+hand and run `pnpm install`.
+
+**An external package already in the catalog:** add `"<name>": "catalog:"` to the consuming
+`package.json` and run `pnpm install`.
+
+**A new external package:** add it to the `catalog:` section of `pnpm-workspace.yaml` first, then
+reference it as above (details in [Dependency Catalog](#dependency-catalog-required)).
+`pnpm add <name> --filter <project-name>` also works for this — under `catalogMode: strict` it
+writes the catalog entry for you — and `pnpm add -w -D <name>` does the same for the workspace root.
+
+#### The lockfile is a fixed point
+
+`pnpm-lock.yaml` is kept in the state pnpm's own incremental resolver converges to, so re-resolving
+it changes nothing. That is what keeps a dependency add from dragging unrelated entries along.
+When a lockfile drifts out of that state, every later add re-resolves stale picks and drags them
+in too. Before this was fixed, every add rewrote six unrelated `@types/node` snapshots.
+
+- `pnpm install --lockfile-only` alone does **not** prove the property: pnpm reuses every locked
+  entry whose specifier is unchanged, and skips resolution entirely when
+  `node_modules/.pnpm-workspace-state-v1.json` says nothing changed.
+- `pnpm dedupe --check` is **not** the test either. `dedupe` (and `install --fix-lockfile`)
+  converge on a slightly different state from incremental installs: an optional `supports-color`
+  peer under `express` resolves to 7.2.0 one way and 8.1.1 the other. A lockfile that satisfies
+  `dedupe --check` still churns on the next add.
+
+The gate is `pnpm nx run monorepo:check-lockfile`. It runs in `check:local`, and in CI's `gates`
+job whenever a lockfile, manifest or `pnpm-workspace.yaml` changes. In a throwaway copy of the
+manifests and the lockfile, it checks two things:
+
+1. `pnpm install --lockfile-only` changes nothing.
+2. Adding a probe importer that depends on one workspace package changes nothing but that
+   importer.
+
+When it fails, it lists the entries that moved. To re-settle the lockfile, run pnpm's own resolvers
+and commit the result with the diff explained, never a hand edit:
 
 ```bash
-# Using --filter
-pnpm add <package-name> --filter <project-name>
-
-# Or navigate to project directory
-cd applications/my-app
-pnpm add <package-name>
+pnpm run lockfile:settle
 ```
+
+That runs `pnpm dedupe`, then one incremental re-resolve (add the probe, remove it), in the
+throwaway copy. It writes the result back to `pnpm-lock.yaml` and re-runs the check.
 
 ### Dependency Catalog (required)
 

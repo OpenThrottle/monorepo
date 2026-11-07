@@ -889,6 +889,22 @@ jobs:
         if: needs.changes.outputs.deps == 'true'
         run: pnpm run validate:notices
 
+      # pnpm-lock.yaml must be a fixed point of pnpm's incremental resolver: in a
+      # throwaway copy, `pnpm install --lockfile-only` changes nothing, and adding
+      # one probe dependency changes only the probe's importer. A drifted lockfile
+      # drags unrelated entries into every later dependency add (OT plan
+      # ac971552). `--frozen-lockfile` in node-setup cannot catch this: a drifted
+      # lockfile still satisfies every manifest.
+      #
+      # 💰 A step, not a job: it reuses this job's install and needs no
+      # node_modules of its own, only pnpm resolving the lockfile (~3–5s). Gated
+      # on `deps`, because only a lockfile, manifest or pnpm-workspace.yaml
+      # change can move it. Fails closed, like the two steps above. The Nx target
+      # is cached on exactly those inputs.
+      - name: '🔒 Lockfile is a fixed point (pnpm-lock.yaml)'
+        if: needs.changes.outputs.deps == 'true'
+        run: pnpm exec nx run monorepo:check-lockfile
+
       # 💰 On PRs, check only the files this PR touched; husky pre-commit already
       # formats on the way in, so a whole-tree sweep per PR is re-checking files
       # nobody edited. Non-PR events (push to main, merge_group) still sweep the

@@ -243,9 +243,9 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@csstools/css-tokenizer` | 4.0.0 | MIT | [source](https://github.com/csstools/postcss-plugins/tree/main/packages/css-tokenizer#readme) |
 | `@dabh/diagnostics` | 2.0.8 | MIT | [Arnout Kazemier](https://github.com/DABH/diagnostics) |
 | `@date-fns/tz` | 1.5.0 | MIT | [Sasha Koss](https://github.com/date-fns/date-fns#readme) |
-| `@emnapi/core` | 1.11.3, 1.4.5, 2.0.0-alpha.3 | MIT | [toyobayashi](https://github.com/toyobayashi/emnapi#readme) |
-| `@emnapi/runtime` | 1.11.3, 1.4.5, 2.0.0-alpha.3 | MIT | [toyobayashi](https://github.com/toyobayashi/emnapi#readme) |
-| `@emnapi/wasi-threads` | 1.0.4, 1.2.3, 2.0.1 | MIT | [toyobayashi](https://github.com/toyobayashi/emnapi#readme) |
+| `@emnapi/core` | 1.4.5, 2.0.0-alpha.3 | MIT | [toyobayashi](https://github.com/toyobayashi/emnapi#readme) |
+| `@emnapi/runtime` | 1.4.5, 2.0.0-alpha.3 | MIT | [toyobayashi](https://github.com/toyobayashi/emnapi#readme) |
+| `@emnapi/wasi-threads` | 1.0.4, 2.0.1 | MIT | [toyobayashi](https://github.com/toyobayashi/emnapi#readme) |
 | `@envelop/core` | 5.5.1 | MIT | [Dotan Simha](https://github.com/graphql-hive/envelop#readme) |
 | `@envelop/instrumentation` | 1.0.0 | MIT | [Valentin Cocaud](https://github.com/n1ru4l/envelop#readme) |
 | `@envelop/types` | 5.2.1 | MIT | [Dotan Simha](https://github.com/n1ru4l/envelop#readme) |
@@ -686,7 +686,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@types/mdx` | 2.0.14 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/mdx) |
 | `@types/morgan` | 1.9.10 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/morgan) |
 | `@types/ms` | 2.1.0 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/ms) |
-| `@types/node` | 18.19.130, 18.19.80, 24.19.2, 26.1.2 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/node) |
+| `@types/node` | 18.19.130, 18.19.80, 24.19.2 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/node) |
 | `@types/node-fetch` | 2.6.13 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/node-fetch) |
 | `@types/parse-json` | 4.0.2 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/parse-json) |
 | `@types/passport` | 1.0.17 | MIT | [source](https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/passport) |
@@ -851,7 +851,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `babel-preset-current-node-syntax` | 1.2.0 | MIT | [Nicolò Ribaudo](https://github.com/nicolo-ribaudo/babel-preset-current-node-syntax#readme) |
 | `babel-preset-jest` | 30.4.0 | MIT | [source](https://github.com/jestjs/jest#readme) |
 | `bail` | 2.0.2 | MIT | [Titus Wormer](https://github.com/wooorm/bail#readme) |
-| `balanced-match` | 1.0.2, 4.0.3, 4.0.4 | MIT | [source](https://github.com/juliangruber/balanced-match#readme) |
+| `balanced-match` | 1.0.2, 4.0.3 | MIT | [source](https://github.com/juliangruber/balanced-match#readme) |
 | `bare-events` | 2.9.1 | Apache-2.0 | [Holepunch](https://github.com/holepunchto/bare-events#readme) |
 | `base64-arraybuffer` | 1.0.2 | MIT | [Niklas von Hertzen](https://github.com/niklasvh/base64-arraybuffer) |
 | `base64-js` | 1.5.1 | MIT | [T. Jameson Little](https://github.com/beatgammit/base64-js) |
@@ -918,7 +918,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `class-variance-authority` | 0.7.1 | Apache-2.0 | [Joe Bell](https://github.com/joe-bell/cva#readme) |
 | `classnames` | 2.5.1 | MIT | [Jed Watson](https://github.com/JedWatson/classnames#readme) |
 | `cli-cursor` | 3.1.0, 5.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/cli-cursor#readme) |
-| `cli-spinners` | 2.6.1, 2.9.2, 3.4.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/cli-spinners#readme) |
+| `cli-spinners` | 2.6.1, 3.4.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/cli-spinners#readme) |
 | `cli-table3` | 0.6.5 | MIT | [James Talmage](https://github.com/cli-table/cli-table3) |
 | `cli-truncate` | 5.2.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/cli-truncate#readme) |
 | `cli-width` | 4.1.0 | ISC | [Ilya Radchenko](https://github.com/knownasilya/cli-width) |
@@ -1417,7 +1417,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `kuler` | 2.0.0 | MIT | [Arnout Kazemier](https://github.com/3rd-Eden/kuler) |
 | `langsmith` | 0.8.8 | MIT | [LangChain](https://github.com/langchain-ai/langsmith-sdk#readme) |
 | `launch-editor` | 2.14.1 | MIT | [Evan You](https://github.com/vitejs/launch-editor#readme) |
-| `legacy-javascript` | 0.0.3 | Apache-2.0 | [Google LLC](https://github.com/GoogleChrome/lighthouse#readme) |
+| `legacy-javascript` | 0.0.4 | Apache-2.0 | [Google LLC](https://github.com/GoogleChrome/lighthouse#readme) |
 | `leven` | 3.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/leven#readme) |
 | `levn` | 0.4.1 | MIT | [George Zahariev](https://github.com/gkz/levn) |
 | `lighthouse` | 13.4.1 | Apache-2.0 | [Google LLC](https://github.com/GoogleChrome/lighthouse#readme) |
@@ -1791,7 +1791,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `rrdom` | 2.1.1 | MIT | [source](https://github.com/rrweb-io/rrweb/tree/main/packages/rrdom#readme) |
 | `rrweb` | 2.1.1 | MIT | [rrweb Core Team](https://github.com/rrweb-io/rrweb#readme) |
 | `rrweb-snapshot` | 2.1.1 | MIT | [rrweb Core Team](https://github.com/rrweb-io/rrweb/tree/master/packages/rrweb-snapshot#readme) |
-| `run-applescript` | 7.0.0, 7.1.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/run-applescript#readme) |
+| `run-applescript` | 7.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/run-applescript#readme) |
 | `run-parallel` | 1.2.0 | MIT | [Feross Aboukhadijeh](https://github.com/feross/run-parallel) |
 | `rxjs` | 7.8.2 | Apache-2.0 | [Ben Lesh](https://rxjs.dev) |
 | `safe-array-concat` | 1.1.4 | MIT | [Jordan Harband](https://github.com/ljharb/safe-array-concat#readme) |
@@ -1971,7 +1971,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `unbzip2-stream` | 1.4.3 | MIT | [Jan Bölsche](https://github.com/regular/unbzip2-stream#readme) |
 | `unc-path-regex` | 0.1.2 | MIT | [Jon Schlinkert](https://github.com/regexhq/unc-path-regex) |
 | `undici` | 7.29.0 | MIT | [source](https://undici.nodejs.org) |
-| `undici-types` | 5.26.5, 7.24.6, 8.3.0 | MIT | [source](https://undici.nodejs.org) |
+| `undici-types` | 5.26.5, 7.24.6 | MIT | [source](https://undici.nodejs.org) |
 | `unicode-canonical-property-names-ecmascript` | 2.0.1 | MIT | [Mathias Bynens](https://github.com/mathiasbynens/unicode-canonical-property-names-ecmascript) |
 | `unicode-emoji-modifier-base` | 1.0.0 | MIT | [Mathias Bynens](https://github.com/mathiasbynens/unicode-emoji-modifier-base) |
 | `unicode-match-property-ecmascript` | 2.0.0 | MIT | [Mathias Bynens](https://github.com/mathiasbynens/unicode-match-property-ecmascript) |

@@ -291,6 +291,30 @@
         "{workspaceRoot}/scripts/check-generated-attributes.ts"
       ]
     },
+    "check-lockfile": {
+      "cache": true,
+      "executor": "nx:run-commands",
+      "inputs": [
+        "{workspaceRoot}/.npmrc",
+        "{workspaceRoot}/applications/*/package.json",
+        "{workspaceRoot}/infra/package.json",
+        "{workspaceRoot}/package.json",
+        "{workspaceRoot}/packages/*/package.json",
+        "{workspaceRoot}/pnpm-lock.yaml",
+        "{workspaceRoot}/pnpm-workspace.yaml",
+        "{workspaceRoot}/scripts/check-catalog-coverage.ts",
+        "{workspaceRoot}/scripts/check-lockfile-fixed-point.ts",
+        "{workspaceRoot}/scripts/utils/**/*",
+        "{workspaceRoot}/tools/*/package.json"
+      ],
+      "metadata": {
+        "description": "Verify pnpm-lock.yaml is a fixed point of pnpm's incremental resolver, via scripts/check-lockfile-fixed-point.ts. In a throwaway copy of the manifests and lockfile, `pnpm install --lockfile-only` must change nothing, and adding a probe importer that depends on one workspace package must change nothing but that importer. A drifted lockfile drags unrelated entries into every later dependency add. On failure it lists the entries that moved and says to run `pnpm run lockfile:settle` (the script's --fix: dedupe, then one incremental re-resolve). Never hand-edit the lockfile. Deliberately not `pnpm dedupe --check`, which converges on a different state from incremental installs. Error-mode. `inputs` MUST be explicit {workspaceRoot} globs — the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever."
+      },
+      "options": {
+        "command": "tsx ./scripts/check-lockfile-fixed-point.ts",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "check-model-facing-text": {
       "cache": false,
       "dependsOn": [
