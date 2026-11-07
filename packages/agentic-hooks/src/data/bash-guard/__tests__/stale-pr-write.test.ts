@@ -34,8 +34,11 @@ const contextWith = (
   return {
     background: false,
     cwd: CWD,
+    globMatches: async () => true,
     lookupPullRequest: vi.fn(lookup),
     lookupTimeoutMs,
+    platform: 'linux',
+    shell: null,
   };
 };
 

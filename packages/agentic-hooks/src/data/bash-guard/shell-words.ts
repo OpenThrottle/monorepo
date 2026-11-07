@@ -95,6 +95,9 @@ export const lexShellSegments = (
   let precededBy: BashOperator | null = null;
   const heredocs: Heredoc[] = [];
   let words: string[] = [];
+  let rawWords: string[] = [];
+  let wordStart = 0;
+  let index = 0;
   let word: string | null = null;
   let quote: '"' | "'" | null = null;
   let dropNextWord = false;
@@ -109,24 +112,26 @@ export const lexShellSegments = (
       dropNextWord = false;
     } else {
       words.push(word);
+      rawWords.push(command.slice(wordStart, index));
     }
     word = null;
   };
   const endSegment = (): void => {
     endWord();
     if (words.length > 0) {
-      segments.push({ precededBy, words });
+      segments.push({ precededBy, rawWords, words });
       precededBy = null;
     }
     words = [];
+    rawWords = [];
     dropNextWord = false;
     pendingHeredoc = null;
   };
   const append = (text: string): void => {
+    if (word === null) wordStart = index;
     word = (word ?? '') + text;
   };
 
-  let index = 0;
   while (index < command.length) {
     const char = command.charAt(index);
     const next = command.charAt(index + 1);
@@ -286,8 +291,8 @@ export const parseBashCommand = (
 ): ParsedBashCommand => {
   let current: string | null = cwd;
   const segments: BashSegment[] = [];
-  for (const { precededBy, words } of lexShellSegments(command)) {
-    segments.push({ cwd: current, precededBy, words });
+  for (const { precededBy, rawWords, words } of lexShellSegments(command)) {
+    segments.push({ cwd: current, precededBy, rawWords, words });
     const { words: bare } = stripCommandPrefixes(words);
     if (bare[0] !== 'cd') continue;
     const from: string | null = current;

@@ -24,6 +24,13 @@ import {
   renderCursorBashGuard,
 } from '../bash-guard-output.ts';
 
+/** Portability rules off, so these tests exercise only the stale-PR rule. */
+const INERT_SHELL = {
+  globMatches: async (): Promise<boolean> => true,
+  platform: 'linux',
+  shell: null,
+} as const;
+
 const fixture: unknown = JSON.parse(
   fs.readFileSync(
     path.join(
@@ -107,6 +114,7 @@ describe('decideCursorBashGuard', () => {
     const out = await decideCursorBashGuard(fixture, '/fallback', {
       lookupPullRequest,
       lookupTimeoutMs: 3000,
+      ...INERT_SHELL,
     });
     const response: unknown = JSON.parse(out);
     expect(response).toMatchObject({ permission: 'deny' });
@@ -122,6 +130,7 @@ describe('decideCursorBashGuard', () => {
     const out = await decideCursorBashGuard(fixture, '/fallback', {
       lookupPullRequest: lookupReturning({ ...MERGED, state: 'OPEN' }),
       lookupTimeoutMs: 3000,
+      ...INERT_SHELL,
     });
     expect(out).toBe(CURSOR_SHELL_ALLOW);
   });
@@ -131,7 +140,7 @@ describe('decideCursorBashGuard', () => {
     const out = await decideCursorBashGuard(
       withCommand('git status'),
       '/fallback',
-      { lookupPullRequest, lookupTimeoutMs: 3000 },
+      { lookupPullRequest, lookupTimeoutMs: 3000, ...INERT_SHELL },
     );
     expect(out).toBe(CURSOR_SHELL_ALLOW);
     expect(lookupPullRequest).not.toHaveBeenCalled();
@@ -141,6 +150,7 @@ describe('decideCursorBashGuard', () => {
     const out = await decideCursorBashGuard({ hello: 1 }, '/fallback', {
       lookupPullRequest: lookupReturning(MERGED),
       lookupTimeoutMs: 3000,
+      ...INERT_SHELL,
     });
     expect(out).toBe(CURSOR_SHELL_ALLOW);
   });
@@ -150,6 +160,7 @@ describe('decideCursorBashGuard with the masked-exit rules', () => {
   const context = {
     lookupPullRequest: lookupReturning(MERGED),
     lookupTimeoutMs: 3000,
+    ...INERT_SHELL,
   };
 
   it('warns on a trailing echo $? as an allow carrying agent_message', async () => {
@@ -179,5 +190,80 @@ describe('decideCursorBashGuard with the masked-exit rules', () => {
       context,
     );
     expect(out).toBe(CURSOR_SHELL_ALLOW);
+  });
+});
+
+describe('decideCursorBashGuard with the portability rules', () => {
+  const zshOnDarwin = (
+    globMatches: (pattern: string, cwd: string) => Promise<boolean>,
+  ) => {
+    return {
+      globMatches: vi.fn(globMatches),
+      lookupPullRequest: lookupReturning(MERGED),
+      lookupTimeoutMs: 3000,
+      platform: 'darwin',
+      shell: 'zsh',
+    };
+  };
+
+  const decide = async (
+    command: string,
+    context: ReturnType<typeof zshOnDarwin>,
+  ) => {
+    const out = await decideCursorBashGuard(
+      withCommand(command),
+      '/fallback',
+      context,
+    );
+    const parsed: unknown = JSON.parse(out);
+    return isRecord(parsed) ? parsed : {};
+  };
+
+  it('denies an unquoted flag-value glob', async () => {
+    const out = await decide(
+      'grep -rn x . --include=*.ts',
+      zshOnDarwin(async () => true),
+    );
+    expect(out.permission).toBe('deny');
+    expect(out.agent_message).toContain('[bash-guard:zsh-unquoted-glob]');
+  });
+
+  it('checks a path glob in the workspace root the empty cwd falls back to', async () => {
+    const context = zshOnDarwin(async () => false);
+    const out = await decide(
+      'ls applications/openthrottle-server/Dockerfile*',
+      context,
+    );
+    expect(out.permission).toBe('deny');
+    expect(context.globMatches).toHaveBeenCalledWith(
+      'applications/openthrottle-server/Dockerfile*',
+      '/tmp/probe-repo',
+    );
+  });
+
+  it('denies GNU sed -i on darwin', async () => {
+    const out = await decide(
+      `sed -i 's/a/b/' f`,
+      zshOnDarwin(async () => true),
+    );
+    expect(out.permission).toBe('deny');
+    expect(out.agent_message).toContain('[bash-guard:bsd-sed-inplace]');
+  });
+
+  it('renders a zsh modifier warn as an allow carrying the agent message', async () => {
+    const out = await decide(
+      'for p in a b; do pnpm nx run "$p:typecheck"; done',
+      zshOnDarwin(async () => true),
+    );
+    expect(out.permission).toBe('allow');
+    expect(out.agent_message).toContain('[bash-guard:zsh-var-modifier]');
+  });
+
+  it('allows the quoted forms', async () => {
+    const out = await decide(
+      `grep -rn x . --include='*.ts' && sed -i '' 's/a/b/' f`,
+      zshOnDarwin(async () => true),
+    );
+    expect(out).toEqual({ permission: 'allow' });
   });
 });

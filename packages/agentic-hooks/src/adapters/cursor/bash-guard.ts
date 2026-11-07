@@ -13,9 +13,11 @@
 import fs from 'node:fs';
 
 import {
+  createFsGlobMatcher,
   createGhPrLookup,
   GH_PR_LOOKUP_TIMEOUT_MS,
   logHookError,
+  readShellEnvironment,
 } from '../../index.ts';
 import {
   CURSOR_SHELL_ALLOW,
@@ -38,6 +40,11 @@ const decide = async (): Promise<string> => {
   return decideCursorBashGuard(raw, fallbackCwd, {
     lookupPullRequest: createGhPrLookup(),
     lookupTimeoutMs: GH_PR_LOOKUP_TIMEOUT_MS,
+    ...readShellEnvironment({
+      env: process.env,
+      globMatches: createFsGlobMatcher(),
+      platform: process.platform,
+    }),
   });
 };
 

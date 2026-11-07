@@ -19,13 +19,15 @@
 export type BashOperator = '&&' | '&' | ';' | '|' | '|&' | '||';
 
 /**
- * One simple command as the lexer sees it: its words after quote removal, and
- * the operator joining it to the previous command (`null` for the first).
+ * One simple command as the lexer sees it: its words after quote removal, the
+ * same words as written in the source, and the operator joining it to the previous command (`null` for the first).
  *
  * @public
  */
 export interface LexedShellSegment {
   readonly precededBy: BashOperator | null;
+  /** Each word as written, quotes and backslashes intact; parallel to `words`. */
+  readonly rawWords: readonly string[];
   readonly words: readonly string[];
 }
 
@@ -91,9 +93,23 @@ export interface BashGuardContext {
    */
   readonly background: boolean;
   readonly cwd: string;
+  /**
+   * Whether `pattern` (a shell glob, already relative to or rooted against
+   * `cwd`) matches at least one path. Must answer `true` whenever it cannot
+   * tell — a timeout, an unreadable directory, too much work — so a rule that
+   * asks fails open.
+   */
+  readonly globMatches: GlobMatcher;
   readonly lookupPullRequest: PullRequestLookup;
   readonly lookupTimeoutMs: number;
+  /** `process.platform` of the machine the command will run on. */
+  readonly platform: string;
+  /** Basename of the user's login shell (`zsh`, `bash`, …), or null if unknown. */
+  readonly shell: string | null;
 }
+
+/** @public */
+export type GlobMatcher = (pattern: string, cwd: string) => Promise<boolean>;
 
 /** @public */
 export type BashRuleVerdict =

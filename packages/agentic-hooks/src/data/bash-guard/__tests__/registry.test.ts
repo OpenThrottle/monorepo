@@ -6,8 +6,11 @@ import type { BashGuardContext, BashGuardRule } from '../types.ts';
 const CONTEXT: BashGuardContext = {
   background: false,
   cwd: '/repo',
+  globMatches: async () => true,
   lookupPullRequest: vi.fn(async () => ({ kind: 'unknown' as const })),
   lookupTimeoutMs: 100,
+  platform: 'linux',
+  shell: null,
 };
 
 const ruleAnswering = (
