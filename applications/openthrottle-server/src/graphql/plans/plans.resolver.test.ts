@@ -1668,11 +1668,79 @@ describe('PlansResolver', () => {
         planRunId: 'cli-run-1',
         prNumber: null,
         status: 'cancelled',
+        usageLimitResetsAt: null,
+        usageLimitType: null,
       });
 
-      expect(mockSettleCliRun).toHaveBeenCalledWith('cli-run-1', 'CANCELLED');
+      expect(mockSettleCliRun).toHaveBeenCalledWith(
+        'cli-run-1',
+        'CANCELLED',
+        null,
+      );
       expect(result).toEqual(
         expect.objectContaining({ hostname: null, status: 'CANCELLED' }),
+      );
+    });
+
+    test('settles USAGE_LIMITED with the reported reset time and window', async () => {
+      const resetsAt = new Date('2026-07-22T05:00:00.000Z');
+      mockSettleCliRun.mockResolvedValueOnce({
+        bullmqJobId: null,
+        createdAt: new Date('2026-07-22T00:00:00.000Z'),
+        executionBackend: 'claude',
+        hostname: null,
+        id: 'cli-run-1',
+        pid: null,
+        planId: mockPlan.id,
+        queueName: PLANS_QUEUE_NAME,
+        runConfigSnapshot: null,
+        runKind: 'orchestrator',
+        status: 'USAGE_LIMITED',
+        updatedAt: new Date('2026-07-22T00:01:00.000Z'),
+        usageLimitResetsAt: resetsAt,
+        usageLimitType: 'five_hour',
+        workerId: null,
+      });
+
+      const result = await resolver.settleCliPlanRun({
+        headSha: null,
+        planRunId: 'cli-run-1',
+        prNumber: null,
+        status: 'usage_limited',
+        usageLimitResetsAt: resetsAt,
+        usageLimitType: 'five_hour',
+      });
+
+      expect(mockSettleCliRun).toHaveBeenCalledWith(
+        'cli-run-1',
+        'USAGE_LIMITED',
+        { resetsAt, type: 'five_hour' },
+      );
+      expect(result).toEqual(
+        expect.objectContaining({
+          status: 'USAGE_LIMITED',
+          usageLimitResetsAt: resetsAt,
+          usageLimitType: 'five_hour',
+        }),
+      );
+    });
+
+    test('ignores usage-limit fields on any other status', async () => {
+      mockSettleCliRun.mockResolvedValueOnce(null);
+
+      await resolver.settleCliPlanRun({
+        headSha: null,
+        planRunId: 'cli-run-1',
+        prNumber: null,
+        status: 'FAILED',
+        usageLimitResetsAt: new Date('2026-07-22T05:00:00.000Z'),
+        usageLimitType: 'five_hour',
+      });
+
+      expect(mockSettleCliRun).toHaveBeenCalledWith(
+        'cli-run-1',
+        'FAILED',
+        null,
       );
     });
 
@@ -1684,6 +1752,8 @@ describe('PlansResolver', () => {
           planRunId: 'cli-run-1',
           prNumber: null,
           status: 'IN_PROGRESS',
+          usageLimitResetsAt: null,
+          usageLimitType: null,
         }),
       ).rejects.toThrow(/Invalid settle status/);
       expect(mockSettleCliRun).not.toHaveBeenCalled();
@@ -1697,6 +1767,8 @@ describe('PlansResolver', () => {
         planRunId: 'missing',
         prNumber: null,
         status: 'COMPLETED',
+        usageLimitResetsAt: null,
+        usageLimitType: null,
       });
 
       expect(result).toBeNull();
@@ -1726,6 +1798,8 @@ describe('PlansResolver', () => {
         planRunId: 'cli-run-1',
         prNumber: 537,
         status: 'COMPLETED',
+        usageLimitResetsAt: null,
+        usageLimitType: null,
       });
 
       expect(mockRecordSettledRunArtifacts).toHaveBeenCalledWith({
@@ -1760,6 +1834,8 @@ describe('PlansResolver', () => {
         planRunId: 'cli-run-1',
         prNumber: null,
         status: 'FAILED',
+        usageLimitResetsAt: null,
+        usageLimitType: null,
       });
 
       expect(mockRecordSettledRunArtifacts).not.toHaveBeenCalled();

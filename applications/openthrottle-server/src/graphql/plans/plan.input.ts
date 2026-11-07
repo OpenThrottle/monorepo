@@ -519,9 +519,21 @@ export class SettleCliPlanRunInput {
   prNumber!: number | null;
 
   @Field(() => String, {
-    description: `Terminal status to set: COMPLETED, CANCELLED, or FAILED. Normalized to uppercase.`,
+    description: `Terminal status to set: COMPLETED, CANCELLED, FAILED, or USAGE_LIMITED. Normalized to uppercase.`,
   })
   status!: string;
+
+  @Field(() => Date, {
+    description: `When the usage limit that stopped the run lifts, as reported by the agent CLI. Recorded only when status is USAGE_LIMITED; ignored otherwise. Null when the CLI reported no reset time.`,
+    nullable: true,
+  })
+  usageLimitResetsAt!: Date | null;
+
+  @Field(() => String, {
+    description: `Raw name of the usage-limit window that stopped the run (five_hour, seven_day, ...). Recorded only when status is USAGE_LIMITED; ignored otherwise.`,
+    nullable: true,
+  })
+  usageLimitType!: string | null;
 }
 
 /**

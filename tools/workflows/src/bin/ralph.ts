@@ -194,7 +194,10 @@ export const main = async (): Promise<void> => {
   };
 
   /** Settle the run row exactly once (no-op when the run was never tracked). */
-  const settleCliRunSafely = async (status: string): Promise<void> => {
+  const settleCliRunSafely = async (
+    status: string,
+    limit: UsageLimit | null = null,
+  ): Promise<void> => {
     if (!planRunId || runSettled) {
       return;
     }
@@ -202,7 +205,7 @@ export const main = async (): Promise<void> => {
     stopMarkerPolling();
     stopHeartbeat();
     try {
-      await settleCliPlanRun(openthrottleConfig, planRunId, status);
+      await settleCliPlanRun(openthrottleConfig, planRunId, status, limit);
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       console.warn(
@@ -285,7 +288,7 @@ export const main = async (): Promise<void> => {
     console.error(
       ` - ⏸️ Claude usage limit reached (${limit.rateLimitType ?? 'unknown window'}); resets at ${limit.resetsAt ?? 'an unknown time'}. Stopping without further iterations; re-run after the reset.`,
     );
-    await settleCliRunSafely('FAILED');
+    await settleCliRunSafely('USAGE_LIMITED', limit);
 
     if (inFlightTaskId) {
       try {
@@ -550,10 +553,15 @@ export const main = async (): Promise<void> => {
       await finishKilledRun(task ?? firstPendingForIteration);
     }
 
-    // A subscription usage limit stopped the agent. The detached CLI does not auto-resume (the
-    // plans worker does that for queued runs): hand the in-flight task and plan back, record the
-    // run as FAILED (settleCliPlanRun accepts no USAGE_LIMITED) and exit non-zero without burning
-    // the remaining iterations on a limit that will not lift.
+    // A subscription usage limit stopped the agent. Hand the in-flight task and plan back, record
+    // the run USAGE_LIMITED with its reset time and window, and exit non-zero without burning the
+    // remaining iterations on a limit that will not lift.
+    //
+    // Deliberately NO auto-resume here (the plans worker does that for queued runs). A detached run
+    // has no BullMQ job and no frozen runConfigSnapshot to continue from, and it runs in a local
+    // checkout the server's worker may not share: "resuming" it server-side would silently swap it
+    // for a different kind of run on a different machine. The recorded reset time tells the human
+    // when to re-run it.
     if (usageLimitHit.current !== null) {
       // eslint-disable-next-line no-await-in-loop
       await finishUsageLimitedRun(

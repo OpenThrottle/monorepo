@@ -227,6 +227,7 @@ describe('Ralph detached-CLI cancelable run', () => {
       graphqlConfig,
       RUN_ID,
       'COMPLETED',
+      null,
     );
     expect(exitSpy).toHaveBeenCalledWith(0);
   });
@@ -314,10 +315,11 @@ describe('Ralph detached-CLI cancelable run', () => {
       graphqlConfig,
       RUN_ID,
       'FAILED',
+      null,
     );
   });
 
-  it('stops on a usage limit: logs the reset, resets task + plan to PENDING, settles FAILED, exits 1', async () => {
+  it('stops on a usage limit: logs the reset, resets task + plan to PENDING, settles USAGE_LIMITED with the limit, exits 1', async () => {
     runIterationAsyncMock.mockImplementationOnce(
       async (config: {
         readonly onUsageLimit?: (limit: {
@@ -346,12 +348,14 @@ describe('Ralph detached-CLI cancelable run', () => {
     expect(settleCliPlanRunMock).toHaveBeenCalledWith(
       graphqlConfig,
       RUN_ID,
-      'FAILED',
+      'USAGE_LIMITED',
+      { rateLimitType: 'five_hour', resetsAt: '2026-11-01T17:00:00.000Z' },
     );
     expect(settleCliPlanRunMock).not.toHaveBeenCalledWith(
       graphqlConfig,
       RUN_ID,
       'COMPLETED',
+      null,
     );
     expect(updateTaskStatusMock).toHaveBeenCalledWith(
       graphqlConfig,
@@ -409,6 +413,7 @@ describe('Ralph detached-CLI cancelable run', () => {
       graphqlConfig,
       RUN_ID,
       'CANCELLED',
+      null,
     );
     // Re-runnable: in-flight task + plan reset to PENDING.
     expect(updateTaskStatusMock).toHaveBeenCalledWith(
@@ -454,6 +459,7 @@ describe('Ralph detached-CLI cancelable run', () => {
       graphqlConfig,
       RUN_ID,
       'CANCELLED',
+      null,
     );
   });
 
@@ -481,6 +487,7 @@ describe('Ralph detached-CLI cancelable run', () => {
       postgresConfig,
       RUN_ID,
       'CANCELLED',
+      null,
     );
   });
 

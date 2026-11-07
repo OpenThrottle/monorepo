@@ -1721,6 +1721,8 @@ export function SettleCliPlanRunInputSchema(): z.ZodObject<
     planRunId: z.string().min(1),
     prNumber: z.number().nullish(),
     status: z.string().min(1),
+    usageLimitResetsAt: definedNonNullAnySchema.nullish(),
+    usageLimitType: z.string().nullish(),
   });
 }
 

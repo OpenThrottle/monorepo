@@ -6,6 +6,7 @@ import {
   ensurePostgresReachable,
   POSTGRES_UNREACHABLE_HINT,
 } from '@openthrottle/openthrottle-agentic-utils';
+import type { UsageLimit } from '@openthrottle/openthrottle-drivers';
 import pg from 'pg';
 
 import type {
@@ -504,20 +505,31 @@ export async function readPlanRunCancelMarkerPostgres(
 /**
  * @description Settles a detached CLI run row on exit (postgres-direct twin of
  * {@link settleCliPlanRunGraphql}): sets the terminal status and clears the location columns, keyed
- * on the run id.
+ * on the run id. A non-null `limit` (a USAGE_LIMITED settle) also records the reset time and window;
+ * a null one leaves those columns untouched.
  */
 export async function settleCliPlanRunPostgres(
   config: WorkflowRalphConfig,
   planRunId: string,
   status: string,
+  limit: UsageLimit | null,
 ): Promise<void> {
   const connectionString = requireConnectionString(config);
   const client = new pg.Client({ connectionString });
   await client.connect();
   try {
+    if (limit === null) {
+      await client.query(
+        `UPDATE plan_runs SET status = $2, hostname = NULL, pid = NULL, worker_id = NULL, updated_at = NOW() WHERE id = $1`,
+        [planRunId, status],
+      );
+
+      return;
+    }
+
     await client.query(
-      `UPDATE plan_runs SET status = $2, hostname = NULL, pid = NULL, worker_id = NULL, updated_at = NOW() WHERE id = $1`,
-      [planRunId, status],
+      `UPDATE plan_runs SET status = $2, hostname = NULL, pid = NULL, worker_id = NULL, usage_limit_resets_at = $3, usage_limit_type = $4, updated_at = NOW() WHERE id = $1`,
+      [planRunId, status, limit.resetsAt, limit.rateLimitType],
     );
   } finally {
     await client.end();

@@ -573,6 +573,14 @@ export class PlanStatusService {
         queueResult.lockedActiveJobIds,
       );
 
+    // Settle the QUEUED rows whose waiting/delayed job was just removed (a usage-limit resume sits
+    // delayed for hours), or they read QUEUED forever. Guarded on QUEUED, so a row whose job already
+    // started is untouched; SCHEDULED rows were settled just above.
+    await this.planRunsService.settleQueuedRunsCancelledByJobIds(
+      PLANS_QUEUE_NAME,
+      queueResult.removedJobIds,
+    );
+
     // Jobs of an ordinary queued run: removing one means the plan's QUEUED status (and its tasks')
     // no longer has a job behind it, so they reset. A scheduled run's job never set either.
     const removedOrdinaryQueuedJob = queueResult.removedJobIds.some(

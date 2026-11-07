@@ -15,7 +15,10 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { NotificationsService } from '../../notifications/notifications.service.ts';
 import type { PlanCancelChannelService } from '../../queues/plans/plan-cancel-channel.service.ts';
 import type { PlanRunCancellationService } from '../../queues/plans/plan-run-cancellation.service.ts';
-import { RUN_PLAN_ORCHESTRATOR_JOB_NAME } from '../../queues/plans/plans.constants.ts';
+import {
+  PLANS_QUEUE_NAME,
+  RUN_PLAN_ORCHESTRATOR_JOB_NAME,
+} from '../../queues/plans/plans.constants.ts';
 import type { RunPlanJobData } from '../../queues/plans/plans.types.ts';
 import type { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service.ts';
 import type { StatusChangeActor } from './plan-status.service.ts';
@@ -95,6 +98,7 @@ describe('PlanStatusService', () => {
   const mockFindById = vi.fn().mockResolvedValue({ heartbeatExpected: true });
   // The plan_runs half of cancelling a SCHEDULED run: number of SCHEDULED rows settled CANCELLED.
   const mockSettleScheduledRunsCancelled = vi.fn().mockResolvedValue(0);
+  const mockSettleQueuedRunsCancelledByJobIds = vi.fn().mockResolvedValue(0);
   // The plan's SCHEDULED rows (read before the queue removal) and the run-scoped settle.
   const mockFindScheduledByPlanId = vi.fn().mockResolvedValue([]);
   const mockSettleScheduledRunCancelled = vi.fn().mockResolvedValue(true);
@@ -142,6 +146,7 @@ describe('PlanStatusService', () => {
     createMock<PlanRunsService>({
       findById: mockFindById,
       findScheduledByPlanId: mockFindScheduledByPlanId,
+      settleQueuedRunsCancelledByJobIds: mockSettleQueuedRunsCancelledByJobIds,
       settleScheduledRunCancelled: mockSettleScheduledRunCancelled,
       settleScheduledRunsCancelled: mockSettleScheduledRunsCancelled,
       stampCancelRequested: mockStampCancelRequested,
@@ -184,6 +189,7 @@ describe('PlanStatusService', () => {
     mockFindById.mockClear();
     mockFindById.mockResolvedValue({ heartbeatExpected: true });
     mockSettleScheduledRunsCancelled.mockReset().mockResolvedValue(0);
+    mockSettleQueuedRunsCancelledByJobIds.mockReset().mockResolvedValue(0);
     mockFindScheduledByPlanId.mockReset().mockResolvedValue([]);
     mockSettleScheduledRunCancelled.mockReset().mockResolvedValue(true);
     mockGetJob.mockReset().mockResolvedValue(undefined);
@@ -1047,6 +1053,11 @@ describe('PlanStatusService', () => {
 
       expect(remove).toHaveBeenCalledOnce();
       expect(result.removedJobIds).toEqual(['job-99']);
+      // The removed job's QUEUED plan_runs row is settled, keyed on the plans queue + job id.
+      expect(mockSettleQueuedRunsCancelledByJobIds).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        ['job-99'],
+      );
       expect(result.outcome).toBe('RUN_CANCELLED');
       expect(result.planStatusAfter).toBe('PENDING');
       // Routed through the applyStatusChange chokepoint: the row now persists via
@@ -1075,6 +1086,28 @@ describe('PlanStatusService', () => {
           taskId: 'task-queued',
           to: 'PENDING',
         }),
+      );
+    });
+
+    test('settles no queued row when the only job is active and could not be removed', async () => {
+      mockGetJobs.mockResolvedValue([
+        {
+          data: { planId: mockPlan.id },
+          getState: vi.fn().mockResolvedValue('active'),
+          id: 'job-active',
+          name: 'run-plan',
+          remove: vi.fn().mockRejectedValue(new Error('locked')),
+        },
+      ]);
+      repo.findOne.mockResolvedValue({ ...mockPlan, status: 'IN_PROGRESS' });
+
+      const result = await service.cancelRun(mockPlan.id, null, testActor);
+
+      expect(result.activeJobIdsCouldNotCancel).toEqual(['job-active']);
+      // A started job's row is the worker's to settle: nothing removed, nothing settled here.
+      expect(mockSettleQueuedRunsCancelledByJobIds).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        [],
       );
     });
 

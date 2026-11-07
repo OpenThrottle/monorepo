@@ -346,12 +346,41 @@ describe('openthrottle-ralph-graphql', () => {
     const { settleCliPlanRunGraphql } =
       await import('../openthrottle-ralph-graphql.js');
 
-    await settleCliPlanRunGraphql('cli-run-1', 'CANCELLED');
+    await settleCliPlanRunGraphql('cli-run-1', 'CANCELLED', null);
 
     const [document, vars] = executeWorkflowGraphqlV2Mock.mock.calls[0] ?? [];
     expect(document).toBe(SettleCliPlanRunDocument);
     expect(vars).toEqual({
-      input: { planRunId: 'cli-run-1', status: 'CANCELLED' },
+      input: {
+        planRunId: 'cli-run-1',
+        status: 'CANCELLED',
+        usageLimitResetsAt: null,
+        usageLimitType: null,
+      },
+    });
+  });
+
+  it('settleCliPlanRunGraphql sends the reset time and window on a USAGE_LIMITED settle', async () => {
+    executeWorkflowGraphqlV2Mock.mockResolvedValue(
+      ok({ settleCliPlanRun: { id: 'cli-run-1', status: 'USAGE_LIMITED' } }),
+    );
+
+    const { settleCliPlanRunGraphql } =
+      await import('../openthrottle-ralph-graphql.js');
+
+    await settleCliPlanRunGraphql('cli-run-1', 'USAGE_LIMITED', {
+      rateLimitType: 'five_hour',
+      resetsAt: '2026-11-01T17:00:00.000Z',
+    });
+
+    const [, vars] = executeWorkflowGraphqlV2Mock.mock.calls[0] ?? [];
+    expect(vars).toEqual({
+      input: {
+        planRunId: 'cli-run-1',
+        status: 'USAGE_LIMITED',
+        usageLimitResetsAt: '2026-11-01T17:00:00.000Z',
+        usageLimitType: 'five_hour',
+      },
     });
   });
 
