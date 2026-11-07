@@ -88,8 +88,16 @@ const BUNDLES: readonly BundleSpec[] = [
     outFile: '.claude/hooks/skill-usage-outcome.cjs',
   },
   {
+    entry: 'adapters/claude/plan-auto-close.ts',
+    outFile: '.claude/hooks/plan-auto-close.cjs',
+  },
+  {
     entry: 'adapters/claude/plan-run-janitor.ts',
     outFile: '.claude/hooks/plan-run-janitor.cjs',
+  },
+  {
+    entry: 'adapters/claude/plan-run-task-guard.ts',
+    outFile: '.claude/hooks/plan-run-task-guard.cjs',
   },
   {
     entry: 'adapters/claude/require-ot-plan-kickoff.ts',

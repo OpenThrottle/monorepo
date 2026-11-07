@@ -15,6 +15,17 @@
           }
         ],
         "matcher": "Write|Edit|MultiEdit"
+      },
+      {
+        "hooks": [
+          {
+            "command": "./.claude/hooks/plan-auto-close.cjs",
+            "statusMessage": "Report plan auto-close (PostToolUse)",
+            "timeout": 10,
+            "type": "command"
+          }
+        ],
+        "matcher": "mcp__.*__update_task"
       }
     ],
     "PreToolUse": [
@@ -48,6 +59,17 @@
           }
         ],
         "matcher": "Bash"
+      },
+      {
+        "hooks": [
+          {
+            "command": "./.claude/hooks/plan-run-task-guard.cjs",
+            "statusMessage": "Plan-run task guard (PreToolUse)",
+            "timeout": 10,
+            "type": "command"
+          }
+        ],
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit"
       }
     ],
     "Stop": [

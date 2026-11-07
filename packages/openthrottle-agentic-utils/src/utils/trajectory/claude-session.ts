@@ -595,6 +595,29 @@ function runIdOf(content: string): string | undefined {
 }
 
 /**
+ * @description One `tool_use` block of a transcript line: its id, tool name and input. Same
+ * reading `findClaudeSessionTaskSegments` does, exported so a caller that only needs the tool
+ * calls (a hook scanning a transcript tail) does not fork the parsing.
+ * @public
+ */
+export interface ClaudeSessionToolUse {
+  readonly id: string;
+  readonly input: Readonly<Record<string, unknown>>;
+  readonly name: string;
+}
+
+/**
+ * @description The `tool_use` blocks on one main-thread transcript line (none for a sidechain
+ * line, a non-assistant line or anything unparseable).
+ * @public
+ */
+export const claudeSessionToolUsesOf = (
+  event: unknown,
+): readonly ClaudeSessionToolUse[] => {
+  return isMainLine(event) ? toolUsesOf(event) : [];
+};
+
+/**
  * @description The ids of subagents spawned in these events (`Agent` results record
  * `toolUseResult.agentId`), in order; their transcripts are `subagents/agent-<id>.jsonl`.
  * @public
