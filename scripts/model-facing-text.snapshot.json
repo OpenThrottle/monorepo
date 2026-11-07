@@ -75,7 +75,7 @@
     "mcp.tool/settle_plan_run": 1345,
     "mcp.tool/update_blog_post": 1627,
     "mcp.tool/update_note": 392,
-    "mcp.tool/update_plan": 1372,
+    "mcp.tool/update_plan": 1513,
     "mcp.tool/update_skill_availability_rule": 907,
     "mcp.tool/update_task": 1075,
     "mcp.tool/upsert_skill_availability_rule_set": 515,
@@ -153,7 +153,7 @@
     "mcp.toolDescription/settle_plan_run": 714,
     "mcp.toolDescription/update_blog_post": 752,
     "mcp.toolDescription/update_note": 57,
-    "mcp.toolDescription/update_plan": 685,
+    "mcp.toolDescription/update_plan": 826,
     "mcp.toolDescription/update_skill_availability_rule": 184,
     "mcp.toolDescription/update_task": 361,
     "mcp.toolDescription/upsert_skill_availability_rule_set": 164,
@@ -170,13 +170,13 @@
     "prompt/Job_Security.md": 9518,
     "prompt/Job_TestHealth.md": 8156,
     "prompt/Job_WorkInFlight.md": 9928,
-    "skill/agents-ralph": 13691,
+    "skill/agents-ralph": 13950,
     "skill/github-commit": 2741,
     "skill/github-pull-request": 14035,
     "skill/github-squash": 8609,
     "skill/ot-folders": 21335,
     "skill/ot-generators": 10250,
-    "skill/ot-loop": 31302,
+    "skill/ot-loop": 31546,
     "skill/ot-onboarding": 24976,
     "skill/ot-plans": 8938,
     "skill/ot-postgres": 6910,
@@ -201,14 +201,14 @@
     "mcpToolset/admin": 14222,
     "mcpToolset/agents": 3368,
     "mcpToolset/blog": 7221,
-    "mcpToolset/core": 33817,
-    "mcpToolsFull": 58628
+    "mcpToolset/core": 33958,
+    "mcpToolsFull": 58769
   },
   "totals": {
-    "alwaysInjected": 40698,
+    "alwaysInjected": 40839,
     "mcpInstructions": 2125,
-    "mcpTools": 33817,
+    "mcpTools": 33958,
     "prompts": 119941,
-    "skills": 181411
+    "skills": 181914
   }
 }
