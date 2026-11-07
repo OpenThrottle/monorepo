@@ -38,6 +38,12 @@ export interface TrajectoryToolCallView {
 
 /** One step, with its tool calls paired to their results. */
 export interface TrajectoryStepView {
+  /**
+   * Subagents a hand-back (or other system turn) names via
+   * `subagent_trajectory_ref` / `extra.openthrottle.subagent_trajectory_id`,
+   * resolved against the root document's embedded trajectories.
+   */
+  readonly linkedSubagents: readonly AtifTrajectory[];
   readonly step: AtifStep;
   readonly toolCalls: readonly TrajectoryToolCallView[];
   /** Results with no `source_call_id`, or one naming a call this step does not hold. */

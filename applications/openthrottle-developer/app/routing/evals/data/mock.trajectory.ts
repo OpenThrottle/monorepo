@@ -2,8 +2,10 @@
  * @description Trajectory fixtures for the evals specs and the route harness.
  * One document exercises every rendering branch the viewer has: a long user
  * prompt, reasoning, a successful call, an error call, a call rebuilt from its
- * result, an Agent call whose result names its subagent, a result that names
- * no call, a subagent nothing mentions, and run-level errors.
+ * result, an Agent call whose result names its subagent, a system hand-back
+ * that links that subagent, a background-task system notice, a result that
+ * names no call, a subagent nothing mentions, and run-level errors. Steps cover
+ * all three ATIF sources (user, agent, system).
  */
 import type {
   AgentTrajectoryLabelRowFragment,
@@ -63,7 +65,7 @@ export const MOCK_TRAJECTORY: AtifTrajectory = {
     total_completion_tokens: 1_250,
     total_cost_usd: 0.4213,
     total_prompt_tokens: 12_400,
-    total_steps: 4,
+    total_steps: 6,
   },
   schema_version: 'ATIF-v1.8',
   steps: [
@@ -124,7 +126,32 @@ export const MOCK_TRAJECTORY: AtifTrajectory = {
         },
       ],
     },
-    { message: 'Done.', source: 'agent', step_id: 4 },
+    {
+      extra: {
+        openthrottle: {
+          kind: 'subagent_hand_back',
+          subagent_trajectory_id: MOCK_SUBAGENT_ID,
+        },
+      },
+      message: `Subagent hand-back (${MOCK_SUBAGENT_ID})`,
+      observation: {
+        results: [
+          {
+            content: 'Found 112 route modules.',
+            subagent_trajectory_ref: { trajectory_id: MOCK_SUBAGENT_ID },
+          },
+        ],
+      },
+      source: 'system',
+      step_id: 4,
+    },
+    {
+      extra: { openthrottle: { kind: 'task_notification' } },
+      message: `Background command "Validate touched projects" completed (exit code 0) (completed)`,
+      source: 'system',
+      step_id: 5,
+    },
+    { message: 'Done.', source: 'agent', step_id: 6 },
   ],
   subagent_trajectories: [MOCK_SUBAGENT, MOCK_ORPHAN_SUBAGENT],
 };

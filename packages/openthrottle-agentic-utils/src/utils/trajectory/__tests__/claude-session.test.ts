@@ -274,9 +274,19 @@ describe('buildClaudeSessionTrajectory', () => {
 
   it('embeds the subagent with its own trajectory id', () => {
     const [embedded] = trajectory?.subagent_trajectories ?? [];
+    const toolNames =
+      embedded?.steps.flatMap((step) => {
+        return (step.tool_calls ?? []).map((call) => {
+          return call.function_name;
+        });
+      }) ?? [];
 
     expect(embedded?.trajectory_id).toBe('abc123');
-    expect(embedded?.steps[0]?.tool_calls?.[0]?.function_name).toBe('Read');
+    expect(toolNames).toContain('Read');
+    expect(embedded?.steps[0]).toMatchObject({
+      message: 'look',
+      source: 'user',
+    });
   });
 
   it('carries the run facts', () => {
@@ -311,6 +321,116 @@ describe('buildClaudeSessionTrajectory', () => {
           taskId: 'task-1',
         }),
       ).toBeUndefined();
+    });
+  });
+
+  describe('non-agent turns', () => {
+    const nonAgentEvents = eventsOf('non-agent-turns.synthetic.jsonl');
+    const nonAgentRecord = buildClaudeSessionTrajectory({
+      agentVersion: '2.1.317',
+      openthrottle: { planRunId: 'run-na', taskId: 'task-na' },
+      segmentEvents: nonAgentEvents,
+      subagents: [{ agentId: 'sub-xyz', events: subagent }],
+      taskId: 'task-na',
+    });
+    const nonAgentSteps = nonAgentRecord?.trajectory.steps ?? [];
+    const sources = nonAgentSteps.map((step) => {
+      return step.source;
+    });
+
+    it('keeps user, system and agent steps in transcript order', () => {
+      expect(sources).toEqual([
+        'agent',
+        'user',
+        'agent',
+        'system',
+        'system',
+        'system',
+        'agent',
+      ]);
+    });
+
+    it('records the user turn with its timestamp', () => {
+      const userStep = nonAgentSteps.find((step) => {
+        return step.source === 'user';
+      });
+
+      expect(userStep?.timestamp).toBe('2026-11-06T17:00:02.000Z');
+      expect(userStep?.message).toContain('Please continue');
+    });
+
+    it('redacts secrets in user turns', () => {
+      const userStep = nonAgentSteps.find((step) => {
+        return step.source === 'user';
+      });
+
+      expect(userStep?.message).toContain('[REDACTED]');
+      expect(userStep?.message).not.toContain('sk-abcdefghijklmnopqrstuvwxyz');
+      expect(userStep?.message).not.toContain(
+        'Bearer super-secret-token-value',
+      );
+    });
+
+    it('links a hand-back step to the subagent trajectory id', () => {
+      const handBack = nonAgentSteps.find((step) => {
+        const extra = step.extra?.openthrottle;
+
+        return (
+          step.source === 'system' &&
+          typeof extra === 'object' &&
+          extra !== null &&
+          'kind' in extra &&
+          extra.kind === 'subagent_hand_back'
+        );
+      });
+
+      expect(handBack?.timestamp).toBe('2026-11-06T17:00:05.000Z');
+      expect(
+        handBack?.observation?.results[0]?.subagent_trajectory_ref,
+      ).toEqual({
+        trajectory_id: 'sub-xyz',
+      });
+      expect(handBack?.extra?.openthrottle).toMatchObject({
+        kind: 'subagent_hand_back',
+        subagent_trajectory_id: 'sub-xyz',
+      });
+    });
+
+    it('records background task completion as a system step', () => {
+      const notification = nonAgentSteps.find((step) => {
+        const extra = step.extra?.openthrottle;
+
+        return (
+          step.source === 'system' &&
+          typeof extra === 'object' &&
+          extra !== null &&
+          'kind' in extra &&
+          extra.kind === 'task_notification'
+        );
+      });
+
+      expect(notification?.timestamp).toBe('2026-11-06T17:00:06.000Z');
+      expect(notification?.message).toContain('Validate touched projects');
+      expect(notification?.message).toContain('completed');
+    });
+
+    it('summarizes system reminders instead of emitting them raw', () => {
+      const reminder = nonAgentSteps.find((step) => {
+        const extra = step.extra?.openthrottle;
+
+        return (
+          step.source === 'system' &&
+          typeof extra === 'object' &&
+          extra !== null &&
+          'kind' in extra &&
+          extra.kind === 'system_reminder'
+        );
+      });
+
+      expect(reminder?.message).toMatch(
+        /System reminder: tools-used-before-summary/i,
+      );
+      expect(reminder?.message).not.toContain('<system-reminder>');
     });
   });
 });

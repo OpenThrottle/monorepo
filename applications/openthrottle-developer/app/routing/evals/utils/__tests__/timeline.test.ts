@@ -21,7 +21,18 @@ describe('buildTrajectoryTimeline', () => {
       steps.map((view) => {
         return view.step.step_id;
       }),
-    ).toEqual([1, 2, 3, 4]);
+    ).toEqual([1, 2, 3, 4, 5, 6]);
+  });
+
+  test('links a hand-back step to its embedded subagent', () => {
+    const handBack = buildTrajectoryTimeline(MOCK_TRAJECTORY).steps[3];
+
+    expect(handBack?.step.source).toBe('system');
+    expect(
+      handBack?.linkedSubagents.map((subagent) => {
+        return subagent.trajectory_id;
+      }),
+    ).toEqual([MOCK_SUBAGENT_ID]);
   });
 
   test('pairs each call with the result whose source_call_id matches', () => {

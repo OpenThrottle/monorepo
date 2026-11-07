@@ -67,6 +67,11 @@ export const TrajectorySubagent = (
         className,
       )}
       data-testid="TrajectorySubagent"
+      id={
+        subagent.trajectory_id === undefined
+          ? undefined
+          : `trajectory-subagent-${subagent.trajectory_id}`
+      }
       onOpenChange={setOpen}
       open={open}
     >

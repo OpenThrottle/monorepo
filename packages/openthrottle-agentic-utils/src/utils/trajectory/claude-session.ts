@@ -16,12 +16,13 @@
 
 import { isRecord } from '@openthrottle/nodejs-utils';
 
-import type { AtifTrajectory } from '../../types/atif.ts';
+import type { AtifStep, AtifTrajectory } from '../../types/atif.ts';
 import type { ConversationStreamChunk } from '../conversation-backend/types.ts';
 import { CONVERSATION_STREAM_CHUNK_KINDS } from '../conversation-backend/types.ts';
 import { createStructuredChunkReader } from '../structured-output/chunk-reader.ts';
 import { capTrajectory } from './cap-trajectory.ts';
 import { chunksToAtif } from './chunks-to-atif.ts';
+import { redactSecrets } from './redact-secrets.ts';
 import { TRAJECTORY_TRANSPORT_BYTES } from './trajectory-record.ts';
 
 /** OpenThrottle MCP tool names end with these, whatever the server alias (`mcp__<alias>__<tool>`). */
@@ -808,22 +809,407 @@ export interface ClaudeSessionTrajectoryRecord {
   readonly truncated: boolean;
 }
 
+/** Most characters kept from a hand-back report body in the system step. */
+const HAND_BACK_EXCERPT_CHARS = 480;
+
+const AGENT_MESSAGE_FROM = /<agent-message\s+from="([A-Za-z0-9_-]+)"/i;
+const TASK_NOTIFICATION_SUMMARY = /<summary>([\s\S]*?)<\/summary>/i;
+const TASK_NOTIFICATION_STATUS = /<status>([\s\S]*?)<\/status>/i;
+const SYSTEM_REMINDER_INNER = /<system-reminder>([\s\S]*?)<\/system-reminder>/i;
+
+/** Plain text on a `user` line: a string content, or joined `text` blocks. */
+const userTurnText = (event: Record<string, unknown>): string | undefined => {
+  const message = isRecord(event.message) ? event.message : undefined;
+  const content = message?.content;
+
+  if (typeof content === 'string') {
+    return content;
+  }
+
+  if (!Array.isArray(content)) {
+    return undefined;
+  }
+
+  const texts = content.flatMap((block: unknown): string[] => {
+    if (typeof block === 'string' && block !== '') {
+      return [block];
+    }
+
+    if (isRecord(block) && block.type === 'text') {
+      const text = stringOf(block.text);
+
+      return text === undefined ? [] : [text];
+    }
+
+    return [];
+  });
+
+  if (texts.length === 0) {
+    return undefined;
+  }
+
+  return texts.join('\n');
+};
+
+/** True when every content block is a tool_result (agent observation, not a turn). */
+const isToolResultOnlyUser = (event: Record<string, unknown>): boolean => {
+  const message = isRecord(event.message) ? event.message : undefined;
+  const content = message?.content;
+
+  if (!Array.isArray(content) || content.length === 0) {
+    return false;
+  }
+
+  return content.every((block: unknown) => {
+    return isRecord(block) && block.type === 'tool_result';
+  });
+};
+
+const timestampOf = (event: Record<string, unknown>): string | undefined => {
+  return stringOf(event.timestamp);
+};
+
+const withStepId = (
+  step: Omit<AtifStep, 'step_id'>,
+  stepId: number,
+): AtifStep => {
+  return { ...step, step_id: stepId };
+};
+
+const redactStepText = (value: string): string => {
+  return redactSecrets(value);
+};
+
+const handBackExcerpt = (text: string): string => {
+  const reportStart = text.indexOf('The report follows:');
+
+  if (reportStart === -1) {
+    return '';
+  }
+
+  const reportBody = text
+    .slice(reportStart + 'The report follows:'.length)
+    .trim();
+
+  if (reportBody === '') {
+    return '';
+  }
+
+  if (reportBody.length <= HAND_BACK_EXCERPT_CHARS) {
+    return reportBody;
+  }
+
+  return `${reportBody.slice(0, HAND_BACK_EXCERPT_CHARS)}…`;
+};
+
+const handBackStep = (
+  text: string,
+  timestamp: string | undefined,
+): Omit<AtifStep, 'step_id'> => {
+  const agentId = AGENT_MESSAGE_FROM.exec(text)?.[1];
+  const excerpt = handBackExcerpt(text);
+  const hasAgentId = agentId !== undefined;
+  const message = hasAgentId
+    ? `Subagent hand-back (${agentId})`
+    : 'Subagent hand-back';
+
+  return {
+    extra: {
+      openthrottle: {
+        kind: 'subagent_hand_back',
+        ...(hasAgentId ? { subagent_trajectory_id: agentId } : {}),
+      },
+    },
+    message: redactStepText(message),
+    observation: {
+      results: [
+        {
+          content: redactStepText(excerpt),
+          ...(hasAgentId
+            ? { subagent_trajectory_ref: { trajectory_id: agentId } }
+            : {}),
+        },
+      ],
+    },
+    source: 'system',
+    ...(timestamp === undefined ? {} : { timestamp }),
+  };
+};
+
+const taskNotificationMessage = (text: string): string => {
+  const summary = TASK_NOTIFICATION_SUMMARY.exec(text)?.[1]?.trim();
+  const status = TASK_NOTIFICATION_STATUS.exec(text)?.[1]?.trim();
+
+  if (summary === undefined) {
+    return 'Background task notification';
+  }
+
+  if (status === undefined) {
+    return summary;
+  }
+
+  return `${summary} (${status})`;
+};
+
+const taskNotificationStep = (
+  text: string,
+  timestamp: string | undefined,
+): Omit<AtifStep, 'step_id'> => {
+  return {
+    extra: { openthrottle: { kind: 'task_notification' } },
+    message: redactStepText(taskNotificationMessage(text)),
+    source: 'system',
+    ...(timestamp === undefined ? {} : { timestamp }),
+  };
+};
+
+const systemReminderTagBody = (
+  inner: string,
+  tagName: string,
+): string | undefined => {
+  return new RegExp(`<${tagName}>([\\s\\S]*?)</${tagName}>`, 'i')
+    .exec(inner)?.[1]
+    ?.trim();
+};
+
+const systemReminderMessage = (text: string): string => {
+  const inner = SYSTEM_REMINDER_INNER.exec(text)?.[1]?.trim() ?? text.trim();
+  const tagName = /<([a-zA-Z][\w-]*)>/.exec(inner)?.[1];
+
+  if (tagName === undefined) {
+    return 'System reminder';
+  }
+
+  const tagBody = systemReminderTagBody(inner, tagName);
+
+  if (tagBody === undefined || tagBody === '') {
+    return `System reminder: ${tagName}`;
+  }
+
+  return `System reminder: ${tagName} (${tagBody})`;
+};
+
+const systemReminderStep = (
+  text: string,
+  timestamp: string | undefined,
+): Omit<AtifStep, 'step_id'> => {
+  return {
+    extra: { openthrottle: { kind: 'system_reminder' } },
+    message: redactStepText(systemReminderMessage(text)),
+    source: 'system',
+    ...(timestamp === undefined ? {} : { timestamp }),
+  };
+};
+
+const harnessTurnStep = (
+  text: string,
+  timestamp: string | undefined,
+  isMeta: boolean,
+): Omit<AtifStep, 'step_id'> => {
+  if (/\[Subagent hand-back\]/i.test(text) || AGENT_MESSAGE_FROM.test(text)) {
+    return handBackStep(text, timestamp);
+  }
+
+  if (/<task-notification>/i.test(text)) {
+    return taskNotificationStep(text, timestamp);
+  }
+
+  if (/<system-reminder>/i.test(text)) {
+    return systemReminderStep(text, timestamp);
+  }
+
+  if (isMeta) {
+    const trimmed = text.trim();
+    const isShort = trimmed.length <= 240;
+    const summary = isShort ? trimmed : `${trimmed.slice(0, 240)}…`;
+
+    return {
+      extra: { openthrottle: { kind: 'harness_message' } },
+      message: redactStepText(summary),
+      source: 'system',
+      ...(timestamp === undefined ? {} : { timestamp }),
+    };
+  }
+
+  return {
+    message: redactStepText(text),
+    source: 'user',
+    ...(timestamp === undefined ? {} : { timestamp }),
+  };
+};
+
+const redactAgentSteps = (steps: readonly AtifStep[]): readonly AtifStep[] => {
+  return steps.map((step) => {
+    let observation: AtifStep['observation'];
+
+    if (step.observation !== undefined) {
+      observation = {
+        results: step.observation.results.map((result) => {
+          return {
+            ...result,
+            content: redactStepText(result.content),
+          };
+        }),
+      };
+    }
+
+    let next: AtifStep = {
+      ...step,
+      message: redactStepText(step.message),
+    };
+
+    if (observation !== undefined) {
+      next = { ...next, observation };
+    }
+
+    if (step.reasoning_content !== undefined) {
+      next = {
+        ...next,
+        reasoning_content: redactStepText(step.reasoning_content),
+      };
+    }
+
+    return next;
+  });
+};
+
+/**
+ * Walks session events in order and emits ATIF steps: agent work via the chunk
+ * mapper, plus user / system turns (hand-backs, task notifications, reminders).
+ * Metrics come from one full pass over the agent-mapped chunks so flushes do not
+ * drop usage.
+ */
+const stepsFromSessionEvents = (
+  events: readonly unknown[],
+  agentVersion: string,
+  model: string | undefined,
+  openthrottle: Readonly<Record<string, unknown>>,
+): AtifTrajectory | undefined => {
+  const steps: AtifStep[] = [];
+  const agentBuffer: unknown[] = [];
+
+  const flushAgent = (): void => {
+    if (agentBuffer.length === 0) {
+      return;
+    }
+
+    const buffered = agentBuffer.splice(0, agentBuffer.length);
+    const chunks = claudeSessionEventsToChunks(buffered);
+
+    if (chunks.length === 0) {
+      return;
+    }
+
+    const partial = chunksToAtif({
+      agentName: 'claude',
+      agentVersion,
+      chunks,
+      driverId: 'claude',
+      modelName: model,
+      openthrottle,
+      prompt: undefined,
+      reportsToolCalls: true,
+    });
+
+    for (const step of redactAgentSteps(partial.steps)) {
+      steps.push({ ...step, step_id: steps.length + 1 });
+    }
+  };
+
+  for (const event of events) {
+    if (!isRecord(event)) {
+      continue;
+    }
+
+    if (event.type === 'assistant') {
+      agentBuffer.push(event);
+      continue;
+    }
+
+    if (event.type !== 'user') {
+      continue;
+    }
+
+    if (isToolResultOnlyUser(event)) {
+      agentBuffer.push(event);
+      continue;
+    }
+
+    const text = userTurnText(event);
+
+    if (text === undefined) {
+      continue;
+    }
+
+    flushAgent();
+    steps.push(
+      withStepId(
+        harnessTurnStep(text, timestampOf(event), event.isMeta === true),
+        steps.length + 1,
+      ),
+    );
+  }
+
+  flushAgent();
+
+  if (steps.length === 0) {
+    return undefined;
+  }
+
+  const shell = chunksToAtif({
+    agentName: 'claude',
+    agentVersion,
+    chunks: claudeSessionEventsToChunks(events),
+    driverId: 'claude',
+    modelName: model,
+    openthrottle,
+    prompt: undefined,
+    reportsToolCalls: true,
+  });
+
+  return {
+    ...shell,
+    final_metrics: {
+      ...shell.final_metrics,
+      total_steps: steps.length,
+    },
+    steps,
+  };
+};
+
 const subagentTrajectory = (
   subagent: ClaudeSessionSubagent,
   agentVersion: string,
 ): { readonly trajectory: AtifTrajectory; readonly truncated: boolean } => {
-  const trajectory = chunksToAtif({
-    agentName: 'claude',
+  const model = modelOf(subagent.events);
+  const built = stepsFromSessionEvents(
+    subagent.events.filter(isRecord),
     agentVersion,
-    chunks: claudeSessionEventsToChunks(subagent.events.filter(isRecord)),
-    driverId: 'claude',
-    modelName: modelOf(subagent.events),
-    openthrottle: { agentId: subagent.agentId },
-    prompt: undefined,
-    reportsToolCalls: true,
-  });
+    model,
+    { agentId: subagent.agentId },
+  );
+
+  if (built === undefined) {
+    const empty = chunksToAtif({
+      agentName: 'claude',
+      agentVersion,
+      chunks: [],
+      driverId: 'claude',
+      modelName: model,
+      openthrottle: { agentId: subagent.agentId },
+      prompt: undefined,
+      reportsToolCalls: true,
+    });
+    const capped = capTrajectory(
+      { ...empty, trajectory_id: subagent.agentId },
+      { observationBytes: 16 * 1024, totalBytes: SUBAGENT_TRANSPORT_BYTES },
+    );
+
+    return { trajectory: capped.trajectory, truncated: capped.truncated };
+  }
+
   const capped = capTrajectory(
-    { ...trajectory, trajectory_id: subagent.agentId },
+    { ...built, trajectory_id: subagent.agentId },
     { observationBytes: 16 * 1024, totalBytes: SUBAGENT_TRANSPORT_BYTES },
   );
 
@@ -832,30 +1218,24 @@ const subagentTrajectory = (
 
 /**
  * @description Builds one task segment's trajectory, subagents embedded, capped to the transport
- * limit. Returns `undefined` when the segment produced no chunks at all.
+ * limit. Returns `undefined` when the segment produced no steps at all.
  * @public
  */
 export const buildClaudeSessionTrajectory = (
   input: BuildClaudeSessionTrajectoryInput,
 ): ClaudeSessionTrajectoryRecord | undefined => {
   const mainEvents = input.segmentEvents.filter(isMainLine);
-  const chunks = claudeSessionEventsToChunks(mainEvents);
+  const model = modelOf(mainEvents);
+  const main = stepsFromSessionEvents(
+    mainEvents,
+    input.agentVersion,
+    model,
+    input.openthrottle,
+  );
 
-  if (chunks.length === 0) {
+  if (main === undefined) {
     return undefined;
   }
-
-  const model = modelOf(mainEvents);
-  const main = chunksToAtif({
-    agentName: 'claude',
-    agentVersion: input.agentVersion,
-    chunks,
-    driverId: 'claude',
-    modelName: model,
-    openthrottle: input.openthrottle,
-    prompt: undefined,
-    reportsToolCalls: true,
-  });
   const subagents = input.subagents.map((subagent) => {
     return subagentTrajectory(subagent, input.agentVersion);
   });

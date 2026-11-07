@@ -10,6 +10,7 @@ import { BrainIcon, ChevronRightIcon } from 'lucide-react';
 import * as React from 'react';
 
 import { TrajectoryClampedText } from '~/routing/evals/components/TrajectoryClampedText';
+import { TrajectorySubagent } from '~/routing/evals/components/TrajectorySubagent';
 import { TrajectoryToolCall } from '~/routing/evals/components/TrajectoryToolCall';
 import {
   TRAJECTORY_CLAMP_LINES,
@@ -28,22 +29,25 @@ export interface TrajectoryStepProps {
 }
 
 /**
- * @description One ATIF step: who spoke, the message (a user prompt collapses
- * past a few lines), the agent's reasoning collapsed by default, and each tool
- * call with its result underneath. `content-visibility: auto` lets the browser
- * skip layout and paint for steps scrolled out of view.
+ * @description One ATIF step: who spoke (agent / user / system, labelled and
+ * muted for non-agent turns), the message (a user prompt collapses past a few
+ * lines), the agent's reasoning collapsed by default, each tool call with its
+ * result underneath, and any subagent a hand-back names so it can be expanded
+ * at the turn it arrived. `content-visibility: auto` lets the browser skip
+ * layout and paint for steps scrolled out of view.
  */
 export const TrajectoryStep = (
   props: TrajectoryStepProps,
 ): React.ReactElement => {
   const { className, view } = props;
-  const { step, toolCalls, unmatchedResults } = view;
+  const { linkedSubagents, step, toolCalls, unmatchedResults } = view;
 
   // Hooks
   const [reasoningOpen, setReasoningOpen] = React.useState(false);
 
   // Setup
   const copy = TRAJECTORY_TIMELINE_COPY;
+  const isAgent = step.source === 'agent';
   const isUser = step.source === 'user';
   const maxLines = isUser
     ? TRAJECTORY_PROMPT_CLAMP_LINES
@@ -51,6 +55,7 @@ export const TrajectoryStep = (
   const reasoning = step.reasoning_content ?? '';
   const hasMessage = step.message.trim() !== '';
   const hasCalls = toolCalls.length > 0;
+  const sourceLabel = STEP_SOURCE_LABEL[step.source];
 
   // Handlers
 
@@ -115,6 +120,19 @@ export const TrajectoryStep = (
       })}
     </div>
   );
+  const linked = (
+    <div className="flex flex-col gap-2">
+      <p className="text-muted-foreground text-xs">{copy.handBackSubagent}</p>
+      {linkedSubagents.map((subagent, index) => {
+        return (
+          <TrajectorySubagent
+            key={subagent.trajectory_id ?? `linked-subagent-${index}`}
+            subagent={subagent}
+          />
+        );
+      })}
+    </div>
+  );
 
   // Life Cycle
 
@@ -124,6 +142,7 @@ export const TrajectoryStep = (
     <li
       className={cn(
         'flex flex-col gap-2 border-b py-4 [contain-intrinsic-size:auto_160px] [content-visibility:auto] last:border-b-0',
+        !isAgent && 'bg-muted/40 text-muted-foreground -mx-2 rounded-md px-2',
         className,
       )}
       data-source={step.source}
@@ -133,8 +152,13 @@ export const TrajectoryStep = (
         <span className="text-muted-foreground font-mono tabular-nums">
           {`${copy.step} ${step.step_id}`}
         </span>
-        <Badge color={STEP_SOURCE_BADGE_COLOR[step.source]} size="xs">
-          {STEP_SOURCE_LABEL[step.source]}
+        <Badge
+          aria-label={sourceLabel}
+          color={STEP_SOURCE_BADGE_COLOR[step.source]}
+          data-testid="TrajectoryStepSource"
+          size="xs"
+        >
+          {sourceLabel}
         </Badge>
         {step.model_name ? model : null}
       </div>
@@ -144,6 +168,7 @@ export const TrajectoryStep = (
       {reasoning.trim() === '' ? null : reasoningBlock}
       {hasCalls ? calls : null}
       {unmatchedResults.length > 0 ? unmatched : null}
+      {linkedSubagents.length > 0 ? linked : null}
     </li>
   );
 };
