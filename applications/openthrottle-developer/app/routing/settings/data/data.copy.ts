@@ -177,6 +177,18 @@ export const SETTINGS_AGENTS_COPY = {
   modelsPopoverTitle: `Models`,
   notInstalledBadge: `Not installed`,
   permissionReason: `Requires the settings:write permission.`,
+  setupLogCloseButton: `Close`,
+  setupLogCopiedToast: `Log copied to clipboard`,
+  setupLogCopyButton: `Copy log`,
+  setupLogCopyFailedToast: `Could not copy the log`,
+  setupLogDescription: `Output from the installer running on the server host. Closing this does not stop the run.`,
+  setupLogEmpty: `Waiting for output…`,
+  setupLogExitCodeLabel: `exit code`,
+  setupLogFailed: `Failed`,
+  setupLogRunning: `Running…`,
+  setupLogSucceeded: `Finished successfully`,
+  setupLogTitleInstallPrefix: `Installing`,
+  setupLogTitleUpdatePrefix: `Updating`,
   toggleDisabledReason: `Requires the settings:write permission.`,
 } as const;
 
