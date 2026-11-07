@@ -8,6 +8,7 @@ import { ChevronDown, Wrench } from 'lucide-react';
 import * as React from 'react';
 
 import { STATUS_CONFIG } from '../data/data.chat-tool-call-status-config';
+import { CHAT_TOOL_CALL_COPY } from '../data/data.copy';
 import type { ChatTurnToolEvent } from '../types';
 import { ChatToolStatus } from '../types';
 import { formatJsonPayload } from '../utils/index';
@@ -99,6 +100,14 @@ export const ChatToolCall = (props: ChatToolCallProps): React.ReactElement => {
         {result !== null && <ToolPayload content={result} label="Result" />}
         {hasNoPayload && (
           <p className="text-muted-foreground text-xs italic">{emptyLabel}</p>
+        )}
+        {event.payloadTruncated === true && (
+          <p
+            className="text-muted-foreground text-xs italic"
+            data-testid="ChatToolCall-truncated"
+          >
+            {CHAT_TOOL_CALL_COPY.payloadTruncated}
+          </p>
         )}
       </CollapsibleContent>
     </Collapsible>

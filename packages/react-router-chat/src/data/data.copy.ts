@@ -13,3 +13,8 @@ export const CHAT_PERSIST_HINT_COPY = {
   private: 'Private — this conversation is not saved',
   saved: 'Saving — this conversation is stored in your history',
 } as const;
+
+/** Copy for {@link ChatToolCall}. */
+export const CHAT_TOOL_CALL_COPY = {
+  payloadTruncated: 'Output truncated when saved',
+} as const;

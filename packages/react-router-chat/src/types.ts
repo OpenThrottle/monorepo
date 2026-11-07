@@ -67,6 +67,12 @@ export interface ChatTurnToolEvent {
   readonly kind: 'tool';
   /** Best-effort tool name (e.g. `read`, `edit`); `tool` when unknown. */
   readonly name: string;
+  /**
+   * True when the server clipped this call's arguments or result to fit the
+   * persisted tool_metadata cap, so the card shows a prefix, not the whole
+   * payload. Absent on live turns and on anything saved whole.
+   */
+  readonly payloadTruncated?: true;
   /** Raw tool result payload as JSON (from the tool_result), when present. */
   readonly resultJson: string | null;
   readonly sortOrder: number;
