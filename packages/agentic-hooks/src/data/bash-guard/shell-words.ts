@@ -14,7 +14,12 @@
  */
 import path from 'node:path';
 
-import type { BashSegment, ParsedBashCommand } from './types.ts';
+import type {
+  BashOperator,
+  BashSegment,
+  LexedShellSegment,
+  ParsedBashCommand,
+} from './types.ts';
 
 const isBlank = (char: string): boolean => {
   return char === ' ' || char === '\t';
@@ -73,16 +78,21 @@ const readRedirection = (
 };
 
 /**
- * Split `command` into simple commands, each a list of words. Redirections and
- * their targets are dropped, and heredoc bodies are skipped, so neither can be
- * mistaken for an argument or a command.
+ * Split `command` into simple commands, each a list of words plus the control
+ * operator that joins it to the previous one. Redirections and their targets
+ * are dropped, and heredoc bodies are skipped, so neither can be mistaken for
+ * an argument or a command.
+ *
+ * `precededBy` ignores subshell parentheses, so in `(a) | b` the `b` segment is
+ * preceded by `|`, and in `a && (b)` by `&&`. A newline reads as `;`.
  *
  * @public
  */
-export const splitShellSegments = (
+export const lexShellSegments = (
   command: string,
-): readonly (readonly string[])[] => {
-  const segments: string[][] = [];
+): readonly LexedShellSegment[] => {
+  const segments: LexedShellSegment[] = [];
+  let precededBy: BashOperator | null = null;
   const heredocs: Heredoc[] = [];
   let words: string[] = [];
   let word: string | null = null;
@@ -104,7 +114,10 @@ export const splitShellSegments = (
   };
   const endSegment = (): void => {
     endWord();
-    if (words.length > 0) segments.push(words);
+    if (words.length > 0) {
+      segments.push({ precededBy, words });
+      precededBy = null;
+    }
     words = [];
     dropNextWord = false;
     pendingHeredoc = null;
@@ -157,11 +170,15 @@ export const splitShellSegments = (
       continue;
     } else if (char === '\n') {
       endSegment();
+      precededBy = ';';
       if (heredocs.length > 0) {
         index = skipHeredocBodies(command, index, heredocs);
         heredocs.length = 0;
       }
-    } else if (char === ';' || char === '(' || char === ')') {
+    } else if (char === ';') {
+      endSegment();
+      precededBy = ';';
+    } else if (char === '(' || char === ')') {
       endSegment();
     } else if (isRedirection) {
       // A word of only digits right before the operator is its fd, not an argument.
@@ -184,9 +201,13 @@ export const splitShellSegments = (
       continue;
     } else if (char === '|') {
       endSegment();
+      if (next === '|') precededBy = '||';
+      else if (next === '&') precededBy = '|&';
+      else precededBy = '|';
       if (next === '|' || next === '&') index += 1;
     } else if (char === '&') {
       endSegment();
+      precededBy = next === '&' ? '&&' : '&';
       if (next === '&') index += 1;
     } else {
       append(char);
@@ -196,6 +217,18 @@ export const splitShellSegments = (
   endSegment();
 
   return segments;
+};
+
+/**
+ * Split `command` into simple commands, each a list of words — the operators
+ * dropped. See {@link lexShellSegments}.
+ *
+ * @public
+ */
+export const splitShellSegments = (
+  command: string,
+): readonly (readonly string[])[] => {
+  return lexShellSegments(command).map((segment) => segment.words);
 };
 
 /** Words a parser can see past to the command they introduce. */
@@ -253,8 +286,8 @@ export const parseBashCommand = (
 ): ParsedBashCommand => {
   let current: string | null = cwd;
   const segments: BashSegment[] = [];
-  for (const words of splitShellSegments(command)) {
-    segments.push({ cwd: current, words });
+  for (const { precededBy, words } of lexShellSegments(command)) {
+    segments.push({ cwd: current, precededBy, words });
     const { words: bare } = stripCommandPrefixes(words);
     if (bare[0] !== 'cd') continue;
     const from: string | null = current;

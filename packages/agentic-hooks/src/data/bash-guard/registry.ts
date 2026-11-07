@@ -10,6 +10,10 @@
  * @public
  */
 import { logHookError } from '../../utils/logging.ts';
+import {
+  maskedExitPipelineRule,
+  maskedExitTrailingRule,
+} from './masked-exit.ts';
 import { parseBashCommand } from './shell-words.ts';
 import { stalePrWriteRule } from './stale-pr-write.ts';
 import type {
@@ -21,7 +25,11 @@ import type {
 } from './types.ts';
 
 /** @public */
-export const BASH_GUARD_RULES: readonly BashGuardRule[] = [stalePrWriteRule];
+export const BASH_GUARD_RULES: readonly BashGuardRule[] = [
+  maskedExitPipelineRule,
+  maskedExitTrailingRule,
+  stalePrWriteRule,
+];
 
 const runRule = async (
   rule: BashGuardRule,

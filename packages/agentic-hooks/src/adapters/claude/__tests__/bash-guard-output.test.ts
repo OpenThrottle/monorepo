@@ -31,6 +31,7 @@ const MERGED: PullRequestState = {
 describe('readClaudeBashCall', () => {
   it('reads the command and cwd of a Bash call', () => {
     expect(readClaudeBashCall(bashPayload('ls'))).toEqual({
+      background: false,
       command: 'ls',
       cwd: '/repo',
     });
@@ -118,5 +119,40 @@ describe('decideClaudeBashGuard', () => {
       repo: null,
       selector: null,
     });
+  });
+});
+
+describe('decideClaudeBashGuard with run_in_background', () => {
+  const masked = 'pnpm run check:local; echo exit=$?';
+  const context = {
+    lookupPullRequest: lookupReturning({ kind: 'unknown' }),
+    lookupTimeoutMs: 3000,
+  };
+
+  it('denies a masked exit when the call runs in the background', async () => {
+    const payload = bashPayload(masked);
+    const raw = {
+      ...payload,
+      tool_input: { ...payload.tool_input, run_in_background: true },
+    };
+    const out = await decideClaudeBashGuard(raw, '/fallback', context);
+    expect(JSON.parse(out ?? '')).toMatchObject({
+      hookSpecificOutput: { permissionDecision: 'deny' },
+    });
+  });
+
+  it('only warns on the same command in the foreground', async () => {
+    const out = await decideClaudeBashGuard(
+      bashPayload(masked),
+      '/fallback',
+      context,
+    );
+    const parsed: unknown = JSON.parse(out ?? '');
+    expect(parsed).toMatchObject({
+      hookSpecificOutput: {
+        additionalContext: expect.stringContaining('masked-exit-trailing'),
+      },
+    });
+    expect(JSON.stringify(parsed)).not.toContain('permissionDecision');
   });
 });

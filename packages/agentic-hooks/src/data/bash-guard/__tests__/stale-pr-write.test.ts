@@ -32,6 +32,7 @@ const contextWith = (
   lookupTimeoutMs = 3000,
 ): BashGuardContext => {
   return {
+    background: false,
     cwd: CWD,
     lookupPullRequest: vi.fn(lookup),
     lookupTimeoutMs,

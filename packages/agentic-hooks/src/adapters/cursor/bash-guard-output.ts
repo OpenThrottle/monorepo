@@ -73,12 +73,15 @@ export const renderCursorBashGuard = (result: BashGuardResult): string => {
 export const decideCursorBashGuard = async (
   raw: unknown,
   fallbackCwd: string,
-  context: Omit<BashGuardContext, 'cwd'>,
+  context: Omit<BashGuardContext, 'background' | 'cwd'>,
 ): Promise<string> => {
   const call = readCursorShellCall(raw);
   if (call === null) return CURSOR_SHELL_ALLOW;
   const result = await evaluateBashGuard(call.command, {
     ...context,
+    // beforeShellExecution carries no background flag, so Cursor calls are
+    // judged as foreground: a masked exit warns via agent_message, never denies.
+    background: false,
     cwd: call.cwd ?? fallbackCwd,
   });
   return renderCursorBashGuard(result);

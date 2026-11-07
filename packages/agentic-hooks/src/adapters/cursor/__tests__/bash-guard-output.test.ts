@@ -145,3 +145,39 @@ describe('decideCursorBashGuard', () => {
     expect(out).toBe(CURSOR_SHELL_ALLOW);
   });
 });
+
+describe('decideCursorBashGuard with the masked-exit rules', () => {
+  const context = {
+    lookupPullRequest: lookupReturning(MERGED),
+    lookupTimeoutMs: 3000,
+  };
+
+  it('warns on a trailing echo $? as an allow carrying agent_message', async () => {
+    const out = await decideCursorBashGuard(
+      withCommand('pnpm run check:local; echo exit=$?'),
+      '/fallback',
+      context,
+    );
+    const response: unknown = JSON.parse(out);
+    expect(response).toMatchObject({ permission: 'allow' });
+    expect(out).toContain('masked-exit-trailing');
+  });
+
+  it('warns on a validation piped into tail without pipefail', async () => {
+    const out = await decideCursorBashGuard(
+      withCommand('pnpm nx run x:test 2>&1 | tail -20'),
+      '/fallback',
+      context,
+    );
+    expect(out).toContain('masked-exit-pipeline');
+  });
+
+  it('allows the pipefail form with a bare allow', async () => {
+    const out = await decideCursorBashGuard(
+      withCommand('set -o pipefail; pnpm nx run x:test 2>&1 | tail -20'),
+      '/fallback',
+      context,
+    );
+    expect(out).toBe(CURSOR_SHELL_ALLOW);
+  });
+});
