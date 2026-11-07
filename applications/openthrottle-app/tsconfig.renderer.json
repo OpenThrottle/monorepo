@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.react.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "noEmit": true,
+    // Never emitted (Vite builds it); see openthrottle-developer's tsconfig.
+    "rewriteRelativeImportExtensions": false,
+    "types": ["node", "vitest/globals"]
+  },
+  "exclude": ["dist", "node_modules", "out"],
+  "include": [
+    "src/renderer/**/*.ts",
+    "src/renderer/**/*.tsx",
+    "src/bridge/**/*.ts"
+  ]
+}

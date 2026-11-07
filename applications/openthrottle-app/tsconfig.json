@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.esm.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "noEmit": true,
+    "types": ["node", "vitest/globals"]
+  },
+  "exclude": ["dist", "node_modules", "out", "src/renderer"],
+  "include": [
+    "electron.vite.config.ts",
+    "scripts/**/*.ts",
+    "src/**/*.ts",
+    "tests/**/*.ts",
+    "vitest.config.ts"
+  ],
+  "references": [
+    {
+      "path": "../../packages/react-router-shadcn"
+    },
+    {
+      "path": "../../packages/openthrottle-desktop-bridge"
+    },
+    {
+      "path": "../../tools/dotfiles"
+    }
+  ]
+}

@@ -10,6 +10,7 @@ const logger = createLogger();
  * @description Valid technology tag values as defined in the reference document
  */
 export const VALID_TECHNOLOGY_TAGS = [
+  'electron',
   'llm',
   'nestjs',
   'nodejs',
@@ -177,25 +178,30 @@ export const validateProjectTags = (
  * duplicate, or invalid technology / production / type tags, or a missing,
  * duplicate, or invalid publish tag where one is required).
  */
-export const resultHasErrors = (result: ValidationResult): boolean =>
-  !result.hasTechnologyTag ||
-  !result.hasProductionTag ||
-  !result.hasTypeTag ||
-  result.multipleProductionTags ||
-  result.multipleTypeTags ||
-  result.invalidTechnologyTags.length > 0 ||
-  result.invalidProductionTags.length > 0 ||
-  result.invalidTypeTags.length > 0 ||
-  (result.requiresPublishTag && !result.hasPublishTag) ||
-  result.multiplePublishTags ||
-  result.invalidPublishValues.length > 0;
+export const resultHasErrors = (result: ValidationResult): boolean => {
+  return (
+    !result.hasTechnologyTag ||
+    !result.hasProductionTag ||
+    !result.hasTypeTag ||
+    result.multipleProductionTags ||
+    result.multipleTypeTags ||
+    result.invalidTechnologyTags.length > 0 ||
+    result.invalidProductionTags.length > 0 ||
+    result.invalidTypeTags.length > 0 ||
+    (result.requiresPublishTag && !result.hasPublishTag) ||
+    result.multiplePublishTags ||
+    result.invalidPublishValues.length > 0
+  );
+};
 
 /**
  * @description True when any project in the set has a tag violation.
  */
 export const hasValidationErrors = (
   results: readonly ValidationResult[],
-): boolean => results.some(resultHasErrors);
+): boolean => {
+  return results.some(resultHasErrors);
+};
 
 /**
  * @description Formats validation results for display
