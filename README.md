@@ -1,6 +1,7 @@
 # 🤖 OpenThrottle | AI
 
 ![🤖 Continuous Integration](https://github.com/OpenThrottle/monorepo/actions/workflows/continuous-integration.yml/badge.svg?branch=main)
+[![🚂 Merge Queue](https://img.shields.io/badge/Merge%20Queue-%F0%9F%A4%96-2ebd5d)](https://github.com/OpenThrottle/monorepo/queue/main)
 
 **OpenThrottle** is an open-core, AI-native platform for planning and shipping software. At its core is a Postgres-backed knowledge base of **plans and tasks** with semantic search, exposed to your editor and agents over **MCP**, plus agentic execution (Ralph) and a developer dashboard that shows what's in progress and what shipped. The repo is an Nx + pnpm monorepo with TypeScript throughout.
 
