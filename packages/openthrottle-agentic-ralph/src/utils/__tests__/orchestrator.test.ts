@@ -1718,4 +1718,130 @@ describe('createWorkflowRalphOrchestrator blocked-only plans', () => {
       status: 'finished',
     });
   });
+
+  describe('when the run hits its iteration or budget limit', () => {
+    it('ends BLOCKED with pending work, hands the task back, and finalizes', async () => {
+      const run = vi.fn(async () => 'still working, no markers');
+      const { executeGraphqlV2, planOutput, planUpdates } =
+        createStatefulExecute([
+          baseTask(TASK_A, 'PENDING', { sortOrder: 1000 }),
+          baseTask(TASK_B, 'PENDING', { sortOrder: 2000 }),
+          baseTask(TASK_C, 'BLOCKED', { sortOrder: 3000 }),
+        ]);
+      const runCommand = createZeroAheadRunner();
+
+      const orchestrator = createWorkflowRalphOrchestrator({
+        executeGraphqlV2,
+        iterationRunner: { run },
+        runCommand,
+      });
+
+      const result = await orchestrator.execute({
+        context: { ...baseContext, iterationMax: 2, iterations: 2 },
+      });
+
+      expect(run).toHaveBeenCalledTimes(2);
+      expect(planUpdates.at(-1)).toBe('BLOCKED');
+      expect(planOutput.join('\n')).toContain(
+        'Iteration limit reached (2/2); 2 task(s) still pending, 1 blocked. Re-run to continue.',
+      );
+      expect(runCommand).toHaveBeenCalledWith(
+        expect.objectContaining({
+          args: expect.arrayContaining(['rev-list', '--count']),
+        }),
+      );
+      expect(result).toEqual({
+        exitCode: 0,
+        reason: 'workflow_max_iterations',
+        status: 'finished',
+      });
+    });
+
+    it('ends COMPLETED when the last iteration finished every task', async () => {
+      const run = vi.fn(
+        async () => `<ralph:task-complete>${TASK_A}</ralph:task-complete>`,
+      );
+      const { executeGraphqlV2, planUpdates } = createStatefulExecute([
+        baseTask(TASK_A, 'PENDING'),
+      ]);
+      const runCommand = createZeroAheadRunner();
+
+      const orchestrator = createWorkflowRalphOrchestrator({
+        executeGraphqlV2,
+        iterationRunner: { run },
+        runCommand,
+      });
+
+      const result = await orchestrator.execute({
+        context: { ...baseContext, iterationMax: 1, iterations: 1 },
+      });
+
+      expect(run).toHaveBeenCalledTimes(1);
+      expect(planUpdates.at(-1)).toBe('COMPLETED');
+      expect(planUpdates).not.toContain('BLOCKED');
+      expect(runCommand).toHaveBeenCalledWith(
+        expect.objectContaining({
+          args: expect.arrayContaining(['rev-list', '--count']),
+        }),
+      );
+      expect(result).toMatchObject({ reason: 'workflow_tasks_exhausted' });
+    });
+
+    it('ends BLOCKED and finalizes when the wall-clock budget is spent', async () => {
+      const run = vi.fn(async () => '');
+      const { executeGraphqlV2, planOutput, planUpdates } =
+        createStatefulExecute([baseTask(TASK_A, 'PENDING')]);
+      const runCommand = createZeroAheadRunner();
+
+      const orchestrator = createWorkflowRalphOrchestrator({
+        executeGraphqlV2,
+        iterationRunner: { run },
+        runCommand,
+      });
+
+      // A 0ms per-iteration timeout derives a 0ms total budget: the guard trips before iteration 1.
+      const result = await orchestrator.execute({
+        context: {
+          ...baseContext,
+          iterationMax: 5,
+          iterationTimeout: 0,
+          iterations: 5,
+          timeout: 0,
+        },
+      });
+
+      expect(run).not.toHaveBeenCalled();
+      expect(planUpdates.at(-1)).toBe('BLOCKED');
+      expect(planOutput.join('\n')).toContain(
+        'Wall-clock budget exhausted after 0/5 iteration(s); 1 task(s) still pending, 0 blocked.',
+      );
+      expect(result).toMatchObject({ reason: 'workflow_budget_exhausted' });
+    });
+
+    it('leaves the plan status alone in task mode', async () => {
+      const run = vi.fn(async () => 'still working, no markers');
+      const { executeGraphqlV2, planUpdates } = createStatefulExecute([
+        baseTask(TASK_A, 'PENDING', { sortOrder: 1000 }),
+        baseTask(TASK_B, 'PENDING', { sortOrder: 2000 }),
+      ]);
+
+      const orchestrator = createWorkflowRalphOrchestrator({
+        executeGraphqlV2,
+        iterationRunner: { run },
+      });
+
+      const result = await orchestrator.execute({
+        context: {
+          ...baseContext,
+          iterationMax: 1,
+          iterations: 1,
+          mode: 'task',
+          taskId: TASK_A,
+        },
+      });
+
+      expect(planUpdates).not.toContain('BLOCKED');
+      expect(result).toMatchObject({ reason: 'workflow_max_iterations' });
+    });
+  });
 });

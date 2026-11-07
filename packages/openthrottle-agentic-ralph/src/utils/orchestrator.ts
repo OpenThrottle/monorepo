@@ -457,6 +457,92 @@ const reconcilePlanIfTasksExhausted = async (params: {
 };
 
 /**
+ * @description Settles a plan-mode run that used up its iteration or budget limit. Re-reads the
+ * tasks, because the last iteration may have finished the plan: nothing remaining → plan COMPLETED
+ * and `workflow_tasks_exhausted`. Otherwise the run has spent what it was given and only a human can
+ * act (re-run, or raise the limit), so the plan is written BLOCKED — never left IN_PROGRESS where it
+ * would be re-queued and hold the queue — and the limit reason is returned. Either reason finalizes.
+ * A failed re-read or status write is surfaced as a diagnostic and still returns the limit reason,
+ * so committed work is pushed regardless.
+ */
+const settlePlanAtRunLimit = async (params: {
+  readonly executeGraphqlV2: WorkflowRalphOrchestratorDeps['executeGraphqlV2'];
+  readonly limitLabel: string;
+  readonly onChunk: WorkflowRalphIterationOnChunk | undefined;
+  readonly planId: string;
+  readonly reason: 'workflow_budget_exhausted' | 'workflow_max_iterations';
+  readonly sessionOptions: ExecuteGraphqlOptionsV2 | undefined;
+}): Promise<
+  | 'workflow_budget_exhausted'
+  | 'workflow_max_iterations'
+  | 'workflow_tasks_exhausted'
+> => {
+  const {
+    executeGraphqlV2,
+    limitLabel,
+    onChunk,
+    planId,
+    reason,
+    sessionOptions,
+  } = params;
+
+  try {
+    const planTasks = await executeGraphqlV2(GetTasksByPlanIdDocument, {
+      input: { planId },
+    });
+    const remaining = planTasks.tasksByPlanId.filter(isRunnableRalphTask);
+
+    if (remaining.length === 0) {
+      await executeGraphqlV2(
+        UpdatePlanDocument,
+        { input: { id: planId, status: 'COMPLETED' } },
+        sessionOptions,
+      );
+
+      return 'workflow_tasks_exhausted';
+    }
+
+    const blockedCount = remaining.filter(
+      (task) => task.status === 'BLOCKED',
+    ).length;
+    const pendingCount = remaining.length - blockedCount;
+
+    await executeGraphqlV2(
+      UpdatePlanDocument,
+      { input: { id: planId, status: 'BLOCKED' } },
+      sessionOptions,
+    );
+
+    const message = `[ralph-orchestrator] ${limitLabel}; ${pendingCount} task(s) still pending, ${blockedCount} blocked. Re-run to continue.\n`;
+
+    try {
+      await executeGraphqlV2(
+        AppendPlanOutputDocument,
+        { input: { content: message, planId } },
+        sessionOptions,
+      );
+    } catch {
+      // Narration is best-effort; the BLOCKED status is the durable signal.
+    }
+
+    if (onChunk) {
+      try {
+        await onChunk({ data: message, stream: 'stderr' });
+      } catch {
+        // ignore
+      }
+    }
+  } catch (error) {
+    await emitDiagnostic(onChunk, {
+      error,
+      phase: `plan ${planId} settle after ${reason} failed`,
+    });
+  }
+
+  return reason;
+};
+
+/**
  * @description Best-effort reset of a task to PENDING (used when an iteration ends without finishing
  * it: max iterations, usage limit). Failure is surfaced as a diagnostic, never thrown (ralph.ts warns).
  */
@@ -712,6 +798,41 @@ export const createWorkflowRalphOrchestrator = (
         const lifecycleDispatcher = context.lifecycleDispatcher;
 
         /**
+         * Exit for the iteration and budget limits. Hands the unfinished task back to PENDING,
+         * then, in plan mode, settles the plan (BLOCKED or COMPLETED) and finalizes so committed
+         * work is pushed under a draft PR. Task mode only hands the task back: the plan's other
+         * tasks are not this run's to judge.
+         */
+        const settleRunLimit = async (
+          reason: 'workflow_budget_exhausted' | 'workflow_max_iterations',
+          limitLabel: string,
+        ): Promise<WorkflowRunResult> => {
+          if (lastIterationTaskId && !lastIterationTaskCompleted) {
+            await resetTaskToPending(
+              executeGraphqlV2,
+              lastIterationTaskId,
+              sessionOptions,
+              onChunk,
+            );
+          }
+
+          if (isTaskCentric) {
+            return onFinished(reason);
+          }
+
+          const settled = await settlePlanAtRunLimit({
+            executeGraphqlV2,
+            limitLabel,
+            onChunk,
+            planId: effectivePlanId,
+            reason,
+            sessionOptions,
+          });
+
+          return maybeFinalize(onFinished(settled));
+        };
+
+        /**
          * This is where we run our guarded loop (max iterations) chipping away
          * at the plan and its tasks.
          */
@@ -729,7 +850,10 @@ export const createWorkflowRalphOrchestrator = (
               phase: 'budget guard',
             });
 
-            return onFinished('workflow_budget_exhausted');
+            return settleRunLimit(
+              'workflow_budget_exhausted',
+              `Wall-clock budget exhausted after ${iteration - 1}/${maxIterations} iteration(s)`,
+            );
           }
 
           let agentPrompt = basePrompt;
@@ -1053,18 +1177,12 @@ export const createWorkflowRalphOrchestrator = (
           }
         } // ---> looping ... done
 
-        // 4. 🟡 If we have a task id and it's not completed, we mark it as pending
-        if (lastIterationTaskId && !lastIterationTaskCompleted) {
-          await resetTaskToPending(
-            executeGraphqlV2,
-            lastIterationTaskId,
-            sessionOptions,
-            onChunk,
-          );
-        }
-
-        // 5. 🟡 We've successfully completed the iterations, but we've hit our limit
-        return onFinished('workflow_max_iterations');
+        // 4–5. 🟡 We've run every iteration we were given: hand the unfinished task back and
+        // settle the plan (BLOCKED, or COMPLETED if the last iteration finished it).
+        return settleRunLimit(
+          'workflow_max_iterations',
+          `Iteration limit reached (${maxIterations}/${maxIterations})`,
+        );
       } catch (error) {
         await emitDiagnostic(onChunk, {
           error,

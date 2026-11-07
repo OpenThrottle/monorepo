@@ -37,8 +37,10 @@ import { sortTasksByPlanListOrder } from './plan-task-list-order.ts';
 
 /** Finished reasons that trigger the host-owned push + PR finalize step. */
 const FINALIZE_REASONS = [
+  'workflow_budget_exhausted',
   'workflow_complete',
   'workflow_complete_handoff_owed',
+  'workflow_max_iterations',
   'workflow_tasks_blocked',
   'workflow_tasks_exhausted',
 ] as const;
@@ -48,9 +50,11 @@ type FinalizePriorReason = (typeof FINALIZE_REASONS)[number];
 /**
  * @description Finalize reasons whose plan did NOT finish. Their work is pushed and the PR opened,
  * but the PR stays a draft (never `gh pr ready`): it is not reviewable until a human unblocks the
- * plan and a later run completes it.
+ * plan (or re-runs it past the iteration/budget limit) and a later run completes it.
  */
 const DRAFT_ONLY_REASONS: ReadonlySet<FinalizePriorReason> = new Set([
+  'workflow_budget_exhausted',
+  'workflow_max_iterations',
   'workflow_tasks_blocked',
 ]);
 
