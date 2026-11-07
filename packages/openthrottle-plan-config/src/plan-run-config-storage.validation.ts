@@ -7,6 +7,7 @@ import { z } from 'zod';
 import {
   DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI,
   DEFAULT_PLAN_RUN_RALPH_EFFORT,
+  DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLEANUP,
   DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLI,
   MAX_PLAN_RUN_CONFIG_JSON_LEN,
   MAX_PLAN_RUN_ITERATIONS,
@@ -18,6 +19,7 @@ import {
   PLAN_RUN_DEBUG_CLI,
   PLAN_RUN_KNOWN_BACKENDS,
   PLAN_RUN_PROMPT_LAYERS,
+  PLAN_RUN_WORKTREE_CLEANUP,
   PLAN_RUN_WORKTREE_CLI,
 } from './plan-run-config-storage.constants.ts';
 import { getDefaultPlanRunConfigStorage } from './plan-run-config-storage.defaults.ts';
@@ -51,6 +53,10 @@ const planRunConfigRalphV1Schema = z
     promptLayer: z.enum(PLAN_RUN_PROMPT_LAYERS),
     skipWorktreeSetup: z.boolean(),
     worktreeBase: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN),
+    // Absent on configs written before teardown existed; those read as the current default.
+    worktreeCleanup: z
+      .enum(PLAN_RUN_WORKTREE_CLEANUP)
+      .default(DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLEANUP),
     worktreeCli: z
       .enum(PLAN_RUN_WORKTREE_CLI)
       .default(DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLI),

@@ -11,7 +11,7 @@ export interface WorktreeBadge {
    * Activity badges are the loudest signal; registration is secondary. `missing` outranks both: a
    * row the scan could not find has no activity to report at all.
    */
-  tone: 'activity' | 'missing' | 'registration';
+  tone: 'activity' | 'cleanup' | 'missing' | 'registration';
 }
 
 /**
@@ -20,6 +20,7 @@ export interface WorktreeBadge {
  */
 export const WORKTREE_BADGE_COLORS = {
   activity: 'green',
+  cleanup: 'slate',
   missing: 'red',
   registration: 'orange',
 } as const satisfies Record<WorktreeBadge['tone'], string>;
@@ -94,6 +95,15 @@ export const deriveWorktreeBadges = (
       label: activity.label,
       title: activity.title,
       tone: 'activity',
+    });
+  }
+
+  if (row.safeToRemove) {
+    badges.push({
+      id: 'safe-to-remove',
+      label: REPOSITORIES_TABLE_COPY.safeToRemoveBadge,
+      title: REPOSITORIES_TABLE_COPY.safeToRemoveBadgeTitle,
+      tone: 'cleanup',
     });
   }
 

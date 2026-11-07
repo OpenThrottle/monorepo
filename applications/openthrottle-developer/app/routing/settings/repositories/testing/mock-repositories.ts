@@ -34,6 +34,7 @@ export interface MockDiscoveredWorktreeOverrides {
   planRunId?: string | null;
   repositoryId?: string | null;
   runMonitored?: boolean | null;
+  safeToRemove?: boolean;
   unregistered?: boolean;
 }
 
@@ -160,6 +161,7 @@ export const mockDiscoveredWorktree = (
     planRunId = null,
     repositoryId = 'repo-1',
     runMonitored = null,
+    safeToRemove = false,
     unregistered = checkoutId == null,
   } = overrides;
 
@@ -173,6 +175,7 @@ export const mockDiscoveredWorktree = (
     planRunId,
     repositoryId,
     runMonitored,
+    safeToRemove,
     unregistered,
   };
 };

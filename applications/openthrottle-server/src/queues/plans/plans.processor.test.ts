@@ -30,6 +30,7 @@ import { StatusChangeSystemAccountService } from '../../graphql/work-ledger/stat
 import { ProcessMetricsService } from '../../metrics/process-metrics.service.ts';
 import type { EnhancedTaskRunMetrics } from '../../metrics/process-metrics.types.ts';
 import { NotificationsService } from '../../notifications/notifications.service.ts';
+import { PlanRunWorktreeCleanupService } from '../../services/plan-run-worktree-cleanup/plan-run-worktree-cleanup.service.ts';
 import { AgenticRalphOrchestratorService } from '../agentic-ralph/agentic-ralph-orchestrator.service.ts';
 import { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.service.ts';
 import { WorkflowLifecycleDispatcherFactory } from '../plan-lifecycle-hooks/workflow-lifecycle-dispatcher.service.ts';
@@ -162,6 +163,11 @@ const mockReprojectScheduledRun = vi
   .fn()
   .mockResolvedValue({ jobId: 'scheduled-plan-run-x' });
 const mockEmitQueueJobCompleted = vi.fn();
+const mockWorktreeCleanupAfterRun = vi.fn().mockResolvedValue({
+  detail: 'the run worked in the base checkout',
+  kind: 'skipped',
+  skip: 'no-worktree',
+});
 const mockHandleUsageLimited = vi.fn().mockResolvedValue({
   message: `Plan paused: usage limit reached — resumes at 2026-11-01T17:01:00.000Z`,
   outcome: 'resumed',
@@ -381,6 +387,12 @@ describe('PlansProcessor', () => {
           provide: WorkflowLifecycleDispatcherFactory,
           useValue: createMock<WorkflowLifecycleDispatcherFactory>({
             create: vi.fn(),
+          }),
+        },
+        {
+          provide: PlanRunWorktreeCleanupService,
+          useValue: createMock<PlanRunWorktreeCleanupService>({
+            afterRun: mockWorktreeCleanupAfterRun,
           }),
         },
         {
@@ -1042,6 +1054,120 @@ describe('PlansProcessor', () => {
         expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
       },
     );
+  });
+
+  describe('worktree teardown after the run (orchestrator path)', () => {
+    const worktree = {
+      baseCheckoutPath: '/repo',
+      worktreePath: '/root/acme/monorepo/plan-2794d106',
+    };
+
+    /** The orchestrator reports the worktree it provisioned, then returns `result`. */
+    const orchestratorProvisions = (result: Record<string, unknown>): void => {
+      mockRunPlanOrchestratorJob.mockImplementationOnce(
+        async (params: {
+          readonly onWorktreeProvisioned?: (value: typeof worktree) => void;
+        }) => {
+          params.onWorktreeProvisioned?.(worktree);
+          return result;
+        },
+      );
+    };
+
+    beforeEach(() => {
+      mockWorktreeCleanupAfterRun.mockClear();
+    });
+
+    it('hands a finished run with a PR to the cleanup policy, after settle and afterAll hooks', async () => {
+      orchestratorProvisions({
+        exitCode: 0,
+        headSha: 'deadbeef',
+        prNumber: 42,
+        reason: 'workflow_complete',
+        status: 'finished',
+      });
+
+      await processor.process(mockJob);
+
+      expect(mockWorktreeCleanupAfterRun).toHaveBeenCalledExactlyOnceWith({
+        planId: mockJob.data.planId,
+        prNumber: 42,
+        reason: 'workflow_complete',
+        worktree,
+      });
+      const cleanupOrder =
+        mockWorktreeCleanupAfterRun.mock.invocationCallOrder[0] ?? 0;
+      const hooksOrder =
+        mockRunAfterRunHooksThenNotify.mock.invocationCallOrder.at(-1) ?? 0;
+      const settleOrder =
+        mockSettleRunByJob.mock.invocationCallOrder.at(-1) ?? 0;
+      expect(hooksOrder).toBeGreaterThan(settleOrder);
+      expect(cleanupOrder).toBeGreaterThan(hooksOrder);
+    });
+
+    it('passes a null worktree when the run worked in the base checkout', async () => {
+      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+        exitCode: 0,
+        prNumber: 42,
+        reason: 'workflow_complete',
+        status: 'finished',
+      });
+
+      await processor.process(mockJob);
+
+      expect(mockWorktreeCleanupAfterRun).toHaveBeenCalledWith(
+        expect.objectContaining({ worktree: null }),
+      );
+    });
+
+    it('reports a failed run to the policy with no PR, so the worktree is kept and logged', async () => {
+      orchestratorProvisions({
+        exitCode: 1,
+        reason: 'workflow_error',
+        status: 'failed',
+      });
+
+      await processor.process(mockJob);
+
+      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        'job-1',
+        PLAN_RUN_STATUS.FAILED,
+      );
+      expect(mockWorktreeCleanupAfterRun).toHaveBeenCalledExactlyOnceWith({
+        planId: mockJob.data.planId,
+        prNumber: undefined,
+        reason: 'workflow_error',
+        worktree,
+      });
+    });
+
+    it('reports a cancelled run to the policy', async () => {
+      orchestratorProvisions({
+        exitCode: 0,
+        reason: 'workflow_cancelled',
+        status: 'finished',
+      });
+
+      await processor.process(mockJob);
+
+      expect(mockWorktreeCleanupAfterRun).toHaveBeenCalledWith(
+        expect.objectContaining({ reason: 'workflow_cancelled', worktree }),
+      );
+    });
+
+    it('leaves a usage-limited run alone: the continuation reuses the worktree', async () => {
+      orchestratorProvisions({
+        exitCode: 0,
+        reason: 'workflow_usage_limited',
+        status: 'finished',
+        usageLimit: { rateLimitType: 'five_hour', resetsAt: null },
+      });
+
+      await processor.process(mockJob);
+
+      expect(mockWorktreeCleanupAfterRun).not.toHaveBeenCalled();
+    });
   });
 
   describe('admission: fire-time policy, settled rows and the guarded claim', () => {

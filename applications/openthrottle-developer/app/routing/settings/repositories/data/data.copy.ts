@@ -32,6 +32,8 @@ export const REPOSITORIES_TABLE_COPY = {
   notAGitRepositoryBadge: `Not a git repository`,
   notAGitRepositoryTitle: `This folder is registered but is not a git checkout, so nothing can be planned or run in it. Removing the checkout here leaves the folder on disk untouched.`,
   repositoryColumn: `Repository / checkout`,
+  safeToRemoveBadge: `Safe to remove`,
+  safeToRemoveBadgeTitle: `A plan-run worktree with nothing uncommitted or unpushed and no live run. Removing it keeps its branch.`,
   searchLabel: `Search repositories`,
   searchPlaceholder: `Search repositories...`,
   sortLabel: `Sort repositories`,
@@ -217,4 +219,22 @@ export const REPOSITORY_HOOK_TELEMETRY_COPY = {
   recordingLabel: `Recording`,
   recordingSummary: `Skill invocations from this checkout are sent to OpenThrottle.`,
   wireSnippet: `cursor-agent --plugin-dir <monorepo>/plugins/openthrottle-cursor -p "…"`,
+} as const;
+
+/**
+ * @description Copy for removing a plan-run worktree from disk: the row action, its confirm, and
+ * the outcome notice. Every surface says the branch is kept — removal never deletes work.
+ */
+export const REMOVE_PLAN_RUN_WORKTREE_COPY = {
+  confirm: `Remove worktree`,
+  descriptionBranch: (branch: string | null): string =>
+    `Its branch${branch === null ? '' : ` ${branch}`} is kept, so a later run can check it out again.`,
+  descriptionPrefix: `This deletes the folder`,
+  descriptionSuffix: `from disk through the repo's worktree teardown.`,
+  kept: (path: string, detail: string | null): string =>
+    `Kept ${path}: ${detail ?? 'the server did not say why'}.`,
+  label: `Remove worktree`,
+  removed: (path: string, branch: string | null): string =>
+    `Removed ${path}. Its branch${branch === null ? '' : ` ${branch}`} was kept.`,
+  title: `Remove this worktree?`,
 } as const;

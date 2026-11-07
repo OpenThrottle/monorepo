@@ -43,6 +43,7 @@ import {
 import { PlanRunWorkspacePreflightService } from '../../services/plan-run-workspace-preflight/plan-run-workspace-preflight.service.ts';
 import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service.ts';
 import { PlanRunWorktreeProvisionService } from '../../services/plan-run-worktree-provision/plan-run-worktree-provision.service.ts';
+import type { ProvisionedPlanRunWorktree } from '../../services/plan-run-worktree-provision/plan-run-worktree-provision.types.ts';
 import type { RunPlanOrchestratorJobData } from './agentic-ralph.types.ts';
 
 type PlanRunTuningInput = NonNullable<
@@ -101,6 +102,14 @@ export class AgenticRalphOrchestratorService {
     readonly correlation?: WorkflowCorrelation;
     readonly jobData: RunPlanOrchestratorJobData;
     readonly lifecycleDispatcher?: WorkflowLifecycleDispatcher;
+    /**
+     * Called once, before the agent starts, when the run was provisioned into its own worktree —
+     * never when it opted out and works in the base checkout. The worker uses it to tear the
+     * worktree down after the run, from the path the run actually used rather than a re-derivation.
+     */
+    readonly onWorktreeProvisioned?: (
+      worktree: ProvisionedPlanRunWorktree,
+    ) => void;
     readonly signal?: AbortSignal;
     /**
      * Work-ledger run session id opened by the plans worker. Forwarded into the orchestrator
@@ -109,8 +118,14 @@ export class AgenticRalphOrchestratorService {
      */
     readonly workSessionId?: string | null;
   }): Promise<WorkflowRunResult> {
-    const { correlation, jobData, lifecycleDispatcher, signal, workSessionId } =
-      params;
+    const {
+      correlation,
+      jobData,
+      lifecycleDispatcher,
+      onWorktreeProvisioned,
+      signal,
+      workSessionId,
+    } = params;
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- AGENTIC_WORKFLOW_REGISTRY is intentionally `any`-typed (AnyAgenticWorkflow); the dispatcher narrows to the ralph orchestrator at the call site
     const orchestrator = this.workflowRegistry
       .resolve(AGENTIC_WORKFLOW_RALPH_ID)
@@ -129,10 +144,14 @@ export class AgenticRalphOrchestratorService {
     // before the first agent turn — which is what checkout registration, `.env` provisioning, and
     // per-path agent-CLI MCP approval all need. Everything downstream (config load, foreign-skill
     // injection, checkout registration, the agent's cwd) targets this path, not the base checkout.
-    const configCwd = await this.resolveRunWorkingDirectory({
+    const resolvedWorkspace = await this.resolveRunWorkingDirectory({
       baseCheckoutCwd,
       jobData,
     });
+    const configCwd = resolvedWorkspace.workingDirectory;
+    if (resolvedWorkspace.worktree !== null) {
+      onWorktreeProvisioned?.(resolvedWorkspace.worktree);
+    }
 
     // Soft-fail registration: must not abort the agent run when checkout lookup/upsert fails.
     await this.maybeRegisterWorktreeCheckout({
@@ -298,7 +317,10 @@ export class AgenticRalphOrchestratorService {
   private async resolveRunWorkingDirectory(params: {
     readonly baseCheckoutCwd: string;
     readonly jobData: RunPlanOrchestratorJobData;
-  }): Promise<string> {
+  }): Promise<{
+    readonly workingDirectory: string;
+    readonly worktree: ProvisionedPlanRunWorktree | null;
+  }> {
     const { baseCheckoutCwd, jobData } = params;
 
     const worktreeName = jobData.ralph?.worktree?.trim();
@@ -307,7 +329,7 @@ export class AgenticRalphOrchestratorService {
         `Plan run ${jobData.planId} opted out of a worktree; working in ${baseCheckoutCwd}`,
         AgenticRalphOrchestratorService.name,
       );
-      return baseCheckoutCwd;
+      return { workingDirectory: baseCheckoutCwd, worktree: null };
     }
 
     // `worktree:new` is a root-only workspace script. An explicit `workingDirectory` (itself
@@ -337,7 +359,10 @@ export class AgenticRalphOrchestratorService {
       AgenticRalphOrchestratorService.name,
     );
 
-    return worktreePath;
+    return {
+      workingDirectory: worktreePath,
+      worktree: { baseCheckoutPath, worktreePath },
+    };
   }
 
   /**

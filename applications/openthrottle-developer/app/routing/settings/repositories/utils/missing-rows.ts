@@ -6,6 +6,9 @@ export const SHOW_MISSING_PARAM = 'showMissing';
 /** The value {@link SHOW_MISSING_PARAM} carries when set. */
 export const SHOW_MISSING_VALUE = '1';
 
+/** Route-action intent for `removePlanRunWorktree`; the worktree's checkout id travels in `checkoutId`. */
+export const REMOVE_PLAN_RUN_WORKTREE_INTENT = 'removePlanRunWorktree';
+
 /** Route-action intent for `pruneWorktreeCheckouts`; ids travel comma-joined in `checkoutIds`. */
 export const PRUNE_WORKTREE_CHECKOUTS_INTENT = 'pruneWorktreeCheckouts';
 

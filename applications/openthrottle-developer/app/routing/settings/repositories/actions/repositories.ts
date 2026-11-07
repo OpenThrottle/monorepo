@@ -13,12 +13,17 @@ import {
   PickFolderNativeDocument,
   PruneWorktreeCheckoutsDocument,
   RefreshCheckoutDocument,
+  RemovePlanRunWorktreeDocument,
 } from '~/__generated__/graphql';
 import {
   AddWorkspaceFolderInputSchema,
   CloneRepositoryInputSchema,
 } from '~/__generated__/schemas';
 import { errorMessageOr } from '~/routing/settings/repositories/utils/error-message';
+import {
+  PRUNE_WORKTREE_CHECKOUTS_INTENT,
+  REMOVE_PLAN_RUN_WORKTREE_INTENT,
+} from '~/routing/settings/repositories/utils/missing-rows';
 
 export const addFolder = async (args: Route.ActionArgs, formData: FormData) => {
   const parsed = parseFormData(formData, AddWorkspaceFolderInputSchema(), {
@@ -182,6 +187,35 @@ export const pruneWorktreeCheckouts = async (
   }
 };
 
+/**
+ * @description Removes one plan-run worktree from disk. The server re-runs every teardown guard,
+ * so a worktree that became dirty since the page loaded comes back as kept, with the reason.
+ */
+export const removePlanRunWorktree = async (
+  args: Route.ActionArgs,
+  formData: FormData,
+) => {
+  const parsed = parseFormData(
+    formData,
+    z.object({ checkoutId: z.string().min(1) }),
+    { labels: { checkoutId: 'Worktree' }, strict: false },
+  );
+  if (!parsed.success) {
+    return { error: parsed.error };
+  }
+
+  try {
+    const data = await executeGraphqlWithAuth(
+      args.request,
+      RemovePlanRunWorktreeDocument,
+      { checkoutId: parsed.data.checkoutId },
+    );
+    return { removal: data.removePlanRunWorktree };
+  } catch (error) {
+    return { error: errorMessageOr(error, 'Failed to remove the worktree.') };
+  }
+};
+
 export const deleteRepo = async (
   args: Route.ActionArgs,
   formData: FormData,
@@ -205,5 +239,36 @@ export const deleteRepo = async (
     const message =
       error instanceof Error ? error.message : 'Failed to remove repository.';
     return { error: message };
+  }
+};
+
+/**
+ * @description The repositories route action: dispatches on the form's `intent`. Lives beside the
+ * handlers it routes to, so adding an intent touches one module.
+ */
+export const repositoriesAction = async (args: Route.ActionArgs) => {
+  const formData = await args.request.formData();
+  const intent = formData.get('intent');
+
+  switch (intent) {
+    case 'addFolder':
+      return addFolder(args, formData);
+    case 'browseDirectory':
+      return browseDirectory(args, formData);
+    case 'cloneRepo':
+      return cloneRepo(args, formData);
+    case 'deleteRepo':
+      return deleteRepo(args, formData);
+    case 'pickFolderNative':
+      return pickFolderNative(args);
+    case PRUNE_WORKTREE_CHECKOUTS_INTENT:
+      return pruneWorktreeCheckouts(args, formData);
+    case 'refreshCheckout':
+      return refreshCheckout(args, formData);
+    case REMOVE_PLAN_RUN_WORKTREE_INTENT:
+      return removePlanRunWorktree(args, formData);
+
+    default:
+      throw new Error('Invalid intent');
   }
 };

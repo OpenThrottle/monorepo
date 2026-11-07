@@ -1355,6 +1355,8 @@ export type DiscoveredWorktreeObject = {
   repositoryId?: Maybe<Scalars['ID']['output']>;
   /** Whether the live run's liveness is VERIFIED rather than merely claimed. True when the run heartbeats on a timer, so RUNNING is a checked fact. False when it does not (an interactive /ot-loop run): the row says IN_PROGRESS and nothing confirms it, so this worktree may be held busy by an agent that died hours ago — surface that distinctly rather than showing it as healthily running. Null when nothing is running. */
   runMonitored?: Maybe<Scalars['Boolean']['output']>;
+  /** True when this is a server-provisioned plan-run worktree that removePlanRunWorktree would remove right now: registered, clean, nothing unpushed, and no live run on it. Always false for any other worktree. */
+  safeToRemove: Scalars['Boolean']['output'];
   /** True when no repository_checkouts row exists at this path for this user. Orthogonal to activity — an unregistered worktree can be DIRTY. */
   unregistered: Scalars['Boolean']['output'];
 };
@@ -2594,6 +2596,8 @@ export type Mutation = {
   removeAgentTrajectoryLabel: Scalars['Boolean']['output'];
   /** Remove a permission from a role */
   removePermissionFromRole: Scalars['Boolean']['output'];
+  /** Remove one server-provisioned plan-run worktree from disk through pnpm run worktree:remove: the repo's teardown hook runs, the directory and its checkout record go, and the branch is kept. Never forced — a primary checkout, a worktree OpenThrottle did not provision, a dirty or unpushed tree, or one an unsettled run still points at is kept and the outcome says why. */
+  removePlanRunWorktree: RemovePlanRunWorktreePayloadObject;
   /** Remove a tag from a plan under the provenance ladder (an agent cannot remove a human row; server-llm removes only its own). Returns false when the tag was not present. */
   removePlanTag: Scalars['Boolean']['output'];
   /** Delete one project_skills row by slug. Distinct from ingest: vanished skills stay as orphans until this explicit remove. Omit projectId to target the dogfood monorepo project. Returns false when no row matched. */
@@ -3115,6 +3119,10 @@ export type MutationRemoveAgentTrajectoryLabelArgs = {
 
 export type MutationRemovePermissionFromRoleArgs = {
   input: RemovePermissionFromRoleInput;
+};
+
+export type MutationRemovePlanRunWorktreeArgs = {
+  checkoutId: Scalars['ID']['input'];
 };
 
 export type MutationRemovePlanTagArgs = {
@@ -3669,6 +3677,28 @@ export type PlanRunPullRequestObject = {
   url: Scalars['String']['output'];
 };
 
+/** What a guarded plan-run worktree teardown did. */
+export const PlanRunWorktreeTeardownOutcome = {
+  /** A guard could not be evaluated or worktree:remove failed. The worktree is still there. */
+  Failed: 'FAILED',
+  /** A queued or in-progress plan run still points at this worktree. */
+  KeptActiveRun: 'KEPT_ACTIVE_RUN',
+  /** The worktree has uncommitted changes. */
+  KeptDirty: 'KEPT_DIRTY',
+  /** Not a server-provisioned plan-<8> worktree under the worktree root. */
+  KeptNotPlanRunWorktree: 'KEPT_NOT_PLAN_RUN_WORKTREE',
+  /** The path is the primary checkout. */
+  KeptPrimary: 'KEPT_PRIMARY',
+  /** The branch has commits that are not on its upstream or the default branch. */
+  KeptUnpushed: 'KEPT_UNPUSHED',
+  /** Every guard passes; reported only by an assessment, never by a removal. */
+  Removable: 'REMOVABLE',
+  /** The worktree directory and its checkout record are gone; the branch is kept. */
+  Removed: 'REMOVED',
+} as const;
+
+export type PlanRunWorktreeTeardownOutcome =
+  (typeof PlanRunWorktreeTeardownOutcome)[keyof typeof PlanRunWorktreeTeardownOutcome];
 export type PlanRunsByPlanIdInput = {
   /** Max plan-run audit rows to return, newest first. */
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -5196,6 +5226,19 @@ export type RemovePermissionFromRoleInput = {
   permissionId: Scalars['ID']['input'];
   /** Role id to remove the permission from */
   roleId: Scalars['ID']['input'];
+};
+
+/** Result of removePlanRunWorktree for one worktree checkout. */
+export type RemovePlanRunWorktreePayloadObject = {
+  __typename?: 'RemovePlanRunWorktreePayloadObject';
+  /** The branch the worktree had checked out, which survives the removal. Null when nothing was removed. */
+  branch?: Maybe<Scalars['String']['output']>;
+  checkoutId: Scalars['ID']['output'];
+  /** Why the worktree was kept, in a sentence. Null when it was removed. */
+  detail?: Maybe<Scalars['String']['output']>;
+  outcome: PlanRunWorktreeTeardownOutcome;
+  /** The worktree's path on the server host. */
+  path: Scalars['String']['output'];
 };
 
 export type RemovePlanTagInput = {
@@ -12476,6 +12519,7 @@ export type DiscoveredWorktreeFieldsFragment = {
   planRunId?: string | null;
   repositoryId?: string | null;
   runMonitored?: boolean | null;
+  safeToRemove: boolean;
   unregistered: boolean;
 };
 
@@ -12594,6 +12638,7 @@ export type GetSettingsRepositoriesQuery = {
       planRunId?: string | null;
       repositoryId?: string | null;
       runMonitored?: boolean | null;
+      safeToRemove: boolean;
       unregistered: boolean;
     }>;
   };
@@ -13131,6 +13176,22 @@ export type PruneWorktreeCheckoutsMutation = {
       outcome: PruneWorktreeCheckoutOutcome;
       path?: string | null;
     }>;
+  };
+};
+
+export type RemovePlanRunWorktreeMutationVariables = Exact<{
+  checkoutId: Scalars['ID']['input'];
+}>;
+
+export type RemovePlanRunWorktreeMutation = {
+  __typename?: 'Mutation';
+  removePlanRunWorktree: {
+    __typename?: 'RemovePlanRunWorktreePayloadObject';
+    branch?: string | null;
+    checkoutId: string;
+    detail?: string | null;
+    outcome: PlanRunWorktreeTeardownOutcome;
+    path: string;
   };
 };
 
@@ -16343,6 +16404,7 @@ export const DiscoveredWorktreeFieldsFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'planRunId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'runMonitored' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'safeToRemove' } },
           { kind: 'Field', name: { kind: 'Name', value: 'unregistered' } },
         ],
       },
@@ -31852,6 +31914,7 @@ export const GetSettingsRepositoriesDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'planRunId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'runMonitored' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'safeToRemove' } },
           { kind: 'Field', name: { kind: 'Name', value: 'unregistered' } },
         ],
       },
@@ -33012,6 +33075,61 @@ export const PruneWorktreeCheckoutsDocument = {
 } as unknown as DocumentNode<
   PruneWorktreeCheckoutsMutation,
   PruneWorktreeCheckoutsMutationVariables
+>;
+export const RemovePlanRunWorktreeDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'removePlanRunWorktree' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'checkoutId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'removePlanRunWorktree' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'checkoutId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'checkoutId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'branch' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'checkoutId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'detail' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'outcome' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RemovePlanRunWorktreeMutation,
+  RemovePlanRunWorktreeMutationVariables
 >;
 export const DeleteWorkspaceLocalRepositoryDocument = {
   kind: 'Document',

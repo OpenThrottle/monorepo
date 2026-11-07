@@ -33,6 +33,7 @@ const basePlanInput = (
     targetMode: 'plan',
     taskId: '',
     worktreeBase: '',
+    worktreeCleanup: 'on-pr',
     worktreeCli: 'omit',
     worktreeName: '',
     ...overrides,

@@ -57,6 +57,7 @@ export const planRunConfigFromWorkflowUiState = (
       promptLayer: workflowInput.promptLayer,
       skipWorktreeSetup: workflowInput.skipWorktreeSetup,
       worktreeBase: workflowInput.worktreeBase.trim(),
+      worktreeCleanup: workflowInput.worktreeCleanup,
       worktreeCli: workflowInput.worktreeCli,
       worktreeName: workflowInput.worktreeName.trim(),
     },
@@ -102,6 +103,7 @@ export const workflowUiStateFromPlanRunConfig = (
     targetMode: parsed.target.mode,
     taskId: parsed.target.mode === 'task' ? parsed.target.taskId : seedTaskId,
     worktreeBase: parsed.ralph.worktreeBase,
+    worktreeCleanup: parsed.ralph.worktreeCleanup,
     worktreeCli: parsed.ralph.worktreeCli,
     worktreeName: parsed.ralph.worktreeName,
   };

@@ -11,24 +11,35 @@
  * their parent rows by `repositoryId`.
  */
 
-import { UseGuards } from '@nestjs/common';
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { NotFoundException, UseGuards } from '@nestjs/common';
+import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
+import { RepositoryCheckoutsService } from '@openthrottle/nestjs-repositories';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME } from '../../services/plan-run-worktree-teardown/plan-run-worktree-teardown.constants.ts';
+import { PlanRunWorktreeTeardownService } from '../../services/plan-run-worktree-teardown/plan-run-worktree-teardown.service.ts';
+import {
+  isPlanRunWorktreeName,
+  primaryCheckoutFromCommonDir,
+} from '../../services/plan-run-worktree-teardown/plan-run-worktree-teardown.utils.ts';
 import { WorktreeActivityService } from '../../services/worktree-activity/worktree-activity.service.ts';
+import type { ClassifiedWorktree } from '../../services/worktree-activity/worktree-activity.types.ts';
 import { WorktreeCheckoutPruneService } from '../../services/worktree-checkout-prune/worktree-checkout-prune.service.ts';
 import { DiscoveredWorktreesObject } from './discovered-worktrees.object.ts';
 import { PruneWorktreeCheckoutsInput } from './prune-worktree-checkouts.input.ts';
 import { PruneWorktreeCheckoutsPayloadObject } from './prune-worktree-checkouts.object.ts';
+import { RemovePlanRunWorktreePayloadObject } from './remove-plan-run-worktree.object.ts';
 
 @Resolver(() => DiscoveredWorktreesObject)
 @UseGuards(GqlPermissionsGuard)
 export class DiscoveredWorktreesResolver {
   constructor(
     private readonly activityService: WorktreeActivityService,
+    private readonly checkoutsService: RepositoryCheckoutsService,
     private readonly pruneService: WorktreeCheckoutPruneService,
+    private readonly teardownService: PlanRunWorktreeTeardownService,
   ) {}
 
   @Query(() => DiscoveredWorktreesObject, {
@@ -39,6 +50,9 @@ export class DiscoveredWorktreesResolver {
     @CurrentUser('sub') userId: string,
   ): Promise<DiscoveredWorktreesObject> {
     const result = await this.activityService.discoverAndClassify(userId);
+    const safeToRemove = await Promise.all(
+      result.worktrees.map((worktree) => this.isSafeToRemove(worktree)),
+    );
 
     return {
       droppedCount: result.droppedCount,
@@ -65,7 +79,7 @@ export class DiscoveredWorktreesResolver {
       })),
       warnings: [...result.warnings],
       worktreeRoot: result.worktreeRoot,
-      worktrees: result.worktrees.map((worktree) => ({
+      worktrees: result.worktrees.map((worktree, index) => ({
         activity: worktree.activity,
         branch: worktree.branch,
         checkoutId: worktree.checkoutId,
@@ -75,6 +89,7 @@ export class DiscoveredWorktreesResolver {
         planRunId: worktree.planRunId,
         repositoryId: worktree.repositoryId,
         runMonitored: worktree.runMonitored,
+        safeToRemove: safeToRemove[index] ?? false,
         unregistered: worktree.unregistered,
       })),
     };
@@ -100,5 +115,74 @@ export class DiscoveredWorktreesResolver {
         path: entry.path,
       })),
     };
+  }
+
+  @Mutation(() => RemovePlanRunWorktreePayloadObject, {
+    description: `Remove one server-provisioned plan-run worktree from disk through pnpm run worktree:remove: the repo's teardown hook runs, the directory and its checkout record go, and the branch is kept. Never forced — a primary checkout, a worktree OpenThrottle did not provision, a dirty or unpushed tree, or one an unsettled run still points at is kept and the outcome says why.`,
+  })
+  @Permissions(PERMISSIONS.SETTINGS_WRITE)
+  async removePlanRunWorktree(
+    @CurrentUser('sub') userId: string,
+    @Args('checkoutId', { type: () => ID }) checkoutId: string,
+  ): Promise<RemovePlanRunWorktreePayloadObject> {
+    const checkout = await this.checkoutsService.findByIdForUser(
+      checkoutId,
+      userId,
+    );
+    if (checkout === null) {
+      throw new NotFoundException(`No checkout ${checkoutId} for this user`);
+    }
+
+    const path = checkout.filesystemPath;
+    const baseCheckoutPath =
+      await this.teardownService.resolveBaseCheckoutPath(path);
+    if (baseCheckoutPath === null) {
+      return {
+        branch: null,
+        checkoutId,
+        detail: 'its primary checkout could not be resolved',
+        outcome: PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME.FAILED,
+        path,
+      };
+    }
+
+    const result = await this.teardownService.teardown({
+      baseCheckoutPath,
+      worktreePath: path,
+    });
+    if (result.outcome === PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME.REMOVED) {
+      return {
+        branch: result.branch,
+        checkoutId,
+        detail: null,
+        outcome: result.outcome,
+        path,
+      };
+    }
+    return {
+      branch: null,
+      checkoutId,
+      detail: result.detail,
+      outcome: result.outcome,
+      path,
+    };
+  }
+
+  /**
+   * @description Whether the page may offer a plan-run worktree as safe to remove: registered, and
+   * every teardown guard passes right now. Never true for any other worktree; never throws.
+   */
+  private async isSafeToRemove(worktree: ClassifiedWorktree): Promise<boolean> {
+    if (worktree.checkoutId === null) return false;
+    if (!isPlanRunWorktreeName(worktree.path)) return false;
+
+    const baseCheckoutPath = primaryCheckoutFromCommonDir(worktree.commonDir);
+    if (baseCheckoutPath === null) return false;
+
+    const verdict = await this.teardownService.assess({
+      baseCheckoutPath,
+      worktreePath: worktree.path,
+    });
+    return verdict.outcome === PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME.REMOVABLE;
   }
 }

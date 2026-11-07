@@ -31,6 +31,14 @@ export const DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI: 'omit' | 'debug' | 'verbose' =
 export const DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLI:
   'flag-only' | 'named' | 'omit' = 'named';
 
+/**
+ * @description What happens to a plan run's worktree after the run finishes. `'on-pr'` removes it
+ * once the run completes cleanly with a PR (the branch is kept); `'keep'` always leaves it on disk.
+ * Absent on a stored config means this default; a persisted value is a choice and is kept.
+ */
+export const DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLEANUP: 'keep' | 'on-pr' =
+  `on-pr`;
+
 /** @description Prefix for a derived plan-run worktree name (`plan-<short plan id>`). */
 export const PLAN_RUN_WORKTREE_NAME_PREFIX = 'plan-';
 
@@ -42,6 +50,7 @@ export const PLAN_RUN_CONFIG_TARGET_MODES = ['plan', 'task'] as const;
 export const PLAN_RUN_PROMPT_LAYERS = ['named', 'file'] as const;
 export const PLAN_RUN_DEBUG_CLI = ['omit', 'debug', 'verbose'] as const;
 export const PLAN_RUN_WORKTREE_CLI = ['flag-only', 'named', 'omit'] as const;
+export const PLAN_RUN_WORKTREE_CLEANUP = ['keep', 'on-pr'] as const;
 
 /** @description RFC 4122 UUID v4 — aligned with workflow-ralph plan/task validation. */
 export const PLAN_RUN_CONFIG_UUID_REGEX =

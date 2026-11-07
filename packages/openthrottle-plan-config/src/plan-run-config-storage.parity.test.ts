@@ -51,6 +51,7 @@ describe('plan run config enqueue tuning parity', () => {
         targetMode: 'plan',
         taskId: '',
         worktreeBase: '',
+        worktreeCleanup: 'on-pr',
         worktreeCli: 'named',
         worktreeName: 'feature-x',
       },

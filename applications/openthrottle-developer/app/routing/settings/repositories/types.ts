@@ -2,8 +2,10 @@ import type {
   DiscoveredWorktreeFieldsFragment,
   GetSettingsRepositoriesQuery,
   PruneWorktreeCheckoutsMutation,
+  RemovePlanRunWorktreeMutation,
   WorkspaceRepositoryFieldsFragment,
 } from '~/__generated__/graphql';
+import type { CheckoutDrift } from '~/routing/settings/utils/drift-labels';
 
 /**
  * @description A single checkout as it arrives on the repositories index query.
@@ -44,6 +46,17 @@ export type ScannedWorktreeRoot =
 /** @description One per-id outcome from the `pruneWorktreeCheckouts` mutation. */
 export type PruneWorktreeCheckoutResult =
   PruneWorktreeCheckoutsMutation['pruneWorktreeCheckouts']['results'][number];
+
+/** @description The last `refreshCheckout` result the page reports drift and merges from. */
+export interface RefreshedCheckout {
+  checkoutId: string;
+  drift: CheckoutDrift;
+  merged: boolean;
+}
+
+/** @description What `removePlanRunWorktree` answered for one worktree. */
+export type RemovePlanRunWorktreeResult =
+  RemovePlanRunWorktreeMutation['removePlanRunWorktree'];
 
 /**
  * @description One table row = one thing on disk, carrying enough of its parent
@@ -108,6 +121,11 @@ export interface RepositoryCheckoutRow {
    * A worktree can be held "Running" by an agent that died hours ago; this is what tells them apart.
    */
   runMonitored: boolean | null;
+  /**
+   * A registered plan-run worktree the server's teardown guards would remove right now (clean,
+   * pushed, no live run). Drives the "Safe to remove" hint and the Remove worktree action.
+   */
+  safeToRemove: boolean;
   /** True when there is no `repository_checkouts` row at this path. */
   unregistered: boolean;
   updatedAt: string | null;

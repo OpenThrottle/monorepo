@@ -57,6 +57,7 @@ fragment DiscoveredWorktreeFields on DiscoveredWorktreeObject {
   planRunId
   repositoryId
   runMonitored
+  safeToRemove
   unregistered
 }
 
@@ -198,6 +199,16 @@ mutation pruneWorktreeCheckouts($input: PruneWorktreeCheckoutsInput!) {
       outcome
       path
     }
+  }
+}
+
+mutation removePlanRunWorktree($checkoutId: ID!) {
+  removePlanRunWorktree(checkoutId: $checkoutId) {
+    branch
+    checkoutId
+    detail
+    outcome
+    path
   }
 }
 

@@ -17,6 +17,7 @@ import {
   DEFAULT_PLAN_RUN_RALPH_MODEL,
   DEFAULT_PLAN_RUN_RALPH_PROMPT,
   DEFAULT_PLAN_RUN_RALPH_RUNNER,
+  DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLEANUP,
   DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLI,
 } from '@openthrottle/openthrottle-plan-config';
 
@@ -132,6 +133,12 @@ export type WorkflowRalphDebugCli = 'omit' | 'debug' | 'verbose';
 export type WorkflowRalphWorktreeCli = 'flag-only' | 'named' | 'omit';
 
 /**
+ * @description What happens to a queued run's worktree when the run finishes: `'on-pr'` removes it
+ * after a clean run that opened a PR (the branch is kept), `'keep'` always leaves it on disk.
+ */
+export type WorkflowRalphWorktreeCleanup = 'keep' | 'on-pr';
+
+/**
  * @description Layer 2 — execution backend id; must stay aligned with `workflow-ralph --backend` / {@link WORKFLOW_RALPH_KNOWN_BACKENDS}.
  */
 export type WorkflowRalphExecutionBackendUi =
@@ -158,6 +165,8 @@ export interface WorkflowRalphRunOptionsInput {
   readonly taskId: string;
   /** @description Cursor-only: `--worktree-base`. */
   readonly worktreeBase: string;
+  /** @description Server-side teardown of a queued run's worktree; not a CLI flag. */
+  readonly worktreeCleanup: WorkflowRalphWorktreeCleanup;
   /** @description Agent CLI worktree: omit, `--worktree` only, or `--worktree <name>`. */
   readonly worktreeCli: WorkflowRalphWorktreeCli;
   readonly worktreeName: string;
@@ -217,6 +226,7 @@ export const getDefaultWorkflowRalphRunOptionsInput = (options?: {
     targetMode,
     taskId,
     worktreeBase: '',
+    worktreeCleanup: DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLEANUP,
     worktreeCli: DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLI,
     // Blank means "derive plan-<short plan id> at enqueue", not "no worktree".
     worktreeName: '',

@@ -11,6 +11,7 @@ import {
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 import * as React from 'react';
 
+import { PlanWorkflowConfigWorktreeCleanup } from '~/routing/plans/components/PlanWorkflowConfigWorktreeCleanup';
 import { PlanWorkflowConfigWorktreeCursorFields } from '~/routing/plans/components/PlanWorkflowConfigWorktreeCursorFields';
 import { PLAN_CONFIG_WORKTREE_COPY } from '~/routing/plans/data/data.copy';
 import {
@@ -148,6 +149,7 @@ export const PlanWorkflowConfigWorktree = (
           </p>
         </div>
       )}
+      <PlanWorkflowConfigWorktreeCleanup input={input} setInput={setInput} />
       <PlanWorkflowConfigWorktreeCursorFields
         input={input}
         setInput={setInput}

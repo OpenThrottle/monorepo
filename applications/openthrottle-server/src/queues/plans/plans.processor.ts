@@ -44,6 +44,8 @@ import type {
 } from '../../metrics/process-metrics.types.ts';
 import { formatEnhancedTaskRunMetricsSummary } from '../../metrics/process-metrics-format.ts';
 import { NotificationsService } from '../../notifications/notifications.service.ts';
+import { PlanRunWorktreeCleanupService } from '../../services/plan-run-worktree-cleanup/plan-run-worktree-cleanup.service.ts';
+import type { ProvisionedPlanRunWorktree } from '../../services/plan-run-worktree-provision/plan-run-worktree-provision.types.ts';
 import { AgenticRalphOrchestratorService } from '../agentic-ralph/agentic-ralph-orchestrator.service.ts';
 import { closeRunOutputForJob } from '../bullmq-keyed-run-logging.ts';
 import { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.service.ts';
@@ -138,6 +140,7 @@ export class PlansProcessor
     private readonly notifications: NotificationsService,
     private readonly planOutputStreamService: PlanOutputStreamService,
     private readonly planRunCancellation: PlanRunCancellationService,
+    private readonly planRunWorktreeCleanup: PlanRunWorktreeCleanupService,
     private readonly planRunsService: PlanRunsService,
     @InjectQueue(PLANS_QUEUE_NAME)
     private readonly plansQueue: Queue<RunPlanJobData, PlanRunJobResult | void>,
@@ -1203,10 +1206,19 @@ export class PlansProcessor
       workflowKind: 'ralph',
     });
 
+    // Filled by the orchestrator once it has provisioned the run's worktree, so teardown acts on
+    // the path the run actually used. Stays null for a run that opted out of a worktree.
+    const provisioned: { worktree: ProvisionedPlanRunWorktree | null } = {
+      worktree: null,
+    };
+
     const outcome = await this.agenticRalphOrchestrator.runPlanOrchestratorJob({
       correlation,
       jobData: data,
       lifecycleDispatcher,
+      onWorktreeProvisioned: (worktree) => {
+        provisioned.worktree = worktree;
+      },
       signal: abortSignal,
       workSessionId,
     });
@@ -1258,6 +1270,13 @@ export class PlansProcessor
         },
       });
 
+      await this.planRunWorktreeCleanup.afterRun({
+        planId: data.planId,
+        prNumber: undefined,
+        reason: outcome.reason,
+        worktree: provisioned.worktree,
+      });
+
       return { taskRunMetrics };
     }
 
@@ -1284,6 +1303,13 @@ export class PlansProcessor
           planId: data.planId,
           severity: 'info',
         },
+      });
+
+      await this.planRunWorktreeCleanup.afterRun({
+        planId: data.planId,
+        prNumber: undefined,
+        reason: outcome.reason,
+        worktree: provisioned.worktree,
       });
 
       return { taskRunMetrics };
@@ -1352,6 +1378,15 @@ export class PlansProcessor
         planId: data.planId,
         severity,
       },
+    });
+
+    // After settle AND afterAll hooks: hooks may still need the worktree. Never throws, and never
+    // touches the settled status — a kept worktree is reported in plan output, nothing more.
+    await this.planRunWorktreeCleanup.afterRun({
+      planId: data.planId,
+      prNumber: outcome.prNumber,
+      reason: outcome.reason,
+      worktree: provisioned.worktree,
     });
 
     return { taskRunMetrics };

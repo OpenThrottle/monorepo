@@ -179,6 +179,7 @@ Driven by `skills/ot-worktree/scripts/*` and `scripts/setup_worktree.ts`.
 | `OPENTHROTTLE_WORKTREE_TEARDOWN`            | Path to the teardown hook                                                          | ❌; default `.worktree/teardown.sh`                |
 | `OPENTHROTTLE_WORKTREE_HEAL`                | Path to the optional heal (backfill) hook                                          | ❌; default `.worktree/heal.sh`                    |
 | `OPENTHROTTLE_WORKTREE_OWN_DB`              | `1` asks the provisioner for the worktree's own database (`worktree:new --own-db`) | ❌; unset                                          |
+| `OPENTHROTTLE_WORKTREE_REAPER_DRY_RUN`      | `false` lets the plan-run worktree reaper remove; otherwise it only reports        | ❌; dry run                                        |
 | `OT_WORKTREE_DB`                            | Which database a checkout uses: `shared`, `isolated`; absent = primary             | ❌ (written by provision/heal)                     |
 | `OPENTHROTTLE_WORKTREE_PROVISIONED_MARKERS` | Space-separated files that mark a worktree as provisioned                          | ❌; default `.env`                                 |
 | `OPENTHROTTLE_WORKTREE_SCRIPT_DIR`          | Script-local variable inside `create.sh`, not user-facing                          | n/a                                                |

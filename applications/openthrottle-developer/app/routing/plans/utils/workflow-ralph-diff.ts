@@ -120,6 +120,12 @@ export const buildWorkflowRalphTuningDiffLabels = (
     );
   }
 
+  if (cur.worktreeCleanup !== refMerged.worktreeCleanup) {
+    lines.push(
+      `Worktree cleanup: ${refMerged.worktreeCleanup} → ${cur.worktreeCleanup}`,
+    );
+  }
+
   if (cur.worktreeBase.trim() !== refMerged.worktreeBase.trim()) {
     lines.push(
       `Worktree base: ${

@@ -5,8 +5,14 @@
  */
 
 import { createMock } from '@golevelup/ts-vitest';
+import type {
+  RepositoryCheckout,
+  RepositoryCheckoutsService,
+} from '@openthrottle/nestjs-repositories';
 import { describe, expect, it, vi } from 'vitest';
 
+import { PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME } from '../../services/plan-run-worktree-teardown/plan-run-worktree-teardown.constants.ts';
+import type { PlanRunWorktreeTeardownService } from '../../services/plan-run-worktree-teardown/plan-run-worktree-teardown.service.ts';
 import type { WorktreeActivityService } from '../../services/worktree-activity/worktree-activity.service.ts';
 import type { WorktreeActivityResult } from '../../services/worktree-activity/worktree-activity.types.ts';
 import { WORKTREE_ACTIVITY } from '../../services/worktree-activity/worktree-activity.types.ts';
@@ -20,12 +26,21 @@ import { DiscoveredWorktreesResolver } from './discovered-worktrees.resolver.ts'
 
 const ROOT = '/Users/matt/Development/openthrottle-worktrees';
 
-const build = (result: WorktreeActivityResult): DiscoveredWorktreesResolver => {
+const build = (
+  result: WorktreeActivityResult,
+  assess = vi.fn().mockResolvedValue({
+    branch: null,
+    outcome: PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME.REMOVABLE,
+    worktreePath: '',
+  }),
+): DiscoveredWorktreesResolver => {
   return new DiscoveredWorktreesResolver(
     createMock<WorktreeActivityService>({
       discoverAndClassify: vi.fn().mockResolvedValue(result),
     }),
+    createMock<RepositoryCheckoutsService>(),
     createMock<WorktreeCheckoutPruneService>(),
+    createMock<PlanRunWorktreeTeardownService>({ assess }),
   );
 };
 
@@ -84,9 +99,93 @@ describe('DiscoveredWorktreesResolver', () => {
           // Carried through to the client so "Running" can be shown as a claim rather
           // than a verified fact when the run does not heartbeat.
           runMonitored: false,
+          // Not a plan-<8> worktree, so never offered for removal.
+          safeToRemove: false,
           unregistered: false,
         },
       ],
+    });
+  });
+
+  describe('safeToRemove', () => {
+    const planRunWorktree = (
+      overrides: Partial<WorktreeActivityResult['worktrees'][number]> = {},
+    ): WorktreeActivityResult => {
+      return {
+        droppedCount: 0,
+        missingCheckouts: [],
+        problems: [],
+        rootSource: 'default',
+        scannedAt: '2026-08-24T00:00:00.000Z',
+        scannedRoots: [],
+        warnings: [],
+        worktreeRoot: ROOT,
+        worktrees: [
+          {
+            activity: WORKTREE_ACTIVITY.IDLE,
+            aheadCount: 0,
+            branch: 'openthrottle/plan-c34e018b',
+            checkoutId: 'checkout-plan',
+            commonDir: '/Users/matt/Development/openthrottle/.git',
+            dirty: false,
+            name: 'plan-c34e018b',
+            path: `${ROOT}/plan-c34e018b`,
+            planId: null,
+            planRunId: null,
+            repositoryId: 'repo-1',
+            runMonitored: null,
+            sources: [WORKTREE_DISCOVERY_SOURCE.GIT_WORKTREE_LIST],
+            unregistered: false,
+            ...overrides,
+          },
+        ],
+      };
+    };
+
+    it('is true for a registered plan-run worktree every guard passes', async () => {
+      const assess = vi.fn().mockResolvedValue({
+        branch: null,
+        outcome: PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME.REMOVABLE,
+        worktreePath: `${ROOT}/plan-c34e018b`,
+      });
+
+      const payload = await build(
+        planRunWorktree(),
+        assess,
+      ).discoveredWorktrees('user-1');
+
+      expect(payload.worktrees[0]?.safeToRemove).toBe(true);
+      expect(assess).toHaveBeenCalledWith({
+        baseCheckoutPath: '/Users/matt/Development/openthrottle',
+        worktreePath: `${ROOT}/plan-c34e018b`,
+      });
+    });
+
+    it('is false when a guard keeps it', async () => {
+      const assess = vi.fn().mockResolvedValue({
+        detail: 'it has uncommitted changes',
+        outcome: PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME.KEPT_DIRTY,
+        worktreePath: `${ROOT}/plan-c34e018b`,
+      });
+
+      const payload = await build(
+        planRunWorktree(),
+        assess,
+      ).discoveredWorktrees('user-1');
+
+      expect(payload.worktrees[0]?.safeToRemove).toBe(false);
+    });
+
+    it('is false, without assessing, for an unregistered worktree', async () => {
+      const assess = vi.fn();
+
+      const payload = await build(
+        planRunWorktree({ checkoutId: null, unregistered: true }),
+        assess,
+      ).discoveredWorktrees('user-1');
+
+      expect(payload.worktrees[0]?.safeToRemove).toBe(false);
+      expect(assess).not.toHaveBeenCalled();
     });
   });
 
@@ -171,7 +270,9 @@ describe('DiscoveredWorktreesResolver', () => {
       ]);
       const resolver = new DiscoveredWorktreesResolver(
         createMock<WorktreeActivityService>(),
+        createMock<RepositoryCheckoutsService>(),
         createMock<WorktreeCheckoutPruneService>({ pruneByIds }),
+        createMock<PlanRunWorktreeTeardownService>(),
       );
 
       const payload = await resolver.pruneWorktreeCheckouts('user-1', {
@@ -190,6 +291,102 @@ describe('DiscoveredWorktreesResolver', () => {
         },
         { checkoutId: 'checkout-nope', outcome: 'not-found', path: null },
       ]);
+    });
+  });
+
+  describe('removePlanRunWorktree', () => {
+    const PATH = `${ROOT}/plan-c34e018b`;
+
+    type TeardownMock = ReturnType<
+      typeof vi.fn<PlanRunWorktreeTeardownService['teardown']>
+    >;
+
+    const buildForRemoval = (options: {
+      readonly checkout: RepositoryCheckout | null;
+      readonly teardown?: TeardownMock;
+    }): {
+      readonly resolver: DiscoveredWorktreesResolver;
+      readonly teardown: TeardownMock;
+    } => {
+      const teardown =
+        options.teardown ??
+        vi.fn<PlanRunWorktreeTeardownService['teardown']>().mockResolvedValue({
+          branch: 'openthrottle/plan-c34e018b',
+          outcome: PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME.REMOVED,
+          worktreePath: PATH,
+        });
+      const resolver = new DiscoveredWorktreesResolver(
+        createMock<WorktreeActivityService>(),
+        createMock<RepositoryCheckoutsService>({
+          findByIdForUser: vi.fn().mockResolvedValue(options.checkout),
+        }),
+        createMock<WorktreeCheckoutPruneService>(),
+        createMock<PlanRunWorktreeTeardownService>({
+          resolveBaseCheckoutPath: vi.fn().mockResolvedValue('/repo'),
+          teardown,
+        }),
+      );
+      return { resolver, teardown };
+    };
+
+    const checkout = createMock<RepositoryCheckout>({
+      filesystemPath: PATH,
+      id: 'checkout-plan',
+      kind: 'worktree',
+    });
+
+    it('tears the worktree down from its primary checkout and reports the kept branch', async () => {
+      const { resolver, teardown } = buildForRemoval({ checkout });
+
+      const payload = await resolver.removePlanRunWorktree(
+        'user-1',
+        'checkout-plan',
+      );
+
+      expect(teardown).toHaveBeenCalledWith({
+        baseCheckoutPath: '/repo',
+        worktreePath: PATH,
+      });
+      expect(payload).toEqual({
+        branch: 'openthrottle/plan-c34e018b',
+        checkoutId: 'checkout-plan',
+        detail: null,
+        outcome: 'removed',
+        path: PATH,
+      });
+    });
+
+    it('reports why a guard kept the worktree', async () => {
+      const { resolver } = buildForRemoval({
+        checkout,
+        teardown: vi
+          .fn<PlanRunWorktreeTeardownService['teardown']>()
+          .mockResolvedValue({
+            detail: 'it has uncommitted changes',
+            outcome: PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME.KEPT_DIRTY,
+            worktreePath: PATH,
+          }),
+      });
+
+      const payload = await resolver.removePlanRunWorktree(
+        'user-1',
+        'checkout-plan',
+      );
+
+      expect(payload).toMatchObject({
+        branch: null,
+        detail: 'it has uncommitted changes',
+        outcome: 'kept-dirty',
+      });
+    });
+
+    it('rejects a checkout the caller does not own', async () => {
+      const { resolver, teardown } = buildForRemoval({ checkout: null });
+
+      await expect(
+        resolver.removePlanRunWorktree('user-1', 'checkout-other'),
+      ).rejects.toThrow(/No checkout/);
+      expect(teardown).not.toHaveBeenCalled();
     });
   });
 });
