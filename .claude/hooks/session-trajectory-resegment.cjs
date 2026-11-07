@@ -1080,7 +1080,7 @@ function mapSystem2(event) {
   };
 }
 function mapAssistant2(event) {
-  if (event.timestamp_ms === void 0) {
+  if (event.timestamp_ms === void 0 || event.model_call_id !== void 0) {
     return null;
   }
   return {
@@ -1103,39 +1103,108 @@ var TOOL_CALL_RESERVED_KEYS = /* @__PURE__ */ new Set([
   "hookAdditionalContexts",
   "toolCallId"
 ]);
-function toolNameOf(toolCall) {
+function toolKeyOf(toolCall) {
   if (!isRecord(toolCall)) {
     return null;
   }
   const key = Object.keys(toolCall).find(
     (candidate) => !TOOL_CALL_RESERVED_KEYS.has(candidate) && isRecord(toolCall[candidate])
   );
-  return key === void 0 ? null : key.replace(/ToolCall$/, "");
+  return key ?? null;
+}
+function toolNameOf(toolCall) {
+  const key = toolKeyOf(toolCall);
+  return key === null ? null : key.replace(/ToolCall$/, "");
+}
+function toolPayloadOf(toolCall) {
+  const key = toolKeyOf(toolCall);
+  if (key === null || !isRecord(toolCall)) {
+    return null;
+  }
+  const payload = toolCall[key];
+  return isRecord(payload) ? payload : null;
+}
+var REJECTED_WITHOUT_REASON = "Rejected by cursor permissions";
+var asNonEmptyString = (value) => {
+  const text = asString4(value);
+  return text === void 0 || text.trim() === "" ? void 0 : text;
+};
+function toolFailureOf(payload) {
+  const result = payload?.result;
+  if (!isRecord(result)) {
+    return null;
+  }
+  if (isRecord(result.error)) {
+    return asNonEmptyString(result.error.errorMessage) ?? asNonEmptyString(result.error.message) ?? "Tool call failed";
+  }
+  if (isRecord(result.rejected)) {
+    return asNonEmptyString(result.rejected.reason) ?? REJECTED_WITHOUT_REASON;
+  }
+  return null;
+}
+var TOOL_ARGS_INTERNAL_KEYS = /* @__PURE__ */ new Set([
+  "adminCommandDenylist",
+  "argumentsRepaired",
+  "closeStdin",
+  "conversationId",
+  "fileOutputThresholdBytes",
+  "hardTimeout",
+  "hasInputRedirect",
+  "hasOutputRedirect",
+  "parsingResult",
+  "requestId",
+  "simpleCommands",
+  "skipApproval",
+  "smartModeApprovalOnly",
+  "smartModeClassifierAllowed",
+  "symbolicPathArguments",
+  "timeoutBehavior",
+  "toolCallId"
+]);
+function toolArgsOf(payload) {
+  const args = payload.args;
+  if (!isRecord(args)) {
+    return args ?? null;
+  }
+  return Object.fromEntries(
+    Object.entries(args).filter(([key]) => !TOOL_ARGS_INTERNAL_KEYS.has(key))
+  );
+}
+function toolSuccessOf(payload) {
+  const result = payload.result;
+  const success = isRecord(result) ? result.success : void 0;
+  if (!isRecord(success)) {
+    return success ?? null;
+  }
+  return asString4(success.content) ?? success;
 }
 function mapToolCall(event) {
   const callId = asString4(event.call_id) ?? null;
-  const metadata = {
-    callId,
-    toolCall: event.tool_call ?? null,
-    toolName: toolNameOf(event.tool_call)
-  };
+  const toolName = toolNameOf(event.tool_call);
+  const payload = toolPayloadOf(event.tool_call);
+  const envelope = event.tool_call ?? null;
   if (event.subtype === "started") {
+    const toolCall = payload === null ? envelope : toolArgsOf(payload);
     return {
       delta: "",
       done: false,
       kind: CONVERSATION_STREAM_CHUNK_KINDS.toolCall,
-      metadata
+      metadata: { callId, toolCall, toolName }
     };
   }
-  if (event.subtype === "completed") {
-    return {
-      delta: "",
-      done: false,
-      kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
-      metadata
-    };
+  if (event.subtype !== "completed") {
+    return null;
   }
-  return null;
+  const failure = toolFailureOf(payload);
+  const success = payload === null ? envelope : toolSuccessOf(payload);
+  const failedMetadata = { callId, isError: true, toolCall: failure, toolName };
+  const succeededMetadata = { callId, toolCall: success, toolName };
+  return {
+    delta: "",
+    done: false,
+    kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
+    metadata: failure === null ? succeededMetadata : failedMetadata
+  };
 }
 function mapResult2(event) {
   const isError = event.is_error === true;
