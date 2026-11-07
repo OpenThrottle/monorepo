@@ -75,15 +75,13 @@ const flushGeneratedSourcesToServer = (tree: Tree): void => {
   removeSmokeArtifacts();
   mkdirSync(smokeDirAbsolute, { recursive: true });
 
-  const sourceChanges = tree
-    .listChanges()
-    .filter((change) => {
-      return (
-        change.path.startsWith(`${SMOKE_RELATIVE_DIR}/`) &&
-        change.path.endsWith('.ts') &&
-        !change.path.endsWith('.test.ts')
-      );
-    });
+  const sourceChanges = tree.listChanges().filter((change) => {
+    return (
+      change.path.startsWith(`${SMOKE_RELATIVE_DIR}/`) &&
+      change.path.endsWith('.ts') &&
+      !change.path.endsWith('.test.ts')
+    );
+  });
 
   for (const change of sourceChanges) {
     const content = tree.read(change.path, 'utf-8');
