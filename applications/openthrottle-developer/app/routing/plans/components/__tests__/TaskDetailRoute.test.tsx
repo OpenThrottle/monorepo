@@ -1,8 +1,8 @@
 import type { RenderResult } from '@testing-library/react';
-import { within } from '@testing-library/react';
+import { cleanup, within } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import * as React from 'react';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type {
   PlanDetailsFragment,
@@ -12,6 +12,23 @@ import { renderRoutesStub } from '~/testing/route-fixtures';
 
 import type { TaskDetailRouteProps } from '../TaskDetailRoute';
 import { TaskDetailRoute } from '../TaskDetailRoute';
+
+// FEATURE_BETA_PREVIEW resolves from process.env at module load, so the real
+// export is a frozen `false` under test. Mock it as a getter over a hoisted
+// box so the suite can exercise both sides of the toolbar and Hooks gate.
+const betaPreview = vi.hoisted(() => ({ enabled: true }));
+
+vi.mock('@openthrottle/react-router-utils', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@openthrottle/react-router-utils')>();
+
+  return {
+    ...actual,
+    get FEATURE_BETA_PREVIEW() {
+      return betaPreview.enabled;
+    },
+  };
+});
 
 const mockTask: TaskDetailsFragment = {
   __typename: 'TaskObject',
@@ -87,15 +104,25 @@ describe('TaskDetailRoute Component', () => {
   let component: RenderResult;
 
   beforeEach(() => {
+    betaPreview.enabled = true;
     component = renderRoute(buildProps());
   });
 
-  test('renders heading and the Details tab by default, with the toolbar parked', () => {
+  test('renders heading, the toolbar and the Details tab by default', () => {
     expect(
       component.getByRole('heading', { name: 'Test Task' }),
     ).toBeInTheDocument();
-    // PlanTaskToolbar is parked behind showToolbar=false in TaskDetailRoute.
+    expect(component.getByTestId('PlanTaskToolbar')).toBeInTheDocument();
+    expect(component.getByTestId('TaskDetails')).toBeInTheDocument();
+  });
+
+  test('hides the toolbar and Hooks tab without FEATURE_BETA_PREVIEW', () => {
+    cleanup();
+    betaPreview.enabled = false;
+    component = renderRoute(buildProps());
+
     expect(component.queryByTestId('PlanTaskToolbar')).toBeNull();
+    expect(component.queryByRole('tab', { name: /hooks/i })).toBeNull();
     expect(component.getByTestId('TaskDetails')).toBeInTheDocument();
   });
 
@@ -113,14 +140,14 @@ describe('TaskDetailRoute Component', () => {
     expect(scoped.getAllByText('Pending').length).toBeGreaterThanOrEqual(1);
   });
 
-  test('exposes the Details and Output tabs, with Artifacts and Hooks parked', () => {
+  test('exposes the Details, Output and Hooks tabs, with Artifacts parked', () => {
     expect(
       component.getByRole('tab', { name: /details/i }),
     ).toBeInTheDocument();
     expect(component.getByRole('tab', { name: /output/i })).toBeInTheDocument();
-    // Artifacts and Hooks are parked behind showArtifacts/showHooks=false.
+    expect(component.getByRole('tab', { name: /hooks/i })).toBeInTheDocument();
+    // Artifacts is parked behind showArtifacts=false.
     expect(component.queryByRole('tab', { name: /artifacts/i })).toBeNull();
-    expect(component.queryByRole('tab', { name: /hooks/i })).toBeNull();
   });
 
   test('switches to the Output tab and shows the empty state', async () => {
@@ -132,9 +159,7 @@ describe('TaskDetailRoute Component', () => {
     ).toBeInTheDocument();
   });
 
-  // Skipped while PlanTaskToolbar is parked behind showToolbar=false in
-  // TaskDetailRoute — restore these when the toolbar returns.
-  test.skip('disables task Mark Complete and Promote when the parent plan run is active', () => {
+  test('disables task Mark Complete and Promote when the parent plan run is active', () => {
     const running = within(
       renderRoute(buildProps(mockTask, buildPlan('IN_PROGRESS'))).container,
     );
@@ -147,7 +172,7 @@ describe('TaskDetailRoute Component', () => {
     ).toBeDisabled();
   });
 
-  test.skip('leaves task actions enabled when the parent plan is not running', () => {
+  test('leaves task actions enabled when the parent plan is not running', () => {
     const idle = within(
       renderRoute(buildProps(mockTask, buildPlan('PENDING'))).container,
     );

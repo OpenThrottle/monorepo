@@ -3,9 +3,26 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 
 import TaskDetailRoute from '../plans.$planId.tasks.$taskId._index';
+
+// FEATURE_BETA_PREVIEW resolves from process.env at module load, so the real
+// export is a frozen `false` under test. Mock it as a getter over a hoisted
+// box so the toolbar and Hooks tab render under test.
+const betaPreview = vi.hoisted(() => ({ enabled: true }));
+
+vi.mock('@openthrottle/react-router-utils', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@openthrottle/react-router-utils')>();
+
+  return {
+    ...actual,
+    get FEATURE_BETA_PREVIEW() {
+      return betaPreview.enabled;
+    },
+  };
+});
 
 const mockTask = {
   __typename: 'TaskObject' as const,
@@ -83,9 +100,8 @@ const renderRoute = (): {
   return { submitted };
 };
 
-// Skipped while PlanTaskToolbar (the only surface rendering task tags) is
-// parked behind showToolbar=false in TaskDetailRoute — restore when it returns.
-describe.skip('routes/plans.$planId.tasks.$taskId._index.tsx — task tags', () => {
+// PlanTaskToolbar is the only surface rendering task tags.
+describe('routes/plans.$planId.tasks.$taskId._index.tsx — task tags', () => {
   test('renders existing task tags', async () => {
     renderRoute();
     expect(await screen.findByTestId('PlanTagChips')).toBeInTheDocument();
@@ -115,9 +131,7 @@ describe.skip('routes/plans.$planId.tasks.$taskId._index.tsx — task tags', () 
   });
 });
 
-// Skipped while the Hooks tab is parked behind showHooks=false in
-// TaskDetailRoute — restore when it returns.
-describe.skip('routes/plans.$planId.tasks.$taskId._index.tsx — task lifecycle hooks', () => {
+describe('routes/plans.$planId.tasks.$taskId._index.tsx — task lifecycle hooks', () => {
   const renderWithHook = (): {
     submitted: Record<string, FormDataEntryValue | null>[];
   } => {

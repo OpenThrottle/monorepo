@@ -13,6 +13,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleTabs } from '@openthrottle/react-router-ui';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
+import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
 import {
   BoltIcon,
   ChevronLeftIcon,
@@ -62,8 +63,7 @@ export const TaskDetailRoute = (
 
   // Setup
   const showArtifacts = false;
-  const showHooks = false;
-  const showToolbar = false;
+  const showBetaSurfaces = FEATURE_BETA_PREVIEW; // toolbar + Hooks tab
 
   const effectivePlanId = task.planId ?? '';
   // Status OR tag: promotion writes PROMOTED plus the legacy `promoted` tag,
@@ -99,7 +99,7 @@ export const TaskDetailRoute = (
     <GlobalScreen className="-max-w-5xl flex h-full w-full flex-col gap-4 p-4 md:gap-8 md:p-8 lg:gap-12 lg:p-12">
       <TaskDetailRouteHeader status={task.status ?? ''} title={task.title} />
 
-      {showToolbar && (
+      {showBetaSurfaces && (
         <PlanTaskToolbar
           className="bg-card border-card-border rounded-lg border p-4"
           isPromoted={isPromoted}
@@ -168,7 +168,7 @@ export const TaskDetailRoute = (
           )}
 
           <div className="flex-1" />
-          {showHooks && (
+          {showBetaSurfaces && (
             <TabsTrigger
               className="flex-0 cursor-pointer"
               id="task-tab-hooks"
@@ -193,7 +193,7 @@ export const TaskDetailRoute = (
           </TabsContent>
         )}
 
-        {showHooks && (
+        {showBetaSurfaces && (
           <TabsContent value="hooks">
             <PlanLifecycleHooksSection
               afterHooks={task.afterHooks}
