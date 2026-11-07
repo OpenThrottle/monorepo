@@ -131,41 +131,39 @@ export const GlobalMetrics = (
                 {formatMetricsSummary(serverMetrics)}
               </span>
 
-              {isOpen && (
-                <Label
-                  aria-hidden={!isOpen}
-                  className={cn('flex shrink-0 items-center gap-2', {
-                    'opacity-100': isOpen,
-                    'pointer-events-none opacity-0': !isOpen,
-                    'transition-opacity duration-200': !prefersReducedMotion,
-                  })}
+              <Label
+                aria-hidden={!isOpen}
+                className={cn('flex shrink-0 items-center gap-2', {
+                  'opacity-100': isOpen,
+                  'pointer-events-none opacity-0': !isOpen,
+                  'transition-opacity duration-200': !prefersReducedMotion,
+                })}
+              >
+                <span>Poll</span>
+                <Select
+                  aria-label="Metrics poll interval"
+                  onValueChange={handleIntervalChange}
+                  value={intervalMs.toString()}
                 >
-                  <span>Poll</span>
-                  <Select
-                    aria-label="Metrics poll interval"
-                    onValueChange={handleIntervalChange}
-                    value={intervalMs.toString()}
+                  <SelectTrigger
+                    className="w-[80px]"
+                    data-testid="GlobalMetrics-poll-interval"
+                    tabIndex={isOpen ? undefined : -1}
                   >
-                    <SelectTrigger
-                      className="w-[80px]"
-                      data-testid="GlobalMetrics-poll-interval"
-                      tabIndex={isOpen ? undefined : -1}
-                    >
-                      <SelectValue placeholder="Poll interval…" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {GLOBAL_METRICS_POLL_INTERVAL_PRESETS.map((preset) => (
-                        <SelectItem
-                          key={preset.valueMs}
-                          value={preset.valueMs.toString()}
-                        >
-                          {preset.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </Label>
-              )}
+                    <SelectValue placeholder="Poll interval…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {GLOBAL_METRICS_POLL_INTERVAL_PRESETS.map((preset) => (
+                      <SelectItem
+                        key={preset.valueMs}
+                        value={preset.valueMs.toString()}
+                      >
+                        {preset.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Label>
             </div>
           </div>
 
