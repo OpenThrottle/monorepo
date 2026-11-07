@@ -1,6 +1,10 @@
+import { isRecord } from '@openthrottle/nodejs-utils';
 import { describe, expect, it } from 'vitest';
 
-import { AGENT_CONVERSATION_TOOL_METADATA_MAX_BYTES } from './agent-conversation.constants.ts';
+import {
+  AGENT_CONVERSATION_PAYLOAD_TRUNCATED_KEY,
+  AGENT_CONVERSATION_TOOL_METADATA_MAX_BYTES,
+} from './agent-conversation.constants.ts';
 import {
   capAgentConversationContent,
   capAgentConversationToolMetadata,
@@ -76,6 +80,139 @@ describe('capAgentConversationToolMetadata', () => {
 
     expect(result.toolMetadataTruncated).toBe(true);
     expect(result.toolMetadata).toMatchObject({ truncated: true });
+  });
+
+  it('returns metadata under the cap unchanged', () => {
+    const small = { events: [{ delta: '', kind: 'session' }] };
+
+    expect(capAgentConversationToolMetadata(small)).toEqual({
+      toolMetadata: small,
+      toolMetadataTruncated: false,
+    });
+  });
+
+  describe('when an events envelope is over the cap', () => {
+    const toolCallEvent = (callId: string): Record<string, unknown> => {
+      return {
+        delta: '',
+        kind: 'tool_call',
+        metadata: {
+          callId,
+          toolCall: { command: `echo ${callId}` },
+          toolName: 'Bash',
+        },
+      };
+    };
+
+    const toolResultEvent = (
+      callId: string,
+      output: string,
+      isError = false,
+    ): Record<string, unknown> => {
+      return {
+        delta: '',
+        kind: 'tool_result',
+        metadata: { callId, isError, toolCall: output },
+      };
+    };
+
+    const largeOutput = 'y'.repeat(200 * 1024);
+    const events = [
+      { delta: '', kind: 'session', metadata: { sessionId: 'sess-1' } },
+      toolCallEvent('call-a'),
+      toolCallEvent('call-big'),
+      toolCallEvent('call-b'),
+      toolResultEvent('call-a', 'alpha'),
+      toolResultEvent('call-big', largeOutput),
+      toolResultEvent('call-b', 'boom', true),
+      {
+        delta: '',
+        kind: 'usage',
+        metadata: { usage: { input_tokens: 12, output_tokens: 34 } },
+      },
+    ];
+
+    const result = capAgentConversationToolMetadata({ events });
+    const capped = result.toolMetadata;
+    const cappedEvents: readonly unknown[] =
+      capped !== null && Array.isArray(capped.events) ? capped.events : [];
+
+    it('fits the cap and flags the envelope truncated', () => {
+      expect(result.toolMetadataTruncated).toBe(true);
+      expect(capped).toMatchObject({ truncated: true });
+      expect(
+        Buffer.byteLength(JSON.stringify(capped), 'utf8'),
+      ).toBeLessThanOrEqual(AGENT_CONVERSATION_TOOL_METADATA_MAX_BYTES);
+    });
+
+    it('keeps every small event byte-for-byte, usage included', () => {
+      expect(cappedEvents).toHaveLength(events.length);
+      expect(cappedEvents.slice(0, 5)).toEqual(events.slice(0, 5));
+      expect(cappedEvents.slice(6)).toEqual(events.slice(6));
+    });
+
+    it('clips only the oversized payload to a prefix, flagged on its metadata', () => {
+      const clipped = cappedEvents[5];
+      const rawMetadata = isRecord(clipped) ? clipped.metadata : null;
+      const metadata = isRecord(rawMetadata) ? rawMetadata : {};
+      const output = metadata.toolCall;
+
+      expect(clipped).toMatchObject({ kind: 'tool_result' });
+      expect(metadata).toMatchObject({
+        [AGENT_CONVERSATION_PAYLOAD_TRUNCATED_KEY]: true,
+        callId: 'call-big',
+        isError: false,
+      });
+      expect(typeof output).toBe('string');
+      if (typeof output !== 'string') {
+        return;
+      }
+
+      expect(largeOutput.startsWith(output)).toBe(true);
+      // The shared limit spends nearly the whole cap on the one big payload.
+      expect(output.length).toBeGreaterThan(60 * 1024);
+    });
+  });
+
+  it('clips an oversized object payload to its JSON text', () => {
+    const args = { content: 'z'.repeat(100 * 1024), file_path: '/tmp/a.ts' };
+    const result = capAgentConversationToolMetadata({
+      events: [
+        {
+          delta: '',
+          kind: 'tool_call',
+          metadata: { callId: 'c1', toolCall: args, toolName: 'Write' },
+        },
+      ],
+    });
+
+    expect(result.toolMetadata).toMatchObject({
+      events: [
+        {
+          kind: 'tool_call',
+          metadata: {
+            [AGENT_CONVERSATION_PAYLOAD_TRUNCATED_KEY]: true,
+            callId: 'c1',
+            toolCall: expect.stringMatching(/^\{"content":"z+$/),
+            toolName: 'Write',
+          },
+        },
+      ],
+      truncated: true,
+    });
+  });
+
+  it('falls back to a bare truncated marker when the skeleton alone is over the cap', () => {
+    const events = Array.from({ length: 5000 }, (_, index) => ({
+      delta: '',
+      kind: 'tool_call',
+      metadata: { callId: `call-${index}`, toolName: 'Bash' },
+    }));
+
+    expect(capAgentConversationToolMetadata({ events })).toEqual({
+      toolMetadata: { truncated: true },
+      toolMetadataTruncated: true,
+    });
   });
 });
 

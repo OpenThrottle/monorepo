@@ -133,6 +133,21 @@ export const parseChunkMetadataRecord = (
   return safeParse(metadataJson);
 };
 
+/**
+ * Key the server sets to `true` on a persisted event's metadata when it clipped
+ * that event's payload to fit the tool_metadata cap. Mirrors
+ * `AGENT_CONVERSATION_PAYLOAD_TRUNCATED_KEY` in `@openthrottle/nestjs-repositories`,
+ * which this client package cannot import.
+ */
+const PAYLOAD_TRUNCATED_KEY = 'payloadTruncated';
+
+/** Spread into a tool event: the truncation flag when set, nothing otherwise. */
+const payloadTruncatedField = (
+  payloadTruncated: boolean,
+): Pick<ChatTurnToolEvent, 'payloadTruncated'> => {
+  return payloadTruncated ? { payloadTruncated: true } : {};
+};
+
 /** Placeholder header used when no backend reported a tool name at all. */
 const FALLBACK_TOOL_NAME = 'tool';
 
@@ -216,6 +231,8 @@ export interface ParsedChunkMetadata {
   readonly isError: boolean;
   /** A legacy claude argument fragment, appended to the open call's args. */
   readonly partialJson: string | null;
+  /** True when the server clipped this chunk's payload to fit the persisted cap. */
+  readonly payloadTruncated: boolean;
   readonly sessionId: string | null;
   /**
    * The `toolCall` payload as display text: a string payload as-is (a tool
@@ -234,6 +251,7 @@ const EMPTY_METADATA: ParsedChunkMetadata = {
   hasToolIdentity: false,
   isError: false,
   partialJson: null,
+  payloadTruncated: false,
   sessionId: null,
   toolCallJson: null,
   toolName: FALLBACK_TOOL_NAME,
@@ -303,6 +321,7 @@ const normalizeMetadata = (
     hasToolIdentity: toolName !== null || callId !== null,
     isError: parsed.isError === true,
     partialJson: asString(parsed.partialJson),
+    payloadTruncated: parsed[PAYLOAD_TRUNCATED_KEY] === true,
     sessionId: asString(parsed.sessionId),
     toolCallJson: toPayloadText(parsed.toolCall),
     toolName: toolName ?? FALLBACK_TOOL_NAME,
@@ -418,6 +437,7 @@ export const applyTurnToolCall = (
     return patchToolEvent(events, existingIndex, (event) => ({
       ...event,
       argsJson,
+      ...payloadTruncatedField(meta.payloadTruncated),
     }));
   }
 
@@ -447,6 +467,7 @@ export const applyTurnToolCall = (
       error: null,
       kind: 'tool',
       name: meta.toolName,
+      ...payloadTruncatedField(meta.payloadTruncated),
       resultJson: null,
       sortOrder,
       status: 'running',
@@ -460,6 +481,8 @@ interface ToolResultInput {
   readonly isError: boolean;
   /** An id-less result names a tool, so it must not adopt another's card. */
   readonly namesTool: boolean;
+  /** True when the server clipped this result to fit the persisted cap. */
+  readonly payloadTruncated: boolean;
   /**
    * Whether an id that matches no call may still resolve the newest open one.
    * True only for legacy claude blocks, whose start chunks may predate ids.
@@ -481,6 +504,7 @@ const resolveToolResult = (
 
   const resolved = {
     error: input.isError ? (input.resultJson ?? 'Tool call failed.') : null,
+    ...payloadTruncatedField(input.payloadTruncated),
     resultJson: input.isError ? null : input.resultJson,
     status: input.isError ? ChatToolStatus.failed : ChatToolStatus.succeeded,
   };
@@ -528,6 +552,7 @@ export const applyTurnToolResult = (
           {
             ...block,
             namesTool: false,
+            payloadTruncated: false,
             positionalFallback: true,
             toolName: FALLBACK_TOOL_NAME,
           },
@@ -543,6 +568,7 @@ export const applyTurnToolResult = (
       callId: meta.callId,
       isError: meta.isError,
       namesTool: meta.hasToolIdentity,
+      payloadTruncated: meta.payloadTruncated,
       positionalFallback: false,
       resultJson: meta.toolCallJson,
       toolName: meta.toolName,
