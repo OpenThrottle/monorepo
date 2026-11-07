@@ -15,6 +15,9 @@ allowBuilds:
   '@swc/core': false
   bcrypt: false
   core-js: false
+  # electron's postinstall downloads the Electron binary (dist/ + path.txt);
+  # without it `openthrottle-app:dev` fails with "Error: Electron uninstall".
+  electron: true
   electron-winstaller: false
   esbuild: false
   keytar: false
