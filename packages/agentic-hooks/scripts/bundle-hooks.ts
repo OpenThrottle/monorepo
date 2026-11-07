@@ -60,6 +60,10 @@ const BUNDLES: readonly BundleSpec[] = [
     outFile: '.claude/hooks/skill-usage-backfill.cjs',
   },
   {
+    entry: 'adapters/claude/resegment.ts',
+    outFile: '.claude/hooks/session-trajectory-resegment.cjs',
+  },
+  {
     entry: 'adapters/claude/capture.ts',
     outFile: '.claude/hooks/skill-usage-capture.cjs',
   },

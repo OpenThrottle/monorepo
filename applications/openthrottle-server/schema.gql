@@ -6351,6 +6351,11 @@ type Mutation {
   recordAgentTrajectory(input: RecordAgentTrajectoryInput!): AgentTrajectory!
 
   """
+  Replace the ATIF document on an existing trajectory in place, keeping its id so human labels keyed by trajectory id survive. Used by the session re-segment operator when a task's boundaries change. The document is validated and capped the same way as recordAgentTrajectory.
+  """
+  replaceAgentTrajectory(id: ID!, input: ReplaceAgentTrajectoryInput!): AgentTrajectory!
+
+  """
   Agents namespace: run one chat turn against the server-side agents path (OpenThrottle / MCP developer). Returns assistant text, mcpTool, structuredPayloadJson, and toolMetadataJson; uses errorMessage instead of throws for expected validation failures.
   """
   agentsRunChatTurn(input: AgentsRunChatTurnInput!): AgentsChatTurnResult!
@@ -7108,6 +7113,33 @@ input RecordAgentTrajectoryInput {
 
   """Task the run worked on. Omit for a run not scoped to one task."""
   taskId: ID
+
+  """
+  The ATIF document as a JSON string. Validated, then capped server-side at 4 MiB.
+  """
+  trajectoryJson: String!
+}
+
+input ReplaceAgentTrajectoryInput {
+  """Wall-clock duration of the run in milliseconds."""
+  durationMs: Int
+
+  """Process exit code of the run."""
+  exitCode: Int
+
+  """
+  Optional key that makes a later recordAgentTrajectory with the same key a no-op. At most 200 characters.
+  """
+  idempotencyKey: String
+
+  """Model that ran, when known."""
+  model: String
+
+  """Free-form result label for the run, for example completed."""
+  outcome: String
+
+  """Plan run the trajectory belongs to after the replace."""
+  planRunId: ID!
 
   """
   The ATIF document as a JSON string. Validated, then capped server-side at 4 MiB.

@@ -1,10 +1,12 @@
 /**
  * @description Reads an interactive Claude Code session transcript (`~/.claude/projects/…/<id>.jsonl`)
  * as per-task ATIF trajectories. One session runs a whole plan, so it is cut at the OpenThrottle
- * task boundaries the transcript itself records: every `begin_task_session` call opens a segment,
- * and the next `begin_task_session` or the run's `settle_plan_run` closes it. Only those segments
- * are ever read, so a session that never worked an OpenThrottle task yields nothing — that is the
- * privacy boundary (docs/openthrottle/eval-system-adr.md § Decision 2).
+ * task boundaries the transcript itself records: a task segment starts at the earliest of
+ * `update_task(IN_PROGRESS)`, `claim_plan_messages` and `begin_task_session` for that task id, and
+ * ends at `update_task(COMPLETED|BLOCKED|SKIPPED)` plus that task's `git commit` when it follows
+ * immediately. Steps between task segments (and plan wrap-up through `settle_plan_run`) are
+ * plan-level segments with `taskId: null`. A session that never started an OpenThrottle task yields
+ * nothing — that is the privacy boundary (docs/openthrottle/eval-system-adr.md § Decision 2).
  *
  * Session lines share the shape of `claude -p --output-format stream-json` events (`assistant`
  * lines carry content blocks, `user` lines carry tool results), so the stream mapper does the
@@ -24,9 +26,13 @@ import { TRAJECTORY_TRANSPORT_BYTES } from './trajectory-record.ts';
 
 /** OpenThrottle MCP tool names end with these, whatever the server alias (`mcp__<alias>__<tool>`). */
 const BEGIN_TASK_TOOL = '__begin_task_session';
+const CLAIM_MESSAGES_TOOL = '__claim_plan_messages';
 const REGISTER_RUN_TOOL = '__register_plan_run';
 const SETTLE_RUN_TOOL = '__settle_plan_run';
 const UPDATE_TASK_TOOL = '__update_task';
+
+/** Task statuses that open a task segment. */
+const START_TASK_STATUS = 'IN_PROGRESS';
 
 /** Task statuses that end a task's work. */
 const TERMINAL_TASK_STATUSES: ReadonlySet<string> = new Set([
@@ -34,6 +40,9 @@ const TERMINAL_TASK_STATUSES: ReadonlySet<string> = new Set([
   'COMPLETED',
   'SKIPPED',
 ]);
+
+/** A Bash whose command runs `git commit` is the task's trailing commit. */
+const GIT_COMMIT_COMMAND = /\bgit\s+commit\b/;
 
 /** Budget for each embedded subagent, so delegated work cannot crowd out the task itself. */
 const SUBAGENT_TRANSPORT_BYTES = 160 * 1024;
@@ -114,8 +123,11 @@ const toolResultsOf = (
 };
 
 /**
- * @description One OpenThrottle task's stretch of a session transcript, as line indexes into the
- * events the caller parsed. `closed` means a later boundary exists, so the segment will not grow.
+ * @description One stretch of a session transcript, as line indexes into the events the caller
+ * parsed. `taskId` is the OpenThrottle task for a task segment, or `null` for a plan-level gap /
+ * wrap-up. `closed` means a later boundary exists, so the segment will not grow. `toolUseId` is the
+ * idempotency key fragment: the task's `begin_task_session` id when present, else the start
+ * marker's id (or the first tool-use id in a plan-level segment).
  * @public
  */
 export interface ClaudeSessionTaskSegment {
@@ -123,24 +135,209 @@ export interface ClaudeSessionTaskSegment {
   readonly endIndex: number;
   readonly planId: string | undefined;
   readonly startIndex: number;
-  readonly taskId: string;
-  /** The `begin_task_session` call's id: a stable key for "already uploaded". */
+  readonly taskId: string | null;
   readonly toolUseId: string;
 }
 
-/**
- * @description The task segments in a session's events, in order.
- * @public
- */
-export const findClaudeSessionTaskSegments = (
+interface TaskMarker {
+  readonly index: number;
+  readonly planId: string | undefined;
+  readonly toolUseId: string;
+}
+
+interface TaskBounds {
+  readonly begin: TaskMarker | undefined;
+  readonly end: TaskMarker | undefined;
+  readonly start: TaskMarker;
+  readonly taskId: string;
+}
+
+interface MutableTaskBounds {
+  begin: TaskMarker | undefined;
+  end: TaskMarker | undefined;
+  start: TaskMarker | undefined;
+}
+
+const isCommitBash = (use: ToolUse): boolean => {
+  if (use.name !== 'Bash') {
+    return false;
+  }
+
+  const command = stringOf(use.input.command);
+
+  return command !== undefined && GIT_COMMIT_COMMAND.test(command);
+};
+
+/** Exclusive end index after `useIds` have all received a tool result, capped at `stopAt`. */
+const exclusiveEndAfterResults = (
   events: readonly unknown[],
-): readonly ClaudeSessionTaskSegment[] => {
-  const boundaries: {
-    readonly index: number;
-    readonly planId: string | undefined;
-    readonly taskId: string | undefined;
-    readonly toolUseId: string;
-  }[] = [];
+  fromIndex: number,
+  useIds: ReadonlySet<string>,
+  stopAt: number,
+): number => {
+  if (useIds.size === 0) {
+    return Math.min(fromIndex + 1, stopAt);
+  }
+
+  const pending = new Set(useIds);
+  let end = Math.min(fromIndex + 1, stopAt);
+
+  for (
+    let index = fromIndex + 1;
+    index < stopAt && pending.size > 0;
+    index += 1
+  ) {
+    if (!isMainLine(events[index])) {
+      end = index + 1;
+      continue;
+    }
+
+    for (const result of toolResultsOf(events[index])) {
+      pending.delete(result.toolUseId);
+    }
+
+    end = index + 1;
+  }
+
+  return end;
+};
+
+/**
+ * End of a task after its terminal `update_task`, including an immediate trailing `git commit`
+ * Bash (and its result) when present before `stopAt`.
+ */
+const exclusiveEndAfterTerminal = (
+  events: readonly unknown[],
+  terminal: TaskMarker,
+  stopAt: number,
+): number => {
+  let end = exclusiveEndAfterResults(
+    events,
+    terminal.index,
+    new Set([terminal.toolUseId]),
+    stopAt,
+  );
+
+  for (let index = end; index < stopAt; index += 1) {
+    if (!isMainLine(events[index])) {
+      continue;
+    }
+
+    const uses = toolUsesOf(events[index]);
+
+    if (uses.length === 0) {
+      continue;
+    }
+
+    if (!uses.every(isCommitBash)) {
+      break;
+    }
+
+    end = exclusiveEndAfterResults(
+      events,
+      index,
+      new Set(
+        uses.map((use) => {
+          return use.id;
+        }),
+      ),
+      stopAt,
+    );
+    break;
+  }
+
+  return end;
+};
+
+const firstToolUseIdInRange = (
+  events: readonly unknown[],
+  startIndex: number,
+  endIndex: number,
+): string | undefined => {
+  for (let index = startIndex; index < endIndex; index += 1) {
+    if (!isMainLine(events[index])) {
+      continue;
+    }
+
+    const [use] = toolUsesOf(events[index]);
+
+    if (use !== undefined) {
+      return use.id;
+    }
+  }
+
+  return undefined;
+};
+
+const planIdNear = (
+  events: readonly unknown[],
+  startIndex: number,
+  fallback: string | undefined,
+): string | undefined => {
+  if (fallback !== undefined) {
+    return fallback;
+  }
+
+  for (let index = startIndex; index >= 0; index -= 1) {
+    if (!isMainLine(events[index])) {
+      continue;
+    }
+
+    for (const use of toolUsesOf(events[index])) {
+      const planId = stringOf(use.input.planId);
+
+      if (planId !== undefined) {
+        return planId;
+      }
+    }
+  }
+
+  return undefined;
+};
+
+const collectTaskBounds = (
+  events: readonly unknown[],
+): {
+  readonly settleIndex: number | undefined;
+  readonly settleToolUseId: string | undefined;
+  readonly tasks: readonly TaskBounds[];
+} => {
+  const byTask = new Map<string, MutableTaskBounds>();
+  let settleIndex: number | undefined;
+  let settleToolUseId: string | undefined;
+
+  const touch = (taskId: string): MutableTaskBounds => {
+    const existing = byTask.get(taskId);
+
+    if (existing !== undefined) {
+      return existing;
+    }
+
+    const created: MutableTaskBounds = {
+      begin: undefined,
+      end: undefined,
+      start: undefined,
+    };
+    byTask.set(taskId, created);
+
+    return created;
+  };
+
+  const noteStart = (
+    taskId: string,
+    marker: TaskMarker,
+    isBegin: boolean,
+  ): void => {
+    const entry = touch(taskId);
+
+    if (isBegin && entry.begin === undefined) {
+      entry.begin = marker;
+    }
+
+    if (entry.start === undefined || marker.index < entry.start.index) {
+      entry.start = marker;
+    }
+  };
 
   events.forEach((event, index) => {
     if (!isMainLine(event)) {
@@ -148,37 +345,213 @@ export const findClaudeSessionTaskSegments = (
     }
 
     for (const use of toolUsesOf(event)) {
-      const isBegin = use.name.endsWith(BEGIN_TASK_TOOL);
+      const planId = stringOf(use.input.planId);
+      const marker = { index, planId, toolUseId: use.id };
 
-      if (isBegin || use.name.endsWith(SETTLE_RUN_TOOL)) {
-        boundaries.push({
-          index,
-          planId: stringOf(use.input.planId),
-          taskId: isBegin ? stringOf(use.input.taskId) : undefined,
-          toolUseId: use.id,
-        });
+      if (use.name.endsWith(SETTLE_RUN_TOOL)) {
+        settleIndex = index;
+        settleToolUseId = use.id;
+        continue;
+      }
+
+      if (use.name.endsWith(BEGIN_TASK_TOOL)) {
+        const taskId = stringOf(use.input.taskId);
+
+        if (taskId !== undefined) {
+          noteStart(taskId, marker, true);
+        }
+
+        continue;
+      }
+
+      if (use.name.endsWith(CLAIM_MESSAGES_TOOL)) {
+        const taskId = stringOf(use.input.taskId);
+
+        if (taskId !== undefined) {
+          noteStart(taskId, marker, false);
+        }
+
+        continue;
+      }
+
+      if (!use.name.endsWith(UPDATE_TASK_TOOL)) {
+        continue;
+      }
+
+      const taskId = stringOf(use.input.id);
+      const status = stringOf(use.input.status);
+
+      if (taskId === undefined || status === undefined) {
+        continue;
+      }
+
+      if (status === START_TASK_STATUS) {
+        noteStart(taskId, marker, false);
+        continue;
+      }
+
+      if (TERMINAL_TASK_STATUSES.has(status)) {
+        const entry = touch(taskId);
+
+        if (entry.end === undefined || index > entry.end.index) {
+          entry.end = marker;
+        }
       }
     }
   });
 
-  return boundaries.flatMap((boundary, position) => {
-    const next = boundaries[position + 1];
-
-    if (boundary.taskId === undefined) {
+  const tasks = [...byTask.entries()].flatMap(([taskId, entry]) => {
+    if (entry.start === undefined) {
       return [];
     }
 
     return [
       {
-        closed: next !== undefined,
-        endIndex: next?.index ?? events.length,
-        planId: boundary.planId,
-        startIndex: boundary.index,
-        taskId: boundary.taskId,
-        toolUseId: boundary.toolUseId,
+        begin: entry.begin,
+        end: entry.end,
+        start: entry.start,
+        taskId,
       },
     ];
   });
+
+  tasks.sort((left, right) => {
+    return left.start.index - right.start.index;
+  });
+
+  return { settleIndex, settleToolUseId, tasks };
+};
+
+const planLevelSegment = (
+  events: readonly unknown[],
+  startIndex: number,
+  endIndex: number,
+  closed: boolean,
+  planId: string | undefined,
+  toolUseId: string,
+): ClaudeSessionTaskSegment | undefined => {
+  if (startIndex >= endIndex) {
+    return undefined;
+  }
+
+  return {
+    closed,
+    endIndex,
+    planId: planIdNear(events, startIndex, planId),
+    startIndex,
+    taskId: null,
+    toolUseId: firstToolUseIdInRange(events, startIndex, endIndex) ?? toolUseId,
+  };
+};
+
+/**
+ * @description The task and plan-level segments in a session's events, in order.
+ * @public
+ */
+export const findClaudeSessionTaskSegments = (
+  events: readonly unknown[],
+): readonly ClaudeSessionTaskSegment[] => {
+  const { settleIndex, settleToolUseId, tasks } = collectTaskBounds(events);
+
+  if (tasks.length === 0) {
+    return [];
+  }
+
+  const taskSegments: ClaudeSessionTaskSegment[] = tasks.map(
+    (task, position) => {
+      const nextStart = tasks[position + 1]?.start.index;
+      const stopAt = nextStart ?? settleIndex ?? events.length;
+      const terminal = task.end;
+      let endIndex: number;
+
+      if (terminal !== undefined) {
+        endIndex = exclusiveEndAfterTerminal(events, terminal, stopAt);
+      } else if (nextStart !== undefined) {
+        endIndex = nextStart;
+      } else if (settleIndex === undefined) {
+        endIndex = events.length;
+      } else {
+        const settleIds =
+          settleToolUseId === undefined ? [] : [settleToolUseId];
+        endIndex = exclusiveEndAfterResults(
+          events,
+          settleIndex,
+          new Set(settleIds),
+          events.length,
+        );
+      }
+
+      const closed =
+        terminal !== undefined ||
+        nextStart !== undefined ||
+        settleIndex !== undefined;
+
+      return {
+        closed,
+        endIndex,
+        planId: task.begin?.planId ?? task.start.planId,
+        startIndex: task.start.index,
+        taskId: task.taskId,
+        toolUseId: task.begin?.toolUseId ?? task.start.toolUseId,
+      };
+    },
+  );
+
+  const segments: ClaudeSessionTaskSegment[] = [];
+
+  taskSegments.forEach((segment, position) => {
+    const previous = taskSegments[position - 1];
+
+    if (previous !== undefined) {
+      const gap = planLevelSegment(
+        events,
+        previous.endIndex,
+        segment.startIndex,
+        true,
+        previous.planId ?? segment.planId,
+        `plan-gap:${previous.toolUseId}:${segment.toolUseId}`,
+      );
+
+      if (gap !== undefined) {
+        segments.push(gap);
+      }
+    }
+
+    segments.push(segment);
+  });
+
+  const last = taskSegments[taskSegments.length - 1];
+
+  if (last !== undefined && last.closed && last.endIndex < events.length) {
+    const wrapUpClosed = settleIndex !== undefined;
+    let wrapUpEnd = events.length;
+
+    if (settleIndex !== undefined) {
+      const settleIds = settleToolUseId === undefined ? [] : [settleToolUseId];
+      wrapUpEnd = exclusiveEndAfterResults(
+        events,
+        settleIndex,
+        new Set(settleIds),
+        events.length,
+      );
+    }
+
+    const wrapUpToolUseId = settleToolUseId ?? `plan-wrap:${last.toolUseId}`;
+    const wrapUp = planLevelSegment(
+      events,
+      last.endIndex,
+      Math.max(wrapUpEnd, last.endIndex),
+      wrapUpClosed,
+      last.planId,
+      wrapUpToolUseId,
+    );
+
+    if (wrapUp !== undefined) {
+      segments.push(wrapUp);
+    }
+  }
+
+  return segments;
 };
 
 /**
@@ -245,8 +618,24 @@ export const findClaudeSessionSubagentIds = (
  */
 export const claudeSessionTaskOutcome = (
   events: readonly unknown[],
-  taskId: string,
+  taskId: string | null,
 ): string => {
+  if (taskId === null) {
+    let settleOutcome = 'unknown';
+
+    for (const event of events) {
+      for (const use of toolUsesOf(event)) {
+        const status = stringOf(use.input.status);
+
+        if (use.name.endsWith(SETTLE_RUN_TOOL) && status !== undefined) {
+          settleOutcome = status.toLowerCase();
+        }
+      }
+    }
+
+    return settleOutcome;
+  }
+
   let outcome = 'unknown';
 
   for (const event of events) {
@@ -402,7 +791,8 @@ export interface BuildClaudeSessionTrajectoryInput {
   /** The segment's events (`events.slice(segment.startIndex, segment.endIndex)`). */
   readonly segmentEvents: readonly unknown[];
   readonly subagents: readonly ClaudeSessionSubagent[];
-  readonly taskId: string;
+  /** OpenThrottle task id, or `null` for a plan-level segment. */
+  readonly taskId: string | null;
 }
 
 /**

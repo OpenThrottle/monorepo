@@ -100,6 +100,7 @@ const mockService = createMock<AgentTrajectoriesService>({
   findById: vi.fn(),
   findByPlanRun: vi.fn(),
   findByTask: vi.fn(),
+  replace: vi.fn(),
 });
 
 describe('AgentTrajectoriesResolver', () => {
@@ -221,6 +222,59 @@ describe('AgentTrajectoriesResolver', () => {
       await expect(resolver.recordAgentTrajectory(buildInput())).rejects.toBe(
         failure,
       );
+    });
+  });
+
+  describe('replaceAgentTrajectory', () => {
+    const replaceInput = {
+      durationMs: 900,
+      exitCode: 0,
+      idempotencyKey: 'session:s1:toolu_1',
+      model: 'claude-opus-5-5',
+      outcome: 'completed',
+      planRunId,
+      trajectoryJson: JSON.stringify(atif),
+    };
+
+    test('rewrites the document in place and keeps the id', async () => {
+      const row = buildRow({ id: 'keep-me' });
+      vi.mocked(mockService.replace).mockResolvedValue(row);
+
+      const result = await resolver.replaceAgentTrajectory(
+        'keep-me',
+        replaceInput,
+      );
+
+      expect(mockService.replace).toHaveBeenCalledWith(
+        'keep-me',
+        expect.objectContaining({
+          idempotencyKey: 'session:s1:toolu_1',
+          planRunId,
+          toolCallCount: 1,
+          trajectory: atif,
+        }),
+      );
+      expect(result.id).toBe('keep-me');
+    });
+
+    test('rejects a document that is not valid ATIF', async () => {
+      await expect(
+        resolver.replaceAgentTrajectory('keep-me', {
+          ...replaceInput,
+          trajectoryJson: '{"x":1}',
+        }),
+      ).rejects.toThrow(
+        new BadRequestException('trajectoryJson is not a valid ATIF document'),
+      );
+      expect(mockService.replace).not.toHaveBeenCalled();
+    });
+
+    test('maps a missing row to NotFound', async () => {
+      vi.mocked(mockService.replace).mockResolvedValue(null);
+
+      await expect(
+        resolver.replaceAgentTrajectory('missing', replaceInput),
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 

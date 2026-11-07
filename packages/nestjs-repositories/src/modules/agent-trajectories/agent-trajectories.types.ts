@@ -38,3 +38,28 @@ export interface CreateAgentTrajectoryInput {
   readonly trajectory: AtifTrajectory;
   readonly truncated: boolean;
 }
+
+/**
+ * @description Fields a caller may rewrite on an existing trajectory while keeping its id (so
+ * human labels keyed by trajectory id survive a re-segment). `taskId`, `source` and `driver` stay
+ * with the row; the document and its derived summary columns are replaced.
+ * @public
+ */
+export interface ReplaceAgentTrajectoryInput {
+  readonly byteSize: number;
+  readonly cachedTokens: number | null;
+  readonly costUsd: number | null;
+  readonly durationMs: number | null;
+  readonly exitCode: number | null;
+  readonly idempotencyKey: string | null;
+  readonly incomplete: boolean;
+  readonly inputTokens: number | null;
+  readonly model: string | null;
+  readonly outcome: string | null;
+  readonly outputTokens: number | null;
+  readonly planRunId: string;
+  readonly schemaVersion: string;
+  readonly toolCallCount: number;
+  readonly trajectory: AtifTrajectory;
+  readonly truncated: boolean;
+}

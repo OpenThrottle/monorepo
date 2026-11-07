@@ -26,6 +26,20 @@ const eventsOf = (name: string): readonly unknown[] => {
     });
 };
 
+const rangesOf = (
+  segments: ReturnType<typeof findClaudeSessionTaskSegments>,
+): readonly (readonly [string | null, number, number, boolean, string])[] => {
+  return segments.map((segment) => {
+    return [
+      segment.taskId,
+      segment.startIndex,
+      segment.endIndex,
+      segment.closed,
+      segment.toolUseId,
+    ];
+  });
+};
+
 const session = eventsOf('claude-session.synthetic.jsonl');
 const subagent = eventsOf('agent-abc123.synthetic.jsonl');
 const [first, second] = findClaudeSessionTaskSegments(session);
@@ -42,11 +56,11 @@ const buildFirst = () => {
 };
 
 describe('findClaudeSessionTaskSegments', () => {
-  it('cuts the session at each begin_task_session', () => {
+  it('cuts the session into one segment per OpenThrottle task', () => {
     expect([first?.taskId, second?.taskId]).toEqual(['task-1', 'task-2']);
   });
 
-  it('closes a segment where the next task begins', () => {
+  it('ends a completed task after its terminal update, before the next task', () => {
     expect(first).toMatchObject({
       closed: true,
       endIndex: second?.startIndex,
@@ -55,12 +69,12 @@ describe('findClaudeSessionTaskSegments', () => {
     });
   });
 
-  it('leaves the last segment open until another boundary appears', () => {
+  it('leaves the last unfinished task open', () => {
     expect(second).toMatchObject({ closed: false, endIndex: session.length });
   });
 
-  describe('a settle_plan_run call', () => {
-    it('closes the segment it ends', () => {
+  describe('a settle_plan_run call after an open task', () => {
+    it('closes that task and keeps the settle inside its range', () => {
       const settle = {
         message: {
           content: [
@@ -75,14 +89,94 @@ describe('findClaudeSessionTaskSegments', () => {
         type: 'assistant',
       };
       const segments = findClaudeSessionTaskSegments([...session, settle]);
+      const last = segments[segments.length - 1];
 
       expect(segments.map((segment) => segment.closed)).toEqual([true, true]);
+      expect(last?.taskId).toBe('task-2');
+      expect(last?.endIndex).toBeGreaterThan(session.length);
     });
   });
 
   describe('a session that never worked an OpenThrottle task', () => {
     it('has no segments, so nothing is ever uploaded', () => {
       expect(findClaudeSessionTaskSegments(session.slice(0, 3))).toEqual([]);
+    });
+  });
+
+  describe('pre-work before the flip', () => {
+    it('starts at claim_plan_messages and keeps the neighbour cancel poll out', () => {
+      const events = eventsOf('pre-work-before-flip.synthetic.jsonl');
+      const segments = findClaudeSessionTaskSegments(events);
+
+      expect(rangesOf(segments)).toEqual([
+        ['task-1', 3, 15, true, 't-begin-1'],
+        [null, 15, 17, true, 't-runs'],
+        ['task-2', 17, 24, false, 't-begin-2'],
+      ]);
+      expect(
+        events
+          .slice(segments[0]?.startIndex, segments[0]?.endIndex)
+          .flatMap((event) => {
+            return JSON.stringify(event);
+          })
+          .join(''),
+      ).not.toContain('t-claim-2');
+      expect(
+        events
+          .slice(segments[2]?.startIndex, segments[2]?.endIndex)
+          .flatMap((event) => {
+            return JSON.stringify(event);
+          })
+          .join(''),
+      ).toContain('t-claim-2');
+    });
+  });
+
+  describe('a flip with no begin_task_session', () => {
+    it('still opens a segment and keys it on the IN_PROGRESS call', () => {
+      const events = eventsOf('no-begin-task-session.synthetic.jsonl');
+      const segments = findClaudeSessionTaskSegments(events);
+
+      expect(rangesOf(segments)).toEqual([['task-1', 3, 9, true, 't-prog']]);
+    });
+  });
+
+  describe('wrap-up after the last task', () => {
+    it('emits a plan-level segment for post-task work', () => {
+      const events = eventsOf('wrap-up-after-last.synthetic.jsonl');
+      const segments = findClaudeSessionTaskSegments(events);
+
+      expect(rangesOf(segments)).toEqual([
+        ['task-1', 3, 9, true, 't-begin'],
+        [null, 9, 13, false, 't-push'],
+      ]);
+    });
+  });
+
+  describe('a terminating settle', () => {
+    it('keeps settle inside the plan-level wrap-up segment', () => {
+      const events = eventsOf('terminating-settle.synthetic.jsonl');
+      const segments = findClaudeSessionTaskSegments(events);
+
+      expect(rangesOf(segments)).toEqual([
+        ['task-1', 3, 7, true, 't-begin'],
+        [null, 7, 9, true, 't-settle'],
+      ]);
+      expect(
+        JSON.stringify(
+          events.slice(segments[1]?.startIndex, segments[1]?.endIndex),
+        ),
+      ).toContain('settle_plan_run');
+    });
+  });
+
+  describe('a task BLOCKED mid-run', () => {
+    it('closes the segment at the BLOCKED update', () => {
+      const events = eventsOf('blocked-mid-run.synthetic.jsonl');
+      const segments = findClaudeSessionTaskSegments(events);
+
+      expect(rangesOf(segments)).toEqual([['task-1', 3, 9, true, 't-begin']]);
+      expect(claudeSessionTaskOutcome(events, 'task-1')).toBe('blocked');
     });
   });
 });
@@ -110,6 +204,18 @@ describe('claudeSessionTaskOutcome', () => {
 
   it('is unknown while the task has not ended', () => {
     expect(claudeSessionTaskOutcome(session, 'task-2')).toBe('unknown');
+  });
+
+  it('reads settle status for a plan-level segment', () => {
+    const events = eventsOf('terminating-settle.synthetic.jsonl');
+    const [, wrapUp] = findClaudeSessionTaskSegments(events);
+
+    expect(
+      claudeSessionTaskOutcome(
+        events.slice(wrapUp?.startIndex, wrapUp?.endIndex),
+        null,
+      ),
+    ).toBe('completed');
   });
 });
 

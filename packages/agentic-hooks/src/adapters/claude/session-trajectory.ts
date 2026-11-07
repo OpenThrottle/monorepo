@@ -1,14 +1,17 @@
 /**
  * Task trajectory upload for a Claude Code `Stop`: read what the session
  * transcript gained since the last Stop, cut it into OpenThrottle task segments
- * (one per `begin_task_session`), and send each CLOSED segment's trajectory once,
- * subagents embedded. Fail-open: nothing here throws, and a transcript that is
- * missing, unreadable or malformed just uploads nothing.
+ * (start at the earliest of `update_task(IN_PROGRESS)` / `claim_plan_messages` /
+ * `begin_task_session`; end at terminal `update_task` plus an immediate commit;
+ * plan-level gaps and wrap-up use `taskId: null`) and send each CLOSED segment's
+ * trajectory once, subagents embedded. Fail-open: nothing here throws, and a
+ * transcript that is missing, unreadable or malformed just uploads nothing.
  *
- * A session that never called `begin_task_session` uploads nothing. Set
+ * A session that never started an OpenThrottle task uploads nothing. Set
  * `OPENTHROTTLE_SESSION_TRAJECTORIES=0` to turn the whole thing off. Every upload carries
- * the idempotency key `session:<sessionId>:<begin_task_session toolUseId>`, so a buffered retry,
- * a dead-letter replay or a re-upload after the state file was swept is a server-side no-op.
+ * the idempotency key `session:<sessionId>:<segment toolUseId>` (the task's
+ * `begin_task_session` id when present), so a buffered retry, a dead-letter replay or a
+ * re-upload after the state file was swept is a server-side no-op.
  *
  * State (`data/trajectory-uploads.ts`) holds the resume offset, the plan run
  * once found, and the segment keys already accounted for. The offset only ever
@@ -197,7 +200,7 @@ export const captureSessionTrajectories = async ({
         // Larger than one scan window and still open: the offset could never
         // move past it, so account for it rather than rescan it forever.
         logHookError(
-          `trajectory segment ${segment.taskId} exceeds scan window`,
+          `trajectory segment ${segment.taskId ?? 'plan'} exceeds scan window`,
         );
         uploaded.add(segment.toolUseId);
         handled += 1;

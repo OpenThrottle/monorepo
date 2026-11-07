@@ -5,10 +5,17 @@
  * buffer later. Same failure classification and buffer mechanics as the other
  * telemetry streams (see `graphql.ts` and `jsonl.ts`). Nothing here throws.
  */
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import { resolveAuthToken, resolveGraphqlUrl } from '../config/env.ts';
-import type { DrainFileResult, HookFetch, PostResult } from '../types.ts';
+import type {
+  DrainFileResult,
+  HookFetch,
+  PostFailure,
+  PostResult,
+} from '../types.ts';
 import { logHookError } from '../utils/logging.ts';
-import { postGraphqlMutation } from './graphql.ts';
+import { postGraphqlField, postGraphqlMutation } from './graphql.ts';
 import {
   appendDeadLetters,
   appendJsonl,
@@ -28,6 +35,41 @@ const RECORD_AGENT_TRAJECTORY_MUTATION = `
 mutation RecordAgentTrajectoryFromHook($input: RecordAgentTrajectoryInput!) {
   recordAgentTrajectory(input: $input) {
     id
+  }
+}
+`;
+
+const REPLACE_AGENT_TRAJECTORY_MUTATION = `
+mutation ReplaceAgentTrajectoryFromHook(
+  $id: ID!
+  $input: ReplaceAgentTrajectoryInput!
+) {
+  replaceAgentTrajectory(id: $id, input: $input) {
+    id
+  }
+}
+`;
+
+const TRAJECTORIES_BY_PLAN_RUN_QUERY = `
+query AgentTrajectoriesByPlanRunFromHook($planRunId: ID!) {
+  agentTrajectoriesByPlanRun(planRunId: $planRunId) {
+    id
+    idempotencyKey
+    source
+    taskId
+    trajectoryJson
+  }
+}
+`;
+
+const TRAJECTORIES_BY_TASK_QUERY = `
+query AgentTrajectoriesByTaskFromHook($taskId: ID!) {
+  agentTrajectoriesByTask(taskId: $taskId) {
+    id
+    idempotencyKey
+    source
+    taskId
+    trajectoryJson
   }
 }
 `;
@@ -78,6 +120,51 @@ const resolveTrajectoryTimeout = (timeoutMs?: number): number => {
 };
 
 /**
+ * One already-stored trajectory, as the re-segment operator needs it: id for
+ * in-place replace, task/idempotency keys for matching, and the document for
+ * old step counts.
+ *
+ * @public
+ */
+export interface StoredTrajectoryRow {
+  readonly id: string;
+  readonly idempotencyKey: string | null;
+  readonly source: string;
+  readonly stepCount: number;
+  readonly taskId: string | null;
+  readonly trajectoryJson: string;
+}
+
+const stepCountOf = (trajectoryJson: string): number => {
+  try {
+    const parsed: unknown = JSON.parse(trajectoryJson);
+    if (!isRecord(parsed) || !Array.isArray(parsed.steps)) {
+      return 0;
+    }
+    return parsed.steps.length;
+  } catch {
+    return 0;
+  }
+};
+
+const readStoredRow = (value: unknown): StoredTrajectoryRow | undefined => {
+  if (!isRecord(value) || typeof value.id !== 'string' || value.id === '') {
+    return undefined;
+  }
+  const trajectoryJson =
+    typeof value.trajectoryJson === 'string' ? value.trajectoryJson : '{}';
+  return {
+    id: value.id,
+    idempotencyKey:
+      typeof value.idempotencyKey === 'string' ? value.idempotencyKey : null,
+    source: typeof value.source === 'string' ? value.source : '',
+    stepCount: stepCountOf(trajectoryJson),
+    taskId: typeof value.taskId === 'string' ? value.taskId : null,
+    trajectoryJson,
+  };
+};
+
+/**
  * POST one trajectory to recordAgentTrajectory. Fail-open result object.
  *
  * @public
@@ -104,6 +191,146 @@ export const postTrajectory = async ({
     timeoutMs,
     variables: { input },
   });
+};
+
+/**
+ * Replace the document on an existing trajectory, keeping its id. Fail-open.
+ *
+ * @public
+ */
+export const replaceTrajectory = async ({
+  authToken = '',
+  fetchImpl = globalThis.fetch,
+  graphqlUrl,
+  id,
+  input,
+  timeoutMs = DEFAULT_TRAJECTORY_POST_TIMEOUT_MS,
+}: {
+  authToken?: string;
+  fetchImpl?: HookFetch;
+  graphqlUrl: string | null;
+  id: string;
+  input: Pick<
+    TrajectoryInput,
+    | 'durationMs'
+    | 'exitCode'
+    | 'idempotencyKey'
+    | 'model'
+    | 'outcome'
+    | 'planRunId'
+    | 'trajectoryJson'
+  >;
+  timeoutMs?: number;
+}): Promise<PostResult> => {
+  return postGraphqlMutation({
+    authToken,
+    fetchImpl,
+    field: 'replaceAgentTrajectory',
+    graphqlUrl,
+    query: REPLACE_AGENT_TRAJECTORY_MUTATION,
+    timeoutMs,
+    variables: {
+      id,
+      input: {
+        durationMs: input.durationMs,
+        exitCode: input.exitCode,
+        idempotencyKey: input.idempotencyKey,
+        model: input.model,
+        outcome: input.outcome,
+        planRunId: input.planRunId,
+        trajectoryJson: input.trajectoryJson,
+      },
+    },
+  });
+};
+
+const readTrajectoryList = (
+  posted: PostFailure | { data: unknown; ok: true },
+  field: string,
+): PostFailure | { ok: true; rows: readonly StoredTrajectoryRow[] } => {
+  if (!posted.ok) {
+    return posted;
+  }
+  if (!Array.isArray(posted.data)) {
+    return { ok: false, permanent: false, reason: `missing ${field}` };
+  }
+  return {
+    ok: true,
+    rows: posted.data.flatMap((entry) => {
+      const row = readStoredRow(entry);
+      return row === undefined ? [] : [row];
+    }),
+  };
+};
+
+/**
+ * List a plan run's trajectories for the re-segment matcher. Fail-open: a
+ * transport failure returns the failure; a success returns the rows.
+ *
+ * @public
+ */
+export const fetchTrajectoriesByPlanRun = async ({
+  authToken = '',
+  fetchImpl = globalThis.fetch,
+  graphqlUrl,
+  planRunId,
+  timeoutMs = DEFAULT_TRAJECTORY_POST_TIMEOUT_MS,
+}: {
+  authToken?: string;
+  fetchImpl?: HookFetch;
+  graphqlUrl: string | null;
+  planRunId: string;
+  timeoutMs?: number;
+}): Promise<
+  PostFailure | { ok: true; rows: readonly StoredTrajectoryRow[] }
+> => {
+  return readTrajectoryList(
+    await postGraphqlField({
+      authToken,
+      fetchImpl,
+      field: 'agentTrajectoriesByPlanRun',
+      graphqlUrl,
+      query: TRAJECTORIES_BY_PLAN_RUN_QUERY,
+      timeoutMs,
+      variables: { planRunId },
+    }),
+    'agentTrajectoriesByPlanRun',
+  );
+};
+
+/**
+ * List a task's trajectories for the re-segment matcher (covers a resume that
+ * moved the task onto a different plan_run_id than neighbours).
+ *
+ * @public
+ */
+export const fetchTrajectoriesByTask = async ({
+  authToken = '',
+  fetchImpl = globalThis.fetch,
+  graphqlUrl,
+  taskId,
+  timeoutMs = DEFAULT_TRAJECTORY_POST_TIMEOUT_MS,
+}: {
+  authToken?: string;
+  fetchImpl?: HookFetch;
+  graphqlUrl: string | null;
+  taskId: string;
+  timeoutMs?: number;
+}): Promise<
+  PostFailure | { ok: true; rows: readonly StoredTrajectoryRow[] }
+> => {
+  return readTrajectoryList(
+    await postGraphqlField({
+      authToken,
+      fetchImpl,
+      field: 'agentTrajectoriesByTask',
+      graphqlUrl,
+      query: TRAJECTORIES_BY_TASK_QUERY,
+      timeoutMs,
+      variables: { taskId },
+    }),
+    'agentTrajectoriesByTask',
+  );
 };
 
 const bufferTrajectory = (

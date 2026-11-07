@@ -233,3 +233,16 @@ export const postGraphqlMutationNode = async (
 
   return { node: posted.data, ok: true };
 };
+
+/**
+ * POST a GraphQL operation and return `data.<field>` unread. Use this for
+ * queries that return a list or a shape the caller wants to parse itself.
+ * Never throws.
+ *
+ * @public
+ */
+export const postGraphqlField = async (
+  args: PostMutationArgs,
+): Promise<PostFailure | { data: unknown; ok: true }> => {
+  return postMutation(args);
+};
