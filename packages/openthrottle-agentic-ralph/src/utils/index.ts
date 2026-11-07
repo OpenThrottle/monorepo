@@ -33,6 +33,7 @@ export {
   comparePlanTaskListOrder,
   isRunnableRalphTask,
   isRunnerExecutedHookTask,
+  isWorkableRalphTask,
   pickRalphTaskForIteration,
   sortTasksByPlanListOrder,
 } from './plan-task-list-order.ts';

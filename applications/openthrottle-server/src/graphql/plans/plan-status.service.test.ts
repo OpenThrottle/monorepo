@@ -266,6 +266,23 @@ describe('PlanStatusService', () => {
       });
     });
 
+    test('a BLOCKED plan may move to QUEUED (the explicit re-enqueue after a human unblocks it)', async () => {
+      const entity = { ...mockPlan, completedAt: null, status: 'BLOCKED' };
+
+      const result = await service.applyStatusChange(manager, {
+        ...baseParams,
+        entity,
+        requestedStatus: 'QUEUED',
+      });
+
+      expect(result).toEqual({
+        applied: true,
+        fromStatus: 'BLOCKED',
+        toStatus: 'QUEUED',
+      });
+      expect(entity.status).toBe('QUEUED');
+    });
+
     test('a no-op transition (current === requested) captures nothing', async () => {
       const entity = { ...mockPlan, status: 'COMPLETED' };
 

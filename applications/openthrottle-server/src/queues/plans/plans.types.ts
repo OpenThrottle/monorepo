@@ -1,4 +1,5 @@
 import type { WorktreeWorkflowResult } from '@openthrottle/nestjs-worktrees';
+import type { WorkflowFinishedReason } from '@openthrottle/openthrottle-agentic-ralph';
 import type {
   ChildProcessMetrics,
   WallClockMetrics,
@@ -52,3 +53,40 @@ export type PlanRunJobResult =
   | { readonly taskRunMetrics: TaskRunMetrics };
 
 export type RunPlanJob = Job<RunPlanJobData, PlanRunJobResult | void>;
+
+/** The task fields `countPlanTasks` reads: status plus the hook identity that routes a task. */
+export interface PlanTaskOutcomeFields {
+  readonly hookRole: string | null;
+  readonly hookSource: string | null;
+  readonly parentTaskId: string | null;
+  readonly status: string;
+}
+
+/**
+ * @description How much of a plan an agent run can still move. `workable` tasks are ones an iteration
+ * can pick (PENDING / QUEUED / IN_PROGRESS); `remaining` adds BLOCKED, which keeps a plan from
+ * COMPLETED although only a human can move it. Runner-executed hook tasks count as neither.
+ */
+export interface PlanTaskCounts {
+  readonly blocked: number;
+  readonly remaining: number;
+  readonly workable: number;
+}
+
+/** A plan status the server settles a plan with no running job into. */
+export type PlanSettleStatus = 'BLOCKED' | 'COMPLETED' | 'QUEUED';
+
+/** Input to `buildFinishedRunNotification`. */
+export interface FinishedRunNotificationInput {
+  readonly counts: PlanTaskCounts;
+  readonly planId: string;
+  readonly planStatus: string | null;
+  readonly prNumber: number | undefined;
+  readonly reason: WorkflowFinishedReason;
+}
+
+/** The queue-job-completed notification for a finished run. */
+export interface FinishedRunNotification {
+  readonly message: string;
+  readonly severity: 'success' | 'warning';
+}

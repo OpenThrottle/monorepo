@@ -37,12 +37,26 @@ import { sortTasksByPlanListOrder } from './plan-task-list-order.ts';
 
 /** Finished reasons that trigger the host-owned push + PR finalize step. */
 const FINALIZE_REASONS = [
+  'workflow_budget_exhausted',
   'workflow_complete',
   'workflow_complete_handoff_owed',
+  'workflow_max_iterations',
+  'workflow_tasks_blocked',
   'workflow_tasks_exhausted',
 ] as const;
 
 type FinalizePriorReason = (typeof FINALIZE_REASONS)[number];
+
+/**
+ * @description Finalize reasons whose plan did NOT finish. Their work is pushed and the PR opened,
+ * but the PR stays a draft (never `gh pr ready`): it is not reviewable until a human unblocks the
+ * plan (or re-runs it past the iteration/budget limit) and a later run completes it.
+ */
+const DRAFT_ONLY_REASONS: ReadonlySet<FinalizePriorReason> = new Set([
+  'workflow_budget_exhausted',
+  'workflow_max_iterations',
+  'workflow_tasks_blocked',
+]);
 
 const isFinalizePriorReason = (
   reason: string,
@@ -735,20 +749,22 @@ const refreshExistingPr = async (params: {
 };
 
 /**
- * @description Creates a draft PR after the local attribution guard passes, then marks it ready.
+ * @description Creates a draft PR after the local attribution guard passes, then marks it ready
+ * unless `markReady` is false (an unfinished plan's PR stays a draft).
  */
 const createAndReadyPr = async (params: {
   readonly baseRef: string;
   readonly cwd: string;
   readonly draftDir: string | undefined;
   readonly executeGraphqlV2: WorkflowExecuteGraphqlV2;
+  readonly markReady: boolean;
   readonly onChunk: WorkflowRalphIterationOnChunk | undefined;
   readonly planId: string;
   readonly runCommand: WorkflowRalphCommandRunner;
 }): Promise<
   { readonly ok: true; readonly prNumber: number } | PrStepFailure
 > => {
-  const { cwd, runCommand } = params;
+  const { cwd, markReady, runCommand } = params;
   const { body, title } = await resolvePrContent(params);
   const guarded = await writeAndGuardPrFiles({ body, cwd, runCommand, title });
 
@@ -798,6 +814,10 @@ const createAndReadyPr = async (params: {
     };
   }
 
+  if (!markReady) {
+    return { ok: true, prNumber };
+  }
+
   const ready = await runGh(runCommand, cwd, ['pr', 'ready', String(prNumber)]);
 
   if (ready.exitCode !== 0) {
@@ -839,6 +859,7 @@ export const finalizePlanRun = async (
   } = params;
   const isHandoffRetry = priorReason === 'workflow_complete_handoff_owed';
   const settledReason = isHandoffRetry ? 'workflow_complete' : priorReason;
+  const markReady = !DRAFT_ONLY_REASONS.has(priorReason);
 
   const branchResult = await runGit(runCommand, cwd, [
     'rev-parse',
@@ -965,6 +986,14 @@ export const finalizePlanRun = async (
       });
     }
 
+    if (!markReady) {
+      return finished({
+        headSha,
+        prNumber: existingPr,
+        reason: settledReason,
+      });
+    }
+
     const ready = await runGh(runCommand, cwd, [
       'pr',
       'ready',
@@ -999,6 +1028,7 @@ export const finalizePlanRun = async (
     cwd,
     draftDir,
     executeGraphqlV2,
+    markReady,
     onChunk,
     planId,
     runCommand,

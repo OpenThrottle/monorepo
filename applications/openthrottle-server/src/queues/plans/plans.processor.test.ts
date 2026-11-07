@@ -154,6 +154,9 @@ const mockRecordSettledRunArtifacts = vi.fn().mockResolvedValue(undefined);
 const mockFindByQueueNameAndBullmqJobId = vi.fn().mockResolvedValue(null);
 const mockMarkRunStarted = vi.fn().mockResolvedValue(0);
 const mockFindScheduledRunsWithJob = vi.fn().mockResolvedValue([]);
+const mockFindEarliestScheduledForByPlanIds = vi
+  .fn()
+  .mockResolvedValue(new Map());
 const mockFireScheduledRun = vi.fn().mockResolvedValue({ kind: 'fire' });
 const mockReprojectScheduledRun = vi
   .fn()
@@ -178,6 +181,8 @@ const mockWorktreeTracker = {
 const mockRepoUpdate = vi.fn().mockResolvedValue(undefined);
 const mockRepoFind = vi.fn().mockResolvedValue([]);
 const mockTaskRepoFindOne = vi.fn().mockResolvedValue(null);
+/** Default: the plan has no tasks, so every reconcile keeps its pre-BLOCKED behaviour. */
+const mockTaskRepoFind = vi.fn().mockResolvedValue([]);
 /** Default: plan is COMPLETED so job completed message is success. Override to { status: 'IN_PROGRESS' } to test iteration-limit notification. */
 const mockRepoFindOne = vi.fn().mockResolvedValue({ status: 'COMPLETED' });
 const mockPlansService = createMock<PlansService>({
@@ -192,7 +197,7 @@ const mockPlansService = createMock<PlansService>({
 const mockTasksService = createMock<TasksService>({
   getRepository: () =>
     createMock<ReturnType<TasksService['getRepository']>>({
-      find: vi.fn().mockResolvedValue([]),
+      find: mockTaskRepoFind,
       findOne: mockTaskRepoFindOne,
     }),
 });
@@ -254,6 +259,8 @@ describe('PlansProcessor', () => {
     mockFindByQueueNameAndBullmqJobId.mockResolvedValue(null);
     mockMarkRunStarted.mockResolvedValue(0);
     mockFindScheduledRunsWithJob.mockResolvedValue([]);
+    mockFindEarliestScheduledForByPlanIds.mockResolvedValue(new Map());
+    mockTaskRepoFind.mockResolvedValue([]);
     mockFireScheduledRun.mockResolvedValue({ kind: 'fire' });
     process.env.OPENTHROTTLE_LIFECYCLE_HOOKS_CHILD_JOBS = 'false';
     mockJob = createMock<RunPlanJob>({
@@ -323,6 +330,8 @@ describe('PlansProcessor', () => {
           useValue: createMock<PlanRunsService>({
             clearRunLocation: vi.fn().mockResolvedValue(0),
             findByQueueNameAndBullmqJobId: mockFindByQueueNameAndBullmqJobId,
+            findEarliestScheduledForByPlanIds:
+              mockFindEarliestScheduledForByPlanIds,
             findPlanIdsWithLiveDetachedRun: mockFindPlanIdsWithLiveDetachedRun,
             findScheduledRunsWithJob: mockFindScheduledRunsWithJob,
             markRunStarted: mockMarkRunStarted,
@@ -818,6 +827,8 @@ describe('PlansProcessor', () => {
         planId: '2794d106-95f9-427e-904d-e0f9b5cbe734',
       });
       expect(mockSettleRunByJob).not.toHaveBeenCalled();
+      // Paused, not finished: the BLOCKED backstop must not touch the plan.
+      expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
     });
 
     it('emits the service message as a warning, skips after-run hooks, and resolves normally (no BullMQ retry)', async () => {
@@ -835,54 +846,202 @@ describe('PlansProcessor', () => {
     });
   });
 
-  describe('iteration limit notification (orchestrator path)', () => {
-    it('emits warning when Ralph hits max iterations but plan is still IN_PROGRESS', async () => {
-      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
-        exitCode: 0,
-        reason: 'workflow_max_iterations',
-        status: 'finished',
-      });
+  describe('finished outcome → plan status and notification (orchestrator path)', () => {
+    const planId = '2794d106-95f9-427e-904d-e0f9b5cbe734';
+    const task = (status: string): Record<string, unknown> => {
+      return {
+        hookRole: null,
+        hookSource: null,
+        parentTaskId: null,
+        planId,
+        status,
+      };
+    };
+
+    /** First findOne is the job-start plan read; the second is the post-run status read. */
+    const givenPlanStatusAfterRun = (status: string): void => {
       mockRepoFindOne
         .mockResolvedValueOnce({ status: 'QUEUED', title: 'Test Plan' })
-        .mockResolvedValueOnce({ status: 'IN_PROGRESS' });
+        .mockResolvedValueOnce({ status });
+    };
+
+    it('workflow_tasks_blocked: warns how many tasks need attention, links the draft PR, settles the run COMPLETED', async () => {
+      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+        exitCode: 0,
+        headSha: 'abc123',
+        prNumber: 42,
+        reason: 'workflow_tasks_blocked',
+        status: 'finished',
+      });
+      givenPlanStatusAfterRun('BLOCKED');
+      mockTaskRepoFind.mockResolvedValueOnce([
+        task('COMPLETED'),
+        task('COMPLETED'),
+        task('BLOCKED'),
+      ]);
 
       await processor.process(mockJob);
 
-      expect(mockRepoFindOne).toHaveBeenCalledWith({
-        where: { id: mockJob.data.planId },
+      // The orchestrator already wrote BLOCKED, so the backstop has nothing to do.
+      expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
+      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        'job-1',
+        PLAN_RUN_STATUS.COMPLETED,
+      );
+      expect(mockEmitQueueJobCompleted).toHaveBeenCalledWith({
+        jobType: 'plans',
+        message: expect.stringContaining(
+          'Plan blocked: 1 task(s) need attention',
+        ),
+        planId,
+        severity: 'warning',
       });
-      const notifications = getProcessorNotifications(processor);
-      expect(notifications.emitQueueJobCompleted).toHaveBeenCalledWith(
+      expect(mockEmitQueueJobCompleted).toHaveBeenCalledWith(
         expect.objectContaining({
-          jobType: 'plans',
-          message: expect.stringContaining('hit iteration limit'),
-          planId: mockJob.data.planId,
-          severity: 'warning',
+          message: expect.stringContaining('PR #42'),
         }),
       );
     });
 
-    it('emits success when Ralph hits max iterations and plan is COMPLETED', async () => {
+    it.each([
+      { label: 'iteration limit', reason: 'workflow_max_iterations' },
+      { label: 'time budget', reason: 'workflow_budget_exhausted' },
+    ])(
+      '$reason with work left and the plan still IN_PROGRESS: backstop writes BLOCKED and the warning names the $label',
+      async ({ label, reason }) => {
+        mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+          exitCode: 0,
+          reason,
+          status: 'finished',
+        });
+        givenPlanStatusAfterRun('IN_PROGRESS');
+        mockTaskRepoFind.mockResolvedValueOnce([
+          task('COMPLETED'),
+          task('PENDING'),
+          task('BLOCKED'),
+        ]);
+
+        await processor.process(mockJob);
+
+        expect(mockWriteGuardedStatus).toHaveBeenCalledWith(planId, {
+          actorKind: 'service_account',
+          actorSub: 'status-change-system-account-id',
+          captureFailureIsFatal: false,
+          guardCurrentStatus: 'IN_PROGRESS',
+          requestedStatus: 'BLOCKED',
+          throwOnForbiddenInProgress: false,
+        });
+        const notifications = getProcessorNotifications(processor);
+        expect(notifications.emitPlanStatusChanged).toHaveBeenCalledWith({
+          planId,
+          status: 'BLOCKED',
+        });
+        expect(mockEmitQueueJobCompleted).toHaveBeenCalledWith({
+          jobType: 'plans',
+          message: expect.stringContaining(`Plan hit its ${label}`),
+          planId,
+          severity: 'warning',
+        });
+        expect(mockEmitQueueJobCompleted).toHaveBeenCalledWith(
+          expect.objectContaining({
+            message: expect.stringContaining(
+              '1 task(s) still pending, 1 blocked',
+            ),
+          }),
+        );
+      },
+    );
+
+    it('workflow_max_iterations where the last iteration finished the plan: success, no backstop write', async () => {
       mockRunPlanOrchestratorJob.mockResolvedValueOnce({
         exitCode: 0,
         reason: 'workflow_max_iterations',
         status: 'finished',
       });
-      mockRepoFindOne
-        .mockResolvedValueOnce({ status: 'QUEUED', title: 'Test Plan' })
-        .mockResolvedValueOnce({ status: 'COMPLETED' });
+      givenPlanStatusAfterRun('COMPLETED');
 
       await processor.process(mockJob);
 
-      const notifications = getProcessorNotifications(processor);
-      expect(notifications.emitQueueJobCompleted).toHaveBeenCalledWith(
+      expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
+      expect(mockEmitQueueJobCompleted).toHaveBeenCalledWith(
         expect.objectContaining({
           message: expect.stringContaining('Plan run finished'),
-          planId: mockJob.data.planId,
+          planId,
           severity: 'success',
         }),
       );
     });
+
+    it('workflow_tasks_exhausted with the plan left IN_PROGRESS and nothing remaining: backstop writes COMPLETED', async () => {
+      givenPlanStatusAfterRun('IN_PROGRESS');
+      mockTaskRepoFind.mockResolvedValueOnce([
+        task('COMPLETED'),
+        task('SKIPPED'),
+      ]);
+
+      await processor.process(mockJob);
+
+      expect(mockWriteGuardedStatus).toHaveBeenCalledWith(
+        planId,
+        expect.objectContaining({
+          guardCurrentStatus: 'IN_PROGRESS',
+          requestedStatus: 'COMPLETED',
+        }),
+      );
+      expect(mockEmitQueueJobCompleted).toHaveBeenCalledWith(
+        expect.objectContaining({ severity: 'success' }),
+      );
+    });
+
+    it('backstop leaves a QUEUED plan alone when another job for it is waiting (re-enqueued during the run)', async () => {
+      givenPlanStatusAfterRun('QUEUED');
+      mockTaskRepoFind.mockResolvedValueOnce([task('BLOCKED')]);
+      mockGetJobs.mockResolvedValueOnce([
+        { data: { planId }, id: 'job-1' },
+        { data: { planId }, id: 'job-2' },
+      ]);
+
+      await processor.process(mockJob);
+
+      expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
+    });
+
+    it('backstop writes BLOCKED for a QUEUED plan whose only queued job is this one', async () => {
+      givenPlanStatusAfterRun('QUEUED');
+      mockTaskRepoFind.mockResolvedValueOnce([task('BLOCKED')]);
+      mockGetJobs.mockResolvedValueOnce([{ data: { planId }, id: 'job-1' }]);
+
+      await processor.process(mockJob);
+
+      expect(mockWriteGuardedStatus).toHaveBeenCalledWith(
+        planId,
+        expect.objectContaining({
+          guardCurrentStatus: 'QUEUED',
+          requestedStatus: 'BLOCKED',
+        }),
+      );
+    });
+
+    it.each([
+      { reason: 'workflow_cancelled', status: 'finished' },
+      { reason: 'workflow_agent_error', status: 'failed' },
+    ])(
+      '$reason never runs the BLOCKED backstop',
+      async ({ reason, status }) => {
+        mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+          exitCode: 1,
+          reason,
+          status,
+        });
+        givenPlanStatusAfterRun('IN_PROGRESS');
+        mockTaskRepoFind.mockResolvedValueOnce([task('BLOCKED')]);
+
+        await processor.process(mockJob);
+
+        expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe('admission: fire-time policy, settled rows and the guarded claim', () => {
@@ -1319,6 +1478,199 @@ describe('PlansProcessor', () => {
       await processor.onModuleInit();
 
       expect(mockPromoteParentPlanToInProgress).not.toHaveBeenCalled();
+    });
+
+    describe('plans no run can progress settle BLOCKED, not QUEUED', () => {
+      const task = (
+        planId: string,
+        status: string,
+      ): Record<string, unknown> => {
+        return {
+          hookRole: null,
+          hookSource: null,
+          parentTaskId: null,
+          planId,
+          status,
+        };
+      };
+
+      it('moves an IN_PROGRESS plan with no job and only BLOCKED tasks left to BLOCKED (the 5aad07f6 shape)', async () => {
+        const blockedPlanId = 'in-progress-only-blocked';
+        mockRepoFind.mockResolvedValueOnce([
+          { id: blockedPlanId, status: 'IN_PROGRESS', title: 'Visual pass' },
+        ]);
+        mockTaskRepoFind.mockResolvedValue([
+          task(blockedPlanId, 'COMPLETED'),
+          task(blockedPlanId, 'COMPLETED'),
+          task(blockedPlanId, 'BLOCKED'),
+        ]);
+
+        await processor.onModuleInit();
+
+        expect(mockWriteGuardedStatus).toHaveBeenCalledWith(blockedPlanId, {
+          actorKind: 'service_account',
+          actorSub: 'status-change-system-account-id',
+          captureFailureIsFatal: false,
+          guardCurrentStatus: 'IN_PROGRESS',
+          requestedStatus: 'BLOCKED',
+          throwOnForbiddenInProgress: false,
+        });
+        expect(mockWriteGuardedStatus).not.toHaveBeenCalledWith(
+          blockedPlanId,
+          expect.objectContaining({ requestedStatus: 'QUEUED' }),
+        );
+        const notifications = getProcessorNotifications(processor);
+        expect(notifications.emitPlanStatusChanged).toHaveBeenCalledWith({
+          planId: blockedPlanId,
+          status: 'BLOCKED',
+        });
+      });
+
+      it('moves an IN_PROGRESS plan with no job and every task terminal to COMPLETED', async () => {
+        const donePlanId = 'in-progress-all-done';
+        mockRepoFind.mockResolvedValueOnce([
+          { id: donePlanId, status: 'IN_PROGRESS', title: 'Done' },
+        ]);
+        mockTaskRepoFind.mockResolvedValue([
+          task(donePlanId, 'COMPLETED'),
+          task(donePlanId, 'CANCELED'),
+        ]);
+
+        await processor.onModuleInit();
+
+        expect(mockWriteGuardedStatus).toHaveBeenCalledWith(
+          donePlanId,
+          expect.objectContaining({
+            guardCurrentStatus: 'IN_PROGRESS',
+            requestedStatus: 'COMPLETED',
+          }),
+        );
+      });
+
+      it('still resets an IN_PROGRESS plan with a workable task to QUEUED', async () => {
+        const workablePlanId = 'in-progress-with-pending';
+        mockRepoFind.mockResolvedValueOnce([
+          { id: workablePlanId, status: 'IN_PROGRESS', title: 'Interrupted' },
+        ]);
+        mockTaskRepoFind.mockResolvedValue([
+          task(workablePlanId, 'BLOCKED'),
+          task(workablePlanId, 'PENDING'),
+        ]);
+
+        await processor.onModuleInit();
+
+        expect(mockWriteGuardedStatus).toHaveBeenCalledTimes(1);
+        expect(mockWriteGuardedStatus).toHaveBeenCalledWith(
+          workablePlanId,
+          expect.objectContaining({ requestedStatus: 'QUEUED' }),
+        );
+      });
+
+      it('repairs a stranded QUEUED plan (no job, no scheduled run, only BLOCKED tasks) to BLOCKED', async () => {
+        const strandedPlanId = 'queued-stranded';
+        mockRepoFind
+          .mockResolvedValueOnce([])
+          .mockResolvedValueOnce([
+            { id: strandedPlanId, status: 'QUEUED', title: 'Stranded' },
+          ])
+          .mockResolvedValueOnce([
+            { id: strandedPlanId, status: 'QUEUED', title: 'Stranded' },
+          ]);
+        mockTaskRepoFind.mockResolvedValue([
+          task(strandedPlanId, 'COMPLETED'),
+          task(strandedPlanId, 'BLOCKED'),
+        ]);
+
+        await processor.onModuleInit();
+
+        expect(mockWriteGuardedStatus).toHaveBeenCalledExactlyOnceWith(
+          strandedPlanId,
+          {
+            actorKind: 'service_account',
+            actorSub: 'status-change-system-account-id',
+            captureFailureIsFatal: false,
+            guardCurrentStatus: 'QUEUED',
+            requestedStatus: 'BLOCKED',
+            throwOnForbiddenInProgress: false,
+          },
+        );
+        const notifications = getProcessorNotifications(processor);
+        expect(notifications.emitPlanStatusChanged).toHaveBeenCalledWith({
+          planId: strandedPlanId,
+          status: 'BLOCKED',
+        });
+      });
+
+      it('leaves a QUEUED plan with only BLOCKED tasks alone when it has a delayed job', async () => {
+        const delayedPlanId = 'queued-blocked-with-delayed-job';
+        mockRepoFind
+          .mockResolvedValueOnce([])
+          .mockResolvedValueOnce([
+            { id: delayedPlanId, status: 'QUEUED', title: 'Delayed' },
+          ])
+          .mockResolvedValueOnce([
+            { id: delayedPlanId, status: 'QUEUED', title: 'Delayed' },
+          ]);
+        mockTaskRepoFind.mockResolvedValue([task(delayedPlanId, 'BLOCKED')]);
+        const delayedJob = { data: { planId: delayedPlanId } };
+        mockGetJobs.mockImplementation(async (states: readonly string[]) =>
+          states.includes('delayed') ? [delayedJob] : [],
+        );
+
+        try {
+          await processor.onModuleInit();
+        } finally {
+          mockGetJobs.mockReset();
+          mockGetJobs.mockResolvedValue([]);
+        }
+
+        expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
+      });
+
+      it('leaves a QUEUED plan with only BLOCKED tasks alone when a run is scheduled for it', async () => {
+        const scheduledPlanId = 'queued-blocked-with-scheduled-run';
+        mockRepoFind
+          .mockResolvedValueOnce([])
+          .mockResolvedValueOnce([
+            { id: scheduledPlanId, status: 'QUEUED', title: 'Scheduled' },
+          ])
+          .mockResolvedValueOnce([
+            { id: scheduledPlanId, status: 'QUEUED', title: 'Scheduled' },
+          ]);
+        mockTaskRepoFind.mockResolvedValue([task(scheduledPlanId, 'BLOCKED')]);
+        mockFindEarliestScheduledForByPlanIds.mockResolvedValueOnce(
+          new Map([
+            [
+              scheduledPlanId,
+              { id: 'run-s', scheduledFor: new Date('2026-12-01T00:00:00Z') },
+            ],
+          ]),
+        );
+
+        await processor.onModuleInit();
+
+        expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
+      });
+
+      it('leaves a QUEUED plan with a workable task alone (it is waiting for a run, not stranded)', async () => {
+        const waitingPlanId = 'queued-with-queued-task';
+        mockRepoFind
+          .mockResolvedValueOnce([])
+          .mockResolvedValueOnce([
+            { id: waitingPlanId, status: 'QUEUED', title: 'Waiting' },
+          ])
+          .mockResolvedValueOnce([
+            { id: waitingPlanId, status: 'QUEUED', title: 'Waiting' },
+          ]);
+        mockTaskRepoFind.mockResolvedValue([
+          task(waitingPlanId, 'BLOCKED'),
+          task(waitingPlanId, 'QUEUED'),
+        ]);
+
+        await processor.onModuleInit();
+
+        expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
+      });
     });
   });
 

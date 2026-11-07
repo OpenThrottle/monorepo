@@ -27,6 +27,14 @@ const SUMMARY_TODO = '**TODO:** Describe the changes in this PR.';
 const TODO_MARKER = '**TODO:**';
 const DESCRIPTION_EXCERPT_MAX = 600;
 const LINE_EXCERPT_MAX = 200;
+/** Task statuses listed under "Not delivered": everything a run left unfinished. */
+const NOT_DELIVERED_STATUSES: ReadonlySet<string> = new Set([
+  'BLOCKED',
+  'IN_PROGRESS',
+  'PENDING',
+  'QUEUED',
+  'SKIPPED',
+]);
 
 /** Conventional types, most significant first. Unknown types rank after all of these. */
 const TYPE_SIGNIFICANCE = [
@@ -260,8 +268,10 @@ const buildSummarySection = (params: BuildPlanRunPrBodyParams): string => {
     blocks.push(delivered.join('\n'));
   }
 
+  // A run stopped by its iteration or budget limit leaves PENDING/QUEUED/IN_PROGRESS work behind;
+  // the reviewer needs to see it next to BLOCKED and SKIPPED.
   const notDelivered = tasks
-    .filter((task) => task.status === 'BLOCKED' || task.status === 'SKIPPED')
+    .filter((task) => NOT_DELIVERED_STATUSES.has(task.status))
     .map((task) => bulletWithSummary(task, ` (${task.status})`));
   if (notDelivered.length > 0) {
     blocks.push(`### Not delivered\n\n${notDelivered.join('\n')}`);

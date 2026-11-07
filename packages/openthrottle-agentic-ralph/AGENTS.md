@@ -47,7 +47,8 @@ see [tools/AGENTS.md](../../tools/AGENTS.md)).
   exception — see `src/utils/finalize-plan-run.ts`.
 - **PR draft hand-off (agent drafts, host publishes).** On its final iteration the agent runs the
   `github-pull-request` skill in draft-only mode. The orchestrator marks that iteration explicitly:
-  when the task it hands the agent is the plan's only runnable one, it appends the
+  when the task it hands the agent is the plan's only workable one (`BLOCKED` tasks don't count),
+  it appends the
   `buildFinalIterationPromptLine` line (`OT_FINAL_ITERATION=1: …`) to the prompt (`orchestrator.ts`;
   plan mode per iteration, task mode from the state load). The agent can't infer this on its own,
   because completions are applied by the host after it exits. That mode writes `title.txt` (a one-line

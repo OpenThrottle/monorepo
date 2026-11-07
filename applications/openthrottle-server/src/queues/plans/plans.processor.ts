@@ -32,6 +32,7 @@ import {
 } from '@openthrottle/openthrottle-agentic-workflow';
 import { loadWorkflowRalphConfig } from '@tools/workflows';
 import type { Queue } from 'bullmq';
+import { In } from 'typeorm';
 
 import { PlanStatusService } from '../../graphql/plans/plan-status.service.ts';
 import { SettleRunLedgerService } from '../../graphql/work-ledger/settle-run-ledger.service.ts';
@@ -70,7 +71,13 @@ import type {
   RunPlanJob,
   RunPlanJobData,
 } from './plans.types.ts';
+import type { PlanTaskCounts, PlanTaskOutcomeFields } from './plans.types.ts';
 import { isRunPlanOrchestratorJobData } from './plans.types.ts';
+import {
+  buildFinishedRunNotification,
+  countPlanTasks,
+  resolveIdlePlanStatus,
+} from './plans.utils.ts';
 import { ScheduledPlanRunService } from './scheduled-plan-run.service.ts';
 import { UsageLimitResumeService } from './usage-limit-resume/usage-limit-resume.service.ts';
 import { WorkLedgerRunService } from './work-ledger-run.service.ts';
@@ -94,11 +101,12 @@ const isStartableRunStatus = (status: string): boolean => {
  * Ralph jobs are renewed (every lockDuration/2) and, after server restart, interrupted jobs become
  * stalled and re-enter the waiting queue within ~lockDuration + stalledInterval.
  *
- * Max iterations: when Ralph hits the iteration limit (e.g. 10) with work remaining, it exits with
- * code 0 and workflow-ralph resets the current task to PENDING so a future run can resume. We do
- * not re-queue the plan job here (costly); the user can re-run the plan or re-enqueue. When the
- * run succeeds (exit 0) but the plan is still IN_PROGRESS, we emit a warning notification so the
- * UI can show "Plan hit iteration limit; tasks still pending. Re-run to continue."
+ * Runs that cannot progress end BLOCKED: when the orchestrator finishes with only BLOCKED tasks
+ * left (`workflow_tasks_blocked`) or stops on its iteration/time limit with work left, the plan is
+ * BLOCKED, never left IN_PROGRESS/QUEUED where it would look runnable forever. The orchestrator
+ * writes that status itself; {@link PlansProcessor.settlePlanLeftOpenByRun} is the backstop, and
+ * the notification names which of the two happened. Nothing re-queues a BLOCKED plan: a human
+ * unblocks it and re-enqueues it.
  */
 @Processor(PLANS_QUEUE_NAME, {
   concurrency: CONCURRENCY,
@@ -165,6 +173,7 @@ export class PlansProcessor
 
     await this.reconcilePlanStatusOnStartup();
     await this.reconcilePlansQueuedWithInProgressTasks();
+    await this.repairStrandedQueuedPlans();
     // Re-project SCHEDULED runs whose delayed job was lost (Redis flushed, volume recreated),
     // applying the grace window. Owner-only for the same reason as the two above. Never throws.
     await this.scheduledPlanRun.reconcileOnStartup();
@@ -195,11 +204,9 @@ export class PlansProcessor
       await this.planRunsService.findPlanIdsWithLiveDetachedRun(
         plans.map((plan) => plan.id),
       );
-    const startupActorSub = await this.statusChangeSystemAccount.resolveId();
-
-    for (const plan of plans) {
+    const orphaned = plans.filter((plan) => {
       if (planIdsWithActiveJob.has(plan.id)) {
-        continue;
+        return false;
       }
 
       if (planIdsWithLiveDetachedRun.has(plan.id)) {
@@ -207,11 +214,28 @@ export class PlansProcessor
           `Plan status reconciliation: leaving plan ${plan.id} IN_PROGRESS (live detached run, no BullMQ job by design).`,
           PlansProcessor.name,
         );
-        continue;
+        return false;
       }
 
+      return true;
+    });
+
+    if (orphaned.length === 0) {
+      return;
+    }
+
+    const countsByPlan = await this.loadPlanTaskCounts(
+      orphaned.map((plan) => plan.id),
+    );
+    const startupActorSub = await this.statusChangeSystemAccount.resolveId();
+
+    for (const plan of orphaned) {
+      // A plan whose tasks are all terminal or BLOCKED has nothing a re-run could do, so it settles
+      // BLOCKED (or COMPLETED) instead of re-entering the queue it would otherwise hold forever.
+      const target = resolveIdlePlanStatus(countsByPlan.get(plan.id));
+
       this.logger.info(
-        `Plan status reconciliation: resetting plan ${plan.id} from IN_PROGRESS to QUEUED (no active job).`,
+        `Plan status reconciliation: moving plan ${plan.id} from IN_PROGRESS to ${target} (no active job).`,
         PlansProcessor.name,
       );
 
@@ -225,14 +249,82 @@ export class PlansProcessor
         actorSub: startupActorSub ?? undefined,
         captureFailureIsFatal: false,
         guardCurrentStatus: 'IN_PROGRESS',
-        requestedStatus: 'QUEUED',
+        requestedStatus: target,
         throwOnForbiddenInProgress: false,
       });
 
       this.notifications.emitPlanStatusChanged({
         planId: plan.id,
-        status: 'QUEUED',
+        status: target,
       });
+    }
+  }
+
+  /**
+   * On startup, settle QUEUED plans that nothing will ever run: no waiting, prioritized or delayed
+   * BullMQ job, no SCHEDULED run, no live detached run, and no workable task. Such a plan was
+   * stranded by an earlier run that finished with only BLOCKED tasks left (before runs settled
+   * those BLOCKED themselves), and it would otherwise hold its place in the queue forever. It is
+   * written BLOCKED, or COMPLETED when no task remains. A QUEUED plan with any workable task is
+   * left alone: it is waiting for a run, not stranded.
+   */
+  private async repairStrandedQueuedPlans(): Promise<void> {
+    const plans = await this.plansService
+      .getRepository()
+      .find({ where: { status: 'QUEUED' } });
+
+    if (plans.length === 0) {
+      return;
+    }
+
+    const planIds = plans.map((plan) => plan.id);
+    const [planIdsWithQueuedJob, scheduledByPlan, liveDetached, countsByPlan] =
+      await Promise.all([
+        this.findPlanIdsWithQueuedJob(undefined),
+        this.planRunsService.findEarliestScheduledForByPlanIds(planIds),
+        this.planRunsService.findPlanIdsWithLiveDetachedRun(planIds),
+        this.loadPlanTaskCounts(planIds),
+      ]);
+
+    const stranded = planIds.flatMap((planId) => {
+      if (
+        planIdsWithQueuedJob.has(planId) ||
+        scheduledByPlan.has(planId) ||
+        liveDetached.has(planId)
+      ) {
+        return [];
+      }
+
+      const target = resolveIdlePlanStatus(countsByPlan.get(planId));
+
+      return target === 'QUEUED' ? [] : [{ planId, target }];
+    });
+
+    if (stranded.length === 0) {
+      return;
+    }
+
+    const actorSub = await this.statusChangeSystemAccount.resolveId();
+
+    for (const { planId, target } of stranded) {
+      this.logger.info(
+        `Plan status reconciliation: moving stranded plan ${planId} from QUEUED to ${target} (no job, no workable task).`,
+        PlansProcessor.name,
+      );
+
+      // eslint-disable-next-line no-await-in-loop
+      const written = await this.planStatusService.writeGuardedStatus(planId, {
+        actorKind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+        actorSub: actorSub ?? undefined,
+        captureFailureIsFatal: false,
+        guardCurrentStatus: 'QUEUED',
+        requestedStatus: target,
+        throwOnForbiddenInProgress: false,
+      });
+
+      if (written) {
+        this.notifications.emitPlanStatusChanged({ planId, status: target });
+      }
     }
   }
 
@@ -445,28 +537,126 @@ export class PlansProcessor
   }
 
   /**
-   * Returns message and severity for queue job completed: if plan is still
-   * IN_PROGRESS (e.g. iteration limit), suggest re-run; otherwise success.
+   * Backstop after a finished run (not failed, cancelled or usage-limited): the orchestrator should
+   * already have settled the plan COMPLETED or BLOCKED, but if it is still IN_PROGRESS or QUEUED it
+   * is written COMPLETED when no task remains and BLOCKED otherwise — the run has ended and nothing
+   * will pick the plan up again without a human. A QUEUED plan with another job waiting for it (a
+   * re-enqueue that landed during this run) is left alone. Returns the plan's resulting status and
+   * task counts for the notification. Does not throw; logs on failure.
    */
-  private async getJobCompletedMessageAndSeverity(
+  private async settlePlanLeftOpenByRun(
     planId: string,
-    defaultMessage: string,
-  ): Promise<{ message: string; severity: 'success' | 'warning' }> {
-    const status = await this.getPlanStatus(planId);
+    jobId: string,
+  ): Promise<{ counts: PlanTaskCounts; planStatus: string | null }> {
+    const emptyCounts: PlanTaskCounts = {
+      blocked: 0,
+      remaining: 0,
+      workable: 0,
+    };
 
-    if (status === 'IN_PROGRESS') {
+    try {
+      const [planStatus, countsByPlan] = await Promise.all([
+        this.getPlanStatus(planId),
+        this.loadPlanTaskCounts([planId]),
+      ]);
+      const counts = countsByPlan.get(planId) ?? emptyCounts;
+
+      if (planStatus !== 'IN_PROGRESS' && planStatus !== 'QUEUED') {
+        return { counts, planStatus };
+      }
+
+      if (planStatus === 'QUEUED') {
+        const waiting = await this.findPlanIdsWithQueuedJob(jobId);
+
+        if (waiting.has(planId)) {
+          return { counts, planStatus };
+        }
+      }
+
+      const target = counts.remaining === 0 ? 'COMPLETED' : 'BLOCKED';
+      const actorSub = await this.statusChangeSystemAccount.resolveId();
+      const written = await this.planStatusService.writeGuardedStatus(planId, {
+        actorKind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+        actorSub: actorSub ?? undefined,
+        captureFailureIsFatal: false,
+        guardCurrentStatus: planStatus,
+        requestedStatus: target,
+        throwOnForbiddenInProgress: false,
+      });
+
+      if (!written) {
+        return { counts, planStatus };
+      }
+
       this.logger.info(
-        `Plan run finished but plan still IN_PROGRESS (e.g. iteration limit); planId=${planId}`,
+        `Plan run finished with plan still ${planStatus}; settled it ${target} (${counts.workable} pending, ${counts.blocked} blocked), planId=${planId}`,
+        PlansProcessor.name,
+      );
+      this.notifications.emitPlanStatusChanged({ planId, status: target });
+
+      return { counts, planStatus: target };
+    } catch (error) {
+      this.logger.warn(
+        `Failed to settle a plan left open by a finished run: planId=${planId}, error=${error instanceof Error ? error.message : String(error)}`,
         PlansProcessor.name,
       );
 
-      return {
-        message: `Plan ${planId} hit iteration limit; tasks still pending. Re-run to continue.`,
-        severity: 'warning',
-      };
+      return { counts: emptyCounts, planStatus: null };
+    }
+  }
+
+  /**
+   * Task counts ({@link countPlanTasks}) for each given plan, in one query. A plan with no tasks is
+   * absent from the map.
+   */
+  private async loadPlanTaskCounts(
+    planIds: readonly string[],
+  ): Promise<Map<string, PlanTaskCounts>> {
+    if (planIds.length === 0) {
+      return new Map();
     }
 
-    return { message: defaultMessage, severity: 'success' };
+    const tasks = await this.tasksService.getRepository().find({
+      select: ['hookRole', 'hookSource', 'parentTaskId', 'planId', 'status'],
+      where: { planId: In([...planIds]) },
+    });
+    const tasksByPlan = new Map<string, PlanTaskOutcomeFields[]>();
+
+    for (const task of tasks) {
+      const planTasks = tasksByPlan.get(task.planId) ?? [];
+
+      planTasks.push(task);
+      tasksByPlan.set(task.planId, planTasks);
+    }
+
+    return new Map(
+      [...tasksByPlan].map(([planId, planTasks]) => [
+        planId,
+        countPlanTasks(planTasks),
+      ]),
+    );
+  }
+
+  /**
+   * Plan ids with a BullMQ job that is running or going to run: active, waiting, prioritized or
+   * delayed (a usage-limit continuation or a scheduled run). `exceptJobId` excludes the caller's
+   * own job.
+   */
+  private async findPlanIdsWithQueuedJob(
+    exceptJobId: string | undefined,
+  ): Promise<Set<string>> {
+    const jobs = await this.plansQueue.getJobs(
+      ['active', 'delayed', 'prioritized', 'waiting'],
+      0,
+      500,
+    );
+
+    return new Set(
+      jobs
+        .filter((job) => String(job.id) !== exceptJobId)
+        .map((job) => job.data?.planId)
+        .filter((id): id is string => typeof id === 'string'),
+    );
   }
 
   /**
@@ -1125,30 +1315,16 @@ export class PlansProcessor
       return { taskRunMetrics };
     }
 
-    const defaultMessage = `Plan run finished: ${data.planId} (${outcome.reason})`;
-
-    let message: string;
-    let severity: 'success' | 'warning';
-
-    if (outcome.reason === 'workflow_plan_already_terminal') {
-      message = `Plan run skipped: ${data.planId} (plan already terminal)`;
-      severity = 'success';
-    } else if (outcome.reason === 'workflow_complete_handoff_owed') {
-      // Finished plan + agent asked for input (or an owed post-plan step). Settle
-      // COMPLETED — never FAILED — and keep the reason in the notification text.
-      message = `Plan run finished with handoff owed: ${data.planId} (workflow_complete_handoff_owed)`;
-      severity = 'warning';
-    } else if (outcome.reason === 'workflow_max_iterations') {
-      const resolved = await this.getJobCompletedMessageAndSeverity(
-        data.planId,
-        defaultMessage,
-      );
-      message = resolved.message;
-      severity = resolved.severity;
-    } else {
-      message = defaultMessage;
-      severity = 'success';
-    }
+    // A finished run leaves no job behind, so a plan it left IN_PROGRESS/QUEUED would sit in the
+    // queue looking runnable forever (and the startup reconcile used to re-queue it).
+    const settled = await this.settlePlanLeftOpenByRun(data.planId, jobId);
+    const { message, severity } = buildFinishedRunNotification({
+      counts: settled.counts,
+      planId: data.planId,
+      planStatus: settled.planStatus,
+      prNumber: outcome.prNumber,
+      reason: outcome.reason,
+    });
 
     this.logger.info(
       `Orchestrator Ralph finished: reason=${outcome.reason}, jobId=${jobId}, ${logContext}`,

@@ -46,6 +46,16 @@ export const RALPH_REMAINING_TASK_STATUSES = new Set([
   'QUEUED',
 ]);
 
+/**
+ * Statuses the agent loop can still make progress on. {@link RALPH_REMAINING_TASK_STATUSES} minus
+ * BLOCKED: a blocked task keeps the plan from COMPLETED, but no iteration can move it — only a human.
+ */
+export const RALPH_WORKABLE_TASK_STATUSES = new Set([
+  'IN_PROGRESS',
+  'PENDING',
+  'QUEUED',
+]);
+
 /** Minimal hook-identity fields needed to route a task between the runner and the agent loop. */
 export interface RalphTaskHookFields {
   readonly hookRole?: string | null;
@@ -79,6 +89,21 @@ export const isRunnableRalphTask = (
 ): boolean => {
   return (
     RALPH_REMAINING_TASK_STATUSES.has(task.status) &&
+    !isRunnerExecutedHookTask(task)
+  );
+};
+
+/**
+ * @description True when the Ralph agent loop can still work a task: a workable status
+ * ({@link RALPH_WORKABLE_TASK_STATUSES}) AND not a runner-executed hook-task. Drives loop exit,
+ * task picking and "last task" detection; {@link isRunnableRalphTask} (which also counts BLOCKED)
+ * decides only whether the plan is COMPLETED.
+ */
+export const isWorkableRalphTask = (
+  task: RalphTaskHookFields & { readonly status: string },
+): boolean => {
+  return (
+    RALPH_WORKABLE_TASK_STATUSES.has(task.status) &&
     !isRunnerExecutedHookTask(task)
   );
 };

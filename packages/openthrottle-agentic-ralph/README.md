@@ -27,7 +27,8 @@ deprecated); see the resolver in `applications/openthrottle-server/src/graphql/p
   injected **`iterationRunner`** (e.g. `createCursorWorkflowRalphIterationRunner` from
   `@tools/workflows`). When **`runCommand`** is set (the server deps factory wires
   `createDefaultWorkflowRalphCommandRunner`), a finished plan also runs the host-owned **finalize**
-  step: `git push` (through Husky, never `--no-verify`), find-or-create PR, `gh pr ready`, and
+  step: `git push` (through Husky, never `--no-verify`), find-or-create PR, `gh pr ready` (skipped
+  for a plan that ends `BLOCKED` — see [How a run ends](#how-a-run-ends)), and
   return `headSha` / `prNumber` for settle-time work-ledger artifacts. The orchestrator never
   opens a Postgres connection or spawns the agent CLI itself; worktree provisioning stays on the
   server. A non-host (docker) worker without `git`/`gh` credentials fails finalize into
@@ -70,6 +71,29 @@ In addition to `iterations` (a count) and the per-iteration timeout, the orchest
 (milliseconds, env-only) for an explicit ceiling; otherwise it derives one from
 `perIterationTimeoutMs × iterations`. When the budget is exhausted the run finishes with reason
 `workflow_budget_exhausted` (checked in the per-iteration guard, before the next agent invocation).
+
+### How a run ends
+
+**A run that can make no further progress ends the plan `BLOCKED`** — it never leaves the plan
+`IN_PROGRESS` or `QUEUED`, where it would look runnable and hold up the queue. It still pushes the
+branch and opens a **draft** PR (never `gh pr ready`) whose body lists the blocked and pending
+tasks; finalize skips push and PR when the branch has no commits ahead of base. A human unblocks
+the plan and re-enqueues it — nothing re-queues a `BLOCKED` plan automatically.
+
+Tasks split into **workable** (`PENDING` / `QUEUED` / `IN_PROGRESS`, not a runner hook) and
+**remaining** (workable + `BLOCKED`). Task picking, the loop exit and the `OT_FINAL_ITERATION=1`
+line use the workable list, so a `BLOCKED` sibling never suppresses the PR draft.
+
+| Finished reason                                         | Plan status                                       | Finalize                        |
+| ------------------------------------------------------- | ------------------------------------------------- | ------------------------------- |
+| `workflow_complete` / `workflow_tasks_exhausted`        | `COMPLETED` (nothing remaining)                   | push + PR, marked ready         |
+| `workflow_tasks_blocked`                                | `BLOCKED` (no workable task, some `BLOCKED`)      | push + draft PR, no agent spent |
+| `workflow_max_iterations` / `workflow_budget_exhausted` | `BLOCKED`, or `COMPLETED` if the last turn did it | push + draft PR                 |
+| `workflow_cancelled` / `workflow_usage_limited`         | unchanged (usage limits auto-resume)              | none                            |
+
+The server backstops this: a finished outcome that still leaves the plan `IN_PROGRESS` or `QUEUED`
+is settled `BLOCKED`, and the startup reconcile writes `BLOCKED` (or `COMPLETED`) instead of
+re-queuing a plan with no workable task (`plans.processor.ts`).
 
 ### Prompt injection layering (trusted inputs)
 

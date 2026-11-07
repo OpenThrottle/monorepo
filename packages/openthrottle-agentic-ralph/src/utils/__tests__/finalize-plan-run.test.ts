@@ -374,6 +374,41 @@ describe('finalizePlanRun', () => {
     expect(appendCalls).toHaveLength(1);
   });
 
+  it.each([
+    'workflow_budget_exhausted',
+    'workflow_max_iterations',
+    'workflow_tasks_blocked',
+  ] as const)(
+    'skips push and PR for %s when the branch has no commits ahead',
+    async (priorReason) => {
+      const cwd = await createCwdWithTemplate();
+      const runCommand = createRunCommand({ aheadCount: '0' });
+
+      const result = await finalizePlanRun({
+        baseBranch: 'main',
+        cwd,
+        draftDir: undefined,
+        executeGraphqlV2: createExecuteGraphqlV2([]),
+        onChunk: undefined,
+        planId: PLAN_ID,
+        priorReason,
+        runCommand,
+      });
+
+      expect(result).toEqual({
+        exitCode: 0,
+        reason: priorReason,
+        status: 'finished',
+      });
+      expect(runCommand).not.toHaveBeenCalledWith(
+        expect.objectContaining({ args: expect.arrayContaining(['push']) }),
+      );
+      expect(runCommand).not.toHaveBeenCalledWith(
+        expect.objectContaining({ command: 'gh' }),
+      );
+    },
+  );
+
   it('compares against a freshly fetched origin/<base>, not the local base', async () => {
     const cwd = await createCwdWithTemplate();
     const runCommand = createRunCommand({ aheadCount: '0' });
@@ -480,6 +515,97 @@ describe('finalizePlanRun', () => {
         }),
       );
     });
+
+    it('leaves the PR of a blocked plan in draft (never `gh pr ready`)', async () => {
+      const cwd = await createCwdWithTemplate();
+      const runCommand = createRunCommand({ aheadCount: '1' }, (args) => {
+        if (args[1] === 'create') {
+          return ok('https://github.com/OpenThrottle/monorepo/pull/42\n');
+        }
+        if (args[1] === 'view') {
+          return ok('42\n');
+        }
+        if (args[1] === 'ready') {
+          throw new Error('a blocked plan must not mark its PR ready');
+        }
+        return undefined;
+      });
+
+      const result = await finalizePlanRun({
+        baseBranch: 'main',
+        cwd,
+        draftDir: undefined,
+        executeGraphqlV2: createExecuteGraphqlV2([]),
+        onChunk: undefined,
+        planId: PLAN_ID,
+        priorReason: 'workflow_tasks_blocked',
+        runCommand,
+      });
+
+      expect(result).toEqual({
+        exitCode: 0,
+        headSha: HEAD_SHA,
+        prNumber: 42,
+        reason: 'workflow_tasks_blocked',
+        status: 'finished',
+      });
+      expect(runCommand).toHaveBeenCalledWith(
+        expect.objectContaining({
+          args: expect.arrayContaining(['pr', 'create', '--draft']),
+        }),
+      );
+    });
+
+    it.each(['workflow_max_iterations', 'workflow_budget_exhausted'] as const)(
+      'pushes a %s run under a draft PR built from the fallback body when the agent wrote no draft',
+      async (priorReason) => {
+        const cwd = await createCwdWithTemplate();
+        const appendCalls: unknown[] = [];
+        const runCommand = createRunCommand({ aheadCount: '2' }, (args) => {
+          if (args[1] === 'create') {
+            return ok('https://github.com/OpenThrottle/monorepo/pull/42\n');
+          }
+          if (args[1] === 'view') {
+            return ok('42\n');
+          }
+          if (args[1] === 'ready') {
+            throw new Error('an unfinished plan must not mark its PR ready');
+          }
+          return undefined;
+        });
+
+        const result = await finalizePlanRun({
+          baseBranch: 'main',
+          cwd,
+          // The agent stopped early, so the draft dir it was handed holds nothing.
+          draftDir: join(cwd, '.ot-pr-draft'),
+          executeGraphqlV2: createExecuteGraphqlV2(appendCalls),
+          onChunk: undefined,
+          planId: PLAN_ID,
+          priorReason,
+          runCommand,
+        });
+
+        const createCall = runCommand.mock.calls.find(
+          ([call]) => call.command === 'gh' && call.args[1] === 'create',
+        );
+        const bodyFile =
+          createCall?.[0].args[createCall[0].args.indexOf('--body-file') + 1];
+        const body =
+          bodyFile === undefined ? '' : await readFile(bodyFile, 'utf8');
+
+        expect(result).toEqual({
+          exitCode: 0,
+          headSha: HEAD_SHA,
+          prNumber: 42,
+          reason: priorReason,
+          status: 'finished',
+        });
+        expect(createCall?.[0].args).toContain('--draft');
+        expect(body).toContain('- Rotate the token (BLOCKED)');
+        expect(JSON.stringify(appendCalls)).toContain('source=fallback');
+      },
+    );
 
     it('lists only the branch commit, not the 20 base commits below it', async () => {
       const { created, runCommand } = await run();

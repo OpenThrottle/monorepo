@@ -154,6 +154,30 @@ describe('buildPlanRunPrBody', () => {
     expect(body).not.toContain('- [ ] Check');
   });
 
+  it('lists every unfinished task (pending, queued, in progress, blocked) under Not delivered', () => {
+    const body = buildPlanRunPrBody({
+      commits: [],
+      footerTaskIds: [],
+      plan: PLAN,
+      planId: PLAN_ID,
+      tasks: [
+        task('done', 'COMPLETED'),
+        task('pending', 'PENDING'),
+        task('queued', 'QUEUED'),
+        task('working', 'IN_PROGRESS'),
+        task('blocked', 'BLOCKED'),
+      ],
+      template,
+    });
+
+    expect(body).toContain('### Not delivered');
+    expect(body).toContain('- Task pending (PENDING)');
+    expect(body).toContain('- Task queued (QUEUED)');
+    expect(body).toContain('- Task working (IN_PROGRESS)');
+    expect(body).toContain('- Task blocked (BLOCKED)');
+    expect(body).not.toContain('- Task done (');
+  });
+
   it('turns completed task summaries into testing steps', () => {
     const body = buildPlanRunPrBody({
       commits: [],

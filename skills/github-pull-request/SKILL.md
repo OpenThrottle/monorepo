@@ -46,7 +46,7 @@ So the agent writes the draft and the host publishes it. This mode is how the ag
 
 **Enter it** when `OT_PR_DRAFT_DIR` is set in the environment, when the prompt carries the
 orchestrator's `OT_FINAL_ITERATION=1` line (it adds that line when the agent's task is the plan's
-last runnable one), or when the user or prompt asks for a draft only. Otherwise run the normal process.
+last workable one, ignoring `BLOCKED` siblings), or when the user or prompt asks for a draft only. Otherwise run the normal process.
 
 **The draft directory** is the absolute path the `OT_FINAL_ITERATION=1` line names, which is also
 `$OT_PR_DRAFT_DIR` when your shell has it. With neither, it is

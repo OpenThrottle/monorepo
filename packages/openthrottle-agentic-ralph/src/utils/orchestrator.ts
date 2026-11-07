@@ -19,6 +19,7 @@ import {
 import type { WorkflowLifecycleTaskContext } from '@openthrottle/openthrottle-agentic-workflow';
 
 import {
+  AppendPlanOutputDocument,
   GetPlanDocument,
   GetServerHealthDocument,
   GetTaskDocument,
@@ -52,6 +53,7 @@ import {
   formatPlanAndTasksForPrompt,
   isRalphTerminalStatus,
   isRunnableRalphTask,
+  isWorkableRalphTask,
   pickRalphTaskForIteration,
 } from '../utils/index.ts';
 import {
@@ -131,17 +133,19 @@ const buildFinalIterationPromptLine = (
 };
 
 /**
- * @description True when `taskId` is the only runnable task left, i.e. finishing it ends the plan.
+ * @description True when `taskId` is the only workable task left, i.e. finishing it ends what this
+ * run can do. Pass the **workable** list ({@link isWorkableRalphTask}), not the remaining one: a
+ * BLOCKED sibling anywhere in the plan must not suppress the PR-draft line.
  */
-const isLastRunnableTask = (
-  runnable: readonly { readonly id: string }[],
+const isLastWorkableTask = (
+  workable: readonly { readonly id: string }[],
   taskId: string,
 ): boolean => {
   const lowered = taskId.toLowerCase();
 
   return (
-    runnable.length > 0 &&
-    runnable.every((task) => task.id.toLowerCase() === lowered)
+    workable.length > 0 &&
+    workable.every((task) => task.id.toLowerCase() === lowered)
   );
 };
 
@@ -326,25 +330,121 @@ const promotePlanToInProgressIfNeeded = async (
 };
 
 /**
- * @description Re-queries the plan's tasks and marks the plan COMPLETED when no non-terminal task
- * remains. The server performs no downward reconcile (see repo memory "no server-side downward
- * reconcile"), so a task-scoped run that completes the plan's last task must reconcile the parent
- * itself — otherwise the plan is stranded non-terminal with every task COMPLETED. Mirrors the
- * plan-mode `remaining.length === 0 → COMPLETED` path. Returns `true` when it reconciled.
+ * @description Writes the plan BLOCKED and narrates which tasks hold it there, on plan output and the
+ * iteration stream. Reached when no task is workable but BLOCKED tasks remain: the run has done all
+ * it can, and only a human can unblock and re-enqueue it. The status write throws (the caller's
+ * error handling applies); the narration is best-effort.
  */
-const reconcilePlanIfTasksExhausted = async (
-  executeGraphqlV2: WorkflowRalphOrchestratorDeps['executeGraphqlV2'],
-  planId: string,
-  sessionOptions: ExecuteGraphqlOptionsV2 | undefined,
-): Promise<boolean> => {
+const markPlanBlocked = async (params: {
+  readonly blockedTitles: readonly string[];
+  readonly executeGraphqlV2: WorkflowRalphOrchestratorDeps['executeGraphqlV2'];
+  readonly onChunk: WorkflowRalphIterationOnChunk | undefined;
+  readonly planId: string;
+  readonly sessionOptions: ExecuteGraphqlOptionsV2 | undefined;
+}): Promise<void> => {
+  const { blockedTitles, executeGraphqlV2, onChunk, planId, sessionOptions } =
+    params;
+
+  await executeGraphqlV2(
+    UpdatePlanDocument,
+    { input: { id: planId, status: 'BLOCKED' } },
+    sessionOptions,
+  );
+
+  const titles = blockedTitles.map((title) => `"${title}"`).join(', ');
+  const message = `[ralph-orchestrator] plan blocked: no workable task left; ${blockedTitles.length} blocked task(s) need a human: ${titles}. Unblock them and re-enqueue the plan to continue.\n`;
+
+  try {
+    await executeGraphqlV2(
+      AppendPlanOutputDocument,
+      { input: { content: message, planId } },
+      sessionOptions,
+    );
+  } catch {
+    // Narration is best-effort; the BLOCKED status is the durable signal.
+  }
+
+  if (onChunk) {
+    try {
+      await onChunk({ data: message, stream: 'stderr' });
+    } catch {
+      // ignore
+    }
+  }
+};
+
+/**
+ * @description What a task load says about the plan: `completed` when no task remains (BLOCKED
+ * counts as remaining), `blocked` when tasks remain but none is workable, else `workable` with the
+ * workable list for picking and last-task detection.
+ */
+type PlanTaskProgress<TTask> =
+  | { readonly blockedTitles: readonly string[]; readonly kind: 'blocked' }
+  | { readonly kind: 'completed' }
+  | { readonly kind: 'workable'; readonly workable: readonly TTask[] };
+
+const classifyPlanTasks = <
+  TTask extends Parameters<typeof isWorkableRalphTask>[0] & {
+    readonly title: string;
+  },
+>(
+  tasks: readonly TTask[],
+): PlanTaskProgress<TTask> => {
+  const remaining = tasks.filter(isRunnableRalphTask);
+
+  if (remaining.length === 0) {
+    return { kind: 'completed' };
+  }
+
+  const workable = remaining.filter(isWorkableRalphTask);
+
+  if (workable.length === 0) {
+    return {
+      blockedTitles: remaining.map((task) => task.title),
+      kind: 'blocked',
+    };
+  }
+
+  return { kind: 'workable', workable };
+};
+
+/**
+ * @description Re-queries the plan's tasks and settles the parent when this run can do no more:
+ * COMPLETED when no non-terminal task remains, BLOCKED when only BLOCKED tasks remain. The server
+ * performs no downward reconcile (see repo memory "no server-side downward reconcile"), so a
+ * task-scoped run must reconcile the parent itself — otherwise the plan is stranded non-terminal.
+ * Mirrors the plan-mode task-load exits. Returns the finished reason when it reconciled, else
+ * `undefined`.
+ */
+const reconcilePlanIfTasksExhausted = async (params: {
+  readonly executeGraphqlV2: WorkflowRalphOrchestratorDeps['executeGraphqlV2'];
+  readonly onChunk: WorkflowRalphIterationOnChunk | undefined;
+  readonly planId: string;
+  readonly sessionOptions: ExecuteGraphqlOptionsV2 | undefined;
+}): Promise<
+  'workflow_tasks_blocked' | 'workflow_tasks_exhausted' | undefined
+> => {
+  const { executeGraphqlV2, onChunk, planId, sessionOptions } = params;
   const planTasks = await executeGraphqlV2(GetTasksByPlanIdDocument, {
     input: { planId },
   });
 
-  const remaining = planTasks.tasksByPlanId.filter(isRunnableRalphTask);
+  const progress = classifyPlanTasks(planTasks.tasksByPlanId);
 
-  if (remaining.length > 0) {
-    return false;
+  if (progress.kind === 'workable') {
+    return undefined;
+  }
+
+  if (progress.kind === 'blocked') {
+    await markPlanBlocked({
+      blockedTitles: progress.blockedTitles,
+      executeGraphqlV2,
+      onChunk,
+      planId,
+      sessionOptions,
+    });
+
+    return 'workflow_tasks_blocked';
   }
 
   await executeGraphqlV2(
@@ -353,7 +453,93 @@ const reconcilePlanIfTasksExhausted = async (
     sessionOptions,
   );
 
-  return true;
+  return 'workflow_tasks_exhausted';
+};
+
+/**
+ * @description Settles a plan-mode run that used up its iteration or budget limit. Re-reads the
+ * tasks, because the last iteration may have finished the plan: nothing remaining → plan COMPLETED
+ * and `workflow_tasks_exhausted`. Otherwise the run has spent what it was given and only a human can
+ * act (re-run, or raise the limit), so the plan is written BLOCKED — never left IN_PROGRESS where it
+ * would be re-queued and hold the queue — and the limit reason is returned. Either reason finalizes.
+ * A failed re-read or status write is surfaced as a diagnostic and still returns the limit reason,
+ * so committed work is pushed regardless.
+ */
+const settlePlanAtRunLimit = async (params: {
+  readonly executeGraphqlV2: WorkflowRalphOrchestratorDeps['executeGraphqlV2'];
+  readonly limitLabel: string;
+  readonly onChunk: WorkflowRalphIterationOnChunk | undefined;
+  readonly planId: string;
+  readonly reason: 'workflow_budget_exhausted' | 'workflow_max_iterations';
+  readonly sessionOptions: ExecuteGraphqlOptionsV2 | undefined;
+}): Promise<
+  | 'workflow_budget_exhausted'
+  | 'workflow_max_iterations'
+  | 'workflow_tasks_exhausted'
+> => {
+  const {
+    executeGraphqlV2,
+    limitLabel,
+    onChunk,
+    planId,
+    reason,
+    sessionOptions,
+  } = params;
+
+  try {
+    const planTasks = await executeGraphqlV2(GetTasksByPlanIdDocument, {
+      input: { planId },
+    });
+    const remaining = planTasks.tasksByPlanId.filter(isRunnableRalphTask);
+
+    if (remaining.length === 0) {
+      await executeGraphqlV2(
+        UpdatePlanDocument,
+        { input: { id: planId, status: 'COMPLETED' } },
+        sessionOptions,
+      );
+
+      return 'workflow_tasks_exhausted';
+    }
+
+    const blockedCount = remaining.filter(
+      (task) => task.status === 'BLOCKED',
+    ).length;
+    const pendingCount = remaining.length - blockedCount;
+
+    await executeGraphqlV2(
+      UpdatePlanDocument,
+      { input: { id: planId, status: 'BLOCKED' } },
+      sessionOptions,
+    );
+
+    const message = `[ralph-orchestrator] ${limitLabel}; ${pendingCount} task(s) still pending, ${blockedCount} blocked. Re-run to continue.\n`;
+
+    try {
+      await executeGraphqlV2(
+        AppendPlanOutputDocument,
+        { input: { content: message, planId } },
+        sessionOptions,
+      );
+    } catch {
+      // Narration is best-effort; the BLOCKED status is the durable signal.
+    }
+
+    if (onChunk) {
+      try {
+        await onChunk({ data: message, stream: 'stderr' });
+      } catch {
+        // ignore
+      }
+    }
+  } catch (error) {
+    await emitDiagnostic(onChunk, {
+      error,
+      phase: `plan ${planId} settle after ${reason} failed`,
+    });
+  }
+
+  return reason;
 };
 
 /**
@@ -515,7 +701,7 @@ export const createWorkflowRalphOrchestrator = (
         if (
           isTaskCentric &&
           taskIdTrim !== '' &&
-          isLastRunnableTask(tasksRows.filter(isRunnableRalphTask), taskIdTrim)
+          isLastWorkableTask(tasksRows.filter(isWorkableRalphTask), taskIdTrim)
         ) {
           taskModeFinalLine = buildFinalIterationPromptLine(prDraftDir);
         }
@@ -612,6 +798,41 @@ export const createWorkflowRalphOrchestrator = (
         const lifecycleDispatcher = context.lifecycleDispatcher;
 
         /**
+         * Exit for the iteration and budget limits. Hands the unfinished task back to PENDING,
+         * then, in plan mode, settles the plan (BLOCKED or COMPLETED) and finalizes so committed
+         * work is pushed under a draft PR. Task mode only hands the task back: the plan's other
+         * tasks are not this run's to judge.
+         */
+        const settleRunLimit = async (
+          reason: 'workflow_budget_exhausted' | 'workflow_max_iterations',
+          limitLabel: string,
+        ): Promise<WorkflowRunResult> => {
+          if (lastIterationTaskId && !lastIterationTaskCompleted) {
+            await resetTaskToPending(
+              executeGraphqlV2,
+              lastIterationTaskId,
+              sessionOptions,
+              onChunk,
+            );
+          }
+
+          if (isTaskCentric) {
+            return onFinished(reason);
+          }
+
+          const settled = await settlePlanAtRunLimit({
+            executeGraphqlV2,
+            limitLabel,
+            onChunk,
+            planId: effectivePlanId,
+            reason,
+            sessionOptions,
+          });
+
+          return maybeFinalize(onFinished(settled));
+        };
+
+        /**
          * This is where we run our guarded loop (max iterations) chipping away
          * at the plan and its tasks.
          */
@@ -629,7 +850,10 @@ export const createWorkflowRalphOrchestrator = (
               phase: 'budget guard',
             });
 
-            return onFinished('workflow_budget_exhausted');
+            return settleRunLimit(
+              'workflow_budget_exhausted',
+              `Wall-clock budget exhausted after ${iteration - 1}/${maxIterations} iteration(s)`,
+            );
           }
 
           let agentPrompt = basePrompt;
@@ -644,10 +868,9 @@ export const createWorkflowRalphOrchestrator = (
 
             // task.filter — runner-executed hook-tasks are handled by the lifecycle
             // dispatcher (beforeAll/afterAll/beforeEach/afterEach), never picked here.
-            const remaining =
-              planTasks.tasksByPlanId.filter(isRunnableRalphTask);
+            const progress = classifyPlanTasks(planTasks.tasksByPlanId);
 
-            if (remaining.length === 0) {
+            if (progress.kind === 'completed') {
               await executeGraphqlV2(
                 UpdatePlanDocument,
                 { input: { id: effectivePlanId, status: 'COMPLETED' } },
@@ -658,7 +881,22 @@ export const createWorkflowRalphOrchestrator = (
               return maybeFinalize(onFinished('workflow_tasks_exhausted'));
             }
 
-            const taskForIteration = pickRalphTaskForIteration(remaining);
+            if (progress.kind === 'blocked') {
+              // 🟡 Only BLOCKED tasks left: no iteration can move them, so stop without
+              // spending one. The plan ends BLOCKED and the work so far is still pushed.
+              await markPlanBlocked({
+                blockedTitles: progress.blockedTitles,
+                executeGraphqlV2,
+                onChunk,
+                planId: effectivePlanId,
+                sessionOptions,
+              });
+
+              return maybeFinalize(onFinished('workflow_tasks_blocked'));
+            }
+
+            const { workable } = progress;
+            const taskForIteration = pickRalphTaskForIteration(workable);
 
             if (taskForIteration) {
               firstPendingForIteration = taskForIteration.id;
@@ -711,7 +949,7 @@ export const createWorkflowRalphOrchestrator = (
 
               agentPrompt =
                 `${basePrompt} Current task for this iteration: ${taskForIteration.id}. When you log progress via append_plan_output, pass taskId: ${taskForIteration.id} — the task you are actively working — so the output is attributed to that task and not just the iteration. (One iteration can touch several tasks; if you switch tasks mid-iteration, tag the id of the task you are actually working.) When you complete it output <ralph:task-complete>${taskForIteration.id}</ralph:task-complete> so the CLI can mark it completed.` +
-                (isLastRunnableTask(remaining, taskForIteration.id)
+                (isLastWorkableTask(workable, taskForIteration.id)
                   ? buildFinalIterationPromptLine(prDraftDir)
                   : '');
             }
@@ -878,14 +1116,15 @@ export const createWorkflowRalphOrchestrator = (
           // iteration applied a completion.
           if (isTaskCentric && completeTaskIds.length > 0) {
             try {
-              const reconciled = await reconcilePlanIfTasksExhausted(
+              const reconciled = await reconcilePlanIfTasksExhausted({
                 executeGraphqlV2,
-                effectivePlanId,
+                onChunk,
+                planId: effectivePlanId,
                 sessionOptions,
-              );
+              });
 
-              if (reconciled) {
-                return maybeFinalize(onFinished('workflow_tasks_exhausted'));
+              if (reconciled !== undefined) {
+                return maybeFinalize(onFinished(reconciled));
               }
             } catch (error) {
               await emitDiagnostic(onChunk, {
@@ -938,18 +1177,12 @@ export const createWorkflowRalphOrchestrator = (
           }
         } // ---> looping ... done
 
-        // 4. 🟡 If we have a task id and it's not completed, we mark it as pending
-        if (lastIterationTaskId && !lastIterationTaskCompleted) {
-          await resetTaskToPending(
-            executeGraphqlV2,
-            lastIterationTaskId,
-            sessionOptions,
-            onChunk,
-          );
-        }
-
-        // 5. 🟡 We've successfully completed the iterations, but we've hit our limit
-        return onFinished('workflow_max_iterations');
+        // 4–5. 🟡 We've run every iteration we were given: hand the unfinished task back and
+        // settle the plan (BLOCKED, or COMPLETED if the last iteration finished it).
+        return settleRunLimit(
+          'workflow_max_iterations',
+          `Iteration limit reached (${maxIterations}/${maxIterations})`,
+        );
       } catch (error) {
         await emitDiagnostic(onChunk, {
           error,

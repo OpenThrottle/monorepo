@@ -170,13 +170,13 @@
     "prompt/Job_Security.md": 9518,
     "prompt/Job_TestHealth.md": 8156,
     "prompt/Job_WorkInFlight.md": 9928,
-    "skill/agents-ralph": 13187,
+    "skill/agents-ralph": 13554,
     "skill/github-commit": 2741,
-    "skill/github-pull-request": 14006,
+    "skill/github-pull-request": 14035,
     "skill/github-squash": 8609,
     "skill/ot-folders": 21263,
     "skill/ot-generators": 10250,
-    "skill/ot-loop": 30804,
+    "skill/ot-loop": 31059,
     "skill/ot-onboarding": 24976,
     "skill/ot-plans": 8938,
     "skill/ot-postgres": 6910,
@@ -209,6 +209,6 @@
     "mcpInstructions": 2125,
     "mcpTools": 33817,
     "prompts": 119941,
-    "skills": 180132
+    "skills": 180783
   }
 }
