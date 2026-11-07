@@ -1,8 +1,17 @@
 import fs from 'node:fs';
+import fsPromises from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 
 import {
   createFsGlobMatcher,
@@ -76,8 +85,23 @@ describe('createFsGlobMatcher', () => {
     expect(await tight('packages/**/*.nope', root)).toBe(true);
   });
 
-  it('answers true on a timeout', async () => {
-    const instant = createFsGlobMatcher({ maxEntries: 1000, timeoutMs: 0 });
-    expect(await instant('packages/**/*.nope', root)).toBe(true);
+  describe('when the walk outlasts the timeout', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('answers true', async () => {
+      // A walk whose reads never settle, so the timer is the only way out —
+      // a real walk over this tiny tree can beat even a 0ms timer.
+      const never = new Promise<never>(() => {});
+      const readdir = vi.spyOn(fsPromises, 'readdir').mockReturnValue(never);
+      const stat = vi.spyOn(fsPromises, 'stat').mockReturnValue(never);
+      const timed = createFsGlobMatcher({ maxEntries: 1000, timeoutMs: 10 });
+
+      expect(await timed('packages/**/*.nope', root)).toBe(true);
+      expect(
+        stat.mock.calls.length + readdir.mock.calls.length,
+      ).toBeGreaterThan(0);
+    });
   });
 });
