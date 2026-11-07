@@ -17,11 +17,14 @@ import {
   PLAN_RUN_STATUS,
   PlanRunsService,
   PlansService,
+  REMAINING_TASK_STATUSES,
   resolveCompletedAtForStatusChange,
+  Task,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import type { Queue } from 'bullmq';
 import type { EntityManager } from 'typeorm';
+import { In } from 'typeorm';
 
 import { updateMatchingTasksAndEmitStatusChanged } from '../../notifications/emit-bulk-task-status-changes.ts';
 import { NotificationsService } from '../../notifications/notifications.service.ts';
@@ -100,9 +103,10 @@ export interface ApplyStatusChangeParams {
   readonly entity: Plan;
   readonly requestedStatus: string;
   /**
-   * True to throw {@link PlanStatusService.forbiddenTransitionMessage} on a forbidden IN_PROGRESS
-   * transition (the `setStatus` mutation's behaviour). False to silently no-op instead (the
-   * `updatePlan`/`resolveStatusChange` behaviour) — openthrottle-ralph parity either way.
+   * True to throw on a forbidden IN_PROGRESS transition or on COMPLETED while tasks remain
+   * unresolved (user-facing `setStatus` / `updatePlan`). False to return `{ applied: false }`
+   * instead (background `writeGuardedStatus` writers — processor settle, parent-plan reconcile)
+   * so a worker is not crashed by a BadRequestException.
    */
   readonly throwOnForbiddenInProgress: boolean;
 }
@@ -195,6 +199,27 @@ export class PlanStatusService {
   }
 
   /**
+   * @description Builds the BadRequest / warn message used when COMPLETED is refused because the
+   * plan still has unresolved tasks. Names each task (id + status) and steers BLOCKED leftovers
+   * toward marking the plan BLOCKED instead of COMPLETED.
+   */
+  unresolvedCompletedMessage(
+    unresolved: ReadonlyArray<{ readonly id: string; readonly status: string }>,
+  ): string {
+    const listed = unresolved
+      .map((task) => `${task.id} (${task.status})`)
+      .join(', ');
+    const hasBlocked = unresolved.some(
+      (task) => normalizePlanStatusForPolicy(task.status) === 'BLOCKED',
+    );
+    const hint = hasBlocked
+      ? ' Set the plan to BLOCKED instead when any task is BLOCKED.'
+      : ' Resolve or cancel those tasks first.';
+
+    return `Cannot mark plan COMPLETED while unresolved tasks remain: ${listed}.${hint}`;
+  }
+
+  /**
    * @description Resolves the next status for a partial plan update. Returns `{ nextStatus }` when
    * the status should change, or `null` when it should stay unchanged (no-op, idempotent, or a
    * forbidden IN_PROGRESS transition that is silently left in place — openthrottle-ralph parity).
@@ -232,6 +257,12 @@ export class PlanStatusService {
    * entity or capturing anything. A forbidden IN_PROGRESS transition throws instead when
    * `throwOnForbiddenInProgress` is true.
    *
+   * COMPLETED is refused while any task is in {@link REMAINING_TASK_STATUSES}: user-facing
+   * callers pass `throwOnForbiddenInProgress: true` and get a {@link BadRequestException} that
+   * names the unresolved tasks; background writers (`writeGuardedStatus` from the processor /
+   * `completeParentPlanIfTasksDone`) pass false and get `{ applied: false }` plus a warn log so
+   * a worker is not crashed. Rejecting is preferred over silently coercing to BLOCKED.
+   *
    * A work-ledger capture failure rethrows (rolling back the caller's transaction) when
    * `captureFailureIsFatal` is true; otherwise it is logged and swallowed so the entity mutation
    * still stands for the caller to persist.
@@ -264,6 +295,27 @@ export class PlanStatusService {
 
     if (normalizePlanStatusForPolicy(previousStatus) === nextStatus) {
       return { applied: false };
+    }
+
+    if (nextStatus === 'COMPLETED') {
+      const unresolved = await manager.getRepository(Task).find({
+        select: { id: true, status: true },
+        where: {
+          planId: entity.id,
+          status: In([...REMAINING_TASK_STATUSES]),
+        },
+      });
+
+      if (unresolved.length > 0) {
+        const message = this.unresolvedCompletedMessage(unresolved);
+
+        if (throwOnForbiddenInProgress) {
+          throw new BadRequestException(message);
+        }
+
+        this.logger.warn(message, PlanStatusService.name);
+        return { applied: false };
+      }
     }
 
     entity.status = nextStatus;

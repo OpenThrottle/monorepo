@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { In, IsNull, Not, Repository } from 'typeorm';
 
+import { REMAINING_TASK_STATUSES } from '../../config/plan-task-status.constants.ts';
 import { Plan } from '../plans/plan.entity.ts';
 import {
   Task,
@@ -517,14 +518,16 @@ export class TasksService {
   }
 
   /**
-   * @description Whether `planId` still has a non-terminal task (BLOCKED, IN_PROGRESS, PENDING, or
-   * QUEUED); COMPLETED, SKIPPED, CANCELED and PROMOTED (the work continued as its own plan) are resolved,
-   * so a plan whose last open task is promoted still completes. This is the read-only "should the plan complete?" half of the downward reconcile that
-   * marks a plan COMPLETED when its last task finishes — the guarded write itself lives in
-   * `PlanStatusService.completeParentPlanIfTasksDone` (server), the one legal place that writes
-   * `plans.status`, so it can attribute the write and capture a status_change artifact. Moved out of
-   * this package because `TasksService` (here, in `@openthrottle/nestjs-repositories`) cannot import
-   * the server-side chokepoint without inverting the dependency.
+   * @description Whether `planId` still has a non-terminal task — membership is
+   * {@link REMAINING_TASK_STATUSES} (BLOCKED, IN_PROGRESS, PENDING, QUEUED). COMPLETED, SKIPPED,
+   * CANCELED and PROMOTED (the work continued as its own plan) are resolved, so a plan whose last
+   * open task is promoted still completes. This is the read-only "should the plan complete?" half of
+   * the downward reconcile that marks a plan COMPLETED when its last task finishes — the guarded
+   * write itself lives in `PlanStatusService.completeParentPlanIfTasksDone` (server), the one legal
+   * place that writes `plans.status`, so it can attribute the write and capture a status_change
+   * artifact. Moved out of this package because `TasksService` (here, in
+   * `@openthrottle/nestjs-repositories`) cannot import the server-side chokepoint without inverting
+   * the dependency. The same status list gates COMPLETED writes inside `applyStatusChange`.
    *
    * Without the downstream write, the only thing that completes a plan is the Ralph orchestrator's
    * top-of-loop check, which several exit paths (agent completion signal, max iterations,
@@ -534,7 +537,7 @@ export class TasksService {
     const remaining = await this.taskRepository.count({
       where: {
         planId,
-        status: In(['BLOCKED', 'IN_PROGRESS', 'PENDING', 'QUEUED']),
+        status: In([...REMAINING_TASK_STATUSES]),
       },
     });
 

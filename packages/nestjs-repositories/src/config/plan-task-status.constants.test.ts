@@ -8,6 +8,7 @@ import {
   isTaskStatus,
   PLAN_STATUS,
   PLAN_STATUS_VALUES,
+  REMAINING_TASK_STATUSES,
   TASK_STATUS,
   TASK_STATUS_VALUES,
 } from './plan-task-status.constants.ts';
@@ -116,5 +117,18 @@ describe('plan-task-status SSOT', () => {
     expect(isPlanStatus('pending')).toBe(false);
     expect(isPlanStatus('CANCELLED')).toBe(false);
     expect(isPlanStatus('DRAFT')).toBe(false);
+  });
+
+  it('REMAINING_TASK_STATUSES is the unresolved set that blocks plan COMPLETED', () => {
+    expect([...REMAINING_TASK_STATUSES]).toEqual([
+      'BLOCKED',
+      'IN_PROGRESS',
+      'PENDING',
+      'QUEUED',
+    ]);
+    expect(REMAINING_TASK_STATUSES).not.toContain(PLAN_STATUS.COMPLETED);
+    expect(REMAINING_TASK_STATUSES).not.toContain(PLAN_STATUS.SKIPPED);
+    expect(REMAINING_TASK_STATUSES).not.toContain(PLAN_STATUS.CANCELED);
+    expect(REMAINING_TASK_STATUSES).not.toContain(PLAN_STATUS.PROMOTED);
   });
 });

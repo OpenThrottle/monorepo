@@ -7,6 +7,7 @@ import type {
   PlansService,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
+import { Task } from '@openthrottle/nestjs-repositories';
 import type { Queue } from 'bullmq';
 import type { EntityManager } from 'typeorm';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -118,7 +119,16 @@ describe('PlanStatusService', () => {
     recordStatusChange: mockRecordStatusChange,
     resolveSessionId: mockResolveSessionId,
   });
-  const manager = createMock<EntityManager>();
+  const mockTaskFind = vi.fn().mockResolvedValue([]);
+  const taskFindRepo = {
+    find: mockTaskFind,
+  };
+  const manager = createMock<EntityManager>({
+    getRepository: vi.fn((entity: unknown) => {
+      if (entity === Task) return taskFindRepo;
+      return repo;
+    }),
+  });
 
   const service = new PlanStatusService(
     mockLogger,
@@ -148,13 +158,22 @@ describe('PlanStatusService', () => {
     repo.update.mockReset();
     repo.update.mockResolvedValue(undefined);
     repo.manager.transaction.mockReset();
-    // Mirrors repo.manager.transaction: runs the callback with a manager whose getRepository(Plan)
-    // routes back to `repo` — the only entity these tests transact against — so existing
-    // `expect(repo.findOne/save)` assertions still hold.
+    // Mirrors repo.manager.transaction: Plan → `repo`, Task → `taskFindRepo` (COMPLETED guard).
     repo.manager.transaction.mockImplementation(
-      async (cb: (manager: { getRepository: () => typeof repo }) => unknown) =>
-        cb({ getRepository: () => repo }),
+      async (
+        cb: (manager: {
+          getRepository: (entity?: unknown) => unknown;
+        }) => unknown,
+      ) =>
+        cb({
+          getRepository: (entity?: unknown) => {
+            if (entity === Task) return taskFindRepo;
+            return repo;
+          },
+        }),
     );
+    mockTaskFind.mockReset();
+    mockTaskFind.mockResolvedValue([]);
     mockGetJobs.mockReset();
     mockGetJobs.mockResolvedValue([]);
     mockPlanRunCancellationAbort.mockReturnValue(false);
@@ -387,6 +406,151 @@ describe('PlanStatusService', () => {
       expect(message).toContain('from=IN_PROGRESS');
       expect(message).toContain('to=PENDING');
       expect(context).toBe('PlanStatusService');
+    });
+
+    test('COMPLETED is refused with a BLOCKED task when throwOnForbiddenInProgress is true', async () => {
+      const entity = { ...mockPlan, completedAt: null, status: 'IN_PROGRESS' };
+      mockTaskFind.mockResolvedValue([
+        { id: 'task-blocked-1', status: 'BLOCKED' },
+      ]);
+
+      let caught: unknown;
+      try {
+        await service.applyStatusChange(manager, {
+          ...baseParams,
+          entity,
+          requestedStatus: 'COMPLETED',
+          throwOnForbiddenInProgress: true,
+        });
+      } catch (error) {
+        caught = error;
+      }
+
+      expect(caught).toBeInstanceOf(BadRequestException);
+      expect(String(caught)).toContain('task-blocked-1 (BLOCKED)');
+      expect(String(caught)).toContain(
+        'Set the plan to BLOCKED instead when any task is BLOCKED',
+      );
+      expect(entity.status).toBe('IN_PROGRESS');
+      expect(mockRecordStatusChange).not.toHaveBeenCalled();
+    });
+
+    test('COMPLETED is refused with a PENDING task when throwOnForbiddenInProgress is true', async () => {
+      const entity = { ...mockPlan, completedAt: null, status: 'IN_PROGRESS' };
+      mockTaskFind.mockResolvedValue([
+        { id: 'task-pending-1', status: 'PENDING' },
+      ]);
+
+      await expect(
+        service.applyStatusChange(manager, {
+          ...baseParams,
+          entity,
+          requestedStatus: 'COMPLETED',
+          throwOnForbiddenInProgress: true,
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(entity.status).toBe('IN_PROGRESS');
+      expect(mockRecordStatusChange).not.toHaveBeenCalled();
+    });
+
+    test('COMPLETED soft-no-ops and logs when tasks remain and throwOnForbiddenInProgress is false', async () => {
+      const entity = { ...mockPlan, completedAt: null, status: 'IN_PROGRESS' };
+      mockTaskFind.mockResolvedValue([
+        { id: 'task-blocked-1', status: 'BLOCKED' },
+      ]);
+
+      const result = await service.applyStatusChange(manager, {
+        ...baseParams,
+        entity,
+        requestedStatus: 'COMPLETED',
+        throwOnForbiddenInProgress: false,
+      });
+
+      expect(result).toEqual({ applied: false });
+      expect(entity.status).toBe('IN_PROGRESS');
+      expect(mockRecordStatusChange).not.toHaveBeenCalled();
+      expect(mockLoggerWarn).toHaveBeenCalledTimes(1);
+      expect(String(mockLoggerWarn.mock.calls[0]?.[0])).toContain(
+        'task-blocked-1',
+      );
+    });
+
+    test('COMPLETED is allowed when every task is COMPLETED/SKIPPED/CANCELED/PROMOTED', async () => {
+      const entity = { ...mockPlan, completedAt: null, status: 'IN_PROGRESS' };
+      // The guard queries only REMAINING_TASK_STATUSES; terminal tasks are not returned.
+      mockTaskFind.mockResolvedValue([]);
+
+      const result = await service.applyStatusChange(manager, {
+        ...baseParams,
+        entity,
+        requestedStatus: 'COMPLETED',
+        throwOnForbiddenInProgress: true,
+      });
+
+      expect(result).toEqual({
+        applied: true,
+        fromStatus: 'IN_PROGRESS',
+        toStatus: 'COMPLETED',
+      });
+      expect(entity.status).toBe('COMPLETED');
+    });
+
+    test('COMPLETED is allowed on a plan with zero tasks', async () => {
+      const entity = { ...mockPlan, completedAt: null, status: 'PENDING' };
+      mockTaskFind.mockResolvedValue([]);
+
+      const result = await service.applyStatusChange(manager, {
+        ...baseParams,
+        entity,
+        requestedStatus: 'COMPLETED',
+        throwOnForbiddenInProgress: true,
+      });
+
+      expect(result).toEqual({
+        applied: true,
+        fromStatus: 'PENDING',
+        toStatus: 'COMPLETED',
+      });
+      expect(mockTaskFind).toHaveBeenCalled();
+    });
+
+    test('BLOCKED and CANCELED writes are unaffected by unresolved tasks', async () => {
+      const entity = { ...mockPlan, completedAt: null, status: 'IN_PROGRESS' };
+      mockTaskFind.mockResolvedValue([
+        { id: 'task-pending-1', status: 'PENDING' },
+      ]);
+
+      const blocked = await service.applyStatusChange(manager, {
+        ...baseParams,
+        entity,
+        requestedStatus: 'BLOCKED',
+        throwOnForbiddenInProgress: true,
+      });
+
+      expect(blocked).toEqual({
+        applied: true,
+        fromStatus: 'IN_PROGRESS',
+        toStatus: 'BLOCKED',
+      });
+      expect(mockTaskFind).not.toHaveBeenCalled();
+
+      const canceledEntity = {
+        ...mockPlan,
+        completedAt: null,
+        status: 'IN_PROGRESS',
+      };
+      const canceled = await service.applyStatusChange(manager, {
+        ...baseParams,
+        entity: canceledEntity,
+        requestedStatus: 'CANCELED',
+        throwOnForbiddenInProgress: true,
+      });
+
+      expect(canceled).toEqual({
+        applied: true,
+        fromStatus: 'IN_PROGRESS',
+        toStatus: 'CANCELED',
+      });
     });
   });
 
