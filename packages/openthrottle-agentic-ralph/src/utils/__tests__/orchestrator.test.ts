@@ -1844,4 +1844,130 @@ describe('createWorkflowRalphOrchestrator blocked-only plans', () => {
       expect(result).toMatchObject({ reason: 'workflow_max_iterations' });
     });
   });
+
+  /**
+   * Replays plan 5aad07f6: three tasks, the agent blocks one of them through its own status
+   * write (as it would over MCP), and the run must end BLOCKED with a draft PR instead of
+   * idling IN_PROGRESS.
+   */
+  describe('replaying the 5aad07f6 shape', () => {
+    /** git/gh stub with commits ahead; captures the `gh pr create` argv and body. */
+    const createAheadRunner = () => {
+      const created: { args: readonly string[]; body: string }[] = [];
+      const runCommand = vi.fn<WorkflowRalphCommandRunner>(
+        async ({ args, command }) => {
+          const [sub, first] = args;
+          if (command === 'bash') {
+            return { exitCode: 0, stderr: '', stdout: '' };
+          }
+          if (command === 'gh' && sub === 'pr' && first === 'create') {
+            const bodyIndex = args.indexOf('--body-file') + 1;
+            const bodyPath = args[bodyIndex] ?? '';
+            created.push({ args, body: await readFile(bodyPath, 'utf8') });
+            return { exitCode: 0, stderr: '', stdout: 'https://x/pull/7\n' };
+          }
+          if (command === 'gh' && sub === 'pr' && first === 'view') {
+            return { exitCode: 0, stderr: '', stdout: '7\n' };
+          }
+          if (command === 'gh' && sub === 'pr' && first === 'list') {
+            return { exitCode: 0, stderr: '', stdout: '[]' };
+          }
+          if (sub === 'rev-parse' && first === '--show-toplevel') {
+            return { exitCode: 0, stderr: '', stdout: `${repoRoot}\n` };
+          }
+          if (sub === 'rev-parse' && first === '--abbrev-ref') {
+            return { exitCode: 0, stderr: '', stdout: 'openthrottle/plan-x\n' };
+          }
+          if (sub === 'rev-parse' && first === 'HEAD') {
+            return { exitCode: 0, stderr: '', stdout: 'abc1234\n' };
+          }
+          if (sub === 'rev-list') {
+            return { exitCode: 0, stderr: '', stdout: '4\n' };
+          }
+          if (sub === 'push') {
+            return { exitCode: 0, stderr: '', stdout: '' };
+          }
+          if (sub === 'log') {
+            return {
+              exitCode: 0,
+              stderr: '',
+              stdout: 'abc1234 feat(x): show agent setup output\n',
+            };
+          }
+          return { exitCode: 1, stderr: '', stdout: '' };
+        },
+      );
+
+      return { created, runCommand };
+    };
+
+    it('ends BLOCKED and opens a draft PR naming the blocked last task, with no further iteration', async () => {
+      const { executeGraphqlV2, planUpdates } = createStatefulExecute([
+        baseTask(TASK_A, 'COMPLETED', { sortOrder: 1000 }),
+        baseTask(TASK_B, 'COMPLETED', { sortOrder: 2000 }),
+        baseTask(TASK_C, 'PENDING', { sortOrder: 3000, title: 'Visual pass' }),
+      ]);
+      const run = vi.fn(async () => {
+        await executeGraphqlV2(UpdateTaskDocument, {
+          input: { id: TASK_C, status: 'BLOCKED' },
+        });
+        return 'visual pass needs a human';
+      });
+      const { created, runCommand } = createAheadRunner();
+
+      const orchestrator = createWorkflowRalphOrchestrator({
+        executeGraphqlV2,
+        iterationRunner: { run },
+        runCommand,
+      });
+
+      const result = await orchestrator.execute({
+        context: { ...baseContext, iterationMax: 5, iterations: 5 },
+      });
+
+      expect(run).toHaveBeenCalledTimes(1);
+      expect(planUpdates.at(-1)).toBe('BLOCKED');
+      expect(planUpdates).not.toContain('COMPLETED');
+      expect(created).toHaveLength(1);
+      expect(created[0]?.args).toContain('--draft');
+      expect(created[0]?.body).toContain('Visual pass');
+      expect(result).toMatchObject({
+        reason: 'workflow_tasks_blocked',
+        status: 'finished',
+      });
+    });
+
+    it('gives the last workable task the final-iteration line when the middle task is BLOCKED', async () => {
+      const prompts: string[] = [];
+      const { executeGraphqlV2, planUpdates } = createStatefulExecute([
+        baseTask(TASK_A, 'COMPLETED', { sortOrder: 1000 }),
+        baseTask(TASK_B, 'BLOCKED', { sortOrder: 2000, title: 'Visual pass' }),
+        baseTask(TASK_C, 'PENDING', { sortOrder: 3000 }),
+      ]);
+      const run = vi.fn(async ({ agentPrompt }: { agentPrompt: string }) => {
+        prompts.push(agentPrompt);
+        return `<ralph:task-complete>${TASK_C}</ralph:task-complete>`;
+      });
+      const { created, runCommand } = createAheadRunner();
+
+      const orchestrator = createWorkflowRalphOrchestrator({
+        executeGraphqlV2,
+        iterationRunner: { run },
+        runCommand,
+      });
+
+      const result = await orchestrator.execute({
+        context: { ...baseContext, iterationMax: 5, iterations: 5 },
+      });
+
+      expect(run).toHaveBeenCalledTimes(1);
+      expect(prompts[0]).toContain(
+        `Current task for this iteration: ${TASK_C}`,
+      );
+      expect(prompts[0]).toContain(FINAL_ITERATION_FLAG);
+      expect(planUpdates.at(-1)).toBe('BLOCKED');
+      expect(created[0]?.body).toContain('Visual pass');
+      expect(result).toMatchObject({ reason: 'workflow_tasks_blocked' });
+    });
+  });
 });
