@@ -19,7 +19,10 @@ import {
 } from '@openthrottle/openthrottle-agentic-utils';
 import { QueryFailedError } from 'typeorm';
 
-import { RecordAgentTrajectoryInput } from './agent-trajectory.input.ts';
+import {
+  RecordAgentTrajectoryInput,
+  ReplaceAgentTrajectoryInput,
+} from './agent-trajectory.input.ts';
 import { toAgentTrajectoryObject } from './agent-trajectory.mapper.ts';
 import { AgentTrajectoryObject } from './agent-trajectory.object.ts';
 
@@ -148,6 +151,73 @@ export class AgentTrajectoriesResolver {
 
       return toAgentTrajectoryObject(row);
     } catch (error) {
+      if (isForeignKeyViolation(error)) {
+        throw new NotFoundException('plan run or task not found');
+      }
+
+      throw error;
+    }
+  }
+
+  @Mutation(() => AgentTrajectoryObject, {
+    description: `Replace the ATIF document on an existing trajectory in place, keeping its id so human labels keyed by trajectory id survive. Used by the session re-segment operator when a task's boundaries change. The document is validated and capped the same way as recordAgentTrajectory.`,
+  })
+  async replaceAgentTrajectory(
+    @Args('id', { type: () => ID }) id: string,
+    @Args('input', { type: () => ReplaceAgentTrajectoryInput })
+    input: ReplaceAgentTrajectoryInput,
+  ): Promise<AgentTrajectoryObject> {
+    if (
+      input.idempotencyKey != null &&
+      (input.idempotencyKey === '' ||
+        input.idempotencyKey.length > MAX_IDEMPOTENCY_KEY_LENGTH)
+    ) {
+      throw new BadRequestException(
+        `idempotencyKey must be 1 to ${MAX_IDEMPOTENCY_KEY_LENGTH} characters`,
+      );
+    }
+
+    const parsed = parseAtifTrajectoryJson(input.trajectoryJson);
+
+    if (parsed === undefined) {
+      throw new BadRequestException(
+        'trajectoryJson is not a valid ATIF document',
+      );
+    }
+
+    const capped = capTrajectory(parsed);
+    const summary = summarizeTrajectory(capped.trajectory);
+
+    try {
+      const row = await this.agentTrajectoriesService.replace(id, {
+        byteSize: capped.byteSize,
+        cachedTokens: summary.cachedTokens,
+        costUsd: summary.costUsd,
+        durationMs: input.durationMs ?? null,
+        exitCode: input.exitCode ?? null,
+        idempotencyKey: input.idempotencyKey ?? null,
+        incomplete: summary.incomplete,
+        inputTokens: summary.inputTokens,
+        model: input.model ?? null,
+        outcome: input.outcome ?? null,
+        outputTokens: summary.outputTokens,
+        planRunId: input.planRunId,
+        schemaVersion: capped.trajectory.schema_version,
+        toolCallCount: summary.toolCallCount,
+        trajectory: capped.trajectory,
+        truncated: capped.truncated,
+      });
+
+      if (row == null) {
+        throw new NotFoundException('trajectory not found');
+      }
+
+      return toAgentTrajectoryObject(row);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+
       if (isForeignKeyViolation(error)) {
         throw new NotFoundException('plan run or task not found');
       }

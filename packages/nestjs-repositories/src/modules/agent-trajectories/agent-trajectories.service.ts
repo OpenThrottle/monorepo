@@ -3,7 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { QueryFailedError, Repository } from 'typeorm';
 
-import type { CreateAgentTrajectoryInput } from './agent-trajectories.types.ts';
+import type {
+  CreateAgentTrajectoryInput,
+  ReplaceAgentTrajectoryInput,
+} from './agent-trajectories.types.ts';
 import { AgentTrajectory } from './agent-trajectory.entity.ts';
 
 const UNIQUE_VIOLATION = '23505';
@@ -89,6 +92,41 @@ export class AgentTrajectoriesService {
    */
   async findById(id: string): Promise<AgentTrajectory | null> {
     return this.agentTrajectoryRepository.findOne({ where: { id } });
+  }
+
+  /**
+   * @description Replaces the document (and derived summary columns) on an existing trajectory,
+   * keeping its id so labels keyed by trajectory id survive. Returns null when no row matches.
+   * A concurrent idempotency-key conflict is rethrown for the caller to surface.
+   */
+  async replace(
+    id: string,
+    input: ReplaceAgentTrajectoryInput,
+  ): Promise<AgentTrajectory | null> {
+    const existing = await this.findById(id);
+
+    if (existing === null) {
+      return null;
+    }
+
+    existing.byteSize = input.byteSize;
+    existing.cachedTokens = input.cachedTokens;
+    existing.costUsd = input.costUsd;
+    existing.durationMs = input.durationMs;
+    existing.exitCode = input.exitCode;
+    existing.idempotencyKey = input.idempotencyKey;
+    existing.incomplete = input.incomplete;
+    existing.inputTokens = input.inputTokens;
+    existing.model = input.model;
+    existing.outcome = input.outcome;
+    existing.outputTokens = input.outputTokens;
+    existing.planRunId = input.planRunId;
+    existing.schemaVersion = input.schemaVersion;
+    existing.toolCallCount = input.toolCallCount;
+    existing.trajectory = input.trajectory;
+    existing.truncated = input.truncated;
+
+    return this.agentTrajectoryRepository.save(existing);
   }
 
   /**

@@ -2618,6 +2618,8 @@ export type Mutation = {
   renameSkillTag: SkillTagObject;
   /** Reorder tasks within a plan. Renumbers sortOrder 1000, 2000, … in taskIds order atomically. */
   reorderPlanTasks: Array<TaskObject>;
+  /** Replace the ATIF document on an existing trajectory in place, keeping its id so human labels keyed by trajectory id survive. Used by the session re-segment operator when a task's boundaries change. The document is validated and capped the same way as recordAgentTrajectory. */
+  replaceAgentTrajectory: AgentTrajectory;
   /** Restore a soft-deleted custom prompt */
   restoreCustomPrompt?: Maybe<CustomPromptObject>;
   /** Resume a paused queue so workers pick up jobs again. */
@@ -3162,6 +3164,11 @@ export type MutationRenameSkillTagArgs = {
 
 export type MutationReorderPlanTasksArgs = {
   input: ReorderPlanTasksInput;
+};
+
+export type MutationReplaceAgentTrajectoryArgs = {
+  id: Scalars['ID']['input'];
+  input: ReplaceAgentTrajectoryInput;
 };
 
 export type MutationRestoreCustomPromptArgs = {
@@ -5296,6 +5303,23 @@ export type RepeatableJobsInput = {
   queueName: Scalars['String']['input'];
   /** Start index for pagination. */
   start?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type ReplaceAgentTrajectoryInput = {
+  /** Wall-clock duration of the run in milliseconds. */
+  durationMs?: InputMaybe<Scalars['Int']['input']>;
+  /** Process exit code of the run. */
+  exitCode?: InputMaybe<Scalars['Int']['input']>;
+  /** Optional key that makes a later recordAgentTrajectory with the same key a no-op. At most 200 characters. */
+  idempotencyKey?: InputMaybe<Scalars['String']['input']>;
+  /** Model that ran, when known. */
+  model?: InputMaybe<Scalars['String']['input']>;
+  /** Free-form result label for the run, for example completed. */
+  outcome?: InputMaybe<Scalars['String']['input']>;
+  /** Plan run the trajectory belongs to after the replace. */
+  planRunId: Scalars['ID']['input'];
+  /** The ATIF document as a JSON string. Validated, then capped server-side at 4 MiB. */
+  trajectoryJson: Scalars['String']['input'];
 };
 
 /** A per-user on-disk instance of a repository. Paths are on the server host. */

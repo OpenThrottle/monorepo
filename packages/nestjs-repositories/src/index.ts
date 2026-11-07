@@ -68,6 +68,7 @@ export { AgentTrajectoriesService } from './modules/agent-trajectories/agent-tra
 export type {
   AgentTrajectorySource,
   CreateAgentTrajectoryInput,
+  ReplaceAgentTrajectoryInput,
 } from './modules/agent-trajectories/agent-trajectories.types.ts';
 export { AgentTrajectory } from './modules/agent-trajectories/agent-trajectory.entity.ts';
 export type { BlogAuthorData } from './modules/blog-authors/blog-author.entity.ts';

@@ -166,6 +166,68 @@ describe('AgentTrajectoriesService', () => {
     });
   });
 
+  describe('replace', () => {
+    it('rewrites the document on the existing row and keeps its id', async () => {
+      const existing = agentTrajectoryFactory.build({
+        idempotencyKey: null,
+        planRunId,
+        taskId,
+        toolCallCount: 1,
+      });
+      mockRepository.findOne.mockResolvedValueOnce(existing);
+
+      const replaced = await service.replace(existing.id, {
+        byteSize: 512,
+        cachedTokens: 10,
+        costUsd: null,
+        durationMs: 99,
+        exitCode: 0,
+        idempotencyKey: 'session:s1:toolu_1',
+        incomplete: false,
+        inputTokens: 20,
+        model: 'claude-opus-5-5',
+        outcome: 'completed',
+        outputTokens: 5,
+        planRunId,
+        schemaVersion: 'ATIF-v1.8',
+        toolCallCount: 3,
+        trajectory: existing.trajectory,
+        truncated: false,
+      });
+
+      expect(replaced?.id).toBe(existing.id);
+      expect(replaced?.toolCallCount).toBe(3);
+      expect(replaced?.idempotencyKey).toBe('session:s1:toolu_1');
+      expect(mockRepository.save).toHaveBeenCalledWith(existing);
+    });
+
+    it('returns null when the id is unknown', async () => {
+      mockRepository.findOne.mockResolvedValueOnce(null);
+
+      await expect(
+        service.replace('missing', {
+          byteSize: 1,
+          cachedTokens: null,
+          costUsd: null,
+          durationMs: null,
+          exitCode: null,
+          idempotencyKey: null,
+          incomplete: false,
+          inputTokens: null,
+          model: null,
+          outcome: null,
+          outputTokens: null,
+          planRunId,
+          schemaVersion: 'ATIF-v1.8',
+          toolCallCount: 0,
+          trajectory: agentTrajectoryFactory.build().trajectory,
+          truncated: false,
+        }),
+      ).resolves.toBeNull();
+      expect(mockRepository.save).not.toHaveBeenCalled();
+    });
+  });
+
   describe('findByPlanRun', () => {
     it('lists the run trajectories oldest first', async () => {
       const rows = [agentTrajectoryFactory.build({ planRunId })];

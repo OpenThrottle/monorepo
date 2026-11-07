@@ -132,6 +132,7 @@ import {
   RenameSkillTagInput,
   ReorderPlanTasksInput,
   RepeatableJobsInput,
+  ReplaceAgentTrajectoryInput,
   RetryJobInput,
   ReviewCycleTimeInput,
   RolloutEvaluationReason,
@@ -1566,6 +1567,20 @@ export function RepeatableJobsInputSchema(): z.ZodObject<
     end: z.number().nullish(),
     queueName: z.string().min(1),
     start: z.number().nullish(),
+  });
+}
+
+export function ReplaceAgentTrajectoryInputSchema(): z.ZodObject<
+  Properties<ReplaceAgentTrajectoryInput>
+> {
+  return z.object({
+    durationMs: z.number().nullish(),
+    exitCode: z.number().nullish(),
+    idempotencyKey: z.string().nullish(),
+    model: z.string().nullish(),
+    outcome: z.string().nullish(),
+    planRunId: z.string().min(1),
+    trajectoryJson: z.string().min(1),
   });
 }
 
