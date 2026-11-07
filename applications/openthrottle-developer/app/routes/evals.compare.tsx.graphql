@@ -1,0 +1,27 @@
+# evals.compare
+
+# A candidate run against a baseline run. McNemar's test, the regressed and
+# improved case ids and the comparability warnings are computed server-side.
+query EvalRunComparisonRoute($baseRunId: ID!, $candidateRunId: ID!) {
+  evalRunComparison(baseRunId: $baseRunId, candidateRunId: $candidateRunId) {
+    base {
+      ...EvalRunReportFields
+    }
+    candidate {
+      ...EvalRunReportFields
+    }
+    improvedCaseIds
+    mcnemar {
+      b
+      c
+      method
+      pValue
+    }
+    regressedCaseIds
+    sharedCases
+    warnings {
+      code
+      message
+    }
+  }
+}

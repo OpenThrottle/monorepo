@@ -116,3 +116,106 @@ export const writeTrajectoryUploadState = ({
     return false;
   }
 };
+
+/** Default age, in days, after which a session's upload state file is swept. @public */
+export const DEFAULT_TRAJECTORY_STATE_TTL_DAYS = 30;
+
+/** Marker file whose mtime records the last sweep, so a sweep runs at most once a day. */
+const SWEEP_MARKER_BASENAME = '.last-sweep';
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+/**
+ * The state-file TTL in days: `OPENTHROTTLE_SESSION_TRAJECTORY_STATE_TTL_DAYS` when it is a
+ * positive number, else {@link DEFAULT_TRAJECTORY_STATE_TTL_DAYS}.
+ *
+ * @public
+ */
+export const resolveTrajectoryStateTtlDays = (): number => {
+  const raw = Number(
+    process.env.OPENTHROTTLE_SESSION_TRAJECTORY_STATE_TTL_DAYS,
+  );
+
+  return Number.isFinite(raw) && raw > 0
+    ? raw
+    : DEFAULT_TRAJECTORY_STATE_TTL_DAYS;
+};
+
+/**
+ * What one sweep did.
+ *
+ * @public
+ */
+export interface SweepTrajectoryUploadStateResult {
+  /** State files deleted. */
+  readonly deleted: number;
+  /** True when the once-a-day marker was fresh, so nothing was scanned. */
+  readonly skipped: boolean;
+}
+
+const deleteIfOlder = async (
+  filePath: string,
+  cutoffMs: number,
+): Promise<boolean> => {
+  try {
+    const stat = await fs.promises.stat(filePath);
+    if (!stat.isFile() || stat.mtimeMs >= cutoffMs) {
+      return false;
+    }
+    await fs.promises.unlink(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Delete per-session state files (`<sessionId>.json`) not written for `ttlDays`.
+ * Safe because every upload carries an idempotency key: a session that resumes
+ * after its state was swept rescans from offset 0 and the server turns each
+ * already-recorded segment into a no-op. Runs at most once a day (an mtime marker), and never
+ * throws.
+ *
+ * @public
+ */
+export const sweepTrajectoryUploadState = async ({
+  dir,
+  nowMs = Date.now(),
+  ttlDays = resolveTrajectoryStateTtlDays(),
+}: {
+  dir?: string;
+  nowMs?: number;
+  ttlDays?: number;
+} = {}): Promise<SweepTrajectoryUploadStateResult> => {
+  try {
+    const target = dir || defaultTrajectoryUploadsDir();
+    const marker = path.join(target, SWEEP_MARKER_BASENAME);
+
+    try {
+      const { mtimeMs } = await fs.promises.stat(marker);
+      if (nowMs - mtimeMs < MS_PER_DAY) {
+        return { deleted: 0, skipped: true };
+      }
+    } catch {
+      // No marker yet: sweep.
+    }
+
+    const names = await fs.promises.readdir(target);
+    const cutoffMs = nowMs - ttlDays * MS_PER_DAY;
+    const results = await Promise.all(
+      names
+        .filter((name) => name.endsWith('.json'))
+        .map((name) => deleteIfOlder(path.join(target, name), cutoffMs)),
+    );
+
+    await fs.promises.writeFile(marker, `${new Date(nowMs).toISOString()}\n`);
+    await fs.promises.utimes(marker, new Date(nowMs), new Date(nowMs));
+
+    return { deleted: results.filter(Boolean).length, skipped: false };
+  } catch (err) {
+    if (!(err instanceof Error && 'code' in err && err.code === 'ENOENT')) {
+      logHookError('sweepTrajectoryUploadState failed', err);
+    }
+    return { deleted: 0, skipped: false };
+  }
+};

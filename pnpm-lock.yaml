@@ -1373,6 +1373,9 @@ importers:
       '@nestjs/typeorm':
         specifier: 'catalog:'
         version: 12.0.1(@nestjs/common@12.0.1(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.0.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typeorm@0.3.31(babel-plugin-macros@3.1.0)(ioredis@5.11.1(supports-color@8.1.1))(pg@8.21.0)(supports-color@8.1.1)(ts-node@10.9.2(@swc/core@1.15.47(@swc/helpers@0.5.23))(@types/node@24.19.2)(@typescript/typescript6@6.0.2)))
+      '@openthrottle/agentic-evals':
+        specifier: workspace:^
+        version: link:../../packages/agentic-evals
       '@openthrottle/agentic-hooks':
         specifier: workspace:^
         version: link:../../packages/agentic-hooks
@@ -2711,6 +2714,9 @@ importers:
       '@nestjs/platform-express':
         specifier: 'catalog:'
         version: 12.0.1(@nestjs/common@12.0.1(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.0.1)(supports-color@8.1.1)
+      '@openthrottle/agentic-evals':
+        specifier: workspace:^
+        version: link:../agentic-evals
       '@openthrottle/agentic-hooks':
         specifier: workspace:^
         version: link:../agentic-hooks
@@ -2723,6 +2729,9 @@ importers:
       '@openthrottle/nodejs-graphql':
         specifier: workspace:^
         version: link:../nodejs-graphql
+      '@openthrottle/openthrottle-agentic-utils':
+        specifier: workspace:^
+        version: link:../openthrottle-agentic-utils
       '@rekog/mcp-nest':
         specifier: 'catalog:'
         version: 1.9.11(478887b27c08ae6e4398d33609b2724c)

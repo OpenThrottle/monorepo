@@ -24,6 +24,12 @@ export class RecordAgentTrajectoryInput {
   exitCode!: number | null;
 
   @Field(() => String, {
+    description: `Optional key that makes recording idempotent: a second call with the same key returns the stored trajectory instead of inserting another. Clients use session:<sessionId>:<toolUseId> for session uploads and spawned:<planRunId>:<iteration> for spawned runs. At most 200 characters.`,
+    nullable: true,
+  })
+  idempotencyKey!: string | null;
+
+  @Field(() => String, {
     description: `Model that ran, when known.`,
     nullable: true,
   })

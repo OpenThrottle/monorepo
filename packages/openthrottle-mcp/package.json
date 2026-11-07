@@ -13,10 +13,12 @@
     "@nestjs/common": "catalog:",
     "@nestjs/core": "catalog:",
     "@nestjs/platform-express": "catalog:",
+    "@openthrottle/agentic-evals": "workspace:^",
     "@openthrottle/agentic-hooks": "workspace:^",
     "@openthrottle/graphql-codegen": "workspace:^",
     "@openthrottle/nestjs-modules": "workspace:^",
     "@openthrottle/nodejs-graphql": "workspace:^",
+    "@openthrottle/openthrottle-agentic-utils": "workspace:^",
     "@rekog/mcp-nest": "catalog:",
     "dotenv": "catalog:",
     "zod": "catalog:"
@@ -102,11 +104,12 @@
       "eval-tool-selection": {
         "cache": false,
         "dependsOn": [
+          "^build",
           "codegen-graphql"
         ],
         "executor": "nx:run-commands",
         "metadata": {
-          "description": "On-demand MCP tool-selection eval: runs every case in src/evals/tool-selection/data/data.cases.ts against the Claude Messages API (needs ANTHROPIC_API_KEY; spends tokens) and compares with the same-model baseline in src/evals/tool-selection/baselines/. Flags after `--`: --model, --effort, --trials, --case <id|area,...>, --tolerance, --write-baseline. Exits 1 on a regression. Never wired into CI or check:local — only its grader unit tests run there, through `test`."
+          "description": "On-demand MCP tool-selection eval: runs every case in src/evals/tool-selection/data/data.cases.ts against the Claude Messages API (needs ANTHROPIC_API_KEY; spends tokens) and compares with the same-model baseline in src/evals/tool-selection/baselines/. Runs on the @openthrottle/agentic-evals core. Flags after `--`: --driver (api only), --model, --effort, --trials, --case <id|area,...>, --tolerance, --concurrency, --write-baseline. Exits 1 on a regression. Never wired into CI or check:local — only its grader unit tests run there, through `test`."
         },
         "options": {
           "command": "tsx ./packages/openthrottle-mcp/src/evals/tool-selection/cli.ts",

@@ -72,7 +72,7 @@ describe('runEvals', () => {
   it('grades every trial, aggregates per case, and sums usage', async () => {
     const selector = scriptedSelector();
     const seen: string[] = [];
-    const result = await runEvals({
+    const { report, result } = await runEvals({
       cases,
       concurrency: 2,
       effort: 'low',
@@ -101,5 +101,41 @@ describe('runEvals', () => {
     expect(seen).toHaveLength(4);
     expect(selector.peak()).toBeLessThanOrEqual(2);
     expect(result.surfaceSha256).toBe(surfaceSha256(surface));
+    expect(report.numbers).toMatchObject({
+      passRate: 0.75,
+      trialsCounted: 4,
+      trialsExcluded: 0,
+      trialsPassed: 3,
+    });
+    expect(report.numbers.passRateCi).not.toBeNull();
+    expect(report.numbers.detectionFloor).not.toBeNull();
+  });
+
+  it('keeps an errored trial in the baseline result but excludes it from the core report', async () => {
+    const { report, result } = await runEvals({
+      cases: cases.slice(0, 1),
+      concurrency: 1,
+      effort: 'low',
+      onTrial: () => undefined,
+      selector: {
+        model: 'fake',
+        select: async () => ({ kind: 'error', message: 'HTTP 529' }),
+      },
+      surface,
+      trials: 2,
+    });
+
+    expect(result.cases).toEqual([
+      {
+        failures: ['error: HTTP 529', 'error: HTTP 529'],
+        id: 'pick',
+        passes: 0,
+        trials: 2,
+      },
+    ]);
+    expect(report.numbers).toMatchObject({
+      passRate: null,
+      trialsExcluded: 2,
+    });
   });
 });

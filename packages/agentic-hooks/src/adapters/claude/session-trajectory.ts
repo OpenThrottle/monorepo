@@ -6,7 +6,9 @@
  * missing, unreadable or malformed just uploads nothing.
  *
  * A session that never called `begin_task_session` uploads nothing. Set
- * `OPENTHROTTLE_SESSION_TRAJECTORIES=0` to turn the whole thing off.
+ * `OPENTHROTTLE_SESSION_TRAJECTORIES=0` to turn the whole thing off. Every upload carries
+ * the idempotency key `session:<sessionId>:<begin_task_session toolUseId>`, so a buffered retry,
+ * a dead-letter replay or a re-upload after the state file was swept is a server-side no-op.
  *
  * State (`data/trajectory-uploads.ts`) holds the resume offset, the plan run
  * once found, and the segment keys already accounted for. The offset only ever
@@ -244,6 +246,7 @@ export const captureSessionTrajectories = async ({
           driver: SESSION_TRAJECTORY_DRIVER,
           durationMs: built.durationMs,
           exitCode: null,
+          idempotencyKey: `session:${sessionId}:${segment.toolUseId}`,
           model: built.model ?? null,
           outcome: built.outcome,
           planRunId: segmentRunId,

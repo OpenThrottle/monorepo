@@ -24,6 +24,7 @@ import { toAgentTrajectoryObject } from './agent-trajectory.mapper.ts';
 import { AgentTrajectoryObject } from './agent-trajectory.object.ts';
 
 const FOREIGN_KEY_VIOLATION = '23503';
+const MAX_IDEMPOTENCY_KEY_LENGTH = 200;
 
 const isAgentTrajectorySource = (
   value: string,
@@ -89,7 +90,7 @@ export class AgentTrajectoriesResolver {
   }
 
   @Mutation(() => AgentTrajectoryObject, {
-    description: `Record an ATIF trajectory for a plan run. The document is validated, capped at 4 MiB server-side (elided observations set truncated) and summarized into token, cost and tool-call columns.`,
+    description: `Record an ATIF trajectory for a plan run. With an idempotencyKey a duplicate is a successful no-op that returns the stored row. The document is validated, capped at 4 MiB server-side (elided observations set truncated) and summarized into token, cost and tool-call columns.`,
   })
   async recordAgentTrajectory(
     @Args('input', { type: () => RecordAgentTrajectoryInput })
@@ -98,6 +99,16 @@ export class AgentTrajectoriesResolver {
     if (!isAgentTrajectorySource(input.source)) {
       throw new BadRequestException(
         `source must be '${AGENT_TRAJECTORY_SOURCE.SPAWNED}' or '${AGENT_TRAJECTORY_SOURCE.SESSION_UPLOAD}'`,
+      );
+    }
+
+    if (
+      input.idempotencyKey != null &&
+      (input.idempotencyKey === '' ||
+        input.idempotencyKey.length > MAX_IDEMPOTENCY_KEY_LENGTH)
+    ) {
+      throw new BadRequestException(
+        `idempotencyKey must be 1 to ${MAX_IDEMPOTENCY_KEY_LENGTH} characters`,
       );
     }
 
@@ -120,6 +131,7 @@ export class AgentTrajectoriesResolver {
         driver: input.driver,
         durationMs: input.durationMs ?? null,
         exitCode: input.exitCode ?? null,
+        idempotencyKey: input.idempotencyKey ?? null,
         incomplete: summary.incomplete,
         inputTokens: summary.inputTokens,
         model: input.model ?? null,

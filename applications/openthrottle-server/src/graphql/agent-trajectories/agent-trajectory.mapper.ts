@@ -19,6 +19,7 @@ export const toAgentTrajectoryObject = (
     durationMs: row.durationMs,
     exitCode: row.exitCode,
     id: row.id,
+    idempotencyKey: row.idempotencyKey,
     incomplete: row.incomplete,
     inputTokens: row.inputTokens,
     model: row.model,

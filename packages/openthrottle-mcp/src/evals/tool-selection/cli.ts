@@ -1,6 +1,6 @@
 /**
  * @description CLI for the on-demand `eval-tool-selection` Nx target. Lists the live tool surface, runs the
- * cases against the Claude Messages API, writes the run to tmp/evals/tool-selection/, and compares it with the
+ * cases against the Claude Messages API on the eval core (`@openthrottle/agentic-evals`), writes the run to tmp/evals/tool-selection/, and compares it with the
  * committed same-model baseline in ./baselines/. Exit codes: 0 no regression, 1 regression, 2 usage error.
  * Never run in CI — every run spends API tokens. See ./README.md.
  */
@@ -18,6 +18,7 @@ import { compareBaseline, passRate } from './compare-baseline.ts';
 import { TOOL_SELECTION_CASES } from './data/data.cases.ts';
 import { HARNESS_TOOLS } from './data/data.harness-tools.ts';
 import type { ToolSelectionCase } from './eval-case.ts';
+import type { ToolSelectionRun } from './run-evals.ts';
 import { runEvals } from './run-evals.ts';
 
 const BASELINE_DIR = join(dirname(fileURLToPath(import.meta.url)), 'baselines');
@@ -131,6 +132,26 @@ const printRun = (
   );
 };
 
+const printStats = (report: ToolSelectionRun['report']): void => {
+  const { numbers } = report;
+  const { passRate: rate, passRateCi: ci } = numbers;
+  if (rate === null || ci === null) {
+    process.stdout.write('  core stats: no gradable trials\n');
+
+    return;
+  }
+  const floor = numbers.detectionFloor;
+  process.stdout.write(
+    `  overall pass rate ${percent(rate)} (${numbers.trialsPassed}/${numbers.trialsCounted}), bootstrap 95% CI ${percent(ci.lower)}–${percent(ci.upper)}` +
+      `${floor === null ? '' : `, detection floor ±${percent(floor)} over ${numbers.casesCounted} cases`}\n`,
+  );
+  if (numbers.trialsExcluded > 0) {
+    process.stdout.write(
+      `  ${numbers.trialsExcluded} errored trial(s) are excluded from the core stats but count as failures against the baseline\n`,
+    );
+  }
+};
+
 /**
  * @description Entry point; returns the process exit code.
  * @public
@@ -141,6 +162,7 @@ export async function main(argv: readonly string[]): Promise<number> {
     options: {
       case: { type: 'string' },
       concurrency: { default: '4', type: 'string' },
+      driver: { default: 'api', type: 'string' },
       effort: { default: 'medium', type: 'string' },
       model: { default: 'claude-opus-5-5', type: 'string' },
       tolerance: { default: '0', type: 'string' },
@@ -148,6 +170,13 @@ export async function main(argv: readonly string[]): Promise<number> {
       'write-baseline': { default: false, type: 'boolean' },
     },
   });
+  if (values.driver !== 'api') {
+    process.stderr.write(
+      `--driver ${values.driver} is not supported: tool selection runs only against the Claude Messages API (--driver api). A CLI driver with the real OpenThrottle MCP attached would EXECUTE tools such as create_plan against a live server, so CLI-driven tool selection needs a sandboxed MCP first. See ./README.md.\n`,
+    );
+
+    return 2;
+  }
   const apiKey = process.env['ANTHROPIC_API_KEY'];
   if (apiKey === undefined || apiKey === '') {
     process.stderr.write(
@@ -183,7 +212,7 @@ export async function main(argv: readonly string[]): Promise<number> {
     model: values.model,
     surface,
   });
-  const result = await runEvals({
+  const { report, result } = await runEvals({
     cases,
     concurrency: Number(values.concurrency),
     effort: values.effort,
@@ -198,6 +227,7 @@ export async function main(argv: readonly string[]): Promise<number> {
   });
 
   printRun(result, cases);
+  printStats(report);
   mkdirSync(RESULTS_DIR, { recursive: true });
   const resultPath = join(RESULTS_DIR, `${fileStem(result.model)}.json`);
   writeFileSync(resultPath, `${JSON.stringify(result, null, 2)}\n`);

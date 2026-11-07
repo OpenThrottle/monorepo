@@ -18,7 +18,13 @@ import { BlogTag } from './modules/blog-tags/blog-tag.entity.ts';
 import { CodeEmbedding } from './modules/code-embeddings/code-embedding.entity.ts';
 import { CodeIndexSnapshot } from './modules/code-index-snapshots/code-index-snapshot.entity.ts';
 import { DailyStat } from './modules/daily-stats/daily-stat.entity.ts';
+import { EvalCase } from './modules/eval-datasets/eval-case.entity.ts';
+import { EvalDataset } from './modules/eval-datasets/eval-dataset.entity.ts';
 import { EvalHumanLabel } from './modules/eval-human-labels/eval-human-label.entity.ts';
+import { EvalJudgeCalibration } from './modules/eval-judge-calibrations/eval-judge-calibration.entity.ts';
+import { EvalGrade } from './modules/eval-runs/eval-grade.entity.ts';
+import { EvalRun } from './modules/eval-runs/eval-run.entity.ts';
+import { EvalTrial } from './modules/eval-runs/eval-trial.entity.ts';
 import { McpConnectorConnection } from './modules/mcp-connectors/mcp-connector-connection.entity.ts';
 import { Note } from './modules/notes/note.entity.ts';
 import { PlanEmbedding } from './modules/plan-embeddings/plan-embedding.entity.ts';
@@ -92,7 +98,13 @@ export function getTypeOrmOptions(): DataSourceOptions {
       CodeIndexSnapshot,
       CustomPrompt,
       DailyStat,
+      EvalCase,
+      EvalDataset,
+      EvalGrade,
       EvalHumanLabel,
+      EvalJudgeCalibration,
+      EvalRun,
+      EvalTrial,
       McpConnectorConnection,
       Note,
       Permission,

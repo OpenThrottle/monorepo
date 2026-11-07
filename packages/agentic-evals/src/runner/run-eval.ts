@@ -16,7 +16,9 @@ import type {
 } from '../types/index.ts';
 import type { EvalWorkspaceFactory } from '../workspace/index.ts';
 import type {
+  EvalDriverIterationOutput,
   EvalIterationOutput,
+  EvalTrajectoryIterationOutput,
   RunEvalIteration,
 } from './eval-iteration.ts';
 import { runDriverIteration } from './eval-iteration.ts';
@@ -126,7 +128,7 @@ const tokensOf = (record: TrajectoryRecord | null): number => {
   return (summary.inputTokens ?? 0) + (summary.outputTokens ?? 0);
 };
 
-const outcomeLabel = (output: EvalIterationOutput): string => {
+const outcomeLabel = (output: EvalDriverIterationOutput): string => {
   if (output.termination === 'exited') {
     return output.exitCode === 0 ? 'succeeded' : 'failed';
   }
@@ -142,7 +144,7 @@ interface TrialFacts {
 }
 
 const interpretOutput = (
-  output: EvalIterationOutput,
+  output: EvalDriverIterationOutput,
   record: TrajectoryRecord | undefined,
 ): TrialFacts => {
   const trajectory = record ?? null;
@@ -169,6 +171,57 @@ const interpretOutput = (
   }
 
   return { ...base, error: null, status: 'completed' };
+};
+
+const trajectoryFacts = (output: EvalTrajectoryIterationOutput): TrialFacts => {
+  return {
+    error: null,
+    finalText: output.finalText,
+    status: 'completed',
+    trajectory: {
+      durationMs: output.durationMs,
+      exitCode: 0,
+      outcome: 'succeeded',
+      trajectory: output.trajectory,
+      trajectoryJson: JSON.stringify(output.trajectory),
+      truncated: false,
+    },
+  };
+};
+
+const driverFacts = (
+  output: EvalDriverIterationOutput,
+  unit: Unit,
+  config: EvalRunConfig,
+): TrialFacts => {
+  const { attempt, evalCase } = unit;
+  const driver = getDriver(config.driverId);
+  const record = buildTrajectoryRecord({
+    agentVersion: 'unknown',
+    driverId: config.driverId,
+    durationMs: output.durationMs,
+    exitCode: output.exitCode,
+    model: config.model,
+    openthrottle: { attempt, caseId: evalCase.id },
+    outcome: outcomeLabel(output),
+    prompt: evalCase.input.prompt,
+    rawStdout: output.rawStdout,
+    reportsToolCalls: driver.capabilities.reportsToolCalls,
+  });
+
+  return interpretOutput(output, record);
+};
+
+const trialFactsOf = (
+  output: EvalIterationOutput,
+  unit: Unit,
+  config: EvalRunConfig,
+): TrialFacts => {
+  if (output.kind === 'trajectory') {
+    return trajectoryFacts(output);
+  }
+
+  return driverFacts(output, unit, config);
 };
 
 const gradeSafely = async (
@@ -262,25 +315,13 @@ const runUnit = async (
         evalCase,
         timeoutMs,
       });
-      const driver = getDriver(config.driverId);
-      const record = buildTrajectoryRecord({
-        agentVersion: 'unknown',
-        driverId: config.driverId,
-        durationMs: output.durationMs,
-        exitCode: output.exitCode,
-        model: config.model,
-        openthrottle: { attempt, caseId: evalCase.id },
-        outcome: outcomeLabel(output),
-        prompt: evalCase.input.prompt,
-        rawStdout: output.rawStdout,
-        reportsToolCalls: driver.capabilities.reportsToolCalls,
-      });
+      const facts = trialFactsOf(output, unit, config);
 
       trial = {
         attempt,
         caseId: evalCase.id,
         workspaceCwd: created.cwd,
-        ...interpretOutput(output, record),
+        ...facts,
       };
     } catch (error) {
       trial = erroredTrial(unit, errorMessage(error), created.cwd);

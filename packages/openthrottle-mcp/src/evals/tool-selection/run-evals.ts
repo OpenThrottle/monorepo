@@ -1,21 +1,44 @@
 /**
- * @description Runs the cases against a {@link ToolSelector}: `trials` attempts per case, at most `concurrency`
- * requests in flight, each trial graded by {@link gradeCase}. Model-agnostic — the selector is injected, which
- * is what lets the orchestration be unit-tested with a scripted fake.
+ * @description Runs the cases against a {@link ToolSelector} on the eval core: the cases become a dataset, the
+ * selector becomes the system under test (one request per trial, converted to an ATIF trajectory), and
+ * {@link gradeCase} runs as a `code` grader. The core's `runEval` owns trials and bounded concurrency; this file
+ * folds its trials and grades back into the {@link RunResult} shape baselines are recorded in, and builds the
+ * core report for the pass rate, its bootstrap CI and the detection floor. Model-agnostic — the selector is
+ * injected, which is what lets the orchestration be unit-tested with a scripted fake.
  */
 
 import { createHash } from 'node:crypto';
 
+import type {
+  EvalGrade,
+  EvalReport,
+  EvalRunConfig,
+  EvalRunResult,
+  EvalTrial,
+  ReportTrial,
+} from '@openthrottle/agentic-evals';
+import {
+  buildEvalReport,
+  noopWorkspaceFactory,
+  runEval,
+} from '@openthrottle/agentic-evals';
+
 import type { ToolSurface } from '../../model-facing-text/list-tool-surface.ts';
 import type { CaseResult, RunResult } from './compare-baseline.ts';
+import {
+  TOOL_SELECTION_GRADER_ID,
+  TOOL_SELECTION_GRADER_VERSION,
+} from './data/data.dataset.ts';
 import type {
-  Selection,
   SelectionUsage,
   ToolSelectionCase,
   ToolSelector,
   TrialGrade,
 } from './eval-case.ts';
-import { gradeCase } from './grade-case.ts';
+import { usageOfTrajectory } from './selection-trajectory.ts';
+import { buildToolSelectionDataset } from './tool-selection-dataset.ts';
+import { createToolSelectionGrader } from './tool-selection-grader.ts';
+import { createToolSelectionIteration } from './tool-selection-iteration.ts';
 
 /**
  * @description Options for {@link runEvals}.
@@ -30,10 +53,13 @@ export interface RunEvalsOptions {
   readonly trials: number;
 }
 
-interface TrialOutcome {
-  readonly caseId: string;
-  readonly grade: TrialGrade;
-  readonly selection: Selection;
+/**
+ * @description A finished run: the baseline-shaped `result`, and the core's `report` (pass rate with its
+ * bootstrap CI, detection floor), which counts an errored trial as excluded rather than failed.
+ */
+export interface ToolSelectionRun {
+  readonly report: EvalReport;
+  readonly result: RunResult;
 }
 
 const ZERO_USAGE: SelectionUsage = {
@@ -41,22 +67,6 @@ const ZERO_USAGE: SelectionUsage = {
   cacheWriteInputTokens: 0,
   inputTokens: 0,
   outputTokens: 0,
-};
-
-const addUsage = (
-  total: SelectionUsage,
-  selection: Selection,
-): SelectionUsage => {
-  if (selection.kind === 'error') return total;
-
-  return {
-    cacheReadInputTokens:
-      total.cacheReadInputTokens + selection.usage.cacheReadInputTokens,
-    cacheWriteInputTokens:
-      total.cacheWriteInputTokens + selection.usage.cacheWriteInputTokens,
-    inputTokens: total.inputTokens + selection.usage.inputTokens,
-    outputTokens: total.outputTokens + selection.usage.outputTokens,
-  };
 };
 
 /**
@@ -67,72 +77,163 @@ export function surfaceSha256(surface: ToolSurface): string {
   return createHash('sha256').update(JSON.stringify(surface)).digest('hex');
 }
 
-/**
- * @description Runs `jobs` with at most `limit` in flight, preserving input order in the result.
- */
-async function runBounded<TResult>(
-  jobs: readonly (() => Promise<TResult>)[],
-  limit: number,
-): Promise<TResult[]> {
-  const results: TResult[] = [];
-  let next = 0;
+const addUsage = (total: SelectionUsage, trial: EvalTrial): SelectionUsage => {
+  if (trial.status !== 'completed' || trial.trajectory === null) {
+    return total;
+  }
 
-  const worker = async (): Promise<void> => {
-    const index = next;
-    next += 1;
-    const job = jobs[index];
-    if (job === undefined) {
-      return;
-    }
-    results[index] = await job();
+  const usage = usageOfTrajectory(trial.trajectory.trajectory);
 
-    return worker();
+  return {
+    cacheReadInputTokens:
+      total.cacheReadInputTokens + usage.cacheReadInputTokens,
+    cacheWriteInputTokens:
+      total.cacheWriteInputTokens + usage.cacheWriteInputTokens,
+    inputTokens: total.inputTokens + usage.inputTokens,
+    outputTokens: total.outputTokens + usage.outputTokens,
   };
-
-  await Promise.all(Array.from({ length: Math.max(1, limit) }, worker));
-
-  return results;
-}
+};
 
 /**
- * @description Runs every case and returns the {@link RunResult}.
+ * @description One trial's outcome in baseline terms. Baselines predate the core's `errored` status: a
+ * refusal or transport error is a non-pass trial with an `error: …` failure, so a baseline keeps measuring
+ * "the model did not produce a right selection".
+ */
+const gradeOfTrial = (
+  trial: EvalTrial,
+  grades: readonly EvalGrade[],
+): TrialGrade => {
+  if (trial.status === 'errored') {
+    return { pass: false, reason: `error: ${trial.error ?? 'unknown'}` };
+  }
+
+  const verdict = grades.find((grade) => {
+    return (
+      grade.graderId === TOOL_SELECTION_GRADER_ID &&
+      grade.caseId === trial.caseId &&
+      grade.attempt === trial.attempt
+    );
+  })?.verdict;
+
+  if (verdict?.kind === 'pass') {
+    return { pass: true };
+  }
+
+  if (verdict?.kind === 'fail') {
+    return { pass: false, reason: verdict.evidence };
+  }
+
+  return {
+    pass: false,
+    reason: `grader error: ${verdict?.kind === 'error' ? verdict.reason : 'no verdict'}`,
+  };
+};
+
+const caseResultOf = (
+  testCase: ToolSelectionCase,
+  run: EvalRunResult,
+): CaseResult => {
+  const grades = run.trials
+    .filter((trial) => {
+      return trial.caseId === testCase.id && trial.status !== 'usage_limited';
+    })
+    .map((trial) => {
+      return gradeOfTrial(trial, run.grades);
+    });
+
+  return {
+    failures: grades.flatMap((grade) => {
+      return grade.pass ? [] : [grade.reason];
+    }),
+    id: testCase.id,
+    passes: grades.filter((grade) => {
+      return grade.pass;
+    }).length,
+    trials: grades.length,
+  };
+};
+
+const reportTrialOf = (
+  trial: EvalTrial,
+  grades: readonly EvalGrade[],
+): ReportTrial => {
+  return {
+    attempt: trial.attempt,
+    caseId: trial.caseId,
+    costUsd: null,
+    grades: grades
+      .filter((grade) => {
+        return grade.caseId === trial.caseId && grade.attempt === trial.attempt;
+      })
+      .map((grade) => {
+        return {
+          graderId: grade.graderId,
+          graderKind: 'code',
+          graderVersion: TOOL_SELECTION_GRADER_VERSION,
+          judgeModel: null,
+          judgeModelVersion: null,
+          verdict: grade.verdict.kind,
+        };
+      }),
+    status: trial.status,
+  };
+};
+
+/**
+ * @description Runs every case and returns the {@link RunResult} plus the core report.
  * @public
  */
-export async function runEvals(options: RunEvalsOptions): Promise<RunResult> {
-  const otToolNames = new Set(options.surface.tools.map((tool) => tool.name));
-  const jobs = options.cases.flatMap((testCase) =>
-    Array.from(
-      { length: options.trials },
-      () => async (): Promise<TrialOutcome> => {
-        const selection = await options.selector.select(testCase.prompt);
-        const grade = gradeCase(testCase, selection, otToolNames);
-        options.onTrial(testCase.id, grade);
-
-        return { caseId: testCase.id, grade, selection };
-      },
-    ),
-  );
-  const outcomes = await runBounded(jobs, options.concurrency);
-
-  const cases = options.cases.map((testCase): CaseResult => {
-    const mine = outcomes.filter((o) => o.caseId === testCase.id);
-
-    return {
-      failures: mine.flatMap((o) => (o.grade.pass ? [] : [o.grade.reason])),
-      id: testCase.id,
-      passes: mine.filter((o) => o.grade.pass).length,
-      trials: mine.length,
-    };
+export async function runEvals(
+  options: RunEvalsOptions,
+): Promise<ToolSelectionRun> {
+  const { cases, selector, surface } = options;
+  const config: EvalRunConfig = {
+    attempts: options.trials,
+    authMode: 'api_key',
+    budget: { maxTokens: null },
+    concurrency: options.concurrency,
+    // The selector owns the model and the effort; the config only has to name a driver the core knows,
+    // and a custom iteration never launches it.
+    driverId: 'claude',
+    effort: undefined,
+    model: selector.model,
+  };
+  const run = await runEval({
+    config,
+    dataset: buildToolSelectionDataset(cases),
+    graders: [
+      createToolSelectionGrader({
+        cases,
+        onGrade: options.onTrial,
+        otToolNames: new Set(surface.tools.map((tool) => tool.name)),
+      }),
+    ],
+    runIteration: createToolSelectionIteration({
+      onError: options.onTrial,
+      selector,
+    }),
+    workspace: noopWorkspaceFactory,
   });
 
   return {
-    cases,
-    effort: options.effort,
-    model: options.selector.model,
-    surfaceSha256: surfaceSha256(options.surface),
-    usage: outcomes.reduce(
-      (total, o) => addUsage(total, o.selection),
-      ZERO_USAGE,
-    ),
+    report: buildEvalReport({
+      calibrations: [],
+      cases: cases.map((testCase) => {
+        return { caseId: testCase.id, split: 'test' };
+      }),
+      k: Math.max(1, options.trials),
+      trials: run.trials.map((trial) => {
+        return reportTrialOf(trial, run.grades);
+      }),
+    }),
+    result: {
+      cases: cases.map((testCase) => {
+        return caseResultOf(testCase, run);
+      }),
+      effort: options.effort,
+      model: selector.model,
+      surfaceSha256: surfaceSha256(surface),
+      usage: run.trials.reduce(addUsage, ZERO_USAGE),
+    },
   };
 }

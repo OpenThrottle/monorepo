@@ -1,0 +1,45 @@
+# evals._index
+
+# The evals area: pick a repository, see its datasets and each dataset's runs.
+fragment EvalRunListRow on EvalRun {
+  authMode
+  createdAt
+  datasetId
+  datasetVersion
+  driver
+  effort
+  finishedAt
+  id
+  k
+  model
+  promptSha
+  skillSha
+  startedAt
+  status
+}
+
+# Eval datasets belong to a repository (eval_datasets.repository_id), not to a
+# checkout, so list workspaceRepositories rather than the checkout-keyed
+# workspaceSettings.localRepositories.
+query EvalsIndexRepositories {
+  workspaceRepositories {
+    id
+    name
+  }
+}
+
+query EvalsIndexDatasets($repositoryId: ID!) {
+  evalDatasets(repositoryId: $repositoryId) {
+    createdAt
+    id
+    name
+    target
+    version
+  }
+}
+
+query EvalsIndexRuns($datasetId: ID!) {
+  evalRuns(datasetId: $datasetId) {
+    ...EvalRunListRow
+  }
+}

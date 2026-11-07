@@ -42,6 +42,12 @@ export interface TrajectoryInput {
   readonly driver: string;
   readonly durationMs: number | null;
   readonly exitCode: number | null;
+  /**
+   * Makes recording idempotent server-side (a duplicate returns the stored row), so a buffered
+   * retry plus a dead-letter replay cannot insert a segment twice. It travels with the payload
+   * through the buffer and dead-letter files.
+   */
+  readonly idempotencyKey: string | null;
   readonly model: string | null;
   readonly outcome: string | null;
   readonly planRunId: string;

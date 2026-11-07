@@ -1482,6 +1482,7 @@ describe('run transcript capture', () => {
             driver: 'cursor',
             durationMs: 1200,
             exitCode: 0,
+            idempotencyKey: `spawned:${PLAN_RUN_ID}:1`,
             model: 'test-model',
             outcome: 'succeeded',
             planRunId: PLAN_RUN_ID,

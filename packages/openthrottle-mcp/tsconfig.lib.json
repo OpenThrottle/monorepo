@@ -16,13 +16,19 @@
   ],
   "references": [
     {
-      "path": "../agentic-hooks/tsconfig.lib.json"
+      "path": "../openthrottle-agentic-utils/tsconfig.lib.json"
+    },
+    {
+      "path": "../nodejs-graphql/tsconfig.lib.json"
     },
     {
       "path": "../nestjs-modules/tsconfig.lib.json"
     },
     {
-      "path": "../nodejs-graphql/tsconfig.lib.json"
+      "path": "../agentic-hooks/tsconfig.lib.json"
+    },
+    {
+      "path": "../agentic-evals/tsconfig.lib.json"
     },
     {
       "path": "../../tools/dotfiles/tsconfig.lib.json"

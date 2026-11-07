@@ -1010,6 +1010,11 @@ type AgentTrajectory {
   id: ID!
 
   """
+  Idempotency key the trajectory was recorded under. Null when recorded without one.
+  """
+  idempotencyKey: String
+
+  """
   True when the run ended before it could finish, so the trajectory is partial.
   """
   incomplete: Boolean!
@@ -1453,6 +1458,67 @@ type EditorPresenceResultObject {
   trusted: Boolean!
 }
 
+"""One input for the agent plus what a correct outcome looks like."""
+type EvalCase {
+  """When the case was added."""
+  createdAt: DateTime!
+
+  """Dataset the case belongs to."""
+  datasetId: ID!
+
+  """What a correct outcome looks like, serialized with JSON.stringify."""
+  goldJson: String!
+
+  """Case id."""
+  id: ID!
+
+  """What the agent is asked to do, serialized with JSON.stringify."""
+  inputJson: String!
+
+  """
+  The trajectory (a real failure) the case was created from. Null for hand-written cases or a pruned trajectory.
+  """
+  sourceTrajectoryId: ID
+
+  """Which side of the dataset the case sits on: dev or test."""
+  split: String!
+}
+
+"""A versioned, per-repository set of eval cases."""
+type EvalDataset {
+  """When the dataset version was created."""
+  createdAt: DateTime!
+
+  """
+  Who created the dataset: the GitHub username of the caller, stamped server-side.
+  """
+  createdBy: String!
+
+  """Free-text description of what the dataset covers."""
+  description: String
+
+  """Dataset id."""
+  id: ID!
+
+  """Dataset name, unique per repository together with version."""
+  name: String!
+
+  """Repository the dataset belongs to."""
+  repositoryId: ID!
+
+  """What the dataset evaluates: plan_task, skill or mcp_tool_selection."""
+  target: String!
+
+  """When the dataset row last changed."""
+  updatedAt: DateTime!
+
+  """Dataset version, starting at 1. Re-creating a name bumps it."""
+  version: Int!
+
+  """The dataset's cases, oldest first."""
+  cases: [EvalCase!]!
+}
+
 """
 One rater's verdict on one agent trajectory. Verdicts are the ground truth LLM judges are calibrated against; notes and failure types are error-analysis coding material.
 """
@@ -1482,6 +1548,506 @@ type AgentTrajectoryLabel {
 
   """The rater's judgement: pass or fail."""
   verdict: String!
+}
+
+"""
+One measurement of a judge (or critic) against human labels: kappa with a bootstrap 95% interval, catch rate, false-fail rate and the resulting gating status.
+"""
+type EvalJudgeCalibration {
+  """
+  P(judge says fail | human says fail). Null when the humans never failed a trial.
+  """
+  catchRate: Float
+
+  """When the calibration was recorded."""
+  createdAt: DateTime!
+
+  """Who recorded the calibration, stamped from the caller's identity."""
+  createdBy: String!
+
+  """Dataset whose cases were labelled. Null for an ad hoc calibration."""
+  datasetId: ID
+
+  """
+  P(judge says fail | human says pass). Null when the humans never passed a trial.
+  """
+  falseFailRate: Float
+
+  """Id of the grader that was calibrated."""
+  graderId: String!
+
+  """Version of the grader that was calibrated."""
+  graderVersion: String!
+
+  """
+  True when this is the held-out judge that no loop, critic or prompt optimization sees.
+  """
+  heldOut: Boolean!
+
+  """Calibration id."""
+  id: ID!
+
+  """Driver that ran the judge."""
+  judgeDriver: String
+
+  """Model that ran the judge."""
+  judgeModel: String!
+
+  """Version or snapshot of the judge model when known."""
+  judgeModelVersion: String
+
+  """Cohen's kappa. Null when undefined: no pairs, or a constant rater."""
+  kappa: Float
+
+  """Upper bound of the bootstrap 95% interval of kappa."""
+  kappaCiHigh: Float
+
+  """Lower bound of the bootstrap 95% interval of kappa."""
+  kappaCiLow: Float
+
+  """Pairs used for the statistics. Judge error verdicts are not counted."""
+  n: Int!
+
+  """Pairs left out because the judge returned an error verdict."""
+  nExcluded: Int!
+
+  """
+  Eval run the judge grades were read from. Null when pairs were supplied directly.
+  """
+  runId: ID
+
+  """
+  Dataset split the labelled cases came from (dev or test). Null when not split-scoped.
+  """
+  split: String
+
+  """
+  unsupervised (kappa >= 0.8), gating (>= 0.6), non_gating (below) or insufficient (too few pairs).
+  """
+  status: String!
+}
+
+"""
+The recorded calibration of a judge over one run, with the trials that could not be paired.
+"""
+type CalibrateJudgeForRunResult {
+  """The calibration that was computed and recorded."""
+  calibration: EvalJudgeCalibration!
+
+  """
+  Graded trials left out because their human raters disagreed with each other.
+  """
+  nConflicted: Int!
+
+  """
+  Graded trials left out because they have no trajectory or no human label.
+  """
+  nUnlabeled: Int!
+}
+
+"""
+One configuration (driver, model, effort, prompt and skill SHAs, auth mode) executed over a dataset, k attempts per case.
+"""
+type EvalRun {
+  """How the CLI was billed: api_key or subscription."""
+  authMode: String!
+
+  """Token budget for the whole run. Null means unlimited."""
+  budgetTokens: Int
+
+  """Dollar budget for the whole run. Null means unlimited."""
+  budgetUsd: Float
+
+  """When the run was recorded."""
+  createdAt: DateTime!
+
+  """
+  Who started the run: the GitHub username of the caller, stamped server-side.
+  """
+  createdBy: String!
+
+  """Dataset that was run."""
+  datasetId: ID!
+
+  """The dataset version the run executed."""
+  datasetVersion: Int!
+
+  """Agent driver under test."""
+  driver: String!
+
+  """Reasoning effort under test. Null when the driver default was used."""
+  effort: String
+
+  """When the run reached a terminal status. Null while unfinished."""
+  finishedAt: DateTime
+
+  """Run id."""
+  id: ID!
+
+  """Attempts per case."""
+  k: Int!
+
+  """Model under test. Null when the driver default was used."""
+  model: String
+
+  """Content SHA of the prompt under test."""
+  promptSha: String
+
+  """Content SHA of the skill under test."""
+  skillSha: String
+
+  """When the run began executing. Null while pending."""
+  startedAt: DateTime
+
+  """
+  Run lifecycle: pending, running, usage_limited (a resumable pause), completed, failed or cancelled.
+  """
+  status: String!
+
+  """The run's trials ordered by attempt."""
+  trials: [EvalTrial!]!
+}
+
+"""A percentile bootstrap interval (10,000 resamples, fixed seed)."""
+type EvalReportInterval {
+  """Confidence level, for example 0.95."""
+  confidence: Float!
+
+  """Lower bound."""
+  lower: Float!
+
+  """Upper bound."""
+  upper: Float!
+}
+
+"""How many trials were left out of the pass rate, by reason."""
+type EvalReportExclusions {
+  """Trials whose attempt errored."""
+  errored: Int!
+
+  """Trials where a counted grader returned an error verdict."""
+  gradeError: Int!
+
+  """Trials with no grade that counts (no code grade, no gating judge)."""
+  noCountedGrade: Int!
+
+  """Trials paused by a usage limit."""
+  usageLimited: Int!
+}
+
+"""
+Agreement with humans (Cohen's kappa) of the weakest calibrated judge that graded the run.
+"""
+type EvalReportJudgeAgreement {
+  """Grader id of that judge."""
+  graderId: String!
+
+  """Grader version of that judge."""
+  graderVersion: String!
+
+  """Cohen's kappa."""
+  kappa: Float!
+
+  """Upper bound of the bootstrap 95% interval."""
+  kappaCiHigh: Float
+
+  """Lower bound of the bootstrap 95% interval."""
+  kappaCiLow: Float
+
+  """Calibration status: unsupervised, gating, non_gating or insufficient."""
+  status: String!
+}
+
+"""
+The headline numbers of one run. Every number is over trials that count: see EvalReportGrader.counts.
+"""
+type EvalReportNumbers {
+  """
+  Cases with at least k counted attempts, the cases pass@k and pass^k average over.
+  """
+  casesAtK: Int!
+
+  """Cases with at least one counted attempt."""
+  casesCounted: Int!
+
+  """
+  Cost of the counted trials divided by their passes. Null when any counted trial is unpriced or nothing passed.
+  """
+  costPerSuccessUsd: Float
+
+  """
+  The smallest change in pass rate a paired comparison over this many cases can detect (alpha 0.05, power 0.8). Null when no case counted.
+  """
+  detectionFloor: Float
+
+  """Why trials were left out."""
+  excluded: EvalReportExclusions!
+
+  """
+  Judge agreement with humans. Null when no judge with a kappa graded the run.
+  """
+  judgeAgreement: EvalReportJudgeAgreement
+
+  """
+  pass@k: the chance at least one of k attempts passes, averaged over cases.
+  """
+  passAtK: Float
+
+  """pass^k: the chance all k attempts pass, averaged over cases."""
+  passHatK: Float
+
+  """Passing trials over counted trials. Null when nothing counted."""
+  passRate: Float
+
+  """Bootstrap 95% interval of the pass rate."""
+  passRateCi: EvalReportInterval
+
+  """Cost of every trial. Null when any trial is unpriced."""
+  totalCostUsd: Float
+
+  """Trials that count."""
+  trialsCounted: Int!
+
+  """Trials left out of the pass rate."""
+  trialsExcluded: Int!
+
+  """Counted trials that passed."""
+  trialsPassed: Int!
+}
+
+"""
+A grader that graded the run, with its calibration and whether its grades count toward the pass rate.
+"""
+type EvalReportGrader {
+  """
+  Calibration status of this judge id and version. Null for code and human graders, and for an uncalibrated judge.
+  """
+  calibrationStatus: String
+
+  """
+  Whether this grader's grades count: code graders and judges calibrated gating or unsupervised. Human grades never count.
+  """
+  counts: Boolean!
+
+  """Stable id of the grader."""
+  graderId: String!
+
+  """code, judge or human."""
+  graderKind: String!
+
+  """Grader version."""
+  graderVersion: String!
+
+  """Judge model."""
+  judgeModel: String
+
+  """Judge model version when known."""
+  judgeModelVersion: String
+
+  """Cohen's kappa of the latest calibration."""
+  kappa: Float
+
+  """Kappa interval upper bound."""
+  kappaCiHigh: Float
+
+  """Kappa interval lower bound."""
+  kappaCiLow: Float
+}
+
+"""
+One case of the run: counted attempts, passes, and whether the case passed.
+"""
+type EvalReportCase {
+  """Attempts that count."""
+  attemptsCounted: Int!
+
+  """Counted attempts that passed."""
+  attemptsPassed: Int!
+
+  """Case id."""
+  caseId: ID!
+
+  """True when every counted attempt passed. Null when no attempt counted."""
+  passed: Boolean
+
+  """dev or test."""
+  split: String!
+}
+
+"""
+A run's report: the full config tuple, its graders, the headline numbers and a row per case.
+"""
+type EvalRunReport {
+  """One row per case."""
+  cases: [EvalReportCase!]!
+
+  """Name of the dataset that was run."""
+  datasetName: String!
+
+  """Every grader that graded the run."""
+  graders: [EvalReportGrader!]!
+
+  """Headline numbers."""
+  numbers: EvalReportNumbers!
+
+  """
+  The run: driver, model, effort, prompt and skill SHAs, auth mode, dataset version, k, budgets and status.
+  """
+  run: EvalRun!
+}
+
+"""A reason the two runs are not strictly comparable."""
+type EvalComparisonWarning {
+  """dataset_differs, auth_mode_differs, k_differs or no_shared_cases."""
+  code: String!
+
+  """A sentence for a reader."""
+  message: String!
+}
+
+"""McNemar's test on the cases where the two runs disagree."""
+type EvalMcNemar {
+  """
+  Cases that passed in the baseline and failed in the candidate: got worse.
+  """
+  b: Int!
+
+  """
+  Cases that failed in the baseline and passed in the candidate: got better.
+  """
+  c: Int!
+
+  """exact or chi_square."""
+  method: String!
+
+  """Two-sided p-value."""
+  pValue: Float!
+}
+
+"""
+A candidate run against a baseline run over the cases both have an outcome for.
+"""
+type EvalRunComparison {
+  """The baseline run's report."""
+  base: EvalRunReport!
+
+  """The candidate run's report."""
+  candidate: EvalRunReport!
+
+  """Cases that failed in the baseline and pass in the candidate."""
+  improvedCaseIds: [ID!]!
+
+  """McNemar's test. Null when no case is shared."""
+  mcnemar: EvalMcNemar
+
+  """Cases that passed in the baseline and fail in the candidate."""
+  regressedCaseIds: [ID!]!
+
+  """Cases both runs have a counted outcome for."""
+  sharedCases: Int!
+
+  """Why the comparison may not mean what it appears to."""
+  warnings: [EvalComparisonWarning!]!
+}
+
+"""
+One grader's verdict on one trial, with the grader and judge identity it was produced by.
+"""
+type EvalGrade {
+  """Judge-cache key. Null for graders that are not cached."""
+  cacheKey: String
+
+  """Cost of grading in USD. Null for code graders and unpriceable judges."""
+  costUsd: Float
+
+  """When the grade was recorded."""
+  createdAt: DateTime!
+
+  """
+  Why the grader could not decide. Set exactly when the verdict is error.
+  """
+  errorReason: String
+
+  """
+  Evidence the grader quoted, serialized with JSON.stringify. Null for an error verdict.
+  """
+  evidenceJson: String
+
+  """Stable id of the grader."""
+  graderId: String!
+
+  """What produced the grade: code, judge or human."""
+  graderKind: String!
+
+  """Grader version; it changes whenever the check changes."""
+  graderVersion: String!
+
+  """Grade id."""
+  id: ID!
+
+  """Driver that ran the judge. Null unless the grader is a judge."""
+  judgeDriver: String
+
+  """Model that ran the judge. Set for every judge grade."""
+  judgeModel: String
+
+  """Version or snapshot of the judge model when known."""
+  judgeModelVersion: String
+
+  """Trial that was graded."""
+  trialId: ID!
+
+  """
+  pass, fail, or error (the grader itself could not decide; excluded from pass rates).
+  """
+  verdict: String!
+}
+
+"""
+One attempt at one case within a run, linked to the trajectory that recorded it.
+"""
+type EvalTrial {
+  """Attempt number, starting at 1."""
+  attempt: Int!
+
+  """Case the trial attempted."""
+  caseId: ID!
+
+  """
+  Cost of the attempt in USD. Null when unpriceable, which is not the same as zero.
+  """
+  costUsd: Float
+
+  """When the trial was recorded."""
+  createdAt: DateTime!
+
+  """Wall-clock duration in milliseconds. Null when unknown."""
+  durationMs: Int
+
+  """Failure message for an errored trial."""
+  error: String
+
+  """Trial id."""
+  id: ID!
+
+  """Run the trial belongs to."""
+  runId: ID!
+
+  """
+  How the attempt ended: completed, errored, or usage_limited (a pause excluded from pass rates).
+  """
+  status: String!
+
+  """The trajectory the attempt produced. Null when none was captured."""
+  trajectoryId: ID
+
+  """Every grader's verdict on this trial, oldest first."""
+  grades: [EvalGrade!]!
+
+  """
+  Human labels on the trial's trajectory, most recently updated first. Empty when the trial has no trajectory.
+  """
+  labels: [AgentTrajectoryLabel!]!
 }
 
 type GeneratorObject {
@@ -4700,10 +5266,35 @@ type Query {
   """
   editorPresence: EditorPresenceResultObject!
 
+  """Fetch one eval dataset by id. Null when it does not exist."""
+  evalDataset(id: ID!): EvalDataset
+
+  """List a repository's eval datasets, newest first."""
+  evalDatasets(repositoryId: ID!): [EvalDataset!]!
+
   """
   List every rater's label on an agent trajectory, most recently updated first.
   """
   agentTrajectoryLabels(trajectoryId: ID!): [AgentTrajectoryLabel!]!
+
+  """List a grader's judge calibrations across versions, newest first."""
+  judgeCalibrations(graderId: String!): [EvalJudgeCalibration!]!
+
+  """
+  The report of one eval run: config tuple, graders, headline numbers (pass rate with a bootstrap 95% interval, judge agreement, detection floor, pass^k, cost per success) and a row per case. Statistics are computed server-side over trials that count.
+  """
+  evalRunReport(runId: ID!): EvalRunReport!
+
+  """
+  Compare a candidate run with a baseline run: McNemar's test over the cases both have an outcome for, the cases that got worse and better, and warnings when the runs used different datasets, auth modes or k.
+  """
+  evalRunComparison(baseRunId: ID!, candidateRunId: ID!): EvalRunComparison!
+
+  """Fetch one eval run by id. Null when it does not exist."""
+  evalRun(id: ID!): EvalRun
+
+  """List a dataset's eval runs, newest first."""
+  evalRuns(datasetId: ID!): [EvalRun!]!
 
   """List available NX generators from @tools/generators"""
   generators: [GeneratorObject!]!
@@ -5755,7 +6346,7 @@ type Mutation {
   updateAgentCli(backend: String!): StartAgentSetupResult!
 
   """
-  Record an ATIF trajectory for a plan run. The document is validated, capped at 4 MiB server-side (elided observations set truncated) and summarized into token, cost and tool-call columns.
+  Record an ATIF trajectory for a plan run. With an idempotencyKey a duplicate is a successful no-op that returns the stored row. The document is validated, capped at 4 MiB server-side (elided observations set truncated) and summarized into token, cost and tool-call columns.
   """
   recordAgentTrajectory(input: RecordAgentTrajectoryInput!): AgentTrajectory!
 
@@ -5856,6 +6447,11 @@ type Mutation {
   writeCustomPromptToFileSystem(id: ID!): Boolean!
 
   """
+  Create an eval dataset from recorded trajectories: each selected trajectory (typically a real failure) becomes a case with its gold answer. Re-using a name in the repository creates the next version. The creator is taken from your identity, never from input.
+  """
+  createEvalDatasetFromTrajectories(input: CreateEvalDatasetFromTrajectoriesInput!): EvalDataset!
+
+  """
   Record your verdict (pass or fail), optional failure type and note on an agent trajectory. One label per rater per trajectory: re-labelling replaces your own. The rater is taken from your identity, never from input.
   """
   labelAgentTrajectory(input: LabelAgentTrajectoryInput!): AgentTrajectoryLabel!
@@ -5864,6 +6460,36 @@ type Mutation {
   Remove your own label on an agent trajectory. Returns false when you had none; other raters' labels are never touched.
   """
   removeAgentTrajectoryLabel(trajectoryId: ID!): Boolean!
+
+  """
+  Record a judge calibration whose statistics were computed elsewhere. History is append-only. The creator is read from your identity, never from input.
+  """
+  recordJudgeCalibration(input: RecordJudgeCalibrationInput!): EvalJudgeCalibration!
+
+  """
+  Calibrate a judge over one run in one call: pair its judge grades with human labels on the trials' trajectories, compute kappa (bootstrap 95% CI), catch rate, false-fail rate and gating status, and record the row. Judge error verdicts are excluded and counted separately.
+  """
+  calibrateJudgeForRun(input: CalibrateJudgeForRunInput!): CalibrateJudgeForRunResult!
+
+  """
+  Record an eval run over a dataset. The dataset version is read from the dataset and the creator from your identity, never from input.
+  """
+  recordEvalRun(input: RecordEvalRunInput!): EvalRun!
+
+  """
+  Move an eval run to a new status. startedAt is stamped the first time it runs; finishedAt on completed, failed or cancelled, and cleared when a paused run resumes.
+  """
+  updateEvalRunStatus(input: UpdateEvalRunStatusInput!): EvalRun!
+
+  """
+  Record one attempt at one case. Re-recording the same run, case and attempt replaces the earlier row, so a resumed run can re-record a usage_limited trial.
+  """
+  recordEvalTrial(input: RecordEvalTrialInput!): EvalTrial!
+
+  """
+  Record one grader's verdict on a trial with the grader id and version and, for judges, the judge model. An error verdict needs errorReason; a judge needs judgeModel. Re-recording the same trial, grader id and version replaces the earlier row.
+  """
+  recordEvalGrade(input: RecordEvalGradeInput!): EvalGrade!
 
   """
   Connect (or re-connect) a catalog connector for the authenticated user. For api_token connectors the token is stored as a bcrypt hash + masked hint; the raw token is never persisted.
@@ -6463,6 +7089,11 @@ input RecordAgentTrajectoryInput {
   """Process exit code of the run."""
   exitCode: Int
 
+  """
+  Optional key that makes recording idempotent: a second call with the same key returns the stored trajectory instead of inserting another. Clients use session:<sessionId>:<toolUseId> for session uploads and spawned:<planRunId>:<iteration> for spawned runs. At most 200 characters.
+  """
+  idempotencyKey: String
+
   """Model that ran, when known."""
   model: String
 
@@ -6776,6 +7407,43 @@ input UpdateCustomPromptInput {
   writeToFileSystem: Boolean! = false
 }
 
+input CreateEvalDatasetFromTrajectoriesInput {
+  """The cases, one per selected trajectory. At least one."""
+  cases: [EvalCaseFromTrajectoryInput!]!
+
+  """
+  Free-text description of what the dataset covers. Blank is stored as null.
+  """
+  description: String
+
+  """
+  Dataset name. Re-using a name in the same repository creates the next version.
+  """
+  name: String!
+
+  """Repository the dataset belongs to."""
+  repositoryId: ID!
+
+  """What the dataset evaluates: plan_task, skill or mcp_tool_selection."""
+  target: String!
+}
+
+input EvalCaseFromTrajectoryInput {
+  """What a correct outcome looks like, as a JSON string."""
+  goldJson: String!
+
+  """
+  What the agent is asked to do, as a JSON string. Omit to derive an object from the trajectory (id, task id, plan run id, driver, model).
+  """
+  inputJson: String
+
+  """Which side of the dataset the case sits on: dev or test."""
+  split: String!
+
+  """The recorded trajectory (a real failure) the case is created from."""
+  trajectoryId: ID!
+}
+
 input LabelAgentTrajectoryInput {
   """
   Free-text failure category, for example wrong-file. Blank is stored as null.
@@ -6793,6 +7461,195 @@ input LabelAgentTrajectoryInput {
   """
   The verdict: pass or fail. Re-labelling replaces your own earlier label.
   """
+  verdict: String!
+}
+
+input RecordJudgeCalibrationInput {
+  """Catch rate in [0, 1]. Omit when undefined."""
+  catchRate: Float
+
+  """Dataset whose cases were labelled. Omit for an ad hoc calibration."""
+  datasetId: ID
+
+  """False-fail rate in [0, 1]. Omit when undefined."""
+  falseFailRate: Float
+
+  """Id of the grader that was calibrated."""
+  graderId: String!
+
+  """Version of the grader that was calibrated."""
+  graderVersion: String!
+
+  """True for the held-out judge. Defaults to false."""
+  heldOut: Boolean! = false
+
+  """Driver that ran the judge."""
+  judgeDriver: String
+
+  """Model that ran the judge."""
+  judgeModel: String!
+
+  """Version or snapshot of the judge model when known."""
+  judgeModelVersion: String
+
+  """Cohen's kappa. Omit when undefined."""
+  kappa: Float
+
+  """Upper bound of the bootstrap 95% interval of kappa."""
+  kappaCiHigh: Float
+
+  """Lower bound of the bootstrap 95% interval of kappa."""
+  kappaCiLow: Float
+
+  """Pairs used for the statistics."""
+  n: Int!
+
+  """Pairs left out because the judge returned an error verdict."""
+  nExcluded: Int! = 0
+
+  """
+  Eval run the grades were read from. Omit when pairs were supplied directly.
+  """
+  runId: ID
+
+  """
+  Dataset split the labelled cases came from: dev or test. Needs datasetId.
+  """
+  split: String
+
+  """unsupervised, gating, non_gating or insufficient."""
+  status: String!
+}
+
+input CalibrateJudgeForRunInput {
+  """Id of the judge grader to calibrate."""
+  graderId: String!
+
+  """Version of the judge grader to calibrate."""
+  graderVersion: String!
+
+  """True when calibrating the held-out judge. Defaults to false."""
+  heldOut: Boolean! = false
+
+  """Run whose judge grades are calibrated."""
+  runId: ID!
+
+  """
+  Only use trials whose case is in this split: dev or test. Omit for every trial.
+  """
+  split: String
+}
+
+input RecordEvalRunInput {
+  """How the CLI is billed: api_key or subscription."""
+  authMode: String!
+
+  """Token budget for the whole run. Omit for unlimited."""
+  budgetTokens: Int
+
+  """Dollar budget for the whole run. Omit for unlimited."""
+  budgetUsd: Float
+
+  """Dataset being run."""
+  datasetId: ID!
+
+  """Agent driver under test."""
+  driver: String!
+
+  """Reasoning effort under test."""
+  effort: String
+
+  """Attempts per case, at least 1."""
+  k: Int!
+
+  """Model under test."""
+  model: String
+
+  """Content SHA of the prompt under test."""
+  promptSha: String
+
+  """Content SHA of the skill under test."""
+  skillSha: String
+
+  """Initial status: pending (default) or running."""
+  status: String
+}
+
+input UpdateEvalRunStatusInput {
+  """Run to update."""
+  runId: ID!
+
+  """
+  New status: pending, running, usage_limited, completed, failed or cancelled.
+  """
+  status: String!
+}
+
+input RecordEvalTrialInput {
+  """Attempt number, starting at 1."""
+  attempt: Int!
+
+  """Case that was attempted."""
+  caseId: ID!
+
+  """Cost of the attempt in USD. Omit when unpriceable."""
+  costUsd: Float
+
+  """Wall-clock duration in milliseconds."""
+  durationMs: Int
+
+  """Failure message for an errored trial."""
+  error: String
+
+  """Run the trial belongs to."""
+  runId: ID!
+
+  """How the attempt ended: completed, errored or usage_limited."""
+  status: String!
+
+  """The recorded trajectory the attempt produced."""
+  trajectoryId: ID
+}
+
+input RecordEvalGradeInput {
+  """Judge-cache key. Omit for graders that are not cached."""
+  cacheKey: String
+
+  """Cost of grading in USD. Omit for code graders and unpriceable judges."""
+  costUsd: Float
+
+  """
+  Why the grader could not decide. Required when the verdict is error, and only then.
+  """
+  errorReason: String
+
+  """
+  Evidence the grader quoted, as a JSON string. Omit for an error verdict.
+  """
+  evidenceJson: String
+
+  """Stable id of the grader."""
+  graderId: String!
+
+  """What produced the grade: code, judge or human."""
+  graderKind: String!
+
+  """Grader version."""
+  graderVersion: String!
+
+  """Driver that ran the judge."""
+  judgeDriver: String
+
+  """Model that ran the judge. Required when graderKind is judge."""
+  judgeModel: String
+
+  """Version or snapshot of the judge model when known."""
+  judgeModelVersion: String
+
+  """Trial being graded."""
+  trialId: ID!
+
+  """pass, fail or error."""
   verdict: String!
 }
 

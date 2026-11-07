@@ -50,6 +50,9 @@ export class AgentTrajectory {
   @Column({ name: 'schema_version', type: 'text' })
   schemaVersion!: string;
 
+  @Column({ name: 'idempotency_key', nullable: true, type: 'text' })
+  idempotencyKey!: string | null;
+
   @Column({ name: 'trajectory', type: 'jsonb' })
   trajectory!: AtifTrajectory;
 
