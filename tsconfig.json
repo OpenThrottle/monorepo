@@ -225,6 +225,9 @@
     },
     {
       "path": "./packages/agentic-evals"
+    },
+    {
+      "path": "./packages/openthrottle-desktop-bridge"
     }
   ]
 }

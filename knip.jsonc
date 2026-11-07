@@ -154,6 +154,33 @@
         "tests/demo/scripts/*.ts",
       ],
     },
+    // Electron shell. None of these are imported: electron-vite's config names the main,
+    // child-server and preload entries as strings, the renderer is reached from
+    // index.html, `package` runs stage-app.ts through tsx, and the opt-in
+    // `test-e2e` target runs the Playwright smoke suite through vitest.e2e.config.ts.
+    // The vitest/electron-vite plugins are off here, so they are listed explicitly.
+    "applications/openthrottle-app": {
+      "entry": [
+        "electron.vite.config.ts",
+        "scripts/stage-app.ts",
+        "src/main/main.ts",
+        "src/preload/preload.ts",
+        "src/renderer/main.tsx",
+        "src/server/server-entry.ts",
+        "tests/e2e/*.e2e.ts",
+        "vitest.e2e.config.ts",
+      ],
+      // Ambient `window.openthrottleShell` merge (TypeScript program, not import graph).
+      "ignore": ["src/renderer/global.d.ts"],
+      // CLI / CSS consumers knip cannot see: the `package` target runs the
+      // electron-builder binary, and styles.css @imports the two Tailwind packages.
+      "ignoreDependencies": [
+        "electron-builder",
+        "tailwindcss",
+        "tw-animate-css",
+      ],
+      "project": ["{scripts,src,tests}/**/*.{ts,tsx}", "*.config.ts"],
+    },
     ".": {
       "entry": [
         "scripts/pnpm-package.ts",

@@ -223,12 +223,12 @@ it is tagged, and its tags decide who is allowed to import it. Tags live in the
 project's `project.json` / `package.json` `nx.tags` and are validated by
 `pnpm run nx:validate-tags` (source: `scripts/nx-validate-tags.ts`).
 
-| Tag           | Cardinality                                           | Values                                                                                                  |
-| ------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `type:`       | **exactly one**, required                             | `application`, `infrastructure`, `package`, `tool`                                                      |
-| `technology:` | one or more, required                                 | `llm`, `nestjs`, `nodejs`, `python`, `react-native`, `react-router`, `react`, `terraform`, `typescript` |
-| `production:` | exactly one, required                                 | `true`, `false`                                                                                         |
-| `publish:`    | exactly one — **`type:package` and `type:tool` only** | `true`, `false`                                                                                         |
+| Tag           | Cardinality                                           | Values                                                                                                              |
+| ------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `type:`       | **exactly one**, required                             | `application`, `infrastructure`, `package`, `tool`                                                                  |
+| `technology:` | one or more, required                                 | `electron`, `llm`, `nestjs`, `nodejs`, `python`, `react-native`, `react-router`, `react`, `terraform`, `typescript` |
+| `production:` | exactly one, required                                 | `true`, `false`                                                                                                     |
+| `publish:`    | exactly one — **`type:package` and `type:tool` only** | `true`, `false`                                                                                                     |
 
 The `technology:` set is closed and lives in `VALID_TECHNOLOGY_TAGS`. Verify it
 against the script when you tag a project rather than trusting this table — the

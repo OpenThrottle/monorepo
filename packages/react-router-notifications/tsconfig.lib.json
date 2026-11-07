@@ -17,13 +17,16 @@
       "path": "../react-router-utils/tsconfig.lib.json"
     },
     {
-      "path": "../openthrottle-notifications/tsconfig.lib.json"
-    },
-    {
       "path": "../react-router-shadcn/tsconfig.lib.json"
     },
     {
       "path": "../react-router-graphql/tsconfig.lib.json"
+    },
+    {
+      "path": "../openthrottle-notifications/tsconfig.lib.json"
+    },
+    {
+      "path": "../openthrottle-desktop-bridge/tsconfig.lib.json"
     },
     {
       "path": "../nodejs-utils/tsconfig.lib.json"
