@@ -27,14 +27,17 @@ type LoaderData = {
   scannedAt: string;
 };
 
-const renderRoute = (loaderData: LoaderData) => {
+const renderRoute = (
+  loaderData: LoaderData,
+  setupActionResult: unknown = { ok: true },
+) => {
   const Stub = createRoutesStub([
     {
       Component,
       loader: () => loaderData,
       path: '/settings/agents',
     },
-    { action: () => ({ ok: true }), path: '/resources/agent-setup' },
+    { action: () => setupActionResult, path: '/resources/agent-setup' },
     { action: () => ({ ok: true }), path: '/resources/agent-enabled' },
   ]);
   return render(<Stub initialEntries={['/settings/agents']} />);
@@ -143,6 +146,51 @@ describe('routes/settings.agents.tsx', () => {
       'SettingsAgentsAuthWarning-claude',
     );
     expect(alert).toHaveTextContent('ANTHROPIC_API_KEY is set');
+  });
+
+  test('starting an update opens the setup log dialog and keeps the row compact', async () => {
+    const user = userEvent.setup();
+    const component = renderRoute(
+      {
+        agents: [
+          {
+            backend: 'claude',
+            enabled: true,
+            label: 'claude-code',
+            models: ['opus'],
+            version: '2.1.0',
+          },
+        ],
+        canManage: true,
+        installEnabled: true,
+        scannedAt: '2026-08-12T00:00:00.000Z',
+      },
+      {
+        backend: 'claude',
+        disabled: false,
+        errorMessage: null,
+        mode: 'update',
+        runId: 'run-1',
+      },
+    );
+
+    const claudeRow = await component.findByTestId(
+      'SettingsAgentsTableRow-claude',
+    );
+    await user.click(within(claudeRow).getByRole('button', { name: 'Update' }));
+
+    const dialog = await component.findByRole('dialog');
+    expect(within(dialog).getByRole('heading')).toHaveTextContent(/^Updating /);
+    // The log lives in the dialog, never inline in the table row.
+    expect(
+      within(claudeRow).queryByTestId('SettingsAgentsCliControlsLog'),
+    ).not.toBeInTheDocument();
+
+    // Closing the dialog (which does not cancel the run) exposes View log.
+    await user.keyboard('{Escape}');
+    expect(
+      within(claudeRow).getByRole('button', { name: 'View log' }),
+    ).toBeInTheDocument();
   });
 
   test('shows the last-checked timestamp from the scan', async () => {

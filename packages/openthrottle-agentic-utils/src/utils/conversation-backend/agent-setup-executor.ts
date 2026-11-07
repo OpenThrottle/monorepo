@@ -11,6 +11,7 @@
  * - Failures always resolve a typed result; the executor never rejects or leaves a dangling child.
  * - The child PATH is augmented with the common per-user install target dirs so a subsequent
  *   discovery scan can see a freshly installed binary (the `~/.local/bin` PATH gotcha).
+ * - The child env is an allowlist (no server secrets) with `NO_COLOR=1` / `FORCE_COLOR=0` forced.
  */
 
 import { spawn } from 'node:child_process';
@@ -39,6 +40,68 @@ const INSTALL_BIN_DIRS = [
   '.opencode/bin',
   'bin',
 ] as const;
+
+/**
+ * Host env vars an installer may read. The child runs a script fetched from the internet
+ * (`curl | shell`), so it gets an allowlist rather than the server's whole environment — database
+ * URLs, API keys and session secrets never reach it.
+ */
+const ALLOWED_ENV_KEYS = [
+  'ALL_PROXY',
+  'CARGO_HOME', // rustup/cargo-based installers pick their prefix from it.
+  'CODEX_HOME',
+  'CURL_CA_BUNDLE',
+  'HOME',
+  'HTTP_PROXY',
+  'HTTPS_PROXY',
+  'LANG',
+  'LC_ALL',
+  'LC_CTYPE',
+  'LOGNAME',
+  'NO_PROXY',
+  'NODE_EXTRA_CA_CERTS',
+  'OPENCODE_INSTALL_DIR',
+  'PATH',
+  'SHELL',
+  'SSL_CERT_DIR',
+  'SSL_CERT_FILE',
+  'TERM',
+  'TMPDIR',
+  'USER',
+  'XDG_BIN_DIR',
+  'XDG_CACHE_HOME',
+  'XDG_CONFIG_HOME',
+  'XDG_DATA_HOME',
+  'all_proxy',
+  'http_proxy',
+  'https_proxy',
+  'no_proxy',
+] as const;
+
+/**
+ * Prefixes passed through wholesale: the package managers' own configuration (install prefix,
+ * registry, tap). Dropping them would make `npm install --global` or `brew upgrade` behave
+ * differently from the user's own terminal.
+ */
+const ALLOWED_ENV_PREFIXES = [
+  'BUN_',
+  'HOMEBREW_',
+  'NPM_CONFIG_',
+  'NVM_',
+  'VOLTA_',
+  'npm_config_',
+] as const;
+
+/**
+ * Values forced on the child regardless of the host environment. Installers stream into a log the
+ * user reads in the browser, so ask them for plain text: `NO_COLOR` is the cross-tool convention,
+ * `FORCE_COLOR=0` covers the Node (chalk/supports-color) installers that ignore it. Not every
+ * installer honors either, so the client still strips ANSI.
+ */
+const FORCED_ENV: Readonly<Record<string, string>> = {
+  FORCE_COLOR: '0',
+  NO_COLOR: '1',
+};
 
 /** Whether a run installs a missing CLI or updates an existing one. */
 export type AgentSetupMode = 'install' | 'update';
@@ -158,6 +221,24 @@ export function augmentPathForInstall(env: NodeJS.ProcessEnv): string {
 }
 
 /**
+ * The child env: the allowlisted host vars, the install-augmented PATH, then {@link FORCED_ENV}
+ * last so the host can never re-enable color.
+ */
+function buildAgentSetupEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  const scrubbed: NodeJS.ProcessEnv = {};
+  for (const [key, value] of Object.entries(env)) {
+    const allowed =
+      ALLOWED_ENV_KEYS.some((allowedKey) => allowedKey === key) ||
+      ALLOWED_ENV_PREFIXES.some((prefix) => key.startsWith(prefix));
+    if (value !== undefined && allowed) {
+      scrubbed[key] = value;
+    }
+  }
+
+  return { ...scrubbed, PATH: augmentPathForInstall(env), ...FORCED_ENV };
+}
+
+/**
  * Build the fixed command for a run from the driver's registry descriptors. A `curl-shell` install
  * (and `update` that falls back to re-running the installer) becomes `sh -c 'curl -fsSL <url> |
  * <shell>'`; an `npm` install becomes `npm install --global <packageName>`; a `command`-method
@@ -238,10 +319,7 @@ export function runAgentSetup(
 
   return new Promise<AgentSetupResult>((resolve) => {
     let settled = false;
-    const childEnv: NodeJS.ProcessEnv = {
-      ...env,
-      PATH: augmentPathForInstall(env),
-    };
+    const childEnv = buildAgentSetupEnv(env);
 
     let child: AgentSetupChildProcess;
     try {

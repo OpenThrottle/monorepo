@@ -180,6 +180,47 @@ describe('runAgentSetup execution', () => {
     expect(chunks).toEqual(['stdout:downloading...', 'stderr:a warning']);
   });
 
+  it('forces NO_COLOR/FORCE_COLOR and passes only allowlisted env to the child', async () => {
+    const child = new FakeChild();
+    const seen: NodeJS.ProcessEnv[] = [];
+    const spawnFn: AgentSetupSpawn = (_file, _args, options) => {
+      seen.push(options.env);
+      return child;
+    };
+
+    const run = runAgentSetup({
+      backend: 'claude',
+      env: {
+        ...HERMETIC_ENV,
+        DATABASE_URL: 'postgres://user:pw@db/ot',
+        FORCE_COLOR: '3',
+        HOMEBREW_NO_AUTO_UPDATE: '1',
+        HTTPS_PROXY: 'http://proxy:3128',
+        JWT_SECRET: 'server-secret',
+        NO_COLOR: 'not-this-value',
+        OPENAI_API_KEY: 'sk-server',
+        npm_config_prefix: '/home/tester/.npm-global',
+      },
+      mode: 'install',
+      spawnFn,
+    });
+    child.emit('close', 0);
+    await run;
+
+    const env = seen[0];
+    expect(env).toBeDefined();
+    expect(env?.NO_COLOR).toBe('1');
+    expect(env?.FORCE_COLOR).toBe('0');
+    expect(env?.HOME).toBe('/home/tester');
+    expect(env?.HTTPS_PROXY).toBe('http://proxy:3128');
+    expect(env?.HOMEBREW_NO_AUTO_UPDATE).toBe('1');
+    expect(env?.npm_config_prefix).toBe('/home/tester/.npm-global');
+    expect(env?.PATH?.startsWith('/home/tester/.local/bin')).toBe(true);
+    expect(env).not.toHaveProperty('DATABASE_URL');
+    expect(env).not.toHaveProperty('JWT_SECRET');
+    expect(env).not.toHaveProperty('OPENAI_API_KEY');
+  });
+
   it('resolves a non-zero-exit failure with the exit code', async () => {
     const child = new FakeChild();
     const run = runAgentSetup({

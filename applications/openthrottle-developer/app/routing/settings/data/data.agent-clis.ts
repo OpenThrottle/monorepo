@@ -126,6 +126,30 @@ export interface AgentCliAuthWarning {
   readonly warning: string;
 }
 
+/** Which agent setup action a run performs. */
+export type AgentSetupMode = 'install' | 'update';
+
+/** A setup run still streaming output. */
+export interface AgentSetupRunRunning {
+  readonly kind: 'running';
+}
+
+/** A setup run that finished cleanly. */
+export interface AgentSetupRunSucceeded {
+  readonly kind: 'succeeded';
+}
+
+/** A setup run that failed; `exitCode` is null when the process never exited normally. */
+export interface AgentSetupRunFailed {
+  readonly error: string | null;
+  readonly exitCode: number | null;
+  readonly kind: 'failed';
+}
+
+/** Lifecycle of one install/update run, as shown in the setup log dialog. */
+export type AgentSetupRunStatus =
+  AgentSetupRunFailed | AgentSetupRunRunning | AgentSetupRunSucceeded;
+
 /** The slice of a discovered agent needed to surface its auth warning. */
 export interface AgentCliAuthSource {
   readonly auth?: { readonly warning?: string | null } | null;
