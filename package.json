@@ -16,6 +16,7 @@
     "@openthrottle/nestjs-testing": "workspace:^",
     "@openthrottle/node-client": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
+    "@openthrottle/openthrottle-desktop-bridge": "workspace:^",
     "@openthrottle/openthrottle-skills": "workspace:^",
     "@react-router/dev": "catalog:",
     "@tools/dotfiles": "workspace:^",

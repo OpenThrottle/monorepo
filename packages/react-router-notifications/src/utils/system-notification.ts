@@ -6,6 +6,7 @@
  */
 
 import { isRecord } from '@openthrottle/nodejs-utils';
+import { getDesktopBridge } from '@openthrottle/openthrottle-desktop-bridge';
 import type {
   NotificationEventName,
   NotificationPayload,
@@ -77,6 +78,50 @@ export function setSystemNotificationsPreference(
   }
 }
 
+/**
+ * True only when the user explicitly switched system notifications off. The
+ * browser default is opt-in (`enabled: false` when nothing is stored), but the
+ * desktop shell has no permission prompt, so an unset preference means "on".
+ */
+function hasOptedOutOfDesktopNotifications(): boolean {
+  try {
+    const raw = window.localStorage.getItem(NOTIFICATIONS_STORAGE_KEY);
+    if (!raw) return false;
+
+    const parsed: unknown = JSON.parse(raw);
+
+    return isRecord(parsed) && parsed.enabled === false;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Hands the notification to the Electron shell when `window.openthrottleDesktop`
+ * exists. Returns true when the bridge owns the notification (whether or not
+ * main chose to show it: it suppresses it while the window is focused, because
+ * the in-app toast already covers that case), so the Web Notifications path,
+ * which the shell keeps denied, is skipped.
+ */
+function showDesktopNotification(payload: NotificationPayload): boolean {
+  const bridge = getDesktopBridge();
+  if (bridge === undefined) return false;
+  if (hasOptedOutOfDesktopNotifications()) return true;
+
+  const title = payload.message;
+  if (!title || title.trim() === '') return true;
+
+  void bridge
+    .notify({
+      body: payload.severity ? `Severity: ${payload.severity}` : '',
+      link: payload.link,
+      title,
+    })
+    .catch(() => undefined);
+
+  return true;
+}
+
 function isSupportedAndGranted(): boolean {
   if (!IS_BROWSER) return false;
   if (!window.isSecureContext) return false;
@@ -99,6 +144,7 @@ export function showSystemNotification(
   payload: NotificationPayload,
   navigate?: (path: string) => void,
 ): void {
+  if (IS_BROWSER && showDesktopNotification(payload)) return;
   if (!isSupportedAndGranted()) return;
 
   const pref = getSystemNotificationsPreference();

@@ -1,0 +1,70 @@
+appId: ai.openthrottle.app
+productName: OpenThrottle
+# `dist/stage` is built by scripts/stage-app.ts: the electron-vite bundles, the
+# developer build and the TRACED runtime closure as a flat node_modules, plus a
+# generated package.json. electron-builder packages it as-is (no dependency
+# collection of its own: pnpm's symlinked node_modules is why) and the
+# allowlist below, not a deploy directory, decides what ships. Never add a
+# `.env` pattern or a broader glob.
+#
+# Run with `--projectDir dist/stage` (see the `package` target): the stage is
+# the project, so electron-builder reads ITS package.json (packageManager
+# `traversal`, no pnpm workspace) and every path below is relative to it.
+directories:
+  buildResources: ../../build-resources
+  output: ../release
+files:
+  - out/**/*
+  - developer/**/*
+  - node_modules/**/*
+  - package.json
+  - '!**/.env'
+  - '!**/.env.*'
+  - '!**/*.map'
+asar: true
+# The stage has no native module and no registry to publish to: never rebuild,
+# never auto-detect a GitHub publisher (it also writes app-update.yml).
+npmRebuild: false
+publish: null
+# Anything executable must be listed here (asar cannot run it). The traced
+# closure has no native module or binary; scripts/stage-app.ts fails if one
+# appears, so add its glob here AND to EXPECTED_NATIVE_FILES.
+asarUnpack: []
+# Registers openthrottle:// (macOS CFBundleURLTypes, Windows registry, Linux
+# desktop entry). The main process maps openthrottle://plans/<uuid> only.
+protocols:
+  name: OpenThrottle
+  schemes:
+    - openthrottle
+# No Developer ID signing (see the signing follow-up). identity `-` is an
+# AD-HOC signature, not a certificate: an arm64 Mac kills an unsigned bundle at
+# launch, and the fuse flip leaves the main binary linker-signed with the bundle
+# unsealed ("code has no resources but signature indicates they must be
+# present"), so electron-builder must seal it. `identity: null` ships that
+# broken state.
+mac:
+  extendInfo:
+    LSApplicationCategoryType: public.app-category.developer-tools
+    NSMicrophoneUsageDescription: OpenThrottle uses the microphone for voice input.
+  icon: icon.icns
+  gatekeeperAssess: false
+  hardenedRuntime: false
+  identity: '-'
+  target:
+    - dir
+    - zip
+# Electron fuses, flipped at package time. runAsNode is safe to disable: the
+# embedded server runs in a utilityProcess, which Electron's fuses docs name as
+# the replacement for ELECTRON_RUN_AS_NODE (only child_process.fork breaks).
+# asar is on (the builder default), which the asar fuses need.
+# enableCookieEncryption stays OFF until the app is code signed: on macOS it
+# needs signed Keychain access, and the transition is one-way (turning it off
+# later corrupts the cookie store). Flip it in the signing follow-up.
+electronFuses:
+  enableCookieEncryption: false
+  enableEmbeddedAsarIntegrityValidation: true
+  enableNodeCliInspectArguments: false
+  enableNodeOptionsEnvironmentVariable: false
+  grantFileProtocolExtraPrivileges: false
+  onlyLoadAppFromAsar: true
+  runAsNode: false

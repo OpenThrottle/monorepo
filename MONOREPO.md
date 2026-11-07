@@ -110,6 +110,7 @@ Create an **application** when you need:
 
 - `openthrottle-developer` - React Router web application (deployed to https://developer.openthrottle.ai)
 - `openthrottle-server` - React Router web application (deployed to https://api.openthrottle.ai)
+- [`openthrottle-app`](./applications/openthrottle-app/README.md) - Electron desktop shell around `openthrottle-developer` (macOS build via `openthrottle-app:package`)
 
 ### When to Create a Package
 

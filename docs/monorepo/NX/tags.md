@@ -54,6 +54,18 @@ Examples:
 - `openthrottle-developer` - React Router application
 - `@openthrottle/react-router-utils` - React Router utilities package
 
+#### `technology:electron`
+
+**When to use:**
+
+- Electron desktop applications (main and preload processes bundled by electron-vite)
+
+**Note:** Pair with `technology:nodejs` — the main process is Node.
+
+**Examples:**
+
+- `openthrottle-app` - Electron desktop shell around the Developer app
+
 #### `technology:react-native`
 
 **When to use:**

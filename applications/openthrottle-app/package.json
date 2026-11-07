@@ -1,0 +1,163 @@
+{
+  "name": "openthrottle-app",
+  "description": "OpenThrottle | App: Electron desktop shell around the Developer app.",
+  "version": "1.0.0",
+  "author": {
+    "email": "matthew.scholta@gmail.com",
+    "name": "Matthew Scholta",
+    "url": "https://mattscholta.com"
+  },
+  "license": "Apache-2.0",
+  "private": true,
+  "repository": "git://github.com/OpenThrottle/monorepo.git",
+  "type": "module",
+  "main": "./out/main/main.js",
+  "sideEffects": [
+    "**/*.css",
+    "./src/main/main.ts",
+    "./src/preload/preload.ts",
+    "./src/renderer/main.tsx",
+    "./src/server/server-entry.ts"
+  ],
+  "scripts": {},
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "implicitDependencies": [
+      "openthrottle-developer"
+    ],
+    "projectType": "application",
+    "sourceRoot": "./",
+    "tags": [
+      "name:openthrottle-app",
+      "production:true",
+      "technology:electron",
+      "technology:nodejs",
+      "type:application"
+    ],
+    "targets": {
+      "build": {
+        "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Build the Electron main and preload bundles to {projectRoot}/out with electron-vite. Runs after openthrottle-developer:build, whose output the packaged app embeds."
+        },
+        "options": {
+          "command": "electron-vite build",
+          "cwd": "{projectRoot}"
+        },
+        "cache": true,
+        "dependsOn": [
+          "^build"
+        ],
+        "outputs": [
+          "{projectRoot}/out"
+        ]
+      },
+      "dev": {
+        "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Run the Electron shell in development with electron-vite (opens the app window)."
+        },
+        "options": {
+          "command": "electron-vite dev",
+          "cwd": "{projectRoot}"
+        },
+        "continuous": true,
+        "dependsOn": [
+          {
+            "target": "ensure-worktree",
+            "projects": "monorepo"
+          }
+        ]
+      },
+      "lint": {
+        "dependsOn": []
+      },
+      "package": {
+        "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Stage the traced runtime closure (scripts/stage-app.ts), then package an unsigned OpenThrottle.app and zip with electron-builder into {projectRoot}/dist/release. Not cached: the output is hundreds of MB and the tracer reads the pnpm store, which Nx does not hash."
+        },
+        "options": {
+          "commands": [
+            "tsx scripts/stage-app.ts",
+            "electron-builder --mac --publish never --projectDir dist/stage --config ../../electron-builder.yml"
+          ],
+          "cwd": "{projectRoot}",
+          "parallel": false
+        },
+        "cache": false,
+        "dependsOn": [
+          "build"
+        ],
+        "outputs": [
+          "{projectRoot}/dist"
+        ]
+      },
+      "test": {
+        "dependsOn": []
+      },
+      "test-e2e": {
+        "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Opt-in, LOCAL-ONLY smoke e2e: launches the built Electron app with Playwright _electron against a running, seeded OT server (OPENTHROTTLE_SERVER_URL, default http://localhost:6021), signs in as the seeded developer user, asserts the home route and a plan detail page. Skips visibly when the server is unreachable. Not part of test, not cached, not run by CI."
+        },
+        "options": {
+          "command": "vitest run --config vitest.e2e.config.ts --reporter=verbose",
+          "cwd": "{projectRoot}"
+        },
+        "cache": false,
+        "dependsOn": [
+          "build"
+        ]
+      },
+      "typecheck": {
+        "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Type-check the Electron shell source, tests and config with tsc --noEmit, then the connection-screen renderer (bundler resolution, DOM) with its own tsconfig (source-first: electron-vite emits the runtime bundles)."
+        },
+        "options": {
+          "command": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.renderer.json",
+          "cwd": "{projectRoot}"
+        },
+        "cache": true,
+        "dependsOn": [
+          "^typecheck"
+        ],
+        "outputs": []
+      }
+    }
+  },
+  "dependencies": {
+    "@react-router/express": "catalog:",
+    "compression": "catalog:",
+    "express": "catalog:",
+    "http-proxy-3": "catalog:",
+    "react-router": "catalog:"
+  },
+  "devDependencies": {
+    "@openthrottle/openthrottle-desktop-bridge": "workspace:^",
+    "@openthrottle/react-router-shadcn": "workspace:^",
+    "@tailwindcss/vite": "catalog:",
+    "@testing-library/dom": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "catalog:",
+    "@types/compression": "catalog:",
+    "@types/express": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vercel/nft": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "electron": "catalog:",
+    "electron-builder": "catalog:",
+    "electron-vite": "catalog:",
+    "jsdom": "catalog:",
+    "playwright": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "tailwindcss": "catalog:",
+    "tw-animate-css": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  }
+}
