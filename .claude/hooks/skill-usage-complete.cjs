@@ -3201,6 +3201,24 @@ var chunksToAtif = (input) => {
   };
 };
 
+// packages/openthrottle-agentic-utils/src/utils/trajectory/redact-secrets.ts
+var SECRET_PATTERNS = [
+  /\bBearer\s+[A-Za-z0-9._\-+=/]+/gi,
+  /\bsk-[A-Za-z0-9]{8,}/gi,
+  /\b(password|passwd|pwd|secret|token|api[_-]?key)\s*[=:]\s*\S+/gi,
+  /\bAIza[0-9A-Za-z\-_]{20,}/gi,
+  /\bghp_[A-Za-z0-9]{20,}/gi,
+  /\bgithub_pat_[A-Za-z0-9_]{20,}/gi
+];
+var redactSecrets = (value) => {
+  let out = value;
+  for (const pattern of SECRET_PATTERNS) {
+    pattern.lastIndex = 0;
+    out = out.replace(pattern, "[REDACTED]");
+  }
+  return out;
+};
+
 // packages/openthrottle-agentic-utils/src/utils/trajectory/trajectory-record.ts
 var TRAJECTORY_TRANSPORT_BYTES = 640 * 1024;
 
@@ -3667,40 +3685,310 @@ var withSubagentRefs = (trajectory, spawned, embeddedIds) => {
   });
   return { ...trajectory, steps };
 };
-var subagentTrajectory = (subagent, agentVersion) => {
-  const trajectory = chunksToAtif({
+var HAND_BACK_EXCERPT_CHARS = 480;
+var AGENT_MESSAGE_FROM = /<agent-message\s+from="([A-Za-z0-9_-]+)"/i;
+var TASK_NOTIFICATION_SUMMARY = /<summary>([\s\S]*?)<\/summary>/i;
+var TASK_NOTIFICATION_STATUS = /<status>([\s\S]*?)<\/status>/i;
+var SYSTEM_REMINDER_INNER = /<system-reminder>([\s\S]*?)<\/system-reminder>/i;
+var userTurnText = (event) => {
+  const message = isRecord(event.message) ? event.message : void 0;
+  const content = message?.content;
+  if (typeof content === "string") {
+    return content;
+  }
+  if (!Array.isArray(content)) {
+    return void 0;
+  }
+  const texts = content.flatMap((block) => {
+    if (typeof block === "string" && block !== "") {
+      return [block];
+    }
+    if (isRecord(block) && block.type === "text") {
+      const text = stringOf2(block.text);
+      return text === void 0 ? [] : [text];
+    }
+    return [];
+  });
+  if (texts.length === 0) {
+    return void 0;
+  }
+  return texts.join("\n");
+};
+var isToolResultOnlyUser = (event) => {
+  const message = isRecord(event.message) ? event.message : void 0;
+  const content = message?.content;
+  if (!Array.isArray(content) || content.length === 0) {
+    return false;
+  }
+  return content.every((block) => {
+    return isRecord(block) && block.type === "tool_result";
+  });
+};
+var timestampOf = (event) => {
+  return stringOf2(event.timestamp);
+};
+var withStepId = (step, stepId) => {
+  return { ...step, step_id: stepId };
+};
+var redactStepText = (value) => {
+  return redactSecrets(value);
+};
+var handBackExcerpt = (text) => {
+  const reportStart = text.indexOf("The report follows:");
+  if (reportStart === -1) {
+    return "";
+  }
+  const reportBody = text.slice(reportStart + "The report follows:".length).trim();
+  if (reportBody === "") {
+    return "";
+  }
+  if (reportBody.length <= HAND_BACK_EXCERPT_CHARS) {
+    return reportBody;
+  }
+  return `${reportBody.slice(0, HAND_BACK_EXCERPT_CHARS)}…`;
+};
+var handBackStep = (text, timestamp) => {
+  const agentId = AGENT_MESSAGE_FROM.exec(text)?.[1];
+  const excerpt = handBackExcerpt(text);
+  const hasAgentId = agentId !== void 0;
+  const message = hasAgentId ? `Subagent hand-back (${agentId})` : "Subagent hand-back";
+  return {
+    extra: {
+      openthrottle: {
+        kind: "subagent_hand_back",
+        ...hasAgentId ? { subagent_trajectory_id: agentId } : {}
+      }
+    },
+    message: redactStepText(message),
+    observation: {
+      results: [
+        {
+          content: redactStepText(excerpt),
+          ...hasAgentId ? { subagent_trajectory_ref: { trajectory_id: agentId } } : {}
+        }
+      ]
+    },
+    source: "system",
+    ...timestamp === void 0 ? {} : { timestamp }
+  };
+};
+var taskNotificationMessage = (text) => {
+  const summary = TASK_NOTIFICATION_SUMMARY.exec(text)?.[1]?.trim();
+  const status = TASK_NOTIFICATION_STATUS.exec(text)?.[1]?.trim();
+  if (summary === void 0) {
+    return "Background task notification";
+  }
+  if (status === void 0) {
+    return summary;
+  }
+  return `${summary} (${status})`;
+};
+var taskNotificationStep = (text, timestamp) => {
+  return {
+    extra: { openthrottle: { kind: "task_notification" } },
+    message: redactStepText(taskNotificationMessage(text)),
+    source: "system",
+    ...timestamp === void 0 ? {} : { timestamp }
+  };
+};
+var systemReminderTagBody = (inner, tagName) => {
+  return new RegExp(`<${tagName}>([\\s\\S]*?)</${tagName}>`, "i").exec(inner)?.[1]?.trim();
+};
+var systemReminderMessage = (text) => {
+  const inner = SYSTEM_REMINDER_INNER.exec(text)?.[1]?.trim() ?? text.trim();
+  const tagName = /<([a-zA-Z][\w-]*)>/.exec(inner)?.[1];
+  if (tagName === void 0) {
+    return "System reminder";
+  }
+  const tagBody = systemReminderTagBody(inner, tagName);
+  if (tagBody === void 0 || tagBody === "") {
+    return `System reminder: ${tagName}`;
+  }
+  return `System reminder: ${tagName} (${tagBody})`;
+};
+var systemReminderStep = (text, timestamp) => {
+  return {
+    extra: { openthrottle: { kind: "system_reminder" } },
+    message: redactStepText(systemReminderMessage(text)),
+    source: "system",
+    ...timestamp === void 0 ? {} : { timestamp }
+  };
+};
+var harnessTurnStep = (text, timestamp, isMeta) => {
+  if (/\[Subagent hand-back\]/i.test(text) || AGENT_MESSAGE_FROM.test(text)) {
+    return handBackStep(text, timestamp);
+  }
+  if (/<task-notification>/i.test(text)) {
+    return taskNotificationStep(text, timestamp);
+  }
+  if (/<system-reminder>/i.test(text)) {
+    return systemReminderStep(text, timestamp);
+  }
+  if (isMeta) {
+    const trimmed = text.trim();
+    const isShort = trimmed.length <= 240;
+    const summary = isShort ? trimmed : `${trimmed.slice(0, 240)}…`;
+    return {
+      extra: { openthrottle: { kind: "harness_message" } },
+      message: redactStepText(summary),
+      source: "system",
+      ...timestamp === void 0 ? {} : { timestamp }
+    };
+  }
+  return {
+    message: redactStepText(text),
+    source: "user",
+    ...timestamp === void 0 ? {} : { timestamp }
+  };
+};
+var redactAgentSteps = (steps) => {
+  return steps.map((step) => {
+    let observation;
+    if (step.observation !== void 0) {
+      observation = {
+        results: step.observation.results.map((result) => {
+          return {
+            ...result,
+            content: redactStepText(result.content)
+          };
+        })
+      };
+    }
+    let next = {
+      ...step,
+      message: redactStepText(step.message)
+    };
+    if (observation !== void 0) {
+      next = { ...next, observation };
+    }
+    if (step.reasoning_content !== void 0) {
+      next = {
+        ...next,
+        reasoning_content: redactStepText(step.reasoning_content)
+      };
+    }
+    return next;
+  });
+};
+var stepsFromSessionEvents = (events, agentVersion, model, openthrottle) => {
+  const steps = [];
+  const agentBuffer = [];
+  const flushAgent = () => {
+    if (agentBuffer.length === 0) {
+      return;
+    }
+    const buffered = agentBuffer.splice(0, agentBuffer.length);
+    const chunks = claudeSessionEventsToChunks(buffered);
+    if (chunks.length === 0) {
+      return;
+    }
+    const partial = chunksToAtif({
+      agentName: "claude",
+      agentVersion,
+      chunks,
+      driverId: "claude",
+      modelName: model,
+      openthrottle,
+      prompt: void 0,
+      reportsToolCalls: true
+    });
+    for (const step of redactAgentSteps(partial.steps)) {
+      steps.push({ ...step, step_id: steps.length + 1 });
+    }
+  };
+  for (const event of events) {
+    if (!isRecord(event)) {
+      continue;
+    }
+    if (event.type === "assistant") {
+      agentBuffer.push(event);
+      continue;
+    }
+    if (event.type !== "user") {
+      continue;
+    }
+    if (isToolResultOnlyUser(event)) {
+      agentBuffer.push(event);
+      continue;
+    }
+    const text = userTurnText(event);
+    if (text === void 0) {
+      continue;
+    }
+    flushAgent();
+    steps.push(
+      withStepId(
+        harnessTurnStep(text, timestampOf(event), event.isMeta === true),
+        steps.length + 1
+      )
+    );
+  }
+  flushAgent();
+  if (steps.length === 0) {
+    return void 0;
+  }
+  const shell = chunksToAtif({
     agentName: "claude",
     agentVersion,
-    chunks: claudeSessionEventsToChunks(subagent.events.filter(isRecord)),
+    chunks: claudeSessionEventsToChunks(events),
     driverId: "claude",
-    modelName: modelOf(subagent.events),
-    openthrottle: { agentId: subagent.agentId },
+    modelName: model,
+    openthrottle,
     prompt: void 0,
     reportsToolCalls: true
   });
+  return {
+    ...shell,
+    final_metrics: {
+      ...shell.final_metrics,
+      total_steps: steps.length
+    },
+    steps
+  };
+};
+var subagentTrajectory = (subagent, agentVersion) => {
+  const model = modelOf(subagent.events);
+  const built = stepsFromSessionEvents(
+    subagent.events.filter(isRecord),
+    agentVersion,
+    model,
+    { agentId: subagent.agentId }
+  );
+  if (built === void 0) {
+    const empty = chunksToAtif({
+      agentName: "claude",
+      agentVersion,
+      chunks: [],
+      driverId: "claude",
+      modelName: model,
+      openthrottle: { agentId: subagent.agentId },
+      prompt: void 0,
+      reportsToolCalls: true
+    });
+    const capped2 = capTrajectory(
+      { ...empty, trajectory_id: subagent.agentId },
+      { observationBytes: 16 * 1024, totalBytes: SUBAGENT_TRANSPORT_BYTES }
+    );
+    return { trajectory: capped2.trajectory, truncated: capped2.truncated };
+  }
   const capped = capTrajectory(
-    { ...trajectory, trajectory_id: subagent.agentId },
+    { ...built, trajectory_id: subagent.agentId },
     { observationBytes: 16 * 1024, totalBytes: SUBAGENT_TRANSPORT_BYTES }
   );
   return { trajectory: capped.trajectory, truncated: capped.truncated };
 };
 var buildClaudeSessionTrajectory = (input) => {
   const mainEvents = input.segmentEvents.filter(isMainLine);
-  const chunks = claudeSessionEventsToChunks(mainEvents);
-  if (chunks.length === 0) {
+  const model = modelOf(mainEvents);
+  const main2 = stepsFromSessionEvents(
+    mainEvents,
+    input.agentVersion,
+    model,
+    input.openthrottle
+  );
+  if (main2 === void 0) {
     return void 0;
   }
-  const model = modelOf(mainEvents);
-  const main2 = chunksToAtif({
-    agentName: "claude",
-    agentVersion: input.agentVersion,
-    chunks,
-    driverId: "claude",
-    modelName: model,
-    openthrottle: input.openthrottle,
-    prompt: void 0,
-    reportsToolCalls: true
-  });
   const subagents = input.subagents.map((subagent) => {
     return subagentTrajectory(subagent, input.agentVersion);
   });
