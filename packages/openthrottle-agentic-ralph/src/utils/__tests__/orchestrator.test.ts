@@ -7,6 +7,7 @@ import type { WorkflowLifecycleDispatcher } from '@openthrottle/openthrottle-age
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  AppendPlanOutputDocument,
   GetPlanDocument,
   type GetPlanQuery,
   GetServerHealthDocument,
@@ -1500,6 +1501,221 @@ describe('run transcript capture', () => {
       const { params } = await runOnce(undefined);
 
       expect(params).not.toHaveProperty('onTrajectory');
+    });
+  });
+});
+
+describe('createWorkflowRalphOrchestrator blocked-only plans', () => {
+  const TASK_C = 'c64424d1-4bb0-4b08-ade3-b9822411d05c';
+
+  /**
+   * Fake GraphQL with mutable task state: records plan status writes and plan-output chunks, and
+   * applies task status updates so re-reads see them.
+   */
+  const createStatefulExecute = (initial: readonly TaskRow[]) => {
+    const tasks = new Map(initial.map((task) => [task.id, task]));
+    const planUpdates: string[] = [];
+    const planOutput: string[] = [];
+    const executeGraphqlV2 = asExecuteGraphqlV2(async (document, variables) => {
+      if (document === GetServerHealthDocument) {
+        return { serverHealth: serverHealthOk };
+      }
+      if (document === GetPlanDocument) {
+        return { plan: basePlan() };
+      }
+      if (document === GetTasksByPlanIdDocument) {
+        return { tasksByPlanId: [...tasks.values()] };
+      }
+      if (document === UpdatePlanDocument) {
+        const input = readUpdateInput(variables);
+        planUpdates.push(input.status);
+        return { updatePlan: basePlan({ status: input.status }) };
+      }
+      if (document === UpdateTaskDocument) {
+        const input = readUpdateInput(variables);
+        const current =
+          input.id === undefined ? undefined : tasks.get(input.id);
+        if (current !== undefined) {
+          tasks.set(current.id, { ...current, status: input.status });
+        }
+        return { updateTask: baseTask(input.id ?? TASK_A, input.status) };
+      }
+      if (document === AppendPlanOutputDocument) {
+        if (
+          isRecord(variables) &&
+          isRecord(variables.input) &&
+          typeof variables.input.content === 'string'
+        ) {
+          planOutput.push(variables.input.content);
+        }
+        return { appendPlanOutput: { id: 'chunk-1' } };
+      }
+      throw new Error('unmocked GraphQL document in test');
+    });
+
+    return { executeGraphqlV2, planOutput, planUpdates };
+  };
+
+  let repoRoot = '';
+
+  beforeEach(async () => {
+    repoRoot = await mkdtemp(join(tmpdir(), 'ot-orchestrator-blocked-'));
+  });
+
+  afterEach(async () => {
+    await rm(repoRoot, { force: true, recursive: true });
+  });
+
+  /** git stub for the finalize step: a branch with zero commits ahead, so no push/PR. */
+  const createZeroAheadRunner = () => {
+    return vi.fn<WorkflowRalphCommandRunner>(async ({ args }) => {
+      const [sub, first] = args;
+      if (sub === 'rev-parse' && first === '--show-toplevel') {
+        return { exitCode: 0, stderr: '', stdout: `${repoRoot}\n` };
+      }
+      if (sub === 'rev-parse' && first === '--abbrev-ref') {
+        return { exitCode: 0, stderr: '', stdout: 'openthrottle/plan-x\n' };
+      }
+      if (sub === 'rev-list') {
+        return { exitCode: 0, stderr: '', stdout: '0\n' };
+      }
+      return { exitCode: 1, stderr: '', stdout: '' };
+    });
+  };
+
+  it('[COMPLETED, COMPLETED, BLOCKED] ends BLOCKED and finalizes without running the agent', async () => {
+    const run = vi.fn(async () => '<promise>COMPLETE</promise>');
+    const { executeGraphqlV2, planOutput, planUpdates } = createStatefulExecute(
+      [
+        baseTask(TASK_A, 'COMPLETED', { sortOrder: 1000 }),
+        baseTask(TASK_B, 'COMPLETED', { sortOrder: 2000 }),
+        baseTask(TASK_C, 'BLOCKED', { sortOrder: 3000, title: 'Visual pass' }),
+      ],
+    );
+    const runCommand = createZeroAheadRunner();
+
+    const orchestrator = createWorkflowRalphOrchestrator({
+      executeGraphqlV2,
+      iterationRunner: { run },
+      runCommand,
+    });
+
+    const result = await orchestrator.execute({
+      context: { ...baseContext, iterations: 5 },
+    });
+
+    expect(run).not.toHaveBeenCalled();
+    expect(planUpdates).toContain('BLOCKED');
+    expect(planUpdates).not.toContain('COMPLETED');
+    expect(planOutput.join('\n')).toContain('"Visual pass"');
+    expect(runCommand).toHaveBeenCalledWith(
+      expect.objectContaining({
+        args: expect.arrayContaining(['rev-list', '--count']),
+      }),
+    );
+    expect(result).toEqual({
+      exitCode: 0,
+      reason: 'workflow_tasks_blocked',
+      status: 'finished',
+    });
+  });
+
+  it('ends BLOCKED once the last workable task completes, spending no further iteration', async () => {
+    // A completion marker without <promise>COMPLETE</promise>, so the loop reaches the next task load.
+    const run = vi.fn(
+      async () => `<ralph:task-complete>${TASK_B}</ralph:task-complete>`,
+    );
+    const { executeGraphqlV2, planUpdates } = createStatefulExecute([
+      baseTask(TASK_A, 'BLOCKED', { sortOrder: 1000 }),
+      baseTask(TASK_B, 'PENDING', { sortOrder: 2000 }),
+    ]);
+
+    const orchestrator = createWorkflowRalphOrchestrator({
+      executeGraphqlV2,
+      iterationRunner: { run },
+    });
+
+    const result = await orchestrator.execute({
+      context: { ...baseContext, iterations: 5 },
+    });
+
+    expect(run).toHaveBeenCalledTimes(1);
+    expect(planUpdates.at(-1)).toBe('BLOCKED');
+    expect(result).toMatchObject({ reason: 'workflow_tasks_blocked' });
+  });
+
+  it('[BLOCKED, PENDING] gives the PENDING task the final-iteration line (plan mode)', async () => {
+    const prompt = await runOnceCapturingPrompt({
+      mode: 'plan',
+      taskId: '',
+      tasks: [
+        baseTask(TASK_A, 'BLOCKED', { sortOrder: 1000 }),
+        baseTask(TASK_B, 'PENDING', { sortOrder: 2000 }),
+      ],
+    });
+
+    expect(prompt).toContain(`Current task for this iteration: ${TASK_B}`);
+    expect(prompt).toContain(FINAL_ITERATION_FLAG);
+  });
+
+  it('gives the target task the final-iteration line when its only sibling is BLOCKED (task mode)', async () => {
+    const prompt = await runOnceCapturingPrompt({
+      mode: 'task',
+      taskId: TASK_B,
+      tasks: [
+        baseTask(TASK_A, 'BLOCKED', { sortOrder: 1000 }),
+        baseTask(TASK_B, 'PENDING', { sortOrder: 2000 }),
+      ],
+    });
+
+    expect(prompt).toContain(FINAL_ITERATION_FLAG);
+  });
+
+  it('[COMPLETED] still ends COMPLETED with workflow_tasks_exhausted', async () => {
+    const run = vi.fn(async () => '');
+    const { executeGraphqlV2, planUpdates } = createStatefulExecute([
+      baseTask(TASK_A, 'COMPLETED'),
+    ]);
+
+    const orchestrator = createWorkflowRalphOrchestrator({
+      executeGraphqlV2,
+      iterationRunner: { run },
+    });
+
+    const result = await orchestrator.execute({ context: { ...baseContext } });
+
+    expect(run).not.toHaveBeenCalled();
+    expect(planUpdates).toContain('COMPLETED');
+    expect(planUpdates).not.toContain('BLOCKED');
+    expect(result).toMatchObject({ reason: 'workflow_tasks_exhausted' });
+  });
+
+  it('reconciles the parent plan to BLOCKED in task mode when only a BLOCKED sibling remains', async () => {
+    const run = vi.fn(async () => '<promise>COMPLETE</promise>');
+    const { executeGraphqlV2, planOutput, planUpdates } = createStatefulExecute(
+      [
+        baseTask(TASK_A, 'IN_PROGRESS', { sortOrder: 1000 }),
+        baseTask(TASK_B, 'BLOCKED', { sortOrder: 2000, title: 'Visual pass' }),
+      ],
+    );
+
+    const orchestrator = createWorkflowRalphOrchestrator({
+      executeGraphqlV2,
+      iterationRunner: { run },
+    });
+
+    const result = await orchestrator.execute({
+      context: { ...baseContext, mode: 'task', taskId: TASK_A },
+    });
+
+    expect(run).toHaveBeenCalledTimes(1);
+    expect(planUpdates.at(-1)).toBe('BLOCKED');
+    expect(planUpdates).not.toContain('COMPLETED');
+    expect(planOutput.join('\n')).toContain('"Visual pass"');
+    expect(result).toEqual({
+      exitCode: 0,
+      reason: 'workflow_tasks_blocked',
+      status: 'finished',
     });
   });
 });

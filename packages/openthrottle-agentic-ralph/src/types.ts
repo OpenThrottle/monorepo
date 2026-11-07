@@ -15,6 +15,7 @@ export type WorkflowFinishedReason =
   | 'workflow_cancelled'
   | 'workflow_max_iterations'
   | 'workflow_plan_already_terminal'
+  | 'workflow_tasks_blocked'
   | 'workflow_tasks_exhausted'
   | 'workflow_usage_limited';
 

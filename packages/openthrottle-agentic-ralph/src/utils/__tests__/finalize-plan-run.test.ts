@@ -481,6 +481,46 @@ describe('finalizePlanRun', () => {
       );
     });
 
+    it('leaves the PR of a blocked plan in draft (never `gh pr ready`)', async () => {
+      const cwd = await createCwdWithTemplate();
+      const runCommand = createRunCommand({ aheadCount: '1' }, (args) => {
+        if (args[1] === 'create') {
+          return ok('https://github.com/OpenThrottle/monorepo/pull/42\n');
+        }
+        if (args[1] === 'view') {
+          return ok('42\n');
+        }
+        if (args[1] === 'ready') {
+          throw new Error('a blocked plan must not mark its PR ready');
+        }
+        return undefined;
+      });
+
+      const result = await finalizePlanRun({
+        baseBranch: 'main',
+        cwd,
+        draftDir: undefined,
+        executeGraphqlV2: createExecuteGraphqlV2([]),
+        onChunk: undefined,
+        planId: PLAN_ID,
+        priorReason: 'workflow_tasks_blocked',
+        runCommand,
+      });
+
+      expect(result).toEqual({
+        exitCode: 0,
+        headSha: HEAD_SHA,
+        prNumber: 42,
+        reason: 'workflow_tasks_blocked',
+        status: 'finished',
+      });
+      expect(runCommand).toHaveBeenCalledWith(
+        expect.objectContaining({
+          args: expect.arrayContaining(['pr', 'create', '--draft']),
+        }),
+      );
+    });
+
     it('lists only the branch commit, not the 20 base commits below it', async () => {
       const { created, runCommand } = await run();
 

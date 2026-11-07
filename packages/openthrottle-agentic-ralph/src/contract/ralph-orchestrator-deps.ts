@@ -137,7 +137,8 @@ export interface WorkflowRalphOrchestratorDeps {
   /**
    * @description Host command runner for the plan-end push/PR finalize step. When set, a finished
    * plan (`workflow_complete` / `workflow_tasks_exhausted` / `workflow_complete_handoff_owed`)
-   * runs the deterministic push + PR step through this runner. When omitted, finalize is skipped
+   * runs the deterministic push + PR step through this runner. A plan that ends BLOCKED
+   * (`workflow_tasks_blocked`) also runs it, but its PR stays a draft. When omitted, finalize is skipped
    * (loop-only / unit-test paths). The server deps factory wires
    * {@link createDefaultWorkflowRalphCommandRunner}. Credentials are the worker host's existing
    * `git` / `gh` auth — a non-host (docker) worker without those credentials fails finalize into
