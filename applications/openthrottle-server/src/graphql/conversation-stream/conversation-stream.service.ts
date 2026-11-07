@@ -120,6 +120,28 @@ const readUsageLimit = (value: unknown): UsageLimit | null => {
  * done lazily in {@link ConversationStreamService.runStream} so the ~2s mint
  * never blocks the start mutation.
  */
+/**
+ * Metadata key of a persisted `text` marker: the offset in the message body
+ * where that text segment (its paragraph break included) starts. Mirrored by `TEXT_SEGMENT_OFFSET_KEY` in
+ * `@openthrottle/react-router-chat`, whose replay slices the body at these
+ * offsets so narration lands between tool blocks, as it did live.
+ */
+const TEXT_SEGMENT_OFFSET_KEY = 'bodyOffset';
+
+/**
+ * What to put between the body so far and a new text segment: nothing for the
+ * first one, otherwise enough newlines to make it a paragraph. Backends end a
+ * segment mid-line before a tool call ("…now." then "Retrying…"), and glued
+ * together they run on — `call.1.` broke a numbered list's markdown.
+ */
+const paragraphBreakBefore = (body: string): string => {
+  if (body === '' || body.endsWith('\n\n')) {
+    return '';
+  }
+
+  return body.endsWith('\n') ? '\n' : '\n\n';
+};
+
 const CURSOR_BACKEND = 'cursor';
 
 /**
@@ -324,8 +346,12 @@ export class ConversationStreamService {
     let terminalUsageLimit: UsageLimit | null = null;
 
     // Non-text events (thinking/tool/usage/session) collected for persistence
-    // into the assistant message's tool_metadata on completion.
+    // into the assistant message's tool_metadata on completion, plus a `text`
+    // marker where each text segment starts in the body.
     const toolEvents: Array<Record<string, unknown>> = [];
+    // False until text arrives, and again after any non-text chunk: the next
+    // text delta then starts a new segment.
+    let textSegmentOpen = false;
 
     // Cursor mints its chat session by spawning `cursor-agent create-chat`
     // (~2s). We do it HERE — in the fire-and-forget stream — rather than in the
@@ -499,14 +525,28 @@ export class ConversationStreamService {
 
         // Assistant text accumulates into the persisted message body; non-text
         // events are collected and persisted into tool_metadata on completion.
+        // A new text segment carries its paragraph break in its first delta,
+        // live and persisted alike, so a replayed body slices into exactly
+        // the segments the live turn showed.
+        let delta = chunk.delta;
         if (chunk.kind === CONVERSATION_STREAM_CHUNK_KINDS.text) {
-          accumulated += chunk.delta;
+          if (!textSegmentOpen && delta !== '') {
+            toolEvents.push({
+              delta: '',
+              kind: CONVERSATION_STREAM_CHUNK_KINDS.text,
+              metadata: { [TEXT_SEGMENT_OFFSET_KEY]: accumulated.length },
+            });
+            delta = paragraphBreakBefore(accumulated) + delta;
+            textSegmentOpen = true;
+          }
+          accumulated += delta;
         } else {
           toolEvents.push({
             delta: chunk.delta,
             kind: chunk.kind,
             metadata: chunk.metadata ?? null,
           });
+          textSegmentOpen = false;
         }
 
         // Persist a CLI-minted session id the first time the backend surfaces
@@ -527,7 +567,7 @@ export class ConversationStreamService {
 
         await this.publishChunk({
           conversationId: run.conversationId,
-          delta: chunk.delta,
+          delta,
           done: false,
           error: null,
           id: randomUUID(),
@@ -786,8 +826,12 @@ export class ConversationStreamService {
     }
 
     try {
-      const isEmpty = toolEvents.length === 0;
-      const toolMetadata = !isEmpty ? { events: [...toolEvents] } : null;
+      // Text markers alone are not worth a timeline: a plain text turn keeps
+      // null tool_metadata and its flat-body rendering.
+      const hasNonTextEvent = toolEvents.some(
+        (event) => event.kind !== CONVERSATION_STREAM_CHUNK_KINDS.text,
+      );
+      const toolMetadata = hasNonTextEvent ? { events: [...toolEvents] } : null;
 
       await this.conversations.appendMessages(run.userId, run.conversationId, [
         {

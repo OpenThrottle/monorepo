@@ -72,10 +72,21 @@ result is embedded inline under the tool key (`editToolCall.result.success` with
 
 ## 3. Assistant text & the double-count rule
 
-With `--stream-partial-output`, `assistant` events with a `timestamp_ms` are incremental text deltas,
-followed by one trailing **consolidated** `assistant` event (no `timestamp_ms`) that repeats the full
-text. Rule: take events with `timestamp_ms`, **skip** the one without. Without partial output (the
-recorded plan-run stream) the consolidated event is the only place the text appears.
+With `--stream-partial-output`, `assistant` events with a `timestamp_ms` are incremental text deltas.
+cursor then repeats text it already streamed in two **consolidated** `assistant` events:
+
+- **Before each tool call**, the text segment so far, carrying `timestamp_ms` **and**
+  `model_call_id`. Partial deltas never carry `model_call_id` (observed on cursor-agent
+  2026.11.05; emitting this event doubled every interim sentence of a turn with tool calls).
+- **At the end**, the final segment again, with no `timestamp_ms`.
+
+Rule: take events with `timestamp_ms` and no `model_call_id`; **skip** both consolidations. Without
+partial output (the recorded plan-run stream) the consolidated event is the only place the text
+appears.
+
+cursor glues segments together with no separator, in its own `result` text too
+(`…a.txt.I will read missing.txt.1. …`). The chat server adds the paragraph break when a text segment
+follows a non-text chunk; see `paragraphBreakBefore` in the conversation-stream service.
 
 ## 4. Thinking & tool calls
 
@@ -91,16 +102,16 @@ No flag; the chat caller applies the persona prefix to the prompt before buildin
 
 `mapCursorEvent` is stateless and returns one chunk or `null`.
 
-| CLI event                          | Chunk         | Notes                                                                                                |
-| ---------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------- |
-| `system`, subtype `init`           | `session`     | `metadata.sessionId` = `session_id`. Other `system` subtypes are skipped.                            |
-| `assistant` with `timestamp_ms`    | `text`        | `delta` = first `message.content[0].text`.                                                           |
-| `assistant` without `timestamp_ms` | none          | Consolidated echo; skipped to avoid double-counting.                                                 |
-| `thinking`, subtype `delta`        | `thinking`    | `delta` = `text`. The `completed` marker is skipped.                                                 |
-| `tool_call`, subtype `started`     | `tool_call`   | `metadata` = `{callId, toolCall, toolName}`.                                                         |
-| `tool_call`, subtype `completed`   | `tool_result` | Same metadata; result is inside `toolCall`.                                                          |
-| `result`                           | `usage`       | `done: true`; `error` = `result` text only when `is_error === true`; `metadata` = `{result, usage}`. |
-| `user`, unknown types              | none          | Prompt echo is skipped.                                                                              |
+| CLI event                          | Chunk         | Notes                                                                                                 |
+| ---------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------- |
+| `system`, subtype `init`           | `session`     | `metadata.sessionId` = `session_id`. Other `system` subtypes are skipped.                             |
+| `assistant` with `timestamp_ms`    | `text`        | `delta` = first `message.content[0].text`. Skipped when it carries `model_call_id`.                   |
+| `assistant` without `timestamp_ms` | none          | Consolidated echo; skipped to avoid double-counting.                                                  |
+| `thinking`, subtype `delta`        | `thinking`    | `delta` = `text`. The `completed` marker is skipped.                                                  |
+| `tool_call`, subtype `started`     | `tool_call`   | `metadata` = `{callId, toolCall, toolName}`; `toolCall` = the tool's `args` minus cursor bookkeeping. |
+| `tool_call`, subtype `completed`   | `tool_result` | `toolCall` = `result.success`; `result.error`/`rejected` set `isError` with readable text instead.    |
+| `result`                           | `usage`       | `done: true`; `error` = `result` text only when `is_error === true`; `metadata` = `{result, usage}`.  |
+| `user`, unknown types              | none          | Prompt echo is skipped.                                                                               |
 
 `toolName` is the first record-valued key of `tool_call` that is not `toolCallId` or
 `hookAdditionalContexts`, with a trailing `ToolCall` stripped (`editToolCall` becomes `edit`).

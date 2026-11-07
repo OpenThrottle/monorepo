@@ -240,6 +240,74 @@ describe('foldPersistedTurnEvents', () => {
  * what each backend in `openthrottle-agentic-utils` actually emits rather than
  * an invented shape. The `name` literal must never surface as a tool name.
  */
+describe('foldPersistedTurnEvents with text segment markers', () => {
+  // The body and markers the server persists for the cursor probe shape:
+  // narration, a tool call, narration, a tool result, the final list.
+  const body = [
+    'Issuing all five probe calls in parallel now.',
+    'Retrying the rejected shells.',
+    '1. **shell `pwd`:** rejected',
+  ].join('\n\n');
+  const marker = (bodyOffset: number): Record<string, unknown> => {
+    return { delta: '', kind: 'text', metadata: { bodyOffset } };
+  };
+  const toolCall = { delta: '', kind: 'tool_call', metadata: { callId: 'c1' } };
+  const toolResult = {
+    delta: '',
+    kind: 'tool_result',
+    metadata: { callId: 'c1' },
+  };
+
+  it('places each slice of the body where it streamed', () => {
+    const result = foldPersistedTurnEvents(
+      persisted([marker(0), toolCall, marker(45), toolResult, marker(76)]),
+      body,
+    );
+
+    expect(result.map((event) => event.kind)).toEqual([
+      'text',
+      'tool',
+      'text',
+      'usage',
+    ]);
+    const texts = result.flatMap((event) => {
+      return event.kind === 'text' ? [event.text] : [];
+    });
+    // The result resolves the card in place, so the last two slices coalesce,
+    // exactly as their live deltas did — and keep the break between them.
+    expect(texts).toEqual([
+      'Issuing all five probe calls in parallel now.',
+      '\n\nRetrying the rejected shells.\n\n1. **shell `pwd`:** rejected',
+    ]);
+  });
+
+  it('keeps every sentence exactly once', () => {
+    const result = foldPersistedTurnEvents(
+      persisted([marker(0), toolCall, marker(45), toolResult, marker(76)]),
+      body,
+    );
+    const text = result
+      .flatMap((event) => (event.kind === 'text' ? [event.text] : []))
+      .join('');
+
+    expect(text).toBe(body);
+  });
+
+  it('falls back to a trailing body when the markers do not fit it', () => {
+    const result = foldPersistedTurnEvents(
+      persisted([marker(0), toolCall, marker(9999)]),
+      body,
+    );
+
+    expect(result.map((event) => event.kind)).toEqual([
+      'tool',
+      'text',
+      'usage',
+    ]);
+    expect(result[1]).toMatchObject({ kind: 'text', text: body });
+  });
+});
+
 describe('tool-name resolution', () => {
   const cases: ReadonlyArray<
     readonly [string, Record<string, unknown>, string]

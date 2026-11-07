@@ -193,11 +193,92 @@ describe('ConversationStreamService', () => {
             events: [
               { delta: 'reasoning…', kind: 'thinking', metadata: null },
               { delta: '', kind: 'tool_call', metadata: { callId: 'c1' } },
+              { delta: '', kind: 'text', metadata: { bodyOffset: 0 } },
             ],
           },
         }),
       ],
     );
+  });
+
+  it('separates text segments split by a tool call and marks where each starts', async () => {
+    // Shape of the cursor probe turn: narration, a tool call, more narration,
+    // a second tool call, then the final answer — each ending mid-line.
+    async function* interleaved(): AsyncGenerator<{
+      delta: string;
+      done: boolean;
+      kind: string;
+      metadata?: Record<string, unknown>;
+    }> {
+      yield {
+        delta: 'Issuing all five probe calls',
+        done: false,
+        kind: 'text',
+      };
+      yield { delta: ' in parallel now.', done: false, kind: 'text' };
+      yield {
+        delta: '',
+        done: false,
+        kind: 'tool_call',
+        metadata: { callId: 'c1' },
+      };
+      yield {
+        delta: 'Retrying the rejected shells.',
+        done: false,
+        kind: 'text',
+      };
+      yield {
+        delta: '',
+        done: false,
+        kind: 'tool_result',
+        metadata: { callId: 'c1' },
+      };
+      yield {
+        delta: '1. **shell `pwd`:** rejected',
+        done: false,
+        kind: 'text',
+      };
+      yield { delta: '', done: true, kind: 'text' };
+    }
+    openAiStreamMock.mockReturnValue(interleaved());
+    const { conversations, publish, service } = buildService();
+
+    await service.runStream(baseRun);
+
+    const body = [
+      'Issuing all five probe calls in parallel now.',
+      'Retrying the rejected shells.',
+      '1. **shell `pwd`:** rejected',
+    ].join('\n\n');
+    expect(conversations.appendMessages).toHaveBeenCalledWith(
+      'user-1',
+      'conv-1',
+      [
+        expect.objectContaining({
+          content: body,
+          toolMetadata: {
+            events: [
+              { delta: '', kind: 'text', metadata: { bodyOffset: 0 } },
+              { delta: '', kind: 'tool_call', metadata: { callId: 'c1' } },
+              { delta: '', kind: 'text', metadata: { bodyOffset: 45 } },
+              { delta: '', kind: 'tool_result', metadata: { callId: 'c1' } },
+              { delta: '', kind: 'text', metadata: { bodyOffset: 76 } },
+            ],
+          },
+        }),
+      ],
+    );
+    // Each marker sits on the paragraph break that opens its segment.
+    expect(body.indexOf('\n\nRetrying')).toBe(45);
+    expect(body.indexOf('\n\n1. **shell')).toBe(76);
+
+    // Live deltas carry the same breaks, so live text IS the persisted body.
+    const liveText = publish.mock.calls
+      .map(([, payload]) => payload.conversationStreamChunkAdded)
+      .filter((chunk) => chunk.kind === 'text' && !chunk.done)
+      .map((chunk) => chunk.delta)
+      .join('');
+    expect(liveText).toBe(body);
   });
 
   it('forwards terminal usage metadata (claude/cursor) as a usage chunk and persists it', async () => {
@@ -259,6 +340,7 @@ describe('ConversationStreamService', () => {
           content: 'Hello',
           toolMetadata: {
             events: [
+              { delta: '', kind: 'text', metadata: { bodyOffset: 0 } },
               {
                 delta: '',
                 kind: 'usage',

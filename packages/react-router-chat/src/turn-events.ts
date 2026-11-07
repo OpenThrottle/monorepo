@@ -642,8 +642,50 @@ export const failRunningTurnTools = (
 };
 
 /**
- * Fold a persisted `toolMetadata.events` array (saved non-text events) plus the
- * message body into the same structured timeline a live turn produces.
+ * Metadata key of a persisted `text` marker: where that text segment starts in
+ * the message body. Mirrors `TEXT_SEGMENT_OFFSET_KEY` in openthrottle-server's
+ * conversation-stream service, which this client package cannot import.
+ */
+const TEXT_SEGMENT_OFFSET_KEY = 'bodyOffset';
+
+/**
+ * The body offsets of a turn's persisted `text` markers, in event order — or
+ * null when the turn has none (persisted before markers existed) or they do
+ * not describe this body: the first must be 0, each must not go backwards,
+ * and none may run past the end. Null means "append the body at the end".
+ */
+const readTextSegmentOffsets = (
+  rawEvents: readonly unknown[],
+  bodyText: string,
+): readonly number[] | null => {
+  const offsets = rawEvents.flatMap((raw) => {
+    if (!isRecord(raw) || raw.kind !== 'text' || !isRecord(raw.metadata)) {
+      return [];
+    }
+
+    const offset = raw.metadata[TEXT_SEGMENT_OFFSET_KEY];
+
+    return typeof offset === 'number' ? [offset] : [];
+  });
+
+  const describesBody = offsets.every((offset, index) => {
+    const previous = offsets[index - 1] ?? 0;
+    const isInteger = Number.isInteger(offset);
+
+    return isInteger && offset >= previous && offset <= bodyText.length;
+  });
+
+  if (offsets.length === 0 || offsets[0] !== 0 || !describesBody) {
+    return null;
+  }
+
+  return offsets;
+};
+
+/**
+ * Fold a persisted `toolMetadata.events` array (saved non-text events, plus a
+ * `text` marker where each text segment starts in the body) and the message
+ * body into the same structured timeline a live turn produces.
  *
  * The server persists only non-text events (thinking/tool/session) without a
  * sortOrder, keeps the assistant text in the message body, and never persists
@@ -668,6 +710,11 @@ export const foldPersistedTurnEvents = (
 
   let events: readonly ChatTurnEvent[] = [];
   let order = 0;
+  // Each text marker places the next slice of the body where it streamed, so
+  // narration sits between tool blocks as it did live. Without markers the
+  // whole body is appended after every event.
+  const textOffsets = readTextSegmentOffsets(rawEvents, bodyText);
+  let textSegment = 0;
   // Persisted usage events (written by the server since usage stopped being
   // dropped) are collected here and folded AFTER the body so the usage summary
   // renders at the end of the turn — matching live streaming, where the usage
@@ -685,7 +732,13 @@ export const foldPersistedTurnEvents = (
         isRecord(raw.metadata) ? raw.metadata : null,
       );
 
-      if (kind === 'thinking') {
+      if (kind === 'text' && textOffsets !== null) {
+        const start = textOffsets[textSegment] ?? bodyText.length;
+        const end = textOffsets[textSegment + 1] ?? bodyText.length;
+        const slice = bodyText.slice(start, end);
+        events = appendTurnTextEvent(events, 'text', slice, order);
+        textSegment += 1;
+      } else if (kind === 'thinking') {
         events = appendTurnTextEvent(events, 'thinking', delta, order);
       } else if (kind === 'tool_call') {
         events = applyTurnToolCall(events, meta, order);
@@ -717,7 +770,7 @@ export const foldPersistedTurnEvents = (
     order += 1;
   }
 
-  if (bodyText.trim() !== '') {
+  if (textOffsets === null && bodyText.trim() !== '') {
     events = [...events, { kind: 'text', sortOrder: order, text: bodyText }];
     order += 1;
   }
