@@ -647,6 +647,53 @@ describe('PlanEnqueueService', () => {
       });
     });
 
+    test('re-enqueues a BLOCKED plan: plan → QUEUED, its BLOCKED tasks → QUEUED, job added', async () => {
+      // A run that could make no further progress ended the plan BLOCKED; nothing re-queues it
+      // automatically, so this explicit enqueue is the only way back in.
+      const blockedPlan = { ...mockPlan, status: 'BLOCKED' };
+      repo.findOne.mockResolvedValue(blockedPlan);
+      mockApplyStatusChange.mockResolvedValueOnce({
+        applied: true,
+        fromStatus: 'BLOCKED',
+        toStatus: 'QUEUED',
+      });
+      mockTaskSelectGetMany.mockResolvedValue([
+        { id: 'task-blocked', status: 'BLOCKED' },
+      ]);
+
+      const result = await service.enqueueOrchestrator({
+        actorKind: 'user',
+        actorSub: 'user-42',
+        branch: 'feature/test',
+        idempotencyKey: null,
+        mode: null,
+        planId: mockPlan.id,
+        priority: null,
+        taskId: null,
+        workingDirectory: null,
+      });
+
+      expect(mockApplyStatusChange).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          entity: blockedPlan,
+          requestedStatus: 'QUEUED',
+        }),
+      );
+      expect(repo.save).toHaveBeenCalledWith(blockedPlan);
+      expect(mockRecordStatusChange).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          entity: 'task',
+          from: 'BLOCKED',
+          taskId: 'task-blocked',
+          to: 'QUEUED',
+        }),
+      );
+      expect(mockEnqueuePlanRalphOrchestrator).toHaveBeenCalledTimes(1);
+      expect(result).toEqual(expect.objectContaining({ jobId: 'job-orch-1' }));
+    });
+
     test('the QUEUED reset leaves COMPLETED and PROMOTED tasks alone', async () => {
       await service.enqueueOrchestrator({
         actorKind: 'user',

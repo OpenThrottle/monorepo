@@ -1,3 +1,5 @@
+import type { WorkflowFinishedReason } from '@openthrottle/openthrottle-agentic-ralph';
+
 import { RUN_PLAN_ORCHESTRATOR_JOB_NAME } from '../agentic-ralph/agentic-ralph.constants.ts';
 
 export const PLANS_QUEUE_NAME = 'Plans';
@@ -91,3 +93,12 @@ export const SCHEDULED_PLAN_RUN_GRACE_MS = 60 * 60 * 1_000;
  * first. Bounds the startup work; a backlog beyond it is reached on a later boot.
  */
 export const SCHEDULED_PLAN_RUN_RECONCILE_LIMIT = 500;
+
+/** The limit a limit-stopped run used up, as its finished-run notification names it. */
+export const PLAN_RUN_LIMIT_LABEL_BY_REASON: ReadonlyMap<
+  WorkflowFinishedReason,
+  string
+> = new Map([
+  ['workflow_budget_exhausted', 'time budget'],
+  ['workflow_max_iterations', 'iteration limit'],
+]);
