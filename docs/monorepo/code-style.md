@@ -1275,8 +1275,8 @@ pnpm add -D @typescript-eslint/eslint-plugin -w
 
 ## What is not here
 
-- **Server, GraphQL and NestJS conventions** — resolver return types (`Result()`,
-  `PaginatedResult()`, `ListResult()`), backwards-compatible schema changes
+- **Server, GraphQL and NestJS conventions** — resolver return types (hand-written
+  `@ObjectType()` classes and `*ListResult` envelopes), backwards-compatible schema changes
   (deprecate, never remove), entity and service testing:
   [`ot-stack`](../../skills/ot-stack/SKILL.md).
 - **Where files go and what they are named** — folder layout, the
