@@ -18,3 +18,10 @@ export const CHAT_PERSIST_HINT_COPY = {
 export const CHAT_TOOL_CALL_COPY = {
   payloadTruncated: 'Output truncated when saved',
 } as const;
+
+/** Copy for {@link ChatCheckoutSelectorRow}. */
+export const CHAT_CHECKOUT_ROW_COPY = {
+  contextOnly: 'Context only',
+  primary: 'Primary',
+  worktree: 'Worktree',
+} as const;

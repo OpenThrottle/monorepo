@@ -1,4 +1,5 @@
 import type {
+  ChatCheckoutKind,
   ChatCheckoutOption,
   ChatModelOption,
   ChatPersonaOption,
@@ -133,6 +134,11 @@ export interface RepositoryOption {
    */
   readonly filesystemPath?: string;
   readonly id: string;
+  /**
+   * Whether this is the repository's primary clone or a linked worktree. The
+   * picker lists primaries first and nests worktrees beneath them.
+   */
+  readonly kind?: ChatCheckoutKind;
   /** Linked OpenThrottle project name, when the checkout has one. Searchable. */
   readonly projectName?: string;
   /**
@@ -367,6 +373,7 @@ export function toCheckoutOptions(
     branch: repository.branch,
     filesystemPath: repository.filesystemPath,
     id: repository.id,
+    kind: repository.kind,
     label: repository.displayName,
     projectName: repository.projectName,
     remoteUrl: repository.remoteUrl,

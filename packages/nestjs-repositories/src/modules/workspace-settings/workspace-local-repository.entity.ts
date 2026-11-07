@@ -6,13 +6,19 @@
  * @deprecated Use Repository / RepositoryCheckout from modules/repositories.
  */
 
+import type { RepositoryCheckoutKind } from '../repositories/repository-checkout.entity.ts';
+
 export interface WorkspaceLocalRepository {
   createdAt: Date;
   displayName: string;
   filesystemPath: string;
+  /** Branch the checkout is on per its last inspection; null until scanned. */
+  gitCurrentBranch: string | null;
   gitDefaultBranch: string | null;
   gitRemoteUrl: string | null;
   id: string;
+  /** `primary` (the repository's main clone) or `worktree` (a linked worktree). */
+  kind: RepositoryCheckoutKind;
   projectId: string | null;
   updatedAt: Date;
   userId: string;

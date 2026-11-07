@@ -10,6 +10,7 @@
  * id spaces that would silently mis-associate a plan if shared.
  */
 import type { ChatCheckoutOption } from '@openthrottle/react-router-chat';
+import { toCheckoutKind } from '@openthrottle/react-router-chat';
 
 import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
 import { basename } from '~/routing/plans/utils/plan-workflow-config-workspace-selector';
@@ -41,6 +42,7 @@ export const toPlanCheckoutOptions = (
       ),
       filesystemPath: checkout.filesystemPath,
       id: checkout.id,
+      kind: toCheckoutKind(checkout.kind),
       // An empty display name would render a blank row, so fall back to the
       // folder name the same way the full workspace selector does.
       label:

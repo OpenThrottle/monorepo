@@ -7312,10 +7312,14 @@ export type WorkspaceLocalRepositoryObject = {
   displayName: Scalars['String']['output'];
   /** Canonical absolute path on the server host. */
   filesystemPath: Scalars['String']['output'];
+  /** Branch the checkout is on per its last inspection scan; null until scanned or when HEAD is detached. */
+  gitCurrentBranch?: Maybe<Scalars['String']['output']>;
   gitDefaultBranch?: Maybe<Scalars['String']['output']>;
   /** Optional git remote URL (origin). */
   gitRemoteUrl?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  /** Checkout kind: 'primary' (the repository's main clone) or 'worktree' (a linked git worktree). */
+  kind: Scalars['String']['output'];
   project?: Maybe<ProjectObject>;
   /** Optional OpenThrottle project linked to this checkout. */
   projectId?: Maybe<Scalars['ID']['output']>;

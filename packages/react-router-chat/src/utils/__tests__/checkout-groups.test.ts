@@ -68,14 +68,69 @@ describe('groupCheckoutOptions', () => {
     ]);
   });
 
-  it('keeps several checkouts of one owner together in input order', () => {
+  it("orders one owner's repositories alphabetically, whatever the input order", () => {
     const groups = groupCheckoutOptions([
       { id: 'b', label: 'beta', remoteUrl: 'git@github.com:acme/beta.git' },
       { id: 'a', label: 'alpha', remoteUrl: 'git@github.com:acme/alpha.git' },
     ]);
 
     expect(groups).toHaveLength(1);
-    expect(groups[0]?.options.map((option) => option.id)).toEqual(['b', 'a']);
+    expect(groups[0]?.options.map((option) => option.id)).toEqual(['a', 'b']);
+  });
+
+  it('puts the primary checkout first and nests its worktrees beneath it', () => {
+    const remoteUrl = 'git@github.com:acme/monorepo.git';
+    const groups = groupCheckoutOptions([
+      { id: 'wt-b', kind: 'worktree', label: 'plan-b', remoteUrl },
+      { id: 'other', label: 'api', remoteUrl: 'git@github.com:acme/api.git' },
+      { id: 'wt-a', kind: 'worktree', label: 'plan-a', remoteUrl },
+      { id: 'main', kind: 'primary', label: 'monorepo', remoteUrl },
+    ]);
+
+    expect(groups[0]?.entries).toEqual([
+      expect.objectContaining({
+        checkout: expect.objectContaining({ id: 'other' }),
+        nested: false,
+      }),
+      expect.objectContaining({
+        checkout: expect.objectContaining({ id: 'main' }),
+        nested: false,
+      }),
+      expect.objectContaining({
+        checkout: expect.objectContaining({ id: 'wt-a' }),
+        nested: true,
+      }),
+      expect.objectContaining({
+        checkout: expect.objectContaining({ id: 'wt-b' }),
+        nested: true,
+      }),
+    ]);
+  });
+
+  it('treats a checkout with no kind as primary', () => {
+    const remoteUrl = 'git@github.com:acme/monorepo.git';
+    const groups = groupCheckoutOptions([
+      { id: 'wt', kind: 'worktree', label: 'a-worktree', remoteUrl },
+      { id: 'main', label: 'monorepo', remoteUrl },
+    ]);
+
+    expect(groups[0]?.options.map((option) => option.id)).toEqual([
+      'main',
+      'wt',
+    ]);
+  });
+
+  it('leaves a worktree flush when its primary is not registered', () => {
+    const groups = groupCheckoutOptions([
+      {
+        id: 'wt',
+        kind: 'worktree',
+        label: 'plan-a',
+        remoteUrl: 'git@github.com:acme/monorepo.git',
+      },
+    ]);
+
+    expect(groups[0]?.entries[0]?.nested).toBe(false);
   });
 
   it('returns no groups for an empty list', () => {

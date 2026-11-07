@@ -257,27 +257,76 @@ describe('ChatCheckoutSelector Component — disambiguation', () => {
     expect(trigger).not.toHaveTextContent('scratch');
   });
 
-  test('gives the two same-named rows distinct qualifiers', async () => {
+  test('gives the two same-named rows distinct, home-relative locations', async () => {
     const user = userEvent.setup();
     const component = renderLookalikes();
     await user.click(component.getByTestId('ChatCheckoutSelector-trigger'));
 
     expect(
       component.getByTestId('ChatCheckoutSelector-qualifier-ot'),
-    ).toHaveTextContent('openthrottle/monorepo');
+    ).toHaveTextContent('~/Development/openthrottle');
     expect(
       component.getByTestId('ChatCheckoutSelector-qualifier-ss'),
-    ).toHaveTextContent('shiftsmart/monorepo');
+    ).toHaveTextContent('~/Work/monorepo');
   });
 
-  test('falls back to a shortened path for a checkout with no remote', async () => {
+  test('falls back to owner/name when the consumer supplies no path', async () => {
     const user = userEvent.setup();
-    const component = renderLookalikes();
+    const component = renderLookalikes({
+      checkouts: [
+        {
+          id: 'np',
+          label: 'monorepo',
+          remoteUrl: 'git@github.com:openthrottle/monorepo.git',
+        },
+      ],
+      selectedCheckoutId: 'np',
+    });
     await user.click(component.getByTestId('ChatCheckoutSelector-trigger'));
 
     expect(
-      component.getByTestId('ChatCheckoutSelector-qualifier-sb'),
-    ).toHaveTextContent('…/scratch/sandbox');
+      component.getByTestId('ChatCheckoutSelector-qualifier-np'),
+    ).toHaveTextContent('openthrottle/monorepo');
+  });
+
+  test('lists the primary checkout before its worktrees, which indent beneath it', async () => {
+    const user = userEvent.setup();
+    const remoteUrl = 'git@github.com:openthrottle/monorepo.git';
+    const component = renderLookalikes({
+      checkouts: [
+        {
+          branch: 'openthrottle/plan-0b6dfaf8',
+          filesystemPath: `/Users/matt/.openthrottle/worktrees/OpenThrottle/monorepo/plan-0b6dfaf8`,
+          id: 'wt',
+          kind: 'worktree',
+          label: 'plan-0b6dfaf8',
+          remoteUrl,
+        },
+        {
+          branch: 'main',
+          filesystemPath: '/Users/matt/Development/openthrottle/monorepo',
+          id: 'main',
+          kind: 'primary',
+          label: 'monorepo',
+          remoteUrl,
+        },
+      ],
+      selectedCheckoutId: 'main',
+    });
+    await user.click(component.getByTestId('ChatCheckoutSelector-trigger'));
+
+    const primary = component.getByTestId('ChatCheckoutSelector-option-main');
+    const worktree = component.getByTestId('ChatCheckoutSelector-option-wt');
+    expect(
+      primary.compareDocumentPosition(worktree) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(worktree).toHaveAttribute('data-kind', 'worktree');
+    expect(worktree).toHaveAttribute('data-nested', 'true');
+    expect(primary).toHaveAttribute('data-nested', 'false');
+    expect(
+      component.getByTestId('ChatCheckoutSelector-row-branch-wt'),
+    ).toHaveAttribute('title', 'openthrottle/plan-0b6dfaf8');
   });
 
   test('groups rows under their owner, with the remote-less ones last', async () => {
