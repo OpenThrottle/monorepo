@@ -3206,14 +3206,17 @@ var TRAJECTORY_TRANSPORT_BYTES = 640 * 1024;
 
 // packages/openthrottle-agentic-utils/src/utils/trajectory/claude-session.ts
 var BEGIN_TASK_TOOL = "__begin_task_session";
+var CLAIM_MESSAGES_TOOL = "__claim_plan_messages";
 var REGISTER_RUN_TOOL = "__register_plan_run";
 var SETTLE_RUN_TOOL = "__settle_plan_run";
 var UPDATE_TASK_TOOL = "__update_task";
+var START_TASK_STATUS = "IN_PROGRESS";
 var TERMINAL_TASK_STATUSES = /* @__PURE__ */ new Set([
   "BLOCKED",
   "COMPLETED",
   "SKIPPED"
 ]);
+var GIT_COMMIT_COMMAND = /\bgit\s+commit\b/;
 var SUBAGENT_TRANSPORT_BYTES = 160 * 1024;
 var stringOf2 = (value) => {
   return typeof value === "string" && value !== "" ? value : void 0;
@@ -3262,40 +3265,277 @@ var toolResultsOf = (event) => {
     return isUsable ? [{ content: text, toolUseId }] : [];
   });
 };
-var findClaudeSessionTaskSegments = (events) => {
-  const boundaries = [];
+var isCommitBash = (use) => {
+  if (use.name !== "Bash") {
+    return false;
+  }
+  const command = stringOf2(use.input.command);
+  return command !== void 0 && GIT_COMMIT_COMMAND.test(command);
+};
+var exclusiveEndAfterResults = (events, fromIndex, useIds, stopAt) => {
+  if (useIds.size === 0) {
+    return Math.min(fromIndex + 1, stopAt);
+  }
+  const pending = new Set(useIds);
+  let end = Math.min(fromIndex + 1, stopAt);
+  for (let index = fromIndex + 1; index < stopAt && pending.size > 0; index += 1) {
+    if (!isMainLine(events[index])) {
+      end = index + 1;
+      continue;
+    }
+    for (const result of toolResultsOf(events[index])) {
+      pending.delete(result.toolUseId);
+    }
+    end = index + 1;
+  }
+  return end;
+};
+var exclusiveEndAfterTerminal = (events, terminal, stopAt) => {
+  let end = exclusiveEndAfterResults(
+    events,
+    terminal.index,
+    /* @__PURE__ */ new Set([terminal.toolUseId]),
+    stopAt
+  );
+  for (let index = end; index < stopAt; index += 1) {
+    if (!isMainLine(events[index])) {
+      continue;
+    }
+    const uses = toolUsesOf(events[index]);
+    if (uses.length === 0) {
+      continue;
+    }
+    if (!uses.every(isCommitBash)) {
+      break;
+    }
+    end = exclusiveEndAfterResults(
+      events,
+      index,
+      new Set(
+        uses.map((use) => {
+          return use.id;
+        })
+      ),
+      stopAt
+    );
+    break;
+  }
+  return end;
+};
+var firstToolUseIdInRange = (events, startIndex, endIndex) => {
+  for (let index = startIndex; index < endIndex; index += 1) {
+    if (!isMainLine(events[index])) {
+      continue;
+    }
+    const [use] = toolUsesOf(events[index]);
+    if (use !== void 0) {
+      return use.id;
+    }
+  }
+  return void 0;
+};
+var planIdNear = (events, startIndex, fallback) => {
+  if (fallback !== void 0) {
+    return fallback;
+  }
+  for (let index = startIndex; index >= 0; index -= 1) {
+    if (!isMainLine(events[index])) {
+      continue;
+    }
+    for (const use of toolUsesOf(events[index])) {
+      const planId = stringOf2(use.input.planId);
+      if (planId !== void 0) {
+        return planId;
+      }
+    }
+  }
+  return void 0;
+};
+var collectTaskBounds = (events) => {
+  const byTask = /* @__PURE__ */ new Map();
+  let settleIndex;
+  let settleToolUseId;
+  const touch = (taskId) => {
+    const existing = byTask.get(taskId);
+    if (existing !== void 0) {
+      return existing;
+    }
+    const created = {
+      begin: void 0,
+      end: void 0,
+      start: void 0
+    };
+    byTask.set(taskId, created);
+    return created;
+  };
+  const noteStart = (taskId, marker, isBegin) => {
+    const entry = touch(taskId);
+    if (isBegin && entry.begin === void 0) {
+      entry.begin = marker;
+    }
+    if (entry.start === void 0 || marker.index < entry.start.index) {
+      entry.start = marker;
+    }
+  };
   events.forEach((event, index) => {
     if (!isMainLine(event)) {
       return;
     }
     for (const use of toolUsesOf(event)) {
-      const isBegin = use.name.endsWith(BEGIN_TASK_TOOL);
-      if (isBegin || use.name.endsWith(SETTLE_RUN_TOOL)) {
-        boundaries.push({
-          index,
-          planId: stringOf2(use.input.planId),
-          taskId: isBegin ? stringOf2(use.input.taskId) : void 0,
-          toolUseId: use.id
-        });
+      const planId = stringOf2(use.input.planId);
+      const marker = { index, planId, toolUseId: use.id };
+      if (use.name.endsWith(SETTLE_RUN_TOOL)) {
+        settleIndex = index;
+        settleToolUseId = use.id;
+        continue;
+      }
+      if (use.name.endsWith(BEGIN_TASK_TOOL)) {
+        const taskId2 = stringOf2(use.input.taskId);
+        if (taskId2 !== void 0) {
+          noteStart(taskId2, marker, true);
+        }
+        continue;
+      }
+      if (use.name.endsWith(CLAIM_MESSAGES_TOOL)) {
+        const taskId2 = stringOf2(use.input.taskId);
+        if (taskId2 !== void 0) {
+          noteStart(taskId2, marker, false);
+        }
+        continue;
+      }
+      if (!use.name.endsWith(UPDATE_TASK_TOOL)) {
+        continue;
+      }
+      const taskId = stringOf2(use.input.id);
+      const status = stringOf2(use.input.status);
+      if (taskId === void 0 || status === void 0) {
+        continue;
+      }
+      if (status === START_TASK_STATUS) {
+        noteStart(taskId, marker, false);
+        continue;
+      }
+      if (TERMINAL_TASK_STATUSES.has(status)) {
+        const entry = touch(taskId);
+        if (entry.end === void 0 || index > entry.end.index) {
+          entry.end = marker;
+        }
       }
     }
   });
-  return boundaries.flatMap((boundary, position) => {
-    const next = boundaries[position + 1];
-    if (boundary.taskId === void 0) {
+  const tasks = [...byTask.entries()].flatMap(([taskId, entry]) => {
+    if (entry.start === void 0) {
       return [];
     }
     return [
       {
-        closed: next !== void 0,
-        endIndex: next?.index ?? events.length,
-        planId: boundary.planId,
-        startIndex: boundary.index,
-        taskId: boundary.taskId,
-        toolUseId: boundary.toolUseId
+        begin: entry.begin,
+        end: entry.end,
+        start: entry.start,
+        taskId
       }
     ];
   });
+  tasks.sort((left, right) => {
+    return left.start.index - right.start.index;
+  });
+  return { settleIndex, settleToolUseId, tasks };
+};
+var planLevelSegment = (events, startIndex, endIndex, closed, planId, toolUseId) => {
+  if (startIndex >= endIndex) {
+    return void 0;
+  }
+  return {
+    closed,
+    endIndex,
+    planId: planIdNear(events, startIndex, planId),
+    startIndex,
+    taskId: null,
+    toolUseId: firstToolUseIdInRange(events, startIndex, endIndex) ?? toolUseId
+  };
+};
+var findClaudeSessionTaskSegments = (events) => {
+  const { settleIndex, settleToolUseId, tasks } = collectTaskBounds(events);
+  if (tasks.length === 0) {
+    return [];
+  }
+  const taskSegments = tasks.map(
+    (task, position) => {
+      const nextStart = tasks[position + 1]?.start.index;
+      const stopAt = nextStart ?? settleIndex ?? events.length;
+      const terminal = task.end;
+      let endIndex;
+      if (terminal !== void 0) {
+        endIndex = exclusiveEndAfterTerminal(events, terminal, stopAt);
+      } else if (nextStart !== void 0) {
+        endIndex = nextStart;
+      } else if (settleIndex === void 0) {
+        endIndex = events.length;
+      } else {
+        const settleIds = settleToolUseId === void 0 ? [] : [settleToolUseId];
+        endIndex = exclusiveEndAfterResults(
+          events,
+          settleIndex,
+          new Set(settleIds),
+          events.length
+        );
+      }
+      const closed = terminal !== void 0 || nextStart !== void 0 || settleIndex !== void 0;
+      return {
+        closed,
+        endIndex,
+        planId: task.begin?.planId ?? task.start.planId,
+        startIndex: task.start.index,
+        taskId: task.taskId,
+        toolUseId: task.begin?.toolUseId ?? task.start.toolUseId
+      };
+    }
+  );
+  const segments = [];
+  taskSegments.forEach((segment, position) => {
+    const previous = taskSegments[position - 1];
+    if (previous !== void 0) {
+      const gap = planLevelSegment(
+        events,
+        previous.endIndex,
+        segment.startIndex,
+        true,
+        previous.planId ?? segment.planId,
+        `plan-gap:${previous.toolUseId}:${segment.toolUseId}`
+      );
+      if (gap !== void 0) {
+        segments.push(gap);
+      }
+    }
+    segments.push(segment);
+  });
+  const last = taskSegments[taskSegments.length - 1];
+  if (last !== void 0 && last.closed && last.endIndex < events.length) {
+    const wrapUpClosed = settleIndex !== void 0;
+    let wrapUpEnd = events.length;
+    if (settleIndex !== void 0) {
+      const settleIds = settleToolUseId === void 0 ? [] : [settleToolUseId];
+      wrapUpEnd = exclusiveEndAfterResults(
+        events,
+        settleIndex,
+        new Set(settleIds),
+        events.length
+      );
+    }
+    const wrapUpToolUseId = settleToolUseId ?? `plan-wrap:${last.toolUseId}`;
+    const wrapUp = planLevelSegment(
+      events,
+      last.endIndex,
+      Math.max(wrapUpEnd, last.endIndex),
+      wrapUpClosed,
+      last.planId,
+      wrapUpToolUseId
+    );
+    if (wrapUp !== void 0) {
+      segments.push(wrapUp);
+    }
+  }
+  return segments;
 };
 var findClaudeSessionPlanRunId = (events) => {
   const registerIds = /* @__PURE__ */ new Set();
@@ -3332,6 +3572,18 @@ var findClaudeSessionSubagentIds = (events) => {
   return [...new Set(ids)];
 };
 var claudeSessionTaskOutcome = (events, taskId) => {
+  if (taskId === null) {
+    let settleOutcome = "unknown";
+    for (const event of events) {
+      for (const use of toolUsesOf(event)) {
+        const status = stringOf2(use.input.status);
+        if (use.name.endsWith(SETTLE_RUN_TOOL) && status !== void 0) {
+          settleOutcome = status.toLowerCase();
+        }
+      }
+    }
+    return settleOutcome;
+  }
   let outcome = "unknown";
   for (const event of events) {
     for (const use of toolUsesOf(event)) {
@@ -3572,7 +3824,7 @@ var captureSessionTrajectories = async ({
       const isOversized = !segment.closed && read.capped && segment.startIndex === 0;
       if (isOversized) {
         logHookError(
-          `trajectory segment ${segment.taskId} exceeds scan window`
+          `trajectory segment ${segment.taskId ?? "plan"} exceeds scan window`
         );
         uploaded.add(segment.toolUseId);
         handled += 1;
