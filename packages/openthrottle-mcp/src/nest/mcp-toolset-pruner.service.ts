@@ -10,8 +10,8 @@
  * provides this service, so discovery has finished by the time this hook runs.
  */
 
-import type { FactoryProvider, OnApplicationBootstrap } from '@nestjs/common';
-import { McpRegistryDiscoveryService } from '@rekog/mcp-nest';
+import type { OnApplicationBootstrap } from '@nestjs/common';
+import type { McpRegistryDiscoveryService } from '@rekog/mcp-nest';
 
 import type { ToolsetName } from '../config/toolsets.ts';
 import { developerMcpToolDefinitions } from '../tool-registry.ts';
@@ -19,8 +19,9 @@ import { McpDeveloperMcpSurface } from './openthrottle-mcp-mcp-surface.ts';
 
 /**
  * @description Removes every {@link McpDeveloperMcpSurface} tool outside the enabled toolsets from
- * the MCP registry once discovery has run. Built by {@link mcpToolsetPrunerProvider} rather than
- * injected by decorators, so it needs no constructor-parameter decorators.
+ * the MCP registry once discovery has run. Built by `mcpToolsetPrunerProvider` (its sibling
+ * `.provider.ts`) rather than injected by decorators, so it needs no constructor-parameter
+ * decorators.
  * @public
  */
 export class McpToolsetPrunerService implements OnApplicationBootstrap {
@@ -50,21 +51,4 @@ export class McpToolsetPrunerService implements OnApplicationBootstrap {
       }
     }
   }
-}
-
-/**
- * @description The Nest provider for a {@link McpToolsetPrunerService} serving `toolsets`. Add it to
- * the module that provides {@link McpDeveloperMcpSurface} and imports `McpModule.forRoot`.
- * @public
- */
-export function mcpToolsetPrunerProvider(
-  toolsets: ReadonlySet<ToolsetName>,
-): FactoryProvider<McpToolsetPrunerService> {
-  return {
-    inject: [McpRegistryDiscoveryService],
-    provide: McpToolsetPrunerService,
-    useFactory: (registry: McpRegistryDiscoveryService) => {
-      return new McpToolsetPrunerService(registry, toolsets);
-    },
-  };
 }

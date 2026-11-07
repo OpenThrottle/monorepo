@@ -7,7 +7,7 @@ import {
   enabledToolsetsFromProcess,
   setActiveToolsets,
 } from '../config/toolsets.ts';
-import { mcpToolsetPrunerProvider } from './mcp-toolset-pruner.service.ts';
+import { mcpToolsetPrunerProvider } from './mcp-toolset-pruner.provider.ts';
 import { NestjsMcpDeveloperService } from './nestjs-openthrottle-mcp.service.ts';
 import type { NestjsMcpDeveloperBootstrapOptions } from './nestjs-openthrottle-mcp-bootstrap-options.interface.ts';
 import { McpDeveloperMcpSurface } from './openthrottle-mcp-mcp-surface.ts';
