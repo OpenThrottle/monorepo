@@ -186,7 +186,7 @@ describe('CLI-run postgres helpers', () => {
     const { settleCliPlanRunPostgres } =
       await import('../openthrottle-ralph-postgres.js');
 
-    await settleCliPlanRunPostgres(mockConfig, 'cli-run-1', 'CANCELLED');
+    await settleCliPlanRunPostgres(mockConfig, 'cli-run-1', 'CANCELLED', null);
 
     const update = mockState.calls.find((c) =>
       c.sql.includes('UPDATE plan_runs'),
@@ -197,6 +197,29 @@ describe('CLI-run postgres helpers', () => {
     expect(update?.sql).toContain('worker_id = NULL');
     expect(update?.sql).toContain('WHERE id = $1');
     expect(update?.params).toEqual(['cli-run-1', 'CANCELLED']);
+    expect(update?.sql).not.toContain('usage_limit_resets_at');
+  });
+
+  it('settleCliPlanRunPostgres records the reset time and window on a USAGE_LIMITED settle', async () => {
+    const { settleCliPlanRunPostgres } =
+      await import('../openthrottle-ralph-postgres.js');
+
+    await settleCliPlanRunPostgres(mockConfig, 'cli-run-1', 'USAGE_LIMITED', {
+      rateLimitType: 'seven_day',
+      resetsAt: '2026-11-01T17:00:00.000Z',
+    });
+
+    const update = mockState.calls.find((c) =>
+      c.sql.includes('UPDATE plan_runs'),
+    );
+    expect(update?.sql).toContain('usage_limit_resets_at = $3');
+    expect(update?.sql).toContain('usage_limit_type = $4');
+    expect(update?.params).toEqual([
+      'cli-run-1',
+      'USAGE_LIMITED',
+      '2026-11-01T17:00:00.000Z',
+      'seven_day',
+    ]);
   });
 
   it('bumpCliPlanRunHeartbeatPostgres updates last_heartbeat_at, keyed on run id', async () => {

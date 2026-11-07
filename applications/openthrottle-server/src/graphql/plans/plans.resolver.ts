@@ -250,7 +250,12 @@ function isPlanRunExecutionBackend(
 
 /** @description Terminal statuses a detached-CLI run may be settled to. */
 function isTerminalCliRunStatus(value: string): boolean {
-  return value === 'CANCELLED' || value === 'COMPLETED' || value === 'FAILED';
+  return (
+    value === 'CANCELLED' ||
+    value === 'COMPLETED' ||
+    value === 'FAILED' ||
+    value === 'USAGE_LIMITED'
+  );
 }
 
 /**
@@ -559,7 +564,7 @@ export class PlansResolver {
   }
 
   @Mutation(() => PlanRunObject, {
-    description: `Settle a detached-CLI run row (from registerCliPlanRun) on exit: set the terminal status (COMPLETED, CANCELLED, or FAILED) and clear the run-location columns. Keyed on the run id. Returns null when the row no longer exists.`,
+    description: `Settle a detached-CLI run row (from registerCliPlanRun) on exit: set the terminal status (COMPLETED, CANCELLED, FAILED, or USAGE_LIMITED) and clear the run-location columns. USAGE_LIMITED also records usageLimitResetsAt / usageLimitType. Settling USAGE_LIMITED schedules no resume: a detached CLI run has no queued job to continue, so it is re-run by hand after the reset. Keyed on the run id. Returns null when the row no longer exists.`,
     nullable: true,
   })
   async settleCliPlanRun(
@@ -570,13 +575,20 @@ export class PlansResolver {
 
     if (!isTerminalCliRunStatus(status)) {
       throw new BadRequestException(
-        `Invalid settle status: ${input.status} (expected COMPLETED, CANCELLED, or FAILED)`,
+        `Invalid settle status: ${input.status} (expected COMPLETED, CANCELLED, FAILED, or USAGE_LIMITED)`,
       );
     }
 
+    const isUsageLimited = status === 'USAGE_LIMITED';
+    const reportedLimit = {
+      resetsAt: input.usageLimitResetsAt ?? null,
+      type: input.usageLimitType ?? null,
+    };
+    const limit = isUsageLimited ? reportedLimit : null;
     const run = await this.planRunsService.settleCliRun(
       input.planRunId,
       status,
+      limit,
     );
 
     if (run != null && status === 'COMPLETED') {

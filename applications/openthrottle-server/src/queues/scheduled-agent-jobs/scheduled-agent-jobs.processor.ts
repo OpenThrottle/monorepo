@@ -329,6 +329,14 @@ export class ScheduledAgentJobsProcessor
     const signal = this.cancellation.attach(runRowId);
 
     try {
+      // Read the durable cancel marker only AFTER the abort signal is attached: a cancel that lands
+      // from here on aborts the signal, and one that landed before (while the job was moving to
+      // active, when there was no controller to abort and the queued job could not be removed) left
+      // the marker this read sees. Either way the agent never spawns for a cancelled run.
+      if (await this.finishIfCancelRequested(runRowId, scheduleId)) {
+        return;
+      }
+
       // The ladder always yields *a* path (process.cwd() last resort), so the only way to be sure the
       // run can do anything useful is to check the directory exists. Failing here — rather than
       // letting the CLI spawn in a missing/renamed directory and report an opaque driver error — is
@@ -475,6 +483,32 @@ export class ScheduledAgentJobsProcessor
       });
       this.retention.maybePruneAfterJobClose();
     }
+  }
+
+  /**
+   * @description Closes the cancel-at-claim race: when the claimed run already carries
+   * `cancel_requested_at`, finishes it `cancelled` without spawning the agent and returns true.
+   */
+  private async finishIfCancelRequested(
+    runRowId: string,
+    scheduleId: string,
+  ): Promise<boolean> {
+    const run = await this.jobsService.findRunById(runRowId);
+    if (!(run?.cancelRequestedAt instanceof Date)) {
+      return false;
+    }
+
+    this.logger.info(
+      `Scheduled agent job ${scheduleId}: run ${runRowId} was cancelled before it started; not spawning the agent.`,
+      ScheduledAgentJobsProcessor.name,
+    );
+    await this.jobsService.markRunFinished(runRowId, {
+      errorMessage: 'Run cancelled',
+      exitCode: null,
+      status: 'cancelled',
+    });
+
+    return true;
   }
 
   /**

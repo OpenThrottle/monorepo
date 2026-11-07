@@ -310,7 +310,7 @@ describe('PlanRunsService', () => {
         buildRun({ id: 'run-cli', status: 'CANCELLED' }),
       );
 
-      const result = await service.settleCliRun('run-cli', 'CANCELLED');
+      const result = await service.settleCliRun('run-cli', 'CANCELLED', null);
 
       expect(repo.update).toHaveBeenCalledWith(
         { id: 'run-cli' },
@@ -319,10 +319,52 @@ describe('PlanRunsService', () => {
       expect(result?.status).toBe('CANCELLED');
     });
 
+    it('settleCliRun records the usage limit when settling USAGE_LIMITED', async () => {
+      const resetsAt = new Date('2026-07-22T05:00:00.000Z');
+      repo.findOne.mockResolvedValueOnce(
+        buildRun({ id: 'run-cli', status: 'USAGE_LIMITED' }),
+      );
+
+      await service.settleCliRun('run-cli', 'USAGE_LIMITED', {
+        resetsAt,
+        type: 'seven_day',
+      });
+
+      expect(repo.update).toHaveBeenCalledWith(
+        { id: 'run-cli' },
+        {
+          hostname: null,
+          pid: null,
+          status: 'USAGE_LIMITED',
+          usageLimitResetsAt: resetsAt,
+          usageLimitType: 'seven_day',
+          workerId: null,
+        },
+      );
+    });
+
+    it('settleCliRun leaves the usage-limit columns alone on any other status', async () => {
+      repo.findOne.mockResolvedValueOnce(
+        buildRun({ id: 'run-cli', status: 'FAILED' }),
+      );
+
+      await service.settleCliRun('run-cli', 'FAILED', {
+        resetsAt: new Date('2026-07-22T05:00:00.000Z'),
+        type: 'seven_day',
+      });
+
+      expect(repo.update).toHaveBeenCalledWith(
+        { id: 'run-cli' },
+        { hostname: null, pid: null, status: 'FAILED', workerId: null },
+      );
+    });
+
     it('settleCliRun returns null when no row matched the id', async () => {
       repo.findOne.mockResolvedValueOnce(null);
 
-      expect(await service.settleCliRun('missing', 'COMPLETED')).toBeNull();
+      expect(
+        await service.settleCliRun('missing', 'COMPLETED', null),
+      ).toBeNull();
     });
   });
 
@@ -476,6 +518,43 @@ describe('PlanRunsService', () => {
         expect.stringContaining('NOT IN (:...exceptBullmqJobIds)'),
         { exceptBullmqJobIds: ['job-firing'] },
       );
+    });
+  });
+
+  describe('settleQueuedRunsCancelledByJobIds', () => {
+    it('settles the rows of removed jobs to CANCELLED, guarded on status QUEUED', async () => {
+      qbExecute.mockResolvedValueOnce({ affected: 1 });
+
+      const settled = await service.settleQueuedRunsCancelledByJobIds('plans', [
+        'usage-limit-resume-run-1',
+      ]);
+
+      const qb = repo.createQueryBuilder.mock.results[0]?.value;
+      expect(qb.set).toHaveBeenCalledWith({
+        hostname: null,
+        pid: null,
+        status: 'CANCELLED',
+        workerId: null,
+      });
+      expect(qb.where).toHaveBeenCalledWith('queue_name = :queueName', {
+        queueName: 'plans',
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith(
+        'bullmq_job_id IN (:...bullmqJobIds)',
+        { bullmqJobIds: ['usage-limit-resume-run-1'] },
+      );
+      // The guard keeps a row whose job already started (IN_PROGRESS) or settled untouched.
+      expect(qb.andWhere).toHaveBeenCalledWith('status = :status', {
+        status: 'QUEUED',
+      });
+      expect(settled).toBe(1);
+    });
+
+    it('writes nothing when no job was removed', async () => {
+      expect(await service.settleQueuedRunsCancelledByJobIds('plans', [])).toBe(
+        0,
+      );
+      expect(repo.createQueryBuilder).not.toHaveBeenCalled();
     });
   });
 

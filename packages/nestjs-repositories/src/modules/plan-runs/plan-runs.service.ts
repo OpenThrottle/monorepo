@@ -238,20 +238,28 @@ export class PlanRunsService {
   /**
    * @description Settles a detached-CLI run on exit, keyed on the RUN ID (not the
    * (queueName, bullmqJobId) pair, which {@link clearRunLocation} uses and which cannot address a
-   * null-job-id CLI row). Sets the terminal status (COMPLETED / CANCELLED / FAILED) and nulls the
-   * run-location columns; leaves the cancel marker intact (audit record). Returns the updated run,
-   * or null when no row matched the id.
+   * null-job-id CLI row). Sets the terminal status (COMPLETED / CANCELLED / FAILED /
+   * USAGE_LIMITED) and nulls the run-location columns; leaves the cancel marker intact (audit
+   * record). `limit` is written to `usage_limit_resets_at` / `usage_limit_type` only when the status
+   * is USAGE_LIMITED — any other status leaves those columns alone. Returns the updated run, or null
+   * when no row matched the id.
    */
   async settleCliRun(
     planRunId: string,
     status: string,
+    limit: UsageLimitSettleInput | null,
   ): Promise<PlanRun | null> {
     const repo = this.getRepository();
+    const location = { hostname: null, pid: null, status, workerId: null };
+    const isUsageLimited = status === PLAN_RUN_STATUS.USAGE_LIMITED;
+    const withLimit = {
+      ...location,
+      usageLimitResetsAt: limit?.resetsAt ?? null,
+      usageLimitType: limit?.type ?? null,
+    };
+    const update = isUsageLimited ? withLimit : location;
 
-    await repo.update(
-      { id: planRunId },
-      { hostname: null, pid: null, status, workerId: null },
-    );
+    await repo.update({ id: planRunId }, update);
 
     return repo.findOne({ where: { id: planRunId } });
   }
@@ -536,6 +544,41 @@ export class PlanRunsService {
     }
 
     const result = await query.execute();
+
+    return result.affected ?? 0;
+  }
+
+  /**
+   * @description Settles the QUEUED rows behind removed plans-queue jobs to CANCELLED — the plan_runs
+   * half of cancelling a waiting or delayed job (a usage-limit resume sits delayed for hours). Keyed
+   * on (queueName, bullmqJobId) and guarded on `status = QUEUED`: a row whose job already started
+   * (IN_PROGRESS), already settled, or is SCHEDULED (settled by
+   * {@link settleScheduledRunsCancelled}) is never touched, so a repeat call is a no-op. Returns the
+   * number of rows settled.
+   */
+  async settleQueuedRunsCancelledByJobIds(
+    queueName: string,
+    bullmqJobIds: readonly string[],
+  ): Promise<number> {
+    if (bullmqJobIds.length === 0) {
+      return 0;
+    }
+
+    const result = await this.getRepository()
+      .createQueryBuilder()
+      .update(PlanRun)
+      .set({
+        hostname: null,
+        pid: null,
+        status: PLAN_RUN_STATUS.CANCELLED,
+        workerId: null,
+      })
+      .where('queue_name = :queueName', { queueName })
+      .andWhere('bullmq_job_id IN (:...bullmqJobIds)', {
+        bullmqJobIds: [...bullmqJobIds],
+      })
+      .andWhere('status = :status', { status: PLAN_RUN_STATUS.QUEUED })
+      .execute();
 
     return result.affected ?? 0;
   }

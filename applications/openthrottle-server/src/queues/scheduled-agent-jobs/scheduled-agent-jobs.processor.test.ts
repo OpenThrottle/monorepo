@@ -448,6 +448,62 @@ describe('ScheduledAgentJobsProcessor', () => {
     });
   });
 
+  describe('cancel requested before the claim', () => {
+    it('finishes a run-now run cancelled without spawning the agent', async () => {
+      // The cancel landed while BullMQ was moving the job to active: too late to remove the job,
+      // too early for an abort controller to exist, so only the durable marker records it.
+      vi.mocked(jobsService.findRunById).mockResolvedValue(
+        createMock<ScheduledAgentJobRun>({
+          cancelRequestedAt: new Date('2026-11-01T12:00:00.000Z'),
+          id: 'run-now-9',
+          trigger: 'manual',
+        }),
+      );
+
+      await processor.process(makeJob({ runId: 'run-now-9' }));
+
+      expect(jobsService.markRunStarted).toHaveBeenCalled();
+      expect(directoryLock.acquire).not.toHaveBeenCalled();
+      expect(runner.run).not.toHaveBeenCalled();
+      expect(jobsService.markRunFinished).toHaveBeenCalledExactlyOnceWith(
+        'run-now-9',
+        { errorMessage: 'Run cancelled', exitCode: null, status: 'cancelled' },
+      );
+      expect(failureNotifier.notify).not.toHaveBeenCalled();
+      expect(cancellation.detach).toHaveBeenCalledWith('run-now-9');
+    });
+
+    it('reads the marker only after the abort signal is attached', async () => {
+      const order: string[] = [];
+      vi.mocked(cancellation.attach).mockImplementation(() => {
+        order.push('attach');
+        return new AbortController().signal;
+      });
+      vi.mocked(jobsService.findRunById).mockImplementation(async (id) => {
+        order.push(`find:${id}`);
+        return createMock<ScheduledAgentJobRun>({
+          cancelRequestedAt: null,
+          id,
+          trigger: 'manual',
+        });
+      });
+
+      await processor.process(makeJob({ runId: 'run-now-9' }));
+
+      expect(order.lastIndexOf('find:run-now-9')).toBeGreaterThan(
+        order.indexOf('attach'),
+      );
+      expect(runner.run).toHaveBeenCalledOnce();
+    });
+
+    it('runs normally when no cancel was requested', async () => {
+      await processor.process(makeJob({ model: 'opus' }));
+
+      expect(jobsService.findRunById).toHaveBeenCalledWith('run-1');
+      expect(runner.run).toHaveBeenCalledOnce();
+    });
+  });
+
   describe('resume of an inactive schedule', () => {
     const resumeRow = (): ScheduledAgentJobRun => {
       return createMock<ScheduledAgentJobRun>({

@@ -11,6 +11,7 @@ import os from 'node:os';
 
 import { resolveWorkflowAuthTokenFromEnv } from '@openthrottle/openthrottle-agentic-ralph';
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
+import type { UsageLimit } from '@openthrottle/openthrottle-drivers';
 
 import { resolveWorkflowRalphTransport } from '../config/load-workflow-ralph-config.ts';
 import {
@@ -365,17 +366,19 @@ export const readPlanRunCancelMarker = async (
 };
 
 /**
- * @description Settles a detached CLI run row on exit: terminal status (COMPLETED/CANCELLED/FAILED)
- * + cleared location columns, keyed on the run id.
+ * @description Settles a detached CLI run row on exit: terminal status
+ * (COMPLETED/CANCELLED/FAILED/USAGE_LIMITED) + cleared location columns, keyed on the run id.
+ * `limit` records the reset time and window on a USAGE_LIMITED settle; omit it otherwise.
  */
 export const settleCliPlanRun = async (
   config: WorkflowRalphConfig,
   planRunId: string,
   status: string,
+  limit: UsageLimit | null = null,
 ): Promise<void> => {
   return isPostgresTransport(config)
-    ? settleCliPlanRunPostgres(config, planRunId, status)
-    : settleCliPlanRunGraphql(planRunId, status);
+    ? settleCliPlanRunPostgres(config, planRunId, status, limit)
+    : settleCliPlanRunGraphql(planRunId, status, limit);
 };
 
 /**

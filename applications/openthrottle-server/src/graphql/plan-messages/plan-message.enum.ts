@@ -13,14 +13,12 @@ import {
 } from '@openthrottle/nestjs-repositories';
 
 registerEnumType(PLAN_MESSAGE_KIND, {
-  description:
-    'What a plan inbox message is for. STEER: a correction that overrides the task description where they conflict, delivered first at the next task boundary. QUEUE: an extra requirement for the upcoming work, delivered after STEERs. FEEDBACK: post-run reflection; recorded, never delivered.',
+  description: `What a plan inbox message is for. STEER: a correction that overrides the task description where they conflict, delivered first at the next task boundary. QUEUE: an extra requirement for the upcoming work, delivered after STEERs. FEEDBACK: post-run reflection; recorded, never delivered.`,
   name: 'PlanMessageKind',
 });
 
 registerEnumType(PLAN_MESSAGE_STATUS, {
-  description:
-    'Plan inbox message lifecycle. PENDING: waiting for the next task boundary. DELIVERED: claimed by a run (immutable). WITHDRAWN: retracted before delivery. RECORDED: FEEDBACK messages only.',
+  description: `Plan inbox message lifecycle. PENDING: waiting for the next task boundary. DELIVERED: claimed by a run (immutable). WITHDRAWN: retracted before delivery. RECORDED: FEEDBACK messages only.`,
   name: 'PlanMessageStatus',
 });
 

@@ -2659,7 +2659,7 @@ export type Mutation = {
    * @deprecated Project links now live on the repository row; use the repository-level surface.
    */
   setWorkspaceLocalRepositoryProject: WorkspaceLocalRepositoryObject;
-  /** Settle a detached-CLI run row (from registerCliPlanRun) on exit: set the terminal status (COMPLETED, CANCELLED, or FAILED) and clear the run-location columns. Keyed on the run id. Returns null when the row no longer exists. */
+  /** Settle a detached-CLI run row (from registerCliPlanRun) on exit: set the terminal status (COMPLETED, CANCELLED, FAILED, or USAGE_LIMITED) and clear the run-location columns. USAGE_LIMITED also records usageLimitResetsAt / usageLimitType. Settling USAGE_LIMITED schedules no resume: a detached CLI run has no queued job to continue, so it is re-run by hand after the reset. Keyed on the run id. Returns null when the row no longer exists. */
   settleCliPlanRun?: Maybe<PlanRunObject>;
   /** Sign out. Returns success; client is responsible for clearing the auth cookie. */
   signout: SignoutResultObject;
@@ -6031,8 +6031,12 @@ export type SettleCliPlanRunInput = {
   planRunId: Scalars['ID']['input'];
   /** Number of the PR the run opened. Recorded as a pull_request artifact on COMPLETED — it survives a rebase or amend, which the head sha does not. Optional. */
   prNumber?: InputMaybe<Scalars['Int']['input']>;
-  /** Terminal status to set: COMPLETED, CANCELLED, or FAILED. Normalized to uppercase. */
+  /** Terminal status to set: COMPLETED, CANCELLED, FAILED, or USAGE_LIMITED. Normalized to uppercase. */
   status: Scalars['String']['input'];
+  /** When the usage limit that stopped the run lifts, as reported by the agent CLI. Recorded only when status is USAGE_LIMITED; ignored otherwise. Null when the CLI reported no reset time. */
+  usageLimitResetsAt?: InputMaybe<Scalars['DateTime']['input']>;
+  /** Raw name of the usage-limit window that stopped the run (five_hour, seven_day, ...). Recorded only when status is USAGE_LIMITED; ignored otherwise. */
+  usageLimitType?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type SignoutResultObject = {

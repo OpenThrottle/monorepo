@@ -36,6 +36,7 @@ import {
   unwrapWorkflowGraphqlResult,
   WorkflowGraphqlError,
 } from '@openthrottle/openthrottle-agentic-ralph';
+import type { UsageLimit } from '@openthrottle/openthrottle-drivers';
 
 import type {
   CliPlanRunCancelMarker,
@@ -402,15 +403,22 @@ export async function readPlanRunCancelMarkerGraphql(
 
 /**
  * @description Settles a detached CLI run row on exit via the settleCliPlanRun mutation: terminal
- * status (COMPLETED/CANCELLED/FAILED) + cleared location columns. Keyed on the run id.
+ * status (COMPLETED/CANCELLED/FAILED/USAGE_LIMITED) + cleared location columns. Keyed on the run
+ * id. `limit` carries the reset time and window for a USAGE_LIMITED settle; pass null otherwise.
  */
 export async function settleCliPlanRunGraphql(
   planRunId: string,
   status: string,
+  limit: UsageLimit | null,
 ): Promise<void> {
   unwrapWorkflowGraphqlResult(
     await executeWorkflowGraphqlV2(SettleCliPlanRunDocument, {
-      input: { planRunId, status },
+      input: {
+        planRunId,
+        status,
+        usageLimitResetsAt: limit?.resetsAt ?? null,
+        usageLimitType: limit?.rateLimitType ?? null,
+      },
     }),
   );
 }
