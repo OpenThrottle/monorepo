@@ -59,11 +59,9 @@ When Ralph hits the iteration cap (e.g. `--iterations 10`) and there is still wo
 
 Implementation: see `tools/workflows/README.md` § Workflow Ralph → "Max iterations and task cleanup", and `src/bin/ralph.ts` (cleanup before `MESSAGE_COMPLETED` and `process.exit(0)`). Plan: `970aecc7-c647-4948-aa20-410e1bd090fc`.
 
-## A run that can't progress ends BLOCKED (queued orchestrator)
+## A run that can't progress ends BLOCKED
 
-The queued orchestrator (`@openthrottle/openthrottle-agentic-ralph`, the default for `enqueuePlanRun`) applies one rule: **a run that can make no further progress ends the plan `BLOCKED`**, still pushes, and opens a draft PR listing what is blocked or pending. That covers both "only `BLOCKED` tasks left" (`workflow_tasks_blocked`, no agent iteration spent) and the iteration or time limit hit with work pending. A human unblocks the plan and re-enqueues it; nothing re-queues a `BLOCKED` plan automatically. Finished reasons and the workable-vs-remaining split: [`packages/openthrottle-agentic-ralph/README.md` § How a run ends](../../packages/openthrottle-agentic-ralph/README.md#how-a-run-ends). Plan: `d08a979b-dd25-4659-860f-c80f0819fb17`.
-
-The local `workflow-ralph` CLI loop above predates this rule: it still counts `BLOCKED` as remaining and exits on the iteration cap without setting a plan status.
+Both the local `workflow-ralph` CLI and the queued orchestrator (`@openthrottle/openthrottle-agentic-ralph`, the default for `enqueuePlanRun`) apply one rule: **a run that can make no further progress ends the plan `BLOCKED`**. That covers both "only `BLOCKED` tasks left" (no agent iteration spent) and the iteration or time limit hit with work pending. Both surfaces reuse `isRunnableRalphTask` / `isWorkableRalphTask` for the remaining-vs-workable split. The orchestrator still pushes and opens a draft PR listing what is blocked or pending; the CLI settles the plan status only (finalize stays out of scope). A human unblocks the plan and re-enqueues or re-runs it; nothing re-queues a `BLOCKED` plan automatically. Finished reasons: [`packages/openthrottle-agentic-ralph/README.md` § How a run ends](../../packages/openthrottle-agentic-ralph/README.md#how-a-run-ends). Plans: `d08a979b-dd25-4659-860f-c80f0819fb17`, `0b62970b-4e8c-4188-9960-48da1cd64380`.
 
 ## Limiting factors (plan status)
 

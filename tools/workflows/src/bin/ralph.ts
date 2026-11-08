@@ -4,7 +4,12 @@
  * Ralph: agentic plan/task runner. Single flow (OpenThrottle required); see main() for steps.
  */
 
-import { isRalphTerminalStatus } from '@openthrottle/openthrottle-agentic-ralph';
+import {
+  isRalphTerminalStatus,
+  isRunnableRalphTask,
+  isWorkableRalphTask,
+  pickRalphTaskForIteration,
+} from '@openthrottle/openthrottle-agentic-ralph';
 import { resolveGitBranchFromCwd } from '@openthrottle/openthrottle-agentic-utils';
 import type { UsageLimit } from '@openthrottle/openthrottle-drivers';
 
@@ -24,7 +29,6 @@ import {
   maybeRegisterPlanRunWorktreeCheckout,
   RALPH_WORKFLOW_FATAL_PREFIX,
   readPlanRunCancelMarker,
-  reconcilePlanCompletionIfAllTasksTerminal,
   registerCliPlanRun,
   settleCliPlanRun,
   updatePlanStatus,
@@ -70,8 +74,9 @@ let settleActiveCliRunOnFatal: ((status: string) => Promise<void>) | null =
  * Exit conditions (order of checks):
  * - Plan already COMPLETED, PROMOTED, or SKIPPED at start → log and exit(0); agent not run.
  * - Plan-centric and no remaining tasks (start of iteration) → set plan COMPLETED, log, exit(0); agent not run for that iteration.
+ * - Plan-centric and remaining but none workable (only BLOCKED) → set plan BLOCKED, log titles, exit(0); agent not run.
  * - parseRalphResponse: ERROR or INPUT_REQUIRED in agent output → exit(1); COMPLETE → exit(0).
- * - Loop end (max iterations reached without early exit): before exit(0), set the current task (if any) back to PENDING so the next run can resume it; then log and exit(0). See README "Max iterations and task cleanup".
+ * - Loop end (max iterations reached without early exit): before exit(0), set the current task (if any) back to PENDING so the next run can resume it; then re-read tasks and set the plan COMPLETED (nothing remaining) or BLOCKED (work still pending). See README "Max iterations and task cleanup".
  */
 export const main = async (): Promise<void> => {
   let parsedArgs: RalphArgs;
@@ -415,9 +420,7 @@ export const main = async (): Promise<void> => {
         openthrottleConfig,
         effectivePlanId,
       );
-      const remaining = planTasks.filter((t) =>
-        ['PENDING', 'QUEUED', 'IN_PROGRESS', 'BLOCKED'].includes(t.status),
-      );
+      const remaining = planTasks.filter(isRunnableRalphTask);
 
       if (remaining.length === 0) {
         // eslint-disable-next-line no-await-in-loop
@@ -435,10 +438,24 @@ export const main = async (): Promise<void> => {
         process.exit(0);
       }
 
-      const firstInProgress = remaining.find((t) => t.status === 'IN_PROGRESS');
-      const taskForIteration =
-        firstInProgress ??
-        remaining.find((t) => ['QUEUED', 'PENDING'].includes(t.status));
+      const workable = remaining.filter(isWorkableRalphTask);
+
+      if (workable.length === 0) {
+        const blockedTitles = remaining.map((blockedTask) => blockedTask.title);
+        const titles = blockedTitles.map((title) => `"${title}"`).join(', ');
+
+        // eslint-disable-next-line no-await-in-loop
+        await updatePlanStatus(openthrottleConfig, effectivePlanId, 'BLOCKED');
+        // eslint-disable-next-line no-await-in-loop
+        await settleCliRunSafely('COMPLETED');
+        console.log(
+          ` - 📋 Plan ${COLORS.green}${effectivePlanId}${COLORS.reset} has only BLOCKED tasks left (${blockedTitles.length}): ${titles}. Unblock them and re-run to continue.`,
+        );
+        console.log(ARTWORK_THANK_YOU);
+        process.exit(0);
+      }
+
+      const taskForIteration = pickRalphTaskForIteration(workable);
 
       if (taskForIteration) {
         firstPendingForIteration = taskForIteration.id;
@@ -692,20 +709,35 @@ export const main = async (): Promise<void> => {
     }
   }
 
-  // Terminal reconcile: on this clean exit path (loop finished / max iterations),
-  // re-fetch tasks and, if all are COMPLETED/PROMOTED/SKIPPED, flip the plan to COMPLETED so
-  // it is never stranded IN_PROGRESS. When the last task was just reset to PENDING
-  // above, the set is no longer terminal and this is a no-op. Plan-centric only;
-  // task-centric runs do not own the plan lifecycle.
+  // Terminal settle after the iteration cap (plan-centric only): re-read tasks and set the
+  // plan COMPLETED when nothing remains, or BLOCKED when work is still pending — never leave
+  // the plan stranded IN_PROGRESS. Matches the orchestrator's settlePlanAtRunLimit.
   if (!task) {
     try {
-      const reconciled = await reconcilePlanCompletionIfAllTasksTerminal(
+      const planTasksAfterCap = await getTasksByPlanId(
         openthrottleConfig,
         effectivePlanId,
       );
-      if (reconciled) {
+      const remainingAfterCap = planTasksAfterCap.filter(isRunnableRalphTask);
+
+      if (remainingAfterCap.length === 0) {
+        await updatePlanStatus(
+          openthrottleConfig,
+          effectivePlanId,
+          'COMPLETED',
+        );
         console.log(
           ` - 📋 All tasks for plan ${COLORS.green}${effectivePlanId}${COLORS.reset} are terminal; marked the plan COMPLETED.`,
+        );
+      } else {
+        const blockedCount = remainingAfterCap.filter((planTask) => {
+          return planTask.status === 'BLOCKED';
+        }).length;
+        const pendingCount = remainingAfterCap.length - blockedCount;
+
+        await updatePlanStatus(openthrottleConfig, effectivePlanId, 'BLOCKED');
+        console.log(
+          ` - 📋 Max iterations reached; ${pendingCount} task(s) still pending, ${blockedCount} blocked. Marked plan ${COLORS.green}${effectivePlanId}${COLORS.reset} BLOCKED.`,
         );
       }
     } catch (error) {
@@ -713,7 +745,7 @@ export const main = async (): Promise<void> => {
       const message = isError ? error.message : String(error);
 
       console.warn(
-        `⚠️ Could not reconcile plan ${effectivePlanId} completion: ${message}`,
+        `⚠️ Could not settle plan ${effectivePlanId} after max iterations: ${message}`,
       );
     }
   }
