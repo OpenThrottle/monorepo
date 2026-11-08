@@ -211,6 +211,22 @@ export class DeletePlanInput {
 }
 
 @InputType()
+export class ReschedulePlanRunInput {
+  @Field(() => ID, { description: 'Plan id the scheduled run belongs to.' })
+  planId!: string;
+
+  @Field(() => ID, {
+    description: `plan_runs id of the SCHEDULED run to move. Any other status is rejected.`,
+  })
+  planRunId!: string;
+
+  @Field(() => Date, {
+    description: `The new absolute instant the run fires at: in the future and within 30 days (SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS), the same rule as schedulePlanRun.`,
+  })
+  scheduledFor!: Date;
+}
+
+@InputType()
 export class CancelPlanRunInput {
   @Field(() => ID, {
     description: `Plan id whose in-queue run-plan (Ralph) job should be cancelled`,
@@ -438,6 +454,12 @@ export class EnqueuePlanRalphOrchestratorInput {
 
 @InputType()
 export class PlanRunsByPlanIdInput {
+  @Field(() => Boolean, {
+    description: `When true, every SCHEDULED run of the plan is returned however old its row is, and limit caps only the runs that are not SCHEDULED. Rows stay newest createdAt first, so the first row is then not necessarily the newest run. Default false: limit caps every run.`,
+    nullable: true,
+  })
+  includeAllScheduled?: boolean | null;
+
   @Field(() => Int, {
     description: `Max plan-run audit rows to return, newest first.`,
     nullable: true,

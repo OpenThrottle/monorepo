@@ -44,8 +44,10 @@ describe('PlanEnqueueService', () => {
     .fn()
     .mockResolvedValue([{ id: 'job-1', name: 'run-plan' }]);
 
+  const mockGetJob = vi.fn().mockResolvedValue(undefined);
   const mockPlansQueue = createMock<Queue<RunPlanJobData, void>>({
     add: mockAdd,
+    getJob: mockGetJob,
     getJobs: mockGetJobs,
     getWaitingCount: mockGetWaitingCount,
   });
@@ -122,10 +124,14 @@ describe('PlanEnqueueService', () => {
   const mockFindByQueueNameAndBullmqJobId = vi.fn().mockResolvedValue(null);
   const mockHasActiveRun = vi.fn().mockResolvedValue(false);
   const mockTransitionScheduledRun = vi.fn().mockResolvedValue(true);
+  const mockFindRunById = vi.fn().mockResolvedValue(null);
+  const mockRescheduleScheduledRun = vi.fn().mockResolvedValue(true);
   const mockPlanRunsService = createMock<PlanRunsService>({
+    findById: mockFindRunById,
     findByQueueNameAndBullmqJobId: mockFindByQueueNameAndBullmqJobId,
     hasActiveRun: mockHasActiveRun,
     recordQueuedRun: mockRecordQueuedRun,
+    rescheduleScheduledRun: mockRescheduleScheduledRun,
     transitionScheduledRun: mockTransitionScheduledRun,
   });
 
@@ -1255,12 +1261,14 @@ describe('PlanEnqueueService', () => {
     };
     const fire = (
       now: Date = NOW,
+      workspaceError: string | null = null,
     ): ReturnType<PlanEnqueueService['fireScheduledRun']> => {
       return service.fireScheduledRun({
         ...actor,
         now,
         planId: mockPlan.id,
         planRunId: 'run-scheduled',
+        workspaceError,
       });
     };
     const expectNoPlanOrTaskWrites = (): void => {
@@ -1436,6 +1444,27 @@ describe('PlanEnqueueService', () => {
       expect(mockReconcileAfterScheduledRunSettled).not.toHaveBeenCalled();
     });
 
+    test('a missing workspace settles the run FAILED with no plan or task write', async () => {
+      taskRepo.count.mockResolvedValue(2);
+
+      const outcome = await fire(
+        NOW,
+        'workingDirectory does not exist: /gone/worktree',
+      );
+
+      expect(outcome).toEqual({
+        kind: 'workspace_missing',
+        reason: 'workingDirectory does not exist: /gone/worktree',
+      });
+      expect(mockTransitionScheduledRun).toHaveBeenCalledWith(
+        'run-scheduled',
+        'FAILED',
+        expect.anything(),
+        'workingDirectory does not exist: /gone/worktree',
+      );
+      expectNoPlanOrTaskWrites();
+    });
+
     test('a COMPLETED plan that still has runnable tasks fires like "Run now": the plan goes QUEUED', async () => {
       const completedPlan = { ...mockPlan, status: 'COMPLETED' };
       repo.findOne.mockResolvedValue(completedPlan);
@@ -1481,6 +1510,151 @@ describe('PlanEnqueueService', () => {
 
       expect(outcome).toEqual({ kind: 'not_scheduled' });
       expect(mockTransitionScheduledRun).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('reschedulePlanRun', () => {
+    const NOW = new Date('2026-11-01T12:00:00.000Z');
+    const LATER = new Date('2026-11-02T09:00:00.000Z');
+    const DELAY_MS = LATER.getTime() - NOW.getTime();
+    const scheduledRun = (overrides: Partial<PlanRun> = {}): PlanRun => {
+      return createMock<PlanRun>({
+        bullmqJobId: 'scheduled-plan-run-x',
+        executionBackend: 'claude',
+        id: 'run-scheduled',
+        planId: mockPlan.id,
+        scheduledFor: new Date('2026-11-01T18:00:00.000Z'),
+        status: 'SCHEDULED',
+        ...overrides,
+      });
+    };
+    const reschedule = (
+      scheduledFor: Date = LATER,
+    ): ReturnType<PlanEnqueueService['reschedulePlanRun']> => {
+      return service.reschedulePlanRun({
+        planId: mockPlan.id,
+        planRunId: 'run-scheduled',
+        scheduledFor,
+      });
+    };
+
+    beforeEach(() => {
+      vi.useFakeTimers();
+      vi.setSystemTime(NOW);
+      mockFindRunById.mockReset();
+      mockGetJob.mockReset();
+      mockRescheduleScheduledRun.mockReset().mockResolvedValue(true);
+      mockEnqueuePlanRalphOrchestrator.mockClear();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    test('re-delays the job first, then moves the row under the SCHEDULED guard', async () => {
+      const changeDelay = vi.fn().mockResolvedValue(undefined);
+      mockFindRunById.mockResolvedValue(scheduledRun());
+      mockGetJob.mockResolvedValue({
+        changeDelay,
+        getState: vi.fn().mockResolvedValue('delayed'),
+      });
+
+      const outcome = await reschedule();
+
+      expect(changeDelay).toHaveBeenCalledWith(DELAY_MS);
+      expect(mockRescheduleScheduledRun).toHaveBeenCalledWith(
+        'run-scheduled',
+        LATER,
+      );
+      const [delayOrder] = changeDelay.mock.invocationCallOrder;
+      const [rowOrder] = mockRescheduleScheduledRun.mock.invocationCallOrder;
+      expect(delayOrder).toBeLessThan(rowOrder ?? 0);
+      expect(outcome).toEqual({
+        executionBackend: 'claude',
+        jobId: 'scheduled-plan-run-x',
+        planId: mockPlan.id,
+        planRunId: 'run-scheduled',
+        scheduledFor: LATER,
+      });
+    });
+
+    test('recreates a job lost from Redis with the new delay', async () => {
+      const jobData = buildRunPlanOrchestratorJobData({
+        mode: null,
+        planId: mockPlan.id,
+        ralph: { backend: 'claude', iterations: 4 },
+        taskId: null,
+        workingDirectory: null,
+      });
+      mockFindRunById.mockResolvedValue(
+        scheduledRun({
+          runConfigSnapshot: buildPlanRunConfigSnapshotFromJobData(jobData),
+        }),
+      );
+      mockGetJob.mockResolvedValue(undefined);
+      mockEnqueuePlanRalphOrchestrator.mockResolvedValueOnce({
+        jobId: 'scheduled-plan-run-x',
+      });
+
+      await reschedule();
+
+      expect(mockEnqueuePlanRalphOrchestrator).toHaveBeenCalledWith(
+        expect.objectContaining({
+          delayMs: DELAY_MS,
+          idempotencyKey: 'scheduled-plan-run-x',
+        }),
+      );
+      expect(mockRescheduleScheduledRun).toHaveBeenCalledTimes(1);
+    });
+
+    test('rejects a job a worker already took, without moving the row', async () => {
+      const changeDelay = vi.fn();
+      mockFindRunById.mockResolvedValue(scheduledRun());
+      mockGetJob.mockResolvedValue({
+        changeDelay,
+        getState: vi.fn().mockResolvedValue('active'),
+      });
+
+      await expect(reschedule()).rejects.toThrow(/already starting/);
+      expect(changeDelay).not.toHaveBeenCalled();
+      expect(mockRescheduleScheduledRun).not.toHaveBeenCalled();
+    });
+
+    test.each(['QUEUED', 'IN_PROGRESS', 'CANCELLED', 'MISSED'])(
+      'rejects a %s run',
+      async (status) => {
+        mockFindRunById.mockResolvedValue(scheduledRun({ status }));
+
+        await expect(reschedule()).rejects.toThrow(/not SCHEDULED/);
+        expect(mockGetJob).not.toHaveBeenCalled();
+      },
+    );
+
+    test('rejects a run of another plan', async () => {
+      mockFindRunById.mockResolvedValue(scheduledRun({ planId: 'other' }));
+
+      await expect(reschedule()).rejects.toThrow(/not found/);
+    });
+
+    test('applies the scheduling rule to the new instant (past, beyond the horizon)', async () => {
+      await expect(reschedule(new Date(NOW.getTime() - 1))).rejects.toThrow(
+        /in the future/,
+      );
+      await expect(
+        reschedule(new Date(NOW.getTime() + 31 * 24 * 60 * 60 * 1_000)),
+      ).rejects.toThrow(/within 30 days/);
+      expect(mockFindRunById).not.toHaveBeenCalled();
+    });
+
+    test('reports a run cancelled while it was being rescheduled', async () => {
+      mockFindRunById.mockResolvedValue(scheduledRun());
+      mockGetJob.mockResolvedValue({
+        changeDelay: vi.fn().mockResolvedValue(undefined),
+        getState: vi.fn().mockResolvedValue('delayed'),
+      });
+      mockRescheduleScheduledRun.mockResolvedValue(false);
+
+      await expect(reschedule()).rejects.toThrow(/cancelled or started/);
     });
   });
 

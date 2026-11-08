@@ -103,6 +103,11 @@ export const buildWorkflowRalphOptionArgs = (
     }
   }
 
+  const effort = input.effort.trim();
+  if (effort !== '') {
+    args.push('--effort', effort);
+  }
+
   if (input.iterations !== DEFAULT_RALPH_ITERATIONS) {
     args.push('--iterations', String(input.iterations));
   }

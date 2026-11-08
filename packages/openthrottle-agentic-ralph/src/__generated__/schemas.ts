@@ -134,6 +134,7 @@ import {
   ReorderPlanTasksInput,
   RepeatableJobsInput,
   ReplaceAgentTrajectoryInput,
+  ReschedulePlanRunInput,
   RetryJobInput,
   ReviewCycleTimeInput,
   RolloutEvaluationReason,
@@ -1119,6 +1120,7 @@ export function PlanRunsByPlanIdInputSchema(): z.ZodObject<
   Properties<PlanRunsByPlanIdInput>
 > {
   return z.object({
+    includeAllScheduled: z.boolean().nullish(),
     limit: z.number().nullish(),
     planId: z.string().min(1),
   });
@@ -1586,6 +1588,16 @@ export function ReplaceAgentTrajectoryInputSchema(): z.ZodObject<
     outcome: z.string().nullish(),
     planRunId: z.string().min(1),
     trajectoryJson: z.string().min(1),
+  });
+}
+
+export function ReschedulePlanRunInputSchema(): z.ZodObject<
+  Properties<ReschedulePlanRunInput>
+> {
+  return z.object({
+    planId: z.string().min(1),
+    planRunId: z.string().min(1),
+    scheduledFor: definedNonNullAnySchema,
   });
 }
 

@@ -1,3 +1,8 @@
+import type { ConversationReasoningEffort } from '@openthrottle/openthrottle-agentic-utils';
+import {
+  CONVERSATION_REASONING_EFFORTS,
+  toConversationReasoningEffort,
+} from '@openthrottle/openthrottle-agentic-utils';
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 
 import { COLORS } from '../config/index';
@@ -126,6 +131,11 @@ export interface RalphArgs {
    * (no per-iteration switching). Default: Cursor `cursor-agent`.
    */
   backend: WorkflowConfigRunner;
+  /**
+   * Reasoning effort from `--effort <level>` (CONVERSATION_REASONING_EFFORTS vocabulary). CLI-only:
+   * no env or config-file layer. Forwarded to the driver, which maps it per backend.
+   */
+  effort: ConversationReasoningEffort | undefined;
   /** Optional per-iteration timeout in ms (non-interactive only). When set, the runner process is killed after this duration. */
   iterationTimeoutMs: number | undefined;
   iterations: number;
@@ -185,6 +195,7 @@ export const parseRalphArgs = (): RalphArgs => {
   const seed = mergeRalphRuntimeSeed(cwd);
   const parsed: Partial<RalphArgs> = {
     backend: seed.backend,
+    effort: undefined,
     iterationTimeoutMs: seed.iterationTimeoutMs,
     iterations: seed.iterations,
     model: seed.model,
@@ -259,6 +270,19 @@ export const parseRalphArgs = (): RalphArgs => {
       } else {
         cliDebug = 'verbose';
       }
+    } else if (arg === '--effort') {
+      const raw = args[i + 1];
+      const effort = toConversationReasoningEffort(raw);
+      if (effort === undefined) {
+        const allowed = Object.values(CONVERSATION_REASONING_EFFORTS).join(
+          ', ',
+        );
+        const message = `--effort must be one of: ${allowed}; got "${raw ?? ''}"`;
+        throw new Error(message);
+      }
+
+      parsed.effort = effort;
+      i++;
     } else if (arg === '--iterations' && i + 1 < args.length) {
       const value = parseInt(args[i + 1] ?? '', 10);
       if (isNaN(value) || value < 1) {
@@ -422,6 +446,7 @@ export const parseRalphArgs = (): RalphArgs => {
 
   const result: RalphArgs = {
     backend: parsed.backend ?? 'cursor',
+    effort: parsed.effort,
     iterationTimeoutMs: parsed.iterationTimeoutMs,
     iterations: parsed.iterations ?? DEFAULT_RALPH_ITERATIONS,
     model: parsed.model,

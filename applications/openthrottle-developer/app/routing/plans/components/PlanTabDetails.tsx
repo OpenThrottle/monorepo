@@ -9,6 +9,7 @@ import * as React from 'react';
 import { PlanDeferredSection } from '~/routing/plans/components/PlanDeferredSection';
 import { PlanLifecycleHooksSection } from '~/routing/plans/components/PlanLifecycleHooksSection';
 import { PlanRunTransparencySkeleton } from '~/routing/plans/components/PlanRunTransparencySkeleton';
+import { PlanScheduledRunsCard } from '~/routing/plans/components/PlanScheduledRunsCard';
 import { PlanWorkflowRunTransparency } from '~/routing/plans/components/PlanWorkflowRunTransparency';
 import {
   workflowRalphRunOptionsAtom,
@@ -40,6 +41,12 @@ export const PlanTabDetails = (
 
   // Setup
   const hasSummary = plan?.summary != null && plan.summary !== '';
+  const scheduledRunAt =
+    typeof plan?.scheduledRunAt === 'string' ? plan.scheduledRunAt : null;
+  const scheduledRun = {
+    scheduledRunAt,
+    scheduledRunId: plan?.scheduledRunId ?? null,
+  };
   const requirements = React.useMemo(() => {
     return tasks
       .map((task) => JSON.parse(task.requirementsJson))
@@ -108,6 +115,25 @@ export const PlanTabDetails = (
           )}
         </div>
 
+        {/* Scheduled runs are pending work the user can act on, so they show
+            without the preview flag; the full Runs card below already
+            includes them when the flag is on. */}
+        {!FEATURE_CHARLIE_PREVIEW && (
+          <PlanDeferredSection
+            errorText={PLAN_DEFERRED_SECTION_COPY.runHistoryError}
+            fallback={null}
+            resolve={runHistory}
+          >
+            {(history) => (
+              <PlanScheduledRunsCard
+                planId={plan.id}
+                planRunAuditRows={history.planRunAuditRows}
+                scheduledRun={scheduledRun}
+              />
+            )}
+          </PlanDeferredSection>
+        )}
+
         {FEATURE_CHARLIE_PREVIEW && (
           <>
             <div className="bg-card border-card-border rounded-lg border p-4 md:p-8">
@@ -131,12 +157,8 @@ export const PlanTabDetails = (
                   planId={plan.id}
                   planRunAuditRows={history.planRunAuditRows}
                   planRunMetrics={history.planRunMetrics}
-                  scheduledRunAt={
-                    typeof plan.scheduledRunAt === 'string'
-                      ? plan.scheduledRunAt
-                      : null
-                  }
-                  scheduledRunId={plan.scheduledRunId ?? null}
+                  scheduledRunAt={scheduledRun.scheduledRunAt}
+                  scheduledRunId={scheduledRun.scheduledRunId}
                   workflowInput={workflowInput}
                   workflowTimeout={workflowTimeout}
                   workingDirectory={workingDirectory ?? ''}

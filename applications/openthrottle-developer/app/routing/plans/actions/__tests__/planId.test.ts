@@ -19,6 +19,7 @@ const {
   PlanDetailAddHookDocument,
   PlanDetailDetachHookDocument,
   PlanDetailEnqueuePlanRunDocument,
+  PlanDetailReschedulePlanRunDocument,
   PlanDetailSetPlanStatusDocument,
   PlanDetailUpdatePlanRunConfigDocument,
   PlanDetailUpdateTaskDocument,
@@ -26,6 +27,7 @@ const {
 const {
   addPlanTag,
   removePlanTag,
+  reschedulePlanRun,
   addHook,
   detachHook,
   runPlan,
@@ -339,5 +341,86 @@ describe('plans/actions/planId status + config parsers', () => {
       PlanDetailEnqueuePlanRunDocument,
       { input: { branch: 'main', planId: 'plan-1', priority: 1 } },
     );
+  });
+});
+
+describe('plans/actions/planId reschedulePlanRun', () => {
+  beforeEach(() => {
+    mockExecute.mockReset();
+  });
+
+  test('forwards the planId, planRunId and normalized instant, returning the payload', async () => {
+    const payload = {
+      jobId: 'job-1',
+      planId: 'plan-1',
+      planRunId: 'run-9',
+      scheduledFor: '2026-11-10T15:00:00.000Z',
+    };
+    mockExecute.mockResolvedValue(
+      asMock<Awaited<ReturnType<typeof executeGraphqlWithAuth>>>({
+        reschedulePlanRun: payload,
+      }),
+    );
+
+    const result = await reschedulePlanRun(
+      actionArgs(),
+      'plan-1',
+      form({
+        planRunId: 'run-9',
+        scheduledFor: '2026-11-10T15:00:00Z',
+      }),
+    );
+
+    expect(result).toEqual({ reschedulePlanRun: payload });
+    expect(mockExecute).toHaveBeenCalledWith(
+      expect.anything(),
+      PlanDetailReschedulePlanRunDocument,
+      {
+        input: {
+          planId: 'plan-1',
+          planRunId: 'run-9',
+          scheduledFor: '2026-11-10T15:00:00.000Z',
+        },
+      },
+    );
+  });
+
+  test('rejects a missing planRunId without calling the server', async () => {
+    const result = await reschedulePlanRun(
+      actionArgs(),
+      'plan-1',
+      form({ scheduledFor: '2026-11-10T15:00:00Z' }),
+    );
+
+    expect(result).toEqual({ reschedulePlanRunError: expect.any(String) });
+    expect(mockExecute).not.toHaveBeenCalled();
+  });
+
+  test.each([[''], ['not-a-date']])(
+    'rejects scheduledFor %j without calling the server',
+    async (scheduledFor) => {
+      const result = await reschedulePlanRun(
+        actionArgs(),
+        'plan-1',
+        form({ planRunId: 'run-9', scheduledFor }),
+      );
+
+      expect(result).toEqual({ reschedulePlanRunError: expect.any(String) });
+      expect(mockExecute).not.toHaveBeenCalled();
+    },
+  );
+
+  test('forwards the server message as reschedulePlanRunError', async () => {
+    mockExecute.mockRejectedValue(new Error('Run is already starting.'));
+
+    const result = await reschedulePlanRun(
+      actionArgs(),
+      'plan-1',
+      form({ planRunId: 'run-9', scheduledFor: '2026-11-10T15:00:00Z' }),
+    );
+
+    expect(result).toEqual({
+      reschedulePlanRunError: 'Run is already starting.',
+    });
   });
 });

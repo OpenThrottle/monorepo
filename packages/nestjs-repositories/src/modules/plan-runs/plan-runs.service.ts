@@ -376,6 +376,37 @@ export class PlanRunsService {
   }
 
   /**
+   * @description Run history for the plan-detail UI: the newest `limit` runs that are NOT SCHEDULED,
+   * plus every SCHEDULED run (at most `scheduledLimit`) however old its row is, all newest
+   * `createdAt` first. A scheduled run is pending work the user can act on, so it must not fall out
+   * of a newest-N window behind the runs created after it. Unlike {@link findRecentByPlanId}, `[0]`
+   * is therefore not "the newest run" — callers that read the head row keep using that method.
+   */
+  async findRunHistoryByPlanId(
+    planId: string,
+    limit: number,
+    scheduledLimit: number,
+  ): Promise<PlanRun[]> {
+    const repo = this.getRepository();
+    const [settledOrLive, scheduled] = await Promise.all([
+      repo.find({
+        order: { createdAt: 'DESC' },
+        take: limit,
+        where: { planId, status: Not(PLAN_RUN_STATUS.SCHEDULED) },
+      }),
+      repo.find({
+        order: { scheduledFor: 'ASC' },
+        take: scheduledLimit,
+        where: { planId, status: PLAN_RUN_STATUS.SCHEDULED },
+      }),
+    ]);
+
+    return [...settledOrLive, ...scheduled].sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+    );
+  }
+
+  /**
    * @description Stamps run-location columns when a worker picks up the job (alongside
    * PlanRunCancellationService.attach), in the SAME update as the IN_PROGRESS status write — a row
    * that is located-but-still-QUEUED, even briefly, is the bug this claim exists to close (a crash
@@ -436,6 +467,32 @@ export class PlanRunsService {
     );
 
     return repo.findOne({ where: { bullmqJobId, queueName } });
+  }
+
+  /**
+   * @description {@link PlanRunsService.settleRunByJob}, guarded: only a row still in
+   * {@link PLAN_RUN_STARTABLE_STATUSES} (QUEUED / IN_PROGRESS) is written, so a row something else
+   * already settled — a cancel, the fire-time policy (MISSED / SUPERSEDED), the stale sweeper — or a
+   * SCHEDULED row that never claimed is left exactly as it is. Nulls the run-location columns in the
+   * same update. Returns whether a row was written.
+   */
+  async settleUnsettledRunByJob(
+    queueName: string,
+    bullmqJobId: string,
+    status: PlanRunStatus,
+  ): Promise<boolean> {
+    const result = await this.getRepository()
+      .createQueryBuilder()
+      .update(PlanRun)
+      .set({ hostname: null, pid: null, status, workerId: null })
+      .where('bullmq_job_id = :bullmqJobId', { bullmqJobId })
+      .andWhere('queue_name = :queueName', { queueName })
+      .andWhere('status IN (:...startableStatuses)', {
+        startableStatuses: [...PLAN_RUN_STARTABLE_STATUSES],
+      })
+      .execute();
+
+    return (result.affected ?? 0) > 0;
   }
 
   /**
@@ -503,6 +560,26 @@ export class PlanRunsService {
         status: PLAN_RUN_STATUS.CANCELLED,
         workerId: null,
       })
+      .where('id = :planRunId', { planRunId })
+      .andWhere('status = :status', { status: PLAN_RUN_STATUS.SCHEDULED })
+      .execute();
+
+    return (result.affected ?? 0) > 0;
+  }
+
+  /**
+   * @description Moves a SCHEDULED run's fire time — the plan_runs half of rescheduling it in place
+   * (the caller re-delays the BullMQ job first). Guarded on `status = SCHEDULED`, so a run that fired,
+   * was cancelled or otherwise settled meanwhile is never rewritten. Returns whether this call won.
+   */
+  async rescheduleScheduledRun(
+    planRunId: string,
+    scheduledFor: Date,
+  ): Promise<boolean> {
+    const result = await this.getRepository()
+      .createQueryBuilder()
+      .update(PlanRun)
+      .set({ scheduledFor })
       .where('id = :planRunId', { planRunId })
       .andWhere('status = :status', { status: PLAN_RUN_STATUS.SCHEDULED })
       .execute();

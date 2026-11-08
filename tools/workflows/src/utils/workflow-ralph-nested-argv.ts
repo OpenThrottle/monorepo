@@ -32,11 +32,11 @@ export interface RalphNestedRunTuningInput {
   readonly backend?: WorkflowConfigRunner | null;
   readonly debug?: WorkflowConfigDebug;
   /**
-   * Reasoning-effort level (chat vocabulary). Carried on job data and the run snapshot, and consumed
-   * by the in-process orchestrator, which forwards it to the agent CLI driver; deliberately NOT turned
-   * into a nested `workflow-ralph` argv flag by {@link buildWorkflowRalphRunTuningArgv}.
+   * Reasoning-effort level (chat vocabulary). Carried on job data and the run snapshot; emitted as
+   * `--effort <level>` by {@link buildWorkflowRalphRunTuningArgv} so a nested CLI run forwards it to
+   * the agent CLI driver. Empty/omitted emits nothing.
    */
-  readonly effort?: ConversationReasoningEffort;
+  readonly effort?: ConversationReasoningEffort | '';
   readonly iterationTimeoutSeconds?: number | null;
   readonly iterations?: number | null;
   readonly model?: string;
@@ -88,6 +88,10 @@ export const buildWorkflowRalphRunTuningArgv = (
     input.backend !== 'cursor'
   ) {
     ralphArgs.push('--backend', input.backend);
+  }
+
+  if (input.effort !== undefined && input.effort !== '') {
+    ralphArgs.push('--effort', input.effort);
   }
 
   const promptFile = input.promptFile?.trim();

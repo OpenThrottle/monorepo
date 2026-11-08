@@ -81,6 +81,7 @@ vi.mock('../../utils/parsers', async (importOriginal) => {
     ...actual,
     parseRalphArgs: vi.fn(() => ({
       backend: 'cursor',
+      effort: undefined,
       iterationTimeoutMs: undefined,
       iterations: 2,
       model: 'auto',
@@ -183,6 +184,7 @@ describe('Ralph main (OpenThrottle before NX project graph)', () => {
     );
     vi.mocked(parsers.parseRalphArgs).mockReturnValue({
       backend: 'cursor',
+      effort: undefined,
       iterationTimeoutMs: undefined,
       iterations: 1,
       model: 'auto',
@@ -243,6 +245,7 @@ describe('Ralph main (OpenThrottle before NX project graph)', () => {
     );
     vi.mocked(parsers.parseRalphArgs).mockReturnValue({
       backend: 'cursor',
+      effort: undefined,
       iterationTimeoutMs: undefined,
       iterations: 1,
       model: 'auto',

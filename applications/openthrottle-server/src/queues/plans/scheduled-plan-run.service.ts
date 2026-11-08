@@ -10,6 +10,7 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import type { Queue } from 'bullmq';
 
+import { validateWorkingDirectory } from '../../graphql/plans/enqueue-plan-ralph-tuning.ts';
 import { PlanEnqueueService } from '../../graphql/plans/plan-enqueue/plan-enqueue.service.ts';
 import type { ScheduledRunFireOutcome } from '../../graphql/plans/plan-enqueue/plan-enqueue.types.ts';
 import { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account.service.ts';
@@ -32,6 +33,23 @@ type ScheduledRunReconcileResult =
 
 const describeError = (error: unknown): string => {
   return error instanceof Error ? error.message : String(error);
+};
+
+/**
+ * @description Re-runs the schedule-time working-directory validation at fire time and returns why
+ * the directory is unusable, or null when it is usable or unset (the worker's default cwd). A
+ * scheduled run's worktree can be removed — and its checkout row pruned — while the run waits.
+ */
+const describeWorkspaceError = (
+  workingDirectory: string | undefined,
+): string | null => {
+  try {
+    validateWorkingDirectory(workingDirectory);
+
+    return null;
+  } catch (error) {
+    return describeError(error);
+  }
 };
 
 /**
@@ -61,13 +79,15 @@ export class ScheduledPlanRunService {
    * its runnable tasks); every other outcome means the run must not start, and the caller returns
    * without any side effect. MISSED and SUPERSEDED notify the user (warning), a run with nothing to run
    * notifies as info, and a run a concurrent cancel already settled (`not_scheduled`) is only logged —
-   * the cancel was the user's own action. `now` is injectable for tests. Throws on a database error.
+   * the cancel was the user's own action. A run whose `workingDirectory` (from its job payload) is gone
+   * settles FAILED and notifies as a warning. `now` is injectable for tests. Throws on a database error.
    */
   async fire(params: {
     readonly now?: Date;
     readonly run: PlanRun;
+    readonly workingDirectory: string | undefined;
   }): Promise<ScheduledRunFireOutcome> {
-    const { run } = params;
+    const { run, workingDirectory } = params;
     const now = params.now ?? new Date();
     const actorSub = await this.statusChangeSystemAccount.resolveId();
     const outcome = await this.planEnqueueService.fireScheduledRun({
@@ -76,6 +96,7 @@ export class ScheduledPlanRunService {
       now,
       planId: run.planId,
       planRunId: run.id,
+      workspaceError: describeWorkspaceError(workingDirectory),
     });
     const scheduledLabel = run.scheduledFor?.toISOString() ?? 'an unknown time';
 
@@ -110,6 +131,13 @@ export class ScheduledPlanRunService {
         await this.notifyNotStarted(
           run,
           `Scheduled plan run superseded: ${outcome.reason} at ${scheduledLabel}, so the scheduled run was not started.`,
+          'warning',
+        );
+        break;
+      case 'workspace_missing':
+        this.notifyNotStarted(
+          run,
+          `Scheduled plan run failed to start at ${scheduledLabel}: ${outcome.reason}. Its worktree was likely removed while the run waited; schedule it again on an existing checkout.`,
           'warning',
         );
         break;

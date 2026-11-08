@@ -150,6 +150,8 @@ const mockFindPlanIdsWithLiveDetachedRun = vi
   .mockResolvedValue(new Set<string>());
 const mockRecordHeartbeatByJob = vi.fn().mockResolvedValue(1);
 const mockSettleRunByJob = vi.fn().mockResolvedValue(null);
+const mockSettleUnsettledRunByJob = vi.fn().mockResolvedValue(true);
+const mockTransitionScheduledRun = vi.fn().mockResolvedValue(true);
 const mockRecordSettledRunArtifacts = vi.fn().mockResolvedValue(undefined);
 /** Default: no plan_runs row for the job (a legacy job), so admission lets it run as it always did. */
 const mockFindByQueueNameAndBullmqJobId = vi.fn().mockResolvedValue(null);
@@ -343,6 +345,8 @@ describe('PlansProcessor', () => {
             markRunStarted: mockMarkRunStarted,
             recordHeartbeatByJob: mockRecordHeartbeatByJob,
             settleRunByJob: mockSettleRunByJob,
+            settleUnsettledRunByJob: mockSettleUnsettledRunByJob,
+            transitionScheduledRun: mockTransitionScheduledRun,
           }),
         },
         {
@@ -1202,6 +1206,29 @@ describe('PlansProcessor', () => {
       expect(mockSettleRunByJob).not.toHaveBeenCalled();
     };
 
+    it("checks the job's working directory at fire time: a worktree removed since scheduling reaches the policy as a workspace error", async () => {
+      const gone = '/nonexistent/ot-scheduled-run-worktree-removed';
+      mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(scheduledRun);
+      mockFireScheduledRun.mockResolvedValueOnce({
+        kind: 'workspace_missing',
+        reason: `workingDirectory does not exist: ${gone}`,
+      });
+
+      await processor.process(
+        createMock<RunPlanJob>({
+          data: { planId, runKind: 'orchestrator', workingDirectory: gone },
+          id: 'job-1',
+        }),
+      );
+
+      expect(mockFireScheduledRun).toHaveBeenCalledWith(
+        expect.objectContaining({
+          workspaceError: `workingDirectory does not exist: ${gone}`,
+        }),
+      );
+      expect(mockRunPlanOrchestratorJob).not.toHaveBeenCalled();
+    });
+
     it('fires a due scheduled run: the policy claims it (plan/tasks QUEUED) before the worker claims it IN_PROGRESS, then the run proceeds', async () => {
       mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(scheduledRun);
       mockMarkRunStarted.mockResolvedValueOnce(1);
@@ -1218,6 +1245,7 @@ describe('PlansProcessor', () => {
         now: expect.any(Date),
         planId,
         planRunId: 'run-scheduled',
+        workspaceError: null,
       });
       // fireScheduledRun is where the SCHEDULED -> QUEUED claim and the plan/task QUEUED flip
       // happen (plan-enqueue.service.test.ts); markRunStarted (QUEUED -> IN_PROGRESS) only after.
@@ -1244,6 +1272,11 @@ describe('PlansProcessor', () => {
         kind: 'superseded',
         message: 'Scheduled plan run superseded',
         reason: 'the plan already had an active run',
+      },
+      {
+        kind: 'workspace_missing',
+        message: 'Scheduled plan run failed to start',
+        reason: 'workingDirectory does not exist: /gone/worktree',
       },
     ] as const)(
       '$kind: the run is settled by the policy, the user is warned, and nothing else happens',
@@ -1833,7 +1866,7 @@ describe('PlansProcessor', () => {
 
     it('a non-final failed attempt leaves the plan_runs row IN_PROGRESS (no settle write)', async () => {
       const planId = 'plan-retrying';
-      mockSettleRunByJob.mockClear();
+      mockSettleUnsettledRunByJob.mockClear();
 
       await processor.onPlanJobFailed({
         error: new Error('Job failed'),
@@ -1845,12 +1878,12 @@ describe('PlansProcessor', () => {
         }),
       });
 
-      expect(mockSettleRunByJob).not.toHaveBeenCalled();
+      expect(mockSettleUnsettledRunByJob).not.toHaveBeenCalled();
     });
 
     it('the final failed attempt settles the plan_runs row to FAILED', async () => {
       const planId = 'plan-exhausted';
-      mockSettleRunByJob.mockClear();
+      mockSettleUnsettledRunByJob.mockClear();
 
       await processor.onPlanJobFailed({
         error: new Error('Job failed'),
@@ -1862,7 +1895,7 @@ describe('PlansProcessor', () => {
         }),
       });
 
-      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+      expect(mockSettleUnsettledRunByJob).toHaveBeenCalledWith(
         PLANS_QUEUE_NAME,
         'job-retry-1',
         PLAN_RUN_STATUS.FAILED,
@@ -1871,7 +1904,7 @@ describe('PlansProcessor', () => {
 
     it('treats a job with no configured attempts as final (settles to FAILED)', async () => {
       const planId = 'plan-no-retry-config';
-      mockSettleRunByJob.mockClear();
+      mockSettleUnsettledRunByJob.mockClear();
 
       await processor.onPlanJobFailed({
         error: new Error('Job failed'),
@@ -1883,10 +1916,115 @@ describe('PlansProcessor', () => {
         }),
       });
 
-      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+      expect(mockSettleUnsettledRunByJob).toHaveBeenCalledWith(
         PLANS_QUEUE_NAME,
         'job-single-attempt',
         PLAN_RUN_STATUS.FAILED,
+      );
+    });
+
+    describe('guarded on the job plan_runs row', () => {
+      const exhaustedJob = (planId: string): RunPlanJob => {
+        return createMock<RunPlanJob>({
+          attemptsMade: 1,
+          data: { planId },
+          id: 'job-guarded',
+          opts: { attempts: 1 },
+        });
+      };
+      const runWithStatus = (status: string): PlanRun => {
+        return createMock<PlanRun>({
+          bullmqJobId: 'job-guarded',
+          id: `run-${status}`,
+          planId: 'plan-guarded',
+          status,
+        });
+      };
+
+      beforeEach(() => {
+        mockSettleUnsettledRunByJob.mockClear();
+        mockTransitionScheduledRun.mockClear();
+        mockWriteGuardedStatus.mockClear();
+      });
+
+      it('SCHEDULED (admission threw before the claim): the plan is not reset, and the exhausted run settles FAILED under the SCHEDULED guard', async () => {
+        mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(
+          runWithStatus('SCHEDULED'),
+        );
+
+        await processor.onPlanJobFailed({
+          error: new Error('db down during fire'),
+          job: exhaustedJob('plan-guarded'),
+        });
+
+        expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
+        expect(mockSettleUnsettledRunByJob).not.toHaveBeenCalled();
+        expect(mockTransitionScheduledRun).toHaveBeenCalledWith(
+          'run-SCHEDULED',
+          PLAN_RUN_STATUS.FAILED,
+        );
+      });
+
+      it('SCHEDULED with retries left: nothing is written, so the retry fires the policy again', async () => {
+        mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(
+          runWithStatus('SCHEDULED'),
+        );
+
+        await processor.onPlanJobFailed({
+          error: new Error('db down during fire'),
+          job: createMock<RunPlanJob>({
+            attemptsMade: 1,
+            data: { planId: 'plan-guarded' },
+            id: 'job-guarded',
+            opts: { attempts: 3 },
+          }),
+        });
+
+        expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
+        expect(mockTransitionScheduledRun).not.toHaveBeenCalled();
+        expect(mockSettleUnsettledRunByJob).not.toHaveBeenCalled();
+      });
+
+      it.each(['MISSED', 'SUPERSEDED', 'CANCELLED', 'COMPLETED', 'FAILED'])(
+        'an already-settled %s row is left as is, and the plan is not reset',
+        async (status) => {
+          mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(
+            runWithStatus(status),
+          );
+
+          await processor.onPlanJobFailed({
+            error: new Error('late failure'),
+            job: exhaustedJob('plan-guarded'),
+          });
+
+          expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
+          expect(mockSettleUnsettledRunByJob).not.toHaveBeenCalled();
+          expect(mockTransitionScheduledRun).not.toHaveBeenCalled();
+        },
+      );
+
+      it.each(['QUEUED', 'IN_PROGRESS'])(
+        'an unsettled %s row resets the plan and settles FAILED through the guarded write',
+        async (status) => {
+          mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(
+            runWithStatus(status),
+          );
+
+          await processor.onPlanJobFailed({
+            error: new Error('run failed'),
+            job: exhaustedJob('plan-guarded'),
+          });
+
+          expect(mockWriteGuardedStatus).toHaveBeenCalledWith(
+            'plan-guarded',
+            expect.objectContaining({ requestedStatus: 'QUEUED' }),
+          );
+          expect(mockSettleUnsettledRunByJob).toHaveBeenCalledWith(
+            PLANS_QUEUE_NAME,
+            'job-guarded',
+            PLAN_RUN_STATUS.FAILED,
+          );
+        },
       );
     });
 

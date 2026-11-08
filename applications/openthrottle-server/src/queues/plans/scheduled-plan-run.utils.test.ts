@@ -14,7 +14,11 @@ const scheduledLateBy = (lateByMs: number): Date => {
   return new Date(NOW.getTime() - lateByMs);
 };
 
-const idlePlan = { hasActiveRun: false, hasRunnableTasks: true } as const;
+const idlePlan = {
+  hasActiveRun: false,
+  hasRunnableTasks: true,
+  workspaceError: null,
+} as const;
 
 describe('SCHEDULED_PLAN_RUN_GRACE_MS', () => {
   it('is one hour', () => {
@@ -103,6 +107,7 @@ describe('decideScheduledPlanRunFire', () => {
         hasRunnableTasks: true,
         now: NOW,
         scheduledFor: scheduledLateBy(0),
+        workspaceError: null,
       }),
     ).toEqual({
       kind: 'superseded',
@@ -117,6 +122,7 @@ describe('decideScheduledPlanRunFire', () => {
         hasRunnableTasks: true,
         now: NOW,
         scheduledFor: scheduledLateBy(30 * MINUTE_MS),
+        workspaceError: null,
       }).kind,
     ).toBe('superseded');
   });
@@ -129,6 +135,7 @@ describe('decideScheduledPlanRunFire', () => {
         hasRunnableTasks: true,
         now: NOW,
         scheduledFor: scheduledLateBy(2 * HOUR_MS),
+        workspaceError: null,
       }).kind,
     ).toBe('missed');
   });
@@ -140,6 +147,7 @@ describe('decideScheduledPlanRunFire', () => {
         hasRunnableTasks: false,
         now: NOW,
         scheduledFor: scheduledLateBy(0),
+        workspaceError: null,
       }),
     ).toEqual({
       kind: 'nothing_to_run',
@@ -154,6 +162,7 @@ describe('decideScheduledPlanRunFire', () => {
         hasRunnableTasks: false,
         now: NOW,
         scheduledFor: scheduledLateBy(0),
+        workspaceError: null,
       }).kind,
     ).toBe('superseded');
     expect(
@@ -162,8 +171,53 @@ describe('decideScheduledPlanRunFire', () => {
         hasRunnableTasks: false,
         now: NOW,
         scheduledFor: scheduledLateBy(HOUR_MS),
+        workspaceError: null,
       }).kind,
     ).toBe('missed');
+  });
+});
+
+describe('decideScheduledPlanRunFire — missing workspace', () => {
+  const gone = 'workingDirectory does not exist: /gone/worktree';
+
+  it('fails a run whose working directory is gone, carrying the reason', () => {
+    expect(
+      decideScheduledPlanRunFire({
+        ...idlePlan,
+        now: NOW,
+        scheduledFor: scheduledLateBy(0),
+        workspaceError: gone,
+      }),
+    ).toEqual({ kind: 'workspace_missing', reason: gone });
+  });
+
+  it('ranks lateness, a collision and nothing-to-run above a missing workspace', () => {
+    expect(
+      decideScheduledPlanRunFire({
+        ...idlePlan,
+        now: NOW,
+        scheduledFor: scheduledLateBy(HOUR_MS),
+        workspaceError: gone,
+      }).kind,
+    ).toBe('missed');
+    expect(
+      decideScheduledPlanRunFire({
+        ...idlePlan,
+        hasActiveRun: true,
+        now: NOW,
+        scheduledFor: scheduledLateBy(0),
+        workspaceError: gone,
+      }).kind,
+    ).toBe('superseded');
+    expect(
+      decideScheduledPlanRunFire({
+        ...idlePlan,
+        hasRunnableTasks: false,
+        now: NOW,
+        scheduledFor: scheduledLateBy(0),
+        workspaceError: gone,
+      }).kind,
+    ).toBe('nothing_to_run');
   });
 });
 

@@ -86,6 +86,7 @@ import {
   RecordPlanRunHeartbeatInput,
   RegisterCliPlanRunInput,
   RegisterPlanRunWorktreeCheckoutInput,
+  ReschedulePlanRunInput,
   SchedulePlanRunInput,
   SearchPlansInput,
   SetPlanStatusInput,
@@ -527,6 +528,16 @@ export class PlansResolver {
       Math.max(1, input.limit ?? DEFAULT_PLAN_RUNS_LIMIT),
       MAX_PLAN_RUNS_LIMIT,
     );
+    if (input.includeAllScheduled) {
+      const history = await this.planRunsService.findRunHistoryByPlanId(
+        input.planId,
+        effectiveLimit,
+        MAX_PLAN_RUNS_LIMIT,
+      );
+
+      return history.map((run) => this.mapPlanRunObject(run));
+    }
+
     const runs = await this.planRunsService.findRecentByPlanId(
       input.planId,
       effectiveLimit,
@@ -1580,6 +1591,38 @@ export class PlansResolver {
       repositoryId: input.repositoryId,
       scheduledFor: input.scheduledFor,
       workingDirectory: input.workingDirectory,
+    });
+
+    return this.toScheduleResult(outcome);
+  }
+
+  @ProfileResponseTime('PlansResolver.reschedulePlanRun')
+  @Mutation(() => SchedulePlanRunResultObject, {
+    description: `Move a SCHEDULED plan run's fire time in place: the run keeps its id, its frozen run config snapshot and its job; only scheduledFor and the delayed job's delay change. Same rule as schedulePlanRun (future, within 30 days). Rejected when the run is not SCHEDULED or its job is already starting. Never changes the plan or task statuses.`,
+  })
+  @EmitNotification([
+    {
+      event: NOTIFICATION_EVENT_NAMES.PLAN_UPDATED,
+      payload: (ret) => {
+        if (isSchedulePlanRunResult(ret)) {
+          return {
+            message: `Plan run rescheduled for ${ret.scheduledFor.toISOString()}`,
+            planId: ret.planId,
+            severity: 'info' as const,
+          };
+        }
+        return null;
+      },
+    },
+  ])
+  async reschedulePlanRun(
+    @Args('input', { type: () => ReschedulePlanRunInput })
+    input: ReschedulePlanRunInput,
+  ): Promise<SchedulePlanRunResultObject> {
+    const outcome = await this.planEnqueueService.reschedulePlanRun({
+      planId: input.planId,
+      planRunId: input.planRunId,
+      scheduledFor: input.scheduledFor,
     });
 
     return this.toScheduleResult(outcome);

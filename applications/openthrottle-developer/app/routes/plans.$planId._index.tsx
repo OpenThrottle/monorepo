@@ -32,6 +32,7 @@ import {
   forceSettlePlanRun,
   postPlanMessage,
   removePlanTag,
+  reschedulePlanRun,
   runPlan,
   saveJobRunHooks,
   saveRunConfig,
@@ -262,6 +263,8 @@ export const action = async (args: Route.ActionArgs) => {
       return postPlanMessage(args, planId, formData);
     case 'removePlanTag':
       return removePlanTag(args, planId, formData);
+    case 'reschedulePlanRun':
+      return reschedulePlanRun(args, planId, formData);
     case 'runPlan':
       return runPlan(args, planId, formData);
     case 'saveJobRunHooks':

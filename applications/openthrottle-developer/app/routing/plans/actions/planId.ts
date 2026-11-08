@@ -21,6 +21,7 @@ import {
   PlanDetailForceSettlePlanRunDocument,
   PlanDetailPostPlanMessageDocument,
   PlanDetailRemovePlanTagDocument,
+  PlanDetailReschedulePlanRunDocument,
   PlanDetailRunConfigDocument,
   PlanDetailSchedulePlanRunDocument,
   PlanDetailSetPlanStatusDocument,
@@ -38,6 +39,7 @@ import {
   ForceSettlePlanRunInputSchema,
   PostPlanMessageInputSchema,
   RemovePlanTagInputSchema,
+  ReschedulePlanRunInputSchema,
   SchedulePlanRunInputSchema,
   SetPlanStatusInputSchema,
   UpdateTaskInputSchema,
@@ -698,6 +700,65 @@ export const schedulePlanRun = async (
       schedulePlanRunError: toErrorMessage(
         error,
         'Failed to schedule plan run.',
+      ),
+    };
+  }
+};
+
+/**
+ * Moves ONE SCHEDULED run's fire time in place. The form carries `planRunId` and
+ * `scheduledFor` (an ISO instant); only "does it parse" is checked here. The
+ * server owns "in the future, within 30 days, still SCHEDULED", and its message
+ * is returned as `reschedulePlanRunError`.
+ */
+export const reschedulePlanRun = async (
+  args: Route.ActionArgs,
+  planId: string,
+  formData: FormData,
+) => {
+  const parsed = parseFormData(
+    formData,
+    z.object({
+      planRunId: z.string().min(1, 'Missing scheduled run id.'),
+      scheduledFor: z.string().nullish(),
+    }),
+    { strict: false },
+  );
+  if (!parsed.success) {
+    return { reschedulePlanRunError: parsed.error };
+  }
+
+  const when = parseScheduledFor(parsed.data.scheduledFor);
+  if (!when.success) {
+    return { reschedulePlanRunError: when.error };
+  }
+
+  try {
+    const validated = ReschedulePlanRunInputSchema().parse({
+      planId,
+      planRunId: parsed.data.planRunId,
+      scheduledFor: when.scheduledFor,
+    });
+    // The generated schema types the `DateTime` scalar loosely, so restate the
+    // instant that was just validated to keep the field required.
+    const input = { ...validated, scheduledFor: when.scheduledFor };
+
+    const result = await executeGraphqlWithAuth(
+      args.request,
+      PlanDetailReschedulePlanRunDocument,
+      { input },
+    );
+
+    if (!result.reschedulePlanRun) {
+      return { reschedulePlanRunError: 'Failed to reschedule plan run.' };
+    }
+
+    return { reschedulePlanRun: result.reschedulePlanRun };
+  } catch (error) {
+    return {
+      reschedulePlanRunError: toErrorMessage(
+        error,
+        'Failed to reschedule plan run.',
       ),
     };
   }

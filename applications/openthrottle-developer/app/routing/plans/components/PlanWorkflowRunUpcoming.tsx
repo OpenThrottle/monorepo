@@ -3,6 +3,7 @@ import * as React from 'react';
 import { parseDate } from '~/global/utils/dates';
 import { PlanRunCancelScheduledButton } from '~/routing/plans/components/PlanRunCancelScheduledButton';
 import { PlanRunMetaList } from '~/routing/plans/components/PlanRunMetaList';
+import { PlanRunRescheduleButton } from '~/routing/plans/components/PlanRunRescheduleButton';
 import { PlanRunStatusBadge } from '~/routing/plans/components/PlanRunStatusBadge';
 import { PlanRunTime } from '~/routing/plans/components/PlanRunTime';
 import { PlanWorkflowRunSection } from '~/routing/plans/components/PlanWorkflowRunSection';
@@ -79,7 +80,12 @@ export const PlanWorkflowRunUpcoming = (
           </div>
           {renderMeta(item)}
         </div>
-        <div className="shrink-0">
+        <div className="flex shrink-0 items-center gap-2">
+          <PlanRunRescheduleButton
+            planId={planId}
+            planRunId={item.id}
+            scheduledFor={item.scheduledFor}
+          />
           <PlanRunCancelScheduledButton planId={planId} planRunId={item.id} />
         </div>
       </li>

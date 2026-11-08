@@ -2624,6 +2624,8 @@ export type Mutation = {
   reorderPlanTasks: Array<TaskObject>;
   /** Replace the ATIF document on an existing trajectory in place, keeping its id so human labels keyed by trajectory id survive. Used by the session re-segment operator when a task's boundaries change. The document is validated and capped the same way as recordAgentTrajectory. */
   replaceAgentTrajectory: AgentTrajectory;
+  /** Move a SCHEDULED plan run's fire time in place: the run keeps its id, its frozen run config snapshot and its job; only scheduledFor and the delayed job's delay change. Same rule as schedulePlanRun (future, within 30 days). Rejected when the run is not SCHEDULED or its job is already starting. Never changes the plan or task statuses. */
+  reschedulePlanRun: SchedulePlanRunResultObject;
   /** Restore a soft-deleted custom prompt */
   restoreCustomPrompt?: Maybe<CustomPromptObject>;
   /** Resume a paused queue so workers pick up jobs again. */
@@ -3179,6 +3181,10 @@ export type MutationReplaceAgentTrajectoryArgs = {
   input: ReplaceAgentTrajectoryInput;
 };
 
+export type MutationReschedulePlanRunArgs = {
+  input: ReschedulePlanRunInput;
+};
+
 export type MutationRestoreCustomPromptArgs = {
   id: Scalars['ID']['input'];
 };
@@ -3704,6 +3710,8 @@ export const PlanRunWorktreeTeardownOutcome = {
 export type PlanRunWorktreeTeardownOutcome =
   (typeof PlanRunWorktreeTeardownOutcome)[keyof typeof PlanRunWorktreeTeardownOutcome];
 export type PlanRunsByPlanIdInput = {
+  /** When true, every SCHEDULED run of the plan is returned however old its row is, and limit caps only the runs that are not SCHEDULED. Rows stay newest createdAt first, so the first row is then not necessarily the newest run. Default false: limit caps every run. */
+  includeAllScheduled?: InputMaybe<Scalars['Boolean']['input']>;
   /** Max plan-run audit rows to return, newest first. */
   limit?: InputMaybe<Scalars['Int']['input']>;
   /** Plan id whose run audit rows should be returned */
@@ -5468,6 +5476,15 @@ export type RepositoryObject = {
   /** OpenThrottle project linked at the repository level. */
   projectId?: Maybe<Scalars['ID']['output']>;
   updatedAt: Scalars['DateTime']['output'];
+};
+
+export type ReschedulePlanRunInput = {
+  /** Plan id the scheduled run belongs to. */
+  planId: Scalars['ID']['input'];
+  /** plan_runs id of the SCHEDULED run to move. Any other status is rejected. */
+  planRunId: Scalars['ID']['input'];
+  /** The new absolute instant the run fires at: in the future and within 30 days (SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS), the same rule as schedulePlanRun. */
+  scheduledFor: Scalars['DateTime']['input'];
 };
 
 export type RetryJobInput = {
@@ -9329,6 +9346,21 @@ export type PlanDetailSchedulePlanRunMutation = {
   schedulePlanRun: {
     __typename?: 'SchedulePlanRunResultObject';
     executionBackend: string;
+    jobId: string;
+    planId: string;
+    planRunId: string;
+    scheduledFor: any;
+  };
+};
+
+export type PlanDetailReschedulePlanRunMutationVariables = Exact<{
+  input: ReschedulePlanRunInput;
+}>;
+
+export type PlanDetailReschedulePlanRunMutation = {
+  __typename?: 'Mutation';
+  reschedulePlanRun: {
+    __typename?: 'SchedulePlanRunResultObject';
     jobId: string;
     planId: string;
     planRunId: string;
@@ -22214,6 +22246,66 @@ export const PlanDetailSchedulePlanRunDocument = {
   PlanDetailSchedulePlanRunMutation,
   PlanDetailSchedulePlanRunMutationVariables
 >;
+export const PlanDetailReschedulePlanRunDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'PlanDetailReschedulePlanRun' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'ReschedulePlanRunInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'reschedulePlanRun' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'planRunId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'scheduledFor' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  PlanDetailReschedulePlanRunMutation,
+  PlanDetailReschedulePlanRunMutationVariables
+>;
 export const PlanDetailEvaluatePlanRulesDocument = {
   kind: 'Document',
   definitions: [
@@ -23294,16 +23386,21 @@ export const PlanDetailRunHistoryDocument = {
                   fields: [
                     {
                       kind: 'ObjectField',
-                      name: { kind: 'Name', value: 'planId' },
-                      value: {
-                        kind: 'Variable',
-                        name: { kind: 'Name', value: 'planId' },
-                      },
+                      name: { kind: 'Name', value: 'includeAllScheduled' },
+                      value: { kind: 'BooleanValue', value: true },
                     },
                     {
                       kind: 'ObjectField',
                       name: { kind: 'Name', value: 'limit' },
                       value: { kind: 'IntValue', value: '25' },
+                    },
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'planId' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'planId' },
+                      },
                     },
                   ],
                 },

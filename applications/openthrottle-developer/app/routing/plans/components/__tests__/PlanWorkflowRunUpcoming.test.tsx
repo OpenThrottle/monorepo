@@ -7,6 +7,7 @@ import { describe, expect, test } from 'vitest';
 
 import {
   PLAN_RUN_CANCEL_SCHEDULED_COPY,
+  PLAN_RUN_RESCHEDULE_COPY,
   PLAN_RUN_TRANSPARENCY_COPY,
 } from '~/routing/plans/data/data.copy';
 
@@ -96,6 +97,11 @@ describe('PlanWorkflowRunUpcoming', () => {
           name: PLAN_RUN_CANCEL_SCHEDULED_COPY.ariaLabel,
         }),
       ).toBeInTheDocument();
+      expect(
+        within(item).getByRole('button', {
+          name: PLAN_RUN_RESCHEDULE_COPY.ariaLabel,
+        }),
+      ).toBeInTheDocument();
     });
   });
 
@@ -114,6 +120,13 @@ describe('PlanWorkflowRunUpcoming', () => {
       const times = items.map((item) =>
         within(item).getByTestId('PlanRunTime').getAttribute('dateTime'),
       );
+      for (const item of items) {
+        expect(
+          within(item).getByRole('button', {
+            name: PLAN_RUN_RESCHEDULE_COPY.ariaLabel,
+          }),
+        ).toBeInTheDocument();
+      }
       expect(times).toEqual([
         '2026-11-04T15:00:00.000Z',
         '2026-11-06T15:00:00.000Z',

@@ -43,6 +43,18 @@ describe('buildWorkflowRalphRunTuningArgv', () => {
     ]);
   });
 
+  it('includes --effort when set', () => {
+    expect(buildWorkflowRalphRunTuningArgv({ effort: 'high' })).toEqual([
+      '--effort',
+      'high',
+    ]);
+  });
+
+  it('omits --effort when empty or unset', () => {
+    expect(buildWorkflowRalphRunTuningArgv({ effort: '' })).toEqual([]);
+    expect(buildWorkflowRalphRunTuningArgv({})).toEqual([]);
+  });
+
   it('includes --prompt when not default', () => {
     expect(
       buildWorkflowRalphRunTuningArgv({ prompt: '/agents/custom' }),
