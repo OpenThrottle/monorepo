@@ -5,7 +5,7 @@ import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { RepositoriesService } from './repositories.service.ts';
 import { Repository } from './repository.entity.ts';
 import { RepositoryCheckout } from './repository-checkout.entity.ts';
-import { RepositoryCheckoutsService } from './repository-checkouts.service.ts';
+import { RepositoryCheckoutsService } from './repository-checkouts/repository-checkouts.service.ts';
 
 @Module({
   controllers: [],

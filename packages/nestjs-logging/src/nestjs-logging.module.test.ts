@@ -3,11 +3,11 @@ import { describe, expect, it } from 'vitest';
 
 import { NestjsLoggingModule } from './nestjs-logging.module.ts';
 import { NestjsLoggingService } from './nestjs-logging.service.ts';
-import type { LogJsonlSink, LogStreamHub } from './ports/logging-ports.ts';
+import type { LogJsonlSink, LogStreamHub } from './ports/ports.types.ts';
 import {
   LOG_JSONL_SINK,
   LOG_STREAM_HUB,
-} from './tokens/nestjs-logging.tokens.ts';
+} from './tokens/nestjs-logging.token.ts';
 
 describe('NestjsLoggingModule', () => {
   it('forRoot wires sink and hub tokens', async () => {

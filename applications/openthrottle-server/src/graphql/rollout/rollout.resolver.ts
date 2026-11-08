@@ -15,7 +15,6 @@ import { RolloutService } from '@openthrottle/nestjs-rollout';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { FeatureFlagObject } from './feature-flag.object.ts';
-import { resolveEvaluationPrincipal } from './resolve-evaluation-principal.ts';
 import {
   CreateRolloutFlagInput,
   UpdateRolloutFlagInput,
@@ -26,6 +25,7 @@ import {
   toFeatureFlagObject,
   toRolloutFlagObject,
 } from './rollout.mapper.ts';
+import { resolveEvaluationPrincipal } from './rollout.utils.ts';
 import { RolloutFlagObject } from './rollout-flag.object.ts';
 
 @Resolver(() => RolloutFlagObject)

@@ -7,14 +7,12 @@ import { In, IsNull, Not } from 'typeorm';
 import type { IsolationLevel } from 'typeorm/driver/types/IsolationLevel.js';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { REMAINING_TASK_STATUSES } from '../../config/plan-task-status.constants.ts';
+import { REMAINING_TASK_STATUSES } from '../../config/config.constants.ts';
 import { Task } from './task.entity.ts';
+import { TASK_SORT_ORDER_GAP } from './tasks.constants.ts';
 import { tasksFactory } from './tasks.factory.ts';
-import {
-  type CreateTaskBatchItem,
-  TASK_SORT_ORDER_GAP,
-  TasksService,
-} from './tasks.service.ts';
+import { TasksService } from './tasks.service.ts';
+import type { CreateTaskBatchItem } from './tasks.types.ts';
 
 describe('TasksService', () => {
   type GetRepository = ReturnType<TasksService['getRepository']>;

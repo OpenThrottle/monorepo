@@ -5,12 +5,12 @@
 import { faker } from '@faker-js/faker';
 import { Factory } from 'fishery';
 
+import type { AgentConversation } from './agent-conversation.entity.ts';
+import type { AgentConversationMessage } from './agent-conversation-message.entity.ts';
 import {
   AGENT_CONVERSATION_MESSAGE_ROLES,
   AGENT_CONVERSATION_STATUSES,
-} from './agent-conversation.constants.ts';
-import type { AgentConversation } from './agent-conversation.entity.ts';
-import type { AgentConversationMessage } from './agent-conversation-message.entity.ts';
+} from './agent-conversations.constants.ts';
 
 export type AgentConversationFactoryData = Pick<
   AgentConversation,

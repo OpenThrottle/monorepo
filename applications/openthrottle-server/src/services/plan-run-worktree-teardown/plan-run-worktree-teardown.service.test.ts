@@ -27,7 +27,7 @@ vi.mock('node:fs', () => ({
   realpathSync: mockRealpathSync,
   statSync: mockStatSync,
 }));
-vi.mock('../worktree-root/worktree-root.resolver.ts', () => ({
+vi.mock('../worktree-root/worktree-root.utils.ts', () => ({
   resolveWorktreeRoot: mockResolveRoot,
 }));
 

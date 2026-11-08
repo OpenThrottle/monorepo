@@ -10,10 +10,10 @@ plus a tsconfig project reference). The `@tools/generators` NestJS app template 
 
 ## Layout
 
-- `src/config/redis.ts` — `getRedisCache`, `disconnectRedisCaches`, the module-level
+- `src/config/redis/redis.utils.ts` — `getRedisCache`, `disconnectRedisCaches`, the module-level
   `liveStores` registry.
-- `src/config/nestjs-redis.config.ts` — `redisConfig()` mapping `REDIS_*` env vars.
-- `src/modules/nestjs-redis.module.ts` — only an `onApplicationShutdown` hook.
+- `src/config/config.constants.ts` — `redisConfig()` mapping `REDIS_*` env vars.
+- `src/nestjs-redis.module.ts` — only an `onApplicationShutdown` hook.
 
 ## Invariants & gotchas
 

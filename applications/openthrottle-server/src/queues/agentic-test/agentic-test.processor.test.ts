@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AgenticTestProcessor } from './agentic-test.processor.ts';
 import type { AgenticTestJob } from './agentic-test.types.ts';
-import * as agenticTestEcho from './agentic-test-echo.ts';
+import * as agenticTestEcho from './agentic-test.utils.ts';
 
 describe('AgenticTestProcessor', () => {
   let processor: AgenticTestProcessor;

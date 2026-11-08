@@ -7,12 +7,12 @@ import type { PlanEmbedding } from '@openthrottle/nestjs-repositories';
 import { PlanEmbeddingsService } from '@openthrottle/nestjs-repositories';
 
 import { PlanObject } from '../plans/plan.object.ts';
+import { PlanEmbeddingsLoaders } from './loaders/loaders.service.ts';
 import {
   GetPlanEmbeddingInput,
   PlanEmbeddingsByPlanInput,
 } from './plan-embedding.input.ts';
 import { PlanEmbeddingObject } from './plan-embedding.object.ts';
-import { PlanEmbeddingsLoaders } from './plan-embeddings-loaders.ts';
 
 /** Default and hard ceiling for the unbounded list query (bounds API memory). */
 const DEFAULT_LIST_LIMIT = 1000;

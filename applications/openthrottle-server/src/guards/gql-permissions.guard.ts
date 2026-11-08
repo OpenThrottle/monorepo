@@ -18,7 +18,7 @@ import type { Permission } from '@openthrottle/nestjs-rbac';
 import { PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
 import { RolesService } from '@openthrottle/nestjs-repositories';
 
-import { getPermissionsForPrincipal } from './principal-access.ts';
+import { getPermissionsForPrincipal } from './guards.utils.ts';
 
 @Injectable()
 export class GqlPermissionsGuard {

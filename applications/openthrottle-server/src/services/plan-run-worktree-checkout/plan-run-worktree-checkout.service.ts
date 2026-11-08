@@ -8,7 +8,6 @@
  * (service-account callback) is explicitly deferred — see
  * docs/monorepo/git-worktree-setup-timing.md.
  */
-
 import { basename } from 'node:path';
 
 import { Injectable } from '@nestjs/common';
@@ -21,14 +20,7 @@ import {
 } from '@openthrottle/nestjs-repositories';
 
 import { RepositoryInspectionService } from '../../graphql/repository-inspection/repository-inspection.service.ts';
-
-export interface RegisterPlanRunWorktreeCheckoutParams {
-  /** Absolute filesystem path of the resolved worktree for this run. */
-  readonly filesystemPath: string;
-  readonly planRunId: string;
-  /** Authenticated user id (JWT `sub`); owns the checkout row. */
-  readonly userId: string;
-}
+import type { RegisterPlanRunWorktreeCheckoutParams } from './plan-run-worktree-checkout.types.ts';
 
 @Injectable()
 export class PlanRunWorktreeCheckoutService {

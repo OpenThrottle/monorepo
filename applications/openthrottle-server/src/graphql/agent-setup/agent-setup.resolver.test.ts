@@ -11,7 +11,7 @@ import type {
 } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { AGENT_CLI_INSTALL_ENABLED_ENV } from './agent-setup.config.ts';
+import { AGENT_CLI_INSTALL_ENABLED_ENV } from './agent-setup.constants.ts';
 import { AgentSetupResolver } from './agent-setup.resolver.ts';
 import type { AgentSetupService } from './agent-setup.service.ts';
 

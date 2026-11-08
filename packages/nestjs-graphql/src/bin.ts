@@ -9,7 +9,7 @@
  *     --module=./build/src/app.module.js --project=<name> --schema=<root>/schema.gql --check
  */
 
-import { runGraphqlSchemaCommand } from './schema/graphql-schema-command.ts';
+import { runGraphqlSchemaCommand } from './schema/graphql-schema-command/graphql-schema-command.utils.ts';
 
 process.exitCode = await runGraphqlSchemaCommand(
   process.argv.slice(2),

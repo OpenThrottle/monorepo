@@ -21,7 +21,7 @@ global `@nestjs/throttler` `GqlThrottlerGuard`, and the developer app's existing
 ## Source of truth
 
 Per‑job BullMQ run transcripts written by `KeyedJsonlWriter`
-(`packages/nestjs-logging/src/services/keyed-jsonl-writer.ts`) to
+(`packages/nestjs-logging/src/keyed-jsonl-writer/keyed-jsonl-writer.service.ts`) to
 `{BULLMQ_RUN_OUTPUT_DIR}/{queueSegment}/{jobSegment}.jsonl` — append‑only, one
 file per `(queueName, jobId)`. (Env var is **`BULLMQ_RUN_OUTPUT_DIR`**; the plan
 prose's `OT_BULLMQ_RUN_OUTPUT_DIR` is stale.) When the var is unset the feature is
@@ -137,7 +137,7 @@ Topic convention mirrors `plan:<id>:output`: **`bullmq:<queueName>:<jobId>:logs`
 publish is wired at the **writer boundary**: `KeyedJsonlWriter` takes an optional
 dep‑free `onAppend(queueName, jobId, record, lineIndex)` observer (invoked
 synchronously per `jsonl` append, never in `raw` mode). The
-`BULLMQ_RUN_OUTPUT_WRITER` factory (`queues/bullmq-run-output.module.ts`) injects
+`BULLMQ_RUN_OUTPUT_WRITER` factory (`queues/bullmq-run-output/bullmq-run-output.module.ts`) injects
 `PUB_SUB` and passes `createQueueJobLogTailPublisher(pubSub)`
 (`graphql/queue-job-logs/queue-job-log-publisher.ts`), which maps + redacts the
 record through the **same** `mapRecordToQueueJobLogEvent` the query uses and

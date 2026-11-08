@@ -11,8 +11,8 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-import type { AgentConversationMessageRole } from './agent-conversation.constants.ts';
 import { AgentConversation } from './agent-conversation.entity.ts';
+import type { AgentConversationMessageRole } from './agent-conversations.types.ts';
 
 export interface AgentConversationMessageData {
   readonly content: string;

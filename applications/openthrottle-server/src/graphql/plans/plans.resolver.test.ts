@@ -21,20 +21,21 @@ import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { NotificationsService } from '../../notifications/notifications.service.ts';
-import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.types.ts';
-import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service.ts';
-import { PlanCancelChannelService } from '../../queues/plans/plan-cancel-channel.service.ts';
-import { PlanRunCancellationService } from '../../queues/plans/plan-run-cancellation.service.ts';
+import { PlanRulesEvaluationService } from '../../queues/plan-rules/evaluation/evaluation.service.ts';
+import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.constants.ts';
+import { PlanCancelChannelService } from '../../queues/plans/cancel-channel/cancel-channel.service.ts';
 import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants.ts';
 import type { RunPlanJobData } from '../../queues/plans/plans.types.ts';
-import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service.ts';
+import { PlanRunCancellationService } from '../../queues/plans/run-cancellation/run-cancellation.service.ts';
+import { TaggingEnqueueService } from '../../queues/tagging/enqueue/enqueue.service.ts';
 import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service.ts';
 import { PlanCreationService } from '../../services/plan-creation/plan-creation.service.ts';
 import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service.ts';
+import { PRUNE_WORKTREE_CHECKOUT_OUTCOME } from '../../services/worktree-checkout-prune/worktree-checkout-prune.constants.ts';
 import { WorktreeCheckoutPruneService } from '../../services/worktree-checkout-prune/worktree-checkout-prune.service.ts';
-import { PRUNE_WORKTREE_CHECKOUT_OUTCOME } from '../../services/worktree-checkout-prune/worktree-checkout-prune.types.ts';
-import { SettleRunLedgerService } from '../work-ledger/settle-run-ledger.service.ts';
-import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service.ts';
+import { SettleRunLedgerService } from '../work-ledger/settle-run-ledger/settle-run-ledger.service.ts';
+import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture/work-ledger-capture.service.ts';
+import { PlansLoaders } from './loaders/loaders.service.ts';
 import type {
   CreatePlanInput,
   ListPlansByStatusInput,
@@ -42,9 +43,8 @@ import type {
 } from './plan.input.ts';
 import { PlanRalphWorkflowModeGraphQL } from './plan.input.ts';
 import { PlanEnqueueService } from './plan-enqueue/plan-enqueue.service.ts';
-import { PlanStatusService } from './plan-status.service.ts';
+import { PlanStatusService } from './plan-status/plan-status.service.ts';
 import { PlansResolver } from './plans.resolver.ts';
-import { PlansLoaders } from './plans-loaders.ts';
 
 vi.mock('@openthrottle/node-client', () => ({
   getPostgresConfig: vi.fn(),

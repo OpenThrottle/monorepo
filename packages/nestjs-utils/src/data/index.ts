@@ -1,7 +1,6 @@
 export {
   type BatchLoadFn,
-  createDataLoader,
   type CreateDataLoaderOptions,
-  createLoaderFromFindByIds,
   type CreateLoaderFromFindByIdsOptions,
-} from './create-data-loader.ts';
+} from './data.types.ts';
+export { createDataLoader, createLoaderFromFindByIds } from './data.utils.ts';

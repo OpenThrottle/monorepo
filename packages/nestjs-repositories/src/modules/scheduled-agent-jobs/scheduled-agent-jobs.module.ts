@@ -3,8 +3,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 
 import { RepositoriesModule } from '../repositories/repositories.module.ts';
+import { ScheduledAgentJobCheckoutPathService } from './checkout-path/checkout-path.service.ts';
 import { ScheduledAgentJob } from './scheduled-agent-job.entity.ts';
-import { ScheduledAgentJobCheckoutPathService } from './scheduled-agent-job-checkout-path.service.ts';
 import { ScheduledAgentJobRun } from './scheduled-agent-job-run.entity.ts';
 import { ScheduledAgentJobsService } from './scheduled-agent-jobs.service.ts';
 

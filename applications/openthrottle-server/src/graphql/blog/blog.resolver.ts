@@ -13,9 +13,9 @@ import {
   BlogTagsService,
 } from '@openthrottle/nestjs-repositories';
 
+import { toBlogPostObject, toBlogTagObject } from './blog-post.mapper.ts';
 import { BlogPostListResult, BlogPostObject } from './blog-post.object.ts';
 import { BlogTagObject } from './blog-tag.object.ts';
-import { toBlogPostObject, toBlogTagObject } from './to-blog-post-object.ts';
 
 const DEFAULT_PAGE_SIZE = 10;
 

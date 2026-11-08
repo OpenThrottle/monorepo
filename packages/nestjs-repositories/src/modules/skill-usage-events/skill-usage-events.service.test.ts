@@ -2,15 +2,13 @@ import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { describe, expect, it, vi } from 'vitest';
 
+import { SKILL_USAGE_DEFAULT_BRANCHES } from './skill-usage-events.constants.ts';
 import {
   SKILL_USAGE_PRIVACY_LEVELS,
   SKILL_USAGE_SCOPES,
   SkillUsageEvent,
 } from './skill-usage-events.entity.ts';
-import {
-  SKILL_USAGE_DEFAULT_BRANCHES,
-  SkillUsageEventsService,
-} from './skill-usage-events.service.ts';
+import { SkillUsageEventsService } from './skill-usage-events.service.ts';
 import {
   SKILL_USAGE_OUTCOMES,
   SkillUsageOutcome,

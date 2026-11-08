@@ -6,8 +6,8 @@ import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
-import { ProcessMetricsService } from '../../metrics/process-metrics.service.ts';
-import { QueuesService } from '../queues/queues.service.ts';
+import { ProcessMetricsService } from '../../metrics/process-metrics/process-metrics.service.ts';
+import { QueuesService } from '../queues/queues-service/queues-service.service.ts';
 import { MetricsResolver } from './metrics.resolver.ts';
 
 describe('MetricsResolver', () => {

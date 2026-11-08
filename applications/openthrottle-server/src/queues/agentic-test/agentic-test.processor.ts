@@ -12,7 +12,7 @@ import type {
   AgenticTestJob,
   AgenticTestJobResult,
 } from './agentic-test.types.ts';
-import { runAgenticTestEchoLoop } from './agentic-test-echo.ts';
+import { runAgenticTestEchoLoop } from './agentic-test.utils.ts';
 
 const CONCURRENCY = 1;
 

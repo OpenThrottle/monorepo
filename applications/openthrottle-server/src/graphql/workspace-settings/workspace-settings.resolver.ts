@@ -29,6 +29,7 @@ import {
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { ProjectObject } from '../projects/project.object.ts';
 import { ApplyWorkspaceEditorConfigurationInput } from './apply-workspace-editor-configuration.input.ts';
+import { WorkspaceSettingsLoaders } from './loaders/loaders.service.ts';
 import {
   toUserWorkspaceProfileObject,
   toWorkspaceEditorIdEnum,
@@ -38,7 +39,7 @@ import {
   validateContactDisplayName,
   validateContactEmail,
   validateEnabledEditors,
-} from './user-workspace-profile.validation.ts';
+} from './user-workspace-profile-validation/user-workspace-profile-validation.utils.ts';
 import { ApplyWorkspaceEditorConfigurationResultObject } from './workspace-editor-config-application.object.ts';
 import { WorkspaceLocalRepositoryObject } from './workspace-local-repository.object.ts';
 import {
@@ -46,7 +47,7 @@ import {
   validateDisplayName,
   validateGitDefaultBranch,
   validateGitRemoteUrl,
-} from './workspace-local-repository.validation.ts';
+} from './workspace-local-repository-validation/workspace-local-repository-validation.utils.ts';
 import {
   CreateWorkspaceLocalRepositoryInput,
   SetWorkspaceLocalRepositoryProjectInput,
@@ -54,7 +55,6 @@ import {
   UpdateWorkspaceProfileInput,
 } from './workspace-settings.input.ts';
 import { WorkspaceSettingsObject } from './workspace-settings.object.ts';
-import { WorkspaceSettingsLoaders } from './workspace-settings-loaders.ts';
 
 @Resolver(() => WorkspaceLocalRepositoryObject)
 @UseGuards(GqlPermissionsGuard)

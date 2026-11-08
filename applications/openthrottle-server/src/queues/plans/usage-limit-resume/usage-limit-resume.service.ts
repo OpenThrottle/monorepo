@@ -9,11 +9,11 @@ import {
 import type { WorkflowRalphUsageLimit } from '@openthrottle/openthrottle-agentic-ralph';
 
 import { PlanEnqueueService } from '../../../graphql/plans/plan-enqueue/plan-enqueue.service.ts';
-import { PlanStatusService } from '../../../graphql/plans/plan-status.service.ts';
-import { StatusChangeSystemAccountService } from '../../../graphql/work-ledger/status-change-system-account.service.ts';
-import { WorkLedgerCaptureService } from '../../../graphql/work-ledger/work-ledger-capture.service.ts';
-import { updateMatchingTasksAndEmitStatusChanged } from '../../../notifications/emit-bulk-task-status-changes.ts';
+import { PlanStatusService } from '../../../graphql/plans/plan-status/plan-status.service.ts';
+import { StatusChangeSystemAccountService } from '../../../graphql/work-ledger/status-change-system-account/status-change-system-account.service.ts';
+import { WorkLedgerCaptureService } from '../../../graphql/work-ledger/work-ledger-capture/work-ledger-capture.service.ts';
 import { NotificationsService } from '../../../notifications/notifications.service.ts';
+import { updateMatchingTasksAndEmitStatusChanged } from '../../../notifications/notifications.utils.ts';
 import { USAGE_LIMIT_RESUME_MAX_CHAIN_DEPTH } from '../../usage-limit/usage-limit.constants.ts';
 import { decideUsageLimitResume } from '../../usage-limit/usage-limit.utils.ts';
 import { PLANS_QUEUE_NAME } from '../plans.constants.ts';

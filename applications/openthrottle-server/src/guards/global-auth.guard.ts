@@ -10,11 +10,11 @@ import {
   getAuthPrincipalFromRequest,
   IS_PUBLIC_KEY,
 } from '@openthrottle/nestjs-auth';
+import { getRequestFromExecutionContext } from '@openthrottle/nestjs-auth';
 import { isRecord } from '@openthrottle/nodejs-utils';
 
-import { GlobalClsAuthHook } from '../auth/global-cls-auth-hook.service.ts';
-import { ServiceAccountAuthService } from '../auth/service-account-auth.service.ts';
-import { getRequestFromExecutionContext } from './get-request-from-execution-context.ts';
+import { GlobalClsAuthHook } from '../auth/global-cls-auth-hook/global-cls-auth-hook.service.ts';
+import { ServiceAccountAuthService } from '../auth/service-account-auth/service-account-auth.service.ts';
 import { GqlJwtAuthGuard } from './gql-jwt-auth.guard.ts';
 
 const readAuthorizationHeader = (req: object): string | undefined => {

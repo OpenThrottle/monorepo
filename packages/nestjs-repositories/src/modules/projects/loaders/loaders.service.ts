@@ -1,0 +1,37 @@
+/**
+ * @description Request-scoped DataLoaders for resolving Project.plans and
+ * Project.tasks in key order. Batches by projectId to avoid N+1 when resolving many projects.
+ */
+
+import { Injectable, Scope } from '@nestjs/common';
+import type DataLoader from 'dataloader';
+
+import { createCollectionByColumnLoader } from '../../../entity-loaders/entity-loaders.utils.ts';
+import type { Plan } from '../../plans/plan.entity.ts';
+import { PlansService } from '../../plans/plans.service.ts';
+import type { Task } from '../../tasks/task.entity.ts';
+import { CROSS_PLAN_TASK_LIST_ORDER } from '../../tasks/tasks.constants.ts';
+import { TasksService } from '../../tasks/tasks.service.ts';
+
+/**
+ * Holds plansByProjectId and tasksByProjectId DataLoaders for the current request.
+ * Injected into ProjectsResolver; resolve plans and tasks via loaders instead of direct service find calls.
+ */
+@Injectable({ scope: Scope.REQUEST })
+export class ProjectsLoaders {
+  /** Plans grouped by projectId, each ordered by createdAt DESC. */
+  readonly plansByProjectIdLoader: DataLoader<string, Plan[]>;
+  /** Tasks grouped by projectId, each ordered by planId then sortOrder then createdAt ASC. */
+  readonly tasksByProjectIdLoader: DataLoader<string, Task[]>;
+
+  constructor(plansService: PlansService, tasksService: TasksService) {
+    this.plansByProjectIdLoader = createCollectionByColumnLoader(plansService, {
+      column: 'projectId',
+      order: { createdAt: 'DESC' },
+    });
+    this.tasksByProjectIdLoader = createCollectionByColumnLoader(tasksService, {
+      column: 'projectId',
+      order: { ...CROSS_PLAN_TASK_LIST_ORDER },
+    });
+  }
+}

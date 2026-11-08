@@ -21,7 +21,6 @@
  * carrying each row's dimension/source so provenance is preserved without re-validating
  * against a vocabulary the copied tags already passed.
  */
-
 import { Injectable } from '@nestjs/common';
 import {
   AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
@@ -44,9 +43,9 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import type { EntityManager } from 'typeorm';
 
-import { resolveArtifactForWrite } from '../../graphql/work-ledger/artifact-type-registry.ts';
-import { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture.service.ts';
-import { WORK_LEDGER_CAPTURE_FAILED_MARKER } from '../../graphql/work-ledger/work-ledger-capture-failure-marker.ts';
+import { resolveArtifactForWrite } from '../../graphql/work-ledger/artifact-type-registry/artifact-type-registry.utils.ts';
+import { WORK_LEDGER_CAPTURE_FAILED_MARKER } from '../../graphql/work-ledger/work-ledger.constants.ts';
+import { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture/work-ledger-capture.service.ts';
 import { NotificationsService } from '../../notifications/notifications.service.ts';
 import {
   PROMOTED_TAG,
@@ -54,32 +53,12 @@ import {
   PROMOTION_SESSION_TOOL_NAME,
   SEED_TASK_TITLE,
 } from './task-promotion.constants.ts';
+import type {
+  PromoteTaskOutcome,
+  PromoteTaskParams,
+} from './task-promotion.types.ts';
 
 const PHASE_DIMENSION = 'phase';
-
-export interface PromoteTaskParams {
-  /** Service-account id of the promoter, when the principal is a machine. */
-  readonly actorServiceAccountId: string | null;
-  /** User id of the promoter, when the principal is a human. */
-  readonly actorUserId: string | null;
-  /**
-   * True to roll back the whole promotion when the source task's status_change capture fails
-   * (the `promoteTaskToPlan` mutation path, via {@link TaskPromotionProcessor} — user-initiated);
-   * false to log it and let the promotion commit anyway (the `promote-task-to-plan` tag-rule
-   * automation, via {@link PromoteTaskToPlanExecutor} — background). Callers set this explicitly
-   * per path rather than it being inferred from the actor fields, since both paths can supply a
-   * resolvable actorUserId (the automation attributes to the plan owner, not a system account).
-   */
-  readonly captureFailureIsFatal: boolean;
-  readonly taskId: string;
-}
-
-export interface PromoteTaskOutcome {
-  /** The plan the task was promoted into, when promotion ran. */
-  readonly newPlanId: string | null;
-  /** Non-null when the job did nothing (task-missing | already-promoted). */
-  readonly skipped: string | null;
-}
 
 @Injectable()
 export class TaskPromotionService {

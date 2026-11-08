@@ -36,8 +36,8 @@ import { projectHookTasksToJobRunHookEntries } from '@tools/workflows';
 import type { Queue } from 'bullmq';
 import type { EntityManager } from 'typeorm';
 
-import { updateMatchingTasksAndEmitStatusChanged } from '../../../notifications/emit-bulk-task-status-changes.ts';
 import { NotificationsService } from '../../../notifications/notifications.service.ts';
+import { updateMatchingTasksAndEmitStatusChanged } from '../../../notifications/notifications.utils.ts';
 import {
   PLAN_JOB_PRIORITY_DEFAULT,
   PLANS_QUEUE_NAME,
@@ -49,22 +49,20 @@ import type {
   RunPlanJobData,
   RunPlanOrchestratorJobData,
 } from '../../../queues/plans/plans.types.ts';
-import type { ScheduledPlanRunFireDecision } from '../../../queues/plans/scheduled-plan-run.utils.ts';
-import { decideScheduledPlanRunFire } from '../../../queues/plans/scheduled-plan-run.utils.ts';
+import type { ScheduledPlanRunFireDecision } from '../../../queues/plans/scheduled-plan-run/scheduled-plan-run.types.ts';
+import { decideScheduledPlanRunFire } from '../../../queues/plans/scheduled-plan-run/scheduled-plan-run.utils.ts';
 import { USAGE_LIMIT_RESUME_JOB_ID_PREFIX } from '../../../queues/usage-limit/usage-limit.constants.ts';
-import {
-  normalizeIdempotencyKey,
-  QueuesService,
-} from '../../queues/queues.service.ts';
-import { WorkLedgerCaptureService } from '../../work-ledger/work-ledger-capture.service.ts';
-import { buildRunPlanOrchestratorJobData } from '../enqueue-plan-ralph-tuning.ts';
+import { QueuesService } from '../../queues/queues-service/queues-service.service.ts';
+import { normalizeIdempotencyKey } from '../../queues/queues-service/queues-service.utils.ts';
+import { WorkLedgerCaptureService } from '../../work-ledger/work-ledger-capture/work-ledger-capture.service.ts';
+import { buildRunPlanOrchestratorJobData } from '../enqueue-plan-ralph-tuning/enqueue-plan-ralph-tuning.utils.ts';
 import {
   buildPlanRunConfigSnapshotFromJobData,
   orchestratorJobInputFromSnapshot,
-} from '../enqueue-plan-run-config-snapshot.ts';
+} from '../enqueue-plan-run-config-snapshot/enqueue-plan-run-config-snapshot.utils.ts';
 import type { RalphPlanRunTuningInput } from '../plan.input.ts';
-import type { StatusChangeActor } from '../plan-status.service.ts';
-import { PlanStatusService } from '../plan-status.service.ts';
+import { PlanStatusService } from '../plan-status/plan-status.service.ts';
+import type { StatusChangeActor } from '../plan-status/plan-status.types.ts';
 import { PLAN_SCHEDULE_CONFLICT_CODE } from './plan-enqueue.constants.ts';
 import type {
   EnqueueOutcome,
@@ -76,10 +74,8 @@ import {
   decidePlanSchedulability,
   isOneScheduledRunViolation,
 } from './plan-enqueue.utils.ts';
-import {
-  countRunnablePlanTasks,
-  ENQUEUE_TASK_STATUSES_TO_RESET,
-} from './plan-runnable-tasks.ts';
+import { ENQUEUE_TASK_STATUSES_TO_RESET } from './runnable-tasks/runnable-tasks.constants.ts';
+import { countRunnablePlanTasks } from './runnable-tasks/runnable-tasks.utils.ts';
 
 /** Task statuses a usage-limit continuation re-queues: only the limited run's in-flight work. */
 const USAGE_LIMIT_RESUME_TASK_STATUSES_TO_RESET = [

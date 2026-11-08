@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
 
-import { ForeignSkillInjectionLifecycleService } from './foreign-skill-injection-lifecycle.service.ts';
-import { ForeignSkillMaterializationService } from './foreign-skill-materialization.service.ts';
+import { ForeignSkillInjectionLifecycleService } from './lifecycle/lifecycle.service.ts';
+import { ForeignSkillMaterializationService } from './materialization/materialization.service.ts';
 
 /**
  * @description Foreign-skill injection wiring: the server-scoped lifecycle

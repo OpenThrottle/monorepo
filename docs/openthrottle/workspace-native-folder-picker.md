@@ -5,7 +5,7 @@ decides it may open a native OS folder dialog, and which per-OS commands return
 an absolute host path with clean cancel/timeout semantics.
 
 Implementation:
-`applications/openthrottle-server/src/graphql/workspace-settings/native-folder-picker.ts`,
+`applications/openthrottle-server/src/graphql/workspace-settings/native-folder-picker/native-folder-picker.utils.ts`,
 surfaced as `workspacePickerCapabilities`, `pickFolderNative`, and the enriched
 `browseDirectory` (the in-app fallback).
 

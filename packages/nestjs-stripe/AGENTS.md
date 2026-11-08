@@ -8,13 +8,13 @@ implementations of the ports in `tokens/stripe-ports.ts` via `forRootAsync`.
 
 ## Layout
 
-- `src/modules/stripe.module.ts` — `StripeModule.forRootAsync({ useFactory, inject })`; the
+- `src/nestjs-stripe.module.ts` — `StripeModule.forRootAsync({ useFactory, inject })`; the
   factory returns the port implementations (user lookup, subscriptions, processed-events).
-- `src/tokens/stripe-ports.ts` — the port interfaces the host must implement, incl.
+- `src/tokens/tokens.types.ts` — the port interfaces the host must implement, incl.
   `StripeProcessedEventsPort` (idempotency/replay protection).
-- `src/controllers/webhooks.controller.ts` — `POST /webhooks/stripe` raw-body adapter.
-- `src/graphql/stripe-webhook.resolver.ts` — `processStripeWebhook` mutation (base64 raw body).
-- `src/config/stripe-config.ts` — `getStripeConfig()`, reads `STRIPE_SECRET_KEY` /
+- `src/webhooks/webhooks.controller.ts` — `POST /webhooks/stripe` raw-body adapter.
+- `src/graphql/stripe-webhook/stripe-webhook.resolver.ts` — `processStripeWebhook` mutation (base64 raw body).
+- `src/config/config.utils.ts` — `getStripeConfig()`, reads `STRIPE_SECRET_KEY` /
   `STRIPE_WEBHOOK_SECRET` from `process.env`.
 
 ## Invariants & gotchas

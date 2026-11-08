@@ -10,13 +10,13 @@ through `openthrottle-server` GraphQL ("architecture B" — the client never tou
 
 ## Layout
 
-- `src/code-vector-store.ts` — raw SQL against the `code_embeddings` table (cosine `<=>` +
+- `src/code-vector-store/code-vector-store.service.ts` — raw SQL against the `code_embeddings` table (cosine `<=>` +
   HNSW); every method is scoped by `workspaceRoot`.
-- `src/code-search.service.ts` — `indexCodeWorkspace`, `codeSemanticSearch`,
+- `src/code-search/code-search.service.ts` — `indexCodeWorkspace`, `codeSemanticSearch`,
   `indexedChunkCount`, `isProviderConfigured`.
-- `src/code-snapshot-store.ts` — snapshot baseline for (planned) incremental indexing;
+- `src/code-snapshot-store/code-snapshot-store.service.ts` — snapshot baseline for (planned) incremental indexing;
   v1 still does a full re-index per run.
-- `src/app-config.service.ts` — resolves the embeddings provider from env.
+- `src/app-config/app-config.service.ts` — resolves the embeddings provider from env.
 - `src/nestjs-vector-search.module.ts` — provides/exports all four; no config module of its own.
 
 ## Invariants & gotchas

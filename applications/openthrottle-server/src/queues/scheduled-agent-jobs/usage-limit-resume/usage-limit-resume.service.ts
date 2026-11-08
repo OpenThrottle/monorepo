@@ -12,15 +12,13 @@ import type { Queue } from 'bullmq';
 import { USAGE_LIMIT_RESUME_MAX_CHAIN_DEPTH } from '../../usage-limit/usage-limit.constants.ts';
 import { decideScheduledUsageLimitResume } from '../../usage-limit/usage-limit.utils.ts';
 import {
-  buildScheduledAgentJobPayload,
-  ScheduledAgentJobSchedulerService,
-} from '../scheduled-agent-job-scheduler.service.ts';
-import {
   SCHEDULED_AGENT_JOB_NAME,
   SCHEDULED_AGENT_JOB_OPTIONS,
   SCHEDULED_AGENT_JOBS_QUEUE_NAME,
 } from '../scheduled-agent-jobs.constants.ts';
 import type { ScheduledAgentJobPayload } from '../scheduled-agent-jobs.types.ts';
+import { ScheduledAgentJobSchedulerService } from '../scheduler/scheduler.service.ts';
+import { buildScheduledAgentJobPayload } from '../scheduler/scheduler.utils.ts';
 import type { ScheduledUsageLimitHandling } from './usage-limit-resume.types.ts';
 import { usageLimitResumeJobId } from './usage-limit-resume.utils.ts';
 

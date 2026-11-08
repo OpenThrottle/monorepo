@@ -43,15 +43,13 @@ vi.mock('node:fs', () => ({
   statSync: mockStatSync,
 }));
 
-import {
-  MAX_DISCOVERED_WORKTREES,
-  WorktreeDiscoveryService,
-} from './worktree-discovery.service.ts';
+import { MAX_DISCOVERED_WORKTREES } from './worktree-discovery.constants.ts';
 import {
   MISSING_CHECKOUT_REASON,
   WORKTREE_DISCOVERY_PROBLEM,
   WORKTREE_DISCOVERY_SOURCE,
-} from './worktree-discovery.types.ts';
+} from './worktree-discovery.constants.ts';
+import { WorktreeDiscoveryService } from './worktree-discovery.service.ts';
 
 const PRIMARY = '/Users/matt/Development/openthrottle';
 /** The default rung of the shared ladder for PRIMARY: `$HOME/worktrees/<repo>`. */

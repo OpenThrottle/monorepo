@@ -1,7 +1,7 @@
 import { PubSub } from 'graphql-subscriptions';
 import { describe, expect, it } from 'vitest';
 
-import { createPubSub } from './pubsub.module.ts';
+import { createPubSub } from './pubsub.utils.ts';
 
 describe('createPubSub', () => {
   it('builds a PubSubEngine (in-memory PubSub) instance', () => {

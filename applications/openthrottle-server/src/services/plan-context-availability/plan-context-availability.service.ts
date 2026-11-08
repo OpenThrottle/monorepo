@@ -17,7 +17,6 @@
  * the inject-task executor's candidate-set gating.
  * See docs/monorepo/plan-task-tags-rules-design.md ("Action type 1").
  */
-
 import {
   BadRequestException,
   Injectable,
@@ -40,7 +39,6 @@ import {
   availabilityExceptionActionPayloadSchema,
   evaluateTagActionRules,
   resolveSkillAvailability,
-  type SkillAvailabilityEnvironment,
   type SkillAvailabilityInput,
   type SkillAvailabilityRule,
   type SkillAvailabilityRuleSet,
@@ -48,38 +46,14 @@ import {
   type TagActionRuleInput,
 } from '@openthrottle/openthrottle-skills';
 
+import type {
+  PlanContextAvailability,
+  PlanContextResolvedSkill,
+  ResolveForPlanInput,
+} from './plan-context-availability.types.ts';
+
 /** nx_project_name of the dogfood project (the projectSkills anchor). */
 const DOGFOOD_NX_PROJECT_NAME = 'OpenThrottle/monorepo';
-
-/** @public */
-export interface PlanContextResolvedSkill {
-  readonly effectiveDisableModelInvocation: boolean;
-  readonly matchedPlanTags: string[];
-  readonly planRelevant: boolean;
-  readonly provenance: string;
-  readonly slug: string;
-  readonly staticDisableModelInvocation: boolean | null;
-}
-
-/** @public */
-export interface PlanContextAvailability {
-  readonly effectiveDomainTags: string[];
-  readonly skills: PlanContextResolvedSkill[];
-  readonly warnings: string[];
-}
-
-/** @public */
-export interface ResolveForPlanInput {
-  /** Availability environment; the shipped resolver defaults to interactive. */
-  readonly environment?: SkillAvailabilityEnvironment;
-  readonly planId: string;
-  /** Explicit project override; falls back to plan.projectId, then dogfood. */
-  readonly projectId?: string | null;
-  /** Task context; must belong to the plan. */
-  readonly taskId?: string | null;
-  /** Whose skill-tag vocabulary feeds the resolver (the reading identity). */
-  readonly vocabularyUserId: string;
-}
 
 @Injectable()
 export class PlanContextAvailabilityService {

@@ -12,7 +12,7 @@ import {
 import type { LogJsonlSink } from '@openthrottle/nestjs-logging';
 import { LOG_JSONL_SINK } from '@openthrottle/nestjs-logging';
 
-import { isOpenthrottleServerDevJsonlLoggingEnabled } from '../../config/openthrottle-server-dev-jsonl-logging.ts';
+import { isOpenthrottleServerDevJsonlLoggingEnabled } from '../../config/config.utils.ts';
 import { NotificationsService } from '../../notifications/notifications.service.ts';
 
 @Injectable()

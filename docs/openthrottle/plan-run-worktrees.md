@@ -72,7 +72,7 @@ and only self-heals on the first `:dev`.
 
 Every agent — Claude, Cursor, Ralph, the BullMQ plans worker — creates worktrees under one
 root. There is **one** implementation of that ladder,
-`applications/openthrottle-server/src/services/worktree-root/worktree-root.resolver.ts`,
+`applications/openthrottle-server/src/services/worktree-root/worktree-root.utils.ts`,
 mirroring `resolve_worktree_root` in `skills/ot-worktree/scripts/root.sh`. Both the provisioning
 path and the discovery path (below) consume it, so the settings page, the worker, and the
 `/settings/repositories` table can never disagree about where worktrees live. The resolver

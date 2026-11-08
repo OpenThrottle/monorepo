@@ -3,12 +3,7 @@ import { stat } from 'node:fs/promises';
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import type { OnApplicationShutdown } from '@nestjs/common';
 import { Inject, Optional } from '@nestjs/common';
-import {
-  hasUsageCounts,
-  type NormalizedTokenUsage,
-  normalizeUsage,
-  sumUsage,
-} from '@openthrottle/agentic-token-usage';
+import { type NormalizedTokenUsage } from '@openthrottle/agentic-token-usage';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import { LoggerService } from '@openthrottle/nestjs-modules';
@@ -27,33 +22,36 @@ import {
 } from '@openthrottle/openthrottle-drivers';
 import { SCHEDULED_RUN_FAILURE_REASONS } from '@openthrottle/openthrottle-notifications';
 
-import { closeRunOutputForJob } from '../bullmq-keyed-run-logging.ts';
-import { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.service.ts';
-import { BULLMQ_RUN_OUTPUT_WRITER } from '../bullmq-run-output-writer.token.ts';
-import { ScheduledAgentJobCancellationService } from './scheduled-agent-job-cancellation.service.ts';
-import { ScheduledAgentJobDirectoryLockService } from './scheduled-agent-job-directory-lock.service.ts';
-import { ScheduledAgentJobFailureNotifierService } from './scheduled-agent-job-failure-notifier.service.ts';
-import { ScheduledAgentJobSchedulerService } from './scheduled-agent-job-scheduler.service.ts';
+import { closeRunOutputForJob } from '../bullmq-keyed-run-logging/bullmq-keyed-run-logging.utils.ts';
+import { BULLMQ_RUN_OUTPUT_WRITER } from '../bullmq-run-output/bullmq-run-output-writer.token.ts';
+import { BullMqRunOutputRetentionService } from '../bullmq-run-output/retention/retention.service.ts';
+import { ScheduledAgentJobCancellationService } from './cancellation/cancellation.service.ts';
+import { ScheduledAgentJobDirectoryLockService } from './directory-lock/directory-lock.service.ts';
+import { ScheduledAgentJobFailureNotifierService } from './failure-notifier/failure-notifier.service.ts';
+import { SCHEDULED_AGENT_JOB_MISFIRE_MIN_THRESHOLD_MS } from './misfire/misfire.constants.ts';
+import {
+  missedOnPickupMessage,
+  shouldRunLateFire,
+  slotMillisFromJobId,
+} from './misfire/misfire.utils.ts';
+import { ScheduledAgentRunnerService } from './runner/runner.service.ts';
+import { isSelfScheduledKind } from './schedule-kind/schedule-kind.utils.ts';
+import {
+  SCHEDULED_AGENT_JOB_OUTPUT_SOURCE,
+  SCHEDULED_AGENT_JOBS_QUEUE_NAME,
+} from './scheduled-agent-jobs.constants.ts';
+import type {
+  ScheduledAgentJobBullJob,
+  ScheduledAgentJobPayload,
+} from './scheduled-agent-jobs.types.ts';
+import { foldRunUsage, parseRunOutcome } from './scheduled-agent-jobs.utils.ts';
 import {
   resolveScheduledAgentJobConcurrencyKey,
   resolveScheduledAgentJobRunCwd,
   resolveScheduledAgentJobsConcurrency,
   resolveScheduledAgentJobTimeoutMs,
-  SCHEDULED_AGENT_JOB_OUTPUT_SOURCE,
-  SCHEDULED_AGENT_JOBS_QUEUE_NAME,
-} from './scheduled-agent-jobs.constants.ts';
-import {
-  missedOnPickupMessage,
-  SCHEDULED_AGENT_JOB_MISFIRE_MIN_THRESHOLD_MS,
-  shouldRunLateFire,
-  slotMillisFromJobId,
-} from './scheduled-agent-jobs.misfire.ts';
-import { isSelfScheduledKind } from './scheduled-agent-jobs.schedule-kind.ts';
-import type {
-  ScheduledAgentJobBullJob,
-  ScheduledAgentJobPayload,
-} from './scheduled-agent-jobs.types.ts';
-import { ScheduledAgentRunnerService } from './scheduled-agent-runner.service.ts';
+} from './scheduled-agent-jobs.utils.ts';
+import { ScheduledAgentJobSchedulerService } from './scheduler/scheduler.service.ts';
 import { ScheduledAgentJobUsageLimitResumeService } from './usage-limit-resume/usage-limit-resume.service.ts';
 
 /** Run-status terminal states — a run in one of these is done and must not be re-marked. */
@@ -65,39 +63,6 @@ const TERMINAL_RUN_STATUSES: ReadonlySet<ScheduledAgentJobRunStatus> = new Set([
   'succeeded',
   'usage_limited',
 ]);
-
-/**
- * Machine token a job's prompt can instruct its agent to emit as the last thing it prints, so a run
- * that did no work stops reporting as a clean success.
- *
- * An agent CLI exits 0 whenever the model produced a turn — including a turn that explicitly
- * declined the task — so the process exit code cannot distinguish "did the work" from "refused".
- * Nor can the CLI's own structured result event: a decline is still a completed turn as far as the
- * CLI is concerned. The only party that knows whether the work happened is the agent, so it has to
- * say so, and it has to say so in a token rather than in prose.
- *
- * This is deliberately an OPT-IN convention, not prose sniffing: a job that says nothing about
- * OT_RUN_OUTCOME keeps exactly its previous mapping, so no existing job or historical row changes
- * meaning. Matching is anchored to a line and case-sensitive; the LAST occurrence wins, so a prompt
- * that quotes the protocol while explaining it cannot outvote the agent's real verdict.
- */
-const RUN_OUTCOME_SENTINEL =
-  /^OT_RUN_OUTCOME:[ \t]*(completed|no_op)[ \t]*$/gmu;
-
-/**
- * @description Reads the last OT_RUN_OUTCOME sentinel from a run's buffered output. Returns `null`
- * when the job did not opt into the convention, which means "no claim either way" — callers must
- * then fall back to the exit-code mapping rather than assume either outcome.
- */
-export const parseRunOutcome = (
-  output: string,
-): 'completed' | 'no_op' | null => {
-  const matches = [...output.matchAll(RUN_OUTCOME_SENTINEL)];
-  const last = matches[matches.length - 1]?.[1];
-
-  return last === 'completed' || last === 'no_op' ? last : null;
-};
-
 /**
  * @description Maps a driver {@link RunAgentStatus} to the persisted run status, letting an
  * agent-emitted {@link parseRunOutcome} verdict override a clean exit.
@@ -143,30 +108,6 @@ const parseResetInstant = (limit: UsageLimit): Date | null => {
 
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
-
-/**
- * @description Fold token usage out of a run's buffered CLI output. The output is JSONL (one event
- * per line for stream-json backends; opencode emits several mid-stream usage lines), so each line is
- * run through the shared {@link normalizeUsage} and accumulated with {@link sumUsage} — the same fold
- * `ConversationStreamService.persistTurnUsage` does, but over raw buffered text instead of discrete
- * usage events. Defensive by contract: `normalizeUsage`/`sumUsage` never throw on bad/partial input,
- * the whole fold is guarded, and a run that reported no counts folds to `null` (nothing to persist).
- */
-export const foldRunUsage = (output: string): NormalizedTokenUsage | null => {
-  try {
-    const folded = output
-      .split('\n')
-      .reduce<NormalizedTokenUsage>((accumulated, line) => {
-        if (line.trim() === '') return accumulated;
-        return sumUsage(accumulated, normalizeUsage(line));
-      }, {});
-
-    return hasUsageCounts(folded) ? folded : null;
-  } catch {
-    return null;
-  }
-};
-
 /** @description The persisted usage columns derived from a folded run usage (all null when absent). */
 const usageColumns = (
   usage: NormalizedTokenUsage | null,

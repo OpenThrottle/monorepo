@@ -9,7 +9,7 @@ import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { ServiceAccount } from '../service-accounts/service-account.entity.ts';
 import { User } from '../users/user.entity.ts';
 import { Permission } from './permission.entity.ts';
-import { PermissionsService } from './permissions.service.ts';
+import { PermissionsService } from './permissions/permissions.service.ts';
 import { Role } from './role.entity.ts';
 import { RolesService } from './roles.service.ts';
 

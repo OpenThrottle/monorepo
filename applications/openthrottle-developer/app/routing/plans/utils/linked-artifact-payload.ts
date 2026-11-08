@@ -4,7 +4,7 @@
  * (for `status_change`) the from → to transition.
  *
  * Payload shapes mirror the server registry
- * (`applications/openthrottle-server/src/graphql/work-ledger/artifact-type-registry.ts`).
+ * (`applications/openthrottle-server/src/graphql/work-ledger/artifact-type-registry/artifact-type-registry.utils.ts`).
  * The registry is **open by design** — an unregistered type, a malformed JSON
  * string, or a payload that has drifted from its schema all degrade to the
  * `unknown` view model, which renders exactly what the panel rendered before

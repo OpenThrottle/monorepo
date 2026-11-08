@@ -16,9 +16,9 @@ import { ForeignSkillInjectionModule } from '../../services/foreign-skill-inject
 import { PlanRunWorkspacePreflightModule } from '../../services/plan-run-workspace-preflight/plan-run-workspace-preflight.module.ts';
 import { PlanRunWorktreeCheckoutModule } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.module.ts';
 import { PlanRunWorktreeProvisionModule } from '../../services/plan-run-worktree-provision/plan-run-worktree-provision.module.ts';
-import { AgenticRalphOrchestratorService } from './agentic-ralph-orchestrator.service.ts';
+import { resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv } from './agentic-ralph.utils.ts';
 import { createAgenticRalphOrchestratorDeps } from './agentic-ralph-orchestrator-deps.factory.ts';
-import { resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv } from './agentic-ralph-worker-graphql-auth.ts';
+import { AgenticRalphOrchestratorService } from './orchestrator/orchestrator.service.ts';
 
 /**
  * @description Nest wiring for in-process Ralph on the server. Registers the Ralph workflow into the

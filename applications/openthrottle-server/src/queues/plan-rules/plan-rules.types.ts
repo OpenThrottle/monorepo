@@ -1,21 +1,9 @@
 /**
  * @description Job payload + trigger taxonomy for plan-rules:evaluate.
  */
-
 import type { Job } from 'bullmq';
 
-/**
- * @description What caused an evaluation pass. Informational (logged and kept
- * on the job) — the evaluation itself is always a full pass over the plan.
- */
-export const PLAN_RULES_TRIGGER_KINDS = {
-  MANUAL: 'manual',
-  PLAN_CREATED: 'plan-created',
-  STATUS_CHANGED: 'status-changed',
-  TAG_CHANGED: 'tag-changed',
-  TASK_CREATED: 'task-created',
-} as const;
-
+import type { PLAN_RULES_TRIGGER_KINDS } from './plan-rules.constants.ts';
 export type PlanRulesTriggerKind =
   (typeof PLAN_RULES_TRIGGER_KINDS)[keyof typeof PLAN_RULES_TRIGGER_KINDS];
 

@@ -64,7 +64,7 @@ export default [
     // unconditionally afterward (matching the unconditional `UPDATE` it
     // replaced) — a second, deliberate write in the same chokepoint file and
     // the same transaction as the `applyStatusChange` call, not a bypass.
-    files: ['**/graphql/plans/plan-status.service.ts'],
+    files: ['**/graphql/plans/plan-status/plan-status.service.ts'],
     rules: {
       'openthrottle/plan-task-status-chokepoint': [
         'error',
@@ -81,7 +81,9 @@ export default [
   {
     // The bulk task-status chokepoint: select-lock-update-capture behind
     // every path that changes many tasks' status in one call.
-    files: ['**/graphql/work-ledger/bulk-task-status-change.ts'],
+    files: [
+      '**/graphql/work-ledger/bulk-task-status-change/bulk-task-status-change.utils.ts',
+    ],
     rules: {
       'openthrottle/plan-task-status-chokepoint': [
         'error',

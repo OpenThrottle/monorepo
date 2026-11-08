@@ -1,4 +1,4 @@
-import { PACKAGE_NAME } from './nestjs-logging.config.ts';
+import { PACKAGE_NAME } from './config.constants.ts';
 
 /**
  * @description Fail-fast validation or wiring errors for nestjs-logging.

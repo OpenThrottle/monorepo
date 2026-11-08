@@ -142,6 +142,8 @@ ruleTester.run('nestjs-file-naming', nestjsFileNaming, {
     { code: CODE, filename: 'src/graphql/queues/job.object.ts' },
     { code: CODE, filename: 'src/graphql/queues/retry-job.input.ts' },
     { code: CODE, filename: 'src/guards/global-auth.guard.ts' },
+    { code: CODE, filename: 'src/config/nestjs-slack.error.ts' },
+    { code: CODE, filename: 'src/emit-notification.interceptor.ts' },
     {
       code: CODE,
       filename: 'src/graphql/plans/plan-schedule-conflict.filter.ts',

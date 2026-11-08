@@ -96,7 +96,7 @@ run by `pnpm worktree:heal` before every `dev`). Git detection of "is this a lin
 worktree" lives only in heal/provision, which decide whether to write the marker;
 everything at runtime reads the marker — `database:start`/`database:stop`
 (`scripts/openthrottle-database-lifecycle.ts`) and the server's "does this checkout own repeatables" gate
-(`applications/openthrottle-server/src/queues/repeatable-job.owner.ts`): every repeatable
+(`applications/openthrottle-server/src/queues/repeatable-job/repeatable-job.utils.ts`): every repeatable
 job (work-ledger sweep/verify/harvest, daily stats, data retention, plan-runs
 stale sweep, and the scheduled-agent-jobs boot reconcile) registers only when that check says
 owner — `shared` is not, `isolated` and an absent marker are. A non-owner logs one line naming

@@ -1,0 +1,32 @@
+/**
+ * @description The registry of retention policies the sweep applies, in order.
+ *
+ * Adding a table's retention rule means writing one policy under `policies/` and
+ * appending it here — the processor, the dry-run reporting and the batching are
+ * shared and need no change.
+ */
+
+import type { RetentionPolicy } from '../data-retention.types.ts';
+import { agentTokenUsagePolicy } from './agent-token-usage.policy.ts';
+import { codeEmbeddingsPolicy } from './code-embeddings.policy.ts';
+import { planOutputStreamPolicy } from './plan-output-stream.policy.ts';
+import {
+  skillUsageEventsPolicy,
+  skillUsageOutcomesPolicy,
+} from './skill-usage.policy.ts';
+import { workLedgerPolicy } from './work-ledger.policy.ts';
+
+export const DATA_RETENTION_POLICIES: readonly RetentionPolicy[] = [
+  planOutputStreamPolicy,
+  workLedgerPolicy,
+  agentTokenUsagePolicy,
+  skillUsageEventsPolicy,
+  skillUsageOutcomesPolicy,
+  codeEmbeddingsPolicy,
+];
+
+/**
+ * DI token for the policy list. Injected rather than imported directly so tests
+ * can supply their own policies without mutating the registry.
+ */
+export const DATA_RETENTION_POLICIES_TOKEN = 'DATA_RETENTION_POLICIES';

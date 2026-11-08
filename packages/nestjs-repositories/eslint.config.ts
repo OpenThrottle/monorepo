@@ -35,7 +35,9 @@ export default [
     // and captures via a caller-supplied callback, inside the same
     // transaction as the write (this package cannot depend on the server's
     // WorkLedgerCaptureService directly — see the callback's own doc comment).
-    files: ['**/tag-action-rules/rule-applications.service.ts'],
+    files: [
+      '**/tag-action-rules/rule-applications/rule-applications.service.ts',
+    ],
     rules: {
       'openthrottle/plan-task-status-chokepoint': [
         'error',

@@ -10,19 +10,19 @@ and the subscription topic-name helpers.
 
 ## Layout
 
-- `src/modules/nestjs-graphql.module.ts` — `DEFAULT_DRIVER_CONFIG` + the `buildDriverConfig` /
+- `src/nestjs-graphql.module.ts` — `DEFAULT_DRIVER_CONFIG` + the `buildDriverConfig` /
   `mergeSecureDefaults` merge logic; every default worth knowing has a JSDoc explaining why.
-- `src/subscriptions/graphql-ws-auth.ts` — connection-time JWT auth for graphql-ws
+- `src/subscriptions/graphql-ws-auth/graphql-ws-auth.utils.ts` — connection-time JWT auth for graphql-ws
   (`connectionParams.authToken`, same HS256 `JWT_SECRET`/`JWT_ISSUER` as HTTP).
-- `src/subscriptions/topics.ts` — topic-name builders (`<entity>:<id>:<facet>`); always build
+- `src/subscriptions/topics/topics.utils.ts` — topic-name builders (`<entity>:<id>:<facet>`); always build
   names here, the in-memory PubSub matches exact strings only.
 - `src/pubsub/pubsub.module.ts` — global module providing the `PUB_SUB` singleton (in-memory
   `PubSub`; Redis swap seam documented in its JSDoc).
 - `src/config/` — `format-error` (leak-safe `formatError`), cache plugins, depth-limit rule,
   response-cache session id.
-- `src/schema/emit-code-first-schema.ts` — `emitCodeFirstSchema`: writes a root module's
+- `src/schema/emit-code-first-schema/emit-code-first-schema.utils.ts` — `emitCodeFirstSchema`: writes a root module's
   `autoSchemaFile` (when set) in Nest preview mode (only `GraphQLModule` initializes; no DB/Redis/HTTP).
-- `src/schema/graphql-schema-command.ts` + `src/bin.ts` — the check/write command behind the
+- `src/schema/graphql-schema-command/graphql-schema-command.utils.ts` + `src/bin.ts` — the check/write command behind the
   shared `graphql-schema` Nx target (`nx.json` targetDefaults). Nx runs `dist/src/bin.js` with
   node directly (so `--env-file` loads before the app module is imported), passing the app's
   built `--module`, `--project` and `--schema={projectRoot}/schema.gql`. A GraphQL API needs no
@@ -35,7 +35,7 @@ and the subscription topic-name helpers.
   `graphql-schema:write` is the only producer of the committed
   `applications/openthrottle-server/schema.gql` (a boot orders types differently from that command,
   so a boot-written file churned the diff and failed `graphql-schema:check`). The one way to point
-  the emit at a file is `GRAPHQL_SCHEMA_FILE` (`src/schema/auto-schema-file.ts`): `forRoot` turns it
+  the emit at a file is `GRAPHQL_SCHEMA_FILE` (`src/schema/auto-schema-file/auto-schema-file.utils.ts`): `forRoot` turns it
   into `autoSchemaFile` when it runs, and only the `graphql-schema` command sets it, BEFORE importing
   the app's root module (an absolute path: the committed schema for `write`, a temp file for `check`).
   Keep that file import-free, and keep `autoSchemaFile` out of `DEFAULT_DRIVER_CONFIG`, so the lookup

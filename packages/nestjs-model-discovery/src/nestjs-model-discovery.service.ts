@@ -7,14 +7,9 @@ import {
   StaleWhileRevalidateCache,
 } from '@openthrottle/openthrottle-agentic-utils';
 
-import type { ModelDiscoveryConfig } from './config/nestjs-model-discovery.config.ts';
-import { MODEL_DISCOVERY_CONFIG_NAMESPACE } from './config/nestjs-model-discovery.config.ts';
-
-/** Options for {@link NestjsModelDiscoveryService.discover}. */
-export interface DiscoverOptions {
-  /** Bypass the in-process cache and force a fresh scan. */
-  readonly forceRefresh?: boolean;
-}
+import { MODEL_DISCOVERY_CONFIG_NAMESPACE } from './config/config.constants.ts';
+import type { ModelDiscoveryConfig } from './config/config.types.ts';
+import type { DiscoverOptions } from './nestjs-model-discovery.types.ts';
 
 /**
  * Injectable, stale-while-revalidate-cached wrapper around the model-discovery

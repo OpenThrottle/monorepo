@@ -12,13 +12,13 @@ import { QueryFailedError } from 'typeorm';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { NotificationsService } from '../../notifications/notifications.service.ts';
-import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service.ts';
-import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service.ts';
-import { TaskPromotionEnqueueService } from '../../queues/task-promotion/task-promotion-enqueue.service.ts';
-import { PlanStatusService } from '../plans/plan-status.service.ts';
-import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service.ts';
+import { PlanRulesEvaluationService } from '../../queues/plan-rules/evaluation/evaluation.service.ts';
+import { TaggingEnqueueService } from '../../queues/tagging/enqueue/enqueue.service.ts';
+import { TaskPromotionEnqueueService } from '../../queues/task-promotion/enqueue/enqueue.service.ts';
+import { PlanStatusService } from '../plans/plan-status/plan-status.service.ts';
+import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture/work-ledger-capture.service.ts';
+import { TasksLoaders } from './loaders/loaders.service.ts';
 import { TasksResolver } from './tasks.resolver.ts';
-import { TasksLoaders } from './tasks-loaders.ts';
 
 describe('TasksResolver', () => {
   let resolver: TasksResolver;

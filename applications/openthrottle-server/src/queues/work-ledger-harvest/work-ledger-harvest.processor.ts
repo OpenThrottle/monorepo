@@ -18,8 +18,7 @@ import {
   WorkSessionSubject,
 } from '@openthrottle/nestjs-repositories';
 
-import { resolveArtifactForWrite } from '../../graphql/work-ledger/artifact-type-registry.ts';
-import { parsePlanTrailers, planRefMatches } from './parse-plan-trailers.ts';
+import { resolveArtifactForWrite } from '../../graphql/work-ledger/artifact-type-registry/artifact-type-registry.utils.ts';
 import {
   WORK_LEDGER_HARVEST_BATCH_SIZE,
   WORK_LEDGER_HARVEST_QUEUE_NAME,
@@ -28,6 +27,10 @@ import type {
   WorkLedgerHarvestJob,
   WorkLedgerHarvestSummary,
 } from './work-ledger-harvest.types.ts';
+import {
+  parsePlanTrailers,
+  planRefMatches,
+} from './work-ledger-harvest.utils.ts';
 
 const CONCURRENCY = 1;
 const TOOL_NAME = 'work-ledger-harvest';

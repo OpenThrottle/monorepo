@@ -31,10 +31,12 @@ import { Repository } from 'typeorm';
 
 import {
   skillAvailabilityPostureSchema,
-  type SkillAvailabilityRuleInput,
-  type SkillAvailabilityRuleInputArgs,
   skillAvailabilityRuleInputSchema,
-} from './skill-availability.schemas.ts';
+} from './skill-availability.constants.ts';
+import type {
+  SkillAvailabilityRuleInput,
+  SkillAvailabilityRuleInputArgs,
+} from './skill-availability.types.ts';
 import { SkillAvailabilityRule } from './skill-availability-rule.entity.ts';
 import { SkillAvailabilityRuleSet } from './skill-availability-rule-set.entity.ts';
 

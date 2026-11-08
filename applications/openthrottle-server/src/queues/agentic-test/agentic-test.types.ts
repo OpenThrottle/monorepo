@@ -16,3 +16,10 @@ export interface AgenticTestJobResult {
 
 /** BullMQ job type for the agentic-test queue. */
 export type AgenticTestJob = Job<AgenticTestJobPayload, AgenticTestJobResult>;
+export interface RunAgenticTestEchoLoopOptions {
+  readonly echoCount?: number;
+  readonly intervalMs?: number;
+  readonly now?: () => Date;
+  readonly onEcho: (timestamp: string, index: number) => void;
+  readonly sleep: (ms: number) => Promise<void>;
+}

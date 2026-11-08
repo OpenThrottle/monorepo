@@ -3,7 +3,6 @@ import type { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 
-import { getTypeOrmOptions } from './database.config.ts';
 import { AgentCliPreferencesModule } from './modules/agent-cli-preferences/agent-cli-preferences.module.ts';
 import { AgentConversationsModule } from './modules/agent-conversations/agent-conversations.module.ts';
 import { AgentTokenUsageModule } from './modules/agent-token-usage/agent-token-usage.module.ts';
@@ -25,7 +24,7 @@ import { PlanRunsModule } from './modules/plan-runs/plan-runs.module.ts';
 import { PlansModule } from './modules/plans/plans.module.ts';
 import { ProjectSkillsModule } from './modules/project-skills/project-skills.module.ts';
 import { ProjectsModule } from './modules/projects/projects.module.ts';
-import { CustomPromptsModule } from './modules/prompts/custom-prompts.module.ts';
+import { CustomPromptsModule } from './modules/prompts/prompts.module.ts';
 import { RepositoriesModule } from './modules/repositories/repositories.module.ts';
 import { RolesModule } from './modules/roles/roles.module.ts';
 import { ScheduledAgentJobsModule } from './modules/scheduled-agent-jobs/scheduled-agent-jobs.module.ts';
@@ -41,6 +40,7 @@ import { TasksModule } from './modules/tasks/tasks.module.ts';
 import { UsersModule } from './modules/users/users.module.ts';
 import { WorkLedgerModule } from './modules/work-ledger/work-ledger.module.ts';
 import { WorkspaceSettingsModule } from './modules/workspace-settings/workspace-settings.module.ts';
+import { getTypeOrmOptions } from './nestjs-repositories.utils.ts';
 
 @Module({
   controllers: [],

@@ -7,7 +7,7 @@ Rate limiting for the GraphQL API: wraps `@nestjs/throttler` with a default tier
 
 ## Layout
 
-- `src/modules/nestjs-throttler.module.ts` — static import, `forRoot`, `forRootAsync`; every
+- `src/nestjs-throttler.module.ts` — static import, `forRoot`, `forRootAsync`; every
   variant re-binds the guard as `APP_GUARD`.
 - `src/guards/gql-throttler.guard.ts` — the whole point of the package; read its doc comments
   before touching throttling behavior.

@@ -22,12 +22,10 @@ import type {
 import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
-import type { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account.service.ts';
-import type { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture.service.ts';
-import {
-  type ActionExecutor,
-  ActionExecutorRegistry,
-} from './action-executor.ts';
+import type { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account/status-change-system-account.service.ts';
+import type { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture/work-ledger-capture.service.ts';
+import { ActionExecutorRegistry } from './action-executor-registry/action-executor-registry.service.ts';
+import type { ActionExecutor } from './action-executor-registry/action-executor-registry.types.ts';
 import { PlanRulesProcessor } from './plan-rules.processor.ts';
 import type { PlanRulesEvaluateJob } from './plan-rules.types.ts';
 

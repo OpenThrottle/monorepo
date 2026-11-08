@@ -11,10 +11,10 @@ import type { Mock } from 'vitest';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { AgentsResolver } from './agents.resolver.ts';
-import { PERSISTED_CONVERSATION_AUTH_ERROR } from './agents-chat-persistence.ts';
-import type { AgentsMcpRouteDecision } from './agents-mcp-router.ts';
-import { AgentsMcpRouter } from './agents-mcp-router.ts';
-import { AgentsMcpRouterLlmService } from './agents-mcp-router-llm.service.ts';
+import { PERSISTED_CONVERSATION_AUTH_ERROR } from './chat-persistence/chat-persistence.constants.ts';
+import { AgentsMcpRouter } from './mcp-router/mcp-router.service.ts';
+import type { AgentsMcpRouteDecision } from './mcp-router/mcp-router.types.ts';
+import { AgentsMcpRouterLlmService } from './mcp-router-llm/mcp-router-llm.service.ts';
 
 const createConfigStub = (): ConfigService => {
   return createMock<ConfigService>({

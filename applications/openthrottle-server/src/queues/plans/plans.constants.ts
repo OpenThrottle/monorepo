@@ -1,7 +1,4 @@
 import type { WorkflowFinishedReason } from '@openthrottle/openthrottle-agentic-ralph';
-
-import { RUN_PLAN_ORCHESTRATOR_JOB_NAME } from '../agentic-ralph/agentic-ralph.constants.ts';
-
 export const PLANS_QUEUE_NAME = 'Plans';
 
 /**
@@ -10,30 +7,6 @@ export const PLANS_QUEUE_NAME = 'Plans';
  * match any legacy `run-plan` jobs persisted in Redis, and so queue display can label them.
  */
 export const RUN_PLAN_SPAWN_JOB_NAME = 'run-plan';
-
-export { RUN_PLAN_ORCHESTRATOR_JOB_NAME };
-
-/**
- * @description Job names on the plans queue that represent a Ralph/plan run (spawn or orchestrator).
- * Used for cancellation and observability filters.
- */
-const PLAN_RALPH_BULL_JOB_NAMES = [
-  RUN_PLAN_SPAWN_JOB_NAME,
-  RUN_PLAN_ORCHESTRATOR_JOB_NAME,
-] as const;
-
-/**
- * @description True when `name` is a plan Ralph job type on the plans queue.
- */
-export const isPlanRalphBullJobName = (
-  name: string | null | undefined,
-): boolean => {
-  return (
-    name != null &&
-    PLAN_RALPH_BULL_JOB_NAMES.some((jobName) => jobName === name)
-  );
-};
-
 /**
  * Worker options for stalled-job recovery after server restart.
  * Ralph runs can be long; lock is renewed every lockDuration/2. After restart, the lock expires

@@ -53,7 +53,7 @@ decision made in a third package is why Node is reading TypeScript at all.
 statically imports the source-first package:
 
 ```js
-// packages/nestjs-repositories/dist/src/database.config.js
+// packages/nestjs-repositories/dist/src/nestjs-repositories.utils.js
 import { getPostgresUrl } from '@openthrottle/openthrottle-agentic-utils';
 ```
 

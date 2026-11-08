@@ -13,7 +13,7 @@ module, and `src/queues/bullmq-run-output.module.ts` / `bullmq-keyed-run-logging
 - `src/config/nestjs-logging.options.ts` — module options + defaults.
 - `src/services/` — `FileLogJsonlSink`, `FileBackedLogStreamHub`, `KeyedJsonlWriter`,
   `pruneKeyedRunOutputDirectory` retention.
-- `src/gateways/nestjs-logging-websocket.gateway.ts` — Socket.IO `logs.*` control/push.
+- `src/gateways/gateways.utils.ts` — Socket.IO `logs.*` control/push.
 - `docs/` — the frozen contract and the BullMQ run-output spec (normative).
 
 ## Invariants & gotchas

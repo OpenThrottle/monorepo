@@ -25,11 +25,11 @@ import type {
   RunPlanJobData,
   RunPlanOrchestratorJobData,
 } from '../../../queues/plans/plans.types.ts';
-import type { QueuesService } from '../../queues/queues.service.ts';
-import type { WorkLedgerCaptureService } from '../../work-ledger/work-ledger-capture.service.ts';
-import { buildRunPlanOrchestratorJobData } from '../enqueue-plan-ralph-tuning.ts';
-import { buildPlanRunConfigSnapshotFromJobData } from '../enqueue-plan-run-config-snapshot.ts';
-import type { PlanStatusService } from '../plan-status.service.ts';
+import type { QueuesService } from '../../queues/queues-service/queues-service.service.ts';
+import type { WorkLedgerCaptureService } from '../../work-ledger/work-ledger-capture/work-ledger-capture.service.ts';
+import { buildRunPlanOrchestratorJobData } from '../enqueue-plan-ralph-tuning/enqueue-plan-ralph-tuning.utils.ts';
+import { buildPlanRunConfigSnapshotFromJobData } from '../enqueue-plan-run-config-snapshot/enqueue-plan-run-config-snapshot.utils.ts';
+import type { PlanStatusService } from '../plan-status/plan-status.service.ts';
 import { PlanEnqueueService } from './plan-enqueue.service.ts';
 
 const mockPlan = createMock<Plan>({

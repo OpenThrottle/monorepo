@@ -16,20 +16,20 @@ import { AgentsChatTurnResult } from './agents.object.ts';
 import {
   isAgentsChatMutationRoutedTool,
   readAgentsChatMutationsEnabledFromConfig,
-} from './agents-chat-mutation-policy.ts';
-import {
-  PERSISTED_CONVERSATION_AUTH_ERROR,
-  persistSuccessfulAgentsChatTurn,
-  resolveHumanUserForPersist,
-  resolvePersistedConversation,
-} from './agents-chat-persistence.ts';
+} from './agents-chat-mutation.policy.ts';
 import {
   agentsChatTurnFromMcpToolResult,
   parseBearerJwt,
 } from './agents-mcp-chat.mapper.ts';
-import { dispatchAgentsMcpRoutedTool } from './agents-mcp-dispatch.ts';
-import { AgentsMcpRouter } from './agents-mcp-router.ts';
-import { AgentsMcpRouterLlmService } from './agents-mcp-router-llm.service.ts';
+import { PERSISTED_CONVERSATION_AUTH_ERROR } from './chat-persistence/chat-persistence.constants.ts';
+import {
+  persistSuccessfulAgentsChatTurn,
+  resolveHumanUserForPersist,
+  resolvePersistedConversation,
+} from './chat-persistence/chat-persistence.utils.ts';
+import { dispatchAgentsMcpRoutedTool } from './mcp-dispatch/mcp-dispatch.utils.ts';
+import { AgentsMcpRouter } from './mcp-router/mcp-router.service.ts';
+import { AgentsMcpRouterLlmService } from './mcp-router-llm/mcp-router-llm.service.ts';
 
 interface AgentsGqlContext {
   readonly req?: { headers?: Record<string, string | string[] | undefined> };

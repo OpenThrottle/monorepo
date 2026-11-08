@@ -1,0 +1,15 @@
+export interface Schema {
+  POSTGRES_CONNECT_TIMEOUT_MS: number;
+  POSTGRES_DB: string;
+  POSTGRES_HOST: string;
+  POSTGRES_IDLE_TIMEOUT_MS: number;
+  POSTGRES_PASSWORD: string;
+  POSTGRES_PATH_MIGRATIONS: string;
+  POSTGRES_POOL_MAX: number;
+  POSTGRES_PORT: number;
+  POSTGRES_SSL: boolean;
+  POSTGRES_SSL_REJECT_UNAUTHORIZED: boolean;
+  POSTGRES_STATEMENT_TIMEOUT_MS: number;
+  POSTGRES_USER: string;
+  POSTGRES_VERSION: string;
+}

@@ -12,10 +12,10 @@ import {
   UNSUPERVISED_STALE_CUTOFF_MS,
 } from '@openthrottle/nestjs-repositories';
 
-import { PlanStatusService } from '../../graphql/plans/plan-status.service.ts';
-import { applyBulkTaskStatusChange } from '../../graphql/work-ledger/bulk-task-status-change.ts';
-import { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account.service.ts';
-import { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture.service.ts';
+import { PlanStatusService } from '../../graphql/plans/plan-status/plan-status.service.ts';
+import { applyBulkTaskStatusChange } from '../../graphql/work-ledger/bulk-task-status-change/bulk-task-status-change.utils.ts';
+import { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account/status-change-system-account.service.ts';
+import { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture/work-ledger-capture.service.ts';
 import {
   PLAN_RUNS_STALE_SWEEP_BATCH_SIZE,
   PLAN_RUNS_STALE_SWEEP_QUEUE_NAME,

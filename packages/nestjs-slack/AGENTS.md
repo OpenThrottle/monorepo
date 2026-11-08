@@ -7,11 +7,11 @@ NestJS module wrapping Slack incoming webhooks via native `fetch` (no Slack SDK)
 
 ## Layout
 
-- `src/modules/nestjs-slack.module.ts` — `NestjsSlackModule.forRoot(options)`; validates
+- `src/nestjs-slack.module.ts` — `NestjsSlackModule.forRoot(options)`; validates
   options in the factory and registers `NestjsSlackService`.
 - `src/config/nestjs-slack.options.ts` — `NestjsSlackModuleOptions`, the
   `NESTJS_SLACK_OPTIONS` injection token, default constants, and `validateNestjsSlackOptions`.
-- `src/services/nestjs-slack.service.ts` — the fetch/retry send logic.
+- `src/nestjs-slack.service.ts` — the fetch/retry send logic.
 
 ## Invariants & gotchas
 

@@ -17,7 +17,7 @@ TypeORM: `packages/nestjs-repositories/src/modules/agent-conversations/`
 
 GraphQL module: `applications/openthrottle-server/src/graphql/agent-conversations/`
 
-Persistence helpers for chat turns: `applications/openthrottle-server/src/graphql/agents/agents-chat-persistence.ts`
+Persistence helpers for chat turns: `applications/openthrottle-server/src/graphql/agents/chat-persistence/chat-persistence.utils.ts`
 
 See [databases/README.md](../../../databases/README.md) § Agent conversations for FK rules, lifecycle, size caps, and the boundary vs `plan_output_stream`.
 

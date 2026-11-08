@@ -8,10 +8,8 @@
 
 import { registerEnumType } from '@nestjs/graphql';
 
-import {
-  QUEUE_JOB_LOG_LEVELS,
-  type QueueJobLogLevel,
-} from './queue-job-log-mapping.ts';
+import { QUEUE_JOB_LOG_LEVELS } from './mapping/mapping.constants.ts';
+import type { QueueJobLogLevel } from './mapping/mapping.types.ts';
 
 /**
  * @description Runtime enum object (`{ debug: 'debug', ... }`) for code-first

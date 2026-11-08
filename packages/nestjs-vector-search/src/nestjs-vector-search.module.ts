@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 
-import { AppConfigService } from './app-config.service.ts';
-import { CodeSearchService } from './code-search.service.ts';
-import { CodeSnapshotStore } from './code-snapshot-store.ts';
-import { CodeVectorStore } from './code-vector-store.ts';
+import { AppConfigService } from './app-config/app-config.service.ts';
+import { CodeSearchService } from './code-search/code-search.service.ts';
+import { CodeSnapshotStore } from './code-snapshot-store/code-snapshot-store.service.ts';
+import { CodeVectorStore } from './code-vector-store/code-vector-store.service.ts';
 
 /**
  * @description Server-side code semantic search. Provides the {@link AppConfigService} embeddings

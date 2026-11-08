@@ -66,10 +66,6 @@ export const PLAN_RUN_STATUS = {
    */
   USAGE_LIMITED: 'USAGE_LIMITED',
 } as const;
-
-export type PlanRunStatus =
-  (typeof PLAN_RUN_STATUS)[keyof typeof PLAN_RUN_STATUS];
-
 /**
  * The statuses a worker may claim a run from (`markRunStarted`): QUEUED on first pickup, IN_PROGRESS
  * when BullMQ retries or recovers a stalled job. Every other status is either not yet startable

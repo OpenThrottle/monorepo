@@ -31,10 +31,8 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { In, IsNull } from 'typeorm';
 
-import {
-  ARTIFACT_IDENTITY,
-  resolveArtifactForWrite,
-} from './artifact-type-registry.ts';
+import { ARTIFACT_IDENTITY } from './artifact-type-registry/artifact-type-registry.constants.ts';
+import { resolveArtifactForWrite } from './artifact-type-registry/artifact-type-registry.utils.ts';
 import {
   AttachWorkSessionSubjectInput,
   EndWorkSessionInput,

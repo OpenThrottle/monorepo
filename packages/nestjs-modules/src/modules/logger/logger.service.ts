@@ -3,7 +3,7 @@ import {
   LoggerService as DefaultLoggerService,
 } from '@nestjs/common';
 
-import { logger } from './logger.config.ts';
+import { logger } from './logger-instance/logger-instance.constants.ts';
 
 /**
  * @external https://docs.nestjs.com/techniques/logger

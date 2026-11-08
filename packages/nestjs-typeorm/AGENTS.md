@@ -9,7 +9,7 @@ this package.
 
 ## Layout
 
-- `src/nestjs-typeorm.config.ts` — the Joi schema (`POSTGRES_*` keys, defaults for
+- `src/nestjs-typeorm.utils.ts` — the Joi schema (`POSTGRES_*` keys, defaults for
   pool/timeout/SSL knobs) and `getTypeormConfig(configService)`; schema and getter are
   deliberately colocated so they can't drift.
 - `src/nestjs-typeorm.module.ts` — composition root: `ConfigModule.forRoot({ isGlobal: true,

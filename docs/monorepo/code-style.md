@@ -44,7 +44,7 @@ lint but never had a rule file of their own:
 | [No default exports](#no-default-exports)                                   | **Enforced**                           | `import-x/no-default-export`                                          |
 | [`import type`](#import-type)                                               | **Enforced**                           | `@typescript-eslint/consistent-type-imports`                          |
 | [Naming conventions](#naming-conventions)                                   | **Enforced** (file names honor system) | `@typescript-eslint/naming-convention`                                |
-| [NestJS file names](#nestjs-file-names)                                     | **Warned**                             | `openthrottle/nestjs-file-naming`, `openthrottle/nestjs-file-exports` |
+| [NestJS file names](#nestjs-file-names)                                     | **Enforced**                           | `openthrottle/nestjs-file-naming`, `openthrottle/nestjs-file-exports` |
 | [Indexed access is `\| undefined`](#indexed-access-returns-undefined)       | **Enforced**                           | `noUncheckedIndexedAccess` compiler flag                              |
 | [No `as` casts](#no-as-casts)                                               | **Enforced**                           | `consistent-type-assertions`, `assertionStyle: 'never'`               |
 | [No `any`](#no-any)                                                         | **Enforced**                           | `@typescript-eslint/no-explicit-any`                                  |
@@ -668,10 +668,9 @@ than a rename:
 
 ### NestJS file names
 
-**Warned** by `openthrottle/nestjs-file-naming` and `openthrottle/nestjs-file-exports`, wired
-through `nestjsEslintConfig` from `@tools/dotfiles` into `openthrottle-server` and every
-`packages/nestjs-*` project. Both go to `error` once the per-area migration (OT plan
-`3915bc12`) reaches zero.
+**Enforced** (`error`) by `openthrottle/nestjs-file-naming` and
+`openthrottle/nestjs-file-exports`, wired through `nestjsEslintConfig` from `@tools/dotfiles`
+into `openthrottle-server` and every `packages/nestjs-*` project.
 
 NestJS is organised by modules, so a file's name is its folder's name plus a **kind** — the
 last dotted segment, which states what the file exports:
@@ -693,10 +692,12 @@ queues/usage-limit/
   `queues/plans/cancel-channel/cancel-channel.service.ts`, never
   `queues/plans/plan-cancel-channel.service.ts` or `plans-cancel-channel.service.ts`. A
   folder makes the second unit visible; a qualifier stacked on the name hides it.
-- **Subject-named kinds** — `decorator`, `entity`, `enum`, `executor`, `factory`, `filter`, `guard`,
-  `input`, `mapper`, `object`, `options`, `policy`, `provider`, `strategy`, `token` —
-  describe one thing each and sit many to a folder, so their stem is free
-  (`graphql/queues/job.object.ts`).
+- **Subject-named kinds** — `decorator`, `entity`, `enum`, `error`, `executor`, `factory`,
+  `filter`, `guard`, `input`, `interceptor`, `mapper`, `object`, `options`, `policy`,
+  `provider`, `strategy`, `token` — describe one thing each and sit many to a folder, so their stem is
+  free (`graphql/queues/job.object.ts`). `.error.ts` is a custom `Error` subclass;
+  `.interceptor.ts` a Nest `NestInterceptor`; `.filter.ts` a Nest `ExceptionFilter`. A plain class that implements an interface and
+  is not itself a Nest provider (a model backend the factory `new`s) is a `.strategy.ts`.
 - **A Nest custom provider is a `.provider.ts`**, named for what it provides: the
   `FactoryProvider` that builds a service sits beside it as
   `nest/mcp-toolset-pruner.provider.ts` next to `nest/mcp-toolset-pruner.service.ts`. The kind

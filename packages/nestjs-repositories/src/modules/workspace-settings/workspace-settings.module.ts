@@ -5,9 +5,9 @@ import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { ProjectsModule } from '../projects/projects.module.ts';
 import { RepositoriesModule } from '../repositories/repositories.module.ts';
 import { UserWorkspaceSettings } from './user-workspace-settings.entity.ts';
-import { UserWorkspaceSettingsService } from './user-workspace-settings.service.ts';
-import { WorkspaceEditorConfigService } from './workspace-editor-config.service.ts';
-import { WorkspaceLocalRepositoriesService } from './workspace-local-repositories.service.ts';
+import { UserWorkspaceSettingsService } from './user-workspace-settings/user-workspace-settings.service.ts';
+import { WorkspaceEditorConfigService } from './workspace-editor-config/workspace-editor-config.service.ts';
+import { WorkspaceLocalRepositoriesService } from './workspace-local-repositories/workspace-local-repositories.service.ts';
 
 @Module({
   controllers: [],

@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 
 import { RuleApplication } from './rule-application.entity.ts';
-import { RuleApplicationsService } from './rule-applications.service.ts';
+import { RuleApplicationsService } from './rule-applications/rule-applications.service.ts';
 import { TagActionRule } from './tag-action-rule.entity.ts';
 import { TagActionRulesService } from './tag-action-rules.service.ts';
 

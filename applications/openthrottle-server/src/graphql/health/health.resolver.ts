@@ -5,7 +5,7 @@
 import { Query, Resolver } from '@nestjs/graphql';
 import { Public } from '@openthrottle/nestjs-auth';
 
-import { ProcessMetricsService } from '../../metrics/process-metrics.service.ts';
+import { ProcessMetricsService } from '../../metrics/process-metrics/process-metrics.service.ts';
 import { HealthService } from './health.service.ts';
 import { ServerHealthObject } from './server-health.object.ts';
 import { ServerMetricsObject } from './server-metrics.object.ts';

@@ -6,8 +6,8 @@
 import { faker } from '@faker-js/faker';
 import { Factory } from 'fishery';
 
-import { BLOG_POST_STATUS } from './blog-post.constants.ts';
 import type { BlogPostData } from './blog-post.entity.ts';
+import { BLOG_POST_STATUS } from './blog-posts.constants.ts';
 
 /**
  * Factory for building BlogPost-shaped objects (plain data for mocks / tests).

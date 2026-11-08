@@ -1,7 +1,7 @@
-export type { RedisConnectionOptions } from './config/nestjs-bullmq.config.ts';
+export { defaultWorkerOptions } from './config/config.constants.ts';
+export type { RedisConnectionOptions } from './config/config.types.ts';
 export {
   resolveQueuePrefix,
   resolveRedisConnection,
-} from './config/nestjs-bullmq.config.ts';
-export { defaultWorkerOptions } from './config/nestjs-bullmq.defaults.ts';
-export * from './modules/nestjs-bullmq.module.ts';
+} from './config/config.utils.ts';
+export * from './nestjs-bullmq.module.ts';

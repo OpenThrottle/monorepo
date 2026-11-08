@@ -1,5 +1,10 @@
-export { WORKTREE_TRACKER_TOKEN } from './config/nestjs-worktrees.constants.ts';
-export { NestjsWorktreesModule } from './modules/nestjs-worktrees.module.ts';
+export { WORKTREE_TRACKER_TOKEN } from './config/config.constants.ts';
+export type { IMutexWorktreeTargetsTracker } from './mutex-worktree-targets/mutex-worktree-targets.strategy.ts';
+export {
+  createMutexWorktreeTargetsTracker,
+  MutexWorktreeTargetsTracker,
+} from './mutex-worktree-targets/mutex-worktree-targets.strategy.ts';
+export { NestjsWorktreesModule } from './nestjs-worktrees.module.ts';
 export type {
   AcquireResult,
   ChildJobFailure,
@@ -24,12 +29,8 @@ export type {
   WorktreeTargetStatus,
   WorktreeWorkflowOptions,
   WorktreeWorkflowResult,
-} from './types/worktree.ts';
-export type { IMutexWorktreeTargetsTracker } from './utils/mutex-worktree-targets.ts';
-export {
-  createMutexWorktreeTargetsTracker,
-  MutexWorktreeTargetsTracker,
-} from './utils/mutex-worktree-targets.ts';
+} from './nestjs-worktrees.types.ts';
+export { getWorktreeTargetsFromEnv } from './nestjs-worktrees.utils.ts';
 export {
   createBranchInWorktree,
   deriveBranchName,
@@ -38,7 +39,6 @@ export {
   parentJobAcquireAndCreateBranch,
   parentJobEnsureCommitBeforeRelease,
   pushBranchToRemote,
-} from './utils/parent-job.ts';
-export { runWorktreeWorkflow } from './utils/workflow.ts';
-export { WorktreeTargetsTracker } from './utils/worktree-targets.ts';
-export { getWorktreeTargetsFromEnv } from './worktree-targets.env.ts';
+} from './parent-job/parent-job.utils.ts';
+export { runWorktreeWorkflow } from './workflow/workflow.utils.ts';
+export { WorktreeTargetsTracker } from './worktree-targets/worktree-targets.strategy.ts';

@@ -7,8 +7,9 @@ import {
 import { Reflector } from '@nestjs/core';
 
 import { PERMISSIONS_KEY } from '../decorators/permissions.decorator.ts';
-import type { Permission, Role } from '../roles.ts';
-import { ROLE_PERMISSIONS, roleHasPermission } from '../roles.ts';
+import { ROLE_PERMISSIONS } from '../roles/roles.constants.ts';
+import type { Permission, Role } from '../roles/roles.types.ts';
+import { roleHasPermission } from '../roles/roles.utils.ts';
 import type { RbacUser } from './roles.guard.ts';
 
 /**

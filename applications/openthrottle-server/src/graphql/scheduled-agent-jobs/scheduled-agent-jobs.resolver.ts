@@ -5,7 +5,6 @@
  * Run logs are NOT here — read them via queueJobLogs/queueJobLogTail keyed by the run's bullmqJobId.
  * Coexists with (never replaces) the low-level repeatableJobs/removeRepeatableJob queue introspection.
  */
-
 import {
   BadRequestException,
   ForbiddenException,
@@ -34,6 +33,7 @@ import {
 } from '@openthrottle/nestjs-repositories';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { ScheduledAgentJobsLoaders } from './loaders/loaders.service.ts';
 import {
   ScheduledAgentJobObject,
   ScheduledAgentJobRepositoryObject,
@@ -50,8 +50,8 @@ import {
   toScheduledAgentJobRunObject,
   toScheduledAgentJobRunStatsObject,
 } from './scheduled-agent-jobs.mapper.ts';
-import { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs-graphql.service.ts';
-import { ScheduledAgentJobsLoaders } from './scheduled-agent-jobs-loaders.ts';
+import { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs.service.ts';
+import { resolveTargetRepository } from './scheduled-agent-jobs.utils.ts';
 
 /** Default window for the run-stats query: the trailing 24 hours. */
 const RUN_STATS_WINDOW_MS = 24 * 60 * 60 * 1000;
@@ -300,56 +300,5 @@ export class ScheduledAgentJobsResolver {
     }
 
     return job;
-  }
-}
-
-/**
- * @description Loads a targeted checkout for display, batched per request. A deleted checkout resolves
- * to null rather than an error: the run's `resolvedCwd` still records where it happened.
- */
-const resolveTargetRepository = async (
-  loaders: ScheduledAgentJobsLoaders,
-  repositoryCheckoutId: string | null,
-): Promise<ScheduledAgentJobRepositoryObject | null> => {
-  if (repositoryCheckoutId === null) return null;
-
-  const checkout = await loaders.checkoutLoader.load(repositoryCheckoutId);
-  if (checkout === null) return null;
-
-  return {
-    displayName: checkout.displayName,
-    filesystemPath: checkout.filesystemPath,
-    id: checkout.id,
-  };
-};
-
-/**
- * @description Resolves the display fields for the checkout a RUN targeted. Separate resolver because
- * `@ResolveField` is bound to the parent ObjectType.
- */
-@Resolver(() => ScheduledAgentJobRunObject)
-@UseGuards(GqlPermissionsGuard)
-export class ScheduledAgentJobRunRepositoryResolver {
-  constructor(private readonly loaders: ScheduledAgentJobsLoaders) {}
-
-  @ResolveField(() => ScheduledAgentJobObject, {
-    description: `The schedule this run belongs to, so a cross-job run list can label itself without a second round trip. Null only if the schedule has since been deleted.`,
-    nullable: true,
-  })
-  async job(
-    @Parent() parent: ScheduledAgentJobRunObject,
-  ): Promise<ScheduledAgentJobObject | null> {
-    const job = await this.loaders.jobLoader.load(parent.scheduledAgentJobId);
-    return job === null ? null : toScheduledAgentJobObject(job);
-  }
-
-  @ResolveField(() => ScheduledAgentJobRepositoryObject, {
-    description: `The repository checkout this run targeted at fire time, resolved for display.`,
-    nullable: true,
-  })
-  async repository(
-    @Parent() parent: ScheduledAgentJobRunObject,
-  ): Promise<ScheduledAgentJobRepositoryObject | null> {
-    return resolveTargetRepository(this.loaders, parent.repositoryCheckoutId);
   }
 }

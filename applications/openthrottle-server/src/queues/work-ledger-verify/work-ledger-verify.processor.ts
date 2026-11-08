@@ -10,8 +10,8 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { In, Not } from 'typeorm';
 
-import { shouldFireLifecycleTriggers } from '../../graphql/work-ledger/artifact-type-registry.ts';
-import { TaggingEnqueueService } from '../tagging/tagging-enqueue.service.ts';
+import { shouldFireLifecycleTriggers } from '../../graphql/work-ledger/artifact-type-registry/artifact-type-registry.utils.ts';
+import { TaggingEnqueueService } from '../tagging/enqueue/enqueue.service.ts';
 import {
   WORK_LEDGER_VERIFY_BATCH_SIZE,
   WORK_LEDGER_VERIFY_ORPHAN_GRACE_HOURS,

@@ -10,14 +10,10 @@ import { SkillTagsService } from '../skill-tags/skill-tags.service.ts';
 import type { UserSkillTag } from '../skill-tags/user-skill-tag.entity.ts';
 import { PlanTag } from './plan-tag.entity.ts';
 import { ProjectTag } from './project-tag.entity.ts';
-import {
-  deriveTagSource,
-  TAG_SOURCES,
-  type TagCaller,
-  TAGGING_SERVICE_ACCOUNT_NAME,
-  type TagSource,
-} from './tag-provenance.ts';
+import { TAG_SOURCES, TAGGING_SERVICE_ACCOUNT_NAME } from './tags.constants.ts';
 import { TagsService } from './tags.service.ts';
+import type { TagCaller, TagSource } from './tags.types.ts';
+import { deriveTagSource } from './tags.utils.ts';
 import { TaskTag } from './task-tag.entity.ts';
 
 describe('deriveTagSource', () => {

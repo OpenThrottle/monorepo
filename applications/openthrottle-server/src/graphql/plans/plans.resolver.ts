@@ -54,24 +54,25 @@ import { isRecord } from '@openthrottle/nodejs-utils';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
-import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.types.ts';
-import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service.ts';
-import { TAGGING_ENTITY_TYPES } from '../../queues/tagging/tagging.types.ts';
-import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service.ts';
+import { PlanRulesEvaluationService } from '../../queues/plan-rules/evaluation/evaluation.service.ts';
+import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.constants.ts';
+import { TaggingEnqueueService } from '../../queues/tagging/enqueue/enqueue.service.ts';
+import { TAGGING_ENTITY_TYPES } from '../../queues/tagging/tagging.constants.ts';
 import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service.ts';
 import { PlanCreationService } from '../../services/plan-creation/plan-creation.service.ts';
 import { PlanRunWorktreeCheckoutService } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service.ts';
+import { PRUNE_WORKTREE_CHECKOUT_OUTCOME } from '../../services/worktree-checkout-prune/worktree-checkout-prune.constants.ts';
 import { WorktreeCheckoutPruneService } from '../../services/worktree-checkout-prune/worktree-checkout-prune.service.ts';
-import { PRUNE_WORKTREE_CHECKOUT_OUTCOME } from '../../services/worktree-checkout-prune/worktree-checkout-prune.types.ts';
 import { ProjectObject } from '../projects/project.object.ts';
 import { TaskObject } from '../tasks/task.object.ts';
-import { SettleRunLedgerService } from '../work-ledger/settle-run-ledger.service.ts';
+import { SettleRunLedgerService } from '../work-ledger/settle-run-ledger/settle-run-ledger.service.ts';
 import { DeregisterWorktreeCheckoutInput } from '../workspace-settings/prune-worktree-checkouts.input.ts';
 import { DeregisterWorktreeCheckoutPayloadObject } from '../workspace-settings/prune-worktree-checkouts.object.ts';
 import {
   parseJobRunHooksJsonInput,
   serializeJobRunHooksForGraphql,
-} from './enqueue-plan-job-run-hooks.ts';
+} from './enqueue-plan-job-run-hooks/enqueue-plan-job-run-hooks.utils.ts';
+import { PlansLoaders } from './loaders/loaders.service.ts';
 import {
   CancelPlanRunInput,
   CreatePlanInput,
@@ -110,9 +111,8 @@ import type {
   EnqueueOutcome,
   ScheduleOutcome,
 } from './plan-enqueue/plan-enqueue.types.ts';
-import { PlanStatusService } from './plan-status.service.ts';
+import { PlanStatusService } from './plan-status/plan-status.service.ts';
 import { PlanTaskStatus } from './plan-task-status.enum.ts';
-import { PlansLoaders } from './plans-loaders.ts';
 
 const DEFAULT_SEARCH_PLANS_LIMIT = 20;
 const DEFAULT_PLAN_RUNS_LIMIT = 20;

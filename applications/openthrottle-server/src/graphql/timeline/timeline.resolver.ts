@@ -20,7 +20,7 @@ import {
   TimelineSpanObject,
   WorkstreamTimelineResultObject,
 } from './timeline.object.ts';
-import { resolveTimelineLane } from './timeline-lanes.ts';
+import { resolveTimelineLane } from './timeline.utils.ts';
 
 /**
  * Rows read per kind. The chart buckets markers past a density threshold, so

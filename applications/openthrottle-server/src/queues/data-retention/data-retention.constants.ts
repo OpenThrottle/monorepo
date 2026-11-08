@@ -41,3 +41,18 @@ export const DATA_RETENTION_BATCH_SIZE = 1_000;
  * the next scheduled sweep continues where this one stopped.
  */
 export const DATA_RETENTION_MAX_BATCHES_PER_POLICY = 50;
+/**
+ * @description Environment contract for the data-retention sweep.
+ *
+ * Enforcement is OPT-IN. With `DATA_RETENTION_ENFORCE` unset the sweep runs in
+ * dry-run mode: it counts what each policy would remove, logs it, and deletes
+ * nothing. Retention deletes are irreversible and the rows in question are real
+ * plan history, so the default has to be the safe one — an operator reads a few
+ * dry-run reports, agrees with the numbers, and only then turns it on.
+ *
+ * That also makes this deployable ahead of the decision: the policies and their
+ * measured impact land now, the deleting starts when someone says so.
+ */
+
+/** BullMQ cron: daily at 03:30:00 (UTC unless DATA_RETENTION_TZ is set). */
+export const DATA_RETENTION_DEFAULT_CRON_PATTERN = '0 30 3 * * *';

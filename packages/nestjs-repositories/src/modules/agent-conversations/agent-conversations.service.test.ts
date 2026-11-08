@@ -8,12 +8,12 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PlansService } from '../plans/plans.service.ts';
 import { ProjectsService } from '../projects/projects.service.ts';
+import { AgentConversation } from './agent-conversation.entity.ts';
+import { AgentConversationMessage } from './agent-conversation-message.entity.ts';
 import {
   AGENT_CONVERSATION_MESSAGE_ROLES,
   AGENT_CONVERSATION_STATUSES,
-} from './agent-conversation.constants.ts';
-import { AgentConversation } from './agent-conversation.entity.ts';
-import { AgentConversationMessage } from './agent-conversation-message.entity.ts';
+} from './agent-conversations.constants.ts';
 import { agentConversationsFactory } from './agent-conversations.factory.ts';
 import { AgentConversationsService } from './agent-conversations.service.ts';
 

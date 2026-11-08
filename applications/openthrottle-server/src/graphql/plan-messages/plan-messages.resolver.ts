@@ -39,7 +39,7 @@ import type {
 } from '@openthrottle/nestjs-repositories';
 import { PlanMessagesService } from '@openthrottle/nestjs-repositories';
 
-import { resolveNoteAuthor } from '../notes/resolve-note-author.ts';
+import { resolveNoteAuthor } from '../notes/notes.utils.ts';
 import {
   ClaimPlanMessagesInput,
   ListPlanMessagesInput,

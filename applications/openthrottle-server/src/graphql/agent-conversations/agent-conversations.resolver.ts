@@ -13,7 +13,7 @@ import {
 } from '@openthrottle/nestjs-repositories';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
-import { assertHumanAuthPrincipal } from '../service-accounts/assert-human-auth-principal.ts';
+import { assertHumanAuthPrincipal } from '../service-accounts/service-accounts.utils.ts';
 import {
   ArchiveAgentConversationInput,
   CreateAgentConversationInput,

@@ -19,7 +19,6 @@ import {
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { RoleObject } from '../roles/role.object.ts';
-import { assertHumanAuthPrincipal } from './assert-human-auth-principal.ts';
 import { CreateServiceAccountCredentialResultObject } from './create-service-account-credential-result.object.ts';
 import {
   AssignRoleToServiceAccountInput,
@@ -30,6 +29,7 @@ import {
 } from './service-account.input.ts';
 import { ServiceAccountObject } from './service-account.object.ts';
 import { ServiceAccountCredentialObject } from './service-account-credential.object.ts';
+import { assertHumanAuthPrincipal } from './service-accounts.utils.ts';
 
 const toCredentialObject = (
   credential: ServiceAccountCredential,

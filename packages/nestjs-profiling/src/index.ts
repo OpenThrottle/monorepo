@@ -19,4 +19,4 @@ export {
   ProfileResponseTime,
   setProfileExecutionReporter,
 } from './decorators/index.ts';
-export { NestjsProfilingModule } from './modules/nestjs-profiling.module.ts';
+export { NestjsProfilingModule } from './nestjs-profiling.module.ts';

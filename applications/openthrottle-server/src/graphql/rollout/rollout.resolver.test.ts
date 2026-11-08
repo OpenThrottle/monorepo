@@ -27,7 +27,7 @@ import {
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
-import { ROLLOUT_DEGRADED_ANONYMOUS_SUB } from './resolve-evaluation-principal.ts';
+import { ROLLOUT_DEGRADED_ANONYMOUS_SUB } from './rollout.constants.ts';
 import { RolloutResolver } from './rollout.resolver.ts';
 
 const flag: RolloutFlag = {

@@ -6,10 +6,10 @@ import { Args, ID, Int, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { EmitNotification } from '@openthrottle/nestjs-websockets';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 
-import { ProcessMetricsService } from '../../metrics/process-metrics.service.ts';
+import { ProcessMetricsService } from '../../metrics/process-metrics/process-metrics.service.ts';
 import { ServerMetricsObject } from '../health/server-metrics.object.ts';
-import { parseTaskRunMetricsFromReturnvalue } from '../queues/parse-task-run-metrics.ts';
-import { QueuesService } from '../queues/queues.service.ts';
+import { parseTaskRunMetricsFromReturnvalue } from '../queues/queues.utils.ts';
+import { QueuesService } from '../queues/queues-service/queues-service.service.ts';
 import { MetricsObject } from './metrics.object.ts';
 import { PlanRunMetricsEntryObject } from './plan-run-metrics-entry.object.ts';
 

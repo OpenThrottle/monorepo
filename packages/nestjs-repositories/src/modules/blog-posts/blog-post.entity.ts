@@ -18,8 +18,8 @@ import {
 
 import type { BlogAuthor } from '../blog-authors/blog-author.entity.ts';
 import type { BlogTag } from '../blog-tags/blog-tag.entity.ts';
-import type { BlogPostStatus } from './blog-post.constants.ts';
-import { BLOG_POST_STATUS } from './blog-post.constants.ts';
+import { BLOG_POST_STATUS } from './blog-posts.constants.ts';
+import type { BlogPostStatus } from './blog-posts.types.ts';
 
 /**
  * Scalar/column fields of BlogPost (no relations).

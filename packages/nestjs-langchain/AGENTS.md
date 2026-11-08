@@ -12,7 +12,7 @@ AI-agent services become consumers.
 
 ## Layout
 
-- `src/config/resilience.ts` — shared `maxRetries`/`maxConcurrency` defaults applied to
+- `src/config/config.utils.ts` — shared `maxRetries`/`maxConcurrency` defaults applied to
   every provider factory; read its header comment before touching provider construction.
 - `src/models/index.ts` — chat model factories, `chatModelProviders` union.
 - `src/embeddings/index.ts` — embedding factories + model-dimensions helper.

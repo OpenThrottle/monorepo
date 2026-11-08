@@ -27,11 +27,11 @@ import {
   PROMOTED_TASK_STATUS,
 } from '../task-promotion/task-promotion.constants.ts';
 import { TaskPromotionService } from '../task-promotion/task-promotion.service.ts';
-import {
-  type ActionExecutor,
-  type ActionExecutorContext,
-  ActionExecutorRegistry,
-} from './action-executor.ts';
+import { ActionExecutorRegistry } from './action-executor-registry/action-executor-registry.service.ts';
+import type {
+  ActionExecutor,
+  ActionExecutorContext,
+} from './action-executor-registry/action-executor-registry.types.ts';
 
 @Injectable()
 export class PromoteTaskToPlanExecutor implements ActionExecutor, OnModuleInit {

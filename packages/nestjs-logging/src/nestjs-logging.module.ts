@@ -1,24 +1,26 @@
 import { type DynamicModule, Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 
+import type {
+  NestjsLoggingModuleAsyncOptions,
+  NestjsLoggingModuleOptions,
+} from './config/nestjs-logging.options.ts';
 import {
   applyNestjsLoggingModuleDefaults,
   DEFAULT_NESTJS_LOGGING_WS_NAMESPACE,
   NESTJS_LOGGING_MODULE_OPTIONS,
-  type NestjsLoggingModuleAsyncOptions,
-  type NestjsLoggingModuleOptions,
   parseNestjsLoggingModuleOptions,
   validateNestjsLoggingModuleAsyncOptions,
   validateNestjsLoggingModuleOptions,
 } from './config/nestjs-logging.options.ts';
-import { buildNestjsLoggingWebsocketGatewayClass } from './gateways/nestjs-logging-websocket.gateway.ts';
+import { FileBackedLogStreamHub } from './file-backed-log-stream-hub/file-backed-log-stream-hub.service.ts';
+import { FileLogJsonlSink } from './file-log-jsonl-sink/file-log-jsonl-sink.service.ts';
+import { buildNestjsLoggingWebsocketGatewayClass } from './gateways/gateways.utils.ts';
 import { NestjsLoggingService } from './nestjs-logging.service.ts';
-import { FileBackedLogStreamHub } from './services/file-backed-log-stream-hub.service.ts';
-import { FileLogJsonlSink } from './services/file-log-jsonl-sink.service.ts';
 import {
   LOG_JSONL_SINK,
   LOG_STREAM_HUB,
-} from './tokens/nestjs-logging.tokens.ts';
+} from './tokens/nestjs-logging.token.ts';
 
 type GatewayClassBuilder = typeof buildNestjsLoggingWebsocketGatewayClass;
 

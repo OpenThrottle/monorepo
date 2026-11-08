@@ -24,14 +24,14 @@ import type {
   CodeIndexJobPayload,
   CodeIndexJobResult,
 } from '../../queues/code-index/code-index.types.ts';
-import type { CodeIndexStatus } from './code-index-status.ts';
-import { CODE_INDEX_STATUS } from './code-index-status.ts';
+import { CODE_INDEX_STATUS } from './code-search.constants.ts';
 import { CodeSemanticSearchInput } from './code-search.input.ts';
 import {
   CodeIndexStatusObject,
   CodeSemanticSearchResult,
   IndexCodeRepositoryResult,
 } from './code-search.object.ts';
+import type { CodeIndexStatus } from './code-search.types.ts';
 
 const DEFAULT_SEARCH_LIMIT = 10;
 const MAX_SEARCH_LIMIT = 50;

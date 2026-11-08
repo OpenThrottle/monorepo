@@ -5,7 +5,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import Stripe from 'stripe';
 
-import { resolveDefaultPriceId } from '../utils/stripe-default-price.utils.ts';
+import { resolveDefaultPriceId } from '../stripe-default-price/stripe-default-price.utils.ts';
 import { StripePriceObject, stripePriceToGql } from './stripe-price.object.ts';
 
 @ObjectType({ description: `Stripe catalog product.` })

@@ -1,8 +1,5 @@
-export {
-  type CorsOptions,
-  getCorsConfiguration,
-  getCorsOptions,
-} from './cors.ts';
+export { type CorsOptions } from './cors/cors.types.ts';
+export { getCorsConfiguration, getCorsOptions } from './cors/cors.utils.ts';
 export {
   Permissions,
   PERMISSIONS_KEY,
@@ -12,10 +9,9 @@ export { PermissionsGuard } from './guards/permissions.guard.ts';
 export { type RbacUser, RolesGuard } from './guards/roles.guard.ts';
 export { NestjsRbacModule } from './nestjs-rbac.module.ts';
 export {
-  type Permission,
   PERMISSIONS,
-  type Role,
   ROLE_PERMISSIONS,
-  roleHasPermission,
   ROLES,
-} from './roles.ts';
+} from './roles/roles.constants.ts';
+export { type Permission, type Role } from './roles/roles.types.ts';
+export { roleHasPermission } from './roles/roles.utils.ts';

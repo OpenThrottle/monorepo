@@ -7,9 +7,9 @@ options builder NestJS apps use at bootstrap.
 
 ## Layout
 
-- `src/roles.ts` — `ROLES`, `PERMISSIONS`, `ROLE_PERMISSIONS`, `roleHasPermission`.
+- `src/roles/roles.utils.ts` — `ROLES`, `PERMISSIONS`, `ROLE_PERMISSIONS`, `roleHasPermission`.
 - `src/guards/` + `src/decorators/` — `RolesGuard`/`PermissionsGuard`, `@Roles`/`@Permissions`.
-- `src/cors.ts` — `getCorsOptions()`, env-driven CORS config.
+- `src/cors/cors.utils.ts` — `getCorsOptions()`, env-driven CORS config.
 
 ## Invariants & gotchas
 
@@ -27,7 +27,7 @@ options builder NestJS apps use at bootstrap.
   allow-all origin, credentials default to **false** (explicit `CORS_CREDENTIALS=true`
   opt-in); with an explicit origin allowlist they default to true. Server CORS behavior
   changes are made here, not in the app's `main.ts`.
-- The README's role/permission tables mirror `src/roles.ts` — update both together.
+- The README's role/permission tables mirror `src/roles/roles.utils.ts` — update both together.
 
 ## Pointers
 

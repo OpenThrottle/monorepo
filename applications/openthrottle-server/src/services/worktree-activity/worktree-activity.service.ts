@@ -17,7 +17,6 @@
  * indexes those checkouts by symlink-resolved real path — so a symlinked worktree root cannot make
  * a running worktree look idle.
  */
-
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { PlanRun } from '@openthrottle/nestjs-repositories';
@@ -26,56 +25,14 @@ import {
   STALE_CUTOFF_MS,
 } from '@openthrottle/nestjs-repositories';
 
+import { WORKTREE_DISCOVERY_PROBLEM } from '../worktree-discovery/worktree-discovery.constants.ts';
 import { WorktreeDiscoveryService } from '../worktree-discovery/worktree-discovery.service.ts';
 import type {
   DiscoveredWorktree,
   WorktreeDiscoveryProblem,
 } from '../worktree-discovery/worktree-discovery.types.ts';
-import { WORKTREE_DISCOVERY_PROBLEM } from '../worktree-discovery/worktree-discovery.types.ts';
-import type {
-  ClassifiedWorktree,
-  WorktreeActivityResult,
-} from './worktree-activity.types.ts';
-import { WORKTREE_ACTIVITY } from './worktree-activity.types.ts';
-
-/**
- * @description The classification itself, as a pure function of the discovered git signals plus the
- * live run (if any), so the precedence reads in one place.
- */
-export const classifyWorktree = (
-  worktree: DiscoveredWorktree,
-  liveRun: PlanRun | null,
-): ClassifiedWorktree => {
-  const unregistered = worktree.checkoutId === null;
-
-  if (liveRun !== null) {
-    return {
-      ...worktree,
-      activity: WORKTREE_ACTIVITY.RUNNING,
-      planId: liveRun.planId,
-      planRunId: liveRun.id,
-      runMonitored: liveRun.heartbeatExpected,
-      unregistered,
-    };
-  }
-
-  // A failed status probe (dirty === null) is not evidence of cleanliness, but IDLE is still the
-  // honest reading: nothing observed says otherwise, and the probe failure is already a warning.
-  const hasUncommitted = worktree.dirty === true;
-  const isAhead = (worktree.aheadCount ?? 0) > 0;
-
-  const isDirty = hasUncommitted || isAhead;
-  const activity = isDirty ? WORKTREE_ACTIVITY.DIRTY : WORKTREE_ACTIVITY.IDLE;
-
-  return {
-    ...worktree,
-    activity,
-    planId: null,
-    planRunId: null,
-    runMonitored: null,
-    unregistered,
-  };
-};
+import type { WorktreeActivityResult } from './worktree-activity.types.ts';
+import { classifyWorktree } from './worktree-activity.utils.ts';
 
 @Injectable()
 export class WorktreeActivityService {

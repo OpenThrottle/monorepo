@@ -27,9 +27,9 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { In } from 'typeorm';
 
-import { realPath } from '../paths/real-path.ts';
-import { isLinkedWorktreeDirectory } from '../worktree-discovery/linked-worktree.ts';
-import { resolveWorktreeRoot } from '../worktree-root/worktree-root.resolver.ts';
+import { realPath } from '../paths/real-path/real-path.utils.ts';
+import { isLinkedWorktreeDirectory } from '../worktree-discovery/worktree-discovery.utils.ts';
+import { resolveWorktreeRoot } from '../worktree-root/worktree-root.utils.ts';
 import { PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME } from './plan-run-worktree-teardown.constants.ts';
 import type {
   PlanRunWorktreeAssessment,
