@@ -1,7 +1,7 @@
 import type { ClassProvider, DynamicModule, Provider } from '@nestjs/common';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { NestjsAuthModule } from '@openthrottle/nestjs-auth';
 import { NestjsBullmqModule } from '@openthrottle/nestjs-bullmq';
 import {
@@ -62,6 +62,7 @@ import { NotificationsGraphqlModule } from './graphql/notifications/notification
 import { PlanEmbeddingsGraphqlModule } from './graphql/plan-embeddings/plan-embeddings-graphql.module.ts';
 import { PlanMessagesGraphqlModule } from './graphql/plan-messages/plan-messages.module.ts';
 import { PlanOutputStreamGraphqlModule } from './graphql/plan-output-stream/plan-output-stream-graphql.module.ts';
+import { PlanScheduleConflictFilter } from './graphql/plans/plan-enqueue/plan-schedule-conflict.filter.ts';
 import { PlansGraphqlModule } from './graphql/plans/plans-graphql.module.ts';
 import { ProjectSkillsGraphqlModule } from './graphql/project-skills/project-skills-graphql.module.ts';
 import { ProjectsGraphqlModule } from './graphql/projects/projects-graphql.module.ts';
@@ -137,6 +138,10 @@ const appProviders: Provider[] = [
   {
     provide: APP_GUARD,
     useClass: GlobalAuthGuard,
+  },
+  {
+    provide: APP_FILTER,
+    useClass: PlanScheduleConflictFilter,
   },
   emitNotificationInterceptorProvider,
 ];

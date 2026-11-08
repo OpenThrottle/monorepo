@@ -142,6 +142,10 @@ ruleTester.run('nestjs-file-naming', nestjsFileNaming, {
     { code: CODE, filename: 'src/graphql/queues/job.object.ts' },
     { code: CODE, filename: 'src/graphql/queues/retry-job.input.ts' },
     { code: CODE, filename: 'src/guards/global-auth.guard.ts' },
+    {
+      code: CODE,
+      filename: 'src/graphql/plans/plan-schedule-conflict.filter.ts',
+    },
     // A provider is subject-named: any stem, many per folder, beside the
     // folder's service.
     { code: CODE, filename: 'src/nest/mcp-toolset-pruner.provider.ts' },

@@ -1,10 +1,26 @@
 import * as React from 'react';
-import { describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import type { PlanDetailsFragment } from '~/__generated__/graphql';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
 import { PlanDetailRouteHeader } from '../PlanDetailRouteHeader';
+
+// FEATURE_BETA_PREVIEW resolves from process.env at module load; mock it as a
+// getter over a hoisted box so both sides of the D10 gate are exercised.
+const betaPreview = vi.hoisted(() => ({ enabled: false }));
+
+vi.mock('@openthrottle/react-router-utils', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@openthrottle/react-router-utils')>();
+
+  return {
+    ...actual,
+    get FEATURE_BETA_PREVIEW() {
+      return betaPreview.enabled;
+    },
+  };
+});
 
 const basePlan: PlanDetailsFragment = {
   __typename: 'PlanObject',
@@ -84,6 +100,43 @@ describe('PlanDetailRouteHeader Component', () => {
     );
 
     expect(queryByTestId('PlanProjectBadge')).not.toBeInTheDocument();
+  });
+
+  describe('the non-beta unschedule control (D10)', () => {
+    const scheduledPlan: PlanDetailsFragment = {
+      ...basePlan,
+      scheduledRunAt: '2026-11-08T17:00:00.000Z',
+      status: 'SCHEDULED',
+    };
+
+    afterEach(() => {
+      betaPreview.enabled = false;
+    });
+
+    test('renders beside the badge on a SCHEDULED plan without beta preview', () => {
+      const { getByTestId } = renderRoutesStub(
+        <PlanDetailRouteHeader plan={scheduledPlan} status="SCHEDULED" />,
+      );
+
+      expect(getByTestId('PlanUnscheduleAction')).toBeInTheDocument();
+    });
+
+    test('is absent with beta preview, where the toolbar owns status', () => {
+      betaPreview.enabled = true;
+      const { queryByTestId } = renderRoutesStub(
+        <PlanDetailRouteHeader plan={scheduledPlan} status="SCHEDULED" />,
+      );
+
+      expect(queryByTestId('PlanUnscheduleAction')).toBeNull();
+    });
+
+    test('is absent on a plan that is not scheduled', () => {
+      const { queryByTestId } = renderRoutesStub(
+        <PlanDetailRouteHeader plan={basePlan} status="IN_PROGRESS" />,
+      );
+
+      expect(queryByTestId('PlanUnscheduleAction')).toBeNull();
+    });
   });
 
   // Most plans have no project, so the chip must be absent rather than an

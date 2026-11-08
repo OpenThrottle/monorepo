@@ -1,9 +1,11 @@
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
+import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
 import { NotebookTextIcon } from 'lucide-react';
 import * as React from 'react';
 
 import type { PlanDetailsFragment } from '~/__generated__/graphql';
 import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
+import { PlanUnscheduleAction } from '~/routing/plans/components/PlanUnscheduleAction';
 import type { PlanStatusKey } from '~/routing/plans/types';
 
 export interface PlanDetailRouteHeaderProps {
@@ -17,7 +19,9 @@ export interface PlanDetailRouteHeaderProps {
  * the plan points at, author→assignee, created/updated). Navigation breadcrumbs
  * live in the global app header now. Primary run/lifecycle actions stay in the sibling
  * {@link PlanToolbar}. Extracted from {@link PlanDetailRoute} per
- * component-primitive-shape R6.
+ * component-primitive-shape R6. Without beta preview that toolbar is hidden, so
+ * a SCHEDULED plan gets its one status control here instead —
+ * {@link PlanUnscheduleAction}, beside the badge (D10).
  */
 export const PlanDetailRouteHeader = (
   props: PlanDetailRouteHeaderProps,
@@ -32,6 +36,7 @@ export const PlanDetailRouteHeader = (
   // "unassigned" placeholder that would sit on every other plan header.
   const title = plan.title ?? 'Untitled';
   const _project = plan.projectRelation;
+  const showUnschedule = !FEATURE_BETA_PREVIEW && status === 'SCHEDULED';
 
   // Handlers
 
@@ -62,6 +67,13 @@ export const PlanDetailRouteHeader = (
             status={status}
             to={`/plans?status=${status}`}
           />
+          {showUnschedule && (
+            <PlanUnscheduleAction
+              className={undefined}
+              planId={plan.id}
+              scheduledRunAt={plan.scheduledRunAt}
+            />
+          )}
 
           {/* {project ? (
             <Badge
