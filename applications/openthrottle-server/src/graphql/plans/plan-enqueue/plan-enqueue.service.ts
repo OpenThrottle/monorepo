@@ -27,14 +27,12 @@ import {
   PlanRunsService,
   PlansService,
   RepositoryCheckoutsService,
-  Task,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
 import type { JobRunHookEntry } from '@tools/workflows';
 import { projectHookTasksToJobRunHookEntries } from '@tools/workflows';
 import type { Queue } from 'bullmq';
 import type { EntityManager } from 'typeorm';
-import { In } from 'typeorm';
 
 import { updateMatchingTasksAndEmitStatusChanged } from '../../../notifications/emit-bulk-task-status-changes.ts';
 import { NotificationsService } from '../../../notifications/notifications.service.ts';
@@ -69,16 +67,10 @@ import type {
   ScheduledRunFireOutcome,
   ScheduleOutcome,
 } from './plan-enqueue.types.ts';
-
-/** Task statuses reset to QUEUED when a plan run is enqueued (COMPLETED and PROMOTED tasks are left unchanged: PROMOTED work continued as its own plan, so re-running it here would duplicate it). */
-const ENQUEUE_TASK_STATUSES_TO_RESET = [
-  'PENDING',
-  'IN_PROGRESS',
-  'BLOCKED',
-  'BACKLOG',
-  'SKIPPED',
-  'CANCELED',
-] as const;
+import {
+  countRunnablePlanTasks,
+  ENQUEUE_TASK_STATUSES_TO_RESET,
+} from './plan-runnable-tasks.ts';
 
 /** Task statuses a usage-limit continuation re-queues: only the limited run's in-flight work. */
 const USAGE_LIMIT_RESUME_TASK_STATUSES_TO_RESET = [
@@ -90,13 +82,14 @@ type ExecutionBackend = PlanRunExecutionBackend;
 
 /**
  * @description The plan_runs status each fire-time decision moves a SCHEDULED run to: QUEUED claims it
- * for the worker; the rest settle it. A COMPLETED run with nothing to run is how an immediate run on
- * a plan with nothing left ends too (`workflow_plan_already_terminal` settles COMPLETED).
+ * for the worker; the rest settle it. A scheduled run with nothing to run settles SKIPPED with its
+ * reason (an immediate run on a plan with nothing left still ends COMPLETED via
+ * `workflow_plan_already_terminal`).
  */
 const SCHEDULED_RUN_STATUS_BY_DECISION = {
   fire: PLAN_RUN_STATUS.QUEUED,
   missed: PLAN_RUN_STATUS.MISSED,
-  nothing_to_run: PLAN_RUN_STATUS.COMPLETED,
+  nothing_to_run: PLAN_RUN_STATUS.SKIPPED,
   superseded: PLAN_RUN_STATUS.SUPERSEDED,
 } as const satisfies Record<
   ScheduledPlanRunFireDecision['kind'],
@@ -524,6 +517,14 @@ export class PlanEnqueueService {
    * branch, the plan, the workspace, the lifecycle hooks and the run's job payload — before anything
    * is written. Shared by {@link enqueueOrchestrator} and {@link schedulePlanRun} so the two cannot
    * drift on what a valid run is. Throws BadRequestException / NotFoundException.
+   *
+   * Refuses a whole-plan run (`mode` 'plan' or null — "Run now", `enqueuePlanRun`/`enqueueSpawn`
+   * and `schedulePlanRun`) when the plan has no runnable tasks ({@link countRunnablePlanTasks}, the
+   * same count {@link fireScheduledRun} uses), so the user hears it up front. A task-targeted run
+   * (`mode` 'task') is exempt: it addresses one task the resolver already verified belongs to the
+   * plan, which may be COMPLETED on purpose (re-run it). The fire-time `nothing_to_run` check stays,
+   * since tasks can complete between scheduling and firing. {@link enqueueUsageLimitResume} does not
+   * pass through here: it continues a run that already started.
    */
   private async prepareOrchestratorRun(input: {
     readonly actorUserId?: string | null;
@@ -569,6 +570,21 @@ export class PlanEnqueueService {
 
     if (!plan) {
       throw new NotFoundException(`🟡 1 - Plan not found: ${planId}`);
+    }
+
+    // A whole-plan run (mode 'plan' or unset) with nothing to pick up would start an orchestrator
+    // that immediately finds nothing; refuse it here instead. A task-targeted run is exempt, see
+    // the method JSDoc.
+    if (mode !== 'task') {
+      const runnableTaskCount = await countRunnablePlanTasks(
+        repo.manager,
+        planId,
+      );
+      if (runnableTaskCount === 0) {
+        throw new BadRequestException(
+          `Plan ${planId} has no runnable tasks (it has no tasks, or every task is COMPLETED or PROMOTED), so there is nothing to run`,
+        );
+      }
     }
 
     const resolvedWorkspace = await this.resolveWorkspace({
@@ -897,7 +913,7 @@ export class PlanEnqueueService {
    * 4. Applies it through {@link PlanRunsService.transitionScheduledRun}, the atomic
    *    `... WHERE status = 'SCHEDULED'` update that a concurrent cancel races: `fire` claims the row
    *    QUEUED, `missed`/`superseded` settle it MISSED/SUPERSEDED, `nothing_to_run` settles it
-   *    COMPLETED. If the update loses the race the result is `not_scheduled` and nothing else is
+   *    SKIPPED, each recording the decision's reason in `settled_reason`. If the update loses the race the result is `not_scheduled` and nothing else is
    *    written.
    * 5. Only for `fire`, and only after the claim won: the plan and task QUEUED flip that scheduling
    *    skipped, via the same {@link writeEnqueueStatuses} every enqueue uses (non-fatal capture — a
@@ -907,8 +923,9 @@ export class PlanEnqueueService {
    * The plan's own status does not gate the fire: a scheduled run on a COMPLETED (or CANCELED,
    * PENDING, ...) plan that still has runnable tasks starts exactly like "Run now" on that plan
    * would — plan -> QUEUED -> IN_PROGRESS. A plan with no runnable tasks is never flipped back to
-   * QUEUED: there is no work, so the run settles COMPLETED and the plan keeps its status and
-   * `completedAt`. Notifying the user is the caller's job. Throws only on a database error.
+   * QUEUED: there is no work, so the run settles SKIPPED; the plan then gets the ordinary
+   * auto-close ({@link PlanStatusService.reconcileAfterScheduledRunSettled}), which completes an idle
+   * PENDING/QUEUED plan whose tasks are all done and otherwise leaves its status and `completedAt`. Notifying the user is the caller's job. Throws only on a database error.
    */
   async fireScheduledRun(params: {
     readonly actorKind: string | undefined;
@@ -920,63 +937,73 @@ export class PlanEnqueueService {
     const { actorKind, actorSub, now, planId, planRunId } = params;
     const repo = this.plansService.getRepository();
 
-    return repo.manager.transaction(async (manager) => {
-      const plan = await manager.getRepository(Plan).findOne({
-        lock: { mode: 'pessimistic_write' },
-        where: { id: planId },
-      });
-      const run = await manager
-        .getRepository(PlanRun)
-        .findOne({ where: { id: planRunId } });
-
-      if (
-        plan === null ||
-        run?.status !== PLAN_RUN_STATUS.SCHEDULED ||
-        run.scheduledFor === null
-      ) {
-        return { kind: 'not_scheduled' };
-      }
-
-      const hasActiveRun = await this.planRunsService.hasActiveRun(
-        planId,
-        planRunId,
-        manager,
-      );
-      const runnableTaskCount = await manager.getRepository(Task).count({
-        where: {
-          planId,
-          status: In([...ENQUEUE_TASK_STATUSES_TO_RESET, 'QUEUED']),
-        },
-      });
-      const decision = decideScheduledPlanRunFire({
-        hasActiveRun,
-        hasRunnableTasks: runnableTaskCount > 0,
-        now,
-        scheduledFor: run.scheduledFor,
-      });
-
-      const won = await this.planRunsService.transitionScheduledRun(
-        planRunId,
-        SCHEDULED_RUN_STATUS_BY_DECISION[decision.kind],
-        manager,
-      );
-
-      if (!won) {
-        return { kind: 'not_scheduled' };
-      }
-
-      if (decision.kind === 'fire') {
-        await this.writeEnqueueStatuses(manager, {
-          actorKind,
-          actorSub,
-          captureFailureIsFatal: false,
-          planId,
-          taskStatusesToReset: ENQUEUE_TASK_STATUSES_TO_RESET,
+    const outcome = await repo.manager.transaction<ScheduledRunFireOutcome>(
+      async (manager) => {
+        const plan = await manager.getRepository(Plan).findOne({
+          lock: { mode: 'pessimistic_write' },
+          where: { id: planId },
         });
-      }
+        const run = await manager
+          .getRepository(PlanRun)
+          .findOne({ where: { id: planRunId } });
 
-      return decision;
-    });
+        if (
+          plan === null ||
+          run?.status !== PLAN_RUN_STATUS.SCHEDULED ||
+          run.scheduledFor === null
+        ) {
+          return { kind: 'not_scheduled' };
+        }
+
+        const hasActiveRun = await this.planRunsService.hasActiveRun(
+          planId,
+          planRunId,
+          manager,
+        );
+        const runnableTaskCount = await countRunnablePlanTasks(manager, planId);
+        const decision = decideScheduledPlanRunFire({
+          hasActiveRun,
+          hasRunnableTasks: runnableTaskCount > 0,
+          now,
+          scheduledFor: run.scheduledFor,
+        });
+
+        const won = await this.planRunsService.transitionScheduledRun(
+          planRunId,
+          SCHEDULED_RUN_STATUS_BY_DECISION[decision.kind],
+          manager,
+          decision.kind === 'fire' ? undefined : decision.reason,
+        );
+
+        if (!won) {
+          return { kind: 'not_scheduled' };
+        }
+
+        if (decision.kind === 'fire') {
+          await this.writeEnqueueStatuses(manager, {
+            actorKind,
+            actorSub,
+            captureFailureIsFatal: false,
+            planId,
+            taskStatusesToReset: ENQUEUE_TASK_STATUSES_TO_RESET,
+          });
+        }
+
+        return decision;
+      },
+    );
+
+    // The SCHEDULED run was what held an idle, fully-done plan open (see
+    // PlanStatusService.completeParentPlanIfTasksDone). Now that it settled SKIPPED, close the plan.
+    // Outside the transaction: the reconcile takes its own plan row lock.
+    if (outcome.kind === 'nothing_to_run') {
+      await this.planStatusService.reconcileAfterScheduledRunSettled(planId, {
+        actorKind,
+        actorSub,
+      });
+    }
+
+    return outcome;
   }
 
   /**

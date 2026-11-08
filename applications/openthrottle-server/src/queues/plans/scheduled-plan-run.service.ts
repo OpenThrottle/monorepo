@@ -5,6 +5,7 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { PlanRun } from '@openthrottle/nestjs-repositories';
 import {
   PLAN_RUN_STATUS,
+  PlanOutputStreamService,
   PlanRunsService,
 } from '@openthrottle/nestjs-repositories';
 import type { Queue } from 'bullmq';
@@ -47,6 +48,7 @@ export class ScheduledPlanRunService {
     private readonly logger: LoggerService,
     private readonly notifications: NotificationsService,
     private readonly planEnqueueService: PlanEnqueueService,
+    private readonly planOutputStreamService: PlanOutputStreamService,
     private readonly planRunsService: PlanRunsService,
     @InjectQueue(PLANS_QUEUE_NAME)
     private readonly plansQueue: Queue<RunPlanJobData, PlanRunJobResult | void>,
@@ -85,14 +87,14 @@ export class ScheduledPlanRunService {
         );
         break;
       case 'missed':
-        this.notifyNotStarted(
+        await this.notifyNotStarted(
           run,
           `Scheduled plan run missed: it was due at ${scheduledLabel} and ${outcome.reason}, so it was not started.`,
           'warning',
         );
         break;
       case 'nothing_to_run':
-        this.notifyNotStarted(
+        await this.notifyNotStarted(
           run,
           `Scheduled plan run skipped: ${outcome.reason} at ${scheduledLabel}.`,
           'info',
@@ -105,7 +107,7 @@ export class ScheduledPlanRunService {
         );
         break;
       case 'superseded':
-        this.notifyNotStarted(
+        await this.notifyNotStarted(
           run,
           `Scheduled plan run superseded: ${outcome.reason} at ${scheduledLabel}, so the scheduled run was not started.`,
           'warning',
@@ -181,13 +183,15 @@ export class ScheduledPlanRunService {
         const settled = await this.planRunsService.transitionScheduledRun(
           run.id,
           PLAN_RUN_STATUS.MISSED,
+          undefined,
+          decision.reason,
         );
 
         if (!settled) {
           return 'settled_elsewhere';
         }
 
-        this.notifyNotStarted(
+        await this.notifyNotStarted(
           run,
           `Scheduled plan run missed: it was due at ${scheduledFor.toISOString()} and ${decision.reason} when the server came back, so it was not started.`,
           'warning',
@@ -217,11 +221,16 @@ export class ScheduledPlanRunService {
     }
   }
 
-  private notifyNotStarted(
+  /**
+   * @description Reports a run that did not start: logs it, emits the ephemeral socket event and
+   * appends the same line to the plan output stream so it shows on Plan Details afterwards. A failed
+   * append is logged and swallowed — the run is already settled and must stay so.
+   */
+  private async notifyNotStarted(
     run: PlanRun,
     message: string,
     severity: 'info' | 'warning',
-  ): void {
+  ): Promise<void> {
     this.logger.info(
       `${message} (run ${run.id}, plan ${run.planId})`,
       ScheduledPlanRunService.name,
@@ -232,5 +241,18 @@ export class ScheduledPlanRunService {
       planId: run.planId,
       severity,
     });
+
+    try {
+      const repo = this.planOutputStreamService.getRepository();
+
+      await repo.save(
+        repo.create({ content: message, iteration: null, planId: run.planId }),
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Could not append the not-started note for scheduled run ${run.id} to plan ${run.planId} output: ${describeError(error)}`,
+        ScheduledPlanRunService.name,
+      );
+    }
   }
 }

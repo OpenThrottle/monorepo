@@ -51,6 +51,7 @@ describe('getPlanToolbarRunTooltip', () => {
     isRunning: false,
     isSubmitting: false,
     isTerminal: false,
+    noRunnableTasks: false,
     scheduledRunAt: null,
     workflowRunBlocked: false,
     workflowRunBlockedReason: undefined,
@@ -67,6 +68,17 @@ describe('getPlanToolbarRunTooltip', () => {
     expect(
       getPlanToolbarRunTooltip({ ...idle, scheduledRunAt: SCHEDULED_AT }),
     ).toMatch(/^A run is scheduled for .+; cancel it to run now\.$/);
+  });
+
+  test('names the empty plan when no task is runnable, ahead of blocked and missing-branch reasons', () => {
+    expect(
+      getPlanToolbarRunTooltip({
+        ...idle,
+        branchMissing: true,
+        noRunnableTasks: true,
+        workflowRunBlocked: true,
+      }),
+    ).toBe(PLAN_TOOLBAR_COPY.runNoRunnableTasksTooltip);
   });
 
   test('scheduled outranks blocked and missing-branch reasons', () => {

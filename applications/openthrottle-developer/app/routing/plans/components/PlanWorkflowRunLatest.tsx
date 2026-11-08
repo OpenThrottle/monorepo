@@ -88,6 +88,7 @@ export const PlanWorkflowRunLatest = (
             resumeOfRunId={run.resumeOfRunId ?? null}
             resumeScheduled={resumedRunIds.has(run.id)}
             scheduledFor={run.scheduledFor ?? null}
+            settledReason={run.settledReason ?? null}
             status={run.status}
             usageLimitResetsAt={run.usageLimitResetsAt ?? null}
           />

@@ -47,6 +47,24 @@ export { WORK_LEDGER_CAPTURE_FAILED_MARKER };
 const IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE = `Cannot transition to IN_PROGRESS: only PENDING, QUEUED, or already IN_PROGRESS plans may enter this state.`;
 
 /**
+ * @description True when `status` equals `guard` (a single status) or is one of its members.
+ */
+function matchesGuardedStatus(
+  status: string,
+  guard: string | readonly string[],
+): boolean {
+  if (typeof guard === 'string') return status === guard;
+
+  return guard.includes(status);
+}
+
+/** Statuses an idle plan may auto-close from once its last task completes. */
+const AUTO_CLOSABLE_IDLE_PLAN_STATUSES: readonly string[] = [
+  'PENDING',
+  'QUEUED',
+];
+
+/**
  * @description Normalizes plan status for policy checks (GraphQL and DB may differ in case).
  */
 function normalizePlanStatusForPolicy(status: string): string {
@@ -137,11 +155,12 @@ export interface WriteGuardedStatusParams {
   readonly captureFailureIsFatal: boolean;
   /**
    * When set, the write is skipped unless the freshly-locked row's current status equals this
-   * value — mirrors a guarded `UPDATE … WHERE status = <guardCurrentStatus>` without giving up
-   * the row lock's freshness. `undefined` means no extra guard beyond
+   * value (a string) or is one of these values (a readonly array) — mirrors a guarded
+   * `UPDATE … WHERE status = <guardCurrentStatus>` / `IN (…)` without giving up the row lock's
+   * freshness. `undefined` means no extra guard beyond
    * {@link PlanStatusService.applyStatusChange}'s own transition policy.
    */
-  readonly guardCurrentStatus: string | undefined;
+  readonly guardCurrentStatus: string | readonly string[] | undefined;
   readonly requestedStatus: string;
   readonly throwOnForbiddenInProgress: boolean;
 }
@@ -414,7 +433,7 @@ export class PlanStatusService {
       if (!entity) return false;
       if (
         params.guardCurrentStatus != null &&
-        entity.status !== params.guardCurrentStatus
+        !matchesGuardedStatus(entity.status, params.guardCurrentStatus)
       ) {
         return false;
       }
@@ -460,15 +479,23 @@ export class PlanStatusService {
   }
 
   /**
-   * @description Downward reconcile: completes `planId` when it is IN_PROGRESS and has no
-   * remaining (non-terminal) tasks — the write half of what used to be
-   * `TasksService.completeParentPlanIfTasksDone`. `TasksService.hasRemainingTasks` answers the
-   * "should it change?" question; `guardCurrentStatus: 'IN_PROGRESS'` re-checks the plan is still
-   * IN_PROGRESS under the row lock before writing (mirrors the old guarded
-   * `UPDATE … WHERE status = 'IN_PROGRESS'`) — enforced explicitly here because
+   * @description Downward reconcile: completes `planId` when it has no remaining (non-terminal)
+   * tasks — the write half of what used to be `TasksService.completeParentPlanIfTasksDone`.
+   * `TasksService.hasRemainingTasks` answers the "should it change?" question; the status guards
+   * re-check the plan's status under the row lock before writing, because
    * `applyStatusChange`'s own transition policy only restricts moves INTO IN_PROGRESS, not out of
-   * it, so nothing else would stop a CANCELED/PENDING/BACKLOG plan from being resurrected straight
-   * to COMPLETED. Returns whether the plan was completed.
+   * it, so nothing else would stop a CANCELED/BACKLOG plan from being resurrected to COMPLETED.
+   *
+   * Which open statuses auto-close:
+   * - IN_PROGRESS: always (unchanged). An interactive loop holds an IN_PROGRESS run of its own and
+   *   must still close its plan.
+   * - PENDING and QUEUED: yes, so tasks completed straight from PENDING (e.g. via MCP) do not leave
+   *   the plan open forever — but only when the plan has no unsettled run: no QUEUED or IN_PROGRESS
+   *   plan_runs row and no SCHEDULED run whose fire would find nothing to run
+   *   ({@link PlanRunsService.hasUnsettledRun}).
+   * - CANCELED, BACKLOG, BLOCKED and COMPLETED: never (the "do not resurrect" rule).
+   *
+   * Returns whether the plan was completed.
    */
   async completeParentPlanIfTasksDone(
     planId: string,
@@ -478,7 +505,7 @@ export class PlanStatusService {
 
     if (hasRemaining) return false;
 
-    return this.writeGuardedStatus(planId, {
+    const closedFromInProgress = await this.writeGuardedStatus(planId, {
       actorKind: actor.actorKind,
       actorSub: actor.actorSub,
       captureFailureIsFatal: true,
@@ -486,6 +513,54 @@ export class PlanStatusService {
       requestedStatus: 'COMPLETED',
       throwOnForbiddenInProgress: false,
     });
+
+    if (closedFromInProgress) return true;
+
+    const hasUnsettledRun = await this.planRunsService.hasUnsettledRun(planId);
+
+    if (hasUnsettledRun) return false;
+
+    return this.writeGuardedStatus(planId, {
+      actorKind: actor.actorKind,
+      actorSub: actor.actorSub,
+      captureFailureIsFatal: true,
+      guardCurrentStatus: AUTO_CLOSABLE_IDLE_PLAN_STATUSES,
+      requestedStatus: 'COMPLETED',
+      throwOnForbiddenInProgress: false,
+    });
+  }
+
+  /**
+   * @description Re-runs {@link completeParentPlanIfTasksDone} after a SCHEDULED run settled without
+   * starting (SKIPPED at fire time, or CANCELLED). That run was the only thing holding an idle plan
+   * whose tasks are all done open, and no task write will come along to re-run the reconcile, so
+   * without this the plan stays PENDING/QUEUED forever. Best-effort: a failure is logged and
+   * swallowed, because the run is already settled and must stay so. Emits the plan status change
+   * when it closes the plan. Returns whether the plan was completed.
+   */
+  async reconcileAfterScheduledRunSettled(
+    planId: string,
+    actor: StatusChangeActor,
+  ): Promise<boolean> {
+    try {
+      const completed = await this.completeParentPlanIfTasksDone(planId, actor);
+
+      if (completed) {
+        this.notificationsService.emitPlanStatusChanged({
+          planId,
+          status: 'COMPLETED',
+        });
+      }
+
+      return completed;
+    } catch (error) {
+      this.logger.warn(
+        `Could not re-run the plan auto-close for plan ${planId} after its scheduled run settled: ${error instanceof Error ? error.message : String(error)}`,
+        PlanStatusService.name,
+      );
+
+      return false;
+    }
   }
 
   /**
@@ -519,7 +594,7 @@ export class PlanStatusService {
     }
 
     if (planRunId !== null) {
-      return this.cancelScheduledRun(planId, planRunId);
+      return this.cancelScheduledRun(planId, planRunId, actor);
     }
 
     const status = normalizePlanStatusForPolicy(plan.status);
@@ -670,6 +745,16 @@ export class PlanStatusService {
       planStatusAfter = refreshed?.status ?? 'PENDING';
     }
 
+    // The cancelled SCHEDULED rows may have been all that held an idle, fully-done plan open.
+    if (cancelledScheduledRuns > 0) {
+      const closed = await this.reconcileAfterScheduledRunSettled(
+        planId,
+        actor,
+      );
+
+      if (closed) planStatusAfter = 'COMPLETED';
+    }
+
     return {
       activeJobIdsCouldNotCancel: [...queueResult.lockedActiveJobIds],
       cancelRequested,
@@ -700,6 +785,7 @@ export class PlanStatusService {
   private async cancelScheduledRun(
     planId: string,
     planRunId: string,
+    actor: StatusChangeActor,
   ): Promise<CancelRunOutcome> {
     const run = await this.planRunsService.findById(planRunId);
 
@@ -771,6 +857,10 @@ export class PlanStatusService {
     // A job already gone from Redis still gets its row settled, so it is not SCHEDULED forever.
     const settled =
       await this.planRunsService.settleScheduledRunCancelled(planRunId);
+
+    if (settled) {
+      await this.reconcileAfterScheduledRunSettled(planId, actor);
+    }
 
     const wasCancelled = settled || removedJobIds.length > 0;
     const { NO_ACTIVE_RUN, RUN_CANCELLED } = CANCEL_PLAN_RUN_OUTCOME;

@@ -135,6 +135,7 @@ export const PlanDetailRoute = (
             repositories={loaderData.workspaceRepositories}
             repositoryId={repositoryId}
             runConfigJson={plan.runConfigJson}
+            runnableTaskCount={plan.runnableTaskCount}
             scheduledRunAt={plan.scheduledRunAt}
             scheduledRunId={plan.scheduledRunId}
             tagVocabulary={tagVocabulary}

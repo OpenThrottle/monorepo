@@ -84,6 +84,10 @@ describe('PlanEnqueueService', () => {
   const repo = {
     findOne: vi.fn().mockResolvedValue(mockPlan),
     manager: {
+      // Non-transactional reads (the runnable-task guard in prepareOrchestratorRun).
+      getRepository: vi.fn((entity: unknown) =>
+        entity === Task ? taskRepo : repo,
+      ),
       transaction: vi.fn(
         async (
           cb: (manager: {
@@ -146,8 +150,12 @@ describe('PlanEnqueueService', () => {
     fromStatus: 'PENDING',
     toStatus: 'QUEUED',
   });
+  const mockReconcileAfterScheduledRunSettled = vi
+    .fn()
+    .mockResolvedValue(false);
   const mockPlanStatusService = createMock<PlanStatusService>({
     applyStatusChange: mockApplyStatusChange,
+    reconcileAfterScheduledRunSettled: mockReconcileAfterScheduledRunSettled,
   });
 
   const mockGetPlanHooks = vi.fn().mockResolvedValue({ after: [], before: [] });
@@ -438,6 +446,63 @@ describe('PlanEnqueueService', () => {
           workingDirectory: null,
         }),
       ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    describe('runnable-task guard', () => {
+      const runNow = {
+        branch: 'feature/test',
+        planId: mockPlan.id,
+        priority: null,
+        workingDirectory: null,
+      };
+
+      test('rejects a whole-plan run with no runnable tasks before writing anything', async () => {
+        taskRepo.count.mockResolvedValue(0);
+
+        await expect(
+          service.enqueueOrchestrator({
+            ...runNow,
+            mode: 'plan',
+            taskId: null,
+          }),
+        ).rejects.toBeInstanceOf(BadRequestException);
+        expect(mockRecordQueuedRun).not.toHaveBeenCalled();
+        expect(mockEnqueuePlanRalphOrchestrator).not.toHaveBeenCalled();
+      });
+
+      test('enqueueSpawn (Run now) is guarded the same way', async () => {
+        taskRepo.count.mockResolvedValue(0);
+
+        await expect(
+          service.enqueueSpawn({
+            branch: 'feature/test',
+            planId: mockPlan.id,
+            priority: null,
+            workingDirectory: null,
+          }),
+        ).rejects.toBeInstanceOf(BadRequestException);
+        expect(mockEnqueuePlanRalphOrchestrator).not.toHaveBeenCalled();
+      });
+
+      test('proceeds with one runnable task', async () => {
+        taskRepo.count.mockResolvedValue(1);
+
+        await expect(
+          service.enqueueOrchestrator({ ...runNow, mode: null, taskId: null }),
+        ).resolves.toMatchObject({ jobId: 'job-orch-1' });
+      });
+
+      test('a task-targeted run is exempt: it is not counted and proceeds', async () => {
+        taskRepo.count.mockResolvedValue(0);
+
+        await expect(
+          service.enqueueOrchestrator({
+            ...runNow,
+            mode: 'task',
+            taskId: '5f2b6c0e-3a1d-4c55-9b0e-7d3c1a2b4e66',
+          }),
+        ).resolves.toMatchObject({ jobId: 'job-orch-1' });
+      });
     });
 
     test('records an orchestrator run and delegates to QueuesService', async () => {
@@ -975,6 +1040,32 @@ describe('PlanEnqueueService', () => {
       });
     });
 
+    describe('runnable-task guard', () => {
+      test('rejects with BadRequestException when the plan has no runnable tasks, writing nothing', async () => {
+        taskRepo.count.mockResolvedValue(0);
+
+        await expect(
+          service.schedulePlanRun({
+            ...baseParams,
+            scheduledFor: new Date(NOW.getTime() + HOUR_MS),
+          }),
+        ).rejects.toBeInstanceOf(BadRequestException);
+        expect(mockRecordQueuedRun).not.toHaveBeenCalled();
+        expect(mockEnqueuePlanRalphOrchestrator).not.toHaveBeenCalled();
+      });
+
+      test('schedules with one runnable task', async () => {
+        taskRepo.count.mockResolvedValue(1);
+
+        await expect(
+          service.schedulePlanRun({
+            ...baseParams,
+            scheduledFor: new Date(NOW.getTime() + HOUR_MS),
+          }),
+        ).resolves.toMatchObject({ planRunId: 'run-scheduled-1' });
+      });
+    });
+
     test('records a SCHEDULED row with scheduled_for and a frozen runConfigSnapshot', async () => {
       const scheduledFor = new Date(NOW.getTime() + 2 * HOUR_MS);
 
@@ -1195,6 +1286,7 @@ describe('PlanEnqueueService', () => {
         'run-scheduled',
         'QUEUED',
         expect.anything(),
+        undefined,
       );
       expect(mockApplyStatusChange).toHaveBeenCalledWith(
         expect.anything(),
@@ -1254,6 +1346,7 @@ describe('PlanEnqueueService', () => {
         'run-scheduled',
         'MISSED',
         expect.anything(),
+        expect.any(String),
       );
       expectNoPlanOrTaskWrites();
     });
@@ -1274,6 +1367,7 @@ describe('PlanEnqueueService', () => {
         'run-scheduled',
         'SUPERSEDED',
         expect.anything(),
+        expect.any(String),
       );
       expectNoPlanOrTaskWrites();
     });
@@ -1288,10 +1382,11 @@ describe('PlanEnqueueService', () => {
         'run-scheduled',
         'MISSED',
         expect.anything(),
+        expect.any(String),
       );
     });
 
-    test('a COMPLETED plan with no runnable tasks: the run settles COMPLETED and the plan stays COMPLETED', async () => {
+    test('a COMPLETED plan with no runnable tasks: the run settles SKIPPED with its reason and the plan stays COMPLETED', async () => {
       repo.findOne.mockResolvedValue({ ...mockPlan, status: 'COMPLETED' });
       taskRepo.count.mockResolvedValue(0);
 
@@ -1314,10 +1409,31 @@ describe('PlanEnqueueService', () => {
       });
       expect(mockTransitionScheduledRun).toHaveBeenCalledWith(
         'run-scheduled',
-        'COMPLETED',
+        'SKIPPED',
         expect.anything(),
+        expect.stringMatching(/\S/),
       );
       expectNoPlanOrTaskWrites();
+    });
+
+    test('a SKIPPED settle re-runs the plan auto-close, after the transaction; other outcomes do not', async () => {
+      mockReconcileAfterScheduledRunSettled.mockClear();
+      repo.findOne.mockResolvedValue({ ...mockPlan, status: 'PENDING' });
+      taskRepo.count.mockResolvedValue(0);
+
+      await fire();
+
+      expect(mockReconcileAfterScheduledRunSettled).toHaveBeenCalledWith(
+        mockPlan.id,
+        actor,
+      );
+
+      mockReconcileAfterScheduledRunSettled.mockClear();
+      taskRepo.count.mockResolvedValue(2);
+
+      await fire();
+
+      expect(mockReconcileAfterScheduledRunSettled).not.toHaveBeenCalled();
     });
 
     test('a COMPLETED plan that still has runnable tasks fires like "Run now": the plan goes QUEUED', async () => {

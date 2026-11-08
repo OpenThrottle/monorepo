@@ -43,6 +43,7 @@ export type PlanRunData = Pick<
   | 'queueName'
   | 'runKind'
   | 'scheduledFor'
+  | 'settledReason'
   | 'status'
   | 'updatedAt'
   | 'workerId'
@@ -180,6 +181,13 @@ export class PlanRun {
     type: 'timestamp with time zone',
   })
   scheduledFor!: Date | null;
+
+  /**
+   * Why a scheduled run settled without starting (migration 150): the fire-time policy's human
+   * reason for MISSED, SUPERSEDED and SKIPPED. Null for every other run.
+   */
+  @Column({ name: 'settled_reason', nullable: true, type: 'text' })
+  settledReason!: string | null;
 
   @Column({ default: 'QUEUED', name: 'status', type: 'text' })
   status!: string;

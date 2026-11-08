@@ -16,6 +16,8 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import DataLoader from 'dataloader';
 
+import { RUNNABLE_TASK_STATUSES } from './plan-enqueue/plan-runnable-tasks.ts';
+
 /**
  * Task statuses that count as "resolved" for {@link PlansLoaders.tasksCompletedCountByPlanIdLoader}
  * — mirrors client `getResolvedTaskCount` (COMPLETED + SKIPPED + PROMOTED; PROMOTED is
@@ -34,6 +36,7 @@ const RESOLVED_TASK_STATUSES = [
 export class PlansLoaders {
   readonly planHooksByPlanIdLoader: DataLoader<string, GroupedHooks>;
   readonly projectLoader: DataLoader<string, Project | null>;
+  readonly runnableTaskCountByPlanIdLoader: DataLoader<string, number>;
   readonly scheduledRunByPlanIdLoader: DataLoader<
     string,
     ScheduledPlanRun | null
@@ -57,6 +60,17 @@ export class PlansLoaders {
         filter: {
           column: 'status',
           values: RESOLVED_TASK_STATUSES,
+        },
+      },
+    );
+
+    this.runnableTaskCountByPlanIdLoader = createGroupedCountLoader(
+      tasksService,
+      {
+        column: 'planId',
+        filter: {
+          column: 'status',
+          values: RUNNABLE_TASK_STATUSES,
         },
       },
     );

@@ -13,6 +13,7 @@ import {
 
 const RESETS_AT = '2026-11-01T17:00:00.000Z';
 const FIRES_AT = '2026-11-03T17:30:00.000Z';
+const SETTLED_REASON = 'Plan had no runnable tasks at fire time.';
 
 const renderCell = (
   overrides: Partial<PlanRunStatusCellProps> = {},
@@ -182,5 +183,52 @@ describe('PlanRunStatusCell Component', () => {
         component.getByText(PLAN_RUN_STATUS_CELL_COPY.supersededReason),
       ).toBeInTheDocument();
     });
+  });
+
+  describe('SKIPPED', () => {
+    test('shows the neutral badge and the settled reason', () => {
+      const component = renderCell({
+        settledReason: SETTLED_REASON,
+        status: 'SKIPPED',
+      });
+
+      expect(
+        component.getByText(PLAN_RUN_STATUS_CELL_COPY.skippedBadge),
+      ).toBeInTheDocument();
+      expect(
+        component.getByTestId('PlanRunStatusCell-reason'),
+      ).toHaveTextContent(SETTLED_REASON);
+    });
+
+    test('renders no reason line when the reason is null', () => {
+      const component = renderCell({ settledReason: null, status: 'SKIPPED' });
+
+      expect(
+        component.getByText(PLAN_RUN_STATUS_CELL_COPY.skippedBadge),
+      ).toBeInTheDocument();
+      expect(component.queryByTestId('PlanRunStatusCell-reason')).toBeNull();
+    });
+  });
+
+  describe('settledReason on MISSED and SUPERSEDED', () => {
+    test.each(['MISSED', 'SUPERSEDED'])(
+      'prefers the settled reason over the generic line for %s',
+      (status) => {
+        const component = renderCell({
+          settledReason: SETTLED_REASON,
+          status,
+        });
+
+        expect(
+          component.getByTestId('PlanRunStatusCell-reason'),
+        ).toHaveTextContent(SETTLED_REASON);
+        expect(
+          component.queryByText(PLAN_RUN_STATUS_CELL_COPY.missedReason),
+        ).toBeNull();
+        expect(
+          component.queryByText(PLAN_RUN_STATUS_CELL_COPY.supersededReason),
+        ).toBeNull();
+      },
+    );
   });
 });

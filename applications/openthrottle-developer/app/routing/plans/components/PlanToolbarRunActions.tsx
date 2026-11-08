@@ -53,6 +53,8 @@ export interface PlanToolbarRunActionsProps {
   readonly repositoryId?: string;
   /** @description The plan's saved run config the Run dialog seeds model, effort and iterations from. */
   readonly runConfigJson: string | null | undefined;
+  /** @description Tasks a whole-plan run would pick up; 0 disables Run and Schedule. */
+  readonly runnableTaskCount?: number;
   /** @description The soonest SCHEDULED run's fire time; non-null gates every run-now path. */
   readonly scheduledRunAt?: Date | string | null;
   /** @description Id of that same run; when set the caret menu offers Cancel scheduled run. */
@@ -90,6 +92,7 @@ export const PlanToolbarRunActions = (
     repositories,
     repositoryId,
     runConfigJson,
+    runnableTaskCount,
     scheduledRunAt,
     scheduledRunId,
     workflowRunBlocked,
@@ -130,6 +133,7 @@ export const PlanToolbarRunActions = (
         planStatus={planStatus}
         ralphTuningJson={ralphTuningJson}
         repositoryId={repositoryId}
+        runnableTaskCount={runnableTaskCount}
         scheduledRunAt={scheduledRunAt}
         scheduledRunId={scheduledRunId}
         workflowRunBlocked={workflowRunBlocked}

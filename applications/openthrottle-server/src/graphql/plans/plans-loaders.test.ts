@@ -112,6 +112,33 @@ describe('PlansLoaders', () => {
     });
   });
 
+  describe('runnableTaskCountByPlanIdLoader', () => {
+    test('filters to the runnable statuses and maps counts in key order', async () => {
+      getRawMany.mockResolvedValue([{ count: '2', key: 'plan-a' }]);
+
+      const counts = await Promise.all([
+        loaders.runnableTaskCountByPlanIdLoader.load('plan-a'),
+        loaders.runnableTaskCountByPlanIdLoader.load('plan-b'),
+      ]);
+
+      expect(taskQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'entity.status IN (:...filterValues)',
+        {
+          filterValues: [
+            'PENDING',
+            'IN_PROGRESS',
+            'BLOCKED',
+            'BACKLOG',
+            'SKIPPED',
+            'CANCELED',
+            'QUEUED',
+          ],
+        },
+      );
+      expect(counts).toEqual([2, 0]);
+    });
+  });
+
   describe('planHooksByPlanIdLoader', () => {
     test('resolves beforeHooks and afterHooks for one plan with a single query', async () => {
       const before = [createMock<Task>({ hookRole: 'before', id: 'h1' })];

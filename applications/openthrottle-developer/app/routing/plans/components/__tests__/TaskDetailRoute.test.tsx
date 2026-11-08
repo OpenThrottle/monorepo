@@ -70,6 +70,7 @@ const buildPlan = (status: string): PlanDetailsFragment => {
     project: null,
     projectId: null,
     runConfigJson: '{}',
+    runnableTaskCount: 1,
     status,
     summary: null,
     tags: [],

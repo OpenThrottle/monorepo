@@ -441,6 +441,13 @@ export class PlansResolver {
     return this.loaders.tasksCompletedCountByPlanIdLoader.load(parent.id);
   }
 
+  @ResolveField(() => Int, {
+    description: `Number of tasks a whole-plan run would pick up (PENDING, IN_PROGRESS, BLOCKED, BACKLOG, SKIPPED, CANCELED or QUEUED). Zero means enqueuePlanRun and schedulePlanRun refuse the plan. Resolved through a batched loader.`,
+  })
+  async runnableTaskCount(@Parent() parent: PlanObject): Promise<number> {
+    return this.loaders.runnableTaskCountByPlanIdLoader.load(parent.id);
+  }
+
   @ResolveField(() => Date, {
     description: `The soonest instant a SCHEDULED run of this plan fires at; null when none is waiting. Resolved from plan_runs through a batched loader.`,
     nullable: true,
@@ -499,6 +506,7 @@ export class PlansResolver {
     );
     out.runKind = planRun.runKind;
     out.scheduledFor = planRun.scheduledFor;
+    out.settledReason = planRun.settledReason;
     out.status = planRun.status;
     out.updatedAt = planRun.updatedAt;
     out.usageLimitResetsAt = planRun.usageLimitResetsAt;

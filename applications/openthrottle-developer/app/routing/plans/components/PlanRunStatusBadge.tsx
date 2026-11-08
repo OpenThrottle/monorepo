@@ -9,8 +9,8 @@ export interface PlanRunStatusBadgeProps {
 }
 
 /**
- * @description The badge for a plan run status that gets one: USAGE_LIMITED, SCHEDULED, MISSED and
- * SUPERSEDED. Renders nothing for every other status so {@link PlanRunStatusCell} can show it as
+ * @description The badge for a plan run status that gets one: USAGE_LIMITED, SCHEDULED, MISSED,
+ * SUPERSEDED and SKIPPED. Renders nothing for every other status so {@link PlanRunStatusCell} can show it as
  * plain text.
  */
 export const PlanRunStatusBadge = (

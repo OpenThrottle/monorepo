@@ -62,6 +62,7 @@ fragment PlanDetails on PlanObject {
     ...ProjectDetails
   }
   runConfigJson
+  runnableTaskCount
   scheduledRunAt
   scheduledRunId
   status
@@ -296,6 +297,7 @@ query PlanDetailRunHistory($planId: ID!) {
     runConfigSnapshotJson
     runKind
     scheduledFor
+    settledReason
     status
     usageLimitResetsAt
   }

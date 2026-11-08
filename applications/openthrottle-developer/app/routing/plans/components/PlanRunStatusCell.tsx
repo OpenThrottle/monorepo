@@ -13,7 +13,9 @@ export interface PlanRunStatusCellProps {
   readonly resumeScheduled: boolean;
   /** ISO instant a SCHEDULED run fires; null on every other kind of run. */
   readonly scheduledFor?: string | null;
-  /** Raw `plan_runs.status` (QUEUED, IN_PROGRESS, COMPLETED, ..., USAGE_LIMITED, SCHEDULED, MISSED, SUPERSEDED). */
+  /** Why a MISSED, SUPERSEDED or SKIPPED run settled without starting (`plan_runs.settled_reason`); null when none was recorded. */
+  readonly settledReason?: string | null;
+  /** Raw `plan_runs.status` (QUEUED, IN_PROGRESS, COMPLETED, ..., USAGE_LIMITED, SCHEDULED, MISSED, SUPERSEDED, SKIPPED). */
   readonly status: string;
   /** ISO instant the usage limit lifts; null when the CLI reported none. */
   readonly usageLimitResetsAt: string | null;
@@ -22,8 +24,8 @@ export interface PlanRunStatusCellProps {
 /**
  * @description Status cell for the queued-run audit table. Most statuses render as plain text.
  * `USAGE_LIMITED` gets a badge plus the reset time and whether the run resumes by itself;
- * `SCHEDULED` a badge plus when it fires; `MISSED` and `SUPERSEDED` a badge plus why the run never
- * started. A continuation run is badged "Resumed". Both times go through {@link PlanRunTime}, so
+ * `SCHEDULED` a badge plus when it fires; `MISSED`, `SUPERSEDED` and `SKIPPED` a badge plus a muted line with the
+ * server's `settledReason` (null renders nothing extra, except MISSED/SUPERSEDED fall back to a generic line). A continuation run is badged "Resumed". Both times go through {@link PlanRunTime}, so
  * the server render (UTC) matches the hydrating render and the viewer's local time appears after.
  */
 export const PlanRunStatusCell = (
@@ -33,6 +35,7 @@ export const PlanRunStatusCell = (
     resumeOfRunId,
     resumeScheduled,
     scheduledFor = null,
+    settledReason = null,
     status,
     usageLimitResetsAt,
   } = props;
@@ -56,7 +59,14 @@ export const PlanRunStatusCell = (
   const isScheduled = status === 'SCHEDULED';
   const isMissed = status === 'MISSED';
   const isSuperseded = status === 'SUPERSEDED';
-  const isSkippedOrPending = isScheduled || isMissed || isSuperseded;
+  const isSkipped = status === 'SKIPPED';
+  const isSkippedOrPending =
+    isScheduled || isMissed || isSuperseded || isSkipped;
+  const fallbackReason = isMissed ? missedReason : supersededReason;
+  const reasonText = isSkipped
+    ? settledReason
+    : (settledReason ?? fallbackReason);
+  const hasReason = reasonText !== null;
   const isContinuationRun = resumeOfRunId !== null;
   const resetsAt = parseDate(usageLimitResetsAt);
   const hasResetTime = resetsAt !== null;
@@ -86,7 +96,15 @@ export const PlanRunStatusCell = (
   );
   const unknownFireTime = <span>{firesUnknown}</span>;
   const fireTimeNote = hasFireTime ? knownFireTime : unknownFireTime;
-  const reasonNote = <span>{isMissed ? missedReason : supersededReason}</span>;
+  const reasonLine = (
+    <span
+      className="text-muted-foreground text-xs"
+      data-testid="PlanRunStatusCell-reason"
+    >
+      {reasonText}
+    </span>
+  );
+  const reasonNote = hasReason ? reasonLine : null;
 
   // Life Cycle
 

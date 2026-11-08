@@ -87,6 +87,7 @@ fragment PlanRun on PlanRunObject {
   queueName
   resumeOfRunId
   runKind
+  settledReason
   status
   updatedAt
   usageLimitResetsAt
