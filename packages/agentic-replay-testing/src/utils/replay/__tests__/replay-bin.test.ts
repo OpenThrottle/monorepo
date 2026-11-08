@@ -198,6 +198,22 @@ describe('the replay bin', () => {
     });
   });
 
+  describe('when a CLI that exited normally is signalled mid-replay', () => {
+    it('still replays the whole recording and its exit code', async () => {
+      const replay = install({ ...TRANSCRIPT, argv: ['go'] });
+
+      const result = await run(replay.bin, ['go'], {
+        onStdout: (kill) => kill(),
+      });
+
+      expect(result).toEqual({
+        code: 0,
+        stderr: 'warned\n',
+        stdout: '{"type":"a"}\n{"type":"b"}\n',
+      });
+    });
+  });
+
   describe('before it ever runs', () => {
     it('has no report', () => {
       expect(install(TRANSCRIPT).readReport()).toBeNull();
