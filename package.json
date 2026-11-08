@@ -11,6 +11,7 @@
     "@graphql-codegen/cli": "catalog:",
     "@nestjs/cli": "catalog:",
     "@openthrottle/agentic-evals": "workspace:^",
+    "@openthrottle/agentic-replay-testing": "workspace:^",
     "@openthrottle/nestjs-modules": "workspace:^",
     "@openthrottle/nestjs-repositories": "workspace:^",
     "@openthrottle/nestjs-testing": "workspace:^",

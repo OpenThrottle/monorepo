@@ -113,6 +113,9 @@
       "path": "../../packages/nestjs-testing/tsconfig.lib.json"
     },
     {
+      "path": "../../packages/agentic-replay-testing/tsconfig.lib.json"
+    },
+    {
       "path": "../../tools/dotfiles/tsconfig.lib.json"
     }
   ]

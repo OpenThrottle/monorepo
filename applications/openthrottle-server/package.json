@@ -97,7 +97,7 @@
         ],
         "executor": "nx:run-commands",
         "metadata": {
-          "description": "Emit the server to ./build with tsc. NOT `nest build`: its SWC builder cannot rewrite `.ts` import specifiers to `.js`, so ESM output would not resolve at runtime (OT plan 31454927 task 2). `--noCheck` keeps this an emit-only step, preserving the separation the old `typeCheck: false` had \u2014 the `typecheck` target is the type gate, and it resolves workspace types through project references that the pruned Docker tree does not carry. The compiler is the same $OPENTHROTTLE_TSC_BIN knob typecheck uses."
+          "description": "Emit the server to ./build with tsc. NOT `nest build`: its SWC builder cannot rewrite `.ts` import specifiers to `.js`, so ESM output would not resolve at runtime (OT plan 31454927 task 2). `--noCheck` keeps this an emit-only step, preserving the separation the old `typeCheck: false` had — the `typecheck` target is the type gate, and it resolves workspace types through project references that the pruned Docker tree does not carry. The compiler is the same $OPENTHROTTLE_TSC_BIN knob typecheck uses."
         },
         "options": {
           "command": "${OPENTHROTTLE_TSC_BIN:-tsc} -p tsconfig.app.json --noCheck",
@@ -236,7 +236,7 @@
         ],
         "executor": "nx:run-commands",
         "metadata": {
-          "description": "Run BullMQ processors only (PROCESS_ROLE=worker, no HTTP listener, no watch \u2014 deliberately, so API edits can't restart it). Pair with `dev-api` for the split dev loop. Replaces `nest start`: the SWC builder it uses cannot rewrite `.ts` import specifiers to `.js`, so ESM output does not resolve at runtime (OT plan 31454927 task 2). tsc emits, `node --watch` reruns."
+          "description": "Run BullMQ processors only (PROCESS_ROLE=worker, no HTTP listener, no watch — deliberately, so API edits can't restart it). Pair with `dev-api` for the split dev loop. Replaces `nest start`: the SWC builder it uses cannot rewrite `.ts` import specifiers to `.js`, so ESM output does not resolve at runtime (OT plan 31454927 task 2). tsc emits, `node --watch` reruns."
         },
         "options": {
           "command": "node --enable-source-maps ./build/src/main.js",
@@ -307,6 +307,7 @@
   "devDependencies": {
     "@golevelup/ts-vitest": "catalog:",
     "@nestjs/testing": "catalog:",
+    "@openthrottle/agentic-replay-testing": "workspace:^",
     "@openthrottle/nestjs-testing": "workspace:^",
     "@testing-library/jest-dom": "catalog:",
     "nestjs-cls": "catalog:",
