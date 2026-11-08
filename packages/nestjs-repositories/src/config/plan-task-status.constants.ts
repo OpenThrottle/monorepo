@@ -2,7 +2,7 @@
  * @description Canonical source of truth for the plan/task status vocabulary.
  *
  * Mirrors the Postgres `plan_task_status` enum (databases/migrations/028 defines
- * the base seven, 029 adds QUEUED, 136 adds PROMOTED). No TS `enum` per docs/monorepo/code-style.md — an `as const`
+ * the base seven, 029 adds QUEUED, 136 adds PROMOTED, 151 adds SCHEDULED). No TS `enum` per docs/monorepo/code-style.md — an `as const`
  * map. Every layer that needs the status vocabulary (entity column typing, the
  * GraphQL `registerEnumType`, resolver input validation) reads from here so the
  * DB enum, the schema, and the MCP tool contract can never silently diverge again.
@@ -16,8 +16,10 @@
 
 /**
  * @description Full `plan_task_status` membership — the values a plan may hold.
- * Matches the Postgres enum exactly (uppercase, single-L `CANCELED`). QUEUED is a
- * real enum member but is only ever written to plans (see {@link TASK_STATUS}).
+ * Matches the Postgres enum exactly (uppercase, single-L `CANCELED`). QUEUED and
+ * SCHEDULED are real enum members but are only ever written to plans (see
+ * {@link TASK_STATUS}). SCHEDULED is server-written: a plan holds it exactly when it
+ * has a SCHEDULED `plan_runs` row, and a manual status write of it is rejected.
  * @public
  */
 export const PLAN_STATUS = {
@@ -29,6 +31,7 @@ export const PLAN_STATUS = {
   PENDING: 'PENDING',
   PROMOTED: 'PROMOTED',
   QUEUED: 'QUEUED',
+  SCHEDULED: 'SCHEDULED',
   SKIPPED: 'SKIPPED',
 } as const;
 
@@ -37,7 +40,8 @@ export type PlanStatus = (typeof PLAN_STATUS)[keyof typeof PLAN_STATUS];
 
 /**
  * @description Status values a task may hold — the same `plan_task_status` enum
- * minus QUEUED, which is plans-only (set when a plan's run is enqueued in BullMQ).
+ * minus QUEUED and SCHEDULED, which are plans-only (set when a plan's run is
+ * enqueued in BullMQ, or scheduled for later).
  * @public
  */
 export const TASK_STATUS = {
@@ -56,7 +60,7 @@ export type TaskStatus = (typeof TASK_STATUS)[keyof typeof TASK_STATUS];
 
 /**
  * @description Every label of the Postgres `plan_task_status` enum (full
- * membership, QUEUED included). This is the set the parity test checks against the
+ * membership, QUEUED and SCHEDULED included). This is the set the parity test checks against the
  * migrations, and the set to register as the GraphQL enum.
  * @public
  */
@@ -64,7 +68,7 @@ export const PLAN_STATUS_VALUES: readonly PlanStatus[] =
   Object.values(PLAN_STATUS);
 
 /**
- * @description Task-valid status labels (QUEUED excluded).
+ * @description Task-valid status labels (QUEUED and SCHEDULED excluded).
  * @public
  */
 export const TASK_STATUS_VALUES: readonly TaskStatus[] =
@@ -84,7 +88,7 @@ export function isPlanStatus(value: string): value is PlanStatus {
 
 /**
  * @description Type guard: true when `value` is a canonical task status label
- * (QUEUED is rejected — it is plans-only).
+ * (QUEUED and SCHEDULED are rejected — they are plans-only).
  * @public
  */
 export function isTaskStatus(value: string): value is TaskStatus {

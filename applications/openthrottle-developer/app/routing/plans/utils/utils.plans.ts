@@ -122,6 +122,9 @@ export const getPlanStatusBadgeColor = (
     case 'QUEUED':
       color = `amber`;
       break;
+    case 'SCHEDULED':
+      color = `orange`;
+      break;
     case 'SKIPPED':
       color = `slate`;
 

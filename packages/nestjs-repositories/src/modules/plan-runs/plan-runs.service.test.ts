@@ -656,6 +656,45 @@ describe('PlanRunsService', () => {
     });
   });
 
+  describe('cancelScheduledRunsForPlan', () => {
+    it('settles the plan SCHEDULED rows CANCELLED, guarded on status, and returns their job ids', async () => {
+      repo.find.mockResolvedValueOnce([
+        { bullmqJobId: 'scheduled-plan-run-a', id: 'run-a' },
+      ]);
+      qbExecute.mockResolvedValueOnce({ affected: 1 });
+
+      const cancelled = await service.cancelScheduledRunsForPlan('plan-1');
+
+      expect(repo.find).toHaveBeenCalledWith({
+        select: { bullmqJobId: true, id: true },
+        where: { planId: 'plan-1', status: 'SCHEDULED' },
+      });
+      const qb = repo.createQueryBuilder.mock.results[0]?.value;
+      expect(qb.set).toHaveBeenCalledWith({
+        hostname: null,
+        pid: null,
+        status: 'CANCELLED',
+        workerId: null,
+      });
+      expect(qb.where).toHaveBeenCalledWith('id IN (:...ids)', {
+        ids: ['run-a'],
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith('status = :status', {
+        status: 'SCHEDULED',
+      });
+      expect(cancelled).toEqual([
+        { bullmqJobId: 'scheduled-plan-run-a', id: 'run-a' },
+      ]);
+    });
+
+    it('writes nothing when the plan has no SCHEDULED run', async () => {
+      repo.find.mockResolvedValueOnce([]);
+
+      expect(await service.cancelScheduledRunsForPlan('plan-1')).toEqual([]);
+      expect(repo.createQueryBuilder).not.toHaveBeenCalled();
+    });
+  });
+
   describe('findScheduledByPlanId', () => {
     it('reads only the plan SCHEDULED rows', async () => {
       repo.find.mockResolvedValueOnce([buildRun({ status: 'SCHEDULED' })]);

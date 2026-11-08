@@ -55,13 +55,15 @@ describe('ambient work-session propagation', () => {
     mockExecute
       .mockResolvedValueOnce({ startWorkSession: { id: 'sess-1' } })
       .mockResolvedValueOnce({ updateTask: { id: 'task-1' } })
+      // update_plan reads the prior status first (to report a cancelled scheduled run).
+      .mockResolvedValueOnce({ plan: { id: 'plan-1', status: 'IN_PROGRESS' } })
       .mockResolvedValueOnce({ updatePlan: { id: 'plan-1' } });
 
     await updateTaskToolHandler({ id: 'task-1', status: 'COMPLETED' });
     await updatePlanToolHandler({ id: 'plan-1', status: 'COMPLETED' });
 
-    // The session is opened once and reused — three calls, not four.
-    expect(mockExecute).toHaveBeenCalledTimes(3);
+    // The session is opened once and reused — four calls (one is the status read), not five.
+    expect(mockExecute).toHaveBeenCalledTimes(4);
     expect(mockExecute).toHaveBeenLastCalledWith(
       'test-token',
       expect.anything(),

@@ -155,12 +155,13 @@ export class ScheduledPlanRunService {
    * - its delayed job is still in BullMQ (any state) → untouched;
    * - the job is missing and the run is within the grace window → the job is re-created with the time
    *   still left, or immediately when it is already due ({@link PlanEnqueueService.reprojectScheduledRun});
-   * - the job is missing and the run is past the grace window → settled MISSED and the user notified.
+   * - the job is missing and the run is past the grace window → settled MISSED, a SCHEDULED plan
+   *   returned to PENDING, and the user notified.
    *
    * Live interactive and detached-CLI plans stay out of it by construction, as PR #620 keeps them out
    * of the plan-status reconcile: only rows that carry a BullMQ job id are candidates (those runs never
-   * do), and this reconcile writes nothing but the scheduled row and its job — never a plan or task
-   * status. Whether a re-projected run may start alongside a live run is decided when it fires, by the
+   * do), and this reconcile writes nothing but the scheduled row, its job and — for a MISSED settle —
+   * the release of a SCHEDULED plan back to PENDING; never a task status. Whether a re-projected run may start alongside a live run is decided when it fires, by the
    * collision hold.
    *
    * Best-effort per run: a failure is logged and leaves that row SCHEDULED for the next boot. Never
@@ -218,6 +219,13 @@ export class ScheduledPlanRunService {
         if (!settled) {
           return 'settled_elsewhere';
         }
+
+        // The plan held SCHEDULED only for this run: back to PENDING (OT plan 764c7654, D4).
+        const actorSub = await this.statusChangeSystemAccount.resolveId();
+        await this.planEnqueueService.releaseScheduledPlan(run.planId, {
+          actorKind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+          actorSub: actorSub ?? undefined,
+        });
 
         await this.notifyNotStarted(
           run,

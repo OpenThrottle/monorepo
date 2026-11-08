@@ -5,22 +5,27 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  Input,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@openthrottle/react-router-shadcn';
-import { CalendarClock, ChevronDown, PlayCircle, XCircle } from 'lucide-react';
+import { ChevronDown, PlayCircle, XCircle } from 'lucide-react';
 import * as React from 'react';
 import type { useFetcher } from 'react-router';
 
 import type { action } from '~/routes/plans.$planId._index';
+import { PlanRunDialogConfirm } from '~/routing/plans/components/PlanRunDialogConfirm';
+import { PlanRunDialogHiddenFields } from '~/routing/plans/components/PlanRunDialogHiddenFields';
+import { PlanToolbarScheduleMenuItem } from '~/routing/plans/components/PlanToolbarScheduleMenuItem';
 import {
   PLAN_RUN_CANCEL_SCHEDULED_COPY,
   PLAN_TOOLBAR_COPY,
 } from '~/routing/plans/data/data.copy';
+import { usePlanRunNowConfirm } from '~/routing/plans/hooks/usePlanRunNowConfirm';
 import type { PlanRunDialogMode } from '~/routing/plans/types';
 import { isPlanRunBranchMissing } from '~/routing/plans/utils/plan-run-dialog';
+import { getPlanScheduleDisabledReason } from '~/routing/plans/utils/plan-schedule-gate';
+import { buildPlanToolbarRunFields } from '~/routing/plans/utils/plan-toolbar-run-fields';
 import {
   getPlanToolbarRunButtonLabel,
   getPlanToolbarRunTooltip,
@@ -42,7 +47,7 @@ export interface PlanToolbarRunSplitButtonProps {
   readonly repositoryId?: string;
   /** @description Tasks a whole-plan run would pick up; 0 disables Run and Schedule (the server refuses both). `undefined` = unknown, not gated. */
   readonly runnableTaskCount?: number;
-  /** @description The soonest SCHEDULED run's fire time; non-null gates every run-now path. */
+  /** @description The soonest SCHEDULED run's fire time; non-null makes Run ask to unschedule first. */
   readonly scheduledRunAt?: Date | string | null;
   /** @description Id of that same scheduled run; non-null adds "Cancel scheduled run" to the caret menu. */
   readonly scheduledRunId?: string | null;
@@ -52,12 +57,10 @@ export interface PlanToolbarRunSplitButtonProps {
 }
 
 /**
- * @description The toolbar's Run control as a split button. The primary half keeps the
- * one-click submit (a `runPlan` form with the hidden `ralphTuning`), tooltip and all; the
- * caret half is a dropdown that opens the Run dialog on its Run or Schedule tab. The caret
- * sits OUTSIDE the form, so it can never submit it; the form wraps only the primary button.
- * A scheduled run disables both run-now paths (they enqueue immediately); Schedule stays
- * available unless the plan is terminal.
+ * @description The toolbar's Run control as a split button: a one-click `runPlan` form, plus a
+ * caret dropdown (outside the form) that opens the Run dialog on its Run or Schedule tab. On a
+ * scheduled plan Run first confirms "Unschedule and run now?" (as does a server
+ * `PLAN_ALREADY_SCHEDULED`) and submits with `cancelScheduled`; Schedule reads Reschedule….
  */
 export const PlanToolbarRunSplitButton = (
   props: PlanToolbarRunSplitButtonProps,
@@ -83,6 +86,18 @@ export const PlanToolbarRunSplitButton = (
   } = props;
 
   // Hooks
+  const runFields = buildPlanToolbarRunFields({
+    branch,
+    checkoutId,
+    jobRunHooksJson,
+    ralphTuningJson,
+    repositoryId,
+    workingDirectory,
+  });
+  const runNowConfirm = usePlanRunNowConfirm({
+    fetcherRunPlan,
+    fields: runFields,
+  });
 
   // Setup
   // Branch is a REQUIRED enqueue input; with it blank the run would fail fast at
@@ -92,6 +107,11 @@ export const PlanToolbarRunSplitButton = (
   const isScheduled = scheduledRunAt != null;
   const canCancelScheduled = scheduledRunId != null;
   const isSubmitting = fetcherRunPlan.state !== 'idle';
+  const scheduleDisabledReason = getPlanScheduleDisabledReason(
+    planStatus,
+    noRunnableTasks,
+  );
+  const isRescheduling = isScheduled || planStatus === 'SCHEDULED';
 
   // Handlers
 
@@ -106,31 +126,7 @@ export const PlanToolbarRunSplitButton = (
       <Tooltip delayDuration={1_000}>
         <TooltipTrigger asChild={true}>
           <fetcherRunPlan.Form method="post">
-            <Input name="intent" type="hidden" value="runPlan" />
-            <Input name="ralphTuning" type="hidden" value={ralphTuningJson} />
-            {branch != null && branch !== '' && (
-              <Input name="branch" type="hidden" value={branch} />
-            )}
-            {jobRunHooksJson !== '' && (
-              <Input
-                name="jobRunHooksJson"
-                type="hidden"
-                value={jobRunHooksJson}
-              />
-            )}
-            {workingDirectory != null && workingDirectory !== '' && (
-              <Input
-                name="workingDirectory"
-                type="hidden"
-                value={workingDirectory}
-              />
-            )}
-            {checkoutId != null && checkoutId !== '' && (
-              <Input name="checkoutId" type="hidden" value={checkoutId} />
-            )}
-            {repositoryId != null && repositoryId !== '' && (
-              <Input name="repositoryId" type="hidden" value={repositoryId} />
-            )}
+            <PlanRunDialogHiddenFields fields={runFields} />
             <Button
               className="rounded-r-none"
               disabled={
@@ -139,11 +135,11 @@ export const PlanToolbarRunSplitButton = (
                 branchMissing ||
                 isRunning ||
                 isTerminal ||
-                noRunnableTasks ||
-                isScheduled
+                noRunnableTasks
               }
+              onClick={isScheduled ? runNowConfirm.onRequest : undefined}
               size="xs"
-              type="submit"
+              type={isScheduled ? 'button' : 'submit'}
               variant="ghost"
             >
               <PlayCircle />
@@ -181,19 +177,17 @@ export const PlanToolbarRunSplitButton = (
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem
-            disabled={isRunning || isScheduled || isTerminal || noRunnableTasks}
+            disabled={isRunning || isTerminal || noRunnableTasks}
             onSelect={() => onOpenDialog('run')}
           >
             <PlayCircle />
             {PLAN_TOOLBAR_COPY.runWithOptionsLabel}
           </DropdownMenuItem>
-          <DropdownMenuItem
-            disabled={isTerminal || noRunnableTasks}
+          <PlanToolbarScheduleMenuItem
+            disabledReason={scheduleDisabledReason}
+            isRescheduling={isRescheduling}
             onSelect={() => onOpenDialog('schedule')}
-          >
-            <CalendarClock />
-            {PLAN_TOOLBAR_COPY.scheduleLabel}
-          </DropdownMenuItem>
+          />
           {canCancelScheduled && (
             <DropdownMenuItem onSelect={onOpenCancelScheduled}>
               <XCircle />
@@ -202,6 +196,14 @@ export const PlanToolbarRunSplitButton = (
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <PlanRunDialogConfirm
+        mode="run"
+        onConfirm={runNowConfirm.onConfirm}
+        onOpenChange={runNowConfirm.onOpenChange}
+        open={runNowConfirm.open}
+        scheduledFor={runNowConfirm.serverScheduledFor ?? scheduledRunAt}
+      />
     </ButtonGroup>
   );
 };

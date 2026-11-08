@@ -1121,6 +1121,12 @@ export class PlansResolver {
 
     if (!entity) return null;
 
+    // D1: SCHEDULED is written only by scheduling a run, never by an update.
+    this.planStatusService.assertNotManualScheduled(
+      entity.status,
+      input.status,
+    );
+
     const inProgressBlocked = this.planStatusService.isInProgressBlocked(
       entity.status,
       input.status,
@@ -1418,6 +1424,7 @@ export class PlansResolver {
       actorSub,
       actorUserId,
       branch: input.branch,
+      cancelScheduled: input.cancelScheduled ?? null,
       checkoutId: input.checkoutId,
       idempotencyKey: input.idempotencyKey ?? null,
       jobRunHooksJson: input.jobRunHooksJson,
@@ -1524,6 +1531,7 @@ export class PlansResolver {
       actorSub,
       actorUserId,
       branch: input.branch,
+      cancelScheduled: input.cancelScheduled ?? null,
       checkoutId: input.checkoutId,
       idempotencyKey: input.idempotencyKey ?? null,
       jobRunHooksJson: input.jobRunHooksJson,
@@ -1588,6 +1596,7 @@ export class PlansResolver {
       planId: input.planId,
       priority: input.priority,
       ralph: input.ralph,
+      replaceScheduled: input.replaceScheduled ?? null,
       repositoryId: input.repositoryId,
       scheduledFor: input.scheduledFor,
       workingDirectory: input.workingDirectory,

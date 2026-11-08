@@ -62,6 +62,7 @@ describe('usePlanRunDialog', () => {
         iterations: 3,
         model: 'opus',
       }),
+      scheduledRunAt: null,
       workflowRunBlocked: false,
       workflowRunBlockedReason: undefined,
       workingDirectory: '',
@@ -119,5 +120,38 @@ describe('usePlanRunDialog', () => {
     expect(result.current.scheduleError).toContain('already passed');
     expect(result.current.blockedReason).toContain('already passed');
     expect(result.current.scheduleSummary).toBeUndefined();
+  });
+
+  test('a scheduled plan seeds the schedule from its current time and asks before posting', () => {
+    const { result } = renderDialogHook({
+      ...options,
+      mode: 'schedule',
+      planStatus: 'SCHEDULED',
+      scheduledRunAt: '2026-11-03T21:00:00.000Z',
+    });
+
+    expect(result.current.draft.scheduleTime).toBe('13:00');
+    expect(result.current.fields.scheduledFor).toBe('2026-11-03T21:00:00.000Z');
+    expect(result.current.confirm.confirmOpen).toBe(false);
+
+    let asked = false;
+    act(() => {
+      asked = result.current.confirm.requestConfirm();
+    });
+
+    expect(asked).toBe(true);
+    expect(result.current.confirm.confirmOpen).toBe(true);
+  });
+
+  test('an unscheduled plan posts without asking', () => {
+    const { result } = renderDialogHook(options);
+
+    let asked = true;
+    act(() => {
+      asked = result.current.confirm.requestConfirm();
+    });
+
+    expect(asked).toBe(false);
+    expect(result.current.confirm.confirmOpen).toBe(false);
   });
 });

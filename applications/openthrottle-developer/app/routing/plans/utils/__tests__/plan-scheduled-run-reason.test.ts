@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { getPlanScheduledRunReason } from '../plan-scheduled-run-reason';
+import {
+  getPlanScheduledForTitle,
+  getPlanScheduledRunReason,
+} from '../plan-scheduled-run-reason';
 
 const PINNED = { locale: 'en-US', timeZone: 'UTC' } as const;
 
@@ -12,7 +15,7 @@ describe('getPlanScheduledRunReason', () => {
     );
 
     expect(reason).toBe(
-      'A run is scheduled for Aug 1, 2026, 9:30 AM; cancel it to run now.',
+      'A run is scheduled for Aug 1, 2026, 9:30 AM; running now will unschedule it first.',
     );
   });
 
@@ -23,7 +26,7 @@ describe('getPlanScheduledRunReason', () => {
     });
 
     expect(reason).toBe(
-      'A run is scheduled for Aug 1, 2026, 2:30 AM; cancel it to run now.',
+      'A run is scheduled for Aug 1, 2026, 2:30 AM; running now will unschedule it first.',
     );
   });
 
@@ -42,5 +45,18 @@ describe('getPlanScheduledRunReason', () => {
 
   it('returns null for a value that is not a valid instant', () => {
     expect(getPlanScheduledRunReason('not-a-date', PINNED)).toBeNull();
+  });
+});
+
+describe('getPlanScheduledForTitle', () => {
+  it('names the scheduled time for a SCHEDULED badge', () => {
+    expect(getPlanScheduledForTitle('2026-08-01T09:30:00.000Z')).toMatch(
+      /^Scheduled for /,
+    );
+  });
+
+  it('is undefined when nothing valid is scheduled', () => {
+    expect(getPlanScheduledForTitle(null)).toBeUndefined();
+    expect(getPlanScheduledForTitle('not-a-date')).toBeUndefined();
   });
 });

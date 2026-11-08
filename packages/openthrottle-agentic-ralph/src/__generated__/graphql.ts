@@ -697,7 +697,7 @@ export type CalibrateJudgeForRunResult = {
 export type CancelPlanRunInput = {
   /** Plan id whose in-queue run-plan (Ralph) job should be cancelled */
   planId: Scalars['ID']['input'];
-  /** Optional plan_runs id of a SCHEDULED run of this plan. When set, cancels only that run: its delayed job is removed and its row settles CANCELLED, with no effect on any other active run, the plan status or the tasks. Already-settled runs are a no-op; a run that is QUEUED or IN_PROGRESS is rejected (omit planRunId to stop a live run). When omitted, the whole plan is cancelled as before. */
+  /** Optional plan_runs id of a SCHEDULED run of this plan. When set, cancels only that run: its delayed job is removed and its row settles CANCELLED, with no effect on any other active run or the tasks; a SCHEDULED plan returns to PENDING. Already-settled runs are a no-op; a run that is QUEUED or IN_PROGRESS is rejected (omit planRunId to stop a live run). When omitted, the whole plan is cancelled as before. */
   planRunId?: InputMaybe<Scalars['ID']['input']>;
 };
 
@@ -1493,6 +1493,8 @@ export type EnqueueDocIngestionResultObject = {
 export type EnqueuePlanRalphOrchestratorInput = {
   /** REQUIRED git branch this run operates on. Captured on plan_runs.branch as run provenance (powers branch->PR mapping). Passed explicitly by callers (skills/UI may pre-fill a default from the worktree name / HEAD) and never inferred server-side; enqueue fails fast when missing or blank. */
   branch: Scalars['String']['input'];
+  /** Set true to run a SCHEDULED plan now: its scheduled run is cancelled and this run is enqueued in its place, in one transaction. Without it, a plan with a scheduled run fails with extensions.code PLAN_ALREADY_SCHEDULED. */
+  cancelScheduled?: InputMaybe<Scalars['Boolean']['input']>;
   /** Optional registered checkout id (highest precedence). Resolved server-side to its filesystem path for this run; when set it overrides repositoryId and workingDirectory. */
   checkoutId?: InputMaybe<Scalars['ID']['input']>;
   /** Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id. */
@@ -1518,6 +1520,8 @@ export type EnqueuePlanRalphOrchestratorInput = {
 export type EnqueuePlanRunInput = {
   /** REQUIRED git branch this run operates on. Captured on plan_runs.branch as run provenance (powers branch->PR mapping). Passed explicitly by callers (skills/UI may pre-fill a default from the worktree name / HEAD) and never inferred server-side; enqueue fails fast when missing or blank. */
   branch: Scalars['String']['input'];
+  /** Set true to run a SCHEDULED plan now: its scheduled run is cancelled and this run is enqueued in its place, in one transaction. Without it, enqueuing a plan that has a scheduled run fails with extensions.code PLAN_ALREADY_SCHEDULED (plus planRunId and scheduledFor). */
+  cancelScheduled?: InputMaybe<Scalars['Boolean']['input']>;
   /** Optional registered checkout id (highest precedence). Resolved server-side to its filesystem path for this run; when set it overrides repositoryId and workingDirectory. */
   checkoutId?: InputMaybe<Scalars['ID']['input']>;
   /** Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id instead of creating a duplicate. */
@@ -3756,7 +3760,7 @@ export type PlanTagObject = {
   updatedAt: Scalars['DateTime']['output'];
 };
 
-/** Canonical plan/task status vocabulary (the Postgres plan_task_status enum). QUEUED is plans-only. Sourced from the shared SSOT so the DB enum, GraphQL schema, and MCP tool contract cannot diverge. */
+/** Canonical plan/task status vocabulary (the Postgres plan_task_status enum). QUEUED and SCHEDULED are plans-only; SCHEDULED is server-written (set while a plan has a scheduled run). Sourced from the shared SSOT so the DB enum, GraphQL schema, and MCP tool contract cannot diverge. */
 export const PlanTaskStatus = {
   Backlog: 'BACKLOG',
   Blocked: 'BLOCKED',
@@ -3766,6 +3770,7 @@ export const PlanTaskStatus = {
   Pending: 'PENDING',
   Promoted: 'PROMOTED',
   Queued: 'QUEUED',
+  Scheduled: 'SCHEDULED',
   Skipped: 'SKIPPED',
 } as const;
 
@@ -5679,6 +5684,8 @@ export type SchedulePlanRunInput = {
   priority?: InputMaybe<Scalars['Int']['input']>;
   /** Optional Ralph / workflow-ralph runtime tuning (iterations, model, backend, etc.). When set, queued workers pass these to nested workflow-ralph; when omitted, defaults come from env and .workflow-ralph.json in the worktree cwd. */
   ralph?: InputMaybe<RalphPlanRunTuningInput>;
+  /** Set true to reschedule a SCHEDULED plan: its scheduled run is cancelled and this one recorded in its place, in one transaction; the plan stays SCHEDULED. Without it, scheduling a plan that already has a scheduled run fails with extensions.code PLAN_ALREADY_SCHEDULED. Only PENDING and BACKLOG plans can be scheduled otherwise (PLAN_ACTIVE for QUEUED / IN_PROGRESS, PLAN_NOT_SCHEDULABLE for BLOCKED and terminal plans). */
+  replaceScheduled?: InputMaybe<Scalars['Boolean']['input']>;
   /** Optional registered repository id. Resolved to the enqueuing user's single checkout of that repository (errors when there is no checkout, or when it is ambiguous). Used when checkoutId is omitted. */
   repositoryId?: InputMaybe<Scalars['ID']['input']>;
   /** REQUIRED absolute instant the run fires at (an ISO-8601 DateTime; send UTC or an explicit offset). Must be strictly in the future and no more than 30 days from now (SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS); the server rejects anything else. */
@@ -6026,7 +6033,7 @@ export type SetPlanStatusInput = {
   /** Plan id to update status for */
   planId: Scalars['ID']['input'];
   /**
-   * New plan status — one of: BACKLOG, BLOCKED, CANCELED, COMPLETED, IN_PROGRESS, PENDING, PROMOTED, QUEUED, SKIPPED. Normalized to uppercase. Provide this OR statusEnum.
+   * New plan status — one of: BACKLOG, BLOCKED, CANCELED, COMPLETED, IN_PROGRESS, PENDING, PROMOTED, QUEUED, SCHEDULED, SKIPPED. Normalized to uppercase. Provide this OR statusEnum.
    * @deprecated Use statusEnum (typed PlanTaskStatus). String status is still accepted (normalized to uppercase) and validated against the canonical set.
    */
   status?: InputMaybe<Scalars['String']['input']>;

@@ -220,7 +220,12 @@ export const parsePlanRunForm = (formData: FormData): PlanRunFormResult => {
   const parsed = parseFormData(
     formData,
     EnqueuePlanRunInputSchema()
-      .omit({ idempotencyKey: true, planId: true, ralph: true })
+      .omit({
+        cancelScheduled: true,
+        idempotencyKey: true,
+        planId: true,
+        ralph: true,
+      })
       .extend({
         backend: z.string().nullish(),
         branch: z.string().nullish(),

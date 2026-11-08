@@ -10,7 +10,14 @@ import type { PlanStatusKey } from '~/routing/plans/types';
 export const PLAN_STATUS_FILTER_GROUPS = [
   {
     heading: PLAN_STATUS_FILTER_COPY.activeGroup,
-    statuses: ['BACKLOG', 'PENDING', 'QUEUED', 'IN_PROGRESS', 'BLOCKED'],
+    statuses: [
+      'BACKLOG',
+      'PENDING',
+      'SCHEDULED',
+      'QUEUED',
+      'IN_PROGRESS',
+      'BLOCKED',
+    ],
   },
   {
     heading: PLAN_STATUS_FILTER_COPY.resolvedGroup,

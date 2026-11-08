@@ -16,6 +16,8 @@ export const DEFAULT_STATUSES: readonly PlanStatusKey[] = [
   'IN_PROGRESS',
   'PENDING',
   'QUEUED',
+  // A scheduled plan is still waiting on work, so it stays in the default view.
+  'SCHEDULED',
 ];
 
 /**

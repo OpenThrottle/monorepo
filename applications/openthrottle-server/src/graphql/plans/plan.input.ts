@@ -234,7 +234,7 @@ export class CancelPlanRunInput {
   planId!: string;
 
   @Field(() => ID, {
-    description: `Optional plan_runs id of a SCHEDULED run of this plan. When set, cancels only that run: its delayed job is removed and its row settles CANCELLED, with no effect on any other active run, the plan status or the tasks. Already-settled runs are a no-op; a run that is QUEUED or IN_PROGRESS is rejected (omit planRunId to stop a live run). When omitted, the whole plan is cancelled as before.`,
+    description: `Optional plan_runs id of a SCHEDULED run of this plan. When set, cancels only that run: its delayed job is removed and its row settles CANCELLED, with no effect on any other active run or the tasks; a SCHEDULED plan returns to PENDING. Already-settled runs are a no-op; a run that is QUEUED or IN_PROGRESS is rejected (omit planRunId to stop a live run). When omitted, the whole plan is cancelled as before.`,
     nullable: true,
   })
   planRunId?: string | null;
@@ -321,9 +321,13 @@ export class RalphPlanRunTuningInput {
   skipWorktreeSetup?: boolean | null;
 }
 
-/** Input for {@link PlansResolver.enqueuePlanRun} (canonical spawn enqueue). Also accepted by deprecated `workflowPlanRun`. */
-@InputType()
-export class EnqueuePlanRunInput {
+/**
+ * The fields a run is configured with, shared by {@link EnqueuePlanRunInput} (run now) and
+ * {@link SchedulePlanRunInput} (run later). Abstract: it is not a GraphQL type of its own, so each
+ * subclass adds only the opt-in that fits it (`cancelScheduled` / `replaceScheduled`).
+ */
+@InputType({ isAbstract: true })
+export class PlanRunOptionsInput {
   @Field(() => String, {
     description: `REQUIRED git branch this run operates on. Captured on plan_runs.branch as run provenance (powers branch->PR mapping). Passed explicitly by callers (skills/UI may pre-fill a default from the worktree name / HEAD) and never inferred server-side; enqueue fails fast when missing or blank.`,
   })
@@ -375,12 +379,28 @@ export class EnqueuePlanRunInput {
   jobRunHooksJson?: string | null;
 }
 
+/** Input for {@link PlansResolver.enqueuePlanRun} (canonical spawn enqueue). Also accepted by deprecated `workflowPlanRun`. */
+@InputType()
+export class EnqueuePlanRunInput extends PlanRunOptionsInput {
+  @Field(() => Boolean, {
+    description: `Set true to run a SCHEDULED plan now: its scheduled run is cancelled and this run is enqueued in its place, in one transaction. Without it, enqueuing a plan that has a scheduled run fails with extensions.code PLAN_ALREADY_SCHEDULED (plus planRunId and scheduledFor).`,
+    nullable: true,
+  })
+  cancelScheduled?: boolean | null;
+}
+
 /**
- * Input for {@link PlansResolver.schedulePlanRun}: exactly the {@link EnqueuePlanRunInput} shape plus
- * the instant the run fires at, so a scheduled run is configured the same way an immediate one is.
+ * Input for {@link PlansResolver.schedulePlanRun}: the same run options as {@link EnqueuePlanRunInput}
+ * plus the instant the run fires at, so a scheduled run is configured the same way an immediate one is.
  */
 @InputType()
-export class SchedulePlanRunInput extends EnqueuePlanRunInput {
+export class SchedulePlanRunInput extends PlanRunOptionsInput {
+  @Field(() => Boolean, {
+    description: `Set true to reschedule a SCHEDULED plan: its scheduled run is cancelled and this one recorded in its place, in one transaction; the plan stays SCHEDULED. Without it, scheduling a plan that already has a scheduled run fails with extensions.code PLAN_ALREADY_SCHEDULED. Only PENDING and BACKLOG plans can be scheduled otherwise (PLAN_ACTIVE for QUEUED / IN_PROGRESS, PLAN_NOT_SCHEDULABLE for BLOCKED and terminal plans).`,
+    nullable: true,
+  })
+  replaceScheduled?: boolean | null;
+
   @Field(() => Date, {
     description: `REQUIRED absolute instant the run fires at (an ISO-8601 DateTime; send UTC or an explicit offset). Must be strictly in the future and no more than 30 days from now (SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS); the server rejects anything else.`,
   })
@@ -389,6 +409,12 @@ export class SchedulePlanRunInput extends EnqueuePlanRunInput {
 
 @InputType()
 export class EnqueuePlanRalphOrchestratorInput {
+  @Field(() => Boolean, {
+    description: `Set true to run a SCHEDULED plan now: its scheduled run is cancelled and this run is enqueued in its place, in one transaction. Without it, a plan with a scheduled run fails with extensions.code PLAN_ALREADY_SCHEDULED.`,
+    nullable: true,
+  })
+  cancelScheduled?: boolean | null;
+
   @Field(() => String, {
     description: `REQUIRED git branch this run operates on. Captured on plan_runs.branch as run provenance (powers branch->PR mapping). Passed explicitly by callers (skills/UI may pre-fill a default from the worktree name / HEAD) and never inferred server-side; enqueue fails fast when missing or blank.`,
   })

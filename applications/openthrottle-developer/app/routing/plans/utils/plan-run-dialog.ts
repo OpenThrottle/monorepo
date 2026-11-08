@@ -22,6 +22,7 @@ import {
   formatScheduleTime,
   getDefaultScheduleInstant,
 } from '~/routing/plans/utils/plan-run-schedule';
+import { getPlanScheduleDisabledReason } from '~/routing/plans/utils/plan-schedule-gate';
 import {
   getPlanIsRunning,
   getPlanIsTerminal,
@@ -64,17 +65,25 @@ export const getPlanConfiguredIterations = (
 /**
  * @description The draft a freshly opened dialog starts from: the plan's saved
  * backend / model / effort and its configured iterations, with the Schedule tab seeded
- * to the next sensible hour. Nothing from an earlier open survives.
+ * to the plan's current scheduled time when it has one (Reschedule…), else to the next
+ * sensible hour. Nothing from an earlier open survives.
  */
 export const createPlanRunDialogDraft = (input: {
   readonly mode: PlanRunDialogMode;
   readonly now: Date;
   readonly planId: string;
   readonly runConfigJson: string | null | undefined;
+  readonly scheduledRunAt: Date | string | null | undefined;
 }): PlanRunDialogDraft => {
-  const { mode, now, planId, runConfigJson } = input;
+  const { mode, now, planId, runConfigJson, scheduledRunAt } = input;
   const { workflowInput } = hydratePlanRunConfigUiState(planId, runConfigJson);
-  const defaultInstant = getDefaultScheduleInstant(now);
+  const scheduledInstant =
+    scheduledRunAt == null ? undefined : new Date(scheduledRunAt);
+  const hasScheduledInstant =
+    scheduledInstant !== undefined && !Number.isNaN(scheduledInstant.getTime());
+  const defaultInstant = hasScheduledInstant
+    ? scheduledInstant
+    : getDefaultScheduleInstant(now);
 
   return {
     backend: workflowInput.executionBackend,
@@ -116,8 +125,8 @@ export interface PlanRunDialogGatingInput {
 
 /**
  * @description The first named reason the dialog cannot submit, or `null`. Same order as
- * the toolbar's Run tooltip: terminal, running (Run now only — a scheduled run fires
- * later), workflow options invalid, then the blank branch. A run with no checkout,
+ * the toolbar's Run tooltip: terminal, running (Run now only), the schedule gate (Schedule
+ * only — BLOCKED or active), workflow options invalid, then the blank branch. A run with no checkout,
  * repository or working directory (monorepo root) is allowed, as the one-click Run allows it.
  */
 export const getPlanRunDialogBlockedReason = (
@@ -137,6 +146,13 @@ export const getPlanRunDialogBlockedReason = (
 
   if (mode === 'run' && getPlanIsRunning(planStatus)) {
     return PLAN_TOOLBAR_COPY.runRunningTooltip;
+  }
+
+  // Scheduling has its own gate (D2): BLOCKED and active plans are rejected by the server.
+  const scheduleReason =
+    mode === 'schedule' ? getPlanScheduleDisabledReason(planStatus) : null;
+  if (scheduleReason !== null) {
+    return scheduleReason;
   }
 
   if (workflowRunBlocked) {

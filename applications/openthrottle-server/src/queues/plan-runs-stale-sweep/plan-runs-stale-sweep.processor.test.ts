@@ -218,6 +218,17 @@ describe('PlanRunsStaleSweepProcessor', () => {
     expect(writeGuardedStatus).not.toHaveBeenCalled();
   });
 
+  it('never resets a SCHEDULED plan (its scheduled run is waiting, not stranded — OT plan 764c7654, D4)', async () => {
+    findStaleInProgressRuns.mockResolvedValue([staleRun('run-1', 'plan-1')]);
+    planFindOne.mockResolvedValue({ id: 'plan-1', status: 'SCHEDULED' });
+
+    await processor.process(job);
+
+    expect(settleStaleRun).toHaveBeenCalledWith('run-1');
+    expect(writeGuardedStatus).not.toHaveBeenCalled();
+    expect(taskManagerTransaction).not.toHaveBeenCalled();
+  });
+
   it('reconciles each affected plan once even when it had several stale runs', async () => {
     findStaleInProgressRuns.mockResolvedValue([
       staleRun('run-1', 'plan-1'),

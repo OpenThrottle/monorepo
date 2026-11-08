@@ -191,6 +191,8 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
           isCompleted={isCompleted}
           isRunning={isRunning}
           planId={planId}
+          planStatus={planStatus}
+          scheduledRunAt={scheduledRunAt}
         />
       }
       tags={

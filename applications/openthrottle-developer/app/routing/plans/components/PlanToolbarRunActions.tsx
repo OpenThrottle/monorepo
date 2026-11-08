@@ -66,7 +66,7 @@ export interface PlanToolbarRunActionsProps {
 
 /**
  * @description The {@link PlanToolbar} primary action group: the Run split button
- * (one-click enqueue plus a caret for Run with options / Schedule), the Evaluate
+ * (one-click enqueue plus a caret for Run with options / Schedule or Reschedule…), the Evaluate
  * rules form, the active-run control (Kill / Stale / Settle) and the
  * {@link PlanRunDialog} the caret opens. Extracted from the toolbar per
  * component-primitive-shape R6.
@@ -194,6 +194,7 @@ export const PlanToolbarRunActions = (
         repositories={runDialog.repositories}
         repositoryId={repositoryId ?? ''}
         runConfigJson={runConfigJson}
+        scheduledRunAt={scheduledRunAt}
         workflowRunBlocked={workflowRunBlocked}
         workflowRunBlockedReason={workflowRunBlockedReason}
         workingDirectory={workingDirectory ?? ''}

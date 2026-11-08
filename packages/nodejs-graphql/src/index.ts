@@ -46,9 +46,39 @@ export {
 export interface GraphqlResponse<TData> {
   readonly data?: TData;
   readonly errors?: ReadonlyArray<{
+    readonly extensions?: Readonly<Record<string, unknown>>;
     readonly message: string;
     readonly path?: ReadonlyArray<string | number>;
   }>;
+}
+
+/**
+ * @description Thrown when a 200 response carries `errors[]`. The message is unchanged
+ * (`GraphQL errors: <first message>`); `extensions` is the first error's `extensions` object so a
+ * caller can branch on a machine-readable `code` instead of scraping the message.
+ *
+ * @public
+ */
+export class GraphqlResponseError extends Error {
+  /** @description The first error's `extensions`, or an empty object when the server sent none. */
+  readonly extensions: Readonly<Record<string, unknown>>;
+
+  constructor(message: string, extensions: Readonly<Record<string, unknown>>) {
+    super(message);
+    this.name = 'GraphqlResponseError';
+    this.extensions = extensions;
+  }
+}
+
+/**
+ * @description Type guard for {@link GraphqlResponseError}.
+ *
+ * @public
+ */
+export function isGraphqlResponseError(
+  error: unknown,
+): error is GraphqlResponseError {
+  return error instanceof GraphqlResponseError;
 }
 
 /**
@@ -121,7 +151,10 @@ export async function executeGraphql<
 
   if (json.errors != null && json.errors.length > 0) {
     const first = json.errors[0];
-    throw new Error(`GraphQL errors: ${first?.message ?? 'unknown'}`);
+    throw new GraphqlResponseError(
+      `GraphQL errors: ${first?.message ?? 'unknown'}`,
+      first?.extensions ?? {},
+    );
   }
 
   if (json.data == null) {
@@ -215,7 +248,10 @@ export async function executeGraphqlAtUrl<
 
   if (json.errors != null && json.errors.length > 0) {
     const first = json.errors[0];
-    throw new Error(`GraphQL errors: ${first?.message ?? 'unknown'}`);
+    throw new GraphqlResponseError(
+      `GraphQL errors: ${first?.message ?? 'unknown'}`,
+      first?.extensions ?? {},
+    );
   }
 
   if (json.data == null) {

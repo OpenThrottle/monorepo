@@ -877,6 +877,7 @@ export function EnqueuePlanRalphOrchestratorInputSchema(): z.ZodObject<
 > {
   return z.object({
     branch: z.string().min(1),
+    cancelScheduled: z.boolean().nullish(),
     checkoutId: z.string().nullish(),
     idempotencyKey: z.string().nullish(),
     jobRunHooksJson: z.string().nullish(),
@@ -895,6 +896,7 @@ export function EnqueuePlanRunInputSchema(): z.ZodObject<
 > {
   return z.object({
     branch: z.string().min(1),
+    cancelScheduled: z.boolean().nullish(),
     checkoutId: z.string().nullish(),
     idempotencyKey: z.string().nullish(),
     jobRunHooksJson: z.string().nullish(),
@@ -1657,6 +1659,7 @@ export function SchedulePlanRunInputSchema(): z.ZodObject<
     planId: z.string().min(1),
     priority: z.number().nullish(),
     ralph: z.lazy(() => RalphPlanRunTuningInputSchema().nullish()),
+    replaceScheduled: z.boolean().nullish(),
     repositoryId: z.string().nullish(),
     scheduledFor: definedNonNullAnySchema,
     workingDirectory: z.string().nullish(),

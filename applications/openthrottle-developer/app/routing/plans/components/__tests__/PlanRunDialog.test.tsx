@@ -15,6 +15,9 @@ import {
   vi,
 } from 'vitest';
 
+import { PLAN_SCHEDULE_CONFIRM_COPY } from '~/routing/plans/data/data.copy';
+import { formatPlanScheduledFor } from '~/routing/plans/utils/format-plan-scheduled-for';
+
 import { buildPlanRunConfigJson } from '../../testing/plan-run-config';
 import type { PlanRunDialogProps } from '../PlanRunDialog';
 import { PlanRunDialog } from '../PlanRunDialog';
@@ -415,5 +418,173 @@ describe('PlanRunDialog Component', () => {
       expect(props.onSubmitted).not.toHaveBeenCalled();
       expect(props.onOpenChange).not.toHaveBeenCalled();
     });
+  });
+
+  describe('a scheduled plan', () => {
+    // 2026-11-03 13:00 PST: tomorrow, inside the 30-day horizon.
+    const SCHEDULED_AT = '2026-11-03T21:00:00.000Z';
+
+    test('Run now asks to unschedule first, and posts nothing until yes', async () => {
+      const user = userEvent.setup();
+      const component = await renderDialog({
+        props: { planStatus: 'SCHEDULED', scheduledRunAt: SCHEDULED_AT },
+      });
+
+      await user.click(component.getByRole('button', { name: 'Run now' }));
+
+      expect(component.getByRole('alertdialog')).toHaveAccessibleName(
+        PLAN_SCHEDULE_CONFIRM_COPY.runNowTitle(
+          formatPlanScheduledFor(SCHEDULED_AT),
+        ),
+      );
+      expect(submitted).toHaveLength(0);
+    });
+
+    test('yes posts the run with cancelScheduled and the dialog config', async () => {
+      const user = userEvent.setup();
+      const component = await renderDialog({
+        props: { planStatus: 'SCHEDULED', scheduledRunAt: SCHEDULED_AT },
+      });
+
+      await user.click(component.getByRole('button', { name: 'Run now' }));
+      await user.click(
+        component.getByRole('button', {
+          name: PLAN_SCHEDULE_CONFIRM_COPY.runNowConfirmLabel,
+        }),
+      );
+
+      await waitFor(() => expect(submitted).toHaveLength(1));
+      expect(submitted[0]).toMatchObject({
+        backend: 'claude',
+        branch: 'feat/run-dialog',
+        cancelScheduled: 'true',
+        intent: 'runPlan',
+        iterations: '7',
+        model: 'opus',
+      });
+    });
+
+    test('keeping it scheduled posts nothing', async () => {
+      const user = userEvent.setup();
+      const component = await renderDialog({
+        props: { planStatus: 'SCHEDULED', scheduledRunAt: SCHEDULED_AT },
+      });
+
+      await user.click(component.getByRole('button', { name: 'Run now' }));
+      await user.click(
+        component.getByRole('button', {
+          name: PLAN_SCHEDULE_CONFIRM_COPY.keepLabel,
+        }),
+      );
+
+      expect(component.queryByRole('alertdialog')).toBeNull();
+      expect(submitted).toHaveLength(0);
+    });
+
+    test('Reschedule opens prefilled with the current time, then asks to replace', async () => {
+      const user = userEvent.setup();
+      const component = await renderDialog({
+        props: {
+          mode: 'schedule',
+          planStatus: 'SCHEDULED',
+          scheduledRunAt: SCHEDULED_AT,
+        },
+      });
+
+      expect(component.getByLabelText('Time')).toHaveValue('13:00');
+      expect(field(component, 'scheduledFor')).toBe(SCHEDULED_AT);
+
+      await user.click(component.getByRole('button', { name: 'Schedule run' }));
+
+      expect(component.getByRole('alertdialog')).toHaveAccessibleName(
+        PLAN_SCHEDULE_CONFIRM_COPY.replaceTitle(
+          formatPlanScheduledFor(SCHEDULED_AT),
+        ),
+      );
+      expect(submitted).toHaveLength(0);
+
+      await user.click(
+        component.getByRole('button', {
+          name: PLAN_SCHEDULE_CONFIRM_COPY.replaceConfirmLabel,
+        }),
+      );
+
+      await waitFor(() => expect(submitted).toHaveLength(1));
+      expect(submitted[0]).toMatchObject({
+        intent: 'schedulePlanRun',
+        replaceScheduled: 'true',
+        scheduledFor: SCHEDULED_AT,
+      });
+    });
+
+    test('a server PLAN_ALREADY_SCHEDULED opens the confirm for a page that did not know', async () => {
+      const user = userEvent.setup();
+      const component = await renderDialog({
+        actionResult: {
+          runPlanConflict: {
+            code: 'PLAN_ALREADY_SCHEDULED',
+            planRunId: 'run-1',
+            scheduledFor: SCHEDULED_AT,
+          },
+        },
+      });
+
+      await user.click(component.getByRole('button', { name: 'Run now' }));
+
+      expect(await component.findByRole('alertdialog')).toHaveAccessibleName(
+        PLAN_SCHEDULE_CONFIRM_COPY.runNowTitle(
+          formatPlanScheduledFor(SCHEDULED_AT),
+        ),
+      );
+      expect(component.queryByTestId('PlanRunDialog-error')).toBeNull();
+
+      await user.click(
+        component.getByRole('button', {
+          name: PLAN_SCHEDULE_CONFIRM_COPY.runNowConfirmLabel,
+        }),
+      );
+
+      await waitFor(() => expect(submitted).toHaveLength(2));
+      expect(submitted[0]).not.toHaveProperty('cancelScheduled');
+      expect(submitted[1]).toMatchObject({ cancelScheduled: 'true' });
+    });
+
+    test('a server PLAN_ALREADY_SCHEDULED on Schedule opens the replace confirm', async () => {
+      const user = userEvent.setup();
+      const component = await renderDialog({
+        actionResult: {
+          schedulePlanRunConflict: {
+            code: 'PLAN_ALREADY_SCHEDULED',
+            planRunId: 'run-1',
+            scheduledFor: SCHEDULED_AT,
+          },
+        },
+        props: { mode: 'schedule' },
+      });
+
+      await user.click(component.getByRole('button', { name: 'Schedule run' }));
+
+      expect(
+        await component.findByRole('button', {
+          name: PLAN_SCHEDULE_CONFIRM_COPY.replaceConfirmLabel,
+        }),
+      ).toBeInTheDocument();
+    });
+
+    test.each(['BLOCKED', 'IN_PROGRESS'])(
+      'Schedule is blocked with a reason for a %s plan',
+      async (planStatus) => {
+        const component = await renderDialog({
+          props: { mode: 'schedule', planStatus },
+        });
+
+        expect(
+          component.getByRole('button', { name: 'Schedule run' }),
+        ).toBeDisabled();
+        expect(
+          component.getByTestId('PlanRunDialog-blocked-reason'),
+        ).toBeInTheDocument();
+      },
+    );
   });
 });

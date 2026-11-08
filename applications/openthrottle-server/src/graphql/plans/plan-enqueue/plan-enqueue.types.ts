@@ -1,6 +1,7 @@
 import type { PlanRunExecutionBackend } from '@openthrottle/nestjs-repositories';
 
 import type { ScheduledPlanRunFireDecision } from '../../../queues/plans/scheduled-plan-run.utils.ts';
+import type { PLAN_SCHEDULE_CONFLICT_CODE } from './plan-enqueue.constants.ts';
 
 /** @description Result of an enqueue: the persisted backend, job id, and live queue position. */
 export interface EnqueueOutcome {
@@ -27,3 +28,19 @@ export interface ScheduleOutcome {
  */
 export type ScheduledRunFireOutcome =
   ScheduledPlanRunFireDecision | { readonly kind: 'not_scheduled' };
+
+/** @description One of the D8 conflict codes in {@link PLAN_SCHEDULE_CONFLICT_CODE}. */
+export type PlanScheduleConflictCode =
+  (typeof PLAN_SCHEDULE_CONFLICT_CODE)[keyof typeof PLAN_SCHEDULE_CONFLICT_CODE];
+
+/**
+ * @description Whether a plan in `planStatus` may take a new scheduled run (D2), and if not, which
+ * conflict code says why. A SCHEDULED plan already holds its one scheduled run (D3).
+ */
+export type PlanSchedulability =
+  | { readonly kind: 'schedulable' }
+  | {
+      readonly code: PlanScheduleConflictCode;
+      readonly kind: 'conflict';
+      readonly message: string;
+    };

@@ -149,6 +149,8 @@ const ISO_DATE_TIME =
  * @description Single GraphQL error object from a response body.
  */
 export interface GraphqlErrorItem {
+  /** @description The server's `extensions` object (e.g. a machine-readable `code`), when sent. */
+  readonly extensions?: Readonly<Record<string, unknown>>;
   readonly message: string;
   readonly path?: ReadonlyArray<string | number>;
 }
@@ -200,10 +202,14 @@ export function asGraphqlPayload(
         path = pathRaw;
       }
 
+      const extensions = isRecord(item.extensions)
+        ? { extensions: item.extensions }
+        : {};
+
       items.push(
         path !== undefined
-          ? { message: item.message, path }
-          : { message: item.message },
+          ? { ...extensions, message: item.message, path }
+          : { ...extensions, message: item.message },
       );
     }
 

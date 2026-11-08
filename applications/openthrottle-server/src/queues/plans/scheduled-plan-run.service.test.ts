@@ -41,6 +41,7 @@ describe('ScheduledPlanRunService', () => {
   const mockEmitQueueJobCompleted = vi.fn();
   const mockFireScheduledRun = vi.fn();
   const mockReprojectScheduledRun = vi.fn();
+  const mockReleaseScheduledPlan = vi.fn();
   const mockFindScheduledRunsWithJob = vi.fn();
   const mockTransitionScheduledRun = vi.fn();
   const mockGetJob = vi.fn();
@@ -54,6 +55,7 @@ describe('ScheduledPlanRunService', () => {
     }),
     createMock<PlanEnqueueService>({
       fireScheduledRun: mockFireScheduledRun,
+      releaseScheduledPlan: mockReleaseScheduledPlan,
       reprojectScheduledRun: mockReprojectScheduledRun,
     }),
     createMock<PlanOutputStreamService>({
@@ -78,6 +80,7 @@ describe('ScheduledPlanRunService', () => {
     vi.clearAllMocks();
     mockFireScheduledRun.mockResolvedValue({ kind: 'fire' });
     mockReprojectScheduledRun.mockResolvedValue({ jobId: 'job' });
+    mockReleaseScheduledPlan.mockResolvedValue(true);
     mockFindScheduledRunsWithJob.mockResolvedValue([]);
     mockTransitionScheduledRun.mockResolvedValue(true);
     mockGetJob.mockResolvedValue(undefined);
@@ -293,6 +296,11 @@ describe('ScheduledPlanRunService', () => {
         expect.objectContaining({ planId: 'plan-stale' }),
       );
       expect(mockReprojectScheduledRun).not.toHaveBeenCalled();
+      // The plan held SCHEDULED only for this run: back to PENDING (D4).
+      expect(mockReleaseScheduledPlan).toHaveBeenCalledWith('plan-stale', {
+        actorKind: 'service_account',
+        actorSub: 'system-account-id',
+      });
       expect(mockEmitQueueJobCompleted).toHaveBeenCalledWith({
         jobType: 'plans',
         message: expect.stringContaining('Scheduled plan run missed'),
@@ -310,6 +318,7 @@ describe('ScheduledPlanRunService', () => {
         'settled_elsewhere',
       ]);
       expect(mockEmitQueueJobCompleted).not.toHaveBeenCalled();
+      expect(mockReleaseScheduledPlan).not.toHaveBeenCalled();
     });
 
     it('handles each run on its own: a failed re-projection is logged and left SCHEDULED, the rest proceed', async () => {

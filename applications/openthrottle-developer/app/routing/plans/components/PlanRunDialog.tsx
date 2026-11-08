@@ -5,7 +5,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  Input,
   Tabs,
   TabsContent,
   TabsList,
@@ -14,7 +13,9 @@ import {
 import * as React from 'react';
 
 import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
+import { PlanRunDialogConfirm } from '~/routing/plans/components/PlanRunDialogConfirm';
 import { PlanRunDialogFooter } from '~/routing/plans/components/PlanRunDialogFooter';
+import { PlanRunDialogHiddenFields } from '~/routing/plans/components/PlanRunDialogHiddenFields';
 import { PlanRunDialogSchedule } from '~/routing/plans/components/PlanRunDialogSchedule';
 import { PlanRunDialogSettings } from '~/routing/plans/components/PlanRunDialogSettings';
 import { PlanRunDialogWorkspace } from '~/routing/plans/components/PlanRunDialogWorkspace';
@@ -55,18 +56,19 @@ export interface PlanRunDialogProps {
 
   /** @description The plan's saved run config; model, effort and iterations read from it on every open. */
   readonly runConfigJson: string | null | undefined;
+
+  /** @description The plan's scheduled run; non-null makes submit ask to unschedule (Run now) or replace (Schedule). */
+  readonly scheduledRunAt?: Date | string | null;
   readonly workflowRunBlocked?: boolean;
   readonly workflowRunBlockedReason?: string;
   readonly workingDirectory: string;
 }
 
 /**
- * @description Run now / Schedule dialog for a plan. Reads the plan's `runConfigJson`
- * (not the chat toolbar atom) and posts `runPlan` or `schedulePlanRun` to the plan
- * detail route action through a fetcher. Model and effort are PLAN settings the action
- * saves; iterations is this run only; branch and checkout are a read-only summary that
- * links to the Configuration tab. The surfaced action error stays inline; success
- * fires `onSubmitted` and closes. State lives in {@link usePlanRunDialog}.
+ * @description Run now / Schedule dialog for a plan. Reads the plan's `runConfigJson` and posts
+ * `runPlan` or `schedulePlanRun` to the plan detail action through a fetcher. Model and effort are
+ * PLAN settings the action saves; iterations is this run only. On a scheduled plan a submit first
+ * asks to unschedule or replace it. State lives in {@link usePlanRunDialog}.
  */
 export const PlanRunDialog = (
   props: PlanRunDialogProps,
@@ -86,6 +88,7 @@ export const PlanRunDialog = (
     repositories = [],
     repositoryId,
     runConfigJson,
+    scheduledRunAt,
     workflowRunBlocked = false,
     workflowRunBlockedReason,
     workingDirectory,
@@ -105,6 +108,7 @@ export const PlanRunDialog = (
     ralphTuningJson,
     repositoryId,
     runConfigJson,
+    scheduledRunAt,
     workflowRunBlocked,
     workflowRunBlockedReason,
     workingDirectory,
@@ -138,16 +142,7 @@ export const PlanRunDialog = (
             <DialogDescription>{copy.description}</DialogDescription>
           </DialogHeader>
 
-          {Object.entries(dialog.fields).map(([name, value]) => (
-            <Input
-              data-testid={`PlanRunDialog-field-${name}`}
-              key={name}
-              name={name}
-              readOnly={true}
-              type="hidden"
-              value={value}
-            />
-          ))}
+          <PlanRunDialogHiddenFields fields={dialog.fields} />
 
           <Tabs onValueChange={handleModeChange} value={draft.mode}>
             <TabsList>
@@ -201,6 +196,13 @@ export const PlanRunDialog = (
             onCancel={() => onOpenChange(false)}
           />
         </fetcher.Form>
+        <PlanRunDialogConfirm
+          mode={draft.mode}
+          onConfirm={dialog.confirm.onConfirm}
+          onOpenChange={dialog.confirm.onConfirmOpenChange}
+          open={dialog.confirm.confirmOpen}
+          scheduledFor={dialog.confirm.serverScheduledFor ?? scheduledRunAt}
+        />
       </DialogContent>
     </Dialog>
   );

@@ -88,11 +88,16 @@ describe('plan-task-status SSOT', () => {
     expect(dbLabels).toEqual([...PLAN_STATUS_VALUES].sort());
   });
 
-  it('TASK_STATUS is PLAN_STATUS minus QUEUED (plans-only)', () => {
+  it('TASK_STATUS is PLAN_STATUS minus QUEUED and SCHEDULED (plans-only)', () => {
+    const plansOnly: readonly string[] = [
+      PLAN_STATUS.QUEUED,
+      PLAN_STATUS.SCHEDULED,
+    ];
     expect([...TASK_STATUS_VALUES].sort()).toEqual(
-      PLAN_STATUS_VALUES.filter((s) => s !== PLAN_STATUS.QUEUED).sort(),
+      PLAN_STATUS_VALUES.filter((s) => !plansOnly.includes(s)).sort(),
     );
     expect(TASK_STATUS_VALUES).not.toContain(PLAN_STATUS.QUEUED);
+    expect(TASK_STATUS_VALUES).not.toContain(PLAN_STATUS.SCHEDULED);
   });
 
   it('keys and values are identical (labels are their own key)', () => {
@@ -113,6 +118,8 @@ describe('plan-task-status SSOT', () => {
   it('type guards accept canonical values and reject unknown / mis-cased ones', () => {
     expect(isPlanStatus('QUEUED')).toBe(true);
     expect(isTaskStatus('QUEUED')).toBe(false);
+    expect(isPlanStatus('SCHEDULED')).toBe(true);
+    expect(isTaskStatus('SCHEDULED')).toBe(false);
     expect(isTaskStatus('PENDING')).toBe(true);
     expect(isPlanStatus('pending')).toBe(false);
     expect(isPlanStatus('CANCELLED')).toBe(false);
