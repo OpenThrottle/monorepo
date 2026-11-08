@@ -1,0 +1,4 @@
+{"backend":"opencode","cliVersion":"1.19.5","model":"not-a-real-model","recordedAt":"2026-11-08T04:36:15.879Z","scenario":"error","schemaVersion":1,"surface":"conversation","type":"header"}
+{"argv":["run","--format","json","--dir","<CWD>","-m","not-a-real-model","--","Reply with exactly: pong"],"channel":"argv","type":"outbound"}
+{"channel":"stdout","data":"{\"type\":\"error\",\"timestamp\":1794112575862,\"sessionID\":\"ses_e468ea76cffepz2gYbFhWSakJ4\",\"error\":{\"name\":\"UnknownError\",\"data\":{\"message\":\"Unexpected server error. Check server logs for details.\",\"ref\":\"err_fde47877\"}}}","type":"inbound"}
+{"code":1,"signal":null,"type":"exit"}

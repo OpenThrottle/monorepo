@@ -1,0 +1,9 @@
+{"backend":"codex","cliVersion":"codex-cli 0.167.0","model":"not-a-real-model","recordedAt":"2026-11-08T04:31:51.585Z","scenario":"error","schemaVersion":1,"surface":"conversation","type":"header"}
+{"argv":["exec","--json","--skip-git-repo-check","--sandbox","read-only","--model","not-a-real-model","--","Reply with exactly: pong"],"channel":"argv","type":"outbound"}
+{"channel":"stdout","data":"{\"type\":\"thread.started\",\"thread_id\":\"00000000-0000-4000-8000-000000000001\"}","type":"inbound"}
+{"channel":"stdout","data":"{\"type\":\"item.completed\",\"item\":{\"id\":\"item_2\",\"type\":\"error\",\"message\":\"Model metadata for `not-a-real-model` not found. Defaulting to fallback metadata; this can degrade performance and cause issues.\"}}","type":"inbound"}
+{"channel":"stdout","data":"{\"type\":\"turn.started\"}","type":"inbound"}
+{"channel":"stdout","data":"{\"type\":\"error\",\"message\":\"The 'not-a-real-model' model is not supported when using Codex with a ChatGPT account.\"}","type":"inbound"}
+{"channel":"stdout","data":"{\"type\":\"turn.failed\",\"error\":{\"message\":\"The 'not-a-real-model' model is not supported when using Codex with a ChatGPT account.\"}}","type":"inbound"}
+{"channel":"stderr","data":"Reading additional input from stdin...\n","type":"inbound"}
+{"code":1,"signal":null,"type":"exit"}

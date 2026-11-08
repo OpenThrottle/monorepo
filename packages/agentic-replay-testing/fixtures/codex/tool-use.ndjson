@@ -1,0 +1,11 @@
+{"backend":"codex","cliVersion":"codex-cli 0.167.0","model":null,"recordedAt":"2026-11-08T04:32:51.787Z","scenario":"tool-use","schemaVersion":1,"surface":"conversation","type":"header"}
+{"argv":["exec","--json","--skip-git-repo-check","--sandbox","read-only","--","Read notes.md and reply with its first heading only."],"channel":"argv","type":"outbound"}
+{"channel":"stdout","data":"{\"type\":\"thread.started\",\"thread_id\":\"00000000-0000-4000-8000-000000000001\"}","type":"inbound"}
+{"channel":"stdout","data":"{\"type\":\"turn.started\"}","type":"inbound"}
+{"channel":"stdout","data":"{\"type\":\"item.completed\",\"item\":{\"id\":\"item_2\",\"type\":\"agent_message\",\"text\":\"I’ll read the file and return only its first heading.\"}}","type":"inbound"}
+{"channel":"stdout","data":"{\"type\":\"item.started\",\"item\":{\"id\":\"item_3\",\"type\":\"command_execution\",\"command\":\"/bin/zsh -lc 'cat notes.md'\",\"aggregated_output\":\"\",\"exit_code\":null,\"status\":\"in_progress\"}}","type":"inbound"}
+{"channel":"stdout","data":"{\"type\":\"item.completed\",\"item\":{\"id\":\"item_3\",\"type\":\"command_execution\",\"command\":\"/bin/zsh -lc 'cat notes.md'\",\"aggregated_output\":\"# Replay fixture notes\\n\\nThis file exists so a tool-use scenario has something to read.\\n\",\"exit_code\":0,\"status\":\"completed\"}}","type":"inbound"}
+{"channel":"stdout","data":"{\"type\":\"item.completed\",\"item\":{\"id\":\"item_4\",\"type\":\"agent_message\",\"text\":\"# Replay fixture notes\"}}","type":"inbound"}
+{"channel":"stdout","data":"{\"type\":\"turn.completed\",\"usage\":{\"input_tokens\":28794,\"cached_input_tokens\":27520,\"cache_write_input_tokens\":0,\"output_tokens\":62,\"reasoning_output_tokens\":0}}","type":"inbound"}
+{"channel":"stderr","data":"Reading additional input from stdin...\n","type":"inbound"}
+{"code":0,"signal":null,"type":"exit"}

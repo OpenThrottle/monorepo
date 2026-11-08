@@ -1,0 +1,4 @@
+{"backend":"codex","cliVersion":"codex-cli 0.167.0","model":null,"recordedAt":"2026-11-08T04:32:22.413Z","scenario":"resume.turn-2","schemaVersion":1,"surface":"conversation","type":"header"}
+{"argv":["exec","resume","--json","--skip-git-repo-check","--sandbox","read-only","--","00000000-0000-4000-8000-000000000001","What was the code word? Reply with the word only."],"channel":"argv","type":"outbound"}
+{"channel":"stderr","data":"error: unexpected argument '--sandbox' found\n\n  tip: to pass '--sandbox' as a value, use '-- --sandbox'\n\nUsage: codex exec resume --json --skip-git-repo-check [SESSION_ID] [PROMPT]\n\nFor more information, try '--help'.\n","type":"inbound"}
+{"code":2,"signal":null,"type":"exit"}

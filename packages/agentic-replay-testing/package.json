@@ -1,0 +1,92 @@
+{
+  "author": {
+    "email": "matthew.scholta@gmail.com",
+    "name": "Matthew Scholta",
+    "url": "https://mattscholta.com"
+  },
+  "dependencies": {
+    "@openthrottle/openthrottle-agentic-ralph": "workspace:^",
+    "@openthrottle/openthrottle-agentic-utils": "workspace:^",
+    "@openthrottle/openthrottle-drivers": "workspace:^"
+  },
+  "description": "Record and replay real agent-CLI transcripts (NDJSON) so backend parsers, the conversation-stream service and the Ralph runner are tested against what the CLIs actually emit.",
+  "devDependencies": {
+    "vitest": "catalog:"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "main": "./src/index.ts",
+  "name": "@openthrottle/agentic-replay-testing",
+  "module": "./src/index.ts",
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "projectType": "library",
+    "sourceRoot": "./",
+    "tags": [
+      "name:@openthrottle/agentic-replay-testing",
+      "production:true",
+      "publish:false",
+      "technology:nodejs",
+      "type:package"
+    ],
+    "targets": {
+      "__build": {},
+      "__build-package": {},
+      "check-drift": {
+        "cache": false,
+        "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Re-record every scenario against the installed agent CLIs into a temp dir and compare each with its committed transcript structurally (argv, stdin, stdout event shapes, exit class). Exits 1 on drift. Spends real tokens; never writes fixtures/."
+        },
+        "options": {
+          "command": "pnpm exec tsx packages/agentic-replay-testing/scripts/check-drift.ts < /dev/null",
+          "cwd": "{workspaceRoot}"
+        }
+      },
+      "lint": {},
+      "record": {
+        "cache": false,
+        "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Record replay transcripts against the locally installed agent CLI (spends real tokens). Pass --backend <id> and optionally --scenario <slug,\u2026>. stdin is closed: the drivers engine inherits it, and claude stalls 3s on an idle stdin pipe, which would otherwise be baked into every plan-run transcript."
+        },
+        "options": {
+          "command": "pnpm exec tsx packages/agentic-replay-testing/scripts/record.ts < /dev/null",
+          "cwd": "{workspaceRoot}"
+        }
+      },
+      "test": {},
+      "typecheck": {}
+    }
+  },
+  "peerDependencies": {},
+  "private": true,
+  "publishConfig": {
+    "access": "restricted",
+    "exports": {
+      ".": {
+        "import": "./src/index.js",
+        "require": "./src/index.js",
+        "types": "./src/index.d.ts"
+      },
+      "./*": {
+        "import": "./*.js",
+        "require": "./*.js",
+        "types": "./*.d.ts"
+      }
+    },
+    "main": "./src/index.js",
+    "module": "./src/index.js",
+    "types": "./src/index.d.ts"
+  },
+  "repository": "git://github.com/OpenThrottle/monorepo.git",
+  "scripts": {},
+  "sideEffects": false,
+  "type": "module",
+  "types": "./src/index.ts",
+  "version": "1.0.0"
+}

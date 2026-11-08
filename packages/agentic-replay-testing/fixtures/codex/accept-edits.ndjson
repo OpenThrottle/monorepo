@@ -1,0 +1,11 @@
+{"backend":"codex","cliVersion":"codex-cli 0.167.0","model":null,"recordedAt":"2026-11-08T04:31:48.360Z","scenario":"accept-edits","schemaVersion":1,"surface":"conversation","type":"header"}
+{"argv":["exec","--json","--skip-git-repo-check","--sandbox","workspace-write","--","Use your file-writing tool to create out.txt containing exactly: hello. Then reply with: done."],"channel":"argv","type":"outbound"}
+{"channel":"stdout","data":"{\"type\":\"thread.started\",\"thread_id\":\"00000000-0000-4000-8000-000000000001\"}","type":"inbound"}
+{"channel":"stdout","data":"{\"type\":\"turn.started\"}","type":"inbound"}
+{"channel":"stdout","data":"{\"type\":\"item.completed\",\"item\":{\"id\":\"item_2\",\"type\":\"agent_message\",\"text\":\"I’ll write `out.txt` in the workspace with the exact requested contents.\"}}","type":"inbound"}
+{"channel":"stdout","data":"{\"type\":\"item.started\",\"item\":{\"id\":\"item_3\",\"type\":\"command_execution\",\"command\":\"/bin/zsh -lc \\\"python3 -c 'from pathlib import Path; Path(\\\\\\\"out.txt\\\\\\\").write_text(\\\\\\\"hello\\\\\\\")'\\\"\",\"aggregated_output\":\"\",\"exit_code\":null,\"status\":\"in_progress\"}}","type":"inbound"}
+{"channel":"stdout","data":"{\"type\":\"item.completed\",\"item\":{\"id\":\"item_3\",\"type\":\"command_execution\",\"command\":\"/bin/zsh -lc \\\"python3 -c 'from pathlib import Path; Path(\\\\\\\"out.txt\\\\\\\").write_text(\\\\\\\"hello\\\\\\\")'\\\"\",\"aggregated_output\":\"\",\"exit_code\":0,\"status\":\"completed\"}}","type":"inbound"}
+{"channel":"stdout","data":"{\"type\":\"item.completed\",\"item\":{\"id\":\"item_4\",\"type\":\"agent_message\",\"text\":\"done.\"}}","type":"inbound"}
+{"channel":"stdout","data":"{\"type\":\"turn.completed\",\"usage\":{\"input_tokens\":29602,\"cached_input_tokens\":25472,\"cache_write_input_tokens\":0,\"output_tokens\":90,\"reasoning_output_tokens\":0}}","type":"inbound"}
+{"channel":"stderr","data":"Reading additional input from stdin...\n","type":"inbound"}
+{"code":0,"signal":null,"type":"exit"}

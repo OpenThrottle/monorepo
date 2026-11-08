@@ -228,6 +228,9 @@
     },
     {
       "path": "./packages/openthrottle-desktop-bridge"
+    },
+    {
+      "path": "./packages/agentic-replay-testing"
     }
   ]
 }
