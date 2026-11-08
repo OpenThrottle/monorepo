@@ -44,11 +44,11 @@ describe('nestjs-application generator', () => {
         `applications/${name}/langgraph.json`,
         `applications/${name}/package.json`,
         `applications/${name}/src/agents/.gitkeep`,
-        `applications/${name}/src/app.controller.test.ts`,
-        `applications/${name}/src/app.controller.ts`,
         `applications/${name}/src/app.module.ts`,
-        `applications/${name}/src/app.service.test.ts`,
-        `applications/${name}/src/app.service.ts`,
+        `applications/${name}/src/app/app.controller.test.ts`,
+        `applications/${name}/src/app/app.controller.ts`,
+        `applications/${name}/src/app/app.service.test.ts`,
+        `applications/${name}/src/app/app.service.ts`,
         `applications/${name}/src/main.ts`,
         `applications/${name}/src/modules/.gitkeep`,
         `applications/${name}/src/queues/.gitkeep`,
@@ -59,5 +59,17 @@ describe('nestjs-application generator', () => {
         `applications/${name}/vitest.config.ts`,
       ]),
     );
+  });
+
+  it('keeps folder kinds out of the src root except app.module.ts', async () => {
+    await generatorNestJSApplication(tree, { name, port, username });
+
+    const sourceRootKinds = tree
+      .children(`applications/${name}/src`)
+      .filter((child) => {
+        return /\.(?:controller|service)(?:\.test)?\.ts$/.test(child);
+      });
+
+    expect(sourceRootKinds).toEqual([]);
   });
 });
