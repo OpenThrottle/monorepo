@@ -38,6 +38,12 @@ for devtools/profiling/troubleshooting.
   (`app/routing/plans/hooks/usePlanRunConfigEditor`, `usePlanLifecycleRevalidation`) and utils, with
   presentational pieces like `PlanWorkflowConfigHookRow` split into `app/routing/plans/components/`.
   Keep new work in that shape; do not grow the route file back up.
+- **A deferred loader promise started before an `await` must be marked handled.** If the awaited
+  query throws (or a deferred one rejects while it is pending), nothing owns the deferred promise
+  and Node exits the whole server. Call `markDeferredHandled([...])` from
+  `app/global/utils/mark-deferred-handled.ts` before the first `await`; the originals still reject
+  for their `errorElement`. There is deliberately no process-level `unhandledRejection` backstop —
+  the crash is what surfaced this bug (OT `a26a5be0`), and `openthrottle-server` also exits on one.
 - **Fresh worktrees fail Vitest at collection** until codegen runs — suites import from
   `app/__generated__/` (`graphql.ts`, `gql.ts`, and this app's unique `testing.ts` mock factory).
   Run `pnpm nx run openthrottle-developer:codegen-graphql` (or the workspace-wide codegen) first;

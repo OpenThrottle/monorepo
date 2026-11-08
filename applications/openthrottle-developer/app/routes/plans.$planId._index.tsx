@@ -22,6 +22,7 @@ import {
   PlanDetailWorkspaceRepositoriesDocument,
 } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
+import { markDeferredHandled } from '~/global/utils/mark-deferred-handled';
 import { loadComposerModels } from '~/routing/home/utils/models.server';
 import {
   addHook,
@@ -163,6 +164,21 @@ export const loader = async (args: Route.LoaderArgs) => {
     PlanDetailWorkspaceRepositoriesDocument,
     {},
   ).then((result) => result.workspaceRepositories ?? []);
+
+  // Before the first await: a deferred rejection must never be "unhandled" —
+  // neither while the critical query is still in flight, nor when it throws and
+  // nothing is returned for React Router to own. Either case used to exit the
+  // server process. The originals still reject for their errorElement.
+  markDeferredHandled([
+    enabledEditors,
+    inboxMessages,
+    ledger,
+    models,
+    outputChunks,
+    runHistory,
+    tagVocabulary,
+    workspaceRepositories,
+  ]);
 
   const critical = await criticalPromise;
 

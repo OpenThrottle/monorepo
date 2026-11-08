@@ -282,6 +282,84 @@ describe('routes/plans.$planId._index loader', () => {
     await expect(callLoader()).rejects.toThrow('plan read failed');
   });
 
+  // Regression: the critical await threw before the deferred promises were
+  // returned, so nothing ever handled their rejections and Node exited the
+  // developer server (seen with a cross-stack auth cookie → permission errors).
+  describe('unhandled rejections', () => {
+    const unhandled: unknown[] = [];
+    const onUnhandled = (reason: unknown): void => {
+      unhandled.push(reason);
+    };
+
+    // Node reports unhandled rejections after the microtask queue drains, so
+    // give it a full macrotask before asserting.
+    const flushRejectionTracking = async (): Promise<void> => {
+      await new Promise((resolve) => {
+        setTimeout(resolve, 20);
+      });
+    };
+
+    beforeEach(() => {
+      unhandled.length = 0;
+      process.on('unhandledRejection', onUnhandled);
+      return () => {
+        process.off('unhandledRejection', onUnhandled);
+      };
+    });
+
+    test('a rejected critical query leaves no deferred rejection unhandled', async () => {
+      mockDocuments(
+        new Map<unknown, unknown>([
+          [PlanDetailCriticalDocument, new Error('Missing permission')],
+          [PlanDetailLedgerDocument, new Error('ledger denied')],
+          [PlanDetailOutputChunksDocument, new Error('output denied')],
+          [PlanDetailRunHistoryDocument, new Error('runs denied')],
+          [PlanDetailTagVocabularyDocument, new Error('tags denied')],
+          [PlanDetailWorkspaceRepositoriesDocument, new Error('repos denied')],
+        ]),
+      );
+
+      await expect(callLoader()).rejects.toThrow('Missing permission');
+      await flushRejectionTracking();
+
+      expect(unhandled).toEqual([]);
+    });
+
+    test('a deferred rejection before the critical query settles stays handled and still rejects', async () => {
+      mockDocuments(
+        new Map<unknown, unknown>([
+          [PlanDetailLedgerDocument, new Error('ledger denied')],
+        ]),
+      );
+      // Hold the critical query open past a macrotask, so the ledger rejection
+      // lands while the loader is still awaiting — before React Router owns it.
+      const fallback = mockExecuteGraphqlWithAuth.getMockImplementation();
+      mockExecuteGraphqlWithAuth.mockImplementation(
+        (request, document, ...rest) => {
+          if (document === PlanDetailCriticalDocument) {
+            return new Promise((resolve) => {
+              setTimeout(() => {
+                resolve({ plan, tasksByPlanId: tasks });
+              }, 40);
+            });
+          }
+          if (!fallback) {
+            throw new Error('mockDocuments did not install a mock');
+          }
+          return fallback(request, document, ...rest);
+        },
+      );
+
+      const result = await callLoader();
+      await flushRejectionTracking();
+
+      expect(unhandled).toEqual([]);
+      // The original promise still rejects, so its errorElement still renders.
+      await expect(result.ledger).rejects.toThrow('ledger denied');
+      expect(result.plan).toEqual(plan);
+    });
+  });
+
   // enabledEditors is deferred too, but loadEnabledEditors keeps its own catch,
   // so a workspace-settings failure degrades that region to no editors instead
   // of rejecting — the toolbar simply renders no deep links.
