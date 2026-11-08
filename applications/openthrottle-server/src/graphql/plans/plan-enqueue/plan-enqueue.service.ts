@@ -91,6 +91,7 @@ const SCHEDULED_RUN_STATUS_BY_DECISION = {
   missed: PLAN_RUN_STATUS.MISSED,
   nothing_to_run: PLAN_RUN_STATUS.SKIPPED,
   superseded: PLAN_RUN_STATUS.SUPERSEDED,
+  workspace_missing: PLAN_RUN_STATUS.FAILED,
 } as const satisfies Record<
   ScheduledPlanRunFireDecision['kind'],
   PlanRunStatus
@@ -405,20 +406,7 @@ export class PlanEnqueueService {
     // One clock read for the whole call, so the past check, the horizon check and the delay agree.
     const nowMs = Date.now();
     const scheduledForMs = scheduledFor.getTime();
-    if (Number.isNaN(scheduledForMs)) {
-      throw new BadRequestException('scheduledFor must be a valid date-time');
-    }
-    if (scheduledForMs <= nowMs) {
-      throw new BadRequestException(
-        `scheduledFor must be in the future (got ${scheduledFor.toISOString()})`,
-      );
-    }
-    if (scheduledForMs - nowMs > SCHEDULED_PLAN_RUN_MAX_HORIZON_MS) {
-      throw new BadRequestException(
-        `scheduledFor must be within ${SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS} days from now (SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS; got ${scheduledFor.toISOString()})`,
-      );
-    }
-    const delayMs = scheduledForMs - nowMs;
+    const delayMs = this.resolveScheduleDelayMs(scheduledFor, nowMs);
 
     const normalizedKey = normalizeIdempotencyKey(idempotencyKey);
     if ('error' in normalizedKey) {
@@ -899,6 +887,99 @@ export class PlanEnqueueService {
   }
 
   /**
+   * @description Validates a requested fire time and returns the delay until it. The same rule for
+   * scheduling and rescheduling: a valid instant strictly in the future, no further out than
+   * {@link SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS} days. Throws BadRequest otherwise.
+   */
+  private resolveScheduleDelayMs(scheduledFor: Date, nowMs: number): number {
+    const scheduledForMs = scheduledFor.getTime();
+    if (Number.isNaN(scheduledForMs)) {
+      throw new BadRequestException('scheduledFor must be a valid date-time');
+    }
+    if (scheduledForMs <= nowMs) {
+      throw new BadRequestException(
+        `scheduledFor must be in the future (got ${scheduledFor.toISOString()})`,
+      );
+    }
+    if (scheduledForMs - nowMs > SCHEDULED_PLAN_RUN_MAX_HORIZON_MS) {
+      throw new BadRequestException(
+        `scheduledFor must be within ${SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS} days from now (SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS; got ${scheduledFor.toISOString()})`,
+      );
+    }
+
+    return scheduledForMs - nowMs;
+  }
+
+  /**
+   * @description Moves ONE scheduled run's fire time in place, instead of cancel + recreate. The run
+   * keeps its id, its frozen run config snapshot and its job id; only `scheduled_for` and the job's
+   * delay change. The new instant follows the scheduling rule ({@link resolveScheduleDelayMs}).
+   *
+   * Order matters: the delayed job is re-delayed FIRST (`changeDelay`, which BullMQ only allows on a
+   * job that is still delayed — a job a worker already took is firing, and that is rejected), and the
+   * row is moved SECOND under the `status = SCHEDULED` guard. A row that loses that guard was
+   * cancelled or settled meanwhile; the cancel removed the job, so nothing is left firing at the new
+   * time. Doing it the other way round could leave a row that says "later" over a job that still
+   * fires at the old time — and an early fire reads as on time to the fire-time policy. A job lost
+   * from Redis (flushed volume) is recreated with the new delay ({@link reprojectScheduledRun}).
+   * Never touches the plan or its tasks. Throws BadRequest for an unknown run, a run of another plan,
+   * or a run that is not SCHEDULED.
+   */
+  async reschedulePlanRun(params: {
+    readonly planId: string;
+    readonly planRunId: string;
+    readonly scheduledFor: Date;
+  }): Promise<ScheduleOutcome> {
+    const { planId, planRunId, scheduledFor } = params;
+    const delayMs = this.resolveScheduleDelayMs(scheduledFor, Date.now());
+    const run = await this.planRunsService.findById(planRunId);
+
+    if (!run || run.planId !== planId) {
+      throw new BadRequestException(
+        `Plan run ${planRunId} was not found for plan ${planId}`,
+      );
+    }
+    if (run.status !== PLAN_RUN_STATUS.SCHEDULED || run.bullmqJobId === null) {
+      throw new BadRequestException(
+        `Plan run ${planRunId} is ${run.status}, not SCHEDULED, so it cannot be rescheduled`,
+      );
+    }
+
+    const jobId = run.bullmqJobId;
+    const job = await this.plansQueue.getJob(jobId);
+
+    if (job === undefined) {
+      await this.reprojectScheduledRun({ delayMs, run });
+    } else {
+      const state = await job.getState();
+      if (state !== 'delayed') {
+        throw new BadRequestException(
+          `Plan run ${planRunId} is already starting (its job is ${state}), so it cannot be rescheduled`,
+        );
+      }
+      await job.changeDelay(delayMs);
+    }
+
+    const moved = await this.planRunsService.rescheduleScheduledRun(
+      planRunId,
+      scheduledFor,
+    );
+    if (!moved) {
+      throw new BadRequestException(
+        `Plan run ${planRunId} was cancelled or started while it was being rescheduled`,
+      );
+    }
+
+    return {
+      executionBackend: run.executionBackend,
+      jobId,
+      planId,
+      planRunId,
+      scheduledFor,
+    };
+  }
+
+  /**
    * @description The fire-time half of a scheduled run, run by the plans worker when the run's delayed
    * job fires and BEFORE anything else touches the run. One transaction:
    *
@@ -913,7 +994,8 @@ export class PlanEnqueueService {
    * 4. Applies it through {@link PlanRunsService.transitionScheduledRun}, the atomic
    *    `... WHERE status = 'SCHEDULED'` update that a concurrent cancel races: `fire` claims the row
    *    QUEUED, `missed`/`superseded` settle it MISSED/SUPERSEDED, `nothing_to_run` settles it
-   *    SKIPPED, each recording the decision's reason in `settled_reason`. If the update loses the race the result is `not_scheduled` and nothing else is
+   *    SKIPPED, `workspace_missing` (the caller's `workspaceError`) settles it FAILED, each recording
+   *    the decision's reason in `settled_reason`. If the update loses the race the result is `not_scheduled` and nothing else is
    *    written.
    * 5. Only for `fire`, and only after the claim won: the plan and task QUEUED flip that scheduling
    *    skipped, via the same {@link writeEnqueueStatuses} every enqueue uses (non-fatal capture — a
@@ -933,8 +1015,11 @@ export class PlanEnqueueService {
     readonly now: Date;
     readonly planId: string;
     readonly planRunId: string;
+    /** Why the run's working directory is unusable, or null; checked by the caller, outside the transaction. */
+    readonly workspaceError: string | null;
   }): Promise<ScheduledRunFireOutcome> {
-    const { actorKind, actorSub, now, planId, planRunId } = params;
+    const { actorKind, actorSub, now, planId, planRunId, workspaceError } =
+      params;
     const repo = this.plansService.getRepository();
 
     const outcome = await repo.manager.transaction<ScheduledRunFireOutcome>(
@@ -966,6 +1051,7 @@ export class PlanEnqueueService {
           hasRunnableTasks: runnableTaskCount > 0,
           now,
           scheduledFor: run.scheduledFor,
+          workspaceError,
         });
 
         const won = await this.planRunsService.transitionScheduledRun(

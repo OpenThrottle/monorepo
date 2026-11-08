@@ -480,6 +480,103 @@ describe('PlanRunsService', () => {
     });
   });
 
+  describe('findRunHistoryByPlanId', () => {
+    it('adds every SCHEDULED run to the newest non-SCHEDULED runs, newest createdAt first', async () => {
+      const old = buildRun({
+        createdAt: new Date('2026-10-01T00:00:00.000Z'),
+        id: 'scheduled-long-ago',
+        status: 'SCHEDULED',
+      });
+      const recent = buildRun({
+        createdAt: new Date('2026-11-05T00:00:00.000Z'),
+        id: 'recent-completed',
+        status: 'COMPLETED',
+      });
+      repo.find.mockResolvedValueOnce([recent]).mockResolvedValueOnce([old]);
+
+      const result = await service.findRunHistoryByPlanId('plan-1', 25, 100);
+
+      expect(repo.find).toHaveBeenNthCalledWith(1, {
+        order: { createdAt: 'DESC' },
+        take: 25,
+        where: { planId: 'plan-1', status: Not('SCHEDULED') },
+      });
+      expect(repo.find).toHaveBeenNthCalledWith(2, {
+        order: { scheduledFor: 'ASC' },
+        take: 100,
+        where: { planId: 'plan-1', status: 'SCHEDULED' },
+      });
+      expect(result.map((run) => run.id)).toEqual([
+        'recent-completed',
+        'scheduled-long-ago',
+      ]);
+    });
+  });
+
+  describe('rescheduleScheduledRun', () => {
+    it('moves scheduled_for only while the row is SCHEDULED', async () => {
+      const scheduledFor = new Date('2026-11-02T09:00:00.000Z');
+      qbExecute.mockResolvedValueOnce({ affected: 1 });
+
+      expect(await service.rescheduleScheduledRun('run-1', scheduledFor)).toBe(
+        true,
+      );
+
+      const qb = repo.createQueryBuilder.mock.results[0]?.value;
+      expect(qb.set).toHaveBeenCalledWith({ scheduledFor });
+      expect(qb.where).toHaveBeenCalledWith('id = :planRunId', {
+        planRunId: 'run-1',
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith('status = :status', {
+        status: 'SCHEDULED',
+      });
+    });
+
+    it('reports false when the run is no longer SCHEDULED', async () => {
+      qbExecute.mockResolvedValueOnce({ affected: 0 });
+
+      expect(await service.rescheduleScheduledRun('run-1', new Date())).toBe(
+        false,
+      );
+    });
+  });
+
+  describe('settleUnsettledRunByJob', () => {
+    it('settles by (queueName, bullmqJobId) only while the row is QUEUED or IN_PROGRESS', async () => {
+      qbExecute.mockResolvedValueOnce({ affected: 1 });
+
+      expect(
+        await service.settleUnsettledRunByJob('plans', 'job-42', 'FAILED'),
+      ).toBe(true);
+
+      const qb = repo.createQueryBuilder.mock.results[0]?.value;
+      expect(qb.set).toHaveBeenCalledWith({
+        hostname: null,
+        pid: null,
+        status: 'FAILED',
+        workerId: null,
+      });
+      expect(qb.where).toHaveBeenCalledWith('bullmq_job_id = :bullmqJobId', {
+        bullmqJobId: 'job-42',
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith('queue_name = :queueName', {
+        queueName: 'plans',
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith(
+        'status IN (:...startableStatuses)',
+        { startableStatuses: ['IN_PROGRESS', 'QUEUED'] },
+      );
+    });
+
+    it('reports false when the guard matched nothing (a settled or SCHEDULED row)', async () => {
+      qbExecute.mockResolvedValueOnce({ affected: 0 });
+
+      expect(
+        await service.settleUnsettledRunByJob('plans', 'job-42', 'FAILED'),
+      ).toBe(false);
+    });
+  });
+
   describe('settleScheduledRunsCancelled', () => {
     it('settles the plan SCHEDULED rows to CANCELLED, guarded on status SCHEDULED, keeping scheduled_for', async () => {
       qbExecute.mockResolvedValueOnce({ affected: 2 });

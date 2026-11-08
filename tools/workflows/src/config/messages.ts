@@ -29,6 +29,7 @@ Options:
   ${COLORS.cyan}--help ${COLORS.reset}              Show this message
   ${COLORS.cyan}--iteration-timeout ${COLORS.gray}<seconds>${COLORS.reset}  Per-iteration timeout (non-interactive only)  ${COLORS.gray}e.g. 1800${COLORS.reset}
   ${COLORS.cyan}--iterations ${COLORS.gray}<number>${COLORS.reset}    Number of iterations to run  ${COLORS.gray}default: ${COLORS.blue}10${COLORS.reset}
+  ${COLORS.cyan}--effort ${COLORS.gray}<level>${COLORS.reset}        Reasoning effort for the agent CLI (low, medium, high, extraHigh, max, ultra); fails on unknown values
   ${COLORS.cyan}--task-iterations ${COLORS.gray}<number>${COLORS.reset}  Opt-in max iterations for ${COLORS.cyan}--task${COLORS.reset} mode (overrides the single-task rule)  ${COLORS.gray}default: ${COLORS.blue}1${COLORS.reset}
   ${COLORS.cyan}--model ${COLORS.gray}<model> ${COLORS.reset}         Model preset when the backend supports it (${COLORS.gray}--model${COLORS.reset}; omit when ${COLORS.blue}'auto'${COLORS.reset} for Claude)  ${COLORS.gray}default: ${COLORS.blue}'auto'${COLORS.reset}
   ${COLORS.cyan}--project ${COLORS.gray}<name>${COLORS.reset}          NX project name (from project graph; applications + packages)

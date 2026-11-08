@@ -1,3 +1,6 @@
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
@@ -85,7 +88,7 @@ describe('ScheduledPlanRunService', () => {
     const run = scheduledRun('a', NOW);
 
     it('applies the policy as the status-change system account, at the given instant', async () => {
-      await service.fire({ now: NOW, run });
+      await service.fire({ now: NOW, run, workingDirectory: undefined });
 
       expect(mockFireScheduledRun).toHaveBeenCalledWith({
         actorKind: 'service_account',
@@ -93,11 +96,50 @@ describe('ScheduledPlanRunService', () => {
         now: NOW,
         planId: 'plan-a',
         planRunId: 'a',
+        workspaceError: null,
+      });
+    });
+
+    it('passes a usable working directory through as no workspace error', async () => {
+      await service.fire({ now: NOW, run, workingDirectory: tmpdir() });
+
+      expect(mockFireScheduledRun).toHaveBeenCalledWith(
+        expect.objectContaining({ workspaceError: null }),
+      );
+    });
+
+    it('reports a working directory removed since scheduling as a workspace error', async () => {
+      const gone = join(tmpdir(), `ot-gone-worktree-${process.pid}-missing`);
+
+      await service.fire({ now: NOW, run, workingDirectory: gone });
+
+      expect(mockFireScheduledRun).toHaveBeenCalledWith(
+        expect.objectContaining({
+          workspaceError: `workingDirectory does not exist: ${gone}`,
+        }),
+      );
+    });
+
+    it('workspace missing: warns the user that the run could not start and why', async () => {
+      mockFireScheduledRun.mockResolvedValueOnce({
+        kind: 'workspace_missing',
+        reason: 'workingDirectory does not exist: /gone/worktree',
+      });
+
+      await service.fire({ now: NOW, run, workingDirectory: undefined });
+
+      expect(mockEmitQueueJobCompleted).toHaveBeenCalledWith({
+        jobType: 'plans',
+        message: `Scheduled plan run failed to start at 2026-11-01T12:00:00.000Z: workingDirectory does not exist: /gone/worktree. Its worktree was likely removed while the run waited; schedule it again on an existing checkout.`,
+        planId: 'plan-a',
+        severity: 'warning',
       });
     });
 
     it('fire: lets the run go on without notifying', async () => {
-      expect(await service.fire({ now: NOW, run })).toEqual({ kind: 'fire' });
+      expect(
+        await service.fire({ now: NOW, run, workingDirectory: undefined }),
+      ).toEqual({ kind: 'fire' });
       expect(mockEmitQueueJobCompleted).not.toHaveBeenCalled();
     });
 
@@ -107,7 +149,7 @@ describe('ScheduledPlanRunService', () => {
         reason: 'it was 75 minutes late, past the 60-minute grace window',
       });
 
-      await service.fire({ now: NOW, run });
+      await service.fire({ now: NOW, run, workingDirectory: undefined });
 
       expect(mockEmitQueueJobCompleted).toHaveBeenCalledWith({
         jobType: 'plans',
@@ -123,7 +165,7 @@ describe('ScheduledPlanRunService', () => {
         reason: 'the plan already had an active run',
       });
 
-      await service.fire({ now: NOW, run });
+      await service.fire({ now: NOW, run, workingDirectory: undefined });
 
       expect(mockEmitQueueJobCompleted).toHaveBeenCalledWith({
         jobType: 'plans',
@@ -139,7 +181,7 @@ describe('ScheduledPlanRunService', () => {
         reason: 'the plan had no tasks left to run',
       });
 
-      await service.fire({ now: NOW, run });
+      await service.fire({ now: NOW, run, workingDirectory: undefined });
 
       expect(mockEmitQueueJobCompleted).toHaveBeenCalledWith(
         expect.objectContaining({ severity: 'info' }),
@@ -152,7 +194,7 @@ describe('ScheduledPlanRunService', () => {
         reason: 'the plan had no tasks left to run',
       });
 
-      await service.fire({ now: NOW, run });
+      await service.fire({ now: NOW, run, workingDirectory: undefined });
 
       expect(mockOutputSave).toHaveBeenCalledWith({
         content: `Scheduled plan run skipped: the plan had no tasks left to run at 2026-11-01T12:00:00.000Z.`,
@@ -168,7 +210,9 @@ describe('ScheduledPlanRunService', () => {
       });
       mockOutputSave.mockRejectedValueOnce(new Error('db down'));
 
-      await expect(service.fire({ now: NOW, run })).resolves.toEqual({
+      await expect(
+        service.fire({ now: NOW, run, workingDirectory: undefined }),
+      ).resolves.toEqual({
         kind: 'nothing_to_run',
         reason: 'the plan had no tasks left to run',
       });
@@ -176,9 +220,9 @@ describe('ScheduledPlanRunService', () => {
     });
 
     it('fire and not_scheduled append nothing to the plan output', async () => {
-      await service.fire({ now: NOW, run });
+      await service.fire({ now: NOW, run, workingDirectory: undefined });
       mockFireScheduledRun.mockResolvedValueOnce({ kind: 'not_scheduled' });
-      await service.fire({ now: NOW, run });
+      await service.fire({ now: NOW, run, workingDirectory: undefined });
 
       expect(mockOutputSave).not.toHaveBeenCalled();
     });
@@ -186,7 +230,9 @@ describe('ScheduledPlanRunService', () => {
     it('not_scheduled (a cancel won the race): no notification — the cancel was the user own action', async () => {
       mockFireScheduledRun.mockResolvedValueOnce({ kind: 'not_scheduled' });
 
-      expect(await service.fire({ now: NOW, run })).toEqual({
+      expect(
+        await service.fire({ now: NOW, run, workingDirectory: undefined }),
+      ).toEqual({
         kind: 'not_scheduled',
       });
       expect(mockEmitQueueJobCompleted).not.toHaveBeenCalled();

@@ -262,6 +262,11 @@ export const PLAN_RUN_TRANSPARENCY_COPY = {
   },
 } as const;
 
+export const PLAN_SCHEDULED_RUNS_CARD_COPY = {
+  description: `Runs waiting for their fire time. Cancel one to run the plan now instead.`,
+  title: `Scheduled runs`,
+} as const;
+
 export const LINKED_ARTIFACTS_PANEL_COPY = {
   allTypesLabel: `All types`,
   allVerificationsLabel: `All`,
@@ -477,6 +482,23 @@ export const PLAN_RUN_CANCEL_SCHEDULED_COPY = {
   pendingLabel: `Cancelling…`,
   triggerLabel: `Cancel`,
   triggerTitle: `Cancel this scheduled run before it fires.`,
+} as const;
+
+/**
+ * @description Reschedule flow for one SCHEDULED run: the row button and its dialog.
+ */
+export const PLAN_RUN_RESCHEDULE_COPY = {
+  ariaLabel: `Reschedule run`,
+  cancelLabel: `Keep current time`,
+  dialogBody: `The run keeps its settings (model, effort, workspace). Only its start time moves.`,
+  dialogTitle: `Reschedule run`,
+  pendingLabel: `Rescheduling…`,
+  submitLabel: `Reschedule`,
+  successToast: (when: string): string => {
+    return `Run rescheduled for ${when}.`;
+  },
+  triggerLabel: `Reschedule`,
+  triggerTitle: `Move this scheduled run to a different start time.`,
 } as const;
 
 /**

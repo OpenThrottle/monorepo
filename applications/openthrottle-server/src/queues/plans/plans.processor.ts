@@ -15,7 +15,7 @@ import {
 import { AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT } from '@openthrottle/nestjs-auth';
 import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { PlanRunStatus } from '@openthrottle/nestjs-repositories';
+import type { PlanRun, PlanRunStatus } from '@openthrottle/nestjs-repositories';
 import {
   HEARTBEAT_INTERVAL_MS,
   PLAN_RUN_STARTABLE_STATUSES,
@@ -401,6 +401,7 @@ export class PlansProcessor
 
   /**
    * When a plan job fails, reset the plan status to QUEUED so it is not stuck as IN_PROGRESS. The job may be retried by BullMQ; if not, the user can re-enqueue.
+   * Guarded on the job's plan_runs row: a SCHEDULED run whose admission threw never flipped the plan, so the plan is left alone (and the run settled FAILED once retries are exhausted); a row already settled elsewhere is left alone entirely; only a QUEUED / IN_PROGRESS row (or no row) takes the reset and the FAILED settle.
    * Handles both payload shapes: { job, error } (NestJS) or (job, error) as separate args from BullMQ Worker.
    */
   @OnWorkerEvent('failed')
@@ -415,17 +416,96 @@ export class PlansProcessor
 
     if (typeof planId !== 'string') return;
 
+    const run =
+      job === undefined ? null : await this.findRunForJobSafe(String(job.id));
+    const exhausted = job !== undefined && this.hasExhaustedRetries(job);
+
+    // Admission threw before the fire-time claim committed (it is one transaction, so it rolled
+    // back): the plan and its tasks were never flipped QUEUED and must not be now. A retry fires
+    // the policy again; once none is left the run can never fire, so it settles FAILED rather than
+    // sitting SCHEDULED behind a failed job the boot reconcile reads as present.
+    if (run?.status === PLAN_RUN_STATUS.SCHEDULED) {
+      if (exhausted) {
+        await this.settleScheduledRunFailedSafe(run.id);
+      }
+
+      this.logger.warn(
+        `Scheduled plan run ${run.id} failed before it could claim (plan ${planId}); plan status left as is${exhausted ? ', run settled FAILED' : ', will retry'}: ${error?.message ?? 'unknown error'}`,
+        PlansProcessor.name,
+      );
+
+      return;
+    }
+
+    // Something else already settled the row (a cancel, the fire-time policy's MISSED /
+    // SUPERSEDED, the stale sweeper): the job's failure is not this run's to report, and the plan
+    // belongs to whatever settled it.
+    if (run !== null && !isStartableRunStatus(run.status)) {
+      this.logger.warn(
+        `Plan job ${String(job?.id)} failed after its plan_runs row ${run.id} was already ${run.status}; leaving the row and plan ${planId} as they are: ${error?.message ?? 'unknown error'}`,
+        PlansProcessor.name,
+      );
+
+      return;
+    }
+
     await this.resetPlanStatusToQueued(planId, 'failed', error?.message);
 
     // The retry boundary: 'failed' fires on EVERY attempt, but a retry is still going
     // to re-claim this row (via markRunStarted, back to IN_PROGRESS). Only settle the
     // plan_runs row to the terminal FAILED status once BullMQ will not retry again —
     // settling earlier would have a retry re-claim a row that already reads terminal.
-    if (job !== undefined && this.hasExhaustedRetries(job)) {
-      await this.settleQueuedRunStatus(
+    // Guarded on QUEUED / IN_PROGRESS, so a row settled between the read above and here keeps
+    // its status.
+    if (job !== undefined && exhausted) {
+      await this.settleUnsettledRunFailedSafe(String(job.id));
+    }
+  }
+
+  /** Reads this job's plan_runs row; null when there is none or the read fails (logged). */
+  private async findRunForJobSafe(jobId: string): Promise<PlanRun | null> {
+    try {
+      return await this.planRunsService.findByQueueNameAndBullmqJobId(
         PLANS_QUEUE_NAME,
-        String(job.id),
+        jobId,
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Failed to read plan_runs row for failed job ${jobId}: ${error instanceof Error ? error.message : String(error)}`,
+        PlansProcessor.name,
+      );
+
+      return null;
+    }
+  }
+
+  /** Settles a SCHEDULED run FAILED under the SCHEDULED guard. Never throws. */
+  private async settleScheduledRunFailedSafe(planRunId: string): Promise<void> {
+    try {
+      await this.planRunsService.transitionScheduledRun(
+        planRunId,
         PLAN_RUN_STATUS.FAILED,
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Failed to settle scheduled plan run ${planRunId} FAILED: ${error instanceof Error ? error.message : String(error)}`,
+        PlansProcessor.name,
+      );
+    }
+  }
+
+  /** Settles this job's run FAILED only while it is still QUEUED / IN_PROGRESS. Never throws. */
+  private async settleUnsettledRunFailedSafe(jobId: string): Promise<void> {
+    try {
+      await this.planRunsService.settleUnsettledRunByJob(
+        PLANS_QUEUE_NAME,
+        jobId,
+        PLAN_RUN_STATUS.FAILED,
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Failed to settle plan_runs status: jobId=${jobId}, status=FAILED, error=${error instanceof Error ? error.message : String(error)}`,
+        PlansProcessor.name,
       );
     }
   }
@@ -746,7 +826,14 @@ export class PlansProcessor
     // the heartbeat, the work-ledger session, the plan status write, the worktree. A scheduled run
     // the fire-time policy settles (MISSED / SUPERSEDED / nothing to run), a run a cancel already
     // settled, or one whose claim lost a race returns here having touched nothing else.
-    if (!(await this.admitRun(planId, queueName, jobId))) {
+    if (
+      !(await this.admitRun(
+        planId,
+        queueName,
+        jobId,
+        job.data.workingDirectory,
+      ))
+    ) {
       const snapshot = this.processMetrics.getCurrentSnapshot();
 
       return { taskRunMetrics: { atEnd: snapshot, atStart: snapshot } };
@@ -929,6 +1016,7 @@ export class PlansProcessor
     planId: string,
     queueName: string,
     jobId: string,
+    workingDirectory: string | undefined,
   ): Promise<boolean> {
     const run = await this.planRunsService.findByQueueNameAndBullmqJobId(
       queueName,
@@ -936,7 +1024,10 @@ export class PlansProcessor
     );
 
     if (run?.status === PLAN_RUN_STATUS.SCHEDULED) {
-      const outcome = await this.scheduledPlanRun.fire({ run });
+      const outcome = await this.scheduledPlanRun.fire({
+        run,
+        workingDirectory,
+      });
 
       if (outcome.kind !== 'fire') {
         return false;

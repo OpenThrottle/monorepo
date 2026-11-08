@@ -6184,6 +6184,11 @@ input ListPlanOutputStreamChunksInput {
 }
 
 input PlanRunsByPlanIdInput {
+  """
+  When true, every SCHEDULED run of the plan is returned however old its row is, and limit caps only the runs that are not SCHEDULED. Rows stay newest createdAt first, so the first row is then not necessarily the newest run. Default false: limit caps every run.
+  """
+  includeAllScheduled: Boolean
+
   """Max plan-run audit rows to return, newest first."""
   limit: Int
 
@@ -6736,6 +6741,11 @@ type Mutation {
   Schedule a plan run for a later instant: the enqueuePlanRun input plus scheduledFor. Records a SCHEDULED plan_runs row with a frozen run config snapshot and a delayed job that starts it. scheduledFor must be in the future and within 30 days (SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS). Does not change the plan or task statuses (the plan stays as it is until the run fires). Cancel with cancelPlanRun (pass planRunId to cancel just this run).
   """
   schedulePlanRun(input: SchedulePlanRunInput!): SchedulePlanRunResultObject!
+
+  """
+  Move a SCHEDULED plan run's fire time in place: the run keeps its id, its frozen run config snapshot and its job; only scheduledFor and the delayed job's delay change. Same rule as schedulePlanRun (future, within 30 days). Rejected when the run is not SCHEDULED or its job is already starting. Never changes the plan or task statuses.
+  """
+  reschedulePlanRun(input: ReschedulePlanRunInput!): SchedulePlanRunResultObject!
 
   """
   Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). Also cancels the plan's SCHEDULED runs (delayed job removed, run settled CANCELLED). With planRunId naming a SCHEDULED run of the plan, cancels ONLY that run (its delayed job and row), leaving any other active run, the plan status and the tasks alone; a planRunId that is already settled is a no-op, and one that is QUEUED or IN_PROGRESS is rejected (omit planRunId to stop a live run). Idempotent: once a scheduled run has fired or settled there is nothing left to cancel.
@@ -8347,6 +8357,21 @@ input SchedulePlanRunInput {
 
   """
   REQUIRED absolute instant the run fires at (an ISO-8601 DateTime; send UTC or an explicit offset). Must be strictly in the future and no more than 30 days from now (SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS); the server rejects anything else.
+  """
+  scheduledFor: DateTime!
+}
+
+input ReschedulePlanRunInput {
+  """Plan id the scheduled run belongs to."""
+  planId: ID!
+
+  """
+  plan_runs id of the SCHEDULED run to move. Any other status is rejected.
+  """
+  planRunId: ID!
+
+  """
+  The new absolute instant the run fires at: in the future and within 30 days (SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS), the same rule as schedulePlanRun.
   """
   scheduledFor: DateTime!
 }

@@ -109,6 +109,18 @@ mutation PlanDetailSchedulePlanRun($input: SchedulePlanRunInput!) {
   }
 }
 
+# Moves one SCHEDULED run's fire time in place (same run id, snapshot and job).
+# The server applies the schedulePlanRun rule (future, within 30 days) and
+# rejects a run that is no longer SCHEDULED or already starting.
+mutation PlanDetailReschedulePlanRun($input: ReschedulePlanRunInput!) {
+  reschedulePlanRun(input: $input) {
+    jobId
+    planId
+    planRunId
+    scheduledFor
+  }
+}
+
 mutation PlanDetailEvaluatePlanRules($planId: ID!) {
   evaluatePlanRules(planId: $planId) {
     enqueued
@@ -272,7 +284,11 @@ query PlanDetailRunHistory($planId: ID!) {
   # `limit: 25` matches `recentPlanRunsMetrics` above so completed-job metrics can
   # join onto history rows, and must equal PLAN_RUN_HISTORY_FETCH_LIMIT in
   # routing/plans/data/data.plan-run-history.ts (the history footer reads it).
-  planRunsByPlanId(input: { planId: $planId, limit: 25 }) {
+  # `includeAllScheduled` makes the limit cap only non-SCHEDULED runs and adds
+  # every SCHEDULED one, so a run scheduled long ago never drops out of Upcoming.
+  planRunsByPlanId(
+    input: { includeAllScheduled: true, limit: 25, planId: $planId }
+  ) {
     branch
     bullmqJobId
     checkout {

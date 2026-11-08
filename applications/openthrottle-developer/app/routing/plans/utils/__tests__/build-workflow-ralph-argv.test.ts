@@ -149,6 +149,20 @@ describe('buildWorkflowRalphOptionArgs', () => {
     ]);
   });
 
+  test('emits --effort when set and nothing when empty', () => {
+    expect(
+      buildWorkflowRalphOptionArgs(basePlanInput({ effort: 'high' })),
+    ).toEqual([
+      '--plan',
+      '0c2720a9-920f-4b16-865a-f803eb444e18',
+      '--effort',
+      'high',
+    ]);
+    expect(
+      buildWorkflowRalphOptionArgs(basePlanInput({ effort: '  ' })),
+    ).not.toContain('--effort');
+  });
+
   test('emits --task for task-centric mode', () => {
     expect(buildWorkflowRalphOptionArgs(baseTaskInput())).toEqual([
       '--task',

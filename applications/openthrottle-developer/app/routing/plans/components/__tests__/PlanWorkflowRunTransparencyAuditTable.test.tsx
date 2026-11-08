@@ -418,5 +418,26 @@ describe('PlanWorkflowRunTransparencyAuditTable', () => {
         component.getByTestId('PlanWorkflowRunTransparencyAuditTable-limit'),
       ).toHaveTextContent(copy.fetchLimitFooter(PLAN_RUN_HISTORY_FETCH_LIMIT));
     });
+
+    test('does not count SCHEDULED rows towards the limit (every one is fetched on top of it)', async () => {
+      const user = userEvent.setup();
+      const historyRows = manyRows(PLAN_RUN_HISTORY_FETCH_LIMIT - 1);
+      const scheduledRow = auditRow({
+        bullmqJobId: 'scheduled-plan-run-old',
+        id: 'run-scheduled-old',
+        status: 'SCHEDULED',
+      });
+      const component = renderTable([...historyRows, scheduledRow]);
+
+      await user.click(
+        component.getByTestId(
+          'PlanWorkflowRunTransparencyAuditTable-show-more',
+        ),
+      );
+
+      expect(
+        component.queryByTestId('PlanWorkflowRunTransparencyAuditTable-limit'),
+      ).toBeNull();
+    });
   });
 });

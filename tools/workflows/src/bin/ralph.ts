@@ -506,6 +506,7 @@ export const main = async (): Promise<void> => {
     const iterationConfig: RunIterationConfig = {
       agentPrompt,
       backend: parsedArgs.backend,
+      effort: parsedArgs.effort,
       iteration,
       model: parsedArgs.model,
       onUsageLimit: (limit) => {

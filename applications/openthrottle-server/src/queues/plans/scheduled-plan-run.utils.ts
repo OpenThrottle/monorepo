@@ -23,13 +23,16 @@ export type ScheduledPlanRunReprojectDecision =
  * - `superseded` → SUPERSEDED: the plan already has an active run; starting would double-run it.
  * - `nothing_to_run` → COMPLETED: the plan has no task a run could pick up, so there is no work to
  *   start (and no reason to flip a finished plan back to QUEUED).
+ * - `workspace_missing` → FAILED: the working directory resolved at schedule time is gone (its
+ *   worktree was removed, or its checkout pruned, while the run waited), so the run cannot start.
  * `reason` is human-readable and shown to the user.
  */
 export type ScheduledPlanRunFireDecision =
   | { readonly kind: 'fire' }
   | { readonly kind: 'missed'; readonly reason: string }
   | { readonly kind: 'nothing_to_run'; readonly reason: string }
-  | { readonly kind: 'superseded'; readonly reason: string };
+  | { readonly kind: 'superseded'; readonly reason: string }
+  | { readonly kind: 'workspace_missing'; readonly reason: string };
 
 const formatLateness = (lateByMs: number): string => {
   const minutes = Math.floor(lateByMs / 60_000);
@@ -81,7 +84,11 @@ export const decideScheduledPlanRunReproject = (
  * 2. **Superseded** — the plan has another active run; never double-run a plan, since two
  *    orchestrators racing for the same PENDING tasks is corruption.
  * 3. **Nothing to run** — no task a run could pick up; settle cleanly rather than fabricate work.
- * 4. **Fire.**
+ *    It outranks a missing workspace: a run with no work settles COMPLETED wherever it would have run.
+ * 4. **Workspace missing** — `workspaceError` is set: the run's working directory no longer exists
+ *    or is no longer usable. The checkout is deliberately not held against prune while the run waits
+ *    (holding a row cannot bring a deleted worktree back), so this is where a lost workspace surfaces.
+ * 5. **Fire.**
  *
  * A run that fires early (`now` before `scheduledFor`) is simply on time.
  */
@@ -90,8 +97,10 @@ export const decideScheduledPlanRunFire = (params: {
   readonly hasRunnableTasks: boolean;
   readonly now: Date;
   readonly scheduledFor: Date;
+  /** Why the run's working directory is unusable, or null when it is usable (or the default). */
+  readonly workspaceError: string | null;
 }): ScheduledPlanRunFireDecision => {
-  const { hasActiveRun, hasRunnableTasks, ...timing } = params;
+  const { hasActiveRun, hasRunnableTasks, workspaceError, ...timing } = params;
   const timingDecision = decideScheduledPlanRunReproject(timing);
 
   if (timingDecision.kind === 'missed') {
@@ -110,6 +119,10 @@ export const decideScheduledPlanRunFire = (params: {
       kind: 'nothing_to_run',
       reason: 'the plan had no tasks left to run',
     };
+  }
+
+  if (workspaceError !== null) {
+    return { kind: 'workspace_missing', reason: workspaceError };
   }
 
   return { kind: 'fire' };

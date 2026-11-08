@@ -59,9 +59,8 @@ export const PlanWorkflowRunTransparencyAuditTable = (
   const collapsedRows = historyRows.slice(0, PLAN_RUN_HISTORY_INITIAL_ROWS);
   const visibleRows = showAll ? historyRows : collapsedRows;
   const hiddenCount = historyRows.length - visibleRows.length;
-  // The limit caps every run, SCHEDULED included, so it is reached on the raw row count.
-  const reachedFetchLimit =
-    planRunAuditRows.length >= PLAN_RUN_HISTORY_FETCH_LIMIT;
+  // The query passes includeAllScheduled, so the limit caps only the non-SCHEDULED history rows.
+  const reachedFetchLimit = historyRows.length >= PLAN_RUN_HISTORY_FETCH_LIMIT;
   const showsFetchLimitFooter = reachedFetchLimit && hiddenCount === 0;
 
   // Handlers

@@ -6,6 +6,7 @@ import type { RalphArgs } from '../parsers';
 const baseArgs = (): RalphArgs => {
   return {
     backend: 'cursor',
+    effort: undefined,
     iterationTimeoutMs: undefined,
     iterations: 1,
     model: undefined,

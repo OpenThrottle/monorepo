@@ -201,6 +201,7 @@ describe('PlansResolver', () => {
   const mockPlanRunCancellationAbort = vi.fn().mockReturnValue(false);
   const mockRecordQueuedRun = vi.fn().mockResolvedValue({});
   const mockFindRecentByPlanId = vi.fn().mockResolvedValue([]);
+  const mockFindRunHistoryByPlanId = vi.fn().mockResolvedValue([]);
   const mockFindById = vi.fn().mockResolvedValue(null);
   const mockRecordHeartbeatById = vi.fn().mockResolvedValue(1);
   const mockRegisterCliRun = vi.fn().mockResolvedValue({});
@@ -208,6 +209,7 @@ describe('PlansResolver', () => {
   const mockPlanRunsService = createMock<PlanRunsService>({
     findById: mockFindById,
     findRecentByPlanId: mockFindRecentByPlanId,
+    findRunHistoryByPlanId: mockFindRunHistoryByPlanId,
     recordHeartbeatById: mockRecordHeartbeatById,
     recordQueuedRun: mockRecordQueuedRun,
     registerCliRun: mockRegisterCliRun,
@@ -1281,6 +1283,32 @@ describe('PlansResolver', () => {
   });
 
   describe('planRunsByPlanId', () => {
+    test('includeAllScheduled reads the history window (limit caps non-SCHEDULED runs, every SCHEDULED run added)', async () => {
+      mockFindRecentByPlanId.mockClear();
+
+      await resolver.planRunsByPlanId({
+        includeAllScheduled: true,
+        limit: 25,
+        planId: mockPlan.id,
+      });
+
+      expect(mockFindRunHistoryByPlanId).toHaveBeenCalledWith(
+        mockPlan.id,
+        25,
+        100,
+      );
+      expect(mockFindRecentByPlanId).not.toHaveBeenCalled();
+    });
+
+    test('without includeAllScheduled the newest-N read is unchanged, so [0] stays the newest run', async () => {
+      mockFindRunHistoryByPlanId.mockClear();
+
+      await resolver.planRunsByPlanId({ limit: 1, planId: mockPlan.id });
+
+      expect(mockFindRecentByPlanId).toHaveBeenCalledWith(mockPlan.id, 1);
+      expect(mockFindRunHistoryByPlanId).not.toHaveBeenCalled();
+    });
+
     test('exposes scheduledFor on a SCHEDULED run and null on an immediate one', async () => {
       const scheduledFor = new Date('2026-11-02T09:00:00.000Z');
       const baseRow = {

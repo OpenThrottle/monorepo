@@ -10,6 +10,10 @@
  *   4. the path is a live linked worktree → SKIPPED_LIVE (the same predicate discovery uses)
  *   5. otherwise the row is deleted → PRUNED
  *
+ * A SCHEDULED run is deliberately not guard 3: a row is only pruned once its worktree is already gone
+ * (guard 4), and holding the row cannot bring the directory back. The fire-time check
+ * (`decideScheduledPlanRunFire`'s `workspace_missing`) settles such a run FAILED and tells the user.
+ *
  * Referencing rows keep their history: every foreign key to repository_checkouts is ON DELETE SET
  * NULL, so a settled run simply loses its "open in editor" link to a worktree that no longer exists.
  */
