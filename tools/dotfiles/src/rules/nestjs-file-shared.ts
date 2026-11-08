@@ -32,6 +32,7 @@ export const SUBJECT_KINDS: readonly string[] = [
   'enum',
   'executor',
   'factory',
+  'filter',
   'guard',
   'input',
   'mapper',

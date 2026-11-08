@@ -693,7 +693,7 @@ queues/usage-limit/
   `queues/plans/cancel-channel/cancel-channel.service.ts`, never
   `queues/plans/plan-cancel-channel.service.ts` or `plans-cancel-channel.service.ts`. A
   folder makes the second unit visible; a qualifier stacked on the name hides it.
-- **Subject-named kinds** — `decorator`, `entity`, `enum`, `executor`, `factory`, `guard`,
+- **Subject-named kinds** — `decorator`, `entity`, `enum`, `executor`, `factory`, `filter`, `guard`,
   `input`, `mapper`, `object`, `options`, `policy`, `provider`, `strategy`, `token` —
   describe one thing each and sit many to a folder, so their stem is free
   (`graphql/queues/job.object.ts`).

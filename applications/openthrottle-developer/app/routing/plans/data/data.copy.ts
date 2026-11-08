@@ -551,6 +551,16 @@ export const PLAN_SCHEDULE_CONFIRM_COPY = {
 
     return `This will unschedule the run at ${localTime}.`;
   },
+  unscheduleBody: (localTime: string | null): string => {
+    if (localTime === null) {
+      return `This will unschedule the scheduled run. The plan goes back to Pending.`;
+    }
+
+    return `This will unschedule the run at ${localTime}. The plan goes back to Pending.`;
+  },
+  unscheduleConfirmLabel: `Unschedule`,
+  unscheduleLabel: `Unschedule`,
+  unschedulePendingLabel: `Unscheduling…`,
 } as const;
 
 /**
