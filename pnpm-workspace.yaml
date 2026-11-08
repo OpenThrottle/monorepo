@@ -392,6 +392,7 @@ catalog:
   'yup': '^1.7.1'
   'zod': '^4.4.3'
   'zod-to-json-schema': '^3.25.2'
+  '@agentclientprotocol/sdk': ^2.2.0
 
 # Enforce catalog usage for any dependency that has a catalog entry
 # (https://pnpm.io/settings#catalogmode) — if this blocks an intentional

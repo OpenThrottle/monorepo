@@ -232,6 +232,14 @@ export type AgentAssetSearchResult = {
   chunks: Array<AgentAssetChunk>;
 };
 
+export type AgentCliAuthStateObject = {
+  __typename?: 'AgentCliAuthStateObject';
+  /** Short explanation of the state (e.g. the account or the credential source), or null. No credential contents are read. */
+  detail?: Maybe<Scalars['String']['output']>;
+  /** "authenticated", "unauthenticated", or "unknown" (the backend is not probed). */
+  status: Scalars['String']['output'];
+};
+
 export type AgentCliAuthStatusObject = {
   __typename?: 'AgentCliAuthStatusObject';
   /** Logged-in account email as reported by `claude auth status`, or null when unknown. No tokens or credential files are read. */
@@ -268,8 +276,12 @@ export type AgentCliOptionObject = {
   attachesWorkspaceMcp: Scalars['Boolean']['output'];
   /** Logged-in account, subscription plan and active credential, reported by `claude auth status --json` (no OAuth tokens or credential files are read, and no Anthropic endpoint is called). Null for CLIs other than claude, or when the probe failed or timed out. */
   auth?: Maybe<AgentCliAuthStatusObject>;
+  /** Generic login state for this backend: probed for claude, cursor and gemini (no credential contents are read); "unknown" for the rest. */
+  authState: AgentCliAuthStateObject;
   /** Backend discriminator (e.g. "cursor") used in StartConversationStreamInput. */
   backend: Scalars['String']['output'];
+  /** Behavioral capabilities of this backend's chat path (resume, approvals, steering, image input, MCP injection, full-history replay). Reflects OPENTHROTTLE_CHAT_ACP_BACKENDS. Read these instead of branching on the backend name. */
+  capabilities: ChatBackendCapabilitiesObject;
   /** True when this driver has a wired streaming chat backend and can be offered as a chat composer backend (false for plan-run-only drivers like codex/grok). */
   chatCapable: Scalars['Boolean']['output'];
   /** Per-user enablement: true unless the current user has disabled this agent on /settings/agents. A disabled agent is hidden from chat/model pickers and rejected when starting new runs. Defaults to true for an unauthenticated request. */
@@ -729,6 +741,22 @@ export type CaptureHealthRowObject = {
   source: Scalars['String']['output'];
   /** Ingest stream: skill_events, skill_outcomes or token_usage. */
   stream: Scalars['String']['output'];
+};
+
+export type ChatBackendCapabilitiesObject = {
+  __typename?: 'ChatBackendCapabilitiesObject';
+  /** Tool-use approvals surface to the user in supervised mode (true only on the ACP path). */
+  approvals: Scalars['Boolean']['output'];
+  /** The backend accepts image input in a prompt. */
+  imageInput: Scalars['Boolean']['output'];
+  /** The chat adapter injects the run's MCP servers (OT MCP) per run. */
+  mcpInjection: Scalars['Boolean']['output'];
+  /** The backend is handed the full message history every turn, so a backend handoff would duplicate it. */
+  replaysFullHistory: Scalars['Boolean']['output'];
+  /** A conversation resumes by backend session id across turns. */
+  resume: Scalars['Boolean']['output'];
+  /** The user can steer a turn that is already running. */
+  steering: Scalars['Boolean']['output'];
 };
 
 /** Drift detected by refreshCheckout, diffing the new scan against the previous snapshot. */
@@ -2630,6 +2658,8 @@ export type Mutation = {
   replaceAgentTrajectory: AgentTrajectory;
   /** Move a SCHEDULED plan run's fire time in place: the run keeps its id, its frozen run config snapshot and its job; only scheduledFor and the delayed job's delay change. Same rule as schedulePlanRun (future, within 30 days). Rejected when the run is not SCHEDULED or its job is already starting. Never changes the plan or task statuses. */
   reschedulePlanRun: SchedulePlanRunResultObject;
+  /** Answer a pending ACP permission request surfaced in an owned conversation: optionId selects one of the offered options, null cancels. Returns false for an unknown or already settled requestId. */
+  respondToConversationPermission: Scalars['Boolean']['output'];
   /** Restore a soft-deleted custom prompt */
   restoreCustomPrompt?: Maybe<CustomPromptObject>;
   /** Resume a paused queue so workers pick up jobs again. */
@@ -3187,6 +3217,12 @@ export type MutationReplaceAgentTrajectoryArgs = {
 
 export type MutationReschedulePlanRunArgs = {
   input: ReschedulePlanRunInput;
+};
+
+export type MutationRespondToConversationPermissionArgs = {
+  conversationId: Scalars['ID']['input'];
+  optionId?: InputMaybe<Scalars['String']['input']>;
+  requestId: Scalars['String']['input'];
 };
 
 export type MutationRestoreCustomPromptArgs = {
@@ -8008,6 +8044,17 @@ export type CancelConversationStreamMutationVariables = Exact<{
 export type CancelConversationStreamMutation = {
   __typename?: 'Mutation';
   cancelConversationStream: boolean;
+};
+
+export type RespondToConversationPermissionMutationVariables = Exact<{
+  conversationId: Scalars['ID']['input'];
+  optionId?: InputMaybe<Scalars['String']['input']>;
+  requestId: Scalars['String']['input'];
+}>;
+
+export type RespondToConversationPermissionMutation = {
+  __typename?: 'Mutation';
+  respondToConversationPermission: boolean;
 };
 
 export type ConversationStreamChunkAddedSubscriptionVariables = Exact<{
@@ -18538,6 +18585,89 @@ export const CancelConversationStreamDocument = {
 } as unknown as DocumentNode<
   CancelConversationStreamMutation,
   CancelConversationStreamMutationVariables
+>;
+export const RespondToConversationPermissionDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'RespondToConversationPermission' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'conversationId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'optionId' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'requestId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'respondToConversationPermission' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'conversationId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'conversationId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'optionId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'optionId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'requestId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'requestId' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RespondToConversationPermissionMutation,
+  RespondToConversationPermissionMutationVariables
 >;
 export const ConversationStreamChunkAddedDocument = {
   kind: 'Document',

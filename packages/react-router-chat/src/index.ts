@@ -13,6 +13,7 @@ export * from './components/ChatJumpToLatest';
 export * from './components/ChatMessageBody';
 export * from './components/ChatModelPicker';
 export * from './components/ChatPermissionModeControl';
+export * from './components/ChatPermissionRequest';
 export * from './components/ChatReasoningTierControl';
 export * from './components/ChatRetryNotice';
 export * from './components/ChatThinkingBlock';

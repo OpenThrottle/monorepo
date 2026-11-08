@@ -135,9 +135,12 @@ function resolveCursorAgentBin(env: NodeJS.ProcessEnv = process.env): string {
 }
 
 /**
- * Build a minimal allowlisted environment for the spawned child.
+ * Build a minimal allowlisted environment for the spawned child. Shared with the
+ * ACP backend (`conversation-backend/acp`), which spawns the same binary.
+ *
+ * @public
  */
-function buildScrubbedEnv(
+export function buildCursorAgentEnv(
   env: NodeJS.ProcessEnv = process.env,
 ): NodeJS.ProcessEnv {
   const scrubbed: NodeJS.ProcessEnv = {};
@@ -220,7 +223,7 @@ export async function createCursorAgentSession(
     cwd: options.cwd,
     // Same process-group treatment as the streaming spawn (see below).
     detached: true,
-    env: buildScrubbedEnv(),
+    env: buildCursorAgentEnv(),
     signal: options.signal,
     stdio: ['ignore', 'pipe', 'pipe'],
   });
@@ -361,7 +364,7 @@ async function* streamCursorAgent(
       // cursor spawns — it inherits this stdout pipe and otherwise outlives the
       // run, both leaking a process and holding the pipe open against EOF.
       detached: true,
-      env: buildScrubbedEnv(),
+      env: buildCursorAgentEnv(),
       stdio: ['ignore', 'pipe', 'pipe'],
     },
   );

@@ -39,6 +39,7 @@ const buildTurn = (
     error: null,
     isStreaming: false,
     messages: [],
+    onRespondToPermission: vi.fn(),
     onRetry: vi.fn(),
     onStop: vi.fn(),
     reset: vi.fn(),

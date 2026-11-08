@@ -4,6 +4,7 @@ import type { ResolvedRunPhase } from './run-phase';
 import {
   appendTurnTextEvent,
   applyTerminalUsageLimit,
+  applyTurnPermission,
   applyTurnToolCall,
   applyTurnToolResult,
   applyTurnUsage,
@@ -12,6 +13,7 @@ import {
   isRetryableTerminalMetadata,
   parseChunkMetadata,
   parseChunkMetadataRecord,
+  settlePendingTurnPermissions,
   toolLabelFromMetadataJson,
 } from './turn-events';
 import type { ChatMessage, ChatTurnEvent } from './types';
@@ -194,7 +196,7 @@ export function reduceStreamChunk(
     events.set(
       chunk.messageId,
       applyTerminalUsageLimit(
-        settled,
+        settlePendingTurnPermissions(settled),
         parseChunkMetadataRecord(chunk.metadataJson ?? null),
         chunk.sortOrder,
       ),
@@ -271,6 +273,15 @@ export function reduceStreamChunk(
         sortOrder: chunk.sortOrder,
       },
     ]);
+  } else if (chunk.kind === 'permission_request') {
+    events.set(
+      chunk.messageId,
+      applyTurnPermission(
+        currentEvents,
+        parseChunkMetadataRecord(chunk.metadataJson ?? null),
+        chunk.sortOrder,
+      ),
+    );
   } else if (chunk.kind === 'usage_limit') {
     events.set(
       chunk.messageId,

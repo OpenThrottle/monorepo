@@ -274,6 +274,7 @@ export function useHeaderChatController(
     onPersistChange: setPersist,
     onPersonaChange: setPersonaId,
     onReasoningChange: setReasoning,
+    onRespondToPermission: turn.onRespondToPermission,
     onRetry: turn.onRetry,
     onServiceTierChange: setServiceTier,
     onStop: turn.onStop,

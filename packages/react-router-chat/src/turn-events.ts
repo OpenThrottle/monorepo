@@ -12,7 +12,10 @@
 import { isRecord } from '@openthrottle/nodejs-utils';
 
 import type {
+  ChatPermissionOption,
+  ChatPermissionResolution,
   ChatTurnEvent,
+  ChatTurnPermissionEvent,
   ChatTurnToolEvent,
   ChatTurnUsageEvent,
   ChatTurnUsageLimitEvent,
@@ -119,6 +122,102 @@ export const applyTerminalUsageLimit = (
   }
 
   return applyTurnUsageLimit(events, usageLimit, sortOrder);
+};
+
+const toPermissionOptions = (
+  value: unknown,
+): readonly ChatPermissionOption[] => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter(isRecord).map((option) => {
+    return {
+      kind: asString(option.kind) ?? 'other',
+      name: asString(option.name) ?? '',
+      optionId: asString(option.optionId) ?? '',
+    };
+  });
+};
+
+const toPermissionResolution = (
+  value: unknown,
+): ChatPermissionResolution | null => {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const optionId = asString(value.optionId);
+
+  return {
+    optionId,
+    outcome: value.outcome === 'selected' ? 'selected' : 'cancelled',
+  };
+};
+
+/**
+ * Fold a `permission_request` chunk's metadata into the turn. A payload with a
+ * `resolution` settles the matching pending event in place (a resolution for an
+ * unknown request is ignored); any other payload appends a pending request.
+ *
+ * @public
+ */
+export const applyTurnPermission = (
+  events: readonly ChatTurnEvent[],
+  payload: Record<string, unknown> | null,
+  sortOrder: number,
+): readonly ChatTurnEvent[] => {
+  const requestId = asString(payload?.requestId);
+  if (payload === null || requestId === null) {
+    return events;
+  }
+
+  if (payload.resolution !== undefined) {
+    const resolution = toPermissionResolution(payload.resolution);
+
+    return events.map((event) => {
+      return event.kind === 'permission' && event.requestId === requestId
+        ? { ...event, resolution }
+        : event;
+    });
+  }
+
+  const toolCall = isRecord(payload.toolCall) ? payload.toolCall : null;
+  const next: ChatTurnPermissionEvent = {
+    kind: 'permission',
+    options: toPermissionOptions(payload.options),
+    requestId,
+    resolution: null,
+    sortOrder,
+    toolKind: asString(toolCall?.kind),
+    toolTitle: asString(toolCall?.title) ?? '',
+  };
+
+  return [...events, next];
+};
+
+/**
+ * Settle every still-pending permission request as cancelled. Called when the
+ * turn ends: nobody can answer a request whose turn is over.
+ *
+ * @public
+ */
+export const settlePendingTurnPermissions = (
+  events: readonly ChatTurnEvent[],
+): readonly ChatTurnEvent[] => {
+  if (
+    !events.some(
+      (event) => event.kind === 'permission' && event.resolution === null,
+    )
+  ) {
+    return events;
+  }
+
+  return events.map((event) => {
+    return event.kind === 'permission' && event.resolution === null
+      ? { ...event, resolution: { optionId: null, outcome: 'cancelled' } }
+      : event;
+  });
 };
 
 /**
@@ -749,6 +848,12 @@ export const foldPersistedTurnEvents = (
           ...events,
           { kind: 'session', sessionId: meta.sessionId, sortOrder: order },
         ];
+      } else if (kind === 'permission_request') {
+        events = applyTurnPermission(
+          events,
+          isRecord(raw.metadata) ? raw.metadata : null,
+          order,
+        );
       } else if (kind === 'usage_limit') {
         events = applyTurnUsageLimit(
           events,
@@ -769,6 +874,10 @@ export const foldPersistedTurnEvents = (
 
     order += 1;
   }
+
+  // A persisted turn is over: a request with no recorded resolution can never
+  // be answered now.
+  events = settlePendingTurnPermissions(events);
 
   if (textOffsets === null && bodyText.trim() !== '') {
     events = [...events, { kind: 'text', sortOrder: order, text: bodyText }];

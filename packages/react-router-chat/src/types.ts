@@ -130,6 +130,50 @@ export interface ChatTurnUsageLimitEvent {
   readonly sortOrder: number;
 }
 
+/** One choice the agent offered for a permission request. @public */
+export interface ChatPermissionOption {
+  readonly kind: string;
+  readonly name: string;
+  readonly optionId: string;
+}
+
+/**
+ * How a permission request was settled: the chosen `optionId`, or null when the
+ * request was cancelled (turn aborted, ended, or dismissed).
+ *
+ * @public
+ */
+export interface ChatPermissionResolution {
+  readonly optionId: string | null;
+  readonly outcome: 'cancelled' | 'selected';
+}
+
+/**
+ * An ACP permission request awaiting (or settled by) a human decision. A
+ * `resolution` of null means it is still pending.
+ *
+ * @public
+ */
+export interface ChatTurnPermissionEvent {
+  readonly kind: 'permission';
+  readonly options: readonly ChatPermissionOption[];
+  readonly requestId: string;
+  readonly resolution: ChatPermissionResolution | null;
+  readonly sortOrder: number;
+  readonly toolKind: string | null;
+  readonly toolTitle: string;
+}
+
+/**
+ * Answers a permission request: `optionId` picks an offered option, null cancels.
+ *
+ * @public
+ */
+export type ChatPermissionResponder = (
+  requestId: string,
+  optionId: string | null,
+) => void;
+
 /**
  * One structured event within an assistant turn, ordered by `sortOrder`.
  * Discriminated on `kind`.
@@ -137,6 +181,7 @@ export interface ChatTurnUsageLimitEvent {
  * @public
  */
 export type ChatTurnEvent =
+  | ChatTurnPermissionEvent
   | ChatTurnSessionEvent
   | ChatTurnTextEvent
   | ChatTurnThinkingEvent

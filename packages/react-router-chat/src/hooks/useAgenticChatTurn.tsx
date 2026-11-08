@@ -20,6 +20,7 @@ import {
 import { deriveRunPhaseFromElapsed } from '../run-phase';
 import type {
   ChatMessage,
+  ChatPermissionResponder,
   ChatStartActionResult,
   ChatTokenUsage,
   LoadAgentConversationMessagesResult,
@@ -57,6 +58,8 @@ export interface UseAgenticChatTurnResult {
   readonly isStreaming: boolean;
   /** User messages + streamed assistant turns (placeholders flagged `pending`). */
   readonly messages: ChatMessage[];
+  /** Answer a pending permission request: an option id, or null to cancel. */
+  readonly onRespondToPermission: ChatPermissionResponder;
   /** Manually replay the last turn after the auto-retry was exhausted. */
   readonly onRetry: () => void;
   /** Cancel the in-flight turn. */
@@ -133,6 +136,7 @@ export function useAgenticChatTurn(
   const turnStartedAtRef = React.useRef<number | null>(null);
 
   const cancelFetcher = useFetcher();
+  const permissionFetcher = useFetcher();
   const localIdRef = React.useRef(0);
   const startFetcher = useFetcher<ChatStartActionResult>();
   const restoreFetcher = useFetcher<LoadAgentConversationMessagesResult>();
@@ -323,6 +327,25 @@ export function useAgenticChatTurn(
     retryCountRef.current = 0;
     setCanRetry(false);
     recover({ cancelFirst: false });
+  };
+
+  const onRespondToPermission: ChatPermissionResponder = (
+    requestId,
+    optionId,
+  ) => {
+    if (!conversationId) {
+      return;
+    }
+
+    permissionFetcher.submit(
+      {
+        conversationId,
+        intent: 'respond-permission',
+        optionId: optionId ?? '',
+        requestId,
+      },
+      { action: CONVERSATION_STREAM_ACTION, method: 'post' },
+    );
   };
 
   const onStop = (): void => {
@@ -518,6 +541,7 @@ export function useAgenticChatTurn(
     error,
     isStreaming,
     messages: messagesView,
+    onRespondToPermission,
     onRetry,
     onStop,
     reset,

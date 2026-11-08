@@ -39,6 +39,7 @@ import {
   type ConversationServiceTier,
   type ConversationStreamChunk,
   createCursorAgentSession,
+  isAcpChatEnabled,
   isRetryableCursorFailure,
   openAiConversationBackend,
   resolveChatIdleTimeoutMs,
@@ -66,6 +67,11 @@ const CLI_BACKENDS: Readonly<Record<string, ConversationBackend>> =
 /** Conversation-metadata key holding a backend's persisted session id. */
 const sessionMetadataKey = (backend: string): string => {
   return `${backend}SessionId`;
+};
+
+/** Conversation-metadata key holding the highest message sortOrder a backend has seen. */
+const seenThroughMetadataKey = (backend: string): string => {
+  return `${backend}SeenThroughSortOrder`;
 };
 
 /**
@@ -360,12 +366,13 @@ export class ConversationStreamService {
     // to show progress and surface a mint failure. claude mints a UUID instantly
     // and opencode mints mid-stream, so only cursor needs this pre-spawn step.
     // A persisted session (later turns) already carries a non-null id here and
-    // skips the mint entirely.
+    // skips the mint entirely. Under ACP routing the mint is skipped too: the
+    // ACP server cannot load a create-chat id, so it would mint its own session
+    // anyway and the ~2s create-chat spawn is pure waste.
     let sessionId = run.sessionId;
-    if (
-      run.backend === CURSOR_BACKEND &&
-      (sessionId === null || sessionId === '')
-    ) {
+    const needsCursorMint =
+      run.backend === CURSOR_BACKEND && !isAcpChatEnabled(CURSOR_BACKEND);
+    if (needsCursorMint && (sessionId === null || sessionId === '')) {
       // Liveness ping so the composer shows "Waiting for {model}…" during the
       // mint instead of sitting idle. Ephemeral: never buffered or persisted.
       await this.publishEphemeralChunk({
@@ -584,7 +591,15 @@ export class ConversationStreamService {
       // then publish the terminal chunk. On idle timeout it carries a clear
       // message + the retryable marker so the client can auto-retry; a normal
       // completion forwards any backend terminalError with no marker.
-      await this.persistAssistant(run, accumulated, toolEvents);
+      const persistedSortOrder = await this.persistAssistant(
+        run,
+        accumulated,
+        toolEvents,
+      );
+
+      if (!timedOut && terminalError === null && persistedSortOrder !== null) {
+        await this.persistSeenThrough(run, persistedSortOrder);
+      }
 
       const timeoutError = `The response timed out after ${Math.round(idleMs / 1000)}s with no activity.`;
       await this.publishChunk({
@@ -817,13 +832,15 @@ export class ConversationStreamService {
     run: StartConversationStreamRun,
     content: string,
     toolEvents: ReadonlyArray<Record<string, unknown>>,
-  ): Promise<void> {
+  ): Promise<number | null> {
     // Private mode (persist=false) never writes the assistant message or the
     // model snapshot — the turn is ephemeral. The stream still emitted every
     // chunk to the live subscriber above; only the DB write is skipped.
     if (!run.persist) {
-      return;
+      return null;
     }
+
+    let persistedSortOrder: number | null = null;
 
     try {
       // Text markers alone are not worth a timeline: a plain text turn keeps
@@ -833,14 +850,20 @@ export class ConversationStreamService {
       );
       const toolMetadata = hasNonTextEvent ? { events: [...toolEvents] } : null;
 
-      await this.conversations.appendMessages(run.userId, run.conversationId, [
-        {
-          content,
-          id: run.assistantMessageId,
-          role: 'assistant',
-          toolMetadata,
-        },
-      ]);
+      const [appended] = await this.conversations.appendMessages(
+        run.userId,
+        run.conversationId,
+        [
+          {
+            content,
+            id: run.assistantMessageId,
+            role: 'assistant',
+            toolMetadata,
+          },
+        ],
+      );
+
+      persistedSortOrder = appended?.sortOrder ?? null;
 
       await this.conversations.updateModelSnapshot(run.conversationId, {
         modelName: run.model,
@@ -857,6 +880,34 @@ export class ConversationStreamService {
     // failure never blocks (or is blocked by) message persistence. Also gated on
     // run.persist (Private turns write nothing).
     await this.persistTurnUsage(run, toolEvents);
+
+    return persistedSortOrder;
+  }
+
+  /**
+   * Record the highest message sortOrder this backend has now seen in
+   * `conversation.metadata[<backend>SeenThroughSortOrder]`, so a later backend
+   * switch can hand over only what it missed. Persisted turns only; failures
+   * are logged, never thrown.
+   */
+  private async persistSeenThrough(
+    run: StartConversationStreamRun,
+    sortOrder: number,
+  ): Promise<void> {
+    if (!run.persist) {
+      return;
+    }
+
+    try {
+      await this.conversations.updateMetadata(run.conversationId, {
+        [seenThroughMetadataKey(run.backend)]: sortOrder,
+      });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        `conversation-stream seen-through persist failed: ${message}`,
+      );
+    }
   }
 
   /**

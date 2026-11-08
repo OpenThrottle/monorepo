@@ -29,7 +29,7 @@
     "mcp.tool/delete_skill_availability_rule_set": 450,
     "mcp.tool/delete_tag_action_rule": 430,
     "mcp.tool/delete_task": 317,
-    "mcp.tool/discover_agent_clis": 1043,
+    "mcp.tool/discover_agent_clis": 881,
     "mcp.tool/discover_local_models": 583,
     "mcp.tool/end_session": 369,
     "mcp.tool/get_activity_by_date": 432,
@@ -107,7 +107,7 @@
     "mcp.toolDescription/delete_skill_availability_rule_set": 165,
     "mcp.toolDescription/delete_tag_action_rule": 157,
     "mcp.toolDescription/delete_task": 55,
-    "mcp.toolDescription/discover_agent_clis": 827,
+    "mcp.toolDescription/discover_agent_clis": 665,
     "mcp.toolDescription/discover_local_models": 365,
     "mcp.toolDescription/end_session": 106,
     "mcp.toolDescription/get_activity_by_date": 294,
@@ -199,10 +199,10 @@
   },
   "reported": {
     "mcpToolset/admin": 14222,
-    "mcpToolset/agents": 3368,
+    "mcpToolset/agents": 3206,
     "mcpToolset/blog": 7221,
     "mcpToolset/core": 34263,
-    "mcpToolsFull": 59074
+    "mcpToolsFull": 58912
   },
   "totals": {
     "alwaysInjected": 41144,

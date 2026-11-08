@@ -817,6 +817,42 @@ type AgentCliAuthStatusObject {
   warning: String
 }
 
+type ChatBackendCapabilitiesObject {
+  """
+  Tool-use approvals surface to the user in supervised mode (true only on the ACP path).
+  """
+  approvals: Boolean!
+
+  """The backend accepts image input in a prompt."""
+  imageInput: Boolean!
+
+  """The chat adapter injects the run's MCP servers (OT MCP) per run."""
+  mcpInjection: Boolean!
+
+  """
+  The backend is handed the full message history every turn, so a backend handoff would duplicate it.
+  """
+  replaysFullHistory: Boolean!
+
+  """A conversation resumes by backend session id across turns."""
+  resume: Boolean!
+
+  """The user can steer a turn that is already running."""
+  steering: Boolean!
+}
+
+type AgentCliAuthStateObject {
+  """
+  Short explanation of the state (e.g. the account or the credential source), or null. No credential contents are read.
+  """
+  detail: String
+
+  """
+  "authenticated", "unauthenticated", or "unknown" (the backend is not probed).
+  """
+  status: String!
+}
+
 type AgentCliOptionObject {
   """
   Backend discriminator (e.g. "cursor") used in StartConversationStreamInput.
@@ -827,6 +863,16 @@ type AgentCliOptionObject {
   Logged-in account, subscription plan and active credential, reported by `claude auth status --json` (no OAuth tokens or credential files are read, and no Anthropic endpoint is called). Null for CLIs other than claude, or when the probe failed or timed out.
   """
   auth: AgentCliAuthStatusObject
+
+  """
+  Generic login state for this backend: probed for claude, cursor and gemini (no credential contents are read); "unknown" for the rest.
+  """
+  authState: AgentCliAuthStateObject!
+
+  """
+  Behavioral capabilities of this backend's chat path (resume, approvals, steering, image input, MCP injection, full-history replay). Reflects OPENTHROTTLE_CHAT_ACP_BACKENDS. Read these instead of branching on the backend name.
+  """
+  capabilities: ChatBackendCapabilitiesObject!
 
   """
   True when this CLI resolves the workspace's committed MCP config (.mcp.json / .cursor/mcp.json / opencode.json), so a run in this checkout can reach openthrottle-mcp. False for codex and gemini, which read only their own config scope (codex: user-scope config.toml; gemini: .gemini/settings.json, never .mcp.json) — for those, MCP reachability is a property of the host and cannot be verified from the workspace, so present it as unverifiable rather than as definitely missing. Distinct from emitting MCP flags: claude, grok, and opencode emit none yet attach fine.
@@ -6514,6 +6560,11 @@ type Mutation {
   Abort an in-flight streamed turn for an owned conversation. Returns true when a stream was aborted.
   """
   cancelConversationStream(conversationId: ID!): Boolean!
+
+  """
+  Answer a pending ACP permission request surfaced in an owned conversation: optionId selects one of the offered options, null cancels. Returns false for an unknown or already settled requestId.
+  """
+  respondToConversationPermission(conversationId: ID!, requestId: String!, optionId: String): Boolean!
 
   """Create a new custom prompt"""
   createCustomPrompt(input: CreateCustomPromptInput!): CustomPromptObject!

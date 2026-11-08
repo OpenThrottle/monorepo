@@ -1,8 +1,9 @@
 import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
+import { ChatPermissionResponderContext } from '../data/data.chat-permission-responder-context';
 import { usePinnedToBottom } from '../hooks/usePinnedToBottom';
-import type { ChatMessage } from '../types';
+import type { ChatMessage, ChatPermissionResponder } from '../types';
 import { findLastUserMessageId } from '../utils/chat-thread';
 import { ChatRetryNotice } from './ChatRetryNotice';
 import { ChatThreadMessage } from './ChatThreadMessage';
@@ -27,6 +28,8 @@ export interface ChatThreadProps {
   readonly messages: readonly ChatMessage[];
   /** Told when the view stops or resumes following the bottom. */
   readonly onPinnedChange?: (isPinned: boolean) => void;
+  /** Answers an ACP permission request card (wired to the respond mutation). */
+  readonly onRespondToPermission?: ChatPermissionResponder;
   /** Replay the last turn (wired to the Retry affordance). */
   readonly onRetry?: () => void;
   /**
@@ -55,6 +58,7 @@ export const ChatThread = (props: ChatThreadProps): React.ReactElement => {
     isRetrying = false,
     messages,
     onPinnedChange,
+    onRespondToPermission,
     onRetry,
     repinRef,
   } = props;
@@ -92,27 +96,29 @@ export const ChatThread = (props: ChatThreadProps): React.ReactElement => {
   // 🔌 Short Circuit
 
   return (
-    <div
-      aria-label="Chat messages"
-      aria-live="polite"
-      className={cn(
-        'flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1',
-        className,
-      )}
-      data-testid="ChatThread"
-      ref={contentRef}
-      role="log"
-    >
-      {isEmpty && (
-        <p className="text-muted-foreground text-sm">{emptyStateLabel}</p>
-      )}
-      {!isEmpty &&
-        messages.map((message) => (
-          <ChatThreadMessage key={message.id} message={message} />
-        ))}
-      {canRetry && onRetry !== undefined && (
-        <ChatRetryNotice isRetrying={isRetrying} onRetry={onRetry} />
-      )}
-    </div>
+    <ChatPermissionResponderContext.Provider value={onRespondToPermission}>
+      <div
+        aria-label="Chat messages"
+        aria-live="polite"
+        className={cn(
+          'flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1',
+          className,
+        )}
+        data-testid="ChatThread"
+        ref={contentRef}
+        role="log"
+      >
+        {isEmpty && (
+          <p className="text-muted-foreground text-sm">{emptyStateLabel}</p>
+        )}
+        {!isEmpty &&
+          messages.map((message) => (
+            <ChatThreadMessage key={message.id} message={message} />
+          ))}
+        {canRetry && onRetry !== undefined && (
+          <ChatRetryNotice isRetrying={isRetrying} onRetry={onRetry} />
+        )}
+      </div>
+    </ChatPermissionResponderContext.Provider>
   );
 };

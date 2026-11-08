@@ -36,11 +36,16 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import {
   AGENT_CLI_ALLOWLIST,
+  backendReplaysFullHistory,
   type ChatCompletionMessage,
   type ConversationPermissionMode,
   type ConversationReasoningEffort,
   type ConversationServiceTier,
+  formatHandoffPreamble,
   maxDirectoriesForBackend,
+  resolveAcpPermission,
+  resolveHandoffTokenBudget,
+  selectHandoffMessages,
   toContainerPath,
   toConversationPermissionMode,
   toConversationReasoningEffort,
@@ -80,6 +85,25 @@ const toChatMessage = (
     content: message.content,
     role: isAssistant ? 'assistant' : isSystem ? 'system' : 'user',
   };
+};
+
+/** Prefix the last user message with the handoff preamble. */
+const withHandoffPreamble = (
+  messages: ChatCompletionMessage[],
+  preamble: string,
+): ChatCompletionMessage[] => {
+  let lastUserIndex = -1;
+  messages.forEach((message, index) => {
+    if (message.role === 'user') {
+      lastUserIndex = index;
+    }
+  });
+
+  return messages.map((message, index) => {
+    return index === lastUserIndex
+      ? { ...message, content: `${preamble}\n\n${message.content}` }
+      : message;
+  });
 };
 
 const failed = (errorMessage: string): StartConversationStreamResult => {
@@ -131,6 +155,10 @@ const BASE_URL_CAPABLE_BACKENDS = new Set<string>(
 /** Conversation-metadata key holding a backend's persisted session id. */
 const sessionMetadataKey = (backend: string): string => {
   return `${backend}SessionId`;
+};
+/** Conversation-metadata key holding the highest message sortOrder a backend has seen. */
+const seenThroughMetadataKey = (backend: string): string => {
+  return `${backend}SeenThroughSortOrder`;
 };
 /** Conversation-metadata key holding a backend's persisted repository id. */
 const repositoryMetadataKey = (backend: string): string => {
@@ -368,9 +396,30 @@ export class ConversationStreamResolver {
         conversationId,
       );
 
-      messages = history
-        .filter((row) => IS_PROMPT_ROLE[row.role])
-        .map(toChatMessage);
+      const promptRows = history.filter((row) => IS_PROMPT_ROLE[row.role]);
+
+      messages = promptRows.map(toChatMessage);
+
+      if (!backendReplaysFullHistory(backend)) {
+        const conversation = await this.conversations.getConversationForUser(
+          userId,
+          conversationId,
+        );
+        const watermark =
+          conversation.metadata?.[seenThroughMetadataKey(backend)];
+        const seenThrough = typeof watermark === 'number' ? watermark : -1;
+        const missed = promptRows
+          .filter((row) => row.id !== userMessageId)
+          .filter((row) => row.sortOrder > seenThrough)
+          .map(toChatMessage);
+        const preamble = formatHandoffPreamble(
+          selectHandoffMessages(missed, resolveHandoffTokenBudget()),
+        );
+
+        if (preamble !== '') {
+          messages = withHandoffPreamble(messages, preamble);
+        }
+      }
     } else {
       messages = [{ content: message, role: 'user' }];
     }
@@ -719,6 +768,38 @@ export class ConversationStreamResolver {
     }
 
     return this.streamService.cancel(conversationId);
+  }
+
+  @Mutation(() => Boolean, {
+    description: `Answer a pending ACP permission request surfaced in an owned conversation: optionId selects one of the offered options, null cancels. Returns false for an unknown or already settled requestId.`,
+    name: 'respondToConversationPermission',
+  })
+  async respondToConversationPermission(
+    @CurrentUser() principal: AuthPrincipal | undefined,
+    @Args('conversationId', { type: () => ID }) conversationId: string,
+    @Args('requestId', { type: () => String }) requestId: string,
+    @Args('optionId', { nullable: true, type: () => String })
+    optionId: string | null | undefined,
+  ): Promise<boolean> {
+    const userId = resolveHumanUserId(principal);
+    if (userId == null) {
+      return false;
+    }
+
+    try {
+      await this.conversations.getConversationForUser(userId, conversationId);
+    } catch (error: unknown) {
+      this.logger.debug(
+        `respondToConversationPermission: ownership check failed for conversation ${conversationId}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+        ConversationStreamResolver.name,
+      );
+
+      return false;
+    }
+
+    return resolveAcpPermission(requestId, optionId ?? null);
   }
 
   /**

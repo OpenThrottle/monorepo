@@ -135,6 +135,82 @@ describe('reduceStreamChunk', () => {
     expect(state.retryableIds.has('assistant-1')).toBe(false);
   });
 
+  describe('permission_request chunks', () => {
+    const request = JSON.stringify({
+      options: [{ kind: 'allow_once', name: 'Allow', optionId: 'yes' }],
+      requestId: 'r1',
+      toolCall: { kind: 'execute', title: 'rm -rf build', toolCallId: 't1' },
+    });
+
+    it('adds a pending permission event', () => {
+      const state = reduceStreamChunk(
+        INITIAL_STREAM_STATE,
+        chunk({
+          kind: 'permission_request',
+          metadataJson: request,
+          sortOrder: 0,
+        }),
+      );
+
+      expect(state.events.get('assistant-1')).toEqual([
+        {
+          kind: 'permission',
+          options: [{ kind: 'allow_once', name: 'Allow', optionId: 'yes' }],
+          requestId: 'r1',
+          resolution: null,
+          sortOrder: 0,
+          toolKind: 'execute',
+          toolTitle: 'rm -rf build',
+        },
+      ]);
+    });
+
+    it('settles the matching event when the resolution chunk arrives', () => {
+      let state = reduceStreamChunk(
+        INITIAL_STREAM_STATE,
+        chunk({
+          kind: 'permission_request',
+          metadataJson: request,
+          sortOrder: 0,
+        }),
+      );
+      state = reduceStreamChunk(
+        state,
+        chunk({
+          kind: 'permission_request',
+          metadataJson: JSON.stringify({
+            requestId: 'r1',
+            resolution: { optionId: 'yes', outcome: 'selected' },
+          }),
+          sortOrder: 1,
+        }),
+      );
+
+      expect(state.events.get('assistant-1')).toMatchObject([
+        { resolution: { optionId: 'yes', outcome: 'selected' } },
+      ]);
+    });
+
+    it('settles a still-pending request as cancelled when the turn ends', () => {
+      let state = reduceStreamChunk(
+        INITIAL_STREAM_STATE,
+        chunk({
+          kind: 'permission_request',
+          metadataJson: request,
+          sortOrder: 0,
+        }),
+      );
+      state = reduceStreamChunk(
+        state,
+        chunk({ done: true, error: 'cancelled', sortOrder: 1 }),
+      );
+
+      expect(state.events.get('assistant-1')?.[0]).toMatchObject({
+        resolution: { optionId: null, outcome: 'cancelled' },
+      });
+    });
+  });
+
   it('adds a usageLimit turn event from a usage_limit chunk', () => {
     let state = INITIAL_STREAM_STATE;
     state = reduceStreamChunk(

@@ -18,22 +18,29 @@ import {
   agentConversationMessagesFactory,
   agentConversationsFactory,
 } from '@openthrottle/nestjs-repositories/testing';
-import type { DiscoveryResult } from '@openthrottle/openthrottle-agentic-utils';
+import type {
+  ChatCompletionMessage,
+  DiscoveryResult,
+} from '@openthrottle/openthrottle-agentic-utils';
 import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ConversationStreamResolver } from './conversation-stream.resolver.ts';
 import type { ConversationStreamService } from './conversation-stream.service.ts';
 
-const { createCursorAgentSessionMock } = vi.hoisted(() => ({
-  createCursorAgentSessionMock: vi.fn(),
-}));
+const { createCursorAgentSessionMock, resolveAcpPermissionMock } = vi.hoisted(
+  () => ({
+    createCursorAgentSessionMock: vi.fn(),
+    resolveAcpPermissionMock: vi.fn(),
+  }),
+);
 
 vi.mock('@openthrottle/openthrottle-agentic-utils', async (importOriginal) => ({
   ...(await importOriginal<
     typeof import('@openthrottle/openthrottle-agentic-utils')
   >()),
   createCursorAgentSession: createCursorAgentSessionMock,
+  resolveAcpPermission: resolveAcpPermissionMock,
 }));
 
 const human: AuthPrincipal = { kind: AUTH_PRINCIPAL_KIND_USER, sub: 'user-1' };
@@ -867,6 +874,75 @@ describe('ConversationStreamResolver.cancelConversationStream', () => {
   });
 });
 
+describe('ConversationStreamResolver.respondToConversationPermission', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('resolves the pending request for an owned conversation', async () => {
+    const { conversations, resolver } = build();
+    resolveAcpPermissionMock.mockReturnValueOnce(true);
+
+    await expect(
+      resolver.respondToConversationPermission(human, 'conv-1', 'req-1', 'yes'),
+    ).resolves.toBe(true);
+    expect(conversations.getConversationForUser).toHaveBeenCalledWith(
+      'user-1',
+      'conv-1',
+    );
+    expect(resolveAcpPermissionMock).toHaveBeenCalledWith('req-1', 'yes');
+  });
+
+  it('cancels the request when no option is given', async () => {
+    const { resolver } = build();
+    resolveAcpPermissionMock.mockReturnValueOnce(true);
+
+    await resolver.respondToConversationPermission(
+      human,
+      'conv-1',
+      'req-1',
+      undefined,
+    );
+
+    expect(resolveAcpPermissionMock).toHaveBeenCalledWith('req-1', null);
+  });
+
+  it('returns false for an unknown or settled request id', async () => {
+    const { resolver } = build();
+    resolveAcpPermissionMock.mockReturnValueOnce(false);
+
+    await expect(
+      resolver.respondToConversationPermission(human, 'conv-1', 'gone', 'yes'),
+    ).resolves.toBe(false);
+  });
+
+  it('returns false without resolving when the caller does not own the conversation', async () => {
+    const { conversations, resolver } = build();
+    vi.mocked(conversations.getConversationForUser).mockRejectedValueOnce(
+      new Error('Agent conversation not found'),
+    );
+
+    await expect(
+      resolver.respondToConversationPermission(human, 'conv-2', 'req-1', 'yes'),
+    ).resolves.toBe(false);
+    expect(resolveAcpPermissionMock).not.toHaveBeenCalled();
+  });
+
+  it('returns false for a non-human caller', async () => {
+    const { resolver } = build();
+
+    await expect(
+      resolver.respondToConversationPermission(
+        serviceAccount,
+        'conv-1',
+        'req-1',
+        'yes',
+      ),
+    ).resolves.toBe(false);
+    expect(resolveAcpPermissionMock).not.toHaveBeenCalled();
+  });
+});
+
 describe('ConversationStreamResolver.conversationStreamChunkAdded', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -923,5 +999,128 @@ describe('ConversationStreamResolver.conversationStreamChunkAdded', () => {
       'ephemeral-1',
     );
     expect(streamService.subscribe).toHaveBeenCalledWith('ephemeral-1');
+  });
+
+  describe('backend handoff', () => {
+    const priorRows = [
+      agentConversationMessagesFactory.build({
+        content: 'claude question',
+        id: 'm0',
+        role: 'user',
+        sortOrder: 0,
+      }),
+      agentConversationMessagesFactory.build({
+        content: 'claude answer',
+        id: 'm1',
+        role: 'assistant',
+        sortOrder: 1,
+      }),
+      agentConversationMessagesFactory.build({
+        content: 'now cursor',
+        id: 'user-msg-1',
+        role: 'user',
+        sortOrder: 2,
+      }),
+    ];
+
+    const arrange = (
+      metadata: Record<string, unknown>,
+    ): ReturnType<typeof build> => {
+      const built = build();
+      vi.mocked(built.repositories.findByIdForUser).mockResolvedValue(
+        createMock<WorkspaceLocalRepository>({
+          filesystemPath: '/repo/checkout',
+        }),
+      );
+      vi.mocked(built.conversations.getConversationForUser).mockResolvedValue(
+        agentConversationsFactory.build({
+          id: 'conv-1',
+          metadata,
+          userId: 'user-1',
+        }),
+      );
+      vi.mocked(
+        built.conversations.listMessagesForConversation,
+      ).mockResolvedValue(priorRows);
+
+      return built;
+    };
+
+    const startedMessages = (
+      streamService: ConversationStreamService,
+    ): ReadonlyArray<ChatCompletionMessage> => {
+      return vi.mocked(streamService.start).mock.calls[0]?.[0].messages ?? [];
+    };
+
+    const start = (
+      resolver: ConversationStreamResolver,
+      backend: string,
+    ): Promise<unknown> => {
+      return resolver.startConversationStream(human, {
+        backend,
+        baseUrl: backend === 'openai' ? 'http://localhost:11434/v1' : null,
+        conversationId: 'conv-1',
+        message: 'now cursor',
+        modelId: backend === 'openai' ? 'llama3' : null,
+        repositoryId: 'repo-1',
+      });
+    };
+
+    it('prefixes the latest user message with the turns a switched-to backend missed', async () => {
+      const { resolver, streamService } = arrange({
+        claudeSeenThroughSortOrder: 1,
+        cursorSessionId: 'cursor-sess',
+      });
+
+      await start(resolver, 'cursor');
+
+      const messages = startedMessages(streamService);
+      const last = messages?.at(-1);
+      expect(last?.content).toContain('User: claude question');
+      expect(last?.content).toContain('Assistant: claude answer');
+      expect(last?.content).toMatch(/\n\nnow cursor$/);
+      expect(messages?.[0]?.content).toBe('claude question');
+    });
+
+    it('injects nothing when the backend has seen every prior message', async () => {
+      const { resolver, streamService } = arrange({
+        cursorSeenThroughSortOrder: 1,
+        cursorSessionId: 'cursor-sess',
+      });
+
+      await start(resolver, 'cursor');
+
+      const messages = startedMessages(streamService);
+      expect(messages?.at(-1)?.content).toBe('now cursor');
+    });
+
+    it('never injects for openai, which replays the full history', async () => {
+      const { resolver, streamService } = arrange({});
+
+      await start(resolver, 'openai');
+
+      const messages = startedMessages(streamService);
+      expect(messages?.at(-1)?.content).toBe('now cursor');
+    });
+
+    it('leaves a Private-mode turn untouched', async () => {
+      const { resolver, streamService } = arrange({});
+
+      await resolver.startConversationStream(human, {
+        backend: 'cursor',
+        baseUrl: null,
+        conversationId: null,
+        message: 'now cursor',
+        modelId: null,
+        persist: false,
+        repositoryId: 'repo-1',
+      });
+
+      expect(streamService.start).toHaveBeenCalledWith(
+        expect.objectContaining({
+          messages: [{ content: 'now cursor', role: 'user' }],
+        }),
+      );
+    });
   });
 });

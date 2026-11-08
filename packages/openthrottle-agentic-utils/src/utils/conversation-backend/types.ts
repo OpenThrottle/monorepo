@@ -172,6 +172,7 @@ export function toConversationServiceTier(
  */
 export const CONVERSATION_STREAM_CHUNK_KINDS = {
   keepalive: 'keepalive',
+  permissionRequest: 'permission_request',
   session: 'session',
   text: 'text',
   thinking: 'thinking',

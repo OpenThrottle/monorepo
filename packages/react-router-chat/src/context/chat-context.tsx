@@ -3,7 +3,11 @@ import * as React from 'react';
 import type { ChatComposerToolbarProps } from '../components/ChatComposerToolbar';
 import type { ChatConversationSidebarProps } from '../components/ChatConversationSidebar';
 import { ChatContext } from '../data/data.chat-context';
-import type { ChatMessage, ChatTokenUsage } from '../types';
+import type {
+  ChatMessage,
+  ChatPermissionResponder,
+  ChatTokenUsage,
+} from '../types';
 
 /**
  * The full agentic-composer surface a host app injects to upgrade
@@ -32,6 +36,8 @@ export interface ChatComposerControls extends Omit<
    * a Stop button wired to {@link onStop}.
    */
   readonly isStreaming?: boolean;
+  /** Answers an ACP permission request card; see {@link ChatPermissionResponder}. */
+  readonly onRespondToPermission?: ChatPermissionResponder;
   /** Replay the last turn; surfaced by the Retry affordance when {@link canRetry}. */
   readonly onRetry?: () => void;
   /** Invoked when the composer's Stop button is pressed while {@link isStreaming}. */

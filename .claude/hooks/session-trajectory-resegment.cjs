@@ -676,6 +676,7 @@ var isClaudeUsageLimitResult = (event) => {
 // packages/openthrottle-agentic-utils/src/utils/conversation-backend/types.ts
 var CONVERSATION_STREAM_CHUNK_KINDS = {
   keepalive: "keepalive",
+  permissionRequest: "permission_request",
   session: "session",
   text: "text",
   thinking: "thinking",
@@ -685,376 +686,8 @@ var CONVERSATION_STREAM_CHUNK_KINDS = {
   usageLimit: "usage_limit"
 };
 
-// packages/openthrottle-agentic-utils/src/utils/conversation-backend/antigravity/events.ts
-var TERMINAL_STEP_STATES = /* @__PURE__ */ new Set(["DONE", "ERROR"]);
-var asString = (value) => {
-  return typeof value === "string" ? value : void 0;
-};
-var toolArgumentsOf = (toolInfo) => {
-  if (isRecord(toolInfo) && isRecord(toolInfo.parameters)) {
-    return toolInfo.parameters;
-  }
-  return toolInfo ?? null;
-};
-var toolOutputOf = (toolInfo) => {
-  if (isRecord(toolInfo) && toolInfo.output !== void 0) {
-    return toolInfo.output;
-  }
-  return toolArgumentsOf(toolInfo);
-};
-function createAntigravityEventMapper() {
-  let model;
-  const toolNameByStep = /* @__PURE__ */ new Map();
-  const mapStepUpdate = (payload) => {
-    const stepType = asString(payload.step_type);
-    const state = asString(payload.state) ?? "";
-    if (stepType === "user_input") {
-      return [];
-    }
-    if (stepType === "agent_response") {
-      const delta = asString(payload.text_delta);
-      if (delta === void 0 || delta === "") {
-        return [];
-      }
-      return [
-        { delta, done: false, kind: CONVERSATION_STREAM_CHUNK_KINDS.text }
-      ];
-    }
-    if (stepType === "tool") {
-      const stepIndex = typeof payload.step_index === "number" ? payload.step_index : -1;
-      const toolName = asString(payload.tool_name);
-      if (toolName !== void 0) {
-        toolNameByStep.set(stepIndex, toolName);
-      }
-      const callId = String(stepIndex);
-      const name = toolNameByStep.get(stepIndex) ?? null;
-      if (!TERMINAL_STEP_STATES.has(state)) {
-        return [
-          {
-            delta: "",
-            done: false,
-            kind: CONVERSATION_STREAM_CHUNK_KINDS.toolCall,
-            metadata: {
-              callId,
-              toolCall: toolArgumentsOf(payload.tool_info),
-              toolName: name
-            }
-          }
-        ];
-      }
-      return [
-        {
-          delta: "",
-          done: false,
-          kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
-          metadata: {
-            callId,
-            toolCall: {
-              // A step-level ERROR is not a turn failure (see rule 3) — surface it on the tool
-              // result and let `result.status` decide the turn.
-              error: state === "ERROR" ? state : null,
-              output: toolOutputOf(payload.tool_info),
-              status: state
-            },
-            toolName: name
-          }
-        }
-      ];
-    }
-    return [];
-  };
-  return (event) => {
-    if (!isRecord(event)) {
-      return [];
-    }
-    const name = asString(event.event);
-    const payload = isRecord(event[name ?? ""]) ? event[name ?? ""] : void 0;
-    if (name === "init") {
-      const init = isRecord(payload) ? payload : {};
-      model = asString(init.model) ?? model;
-      const conversationId = asString(event.conversation_id);
-      if (conversationId === void 0 || conversationId === "") {
-        return [];
-      }
-      return [
-        {
-          delta: "",
-          done: false,
-          kind: CONVERSATION_STREAM_CHUNK_KINDS.session,
-          metadata: { sessionId: conversationId }
-        }
-      ];
-    }
-    if (name === "step_update" && isRecord(payload)) {
-      return mapStepUpdate(payload);
-    }
-    if (name === "result" && isRecord(payload)) {
-      const failed = asString(payload.status) !== "SUCCESS";
-      const errorMessage = asString(payload.error);
-      return [
-        {
-          delta: "",
-          done: true,
-          error: failed ? errorMessage ?? "antigravity reported an error" : null,
-          kind: CONVERSATION_STREAM_CHUNK_KINDS.usage,
-          metadata: { model: model ?? null, usage: payload.usage ?? null }
-        }
-      ];
-    }
-    return [];
-  };
-}
-
-// packages/openthrottle-agentic-utils/src/utils/conversation-backend/claude/events.ts
-var asString2 = (value) => {
-  const isString = typeof value === "string";
-  return isString ? value : void 0;
-};
-function mapSystem(event) {
-  if (event.subtype !== "init") {
-    return null;
-  }
-  return {
-    delta: "",
-    done: false,
-    kind: CONVERSATION_STREAM_CHUNK_KINDS.session,
-    metadata: { sessionId: asString2(event.session_id) ?? null }
-  };
-}
-function mapStreamEvent(inner) {
-  if (!isRecord(inner)) {
-    return null;
-  }
-  if (inner.type === "content_block_delta" && isRecord(inner.delta)) {
-    const delta = inner.delta;
-    if (delta.type === "text_delta") {
-      return {
-        delta: asString2(delta.text) ?? "",
-        done: false,
-        kind: CONVERSATION_STREAM_CHUNK_KINDS.text
-      };
-    }
-    if (delta.type === "thinking_delta") {
-      return {
-        delta: asString2(delta.thinking) ?? "",
-        done: false,
-        kind: CONVERSATION_STREAM_CHUNK_KINDS.thinking
-      };
-    }
-    return null;
-  }
-  if (inner.type === "content_block_start" && isRecord(inner.content_block)) {
-    const block = inner.content_block;
-    if (block.type === "tool_use") {
-      return {
-        delta: "",
-        done: false,
-        kind: CONVERSATION_STREAM_CHUNK_KINDS.toolCall,
-        metadata: {
-          callId: asString2(block.id) ?? null,
-          index: inner.index ?? null,
-          name: asString2(block.name) ?? null,
-          toolName: asString2(block.name) ?? null
-        }
-      };
-    }
-  }
-  return null;
-}
-function mapAssistant(event) {
-  const message = event.message;
-  if (!isRecord(message) || !Array.isArray(message.content)) {
-    return [];
-  }
-  return message.content.filter(
-    (block) => isRecord(block) && block.type === "tool_use"
-  ).map((block) => ({
-    delta: "",
-    done: false,
-    kind: CONVERSATION_STREAM_CHUNK_KINDS.toolCall,
-    metadata: {
-      callId: asString2(block.id) ?? null,
-      name: asString2(block.name) ?? null,
-      toolCall: block.input ?? null,
-      toolName: asString2(block.name) ?? null
-    }
-  }));
-}
-function toolResultText(content) {
-  if (!Array.isArray(content)) {
-    return content ?? null;
-  }
-  return content.map((part) => {
-    if (!isRecord(part)) {
-      return "";
-    }
-    return part.type === "text" ? asString2(part.text) ?? "" : `[${asString2(part.type) ?? "content"}]`;
-  }).join("\n");
-}
-function mapUser(event) {
-  const message = event.message;
-  if (!isRecord(message) || !Array.isArray(message.content)) {
-    return [];
-  }
-  return message.content.filter(
-    (block) => isRecord(block) && block.type === "tool_result"
-  ).map((block) => ({
-    delta: "",
-    done: false,
-    kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
-    metadata: {
-      callId: asString2(block.tool_use_id) ?? null,
-      isError: block.is_error === true,
-      toolCall: toolResultText(block.content)
-    }
-  }));
-}
-function mapRateLimit(event) {
-  const usageLimit = parseClaudeRateLimitInfo(event.rate_limit_info);
-  if (usageLimit === null) {
-    return null;
-  }
-  return {
-    delta: "",
-    done: false,
-    kind: CONVERSATION_STREAM_CHUNK_KINDS.usageLimit,
-    metadata: {
-      rateLimitType: usageLimit.rateLimitType,
-      resetsAt: usageLimit.resetsAt
-    }
-  };
-}
-function mapResult(event) {
-  const isError = event.is_error === true;
-  const hitUsageLimit = isClaudeUsageLimitResult(event);
-  const unknownUsageLimit = {
-    usageLimit: { rateLimitType: null, resetsAt: null }
-  };
-  return {
-    delta: "",
-    done: true,
-    error: isError ? asString2(event.result) ?? "claude reported an error" : null,
-    kind: CONVERSATION_STREAM_CHUNK_KINDS.usage,
-    metadata: {
-      apiErrorStatus: event.api_error_status ?? null,
-      modelUsage: event.modelUsage ?? null,
-      result: asString2(event.result) ?? null,
-      totalCostUsd: event.total_cost_usd ?? null,
-      usage: event.usage ?? null,
-      ...hitUsageLimit ? unknownUsageLimit : {}
-    }
-  };
-}
-var listOf = (chunk) => {
-  return chunk === null ? [] : [chunk];
-};
-function mapClaudeEvent(event) {
-  if (!isRecord(event)) {
-    return [];
-  }
-  switch (event.type) {
-    case "assistant":
-      return mapAssistant(event);
-    case "rate_limit_event":
-      return listOf(mapRateLimit(event));
-    case "result":
-      return [mapResult(event)];
-    case "stream_event":
-      return listOf(mapStreamEvent(event.event));
-    case "system":
-      return listOf(mapSystem(event));
-    case "user":
-      return mapUser(event);
-    default:
-      return [];
-  }
-}
-
-// packages/openthrottle-agentic-utils/src/utils/conversation-backend/codex/events.ts
-var asString3 = (value) => {
-  const isString = typeof value === "string";
-  return isString ? value : void 0;
-};
-var itemType = (item) => {
-  return asString3(item.item_type) ?? asString3(item.type);
-};
-function mapItemCompleted(event) {
-  const item = event.item;
-  if (!isRecord(item)) {
-    return null;
-  }
-  const kind = itemType(item);
-  if (kind === "agent_message") {
-    return {
-      delta: asString3(item.text) ?? "",
-      done: false,
-      kind: CONVERSATION_STREAM_CHUNK_KINDS.text
-    };
-  }
-  if (kind === "reasoning") {
-    return {
-      delta: asString3(item.text) ?? "",
-      done: false,
-      kind: CONVERSATION_STREAM_CHUNK_KINDS.thinking
-    };
-  }
-  if (kind === void 0) {
-    return null;
-  }
-  return {
-    delta: "",
-    done: false,
-    kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
-    // codex has no tool name of its own — the item kind (`command_execution`,
-    // `file_change`, …) IS what the activity was, so it doubles as the name.
-    metadata: { item, itemType: kind, toolName: kind }
-  };
-}
-function mapCodexEvent(event) {
-  if (!isRecord(event)) {
-    return null;
-  }
-  switch (event.type) {
-    case "thread.started":
-      return {
-        delta: "",
-        done: false,
-        kind: CONVERSATION_STREAM_CHUNK_KINDS.session,
-        metadata: { sessionId: asString3(event.thread_id) ?? null }
-      };
-    case "item.completed":
-      return mapItemCompleted(event);
-    case "turn.completed":
-      return {
-        delta: "",
-        done: true,
-        error: null,
-        kind: CONVERSATION_STREAM_CHUNK_KINDS.usage,
-        metadata: { usage: event.usage ?? null }
-      };
-    case "turn.failed": {
-      const error = isRecord(event.error) ? event.error : void 0;
-      return {
-        delta: "",
-        done: true,
-        error: asString3(error?.message) ?? "codex reported a failed turn",
-        kind: CONVERSATION_STREAM_CHUNK_KINDS.text
-      };
-    }
-    case "error":
-      return {
-        delta: "",
-        done: true,
-        error: asString3(event.message) ?? "codex reported an error",
-        kind: CONVERSATION_STREAM_CHUNK_KINDS.text
-      };
-    default:
-      return null;
-  }
-}
-
 // packages/openthrottle-agentic-utils/src/utils/conversation-backend/cursor-agent/events.ts
-var asString4 = (value) => {
+var asString = (value) => {
   const isString = typeof value === "string";
   return isString ? value : void 0;
 };
@@ -1066,9 +699,9 @@ function messageText(message) {
   if (!Array.isArray(content) || !isRecord(content[0])) {
     return "";
   }
-  return asString4(content[0].text) ?? "";
+  return asString(content[0].text) ?? "";
 }
-function mapSystem2(event) {
+function mapSystem(event) {
   if (event.subtype !== "init") {
     return null;
   }
@@ -1076,10 +709,10 @@ function mapSystem2(event) {
     delta: "",
     done: false,
     kind: CONVERSATION_STREAM_CHUNK_KINDS.session,
-    metadata: { sessionId: asString4(event.session_id) ?? null }
+    metadata: { sessionId: asString(event.session_id) ?? null }
   };
 }
-function mapAssistant2(event) {
+function mapAssistant(event) {
   if (event.timestamp_ms === void 0 || event.model_call_id !== void 0) {
     return null;
   }
@@ -1094,7 +727,7 @@ function mapThinking(event) {
     return null;
   }
   return {
-    delta: asString4(event.text) ?? "",
+    delta: asString(event.text) ?? "",
     done: false,
     kind: CONVERSATION_STREAM_CHUNK_KINDS.thinking
   };
@@ -1126,7 +759,7 @@ function toolPayloadOf(toolCall) {
 }
 var REJECTED_WITHOUT_REASON = "Rejected by cursor permissions";
 var asNonEmptyString = (value) => {
-  const text = asString4(value);
+  const text = asString(value);
   return text === void 0 || text.trim() === "" ? void 0 : text;
 };
 function toolFailureOf(payload) {
@@ -1176,10 +809,10 @@ function toolSuccessOf(payload) {
   if (!isRecord(success)) {
     return success ?? null;
   }
-  return asString4(success.content) ?? success;
+  return asString(success.content) ?? success;
 }
 function mapToolCall(event) {
-  const callId = asString4(event.call_id) ?? null;
+  const callId = asString(event.call_id) ?? null;
   const toolName = toolNameOf(event.tool_call);
   const payload = toolPayloadOf(event.tool_call);
   const envelope = event.tool_call ?? null;
@@ -1206,15 +839,15 @@ function mapToolCall(event) {
     metadata: failure === null ? succeededMetadata : failedMetadata
   };
 }
-function mapResult2(event) {
+function mapResult(event) {
   const isError = event.is_error === true;
   return {
     delta: "",
     done: true,
-    error: isError ? asString4(event.result) ?? "cursor-agent reported an error" : null,
+    error: isError ? asString(event.result) ?? "cursor-agent reported an error" : null,
     kind: CONVERSATION_STREAM_CHUNK_KINDS.usage,
     metadata: {
-      result: asString4(event.result) ?? null,
+      result: asString(event.result) ?? null,
       usage: event.usage ?? null
     }
   };
@@ -1225,11 +858,11 @@ function mapCursorEvent(event) {
   }
   switch (event.type) {
     case "assistant":
-      return mapAssistant2(event);
+      return mapAssistant(event);
     case "result":
-      return mapResult2(event);
+      return mapResult(event);
     case "system":
-      return mapSystem2(event);
+      return mapSystem(event);
     case "thinking":
       return mapThinking(event);
     case "tool_call":
@@ -1240,7 +873,7 @@ function mapCursorEvent(event) {
 }
 
 // packages/openthrottle-agentic-utils/src/utils/conversation-backend/gemini/events.ts
-var asString5 = (value) => {
+var asString2 = (value) => {
   return typeof value === "string" ? value : void 0;
 };
 function createGeminiEventMapper() {
@@ -1252,7 +885,7 @@ function createGeminiEventMapper() {
     }
     switch (event.type) {
       case "init": {
-        model = asString5(event.model) ?? model;
+        model = asString2(event.model) ?? model;
         return [];
       }
       case "message": {
@@ -1261,15 +894,15 @@ function createGeminiEventMapper() {
         }
         return [
           {
-            delta: asString5(event.content) ?? "",
+            delta: asString2(event.content) ?? "",
             done: false,
             kind: CONVERSATION_STREAM_CHUNK_KINDS.text
           }
         ];
       }
       case "tool_use": {
-        const callId = asString5(event.tool_id) ?? "";
-        const toolName = asString5(event.tool_name) ?? null;
+        const callId = asString2(event.tool_id) ?? "";
+        const toolName = asString2(event.tool_name) ?? null;
         if (toolName !== null) {
           toolNameByCallId.set(callId, toolName);
         }
@@ -1290,7 +923,7 @@ function createGeminiEventMapper() {
         ];
       }
       case "tool_result": {
-        const callId = asString5(event.tool_id) ?? "";
+        const callId = asString2(event.tool_id) ?? "";
         return [
           {
             delta: "",
@@ -1300,8 +933,8 @@ function createGeminiEventMapper() {
               callId,
               toolCall: {
                 error: event.error ?? null,
-                output: asString5(event.output) ?? null,
-                status: asString5(event.status) ?? null
+                output: asString2(event.output) ?? null,
+                status: asString2(event.status) ?? null
               },
               toolName: toolNameByCallId.get(callId) ?? null
             }
@@ -1310,7 +943,7 @@ function createGeminiEventMapper() {
       }
       case "result": {
         const failed = event.status === "error";
-        const errorMessage = isRecord(event.error) ? asString5(event.error.message) : void 0;
+        const errorMessage = isRecord(event.error) ? asString2(event.error.message) : void 0;
         return [
           {
             delta: "",
@@ -1330,6 +963,374 @@ function createGeminiEventMapper() {
         return [];
     }
   };
+}
+
+// packages/openthrottle-agentic-utils/src/utils/conversation-backend/antigravity/events.ts
+var TERMINAL_STEP_STATES = /* @__PURE__ */ new Set(["DONE", "ERROR"]);
+var asString3 = (value) => {
+  return typeof value === "string" ? value : void 0;
+};
+var toolArgumentsOf = (toolInfo) => {
+  if (isRecord(toolInfo) && isRecord(toolInfo.parameters)) {
+    return toolInfo.parameters;
+  }
+  return toolInfo ?? null;
+};
+var toolOutputOf = (toolInfo) => {
+  if (isRecord(toolInfo) && toolInfo.output !== void 0) {
+    return toolInfo.output;
+  }
+  return toolArgumentsOf(toolInfo);
+};
+function createAntigravityEventMapper() {
+  let model;
+  const toolNameByStep = /* @__PURE__ */ new Map();
+  const mapStepUpdate = (payload) => {
+    const stepType = asString3(payload.step_type);
+    const state = asString3(payload.state) ?? "";
+    if (stepType === "user_input") {
+      return [];
+    }
+    if (stepType === "agent_response") {
+      const delta = asString3(payload.text_delta);
+      if (delta === void 0 || delta === "") {
+        return [];
+      }
+      return [
+        { delta, done: false, kind: CONVERSATION_STREAM_CHUNK_KINDS.text }
+      ];
+    }
+    if (stepType === "tool") {
+      const stepIndex = typeof payload.step_index === "number" ? payload.step_index : -1;
+      const toolName = asString3(payload.tool_name);
+      if (toolName !== void 0) {
+        toolNameByStep.set(stepIndex, toolName);
+      }
+      const callId = String(stepIndex);
+      const name = toolNameByStep.get(stepIndex) ?? null;
+      if (!TERMINAL_STEP_STATES.has(state)) {
+        return [
+          {
+            delta: "",
+            done: false,
+            kind: CONVERSATION_STREAM_CHUNK_KINDS.toolCall,
+            metadata: {
+              callId,
+              toolCall: toolArgumentsOf(payload.tool_info),
+              toolName: name
+            }
+          }
+        ];
+      }
+      return [
+        {
+          delta: "",
+          done: false,
+          kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
+          metadata: {
+            callId,
+            toolCall: {
+              // A step-level ERROR is not a turn failure (see rule 3) — surface it on the tool
+              // result and let `result.status` decide the turn.
+              error: state === "ERROR" ? state : null,
+              output: toolOutputOf(payload.tool_info),
+              status: state
+            },
+            toolName: name
+          }
+        }
+      ];
+    }
+    return [];
+  };
+  return (event) => {
+    if (!isRecord(event)) {
+      return [];
+    }
+    const name = asString3(event.event);
+    const payload = isRecord(event[name ?? ""]) ? event[name ?? ""] : void 0;
+    if (name === "init") {
+      const init = isRecord(payload) ? payload : {};
+      model = asString3(init.model) ?? model;
+      const conversationId = asString3(event.conversation_id);
+      if (conversationId === void 0 || conversationId === "") {
+        return [];
+      }
+      return [
+        {
+          delta: "",
+          done: false,
+          kind: CONVERSATION_STREAM_CHUNK_KINDS.session,
+          metadata: { sessionId: conversationId }
+        }
+      ];
+    }
+    if (name === "step_update" && isRecord(payload)) {
+      return mapStepUpdate(payload);
+    }
+    if (name === "result" && isRecord(payload)) {
+      const failed = asString3(payload.status) !== "SUCCESS";
+      const errorMessage = asString3(payload.error);
+      return [
+        {
+          delta: "",
+          done: true,
+          error: failed ? errorMessage ?? "antigravity reported an error" : null,
+          kind: CONVERSATION_STREAM_CHUNK_KINDS.usage,
+          metadata: { model: model ?? null, usage: payload.usage ?? null }
+        }
+      ];
+    }
+    return [];
+  };
+}
+
+// packages/openthrottle-agentic-utils/src/utils/conversation-backend/claude/events.ts
+var asString4 = (value) => {
+  const isString = typeof value === "string";
+  return isString ? value : void 0;
+};
+function mapSystem2(event) {
+  if (event.subtype !== "init") {
+    return null;
+  }
+  return {
+    delta: "",
+    done: false,
+    kind: CONVERSATION_STREAM_CHUNK_KINDS.session,
+    metadata: { sessionId: asString4(event.session_id) ?? null }
+  };
+}
+function mapStreamEvent(inner) {
+  if (!isRecord(inner)) {
+    return null;
+  }
+  if (inner.type === "content_block_delta" && isRecord(inner.delta)) {
+    const delta = inner.delta;
+    if (delta.type === "text_delta") {
+      return {
+        delta: asString4(delta.text) ?? "",
+        done: false,
+        kind: CONVERSATION_STREAM_CHUNK_KINDS.text
+      };
+    }
+    if (delta.type === "thinking_delta") {
+      return {
+        delta: asString4(delta.thinking) ?? "",
+        done: false,
+        kind: CONVERSATION_STREAM_CHUNK_KINDS.thinking
+      };
+    }
+    return null;
+  }
+  if (inner.type === "content_block_start" && isRecord(inner.content_block)) {
+    const block = inner.content_block;
+    if (block.type === "tool_use") {
+      return {
+        delta: "",
+        done: false,
+        kind: CONVERSATION_STREAM_CHUNK_KINDS.toolCall,
+        metadata: {
+          callId: asString4(block.id) ?? null,
+          index: inner.index ?? null,
+          name: asString4(block.name) ?? null,
+          toolName: asString4(block.name) ?? null
+        }
+      };
+    }
+  }
+  return null;
+}
+function mapAssistant2(event) {
+  const message = event.message;
+  if (!isRecord(message) || !Array.isArray(message.content)) {
+    return [];
+  }
+  return message.content.filter(
+    (block) => isRecord(block) && block.type === "tool_use"
+  ).map((block) => ({
+    delta: "",
+    done: false,
+    kind: CONVERSATION_STREAM_CHUNK_KINDS.toolCall,
+    metadata: {
+      callId: asString4(block.id) ?? null,
+      name: asString4(block.name) ?? null,
+      toolCall: block.input ?? null,
+      toolName: asString4(block.name) ?? null
+    }
+  }));
+}
+function toolResultText(content) {
+  if (!Array.isArray(content)) {
+    return content ?? null;
+  }
+  return content.map((part) => {
+    if (!isRecord(part)) {
+      return "";
+    }
+    return part.type === "text" ? asString4(part.text) ?? "" : `[${asString4(part.type) ?? "content"}]`;
+  }).join("\n");
+}
+function mapUser(event) {
+  const message = event.message;
+  if (!isRecord(message) || !Array.isArray(message.content)) {
+    return [];
+  }
+  return message.content.filter(
+    (block) => isRecord(block) && block.type === "tool_result"
+  ).map((block) => ({
+    delta: "",
+    done: false,
+    kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
+    metadata: {
+      callId: asString4(block.tool_use_id) ?? null,
+      isError: block.is_error === true,
+      toolCall: toolResultText(block.content)
+    }
+  }));
+}
+function mapRateLimit(event) {
+  const usageLimit = parseClaudeRateLimitInfo(event.rate_limit_info);
+  if (usageLimit === null) {
+    return null;
+  }
+  return {
+    delta: "",
+    done: false,
+    kind: CONVERSATION_STREAM_CHUNK_KINDS.usageLimit,
+    metadata: {
+      rateLimitType: usageLimit.rateLimitType,
+      resetsAt: usageLimit.resetsAt
+    }
+  };
+}
+function mapResult2(event) {
+  const isError = event.is_error === true;
+  const hitUsageLimit = isClaudeUsageLimitResult(event);
+  const unknownUsageLimit = {
+    usageLimit: { rateLimitType: null, resetsAt: null }
+  };
+  return {
+    delta: "",
+    done: true,
+    error: isError ? asString4(event.result) ?? "claude reported an error" : null,
+    kind: CONVERSATION_STREAM_CHUNK_KINDS.usage,
+    metadata: {
+      apiErrorStatus: event.api_error_status ?? null,
+      modelUsage: event.modelUsage ?? null,
+      result: asString4(event.result) ?? null,
+      totalCostUsd: event.total_cost_usd ?? null,
+      usage: event.usage ?? null,
+      ...hitUsageLimit ? unknownUsageLimit : {}
+    }
+  };
+}
+var listOf = (chunk) => {
+  return chunk === null ? [] : [chunk];
+};
+function mapClaudeEvent(event) {
+  if (!isRecord(event)) {
+    return [];
+  }
+  switch (event.type) {
+    case "assistant":
+      return mapAssistant2(event);
+    case "rate_limit_event":
+      return listOf(mapRateLimit(event));
+    case "result":
+      return [mapResult2(event)];
+    case "stream_event":
+      return listOf(mapStreamEvent(event.event));
+    case "system":
+      return listOf(mapSystem2(event));
+    case "user":
+      return mapUser(event);
+    default:
+      return [];
+  }
+}
+
+// packages/openthrottle-agentic-utils/src/utils/conversation-backend/codex/events.ts
+var asString5 = (value) => {
+  const isString = typeof value === "string";
+  return isString ? value : void 0;
+};
+var itemType = (item) => {
+  return asString5(item.item_type) ?? asString5(item.type);
+};
+function mapItemCompleted(event) {
+  const item = event.item;
+  if (!isRecord(item)) {
+    return null;
+  }
+  const kind = itemType(item);
+  if (kind === "agent_message") {
+    return {
+      delta: asString5(item.text) ?? "",
+      done: false,
+      kind: CONVERSATION_STREAM_CHUNK_KINDS.text
+    };
+  }
+  if (kind === "reasoning") {
+    return {
+      delta: asString5(item.text) ?? "",
+      done: false,
+      kind: CONVERSATION_STREAM_CHUNK_KINDS.thinking
+    };
+  }
+  if (kind === void 0) {
+    return null;
+  }
+  return {
+    delta: "",
+    done: false,
+    kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
+    // codex has no tool name of its own — the item kind (`command_execution`,
+    // `file_change`, …) IS what the activity was, so it doubles as the name.
+    metadata: { item, itemType: kind, toolName: kind }
+  };
+}
+function mapCodexEvent(event) {
+  if (!isRecord(event)) {
+    return null;
+  }
+  switch (event.type) {
+    case "thread.started":
+      return {
+        delta: "",
+        done: false,
+        kind: CONVERSATION_STREAM_CHUNK_KINDS.session,
+        metadata: { sessionId: asString5(event.thread_id) ?? null }
+      };
+    case "item.completed":
+      return mapItemCompleted(event);
+    case "turn.completed":
+      return {
+        delta: "",
+        done: true,
+        error: null,
+        kind: CONVERSATION_STREAM_CHUNK_KINDS.usage,
+        metadata: { usage: event.usage ?? null }
+      };
+    case "turn.failed": {
+      const error = isRecord(event.error) ? event.error : void 0;
+      return {
+        delta: "",
+        done: true,
+        error: asString5(error?.message) ?? "codex reported a failed turn",
+        kind: CONVERSATION_STREAM_CHUNK_KINDS.text
+      };
+    }
+    case "error":
+      return {
+        delta: "",
+        done: true,
+        error: asString5(event.message) ?? "codex reported an error",
+        kind: CONVERSATION_STREAM_CHUNK_KINDS.text
+      };
+    default:
+      return null;
+  }
 }
 
 // packages/openthrottle-agentic-utils/src/utils/conversation-backend/grok/events.ts

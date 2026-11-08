@@ -27,9 +27,25 @@ type AgentCliAuth = {
   warning: string | null;
 };
 
+type AgentCliAuthState = {
+  detail: string | null;
+  status: string;
+};
+
+type AgentCliCapabilities = {
+  approvals: boolean;
+  imageInput: boolean;
+  mcpInjection: boolean;
+  replaysFullHistory: boolean;
+  resume: boolean;
+  steering: boolean;
+};
+
 type AgentCli = {
   auth: AgentCliAuth | null;
+  authState: AgentCliAuthState;
   backend: string;
+  capabilities: AgentCliCapabilities;
   chatCapable: boolean;
   label: string;
   models: string[];
@@ -81,7 +97,7 @@ function describeAuth(agent: AgentCli): string[] {
 
 export const discoverAgentClisToolParameters = z.object({}).strict();
 
-export const discoverAgentClisToolDescription = `Discover the agentic CLIs (claude, codex, cursor, gemini, grok, opencode, …) detected as available on the server host, with each CLI's --version and the models it can run, via the discoverAgentClis GraphQL query. No arguments. Returns a cached snapshot (60s TTL). Each agent reports chatCapable — whether it has a wired streaming chat backend (false for plan-run-only drivers). For claude, \`auth\` reports the logged-in account (email, organization), the subscription plan, and which credential is active — the subscription or an API key — as read from \`claude auth status\` (no tokens are read). When ANTHROPIC_API_KEY would override the subscription (it always wins in -p mode), \`auth.warning\` says so loudly; relay that warning to the user. Caveat: availability reflects the server's host, not this MCP process's host.`;
+export const discoverAgentClisToolDescription = `Discover agentic CLIs (claude, codex, cursor, gemini, …) available on the server host: --version, models, and chatCapable (has a streaming chat backend). Cached 60s; no arguments. Each agent reports \`authState\` (authenticated | unauthenticated | unknown) and chat \`capabilities\` (resume, approvals, steering, imageInput, mcpInjection, replaysFullHistory); read capabilities instead of branching on backend names. claude's \`auth\` adds account, plan and active credential from \`claude auth status\`; relay \`auth.warning\` (ANTHROPIC_API_KEY overriding the subscription) to the user. No credential contents are read. Reflects the server's host, not this MCP process's.`;
 
 export async function discoverAgentClisToolHandler(
   _args: z.infer<typeof discoverAgentClisToolParameters>,
@@ -97,7 +113,19 @@ export async function discoverAgentClisToolHandler(
 
       const agents: AgentCli[] = discovered.agents.map((agent) => ({
         auth: toAgentCliAuth(agent.auth),
+        authState: {
+          detail: agent.authState.detail ?? null,
+          status: agent.authState.status,
+        },
         backend: agent.backend,
+        capabilities: {
+          approvals: agent.capabilities.approvals,
+          imageInput: agent.capabilities.imageInput,
+          mcpInjection: agent.capabilities.mcpInjection,
+          replaysFullHistory: agent.capabilities.replaysFullHistory,
+          resume: agent.capabilities.resume,
+          steering: agent.capabilities.steering,
+        },
         chatCapable: agent.chatCapable,
         label: agent.label,
         models: [...agent.models],
