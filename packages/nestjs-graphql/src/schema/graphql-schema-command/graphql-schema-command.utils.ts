@@ -227,6 +227,33 @@ const compareGraphqlSchema = async (
 
   return false;
 };
+
+/**
+ * @description Turn a throw from loading or initializing the root module — a
+ * Nest bootstrap or DI error, or an import-time failure — into a {@link Failure}.
+ *
+ * It has to be caught here. Left to escape, it rejects `bin.ts`'s top-level
+ * await, which Node reports as an `uncaughtException`; an app whose logger
+ * handles uncaught exceptions without exiting (winston's `exitOnError: false`)
+ * then swallows it, and the process exits 0 having written nothing. That made
+ * both `write` and `check` pass on a DI-broken root module.
+ */
+const describeInitializationFailure = (
+  options: GraphqlSchemaOptions,
+  error: unknown,
+): Failure => {
+  const detail = error instanceof Error ? error.message : String(error);
+
+  return {
+    error: [
+      `❌ Could not initialize ${options.exportName} from ${options.modulePath}, so no schema was emitted.`,
+      '',
+      detail,
+    ].join('\n'),
+    ok: false,
+  };
+};
+
 /**
  * @description Load the root module and emit its schema to `emitPath`, which
  * {@link GRAPHQL_SCHEMA_FILE_ENV} carries into the module's `autoSchemaFile`.
@@ -252,6 +279,8 @@ const emitToFile = async (
     await emitCodeFirstSchema(loaded.value);
 
     return { ok: true, value: undefined };
+  } catch (error) {
+    return describeInitializationFailure(options, error);
   } finally {
     if (previous === undefined) {
       Reflect.deleteProperty(process.env, GRAPHQL_SCHEMA_FILE_ENV);
@@ -263,7 +292,9 @@ const emitToFile = async (
 
 /**
  * @description Run the command end to end and resolve its exit code: 0 when
- * the schema matches or was written, 1 on drift, 2 on a usage or load error.
+ * the schema matches or was written, 1 on drift, 2 on a usage or load error —
+ * including a root module that fails to initialize (a Nest bootstrap or DI
+ * error), which must never pass as a written or matching schema.
  * `load` defaults to importing the built module file; tests pass a fixture.
  */
 export const runGraphqlSchemaCommand = async (

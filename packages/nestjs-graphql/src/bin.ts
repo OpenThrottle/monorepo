@@ -11,8 +11,17 @@
 
 import { runGraphqlSchemaCommand } from './schema/graphql-schema-command/graphql-schema-command.utils.ts';
 
-process.exitCode = await runGraphqlSchemaCommand(
-  process.argv.slice(2),
-  process.env,
-  process.cwd(),
-);
+// The exit code is set explicitly on every path. An unhandled rejection here
+// would surface as an `uncaughtException`, and the app's root module can
+// install a handler that logs it without exiting — leaving the default exit
+// code 0 on a run that emitted nothing.
+try {
+  process.exitCode = await runGraphqlSchemaCommand(
+    process.argv.slice(2),
+    process.env,
+    process.cwd(),
+  );
+} catch (error) {
+  console.error(error);
+  process.exitCode = 2;
+}

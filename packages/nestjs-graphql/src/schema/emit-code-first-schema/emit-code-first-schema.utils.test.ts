@@ -101,4 +101,24 @@ describe('emitCodeFirstSchema', () => {
 
     expect(constructed).toBe(0);
   });
+
+  it('rejects when a provider cannot be resolved', async () => {
+    const file = join(directory, 'schema.gql');
+
+    @Module({
+      imports: [
+        GraphQLModule.forRoot<ApolloDriverConfig>({
+          autoSchemaFile: file,
+          driver: ApolloDriver,
+        }),
+      ],
+      providers: [EmitSchemaWidgetResolver],
+    })
+    class MissingDependencyModule {}
+
+    await expect(emitCodeFirstSchema(MissingDependencyModule)).rejects.toThrow(
+      /can't resolve dependencies of the EmitSchemaWidgetResolver/,
+    );
+    await expect(readFile(file, 'utf8')).rejects.toThrow(/ENOENT/);
+  });
 });
