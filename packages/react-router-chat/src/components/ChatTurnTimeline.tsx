@@ -6,6 +6,7 @@ import type { ChatTurnEvent } from '../types';
 import { activityGroupAnchor } from '../utils/activity-group-anchor';
 import { ChatActivityGroup } from './ChatActivityGroup';
 import { ChatMessageBody } from './ChatMessageBody';
+import { ChatPermissionRequest } from './ChatPermissionRequest';
 import { ChatThinkingBlock } from './ChatThinkingBlock';
 import { ChatToolCall } from './ChatToolCall';
 import { ChatToolCallGroup } from './ChatToolCallGroup';
@@ -88,6 +89,8 @@ export const ChatTurnTimeline = (
         const key = `${event.kind}-${event.sortOrder}`;
 
         switch (event.kind) {
+          case 'permission':
+            return <ChatPermissionRequest event={event} key={key} />;
           case 'session':
             return null;
           case 'text':

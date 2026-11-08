@@ -8,10 +8,14 @@
  */
 
 import { spawn } from 'node:child_process';
+import { stat } from 'node:fs/promises';
+import { join } from 'node:path';
 
 import type { DriverModelListing } from '@openthrottle/openthrottle-drivers';
 import { ALL_DRIVERS } from '@openthrottle/openthrottle-drivers';
 
+import type { ChatBackendCapabilities } from './capabilities.ts';
+import { resolveChatBackendCapabilities } from './capabilities.ts';
 import type { ClaudeAuthStatus } from './claude/auth-status.ts';
 import { probeClaudeAuthStatus } from './claude/auth-status.ts';
 
@@ -48,6 +52,36 @@ export interface AgentCliDescriptor {
 }
 
 /**
+ * Generic authentication status of an agent CLI, independent of the backend.
+ *
+ * @public
+ */
+export const AGENT_CLI_AUTH_STATUSES = {
+  authenticated: 'authenticated',
+  unauthenticated: 'unauthenticated',
+  unknown: 'unknown',
+} as const;
+
+/**
+ * @public
+ */
+export type AgentCliAuthStatus =
+  (typeof AGENT_CLI_AUTH_STATUSES)[keyof typeof AGENT_CLI_AUTH_STATUSES];
+
+/**
+ * Whether an agent CLI is logged in, with a short human-readable detail when
+ * the probe has one. No credential contents are ever read.
+ *
+ * @public
+ */
+export interface AgentCliAuthState {
+  /** Short explanation (e.g. the account), or null when there is none. */
+  readonly detail: string | null;
+  /** Authenticated, unauthenticated, or unknown when the backend is not probed. */
+  readonly status: AgentCliAuthStatus;
+}
+
+/**
  * Outcome of probing one allowlisted CLI.
  */
 export interface AgentCliAvailability {
@@ -58,10 +92,14 @@ export interface AgentCliAvailability {
    * (no tokens read). Non-null only for an available claude whose probe parsed.
    */
   readonly auth: ClaudeAuthStatus | null;
+  /** Generic login state; unknown for backends that are not probed. */
+  readonly authState: AgentCliAuthState;
   /** True when the binary is present and its version probe exited cleanly. */
   readonly available: boolean;
   /** Backend discriminator (driver id). */
   readonly backend: string;
+  /** Behavioral capabilities of this backend's chat path (read these, not backend names). */
+  readonly capabilities: ChatBackendCapabilities;
   /** True when the driver can be offered as a streaming chat backend. */
   readonly chatCapable: boolean;
   /** Human-readable label. */
@@ -193,6 +231,11 @@ function listModels(
   });
 }
 
+const UNKNOWN_AUTH_STATE: AgentCliAuthState = {
+  detail: null,
+  status: AGENT_CLI_AUTH_STATUSES.unknown,
+};
+
 function probe(
   descriptor: AgentCliDescriptor,
   env: NodeJS.ProcessEnv,
@@ -212,8 +255,10 @@ function probe(
     const unavailable: AgentCliAvailability = {
       attachesWorkspaceMcp,
       auth: null,
+      authState: UNKNOWN_AUTH_STATE,
       available: false,
       backend,
+      capabilities: resolveChatBackendCapabilities(backend, env),
       chatCapable,
       label,
       models: [],
@@ -259,8 +304,10 @@ function probe(
         resolve({
           attachesWorkspaceMcp,
           auth: null,
+          authState: UNKNOWN_AUTH_STATE,
           available: true,
           backend,
+          capabilities: resolveChatBackendCapabilities(backend, env),
           chatCapable,
           label,
           models,
@@ -273,11 +320,146 @@ function probe(
 }
 
 const CLAUDE_BACKEND = 'claude';
+const CURSOR_BACKEND = 'cursor';
+const GEMINI_BACKEND = 'gemini';
+const AUTH_DETAIL_MAX_CHARS = 200;
+
+function claudeAuthState(auth: ClaudeAuthStatus | null): AgentCliAuthState {
+  if (auth === null) {
+    return UNKNOWN_AUTH_STATE;
+  }
+
+  if (!auth.loggedIn) {
+    return {
+      detail: auth.warning,
+      status: AGENT_CLI_AUTH_STATUSES.unauthenticated,
+    };
+  }
+
+  return {
+    detail: auth.accountEmail,
+    status: AGENT_CLI_AUTH_STATUSES.authenticated,
+  };
+}
 
 /**
- * Probe one CLI. For claude the `claude auth status` probe runs concurrently
- * with the version probe and is kept only when the binary is available; every
- * other entry has `auth: null`. The auth probe never rejects (null on failure).
+ * Run `<binary> <args>` with the same scrubbed env and timeout as the version
+ * probe. Resolves the exit code and stdout; never rejects (a spawn error or a
+ * timeout resolves `code: null`).
+ */
+function runProbe(
+  binary: string,
+  args: readonly string[],
+  env: NodeJS.ProcessEnv,
+  timeoutMs: number,
+): Promise<{ readonly code: number | null; readonly stdout: string }> {
+  return new Promise((resolve) => {
+    let stdout = '';
+
+    const child = spawn(binary, [...args], {
+      env: { HOME: env.HOME, PATH: env.PATH },
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+
+    const timer = setTimeout(() => {
+      child.kill('SIGKILL');
+      resolve({ code: null, stdout });
+    }, timeoutMs);
+
+    child.stdout?.on('data', (data: Buffer) => {
+      stdout += data.toString('utf8');
+    });
+
+    child.on('error', () => {
+      clearTimeout(timer);
+      resolve({ code: null, stdout });
+    });
+
+    child.on('close', (code) => {
+      clearTimeout(timer);
+      resolve({ code, stdout });
+    });
+  });
+}
+
+/** `cursor-agent status`: "Not logged in" or a non-zero exit is unauthenticated; unrecognised output is unknown. */
+async function probeCursorAuthState(
+  descriptor: AgentCliDescriptor,
+  env: NodeJS.ProcessEnv,
+  timeoutMs: number,
+): Promise<AgentCliAuthState> {
+  const { code, stdout } = await runProbe(
+    resolveBinary(descriptor, env),
+    ['status'],
+    env,
+    timeoutMs,
+  );
+  const output = stdout.trim();
+  const firstLine = output.split('\n')[0]?.trim() ?? '';
+  const detail =
+    firstLine === '' ? null : firstLine.slice(0, AUTH_DETAIL_MAX_CHARS);
+
+  if (code !== 0 || /not logged in/i.test(output)) {
+    return { detail, status: AGENT_CLI_AUTH_STATUSES.unauthenticated };
+  }
+
+  if (/logged in/i.test(output)) {
+    return { detail, status: AGENT_CLI_AUTH_STATUSES.authenticated };
+  }
+
+  return { detail, status: AGENT_CLI_AUTH_STATUSES.unknown };
+}
+
+async function fileExists(path: string): Promise<boolean> {
+  try {
+    return (await stat(path)).isFile();
+  } catch {
+    return false;
+  }
+}
+
+function hasValue(value: string | undefined): boolean {
+  return value !== undefined && value.trim() !== '';
+}
+
+/** gemini: an API key in the env, or the cached login file's existence (never its contents). */
+async function probeGeminiAuthState(
+  env: NodeJS.ProcessEnv,
+): Promise<AgentCliAuthState> {
+  if (hasValue(env.GEMINI_API_KEY)) {
+    return {
+      detail: 'GEMINI_API_KEY is set',
+      status: AGENT_CLI_AUTH_STATUSES.authenticated,
+    };
+  }
+
+  if (hasValue(env.GOOGLE_API_KEY)) {
+    return {
+      detail: 'GOOGLE_API_KEY is set',
+      status: AGENT_CLI_AUTH_STATUSES.authenticated,
+    };
+  }
+
+  const home = env.HOME;
+
+  if (
+    hasValue(home) &&
+    (await fileExists(join(home ?? '', '.gemini', 'oauth_creds.json')))
+  ) {
+    return {
+      detail: 'Google login cached',
+      status: AGENT_CLI_AUTH_STATUSES.authenticated,
+    };
+  }
+
+  return { detail: null, status: AGENT_CLI_AUTH_STATUSES.unauthenticated };
+}
+
+/**
+ * Probe one CLI. The claude `auth status`, cursor `status` and gemini
+ * credential checks run concurrently with the version probe; their results are
+ * kept only when the binary is available. Every other entry has an unknown
+ * `authState` and `auth: null`. The auth probes never reject.
  */
 async function probeWithAuth(
   descriptor: AgentCliDescriptor,
@@ -292,6 +474,28 @@ async function probeWithAuth(
     modelListTimeoutMs,
   );
 
+  if (descriptor.backend === CURSOR_BACKEND) {
+    const [availability, authState] = await Promise.all([
+      availabilityPromise,
+      probeCursorAuthState(descriptor, env, probeTimeoutMs),
+    ]);
+
+    return availability.available
+      ? { ...availability, authState }
+      : availability;
+  }
+
+  if (descriptor.backend === GEMINI_BACKEND) {
+    const [availability, authState] = await Promise.all([
+      availabilityPromise,
+      probeGeminiAuthState(env),
+    ]);
+
+    return availability.available
+      ? { ...availability, authState }
+      : availability;
+  }
+
   if (descriptor.backend !== CLAUDE_BACKEND) {
     return availabilityPromise;
   }
@@ -305,13 +509,16 @@ async function probeWithAuth(
     }),
   ]);
 
-  return availability.available ? { ...availability, auth } : availability;
+  return availability.available
+    ? { ...availability, auth, authState: claudeAuthState(auth) }
+    : availability;
 }
 
 /**
  * Probe every allowlisted agent CLI for availability + per-driver models. For
  * claude it also reports the account, plan and active credential via
- * `claude auth status` (never reading tokens).
+ * `claude auth status` (never reading tokens); claude, cursor and gemini report
+ * a generic `authState`, and every entry reports its chat `capabilities`.
  *
  * @public
  */

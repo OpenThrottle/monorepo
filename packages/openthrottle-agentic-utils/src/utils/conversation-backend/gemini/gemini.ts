@@ -72,9 +72,10 @@ function resolveGeminiBin(env: NodeJS.ProcessEnv = process.env): string {
 /**
  * Build a minimal allowlisted environment for the spawned child. `extra` (the
  * run's `mcpEnv`) is merged on top: the host env stays allowlisted, and only
- * the explicit server-provided keys are admitted.
+ * the explicit server-provided keys are admitted. Shared with the ACP backend
+ * (`conversation-backend/acp`), which spawns the same binary.
  */
-function buildScrubbedEnv(
+export function buildGeminiEnv(
   env: NodeJS.ProcessEnv = process.env,
   extra?: Readonly<Record<string, string>>,
 ): NodeJS.ProcessEnv {
@@ -150,7 +151,7 @@ async function* streamGemini(
     }),
     {
       cwd: run.cwd,
-      env: buildScrubbedEnv(process.env, run.mcpEnv),
+      env: buildGeminiEnv(process.env, run.mcpEnv),
       stdio: ['pipe', 'pipe', 'pipe'],
     },
   );

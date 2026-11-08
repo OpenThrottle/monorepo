@@ -116,6 +116,7 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
         canRetry={composer?.canRetry}
         messages={messages}
         onPinnedChange={setIsPinned}
+        onRespondToPermission={composer?.onRespondToPermission}
         onRetry={composer?.onRetry}
         repinRef={repinRef}
       />

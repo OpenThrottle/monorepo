@@ -117,6 +117,10 @@ export interface ConversationStreamActionDocuments {
     unknown,
     { conversationId: string }
   >;
+  readonly respondPermissionDocument: TypedDocumentNode<
+    unknown,
+    { conversationId: string; optionId: string | null; requestId: string }
+  >;
   readonly startDocument: TypedDocumentNode<
     StartConversationStreamPayload,
     { input: ConversationStreamStartInput }
@@ -125,7 +129,8 @@ export interface ConversationStreamActionDocuments {
 
 /**
  * Build the `/resources/conversation-stream` action. `intent=cancel` cancels the
- * in-flight stream; otherwise it starts a turn via StartConversationStream
+ * in-flight stream; `intent=respond-permission` answers a pending permission
+ * request; otherwise it starts a turn via StartConversationStream
  * (reasoning / serviceTier / permissionMode / fileMentions are forwarded).
  * @public
  */
@@ -133,7 +138,9 @@ export function createConversationStreamAction(
   documents: ConversationStreamActionDocuments,
 ): (args: {
   request: Request;
-}) => Promise<ChatStartActionResult | { cancelled: boolean }> {
+}) => Promise<
+  ChatStartActionResult | { cancelled: boolean } | { responded: boolean }
+> {
   return async (args) => {
     const formData = await args.request.formData();
     const intent = formData.get('intent');
@@ -147,6 +154,24 @@ export function createConversationStreamAction(
       }
 
       return { cancelled: true };
+    }
+
+    if (intent === 'respond-permission') {
+      const conversationId = String(formData.get('conversationId') ?? '');
+      const requestId = String(formData.get('requestId') ?? '');
+      // An empty option id is the form encoding of "cancel".
+      const optionId = String(formData.get('optionId') ?? '') || null;
+      if (!conversationId || !requestId) {
+        return { responded: false };
+      }
+
+      await executeGraphqlWithAuth(
+        args.request,
+        documents.respondPermissionDocument,
+        { conversationId, optionId, requestId },
+      );
+
+      return { responded: true };
     }
 
     const input = buildStartConversationStreamInput(formData);

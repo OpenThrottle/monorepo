@@ -74,6 +74,53 @@ export class AgentCliAuthStatusObject {
 }
 
 @ObjectType()
+export class ChatBackendCapabilitiesObject {
+  @Field(() => Boolean, {
+    description: `Tool-use approvals surface to the user in supervised mode (true only on the ACP path).`,
+  })
+  approvals!: boolean;
+
+  @Field(() => Boolean, {
+    description: `The backend accepts image input in a prompt.`,
+  })
+  imageInput!: boolean;
+
+  @Field(() => Boolean, {
+    description: `The chat adapter injects the run's MCP servers (OT MCP) per run.`,
+  })
+  mcpInjection!: boolean;
+
+  @Field(() => Boolean, {
+    description: `The backend is handed the full message history every turn, so a backend handoff would duplicate it.`,
+  })
+  replaysFullHistory!: boolean;
+
+  @Field(() => Boolean, {
+    description: `A conversation resumes by backend session id across turns.`,
+  })
+  resume!: boolean;
+
+  @Field(() => Boolean, {
+    description: `The user can steer a turn that is already running.`,
+  })
+  steering!: boolean;
+}
+
+@ObjectType()
+export class AgentCliAuthStateObject {
+  @Field(() => String, {
+    description: `Short explanation of the state (e.g. the account or the credential source), or null. No credential contents are read.`,
+    nullable: true,
+  })
+  detail!: string | null;
+
+  @Field(() => String, {
+    description: `"authenticated", "unauthenticated", or "unknown" (the backend is not probed).`,
+  })
+  status!: string;
+}
+
+@ObjectType()
 export class AgentCliOptionObject {
   @Field(() => String, {
     description: `Backend discriminator (e.g. "cursor") used in StartConversationStreamInput.`,
@@ -85,6 +132,16 @@ export class AgentCliOptionObject {
     nullable: true,
   })
   auth!: AgentCliAuthStatusObject | null;
+
+  @Field(() => AgentCliAuthStateObject, {
+    description: `Generic login state for this backend: probed for claude, cursor and gemini (no credential contents are read); "unknown" for the rest.`,
+  })
+  authState!: AgentCliAuthStateObject;
+
+  @Field(() => ChatBackendCapabilitiesObject, {
+    description: `Behavioral capabilities of this backend's chat path (resume, approvals, steering, image input, MCP injection, full-history replay). Reflects OPENTHROTTLE_CHAT_ACP_BACKENDS. Read these instead of branching on the backend name.`,
+  })
+  capabilities!: ChatBackendCapabilitiesObject;
 
   @Field(() => Boolean, {
     description: `True when this CLI resolves the workspace's committed MCP config (.mcp.json / .cursor/mcp.json / opencode.json), so a run in this checkout can reach openthrottle-mcp. False for codex and gemini, which read only their own config scope (codex: user-scope config.toml; gemini: .gemini/settings.json, never .mcp.json) — for those, MCP reachability is a property of the host and cannot be verified from the workspace, so present it as unverifiable rather than as definitely missing. Distinct from emitting MCP flags: claude, grok, and opencode emit none yet attach fine.`,

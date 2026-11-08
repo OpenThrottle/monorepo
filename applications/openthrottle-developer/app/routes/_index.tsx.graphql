@@ -65,6 +65,18 @@ mutation CancelConversationStream($conversationId: ID!) {
   cancelConversationStream(conversationId: $conversationId)
 }
 
+mutation RespondToConversationPermission(
+  $conversationId: ID!
+  $optionId: String
+  $requestId: String!
+) {
+  respondToConversationPermission(
+    conversationId: $conversationId
+    optionId: $optionId
+    requestId: $requestId
+  )
+}
+
 subscription ConversationStreamChunkAdded($conversationId: ID!) {
   conversationStreamChunkAdded(conversationId: $conversationId) {
     conversationId

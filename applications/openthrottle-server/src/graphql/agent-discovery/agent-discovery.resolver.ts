@@ -48,7 +48,9 @@ export class AgentDiscoveryResolver {
         return {
           attachesWorkspaceMcp: agent.attachesWorkspaceMcp,
           auth: agent.auth,
+          authState: agent.authState,
           backend: agent.backend,
+          capabilities: agent.capabilities,
           chatCapable: agent.chatCapable,
           enabled: !agentDisabled,
           label: agent.label,

@@ -16,6 +16,7 @@
  * accepted-backend allowlist, and server routing all light up from there.
  */
 
+import { withAcpRouting } from './acp/index.ts';
 import { antigravityConversationBackend } from './antigravity/index.ts';
 import { claudeConversationBackend } from './claude/index.ts';
 import { codexConversationBackend } from './codex/index.ts';
@@ -28,7 +29,9 @@ import type { ConversationBackend } from './types.ts';
 /**
  * CLI streaming backends keyed by driver id (the `backend` discriminator).
  * openai is the default HTTP path and is intentionally NOT here — it is not a
- * driver-backed CLI backend.
+ * driver-backed CLI backend. Drivers with an ACP spec are wrapped in
+ * `withAcpRouting`, so `OPENTHROTTLE_CHAT_ACP_BACKENDS` can move their chat onto
+ * the ACP backend per turn without changing this map's keys.
  *
  * @public
  */
@@ -38,8 +41,8 @@ export const CONVERSATION_CLI_BACKENDS: Readonly<
   antigravity: antigravityConversationBackend,
   claude: claudeConversationBackend,
   codex: codexConversationBackend,
-  cursor: cursorAgentConversationBackend,
-  gemini: geminiConversationBackend,
+  cursor: withAcpRouting('cursor', cursorAgentConversationBackend),
+  gemini: withAcpRouting('gemini', geminiConversationBackend),
   grok: grokConversationBackend,
   opencode: opencodeConversationBackend,
 };

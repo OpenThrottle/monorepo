@@ -2,7 +2,9 @@
 # plan/task I/O domain (mirrors model-discovery.graphql). Surfaces the agentic
 # CLIs detected on the server host with their versions and per-driver models.
 # `auth` (claude only) reports the account, plan and active credential from
-# `claude auth status`, including the API-key-overrides-subscription warning.
+# `claude auth status`, including the API-key-overrides-subscription warning. `authState` is the generic
+# login state (claude, cursor, gemini probed) and `capabilities` the behavioral
+# capabilities of the backend's chat path.
 
 query discoverAgentClis {
   discoverAgentClis {
@@ -17,7 +19,19 @@ query discoverAgentClis {
         subscriptionType
         warning
       }
+      authState {
+        detail
+        status
+      }
       backend
+      capabilities {
+        approvals
+        imageInput
+        mcpInjection
+        replaysFullHistory
+        resume
+        steering
+      }
       chatCapable
       label
       models

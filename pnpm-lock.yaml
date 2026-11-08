@@ -164,6 +164,9 @@ settings:
 
 catalogs:
   default:
+    '@agentclientprotocol/sdk':
+      specifier: ^2.2.0
+      version: 2.2.0
     '@apollo/cache-control-types':
       specifier: ^1.0.3
       version: 1.0.3
@@ -2735,6 +2738,9 @@ importers:
 
   packages/openthrottle-agentic-utils:
     dependencies:
+      '@agentclientprotocol/sdk':
+        specifier: 'catalog:'
+        version: 2.2.0(zod@4.4.3)
       '@openthrottle/nodejs-utils':
         specifier: workspace:^
         version: link:../nodejs-utils
@@ -3848,6 +3854,15 @@ packages:
 
   '@adobe/css-tools@4.5.0':
     resolution: {integrity: sha512-6OzddxPio9UiWTCemp4N8cYLV2ZN1ncRnV1cVGtve7dhPOtRkleRyx32GQCYSwDYgaHU3USMm84tNsvKzRCa1Q==}
+
+  '@agentclientprotocol/sdk@2.2.0':
+    resolution: {integrity: sha512-o1+eDQVb05yzPY+5v54awHyONU1oeLsbLVavkwrMQaZDuJDh/38pQiXJS4ix4d6QA3Y4bU0lHFRjwg99KKKSaQ==}
+    peerDependencies:
+      '@modelcontextprotocol/server': ^2.4.0
+      zod: ^4.4.3
+    peerDependenciesMeta:
+      '@modelcontextprotocol/server':
+        optional: true
 
   '@angular-devkit/core@22.1.5':
     resolution: {integrity: sha512-HiY6d5dkIdJs5grP9OHvgkf14QOcDIo+hbuT7YKuLItQ++ZxCwUabJMLCCJ5R0KrstE5NqED0dNcyk5WD01t5Q==}
@@ -17233,6 +17248,10 @@ snapshots:
   '@acemir/cssom@0.9.31': {}
 
   '@adobe/css-tools@4.5.0': {}
+
+  '@agentclientprotocol/sdk@2.2.0(zod@4.4.3)':
+    dependencies:
+      zod: 4.4.3
 
   '@angular-devkit/core@22.1.5(chokidar@5.0.0)':
     dependencies:

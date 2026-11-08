@@ -4,6 +4,7 @@ import type {
   AgentConversationsService,
   AgentTokenUsageService,
 } from '@openthrottle/nestjs-repositories';
+import { agentConversationMessagesFactory } from '@openthrottle/nestjs-repositories/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -867,6 +868,28 @@ describe('ConversationStreamService', () => {
     expect(conversations.updateMetadata).not.toHaveBeenCalled();
   });
 
+  it('skips the create-chat mint when cursor chat is routed through ACP', async () => {
+    vi.stubEnv('OPENTHROTTLE_CHAT_ACP_BACKENDS', 'cursor');
+    cursorStreamMock.mockReturnValue(fakeStream(['hi']));
+    const { service } = buildService();
+
+    try {
+      await service.runStream({
+        ...baseRun,
+        backend: 'cursor',
+        cwd: '/repo',
+        provider: 'cursor',
+      });
+    } finally {
+      vi.unstubAllEnvs();
+    }
+
+    expect(createCursorAgentSessionMock).not.toHaveBeenCalled();
+    expect(cursorStreamMock.mock.calls[0]?.[0]).toMatchObject({
+      sessionId: undefined,
+    });
+  });
+
   it('surfaces a cursor mint failure as a terminal error chunk instead of hanging (no spawn)', async () => {
     createCursorAgentSessionMock.mockRejectedValue(new Error('auth expired'));
     const { service, publish } = buildService();
@@ -1134,5 +1157,76 @@ describe('ConversationStreamService.subscribe (replay buffer)', () => {
 
     expect(replayed).toContain('new');
     expect(replayed).not.toContain('old');
+  });
+
+  describe('seen-through watermark', () => {
+    const watermarkCalls = (
+      conversations: AgentConversationsService,
+    ): unknown[] => {
+      return vi
+        .mocked(conversations.updateMetadata)
+        .mock.calls.filter(
+          ([, patch]) => 'openaiSeenThroughSortOrder' in patch,
+        );
+    };
+
+    it('records the persisted assistant sortOrder after a successful turn', async () => {
+      openAiStreamMock.mockReturnValue(fakeStream(['ok']));
+      const { conversations, service } = buildService();
+      vi.mocked(conversations.appendMessages).mockResolvedValue([
+        agentConversationMessagesFactory.build({ sortOrder: 7 }),
+      ]);
+
+      await service.runStream(baseRun);
+
+      expect(conversations.updateMetadata).toHaveBeenCalledWith('conv-1', {
+        openaiSeenThroughSortOrder: 7,
+      });
+    });
+
+    it('does not record it when the stream fails', async () => {
+      async function* failing(): AsyncGenerator<{
+        delta: string;
+        done: boolean;
+        kind: string;
+      }> {
+        yield { delta: 'partial', done: false, kind: 'text' };
+        throw new Error('connection reset');
+      }
+      openAiStreamMock.mockReturnValue(failing());
+      const { conversations, service } = buildService();
+      vi.mocked(conversations.appendMessages).mockResolvedValue([
+        agentConversationMessagesFactory.build({ sortOrder: 7 }),
+      ]);
+
+      await service.runStream(baseRun);
+
+      expect(watermarkCalls(conversations)).toEqual([]);
+    });
+
+    it('does not record it in Private mode', async () => {
+      openAiStreamMock.mockReturnValue(fakeStream(['ok']));
+      const { conversations, service } = buildService();
+
+      await service.runStream({ ...baseRun, persist: false });
+
+      expect(watermarkCalls(conversations)).toEqual([]);
+    });
+
+    it('logs and swallows a watermark write failure', async () => {
+      openAiStreamMock.mockReturnValue(fakeStream(['ok']));
+      const { conversations, publish, service } = buildService();
+      vi.mocked(conversations.appendMessages).mockResolvedValue([
+        agentConversationMessagesFactory.build({ sortOrder: 7 }),
+      ]);
+      vi.mocked(conversations.updateMetadata).mockRejectedValue(
+        new Error('db down'),
+      );
+
+      await service.runStream(baseRun);
+
+      const last = publish.mock.calls.at(-1)?.[1].conversationStreamChunkAdded;
+      expect(last).toMatchObject({ done: true, error: null });
+    });
   });
 });

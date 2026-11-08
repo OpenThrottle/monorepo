@@ -23,13 +23,25 @@ vi.mock('@openthrottle/openthrottle-agentic-utils', async (importOriginal) => {
 
 const discoverAgentClisMock = vi.mocked(discoverAgentClis);
 
+const AUTH_STATE = { detail: null, status: 'unknown' } as const;
+const CAPABILITIES = {
+  approvals: false,
+  imageInput: false,
+  mcpInjection: false,
+  replaysFullHistory: false,
+  resume: true,
+  steering: false,
+} as const;
+
 const SNAPSHOT: AgentCliDiscoveryResult = {
   agents: [
     {
       attachesWorkspaceMcp: true,
       auth: null,
+      authState: AUTH_STATE,
       available: true,
       backend: 'cursor',
+      capabilities: CAPABILITIES,
       chatCapable: true,
       label: 'Cursor Agent',
       models: ['auto'],
@@ -39,8 +51,10 @@ const SNAPSHOT: AgentCliDiscoveryResult = {
     {
       attachesWorkspaceMcp: true,
       auth: null,
+      authState: AUTH_STATE,
       available: false,
       backend: 'claude',
+      capabilities: CAPABILITIES,
       chatCapable: true,
       label: 'Claude Code',
       models: [],

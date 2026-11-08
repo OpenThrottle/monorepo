@@ -13,14 +13,14 @@ Platform-specific prebuilt binaries (packages that declare `os`/`cpu`, e.g.
 `@rollup/rollup-linux-x64-gnu`, `fsevents`) are omitted: which ones install depends on
 the host OS, and each shares the license of the cross-platform toolchain already listed.
 
-**2136** third-party packages.
+**2137** third-party packages.
 
 ## License summary
 
 | License | Packages |
 | --- | --- |
 | MIT | 1840 |
-| Apache-2.0 | 95 |
+| Apache-2.0 | 96 |
 | ISC | 80 |
 | BSD-3-Clause | 59 |
 | BSD-2-Clause | 26 |
@@ -50,6 +50,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | --- | --- | --- | --- |
 | `@acemir/cssom` | 0.9.31 | MIT | [Nikita Vasilyev](https://github.com/acemir/CSSOM#readme) |
 | `@adobe/css-tools` | 4.5.0 | MIT | [TJ Holowaychuk](https://github.com/adobe/css-tools#readme) |
+| `@agentclientprotocol/sdk` | 2.2.0 | Apache-2.0 | [Zed Industries](https://github.com/agentclientprotocol/typescript-sdk#readme) |
 | `@angular-devkit/core` | 22.1.5 | MIT | [Angular Authors](https://github.com/angular/angular-cli) |
 | `@angular-devkit/schematics` | 22.1.5 | MIT | [Angular Authors](https://github.com/angular/angular-cli) |
 | `@angular-devkit/schematics-cli` | 22.1.5 | MIT | [Angular Authors](https://github.com/angular/angular-cli) |

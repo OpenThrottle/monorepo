@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { Route } from '@/app/routes/+types/resources.conversation-stream';
 import {
   CancelConversationStreamDocument,
+  RespondToConversationPermissionDocument,
   StartConversationStreamDocument,
 } from '~/__generated__/graphql';
 
@@ -82,5 +83,28 @@ describe('routes/resources.conversation-stream action (admin)', () => {
       { conversationId: 'c1' },
     );
     expect(result).toEqual({ cancelled: true });
+  });
+
+  test('respond-permission forwards the chosen option, and an empty one as null', async () => {
+    mockGraphql.mockResolvedValue({ respondToConversationPermission: true });
+
+    const result = await action(
+      createActionArgs<Route.ActionArgs>({
+        body: {
+          conversationId: 'c1',
+          intent: 'respond-permission',
+          optionId: '',
+          requestId: 'r1',
+        },
+        url: 'http://localhost/resources/conversation-stream',
+      }),
+    );
+
+    expect(mockGraphql).toHaveBeenCalledWith(
+      expect.anything(),
+      RespondToConversationPermissionDocument,
+      { conversationId: 'c1', optionId: null, requestId: 'r1' },
+    );
+    expect(result).toEqual({ responded: true });
   });
 });

@@ -6,6 +6,7 @@ import {
 import type { Route } from '@/app/routes/+types/resources.conversation-stream';
 import {
   CancelConversationStreamDocument,
+  RespondToConversationPermissionDocument,
   StartConversationStreamDocument,
 } from '~/__generated__/graphql';
 
@@ -17,9 +18,12 @@ import {
  */
 export const action = (
   args: Route.ActionArgs,
-): Promise<ChatStartActionResult | { cancelled: boolean }> => {
+): Promise<
+  ChatStartActionResult | { cancelled: boolean } | { responded: boolean }
+> => {
   return createConversationStreamAction({
     cancelDocument: CancelConversationStreamDocument,
+    respondPermissionDocument: RespondToConversationPermissionDocument,
     startDocument: StartConversationStreamDocument,
   })(args);
 };

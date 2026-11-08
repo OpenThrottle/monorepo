@@ -7,6 +7,16 @@ vi.mock('@openthrottle/nodejs-graphql', () => ({
   executeGraphql: vi.fn(),
 }));
 
+const AUTH_STATE = { detail: null, status: 'unknown' };
+const CAPABILITIES = {
+  approvals: false,
+  imageInput: false,
+  mcpInjection: false,
+  replaysFullHistory: false,
+  resume: true,
+  steering: false,
+};
+
 describe('discoverAgentClisToolHandler', () => {
   beforeEach(() => {
     vi.mocked(executeGraphql).mockReset();
@@ -18,7 +28,9 @@ describe('discoverAgentClisToolHandler', () => {
         agents: [
           {
             auth: null,
+            authState: AUTH_STATE,
             backend: 'cursor',
+            capabilities: CAPABILITIES,
             chatCapable: true,
             label: 'cursor-agent',
             models: ['auto', 'gpt-5.2'],
@@ -26,7 +38,9 @@ describe('discoverAgentClisToolHandler', () => {
           },
           {
             auth: null,
+            authState: AUTH_STATE,
             backend: 'codex',
+            capabilities: CAPABILITIES,
             chatCapable: false,
             label: 'codex',
             models: [],
@@ -51,6 +65,7 @@ describe('discoverAgentClisToolHandler', () => {
         agents: [
           {
             backend: 'cursor',
+            capabilities: CAPABILITIES,
             chatCapable: true,
             models: ['auto', 'gpt-5.2'],
             version: '2026.07.23',
@@ -84,7 +99,9 @@ describe('discoverAgentClisToolHandler', () => {
         agents: [
           {
             auth,
+            authState: AUTH_STATE,
             backend: 'claude',
+            capabilities: CAPABILITIES,
             chatCapable: true,
             label: 'Claude Code',
             models: ['opus'],
@@ -108,6 +125,45 @@ describe('discoverAgentClisToolHandler', () => {
     expect(content.text).toContain('dev@example.com, team');
     expect(content.text).toContain('WARNING (Claude Code)');
     expect(content.text).toContain(auth.warning);
+  });
+
+  it('maps authState and capabilities into the structured output', async () => {
+    const authState = {
+      detail: 'Logged in as dev@example.com',
+      status: 'authenticated',
+    };
+    const capabilities = {
+      approvals: true,
+      imageInput: true,
+      mcpInjection: true,
+      replaysFullHistory: false,
+      resume: true,
+      steering: false,
+    };
+    vi.mocked(executeGraphql).mockResolvedValue({
+      discoverAgentClis: {
+        agents: [
+          {
+            auth: null,
+            authState,
+            backend: 'cursor',
+            capabilities,
+            chatCapable: true,
+            label: 'cursor-agent',
+            models: [],
+            version: '1',
+          },
+        ],
+        scannedAt: '2026-07-28T00:00:00.000Z',
+        totalCount: 1,
+      },
+    });
+
+    const result = await discoverAgentClisToolHandler({});
+
+    expect(result).toMatchObject({
+      structuredContent: { agents: [{ authState, capabilities }] },
+    });
   });
 
   it('reports no agent CLIs found for an empty result', async () => {

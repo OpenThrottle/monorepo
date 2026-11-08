@@ -104,6 +104,7 @@ describe('CONVERSATION_STREAM_CHUNK_KINDS', () => {
   it('maps each kind to its snake_case wire value', () => {
     expect(CONVERSATION_STREAM_CHUNK_KINDS).toEqual({
       keepalive: 'keepalive',
+      permissionRequest: 'permission_request',
       session: 'session',
       text: 'text',
       thinking: 'thinking',
@@ -114,10 +115,10 @@ describe('CONVERSATION_STREAM_CHUNK_KINDS', () => {
     });
   });
 
-  it('has exactly eight distinct kinds', () => {
+  it('has exactly nine distinct kinds', () => {
     const values = Object.values(CONVERSATION_STREAM_CHUNK_KINDS);
-    expect(values).toHaveLength(8);
-    expect(new Set(values).size).toBe(8);
+    expect(values).toHaveLength(9);
+    expect(new Set(values).size).toBe(9);
   });
 });
 

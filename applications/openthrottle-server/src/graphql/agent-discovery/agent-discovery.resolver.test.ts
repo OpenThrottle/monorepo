@@ -19,13 +19,25 @@ import type { AgentDiscoveryService } from './agent-discovery.service.ts';
 
 const human: AuthPrincipal = { kind: AUTH_PRINCIPAL_KIND_USER, sub: 'user-1' };
 
+const AUTH_STATE = { detail: null, status: 'unknown' } as const;
+const CAPABILITIES = {
+  approvals: false,
+  imageInput: false,
+  mcpInjection: false,
+  replaysFullHistory: false,
+  resume: true,
+  steering: false,
+} as const;
+
 const SNAPSHOT: AgentCliDiscoveryResult = {
   agents: [
     {
       attachesWorkspaceMcp: true,
       auth: null,
+      authState: AUTH_STATE,
       available: true,
       backend: 'cursor',
+      capabilities: CAPABILITIES,
       chatCapable: true,
       label: 'Cursor Agent',
       models: ['auto', 'gpt-5.2'],
@@ -35,8 +47,10 @@ const SNAPSHOT: AgentCliDiscoveryResult = {
     {
       attachesWorkspaceMcp: true,
       auth: null,
+      authState: AUTH_STATE,
       available: false,
       backend: 'claude',
+      capabilities: CAPABILITIES,
       chatCapable: true,
       label: 'Claude Code',
       models: [],
@@ -46,8 +60,10 @@ const SNAPSHOT: AgentCliDiscoveryResult = {
     {
       attachesWorkspaceMcp: true,
       auth: null,
+      authState: AUTH_STATE,
       available: true,
       backend: 'opencode',
+      capabilities: CAPABILITIES,
       chatCapable: true,
       label: 'OpenCode',
       models: ['opencode/big-pickle'],
@@ -82,7 +98,9 @@ describe('AgentDiscoveryResolver', () => {
       {
         attachesWorkspaceMcp: true,
         auth: null,
+        authState: AUTH_STATE,
         backend: 'cursor',
+        capabilities: CAPABILITIES,
         chatCapable: true,
         enabled: true,
         label: 'Cursor Agent',
@@ -97,7 +115,9 @@ describe('AgentDiscoveryResolver', () => {
       {
         attachesWorkspaceMcp: true,
         auth: null,
+        authState: AUTH_STATE,
         backend: 'opencode',
+        capabilities: CAPABILITIES,
         chatCapable: true,
         enabled: true,
         label: 'OpenCode',
@@ -132,6 +152,30 @@ describe('AgentDiscoveryResolver', () => {
     const result = await resolver.discoverAgentClis(human);
 
     expect(result.agents[0]?.auth).toEqual(auth);
+  });
+
+  it('passes capabilities and authState through for each agent', async () => {
+    const authState = {
+      detail: 'dev@example.com',
+      status: 'authenticated',
+    } as const;
+    const capabilities = {
+      approvals: true,
+      imageInput: true,
+      mcpInjection: true,
+      replaysFullHistory: false,
+      resume: true,
+      steering: false,
+    } as const;
+    vi.mocked(service.discover).mockResolvedValue({
+      agents: [{ ...SNAPSHOT.agents[0]!, authState, capabilities }],
+      scannedAt: SNAPSHOT.scannedAt,
+    });
+
+    const result = await resolver.discoverAgentClis(human);
+
+    expect(result.agents[0]?.authState).toEqual(authState);
+    expect(result.agents[0]?.capabilities).toEqual(capabilities);
   });
 
   it('overlays per-model disabled + favorite state into modelOptions, and an agent-OFF forces every model disabled', async () => {
@@ -187,8 +231,10 @@ describe('AgentDiscoveryResolver', () => {
         {
           attachesWorkspaceMcp: true,
           auth: null,
+          authState: AUTH_STATE,
           available: false,
           backend: 'cursor',
+          capabilities: CAPABILITIES,
           chatCapable: true,
           label: 'Cursor Agent',
           models: [],

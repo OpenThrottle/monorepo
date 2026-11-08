@@ -1,4 +1,10 @@
-import { chmodSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  chmodSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -327,5 +333,130 @@ describe('discoverAgentClis', () => {
     expect(
       result.agents.find((agent) => agent.backend === 'opencode')?.available,
     ).toBe(false);
+  });
+});
+
+/** A fake cursor-agent: `status` prints `statusOut` and exits `statusCode`. */
+function writeCursorBin(statusOut: string, statusCode: number): string {
+  const path = join(dir, `cursor-${statusCode}-${statusOut.length}`);
+  const body = [
+    'const a = process.argv.slice(2);',
+    `if (a[0] === 'status') { process.stdout.write(${JSON.stringify(statusOut)}); process.exit(${statusCode}); }`,
+    `else { process.stdout.write('2026.11.05\\n'); }`,
+  ].join('\n');
+  writeFileSync(path, `#!/usr/bin/env node\n${body}\n`, 'utf8');
+  chmodSync(path, 0o755);
+  return path;
+}
+
+describe('discoverAgentClis authState and capabilities', () => {
+  it('reports capabilities per backend, following the ACP flag', async () => {
+    const bin = writeFakeBin('cursor-caps', '2026.11.05\n');
+    const base = await discoverAgentClis({
+      env: hermeticEnv({ [CURSOR_AGENT_BIN_ENV]: bin }),
+    });
+    const acp = await discoverAgentClis({
+      env: hermeticEnv({
+        [CURSOR_AGENT_BIN_ENV]: bin,
+        OPENTHROTTLE_CHAT_ACP_BACKENDS: 'cursor',
+      }),
+    });
+
+    const pick = (result: typeof base) => {
+      return result.agents.find((agent) => agent.backend === 'cursor')
+        ?.capabilities;
+    };
+
+    expect(pick(base)).toMatchObject({ approvals: false, resume: true });
+    expect(pick(acp)).toMatchObject({
+      approvals: true,
+      imageInput: true,
+      mcpInjection: true,
+    });
+  });
+
+  it('marks cursor authenticated when `status` says Logged in', async () => {
+    const bin = writeCursorBin('Logged in as dev@example.com\n', 0);
+    const result = await discoverAgentClis({
+      env: hermeticEnv({ [CURSOR_AGENT_BIN_ENV]: bin }),
+    });
+
+    expect(
+      result.agents.find((agent) => agent.backend === 'cursor')?.authState,
+    ).toEqual({
+      detail: 'Logged in as dev@example.com',
+      status: 'authenticated',
+    });
+  });
+
+  it('marks cursor unauthenticated on "Not logged in"', async () => {
+    const bin = writeCursorBin('Not logged in\n', 0);
+    const result = await discoverAgentClis({
+      env: hermeticEnv({ [CURSOR_AGENT_BIN_ENV]: bin }),
+    });
+
+    expect(
+      result.agents.find((agent) => agent.backend === 'cursor')?.authState
+        .status,
+    ).toBe('unauthenticated');
+  });
+
+  it('marks cursor unauthenticated when `status` exits non-zero', async () => {
+    const bin = writeCursorBin('', 1);
+    const result = await discoverAgentClis({
+      env: hermeticEnv({ [CURSOR_AGENT_BIN_ENV]: bin }),
+    });
+
+    expect(
+      result.agents.find((agent) => agent.backend === 'cursor')?.authState
+        .status,
+    ).toBe('unauthenticated');
+  });
+
+  it('derives the claude authState from `claude auth status`', async () => {
+    const bin = writeAuthBin('claude-auth-state', {
+      email: 'dev@example.com',
+      loggedIn: true,
+    });
+    const result = await discoverAgentClis({
+      env: hermeticEnv({ [CLAUDE_BIN_ENV]: bin }),
+    });
+
+    expect(
+      result.agents.find((agent) => agent.backend === 'claude')?.authState,
+    ).toEqual({ detail: 'dev@example.com', status: 'authenticated' });
+  });
+
+  it('reports gemini authenticated from an API key, a cached login, else unauthenticated', async () => {
+    const bin = writeFakeBin('gemini-auth', '0.25.2\n');
+    const home = mkdtempSync(join(dir, 'home-'));
+    const gemini = (overrides: Record<string, string>) => {
+      return discoverAgentClis({
+        env: hermeticEnv({ [GEMINI_BIN_ENV]: bin, HOME: home, ...overrides }),
+      }).then(
+        (result) =>
+          result.agents.find((agent) => agent.backend === 'gemini')?.authState
+            .status,
+      );
+    };
+
+    expect(await gemini({})).toBe('unauthenticated');
+    expect(await gemini({ GEMINI_API_KEY: 'k' })).toBe('authenticated');
+    expect(await gemini({ GOOGLE_API_KEY: 'k' })).toBe('authenticated');
+
+    mkdirSync(join(home, '.gemini'));
+    writeFileSync(join(home, '.gemini', 'oauth_creds.json'), '{}', 'utf8');
+    expect(await gemini({})).toBe('authenticated');
+  });
+
+  it('reports unknown with no detail for backends that are not probed', async () => {
+    const bin = writeFakeBin('opencode-auth', '1.18.5\n');
+    const result = await discoverAgentClis({
+      env: hermeticEnv({ [OPENCODE_BIN_ENV]: bin }),
+    });
+
+    expect(
+      result.agents.find((agent) => agent.backend === 'opencode')?.authState,
+    ).toEqual({ detail: null, status: 'unknown' });
   });
 });

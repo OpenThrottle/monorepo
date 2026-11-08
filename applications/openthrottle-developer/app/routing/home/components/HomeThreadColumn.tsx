@@ -67,6 +67,7 @@ export const HomeThreadColumn = (
         getScrollElement={getGlobalScrollElement}
         messages={turn.messages}
         onPinnedChange={setIsPinned}
+        onRespondToPermission={turn.onRespondToPermission}
         onRetry={turn.onRetry}
         repinRef={repinRef}
       />

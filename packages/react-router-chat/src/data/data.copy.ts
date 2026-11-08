@@ -25,3 +25,11 @@ export const CHAT_CHECKOUT_ROW_COPY = {
   primary: 'Primary',
   worktree: 'Worktree',
 } as const;
+
+/** Copy for {@link ChatPermissionRequest}. */
+export const CHAT_PERMISSION_REQUEST_COPY = {
+  cancelled: 'Cancelled',
+  dismiss: 'Dismiss',
+  heading: 'Permission requested',
+  selectedPrefix: 'Answered:',
+} as const;
