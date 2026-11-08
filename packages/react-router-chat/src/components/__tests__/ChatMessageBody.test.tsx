@@ -20,6 +20,13 @@ import { ChatMessageBody } from '../ChatMessageBody';
  */
 const LAZY_RENDERER_TIMEOUT_MS = 10_000;
 
+/**
+ * The preload below transforms the whole `react-router-shadcn` barrel, which
+ * has overrun Vitest's 15s `hookTimeout` on a contended CI shard. It is
+ * transform-bound, not a hang, so it gets its own budget.
+ */
+const PRELOAD_TIMEOUT_MS = 60_000;
+
 describe('ChatMessageBody Component', () => {
   let component: RenderResult;
   let props: ChatMessageBodyProps;
@@ -31,7 +38,7 @@ describe('ChatMessageBody Component', () => {
   // here and keep the `findBy` waits measuring the render, not module loading.
   beforeAll(async () => {
     await import('@openthrottle/react-router-markdown');
-  });
+  }, PRELOAD_TIMEOUT_MS);
 
   const renderBody = (p: ChatMessageBodyProps): RenderResult => {
     const Comp = () => {

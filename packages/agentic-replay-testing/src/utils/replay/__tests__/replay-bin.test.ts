@@ -69,9 +69,19 @@ const run = (
   });
   let stdout = '';
   let stderr = '';
+  // One signal, like a backend aborting a turn. Killing on every chunk races
+  // the child's exit: a second SIGTERM landing after its handlers are torn
+  // down kills it by signal (`code: null`), which CI load made flaky.
+  let killed = false;
+  const kill = (): void => {
+    if (!killed) {
+      killed = true;
+      child.kill('SIGTERM');
+    }
+  };
   child.stdout.on('data', (data: Buffer) => {
     stdout += data.toString('utf8');
-    options.onStdout?.(() => child.kill('SIGTERM'));
+    options.onStdout?.(kill);
   });
   child.stderr.on('data', (data: Buffer) => {
     stderr += data.toString('utf8');
