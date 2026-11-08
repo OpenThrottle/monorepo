@@ -23,6 +23,9 @@ import {
 } from '../replay-bin.ts';
 import { replayFixture } from '../replay-fixture.ts';
 
+/** ~1 MB of stdout: enough to outlast a 64 KB pipe buffer many times over. */
+const LONG_RECORDING_LINES = 30_000;
+
 let dir: string;
 let installed: ReplayBin[];
 
@@ -200,7 +203,16 @@ describe('the replay bin', () => {
 
   describe('when a CLI that exited normally is signalled mid-replay', () => {
     it('still replays the whole recording and its exit code', async () => {
-      const replay = install({ ...TRANSCRIPT, argv: ['go'] });
+      // Far past a pipe buffer, so the bin is provably still writing when the
+      // signal lands. A two-line recording can finish and start exiting first,
+      // and a signal during exit kills any process — that race is not the bin's.
+      const stdout = Array.from(
+        { length: LONG_RECORDING_LINES },
+        (_, index) => {
+          return `{"type":"line","index":${index}}`;
+        },
+      );
+      const replay = install({ ...TRANSCRIPT, argv: ['go'], stdout });
 
       const result = await run(replay.bin, ['go'], {
         onStdout: (kill) => kill(),
@@ -209,7 +221,7 @@ describe('the replay bin', () => {
       expect(result).toEqual({
         code: 0,
         stderr: 'warned\n',
-        stdout: '{"type":"a"}\n{"type":"b"}\n',
+        stdout: `${stdout.join('\n')}\n`,
       });
     });
   });
