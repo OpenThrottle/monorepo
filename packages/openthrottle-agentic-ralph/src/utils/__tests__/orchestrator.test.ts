@@ -1056,6 +1056,115 @@ describe('createWorkflowRalphOrchestrator control parsing', () => {
     });
   });
 
+  describe('a failure marker never strands the task or plan IN_PROGRESS', () => {
+    const runWith = async (
+      output: string,
+      mode: 'plan' | 'task' = 'plan',
+    ): Promise<{
+      readonly planUpdates: readonly string[];
+      readonly result: Awaited<
+        ReturnType<
+          ReturnType<typeof createWorkflowRalphOrchestrator>['execute']
+        >
+      >;
+      readonly taskUpdates: ReadonlyArray<{ id: string; status: string }>;
+    }> => {
+      let taskStatus = 'PENDING';
+      const planUpdates: string[] = [];
+      const taskUpdates: Array<{ id: string; status: string }> = [];
+      const executeGraphqlV2 = asExecuteGraphqlV2(
+        async (document, variables) => {
+          if (document === GetServerHealthDocument) {
+            return { serverHealth: serverHealthOk };
+          }
+          if (document === GetPlanDocument) {
+            return { plan: basePlan() };
+          }
+          if (document === GetTaskDocument) {
+            return { task: baseTask(TASK_A, taskStatus) };
+          }
+          if (document === GetTasksByPlanIdDocument) {
+            return { tasksByPlanId: [baseTask(TASK_A, taskStatus)] };
+          }
+          if (document === UpdatePlanDocument) {
+            const input = readUpdateInput(variables);
+            planUpdates.push(input.status);
+            return { updatePlan: basePlan({ status: input.status }) };
+          }
+          if (document === UpdateTaskDocument) {
+            const input = readUpdateInput(variables);
+            taskStatus = input.status;
+            taskUpdates.push({ id: input.id ?? '', status: input.status });
+            return { updateTask: baseTask(TASK_A, input.status) };
+          }
+          if (document === AppendPlanOutputDocument) {
+            return { appendPlanOutput: null };
+          }
+          throw new Error('unmocked GraphQL document in test');
+        },
+      );
+      const orchestrator = createWorkflowRalphOrchestrator({
+        executeGraphqlV2,
+        iterationRunner: { run: vi.fn(async () => output) },
+      });
+      const taskContext = {
+        ...baseContext,
+        mode: 'task' as const,
+        taskId: TASK_A,
+      };
+      const isTaskMode = mode === 'task';
+      const context = isTaskMode ? taskContext : { ...baseContext };
+      const result = await orchestrator.execute({ context });
+
+      return { planUpdates, result, taskUpdates };
+    };
+
+    it('ERROR resets the task to PENDING and settles the plan BLOCKED', async () => {
+      const { planUpdates, result, taskUpdates } = await runWith(
+        '<promise>ERROR</promise>',
+      );
+
+      expect(result.reason).toBe('workflow_agent_error');
+      expect(taskUpdates).toEqual([
+        { id: TASK_A, status: 'IN_PROGRESS' },
+        { id: TASK_A, status: 'PENDING' },
+      ]);
+      expect(planUpdates.at(-1)).toBe('BLOCKED');
+    });
+
+    it('ERROR leaves a task the same iteration completed COMPLETED', async () => {
+      const { planUpdates, result, taskUpdates } = await runWith(
+        `<ralph:task-complete>${TASK_A}</ralph:task-complete><promise>ERROR</promise>`,
+      );
+
+      expect(result.reason).toBe('workflow_agent_error');
+      expect(taskUpdates.at(-1)).toEqual({ id: TASK_A, status: 'COMPLETED' });
+      // Nothing is left, so the plan closes rather than blocking.
+      expect(planUpdates.at(-1)).toBe('COMPLETED');
+    });
+
+    it('INPUT_REQUIRED blocks the task and settles the plan BLOCKED', async () => {
+      const { planUpdates, result, taskUpdates } = await runWith(
+        '<promise>INPUT_REQUIRED</promise>',
+      );
+
+      expect(result.reason).toBe('workflow_input_required');
+      expect(taskUpdates.at(-1)).toEqual({ id: TASK_A, status: 'BLOCKED' });
+      expect(planUpdates.at(-1)).toBe('BLOCKED');
+    });
+
+    it('a task-centric ERROR resets its task and leaves the plan alone', async () => {
+      const { planUpdates, result, taskUpdates } = await runWith(
+        '<promise>ERROR</promise>',
+        'task',
+      );
+
+      expect(result.reason).toBe('workflow_agent_error');
+      expect(taskUpdates.at(-1)).toEqual({ id: TASK_A, status: 'PENDING' });
+      expect(planUpdates).not.toContain('BLOCKED');
+    });
+  });
+
   it('fails with workflow_input_required when the agent emits INPUT_REQUIRED', async () => {
     const run = vi.fn(async () => '<promise>INPUT_REQUIRED</promise>');
     const iterationRunner: WorkflowRalphIterationRunner = { run };

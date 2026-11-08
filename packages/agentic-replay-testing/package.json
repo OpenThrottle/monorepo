@@ -52,10 +52,10 @@
         "cache": false,
         "executor": "nx:run-commands",
         "metadata": {
-          "description": "Record replay transcripts against the locally installed agent CLI (spends real tokens). Pass --backend <id> and optionally --scenario <slug,\u2026>. stdin is closed: the drivers engine inherits it, and claude stalls 3s on an idle stdin pipe, which would otherwise be baked into every plan-run transcript."
+          "description": "Record replay transcripts against the locally installed agent CLI (spends real tokens). Pass --backend <id> and optionally --scenario <slug,\u2026>."
         },
         "options": {
-          "command": "pnpm exec tsx packages/agentic-replay-testing/scripts/record.ts < /dev/null",
+          "command": "pnpm exec tsx packages/agentic-replay-testing/scripts/record.ts",
           "cwd": "{workspaceRoot}"
         }
       },

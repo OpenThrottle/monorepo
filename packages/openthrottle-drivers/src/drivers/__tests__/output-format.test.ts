@@ -51,7 +51,7 @@ describe('structured output', () => {
   describe('flag placement', () => {
     it('puts --json right after `codex exec`', () => {
       expect(codexDriver.buildShellCommand(structured)).toMatch(
-        /^codex exec --json --sandbox workspace-write /,
+        /^codex exec --json --sandbox workspace-write --skip-git-repo-check /,
       );
     });
 

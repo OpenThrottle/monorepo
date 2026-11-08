@@ -24,19 +24,19 @@ const config = (
 describe('codex driver', () => {
   it('builds the base exec command with a workspace-write sandbox', () => {
     expect(codexDriver.buildShellCommand(config())).toBe(
-      'codex exec --sandbox workspace-write "fix it"',
+      'codex exec --sandbox workspace-write --skip-git-repo-check "fix it"',
     );
   });
 
   it('places --model before the positional prompt', () => {
     expect(codexDriver.buildShellCommand(config({ model: 'o3' }))).toBe(
-      'codex exec --sandbox workspace-write --model o3 "fix it"',
+      'codex exec --sandbox workspace-write --skip-git-repo-check --model o3 "fix it"',
     );
   });
 
   it('omits --model when unset or auto', () => {
     expect(codexDriver.buildShellCommand(config({ model: 'auto' }))).toBe(
-      'codex exec --sandbox workspace-write "fix it"',
+      'codex exec --sandbox workspace-write --skip-git-repo-check "fix it"',
     );
   });
 
@@ -46,14 +46,16 @@ describe('codex driver', () => {
         config({ model: 'm; rm -rf ~', prompt: 'run $(id)' }),
       ),
     ).toBe(
-      'codex exec --sandbox workspace-write --model "m; rm -rf ~" "run \\$(id)"',
+      'codex exec --sandbox workspace-write --skip-git-repo-check --model "m; rm -rf ~" "run \\$(id)"',
     );
   });
 
   it('ignores worktree options (no worktree capability)', () => {
     expect(
       codexDriver.buildShellCommand(config({ worktree: { worktree: 'wt' } })),
-    ).toBe('codex exec --sandbox workspace-write "fix it"');
+    ).toBe(
+      'codex exec --sandbox workspace-write --skip-git-repo-check "fix it"',
+    );
   });
 
   it('targets a fingerprinted local endpoint via --oss + base_url override', () => {
@@ -68,7 +70,7 @@ describe('codex driver', () => {
         }),
       ),
     ).toBe(
-      'codex exec --sandbox workspace-write --oss --local-provider ollama -c "model_providers.oss.base_url=\\"http://localhost:11434/v1\\"" --model llama3 "fix it"',
+      'codex exec --sandbox workspace-write --skip-git-repo-check --oss --local-provider ollama -c "model_providers.oss.base_url=\\"http://localhost:11434/v1\\"" --model llama3 "fix it"',
     );
   });
 
@@ -78,7 +80,7 @@ describe('codex driver', () => {
         config({ endpoint: { baseUrl: 'http://h:1/v1', provider: null } }),
       ),
     ).toBe(
-      'codex exec --sandbox workspace-write --oss --local-provider ollama -c "model_providers.oss.base_url=\\"http://h:1/v1\\"" "fix it"',
+      'codex exec --sandbox workspace-write --skip-git-repo-check --oss --local-provider ollama -c "model_providers.oss.base_url=\\"http://h:1/v1\\"" "fix it"',
     );
   });
 

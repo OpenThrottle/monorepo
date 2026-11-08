@@ -105,7 +105,7 @@ describe('runDriverSync', () => {
     });
   };
 
-  it('builds the command from the driver and runs it with shell + piped stdio', () => {
+  it('builds the command from the driver and runs it with shell, no stdin, piped output', () => {
     mockReturn('done', '');
     const result = runDriverSync(testDriver, { iteration: 1, prompt: 'hi' });
 
@@ -116,7 +116,7 @@ describe('runDriverSync', () => {
     expect(args).toEqual([]);
     expect(opts).toMatchObject({
       shell: true,
-      stdio: ['inherit', 'pipe', 'pipe'],
+      stdio: ['ignore', 'pipe', 'pipe'],
     });
   });
 
@@ -226,6 +226,10 @@ describe('runDriverAsync', () => {
       { data: 'err', stream: 'stderr' },
     ]);
     expect(vi.mocked(spawn).mock.calls[0]?.[0]).toBe('echo-driver -p "go"');
+    // Never inherit the host's stdin: an idle inherited pipe stalls claude 3s per run.
+    expect(vi.mocked(spawn).mock.calls[0]?.[2]).toMatchObject({
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
   });
 
   describe('renderOutputLine live rendering', () => {

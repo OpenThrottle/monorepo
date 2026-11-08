@@ -3,10 +3,11 @@
  * via `OPENTHROTTLE_OPENCODE_BIN`. opencode mints `ses_…` ids (not UUIDs, so
  * left literal by the sanitizer); the resume turn gets it from turn 1.
  *
- * No permission-denied transcript: the supervised posture let the write
- * through, so the recorder refused it (a filed follow-up). No plan-run
- * transcripts: on the recording account the plan-run driver's default model
- * is gated behind a provider form, which records nothing but that error.
+ * permission-denied was recorded with `opencode/big-pickle`: on the recording
+ * host the account default model was unavailable. Supervised writes
+ * `edit`/`bash: ask` into the temp config, which a headless run auto-rejects.
+ * The opencode plan-run transcripts (same model, same reason) are replayed in
+ * ralph.replay.test.ts.
  */
 
 import { CONVERSATION_STREAM_CHUNK_KINDS as KINDS } from '@openthrottle/openthrottle-agentic-utils';
@@ -15,6 +16,7 @@ import { describe, expect, it } from 'vitest';
 import { OPENCODE_RECORDING_PROFILE, replayFixturePath } from '../src/index.ts';
 import {
   countOf,
+  ofKind,
   replayStrict,
   terminal,
   textOf,
@@ -42,6 +44,17 @@ describe('opencode replay', () => {
     expect(countOf(tool.chunks, KINDS.toolResult)).toBe(1);
     expect(countOf(multi.chunks, KINDS.toolResult)).toBe(2);
     expect(textOf(edits.chunks)).toBe('done.');
+  });
+
+  it('permission-denied rejects the write as an error tool result', async () => {
+    const { chunks } = await replay(
+      replayFixturePath('opencode', 'permission-denied'),
+    );
+    const results = ofKind(chunks, KINDS.toolResult);
+
+    expect(countOf(chunks, KINDS.toolCall)).toBe(1);
+    expect(results.map((chunk) => chunk.metadata?.isError)).toEqual([true]);
+    expect(terminal(chunks)?.error ?? null).toBeNull();
   });
 
   it('error surfaces the non-zero exit', async () => {

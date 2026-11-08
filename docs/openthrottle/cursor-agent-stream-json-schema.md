@@ -19,20 +19,21 @@ Chat path (`argv.ts`, `buildCursorAgentArgv`), spawned without a shell:
 
 ```
 cursor-agent --print --output-format stream-json --stream-partial-output \
-  --workspace <cwd> --trust --resume <chat-id> [--force] [--model <id>] -- "<prompt>"
+  --workspace <cwd> --trust --resume <chat-id> (--force | --mode ask) [--model <id>] -- "<prompt>"
 ```
 
-| Flag                          | Meaning                                                                                                 |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `--print`                     | Headless mode.                                                                                          |
-| `--output-format stream-json` | NDJSON event stream (this doc).                                                                         |
-| `--stream-partial-output`     | Emit incremental deltas (events carrying `timestamp_ms`). Chat only.                                    |
-| `--workspace <cwd>`           | Workspace directory (also the spawn cwd).                                                               |
-| `--trust`                     | Always on; the workspace is a registered, ownership-checked checkout.                                   |
-| `--resume <chat-id>`          | One OT conversation maps to one cursor chat. The id is minted up front with `cursor-agent create-chat`. |
-| `--force`                     | Added only for the `fullAccess` posture (run every tool call unless denied).                            |
-| `--model <id>`                | Verbatim. Omitted when unset.                                                                           |
-| `--`                          | End-of-options marker; persona markdown often starts with `---`, which would parse as an unknown flag.  |
+| Flag                          | Meaning                                                                                                        |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `--print`                     | Headless mode.                                                                                                 |
+| `--output-format stream-json` | NDJSON event stream (this doc).                                                                                |
+| `--stream-partial-output`     | Emit incremental deltas (events carrying `timestamp_ms`). Chat only.                                           |
+| `--workspace <cwd>`           | Workspace directory (also the spawn cwd).                                                                      |
+| `--trust`                     | Always on; skips the workspace-trust prompt. **Not** a permission boundary: `--print` can write and run shell. |
+| `--resume <chat-id>`          | One OT conversation maps to one cursor chat. The id is minted up front with `cursor-agent create-chat`.        |
+| `--force`                     | Added only for the `fullAccess` posture (run every tool call unless denied).                                   |
+| `--mode ask`                  | Every other posture (supervised, accept-edits, none): read-only, no writes and no shell (2026.11.05).          |
+| `--model <id>`                | Verbatim. Omitted when unset.                                                                                  |
+| `--`                          | End-of-options marker; persona markdown often starts with `---`, which would parse as an unknown flag.         |
 
 There is **no separate reasoning or service-tier flag** in `--print` mode. Both are baked into the
 model id (for example `claude-opus-4-8-high-fast`); the bracket form `auto[fast=false]` is rejected at

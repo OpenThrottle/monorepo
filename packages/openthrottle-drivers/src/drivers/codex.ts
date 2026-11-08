@@ -3,8 +3,10 @@
  * installed CLI (codex-cli 0.145.0, `codex exec --help`): `codex exec [OPTIONS] [PROMPT]` runs
  * autonomously, `-m/--model` selects the model, and `-s/--sandbox` selects the filesystem policy.
  * We pass `--sandbox workspace-write` so the agent can edit the workspace without approval prompts
- * (the headless analog of Claude's `--permission-mode acceptEdits`). Codex exec exposes no
- * agent-worktree flags.
+ * (the headless analog of Claude's `--permission-mode acceptEdits`), and `--skip-git-repo-check`
+ * as the chat backend does: without it a run whose cwd is not a trusted git repo exits 1 ("Not
+ * inside a trusted directory"), which the orchestrator reads as "no marker" and spends every
+ * iteration on. Codex exec exposes no agent-worktree flags.
  */
 
 import { defineDriver } from '../registry/index.ts';
@@ -92,7 +94,7 @@ export const codexDriver = defineDriver({
 
     const outputFlag = structuredOutputShellFlag(config, '--json');
 
-    return `codex exec${outputFlag} --sandbox workspace-write${endpointFlags}${effortFlag}${modelFlag} "${safePrompt}"`;
+    return `codex exec${outputFlag} --sandbox workspace-write --skip-git-repo-check${endpointFlags}${effortFlag}${modelFlag} "${safePrompt}"`;
   },
   capabilities,
   id: 'codex',

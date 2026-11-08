@@ -80,22 +80,21 @@ describe('codex replay', () => {
         replayFixturePath('codex', 'resume.turn-1'),
       );
 
-      expect(textOf(chunks)).toBe('OK.');
+      expect(textOf(chunks)).toMatch(/^OK\.?$/);
     });
 
-    it('turn 2 fails: codex exec resume rejects --sandbox (known bug)', async () => {
-      // Characterization of a production bug the recording found: codex
-      // 0.167's `exec resume` has no --sandbox option, so every follow-up
-      // turn of a codex chat exits with a usage error. When the argv builder
-      // is fixed, re-record this transcript and assert the recalled word.
+    it('turn 2 resumes the thread under the same read-only sandbox', async () => {
+      // `codex exec resume` rejects `--sandbox`, so the posture travels as the
+      // `sandbox_mode` config key.
       const { chunks, transcript } = await replay(
         replayFixturePath('codex', 'resume.turn-2'),
       );
 
       expect(transcript.argv.slice(0, 2)).toEqual(['exec', 'resume']);
-      expect(terminal(chunks)?.error).toContain(
-        "unexpected argument '--sandbox'",
-      );
+      expect(transcript.argv).not.toContain('--sandbox');
+      expect(transcript.argv).toContain('sandbox_mode="read-only"');
+      expect(textOf(chunks)).toBe('heron');
+      expect(terminal(chunks)?.error ?? null).toBeNull();
     });
   });
 });

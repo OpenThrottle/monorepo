@@ -10,10 +10,11 @@
  *
  * opencode also has no scoped per-tool permission *flag* (only the blanket
  * `run --auto`), so the composer permission mode is expressed here in the same
- * temp config's `permission` slice: a scoped `allow` for the injected managed
- * MCP servers (`<server>*`) so their tools are callable in a headless run,
- * mirroring claude's `--allowedTools`. `fullAccess` is handled by the `--auto`
- * flag instead (see argv.ts), so it writes no permission slice.
+ * temp config's `permission` slice: explicit `edit`/`bash` actions (opencode's
+ * own defaults let a headless turn write), plus a scoped `allow` for the
+ * injected managed MCP servers (`<server>*`) so their tools are callable in a
+ * headless run, mirroring claude's `--allowedTools`. `fullAccess` is handled by
+ * the `--auto` flag instead (see argv.ts), so it writes no permission slice.
  */
 
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
@@ -125,14 +126,16 @@ const toStringRecord = (value: unknown): Record<string, string> | undefined => {
 };
 
 /**
- * Build opencode's `permission` slice for a permission mode. Every non-
- * `fullAccess` posture scopes an `allow` to the injected managed MCP servers
- * (`<server>*`) so their tools are callable in a headless run without a blanket
- * bypass; `autoAcceptEdits` additionally allows `edit`. `fullAccess` returns
- * undefined — it is handled by the `--auto` flag, not a permission slice. Left/
- * unmapped tools keep opencode's default posture. Returns undefined when the
- * slice would be empty (e.g. `supervised`/default with no managed servers), so
- * no permission key is written.
+ * Build opencode's `permission` slice for a permission mode. opencode 1.19.5
+ * defaults `edit` and `bash` to `allow`, so a turn with no slice wrote files
+ * with no approval. Every non-`fullAccess` posture therefore sets them
+ * explicitly: `ask`, which a headless `opencode run` auto-rejects ("The user
+ * rejected permission to use this specific tool call") — the same shape as
+ * claude's denied write. `autoAcceptEdits` lifts `edit` to `allow` and keeps
+ * `bash` on `ask`. Every non-`fullAccess` posture also scopes an `allow` to the
+ * injected managed MCP servers (`<server>*`) so their tools stay callable
+ * headless without a blanket bypass. `fullAccess` returns undefined — it is
+ * handled by the `--auto` flag, not a permission slice.
  */
 function buildOpencodePermission(
   managedNames: readonly string[],
@@ -141,14 +144,16 @@ function buildOpencodePermission(
   if (permissionMode === CONVERSATION_PERMISSION_MODES.fullAccess) {
     return undefined;
   }
-  const permission: Record<string, OpencodePermissionAction> = {};
-  if (permissionMode === CONVERSATION_PERMISSION_MODES.autoAcceptEdits) {
-    permission['edit'] = 'allow';
-  }
+  const isAcceptEdits =
+    permissionMode === CONVERSATION_PERMISSION_MODES.autoAcceptEdits;
+  const permission: Record<string, OpencodePermissionAction> = {
+    bash: 'ask',
+    edit: isAcceptEdits ? 'allow' : 'ask',
+  };
   for (const name of managedNames) {
     permission[`${name}*`] = 'allow';
   }
-  return Object.keys(permission).length > 0 ? permission : undefined;
+  return permission;
 }
 
 /**
@@ -193,8 +198,8 @@ export function translateManagedMcpToOpencode(
 /**
  * Write the translated managed servers + permission slice to a fresh temp
  * `opencode.json` outside any checkout and return its path + a cleanup. Returns
- * null when there is nothing to write (no servers translated AND no permission
- * slice to set — e.g. `supervised`/default with no managed servers).
+ * null when there is nothing to write (no servers translated, no provider, and
+ * no permission slice — only `fullAccess`, whose posture is `--auto`).
  */
 export function writeOpencodeMcpConfig(
   managed: Readonly<Record<string, Readonly<Record<string, unknown>>>>,

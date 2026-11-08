@@ -67,7 +67,7 @@ per-driver base-flag name) is a follow-up.
 Command shapes (legacy-identical for cursor; claude adds stream-json output flags):
 
 - `claude -p --permission-mode acceptEdits "<prompt>" --output-format stream-json --verbose [--model M] [-w [name]]` (the driver's `parseOutput` recovers the text-mode stdout from the terminal `result` event and reports usage limits)
-- `codex exec --sandbox workspace-write [--model M] "<prompt>"`
+- `codex exec --sandbox workspace-write --skip-git-repo-check [--model M] "<prompt>"`
 - `cursor-agent --force -p "<prompt>" [--model M] [-w [name] [--worktree-base B] [--skip-worktree-setup]]`
 - `gemini --approval-mode yolo "<prompt>" [--model M] < /dev/null` (the redirect is load-bearing:
   with a non-TTY stdin the CLI blocks reading it to EOF; the positional prompt is used because

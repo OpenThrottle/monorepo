@@ -3,10 +3,10 @@
  * backend via `OPENTHROTTLE_CURSOR_AGENT_BIN`. The chat id was minted with
  * `create-chat` at record time and sanitized to `placeholderUuid(1)`.
  *
- * There is deliberately no permission-denied transcript: in the supervised
- * posture cursor-agent wrote the file (and ran a shell command) without
- * approval, so the recorder refused it. That is a filed follow-up, not a
- * fixture.
+ * Every posture but fullAccess runs `--mode ask` (read-only): `--trust` alone
+ * let a `--print` turn write files and run shell. So supervised denies the
+ * write by never attempting it, and accept-edits (not advertised for cursor)
+ * is read-only too.
  */
 
 import { CONVERSATION_STREAM_CHUNK_KINDS as KINDS } from '@openthrottle/openthrottle-agentic-utils';
@@ -33,17 +33,36 @@ describe('cursor replay', () => {
     expect(terminal(chunks)?.error ?? null).toBeNull();
   });
 
-  it('tool-use, multi-tool and accept-edits pair calls with results', async () => {
+  it('tool-use and multi-tool pair calls with results', async () => {
     const tool = await replay(replayFixturePath('cursor', 'tool-use'));
     const multi = await replay(replayFixturePath('cursor', 'multi-tool'));
-    const edits = await replay(replayFixturePath('cursor', 'accept-edits'));
 
-    for (const { chunks } of [tool, multi, edits]) {
+    for (const { chunks } of [tool, multi]) {
       expect(countOf(chunks, KINDS.toolCall)).toBe(
         countOf(chunks, KINDS.toolResult),
       );
       expect(countOf(chunks, KINDS.toolCall)).toBeGreaterThan(0);
     }
+  });
+
+  it('permission-denied runs read-only and never attempts the write', async () => {
+    const { chunks, transcript } = await replay(
+      replayFixturePath('cursor', 'permission-denied'),
+    );
+
+    expect(transcript.argv).toContain('ask');
+    expect(transcript.argv).not.toContain('--force');
+    expect(countOf(chunks, KINDS.toolCall)).toBe(0);
+    expect(terminal(chunks)?.error ?? null).toBeNull();
+  });
+
+  it('accept-edits collapses to the read-only posture', async () => {
+    const { chunks, transcript } = await replay(
+      replayFixturePath('cursor', 'accept-edits'),
+    );
+
+    expect(transcript.argv).toContain('ask');
+    expect(countOf(chunks, KINDS.toolCall)).toBe(0);
   });
 
   it('error names the rejected model', async () => {

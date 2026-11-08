@@ -9,8 +9,8 @@
  *
  * Two spawn gotchas verified against 0.25.2:
  * - When stdin is not a TTY the CLI `await`s reading stdin to EOF before running
- *   (`dist/src/gemini.js` `readStdin()`), and the engine spawns with `stdio: ['inherit', …]` —
- *   so the command redirects `< /dev/null` or a server-spawned run hangs forever.
+ *   (`dist/src/gemini.js` `readStdin()`). The engine now spawns with stdin ignored, but the command
+ *   keeps its own `< /dev/null` so it is safe under any spawner (and the recorded argv is stable).
  * - Headless auth comes from the environment (`GEMINI_API_KEY`, `GOOGLE_GENAI_USE_VERTEXAI`,
  *   `GOOGLE_GENAI_USE_GCA`) or a host-level `~/.gemini/settings.json`; with none it exits 41.
  */
