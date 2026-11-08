@@ -102,9 +102,12 @@ export const updatePlanToolParameters = UpdatePlanInputSchema().strict();
 /**
  * Canonical plan/task status labels, derived from the generated PlanTaskStatus
  * GraphQL enum (the SSOT) so these tool descriptions never carry a stale,
- * hand-maintained status list. QUEUED is plans-only.
+ * hand-maintained status list. QUEUED and SCHEDULED are plans-only.
  */
 const PLAN_TASK_STATUS_VALUES = Object.values(PlanTaskStatus).join(', ');
+
+/** Shared tail: what SCHEDULED means to a caller that reads or writes plan status. */
+const SCHEDULED_STATUS_GUIDANCE = `SCHEDULED (plans only) is server-set while a run is scheduled; it cannot be set directly.`;
 
 /** Shared tail: the workspace the plan is recorded against. Identical wording on both tools. */
 const WORKSPACE_PATH_GUIDANCE = `On stdio, the folder you are working in is sent automatically as workspacePath and resolved to the repository behind it, so the plan opens pre-selected in its Configuration tab — you do NOT need to pass it, and this works the same for OpenThrottle and for any other registered checkout. Pass workspacePath to name a different absolute path, or an empty string to opt out. It is only ever a hint: the server resolves it against your own registered checkouts and ignores anything else, and it never overrides a workspace already named in runConfigJson. The repository link lives in runConfigJson.workspace.repositoryId — the free-text project field is an unrelated label and does NOT link a plan to a repo.`;
@@ -117,9 +120,9 @@ export const deletePlanToolDescription = `Delete a plan by id. Returns whether a
 
 export const getPlanToolDescription = `Fetch a plan by id (UUID). Returns the plan row, including its tags (tag, dimension, source), or not found.`;
 
-export const listPlansByStatusToolDescription = `List plans in OpenThrottle by status. Valid statuses (uppercase): ${PLAN_TASK_STATUS_VALUES}. Pass statuses (e.g. ["IN_PROGRESS","PENDING"]); an empty array or "all" means no status filter. Unknown values are rejected with the valid set. Optional: limit/offset, project, assignees, titleSubstring. Each plan carries its tags (tag, dimension, source), so a follow-up plan reads as tagged follow-up. Use for /openthrottle/pending or list by status.`;
+export const listPlansByStatusToolDescription = `List plans in OpenThrottle by status. Valid statuses (uppercase): ${PLAN_TASK_STATUS_VALUES}. ${SCHEDULED_STATUS_GUIDANCE} Pass statuses (e.g. ["IN_PROGRESS","PENDING"]); an empty array or "all" means no status filter. Unknown values are rejected with the valid set. Optional: limit/offset, project, assignees, titleSubstring. Each plan carries its tags (tag, dimension, source), so a follow-up plan reads as tagged follow-up. Use for /openthrottle/pending or list by status.`;
 
-export const updatePlanToolDescription = `Update a plan by id. Pass id and any of: title, description, status (one of: ${PLAN_TASK_STATUS_VALUES}; uppercase), author, assignee, category, project, projectId, summary, jobRunHooksJson, runConfigJson. COMPLETED is refused while any task is unresolved (BLOCKED, IN_PROGRESS, PENDING, or QUEUED) — set BLOCKED instead when a task is BLOCKED. jobRunHooksJson and runConfigJson replace the whole stored value, so read the current one back from get_plan first and merge — a partial object silently drops the keys you omitted. Pass null to reset either to its default shell; omit to leave unchanged. The plan-to-repository link lives in runConfigJson.workspace.repositoryId — the free-text project field is an unrelated label and does NOT link a plan to a repo.`;
+export const updatePlanToolDescription = `Update a plan by id. Pass id and any of: title, description, status (one of: ${PLAN_TASK_STATUS_VALUES}; uppercase), author, assignee, category, project, projectId, summary, jobRunHooksJson, runConfigJson. COMPLETED is refused while any task is unresolved (BLOCKED, IN_PROGRESS, PENDING, or QUEUED) — set BLOCKED instead when a task is BLOCKED. ${SCHEDULED_STATUS_GUIDANCE} Moving a SCHEDULED plan to another status cancels its scheduled run. jobRunHooksJson and runConfigJson replace the whole stored value, so read the current one back from get_plan first and merge — a partial object silently drops the keys you omitted. Pass null to reset either to its default shell; omit to leave unchanged. The plan-to-repository link lives in runConfigJson.workspace.repositoryId — the free-text project field is an unrelated label and does NOT link a plan to a repo.`;
 
 export async function listPlansByStatusToolHandler(
   args: z.infer<typeof listPlansByStatusToolParameters>,
@@ -319,6 +322,10 @@ export async function updatePlanToolHandler(
     'update_plan',
     async () => {
       const token = getAuthToken();
+      const priorStatus = await readStatusBeforeStatusChange(
+        token,
+        parsed.data,
+      );
       const result = await executeGraphqlWithAuth(
         token,
         UpdatePlanDocument,
@@ -331,10 +338,54 @@ export async function updatePlanToolHandler(
       const plan = result?.updatePlan;
       if (!plan) return null;
 
-      const text = `Updated plan: ${plan.id}\n${JSON.stringify(plan, null, 2)}`;
+      const scheduledRunNote = describeCancelledScheduledRun(
+        priorStatus,
+        plan.status,
+      );
+      const text = `Updated plan: ${plan.id}${scheduledRunNote}\n${JSON.stringify(plan, null, 2)}`;
       return { structuredContent: { plan }, text };
     },
   );
+}
+
+/**
+ * @description The plan's status before an update that changes it, so the response can say when
+ * leaving SCHEDULED cancelled the plan's scheduled run (the server does it, D7, and its success shape
+ * is unchanged). Skipped — null — when the update sets no status, or sets SCHEDULED (the server
+ * rejects that). Best-effort: a failed read only drops the note, never the update.
+ */
+async function readStatusBeforeStatusChange(
+  token: string,
+  input: z.infer<typeof updatePlanToolParameters>,
+): Promise<string | null> {
+  const requested = input.status?.trim().toUpperCase();
+  if (requested == null || requested === '' || requested === 'SCHEDULED') {
+    return null;
+  }
+
+  try {
+    const result = await executeGraphqlWithAuth(token, GetPlanDocument, {
+      id: input.id,
+    });
+    return result?.plan?.status ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * @description The update_plan response note for a plan that left SCHEDULED: the server cancelled
+ * its scheduled run in the same write. Empty when the plan was not SCHEDULED or still is.
+ */
+function describeCancelledScheduledRun(
+  priorStatus: string | null,
+  nextStatus: string,
+): string {
+  if (priorStatus !== 'SCHEDULED' || nextStatus === 'SCHEDULED') {
+    return '';
+  }
+
+  return ` (it was SCHEDULED; moving it to ${nextStatus} cancelled its scheduled run)`;
 }
 
 export async function deletePlanToolHandler(

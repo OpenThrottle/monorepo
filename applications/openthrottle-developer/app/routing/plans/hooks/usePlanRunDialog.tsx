@@ -11,6 +11,8 @@ import { useFetcher } from 'react-router';
 import type { action } from '~/routes/plans.$planId._index';
 import { PLAN_RUN_DIALOG_CLOCK_TICK_MS } from '~/routing/plans/config/defaults';
 import { PLAN_RUN_DIALOG_COPY } from '~/routing/plans/data/data.copy';
+import type { UsePlanRunDialogConfirmResult } from '~/routing/plans/hooks/usePlanRunDialogConfirm';
+import { usePlanRunDialogConfirm } from '~/routing/plans/hooks/usePlanRunDialogConfirm';
 import type {
   PlanRunDialogDraft,
   PlanRunDialogMode,
@@ -50,6 +52,8 @@ export interface UsePlanRunDialogOptions {
   readonly repositoryId: string;
   /** @description The plan's saved run config; the draft resets from it on every open. */
   readonly runConfigJson: string | null | undefined;
+  /** @description The plan's scheduled run; non-null makes a submit ask to unschedule/replace first. */
+  readonly scheduledRunAt: Date | string | null | undefined;
   readonly workflowRunBlocked: boolean;
   readonly workflowRunBlockedReason: string | undefined;
   readonly workingDirectory: string;
@@ -58,6 +62,8 @@ export interface UsePlanRunDialogOptions {
 export interface UsePlanRunDialogResult {
   /** @description Named reason submit is disabled, or `null` when it can go. */
   readonly blockedReason: string | null;
+  /** @description State and handlers of the unschedule-first confirm. */
+  readonly confirm: UsePlanRunDialogConfirmResult;
   readonly draft: PlanRunDialogDraft;
   /** @description The action's error for the current mode, once a submit was attempted. */
   readonly errorMessage: string | undefined;
@@ -97,6 +103,7 @@ export const usePlanRunDialog = (
     ralphTuningJson,
     repositoryId,
     runConfigJson,
+    scheduledRunAt,
     workflowRunBlocked,
     workflowRunBlockedReason,
     workingDirectory,
@@ -106,7 +113,13 @@ export const usePlanRunDialog = (
   const fetcher = useFetcher<typeof action>();
   const [now, setNow] = React.useState(() => new Date());
   const [draft, setDraft] = React.useState(() =>
-    createPlanRunDialogDraft({ mode, now, planId, runConfigJson }),
+    createPlanRunDialogDraft({
+      mode,
+      now,
+      planId,
+      runConfigJson,
+      scheduledRunAt,
+    }),
   );
   const [attempted, setAttempted] = React.useState(false);
   const wasBusy = React.useRef(false);
@@ -145,6 +158,13 @@ export const usePlanRunDialog = (
     workingDirectory,
   });
 
+  const confirm = usePlanRunDialogConfirm({
+    fetcher,
+    fields,
+    mode: draft.mode,
+    open,
+    scheduledRunAt,
+  });
   const data = fetcher.data;
   const runError =
     data != null && 'runPlanError' in data ? data.runPlanError : undefined;
@@ -167,6 +187,11 @@ export const usePlanRunDialog = (
     }));
   };
 
+  const onConfirm = (): void => {
+    setAttempted(true);
+    confirm.onConfirm();
+  };
+
   const onSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
     // The clock moved since the last render: re-check against it so a schedule
     // that slipped into the past never posts. The server remains the real gate.
@@ -178,6 +203,13 @@ export const usePlanRunDialog = (
       getScheduleInstantError(instant, current) !== null;
 
     if (blockedReason !== null || stale || isSubmitting) {
+      event.preventDefault();
+
+      return;
+    }
+
+    // A scheduled plan asks before anything posts; "yes" posts via the confirm hook.
+    if (confirm.requestConfirm()) {
       event.preventDefault();
 
       return;
@@ -198,7 +230,13 @@ export const usePlanRunDialog = (
     const current = new Date();
     setNow(current);
     setDraft(
-      createPlanRunDialogDraft({ mode, now: current, planId, runConfigJson }),
+      createPlanRunDialogDraft({
+        mode,
+        now: current,
+        planId,
+        runConfigJson,
+        scheduledRunAt,
+      }),
     );
     setAttempted(false);
 
@@ -240,6 +278,7 @@ export const usePlanRunDialog = (
 
   return {
     blockedReason,
+    confirm: { ...confirm, onConfirm },
     draft,
     errorMessage,
     fetcher,

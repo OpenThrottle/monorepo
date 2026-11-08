@@ -22,6 +22,8 @@ export const getPlanToolbarRunButtonLabel = (planStatus?: string): string => {
       return 'Promoted';
     case 'QUEUED':
       return 'Queued';
+    case 'SCHEDULED':
+      return 'Run now';
     case 'SKIPPED':
       return 'Skipped';
 
@@ -43,9 +45,9 @@ export interface PlanToolbarRunTooltipOptions {
 
 /**
  * @description The primary Run button's tooltip. Precedence: submitting > terminal > running >
- * scheduled > no runnable tasks > blocked > branch missing > default (terminal and running are mutually exclusive).
- * A scheduled run outranks the workflow/branch gates because it is the reason the button is
- * disabled whatever else is true, and the only one the user can resolve from this toolbar.
+ * no runnable tasks > blocked > branch missing > scheduled > default (terminal and running are
+ * mutually exclusive). A scheduled run no longer disables Run (it asks to unschedule first), so it
+ * only explains itself once nothing else is gating the button.
  */
 export const getPlanToolbarRunTooltip = (
   options: PlanToolbarRunTooltipOptions,
@@ -61,9 +63,6 @@ export const getPlanToolbarRunTooltip = (
   if (options.isRunning) {
     return PLAN_TOOLBAR_COPY.runRunningTooltip;
   }
-  if (scheduledReason !== null) {
-    return scheduledReason;
-  }
   if (options.noRunnableTasks) {
     return PLAN_TOOLBAR_COPY.runNoRunnableTasksTooltip;
   }
@@ -75,6 +74,9 @@ export const getPlanToolbarRunTooltip = (
   }
   if (options.branchMissing) {
     return PLAN_RUN_GATING_COPY.branchRequired;
+  }
+  if (scheduledReason !== null) {
+    return scheduledReason;
   }
 
   return PLAN_TOOLBAR_COPY.runDefaultTooltip;

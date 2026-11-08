@@ -9,6 +9,7 @@ import {
   executeGraphqlAtUrl,
   executeGraphqlWithAuth,
   GRAPHQL_TIMEOUT_ERROR_PREFIX,
+  isGraphqlResponseError,
 } from './index.ts';
 
 // See graphql-v2.test.ts: the generic overload brands the parsed document with
@@ -193,6 +194,45 @@ describe('executeGraphqlAtUrl error branches', () => {
     if (error instanceof Error) {
       expect(error.message).toBe('GraphQL errors: nope');
     }
+  });
+
+  it("carries the first error's extensions on a GraphqlResponseError", async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      jsonResponse({
+        data: null,
+        errors: [
+          {
+            extensions: { code: 'PLAN_ALREADY_SCHEDULED', planRunId: 'run-1' },
+            message: 'nope',
+          },
+        ],
+      }),
+    );
+
+    const error = await executeGraphqlAtUrl(url, doc, undefined).catch(
+      (caught: unknown) => caught,
+    );
+
+    expect(isGraphqlResponseError(error)).toBe(true);
+    if (isGraphqlResponseError(error)) {
+      expect(error.message).toBe('GraphQL errors: nope');
+      expect(error.extensions).toEqual({
+        code: 'PLAN_ALREADY_SCHEDULED',
+        planRunId: 'run-1',
+      });
+    }
+  });
+
+  it('gives a GraphqlResponseError empty extensions when the server sent none', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      jsonResponse({ data: null, errors: [{ message: 'nope' }] }),
+    );
+
+    const error = await executeGraphqlAtUrl(url, doc, undefined).catch(
+      (caught: unknown) => caught,
+    );
+
+    expect(isGraphqlResponseError(error) ? error.extensions : null).toEqual({});
   });
 
   it('throws when HTTP OK with no errors but data is missing', async () => {

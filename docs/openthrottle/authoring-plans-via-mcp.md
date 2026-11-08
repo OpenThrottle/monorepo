@@ -61,7 +61,7 @@ contract: [task-wave-encoding.md](./task-wave-encoding.md).
 
 ### Status lifecycle
 
-Both plans and tasks carry a `status` from a fixed enum. The canonical statuses are **`BACKLOG`**, **`BLOCKED`**, **`CANCELED`**, **`COMPLETED`**, **`IN_PROGRESS`**, **`PENDING`**, **`PROMOTED`**, **`SKIPPED`** (plus **`QUEUED`** for plans only — set when a Run-plan job is enqueued in BullMQ until the worker picks it up).
+Both plans and tasks carry a `status` from a fixed enum. The canonical statuses are **`BACKLOG`**, **`BLOCKED`**, **`CANCELED`**, **`COMPLETED`**, **`IN_PROGRESS`**, **`PENDING`**, **`PROMOTED`**, **`SKIPPED`**, plus two for plans only: **`QUEUED`** (a Run-plan job is enqueued in BullMQ until the worker picks it up) and **`SCHEDULED`** (the plan has a run scheduled for later — see [What `SCHEDULED` means](#what-scheduled-means)).
 
 The everyday task path is:
 
@@ -78,6 +78,16 @@ PENDING ──▶ IN_PROGRESS ──▶ COMPLETED
 - Transitioning into `COMPLETED` stamps `completed_at`; leaving `COMPLETED` clears it.
 - "Remaining work" (e.g. `get_remaining_tasks_for_plan`) means any status that is **not** `COMPLETED`, `PROMOTED`, `SKIPPED`, or `CANCELED`.
 
+#### What `SCHEDULED` means
+
+`SCHEDULED` = **this plan has a run waiting to fire at a later time.** A plan holds it exactly while it has one `SCHEDULED` run (`plan_runs.status = 'SCHEDULED'` with a delayed BullMQ job).
+
+- **Plans only, server-written.** Only scheduling a run writes it; tasks never take it. `update_plan` / `setPlanStatus` reject a manual `SCHEDULED` (re-sending `SCHEDULED` for a plan that already is one is a harmless no-op).
+- **Only `PENDING` and `BACKLOG` plans can be scheduled.** Anything else is rejected with a GraphQL error whose `extensions.code` says why: `PLAN_ACTIVE` (the plan is `QUEUED` — a usage-limit resume wait included — or `IN_PROGRESS`), `PLAN_NOT_SCHEDULABLE` (`BLOCKED` or terminal) or `PLAN_ALREADY_SCHEDULED`. The error also carries `planRunId` and `scheduledFor` of the run already scheduled, when there is one.
+- **At most one scheduled run per plan** (a partial unique index backs it). Scheduling again is `PLAN_ALREADY_SCHEDULED` unless you pass `replaceScheduled: true`, which cancels the old run and schedules the new one in one transaction — the plan stays `SCHEDULED`. Running now is `PLAN_ALREADY_SCHEDULED` unless you pass `cancelScheduled: true` to `enqueuePlanRun` / `enqueuePlanRalphOrchestrator`, which cancels the scheduled run and enqueues a normal one.
+- **Leaving it.** When the run fires the plan moves to `QUEUED` as for any run. Every other exit — cancelling the scheduled run, or the run settling `MISSED`, `SUPERSEDED` or with nothing to run — returns the plan to **`PENDING`**, whatever it was scheduled from.
+- **Any status change away from `SCHEDULED` cancels the scheduled run.** Mark Complete, `update_plan`, a task going `IN_PROGRESS`, or the last task completing all move the plan on and cancel its run in the same write; `update_plan` says so in its response.
+
 #### What `PROMOTED` means
 
 `PROMOTED` = **not finished here; the work continued as its own plan.** `promote_task` writes it on the source task. It is the only way a task reaches `PROMOTED` — you do not set it by hand.
@@ -90,7 +100,7 @@ PENDING ──▶ IN_PROGRESS ──▶ COMPLETED
 | `CANCELED`  | no                                | yes                          | no                                |
 
 - **Resolved.** Plan progress (resolved/total) and the "no remaining tasks → plan `COMPLETED`" rollup treat `PROMOTED` exactly as they treated a promotion-`SKIPPED` before it existed — promoting a task never un-finishes its plan.
-- **Membership: plans and tasks.** `plan_task_status` is one shared Postgres enum, and `plan-task-status.constants.test.ts` asserts `TASK_STATUS === PLAN_STATUS − QUEUED`. A tasks-only `PROMOTED` would turn that into a two-exception rule and weaken the parity gate, so the value is valid on both. Promoting a _plan_ is not an operation today; the label is permitted, not used.
+- **Membership: plans and tasks.** `plan_task_status` is one shared Postgres enum, and `plan-task-status.constants.test.ts` asserts `TASK_STATUS === PLAN_STATUS − {QUEUED, SCHEDULED}`. A tasks-only `PROMOTED` would turn that into a two-exception rule and weaken the parity gate, so the value is valid on both. Promoting a _plan_ is not an operation today; the label is permitted, not used.
 - **Enum position:** `ADD VALUE 'PROMOTED' AFTER 'PENDING'`, giving `… QUEUED, PENDING, PROMOTED, SKIPPED` — next to the status it was split out of.
 - **The `promoted` tag is kept** alongside the status for one release. Readers accept **status or tag** (`status === 'PROMOTED' || tags include 'promoted'`), so rows promoted before the change and rows backfilled by migration render and guard identically. Retire the tag write once a release has shipped with the backfill applied and no reader still needs the fallback; that retirement is its own change.
 - **`SKIPPED` keeps its other two meanings:** "won't be worked on", and the reversible orphan soft-close written by tag-action rules (`SOFT_CLOSED_TASK_STATUS`). The soft-close is **not** a promotion and stays `SKIPPED` — `inject-task` revives a task by recognising exactly that value.

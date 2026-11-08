@@ -28,6 +28,10 @@ describe('getPlanToolbarRunButtonLabel', () => {
     expect(getPlanToolbarRunButtonLabel('PROMOTED')).toBe('Promoted');
   });
 
+  test('returns "Run now" for SCHEDULED, where Run unschedules first', () => {
+    expect(getPlanToolbarRunButtonLabel('SCHEDULED')).toBe('Run now');
+  });
+
   test('returns "Queued" for QUEUED', () => {
     expect(getPlanToolbarRunButtonLabel('QUEUED')).toBe('Queued');
   });
@@ -67,7 +71,9 @@ describe('getPlanToolbarRunTooltip', () => {
   test('names the scheduled run when one is waiting', () => {
     expect(
       getPlanToolbarRunTooltip({ ...idle, scheduledRunAt: SCHEDULED_AT }),
-    ).toMatch(/^A run is scheduled for .+; cancel it to run now\.$/);
+    ).toMatch(
+      /^A run is scheduled for .+; running now will unschedule it first\.$/,
+    );
   });
 
   test('names the empty plan when no task is runnable, ahead of blocked and missing-branch reasons', () => {
@@ -81,7 +87,7 @@ describe('getPlanToolbarRunTooltip', () => {
     ).toBe(PLAN_TOOLBAR_COPY.runNoRunnableTasksTooltip);
   });
 
-  test('scheduled outranks blocked and missing-branch reasons', () => {
+  test('blocked and missing-branch reasons outrank scheduled, which no longer gates Run', () => {
     expect(
       getPlanToolbarRunTooltip({
         ...idle,
@@ -90,7 +96,14 @@ describe('getPlanToolbarRunTooltip', () => {
         workflowRunBlocked: true,
         workflowRunBlockedReason: 'Fix CLI options',
       }),
-    ).toMatch(/^A run is scheduled/);
+    ).toBe('Fix CLI options');
+    expect(
+      getPlanToolbarRunTooltip({
+        ...idle,
+        branchMissing: true,
+        scheduledRunAt: SCHEDULED_AT,
+      }),
+    ).toBe(PLAN_RUN_GATING_COPY.branchRequired);
   });
 
   test('running and terminal outrank scheduled; submitting outranks everything', () => {

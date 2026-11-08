@@ -15,6 +15,7 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   Plan,
   PLAN_RUN_STATUS,
+  PLAN_STATUS,
   PlanRunsService,
   PlansService,
   REMAINING_TASK_STATUSES,
@@ -44,7 +45,7 @@ import { cancelPlanRunJobsForPlan } from './cancel-plan-run-jobs.ts';
  */
 export { WORK_LEDGER_CAPTURE_FAILED_MARKER };
 
-const IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE = `Cannot transition to IN_PROGRESS: only PENDING, QUEUED, or already IN_PROGRESS plans may enter this state.`;
+const IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE = `Cannot transition to IN_PROGRESS: only PENDING, QUEUED, SCHEDULED, or already IN_PROGRESS plans may enter this state.`;
 
 /**
  * @description True when `status` equals `guard` (a single status) or is one of its members.
@@ -73,12 +74,21 @@ function normalizePlanStatusForPolicy(status: string): string {
 
 /**
  * @description openthrottle-ralph parity: `UPDATE … SET status = 'IN_PROGRESS' WHERE status != 'IN_PROGRESS'`.
- * Allows `PENDING`, `QUEUED`, and idempotent `IN_PROGRESS` → `IN_PROGRESS`.
+ * Allows `PENDING`, `QUEUED`, `SCHEDULED` and idempotent `IN_PROGRESS` → `IN_PROGRESS`. A SCHEDULED plan
+ * was PENDING or BACKLOG before it was scheduled (D2); work starting on it (an interactive loop, a task
+ * going IN_PROGRESS) moves it on and cancels the scheduled run (D7).
  */
 function canApplyInProgressAsTargetStatus(currentStatus: string): boolean {
   const s = normalizePlanStatusForPolicy(currentStatus);
-  return s === 'PENDING' || s === 'IN_PROGRESS' || s === 'QUEUED';
+  return (
+    s === 'PENDING' ||
+    s === 'IN_PROGRESS' ||
+    s === 'QUEUED' ||
+    s === 'SCHEDULED'
+  );
 }
+
+const MANUAL_SCHEDULED_FORBIDDEN_MESSAGE = `Cannot set a plan to SCHEDULED directly: it is set by scheduling a run (schedulePlanRun) and cleared when that run fires or is cancelled.`;
 
 /**
  * @description Machine-readable primary outcome of a cancel-plan-run request (the honest replacement
@@ -134,6 +144,8 @@ export type ApplyStatusChangeResult =
   | { readonly applied: false }
   | {
       readonly applied: true;
+      /** The SCHEDULED runs cancelled because the plan left SCHEDULED (D7); usually empty. */
+      readonly cancelledScheduledRunIds: readonly string[];
       readonly fromStatus: string;
       readonly toStatus: string;
     };
@@ -146,6 +158,12 @@ export type ApplyStatusChangeResult =
 export interface StatusChangeActor {
   readonly actorKind: string | undefined;
   readonly actorSub: string | undefined;
+}
+
+/** Parameters for {@link PlanStatusService.releaseScheduledPlan}. */
+export interface ReleaseScheduledPlanParams extends StatusChangeActor {
+  readonly captureFailureIsFatal: boolean;
+  readonly planId: string;
 }
 
 /** Parameters for {@link PlanStatusService.writeGuardedStatus}. */
@@ -215,6 +233,25 @@ export class PlanStatusService {
       normalizePlanStatusForPolicy(requestedStatus) === 'IN_PROGRESS' &&
       !canApplyInProgressAsTargetStatus(currentStatus)
     );
+  }
+
+  /**
+   * @description D1: a plan holds SCHEDULED exactly while it has a SCHEDULED run, so only the
+   * scheduling code paths write it. Throws on a user-facing request to set it (`setPlanStatus`,
+   * `updatePlan`, MCP `update_plan`); re-sending SCHEDULED for a plan that already is SCHEDULED (a
+   * form that echoes the whole row) is a harmless no-op and passes.
+   */
+  assertNotManualScheduled(
+    currentStatus: string,
+    requestedStatus: string | null | undefined,
+  ): void {
+    if (requestedStatus == null) return;
+    const next = normalizePlanStatusForPolicy(requestedStatus);
+    const current = normalizePlanStatusForPolicy(currentStatus);
+
+    if (next === PLAN_STATUS.SCHEDULED && current !== PLAN_STATUS.SCHEDULED) {
+      throw new BadRequestException(MANUAL_SCHEDULED_FORBIDDEN_MESSAGE);
+    }
   }
 
   /**
@@ -337,6 +374,17 @@ export class PlanStatusService {
       }
     }
 
+    // D7: leaving SCHEDULED by any route other than the fire claim or a settle (both of which
+    // already moved the run on, so this finds nothing) cancels the plan's scheduled run, in the
+    // caller's transaction. Its delayed job is removed right away; one left behind by a rollback
+    // fires into a no-op claim (guarded on SCHEDULED) and the boot reconcile re-adds it.
+    const isLeavingScheduled =
+      normalizePlanStatusForPolicy(previousStatus) === PLAN_STATUS.SCHEDULED &&
+      nextStatus !== PLAN_STATUS.SCHEDULED;
+    const cancelledScheduledRunIds = isLeavingScheduled
+      ? await this.cancelScheduledRunsOnExit(manager, entity.id, nextStatus)
+      : [];
+
     entity.status = nextStatus;
     entity.completedAt = resolveCompletedAtForStatusChange({
       currentCompletedAt: entity.completedAt,
@@ -368,13 +416,73 @@ export class PlanStatusService {
       );
     }
 
-    return { applied: true, fromStatus: previousStatus, toStatus: nextStatus };
+    return {
+      applied: true,
+      cancelledScheduledRunIds,
+      fromStatus: previousStatus,
+      toStatus: nextStatus,
+    };
+  }
+
+  /**
+   * @description The D7 half of {@link applyStatusChange}: settles the plan's SCHEDULED runs
+   * CANCELLED in `manager`'s transaction, removes their delayed jobs (best-effort — a job that cannot
+   * be removed is harmless, see {@link removeScheduledRunJobs}), and logs which runs went. Returns
+   * the cancelled run ids.
+   */
+  private async cancelScheduledRunsOnExit(
+    manager: EntityManager,
+    planId: string,
+    nextStatus: string,
+  ): Promise<readonly string[]> {
+    const cancelled = await this.planRunsService.cancelScheduledRunsForPlan(
+      planId,
+      manager,
+    );
+
+    if (cancelled.length === 0) return [];
+
+    await this.removeScheduledRunJobs(
+      cancelled.flatMap((run) => {
+        return run.bullmqJobId === null ? [] : [run.bullmqJobId];
+      }),
+    );
+    const ids = cancelled.map((run) => run.id);
+    this.logger.info(
+      `Plan ${planId} moved SCHEDULED -> ${nextStatus}; cancelled its scheduled run ${ids.join(', ')}`,
+      PlanStatusService.name,
+    );
+
+    return ids;
+  }
+
+  /**
+   * @description Removes the delayed BullMQ jobs of scheduled runs whose rows were just cancelled.
+   * Best-effort by design: a job that is gone already is skipped, and a removal that fails is
+   * logged, not thrown — the job's fire-time claim is guarded on `status = SCHEDULED`, so a job
+   * whose run is CANCELLED does nothing when it fires.
+   */
+  async removeScheduledRunJobs(jobIds: readonly string[]): Promise<void> {
+    await Promise.all(
+      jobIds.map(async (jobId) => {
+        try {
+          const job = await this.plansQueue.getJob(jobId);
+          await job?.remove();
+        } catch (error) {
+          this.logger.warn(
+            `Could not remove delayed job ${jobId} of a cancelled scheduled run; it will no-op when it fires: ${String(error)}`,
+            PlanStatusService.name,
+          );
+        }
+      }),
+    );
   }
 
   /**
    * @description Sets a plan's status with transition validation (the setPlanStatus mutation body).
    * Returns the (possibly unchanged) plan, or null when the plan does not exist. Throws
-   * BadRequestException when an IN_PROGRESS transition is forbidden. Runs entirely inside one
+   * BadRequestException when an IN_PROGRESS transition is forbidden or SCHEDULED is requested
+   * directly (D1). Moving a SCHEDULED plan anywhere else cancels its scheduled run (D7). Runs entirely inside one
    * transaction so the row save and the status_change capture commit together.
    */
   async setStatus(
@@ -389,6 +497,8 @@ export class PlanStatusService {
       const entity = await planRepo.findOne({ where: { id: planId } });
 
       if (!entity) return null;
+
+      this.assertNotManualScheduled(entity.status, requestedStatus);
 
       const result = await this.applyStatusChange(manager, {
         actorKind: actor.actorKind,
@@ -455,6 +565,60 @@ export class PlanStatusService {
   }
 
   /**
+   * @description Moves a SCHEDULED plan back to PENDING inside the caller's transaction — the plan
+   * half of every non-fire exit from SCHEDULED (OT plan 764c7654, D4): a cancelled scheduled run, and
+   * one the fire-time policy settled MISSED / SUPERSEDED / nothing to run. Always PENDING; the status
+   * the plan was scheduled from is not stored. Guarded: the plan row is re-read under a write lock and
+   * left alone unless it is still SCHEDULED, so a plan a human or another run has moved on is never
+   * rewound. Returns whether the plan row changed.
+   */
+  async releaseScheduledPlan(
+    manager: EntityManager,
+    params: ReleaseScheduledPlanParams,
+  ): Promise<boolean> {
+    const planRepo = manager.getRepository(Plan);
+    const entity = await planRepo.findOne({
+      lock: { mode: 'pessimistic_write' },
+      where: { id: params.planId },
+    });
+
+    if (entity?.status !== PLAN_STATUS.SCHEDULED) return false;
+
+    const result = await this.applyStatusChange(manager, {
+      actorKind: params.actorKind,
+      actorSub: params.actorSub,
+      captureFailureIsFatal: params.captureFailureIsFatal,
+      entity,
+      requestedStatus: PLAN_STATUS.PENDING,
+      throwOnForbiddenInProgress: false,
+    });
+
+    if (!result.applied) return false;
+
+    await planRepo.save(entity);
+    return true;
+  }
+
+  /**
+   * @description {@link releaseScheduledPlan} in a transaction of its own, for an exit path that
+   * has already settled the scheduled run outside one (cancel, the boot reconcile's MISSED settle).
+   */
+  async releaseScheduledPlanStandalone(
+    planId: string,
+    actor: StatusChangeActor,
+    captureFailureIsFatal: boolean,
+  ): Promise<boolean> {
+    return this.writeGuardedStatus(planId, {
+      actorKind: actor.actorKind,
+      actorSub: actor.actorSub,
+      captureFailureIsFatal,
+      guardCurrentStatus: PLAN_STATUS.SCHEDULED,
+      requestedStatus: PLAN_STATUS.PENDING,
+      throwOnForbiddenInProgress: false,
+    });
+  }
+
+  /**
    * @description Promotes `planId` to IN_PROGRESS when one of its tasks has just entered
    * IN_PROGRESS (the "any live task implies a live plan" rule) — the write half of what used to be
    * `TasksService.syncParentPlanStatus`. Defers to `applyStatusChange`'s IN_PROGRESS transition
@@ -489,6 +653,8 @@ export class PlanStatusService {
    * Which open statuses auto-close:
    * - IN_PROGRESS: always (unchanged). An interactive loop holds an IN_PROGRESS run of its own and
    *   must still close its plan.
+   * - SCHEDULED: always. Closing it cancels the scheduled run in the same write (D7) rather than
+   *   leaving a run to fire into nothing.
    * - PENDING and QUEUED: yes, so tasks completed straight from PENDING (e.g. via MCP) do not leave
    *   the plan open forever — but only when the plan has no unsettled run: no QUEUED or IN_PROGRESS
    *   plan_runs row and no SCHEDULED run whose fire would find nothing to run
@@ -509,7 +675,9 @@ export class PlanStatusService {
       actorKind: actor.actorKind,
       actorSub: actor.actorSub,
       captureFailureIsFatal: true,
-      guardCurrentStatus: 'IN_PROGRESS',
+      // SCHEDULED too: the last task completing on a scheduled plan closes it and cancels the
+      // scheduled run (D7) rather than leaving a run to fire into nothing.
+      guardCurrentStatus: ['IN_PROGRESS', PLAN_STATUS.SCHEDULED],
       requestedStatus: 'COMPLETED',
       throwOnForbiddenInProgress: false,
     });
@@ -574,9 +742,9 @@ export class PlanStatusService {
    * which makes a repeat cancel — and a cancel after the run fired (IN_PROGRESS) or settled — a
    * no-op for the row; a job a worker already holds locked (it is firing right now) is left to the
    * worker. Without `planRunId` cancelling is per PLAN, as it always was: every delayed job and
-   * SCHEDULED row of the plan goes together. Jobs removed for SCHEDULED rows do not by themselves
-   * reset the plan or its tasks — scheduling never changed their status — so cancelling only a
-   * scheduled run leaves a COMPLETED plan COMPLETED.
+   * SCHEDULED row of the plan goes together. Settling a SCHEDULED row returns a SCHEDULED plan to
+   * PENDING ({@link releaseScheduledPlanStandalone}, D4); its tasks are untouched, because scheduling
+   * never changed them.
    *
    * With `planRunId` the cancel is scoped to that one run — see {@link cancelScheduledRun}.
    */
@@ -745,6 +913,14 @@ export class PlanStatusService {
       planStatusAfter = refreshed?.status ?? 'PENDING';
     }
 
+    // The plan held SCHEDULED only because of the rows just settled: back to PENDING (D4).
+    if (
+      cancelledScheduledRuns > 0 &&
+      (await this.releaseScheduledPlanStandalone(planId, actor, true))
+    ) {
+      planStatusAfter = PLAN_STATUS.PENDING;
+    }
+
     // The cancelled SCHEDULED rows may have been all that held an idle, fully-done plan open.
     if (cancelledScheduledRuns > 0) {
       const closed = await this.reconcileAfterScheduledRunSettled(
@@ -769,9 +945,9 @@ export class PlanStatusService {
 
   /**
    * @description The run-scoped cancel behind `cancelPlanRun({ planId, planRunId })`: cancels exactly
-   * one SCHEDULED run — removes its delayed BullMQ job and settles its row CANCELLED — and nothing
-   * else. No other run of the plan (live or scheduled), no cancel marker, no abort signal, and
-   * neither the plan status nor the tasks are touched, so a live run on the same plan survives it.
+   * one SCHEDULED run — removes its delayed BullMQ job and settles its row CANCELLED — and returns a
+   * SCHEDULED plan to PENDING (D4). No other run of the plan, no cancel marker, no abort signal, and
+   * the tasks are not touched, so a live run on the same plan survives it.
    *
    * `planRunId` that names no run of `planId` is rejected. A run that is not SCHEDULED:
    *  - already settled (CANCELLED, COMPLETED, FAILED, ...) -> a no-op `NO_ACTIVE_RUN`, so a repeat or
@@ -799,14 +975,17 @@ export class PlanStatusService {
       fields: Pick<
         CancelRunOutcome,
         'activeJobIdsCouldNotCancel' | 'noMatchingJob' | 'removedJobIds'
-      > & { readonly outcome: CancelPlanRunOutcome },
+      > & {
+        readonly outcome: CancelPlanRunOutcome;
+        readonly planStatusAfter?: string | null;
+      },
     ): CancelRunOutcome => {
       return {
         ...fields,
         cancelRequested: false,
         planId,
-        // The plan is deliberately untouched by a run-scoped cancel.
-        planStatusAfter: null,
+        // Null unless the cancel released a SCHEDULED plan back to PENDING.
+        planStatusAfter: fields.planStatusAfter ?? null,
         signaledActiveRunToStop: false,
       };
     };
@@ -858,17 +1037,22 @@ export class PlanStatusService {
     const settled =
       await this.planRunsService.settleScheduledRunCancelled(planRunId);
 
-    if (settled) {
-      await this.reconcileAfterScheduledRunSettled(planId, actor);
-    }
-
+    // Release a SCHEDULED plan to PENDING first (D4), then let the ordinary auto-close complete it
+    // if every task is already done.
+    const released =
+      settled &&
+      (await this.releaseScheduledPlanStandalone(planId, actor, true));
+    const closed =
+      settled && (await this.reconcileAfterScheduledRunSettled(planId, actor));
     const wasCancelled = settled || removedJobIds.length > 0;
     const { NO_ACTIVE_RUN, RUN_CANCELLED } = CANCEL_PLAN_RUN_OUTCOME;
+    const releasedStatus = released ? PLAN_STATUS.PENDING : null;
 
     return outcomeFor({
       activeJobIdsCouldNotCancel: [],
       noMatchingJob: job === undefined,
       outcome: wasCancelled ? RUN_CANCELLED : NO_ACTIVE_RUN,
+      planStatusAfter: closed ? 'COMPLETED' : releasedStatus,
       removedJobIds,
     });
   }

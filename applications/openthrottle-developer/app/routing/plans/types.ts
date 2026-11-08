@@ -33,6 +33,7 @@ export const planStatusValues: Record<PlanStatusKey, string> = {
   PENDING: 'Pending',
   PROMOTED: 'Promoted',
   QUEUED: 'Queued',
+  SCHEDULED: 'Scheduled',
   SKIPPED: 'Skipped',
 };
 

@@ -90,6 +90,16 @@ interface RegisterCliPlanRunInput {
   readonly workerId: string | null;
 }
 
+/**
+ * @description A SCHEDULED run that was just cancelled: its id, and the delayed BullMQ job the caller
+ * should remove (null when the row never recorded one).
+ * @public
+ */
+export interface ScheduledRunRef {
+  readonly bullmqJobId: string | null;
+  readonly id: string;
+}
+
 /** A plan's soonest SCHEDULED run: which row it is and the instant it fires. */
 export interface ScheduledPlanRun {
   readonly id: string;
@@ -658,6 +668,49 @@ export class PlanRunsService {
       .execute();
 
     return result.affected ?? 0;
+  }
+
+  /**
+   * @description Settles every SCHEDULED run of the plan to CANCELLED inside the caller's transaction
+   * and returns the rows it settled (id + delayed job id), so the caller can remove those jobs after
+   * its transaction commits. The guarded half of a status write away from a SCHEDULED plan, a
+   * reschedule (`replaceScheduled`) and run-now over a schedule (`cancelScheduled`) — OT plan
+   * 764c7654, D5–D7. Guarded on `status = SCHEDULED` like {@link settleScheduledRunsCancelled}, so a
+   * run that fired or settled concurrently is never touched. A job left behind is harmless: the
+   * fire-time claim ({@link transitionScheduledRun}) matches no row once its run is CANCELLED.
+   */
+  async cancelScheduledRunsForPlan(
+    planId: string,
+    manager?: EntityManager,
+  ): Promise<readonly ScheduledRunRef[]> {
+    const repo = manager
+      ? manager.getRepository(PlanRun)
+      : this.getRepository();
+    const scheduled = await repo.find({
+      select: { bullmqJobId: true, id: true },
+      where: { planId, status: PLAN_RUN_STATUS.SCHEDULED },
+    });
+
+    if (scheduled.length === 0) {
+      return [];
+    }
+
+    await repo
+      .createQueryBuilder()
+      .update(PlanRun)
+      .set({
+        hostname: null,
+        pid: null,
+        status: PLAN_RUN_STATUS.CANCELLED,
+        workerId: null,
+      })
+      .where('id IN (:...ids)', { ids: scheduled.map((run) => run.id) })
+      .andWhere('status = :status', { status: PLAN_RUN_STATUS.SCHEDULED })
+      .execute();
+
+    return scheduled.map((run) => {
+      return { bullmqJobId: run.bullmqJobId, id: run.id };
+    });
   }
 
   /**

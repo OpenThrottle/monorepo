@@ -165,7 +165,10 @@ export const buildPlansTableColumns = (
         return (
           <div className="p-2 max-sm:p-0">
             <Link to={`/plans?status=${status}`} viewTransition={true}>
-              <PlanStatusBadge status={statusKey} />
+              <PlanStatusBadge
+                scheduledRunAt={row.original.scheduledRunAt}
+                status={statusKey}
+              />
             </Link>
           </div>
         );

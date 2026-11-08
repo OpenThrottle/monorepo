@@ -53,6 +53,7 @@ import {
   parsePlanRunForm,
   parseScheduledFor,
 } from '~/routing/plans/utils/plan-run-form';
+import { readPlanScheduleFailure } from '~/routing/plans/utils/plan-schedule-conflict';
 
 /**
  * Cancels a plan's runs. With no `planRunId` it is the per-plan cancel it always
@@ -610,8 +611,12 @@ export const runPlan = async (
   }
 
   try {
+    // `cancelScheduled=true` is the user's yes to "Unschedule and run now?".
     const input = EnqueuePlanRunInputSchema().parse({
       ...parsed.fields,
+      ...(formData.get('cancelScheduled') === 'true'
+        ? { cancelScheduled: true }
+        : {}),
       planId,
     });
 
@@ -627,10 +632,16 @@ export const runPlan = async (
 
     return { runPlan: result.enqueuePlanRun };
   } catch (error) {
-    const isError = error instanceof Error;
-    const message = isError ? error.message : String(error);
+    // A scheduled plan comes back as a conflict, not an error, so the client opens
+    // the unschedule-and-run confirm instead of a generic toast.
+    const failure = readPlanScheduleFailure(
+      error,
+      'Failed to enqueue plan run.',
+    );
 
-    return { runPlanError: message };
+    return 'conflict' in failure
+      ? { runPlanConflict: failure.conflict }
+      : { runPlanError: failure.message };
   }
 };
 
@@ -675,9 +686,13 @@ export const schedulePlanRun = async (
   }
 
   try {
+    // `replaceScheduled=true` is the user's yes to "Replace the scheduled run?".
     const validated = SchedulePlanRunInputSchema().parse({
       ...parsed.fields,
       planId,
+      ...(formData.get('replaceScheduled') === 'true'
+        ? { replaceScheduled: true }
+        : {}),
       scheduledFor: when.scheduledFor,
     });
     // The generated schema types the `DateTime` scalar loosely (optional `any`),
@@ -696,12 +711,14 @@ export const schedulePlanRun = async (
 
     return { schedulePlanRun: result.schedulePlanRun };
   } catch (error) {
-    return {
-      schedulePlanRunError: toErrorMessage(
-        error,
-        'Failed to schedule plan run.',
-      ),
-    };
+    const failure = readPlanScheduleFailure(
+      error,
+      'Failed to schedule plan run.',
+    );
+
+    return 'conflict' in failure
+      ? { schedulePlanRunConflict: failure.conflict }
+      : { schedulePlanRunError: failure.message };
   }
 };
 

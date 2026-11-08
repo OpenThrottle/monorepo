@@ -1,8 +1,12 @@
-import { PLAN_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
+import {
+  PLAN_STATUS_BADGE_COPY,
+  PLAN_TOOLBAR_COPY,
+} from '~/routing/plans/data/data.copy';
+import { formatPlanScheduledFor } from '~/routing/plans/utils/format-plan-scheduled-for';
 
 /**
  * @description The Run tooltip's explanation for a plan that already has a run waiting on its
- * delayed job: "a run is scheduled for <local time>; cancel it to run now." Takes the plan's
+ * delayed job: "a run is scheduled for <local time>; running now will unschedule it first." Takes the plan's
  * `scheduledRunAt` (the soonest SCHEDULED run's `scheduled_for`, an absolute UTC instant) and renders
  * it in the browser's local time zone. `locale` and `timeZone` default to the browser's and exist so
  * a test can pin the output.
@@ -17,20 +21,24 @@ export const getPlanScheduledRunReason = (
     readonly timeZone?: string;
   } = {},
 ): string | null => {
-  if (scheduledRunAt == null) {
+  const localTime = formatPlanScheduledFor(scheduledRunAt, options);
+  if (localTime === null) {
     return null;
   }
-
-  const instant = new Date(scheduledRunAt);
-  if (Number.isNaN(instant.getTime())) {
-    return null;
-  }
-
-  const localTime = instant.toLocaleString(options.locale, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-    timeZone: options.timeZone,
-  });
 
   return PLAN_TOOLBAR_COPY.runScheduledTooltip(localTime);
+};
+
+/**
+ * @description The tooltip of a SCHEDULED {@link PlanStatusBadge}: "Scheduled for <local time>",
+ * or `undefined` when the plan has no valid `scheduledRunAt` (the badge then carries no tooltip).
+ */
+export const getPlanScheduledForTitle = (
+  scheduledRunAt: Date | string | null | undefined,
+): string | undefined => {
+  const localTime = formatPlanScheduledFor(scheduledRunAt);
+
+  return localTime === null
+    ? undefined
+    : PLAN_STATUS_BADGE_COPY.scheduledFor(localTime);
 };

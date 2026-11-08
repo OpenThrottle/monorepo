@@ -56,6 +56,7 @@ describe('plan-run-dialog utils', () => {
           iterations: 7,
           model: 'opus',
         }),
+        scheduledRunAt: null,
       });
 
       expect(draft).toMatchObject({
@@ -77,9 +78,36 @@ describe('plan-run-dialog utils', () => {
           effort: 'high',
           executionBackend: 'cursor',
         }),
+        scheduledRunAt: null,
       });
 
       expect(draft.effort).toBe('');
+    });
+
+    test("seeds the schedule tab from the plan's current scheduled time (Reschedule…)", () => {
+      // 17:00 UTC is 09:00 in the pinned America/Los_Angeles zone (PST).
+      const draft = createPlanRunDialogDraft({
+        mode: 'schedule',
+        now: NOW,
+        planId: 'plan-1',
+        runConfigJson: null,
+        scheduledRunAt: '2026-11-08T17:00:00.000Z',
+      });
+
+      expect(draft.scheduleTime).toBe('09:00');
+      expect(draft.scheduleDate?.getDate()).toBe(8);
+    });
+
+    test('ignores an unreadable scheduled time and keeps the default hour', () => {
+      const draft = createPlanRunDialogDraft({
+        mode: 'schedule',
+        now: NOW,
+        planId: 'plan-1',
+        runConfigJson: null,
+        scheduledRunAt: 'not a date',
+      });
+
+      expect(draft.scheduleTime).toBe('13:00');
     });
 
     test('falls back to the defaults when the plan has no run config', () => {
@@ -116,17 +144,36 @@ describe('plan-run-dialog utils', () => {
       expect(getPlanRunDialogBlockedReason(gating())).toBeNull();
     });
 
-    test('blocks a terminal plan, and a running one only for Run now', () => {
+    test('blocks a terminal plan, and a running one on the Run tab', () => {
       expect(
         getPlanRunDialogBlockedReason(gating({ planStatus: 'COMPLETED' })),
       ).toContain('terminal');
       expect(
         getPlanRunDialogBlockedReason(gating({ planStatus: 'IN_PROGRESS' })),
       ).toContain('already active');
+    });
+
+    test('blocks Schedule for an active, BLOCKED or terminal plan but not a SCHEDULED one', () => {
       expect(
         getPlanRunDialogBlockedReason(
           gating({ mode: 'schedule', planStatus: 'IN_PROGRESS' }),
         ),
+      ).toContain('queued or running');
+      expect(
+        getPlanRunDialogBlockedReason(
+          gating({ mode: 'schedule', planStatus: 'BLOCKED' }),
+        ),
+      ).toContain('BLOCKED');
+      expect(
+        getPlanRunDialogBlockedReason(
+          gating({ mode: 'schedule', planStatus: 'SCHEDULED' }),
+        ),
+      ).toBeNull();
+    });
+
+    test('does not block Run now for a SCHEDULED plan (the confirm unschedules first)', () => {
+      expect(
+        getPlanRunDialogBlockedReason(gating({ planStatus: 'SCHEDULED' })),
       ).toBeNull();
     });
 
@@ -152,6 +199,7 @@ describe('plan-run-dialog utils', () => {
         executionBackend: 'claude',
         model: 'opus',
       }),
+      scheduledRunAt: null,
     });
     const base = {
       branch: 'feat/x',

@@ -84,6 +84,7 @@ describe('PlanStatusFilter', () => {
     expect(onChange).toHaveBeenCalledWith([
       'BACKLOG',
       'PENDING',
+      'SCHEDULED',
       'QUEUED',
       'IN_PROGRESS',
       'BLOCKED',

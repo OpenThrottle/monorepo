@@ -51,7 +51,7 @@ vi.mock('@openthrottle/node-client', () => ({
   searchPlansBySemanticQuery: vi.fn(),
 }));
 
-const IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE = `Cannot transition to IN_PROGRESS: only PENDING, QUEUED, or already IN_PROGRESS plans may enter this state.`;
+const IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE = `Cannot transition to IN_PROGRESS: only PENDING, QUEUED, SCHEDULED, or already IN_PROGRESS plans may enter this state.`;
 
 describe('PlansResolver', () => {
   let resolver: PlansResolver;
@@ -1018,6 +1018,7 @@ describe('PlansResolver', () => {
         actorSub: undefined,
         actorUserId: null,
         branch: 'feature/test',
+        cancelScheduled: null,
         idempotencyKey: 'caller-key',
         jobRunHooksJson: null,
         planId: mockPlan.id,

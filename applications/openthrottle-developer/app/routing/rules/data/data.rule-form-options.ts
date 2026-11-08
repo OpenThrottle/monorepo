@@ -17,5 +17,6 @@ export const PLAN_STATUSES = [
   'PENDING',
   'PROMOTED',
   'QUEUED',
+  'SCHEDULED',
   'SKIPPED',
 ];

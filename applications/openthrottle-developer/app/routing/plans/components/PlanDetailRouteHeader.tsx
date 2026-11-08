@@ -57,7 +57,11 @@ export const PlanDetailRouteHeader = (
 
       <div className="flex flex-col gap-2">
         <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-          <PlanStatusBadge status={status} to={`/plans?status=${status}`} />
+          <PlanStatusBadge
+            scheduledRunAt={plan.scheduledRunAt}
+            status={status}
+            to={`/plans?status=${status}`}
+          />
 
           {/* {project ? (
             <Badge

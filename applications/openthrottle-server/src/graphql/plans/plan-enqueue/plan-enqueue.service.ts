@@ -19,10 +19,12 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   PlanRunExecutionBackend,
   PlanRunStatus,
+  ScheduledRunRef,
 } from '@openthrottle/nestjs-repositories';
 import {
   Plan,
   PLAN_RUN_STATUS,
+  PLAN_STATUS,
   PlanRun,
   PlanRunsService,
   PlansService,
@@ -61,12 +63,19 @@ import {
   orchestratorJobInputFromSnapshot,
 } from '../enqueue-plan-run-config-snapshot.ts';
 import type { RalphPlanRunTuningInput } from '../plan.input.ts';
+import type { StatusChangeActor } from '../plan-status.service.ts';
 import { PlanStatusService } from '../plan-status.service.ts';
+import { PLAN_SCHEDULE_CONFLICT_CODE } from './plan-enqueue.constants.ts';
 import type {
   EnqueueOutcome,
   ScheduledRunFireOutcome,
   ScheduleOutcome,
 } from './plan-enqueue.types.ts';
+import {
+  createPlanScheduleConflictError,
+  decidePlanSchedulability,
+  isOneScheduledRunViolation,
+} from './plan-enqueue.utils.ts';
 import {
   countRunnablePlanTasks,
   ENQUEUE_TASK_STATUSES_TO_RESET,
@@ -107,6 +116,8 @@ interface EnqueueSpawnParams {
   readonly actorUserId?: string | null;
   /** REQUIRED git branch the run operates on; persisted on plan_runs.branch. Rejected when blank. */
   readonly branch: string;
+  /** True to cancel the plan's scheduled run and run now (D6); otherwise a schedule rejects. */
+  readonly cancelScheduled?: boolean | null;
   /** Explicit registered checkout id; resolved to a filesystem path (highest precedence). */
   readonly checkoutId?: string | null;
   readonly idempotencyKey?: string | null;
@@ -129,6 +140,8 @@ interface EnqueueOrchestratorParams {
   readonly actorUserId?: string | null;
   /** REQUIRED git branch the run operates on; persisted on plan_runs.branch. Rejected when blank. */
   readonly branch: string;
+  /** True to cancel the plan's scheduled run and run now (D6); otherwise a schedule rejects. */
+  readonly cancelScheduled?: boolean | null;
   /** Explicit registered checkout id; resolved to a filesystem path (highest precedence). */
   readonly checkoutId?: string | null;
   readonly idempotencyKey?: string | null;
@@ -164,6 +177,8 @@ interface SchedulePlanRunParams {
   readonly planId: string;
   readonly priority?: number | null;
   readonly ralph?: RalphPlanRunTuningInput | null;
+  /** True to cancel the plan's current scheduled run and schedule this one in its place (D5). */
+  readonly replaceScheduled?: boolean | null;
   /** Portable repository id; resolved to the user's single checkout when checkoutId is omitted. */
   readonly repositoryId?: string | null;
   /** The absolute instant the run fires at. Must be in the future and within the 30-day horizon. */
@@ -185,6 +200,13 @@ interface EnqueueUsageLimitResumeParams {
   readonly jobData: RunPlanOrchestratorJobData;
   /** The run row that stopped on the limit; the continuation row links back to it. */
   readonly limitedRun: PlanRun;
+}
+
+/** @description What {@link PlanEnqueueService.commitEnqueueTransaction} committed. */
+interface CommittedEnqueue {
+  /** SCHEDULED runs the commit cancelled (D5/D6), whose delayed jobs the caller removes. */
+  readonly cancelledScheduledRuns: readonly ScheduledRunRef[];
+  readonly planRun: PlanRun;
 }
 
 /** @description A run's workspace after resolution: the canonical ids to snapshot plus the path it runs in. */
@@ -242,6 +264,7 @@ export class PlanEnqueueService {
       actorSub,
       actorUserId,
       branch,
+      cancelScheduled,
       checkoutId,
       idempotencyKey,
       jobRunHooksJson,
@@ -257,6 +280,7 @@ export class PlanEnqueueService {
       actorSub,
       actorUserId,
       branch,
+      cancelScheduled,
       checkoutId,
       idempotencyKey: idempotencyKey ?? null,
       jobRunHooksJson,
@@ -274,6 +298,10 @@ export class PlanEnqueueService {
    * @description Enqueue an in-process Ralph orchestrator plan-run. Callers must pre-validate the
    * GraphQL `mode`/`taskId` constraints (the resolver does this); this method assumes a resolved
    * `mode` and an existing `taskId` when `mode === 'task'`.
+   *
+   * A plan with a SCHEDULED run is rejected with `PLAN_ALREADY_SCHEDULED` (D6) unless
+   * `cancelScheduled` is set: then the scheduled run is cancelled in the same transaction that
+   * records this run (plan SCHEDULED -> QUEUED), and its delayed job is removed after the commit.
    */
   async enqueueOrchestrator(
     params: EnqueueOrchestratorParams,
@@ -283,6 +311,7 @@ export class PlanEnqueueService {
       actorSub,
       actorUserId,
       branch,
+      cancelScheduled,
       checkoutId,
       idempotencyKey,
       jobRunHooksJson,
@@ -321,7 +350,7 @@ export class PlanEnqueueService {
       repositoryId: resolvedWorkspace.repositoryId,
     });
 
-    await this.commitEnqueueTransaction({
+    const { cancelledScheduledRuns } = await this.commitEnqueueTransaction({
       actorKind,
       actorSub,
       actorUserId,
@@ -336,7 +365,10 @@ export class PlanEnqueueService {
       planId,
       runConfigSnapshot,
       runKind: 'orchestrator',
+      scheduledRunPolicy: cancelScheduled === true ? 'cancel' : 'reject',
     });
+
+    await this.removeCancelledScheduledJobs(cancelledScheduledRuns);
 
     const enqueueResult = await this.queuesService.enqueuePlanRalphOrchestrator(
       {
@@ -367,12 +399,20 @@ export class PlanEnqueueService {
   /**
    * @description Schedules a plan run for a later instant. Goes through the same two steps as every
    * other orchestrator enqueue and as {@link enqueueUsageLimitResume} — {@link commitEnqueueTransaction}
-   * (run row SCHEDULED with `scheduled_for`; plan and tasks untouched) then
+   * (run row SCHEDULED with `scheduled_for`; plan -> SCHEDULED, tasks untouched) then
    * `QueuesService.enqueuePlanRalphOrchestrator` (BullMQ add after commit, delayed by the time left) —
    * differing only in that the run is freshly resolved from the request, like
    * {@link enqueueOrchestrator}, and the status/delay come from `scheduledFor`. Unlike every other
-   * enqueue it does NOT touch the plan or task statuses (see `skipPlanAndTaskStatusWrites`): that
-   * moves to fire time.
+   * enqueue it moves the plan to SCHEDULED rather than QUEUED and leaves the tasks alone (the
+   * `schedule` status writes): the plan -> QUEUED flip and the task resets move to fire time.
+   *
+   * Only a PENDING or BACKLOG plan can be scheduled (OT plan 764c7654, D2); anything else is rejected
+   * with a D8 conflict (`PLAN_ALREADY_SCHEDULED`, `PLAN_ACTIVE`, `PLAN_NOT_SCHEDULABLE`). The check
+   * runs inside the commit transaction against the plan row under a write lock, so two concurrent
+   * schedules of one plan cannot both pass it; the partial unique index of migration 152 backs it,
+   * and a violation of it maps to `PLAN_ALREADY_SCHEDULED` too. With `replaceScheduled` a SCHEDULED
+   * plan is rescheduled instead (D5): the old run is cancelled and the new one recorded in one
+   * transaction, and the plan stays SCHEDULED throughout.
    *
    * Validation lives here, not in the resolver, so every caller (UI, MCP) gets the same rules:
    * `scheduledFor` must be a valid instant strictly in the future and no further out than
@@ -398,6 +438,7 @@ export class PlanEnqueueService {
       planId,
       priority,
       ralph,
+      replaceScheduled,
       repositoryId,
       scheduledFor,
       workingDirectory,
@@ -457,26 +498,33 @@ export class PlanEnqueueService {
     });
     const executionBackend = jobData.executionBackend ?? 'cursor';
 
-    const planRun = await this.commitEnqueueTransaction({
-      actorKind,
-      actorSub,
-      actorUserId,
-      branch: resolvedBranch,
-      bullmqJobId: jobId,
-      checkoutId: resolvedWorkspace.checkoutId,
-      executionBackend,
-      model: runConfigSnapshot.ralph.model ?? null,
-      planId,
-      runConfigSnapshot,
-      runKind: 'orchestrator',
-      scheduledFor,
-      // Scheduling writes ONLY the run row. The plan and its tasks are left exactly as they are:
-      // another run may be live on this plan (resetting its tasks to QUEUED would corrupt it), and
-      // a plan must not read QUEUED for up to 30 days. The plan -> QUEUED and task resets happen at
-      // fire time, when the delayed job starts the run.
-      skipPlanAndTaskStatusWrites: true,
-      status: PLAN_RUN_STATUS.SCHEDULED,
-    });
+    const { cancelledScheduledRuns, planRun } =
+      await this.commitEnqueueTransaction({
+        actorKind,
+        actorSub,
+        actorUserId,
+        branch: resolvedBranch,
+        bullmqJobId: jobId,
+        checkoutId: resolvedWorkspace.checkoutId,
+        executionBackend,
+        model: runConfigSnapshot.ralph.model ?? null,
+        planId,
+        runConfigSnapshot,
+        runKind: 'orchestrator',
+        scheduledFor,
+        // Scheduling moves the plan to SCHEDULED and leaves its tasks exactly as they are: a plan must
+        // not read QUEUED for up to 30 days. The plan -> QUEUED and task resets happen at fire time,
+        // when the delayed job starts the run.
+        scheduledRunPolicy: replaceScheduled === true ? 'cancel' : 'reject',
+        status: PLAN_RUN_STATUS.SCHEDULED,
+        statusWrites: 'schedule',
+      });
+
+    // D5: the old row is already CANCELLED (committed with the new one), so its job is now inert;
+    // removing it before adding the new job only tidies Redis. If the process dies between the
+    // commit and these BullMQ calls, the old job fires into a no-op claim and the boot reconcile
+    // re-adds the new run's missing job.
+    await this.removeCancelledScheduledJobs(cancelledScheduledRuns);
 
     const enqueueResult = await this.queuesService.enqueuePlanRalphOrchestrator(
       {
@@ -735,7 +783,10 @@ export class PlanEnqueueService {
 
   /**
    * @description Atomicity invariant: the run record (QUEUED, or SCHEDULED with `scheduledFor`), plan
-   * status, and task resets commit together or not at all. Returns the recorded run. The BullMQ add cannot join a DB transaction, so callers enqueue AFTER this
+   * status, and task resets commit together or not at all. `statusWrites` picks the status half:
+   * `enqueue` (the default) moves the plan and its resettable tasks to QUEUED; `schedule` first
+   * checks the locked plan may be scheduled (D2, throwing a D8 conflict), then moves only the plan, to
+   * SCHEDULED. Returns the recorded run. The BullMQ add cannot join a DB transaction, so callers enqueue AFTER this
    * commits (enqueue-after-commit). A DB failure leaves NO orphaned job; the narrow
    * "committed but add threw" window leaves a QUEUED plan with no job, which a retry re-enqueues and
    * the processor's onModuleInit reconciliation tolerates.
@@ -757,13 +808,16 @@ export class PlanEnqueueService {
     runKind: 'orchestrator' | 'spawn';
     scheduledFor?: Date | null;
     /**
-     * True to write only the run row, leaving the plan and its tasks exactly as they are. Used by
-     * a scheduled run: the plan may have another run live, and must not read QUEUED until fire time.
+     * What to do when the plan already has a SCHEDULED run: `reject` with PLAN_ALREADY_SCHEDULED,
+     * `cancel` it in this transaction (D5 reschedule, D6 run-now), or `ignore` it (system enqueues
+     * such as a usage-limit resume, which never meet one). Defaults to `ignore`.
      */
-    skipPlanAndTaskStatusWrites?: boolean;
+    scheduledRunPolicy?: 'cancel' | 'ignore' | 'reject';
     status?: PlanRunStatus;
+    /** Which status writes join the run row; see the method description. Defaults to `enqueue`. */
+    statusWrites?: 'enqueue' | 'schedule';
     taskStatusesToReset?: readonly string[];
-  }): Promise<PlanRun> {
+  }): Promise<CommittedEnqueue> {
     const {
       actorKind,
       actorSub,
@@ -778,14 +832,26 @@ export class PlanEnqueueService {
       runConfigSnapshot,
       runKind,
       scheduledFor,
-      skipPlanAndTaskStatusWrites,
+      scheduledRunPolicy,
       status,
+      statusWrites,
       taskStatusesToReset,
     } = params;
     const repo = this.plansService.getRepository();
 
     return repo.manager.transaction(async (manager) => {
-      const planRun = await this.planRunsService.recordQueuedRun(
+      const cancelledScheduledRuns = await this.applyScheduledRunPolicy(
+        manager,
+        planId,
+        scheduledRunPolicy ?? 'ignore',
+      );
+      const isSchedule = statusWrites === 'schedule';
+      // A reschedule has just cancelled the old run above, so its SCHEDULED plan may be scheduled.
+      const planToSchedule = isSchedule
+        ? await this.lockSchedulablePlan(manager, planId, scheduledRunPolicy)
+        : null;
+
+      const planRun = await this.recordRunMappingScheduleConflict(
         {
           actorUserId: actorUserId ?? null,
           branch: branch ?? null,
@@ -804,8 +870,18 @@ export class PlanEnqueueService {
         manager,
       );
 
-      if (skipPlanAndTaskStatusWrites === true) {
-        return planRun;
+      if (planToSchedule !== null) {
+        await this.planStatusService.applyStatusChange(manager, {
+          actorKind,
+          actorSub,
+          captureFailureIsFatal: true,
+          entity: planToSchedule,
+          requestedStatus: PLAN_STATUS.SCHEDULED,
+          throwOnForbiddenInProgress: true,
+        });
+        await manager.getRepository(Plan).save(planToSchedule);
+
+        return { cancelledScheduledRuns, planRun };
       }
 
       // Fatal capture: this is a foreground, user-initiated mutation already inside its own
@@ -819,8 +895,137 @@ export class PlanEnqueueService {
           taskStatusesToReset ?? ENQUEUE_TASK_STATUSES_TO_RESET,
       });
 
-      return planRun;
+      return { cancelledScheduledRuns, planRun };
     });
+  }
+
+  /**
+   * @description Applies a {@link commitEnqueueTransaction} `scheduledRunPolicy` to the plan, under
+   * a write lock on the plan row so it cannot race a concurrent schedule. With no SCHEDULED run it is
+   * a no-op. `reject` throws the D8 `PLAN_ALREADY_SCHEDULED` conflict naming the run; `cancel` settles
+   * the plan's SCHEDULED runs CANCELLED and returns them for the caller to remove their jobs after
+   * commit.
+   */
+  private async applyScheduledRunPolicy(
+    manager: EntityManager,
+    planId: string,
+    policy: 'cancel' | 'ignore' | 'reject',
+  ): Promise<readonly ScheduledRunRef[]> {
+    if (policy === 'ignore') return [];
+
+    await manager.getRepository(Plan).findOne({
+      lock: { mode: 'pessimistic_write' },
+      where: { id: planId },
+    });
+    const scheduledRun = await manager.getRepository(PlanRun).findOne({
+      order: { scheduledFor: 'ASC' },
+      where: { planId, status: PLAN_RUN_STATUS.SCHEDULED },
+    });
+
+    if (scheduledRun === null) return [];
+
+    if (policy === 'reject') {
+      throw createPlanScheduleConflictError({
+        code: PLAN_SCHEDULE_CONFLICT_CODE.PLAN_ALREADY_SCHEDULED,
+        message: `Plan already has a run scheduled for ${scheduledRun.scheduledFor?.toISOString() ?? 'later'}; pass cancelScheduled to run now, or replaceScheduled to reschedule`,
+        planRunId: scheduledRun.id,
+        scheduledFor: scheduledRun.scheduledFor,
+      });
+    }
+
+    return this.planRunsService.cancelScheduledRunsForPlan(planId, manager);
+  }
+
+  /**
+   * @description `recordQueuedRun`, with a violation of the one-SCHEDULED-run-per-plan index
+   * (migration 152) mapped to the D8 `PLAN_ALREADY_SCHEDULED` conflict. The plan-row lock makes the
+   * violation unreachable through this service; the index is the backstop for any other writer.
+   */
+  private async recordRunMappingScheduleConflict(
+    run: Parameters<PlanRunsService['recordQueuedRun']>[0],
+    manager: EntityManager,
+  ): Promise<PlanRun> {
+    try {
+      return await this.planRunsService.recordQueuedRun(run, manager);
+    } catch (error) {
+      if (!isOneScheduledRunViolation(error)) throw error;
+
+      throw createPlanScheduleConflictError({
+        code: PLAN_SCHEDULE_CONFLICT_CODE.PLAN_ALREADY_SCHEDULED,
+        message: `Plan already has a scheduled run`,
+        planRunId: null,
+        scheduledFor: null,
+      });
+    }
+  }
+
+  /** @description Removes the delayed jobs of scheduled runs a commit just cancelled (best-effort). */
+  private async removeCancelledScheduledJobs(
+    runs: readonly ScheduledRunRef[],
+  ): Promise<void> {
+    await this.planStatusService.removeScheduledRunJobs(
+      runs.flatMap((run) => {
+        return run.bullmqJobId === null ? [] : [run.bullmqJobId];
+      }),
+    );
+  }
+
+  /**
+   * @description Re-reads the plan under a write lock inside the scheduling transaction and applies
+   * the D2 gate ({@link decidePlanSchedulability}). Returns the locked row for the caller to move to
+   * SCHEDULED, or throws the D8 conflict — carrying the plan's current scheduled run when it has one.
+   * Under the `cancel` policy (a D5 reschedule) a SCHEDULED plan passes: its old run was cancelled
+   * earlier in this transaction, and the plan stays SCHEDULED for the new one.
+   */
+  private async lockSchedulablePlan(
+    manager: EntityManager,
+    planId: string,
+    scheduledRunPolicy: 'cancel' | 'ignore' | 'reject' | undefined,
+  ): Promise<Plan> {
+    const plan = await manager.getRepository(Plan).findOne({
+      lock: { mode: 'pessimistic_write' },
+      where: { id: planId },
+    });
+
+    if (!plan) {
+      throw new NotFoundException(`🟡 1 - Plan not found: ${planId}`);
+    }
+
+    const schedulability = decidePlanSchedulability(plan.status);
+    const isReschedule =
+      scheduledRunPolicy === 'cancel' && plan.status === PLAN_STATUS.SCHEDULED;
+
+    if (schedulability.kind === 'schedulable' || isReschedule) {
+      return plan;
+    }
+
+    const scheduledRun = await manager.getRepository(PlanRun).findOne({
+      order: { scheduledFor: 'ASC' },
+      where: { planId, status: PLAN_RUN_STATUS.SCHEDULED },
+    });
+
+    throw createPlanScheduleConflictError({
+      code: schedulability.code,
+      message: schedulability.message,
+      planRunId: scheduledRun?.id ?? null,
+      scheduledFor: scheduledRun?.scheduledFor ?? null,
+    });
+  }
+
+  /**
+   * @description Returns a SCHEDULED plan to PENDING once its scheduled run was settled without
+   * firing (D4) — the boot reconcile's MISSED settle. Guarded on the plan still being SCHEDULED.
+   * Background writer: a work-ledger capture failure is logged, not thrown.
+   */
+  async releaseScheduledPlan(
+    planId: string,
+    actor: StatusChangeActor,
+  ): Promise<boolean> {
+    return this.planStatusService.releaseScheduledPlanStandalone(
+      planId,
+      actor,
+      false,
+    );
   }
 
   /**
@@ -997,16 +1202,18 @@ export class PlanEnqueueService {
    *    SKIPPED, `workspace_missing` (the caller's `workspaceError`) settles it FAILED, each recording
    *    the decision's reason in `settled_reason`. If the update loses the race the result is `not_scheduled` and nothing else is
    *    written.
-   * 5. Only for `fire`, and only after the claim won: the plan and task QUEUED flip that scheduling
-   *    skipped, via the same {@link writeEnqueueStatuses} every enqueue uses (non-fatal capture — a
-   *    background writer, like every other worker-side status write). The worker then claims the row
-   *    IN_PROGRESS and promotes the plan as for any run.
+   * 5. Only for `fire`, and only after the claim won: the plan (SCHEDULED) and task QUEUED flip that
+   *    scheduling skipped, via the same {@link writeEnqueueStatuses} every enqueue uses (non-fatal
+   *    capture — a background writer, like every other worker-side status write). The worker then
+   *    claims the row IN_PROGRESS and promotes the plan as for any run. Every other decision returns
+   *    a SCHEDULED plan to PENDING ({@link PlanStatusService.releaseScheduledPlan}, D4) in the same
+   *    transaction.
    *
-   * The plan's own status does not gate the fire: a scheduled run on a COMPLETED (or CANCELED,
-   * PENDING, ...) plan that still has runnable tasks starts exactly like "Run now" on that plan
-   * would — plan -> QUEUED -> IN_PROGRESS. A plan with no runnable tasks is never flipped back to
-   * QUEUED: there is no work, so the run settles SKIPPED; the plan then gets the ordinary
-   * auto-close ({@link PlanStatusService.reconcileAfterScheduledRunSettled}), which completes an idle
+   * The plan's own status does not gate the fire: since D2 only a PENDING/BACKLOG plan is scheduled,
+   * it is SCHEDULED here, but a legacy row on any other plan still starts exactly like "Run now"
+   * would — plan -> QUEUED -> IN_PROGRESS. A plan with no runnable tasks is never flipped to
+   * QUEUED: there is no work, so the run settles SKIPPED and a SCHEDULED plan returns to PENDING; the
+   * plan then gets the ordinary auto-close ({@link PlanStatusService.reconcileAfterScheduledRunSettled}), which completes an idle
    * PENDING/QUEUED plan whose tasks are all done and otherwise leaves its status and `completedAt`. Notifying the user is the caller's job. Throws only on a database error.
    */
   async fireScheduledRun(params: {
@@ -1072,6 +1279,13 @@ export class PlanEnqueueService {
             captureFailureIsFatal: false,
             planId,
             taskStatusesToReset: ENQUEUE_TASK_STATUSES_TO_RESET,
+          });
+        } else {
+          await this.planStatusService.releaseScheduledPlan(manager, {
+            actorKind,
+            actorSub,
+            captureFailureIsFatal: false,
+            planId,
           });
         }
 

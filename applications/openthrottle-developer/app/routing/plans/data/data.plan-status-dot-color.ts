@@ -13,5 +13,6 @@ export const PLAN_STATUS_DOT_COLOR: Record<PlanStatusKey, string> = {
   PENDING: 'bg-sky-500',
   PROMOTED: 'bg-blue-500',
   QUEUED: 'bg-amber-500',
+  SCHEDULED: 'bg-orange-500',
   SKIPPED: 'bg-teal-500',
 };

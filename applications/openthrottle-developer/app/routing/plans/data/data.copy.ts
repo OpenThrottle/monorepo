@@ -35,6 +35,14 @@ export const PLANS_ONBOARDING = {
 } satisfies GlobalFeatureOnboardingContent;
 
 /**
+ * @description Copy for {@link PlanStatusBadge}: the tooltip a SCHEDULED badge
+ * carries, naming the local time its run fires at.
+ */
+export const PLAN_STATUS_BADGE_COPY = {
+  scheduledFor: (localTime: string): string => `Scheduled for ${localTime}`,
+} as const;
+
+/**
  * @description Copy for the plans index Status filter ({@link PlanStatusFilter}):
  * the trigger title, the two group headings and the two footer actions.
  */
@@ -332,6 +340,7 @@ export const PLAN_TOOLBAR_COPY = {
   evaluateRulesRunningTooltip: `Unavailable while a run is active — kill the run first.`,
   evaluateRulesTerminalTooltip: `This plan is in a terminal state — nothing to evaluate.`,
   markCompleteRunningTooltip: `Unavailable while a run is active — kill the run first.`,
+  rescheduleLabel: `Reschedule…`,
   runCaretAriaLabel: `More run options`,
   runDefaultTooltip: `Enqueue a worker run for this plan using tuning from Workflow run options (defaults apply if you have not changed them).`,
   runNoRunnableTasksTooltip: `Every task on this plan is already done — add or reopen a task to run or schedule it.`,
@@ -346,10 +355,13 @@ export const PLAN_TOOLBAR_COPY = {
   runScheduledToastDescription: (localTime: string): string =>
     `Fires ${localTime}.`,
   runScheduledTooltip: (localTime: string): string =>
-    `A run is scheduled for ${localTime}; cancel it to run now.`,
+    `A run is scheduled for ${localTime}; running now will unschedule it first.`,
   runTerminalTooltip: `This plan is in a terminal state — create a new plan to do more work.`,
   runWithOptionsLabel: `Run with options…`,
+  scheduleActiveTooltip: `A run is already queued or running — a plan can only be scheduled before it starts.`,
+  scheduleBlockedTooltip: `This plan is BLOCKED — unblock it before scheduling a run.`,
   scheduleLabel: `Schedule…`,
+  scheduleTerminalTooltip: `This plan is in a terminal state — create a new plan to schedule more work.`,
   settleRunAriaLabel: (planTitle: string): string =>
     `Settle interactive run for ${planTitle}`,
   settleRunCancelLabel: `Keep waiting`,
@@ -499,6 +511,46 @@ export const PLAN_RUN_RESCHEDULE_COPY = {
   },
   triggerLabel: `Reschedule`,
   triggerTitle: `Move this scheduled run to a different start time.`,
+} as const;
+
+/**
+ * @description Confirms that unschedule a SCHEDULED plan's run before something else proceeds:
+ * Run now (one-click or the dialog), Reschedule (replace), a status change, and the server's
+ * `PLAN_ALREADY_SCHEDULED` conflict arriving from a stale page or another tab. `localTime` is the
+ * run's fire time in the browser's zone, `null` when it is unknown.
+ */
+export const PLAN_SCHEDULE_CONFIRM_COPY = {
+  conflictActive: `A run is already queued or running for this plan, so it cannot be scheduled.`,
+  conflictNotSchedulable: `This plan is blocked or finished, so it cannot be scheduled.`,
+  keepLabel: `Keep it scheduled`,
+  pendingLabel: `Working…`,
+  replaceBody: `The current scheduled run is cancelled and this one takes its place. The plan stays scheduled.`,
+  replaceConfirmLabel: `Replace schedule`,
+  replaceTitle: (localTime: string | null): string => {
+    if (localTime === null) {
+      return `A run is already scheduled. Replace it?`;
+    }
+
+    return `Scheduled for ${localTime}. Replace it?`;
+  },
+  runNowBody: `The scheduled run is cancelled and a run starts right away.`,
+  runNowConfirmLabel: `Unschedule and run now`,
+  runNowTitle: (localTime: string | null): string => {
+    if (localTime === null) {
+      return `This plan has a scheduled run. Unschedule and run now?`;
+    }
+
+    return `Scheduled for ${localTime}. Unschedule and run now?`;
+  },
+  statusConfirmLabel: `Unschedule and continue`,
+  statusTitle: `Unschedule this run?`,
+  statusUnschedule: (localTime: string | null): string => {
+    if (localTime === null) {
+      return `This will unschedule the scheduled run.`;
+    }
+
+    return `This will unschedule the run at ${localTime}.`;
+  },
 } as const;
 
 /**

@@ -17,6 +17,8 @@ import {
   createPlanToolHandler,
   listPlansByStatusToolDescription,
   listPlansByStatusToolHandler,
+  updatePlanToolDescription,
+  updatePlanToolHandler,
 } from './plans.ts';
 
 vi.mock('@openthrottle/nodejs-graphql', () => ({
@@ -549,6 +551,88 @@ describe('listPlansByStatusToolHandler', () => {
         ],
         isError: true,
       });
+    });
+  });
+});
+
+describe('update_plan and the server-written SCHEDULED status', () => {
+  beforeEach(async () => {
+    process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = 'test-token';
+    await primeWorkSession();
+  });
+
+  afterEach(() => {
+    delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
+    clearCurrentSession();
+  });
+
+  it('documents that SCHEDULED is server-written and that leaving it cancels the run', () => {
+    expect(listPlansByStatusToolDescription).toContain('SCHEDULED');
+    expect(updatePlanToolDescription).toContain('cannot be set directly');
+    expect(updatePlanToolDescription).toContain('cancels its scheduled run');
+  });
+
+  it('says the scheduled run was cancelled when a SCHEDULED plan moves on (D7)', async () => {
+    vi.mocked(executeGraphqlWithAuth)
+      .mockResolvedValueOnce({ plan: { id: 'plan-1', status: 'SCHEDULED' } })
+      .mockResolvedValueOnce({
+        updatePlan: { id: 'plan-1', status: 'COMPLETED' },
+      });
+
+    const result = await updatePlanToolHandler({
+      id: 'plan-1',
+      status: 'COMPLETED',
+    });
+
+    expect(result).toMatchObject({
+      content: [
+        { text: expect.stringContaining('cancelled its scheduled run') },
+      ],
+    });
+  });
+
+  it('adds no note for a plan that was not SCHEDULED', async () => {
+    vi.mocked(executeGraphqlWithAuth)
+      .mockResolvedValueOnce({ plan: { id: 'plan-1', status: 'PENDING' } })
+      .mockResolvedValueOnce({
+        updatePlan: { id: 'plan-1', status: 'COMPLETED' },
+      });
+
+    const result = await updatePlanToolHandler({
+      id: 'plan-1',
+      status: 'COMPLETED',
+    });
+
+    expect(result).toMatchObject({
+      content: [{ text: expect.not.stringContaining('scheduled run') }],
+    });
+  });
+
+  it('skips the status read when the update sets no status', async () => {
+    vi.mocked(executeGraphqlWithAuth).mockResolvedValueOnce({
+      updatePlan: { id: 'plan-1', status: 'PENDING' },
+    });
+
+    await updatePlanToolHandler({ id: 'plan-1', title: 'Renamed' });
+
+    expect(executeGraphqlWithAuth).toHaveBeenCalledOnce();
+  });
+
+  it('surfaces the server rejection of a manual SCHEDULED write verbatim (D1)', async () => {
+    const rejection = `Cannot set a plan to SCHEDULED directly: it is set by scheduling a run (schedulePlanRun) and cleared when that run fires or is cancelled.`;
+    vi.mocked(executeGraphqlWithAuth).mockRejectedValueOnce(
+      new Error(`GraphQL errors: ${rejection}`),
+    );
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    const result = await updatePlanToolHandler({
+      id: 'plan-1',
+      status: 'SCHEDULED',
+    });
+
+    expect(result).toMatchObject({
+      content: [{ text: `update_plan failed: ${rejection}` }],
+      isError: true,
     });
   });
 });
