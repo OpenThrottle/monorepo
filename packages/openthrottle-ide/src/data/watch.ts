@@ -35,7 +35,8 @@ export interface WatchHandlers {
   onError?: (error: unknown) => void;
   /**
    * Called once per debounce window with the coalesced batch of events. At most
-   * one event per path is reported per batch (the latest one wins).
+   * one event per path is reported per batch: the latest one wins, except that a
+   * `change` never overrides an `add` in the same window.
    */
   onEvents: (events: WatchEvent[]) => void;
 }
@@ -45,10 +46,13 @@ export interface WatchHandle {
   /** Stop watching and fully release the underlying watcher's resources. */
   close: () => Promise<void>;
   /**
-   * Resolves once the watcher has finished its initial scan and is live.
-   * Until then, writes may land before the watcher is listening and go
-   * unreported, so callers that need to observe a specific change should await
-   * this first rather than guessing with a sleep.
+   * Resolves once the watcher has finished its initial scan and registered its
+   * OS watches. Await it before writing rather than guessing with a sleep —
+   * but on macOS it is necessary, not sufficient: directory watches go through
+   * FSEvents, which libuv starts asynchronously, so a write landing just after
+   * `ready` can still be dropped (dropped, not delayed). A caller that must
+   * observe one specific change should confirm liveness by observing a probe
+   * write first.
    */
   ready: Promise<void>;
 }
@@ -92,7 +96,11 @@ export function watchWorkspace(
 
   const enqueue = (type: WatchEventType, absolutePath: string): void => {
     const path = toRelativePath(absolutePath, resolved);
-    pending.set(path, { path, type });
+    // A new file is routinely reported as `add` then `change` (the create, then
+    // the content write). Latest-wins would collapse that pair into `change`,
+    // so a file nobody has heard of yet would never be reported as added.
+    const isStillNew = type === 'change' && pending.get(path)?.type === 'add';
+    pending.set(path, { path, type: isStillNew ? 'add' : type });
     if (flushTimer) {
       clearTimeout(flushTimer);
     }
@@ -215,7 +223,7 @@ export async function createWorkspaceIndex(
   handlers?: Pick<WatchHandlers, 'debounceMs' | 'onError'>,
 ): Promise<WorkspaceIndex> {
   const resolved = resolveWorkspaceConfig(config);
-  let snapshot = await hashWorkspace(config);
+  let snapshot: WorkspaceFileHash[] = [];
   const subscribers = new Set<IndexSubscriber>();
 
   // Serialize batch processing so concurrent flushes never race on `snapshot`.
@@ -266,10 +274,21 @@ export async function createWorkspaceIndex(
     },
   });
 
-  // Resolve only once the watcher is actually listening: a caller that awaits
-  // this function then immediately writes a file should see that write, not
-  // race the initial scan.
+  // Seed the snapshot only once the watcher is listening, and hold every batch
+  // behind the seed. Seeding first left a gap: a write landing between the hash
+  // and the watcher going live was in neither, so the index stayed stale for
+  // that file forever. Now such a write is either already in the seed or
+  // re-applied on top of it, and re-hashing an unchanged file is a no-op.
   await watcher.ready;
+  queue = queue.then(async () => {
+    snapshot = await hashWorkspace(config);
+  });
+  try {
+    await queue;
+  } catch (error) {
+    await watcher.close();
+    throw error;
+  }
 
   return {
     close: async (): Promise<void> => {
