@@ -5,7 +5,7 @@ import type {
   AgentTokenUsageService,
 } from '@openthrottle/nestjs-repositories';
 import { agentConversationMessagesFactory } from '@openthrottle/nestjs-repositories/testing';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   ConversationStreamService,
@@ -118,8 +118,17 @@ function buildService(): {
   return { conversations, publish, recordTurnUsage, service };
 }
 
+beforeEach(() => {
+  // Default this suite to the CLI chat path. vitest.config spreads loadEnv into
+  // test.env, so .env.default's OPENTHROTTLE_CHAT_ACP_BACKENDS=all would otherwise
+  // skip the cursor create-chat mint under ACP routing (and a shell override
+  // cannot win — the file value is injected into test.env, not inherited).
+  vi.stubEnv('OPENTHROTTLE_CHAT_ACP_BACKENDS', '');
+});
+
 afterEach(() => {
   vi.clearAllMocks();
+  vi.unstubAllEnvs();
   vi.useRealTimers();
   delete process.env.OPENTHROTTLE_CHAT_IDLE_TIMEOUT_MS;
 });
@@ -873,16 +882,12 @@ describe('ConversationStreamService', () => {
     cursorStreamMock.mockReturnValue(fakeStream(['hi']));
     const { service } = buildService();
 
-    try {
-      await service.runStream({
-        ...baseRun,
-        backend: 'cursor',
-        cwd: '/repo',
-        provider: 'cursor',
-      });
-    } finally {
-      vi.unstubAllEnvs();
-    }
+    await service.runStream({
+      ...baseRun,
+      backend: 'cursor',
+      cwd: '/repo',
+      provider: 'cursor',
+    });
 
     expect(createCursorAgentSessionMock).not.toHaveBeenCalled();
     expect(cursorStreamMock.mock.calls[0]?.[0]).toMatchObject({
