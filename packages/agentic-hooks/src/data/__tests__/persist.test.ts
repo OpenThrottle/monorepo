@@ -39,6 +39,32 @@ const jsonFetch = (
   return async () => ({ json: async () => body, ok, status });
 };
 
+/*
+ * Every helper under test falls back to `default*JsonlPath()` — i.e. the
+ * developer's real `~/.openthrottle/skill-usage/` buffer — for any path a case
+ * does not pass. Point the whole file at a throwaway telemetry dir so a missed
+ * path can never read, post, or dead-letter real buffered telemetry.
+ */
+let isolatedTelemetryDir: string;
+let prevTelemetryDir: string | undefined;
+
+beforeAll(() => {
+  isolatedTelemetryDir = fs.mkdtempSync(
+    path.join(os.tmpdir(), 'skill-persist-telemetry-'),
+  );
+  prevTelemetryDir = process.env.OPENTHROTTLE_TELEMETRY_DIR;
+  process.env.OPENTHROTTLE_TELEMETRY_DIR = isolatedTelemetryDir;
+});
+
+afterAll(() => {
+  if (prevTelemetryDir === undefined) {
+    delete process.env.OPENTHROTTLE_TELEMETRY_DIR;
+  } else {
+    process.env.OPENTHROTTLE_TELEMETRY_DIR = prevTelemetryDir;
+  }
+  fs.rmSync(isolatedTelemetryDir, { force: true, recursive: true });
+});
+
 describe('postSkillUsageEvent + persistUsageEvent', () => {
   let tmpRoot: string;
   let jsonlPath: string;
@@ -546,6 +572,7 @@ describe('drainBufferedUsage', () => {
   it('drains both events + outcomes via the right mutations', async () => {
     const eventsPath = path.join(tmpRoot, 'events.jsonl');
     const outcomesPath = path.join(tmpRoot, 'outcomes.jsonl');
+    const tokenUsagePath = path.join(tmpRoot, 'token-usage.jsonl');
     fs.writeFileSync(
       eventsPath,
       `${JSON.stringify({ occurredAt: 't', scope: 'ours', skill_name: 'ot-plans', timestamp: 't' })}\n`,
@@ -579,10 +606,12 @@ describe('drainBufferedUsage', () => {
       graphqlUrl: 'http://example.test/graphql',
       outcomesPath,
       repoRoot: tmpRoot,
+      tokenUsagePath,
     });
 
     expect(res.events.sent).toBe(1);
     expect(res.outcomes.sent).toBe(1);
+    expect(res.tokenUsage.sent).toBe(0);
     expect(seenMutations.sort()).toEqual(['outcome', 'usage']);
     expect(fs.existsSync(eventsPath)).toBe(false);
     expect(fs.existsSync(outcomesPath)).toBe(false);
@@ -599,6 +628,7 @@ describe('drainBufferedUsage', () => {
       },
       graphqlUrl: 'http://example.test/graphql',
       repoRoot: tmpRoot,
+      tokenUsagePath: path.join(tmpRoot, 'token-usage-disabled.jsonl'),
     });
     expect(res.events.sent).toBe(0);
     expect(fs.existsSync(eventsPath)).toBe(true);
