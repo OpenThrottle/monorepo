@@ -63,7 +63,9 @@ export const IdeWorkspaceBody = (
         </EmptyDescription>
       </EmptyHeader>
       <Button asChild={true} variant="outline">
-        <Link to="/settings/repositories">Add a repository</Link>
+        <Link prefetch="intent" to="/settings/repositories">
+          Add a repository
+        </Link>
       </Button>
     </Empty>
   );

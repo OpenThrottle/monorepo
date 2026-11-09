@@ -27,6 +27,7 @@ import {
 } from '@openthrottle/nestjs-repositories';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { WorktreeActivityService } from '../../services/worktree-activity/worktree-activity.service.ts';
 import { ProjectObject } from '../projects/project.object.ts';
 import { ApplyWorkspaceEditorConfigurationInput } from './apply-workspace-editor-configuration.input.ts';
 import { WorkspaceSettingsLoaders } from './loaders/loaders.service.ts';
@@ -65,6 +66,7 @@ export class WorkspaceSettingsResolver {
     private readonly workspaceEditorConfigService: WorkspaceEditorConfigService,
     private readonly loaders: WorkspaceSettingsLoaders,
     private readonly configService: ConfigService,
+    private readonly activityService: WorktreeActivityService,
   ) {}
 
   @Query(() => WorkspaceSettingsObject, {
@@ -271,6 +273,11 @@ export class WorkspaceSettingsResolver {
     @CurrentUser('sub') userId: string,
     @Args('id', { type: () => ID }) id: string,
   ): Promise<boolean> {
-    return this.workspaceLocalRepositoriesService.delete(userId, id);
+    const deleted = await this.workspaceLocalRepositoriesService.delete(
+      userId,
+      id,
+    );
+    this.activityService.invalidate(userId);
+    return deleted;
   }
 }

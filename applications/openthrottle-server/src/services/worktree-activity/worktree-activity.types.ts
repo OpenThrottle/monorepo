@@ -7,6 +7,7 @@ import type {
   MissingWorktreeCheckout,
   ScannedWorktreeRoot,
   WorktreeDiscoveryProblem,
+  WorktreeDiscoveryResult,
 } from '../worktree-discovery/worktree-discovery.types.ts';
 import type { WorktreeRootSource } from '../worktree-root/worktree-root.types.ts';
 import type { WORKTREE_ACTIVITY } from './worktree-activity.constants.ts';
@@ -55,4 +56,20 @@ export interface WorktreeActivityResult {
   readonly warnings: readonly string[];
   readonly worktreeRoot: string | null;
   readonly worktrees: readonly ClassifiedWorktree[];
+}
+
+export interface DiscoverAndClassifyOptions {
+  /** Bypass and replace the cached discovery: an explicit refresh, never a routine page load. */
+  readonly fresh: boolean;
+}
+
+/** One user's cached discovery: the scan (shared by concurrent readers while it runs) and its start. */
+export interface CachedDiscovery {
+  readonly result: Promise<WorktreeDiscoveryResult>;
+  readonly startedAt: number;
+  /**
+   * Per-worktree verdicts computed against this scan (e.g. `safeToRemove`), keyed by caller-chosen
+   * key. They live and die with the scan: a fresh scan or an invalidate starts an empty map.
+   */
+  readonly verdicts: Map<string, Promise<boolean>>;
 }

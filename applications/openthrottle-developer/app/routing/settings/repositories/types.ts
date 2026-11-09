@@ -1,10 +1,14 @@
 import type {
   DiscoveredWorktreeFieldsFragment,
-  GetSettingsRepositoriesQuery,
+  GetSettingsRepositoriesDiscoveryQuery,
   PruneWorktreeCheckoutsMutation,
   RemovePlanRunWorktreeMutation,
   WorkspaceRepositoryFieldsFragment,
 } from '~/__generated__/graphql';
+import type {
+  RepositoriesSortBy,
+  RepositoriesSortOrder,
+} from '~/routing/settings/repositories/config/repositories.defaults';
 import type { CheckoutDrift } from '~/routing/settings/utils/drift-labels';
 
 /**
@@ -26,7 +30,50 @@ export type DiscoveredWorktree = DiscoveredWorktreeFieldsFragment;
  * facts (where it looked, what it could not read, what the cap dropped).
  */
 export type DiscoveredWorktreesResult =
-  GetSettingsRepositoriesQuery['discoveredWorktrees'];
+  GetSettingsRepositoriesDiscoveryQuery['discoveredWorktrees'];
+
+/**
+ * @description The deferred half of the repositories loader: both on-disk scans (worktrees and
+ * workspace folders). They are the slow part of the page, so the loader streams them rather than
+ * holding the table back for them.
+ */
+export type RepositoriesDiscovery = GetSettingsRepositoriesDiscoveryQuery;
+
+/** @description One git repository found under a configured workspace root. */
+export type DiscoveredFolder =
+  RepositoriesDiscovery['discoveredFolders'][number];
+
+/**
+ * @description The streamed discovery as the page sees it. `pending` only before the first
+ * resolution: a revalidation keeps the last resolved scan on screen until its replacement lands.
+ */
+export type RepositoriesDiscoveryState =
+  | { readonly status: 'pending' }
+  | { readonly status: 'rejected' }
+  | { readonly status: 'resolved'; readonly value: RepositoriesDiscovery };
+
+/** @description The status of a {@link RepositoriesDiscoveryState}. */
+export type RepositoriesDiscoveryStatus = RepositoriesDiscoveryState['status'];
+
+/**
+ * @description What the table shows for the current URL: the rows for this page after the
+ * show-missing toggle, search and sort, plus the parsed params that produced them.
+ */
+export interface RepositoriesView {
+  /** Parent rows a search matched only through a child, so the table opens them. */
+  readonly autoExpandedIds: string[];
+  /** True when nothing is registered at all, as opposed to nothing matching a search. */
+  readonly isUnpopulated: boolean;
+  readonly limit: number;
+  readonly page: number;
+  readonly rows: RepositoryCheckoutRow[];
+  readonly search: string;
+  readonly showMissing: boolean;
+  readonly sortBy: RepositoriesSortBy;
+  readonly sortOrder: RepositoriesSortOrder;
+  /** Parent rows across every page. */
+  readonly totalCount: number;
+}
 
 /**
  * @description A registered worktree checkout with no live worktree behind it — the row

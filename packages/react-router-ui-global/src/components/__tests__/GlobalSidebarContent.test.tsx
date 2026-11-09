@@ -154,3 +154,95 @@ describe('GlobalSidebarContent on phones', () => {
     });
   });
 });
+
+describe('GlobalSidebarContent prefetch and pending navigation', () => {
+  test('prefetches an item that opts in, once it is hovered', async () => {
+    const user = userEvent.setup();
+    const navigationData: NonNullable<GlobalSidebarContentProps['data']> = {
+      Settings: [
+        {
+          children: 'Repositories',
+          icon: StubIcon,
+          prefetch: 'intent',
+          to: '/target',
+        },
+      ],
+    };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
+    const Component = () => {
+      return (
+        <GlobalProviders>
+          <GlobalSidebarContent data={navigationData} />
+        </GlobalProviders>
+      );
+    };
+    const RoutesStub = createRoutesStub([
+      { Component, path: '/' },
+      {
+        Component: () => null,
+        loader: () => {
+          return null;
+        },
+        path: '/target',
+      },
+    ]);
+    render(<RoutesStub />);
+
+    expect(document.querySelector('link[rel="prefetch"]')).toBeNull();
+
+    await user.hover(screen.getByRole('link', { name: 'Repositories' }));
+
+    await waitFor(() => {
+      expect(
+        document.querySelector('link[rel="prefetch"][href="/target.data"]'),
+      ).not.toBeNull();
+    });
+  });
+
+  test('marks a link as pending while its route is still loading', async () => {
+    const user = userEvent.setup();
+    const navigationData: NonNullable<GlobalSidebarContentProps['data']> = {
+      Settings: [
+        {
+          children: 'Repositories',
+          icon: StubIcon,
+          prefetch: 'intent',
+          to: '/slow',
+        },
+      ],
+    };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
+    const Component = () => {
+      return (
+        <GlobalProviders>
+          <GlobalSidebarContent data={navigationData} />
+        </GlobalProviders>
+      );
+    };
+    const RoutesStub = createRoutesStub([
+      { Component, path: '/' },
+      {
+        Component: () => null,
+        // Never settles, so the navigation stays pending for the assertion.
+        loader: () => {
+          return new Promise<never>(() => undefined);
+        },
+        path: '/slow',
+      },
+    ]);
+    render(<RoutesStub />);
+
+    const link = screen.getByRole('link', { name: 'Repositories' });
+    expect(link).not.toHaveClass('pending');
+
+    await user.click(link);
+
+    // NavLink appends `pending`; the link's `[&.pending]:animate-pulse` styles it. The className
+    // must stay a string: SidebarMenuButton's Slot merges classNames as strings, so a NavLink
+    // className function would be stringified rather than called.
+    await waitFor(() => {
+      expect(link).toHaveClass('pending');
+    });
+    expect(link.className).toContain('[&.pending]:animate-pulse');
+  });
+});

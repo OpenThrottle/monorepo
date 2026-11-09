@@ -81,6 +81,17 @@ fragment WorkspaceRepositoryFields on RepositoryObject {
 }
 
 query getSettingsRepositories {
+  workspacePickerCapabilities {
+    canUseNativeDialog
+    defaultBrowsePath
+    roots
+  }
+  workspaceRepositories {
+    ...WorkspaceRepositoryFields
+  }
+}
+
+query getSettingsRepositoriesDiscovery {
   discoveredFolders {
     alreadyRegistered
     name
@@ -111,14 +122,6 @@ query getSettingsRepositories {
     worktrees {
       ...DiscoveredWorktreeFields
     }
-  }
-  workspacePickerCapabilities {
-    canUseNativeDialog
-    defaultBrowsePath
-    roots
-  }
-  workspaceRepositories {
-    ...WorkspaceRepositoryFields
   }
 }
 
@@ -216,4 +219,10 @@ mutation removePlanRunWorktree($checkoutId: ID!) {
 
 mutation deleteWorkspaceLocalRepository($id: ID!) {
   deleteWorkspaceLocalRepository(id: $id)
+}
+
+query rescanSettingsWorktrees {
+  discoveredWorktrees(refresh: true) {
+    scannedAt
+  }
 }

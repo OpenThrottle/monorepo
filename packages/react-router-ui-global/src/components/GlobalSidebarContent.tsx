@@ -99,11 +99,12 @@ export const GlobalSidebarContent = (
           tooltip={String(children)}
         >
           <NavLink
-            className={cn('text-xs!', {
+            className={cn('text-xs! [&.pending]:animate-pulse', {
               'text-muted-foreground pointer-events-none':
                 item.disabled && !isCharlieEnabled,
             })}
             onClick={closeMobileSidebar}
+            prefetch={item.prefetch}
             to={item.to}
             viewTransition={true}
           >

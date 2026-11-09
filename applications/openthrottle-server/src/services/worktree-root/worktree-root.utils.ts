@@ -70,10 +70,14 @@ const readOriginRemote = (repoPath: string): string | null => {
  * Mirrors `_ot_repo_namespace`. Handles `https://host/org/repo.git`, `ssh://host/org/repo` and
  * `git@host:org/repo.git` by taking the last two `/`- or `:`-delimited segments.
  */
-export const repositoryNamespace = (repoPath: string): string => {
+export const repositoryNamespace = (
+  repoPath: string,
+  originRemote: string | null | undefined = undefined,
+): string => {
   const fallback = safeSegment(basename(repoPath)) ?? 'repo';
 
-  const remote = readOriginRemote(repoPath);
+  const remote =
+    originRemote === undefined ? readOriginRemote(repoPath) : originRemote;
   if (remote === null) return fallback;
 
   const trimmed = remote.replace(/\.git$/, '').replace(/\/$/, '');
@@ -170,7 +174,7 @@ export const normalizeWorktreeRootSetting = (
 export const resolveWorktreeRoot = (
   params: ResolveWorktreeRootParams,
 ): ResolvedWorktreeRoot => {
-  const { baseCheckoutPath, env = process.env } = params;
+  const { baseCheckoutPath, env = process.env, originRemote } = params;
 
   const candidates: ReadonlyArray<
     readonly [WorktreeRootSource, string | null]
@@ -188,7 +192,7 @@ export const resolveWorktreeRoot = (
   ];
 
   // OT always organizes beneath the root, whatever supplied it.
-  const namespace = repositoryNamespace(baseCheckoutPath);
+  const namespace = repositoryNamespace(baseCheckoutPath, originRemote);
 
   for (const [source, value] of candidates) {
     if (value === null) continue;

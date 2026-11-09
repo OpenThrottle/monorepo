@@ -10,6 +10,13 @@ export interface ResolveWorktreeRootParams {
    * pure and testable.
    */
   readonly env?: NodeJS.ProcessEnv;
+  /**
+   * The checkout's `origin` remote when the caller already read it: a string, or null for "has
+   * none". Omitted means read it here with a synchronous `git remote get-url origin`, which blocks
+   * the event loop — callers resolving many checkouts per request read the remotes concurrently
+   * with async git and pass them in.
+   */
+  readonly originRemote?: string | null;
 }
 
 export interface ResolvedWorktreeRoot {

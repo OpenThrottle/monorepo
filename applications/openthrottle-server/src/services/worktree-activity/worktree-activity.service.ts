@@ -16,6 +16,13 @@
  * Paths are matched through registered checkout ids rather than string comparison, and discovery
  * indexes those checkouts by symlink-resolved real path — so a symlinked worktree root cannot make
  * a running worktree look idle.
+ *
+ * Discovery itself — the git and filesystem scan — is cached per user for
+ * {@link DISCOVERY_CACHE_TTL_MS}, and concurrent reads share one scan. The live-run lookup is NOT
+ * cached: it is one indexed query, and it is the half that changes on its own. Anything that changes
+ * a user's checkouts or worktrees through OpenThrottle calls {@link WorktreeActivityService.invalidate}.
+ * Expensive per-worktree verdicts derived from a scan can ride along with it through
+ * {@link WorktreeActivityService.memoizeVerdict}.
  */
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
@@ -30,13 +37,26 @@ import { WorktreeDiscoveryService } from '../worktree-discovery/worktree-discove
 import type {
   DiscoveredWorktree,
   WorktreeDiscoveryProblem,
+  WorktreeDiscoveryResult,
 } from '../worktree-discovery/worktree-discovery.types.ts';
-import type { WorktreeActivityResult } from './worktree-activity.types.ts';
+import { DISCOVERY_CACHE_TTL_MS } from './worktree-activity.constants.ts';
+import type {
+  CachedDiscovery,
+  DiscoverAndClassifyOptions,
+  WorktreeActivityResult,
+} from './worktree-activity.types.ts';
 import { classifyWorktree } from './worktree-activity.utils.ts';
 
 @Injectable()
 export class WorktreeActivityService {
   private readonly name = 'worktree-activity';
+
+  /**
+   * One entry per user: the scan's promise (shared by concurrent readers while it runs) and when it
+   * started. A rejected scan is evicted rather than cached; discovery never rejects by contract, so
+   * that is belt and braces.
+   */
+  private readonly discoveries = new Map<string, CachedDiscovery>();
 
   constructor(
     private readonly logger: LoggerService,
@@ -51,8 +71,11 @@ export class WorktreeActivityService {
    * throughout: a failure reading plan runs degrades every worktree to its git-only classification
    * plus a warning, never an error on the page.
    */
-  async discoverAndClassify(userId: string): Promise<WorktreeActivityResult> {
-    const discovery = await this.discoveryService.discover(userId);
+  async discoverAndClassify(
+    userId: string,
+    options: DiscoverAndClassifyOptions = { fresh: false },
+  ): Promise<WorktreeActivityResult> {
+    const discovery = await this.discover(userId, options.fresh);
     const problems = [...discovery.problems];
     const warnings = [...discovery.warnings];
 
@@ -80,6 +103,74 @@ export class WorktreeActivityService {
         ),
       ),
     };
+  }
+
+  /**
+   * @description Drops the user's cached discovery so the next read rescans. Call it after anything
+   * that adds, removes or re-registers one of the user's checkouts or worktrees.
+   */
+  invalidate(userId: string): void {
+    this.discoveries.delete(userId);
+  }
+
+  /**
+   * @description Computes a per-worktree verdict once per cached scan and reuses it until that scan
+   * expires, is refreshed or is invalidated. With no live cached scan for the user it just computes:
+   * there is nothing to tie the answer's lifetime to. A rejected computation is not kept.
+   */
+  memoizeVerdict(
+    userId: string,
+    key: string,
+    compute: () => Promise<boolean>,
+  ): Promise<boolean> {
+    const entry = this.discoveries.get(userId);
+    if (
+      entry === undefined ||
+      Date.now() - entry.startedAt >= DISCOVERY_CACHE_TTL_MS
+    ) {
+      return compute();
+    }
+
+    const existing = entry.verdicts.get(key);
+    if (existing !== undefined) return existing;
+
+    const verdict = compute();
+    entry.verdicts.set(key, verdict);
+    void verdict.catch(() => {
+      if (entry.verdicts.get(key) === verdict) entry.verdicts.delete(key);
+    });
+    return verdict;
+  }
+
+  /** The user's discovery: the cached scan while it is fresh, otherwise a new one. */
+  private discover(
+    userId: string,
+    fresh: boolean,
+  ): Promise<WorktreeDiscoveryResult> {
+    const now = Date.now();
+    const cached = this.discoveries.get(userId);
+    if (
+      !fresh &&
+      cached !== undefined &&
+      now - cached.startedAt < DISCOVERY_CACHE_TTL_MS
+    ) {
+      return cached.result;
+    }
+
+    const result = this.discoveryService.discover(userId);
+    const entry: CachedDiscovery = {
+      result,
+      startedAt: now,
+      verdicts: new Map(),
+    };
+    this.discoveries.set(userId, entry);
+    void result.catch(() => {
+      // Only evict our own entry: an invalidate + rescan may already have replaced it.
+      if (this.discoveries.get(userId) === entry) {
+        this.discoveries.delete(userId);
+      }
+    });
+    return result;
   }
 
   /**

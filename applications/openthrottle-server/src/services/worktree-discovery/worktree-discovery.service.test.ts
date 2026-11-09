@@ -79,6 +79,8 @@ interface GitScript {
   readonly fail?: ReadonlySet<string>;
   /** Checkout paths that are registered folders but not git repositories. */
   readonly notGitRepos?: readonly string[];
+  /** `git remote get-url origin` output; empty (the default) means the checkout has no origin. */
+  readonly remote?: string;
   readonly revList?: string;
   readonly status?: string;
   readonly worktreeList?: string;
@@ -118,6 +120,8 @@ const scriptGit = (script: GitScript): void => {
         switch (key) {
           case 'branch':
             return script.branch ?? 'openthrottle/wt-a\n';
+          case 'remote':
+            return script.remote ?? '';
           case 'rev-list':
             return script.revList ?? '0\n';
           case 'rev-parse':
@@ -485,6 +489,67 @@ describe('WorktreeDiscoveryService', () => {
     expect(result.worktreeRoot).toBe('/srv/worktrees/openthrottle');
     expect(result.rootSource).toBe('env');
     expect(mockReaddirSync).toHaveBeenCalledWith('/srv/worktrees/openthrottle');
+  });
+
+  it('namespaces the root by the origin remote it reads with async git', async () => {
+    scriptGit({ remote: 'git@github.com:OpenThrottle/monorepo.git\n' });
+    withRoot({ entries: [] });
+
+    const result = await build([checkout()], '/srv/worktrees').discover(USER);
+
+    expect(result.worktreeRoot).toBe('/srv/worktrees/OpenThrottle/monorepo');
+    expect(mockExecFile).toHaveBeenCalledWith(
+      'git',
+      ['-C', PRIMARY, 'remote', 'get-url', 'origin'],
+      expect.anything(),
+      expect.any(Function),
+    );
+  });
+
+  it('falls back to the basename, silently, when the origin lookup fails', async () => {
+    scriptGit({ fail: new Set(['remote']) });
+    withRoot({ entries: [] });
+
+    const result = await build([checkout()], '/srv/worktrees').discover(USER);
+
+    expect(result.worktreeRoot).toBe('/srv/worktrees/openthrottle');
+    expect(result.problems).toEqual([]);
+  });
+
+  it('probes every primary concurrently and still reports problems in checkout order', async () => {
+    const other = '/Users/someone/code/other';
+    const pending: Array<() => void> = [];
+    mockExecFile.mockImplementation(
+      (
+        _file: string,
+        args: readonly string[],
+        _options: unknown,
+        callback: (error: Error | null, result?: { stdout: string }) => void,
+      ) => {
+        // Hold every probe until all primaries have started: a sequential scan would deadlock here.
+        pending.push(() => {
+          callback(
+            new Error(`git ${args[2] ?? ''} exploded in ${args[1] ?? ''}`),
+          );
+        });
+        if (pending.length === 4) pending.forEach((release) => release());
+      },
+    );
+    withRoot({ entries: [] });
+
+    const result = await build([
+      checkout(),
+      checkout({
+        filesystemPath: other,
+        id: 'checkout-other',
+        repositoryId: 'repo-other',
+      }),
+    ]).discover(USER);
+
+    expect(result.problems.map((entry) => entry.path)).toEqual([
+      PRIMARY,
+      other,
+    ]);
   });
 
   it('reports a deleted worktree git still lists once, and never probes it', async () => {

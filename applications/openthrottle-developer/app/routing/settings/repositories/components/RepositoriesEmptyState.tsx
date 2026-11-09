@@ -10,10 +10,12 @@ import { REPOSITORIES_ONBOARDING } from '~/routing/settings/repositories/data/da
 
 export interface RepositoriesEmptyStateProps {
   actionError?: string | null;
-  discoveredFolders: Pick<
+  discoveredFolders: readonly Pick<
     DiscoveredFolderObject,
     'alreadyRegistered' | 'name' | 'path'
   >[];
+  /** The workspace-root scan is still streaming in, so an empty list means "not yet", not "none". */
+  isDiscoveringFolders: boolean;
   pickerCapabilities: Pick<
     WorkspacePickerCapabilitiesObject,
     'canUseNativeDialog' | 'defaultBrowsePath' | 'roots'
@@ -27,7 +29,12 @@ export interface RepositoriesEmptyStateProps {
 export const RepositoriesEmptyState = (
   props: RepositoriesEmptyStateProps,
 ): React.ReactElement => {
-  const { actionError, discoveredFolders, pickerCapabilities } = props;
+  const {
+    actionError,
+    discoveredFolders,
+    isDiscoveringFolders,
+    pickerCapabilities,
+  } = props;
 
   // Hooks
 
@@ -46,6 +53,7 @@ export const RepositoriesEmptyState = (
       <AddFolderDialog
         actionError={actionError}
         discoveredFolders={discoveredFolders}
+        isDiscoveringFolders={isDiscoveringFolders}
         pickerCapabilities={pickerCapabilities}
       />
       <GlobalFeatureOnboarding content={REPOSITORIES_ONBOARDING} />

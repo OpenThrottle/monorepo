@@ -14,11 +14,13 @@ import {
   PruneWorktreeCheckoutsDocument,
   RefreshCheckoutDocument,
   RemovePlanRunWorktreeDocument,
+  RescanSettingsWorktreesDocument,
 } from '~/__generated__/graphql';
 import {
   AddWorkspaceFolderInputSchema,
   CloneRepositoryInputSchema,
 } from '~/__generated__/schemas';
+import { RESCAN_WORKTREES_INTENT } from '~/routing/settings/repositories/config/repositories.defaults';
 import { errorMessageOr } from '~/routing/settings/repositories/utils/error-message';
 import {
   PRUNE_WORKTREE_CHECKOUTS_INTENT,
@@ -243,6 +245,24 @@ export const deleteRepo = async (
 };
 
 /**
+ * @description Forces a fresh on-disk worktree scan. The server caches each user's scan for a few
+ * seconds, so a plain loader revalidation would hand back the cached one; this asks for
+ * `refresh: true`, which replaces the cache, and the revalidation that follows every action then
+ * reads the fresh scan.
+ */
+export const rescanWorktrees = async (args: Route.ActionArgs) => {
+  try {
+    const data = await executeGraphqlWithAuth(
+      args.request,
+      RescanSettingsWorktreesDocument,
+    );
+    return { rescannedAt: data.discoveredWorktrees.scannedAt };
+  } catch (error) {
+    return { error: errorMessageOr(error, 'Failed to rescan worktrees.') };
+  }
+};
+
+/**
  * @description The repositories route action: dispatches on the form's `intent`. Lives beside the
  * handlers it routes to, so adding an intent touches one module.
  */
@@ -267,6 +287,8 @@ export const repositoriesAction = async (args: Route.ActionArgs) => {
       return refreshCheckout(args, formData);
     case REMOVE_PLAN_RUN_WORKTREE_INTENT:
       return removePlanRunWorktree(args, formData);
+    case RESCAN_WORKTREES_INTENT:
+      return rescanWorktrees(args);
 
     default:
       throw new Error('Invalid intent');

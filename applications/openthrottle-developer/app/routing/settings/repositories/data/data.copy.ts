@@ -125,10 +125,14 @@ export const WORKTREE_DISCOVERY_COPY = {
   orphanRemedy: `Delete them by hand once you have checked nothing in them is needed — OpenThrottle never deletes folders.`,
   orphanSummarySuffixOne: `folder in the worktree root is left over from a removed worktree and has no .git.`,
   orphanSummarySuffixOther: `folders in the worktree root are left over from removed worktrees and have no .git.`,
+  /** While the on-disk scan streams in after the table: the registered rows are already real. */
+  pendingLabel: `Scanning worktrees on disk…`,
   problemsCountSuffixOne: `note from the last scan`,
   problemsCountSuffixOther: `notes from the last scan`,
   refreshButton: `Rescan worktrees`,
   refreshingButton: `Rescanning…`,
+  /** The scan failed on first load, so rows show registered checkouts without their on-disk state. */
+  rejectedBody: `Could not scan for worktrees on disk. Registered checkouts are listed without their on-disk state.`,
   rootPrefix: `Scanning for worktrees in`,
   /** Leads the list when repositories resolve to more than one configured root. */
   rootsPrefixOther: `Scanning for worktrees in these roots:`,

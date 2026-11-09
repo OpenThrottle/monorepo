@@ -147,7 +147,7 @@ export default function Component(
           <GlobalHeading heading="h1" icon={FoldersIcon} title="Projects" />
 
           <Button asChild={true} className="gap-2" size="xs" variant="outline">
-            <Link to="/settings/repositories">
+            <Link prefetch="intent" to="/settings/repositories">
               <FolderPlusIcon aria-hidden={true} className="size-4" />
               Add repository
             </Link>

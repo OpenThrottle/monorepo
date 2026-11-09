@@ -10,7 +10,6 @@ import * as React from 'react';
 
 import type {
   AddWorkspaceFolderMutation,
-  DiscoveredFolderObject,
   WorkspacePickerCapabilitiesObject,
 } from '~/__generated__/graphql';
 import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
@@ -23,31 +22,28 @@ import { PruneWorktreesOutcome } from '~/routing/settings/repositories/component
 import { RepositoriesEmptyState } from '~/routing/settings/repositories/components/RepositoriesEmptyState';
 import { RepositoriesTable } from '~/routing/settings/repositories/components/RepositoriesTable';
 import { RepositoriesToolbar } from '~/routing/settings/repositories/components/RepositoriesToolbar';
-import { WorktreeDiscoveryNotice } from '~/routing/settings/repositories/components/WorktreeDiscoveryNotice';
+import { WorktreeDiscoveryStatus } from '~/routing/settings/repositories/components/WorktreeDiscoveryStatus';
 import { WorktreeRemovalOutcome } from '~/routing/settings/repositories/components/WorktreeRemovalOutcome';
 import { REPOSITORIES_ONBOARDING } from '~/routing/settings/repositories/data/data.copy';
 import type {
+  DiscoveredFolder,
   DiscoveredWorktreesResult,
   PruneWorktreeCheckoutResult,
   RefreshedCheckout,
   RemovePlanRunWorktreeResult,
-  RepositoryCheckoutRow,
+  RepositoriesDiscoveryStatus,
+  RepositoriesView,
 } from '~/routing/settings/repositories/types';
 
 export interface RepositoriesSectionProps {
   actionError?: string | null;
   addedFolder?: AddWorkspaceFolderMutation['addWorkspaceFolder'] | null;
-  autoExpandedIds: string[];
   className?: string;
-  discoveredFolders: Pick<
-    DiscoveredFolderObject,
-    'alreadyRegistered' | 'name' | 'path'
-  >[];
-  discoveredWorktrees: DiscoveredWorktreesResult;
-  /** True when no repositories are registered at all, as opposed to none matching a search. */
-  isUnpopulated: boolean;
-  limit: number;
-  page: number;
+  /** Empty until the deferred scan resolves; see {@link discoveryStatus}. */
+  discoveredFolders: readonly DiscoveredFolder[];
+  /** Null until the deferred scan has resolved once (or when it failed with nothing to show). */
+  discoveredWorktrees: DiscoveredWorktreesResult | null;
+  discoveryStatus: RepositoriesDiscoveryStatus;
   pickerCapabilities: Pick<
     WorkspacePickerCapabilitiesObject,
     'canUseNativeDialog' | 'defaultBrowsePath' | 'roots'
@@ -56,13 +52,8 @@ export interface RepositoriesSectionProps {
   pruned?: readonly PruneWorktreeCheckoutResult[] | null;
   refreshed?: RefreshedCheckout | null;
   removal?: RemovePlanRunWorktreeResult | null;
-  rows: RepositoryCheckoutRow[];
-  search: string;
-  /** Whether registered worktrees missing from disk are listed. */
-  showMissing: boolean;
-  sortBy: string;
-  sortOrder: string;
-  totalCount: number;
+  /** The rows and URL params for this page — see `buildRepositoriesView`. */
+  view: RepositoriesView;
 }
 
 export const RepositoriesSection = (
@@ -71,24 +62,28 @@ export const RepositoriesSection = (
   const {
     actionError,
     addedFolder,
-    autoExpandedIds,
     className,
     discoveredFolders,
     discoveredWorktrees,
-    isUnpopulated,
-    limit,
-    page,
+    discoveryStatus,
     pickerCapabilities,
     pruned,
     refreshed,
     removal,
+    view,
+  } = props;
+  const {
+    autoExpandedIds,
+    isUnpopulated,
+    limit,
+    page,
     rows,
     search,
     showMissing,
     sortBy,
     sortOrder,
     totalCount,
-  } = props;
+  } = view;
 
   // Hooks
 
@@ -96,9 +91,11 @@ export const RepositoriesSection = (
   const driftByCheckoutId = refreshed
     ? { [refreshed.checkoutId]: refreshed.drift }
     : undefined;
-  const missingCheckoutIds = discoveredWorktrees.missingCheckouts.map(
-    (missing) => missing.checkoutId,
-  );
+  const missingCheckouts = discoveredWorktrees?.missingCheckouts ?? [];
+  const missingCheckoutIds = missingCheckouts.map(({ checkoutId }) => {
+    return checkoutId;
+  });
+  const isDiscoveringFolders = discoveryStatus === 'pending';
 
   // Handlers
 
@@ -117,9 +114,11 @@ export const RepositoriesSection = (
     <RepositoriesEmptyState
       actionError={actionError}
       discoveredFolders={discoveredFolders}
+      isDiscoveringFolders={isDiscoveringFolders}
       pickerCapabilities={pickerCapabilities}
     />
   );
+
   const populatedBody = (
     <div className="flex flex-col gap-4">
       <RepositoriesToolbar
@@ -139,6 +138,7 @@ export const RepositoriesSection = (
           <AddFolderDialog
             actionError={actionError}
             discoveredFolders={discoveredFolders}
+            isDiscoveringFolders={isDiscoveringFolders}
             pickerCapabilities={pickerCapabilities}
           />
         </>
@@ -150,7 +150,10 @@ export const RepositoriesSection = (
         isUnpopulated={isUnpopulated}
         rows={rows}
       />
-      <WorktreeDiscoveryNotice discoveredWorktrees={discoveredWorktrees} />
+      <WorktreeDiscoveryStatus
+        discoveredWorktrees={discoveredWorktrees}
+        status={discoveryStatus}
+      />
       <OpenThrottlePagination
         className="mt-8"
         limit={limit}

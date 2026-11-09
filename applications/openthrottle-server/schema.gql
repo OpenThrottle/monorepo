@@ -4973,14 +4973,14 @@ type DiscoveredWorktreeObject {
   runMonitored: Boolean
 
   """
-  True when this is a server-provisioned plan-run worktree that removePlanRunWorktree would remove right now: registered, clean, nothing unpushed, and no live run on it. Always false for any other worktree.
-  """
-  safeToRemove: Boolean!
-
-  """
   True when no repository_checkouts row exists at this path for this user. Orthogonal to activity — an unregistered worktree can be DIRTY.
   """
   unregistered: Boolean!
+
+  """
+  True when this is a server-provisioned plan-run worktree that removePlanRunWorktree would remove as of the last scan: registered, clean, nothing unpushed, and no live run on it. Reused for as long as the scan is cached; removePlanRunWorktree re-checks every guard before removing anything. Always false for any other worktree.
+  """
+  safeToRemove: Boolean!
 }
 
 """
@@ -5853,9 +5853,14 @@ type Query {
   users: [UserObject!]!
 
   """
-  Git worktrees that exist on disk for the authenticated user's repositories, whether or not OpenThrottle provisioned them, each classified RUNNING / DIRTY / IDLE. Read-only: nothing here creates, prunes or removes a worktree. Runs live on every request and never throws — an unreadable root or a failed git probe becomes a warning on the payload.
+  Git worktrees that exist on disk for the authenticated user's repositories, whether or not OpenThrottle provisioned them, each classified RUNNING / DIRTY / IDLE. Read-only: nothing here creates, prunes or removes a worktree. The on-disk scan is reused for a few seconds per user (pass refresh to force one); live-run classification is always current. Never throws — an unreadable root or a failed git probe becomes a warning on the payload.
   """
-  discoveredWorktrees: DiscoveredWorktreesObject!
+  discoveredWorktrees(
+    """
+    Rescan now instead of reusing a scan from the last few seconds. The scan is cached briefly per user, and changes made through OpenThrottle (adding, cloning, refreshing, pruning or removing) already invalidate it — pass this for an explicit user-requested refresh, not on every load.
+    """
+    refresh: Boolean = false
+  ): DiscoveredWorktreesObject!
 
   """
   Git repositories found one level under the configured workspace roots (server-host paths); empty when OPENTHROTTLE_WORKSPACE_ROOTS is unset.
