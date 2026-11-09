@@ -22,8 +22,8 @@ export interface PlanRunStatusCellProps {
 }
 
 /**
- * @description Status cell for the queued-run audit table. Most statuses render as plain text.
- * `USAGE_LIMITED` gets a badge plus the reset time and whether the run resumes by itself;
+ * @description Status cell for the queued-run audit table. Every status renders as a
+ * {@link PlanRunStatusBadge}; some add a line beneath it. `USAGE_LIMITED` gets the badge plus the reset time and whether the run resumes by itself;
  * `SCHEDULED` a badge plus when it fires; `MISSED`, `SUPERSEDED` and `SKIPPED` a badge plus a muted line with the
  * server's `settledReason` (null renders nothing extra, except MISSED/SUPERSEDED fall back to a generic line). A continuation run is badged "Resumed". Both times go through {@link PlanRunTime}, so
  * the server render (UTC) matches the hydrating render and the viewer's local time appears after.
@@ -121,7 +121,7 @@ export const PlanRunStatusCell = (
   if (!isUsageLimited) {
     return (
       <span className="flex flex-col gap-1" data-testid="PlanRunStatusCell">
-        <span>{status}</span>
+        <PlanRunStatusBadge status={status} />
         {isContinuationRun ? continuationBadge : null}
       </span>
     );

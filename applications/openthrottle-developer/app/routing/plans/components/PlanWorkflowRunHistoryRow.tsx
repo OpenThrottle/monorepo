@@ -51,6 +51,8 @@ export const PlanWorkflowRunHistoryRow = (
 
   // Setup
   const copy = PLAN_RUN_TRANSPARENCY_COPY.history;
+  // A STALE status already badges itself "Stale"; the liveness badge is for a live run gone quiet.
+  const showStaleBadge = row.isStale && row.status !== 'STALE';
 
   // Handlers
   const handleToggleExpanded = (): void => {
@@ -101,7 +103,7 @@ export const PlanWorkflowRunHistoryRow = (
               status={row.status}
               usageLimitResetsAt={row.usageLimitResetsAt ?? null}
             />
-            {row.isStale && (
+            {showStaleBadge && (
               <Badge
                 color="red"
                 data-testid="PlanWorkflowRunHistoryRow-stale"

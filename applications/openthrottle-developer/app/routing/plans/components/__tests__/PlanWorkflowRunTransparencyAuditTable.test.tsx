@@ -155,6 +155,22 @@ describe('PlanWorkflowRunTransparencyAuditTable', () => {
         within(freshRow).queryByTestId('PlanWorkflowRunHistoryRow-stale'),
       ).toBeNull();
     });
+
+    test('shows a single "Stale" when the status itself is STALE', () => {
+      const component = renderTable([
+        auditRow({ id: 'r-stale', isStale: true, status: 'STALE' }),
+      ]);
+
+      const staleRow = component.getByTestId(
+        'PlanWorkflowRunHistoryRow-r-stale',
+      );
+      expect(
+        within(staleRow).queryByTestId('PlanWorkflowRunHistoryRow-stale'),
+      ).toBeNull();
+      expect(
+        within(staleRow).getByTestId('PlanRunStatusBadge'),
+      ).toHaveAttribute('data-status', 'STALE');
+    });
   });
 
   describe('when a row is expanded and collapsed', () => {
