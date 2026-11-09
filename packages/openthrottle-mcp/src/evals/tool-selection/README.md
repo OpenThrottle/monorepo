@@ -120,7 +120,7 @@ tool or argument that no longer exists, which would otherwise leave a case that 
 | `run-evals.ts`                       | `runEval` + aggregation back to baseline-shaped results and the core report |
 | `run-evals.characterization.test.ts` | Literal per-case results; proof the port kept baselines compatible          |
 | `compare-baseline.ts`                | Same-model baseline comparison (format unchanged)                           |
-| `anthropic-tool-selector.ts`         | Messages API adapter (raw HTTP until the package adds `@anthropic-ai/sdk`)  |
+| `anthropic-tool-selector.ts`         | Messages API adapter (`@anthropic-ai/sdk` `client.messages.create`)         |
 | `cli.ts`                             | The Nx target's entry point                                                 |
 
 The evals are not reachable from `bin.ts` or `bin-http.ts`, so the production esbuild bundle does not

@@ -205,8 +205,8 @@ export async function main(argv: readonly string[]): Promise<number> {
   const selector = createAnthropicToolSelector({
     apiKey,
     baseUrl: process.env['ANTHROPIC_BASE_URL'] ?? 'https://api.anthropic.com',
+    client: undefined,
     effort: values.effort,
-    fetchImpl: fetch,
     harnessTools: HARNESS_TOOLS,
     maxRetries: 3,
     model: values.model,

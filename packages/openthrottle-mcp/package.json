@@ -25,6 +25,7 @@
   },
   "description": "Model Context Protocol server for OpenThrottle: plans, tasks, and GraphQL-backed tools (no direct database access).",
   "devDependencies": {
+    "@anthropic-ai/sdk": "catalog:",
     "@nestjs/testing": "catalog:",
     "esbuild": "catalog:",
     "graphql-codegen-typescript-validation-schema": "catalog:",
