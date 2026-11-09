@@ -8200,6 +8200,21 @@ export type TranscriptionStreamChunkAddedSubscription = {
   };
 };
 
+export type HomeDefaultAgentQueryVariables = Exact<{ [key: string]: never }>;
+
+export type HomeDefaultAgentQuery = {
+  __typename?: 'Query';
+  userPreferences: {
+    __typename?: 'UserPreferencesObject';
+    defaultAgent?: {
+      __typename?: 'UserPreferencesAgentObject';
+      backend: string;
+      effort?: string | null;
+      model: string;
+    } | null;
+  };
+};
+
 export type SearchAgentAssetsQueryVariables = Exact<{
   input: AgentAssetSearchInput;
 }>;
@@ -19209,6 +19224,51 @@ export const TranscriptionStreamChunkAddedDocument = {
 } as unknown as DocumentNode<
   TranscriptionStreamChunkAddedSubscription,
   TranscriptionStreamChunkAddedSubscriptionVariables
+>;
+export const HomeDefaultAgentDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'HomeDefaultAgent' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'userPreferences' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'defaultAgent' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'backend' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'effort' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  HomeDefaultAgentQuery,
+  HomeDefaultAgentQueryVariables
 >;
 export const SearchAgentAssetsDocument = {
   kind: 'Document',

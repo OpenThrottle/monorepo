@@ -23,7 +23,10 @@ import {
 } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import { markDeferredHandled } from '~/global/utils/markDeferredHandled';
-import { loadComposerModels } from '~/routing/home/utils/models.server';
+import {
+  loadComposerModels,
+  loadDefaultAgent,
+} from '~/routing/home/utils/models.server';
 import {
   addHook,
   addPlanTag,
@@ -44,7 +47,9 @@ import {
 } from '~/routing/plans/actions/planId';
 import { PlanDetailRoute } from '~/routing/plans/components/PlanDetailRoute';
 import { PlanRunConfigStoreProvider } from '~/routing/plans/components/PlanRunConfigStoreProvider';
+import { PlanDefaultAgentContext } from '~/routing/plans/config/plan-default-agent-context';
 import { loadEnabledEditors } from '~/routing/plans/utils/loadEnabledEditors';
+import { resolvePlanRunDefaultAgent } from '~/routing/plans/utils/plan-run-default-agent';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -81,6 +86,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   // Await boundaries stay type-uniform with the real branch.
   if (!planId) {
     return {
+      defaultAgent: Promise.resolve(null),
       enabledEditors: Promise.resolve([]),
       inboxMessages: Promise.resolve([]),
       ledger: Promise.resolve({ linkedArtifacts: [], ruleApplications: [] }),
@@ -117,6 +123,16 @@ export const loader = async (args: Route.LoaderArgs) => {
   // probes local model servers (cold-slow); it never rejects (degrades to []), so a failed
   // probe leaves the picker's empty state rather than an error region.
   const models = loadComposerModels(args.request);
+
+  // The user's default agent, narrowed against the same discovered options so an
+  // agent or model that is now disabled reads as "no preference" (D3). Seeds the
+  // Run dialog for a plan whose own agent is unset. Neither half rejects.
+  const defaultAgent = Promise.all([
+    models,
+    loadDefaultAgent(args.request),
+  ]).then(([resolvedModels, stored]) =>
+    resolvePlanRunDefaultAgent(stored, resolvedModels),
+  );
 
   // The inbox has no error region of its own — it is optional chrome above the
   // tabs — so, like the editor links, a failure degrades it to an empty inbox
@@ -170,6 +186,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   // nothing is returned for React Router to own. Either case used to exit the
   // server process. The originals still reject for their errorElement.
   markDeferredHandled([
+    defaultAgent,
     enabledEditors,
     inboxMessages,
     ledger,
@@ -183,6 +200,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   const critical = await criticalPromise;
 
   return {
+    defaultAgent,
     enabledEditors,
     inboxMessages,
     ledger,
@@ -247,7 +265,9 @@ export default function Component(
       plan={plan}
       repositories={loaderData.workspaceRepositories}
     >
-      <PlanDetailRoute loaderData={loaderData} params={params} plan={plan} />
+      <PlanDefaultAgentContext.Provider value={loaderData.defaultAgent}>
+        <PlanDetailRoute loaderData={loaderData} params={params} plan={plan} />
+      </PlanDefaultAgentContext.Provider>
     </PlanRunConfigStoreProvider>
   );
 }

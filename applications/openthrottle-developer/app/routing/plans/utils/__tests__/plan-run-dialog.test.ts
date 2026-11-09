@@ -1,5 +1,7 @@
 import { beforeAll, describe, expect, test } from 'vitest';
 
+import type { DefaultAgentDraft } from '~/routing/settings/utils/user-preferences';
+
 import { buildPlanRunConfigJson } from '../../testing/buildPlanRunConfigJson';
 import { parsePlanDetailTab } from '../parsers';
 import type { PlanRunDialogGatingInput } from '../plan-run-dialog';
@@ -84,6 +86,7 @@ describe('plan-run-dialog utils', () => {
   describe('createPlanRunDialogDraft', () => {
     test('reads backend, model, effort and iterations from the plan', () => {
       const draft = createPlanRunDialogDraft({
+        defaultAgent: null,
         mode: 'schedule',
         now: NOW,
         planId: 'plan-1',
@@ -108,6 +111,7 @@ describe('plan-run-dialog utils', () => {
 
     test('drops an effort the backend has no knob for', () => {
       const draft = createPlanRunDialogDraft({
+        defaultAgent: null,
         mode: 'run',
         now: NOW,
         planId: 'plan-1',
@@ -124,6 +128,7 @@ describe('plan-run-dialog utils', () => {
     test("seeds the schedule tab from the plan's current scheduled time (Reschedule…)", () => {
       // 17:00 UTC is 09:00 in the pinned America/Los_Angeles zone (PST).
       const draft = createPlanRunDialogDraft({
+        defaultAgent: null,
         mode: 'schedule',
         now: NOW,
         planId: 'plan-1',
@@ -137,6 +142,7 @@ describe('plan-run-dialog utils', () => {
 
     test('ignores an unreadable scheduled time and keeps the default hour', () => {
       const draft = createPlanRunDialogDraft({
+        defaultAgent: null,
         mode: 'schedule',
         now: NOW,
         planId: 'plan-1',
@@ -149,6 +155,56 @@ describe('plan-run-dialog utils', () => {
 
     test('falls back to the defaults when the plan has no run config', () => {
       expect(getPlanConfiguredIterations('plan-1', null)).toBeGreaterThan(0);
+    });
+
+    describe('with a default agent', () => {
+      const defaultAgent: DefaultAgentDraft = {
+        backend: 'claude',
+        effort: 'high',
+        model: 'opus',
+      };
+
+      test('seeds a plan with no run config from the preference', () => {
+        const draft = createPlanRunDialogDraft({
+          defaultAgent,
+          mode: 'run',
+          now: NOW,
+          planId: 'plan-1',
+          runConfigJson: null,
+          scheduledRunAt: null,
+        });
+
+        expect(draft).toMatchObject(defaultAgent);
+      });
+
+      test('seeds a plan still on the system default agent', () => {
+        const draft = createPlanRunDialogDraft({
+          defaultAgent,
+          mode: 'run',
+          now: NOW,
+          planId: 'plan-1',
+          runConfigJson: buildPlanRunConfigJson({ iterations: 4 }),
+          scheduledRunAt: null,
+        });
+
+        expect(draft).toMatchObject({ ...defaultAgent, iterationsText: '4' });
+      });
+
+      test("keeps the plan's own explicit agent", () => {
+        const draft = createPlanRunDialogDraft({
+          defaultAgent,
+          mode: 'run',
+          now: NOW,
+          planId: 'plan-1',
+          runConfigJson: buildPlanRunConfigJson({
+            executionBackend: 'cursor',
+            model: 'gpt-5.2',
+          }),
+          scheduledRunAt: null,
+        });
+
+        expect(draft).toMatchObject({ backend: 'cursor', model: 'gpt-5.2' });
+      });
     });
   });
 
@@ -228,6 +284,7 @@ describe('plan-run-dialog utils', () => {
 
   describe('buildPlanRunDialogFields', () => {
     const draft = createPlanRunDialogDraft({
+      defaultAgent: null,
       mode: 'run',
       now: NOW,
       planId: 'plan-1',

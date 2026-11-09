@@ -19,9 +19,11 @@ import type {
 import {
   DiscoverAgentClisDocument,
   DiscoverLocalModelsDocument,
+  HomeDefaultAgentDocument,
   PersonaPromptsDocument,
   WorkspaceLocalRepositoriesDocument,
 } from '~/__generated__/graphql';
+import type { ComposerDefaultAgent } from '~/routing/home/utils/seed-composer-default-agent';
 
 /**
  * The registered-checkout option type is single-sourced in
@@ -142,6 +144,35 @@ export async function loadRepositories(
     }));
   } catch {
     return [];
+  }
+}
+
+/**
+ * @description Server-only loader helper: the user's saved default agent, which
+ * seeds the composer when the toolbar remembers no pick. `null` when unset or on
+ * failure, so the composer keeps today's discovery-derived seed.
+ */
+export async function loadDefaultAgent(
+  request: Request,
+): Promise<ComposerDefaultAgent | null> {
+  try {
+    const data = await executeGraphqlWithAuth(
+      request,
+      HomeDefaultAgentDocument,
+    );
+    const agent = data.userPreferences.defaultAgent;
+
+    if (agent == null) {
+      return null;
+    }
+
+    return {
+      backend: agent.backend,
+      effort: agent.effort ?? null,
+      model: agent.model,
+    };
+  } catch {
+    return null;
   }
 }
 

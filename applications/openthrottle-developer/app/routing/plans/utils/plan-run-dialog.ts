@@ -17,6 +17,7 @@ import type {
 import { getPlanScheduleDisabledReason } from '~/routing/plans/utils/getPlanScheduleDisabledReason';
 import { PLANS_DETAIL_TAB_SEARCH_PARAM } from '~/routing/plans/utils/parsers';
 import { hydratePlanRunConfigUiState } from '~/routing/plans/utils/plan-run-config-ui';
+import { seedPlanRunAgent } from '~/routing/plans/utils/plan-run-default-agent';
 import { reconcilePlanRunEffort } from '~/routing/plans/utils/plan-run-model-effort';
 import {
   formatOtLoopCommandsText,
@@ -32,6 +33,7 @@ import {
   getPlanIsRunning,
   getPlanIsTerminal,
 } from '~/routing/plans/utils/utils.plans';
+import type { DefaultAgentDraft } from '~/routing/settings/utils/user-preferences';
 
 const isBlank = (value: string | null | undefined): boolean => {
   return value == null || value.trim() === '';
@@ -74,16 +76,21 @@ export const getPlanConfiguredIterations = (
  * sensible hour. Nothing from an earlier open survives.
  */
 export const createPlanRunDialogDraft = (input: {
+  /** @description The user's valid default agent; seeds a plan whose agent is unset (D3). */
+  readonly defaultAgent: DefaultAgentDraft | null;
   readonly mode: PlanRunDialogMode;
   readonly now: Date;
   readonly planId: string;
   readonly runConfigJson: string | null | undefined;
   readonly scheduledRunAt: Date | string | null | undefined;
 }): PlanRunDialogDraft => {
-  const { mode, now, planId, runConfigJson, scheduledRunAt } = input;
-  const { otLoop, runner, workflowInput } = hydratePlanRunConfigUiState(
-    planId,
-    runConfigJson,
+  const { defaultAgent, mode, now, planId, runConfigJson, scheduledRunAt } =
+    input;
+  const hydrated = hydratePlanRunConfigUiState(planId, runConfigJson);
+  const { otLoop, runner } = hydrated;
+  const workflowInput = seedPlanRunAgent(
+    hydrated.workflowInput,
+    defaultAgent,
   );
   const scheduledInstant =
     scheduledRunAt == null ? undefined : new Date(scheduledRunAt);

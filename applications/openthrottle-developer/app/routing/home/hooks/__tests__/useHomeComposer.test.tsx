@@ -104,6 +104,7 @@ function buildStub(
 ): React.ReactElement {
   const props: UseHomeComposerOptions = {
     conversationList: makeConversationList(),
+    defaultAgent: null,
     models: [openaiModel],
     personas: [],
     repositories: [repositoryA],
@@ -174,6 +175,46 @@ describe('useHomeComposer', () => {
 
     expect(value.current?.modelId).toBe(cliModel.id);
     expect(value.current?.isCliBackend).toBe(true);
+  });
+
+  describe('default agent seed', () => {
+    const defaultAgent = { backend: 'claude', effort: 'high', model: 'sonnet' };
+
+    test('a remembered atom pick wins over the preference', async () => {
+      store.set(chatToolbarStateAtom, {
+        ...DEFAULT_CHAT_TOOLBAR_STATE,
+        modelId: openaiModel.id,
+      });
+      await renderComposer({ defaultAgent, models: [openaiModel, cliModel] });
+
+      expect(value.current?.modelId).toBe(openaiModel.id);
+    });
+
+    test('the preference seeds model and reasoning when the atom is empty', async () => {
+      await renderComposer({ defaultAgent, models: [openaiModel, cliModel] });
+
+      expect(value.current?.modelId).toBe(cliModel.id);
+      expect(value.current?.reasoning).toBe('high');
+      // Derive-only: the preference is never written into the atom.
+      expect(store.get(chatToolbarStateAtom).modelId).toBeUndefined();
+    });
+
+    test('discovery seeds the model when the preference is not offered', async () => {
+      await renderComposer({
+        defaultAgent: { ...defaultAgent, backend: 'codex' },
+        models: [openaiModel, cliModel],
+      });
+
+      expect(value.current?.modelId).toBe(openaiModel.id);
+    });
+
+    test('a composer pick after load overrides the preference', async () => {
+      await renderComposer({ defaultAgent, models: [openaiModel, cliModel] });
+
+      act(() => value.current?.setModelId(openaiModel.id));
+
+      expect(value.current?.modelId).toBe(openaiModel.id);
+    });
   });
 
   test('setDraft updates the draft text', async () => {
@@ -302,6 +343,7 @@ describe('useHomeComposer', () => {
     const propsRef: { current: UseHomeComposerOptions } = {
       current: {
         conversationList,
+        defaultAgent: null,
         models: [openaiModel],
         personas: [],
         repositories: [repositoryA],

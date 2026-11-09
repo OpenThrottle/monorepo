@@ -81,6 +81,7 @@ describe('HomeComposer Component', () => {
   beforeEach(() => {
     props = {
       conversationList: buildConversationList(),
+      defaultAgent: null,
       models,
       personas,
       repositories,

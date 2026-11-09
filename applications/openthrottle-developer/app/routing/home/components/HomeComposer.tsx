@@ -14,10 +14,13 @@ import type { UseAgenticChatTurnResult } from '~/routing/home/hooks/useAgenticCh
 import type { UseConversationListResult } from '~/routing/home/hooks/useConversationList';
 import { useHomeComposer } from '~/routing/home/hooks/useHomeComposer';
 import type { RepositoryOption } from '~/routing/home/utils/models.server';
+import type { ComposerDefaultAgent } from '~/routing/home/utils/seed-composer-default-agent';
 
 export interface HomeComposerProps {
   /** Sidebar-backing conversation list; the composer refreshes it on new persisted turns. */
   conversationList: UseConversationListResult;
+  /** The saved default agent; seeds the model and effort when nothing is remembered. */
+  defaultAgent: ComposerDefaultAgent | null;
   /** Discovered composer models (local endpoints + agent CLIs + driver×endpoint). */
   models: ChatModelOption[];
   /** Registry personas; falls back to the mock list when empty. */
@@ -38,7 +41,14 @@ export interface HomeComposerProps {
  * the composer without the thread being re-mounted by the fallback swap.
  */
 export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
-  const { conversationList, models, personas, repositories, turn } = props;
+  const {
+    conversationList,
+    defaultAgent,
+    models,
+    personas,
+    repositories,
+    turn,
+  } = props;
 
   // Hooks
   const navigate = useNavigate();
@@ -78,6 +88,7 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
     voice,
   } = useHomeComposer({
     conversationList,
+    defaultAgent,
     models,
     personas,
     repositories,
