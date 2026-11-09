@@ -28,6 +28,7 @@ interface FormatPlanTaskForPrompt {
   readonly title: string;
 }
 
+export { describeWorkflowAccountError } from './describeWorkflowAccountError.ts';
 export type { PlanTaskSortFields } from './plan-task-list-order.ts';
 export {
   comparePlanTaskListOrder,

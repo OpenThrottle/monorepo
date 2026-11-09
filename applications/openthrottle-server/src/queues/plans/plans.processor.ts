@@ -1234,6 +1234,32 @@ export class PlansProcessor
    * `settleCliPlanRun`). Never throws — the settle write is diagnostic bookkeeping,
    * not on the critical path of the job outcome itself.
    */
+  /**
+   * Writes the terminal row, passing a settled reason only when there is one so every
+   * reason-less settle keeps its original three-argument call.
+   */
+  private async settleRunRow(
+    queueName: string,
+    bullmqJobId: string,
+    status: PlanRunStatus,
+    settledReason: string | undefined,
+  ): Promise<PlanRun | null> {
+    if (settledReason === undefined) {
+      return this.planRunsRepository.settleRunByJob(
+        queueName,
+        bullmqJobId,
+        status,
+      );
+    }
+
+    return this.planRunsRepository.settleRunByJob(
+      queueName,
+      bullmqJobId,
+      status,
+      settledReason,
+    );
+  }
+
   private async settleQueuedRunStatus(
     queueName: string,
     bullmqJobId: string,
@@ -1242,12 +1268,14 @@ export class PlansProcessor
       readonly headSha: string | undefined;
       readonly prNumber: number | undefined;
     },
+    settledReason?: string,
   ): Promise<void> {
     try {
-      const run = await this.planRunsRepository.settleRunByJob(
+      const run = await this.settleRunRow(
         queueName,
         bullmqJobId,
         status,
+        settledReason,
       );
 
       if (
@@ -1559,10 +1587,19 @@ export class PlansProcessor
         PlansProcessor.name,
       );
 
+      // An account error is terminal and needs a human: persist its description (error,
+      // credential, fix) so the run row says why without digging through plan output.
+      const isAccountError = outcome.reason === 'workflow_agent_account_error';
+      const failureDescription = isAccountError
+        ? outcome.description
+        : undefined;
+
       await this.settleQueuedRunStatus(
         PLANS_QUEUE_NAME,
         jobId,
         PLAN_RUN_STATUS.FAILED,
+        undefined,
+        failureDescription,
       );
 
       // OT Loop only: a failure at start (no commands, a red setup) never reached a task, so the plan
@@ -1582,7 +1619,7 @@ export class PlansProcessor
         mainRunSucceeded: false,
         notification: {
           jobType: 'plans',
-          message: `Plan run failed: ${data.planId} — ${outcome.reason}`,
+          message: `Plan run failed: ${data.planId} — ${failureDescription ?? outcome.reason}`,
           planId: data.planId,
           severity: 'error',
         },

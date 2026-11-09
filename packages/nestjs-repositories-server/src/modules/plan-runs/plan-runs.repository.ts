@@ -368,17 +368,26 @@ export class PlanRunsRepository extends BaseRepository<
    * status (COMPLETED / CANCELLED / FAILED — never STALE, which is reserved for the stale sweeper)
    * and nulls the run-location columns in one update; leaves the cancel marker and
    * lastHeartbeatAt untouched. Best-effort by key: returns null when no row matched.
+   * `settledReason`, when given, is written to `settled_reason` in the same update (e.g. why a
+   * FAILED run stopped); omitted, the column is left as it is.
    */
   async settleRunByJob(
     queueName: string,
     bullmqJobId: string,
     status: PlanRunStatus,
+    settledReason?: string,
   ): Promise<PlanRun | null> {
     const repo = this.repository;
 
     await repo.update(
       { bullmqJobId, queueName },
-      { hostname: null, pid: null, status, workerId: null },
+      {
+        hostname: null,
+        pid: null,
+        ...(settledReason === undefined ? {} : { settledReason }),
+        status,
+        workerId: null,
+      },
     );
 
     return repo.findOne({ where: { bullmqJobId, queueName } });

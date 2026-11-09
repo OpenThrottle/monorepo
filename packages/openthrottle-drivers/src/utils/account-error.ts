@@ -2,7 +2,7 @@
  * @description Shared fatal-account-error signal for Claude Code. When the account the CLI bills
  * against cannot serve requests at all — no credit left, a bad or revoked key, no access — every
  * request fails the same way, so retrying is pointless. Unlike a usage limit (see
- * `usage-limit.ts`) nothing lifts on its own: a human must fix the account.
+ * `claude-output.ts`) nothing lifts on its own: a human must fix the account.
  *
  * The CLI reports it as a synthetic `assistant` event whose top-level `error` names the class
  * (`isApiErrorMessage: true` in the session transcript), followed by an error `result`. The class
@@ -35,6 +35,17 @@ export type AccountErrorKind =
 export interface AccountError {
   readonly kind: AccountErrorKind;
   readonly message: string | null;
+}
+
+/**
+ * @description An {@link AccountError} as one agent run reports it: plus `apiKeySource`, the
+ * credential the CLI said it authenticated with (`ANTHROPIC_API_KEY` when it billed a key from its
+ * environment, anything else for its own login), or null when the run never reported it. This is
+ * what a run surfaces so a diagnostic can say which account to fix.
+ * @public
+ */
+export interface AgentAccountError extends AccountError {
+  readonly apiKeySource: string | null;
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
