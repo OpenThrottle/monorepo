@@ -5,7 +5,9 @@ export {
 } from './git-exclude.ts';
 export {
   deleteLedger,
+  layerForLedgerPath,
   ledgerPathForRepo,
+  ledgerPathsForRepo,
   listLedgerPaths,
   readLedger,
   resolveLedgerDir,
@@ -27,11 +29,13 @@ export type {
   ForeignSkillInjectionMode,
   ForeignSkillLedger,
   ForeignSkillLedgerEntry,
+  ForeignSkillMaterializationLayer,
   GitExcludeOwner,
 } from './types.ts';
 export {
   FOREIGN_SKILL_INJECTION_MODE,
   FOREIGN_SKILL_LEDGER_DIR_ENV,
+  FOREIGN_SKILL_MATERIALIZATION_LAYER,
   FOREIGN_SKILL_TARGET_DIRS,
   GIT_EXCLUDE_BEGIN_MARKER,
   GIT_EXCLUDE_END_MARKER,

@@ -169,6 +169,16 @@ export class RepositoryCheckoutObject {
   })
   foreignSkillInjectionEnabled!: boolean;
 
+  @Field(() => Boolean, {
+    description: `True when this checkout is a foreign workspace (not the OpenThrottle monorepo itself). Foreign-only settings such as the worktree skill overlay are not meaningful when false.`,
+  })
+  isForeign!: boolean;
+
+  @Field(() => Boolean, {
+    description: `True (default, opt-out) when the ot-worktree skill overlay is applied to worktrees of this foreign checkout; false falls back to the server's SSOT worktree scripts, and worktrees keep working.`,
+  })
+  worktreeSkillOverlayEnabled!: boolean;
+
   @Field(() => String, {
     description: `'primary' or 'worktree' (worktree reserved for future workflow unification).`,
   })

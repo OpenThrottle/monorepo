@@ -21,6 +21,7 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 
 import type { PlanRunWorkspacePreflightParams } from './plan-run-workspace-preflight.types.ts';
+import { findWorktreeProvisioner } from './plan-run-workspace-preflight.utils.ts';
 
 /**
  * Workspace MCP config each backend reads, relative to the run directory. Only the two backends a
@@ -59,21 +60,37 @@ export class PlanRunWorkspacePreflightService {
     }
 
     return [
-      ...this.checkEnvFile(workingDirectory),
+      ...this.checkProvisioning(workingDirectory),
       ...this.checkMcpConfig(backend, workingDirectory),
     ];
   }
 
   /**
+   * @description A repo with no worktree provisioner gets a worktree with nothing installed — valid,
+   * but worth one line naming the hook that would fix it. Only a repo that HAS a provisioner is
+   * expected to leave a `.env` behind, so the `.env` check is gated on one: a foreign repo with no
+   * provisioner must not be told about OpenThrottle's own `.env` conventions.
+   */
+  private checkProvisioning(workingDirectory: string): readonly string[] {
+    if (findWorktreeProvisioner(workingDirectory, process.env) === null) {
+      return [
+        `${workingDirectory} has no worktree provisioner, so the worktree was created but nothing (dependencies, env files) was installed into it. To provision plan-run worktrees for this repo, add an executable .worktree/provision.sh — see skills/ot-worktree/references/contract.md.`,
+      ];
+    }
+
+    return this.checkEnvFile(workingDirectory);
+  }
+
+  /**
    * @description A fresh worktree without a provisioned `.env` is the "password prompt instead of an
-   * error" trap — `worktree:new` writes one, a bare `git worktree add` does not.
+   * error" trap — the repo's provisioner writes one, a bare `git worktree add` does not.
    */
   private checkEnvFile(workingDirectory: string): readonly string[] {
     const envPath = join(workingDirectory, '.env');
 
     if (!existsSync(envPath)) {
       return [
-        `No .env in ${workingDirectory}. A worktree created outside \`pnpm run worktree:new\` is not provisioned; expect credential prompts rather than a clean failure.`,
+        `No .env in ${workingDirectory}. The repo has a worktree provisioner, but this worktree was not provisioned by it (it was not created through the ot-worktree create action); expect credential prompts rather than a clean failure.`,
       ];
     }
 

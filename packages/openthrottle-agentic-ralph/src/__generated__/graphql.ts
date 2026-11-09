@@ -2628,7 +2628,7 @@ export type Mutation = {
   removeAgentTrajectoryLabel: Scalars['Boolean']['output'];
   /** Remove a permission from a role */
   removePermissionFromRole: Scalars['Boolean']['output'];
-  /** Remove one server-provisioned plan-run worktree from disk through pnpm run worktree:remove: the repo's teardown hook runs, the directory and its checkout record go, and the branch is kept. Never forced — a primary checkout, a worktree OpenThrottle did not provision, a dirty or unpushed tree, or one an unsettled run still points at is kept and the outcome says why. */
+  /** Remove one server-provisioned plan-run worktree from disk through the ot-worktree destroy action (destroy.sh, never a pnpm script, so it works in any repo): the repo's teardown hook runs, the directory and its checkout record go, and the branch is kept. Never forced — a primary checkout, a worktree OpenThrottle did not provision, a dirty or unpushed tree, or one an unsettled run still points at is kept and the outcome says why. */
   removePlanRunWorktree: RemovePlanRunWorktreePayloadObject;
   /** Remove a tag from a plan under the provenance ladder (an agent cannot remove a human row; server-llm removes only its own). Returns false when the tag was not present. */
   removePlanTag: Scalars['Boolean']['output'];
@@ -3729,7 +3729,7 @@ export type PlanRunPullRequestObject = {
 
 /** What a guarded plan-run worktree teardown did. */
 export const PlanRunWorktreeTeardownOutcome = {
-  /** A guard could not be evaluated or worktree:remove failed. The worktree is still there. */
+  /** A guard could not be evaluated or the ot-worktree destroy action failed. The worktree is still there. */
   Failed: 'FAILED',
   /** A queued or in-progress plan run still points at this worktree. */
   KeptActiveRun: 'KEPT_ACTIVE_RUN',
@@ -5430,6 +5430,8 @@ export type RepositoryCheckoutObject = {
   id: Scalars['ID']['output'];
   /** Cached inspection snapshot; null until the first scan completes. */
   inspection?: Maybe<RepositoryInspectionObject>;
+  /** True when this checkout is a foreign workspace (not the OpenThrottle monorepo itself). Foreign-only settings such as the worktree skill overlay are not meaningful when false. */
+  isForeign: Scalars['Boolean']['output'];
   /** 'primary' or 'worktree' (worktree reserved for future workflow unification). */
   kind: Scalars['String']['output'];
   /** True when OpenThrottle cloned this checkout into the managed checkout root. */
@@ -5438,6 +5440,8 @@ export type RepositoryCheckoutObject = {
   scannedAt?: Maybe<Scalars['DateTime']['output']>;
   updatedAt: Scalars['DateTime']['output'];
   userId: Scalars['ID']['output'];
+  /** True (default, opt-out) when the ot-worktree skill overlay is applied to worktrees of this foreign checkout; false falls back to the server's SSOT worktree scripts, and worktrees keep working. */
+  worktreeSkillOverlayEnabled: Scalars['Boolean']['output'];
 };
 
 /** Presence of agent configuration files at the checkout root. */
@@ -7007,6 +7011,8 @@ export type UpdateRepositoryInput = {
   name?: InputMaybe<Scalars['String']['input']>;
   /** OpenThrottle project to link, or null to clear; omit to leave unchanged. */
   projectId?: InputMaybe<Scalars['ID']['input']>;
+  /** Turn the ot-worktree skill overlay on or off for this user's checkouts of the repository (default on; off falls back to the server's SSOT worktree scripts); omit to leave unchanged. Only meaningful for foreign checkouts. */
+  worktreeSkillOverlayEnabled?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type UpdateRoleInput = {

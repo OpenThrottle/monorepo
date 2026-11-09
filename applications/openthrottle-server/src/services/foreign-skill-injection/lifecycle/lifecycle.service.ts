@@ -1,6 +1,7 @@
 import { Injectable, type OnApplicationShutdown } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
+  layerForLedgerPath,
   listLedgerPaths,
   readLedger,
   teardown,
@@ -39,7 +40,12 @@ export class ForeignSkillInjectionLifecycleService implements OnApplicationShutd
         continue;
       }
       try {
-        teardown({ env: process.env, repoPath: ledger.repoPath });
+        // Each layer (curated set, ot-worktree overlay) has its own ledger and exclude block.
+        teardown({
+          env: process.env,
+          layer: layerForLedgerPath(ledgerPath),
+          repoPath: ledger.repoPath,
+        });
         reconciled += 1;
       } catch (error) {
         this.logger.warn(

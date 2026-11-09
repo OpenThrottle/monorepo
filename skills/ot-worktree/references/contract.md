@@ -66,6 +66,32 @@ that does not support it ignores it:
 | ------------------------------ | ---------------------------------------------------------------------- |
 | `OPENTHROTTLE_WORKTREE_OWN_DB` | `1` — provision the worktree with its own database (not the primary's) |
 
+## Example: a provisioner for a repo that does not use pnpm
+
+The hook is plain shell; nothing about it is OpenThrottle-specific. A minimal
+`.worktree/provision.sh` (commit it, `chmod +x`) for a repo on npm, yarn or bundler:
+
+```sh
+#!/bin/sh
+set -eu
+cd "$OPENTHROTTLE_WORKTREE_PATH"
+
+# Reuse the primary checkout's local env file, if the repo keeps one untracked.
+[ -f "$OPENTHROTTLE_SOURCE_REPO/.env" ] && cp "$OPENTHROTTLE_SOURCE_REPO/.env" .env
+
+if [ -f yarn.lock ]; then
+  yarn install --frozen-lockfile
+elif [ -f package-lock.json ]; then
+  npm ci
+elif [ -f Gemfile.lock ]; then
+  bundle install
+fi
+```
+
+Without one, `create.sh` still creates the worktree and logs
+`no repo provisioner found — worktree created but not provisioned`; OpenThrottle plan runs surface
+the same fact in the plan's output stream.
+
 ## Failure semantics
 
 - A **provision** hook that exits non-zero fails worktree creation. Better to fail loudly than hand

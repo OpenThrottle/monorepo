@@ -40,6 +40,7 @@ import {
   mergePlanRunTuningWithWorkflowRalphConfig,
 } from '@tools/workflows';
 
+import { WorktreeSkillOverlayService } from '../../../services/foreign-skill-injection/worktree-skill-overlay/worktree-skill-overlay.service.ts';
 import { PlanRunWorkspacePreflightService } from '../../../services/plan-run-workspace-preflight/plan-run-workspace-preflight.service.ts';
 import { PlanRunWorktreeCheckoutService } from '../../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service.ts';
 import { PlanRunWorktreeProvisionService } from '../../../services/plan-run-worktree-provision/plan-run-worktree-provision.service.ts';
@@ -92,6 +93,7 @@ export class AgenticRalphOrchestratorService {
     private readonly planRunWorktreeProvisionService: PlanRunWorktreeProvisionService,
     private readonly repositoryCheckoutsService: RepositoryCheckoutsService,
     private readonly userWorkspaceSettingsService: UserWorkspaceSettingsService,
+    private readonly worktreeSkillOverlayService: WorktreeSkillOverlayService,
   ) {}
 
   /**
@@ -147,6 +149,7 @@ export class AgenticRalphOrchestratorService {
     const resolvedWorkspace = await this.resolveRunWorkingDirectory({
       baseCheckoutCwd,
       jobData,
+      run,
     });
     const configCwd = resolvedWorkspace.workingDirectory;
     if (resolvedWorkspace.worktree !== null) {
@@ -317,11 +320,12 @@ export class AgenticRalphOrchestratorService {
   private async resolveRunWorkingDirectory(params: {
     readonly baseCheckoutCwd: string;
     readonly jobData: RunPlanOrchestratorJobData;
+    readonly run: PlanRun | null;
   }): Promise<{
     readonly workingDirectory: string;
     readonly worktree: ProvisionedPlanRunWorktree | null;
   }> {
-    const { baseCheckoutCwd, jobData } = params;
+    const { baseCheckoutCwd, jobData, run } = params;
 
     const worktreeName = jobData.ralph?.worktree?.trim();
     if (worktreeName === undefined || worktreeName === '') {
@@ -332,7 +336,7 @@ export class AgenticRalphOrchestratorService {
       return { workingDirectory: baseCheckoutCwd, worktree: null };
     }
 
-    // `worktree:new` is a root-only workspace script. An explicit `workingDirectory` (itself
+    // The ot-worktree create action must run from a repo root. An explicit `workingDirectory` (itself
     // derived from checkoutId/repositoryId upstream — see PlanEnqueueService.resolveWorkspace) is
     // trusted as-is and takes precedence, unchanged. Absent that, `baseCheckoutCwd` is whatever
     // `getWorkflowConfigCwd` fell back to (WORKSPACE_ROOT, or this process's own cwd — a
@@ -348,6 +352,13 @@ export class AgenticRalphOrchestratorService {
         worktreeName,
       );
     }
+
+    // Foreign checkouts only, default on, honouring the per-checkout opt-out. Never throws: an
+    // opted-out or failed overlay still provisions, through the server's own ot-worktree scripts.
+    await this.worktreeSkillOverlayService.ensureForBaseCheckout({
+      actorUserId: run?.actorUserId ?? null,
+      baseCheckoutPath,
+    });
 
     const worktreePath = await this.planRunWorktreeProvisionService.provision({
       baseCheckoutPath,
@@ -367,7 +378,7 @@ export class AgenticRalphOrchestratorService {
 
   /**
    * @description Resolves a genuine OpenThrottle repo root (via {@link getOpenThrottleRoot}'s
-   * `.openthrottle.mjs` marker walk) to hand `worktree:new` — a root-only workspace script — when
+   * `.openthrottle.mjs` marker walk) to run the ot-worktree create action from — it needs a repo root — when
    * the enqueue named no checkoutId/repositoryId/workingDirectory. Throws a legible error naming
    * what is missing when no root is resolvable, so the job fails fast with that message in
    * `failedReason` instead of retrying three times against a doomed `baseCheckoutPath` and giving up

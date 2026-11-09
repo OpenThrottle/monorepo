@@ -2628,7 +2628,7 @@ export type Mutation = {
   removeAgentTrajectoryLabel: Scalars['Boolean']['output'];
   /** Remove a permission from a role */
   removePermissionFromRole: Scalars['Boolean']['output'];
-  /** Remove one server-provisioned plan-run worktree from disk through pnpm run worktree:remove: the repo's teardown hook runs, the directory and its checkout record go, and the branch is kept. Never forced — a primary checkout, a worktree OpenThrottle did not provision, a dirty or unpushed tree, or one an unsettled run still points at is kept and the outcome says why. */
+  /** Remove one server-provisioned plan-run worktree from disk through the ot-worktree destroy action (destroy.sh, never a pnpm script, so it works in any repo): the repo's teardown hook runs, the directory and its checkout record go, and the branch is kept. Never forced — a primary checkout, a worktree OpenThrottle did not provision, a dirty or unpushed tree, or one an unsettled run still points at is kept and the outcome says why. */
   removePlanRunWorktree: RemovePlanRunWorktreePayloadObject;
   /** Remove a tag from a plan under the provenance ladder (an agent cannot remove a human row; server-llm removes only its own). Returns false when the tag was not present. */
   removePlanTag: Scalars['Boolean']['output'];
@@ -3729,7 +3729,7 @@ export type PlanRunPullRequestObject = {
 
 /** What a guarded plan-run worktree teardown did. */
 export const PlanRunWorktreeTeardownOutcome = {
-  /** A guard could not be evaluated or worktree:remove failed. The worktree is still there. */
+  /** A guard could not be evaluated or the ot-worktree destroy action failed. The worktree is still there. */
   Failed: 'FAILED',
   /** A queued or in-progress plan run still points at this worktree. */
   KeptActiveRun: 'KEPT_ACTIVE_RUN',
@@ -5430,6 +5430,8 @@ export type RepositoryCheckoutObject = {
   id: Scalars['ID']['output'];
   /** Cached inspection snapshot; null until the first scan completes. */
   inspection?: Maybe<RepositoryInspectionObject>;
+  /** True when this checkout is a foreign workspace (not the OpenThrottle monorepo itself). Foreign-only settings such as the worktree skill overlay are not meaningful when false. */
+  isForeign: Scalars['Boolean']['output'];
   /** 'primary' or 'worktree' (worktree reserved for future workflow unification). */
   kind: Scalars['String']['output'];
   /** True when OpenThrottle cloned this checkout into the managed checkout root. */
@@ -5438,6 +5440,8 @@ export type RepositoryCheckoutObject = {
   scannedAt?: Maybe<Scalars['DateTime']['output']>;
   updatedAt: Scalars['DateTime']['output'];
   userId: Scalars['ID']['output'];
+  /** True (default, opt-out) when the ot-worktree skill overlay is applied to worktrees of this foreign checkout; false falls back to the server's SSOT worktree scripts, and worktrees keep working. */
+  worktreeSkillOverlayEnabled: Scalars['Boolean']['output'];
 };
 
 /** Presence of agent configuration files at the checkout root. */
@@ -7007,6 +7011,8 @@ export type UpdateRepositoryInput = {
   name?: InputMaybe<Scalars['String']['input']>;
   /** OpenThrottle project to link, or null to clear; omit to leave unchanged. */
   projectId?: InputMaybe<Scalars['ID']['input']>;
+  /** Turn the ot-worktree skill overlay on or off for this user's checkouts of the repository (default on; off falls back to the server's SSOT worktree scripts); omit to leave unchanged. Only meaningful for foreign checkouts. */
+  worktreeSkillOverlayEnabled?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type UpdateRoleInput = {
@@ -12361,12 +12367,14 @@ export type GetWorkspaceRepositoryQuery = {
       filesystemPath: string;
       foreignSkillInjectionEnabled: boolean;
       id: string;
+      isForeign: boolean;
       kind: string;
       managed: boolean;
       repositoryId: string;
       scannedAt?: any | null;
       updatedAt: any;
       userId: string;
+      worktreeSkillOverlayEnabled: boolean;
       inspection?: {
         __typename?: 'RepositoryInspectionObject';
         scannedAt: any;
@@ -12435,12 +12443,14 @@ export type GetWorkspaceRepositoryForEditQuery = {
       filesystemPath: string;
       foreignSkillInjectionEnabled: boolean;
       id: string;
+      isForeign: boolean;
       kind: string;
       managed: boolean;
       repositoryId: string;
       scannedAt?: any | null;
       updatedAt: any;
       userId: string;
+      worktreeSkillOverlayEnabled: boolean;
       inspection?: {
         __typename?: 'RepositoryInspectionObject';
         scannedAt: any;
@@ -12508,12 +12518,14 @@ export type UpdateRepositoryMutation = {
       filesystemPath: string;
       foreignSkillInjectionEnabled: boolean;
       id: string;
+      isForeign: boolean;
       kind: string;
       managed: boolean;
       repositoryId: string;
       scannedAt?: any | null;
       updatedAt: any;
       userId: string;
+      worktreeSkillOverlayEnabled: boolean;
       inspection?: {
         __typename?: 'RepositoryInspectionObject';
         scannedAt: any;
@@ -12566,12 +12578,14 @@ export type RepositoryCheckoutFieldsFragment = {
   filesystemPath: string;
   foreignSkillInjectionEnabled: boolean;
   id: string;
+  isForeign: boolean;
   kind: string;
   managed: boolean;
   repositoryId: string;
   scannedAt?: any | null;
   updatedAt: any;
   userId: string;
+  worktreeSkillOverlayEnabled: boolean;
   inspection?: {
     __typename?: 'RepositoryInspectionObject';
     scannedAt: any;
@@ -12645,12 +12659,14 @@ export type WorkspaceRepositoryFieldsFragment = {
     filesystemPath: string;
     foreignSkillInjectionEnabled: boolean;
     id: string;
+    isForeign: boolean;
     kind: string;
     managed: boolean;
     repositoryId: string;
     scannedAt?: any | null;
     updatedAt: any;
     userId: string;
+    worktreeSkillOverlayEnabled: boolean;
     inspection?: {
       __typename?: 'RepositoryInspectionObject';
       scannedAt: any;
@@ -12770,12 +12786,14 @@ export type GetSettingsRepositoriesQuery = {
       filesystemPath: string;
       foreignSkillInjectionEnabled: boolean;
       id: string;
+      isForeign: boolean;
       kind: string;
       managed: boolean;
       repositoryId: string;
       scannedAt?: any | null;
       updatedAt: any;
       userId: string;
+      worktreeSkillOverlayEnabled: boolean;
       inspection?: {
         __typename?: 'RepositoryInspectionObject';
         scannedAt: any;
@@ -12869,12 +12887,14 @@ export type AddWorkspaceFolderMutation = {
       filesystemPath: string;
       foreignSkillInjectionEnabled: boolean;
       id: string;
+      isForeign: boolean;
       kind: string;
       managed: boolean;
       repositoryId: string;
       scannedAt?: any | null;
       updatedAt: any;
       userId: string;
+      worktreeSkillOverlayEnabled: boolean;
       inspection?: {
         __typename?: 'RepositoryInspectionObject';
         scannedAt: any;
@@ -12933,12 +12953,14 @@ export type AddWorkspaceFolderMutation = {
         filesystemPath: string;
         foreignSkillInjectionEnabled: boolean;
         id: string;
+        isForeign: boolean;
         kind: string;
         managed: boolean;
         repositoryId: string;
         scannedAt?: any | null;
         updatedAt: any;
         userId: string;
+        worktreeSkillOverlayEnabled: boolean;
         inspection?: {
           __typename?: 'RepositoryInspectionObject';
           scannedAt: any;
@@ -13006,12 +13028,14 @@ export type CloneRepositoryMutation = {
       filesystemPath: string;
       foreignSkillInjectionEnabled: boolean;
       id: string;
+      isForeign: boolean;
       kind: string;
       managed: boolean;
       repositoryId: string;
       scannedAt?: any | null;
       updatedAt: any;
       userId: string;
+      worktreeSkillOverlayEnabled: boolean;
       inspection?: {
         __typename?: 'RepositoryInspectionObject';
         scannedAt: any;
@@ -13070,12 +13094,14 @@ export type CloneRepositoryMutation = {
         filesystemPath: string;
         foreignSkillInjectionEnabled: boolean;
         id: string;
+        isForeign: boolean;
         kind: string;
         managed: boolean;
         repositoryId: string;
         scannedAt?: any | null;
         updatedAt: any;
         userId: string;
+        worktreeSkillOverlayEnabled: boolean;
         inspection?: {
           __typename?: 'RepositoryInspectionObject';
           scannedAt: any;
@@ -13143,12 +13169,14 @@ export type RefreshCheckoutMutation = {
       filesystemPath: string;
       foreignSkillInjectionEnabled: boolean;
       id: string;
+      isForeign: boolean;
       kind: string;
       managed: boolean;
       repositoryId: string;
       scannedAt?: any | null;
       updatedAt: any;
       userId: string;
+      worktreeSkillOverlayEnabled: boolean;
       inspection?: {
         __typename?: 'RepositoryInspectionObject';
         scannedAt: any;
@@ -13212,12 +13240,14 @@ export type RefreshCheckoutMutation = {
         filesystemPath: string;
         foreignSkillInjectionEnabled: boolean;
         id: string;
+        isForeign: boolean;
         kind: string;
         managed: boolean;
         repositoryId: string;
         scannedAt?: any | null;
         updatedAt: any;
         userId: string;
+        worktreeSkillOverlayEnabled: boolean;
         inspection?: {
           __typename?: 'RepositoryInspectionObject';
           scannedAt: any;
@@ -16673,12 +16703,17 @@ export const RepositoryCheckoutFieldsFragmentDoc = {
               ],
             },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'isForeign' } },
           { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
           { kind: 'Field', name: { kind: 'Name', value: 'managed' } },
           { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'worktreeSkillOverlayEnabled' },
+          },
         ],
       },
     },
@@ -16885,12 +16920,17 @@ export const WorkspaceRepositoryFieldsFragmentDoc = {
               ],
             },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'isForeign' } },
           { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
           { kind: 'Field', name: { kind: 'Name', value: 'managed' } },
           { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'worktreeSkillOverlayEnabled' },
+          },
         ],
       },
     },
@@ -31250,12 +31290,17 @@ export const GetWorkspaceRepositoryDocument = {
               ],
             },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'isForeign' } },
           { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
           { kind: 'Field', name: { kind: 'Name', value: 'managed' } },
           { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'worktreeSkillOverlayEnabled' },
+          },
         ],
       },
     },
@@ -31522,12 +31567,17 @@ export const GetWorkspaceRepositoryForEditDocument = {
               ],
             },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'isForeign' } },
           { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
           { kind: 'Field', name: { kind: 'Name', value: 'managed' } },
           { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'worktreeSkillOverlayEnabled' },
+          },
         ],
       },
     },
@@ -31786,12 +31836,17 @@ export const UpdateRepositoryDocument = {
               ],
             },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'isForeign' } },
           { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
           { kind: 'Field', name: { kind: 'Name', value: 'managed' } },
           { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'worktreeSkillOverlayEnabled' },
+          },
         ],
       },
     },
@@ -32154,12 +32209,17 @@ export const GetSettingsRepositoriesDocument = {
               ],
             },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'isForeign' } },
           { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
           { kind: 'Field', name: { kind: 'Name', value: 'managed' } },
           { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'worktreeSkillOverlayEnabled' },
+          },
         ],
       },
     },
@@ -32583,12 +32643,17 @@ export const AddWorkspaceFolderDocument = {
               ],
             },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'isForeign' } },
           { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
           { kind: 'Field', name: { kind: 'Name', value: 'managed' } },
           { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'worktreeSkillOverlayEnabled' },
+          },
         ],
       },
     },
@@ -32894,12 +32959,17 @@ export const CloneRepositoryDocument = {
               ],
             },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'isForeign' } },
           { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
           { kind: 'Field', name: { kind: 'Name', value: 'managed' } },
           { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'worktreeSkillOverlayEnabled' },
+          },
         ],
       },
     },
@@ -33212,12 +33282,17 @@ export const RefreshCheckoutDocument = {
               ],
             },
           },
+          { kind: 'Field', name: { kind: 'Name', value: 'isForeign' } },
           { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
           { kind: 'Field', name: { kind: 'Name', value: 'managed' } },
           { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'userId' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'worktreeSkillOverlayEnabled' },
+          },
         ],
       },
     },

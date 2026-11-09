@@ -118,7 +118,7 @@ export class DiscoveredWorktreesResolver {
   }
 
   @Mutation(() => RemovePlanRunWorktreePayloadObject, {
-    description: `Remove one server-provisioned plan-run worktree from disk through pnpm run worktree:remove: the repo's teardown hook runs, the directory and its checkout record go, and the branch is kept. Never forced — a primary checkout, a worktree OpenThrottle did not provision, a dirty or unpushed tree, or one an unsettled run still points at is kept and the outcome says why.`,
+    description: `Remove one server-provisioned plan-run worktree from disk through the ot-worktree destroy action (destroy.sh, never a pnpm script, so it works in any repo): the repo's teardown hook runs, the directory and its checkout record go, and the branch is kept. Never forced — a primary checkout, a worktree OpenThrottle did not provision, a dirty or unpushed tree, or one an unsettled run still points at is kept and the outcome says why.`,
   })
   @Permissions(PERMISSIONS.SETTINGS_WRITE)
   async removePlanRunWorktree(

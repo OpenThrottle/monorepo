@@ -31,6 +31,7 @@ import {
 } from 'vitest';
 
 import type { ForeignSkillMaterializationService } from '../../../services/foreign-skill-injection/materialization/materialization.service.ts';
+import type { WorktreeSkillOverlayService } from '../../../services/foreign-skill-injection/worktree-skill-overlay/worktree-skill-overlay.service.ts';
 import { RepositoryInspectionService } from '../../repository-inspection/repository-inspection.service.ts';
 import { NATIVE_PICKER_ENV } from '../native-folder-picker/native-folder-picker.constants.ts';
 import {
@@ -80,6 +81,10 @@ describe('WorkspaceFoldersService', () => {
       applyForRepository: vi.fn(),
     });
 
+  const mockWorktreeSkillOverlay = createMock<WorktreeSkillOverlayService>({
+    applyForRepository: vi.fn(),
+  });
+
   const service = new WorkspaceFoldersService(
     createMock<LoggerService>(),
     mockCheckoutsService,
@@ -87,6 +92,7 @@ describe('WorkspaceFoldersService', () => {
     mockProjectsService,
     mockRepositoriesService,
     mockForeignSkillMaterialization,
+    mockWorktreeSkillOverlay,
   );
 
   let workspaceRoot: string;
@@ -125,6 +131,9 @@ describe('WorkspaceFoldersService', () => {
     vi.mocked(mockCheckoutsService.saveInspection).mockReset();
     vi.mocked(
       mockCheckoutsService.setForeignSkillInjectionEnabledForRepository,
+    ).mockReset();
+    vi.mocked(
+      mockCheckoutsService.setWorktreeSkillOverlayEnabledForRepository,
     ).mockReset();
     vi.mocked(mockForeignSkillMaterialization.applyForRepository).mockReset();
     vi.mocked(mockProjectsService.create).mockReset();
@@ -819,6 +828,35 @@ describe('WorkspaceFoldersService', () => {
         mockForeignSkillMaterialization.applyForRepository,
       ).toHaveBeenCalledWith(userId, 'repo-inject', true);
       // Flag-only edit must not touch the shared repository row.
+      expect(mockRepositoriesService.update).not.toHaveBeenCalled();
+    });
+
+    it('stores the worktree skill overlay flag and applies it to disk', async () => {
+      const repository = asMock<Repository>({
+        id: 'repo-overlay',
+        name: 'acme/monorepo',
+        projectId: null,
+      });
+      vi.mocked(
+        mockCheckoutsService.findByRepositoryIdForUser,
+      ).mockResolvedValue([ownedCheckout(repository)]);
+
+      await service.updateRepository(userId, {
+        id: 'repo-overlay',
+        worktreeSkillOverlayEnabled: false,
+      });
+
+      expect(
+        mockCheckoutsService.setWorktreeSkillOverlayEnabledForRepository,
+      ).toHaveBeenCalledWith(userId, 'repo-overlay', false);
+      expect(mockWorktreeSkillOverlay.applyForRepository).toHaveBeenCalledWith(
+        userId,
+        'repo-overlay',
+        false,
+      );
+      expect(
+        mockForeignSkillMaterialization.applyForRepository,
+      ).not.toHaveBeenCalled();
       expect(mockRepositoriesService.update).not.toHaveBeenCalled();
     });
 

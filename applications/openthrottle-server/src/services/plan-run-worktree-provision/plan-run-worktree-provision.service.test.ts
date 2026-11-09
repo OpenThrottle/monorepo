@@ -1,21 +1,29 @@
 /**
  * @description Unit tests for plan-run worktree provisioning: reuse an existing worktree, create
- * one through `pnpm run worktree:new` (forwarding the configured root), fail fast rather than fall
- * back to the base checkout, and serialize concurrent provisioning of the same name.
+ * one by exec'ing the resolved ot-worktree `create.sh` (never pnpm), fail fast rather than fall back
+ * to the base checkout, name the searched ladder when no script resolves, and serialize concurrent
+ * provisioning of the same name. The real-script path is covered by the sibling integration test.
  */
 
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { mockExecFile } = vi.hoisted(() => ({ mockExecFile: vi.fn() }));
+const { mockExecFile, mockResolveScript } = vi.hoisted(() => ({
+  mockExecFile: vi.fn(),
+  mockResolveScript: vi.fn(),
+}));
 
 vi.mock('node:child_process', () => ({ execFile: mockExecFile }));
+vi.mock('../ot-worktree-script/ot-worktree-script.utils.ts', () => ({
+  resolveOtWorktreeScript: mockResolveScript,
+}));
 
 import { PlanRunWorktreeProvisionService } from './plan-run-worktree-provision.service.ts';
 
 const BASE = '/Users/matt/Development/openthrottle';
 const WORKTREE = '/Users/matt/Development/openthrottle-worktrees/plan-5e172b67';
+const CREATE_SCRIPT = '/opt/openthrottle/skills/ot-worktree/scripts/create.sh';
 
 /**
  * Answers one promisified execFile call: `git worktree list` yields `list`, everything else `stdout`.
@@ -53,6 +61,12 @@ describe('PlanRunWorktreeProvisionService', () => {
 
   beforeEach(() => {
     mockExecFile.mockReset();
+    mockResolveScript.mockReset();
+    mockResolveScript.mockReturnValue({
+      ok: true,
+      rung: 'openthrottle-ssot',
+      scriptPath: CREATE_SCRIPT,
+    });
     service = new PlanRunWorktreeProvisionService(createMock<LoggerService>());
   });
 
@@ -66,12 +80,12 @@ describe('PlanRunWorktreeProvisionService', () => {
       }),
     ).resolves.toBe(WORKTREE);
 
-    expect(mockExecFile.mock.calls.some(([file]) => file === 'pnpm')).toBe(
+    expect(mockExecFile.mock.calls.some(([file]) => file === 'bash')).toBe(
       false,
     );
   });
 
-  it('creates the worktree through worktree:new and returns the printed path', async () => {
+  it('creates the worktree by exec-ing the resolved create.sh and returns the printed path', async () => {
     respond({ list: `worktree ${BASE}\n`, stdout: `${WORKTREE}\n` });
 
     await expect(
@@ -82,9 +96,31 @@ describe('PlanRunWorktreeProvisionService', () => {
     ).resolves.toBe(WORKTREE);
 
     const createCall = mockExecFile.mock.calls.find(
-      ([file]) => file === 'pnpm',
+      ([file]) => file === 'bash',
     );
-    expect(createCall?.[1]).toEqual(['run', 'worktree:new', 'plan-5e172b67']);
+    expect(createCall?.[1]).toEqual([CREATE_SCRIPT, 'plan-5e172b67']);
+    expect(createCall?.[2]).toMatchObject({ cwd: BASE });
+    expect(mockExecFile.mock.calls.some(([file]) => file === 'pnpm')).toBe(
+      false,
+    );
+  });
+
+  it('names the searched ladder when no create.sh resolves', async () => {
+    respond({ list: `worktree ${BASE}\n` });
+    mockResolveScript.mockReturnValue({
+      ok: false,
+      searched: [`${BASE}/skills/ot-worktree/scripts/create.sh`],
+    });
+
+    await expect(
+      service.provision({
+        baseCheckoutPath: BASE,
+        worktreeName: 'plan-5e172b67',
+      }),
+    ).rejects.toThrow(/Searched, in order:\n {2}- .*skills\/ot-worktree/);
+    expect(mockExecFile.mock.calls.some(([file]) => file === 'bash')).toBe(
+      false,
+    );
   });
 
   it('throws with the script stderr rather than falling back to the base checkout', async () => {
@@ -128,7 +164,7 @@ describe('PlanRunWorktreeProvisionService', () => {
     expect(first).toBe(WORKTREE);
     expect(second).toBe(WORKTREE);
     expect(
-      mockExecFile.mock.calls.filter(([file]) => file === 'pnpm'),
+      mockExecFile.mock.calls.filter(([file]) => file === 'bash'),
     ).toHaveLength(1);
   });
 });

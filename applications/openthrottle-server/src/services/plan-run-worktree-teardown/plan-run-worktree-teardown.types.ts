@@ -42,7 +42,7 @@ export interface PlanRunWorktreeRemoved extends PlanRunWorktreeResultBase {
   readonly outcome: typeof PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME.REMOVED;
 }
 
-/** A guard could not be evaluated or `worktree:remove` failed. The worktree is still there. */
+/** A guard could not be evaluated or the destroy action failed. The worktree is still there. */
 export interface PlanRunWorktreeTeardownFailed extends PlanRunWorktreeResultBase {
   readonly detail: string;
   readonly outcome: typeof PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME.FAILED;

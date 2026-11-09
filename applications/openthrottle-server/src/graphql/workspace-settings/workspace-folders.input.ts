@@ -76,4 +76,10 @@ export class UpdateRepositoryInput {
     nullable: true,
   })
   projectId?: string | null;
+
+  @Field(() => Boolean, {
+    description: `Turn the ot-worktree skill overlay on or off for this user's checkouts of the repository (default on; off falls back to the server's SSOT worktree scripts); omit to leave unchanged. Only meaningful for foreign checkouts.`,
+    nullable: true,
+  })
+  worktreeSkillOverlayEnabled?: boolean | null;
 }

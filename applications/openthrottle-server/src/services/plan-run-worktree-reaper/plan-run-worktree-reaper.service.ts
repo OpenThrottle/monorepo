@@ -142,7 +142,7 @@ export class PlanRunWorktreeReaperService {
   /**
    * @description Every `plan-<8 hex>` worktree discovery finds for any user, deduped on path, with
    * its primary checkout derived from the git common dir. Worktrees whose primary cannot be derived
-   * are skipped: `worktree:remove` has nowhere to run from.
+   * are skipped: the ot-worktree destroy action has nowhere to run from.
    */
   private async discoverCandidates(): Promise<PlanRunWorktreeCandidate[]> {
     const checkouts = await this.checkoutsService.findAll();

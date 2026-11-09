@@ -30,12 +30,14 @@ import {
   RepositoryCheckoutsService,
 } from '@openthrottle/nestjs-repositories';
 import { isRecord } from '@openthrottle/nodejs-utils';
+import { resolveForeignWorkspaceContext } from '@openthrottle/openthrottle-agentic-utils';
 import {
   toContainerPath,
   toHostPath,
 } from '@openthrottle/openthrottle-agentic-utils';
 
 import { ForeignSkillMaterializationService } from '../../../services/foreign-skill-injection/materialization/materialization.service.ts';
+import { WorktreeSkillOverlayService } from '../../../services/foreign-skill-injection/worktree-skill-overlay/worktree-skill-overlay.service.ts';
 import { RepositoryInspectionService } from '../../repository-inspection/repository-inspection.service.ts';
 import type { RepositoryInspectionSnapshot } from '../../repository-inspection/repository-inspection.types.ts';
 import type { NativeDialogRunner } from '../native-folder-picker/native-folder-picker.types.ts';
@@ -160,6 +162,7 @@ export class WorkspaceFoldersService {
     private readonly projectsService: ProjectsService,
     private readonly repositoriesService: RepositoriesService,
     private readonly foreignSkillMaterialization: ForeignSkillMaterializationService,
+    private readonly worktreeSkillOverlay: WorktreeSkillOverlayService,
   ) {
     this.logger.debug('🧩 workspace-folders 🧩');
   }
@@ -819,6 +822,7 @@ export class WorkspaceFoldersService {
       id: string;
       name?: string | null;
       projectId?: string | null;
+      worktreeSkillOverlayEnabled?: boolean | null;
     },
   ): Promise<RepositoryObject> {
     const owned = await this.checkoutsService.findByRepositoryIdForUser(
@@ -844,6 +848,21 @@ export class WorkspaceFoldersService {
         userId,
         input.id,
         input.foreignSkillInjectionEnabled,
+      );
+    }
+
+    // The overlay flag is per-user, per-checkout like the injection opt-in. Applied to
+    // disk immediately (overlay added on, removed off); soft-fail, never blocks the update.
+    if (input.worktreeSkillOverlayEnabled != null) {
+      await this.checkoutsService.setWorktreeSkillOverlayEnabledForRepository(
+        userId,
+        input.id,
+        input.worktreeSkillOverlayEnabled,
+      );
+      await this.worktreeSkillOverlay.applyForRepository(
+        userId,
+        input.id,
+        input.worktreeSkillOverlayEnabled,
       );
     }
 
@@ -967,6 +986,10 @@ export class WorkspaceFoldersService {
       foreignSkillInjectionEnabled: checkout.foreignSkillInjectionEnabled,
       id: checkout.id,
       inspection: snapshot === null ? null : toInspectionObject(snapshot),
+      isForeign: resolveForeignWorkspaceContext(
+        checkout.filesystemPath,
+        process.env,
+      ).isForeign,
       kind: checkout.kind,
       managed: checkout.managed,
       repositoryId: checkout.repositoryId,
@@ -974,6 +997,7 @@ export class WorkspaceFoldersService {
         snapshot === null ? checkout.scannedAt : new Date(snapshot.scannedAt),
       updatedAt: checkout.updatedAt,
       userId: checkout.userId,
+      worktreeSkillOverlayEnabled: checkout.worktreeSkillOverlayEnabled,
     };
   }
 

@@ -1,6 +1,6 @@
 /**
- * @description Creation of the git worktree a programmatic plan run executes in, via
- * `pnpm run worktree:new`.
+ * @description Creation of the git worktree a programmatic plan run executes in, via the
+ * ot-worktree create action (`create.sh`, resolved by path — never a pnpm script).
  */
 
 import { Module } from '@nestjs/common';

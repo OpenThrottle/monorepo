@@ -31,8 +31,14 @@ const makeWorkspace = (options: {
   readonly config?: unknown;
   readonly env?: boolean;
   readonly launcher?: boolean;
+  readonly provisioner?: boolean;
 }): string => {
   const dir = mkdtempSync(join(tmpdir(), 'ot-preflight-'));
+
+  if (options.provisioner !== false) {
+    mkdirSync(join(dir, '.worktree'), { recursive: true });
+    writeFileSync(join(dir, '.worktree', 'provision.sh'), '#!/bin/sh\n');
+  }
 
   if (options.env !== false) {
     writeFileSync(join(dir, '.env'), 'OPENTHROTTLE_SERVER_APP_URL=http://x\n');
@@ -130,6 +136,39 @@ describe('PlanRunWorkspacePreflightService', () => {
     expect(service.check({ backend: 'claude', workingDirectory })).toEqual([
       expect.stringContaining('No .mcp.json in'),
     ]);
+  });
+
+  describe('when the repo has no worktree provisioner (a foreign repo)', () => {
+    it('says the worktree is unprovisioned, names the hook contract, and skips the .env check', () => {
+      const workingDirectory = makeWorkspace({
+        config: CURSOR_CONFIG,
+        env: false,
+        launcher: true,
+        provisioner: false,
+      });
+
+      const warnings = service.check({ backend: 'cursor', workingDirectory });
+
+      expect(warnings).toEqual([
+        expect.stringContaining('.worktree/provision.sh'),
+      ]);
+      expect(warnings.join('\n')).toContain(
+        'skills/ot-worktree/references/contract.md',
+      );
+      expect(warnings.join('\n')).not.toMatch(/pnpm|No \.env/);
+    });
+  });
+
+  it('never suggests pnpm in the missing-.env warning', () => {
+    const workingDirectory = makeWorkspace({
+      config: CURSOR_CONFIG,
+      env: false,
+      launcher: true,
+    });
+
+    expect(
+      service.check({ backend: 'cursor', workingDirectory }).join('\n'),
+    ).not.toContain('pnpm');
   });
 
   it('reports a run directory that does not exist at all', () => {

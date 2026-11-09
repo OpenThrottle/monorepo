@@ -311,6 +311,25 @@ export class RepositoryCheckoutsService {
   }
 
   /**
+   * @description Sets the per-user ot-worktree skill overlay flag (default on,
+   * opt-out) for every one of the user's checkouts of a repository, mirroring
+   * {@link setForeignSkillInjectionEnabledForRepository}. Store-only: this is
+   * the seam a later task hooks overlay apply/remove behaviour onto. Returns
+   * the number of rows updated.
+   */
+  async setWorktreeSkillOverlayEnabledForRepository(
+    userId: string,
+    repositoryId: string,
+    enabled: boolean,
+  ): Promise<number> {
+    const result = await this.repository.update(
+      { repositoryId, userId },
+      { worktreeSkillOverlayEnabled: enabled },
+    );
+    return result.affected ?? 0;
+  }
+
+  /**
    * @description Persists an inspection snapshot with its scan timestamp.
    * Returns null when the checkout does not exist.
    */

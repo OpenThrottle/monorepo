@@ -25,6 +25,7 @@ import { getOpenThrottleRoot } from '@openthrottle/openthrottle-agentic-utils';
 import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { WorktreeSkillOverlayService } from '../../../services/foreign-skill-injection/worktree-skill-overlay/worktree-skill-overlay.service.ts';
 import type { PlanRunWorkspacePreflightService } from '../../../services/plan-run-workspace-preflight/plan-run-workspace-preflight.service.ts';
 import type { PlanRunWorktreeCheckoutService } from '../../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.service.ts';
 import type { PlanRunWorktreeProvisionService } from '../../../services/plan-run-worktree-provision/plan-run-worktree-provision.service.ts';
@@ -105,6 +106,10 @@ const WORKTREE_PATH = `/Users/matt/.cursor/worktrees/openthrottle/auto-register`
 const PROVISIONED_WORKTREE_PATH = `/Users/matt/Development/openthrottle-worktrees/plan-aaaaaaaa`;
 
 const mockProvision = vi.fn(async () => PROVISIONED_WORKTREE_PATH);
+const mockEnsureOverlay = vi.fn(async () => ({
+  baseCheckoutPath: WORKTREE_PATH,
+  status: 'not-foreign' as const,
+}));
 const mockPreflightCheck = vi.fn((): readonly string[] => []);
 const mockOutputCreate = vi.fn((entity: unknown) => entity);
 const mockOutputSave = vi.fn(async (entity: unknown) => entity);
@@ -204,6 +209,9 @@ describe('AgenticRalphOrchestratorService worktree checkout registration', () =>
       }),
       createMock<UserWorkspaceSettingsService>({
         getOrCreateForUser: mockGetOrCreateForUser,
+      }),
+      createMock<WorktreeSkillOverlayService>({
+        ensureForBaseCheckout: mockEnsureOverlay,
       }),
     );
   });
@@ -376,6 +384,9 @@ describe('AgenticRalphOrchestratorService foreign-skill injection gate', () => {
       createMock<UserWorkspaceSettingsService>({
         getOrCreateForUser: mockGetOrCreateForUser,
       }),
+      createMock<WorktreeSkillOverlayService>({
+        ensureForBaseCheckout: mockEnsureOverlay,
+      }),
     );
   });
 
@@ -512,6 +523,9 @@ describe('AgenticRalphOrchestratorService worktree provisioning', () => {
       createMock<UserWorkspaceSettingsService>({
         getOrCreateForUser: mockGetOrCreateForUser,
       }),
+      createMock<WorktreeSkillOverlayService>({
+        ensureForBaseCheckout: mockEnsureOverlay,
+      }),
     );
   });
 
@@ -621,6 +635,19 @@ describe('AgenticRalphOrchestratorService worktree provisioning', () => {
 
     expect(mockPreflightCheck).toHaveBeenCalledTimes(1);
     expect(mockOutputSave).not.toHaveBeenCalled();
+  });
+
+  it('ensures the ot-worktree overlay on the base checkout before provisioning', async () => {
+    mockEnsureOverlay.mockClear();
+
+    await runWithWorktree();
+
+    expect(mockEnsureOverlay).toHaveBeenCalledWith(
+      expect.objectContaining({ baseCheckoutPath: WORKTREE_PATH }),
+    );
+    const [overlayOrder] = mockEnsureOverlay.mock.invocationCallOrder;
+    const [provisionOrder] = mockProvision.mock.invocationCallOrder;
+    expect(overlayOrder).toBeLessThan(provisionOrder ?? 0);
   });
 
   it('fails the run when provisioning fails instead of falling back to the base checkout', async () => {
@@ -749,6 +776,9 @@ describe('AgenticRalphOrchestratorService default-path worktree root resolution'
       }),
       createMock<UserWorkspaceSettingsService>({
         getOrCreateForUser: mockGetOrCreateForUser,
+      }),
+      createMock<WorktreeSkillOverlayService>({
+        ensureForBaseCheckout: mockEnsureOverlay,
       }),
     );
   });

@@ -19,6 +19,7 @@ import type { WorkspaceRepositoryFieldsFragment } from '~/__generated__/graphql'
 import { WORKSPACE_REPOSITORY_DETAIL_COPY } from '~/routing/settings/data/data.copy';
 import type { ProjectOption } from '~/routing/settings/repositories/components/RepositoryProjectSelect';
 import { RepositoryProjectSelect } from '~/routing/settings/repositories/components/RepositoryProjectSelect';
+import { RepositoryWorktreeOverlayToggle } from '~/routing/settings/repositories/components/RepositoryWorktreeOverlayToggle';
 
 export interface RepositoryEditFormProps {
   actionError?: string | null;
@@ -34,8 +35,7 @@ export const RepositoryEditForm = (
 
   // Hooks
   const navigation = useNavigation();
-  // The injection opt-in lives per-checkout; the user's checkouts of this repo are
-  // flipped together, so any checkout reflects the current state.
+  // Per-checkout opt-in, flipped together across the repo's checkouts.
   const [injectionEnabled, setInjectionEnabled] = React.useState(
     (repository.checkouts ?? []).some(
       (checkout) => checkout.foreignSkillInjectionEnabled,
@@ -43,6 +43,7 @@ export const RepositoryEditForm = (
   );
 
   // Setup
+  const checkouts = repository.checkouts ?? [];
   const submitting =
     navigation.state === 'submitting' &&
     navigation.formData?.get('intent') === 'updateRepository';
@@ -173,6 +174,8 @@ export const RepositoryEditForm = (
                   onCheckedChange={setInjectionEnabled}
                 />
               </div>
+
+              <RepositoryWorktreeOverlayToggle checkouts={checkouts} />
             </section>
 
             {actionError ? errorAlert : null}

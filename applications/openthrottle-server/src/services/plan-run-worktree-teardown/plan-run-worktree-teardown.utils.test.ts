@@ -52,12 +52,12 @@ describe('describePlanRunWorktreeTeardown', () => {
 
   it('marks a failed teardown as failed', () => {
     const line = describePlanRunWorktreeTeardown({
-      detail: 'worktree:remove exited 1',
+      detail: 'ot-worktree destroy exited 1',
       outcome: PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME.FAILED,
       worktreePath: PATH,
     });
 
-    expect(line).toContain('teardown failed — worktree:remove exited 1');
+    expect(line).toContain('teardown failed — ot-worktree destroy exited 1');
   });
 });
 

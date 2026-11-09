@@ -39,12 +39,14 @@ fragment RepositoryCheckoutFields on RepositoryCheckoutObject {
     }
     warnings
   }
+  isForeign
   kind
   managed
   repositoryId
   scannedAt
   updatedAt
   userId
+  worktreeSkillOverlayEnabled
 }
 
 fragment DiscoveredWorktreeFields on DiscoveredWorktreeObject {

@@ -4,7 +4,8 @@
  */
 
 import { execFile } from 'node:child_process';
-import { basename, dirname } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { basename, dirname, join } from 'node:path';
 import { promisify } from 'node:util';
 
 import { PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME } from './plan-run-worktree-teardown.constants.ts';
@@ -103,6 +104,34 @@ export const runCommand = async (
       stdout: readStringField(error, 'stdout'),
     };
   }
+};
+
+/** `<directory>/package.json` parsed, or undefined when it is absent or not JSON. */
+const readPackageJson = (directory: string): unknown => {
+  try {
+    const parsed: unknown = JSON.parse(
+      readFileSync(join(directory, 'package.json'), 'utf8'),
+    );
+    return parsed;
+  } catch {
+    return undefined;
+  }
+};
+
+/**
+ * @description Whether `<directory>/package.json` defines `scripts[scriptName]`. False for a
+ * directory with no `package.json`, an unreadable or malformed one, or one without that script —
+ * which is how monorepo-only machinery is gated off in a foreign repo.
+ */
+export const packageDefinesScript = (
+  directory: string,
+  scriptName: string,
+): boolean => {
+  const manifest = readPackageJson(directory);
+  if (typeof manifest !== 'object' || manifest === null) return false;
+  const scripts: unknown = Reflect.get(manifest, 'scripts');
+  if (typeof scripts !== 'object' || scripts === null) return false;
+  return typeof Reflect.get(scripts, scriptName) === 'string';
 };
 
 /** The last 2000 characters of command output, trimmed — enough to name a failure. */

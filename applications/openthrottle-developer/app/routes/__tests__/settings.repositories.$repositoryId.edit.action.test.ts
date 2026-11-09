@@ -51,6 +51,26 @@ describe('routes/settings.repositories.$repositoryId.edit action', () => {
     expect(mockExecute).not.toHaveBeenCalled();
   });
 
+  test('forwards the worktree skill overlay opt-out', async () => {
+    mockExecute.mockResolvedValue({ updateRepository: { id: 'repo-1' } });
+
+    await action(
+      buildArgs('repo-1', {
+        intent: 'updateRepository',
+        name: 'monorepo',
+        worktreeSkillOverlayEnabled: 'false',
+      }),
+    );
+
+    expect(mockExecute).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      {
+        input: expect.objectContaining({ worktreeSkillOverlayEnabled: false }),
+      },
+    );
+  });
+
   test('updates the repository and redirects to the detail page on success', async () => {
     mockExecute.mockResolvedValue({
       updateRepository: { id: 'repo-1' },
@@ -75,6 +95,7 @@ describe('routes/settings.repositories.$repositoryId.edit action', () => {
           id: 'repo-1',
           name: 'monorepo',
           projectId: 'project-1',
+          worktreeSkillOverlayEnabled: null,
         },
       },
     );

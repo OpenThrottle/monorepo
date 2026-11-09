@@ -1,6 +1,6 @@
 /**
  * @description GraphQL payload for removing one plan-run worktree from disk through the guarded
- * teardown (`pnpm run worktree:remove`, branch kept). A guard that refuses is an outcome, not an
+ * teardown (the ot-worktree destroy action, `destroy.sh`, branch kept). A guard that refuses is an outcome, not an
  * error, so the page can say why the worktree stayed.
  */
 
@@ -16,7 +16,7 @@ registerEnumType(PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME, {
   name: 'PlanRunWorktreeTeardownOutcome',
   valuesMap: {
     FAILED: {
-      description: `A guard could not be evaluated or worktree:remove failed. The worktree is still there.`,
+      description: `A guard could not be evaluated or the ot-worktree destroy action failed. The worktree is still there.`,
     },
     KEPT_ACTIVE_RUN: {
       description: `A queued or in-progress plan run still points at this worktree.`,

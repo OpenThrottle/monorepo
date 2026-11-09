@@ -16,8 +16,19 @@ import {
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-import type { ForeignSkillLedger } from './types.ts';
-import { FOREIGN_SKILL_LEDGER_DIR_ENV } from './types.ts';
+import type {
+  ForeignSkillLedger,
+  ForeignSkillMaterializationLayer,
+} from './types.ts';
+import {
+  FOREIGN_SKILL_LEDGER_DIR_ENV,
+  FOREIGN_SKILL_MATERIALIZATION_LAYER,
+} from './types.ts';
+
+/** Every non-curated layer, matched against a ledger filename's `.<layer>.json` suffix. */
+const SUFFIXED_LAYERS: readonly ForeignSkillMaterializationLayer[] = [
+  FOREIGN_SKILL_MATERIALIZATION_LAYER.WORKTREE_OVERLAY,
+];
 
 const isErrnoException = (error: unknown): error is NodeJS.ErrnoException => {
   return error instanceof Error && 'code' in error;
@@ -52,18 +63,52 @@ export const resolveLedgerDir = (
 };
 
 /**
- * @description Absolute path to the ledger file for a given repo. The filename
- * is a hash of the repo path (stable across runs), so the same repo always maps
- * to the same ledger.
+ * @description Absolute path to the ledger file for a given repo and layer. The
+ * filename is a hash of the repo path (stable across runs), so the same repo
+ * always maps to the same ledger. The curated layer keeps the original
+ * `<hash>.json`; every other layer is `<hash>.<layer>.json`.
  *
  * @public
  */
 export const ledgerPathForRepo = (
   repoPath: string,
   env: NodeJS.ProcessEnv = process.env,
+  layer: ForeignSkillMaterializationLayer = FOREIGN_SKILL_MATERIALIZATION_LAYER.CURATED,
 ): string => {
   const hash = createHash('sha256').update(repoPath).digest('hex').slice(0, 32);
-  return join(resolveLedgerDir(env), `${hash}.json`);
+  const isCurated = layer === FOREIGN_SKILL_MATERIALIZATION_LAYER.CURATED;
+  const suffix = isCurated ? '' : `.${layer}`;
+  return join(resolveLedgerDir(env), `${hash}${suffix}.json`);
+};
+
+/**
+ * @description The layer a ledger file belongs to, read from its filename — so a
+ * sweep over {@link listLedgerPaths} can tear each ledger down with its own
+ * layer's exclude block.
+ *
+ * @public
+ */
+export const layerForLedgerPath = (
+  ledgerPath: string,
+): ForeignSkillMaterializationLayer => {
+  const suffixed = SUFFIXED_LAYERS.find((layer) => {
+    return ledgerPath.endsWith(`.${layer}.json`);
+  });
+  return suffixed ?? FOREIGN_SKILL_MATERIALIZATION_LAYER.CURATED;
+};
+
+/**
+ * @description Every ledger path for a repo, one per layer, in layer order.
+ *
+ * @public
+ */
+export const ledgerPathsForRepo = (
+  repoPath: string,
+  env: NodeJS.ProcessEnv = process.env,
+): readonly string[] => {
+  return Object.values(FOREIGN_SKILL_MATERIALIZATION_LAYER).map((layer) => {
+    return ledgerPathForRepo(repoPath, env, layer);
+  });
 };
 
 /**

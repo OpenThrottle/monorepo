@@ -34,6 +34,7 @@ import {
 import {
   deleteLedger,
   ledgerPathForRepo,
+  ledgerPathsForRepo,
   readLedger,
   writeLedger,
 } from './ledger.ts';
@@ -41,16 +42,52 @@ import type {
   ForeignSkillInjectionMode,
   ForeignSkillLedger,
   ForeignSkillLedgerEntry,
+  ForeignSkillMaterializationLayer,
+  GitExcludeOwner,
 } from './types.ts';
 import {
   FOREIGN_SKILL_INJECTION_MODE,
+  FOREIGN_SKILL_MATERIALIZATION_LAYER,
   FOREIGN_SKILL_TARGET_DIRS,
   GIT_EXCLUDE_OWNER,
 } from './types.ts';
 
+/** Each layer writes its own `.git/info/exclude` block. */
+const EXCLUDE_OWNER_BY_LAYER: Readonly<
+  Record<ForeignSkillMaterializationLayer, GitExcludeOwner>
+> = {
+  [FOREIGN_SKILL_MATERIALIZATION_LAYER.CURATED]:
+    GIT_EXCLUDE_OWNER.FOREIGN_SKILL_INJECTION,
+  [FOREIGN_SKILL_MATERIALIZATION_LAYER.WORKTREE_OVERLAY]:
+    GIT_EXCLUDE_OWNER.WORKTREE_SKILL_OVERLAY,
+};
+
+/** Paths OTHER layers have ledgered in this repo — never ours to touch, never target-owned. */
+const siblingLedgeredRelPaths = (
+  repoPath: string,
+  env: NodeJS.ProcessEnv,
+  ownLedgerPath: string,
+): ReadonlySet<string> => {
+  const paths = new Set<string>();
+  for (const ledgerPath of ledgerPathsForRepo(repoPath, env)) {
+    if (ledgerPath === ownLedgerPath) continue;
+    for (const entry of readLedger(ledgerPath)?.entries ?? []) {
+      paths.add(entry.injectedRelativePath);
+    }
+  }
+  return paths;
+};
+
 /** @public */
 export interface EnsureMaterializedOptions {
   readonly env?: NodeJS.ProcessEnv;
+  /** Which layer to materialize. Defaults to `curated`. */
+  readonly layer?: ForeignSkillMaterializationLayer;
+  /**
+   * Restricts the manifest to these skill names (e.g. `['ot-worktree']` for the worktree overlay).
+   * Omit for the whole resolved manifest.
+   */
+  readonly onlySkillNames?: readonly string[];
   /** Absolute path to `<OT_ROOT>/skills` (the curated SSOT source). */
   readonly otCuratedSkillsDir: string;
   /** Absolute path to the opt-in per-user experimental skills dir, if enabled. */
@@ -70,6 +107,8 @@ export interface EnsureMaterializedResult {
 /** @public */
 export interface TeardownOptions {
   readonly env?: NodeJS.ProcessEnv;
+  /** Which layer to tear down. Defaults to `curated`; other layers are left alone. */
+  readonly layer?: ForeignSkillMaterializationLayer;
   readonly repoPath: string;
 }
 
@@ -334,14 +373,21 @@ const injectEntry = (
 export const ensureMaterialized = (
   options: EnsureMaterializedOptions,
 ): EnsureMaterializedResult => {
-  const { otCuratedSkillsDir, personalSkillsDir, repoPath } = options;
+  const { onlySkillNames, otCuratedSkillsDir, personalSkillsDir, repoPath } =
+    options;
   const env = options.env ?? process.env;
+  const layer = options.layer ?? FOREIGN_SKILL_MATERIALIZATION_LAYER.CURATED;
+  const excludeOwner = EXCLUDE_OWNER_BY_LAYER[layer];
 
-  const ledgerPath = ledgerPathForRepo(repoPath, env);
+  const ledgerPath = ledgerPathForRepo(repoPath, env, layer);
   const existing = readLedger(ledgerPath);
-  const existingRelPaths = new Set(
-    (existing?.entries ?? []).map((entry) => entry.injectedRelativePath),
-  );
+  const siblingRelPaths = siblingLedgeredRelPaths(repoPath, env, ledgerPath);
+  // A sibling layer's entry is OT's, not the target's: exclude it from the target-owned scan so the
+  // skill stays in this layer's manifest, then skip it silently below rather than warn.
+  const existingRelPaths = new Set([
+    ...(existing?.entries ?? []).map((entry) => entry.injectedRelativePath),
+    ...siblingRelPaths,
+  ]);
 
   const targetDirWarnings: string[] = [];
   const targetDirs = resolveTargetDirs(repoPath, targetDirWarnings);
@@ -352,10 +398,14 @@ export const ensureMaterialized = (
     targetDirs,
   );
 
-  const { entries: manifest, warnings } = resolveForeignSkillManifest({
+  const resolvedManifest = resolveForeignSkillManifest({
     otCuratedSkillsDir,
     personalSkillsDir,
     targetRepoSkillNames: targetOwned,
+  });
+  const { warnings } = resolvedManifest;
+  const manifest = resolvedManifest.entries.filter((entry) => {
+    return onlySkillNames === undefined || onlySkillNames.includes(entry.name);
   });
 
   const mode = getWorkspacePathMapping(env)
@@ -381,6 +431,12 @@ export const ensureMaterialized = (
       if (prior !== undefined && isEntryStillOurs(injectedAbs, prior)) {
         // Reuse across runs — no work, keep the ledger entry as-is.
         ledgerEntries.push(prior);
+        continue;
+      }
+
+      if (siblingRelPaths.has(relPath)) {
+        // Another OT layer already placed this skill here; it is present, and it is that layer's to
+        // remove. Not an occupant worth warning about.
         continue;
       }
 
@@ -428,18 +484,11 @@ export const ensureMaterialized = (
 
   const relPaths = ledgerEntries.map((entry) => entry.injectedRelativePath);
   if (relPaths.length > 0) {
-    writeManagedExcludeBlock(
-      repoPath,
-      relPaths,
-      GIT_EXCLUDE_OWNER.FOREIGN_SKILL_INJECTION,
-    );
+    writeManagedExcludeBlock(repoPath, relPaths, excludeOwner);
     writeLedger(ledgerPath, ledger);
   } else {
     // Nothing injected (e.g. target owns everything) — leave no residue.
-    removeManagedExcludeBlock(
-      repoPath,
-      GIT_EXCLUDE_OWNER.FOREIGN_SKILL_INJECTION,
-    );
+    removeManagedExcludeBlock(repoPath, excludeOwner);
     deleteLedger(ledgerPath);
   }
 
@@ -461,8 +510,9 @@ export const ensureMaterialized = (
 export const teardown = (options: TeardownOptions): void => {
   const { repoPath } = options;
   const env = options.env ?? process.env;
+  const layer = options.layer ?? FOREIGN_SKILL_MATERIALIZATION_LAYER.CURATED;
 
-  const ledgerPath = ledgerPathForRepo(repoPath, env);
+  const ledgerPath = ledgerPathForRepo(repoPath, env, layer);
   const ledger = readLedger(ledgerPath);
   if (ledger === undefined) {
     return;
@@ -475,10 +525,7 @@ export const teardown = (options: TeardownOptions): void => {
     }
   }
 
-  removeManagedExcludeBlock(
-    repoPath,
-    GIT_EXCLUDE_OWNER.FOREIGN_SKILL_INJECTION,
-  );
+  removeManagedExcludeBlock(repoPath, EXCLUDE_OWNER_BY_LAYER[layer]);
 
   // Remove OT-created dirs, deepest-first, only when now empty.
   for (const relDir of [...ledger.createdDirs].sort().reverse()) {

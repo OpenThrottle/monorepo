@@ -31,6 +31,7 @@ export interface RepositoryCheckoutData {
   readonly repositoryId: string;
   readonly scannedAt: Date | null;
   readonly userId: string;
+  readonly worktreeSkillOverlayEnabled: boolean;
 }
 
 @Entity('repository_checkouts')
@@ -70,6 +71,13 @@ export class RepositoryCheckout {
 
   @Column({ name: 'kind', type: 'text' })
   kind!: RepositoryCheckoutKind;
+
+  @Column({
+    default: true,
+    name: 'worktree_skill_overlay_enabled',
+    type: 'boolean',
+  })
+  worktreeSkillOverlayEnabled!: boolean;
 
   @Column({ name: 'inspection', nullable: true, type: 'jsonb' })
   inspection!: Record<string, unknown> | null;

@@ -386,3 +386,29 @@ does: on disk and invokable, but linked in from outside the repo, so nobody else
 - Directory pruning uses `rmdir` (empty-only) semantics. The recursive-remove variant throws on a directory and silently leaves it behind — that exact bug was hit in the injection teardown path.
 - The injection resolver drops any name the target repo owns, and `scanTargetOwnedSkillNames` builds its keys from resolved target dirs. Changing one side without the other silently un-injects OT's own skills (§1a).
 - Empty/missing personal root stays a clean no-op on **every** path, including `cleanup.sh` and `--check`.
+
+## 8. The `ot-worktree` overlay — a second, default-on layer (added 2026-11-09, OT plan `1fdcec46`)
+
+Everything above describes the **curated** layer: the full curated set, opt-in per checkout
+(`foreign_skill_injection_enabled`, default false). A second layer exists for one skill only:
+`ot-worktree`, which OpenThrottle guarantees in any foreign repo it provisions plan-run worktrees
+for. It is **default on, with a per-checkout opt-out** (`worktree_skill_overlay_enabled`, migration
+155), and independent of the curated opt-in.
+
+- **Own ledger, own exclude block.** `ensureMaterialized` / `teardown` take a `layer`
+  (`FOREIGN_SKILL_MATERIALIZATION_LAYER`). The curated layer keeps `<hash>.json` and the
+  `foreign-skill-injection` block; the overlay writes `<hash>.worktree-overlay.json` and a
+  `worktree-skill-overlay` block. Tearing one layer down never touches the other's entries.
+- **Shared skill, first layer owns it.** When both layers want `.agents/skills/ot-worktree`, whichever
+  materialized first owns the path; the other skips it silently (a sibling layer's entry is neither
+  target-owned nor an occupant worth warning about). The overlay is re-ensured before every plan-run
+  provisioning, so a gap left by tearing down the owning layer heals on the next run.
+- **When it is applied.** `WorktreeSkillOverlayService.ensureForBaseCheckout`, called by the
+  orchestrator on the base checkout immediately before the plan-run worktree is created, and
+  `applyForRepository` when the toggle is saved (removed when turned off, re-added when turned on).
+  It is not reconciled at boot: the boot reaper tears down every ledgered layer, overlay included
+  (it reads each ledger's layer from its filename), and the next provisioning restores it.
+- **Never fails a run.** Opted out, nothing is written. A materialization error is a warning.
+  Provisioning does not depend on the overlay at all: the server execs `create.sh` through the
+  `services/ot-worktree-script` ladder, whose last rung is the server's own copy. The overlay is
+  what makes the skill visible to agents working in the repo.
