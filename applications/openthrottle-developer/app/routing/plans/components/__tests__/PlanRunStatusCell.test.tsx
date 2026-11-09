@@ -32,16 +32,34 @@ const renderCell = (
 };
 
 describe('PlanRunStatusCell Component', () => {
-  test('renders an ordinary status as plain text with no usage-limit badge', () => {
-    const component = renderCell({ status: 'COMPLETED' });
+  describe('a status with no extra line', () => {
+    test.each([
+      ['CANCELLED', PLAN_RUN_STATUS_CELL_COPY.cancelledBadge],
+      ['COMPLETED', PLAN_RUN_STATUS_CELL_COPY.completedBadge],
+      ['FAILED', PLAN_RUN_STATUS_CELL_COPY.failedBadge],
+      ['IN_PROGRESS', PLAN_RUN_STATUS_CELL_COPY.inProgressBadge],
+      ['QUEUED', PLAN_RUN_STATUS_CELL_COPY.queuedBadge],
+      ['STALE', PLAN_RUN_STATUS_CELL_COPY.staleBadge],
+    ])('badges %s as "%s" and never shows the raw enum', (status, label) => {
+      const component = renderCell({ status });
 
-    expect(component.getByText('COMPLETED')).toBeInTheDocument();
-    expect(
-      component.queryByText(PLAN_RUN_STATUS_CELL_COPY.usageLimitedBadge),
-    ).toBeNull();
+      expect(component.getByTestId('PlanRunStatusBadge')).toHaveTextContent(
+        label,
+      );
+      expect(component.queryByText(status)).toBeNull();
+      expect(component.queryByTestId('PlanRunStatusCell-reason')).toBeNull();
+    });
+
+    test('badges an unknown status with its raw value', () => {
+      const component = renderCell({ status: 'PAUSED_FOR_REVIEW' });
+
+      expect(component.getByTestId('PlanRunStatusBadge')).toHaveTextContent(
+        'PAUSED_FOR_REVIEW',
+      );
+    });
   });
 
-  test('badges a continuation run as resumed', () => {
+  test('badges a continuation run as resumed alongside its status', () => {
     const component = renderCell({
       resumeOfRunId: 'run-limited',
       status: 'IN_PROGRESS',
@@ -49,6 +67,9 @@ describe('PlanRunStatusCell Component', () => {
 
     expect(
       component.getByText(PLAN_RUN_STATUS_CELL_COPY.resumedBadge),
+    ).toBeInTheDocument();
+    expect(
+      component.getByText(PLAN_RUN_STATUS_CELL_COPY.inProgressBadge),
     ).toBeInTheDocument();
   });
 

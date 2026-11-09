@@ -460,12 +460,17 @@ export const PLAN_RUN_MODEL_EFFORT_COPY = {
  * `settledReason`; MISSED and SUPERSEDED prefer it and fall back to the generic lines below.
  */
 export const PLAN_RUN_STATUS_CELL_COPY = {
+  cancelledBadge: `Cancelled`,
   columnLabel: `Status`,
+  completedBadge: `Completed`,
+  failedBadge: `Failed`,
   firesPrefix: `Fires at`,
   firesUnknown: `Fire time unknown`,
+  inProgressBadge: `In progress`,
   missedBadge: `Missed`,
   missedReason: `Could not fire within the 1-hour grace window after its scheduled time.`,
   notResumedSuffix: `Not resumed automatically`,
+  queuedBadge: `Queued`,
   resetUnknown: `Reset time unknown`,
   resetsPrefix: `Resets at`,
   resumedBadge: `Resumed`,
@@ -473,6 +478,7 @@ export const PLAN_RUN_STATUS_CELL_COPY = {
   resumesPrefix: `Resumes after the reset at`,
   scheduledBadge: `Scheduled`,
   skippedBadge: `Skipped`,
+  staleBadge: `Stale`,
   supersededBadge: `Superseded`,
   supersededReason: `Another run of this plan was already active when this one was due.`,
   usageLimitedBadge: `Usage limited`,

@@ -4,18 +4,18 @@ import * as React from 'react';
 import { getPlanRunStatusBadgeVariant } from '~/routing/plans/utils/plan-run-status-badge';
 
 export interface PlanRunStatusBadgeProps {
-  /** Raw `plan_runs.status`. Only the badged statuses render; any other renders nothing. */
+  /** Raw `plan_runs.status`. A status without a known label shows its raw value in a neutral badge. */
   readonly status: string;
 }
 
 /**
- * @description The badge for a plan run status that gets one: USAGE_LIMITED, SCHEDULED, MISSED,
- * SUPERSEDED and SKIPPED. Renders nothing for every other status so {@link PlanRunStatusCell} can show it as
- * plain text.
+ * @description The humanized, colored badge for any plan run status (see
+ * {@link getPlanRunStatusBadgeVariant}). The raw status rides along on `data-status` for tests and
+ * styling hooks.
  */
 export const PlanRunStatusBadge = (
   props: PlanRunStatusBadgeProps,
-): React.ReactElement | null => {
+): React.ReactElement => {
   const { status } = props;
 
   // Hooks
@@ -30,12 +30,14 @@ export const PlanRunStatusBadge = (
   // Life Cycle
 
   // 🔌 Short Circuit
-  if (variant === null) {
-    return null;
-  }
 
   return (
-    <Badge color={variant.color} data-testid="PlanRunStatusBadge" size="xs">
+    <Badge
+      color={variant.color}
+      data-status={status}
+      data-testid="PlanRunStatusBadge"
+      size="xs"
+    >
       {variant.label}
     </Badge>
   );
