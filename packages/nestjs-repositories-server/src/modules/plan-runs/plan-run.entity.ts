@@ -3,7 +3,7 @@
  * `BaseHardDeleteModel`: a run is history and is never user-deleted, so a delete is real (the
  * only deletes are FK cascades from a removed plan). Its status, heartbeat and cancel marker
  * are written in place, so it declares its own `updated_at`. Matches
- * databases/openthrottle/migrations (038, 047, 053, 076, 080, 087, 110, 138, 140, 150, 176).
+ * databases/openthrottle/migrations (038, 047, 053, 076, 080, 087, 110, 138, 140, 150, 176, 192).
  * @public
  */
 
@@ -144,8 +144,9 @@ export class PlanRun extends BaseHardDeleteModel {
   scheduledFor!: Date | null;
 
   /**
-   * Why a scheduled run settled without starting (migration 150): the fire-time policy's human
-   * reason for MISSED, SUPERSEDED and SKIPPED. Null for every other run.
+   * Why a run settled the way it did (migrations 150, 192): the fire-time policy's human reason for
+   * a MISSED, SUPERSEDED or SKIPPED scheduled run, or the orchestrator's description of why a FAILED
+   * run stopped (a fatal agent account error: the error, the credential, the fix). Null otherwise.
    */
   @Column({ name: 'settled_reason', nullable: true, type: 'text' })
   settledReason!: string | null;

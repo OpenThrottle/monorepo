@@ -14,6 +14,7 @@ import {
 const RESETS_AT = '2026-11-01T17:00:00.000Z';
 const FIRES_AT = '2026-11-03T17:30:00.000Z';
 const SETTLED_REASON = 'Plan had no runnable tasks at fire time.';
+const ACCOUNT_ERROR_REASON = `Agent account error (billing_error): Credit balance is too low. The agent CLI authenticated with ANTHROPIC_API_KEY from the server's environment.`;
 
 const renderCell = (
   overrides: Partial<PlanRunStatusCellProps> = {},
@@ -228,6 +229,46 @@ describe('PlanRunStatusCell Component', () => {
         component.getByText(PLAN_RUN_STATUS_CELL_COPY.skippedBadge),
       ).toBeInTheDocument();
       expect(component.queryByTestId('PlanRunStatusCell-reason')).toBeNull();
+    });
+  });
+
+  describe('FAILED', () => {
+    test('shows the badge and why the run stopped when the server recorded it', () => {
+      const component = renderCell({
+        settledReason: ACCOUNT_ERROR_REASON,
+        status: 'FAILED',
+      });
+
+      expect(
+        component.getByText(PLAN_RUN_STATUS_CELL_COPY.failedBadge),
+      ).toBeInTheDocument();
+      expect(
+        component.getByTestId('PlanRunStatusCell-reason'),
+      ).toHaveTextContent(ACCOUNT_ERROR_REASON);
+    });
+
+    test('renders no reason line and no generic fallback when the reason is null', () => {
+      const component = renderCell({ settledReason: null, status: 'FAILED' });
+
+      expect(component.queryByTestId('PlanRunStatusCell-reason')).toBeNull();
+      expect(
+        component.queryByText(PLAN_RUN_STATUS_CELL_COPY.supersededReason),
+      ).toBeNull();
+    });
+
+    test('keeps the reason beside the resumed badge on a failed continuation run', () => {
+      const component = renderCell({
+        resumeOfRunId: 'run-limited',
+        settledReason: ACCOUNT_ERROR_REASON,
+        status: 'FAILED',
+      });
+
+      expect(
+        component.getByText(PLAN_RUN_STATUS_CELL_COPY.resumedBadge),
+      ).toBeInTheDocument();
+      expect(
+        component.getByTestId('PlanRunStatusCell-reason'),
+      ).toHaveTextContent(ACCOUNT_ERROR_REASON);
     });
   });
 
