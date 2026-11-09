@@ -101,8 +101,8 @@ export const DEFAULT_CLI_BACKEND_CAPABILITIES: ChatBackendCapabilities = {
  * - serviceTier: only cursor routes by tier (model-string `[fast=…]`); the rest
  *   have no tier flag.
  * - permissionMode: claude/codex/grok/opencode map all three to distinct flags;
- *   cursor has only two distinct headless postures (trust-only vs `--force`), so
- *   it advertises just those.
+ *   cursor has only two distinct headless postures (read-only `--mode ask` vs
+ *   `--force`), so it advertises just those.
  * @public
  */
 export const CHAT_BACKEND_CAPABILITIES: Readonly<
@@ -147,9 +147,10 @@ export const CHAT_BACKEND_CAPABILITIES: Readonly<
   },
   cursor: {
     maxRepositories: SINGLE_REPOSITORY_CAP,
-    // Headless cursor has two distinct permission postures: trust-only (safe)
-    // and `--force` (run everything). autoAcceptEdits has no distinct edits-only
-    // flag, so it is not advertised.
+    // Headless cursor has two distinct permission postures: read-only
+    // `--mode ask` (supervised: no writes, no shell) and `--force` (run
+    // everything). autoAcceptEdits has no distinct edits-only flag, so it is
+    // not advertised.
     permissionModes: [
       ChatPermissionMode.supervised,
       ChatPermissionMode.fullAccess,

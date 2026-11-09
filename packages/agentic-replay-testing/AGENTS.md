@@ -59,14 +59,13 @@ service and backend with no agentic-utils mock (ids seeded, `Date` frozen).
   `planRunTaskId`), fixed timestamps, no hook plugin dirs, and the checkout path tokenized as
   `<OT_ROOT>` (derived from `replay-paths.ts`'s own location). Changing any orchestrator prompt text
   makes the plan-run replays fail by design — re-record them.
-- **Record with stdin closed** (the `record` target does `< /dev/null`). The drivers engine inherits
-  stdin, and claude waits 3s on an idle stdin pipe, printing a warning that would be baked into every
-  plan-run transcript.
 - **Profiles derive bin env, binary and version flags from the drivers registry** (`profileFor`).
   Adding a backend = one profile with its `sessionStrategy`, `redactKeys` and `dropStdoutLine`, then
   record and inspect the transcripts for host config before committing.
 - **A failed scenario writes nothing.** `permission-denied` fails a backend whose supervised posture
-  lets the write through (cursor, opencode today) — never hand-add that transcript.
+  lets the write through — never hand-add that transcript. cursor runs non-`fullAccess` postures as
+  `--mode ask`, and opencode writes `edit`/`bash: ask` into its temp config; both were refused here
+  before that.
 - **Plan-run cwds are git repositories** (`runPlanRunScenario` runs `git init`), as real plan runs
   are; codex refuses to run outside one.
 - **One sanitizer instance per scenario** (all its turns), so a session id one turn reports and the

@@ -29,6 +29,8 @@ describe('buildCursorAgentArgv', () => {
       '--trust',
       '--resume',
       'chat-1',
+      '--mode',
+      'ask',
       '--',
       'do the thing',
     ]);
@@ -67,7 +69,7 @@ describe('buildCursorAgentArgv', () => {
     expect(argv.at(-1)).toBe('---\nname: product\n---\n\nBe concise.');
   });
 
-  describe('permission mode → --force', () => {
+  describe('permission mode → --force or --mode ask', () => {
     it('fullAccess adds --force on top of the always-on --trust', () => {
       const argv = buildCursorAgentArgv({
         cwd: '/repo',
@@ -77,9 +79,10 @@ describe('buildCursorAgentArgv', () => {
       });
       expect(argv).toContain('--trust');
       expect(argv).toContain('--force');
+      expect(argv).not.toContain('--mode');
     });
 
-    it('supervised/autoAcceptEdits/no-mode stay trust-only (no --force)', () => {
+    it('supervised/autoAcceptEdits/no-mode run read-only --mode ask, never trust-only', () => {
       for (const permissionMode of [
         CONVERSATION_PERMISSION_MODES.supervised,
         CONVERSATION_PERMISSION_MODES.autoAcceptEdits,
@@ -93,6 +96,7 @@ describe('buildCursorAgentArgv', () => {
         });
         expect(argv).toContain('--trust');
         expect(argv).not.toContain('--force');
+        expect(valueAfter(argv, '--mode')).toBe('ask');
       }
     });
   });

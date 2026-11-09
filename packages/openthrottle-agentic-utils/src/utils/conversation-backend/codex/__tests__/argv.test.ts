@@ -122,6 +122,44 @@ describe('buildCodexArgv', () => {
     });
   });
 
+  describe('resume keeps the sandbox policy without --sandbox', () => {
+    // `codex exec resume` (0.167.0) rejects `--sandbox`; the same policy goes in
+    // through the `sandbox_mode` config key.
+    const resumed = (
+      permissionMode: Parameters<typeof buildCodexArgv>[0]['permissionMode'],
+    ): string[] => {
+      return buildCodexArgv({
+        permissionMode,
+        prompt: 'p',
+        resume: true,
+        sessionId: 'thread-1',
+      });
+    };
+
+    it('default and supervised → -c sandbox_mode="read-only"', () => {
+      for (const mode of [
+        undefined,
+        CONVERSATION_PERMISSION_MODES.supervised,
+      ]) {
+        const argv = resumed(mode);
+        expect(argv).not.toContain('--sandbox');
+        expect(valueAfter(argv, '-c')).toBe('sandbox_mode="read-only"');
+      }
+    });
+
+    it('autoAcceptEdits → -c sandbox_mode="workspace-write"', () => {
+      const argv = resumed(CONVERSATION_PERMISSION_MODES.autoAcceptEdits);
+      expect(argv).not.toContain('--sandbox');
+      expect(valueAfter(argv, '-c')).toBe('sandbox_mode="workspace-write"');
+    });
+
+    it('fullAccess keeps the bypass flag, which resume accepts', () => {
+      const argv = resumed(CONVERSATION_PERMISSION_MODES.fullAccess);
+      expect(argv).toContain('--dangerously-bypass-approvals-and-sandbox');
+      expect(argv).not.toContain('-c');
+    });
+  });
+
   describe('reasoning effort → -c model_reasoning_effort', () => {
     const effortFor = (
       reasoning: (typeof CONVERSATION_REASONING_EFFORTS)[keyof typeof CONVERSATION_REASONING_EFFORTS],

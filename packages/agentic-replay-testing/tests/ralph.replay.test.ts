@@ -69,7 +69,7 @@ describe('Ralph orchestrator replaying claude', () => {
   });
 
   describe('plan-run-error', () => {
-    it('fails the run on the error marker and leaves the task in progress', async () => {
+    it('fails the run on the error marker and hands the task back', async () => {
       const result = await replayStrictPlanRun(
         replayFixturePath('claude', 'plan-run-error'),
       );
@@ -79,10 +79,16 @@ describe('Ralph orchestrator replaying claude', () => {
         reason: 'workflow_agent_error',
         status: 'failed',
       });
-      // Characterization: the orchestrator hands a failed run back to its host
-      // without resetting the task, so it is still IN_PROGRESS here.
-      expect(result.store.taskStatus(TASK)).toBe('IN_PROGRESS');
-      expect(result.store.planStatus()).toBe('IN_PROGRESS');
+      // The host settles the run FAILED and moves neither the task nor the
+      // plan, so the orchestrator does: the task back to PENDING and the plan
+      // BLOCKED, as at the iteration limit.
+      expect(result.store.statusChanges().slice(-2)).toEqual([
+        { entity: 'task', id: TASK, status: 'PENDING' },
+        { entity: 'plan', id: PLAN_RUN_PLAN_ID, status: 'BLOCKED' },
+      ]);
+      expect(result.store.output()).toEqual([
+        expect.stringContaining('Agent reported an error (iteration 1)'),
+      ]);
     });
   });
 
@@ -110,8 +116,9 @@ describe('Ralph orchestrator replaying claude', () => {
 /**
  * The same three scenarios recorded against the other CLIs whose plan-run
  * drivers the engine runs. Each table row names its transcript literally so
- * the coverage guard sees it. (opencode has none: on the recording account its
- * plan-run default model is gated behind a provider form.)
+ * the coverage guard sees it. opencode was recorded with `opencode/big-pickle`:
+ * on the recording account its plan-run default model is gated behind a
+ * provider form.
  */
 describe.each([
   {
@@ -125,6 +132,12 @@ describe.each([
     complete: replayFixturePath('cursor', 'plan-run-complete'),
     error: replayFixturePath('cursor', 'plan-run-error'),
     noMarker: replayFixturePath('cursor', 'plan-run-no-marker'),
+  },
+  {
+    backend: 'opencode',
+    complete: replayFixturePath('opencode', 'plan-run-complete'),
+    error: replayFixturePath('opencode', 'plan-run-error'),
+    noMarker: replayFixturePath('opencode', 'plan-run-no-marker'),
   },
   {
     backend: 'antigravity',
@@ -144,6 +157,8 @@ describe.each([
     const result = await replayStrictPlanRun(error);
 
     expect(result.outcome).toMatchObject({ reason: 'workflow_agent_error' });
+    expect(result.store.taskStatus(TASK)).toBe('PENDING');
+    expect(result.store.planStatus()).toBe('BLOCKED');
   });
 
   it('blocks the plan when no marker arrives', async () => {

@@ -64,17 +64,17 @@ describe('driver reasoning effort', () => {
         config({ effort: DRIVER_REASONING_EFFORTS.max, model: 'o3' }),
       ),
     ).toBe(
-      'codex exec --sandbox workspace-write -c model_reasoning_effort=high --model o3 "fix it"',
+      'codex exec --sandbox workspace-write --skip-git-repo-check -c model_reasoning_effort=high --model o3 "fix it"',
     );
     expect(
       codexDriver.buildShellCommand(
         config({ effort: DRIVER_REASONING_EFFORTS.medium }),
       ),
     ).toBe(
-      'codex exec --sandbox workspace-write -c model_reasoning_effort=medium "fix it"',
+      'codex exec --sandbox workspace-write --skip-git-repo-check -c model_reasoning_effort=medium "fix it"',
     );
     expect(codexDriver.buildShellCommand(config())).toBe(
-      'codex exec --sandbox workspace-write "fix it"',
+      'codex exec --sandbox workspace-write --skip-git-repo-check "fix it"',
     );
   });
 

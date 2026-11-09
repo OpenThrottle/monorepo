@@ -110,16 +110,24 @@ describe('writeOpencodeMcpConfig', () => {
     expect(() => file.cleanup()).not.toThrow();
   });
 
-  it('returns null when there is nothing to inject', () => {
-    expect(writeOpencodeMcpConfig({})).toBeNull();
-    expect(writeOpencodeMcpConfig({ broken: { args: ['x'] } })).toBeNull();
+  it('returns null when there is nothing to inject (fullAccess, no servers)', () => {
+    const { fullAccess } = CONVERSATION_PERMISSION_MODES;
+
+    expect(writeOpencodeMcpConfig({}, fullAccess)).toBeNull();
+    expect(
+      writeOpencodeMcpConfig({ broken: { args: ['x'] } }, fullAccess),
+    ).toBeNull();
   });
 
   it('writes a config carrying only the local-endpoint provider (no MCP/permission)', () => {
-    const file = writeOpencodeMcpConfig({}, undefined, {
-      baseUrl: 'http://localhost:11434/v1',
-      model: 'llama3',
-    });
+    const file = writeOpencodeMcpConfig(
+      {},
+      CONVERSATION_PERMISSION_MODES.fullAccess,
+      {
+        baseUrl: 'http://localhost:11434/v1',
+        model: 'llama3',
+      },
+    );
 
     expect(file).not.toBeNull();
     if (file === null) {
@@ -135,19 +143,27 @@ describe('writeOpencodeMcpConfig', () => {
 });
 
 describe('translateManagedMcpToOpencode — permission slice', () => {
-  it('default (no mode): scopes an allow to the injected MCP servers, no edit allow', () => {
+  it('default (no mode): asks for edit and bash, scoped allow for the injected MCP servers', () => {
     const config = translateManagedMcpToOpencode(MANAGED);
 
-    expect(config.permission).toEqual({ 'openthrottle-mcp*': 'allow' });
+    expect(config.permission).toEqual({
+      bash: 'ask',
+      edit: 'ask',
+      'openthrottle-mcp*': 'allow',
+    });
   });
 
-  it('supervised: same scoped allow as the default', () => {
+  it('supervised: same as the default', () => {
     const config = translateManagedMcpToOpencode(
       MANAGED,
       CONVERSATION_PERMISSION_MODES.supervised,
     );
 
-    expect(config.permission).toEqual({ 'openthrottle-mcp*': 'allow' });
+    expect(config.permission).toEqual({
+      bash: 'ask',
+      edit: 'ask',
+      'openthrottle-mcp*': 'allow',
+    });
   });
 
   it('autoAcceptEdits: allows edit plus the scoped MCP grant', () => {
@@ -157,6 +173,7 @@ describe('translateManagedMcpToOpencode — permission slice', () => {
     );
 
     expect(config.permission).toEqual({
+      bash: 'ask',
       edit: 'allow',
       'openthrottle-mcp*': 'allow',
     });
@@ -171,8 +188,11 @@ describe('translateManagedMcpToOpencode — permission slice', () => {
     expect(config.permission).toBeUndefined();
   });
 
-  it('supervised/default with no servers: no permission slice', () => {
-    expect(translateManagedMcpToOpencode({}).permission).toBeUndefined();
+  it('supervised/default with no servers: still asks for edit and bash', () => {
+    expect(translateManagedMcpToOpencode({}).permission).toEqual({
+      bash: 'ask',
+      edit: 'ask',
+    });
   });
 
   it('autoAcceptEdits with no servers: still allows edit', () => {
@@ -181,7 +201,7 @@ describe('translateManagedMcpToOpencode — permission slice', () => {
       CONVERSATION_PERMISSION_MODES.autoAcceptEdits,
     );
 
-    expect(config.permission).toEqual({ edit: 'allow' });
+    expect(config.permission).toEqual({ bash: 'ask', edit: 'allow' });
   });
 });
 
@@ -194,7 +214,11 @@ describe('writeOpencodeMcpConfig — permission slice', () => {
       return;
     }
     const written = JSON.parse(readFileSync(file.path, 'utf8'));
-    expect(written.permission).toEqual({ 'openthrottle-mcp*': 'allow' });
+    expect(written.permission).toEqual({
+      bash: 'ask',
+      edit: 'ask',
+      'openthrottle-mcp*': 'allow',
+    });
     file.cleanup();
   });
 
@@ -210,7 +234,22 @@ describe('writeOpencodeMcpConfig — permission slice', () => {
     }
     const written = JSON.parse(readFileSync(file.path, 'utf8'));
     expect(written.mcp).toBeUndefined();
-    expect(written.permission).toEqual({ edit: 'allow' });
+    expect(written.permission).toEqual({ bash: 'ask', edit: 'allow' });
+    file.cleanup();
+  });
+
+  it('writes the ask posture for supervised even with no MCP servers', () => {
+    const file = writeOpencodeMcpConfig(
+      {},
+      CONVERSATION_PERMISSION_MODES.supervised,
+    );
+
+    expect(file).not.toBeNull();
+    if (file === null) {
+      return;
+    }
+    const written = JSON.parse(readFileSync(file.path, 'utf8'));
+    expect(written.permission).toEqual({ bash: 'ask', edit: 'ask' });
     file.cleanup();
   });
 

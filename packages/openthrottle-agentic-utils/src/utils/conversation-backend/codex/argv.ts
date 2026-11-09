@@ -65,18 +65,39 @@ export interface CodexArgvOptions {
   readonly sessionId?: string;
 }
 
-/** Map a composer permission posture onto codex sandbox flags. */
-function sandboxFlags(
+/** The codex sandbox policy for a composer permission posture, or null to bypass it. */
+function sandboxMode(
   permissionMode: ConversationPermissionMode | undefined,
-): string[] {
+): 'read-only' | 'workspace-write' | null {
   if (permissionMode === CONVERSATION_PERMISSION_MODES.fullAccess) {
-    return ['--dangerously-bypass-approvals-and-sandbox'];
+    return null;
   }
   if (permissionMode === CONVERSATION_PERMISSION_MODES.autoAcceptEdits) {
-    return ['--sandbox', 'workspace-write'];
+    return 'workspace-write';
   }
   // `supervised` and the no-mode default: read-only (no unattended writes).
-  return ['--sandbox', 'read-only'];
+  return 'read-only';
+}
+
+/**
+ * Map a composer permission posture onto codex sandbox flags. `codex exec`
+ * takes `--sandbox <mode>`, but `codex exec resume` (0.167.0) rejects it
+ * ("unexpected argument '--sandbox'") and has no equivalent flag, so a resumed
+ * turn sets the same policy through the `sandbox_mode` config key instead. The
+ * bypass flag is accepted by both.
+ */
+function sandboxFlags(
+  permissionMode: ConversationPermissionMode | undefined,
+  resume: boolean,
+): string[] {
+  const mode = sandboxMode(permissionMode);
+  if (mode === null) {
+    return ['--dangerously-bypass-approvals-and-sandbox'];
+  }
+  if (resume) {
+    return ['-c', `sandbox_mode=${JSON.stringify(mode)}`];
+  }
+  return ['--sandbox', mode];
 }
 
 /**
@@ -91,7 +112,7 @@ export function buildCodexArgv(options: CodexArgvOptions): string[] {
   const common = [
     '--json',
     '--skip-git-repo-check',
-    ...sandboxFlags(options.permissionMode),
+    ...sandboxFlags(options.permissionMode, options.resume),
   ];
 
   // `-c model_reasoning_effort=<value>` overrides the config-file default for

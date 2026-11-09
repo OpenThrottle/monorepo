@@ -44,11 +44,16 @@ export interface CursorAgentArgvOptions {
   readonly model?: string;
   /**
    * Composer permission posture. cursor-agent always runs `--trust` (the
-   * workspace is a registered, ownership-checked checkout); on top of that,
-   * `fullAccess` adds `--force` (run every tool call unless explicitly denied).
-   * `supervised`/`autoAcceptEdits`/no-mode keep the safe trust-only posture —
-   * headless cursor has no distinct edits-only auto-run flag, so those collapse
-   * to the safe posture (the composer advertises only the two distinct modes).
+   * workspace is a registered, ownership-checked checkout), which only skips the
+   * workspace-trust prompt — it is NOT a permission boundary: as of
+   * cursor-agent 2026.11.05, `--print` "has access to all tools, including write
+   * and shell", and a trust-only turn wrote files and ran shell commands with no
+   * approval. Headless cursor has no approval prompt and no edits-only auto-run,
+   * so it has exactly two enforced postures:
+   * - `fullAccess` → `--force` (run every tool call unless explicitly denied);
+   * - everything else (`supervised`, `autoAcceptEdits`, no mode) → `--mode ask`,
+   *   cursor's read-only Q&A mode: no file writes and no shell. `--sandbox
+   *   enabled` is not an alternative — the same version exits 1 with it.
    */
   readonly permissionMode?: ConversationPermissionMode;
   /** The fully-composed prompt (persona prefix already applied by the caller). */
@@ -76,11 +81,13 @@ export function buildCursorAgentArgv(
     options.sessionId,
   ];
 
-  // fullAccess adds `--force` (run every tool call unless denied) on top of the
-  // always-on `--trust`; every other posture stays trust-only (the safe
-  // default). Placed before the `--` terminator + prompt.
+  // fullAccess adds `--force` (run every tool call unless denied); every other
+  // posture is read-only `--mode ask`, because `--trust` alone lets a `--print`
+  // turn write and run shell. Placed before the `--` terminator + prompt.
   if (options.permissionMode === CONVERSATION_PERMISSION_MODES.fullAccess) {
     argv.push('--force');
+  } else {
+    argv.push('--mode', 'ask');
   }
 
   if (options.model !== undefined && options.model !== '') {

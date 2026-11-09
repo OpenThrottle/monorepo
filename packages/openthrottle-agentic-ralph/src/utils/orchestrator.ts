@@ -457,34 +457,22 @@ const reconcilePlanIfTasksExhausted = async (params: {
 };
 
 /**
- * @description Settles a plan-mode run that used up its iteration or budget limit. Re-reads the
- * tasks, because the last iteration may have finished the plan: nothing remaining → plan COMPLETED
- * and `workflow_tasks_exhausted`. Otherwise the run has spent what it was given and only a human can
- * act (re-run, or raise the limit), so the plan is written BLOCKED — never left IN_PROGRESS where it
- * would be re-queued and hold the queue — and the limit reason is returned. Either reason finalizes.
- * A failed re-read or status write is surfaced as a diagnostic and still returns the limit reason,
- * so committed work is pushed regardless.
+ * @description Settles a plan-mode run that stopped and needs a human to act — an iteration or
+ * budget limit, or an agent ERROR / INPUT_REQUIRED marker. Re-reads the tasks, because the last
+ * iteration may have finished the plan: nothing remaining → plan COMPLETED and `completed`.
+ * Otherwise the plan is written BLOCKED — never left IN_PROGRESS, where no live run owns it and
+ * nothing would ever move it — narrated with `label`, and `blocked` is returned. A manual re-enqueue
+ * resumes a BLOCKED plan. A failed re-read or status write is surfaced as a diagnostic and returns
+ * `blocked`, so committed work is pushed regardless.
  */
-const settlePlanAtRunLimit = async (params: {
+const settlePlanAwaitingHuman = async (params: {
   readonly executeGraphqlV2: WorkflowRalphOrchestratorDeps['executeGraphqlV2'];
-  readonly limitLabel: string;
+  readonly label: string;
   readonly onChunk: WorkflowRalphIterationOnChunk | undefined;
   readonly planId: string;
-  readonly reason: 'workflow_budget_exhausted' | 'workflow_max_iterations';
   readonly sessionOptions: ExecuteGraphqlOptionsV2 | undefined;
-}): Promise<
-  | 'workflow_budget_exhausted'
-  | 'workflow_max_iterations'
-  | 'workflow_tasks_exhausted'
-> => {
-  const {
-    executeGraphqlV2,
-    limitLabel,
-    onChunk,
-    planId,
-    reason,
-    sessionOptions,
-  } = params;
+}): Promise<'blocked' | 'completed'> => {
+  const { executeGraphqlV2, label, onChunk, planId, sessionOptions } = params;
 
   try {
     const planTasks = await executeGraphqlV2(GetTasksByPlanIdDocument, {
@@ -499,7 +487,7 @@ const settlePlanAtRunLimit = async (params: {
         sessionOptions,
       );
 
-      return 'workflow_tasks_exhausted';
+      return 'completed';
     }
 
     const blockedCount = remaining.filter(
@@ -513,7 +501,7 @@ const settlePlanAtRunLimit = async (params: {
       sessionOptions,
     );
 
-    const message = `[ralph-orchestrator] ${limitLabel}; ${pendingCount} task(s) still pending, ${blockedCount} blocked. Re-run to continue.\n`;
+    const message = `[ralph-orchestrator] ${label}; ${pendingCount} task(s) still pending, ${blockedCount} blocked. Re-run to continue.\n`;
 
     try {
       await executeGraphqlV2(
@@ -535,16 +523,63 @@ const settlePlanAtRunLimit = async (params: {
   } catch (error) {
     await emitDiagnostic(onChunk, {
       error,
-      phase: `plan ${planId} settle after ${reason} failed`,
+      phase: `plan ${planId} settle after "${label}" failed`,
     });
   }
 
-  return reason;
+  return 'blocked';
+};
+
+/**
+ * @description Settles a plan-mode run that used up its iteration or budget limit (see
+ * {@link settlePlanAwaitingHuman}): `workflow_tasks_exhausted` when the last iteration finished the
+ * plan, else the limit reason. Either reason finalizes.
+ */
+const settlePlanAtRunLimit = async (params: {
+  readonly executeGraphqlV2: WorkflowRalphOrchestratorDeps['executeGraphqlV2'];
+  readonly limitLabel: string;
+  readonly onChunk: WorkflowRalphIterationOnChunk | undefined;
+  readonly planId: string;
+  readonly reason: 'workflow_budget_exhausted' | 'workflow_max_iterations';
+  readonly sessionOptions: ExecuteGraphqlOptionsV2 | undefined;
+}): Promise<
+  | 'workflow_budget_exhausted'
+  | 'workflow_max_iterations'
+  | 'workflow_tasks_exhausted'
+> => {
+  const { limitLabel, reason, ...rest } = params;
+  const settled = await settlePlanAwaitingHuman({ ...rest, label: limitLabel });
+
+  return settled === 'completed' ? 'workflow_tasks_exhausted' : reason;
+};
+
+/**
+ * @description Best-effort move of a task to BLOCKED (an agent INPUT_REQUIRED marker: only a human
+ * can answer). Failure is surfaced as a diagnostic, never thrown.
+ */
+const markTaskBlocked = async (
+  executeGraphqlV2: WorkflowRalphOrchestratorDeps['executeGraphqlV2'],
+  taskId: string,
+  sessionOptions: ExecuteGraphqlOptionsV2 | undefined,
+  onChunk: WorkflowRalphIterationOnChunk | undefined,
+): Promise<void> => {
+  try {
+    await executeGraphqlV2(
+      UpdateTaskDocument,
+      { input: { id: taskId, status: 'BLOCKED' } },
+      sessionOptions,
+    );
+  } catch (error) {
+    await emitDiagnostic(onChunk, {
+      error,
+      phase: `BLOCKED write for task ${taskId} failed`,
+    });
+  }
 };
 
 /**
  * @description Best-effort reset of a task to PENDING (used when an iteration ends without finishing
- * it: max iterations, usage limit). Failure is surfaced as a diagnostic, never thrown (ralph.ts warns).
+ * it: max iterations, usage limit, an agent ERROR marker). Failure is surfaced as a diagnostic, never thrown (ralph.ts warns).
  */
 const resetTaskToPending = async (
   executeGraphqlV2: WorkflowRalphOrchestratorDeps['executeGraphqlV2'],
@@ -1137,8 +1172,49 @@ export const createWorkflowRalphOrchestrator = (
           // agent.parse_control (order is specific)
           const control = parseAgentOutput(agentOutput);
 
-          // 1. 🔴 We check for any errors
+          // The task this iteration was working, unless the iteration completed it.
+          const candidateTaskId = taskIdTrim || firstPendingForIteration;
+          const isUnfinished =
+            candidateTaskId !== undefined &&
+            candidateTaskId !== '' &&
+            !hasCompletionId(candidateTaskId);
+          const unfinishedTaskId = isUnfinished ? candidateTaskId : undefined;
+
+          // A failed run is settled FAILED by its host, which moves neither the task nor the plan,
+          // so a failure exit must leave both where a human can pick them up — never IN_PROGRESS.
+          // In plan mode the plan settles like an iteration-limit stop (BLOCKED, or COMPLETED when
+          // nothing is left); a task-centric run leaves its plan alone, as at the iteration limit.
+          const settlePlanForFailure = async (label: string): Promise<void> => {
+            if (isTaskCentric) {
+              return;
+            }
+
+            await settlePlanAwaitingHuman({
+              executeGraphqlV2,
+              label,
+              onChunk,
+              planId: effectivePlanId,
+              sessionOptions,
+            });
+          };
+
+          // 1. 🔴 We check for any errors. The in-flight task goes back to PENDING (as on a usage
+          // limit or the iteration limit). Not BLOCKED — the engine's own timeout/abort sentinel
+          // is this same marker, so an ERROR is often transient.
           if (control === 'ERROR') {
+            if (unfinishedTaskId !== undefined) {
+              await resetTaskToPending(
+                executeGraphqlV2,
+                unfinishedTaskId,
+                sessionOptions,
+                onChunk,
+              );
+            }
+
+            await settlePlanForFailure(
+              `Agent reported an error (iteration ${iteration})`,
+            );
+
             return onFailure('workflow_agent_error');
           }
 
@@ -1167,6 +1243,21 @@ export const createWorkflowRalphOrchestrator = (
                 phase: `iteration ${iteration} INPUT_REQUIRED remaining-task re-read failed`,
               });
             }
+
+            // The agent is waiting on a human answer, so its task is BLOCKED rather than handed
+            // back to PENDING: a re-run alone would ask the same question again.
+            if (unfinishedTaskId !== undefined) {
+              await markTaskBlocked(
+                executeGraphqlV2,
+                unfinishedTaskId,
+                sessionOptions,
+                onChunk,
+              );
+            }
+
+            await settlePlanForFailure(
+              `Agent needs input (iteration ${iteration})`,
+            );
 
             return onFailure('workflow_input_required');
           }

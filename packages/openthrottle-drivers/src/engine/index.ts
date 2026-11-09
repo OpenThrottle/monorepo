@@ -1,11 +1,15 @@
 /**
  * @description Driver-agnostic execution engine: `runDriverSync` / `runDriverAsync`. Generalized
  * from tools/workflows' `runShellIterationSync` / `runShellIterationAsync` with identical semantics
- * (`shell: true`, `stdio: ['inherit','pipe','pipe']`, stdout/stderr trim + `\n` merge, spawn-error
+ * (`shell: true`, stdout/stderr trim + `\n` merge, spawn-error
  * message passthrough, `<promise>ERROR</promise>` timeout/abort sentinels, streaming chunks,
  * SIGTERM→SIGKILL escalation) but with the Ralph logger replaced by an injectable {@link DriverLogger}.
  * A driver may add `parseOutput` (final text + usage limit from raw stdout) and `renderOutputLine`
  * (live, line-buffered stdout rendering for `onChunk`); drivers without them behave byte-identically.
+ *
+ * stdin is `ignore`d (see {@link DRIVER_STDIO}), not inherited: every driver takes its prompt as an
+ * argument, and an inherited idle stdin pipe (an agent harness, a process manager) made claude wait
+ * 3s per iteration ("no stdin data received in 3s") and would make a non-TTY gemini block forever.
  */
 
 import type { ChildProcess } from 'child_process';
@@ -20,6 +24,13 @@ import { escalateKill } from '../utils/child-kill.ts';
 import type { DriverLogger } from '../utils/logger.ts';
 import { noopDriverLogger } from '../utils/logger.ts';
 import type { UsageLimit } from '../utils/usage-limit.ts';
+
+/**
+ * @description Child stdio for every driver run: no stdin (a driver never reads it — the prompt is
+ * an argument), piped stdout/stderr. `ignore` gives the child `/dev/null`, so a CLI that probes a
+ * non-TTY stdin sees EOF at once instead of waiting on the host's.
+ */
+const DRIVER_STDIO: ['ignore', 'pipe', 'pipe'] = ['ignore', 'pipe', 'pipe'];
 
 /**
  * @description How a driver run ended: the child closed on its own, or the engine killed it.
@@ -114,7 +125,7 @@ export const runDriverSync = (
     encoding: 'utf-8',
     env: mergeChildEnv(config.env),
     shell: true,
-    stdio: ['inherit', 'pipe', 'pipe'],
+    stdio: DRIVER_STDIO,
   });
 
   const parsed = interpretStdout(driver, child.stdout ?? '');
@@ -177,7 +188,7 @@ export const runDriverAsync = (
       cwd,
       env: mergeChildEnv(config.env),
       shell: true,
-      stdio: ['inherit', 'pipe', 'pipe'],
+      stdio: DRIVER_STDIO,
     });
 
     const startedAt = Date.now();

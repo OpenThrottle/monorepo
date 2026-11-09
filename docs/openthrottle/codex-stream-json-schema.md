@@ -33,6 +33,7 @@ codex exec [resume] --json --skip-git-repo-check <sandbox flags> \
 | `--sandbox read-only`                              | Default and `supervised` posture. A headless `exec` cannot prompt, so read-only is the safe default.             |
 | `--sandbox workspace-write`                        | `autoAcceptEdits` posture.                                                                                       |
 | `--dangerously-bypass-approvals-and-sandbox`       | `fullAccess` posture.                                                                                            |
+| `-c sandbox_mode="<mode>"`                         | Resumed turns only: `exec resume` (0.167.0) rejects `--sandbox`, so the same policy goes in as a config key.     |
 | `-c model_reasoning_effort=<v>`                    | Reasoning effort; `high`/`extraHigh`/`max`/`ultra` clamp to `high`. Omitted when unset.                          |
 | `--oss --local-provider ollama -c …base_url=<url>` | Local OpenAI-compatible endpoint through codex's built-in OSS provider. The `-c` value is a TOML string literal. |
 | `--model <id>`                                     | Omitted when blank or `auto`.                                                                                    |
@@ -44,12 +45,12 @@ throws before spawn.
 Plan-run path (driver `buildShellCommand`):
 
 ```
-codex exec --json --sandbox workspace-write [endpoint flags] [effort] [--model <id>] "<prompt>"
+codex exec --json --sandbox workspace-write --skip-git-repo-check [endpoint flags] [effort] [--model <id>] "<prompt>"
 ```
 
 `--json` is added right after `codex exec` only when `outputFormat` is `structured`; otherwise the
-command is the plain text form. The plan-run command pins `--sandbox workspace-write` and has no
-`--skip-git-repo-check`.
+command is the plain text form. The plan-run command pins `--sandbox workspace-write` and, like the chat path, passes
+`--skip-git-repo-check` (without it a cwd that is not a trusted git repo exits 1).
 
 ## 2. Framing & event taxonomy
 
