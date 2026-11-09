@@ -14,6 +14,7 @@ export const PLAN_RUN_SCENARIOS: readonly PlanRunScenario[] = [
     iterations: 2,
     prompt: OPERATOR_PROMPT,
     slug: 'plan-run-complete',
+    synthetic: null,
     tasks: [
       {
         description: `Reply with the task-complete marker for this task, exactly as the instructions describe, and nothing else.`,
@@ -26,6 +27,7 @@ export const PLAN_RUN_SCENARIOS: readonly PlanRunScenario[] = [
     iterations: 1,
     prompt: OPERATOR_PROMPT,
     slug: 'plan-run-error',
+    synthetic: null,
     tasks: [
       {
         description: `You cannot do this task. Reply with exactly <promise>ERROR</promise> and nothing else.`,
@@ -38,10 +40,24 @@ export const PLAN_RUN_SCENARIOS: readonly PlanRunScenario[] = [
     iterations: 1,
     prompt: OPERATOR_PROMPT,
     slug: 'plan-run-no-marker',
+    synthetic: null,
     tasks: [
       {
         description: `Do not complete this task. Reply with exactly: not yet. Output no marker of any kind.`,
         title: 'Answer without completing',
+      },
+    ],
+  },
+  {
+    description: `The agent's account has no credit; the run stops FAILED after one of three iterations.`,
+    iterations: 3,
+    prompt: OPERATOR_PROMPT,
+    slug: 'plan-run-account-error',
+    synthetic: { backend: 'claude', bin: 'claude-credit-exhausted' },
+    tasks: [
+      {
+        description: `Reply with the task-complete marker for this task, exactly as the instructions describe, and nothing else.`,
+        title: 'Acknowledge the replay recording',
       },
     ],
   },

@@ -458,6 +458,9 @@ export const PLAN_RUN_MODEL_EFFORT_COPY = {
  * fired within the 1-hour grace window) and `SUPERSEDED` (another run was active when it was due)
  * say why the run never started. `SKIPPED` (settled at fire time) shows only the server's
  * `settledReason`; MISSED and SUPERSEDED prefer it and fall back to the generic lines below.
+ * `FAILED` shows the server's `settledReason` when one was recorded — the orchestrator's own
+ * operator-readable line (a fatal agent account error names the error, the credential the CLI used
+ * and the fix) — and nothing extra otherwise; there is no generic failure line to fall back to.
  */
 export const PLAN_RUN_STATUS_CELL_COPY = {
   cancelledBadge: `Cancelled`,

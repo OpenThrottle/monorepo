@@ -62,6 +62,13 @@ service and backend with no agentic-utils mock (ids seeded, `Date` frozen).
 - **Profiles derive bin env, binary and version flags from the drivers registry** (`profileFor`).
   Adding a backend = one profile with its `sessionStrategy`, `redactKeys` and `dropStdoutLine`, then
   record and inspect the transcripts for host config before committing.
+- **Synthetic plan-run scenarios** (`synthetic: { backend, bin }`) cover failures no real account
+  reproduces on demand (an org out of credit). `record` runs them against the stand-in
+  `scripts/synthetic/<bin>.ts` (exports `runSyntheticCli`) for that one backend only; argv is still
+  the real orchestrator's. `check-drift` skips them. Edit the stand-in and re-record, never the
+  fixture.
+- **The plan-run harness clears `WORKFLOW_RALPH_OT_ROOT`** for the run, so a session launched by a
+  plan run (which inherits it, pointing at another checkout) still builds the recorded prompt.
 - **A failed scenario writes nothing.** `permission-denied` fails a backend whose supervised posture
   lets the write through — never hand-add that transcript. cursor runs non-`fullAccess` postures as
   `--mode ask`, and opencode writes `edit`/`bash: ask` into its temp config; both were refused here

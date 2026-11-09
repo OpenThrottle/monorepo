@@ -10,27 +10,47 @@
  *
  * Conversation scenarios drive the production conversation backend; plan-run
  * scenarios (`plan-run-*`) drive the real Ralph orchestrator and drivers engine.
+ * A plan-run scenario marked `synthetic` is recorded against its stand-in CLI
+ * from scripts/synthetic/ — whatever --bin says — and only for its own backend.
  *
  * This spends real tokens on the logged-in account. Transcripts land in
  * fixtures/<backend>/ and are sanitized and leak-checked before writing.
  */
 
 import { execFileSync } from 'node:child_process';
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 
 import {
   PLAN_RUN_SCENARIOS,
+  type PlanRunScenarioSynthetic,
   RECORDING_PROFILES,
   recordPlanRunScenario,
   recordScenario,
   SCENARIOS,
+  writeNodeBin,
 } from '../src/index.ts';
 
 const FIXTURES_DIR = join(import.meta.dirname, '..', 'fixtures');
 
 function resolveBin(name: string): string {
   return execFileSync('which', [name], { encoding: 'utf8' }).trim();
+}
+
+/**
+ * Install a scenario's stand-in CLI as an executable. Every module under
+ * scripts/synthetic/ exports `runSyntheticCli`.
+ */
+function writeSyntheticBin(synthetic: PlanRunScenarioSynthetic): string {
+  return writeNodeBin({
+    dir: mkdtempSync(join(tmpdir(), 'ot-replay-synthetic-')),
+    entry: 'runSyntheticCli',
+    modulePath: join(import.meta.dirname, 'synthetic', `${synthetic.bin}.ts`),
+    name: synthetic.bin,
+    options: {},
+  });
 }
 
 async function main(): Promise<number> {
@@ -56,7 +76,10 @@ async function main(): Promise<number> {
   };
   const scenarios = SCENARIOS.filter((scenario) => isWanted(scenario.slug));
   const planRunScenarios = PLAN_RUN_SCENARIOS.filter((scenario) => {
-    return isWanted(scenario.slug);
+    const isOtherBackend =
+      scenario.synthetic !== null &&
+      scenario.synthetic.backend !== profile.backend;
+    return isWanted(scenario.slug) && !isOtherBackend;
   });
   const model = values.model ?? profile.defaultModel;
   const outDir = join(FIXTURES_DIR, profile.backend);
@@ -84,12 +107,14 @@ async function main(): Promise<number> {
 
   for (const scenario of planRunScenarios) {
     process.stdout.write(`recording ${profile.backend}/${scenario.slug}… `);
+    const { synthetic } = scenario;
+    const scenarioBin = synthetic ? writeSyntheticBin(synthetic) : realBin;
     // eslint-disable-next-line no-await-in-loop
     const result = await recordPlanRunScenario({
       model,
       outDir,
       profile,
-      realBin,
+      realBin: scenarioBin,
       scenario,
     });
     if (result.ok) {
