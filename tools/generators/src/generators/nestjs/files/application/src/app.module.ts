@@ -8,8 +8,8 @@ import { NestjsRedisModule } from '@openthrottle/nestjs-redis';
 import { NestjsRedisModule as _NestjsRedisModule } from '@openthrottle/nestjs-redis';
 import { NestjsThrottlerModule } from '@openthrottle/nestjs-throttler';
 
-import { AppController } from './app.controller.ts';
-import { AppService } from './app.service.ts';
+import { AppController } from './app/app.controller.ts';
+import { AppService } from './app/app.service.ts';
 
 @Module({
   controllers: [AppController],

@@ -28,6 +28,11 @@ import { getDirname } from './vite-config.ts';
 /** @public */
 export type { Config as EslintFlatConfig } from 'eslint/config';
 /** @public */
+export {
+  lintNestjsFileContract,
+  type NestjsContractLintInput,
+} from './nestjs-contract-lint.ts';
+/** @public */
 export { prettierConfig } from './prettier-config.ts';
 /** @public */
 export { lintReadability, type ReadabilitySource } from './readability-lint.ts';
