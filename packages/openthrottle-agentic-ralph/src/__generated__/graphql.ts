@@ -2750,6 +2750,8 @@ export type Mutation = {
   updateTask?: Maybe<TaskObject>;
   /** Update a user */
   updateUser?: Maybe<UserObject>;
+  /** Update the authenticated user's preferences. An omitted field is left unchanged; an explicit null clears it to the system default. */
+  updateUserPreferences: UserPreferencesObject;
   /**
    * Update metadata for a local repository owned by the authenticated user.
    * @deprecated Replaced by the repository/checkout model (refreshCheckout re-derives git metadata from disk).
@@ -3389,6 +3391,10 @@ export type MutationUpdateTaskArgs = {
 
 export type MutationUpdateUserArgs = {
   input: UpdateUserInput;
+};
+
+export type MutationUpdateUserPreferencesArgs = {
+  input: UpdateUserPreferencesInput;
 };
 
 export type MutationUpdateWorkspaceLocalRepositoryArgs = {
@@ -4353,6 +4359,8 @@ export type Query = {
   unverifiedWorkArtifacts: WorkArtifactListResult;
   /** Get a user by ID */
   user?: Maybe<UserObject>;
+  /** Preferences for the authenticated user. All fields are null until the user saves one. */
+  userPreferences: UserPreferencesObject;
   /** List all users, ordered by createdAt descending */
   users: Array<UserObject>;
   workArtifactsByPlan: WorkArtifactListResult;
@@ -7126,6 +7134,12 @@ export type UpdateUserInput = {
   id: Scalars['ID']['input'];
 };
 
+/** A partial update: an omitted field is left unchanged and an explicit null clears it. */
+export type UpdateUserPreferencesInput = {
+  defaultAgent?: InputMaybe<UserPreferencesAgentInput>;
+  defaultEditor?: InputMaybe<WorkspaceEditorId>;
+};
+
 export type UpdateWorkspaceLocalRepositoryInput = {
   displayName?: InputMaybe<Scalars['String']['input']>;
   gitDefaultBranch?: InputMaybe<Scalars['String']['input']>;
@@ -7187,6 +7201,36 @@ export type UserObject = {
   githubUsername: Scalars['String']['output'];
   id: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
+};
+
+/** A default agent. Backend and model are required together; effort may be null. */
+export type UserPreferencesAgentInput = {
+  /** Agent CLI driver id. */
+  backend: Scalars['String']['input'];
+  /** Reasoning effort level, or null for the backend's own default. */
+  effort?: InputMaybe<Scalars['String']['input']>;
+  /** Driver-specific model id. */
+  model: Scalars['String']['input'];
+};
+
+/** The user's default agent. Backend and model always travel together, so a half-set agent cannot be represented. */
+export type UserPreferencesAgentObject = {
+  __typename?: 'UserPreferencesAgentObject';
+  /** Agent CLI driver id (e.g. claude, cursor, codex). */
+  backend: Scalars['String']['output'];
+  /** Reasoning effort level, or null for the backend's own default. */
+  effort?: Maybe<Scalars['String']['output']>;
+  /** Driver-specific model id, opaque to the server. */
+  model: Scalars['String']['output'];
+};
+
+/** Per-user preferences. A null field means "use the system default". */
+export type UserPreferencesObject = {
+  __typename?: 'UserPreferencesObject';
+  /** Default agent (backend + model + effort), or null for the system default. */
+  defaultAgent?: Maybe<UserPreferencesAgentObject>;
+  /** Default editor for open-in-editor links, or null for the system default (VS Code). */
+  defaultEditor?: Maybe<WorkspaceEditorId>;
 };
 
 /** Per-user workspace profile: contact fields and enabled editors. */

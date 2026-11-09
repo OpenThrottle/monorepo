@@ -176,11 +176,13 @@ import {
   UpdateServiceAccountInput,
   UpdateTaskInput,
   UpdateUserInput,
+  UpdateUserPreferencesInput,
   UpdateWorkspaceLocalRepositoryInput,
   UpdateWorkspaceProfileInput,
   UpsertBlogAuthorInput,
   UpsertBlogTagInput,
   UpsertTagActionRuleInput,
+  UserPreferencesAgentInput,
   WallClockInterpretation,
   WithdrawPlanMessageInput,
   WorkArtifactsByPlanInput,
@@ -2036,6 +2038,15 @@ export function UpdateUserInputSchema(): z.ZodObject<
   });
 }
 
+export function UpdateUserPreferencesInputSchema(): z.ZodObject<
+  Properties<UpdateUserPreferencesInput>
+> {
+  return z.object({
+    defaultAgent: z.lazy(() => UserPreferencesAgentInputSchema().nullish()),
+    defaultEditor: WorkspaceEditorIdSchema.nullish(),
+  });
+}
+
 export function UpdateWorkspaceLocalRepositoryInputSchema(): z.ZodObject<
   Properties<UpdateWorkspaceLocalRepositoryInput>
 > {
@@ -2092,6 +2103,16 @@ export function UpsertTagActionRuleInputSchema(): z.ZodObject<
     status: z.string().nullish(),
     tagAll: z.array(z.string().min(1)),
     title: z.string().min(1),
+  });
+}
+
+export function UserPreferencesAgentInputSchema(): z.ZodObject<
+  Properties<UserPreferencesAgentInput>
+> {
+  return z.object({
+    backend: z.string().min(1),
+    effort: z.string().nullish(),
+    model: z.string().min(1),
   });
 }
 

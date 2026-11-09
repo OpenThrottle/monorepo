@@ -79,6 +79,7 @@ import { TasksGraphqlModule } from './graphql/tasks/tasks.module.ts';
 import { TimelineGraphqlModule } from './graphql/timeline/timeline.module.ts';
 import { TokenUsageGraphqlModule } from './graphql/token-usage/token-usage.module.ts';
 import { TranscriptionStreamGraphqlModule } from './graphql/transcription-stream/transcription-stream.module.ts';
+import { UserPreferencesGraphqlModule } from './graphql/user-preferences/user-preferences.module.ts';
 import { UsersGraphqlModule } from './graphql/users/users.module.ts';
 import { WorkLedgerGraphqlModule } from './graphql/work-ledger/work-ledger.module.ts';
 import { WorkspaceSettingsGraphqlModule } from './graphql/workspace-settings/workspace-settings.module.ts';
@@ -298,6 +299,7 @@ export const buildImports = (role: ProcessRole): AppModuleImports => {
       TimelineGraphqlModule,
       TokenUsageGraphqlModule,
       TranscriptionStreamGraphqlModule,
+      UserPreferencesGraphqlModule,
       UsersGraphqlModule,
       WorkLedgerGraphqlModule,
       WorkspaceSettingsGraphqlModule,
