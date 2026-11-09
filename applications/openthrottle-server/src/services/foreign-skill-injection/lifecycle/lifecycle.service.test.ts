@@ -17,6 +17,7 @@ import type { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   ensureMaterialized,
   FOREIGN_SKILL_LEDGER_DIR_ENV,
+  FOREIGN_SKILL_MATERIALIZATION_LAYER,
   ledgerPathForRepo,
   readLedger,
 } from '@openthrottle/openthrottle-agentic-utils';
@@ -123,6 +124,32 @@ describe('ForeignSkillInjectionLifecycleService reaper', () => {
     expect(() => lstatSync(join(repo, '.agents/skills/ot-plans'))).toThrow();
     expect(() => lstatSync(join(repo, '.agents'))).toThrow();
     expect(readLedger(ledgerPathForRepo(repo, process.env))).toBeUndefined();
+    expect(git(repo, 'status', '--porcelain')).toBe('');
+  });
+
+  it('reaps a stranded ot-worktree overlay layer alongside the curated one', () => {
+    const overlay = FOREIGN_SKILL_MATERIALIZATION_LAYER.WORKTREE_OVERLAY;
+    writeSkill(otSkills, 'ot-worktree');
+    ensureMaterialized({
+      env: process.env,
+      layer: overlay,
+      onlySkillNames: ['ot-worktree'],
+      otCuratedSkillsDir: otSkills,
+      repoPath: repo,
+    });
+    expect(
+      readLedger(ledgerPathForRepo(repo, process.env, overlay)),
+    ).toBeDefined();
+
+    service.reapStrandedLedgers();
+
+    expect(() => lstatSync(join(repo, '.agents/skills/ot-worktree'))).toThrow();
+    expect(
+      readLedger(ledgerPathForRepo(repo, process.env, overlay)),
+    ).toBeUndefined();
+    expect(readFileSync(join(repo, '.git/info/exclude'), 'utf8')).not.toContain(
+      'worktree-skill-overlay',
+    );
     expect(git(repo, 'status', '--porcelain')).toBe('');
   });
 

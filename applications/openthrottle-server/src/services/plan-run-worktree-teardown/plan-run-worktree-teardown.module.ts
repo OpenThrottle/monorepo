@@ -1,6 +1,7 @@
 /**
- * @description Guarded removal of the git worktree a programmatic plan run executed in, via
- * `pnpm run worktree:remove` — the mirror of plan-run-worktree-provision.
+ * @description Guarded removal of the git worktree a programmatic plan run executed in, via the
+ * ot-worktree destroy action (`destroy.sh`, resolved by path) — the mirror of
+ * plan-run-worktree-provision.
  */
 
 import { Module } from '@nestjs/common';

@@ -434,7 +434,7 @@ export const isWorkflowActorUserJwt = (token: string | undefined): boolean => {
  * the agent run. Does not pass `ot_sa_` tokens to this mutation. Does not cover provision-time
  * registration from `worktree:new` / `setup_worktree.ts` (deferred follow-up; a worktree
  * stays out of Workspace Settings until a run starts against them). Removal has its own
- * front door: `pnpm worktree:remove <name>` (the `ot-worktree` destroy action).
+ * front door: the `ot-worktree` destroy action (`destroy.sh`; `pnpm worktree:remove` in this monorepo).
  */
 export const maybeRegisterPlanRunWorktreeCheckout = async (
   config: WorkflowRalphConfig,

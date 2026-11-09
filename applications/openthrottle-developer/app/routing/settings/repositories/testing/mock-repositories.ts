@@ -18,10 +18,12 @@ export interface MockCheckoutOverrides {
   filesystemPath?: string;
   foreignSkillInjectionEnabled?: boolean;
   id: string;
+  isForeign?: boolean;
   kind?: string;
   managed?: boolean;
   repositoryId?: string;
   updatedAt?: string;
+  worktreeSkillOverlayEnabled?: boolean;
 }
 
 export interface MockDiscoveredWorktreeOverrides {
@@ -96,10 +98,12 @@ export const mockCheckout = (
     filesystemPath = `/Users/dev/Development/${overrides.id}`,
     foreignSkillInjectionEnabled = false,
     id,
+    isForeign = true,
     kind = 'primary',
     managed = false,
     repositoryId = 'repo-1',
     updatedAt = '2026-07-24T00:00:00.000Z',
+    worktreeSkillOverlayEnabled = true,
   } = overrides;
 
   return {
@@ -109,12 +113,14 @@ export const mockCheckout = (
     foreignSkillInjectionEnabled,
     id,
     inspection: mockInspection(branch),
+    isForeign,
     kind,
     managed,
     repositoryId,
     scannedAt: '2026-07-24T00:00:00.000Z',
     updatedAt,
     userId: 'user-1',
+    worktreeSkillOverlayEnabled,
   };
 };
 

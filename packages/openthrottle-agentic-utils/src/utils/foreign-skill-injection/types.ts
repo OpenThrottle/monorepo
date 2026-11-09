@@ -67,11 +67,33 @@ export const GIT_EXCLUDE_END_MARKER = `# END OpenThrottle foreign-skill-injectio
 export const GIT_EXCLUDE_OWNER = {
   FOREIGN_SKILL_INJECTION: 'foreign-skill-injection',
   WORKSPACE_EDITORS: 'workspace-editors',
+  WORKTREE_SKILL_OVERLAY: 'worktree-skill-overlay',
 } as const;
 
 /** @public */
 export type GitExcludeOwner =
   (typeof GIT_EXCLUDE_OWNER)[keyof typeof GIT_EXCLUDE_OWNER];
+
+/**
+ * Independent skill layers OT materializes into one foreign repo. Each keeps its own ledger and its
+ * own `.git/info/exclude` block, so applying or tearing down one never touches the other:
+ *
+ * - `curated` — the full curated set, opt-in per checkout (`foreign_skill_injection_enabled`).
+ * - `worktree-overlay` — just `ot-worktree`, default on per checkout
+ *   (`worktree_skill_overlay_enabled`), so OT can provision plan-run worktrees in any repo.
+ *
+ * The value is part of the overlay's ledger filename; `curated` keeps the original unsuffixed name.
+ *
+ * @public
+ */
+export const FOREIGN_SKILL_MATERIALIZATION_LAYER = {
+  CURATED: 'curated',
+  WORKTREE_OVERLAY: 'worktree-overlay',
+} as const;
+
+/** @public */
+export type ForeignSkillMaterializationLayer =
+  (typeof FOREIGN_SKILL_MATERIALIZATION_LAYER)[keyof typeof FOREIGN_SKILL_MATERIALIZATION_LAYER];
 
 /**
  * One injected path recorded in a repo's ledger — the authoritative record for

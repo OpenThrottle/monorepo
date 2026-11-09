@@ -44,6 +44,9 @@ describe('RepositoryEditForm Component', () => {
             intent: formData.get('intent'),
             name: formData.get('name'),
             projectId: formData.get('projectId'),
+            worktreeSkillOverlayEnabled: formData.get(
+              'worktreeSkillOverlayEnabled',
+            ),
           });
           return redirect('/detail');
         },
@@ -86,6 +89,7 @@ describe('RepositoryEditForm Component', () => {
       intent: 'updateRepository',
       name: 'acme/monorepo',
       projectId: '__none__',
+      worktreeSkillOverlayEnabled: null,
     });
     // The action's redirect navigates away from the edit route.
     await waitFor(() =>
@@ -106,6 +110,56 @@ describe('RepositoryEditForm Component', () => {
     expect(submitted[0]?.foreignSkillInjectionEnabled).toBe('true');
   });
 
+  describe('worktree skill overlay toggle', () => {
+    const foreignCheckout = {
+      createdAt: '2026-07-24T00:00:00.000Z',
+      displayName: 'monorepo',
+      filesystemPath: '/Users/dev/Development/acme',
+      foreignSkillInjectionEnabled: false,
+      id: 'checkout-1',
+      inspection: null,
+      isForeign: true,
+      kind: 'primary',
+      managed: false,
+      repositoryId: 'repo-1',
+      scannedAt: null,
+      updatedAt: '2026-07-24T00:00:00.000Z',
+      userId: 'user-1',
+      worktreeSkillOverlayEnabled: true,
+    };
+
+    test('is hidden for the OpenThrottle repository itself', () => {
+      props.repository = {
+        ...repository,
+        checkouts: [{ ...foreignCheckout, isForeign: false }],
+      };
+      setup();
+
+      expect(
+        component.queryByTestId('RepositoryEditForm-overlay'),
+      ).not.toBeInTheDocument();
+    });
+
+    test('defaults to on for a foreign checkout and keeps worktrees working copy', () => {
+      props.repository = { ...repository, checkouts: [foreignCheckout] };
+      setup();
+
+      expect(component.getByTestId('RepositoryEditForm-overlay')).toBeChecked();
+      expect(component.getByText(/worktrees keep working/)).toBeInTheDocument();
+    });
+
+    test('submits false once the user opts out', async () => {
+      const user = userEvent.setup();
+      props.repository = { ...repository, checkouts: [foreignCheckout] };
+      setup();
+
+      await user.click(component.getByTestId('RepositoryEditForm-overlay'));
+      await user.click(component.getByRole('button', { name: /Save changes/ }));
+
+      expect(submitted[0]?.worktreeSkillOverlayEnabled).toBe('false');
+    });
+  });
+
   test('seeds the injection toggle from an opted-in checkout', () => {
     props.repository = {
       ...repository,
@@ -117,12 +171,14 @@ describe('RepositoryEditForm Component', () => {
           foreignSkillInjectionEnabled: true,
           id: 'checkout-1',
           inspection: null,
+          isForeign: true,
           kind: 'primary',
           managed: false,
           repositoryId: 'repo-1',
           scannedAt: null,
           updatedAt: '2026-07-24T00:00:00.000Z',
           userId: 'user-1',
+          worktreeSkillOverlayEnabled: true,
         },
       ],
     };

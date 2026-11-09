@@ -4,7 +4,7 @@
  */
 
 export interface ProvisionedPlanRunWorktree {
-  /** Absolute path of the checkout the worktree was created from (where `worktree:remove` runs). */
+  /** Absolute path of the checkout the worktree was created from (where the ot-worktree destroy action runs). */
   readonly baseCheckoutPath: string;
   /** Absolute path of the worktree the agent works in. */
   readonly worktreePath: string;

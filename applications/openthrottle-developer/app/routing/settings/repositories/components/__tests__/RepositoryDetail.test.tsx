@@ -42,12 +42,14 @@ const checkout = {
     },
     warnings: [],
   },
+  isForeign: true,
   kind: 'primary',
   managed: true,
   repositoryId: 'repo-1',
   scannedAt: '2026-07-24T00:00:00.000Z',
   updatedAt: '2026-07-24T00:00:00.000Z',
   userId: 'user-1',
+  worktreeSkillOverlayEnabled: true,
 };
 
 describe('RepositoryDetail Component', () => {

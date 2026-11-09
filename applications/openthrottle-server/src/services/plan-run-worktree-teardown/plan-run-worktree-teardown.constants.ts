@@ -3,7 +3,7 @@
  */
 
 /**
- * - `REMOVED` — every guard passed and `pnpm run worktree:remove` succeeded. The branch is kept.
+ * - `REMOVED` — every guard passed and the ot-worktree destroy action (`destroy.sh`) succeeded. The branch is kept.
  * - `REMOVABLE` — every guard passed; returned only by an assessment, which removes nothing.
  * - `KEPT_NOT_PLAN_RUN_WORKTREE` — not a linked `plan-<8 hex>` worktree under the resolved root.
  * - `KEPT_PRIMARY` — the path is the base (primary) checkout.

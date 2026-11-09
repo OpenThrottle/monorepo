@@ -1,8 +1,11 @@
 /**
  * @description Provisions the git worktree a programmatic plan run executes in, through the ONE
- * sanctioned entrypoint `pnpm run worktree:new <name>` (`skills/ot-worktree/scripts/create.sh`) — never a bare
- * `git worktree add`, which skips port allocation and `.env` provisioning and only self-heals on the
- * first `:dev`. Idempotent: an existing worktree for the run's name is reused, never recreated.
+ * sanctioned entrypoint: the ot-worktree **create** action (`skills/ot-worktree/scripts/create.sh`),
+ * exec'd by absolute path with cwd = the base checkout — never a bare `git worktree add`, which
+ * skips the repo's provisioner, and never `pnpm run worktree:new`, which is only the OpenThrottle
+ * monorepo's own alias and does not exist in a foreign repo. The script is found by
+ * {@link resolveOtWorktreeScript}, whose last rung is the server's own copy, so a foreign repo needs
+ * nothing installed. Idempotent: an existing worktree for the run's name is reused, never recreated.
  *
  * Fails fast. A silent fallback to the process cwd would drop the agent into the primary checkout,
  * which is the bug this exists to fix. See docs/openthrottle/plan-run-worktrees.md.
@@ -13,6 +16,8 @@ import { promisify } from 'node:util';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 
+import { OT_WORKTREE_ACTION } from '../ot-worktree-script/ot-worktree-script.constants.ts';
+import { resolveOtWorktreeScript } from '../ot-worktree-script/ot-worktree-script.utils.ts';
 import { resolveWorktreeRoot } from '../worktree-root/worktree-root.utils.ts';
 import type { ProvisionPlanRunWorktreeParams } from './plan-run-worktree-provision.types.ts';
 
@@ -118,7 +123,7 @@ export class PlanRunWorktreeProvisionService {
   }
 
   /**
-   * @description Runs `pnpm run worktree:new <name>` and returns the absolute path it prints. The
+   * @description Runs the resolved `create.sh <name>` and returns the absolute path it prints. The
    * script's contract is that stdout carries ONLY that path.
    */
   private async createWorktree(
@@ -133,16 +138,30 @@ export class PlanRunWorktreeProvisionService {
     // look in.
     const resolved = this.describeResolvedRoot(baseCheckoutPath);
 
+    const script = resolveOtWorktreeScript({
+      action: OT_WORKTREE_ACTION.CREATE,
+      baseCheckoutPath,
+      env: process.env,
+    });
+    if (!script.ok) {
+      throw new Error(
+        `Failed to provision worktree "${worktreeName}" from ${baseCheckoutPath}: no ot-worktree ` +
+          `create.sh found. Searched, in order:\n${script.searched
+            .map((path) => `  - ${path}`)
+            .join('\n')}`,
+      );
+    }
+
     this.logger.log(
       `[${this.name}] creating worktree ${worktreeName} from ${baseCheckoutPath}${
         resolved === null ? '' : ` under ${resolved}`
-      }`,
+      } via ${script.scriptPath} (rung: ${script.rung})`,
     );
 
     try {
       const { stdout } = await execFileAsync(
-        'pnpm',
-        ['run', 'worktree:new', worktreeName],
+        'bash',
+        [script.scriptPath, worktreeName],
         {
           cwd: baseCheckoutPath,
           env: process.env,
@@ -159,7 +178,7 @@ export class PlanRunWorktreeProvisionService {
 
       if (path === undefined) {
         throw new Error(
-          `worktree:new printed no worktree path (stdout: ${stdout.trim().slice(-500)})`,
+          `ot-worktree create printed no worktree path (stdout: ${stdout.trim().slice(-500)})`,
         );
       }
 

@@ -138,6 +138,8 @@ export const WORKSPACE_REPOSITORY_DETAIL_COPY = {
   nameLabel: `Name`,
   namePlaceholder: `e.g. acme/monorepo`,
   noProject: `No project linked`,
+  overlayHelp: `Layers OpenThrottle's worktree setup over new worktrees of this repository. Turn it off and worktrees keep working: OpenThrottle falls back to its built-in worktree scripts instead. Only affects your own checkouts.`,
+  overlayLabel: `Worktree skill overlay`,
   projectLabel: `Linked project`,
   remoteLabel: `Remote`,
   remoteLocalOnly: `Local only (no remote detected)`,

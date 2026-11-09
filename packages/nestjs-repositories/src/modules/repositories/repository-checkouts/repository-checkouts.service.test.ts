@@ -308,6 +308,36 @@ describe('RepositoryCheckoutsService', () => {
     });
   });
 
+  describe('setWorktreeSkillOverlayEnabledForRepository', () => {
+    it('updates every one of the user checkouts and returns the affected count', async () => {
+      vi.mocked(mockOrmRepository.update).mockResolvedValue({ affected: 2 });
+
+      const result = await service.setWorktreeSkillOverlayEnabledForRepository(
+        userId,
+        repositoryId,
+        false,
+      );
+
+      expect(result).toBe(2);
+      expect(mockOrmRepository.update).toHaveBeenCalledWith(
+        { repositoryId, userId },
+        { worktreeSkillOverlayEnabled: false },
+      );
+    });
+
+    it('returns 0 when the user owns no checkout of the repository', async () => {
+      vi.mocked(mockOrmRepository.update).mockResolvedValue({ affected: 0 });
+
+      await expect(
+        service.setWorktreeSkillOverlayEnabledForRepository(
+          userId,
+          repositoryId,
+          true,
+        ),
+      ).resolves.toBe(0);
+    });
+  });
+
   describe('delete', () => {
     it('returns true when a row is removed', async () => {
       vi.mocked(mockOrmRepository.delete).mockResolvedValue({ affected: 1 });

@@ -48,14 +48,29 @@ never learns the resulting path: `getWorkflowConfigCwd()` still resolves to the 
 checkout, `RepositoryInspectionService.scan()` reports `isLinkedWorktree: false`,
 checkout registration is skipped, and `plan_runs.checkout_id` stays `NULL`.
 
-So the server provisions the worktree up front through the one sanctioned entrypoint,
-`pnpm run worktree:new <name>` (`skills/ot-worktree/scripts/create.sh`), and uses the absolute path
-it prints on stdout as the run's working directory. Exactly one worktree per run, and the
-path is known before the agent starts — which is what checkout registration, `.env`
+So the server provisions the worktree up front through the one sanctioned entrypoint, the
+`ot-worktree` **create** action — `bash <create.sh> <name>` with cwd = the base checkout — and uses
+the absolute path it prints on stdout as the run's working directory. Exactly one worktree per run,
+and the path is known before the agent starts — which is what checkout registration, `.env`
 provisioning, and per-path agent-CLI MCP approval all require.
 
-A bare `git worktree add` is never used: it skips port allocation and `.env` provisioning,
-and only self-heals on the first `:dev`.
+`pnpm run worktree:new` is only this monorepo's alias for that script; it does not exist in a
+foreign repo, which may not use pnpm at all. The server therefore never runs a package script. It
+finds `create.sh` by path (`services/ot-worktree-script`), first readable file wins:
+
+1. `<checkout>/skills/ot-worktree/scripts/` — this monorepo's own SSOT.
+2. `<checkout>/.agents/skills/ot-worktree/scripts/` — the overlay OT materializes into foreign repos.
+3. `<checkout>/.claude/skills/ot-worktree/scripts/` — the same overlay's Claude fan-out.
+4. `<OpenThrottle root>/skills/ot-worktree/scripts/` — the server's own copy (the server image ships
+   `skills/`), so provisioning never fails for lack of an overlay.
+
+The provisioning log line names the rung that answered. The script is repo-agnostic: it resolves the
+repo from its cwd, places the worktree under `<root>/<org>/<repo>/<name>`, and runs the repo's own
+provisioner (`.worktree/provision.sh`) if it has one — a repo without one gets an unprovisioned
+worktree, which is valid.
+
+A bare `git worktree add` is never used: it skips the repo's provisioner (in this monorepo, port
+allocation and `.env`), and only self-heals on the first `:dev`.
 
 ## Decisions
 
@@ -170,8 +185,11 @@ settled status.
 5. Nothing unpushed: the upstream exists with nothing ahead of it, or `HEAD` is already contained in
    `origin/<default>`.
 
-Then a path-scoped `pnpm worktree:serve --stop`, then `pnpm run worktree:remove <path>` from the
-primary — never a bare `git worktree remove`, never `--force`, never `--delete-branch` — and any
+Then a path-scoped `pnpm worktree:serve --stop` — only when the worktree's `package.json` defines
+that script, which in practice means this monorepo; a foreign repo is skipped without spawning
+anything — then the `ot-worktree` destroy action, `bash <destroy.sh> <path>` from the primary, with
+`destroy.sh` resolved by the same ladder as `create.sh` above — never `pnpm run worktree:remove`,
+never a bare `git worktree remove`, never `--force`, never `--delete-branch` — and any
 checkout row the destroy action's fail-open deregistration missed is deleted. A guard that cannot be
 evaluated keeps the worktree. What the destroy action itself does is the
 [`ot-worktree`](../../skills/ot-worktree/SKILL.md) skill's to describe, not this page's.
@@ -254,8 +272,14 @@ never seen, the orchestrator preflights the resolved directory before the first 
 and writes anything it finds into the plan output stream (warn-only — the run continues,
 but a false success is no longer silent):
 
-- **`.env` present and non-empty.** A worktree created outside `worktree:new` has none, and
-  the symptom is an interactive **credential prompt**, not an error.
+- **A worktree provisioner exists.** A repo with no `.worktree/provision.sh` (or this monorepo's
+  `scripts/setup_worktree.ts`) gets a worktree with nothing installed. That is valid — OpenThrottle
+  does not guess at a foreign repo's install step — but the run says so in one line naming the hook
+  contract ([`contract.md`](../../skills/ot-worktree/references/contract.md), which has a non-pnpm
+  example provisioner).
+- **`.env` present and non-empty** — checked only when the repo has a provisioner, since only then is
+  one expected. A worktree the provisioner did not build has none, and the symptom is an interactive
+  **credential prompt**, not an error.
 - **The backend's workspace MCP config exists** — `.cursor/mcp.json` for cursor,
   `.mcp.json` for claude — and defines `openthrottle-mcp`. Without it the agent cannot read
   or update the plan it was given.
@@ -264,8 +288,16 @@ but a false success is no longer silent):
   workspace root but _spawned_ with the process cwd, so it reports a connection failure from
   anywhere else.
 
-`pnpm run worktree:new` satisfies all three: it provisions `.env`, both MCP config files,
-and the `scripts/` launchers in the new worktree.
+In this monorepo the ot-worktree create action (`pnpm run worktree:new` is its alias) satisfies all
+of them: its provisioner writes `.env`, both MCP config files, and the `scripts/` launchers. A foreign
+repo gets exactly what its own `.worktree/provision.sh` does, for example (no pnpm involved):
+
+```sh
+#!/bin/sh
+set -eu
+cd "$OPENTHROTTLE_WORKTREE_PATH"
+if [ -f yarn.lock ]; then yarn install --frozen-lockfile; elif [ -f package-lock.json ]; then npm ci; fi
+```
 
 ## Known traps
 

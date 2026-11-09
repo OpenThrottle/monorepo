@@ -1,7 +1,10 @@
 /**
  * @description Removes the git worktree a programmatic plan run executed in, through the ONE
- * sanctioned entrypoint `pnpm run worktree:remove <path>` (`skills/ot-worktree/scripts/destroy.sh`):
- * it runs the repo's `.worktree/teardown.sh`, removes the worktree and deregisters its checkout row.
+ * sanctioned entrypoint: the ot-worktree **destroy** action (`destroy.sh <path>`), exec'd by absolute
+ * path with cwd = the base checkout. It runs the repo's `.worktree/teardown.sh`, removes the worktree
+ * and deregisters its checkout row. Never `pnpm run worktree:remove` — the monorepo's own alias,
+ * absent from a foreign repo — and the script is found by {@link resolveOtWorktreeScript}, so a
+ * foreign repo needs nothing installed.
  * Never a bare `git worktree remove`, never `--force`, never `--delete-branch` — the branch always
  * survives, so a re-run re-provisions by checking it out again.
  *
@@ -27,6 +30,8 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { In } from 'typeorm';
 
+import { OT_WORKTREE_ACTION } from '../ot-worktree-script/ot-worktree-script.constants.ts';
+import { resolveOtWorktreeScript } from '../ot-worktree-script/ot-worktree-script.utils.ts';
 import { realPath } from '../paths/real-path/real-path.utils.ts';
 import { isLinkedWorktreeDirectory } from '../worktree-discovery/worktree-discovery.utils.ts';
 import { resolveWorktreeRoot } from '../worktree-root/worktree-root.utils.ts';
@@ -40,6 +45,7 @@ import type {
 import type { CommandResult } from './plan-run-worktree-teardown.types.ts';
 import {
   isPlanRunWorktreeName,
+  packageDefinesScript,
   primaryCheckoutFromCommonDir,
   runCommand,
   tailOutput,
@@ -50,6 +56,9 @@ const REMOVE_TIMEOUT_MS = 5 * 60 * 1000;
 
 /** `worktree:serve --stop` signals a process group and waits briefly; it is best-effort. */
 const STOP_TIMEOUT_MS = 60 * 1000;
+
+/** The OpenThrottle monorepo's served-stack script; a foreign repo has no such machinery. */
+const WORKTREE_SERVE_SCRIPT = 'worktree:serve';
 
 const GIT_TIMEOUT_MS = 30 * 1000;
 
@@ -138,15 +147,36 @@ export class PlanRunWorktreeTeardownService {
       return verdict;
     }
 
+    const script = resolveOtWorktreeScript({
+      action: OT_WORKTREE_ACTION.DESTROY,
+      baseCheckoutPath,
+      env: process.env,
+    });
+    if (!script.ok) {
+      const detail = `no ot-worktree destroy.sh found; searched ${script.searched.join(', ')}`;
+      this.logger.warn(`[${this.name}] ${worktreePath}: ${detail}`);
+      return {
+        detail,
+        outcome: PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME.FAILED,
+        worktreePath,
+      };
+    }
+
     await this.stopServedProcesses(worktreePath);
 
+    this.logger.log(
+      `[${this.name}] removing ${worktreePath} via ${script.scriptPath} (rung: ${script.rung})`,
+    );
     const removed = await runCommand(
-      'pnpm',
-      ['run', 'worktree:remove', worktreePath],
-      { cwd: baseCheckoutPath, timeout: REMOVE_TIMEOUT_MS },
+      'bash',
+      [script.scriptPath, worktreePath],
+      {
+        cwd: baseCheckoutPath,
+        timeout: REMOVE_TIMEOUT_MS,
+      },
     );
     if (removed.exitCode !== 0) {
-      const detail = `worktree:remove exited ${removed.exitCode}: ${tailOutput(removed.stderr)}`;
+      const detail = `ot-worktree destroy exited ${removed.exitCode}: ${tailOutput(removed.stderr)}`;
       this.logger.warn(`[${this.name}] ${worktreePath}: ${detail}`);
       return {
         detail,
@@ -324,12 +354,21 @@ export class PlanRunWorktreeTeardownService {
 
   /**
    * @description `pnpm worktree:serve --stop` from inside the worktree, which signals only the
-   * processes its pidfiles or cwd tie to that worktree. Best-effort: nothing may be running.
+   * processes its pidfiles or cwd tie to that worktree. Best-effort: nothing may be running. Only
+   * the OpenThrottle monorepo has that script, so a worktree whose `package.json` does not define it
+   * (any foreign repo, pnpm or not) is skipped without spawning anything.
    */
   private async stopServedProcesses(worktreePath: string): Promise<void> {
+    if (!packageDefinesScript(worktreePath, WORKTREE_SERVE_SCRIPT)) {
+      this.logger.debug(
+        `[${this.name}] ${worktreePath} defines no ${WORKTREE_SERVE_SCRIPT} script; nothing to stop`,
+      );
+      return;
+    }
+
     const stopped = await runCommand(
       'pnpm',
-      ['run', 'worktree:serve', '--stop'],
+      ['run', WORKTREE_SERVE_SCRIPT, '--stop'],
       { cwd: worktreePath, timeout: STOP_TIMEOUT_MS },
     );
     if (stopped.exitCode !== 0) {

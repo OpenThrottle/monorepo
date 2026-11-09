@@ -4750,6 +4750,16 @@ type RepositoryCheckoutObject {
   foreignSkillInjectionEnabled: Boolean!
 
   """
+  True when this checkout is a foreign workspace (not the OpenThrottle monorepo itself). Foreign-only settings such as the worktree skill overlay are not meaningful when false.
+  """
+  isForeign: Boolean!
+
+  """
+  True (default, opt-out) when the ot-worktree skill overlay is applied to worktrees of this foreign checkout; false falls back to the server's SSOT worktree scripts, and worktrees keep working.
+  """
+  worktreeSkillOverlayEnabled: Boolean!
+
+  """
   'primary' or 'worktree' (worktree reserved for future workflow unification).
   """
   kind: String!
@@ -5196,7 +5206,7 @@ type RemovePlanRunWorktreePayloadObject {
 """What a guarded plan-run worktree teardown did."""
 enum PlanRunWorktreeTeardownOutcome {
   """
-  A guard could not be evaluated or worktree:remove failed. The worktree is still there.
+  A guard could not be evaluated or the ot-worktree destroy action failed. The worktree is still there.
   """
   FAILED
 
@@ -7078,7 +7088,7 @@ type Mutation {
   pruneWorktreeCheckouts(input: PruneWorktreeCheckoutsInput!): PruneWorktreeCheckoutsPayloadObject!
 
   """
-  Remove one server-provisioned plan-run worktree from disk through pnpm run worktree:remove: the repo's teardown hook runs, the directory and its checkout record go, and the branch is kept. Never forced — a primary checkout, a worktree OpenThrottle did not provision, a dirty or unpushed tree, or one an unsettled run still points at is kept and the outcome says why.
+  Remove one server-provisioned plan-run worktree from disk through the ot-worktree destroy action (destroy.sh, never a pnpm script, so it works in any repo): the repo's teardown hook runs, the directory and its checkout record go, and the branch is kept. Never forced — a primary checkout, a worktree OpenThrottle did not provision, a dirty or unpushed tree, or one an unsettled run still points at is kept and the outcome says why.
   """
   removePlanRunWorktree(checkoutId: ID!): RemovePlanRunWorktreePayloadObject!
 
@@ -9303,6 +9313,11 @@ input UpdateRepositoryInput {
   OpenThrottle project to link, or null to clear; omit to leave unchanged.
   """
   projectId: ID
+
+  """
+  Turn the ot-worktree skill overlay on or off for this user's checkouts of the repository (default on; off falls back to the server's SSOT worktree scripts); omit to leave unchanged. Only meaningful for foreign checkouts.
+  """
+  worktreeSkillOverlayEnabled: Boolean
 }
 
 input UpdateWorkspaceProfileInput {

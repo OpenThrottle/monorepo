@@ -102,6 +102,7 @@ export const action = async (args: Route.ActionArgs) => {
         .omit({ id: true, projectId: true })
         .extend({
           foreignSkillInjectionEnabled: coerceBoolean(z.boolean()).nullish(),
+          worktreeSkillOverlayEnabled: coerceBoolean(z.boolean()).nullish(),
         }),
       { strict: false },
     );
@@ -118,6 +119,9 @@ export const action = async (args: Route.ActionArgs) => {
           id: args.params.repositoryId,
           name: parsed.data.name ?? null,
           projectId: parseProjectIdFromFormData(formData.get('projectId')),
+          // Absent for the OpenThrottle repo itself (the switch is not rendered): null leaves it unchanged.
+          worktreeSkillOverlayEnabled:
+            parsed.data.worktreeSkillOverlayEnabled ?? null,
         },
       });
       return redirect(repositoryDetailPath(args.params.repositoryId));

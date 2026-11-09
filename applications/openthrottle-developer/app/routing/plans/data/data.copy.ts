@@ -403,7 +403,7 @@ export const PLAN_TASK_TOOLBAR_COPY = {
 export const PLAN_CONFIG_WORKTREE_COPY = {
   autoNameHint: (derivedName: string): string =>
     `Leave blank to use ${derivedName}, derived from the plan id. One worktree per plan, reused across runs, so its branch accumulates the plan's work.`,
-  explainer: `Queued runs execute in a git worktree OpenThrottle creates through \`pnpm run worktree:new\`, so the run has its own branch, ports, and provisioned .env. Turn this off only to run in the base checkout.`,
+  explainer: `Queued runs execute in a git worktree OpenThrottle creates for them, so each run has its own branch, set up by the repo's own worktree provisioner when it has one. Turn this off only to run in the base checkout.`,
   modeLabel: `Worktree`,
   modeOmitLabel: `Off (run in the base checkout)`,
   nameLabel: `Worktree name`,
@@ -412,7 +412,7 @@ export const PLAN_CONFIG_WORKTREE_COPY = {
 
 /**
  * @description Copy for the worktree cleanup control under `Worktree` on the plan Configuration
- * tab. Removal goes through `pnpm run worktree:remove` and always keeps the branch.
+ * tab. Removal goes through the ot-worktree destroy action and always keeps the branch.
  */
 export const PLAN_CONFIG_WORKTREE_CLEANUP_COPY = {
   disabledHint: `Turn the worktree on to choose what happens to it after a run.`,

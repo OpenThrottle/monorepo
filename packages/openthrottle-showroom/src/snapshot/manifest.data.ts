@@ -574,6 +574,10 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
         reason: 'structural (timestamp with time zone)',
       },
       user_id: { action: 'keep', reason: 'structural (uuid)' },
+      worktree_skill_overlay_enabled: {
+        action: 'keep',
+        reason: 'structural (boolean)',
+      },
     },
     reason: 'worktree and checkout surfaces',
   },

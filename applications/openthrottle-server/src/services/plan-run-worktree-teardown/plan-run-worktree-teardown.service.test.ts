@@ -1,7 +1,8 @@
 /**
  * @description Unit tests for plan-run worktree teardown: each guard keeps the worktree with its own
- * outcome, a removal goes through `pnpm run worktree:remove` with no --force / --delete-branch, a
- * failing removal is reported rather than thrown, and concurrent teardowns of one path share a run.
+ * outcome, a removal execs the resolved ot-worktree `destroy.sh` with no --force / --delete-branch,
+ * `worktree:serve --stop` runs only where the worktree's package.json defines it (never in a foreign
+ * repo), a failing removal is reported rather than thrown, and concurrent teardowns share a run.
  */
 
 import { createMock } from '@golevelup/ts-vitest';
@@ -14,18 +15,30 @@ import type {
 } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { mockExecFile, mockRealpathSync, mockResolveRoot, mockStatSync } =
-  vi.hoisted(() => ({
-    mockExecFile: vi.fn(),
-    mockRealpathSync: vi.fn(),
-    mockResolveRoot: vi.fn(),
-    mockStatSync: vi.fn(),
-  }));
+const {
+  mockExecFile,
+  mockReadFileSync,
+  mockRealpathSync,
+  mockResolveRoot,
+  mockResolveScript,
+  mockStatSync,
+} = vi.hoisted(() => ({
+  mockExecFile: vi.fn(),
+  mockReadFileSync: vi.fn(),
+  mockRealpathSync: vi.fn(),
+  mockResolveRoot: vi.fn(),
+  mockResolveScript: vi.fn(),
+  mockStatSync: vi.fn(),
+}));
 
 vi.mock('node:child_process', () => ({ execFile: mockExecFile }));
 vi.mock('node:fs', () => ({
+  readFileSync: mockReadFileSync,
   realpathSync: mockRealpathSync,
   statSync: mockStatSync,
+}));
+vi.mock('../ot-worktree-script/ot-worktree-script.utils.ts', () => ({
+  resolveOtWorktreeScript: mockResolveScript,
 }));
 vi.mock('../worktree-root/worktree-root.utils.ts', () => ({
   resolveWorktreeRoot: mockResolveRoot,
@@ -38,6 +51,7 @@ const BASE = '/Users/matt/Development/openthrottle/monorepo';
 const ROOT = '/Users/matt/.openthrottle/worktrees/acme/monorepo';
 const WORKTREE = `${ROOT}/plan-c34e018b`;
 const BRANCH = 'openthrottle/plan-c34e018b';
+const DESTROY_SCRIPT = `${BASE}/skills/ot-worktree/scripts/destroy.sh`;
 
 interface GitState {
   readonly aheadOfUpstream: string;
@@ -68,7 +82,7 @@ const ok = (callback: ExecCallback, stdout: string): void => {
   callback(null, { stderr: '', stdout });
 };
 
-/** Answers git and pnpm calls from one description of the worktree's state. */
+/** Answers git, bash (destroy.sh) and pnpm calls from one description of the worktree's state. */
 const withGit = (state: GitState): void => {
   mockExecFile.mockImplementation(
     (
@@ -78,11 +92,15 @@ const withGit = (state: GitState): void => {
       callback: ExecCallback,
     ) => {
       const joined = args.join(' ');
-      if (file === 'pnpm') {
-        if (joined.startsWith('run worktree:remove') && state.removeFails) {
+      if (file === 'bash') {
+        if (state.removeFails) {
           fail(callback, 'worktree has uncommitted changes');
           return;
         }
+        ok(callback, '');
+        return;
+      }
+      if (file === 'pnpm') {
         ok(callback, '');
         return;
       }
@@ -171,13 +189,28 @@ const build = (options: {
   return { deleteWorktreeCheckout, service };
 };
 
-const pnpmCalls = (): string[] => {
+/** Every non-git command the service spawned, as `<file> <args>`. */
+const commandCalls = (): string[] => {
   return mockExecFile.mock.calls
-    .filter((call) => call[0] === 'pnpm')
+    .filter((call) => call[0] !== 'git')
     .map((call) => {
       const args: unknown = call[1];
-      return Array.isArray(args) ? args.join(' ') : '';
+      return `${String(call[0])} ${Array.isArray(args) ? args.join(' ') : ''}`;
     });
+};
+
+/** The worktree's package.json: monorepo-shaped (defines worktree:serve), or absent (foreign). */
+const withPackageJson = (manifest: object | null): void => {
+  mockReadFileSync.mockImplementation(() => {
+    if (manifest === null) {
+      throw Object.assign(new Error('ENOENT'), { code: 'ENOENT' });
+    }
+    return JSON.stringify(manifest);
+  });
+};
+
+const MONOREPO_MANIFEST = {
+  scripts: { 'worktree:serve': 'node ./scripts/worktree_serve.ts' },
 };
 
 describe('PlanRunWorktreeTeardownService', () => {
@@ -192,10 +225,17 @@ describe('PlanRunWorktreeTeardownService', () => {
       source: 'default',
     });
     withDisk([WORKTREE]);
+    withPackageJson(MONOREPO_MANIFEST);
+    mockResolveScript.mockReset();
+    mockResolveScript.mockReturnValue({
+      ok: true,
+      rung: 'checkout-skills',
+      scriptPath: DESTROY_SCRIPT,
+    });
   });
 
   describe('when every guard passes', () => {
-    it('stops served processes, removes through worktree:remove and keeps the branch', async () => {
+    it('stops served processes, removes through destroy.sh and keeps the branch', async () => {
       withGit(CLEAN_PUSHED);
       const { deleteWorktreeCheckout, service } = build({
         checkouts: [checkout()],
@@ -211,12 +251,12 @@ describe('PlanRunWorktreeTeardownService', () => {
         outcome: PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME.REMOVED,
         worktreePath: WORKTREE,
       });
-      expect(pnpmCalls()).toEqual([
-        'run worktree:serve --stop',
-        `run worktree:remove ${WORKTREE}`,
+      expect(commandCalls()).toEqual([
+        'pnpm run worktree:serve --stop',
+        `bash ${DESTROY_SCRIPT} ${WORKTREE}`,
       ]);
       const removeCall = mockExecFile.mock.calls.find(
-        (call) => call[0] === 'pnpm' && call[1].includes('worktree:remove'),
+        (call) => call[0] === 'bash',
       );
       expect(removeCall?.[2]).toMatchObject({ cwd: BASE });
       expect(deleteWorktreeCheckout).toHaveBeenCalledWith(
@@ -235,7 +275,7 @@ describe('PlanRunWorktreeTeardownService', () => {
       });
 
       expect(result.outcome).toBe(PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME.REMOVABLE);
-      expect(pnpmCalls()).toEqual([]);
+      expect(commandCalls()).toEqual([]);
     });
 
     it('never passes --force or --delete-branch', async () => {
@@ -247,7 +287,60 @@ describe('PlanRunWorktreeTeardownService', () => {
         worktreePath: WORKTREE,
       });
 
-      expect(pnpmCalls().join(' ')).not.toMatch(/--force|--delete-branch/);
+      expect(commandCalls().join(' ')).not.toMatch(/--force|--delete-branch/);
+    });
+  });
+
+  describe('when the worktree belongs to a foreign repo', () => {
+    it('removes it through destroy.sh without spawning pnpm at all', async () => {
+      withGit(CLEAN_PUSHED);
+      withPackageJson(null);
+      const { service } = build({ checkouts: [] });
+
+      const result = await service.teardown({
+        baseCheckoutPath: BASE,
+        worktreePath: WORKTREE,
+      });
+
+      expect(result.outcome).toBe(PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME.REMOVED);
+      expect(commandCalls()).toEqual([`bash ${DESTROY_SCRIPT} ${WORKTREE}`]);
+    });
+
+    it('skips worktree:serve --stop when package.json lacks the script', async () => {
+      withGit(CLEAN_PUSHED);
+      withPackageJson({ scripts: { test: 'jest' } });
+      const { service } = build({ checkouts: [] });
+
+      await service.teardown({
+        baseCheckoutPath: BASE,
+        worktreePath: WORKTREE,
+      });
+
+      expect(commandCalls().some((call) => call.startsWith('pnpm'))).toBe(
+        false,
+      );
+    });
+
+    it('reports FAILED, listing the searched ladder, when no destroy.sh resolves', async () => {
+      withGit(CLEAN_PUSHED);
+      mockResolveScript.mockReturnValue({
+        ok: false,
+        searched: [`${BASE}/skills/ot-worktree/scripts/destroy.sh`],
+      });
+      const { service } = build({ checkouts: [] });
+
+      const result = await service.teardown({
+        baseCheckoutPath: BASE,
+        worktreePath: WORKTREE,
+      });
+
+      expect(result).toMatchObject({
+        detail: expect.stringContaining(
+          'skills/ot-worktree/scripts/destroy.sh',
+        ),
+        outcome: PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME.FAILED,
+      });
+      expect(commandCalls()).toEqual([]);
     });
   });
 
@@ -264,7 +357,7 @@ describe('PlanRunWorktreeTeardownService', () => {
       expect(result.outcome).toBe(
         PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME.KEPT_PRIMARY,
       );
-      expect(pnpmCalls()).toEqual([]);
+      expect(commandCalls()).toEqual([]);
     });
   });
 
@@ -333,7 +426,7 @@ describe('PlanRunWorktreeTeardownService', () => {
       expect(result.outcome).toBe(
         PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME.KEPT_ACTIVE_RUN,
       );
-      expect(pnpmCalls()).toEqual([]);
+      expect(commandCalls()).toEqual([]);
     });
   });
 
@@ -385,7 +478,7 @@ describe('PlanRunWorktreeTeardownService', () => {
   });
 
   describe('when something cannot be evaluated or removed', () => {
-    it('reports FAILED when worktree:remove fails, without throwing', async () => {
+    it('reports FAILED when destroy.sh fails, without throwing', async () => {
       withGit({ ...CLEAN_PUSHED, removeFails: true });
       const { deleteWorktreeCheckout, service } = build({
         checkouts: [checkout()],
@@ -397,7 +490,7 @@ describe('PlanRunWorktreeTeardownService', () => {
       });
 
       expect(result).toMatchObject({
-        detail: expect.stringContaining('worktree:remove exited 1'),
+        detail: expect.stringContaining('ot-worktree destroy exited 1'),
         outcome: PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME.FAILED,
       });
       expect(deleteWorktreeCheckout).not.toHaveBeenCalled();
@@ -424,7 +517,7 @@ describe('PlanRunWorktreeTeardownService', () => {
         detail: expect.stringContaining('db down'),
         outcome: PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME.FAILED,
       });
-      expect(pnpmCalls()).toEqual([]);
+      expect(commandCalls()).toEqual([]);
     });
 
     it('still removes when worktree:serve --stop fails', async () => {
@@ -468,7 +561,7 @@ describe('PlanRunWorktreeTeardownService', () => {
 
       expect(first).toBe(second);
       expect(
-        pnpmCalls().filter((call) => call.includes('worktree:remove')),
+        commandCalls().filter((call) => call.startsWith('bash')),
       ).toHaveLength(1);
     });
   });

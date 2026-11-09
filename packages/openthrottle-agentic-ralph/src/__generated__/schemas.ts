@@ -1935,6 +1935,7 @@ export function UpdateRepositoryInputSchema(): z.ZodObject<
     id: z.string().min(1),
     name: z.string().nullish(),
     projectId: z.string().nullish(),
+    worktreeSkillOverlayEnabled: z.boolean().nullish(),
   });
 }
 
