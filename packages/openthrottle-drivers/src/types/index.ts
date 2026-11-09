@@ -63,6 +63,12 @@ export interface DriverEndpointConfig {
  * @public
  */
 export interface DriverInvocationConfig {
+  /**
+   * Executable the command invokes. Omitted ⇒ the driver's bare {@link AgentDriver.binary}. The
+   * engine fills it from {@link AgentDriver.binEnv} (via `resolveDriverBinary`) before building the
+   * command, so callers never set it themselves; builders shell-escape it.
+   */
+  readonly bin?: string;
   /** Process cwd for the subprocess; inherits `process.cwd()` when omitted. */
   readonly cwd?: string;
   /**

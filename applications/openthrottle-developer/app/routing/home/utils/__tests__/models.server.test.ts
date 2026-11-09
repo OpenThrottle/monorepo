@@ -101,6 +101,31 @@ describe('loadComposerModels', () => {
     expect(models[0]?.description).toBe('ollama');
   });
 
+  test('keeps agent CLI options when only local discovery fails', async () => {
+    mockExecute
+      .mockResolvedValueOnce(AGENT_PAYLOAD)
+      .mockRejectedValueOnce(new Error('local scan failed'));
+
+    const models = await loadComposerModels(request());
+
+    expect(models).toHaveLength(1);
+    expect(models[0]?.subLabel).toBe('Cursor Agent');
+  });
+
+  test('waits for a slow agent discovery rather than resolving local-only', async () => {
+    mockExecute
+      .mockImplementationOnce(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        return AGENT_PAYLOAD;
+      })
+      .mockResolvedValueOnce(LOCAL_PAYLOAD);
+
+    const models = await loadComposerModels(request());
+
+    expect(models.map((model) => model.subLabel)).toContain('Cursor Agent');
+    expect(models).toHaveLength(3);
+  });
+
   test('returns an empty list when both discovery queries fail', async () => {
     mockExecute.mockRejectedValue(new Error('everything failed'));
 

@@ -94,7 +94,7 @@ export const codexDriver = defineDriver({
 
     const outputFlag = structuredOutputShellFlag(config, '--json');
 
-    return `codex exec${outputFlag} --sandbox workspace-write --skip-git-repo-check${endpointFlags}${effortFlag}${modelFlag} "${safePrompt}"`;
+    return `${escapeShellArg(config.bin ?? 'codex')} exec${outputFlag} --sandbox workspace-write --skip-git-repo-check${endpointFlags}${effortFlag}${modelFlag} "${safePrompt}"`;
   },
   capabilities,
   id: 'codex',

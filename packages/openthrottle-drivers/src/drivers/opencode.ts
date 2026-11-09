@@ -12,6 +12,7 @@ import { structuredOutputShellFlag } from '../utils/output-format.ts';
 import { opencodeVariant } from '../utils/reasoning-effort.ts';
 import {
   escapeForShellDoubleQuoted,
+  escapeShellArg,
   formatModelFlag,
   formatShellEnvPrefix,
 } from '../utils/shell.ts';
@@ -85,7 +86,7 @@ export const opencodeDriver = defineDriver({
 
     const outputFlag = structuredOutputShellFlag(config, '--format json');
 
-    return `${endpointPrefix}opencode run --auto "${safePrompt}"${outputFlag}${modelFlag}${variantFlag}`;
+    return `${endpointPrefix}${escapeShellArg(config.bin ?? 'opencode')} run --auto "${safePrompt}"${outputFlag}${modelFlag}${variantFlag}`;
   },
   capabilities,
   discoverModels,

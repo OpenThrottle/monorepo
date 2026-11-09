@@ -110,8 +110,14 @@ Consumed by docker-compose (which maps them onto the un-namespaced `PORT`,
 
 ## 5. Agent CLI drivers
 
-Binary overrides — each names the executable for one driver; unset means "resolve
-from `PATH`". None have `.env.default` entries.
+Binary overrides — each names the executable for one driver; unset (or blank) means
+"resolve from `PATH`". None have `.env.default` entries.
+
+One rule (`resolveDriverBinary` in `@openthrottle/openthrottle-drivers`) applies on every
+surface that spawns a CLI: agent discovery and version probes, chat, install/update, and the
+run engine behind plan runs (orchestrator and `workflow-ralph`) and scheduled agent jobs. The
+run engine reads the override from the child's effective env — the server's `process.env`
+plus any per-run `env` — so a stub named here is the binary a run actually spawns.
 
 | Variable                        | Driver              |
 | ------------------------------- | ------------------- |

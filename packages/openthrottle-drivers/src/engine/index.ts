@@ -20,6 +20,7 @@ import type {
   DriverInvocationConfig,
   DriverParsedOutput,
 } from '../types/index.ts';
+import { resolveDriverBinary } from '../utils/binary.ts';
 import { escalateKill } from '../utils/child-kill.ts';
 import type { DriverLogger } from '../utils/logger.ts';
 import { noopDriverLogger } from '../utils/logger.ts';
@@ -93,6 +94,21 @@ const mergeChildEnv = (
 };
 
 /**
+ * @description Builds the shell command with the executable resolved from the driver's `binEnv`
+ * override in the child's effective env (inherited `process.env` + `config.env`) — the same rule
+ * discovery and chat use — so a stub named by `OPENTHROTTLE_<X>_BIN` is what a plan or scheduled
+ * run actually spawns, not whatever `<binary>` is first on PATH.
+ */
+const buildCommand = (
+  driver: AgentDriver,
+  config: DriverInvocationConfig,
+): string => {
+  const bin = resolveDriverBinary(driver, { ...process.env, ...config.env });
+
+  return driver.buildShellCommand({ ...config, bin });
+};
+
+/**
  * @description Applies the driver's optional `parseOutput` to the raw collected stdout. Drivers
  * without one pass through untouched, so only drivers that opted in change behavior.
  */
@@ -117,7 +133,7 @@ export const runDriverSync = (
   options: RunDriverOptions = {},
 ): string => {
   const logger = options.logger ?? noopDriverLogger;
-  const command = driver.buildShellCommand(config);
+  const command = buildCommand(driver, config);
   const { cwd, iteration } = config;
 
   const child = spawnSync(command, [], {
@@ -173,7 +189,7 @@ export const runDriverAsync = (
 ): Promise<string> => {
   const logger = options.logger ?? noopDriverLogger;
   const runnerLabel = driver.label;
-  const command = driver.buildShellCommand(config);
+  const command = buildCommand(driver, config);
   const { cwd, iteration, onChunk, signal, timeoutMs } = config;
 
   return new Promise((resolve, reject) => {

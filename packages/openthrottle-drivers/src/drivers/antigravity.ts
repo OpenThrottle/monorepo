@@ -37,7 +37,11 @@
 import { defineDriver } from '../registry/index.ts';
 import type { DriverCapabilities, DriverModelListing } from '../types/index.ts';
 import { structuredOutputShellFlag } from '../utils/output-format.ts';
-import { escapeForShellDoubleQuoted, formatModelFlag } from '../utils/shell.ts';
+import {
+  escapeForShellDoubleQuoted,
+  escapeShellArg,
+  formatModelFlag,
+} from '../utils/shell.ts';
 
 const capabilities: DriverCapabilities = {
   /**
@@ -135,7 +139,7 @@ export const antigravityDriver = defineDriver({
       '--output-format stream-json',
     );
 
-    return `agy -p "${safePrompt}"${outputFlag} --dangerously-skip-permissions --add-dir "$PWD"${modelFlag} < /dev/null`;
+    return `${escapeShellArg(config.bin ?? 'agy')} -p "${safePrompt}"${outputFlag} --dangerously-skip-permissions --add-dir "$PWD"${modelFlag} < /dev/null`;
   },
   capabilities,
   discoverModels,

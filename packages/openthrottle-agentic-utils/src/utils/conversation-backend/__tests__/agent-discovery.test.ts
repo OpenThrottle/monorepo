@@ -336,6 +336,71 @@ describe('discoverAgentClis', () => {
   });
 });
 
+/** Write a fake grok that sleeps before answering `sleepOn` (`version` or `models`). */
+function writeSlowBin(name: string, sleepOn: 'models' | 'version'): string {
+  const path = join(dir, name);
+  const body = [
+    'const a = process.argv.slice(2);',
+    `const slow = ${JSON.stringify(sleepOn)} === 'models' ? a[0] === 'models' : a[0] !== 'models';`,
+    'const answer = () => process.stdout.write(a[0] === "models" ? "Available models:\\n  * grok-4.5\\n" : "grok 0.2.112\\n");',
+    'if (slow) { setTimeout(answer, 2000); } else { answer(); }',
+  ].join('\n');
+  writeFileSync(path, `#!/usr/bin/env node\n${body}\n`, 'utf8');
+  chmodSync(path, 0o755);
+  return path;
+}
+
+describe('discoverAgentClis timeouts', () => {
+  describe('when every probe answers in time', () => {
+    it('reports timedOut false', async () => {
+      const bin = writeFakeBin('grok-fast.js', 'grok 0.2.112\n', '  * a\n');
+      const result = await discoverAgentClis({
+        env: hermeticEnv({ [GROK_BIN_ENV]: bin }),
+      });
+
+      expect(
+        result.agents.find((agent) => agent.backend === 'grok'),
+      ).toMatchObject({ available: true, timedOut: false });
+    });
+
+    it('reports timedOut false for a missing binary (absent, not slow)', async () => {
+      const result = await discoverAgentClis({ env: hermeticEnv({}) });
+
+      expect(
+        result.agents.find((agent) => agent.backend === 'grok'),
+      ).toMatchObject({ available: false, timedOut: false });
+    });
+  });
+
+  describe('when the version probe times out', () => {
+    it('reports unavailable but flags it timedOut', async () => {
+      const bin = writeSlowBin('grok-slow-version.js', 'version');
+      const result = await discoverAgentClis({
+        env: hermeticEnv({ [GROK_BIN_ENV]: bin }),
+        probeTimeoutMs: 300,
+      });
+
+      expect(
+        result.agents.find((agent) => agent.backend === 'grok'),
+      ).toMatchObject({ available: false, models: [], timedOut: true });
+    });
+  });
+
+  describe('when the model listing times out', () => {
+    it('stays available with empty models and flags it timedOut', async () => {
+      const bin = writeSlowBin('grok-slow-models.js', 'models');
+      const result = await discoverAgentClis({
+        env: hermeticEnv({ [GROK_BIN_ENV]: bin }),
+        modelListTimeoutMs: 300,
+      });
+
+      expect(
+        result.agents.find((agent) => agent.backend === 'grok'),
+      ).toMatchObject({ available: true, models: [], timedOut: true });
+    });
+  });
+});
+
 /** A fake cursor-agent: `status` prints `statusOut` and exits `statusCode`. */
 function writeCursorBin(statusOut: string, statusCode: number): string {
   const path = join(dir, `cursor-${statusCode}-${statusOut.length}`);

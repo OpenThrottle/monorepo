@@ -14,6 +14,7 @@ import { structuredOutputShellFlag } from '../utils/output-format.ts';
 import { grokReasoningEffort } from '../utils/reasoning-effort.ts';
 import {
   escapeForShellDoubleQuoted,
+  escapeShellArg,
   formatModelFlag,
   formatShellEnvPrefix,
 } from '../utils/shell.ts';
@@ -108,7 +109,7 @@ export const grokDriver = defineDriver({
       config,
       '--output-format streaming-json',
     );
-    const base = `${endpointPrefix}grok -p "${safePrompt}"${outputFlag} --permission-mode acceptEdits${modelFlag}${effortFlag}`;
+    const base = `${endpointPrefix}${escapeShellArg(config.bin ?? 'grok')} -p "${safePrompt}"${outputFlag} --permission-mode acceptEdits${modelFlag}${effortFlag}`;
 
     return appendWorktreeShellFlags(base, capabilities, config.worktree);
   },
