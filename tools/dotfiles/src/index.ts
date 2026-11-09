@@ -351,8 +351,9 @@ export const eslintConfig = tslint.config([
       // "Long strings are template literals" (code-style.md). A custom rule
       // rather than `quotes: ['error', 'backtick']`, which would rewrite every
       // short string in the repo; this reports only a quoted string Prettier
-      // wrapped below its key or `=`. Autofixable. `warn` until migrated.
-      'openthrottle/long-string-template-literal': 'warn',
+      // wrapped below its key or `=`. Autofixable; the existing sites were
+      // migrated with `eslint --fix`.
+      'openthrottle/long-string-template-literal': 'error',
       // "Named functions use block bodies" (code-style.md). A custom rule
       // rather than core `arrow-body-style`, which would also hit every inline
       // callback — those are exempt by decision. Autofixable; the existing
