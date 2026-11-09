@@ -33,7 +33,7 @@ export const usePlanDefaultAgent = (): DefaultAgentDraft | null => {
     // The loader's promise never rejects in practice; a rejection still reads
     // as "no preference" rather than surfacing an error in the dialog.
     const resolve = async (): Promise<void> => {
-      let resolved: DefaultAgentDraft | null = null;
+      let resolved: DefaultAgentDraft | null;
       try {
         resolved = (await deferred) ?? null;
       } catch {
