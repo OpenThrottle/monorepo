@@ -15,6 +15,8 @@
 import { isRecord } from '@openthrottle/nodejs-utils';
 import {
   isClaudeUsageLimitResult,
+  parseClaudeAccountError,
+  parseClaudeApiKeySource,
   parseClaudeRateLimitInfo,
 } from '@openthrottle/openthrottle-drivers';
 
@@ -27,7 +29,11 @@ const asString = (value: unknown): string | undefined => {
   return isString ? value : undefined;
 };
 
-/** `system` → a session-id confirmation chunk on init; otherwise ignored. */
+/**
+ * `system` → a session-id confirmation chunk on init; otherwise ignored. It also
+ * carries `apiKeySource`, so a failed run can say whether the CLI billed an
+ * `ANTHROPIC_API_KEY` from its environment or used the host login.
+ */
 function mapSystem(
   event: Record<string, unknown>,
 ): ConversationStreamChunk | null {
@@ -39,7 +45,10 @@ function mapSystem(
     delta: '',
     done: false,
     kind: CONVERSATION_STREAM_CHUNK_KINDS.session,
-    metadata: { sessionId: asString(event.session_id) ?? null },
+    metadata: {
+      apiKeySource: parseClaudeApiKeySource(event),
+      sessionId: asString(event.session_id) ?? null,
+    },
   };
 }
 
@@ -103,11 +112,24 @@ function mapStreamEvent(inner: unknown): ConversationStreamChunk | null {
  * carrying the complete `input` as `toolCall`. It repeats the `callId` of the
  * `content_block_start` chunk that opened the card, so the timeline fills in
  * that card's arguments rather than opening a second one. Text and thinking
- * blocks are skipped (double-count).
+ * blocks are skipped (double-count). The CLI's synthetic API-error message for
+ * a fatal account error maps to one `account_error` chunk instead.
  */
 function mapAssistant(
   event: Record<string, unknown>,
 ): readonly ConversationStreamChunk[] {
+  const accountError = parseClaudeAccountError(event);
+  if (accountError !== null) {
+    return [
+      {
+        delta: '',
+        done: false,
+        kind: CONVERSATION_STREAM_CHUNK_KINDS.accountError,
+        metadata: { kind: accountError.kind, message: accountError.message },
+      },
+    ];
+  }
+
   const message = event.message;
   if (!isRecord(message) || !Array.isArray(message.content)) {
     return [];
@@ -213,11 +235,13 @@ function mapRateLimit(
  * `result` → the terminal chunk. Gate the error on `is_error`, NOT `subtype`
  * (an invalid model still reports `subtype:"success"`). A 429 error result
  * (`api_error_status`) also sets `metadata.usageLimit` with unknown type/reset;
- * the backend swaps in the details from an earlier `usage_limit` chunk.
+ * the backend swaps in the details from an earlier `usage_limit` chunk. A fatal
+ * account-error result sets `metadata.accountError` (`{ kind, message }`).
  */
 function mapResult(event: Record<string, unknown>): ConversationStreamChunk {
   const isError = event.is_error === true;
   const hitUsageLimit = isClaudeUsageLimitResult(event);
+  const accountError = parseClaudeAccountError(event);
   const unknownUsageLimit = {
     usageLimit: { rateLimitType: null, resetsAt: null },
   };
@@ -236,6 +260,7 @@ function mapResult(event: Record<string, unknown>): ConversationStreamChunk {
       totalCostUsd: event.total_cost_usd ?? null,
       usage: event.usage ?? null,
       ...(hitUsageLimit ? unknownUsageLimit : {}),
+      ...(accountError === null ? {} : { accountError }),
     },
   };
 }
@@ -250,7 +275,8 @@ const listOf = (
 /**
  * Map a single claude event to its chunks — usually zero or one; a `user` event
  * holding a parallel batch's results, or an `assistant` event holding several
- * `tool_use` blocks, yields one per block. Non-rejected `rate_limit_event`s,
+ * `tool_use` blocks, yields one per block; a fatal account-error `assistant`
+ * event yields one `account_error` chunk. Non-rejected `rate_limit_event`s,
  * non-init `system` subtypes and the consolidated `assistant` text map to none.
  *
  * @public
