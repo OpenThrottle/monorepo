@@ -55,16 +55,34 @@ const testDriver: AgentDriver = defineDriver({
   versionArgs: ['--version'],
 });
 
-/** Stand-in structured driver: `LIMIT:<text>` marks a usage limit, anything else is passthrough. */
+const TEST_ACCOUNT_ERROR = {
+  apiKeySource: 'ANTHROPIC_API_KEY',
+  kind: 'billing_error',
+  message: 'Credit balance is too low',
+} as const;
+
+/**
+ * Stand-in structured driver: `LIMIT:<text>` marks a usage limit, `ACCOUNT:<text>` a fatal account
+ * error, anything else is passthrough.
+ */
 const parseTestOutput = (stdout: string): DriverParsedOutput => {
   if (stdout.startsWith('LIMIT:')) {
     return {
+      accountError: null,
       text: stdout.slice('LIMIT:'.length),
       usageLimit: { rateLimitType: 'five_hour', resetsAt: null },
     };
   }
 
-  return { text: `parsed(${stdout})`, usageLimit: null };
+  if (stdout.startsWith('ACCOUNT:')) {
+    return {
+      accountError: TEST_ACCOUNT_ERROR,
+      text: stdout.slice('ACCOUNT:'.length),
+      usageLimit: null,
+    };
+  }
+
+  return { accountError: null, text: `parsed(${stdout})`, usageLimit: null };
 };
 
 const structuredDriver: AgentDriver = defineDriver({
@@ -160,6 +178,19 @@ describe('runDriverSync', () => {
     mockReturn('LIMIT:ignored', '');
     runDriverSync(testDriver, { iteration: 1, prompt: 'x' }, { onUsageLimit });
     expect(onUsageLimit).not.toHaveBeenCalled();
+  });
+
+  it('fires onAccountError with the parsed account error (sync)', () => {
+    const onAccountError = vi.fn();
+    mockReturn('ACCOUNT:stopped', '');
+    expect(
+      runDriverSync(
+        structuredDriver,
+        { iteration: 1, prompt: 'x' },
+        { onAccountError },
+      ),
+    ).toBe('stopped');
+    expect(onAccountError).toHaveBeenCalledExactlyOnceWith(TEST_ACCOUNT_ERROR);
   });
 
   it('does not fire onUsageLimit when the child fails to launch', () => {
@@ -372,6 +403,42 @@ describe('runDriverAsync', () => {
       'tial',
       'err',
     ]);
+  });
+
+  it('fires onAccountError with the parsed error before onExit; not when there is none', async () => {
+    const child = makeChild();
+    vi.mocked(spawn).mockReturnValue(child);
+
+    const order: string[] = [];
+    const onAccountError = vi.fn((error: { readonly kind: string }) => {
+      order.push(`account:${error.kind}`);
+    });
+    const promise = runDriverAsync(
+      structuredDriver,
+      { iteration: 1, prompt: 'go' },
+      { onAccountError, onExit: () => order.push('exit') },
+    );
+
+    child.stdout?.emit('data', 'ACCOUNT:no credit');
+    child.emit('close', 1);
+
+    expect(await promise).toBe('no credit');
+    expect(onAccountError).toHaveBeenCalledExactlyOnceWith(TEST_ACCOUNT_ERROR);
+    expect(order).toEqual(['account:billing_error', 'exit']);
+
+    const quiet = makeChild();
+    vi.mocked(spawn).mockReturnValue(quiet);
+    onAccountError.mockClear();
+    const fine = runDriverAsync(
+      structuredDriver,
+      { iteration: 1, prompt: 'go' },
+      { onAccountError },
+    );
+    quiet.stdout?.emit('data', 'fine');
+    quiet.emit('close', 0);
+
+    expect(await fine).toBe('parsed(fine)');
+    expect(onAccountError).not.toHaveBeenCalled();
   });
 
   it('does not fire onUsageLimit when there is no limit', async () => {

@@ -215,7 +215,7 @@ export class PlanRunObject implements PlanRunData {
   scheduledFor!: Date | null;
 
   @Field(() => String, {
-    description: `Why a scheduled run settled without starting: the fire-time policy's reason for a MISSED, SUPERSEDED or SKIPPED run. Null for every other run.`,
+    description: `Why a run settled the way it did: the fire-time policy's reason for a MISSED, SUPERSEDED or SKIPPED scheduled run, or why a FAILED run stopped when the orchestrator recorded it (a fatal agent account error names the error, the credential the agent CLI used and the fix). Null for every other run.`,
     nullable: true,
   })
   settledReason!: string | null;

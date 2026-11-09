@@ -757,6 +757,30 @@ describe('PlansProcessor', () => {
       );
     });
 
+    it('persists the account-error description as the settled reason of a FAILED row', async () => {
+      const description = `Agent account error (billing_error): Credit balance is too low. Fix: top up.`;
+      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+        accountError: {
+          apiKeySource: 'ANTHROPIC_API_KEY',
+          kind: 'billing_error',
+          message: 'Credit balance is too low',
+        },
+        description,
+        exitCode: 1,
+        reason: 'workflow_agent_account_error',
+        status: 'failed',
+      });
+
+      await processor.process(mockJob);
+
+      expect(mockSettleRunByJob).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        'job-1',
+        PLAN_RUN_STATUS.FAILED,
+        description,
+      );
+    });
+
     it('settles the row to CANCELLED when the orchestrator outcome is cancelled', async () => {
       mockRunPlanOrchestratorJob.mockResolvedValueOnce({
         exitCode: 0,

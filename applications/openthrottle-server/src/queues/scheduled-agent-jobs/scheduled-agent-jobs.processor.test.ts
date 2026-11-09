@@ -31,6 +31,7 @@ const result = (
   overrides: Partial<RunAgentPromptResult>,
 ): RunAgentPromptResult => {
   return {
+    accountError: null,
     driverId: 'claude',
     exitCode: 0,
     output: '',

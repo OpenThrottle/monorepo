@@ -3703,7 +3703,7 @@ export type PlanRunObject = {
   runKind: Scalars['String']['output'];
   /** The absolute UTC instant a scheduled run fires at. Set only on runs created by schedulePlanRun (status SCHEDULED while waiting) and kept once the run settles, so history still shows when it was meant to fire. Null for every run that was enqueued to run now. */
   scheduledFor?: Maybe<Scalars['DateTime']['output']>;
-  /** Why a scheduled run settled without starting: the fire-time policy's reason for a MISSED, SUPERSEDED or SKIPPED run. Null for every other run. */
+  /** Why a run settled the way it did: the fire-time policy's reason for a MISSED, SUPERSEDED or SKIPPED scheduled run, or why a FAILED run stopped when the orchestrator recorded it (a fatal agent account error names the error, the credential the agent CLI used and the fix). Null for every other run. */
   settledReason?: Maybe<Scalars['String']['output']>;
   status: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];

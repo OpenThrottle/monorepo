@@ -11,6 +11,7 @@
 import type { TrajectoryRecord } from '@openthrottle/openthrottle-agentic-utils';
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import type {
+  AgentAccountError,
   DriverReasoningEffort,
   UsageLimit,
 } from '@openthrottle/openthrottle-drivers';
@@ -47,19 +48,25 @@ export interface CursorWorkflowRalphIterationRunParams {
   readonly iteration: number;
   readonly model: string | undefined;
   /**
+   * @description Forwarded to {@link runIterationAsync} `onAccountError`: fired when the iteration
+   * closes normally on a fatal account error. Backends that never report one (every CLI but Claude
+   * today) never call it. The returned string is unchanged.
+   */
+  readonly onAccountError?: (accountError: AgentAccountError) => void;
+  /**
    * @description Per-iteration hook (e.g. from `createWorkflowRalphOrchestrator` deps). Merged with
    * factory `CreateCursorWorkflowRalphIterationRunnerOptions.onChunk`.
    */
   readonly onChunk?: (
     chunk: CursorWorkflowRalphIterationStreamChunk,
   ) => void | Promise<void>;
+  /** @description Forwarded to {@link runIterationAsync} `onTrajectory` (fail-open transcript capture). */
+  readonly onTrajectory?: (record: TrajectoryRecord) => void | Promise<void>;
   /**
    * @description Per-iteration hook fired when the iteration closes normally having hit a
    * subscription usage limit. Merged with factory
    * `CreateCursorWorkflowRalphIterationRunnerOptions.onUsageLimit`. The returned string is unchanged.
    */
-  /** @description Forwarded to {@link runIterationAsync} `onTrajectory` (fail-open transcript capture). */
-  readonly onTrajectory?: (record: TrajectoryRecord) => void | Promise<void>;
   readonly onUsageLimit?: (usageLimit: UsageLimit) => void;
   readonly runner: WorkflowConfigRunner;
   readonly signal: AbortSignal | undefined;
@@ -169,6 +176,7 @@ export const createCursorWorkflowRalphIterationRunner = (
         env: params.env,
         iteration: params.iteration,
         model: params.model,
+        onAccountError: params.onAccountError,
         onChunk: mergedOnChunk,
         onTrajectory: params.onTrajectory,
         onUsageLimit: mergedOnUsageLimit,

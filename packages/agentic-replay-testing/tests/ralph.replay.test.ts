@@ -27,11 +27,22 @@ const replayStrictPlanRun = async (
   return result;
 };
 
-const stdoutOf = (result: ReplayPlanRunResult): string => {
+const streamOf = (
+  result: ReplayPlanRunResult,
+  stream: 'stderr' | 'stdout',
+): string => {
   return result.chunks
-    .filter((chunk) => chunk.stream === 'stdout')
+    .filter((chunk) => chunk.stream === stream)
     .map((chunk) => chunk.data)
     .join('');
+};
+
+const stdoutOf = (result: ReplayPlanRunResult): string => {
+  return streamOf(result, 'stdout');
+};
+
+const stderrOf = (result: ReplayPlanRunResult): string => {
+  return streamOf(result, 'stderr');
 };
 
 describe('Ralph orchestrator replaying claude', () => {
@@ -109,6 +120,60 @@ describe('Ralph orchestrator replaying claude', () => {
       expect(result.outcome).toMatchObject({
         reason: 'workflow_max_iterations',
       });
+    });
+  });
+
+  /**
+   * Recorded through `scripts/synthetic/claude-credit-exhausted.ts`: no real
+   * account runs out of credit on demand. The orchestrator, drivers engine and
+   * argv are real; only the CLI's reply is hand-built.
+   */
+  describe('plan-run-account-error', () => {
+    it('stops FAILED after one iteration of a three-iteration budget', async () => {
+      const result = await replayStrictPlanRun(
+        replayFixturePath('claude', 'plan-run-account-error'),
+      );
+
+      expect(result.outcome).toMatchObject({
+        accountError: {
+          kind: 'billing_error',
+          message: 'Credit balance is too low',
+        },
+        exitCode: 1,
+        reason: 'workflow_agent_account_error',
+        status: 'failed',
+      });
+      // One spawn: the task went IN_PROGRESS once, then back — never re-run.
+      expect(result.store.statusChanges()).toEqual([
+        { entity: 'plan', id: PLAN_RUN_PLAN_ID, status: 'IN_PROGRESS' },
+        { entity: 'task', id: TASK, status: 'IN_PROGRESS' },
+        { entity: 'task', id: TASK, status: 'PENDING' },
+        { entity: 'plan', id: PLAN_RUN_PLAN_ID, status: 'BLOCKED' },
+      ]);
+    });
+
+    it('streams a diagnostic naming the error and the fix', async () => {
+      const result = await replayStrictPlanRun(
+        replayFixturePath('claude', 'plan-run-account-error'),
+      );
+      // The host's onChunk is what appends to plan output in production.
+      const diagnostic = stderrOf(result);
+
+      expect(diagnostic).toContain('[ralph-orchestrator] iteration 1 stopped');
+      expect(diagnostic).toContain(
+        'Agent account error (billing_error): Credit balance is too low.',
+      );
+      expect(diagnostic).toContain('Fix:');
+    });
+
+    it('leaves the plan awaiting a human in plan output', async () => {
+      const result = await replayStrictPlanRun(
+        replayFixturePath('claude', 'plan-run-account-error'),
+      );
+
+      expect(result.store.output()).toEqual([
+        expect.stringContaining('Agent account error (iteration 1)'),
+      ]);
     });
   });
 });

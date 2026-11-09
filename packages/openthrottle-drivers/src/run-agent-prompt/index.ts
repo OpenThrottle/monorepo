@@ -21,6 +21,7 @@ import type {
   DriverInvocationConfig,
   DriverWorktreeOptions,
 } from '../types/index.ts';
+import type { AgentAccountError } from '../utils/account-error.ts';
 import type { UsageLimit } from '../utils/usage-limit.ts';
 
 /**
@@ -89,10 +90,11 @@ export type RunAgentStatus =
  * For a driver with `parseOutput` (Claude's stream-json) `output` is the parsed result text after a
  * normal close; after a timeout/cancel it is the partial live-rendered text (see `renderOutputLine`). `usageLimit` is non-null only when the run closed normally and hit a subscription usage
  * limit; `status` is still exit-code based (a limited run is `failed`), so the caller decides what
- * a limit means.
+ * a limit means. `accountError` follows the same rule for a fatal account error.
  * @public
  */
 export interface RunAgentPromptResult {
+  readonly accountError: AgentAccountError | null;
   readonly driverId: DriverId;
   readonly exitCode: number | null;
   readonly model?: string;
@@ -166,12 +168,17 @@ export const runAgentPrompt = async (
   let exitCode: number | null = null;
   let exited = false;
   let usageLimit: UsageLimit | null = null;
+  let accountError: AgentAccountError | null = null;
   let finalOutput: string | undefined;
 
   let status: RunAgentStatus;
   try {
     const engineOutput = await runDriverAsync(driver, invocationConfig, {
       logger: options.logger,
+      onAccountError: (error: AgentAccountError): void => {
+        accountError = error;
+        options.onAccountError?.(error);
+      },
       onExit: (code: number | null): void => {
         exited = true;
         exitCode = code;
@@ -200,6 +207,7 @@ export const runAgentPrompt = async (
   }
 
   return {
+    accountError,
     driverId,
     exitCode,
     model: config.model,

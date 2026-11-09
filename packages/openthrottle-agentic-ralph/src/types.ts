@@ -6,7 +6,10 @@ import type {
   WorkflowLifecycleDispatcher,
 } from '@openthrottle/openthrottle-agentic-workflow';
 
-import type { WorkflowRalphUsageLimit } from './contract/ralph-orchestrator-deps.ts';
+import type {
+  WorkflowRalphAccountError,
+  WorkflowRalphUsageLimit,
+} from './contract/ralph-orchestrator-deps.ts';
 
 export type WorkflowFinishedReason =
   | 'workflow_budget_exhausted'
@@ -20,7 +23,10 @@ export type WorkflowFinishedReason =
   | 'workflow_usage_limited';
 
 export type WorkflowFailedReason =
-  'workflow_agent_error' | 'workflow_input_required' | 'workflow_unhandled';
+  | 'workflow_agent_account_error'
+  | 'workflow_agent_error'
+  | 'workflow_input_required'
+  | 'workflow_unhandled';
 
 /**
  * @description Fields aligned with the developer app’s `WorkflowRalphRunOptionsInput` (argv / form).
@@ -113,6 +119,21 @@ export interface WorkflowUsageLimitedResult {
 }
 
 /**
+ * @description A run stopped after one iteration because the agent's account cannot serve requests
+ * (no credit, a bad key, no access). Terminal — unlike a usage limit nothing lifts on its own, so
+ * the host settles it FAILED and never resumes it. `description` is the operator-readable line
+ * (error, credential, fix) the orchestrator already wrote to plan output; hosts persist it as the
+ * run's settled reason.
+ */
+export interface WorkflowAccountErrorResult {
+  readonly accountError: WorkflowRalphAccountError;
+  readonly description: string;
+  readonly exitCode: 1;
+  readonly reason: 'workflow_agent_account_error';
+  readonly status: 'failed';
+}
+
+/**
  * @description A clean finish that may carry settle artifacts from the host-owned push/PR
  * finalize step. `headSha` / `prNumber` are present when that step pushed and opened (or reused)
  * a PR; omitted when finalize was skipped (no commits ahead) or never ran. The plans worker
@@ -132,11 +153,15 @@ export interface WorkflowFinishedResult {
  * `usageLimit`; finished results may carry optional settle artifacts from plan-end finalize.
  */
 export type WorkflowRunResult =
+  | WorkflowAccountErrorResult
   | WorkflowFinishedResult
   | WorkflowUsageLimitedResult
   | {
       readonly exitCode: 1;
-      readonly reason: WorkflowFailedReason;
+      readonly reason: Exclude<
+        WorkflowFailedReason,
+        'workflow_agent_account_error'
+      >;
       readonly status: 'failed';
     };
 

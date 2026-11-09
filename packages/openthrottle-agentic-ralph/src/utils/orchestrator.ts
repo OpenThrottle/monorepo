@@ -32,6 +32,7 @@ import {
   resolveRalphMaxTotalMsFromEnv,
 } from '../config/index.ts';
 import type {
+  WorkflowRalphAccountError,
   WorkflowRalphIterationOnChunk,
   WorkflowRalphIterationRunParams,
   WorkflowRalphOrchestratorDeps,
@@ -50,6 +51,7 @@ import {
   shouldFinalizePlanRun,
 } from '../utils/finalize-plan-run.ts';
 import {
+  describeWorkflowAccountError,
   formatPlanAndTasksForPrompt,
   isRalphTerminalStatus,
   isRunnableRalphTask,
@@ -184,7 +186,22 @@ const onUsageLimited = (
   };
 };
 
-const onFailure = (reason: WorkflowFailedReason): WorkflowRunResult => {
+const onAccountError = (
+  accountError: WorkflowRalphAccountError,
+  description: string,
+): WorkflowRunResult => {
+  return {
+    accountError,
+    description,
+    exitCode: 1,
+    reason: 'workflow_agent_account_error',
+    status: 'failed',
+  };
+};
+
+const onFailure = (
+  reason: Exclude<WorkflowFailedReason, 'workflow_agent_account_error'>,
+): WorkflowRunResult => {
   return {
     exitCode: 1,
     reason,
@@ -1001,6 +1018,9 @@ export const createWorkflowRalphOrchestrator = (
           const usageLimitHit: { current: WorkflowRalphUsageLimit | null } = {
             current: null,
           };
+          const accountErrorHit: {
+            current: WorkflowRalphAccountError | null;
+          } = { current: null };
           // iteration.trajectory — only when the host resolved a plan_runs row to record against.
           const trajectoryCapture = buildTrajectoryCapture({
             context,
@@ -1019,6 +1039,9 @@ export const createWorkflowRalphOrchestrator = (
               ...trajectoryCapture,
               iteration,
               model: context.model,
+              onAccountError: (error) => {
+                accountErrorHit.current = error;
+              },
               onChunk,
               onUsageLimit: (limit) => {
                 usageLimitHit.current = limit;
@@ -1062,6 +1085,42 @@ export const createWorkflowRalphOrchestrator = (
             );
 
             return onUsageLimited(usageLimitHit.current);
+          }
+
+          // iteration.account_error — the agent's account cannot serve requests (no credit, a bad
+          // key, no access), so every further iteration would fail identically. Not a real
+          // iteration either: say what broke and how to fix it, hand the task back, and stop FAILED.
+          // Terminal — unlike a usage limit nothing lifts on its own, so there is no resume.
+          if (accountErrorHit.current !== null) {
+            const description = describeWorkflowAccountError(
+              accountErrorHit.current,
+            );
+
+            await emitDiagnostic(onChunk, {
+              error: description,
+              phase: `iteration ${iteration} stopped`,
+            });
+
+            await resetTaskToPending(
+              executeGraphqlV2,
+              taskIdTrim || firstPendingForIteration,
+              sessionOptions,
+              onChunk,
+            );
+
+            // As on an agent ERROR: a FAILED run moves neither the task nor the plan, so leave the
+            // plan where a human can pick it up — never IN_PROGRESS.
+            if (!isTaskCentric) {
+              await settlePlanAwaitingHuman({
+                executeGraphqlV2,
+                label: `Agent account error (iteration ${iteration})`,
+                onChunk,
+                planId: effectivePlanId,
+                sessionOptions,
+              });
+            }
+
+            return onAccountError(accountErrorHit.current, description);
           }
 
           // Completion ids are kept in their original casing so the

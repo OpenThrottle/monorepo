@@ -10,6 +10,7 @@ export * from './errors/index.ts';
 export * from './registry/index.ts';
 export * from './run-agent-prompt/index.ts';
 export * from './types/index.ts';
+export * from './utils/account-error.ts';
 export * from './utils/child-kill.ts';
 export * from './utils/claude-output.ts';
 export * from './utils/logger.ts';

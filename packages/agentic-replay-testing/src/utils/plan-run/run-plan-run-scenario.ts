@@ -11,6 +11,7 @@ import {
   createWorkflowRalphOrchestrator,
   type WorkflowRalphIterationStreamChunk,
 } from '@openthrottle/openthrottle-agentic-ralph';
+import { WORKFLOW_RALPH_OT_ROOT_ENV } from '@openthrottle/openthrottle-agentic-utils';
 import type { DriverId } from '@openthrottle/openthrottle-drivers';
 
 import type { PlanRunScenario } from '../../types/plan-run-scenario.ts';
@@ -57,6 +58,24 @@ export async function runPlanRunScenario(
   // one (codex: "Not inside a trusted directory"). Initialize it here so the
   // recorder and every replay see the same kind of directory.
   execFileSync('git', ['init', '--quiet'], { cwd: options.cwd });
+  // The prompt names the OpenThrottle root, recorded as `<OT_ROOT>` from this
+  // checkout. A session launched by a plan run inherits WORKFLOW_RALPH_OT_ROOT
+  // pointing at another checkout, which changes the prompt and fails every
+  // replay — so resolve the root from this module, as the recorder did.
+  const inheritedOtRoot = process.env[WORKFLOW_RALPH_OT_ROOT_ENV];
+  delete process.env[WORKFLOW_RALPH_OT_ROOT_ENV];
+  try {
+    return await executeScenario(options);
+  } finally {
+    if (inheritedOtRoot !== undefined) {
+      process.env[WORKFLOW_RALPH_OT_ROOT_ENV] = inheritedOtRoot;
+    }
+  }
+}
+
+async function executeScenario(
+  options: RunPlanRunScenarioOptions,
+): Promise<RunPlanRunScenarioResult> {
   const store = createPlanRunStore(options.scenario);
   const chunks: WorkflowRalphIterationStreamChunk[] = [];
   const orchestrator = createWorkflowRalphOrchestrator({

@@ -134,6 +134,7 @@ describe('recoverStructuredText', () => {
   describe.each(SUCCESSFUL_RUNS)('$driverId', ({ driverId, name }) => {
     it('returns what a text-mode run would have printed', () => {
       expect(recoverStructuredText(driverId, fixture(name))).toEqual({
+        accountError: null,
         text: 'DONE',
         usageLimit: null,
       });
@@ -148,9 +149,42 @@ describe('recoverStructuredText', () => {
     });
   });
 
+  describe('a claude run that hit a fatal account error', () => {
+    const creditFixture = readFileSync(
+      join(
+        import.meta.dirname,
+        '../../conversation-backend/claude/__tests__/fixtures/credit-balance-too-low.synthetic.ndjson',
+      ),
+      'utf8',
+    );
+
+    it('reports the error with the init apiKeySource', () => {
+      expect(
+        recoverStructuredText('claude', creditFixture).accountError,
+      ).toEqual({
+        apiKeySource: 'ANTHROPIC_API_KEY',
+        kind: 'billing_error',
+        message: 'Credit balance is too low',
+      });
+    });
+
+    it('renders the error into plan output', () => {
+      const renderLine = createStructuredLineRenderer('claude');
+      const lines = creditFixture
+        .split('\n')
+        .map((line) => renderLine(line))
+        .filter((line) => line !== null);
+
+      expect(lines.join('\n')).toContain(
+        'Account error (billing_error): Credit balance is too low',
+      );
+    });
+  });
+
   describe('stdout with no JSON at all', () => {
     it('falls back to the raw output', () => {
       expect(recoverStructuredText('codex', '  Not logged in\n')).toEqual({
+        accountError: null,
         text: 'Not logged in',
         usageLimit: null,
       });
