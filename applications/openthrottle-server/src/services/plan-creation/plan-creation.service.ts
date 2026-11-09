@@ -2,17 +2,20 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { PlanRunConfigStorage } from '@openthrottle/nestjs-repositories';
 import {
+  AgentCliPreferencesService,
   getDefaultPlanRunConfigStorage,
   parsePlanRunConfigJson,
   Plan,
   PlanEmbeddingsService,
   PlansService,
+  UserPreferencesService,
 } from '@openthrottle/nestjs-repositories';
 import { embedQuery } from '@openthrottle/node-client';
 
 import type { CreatePlanInput } from '../../graphql/plans/plan.input.ts';
 import { CheckoutPathResolutionService } from '../checkout-path-resolution/checkout-path-resolution.service.ts';
 import { EffectiveUserResolutionService } from '../effective-user-resolution/effective-user-resolution.service.ts';
+import { applyDefaultAgentToRunConfig } from './plan-creation.utils.ts';
 
 /** @description Same GitHub-login rule as assignee normalization in @openthrottle/node-client openthrottle-client. */
 const GITHUB_USERNAME_REGEX =
@@ -53,10 +56,12 @@ export class PlanCreationService {
 
   constructor(
     private readonly logger: LoggerService,
+    private readonly agentCliPreferencesService: AgentCliPreferencesService,
     private readonly checkoutPathResolutionService: CheckoutPathResolutionService,
     private readonly effectiveUserResolutionService: EffectiveUserResolutionService,
     private readonly planEmbeddingsService: PlanEmbeddingsService,
     private readonly plansService: PlansService,
+    private readonly userPreferencesService: UserPreferencesService,
   ) {
     this.logger.debug(`🧩 ${this.name} 🧩`);
   }
@@ -115,7 +120,7 @@ export class PlanCreationService {
       project: input.project ?? null,
       projectId: input.projectId ?? null,
       runConfig: await this.seedWorkspaceFromPath(
-        parsedRunConfig ?? getDefaultPlanRunConfigStorage(),
+        parsedRunConfig ?? (await this.defaultRunConfigForUser(userId)),
         input.workspacePath,
         userId,
       ),
@@ -123,6 +128,69 @@ export class PlanCreationService {
       summary: input.summary ?? null,
       title,
     };
+  }
+
+  /**
+   * @description The run config a plan gets when the caller sent none: the system defaults, with
+   * the creating user's default agent (backend + model + effort) stamped over the Ralph runner
+   * when they have one that is still valid.
+   *
+   * Only reached when `runConfigJson` is absent — an explicit run config always wins (D3).
+   * "Valid" means a known driver whose agent and model the user has not disabled; anything else
+   * silently keeps the system default and the preference row is never touched. Like workspace
+   * seeding this is a convenience, never a gate: a missing user or a lookup error returns the
+   * system defaults rather than failing plan creation.
+   */
+  private async defaultRunConfigForUser(
+    userId: string | undefined,
+  ): Promise<PlanRunConfigStorage> {
+    const defaults = getDefaultPlanRunConfigStorage();
+    if (userId === undefined || userId.trim() === '') {
+      return defaults;
+    }
+
+    try {
+      // MCP `create_plan` usually runs as a service account; its preferences are its human's.
+      const effectiveUserId =
+        await this.effectiveUserResolutionService.resolveEffectiveUserId(
+          userId,
+        );
+      if (effectiveUserId === null) {
+        return defaults;
+      }
+
+      const { defaultAgent } =
+        await this.userPreferencesService.getForUser(effectiveUserId);
+      if (defaultAgent === null) {
+        return defaults;
+      }
+
+      const [agentEnabled, modelEnabled] = await Promise.all([
+        this.agentCliPreferencesService.isEnabled(
+          effectiveUserId,
+          defaultAgent.backend,
+        ),
+        this.agentCliPreferencesService.isModelEnabled(
+          effectiveUserId,
+          defaultAgent.backend,
+          defaultAgent.model,
+        ),
+      ]);
+      if (!agentEnabled || !modelEnabled) {
+        this.logger.debug(
+          `${this.name}: default agent ${defaultAgent.backend}/${defaultAgent.model} is disabled; using system default`,
+        );
+        return defaults;
+      }
+
+      return applyDefaultAgentToRunConfig(defaults, defaultAgent);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.warn(
+        `${this.name}: default agent lookup failed, using system default: ${message}`,
+      );
+      return defaults;
+    }
   }
 
   /**

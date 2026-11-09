@@ -8,9 +8,11 @@ import type {
   PlanRunConfigStorage,
 } from '@openthrottle/nestjs-repositories';
 import {
+  AgentCliPreferencesService,
   getDefaultPlanRunConfigStorage,
   PlanEmbeddingsService,
   PlansService,
+  UserPreferencesService,
 } from '@openthrottle/nestjs-repositories';
 import { embedQuery } from '@openthrottle/node-client';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -33,6 +35,9 @@ describe('PlanCreationService', () => {
   let service: PlanCreationService;
   const resolveCheckoutForPath = vi.fn();
   const resolveEffectiveUserId = vi.fn();
+  const getForUser = vi.fn();
+  const isEnabled = vi.fn();
+  const isModelEnabled = vi.fn();
   const planRepo = {
     create: vi.fn(),
     manager: {
@@ -54,6 +59,14 @@ describe('PlanCreationService', () => {
     resolveCheckoutForPath.mockResolvedValue(null);
     // Default: a user sub acts as itself (the human-JWT case).
     resolveEffectiveUserId.mockImplementation(async (sub: string) => sub);
+    // Default: no saved preference, every agent and model enabled.
+    getForUser.mockImplementation(async (userId: string) => ({
+      defaultAgent: null,
+      defaultEditor: null,
+      userId,
+    }));
+    isEnabled.mockResolvedValue(true);
+    isModelEnabled.mockResolvedValue(true);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -69,6 +82,14 @@ describe('PlanCreationService', () => {
         {
           provide: LoggerService,
           useValue: createMock<LoggerService>(),
+        },
+        {
+          provide: AgentCliPreferencesService,
+          useValue: { isEnabled, isModelEnabled },
+        },
+        {
+          provide: UserPreferencesService,
+          useValue: { getForUser },
         },
         {
           provide: PlansService,
@@ -521,6 +542,176 @@ describe('PlanCreationService', () => {
 
       expectWorkspace(1, RESOLVED);
       expectWorkspace(2, RESOLVED);
+    });
+  });
+
+  describe('default agent', () => {
+    const USER = 'user-1';
+    const AGENT = { backend: 'claude', effort: 'high', model: 'opus' };
+
+    const input = (
+      overrides: Partial<CreatePlanInput> = {},
+    ): CreatePlanInput => {
+      return {
+        assignee: null,
+        author: 'visormatt',
+        category: 'feature',
+        description: null,
+        project: null,
+        projectId: null,
+        status: null,
+        summary: null,
+        title: 'Plan',
+        ...overrides,
+      };
+    };
+
+    const expectRalph = (
+      expected: Partial<PlanRunConfigStorage['ralph']>,
+    ): void => {
+      expect(planRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          runConfig: expect.objectContaining({
+            ralph: expect.objectContaining(expected),
+          }),
+        }),
+      );
+    };
+
+    const systemRalph = getDefaultPlanRunConfigStorage().ralph;
+    const systemAgent = {
+      effort: systemRalph.effort,
+      executionBackend: systemRalph.executionBackend,
+      model: systemRalph.model,
+    };
+
+    beforeEach(() => {
+      planRepo.create.mockImplementation((fields: unknown) => fields);
+      planRepo.save.mockImplementation((entity: unknown) =>
+        Promise.resolve(entity),
+      );
+    });
+
+    it('keeps the system default when the user has no preference', async () => {
+      await service.createPlanFromInput(input(), USER);
+
+      expect(getForUser).toHaveBeenCalledWith(USER);
+      expectRalph(systemAgent);
+    });
+
+    it('stamps the user default agent, model and effort', async () => {
+      getForUser.mockResolvedValue({
+        defaultAgent: AGENT,
+        defaultEditor: null,
+        userId: USER,
+      });
+
+      await service.createPlanFromInput(input(), USER);
+
+      expect(isEnabled).toHaveBeenCalledWith(USER, 'claude');
+      expect(isModelEnabled).toHaveBeenCalledWith(USER, 'claude', 'opus');
+      expectRalph({
+        effort: 'high',
+        executionBackend: 'claude',
+        model: 'opus',
+      });
+    });
+
+    it('stamps an empty effort when the preference has none', async () => {
+      getForUser.mockResolvedValue({
+        defaultAgent: { ...AGENT, effort: null },
+        defaultEditor: null,
+        userId: USER,
+      });
+
+      await service.createPlanFromInput(input(), USER);
+
+      expectRalph({ effort: '', executionBackend: 'claude', model: 'opus' });
+    });
+
+    it('reads the preference of the human behind a service account', async () => {
+      resolveEffectiveUserId.mockResolvedValue('user-linked');
+      getForUser.mockResolvedValue({
+        defaultAgent: AGENT,
+        defaultEditor: null,
+        userId: 'user-linked',
+      });
+
+      await service.createPlanFromInput(input(), 'sa-1');
+
+      expect(getForUser).toHaveBeenCalledWith('user-linked');
+      expectRalph({ executionBackend: 'claude', model: 'opus' });
+    });
+
+    it('falls back to the system default when the agent is disabled', async () => {
+      getForUser.mockResolvedValue({
+        defaultAgent: AGENT,
+        defaultEditor: null,
+        userId: USER,
+      });
+      isEnabled.mockResolvedValue(false);
+
+      await service.createPlanFromInput(input(), USER);
+
+      expectRalph(systemAgent);
+    });
+
+    it('falls back to the system default when the model is disabled', async () => {
+      getForUser.mockResolvedValue({
+        defaultAgent: AGENT,
+        defaultEditor: null,
+        userId: USER,
+      });
+      isModelEnabled.mockResolvedValue(false);
+
+      await service.createPlanFromInput(input(), USER);
+
+      expectRalph(systemAgent);
+    });
+
+    it('falls back to the system default when the backend is no longer a known driver', async () => {
+      getForUser.mockResolvedValue({
+        defaultAgent: { ...AGENT, backend: 'retired-cli' },
+        defaultEditor: null,
+        userId: USER,
+      });
+
+      await service.createPlanFromInput(input(), USER);
+
+      expectRalph(systemAgent);
+    });
+
+    it('never overrides an explicit runConfigJson', async () => {
+      getForUser.mockResolvedValue({
+        defaultAgent: AGENT,
+        defaultEditor: null,
+        userId: USER,
+      });
+      const explicit = getDefaultPlanRunConfigStorage();
+
+      await service.createPlanFromInput(
+        input({ runConfigJson: JSON.stringify(explicit) }),
+        USER,
+      );
+
+      expect(getForUser).not.toHaveBeenCalled();
+      expectRalph(systemAgent);
+    });
+
+    it('does not look up preferences without an authenticated user', async () => {
+      await service.createPlanFromInput(input());
+
+      expect(getForUser).not.toHaveBeenCalled();
+      expectRalph(systemAgent);
+    });
+
+    it('still creates the plan with the system default when the lookup throws', async () => {
+      getForUser.mockRejectedValue(new Error('boom'));
+
+      const plan = await service.createPlanFromInput(input(), USER);
+
+      expect(plan).toBeDefined();
+      expectRalph(systemAgent);
     });
   });
 
