@@ -42,6 +42,7 @@ const SNAPSHOT: AgentCliDiscoveryResult = {
       label: 'Cursor Agent',
       models: ['auto', 'gpt-5.2'],
       supportsCustomBaseUrl: false,
+      timedOut: false,
       version: '2026.06.15',
     },
     {
@@ -55,6 +56,7 @@ const SNAPSHOT: AgentCliDiscoveryResult = {
       label: 'Claude Code',
       models: [],
       supportsCustomBaseUrl: false,
+      timedOut: false,
       version: null,
     },
     {
@@ -68,6 +70,7 @@ const SNAPSHOT: AgentCliDiscoveryResult = {
       label: 'OpenCode',
       models: ['opencode/big-pickle'],
       supportsCustomBaseUrl: true,
+      timedOut: false,
       version: '1.18.5',
     },
   ],
@@ -239,6 +242,7 @@ describe('AgentDiscoveryResolver', () => {
           label: 'Cursor Agent',
           models: [],
           supportsCustomBaseUrl: false,
+          timedOut: false,
           version: null,
         },
       ],

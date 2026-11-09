@@ -590,3 +590,97 @@ describe('runDriverAsync', () => {
     await expect(promise).rejects.toThrow('boom');
   });
 });
+
+describe('binEnv override on the run path', () => {
+  const binDriver: AgentDriver = defineDriver({
+    ...testDriver,
+    binEnv: 'OPENTHROTTLE_ECHO_BIN',
+    buildShellCommand: (config) => {
+      return `${config.bin ?? 'echo-driver'} -p "${config.prompt}"`;
+    },
+    id: 'bin-echo',
+  });
+
+  beforeEach(() => {
+    vi.mocked(spawnSync).mockReset();
+    vi.mocked(spawnSync).mockReturnValue({
+      output: [''],
+      pid: 0,
+      signal: null,
+      status: 0,
+      stderr: '',
+      stdout: '',
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+  });
+
+  const spawnedCommand = (): unknown => {
+    return vi.mocked(spawnSync).mock.calls[0]?.[0];
+  };
+
+  describe('when the override is in the per-run env', () => {
+    it('spawns the override', () => {
+      runDriverSync(binDriver, {
+        env: { OPENTHROTTLE_ECHO_BIN: '/tmp/stub/echo' },
+        iteration: 1,
+        prompt: 'hi',
+      });
+
+      expect(spawnedCommand()).toBe('/tmp/stub/echo -p "hi"');
+    });
+  });
+
+  describe('when the override is in the inherited process env', () => {
+    it('spawns the override', () => {
+      vi.stubEnv('OPENTHROTTLE_ECHO_BIN', '/tmp/stub/echo');
+      runDriverSync(binDriver, { iteration: 1, prompt: 'hi' });
+
+      expect(spawnedCommand()).toBe('/tmp/stub/echo -p "hi"');
+    });
+
+    it('lets the per-run env win over the inherited one', () => {
+      vi.stubEnv('OPENTHROTTLE_ECHO_BIN', '/tmp/stub/inherited');
+      runDriverSync(binDriver, {
+        env: { OPENTHROTTLE_ECHO_BIN: '/tmp/stub/per-run' },
+        iteration: 1,
+        prompt: 'hi',
+      });
+
+      expect(spawnedCommand()).toBe('/tmp/stub/per-run -p "hi"');
+    });
+  });
+
+  describe('when the override is unset', () => {
+    it('spawns the bare binary off PATH', () => {
+      vi.stubEnv('OPENTHROTTLE_ECHO_BIN', '');
+      runDriverSync(binDriver, { iteration: 1, prompt: 'hi' });
+
+      expect(spawnedCommand()).toBe('echo-driver -p "hi"');
+    });
+  });
+
+  describe('on the async path', () => {
+    it('spawns the override', async () => {
+      const child = asChildProcess(new EventEmitter());
+      child.stdout = new PassThrough();
+      child.stderr = new PassThrough();
+      vi.mocked(spawn).mockReturnValue(child);
+
+      const promise = runDriverAsync(binDriver, {
+        env: { OPENTHROTTLE_ECHO_BIN: '/tmp/stub/echo' },
+        iteration: 1,
+        prompt: 'go',
+      });
+      child.emit('close', 0);
+      await promise;
+
+      expect(vi.mocked(spawn).mock.calls.at(-1)?.[0]).toBe(
+        '/tmp/stub/echo -p "go"',
+      );
+    });
+  });
+});

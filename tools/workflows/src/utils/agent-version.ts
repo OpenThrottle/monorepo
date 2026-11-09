@@ -8,15 +8,14 @@
 import { spawnSync } from 'node:child_process';
 
 import type { AgentDriver } from '@openthrottle/openthrottle-drivers';
+import { resolveDriverBinary } from '@openthrottle/openthrottle-drivers';
 
 const VERSION_PROBE_TIMEOUT_MS = 3000;
 
 const cachedVersions = new Map<string, string>();
 
 const probeVersion = (driver: AgentDriver): string => {
-  const override =
-    driver.binEnv === undefined ? undefined : process.env[driver.binEnv];
-  const binary = override?.trim() || driver.binary;
+  const binary = resolveDriverBinary(driver, process.env);
 
   try {
     const result = spawnSync(binary, [...driver.versionArgs], {

@@ -12,7 +12,10 @@ import { stat } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import type { DriverModelListing } from '@openthrottle/openthrottle-drivers';
-import { ALL_DRIVERS } from '@openthrottle/openthrottle-drivers';
+import {
+  ALL_DRIVERS,
+  resolveDriverBinary,
+} from '@openthrottle/openthrottle-drivers';
 
 import type { ChatBackendCapabilities } from './capabilities.ts';
 import { resolveChatBackendCapabilities } from './capabilities.ts';
@@ -108,6 +111,12 @@ export interface AgentCliAvailability {
   readonly models: readonly string[];
   /** True when this driver can target a custom OpenAI-compatible base URL (a discovered endpoint). */
   readonly supportsCustomBaseUrl: boolean;
+  /**
+   * True when the version probe or the model listing hit its timeout. A timeout means a slow or
+   * loaded host, not a missing binary, so `available` / `models` are NOT authoritative for this
+   * entry: a consumer holding an earlier snapshot of the same backend should keep that instead.
+   */
+  readonly timedOut: boolean;
   /** Trimmed version output when available, else null. */
   readonly version: string | null;
 }
@@ -157,52 +166,51 @@ export const AGENT_CLI_ALLOWLIST: readonly AgentCliDescriptor[] =
     versionArgs: driver.versionArgs,
   }));
 
-function resolveBinary(
-  descriptor: AgentCliDescriptor,
-  env: NodeJS.ProcessEnv,
-): string {
-  const { binEnv } = descriptor;
-  const override = binEnv === undefined ? undefined : env[binEnv]?.trim();
-
-  if (override !== undefined && override !== '') {
-    return override;
-  }
-
-  return descriptor.binary;
+/** A model listing, flagged when it was cut short by its timeout. */
+interface ModelListing {
+  readonly models: readonly string[];
+  readonly timedOut: boolean;
 }
+
+const NO_MODELS: ModelListing = { models: [], timedOut: false };
 
 /**
  * Enumerate a driver's models. Static descriptors resolve without spawning;
  * command descriptors spawn `<binary> <argv>` and map stdout through the pure
  * `parse`. Tolerant: any failure (missing binary, non-zero exit, timeout, parse
- * throw) degrades to `[]` and never rejects.
+ * throw) degrades to `[]` and never rejects; a timeout is flagged so the caller
+ * can tell "lists no models" from "was too slow to say".
  */
 function listModels(
   descriptor: AgentCliDescriptor,
   env: NodeJS.ProcessEnv,
   timeoutMs: number,
-): Promise<readonly string[]> {
+): Promise<ModelListing> {
   const listing = descriptor.discoverModels;
 
   if (listing === undefined) {
-    return Promise.resolve([]);
+    return Promise.resolve(NO_MODELS);
   }
 
   if (listing.mode === 'static') {
-    return Promise.resolve(listing.models);
+    return Promise.resolve({ models: listing.models, timedOut: false });
   }
 
   return new Promise((resolve) => {
     let stdout = '';
 
-    const child = spawn(resolveBinary(descriptor, env), [...listing.argv], {
-      env: { HOME: env.HOME, PATH: env.PATH },
-      stdio: ['ignore', 'pipe', 'ignore'],
-    });
+    const child = spawn(
+      resolveDriverBinary(descriptor, env),
+      [...listing.argv],
+      {
+        env: { HOME: env.HOME, PATH: env.PATH },
+        stdio: ['ignore', 'pipe', 'ignore'],
+      },
+    );
 
     const timer = setTimeout(() => {
       child.kill('SIGKILL');
-      resolve([]);
+      resolve({ models: [], timedOut: true });
     }, timeoutMs);
 
     child.stdout?.on('data', (data: Buffer) => {
@@ -211,21 +219,21 @@ function listModels(
 
     child.on('error', () => {
       clearTimeout(timer);
-      resolve([]);
+      resolve(NO_MODELS);
     });
 
     child.on('close', (code) => {
       clearTimeout(timer);
 
       if (code !== 0) {
-        resolve([]);
+        resolve(NO_MODELS);
         return;
       }
 
       try {
-        resolve(listing.parse(stdout));
+        resolve({ models: listing.parse(stdout), timedOut: false });
       } catch {
-        resolve([]);
+        resolve(NO_MODELS);
       }
     });
   });
@@ -263,11 +271,12 @@ function probe(
       label,
       models: [],
       supportsCustomBaseUrl,
+      timedOut: false,
       version: null,
     };
 
     const child = spawn(
-      resolveBinary(descriptor, env),
+      resolveDriverBinary(descriptor, env),
       [...descriptor.versionArgs],
       {
         env: { HOME: env.HOME, PATH: env.PATH },
@@ -277,7 +286,7 @@ function probe(
 
     const timer = setTimeout(() => {
       child.kill('SIGKILL');
-      resolve(unavailable);
+      resolve({ ...unavailable, timedOut: true });
     }, probeTimeoutMs);
 
     child.stdout?.on('data', (data: Buffer) => {
@@ -300,7 +309,7 @@ function probe(
       const version = stdout.trim() === '' ? null : stdout.trim();
 
       // Availability is independent of model-listing success.
-      listModels(descriptor, env, modelListTimeoutMs).then((models) => {
+      listModels(descriptor, env, modelListTimeoutMs).then((listing) => {
         resolve({
           attachesWorkspaceMcp,
           auth: null,
@@ -310,8 +319,9 @@ function probe(
           capabilities: resolveChatBackendCapabilities(backend, env),
           chatCapable,
           label,
-          models,
+          models: listing.models,
           supportsCustomBaseUrl,
+          timedOut: listing.timedOut,
           version,
         });
       });
@@ -389,7 +399,7 @@ async function probeCursorAuthState(
   timeoutMs: number,
 ): Promise<AgentCliAuthState> {
   const { code, stdout } = await runProbe(
-    resolveBinary(descriptor, env),
+    resolveDriverBinary(descriptor, env),
     ['status'],
     env,
     timeoutMs,
@@ -503,7 +513,7 @@ async function probeWithAuth(
   const [availability, auth] = await Promise.all([
     availabilityPromise,
     probeClaudeAuthStatus({
-      binary: resolveBinary(descriptor, env),
+      binary: resolveDriverBinary(descriptor, env),
       env,
       timeoutMs: probeTimeoutMs,
     }),

@@ -90,7 +90,7 @@ export const cursorDriver = defineDriver({
       config,
       '--output-format stream-json',
     );
-    const base = `cursor-agent --force -p "${safePrompt}"${outputFlag}${modelFlag}`;
+    const base = `${escapeShellArg(config.bin ?? 'cursor-agent')} --force -p "${safePrompt}"${outputFlag}${modelFlag}`;
     const withMcp = appendMcpShellFlags(base, capabilities, CURSOR_MCP_FLAGS);
     const withPlugins = appendPluginDirShellFlags(
       withMcp,

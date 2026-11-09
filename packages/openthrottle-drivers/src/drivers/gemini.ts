@@ -18,7 +18,11 @@
 import { defineDriver } from '../registry/index.ts';
 import type { DriverCapabilities } from '../types/index.ts';
 import { structuredOutputShellFlag } from '../utils/output-format.ts';
-import { escapeForShellDoubleQuoted, formatModelFlag } from '../utils/shell.ts';
+import {
+  escapeForShellDoubleQuoted,
+  escapeShellArg,
+  formatModelFlag,
+} from '../utils/shell.ts';
 
 const capabilities: DriverCapabilities = {
   /**
@@ -74,7 +78,7 @@ export const geminiDriver = defineDriver({
       '--output-format stream-json',
     );
 
-    return `gemini --approval-mode yolo "${safePrompt}"${outputFlag}${modelFlag} < /dev/null`;
+    return `${escapeShellArg(config.bin ?? 'gemini')} --approval-mode yolo "${safePrompt}"${outputFlag}${modelFlag} < /dev/null`;
   },
   capabilities,
   id: 'gemini',

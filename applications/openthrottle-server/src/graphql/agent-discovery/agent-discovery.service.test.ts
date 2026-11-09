@@ -46,6 +46,7 @@ const SNAPSHOT: AgentCliDiscoveryResult = {
       label: 'Cursor Agent',
       models: ['auto'],
       supportsCustomBaseUrl: false,
+      timedOut: false,
       version: '2026.06.15',
     },
     {
@@ -59,6 +60,7 @@ const SNAPSHOT: AgentCliDiscoveryResult = {
       label: 'Claude Code',
       models: [],
       supportsCustomBaseUrl: false,
+      timedOut: false,
       version: null,
     },
   ],
@@ -204,5 +206,71 @@ describe('AgentDiscoveryService', () => {
     vi.advanceTimersByTime(1_500);
     await service.discover();
     expect(discoverAgentClisMock).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('AgentDiscoveryService probe-timeout carry-forward', () => {
+  const [cursor, claude] = SNAPSHOT.agents;
+
+  /** A sweep where cursor's probe timed out (unavailable, no models). */
+  const cursorTimedOut = (): AgentCliDiscoveryResult => {
+    if (cursor === undefined || claude === undefined) {
+      throw new Error('SNAPSHOT fixture is missing an agent');
+    }
+
+    return {
+      agents: [
+        { ...cursor, available: false, models: [], timedOut: true },
+        claude,
+      ],
+      scannedAt: '2026-06-19T02:00:00.000Z',
+    };
+  };
+
+  describe('when a later sweep times out on an agent the previous sweep found', () => {
+    it('keeps the previous entry for that agent', async () => {
+      const service = await buildService();
+      await service.discover();
+
+      discoverAgentClisMock.mockResolvedValueOnce(cursorTimedOut());
+      service.invalidate();
+      const result = await service.discover();
+
+      expect(result.agents[0]).toBe(cursor);
+      expect(result.agents[1]).toBe(claude);
+      expect(result.scannedAt).toBe('2026-06-19T02:00:00.000Z');
+    });
+  });
+
+  describe('when the very first sweep times out', () => {
+    it('serves the timed-out entry (nothing to carry forward)', async () => {
+      discoverAgentClisMock.mockResolvedValueOnce(cursorTimedOut());
+      const service = await buildService();
+      const result = await service.discover();
+
+      expect(result.agents[0]).toMatchObject({
+        available: false,
+        timedOut: true,
+      });
+    });
+  });
+
+  describe('when a later sweep answers that the agent is gone', () => {
+    it('drops it (only a timeout is carried forward)', async () => {
+      const service = await buildService();
+      await service.discover();
+
+      const gone: AgentCliDiscoveryResult = {
+        agents: SNAPSHOT.agents.map((agent) => {
+          return { ...agent, available: false, models: [] };
+        }),
+        scannedAt: '2026-06-19T03:00:00.000Z',
+      };
+      discoverAgentClisMock.mockResolvedValueOnce(gone);
+      service.invalidate();
+      const result = await service.discover();
+
+      expect(result).toBe(gone);
+    });
   });
 });

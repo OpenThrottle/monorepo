@@ -22,9 +22,10 @@ wiring belong in `nestjs-repositories` / `openthrottle-server`, not here.
   `dist/` and a real `build` target ([packages/AGENTS.md](../AGENTS.md)). ESM + NodeNext, so relative
   imports carry `.ts` (`eslint --fix` writes them). Its deps (`openthrottle-drivers`,
   `openthrottle-agentic-utils`) are source-first; Node loads them through the workspace symlink.
-- **Drivers run `<binary> ...` off PATH.** `buildShellCommand` hardcodes `codex exec ...`; the
-  `binEnv` override only affects discovery and chat. To stub a CLI, put a script of that name first
-  on PATH via `runEval({ env })`.
+- **Drivers run `<binary> ...` off PATH unless `binEnv` overrides it.** The engine resolves the
+  driver's `binEnv` (e.g. `OPENTHROTTLE_CODEX_BIN`) from `process.env` merged with
+  `runEval({ env })`, so either point that variable at a stub or put a script of that name first on
+  PATH.
 - **Graders run before the workspace is disposed**; `EvalTrial.workspaceCwd` is dead afterwards.
 - **`usage_limited` trials get no grades** and the run returns a `cursor`; keep that contract, the
   stats and the resume path rely on it.

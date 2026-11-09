@@ -17,7 +17,11 @@
 import { spawn } from 'node:child_process';
 
 import type { AgentDriver } from '@openthrottle/openthrottle-drivers';
-import { getDriver, isDriverId } from '@openthrottle/openthrottle-drivers';
+import {
+  getDriver,
+  isDriverId,
+  resolveDriverBinary,
+} from '@openthrottle/openthrottle-drivers';
 
 /** Default per-run wall-clock budget (10 minutes) before the child is force-killed. */
 export const DEFAULT_AGENT_SETUP_TIMEOUT_MS = 600_000;
@@ -188,12 +192,6 @@ interface ResolvedCommand {
   readonly file: string;
 }
 
-function resolveBinary(driver: AgentDriver, env: NodeJS.ProcessEnv): string {
-  const override =
-    driver.binEnv !== undefined ? env[driver.binEnv]?.trim() : undefined;
-  return override !== undefined && override !== '' ? override : driver.binary;
-}
-
 /**
  * PATH with the common per-user install dirs prepended (deduped, order-preserving) so a binary a
  * `curl|shell` installer just wrote is discoverable without restarting the server.
@@ -251,7 +249,10 @@ export function buildAgentSetupCommand(
   env: NodeJS.ProcessEnv,
 ): ResolvedCommand | null {
   if (mode === 'update' && driver.update?.method === 'command') {
-    return { args: [...driver.update.argv], file: resolveBinary(driver, env) };
+    return {
+      args: [...driver.update.argv],
+      file: resolveDriverBinary(driver, env),
+    };
   }
 
   // install, or update via reinstall / no explicit update descriptor → re-run the installer.

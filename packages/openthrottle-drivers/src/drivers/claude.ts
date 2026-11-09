@@ -17,7 +17,11 @@ import {
   OPENTHROTTLE_PLUGIN_DIR_REL,
 } from '../utils/plugin-dir.ts';
 import { claudeEffortFlag } from '../utils/reasoning-effort.ts';
-import { escapeForShellDoubleQuoted, formatModelFlag } from '../utils/shell.ts';
+import {
+  escapeForShellDoubleQuoted,
+  escapeShellArg,
+  formatModelFlag,
+} from '../utils/shell.ts';
 import { appendWorktreeShellFlags } from '../utils/worktree.ts';
 
 const capabilities: DriverCapabilities = {
@@ -84,7 +88,7 @@ export const claudeDriver = defineDriver({
     // `--output-format stream-json --verbose` sits right after the prompt (before `--model`): text
     // mode hides the `rate_limit_event` / 429 `result` that signal a usage limit. `parseOutput`
     // below recovers the text-mode stdout from the terminal `result` event, so callers are unchanged.
-    const base = `claude -p --permission-mode acceptEdits "${safePrompt}" ${STREAM_JSON_FLAGS}${modelFlag}${effortFlag}`;
+    const base = `${escapeShellArg(config.bin ?? 'claude')} -p --permission-mode acceptEdits "${safePrompt}" ${STREAM_JSON_FLAGS}${modelFlag}${effortFlag}`;
 
     // `--effort` follows `--model`. `--plugin-dir` sits after them and before the worktree flags, matching where cursor
     // threads its MCP flags — the position is asserted in the parity tests, not incidental.

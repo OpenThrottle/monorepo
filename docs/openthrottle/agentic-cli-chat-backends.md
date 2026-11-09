@@ -234,6 +234,11 @@ The gate (see `conversation-stream.resolver.ts` + the cursor-agent adapter):
 
 ### Tuning (env)
 
+The `OPENTHROTTLE_<X>_BIN` overrides below are not chat-only: discovery, chat,
+install/update and plan/scheduled runs all resolve the executable through the same
+`resolveDriverBinary` rule, so they always agree on which binary runs (see
+[environment-variables.md § Agent CLI drivers](../monorepo/environment-variables.md#5-agent-cli-drivers)).
+
 | Var                                       | Meaning                                                        | Default            |
 | ----------------------------------------- | -------------------------------------------------------------- | ------------------ |
 | `OPENTHROTTLE_AGENT_DEV_CWD`              | Dev-only cwd when no repository is selected (ignored in prod)  | unset              |
