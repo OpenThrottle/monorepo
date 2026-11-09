@@ -7,6 +7,11 @@
  */
 
 import type { DriverParsedOutput } from '../types/index.ts';
+import type { AccountError } from './account-error.ts';
+import {
+  parseClaudeAccountError,
+  parseClaudeApiKeySource,
+} from './account-error.ts';
 import type { UsageLimit } from './usage-limit.ts';
 import {
   isClaudeUsageLimitResult,
@@ -44,6 +49,8 @@ const parseLine = (line: string): Record<string, unknown> | undefined => {
  *   by a successful `result` is not a limit: the run completed. When the terminal is a 429 error
  *   `result` and no rejected event was seen, the limit is `{ rateLimitType: null, resetsAt: null }`
  *   ("limited, reset unknown"). The human `result` text is never inspected.
+ * - `accountError` is the first fatal account error (see `parseClaudeAccountError`) with the init
+ *   event's `apiKeySource` attached, so a caller can say which credential to fix.
  * @public
  */
 export const parseClaudeStreamJsonOutput = (
@@ -51,6 +58,8 @@ export const parseClaudeStreamJsonOutput = (
 ): DriverParsedOutput => {
   let rejected: UsageLimit | null = null;
   let result: Record<string, unknown> | undefined;
+  let accountError: AccountError | null = null;
+  let apiKeySource: string | null = null;
 
   for (const line of stdout.split('\n')) {
     const event = parseLine(line);
@@ -59,6 +68,10 @@ export const parseClaudeStreamJsonOutput = (
       continue;
     }
 
+    apiKeySource = parseClaudeApiKeySource(event) ?? apiKeySource;
+    // The first fatal error wins: the assistant event carries the CLI's text, the result echoes it.
+    accountError = accountError ?? parseClaudeAccountError(event);
+
     if (event.type === 'rate_limit_event') {
       rejected = parseClaudeRateLimitInfo(event.rate_limit_info) ?? rejected;
     } else if (event.type === 'result') {
@@ -66,20 +79,29 @@ export const parseClaudeStreamJsonOutput = (
     }
   }
 
+  const reported =
+    accountError === null ? null : { ...accountError, apiKeySource };
+
   if (result === undefined) {
-    return { text: stdout.trim(), usageLimit: rejected };
+    return {
+      accountError: reported,
+      text: stdout.trim(),
+      usageLimit: rejected,
+    };
   }
 
   const text = typeof result.result === 'string' ? result.result.trim() : '';
 
   if (isClaudeUsageLimitResult(result)) {
     return {
+      accountError: reported,
       text,
       usageLimit: rejected ?? { rateLimitType: null, resetsAt: null },
     };
   }
 
   return {
+    accountError: reported,
     text,
     usageLimit: result.is_error === true ? rejected : null,
   };

@@ -8,11 +8,14 @@
  */
 
 import type {
+  AccountError,
+  AccountErrorKind,
   AgentDriver,
   DriverParsedOutput,
   UsageLimit,
 } from '@openthrottle/openthrottle-drivers';
 import {
+  ACCOUNT_ERROR_KINDS,
   DRIVER_OUTPUT_FORMATS,
   DRIVERS,
 } from '@openthrottle/openthrottle-drivers';
@@ -56,9 +59,42 @@ const usageLimitOf = (chunk: ConversationStreamChunk): UsageLimit | null => {
   };
 };
 
+const isAccountErrorKind = (value: unknown): value is AccountErrorKind => {
+  return Object.values(ACCOUNT_ERROR_KINDS).some((known) => {
+    return known === value;
+  });
+};
+
+const accountErrorOf = (
+  chunk: ConversationStreamChunk,
+): AccountError | null => {
+  if (chunk.kind !== CONVERSATION_STREAM_CHUNK_KINDS.accountError) {
+    return null;
+  }
+
+  const metadata = chunk.metadata ?? {};
+  const kind = metadata.kind;
+
+  if (!isAccountErrorKind(kind)) {
+    return null;
+  }
+
+  return { kind, message: stringOrNull(metadata.message) };
+};
+
+/** The credential a `session` chunk says the CLI authenticated with (Claude's init `apiKeySource`). */
+const apiKeySourceOf = (chunk: ConversationStreamChunk): string | null => {
+  if (chunk.kind !== CONVERSATION_STREAM_CHUNK_KINDS.session) {
+    return null;
+  }
+
+  return stringOrNull((chunk.metadata ?? {}).apiKeySource);
+};
+
 /**
  * @description What a text-mode run would have printed, recovered from the chunks: the assistant
  * text in order, with a line break wherever a tool call interrupted it, plus any stream error.
+ * A fatal account error comes back as `accountError`, with the `session` chunk's `apiKeySource`.
  * When stdout held no JSON events at all (a crash, an auth failure printed as prose) the raw
  * stdout is returned so the failure stays visible.
  * @public
@@ -70,15 +106,19 @@ export const recoverStructuredText = (
   const chunks = readStructuredOutput(driverId, rawStdout);
 
   if (chunks.length === 0) {
-    return { text: rawStdout.trim(), usageLimit: null };
+    return { accountError: null, text: rawStdout.trim(), usageLimit: null };
   }
 
   const parts: string[] = [];
   let usageLimit: UsageLimit | null = null;
+  let accountError: AccountError | null = null;
+  let apiKeySource: string | null = null;
   let interrupted = false;
 
   for (const chunk of chunks) {
     usageLimit = usageLimitOf(chunk) ?? usageLimit;
+    accountError = accountError ?? accountErrorOf(chunk);
+    apiKeySource = apiKeySourceOf(chunk) ?? apiKeySource;
 
     if (typeof chunk.error === 'string' && chunk.error.trim() !== '') {
       parts.push(`\nError: ${chunk.error.trim()}`);
@@ -96,7 +136,12 @@ export const recoverStructuredText = (
     }
   }
 
-  return { text: parts.join('').trim(), usageLimit };
+  return {
+    accountError:
+      accountError === null ? null : { ...accountError, apiKeySource },
+    text: parts.join('').trim(),
+    usageLimit,
+  };
 };
 
 const renderChunk = (
@@ -117,6 +162,15 @@ const renderChunk = (
       return hasSeenToolCall ? null : `→ ${toolNameOf(chunk)}`;
     case CONVERSATION_STREAM_CHUNK_KINDS.usageLimit:
       return 'Usage limit reached';
+    case CONVERSATION_STREAM_CHUNK_KINDS.accountError: {
+      const error = accountErrorOf(chunk);
+
+      if (error === null) {
+        return null;
+      }
+
+      return `Account error (${error.kind})${error.message === null ? '' : `: ${error.message}`}`;
+    }
     default:
       return null;
   }

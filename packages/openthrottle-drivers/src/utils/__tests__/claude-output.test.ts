@@ -60,6 +60,7 @@ describe('parseClaudeStreamJsonOutput', () => {
     });
 
     expect(parseClaudeStreamJsonOutput(stdout)).toEqual({
+      accountError: null,
       text: 'done\n<promise>COMPLETE</promise>',
       usageLimit: null,
     });
@@ -74,6 +75,7 @@ describe('parseClaudeStreamJsonOutput', () => {
     });
 
     expect(parseClaudeStreamJsonOutput(stdout)).toEqual({
+      accountError: null,
       text: "You've hit your limit",
       usageLimit: { rateLimitType: 'five_hour', resetsAt: RESETS_AT_ISO },
     });
@@ -102,6 +104,7 @@ describe('parseClaudeStreamJsonOutput', () => {
     });
 
     expect(parseClaudeStreamJsonOutput(stdout)).toEqual({
+      accountError: null,
       text: 'Server is busy',
       usageLimit: { rateLimitType: null, resetsAt: null },
     });
@@ -116,6 +119,7 @@ describe('parseClaudeStreamJsonOutput', () => {
     });
 
     expect(parseClaudeStreamJsonOutput(stdout)).toEqual({
+      accountError: null,
       text: 'internal error',
       usageLimit: null,
     });
@@ -139,6 +143,7 @@ describe('parseClaudeStreamJsonOutput', () => {
     });
 
     expect(parseClaudeStreamJsonOutput(stdout)).toEqual({
+      accountError: null,
       text: 'finished anyway',
       usageLimit: null,
     });
@@ -161,6 +166,7 @@ describe('parseClaudeStreamJsonOutput', () => {
     );
 
     expect(parseClaudeStreamJsonOutput(stdout)).toEqual({
+      accountError: null,
       text: 'second',
       usageLimit: { rateLimitType: 'five_hour', resetsAt: RESETS_AT_ISO },
     });
@@ -170,6 +176,7 @@ describe('parseClaudeStreamJsonOutput', () => {
     const stdout = `\n${ndjson(initEvent, assistantEvent)}\n  \n`;
 
     expect(parseClaudeStreamJsonOutput(stdout)).toEqual({
+      accountError: null,
       text: ndjson(initEvent, assistantEvent),
       usageLimit: null,
     });
@@ -186,10 +193,12 @@ describe('parseClaudeStreamJsonOutput', () => {
 
   it('returns the raw text for non-stream-json output (e.g. a CLI error)', () => {
     expect(parseClaudeStreamJsonOutput('Error: Invalid API key\n')).toEqual({
+      accountError: null,
       text: 'Error: Invalid API key',
       usageLimit: null,
     });
     expect(parseClaudeStreamJsonOutput('')).toEqual({
+      accountError: null,
       text: '',
       usageLimit: null,
     });
@@ -207,6 +216,7 @@ describe('parseClaudeStreamJsonOutput', () => {
     );
 
     expect(parseClaudeStreamJsonOutput(stdout)).toEqual({
+      accountError: null,
       text: 'clean',
       usageLimit: null,
     });
@@ -231,8 +241,73 @@ describe('parseClaudeStreamJsonOutput', () => {
     });
 
     expect(parseClaudeStreamJsonOutput(stdout)).toEqual({
+      accountError: null,
       text: '',
       usageLimit: null,
+    });
+  });
+
+  describe('fatal account errors', () => {
+    const apiErrorAssistant = (error: string, text: string): object => {
+      return {
+        error,
+        isApiErrorMessage: true,
+        message: { content: [{ text, type: 'text' }], role: 'assistant' },
+        session_id: 's-1',
+        type: 'assistant',
+      };
+    };
+
+    const errorResult = (text: string, status: number): object => {
+      return {
+        api_error_status: status,
+        is_error: true,
+        result: text,
+        session_id: 's-1',
+        subtype: 'success',
+        type: 'result',
+      };
+    };
+
+    it('reports a billing error with the init apiKeySource', () => {
+      const stdout = ndjson(
+        { ...initEvent, apiKeySource: 'ANTHROPIC_API_KEY' },
+        apiErrorAssistant('billing_error', 'Credit balance is too low'),
+        errorResult('Credit balance is too low', 400),
+      );
+
+      expect(parseClaudeStreamJsonOutput(stdout)).toEqual({
+        accountError: {
+          apiKeySource: 'ANTHROPIC_API_KEY',
+          kind: 'billing_error',
+          message: 'Credit balance is too low',
+        },
+        text: 'Credit balance is too low',
+        usageLimit: null,
+      });
+    });
+
+    it('reports an invalid key from a 401 result alone, with a null source when init had none', () => {
+      const stdout = ndjson(
+        initEvent,
+        errorResult('Invalid API key · Fix external API key', 401),
+      );
+
+      expect(parseClaudeStreamJsonOutput(stdout).accountError).toEqual({
+        apiKeySource: null,
+        kind: 'authentication_error',
+        message: 'Invalid API key · Fix external API key',
+      });
+    });
+
+    it('does not map a non-fatal API error', () => {
+      const stdout = ndjson(
+        initEvent,
+        apiErrorAssistant('server_error', 'Internal server error'),
+        errorResult('Internal server error', 500),
+      );
+
+      expect(parseClaudeStreamJsonOutput(stdout).accountError).toBeNull();
     });
   });
 });

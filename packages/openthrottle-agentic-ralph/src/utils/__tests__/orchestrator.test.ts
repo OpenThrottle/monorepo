@@ -1000,6 +1000,130 @@ describe('createWorkflowRalphOrchestrator terminal outcomes', () => {
     expect(taskUpdates.some((u) => u.status === 'COMPLETED')).toBe(false);
   });
 
+  describe('when an iteration hits a fatal account error', () => {
+    const accountError = {
+      apiKeySource: 'ANTHROPIC_API_KEY',
+      kind: 'billing_error',
+      message: 'Credit balance is too low',
+    };
+
+    const runAccountErrorPlan = async (): Promise<{
+      readonly chunks: readonly string[];
+      readonly planUpdates: readonly string[];
+      readonly result: Awaited<
+        ReturnType<
+          ReturnType<typeof createWorkflowRalphOrchestrator>['execute']
+        >
+      >;
+      readonly run: ReturnType<typeof vi.fn>;
+      readonly taskUpdates: ReadonlyArray<{ id: string; status: string }>;
+    }> => {
+      // The failed run's "output" even contains a completion marker; it must NOT be parsed.
+      const run = vi.fn(
+        async (params: {
+          readonly onAccountError?: (error: typeof accountError) => void;
+        }) => {
+          params.onAccountError?.(accountError);
+
+          return `Credit balance is too low <ralph:task-complete>${TASK_A}</ralph:task-complete>`;
+        },
+      );
+      const iterationRunner: WorkflowRalphIterationRunner = { run };
+
+      let taskStatus = 'PENDING';
+      const taskUpdates: Array<{ id: string; status: string }> = [];
+      const planUpdates: string[] = [];
+      const executeGraphqlV2 = asExecuteGraphqlV2(
+        async (document, variables) => {
+          if (document === GetServerHealthDocument) {
+            return { serverHealth: serverHealthOk };
+          }
+          if (document === GetPlanDocument) {
+            return { plan: basePlan() };
+          }
+          if (document === GetTasksByPlanIdDocument) {
+            return { tasksByPlanId: [baseTask(TASK_A, taskStatus)] };
+          }
+          if (document === UpdatePlanDocument) {
+            const input = readUpdateInput(variables);
+            planUpdates.push(input.status);
+
+            return { updatePlan: basePlan({ status: input.status }) };
+          }
+          if (document === UpdateTaskDocument) {
+            const input = readUpdateInput(variables);
+            taskStatus = input.status;
+            taskUpdates.push({ id: input.id ?? '', status: input.status });
+
+            return { updateTask: baseTask(TASK_A, input.status) };
+          }
+          if (document === AppendPlanOutputDocument) {
+            return { appendPlanOutput: { id: 'chunk' } };
+          }
+          throw new Error('unmocked GraphQL document in test');
+        },
+      );
+
+      const chunks: string[] = [];
+      const onChunk: WorkflowRalphIterationOnChunk = (chunk) => {
+        chunks.push(chunk.data);
+      };
+
+      const orchestrator = createWorkflowRalphOrchestrator({
+        executeGraphqlV2,
+        iterationRunner,
+        onChunk,
+      });
+
+      const result = await orchestrator.execute({
+        context: { ...baseContext, iterationMax: 5, iterations: 5 },
+      });
+
+      return { chunks, planUpdates, result, run, taskUpdates };
+    };
+
+    it('stops FAILED after exactly one iteration with workflow_agent_account_error', async () => {
+      const { result, run } = await runAccountErrorPlan();
+
+      expect(run).toHaveBeenCalledTimes(1);
+      expect(result).toMatchObject({
+        accountError,
+        exitCode: 1,
+        reason: 'workflow_agent_account_error',
+        status: 'failed',
+      });
+    });
+
+    it('hands the task back PENDING without applying the completion marker', async () => {
+      const { taskUpdates } = await runAccountErrorPlan();
+
+      expect(taskUpdates.at(-1)).toEqual({ id: TASK_A, status: 'PENDING' });
+      expect(taskUpdates.some((u) => u.status === 'COMPLETED')).toBe(false);
+    });
+
+    it('leaves the plan BLOCKED, never IN_PROGRESS', async () => {
+      const { planUpdates } = await runAccountErrorPlan();
+
+      expect(planUpdates.at(-1)).toBe('BLOCKED');
+    });
+
+    it('writes a diagnostic naming the error, the credential and the fix', async () => {
+      const { chunks, result } = await runAccountErrorPlan();
+      const diagnostic = chunks.find((chunk) => {
+        return chunk.includes('iteration 1 stopped');
+      });
+
+      expect(diagnostic).toContain('billing_error');
+      expect(diagnostic).toContain('Credit balance is too low');
+      expect(diagnostic).toContain('ANTHROPIC_API_KEY');
+      expect(diagnostic).toContain('restart the server');
+      expect(
+        result.reason === 'workflow_agent_account_error' &&
+          diagnostic?.includes(result.description),
+      ).toBe(true);
+    });
+  });
+
   it('prefers workflow_cancelled over a usage limit when the run was cancelled', async () => {
     let cancelled = false;
     const run = vi.fn(

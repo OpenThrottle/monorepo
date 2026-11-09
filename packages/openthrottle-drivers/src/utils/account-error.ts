@@ -37,6 +37,17 @@ export interface AccountError {
   readonly message: string | null;
 }
 
+/**
+ * @description An {@link AccountError} as one agent run reports it: plus `apiKeySource`, the
+ * credential the CLI said it authenticated with (`ANTHROPIC_API_KEY` when it billed a key from its
+ * environment, anything else for its own login), or null when the run never reported it. This is
+ * what a run surfaces so a diagnostic can say which account to fix.
+ * @public
+ */
+export interface AgentAccountError extends AccountError {
+  readonly apiKeySource: string | null;
+}
+
 const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 };

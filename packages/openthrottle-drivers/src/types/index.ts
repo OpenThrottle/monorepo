@@ -5,6 +5,7 @@
  * package stays a leaf dependency.
  */
 
+import type { AgentAccountError } from '../utils/account-error.ts';
 import type { DriverOutputFormat } from '../utils/output-format.ts';
 import type { DriverReasoningEffort } from '../utils/reasoning-effort.ts';
 import type { UsageLimit } from '../utils/usage-limit.ts';
@@ -240,10 +241,12 @@ export type DriverUpdateDescriptor =
 /**
  * @description What a driver's {@link AgentDriver.parseOutput} extracts from the raw stdout of one
  * run. `text` is what text-mode stdout would have been (the engine then merges stderr into it);
- * `usageLimit` is non-null when the run was stopped by a subscription usage limit.
+ * `usageLimit` is non-null when the run was stopped by a subscription usage limit; `accountError`
+ * is non-null when its account cannot serve requests at all (no credit, a bad key, no access).
  * @public
  */
 export interface DriverParsedOutput {
+  readonly accountError: AgentAccountError | null;
   readonly text: string;
   readonly usageLimit: UsageLimit | null;
 }

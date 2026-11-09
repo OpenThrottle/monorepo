@@ -20,6 +20,7 @@ import type {
   DriverInvocationConfig,
   DriverParsedOutput,
 } from '../types/index.ts';
+import type { AgentAccountError } from '../utils/account-error.ts';
 import { escalateKill } from '../utils/child-kill.ts';
 import type { DriverLogger } from '../utils/logger.ts';
 import { noopDriverLogger } from '../utils/logger.ts';
@@ -57,6 +58,13 @@ export interface DriverRawOutput {
  */
 export interface RunDriverOptions {
   readonly logger?: DriverLogger;
+  /**
+   * Called with the parsed {@link AgentAccountError} when a run closes **normally** and the
+   * driver's `parseOutput` found a fatal account error (no credit, a bad key, no access — today
+   * only Claude reports one). Same timing as {@link onUsageLimit}: not on timeout, abort or a
+   * launch failure; before `onExit`; never changes the returned string.
+   */
+  readonly onAccountError?: (accountError: AgentAccountError) => void;
   /**
    * Called by `runDriverAsync` with the child's exit code on a **normal** process close only — it
    * does NOT fire when the run ends via timeout or abort (those resolve with a `<promise>ERROR</promise>`
@@ -101,7 +109,11 @@ const interpretStdout = (
   rawStdout: string,
 ): DriverParsedOutput => {
   return (
-    driver.parseOutput?.(rawStdout) ?? { text: rawStdout, usageLimit: null }
+    driver.parseOutput?.(rawStdout) ?? {
+      accountError: null,
+      text: rawStdout,
+      usageLimit: null,
+    }
   );
 };
 
@@ -145,6 +157,10 @@ export const runDriverSync = (
 
   if (parsed.usageLimit !== null) {
     options.onUsageLimit?.(parsed.usageLimit);
+  }
+
+  if (parsed.accountError !== null) {
+    options.onAccountError?.(parsed.accountError);
   }
 
   logger.debug('runDriverSync: runner exited', {
@@ -346,6 +362,10 @@ export const runDriverAsync = (
 
       if (parsed.usageLimit !== null) {
         options.onUsageLimit?.(parsed.usageLimit);
+      }
+
+      if (parsed.accountError !== null) {
+        options.onAccountError?.(parsed.accountError);
       }
 
       options.onExit?.(status);
