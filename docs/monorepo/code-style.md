@@ -67,7 +67,7 @@ lint but never had a rule file of their own:
 | [Data files hold data](#data-files-hold-data)                               | **Enforced** (React Router projects)   | `openthrottle/data-file-shape`                                        |
 | [Named functions use block bodies](#named-functions-use-block-bodies)       | **Enforced** (autofix)                 | `openthrottle/named-function-block-body`                              |
 | [A ternary takes at most three lines](#a-ternary-takes-at-most-three-lines) | **Enforced**                           | `openthrottle/three-line-ternary`                                     |
-| [Long strings are template literals](#long-strings-are-template-literals)   | **Warned** (autofix)                   | `openthrottle/long-string-template-literal`                           |
+| [Long strings are template literals](#long-strings-are-template-literals)   | **Enforced** (autofix)                 | `openthrottle/long-string-template-literal`                           |
 | [JSX consts live under `// Markup`](#jsx-consts-live-under-markup)          | **Enforced** (components)              | `openthrottle/component-primitive-shape`                              |
 | [`sideEffects` is declared and true](#sideeffects-is-declared-and-true)     | **Enforced**                           | `monorepo:check-side-effects` (CI + `check:local`)                    |
 
@@ -826,8 +826,8 @@ measures 210 before Prettier can land at 211 after. Check the cap on the formatt
 
 ## Readability
 
-All five have a lint rule (OT plan `a8cb40e5`). "JSX consts live under `// Markup`" is an
-error in components; the other four warn until their migrations land, then flip to `error`.
+All five have a lint rule at `error` (OT plan `a8cb40e5`); "JSX consts live under
+`// Markup`" covers components only.
 
 **We write code for humans.** The compiler and the minifier make code concise; the source
 does not have to be. These five conventions came out of the PR #622 review, and the
@@ -1027,8 +1027,9 @@ const COPY = {
 line, not two. `data.copy.ts` files already use backticks throughout. Short strings keep
 single quotes: the convention is about strings that wrap, not about quote style.
 
-**Enforcement.** `openthrottle/long-string-template-literal` is on at `warn` repo-wide. It
-raised 420 warnings across the 72 lint targets when it landed. It reports a quoted string
+**Enforcement.** `openthrottle/long-string-template-literal` is on at `error` repo-wide. It
+raised 420 warnings across the 72 lint targets when it landed at `warn`; those sites were
+migrated with its autofix and the rule flipped to `error` (task `73b46adb`). It reports a quoted string
 that starts on a later line than the `:` or `=` before it, which is exactly what Prettier
 prints when it moves a string below its key. It checks three positions: an object property
 value, a class property value, and a `const x =` initializer. Call arguments are out of
@@ -1036,8 +1037,7 @@ scope, because Prettier puts every argument on its own line once a call outgrows
 width; a string alone on its line there is no signal, and backticks would not change the
 layout. The autofix rewrites the string as a template literal on the key's line. It drops
 the quote escape and escapes `` ` `` and `${`. It skips the fix when a comment sits between
-key and value, or when the string has a legacy octal escape. The rule goes to `error` once
-the existing sites are migrated.
+key and value, or when the string has a legacy octal escape; fix those by hand.
 
 Two alternatives were measured and rejected (plan `a8cb40e5`, task `1cc27f78`):
 
