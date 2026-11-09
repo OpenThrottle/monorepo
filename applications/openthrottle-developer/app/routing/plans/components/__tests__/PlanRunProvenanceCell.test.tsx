@@ -2,6 +2,9 @@ import { render, type RenderResult } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
+import { WorkspaceEditorId } from '~/__generated__/graphql';
+import { DefaultEditorContext } from '~/global/config/default-editor-context';
+
 import {
   PlanRunProvenanceCell,
   type PlanRunProvenanceCellProps,
@@ -38,6 +41,25 @@ describe('PlanRunProvenanceCell Component', () => {
       'vscode://file/Users/dev/openthrottle-worktrees/feature',
     );
     expect(link.textContent).toContain('worktree');
+  });
+
+  test('opens the checkout in the default editor when one is set', () => {
+    const component = render(
+      <DefaultEditorContext.Provider value={WorkspaceEditorId.Cursor}>
+        <PlanRunProvenanceCell
+          checkout={{
+            displayName: 'feature-wt',
+            filesystemPath: '/Users/dev/openthrottle-worktrees/feature',
+            kind: 'worktree',
+          }}
+        />
+      </DefaultEditorContext.Provider>,
+    );
+
+    const link = component.getByRole('link', { name: /open in editor/i });
+    expect(link.getAttribute('href')).toBe(
+      'cursor://file/Users/dev/openthrottle-worktrees/feature',
+    );
   });
 
   test('hides the editor link when no checkout is present', () => {

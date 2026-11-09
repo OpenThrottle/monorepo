@@ -7734,6 +7734,16 @@ export type GetMyUserQuery = {
   } | null;
 };
 
+export type GetMyDefaultEditorQueryVariables = Exact<{ [key: string]: never }>;
+
+export type GetMyDefaultEditorQuery = {
+  __typename?: 'Query';
+  userPreferences: {
+    __typename?: 'UserPreferencesObject';
+    defaultEditor?: WorkspaceEditorId | null;
+  };
+};
+
 export type EvaluateFeatureFlagsQueryVariables = Exact<{
   anonymousId?: InputMaybe<Scalars['String']['input']>;
   applicationKey?: InputMaybe<Scalars['String']['input']>;
@@ -17600,6 +17610,37 @@ export const GetMyUserDocument = {
     },
   ],
 } as unknown as DocumentNode<GetMyUserQuery, GetMyUserQueryVariables>;
+export const GetMyDefaultEditorDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getMyDefaultEditor' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'userPreferences' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'defaultEditor' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetMyDefaultEditorQuery,
+  GetMyDefaultEditorQueryVariables
+>;
 export const EvaluateFeatureFlagsDocument = {
   kind: 'Document',
   definitions: [

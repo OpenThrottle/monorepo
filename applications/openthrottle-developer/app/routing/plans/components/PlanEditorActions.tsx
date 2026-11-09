@@ -10,6 +10,8 @@ import * as React from 'react';
 
 import type { WorkspaceEditorId } from '~/__generated__/graphql';
 import { getWorkspaceEditorDeepLink } from '~/global/config/workspace-editor-deep-links';
+import { useDefaultEditor } from '~/global/hooks/useDefaultEditor';
+import { orderEditorsDefaultFirst } from '~/global/utils/order-editors-default-first';
 import { PlanDeferredSection } from '~/routing/plans/components/PlanDeferredSection';
 import { PlanToolbarTagsSkeleton } from '~/routing/plans/components/PlanToolbarTagsSkeleton';
 import { PLAN_DEFERRED_SECTION_COPY } from '~/routing/plans/data/data.copy';
@@ -34,7 +36,8 @@ export interface PlanEditorActionsProps {
 /**
  * @description "Open this plan in my editor" deep links for the plan toolbar —
  * one button per enabled editor, each landing in the plan's checkout with the
- * prompt to run the plan already typed.
+ * prompt to run the plan already typed. The user's default editor renders
+ * first when it is enabled.
  *
  * An editor whose link cannot be built (it needs a folder and the plan has no
  * checkout selected) renders **disabled with a tooltip naming the fix**, not
@@ -54,6 +57,7 @@ export const PlanEditorActions = (
   const { className, editors, planId, workingDirectory } = props;
 
   // Hooks
+  const defaultEditor = useDefaultEditor();
 
   // Setup
 
@@ -93,7 +97,8 @@ export const PlanEditorActions = (
     // A null href means the editor is supported but its precondition is unmet
     // (it needs a folder and none resolved). Those render disabled with a tooltip
     // rather than vanishing — silent absence reads as "the feature is broken".
-    const targets = resolvedEditors
+    // The default editor leads the group (D5); it is never added when disabled.
+    const targets = orderEditorsDefaultFirst(resolvedEditors, defaultEditor)
       .map((editor) => {
         const target = getWorkspaceEditorDeepLink(editor);
 

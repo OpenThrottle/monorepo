@@ -5,6 +5,7 @@ import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
 import { WorkspaceEditorId } from '~/__generated__/graphql';
+import { DefaultEditorContext } from '~/global/config/default-editor-context';
 import {
   PLAN_DEFERRED_SECTION_COPY,
   PLAN_EDITOR_ACTIONS_COPY,
@@ -17,8 +18,19 @@ import { PlanEditorActions } from '../PlanEditorActions';
 const PLAN_ID = 'ec3dcee9-36e6-4ecb-876a-f689723f6db4';
 const WORKING_DIRECTORY = '/Users/matt/Development/openthrottle';
 
-const renderActions = (props: PlanEditorActionsProps): RenderResult => {
-  return renderRoutesStub(<PlanEditorActions {...props} />);
+const renderActions = (
+  props: PlanEditorActionsProps,
+  defaultEditor: WorkspaceEditorId | null = null,
+): RenderResult => {
+  return renderRoutesStub(
+    <DefaultEditorContext.Provider value={defaultEditor}>
+      <PlanEditorActions {...props} />
+    </DefaultEditorContext.Provider>,
+  );
+};
+
+const linkLabels = (component: RenderResult): readonly string[] => {
+  return component.getAllByRole('link').map((link) => link.textContent ?? '');
 };
 
 const resolvedEditors = (
@@ -169,6 +181,73 @@ describe('PlanEditorActions Component', () => {
     expect(
       component.getByRole('button', { name: 'Claude Code' }),
     ).toBeDisabled();
+  });
+
+  describe('when no default editor is set', () => {
+    test('keeps the enabled-editors order', async () => {
+      const component = renderActions({
+        editors: resolvedEditors([
+          WorkspaceEditorId.Claude,
+          WorkspaceEditorId.Cursor,
+          WorkspaceEditorId.Vscode,
+        ]),
+        planId: PLAN_ID,
+        workingDirectory: WORKING_DIRECTORY,
+      });
+
+      await component.findByTestId('PlanEditorActions');
+
+      expect(linkLabels(component)).toEqual([
+        'Claude Code',
+        'Cursor',
+        'VS Code',
+      ]);
+    });
+  });
+
+  describe('when the default editor is enabled', () => {
+    test('renders its button first', async () => {
+      const component = renderActions(
+        {
+          editors: resolvedEditors([
+            WorkspaceEditorId.Claude,
+            WorkspaceEditorId.Cursor,
+            WorkspaceEditorId.Vscode,
+          ]),
+          planId: PLAN_ID,
+          workingDirectory: WORKING_DIRECTORY,
+        },
+        WorkspaceEditorId.Vscode,
+      );
+
+      await component.findByTestId('PlanEditorActions');
+
+      expect(linkLabels(component)).toEqual([
+        'VS Code',
+        'Claude Code',
+        'Cursor',
+      ]);
+    });
+  });
+
+  describe('when the default editor is not enabled', () => {
+    test('neither adds it nor reorders the group', async () => {
+      const component = renderActions(
+        {
+          editors: resolvedEditors([
+            WorkspaceEditorId.Cursor,
+            WorkspaceEditorId.Vscode,
+          ]),
+          planId: PLAN_ID,
+          workingDirectory: WORKING_DIRECTORY,
+        },
+        WorkspaceEditorId.Claude,
+      );
+
+      await component.findByTestId('PlanEditorActions');
+
+      expect(linkLabels(component)).toEqual(['Cursor', 'VS Code']);
+    });
   });
 
   test('renders no Add to Queue or Schedule placeholder buttons', async () => {

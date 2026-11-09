@@ -73,6 +73,10 @@ import { GlobalRootLoaderFailureBanner } from '~/global/components/GlobalRootLoa
 import { GlobalServerHealthBanner } from '~/global/components/GlobalServerHealthBanner';
 import { NotificationsSubscriptionBridge } from '~/global/components/NotificationsSubscriptionBridge';
 import { PROTECTED_PATH_PREFIXES } from '~/global/config/config.app';
+import {
+  DefaultEditorContext,
+  USER_PREFERENCES_ROUTE_PATH,
+} from '~/global/config/default-editor-context';
 import { SITE_TITLE } from '~/global/config/settings';
 import { CONFIG_STORAGE_KEY } from '~/global/data/data.appearance-config';
 import { configAtom } from '~/global/data/data.atom-config';
@@ -110,6 +114,7 @@ import {
   callLogoutMutation,
   callRegisterMutation,
 } from '~/global/utils/utils.auth';
+import { fetchMyDefaultEditor } from '~/global/utils/utils.default-editor.server';
 import { filterNavigationByPermission } from '~/global/utils/utils.permissions';
 import { fetchMyPermissions } from '~/global/utils/utils.permissions.server';
 import { useHeaderChatController } from '~/routing/home/hooks/useHeaderChatController';
@@ -120,10 +125,17 @@ import stylesheet from '~/styles.css?url';
  * @external https://remix.run/docs/en/main/route/should-revalidate
  * We only need to revalidate when we login or logout which
  * is already taken care of by the auth routes. So we don't need to revalidate
- * (refetch) to data at this level.
+ * (refetch) to data at this level — except after a save on the preferences
+ * route, so editor links pick up a new default without a full reload.
  */
-export const shouldRevalidate: ShouldRevalidateFunction = (_args) => {
-  return false;
+export const shouldRevalidate: ShouldRevalidateFunction = (args) => {
+  const { formAction, formMethod } = args;
+
+  if (formMethod == null || formMethod.toUpperCase() === 'GET') {
+    return false;
+  }
+
+  return formAction?.split('?')[0] === USER_PREFERENCES_ROUTE_PATH;
 };
 
 export const links: Route.LinksFunction = () => {
@@ -260,13 +272,16 @@ export const loader = async (args: Route.LoaderArgs) => {
   // Probes return their own failure so the values stay properly typed (a `let`
   // assigned only inside these closures would be narrowed back to `null`,
   // dropping `RootLoaderFailure` from the loader's inferred return type).
-  const [healthFailure, userFailure, permissions] = await Promise.all([
-    healthProbe(),
-    userProbe(),
-    // Soft-fails to `[]` (never throws), so a permissions hiccup can't raise the
-    // root-loader failure banner or flip `userLoadOk`.
-    fetchMyPermissions(request),
-  ]);
+  const [healthFailure, userFailure, permissions, defaultEditor] =
+    await Promise.all([
+      healthProbe(),
+      userProbe(),
+      // Soft-fails to `[]` (never throws), so a permissions hiccup can't raise the
+      // root-loader failure banner or flip `userLoadOk`.
+      fetchMyPermissions(request),
+      // Soft-fails to `null` (system default) for the same reason.
+      fetchMyDefaultEditor(request),
+    ]);
 
   // Prefer the user-step failure when both health and user fail so the banner shows the last/most specific error.
   const rootLoaderFailure = userFailure ?? healthFailure;
@@ -284,6 +299,7 @@ export const loader = async (args: Route.LoaderArgs) => {
 
   return {
     canonical,
+    defaultEditor,
     env,
     permissions,
     rootLoaderDiagnostics: diagnostics,
@@ -628,82 +644,84 @@ export default function App(): React.ReactElement {
   return (
     <>
       <NotificationsStoreProvider>
-        <DeveloperRolloutProvider identityKey={data?.user?.id ?? null}>
-          <NotificationsSubscriptionBridge>
-            <GlobalProviders
-              chat={headerChatSurface}
-              chatPersist={data?.user != null}
-            >
-              <GlobalLayout
-                authenticated={data?.user !== null}
-                data={navigation}
-                health={data?.serverHealth}
-                overrides={{
-                  footer: isFooterHidden,
-                  header: isHeaderHidden,
-                }}
+        <DefaultEditorContext.Provider value={data?.defaultEditor ?? null}>
+          <DeveloperRolloutProvider identityKey={data?.user?.id ?? null}>
+            <NotificationsSubscriptionBridge>
+              <GlobalProviders
+                chat={headerChatSurface}
+                chatPersist={data?.user != null}
               >
-                <GlobalRootLoaderFailureBanner
-                  diagnostics={data?.rootLoaderDiagnostics}
-                  failure={data?.rootLoaderFailure ?? null}
-                  isRevalidating={revalidator.state === 'loading'}
-                  onRetry={handleRootLoaderRetry}
-                  userLoadOk={data?.userLoadOk !== false}
-                />
-
-                <GlobalServerHealthBanner
+                <GlobalLayout
+                  authenticated={data?.user !== null}
+                  data={navigation}
                   health={data?.serverHealth}
-                  suppress={data?.rootLoaderFailure?.step === 'health'}
-                />
+                  overrides={{
+                    footer: isFooterHidden,
+                    header: isHeaderHidden,
+                  }}
+                >
+                  <GlobalRootLoaderFailureBanner
+                    diagnostics={data?.rootLoaderDiagnostics}
+                    failure={data?.rootLoaderFailure ?? null}
+                    isRevalidating={revalidator.state === 'loading'}
+                    onRetry={handleRootLoaderRetry}
+                    userLoadOk={data?.userLoadOk !== false}
+                  />
 
-                {isHeaderHidden ? null : headerMarkup}
+                  <GlobalServerHealthBanner
+                    health={data?.serverHealth}
+                    suppress={data?.rootLoaderFailure?.step === 'health'}
+                  />
 
-                <Outlet />
+                  {isHeaderHidden ? null : headerMarkup}
 
-                {isMetricsHidden ? null : metricsMarkup}
+                  <Outlet />
 
-                <OpenThrottleCommander
-                  className="m-0! p-0!"
-                  emptyStateExtras={commanderEmptyExtras}
-                  emptyStateMessage={
-                    <span className="block px-2 text-center text-sm leading-relaxed">
-                      <span className="block font-medium">
-                        Nothing matched that filter
-                      </span>
-                      <span className="text-muted-foreground mt-2 block text-xs">
-                        <span className="block">
-                          1) Keep typing to narrow the list, or 2) paste one
-                          OpenThrottle UUID for plan/queue/generator/search
-                          rows, or 3) paste two UUIDs with{' '}
-                          <code className="text-[10px]">/</code> or a space to
-                          jump to a queue job or a plan task.
+                  {isMetricsHidden ? null : metricsMarkup}
+
+                  <OpenThrottleCommander
+                    className="m-0! p-0!"
+                    emptyStateExtras={commanderEmptyExtras}
+                    emptyStateMessage={
+                      <span className="block px-2 text-center text-sm leading-relaxed">
+                        <span className="block font-medium">
+                          Nothing matched that filter
+                        </span>
+                        <span className="text-muted-foreground mt-2 block text-xs">
+                          <span className="block">
+                            1) Keep typing to narrow the list, or 2) paste one
+                            OpenThrottle UUID for plan/queue/generator/search
+                            rows, or 3) paste two UUIDs with{' '}
+                            <code className="text-[10px]">/</code> or a space to
+                            jump to a queue job or a plan task.
+                          </span>
+                        </span>
+                        <span className="text-muted-foreground mt-2 block text-xs">
+                          When you have typed text (even if it is not a UUID),
+                          the list below offers browse shortcuts and a full-text
+                          search action.
+                        </span>
+                        <span className="text-muted-foreground mt-2 block text-[10px]">
+                          Server metrics (when visible) use{' '}
+                          <code className="text-[10px]">serverMetrics</code>{' '}
+                          from openthrottle-server; definitions and GraphQL
+                          health: Settings → Debug.
                         </span>
                       </span>
-                      <span className="text-muted-foreground mt-2 block text-xs">
-                        When you have typed text (even if it is not a UUID), the
-                        list below offers browse shortcuts and a full-text
-                        search action.
-                      </span>
-                      <span className="text-muted-foreground mt-2 block text-[10px]">
-                        Server metrics (when visible) use{' '}
-                        <code className="text-[10px]">serverMetrics</code> from
-                        openthrottle-server; definitions and GraphQL health:
-                        Settings → Debug.
-                      </span>
-                    </span>
-                  }
-                  footerHint="Debug jumps use the same POST as Search — see root action commander-search (jump, id, id2, q)."
-                  groups={groups}
-                  onEmptyStateSearch={handleSearch}
-                  onOpenChange={setCommanderOpen}
-                  onSearchChange={setCommanderQuery}
-                  open={commanderOpen}
-                  placeholder="Command, filter navigation, or paste UUID / queueId · jobId…"
-                />
-              </GlobalLayout>
-            </GlobalProviders>
-          </NotificationsSubscriptionBridge>
-        </DeveloperRolloutProvider>
+                    }
+                    footerHint="Debug jumps use the same POST as Search — see root action commander-search (jump, id, id2, q)."
+                    groups={groups}
+                    onEmptyStateSearch={handleSearch}
+                    onOpenChange={setCommanderOpen}
+                    onSearchChange={setCommanderQuery}
+                    open={commanderOpen}
+                    placeholder="Command, filter navigation, or paste UUID / queueId · jobId…"
+                  />
+                </GlobalLayout>
+              </GlobalProviders>
+            </NotificationsSubscriptionBridge>
+          </DeveloperRolloutProvider>
+        </DefaultEditorContext.Provider>
       </NotificationsStoreProvider>
     </>
   );

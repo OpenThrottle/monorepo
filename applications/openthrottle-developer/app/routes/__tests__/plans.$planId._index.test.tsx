@@ -29,6 +29,7 @@ const buildPlanDetailMatches = (
 ): PlanDetailMatches => {
   const rootData = {
     canonical: 'http://localhost/',
+    defaultEditor: null,
     env: getPublicEnv(),
     permissions: [],
     rootLoaderDiagnostics: {},
