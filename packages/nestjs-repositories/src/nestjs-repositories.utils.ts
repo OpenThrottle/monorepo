@@ -56,6 +56,7 @@ import { ProjectTag } from './modules/tags/project-tag.entity.ts';
 import { TaskTag } from './modules/tags/task-tag.entity.ts';
 import { TaskEmbedding } from './modules/task-embeddings/task-embedding.entity.ts';
 import { Task } from './modules/tasks/task.entity.ts';
+import { UserPreferences } from './modules/user-preferences/user-preferences.entity.ts';
 import { User } from './modules/users/user.entity.ts';
 import { WorkArtifact } from './modules/work-ledger/work-artifact.entity.ts';
 import { WorkSession } from './modules/work-ledger/work-session.entity.ts';
@@ -137,6 +138,7 @@ export function getTypeOrmOptions(): DataSourceOptions {
       User,
       UserDisabledAgentCli,
       UserFavoriteAgentModel,
+      UserPreferences,
       UserSkillTag,
       UserWorkspaceSettings,
       WorkArtifact,

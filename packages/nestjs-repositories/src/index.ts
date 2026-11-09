@@ -490,6 +490,19 @@ export type {
   CreateTaskBatchItem,
   GroupedHooks,
 } from './modules/tasks/tasks.types.ts';
+export { USER_PREFERENCES_ERROR_REASONS } from './modules/user-preferences/user-preferences.constants.ts';
+export { UserPreferences } from './modules/user-preferences/user-preferences.entity.ts';
+export { UserPreferencesModule } from './modules/user-preferences/user-preferences.module.ts';
+export { UserPreferencesService } from './modules/user-preferences/user-preferences.service.ts';
+export type {
+  UpdateUserPreferencesPatch,
+  UpdateUserPreferencesResult,
+  UserPreferencesAgent,
+  UserPreferencesAgentInput,
+  UserPreferencesData,
+  UserPreferencesError,
+  UserPreferencesErrorReason,
+} from './modules/user-preferences/user-preferences.types.ts';
 export type { UserData } from './modules/users/user.entity.ts';
 export { User } from './modules/users/user.entity.ts';
 export { UsersService } from './modules/users/users.service.ts';
