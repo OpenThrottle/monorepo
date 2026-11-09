@@ -3,130 +3,55 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { In, Repository } from 'typeorm';
 
-import { toLikeContainsPattern } from '../../utils/like-pattern.ts';
-import { resolveListPagination } from '../../utils/list-pagination.ts';
-import { isUniqueViolation } from '../../utils/unique-violation.ts';
+import { toLikeContainsPattern } from '../../like-pattern/like-pattern.utils.ts';
+import { resolveListPagination } from '../../list-pagination/list-pagination.utils.ts';
+import { isUniqueViolation } from '../../unique-violation/unique-violation.utils.ts';
 import { BlogAuthor } from '../blog-authors/blog-author.entity.ts';
 import { BlogTag } from '../blog-tags/blog-tag.entity.ts';
-import type { BlogPostStatus } from './blog-post.constants.ts';
-import { BLOG_POST_STATUS } from './blog-post.constants.ts';
 import { BlogPost } from './blog-post.entity.ts';
+import { BLOG_POST_STATUS } from './blog-posts.constants.ts';
+import type {
+  BlogPostDraftInput,
+  BlogPostPage,
+  BlogPostPatch,
+  FindAdminBlogPostInput,
+  FindAdminBlogPostsInput,
+  FindPublishedBlogPostsInput,
+} from './blog-posts.types.ts';
+import type { BlogPostStatus } from './blog-posts.types.ts';
 import {
   decodeBlogPostAdminCursor,
   decodeBlogPostCursor,
   encodeBlogPostAdminCursor,
   encodeBlogPostCursor,
-} from './blog-post-cursor.ts';
-import type { BlogPostState } from './blog-post-visibility.ts';
+} from './cursor/cursor.utils.ts';
+import { BLOG_POST_STATE } from './visibility/visibility.constants.ts';
 import {
   applyBlogPostStateFilter,
   applyBlogPostVisibility,
-  BLOG_POST_STATE,
   deriveBlogPostState,
-} from './blog-post-visibility.ts';
+} from './visibility/visibility.utils.ts';
+import {
+  BLOG_WRITE_ENTITY,
+  BLOG_WRITE_RESULT_KIND,
+} from './write-result/write-result.constants.ts';
 import type {
   BlogPostWriteResult,
   BlogWriteNotFound,
   BlogWriteOk,
-} from './blog-write-result.ts';
+} from './write-result/write-result.types.ts';
 import {
-  BLOG_WRITE_ENTITY,
-  BLOG_WRITE_RESULT_KIND,
   blogWriteCoverAltRequired,
   blogWriteNotFound,
   blogWriteOk,
   blogWriteSlugConflict,
   blogWriteStaleWrite,
-} from './blog-write-result.ts';
+} from './write-result/write-result.utils.ts';
 import {
   assertBlogSlug,
   assertNotBlank,
   isCoverAltMissing,
-} from './blog-write-validation.ts';
-
-/**
- * Input for {@link BlogPostsService.findPublished}.
- * @public
- */
-export interface FindPublishedBlogPostsInput {
-  /** Opaque cursor from a previous page's `endCursor`; omit for the first page. */
-  readonly after?: string | null;
-  /** Page size, clamped to `[1, LIST_PAGINATION_MAX_LIMIT]`. */
-  readonly first: number;
-  /** Only posts carrying the tag with this slug. */
-  readonly tagSlug?: string | null;
-}
-
-/**
- * One page of publicly visible posts, newest first.
- * @public
- */
-export interface BlogPostPage {
-  /** Cursor of the last item, or `null` when the page is empty. */
-  readonly endCursor: string | null;
-  readonly hasNextPage: boolean;
-  /** Posts with `author` and `tags` (all of each post's tags) loaded. */
-  readonly items: readonly BlogPost[];
-}
-
-/**
- * Input for {@link BlogPostsService.createPost}. Posts are always created as DRAFT; go live
- * with {@link BlogPostsService.publishPost}.
- * @public
- */
-export interface BlogPostDraftInput {
-  /** Slug of an existing author; omit or `null` for no byline. */
-  readonly authorSlug?: string | null;
-  readonly bodyMarkdown: string;
-  readonly coverImageAlt?: string | null;
-  readonly coverImageUrl?: string | null;
-  readonly excerpt?: string | null;
-  readonly seoDescription?: string | null;
-  readonly seoTitle?: string | null;
-  readonly slug: string;
-  readonly title: string;
-}
-
-/**
- * Partial update for {@link BlogPostsService.updatePost}. A property that is `undefined` (or
- * omitted) is left unchanged; `null` clears a nullable column. Status and `published_at` are
- * not patchable — use the publish / unpublish / archive transitions.
- * @public
- */
-export interface BlogPostPatch {
-  readonly authorSlug?: string | null;
-  readonly bodyMarkdown?: string;
-  readonly coverImageAlt?: string | null;
-  readonly coverImageUrl?: string | null;
-  readonly excerpt?: string | null;
-  readonly seoDescription?: string | null;
-  readonly seoTitle?: string | null;
-  readonly slug?: string;
-  readonly title?: string;
-}
-
-/**
- * Input for {@link BlogPostsService.findAdminPosts}.
- * @public
- */
-export interface FindAdminBlogPostsInput {
-  /** Opaque cursor from a previous page's `endCursor`; omit for the first page. */
-  readonly after?: string | null;
-  /** Page size, clamped to `[1, LIST_PAGINATION_MAX_LIMIT]`. */
-  readonly first: number;
-  /** Case-insensitive substring match on title OR slug; blank means no search. */
-  readonly search?: string | null;
-  /** Only posts in one of these derived states; omit or empty for every post. */
-  readonly states?: readonly BlogPostState[] | null;
-}
-
-/**
- * Lookup for {@link BlogPostsService.findAdminPost}: by id or by slug.
- * @public
- */
-export type FindAdminBlogPostInput =
-  { readonly id: string } | { readonly slug: string };
-
+} from './write-validation/write-validation.utils.ts';
 /**
  * Column changes a write can make. Only the keys present are written, so a concurrent edit to
  * an untouched column is never overwritten.

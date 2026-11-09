@@ -5,7 +5,7 @@
  * The dedupe/count helpers live in `utils/repo-skills-registry.ts`.
  *
  * Keep `OPENTHROTTLE_REPO_SKILL_PATHS` in
- * `packages/nestjs-repositories/.../openthrottle-repo-skill-paths.ts` aligned
+ * `packages/nestjs-repositories/.../workspace-settings.constants.ts` aligned
  * when adding skills that workspace editor apply should write.
  */
 import type { SkillSource } from '@openthrottle/openthrottle-skills';

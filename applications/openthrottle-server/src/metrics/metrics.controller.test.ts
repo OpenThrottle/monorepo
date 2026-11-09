@@ -3,10 +3,10 @@ import { Test } from '@nestjs/testing';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { MetricsController } from './metrics.controller.ts';
-import { ProcessMetricsService } from './process-metrics.service.ts';
-import type { ProcessMetricsSnapshot } from './process-metrics.types.ts';
-import { SystemMetricsService } from './system-metrics.service.ts';
-import type { SystemMetricsSnapshot } from './system-metrics.types.ts';
+import { ProcessMetricsService } from './process-metrics/process-metrics.service.ts';
+import type { ProcessMetricsSnapshot } from './process-metrics/process-metrics.types.ts';
+import { SystemMetricsService } from './system-metrics/system-metrics.service.ts';
+import type { SystemMetricsSnapshot } from './system-metrics/system-metrics.types.ts';
 
 describe('MetricsController', () => {
   let controller: MetricsController;

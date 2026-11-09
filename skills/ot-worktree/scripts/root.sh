@@ -3,7 +3,7 @@
 # resolve_worktree_root — the single place that decides where worktrees live.
 #
 # This is mirrored in TypeScript by
-# applications/openthrottle-server/src/services/worktree-root/worktree-root.resolver.ts
+# applications/openthrottle-server/src/services/worktree-root/worktree-root.utils.ts
 # (the server needs the same answer to discover worktrees). Change one, change both.
 #
 # Sourced, never executed. Requires log() from common.sh.

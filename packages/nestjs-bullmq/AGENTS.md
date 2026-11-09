@@ -9,9 +9,9 @@ job options (retries/backoff/retention), and a `registerQueue` helper for featur
 
 ## Layout
 
-- `src/modules/nestjs-bullmq.module.ts` — the whole module: `ConfigModule.forRoot` with Joi
+- `src/nestjs-bullmq.module.ts` — the whole module: `ConfigModule.forRoot` with Joi
   validation, `BullModule.forRootAsync`, root `defaultJobOptions`, static `registerQueue`.
-- `src/config/nestjs-bullmq.config.ts` — `redisConfig` (`registerAs`) mapping `REDIS_*` env
+- `src/config/config.constants.ts` — `redisConfig` (`registerAs`) mapping `REDIS_*` env
   vars to ioredis connection options, plus the Joi `configValidationSchema`.
 - `src/config/nestjs-bullmq.defaults.ts` — `defaultWorkerOptions` (lockDuration,
   stalledInterval, maxStalledCount) for stalled-job recovery.

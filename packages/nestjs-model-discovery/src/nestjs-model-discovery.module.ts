@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 
-import { modelDiscoveryConfig } from './config/nestjs-model-discovery.config.ts';
+import { modelDiscoveryConfig } from './config/model-discovery-config/model-discovery-config.constants.ts';
 import { NestjsModelDiscoveryService } from './nestjs-model-discovery.service.ts';
 
 @Module({

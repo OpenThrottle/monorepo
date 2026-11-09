@@ -10,19 +10,19 @@ import {
 import { And, LessThan, MoreThanOrEqual } from 'typeorm';
 
 import { NotificationsService } from '../../notifications/notifications.service.ts';
-import { resolveRepeatablesOwner } from '../repeatable-job.owner.ts';
+import { resolveRepeatablesOwner } from '../repeatable-job/repeatable-job.utils.ts';
 import { DAILY_STATS_QUEUE_NAME } from './daily-stats.constants.ts';
-import {
-  addUtcDaysToYmd,
-  enumerateYmdRange,
-  getPreviousUtcDayYmd,
-  getUtcDayBounds,
-} from './daily-stats.dates.ts';
 import type {
   AggregateDailyStatsJob,
   CatchUpSummary,
   DailyStatsAggregate,
 } from './daily-stats.types.ts';
+import {
+  addUtcDaysToYmd,
+  enumerateYmdRange,
+  getPreviousUtcDayYmd,
+  getUtcDayBounds,
+} from './daily-stats.utils.ts';
 
 const CONCURRENCY = 1;
 

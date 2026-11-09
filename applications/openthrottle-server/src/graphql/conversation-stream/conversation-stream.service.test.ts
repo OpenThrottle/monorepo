@@ -7,10 +7,8 @@ import type {
 import { agentConversationMessagesFactory } from '@openthrottle/nestjs-repositories/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  ConversationStreamService,
-  type StartConversationStreamRun,
-} from './conversation-stream.service.ts';
+import { ConversationStreamService } from './conversation-stream.service.ts';
+import type { StartConversationStreamRun } from './conversation-stream.types.ts';
 
 const {
   claudeStreamMock,

@@ -28,7 +28,7 @@ import { asMock } from '@openthrottle/nestjs-testing';
 import type { EntityManager, Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
-import type { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture.service.ts';
+import type { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture/work-ledger-capture.service.ts';
 import type { NotificationsService } from '../../notifications/notifications.service.ts';
 import { PROMOTED_TAG } from './task-promotion.constants.ts';
 import { TaskPromotionService } from './task-promotion.service.ts';

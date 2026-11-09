@@ -9,7 +9,7 @@ import type {
 import type { FindManyOptions, Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { TaggingEnqueueService } from '../tagging/tagging-enqueue.service.ts';
+import type { TaggingEnqueueService } from '../tagging/enqueue/enqueue.service.ts';
 import { WorkLedgerVerifyProcessor } from './work-ledger-verify.processor.ts';
 import type { WorkLedgerVerifyJob } from './work-ledger-verify.types.ts';
 

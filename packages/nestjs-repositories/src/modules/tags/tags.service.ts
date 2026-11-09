@@ -10,7 +10,6 @@
  * rollup the rules engine and plan-aware availability reads consume.
  * See docs/monorepo/plan-task-tags-rules-design.md ("Tag model").
  */
-
 import {
   BadRequestException,
   ConflictException,
@@ -31,34 +30,13 @@ import { SkillTagsService } from '../skill-tags/skill-tags.service.ts';
 import { Task } from '../tasks/task.entity.ts';
 import { PlanTag } from './plan-tag.entity.ts';
 import { ProjectTag } from './project-tag.entity.ts';
-import {
-  deriveTagSource,
-  TAG_SOURCE_RANK,
-  type TagCaller,
-  type TagSource,
-} from './tag-provenance.ts';
+import { TAG_SOURCE_RANK } from './tags.constants.ts';
+import type { AddTagOptions, EffectiveTag } from './tags.types.ts';
+import type { TagCaller, TagSource } from './tags.types.ts';
+import { deriveTagSource } from './tags.utils.ts';
 import { TaskTag } from './task-tag.entity.ts';
 
 const PHASE_DIMENSION = 'phase';
-
-/**
- * @description One entry of an effective tag set: deduped by tag name with the
- * highest-provenance source (and that row's confidence) winning for display.
- * @public
- */
-export interface EffectiveTag {
-  readonly confidence: number | null;
-  readonly dimension: string;
-  readonly source: TagSource;
-  readonly tag: string;
-}
-
-/** @public */
-export interface AddTagOptions {
-  /** Model confidence (0-1) — stored for server-llm writes, observability only. */
-  readonly confidence?: number | null;
-}
-
 const isPostgresError = (error: unknown, code: string): boolean => {
   if (!(error instanceof QueryFailedError)) return false;
   const driverError: unknown = error.driverError;

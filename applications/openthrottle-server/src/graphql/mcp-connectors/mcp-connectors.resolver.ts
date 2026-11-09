@@ -12,15 +12,13 @@ import type { McpConnectorConnection } from '@openthrottle/nestjs-repositories';
 import { McpConnectorsService } from '@openthrottle/nestjs-repositories';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { MCP_CONNECTOR_CATALOG } from './catalog/catalog.constants.ts';
+import { findMcpConnector } from './catalog/catalog.utils.ts';
 import {
   ConnectMcpConnectorInput,
   SetMcpConnectorEnabledInput,
 } from './mcp-connector.input.ts';
 import { McpConnectorObject } from './mcp-connector.object.ts';
-import {
-  findMcpConnector,
-  MCP_CONNECTOR_CATALOG,
-} from './mcp-connector-catalog.ts';
 import { McpConnectorConnectionObject } from './mcp-connector-connection.object.ts';
 import { McpConnectorConnectionResultObject } from './mcp-connector-connection-result.object.ts';
 

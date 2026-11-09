@@ -4,27 +4,15 @@
  * persisted — api_token credentials are stored as a bcrypt hash + masked hint
  * (mirroring service-account credentials); oauth connections store no secret.
  */
-
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
 
-import {
-  type McpConnectorAuthType,
-  McpConnectorConnection,
-} from './mcp-connector-connection.entity.ts';
-import { maskCredentialToken } from './mcp-connector-credential.util.ts';
-
-/** Input for {@link McpConnectorsService.connect}. */
-export type ConnectMcpConnectorInput = {
-  readonly apiToken?: string | null;
-  readonly authType: McpConnectorAuthType;
-  readonly connectorKey: string;
-  readonly label?: string | null;
-  readonly userId: string;
-};
+import { McpConnectorConnection } from './mcp-connector-connection.entity.ts';
+import type { ConnectMcpConnectorInput } from './mcp-connectors.types.ts';
+import { maskCredentialToken } from './mcp-connectors.utils.ts';
 
 @Injectable()
 export class McpConnectorsService {

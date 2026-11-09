@@ -25,7 +25,7 @@ import {
 } from '@openthrottle/nestjs-repositories';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
-import { resolveTagCaller } from '../tags/tags.resolver.ts';
+import { resolveTagCaller } from '../tags/tags.utils.ts';
 import {
   ProjectSkillObject,
   ProjectSkillsResult,

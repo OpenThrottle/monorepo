@@ -4,7 +4,7 @@ import { asMock } from '@openthrottle/nestjs-testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Permissions } from '../decorators/permissions.decorator.ts';
-import { PERMISSIONS, ROLES } from '../roles.ts';
+import { PERMISSIONS, ROLES } from '../roles/roles.constants.ts';
 import { PermissionsGuard } from './permissions.guard.ts';
 
 function createMockContext(

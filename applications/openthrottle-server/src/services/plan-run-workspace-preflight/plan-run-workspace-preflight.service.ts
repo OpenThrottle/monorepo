@@ -13,13 +13,14 @@
  * The diagnostic split matters: a run whose tool catalog is missing the OT tools while other servers
  * attach is an approval/cwd problem, never an auth problem.
  */
-
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
+
+import type { PlanRunWorkspacePreflightParams } from './plan-run-workspace-preflight.types.ts';
 
 /**
  * Workspace MCP config each backend reads, relative to the run directory. Only the two backends a
@@ -35,12 +36,6 @@ const MCP_CONFIG_BY_BACKEND: Partial<Record<WorkflowConfigRunner, string>> = {
 
 /** The MCP server whose absence makes a plan run pointless: it is how the agent reads/writes OT. */
 const REQUIRED_MCP_SERVER = 'openthrottle-mcp';
-
-export interface PlanRunWorkspacePreflightParams {
-  readonly backend: WorkflowConfigRunner;
-  /** Absolute path of the directory the agent will run in (the run's worktree). */
-  readonly workingDirectory: string;
-}
 
 @Injectable()
 export class PlanRunWorkspacePreflightService {

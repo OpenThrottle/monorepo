@@ -141,21 +141,34 @@ function describeMismatch(report: ReplayReport): string {
 }
 
 /**
- * Resolve on the first SIGINT/SIGTERM. The handlers stay installed (`on`, not
- * `once`): a backend can signal more than once while tearing down, and a
- * second signal with no handler would kill the replay before it reports the
- * recorded exit code.
+ * Install SIGINT/SIGTERM handlers and resolve on the first signal. The
+ * handlers stay installed (`on`, not `once`): a backend can signal more than
+ * once while tearing down, and a second signal with no handler would kill the
+ * replay before it reports the recorded exit code.
+ *
+ * They go on for every replay, not only a terminated one: the transcript
+ * already holds how the CLI reacted to any signal it got (agy, for one, traps
+ * SIGTERM, writes an `interrupted` result and exits 1), so a signal must never
+ * cut the replay short of the recording.
  */
-function waitForTermination(): Promise<void> {
+function trapTermination(): Promise<void> {
   return new Promise((resolve) => {
-    const timer = setTimeout(resolve, TERMINATION_WAIT_MS);
     for (const signal of ['SIGINT', 'SIGTERM'] as const) {
       process.on(signal, () => {
-        clearTimeout(timer);
         resolve();
       });
     }
   });
+}
+
+/** Resolve on the first trapped signal, or after {@link TERMINATION_WAIT_MS}. */
+async function waitForTermination(trapped: Promise<void>): Promise<void> {
+  let timer: NodeJS.Timeout | undefined;
+  const timeout = new Promise<void>((resolve) => {
+    timer = setTimeout(resolve, TERMINATION_WAIT_MS);
+  });
+  await Promise.race([trapped, timeout]);
+  clearTimeout(timer);
 }
 
 /**
@@ -199,7 +212,10 @@ export async function runReplayBin(options: ReplayBinOptions): Promise<void> {
 
   // Termination handlers go on before any output: a backend can abort on the
   // first chunk it reads, before the last line is written.
-  const terminated = wasTerminated(transcript) ? waitForTermination() : null;
+  const trapped = trapTermination();
+  const terminated = wasTerminated(transcript)
+    ? waitForTermination(trapped)
+    : null;
 
   for (const line of transcript.stdout) {
     process.stdout.write(`${line}\n`);

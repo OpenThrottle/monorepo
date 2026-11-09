@@ -14,7 +14,7 @@ import type {
   AgenticTestJobPayload,
   AgenticTestJobResult,
 } from '../../queues/agentic-test/agentic-test.types.ts';
-import { AGENTIC_WORKFLOW_MOCK_PAYLOAD } from './agentic-workflow-mock-payload.ts';
+import { AGENTIC_WORKFLOW_MOCK_PAYLOAD } from './agentic-workflow.constants.ts';
 
 @Injectable()
 export class AgenticWorkflowService {

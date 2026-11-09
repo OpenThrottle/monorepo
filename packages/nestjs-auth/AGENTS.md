@@ -9,7 +9,7 @@ by human-JWT and service-account auth.
 
 ## Layout
 
-- `src/auth-principal.ts` — `AuthPrincipal` union (`kind: 'user' | 'service_account'`),
+- `src/auth-principal/auth-principal.utils.ts` — `AuthPrincipal` union (`kind: 'user' | 'service_account'`),
   normalizers and type guards; the identity shape RBAC/CLS code depends on.
 - `src/strategies/jwt.strategy.ts` — HS256 strategy, `JwtPayload`, secret-length enforcement.
 - `src/guards/jwt-auth.guard.ts` — honors `IS_PUBLIC_KEY` from `src/decorators/public.decorator.ts`.
@@ -21,7 +21,7 @@ by human-JWT and service-account auth.
 ## Invariants & gotchas
 
 - **Service-account layering lives in the server, not here.** `ot_sa_…` bearer validation is
-  `applications/openthrottle-server/src/auth/service-account-auth.service.ts`; the server's
+  `applications/openthrottle-server/src/auth/service-account-auth/service-account-auth.service.ts`; the server's
   `GlobalAuthGuard` tries it first, then falls back to this package's JWT guard, and both paths
   normalize into this package's `AuthPrincipal` and honor this package's `IS_PUBLIC_KEY`. Changing
   the `AuthPrincipal` shape, `kind` discriminants, or `IS_PUBLIC_KEY` breaks that guard.

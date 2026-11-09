@@ -24,17 +24,20 @@ export const FOLDER_KINDS: readonly string[] = [
 /**
  * Subject-named kinds: many per folder, each named for what it describes
  * (`graphql/queues/job.object.ts`, `guards/global-auth.guard.ts`,
- * `nest/mcp-toolset-pruner.provider.ts`).
+ * `nest/mcp-toolset-pruner.provider.ts`). `error` is a custom `Error` subclass and
+ * `interceptor` a Nest `NestInterceptor`.
  */
 export const SUBJECT_KINDS: readonly string[] = [
   'decorator',
   'entity',
   'enum',
+  'error',
   'executor',
   'factory',
   'filter',
   'guard',
   'input',
+  'interceptor',
   'mapper',
   'object',
   'options',

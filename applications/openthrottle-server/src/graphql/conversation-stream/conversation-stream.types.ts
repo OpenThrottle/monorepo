@@ -1,14 +1,15 @@
+import {
+  type ChatCompletionMessage,
+  type ConversationPermissionMode,
+  type ConversationReasoningEffort,
+  type ConversationServiceTier,
+} from '@openthrottle/openthrottle-agentic-utils';
 /**
  * @description Shared shapes for the conversation streaming feature. The publish
  * envelope key MUST equal the subscription resolver field name so @nestjs/graphql
  * can resolve conversationStreamChunkAdded (mirrors appendPlanOutput -> planOutputChunkAdded).
  */
-
 import type { UsageLimit } from '@openthrottle/openthrottle-drivers';
-
-/** Subscription field name; used as the PubSub publish envelope key. */
-export const CONVERSATION_STREAM_CHUNK_FIELD =
-  'conversationStreamChunkAdded' as const;
 
 /** A single streamed chunk published to `conversation:<conversationId>:stream`. */
 export interface ConversationStreamChunkPayload {
@@ -66,4 +67,57 @@ export interface TerminalUsageLimitMetadata {
  */
 export interface ConversationStreamChunkEnvelope {
   readonly conversationStreamChunkAdded: ConversationStreamChunkPayload;
+}
+/** Everything needed to run one streamed assistant turn. */
+export interface StartConversationStreamRun {
+  /** Extra directories granted to a CLI beyond `cwd`; empty when none. */
+  readonly additionalDirectories: readonly string[];
+  /** Pre-allocated assistant message id (returned to the client by the mutation). */
+  readonly assistantMessageId: string;
+  /** Backend discriminator (`openai` | `cursor`). */
+  readonly backend: string;
+  /** OpenAI-compatible base URL of the discovered endpoint (openai backend). */
+  readonly baseUrl: string | null;
+  /** Conversation the turn belongs to. */
+  readonly conversationId: string;
+  /** Resolved working directory for a CLI backend. */
+  readonly cwd: string | null;
+  /** @-mentioned workspace-relative paths for structured context injection; empty when none. */
+  readonly fileMentions: readonly string[];
+  /** Extra env a CLI child passes through (OT MCP token + API URLs); null when no MCP is configured. */
+  readonly mcpEnv: Readonly<Record<string, string>> | null;
+  /** Managed MCP servers (canonical `.mcp.json` schema) for a CLI backend; null when none apply. */
+  readonly mcpServers: Readonly<
+    Record<string, Readonly<Record<string, unknown>>>
+  > | null;
+  /** Full prompt context (prior history + the new user message), oldest first. */
+  readonly messages: ReadonlyArray<ChatCompletionMessage>;
+  /** Model id to complete with (openai), or optional model override (cli). */
+  readonly model: string;
+  /**
+   * Permission posture selected in the composer toolbar; forwarded to CLI
+   * backends, which resolve it to concrete permission flags. Null when unset.
+   */
+  readonly permissionMode: ConversationPermissionMode | null;
+  /**
+   * When false (Private mode) the turn streams ephemerally: nothing is written
+   * to the DB — no assistant message, no model snapshot, no CLI-minted session
+   * id. The replay buffer + pubsub still run against the (synthetic) id. True
+   * for every persisted turn.
+   */
+  readonly persist: boolean;
+  /** Provider/backend label persisted on the conversation, or null. */
+  readonly provider: string | null;
+  /** Reasoning effort forwarded to backends that expose one; null when unset. */
+  readonly reasoning: ConversationReasoningEffort | null;
+  /** True when the CLI backend should resume `sessionId` rather than create it (claude). */
+  readonly resumeSession: boolean;
+  /** Service tier forwarded to tier-aware backends (cursor); null when unset. */
+  readonly serviceTier: ConversationServiceTier | null;
+  /** CLI session handle to resume (e.g. cursor chat id), or null when the CLI mints it (opencode first turn). */
+  readonly sessionId: string | null;
+  /** System prompt (persona) injected by CLI backends. */
+  readonly systemPrompt: string | null;
+  /** Owning user id (conversation ownership is enforced on persist). */
+  readonly userId: string;
 }

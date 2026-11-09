@@ -4,7 +4,7 @@ import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants.ts';
 import { QueuesResolver } from './queues.resolver.ts';
-import { QueuesService } from './queues.service.ts';
+import { QueuesService } from './queues-service/queues-service.service.ts';
 
 describe('QueuesResolver', () => {
   let resolver: QueuesResolver;

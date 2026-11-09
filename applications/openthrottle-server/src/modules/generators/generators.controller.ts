@@ -1,10 +1,7 @@
 import { Controller, Get, NotFoundException, Param } from '@nestjs/common';
 
-import {
-  GeneratorItem,
-  getGeneratorByName,
-  getGeneratorsList,
-} from './generators.service.ts';
+import type { GeneratorItem } from './generators.types.ts';
+import { getGeneratorByName, getGeneratorsList } from './generators.utils.ts';
 
 @Controller('generators')
 export class GeneratorsController {

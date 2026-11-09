@@ -1,6 +1,6 @@
 import { SetMetadata } from '@nestjs/common';
 
-import type { Role } from '../roles.ts';
+import type { Role } from '../roles/roles.types.ts';
 
 /** Metadata key for required roles on a route. */
 export const ROLES_KEY = 'roles';

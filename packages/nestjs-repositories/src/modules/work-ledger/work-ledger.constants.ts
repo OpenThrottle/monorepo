@@ -17,10 +17,6 @@ export const WORK_SESSION_CLOSED_BY = {
   /** Closed by the hourly abandoned-session sweeper, 24h after the session started. */
   SWEEPER: 'sweeper',
 } as const;
-
-export type WorkSessionClosedBy =
-  (typeof WORK_SESSION_CLOSED_BY)[keyof typeof WORK_SESSION_CLOSED_BY];
-
 /** Artifact verification state (claims vs facts). Mirrors chk_work_artifacts_verification. */
 export const WORK_ARTIFACT_VERIFICATION = {
   /** Verifier could not reconcile the claim (e.g. rebase/branch drift). */
@@ -30,10 +26,6 @@ export const WORK_ARTIFACT_VERIFICATION = {
   /** Confirmed by a verifier, or a first-party server-witnessed event born verified. */
   VERIFIED: 'verified',
 } as const;
-
-export type WorkArtifactVerification =
-  (typeof WORK_ARTIFACT_VERIFICATION)[keyof typeof WORK_ARTIFACT_VERIFICATION];
-
 /** What wrote an artifact. Mirrors chk_work_artifacts_source. */
 export const WORK_ARTIFACT_SOURCE = {
   /** A verifier/scanner (e.g. git trailer harvest). */
@@ -47,6 +39,3 @@ export const WORK_ARTIFACT_SOURCE = {
   /** First-party server-witnessed event (e.g. status_change). */
   SERVER: 'server',
 } as const;
-
-export type WorkArtifactSource =
-  (typeof WORK_ARTIFACT_SOURCE)[keyof typeof WORK_ARTIFACT_SOURCE];

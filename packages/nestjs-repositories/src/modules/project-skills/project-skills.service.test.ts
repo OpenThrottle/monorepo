@@ -8,7 +8,7 @@ import type { ProjectSkillInput } from '@openthrottle/openthrottle-skills';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { SkillTagsService } from '../skill-tags/skill-tags.service.ts';
-import type { TagCaller } from '../tags/tag-provenance.ts';
+import type { TagCaller } from '../tags/tags.types.ts';
 import { ProjectSkill } from './project-skill.entity.ts';
 import { ProjectSkillsService } from './project-skills.service.ts';
 

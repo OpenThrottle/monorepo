@@ -14,12 +14,12 @@ import {
   DATABASE_BACKUP_QUEUE_NAME,
   DATABASE_BACKUP_WORKER_LOCK_DURATION_MS,
 } from './database-backup.constants.ts';
-import { getDatabaseBackupWorkspaceRoot } from './database-backup.env.ts';
-import { spawnDatabaseBackup } from './database-backup.spawn.ts';
 import type {
   DatabaseBackupJob,
   DatabaseBackupJobResult,
 } from './database-backup.types.ts';
+import { getDatabaseBackupWorkspaceRoot } from './database-backup.utils.ts';
+import { spawnDatabaseBackup } from './database-backup.utils.ts';
 
 const CONCURRENCY = 1;
 const JOB_TYPE = 'database-backup';

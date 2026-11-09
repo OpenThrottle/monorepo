@@ -25,7 +25,6 @@
  * Path containment: the only directory read is the root the shared ladder resolves. No
  * client-supplied path reaches this service.
  */
-
 import { execFile } from 'node:child_process';
 import { readdirSync, statSync } from 'node:fs';
 import { basename, join } from 'node:path';
@@ -39,14 +38,16 @@ import {
   UserWorkspaceSettingsService,
 } from '@openthrottle/nestjs-repositories';
 
-import { parseLinkedWorktrees } from '../../graphql/repository-inspection/parse-linked-worktrees.ts';
-import { realPath } from '../paths/real-path.ts';
-import type { WorktreeRootSource } from '../worktree-root/worktree-root.resolver.ts';
-import { resolveWorktreeRoot } from '../worktree-root/worktree-root.resolver.ts';
+import { parseLinkedWorktrees } from '../../graphql/repository-inspection/repository-inspection.utils.ts';
+import { realPath } from '../paths/real-path/real-path.utils.ts';
+import type { WorktreeRootSource } from '../worktree-root/worktree-root.types.ts';
+import { resolveWorktreeRoot } from '../worktree-root/worktree-root.utils.ts';
+import { MAX_DISCOVERED_WORKTREES } from './worktree-discovery.constants.ts';
 import {
-  isExistingDirectory,
-  isLinkedWorktreeDirectory,
-} from './linked-worktree.ts';
+  MISSING_CHECKOUT_REASON,
+  WORKTREE_DISCOVERY_PROBLEM,
+  WORKTREE_DISCOVERY_SOURCE,
+} from './worktree-discovery.constants.ts';
 import type {
   DiscoveredWorktree,
   MissingWorktreeCheckout,
@@ -57,10 +58,9 @@ import type {
   WorktreeDiscoverySource,
 } from './worktree-discovery.types.ts';
 import {
-  MISSING_CHECKOUT_REASON,
-  WORKTREE_DISCOVERY_PROBLEM,
-  WORKTREE_DISCOVERY_SOURCE,
-} from './worktree-discovery.types.ts';
+  isExistingDirectory,
+  isLinkedWorktreeDirectory,
+} from './worktree-discovery.utils.ts';
 
 const execFileAsync = promisify(execFile);
 
@@ -69,10 +69,6 @@ const GIT_COMMAND_TIMEOUT_MS = 2_000;
 
 /** Cap on stdout per git probe; worktree/status listings stay well inside this. */
 const GIT_MAX_BUFFER_BYTES = 1024 * 1024;
-
-/** Hard cap on rows returned. Overflow is counted and warned about, never silently dropped. */
-export const MAX_DISCOVERED_WORKTREES = 200;
-
 /** Matches the ceiling `workspaceRepositories` already uses for a user's checkouts. */
 const CHECKOUT_LIST_LIMIT = 200;
 

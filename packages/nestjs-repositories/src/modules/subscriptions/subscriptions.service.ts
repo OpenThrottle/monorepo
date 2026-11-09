@@ -4,10 +4,8 @@ import type { DeepPartial } from 'typeorm';
 import { In } from 'typeorm';
 import { Repository } from 'typeorm';
 
-import {
-  type ListPaginationInput,
-  resolveListPagination,
-} from '../../utils/list-pagination.ts';
+import type { ListPaginationInput } from '../../list-pagination/list-pagination.types.ts';
+import { resolveListPagination } from '../../list-pagination/list-pagination.utils.ts';
 import { Subscription } from './subscription.entity.ts';
 
 @Injectable()

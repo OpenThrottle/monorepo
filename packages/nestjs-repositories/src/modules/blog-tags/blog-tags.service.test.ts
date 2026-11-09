@@ -7,7 +7,7 @@ import type { SelectQueryBuilder } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { BlogPost } from '../blog-posts/blog-post.entity.ts';
-import { applyBlogPostVisibility } from '../blog-posts/blog-post-visibility.ts';
+import { applyBlogPostVisibility } from '../blog-posts/visibility/visibility.utils.ts';
 import { BlogTag } from './blog-tag.entity.ts';
 import { blogTagsFactory } from './blog-tags.factory.ts';
 import { BlogTagsService } from './blog-tags.service.ts';

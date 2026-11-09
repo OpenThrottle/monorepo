@@ -40,14 +40,3 @@ export interface RunPlanOrchestratorJobData {
    */
   readonly workingDirectory?: string;
 }
-
-/**
- * @description Narrows to the in-process orchestrator payload. Safe for any object with optional `runKind`
- * and `planId` (including spawn payloads on the same queue).
- */
-export const isRunPlanOrchestratorJobData = (data: {
-  readonly planId: string;
-  readonly runKind?: string;
-}): data is RunPlanOrchestratorJobData => {
-  return data.runKind === 'orchestrator';
-};

@@ -17,7 +17,6 @@
  * Referencing rows keep their history: every foreign key to repository_checkouts is ON DELETE SET
  * NULL, so a settled run simply loses its "open in editor" link to a worktree that no longer exists.
  */
-
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories';
@@ -26,16 +25,14 @@ import {
   RepositoryCheckoutsService,
 } from '@openthrottle/nestjs-repositories';
 
-import { realPath } from '../paths/real-path.ts';
-import { isLinkedWorktreeDirectory } from '../worktree-discovery/linked-worktree.ts';
+import { realPath } from '../paths/real-path/real-path.utils.ts';
+import { isLinkedWorktreeDirectory } from '../worktree-discovery/worktree-discovery.utils.ts';
+import { MAX_PRUNE_CHECKOUT_IDS } from './worktree-checkout-prune.constants.ts';
+import { PRUNE_WORKTREE_CHECKOUT_OUTCOME } from './worktree-checkout-prune.constants.ts';
 import type {
   DeregisterWorktreeCheckoutResult,
   PruneWorktreeCheckoutResult,
 } from './worktree-checkout-prune.types.ts';
-import { PRUNE_WORKTREE_CHECKOUT_OUTCOME } from './worktree-checkout-prune.types.ts';
-
-/** Matches the discovery cap: a page never shows more rows than this to prune at once. */
-export const MAX_PRUNE_CHECKOUT_IDS = 200;
 
 const WORKTREE_KIND = 'worktree';
 

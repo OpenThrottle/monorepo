@@ -6,8 +6,8 @@
 
 import { Field, InputType, Int } from '@nestjs/graphql';
 
+import type { QueueJobLogLevel } from './mapping/mapping.types.ts';
 import { QueueJobLogLevelEnum } from './queue-job-log-level.enum.ts';
-import type { QueueJobLogLevel } from './queue-job-log-mapping.ts';
 
 @InputType()
 export class QueueJobLogsInput {

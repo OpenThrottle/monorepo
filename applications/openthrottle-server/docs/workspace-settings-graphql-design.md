@@ -271,7 +271,7 @@ Nothing read the directories, so apply simply stopped creating them; `enabledSki
 
 `WorkspaceEditorConfigService.reconcileManifestExclusions()` back-fills the exclude at server boot for every registered checkout that already carries a manifest. Idempotent, per-checkout soft-fail, and it never touches the manifest itself — that is the identity anchor `RepositoryInspectionService` reads to reconcile a moved or re-added folder. Non-git folders are skipped silently: there is nothing to hide from.
 
-Service: `packages/nestjs-repositories/src/modules/workspace-settings/workspace-editor-config.service.ts`
+Service: `packages/nestjs-repositories/src/modules/workspace-settings/workspace-editor-config/workspace-editor-config.service.ts`
 
 Developer UI: Settings → Workspace → **Apply editor configuration** (after enabling editors and linking repos).
 
@@ -284,7 +284,7 @@ Developer UI: Settings → Workspace → **Apply editor configuration** (after e
 
 ## Related code
 
-- Path validation (Ralph): `applications/openthrottle-server/src/graphql/plans/enqueue-plan-ralph-tuning.ts` — `validateWorkingDirectory`
+- Path validation (Ralph): `applications/openthrottle-server/src/graphql/plans/enqueue-plan-ralph-tuning/enqueue-plan-ralph-tuning.utils.ts` — `validateWorkingDirectory`
 - Client path validation: `applications/openthrottle-developer/app/routing/plans/utils/workspace-path.ts`
 - Skill registry (UI): `applications/openthrottle-developer/app/routing/agents/data/data.repo-skills-registry.ts`
 - Skill paths (apply): `packages/nestjs-repositories/.../openthrottle-repo-skill-paths.ts`

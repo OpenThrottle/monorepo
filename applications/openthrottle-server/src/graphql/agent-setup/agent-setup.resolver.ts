@@ -40,7 +40,6 @@ import type { AgentSetupMode } from '@openthrottle/openthrottle-agentic-utils';
 import { isDriverId } from '@openthrottle/openthrottle-drivers';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
-import { readAgentCliInstallEnabledFromConfig } from './agent-setup.config.ts';
 import {
   AgentCliSetupConfigObject,
   AgentSetupStreamChunkObject,
@@ -51,7 +50,8 @@ import {
   StartAgentSetupResult,
 } from './agent-setup.object.ts';
 import { AgentSetupService } from './agent-setup.service.ts';
-import { type AgentSetupStreamChunkEnvelope } from './agent-setup.types.ts';
+import type { AgentSetupStreamChunkEnvelope } from './agent-setup.types.ts';
+import { readAgentCliInstallEnabledFromConfig } from './agent-setup.utils.ts';
 
 @Resolver()
 export class AgentSetupResolver {

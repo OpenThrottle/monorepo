@@ -1,0 +1,602 @@
+/**
+ * @description Orchestration + validation for the scheduled-agent-jobs GraphQL surface. Validates
+ * schedule timing (cron, interval or once)/driver/capability/settings, then coordinates the repositories service (persistence), the
+ * scheduler service (BullMQ projection), and the shared queue (run-now enqueue). The DB write and the
+ * scheduler upsert are ordered write-then-project (mirroring enqueue-after-commit): a scheduler is
+ * only registered after its row exists.
+ */
+
+import { InjectQueue } from '@nestjs/bullmq';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { LoggerService } from '@openthrottle/nestjs-modules';
+import {
+  SCHEDULED_AGENT_JOB_MISFIRE_POLICIES,
+  type ScheduledAgentJob,
+  ScheduledAgentJobCheckoutPathService,
+  type ScheduledAgentJobDriverId,
+  type ScheduledAgentJobMisfirePolicy,
+  type ScheduledAgentJobRun,
+  type ScheduledAgentJobRunStatusCount,
+  type ScheduledAgentJobSettings,
+  ScheduledAgentJobsService,
+} from '@openthrottle/nestjs-repositories';
+import {
+  getDriver,
+  parseDriverId,
+  UnknownDriverError,
+} from '@openthrottle/openthrottle-drivers';
+import type { Queue } from 'bullmq';
+
+import { ScheduledAgentJobCancellationService } from '../../queues/scheduled-agent-jobs/cancellation/cancellation.service.ts';
+import { SCHEDULED_AGENT_JOB_MISFIRE_MIN_THRESHOLD_MS } from '../../queues/scheduled-agent-jobs/misfire/misfire.constants.ts';
+import {
+  SCHEDULED_AGENT_JOB_NAME,
+  SCHEDULED_AGENT_JOB_OPTIONS,
+  SCHEDULED_AGENT_JOBS_QUEUE_NAME,
+} from '../../queues/scheduled-agent-jobs/scheduled-agent-jobs.constants.ts';
+import type { ScheduledAgentJobPayload } from '../../queues/scheduled-agent-jobs/scheduled-agent-jobs.types.ts';
+import { ScheduledAgentJobSchedulerService } from '../../queues/scheduled-agent-jobs/scheduler/scheduler.service.ts';
+import type {
+  ScheduleSpec,
+  ScheduleSpecRequest,
+} from './schedule-spec/schedule-spec.types.ts';
+import { resolveScheduleSpec } from './schedule-spec/schedule-spec.utils.ts';
+
+/** Shape a create request arrives in (settings already validated/parsed). */
+interface CreateArgs extends ScheduleSpecRequest {
+  readonly cwd?: string | null;
+  readonly driverId: string;
+  readonly enabled?: boolean;
+  readonly misfirePolicy?: string | null;
+  readonly misfireThresholdMs?: number | null;
+  readonly model?: string | null;
+  readonly name: string;
+  readonly ownerUserId: string | null;
+  readonly prompt: string;
+  readonly repositoryCheckoutId?: string | null;
+  readonly settingsJson?: string | null;
+  readonly timeoutMs?: number | null;
+  readonly timezone?: string | null;
+}
+
+interface UpdateArgs extends ScheduleSpecRequest {
+  readonly cwd?: string | null;
+  readonly driverId?: string;
+  readonly misfirePolicy?: string | null;
+  readonly misfireThresholdMs?: number | null;
+  readonly model?: string | null;
+  readonly name?: string;
+  readonly prompt?: string;
+  readonly repositoryCheckoutId?: string | null;
+  readonly settingsJson?: string | null;
+  readonly timeoutMs?: number | null;
+  readonly timezone?: string | null;
+}
+
+@Injectable()
+export class ScheduledAgentJobsGraphqlService {
+  constructor(
+    private readonly logger: LoggerService,
+    private readonly jobsService: ScheduledAgentJobsService,
+    private readonly checkoutPaths: ScheduledAgentJobCheckoutPathService,
+    private readonly scheduler: ScheduledAgentJobSchedulerService,
+    private readonly cancellation: ScheduledAgentJobCancellationService,
+    @InjectQueue(SCHEDULED_AGENT_JOBS_QUEUE_NAME)
+    private readonly queue: Queue<ScheduledAgentJobPayload, void>,
+  ) {}
+
+  list(ownerUserId?: string): Promise<ScheduledAgentJob[]> {
+    return this.jobsService.listJobs(ownerUserId);
+  }
+
+  get(id: string): Promise<ScheduledAgentJob | null> {
+    return this.jobsService.findJobById(id);
+  }
+
+  listRuns(
+    scheduledAgentJobId: string,
+    limit?: number,
+  ): Promise<ScheduledAgentJobRun[]> {
+    return this.jobsService.listRunsForJob(scheduledAgentJobId, limit);
+  }
+
+  getRun(runId: string): Promise<ScheduledAgentJobRun | null> {
+    return this.jobsService.findRunById(runId);
+  }
+
+  /** Every not-yet-terminal run across all schedules, oldest-first. */
+  listInFlightRuns(limit?: number): Promise<ScheduledAgentJobRun[]> {
+    return this.jobsService.listInFlightRuns(limit);
+  }
+
+  /** Run counts grouped by status for runs created at or after `since`. */
+  countRunsByStatusSince(
+    since: Date,
+  ): Promise<ScheduledAgentJobRunStatusCount[]> {
+    return this.jobsService.countRunsByStatusSince(since);
+  }
+
+  /** Live, unwindowed counts of not-yet-terminal runs, grouped by status. */
+  countInFlightRunsByStatus(): Promise<ScheduledAgentJobRunStatusCount[]> {
+    return this.jobsService.countInFlightRunsByStatus();
+  }
+
+  async create(args: CreateArgs): Promise<ScheduledAgentJob> {
+    const driverId = this.validateDriver(args.driverId, {
+      model: args.model,
+      settingsJson: args.settingsJson,
+    });
+    const spec = this.assertValidSchedule(args, undefined);
+    const settings = this.parseSettings(args.settingsJson);
+    const misfirePolicy = this.parseMisfirePolicy(args.misfirePolicy);
+    const misfireThresholdMs = this.parseMisfireThreshold(
+      args.misfireThresholdMs,
+    );
+    await this.assertResolvableCheckout(
+      args.repositoryCheckoutId,
+      args.ownerUserId,
+    );
+
+    const job = await this.jobsService.createJob({
+      ...spec,
+      cwd: args.cwd ?? null,
+      driverId,
+      enabled: args.enabled ?? true,
+      misfirePolicy,
+      misfireThresholdMs,
+      model: args.model ?? null,
+      name: args.name,
+      ownerUserId: args.ownerUserId,
+      prompt: args.prompt,
+      repositoryCheckoutId: args.repositoryCheckoutId ?? null,
+      settings,
+      timeoutMs: args.timeoutMs ?? null,
+      timezone: args.timezone ?? null,
+    });
+
+    await this.projectScheduler(job);
+    return this.reload(job.id);
+  }
+
+  async update(id: string, args: UpdateArgs): Promise<ScheduledAgentJob> {
+    const existing = await this.requireJob(id);
+
+    const driverId = this.validateDriver(args.driverId ?? existing.driverId, {
+      existingSettings: existing.settings,
+      model: args.model === undefined ? existing.model : args.model,
+      settingsJson: args.settingsJson,
+    });
+    const spec = this.assertValidSchedule(args, existing);
+    const misfirePolicy = this.parseMisfirePolicy(args.misfirePolicy);
+    const misfireThresholdMs = this.parseMisfireThreshold(
+      args.misfireThresholdMs,
+    );
+    // Validated against the EXISTING owner: ownerUserId is never client-supplied on update.
+    await this.assertResolvableCheckout(
+      args.repositoryCheckoutId,
+      existing.ownerUserId,
+    );
+
+    let nextDriverId: typeof driverId | undefined;
+    if (args.driverId !== undefined) {
+      nextDriverId = driverId;
+    }
+    let nextSettings: ScheduledAgentJobSettings | undefined;
+    if (args.settingsJson !== undefined) {
+      nextSettings = this.parseSettings(args.settingsJson);
+    }
+
+    const updated = await this.jobsService.updateJob(id, {
+      ...spec,
+      cwd: args.cwd,
+      driverId: nextDriverId,
+      misfirePolicy,
+      misfireThresholdMs,
+      model: args.model,
+      name: args.name,
+      prompt: args.prompt,
+      repositoryCheckoutId: args.repositoryCheckoutId,
+      settings: nextSettings,
+      timeoutMs: args.timeoutMs,
+      timezone: args.timezone,
+    });
+    if (updated === null) {
+      throw new BadRequestException(`Scheduled job ${id} not found`);
+    }
+
+    await this.projectScheduler(updated);
+    return this.reload(id);
+  }
+
+  async setEnabled(id: string, enabled: boolean): Promise<ScheduledAgentJob> {
+    const updated = await this.jobsService.setJobEnabled(id, enabled);
+    if (updated === null) {
+      throw new BadRequestException(`Scheduled job ${id} not found`);
+    }
+
+    await this.projectScheduler(updated);
+    return this.reload(id);
+  }
+
+  async delete(id: string): Promise<boolean> {
+    const existing = await this.jobsService.findJobById(id);
+    if (existing === null) {
+      return false;
+    }
+
+    await this.scheduler.unschedule(existing);
+    return this.jobsService.deleteJob(id);
+  }
+
+  /**
+   * @description Enqueue an immediate one-off run. Pre-creates the run row (trigger=manual) and sets
+   * the BullMQ jobId to the run id so the JSONL log join is deterministic. Allowed on a disabled
+   * schedule (useful to test before enabling).
+   */
+  async runNow(id: string): Promise<ScheduledAgentJobRun> {
+    const job = await this.requireJob(id);
+
+    const run = await this.jobsService.createRun({
+      driverId: job.driverId,
+      model: job.model,
+      scheduledAgentJobId: job.id,
+      status: 'queued',
+      trigger: 'manual',
+    });
+
+    const payload: ScheduledAgentJobPayload = {
+      cwd: job.cwd,
+      driverId: job.driverId,
+      model: job.model,
+      prompt: job.prompt,
+      repositoryCheckoutId: job.repositoryCheckoutId,
+      runId: run.id,
+      scheduleId: job.id,
+      settings: job.settings,
+      timeoutMs: job.timeoutMs,
+    };
+
+    await this.queue.add(SCHEDULED_AGENT_JOB_NAME, payload, {
+      ...SCHEDULED_AGENT_JOB_OPTIONS,
+      jobId: run.id,
+    });
+
+    return run;
+  }
+
+  /**
+   * @description Request cancellation of an in-flight run: durable marker + best-effort in-process
+   * abort. Cross-process cancellation (a pub/sub channel) is a follow-up; the marker is the guaranteed
+   * fallback.
+   */
+  async cancelRun(runId: string): Promise<ScheduledAgentJobRun> {
+    const run = await this.jobsService.findRunById(runId);
+    if (run === null) {
+      throw new BadRequestException(`Scheduled job run ${runId} not found`);
+    }
+
+    await this.jobsService.requestRunCancel(runId);
+    this.cancellation.abort(runId);
+
+    if (run.status === 'queued') {
+      await this.cancelQueuedRun(run);
+    }
+
+    const refreshed = await this.jobsService.findRunById(runId);
+    return refreshed ?? run;
+  }
+
+  /**
+   * @description Cancels a run that has not started: removes its BullMQ job (a run-now job that has
+   * not been picked up yet, or a delayed usage-limit resume) and records the run `cancelled`, so the
+   * job cannot fire later. The job is addressed by the run's `bullmqJobId` (set at creation for a
+   * resume) falling back to the run id (run-now's jobId). A job a worker has already locked cannot be
+   * removed; the durable cancel marker stays as the fallback and the row is left for the processor.
+   * Best-effort — a Redis error is logged, never thrown.
+   */
+  private async cancelQueuedRun(run: ScheduledAgentJobRun): Promise<void> {
+    try {
+      const job = await this.queue.getJob(run.bullmqJobId ?? run.id);
+
+      if (job !== undefined) {
+        const state = await job.getState();
+        if (state === 'active') {
+          return;
+        }
+        await job.remove();
+      }
+
+      await this.jobsService.markRunFinished(run.id, {
+        errorMessage: 'Run cancelled',
+        exitCode: null,
+        status: 'cancelled',
+      });
+    } catch (error) {
+      this.logger.warn(
+        `Could not remove the queued job for scheduled run ${run.id}: ${error instanceof Error ? error.message : String(error)}`,
+        ScheduledAgentJobsGraphqlService.name,
+      );
+    }
+  }
+
+  private async projectScheduler(job: ScheduledAgentJob): Promise<void> {
+    if (job.enabled) {
+      const next = await this.scheduler.upsertScheduler(job);
+      await this.jobsService.updateNextRunAt(job.id, next);
+    } else {
+      await this.scheduler.unschedule(job);
+      await this.jobsService.updateNextRunAt(job.id, null);
+    }
+  }
+
+  private async requireJob(id: string): Promise<ScheduledAgentJob> {
+    const job = await this.jobsService.findJobById(id);
+    if (job === null) {
+      throw new BadRequestException(`Scheduled job ${id} not found`);
+    }
+    return job;
+  }
+
+  private async reload(id: string): Promise<ScheduledAgentJob> {
+    const job = await this.jobsService.findJobById(id);
+    if (job === null) {
+      throw new BadRequestException(`Scheduled job ${id} vanished after write`);
+    }
+    return job;
+  }
+
+  /**
+   * @description Rejects a checkout id that does not resolve for the schedule's owner, so a foreign or
+   * unknown id fails at create/update rather than at 3am. Undefined means "not being changed" and null
+   * means "clear the target" — neither is validated. Supplying BOTH a checkout and a `cwd` is accepted:
+   * the precedence ladder is deterministic and the checkout simply wins.
+   */
+  private async assertResolvableCheckout(
+    repositoryCheckoutId: string | null | undefined,
+    ownerUserId: string | null,
+  ): Promise<void> {
+    if (
+      repositoryCheckoutId === undefined ||
+      repositoryCheckoutId === null ||
+      repositoryCheckoutId.trim() === ''
+    ) {
+      return;
+    }
+
+    const resolved = await this.checkoutPaths.resolve({
+      checkoutId: repositoryCheckoutId,
+      ownerUserId,
+    });
+    if ('error' in resolved) {
+      throw new BadRequestException('Repository not found.');
+    }
+  }
+
+  /**
+   * @description The validated schedule kind and timing (cron pattern, interval, or run-once time).
+   * On update, `existing` fills in whatever the request leaves out. Throws on anything invalid.
+   */
+  private assertValidSchedule(
+    request: ScheduleSpecRequest,
+    existing: ScheduledAgentJob | undefined,
+  ): ScheduleSpec {
+    const result = resolveScheduleSpec(request, existing);
+    if (!result.ok) {
+      throw new BadRequestException(result.reason);
+    }
+    return result.spec;
+  }
+
+  /**
+   * @description The misfire policy from a request, or undefined when omitted/null (create keeps the
+   * column default, update leaves the field unchanged). Throws on an unknown policy.
+   */
+  private parseMisfirePolicy(
+    raw: string | null | undefined,
+  ): ScheduledAgentJobMisfirePolicy | undefined {
+    if (raw === null || raw === undefined) return undefined;
+
+    const policy = SCHEDULED_AGENT_JOB_MISFIRE_POLICIES.find(
+      (candidate) => candidate === raw,
+    );
+    if (policy === undefined) {
+      throw new BadRequestException(
+        `Unknown misfire policy "${raw}"; expected one of ${SCHEDULED_AGENT_JOB_MISFIRE_POLICIES.join(', ')}.`,
+      );
+    }
+
+    return policy;
+  }
+
+  /**
+   * @description The misfire threshold from a request, or undefined when omitted/null. Must be a whole
+   * number of ms of at least a minute: below that, ordinary queue jitter would trip the policy.
+   */
+  private parseMisfireThreshold(
+    raw: number | null | undefined,
+  ): number | undefined {
+    if (raw === null || raw === undefined) return undefined;
+
+    if (
+      !Number.isInteger(raw) ||
+      raw < SCHEDULED_AGENT_JOB_MISFIRE_MIN_THRESHOLD_MS
+    ) {
+      throw new BadRequestException(
+        `misfireThresholdMs must be a whole number of at least ${SCHEDULED_AGENT_JOB_MISFIRE_MIN_THRESHOLD_MS} (one minute).`,
+      );
+    }
+
+    return raw;
+  }
+
+  /**
+   * @description Validates the driver id and that the requested model/endpoint/worktree are supported
+   * by that driver's capabilities. Returns the typed driver id. Throws BadRequestException on any
+   * mismatch (never a silent drop).
+   */
+  private validateDriver(
+    rawDriverId: string,
+    opts: {
+      readonly existingSettings?: ScheduledAgentJobSettings;
+      readonly model?: string | null;
+      readonly settingsJson?: string | null;
+    },
+  ): ScheduledAgentJobDriverId {
+    let driverId: ScheduledAgentJobDriverId;
+    try {
+      driverId = parseDriverId(rawDriverId);
+    } catch (error) {
+      if (error instanceof UnknownDriverError) {
+        throw new BadRequestException(`Unknown driver "${rawDriverId}"`);
+      }
+      throw error;
+    }
+
+    const driver = getDriver(driverId);
+    const model = opts.model?.trim();
+    if (model && !driver.capabilities.supportsModelFlag) {
+      throw new BadRequestException(
+        `Driver "${driverId}" does not support a model flag`,
+      );
+    }
+
+    let settings = opts.existingSettings;
+    if (opts.settingsJson !== undefined && opts.settingsJson !== null) {
+      settings = this.parseSettings(opts.settingsJson);
+    }
+    if (settings?.endpoint && !driver.capabilities.supportsCustomBaseUrl) {
+      throw new BadRequestException(
+        `Driver "${driverId}" does not support a custom endpoint`,
+      );
+    }
+    if (settings?.worktree && !driver.capabilities.worktree) {
+      throw new BadRequestException(
+        `Driver "${driverId}" does not support worktrees`,
+      );
+    }
+
+    return driverId;
+  }
+
+  /**
+   * @description Parses + validates the settings JSON into the strict AgentPromptSettings subset.
+   * Rejects unknown top-level keys, unknown endpoint/worktree keys, and endpoint.apiKey (never persist
+   * a plaintext key).
+   */
+  private parseSettings(
+    settingsJson: string | null | undefined,
+  ): ScheduledAgentJobSettings {
+    if (
+      settingsJson === undefined ||
+      settingsJson === null ||
+      settingsJson.trim() === ''
+    ) {
+      return {};
+    }
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(settingsJson);
+    } catch {
+      throw new BadRequestException('settingsJson is not valid JSON');
+    }
+
+    if (
+      parsed === null ||
+      typeof parsed !== 'object' ||
+      Array.isArray(parsed)
+    ) {
+      throw new BadRequestException('settingsJson must be a JSON object');
+    }
+
+    const record: Record<string, unknown> = { ...parsed };
+    const settings: {
+      endpoint?: ScheduledAgentJobSettings['endpoint'];
+      worktree?: ScheduledAgentJobSettings['worktree'];
+    } = {};
+
+    for (const key of Object.keys(record)) {
+      if (key !== 'endpoint' && key !== 'worktree') {
+        throw new BadRequestException(`Unknown settings key "${key}"`);
+      }
+    }
+
+    if (record.endpoint !== undefined) {
+      settings.endpoint = this.parseEndpoint(record.endpoint);
+    }
+    if (record.worktree !== undefined) {
+      settings.worktree = this.parseWorktree(record.worktree);
+    }
+
+    return settings;
+  }
+
+  private parseEndpoint(
+    raw: unknown,
+  ): NonNullable<ScheduledAgentJobSettings['endpoint']> {
+    if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) {
+      throw new BadRequestException('settings.endpoint must be an object');
+    }
+    const record: Record<string, unknown> = { ...raw };
+
+    if ('apiKey' in record) {
+      throw new BadRequestException(
+        'settings.endpoint.apiKey is not allowed; configure keys via server env',
+      );
+    }
+    for (const key of Object.keys(record)) {
+      if (key !== 'baseUrl' && key !== 'provider' && key !== 'configFilePath') {
+        throw new BadRequestException(`Unknown endpoint key "${key}"`);
+      }
+    }
+    if (typeof record.baseUrl !== 'string' || record.baseUrl.trim() === '') {
+      throw new BadRequestException('settings.endpoint.baseUrl is required');
+    }
+
+    let endpoint: NonNullable<ScheduledAgentJobSettings['endpoint']> = {
+      baseUrl: record.baseUrl,
+    };
+    if (
+      record.provider === 'lmstudio' ||
+      record.provider === 'ollama' ||
+      record.provider === null
+    ) {
+      endpoint = { ...endpoint, provider: record.provider };
+    }
+    if (typeof record.configFilePath === 'string') {
+      endpoint = { ...endpoint, configFilePath: record.configFilePath };
+    }
+
+    return endpoint;
+  }
+
+  private parseWorktree(
+    raw: unknown,
+  ): NonNullable<ScheduledAgentJobSettings['worktree']> {
+    if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) {
+      throw new BadRequestException('settings.worktree must be an object');
+    }
+    const record: Record<string, unknown> = { ...raw };
+    for (const key of Object.keys(record)) {
+      if (
+        key !== 'skipWorktreeSetup' &&
+        key !== 'worktree' &&
+        key !== 'worktreeBase'
+      ) {
+        throw new BadRequestException(`Unknown worktree key "${key}"`);
+      }
+    }
+
+    return {
+      ...(typeof record.skipWorktreeSetup === 'boolean'
+        ? { skipWorktreeSetup: record.skipWorktreeSetup }
+        : {}),
+      ...(typeof record.worktree === 'string'
+        ? { worktree: record.worktree }
+        : {}),
+      ...(typeof record.worktreeBase === 'string'
+        ? { worktreeBase: record.worktreeBase }
+        : {}),
+    };
+  }
+}

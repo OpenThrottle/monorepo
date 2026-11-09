@@ -8,9 +8,9 @@ basic-auth, for monitoring BullMQ queues/jobs.
 
 ## Layout
 
-- `src/modules/nestjs-bullmq-board.module.ts` — everything: `isBullBoardEnabled()`, `forRoot`
+- `src/nestjs-bullmq-board.module.ts` — everything: `isBullBoardEnabled()`, `forRoot`
   (mounts dashboard + basic-auth), `forFeature` (registers one queue).
-- `src/config/nestjs-bullmq-board.config.ts` — `bullmqBoardConfig` (`registerAs`) + Joi schema
+- `src/config/config.constants.ts` — `bullmqBoardConfig` (`registerAs`) + Joi schema
   for `BULLMQ_BOARD_ADMIN_USERNAME` / `BULLMQ_BOARD_ADMIN_PASSWORD` (password min 16 chars).
 
 ## Invariants & gotchas

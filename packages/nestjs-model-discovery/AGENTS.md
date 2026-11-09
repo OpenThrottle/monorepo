@@ -12,7 +12,7 @@ package directly).
 
 - `src/nestjs-model-discovery.service.ts` — `discover()` / `invalidate()`, in-process
   TTL cache, `scannedAt` stamping.
-- `src/config/nestjs-model-discovery.config.ts` — `registerAs('modelDiscovery')` env
+- `src/config/config.constants.ts` — `registerAs('modelDiscovery')` env
   mapping + exported Joi `configValidationSchema`.
 - `src/nestjs-model-discovery.module.ts` — module wiring.
 

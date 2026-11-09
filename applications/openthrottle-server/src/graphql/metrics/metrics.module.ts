@@ -1,0 +1,16 @@
+/**
+ * @description GraphQL module for metrics namespace. Exposes metrics { serverSnapshot, recentPlanRunsMetrics };
+ * serverMetrics remains at root (HealthGraphqlModule) for backward compatibility.
+ */
+
+import { Module } from '@nestjs/common';
+
+import { MetricsModule } from '../../metrics/metrics.module.ts';
+import { QueuesGraphqlModule } from '../queues/queues.module.ts';
+import { MetricsResolver } from './metrics.resolver.ts';
+
+@Module({
+  imports: [MetricsModule, QueuesGraphqlModule],
+  providers: [MetricsResolver],
+})
+export class MetricsGraphqlModule {}

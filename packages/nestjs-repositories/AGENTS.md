@@ -12,11 +12,11 @@ through — the sibling `nestjs-typeorm` has no consumers.
 - `src/index.ts` — barrel of every entity, factory, service, and loader; add new exports here.
 - `src/modules/<domain>/<name>.entity.ts` — one folder per table; entities + `*.service.ts`
   (thin `getRepository()` wrappers) + `*.factory.ts` (fishery test factories).
-- `src/database.config.ts` — DataSource wiring; reads `POSTGRES_URL`/`POSTGRES_*` via
+- `src/nestjs-repositories.utils.ts` — DataSource wiring; reads `POSTGRES_URL`/`POSTGRES_*` via
   `getPostgresUrl`, honours `POSTGRES_SLOW_QUERY_MS`.
 - `src/utils/` — shared `entity-loaders` (dataloader helpers), `list-pagination`,
   `vector.transformer` (pgvector column codec).
-- `src/config/` — `plan-task-status.constants` (the plan/task status sets).
+- `src/config/` — `config.constants` (the plan/task status sets).
 
 ## Invariants & gotchas
 

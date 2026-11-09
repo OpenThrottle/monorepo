@@ -1,0 +1,90 @@
+import type { RedisConnectionOptions } from './config.types.ts';
+/** BullMQ's default key prefix; the main checkout keeps it so existing Redis state stays reachable. */
+const DEFAULT_QUEUE_PREFIX = 'bull';
+
+/**
+ * Truthy env-string check. Accepts `1`, `true`, `yes`, `on` (case-insensitive).
+ */
+const isEnvTrue = (value: string | undefined): boolean => {
+  return (
+    value !== undefined &&
+    ['1', 'on', 'true', 'yes'].includes(value.toLowerCase())
+  );
+};
+
+/**
+ * @description Resolves the environment-scoped BullMQ key prefix for this checkout.
+ *
+ * Worktrees share the host Redis, and BullMQ queue names are static global
+ * strings — without a per-checkout prefix, every worker-role process races on
+ * the same queues and a plan run can execute against the WRONG checkout. The
+ * prefix is the isolation mechanism.
+ *
+ * Resolution order:
+ * 1. `OT_QUEUE_PREFIX` — explicit override.
+ * 2. `OT_CONTAINER_PREFIX` (written per-worktree by `setup_worktree.ts`, e.g.
+ *    `wt-<slug>-`) → `bull:wt-<slug>` so worktrees are isolated out of the box.
+ * 3. `'bull'` — BullMQ's default; the main checkout and self-hosted deploys
+ *    keep their existing Redis keys (repeatable jobs, cron state) untouched.
+ *
+ * Every producer and consumer in one checkout resolves the same value because
+ * both read the same env (root `.env` via Nx env loading, or the container
+ * environment in docker).
+ *
+ * @public
+ */
+export const resolveQueuePrefix = (): string => {
+  const explicit = process.env.OT_QUEUE_PREFIX?.trim();
+  if (explicit) {
+    return explicit;
+  }
+
+  const containerPrefix = process.env.OT_CONTAINER_PREFIX?.trim().replace(
+    /-+$/,
+    '',
+  );
+  if (containerPrefix) {
+    return `${DEFAULT_QUEUE_PREFIX}:${containerPrefix}`;
+  }
+
+  return DEFAULT_QUEUE_PREFIX;
+};
+
+/**
+ * @description Resolves ioredis connection options from REDIS_* env vars, or
+ * `null` when `REDIS_HOST` is unset.
+ *
+ * Required: `REDIS_HOST`. Optional: `REDIS_PORT` (default 6379), `REDIS_DB`,
+ * `REDIS_USERNAME`, `REDIS_PASSWORD`, `REDIS_TLS` (enables TLS — required by most
+ * managed/cloud Redis), `REDIS_FAMILY` (4 = IPv4, 6 = IPv6; some managed Redis
+ * resolve only over IPv6).
+ *
+ * Client resiliency defaults follow BullMQ requirements: `maxRetriesPerRequest`
+ * is `null` and `enableReadyCheck` is `false` so blocking commands work and
+ * connections survive transient Redis failovers.
+ *
+ * @public
+ */
+export const resolveRedisConnection = (): RedisConnectionOptions | null => {
+  const host = process.env.REDIS_HOST;
+  if (!host) {
+    return null;
+  }
+
+  return {
+    db: process.env.REDIS_DB ? Number(process.env.REDIS_DB) : undefined,
+    enableReadyCheck: false,
+    family: process.env.REDIS_FAMILY
+      ? Number(process.env.REDIS_FAMILY)
+      : undefined,
+    host,
+    maxRetriesPerRequest: null,
+    password: process.env.REDIS_PASSWORD || undefined,
+    // Coerce REDIS_PORT to a number once here so the connection contract is a
+    // typed number, not the raw process.env string. Consumers read `port`
+    // directly without re-coercing.
+    port: Number(process.env.REDIS_PORT) || 6379,
+    tls: isEnvTrue(process.env.REDIS_TLS) ? {} : undefined,
+    username: process.env.REDIS_USERNAME || undefined,
+  };
+};

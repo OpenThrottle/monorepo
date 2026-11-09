@@ -9,10 +9,8 @@ import {
   SCHEDULED_AGENT_JOB_RUN_IN_FLIGHT_STATUSES,
   ScheduledAgentJobRun,
 } from './scheduled-agent-job-run.entity.ts';
-import {
-  ScheduledAgentJobsService,
-  schedulerKeyForJob,
-} from './scheduled-agent-jobs.service.ts';
+import { ScheduledAgentJobsService } from './scheduled-agent-jobs.service.ts';
+import { schedulerKeyForJob } from './scheduled-agent-jobs.utils.ts';
 
 type JobRepo = {
   create: ReturnType<typeof vi.fn>;

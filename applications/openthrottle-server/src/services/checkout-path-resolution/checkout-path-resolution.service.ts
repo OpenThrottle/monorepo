@@ -10,7 +10,6 @@
  * failing database read all return `null`. Nothing here throws, because every caller treats a
  * miss as "fall back to the existing default" rather than as an error.
  */
-
 import { isAbsolute } from 'node:path';
 
 import { Injectable } from '@nestjs/common';
@@ -18,21 +17,18 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories';
 import { RepositoryCheckoutsService } from '@openthrottle/nestjs-repositories';
 
-import { isPathWithin, pathDepth } from '../paths/path-containment.ts';
-import { realPath } from '../paths/real-path.ts';
+import {
+  isPathWithin,
+  pathDepth,
+} from '../paths/path-containment/path-containment.utils.ts';
+import { realPath } from '../paths/real-path/real-path.utils.ts';
+import type {
+  ResolveCheckoutForPathInput,
+  ResolvedCheckoutForPath,
+} from './checkout-path-resolution.types.ts';
 
 /** Matches the ceiling `workspaceRepositories` and worktree discovery already use. */
 const CHECKOUT_LIST_LIMIT = 200;
-
-export interface ResolveCheckoutForPathInput {
-  readonly path: string;
-  readonly userId: string;
-}
-
-export interface ResolvedCheckoutForPath {
-  readonly checkoutId: string;
-  readonly repositoryId: string;
-}
 
 @Injectable()
 export class CheckoutPathResolutionService {

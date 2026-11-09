@@ -32,15 +32,16 @@ import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notificatio
 import { In, QueryFailedError } from 'typeorm';
 
 import { NotificationsService } from '../../notifications/notifications.service.ts';
-import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.types.ts';
-import { PlanRulesEvaluationService } from '../../queues/plan-rules/plan-rules-evaluation.service.ts';
-import { TAGGING_ENTITY_TYPES } from '../../queues/tagging/tagging.types.ts';
-import { TaggingEnqueueService } from '../../queues/tagging/tagging-enqueue.service.ts';
-import { TaskPromotionEnqueueService } from '../../queues/task-promotion/task-promotion-enqueue.service.ts';
+import { PlanRulesEvaluationService } from '../../queues/plan-rules/evaluation/evaluation.service.ts';
+import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.constants.ts';
+import { TaggingEnqueueService } from '../../queues/tagging/enqueue/enqueue.service.ts';
+import { TAGGING_ENTITY_TYPES } from '../../queues/tagging/tagging.constants.ts';
+import { TaskPromotionEnqueueService } from '../../queues/task-promotion/enqueue/enqueue.service.ts';
 import { PlanObject } from '../plans/plan.object.ts';
-import { PlanStatusService } from '../plans/plan-status.service.ts';
+import { PlanStatusService } from '../plans/plan-status/plan-status.service.ts';
 import { ProjectObject } from '../projects/project.object.ts';
-import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture.service.ts';
+import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture/work-ledger-capture.service.ts';
+import { TasksLoaders } from './loaders/loaders.service.ts';
 import {
   AddHookInput,
   CreateTaskInput,
@@ -60,7 +61,6 @@ import {
   TaskObject,
   TasksByProjectIdResultObject,
 } from './task.object.ts';
-import { TasksLoaders } from './tasks-loaders.ts';
 
 /** Default cap for the unpaginated tasks() list query so it never full-table-scans. */
 const DEFAULT_TASKS_LIMIT = 100;

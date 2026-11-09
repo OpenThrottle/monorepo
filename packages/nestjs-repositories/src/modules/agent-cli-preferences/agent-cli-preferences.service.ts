@@ -8,21 +8,14 @@
  * validation (against the drivers registry) is the caller's responsibility — this service is a thin
  * persistence layer and never spawns anything.
  */
-
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { IsNull, Not, Repository } from 'typeorm';
 
+import type { ModelPreferenceMap } from './agent-cli-preferences.types.ts';
 import { UserDisabledAgentCli } from './user-disabled-agent-cli.entity.ts';
 import { UserFavoriteAgentModel } from './user-favorite-agent-model.entity.ts';
-
-/**
- * A per-user overlay of model-level preferences, keyed by backend → set of model ids. Used for both
- * the disabled-models and favorite-models projections so callers can answer per-(backend, model)
- * questions from a single fetch.
- */
-export type ModelPreferenceMap = ReadonlyMap<string, ReadonlySet<string>>;
 
 /** Build a backend → Set<model> map from rows carrying a non-null model. */
 function toModelMap(

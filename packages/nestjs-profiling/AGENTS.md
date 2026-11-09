@@ -9,7 +9,7 @@ standalone `profileExecution` util, an NDJSON file writer, and key-name-based re
 
 - `src/decorators/` — the whole package lives here: decorators, util, types, the reporter
   singleton, `profile-execution-file-writer.ts`, `profile-execution.redaction.ts`.
-- `src/modules/nestjs-profiling.module.ts` — optional convenience module: only imports
+- `src/nestjs-profiling.module.ts` — optional convenience module: only imports
   `LoggerModule`, exposes no providers. Decorators and util work without it.
 
 ## Invariants & gotchas

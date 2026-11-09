@@ -13,7 +13,7 @@ import {
 } from 'typeorm';
 
 import { Plan } from '../plans/plan.entity.ts';
-import type { TagSource } from './tag-provenance.ts';
+import type { TagSource } from './tags.types.ts';
 
 export interface PlanTagData {
   readonly confidence: number | null;

@@ -6,20 +6,9 @@ import { Repository } from 'typeorm';
 import {
   assertBlogSlug,
   assertNotBlank,
-} from '../blog-posts/blog-write-validation.ts';
+} from '../blog-posts/write-validation/write-validation.utils.ts';
 import { BlogAuthor } from './blog-author.entity.ts';
-
-/**
- * Input for {@link BlogAuthorsService.upsertAuthor}. The write replaces the author's fields:
- * an omitted or `null` bio / avatar clears the column. `userId` is deliberately not settable.
- * @public
- */
-export interface BlogAuthorUpsertInput {
-  readonly avatarUrl?: string | null;
-  readonly bio?: string | null;
-  readonly displayName: string;
-  readonly slug: string;
-}
+import type { BlogAuthorUpsertInput } from './blog-authors.types.ts';
 
 /** @public */
 @Injectable()

@@ -13,7 +13,7 @@ import {
 import type {
   WorkArtifactSource,
   WorkArtifactVerification,
-} from './work-ledger.constants.ts';
+} from './work-ledger.types.ts';
 
 /** Column-only shape of WorkArtifact (no relations). */
 export type WorkArtifactData = Pick<

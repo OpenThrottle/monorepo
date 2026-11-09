@@ -70,8 +70,8 @@
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "sideEffects": [
-    "./dist/src/modules/logger/logger.config.js",
-    "./src/modules/logger/logger.config.ts"
+    "./dist/src/modules/logger/logger.utils.js",
+    "./src/modules/logger/logger.utils.ts"
   ],
   "type": "module",
   "types": "./dist/src/index.d.ts"

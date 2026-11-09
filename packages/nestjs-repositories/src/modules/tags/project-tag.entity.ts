@@ -13,7 +13,7 @@ import {
 } from 'typeorm';
 
 import { Project } from '../projects/project.entity.ts';
-import type { TagSource } from './tag-provenance.ts';
+import type { TagSource } from './tags.types.ts';
 
 export interface ProjectTagData {
   readonly confidence: number | null;

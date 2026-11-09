@@ -14,7 +14,7 @@ import { AgentTokenUsageService } from '@openthrottle/nestjs-repositories';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service.ts';
-import { assertHumanAuthPrincipal } from '../service-accounts/assert-human-auth-principal.ts';
+import { assertHumanAuthPrincipal } from '../service-accounts/service-accounts.utils.ts';
 import { RecordTokenUsageInput } from './token-usage.input.ts';
 import {
   toTokenUsageRowObject,

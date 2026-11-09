@@ -1,6 +1,6 @@
 import type { PlanRunExecutionBackend } from '@openthrottle/nestjs-repositories';
 
-import type { ScheduledPlanRunFireDecision } from '../../../queues/plans/scheduled-plan-run.utils.ts';
+import type { ScheduledPlanRunFireDecision } from '../../../queues/plans/scheduled-plan-run/scheduled-plan-run.types.ts';
 import type { PLAN_SCHEDULE_CONFLICT_CODE } from './plan-enqueue.constants.ts';
 
 /** @description Result of an enqueue: the persisted backend, job id, and live queue position. */

@@ -12,13 +12,13 @@ reference is `plans.processor.backup.ts`.
 
 ## Layout
 
-- `src/modules/nestjs-worktrees.module.ts` — `@Global()` module; factory parses
+- `src/nestjs-worktrees.module.ts` — `@Global()` module; factory parses
   `WORKTREE_TARGETS`, wraps `WorktreeTargetsTracker` in `MutexWorktreeTargetsTracker`
   (`async-mutex`), registers it under `WORKTREE_TRACKER_TOKEN` (a `Symbol`).
-- `src/utils/workflow.ts` / `parent-job.ts` / `child-job.ts` — the workflow shell, branch/commit
+- `src/workflow/workflow.utils.ts` / `parent-job.ts` / `child-job.ts` — the workflow shell, branch/commit
   helpers, and a simplified `runChildJob`.
-- `src/worktree-targets.env.ts` — `getWorktreeTargetsFromEnv()` (tuple or object JSON forms).
-- `src/types/worktree.ts` — the exported result/option types.
+- `src/nestjs-worktrees.utils.ts` — `getWorktreeTargetsFromEnv()` (tuple or object JSON forms).
+- `src/nestjs-worktrees.types.ts` — the exported result/option types.
 
 ## Invariants & gotchas
 

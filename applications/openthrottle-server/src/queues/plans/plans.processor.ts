@@ -34,33 +34,33 @@ import { loadWorkflowRalphConfig } from '@tools/workflows';
 import type { Queue } from 'bullmq';
 import { In } from 'typeorm';
 
-import { PlanStatusService } from '../../graphql/plans/plan-status.service.ts';
-import { SettleRunLedgerService } from '../../graphql/work-ledger/settle-run-ledger.service.ts';
-import { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account.service.ts';
-import { ProcessMetricsService } from '../../metrics/process-metrics.service.ts';
+import { PlanStatusService } from '../../graphql/plans/plan-status/plan-status.service.ts';
+import { SettleRunLedgerService } from '../../graphql/work-ledger/settle-run-ledger/settle-run-ledger.service.ts';
+import { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account/status-change-system-account.service.ts';
+import { ProcessMetricsService } from '../../metrics/process-metrics/process-metrics.service.ts';
 import type {
   EnhancedTaskRunMetrics,
   ProcessMetricsSnapshot,
-} from '../../metrics/process-metrics.types.ts';
-import { formatEnhancedTaskRunMetricsSummary } from '../../metrics/process-metrics-format.ts';
+} from '../../metrics/process-metrics/process-metrics.types.ts';
+import { formatEnhancedTaskRunMetricsSummary } from '../../metrics/process-metrics/process-metrics.utils.ts';
 import { NotificationsService } from '../../notifications/notifications.service.ts';
 import { PlanRunWorktreeCleanupService } from '../../services/plan-run-worktree-cleanup/plan-run-worktree-cleanup.service.ts';
 import type { ProvisionedPlanRunWorktree } from '../../services/plan-run-worktree-provision/plan-run-worktree-provision.types.ts';
-import { AgenticRalphOrchestratorService } from '../agentic-ralph/agentic-ralph-orchestrator.service.ts';
-import { closeRunOutputForJob } from '../bullmq-keyed-run-logging.ts';
-import { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.service.ts';
-import { BULLMQ_RUN_OUTPUT_WRITER } from '../bullmq-run-output-writer.token.ts';
-import type { PlanQueueJobCompletedPayload } from '../job-run-hooks/execute-plan-job-run-hooks.ts';
+import { isRunPlanOrchestratorJobData } from '../agentic-ralph/agentic-ralph.utils.ts';
+import { AgenticRalphOrchestratorService } from '../agentic-ralph/orchestrator/orchestrator.service.ts';
+import { closeRunOutputForJob } from '../bullmq-keyed-run-logging/bullmq-keyed-run-logging.utils.ts';
+import { BULLMQ_RUN_OUTPUT_WRITER } from '../bullmq-run-output/bullmq-run-output-writer.token.ts';
+import { BullMqRunOutputRetentionService } from '../bullmq-run-output/retention/retention.service.ts';
+import type { PlanQueueJobCompletedPayload } from '../job-run-hooks/job-run-hooks.types.ts';
 import {
   runAfterAllHooksWithDispatcherThenNotify,
   runAfterRunHooksThenNotify,
   runBeforeAllHooksWithDispatcher,
   runBeforeRunHooksAndHandleBlock,
-} from '../job-run-hooks/execute-plan-job-run-hooks.ts';
+} from '../job-run-hooks/job-run-hooks.utils.ts';
 // import { DelayedError } from 'bullmq';
-import { WorkflowLifecycleDispatcherFactory } from '../plan-lifecycle-hooks/workflow-lifecycle-dispatcher.service.ts';
-import { resolveRepeatablesOwner } from '../repeatable-job.owner.ts';
-import { PlanRunCancellationService } from './plan-run-cancellation.service.ts';
+import { WorkflowLifecycleDispatcherFactory } from '../plan-lifecycle-hooks/workflow-lifecycle-dispatcher/workflow-lifecycle-dispatcher.service.ts';
+import { resolveRepeatablesOwner } from '../repeatable-job/repeatable-job.utils.ts';
 import {
   PLANS_QUEUE_NAME,
   PLANS_WORKER_LOCK_DURATION_MS,
@@ -74,15 +74,15 @@ import type {
   RunPlanJobData,
 } from './plans.types.ts';
 import type { PlanTaskCounts, PlanTaskOutcomeFields } from './plans.types.ts';
-import { isRunPlanOrchestratorJobData } from './plans.types.ts';
 import {
   buildFinishedRunNotification,
   countPlanTasks,
   resolveIdlePlanStatus,
 } from './plans.utils.ts';
-import { ScheduledPlanRunService } from './scheduled-plan-run.service.ts';
+import { PlanRunCancellationService } from './run-cancellation/run-cancellation.service.ts';
+import { ScheduledPlanRunService } from './scheduled-plan-run/scheduled-plan-run.service.ts';
 import { UsageLimitResumeService } from './usage-limit-resume/usage-limit-resume.service.ts';
-import { WorkLedgerRunService } from './work-ledger-run.service.ts';
+import { WorkLedgerRunService } from './work-ledger-run/work-ledger-run.service.ts';
 
 const CONCURRENCY = 1;
 

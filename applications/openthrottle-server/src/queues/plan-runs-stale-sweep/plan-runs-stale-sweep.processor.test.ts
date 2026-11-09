@@ -8,9 +8,9 @@ import type {
 import type { PlanRun } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { PlanStatusService } from '../../graphql/plans/plan-status.service.ts';
-import type { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account.service.ts';
-import type { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture.service.ts';
+import type { PlanStatusService } from '../../graphql/plans/plan-status/plan-status.service.ts';
+import type { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account/status-change-system-account.service.ts';
+import type { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture/work-ledger-capture.service.ts';
 import { PlanRunsStaleSweepProcessor } from './plan-runs-stale-sweep.processor.ts';
 import type { PlanRunsStaleSweepJob } from './plan-runs-stale-sweep.types.ts';
 

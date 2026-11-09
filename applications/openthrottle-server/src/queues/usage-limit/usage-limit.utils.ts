@@ -4,20 +4,13 @@ import {
   USAGE_LIMIT_RESUME_MAX_HORIZON_MS,
   USAGE_LIMIT_RESUME_PAST_TOLERANCE_MS,
 } from './usage-limit.constants.ts';
+import type { UsageLimitResumeDecision } from './usage-limit.types.ts';
 
 /** @description The slice of a usage limit the resume decision needs. */
 interface UsageLimitResumeInput {
   /** ISO-8601 reset instant; null when the agent CLI did not report one. */
   readonly resetsAt: string | null;
 }
-
-/**
- * @description Whether a usage-limited run is continued automatically. `resume` carries how long to
- * delay the continuation job; `hold` carries a human-readable reason that is shown to the user.
- */
-export type UsageLimitResumeDecision =
-  | { readonly delayMs: number; readonly kind: 'resume' }
-  | { readonly kind: 'hold'; readonly reason: string };
 
 /**
  * @description Pure policy for resuming a plan run that stopped on a subscription usage limit.

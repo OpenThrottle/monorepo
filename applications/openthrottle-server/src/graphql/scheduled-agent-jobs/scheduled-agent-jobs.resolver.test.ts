@@ -19,16 +19,14 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { ScheduledAgentJobsLoaders } from './loaders/loaders.service.ts';
 import type {
   ScheduledAgentJobObject,
   ScheduledAgentJobRunObject,
 } from './scheduled-agent-job.object.ts';
-import {
-  ScheduledAgentJobRunRepositoryResolver,
-  ScheduledAgentJobsResolver,
-} from './scheduled-agent-jobs.resolver.ts';
-import type { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs-graphql.service.ts';
-import type { ScheduledAgentJobsLoaders } from './scheduled-agent-jobs-loaders.ts';
+import { ScheduledAgentJobRunRepositoryResolver } from './scheduled-agent-job-run-repository/scheduled-agent-job-run-repository.resolver.ts';
+import { ScheduledAgentJobsResolver } from './scheduled-agent-jobs.resolver.ts';
+import type { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs.service.ts';
 
 const human: AuthPrincipal = { kind: AUTH_PRINCIPAL_KIND_USER, sub: 'user-1' };
 const serviceAccount: AuthPrincipal = {

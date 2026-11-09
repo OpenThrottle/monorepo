@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ServiceAccount } from './service-account.entity.ts';
 import { ServiceAccountCredential } from './service-account-credential.entity.ts';
-import { SERVICE_ACCOUNT_BEARER_PREFIX } from './service-account-token.util.ts';
+import { SERVICE_ACCOUNT_BEARER_PREFIX } from './service-accounts.constants.ts';
 import { ServiceAccountsService } from './service-accounts.service.ts';
 
 const serviceAccountId = '11111111-1111-4111-8111-111111111111';

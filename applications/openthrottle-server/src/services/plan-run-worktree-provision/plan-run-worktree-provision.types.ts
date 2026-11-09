@@ -9,3 +9,9 @@ export interface ProvisionedPlanRunWorktree {
   /** Absolute path of the worktree the agent works in. */
   readonly worktreePath: string;
 }
+export interface ProvisionPlanRunWorktreeParams {
+  /** Absolute path of the checkout the worktree is created from. */
+  readonly baseCheckoutPath: string;
+  /** Worktree name (also the branch, as `openthrottle/<name>`). */
+  readonly worktreeName: string;
+}

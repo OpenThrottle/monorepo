@@ -1,0 +1,83 @@
+/**
+ * @description Lists and retrieves Stripe {@link https://stripe.com/docs/api/products Products} and {@link https://stripe.com/docs/api/prices Prices} using the configured secret key.
+ */
+
+import { Injectable } from '@nestjs/common';
+import Stripe from 'stripe';
+
+import { createLazyStripeClient } from '../config/config.utils.ts';
+
+@Injectable()
+export class StripeProductsService {
+  private readonly getStripe = createLazyStripeClient();
+
+  /**
+   * @description Active products (paginated list; first page only, up to `limit`).
+   */
+  async listActiveProducts(options?: {
+    readonly limit?: number;
+  }): Promise<readonly Stripe.Product[]> {
+    const stripe = this.getStripe();
+    const list = await stripe.products.list({
+      active: true,
+      limit: options?.limit ?? 100,
+    });
+
+    return list.data;
+  }
+
+  /**
+   * @description Active prices for a single product (paginated list; first page only, up to `limit`).
+   */
+  async listActivePricesForProduct(
+    productId: string,
+    options?: { readonly limit?: number },
+  ): Promise<readonly Stripe.Price[]> {
+    const stripe = this.getStripe();
+    const list = await stripe.prices.list({
+      active: true,
+      limit: options?.limit ?? 100,
+      product: productId,
+    });
+
+    return list.data;
+  }
+
+  /**
+   * @description Fetches active prices for each product id in parallel (deduped). Missing products yield an empty array for that id.
+   */
+  async listActivePricesForProducts(
+    productIds: readonly string[],
+    options?: { readonly limit?: number },
+  ): Promise<ReadonlyMap<string, readonly Stripe.Price[]>> {
+    const unique = [...new Set(productIds)];
+    const entries = await Promise.all(
+      unique.map(async (id) => {
+        const prices = await this.listActivePricesForProduct(id, options);
+        return [id, prices] as const;
+      }),
+    );
+
+    return new Map(entries);
+  }
+
+  /**
+   * @description Retrieves a product by Stripe ID, or `null` if missing.
+   */
+  async getProductById(productId: string): Promise<Stripe.Product | null> {
+    const stripe = this.getStripe();
+
+    try {
+      return await stripe.products.retrieve(productId);
+    } catch (error) {
+      if (
+        error instanceof Stripe.errors.StripeInvalidRequestError &&
+        error.code === 'resource_missing'
+      ) {
+        return null;
+      }
+
+      throw error;
+    }
+  }
+}

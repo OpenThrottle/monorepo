@@ -2,10 +2,8 @@
 import { ChatVertexAI } from '@langchain/google-vertexai';
 import { ChatOllama } from '@langchain/ollama';
 
-import {
-  type ResilienceConfig,
-  resolveResilienceConfig,
-} from '../config/resilience.ts';
+import type { ResilienceConfig } from '../config/config.types.ts';
+import { resolveResilienceConfig } from '../config/config.utils.ts';
 
 /**
  * ------------------------------------------------------------

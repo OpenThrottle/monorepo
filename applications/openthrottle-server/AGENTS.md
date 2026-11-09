@@ -21,8 +21,10 @@ apps, `packages/openthrottle-mcp`) consumes its schema through the committed
 
 ## Layout
 
-- `src/app.module.ts` — single registration point: every GraphQL feature module, queue module,
-  and `@openthrottle/nestjs-*` platform module. New features get wired here.
+- `src/openthrottle-server.utils.ts` (`buildImports`) — single registration point: every GraphQL
+  feature module, queue module, and `@openthrottle/nestjs-*` platform module. New features get
+  wired here. `src/app.module.ts`, `src/api-app/` and `src/worker-app/` are the three
+  per-`PROCESS_ROLE` root modules built from it; `main.ts` picks one.
 - `src/graphql/<feature>/` — one folder per schema area (resolver, service, `*.object.ts`,
   `*.input.ts`, module). Example with tests to copy: `src/graphql/queue-job-logs/` (the
   queue-job log tail API; design doc in [docs/log-tail-api-design.md](./docs/log-tail-api-design.md)).
@@ -60,11 +62,11 @@ apps, `packages/openthrottle-mcp`) consumes its schema through the committed
   the ONLY json parser once registered — `application/json` must stay in its `type` list or
   `/graphql` POST bodies 400. The comment above the call explains the Nest dedupe mechanics.
 - Subscriptions returning the `NotificationEvent` interface leave concrete types orphaned —
-  they must stay registered via `buildSchemaOptions.orphanedTypes` in `app.module.ts`.
+  they must stay registered via `buildSchemaOptions.orphanedTypes` in `openthrottle-server.utils.ts`.
 - graphql-ws requests have no `req`: the GraphQL context puts the validated user on `userId`
   for ws and on `req` for HTTP. Guards/resolvers must handle both shapes.
 - Bull Board sits behind a single static basic-auth credential — it stays disabled in
-  production (`isBullBoardEnabled()` gate in `app.module.ts`).
+  production (`isBullBoardEnabled()` gate in `openthrottle-server.utils.ts`).
 - **Agent-CLI install/update** (`graphql/agent-setup/`): `installAgentCli`/`updateAgentCli` run
   the registry-defined `curl | shell` installers on the server host — RCE-on-demand, so they are
   double-gated: the `SETTINGS_WRITE` permission AND the default-OFF `OT_AGENT_CLI_INSTALL_ENABLED`

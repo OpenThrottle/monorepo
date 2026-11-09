@@ -11,13 +11,14 @@ import type {
   PlanRunKind,
 } from './plan-run.entity.ts';
 import { PlanRun } from './plan-run.entity.ts';
-import type { PlanRunStatus } from './plan-runs.constants.ts';
 import {
   PLAN_RUN_STARTABLE_STATUSES,
   PLAN_RUN_STATUS,
   STALE_CUTOFF_MS,
   UNSUPERVISED_STALE_CUTOFF_MS,
 } from './plan-runs.constants.ts';
+import type { ScheduledPlanRun, ScheduledRunRef } from './plan-runs.types.ts';
+import type { PlanRunStatus } from './plan-runs.types.ts';
 
 /**
  * Excludes a scheduled run that never started: a `scheduled_for` row that is not QUEUED/IN_PROGRESS
@@ -88,22 +89,6 @@ interface RegisterCliPlanRunInput {
   readonly pid: number | null;
   readonly planId: string;
   readonly workerId: string | null;
-}
-
-/**
- * @description A SCHEDULED run that was just cancelled: its id, and the delayed BullMQ job the caller
- * should remove (null when the row never recorded one).
- * @public
- */
-export interface ScheduledRunRef {
-  readonly bullmqJobId: string | null;
-  readonly id: string;
-}
-
-/** A plan's soonest SCHEDULED run: which row it is and the instant it fires. */
-export interface ScheduledPlanRun {
-  readonly id: string;
-  readonly scheduledFor: Date;
 }
 
 /** Where a run is executing; stamped at job start, cleared at finish. */

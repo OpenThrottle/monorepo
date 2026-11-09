@@ -23,11 +23,9 @@ vi.mock('node:fs', () => ({
   statSync: mockStatSync,
 }));
 
-import {
-  MAX_PRUNE_CHECKOUT_IDS,
-  WorktreeCheckoutPruneService,
-} from './worktree-checkout-prune.service.ts';
-import { PRUNE_WORKTREE_CHECKOUT_OUTCOME } from './worktree-checkout-prune.types.ts';
+import { MAX_PRUNE_CHECKOUT_IDS } from './worktree-checkout-prune.constants.ts';
+import { PRUNE_WORKTREE_CHECKOUT_OUTCOME } from './worktree-checkout-prune.constants.ts';
+import { WorktreeCheckoutPruneService } from './worktree-checkout-prune.service.ts';
 
 const USER = 'user-1';
 const ROOT = '/Users/matt/.openthrottle/worktrees/acme/monorepo';

@@ -9,7 +9,7 @@ import type { GlobalClsUser } from '@openthrottle/nestjs-modules';
 import type { EvalJsonValue } from '@openthrottle/nestjs-repositories';
 import { QueryFailedError } from 'typeorm';
 
-import { resolveNoteAuthor } from '../notes/resolve-note-author.ts';
+import { resolveNoteAuthor } from '../notes/notes.utils.ts';
 
 const FOREIGN_KEY_VIOLATION = '23503';
 

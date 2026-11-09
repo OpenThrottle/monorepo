@@ -11,8 +11,33 @@ import {
 } from '@openthrottle/nestjs-profiling';
 import { getCorsOptions } from '@openthrottle/nestjs-rbac';
 
-import { buildAppModule } from './app.module.ts';
-import { PROCESS_ROLES, resolveProcessRole } from './config/process-role.ts';
+import { ApiAppModule } from './api-app/api-app.module.ts';
+import { AppModule } from './app.module.ts';
+import { PROCESS_ROLES } from './config/config.constants.ts';
+import type { ProcessRole } from './config/config.types.ts';
+import { resolveProcessRole } from './config/config.utils.ts';
+import { WorkerAppModule } from './worker-app/worker-app.module.ts';
+
+/**
+ * @description Role-gated composition root consumed by the single `main.ts`
+ * bootstrap (no duplicate worker entrypoint). Returns a STATIC module class —
+ * see {@link buildImports} for why a DynamicModule would reorder the schema.
+ */
+const buildAppModule = ({
+  role,
+}: {
+  role: ProcessRole;
+}): typeof AppModule | typeof ApiAppModule | typeof WorkerAppModule => {
+  if (role === PROCESS_ROLES.api) {
+    return ApiAppModule;
+  }
+
+  if (role === PROCESS_ROLES.worker) {
+    return WorkerAppModule;
+  }
+
+  return AppModule;
+};
 
 /**
  * @description Worker-only bootstrap: an application context with BullMQ

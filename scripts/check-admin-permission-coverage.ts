@@ -12,7 +12,7 @@ const logger = createLogger();
  * @description Enforces the RBAC invariant that the `admin` role is the full permission
  * superset in the DB seed, mirroring @openthrottle/nestjs-rbac
  * `ROLE_PERMISSIONS[ADMIN] = Object.values(PERMISSIONS)`
- * (packages/nestjs-rbac/src/roles.ts).
+ * (packages/nestjs-rbac/src/roles/roles.constants.ts).
  *
  * The bug this guards against: migration 034 grants admin every permission via a
  * `CROSS JOIN permissions` — but that is a point-in-time snapshot. When a later
@@ -50,11 +50,12 @@ export interface DefinedPermission {
 }
 
 /** Split SQL into individual statements. The migration corpus has no `;` inside literals. */
-const statements = (sql: string): string[] =>
-  sql
+const statements = (sql: string): string[] => {
+  return sql
     .split(';')
     .map((s) => s.trim())
     .filter(Boolean);
+};
 
 const permissionLiterals = (fragment: string): string[] => {
   const names = new Set<string>();
@@ -66,10 +67,11 @@ const permissionLiterals = (fragment: string): string[] => {
  * @description Permission names DEFINED by a statement — i.e. inserted into the
  * `permissions` table. Grants (`role_permissions`) are ignored here.
  */
-export const permissionsDefinedInStatement = (statement: string): string[] =>
-  /insert\s+into\s+permissions\b/i.test(statement)
+export const permissionsDefinedInStatement = (statement: string): string[] => {
+  return /insert\s+into\s+permissions\b/i.test(statement)
     ? permissionLiterals(statement)
     : [];
+};
 
 /**
  * @description How a statement grants the `admin` role. `blanket` = a

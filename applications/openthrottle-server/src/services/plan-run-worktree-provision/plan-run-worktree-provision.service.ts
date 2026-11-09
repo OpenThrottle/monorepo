@@ -7,14 +7,14 @@
  * Fails fast. A silent fallback to the process cwd would drop the agent into the primary checkout,
  * which is the bug this exists to fix. See docs/openthrottle/plan-run-worktrees.md.
  */
-
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 
-import { resolveWorktreeRoot } from '../worktree-root/worktree-root.resolver.ts';
+import { resolveWorktreeRoot } from '../worktree-root/worktree-root.utils.ts';
+import type { ProvisionPlanRunWorktreeParams } from './plan-run-worktree-provision.types.ts';
 
 const execFileAsync = promisify(execFile);
 
@@ -22,14 +22,6 @@ const execFileAsync = promisify(execFile);
 const PROVISION_TIMEOUT_MS = 20 * 60 * 1000;
 
 const PROVISION_MAX_BUFFER_BYTES = 16 * 1024 * 1024;
-
-export interface ProvisionPlanRunWorktreeParams {
-  /** Absolute path of the checkout the worktree is created from. */
-  readonly baseCheckoutPath: string;
-  /** Worktree name (also the branch, as `openthrottle/<name>`). */
-  readonly worktreeName: string;
-}
-
 const readStderrTail = (error: unknown): string => {
   if (typeof error !== 'object' || error === null) return '';
   if (!('stderr' in error)) return '';

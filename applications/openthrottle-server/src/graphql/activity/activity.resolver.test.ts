@@ -15,12 +15,10 @@ import {
   ActivityOutputChunkRowObject,
   ActivityTaskUpdatedRowObject,
 } from './activity.object.ts';
-import {
-  ActivityCommitRowResolver,
-  ActivityOutputChunkRowResolver,
-  ActivityTaskUpdatedRowResolver,
-} from './activity.resolver.ts';
-import { ActivityLoaders } from './activity-loaders.ts';
+import { ActivityCommitRowResolver } from './activity-commit-row/activity-commit-row.resolver.ts';
+import { ActivityOutputChunkRowResolver } from './activity-output-chunk-row/activity-output-chunk-row.resolver.ts';
+import { ActivityTaskUpdatedRowResolver } from './activity-task-updated-row/activity-task-updated-row.resolver.ts';
+import { ActivityLoaders } from './loaders/loaders.service.ts';
 
 const mockPlan = plansFactory.build();
 const mockTask = tasksFactory.build();

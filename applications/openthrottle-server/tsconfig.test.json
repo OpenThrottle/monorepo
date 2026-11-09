@@ -12,7 +12,7 @@
     "types": ["node", "vitest/globals"]
   },
   "include": ["src/**/*.json", "src/**/*.ts", "src/**/*.tsx", "tests/**/*.ts"],
-  "exclude": ["build", "src/graphql/resolver-authorization-stance.test.ts"],
+  "exclude": ["build", "src/graphql/graphql.test.ts"],
   "references": [
     {
       "path": "../../tools/workflows/tsconfig.lib.json"

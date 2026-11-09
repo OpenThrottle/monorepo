@@ -5,7 +5,6 @@
  * stored payloads. Matching itself is the pure evaluateTagActionRules in
  * @openthrottle/openthrottle-skills — this service only stores rules.
  */
-
 import {
   BadRequestException,
   Injectable,
@@ -21,20 +20,7 @@ import { Repository } from 'typeorm';
 import { ZodError } from 'zod';
 
 import { TagActionRule } from './tag-action-rule.entity.ts';
-
-/** @public */
-export interface UpsertTagActionRuleInput {
-  readonly actionPayload: unknown;
-  readonly actionType: string;
-  readonly enabled?: boolean;
-  readonly environment?: string | null;
-  /** When present, updates the existing rule (must belong to the user). */
-  readonly id?: string | null;
-  readonly projectId?: string | null;
-  readonly status?: string | null;
-  readonly tagAll?: readonly string[];
-  readonly title: string;
-}
+import type { UpsertTagActionRuleInput } from './tag-action-rules.types.ts';
 
 @Injectable()
 export class TagActionRulesService {

@@ -823,9 +823,9 @@ export const sourceFirstEslintConfig = tslint.config([
  * Spread this **after** `eslintConfig` in `applications/openthrottle-server`
  * and every `packages/nestjs-*` config. It scopes itself to `src/` because nx
  * lints with cwd at the project, so the glob is project-relative. Both rules
- * are `warn` until the per-area migration (OT plan 3915bc12) reaches zero;
- * that plan's last task flips them to `error`. A file that must keep its name
- * goes in the consuming config's `ignores`, where the exception is reviewed.
+ * are `error`: the per-area migration (OT plan 3915bc12) brought every
+ * consumer to zero. A file that must keep its name is turned off in the
+ * consuming config, where the exception is reviewed.
  * @public
  */
 export const nestjsEslintConfig = tslint.config([
@@ -833,8 +833,8 @@ export const nestjsEslintConfig = tslint.config([
     files: ['src/**/*.ts'],
     ignores: ['**/__generated__/**'],
     rules: {
-      'openthrottle/nestjs-file-exports': 'warn',
-      'openthrottle/nestjs-file-naming': 'warn',
+      'openthrottle/nestjs-file-exports': 'error',
+      'openthrottle/nestjs-file-naming': 'error',
     },
   },
 ]);

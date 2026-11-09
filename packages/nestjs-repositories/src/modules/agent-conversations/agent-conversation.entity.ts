@@ -15,7 +15,7 @@ import {
 import { Plan } from '../plans/plan.entity.ts';
 import { Project } from '../projects/project.entity.ts';
 import { User } from '../users/user.entity.ts';
-import type { AgentConversationStatus } from './agent-conversation.constants.ts';
+import type { AgentConversationStatus } from './agent-conversations.types.ts';
 
 export interface AgentConversationData {
   readonly createdAt: Date;

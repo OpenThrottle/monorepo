@@ -4,9 +4,9 @@ NestJS RBAC and CORS utilities. For step-by-step wiring of this package together
 
 ## RBAC roles and permissions
 
-Roles and permissions are defined in the package and used by guards (see task “Implement permission/role guards and decorators”). The static mapping in `src/roles.ts` (`ROLE_PERMISSIONS`) is a **default / seed table ONLY** — it is the built-in default for this package's JWT-claim-based guards and a reference for apps with no database. It is **not** the production source of truth for apps with a DB-backed authorization model (e.g. openthrottle-server, which resolves permissions via `RolesService`). Apps override or extend it by loading roles/permissions from their own DB and passing a custom mapping to the guards / `roleHasPermission`.
+Roles and permissions are defined in the package and used by guards (see task “Implement permission/role guards and decorators”). The static mapping in `src/roles/roles.utils.ts` (`ROLE_PERMISSIONS`) is a **default / seed table ONLY** — it is the built-in default for this package's JWT-claim-based guards and a reference for apps with no database. It is **not** the production source of truth for apps with a DB-backed authorization model (e.g. openthrottle-server, which resolves permissions via `RolesService`). Apps override or extend it by loading roles/permissions from their own DB and passing a custom mapping to the guards / `roleHasPermission`.
 
-> The tables below mirror `ROLE_PERMISSIONS` in `src/roles.ts`. Keep the two in sync.
+> The tables below mirror `ROLE_PERMISSIONS` in `src/roles/roles.utils.ts`. Keep the two in sync.
 
 ### Roles
 

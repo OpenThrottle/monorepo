@@ -7,7 +7,7 @@ import {
 import { Reflector } from '@nestjs/core';
 
 import { ROLES_KEY } from '../decorators/roles.decorator.ts';
-import type { Role } from '../roles.ts';
+import type { Role } from '../roles/roles.types.ts';
 
 /** Minimal user shape with roles for RBAC. Auth (nestjs-auth) attaches this to request.user. */
 export interface RbacUser {

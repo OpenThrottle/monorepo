@@ -12,4 +12,4 @@ export {
   validateNestjsThrottlerModuleOptions,
 } from './config/nestjs-throttler.options.ts';
 export { GqlThrottlerGuard } from './guards/gql-throttler.guard.ts';
-export { NestjsThrottlerModule } from './modules/nestjs-throttler.module.ts';
+export { NestjsThrottlerModule } from './nestjs-throttler.module.ts';

@@ -1,11 +1,4 @@
-/**
- * @description Shared shapes for the agent-CLI install/update streaming feature. The publish
- * envelope key MUST equal the subscription resolver field name so @nestjs/graphql can resolve
- * agentSetupChunkAdded (mirrors conversationStreamChunkAdded).
- */
-
-/** Subscription field name; used as the PubSub publish envelope key. */
-export const AGENT_SETUP_CHUNK_FIELD = 'agentSetupChunkAdded' as const;
+import { type AgentSetupMode } from '@openthrottle/openthrottle-agentic-utils';
 
 /** A single chunk published to `agent-setup:<runId>:stream`. */
 export interface AgentSetupStreamChunkPayload {
@@ -34,4 +27,11 @@ export interface AgentSetupStreamChunkPayload {
  */
 export interface AgentSetupStreamChunkEnvelope {
   readonly agentSetupChunkAdded: AgentSetupStreamChunkPayload;
+}
+/** Inputs for one install/update run. */
+export interface StartAgentSetupRun {
+  /** Backend (driver id) — already validated by the resolver against the registry. */
+  readonly backend: string;
+  /** Install a missing CLI or update an existing one. */
+  readonly mode: AgentSetupMode;
 }

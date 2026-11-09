@@ -7,12 +7,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
   AUTH_PRINCIPAL_KIND_USER,
-} from '../auth-principal.ts';
+} from '../auth-principal/auth-principal.constants.ts';
 import type { JwtPayload } from '../strategies/jwt.strategy.ts';
-import {
-  CurrentUser,
-  type CurrentUserProperty,
-} from './current-user.decorator.ts';
+import type { CurrentUserProperty } from './current-user.decorator.ts';
+import { CurrentUser } from './current-user.decorator.ts';
 
 type ParamFactory = (
   data: CurrentUserProperty | undefined,

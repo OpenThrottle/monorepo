@@ -9,9 +9,9 @@ import type {
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { PlanEnqueueService } from '../../../graphql/plans/plan-enqueue/plan-enqueue.service.ts';
-import type { PlanStatusService } from '../../../graphql/plans/plan-status.service.ts';
-import type { StatusChangeSystemAccountService } from '../../../graphql/work-ledger/status-change-system-account.service.ts';
-import type { WorkLedgerCaptureService } from '../../../graphql/work-ledger/work-ledger-capture.service.ts';
+import type { PlanStatusService } from '../../../graphql/plans/plan-status/plan-status.service.ts';
+import type { StatusChangeSystemAccountService } from '../../../graphql/work-ledger/status-change-system-account/status-change-system-account.service.ts';
+import type { WorkLedgerCaptureService } from '../../../graphql/work-ledger/work-ledger-capture/work-ledger-capture.service.ts';
 import type { NotificationsService } from '../../../notifications/notifications.service.ts';
 import { PLANS_QUEUE_NAME } from '../plans.constants.ts';
 import type { RunPlanOrchestratorJobData } from '../plans.types.ts';

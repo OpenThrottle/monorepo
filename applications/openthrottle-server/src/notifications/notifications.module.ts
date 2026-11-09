@@ -9,7 +9,7 @@ import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { EMIT_NOTIFICATION_EMITTER } from '@openthrottle/nestjs-websockets';
 
-import { NotificationEmitterAdapter } from './notification-emitter.adapter.ts';
+import { NotificationEmitterAdapter } from './notification-emitter/notification-emitter.service.ts';
 import { NotificationsService } from './notifications.service.ts';
 
 @Module({

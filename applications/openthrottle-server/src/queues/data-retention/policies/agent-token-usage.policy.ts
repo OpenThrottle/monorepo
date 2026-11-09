@@ -17,7 +17,7 @@
  * keep this bounded at the batch sizes the sweep uses.
  */
 
-import { createAgeRetentionPolicy } from './create-age-retention-policy.ts';
+import { createAgeRetentionPolicy } from './policies.utils.ts';
 
 export const agentTokenUsagePolicy = createAgeRetentionPolicy({
   column: 'created_at',

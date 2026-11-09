@@ -170,7 +170,7 @@ upstream to diverge from. Only a lockfile-installed external skill is read-only.
   Running an external skill is likewise unaffected.
 
 - **Exactly one write path for SKILL.md.** The custom-prompt resolver
-  (`applications/openthrottle-server/src/graphql/prompts/custom-prompts.resolver.ts`)
+  (`applications/openthrottle-server/src/graphql/prompts/prompts.resolver.ts`)
   can also persist content to a client-supplied `filePath`, which would have
   been a way around this gate. It now refuses any `SKILL.md` target outright
   (`resolveCustomPromptWritePath`, alongside its workspace-containment checks),

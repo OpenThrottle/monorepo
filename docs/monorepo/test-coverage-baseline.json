@@ -6148,35 +6148,35 @@
     },
     {
       "category": "config",
-      "file": "packages/nestjs-auth/src/config/nestjs-auth.tokens.ts",
+      "file": "packages/nestjs-auth/src/config/nestjs-auth-options.token.ts",
       "project": "packages/nestjs-auth",
       "status": "missing",
       "testFile": null
     },
     {
       "category": "utils",
-      "file": "packages/nestjs-auth/src/utils/auth-principal-from-request.ts",
+      "file": "packages/nestjs-auth/src/auth-principal-from-request/auth-principal-from-request.utils.ts",
       "project": "packages/nestjs-auth",
       "status": "tested",
-      "testFile": "packages/nestjs-auth/src/utils/auth-principal-from-request.test.ts"
+      "testFile": "packages/nestjs-auth/src/auth-principal-from-request/auth-principal-from-request.utils.test.ts"
     },
     {
       "category": "utils",
-      "file": "packages/nestjs-auth/src/utils/get-request-from-execution-context.ts",
+      "file": "packages/nestjs-auth/src/get-request-from-execution-context/get-request-from-execution-context.utils.ts",
       "project": "packages/nestjs-auth",
       "status": "tested",
-      "testFile": "packages/nestjs-auth/src/utils/get-request-from-execution-context.test.ts"
+      "testFile": "packages/nestjs-auth/src/get-request-from-execution-context/get-request-from-execution-context.utils.test.ts"
     },
     {
       "category": "config",
-      "file": "packages/nestjs-bullmq-board/src/config/nestjs-bullmq-board.config.ts",
+      "file": "packages/nestjs-bullmq-board/src/config/config.constants.ts",
       "project": "packages/nestjs-bullmq-board",
       "status": "tested",
-      "testFile": "packages/nestjs-bullmq-board/src/config/nestjs-bullmq-board.config.test.ts"
+      "testFile": "packages/nestjs-bullmq-board/src/config/config.constants.test.ts"
     },
     {
       "category": "config",
-      "file": "packages/nestjs-bullmq/src/config/nestjs-bullmq.config.ts",
+      "file": "packages/nestjs-bullmq/src/config/config.constants.ts",
       "project": "packages/nestjs-bullmq",
       "status": "missing",
       "testFile": null
@@ -6190,10 +6190,10 @@
     },
     {
       "category": "config",
-      "file": "packages/nestjs-graphql/src/config/format-error.ts",
+      "file": "packages/nestjs-graphql/src/config/format-error/format-error.utils.ts",
       "project": "packages/nestjs-graphql",
       "status": "tested",
-      "testFile": "packages/nestjs-graphql/src/config/format-error.test.ts"
+      "testFile": "packages/nestjs-graphql/src/config/format-error/format-error.utils.test.ts"
     },
     {
       "category": "config",
@@ -6204,35 +6204,35 @@
     },
     {
       "category": "config",
-      "file": "packages/nestjs-graphql/src/config/query-depth-limit.ts",
+      "file": "packages/nestjs-graphql/src/config/query-depth-limit/query-depth-limit.utils.ts",
       "project": "packages/nestjs-graphql",
       "status": "tested",
-      "testFile": "packages/nestjs-graphql/src/config/query-depth-limit.test.ts"
+      "testFile": "packages/nestjs-graphql/src/config/query-depth-limit/query-depth-limit.utils.test.ts"
     },
     {
       "category": "config",
-      "file": "packages/nestjs-graphql/src/config/response-cache-session.ts",
+      "file": "packages/nestjs-graphql/src/config/response-cache-session/response-cache-session.utils.ts",
       "project": "packages/nestjs-graphql",
       "status": "tested",
-      "testFile": "packages/nestjs-graphql/src/config/response-cache-session.test.ts"
+      "testFile": "packages/nestjs-graphql/src/config/response-cache-session/response-cache-session.utils.test.ts"
     },
     {
       "category": "config",
-      "file": "packages/nestjs-langchain/src/config/resilience.ts",
+      "file": "packages/nestjs-langchain/src/config/config.utils.ts",
       "project": "packages/nestjs-langchain",
       "status": "missing",
       "testFile": null
     },
     {
       "category": "utils",
-      "file": "packages/nestjs-langchain/src/utils/files.ts",
+      "file": "packages/nestjs-langchain/src/files/files.utils.ts",
       "project": "packages/nestjs-langchain",
       "status": "tested",
-      "testFile": "packages/nestjs-langchain/src/utils/files.test.ts"
+      "testFile": "packages/nestjs-langchain/src/files/files.utils.test.ts"
     },
     {
       "category": "config",
-      "file": "packages/nestjs-logging/src/config/nestjs-logging-levels.ts",
+      "file": "packages/nestjs-logging/src/config/config.constants.ts",
       "project": "packages/nestjs-logging",
       "status": "missing",
       "testFile": null
@@ -6260,31 +6260,31 @@
     },
     {
       "category": "config",
-      "file": "packages/nestjs-model-discovery/src/config/nestjs-model-discovery.config.ts",
+      "file": "packages/nestjs-model-discovery/src/config/config.constants.ts",
       "project": "packages/nestjs-model-discovery",
       "status": "tested",
-      "testFile": "packages/nestjs-model-discovery/src/config/nestjs-model-discovery.config.test.ts"
+      "testFile": "packages/nestjs-model-discovery/src/config/config.constants.test.ts"
     },
     {
       "category": "config",
-      "file": "packages/nestjs-redis/src/config/nestjs-redis.config.ts",
+      "file": "packages/nestjs-redis/src/config/config.constants.ts",
       "project": "packages/nestjs-redis",
       "status": "tested",
-      "testFile": "packages/nestjs-redis/src/config/nestjs-redis.config.test.ts"
+      "testFile": "packages/nestjs-redis/src/config/config.constants.test.ts"
     },
     {
       "category": "config",
-      "file": "packages/nestjs-redis/src/config/redis-client.ts",
+      "file": "packages/nestjs-redis/src/config/redis-client/redis-client.utils.ts",
       "project": "packages/nestjs-redis",
       "status": "tested",
-      "testFile": "packages/nestjs-redis/src/config/redis-client.test.ts"
+      "testFile": "packages/nestjs-redis/src/config/redis-client/redis-client.utils.test.ts"
     },
     {
       "category": "config",
-      "file": "packages/nestjs-redis/src/config/redis.ts",
+      "file": "packages/nestjs-redis/src/config/redis/redis.utils.ts",
       "project": "packages/nestjs-redis",
       "status": "tested",
-      "testFile": "packages/nestjs-redis/src/config/redis.test.ts"
+      "testFile": "packages/nestjs-redis/src/config/redis/redis.utils.test.ts"
     },
     {
       "category": "config",
@@ -6302,17 +6302,17 @@
     },
     {
       "category": "config",
-      "file": "packages/nestjs-stripe/src/config/stripe-config.ts",
+      "file": "packages/nestjs-stripe/src/config/config.utils.ts",
       "project": "packages/nestjs-stripe",
       "status": "tested",
-      "testFile": "packages/nestjs-stripe/src/config/stripe-config.test.ts"
+      "testFile": "packages/nestjs-stripe/src/config/config.utils.test.ts"
     },
     {
       "category": "utils",
-      "file": "packages/nestjs-testing/src/utils/as-mock.ts",
+      "file": "packages/nestjs-testing/src/as-mock/as-mock.utils.ts",
       "project": "packages/nestjs-testing",
       "status": "tested",
-      "testFile": "packages/nestjs-testing/src/utils/__tests__/as-mock.test.ts"
+      "testFile": "packages/nestjs-testing/src/as-mock/as-mock.utils.test.ts"
     },
     {
       "category": "utils",
@@ -6337,45 +6337,45 @@
     },
     {
       "category": "data",
-      "file": "packages/nestjs-utils/src/data/create-data-loader.ts",
+      "file": "packages/nestjs-utils/src/data/data.utils.ts",
       "project": "packages/nestjs-utils",
       "status": "tested",
-      "testFile": "packages/nestjs-utils/src/data/create-data-loader.test.ts"
+      "testFile": "packages/nestjs-utils/src/data/data.utils.test.ts"
     },
     {
       "category": "config",
-      "file": "packages/nestjs-worktrees/src/config/nestjs-worktrees.constants.ts",
+      "file": "packages/nestjs-worktrees/src/config/config.constants.ts",
       "project": "packages/nestjs-worktrees",
       "status": "missing",
       "testFile": null
     },
     {
       "category": "utils",
-      "file": "packages/nestjs-worktrees/src/utils/mutex-worktree-targets.ts",
+      "file": "packages/nestjs-worktrees/src/mutex-worktree-targets/mutex-worktree-targets.strategy.ts",
       "project": "packages/nestjs-worktrees",
       "status": "tested",
-      "testFile": "packages/nestjs-worktrees/src/utils/mutex-worktree-targets.test.ts"
+      "testFile": "packages/nestjs-worktrees/src/mutex-worktree-targets/mutex-worktree-targets.strategy.test.ts"
     },
     {
       "category": "utils",
-      "file": "packages/nestjs-worktrees/src/utils/parent-job.ts",
+      "file": "packages/nestjs-worktrees/src/parent-job/parent-job.utils.ts",
       "project": "packages/nestjs-worktrees",
       "status": "tested",
-      "testFile": "packages/nestjs-worktrees/src/utils/parent-job.test.ts"
+      "testFile": "packages/nestjs-worktrees/src/parent-job/parent-job.utils.test.ts"
     },
     {
       "category": "utils",
-      "file": "packages/nestjs-worktrees/src/utils/workflow.ts",
+      "file": "packages/nestjs-worktrees/src/workflow/workflow.utils.ts",
       "project": "packages/nestjs-worktrees",
       "status": "tested",
-      "testFile": "packages/nestjs-worktrees/src/utils/__tests__/workflow.test.ts"
+      "testFile": "packages/nestjs-worktrees/src/workflow/workflow.utils.test.ts"
     },
     {
       "category": "utils",
-      "file": "packages/nestjs-worktrees/src/utils/worktree-targets.ts",
+      "file": "packages/nestjs-worktrees/src/worktree-targets/worktree-targets.strategy.ts",
       "project": "packages/nestjs-worktrees",
       "status": "tested",
-      "testFile": "packages/nestjs-worktrees/src/utils/worktree-targets.test.ts"
+      "testFile": "packages/nestjs-worktrees/src/worktree-targets/worktree-targets.strategy.test.ts"
     },
     {
       "category": "utils",
@@ -11414,7 +11414,7 @@
       "missing": 2,
       "missingFiles": [
         "packages/nestjs-auth/src/config/nestjs-auth.options.ts",
-        "packages/nestjs-auth/src/config/nestjs-auth.tokens.ts"
+        "packages/nestjs-auth/src/config/nestjs-auth-options.token.ts"
       ],
       "optOut": 0,
       "project": "packages/nestjs-auth",
@@ -11440,7 +11440,7 @@
       "enforced": false,
       "missing": 2,
       "missingFiles": [
-        "packages/nestjs-bullmq/src/config/nestjs-bullmq.config.ts",
+        "packages/nestjs-bullmq/src/config/config.constants.ts",
         "packages/nestjs-bullmq/src/config/nestjs-bullmq.defaults.ts"
       ],
       "optOut": 0,
@@ -11480,7 +11480,7 @@
       "category": "config",
       "enforced": false,
       "missing": 1,
-      "missingFiles": ["packages/nestjs-langchain/src/config/resilience.ts"],
+      "missingFiles": ["packages/nestjs-langchain/src/config/config.utils.ts"],
       "optOut": 0,
       "project": "packages/nestjs-langchain",
       "stub": 0,
@@ -11505,7 +11505,7 @@
       "enforced": false,
       "missing": 3,
       "missingFiles": [
-        "packages/nestjs-logging/src/config/nestjs-logging-levels.ts",
+        "packages/nestjs-logging/src/config/config.constants.ts",
         "packages/nestjs-logging/src/config/nestjs-logging.config.ts",
         "packages/nestjs-logging/src/config/nestjs-logging.error.ts"
       ],
@@ -11610,7 +11610,7 @@
       "enforced": false,
       "missing": 1,
       "missingFiles": [
-        "packages/nestjs-worktrees/src/config/nestjs-worktrees.constants.ts"
+        "packages/nestjs-worktrees/src/config/config.constants.ts"
       ],
       "optOut": 0,
       "project": "packages/nestjs-worktrees",

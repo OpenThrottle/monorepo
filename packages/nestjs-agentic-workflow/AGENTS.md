@@ -10,11 +10,11 @@ tokens. Part of the replacement for the **deprecated** `@tools/workflows` (see
 
 ## Layout
 
-- `src/modules/nestjs-agentic-workflow.module.ts` — `register` / `registerAsync` /
+- `src/nestjs-agentic-workflow.module.ts` — `register` / `registerAsync` /
   `registerWorkflow`; the JSDoc on `registerWorkflow` explains the registry/dispatcher design and
   why per-workflow providers stay module-private.
-- `src/agentic-workflow-base.ts` — `AgenticWorkflowBase`, `AGENTIC_WORKFLOW_REGISTRY`, registry factory.
-- `src/agentic-workflow-ralph-registration.ts` — `AGENTIC_WORKFLOW_RALPH_ID` (`'ralph'`, must match
+- `src/agentic-workflow-base.strategy.ts` — `AgenticWorkflowBase`, `AGENTIC_WORKFLOW_REGISTRY`, registry factory.
+- `src/nestjs-agentic-workflow.constants.ts` — `AGENTIC_WORKFLOW_RALPH_ID` (`'ralph'`, must match
   `WorkflowContext.kind` in `@openthrottle/openthrottle-agentic-ralph`) + the orchestrator-deps token.
 - `src/testing/` — `compileAgenticWorkflowTestingModule` + `GlobalLoggerStubModule`; own
   [README](./src/testing/README.md) with processor-test recipes.

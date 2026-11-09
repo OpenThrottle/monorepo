@@ -24,3 +24,8 @@ export const DATABASE_BACKUP_PNPM_SCRIPT = 'database:backup';
  * Aligns with default job timeout (30 min) in database-backup.env.
  */
 export const DATABASE_BACKUP_WORKER_LOCK_DURATION_MS = 1_800_000;
+/** @description BullMQ cron: daily at 00:00:00 (UTC when DATABASE_BACKUP_TZ is unset). */
+export const DATABASE_BACKUP_DEFAULT_CRON_PATTERN = '0 0 0 * * *';
+
+/** @description Default BullMQ job timeout (30 minutes). */
+export const DATABASE_BACKUP_DEFAULT_JOB_TIMEOUT_MS = 1_800_000;

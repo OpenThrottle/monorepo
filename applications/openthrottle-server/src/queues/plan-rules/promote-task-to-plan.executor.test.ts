@@ -21,10 +21,8 @@ import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { TaskPromotionService } from '../task-promotion/task-promotion.service.ts';
-import {
-  type ActionExecutorContext,
-  ActionExecutorRegistry,
-} from './action-executor.ts';
+import { ActionExecutorRegistry } from './action-executor-registry/action-executor-registry.service.ts';
+import type { ActionExecutorContext } from './action-executor-registry/action-executor-registry.types.ts';
 import { PromoteTaskToPlanExecutor } from './promote-task-to-plan.executor.ts';
 
 const PLAN_ID = '00000000-0000-4000-8000-0000000000a1';

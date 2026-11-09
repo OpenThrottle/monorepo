@@ -17,7 +17,6 @@ import { EnqueueAgenticTestResultObject } from './enqueue-agentic-test-result.ob
 import { EnqueueDocIngestionInput } from './enqueue-doc-ingestion.input.ts';
 import { EnqueueDocIngestionResultObject } from './enqueue-doc-ingestion-result.object.ts';
 import { JobObject } from './job.object.ts';
-import { parseTaskRunMetricsFromReturnvalue } from './parse-task-run-metrics.ts';
 import { QueueControlInput } from './queue-control.input.ts';
 import { QueueControlResultObject } from './queue-control-result.object.ts';
 import { QueueDetailsInput } from './queue-details.input.ts';
@@ -26,7 +25,8 @@ import {
   QueueDetailsObject,
 } from './queue-details.object.ts';
 import { QueueStatsObject } from './queue-stats.object.ts';
-import { QueuesService } from './queues.service.ts';
+import { parseTaskRunMetricsFromReturnvalue } from './queues.utils.ts';
+import { QueuesService } from './queues-service/queues-service.service.ts';
 import { RemoveRepeatableJobInput } from './remove-repeatable-job.input.ts';
 import { RemoveRepeatableJobResultObject } from './remove-repeatable-job-result.object.ts';
 import { RepeatableJobObject } from './repeatable-job.object.ts';

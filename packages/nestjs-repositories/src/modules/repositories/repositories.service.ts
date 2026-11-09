@@ -2,13 +2,13 @@
  * @description CRUD and find-or-create for repositories (identity = normalized
  * git remote URL; provisional rows carry NULL until a remote is detected).
  */
-
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Repository as OrmRepository } from 'typeorm';
 
-import { normalizeRemoteUrl } from './normalize-remote-url.ts';
+import type { MergeDetectedRemoteResult } from './repositories.types.ts';
+import { normalizeRemoteUrl } from './repositories.utils.ts';
 import { Repository } from './repository.entity.ts';
 import { RepositoryCheckout } from './repository-checkout.entity.ts';
 
@@ -17,15 +17,6 @@ interface CreateRepositoryData {
   readonly name: string;
   readonly normalizedRemoteUrl: string | null;
   readonly projectId: string | null;
-}
-
-export interface MergeDetectedRemoteResult {
-  /** True when the provisional row merged into an existing canonical row. */
-  readonly merged: boolean;
-  /** The surviving repository (canonical on merge, promoted otherwise). */
-  readonly repository: Repository;
-  /** Project link dropped from the provisional row on merge (canonical wins). */
-  readonly supersededProjectId: string | null;
 }
 
 interface UpdateRepositoryData {

@@ -7,8 +7,8 @@
 import { Module } from '@nestjs/common';
 
 import { MetricsController } from './metrics.controller.ts';
-import { ProcessMetricsService } from './process-metrics.service.ts';
-import { SystemMetricsService } from './system-metrics.service.ts';
+import { ProcessMetricsService } from './process-metrics/process-metrics.service.ts';
+import { SystemMetricsService } from './system-metrics/system-metrics.service.ts';
 
 @Module({
   controllers: [MetricsController],

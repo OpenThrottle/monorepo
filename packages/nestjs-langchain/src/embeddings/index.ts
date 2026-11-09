@@ -2,10 +2,8 @@ import type { EmbeddingsInterface } from '@langchain/core/embeddings';
 import { VertexAIEmbeddings } from '@langchain/google-vertexai';
 import { OllamaEmbeddings } from '@langchain/ollama';
 
-import {
-  type ResilienceConfig,
-  resolveResilienceConfig,
-} from '../config/resilience.ts';
+import type { ResilienceConfig } from '../config/config.types.ts';
+import { resolveResilienceConfig } from '../config/config.utils.ts';
 
 /**
  * ------------------------------------------------------------

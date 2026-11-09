@@ -6,7 +6,7 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import { PLAN_RUN_WORKTREE_REAPER_DRY_RUN_ENV } from '../../services/plan-run-worktree-reaper/plan-run-worktree-reaper.constants.ts';
 import { PlanRunWorktreeReaperService } from '../../services/plan-run-worktree-reaper/plan-run-worktree-reaper.service.ts';
 import { isPlanRunWorktreeReaperDryRun } from '../../services/plan-run-worktree-reaper/plan-run-worktree-reaper.utils.ts';
-import { resolveRepeatablesOwner } from '../repeatable-job.owner.ts';
+import { resolveRepeatablesOwner } from '../repeatable-job/repeatable-job.utils.ts';
 import { PLAN_RUN_WORKTREE_REAPER_QUEUE_NAME } from './plan-run-worktree-reaper.constants.ts';
 import type { PlanRunWorktreeReaperJob } from './plan-run-worktree-reaper.types.ts';
 

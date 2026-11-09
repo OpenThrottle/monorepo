@@ -21,10 +21,10 @@ import type { MatchedTagAction } from '@openthrottle/openthrottle-skills';
 import { QueryFailedError } from 'typeorm';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
-import type { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account.service.ts';
-import type { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture.service.ts';
+import type { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account/status-change-system-account.service.ts';
+import type { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture/work-ledger-capture.service.ts';
 import type { PlanContextAvailabilityService } from '../../services/plan-context-availability/plan-context-availability.service.ts';
-import { ActionExecutorRegistry } from './action-executor.ts';
+import { ActionExecutorRegistry } from './action-executor-registry/action-executor-registry.service.ts';
 import { InjectTaskExecutor } from './inject-task.executor.ts';
 
 const planId = '00000000-0000-4000-8000-000000000001';

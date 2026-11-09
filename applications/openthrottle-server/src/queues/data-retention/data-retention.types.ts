@@ -61,3 +61,11 @@ export interface DataRetentionSweepSummary {
   readonly totalDeleted: number;
   readonly totalExpired: number;
 }
+export interface DataRetentionConfig {
+  /** Cron pattern for the repeatable sweep. */
+  readonly cronPattern: string;
+  /** When false, the sweep counts and reports but never deletes. */
+  readonly enforce: boolean;
+  /** Timezone for the cron pattern; undefined means UTC. */
+  readonly tz: string | undefined;
+}

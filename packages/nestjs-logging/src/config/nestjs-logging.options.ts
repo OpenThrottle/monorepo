@@ -5,16 +5,14 @@ import type {
 } from '@nestjs/common';
 import { isRecord } from '@openthrottle/nodejs-utils';
 
-import {
-  createLogRedactor,
-  type LogRedactor,
-  type RedactionOptions,
-} from '../services/log-redaction.ts';
+import type {
+  LogRedactor,
+  RedactionOptions,
+} from '../log-redaction/log-redaction.types.ts';
+import { createLogRedactor } from '../log-redaction/log-redaction.utils.ts';
+import { ALL_NESTJS_LOGGING_LEVELS } from './config.constants.ts';
+import type { NestjsLoggingLevel } from './config.types.ts';
 import { NestjsLoggingError } from './nestjs-logging.error.ts';
-import {
-  ALL_NESTJS_LOGGING_LEVELS,
-  type NestjsLoggingLevel,
-} from './nestjs-logging-levels.ts';
 
 /**
  * @description Injection token for resolved {@link NestjsLoggingModuleOptions} (including defaults).

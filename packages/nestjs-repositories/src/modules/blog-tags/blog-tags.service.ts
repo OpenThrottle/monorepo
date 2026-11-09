@@ -3,23 +3,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { Repository } from 'typeorm';
 
-import { applyBlogPostVisibility } from '../blog-posts/blog-post-visibility.ts';
+import { applyBlogPostVisibility } from '../blog-posts/visibility/visibility.utils.ts';
 import {
   assertBlogSlug,
   assertNotBlank,
-} from '../blog-posts/blog-write-validation.ts';
+} from '../blog-posts/write-validation/write-validation.utils.ts';
 import { BlogTag } from './blog-tag.entity.ts';
-
-/**
- * Input for {@link BlogTagsService.upsertTag}. The write replaces the tag's fields: an omitted
- * or `null` description clears the column.
- * @public
- */
-export interface BlogTagUpsertInput {
-  readonly description?: string | null;
-  readonly name: string;
-  readonly slug: string;
-}
+import type { BlogTagUpsertInput } from './blog-tags.types.ts';
 
 /** @public */
 @Injectable()

@@ -13,7 +13,7 @@ import {
 } from 'typeorm';
 
 import { Task } from '../tasks/task.entity.ts';
-import type { TagSource } from './tag-provenance.ts';
+import type { TagSource } from './tags.types.ts';
 
 export interface TaskTagData {
   readonly confidence: number | null;

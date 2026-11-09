@@ -3198,80 +3198,6 @@ type ProjectSkillsResult {
   orphanSlugs: [String!]!
 }
 
-"""
-A tag attached to a plan. Source is derived from the writing identity (human > agent > server-llm) and never client-supplied.
-"""
-type PlanTagObject {
-  id: ID!
-  planId: ID!
-
-  """Kebab-case tag slug, unique per plan."""
-  tag: String!
-
-  """
-  Vocabulary axis: "domain" (subject area) or "phase" (lifecycle stage; at most one phase tag per plan).
-  """
-  dimension: String!
-
-  """
-  Writing identity class: "human", "agent", or "server-llm". Ranked human > agent > server-llm for replace/remove arbitration.
-  """
-  source: String!
-
-  """Model confidence (0-1) for server-llm rows; null otherwise."""
-  confidence: Float
-  createdAt: DateTime!
-  updatedAt: DateTime!
-}
-
-"""
-A tag attached to a project. Same shape and provenance semantics as plan tags; a project's tags feed the effective-tag-set rollup for its plans.
-"""
-type ProjectTagObject {
-  id: ID!
-  projectId: ID!
-
-  """Kebab-case tag slug, unique per project."""
-  tag: String!
-
-  """Vocabulary axis: "domain" (subject area) or "phase" (lifecycle stage)."""
-  dimension: String!
-
-  """
-  Writing identity class: "human", "agent", or "server-llm". Ranked human > agent > server-llm for replace/remove arbitration.
-  """
-  source: String!
-
-  """Model confidence (0-1) for server-llm rows; null otherwise."""
-  confidence: Float
-  createdAt: DateTime!
-  updatedAt: DateTime!
-}
-
-"""
-A tag attached to a task. Same shape and provenance semantics as plan tags.
-"""
-type TaskTagObject {
-  id: ID!
-  taskId: ID!
-
-  """Kebab-case tag slug, unique per task."""
-  tag: String!
-
-  """Vocabulary axis: "domain" (subject area) or "phase" (lifecycle stage)."""
-  dimension: String!
-
-  """
-  Writing identity class: "human", "agent", or "server-llm". Ranked human > agent > server-llm for replace/remove arbitration.
-  """
-  source: String!
-
-  """Model confidence (0-1) for server-llm rows; null otherwise."""
-  confidence: Float
-  createdAt: DateTime!
-  updatedAt: DateTime!
-}
-
 """A custom prompt document for AI workflow customization"""
 type CustomPromptObject {
   id: String!
@@ -4259,6 +4185,80 @@ type RuleApplicationObject {
   JSON-encoded executor context for the state (e.g. {"reason":"skill-unavailable"}).
   """
   detailsJson: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+A tag attached to a plan. Source is derived from the writing identity (human > agent > server-llm) and never client-supplied.
+"""
+type PlanTagObject {
+  id: ID!
+  planId: ID!
+
+  """Kebab-case tag slug, unique per plan."""
+  tag: String!
+
+  """
+  Vocabulary axis: "domain" (subject area) or "phase" (lifecycle stage; at most one phase tag per plan).
+  """
+  dimension: String!
+
+  """
+  Writing identity class: "human", "agent", or "server-llm". Ranked human > agent > server-llm for replace/remove arbitration.
+  """
+  source: String!
+
+  """Model confidence (0-1) for server-llm rows; null otherwise."""
+  confidence: Float
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+A tag attached to a project. Same shape and provenance semantics as plan tags; a project's tags feed the effective-tag-set rollup for its plans.
+"""
+type ProjectTagObject {
+  id: ID!
+  projectId: ID!
+
+  """Kebab-case tag slug, unique per project."""
+  tag: String!
+
+  """Vocabulary axis: "domain" (subject area) or "phase" (lifecycle stage)."""
+  dimension: String!
+
+  """
+  Writing identity class: "human", "agent", or "server-llm". Ranked human > agent > server-llm for replace/remove arbitration.
+  """
+  source: String!
+
+  """Model confidence (0-1) for server-llm rows; null otherwise."""
+  confidence: Float
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+A tag attached to a task. Same shape and provenance semantics as plan tags.
+"""
+type TaskTagObject {
+  id: ID!
+  taskId: ID!
+
+  """Kebab-case tag slug, unique per task."""
+  tag: String!
+
+  """Vocabulary axis: "domain" (subject area) or "phase" (lifecycle stage)."""
+  dimension: String!
+
+  """
+  Writing identity class: "human", "agent", or "server-llm". Ranked human > agent > server-llm for replace/remove arbitration.
+  """
+  source: String!
+
+  """Model confidence (0-1) for server-llm rows; null otherwise."""
+  confidence: Float
   createdAt: DateTime!
   updatedAt: DateTime!
 }

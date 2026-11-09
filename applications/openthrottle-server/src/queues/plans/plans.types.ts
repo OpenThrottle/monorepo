@@ -6,13 +6,9 @@ import type {
 } from '@openthrottle/openthrottle-agentic-utils';
 import type { Job } from 'bullmq';
 
-import type { TaskRunMetrics } from '../../metrics/process-metrics.types.ts';
+import type { TaskRunMetrics } from '../../metrics/process-metrics/process-metrics.types.ts';
 import type { RunPlanOrchestratorJobData } from '../agentic-ralph/agentic-ralph.types.ts';
-import { isRunPlanOrchestratorJobData } from '../agentic-ralph/agentic-ralph.types.ts';
-
 export type { RunPlanOrchestratorJobData };
-export { isRunPlanOrchestratorJobData };
-
 /**
  * ## Plans queue job shape (design)
  *

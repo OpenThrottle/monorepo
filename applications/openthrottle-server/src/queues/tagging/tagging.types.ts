@@ -1,14 +1,9 @@
 /**
  * @description Job payloads + results for the tagging queue.
  */
-
 import type { Job } from 'bullmq';
 
-export const TAGGING_ENTITY_TYPES = {
-  PLAN: 'plan',
-  TASK: 'task',
-} as const;
-
+import type { TAGGING_ENTITY_TYPES } from './tagging.constants.ts';
 export type TaggingEntityType =
   (typeof TAGGING_ENTITY_TYPES)[keyof typeof TAGGING_ENTITY_TYPES];
 
@@ -32,3 +27,30 @@ export interface TaggingJobResult {
 
 export type PredictTaggingJob = Job<PredictTaggingJobData, TaggingJobResult>;
 export type RefineTaggingJob = Job<RefineTaggingJobData, TaggingJobResult>;
+export interface TaggingClassificationInput {
+  readonly description: string | null;
+  /** Optional diff excerpt (refine-tagging). */
+  readonly diff?: string;
+  readonly summary: string | null;
+  readonly title: string;
+}
+
+export interface TaggingVocabularyEntry {
+  readonly dimension: string;
+  readonly tag: string;
+}
+
+export interface TaggingPrediction {
+  readonly confidence: number;
+  readonly dimension: string;
+  readonly tag: string;
+}
+
+export interface TaggingModelProvider {
+  classify(
+    input: TaggingClassificationInput,
+    vocabulary: readonly TaggingVocabularyEntry[],
+  ): Promise<TaggingPrediction[]>;
+  /** Human-readable provider name for logs. */
+  readonly name: string;
+}

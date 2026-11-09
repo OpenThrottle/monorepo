@@ -1,0 +1,28 @@
+import { Module } from '@nestjs/common';
+import { GitHubModule } from '@openthrottle/nestjs-github';
+import { LoggerModule } from '@openthrottle/nestjs-modules';
+import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories';
+
+import { TaggingQueueProducerModule } from '../tagging/producer/producer.module.ts';
+import { WorkLedgerVerifyQueueProducerModule } from './producer/producer.module.ts';
+import { WorkLedgerVerifyRepeatableService } from './repeatable/repeatable.service.ts';
+import { WorkLedgerVerifyProcessor } from './work-ledger-verify.processor.ts';
+
+/**
+ * @description Processor half of the work-ledger-verify queue (WorkerHost + repeatable
+ * scheduler). Loaded only under PROCESS_ROLE worker/all. Verifies unverified git_commit
+ * artifacts against GitHub (existence) on a 15-minute sweep. The repeatable registration
+ * lives with the processor so an api-only process doesn't create an orphan schedule.
+ */
+@Module({
+  exports: [WorkLedgerVerifyQueueProducerModule],
+  imports: [
+    GitHubModule,
+    LoggerModule,
+    NestjsRepositoriesModule,
+    TaggingQueueProducerModule,
+    WorkLedgerVerifyQueueProducerModule,
+  ],
+  providers: [WorkLedgerVerifyProcessor, WorkLedgerVerifyRepeatableService],
+})
+export class WorkLedgerVerifyQueueModule {}

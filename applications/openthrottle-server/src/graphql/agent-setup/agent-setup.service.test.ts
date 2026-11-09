@@ -8,8 +8,8 @@ import type {
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { AgentDiscoveryService } from '../agent-discovery/agent-discovery.service.ts';
+import { AGENT_SETUP_CHUNK_FIELD } from './agent-setup.constants.ts';
 import { AgentSetupService } from './agent-setup.service.ts';
-import { AGENT_SETUP_CHUNK_FIELD } from './agent-setup.types.ts';
 
 const { runAgentSetupMock } = vi.hoisted(() => ({
   runAgentSetupMock: vi.fn(),

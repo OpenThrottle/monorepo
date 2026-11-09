@@ -154,4 +154,4 @@ Code and database comments no longer cite it. **One knowing exception:** the tex
 - `databases/migrations/113_add_instant_to_work_sessions_closed_by.sql` — the `instant` value.
 - `databases/migrations/129_strip_design_doc_citations_from_work_ledger_comments.sql` — the current table and column comments.
 - `packages/openthrottle-mcp/src/session/session-headers.ts` — ambient session propagation.
-- `applications/openthrottle-server/src/graphql/work-ledger/work-ledger-capture.service.ts` — the server-side capture path.
+- `applications/openthrottle-server/src/graphql/work-ledger/work-ledger-capture/work-ledger-capture.service.ts` — the server-side capture path.

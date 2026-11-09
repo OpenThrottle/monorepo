@@ -10,7 +10,7 @@ import { NotesService } from '@openthrottle/nestjs-repositories';
 
 import { CreateNoteInput, UpdateNoteInput } from './note.input.ts';
 import { NoteObject } from './note.object.ts';
-import { resolveNoteAuthor } from './resolve-note-author.ts';
+import { resolveNoteAuthor } from './notes.utils.ts';
 
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a)
 @Resolver(() => NoteObject)

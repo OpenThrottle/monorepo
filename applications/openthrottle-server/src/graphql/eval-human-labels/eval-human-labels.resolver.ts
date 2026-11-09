@@ -21,7 +21,7 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { QueryFailedError } from 'typeorm';
 
-import { resolveNoteAuthor } from '../notes/resolve-note-author.ts';
+import { resolveNoteAuthor } from '../notes/notes.utils.ts';
 import { toAgentTrajectoryLabelObject } from './agent-trajectory-label.mapper.ts';
 import { AgentTrajectoryLabelObject } from './agent-trajectory-label.object.ts';
 import { LabelAgentTrajectoryInput } from './label-agent-trajectory.input.ts';

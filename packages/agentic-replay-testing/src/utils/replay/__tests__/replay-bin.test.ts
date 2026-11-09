@@ -23,6 +23,9 @@ import {
 } from '../replay-bin.ts';
 import { replayFixture } from '../replay-fixture.ts';
 
+/** ~1 MB of stdout: enough to outlast a 64 KB pipe buffer many times over. */
+const LONG_RECORDING_LINES = 30_000;
+
 let dir: string;
 let installed: ReplayBin[];
 
@@ -69,9 +72,19 @@ const run = (
   });
   let stdout = '';
   let stderr = '';
+  // One signal, like a backend aborting a turn. Killing on every chunk races
+  // the child's exit: a second SIGTERM landing after its handlers are torn
+  // down kills it by signal (`code: null`), which CI load made flaky.
+  let killed = false;
+  const kill = (): void => {
+    if (!killed) {
+      killed = true;
+      child.kill('SIGTERM');
+    }
+  };
   child.stdout.on('data', (data: Buffer) => {
     stdout += data.toString('utf8');
-    options.onStdout?.(() => child.kill('SIGTERM'));
+    options.onStdout?.(kill);
   });
   child.stderr.on('data', (data: Buffer) => {
     stderr += data.toString('utf8');
@@ -185,6 +198,31 @@ describe('the replay bin', () => {
       });
 
       expect(result.code).toBe(143);
+    });
+  });
+
+  describe('when a CLI that exited normally is signalled mid-replay', () => {
+    it('still replays the whole recording and its exit code', async () => {
+      // Far past a pipe buffer, so the bin is provably still writing when the
+      // signal lands. A two-line recording can finish and start exiting first,
+      // and a signal during exit kills any process — that race is not the bin's.
+      const stdout = Array.from(
+        { length: LONG_RECORDING_LINES },
+        (_, index) => {
+          return `{"type":"line","index":${index}}`;
+        },
+      );
+      const replay = install({ ...TRANSCRIPT, argv: ['go'], stdout });
+
+      const result = await run(replay.bin, ['go'], {
+        onStdout: (kill) => kill(),
+      });
+
+      expect(result).toEqual({
+        code: 0,
+        stderr: 'warned\n',
+        stdout: `${stdout.join('\n')}\n`,
+      });
     });
   });
 

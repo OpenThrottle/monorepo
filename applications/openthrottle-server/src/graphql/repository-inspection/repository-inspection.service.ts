@@ -6,11 +6,10 @@
  * RepositoryCheckoutsService (DB is a cache; disk is the source of truth).
  * Pattern precedent: agent-discovery / model-discovery cached snapshots.
  */
-
 import { execFile } from 'node:child_process';
 import { existsSync, realpathSync, statSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { isAbsolute, join } from 'node:path';
+import { join } from 'node:path';
 import { promisify } from 'node:util';
 
 import { Injectable } from '@nestjs/common';
@@ -21,12 +20,13 @@ import {
   RepositoryCheckoutsService,
 } from '@openthrottle/nestjs-repositories';
 import { isRecord } from '@openthrottle/nodejs-utils';
-import {
-  toContainerPath,
-  toHostPath,
-} from '@openthrottle/openthrottle-agentic-utils';
+import { toHostPath } from '@openthrottle/openthrottle-agentic-utils';
 
-import { parseLinkedWorktrees } from './parse-linked-worktrees.ts';
+import {
+  HOOK_TELEMETRY_PRODUCER_MARKERS,
+  HOOK_TELEMETRY_REASONS,
+  HOOK_TELEMETRY_STATUSES,
+} from './repository-inspection.constants.ts';
 import type {
   RepositoryInspectionAgentConfig,
   RepositoryInspectionGit,
@@ -35,12 +35,9 @@ import type {
   RepositoryInspectionRemote,
   RepositoryInspectionSnapshot,
   RepositoryInspectionStack,
-} from './repository-inspection.snapshot.ts';
-import {
-  HOOK_TELEMETRY_PRODUCER_MARKERS,
-  HOOK_TELEMETRY_REASONS,
-  HOOK_TELEMETRY_STATUSES,
-} from './repository-inspection.snapshot.ts';
+} from './repository-inspection.types.ts';
+import { validateInspectionPath } from './repository-inspection.utils.ts';
+import { parseLinkedWorktrees } from './repository-inspection.utils.ts';
 
 const execFileAsync = promisify(execFile);
 
@@ -49,9 +46,6 @@ const GIT_COMMAND_TIMEOUT_MS = 2_000;
 
 /** Cap on stdout per git command (worktree/status lists stay bounded). */
 const GIT_MAX_BUFFER_BYTES = 1024 * 1024;
-
-const MAX_PATH_LENGTH = 4096;
-
 const OPENTHROTTLE_MANIFEST_RELATIVE_PATH = `.openthrottle/workspace-editors.json`;
 
 /** Root-level marker files → language tags. Root checks only, no walks. */
@@ -75,37 +69,6 @@ const PACKAGE_MANAGER_LOCKFILES: ReadonlyArray<readonly [string, string]> = [
 ];
 
 const SKILLS_DIRECTORIES = ['.agents/skills', '.claude/skills', 'skills'];
-
-/**
- * Validates a path before any filesystem access: absolute, sane length, no
- * NUL bytes, exists, and is a directory — the validateWorkingDirectory-style
- * checks from the design doc §6. Comparison happens in this process's view
- * (toContainerPath); the returned value is the resolved, process-view path.
- */
-export const validateInspectionPath = (raw: string): string => {
-  const trimmed = raw.trim();
-  if (trimmed === '' || trimmed.includes('\0')) {
-    throw new Error('inspection path is empty or contains invalid characters');
-  }
-  if (trimmed.length > MAX_PATH_LENGTH) {
-    throw new Error(
-      `inspection path must be at most ${MAX_PATH_LENGTH} characters`,
-    );
-  }
-  if (!isAbsolute(trimmed)) {
-    throw new Error('inspection path must be an absolute path');
-  }
-
-  const resolved = toContainerPath(trimmed);
-  if (!existsSync(resolved)) {
-    throw new Error(`inspection path does not exist: ${trimmed}`);
-  }
-  if (!statSync(resolved).isDirectory()) {
-    throw new Error(`inspection path is not a directory: ${trimmed}`);
-  }
-
-  return resolved;
-};
 
 @Injectable()
 export class RepositoryInspectionService {

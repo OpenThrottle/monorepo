@@ -25,10 +25,8 @@ import type {
 import { CLAUDE_BIN_ENV } from '@openthrottle/openthrottle-agentic-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  ConversationStreamService,
-  type StartConversationStreamRun,
-} from './conversation-stream.service.ts';
+import { ConversationStreamService } from './conversation-stream.service.ts';
+import type { StartConversationStreamRun } from './conversation-stream.types.ts';
 
 const ids = vi.hoisted(() => ({ next: 0 }));
 

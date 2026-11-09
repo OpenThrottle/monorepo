@@ -1,7 +1,6 @@
 /**
  * @description CRUD and turn persistence for agent_conversations (human user-scoped).
  */
-
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
@@ -9,23 +8,24 @@ import { Repository } from 'typeorm';
 
 import { PlansService } from '../plans/plans.service.ts';
 import { ProjectsService } from '../projects/projects.service.ts';
-import type {
-  AgentConversationMessageRole,
-  AgentConversationStatus,
-} from './agent-conversation.constants.ts';
+import { AgentConversation } from './agent-conversation.entity.ts';
+import { AgentConversationMessage } from './agent-conversation-message.entity.ts';
 import {
   AGENT_CONVERSATION_MESSAGE_ROLES,
   AGENT_CONVERSATION_STATUSES,
-} from './agent-conversation.constants.ts';
-import { AgentConversation } from './agent-conversation.entity.ts';
+} from './agent-conversations.constants.ts';
+import type { AppendTurnResult } from './agent-conversations.types.ts';
+import type {
+  AgentConversationMessageRole,
+  AgentConversationStatus,
+} from './agent-conversations.types.ts';
 import {
   capAgentConversationContent,
   capAgentConversationToolMetadata,
   clampAgentConversationListLimit,
   clampAgentConversationMessagesLimit,
   resolveCurrentMaxSortOrder,
-} from './agent-conversation.util.ts';
-import { AgentConversationMessage } from './agent-conversation-message.entity.ts';
+} from './agent-conversations.utils.ts';
 
 interface CreateConversationInput {
   readonly metadata?: Record<string, unknown> | null;
@@ -72,11 +72,6 @@ interface AppendMessageInput {
 interface UpdateModelSnapshotInput {
   readonly modelName: string | null;
   readonly modelProvider: string | null;
-}
-
-export interface AppendTurnResult {
-  readonly assistantMessage: AgentConversationMessage;
-  readonly userMessage: AgentConversationMessage;
 }
 
 @Injectable()

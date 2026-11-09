@@ -1,29 +1,60 @@
+export { CAPTURE_HEALTH_STREAMS } from './capture-health/capture-health.constants.ts';
+export type {
+  CaptureHealthRow,
+  CaptureHealthStream,
+} from './capture-health/capture-health.types.ts';
+export { type ResolveCompletedAtForStatusChangeInput } from './completed-at/completed-at.types.ts';
+export { resolveCompletedAtForStatusChange } from './completed-at/completed-at.utils.ts';
 export {
-  isPlanStatus,
-  isTaskStatus,
   PLAN_STATUS,
   PLAN_STATUS_LIST,
   PLAN_STATUS_VALUES,
-  type PlanStatus,
   REMAINING_TASK_STATUSES,
-  type RemainingTaskStatus,
   TASK_STATUS,
   TASK_STATUS_LIST,
   TASK_STATUS_VALUES,
+} from './config/config.constants.ts';
+export {
+  type PlanStatus,
+  type RemainingTaskStatus,
   type TaskStatus,
-} from './config/plan-task-status.constants.ts';
-export { getTypeOrmOptions as getOpenThrottleTypeOrmOptions } from './database.config.ts';
+} from './config/config.types.ts';
+export { isPlanStatus, isTaskStatus } from './config/config.utils.ts';
+export {
+  type CollectionByColumnLoaderOptions,
+  type GroupedCountColumnInFilter,
+  type GroupedCountLoaderOptions,
+  type RepositoryAccessor,
+} from './entity-loaders/entity-loaders.types.ts';
+export {
+  createCollectionByColumnLoader,
+  createEntityByIdLoader,
+  createGroupedCountLoader,
+} from './entity-loaders/entity-loaders.utils.ts';
+export {
+  escapeLikePattern,
+  toLikeContainsPattern,
+} from './like-pattern/like-pattern.utils.ts';
+export {
+  LIST_PAGINATION_DEFAULT_LIMIT,
+  LIST_PAGINATION_MAX_LIMIT,
+} from './list-pagination/list-pagination.constants.ts';
+export {
+  type ListPaginationInput,
+  type ResolvedListPagination,
+} from './list-pagination/list-pagination.types.ts';
+export { resolveListPagination } from './list-pagination/list-pagination.utils.ts';
 export { AgentCliPreferencesModule } from './modules/agent-cli-preferences/agent-cli-preferences.module.ts';
-export type { ModelPreferenceMap } from './modules/agent-cli-preferences/agent-cli-preferences.service.ts';
 export { AgentCliPreferencesService } from './modules/agent-cli-preferences/agent-cli-preferences.service.ts';
+export type { ModelPreferenceMap } from './modules/agent-cli-preferences/agent-cli-preferences.types.ts';
 export type { UserDisabledAgentCliData } from './modules/agent-cli-preferences/user-disabled-agent-cli.entity.ts';
 export { UserDisabledAgentCli } from './modules/agent-cli-preferences/user-disabled-agent-cli.entity.ts';
 export type { UserFavoriteAgentModelData } from './modules/agent-cli-preferences/user-favorite-agent-model.entity.ts';
 export { UserFavoriteAgentModel } from './modules/agent-cli-preferences/user-favorite-agent-model.entity.ts';
-export type {
-  AgentConversationMessageRole,
-  AgentConversationStatus,
-} from './modules/agent-conversations/agent-conversation.constants.ts';
+export type { AgentConversationData } from './modules/agent-conversations/agent-conversation.entity.ts';
+export { AgentConversation } from './modules/agent-conversations/agent-conversation.entity.ts';
+export type { AgentConversationMessageData } from './modules/agent-conversations/agent-conversation-message.entity.ts';
+export { AgentConversationMessage } from './modules/agent-conversations/agent-conversation-message.entity.ts';
 export {
   AGENT_CONVERSATION_CONTENT_MAX_BYTES,
   AGENT_CONVERSATION_LIST_DEFAULT_LIMIT,
@@ -34,20 +65,20 @@ export {
   AGENT_CONVERSATION_PAYLOAD_TRUNCATED_KEY,
   AGENT_CONVERSATION_STATUSES,
   AGENT_CONVERSATION_TOOL_METADATA_MAX_BYTES,
-} from './modules/agent-conversations/agent-conversation.constants.ts';
-export type { AgentConversationData } from './modules/agent-conversations/agent-conversation.entity.ts';
-export { AgentConversation } from './modules/agent-conversations/agent-conversation.entity.ts';
+} from './modules/agent-conversations/agent-conversations.constants.ts';
+export { AgentConversationsService } from './modules/agent-conversations/agent-conversations.service.ts';
+export type {
+  AgentConversationMessageRole,
+  AgentConversationStatus,
+} from './modules/agent-conversations/agent-conversations.types.ts';
+export type { AppendTurnResult } from './modules/agent-conversations/agent-conversations.types.ts';
 export {
   capAgentConversationContent,
   capAgentConversationToolMetadata,
   clampAgentConversationListLimit,
   clampAgentConversationMessagesLimit,
   deriveConversationTitleFromMessage,
-} from './modules/agent-conversations/agent-conversation.util.ts';
-export type { AgentConversationMessageData } from './modules/agent-conversations/agent-conversation-message.entity.ts';
-export { AgentConversationMessage } from './modules/agent-conversations/agent-conversation-message.entity.ts';
-export type { AppendTurnResult } from './modules/agent-conversations/agent-conversations.service.ts';
-export { AgentConversationsService } from './modules/agent-conversations/agent-conversations.service.ts';
+} from './modules/agent-conversations/agent-conversations.utils.ts';
 export type {
   AgentTokenUsageData,
   AgentTokenUsageSource,
@@ -57,14 +88,14 @@ export {
   AgentTokenUsage,
 } from './modules/agent-token-usage/agent-token-usage.entity.ts';
 export { AgentTokenUsageModule } from './modules/agent-token-usage/agent-token-usage.module.ts';
+export { AgentTokenUsageService } from './modules/agent-token-usage/agent-token-usage.service.ts';
 export type {
   RecordTokenUsageInput,
   TokenUsageBatchResult,
   TokenUsageBatchRow,
   TokenUsageRangeQuery,
   TokenUsageTotals,
-} from './modules/agent-token-usage/agent-token-usage.service.ts';
-export { AgentTokenUsageService } from './modules/agent-token-usage/agent-token-usage.service.ts';
+} from './modules/agent-token-usage/agent-token-usage.types.ts';
 export { AGENT_TRAJECTORY_SOURCE } from './modules/agent-trajectories/agent-trajectories.constants.ts';
 export { AgentTrajectoriesModule } from './modules/agent-trajectories/agent-trajectories.module.ts';
 export { AgentTrajectoriesService } from './modules/agent-trajectories/agent-trajectories.service.ts';
@@ -77,23 +108,17 @@ export { AgentTrajectory } from './modules/agent-trajectories/agent-trajectory.e
 export type { BlogAuthorData } from './modules/blog-authors/blog-author.entity.ts';
 export { BlogAuthor } from './modules/blog-authors/blog-author.entity.ts';
 export { BlogAuthorsModule } from './modules/blog-authors/blog-authors.module.ts';
-export type { BlogAuthorUpsertInput } from './modules/blog-authors/blog-authors.service.ts';
 export { BlogAuthorsService } from './modules/blog-authors/blog-authors.service.ts';
-export type { BlogPostStatus } from './modules/blog-posts/blog-post.constants.ts';
+export type { BlogAuthorUpsertInput } from './modules/blog-authors/blog-authors.types.ts';
+export type { BlogPostData } from './modules/blog-posts/blog-post.entity.ts';
+export { BlogPost } from './modules/blog-posts/blog-post.entity.ts';
 export {
   BLOG_POST_STATUS,
   BLOG_POST_STATUS_VALUES,
-} from './modules/blog-posts/blog-post.constants.ts';
-export type { BlogPostData } from './modules/blog-posts/blog-post.entity.ts';
-export { BlogPost } from './modules/blog-posts/blog-post.entity.ts';
-export type { BlogPostState } from './modules/blog-posts/blog-post-visibility.ts';
-export {
-  applyBlogPostStateFilter,
-  applyBlogPostVisibility,
-  BLOG_POST_STATE,
-  deriveBlogPostState,
-} from './modules/blog-posts/blog-post-visibility.ts';
+} from './modules/blog-posts/blog-posts.constants.ts';
 export { BlogPostsModule } from './modules/blog-posts/blog-posts.module.ts';
+export { BlogPostsService } from './modules/blog-posts/blog-posts.service.ts';
+export type { BlogPostStatus } from './modules/blog-posts/blog-posts.types.ts';
 export type {
   BlogPostDraftInput,
   BlogPostPage,
@@ -101,8 +126,18 @@ export type {
   FindAdminBlogPostInput,
   FindAdminBlogPostsInput,
   FindPublishedBlogPostsInput,
-} from './modules/blog-posts/blog-posts.service.ts';
-export { BlogPostsService } from './modules/blog-posts/blog-posts.service.ts';
+} from './modules/blog-posts/blog-posts.types.ts';
+export { BLOG_POST_STATE } from './modules/blog-posts/visibility/visibility.constants.ts';
+export type { BlogPostState } from './modules/blog-posts/visibility/visibility.types.ts';
+export {
+  applyBlogPostStateFilter,
+  applyBlogPostVisibility,
+  deriveBlogPostState,
+} from './modules/blog-posts/visibility/visibility.utils.ts';
+export {
+  BLOG_WRITE_ENTITY,
+  BLOG_WRITE_RESULT_KIND,
+} from './modules/blog-posts/write-result/write-result.constants.ts';
 export type {
   BlogPostWriteResult,
   BlogWriteCoverAltRequired,
@@ -112,22 +147,18 @@ export type {
   BlogWriteResult,
   BlogWriteSlugConflict,
   BlogWriteStaleWrite,
-} from './modules/blog-posts/blog-write-result.ts';
-export {
-  BLOG_WRITE_ENTITY,
-  BLOG_WRITE_RESULT_KIND,
-} from './modules/blog-posts/blog-write-result.ts';
+} from './modules/blog-posts/write-result/write-result.types.ts';
+export { BLOG_SLUG_PATTERN } from './modules/blog-posts/write-validation/write-validation.constants.ts';
 export {
   assertBlogSlug,
   assertNotBlank,
-  BLOG_SLUG_PATTERN,
   isCoverAltMissing,
-} from './modules/blog-posts/blog-write-validation.ts';
+} from './modules/blog-posts/write-validation/write-validation.utils.ts';
 export type { BlogTagData } from './modules/blog-tags/blog-tag.entity.ts';
 export { BlogTag } from './modules/blog-tags/blog-tag.entity.ts';
 export { BlogTagsModule } from './modules/blog-tags/blog-tags.module.ts';
-export type { BlogTagUpsertInput } from './modules/blog-tags/blog-tags.service.ts';
 export { BlogTagsService } from './modules/blog-tags/blog-tags.service.ts';
+export type { BlogTagUpsertInput } from './modules/blog-tags/blog-tags.types.ts';
 export type { CodeEmbeddingSearchRow } from './modules/code-embeddings/code-embedding.entity.ts';
 export { CodeEmbedding } from './modules/code-embeddings/code-embedding.entity.ts';
 export type { CodeIndexSnapshotEntry } from './modules/code-index-snapshots/code-index-snapshot.entity.ts';
@@ -201,10 +232,10 @@ export {
   MCP_CONNECTOR_AUTH_TYPES,
   McpConnectorConnection,
 } from './modules/mcp-connectors/mcp-connector-connection.entity.ts';
-export { maskCredentialToken } from './modules/mcp-connectors/mcp-connector-credential.util.ts';
 export { McpConnectorsModule } from './modules/mcp-connectors/mcp-connectors.module.ts';
-export type { ConnectMcpConnectorInput } from './modules/mcp-connectors/mcp-connectors.service.ts';
 export { McpConnectorsService } from './modules/mcp-connectors/mcp-connectors.service.ts';
+export type { ConnectMcpConnectorInput } from './modules/mcp-connectors/mcp-connectors.types.ts';
+export { maskCredentialToken } from './modules/mcp-connectors/mcp-connectors.utils.ts';
 export { Note } from './modules/notes/note.entity.ts';
 export { NotesService } from './modules/notes/notes.service.ts';
 export type { PlanEmbeddingSearchRow } from './modules/plan-embeddings/plan-embedding.entity.ts';
@@ -235,7 +266,6 @@ export type {
   PlanRunKind,
 } from './modules/plan-runs/plan-run.entity.ts';
 export { PlanRun } from './modules/plan-runs/plan-run.entity.ts';
-export type { PlanRunStatus } from './modules/plan-runs/plan-runs.constants.ts';
 export {
   HEARTBEAT_INTERVAL_MS,
   PLAN_RUN_STARTABLE_STATUSES,
@@ -243,21 +273,23 @@ export {
   STALE_CUTOFF_MS,
   UNSUPERVISED_STALE_CUTOFF_MS,
 } from './modules/plan-runs/plan-runs.constants.ts';
+export { PlanRunsService } from './modules/plan-runs/plan-runs.service.ts';
+export type { PlanRunStatus } from './modules/plan-runs/plan-runs.types.ts';
 export type {
   ScheduledPlanRun,
   ScheduledRunRef,
-} from './modules/plan-runs/plan-runs.service.ts';
-export { PlanRunsService } from './modules/plan-runs/plan-runs.service.ts';
+} from './modules/plan-runs/plan-runs.types.ts';
 export type { PlanData } from './modules/plans/plan.entity.ts';
 export { Plan } from './modules/plans/plan.entity.ts';
 export { PlansService } from './modules/plans/plans.service.ts';
 export type { ProjectSkillData } from './modules/project-skills/project-skill.entity.ts';
 export { ProjectSkill } from './modules/project-skills/project-skill.entity.ts';
+export { ProjectSkillsService } from './modules/project-skills/project-skills.service.ts';
 export type {
   ProjectSkillReconciliation,
   ProjectSkillView,
-} from './modules/project-skills/project-skills.service.ts';
-export { ProjectSkillsService } from './modules/project-skills/project-skills.service.ts';
+} from './modules/project-skills/project-skills.types.ts';
+export { ProjectsLoaders } from './modules/projects/loaders/loaders.service.ts';
 export type { ProjectData } from './modules/projects/project.entity.ts';
 export { Project } from './modules/projects/project.entity.ts';
 export { ProjectsService } from './modules/projects/projects.service.ts';
@@ -269,11 +301,11 @@ export {
   CUSTOM_PROMPT_TYPES,
   CustomPrompt,
 } from './modules/prompts/custom-prompt.entity.ts';
-export { CustomPromptsService } from './modules/prompts/custom-prompts.service.ts';
-export { normalizeRemoteUrl } from './modules/repositories/normalize-remote-url.ts';
+export { CustomPromptsService } from './modules/prompts/prompts.service.ts';
 export { RepositoriesModule } from './modules/repositories/repositories.module.ts';
-export type { MergeDetectedRemoteResult } from './modules/repositories/repositories.service.ts';
 export { RepositoriesService } from './modules/repositories/repositories.service.ts';
+export type { MergeDetectedRemoteResult } from './modules/repositories/repositories.types.ts';
+export { normalizeRemoteUrl } from './modules/repositories/repositories.utils.ts';
 export type { RepositoryData } from './modules/repositories/repository.entity.ts';
 export { Repository } from './modules/repositories/repository.entity.ts';
 export type {
@@ -284,13 +316,18 @@ export {
   REPOSITORY_CHECKOUT_KINDS,
   RepositoryCheckout,
 } from './modules/repositories/repository-checkout.entity.ts';
-export { RepositoryCheckoutsService } from './modules/repositories/repository-checkouts.service.ts';
+export { RepositoryCheckoutsService } from './modules/repositories/repository-checkouts/repository-checkouts.service.ts';
 export type { PermissionData } from './modules/roles/permission.entity.ts';
 export { Permission } from './modules/roles/permission.entity.ts';
-export { PermissionsService } from './modules/roles/permissions.service.ts';
+export { PermissionsService } from './modules/roles/permissions/permissions.service.ts';
 export type { RoleData } from './modules/roles/role.entity.ts';
 export { Role } from './modules/roles/role.entity.ts';
 export { RolesService } from './modules/roles/roles.service.ts';
+export { ScheduledAgentJobCheckoutPathService } from './modules/scheduled-agent-jobs/checkout-path/checkout-path.service.ts';
+export type {
+  ResolveScheduledAgentJobCheckoutPathInput,
+  ResolveScheduledAgentJobCheckoutPathResult,
+} from './modules/scheduled-agent-jobs/checkout-path/checkout-path.types.ts';
 export type {
   ScheduledAgentJobData,
   ScheduledAgentJobDriverId,
@@ -306,11 +343,6 @@ export {
   ScheduledAgentJob,
 } from './modules/scheduled-agent-jobs/scheduled-agent-job.entity.ts';
 export type {
-  ResolveScheduledAgentJobCheckoutPathInput,
-  ResolveScheduledAgentJobCheckoutPathResult,
-} from './modules/scheduled-agent-jobs/scheduled-agent-job-checkout-path.service.ts';
-export { ScheduledAgentJobCheckoutPathService } from './modules/scheduled-agent-jobs/scheduled-agent-job-checkout-path.service.ts';
-export type {
   ScheduledAgentJobRunData,
   ScheduledAgentJobRunSettingsSnapshot,
   ScheduledAgentJobRunStatus,
@@ -321,6 +353,7 @@ export {
   ScheduledAgentJobRun,
 } from './modules/scheduled-agent-jobs/scheduled-agent-job-run.entity.ts';
 export { ScheduledAgentJobsModule } from './modules/scheduled-agent-jobs/scheduled-agent-jobs.module.ts';
+export { ScheduledAgentJobsService } from './modules/scheduled-agent-jobs/scheduled-agent-jobs.service.ts';
 export type {
   ClaimScheduledAgentJobSlotInput,
   CreateScheduledAgentJobInput,
@@ -330,37 +363,34 @@ export type {
   ScheduledAgentJobRunStatusCount,
   StartScheduledAgentJobRunInput,
   UpdateScheduledAgentJobInput,
-} from './modules/scheduled-agent-jobs/scheduled-agent-jobs.service.ts';
-export {
-  ScheduledAgentJobsService,
-  schedulerKeyForJob,
-} from './modules/scheduled-agent-jobs/scheduled-agent-jobs.service.ts';
+} from './modules/scheduled-agent-jobs/scheduled-agent-jobs.types.ts';
+export { schedulerKeyForJob } from './modules/scheduled-agent-jobs/scheduled-agent-jobs.utils.ts';
 export type { ServiceAccountData } from './modules/service-accounts/service-account.entity.ts';
 export { ServiceAccount } from './modules/service-accounts/service-account.entity.ts';
 export type { ServiceAccountCredentialData } from './modules/service-accounts/service-account-credential.entity.ts';
 export { ServiceAccountCredential } from './modules/service-accounts/service-account-credential.entity.ts';
-export {
-  formatServiceAccountToken,
-  normalizeServiceAccountBearerToken,
-  parseServiceAccountToken,
-  SERVICE_ACCOUNT_BEARER_PREFIX,
-} from './modules/service-accounts/service-account-token.util.ts';
+export { SERVICE_ACCOUNT_BEARER_PREFIX } from './modules/service-accounts/service-accounts.constants.ts';
 export { ServiceAccountsModule } from './modules/service-accounts/service-accounts.module.ts';
+export { ServiceAccountsService } from './modules/service-accounts/service-accounts.service.ts';
 export type {
   CreateServiceAccountCredentialResult,
   UpsertServiceAccountCredentialResult,
   VerifiedServiceAccountCredential,
-} from './modules/service-accounts/service-accounts.service.ts';
-export { ServiceAccountsService } from './modules/service-accounts/service-accounts.service.ts';
-export type {
-  SkillAvailabilityRuleInput,
-  SkillAvailabilityRuleInputArgs,
-} from './modules/skill-availability/skill-availability.schemas.ts';
+} from './modules/service-accounts/service-accounts.types.ts';
+export {
+  formatServiceAccountToken,
+  normalizeServiceAccountBearerToken,
+  parseServiceAccountToken,
+} from './modules/service-accounts/service-accounts.utils.ts';
 export {
   skillAvailabilityPostureSchema,
   skillAvailabilityRuleInputSchema,
-} from './modules/skill-availability/skill-availability.schemas.ts';
+} from './modules/skill-availability/skill-availability.constants.ts';
 export { SkillAvailabilityService } from './modules/skill-availability/skill-availability.service.ts';
+export type {
+  SkillAvailabilityRuleInput,
+  SkillAvailabilityRuleInputArgs,
+} from './modules/skill-availability/skill-availability.types.ts';
 export type { SkillAvailabilityRuleData } from './modules/skill-availability/skill-availability-rule.entity.ts';
 export { SkillAvailabilityRule } from './modules/skill-availability/skill-availability-rule.entity.ts';
 export type { SkillAvailabilityRuleSetData } from './modules/skill-availability/skill-availability-rule-set.entity.ts';
@@ -368,6 +398,7 @@ export { SkillAvailabilityRuleSet } from './modules/skill-availability/skill-ava
 export { SkillTagsService } from './modules/skill-tags/skill-tags.service.ts';
 export type { UserSkillTagData } from './modules/skill-tags/user-skill-tag.entity.ts';
 export { UserSkillTag } from './modules/skill-tags/user-skill-tag.entity.ts';
+export { SKILL_USAGE_DEFAULT_BRANCHES } from './modules/skill-usage-events/skill-usage-events.constants.ts';
 export type {
   SkillUsageEventData,
   SkillUsagePrivacyLevel,
@@ -382,6 +413,7 @@ export {
   SkillUsageEvent,
 } from './modules/skill-usage-events/skill-usage-events.entity.ts';
 export { SkillUsageEventsModule } from './modules/skill-usage-events/skill-usage-events.module.ts';
+export { SkillUsageEventsService } from './modules/skill-usage-events/skill-usage-events.service.ts';
 export type {
   RecordSkillUsageInput,
   RecordSkillUsageOutcomeInput,
@@ -394,11 +426,7 @@ export type {
   SkillUsageGitBranchSearchQuery,
   SkillUsageGitBranchSearchResult,
   SkillUsageRangeQuery,
-} from './modules/skill-usage-events/skill-usage-events.service.ts';
-export {
-  SKILL_USAGE_DEFAULT_BRANCHES,
-  SkillUsageEventsService,
-} from './modules/skill-usage-events/skill-usage-events.service.ts';
+} from './modules/skill-usage-events/skill-usage-events.types.ts';
 export type {
   SkillUsageCaptureModel,
   SkillUsageOutcomeData,
@@ -421,35 +449,30 @@ export {
   RULE_APPLICATION_STATES,
   RuleApplication,
 } from './modules/tag-action-rules/rule-application.entity.ts';
+export { SOFT_CLOSED_TASK_STATUS } from './modules/tag-action-rules/rule-applications/rule-applications.constants.ts';
+export { RuleApplicationsService } from './modules/tag-action-rules/rule-applications/rule-applications.service.ts';
 export type {
   OrphanedTaskStatusCapture,
   OrphanedTaskStatusCaptureParams,
   RecordRuleApplicationInput,
-} from './modules/tag-action-rules/rule-applications.service.ts';
-export {
-  RuleApplicationsService,
-  SOFT_CLOSED_TASK_STATUS,
-} from './modules/tag-action-rules/rule-applications.service.ts';
+} from './modules/tag-action-rules/rule-applications/rule-applications.types.ts';
 export type { TagActionRuleData } from './modules/tag-action-rules/tag-action-rule.entity.ts';
 export { TagActionRule } from './modules/tag-action-rules/tag-action-rule.entity.ts';
-export type { UpsertTagActionRuleInput } from './modules/tag-action-rules/tag-action-rules.service.ts';
 export { TagActionRulesService } from './modules/tag-action-rules/tag-action-rules.service.ts';
+export type { UpsertTagActionRuleInput } from './modules/tag-action-rules/tag-action-rules.types.ts';
 export type { PlanTagData } from './modules/tags/plan-tag.entity.ts';
 export { PlanTag } from './modules/tags/plan-tag.entity.ts';
 export type { ProjectTagData } from './modules/tags/project-tag.entity.ts';
 export { ProjectTag } from './modules/tags/project-tag.entity.ts';
-export type { TagCaller, TagSource } from './modules/tags/tag-provenance.ts';
 export {
-  deriveTagSource,
   TAG_SOURCE_RANK,
   TAG_SOURCES,
   TAGGING_SERVICE_ACCOUNT_NAME,
-} from './modules/tags/tag-provenance.ts';
-export type {
-  AddTagOptions,
-  EffectiveTag,
-} from './modules/tags/tags.service.ts';
+} from './modules/tags/tags.constants.ts';
 export { TagsService } from './modules/tags/tags.service.ts';
+export type { TagCaller, TagSource } from './modules/tags/tags.types.ts';
+export type { AddTagOptions, EffectiveTag } from './modules/tags/tags.types.ts';
+export { deriveTagSource } from './modules/tags/tags.utils.ts';
 export type { TaskTagData } from './modules/tags/task-tag.entity.ts';
 export { TaskTag } from './modules/tags/task-tag.entity.ts';
 export type { TaskEmbeddingSearchRow } from './modules/task-embeddings/task-embedding.entity.ts';
@@ -457,96 +480,65 @@ export { TaskEmbedding } from './modules/task-embeddings/task-embedding.entity.t
 export { TaskEmbeddingsService } from './modules/task-embeddings/task-embeddings.service.ts';
 export type { TaskData } from './modules/tasks/task.entity.ts';
 export { Task } from './modules/tasks/task.entity.ts';
-export type {
-  CreateTaskBatchItem,
-  GroupedHooks,
-} from './modules/tasks/tasks.service.ts';
 export {
   CROSS_PLAN_TASK_LIST_ORDER,
   PLAN_TASK_LIST_ORDER,
   TASK_SORT_ORDER_GAP,
-  TasksService,
-} from './modules/tasks/tasks.service.ts';
+} from './modules/tasks/tasks.constants.ts';
+export { TasksService } from './modules/tasks/tasks.service.ts';
+export type {
+  CreateTaskBatchItem,
+  GroupedHooks,
+} from './modules/tasks/tasks.types.ts';
 export type { UserData } from './modules/users/user.entity.ts';
 export { User } from './modules/users/user.entity.ts';
 export { UsersService } from './modules/users/users.service.ts';
 export type { WorkArtifactData } from './modules/work-ledger/work-artifact.entity.ts';
 export { WorkArtifact } from './modules/work-ledger/work-artifact.entity.ts';
-export type {
-  WorkArtifactSource,
-  WorkArtifactVerification,
-  WorkSessionClosedBy,
-} from './modules/work-ledger/work-ledger.constants.ts';
 export {
   WORK_ARTIFACT_SOURCE,
   WORK_ARTIFACT_VERIFICATION,
   WORK_SESSION_CLOSED_BY,
 } from './modules/work-ledger/work-ledger.constants.ts';
 export { WorkLedgerService } from './modules/work-ledger/work-ledger.service.ts';
+export type {
+  WorkArtifactSource,
+  WorkArtifactVerification,
+  WorkSessionClosedBy,
+} from './modules/work-ledger/work-ledger.types.ts';
 export type { WorkSessionData } from './modules/work-ledger/work-session.entity.ts';
 export { WorkSession } from './modules/work-ledger/work-session.entity.ts';
 export type { WorkSessionSubjectData } from './modules/work-ledger/work-session-subject.entity.ts';
 export { WorkSessionSubject } from './modules/work-ledger/work-session-subject.entity.ts';
+export { EDITOR_PRESENCE_STATES } from './modules/workspace-settings/editor-presence/editor-presence.constants.ts';
 export type {
   DetectEditorPresenceOptions,
   EditorPresence,
   EditorPresenceResult,
   EditorPresenceState,
-} from './modules/workspace-settings/editor-presence.ts';
-export {
-  detectEditorPresence,
-  EDITOR_PRESENCE_STATES,
-} from './modules/workspace-settings/editor-presence.ts';
+} from './modules/workspace-settings/editor-presence/editor-presence.types.ts';
+export { detectEditorPresence } from './modules/workspace-settings/editor-presence/editor-presence.utils.ts';
 export type { UserWorkspaceSettingsData } from './modules/workspace-settings/user-workspace-settings.entity.ts';
 export { UserWorkspaceSettings } from './modules/workspace-settings/user-workspace-settings.entity.ts';
-export { UserWorkspaceSettingsService } from './modules/workspace-settings/user-workspace-settings.service.ts';
+export { UserWorkspaceSettingsService } from './modules/workspace-settings/user-workspace-settings/user-workspace-settings.service.ts';
+export { WorkspaceEditorConfigService } from './modules/workspace-settings/workspace-editor-config/workspace-editor-config.service.ts';
 export type {
   ApplyWorkspaceEditorConfigOptions,
   WorkspaceEditorConfigApplication,
-} from './modules/workspace-settings/workspace-editor-config.service.ts';
-export { WorkspaceEditorConfigService } from './modules/workspace-settings/workspace-editor-config.service.ts';
-export type { WorkspaceEditorId } from './modules/workspace-settings/workspace-editor-id.ts';
-export {
-  isWorkspaceEditorId,
-  WORKSPACE_EDITOR_IDS,
-  WORKSPACE_EDITORS,
-} from './modules/workspace-settings/workspace-editor-id.ts';
-export { buildManagedMcpServers } from './modules/workspace-settings/workspace-editor-mcp-config.ts';
-export { WorkspaceLocalRepositoriesService } from './modules/workspace-settings/workspace-local-repositories.service.ts';
+} from './modules/workspace-settings/workspace-editor-config/workspace-editor-config.types.ts';
+export { buildManagedMcpServers } from './modules/workspace-settings/workspace-editor-mcp-config/workspace-editor-mcp-config.utils.ts';
+export { WorkspaceLocalRepositoriesService } from './modules/workspace-settings/workspace-local-repositories/workspace-local-repositories.service.ts';
 export type { WorkspaceLocalRepository } from './modules/workspace-settings/workspace-local-repository.entity.ts';
 export type { WorkspaceLocalRepositoryData } from './modules/workspace-settings/workspace-local-repository.entity.ts';
+export {
+  WORKSPACE_EDITOR_IDS,
+  WORKSPACE_EDITORS,
+} from './modules/workspace-settings/workspace-settings.constants.ts';
+export type { WorkspaceEditorId } from './modules/workspace-settings/workspace-settings.types.ts';
+export { isWorkspaceEditorId } from './modules/workspace-settings/workspace-settings.utils.ts';
 export { NestjsRepositoriesModule } from './nestjs-repositories.module.ts';
-export { ProjectsLoaders } from './projects-loaders.ts';
-export type {
-  CaptureHealthRow,
-  CaptureHealthStream,
-} from './utils/capture-health.ts';
-export { CAPTURE_HEALTH_STREAMS } from './utils/capture-health.ts';
-export {
-  resolveCompletedAtForStatusChange,
-  type ResolveCompletedAtForStatusChangeInput,
-} from './utils/completed-at.ts';
-export {
-  type CollectionByColumnLoaderOptions,
-  createCollectionByColumnLoader,
-  createEntityByIdLoader,
-  createGroupedCountLoader,
-  type GroupedCountColumnInFilter,
-  type GroupedCountLoaderOptions,
-  type RepositoryAccessor,
-} from './utils/entity-loaders.ts';
-export {
-  escapeLikePattern,
-  toLikeContainsPattern,
-} from './utils/like-pattern.ts';
-export {
-  LIST_PAGINATION_DEFAULT_LIMIT,
-  LIST_PAGINATION_MAX_LIMIT,
-  type ListPaginationInput,
-  type ResolvedListPagination,
-  resolveListPagination,
-} from './utils/list-pagination.ts';
-export { vectorTransformer } from './utils/vector.transformer.ts';
+export { getTypeOrmOptions as getOpenThrottleTypeOrmOptions } from './nestjs-repositories.utils.ts';
+export { vectorTransformer } from './vector-transformer/vector-transformer.constants.ts';
 export type {
   BuildPlanRunConfigSnapshotInput,
   PlanJobRunHooksStorage,

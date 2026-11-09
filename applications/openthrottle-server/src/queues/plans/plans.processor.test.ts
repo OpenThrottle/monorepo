@@ -24,17 +24,16 @@ import type { Readable } from 'stream';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PlanEnqueueService } from '../../graphql/plans/plan-enqueue/plan-enqueue.service.ts';
-import { PlanStatusService } from '../../graphql/plans/plan-status.service.ts';
-import { SettleRunLedgerService } from '../../graphql/work-ledger/settle-run-ledger.service.ts';
-import { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account.service.ts';
-import { ProcessMetricsService } from '../../metrics/process-metrics.service.ts';
-import type { EnhancedTaskRunMetrics } from '../../metrics/process-metrics.types.ts';
+import { PlanStatusService } from '../../graphql/plans/plan-status/plan-status.service.ts';
+import { SettleRunLedgerService } from '../../graphql/work-ledger/settle-run-ledger/settle-run-ledger.service.ts';
+import { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account/status-change-system-account.service.ts';
+import { ProcessMetricsService } from '../../metrics/process-metrics/process-metrics.service.ts';
+import type { EnhancedTaskRunMetrics } from '../../metrics/process-metrics/process-metrics.types.ts';
 import { NotificationsService } from '../../notifications/notifications.service.ts';
 import { PlanRunWorktreeCleanupService } from '../../services/plan-run-worktree-cleanup/plan-run-worktree-cleanup.service.ts';
-import { AgenticRalphOrchestratorService } from '../agentic-ralph/agentic-ralph-orchestrator.service.ts';
-import { BullMqRunOutputRetentionService } from '../bullmq-run-output-retention.service.ts';
-import { WorkflowLifecycleDispatcherFactory } from '../plan-lifecycle-hooks/workflow-lifecycle-dispatcher.service.ts';
-import { PlanRunCancellationService } from './plan-run-cancellation.service.ts';
+import { AgenticRalphOrchestratorService } from '../agentic-ralph/orchestrator/orchestrator.service.ts';
+import { BullMqRunOutputRetentionService } from '../bullmq-run-output/retention/retention.service.ts';
+import { WorkflowLifecycleDispatcherFactory } from '../plan-lifecycle-hooks/workflow-lifecycle-dispatcher/workflow-lifecycle-dispatcher.service.ts';
 import {
   PLANS_QUEUE_NAME,
   PLANS_WORKER_LOCK_DURATION_MS,
@@ -43,9 +42,10 @@ import {
 } from './plans.constants.ts';
 import { PlansProcessor } from './plans.processor.ts';
 import type { PlanRunJobResult, RunPlanJob } from './plans.types.ts';
-import { ScheduledPlanRunService } from './scheduled-plan-run.service.ts';
+import { PlanRunCancellationService } from './run-cancellation/run-cancellation.service.ts';
+import { ScheduledPlanRunService } from './scheduled-plan-run/scheduled-plan-run.service.ts';
 import { UsageLimitResumeService } from './usage-limit-resume/usage-limit-resume.service.ts';
-import { WorkLedgerRunService } from './work-ledger-run.service.ts';
+import { WorkLedgerRunService } from './work-ledger-run/work-ledger-run.service.ts';
 
 /** @nestjs/bullmq Worker options metadata key (from bull.constants WORKER_METADATA). Used to assert stalled-job recovery options. */
 const WORKER_METADATA_KEY = 'bullmq:worker_metadata';
@@ -123,7 +123,7 @@ const mockRunAfterRunHooksThenNotify = vi.fn().mockImplementation(
   },
 );
 
-vi.mock('../job-run-hooks/execute-plan-job-run-hooks', () => ({
+vi.mock('../job-run-hooks/job-run-hooks.utils', () => ({
   runAfterAllHooksWithDispatcherThenNotify: vi.fn(),
   runAfterRunHooksThenNotify: (
     ...args: unknown[]

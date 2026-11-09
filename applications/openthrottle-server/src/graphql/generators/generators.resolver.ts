@@ -7,7 +7,7 @@ import { Args, Query, Resolver } from '@nestjs/graphql';
 import {
   getGeneratorByName,
   getGeneratorsList,
-} from '../../modules/generators/generators.service.ts';
+} from '../../modules/generators/generators.utils.ts';
 import { GetGeneratorInput } from './generator.input.ts';
 import { GeneratorDetailObject, GeneratorObject } from './generator.object.ts';
 

@@ -7,7 +7,6 @@
  * nothing. Single-process only (in-memory PubSub + buffer), which is fine — this is a
  * local-developer-machine feature.
  */
-
 import { randomUUID } from 'node:crypto';
 
 import { Inject, Injectable } from '@nestjs/common';
@@ -18,16 +17,16 @@ import {
 } from '@openthrottle/nestjs-graphql';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
-  type AgentSetupMode,
   type AgentSetupResult,
   runAgentSetup,
 } from '@openthrottle/openthrottle-agentic-utils';
 
 import { AgentDiscoveryService } from '../agent-discovery/agent-discovery.service.ts';
-import {
-  AGENT_SETUP_CHUNK_FIELD,
-  type AgentSetupStreamChunkEnvelope,
-  type AgentSetupStreamChunkPayload,
+import { AGENT_SETUP_CHUNK_FIELD } from './agent-setup.constants.ts';
+import type { StartAgentSetupRun } from './agent-setup.types.ts';
+import type {
+  AgentSetupStreamChunkEnvelope,
+  AgentSetupStreamChunkPayload,
 } from './agent-setup.types.ts';
 
 /** How long a finished run's chunk buffer is retained after its terminal chunk, for late subscribers. */
@@ -35,14 +34,6 @@ const BUFFER_GRACE_MS = 30_000;
 
 /** Hard cap on buffered chunks per run; bounds memory (the live stream is unaffected). */
 const BUFFER_MAX_CHUNKS = 5_000;
-
-/** Inputs for one install/update run. */
-export interface StartAgentSetupRun {
-  /** Backend (driver id) — already validated by the resolver against the registry. */
-  readonly backend: string;
-  /** Install a missing CLI or update an existing one. */
-  readonly mode: AgentSetupMode;
-}
 
 @Injectable()
 export class AgentSetupService {
