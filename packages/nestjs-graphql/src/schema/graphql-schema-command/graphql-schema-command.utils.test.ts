@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 import { ApolloDriver, type ApolloDriverConfig } from '@nestjs/apollo';
-import { Module, type Type } from '@nestjs/common';
+import { Inject, Injectable, Module, type Type } from '@nestjs/common';
 import {
   Field,
   GraphQLModule,
@@ -50,6 +50,42 @@ const buildFixtureModule = (): Type => {
   class CommandFixtureModule {}
 
   return CommandFixtureModule;
+};
+
+/** Never provided by {@link buildUnresolvableModule}, so DI cannot construct its resolver. */
+@Injectable()
+class UnprovidedService {}
+
+@Resolver(() => CommandWidget)
+class UnresolvableWidgetResolver {
+  constructor(
+    @Inject(UnprovidedService) private readonly service: UnprovidedService,
+  ) {}
+
+  @Query(() => CommandWidget)
+  unresolvableWidget(): CommandWidget {
+    return { closedBy: String(this.service) };
+  }
+}
+
+/** A root module whose resolver needs a provider no module supplies. */
+const buildUnresolvableModule = (): Type => {
+  @Module({
+    imports: [
+      GraphQLModule.forRoot<ApolloDriverConfig>({
+        autoSchemaFile: resolveAutoSchemaFile(),
+        driver: ApolloDriver,
+      }),
+    ],
+    providers: [UnresolvableWidgetResolver],
+  })
+  class UnresolvableFixtureModule {}
+
+  return UnresolvableFixtureModule;
+};
+
+const loadUnresolvable: RootModuleLoader = async () => {
+  return { ok: true, value: buildUnresolvableModule() };
 };
 
 const loadFixture: RootModuleLoader = async () => {
@@ -211,5 +247,36 @@ describe('runGraphqlSchemaCommand', () => {
     expect(errors()).toContain('First difference at line 1:');
     expect(errors()).toContain('- # drift');
     expect(errors()).toContain('pnpm nx run api:graphql-schema:write');
+  });
+
+  describe('when the root module fails to initialize', () => {
+    it('exits 2 on --write and writes no schema', async () => {
+      expect(await run([...BASE_ARGS, '--write'], loadUnresolvable)).toBe(2);
+      expect(errors()).toContain('Could not initialize AppModule');
+      expect(errors()).toContain("can't resolve dependencies");
+      await expect(readFile(schemaPath, 'utf8')).rejects.toThrow(/ENOENT/);
+    });
+
+    it('exits 2 on --check even when the committed schema exists', async () => {
+      await run([...BASE_ARGS, '--write']);
+
+      expect(await run([...BASE_ARGS, '--check'], loadUnresolvable)).toBe(2);
+      expect(errors()).toContain("can't resolve dependencies");
+    });
+
+    it('exits 2 when the loader throws', async () => {
+      const load: RootModuleLoader = async () => {
+        throw new Error('import-time failure');
+      };
+
+      expect(await run([...BASE_ARGS, '--check'], load)).toBe(2);
+      expect(errors()).toContain('import-time failure');
+    });
+
+    it('restores the environment after the failure', async () => {
+      await run([...BASE_ARGS, '--write'], loadUnresolvable);
+
+      expect(process.env[GRAPHQL_SCHEMA_FILE_ENV]).toBeUndefined();
+    });
   });
 });
