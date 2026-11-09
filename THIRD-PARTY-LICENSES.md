@@ -13,19 +13,19 @@ Platform-specific prebuilt binaries (packages that declare `os`/`cpu`, e.g.
 `@rollup/rollup-linux-x64-gnu`, `fsevents`) are omitted: which ones install depends on
 the host OS, and each shares the license of the cross-platform toolchain already listed.
 
-**2137** third-party packages.
+**2142** third-party packages.
 
 ## License summary
 
 | License | Packages |
 | --- | --- |
-| MIT | 1840 |
-| Apache-2.0 | 96 |
+| MIT | 1843 |
+| Apache-2.0 | 97 |
 | ISC | 80 |
 | BSD-3-Clause | 59 |
 | BSD-2-Clause | 26 |
 | BlueOak-1.0.0 | 12 |
-| Unlicense | 3 |
+| Unlicense | 4 |
 | (WTFPL OR MIT) | 2 |
 | LicenseRef-PolyForm-Shield-1.0.0 | 2 |
 | MIT-0 | 2 |
@@ -55,6 +55,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@angular-devkit/schematics` | 22.1.5 | MIT | [Angular Authors](https://github.com/angular/angular-cli) |
 | `@angular-devkit/schematics-cli` | 22.1.5 | MIT | [Angular Authors](https://github.com/angular/angular-cli) |
 | `@anthropic-ai/sdk` | 0.27.3 | MIT | [Anthropic](https://github.com/anthropics/anthropic-sdk-typescript#readme) |
+| `@anthropic-ai/sdk` | 1.3.0 | Apache-2.0 | [Anthropic](https://github.com/anthropics/anthropic-sdk-typescript#readme) |
 | `@apm-js-collab/code-transformer` | 0.18.1 | Apache-2.0 | [source](https://github.com/nodejs/orchestrion-js#readme) |
 | `@apm-js-collab/code-transformer-bundler-plugins` | 0.7.3 | MIT | [source](https://github.com/apm-js-collab/code-transformer-bundler-plugins#readme) |
 | `@apm-js-collab/tracing-hooks` | 0.13.0 | Apache-2.0 | [source](https://github.com/apm-js-collab/tracing-hooks#readme) |
@@ -611,6 +612,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@solid-primitives/static-store` | 0.1.4 | MIT | [Damian Tarnawski](https://primitives.solidjs.community/package/static-store) |
 | `@solid-primitives/utils` | 6.4.1 | MIT | [Damian Tarnawski @thetarnav](https://github.com/solidjs-community/solid-primitives/tree/main/packages/utils#readme) |
 | `@sqltools/formatter` | 1.2.5 | MIT | [source](https://github.com/mtxr/vscode-sqltools#readme) |
+| `@stablelib/base64` | 1.0.1 | MIT | [Dmitry Chestnykh](https://github.com/StableLib/stablelib/tree/master/packages/base64) |
 | `@standard-schema/spec` | 1.1.0 | MIT | [Colin McDonnell](https://standardschema.dev) |
 | `@standard-schema/utils` | 0.3.0 | MIT | [Fabian Hiller](https://github.com/standard-schema/standard-schema#readme) |
 | `@storybook/addon-docs` | 10.5.7 | MIT | [source](https://github.com/storybookjs/storybook/tree/next/code/addons/docs) |
@@ -1203,6 +1205,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `fast-json-stable-stringify` | 2.1.0 | MIT | [James Halliday](https://github.com/epoberezkin/fast-json-stable-stringify) |
 | `fast-levenshtein` | 2.0.6 | MIT | [Ramesh Nair](https://github.com/hiddentao/fast-levenshtein#readme) |
 | `fast-safe-stringify` | 2.1.1 | MIT | [David Mark Clements](https://github.com/davidmarkclements/fast-safe-stringify#readme) |
+| `fast-sha256` | 1.3.0 | Unlicense | [Dmitry Chestnykh](https://github.com/dchest/fast-sha256-js#readme) |
 | `fast-string-truncated-width` | 3.0.3 | MIT | [source](https://github.com/fabiospampinato/fast-string-truncated-width#readme) |
 | `fast-string-width` | 3.0.2 | MIT | [source](https://github.com/fabiospampinato/fast-string-width#readme) |
 | `fast-uri` | 3.1.4 | BSD-3-Clause | [Vincent Le Goff](https://github.com/fastify/fast-uri) |
@@ -1462,7 +1465,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `json-bigint` | 1.0.0 | MIT | [Andrey Sidorov](https://github.com/sidorares/json-bigint#readme) |
 | `json-buffer` | 3.0.1 | MIT | [Dominic Tarr](https://github.com/dominictarr/json-buffer) |
 | `json-parse-even-better-errors` | 2.3.1 | MIT | [Kat Marchán](https://github.com/npm/json-parse-even-better-errors#readme) |
-| `json-schema-to-ts` | 1.6.4 | MIT | [Thomas Aribart](https://github.com/ThomasAribart/json-schema-to-ts#readme) |
+| `json-schema-to-ts` | 1.6.4, 3.1.1 | MIT | [Thomas Aribart](https://github.com/ThomasAribart/json-schema-to-ts#readme) |
 | `json-schema-traverse` | 0.4.1, 1.0.0 | MIT | [Evgeny Poberezkin](https://github.com/epoberezkin/json-schema-traverse#readme) |
 | `json-schema-typed` | 8.0.2 | BSD-2-Clause | [Remy Rylan](https://github.com/RemyRylan/json-schema-typed/tree/main/dist/node) |
 | `json-stable-stringify-without-jsonify` | 1.0.1 | MIT | [James Halliday](https://github.com/samn/json-stable-stringify) |
@@ -1950,6 +1953,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `stack-utils` | 2.0.6 | MIT | [James Talmage](https://github.com/tapjs/stack-utils#readme) |
 | `stackback` | 0.0.2 | MIT | [Roman Shtylman](https://github.com/shtylman/node-stackback#readme) |
 | `standard-as-callback` | 2.1.0 | MIT | [luin](https://github.com/luin/asCallback#readme) |
+| `standardwebhooks` | 1.1.1 | MIT | [Standard Webhooks](https://github.com/standard-webhooks/standard-webhooks/tree/main/libraries/javascript) |
 | `stat-mode` | 1.0.0 | MIT | [Nathan Rajlich](https://github.com/TooTallNate/stat-mode) |
 | `state-local` | 1.0.7 | MIT | [Suren Atoyan](https://github.com/suren-atoyan/state-local#readme) |
 | `statuses` | 2.0.2 | MIT | [source](https://github.com/jshttp/statuses#readme) |
@@ -2040,6 +2044,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `triple-beam` | 1.4.1 | MIT | [Charlie Robbins](https://github.com/winstonjs/triple-beam#readme) |
 | `trough` | 2.2.0 | MIT | [Titus Wormer](https://github.com/wooorm/trough#readme) |
 | `truncate-utf8-bytes` | 1.0.2 | WTFPL | [Carl Xiong](https://github.com/parshap/truncate-utf8-bytes#readme) |
+| `ts-algebra` | 2.0.0 | MIT | [Thomas Aribart](https://github.com/ThomasAribart/ts-algebra#readme) |
 | `ts-api-utils` | 2.5.0 | MIT | [JoshuaKGoldberg](https://github.com/JoshuaKGoldberg/ts-api-utils#readme) |
 | `ts-dedent` | 2.3.0 | MIT | [Tamino Martinius](https://github.com/tamino-martinius/node-ts-dedent#readme) |
 | `ts-log` | 2.2.7 | MIT | [Stagnation Lab](https://github.com/kallaspriit/ts-log#readme) |

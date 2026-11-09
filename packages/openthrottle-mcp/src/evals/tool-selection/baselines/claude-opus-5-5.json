@@ -1,0 +1,199 @@
+{
+  "cases": [
+    {
+      "failures": [],
+      "id": "plan-create-basic",
+      "passes": 3,
+      "trials": 3
+    },
+    {
+      "failures": [],
+      "id": "plan-create-not-markdown",
+      "passes": 3,
+      "trials": 3
+    },
+    {
+      "failures": [],
+      "id": "plan-create-batch",
+      "passes": 3,
+      "trials": 3
+    },
+    {
+      "failures": [],
+      "id": "plan-get",
+      "passes": 3,
+      "trials": 3
+    },
+    {
+      "failures": [],
+      "id": "plan-update-status",
+      "passes": 3,
+      "trials": 3
+    },
+    {
+      "failures": [],
+      "id": "plan-list-in-progress",
+      "passes": 3,
+      "trials": 3
+    },
+    {
+      "failures": [],
+      "id": "plan-delete",
+      "passes": 3,
+      "trials": 3
+    },
+    {
+      "failures": [],
+      "id": "task-create",
+      "passes": 3,
+      "trials": 3
+    },
+    {
+      "failures": [],
+      "id": "task-create-batch",
+      "passes": 3,
+      "trials": 3
+    },
+    {
+      "failures": [],
+      "id": "task-start",
+      "passes": 3,
+      "trials": 3
+    },
+    {
+      "failures": [],
+      "id": "task-complete",
+      "passes": 3,
+      "trials": 3
+    },
+    {
+      "failures": [],
+      "id": "task-list-remaining",
+      "passes": 3,
+      "trials": 3
+    },
+    {
+      "failures": [],
+      "id": "task-reorder",
+      "passes": 3,
+      "trials": 3
+    },
+    {
+      "failures": [],
+      "id": "task-get",
+      "passes": 3,
+      "trials": 3
+    },
+    {
+      "failures": [],
+      "id": "search-prior-work",
+      "passes": 3,
+      "trials": 3
+    },
+    {
+      "failures": [],
+      "id": "search-ask-ot",
+      "passes": 3,
+      "trials": 3
+    },
+    {
+      "failures": [],
+      "id": "search-list-sources",
+      "passes": 3,
+      "trials": 3
+    },
+    {
+      "failures": [],
+      "id": "search-get-document",
+      "passes": 3,
+      "trials": 3
+    },
+    {
+      "failures": [],
+      "id": "follow-up-file-plan",
+      "passes": 3,
+      "trials": 3
+    },
+    {
+      "failures": [],
+      "id": "follow-up-tag-plan",
+      "passes": 3,
+      "trials": 3
+    },
+    {
+      "failures": [],
+      "id": "follow-up-tag-task",
+      "passes": 3,
+      "trials": 3
+    },
+    {
+      "failures": [],
+      "id": "output-append-progress",
+      "passes": 3,
+      "trials": 3
+    },
+    {
+      "failures": [],
+      "id": "output-read-iteration-log",
+      "passes": 3,
+      "trials": 3
+    },
+    {
+      "failures": [],
+      "id": "output-last-activity",
+      "passes": 3,
+      "trials": 3
+    },
+    {
+      "failures": [],
+      "id": "output-shipped-yesterday",
+      "passes": 3,
+      "trials": 3
+    },
+    {
+      "failures": [],
+      "id": "control-rename-variable",
+      "passes": 3,
+      "trials": 3
+    },
+    {
+      "failures": [],
+      "id": "control-general-question",
+      "passes": 3,
+      "trials": 3
+    },
+    {
+      "failures": [],
+      "id": "control-git-log",
+      "passes": 3,
+      "trials": 3
+    },
+    {
+      "failures": [],
+      "id": "control-edit-docs",
+      "passes": 3,
+      "trials": 3
+    },
+    {
+      "failures": [],
+      "id": "control-run-tests",
+      "passes": 3,
+      "trials": 3
+    },
+    {
+      "failures": [],
+      "id": "control-delete-file",
+      "passes": 3,
+      "trials": 3
+    }
+  ],
+  "effort": "medium",
+  "model": "claude-opus-5-5",
+  "surfaceSha256": "43fc4ebadd0960e4c6c14ce8f7799e5cf535c0af8f7411cc5a6e0a45f4fe03b1",
+  "usage": {
+    "cacheReadInputTokens": 2294598,
+    "cacheWriteInputTokens": 103128,
+    "inputTokens": 11229,
+    "outputTokens": 14326
+  }
+}

@@ -261,22 +261,29 @@ export async function listBlogPostsToolHandler(
 
 // ── get_blog_post ────────────────────────────────────────────────────────────
 
+/**
+ * @description The registered (advertised) schema — a plain strict object so `tools/list` publishes `id` and
+ * `slug`. The exactly-one rule lives in {@link getBlogPostArgs}: a zod v3 `.refine()` is a ZodEffects, which the
+ * MCP SDK serializes as `properties: {}`.
+ */
 export const getBlogPostToolParameters = z
   .object({
     id: z.string().min(1).optional().describe('The post id (UUID).'),
     slug: z.string().min(1).optional().describe('The post slug.'),
   })
-  .strict()
-  .refine((data) => (data.id === undefined) !== (data.slug === undefined), {
-    message: 'Provide exactly one of id or slug',
-  });
+  .strict();
+
+const getBlogPostArgs = getBlogPostToolParameters.refine(
+  (data) => (data.id === undefined) !== (data.slug === undefined),
+  { message: 'Provide exactly one of id or slug' },
+);
 
 export const getBlogPostToolDescription = `Fetch one blog post in any state by id or by slug (exactly one of the two), including its markdown body, tags, author and updatedAt. Read it before update_blog_post: send its updatedAt back as expectedUpdatedAt. Returns the BlogPostAdminObject or BlogPostNotFoundError (see __typename) plus the developer-app editorUrl. ${DRAFT_ONLY_BOUNDARY}`;
 
 export async function getBlogPostToolHandler(
   args: z.infer<typeof getBlogPostToolParameters>,
 ): Promise<GetBlogPostResult> {
-  const parsed = getBlogPostToolParameters.safeParse(args);
+  const parsed = getBlogPostArgs.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error);
   }

@@ -1,21 +1,20 @@
 /**
- * @description A {@link ToolSelector} backed by the Claude Messages API. One request per trial: the OT tool
- * surface (plus a few generic harness tools), the server instructions in the system prompt the way an MCP
- * client injects them, and the case prompt as the only user turn. The first assistant turn is the selection —
- * no tool is executed and no second turn is sent.
+ * @description A {@link ToolSelector} backed by the Claude Messages API via `@anthropic-ai/sdk`. One request
+ * per trial: the OT tool surface (plus a few generic harness tools), the server instructions in the system
+ * prompt the way an MCP client injects them, and the case prompt as the only user turn. The first assistant
+ * turn is the selection — no tool is executed and no second turn is sent.
  *
  * Deliberate choices, each load-bearing for a fair same-model comparison:
  * - `tool_choice: auto`, never forced: control cases assert the model picks NO OT tool, and current Claude
  *   models reject forced tool choice anyway.
- * - No server-side refusal fallback: a fallback would silently answer with another model and contaminate a
- *   same-model baseline. A refusal is reported as an error instead.
+ * - No server-side refusal fallback (and no `betaRefusalFallbackMiddleware`): a fallback would silently
+ *   answer with another model and contaminate a same-model baseline. A refusal is reported as an error
+ *   instead.
  * - The stable prefix (tools + system) carries a cache breakpoint, so only the first request of a run pays
  *   full price for the ~60 KB surface.
- *
- * Raw HTTP rather than `@anthropic-ai/sdk`: the package does not depend on the SDK yet (adding it is follow-up
- * work); this file is the only place that changes when it does.
  */
 
+import Anthropic, { APIError } from '@anthropic-ai/sdk';
 import type { Tool } from '@modelcontextprotocol/sdk/types.js';
 
 import type { ToolSurface } from '../../model-facing-text/list-tool-surface.ts';
@@ -26,14 +25,36 @@ import type {
   ToolSelector,
 } from './eval-case.ts';
 
+const OUTPUT_EFFORTS = {
+  high: 'high',
+  low: 'low',
+  max: 'max',
+  medium: 'medium',
+  xhigh: 'xhigh',
+} as const;
+
+type OutputEffort = (typeof OUTPUT_EFFORTS)[keyof typeof OUTPUT_EFFORTS];
+
+/**
+ * @description Minimal Messages API surface the selector needs — real {@link Anthropic} clients satisfy it,
+ * and tests supply a mock.
+ */
+export interface AnthropicMessagesClient {
+  readonly messages: {
+    readonly create: (
+      body: Anthropic.MessageCreateParamsNonStreaming,
+    ) => Promise<Anthropic.Message>;
+  };
+}
+
 /**
  * @description Options for {@link createAnthropicToolSelector}.
  */
 export interface AnthropicToolSelectorOptions {
   readonly apiKey: string;
   readonly baseUrl: string;
+  readonly client: AnthropicMessagesClient | undefined;
   readonly effort: string;
-  readonly fetchImpl: typeof fetch;
   readonly harnessTools: readonly HarnessTool[];
   readonly maxRetries: number;
   readonly model: string;
@@ -46,26 +67,14 @@ export interface AnthropicToolSelectorOptions {
  */
 export interface HarnessTool {
   readonly description: string;
-  readonly input_schema: Readonly<Record<string, unknown>>;
+  readonly input_schema: Anthropic.Tool.InputSchema;
   readonly name: string;
 }
 
-const API_VERSION = '2026-10-21';
 const MAX_TOKENS = 16000;
 
-const isRecord = (
-  value: unknown,
-): value is Readonly<Record<string, unknown>> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
-
-const numberField = (
-  record: Readonly<Record<string, unknown>>,
-  key: string,
-): number => {
-  const value = record[key];
-
-  return typeof value === 'number' ? value : 0;
+const isOutputEffort = (value: string): value is OutputEffort => {
+  return Object.hasOwn(OUTPUT_EFFORTS, value);
 };
 
 /**
@@ -84,10 +93,19 @@ function buildSystemPrompt(instructions: string): string {
   ].join('\n');
 }
 
-const toApiTool = (tool: Tool): HarnessTool => {
+const toInputSchema = (
+  schema: Readonly<Record<string, unknown>>,
+): Anthropic.Tool.InputSchema => {
+  return {
+    ...schema,
+    type: 'object',
+  };
+};
+
+const toApiTool = (tool: Tool): Anthropic.Tool => {
   return {
     description: tool.description ?? '',
-    input_schema: tool.inputSchema,
+    input_schema: toInputSchema(tool.inputSchema),
     name: tool.name,
   };
 };
@@ -102,12 +120,16 @@ export function buildRequestBody(
     'effort' | 'harnessTools' | 'model' | 'surface'
   >,
   prompt: string,
-): Readonly<Record<string, unknown>> {
+): Anthropic.MessageCreateParamsNonStreaming {
+  const effort: OutputEffort = isOutputEffort(options.effort)
+    ? options.effort
+    : OUTPUT_EFFORTS.medium;
+
   return {
     max_tokens: MAX_TOKENS,
     messages: [{ content: prompt, role: 'user' }],
     model: options.model,
-    output_config: { effort: options.effort },
+    output_config: { effort },
     system: [
       {
         cache_control: { type: 'ephemeral' },
@@ -120,100 +142,82 @@ export function buildRequestBody(
   };
 }
 
-const parseUsage = (value: unknown): SelectionUsage => {
-  const usage = isRecord(value) ? value : {};
-
+const parseUsage = (usage: Anthropic.Usage): SelectionUsage => {
   return {
-    cacheReadInputTokens: numberField(usage, 'cache_read_input_tokens'),
-    cacheWriteInputTokens: numberField(usage, 'cache_creation_input_tokens'),
-    inputTokens: numberField(usage, 'input_tokens'),
-    outputTokens: numberField(usage, 'output_tokens'),
+    cacheReadInputTokens: usage.cache_read_input_tokens ?? 0,
+    cacheWriteInputTokens: usage.cache_creation_input_tokens ?? 0,
+    inputTokens: usage.input_tokens,
+    outputTokens: usage.output_tokens,
   };
 };
 
 /**
- * @description Parses a Messages API response body into a {@link Selection}. Tool inputs arrive already parsed
- * as JSON objects; text blocks are concatenated for the report.
+ * @description Parses a Messages API response into a {@link Selection}. Tool inputs arrive already parsed as
+ * JSON objects; text blocks are concatenated for the report.
  * @public
  */
-export function parseResponseBody(body: unknown): Selection {
-  if (!isRecord(body) || !Array.isArray(body['content'])) {
-    return { kind: 'error', message: 'malformed response: no content array' };
-  }
-  if (body['stop_reason'] === 'refusal') {
+export function parseMessage(message: Anthropic.Message): Selection {
+  if (message.stop_reason === 'refusal') {
     return { kind: 'error', message: 'model refused' };
   }
 
-  const blocks: readonly unknown[] = body['content'];
-  const calls = blocks.flatMap((block): SelectedCall[] => {
-    if (!isRecord(block) || block['type'] !== 'tool_use') return [];
-    const name = block['name'];
-    if (typeof name !== 'string') return [];
-    return [{ input: block['input'], name }];
+  const calls = message.content.flatMap((block): SelectedCall[] => {
+    if (block.type !== 'tool_use') return [];
+    return [{ input: block.input, name: block.name }];
   });
-  const text = blocks
+  const text = message.content
     .flatMap((block): string[] => {
-      if (!isRecord(block) || block['type'] !== 'text') return [];
-      const blockText = block['text'];
-      if (typeof blockText !== 'string') return [];
-      return [blockText];
+      if (block.type !== 'text') return [];
+      return [block.text];
     })
     .join('\n');
 
-  return { calls, kind: 'calls', text, usage: parseUsage(body['usage']) };
+  return { calls, kind: 'calls', text, usage: parseUsage(message.usage) };
 }
 
-const isRetryable = (status: number): boolean => {
-  return status === 429 || status >= 500;
+const resolveClient = (
+  options: AnthropicToolSelectorOptions,
+): AnthropicMessagesClient => {
+  if (options.client !== undefined) {
+    return options.client;
+  }
+
+  return new Anthropic({
+    apiKey: options.apiKey,
+    baseURL: options.baseUrl,
+    maxRetries: options.maxRetries,
+  });
 };
 
-const delay = async (ms: number): Promise<void> => {
-  await new Promise((resolve) => setTimeout(resolve, ms));
+const formatApiError = (error: APIError): string => {
+  const status = error.status === undefined ? 'unknown' : String(error.status);
+
+  return `HTTP ${status}: ${error.message.slice(0, 300)}`;
 };
 
 /**
- * @description Creates the selector. Retries 429/5xx with exponential backoff up to `maxRetries` times.
+ * @description Creates the selector. Retries are delegated to the SDK (`maxRetries` on the client).
  * @public
  */
 export function createAnthropicToolSelector(
   options: AnthropicToolSelectorOptions,
 ): ToolSelector {
-  const send = async (body: string, attempt: number): Promise<Selection> => {
-    const response = await options.fetchImpl(`${options.baseUrl}/v1/messages`, {
-      body,
-      headers: {
-        'anthropic-version': API_VERSION,
-        'content-type': 'application/json',
-        'x-api-key': options.apiKey,
-      },
-      method: 'POST',
-    });
-
-    if (response.ok) {
-      const json: unknown = await response.json();
-
-      return parseResponseBody(json);
-    }
-    if (isRetryable(response.status) && attempt < options.maxRetries) {
-      await delay(1000 * 2 ** attempt);
-
-      return send(body, attempt + 1);
-    }
-
-    const detail = await response.text();
-
-    return {
-      kind: 'error',
-      message: `HTTP ${response.status}: ${detail.slice(0, 300)}`,
-    };
-  };
+  const client = resolveClient(options);
 
   return {
     model: options.model,
     select: async (prompt: string): Promise<Selection> => {
       try {
-        return await send(JSON.stringify(buildRequestBody(options, prompt)), 0);
+        const message = await client.messages.create(
+          buildRequestBody(options, prompt),
+        );
+
+        return parseMessage(message);
       } catch (error: unknown) {
+        if (error instanceof APIError) {
+          return { kind: 'error', message: formatApiError(error) };
+        }
+
         return {
           kind: 'error',
           message: error instanceof Error ? error.message : String(error),

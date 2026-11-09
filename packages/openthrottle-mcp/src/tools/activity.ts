@@ -40,20 +40,23 @@ function toLinesOrNone<TItem>(
   return items.map(toLine);
 }
 
-/** Exactly one of date (YYYY-MM-DD) or daysBack (1–365). */
-export const getActivityByDateToolParameters = ActivityByDateInputSchema()
-  // `.strict()` BEFORE `.refine()`: refine returns a ZodEffects wrapper with no
-  // `.strict()` of its own, so the unknown-key check has to be installed on the
-  // object schema underneath it.
-  .strict()
-  .refine(
-    (data) => {
-      const hasDate = data.date != null && data.date !== '';
-      const hasDaysBack = data.daysBack != null;
-      return hasDate !== hasDaysBack;
-    },
-    { message: 'Provide exactly one of date (YYYY-MM-DD) or daysBack (1–365)' },
-  );
+/**
+ * @description The registered (advertised) schema: a plain strict object, so `tools/list` publishes `date` and
+ * `daysBack`. Never register the refined {@link getActivityByDateArgs} instead — a zod v3 `.refine()` returns a
+ * ZodEffects, which the MCP SDK serializes as `properties: {}`, hiding both arguments from every client.
+ */
+export const getActivityByDateToolParameters =
+  ActivityByDateInputSchema().strict();
+
+/** Exactly one of date (YYYY-MM-DD) or daysBack (1–365); enforced in the handler. */
+const getActivityByDateArgs = getActivityByDateToolParameters.refine(
+  (data) => {
+    const hasDate = data.date != null && data.date !== '';
+    const hasDaysBack = data.daysBack != null;
+    return hasDate !== hasDaysBack;
+  },
+  { message: 'Provide exactly one of date (YYYY-MM-DD) or daysBack (1–365)' },
+);
 
 export const getLastActivityToolParameters = LastActivityInputSchema().strict();
 
@@ -64,7 +67,7 @@ export const getLastActivityToolDescription = `Answer "What was the last thing w
 export async function getActivityByDateToolHandler(
   args: z.infer<typeof getActivityByDateToolParameters>,
 ): Promise<GetActivityByDateResult> {
-  const parsed = getActivityByDateToolParameters.safeParse(args);
+  const parsed = getActivityByDateArgs.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error);
   }

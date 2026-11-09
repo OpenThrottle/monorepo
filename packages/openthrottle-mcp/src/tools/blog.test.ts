@@ -118,11 +118,17 @@ describe('update_blog_post parameters', () => {
 });
 
 describe('get_blog_post parameters', () => {
+  // The exactly-one rule is enforced by the handler, not the registered schema: a refined schema would
+  // advertise no properties on tools/list (see tool-registry.advertised-parameters.test.ts).
   it.each([
     ['neither id nor slug', {}],
     ['both id and slug', { id: postId, slug: 'hello' }],
-  ])('rejects %s', (_label, input) => {
-    expect(getBlogPostToolParameters.safeParse(input).success).toBe(false);
+  ])('rejects %s without calling GraphQL', async (_label, input) => {
+    const result = await getBlogPostToolHandler(input);
+
+    expect(result).toMatchObject({ isError: true });
+    expect(firstText(result)).toContain('exactly one of id or slug');
+    expect(executeGraphqlWithAuth).not.toHaveBeenCalled();
   });
 
   it.each([

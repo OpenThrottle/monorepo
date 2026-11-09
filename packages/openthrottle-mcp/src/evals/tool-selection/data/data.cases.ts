@@ -55,7 +55,8 @@ export const TOOL_SELECTION_CASES: readonly ToolSelectionCase[] = [
     forbid: ['write_file', 'edit_file'],
     id: 'plan-create-not-markdown',
     origin: SEED,
-    prompt: `Write up a plan for adding rate limiting to the GraphQL API and save it somewhere the team can pick it up. Author visormatt, category backend.`,
+    // Single-turn: given no plan content, the model explores the repo with `bash` first, so the prompt carries it.
+    prompt: `Write up this plan and save it somewhere the team can pick it up: add rate limiting to the GraphQL API — a per-user token bucket of 100 requests a minute, answering 429 with a Retry-After header when it runs dry. Author visormatt, category backend.`,
   },
   {
     area: 'plan-crud',
@@ -331,11 +332,16 @@ export const TOOL_SELECTION_CASES: readonly ToolSelectionCase[] = [
   },
   {
     area: 'output',
-    expect: { args: {}, kind: 'call', tools: ['get_activity_by_date'] },
+    expect: {
+      args: { date: equals('2026-11-07') },
+      kind: 'call',
+      tools: ['get_activity_by_date'],
+    },
     forbid: [],
     id: 'output-shipped-yesterday',
     origin: SEED,
-    prompt: `What did we ship in OpenThrottle yesterday?`,
+    // Single-turn: without today's date the model reaches for `bash` (`date`) first, so the prompt carries it.
+    prompt: `Today is 2026-11-08. What did we ship in OpenThrottle yesterday?`,
   },
   // ── controls: no OT tool is the right answer ───────────────────────────────
   {

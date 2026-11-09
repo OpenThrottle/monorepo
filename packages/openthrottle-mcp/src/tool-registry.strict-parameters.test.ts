@@ -48,9 +48,10 @@ interface SchemaLike {
 }
 
 /**
- * Deliberately does NOT require `.shape`: `get_activity_by_date` is a strict object
- * wrapped in `.refine()`, so its registered schema is a ZodEffects. What matters is
- * that the registered schema rejects the key, not which wrapper it arrives in.
+ * Deliberately does NOT require `.shape`: what matters here is that the registered
+ * schema rejects the key, not which wrapper it arrives in. That registered schemas are
+ * plain objects (so `tools/list` advertises their properties) is asserted separately in
+ * `tool-registry.advertised-parameters.test.ts`.
  */
 const isSchemaLike = (value: unknown): value is SchemaLike => {
   if (typeof value !== 'object' || value === null) return false;

@@ -32,8 +32,8 @@
     "mcp.tool/discover_agent_clis": 881,
     "mcp.tool/discover_local_models": 583,
     "mcp.tool/end_session": 369,
-    "mcp.tool/get_activity_by_date": 432,
-    "mcp.tool/get_blog_post": 747,
+    "mcp.tool/get_activity_by_date": 655,
+    "mcp.tool/get_blog_post": 970,
     "mcp.tool/get_document": 581,
     "mcp.tool/get_last_activity": 565,
     "mcp.tool/get_note": 320,
@@ -201,14 +201,14 @@
   "reported": {
     "mcpToolset/admin": 14222,
     "mcpToolset/agents": 3206,
-    "mcpToolset/blog": 7221,
-    "mcpToolset/core": 34263,
-    "mcpToolsFull": 58912
+    "mcpToolset/blog": 7444,
+    "mcpToolset/core": 34486,
+    "mcpToolsFull": 59358
   },
   "totals": {
-    "alwaysInjected": 41144,
+    "alwaysInjected": 41367,
     "mcpInstructions": 2125,
-    "mcpTools": 34263,
+    "mcpTools": 34486,
     "prompts": 127839,
     "skills": 181913
   }
