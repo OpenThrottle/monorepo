@@ -18,13 +18,21 @@
 --
 -- Idempotent: every row has a FIXED id; the script deletes the fixture plan (plan_runs cascade)
 -- and its work session, then re-inserts it, all inside one transaction. Timestamps are
--- now()-relative ON PURPOSE, unlike blog.sql: scheduled runs must sit in the future and the
+-- now()-relative ON PURPOSE, unlike blog.sql: the scheduled run must sit in the future and the
 -- in-progress run needs a fresh heartbeat, so re-run the script before each visual pass.
 --
 -- Safe against the background jobs of a running server (the user's local DB may be shared):
---   * SCHEDULED rows carry NO bullmq_job_id. The scheduled-run boot reconcile skips such rows; one
---     with a job id would get its "lost" delayed job re-created and actually run this plan.
---   * scheduled_for is in the future, so nothing marks the scheduled rows MISSED.
+--   * The SCHEDULED row carries NO bullmq_job_id. The scheduled-run boot reconcile
+--     (findScheduledRunsWithJob) skips such rows; one with a job id would get its "lost" delayed job
+--     re-created and actually run this plan. There is exactly ONE: plan_runs_one_scheduled_per_plan_idx
+--     (migration 152) allows at most one SCHEDULED run per plan, and a second aborts the whole script.
+--   * scheduled_for is in the future, so nothing marks the scheduled row MISSED.
+--   * The QUEUED row carries NO bullmq_job_id and NO checkout_id, which makes it inert: both stale-sweep
+--     passes match status = IN_PROGRESS only, the scheduled-run reconcile reads only SCHEDULED rows,
+--     the plans worker's startup reconciles key on plans.status (this plan is PENDING), cancelling
+--     queued jobs settles rows by job id, and worktree prune/teardown key on checkout_id. Nothing ever
+--     settles it either, so it reads as live until the CLEANUP block (or a re-run) deletes it. It adds
+--     no new "plan has an active run" effect: the IN_PROGRESS row already provides one.
 --   * The IN_PROGRESS row has heartbeat_expected = false and no job, so the stale sweep judges it
 --     on the 12h unsupervised cutoff. A SUPERVISED stale-looking row (heartbeat_expected = true,
 --     last heartbeat > 120s old) is what drives the UI's `isStale` badge, but the sweep flips it to
@@ -33,10 +41,11 @@
 --   * Every other run is terminal.
 --
 -- Run states covered (plan_runs.status is plain TEXT; see migrations 138 and 140):
---   SCHEDULED x2 (+2h, +1 day), IN_PROGRESS, STALE, USAGE_LIMITED + its COMPLETED resume run
---   (resume_of_run_id), MISSED, SUPERSEDED, COMPLETED with a job id + branch + PR, and a
---   CLI/orchestrator COMPLETED run with no job, plus four older COMPLETED runs so history has
---   12 rows and shows its "Show N more" button.
+--   SCHEDULED (+2h), QUEUED (job-less, inert), IN_PROGRESS, STALE, USAGE_LIMITED + its COMPLETED
+--   resume run (resume_of_run_id), MISSED and SUPERSEDED (with settled_reason), COMPLETED with a job
+--   id + branch + PR, a CLI/orchestrator COMPLETED run with no job, FAILED and CANCELLED (terminal,
+--   with job ids), SKIPPED (a scheduled run that fired with nothing left, with settled_reason), plus
+--   four older COMPLETED runs: 17 rows, so history pages past 10 and shows its "Show N more" button.
 
 BEGIN;
 
@@ -80,12 +89,13 @@ VALUES
    '{"version":1,"target":{"mode":"plan","taskId":""},"ralph":{"executionBackend":"claude","model":"claude-sonnet-5","effort":"high","iterations":10},"workspace":{"workingDirectory":""}}',
    NULL, TRUE, NULL, 'claude-sonnet-5', now() + interval '2 hours', NULL, NULL, NULL),
 
-  -- 02 SCHEDULED, fires in 1 day.
+  -- 02 QUEUED, waiting for a worker. No job id and no checkout, so nothing picks it up (see the
+  --    header). It was a second SCHEDULED row until migration 152 allowed only one per plan.
   ('fe000000-0000-4000-8000-000000000102', 'fe000000-0000-4000-8000-000000000001', 'plans',
-   NULL, 'orchestrator', 'cursor', 'SCHEDULED',
-   now() - interval '10 minutes', now() - interval '10 minutes',
+   NULL, 'orchestrator', 'cursor', 'QUEUED',
+   now() - interval '1 minute', now() - interval '1 minute',
    '{"version":1,"target":{"mode":"plan","taskId":""},"ralph":{"executionBackend":"cursor","model":"claude-opus-4.8","effort":"medium","iterations":10},"workspace":{"workingDirectory":""}}',
-   NULL, TRUE, NULL, NULL, now() + interval '1 day', NULL, NULL, NULL),
+   NULL, TRUE, NULL, 'claude-opus-4.8', NULL, NULL, NULL, NULL),
 
   -- 03 IN_PROGRESS, unsupervised (heartbeat_expected = false) with a fresh heartbeat.
   ('fe000000-0000-4000-8000-000000000103', 'fe000000-0000-4000-8000-000000000001', 'plans',
@@ -168,6 +178,49 @@ VALUES
    now() - interval '13 days', now() - interval '13 days' + interval '20 minutes',
    NULL, now() - interval '13 days' + interval '20 minutes', FALSE, NULL, 'claude-opus-4.8',
    NULL, NULL, NULL, NULL);
+
+-- ---------------------------------------------------------------------------
+-- Runs added after migration 150 (settled_reason). Kept in their own INSERT so
+-- the column list above stays unchanged. All terminal.
+-- ---------------------------------------------------------------------------
+
+INSERT INTO plan_runs (
+  id, plan_id, queue_name, bullmq_job_id, run_kind, execution_backend, status,
+  created_at, updated_at, run_config_snapshot, last_heartbeat_at, heartbeat_expected,
+  branch, model, scheduled_for, settled_reason
+)
+VALUES
+  -- 15 FAILED: a spawn run whose job gave up after its retries.
+  ('fe000000-0000-4000-8000-000000000115', 'fe000000-0000-4000-8000-000000000001', 'plans',
+   'fixture-run-states-115', 'spawn', 'codex', 'FAILED',
+   now() - interval '6 days', now() - interval '6 days' + interval '7 minutes',
+   '{"version":1,"target":{"mode":"plan","taskId":""},"ralph":{"executionBackend":"codex","model":"gpt-5-codex","iterations":10},"workspace":{"workingDirectory":""}}',
+   now() - interval '6 days' + interval '7 minutes', TRUE, 'openthrottle/fixture-run-states-15',
+   'gpt-5-codex', NULL, NULL),
+
+  -- 16 CANCELLED: a run a human killed mid-flight.
+  ('fe000000-0000-4000-8000-000000000116', 'fe000000-0000-4000-8000-000000000001', 'plans',
+   'fixture-run-states-116', 'spawn', 'claude', 'CANCELLED',
+   now() - interval '7 days', now() - interval '7 days' + interval '12 minutes',
+   '{"version":1,"target":{"mode":"plan","taskId":""},"ralph":{"executionBackend":"claude","model":"claude-sonnet-5","effort":"high","iterations":10},"workspace":{"workingDirectory":""}}',
+   now() - interval '7 days' + interval '12 minutes', TRUE, 'openthrottle/fixture-run-states-16',
+   'claude-sonnet-5', NULL, NULL),
+
+  -- 17 SKIPPED: a scheduled run that fired with nothing runnable left (never started).
+  ('fe000000-0000-4000-8000-000000000117', 'fe000000-0000-4000-8000-000000000001', 'plans',
+   NULL, 'orchestrator', 'claude', 'SKIPPED',
+   now() - interval '8 days', now() - interval '7 days 23 hours',
+   '{"version":1,"target":{"mode":"plan","taskId":""},"ralph":{"executionBackend":"claude","model":"claude-sonnet-5","iterations":10},"workspace":{"workingDirectory":""}}',
+   NULL, TRUE, NULL, 'claude-sonnet-5', now() - interval '7 days 23 hours',
+   'Nothing to run: every task was already resolved when the schedule fired.');
+
+UPDATE plan_runs
+   SET settled_reason = 'Missed: the server was down for longer than the 1-hour grace window.'
+ WHERE id = 'fe000000-0000-4000-8000-000000000107';
+
+UPDATE plan_runs
+   SET settled_reason = 'Superseded: the plan already had an active run when the schedule fired.'
+ WHERE id = 'fe000000-0000-4000-8000-000000000108';
 
 -- ---------------------------------------------------------------------------
 -- PR provenance for run 09: plan_runs → work_sessions.plan_run_id →
