@@ -31,6 +31,11 @@ import {
   RepositoryCheckoutsService,
   TasksService,
 } from '@openthrottle/nestjs-repositories';
+import {
+  nodeResolverFs,
+  resolveOtLoopCommands,
+} from '@openthrottle/openthrottle-agentic-loop';
+import { getWorkflowConfigCwd } from '@openthrottle/openthrottle-agentic-utils';
 import type { JobRunHookEntry } from '@tools/workflows';
 import { projectHookTasksToJobRunHookEntries } from '@tools/workflows';
 import type { Queue } from 'bullmq';
@@ -73,6 +78,7 @@ import {
   createPlanScheduleConflictError,
   decidePlanSchedulability,
   isOneScheduledRunViolation,
+  resolveRequestedRunner,
 } from './plan-enqueue.utils.ts';
 import { ENQUEUE_TASK_STATUSES_TO_RESET } from './runnable-tasks/runnable-tasks.constants.ts';
 import { countRunnablePlanTasks } from './runnable-tasks/runnable-tasks.utils.ts';
@@ -123,6 +129,8 @@ interface EnqueueSpawnParams {
   readonly ralph?: RalphPlanRunTuningInput | null;
   /** Portable repository id; resolved to the user's single checkout when checkoutId is omitted. */
   readonly repositoryId?: string | null;
+  /** Requested runner (`ralph` | `ot-loop`); absent falls back to the plan's stored runner, else Ralph. */
+  readonly runner?: string | null;
   readonly workingDirectory?: string | null;
 }
 
@@ -148,6 +156,8 @@ interface EnqueueOrchestratorParams {
   readonly ralph?: RalphPlanRunTuningInput | null;
   /** Portable repository id; resolved to the user's single checkout when checkoutId is omitted. */
   readonly repositoryId?: string | null;
+  /** Requested runner (`ralph` | `ot-loop`); absent falls back to the plan's stored runner, else Ralph. */
+  readonly runner?: string | null;
   readonly taskId?: string | null;
   readonly workingDirectory?: string | null;
 }
@@ -177,6 +187,8 @@ interface SchedulePlanRunParams {
   readonly replaceScheduled?: boolean | null;
   /** Portable repository id; resolved to the user's single checkout when checkoutId is omitted. */
   readonly repositoryId?: string | null;
+  /** Requested runner (`ralph` | `ot-loop`); absent falls back to the plan's stored runner, else Ralph. */
+  readonly runner?: string | null;
   /** The absolute instant the run fires at. Must be in the future and within the 30-day horizon. */
   readonly scheduledFor: Date;
   readonly workingDirectory?: string | null;
@@ -268,6 +280,7 @@ export class PlanEnqueueService {
       priority,
       ralph,
       repositoryId,
+      runner,
       workingDirectory,
     } = params;
 
@@ -285,6 +298,7 @@ export class PlanEnqueueService {
       priority,
       ralph,
       repositoryId,
+      runner,
       taskId: null,
       workingDirectory,
     });
@@ -316,6 +330,7 @@ export class PlanEnqueueService {
       priority,
       ralph,
       repositoryId,
+      runner,
       taskId,
       workingDirectory,
     } = params;
@@ -330,6 +345,7 @@ export class PlanEnqueueService {
         planId,
         ralph,
         repositoryId,
+        runner,
         taskId,
         workingDirectory,
       });
@@ -436,6 +452,7 @@ export class PlanEnqueueService {
       ralph,
       replaceScheduled,
       repositoryId,
+      runner,
       scheduledFor,
       workingDirectory,
     } = params;
@@ -467,6 +484,7 @@ export class PlanEnqueueService {
         planId,
         ralph,
         repositoryId,
+        runner,
         taskId: null,
         workingDirectory,
       });
@@ -567,6 +585,7 @@ export class PlanEnqueueService {
     readonly planId: string;
     readonly ralph?: RalphPlanRunTuningInput | null;
     readonly repositoryId?: string | null;
+    readonly runner?: string | null;
     readonly taskId?: string | null;
     readonly workingDirectory?: string | null;
   }): Promise<{
@@ -583,6 +602,7 @@ export class PlanEnqueueService {
       planId,
       ralph,
       repositoryId,
+      runner,
       taskId,
       workingDirectory,
     } = input;
@@ -628,24 +648,66 @@ export class PlanEnqueueService {
 
     const materializedHookEntries =
       await this.resolveMaterializedHookEntries(planId);
+    // The request wins over the plan's stored runConfig; absent on both means Ralph.
+    const effectiveRunner = resolveRequestedRunner(
+      runner,
+      plan.runConfig?.runner,
+    );
+    const otLoop =
+      effectiveRunner === 'ot-loop' ? plan.runConfig?.otLoop : undefined;
 
+    let jobData: ReturnType<typeof buildRunPlanOrchestratorJobData>;
     try {
-      const jobData = buildRunPlanOrchestratorJobData({
+      jobData = buildRunPlanOrchestratorJobData({
         jobRunHooksJson,
         materializedHookEntries,
         mode: mode ?? null,
+        otLoop,
         planId,
         planJobRunHooks: plan.jobRunHooks,
         ralph,
+        runner: effectiveRunner,
         taskId,
         workingDirectory: resolvedWorkspace.workingDirectory,
       });
-
-      return { jobData, resolvedBranch, resolvedWorkspace };
     } catch (error) {
       throw new BadRequestException(
         error instanceof Error ? error.message : String(error),
       );
+    }
+
+    if (effectiveRunner === 'ot-loop') {
+      await this.assertOtLoopRunnable(jobData);
+    }
+
+    return { jobData, resolvedBranch, resolvedWorkspace };
+  }
+
+  /**
+   * @description Rejects an OT Loop run that could not start, at enqueue (docs/workflows/ot-loop-job.md
+   * § 5, § 6): by the time the job runs the plan is already IN_PROGRESS. Two checks. The run must have
+   * a worktree (`ralph.worktree` present; the `disableWorktree` opt-out strips it), because the loop
+   * resets and cleans its working tree and must never do that to a human's checkout. And a
+   * validation command must resolve against the base checkout, which holds the same committed
+   * `.openthrottle/ot-loop.json` the worktree will: the loop never marks a task done unvalidated.
+   */
+  private async assertOtLoopRunnable(
+    jobData: ReturnType<typeof buildRunPlanOrchestratorJobData>,
+  ): Promise<void> {
+    if ((jobData.ralph?.worktree?.trim() ?? '') === '') {
+      throw new BadRequestException(
+        `OT Loop needs a worktree: it resets and cleans the working tree, so it never runs in your checkout. Remove disableWorktree to run it.`,
+      );
+    }
+
+    const resolved = await resolveOtLoopCommands({
+      fs: nodeResolverFs,
+      otLoop: { validationCommands: jobData.otLoop?.validationCommands },
+      worktreeRoot: getWorkflowConfigCwd(jobData.workingDirectory, process.env),
+    });
+
+    if (resolved.kind !== 'resolved') {
+      throw new BadRequestException(resolved.message);
     }
   }
 

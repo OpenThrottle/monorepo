@@ -1,3 +1,7 @@
+import type {
+  PlanRunConfigOtLoop,
+  PlanRunConfigRunner,
+} from '@openthrottle/openthrottle-plan-config';
 import { atom } from 'jotai';
 
 import {
@@ -25,6 +29,22 @@ import { validateWorkspacePathClient } from '~/routing/plans/utils/workspace-pat
  */
 export const workflowRalphRunOptionsAtom = atom<WorkflowRalphRunOptionsInput>(
   getDefaultWorkflowRalphRunOptionsInput(),
+);
+
+/**
+ * @description Which runner executes this plan's runs; `undefined` is an absent
+ * `runConfigJson.runner`, which means Ralph. Serialized into `runConfigJson`.
+ */
+export const workflowRunnerAtom = atom<PlanRunConfigRunner | undefined>(
+  undefined,
+);
+
+/**
+ * @description The plan's `runConfigJson.otLoop` block (validation commands, retries and
+ * the repo-file-only overrides). Only meaningful when {@link workflowRunnerAtom} is `'ot-loop'`.
+ */
+export const workflowOtLoopAtom = atom<PlanRunConfigOtLoop | undefined>(
+  undefined,
 );
 
 /**
@@ -233,11 +253,16 @@ export const runConfigJsonAtom = atom((get): string => {
     return '';
   }
 
+  const otLoop = get(workflowOtLoopAtom);
+  const runner = get(workflowRunnerAtom);
+
   try {
     return serializePlanRunConfigUiState({
       checkoutId: get(workflowCheckoutIdAtom),
       iterationTimeoutText: get(workflowRunIterationTimeoutTextAtom),
+      ...(otLoop !== undefined ? { otLoop } : {}),
       repositoryId: get(workflowRepositoryIdAtom),
+      ...(runner !== undefined ? { runner } : {}),
       workflowInput: runOptions,
       workingDirectory: get(workflowWorkingDirectoryAtom),
     });
@@ -265,6 +290,8 @@ export const resetWorkflowRunToDefaultsAtom = atom(
     set(workflowWorkingDirectoryAtom, '');
     set(workflowCheckoutIdAtom, '');
     set(workflowRepositoryIdAtom, '');
+    set(workflowRunnerAtom, undefined);
+    set(workflowOtLoopAtom, undefined);
     set(workflowBranchAtom, '');
     // Reset makes the branch pristine again, so a later hydration may fill it.
     set(workflowBranchDirtyAtom, false);

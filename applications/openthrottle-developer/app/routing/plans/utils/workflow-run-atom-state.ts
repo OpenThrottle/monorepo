@@ -1,3 +1,8 @@
+import type {
+  PlanRunConfigOtLoop,
+  PlanRunConfigRunner,
+} from '@openthrottle/openthrottle-plan-config';
+
 import {
   getDefaultWorkflowRalphRunOptionsInput,
   type WorkflowRalphRunOptionsInput,
@@ -51,8 +56,10 @@ export interface WorkflowRunSeedValues {
   readonly checkoutId: string;
   readonly iterationTimeoutText: string;
   readonly jobRunHookRows: JobRunHookDraftRow[];
+  readonly otLoop: PlanRunConfigOtLoop | undefined;
   readonly repositoryId: string;
   readonly runOptions: WorkflowRalphRunOptionsInput;
+  readonly runner: PlanRunConfigRunner | undefined;
   readonly workingDirectory: string;
 }
 
@@ -78,8 +85,10 @@ export const getWorkflowRunSeedValues = (
     checkoutId: hydrated.checkoutId,
     iterationTimeoutText: hydrated.iterationTimeoutText,
     jobRunHookRows,
+    otLoop: hydrated.otLoop,
     repositoryId: hydrated.repositoryId,
     runOptions: hydrated.workflowInput,
+    runner: hydrated.runner,
     workingDirectory: hydrated.workingDirectory,
   };
 };

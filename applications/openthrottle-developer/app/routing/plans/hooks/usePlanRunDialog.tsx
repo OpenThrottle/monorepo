@@ -5,17 +5,22 @@
  * fields, and the action fetcher. This dialog reads the PLAN's saved run config, not
  * the chat toolbar atom. Extracted per component-primitive-shape R7.
  */
+import { MAX_PLAN_RUN_OT_LOOP_RETRIES } from '@openthrottle/openthrottle-plan-config';
 import * as React from 'react';
 import { useFetcher } from 'react-router';
 
 import type { action } from '~/routes/plans.$planId._index';
 import { PLAN_RUN_DIALOG_CLOCK_TICK_MS } from '~/routing/plans/config/defaults';
-import { PLAN_RUN_DIALOG_COPY } from '~/routing/plans/data/data.copy';
+import {
+  PLAN_RUN_DIALOG_COPY,
+  PLAN_RUN_RUNNER_COPY,
+} from '~/routing/plans/data/data.copy';
 import type { UsePlanRunDialogConfirmResult } from '~/routing/plans/hooks/usePlanRunDialogConfirm';
 import { usePlanRunDialogConfirm } from '~/routing/plans/hooks/usePlanRunDialogConfirm';
 import type {
   PlanRunDialogDraft,
   PlanRunDialogMode,
+  PlanRunDialogRunnerSettings,
   PlanRunDialogSubmission,
 } from '~/routing/plans/types';
 import { getPlanRunDialogScheduleFeedback } from '~/routing/plans/utils/getPlanRunDialogScheduleFeedback';
@@ -29,6 +34,7 @@ import {
 } from '~/routing/plans/utils/plan-run-dialog';
 import type { PlanRunModelSelection } from '~/routing/plans/utils/plan-run-model-effort';
 import { reconcilePlanRunEffort } from '~/routing/plans/utils/plan-run-model-effort';
+import { parseOtLoopMaxRetriesText } from '~/routing/plans/utils/plan-run-ot-loop';
 import {
   getLocalTimeZone,
   getScheduleInstantError,
@@ -81,6 +87,8 @@ export interface UsePlanRunDialogResult {
   readonly onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
   /** @description The plan's configured iterations, for the "resets to" hint. */
   readonly planIterations: number;
+  /** @description The runner choice and OT Loop fields, spread onto the settings section. */
+  readonly runnerSettings: PlanRunDialogRunnerSettings;
   readonly scheduleError: string | null;
   /** @description "fires 3:00 PM PST, in about 4 hours"; `undefined` until a future instant is picked. */
   readonly scheduleSummary: string | undefined;
@@ -128,8 +136,17 @@ export const usePlanRunDialog = (
   const isSubmitting = fetcher.state !== 'idle';
   const instant = getPlanRunDialogInstant(draft);
   const iterations = parsePlanRunDialogIterations(draft.iterationsText);
-  const iterationsError =
-    iterations === null ? PLAN_RUN_DIALOG_COPY.iterationsInvalid : undefined;
+  // Iterations is Ralph-only and retries are OT Loop-only; the hidden one never blocks.
+  const isOtLoop = draft.runner === 'ot-loop';
+  const isIterationsInvalid = iterations === null && !isOtLoop;
+  const iterationsError = isIterationsInvalid
+    ? PLAN_RUN_DIALOG_COPY.iterationsInvalid
+    : undefined;
+  const retries = parseOtLoopMaxRetriesText(draft.otLoopMaxRetriesText);
+  const isRetriesInvalid = isOtLoop && retries === null;
+  const otLoopMaxRetriesError = isRetriesInvalid
+    ? PLAN_RUN_RUNNER_COPY.maxRetriesInvalid(MAX_PLAN_RUN_OT_LOOP_RETRIES)
+    : undefined;
   const isScheduleMode = draft.mode === 'schedule';
   const { scheduleError, scheduleSummary } = getPlanRunDialogScheduleFeedback({
     instant,
@@ -145,6 +162,7 @@ export const usePlanRunDialog = (
       workflowRunBlockedReason,
     }) ??
     iterationsError ??
+    otLoopMaxRetriesError ??
     scheduleError;
   const fields = buildPlanRunDialogFields({
     branch,
@@ -293,6 +311,17 @@ export const usePlanRunDialog = (
     onScheduleTimeChange: (scheduleTime) => patchDraft({ scheduleTime }),
     onSubmit,
     planIterations: getPlanConfiguredIterations(planId, runConfigJson),
+    runnerSettings: {
+      onOtLoopMaxRetriesChange: (otLoopMaxRetriesText) =>
+        patchDraft({ otLoopMaxRetriesText }),
+      onOtLoopValidationChange: (otLoopValidationText) =>
+        patchDraft({ otLoopValidationText }),
+      onRunnerChange: (runner) => patchDraft({ runner }),
+      otLoopMaxRetriesError,
+      otLoopMaxRetriesText: draft.otLoopMaxRetriesText,
+      otLoopValidationText: draft.otLoopValidationText,
+      runner: draft.runner,
+    },
     scheduleError,
     scheduleSummary,
     timeZone: getLocalTimeZone(),

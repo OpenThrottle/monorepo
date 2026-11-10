@@ -7,6 +7,12 @@
 > orchestrator) — trigger → surface → host process → transport → post-run checks — see
 > [tools/workflows/README.md → Which path runs when](../../tools/workflows/README.md#which-path-runs-when-canonical-decision-table).
 
+> **Where `/agents-ralph` is still used.** Only by the Ralph runner (the in-process orchestrator and
+> the `workflow-ralph` CLI) described here, until a follow-up plan retires it. The OT Loop runner
+> ([ot-loop-job.md](./ot-loop-job.md)) never uses it: its worker is any `@openthrottle/openthrottle-drivers`
+> CLI fed a standalone prompt built from the task row — no slash command, no skills, no OT MCP.
+> Ralph is still the default; a plan opts into OT Loop with `runConfigJson.runner: 'ot-loop'`.
+
 ## Goal
 
 - **Ralph** runs a single workflow: idea or PRD → **plan and tasks in OpenThrottle** → execute one task at a time until done. Progress lives in OpenThrottle (plan, tasks, `plan_output_stream`); no file-based modes or OUTPUT files.

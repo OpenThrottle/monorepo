@@ -1,0 +1,18 @@
+{
+  "finalValidation": {
+    "commands": [
+      "pnpm nx run-many -t lint,typecheck,test --parallel=1",
+      "pnpm nx format:check"
+    ]
+  },
+  "setup": {
+    "commands": ["pnpm nx run-many --target=codegen-graphql --all"]
+  },
+  "validation": {
+    "commands": [
+      "pnpm nx affected -t lint --base={taskStartSha} --parallel=1",
+      "pnpm nx affected -t typecheck --base={taskStartSha} --parallel=1",
+      "pnpm nx affected -t test --base={taskStartSha} --parallel=1"
+    ]
+  }
+}

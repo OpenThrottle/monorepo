@@ -9,8 +9,13 @@
  * overlaid, so the run that starts and the config on the plan agree.
  */
 
+import type {
+  PlanRunConfigOtLoop,
+  PlanRunConfigRunner,
+} from '@openthrottle/openthrottle-plan-config';
 import {
   getDefaultPlanRunConfigStorage,
+  MAX_PLAN_RUN_OT_LOOP_RETRIES,
   planRunConfigFromPlanStorage,
   serializePlanRunConfigForGraphql,
 } from '@openthrottle/openthrottle-plan-config';
@@ -33,6 +38,12 @@ import {
   parsePlanRunEffort,
   type PlanRunModelSelection,
 } from '~/routing/plans/utils/plan-run-model-effort';
+import {
+  isPlanRunRunner,
+  mergeOtLoopFields,
+  parseOtLoopCommandsText,
+  parseOtLoopMaxRetriesText,
+} from '~/routing/plans/utils/plan-run-ot-loop';
 import { isExecutionBackend } from '~/routing/plans/utils/plan-workflow-config-execution';
 import {
   DEFAULT_RALPH_MODEL,
@@ -49,6 +60,21 @@ export interface PlanRunPersistedSelection extends PlanRunModelSelection {
   readonly effort: string;
 }
 
+/**
+ * @description The runner choice the dialog saves to `runConfigJson.runner` (and sends at
+ * enqueue). `otLoop` is present only for OT Loop: the edited validation commands and retry
+ * count, merged onto the stored block so its setup and final-validation commands survive.
+ */
+export interface PlanRunRunnerSelection {
+  readonly otLoop:
+    | {
+        readonly maxRetries: number | undefined;
+        readonly validationCommands: readonly string[];
+      }
+    | undefined;
+  readonly runner: PlanRunConfigRunner;
+}
+
 /** @description The enqueue input minus the route's `planId`. */
 export type PlanRunEnqueueFields = Omit<EnqueuePlanRunInput, 'planId'>;
 
@@ -57,6 +83,7 @@ export type PlanRunFormResult =
   | {
       readonly fields: PlanRunEnqueueFields;
       readonly persisted: PlanRunPersistedSelection | undefined;
+      readonly runnerSelection: PlanRunRunnerSelection | undefined;
       readonly success: true;
     };
 
@@ -157,6 +184,44 @@ export const mergePersistedSelectionIntoRunConfig = (input: {
   };
 };
 
+/**
+ * @description Merges the dialog's runner choice into a plan's saved run config. Ralph is the
+ * default, so choosing it removes a stored `runner` key rather than writing `'ralph'`; the
+ * stored `otLoop` block is left alone unless OT Loop is selected. `changed` is `false` when
+ * the saved config already holds the choice, so the caller can skip the write.
+ * @throws Error when `runConfigJson` is present but not valid JSON.
+ */
+export const mergeRunnerSelectionIntoRunConfig = (input: {
+  readonly planId: string;
+  readonly runConfigJson: string | null | undefined;
+  readonly selection: PlanRunRunnerSelection;
+}): { readonly changed: boolean; readonly runConfigJson: string } => {
+  const { planId, runConfigJson, selection } = input;
+  const options = { planId };
+  const stored = loadStoredRunConfig(runConfigJson, options);
+  const { otLoop: storedOtLoop, runner: storedRunner, ...rest } = stored;
+  const { otLoop: edited } = selection;
+  const nextOtLoop: PlanRunConfigOtLoop | undefined = edited
+    ? mergeOtLoopFields(storedOtLoop, edited)
+    : storedOtLoop;
+  const nextRunner = selection.runner === 'ot-loop' ? 'ot-loop' : undefined;
+  const changed =
+    (storedRunner ?? 'ralph') !== selection.runner ||
+    JSON.stringify(storedOtLoop) !== JSON.stringify(nextOtLoop);
+
+  return {
+    changed,
+    runConfigJson: serializePlanRunConfigForGraphql(
+      {
+        ...rest,
+        ...(nextOtLoop !== undefined ? { otLoop: nextOtLoop } : {}),
+        ...(nextRunner !== undefined ? { runner: nextRunner } : {}),
+      },
+      options,
+    ),
+  };
+};
+
 type PersistedSelectionResult =
   | { readonly error: string; readonly success: false }
   | {
@@ -207,6 +272,54 @@ const parsePersistedSelection = (fields: {
   };
 };
 
+type RunnerSelectionResult =
+  | { readonly error: string; readonly success: false }
+  | {
+      readonly selection: PlanRunRunnerSelection | undefined;
+      readonly success: true;
+    };
+
+const parseRunnerSelection = (fields: {
+  readonly otLoopMaxRetries?: string | null;
+  readonly otLoopValidationCommands?: string | null;
+  readonly runner?: string | null;
+}): RunnerSelectionResult => {
+  const { otLoopMaxRetries, otLoopValidationCommands, runner } = fields;
+
+  if (runner == null) {
+    return { selection: undefined, success: true };
+  }
+
+  if (!isPlanRunRunner(runner)) {
+    return { error: `Unknown runner "${runner}".`, success: false };
+  }
+
+  if (runner === 'ralph') {
+    return { selection: { otLoop: undefined, runner }, success: true };
+  }
+
+  const maxRetries = parseOtLoopMaxRetriesText(otLoopMaxRetries ?? '');
+  if (maxRetries === null) {
+    return {
+      error: `Retries must be a whole number from 0 to ${MAX_PLAN_RUN_OT_LOOP_RETRIES}.`,
+      success: false,
+    };
+  }
+
+  return {
+    selection: {
+      otLoop: {
+        maxRetries,
+        validationCommands: parseOtLoopCommandsText(
+          otLoopValidationCommands ?? '',
+        ),
+      },
+      runner,
+    },
+    success: true,
+  };
+};
+
 /**
  * @description Reads the kickoff form shared by `runPlan` and
  * `schedulePlanRun`. Every field goes through `parseFormData` (blank fields
@@ -237,6 +350,8 @@ export const parsePlanRunForm = (formData: FormData): PlanRunFormResult => {
             .min(1, 'Iterations must be at least 1.'),
         ).nullish(),
         model: z.string().nullish(),
+        otLoopMaxRetries: z.string().nullish(),
+        otLoopValidationCommands: z.string().nullish(),
         priority: coerceNumber(z.number()).nullish(),
         ralphTuning: z.string().nullish(),
       }),
@@ -269,6 +384,11 @@ export const parsePlanRunForm = (formData: FormData): PlanRunFormResult => {
   const selection = parsePersistedSelection(fields);
   if (!selection.success) {
     return selection;
+  }
+
+  const runnerSelection = parseRunnerSelection(fields);
+  if (!runnerSelection.success) {
+    return runnerSelection;
   }
 
   // Branch is a REQUIRED kickoff input (never inferred server-side). The run
@@ -305,6 +425,7 @@ export const parsePlanRunForm = (formData: FormData): PlanRunFormResult => {
   const checkoutId = fields.checkoutId ?? undefined;
   const repositoryId = fields.repositoryId ?? undefined;
   const workingDirectory = fields.workingDirectory ?? undefined;
+  const runner = runnerSelection.selection?.runner;
 
   return {
     fields: {
@@ -315,9 +436,11 @@ export const parsePlanRunForm = (formData: FormData): PlanRunFormResult => {
       ...(jobRunHooksJson !== undefined ? { jobRunHooksJson } : {}),
       ...(ralph !== undefined ? { ralph } : {}),
       ...(repositoryId !== undefined ? { repositoryId } : {}),
+      ...(runner !== undefined ? { runner } : {}),
       ...(workingDirectory !== undefined ? { workingDirectory } : {}),
     },
     persisted: selection.persisted,
+    runnerSelection: runnerSelection.selection,
     success: true,
   };
 };

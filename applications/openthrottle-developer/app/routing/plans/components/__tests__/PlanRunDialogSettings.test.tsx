@@ -6,6 +6,8 @@ import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { PLAN_RUN_RUNNER_COPY } from '~/routing/plans/data/data.copy';
+
 import type { PlanRunDialogSettingsProps } from '../PlanRunDialogSettings';
 import { PlanRunDialogSettings } from '../PlanRunDialogSettings';
 
@@ -38,7 +40,14 @@ describe('PlanRunDialogSettings Component', () => {
       onEffortChange: vi.fn(),
       onIterationsChange: vi.fn(),
       onModelChange: vi.fn(),
+      onOtLoopMaxRetriesChange: vi.fn(),
+      onOtLoopValidationChange: vi.fn(),
+      onRunnerChange: vi.fn(),
+      otLoopMaxRetriesError: undefined,
+      otLoopMaxRetriesText: '',
+      otLoopValidationText: '',
       planIterations: 5,
+      runner: 'ralph',
     };
   });
 
@@ -78,5 +87,68 @@ describe('PlanRunDialogSettings Component', () => {
       'aria-invalid',
       'true',
     );
+  });
+
+  describe('runner', () => {
+    test('reports a runner change', async () => {
+      const user = userEvent.setup();
+      const component = await renderSettings();
+
+      await user.click(
+        component.getByRole('radio', {
+          name: PLAN_RUN_RUNNER_COPY.otLoopLabel,
+        }),
+      );
+
+      expect(props.onRunnerChange).toHaveBeenCalledWith('ot-loop');
+    });
+
+    test('Ralph shows iterations and hides the OT Loop fields', async () => {
+      const component = await renderSettings();
+
+      expect(component.getByLabelText('Iterations')).toBeInTheDocument();
+      expect(
+        component.queryByTestId('PlanRunOtLoopFields'),
+      ).not.toBeInTheDocument();
+    });
+
+    test('OT Loop hides iterations and shows validation and retries', async () => {
+      props = { ...props, runner: 'ot-loop' };
+      const component = await renderSettings();
+
+      expect(component.queryByLabelText('Iterations')).not.toBeInTheDocument();
+      expect(
+        component.getByRole('textbox', {
+          name: PLAN_RUN_RUNNER_COPY.validationLabel,
+        }),
+      ).toBeInTheDocument();
+      expect(
+        component.getByRole('spinbutton', {
+          name: PLAN_RUN_RUNNER_COPY.maxRetriesLabel,
+        }),
+      ).toBeInTheDocument();
+    });
+
+    test('OT Loop edits are reported', async () => {
+      const user = userEvent.setup();
+      props = { ...props, runner: 'ot-loop' };
+      const component = await renderSettings();
+
+      await user.type(
+        component.getByRole('textbox', {
+          name: PLAN_RUN_RUNNER_COPY.validationLabel,
+        }),
+        'x',
+      );
+      await user.type(
+        component.getByRole('spinbutton', {
+          name: PLAN_RUN_RUNNER_COPY.maxRetriesLabel,
+        }),
+        '2',
+      );
+
+      expect(props.onOtLoopValidationChange).toHaveBeenCalledWith('x');
+      expect(props.onOtLoopMaxRetriesChange).toHaveBeenCalledWith('2');
+    });
   });
 });

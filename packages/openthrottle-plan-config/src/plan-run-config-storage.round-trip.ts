@@ -44,6 +44,8 @@ export const planRunConfigFromWorkflowUiState = (
 
   const config: PlanRunConfigStorage = {
     ...defaults,
+    ...(ui.otLoop !== undefined ? { otLoop: ui.otLoop } : {}),
+    ...(ui.runner !== undefined ? { runner: ui.runner } : {}),
     ralph: {
       debugCli: workflowInput.debugCli,
       effort: workflowInput.effort.trim(),
@@ -111,7 +113,9 @@ export const workflowUiStateFromPlanRunConfig = (
   return {
     checkoutId: parsed.workspace.checkoutId,
     iterationTimeoutText: parsed.ralph.iterationTimeoutText,
+    ...(parsed.otLoop !== undefined ? { otLoop: parsed.otLoop } : {}),
     repositoryId: parsed.workspace.repositoryId,
+    ...(parsed.runner !== undefined ? { runner: parsed.runner } : {}),
     workflowInput,
     workingDirectory: parsed.workspace.workingDirectory,
   };

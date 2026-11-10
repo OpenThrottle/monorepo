@@ -15,9 +15,11 @@ import {
   jobRunHookDraftRowsAtom,
   workflowBranchAtom,
   workflowCheckoutIdAtom,
+  workflowOtLoopAtom,
   workflowRalphRunOptionsAtom,
   workflowRepositoryIdAtom,
   workflowRunIterationTimeoutTextAtom,
+  workflowRunnerAtom,
   workflowWorkingDirectoryAtom,
 } from '~/routing/plans/data/data.atom-plan';
 import { resolveDefaultRunBranch } from '~/routing/plans/utils/plan-run-branch';
@@ -58,6 +60,8 @@ export const PlanRunConfigStoreProvider = (
     seeded.set(workflowCheckoutIdAtom, seed.checkoutId);
     seeded.set(workflowRepositoryIdAtom, seed.repositoryId);
     seeded.set(jobRunHookDraftRowsAtom, seed.jobRunHookRows);
+    seeded.set(workflowRunnerAtom, seed.runner);
+    seeded.set(workflowOtLoopAtom, seed.otLoop);
     // The branch is required to enqueue, so seed it here rather than waiting for
     // the Configuration tab's workspace selector to mount and pre-fill it.
     //

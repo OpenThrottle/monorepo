@@ -34,9 +34,14 @@ export const PlanTabOutput = (
   // resolved as empty, never as the pending state.
   // Linked artifacts come from the same loader, deferred on their own promise
   // so a slow ledger query never blocks the output stream.
-  const { ledger, outputChunks } = usePlanDetailRouteData();
+  const { ledger, outputChunks, tasks } = usePlanDetailRouteData();
 
   // Setup
+  // Task-tagged chunks (OT Loop worker and validation output) name their task by title.
+  const taskTitles = React.useMemo(
+    () => new Map(tasks.map((task) => [task.id, task.title])),
+    [tasks],
+  );
 
   // Handlers
 
@@ -59,7 +64,7 @@ export const PlanTabOutput = (
       >
         {() => {
           if (chunks.length > 0) {
-            return <OutputStream chunks={chunks} />;
+            return <OutputStream chunks={chunks} taskTitles={taskTitles} />;
           }
 
           return (

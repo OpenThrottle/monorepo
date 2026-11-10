@@ -5,6 +5,7 @@ import {
   createPlanScheduleConflictError,
   decidePlanSchedulability,
   isOneScheduledRunViolation,
+  resolveRequestedRunner,
 } from './plan-enqueue.utils.ts';
 
 describe('decidePlanSchedulability (D2)', () => {
@@ -82,5 +83,26 @@ describe('isOneScheduledRunViolation', () => {
       ),
     ).toBe(false);
     expect(isOneScheduledRunViolation(new Error('boom'))).toBe(false);
+  });
+});
+
+describe('resolveRequestedRunner', () => {
+  test('the request wins over the stored runner', () => {
+    expect(resolveRequestedRunner('ralph', 'ot-loop')).toBe('ralph');
+    expect(resolveRequestedRunner(' ot-loop ', undefined)).toBe('ot-loop');
+  });
+
+  test.each([null, undefined, '', '   '])(
+    'falls back to the stored runner for %j',
+    (requested) => {
+      expect(resolveRequestedRunner(requested, 'ot-loop')).toBe('ot-loop');
+      expect(resolveRequestedRunner(requested, undefined)).toBeUndefined();
+    },
+  );
+
+  test('rejects an unknown runner', () => {
+    expect(() => resolveRequestedRunner('turbo', undefined)).toThrow(
+      /Invalid runner: turbo/,
+    );
   });
 });

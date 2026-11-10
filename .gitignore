@@ -5,7 +5,9 @@
 # Phase 1 skill-usage JSONL lives under .cache/skill-usage/ (covered by .cache)
 .langgraph_api
 .nx
-.openthrottle
+.openthrottle/*
+# The per-repository OT Loop config is committed (docs/workflows/ot-loop-job.md § 6).
+!.openthrottle/ot-loop.json
 .pnpm-store
 .postgres-profiling
 .vercel

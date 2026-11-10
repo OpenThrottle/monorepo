@@ -150,7 +150,32 @@ export const PLAN_LIFECYCLE_HOOKS_COPY = {
 export const OUTPUT_STREAM_COPY = {
   iterationPrefix: `#`,
   iterationTitle: `Iteration`,
+  taskLabel: (name: string): string => `Task: ${name}`,
+  taskTitle: `Task this output belongs to`,
   unknownDay: `Unknown date`,
+} as const;
+
+/**
+ * @description The runner choice (Ralph | OT Loop) and the OT Loop fields shown in the
+ * Run dialog and the Configuration tab. The validation list is an optional override:
+ * empty falls back to the repo's `.openthrottle/ot-loop.json`, then the Nx default
+ * (docs/workflows/ot-loop-job.md § 6). Retries are an integer 0..5 (default 2).
+ */
+export const PLAN_RUN_RUNNER_COPY = {
+  groupLabel: `Runner`,
+  headingConfiguration: `Runner`,
+  maxRetriesHint: (defaultRetries: number, max: number): string =>
+    `Whole number from 0 to ${max}. Leave blank for ${defaultRetries}.`,
+  maxRetriesInvalid: (max: number): string =>
+    `Retries must be a whole number from 0 to ${max}.`,
+  maxRetriesLabel: `Retries per task`,
+  otLoopHelp: `OT Loop runs one fresh worker per task and validates each before moving on. Operator messages reach the worker as guidance. "Stop after this task" is not honoured; use Cancel to stop a run.`,
+  otLoopLabel: `OT Loop`,
+  ralphLabel: `Ralph`,
+  scope: `saved to the plan`,
+  validationHint: `One command per line. Leave empty to use the repo's .openthrottle/ot-loop.json, else the Nx default.`,
+  validationLabel: `Validation commands (override)`,
+  validationPlaceholder: `pnpm nx affected --target=test`,
 } as const;
 
 /**
@@ -647,7 +672,7 @@ export const PLAN_RUN_DIALOG_COPY = {
   modeRunLabel: `Run now`,
   modeScheduleLabel: `Schedule`,
   planSettingsHeading: `Plan settings`,
-  planSettingsNotice: `Changing the model or effort changes this plan's run config. They are saved to the plan, not just to this run.`,
+  planSettingsNotice: `Changing the runner, model, effort or OT Loop settings changes this plan's run config. They are saved to the plan, not just to this run.`,
   relativeIn: (count: number, unit: 'day' | 'hour' | 'minute'): string =>
     `in about ${count} ${unit}${count === 1 ? '' : 's'}`,
   relativeInLessThanMinute: `in less than a minute`,

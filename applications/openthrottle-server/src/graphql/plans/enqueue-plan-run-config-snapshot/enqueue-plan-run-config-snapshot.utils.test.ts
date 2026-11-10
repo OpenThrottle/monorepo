@@ -62,6 +62,27 @@ describe('buildPlanRunConfigSnapshotFromJobData', () => {
     expect(task.ralph.effort).toBe('low');
   });
 
+  test('carries runner and otLoop on the snapshot and omits them when unset', () => {
+    const otLoop = { validationCommands: ['pnpm nx run x:test'] };
+    const snapshot = buildPlanRunConfigSnapshotFromJobData({
+      executionBackend: 'cursor',
+      otLoop,
+      planId: '7a293e25-e50d-4d4e-86a0-768b779ab0d9',
+      runKind: 'orchestrator',
+      runner: 'ot-loop',
+    });
+    expect(snapshot.runner).toBe('ot-loop');
+    expect(snapshot.otLoop).toEqual(otLoop);
+
+    const plain = buildPlanRunConfigSnapshotFromJobData({
+      executionBackend: 'cursor',
+      planId: '7a293e25-e50d-4d4e-86a0-768b779ab0d9',
+      runKind: 'orchestrator',
+    });
+    expect(plain).not.toHaveProperty('runner');
+    expect(plain).not.toHaveProperty('otLoop');
+  });
+
   test('omits effort from the snapshot when unset', () => {
     const snapshot = buildPlanRunConfigSnapshotFromJobData({
       executionBackend: 'cursor',
@@ -152,5 +173,54 @@ describe('orchestratorJobInputFromSnapshot', () => {
     });
 
     expect(rebuilt).toEqual(original);
+  });
+
+  test('carries runner and otLoop through snapshot and back (OT Loop never becomes Ralph)', () => {
+    const otLoop = {
+      finalValidationCommands: ['pnpm run check:local'],
+      maxRetries: 3,
+      setupCommands: ['pnpm nx run-many --target=codegen-graphql --all'],
+      validationCommands: ['pnpm nx affected --target=lint'],
+    };
+    const { original, rebuilt } = roundTrip({
+      mode: null,
+      otLoop,
+      planId,
+      ralph: null,
+      runner: 'ot-loop',
+      taskId: null,
+      workingDirectory: null,
+    });
+
+    expect(original.runner).toBe('ot-loop');
+    expect(original.otLoop).toEqual(otLoop);
+    expect(rebuilt).toEqual(original);
+    expect(rebuilt.runner).toBe('ot-loop');
+    expect(rebuilt.otLoop).toEqual(otLoop);
+  });
+
+  test('carries runner and otLoop for a task-mode run', () => {
+    const { original, rebuilt } = roundTrip({
+      mode: 'task',
+      otLoop: { maxRetries: 0 },
+      planId,
+      ralph: null,
+      runner: 'ot-loop',
+      taskId: '45a30762-92a9-42f4-90e0-2437c7ef26a8',
+      workingDirectory: null,
+    });
+
+    expect(rebuilt).toEqual(original);
+    expect(rebuilt.otLoop).toEqual({ maxRetries: 0 });
+  });
+
+  test('an explicit ralph runner round-trips and an absent runner stays absent', () => {
+    const explicit = roundTrip({ planId, runner: 'ralph' });
+    expect(explicit.rebuilt.runner).toBe('ralph');
+
+    const absent = roundTrip({ planId });
+    expect(absent.original).not.toHaveProperty('runner');
+    expect(absent.rebuilt).not.toHaveProperty('runner');
+    expect(absent.rebuilt).not.toHaveProperty('otLoop');
   });
 });

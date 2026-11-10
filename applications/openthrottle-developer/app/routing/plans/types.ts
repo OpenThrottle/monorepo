@@ -1,3 +1,4 @@
+import type { PlanRunConfigRunner } from '@openthrottle/openthrottle-plan-config';
 import type { useRouteLoaderData } from 'react-router';
 
 import type {
@@ -71,6 +72,12 @@ export interface PlanRunDialogDraft {
   readonly iterationsText: string;
   readonly mode: PlanRunDialogMode;
   readonly model: string;
+  /** @description Raw retry count (blank = default); OT Loop only. */
+  readonly otLoopMaxRetriesText: string;
+  /** @description One validation command per line; OT Loop only. Blank = repo file / Nx default. */
+  readonly otLoopValidationText: string;
+  /** @description Saved to the plan's run config and sent as `runner` at enqueue. */
+  readonly runner: PlanRunConfigRunner;
   readonly scheduleDate: Date | undefined;
   /** @description `HH:mm`, 24-hour, in the browser's local zone. */
   readonly scheduleTime: string;
@@ -89,3 +96,18 @@ export type PlanRunDialogSubmission =
       readonly mode: 'schedule';
       readonly result: PlanDetailSchedulePlanRunMutation['schedulePlanRun'];
     };
+
+/**
+ * @description The runner choice and OT Loop fields of the Run dialog, as one bag the
+ * dialog spreads onto its settings section.
+ */
+export interface PlanRunDialogRunnerSettings {
+  readonly onOtLoopMaxRetriesChange: (text: string) => void;
+  readonly onOtLoopValidationChange: (text: string) => void;
+  readonly onRunnerChange: (runner: PlanRunConfigRunner) => void;
+  /** @description Why the retry count is invalid; `undefined` when it is fine or the runner is Ralph. */
+  readonly otLoopMaxRetriesError: string | undefined;
+  readonly otLoopMaxRetriesText: string;
+  readonly otLoopValidationText: string;
+  readonly runner: PlanRunConfigRunner;
+}

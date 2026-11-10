@@ -60,3 +60,12 @@ export const MAX_PLAN_RUN_CONFIG_JSON_LEN = 512_000;
 export const MAX_PLAN_RUN_ITERATIONS = 1_000_000;
 export const MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN = 8192;
 export const MAX_PLAN_RUN_WORKING_DIRECTORY_LEN = 4096;
+
+/** @description Which runner executes a plan run. Absent on a config means `'ralph'`. */
+export const PLAN_RUN_CONFIG_RUNNERS = ['ralph', 'ot-loop'] as const;
+
+/** @description Upper bound the schema accepts for `otLoop.maxRetries` (the runner clamps at run time). */
+export const MAX_PLAN_RUN_OT_LOOP_RETRIES = 5;
+
+/** @description Most commands accepted in one `otLoop` command list. */
+export const MAX_PLAN_RUN_OT_LOOP_COMMANDS = 50;

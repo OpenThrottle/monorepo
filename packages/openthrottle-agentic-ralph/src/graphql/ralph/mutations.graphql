@@ -97,6 +97,17 @@ mutation appendPlanOutput($input: AppendPlanOutputInput!) {
   }
 }
 
+# The OT Loop job claims the plan inbox at each task boundary (docs/workflows/ot-loop-job.md § 9).
+mutation ralphClaimPlanMessages($input: ClaimPlanMessagesInput!) {
+  claimPlanMessages(input: $input) {
+    messages {
+      body
+      id
+      kind
+    }
+  }
+}
+
 mutation ralphStartWorkSession($input: StartWorkSessionInput!) {
   startWorkSession(input: $input) {
     id

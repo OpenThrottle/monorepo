@@ -3,6 +3,10 @@
  * Re-exports canonical helpers from the isomorphic `@openthrottle/openthrottle-plan-config` package.
  */
 
+import type {
+  PlanRunConfigOtLoop,
+  PlanRunConfigRunner,
+} from '@openthrottle/openthrottle-plan-config';
 import {
   getDefaultPlanRunConfigStorage,
   planRunConfigFromPlanStorage,
@@ -16,7 +20,11 @@ import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-w
 export interface PlanRunConfigUiState {
   readonly checkoutId: string;
   readonly iterationTimeoutText: string;
+  /** @description Carried through hydrate and serialize so a UI save keeps it. */
+  readonly otLoop?: PlanRunConfigOtLoop;
   readonly repositoryId: string;
+  /** @description Carried through hydrate and serialize so a UI save keeps it. */
+  readonly runner?: PlanRunConfigRunner;
   readonly workflowInput: WorkflowRalphRunOptionsInput;
   readonly workingDirectory: string;
 }
@@ -53,7 +61,9 @@ export const hydratePlanRunConfigUiState = (
     return {
       checkoutId: ui.checkoutId ?? '',
       iterationTimeoutText: ui.iterationTimeoutText,
+      ...(ui.otLoop !== undefined ? { otLoop: ui.otLoop } : {}),
       repositoryId: ui.repositoryId ?? '',
+      ...(ui.runner !== undefined ? { runner: ui.runner } : {}),
       workflowInput: {
         ...ui.workflowInput,
         iterationTimeoutSeconds: undefined,
@@ -87,7 +97,9 @@ export const serializePlanRunConfigUiState = (
   const {
     checkoutId,
     iterationTimeoutText,
+    otLoop,
     repositoryId,
+    runner,
     workflowInput,
     workingDirectory,
   } = state;
@@ -95,7 +107,9 @@ export const serializePlanRunConfigUiState = (
   const stored = planRunConfigFromWorkflowUiState({
     checkoutId,
     iterationTimeoutText,
+    ...(otLoop !== undefined ? { otLoop } : {}),
     repositoryId,
+    ...(runner !== undefined ? { runner } : {}),
     workflowInput: {
       debugCli: workflowInput.debugCli,
       effort: workflowInput.effort,

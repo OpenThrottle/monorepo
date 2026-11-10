@@ -48,6 +48,7 @@ import {
   finalizePlanRun,
   preparePlanRunPrDraftDir,
   shouldFinalizePlanRun,
+  shouldMarkPlanRunReady,
 } from '../utils/finalize-plan-run.ts';
 import {
   formatPlanAndTasksForPrompt,
@@ -701,6 +702,7 @@ export const createWorkflowRalphOrchestrator = (
             cwd: resolveOrchestratorAgentCwd(context),
             draftDir: prDraftDir,
             executeGraphqlV2,
+            markReady: shouldMarkPlanRunReady(result.reason),
             onChunk,
             planId: effectivePlanId,
             priorReason: result.reason,

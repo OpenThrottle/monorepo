@@ -47,9 +47,13 @@ import {
 } from '~/__generated__/schemas';
 import { toErrorMessage } from '~/global/utils/utils.error-message';
 import { parseJobRunHooksJsonFromPlan } from '~/routing/plans/utils/job-run-hooks-ui';
-import type { PlanRunPersistedSelection } from '~/routing/plans/utils/plan-run-form';
+import type {
+  PlanRunPersistedSelection,
+  PlanRunRunnerSelection,
+} from '~/routing/plans/utils/plan-run-form';
 import {
   mergePersistedSelectionIntoRunConfig,
+  mergeRunnerSelectionIntoRunConfig,
   parsePlanRunForm,
   parseScheduledFor,
 } from '~/routing/plans/utils/plan-run-form';
@@ -543,7 +547,7 @@ export const saveJobRunHooks = async (
 };
 
 /**
- * Writes the dialog's model/backend/effort to the plan's saved run config
+ * Writes the dialog's runner and model/backend/effort to the plan's saved run config
  * through the same `updatePlan.runConfigJson` mutation the Configuration tab's
  * save uses. Read-merge-write so nothing else in the saved config changes (and
  * `iterations`, a per-run override, never lands there). Skips the write when the
@@ -552,28 +556,50 @@ export const saveJobRunHooks = async (
 const persistPlanRunSelection = async (
   args: Route.ActionArgs,
   planId: string,
-  persisted: PlanRunPersistedSelection,
+  selection: {
+    readonly persisted: PlanRunPersistedSelection | undefined;
+    readonly runnerSelection: PlanRunRunnerSelection | undefined;
+  },
 ): Promise<string | undefined> => {
+  const { persisted, runnerSelection } = selection;
+
   try {
     const current = await executeGraphqlWithAuth(
       args.request,
       PlanDetailRunConfigDocument,
       { id: planId },
     );
-    const merged = mergePersistedSelectionIntoRunConfig({
-      persisted,
-      planId,
-      runConfigJson: current.plan?.runConfigJson,
-    });
+    let runConfigJson = current.plan?.runConfigJson;
+    let changed = false;
 
-    if (!merged.changed) {
+    if (persisted !== undefined) {
+      const merged = mergePersistedSelectionIntoRunConfig({
+        persisted,
+        planId,
+        runConfigJson,
+      });
+      runConfigJson = merged.runConfigJson;
+      changed = merged.changed;
+    }
+
+    if (runnerSelection !== undefined) {
+      const merged = mergeRunnerSelectionIntoRunConfig({
+        planId,
+        runConfigJson,
+        selection: runnerSelection,
+      });
+      runConfigJson = merged.runConfigJson;
+      changed = changed || merged.changed;
+    }
+
+    if (!changed || runConfigJson == null) {
       return undefined;
     }
 
     const result = await executeGraphqlWithAuth(
       args.request,
       PlanDetailUpdatePlanRunConfigDocument,
-      { input: { id: planId, runConfigJson: merged.runConfigJson } },
+      { input: { id: planId, runConfigJson } },
     );
 
     return result.updatePlan?.id
@@ -599,12 +625,8 @@ export const runPlan = async (
 
   // Persist BEFORE enqueuing so the run and the saved config agree. A failed
   // save stops here: enqueuing anyway would run a model the plan does not show.
-  if (parsed.persisted !== undefined) {
-    const persistError = await persistPlanRunSelection(
-      args,
-      planId,
-      parsed.persisted,
-    );
+  if (parsed.persisted !== undefined || parsed.runnerSelection !== undefined) {
+    const persistError = await persistPlanRunSelection(args, planId, parsed);
     if (persistError !== undefined) {
       return { runPlanError: persistError };
     }
@@ -674,12 +696,8 @@ export const schedulePlanRun = async (
     return { schedulePlanRunError: parsed.error };
   }
 
-  if (parsed.persisted !== undefined) {
-    const persistError = await persistPlanRunSelection(
-      args,
-      planId,
-      parsed.persisted,
-    );
+  if (parsed.persisted !== undefined || parsed.runnerSelection !== undefined) {
+    const persistError = await persistPlanRunSelection(args, planId, parsed);
     if (persistError !== undefined) {
       return { schedulePlanRunError: persistError };
     }

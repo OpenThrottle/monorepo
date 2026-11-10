@@ -29,6 +29,9 @@
       "path": "../../packages/openthrottle-agentic-ralph/tsconfig.lib.json"
     },
     {
+      "path": "../../packages/openthrottle-agentic-loop/tsconfig.lib.json"
+    },
+    {
       "path": "../../packages/nodejs-utils/tsconfig.lib.json"
     },
     {

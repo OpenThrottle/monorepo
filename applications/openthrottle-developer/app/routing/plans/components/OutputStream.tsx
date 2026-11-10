@@ -5,7 +5,9 @@
  * is hoisted into a separator that repeats only when the day changes, and the
  * full timestamp lives in the header's `title`/`dateTime` rather than on screen.
  * Each chunk compiles through its own {@link MarkdownRenderer} so one malformed
- * fragment cannot blank the whole stream.
+ * fragment cannot blank the whole stream. Task-tagged chunks (worker and validation output)
+ * are raw CLI text, so they render verbatim in a monospace `<pre>` instead of as Markdown, with
+ * the task named where its output starts.
  */
 import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import * as React from 'react';
@@ -15,21 +17,30 @@ import type { OutputStreamChunk } from '~/routing/plans/utils/output-stream-chun
 import {
   formatChunkTime,
   formatChunkTimestamp,
+  getTaskDisplayName,
+  getTaskRunStartIds,
   groupChunksByDay,
   toChunkDateTimeAttribute,
 } from '~/routing/plans/utils/output-stream-chunks';
 
 export interface OutputStreamProps {
   chunks: readonly OutputStreamChunk[];
+
+  /** @description Task titles by id, for labeling task-tagged chunks; an unknown id shows its short form. */
+  taskTitles?: ReadonlyMap<string, string>;
 }
 
 export const OutputStream = (props: OutputStreamProps): React.ReactElement => {
-  const { chunks } = props;
+  const { chunks, taskTitles } = props;
 
   // Hooks
 
   // Setup
   const groups = React.useMemo(() => groupChunksByDay(chunks), [chunks]);
+  const taskRunStarts = React.useMemo(
+    () => getTaskRunStartIds(chunks),
+    [chunks],
+  );
 
   // Handlers
 
@@ -76,10 +87,30 @@ export const OutputStream = (props: OutputStreamProps): React.ReactElement => {
                     )}
                   </span>
 
-                  <MarkdownRenderer
-                    className="text-muted-foreground min-w-0 text-xs"
-                    source={chunk.content}
-                  />
+                  {chunk.taskId == null && (
+                    <MarkdownRenderer
+                      className="text-muted-foreground min-w-0 text-xs"
+                      source={chunk.content}
+                    />
+                  )}
+                  {chunk.taskId != null && (
+                    <div className="min-w-0">
+                      {taskRunStarts.has(chunk.id) && (
+                        <p
+                          className="text-foreground/80 mb-0.5 text-[11px] font-medium"
+                          data-testid="OutputStream-task"
+                          title={OUTPUT_STREAM_COPY.taskTitle}
+                        >
+                          {OUTPUT_STREAM_COPY.taskLabel(
+                            getTaskDisplayName(chunk.taskId, taskTitles),
+                          )}
+                        </p>
+                      )}
+                      <pre className="text-muted-foreground font-mono text-xs break-words whitespace-pre-wrap">
+                        {chunk.content}
+                      </pre>
+                    </div>
+                  )}
                 </li>
               );
             })}

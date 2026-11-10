@@ -886,6 +886,7 @@ export function EnqueuePlanRalphOrchestratorInputSchema(): z.ZodObject<
     priority: z.number().nullish(),
     ralph: z.lazy(() => RalphPlanRunTuningInputSchema().nullish()),
     repositoryId: z.string().nullish(),
+    runner: z.string().nullish(),
     taskId: z.string().nullish(),
     workingDirectory: z.string().nullish(),
   });
@@ -904,6 +905,7 @@ export function EnqueuePlanRunInputSchema(): z.ZodObject<
     priority: z.number().nullish(),
     ralph: z.lazy(() => RalphPlanRunTuningInputSchema().nullish()),
     repositoryId: z.string().nullish(),
+    runner: z.string().nullish(),
     workingDirectory: z.string().nullish(),
   });
 }
@@ -1662,6 +1664,7 @@ export function SchedulePlanRunInputSchema(): z.ZodObject<
     ralph: z.lazy(() => RalphPlanRunTuningInputSchema().nullish()),
     replaceScheduled: z.boolean().nullish(),
     repositoryId: z.string().nullish(),
+    runner: z.string().nullish(),
     scheduledFor: definedNonNullAnySchema,
     workingDirectory: z.string().nullish(),
   });

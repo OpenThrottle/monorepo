@@ -11,6 +11,7 @@ import { PlanWorkflowCommand } from '~/routing/plans/components/PlanWorkflowComm
 import { PlanWorkflowConfigExecution } from '~/routing/plans/components/PlanWorkflowConfigExecution';
 import { PlanWorkflowConfigHooks } from '~/routing/plans/components/PlanWorkflowConfigHooks';
 import { PlanWorkflowConfigPrompt } from '~/routing/plans/components/PlanWorkflowConfigPrompt';
+import { PlanWorkflowConfigRunner } from '~/routing/plans/components/PlanWorkflowConfigRunner';
 import { PlanWorkflowConfigTarget } from '~/routing/plans/components/PlanWorkflowConfigTarget';
 import { PlanWorkflowConfigTuning } from '~/routing/plans/components/PlanWorkflowConfigTuning';
 import { PlanWorkflowConfigWorkspaceSelector } from '~/routing/plans/components/PlanWorkflowConfigWorkspaceSelector';
@@ -109,7 +110,6 @@ export const PlanTabConfiguration = (
   // Setup
 
   // Handlers
-  // (Run target: PlanWorkflowConfigTarget)
 
   // Markup
 
@@ -142,6 +142,7 @@ export const PlanTabConfiguration = (
               input={input}
               setInput={setInput}
             />
+            <PlanWorkflowConfigRunner heading="Runner" />
 
             <PlanWorkflowConfigWorkspaceSelector
               branch={branch}

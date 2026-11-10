@@ -7,6 +7,8 @@
 import {
   DEFAULT_PLAN_RUN_RALPH_RUNNER,
   type PlanJobRunHooksStorage,
+  type PlanRunConfigOtLoop,
+  type PlanRunConfigRunner,
 } from '@openthrottle/nestjs-repositories';
 import {
   CONVERSATION_REASONING_EFFORTS,
@@ -354,9 +356,11 @@ export const buildRunPlanOrchestratorJobData = (input: {
   readonly jobRunHooksJson?: string | null;
   readonly materializedHookEntries?: readonly JobRunHookEntry[];
   readonly mode?: 'plan' | 'task' | null;
+  readonly otLoop?: PlanRunConfigOtLoop | null;
   readonly planId: string;
   readonly planJobRunHooks?: PlanJobRunHooksStorage | null;
   readonly ralph?: RalphPlanRunTuningInput | null;
+  readonly runner?: PlanRunConfigRunner | null;
   readonly taskId?: string | null;
   readonly workingDirectory?: string | null;
 }): RunPlanOrchestratorJobData => {
@@ -377,6 +381,10 @@ export const buildRunPlanOrchestratorJobData = (input: {
     }),
   );
   const jobRunHooksSpread = jobRunHooks !== undefined ? { jobRunHooks } : {};
+  const runnerSpread = {
+    ...(input.otLoop != null ? { otLoop: input.otLoop } : {}),
+    ...(input.runner != null ? { runner: input.runner } : {}),
+  };
 
   if (mode === 'task') {
     if (taskRaw === '') {
@@ -396,6 +404,7 @@ export const buildRunPlanOrchestratorJobData = (input: {
       mode: 'task',
       planId,
       ...jobRunHooksSpread,
+      ...runnerSpread,
       ralph,
       runKind: 'orchestrator',
       taskId: taskRaw,
@@ -418,6 +427,7 @@ export const buildRunPlanOrchestratorJobData = (input: {
     planId,
     runKind: 'orchestrator',
     ...jobRunHooksSpread,
+    ...runnerSpread,
     ...(mode === 'plan' ? { mode: 'plan' } : {}),
     ralph,
     ...(workingDirectory !== undefined ? { workingDirectory } : {}),

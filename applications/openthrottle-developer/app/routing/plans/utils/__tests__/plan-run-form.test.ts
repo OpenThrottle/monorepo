@@ -6,6 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import {
   mergePersistedSelectionIntoRunConfig,
+  mergeRunnerSelectionIntoRunConfig,
   overlayPlanRunTuning,
   parsePlanRunForm,
   parseScheduledFor,
@@ -242,5 +243,143 @@ describe('parseScheduledFor', () => {
       error: 'The scheduled start time is not a valid date and time.',
       success: false,
     });
+  });
+});
+
+describe('parsePlanRunForm runner', () => {
+  const base = { branch: 'feat/x' };
+
+  test('sends no runner and persists nothing when the form carries none', () => {
+    const parsed = parsePlanRunForm(form(base));
+
+    expect(parsed).toMatchObject({ runnerSelection: undefined, success: true });
+    expect(parsed.success && parsed.fields).not.toHaveProperty('runner');
+  });
+
+  test('OT Loop reaches the enqueue fields and the persisted selection, trimmed', () => {
+    const parsed = parsePlanRunForm(
+      form({
+        ...base,
+        otLoopMaxRetries: '4',
+        otLoopValidationCommands: ' pnpm test \n\n  pnpm lint  ',
+        runner: 'ot-loop',
+      }),
+    );
+
+    expect(parsed).toMatchObject({
+      fields: { runner: 'ot-loop' },
+      runnerSelection: {
+        otLoop: {
+          maxRetries: 4,
+          validationCommands: ['pnpm test', 'pnpm lint'],
+        },
+        runner: 'ot-loop',
+      },
+      success: true,
+    });
+  });
+
+  test('Ralph carries no OT Loop edit', () => {
+    expect(
+      parsePlanRunForm(
+        form({ ...base, otLoopMaxRetries: '4', runner: 'ralph' }),
+      ),
+    ).toMatchObject({
+      fields: { runner: 'ralph' },
+      runnerSelection: { otLoop: undefined, runner: 'ralph' },
+    });
+  });
+
+  test.each([
+    [{ runner: 'turbo' }, 'Unknown runner "turbo".'],
+    [
+      { otLoopMaxRetries: '6', runner: 'ot-loop' },
+      'Retries must be a whole number from 0 to 5.',
+    ],
+    [
+      { otLoopMaxRetries: '1.5', runner: 'ot-loop' },
+      'Retries must be a whole number from 0 to 5.',
+    ],
+  ])('rejects %j', (extra, error) => {
+    expect(parsePlanRunForm(form({ ...base, ...extra }))).toEqual({
+      error,
+      success: false,
+    });
+  });
+});
+
+describe('mergeRunnerSelectionIntoRunConfig', () => {
+  const stored = (extra: Record<string, unknown> = {}): string => {
+    return serializePlanRunConfigForGraphql(
+      { ...getDefaultPlanRunConfigStorage({ planId }), ...extra },
+      { planId },
+    );
+  };
+
+  test('writes OT Loop and merges the edited fields, keeping setup commands', () => {
+    const merged = mergeRunnerSelectionIntoRunConfig({
+      planId,
+      runConfigJson: stored({
+        otLoop: { setupCommands: ['pnpm i'], validationCommands: ['old'] },
+        runner: 'ot-loop',
+      }),
+      selection: {
+        otLoop: { maxRetries: 1, validationCommands: ['new'] },
+        runner: 'ot-loop',
+      },
+    });
+
+    expect(merged.changed).toBe(true);
+    expect(JSON.parse(merged.runConfigJson)).toMatchObject({
+      otLoop: {
+        maxRetries: 1,
+        setupCommands: ['pnpm i'],
+        validationCommands: ['new'],
+      },
+      runner: 'ot-loop',
+    });
+  });
+
+  test('an empty list and blank retries clear their keys', () => {
+    const merged = mergeRunnerSelectionIntoRunConfig({
+      planId,
+      runConfigJson: stored({
+        otLoop: { maxRetries: 2, validationCommands: ['old'] },
+        runner: 'ot-loop',
+      }),
+      selection: {
+        otLoop: { maxRetries: undefined, validationCommands: [] },
+        runner: 'ot-loop',
+      },
+    });
+
+    expect(JSON.parse(merged.runConfigJson)).not.toHaveProperty('otLoop');
+  });
+
+  test('Ralph removes the runner key and leaves the stored otLoop alone', () => {
+    const merged = mergeRunnerSelectionIntoRunConfig({
+      planId,
+      runConfigJson: stored({
+        otLoop: { validationCommands: ['keep'] },
+        runner: 'ot-loop',
+      }),
+      selection: { otLoop: undefined, runner: 'ralph' },
+    });
+
+    expect(merged.changed).toBe(true);
+    expect(JSON.parse(merged.runConfigJson)).not.toHaveProperty('runner');
+    expect(JSON.parse(merged.runConfigJson)).toMatchObject({
+      otLoop: { validationCommands: ['keep'] },
+    });
+  });
+
+  test('reports no change when the saved config already holds the choice', () => {
+    expect(
+      mergeRunnerSelectionIntoRunConfig({
+        planId,
+        runConfigJson: stored(),
+        selection: { otLoop: undefined, runner: 'ralph' },
+      }).changed,
+    ).toBe(false);
   });
 });

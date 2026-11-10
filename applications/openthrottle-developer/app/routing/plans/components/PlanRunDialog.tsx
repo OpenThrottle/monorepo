@@ -178,6 +178,7 @@ export const PlanRunDialog = (
             onIterationsChange={dialog.onIterationsChange}
             onModelChange={dialog.onModelChange}
             planIterations={dialog.planIterations}
+            {...dialog.runnerSettings}
           />
 
           <PlanRunDialogWorkspace

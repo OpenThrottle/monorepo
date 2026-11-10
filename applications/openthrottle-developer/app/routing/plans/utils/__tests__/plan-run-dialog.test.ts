@@ -44,6 +44,43 @@ describe('plan-run-dialog utils', () => {
     });
   });
 
+  describe('createPlanRunDialogDraft runner', () => {
+    const draftFor = (runConfigJson: string) => {
+      return createPlanRunDialogDraft({
+        mode: 'run',
+        now: NOW,
+        planId: 'plan-1',
+        runConfigJson,
+        scheduledRunAt: null,
+      });
+    };
+
+    test('defaults to Ralph with empty OT Loop fields when the plan names no runner', () => {
+      expect(draftFor(buildPlanRunConfigJson())).toMatchObject({
+        otLoopMaxRetriesText: '',
+        otLoopValidationText: '',
+        runner: 'ralph',
+      });
+    });
+
+    test('hydrates OT Loop, its commands one per line, and its retries', () => {
+      const stored = JSON.parse(buildPlanRunConfigJson());
+      const draft = draftFor(
+        JSON.stringify({
+          ...stored,
+          otLoop: { maxRetries: 1, validationCommands: ['a', 'b'] },
+          runner: 'ot-loop',
+        }),
+      );
+
+      expect(draft).toMatchObject({
+        otLoopMaxRetriesText: '1',
+        otLoopValidationText: 'a\nb',
+        runner: 'ot-loop',
+      });
+    });
+  });
+
   describe('createPlanRunDialogDraft', () => {
     test('reads backend, model, effort and iterations from the plan', () => {
       const draft = createPlanRunDialogDraft({
@@ -223,6 +260,7 @@ describe('plan-run-dialog utils', () => {
         iterations: '4',
         model: 'opus',
         ralphTuning: '{"iterations":2}',
+        runner: 'ralph',
       });
     });
 
@@ -236,6 +274,45 @@ describe('plan-run-dialog utils', () => {
         intent: 'schedulePlanRun',
         scheduledFor: '2026-11-02T23:00:00.000Z',
       });
+    });
+
+    test('OT Loop sends the runner and its fields and drops iterations', () => {
+      const fields = buildPlanRunDialogFields({
+        ...base,
+        draft: {
+          ...draft,
+          otLoopMaxRetriesText: '3',
+          otLoopValidationText: `  pnpm nx run a:test \n\n pnpm nx run a:lint\n`,
+          runner: 'ot-loop',
+        },
+      });
+
+      expect(fields).toMatchObject({
+        otLoopMaxRetries: '3',
+        otLoopValidationCommands: 'pnpm nx run a:test\npnpm nx run a:lint',
+        runner: 'ot-loop',
+      });
+      expect(fields).not.toHaveProperty('iterations');
+    });
+
+    test('OT Loop leaves blank retries and an empty validation list out', () => {
+      const fields = buildPlanRunDialogFields({
+        ...base,
+        draft: { ...draft, runner: 'ot-loop' },
+      });
+
+      expect(fields).not.toHaveProperty('otLoopMaxRetries');
+      expect(fields).not.toHaveProperty('otLoopValidationCommands');
+    });
+
+    test('Ralph never sends the OT Loop fields', () => {
+      const fields = buildPlanRunDialogFields({
+        ...base,
+        draft: { ...draft, otLoopMaxRetriesText: '3', runner: 'ralph' },
+      });
+
+      expect(fields).not.toHaveProperty('otLoopMaxRetries');
+      expect(fields).toHaveProperty('iterations', '4');
     });
 
     test('omits iterations when blank and effort when unset', () => {

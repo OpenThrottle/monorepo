@@ -84,4 +84,29 @@ describe('buildPlanRunConfigSnapshot', () => {
 
     expect(parsePlanRunConfigSnapshot(built)).toEqual(built);
   });
+
+  test('carries runner and otLoop and round-trips them through the schema', () => {
+    const built = buildPlanRunConfigSnapshot({
+      executionBackend: 'claude',
+      otLoop: { maxRetries: 2, validationCommands: ['pnpm nx run x:test'] },
+      runner: 'ot-loop',
+    });
+
+    expect(built.runner).toBe('ot-loop');
+    expect(built.otLoop).toEqual({
+      maxRetries: 2,
+      validationCommands: ['pnpm nx run x:test'],
+    });
+    expect(parsePlanRunConfigSnapshot(built)).toEqual(built);
+  });
+
+  test('omits runner and otLoop when unset and rejects a bad runner', () => {
+    const built = buildPlanRunConfigSnapshot({ executionBackend: 'cursor' });
+
+    expect(built).not.toHaveProperty('runner');
+    expect(built).not.toHaveProperty('otLoop');
+    expect(() =>
+      parsePlanRunConfigSnapshot({ ...built, runner: 'other' }),
+    ).toThrow();
+  });
 });
