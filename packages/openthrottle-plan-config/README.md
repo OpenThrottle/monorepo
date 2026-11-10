@@ -18,8 +18,9 @@ A plan run enqueued with no explicit configuration gets:
 | Iterations | `10`                             | `DEFAULT_PLAN_RUN_RALPH_ITERATIONS`                                  |
 | Prompt     | `/agents-ralph`                  | `DEFAULT_PLAN_RUN_RALPH_PROMPT`                                      |
 
-`cursor` stays the backend default deliberately: Claude requires a different payment model for
-unattended programmatic invocation, so the queue must not silently route to it.
+Plans that leave the backend unset inherit `cursor`. Claude runs on the same host after
+`claude auth login` and bills that subscription; set it per plan with `ralph.executionBackend`
+(Settings → the plan's Configuration tab).
 
 A blank `worktreeName` means "derive it at enqueue", not "no worktree". To opt out per plan, set
 `ralph.worktreeCli` to `'omit'` (Settings → the plan's Configuration tab → Worktree → _Off_); an
