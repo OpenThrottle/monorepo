@@ -33,7 +33,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 
 // packages/agentic-hooks/src/adapters/codex/complete.ts
-var import_node_fs6 = __toESM(require("node:fs"), 1);
+var import_node_fs7 = __toESM(require("node:fs"), 1);
 
 // packages/agentic-hooks/src/data/jsonl.ts
 var import_node_fs2 = __toESM(require("node:fs"), 1);
@@ -414,22 +414,48 @@ var isRecord = (value) => {
 };
 
 // packages/agentic-hooks/src/utils/scope.ts
-var import_node_fs3 = __toESM(require("node:fs"), 1);
+var import_node_fs4 = __toESM(require("node:fs"), 1);
 var import_node_os2 = __toESM(require("node:os"), 1);
+var import_node_path4 = __toESM(require("node:path"), 1);
+
+// packages/agentic-hooks/src/utils/checkout-root.ts
+var import_node_fs3 = __toESM(require("node:fs"), 1);
 var import_node_path3 = __toESM(require("node:path"), 1);
+var findGitAncestor = (dir) => {
+  if (import_node_fs3.default.existsSync(import_node_path3.default.join(dir, ".git"))) {
+    return dir;
+  }
+  const parent = import_node_path3.default.dirname(dir);
+  if (parent === dir) {
+    return null;
+  }
+  return findGitAncestor(parent);
+};
+var resolveCheckoutRoot = (dir) => {
+  if (dir === null || dir === "" || !import_node_path3.default.isAbsolute(dir)) {
+    return null;
+  }
+  try {
+    return findGitAncestor(import_node_path3.default.resolve(dir));
+  } catch {
+    return null;
+  }
+};
+
+// packages/agentic-hooks/src/utils/scope.ts
 var PERSONAL_SKILLS_DIR_ENV = "OPENTHROTTLE_PERSONAL_SKILLS_DIR";
-var SKILL_LINK_DIR = import_node_path3.default.join(".agents", "skills");
+var SKILL_LINK_DIR = import_node_path4.default.join(".agents", "skills");
 var resolvePersonalSkillsRoot = (env) => {
   const override = env[PERSONAL_SKILLS_DIR_ENV]?.trim();
   if (override !== void 0 && override !== "") {
     return override;
   }
-  return import_node_path3.default.join(import_node_os2.default.homedir(), ".openthrottle", "skills");
+  return import_node_path4.default.join(import_node_os2.default.homedir(), ".openthrottle", "skills");
 };
 var isPathInsideRoot = (root, candidate) => {
   try {
-    const realRoot = import_node_fs3.default.realpathSync(root);
-    return import_node_fs3.default.realpathSync(candidate).startsWith(`${realRoot}${import_node_path3.default.sep}`);
+    const realRoot = import_node_fs4.default.realpathSync(root);
+    return import_node_fs4.default.realpathSync(candidate).startsWith(`${realRoot}${import_node_path4.default.sep}`);
   } catch {
     return false;
   }
@@ -438,16 +464,28 @@ var isPersonalSkill = (skillName, repoRoot, env) => {
   const personalRoot = resolvePersonalSkillsRoot(env);
   return isPathInsideRoot(
     personalRoot,
-    import_node_path3.default.join(repoRoot, SKILL_LINK_DIR, skillName)
+    import_node_path4.default.join(repoRoot, SKILL_LINK_DIR, skillName)
   );
+};
+var isInjectedSkill = (skillName, repoRoot) => {
+  const target = import_node_fs4.default.realpathSync(
+    import_node_path4.default.join(repoRoot, SKILL_LINK_DIR, skillName)
+  );
+  const sourceRoot = resolveCheckoutRoot(target);
+  if (sourceRoot === null) {
+    return false;
+  }
+  const isAuthoredDir = target === import_node_path4.default.join(sourceRoot, "skills", skillName);
+  const ownRoot = resolveCheckoutRoot(import_node_fs4.default.realpathSync(repoRoot));
+  return isAuthoredDir && sourceRoot !== ownRoot;
 };
 var detectScope = (skillName, repoRoot, env = process.env) => {
   if (!skillName || skillName.includes(":")) {
     return "third-party";
   }
-  const authoredDir = import_node_path3.default.join(repoRoot, "skills", skillName);
+  const authoredDir = import_node_path4.default.join(repoRoot, "skills", skillName);
   try {
-    if (import_node_fs3.default.existsSync(authoredDir) && import_node_fs3.default.statSync(authoredDir).isDirectory()) {
+    if (import_node_fs4.default.existsSync(authoredDir) && import_node_fs4.default.statSync(authoredDir).isDirectory()) {
       return "ours";
     }
   } catch {
@@ -455,6 +493,12 @@ var detectScope = (skillName, repoRoot, env = process.env) => {
   try {
     if (isPersonalSkill(skillName, repoRoot, env)) {
       return "personal";
+    }
+  } catch {
+  }
+  try {
+    if (isInjectedSkill(skillName, repoRoot)) {
+      return "injected";
     }
   } catch {
   }
@@ -491,6 +535,7 @@ var buildOutcomeEvent = ({
   skillName,
   outcome,
   repoRoot,
+  deliberate = false,
   sessionId = null,
   toolUseId = null,
   durationMs = null,
@@ -525,6 +570,9 @@ var buildOutcomeEvent = ({
   };
   if (source != null) {
     event.source = source;
+  }
+  if (deliberate) {
+    event.deliberate = true;
   }
   return event;
 };
@@ -598,6 +646,9 @@ var toRecordSkillUsageOutcomeInput = (event) => {
   }
   if (event.duration_ms != null) {
     input.durationMs = event.duration_ms;
+  }
+  if (event.deliberate === true) {
+    input.deliberate = true;
   }
   return input;
 };
@@ -734,11 +785,11 @@ var postGraphqlMutationNode = async (args) => {
 };
 
 // packages/agentic-hooks/src/data/persist.ts
-var import_node_fs5 = __toESM(require("node:fs"), 1);
-var import_node_path4 = __toESM(require("node:path"), 1);
+var import_node_fs6 = __toESM(require("node:fs"), 1);
+var import_node_path5 = __toESM(require("node:path"), 1);
 
 // packages/agentic-hooks/src/data/starts.ts
-var import_node_fs4 = __toESM(require("node:fs"), 1);
+var import_node_fs5 = __toESM(require("node:fs"), 1);
 var listStartsForSession = ({
   sessionId,
   startsDir
@@ -750,10 +801,10 @@ var listStartsForSession = ({
     }
     const dir = startsDir || defaultStartsDir();
     const filePath = startsFilePathForSession(dir, sid);
-    if (!import_node_fs4.default.existsSync(filePath)) {
+    if (!import_node_fs5.default.existsSync(filePath)) {
       return [];
     }
-    const text = import_node_fs4.default.readFileSync(filePath, "utf8");
+    const text = import_node_fs5.default.readFileSync(filePath, "utf8");
     const out = [];
     for (const line of text.split("\n")) {
       const trimmed = line.trim();
@@ -786,7 +837,7 @@ var drainStartsForSession = ({
     }
     const dir = startsDir || defaultStartsDir();
     const filePath = startsFilePathForSession(dir, sid);
-    if (!import_node_fs4.default.existsSync(filePath)) {
+    if (!import_node_fs5.default.existsSync(filePath)) {
       return 0;
     }
     const entries = listStartsForSession({
@@ -794,7 +845,7 @@ var drainStartsForSession = ({
       startsDir: dir
     });
     if (!resolvedKeys) {
-      import_node_fs4.default.rmSync(filePath, { force: true });
+      import_node_fs5.default.rmSync(filePath, { force: true });
       return entries.length;
     }
     const keep = [];
@@ -807,9 +858,9 @@ var drainStartsForSession = ({
       }
     }
     if (keep.length === 0) {
-      import_node_fs4.default.rmSync(filePath, { force: true });
+      import_node_fs5.default.rmSync(filePath, { force: true });
     } else {
-      import_node_fs4.default.writeFileSync(
+      import_node_fs5.default.writeFileSync(
         filePath,
         `${keep.map((e) => JSON.stringify(e)).join("\n")}
 `,
@@ -1030,6 +1081,10 @@ var completeOpenStartsForSession = async ({
       const key = startCorrelationKey(start);
       const durationMs = null;
       const event = buildOutcomeEvent({
+        // `error` here is a harness-observed failure relayed by an adapter
+        // (e.g. a final_status), an honest signal, so it declares itself.
+        // `session_ended` makes no quality claim and needs no declaration.
+        deliberate: outcome === SKILL_USAGE_OUTCOMES.ERROR,
         durationMs,
         outcome,
         repoRoot,
@@ -1081,7 +1136,7 @@ var sweepAbandonedStarts = async ({
   const dir = startsDir || defaultStartsDir();
   let files;
   try {
-    files = import_node_fs5.default.readdirSync(dir);
+    files = import_node_fs6.default.readdirSync(dir);
   } catch {
     return { swept: 0 };
   }
@@ -1095,10 +1150,10 @@ var sweepAbandonedStarts = async ({
     if (!file.endsWith(".jsonl") || file === currentFile) {
       continue;
     }
-    const filePath = import_node_path4.default.join(dir, file);
+    const filePath = import_node_path5.default.join(dir, file);
     let mtimeMs;
     try {
-      mtimeMs = import_node_fs5.default.statSync(filePath).mtimeMs;
+      mtimeMs = import_node_fs6.default.statSync(filePath).mtimeMs;
     } catch {
       continue;
     }
@@ -1268,7 +1323,7 @@ var normalizeCodexSessionEndPayload = (raw) => {
 var main = async () => {
   try {
     const repoRoot = process.env.OPEN_THROTTLE_REPO_ROOT || process.cwd();
-    const stdinBuf = import_node_fs6.default.readFileSync(0, "utf8");
+    const stdinBuf = import_node_fs7.default.readFileSync(0, "utf8");
     if (!stdinBuf || !stdinBuf.trim()) {
       return;
     }

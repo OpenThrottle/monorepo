@@ -61,6 +61,7 @@ const skillUsageResponse = {
     byDay: [
       {
         date: '2026-01-01',
+        injectedCount: 0,
         oursCount: 1,
         thirdPartyCount: 0,
         totalCount: 1,

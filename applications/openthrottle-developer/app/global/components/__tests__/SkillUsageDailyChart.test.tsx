@@ -30,6 +30,7 @@ describe('SkillUsageDailyChart Component', () => {
       data: [
         {
           date: '2026-07-15',
+          injectedCount: 0,
           oursCount: 2,
           personalCount: 3,
           thirdPartyCount: 1,

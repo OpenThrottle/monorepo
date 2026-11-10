@@ -39,6 +39,7 @@ export * from './data/token-usage.ts';
 export * from './data/trajectories.ts';
 export * from './data/trajectory-uploads.ts';
 export * from './types.ts';
+export * from './utils/checkout-root.ts';
 export * from './utils/logging.ts';
 export * from './utils/privacy.ts';
 export * from './utils/scope.ts';

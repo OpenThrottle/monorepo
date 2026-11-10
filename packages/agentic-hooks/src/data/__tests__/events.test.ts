@@ -166,6 +166,18 @@ describe('buildOutcomeEvent', () => {
     expect(event?.duration_ms).toBeNull();
   });
 
+  it('declares a deliberate reporter only when asked', () => {
+    const base = {
+      outcome: SKILL_USAGE_OUTCOMES.SUCCESS,
+      repoRoot: tmpRoot,
+      skillName: 'ot-plans',
+    };
+    expect(buildOutcomeEvent(base)?.deliberate).toBeUndefined();
+    expect(buildOutcomeEvent({ ...base, deliberate: true })?.deliberate).toBe(
+      true,
+    );
+  });
+
   it('rejects invalid outcome values', () => {
     expect(
       buildOutcomeEvent({
@@ -204,5 +216,14 @@ describe('toRecordSkillUsageOutcomeInput', () => {
       skillName: 'ot-plans',
       toolUseId: 'tool-1',
     });
+  });
+
+  it('omits deliberate unless the event declares it', () => {
+    expect(toRecordSkillUsageOutcomeInput(sampleOutcome)).not.toHaveProperty(
+      'deliberate',
+    );
+    expect(
+      toRecordSkillUsageOutcomeInput({ ...sampleOutcome, deliberate: true }),
+    ).toMatchObject({ deliberate: true });
   });
 });

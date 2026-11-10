@@ -267,7 +267,17 @@ export class SkillUsageEventsService {
   async recordSkillUsageOutcome(
     input: RecordSkillUsageOutcomeInput,
   ): Promise<SkillUsageOutcome> {
+    const makesQualityClaim =
+      input.outcome === SKILL_USAGE_OUTCOMES.SUCCESS ||
+      input.outcome === SKILL_USAGE_OUTCOMES.ERROR;
+    // Set explicitly: the column DEFAULT is `reported_v1`, so leaving it to
+    // the database would stamp a stale hook's hardcoded success as a report.
+    const isUndeclaredClaim = makesQualityClaim && input.deliberate !== true;
+    const captureModel = isUndeclaredClaim
+      ? SKILL_USAGE_CAPTURE_MODELS.LEGACY_ASSUMED_SUCCESS
+      : SKILL_USAGE_CAPTURE_MODELS.REPORTED_V1;
     const row = this.outcomesRepository.create({
+      captureModel,
       cwd: input.cwd ?? null,
       durationMs: input.durationMs ?? null,
       gitBranch: input.gitBranch ?? null,
@@ -289,7 +299,7 @@ export class SkillUsageEventsService {
 
   /**
    * Aggregated skill usage over `[start, end]` (inclusive days, UTC): top
-   * skills (with opt-in outcome stats), the ours / personal / third-party split, per-day
+   * skills (with opt-in outcome stats), the ours / injected / personal / third-party split, per-day
    * series, and filter option lists. Branch/cwd filters apply to the
    * aggregates; filterOptions are computed over the same date range without
    * those two filters so the dropdowns stay populated while a filter is active.
@@ -394,6 +404,7 @@ export class SkillUsageEventsService {
 
     return rows.map((row) => ({
       date: String(row.date),
+      injectedCount: toNumber(row[SKILL_USAGE_SCOPE_COUNT_KEYS.injected]),
       oursCount: toNumber(row[SKILL_USAGE_SCOPE_COUNT_KEYS.ours]),
       personalCount: toNumber(row[SKILL_USAGE_SCOPE_COUNT_KEYS.personal]),
       thirdPartyCount: toNumber(

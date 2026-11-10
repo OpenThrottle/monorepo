@@ -33,7 +33,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 
 // packages/agentic-hooks/src/adapters/claude/outcome.ts
-var import_node_path4 = __toESM(require("node:path"), 1);
+var import_node_path5 = __toESM(require("node:path"), 1);
 
 // packages/agentic-hooks/src/data/jsonl.ts
 var import_node_fs2 = __toESM(require("node:fs"), 1);
@@ -185,6 +185,7 @@ var resolveAuthToken = (repoRoot, options) => {
 // packages/agentic-hooks/src/data/jsonl.ts
 var TELEMETRY_DIR_BASENAME = "skill-usage";
 var OUTCOMES_JSONL_BASENAME = "outcomes.jsonl";
+var STARTS_DIR_BASENAME = "starts";
 var resolveTelemetryDir = () => {
   return process.env.OPENTHROTTLE_TELEMETRY_DIR?.trim() || import_node_path2.default.join(userConfigDir(), TELEMETRY_DIR_BASENAME);
 };
@@ -196,6 +197,23 @@ var appendJsonl = (jsonlPath, event) => {
 var defaultOutcomesJsonlPath = () => {
   return import_node_path2.default.join(resolveTelemetryDir(), OUTCOMES_JSONL_BASENAME);
 };
+var defaultStartsDir = () => {
+  return import_node_path2.default.join(resolveTelemetryDir(), STARTS_DIR_BASENAME);
+};
+var sanitizeSessionId = (sessionId) => {
+  return String(sessionId).replace(/[^A-Za-z0-9._-]/g, "-");
+};
+var startsFilePathForSession = (startsDir, sessionId) => {
+  return import_node_path2.default.join(startsDir, `${sanitizeSessionId(sessionId)}.jsonl`);
+};
+var startCorrelationKey = (entry) => {
+  const sid = typeof entry?.session_id === "string" ? entry.session_id : "";
+  const skill = typeof entry?.skill_name === "string" ? entry.skill_name : "";
+  const toolUseId = typeof entry?.tool_use_id === "string" ? entry.tool_use_id : "";
+  const startedAt = typeof entry?.started_at === "string" ? entry.started_at : "";
+  const disc = toolUseId || startedAt;
+  return `${sid}::${skill}::${disc}`;
+};
 
 // packages/nodejs-utils/src/utils/is-record.ts
 var isRecord = (value) => {
@@ -203,22 +221,54 @@ var isRecord = (value) => {
 };
 
 // packages/agentic-hooks/src/utils/scope.ts
-var import_node_fs3 = __toESM(require("node:fs"), 1);
+var import_node_fs4 = __toESM(require("node:fs"), 1);
 var import_node_os2 = __toESM(require("node:os"), 1);
+var import_node_path4 = __toESM(require("node:path"), 1);
+
+// packages/agentic-hooks/src/utils/checkout-root.ts
+var import_node_fs3 = __toESM(require("node:fs"), 1);
 var import_node_path3 = __toESM(require("node:path"), 1);
+var findGitAncestor = (dir) => {
+  if (import_node_fs3.default.existsSync(import_node_path3.default.join(dir, ".git"))) {
+    return dir;
+  }
+  const parent = import_node_path3.default.dirname(dir);
+  if (parent === dir) {
+    return null;
+  }
+  return findGitAncestor(parent);
+};
+var resolveCheckoutRoot = (dir) => {
+  if (dir === null || dir === "" || !import_node_path3.default.isAbsolute(dir)) {
+    return null;
+  }
+  try {
+    return findGitAncestor(import_node_path3.default.resolve(dir));
+  } catch {
+    return null;
+  }
+};
+var resolveHookRepoRoot = ({
+  payloadCwd,
+  projectDir
+}) => {
+  return resolveCheckoutRoot(projectDir) ?? resolveCheckoutRoot(payloadCwd) ?? projectDir;
+};
+
+// packages/agentic-hooks/src/utils/scope.ts
 var PERSONAL_SKILLS_DIR_ENV = "OPENTHROTTLE_PERSONAL_SKILLS_DIR";
-var SKILL_LINK_DIR = import_node_path3.default.join(".agents", "skills");
+var SKILL_LINK_DIR = import_node_path4.default.join(".agents", "skills");
 var resolvePersonalSkillsRoot = (env) => {
   const override = env[PERSONAL_SKILLS_DIR_ENV]?.trim();
   if (override !== void 0 && override !== "") {
     return override;
   }
-  return import_node_path3.default.join(import_node_os2.default.homedir(), ".openthrottle", "skills");
+  return import_node_path4.default.join(import_node_os2.default.homedir(), ".openthrottle", "skills");
 };
 var isPathInsideRoot = (root, candidate) => {
   try {
-    const realRoot = import_node_fs3.default.realpathSync(root);
-    return import_node_fs3.default.realpathSync(candidate).startsWith(`${realRoot}${import_node_path3.default.sep}`);
+    const realRoot = import_node_fs4.default.realpathSync(root);
+    return import_node_fs4.default.realpathSync(candidate).startsWith(`${realRoot}${import_node_path4.default.sep}`);
   } catch {
     return false;
   }
@@ -227,16 +277,28 @@ var isPersonalSkill = (skillName, repoRoot, env) => {
   const personalRoot = resolvePersonalSkillsRoot(env);
   return isPathInsideRoot(
     personalRoot,
-    import_node_path3.default.join(repoRoot, SKILL_LINK_DIR, skillName)
+    import_node_path4.default.join(repoRoot, SKILL_LINK_DIR, skillName)
   );
+};
+var isInjectedSkill = (skillName, repoRoot) => {
+  const target = import_node_fs4.default.realpathSync(
+    import_node_path4.default.join(repoRoot, SKILL_LINK_DIR, skillName)
+  );
+  const sourceRoot = resolveCheckoutRoot(target);
+  if (sourceRoot === null) {
+    return false;
+  }
+  const isAuthoredDir = target === import_node_path4.default.join(sourceRoot, "skills", skillName);
+  const ownRoot = resolveCheckoutRoot(import_node_fs4.default.realpathSync(repoRoot));
+  return isAuthoredDir && sourceRoot !== ownRoot;
 };
 var detectScope = (skillName, repoRoot, env = process.env) => {
   if (!skillName || skillName.includes(":")) {
     return "third-party";
   }
-  const authoredDir = import_node_path3.default.join(repoRoot, "skills", skillName);
+  const authoredDir = import_node_path4.default.join(repoRoot, "skills", skillName);
   try {
-    if (import_node_fs3.default.existsSync(authoredDir) && import_node_fs3.default.statSync(authoredDir).isDirectory()) {
+    if (import_node_fs4.default.existsSync(authoredDir) && import_node_fs4.default.statSync(authoredDir).isDirectory()) {
       return "ours";
     }
   } catch {
@@ -244,6 +306,12 @@ var detectScope = (skillName, repoRoot, env = process.env) => {
   try {
     if (isPersonalSkill(skillName, repoRoot, env)) {
       return "personal";
+    }
+  } catch {
+  }
+  try {
+    if (isInjectedSkill(skillName, repoRoot)) {
+      return "injected";
     }
   } catch {
   }
@@ -272,6 +340,7 @@ var buildOutcomeEvent = ({
   skillName,
   outcome,
   repoRoot,
+  deliberate = false,
   sessionId = null,
   toolUseId = null,
   durationMs = null,
@@ -307,6 +376,9 @@ var buildOutcomeEvent = ({
   if (source != null) {
     event.source = source;
   }
+  if (deliberate) {
+    event.deliberate = true;
+  }
   return event;
 };
 var toRecordSkillUsageOutcomeInput = (event) => {
@@ -335,6 +407,9 @@ var toRecordSkillUsageOutcomeInput = (event) => {
   }
   if (event.duration_ms != null) {
     input.durationMs = event.duration_ms;
+  }
+  if (event.deliberate === true) {
+    input.deliberate = true;
   }
   return input;
 };
@@ -460,6 +535,137 @@ var postGraphqlMutation = async (args) => {
   return transient(`missing ${args.field}.id`);
 };
 
+// packages/agentic-hooks/src/data/starts.ts
+var import_node_fs5 = __toESM(require("node:fs"), 1);
+var listStartsForSession = ({
+  sessionId,
+  startsDir
+}) => {
+  try {
+    const sid = typeof sessionId === "string" ? sessionId.trim() : "";
+    if (!sid) {
+      return [];
+    }
+    const dir = startsDir || defaultStartsDir();
+    const filePath = startsFilePathForSession(dir, sid);
+    if (!import_node_fs5.default.existsSync(filePath)) {
+      return [];
+    }
+    const text = import_node_fs5.default.readFileSync(filePath, "utf8");
+    const out = [];
+    for (const line of text.split("\n")) {
+      const trimmed = line.trim();
+      if (!trimmed) {
+        continue;
+      }
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (isRecord(parsed)) {
+          out.push(parsed);
+        }
+      } catch {
+      }
+    }
+    return out;
+  } catch (err) {
+    logHookError("listStartsForSession failed", err);
+    return [];
+  }
+};
+var drainStartsForSession = ({
+  sessionId,
+  resolvedKeys,
+  startsDir
+}) => {
+  try {
+    const sid = typeof sessionId === "string" ? sessionId.trim() : "";
+    if (!sid) {
+      return 0;
+    }
+    const dir = startsDir || defaultStartsDir();
+    const filePath = startsFilePathForSession(dir, sid);
+    if (!import_node_fs5.default.existsSync(filePath)) {
+      return 0;
+    }
+    const entries = listStartsForSession({
+      sessionId: sid,
+      startsDir: dir
+    });
+    if (!resolvedKeys) {
+      import_node_fs5.default.rmSync(filePath, { force: true });
+      return entries.length;
+    }
+    const keep = [];
+    let drained = 0;
+    for (const entry of entries) {
+      if (resolvedKeys.has(startCorrelationKey(entry))) {
+        drained += 1;
+      } else {
+        keep.push(entry);
+      }
+    }
+    if (keep.length === 0) {
+      import_node_fs5.default.rmSync(filePath, { force: true });
+    } else {
+      import_node_fs5.default.writeFileSync(
+        filePath,
+        `${keep.map((e) => JSON.stringify(e)).join("\n")}
+`,
+        "utf8"
+      );
+    }
+    return drained;
+  } catch (err) {
+    logHookError("drainStartsForSession failed", err);
+    return 0;
+  }
+};
+var startedAtMs = (entry) => {
+  const raw = entry.started_at;
+  if (typeof raw !== "string") {
+    return null;
+  }
+  const ms = Date.parse(raw);
+  return Number.isNaN(ms) ? null : ms;
+};
+var claimLatestStart = ({
+  nowMs = Date.now(),
+  sessionId,
+  skillName,
+  startsDir
+}) => {
+  try {
+    const matches = listStartsForSession({ sessionId, startsDir }).filter(
+      (entry) => entry.skill_name === skillName && startedAtMs(entry) !== null
+    );
+    const latest = matches.reduce(
+      (best, entry) => {
+        if (best === null) {
+          return entry;
+        }
+        return (startedAtMs(entry) ?? 0) > (startedAtMs(best) ?? 0) ? entry : best;
+      },
+      null
+    );
+    if (latest === null) {
+      return null;
+    }
+    const startMs = startedAtMs(latest);
+    if (startMs === null || nowMs < startMs) {
+      return null;
+    }
+    drainStartsForSession({
+      resolvedKeys: /* @__PURE__ */ new Set([startCorrelationKey(latest)]),
+      sessionId,
+      startsDir
+    });
+    return nowMs - startMs;
+  } catch (err) {
+    logHookError("claimLatestStart failed", err);
+    return null;
+  }
+};
+
 // packages/agentic-hooks/src/data/persist.ts
 var forLog = (graphqlUrl) => {
   return graphqlUrl.replace(/^([a-z][a-z0-9+.-]*:\/\/)[^/?#]*@/i, "$1***@");
@@ -575,13 +781,19 @@ var CLAUDE_SOURCE = "claude-code";
 var main = async () => {
   try {
     const args = parseOutcomeArgs(process.argv.slice(2));
-    const repoRoot = process.env.CLAUDE_PROJECT_DIR || process.env.OPEN_THROTTLE_REPO_ROOT || process.cwd();
+    const repoRoot = resolveHookRepoRoot({
+      payloadCwd: process.cwd(),
+      projectDir: process.env.CLAUDE_PROJECT_DIR || process.env.OPEN_THROTTLE_REPO_ROOT || process.cwd()
+    });
     const skillName = args.skill || process.env.OPENTHROTTLE_TELEMETRY_SKILL_NAME || "";
     const outcome = args.outcome || process.env.OPENTHROTTLE_TELEMETRY_OUTCOME || "";
-    const sessionId = args.session || process.env.OPENTHROTTLE_TELEMETRY_SESSION_ID || process.env.CLAUDE_SESSION_ID || null;
+    const sessionId = args.session || process.env.OPENTHROTTLE_TELEMETRY_SESSION_ID || // What Claude Code actually exports to the Bash tool; the older
+    // CLAUDE_SESSION_ID is unset there, which left every reporter row
+    // uncorrelated.
+    process.env.CLAUDE_CODE_SESSION_ID || process.env.CLAUDE_SESSION_ID || null;
     const toolUseId = args["tool-use-id"] || process.env.OPENTHROTTLE_TELEMETRY_TOOL_USE_ID || null;
     const durationRaw = args["duration-ms"] || process.env.OPENTHROTTLE_TELEMETRY_DURATION_MS || "";
-    const durationMs = durationRaw === "" ? null : Number(durationRaw);
+    const explicitDurationMs = durationRaw === "" ? null : Number(durationRaw);
     if (outcome !== SKILL_USAGE_OUTCOMES.SUCCESS && outcome !== SKILL_USAGE_OUTCOMES.ABANDONED && outcome !== SKILL_USAGE_OUTCOMES.ERROR) {
       logHookError(
         `invalid --outcome (want ${[
@@ -592,7 +804,10 @@ var main = async () => {
       );
       return;
     }
+    const claimedDurationMs = claimLatestStart({ sessionId, skillName });
+    const durationMs = explicitDurationMs ?? claimedDurationMs;
     const event = buildOutcomeEvent({
+      deliberate: true,
       durationMs,
       outcome,
       repoRoot,
@@ -608,7 +823,7 @@ var main = async () => {
     const outPath = defaultOutcomesJsonlPath();
     await persistOutcomeEvent({
       event,
-      jsonlPath: import_node_path4.default.resolve(outPath),
+      jsonlPath: import_node_path5.default.resolve(outPath),
       repoRoot
     });
   } catch (err) {

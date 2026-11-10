@@ -167,3 +167,79 @@ export const drainStartsForSession = ({
     return 0;
   }
 };
+
+/**
+ * @description The started_at of an open start, in epoch ms, or null when it
+ * is missing or unparseable.
+ */
+const startedAtMs = (entry: Record<string, unknown>): number | null => {
+  const raw = entry.started_at;
+  if (typeof raw !== 'string') {
+    return null;
+  }
+  const ms = Date.parse(raw);
+  return Number.isNaN(ms) ? null : ms;
+};
+
+/**
+ * @description Claim a deliberate reporter's own open start: find the most
+ * recent open start for `skillName` in this session, drain it, and return the
+ * milliseconds from that load to `nowMs`.
+ *
+ * This is the one honest skill-scoped duration the harness allows. The start is
+ * written when the skill is loaded; the reporter runs at the skill's own finish
+ * line; nothing else the session did afterwards is counted, which is exactly
+ * what the old load→session-end number got wrong. Draining the entry also stops
+ * the session-end hook from emitting a second, `session_ended` row for the same
+ * invocation.
+ *
+ * Null (and nothing drained) when there is no matching start — the skill
+ * finished in a later turn than it loaded, after the turn-end hook already
+ * resolved its start — or when the clock reads backwards. Fail-open.
+ *
+ * @public
+ */
+export const claimLatestStart = ({
+  nowMs = Date.now(),
+  sessionId,
+  skillName,
+  startsDir,
+}: {
+  readonly nowMs?: number;
+  readonly sessionId: string | null;
+  readonly skillName: string;
+  readonly startsDir?: string;
+}): number | null => {
+  try {
+    const matches = listStartsForSession({ sessionId, startsDir }).filter(
+      (entry) => entry.skill_name === skillName && startedAtMs(entry) !== null,
+    );
+    const latest = matches.reduce<Record<string, unknown> | null>(
+      (best, entry) => {
+        if (best === null) {
+          return entry;
+        }
+        return (startedAtMs(entry) ?? 0) > (startedAtMs(best) ?? 0)
+          ? entry
+          : best;
+      },
+      null,
+    );
+    if (latest === null) {
+      return null;
+    }
+    const startMs = startedAtMs(latest);
+    if (startMs === null || nowMs < startMs) {
+      return null;
+    }
+    drainStartsForSession({
+      resolvedKeys: new Set([startCorrelationKey(latest)]),
+      sessionId,
+      startsDir,
+    });
+    return nowMs - startMs;
+  } catch (err) {
+    logHookError('claimLatestStart failed', err);
+    return null;
+  }
+};

@@ -32,14 +32,15 @@ describe('UsageSkillUsageSummary Component', () => {
       byScope: [
         buildByScope({ count: 5, scope: SKILL_USAGE_SCOPES.OURS }),
         buildByScope({ count: 4, scope: SKILL_USAGE_SCOPES.PERSONAL }),
+        buildByScope({ count: 8, scope: SKILL_USAGE_SCOPES.INJECTED }),
         buildByScope({ count: 2, scope: SKILL_USAGE_SCOPES.THIRD_PARTY }),
       ],
-      totalCount: 11,
+      totalCount: 19,
     });
 
     expect(component.getByTestId('UsageSkillUsageSummary')).toBeInTheDocument();
     expect(component.getByText('Total invocations')).toBeInTheDocument();
-    expect(component.getByText('11')).toBeInTheDocument();
+    expect(component.getByText('19')).toBeInTheDocument();
     expect(component.getByText('5')).toBeInTheDocument();
     expect(component.getByText('4')).toBeInTheDocument();
     expect(component.getByText('2')).toBeInTheDocument();
@@ -54,6 +55,13 @@ describe('UsageSkillUsageSummary Component', () => {
         `${SKILL_USAGE_COPY.scopeSplitHeading} — Third-party`,
       ),
     ).toBeInTheDocument();
+    expect(component.getByText('8')).toBeInTheDocument();
+    expect(
+      component.getByText(`${SKILL_USAGE_COPY.scopeSplitHeading} — Injected`),
+    ).toBeInTheDocument();
+    expect(
+      component.getByText(SKILL_USAGE_COPY.scopeInjectedHint),
+    ).toBeInTheDocument();
     expect(
       component.getByText(SKILL_USAGE_COPY.scopePersonalHint),
     ).toBeInTheDocument();
@@ -66,6 +74,6 @@ describe('UsageSkillUsageSummary Component', () => {
     });
 
     // Total plus one tile per scope member.
-    expect(component.getAllByText('0')).toHaveLength(4);
+    expect(component.getAllByText('0')).toHaveLength(5);
   });
 });

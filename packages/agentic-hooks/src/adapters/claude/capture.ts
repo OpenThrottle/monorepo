@@ -13,19 +13,22 @@ import {
   logHookError,
   persistUsageEvent,
   recordSkillStart,
+  resolveHookRepoRoot,
 } from '../../index.ts';
 import { CLAUDE_SOURCE, normalizeClaudePayload } from './payload.ts';
 import { isShadowedByRepoHooks } from './shadow.ts';
 
 const main = async (): Promise<void> => {
   try {
-    const repoRoot =
+    const projectDir =
       process.env.CLAUDE_PROJECT_DIR ||
       process.env.OPEN_THROTTLE_REPO_ROOT ||
       process.cwd();
 
     // The repository registers this same hook; let that copy do the work.
-    if (isShadowedByRepoHooks({ repoRoot })) {
+    // Judged against the LAUNCH directory on purpose: that is whose settings
+    // Claude loaded, so it decides whether the repo copy is running at all.
+    if (isShadowedByRepoHooks({ repoRoot: projectDir })) {
       return;
     }
 
@@ -46,6 +49,13 @@ const main = async (): Promise<void> => {
     if (!normalized) {
       return;
     }
+
+    // Scope and branch belong to the checkout the call happened in, which is
+    // not the launch directory when a session starts above the repo.
+    const repoRoot = resolveHookRepoRoot({
+      payloadCwd: normalized.cwd ?? null,
+      projectDir,
+    });
 
     const event = buildUsageEvent({
       normalized,

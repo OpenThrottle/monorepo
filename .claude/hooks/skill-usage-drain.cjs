@@ -510,6 +510,9 @@ var toRecordSkillUsageOutcomeInput = (event) => {
   if (event.duration_ms != null) {
     input.durationMs = event.duration_ms;
   }
+  if (event.deliberate === true) {
+    input.deliberate = true;
+  }
   return input;
 };
 

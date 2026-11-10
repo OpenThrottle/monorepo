@@ -3948,7 +3948,7 @@ type SkillUsageEventObject {
   receivedAt: DateTime!
 
   """
-  ours | personal | third-party — derived by the client: ours is authored under skills/, personal is linked from the invoking user's personal skills root outside the repo, third-party is everything else.
+  ours | injected | personal | third-party — derived by the client: ours is authored under skills/, personal is linked from the invoking user's personal skills root outside the repo, injected is an OpenThrottle skill authored under another repository's skills/ and linked in by foreign skill injection, third-party is everything else.
   """
   scope: String!
 
@@ -3996,7 +3996,7 @@ type SkillUsageBySkillObject {
   """
   outcomeCount: Int!
 
-  """ours | personal | third-party for this skill row."""
+  """ours | injected | personal | third-party for this skill row."""
   scope: String!
 
   """
@@ -4035,7 +4035,7 @@ type SkillUsageOutcomeObject {
   """Server receipt time (set on insert)."""
   receivedAt: DateTime!
 
-  """ours | personal | third-party."""
+  """ours | injected | personal | third-party."""
   scope: String!
 
   """Harness session id when present."""
@@ -4057,13 +4057,18 @@ type SkillUsageByScopeObject {
   """Invocation count for this scope in the filtered range."""
   count: Int!
 
-  """ours | personal | third-party."""
+  """ours | injected | personal | third-party."""
   scope: String!
 }
 
 type SkillUsageByDayObject {
   """UTC calendar day (YYYY-MM-DD)."""
   date: String!
+
+  """
+  injected-scoped invocations on this day: OpenThrottle skills authored in another repository and linked into this workspace by foreign skill injection.
+  """
+  injectedCount: Int!
 
   """ours-scoped invocations on this day."""
   oursCount: Int!
@@ -5743,7 +5748,9 @@ type Query {
     """End date (inclusive), YYYY-MM-DD"""
     end: String!
 
-    """Restrict to one of: ours, personal, third-party; omit for all."""
+    """
+    Restrict to one of: injected, ours, personal, third-party; omit for all.
+    """
     scope: String
 
     """Restrict to one git branch; omit for all branches."""
@@ -8876,7 +8883,7 @@ input RecordSkillUsageInput {
   """Harness prompt_id when present."""
   promptId: String
 
-  """ours | personal | third-party."""
+  """ours | injected | personal | third-party."""
   scope: String!
 
   """Harness session id when present."""
@@ -8898,6 +8905,11 @@ input RecordSkillUsageOutcomeInput {
   """Working directory at outcome time."""
   cwd: String
 
+  """
+  True when a deliberate reporter (the skill-usage-outcome helper, or an adapter relaying a harness-observed failure) sent this outcome. A success/error without it is stored as legacy_assumed_success, because a stale pre-#537 hook hardcoded success. session_ended and abandoned make no quality claim and do not need it.
+  """
+  deliberate: Boolean
+
   """Wall-clock duration in milliseconds when the skill reports it."""
   durationMs: Int
 
@@ -8911,7 +8923,7 @@ input RecordSkillUsageOutcomeInput {
   outcome: String!
 
   """
-  ours | personal | third-party. Omitting it defaults to ours — a legacy default for senders that predate the field; every current hook posts an explicit scope.
+  ours | injected | personal | third-party. Omitting it defaults to ours — a legacy default for senders that predate the field; every current hook posts an explicit scope.
   """
   scope: String
 

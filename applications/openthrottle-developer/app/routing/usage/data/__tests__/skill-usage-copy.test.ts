@@ -15,6 +15,7 @@ import {
 describe('skillUsageScopeLabel', () => {
   test('maps known scope ids to human labels and echoes unknowns', () => {
     expect(skillUsageScopeLabel('ours')).toBe('Ours');
+    expect(skillUsageScopeLabel('injected')).toBe('Injected');
     expect(skillUsageScopeLabel('personal')).toBe('Personal');
     expect(skillUsageScopeLabel('third-party')).toBe('Third-party');
     expect(skillUsageScopeLabel('mystery')).toBe('mystery');
@@ -33,6 +34,13 @@ describe('skillUsageScopeBadgeColor', () => {
     // invocation fell through to the third-party colour.
     expect(skillUsageScopeBadgeColor('personal')).toBe('violet');
     expect(skillUsageScopeBadgeColor('personal')).not.toBe(
+      skillUsageScopeBadgeColor('third-party'),
+    );
+  });
+
+  test('colours an injected skill blue, distinct from third-party', () => {
+    expect(skillUsageScopeBadgeColor('injected')).toBe('blue');
+    expect(skillUsageScopeBadgeColor('injected')).not.toBe(
       skillUsageScopeBadgeColor('third-party'),
     );
   });
@@ -60,18 +68,20 @@ describe('skillUsageCwdLabel', () => {
 });
 
 describe('skillUsageAvgDurationLabel', () => {
-  test('em dash for missing samples, ms under a second, seconds otherwise', () => {
-    expect(skillUsageAvgDurationLabel(null)).toBe('—');
-    expect(skillUsageAvgDurationLabel(undefined)).toBe('—');
+  test('not measured for missing samples, ms under a second, seconds otherwise', () => {
+    expect(skillUsageAvgDurationLabel(null)).toBe(SKILL_USAGE_COPY.notMeasured);
+    expect(skillUsageAvgDurationLabel(undefined)).toBe(
+      SKILL_USAGE_COPY.notMeasured,
+    );
     expect(skillUsageAvgDurationLabel(250)).toBe('250ms');
     expect(skillUsageAvgDurationLabel(1500)).toBe('1.5s');
   });
 });
 
 describe('skillUsageOutcomesLabel', () => {
-  test('renders count/total, em dash when none reported', () => {
+  test('renders count/total, not measured when none reported', () => {
     expect(skillUsageOutcomesLabel(3, 5)).toBe('3/5');
-    expect(skillUsageOutcomesLabel(0, 5)).toBe('—');
+    expect(skillUsageOutcomesLabel(0, 5)).toBe(SKILL_USAGE_COPY.notMeasured);
   });
 });
 

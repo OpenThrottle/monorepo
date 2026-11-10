@@ -189,3 +189,11 @@ stops the worktree's own docker compose project before removal.
 
 Note the hook is read from the **worktree's** checkout, not the primary one — so a worktree on a
 branch predating the hook will not run it.
+
+## Report the outcome
+
+Once, at the end — `error` if the action exited non-zero, `abandoned` if called off ([why](../../docs/monorepo/skill-usage-telemetry-scope.md#reporting-an-outcome-from-a-skill)):
+
+```bash
+r="$(git rev-parse --show-toplevel)/.claude/hooks/skill-usage-outcome.cjs"; if [ -f "$r" ]; then node "$r" --skill ot-worktree --outcome success; fi
+```

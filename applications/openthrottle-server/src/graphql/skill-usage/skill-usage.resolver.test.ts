@@ -115,6 +115,25 @@ describe('SkillUsageResolver', () => {
     });
 
     describe('scope validation', () => {
+      test('accepts an injected-scoped invocation', async () => {
+        recordSkillUsage.mockResolvedValue({
+          ...savedRow,
+          scope: SKILL_USAGE_SCOPES.INJECTED,
+          skillName: 'ot-plans',
+        });
+
+        const result = await resolver.recordSkillUsage({
+          occurredAt: new Date('2026-07-31T12:00:00.000Z'),
+          scope: SKILL_USAGE_SCOPES.INJECTED,
+          skillName: 'ot-plans',
+        });
+
+        expect(recordSkillUsage).toHaveBeenLastCalledWith(
+          expect.objectContaining({ scope: SKILL_USAGE_SCOPES.INJECTED }),
+        );
+        expect(result.scope).toBe(SKILL_USAGE_SCOPES.INJECTED);
+      });
+
       test('accepts a personal-scoped invocation', async () => {
         recordSkillUsage.mockResolvedValue({
           ...savedRow,
@@ -143,7 +162,9 @@ describe('SkillUsageResolver', () => {
             scope: 'not-a-real-scope',
             skillName: 'ot-plans',
           }),
-        ).rejects.toThrow('scope must be one of: ours, personal, third-party');
+        ).rejects.toThrow(
+          'scope must be one of: injected, ours, personal, third-party',
+        );
       });
     });
 
@@ -307,6 +328,7 @@ describe('SkillUsageResolver', () => {
 
       expect(recordSkillUsageOutcome).toHaveBeenCalledWith({
         cwd: '/repo',
+        deliberate: null,
         durationMs: 4200,
         gitBranch: 'example-usage-tracking',
         occurredAt: new Date('2026-07-31T12:05:00.000Z'),
@@ -321,6 +343,21 @@ describe('SkillUsageResolver', () => {
       expect(result.outcome).toBe(SKILL_USAGE_OUTCOMES.SUCCESS);
       expect(result.durationMs).toBe(4200);
       expect(result.source).toBe('claude-code');
+    });
+
+    test('forwards the deliberate-reporter declaration to the service', async () => {
+      recordSkillUsageOutcome.mockResolvedValue(savedOutcome);
+
+      await resolver.recordSkillUsageOutcome({
+        deliberate: true,
+        occurredAt: new Date('2026-07-31T12:05:00.000Z'),
+        outcome: SKILL_USAGE_OUTCOMES.SUCCESS,
+        skillName: 'ot-plans',
+      });
+
+      expect(recordSkillUsageOutcome).toHaveBeenLastCalledWith(
+        expect.objectContaining({ deliberate: true }),
+      );
     });
 
     // Iterates the vocabulary rather than naming members, so a value the
@@ -380,6 +417,7 @@ describe('SkillUsageResolver', () => {
         byDay: [
           {
             date: '2026-07-15',
+            injectedCount: 4,
             oursCount: 2,
             personalCount: 3,
             thirdPartyCount: 1,
@@ -428,6 +466,7 @@ describe('SkillUsageResolver', () => {
       expect(result.byScope).toHaveLength(3);
       expect(result.byDay[0]?.date).toBe('2026-07-15');
       expect(result.byDay[0]?.personalCount).toBe(3);
+      expect(result.byDay[0]?.injectedCount).toBe(4);
       expect(result.filterOptions.gitBranches).toEqual(['main']);
     });
 

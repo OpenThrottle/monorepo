@@ -128,3 +128,11 @@ inherited the truncated block permanently. Plan `df3be51a-401d-4d69-bb41-db766ce
 tasks and the git-only command returned six: `a02fc841-24e2-4a67-b258-a3ecd09ac76b`, a skill re-sync
 whose only output is gitignored, had no commit to carry it, and the self-check passed anyway. The
 operator caught it by hand. Build the footer block _before_ you reset, from OT.
+
+## Report the outcome
+
+Once, at the end — `error` if the squash or push failed, `abandoned` if called off ([why](../../docs/monorepo/skill-usage-telemetry-scope.md#reporting-an-outcome-from-a-skill)):
+
+```bash
+r="$(git rev-parse --show-toplevel)/.claude/hooks/skill-usage-outcome.cjs"; if [ -f "$r" ]; then node "$r" --skill github-squash --outcome success; fi
+```

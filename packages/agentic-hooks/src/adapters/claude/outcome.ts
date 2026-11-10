@@ -7,19 +7,24 @@
  * that may report a duration: the automatic session-end hooks cannot observe
  * either (see `completeOpenStartsForSession`). It is therefore what makes the
  * `/usage` Outcomes column mean anything — a skill that never calls this shows
- * `—`, which is the honest reading of "nobody measured".
+ * as not measured, which is the honest reading of "nobody measured".
+ *
+ * Without `--duration-ms` the duration is derived from the skill's own open
+ * start (load → this call); see `claimLatestStart`. Session id defaults to
+ * `$CLAUDE_CODE_SESSION_ID`.
  *
  * Usage:
- *   node .claude/hooks/skill-usage-outcome.cjs --skill ot-plans \
- *     --outcome success --duration-ms 4200 --session "$CLAUDE_SESSION_ID"
+ *   node .claude/hooks/skill-usage-outcome.cjs --skill ot-plans --outcome success
  */
 import path from 'node:path';
 
 import {
   buildOutcomeEvent,
+  claimLatestStart,
   defaultOutcomesJsonlPath,
   logHookError,
   persistOutcomeEvent,
+  resolveHookRepoRoot,
   SKILL_USAGE_OUTCOMES,
 } from '../../index.ts';
 import { parseOutcomeArgs } from './outcome-args.ts';
@@ -28,10 +33,15 @@ import { CLAUDE_SOURCE } from './payload.ts';
 const main = async (): Promise<void> => {
   try {
     const args = parseOutcomeArgs(process.argv.slice(2));
-    const repoRoot =
-      process.env.CLAUDE_PROJECT_DIR ||
-      process.env.OPEN_THROTTLE_REPO_ROOT ||
-      process.cwd();
+    // The reporter runs from the agent's shell, so its cwd is where the work
+    // happened — the same checkout resolution the capture hook uses.
+    const repoRoot = resolveHookRepoRoot({
+      payloadCwd: process.cwd(),
+      projectDir:
+        process.env.CLAUDE_PROJECT_DIR ||
+        process.env.OPEN_THROTTLE_REPO_ROOT ||
+        process.cwd(),
+    });
 
     const skillName =
       args.skill || process.env.OPENTHROTTLE_TELEMETRY_SKILL_NAME || '';
@@ -40,6 +50,10 @@ const main = async (): Promise<void> => {
     const sessionId =
       args.session ||
       process.env.OPENTHROTTLE_TELEMETRY_SESSION_ID ||
+      // What Claude Code actually exports to the Bash tool; the older
+      // CLAUDE_SESSION_ID is unset there, which left every reporter row
+      // uncorrelated.
+      process.env.CLAUDE_CODE_SESSION_ID ||
       process.env.CLAUDE_SESSION_ID ||
       null;
     const toolUseId =
@@ -50,7 +64,7 @@ const main = async (): Promise<void> => {
       args['duration-ms'] ||
       process.env.OPENTHROTTLE_TELEMETRY_DURATION_MS ||
       '';
-    const durationMs = durationRaw === '' ? null : Number(durationRaw);
+    const explicitDurationMs = durationRaw === '' ? null : Number(durationRaw);
 
     // `session_ended` is deliberately NOT accepted here. It is the automatic
     // session-end path's way of saying "no quality claim"; a deliberate
@@ -71,7 +85,14 @@ const main = async (): Promise<void> => {
       return;
     }
 
+    // Always claim this skill's open start, so the turn-end hook does not add
+    // a second, session_ended row for the same invocation; its load→now span
+    // is the duration unless the caller measured one itself.
+    const claimedDurationMs = claimLatestStart({ sessionId, skillName });
+    const durationMs = explicitDurationMs ?? claimedDurationMs;
+
     const event = buildOutcomeEvent({
+      deliberate: true,
       durationMs,
       outcome,
       repoRoot,

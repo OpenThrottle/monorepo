@@ -24,6 +24,7 @@ describe('toSkillsIndexUsageData', () => {
         byDay: [
           {
             date: '2026-08-05',
+            injectedCount: 7,
             oursCount: 3,
             personalCount: 2,
             thirdPartyCount: 1,
@@ -52,6 +53,7 @@ describe('toSkillsIndexUsageData', () => {
     expect(result.byDay).toEqual([
       {
         date: '2026-08-05',
+        injectedCount: 7,
         oursCount: 3,
         personalCount: 2,
         thirdPartyCount: 1,

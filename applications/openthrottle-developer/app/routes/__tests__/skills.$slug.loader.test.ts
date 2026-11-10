@@ -71,6 +71,7 @@ describe('routes/skills.$slug loader', () => {
         byDay: [
           {
             date: '2026-08-05',
+            injectedCount: 0,
             oursCount: 5,
             thirdPartyCount: 0,
             totalCount: 5,
@@ -109,7 +110,13 @@ describe('routes/skills.$slug loader', () => {
     expect(usage).toEqual({
       available: true,
       byDay: [
-        { date: '2026-08-05', oursCount: 5, thirdPartyCount: 0, totalCount: 5 },
+        {
+          date: '2026-08-05',
+          injectedCount: 0,
+          oursCount: 5,
+          thirdPartyCount: 0,
+          totalCount: 5,
+        },
       ],
       skill: {
         abandonedCount: 0,
