@@ -5,10 +5,38 @@
     "url": "https://<%= name %>.com"
   },
   "dependencies": {
-    "@openthrottle/graphql-codegen": "workspace:^"
+    "@graphql-typed-document-node/core": "catalog:",
+    "@openthrottle/graphql-codegen": "workspace:^",
+    "@openthrottle/react-router-shadcn": "workspace:^",
+    "@openthrottle/react-router-ui-global": "workspace:^",
+    "@openthrottle/react-router-utils": "workspace:^",
+    "@react-router/dev": "catalog:",
+    "@react-router/fs-routes": "catalog:",
+    "@react-router/node": "catalog:",
+    "@vercel/analytics": "catalog:",
+    "@vercel/react-router": "catalog:",
+    "dotenv": "catalog:",
+    "isbot": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-router": "catalog:",
+    "tailwindcss": "catalog:",
+    "tw-animate-css": "catalog:",
+    "zod": "catalog:"
   },
   "description": "FIXME: Add a description...",
-  "devDependencies": {},
+  "devDependencies": {
+    "@openthrottle/react-router-testing": "workspace:^",
+    "@tailwindcss/vite": "catalog:",
+    "@testing-library/jest-dom": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "catalog:",
+    "react-router-devtools": "catalog:",
+    "vite": "catalog:",
+    "vite-bundle-analyzer": "catalog:",
+    "vite-plugin-devtools-json": "catalog:",
+    "vitest": "catalog:"
+  },
   "name": "<%= name %>",
   "nx": {
     "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",

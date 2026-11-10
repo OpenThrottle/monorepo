@@ -185,6 +185,11 @@ export const defineCodegen = (options: DefineCodegenOptions): CodegenConfig => {
     hooks: {
       afterAllFileWrite: ['prettier --write'],
     },
+    // A freshly generated app has no `.graphql` documents yet, and an empty
+    // documents glob is a hard failure by default — so every new app failed
+    // `codegen-graphql` in CI until someone wrote its first query. With no
+    // documents the client preset still emits the schema types.
+    ignoreNoDocuments: true,
     schema: schemaFile,
   };
 

@@ -60,9 +60,13 @@ _ot_setup_disabled() {
 }
 
 # Provision the worktree at $1, with $2 as the primary checkout.
+#
 # Discovery, first hit wins, all optional:
-#   1. $OPENTHROTTLE_WORKTREE_PROVISION   2. .worktree/provision.sh
-#   3. scripts/setup_worktree.ts   4. scripts/setup_worktree.sh (branches that predate the .ts)
+#   1. $OPENTHROTTLE_WORKTREE_PROVISION
+#   2. .worktree/provision.sh
+#   3. scripts/setup_worktree.ts
+#   4. scripts/setup_worktree.sh (branches that predate the .ts)
+#
 # No provisioner is a valid outcome, not an error. A provisioner that fails
 # propagates its exit code — better to fail loudly than hand back a half-built tree.
 provision_worktree() {
@@ -86,6 +90,7 @@ provision_worktree() {
   done
 
   log "ℹ️  no repo provisioner found — worktree created but not provisioned"
+
   return 0
 }
 

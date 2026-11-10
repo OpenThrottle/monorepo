@@ -51,14 +51,18 @@ export const rewritePortsInContent = (
 };
 
 /** Placeholder tokens (ot_sa_xxx…) and empties must never be synced. */
-export const isSyncableSecret = (value: string | undefined): value is string =>
-  value !== undefined && value !== '' && !value.includes('xxxxxx');
+export const isSyncableSecret = (
+  value: string | undefined,
+): value is string => {
+  return value !== undefined && value !== '' && !value.includes('xxxxxx');
+};
 
 /** Every .env this worktree owns: the root one plus each application's. */
-const envFilePaths = (): string[] =>
-  ['.env', ...globSync('applications/*/.env')].filter((path) =>
-    existsSync(path),
-  );
+const envFilePaths = (): string[] => {
+  return ['.env', ...globSync('applications/*/.env')].filter((path) => {
+    return existsSync(path);
+  });
+};
 
 /**
  * Make `docker compose` worktree-safe: container names and the compose
@@ -165,18 +169,7 @@ const main = async (): Promise<void> => {
   //     the path taken: resolve a block here, for skill-driven and standalone
   //     runs alike (OT_PORT_* in the environment still wins when present).
   let base = Number(process.env.OT_PORT_BASE ?? '') || undefined;
-  let ports =
-    base === undefined
-      ? undefined
-      : {
-          admin: Number(process.env.OT_PORT_ADMIN ?? base + 2),
-          cms: Number(process.env.OT_PORT_CMS ?? base + 3),
-          developer: Number(process.env.OT_PORT_DEVELOPER ?? base),
-          email: Number(process.env.OT_PORT_EMAIL ?? base + 4),
-          mcp: Number(process.env.OT_PORT_MCP ?? base + 6),
-          server: Number(process.env.OT_PORT_SERVER ?? base + 1),
-          website: Number(process.env.OT_PORT_WEBSITE ?? base + 5),
-        };
+  let ports: ReturnType<typeof resolveWorktreePorts>['ports'] | undefined;
 
   if (base === undefined) {
     try {
@@ -188,6 +181,16 @@ const main = async (): Promise<void> => {
     } catch {
       // Port allocation is best-effort; the canonical block still works.
     }
+  } else {
+    ports = {
+      admin: Number(process.env.OT_PORT_ADMIN ?? base + 2),
+      cms: Number(process.env.OT_PORT_CMS ?? base + 3),
+      developer: Number(process.env.OT_PORT_DEVELOPER ?? base),
+      email: Number(process.env.OT_PORT_EMAIL ?? base + 4),
+      mcp: Number(process.env.OT_PORT_MCP ?? base + 6),
+      server: Number(process.env.OT_PORT_SERVER ?? base + 1),
+      website: Number(process.env.OT_PORT_WEBSITE ?? base + 5),
+    };
   }
 
   if (base !== undefined && ports !== undefined && base !== 6020) {
