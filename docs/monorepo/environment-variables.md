@@ -135,6 +135,14 @@ plus any per-run `env` — so a stub named here is the binary a run actually spa
 | `OT_AGENT_CLI_INSTALL_ENABLED`   | Gates server-side install/update of agent CLIs    | ✅ server `.env.default` `false` |
 | `OPENTHROTTLE_AGENT_DEV_CWD`     | Dev-only cwd override for chat streams            | ❌                               |
 
+### Agent discovery cache (all read in `agent-discovery.service.ts`, none in `.env.default`)
+
+| Variable                       | Used for                                                                                                                                                                                                                 | Code default |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------ |
+| `AGENT_DISCOVERY_CACHE_TTL_MS` | Soft TTL of the agent-CLI discovery snapshot; past it the snapshot is served stale while one background sweep refreshes it                                                                                               | `60000`      |
+| `AGENT_DISCOVERY_HARD_TTL_MS`  | Hard TTL; past it the next request blocks on a fresh sweep. Clamped up to the soft TTL                                                                                                                                   | `600000`     |
+| `AGENT_DISCOVERY_WARM_ON_BOOT` | Fire one non-blocking sweep at server bootstrap (retried once if a probe timed out) so the first home load never blocks on a cold sweep. `0`/`false`/`no`/`off` disables; unset is off under `NODE_ENV=test` or `VITEST` | on           |
+
 ### Agent run bounds (all read in `cursor-agent/teardown.ts`, none in `.env.default`)
 
 | Variable                                  | Used for                                     | Code default                |

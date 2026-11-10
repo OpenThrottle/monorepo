@@ -99,6 +99,7 @@ afterEach(() => {
   vi.restoreAllMocks();
   delete process.env.AGENT_DISCOVERY_CACHE_TTL_MS;
   delete process.env.AGENT_DISCOVERY_HARD_TTL_MS;
+  delete process.env.AGENT_DISCOVERY_WARM_ON_BOOT;
 });
 
 describe('AgentDiscoveryService', () => {
@@ -271,6 +272,120 @@ describe('AgentDiscoveryService probe-timeout carry-forward', () => {
       const result = await service.discover();
 
       expect(result).toBe(gone);
+    });
+  });
+});
+
+describe('AgentDiscoveryService boot warm-up', () => {
+  const [cursor, claude] = SNAPSHOT.agents;
+
+  /** A first sweep where cursor's probe timed out. */
+  const firstSweepTimedOut = (): AgentCliDiscoveryResult => {
+    if (cursor === undefined || claude === undefined) {
+      throw new Error('SNAPSHOT fixture is missing an agent');
+    }
+
+    return {
+      agents: [
+        { ...cursor, available: false, models: [], timedOut: true },
+        claude,
+      ],
+      scannedAt: '2026-06-19T04:00:00.000Z',
+    };
+  };
+
+  describe('when AGENT_DISCOVERY_WARM_ON_BOOT is unset under the test runner', () => {
+    it('does not sweep on bootstrap', async () => {
+      const service = await buildService();
+      service.onApplicationBootstrap();
+      await flush();
+
+      expect(discoverAgentClisMock).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when AGENT_DISCOVERY_WARM_ON_BOOT is falsy', () => {
+    it('does not sweep on bootstrap', async () => {
+      process.env.AGENT_DISCOVERY_WARM_ON_BOOT = 'false';
+      const service = await buildService();
+      service.onApplicationBootstrap();
+      await flush();
+
+      expect(discoverAgentClisMock).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when AGENT_DISCOVERY_WARM_ON_BOOT is on', () => {
+    beforeEach(() => {
+      process.env.AGENT_DISCOVERY_WARM_ON_BOOT = 'true';
+    });
+
+    it('sweeps once without blocking bootstrap, and the first request reuses it', async () => {
+      const service = await buildService();
+
+      expect(service.onApplicationBootstrap()).toBeUndefined();
+      expect(discoverAgentClisMock).toHaveBeenCalledTimes(1);
+
+      const result = await service.discover();
+
+      expect(result).toBe(SNAPSHOT);
+      expect(discoverAgentClisMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('shares an in-flight warm sweep with a request that arrives mid-sweep', async () => {
+      let releaseScan: (result: AgentCliDiscoveryResult) => void = () => {};
+      discoverAgentClisMock.mockReturnValueOnce(
+        new Promise<AgentCliDiscoveryResult>((resolve) => {
+          releaseScan = resolve;
+        }),
+      );
+
+      const service = await buildService();
+      service.onApplicationBootstrap();
+      const request = service.discover();
+
+      releaseScan(SNAPSHOT);
+
+      await expect(request).resolves.toBe(SNAPSHOT);
+      expect(discoverAgentClisMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('retries once when the boot sweep had a timed-out probe', async () => {
+      discoverAgentClisMock
+        .mockResolvedValueOnce(firstSweepTimedOut())
+        .mockResolvedValueOnce(SNAPSHOT);
+
+      const service = await buildService();
+      service.onApplicationBootstrap();
+      await vi.waitFor(() => {
+        expect(discoverAgentClisMock).toHaveBeenCalledTimes(2);
+      });
+      await flush();
+
+      const result = await service.discover();
+
+      expect(result).toBe(SNAPSHOT);
+      expect(discoverAgentClisMock).toHaveBeenCalledTimes(2);
+    });
+
+    it('never throws when the boot sweep fails', async () => {
+      discoverAgentClisMock.mockRejectedValueOnce(new Error('spawn failed'));
+      const logger = createMock<LoggerService>();
+      const app = await Test.createTestingModule({
+        providers: [
+          AgentDiscoveryService,
+          { provide: LoggerService, useValue: logger },
+        ],
+      }).compile();
+      const service = app.get(AgentDiscoveryService);
+
+      service.onApplicationBootstrap();
+
+      await vi.waitFor(() => {
+        expect(logger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('boot warm-up failed: spawn failed'),
+        );
+      });
     });
   });
 });
