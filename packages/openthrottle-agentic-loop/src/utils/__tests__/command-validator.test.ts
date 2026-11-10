@@ -165,18 +165,77 @@ describe('createCommandValidator abort and timeout', () => {
   });
 });
 
+const makeFakeClock = (stepMs: number): ScheduleClock => {
+  let now = 0;
+
+  return {
+    now: () => {
+      now += stepMs;
+
+      return now - stepMs;
+    },
+    schedule: systemScheduleClock.schedule,
+  };
+};
+
 describe('createCommandValidator output streaming', () => {
-  it('forwards batched chunks tagged with the task id and flushes at the end', async () => {
-    const fake = makeSpawn({ a: ok('hello\n') });
+  it('streams a start line and exactly one summary line for a green command, never its output', async () => {
+    const fake = makeSpawn({ a: ok('noisy [local cache] lines\n') });
     const chunks: ValidationChunk[] = [];
 
     await build(['a'], fake.spawn, {
+      clock: makeFakeClock(46_000),
       onChunk: (chunk) => chunks.push(chunk),
     }).validate(input());
 
     expect(chunks).toEqual([
-      { command: 'a', taskId: '1', text: '$ a\nhello\n' },
+      { command: 'a', taskId: '1', text: '$ a\n' },
+      { command: 'a', taskId: '1', text: 'a ✔ · 46s\n' },
     ]);
+  });
+
+  it('labels an nx target run by its targets', async () => {
+    const fake = makeSpawn({});
+    const chunks: ValidationChunk[] = [];
+
+    await build(
+      ['pnpm nx affected -t lint --base=x --parallel=1'],
+      fake.spawn,
+      {
+        clock: makeFakeClock(1000),
+        onChunk: (chunk) => chunks.push(chunk),
+      },
+    ).validate(input());
+
+    expect(chunks[1]?.text).toBe('lint ✔ · 1s\n');
+  });
+
+  it('streams the summary line and the ANSI-free tail on red, and returns the same tail', async () => {
+    const fake = makeSpawn({ b: fail(2, '\u001b[31mboom\u001b[0m\n') });
+    const chunks: ValidationChunk[] = [];
+    const result = await build(['b'], fake.spawn, {
+      clock: makeFakeClock(54_000),
+      onChunk: (chunk) => chunks.push(chunk),
+    }).validate(input());
+
+    expect(chunks.map((chunk) => chunk.text)).toEqual([
+      '$ b\n',
+      'b ✗ exit 2 · 54s\nboom\n\n',
+    ]);
+    expect(chunks.map((chunk) => chunk.text).join('')).not.toContain('\u001b');
+    expect(result).toMatchObject({ kind: 'red', tail: 'boom\n' });
+  });
+
+  it('says timed out in the summary line', async () => {
+    const fake = makeSpawn({ a: hang });
+    const chunks: ValidationChunk[] = [];
+
+    await build(['a'], fake.spawn, {
+      onChunk: (chunk) => chunks.push(chunk),
+      timeoutMs: 20,
+    }).validate(input());
+
+    expect(chunks[1]?.text).toMatch(/^a ✗ timed out · \d+s\n/);
   });
 });
 

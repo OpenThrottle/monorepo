@@ -5,6 +5,7 @@ import type {
 import {
   buildWorkerPrompt,
   clearResultFile,
+  createAnsiStripStream,
   createBatchedChunkSink,
   parseWorkerResult,
   readResultFile,
@@ -49,6 +50,14 @@ export const createOtLoopWorkerRunner = (
         { maxBytes: SINK_MAX_BYTES, maxMs: SINK_MAX_MS },
         systemScheduleClock,
       );
+      // Plain-text CLIs (codex, cursor, …) can emit colour codes; strip them before they are stored.
+      const clean = createAnsiStripStream((cleanText) => {
+        sink.push(cleanText);
+      });
+      const flushOutput = (): void => {
+        clean.flush();
+        sink.flush();
+      };
       let text: string;
 
       try {
@@ -61,7 +70,7 @@ export const createOtLoopWorkerRunner = (
             iteration: attempts,
             ...(model !== undefined ? { model } : {}),
             onChunk: (chunk) => {
-              sink.push(chunk.data);
+              clean.push(chunk.data);
             },
             prompt: buildWorkerPrompt({
               guidance: input.guidance,
@@ -82,7 +91,7 @@ export const createOtLoopWorkerRunner = (
           },
         );
       } catch (error) {
-        sink.flush();
+        flushOutput();
         await output.settled();
 
         if (signal.aborted) {
@@ -94,7 +103,7 @@ export const createOtLoopWorkerRunner = (
         return { kind: 'error', message };
       }
 
-      sink.flush();
+      flushOutput();
       await output.settled();
 
       if (signal.aborted) {

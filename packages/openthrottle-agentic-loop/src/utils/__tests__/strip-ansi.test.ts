@@ -13,14 +13,17 @@ import { makeTask } from './loop-fakes.ts';
 const ESC = String.fromCharCode(27);
 const GREEN_CHECK = `${ESC}[32m✔${ESC}[39m`;
 
-const scriptedSpawn = (pieces: readonly string[]): SpawnCommand => {
+const scriptedSpawn = (
+  pieces: readonly string[],
+  exitCode = 1,
+): SpawnCommand => {
   return ({ onOutput }) => {
     pieces.forEach((piece) => {
       onOutput(piece);
     });
 
     return {
-      done: Promise.resolve({ exitCode: 0 }),
+      done: Promise.resolve({ exitCode }),
       kill: () => undefined,
     };
   };
@@ -59,7 +62,7 @@ describe('createAnsiStripStream', () => {
 });
 
 describe('ANSI never reaches onChunk', () => {
-  it('strips from validator output, including a split sequence', async () => {
+  it('strips the failure tail on red, including a split sequence', async () => {
     const chunks: ValidationChunk[] = [];
     const validator = createCommandValidator({
       clock: systemScheduleClock,

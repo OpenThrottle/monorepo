@@ -181,6 +181,23 @@ describe('createOtLoopWorkerRunner', () => {
     expect(written).toEqual([{ taskId: 'task-1', text: 'hello world' }]);
   });
 
+  it('strips colour codes from driver output, including a code split across chunks', async () => {
+    const esc = String.fromCharCode(27);
+    const runner = build(
+      driverThat((config, options) => {
+        config.onChunk?.({ data: `${esc}[32mok${esc}[`, stream: 'stdout' });
+        config.onChunk?.({ data: '39m done', stream: 'stdout' });
+        options.onExit?.(0);
+
+        return 'done';
+      }),
+    );
+
+    await runner.run(input());
+
+    expect(written).toEqual([{ taskId: 'task-1', text: 'ok done' }]);
+  });
+
   it('classifies an aborted attempt as aborted even when the driver also printed its error sentinel', async () => {
     const controller = new AbortController();
     const runner = build(

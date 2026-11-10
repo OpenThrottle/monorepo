@@ -6,11 +6,8 @@ import type {
 import {
   COMMAND_TIMEOUT_EXIT_CODE,
   OUTPUT_BUFFER_MAX_CHARS,
-  SINK_MAX_BYTES,
-  SINK_MAX_MS,
 } from '../data/data.constants.ts';
-import { createBatchedChunkSink } from './create-batched-chunk-sink.ts';
-import { createAnsiStripStream } from './strip-ansi.ts';
+import { summarizeCommand } from './summarize-command.ts';
 import { tailForRetry } from './tail-for-retry.ts';
 
 export interface RunCommandSequenceOptions {
@@ -18,7 +15,10 @@ export interface RunCommandSequenceOptions {
   /** Final shell commands (placeholders already substituted). */
   readonly commands: readonly string[];
   readonly cwd: string;
-  /** Receives batched output text for the command that is running. */
+  /**
+   * Receives the stream for the command that is running: a `$ <command>` start line, then one
+   * summary line when it ends (plus the ANSI-free failure tail on red). Green output is not streamed.
+   */
   readonly onOutput: (input: {
     readonly command: string;
     readonly text: string;
@@ -37,26 +37,21 @@ const runCommand = async (
   options: RunCommandSequenceOptions,
   command: string,
 ): Promise<CommandOutcome> => {
-  const batched = createBatchedChunkSink(
-    (text) => {
-      options.onOutput({ command, text });
-    },
-    { maxBytes: SINK_MAX_BYTES, maxMs: SINK_MAX_MS },
-    options.clock,
-  );
-  // Strip before batching so no escape sequence reaches onOutput, even one split across chunks.
-  const sink = createAnsiStripStream(batched.push);
+  const emit = (text: string): void => {
+    options.onOutput({ command, text });
+  };
+  const startedAt = options.clock.now();
   let output = '';
   let timedOut = false;
 
-  sink.push(`$ ${command}\n`);
+  // The start line is the liveness heartbeat for a command that runs for minutes.
+  emit(`$ ${command}\n`);
 
   const child = options.spawn({
     command,
     cwd: options.cwd,
     onOutput: (text) => {
       output = `${output}${text}`.slice(-OUTPUT_BUFFER_MAX_CHARS);
-      sink.push(text);
     },
   });
   const cancelTimeout = options.clock.schedule(() => {
@@ -80,26 +75,39 @@ const runCommand = async (
       return { kind: 'aborted' };
     }
 
+    const durationMs = options.clock.now() - startedAt;
+
     if (timedOut) {
-      const note = `\n[timed out after ${options.timeoutMs} ms and was killed]\n`;
+      const tail = tailForRetry(
+        `${output}\n[timed out after ${options.timeoutMs} ms and was killed]\n`,
+      );
 
-      sink.push(note);
+      emit(
+        `${summarizeCommand({ command, durationMs, outcome: { kind: 'timed_out' } })}\n${tail}\n`,
+      );
 
-      return {
-        exitCode: COMMAND_TIMEOUT_EXIT_CODE,
-        kind: 'red',
-        tail: tailForRetry(`${output}${note}`),
-      };
+      return { exitCode: COMMAND_TIMEOUT_EXIT_CODE, kind: 'red', tail };
     }
 
-    return exitCode === 0
-      ? { kind: 'green' }
-      : { exitCode: exitCode ?? 1, kind: 'red', tail: tailForRetry(output) };
+    if (exitCode === 0) {
+      emit(
+        `${summarizeCommand({ command, durationMs, outcome: { kind: 'green' } })}\n`,
+      );
+
+      return { kind: 'green' };
+    }
+
+    const tail = tailForRetry(output);
+    const code = exitCode ?? 1;
+
+    emit(
+      `${summarizeCommand({ command, durationMs, outcome: { exitCode: code, kind: 'red' } })}\n${tail}\n`,
+    );
+
+    return { exitCode: code, kind: 'red', tail };
   } finally {
     cancelTimeout();
     options.signal.removeEventListener('abort', onAbort);
-    sink.flush();
-    batched.flush();
   }
 };
 
@@ -139,7 +147,7 @@ const runFrom = async (
 /**
  * @description Runs shell commands strictly one after another; the first non-zero exit (or a
  * timeout) stops the sequence red, and an abort kills the running child and ends `aborted`,
- * never red. Streams batched output (§ 10). An empty list is `green`: callers refuse empty
+ * never red. Streams a start line and one summary line per command, plus the failure tail on red (§ 10). An empty list is `green`: callers refuse empty
  * validation before getting here.
  * @public
  */

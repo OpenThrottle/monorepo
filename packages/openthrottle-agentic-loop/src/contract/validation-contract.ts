@@ -6,6 +6,8 @@
 
 /** @public */
 export interface ScheduleClock {
+  /** Current time in epoch milliseconds; injected so durations are deterministic in tests. */
+  now(): number;
   /** Runs `callback` once after `delayMs`; returns a function that cancels it. */
   schedule(callback: () => void, delayMs: number): () => void;
 }

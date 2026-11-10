@@ -6,6 +6,7 @@ import { createBatchedChunkSink } from '../create-batched-chunk-sink.ts';
 const makeClock = () => {
   const timers: { callback: () => void; cancelled: boolean; ms: number }[] = [];
   const clock: ScheduleClock = {
+    now: () => 0,
     schedule: (callback, ms) => {
       const timer = { callback, cancelled: false, ms };
 
