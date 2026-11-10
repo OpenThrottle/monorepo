@@ -19,4 +19,5 @@ export * from './utils/output-format.ts';
 export * from './utils/plugin-dir.ts';
 export * from './utils/reasoning-effort.ts';
 export * from './utils/shell.ts';
+export * from './utils/tool-argument.ts';
 export * from './utils/usage-limit.ts';

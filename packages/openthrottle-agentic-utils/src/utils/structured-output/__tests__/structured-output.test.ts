@@ -46,11 +46,23 @@ const render = (driverId: string, name: string): readonly string[] => {
 
 /** Recorded (or, for codex and gemini, synthetic) runs of the same one-tool prompt. */
 const SUCCESSFUL_RUNS = [
-  { driverId: 'antigravity', name: 'antigravity', tool: 'write_file' },
-  { driverId: 'claude', name: 'claude', tool: 'Write' },
-  { driverId: 'codex', name: 'codex.synthetic', tool: 'command_execution' },
-  { driverId: 'cursor', name: 'cursor', tool: 'edit' },
-  { driverId: 'gemini', name: 'gemini.synthetic', tool: 'write_file' },
+  {
+    driverId: 'antigravity',
+    line: '→ write_file fixture/hello.txt',
+    name: 'antigravity',
+  },
+  { driverId: 'claude', line: '→ Write fixture/hello.txt', name: 'claude' },
+  {
+    driverId: 'codex',
+    line: "→ command_execution bash -lc 'echo hi > hello.txt'",
+    name: 'codex.synthetic',
+  },
+  { driverId: 'cursor', line: '→ edit fixture/hello.txt', name: 'cursor' },
+  {
+    driverId: 'gemini',
+    line: '→ write_file hello.txt',
+    name: 'gemini.synthetic',
+  },
 ];
 
 describe('createStructuredChunkReader', () => {
@@ -172,15 +184,17 @@ describe('recoverStructuredText', () => {
 });
 
 describe('createStructuredLineRenderer', () => {
-  describe.each(SUCCESSFUL_RUNS)('$driverId', ({ driverId, name, tool }) => {
-    it('renders one line per tool and the final text, nothing raw', () => {
-      expect(render(driverId, name)).toEqual([`→ ${tool}`, 'DONE']);
+  describe.each(SUCCESSFUL_RUNS)('$driverId', ({ driverId, line, name }) => {
+    it('renders one line per tool, with its argument, and the final text, nothing raw', () => {
+      expect(render(driverId, name)).toEqual([line, 'DONE']);
     });
   });
 
   describe('codex, which reports a tool only once it finishes', () => {
     it('renders the result as the tool line', () => {
-      expect(render('codex', 'codex.synthetic')[0]).toBe('→ command_execution');
+      expect(render('codex', 'codex.synthetic')[0]).toBe(
+        `→ command_execution bash -lc 'echo hi > hello.txt'`,
+      );
     });
   });
 

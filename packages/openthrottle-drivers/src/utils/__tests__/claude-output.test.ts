@@ -258,7 +258,7 @@ describe('renderClaudeStreamJsonLine', () => {
     ).toBe('Looking at the file.\nDone.');
   });
 
-  it('renders a tool_use block as a short arrow line, after any text', () => {
+  it('renders a tool_use block as an arrow line with its argument, after any text', () => {
     expect(
       renderClaudeStreamJsonLine(
         line({
@@ -267,7 +267,7 @@ describe('renderClaudeStreamJsonLine', () => {
               { text: 'Reading.', type: 'text' },
               {
                 id: 't1',
-                input: { path: '/x' },
+                input: { file_path: '/work/src/a.ts' },
                 name: 'Read',
                 type: 'tool_use',
               },
@@ -276,7 +276,7 @@ describe('renderClaudeStreamJsonLine', () => {
           type: 'assistant',
         }),
       ),
-    ).toBe('Reading.\n→ Read');
+    ).toBe('Reading.\n→ Read src/a.ts');
   });
 
   it('skips assistant events with no text or tool_use (e.g. thinking only)', () => {
