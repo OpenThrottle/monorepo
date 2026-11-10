@@ -39,6 +39,7 @@ import {
   loadWorkflowRalphConfig,
   mergePlanRunTuningWithWorkflowRalphConfig,
 } from '@tools/workflows';
+import { UnrecoverableError } from 'bullmq';
 
 import { WorktreeSkillOverlayService } from '../../../services/foreign-skill-injection/worktree-skill-overlay/worktree-skill-overlay.service.ts';
 import { PlanRunWorkspacePreflightService } from '../../../services/plan-run-workspace-preflight/plan-run-workspace-preflight.service.ts';
@@ -382,7 +383,7 @@ export class AgenticRalphOrchestratorService {
    * the enqueue named no checkoutId/repositoryId/workingDirectory. Throws a legible error naming
    * what is missing when no root is resolvable, so the job fails fast with that message in
    * `failedReason` instead of retrying three times against a doomed `baseCheckoutPath` and giving up
-   * silently.
+   * silently. The error is BullMQ's `UnrecoverableError`: nothing about a retry would change it.
    */
   private resolveRepoRootForWorktreeProvisioning(
     planId: string,
@@ -390,7 +391,7 @@ export class AgenticRalphOrchestratorService {
   ): string {
     const repoRoot = getOpenThrottleRoot(process.env);
     if (repoRoot === undefined) {
-      throw new Error(
+      throw new UnrecoverableError(
         `Cannot provision worktree "${worktreeName}" for plan run ${planId}: no checkoutId, ` +
           `repositoryId, or workingDirectory was provided on enqueue, and no OpenThrottle ` +
           `repository root could be resolved from this process (checked WORKFLOW_RALPH_OT_ROOT, ` +

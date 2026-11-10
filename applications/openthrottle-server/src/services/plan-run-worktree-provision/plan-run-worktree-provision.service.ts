@@ -9,12 +9,17 @@
  *
  * Fails fast. A silent fallback to the process cwd would drop the agent into the primary checkout,
  * which is the bug this exists to fix. See docs/openthrottle/plan-run-worktrees.md.
+ *
+ * A deterministic failure (no create.sh, a non-git base, a script that prints no path) throws BullMQ's
+ * `UnrecoverableError`, so the plan job fails once instead of retrying with backoff against the same
+ * doomed input. Only a create.sh that was killed (timeout or signal) throws a plain, retryable Error.
  */
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { UnrecoverableError } from 'bullmq';
 
 import { OT_WORKTREE_ACTION } from '../ot-worktree-script/ot-worktree-script.constants.ts';
 import { resolveOtWorktreeScript } from '../ot-worktree-script/ot-worktree-script.utils.ts';
@@ -34,6 +39,16 @@ const readStderrTail = (error: unknown): string => {
   return error.stderr.trim().slice(-2000);
 };
 
+/**
+ * @description Whether a failed `execFile` was killed rather than exiting on its own — the timeout
+ * (`killed`) or an external signal. Those may succeed on a retry; a non-zero exit will not.
+ */
+const isKilledExecFailure = (error: unknown): boolean => {
+  if (typeof error !== 'object' || error === null) return false;
+  if ('killed' in error && error.killed === true) return true;
+  return 'signal' in error && typeof error.signal === 'string';
+};
+
 @Injectable()
 export class PlanRunWorktreeProvisionService {
   private readonly name = 'plan-run-worktree-provision';
@@ -47,8 +62,9 @@ export class PlanRunWorktreeProvisionService {
 
   /**
    * @description Returns the absolute path of the run's worktree, creating it when missing.
-   * @throws Error when the worktree cannot be created — the caller must fail the run rather than
-   * fall back to the base checkout.
+   * @throws UnrecoverableError when the worktree cannot be created for a deterministic reason, or a
+   * plain Error when create.sh was killed — either way the caller must fail the run rather than fall
+   * back to the base checkout.
    */
   async provision(params: ProvisionPlanRunWorktreeParams): Promise<string> {
     const { baseCheckoutPath, worktreeName } = params;
@@ -144,7 +160,7 @@ export class PlanRunWorktreeProvisionService {
       env: process.env,
     });
     if (!script.ok) {
-      throw new Error(
+      throw new UnrecoverableError(
         `Failed to provision worktree "${worktreeName}" from ${baseCheckoutPath}: no ot-worktree ` +
           `create.sh found. Searched, in order:\n${script.searched
             .map((path) => `  - ${path}`)
@@ -158,10 +174,45 @@ export class PlanRunWorktreeProvisionService {
       } via ${script.scriptPath} (rung: ${script.rung})`,
     );
 
+    const stdout = await this.execCreateScript({
+      baseCheckoutPath,
+      scriptPath: script.scriptPath,
+      worktreeName,
+    });
+
+    const path = stdout
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.startsWith('/'))
+      .pop();
+
+    if (path === undefined) {
+      throw new UnrecoverableError(
+        `Failed to provision worktree "${worktreeName}" from ${baseCheckoutPath}: ot-worktree ` +
+          `create printed no worktree path (stdout: ${stdout.trim().slice(-500)})`,
+      );
+    }
+
+    this.logger.log(`[${this.name}] worktree ${worktreeName} at ${path}`);
+    return path;
+  }
+
+  /**
+   * @description Execs `create.sh <name>` from the base checkout and returns its stdout. A killed
+   * script (timeout or signal) throws a retryable Error; any other failure is deterministic and
+   * throws `UnrecoverableError`. Both messages name the script's error and the tail of its stderr.
+   */
+  private async execCreateScript(params: {
+    readonly baseCheckoutPath: string;
+    readonly scriptPath: string;
+    readonly worktreeName: string;
+  }): Promise<string> {
+    const { baseCheckoutPath, scriptPath, worktreeName } = params;
+
     try {
       const { stdout } = await execFileAsync(
         'bash',
-        [script.scriptPath, worktreeName],
+        [scriptPath, worktreeName],
         {
           cwd: baseCheckoutPath,
           env: process.env,
@@ -169,30 +220,18 @@ export class PlanRunWorktreeProvisionService {
           timeout: PROVISION_TIMEOUT_MS,
         },
       );
-
-      const path = stdout
-        .split('\n')
-        .map((line) => line.trim())
-        .filter((line) => line.startsWith('/'))
-        .pop();
-
-      if (path === undefined) {
-        throw new Error(
-          `ot-worktree create printed no worktree path (stdout: ${stdout.trim().slice(-500)})`,
-        );
-      }
-
-      this.logger.log(`[${this.name}] worktree ${worktreeName} at ${path}`);
-      return path;
+      return stdout;
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
       const stderr = readStderrTail(error);
+      const message = `Failed to provision worktree "${worktreeName}" from ${baseCheckoutPath}: ${detail}${
+        stderr === '' ? '' : `\n${stderr}`
+      }`;
 
-      throw new Error(
-        `Failed to provision worktree "${worktreeName}" from ${baseCheckoutPath}: ${detail}${
-          stderr === '' ? '' : `\n${stderr}`
-        }`,
-      );
+      if (isKilledExecFailure(error)) {
+        throw new Error(message);
+      }
+      throw new UnrecoverableError(message);
     }
   }
 

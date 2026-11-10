@@ -412,3 +412,37 @@ for. It is **default on, with a per-checkout opt-out** (`worktree_skill_overlay_
   Provisioning does not depend on the overlay at all: the server execs `create.sh` through the
   `services/ot-worktree-script` ladder, whose last rung is the server's own copy. The overlay is
   what makes the skill visible to agents working in the repo.
+
+### 8.1 Not inside the plan-run worktree — decided 2026-11-09 (OT plan `104bf85e`)
+
+The overlay is untracked and excluded, so `git worktree add` does not carry it into
+`<root>/<org>/<repo>/plan-<8>`: an agent working in a plan-run worktree does not see `ot-worktree`.
+That is **deliberate, and stays that way.** The overlay is applied to the base checkout only.
+
+- **The shared exclude file makes a per-worktree ledger unsafe.** `.git/info/exclude` is not
+  per-worktree: `git rev-parse --git-path info/exclude` resolves to the repository's _common_ git
+  dir from every linked worktree. Both checkouts would write the same `worktree-skill-overlay` block
+  into one file, so when the worktree's ledger is torn down (before `destroy.sh`, or by the boot
+  reaper after the directory is gone) `removeManagedExcludeBlock` would strip the block that also
+  hides the **base checkout's** overlay, and the base checkout's `git status` would show
+  `.agents/skills/ot-worktree`. Doing this safely needs the block to be reference-counted across
+  every worktree of the repo, which is a ledger-format change, not a call-site change.
+- **The agent in the worktree has no use for it.** `ot-worktree` creates, heals and destroys
+  worktrees. A plan-run worktree's whole lifecycle belongs to OpenThrottle (provisioned at job
+  start, torn down by `PlanRunWorktreeTeardownService`), and the run already keeps the agent CLI's
+  own `-w` flag off so it cannot end up with a second worktree. An agent creating or removing
+  worktrees from inside one is what the design rules out.
+- **Provisioning never depended on it.** `create.sh` is found through the `services/ot-worktree-script`
+  ladder, whose last rung is the server's own copy.
+
+So the guarantee is: **the base checkout — where people and agents start worktrees — has
+`ot-worktree`; OT-managed plan-run worktrees deliberately do not.** Because the exclude block is
+shared and its paths are anchored to each worktree's root, a human who links the skill into a
+worktree by hand still gets a clean `git status` there.
+
+The same shared-file property applies to the curated layer, which materializes into the run's
+`configCwd` (the worktree). It is harmless there today because every curated teardown path tears
+down the repository's checkouts together (toggle off, shutdown, boot reap followed by reconcile),
+never one worktree alone. A worktree's curated ledger does outlive `destroy.sh` until the next boot
+reap, which skips its missing paths. Any future change that tears down a single checkout's layer
+must account for the shared block first.
