@@ -87,6 +87,49 @@ describe('SkillUsageLeaderboard Component', () => {
     expect(component.getByText('Third-party')).toBeInTheDocument();
   });
 
+  test('shows the not-measured state for null outcomes and duration', () => {
+    const component = renderComponent({
+      bySkill: [buildBySkill({ avgDurationMs: null, outcomeCount: 0 })],
+    });
+
+    expect(component.getAllByTestId('skill-usage-not-measured')).toHaveLength(
+      2,
+    );
+    expect(
+      component.queryByRole('cell', { name: '—' }),
+    ).not.toBeInTheDocument();
+  });
+
+  test('renders measured values without the not-measured state', () => {
+    const component = renderComponent({
+      bySkill: [
+        buildBySkill({
+          avgDurationMs: 250,
+          count: 4,
+          outcomeCount: 2,
+          successCount: 2,
+        }),
+      ],
+    });
+
+    expect(component.getByRole('cell', { name: '2/4' })).toBeInTheDocument();
+    expect(component.getByRole('cell', { name: '250ms' })).toBeInTheDocument();
+    expect(
+      component.queryByTestId('skill-usage-not-measured'),
+    ).not.toBeInTheDocument();
+  });
+
+  test('marks only the unreported metric when the other is measured', () => {
+    const component = renderComponent({
+      bySkill: [buildBySkill({ avgDurationMs: 1500, outcomeCount: 0 })],
+    });
+
+    expect(component.getAllByTestId('skill-usage-not-measured')).toHaveLength(
+      1,
+    );
+    expect(component.getByRole('cell', { name: '1.5s' })).toBeInTheDocument();
+  });
+
   test('links installed rows and leaves external rows as plain text', () => {
     const component = renderComponent({
       bySkill: [
@@ -211,6 +254,7 @@ describe('SkillUsageLeaderboard Component', () => {
 
     const names = component
       .getAllByRole('link')
+      .filter((link) => link.getAttribute('href')?.startsWith('/skills/'))
       .map((link) => link.textContent);
 
     expect(names).toEqual(['b-skill', 'a-skill']);

@@ -75,7 +75,7 @@ export class SkillUsageEventObject {
   receivedAt!: Date;
 
   @Field(() => String, {
-    description: `ours | personal | third-party — derived by the client: ours is authored under skills/, personal is linked from the invoking user's personal skills root outside the repo, third-party is everything else.`,
+    description: `ours | injected | personal | third-party — derived by the client: ours is authored under skills/, personal is linked from the invoking user's personal skills root outside the repo, injected is an OpenThrottle skill authored under another repository's skills/ and linked in by foreign skill injection, third-party is everything else.`,
   })
   scope!: string;
 
@@ -138,7 +138,7 @@ export class SkillUsageBySkillObject {
   outcomeCount!: number;
 
   @Field(() => String, {
-    description: `ours | personal | third-party for this skill row.`,
+    description: `ours | injected | personal | third-party for this skill row.`,
   })
   scope!: string;
 
@@ -197,7 +197,7 @@ export class SkillUsageOutcomeObject {
   receivedAt!: Date;
 
   @Field(() => String, {
-    description: `ours | personal | third-party.`,
+    description: `ours | injected | personal | third-party.`,
   })
   scope!: string;
 
@@ -233,7 +233,7 @@ export class SkillUsageByScopeObject {
   count!: number;
 
   @Field(() => String, {
-    description: `ours | personal | third-party.`,
+    description: `ours | injected | personal | third-party.`,
   })
   scope!: string;
 }
@@ -244,6 +244,11 @@ export class SkillUsageByDayObject {
     description: `UTC calendar day (YYYY-MM-DD).`,
   })
   date!: string;
+
+  @Field(() => Int, {
+    description: `injected-scoped invocations on this day: OpenThrottle skills authored in another repository and linked into this workspace by foreign skill injection.`,
+  })
+  injectedCount!: number;
 
   @Field(() => Int, {
     description: `ours-scoped invocations on this day.`,

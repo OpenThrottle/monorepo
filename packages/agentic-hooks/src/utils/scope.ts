@@ -6,6 +6,8 @@
  *                   (`~/.openthrottle/skills` / `OPENTHROTTLE_PERSONAL_SKILLS_DIR`) and linked
  *                   into the repo by ot-skill-sync: on disk and invokable, but outside the repo,
  *                   so nobody else's checkout has it.
+ * - `injected`    — authored under ANOTHER checkout's `skills/<name>/` and linked into this
+ *                   repo by foreign skill injection, so this repo's other checkouts lack it.
  * - `third-party` — everything else (plugin-namespaced `a:b`, or a skills-lock install).
  *
  * This runs synchronously inside a hook on every Skill invocation, so the `ours` answer is
@@ -16,6 +18,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 import type { Scope } from '../types.ts';
+import { resolveCheckoutRoot } from './checkout-root.ts';
 
 /** Env var overriding the personal skills root. */
 const PERSONAL_SKILLS_DIR_ENV = 'OPENTHROTTLE_PERSONAL_SKILLS_DIR';
@@ -87,6 +90,25 @@ const isPersonalSkill = (
 };
 
 /**
+ * @description True when the link at `.agents/skills/<name>` resolves to exactly
+ * `<checkout>/skills/<name>` of a git checkout OTHER than the one `repoRoot` sits in — the shape
+ * foreign skill injection writes. Requiring the `skills/<name>` tail keeps an arbitrary symlink
+ * that merely lands inside some repo out of this tier.
+ */
+const isInjectedSkill = (skillName: string, repoRoot: string): boolean => {
+  const target = fs.realpathSync(
+    path.join(repoRoot, SKILL_LINK_DIR, skillName),
+  );
+  const sourceRoot = resolveCheckoutRoot(target);
+  if (sourceRoot === null) {
+    return false;
+  }
+  const isAuthoredDir = target === path.join(sourceRoot, 'skills', skillName);
+  const ownRoot = resolveCheckoutRoot(fs.realpathSync(repoRoot));
+  return isAuthoredDir && sourceRoot !== ownRoot;
+};
+
+/**
  * @public
  */
 export const detectScope = (
@@ -112,7 +134,15 @@ export const detectScope = (
       return 'personal';
     }
   } catch {
-    // fail-open → treat as third-party
+    // fail-open → fall through to the injected check, then third-party
+  }
+
+  try {
+    if (isInjectedSkill(skillName, repoRoot)) {
+      return 'injected';
+    }
+  } catch {
+    // fail-open → treat as third-party (missing or dangling link included)
   }
 
   return 'third-party';

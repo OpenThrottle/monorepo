@@ -201,3 +201,11 @@ skip this step and never pipe around it; if it fails, the draft is wrong, not th
 - Mention any architectural decisions or significant refactors
 - Note any dependencies or prerequisites for reviewers
 - If the PR is large, consider breaking it down, or add a note about the complexity
+
+## Report the outcome
+
+Once, at the end — `error` if no PR URL came back, `abandoned` if called off ([why](../../docs/monorepo/skill-usage-telemetry-scope.md#reporting-an-outcome-from-a-skill)):
+
+```bash
+r="$(git rev-parse --show-toplevel)/.claude/hooks/skill-usage-outcome.cjs"; if [ -f "$r" ]; then node "$r" --skill github-pull-request --outcome success; fi
+```

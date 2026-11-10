@@ -39,6 +39,11 @@ export const UsageSkillUsageSummary = (
       total: skillUsageScopeCount(byScope, SKILL_USAGE_SCOPES.OURS),
     },
     {
+      hint: SKILL_USAGE_COPY.scopeInjectedHint,
+      label: 'Injected',
+      total: skillUsageScopeCount(byScope, SKILL_USAGE_SCOPES.INJECTED),
+    },
+    {
       hint: SKILL_USAGE_COPY.scopePersonalHint,
       label: 'Personal',
       total: skillUsageScopeCount(byScope, SKILL_USAGE_SCOPES.PERSONAL),

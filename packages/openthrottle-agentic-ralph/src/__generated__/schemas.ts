@@ -1367,6 +1367,7 @@ export function RecordSkillUsageOutcomeInputSchema(): z.ZodObject<
 > {
   return z.object({
     cwd: z.string().nullish(),
+    deliberate: z.boolean().nullish(),
     durationMs: z.number().nullish(),
     gitBranch: z.string().nullish(),
     occurredAt: definedNonNullAnySchema,

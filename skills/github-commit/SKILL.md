@@ -40,3 +40,11 @@ knowledge of a repo that forbids it, and it does not apply here: this workspace'
 conventional-commit footers only, and [`CLAUDE.md`](../../CLAUDE.md) states the prohibition for the
 whole repo. The two instructions are not compatible and cannot both be satisfied. Drop the line, and
 say you dropped it — do not silently comply with both.
+
+## Report the outcome
+
+Once, at the end — `error` if the commit could not be made, `abandoned` if called off ([why](../../docs/monorepo/skill-usage-telemetry-scope.md#reporting-an-outcome-from-a-skill)):
+
+```bash
+r="$(git rev-parse --show-toplevel)/.claude/hooks/skill-usage-outcome.cjs"; if [ -f "$r" ]; then node "$r" --skill github-commit --outcome success; fi
+```

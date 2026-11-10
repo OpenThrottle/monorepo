@@ -197,6 +197,7 @@ export class SkillUsageResolver {
 
     const saved = await this.skillUsageEventsService.recordSkillUsageOutcome({
       cwd: input.cwd ?? null,
+      deliberate: input.deliberate ?? null,
       durationMs: input.durationMs ?? null,
       gitBranch: input.gitBranch ?? null,
       occurredAt,

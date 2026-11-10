@@ -9,6 +9,7 @@ type SkillUsage = GetSkillDetailUsageQuery['skillUsage'];
 const byDay: SkillUsage['byDay'] = [
   {
     date: '2026-08-01',
+    injectedCount: 7,
     oursCount: 2,
     personalCount: 4,
     thirdPartyCount: 1,
@@ -38,6 +39,7 @@ describe('toSkillDetailUsageData', () => {
       byDay: [
         {
           date: '2026-08-01',
+          injectedCount: 7,
           oursCount: 2,
           personalCount: 4,
           thirdPartyCount: 1,

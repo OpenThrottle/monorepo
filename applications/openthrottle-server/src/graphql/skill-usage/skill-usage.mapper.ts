@@ -109,6 +109,7 @@ export const toSkillUsageByDayObject = (
   const object = new SkillUsageByDayObject();
 
   object.date = row.date;
+  object.injectedCount = row.injectedCount;
   object.oursCount = row.oursCount;
   object.personalCount = row.personalCount;
   object.thirdPartyCount = row.thirdPartyCount;

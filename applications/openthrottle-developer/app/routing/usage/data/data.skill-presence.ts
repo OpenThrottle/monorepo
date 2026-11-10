@@ -15,6 +15,8 @@
  * | `ours`        | no           | `missing`   |
  * | `personal`    | yes          | `personal`  |
  * | `personal`    | no           | `missing`   |
+ * | `injected`    | yes          | `installed` |
+ * | `injected`    | no           | `missing`   |
  * | `third-party` | —            | `external`  |
  *
  * Personal-ness comes from the captured scope, not from intersecting `ours`

@@ -149,6 +149,7 @@ describe('routes/skills.$slug.tsx', () => {
         byDay: [
           {
             date: '2026-08-05',
+            injectedCount: 0,
             oursCount: 5,
             personalCount: 0,
             thirdPartyCount: 0,

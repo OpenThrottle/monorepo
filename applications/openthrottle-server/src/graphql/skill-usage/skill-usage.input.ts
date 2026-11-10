@@ -68,7 +68,7 @@ export class RecordSkillUsageInput {
   promptId?: string | null;
 
   @Field(() => String, {
-    description: `ours | personal | third-party.`,
+    description: `ours | injected | personal | third-party.`,
   })
   scope!: string;
 
@@ -104,6 +104,12 @@ export class RecordSkillUsageOutcomeInput {
   })
   cwd?: string | null;
 
+  @Field(() => Boolean, {
+    description: `True when a deliberate reporter (the skill-usage-outcome helper, or an adapter relaying a harness-observed failure) sent this outcome. A success/error without it is stored as legacy_assumed_success, because a stale pre-#537 hook hardcoded success. session_ended and abandoned make no quality claim and do not need it.`,
+    nullable: true,
+  })
+  deliberate?: boolean | null;
+
   @Field(() => Int, {
     description: `Wall-clock duration in milliseconds when the skill reports it.`,
     nullable: true,
@@ -127,7 +133,7 @@ export class RecordSkillUsageOutcomeInput {
   outcome!: string;
 
   @Field(() => String, {
-    description: `ours | personal | third-party. Omitting it defaults to ours — a legacy default for senders that predate the field; every current hook posts an explicit scope.`,
+    description: `ours | injected | personal | third-party. Omitting it defaults to ours — a legacy default for senders that predate the field; every current hook posts an explicit scope.`,
     nullable: true,
   })
   scope?: string | null;

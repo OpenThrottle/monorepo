@@ -5112,7 +5112,7 @@ export type RecordSkillUsageInput = {
   privacyLevel?: InputMaybe<Scalars['String']['input']>;
   /** Harness prompt_id when present. */
   promptId?: InputMaybe<Scalars['String']['input']>;
-  /** ours | personal | third-party. */
+  /** ours | injected | personal | third-party. */
   scope: Scalars['String']['input'];
   /** Harness session id when present. */
   sessionId?: InputMaybe<Scalars['String']['input']>;
@@ -5127,6 +5127,8 @@ export type RecordSkillUsageInput = {
 export type RecordSkillUsageOutcomeInput = {
   /** Working directory at outcome time. */
   cwd?: InputMaybe<Scalars['String']['input']>;
+  /** True when a deliberate reporter (the skill-usage-outcome helper, or an adapter relaying a harness-observed failure) sent this outcome. A success/error without it is stored as legacy_assumed_success, because a stale pre-#537 hook hardcoded success. session_ended and abandoned make no quality claim and do not need it. */
+  deliberate?: InputMaybe<Scalars['Boolean']['input']>;
   /** Wall-clock duration in milliseconds when the skill reports it. */
   durationMs?: InputMaybe<Scalars['Int']['input']>;
   /** Git branch at outcome time. */
@@ -5135,7 +5137,7 @@ export type RecordSkillUsageOutcomeInput = {
   occurredAt: Scalars['DateTime']['input'];
   /** success | abandoned | error. */
   outcome: Scalars['String']['input'];
-  /** ours | personal | third-party. Omitting it defaults to ours — a legacy default for senders that predate the field; every current hook posts an explicit scope. */
+  /** ours | injected | personal | third-party. Omitting it defaults to ours — a legacy default for senders that predate the field; every current hook posts an explicit scope. */
   scope?: InputMaybe<Scalars['String']['input']>;
   /** Harness session id — primary correlation key with skillName. */
   sessionId?: InputMaybe<Scalars['String']['input']>;
@@ -6206,6 +6208,8 @@ export type SkillUsageByDayObject = {
   __typename?: 'SkillUsageByDayObject';
   /** UTC calendar day (YYYY-MM-DD). */
   date: Scalars['String']['output'];
+  /** injected-scoped invocations on this day: OpenThrottle skills authored in another repository and linked into this workspace by foreign skill injection. */
+  injectedCount: Scalars['Int']['output'];
   /** ours-scoped invocations on this day. */
   oursCount: Scalars['Int']['output'];
   /** personal-scoped invocations on this day. */
@@ -6220,7 +6224,7 @@ export type SkillUsageByScopeObject = {
   __typename?: 'SkillUsageByScopeObject';
   /** Invocation count for this scope in the filtered range. */
   count: Scalars['Int']['output'];
-  /** ours | personal | third-party. */
+  /** ours | injected | personal | third-party. */
   scope: Scalars['String']['output'];
 };
 
@@ -6238,7 +6242,7 @@ export type SkillUsageBySkillObject = {
   lastUsedAt?: Maybe<Scalars['DateTime']['output']>;
   /** QUALITY outcomes for this skill — successCount + errorCount only. Deliberately excludes sessionEndedCount and abandonedCount, which say the process finished or died, not that the skill's work went well. May be far less than count; zero is the normal, honest reading for any skill that does not report its own outcome. */
   outcomeCount: Scalars['Int']['output'];
-  /** ours | personal | third-party for this skill row. */
+  /** ours | injected | personal | third-party for this skill row. */
   scope: Scalars['String']['output'];
   /** Automatic session-end records for this skill — the session that loaded it ended normally. Liveness, not quality; excluded from outcomeCount. */
   sessionEndedCount: Scalars['Int']['output'];
@@ -6274,7 +6278,7 @@ export type SkillUsageEventObject = {
   promptId?: Maybe<Scalars['String']['output']>;
   /** Server receipt time (set on insert). */
   receivedAt: Scalars['DateTime']['output'];
-  /** ours | personal | third-party — derived by the client: ours is authored under skills/, personal is linked from the invoking user's personal skills root outside the repo, third-party is everything else. */
+  /** ours | injected | personal | third-party — derived by the client: ours is authored under skills/, personal is linked from the invoking user's personal skills root outside the repo, injected is an OpenThrottle skill authored under another repository's skills/ and linked in by foreign skill injection, third-party is everything else. */
   scope: Scalars['String']['output'];
   /** Harness session id when present. */
   sessionId?: Maybe<Scalars['String']['output']>;
@@ -6332,7 +6336,7 @@ export type SkillUsageOutcomeObject = {
   outcome: Scalars['String']['output'];
   /** Server receipt time (set on insert). */
   receivedAt: Scalars['DateTime']['output'];
-  /** ours | personal | third-party. */
+  /** ours | injected | personal | third-party. */
   scope: Scalars['String']['output'];
   /** Harness session id when present. */
   sessionId?: Maybe<Scalars['String']['output']>;

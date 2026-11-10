@@ -12,6 +12,62 @@ skill on usage grounds.
 [dated snapshot](#invocation-snapshot--measured-2026-08-20) describes the old contract and is kept
 as history. Start with [The outcome model](#the-outcome-model-what-each-value-may-claim).
 
+## Audit — 2026-11-09: sparse outcomes, empty durations, OT skills as third-party
+
+OT plan `25f11313`. `/usage` looked unhealthy on three axes. One was a leak of an old bug, one was
+by design plus one real bug, and one was two separate scope defects.
+
+**1. Outcomes were sparse — and the 116 that existed were not real.** Every `success` /
+`reported_v1` row was the pre-2026-09-13 hardcoded-success Stop hook, still running in checkouts
+and long-lived sessions that had not pulled the fix. `capture_model` was a column _default_, and
+migration 124 attached `reported_v1` to the shared local database three days before the hook fix
+merged, so those rows were labelled measured. No deliberate reporter was wired anywhere, which is
+also why `error` had never fired. Fixed: the server now sets `capture_model` itself and stores a
+`success`/`error` as `legacy_assumed_success` unless the sender declares `deliberate: true`; the
+116 rows are relabelled (migration 153); the reporter is wired into five skills (see
+[Reporting an outcome from a skill](#reporting-an-outcome-from-a-skill)).
+
+**2. Durations were empty — by design, plus a reporter that could never have correlated.** No
+hook brackets a skill's own work, so automatic paths write `null`; that stands. But the documented
+reporter call passed `$CLAUDE_SESSION_ID`, which Claude Code does not export to its Bash tool
+(`$CLAUDE_CODE_SESSION_ID` is the real one). Fixed, and the reporter now derives a genuinely
+skill-scoped duration by claiming its own load-time start. Also learned: `Stop` fires at the end of
+**every turn**, so `session_ended` means "the turn that loaded this skill ended", and a derived
+duration exists only for a skill that finishes in that turn. Unmeasured cells now read **Not
+measured** and link here, instead of a bare dash.
+
+**3. OT skills read as third-party — two causes.**
+
+- _Launched outside a checkout._ Sessions started in a desktop-app scratch workspace still run the
+  user-scoped plugin's hooks, which judged scope and branch against that launch directory: no
+  `skills/`, no git → `third-party` with an empty branch, although every call ran in the repo. The
+  capture hook now resolves the checkout from the payload `cwd` when the launch directory is not
+  one. 8 events + 16 outcomes relabelled `ours` (migration 153).
+- _Injected into foreign workspaces._ Foreign skill injection links `<OT checkout>/skills/<name>`
+  into other repos, where no `skills/<name>` exists. Decision: a new **`injected`** scope rather
+  than borrowing `ours`. Detected when `.agents/skills/<name>` resolves to exactly
+  `skills/<name>` of _another_ checkout; migration 154 widens both CHECKs and relabels 15 + 15
+  historical rows. `/usage` shows it as its own tile, filter, badge and chart series.
+
+Also relabelled: personal skills captured before `personal` existed (59 events, 62 outcomes).
+Left alone: slugs that were never skills (`ot-telemetry`, `probe-skill`).
+
+**Counts, local database, before → after migrations 153 + 154:**
+
+| table      | value                                |  before |   after |
+| ---------- | ------------------------------------ | ------: | ------: |
+| `events`   | `ours`                               |     976 |     984 |
+| `events`   | `personal`                           |      22 |      81 |
+| `events`   | `injected`                           |       — |      15 |
+| `events`   | `third-party`                        |     196 |     114 |
+| `outcomes` | `success` / `reported_v1`            |     116 |   **0** |
+| `outcomes` | `success` / `legacy_assumed_success` |     546 |     662 |
+| `outcomes` | `session_ended` / `reported_v1`      |     447 |     447 |
+| `outcomes` | `abandoned` (both models)            | 26 + 43 | 26 + 43 |
+
+Zero measured outcomes is the honest starting line: every outcome on `/usage` from here on comes
+from a skill that reported its own work.
+
 ## Where the rows come from
 
 Authoring lives in [`packages/agentic-hooks`](../../packages/agentic-hooks); the
@@ -83,16 +139,26 @@ it finished, supplies a duration.
 This is the only path that may claim quality or report a duration:
 
 ```bash
-node .claude/hooks/skill-usage-outcome.cjs \
-  --skill ot-plans \
-  --outcome error \
-  --duration-ms 4200 \
-  --session "$CLAUDE_SESSION_ID"
+node .claude/hooks/skill-usage-outcome.cjs --skill ot-plans --outcome error
 ```
 
 `--outcome` accepts `success` | `abandoned` | `error`. It deliberately **rejects** `session_ended`:
 that value exists to say "no quality claim", and a reporter that knows how the work went has no
 reason to emit it. Fail-open throughout — outcome capture never blocks or slows a skill.
+
+- **Session.** Defaults to `$CLAUDE_CODE_SESSION_ID`, which is what Claude Code exports to its Bash
+  tool. The older `$CLAUDE_SESSION_ID` this example used to pass is **unset** there, so a reporter
+  wired that way would post rows no start or event could ever be joined to.
+- **Duration.** Without `--duration-ms`, the reporter claims the skill's own open start and reports
+  load → now. That is a genuinely skill-scoped number — the start marks the load, the reporter marks
+  the skill's own finish line — and claiming the start also stops the turn-end hook writing a second
+  `session_ended` row for the same invocation. It only exists when the skill finishes in the turn
+  that loaded it: `Stop` fires at the end of **every turn**, not of the session, and resolves the
+  turn's open starts. A multi-turn skill (`ot-loop`) therefore reports an outcome with no duration.
+- **Declaration.** The reporter sends `deliberate: true`; the server stores a `success`/`error`
+  without it as `legacy_assumed_success`, so a stale hook bundle can never mint a measured outcome.
+- **Wired today:** `github-commit`, `github-squash`, `github-pull-request`, `ot-worktree` (each at its
+  end) and `ot-loop` (once per run, at settle — never per task).
 
 ### Legacy rows are quarantined, not rewritten
 
@@ -107,6 +173,16 @@ of all events but **all 7 belong to `ot-plans`**, where they were 7 of 42 invoca
 make that one skill's number wrong.
 
 Migration 113 widened the `outcome` CHECK to admit `session_ended`.
+
+**Relabelled, still not rewritten (migration 153, 2026-11).** `capture_model` is a column
+_default_, so it labels whatever writes the row, not how the row was produced. The `reported_v1`
+default reached the local database three days before the hook fix merged, and checkouts still
+running the old bundle kept posting hardcoded `success` through 2026-10-29: 116 rows that looked
+measured and were not. Migration 153 gives them the `legacy_assumed_success` label their pre-cutoff
+twins already carry. It also corrects two closed sets of `scope`: personal skills captured before
+`personal` existed, and in-repo skills scored against the folder above the repo. Every predicate is
+pinned to a past window or a closed id list. `outcome` values are never rewritten — only the labels
+that say how far to trust them.
 
 ## Captured
 

@@ -132,6 +132,7 @@ export const buildOutcomeEvent = ({
   skillName,
   outcome,
   repoRoot,
+  deliberate = false,
   sessionId = null,
   toolUseId = null,
   durationMs = null,
@@ -141,6 +142,8 @@ export const buildOutcomeEvent = ({
   source,
 }: {
   cwd?: string | null;
+  /** Declare a deliberate reporter; see `OutcomeEvent.deliberate`. */
+  deliberate?: boolean;
   durationMs?: number | null;
   gitBranch?: string;
   // Accepts any string and validates at runtime (a JSONL/JS caller may hand in
@@ -190,6 +193,9 @@ export const buildOutcomeEvent = ({
   // how `UsageEvent.source` is handled in buildUsageEvent.
   if (source != null) {
     event.source = source;
+  }
+  if (deliberate) {
+    event.deliberate = true;
   }
 
   return event;
@@ -283,6 +289,9 @@ export const toRecordSkillUsageOutcomeInput = (
   }
   if (event.duration_ms != null) {
     input.durationMs = event.duration_ms;
+  }
+  if (event.deliberate === true) {
+    input.deliberate = true;
   }
 
   return input;

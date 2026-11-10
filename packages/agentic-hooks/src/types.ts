@@ -10,13 +10,15 @@ export type PrivacyLevel = 'full' | 'name-only' | 'truncated';
 /**
  * Who a captured invocation belongs to: authored in this repo (`ours`),
  * authored by the invoking user under their personal skills root outside the
- * repo (`personal`), or installed/plugin-namespaced (`third-party`).
+ * repo (`personal`), authored in ANOTHER repository and linked into this one
+ * by foreign skill injection (`injected`), or installed/plugin-namespaced
+ * (`third-party`).
  *
  * Mirrors `SKILL_USAGE_SCOPES` in
  * `@openthrottle/nestjs-repositories`'s `skill-usage-events.entity.ts`, which
  * is the canonical declaration and the one the Postgres CHECK follows.
  */
-export type Scope = 'ours' | 'personal' | 'third-party';
+export type Scope = 'injected' | 'ours' | 'personal' | 'third-party';
 
 /**
  * Outcome classifiers, split by who can honestly emit them.
@@ -84,6 +86,13 @@ export interface UsageEvent {
  */
 export interface OutcomeEvent {
   cwd: string;
+  /**
+   * True when a deliberate reporter (the `skill-usage-outcome` helper, or an
+   * adapter relaying a harness-observed failure) emitted a success/error
+   * claim. The server stores such a claim as `reported_v1` only when this is
+   * declared; a stale pre-#537 bundle never sets it.
+   */
+  deliberate?: boolean;
   duration_ms: number | null;
   event_kind: 'outcome';
   git_branch: string;

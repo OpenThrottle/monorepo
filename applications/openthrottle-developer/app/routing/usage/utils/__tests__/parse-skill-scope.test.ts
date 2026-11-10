@@ -10,6 +10,12 @@ describe('parseSkillScope', () => {
     );
   });
 
+  it('returns the "injected" scope unchanged', () => {
+    expect(parseSkillScope(SKILL_USAGE_SCOPES.INJECTED)).toBe(
+      SKILL_USAGE_SCOPES.INJECTED,
+    );
+  });
+
   it('returns the "personal" scope unchanged', () => {
     // Before personal was a member this fell through to null, so a
     // ?skillScope=personal link looked like it worked while showing everything.

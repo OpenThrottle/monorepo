@@ -50,6 +50,7 @@ const buildByDay = (
 ): UsageSkillUsageByDayFragment => {
   return {
     date: '2026-07-15',
+    injectedCount: 0,
     oursCount: 0,
     personalCount: 0,
     thirdPartyCount: 0,

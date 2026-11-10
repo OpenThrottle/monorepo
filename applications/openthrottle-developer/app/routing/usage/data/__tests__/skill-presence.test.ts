@@ -94,6 +94,24 @@ describe('skill-presence', () => {
       });
     });
 
+    it('classifies an on-disk injected skill as installed', () => {
+      const presence = classifySkillUsagePresence(
+        { scope: 'injected', skillName: 'ot-plans' },
+        new Set(['ot-plans']),
+      );
+
+      expect(presence).toBe('installed');
+    });
+
+    it('classifies a removed injected skill as missing', () => {
+      const presence = classifySkillUsagePresence(
+        { scope: 'injected', skillName: 'ot-plans' },
+        new Set(),
+      );
+
+      expect(presence).toBe('missing');
+    });
+
     it('classifies an on-disk personal skill as personal, not installed', () => {
       // Read straight off the captured scope — no slug-set intersection.
       const presence = classifySkillUsagePresence(

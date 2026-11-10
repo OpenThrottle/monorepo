@@ -79,6 +79,7 @@ describe('SkillDetailUsage Component', () => {
         byDay: [
           {
             date: '2026-08-05',
+            injectedCount: 0,
             oursCount: 12,
             personalCount: 0,
             thirdPartyCount: 0,

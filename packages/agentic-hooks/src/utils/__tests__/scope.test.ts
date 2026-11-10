@@ -170,3 +170,83 @@ describe('detectScope — the personal tier', () => {
     expect(detectScope('', repoRoot, env())).toBe('third-party');
   });
 });
+
+describe('detectScope — the injected tier', () => {
+  let fixtureRoot: string;
+  let foreignRepo: string;
+  let sourceRepo: string;
+
+  /** Reproduce what foreign skill injection writes into the foreign repo. */
+  const link = (name: string, target: string) => {
+    const dir = path.join(foreignRepo, '.agents', 'skills');
+    fs.mkdirSync(dir, { recursive: true });
+    fs.symlinkSync(target, path.join(dir, name));
+  };
+
+  const authoredIn = (repo: string, name: string): string => {
+    const dir = path.join(repo, 'skills', name);
+    fs.mkdirSync(dir, { recursive: true });
+    return dir;
+  };
+
+  /** A personal root that matches nothing, so only the injected check can fire. */
+  const env = (): NodeJS.ProcessEnv => {
+    return {
+      OPENTHROTTLE_PERSONAL_SKILLS_DIR: path.join(fixtureRoot, 'no-personal'),
+    };
+  };
+
+  beforeEach(() => {
+    fixtureRoot = fs.realpathSync(
+      fs.mkdtempSync(path.join(os.tmpdir(), 'skill-usage-injected-')),
+    );
+    foreignRepo = path.join(fixtureRoot, 'foreign');
+    sourceRepo = path.join(fixtureRoot, 'source');
+    fs.mkdirSync(path.join(foreignRepo, '.git'), { recursive: true });
+    fs.mkdirSync(path.join(sourceRepo, '.git'), { recursive: true });
+  });
+
+  afterEach(() => {
+    fs.rmSync(fixtureRoot, { force: true, recursive: true });
+  });
+
+  it("labels a link into another checkout's skills/<name> as injected", () => {
+    link('ot-loop', authoredIn(sourceRepo, 'ot-loop'));
+
+    expect(detectScope('ot-loop', foreignRepo, env())).toBe('injected');
+  });
+
+  it('labels a link into a directory that is not skills/<name> as third-party', () => {
+    const notAuthored = path.join(sourceRepo, 'vendor', 'ot-loop');
+    fs.mkdirSync(notAuthored, { recursive: true });
+    link('ot-loop', notAuthored);
+
+    expect(detectScope('ot-loop', foreignRepo, env())).toBe('third-party');
+  });
+
+  it('labels a link whose name differs from the authored folder as third-party', () => {
+    link('renamed', authoredIn(sourceRepo, 'ot-loop'));
+
+    expect(detectScope('renamed', foreignRepo, env())).toBe('third-party');
+  });
+
+  it('labels a link into skills/ outside any checkout as third-party', () => {
+    const loose = path.join(fixtureRoot, 'loose');
+    link('ot-loop', authoredIn(loose, 'ot-loop'));
+
+    expect(detectScope('ot-loop', foreignRepo, env())).toBe('third-party');
+  });
+
+  it('labels a dangling injected link as third-party', () => {
+    link('gone', path.join(sourceRepo, 'skills', 'gone'));
+
+    expect(detectScope('gone', foreignRepo, env())).toBe('third-party');
+  });
+
+  it('prefers ours when the skill is also authored in this repo', () => {
+    authoredIn(foreignRepo, 'ot-loop');
+    link('ot-loop', authoredIn(sourceRepo, 'ot-loop'));
+
+    expect(detectScope('ot-loop', foreignRepo, env())).toBe('ours');
+  });
+});

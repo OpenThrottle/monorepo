@@ -333,6 +333,13 @@ which the run reads as live and its worktree stays marked busy.
 4. Next we will fetch main `git fetch origin main:main` and rebase the branch against `main`
 5. **Open a Draft PR** with `/github-pull-request` (conventional-commit title, the repo PR template, testing steps phrased as things to do) — this is the single push for the whole plan. Leave it in **draft**: `build` skips on draft PRs, so a draft is what keeps any later push cheap. Mark it ready (`gh pr ready`) only when the work is genuinely up for review. **Capture the PR URL and number, and the branch head sha** — the PR is the precondition for teardown below, and step 6 records both.
 6. **Settle your run row, with the sha and the PR number** — `settle_plan_run(planRunId, 'COMPLETED', headSha, prNumber)`. The PR is open, so the run is genuinely done, and nothing else will ever close this row. Those two values are also how the work gets onto the ledger: the server writes the artifacts itself from them. Pass them here and there is nothing to do after the merge — see [Recording the work on the ledger](#recording-the-work-on-the-ledger).
+
+   Then report the outcome **once per run, never per task** (`COMPLETED` → `success`, `FAILED` → `error`, `CANCELLED` → `abandoned`; same on every exit path):
+
+   ```bash
+   r="$(git rev-parse --show-toplevel)/.claude/hooks/skill-usage-outcome.cjs"; if [ -f "$r" ]; then node "$r" --skill ot-loop --outcome success; fi
+   ```
+
 7. **Stop the loop** once the PR is open. Do **not** merge.
 
 ## Teardown the worktree (only after a successful PR)

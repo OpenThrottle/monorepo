@@ -1,6 +1,6 @@
 /**
  * @description Chart config + datum shape for the skill-usage over-time
- * stacked bar chart (ours / personal / third-party per UTC day). Shared by the
+ * stacked bar chart (ours / injected / personal / third-party per UTC day). Shared by the
  * /usage route and the /skills/$slug detail route.
  *
  * The series are keyed by the by-day count fields rather than by scope id, and
@@ -12,6 +12,7 @@ import type { ChartConfig } from '@openthrottle/react-router-shadcn';
 
 export interface SkillUsageChartDatum {
   date: string;
+  injectedCount: number;
   oursCount: number;
   personalCount: number;
   thirdPartyCount: number;
@@ -19,6 +20,7 @@ export interface SkillUsageChartDatum {
 }
 
 export const SKILL_USAGE_CHART_CONFIG: ChartConfig = {
+  injectedCount: { color: 'var(--chart-3)', label: 'Injected' },
   oursCount: { color: 'var(--chart-1)', label: 'Ours' },
   personalCount: { color: 'var(--chart-2)', label: 'Personal' },
   thirdPartyCount: { color: 'var(--chart-4)', label: 'Third-party' },
@@ -38,6 +40,7 @@ export const SKILL_USAGE_TOP_BAR_RADIUS: [number, number, number, number] = [
 
 export const SKILL_USAGE_CHART_SERIES = [
   'oursCount',
+  'injectedCount',
   'personalCount',
   'thirdPartyCount',
 ] as const;

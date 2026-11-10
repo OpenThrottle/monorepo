@@ -20,7 +20,7 @@ export interface SkillUsageDailyChartProps {
 }
 
 /**
- * @description Stacked daily bar chart: ours / personal / third-party skill
+ * @description Stacked daily bar chart: ours / injected / personal / third-party skill
  * invocations.
  * Shared by the /usage route and the /skills/$slug detail route. Under jsdom,
  * Recharts draws no geometry — tests assert the wrapper mounts.

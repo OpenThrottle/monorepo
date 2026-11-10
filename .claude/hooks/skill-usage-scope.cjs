@@ -33,8 +33,8 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 
 // packages/agentic-hooks/src/adapters/claude/scope.ts
-var import_node_fs2 = __toESM(require("node:fs"), 1);
-var import_node_path2 = __toESM(require("node:path"), 1);
+var import_node_fs3 = __toESM(require("node:fs"), 1);
+var import_node_path3 = __toESM(require("node:path"), 1);
 
 // packages/nodejs-utils/src/utils/is-record.ts
 var isRecord = (value) => {
@@ -42,22 +42,48 @@ var isRecord = (value) => {
 };
 
 // packages/agentic-hooks/src/utils/scope.ts
-var import_node_fs = __toESM(require("node:fs"), 1);
+var import_node_fs2 = __toESM(require("node:fs"), 1);
 var import_node_os = __toESM(require("node:os"), 1);
+var import_node_path2 = __toESM(require("node:path"), 1);
+
+// packages/agentic-hooks/src/utils/checkout-root.ts
+var import_node_fs = __toESM(require("node:fs"), 1);
 var import_node_path = __toESM(require("node:path"), 1);
+var findGitAncestor = (dir) => {
+  if (import_node_fs.default.existsSync(import_node_path.default.join(dir, ".git"))) {
+    return dir;
+  }
+  const parent = import_node_path.default.dirname(dir);
+  if (parent === dir) {
+    return null;
+  }
+  return findGitAncestor(parent);
+};
+var resolveCheckoutRoot = (dir) => {
+  if (dir === null || dir === "" || !import_node_path.default.isAbsolute(dir)) {
+    return null;
+  }
+  try {
+    return findGitAncestor(import_node_path.default.resolve(dir));
+  } catch {
+    return null;
+  }
+};
+
+// packages/agentic-hooks/src/utils/scope.ts
 var PERSONAL_SKILLS_DIR_ENV = "OPENTHROTTLE_PERSONAL_SKILLS_DIR";
-var SKILL_LINK_DIR = import_node_path.default.join(".agents", "skills");
+var SKILL_LINK_DIR = import_node_path2.default.join(".agents", "skills");
 var resolvePersonalSkillsRoot = (env) => {
   const override = env[PERSONAL_SKILLS_DIR_ENV]?.trim();
   if (override !== void 0 && override !== "") {
     return override;
   }
-  return import_node_path.default.join(import_node_os.default.homedir(), ".openthrottle", "skills");
+  return import_node_path2.default.join(import_node_os.default.homedir(), ".openthrottle", "skills");
 };
 var isPathInsideRoot = (root, candidate) => {
   try {
-    const realRoot = import_node_fs.default.realpathSync(root);
-    return import_node_fs.default.realpathSync(candidate).startsWith(`${realRoot}${import_node_path.default.sep}`);
+    const realRoot = import_node_fs2.default.realpathSync(root);
+    return import_node_fs2.default.realpathSync(candidate).startsWith(`${realRoot}${import_node_path2.default.sep}`);
   } catch {
     return false;
   }
@@ -66,16 +92,28 @@ var isPersonalSkill = (skillName2, repoRoot2, env) => {
   const personalRoot = resolvePersonalSkillsRoot(env);
   return isPathInsideRoot(
     personalRoot,
-    import_node_path.default.join(repoRoot2, SKILL_LINK_DIR, skillName2)
+    import_node_path2.default.join(repoRoot2, SKILL_LINK_DIR, skillName2)
   );
+};
+var isInjectedSkill = (skillName2, repoRoot2) => {
+  const target = import_node_fs2.default.realpathSync(
+    import_node_path2.default.join(repoRoot2, SKILL_LINK_DIR, skillName2)
+  );
+  const sourceRoot = resolveCheckoutRoot(target);
+  if (sourceRoot === null) {
+    return false;
+  }
+  const isAuthoredDir = target === import_node_path2.default.join(sourceRoot, "skills", skillName2);
+  const ownRoot = resolveCheckoutRoot(import_node_fs2.default.realpathSync(repoRoot2));
+  return isAuthoredDir && sourceRoot !== ownRoot;
 };
 var detectScope = (skillName2, repoRoot2, env = process.env) => {
   if (!skillName2 || skillName2.includes(":")) {
     return "third-party";
   }
-  const authoredDir = import_node_path.default.join(repoRoot2, "skills", skillName2);
+  const authoredDir = import_node_path2.default.join(repoRoot2, "skills", skillName2);
   try {
-    if (import_node_fs.default.existsSync(authoredDir) && import_node_fs.default.statSync(authoredDir).isDirectory()) {
+    if (import_node_fs2.default.existsSync(authoredDir) && import_node_fs2.default.statSync(authoredDir).isDirectory()) {
       return "ours";
     }
   } catch {
@@ -83,6 +121,12 @@ var detectScope = (skillName2, repoRoot2, env = process.env) => {
   try {
     if (isPersonalSkill(skillName2, repoRoot2, env)) {
       return "personal";
+    }
+  } catch {
+  }
+  try {
+    if (isInjectedSkill(skillName2, repoRoot2)) {
+      return "injected";
     }
   } catch {
   }
@@ -105,15 +149,15 @@ if (skillName.includes(":")) {
   reason = "plugin-namespaced (contains :)";
 } else if (scope === "ours") {
   reason = "directory under skills/";
-  registryHit = import_node_path2.default.join(repoRoot, "skills", skillName);
+  registryHit = import_node_path3.default.join(repoRoot, "skills", skillName);
 } else if (scope === "personal") {
   reason = "linked from the personal skills root (outside the repo)";
-  registryHit = import_node_path2.default.join(repoRoot, ".agents", "skills", skillName);
+  registryHit = import_node_path3.default.join(repoRoot, ".agents", "skills", skillName);
 } else {
-  const lockPath = import_node_path2.default.join(repoRoot, "skills-lock.json");
+  const lockPath = import_node_path3.default.join(repoRoot, "skills-lock.json");
   try {
-    if (import_node_fs2.default.existsSync(lockPath)) {
-      const lock = JSON.parse(import_node_fs2.default.readFileSync(lockPath, "utf8"));
+    if (import_node_fs3.default.existsSync(lockPath)) {
+      const lock = JSON.parse(import_node_fs3.default.readFileSync(lockPath, "utf8"));
       if (isRecord(lock) && isRecord(lock.skills) && lock.skills[skillName]) {
         reason = "skills-lock.json install (external; not under skills/)";
         registryHit = "skills-lock.json";

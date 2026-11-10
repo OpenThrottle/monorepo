@@ -58,6 +58,10 @@ describe('UsageSkillUsageFilters Component', () => {
     const oursLink = component.getByRole('link', { name: 'Ours' });
     expect(oursLink).toHaveAttribute('href', '/?skillScope=ours');
     expect(oursLink).toHaveAttribute('aria-current', 'true');
+    expect(component.getByRole('link', { name: 'Injected' })).toHaveAttribute(
+      'href',
+      '/?skillScope=injected',
+    );
     expect(
       component.getByRole('link', { name: 'Third-party' }),
     ).toHaveAttribute('href', '/?skillScope=third-party');

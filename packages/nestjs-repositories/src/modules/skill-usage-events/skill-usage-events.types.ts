@@ -37,6 +37,13 @@ export interface RecordSkillUsageInput {
  */
 export interface RecordSkillUsageOutcomeInput {
   readonly cwd?: string | null;
+  /**
+   * True when the sender is a deliberate reporter. A `success`/`error` claim
+   * without it is stored as `legacy_assumed_success` (a stale pre-#537 bundle
+   * hardcoded `success`); `session_ended`/`abandoned` make no quality claim
+   * and are always `reported_v1`.
+   */
+  readonly deliberate?: boolean | null;
   readonly durationMs?: number | null;
   readonly gitBranch?: string | null;
   readonly occurredAt: Date;
@@ -91,13 +98,15 @@ export interface SkillUsageByScopeRow {
 }
 
 /**
- * Per-UTC-day invocation counts, split by scope. `thirdPartyCount` excludes
+ * Per-UTC-day invocation counts, split by scope. `injectedCount` counts OpenThrottle skills linked in from
+ * another repository by foreign skill injection. `thirdPartyCount` excludes
  * personal invocations — before the personal member existed they were counted
  * here, and historical rows are never reclassified, so a personal skill's
  * series can legitimately straddle both columns across the migration date.
  */
 export interface SkillUsageByDayRow {
   readonly date: string;
+  readonly injectedCount: number;
   readonly oursCount: number;
   readonly personalCount: number;
   readonly thirdPartyCount: number;

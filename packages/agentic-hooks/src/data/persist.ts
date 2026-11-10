@@ -511,6 +511,10 @@ export const completeOpenStartsForSession = async ({
       const durationMs = null;
 
       const event = buildOutcomeEvent({
+        // `error` here is a harness-observed failure relayed by an adapter
+        // (e.g. a final_status), an honest signal, so it declares itself.
+        // `session_ended` makes no quality claim and needs no declaration.
+        deliberate: outcome === SKILL_USAGE_OUTCOMES.ERROR,
         durationMs,
         outcome,
         repoRoot,

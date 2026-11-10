@@ -344,6 +344,31 @@ describe('completeOpenStartsForSession', () => {
     };
   };
 
+  it('declares a harness-reported error as deliberate', async () => {
+    const sessionId = 'sess-error';
+    recordSkillStart({
+      scope: 'ours',
+      sessionId,
+      skillName: 'ot-plans',
+      startedAt: '2026-08-01T00:00:00.000Z',
+      startsDir,
+      toolUseId: 'tu-err',
+    });
+
+    const posted: Array<Record<string, unknown>> = [];
+    await completeOpenStartsForSession({
+      fetchImpl: recordingFetch(posted),
+      graphqlUrl: 'http://example.test/graphql',
+      outcome: 'error',
+      repoRoot: tmpRoot,
+      sessionId,
+      startsDir,
+    });
+
+    expect(posted[0]?.outcome).toBe('error');
+    expect(posted[0]?.deliberate).toBe(true);
+  });
+
   it('emits one session_ended outcome per open start with no duration, then drains', async () => {
     const sessionId = 'sess-complete';
     recordSkillStart({
@@ -381,6 +406,8 @@ describe('completeOpenStartsForSession', () => {
     // `session_ended`, never `success`: a session-end payload cannot tell
     // whether the skill helped, so this path makes no quality claim.
     expect(bySkill['ot-plans']?.outcome).toBe('session_ended');
+    // session_ended makes no quality claim, so it never declares itself.
+    expect(bySkill['ot-plans']?.deliberate).toBeUndefined();
     expect(bySkill['ot-plans']?.sessionId).toBe(sessionId);
     expect(bySkill['ot-plans']?.toolUseId).toBe('tu-a');
     // No duration on any automatic path — the only figure available is

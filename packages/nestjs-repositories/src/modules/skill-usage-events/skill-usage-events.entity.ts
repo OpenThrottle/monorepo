@@ -25,12 +25,17 @@ import {
  * (`~/.openthrottle/skills` / `OPENTHROTTLE_PERSONAL_SKILLS_DIR`): on disk and
  * invokable, but outside the repo, so nobody else's checkout has it.
  *
+ * `injected` = authored under ANOTHER repository's `skills/<name>/` and linked
+ * into this one by foreign skill injection (OT plan 25f11313): an OpenThrottle
+ * skill used in a workspace that does not author it.
+ *
  * Distinct from the `/agents` registry provenance vocabulary
  * (`committed | installed | external`), which answers where the file came from
  * rather than who the invocation belongs to. The two are deliberately not
  * unified.
  */
 export const SKILL_USAGE_SCOPES = {
+  INJECTED: 'injected',
   OURS: 'ours',
   PERSONAL: 'personal',
   THIRD_PARTY: 'third-party',
@@ -72,6 +77,7 @@ export const SKILL_USAGE_SCOPE_LIST = SKILL_USAGE_SCOPE_VALUES.join(', ');
  * @public
  */
 export const SKILL_USAGE_SCOPE_COUNT_KEYS = {
+  [SKILL_USAGE_SCOPES.INJECTED]: 'injectedCount',
   [SKILL_USAGE_SCOPES.OURS]: 'oursCount',
   [SKILL_USAGE_SCOPES.PERSONAL]: 'personalCount',
   [SKILL_USAGE_SCOPES.THIRD_PARTY]: 'thirdPartyCount',

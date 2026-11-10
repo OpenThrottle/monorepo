@@ -1,10 +1,12 @@
 import {
+  SKILL_USAGE_COPY,
   SKILL_USAGE_SCOPE_BADGE_COLORS,
   SKILL_USAGE_SCOPES,
 } from '~/routing/usage/data/data.skill-usage-copy';
 
 /** Human label for a scope id. */
 export const skillUsageScopeLabel = (scope: string): string => {
+  if (scope === SKILL_USAGE_SCOPES.INJECTED) return 'Injected';
   if (scope === SKILL_USAGE_SCOPES.OURS) return 'Ours';
   if (scope === SKILL_USAGE_SCOPES.PERSONAL) return 'Personal';
   if (scope === SKILL_USAGE_SCOPES.THIRD_PARTY) return 'Third-party';
@@ -20,7 +22,10 @@ export const skillUsageScopeLabel = (scope: string): string => {
  */
 export const skillUsageScopeBadgeColor = (
   scope: string,
-): 'green' | 'orange' | 'violet' => {
+): 'blue' | 'green' | 'orange' | 'violet' => {
+  if (scope === SKILL_USAGE_SCOPES.INJECTED) {
+    return SKILL_USAGE_SCOPE_BADGE_COLORS.injected;
+  }
   if (scope === SKILL_USAGE_SCOPES.OURS) {
     return SKILL_USAGE_SCOPE_BADGE_COLORS.ours;
   }
@@ -39,34 +44,34 @@ export const skillUsageCwdLabel = (cwd: string): string => {
 };
 
 /**
- * Format avg duration for the leaderboard; em dash when no samples.
+ * Format avg duration; "Not measured" when no samples.
  *
- * Em dash is the COMMON case by design. Only a deliberate reporter supplies a
+ * Not measured is the COMMON case by design. Only a deliberate reporter supplies a
  * duration: no harness hook brackets a skill's own work, so the automatic
  * session-end paths report null rather than session-tail length.
  */
 export const skillUsageAvgDurationLabel = (
   avgDurationMs: number | null | undefined,
 ): string => {
-  if (avgDurationMs == null) return '—';
+  if (avgDurationMs == null) return SKILL_USAGE_COPY.notMeasured;
   if (avgDurationMs < 1000) return `${avgDurationMs}ms`;
 
   return `${(avgDurationMs / 1000).toFixed(1)}s`;
 };
 
 /**
- * Compact outcomes cell: "3/5" or em dash when none reported.
+ * Compact outcomes cell: "3/5", or "Not measured" when none reported.
  *
  * `outcomeCount` is QUALITY outcomes only (success + error). Session-end and
  * abandoned records are excluded upstream, so a skill that never reports its own
- * outcome shows `—` — the honest reading of "nobody measured this", rather than
+ * outcome shows as not measured — the honest reading of "nobody measured this", rather than
  * a full score assembled from "the session finished".
  */
 export const skillUsageOutcomesLabel = (
   outcomeCount: number,
   startCount: number,
 ): string => {
-  if (outcomeCount <= 0) return '—';
+  if (outcomeCount <= 0) return SKILL_USAGE_COPY.notMeasured;
 
   return `${outcomeCount}/${startCount}`;
 };

@@ -10,8 +10,10 @@ import {
 } from './skill-usage-events.entity.ts';
 import { SkillUsageEventsService } from './skill-usage-events.service.ts';
 import {
+  SKILL_USAGE_CAPTURE_MODELS,
   SKILL_USAGE_OUTCOMES,
   SkillUsageOutcome,
+  type SkillUsageOutcomeValue,
 } from './skill-usage-outcomes.entity.ts';
 
 type QueryBuilderMock = {
@@ -319,6 +321,7 @@ describe('SkillUsageEventsService', () => {
       });
 
       expect(create).toHaveBeenCalledWith({
+        captureModel: SKILL_USAGE_CAPTURE_MODELS.LEGACY_ASSUMED_SUCCESS,
         cwd: '/repo',
         durationMs: 4200,
         gitBranch: 'example-usage-tracking',
@@ -349,6 +352,7 @@ describe('SkillUsageEventsService', () => {
         });
 
         expect(create).toHaveBeenCalledWith({
+          captureModel: SKILL_USAGE_CAPTURE_MODELS.REPORTED_V1,
           cwd: null,
           durationMs: null,
           gitBranch: null,
@@ -361,6 +365,56 @@ describe('SkillUsageEventsService', () => {
           toolUseId: null,
         });
       });
+    });
+  });
+
+  describe('recordSkillUsageOutcome capture model', () => {
+    const record = async (
+      outcome: SkillUsageOutcomeValue,
+      deliberate: boolean | undefined,
+    ): Promise<unknown> => {
+      const create = vi.fn((input: Partial<SkillUsageOutcome>) => input);
+      const save = vi.fn((row: Partial<SkillUsageOutcome>) =>
+        Promise.resolve({ ...row, id: 'outcome-1', receivedAt: new Date() }),
+      );
+      const service = await buildService({ outcomes: { create, save } });
+      await service.recordSkillUsageOutcome({
+        deliberate,
+        occurredAt: new Date('2026-07-31T12:06:00.000Z'),
+        outcome,
+        skillName: 'ot-plans',
+      });
+      return create.mock.calls[0]?.[0].captureModel;
+    };
+
+    it.each([SKILL_USAGE_OUTCOMES.SUCCESS, SKILL_USAGE_OUTCOMES.ERROR])(
+      'stores undeclared %s as legacy_assumed_success',
+      async (outcome) => {
+        expect(await record(outcome, undefined)).toBe(
+          SKILL_USAGE_CAPTURE_MODELS.LEGACY_ASSUMED_SUCCESS,
+        );
+        expect(await record(outcome, false)).toBe(
+          SKILL_USAGE_CAPTURE_MODELS.LEGACY_ASSUMED_SUCCESS,
+        );
+      },
+    );
+
+    it.each([SKILL_USAGE_OUTCOMES.SUCCESS, SKILL_USAGE_OUTCOMES.ERROR])(
+      'stores declared %s as reported_v1',
+      async (outcome) => {
+        expect(await record(outcome, true)).toBe(
+          SKILL_USAGE_CAPTURE_MODELS.REPORTED_V1,
+        );
+      },
+    );
+
+    it.each([
+      SKILL_USAGE_OUTCOMES.SESSION_ENDED,
+      SKILL_USAGE_OUTCOMES.ABANDONED,
+    ])('keeps %s as reported_v1 without a declaration', async (outcome) => {
+      expect(await record(outcome, undefined)).toBe(
+        SKILL_USAGE_CAPTURE_MODELS.REPORTED_V1,
+      );
     });
   });
 
@@ -872,6 +926,7 @@ describe('SkillUsageEventsService', () => {
         getRawMany: vi.fn().mockResolvedValue([
           {
             date: '2026-07-15',
+            injectedCount: '3',
             oursCount: '2',
             personalCount: '4',
             thirdPartyCount: '1',
@@ -891,6 +946,7 @@ describe('SkillUsageEventsService', () => {
       expect(rows).toEqual([
         {
           date: '2026-07-15',
+          injectedCount: 3,
           oursCount: 2,
           personalCount: 4,
           thirdPartyCount: 1,
@@ -910,6 +966,7 @@ describe('SkillUsageEventsService', () => {
       const aliases = qb.addSelect.mock.calls.map((call) => call[1]);
       expect(aliases).toEqual(
         expect.arrayContaining([
+          'injectedCount',
           'oursCount',
           'personalCount',
           'thirdPartyCount',
@@ -938,6 +995,7 @@ describe('SkillUsageEventsService', () => {
       });
 
       expect(rows[0]?.personalCount).toBe(0);
+      expect(rows[0]?.injectedCount).toBe(0);
     });
   });
 
@@ -964,6 +1022,7 @@ describe('SkillUsageEventsService', () => {
         getRawMany: vi.fn().mockResolvedValue([
           {
             date: '2026-07-15',
+            injectedCount: '1',
             oursCount: '5',
             personalCount: '2',
             thirdPartyCount: '0',
@@ -1022,6 +1081,7 @@ describe('SkillUsageEventsService', () => {
       expect(result.byDay).toEqual([
         {
           date: '2026-07-15',
+          injectedCount: 1,
           oursCount: 5,
           personalCount: 2,
           thirdPartyCount: 0,
