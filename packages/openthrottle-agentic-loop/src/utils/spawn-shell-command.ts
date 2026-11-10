@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process';
 
 import type { SpawnCommand } from '../contract/index.ts';
+import { UNCOLORED_ENV } from '../data/data.ansi.ts';
 import { KILL_GRACE_MS } from '../data/data.constants.ts';
 
 const EXIT_COMMAND_NOT_RUNNABLE = 127;
@@ -16,6 +17,7 @@ export const spawnShellCommand: SpawnCommand = ({ command, cwd, onOutput }) => {
   const child = spawn(command, {
     cwd,
     detached: isPosix,
+    env: { ...process.env, ...UNCOLORED_ENV },
     shell: true,
     stdio: ['ignore', 'pipe', 'pipe'],
   });

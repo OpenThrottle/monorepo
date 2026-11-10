@@ -4,6 +4,7 @@
  * that section must land here in the same PR. See docs/workflows/ot-loop-job.md.
  */
 export * from './contract/index.ts';
+export * from './data/data.ansi.ts';
 export * from './data/data.constants.ts';
 export * from './data/data.git.ts';
 export * from './data/data.model-routing.ts';
@@ -31,6 +32,7 @@ export * from './utils/run-command-sequence.ts';
 export * from './utils/run-ot-loop.ts';
 export * from './utils/select-next-task.ts';
 export * from './utils/spawn-shell-command.ts';
+export * from './utils/strip-ansi.ts';
 export * from './utils/substitute-task-start-sha.ts';
 export * from './utils/system-schedule-clock.ts';
 export * from './utils/tail-for-retry.ts';

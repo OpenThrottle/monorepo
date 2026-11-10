@@ -10,6 +10,7 @@ import {
   SINK_MAX_MS,
 } from '../data/data.constants.ts';
 import { createBatchedChunkSink } from './create-batched-chunk-sink.ts';
+import { createAnsiStripStream } from './strip-ansi.ts';
 import { tailForRetry } from './tail-for-retry.ts';
 
 export interface RunCommandSequenceOptions {
@@ -36,13 +37,15 @@ const runCommand = async (
   options: RunCommandSequenceOptions,
   command: string,
 ): Promise<CommandOutcome> => {
-  const sink = createBatchedChunkSink(
+  const batched = createBatchedChunkSink(
     (text) => {
       options.onOutput({ command, text });
     },
     { maxBytes: SINK_MAX_BYTES, maxMs: SINK_MAX_MS },
     options.clock,
   );
+  // Strip before batching so no escape sequence reaches onOutput, even one split across chunks.
+  const sink = createAnsiStripStream(batched.push);
   let output = '';
   let timedOut = false;
 
@@ -96,6 +99,7 @@ const runCommand = async (
     cancelTimeout();
     options.signal.removeEventListener('abort', onAbort);
     sink.flush();
+    batched.flush();
   }
 };
 

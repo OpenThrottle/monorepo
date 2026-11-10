@@ -2,9 +2,8 @@ import {
   FAILURE_TAIL_MAX_BYTES,
   FAILURE_TAIL_MAX_LINES,
 } from '../data/data.constants.ts';
+import { stripAnsi } from './strip-ansi.ts';
 
-const ESC = String.fromCharCode(27);
-const ANSI_PATTERN = new RegExp(`${ESC}\\[[0-9;?]*[ -/]*[@-~]`, 'g');
 const REPLACEMENT_CHAR = String.fromCharCode(0xfffd);
 
 /**
@@ -12,7 +11,7 @@ const REPLACEMENT_CHAR = String.fromCharCode(0xfffd);
  * @public
  */
 export const tailForRetry = (output: string): string => {
-  const clean = output.replace(ANSI_PATTERN, '');
+  const clean = stripAnsi(output);
   const lines = clean.split('\n').slice(-FAILURE_TAIL_MAX_LINES);
   const joined = lines.join('\n');
   const bytes = Buffer.from(joined, 'utf8');
