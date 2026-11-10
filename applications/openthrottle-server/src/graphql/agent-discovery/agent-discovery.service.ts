@@ -13,8 +13,16 @@
  * - `AGENT_DISCOVERY_HARD_TTL_MS` — hard-staleness bound; past it the next call
  *   blocks on a fresh scan so an idle process never serves stale data forever.
  *   Default 600_000 (10x the soft TTL); clamped up to the soft TTL.
+ *
+ * Boot warm-up (`AGENT_DISCOVERY_WARM_ON_BOOT`): on application bootstrap the
+ * service fires one non-blocking sweep so the first request that needs agent
+ * CLIs finds a warm cache instead of paying a cold sweep (~8s, past React
+ * Router's stream timeout). Unset means on, except under a test runner
+ * (`NODE_ENV=test` or `VITEST`), where it is off so testing modules never spawn
+ * real CLIs; an explicit value always wins.
  */
 
+import type { OnApplicationBootstrap } from '@nestjs/common';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { AgentCliDiscoveryResult } from '@openthrottle/openthrottle-agentic-utils';
@@ -30,8 +38,26 @@ function intFromEnv(value: string | undefined, fallback: number): number {
   return Number.isInteger(parsed) && parsed >= 0 ? parsed : fallback;
 }
 
+const FALSY_ENV_VALUES = ['0', 'false', 'no', 'off'];
+
+/**
+ * Whether to warm the cache on boot. An explicit value wins; unset (or blank)
+ * means on, except under a test runner.
+ */
+function warmOnBootFromEnv(env: NodeJS.ProcessEnv): boolean {
+  const raw = env.AGENT_DISCOVERY_WARM_ON_BOOT?.trim().toLowerCase();
+
+  if (raw !== undefined && raw !== '') {
+    return !FALSY_ENV_VALUES.includes(raw);
+  }
+
+  const underTestRunner = env.NODE_ENV === 'test' || (env.VITEST ?? '') !== '';
+
+  return !underTestRunner;
+}
+
 @Injectable()
-export class AgentDiscoveryService {
+export class AgentDiscoveryService implements OnApplicationBootstrap {
   private readonly cache =
     new StaleWhileRevalidateCache<AgentCliDiscoveryResult>();
   private readonly softTtlMs: number;
@@ -50,6 +76,18 @@ export class AgentDiscoveryService {
       this.softTtlMs,
       intFromEnv(process.env.AGENT_DISCOVERY_HARD_TTL_MS, DEFAULT_HARD_TTL_MS),
     );
+  }
+
+  /**
+   * Fire the boot warm-up without awaiting it, so the server's bootstrap never
+   * waits on CLI probes. Gated by `AGENT_DISCOVERY_WARM_ON_BOOT`.
+   */
+  onApplicationBootstrap(): void {
+    if (!warmOnBootFromEnv(process.env)) {
+      return;
+    }
+
+    void this.warm();
   }
 
   /**
@@ -73,6 +111,34 @@ export class AgentDiscoveryService {
    */
   invalidate(): void {
     this.cache.invalidate();
+  }
+
+  /**
+   * Sweep once so the cache is warm before the first request; a request that
+   * arrives mid-sweep shares it rather than starting its own. A first sweep
+   * has nothing to carry forward, so when any probe in it timed out the sweep is
+   * retried once — the retry runs as a forced refresh, which keeps serving the
+   * first snapshot meanwhile. Never throws: a failed warm-up only means the
+   * first request pays the cold sweep, as it did before.
+   */
+  private async warm(): Promise<void> {
+    const ttls = { hardTtlMs: this.hardTtlMs, softTtlMs: this.softTtlMs };
+
+    try {
+      const first = await this.cache.get(() => this.scan(), ttls);
+      const timedOut = first.agents.some((agent) => agent.timedOut);
+
+      if (timedOut) {
+        this.logger.debug(
+          '🤖 agent-discovery: boot sweep had timed-out probes; retrying once',
+        );
+        await this.cache.get(() => this.scan(), ttls, true);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+
+      this.logger.warn(`🤖 agent-discovery: boot warm-up failed: ${message}`);
+    }
   }
 
   /**
