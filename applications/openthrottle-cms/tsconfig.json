@@ -1,0 +1,33 @@
+{
+  "extends": "../../tsconfig.react-router.json",
+  "compilerOptions": {
+    "paths": {
+      "~/*": ["./app/*"],
+      "@/*": ["./.react-router/types/*"]
+    },
+    "rootDirs": ["./", ".react-router/types"]
+  },
+  "exclude": ["build", "dist", "node_modules"],
+  "files": [],
+  "include": ["**/*", "**/*.json", ".react-router/types"],
+  "references": [
+    {
+      "path": "../../packages/react-router-shadcn"
+    },
+    {
+      "path": "../../packages/react-router-testing"
+    },
+    {
+      "path": "../../tools/dotfiles"
+    },
+    {
+      "path": "../../packages/graphql-codegen"
+    },
+    {
+      "path": "../../packages/react-router-ui-global"
+    },
+    {
+      "path": "../../packages/react-router-utils"
+    }
+  ]
+}

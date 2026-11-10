@@ -231,6 +231,21 @@
     },
     {
       "path": "./packages/agentic-replay-testing"
+    },
+    {
+      "path": "./packages/react-router-cms-core"
+    },
+    {
+      "path": "./applications/openthrottle-cms"
+    },
+    {
+      "path": "./packages/react-router-cms-editor"
+    },
+    {
+      "path": "./packages/react-router-cms-library"
+    },
+    {
+      "path": "./packages/react-router-cms-ui"
     }
   ]
 }

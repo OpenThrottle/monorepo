@@ -1,75 +1,75 @@
 {
-  "author": "<%= name %>",
-  "background_color": "#ffffff",
+  "author": "Matthew Scholta",
+  "background_color": "#0b0d0f",
   "default_locale": "en",
   "display": "standalone",
   "dir": "ltr",
-  "description": "<%= name %>",
+  "description": "OpenThrottle | Developer",
   "id": "/",
   "icons": [
     {
       "purpose": "any",
       "sizes": "48x48",
-      "src": "/branding/icon-48.png",
+      "src": "https://storage.googleapis.com/monorepo-production-assets/OpenThrottle/branding/icons/blue/icon-48.png",
       "type": "image/png"
     },
     {
       "purpose": "any",
       "sizes": "96x96",
-      "src": "/branding/icon-96.png",
+      "src": "https://storage.googleapis.com/monorepo-production-assets/OpenThrottle/branding/icons/blue/icon-96.png",
       "type": "image/png"
     },
     {
       "purpose": "any",
       "sizes": "144x144",
-      "src": "/branding/icon-144.png",
+      "src": "https://storage.googleapis.com/monorepo-production-assets/OpenThrottle/branding/icons/blue/icon-144.png",
       "type": "image/png"
     },
     {
       "purpose": "any",
       "sizes": "192x192",
-      "src": "/branding/icon-192.png",
+      "src": "https://storage.googleapis.com/monorepo-production-assets/OpenThrottle/branding/icons/blue/icon-192.png",
       "type": "image/png"
     },
     {
       "purpose": "any",
       "sizes": "256x256",
-      "src": "/branding/icon-256.png",
+      "src": "https://storage.googleapis.com/monorepo-production-assets/OpenThrottle/branding/icons/blue/icon-256.png",
       "type": "image/png"
     },
     {
       "purpose": "any",
       "sizes": "384x384",
-      "src": "/branding/icon-384.png",
+      "src": "https://storage.googleapis.com/monorepo-production-assets/OpenThrottle/branding/icons/blue/icon-384.png",
       "type": "image/png"
     },
     {
       "purpose": "any",
       "sizes": "512x512",
-      "src": "/branding/icon-512.png",
+      "src": "https://storage.googleapis.com/monorepo-production-assets/OpenThrottle/branding/icons/blue/icon-512.png",
       "type": "image/png"
     },
     {
       "purpose": "any maskable",
       "sizes": "256x256",
-      "src": "/branding/icon-256.png",
+      "src": "https://storage.googleapis.com/monorepo-production-assets/OpenThrottle/branding/icons/blue/icon-256.png",
       "type": "image/png"
     },
     {
       "purpose": "any maskable",
       "sizes": "512x512",
-      "src": "/branding/icon-512.png",
+      "src": "https://storage.googleapis.com/monorepo-production-assets/OpenThrottle/branding/icons/blue/icon-512.png",
       "type": "image/png"
     }
   ],
   "lang": "en-US",
   "manifest_version": 2,
-  "name": "<%= name %>",
+  "name": "OpenThrottle | Developer",
   "orientation": "portrait",
   "scope": "/",
   "shortcuts": [],
-  "short_name": "Design",
+  "short_name": "Developer",
   "start_url": "/",
-  "theme_color": "#e0f0ff",
+  "theme_color": "#0088FF",
   "version": "1.0"
 }
