@@ -20,6 +20,7 @@ import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import type { Project } from '@openthrottle/nestjs-repositories';
 
 import { GqlPermissionsGuard } from '../../../guards/gql-permissions.guard.ts';
+import { WorktreeActivityService } from '../../../services/worktree-activity/worktree-activity.service.ts';
 import { ProjectObject } from '../../projects/project.object.ts';
 import { WorkspaceSettingsLoaders } from '../loaders/loaders.service.ts';
 import { RepositoryObject } from '../repository.object.ts';
@@ -43,6 +44,7 @@ import { WorkspaceFoldersService } from './workspace-folders.service.ts';
 @UseGuards(GqlPermissionsGuard)
 export class WorkspaceFoldersResolver {
   constructor(
+    private readonly activityService: WorktreeActivityService,
     private readonly loaders: WorkspaceSettingsLoaders,
     private readonly workspaceFoldersService: WorkspaceFoldersService,
   ) {}
@@ -133,7 +135,13 @@ export class WorkspaceFoldersResolver {
     @Args('input', { type: () => AddWorkspaceFolderInput })
     input: AddWorkspaceFolderInput,
   ): Promise<AddWorkspaceFolderPayloadObject> {
-    return this.workspaceFoldersService.addWorkspaceFolder(userId, input);
+    const payload = await this.workspaceFoldersService.addWorkspaceFolder(
+      userId,
+      input,
+    );
+    // A new or re-linked checkout changes which primaries discovery scans.
+    this.activityService.invalidate(userId);
+    return payload;
   }
 
   @Mutation(() => AddWorkspaceFolderPayloadObject, {
@@ -145,7 +153,13 @@ export class WorkspaceFoldersResolver {
     @Args('input', { type: () => CloneRepositoryInput })
     input: CloneRepositoryInput,
   ): Promise<AddWorkspaceFolderPayloadObject> {
-    return this.workspaceFoldersService.cloneRepository(userId, input);
+    const payload = await this.workspaceFoldersService.cloneRepository(
+      userId,
+      input,
+    );
+    // A new or re-linked checkout changes which primaries discovery scans.
+    this.activityService.invalidate(userId);
+    return payload;
   }
 
   @Mutation(() => RefreshCheckoutPayloadObject, {
@@ -157,7 +171,13 @@ export class WorkspaceFoldersResolver {
     @Args('input', { type: () => RefreshCheckoutInput })
     input: RefreshCheckoutInput,
   ): Promise<RefreshCheckoutPayloadObject> {
-    return this.workspaceFoldersService.refreshCheckout(userId, input.id);
+    const payload = await this.workspaceFoldersService.refreshCheckout(
+      userId,
+      input.id,
+    );
+    // A new or re-linked checkout changes which primaries discovery scans.
+    this.activityService.invalidate(userId);
+    return payload;
   }
 
   @Mutation(() => RepositoryObject, {

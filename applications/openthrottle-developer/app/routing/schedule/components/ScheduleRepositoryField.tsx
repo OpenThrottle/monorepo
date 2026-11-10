@@ -70,7 +70,7 @@ export const ScheduleRepositoryField = (
   const emptyState = (
     <p className="text-muted-foreground text-sm">
       {SCHEDULE_COPY.repositoryEmptyState}{' '}
-      <Link className="underline" to="/settings/repositories">
+      <Link className="underline" prefetch="intent" to="/settings/repositories">
         {SCHEDULE_COPY.repositoryEmptyStateAction}
       </Link>
     </p>

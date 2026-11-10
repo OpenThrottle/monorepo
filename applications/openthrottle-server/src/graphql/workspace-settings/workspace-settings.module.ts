@@ -28,6 +28,7 @@ import { PlanRunWorktreeTeardownModule } from '../../services/plan-run-worktree-
 import { WorktreeActivityModule } from '../../services/worktree-activity/worktree-activity.module.ts';
 import { WorktreeCheckoutPruneModule } from '../../services/worktree-checkout-prune/worktree-checkout-prune.module.ts';
 import { RepositoryInspectionModule } from '../repository-inspection/repository-inspection.module.ts';
+import { DiscoveredWorktreeResolver } from './discovered-worktree/discovered-worktree.resolver.ts';
 import { DiscoveredWorktreesResolver } from './discovered-worktrees/discovered-worktrees.resolver.ts';
 import { WorkspaceSettingsLoaders } from './loaders/loaders.service.ts';
 import { WorkspaceFoldersResolver } from './workspace-folders/workspace-folders.resolver.ts';
@@ -45,6 +46,7 @@ import { WorkspaceSettingsResolver } from './workspace-settings.resolver.ts';
     WorktreeCheckoutPruneModule,
   ],
   providers: [
+    DiscoveredWorktreeResolver,
     DiscoveredWorktreesResolver,
     GqlPermissionsGuard,
     WorkspaceFoldersResolver,

@@ -6,6 +6,8 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
+import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
+
 import type { AddFolderDialogProps } from '../AddFolderDialog';
 import { AddFolderDialog } from '../AddFolderDialog';
 
@@ -27,6 +29,7 @@ describe('AddFolderDialog Component', () => {
           path: '/Users/dev/Development/registered-repo',
         },
       ],
+      isDiscoveringFolders: false,
       pickerCapabilities: {
         canUseNativeDialog: false,
         defaultBrowsePath: '/Users/dev/Development',
@@ -54,6 +57,36 @@ describe('AddFolderDialog Component', () => {
     expect(
       component.getByText('/Users/dev/Development/openthrottle'),
     ).toBeInTheDocument();
+  });
+
+  test('says it is still looking while the workspace-root scan streams in', async () => {
+    const user = userEvent.setup();
+    props = { ...props, discoveredFolders: [], isDiscoveringFolders: true };
+    component.unmount();
+    const RoutesStub = createRoutesStub([
+      {
+        Component: () => <AddFolderDialog {...props} />,
+        action: () => ({ ok: true }),
+        path: '/',
+      },
+    ]);
+    component = render(<RoutesStub />);
+
+    await user.click(component.getByTestId('AddFolderDialogTrigger'));
+
+    expect(
+      component.getByText(WORKSPACE_FOLDERS_COPY.discoveringFolders),
+    ).toHaveAttribute('aria-busy', 'true');
+  });
+
+  test('says nothing about scanning once the scan has resolved', async () => {
+    const user = userEvent.setup();
+
+    await user.click(component.getByTestId('AddFolderDialogTrigger'));
+
+    expect(
+      component.queryByText(WORKSPACE_FOLDERS_COPY.discoveringFolders),
+    ).toBeNull();
   });
 
   test('marks already-registered folders instead of offering Add', async () => {
@@ -103,6 +136,7 @@ const renderPicker = (canUseNativeDialog: boolean): RenderResult => {
     return (
       <AddFolderDialog
         discoveredFolders={[]}
+        isDiscoveringFolders={false}
         pickerCapabilities={{
           canUseNativeDialog,
           defaultBrowsePath: '/root',

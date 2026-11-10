@@ -32,6 +32,8 @@ export const WORKSPACE_FOLDERS_COPY = {
   cloneRepoTitle: `Clone a repository`,
   cloneRepoUrlLabel: `Git URL`,
   detailsButton: `Details`,
+  /** Shown in the add-folder dialog while the workspace-root scan streams in. */
+  discoveringFolders: `Looking for repositories in your workspace roots…`,
   driftBranchMoved: `Branch changed since last scan`,
   driftPathMissing: `Folder is missing on disk`,
   driftRemoteChanged: `Remote changed since last scan`,

@@ -25,10 +25,12 @@ import { useAddFolderDialog } from '~/routing/settings/repositories/hooks/useAdd
 
 export interface AddFolderDialogProps {
   actionError?: string | null;
-  discoveredFolders: Pick<
+  discoveredFolders: readonly Pick<
     DiscoveredFolderObject,
     'alreadyRegistered' | 'name' | 'path'
   >[];
+  /** The workspace-root scan is still streaming in, so an empty list means "not yet", not "none". */
+  isDiscoveringFolders: boolean;
   pickerCapabilities: Pick<
     WorkspacePickerCapabilitiesObject,
     'canUseNativeDialog' | 'defaultBrowsePath' | 'roots'
@@ -38,7 +40,12 @@ export interface AddFolderDialogProps {
 export const AddFolderDialog = (
   props: AddFolderDialogProps,
 ): React.ReactElement => {
-  const { actionError, discoveredFolders, pickerCapabilities } = props;
+  const {
+    actionError,
+    discoveredFolders,
+    isDiscoveringFolders,
+    pickerCapabilities,
+  } = props;
 
   // Hooks
   const picker = useAddFolderDialog({
@@ -50,6 +57,7 @@ export const AddFolderDialog = (
 
   // Setup
   const hasDiscoveredFolders = discoveredFolders.length > 0;
+  const showDiscovering = isDiscoveringFolders && !hasDiscoveredFolders;
   const { addFolderButton, pickerLoading } = WORKSPACE_FOLDERS_COPY;
   const submitLabel = picker.isAdding ? pickerLoading : addFolderButton;
 
@@ -92,6 +100,15 @@ export const AddFolderDialog = (
         parentPath={picker.parentPath}
       />
     </div>
+  );
+  const discoveringNotice = (
+    <p
+      aria-busy={true}
+      className="text-muted-foreground border-t pt-4 text-xs"
+      role="status"
+    >
+      {WORKSPACE_FOLDERS_COPY.discoveringFolders}
+    </p>
   );
   const discoveredList = (
     <div className="space-y-2 border-t pt-4">
@@ -167,6 +184,7 @@ export const AddFolderDialog = (
         {picker.canUseNativeDialog ? nativeBrowse : inAppBrowse}
 
         {hasDiscoveredFolders ? discoveredList : null}
+        {showDiscovering ? discoveringNotice : null}
 
         <div className="space-y-2 border-t pt-4">
           <button

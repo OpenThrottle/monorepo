@@ -203,6 +203,8 @@ export const dataNavigationV2: Record<string, PermissionGatedNavigationLink[]> =
         children: 'Repositories',
         disabled: false,
         icon: FolderGit2Icon,
+        // Hover/focus runs the loader early, which also warms the server's worktree-scan cache.
+        prefetch: 'intent',
         to: '/settings/repositories',
       },
       {

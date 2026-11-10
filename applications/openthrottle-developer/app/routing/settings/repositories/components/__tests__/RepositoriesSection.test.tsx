@@ -10,13 +10,17 @@ import {
   WorkspaceFolderReconciliation,
 } from '~/__generated__/graphql';
 import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
-import { REPOSITORIES_ONBOARDING } from '~/routing/settings/repositories/data/data.copy';
+import {
+  REPOSITORIES_ONBOARDING,
+  WORKTREE_DISCOVERY_COPY,
+} from '~/routing/settings/repositories/data/data.copy';
 import {
   mockCheckout,
   mockDiscoveredWorktrees,
   mockMissingCheckout,
   mockRepository,
 } from '~/routing/settings/repositories/testing/mock-repositories';
+import type { RepositoriesView } from '~/routing/settings/repositories/types';
 import { buildRepositoryRows } from '~/routing/settings/repositories/utils/rows';
 
 import type { RepositoriesSectionProps } from '../RepositoriesSection';
@@ -29,6 +33,26 @@ const repository = mockRepository({
 });
 
 const rows = buildRepositoryRows([repository]);
+
+const EMPTY_VIEW: RepositoriesView = {
+  autoExpandedIds: [],
+  isUnpopulated: true,
+  limit: 10,
+  page: 1,
+  rows: [],
+  search: '',
+  showMissing: false,
+  sortBy: 'name',
+  sortOrder: 'asc',
+  totalCount: 0,
+};
+
+const POPULATED_VIEW: RepositoriesView = {
+  ...EMPTY_VIEW,
+  isUnpopulated: false,
+  rows,
+  totalCount: 1,
+};
 
 describe('RepositoriesSection Component', () => {
   let component: RenderResult;
@@ -48,30 +72,22 @@ describe('RepositoriesSection Component', () => {
 
   beforeEach(() => {
     props = {
-      autoExpandedIds: [],
       discoveredFolders: [],
       discoveredWorktrees: mockDiscoveredWorktrees(),
-      isUnpopulated: true,
-      limit: 10,
-      page: 1,
+      discoveryStatus: 'resolved',
       pickerCapabilities: {
         canUseNativeDialog: false,
         defaultBrowsePath: '/Users/dev/Development',
         roots: ['/Users/dev/Development'],
       },
-      rows: [],
-      search: '',
-      showMissing: false,
-      sortBy: 'name',
-      sortOrder: 'asc',
-      totalCount: 0,
+      view: EMPTY_VIEW,
     };
 
     component = renderSection();
   });
 
   const populate = (): void => {
-    props = { ...props, isUnpopulated: false, rows, totalCount: 1 };
+    props = { ...props, view: POPULATED_VIEW };
     component = renderSection();
   };
 
@@ -145,14 +161,12 @@ describe('RepositoriesSection Component', () => {
   test('passes refresh drift through to the table row', () => {
     props = {
       ...props,
-      isUnpopulated: false,
       refreshed: {
         checkoutId: 'checkout-1',
         drift: { branchMoved: false, pathMissing: true, remoteChanged: false },
         merged: false,
       },
-      rows,
-      totalCount: 1,
+      view: POPULATED_VIEW,
     };
     component = renderSection();
 
@@ -238,6 +252,55 @@ describe('RepositoriesSection Component', () => {
         'role',
         'status',
       );
+    });
+  });
+
+  describe('while the on-disk scan is still streaming in', () => {
+    beforeEach(() => {
+      props = {
+        ...props,
+        discoveredWorktrees: null,
+        discoveryStatus: 'pending',
+        view: POPULATED_VIEW,
+      };
+      component = renderSection();
+    });
+
+    test('already renders the registered repository rows', () => {
+      expect(component.getByTestId('RepositoriesTable')).toBeInTheDocument();
+      expect(component.getByText('monorepo')).toBeInTheDocument();
+    });
+
+    test('shows a pending line in place of the scan notice', () => {
+      expect(component.getByTestId('WorktreeDiscoveryStatus')).toHaveAttribute(
+        'aria-busy',
+        'true',
+      );
+      expect(
+        component.getByText(WORKTREE_DISCOVERY_COPY.pendingLabel),
+      ).toBeInTheDocument();
+    });
+
+    test('offers no missing-worktree controls yet', () => {
+      expect(component.queryByTestId('MissingWorktreesToggle')).toBeNull();
+      expect(component.queryByTestId('PruneMissingWorktreesButton')).toBeNull();
+    });
+  });
+
+  describe('when the first scan failed', () => {
+    test('keeps the rows and reports the failure', () => {
+      props = {
+        ...props,
+        discoveredWorktrees: null,
+        discoveryStatus: 'rejected',
+        view: POPULATED_VIEW,
+      };
+      component = renderSection();
+
+      expect(component.getByText('monorepo')).toBeInTheDocument();
+      expect(
+        component.getByText(WORKTREE_DISCOVERY_COPY.rejectedBody),
+      ).toBeInTheDocument();
     });
   });
 });

@@ -21,13 +21,16 @@ import { WorktreeDiscoveryNotice } from '../WorktreeDiscoveryNotice';
 const renderNotice = (
   discoveredWorktrees: DiscoveredWorktreesResult,
   loader?: () => unknown,
+  action?: (args: { request: Request }) => Promise<unknown>,
 ): RenderResult => {
   const Component = () => {
     return (
       <WorktreeDiscoveryNotice discoveredWorktrees={discoveredWorktrees} />
     );
   };
-  const RoutesStub = createRoutesStub([{ Component, loader, path: '/' }]);
+  const RoutesStub = createRoutesStub([
+    { Component, action, loader, path: '/' },
+  ]);
 
   return render(<RoutesStub />);
 };
@@ -104,10 +107,15 @@ describe('WorktreeDiscoveryNotice Component', () => {
     });
   });
 
-  test('re-runs discovery by revalidating the loader', async () => {
+  test('rescans through the rescanWorktrees intent, then re-reads the loader', async () => {
     const user = userEvent.setup();
     const loader = vi.fn(() => null);
-    const component = renderNotice(mockDiscoveredWorktrees(), loader);
+    const intents: unknown[] = [];
+    const action = async ({ request }: { request: Request }) => {
+      intents.push((await request.formData()).get('intent'));
+      return null;
+    };
+    const component = renderNotice(mockDiscoveredWorktrees(), loader, action);
 
     // A stubbed route with a loader resolves asynchronously before it renders.
     await waitFor(() =>
@@ -125,8 +133,12 @@ describe('WorktreeDiscoveryNotice Component', () => {
       }),
     );
 
-    // Discovery is a live loader read, not a mutation, so refresh is a revalidation.
-    expect(loader).toHaveBeenCalled();
+    // The server caches the scan, so a bare revalidation would return it unchanged: the intent
+    // forces a fresh one, and the revalidation after the action reads it.
+    await waitFor(() => {
+      expect(intents).toEqual(['rescanWorktrees']);
+      expect(loader).toHaveBeenCalled();
+    });
   });
 
   test('leads with a sentence and keeps the raw git output collapsed', async () => {

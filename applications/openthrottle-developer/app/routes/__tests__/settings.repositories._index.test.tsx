@@ -4,8 +4,12 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/settings.repositories._index';
 import {
+  GetSettingsRepositoriesDiscoveryDocument,
+  GetSettingsRepositoriesDocument,
+  RescanSettingsWorktreesDocument,
+} from '~/__generated__/graphql';
+import {
   mockCheckout,
-  mockDiscoveredWorktree,
   mockRepository,
 } from '~/routing/settings/repositories/testing/mock-repositories';
 
@@ -62,7 +66,16 @@ const discoveredWorktrees = {
   worktrees: [],
 };
 
-const mockLoaderPayload = {
+const fastPayload = {
+  workspacePickerCapabilities: {
+    canUseNativeDialog: false,
+    defaultBrowsePath: '/Users/dev',
+    roots: ['/Users/dev'],
+  },
+  workspaceRepositories,
+};
+
+const discoveryPayload = {
   discoveredFolders: [
     {
       alreadyRegistered: false,
@@ -71,12 +84,19 @@ const mockLoaderPayload = {
     },
   ],
   discoveredWorktrees,
-  workspacePickerCapabilities: {
-    canUseNativeDialog: false,
-    defaultBrowsePath: '/Users/dev',
-    roots: ['/Users/dev'],
-  },
-  workspaceRepositories,
+};
+
+/** Answers each loader query by its document; anything else is a test bug. */
+const mockQueries = (discovery: Promise<unknown>): void => {
+  mockExecuteGraphqlWithAuth.mockImplementation((_request, document) => {
+    if (document === GetSettingsRepositoriesDocument) {
+      return Promise.resolve(fastPayload);
+    }
+    if (document === GetSettingsRepositoriesDiscoveryDocument) {
+      return discovery;
+    }
+    throw new Error('unexpected query');
+  });
 };
 
 const loaderArgs = (url: string): Route.LoaderArgs => {
@@ -97,135 +117,62 @@ describe('routes/settings.repositories._index.tsx', () => {
   });
 
   describe('loader', () => {
-    test('returns nested rows, discovered folders, and picker capabilities', async () => {
-      mockExecuteGraphqlWithAuth.mockResolvedValue(mockLoaderPayload);
+    test('returns the registered repositories and picker capabilities', async () => {
+      mockQueries(Promise.resolve(discoveryPayload));
 
       const result = await loader(
         loaderArgs('http://localhost/settings/repositories'),
       );
 
-      expect(result.discoveredFolders).toHaveLength(1);
-      expect(result.pickerCapabilities.canUseNativeDialog).toBe(false);
+      expect(result.workspaceRepositories.map((repo) => repo.id)).toEqual([
+        'repo-1',
+        'repo-2',
+      ]);
       expect(result.pickerCapabilities.roots).toEqual(['/Users/dev']);
-      expect(result.isUnpopulated).toBe(false);
-      expect(result.rows.map((row) => row.id)).toEqual([
-        'checkout-1',
-        'checkout-2',
-      ]);
-      expect(result.rows[0]?.children).toHaveLength(1);
-      expect(result.totalCount).toBe(2);
     });
 
-    test('nests a worktree found on disk under its repository row', async () => {
-      mockExecuteGraphqlWithAuth.mockResolvedValue({
-        ...mockLoaderPayload,
-        discoveredWorktrees: {
-          ...discoveredWorktrees,
-          worktrees: [
-            mockDiscoveredWorktree({ name: 'wt-a', repositoryId: 'repo-1' }),
-          ],
-        },
-      });
+    test('streams the on-disk scans rather than waiting for them', async () => {
+      // A scan that never settles must not hold the loader back.
+      mockQueries(new Promise<never>(() => undefined));
 
       const result = await loader(
         loaderArgs('http://localhost/settings/repositories'),
       );
 
-      // Pagination still counts PARENT rows only, so the extra child does not
-      // change the total.
-      expect(result.totalCount).toBe(2);
-      expect(
-        result.rows[0]?.children?.map((child) => child.displayName),
-      ).toEqual(['openthrottle-worktree', 'wt-a']);
-      expect(result.discoveredWorktrees.worktrees).toHaveLength(1);
+      expect(result.discovery).toBeInstanceOf(Promise);
+      expect(result.workspaceRepositories).toHaveLength(2);
     });
 
-    test('reports an unpopulated workspace when no repositories exist', async () => {
-      mockExecuteGraphqlWithAuth.mockResolvedValue({
-        ...mockLoaderPayload,
-        workspaceRepositories: [],
-      });
+    test('resolves the streamed promise to both scans', async () => {
+      mockQueries(Promise.resolve(discoveryPayload));
 
       const result = await loader(
         loaderArgs('http://localhost/settings/repositories'),
       );
 
-      expect(result.isUnpopulated).toBe(true);
-      expect(result.rows).toEqual([]);
-      expect(result.totalCount).toBe(0);
+      await expect(result.discovery).resolves.toEqual(discoveryPayload);
     });
 
-    test('filters by search and auto-expands a group matched only by a worktree', async () => {
-      mockExecuteGraphqlWithAuth.mockResolvedValue(mockLoaderPayload);
+    test('passes a scan failure through to the page instead of failing the load', async () => {
+      mockQueries(Promise.reject(new Error('git exploded')));
 
       const result = await loader(
+        loaderArgs('http://localhost/settings/repositories'),
+      );
+
+      await expect(result.discovery).rejects.toThrow('git exploded');
+    });
+
+    test('issues the same two queries whatever the search params', async () => {
+      mockQueries(Promise.resolve(discoveryPayload));
+
+      await loader(
         loaderArgs(
-          'http://localhost/settings/repositories?search=openthrottle-worktree',
+          'http://localhost/settings/repositories?search=web&sortBy=name&page=2',
         ),
       );
 
-      expect(result.rows.map((row) => row.id)).toEqual(['checkout-1']);
-      expect(result.autoExpandedIds).toEqual(['checkout-1']);
-      expect(result.isUnpopulated).toBe(false);
-      expect(result.totalCount).toBe(1);
-    });
-
-    test('applies sortBy and sortOrder, falling back to the defaults', async () => {
-      mockExecuteGraphqlWithAuth.mockResolvedValue(mockLoaderPayload);
-
-      const sorted = await loader(
-        loaderArgs(
-          'http://localhost/settings/repositories?sortBy=name&sortOrder=desc',
-        ),
-      );
-
-      expect(sorted.rows.map((row) => row.repositoryName)).toEqual([
-        'website',
-        'OpenThrottle',
-      ]);
-
-      mockExecuteGraphqlWithAuth.mockResolvedValue(mockLoaderPayload);
-
-      const fallback = await loader(
-        loaderArgs(
-          'http://localhost/settings/repositories?sortBy=bogus&sortOrder=sideways',
-        ),
-      );
-
-      expect(fallback.sortBy).toBe('name');
-      expect(fallback.sortOrder).toBe('asc');
-    });
-
-    test('pages over parent rows, keeping a group whole', async () => {
-      mockExecuteGraphqlWithAuth.mockResolvedValue(mockLoaderPayload);
-
-      const result = await loader(
-        loaderArgs('http://localhost/settings/repositories?limit=1&page=1'),
-      );
-
-      expect(result.rows).toHaveLength(1);
-      expect(result.rows[0]?.id).toBe('checkout-1');
-      expect(result.rows[0]?.children).toHaveLength(1);
-      expect(result.totalCount).toBe(2);
-
-      mockExecuteGraphqlWithAuth.mockResolvedValue(mockLoaderPayload);
-
-      const pageTwo = await loader(
-        loaderArgs('http://localhost/settings/repositories?limit=1&page=2'),
-      );
-
-      expect(pageTwo.rows.map((row) => row.id)).toEqual(['checkout-2']);
-    });
-
-    test('clamps limit and page to sane values', async () => {
-      mockExecuteGraphqlWithAuth.mockResolvedValue(mockLoaderPayload);
-
-      const result = await loader(
-        loaderArgs('http://localhost/settings/repositories?limit=9999&page=0'),
-      );
-
-      expect(result.limit).toBe(100);
-      expect(result.page).toBe(1);
+      expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -410,6 +357,34 @@ describe('routes/settings.repositories._index.tsx', () => {
         expect.any(Object),
         { id: 'repo-1' },
       );
+    });
+
+    test('rescanWorktrees asks the server for a fresh scan', async () => {
+      mockExecuteGraphqlWithAuth.mockResolvedValue({
+        discoveredWorktrees: { scannedAt: '2026-11-08T00:00:00.000Z' },
+      });
+
+      const formData = new FormData();
+      formData.set('intent', 'rescanWorktrees');
+
+      const result = await action(actionArgs(formData));
+
+      expect(result).toEqual({ rescannedAt: '2026-11-08T00:00:00.000Z' });
+      expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
+        expect.any(Request),
+        RescanSettingsWorktreesDocument,
+      );
+    });
+
+    test('rescanWorktrees reports a failed scan as an error', async () => {
+      mockExecuteGraphqlWithAuth.mockRejectedValue(new Error('git exploded'));
+
+      const formData = new FormData();
+      formData.set('intent', 'rescanWorktrees');
+
+      const result = await action(actionArgs(formData));
+
+      expect(result).toEqual({ error: 'git exploded' });
     });
 
     test('throws on unknown intent', async () => {

@@ -80,7 +80,7 @@ export const SettingsWorkspaceEditorTargets = (
   // Markup
   const addRepositoryButton = (
     <Button asChild={true} variant="outline">
-      <Link to="/settings/repositories">
+      <Link prefetch="intent" to="/settings/repositories">
         {WORKSPACE_SETTINGS_COPY.targetsAddRepositoryLink}
       </Link>
     </Button>

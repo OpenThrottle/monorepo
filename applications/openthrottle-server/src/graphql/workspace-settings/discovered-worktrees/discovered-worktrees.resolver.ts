@@ -9,6 +9,10 @@
  * `rootSource`, `warnings`, the cap). The repositories index route already fires a single query, so
  * the loader requests this alongside `workspaceRepositories` and the client stitches worktrees onto
  * their parent rows by `repositoryId`.
+ *
+ * The scan is cached per user by WorktreeActivityService; the mutations here invalidate it, and the
+ * `refresh` argument bypasses it. `safeToRemove` is resolved per worktree by
+ * DiscoveredWorktreeResolver, so it only costs anything when a client selects it.
  */
 
 import { NotFoundException, UseGuards } from '@nestjs/common';
@@ -20,12 +24,7 @@ import { RepositoryCheckoutsService } from '@openthrottle/nestjs-repositories';
 import { GqlPermissionsGuard } from '../../../guards/gql-permissions.guard.ts';
 import { PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME } from '../../../services/plan-run-worktree-teardown/plan-run-worktree-teardown.constants.ts';
 import { PlanRunWorktreeTeardownService } from '../../../services/plan-run-worktree-teardown/plan-run-worktree-teardown.service.ts';
-import {
-  isPlanRunWorktreeName,
-  primaryCheckoutFromCommonDir,
-} from '../../../services/plan-run-worktree-teardown/plan-run-worktree-teardown.utils.ts';
 import { WorktreeActivityService } from '../../../services/worktree-activity/worktree-activity.service.ts';
-import type { ClassifiedWorktree } from '../../../services/worktree-activity/worktree-activity.types.ts';
 import { WorktreeCheckoutPruneService } from '../../../services/worktree-checkout-prune/worktree-checkout-prune.service.ts';
 import { DiscoveredWorktreesObject } from '../discovered-worktrees.object.ts';
 import { PruneWorktreeCheckoutsInput } from '../prune-worktree-checkouts.input.ts';
@@ -43,16 +42,22 @@ export class DiscoveredWorktreesResolver {
   ) {}
 
   @Query(() => DiscoveredWorktreesObject, {
-    description: `Git worktrees that exist on disk for the authenticated user's repositories, whether or not OpenThrottle provisioned them, each classified RUNNING / DIRTY / IDLE. Read-only: nothing here creates, prunes or removes a worktree. Runs live on every request and never throws — an unreadable root or a failed git probe becomes a warning on the payload.`,
+    description: `Git worktrees that exist on disk for the authenticated user's repositories, whether or not OpenThrottle provisioned them, each classified RUNNING / DIRTY / IDLE. Read-only: nothing here creates, prunes or removes a worktree. The on-disk scan is reused for a few seconds per user (pass refresh to force one); live-run classification is always current. Never throws — an unreadable root or a failed git probe becomes a warning on the payload.`,
   })
   @Permissions(PERMISSIONS.SETTINGS_READ)
   async discoveredWorktrees(
     @CurrentUser('sub') userId: string,
+    @Args('refresh', {
+      defaultValue: false,
+      description: `Rescan now instead of reusing a scan from the last few seconds. The scan is cached briefly per user, and changes made through OpenThrottle (adding, cloning, refreshing, pruning or removing) already invalidate it — pass this for an explicit user-requested refresh, not on every load.`,
+      nullable: true,
+      type: () => Boolean,
+    })
+    refresh: boolean | null = false,
   ): Promise<DiscoveredWorktreesObject> {
-    const result = await this.activityService.discoverAndClassify(userId);
-    const safeToRemove = await Promise.all(
-      result.worktrees.map((worktree) => this.isSafeToRemove(worktree)),
-    );
+    const result = await this.activityService.discoverAndClassify(userId, {
+      fresh: refresh === true,
+    });
 
     return {
       droppedCount: result.droppedCount,
@@ -79,17 +84,18 @@ export class DiscoveredWorktreesResolver {
       })),
       warnings: [...result.warnings],
       worktreeRoot: result.worktreeRoot,
-      worktrees: result.worktrees.map((worktree, index) => ({
+      worktrees: result.worktrees.map((worktree) => ({
         activity: worktree.activity,
         branch: worktree.branch,
         checkoutId: worktree.checkoutId,
+        commonDir: worktree.commonDir,
+        dirty: worktree.dirty,
         name: worktree.name,
         path: worktree.path,
         planId: worktree.planId,
         planRunId: worktree.planRunId,
         repositoryId: worktree.repositoryId,
         runMonitored: worktree.runMonitored,
-        safeToRemove: safeToRemove[index] ?? false,
         unregistered: worktree.unregistered,
       })),
     };
@@ -108,6 +114,7 @@ export class DiscoveredWorktreesResolver {
       userId,
       input.checkoutIds,
     );
+    this.activityService.invalidate(userId);
     return {
       results: results.map((entry) => ({
         checkoutId: entry.checkoutId,
@@ -150,6 +157,7 @@ export class DiscoveredWorktreesResolver {
       baseCheckoutPath,
       worktreePath: path,
     });
+    this.activityService.invalidate(userId);
     if (result.outcome === PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME.REMOVED) {
       return {
         branch: result.branch,
@@ -166,23 +174,5 @@ export class DiscoveredWorktreesResolver {
       outcome: result.outcome,
       path,
     };
-  }
-
-  /**
-   * @description Whether the page may offer a plan-run worktree as safe to remove: registered, and
-   * every teardown guard passes right now. Never true for any other worktree; never throws.
-   */
-  private async isSafeToRemove(worktree: ClassifiedWorktree): Promise<boolean> {
-    if (worktree.checkoutId === null) return false;
-    if (!isPlanRunWorktreeName(worktree.path)) return false;
-
-    const baseCheckoutPath = primaryCheckoutFromCommonDir(worktree.commonDir);
-    if (baseCheckoutPath === null) return false;
-
-    const verdict = await this.teardownService.assess({
-      baseCheckoutPath,
-      worktreePath: worktree.path,
-    });
-    return verdict.outcome === PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME.REMOVABLE;
   }
 }

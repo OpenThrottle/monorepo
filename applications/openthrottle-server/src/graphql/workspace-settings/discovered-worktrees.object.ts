@@ -195,6 +195,19 @@ export class ScannedWorktreeRootObject {
   description: `A linked git worktree that exists on disk right now (server-host path).`,
 })
 export class DiscoveredWorktreeObject {
+  /**
+   * @description NOT a GraphQL field. The worktree's resolved git common dir, carried so the
+   * `safeToRemove` field resolver (DiscoveredWorktreeResolver) can find its primary checkout without
+   * re-probing git.
+   */
+  commonDir!: string | null;
+
+  /**
+   * @description NOT a GraphQL field. Discovery's `git status` verdict (null when the probe
+   * failed), carried so `safeToRemove` can answer a dirty worktree without re-running it.
+   */
+  dirty!: boolean | null;
+
   @Field(() => WorktreeActivityEnum, {
     description: `RUNNING / DIRTY / IDLE. See WorktreeActivity for what does and does not count as running.`,
   })
@@ -245,11 +258,6 @@ export class DiscoveredWorktreeObject {
     nullable: true,
   })
   runMonitored!: boolean | null;
-
-  @Field(() => Boolean, {
-    description: `True when this is a server-provisioned plan-run worktree that removePlanRunWorktree would remove right now: registered, clean, nothing unpushed, and no live run on it. Always false for any other worktree.`,
-  })
-  safeToRemove!: boolean;
 
   @Field(() => Boolean, {
     description: `True when no repository_checkouts row exists at this path for this user. Orthogonal to activity — an unregistered worktree can be DIRTY.`,

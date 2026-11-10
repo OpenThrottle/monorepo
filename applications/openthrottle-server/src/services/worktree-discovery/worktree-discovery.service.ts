@@ -87,6 +87,12 @@ interface ResolvedRootOrigin {
   readonly source: WorktreeRootSource;
 }
 
+/** What source 1 learns per primary, beyond the worktree candidates it adds. */
+interface GitWorktreeListResult {
+  readonly notGitRepos: ReadonlySet<string>;
+  readonly originRemotes: ReadonlyMap<string, string | null>;
+}
+
 /** Accumulator for one worktree while the two sources are being merged. */
 interface WorktreeCandidate {
   path: string;
@@ -121,18 +127,15 @@ export class WorktreeDiscoveryService {
     );
 
     const candidates = new Map<string, WorktreeCandidate>();
-    const notGitRepos = await this.collectFromGitWorktreeList(
-      primaries,
-      candidates,
-      problems,
-    );
+    const { notGitRepos, originRemotes } =
+      await this.collectFromGitWorktreeList(primaries, candidates, problems);
 
-    // A folder that is not a repository has no worktree root to resolve, and asking would shell out
-    // to `git remote get-url origin` only to fall back to the basename.
+    // A folder that is not a repository has no worktree root to resolve.
     const roots = this.resolveRoots(
       primaries.filter(
         (primary) => !notGitRepos.has(realPath(primary.filesystemPath)),
       ),
+      originRemotes,
       problems,
     );
     const scannedRoots = this.collectFromRootScan(roots, candidates, problems);
@@ -233,6 +236,7 @@ export class WorktreeDiscoveryService {
    */
   private resolveRoots(
     primaries: readonly RepositoryCheckout[],
+    originRemotes: ReadonlyMap<string, string | null>,
     problems: WorktreeDiscoveryProblem[],
   ): Map<string, ResolvedRootOrigin> {
     const roots = new Map<string, ResolvedRootOrigin>();
@@ -241,6 +245,7 @@ export class WorktreeDiscoveryService {
       try {
         const { baseRoot, resolvedRoot, source } = resolveWorktreeRoot({
           baseCheckoutPath: primary.filesystemPath,
+          originRemote: originRemotes.get(primary.filesystemPath) ?? null,
         });
         if (!roots.has(resolvedRoot)) {
           roots.set(resolvedRoot, { baseRoot, source });
@@ -260,26 +265,42 @@ export class WorktreeDiscoveryService {
   }
 
   /**
-   * Source 1: live `git worktree list --porcelain` from every registered primary checkout.
+   * Source 1: live `git worktree list --porcelain` from every registered primary checkout, run
+   * concurrently alongside each checkout's `git remote get-url origin` (which the root ladder needs
+   * for the `<org>/<repo>` namespace). Both used to run one checkout at a time — the remote lookup
+   * synchronously, blocking the event loop — which was a third of the page's scan time.
+   *
+   * Results are folded in primary order, so problems and candidates come out exactly as a
+   * sequential scan would produce them.
    *
    * @returns the real paths of registered folders that turned out not to be git repositories at
-   * all. That is a per-repository condition — reported once, on the row — not a page-wide warning
-   * that reappears on every load.
+   * all — a per-repository condition, reported once on the row rather than as a page-wide warning —
+   * and each git primary's origin remote (null when it has none), keyed by its registered path.
    */
   private async collectFromGitWorktreeList(
     primaries: readonly RepositoryCheckout[],
     candidates: Map<string, WorktreeCandidate>,
     problems: WorktreeDiscoveryProblem[],
-  ): Promise<Set<string>> {
+  ): Promise<GitWorktreeListResult> {
     const notGitRepos = new Set<string>();
+    const originRemotes = new Map<string, string | null>();
 
-    for (const primary of primaries) {
-      // eslint-disable-next-line no-await-in-loop
-      const { error, stdout } = await this.runGit(primary.filesystemPath, [
-        'worktree',
-        'list',
-        '--porcelain',
-      ]);
+    const probes = await Promise.all(
+      primaries.map(async (primary) => {
+        const [list, remote] = await Promise.all([
+          this.runGit(primary.filesystemPath, [
+            'worktree',
+            'list',
+            '--porcelain',
+          ]),
+          this.runGit(primary.filesystemPath, ['remote', 'get-url', 'origin']),
+        ]);
+        return { list, primary, remote };
+      }),
+    );
+
+    for (const { list, primary, remote } of probes) {
+      const { error, stdout } = list;
 
       if (error !== null) {
         if (isNotAGitRepositoryError(error)) {
@@ -304,12 +325,16 @@ export class WorktreeDiscoveryService {
         continue;
       }
 
+      // No origin is a normal state (the namespace falls back to the basename), never a problem.
+      const url = remote.error === null ? remote.stdout.trim() : '';
+      originRemotes.set(primary.filesystemPath, url === '' ? null : url);
+
       for (const path of parseLinkedWorktrees(stdout)) {
         add(candidates, path, WORKTREE_DISCOVERY_SOURCE.GIT_WORKTREE_LIST);
       }
     }
 
-    return notGitRepos;
+    return { notGitRepos, originRemotes };
   }
 
   /**

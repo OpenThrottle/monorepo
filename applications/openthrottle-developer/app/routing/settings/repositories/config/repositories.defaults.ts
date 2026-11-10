@@ -44,3 +44,30 @@ export const isRepositoriesSortOrder = (
 ): value is RepositoriesSortOrder => {
   return REPOSITORIES_SORT_ORDER.some((candidate) => candidate === value);
 };
+
+/**
+ * Search params that only change what the table shows — never what the loader fetches. A
+ * navigation that changes nothing else skips the loader (see `shouldRevalidateRepositories`).
+ * `q` is the toolbar search's legacy key, which it strips on commit.
+ */
+export const REPOSITORIES_VIEW_PARAMS: readonly string[] = [
+  'limit',
+  'page',
+  'q',
+  'search',
+  'showMissing',
+  'sortBy',
+  'sortOrder',
+];
+
+/** Route-action intent that forces a fresh on-disk worktree scan, bypassing the server's cache. */
+export const RESCAN_WORKTREES_INTENT = 'rescanWorktrees';
+
+/**
+ * Route-action intents that read without changing anything (the folder picker's browsing), so
+ * finishing one has nothing to refresh.
+ */
+export const REPOSITORIES_READ_ONLY_INTENTS: readonly string[] = [
+  'browseDirectory',
+  'pickFolderNative',
+];

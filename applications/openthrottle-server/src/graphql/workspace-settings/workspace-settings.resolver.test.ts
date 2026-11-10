@@ -19,6 +19,7 @@ import { join } from 'path';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { WorktreeActivityService } from '../../services/worktree-activity/worktree-activity.service.ts';
 import { WorkspaceSettingsLoaders } from './loaders/loaders.service.ts';
 import { toUserWorkspaceProfileObject } from './user-workspace-profile.mapper.ts';
 import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum.ts';
@@ -89,6 +90,10 @@ describe('WorkspaceSettingsResolver', () => {
     }),
   });
 
+  const mockActivityService = createMock<WorktreeActivityService>({
+    invalidate: vi.fn(),
+  });
+
   let resolver: WorkspaceSettingsResolver;
 
   beforeAll(async () => {
@@ -115,6 +120,10 @@ describe('WorkspaceSettingsResolver', () => {
         {
           provide: ConfigService,
           useValue: mockConfigService,
+        },
+        {
+          provide: WorktreeActivityService,
+          useValue: mockActivityService,
         },
         {
           provide: RolesService,
@@ -346,6 +355,16 @@ describe('WorkspaceSettingsResolver', () => {
       );
 
       expect(result).toBe(true);
+    });
+
+    test('drops the cached worktree discovery for the caller', async () => {
+      vi.mocked(mockWorkspaceLocalRepositoriesService.delete).mockResolvedValue(
+        true,
+      );
+
+      await resolver.deleteWorkspaceLocalRepository(userId, mockRepo.id);
+
+      expect(mockActivityService.invalidate).toHaveBeenCalledWith(userId);
     });
   });
 

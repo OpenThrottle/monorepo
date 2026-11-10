@@ -7,9 +7,10 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import { RefreshCwIcon } from 'lucide-react';
 import * as React from 'react';
-import { Link, useRevalidator } from 'react-router';
+import { Link } from 'react-router';
 
 import { WORKTREE_DISCOVERY_COPY } from '~/routing/settings/repositories/data/data.copy';
+import { useRescanWorktrees } from '~/routing/settings/repositories/hooks/useRescanWorktrees';
 import type { DiscoveredWorktreesResult } from '~/routing/settings/repositories/types';
 import { configuredRoots } from '~/routing/settings/repositories/utils/configured-roots';
 import { summarizeDiscovery } from '~/routing/settings/repositories/utils/discovery-problems';
@@ -25,8 +26,9 @@ export interface WorktreeDiscoveryNoticeProps {
  * root(s) OpenThrottle looked under and where each came from, anything worth acting
  * on, and a control to look again.
  *
- * Discovery runs live in the loader with no cached snapshot, so "refresh" is a
- * loader revalidation rather than a mutation. A healthy machine renders one quiet
+ * The server caches each user's scan for a few seconds, so "refresh" submits the
+ * `rescanWorktrees` intent (see `useRescanWorktrees`) rather than merely
+ * re-running the loader. A healthy machine renders one quiet
  * line and no alert: a repository with no worktrees yet is the ordinary state, and
  * saying so once as a count beats a bullet per repository that never goes away.
  * A scan that genuinely half-worked still says so — that is what the surface is for
@@ -39,10 +41,9 @@ export const WorktreeDiscoveryNotice = (
   const { droppedCount, scannedRoots } = discoveredWorktrees;
 
   // Hooks
-  const revalidator = useRevalidator();
+  const { isRescanning, rescan } = useRescanWorktrees();
 
   // Setup
-  const isRescanning = revalidator.state === 'loading';
   const roots = configuredRoots(scannedRoots);
   const hasNoRoots = roots.length === 0;
   const [singleRoot] = roots.length === 1 ? roots : [];
@@ -71,7 +72,7 @@ export const WorktreeDiscoveryNotice = (
 
   // Handlers
   const handleRescan = (): void => {
-    void revalidator.revalidate();
+    rescan();
   };
 
   // Markup

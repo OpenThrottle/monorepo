@@ -1383,7 +1383,7 @@ export type DiscoveredWorktreeObject = {
   repositoryId?: Maybe<Scalars['ID']['output']>;
   /** Whether the live run's liveness is VERIFIED rather than merely claimed. True when the run heartbeats on a timer, so RUNNING is a checked fact. False when it does not (an interactive /ot-loop run): the row says IN_PROGRESS and nothing confirms it, so this worktree may be held busy by an agent that died hours ago — surface that distinctly rather than showing it as healthily running. Null when nothing is running. */
   runMonitored?: Maybe<Scalars['Boolean']['output']>;
-  /** True when this is a server-provisioned plan-run worktree that removePlanRunWorktree would remove right now: registered, clean, nothing unpushed, and no live run on it. Always false for any other worktree. */
+  /** True when this is a server-provisioned plan-run worktree that removePlanRunWorktree would remove as of the last scan: registered, clean, nothing unpushed, and no live run on it. Reused for as long as the scan is cached; removePlanRunWorktree re-checks every guard before removing anything. Always false for any other worktree. */
   safeToRemove: Scalars['Boolean']['output'];
   /** True when no repository_checkouts row exists at this path for this user. Orthogonal to activity — an unregistered worktree can be DIRTY. */
   unregistered: Scalars['Boolean']['output'];
@@ -4145,7 +4145,7 @@ export type Query = {
   discoverLocalModels: DiscoverLocalModelsResult;
   /** Git repositories found one level under the configured workspace roots (server-host paths); empty when OPENTHROTTLE_WORKSPACE_ROOTS is unset. */
   discoveredFolders: Array<DiscoveredFolderObject>;
-  /** Git worktrees that exist on disk for the authenticated user's repositories, whether or not OpenThrottle provisioned them, each classified RUNNING / DIRTY / IDLE. Read-only: nothing here creates, prunes or removes a worktree. Runs live on every request and never throws — an unreadable root or a failed git probe becomes a warning on the payload. */
+  /** Git worktrees that exist on disk for the authenticated user's repositories, whether or not OpenThrottle provisioned them, each classified RUNNING / DIRTY / IDLE. Read-only: nothing here creates, prunes or removes a worktree. The on-disk scan is reused for a few seconds per user (pass refresh to force one); live-run classification is always current. Never throws — an unreadable root or a failed git probe becomes a warning on the payload. */
   discoveredWorktrees: DiscoveredWorktreesObject;
   /** Probe which editors are installed on the machine hosting the server. Returns a cached snapshot (60s TTL); does not probe per request. **Advisory only** — this never gates enabling an editor. An editor reporting NOT_FOUND can still be enabled and will still get a working toolbar button, and UNKNOWN (a containerized server, an unsupported platform, or a failed probe) means nothing is claimed either way and clients should render no hint. */
   editorPresence: EditorPresenceResultObject;
@@ -4450,6 +4450,10 @@ export type QueryDailyStatsArgs = {
 export type QueryDailyStatsRangeArgs = {
   end: Scalars['String']['input'];
   start: Scalars['String']['input'];
+};
+
+export type QueryDiscoveredWorktreesArgs = {
+  refresh?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type QueryEvalDatasetArgs = {
@@ -12717,53 +12721,6 @@ export type GetSettingsRepositoriesQueryVariables = Exact<{
 
 export type GetSettingsRepositoriesQuery = {
   __typename?: 'Query';
-  discoveredFolders: Array<{
-    __typename?: 'DiscoveredFolderObject';
-    alreadyRegistered: boolean;
-    name: string;
-    path: string;
-  }>;
-  discoveredWorktrees: {
-    __typename?: 'DiscoveredWorktreesObject';
-    droppedCount: number;
-    scannedAt: string;
-    missingCheckouts: Array<{
-      __typename?: 'MissingWorktreeCheckoutObject';
-      checkoutId: string;
-      path: string;
-      reason: MissingWorktreeCheckoutReason;
-      repositoryId: string;
-    }>;
-    problems: Array<{
-      __typename?: 'WorktreeDiscoveryProblemObject';
-      detail: string;
-      kind: WorktreeDiscoveryProblemKind;
-      path?: string | null;
-      repositoryId?: string | null;
-    }>;
-    scannedRoots: Array<{
-      __typename?: 'ScannedWorktreeRootObject';
-      baseRoot: string;
-      exists: boolean;
-      path: string;
-      source: WorktreeRootSource;
-      worktreeCount: number;
-    }>;
-    worktrees: Array<{
-      __typename?: 'DiscoveredWorktreeObject';
-      activity: WorktreeActivity;
-      branch?: string | null;
-      checkoutId?: string | null;
-      name: string;
-      path: string;
-      planId?: string | null;
-      planRunId?: string | null;
-      repositoryId?: string | null;
-      runMonitored?: boolean | null;
-      safeToRemove: boolean;
-      unregistered: boolean;
-    }>;
-  };
   workspacePickerCapabilities: {
     __typename?: 'WorkspacePickerCapabilitiesObject';
     canUseNativeDialog: boolean;
@@ -12837,6 +12794,61 @@ export type GetSettingsRepositoriesQuery = {
     }>;
     project?: { __typename?: 'ProjectObject'; id: string; name: string } | null;
   }>;
+};
+
+export type GetSettingsRepositoriesDiscoveryQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type GetSettingsRepositoriesDiscoveryQuery = {
+  __typename?: 'Query';
+  discoveredFolders: Array<{
+    __typename?: 'DiscoveredFolderObject';
+    alreadyRegistered: boolean;
+    name: string;
+    path: string;
+  }>;
+  discoveredWorktrees: {
+    __typename?: 'DiscoveredWorktreesObject';
+    droppedCount: number;
+    scannedAt: string;
+    missingCheckouts: Array<{
+      __typename?: 'MissingWorktreeCheckoutObject';
+      checkoutId: string;
+      path: string;
+      reason: MissingWorktreeCheckoutReason;
+      repositoryId: string;
+    }>;
+    problems: Array<{
+      __typename?: 'WorktreeDiscoveryProblemObject';
+      detail: string;
+      kind: WorktreeDiscoveryProblemKind;
+      path?: string | null;
+      repositoryId?: string | null;
+    }>;
+    scannedRoots: Array<{
+      __typename?: 'ScannedWorktreeRootObject';
+      baseRoot: string;
+      exists: boolean;
+      path: string;
+      source: WorktreeRootSource;
+      worktreeCount: number;
+    }>;
+    worktrees: Array<{
+      __typename?: 'DiscoveredWorktreeObject';
+      activity: WorktreeActivity;
+      branch?: string | null;
+      checkoutId?: string | null;
+      name: string;
+      path: string;
+      planId?: string | null;
+      planRunId?: string | null;
+      repositoryId?: string | null;
+      runMonitored?: boolean | null;
+      safeToRemove: boolean;
+      unregistered: boolean;
+    }>;
+  };
 };
 
 export type BrowseWorkspaceDirectoryQueryVariables = Exact<{
@@ -13338,6 +13350,18 @@ export type DeleteWorkspaceLocalRepositoryMutationVariables = Exact<{
 export type DeleteWorkspaceLocalRepositoryMutation = {
   __typename?: 'Mutation';
   deleteWorkspaceLocalRepository: boolean;
+};
+
+export type RescanSettingsWorktreesQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type RescanSettingsWorktreesQuery = {
+  __typename?: 'Query';
+  discoveredWorktrees: {
+    __typename?: 'DiscoveredWorktreesObject';
+    scannedAt: string;
+  };
 };
 
 export type GetRolloutFlagQueryVariables = Exact<{
@@ -31914,118 +31938,6 @@ export const GetSettingsRepositoriesDocument = {
         selections: [
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'discoveredFolders' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'alreadyRegistered' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'path' } },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'discoveredWorktrees' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'droppedCount' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'missingCheckouts' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'checkoutId' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'path' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'reason' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'repositoryId' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'problems' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'detail' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'path' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'repositoryId' },
-                      },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'scannedRoots' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'baseRoot' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'exists' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'path' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'source' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'worktreeCount' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'worktrees' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'FragmentSpread',
-                        name: {
-                          kind: 'Name',
-                          value: 'DiscoveredWorktreeFields',
-                        },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
             name: { kind: 'Name', value: 'workspacePickerCapabilities' },
             selectionSet: {
               kind: 'SelectionSet',
@@ -32225,30 +32137,6 @@ export const GetSettingsRepositoriesDocument = {
     },
     {
       kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'DiscoveredWorktreeFields' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'DiscoveredWorktreeObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'activity' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'branch' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'checkoutId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'path' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'planRunId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'runMonitored' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'safeToRemove' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'unregistered' } },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'WorkspaceRepositoryFields' },
       typeCondition: {
         kind: 'NamedType',
@@ -32298,6 +32186,160 @@ export const GetSettingsRepositoriesDocument = {
 } as unknown as DocumentNode<
   GetSettingsRepositoriesQuery,
   GetSettingsRepositoriesQueryVariables
+>;
+export const GetSettingsRepositoriesDiscoveryDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getSettingsRepositoriesDiscovery' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'discoveredFolders' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'alreadyRegistered' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'discoveredWorktrees' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'droppedCount' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'missingCheckouts' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'checkoutId' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'reason' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'repositoryId' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'problems' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'detail' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'repositoryId' },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'scannedRoots' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'baseRoot' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'exists' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'source' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'worktreeCount' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'worktrees' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: {
+                          kind: 'Name',
+                          value: 'DiscoveredWorktreeFields',
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'DiscoveredWorktreeFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'DiscoveredWorktreeObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'activity' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'branch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'checkoutId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planRunId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'runMonitored' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'safeToRemove' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'unregistered' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetSettingsRepositoriesDiscoveryQuery,
+  GetSettingsRepositoriesDiscoveryQueryVariables
 >;
 export const BrowseWorkspaceDirectoryDocument = {
   kind: 'Document',
@@ -33515,6 +33557,41 @@ export const DeleteWorkspaceLocalRepositoryDocument = {
 } as unknown as DocumentNode<
   DeleteWorkspaceLocalRepositoryMutation,
   DeleteWorkspaceLocalRepositoryMutationVariables
+>;
+export const RescanSettingsWorktreesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'rescanSettingsWorktrees' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'discoveredWorktrees' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'refresh' },
+                value: { kind: 'BooleanValue', value: true },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'scannedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RescanSettingsWorktreesQuery,
+  RescanSettingsWorktreesQueryVariables
 >;
 export const GetRolloutFlagDocument = {
   kind: 'Document',
