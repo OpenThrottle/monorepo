@@ -7,6 +7,7 @@
 
 import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
+import { UnrecoverableError } from 'bullmq';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { mockExecFile, mockResolveScript } = vi.hoisted(() => ({
@@ -136,6 +137,56 @@ describe('PlanRunWorktreeProvisionService', () => {
     ).rejects.toThrow(/fatal: invalid reference/);
   });
 
+  it('fails a non-git base unrecoverably, naming the script, the base path and stderr', async () => {
+    const failure: Error & { stderr?: string } = new Error(
+      `Command failed: bash ${CREATE_SCRIPT} plan-5e172b67`,
+    );
+    failure.stderr = 'fatal: not a git repository';
+    respond({ failCreate: failure, list: '' });
+
+    const attempt = service.provision({
+      baseCheckoutPath: BASE,
+      worktreeName: 'plan-5e172b67',
+    });
+
+    await expect(attempt).rejects.toBeInstanceOf(UnrecoverableError);
+    await expect(attempt).rejects.toThrow(
+      new RegExp(
+        `from ${BASE}: Command failed: bash ${CREATE_SCRIPT}.*\\nfatal: not a git repository`,
+        's',
+      ),
+    );
+  });
+
+  it('keeps a killed create.sh (timeout) retryable', async () => {
+    const failure: Error & { killed?: boolean; signal?: string } = new Error(
+      'Command failed',
+    );
+    failure.killed = true;
+    failure.signal = 'SIGTERM';
+    respond({ failCreate: failure, list: `worktree ${BASE}\n` });
+
+    const attempt = service.provision({
+      baseCheckoutPath: BASE,
+      worktreeName: 'plan-5e172b67',
+    });
+
+    await expect(attempt).rejects.toThrow(/Failed to provision worktree/);
+    await expect(attempt).rejects.not.toBeInstanceOf(UnrecoverableError);
+  });
+
+  it('fails unrecoverably when no create.sh resolves', async () => {
+    respond({ list: `worktree ${BASE}\n` });
+    mockResolveScript.mockReturnValue({ ok: false, searched: [] });
+
+    await expect(
+      service.provision({
+        baseCheckoutPath: BASE,
+        worktreeName: 'plan-5e172b67',
+      }),
+    ).rejects.toBeInstanceOf(UnrecoverableError);
+  });
+
   it('throws when the script prints no path', async () => {
     respond({ list: `worktree ${BASE}\n`, stdout: 'setup complete\n' });
 
@@ -144,7 +195,7 @@ describe('PlanRunWorktreeProvisionService', () => {
         baseCheckoutPath: BASE,
         worktreeName: 'plan-5e172b67',
       }),
-    ).rejects.toThrow(/printed no worktree path/);
+    ).rejects.toThrow(UnrecoverableError);
   });
 
   it('serializes concurrent provisioning of the same worktree name', async () => {

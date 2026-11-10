@@ -22,6 +22,7 @@ import {
 } from '@openthrottle/nestjs-repositories';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { getOpenThrottleRoot } from '@openthrottle/openthrottle-agentic-utils';
+import { UnrecoverableError } from 'bullmq';
 import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -823,5 +824,13 @@ describe('AgenticRalphOrchestratorService default-path worktree root resolution'
     );
     expect(mockProvision).not.toHaveBeenCalled();
     expect(mockExecute).not.toHaveBeenCalled();
+  });
+
+  it('marks the missing-root failure unrecoverable so BullMQ does not retry it', async () => {
+    mockGetOpenThrottleRoot.mockReturnValueOnce(undefined);
+
+    await expect(runWithoutExplicitWorkingDirectory()).rejects.toBeInstanceOf(
+      UnrecoverableError,
+    );
   });
 });

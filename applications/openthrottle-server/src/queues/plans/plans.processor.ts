@@ -32,6 +32,7 @@ import {
 } from '@openthrottle/openthrottle-agentic-workflow';
 import { loadWorkflowRalphConfig } from '@tools/workflows';
 import type { Queue } from 'bullmq';
+import { UnrecoverableError } from 'bullmq';
 import { In } from 'typeorm';
 
 import { PlanStatusService } from '../../graphql/plans/plan-status/plan-status.service.ts';
@@ -400,7 +401,7 @@ export class PlansProcessor
   }
 
   /**
-   * When a plan job fails, reset the plan status to QUEUED so it is not stuck as IN_PROGRESS. The job may be retried by BullMQ; if not, the user can re-enqueue.
+   * When a plan job attempt fails with a retry still to come, reset the plan status to QUEUED so it is not stuck as IN_PROGRESS. On the final attempt (retries exhausted, or an `UnrecoverableError`) the plan is set BLOCKED instead and the failure reason is written to its output stream, so it never reads QUEUED with no job behind it; the user re-enqueues once the cause is fixed.
    * Guarded on the job's plan_runs row: a SCHEDULED run whose admission threw never flipped the plan, so the plan is left alone (and the run settled FAILED once retries are exhausted); a row already settled elsewhere is left alone entirely; only a QUEUED / IN_PROGRESS row (or no row) takes the reset and the FAILED settle.
    * Handles both payload shapes: { job, error } (NestJS) or (job, error) as separate args from BullMQ Worker.
    */
@@ -418,7 +419,7 @@ export class PlansProcessor
 
     const run =
       job === undefined ? null : await this.findRunForJobSafe(String(job.id));
-    const exhausted = job !== undefined && this.hasExhaustedRetries(job);
+    const exhausted = job !== undefined && this.hasExhaustedRetries(job, error);
 
     // Admission threw before the fire-time claim committed (it is one transaction, so it rolled
     // back): the plan and its tasks were never flipped QUEUED and must not be now. A retry fires
@@ -449,7 +450,17 @@ export class PlansProcessor
       return;
     }
 
-    await this.resetPlanStatusToQueued(planId, 'failed', error?.message);
+    // A retry is coming, so QUEUED is true: the plan is waiting on it. On the last attempt nothing
+    // is coming, and QUEUED would advertise a run that will never happen.
+    if (job !== undefined && exhausted) {
+      await this.blockPlanAfterFinalFailure(
+        planId,
+        String(job.id),
+        error?.message,
+      );
+    } else {
+      await this.resetPlanStatusToQueued(planId, 'failed', error?.message);
+    }
 
     // The retry boundary: 'failed' fires on EVERY attempt, but a retry is still going
     // to re-claim this row (via markRunStarted, back to IN_PROGRESS). Only settle the
@@ -459,6 +470,76 @@ export class PlansProcessor
     // its status.
     if (job !== undefined && exhausted) {
       await this.settleUnsettledRunFailedSafe(String(job.id));
+    }
+  }
+
+  /**
+   * After a job's final failed attempt: sets the plan BLOCKED (nothing will run it again) and
+   * appends the failure reason to its output stream so the plan page says why. A plan that
+   * another waiting job will pick up (a re-enqueue that landed meanwhile) is left as it is. Does
+   * not throw; logs on failure.
+   */
+  private async blockPlanAfterFinalFailure(
+    planId: string,
+    jobId: string,
+    detail: string | undefined,
+  ): Promise<void> {
+    try {
+      const waiting = await this.findPlanIdsWithQueuedJob(jobId);
+
+      if (waiting.has(planId)) {
+        this.logger.info(
+          `Plan job ${jobId} failed for the last time, but another job is waiting for plan ${planId}; leaving its status`,
+          PlansProcessor.name,
+        );
+
+        return;
+      }
+
+      const actorSub = await this.statusChangeSystemAccount.resolveId();
+      const written = await this.planStatusService.writeGuardedStatus(planId, {
+        actorKind: AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
+        actorSub: actorSub ?? undefined,
+        captureFailureIsFatal: false,
+        guardCurrentStatus: undefined,
+        requestedStatus: 'BLOCKED',
+        throwOnForbiddenInProgress: false,
+      });
+
+      if (!written) return;
+
+      this.notifications.emitPlanStatusChanged({ planId, status: 'BLOCKED' });
+      await this.appendPlanOutputSafe(
+        planId,
+        `Plan run failed and will not be retried; plan set BLOCKED. Fix the cause and re-enqueue.\n${detail ?? 'unknown error'}`,
+      );
+
+      this.logger.info(
+        `Plan status set BLOCKED after the job's final failed attempt (jobId=${jobId}${detail ? `, detail=${detail}` : ''}), planId=${planId}`,
+        PlansProcessor.name,
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Failed to block plan after its job's final failure: planId=${planId}, error=${error instanceof Error ? error.message : String(error)}`,
+        PlansProcessor.name,
+      );
+    }
+  }
+
+  /** Appends one chunk to the plan's output stream. Never throws (logs). */
+  private async appendPlanOutputSafe(
+    planId: string,
+    content: string,
+  ): Promise<void> {
+    try {
+      const repo = this.planOutputStreamService.getRepository();
+
+      await repo.save(repo.create({ content, iteration: null, planId }));
+    } catch (error) {
+      this.logger.warn(
+        `Failed to append to plan output: planId=${planId}, error=${error instanceof Error ? error.message : String(error)}`,
+        PlansProcessor.name,
+      );
     }
   }
 
@@ -513,9 +594,16 @@ export class PlansProcessor
   /**
    * Whether a job's failed attempt is its last — `attempts` guards against undefined by
    * defaulting to 1 (BullMQ's own default, meaning no retries), so an unconfigured job is
-   * treated as exhausted on its first and only attempt.
+   * treated as exhausted on its first and only attempt. An `UnrecoverableError` (e.g. a
+   * deterministic worktree-provisioning failure) is always the last attempt: BullMQ fails the job
+   * outright without consulting `attempts`.
    */
-  private hasExhaustedRetries(job: RunPlanJob): boolean {
+  private hasExhaustedRetries(
+    job: RunPlanJob,
+    error: Error | undefined,
+  ): boolean {
+    if (error instanceof UnrecoverableError) return true;
+
     const attempts = job.opts.attempts ?? 1;
 
     return job.attemptsMade >= attempts;

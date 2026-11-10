@@ -18,6 +18,7 @@ import type {
   ChildProcessMetrics,
   WallClockMetrics,
 } from '@openthrottle/openthrottle-agentic-utils';
+import { UnrecoverableError } from 'bullmq';
 import type { ChildProcess } from 'child_process';
 import { spawn as nodeSpawn } from 'child_process';
 import type { Readable } from 'stream';
@@ -1834,12 +1835,17 @@ describe('PlansProcessor', () => {
   });
 
   describe('Worker events (failed / stalled)', () => {
-    it('onPlanJobFailed resets plan status to QUEUED', async () => {
+    it('onPlanJobFailed resets plan status to QUEUED while a retry is coming', async () => {
       const planId = 'plan-failed-id';
 
       await processor.onPlanJobFailed({
         error: new Error('Job failed'),
-        job: createMock<RunPlanJob>({ data: { planId }, id: 'job-1' }),
+        job: createMock<RunPlanJob>({
+          attemptsMade: 1,
+          data: { planId },
+          id: 'job-1',
+          opts: { attempts: 3 },
+        }),
       });
 
       // Routed through the applyStatusChange chokepoint (PlanStatusService.writeGuardedStatus),
@@ -1902,6 +1908,29 @@ describe('PlansProcessor', () => {
       );
     });
 
+    it('treats an UnrecoverableError as the final attempt even with retries configured (settles to FAILED)', async () => {
+      const planId = 'plan-unrecoverable';
+      mockSettleUnsettledRunByJob.mockClear();
+
+      await processor.onPlanJobFailed({
+        error: new UnrecoverableError(
+          'Failed to provision worktree "plan-x" from /tmp/not-git: fatal: not a git repository',
+        ),
+        job: createMock<RunPlanJob>({
+          attemptsMade: 1,
+          data: { planId },
+          id: 'job-unrecoverable',
+          opts: { attempts: 3 },
+        }),
+      });
+
+      expect(mockSettleUnsettledRunByJob).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        'job-unrecoverable',
+        PLAN_RUN_STATUS.FAILED,
+      );
+    });
+
     it('treats a job with no configured attempts as final (settles to FAILED)', async () => {
       const planId = 'plan-no-retry-config';
       mockSettleUnsettledRunByJob.mockClear();
@@ -1921,6 +1950,88 @@ describe('PlansProcessor', () => {
         'job-single-attempt',
         PLAN_RUN_STATUS.FAILED,
       );
+    });
+
+    describe('plan status by attempt', () => {
+      beforeEach(() => {
+        mockGetJobs.mockClear();
+        mockSave.mockClear();
+        mockWriteGuardedStatus.mockClear();
+      });
+
+      it('a non-final attempt resets the plan to QUEUED for the coming retry', async () => {
+        await processor.onPlanJobFailed({
+          error: new Error('transient'),
+          job: createMock<RunPlanJob>({
+            attemptsMade: 1,
+            data: { planId: 'plan-retry' },
+            id: 'job-retry',
+            opts: { attempts: 3 },
+          }),
+        });
+
+        expect(mockWriteGuardedStatus).toHaveBeenCalledTimes(1);
+        expect(mockWriteGuardedStatus).toHaveBeenCalledWith(
+          'plan-retry',
+          expect.objectContaining({ requestedStatus: 'QUEUED' }),
+        );
+        expect(mockSave).not.toHaveBeenCalled();
+      });
+
+      it('the final attempt sets the plan BLOCKED, not QUEUED, and writes the reason to its output', async () => {
+        await processor.onPlanJobFailed({
+          error: new Error('Failed to provision worktree "plan-x"'),
+          job: createMock<RunPlanJob>({
+            attemptsMade: 3,
+            data: { planId: 'plan-final' },
+            id: 'job-final',
+            opts: { attempts: 3 },
+          }),
+        });
+
+        expect(mockWriteGuardedStatus).toHaveBeenCalledTimes(1);
+        expect(mockWriteGuardedStatus).toHaveBeenCalledWith(
+          'plan-final',
+          expect.objectContaining({ requestedStatus: 'BLOCKED' }),
+        );
+        expect(mockSave).toHaveBeenCalledTimes(1);
+      });
+
+      it('an UnrecoverableError on the first attempt sets the plan BLOCKED', async () => {
+        await processor.onPlanJobFailed({
+          error: new UnrecoverableError('fatal: not a git repository'),
+          job: createMock<RunPlanJob>({
+            attemptsMade: 1,
+            data: { planId: 'plan-unrecoverable' },
+            id: 'job-unrecoverable',
+            opts: { attempts: 3 },
+          }),
+        });
+
+        expect(mockWriteGuardedStatus).toHaveBeenCalledWith(
+          'plan-unrecoverable',
+          expect.objectContaining({ requestedStatus: 'BLOCKED' }),
+        );
+      });
+
+      it('the final attempt leaves the plan alone when another job is waiting for it', async () => {
+        mockGetJobs.mockResolvedValueOnce([
+          { data: { planId: 'plan-requeued' }, id: 'job-next' },
+        ]);
+
+        await processor.onPlanJobFailed({
+          error: new Error('run failed'),
+          job: createMock<RunPlanJob>({
+            attemptsMade: 3,
+            data: { planId: 'plan-requeued' },
+            id: 'job-final',
+            opts: { attempts: 3 },
+          }),
+        });
+
+        expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
+        expect(mockSave).not.toHaveBeenCalled();
+      });
     });
 
     describe('guarded on the job plan_runs row', () => {
@@ -2004,7 +2115,7 @@ describe('PlansProcessor', () => {
       );
 
       it.each(['QUEUED', 'IN_PROGRESS'])(
-        'an unsettled %s row resets the plan and settles FAILED through the guarded write',
+        'an unsettled %s row blocks the plan and settles FAILED through the guarded write',
         async (status) => {
           mockFindByQueueNameAndBullmqJobId.mockResolvedValueOnce(
             runWithStatus(status),
@@ -2017,7 +2128,7 @@ describe('PlansProcessor', () => {
 
           expect(mockWriteGuardedStatus).toHaveBeenCalledWith(
             'plan-guarded',
-            expect.objectContaining({ requestedStatus: 'QUEUED' }),
+            expect.objectContaining({ requestedStatus: 'BLOCKED' }),
           );
           expect(mockSettleUnsettledRunByJob).toHaveBeenCalledWith(
             PLANS_QUEUE_NAME,
