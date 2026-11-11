@@ -48,9 +48,8 @@ one-way: cms-ui must never import cms-core.
   `utils/registry-props.ts`; never widen the registry type or cast.
 - **Renderers take the registry as a prop** (`CORE_COMPONENTS` or `createComponentRegistry(...)`);
   upstream accepted one and silently used its own.
-- **No app routes or form intents in the package.** Hrefs (`getFragmentHref`, `getEditHref`,
-  `addHref`), the submit `intent`, the remove/reorder handlers and the phone-preview `renderUrl`
-  all come from the caller.
+- **No app routes or form intents in the package.** Hrefs (`getFragmentHref`, `addHref`), the submit
+  `intent`, the remove/reorder handlers and the phone-preview `previewUrl` all come from the caller.
 - **`src/index.ts` is the only barrel.** Import concrete files inside the package — sub-folder
   barrels were removed, and `data.registry.ts` / `data.form-fields.ts` import components that
   import `data/data.copy.ts`, so a `data/` barrel would reintroduce an import cycle. Stories live in
@@ -62,7 +61,10 @@ one-way: cms-ui must never import cms-core.
 - Name map from upstream: `Rocket*` types → `Cms*`; `Rocket*` components → `Core*`
   (`RocketRenderer` → `CoreRenderer`, `RocketFormRenderer` → `CoreFormRenderer`, …);
   `RocketComponents` → `CORE_COMPONENTS`; `RocketBaseComponentProps` → `CmsRenderUnknown`;
-  `FormBaseProps` → `CmsFormBaseProps`. `Form*`, `Layout*` and `Logic*` keep their names.
+  `FormBaseProps` → `CmsFormBaseProps`. `Form*`, `Layout*` and `Logic*` keep their names. Field
+  props renamed for outsiders: `label` → `name` (it is the property key), `parent` → `hideLabel`,
+  `FormLabel` `copy` → `text`; the form posts `intent` (not `_action`), and `CoreFormRenderer`
+  takes the `children` field's props as `children`.
 - Dropped on purpose — do not port without a plan: `atomComponent`; the demo presets and popmotion
   `findIndex` from `utils/reorder.ts`; `utils/library-loader.ts` (evaluates DB-stored code with
   `new Function` and queries Supabase directly); `utils/validators.server.ts` (ajv, server-only);

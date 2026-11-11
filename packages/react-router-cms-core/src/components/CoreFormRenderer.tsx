@@ -9,10 +9,7 @@ import { CORE_FORM_COPY } from '../data/data.copy';
 import { CoreFormContext } from '../data/data.core-form-context';
 import { FORM_FIELDS } from '../data/data.form-fields';
 import type { CmsParsedSchema } from '../types/cms-json-schema';
-import type {
-  CmsFormChildrenBindings,
-  CmsFormContextValue,
-} from '../types/cms-render';
+import type { CmsFormChildren, CmsFormContextValue } from '../types/cms-render';
 import { getFormFieldKind } from '../utils/form-field-kind';
 import { FormAccordion } from './FormAccordion';
 import { FormAccordionPane } from './FormAccordionPane';
@@ -22,11 +19,11 @@ import { FormChildren } from './FormChildren';
  * @public
  */
 export interface CoreFormRendererProps {
-  /** Bindings for a `children` property; without them that property renders no field. */
-  readonly childrenBindings: CmsFormChildrenBindings | undefined;
+  /** The `children` field's props; without them a `children` property renders no field. */
+  readonly children: CmsFormChildren | undefined;
   readonly className: string | undefined;
   readonly fragmentUuid: string;
-  /** Posted as `_action`, so the route action can tell this submit from others. */
+  /** Posted as `intent`, so the route action can tell this submit from others. */
   readonly intent: string;
   readonly schema: CmsParsedSchema;
 }
@@ -34,13 +31,13 @@ export interface CoreFormRendererProps {
 /**
  * @description The edit form for one fragment: a field per schema property, each in an accordion
  * pane, editing the fragment draft. Submitting posts the draft as JSON in `properties`, alongside
- * `_action`, `fragment_uuid` and `typename`.
+ * `intent`, `fragment_uuid` and `typename`.
  * @public
  */
 export const CoreFormRenderer = (
   props: CoreFormRendererProps,
 ): React.ReactElement => {
-  const { childrenBindings, className, fragmentUuid, intent, schema } = props;
+  const { children, className, fragmentUuid, intent, schema } = props;
 
   // Hooks
   const draft = useAtomValue(atomFragmentDraft);
@@ -59,11 +56,7 @@ export const CoreFormRenderer = (
     if (kind === 'none') return null;
 
     if (kind === 'children') {
-      return (
-        childrenBindings && (
-          <FormChildren {...childrenBindings} className={undefined} />
-        )
-      );
+      return children && <FormChildren {...children} className={undefined} />;
     }
 
     const Field = FORM_FIELDS[kind];
@@ -72,8 +65,8 @@ export const CoreFormRenderer = (
       <Field
         className={undefined}
         disabled={false}
-        label={key}
-        parent={true}
+        hideLabel={true}
+        name={key}
         schema={schema}
       />
     );
@@ -99,7 +92,7 @@ export const CoreFormRenderer = (
   return (
     <CoreFormContext.Provider value={context}>
       <Form className={cn('flex h-full flex-col', className)} method="post">
-        <input name="_action" type="hidden" value={intent} />
+        <input name="intent" type="hidden" value={intent} />
         <input name="fragment_uuid" type="hidden" value={fragmentUuid} />
         <input name="properties" type="hidden" value={JSON.stringify(draft)} />
         <input name="typename" type="hidden" value={schema.typename} />

@@ -12,9 +12,9 @@ describe('FormLabel', () => {
         <>
           <FormLabel
             className={undefined}
-            copy="title"
-            parent={false}
+            hideLabel={false}
             required={true}
+            text="title"
           />
           <input id="title" />
         </>,
@@ -34,9 +34,9 @@ describe('FormLabel', () => {
       const component = render(
         <FormLabel
           className={undefined}
-          copy="title"
-          parent={true}
+          hideLabel={true}
           required={false}
+          text="title"
         />,
       );
 

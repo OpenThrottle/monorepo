@@ -7,14 +7,14 @@ import { atomFragmentDraft } from '../../data/data.atom.fragment-draft';
 import { MOCK_FORM_SCHEMA } from '../../data/mock.form-schema';
 import { useFormField } from '../useFormField';
 
-const renderField = (label: string) => {
+const renderField = (name: string) => {
   const store = createStore();
   store.set(atomFragmentDraft, { title: 'Hello' });
   const wrapper = (props: { readonly children: React.ReactNode }) => {
     return <Provider store={store}>{props.children}</Provider>;
   };
   const hook = renderHook(
-    () => useFormField({ label, schema: MOCK_FORM_SCHEMA }),
+    () => useFormField({ name, schema: MOCK_FORM_SCHEMA }),
     {
       wrapper,
     },

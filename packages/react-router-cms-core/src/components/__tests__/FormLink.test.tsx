@@ -16,8 +16,8 @@ const renderField = (draft: Readonly<Record<string, unknown>>) => {
       <FormLink
         className={undefined}
         disabled={false}
-        label="href"
-        parent={false}
+        hideLabel={false}
+        name="href"
         schema={MOCK_FORM_SCHEMA}
       />
     </Provider>,

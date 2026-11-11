@@ -15,11 +15,11 @@ export interface FormLinkProps extends CmsFormBaseProps {}
  * @public
  */
 export const FormLink = (props: FormLinkProps): React.ReactElement => {
-  const { className, disabled, label, parent, schema } = props;
+  const { className, disabled, hideLabel, name, schema } = props;
 
   // Hooks
   const { description, isRequired, setValue, value } = useFormField({
-    label,
+    name,
     schema,
   });
 
@@ -40,15 +40,15 @@ export const FormLink = (props: FormLinkProps): React.ReactElement => {
     <div className={cn('flex flex-col gap-2 p-4', className)}>
       <FormLabel
         className={undefined}
-        copy={label}
-        parent={parent}
+        hideLabel={hideLabel}
         required={isRequired}
+        text={name}
       />
       <Input
-        aria-label={label}
+        aria-label={name}
         disabled={disabled}
-        id={label}
-        name={label}
+        id={name}
+        name={name}
         onChange={onChange}
         placeholder={description}
         required={isRequired}

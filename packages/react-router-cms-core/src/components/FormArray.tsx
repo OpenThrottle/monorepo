@@ -20,11 +20,11 @@ export interface FormArrayProps extends CmsFormBaseProps {}
  * @public
  */
 export const FormArray = (props: FormArrayProps): React.ReactElement => {
-  const { className, disabled, label, parent, schema } = props;
+  const { className, disabled, hideLabel, name, schema } = props;
 
   // Hooks
   const { description, isRequired, setValue, value } = useFormField({
-    label,
+    name,
     schema,
   });
 
@@ -63,9 +63,9 @@ export const FormArray = (props: FormArrayProps): React.ReactElement => {
     <div className={cn('flex flex-col gap-2 p-4', className)}>
       <FormLabel
         className={undefined}
-        copy={label}
-        parent={parent}
+        hideLabel={hideLabel}
         required={isRequired}
+        text={name}
       />
       {description && (
         <p className="text-muted-foreground text-sm">{description}</p>
@@ -75,7 +75,7 @@ export const FormArray = (props: FormArrayProps): React.ReactElement => {
         return (
           <div className="flex items-center gap-2" key={index}>
             <Input
-              aria-label={`${label} ${index + 1}`}
+              aria-label={`${name} ${index + 1}`}
               disabled={disabled}
               onChange={onChangeItem(index)}
               value={toInputValue(item)}

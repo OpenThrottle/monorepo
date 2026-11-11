@@ -15,11 +15,11 @@ export interface FormStringProps extends CmsFormBaseProps {}
  * @public
  */
 export const FormString = (props: FormStringProps): React.ReactElement => {
-  const { className, disabled, label, parent, schema } = props;
+  const { className, disabled, hideLabel, name, schema } = props;
 
   // Hooks
   const { description, isRequired, setValue, value } = useFormField({
-    label,
+    name,
     schema,
   });
 
@@ -40,18 +40,18 @@ export const FormString = (props: FormStringProps): React.ReactElement => {
     <div className={cn('flex flex-col gap-2 p-4', className)}>
       <FormLabel
         className={undefined}
-        copy={label}
-        parent={parent}
+        hideLabel={hideLabel}
         required={isRequired}
+        text={name}
       />
       {description && (
         <p className="text-muted-foreground text-sm">{description}</p>
       )}
       <Input
-        aria-label={label}
+        aria-label={name}
         disabled={disabled}
-        id={label}
-        name={label}
+        id={name}
+        name={name}
         onChange={onChange}
         required={isRequired}
         type="text"

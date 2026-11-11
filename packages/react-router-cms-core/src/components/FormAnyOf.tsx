@@ -18,10 +18,10 @@ export interface FormAnyOfProps extends CmsFormBaseProps {}
  * @public
  */
 export const FormAnyOf = (props: FormAnyOfProps): React.ReactElement => {
-  const { className, label, parent, schema } = props;
+  const { className, hideLabel, name, schema } = props;
 
   // Hooks
-  const { description, isRequired, property } = useFormField({ label, schema });
+  const { description, isRequired, property } = useFormField({ name, schema });
 
   // Setup
   const options = getAnyOfOptionLabels(property?.anyOf);
@@ -38,9 +38,9 @@ export const FormAnyOf = (props: FormAnyOfProps): React.ReactElement => {
     <div className={cn('flex flex-col gap-2 p-4', className)}>
       <FormLabel
         className={undefined}
-        copy={label}
-        parent={parent}
+        hideLabel={hideLabel}
         required={isRequired}
+        text={name}
       />
       {description && (
         <p className="text-muted-foreground text-sm">{description}</p>

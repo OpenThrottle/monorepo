@@ -8,18 +8,18 @@ import { FORM_FIELD_COPY } from '../data/data.copy';
  */
 export interface FormLabelProps {
   readonly className: string | undefined;
-  /** The label text, which is also the `id` of the input it labels. */
-  readonly copy: string;
   /** A top-level field is already labelled by its accordion pane, so it renders no label. */
-  readonly parent: boolean;
+  readonly hideLabel: boolean;
   readonly required: boolean;
+  /** The label text, which is also the `id` of the input it labels. */
+  readonly text: string;
 }
 
 /**
  * @public
  */
 export const FormLabel = (props: FormLabelProps): React.ReactElement | null => {
-  const { className, copy, parent, required } = props;
+  const { className, hideLabel, required, text } = props;
 
   // Hooks
 
@@ -35,14 +35,14 @@ export const FormLabel = (props: FormLabelProps): React.ReactElement | null => {
   // Life Cycle
 
   // 🔌 Short Circuit
-  if (parent) return null;
+  if (hideLabel) return null;
 
   return (
     <Label
       className={cn('text-foreground font-medium', className)}
-      htmlFor={copy}
+      htmlFor={text}
     >
-      {copy}
+      {text}
       {required && mark}
     </Label>
   );

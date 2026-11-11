@@ -14,11 +14,11 @@ export interface FormBooleanProps extends CmsFormBaseProps {}
  * @public
  */
 export const FormBoolean = (props: FormBooleanProps): React.ReactElement => {
-  const { className, disabled, label, parent, schema } = props;
+  const { className, disabled, hideLabel, name, schema } = props;
 
   // Hooks
   const { description, isRequired, setValue, value } = useFormField({
-    label,
+    name,
     schema,
   });
 
@@ -39,21 +39,21 @@ export const FormBoolean = (props: FormBooleanProps): React.ReactElement => {
     <div className={cn('flex flex-col gap-2 p-4', className)}>
       <FormLabel
         className={undefined}
-        copy={label}
-        parent={parent}
+        hideLabel={hideLabel}
         required={isRequired}
+        text={name}
       />
       <div className="flex items-center gap-2">
         <Switch
-          aria-label={label}
+          aria-label={name}
           checked={value === true}
           disabled={disabled}
-          id={label}
-          name={label}
+          id={name}
+          name={name}
           onCheckedChange={onCheckedChange}
           required={isRequired}
         />
-        {description && <Label htmlFor={label}>{description}</Label>}
+        {description && <Label htmlFor={name}>{description}</Label>}
       </div>
     </div>
   );

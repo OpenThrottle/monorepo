@@ -76,13 +76,13 @@ const registry = createComponentRegistry({
 ```
 
 Edit a fragment against its schema. Fields write to `atomFragmentDraft`; submitting posts
-`_action`, `fragment_uuid`, `properties` (the draft as JSON) and `typename` to the route action:
+`intent`, `fragment_uuid`, `properties` (the draft as JSON) and `typename` to the route action:
 
 ```tsx
 import { CoreFormRenderer } from '@openthrottle/react-router-cms-core';
 
 <CoreFormRenderer
-  childrenBindings={undefined} // pass bindings to edit a `children` property
+  children={undefined} // pass the children field props to edit a `children` property
   className={undefined}
   fragmentUuid={fragment.uuid}
   intent="updateFragment"

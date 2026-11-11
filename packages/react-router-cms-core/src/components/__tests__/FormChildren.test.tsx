@@ -11,7 +11,7 @@ import { MOCK_FRAGMENT_RECORDS } from '../../data/mock.fragment-records';
 import type { CmsFragmentRecord } from '../../types/cms-records';
 import { FormChildren } from '../FormChildren';
 
-const getEditHref = (fragment: CmsFragmentRecord): string => {
+const getFragmentHref = (fragment: CmsFragmentRecord): string => {
   return `/edit/${fragment.uuid}`;
 };
 
@@ -25,7 +25,7 @@ const renderChildren = (fragments: readonly CmsFragmentRecord[]) => {
           addHref="/add"
           className={undefined}
           fragments={fragments}
-          getEditHref={getEditHref}
+          getFragmentHref={getFragmentHref}
           onRemove={onRemove}
           onReorder={onReorder}
         />

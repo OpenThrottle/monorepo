@@ -24,11 +24,11 @@ export interface FormSelectProps extends CmsFormBaseProps {}
  * @public
  */
 export const FormSelect = (props: FormSelectProps): React.ReactElement => {
-  const { className, disabled, label, parent, schema } = props;
+  const { className, disabled, hideLabel, name, schema } = props;
 
   // Hooks
   const { description, isRequired, property, setValue, value } = useFormField({
-    label,
+    name,
     schema,
   });
 
@@ -50,21 +50,21 @@ export const FormSelect = (props: FormSelectProps): React.ReactElement => {
     <div className={cn('flex flex-col gap-2 p-4', className)}>
       <FormLabel
         className={undefined}
-        copy={label}
-        parent={parent}
+        hideLabel={hideLabel}
         required={isRequired}
+        text={name}
       />
       {description && (
         <p className="text-muted-foreground text-sm">{description}</p>
       )}
       <Select
         disabled={disabled}
-        name={label}
+        name={name}
         onValueChange={onValueChange}
         required={isRequired}
         value={toInputValue(value)}
       >
-        <SelectTrigger aria-label={label} id={label}>
+        <SelectTrigger aria-label={name} id={name}>
           <SelectValue placeholder={FORM_FIELD_COPY.selectPlaceholder} />
         </SelectTrigger>
         <SelectContent>

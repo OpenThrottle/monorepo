@@ -49,7 +49,7 @@ export interface CmsParsedSchema<TType = CmsSchemaInstanceType> extends Omit<
 export interface CmsFormBaseProps<TType = CmsSchemaInstanceType> {
   readonly className: string | undefined;
   readonly disabled: boolean;
-  readonly label: string;
-  readonly parent: boolean;
+  readonly hideLabel: boolean;
+  readonly name: string;
   readonly schema: CmsParsedSchema<TType>;
 }

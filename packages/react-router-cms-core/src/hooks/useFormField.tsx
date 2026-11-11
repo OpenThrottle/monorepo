@@ -7,8 +7,8 @@ import type { CmsJsonSchema, CmsParsedSchema } from '../types/cms-json-schema';
  * @public
  */
 export interface UseFormFieldOptions {
-  /** The property name, which is also the field's label and input name. */
-  readonly label: string;
+  /** The property name: the draft key, the input `name` and the label text. */
+  readonly name: string;
   readonly schema: CmsParsedSchema;
 }
 
@@ -32,20 +32,20 @@ export interface UseFormFieldResult {
 export const useFormField = (
   options: UseFormFieldOptions,
 ): UseFormFieldResult => {
-  const { label, schema } = options;
+  const { name, schema } = options;
 
   // Hooks
   const [draft, setDraft] = useAtom(atomFragmentDraft);
 
   // Setup
   const jsonSchema = schema.json_schema;
-  const property = jsonSchema.properties?.[label];
-  const isRequired = jsonSchema.required?.includes(label) ?? false;
+  const property = jsonSchema.properties?.[name];
+  const isRequired = jsonSchema.required?.includes(name) ?? false;
 
   // Handlers
   const setValue = (value: unknown): void => {
     setDraft((current) => {
-      return { ...current, [label]: value };
+      return { ...current, [name]: value };
     });
   };
 
@@ -60,6 +60,6 @@ export const useFormField = (
     isRequired,
     property,
     setValue,
-    value: draft[label],
+    value: draft[name],
   };
 };

@@ -16,8 +16,8 @@ const renderField = (draft: Readonly<Record<string, unknown>>) => {
       <FormSelect
         className={undefined}
         disabled={false}
-        label="size"
-        parent={false}
+        hideLabel={false}
+        name="size"
         schema={MOCK_FORM_SCHEMA}
       />
     </Provider>,

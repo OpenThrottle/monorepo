@@ -62,11 +62,11 @@ export interface CmsFormContextValue {
  * routes or form intents of its own.
  * @public
  */
-export interface CmsFormChildrenBindings {
+export interface CmsFormChildren {
   /** Where "add children" goes — typically a route or modal search param in the app. */
   readonly addHref: string;
   readonly fragments: readonly CmsFragmentRecord[];
-  readonly getEditHref: (fragment: CmsFragmentRecord) => string;
+  readonly getFragmentHref: (fragment: CmsFragmentRecord) => string;
   readonly onRemove: (fragment: CmsFragmentRecord) => void;
   /** Called with the new order; the list is controlled, so apply it to `fragments`. */
   readonly onReorder: (fragments: readonly CmsFragmentRecord[]) => void;

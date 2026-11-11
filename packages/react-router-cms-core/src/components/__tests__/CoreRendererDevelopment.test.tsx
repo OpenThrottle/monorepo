@@ -28,7 +28,7 @@ const renderPreview = (device: CmsDevice, url: string) => {
           componentRegistry={CORE_COMPONENTS}
           fragments={MOCK_FRAGMENTS}
           getFragmentHref={(fragment) => `/edit/${fragment.uuid}`}
-          renderUrl="https://cms.test/render/layout-1"
+          previewUrl="https://cms.test/render/layout-1"
           selectedUuid="heading-1"
         />
       </Provider>

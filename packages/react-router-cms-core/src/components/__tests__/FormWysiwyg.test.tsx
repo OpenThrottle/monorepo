@@ -16,8 +16,8 @@ const renderField = (draft: Readonly<Record<string, unknown>>) => {
       <FormWysiwyg
         className={undefined}
         disabled={false}
-        label="copy"
-        parent={false}
+        hideLabel={false}
+        name="copy"
         schema={MOCK_FORM_SCHEMA}
       />
     </Provider>,

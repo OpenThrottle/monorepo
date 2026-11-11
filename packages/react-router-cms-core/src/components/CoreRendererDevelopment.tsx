@@ -24,7 +24,7 @@ export interface CoreRendererDevelopmentProps {
    * The app's standalone render route. On a phone-sized preview the page loads there in an iframe,
    * so its own viewport applies; `undefined` renders inline instead.
    */
-  readonly renderUrl: string | undefined;
+  readonly previewUrl: string | undefined;
   /** The fragment being edited; the draft is merged over its properties. */
   readonly selectedUuid: string | undefined;
 }
@@ -42,7 +42,7 @@ export const CoreRendererDevelopment = (
     componentRegistry,
     fragments,
     getFragmentHref,
-    renderUrl,
+    previewUrl,
     selectedUuid,
   } = props;
 
@@ -54,8 +54,8 @@ export const CoreRendererDevelopment = (
   // Setup
   const debug = searchParams.get('debug') === 'true';
   const previewed = applyFragmentDraft(fragments, selectedUuid, draft);
-  const isIframe = device === CMS_DEVICE.MOBILE && renderUrl !== undefined;
-  const src = `${renderUrl ?? ''}?${searchParams.toString()}`;
+  const isIframe = device === CMS_DEVICE.MOBILE && previewUrl !== undefined;
+  const src = `${previewUrl ?? ''}?${searchParams.toString()}`;
 
   // Handlers
 

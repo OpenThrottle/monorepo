@@ -7,13 +7,13 @@ import { Link } from 'react-router';
 
 import { FORM_CHILDREN_COPY } from '../data/data.copy';
 import type { CmsFragmentRecord } from '../types/cms-records';
-import type { CmsFormChildrenBindings } from '../types/cms-render';
+import type { CmsFormChildren } from '../types/cms-render';
 import { ReorderGroup } from './ReorderGroup';
 
 /**
  * @public
  */
-export interface FormChildrenProps extends CmsFormChildrenBindings {
+export interface FormChildrenProps extends CmsFormChildren {
   readonly className: string | undefined;
 }
 
@@ -23,8 +23,14 @@ export interface FormChildrenProps extends CmsFormChildrenBindings {
  * @public
  */
 export const FormChildren = (props: FormChildrenProps): React.ReactElement => {
-  const { addHref, className, fragments, getEditHref, onRemove, onReorder } =
-    props;
+  const {
+    addHref,
+    className,
+    fragments,
+    getFragmentHref,
+    onRemove,
+    onReorder,
+  } = props;
 
   // Hooks
 
@@ -52,7 +58,7 @@ export const FormChildren = (props: FormChildrenProps): React.ReactElement => {
           <Button asChild={true} size="icon" variant="ghost">
             <Link
               aria-label={FORM_CHILDREN_COPY.edit}
-              to={getEditHref(fragment)}
+              to={getFragmentHref(fragment)}
             >
               <PencilIcon size={20} weight="light" />
             </Link>

@@ -12,7 +12,7 @@ import { CORE_FORM_COPY, FORM_CHILDREN_COPY } from '../../data/data.copy';
 import { MOCK_FORM_SCHEMA } from '../../data/mock.form-schema';
 import { MOCK_FRAGMENT_RECORDS } from '../../data/mock.fragment-records';
 import type { CmsParsedSchema } from '../../types/cms-json-schema';
-import type { CmsFormChildrenBindings } from '../../types/cms-render';
+import type { CmsFormChildren } from '../../types/cms-render';
 import { CoreFormRenderer } from '../CoreFormRenderer';
 
 const withChildren: CmsParsedSchema = {
@@ -23,17 +23,17 @@ const withChildren: CmsParsedSchema = {
   },
 };
 
-const bindings: CmsFormChildrenBindings = {
+const bindings: CmsFormChildren = {
   addHref: '/add',
   fragments: MOCK_FRAGMENT_RECORDS,
-  getEditHref: (fragment) => `/edit/${fragment.uuid}`,
+  getFragmentHref: (fragment) => `/edit/${fragment.uuid}`,
   onRemove: vi.fn(),
   onReorder: vi.fn(),
 };
 
 const renderForm = (
   schema: CmsParsedSchema,
-  childrenBindings: CmsFormChildrenBindings | undefined,
+  children: CmsFormChildren | undefined,
 ) => {
   const store = createStore();
   store.set(atomFragmentDraft, { title: 'Hello' });
@@ -43,7 +43,7 @@ const renderForm = (
       <Provider store={store}>
         <DndProvider backend={HTML5Backend}>
           <CoreFormRenderer
-            childrenBindings={childrenBindings}
+            children={children}
             className={undefined}
             fragmentUuid="fragment-1"
             intent="updateFragment"
@@ -96,7 +96,7 @@ describe('CoreFormRenderer', () => {
       expect(submitted).toHaveLength(1);
     });
     const [data] = submitted;
-    expect(data?.get('_action')).toBe('updateFragment');
+    expect(data?.get('intent')).toBe('updateFragment');
     expect(data?.get('fragment_uuid')).toBe('fragment-1');
     expect(data?.get('properties')).toBe(JSON.stringify({ title: 'Hello' }));
     expect(data?.get('typename')).toBe('Mock');
