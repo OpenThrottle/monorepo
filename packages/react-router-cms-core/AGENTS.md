@@ -71,9 +71,8 @@ one-way: cms-ui must never import cms-core.
   `utils/forms.ts` (dead formik WIP); `components/library.ts` and the `LayoutComponents` path
   tuples (a Vite transpile shim); `SurveyRenderer`; TinyMCE in `FormWysiwyg`, which shipped an API
   key in source. `FormWysiwyg` edits HTML source in a `TextArea` until an editor is chosen.
-- The react `util` generator uses `name` for both the identifier and the filename: pass camelCase
-  and rename the file to kebab-case `.ts`. Its `component` stub fails `no-empty-pattern` as
-  generated; give the props a `className` before linting.
+- The react `component` generator's stub fails `no-empty-pattern` as generated; give the props a
+  `className` before linting.
 
 ## Pointers
 

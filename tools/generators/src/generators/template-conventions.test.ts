@@ -29,7 +29,7 @@ const emittedTestTemplates = [
   'react-router/files/table/__tests__/__name__.test.tsx',
   'react/files/component/__tests__/__name__.test.tsx',
   'react/files/hook/__tests__/__name__.test.tsx',
-  'react/files/util/__tests__/__name__.test.tsx',
+  'react/files/util/__tests__/__name__.test.ts',
 ];
 
 // The subset that renders a component and queries the DOM (route-api tests
