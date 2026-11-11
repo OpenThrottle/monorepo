@@ -4,6 +4,7 @@ import { describe, expect, test } from 'vitest';
 import { CMS_DEVICE } from '../../config/cms-device';
 import type { CmsFragment } from '../../types/cms-fragment';
 import { atomFragment } from '../data.atom.fragment';
+import { atomFragmentDraft } from '../data.atom.fragment-draft';
 import { atomFragments } from '../data.atom.fragments';
 import { atomSettings, atomSettingsDefault } from '../data.atom.settings';
 
@@ -57,5 +58,17 @@ describe('data/atomSettings', () => {
       device: CMS_DEVICE.MOBILE,
       navigation: { open: false },
     });
+  });
+});
+
+describe('data/atomFragmentDraft', () => {
+  test('starts with no edits', () => {
+    expect(createStore().get(atomFragmentDraft)).toEqual({});
+  });
+
+  test('holds the edited properties once set', () => {
+    const store = createStore();
+    store.set(atomFragmentDraft, { title: 'Edited' });
+    expect(store.get(atomFragmentDraft)).toEqual({ title: 'Edited' });
   });
 });

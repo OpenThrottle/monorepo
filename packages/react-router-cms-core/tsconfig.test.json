@@ -16,7 +16,6 @@
     "tests/**/*.spec.tsx",
     "tests/**/*.test.ts",
     "tests/**/*.test.tsx",
-    "vitest.setup.ts",
-    "vitest.setup.tsx"
+    "tests/setup.ts"
   ]
 }

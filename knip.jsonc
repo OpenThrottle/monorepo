@@ -71,8 +71,8 @@
     // Vitest / route test harness (entry globs do not satisfy knip file graph yet)
     "applications/openthrottle-developer/app/testing/route-fixtures.tsx",
     "applications/openthrottle-developer/app/testing/search-route-fixtures.ts",
-    // @openthrottle/react-router-cms-core: spec-only fixture (knip ignores __tests__, and stories stay in react-router-shadcn)
-    "packages/react-router-cms-core/src/data/mock.reorder.ts",
+    // @openthrottle/react-router-cms-core: spec-only fixtures (knip ignores __tests__, and stories stay in react-router-shadcn)
+    "packages/react-router-cms-core/src/data/mock.*.ts",
     // openthrottle-server: Stripe payments / RBAC roles disabled in app.module (intentional rollback; see @deprecated)
     "applications/openthrottle-server/src/graphql/payments/**",
     "applications/openthrottle-server/src/graphql/roles/**",
