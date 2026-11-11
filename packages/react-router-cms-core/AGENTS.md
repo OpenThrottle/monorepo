@@ -1,22 +1,45 @@
 # @openthrottle/react-router-cms-core — agent notes
 
-> TODO: Replace this line with one or two sentences on the package's purpose —
-> what it does, its main exports, and who consumes it. Delete the TODOs as you
-> fill each section in; an empty stub is a smell.
+Foundation library for the OpenThrottle CMS: content-model types (fragments, layouts, schemas),
+Jotai editor-state atoms, fragment-tree utils and drag-to-reorder primitives. Ported from
+`@rocketcms/core` (visormatt/monorepo, `packages/rocketcms/core`), re-scaffolded with
+`@tools/generators` rather than copied (OT plan `9a1f8a93`).
+
+**Consumed by:** `applications/openthrottle-cms` (not imported yet — the app is still a scaffold).
 
 ## Layout
 
-- [src/index.ts](src/index.ts) — public entry point. Export the package's public
-  API here and tag exported public API with `@public` so Knip keeps it.
+- [src/index.ts](src/index.ts) — public entry point; every export carries a `@public` JSDoc tag.
+- [src/types/](src/types/) — `CmsFragment` (the layout tree), the stored row types (`CmsLayout`,
+  `CmsFragmentRecord`, `CmsSchema`), `CmsJsonSchema` and `CmsReorderListSource`.
+- [src/config/](src/config/) — `CMS_STATUS`, `CMS_DEVICE` (`as const` objects).
+- [src/data/](src/data/) — Jotai atoms (`data.atom.*.ts`), `REORDER_HANDLE_COPY`,
+  `CMS_REORDER_DRAG_TYPE`, and `mock.reorder.ts` (stories/specs only, not exported).
+- [src/utils/](src/utils/) — `getLayoutBreadcrumbs`, `moveListItem`, `shouldReorderOnHover`.
+- [src/hooks/](src/hooks/) + [src/components/](src/components/) — `useReorderList` /
+  `useReorderItem` and `ReorderGroup` / `ReorderItem` / `ReorderHandle`.
 
 ## Invariants & gotchas
 
-- TODO: capture anything non-obvious a future agent must respect — build vs
-  source-first status, cross-package contracts, and any "changing X here changes
-  Y" ripple effects (e.g. a shared fixture consumed by many suites).
+- Source-first, no build target — see [packages/AGENTS.md](../AGENTS.md).
+- **Consumers must render reorder components under a `DndProvider`** (`react-dnd-html5-backend`).
+  The package deliberately doesn't mount one: a nested provider breaks drag-and-drop for any
+  other react-dnd surface on the page.
+- **`react-dnd` is the only drag-and-drop library.** Upstream mixed `react-dnd`, `framer-motion`
+  and `@popmotion/popcorn`; do not reintroduce the other two (or `immutability-helper` —
+  `moveListItem` replaces it).
+- `ReorderHandle` is the only drag source; the rest of a row stays clickable. Keep `rowRef` on the
+  row (drop target + preview) and `handleRef` on the handle.
+- `CmsFragment.children` is always an array (upstream allowed one-or-many). Normalise at the data
+  boundary, not in consumers.
+- Upstream `Rocket*` names are `Cms*` here. Dropped on purpose: `atomComponent` (untyped, unused),
+  the demo colour/height/z-index presets and popmotion `findIndex` from `utils/reorder.ts`, the
+  hardcoded default list in `ReorderGroup`, and the skipped placeholder specs and snapshots.
+- The react `util` generator uses `name` for both the identifier and the filename: pass camelCase
+  and rename the file to kebab-case `.ts`.
 
 ## Pointers
 
 - [README.md](README.md) — human-facing overview and usage.
-- [../AGENTS.md](../AGENTS.md) — parent-tier conventions (package layout,
-  `@public` tags, source-first pattern).
+- [../AGENTS.md](../AGENTS.md) — parent-tier conventions (package layout, `@public` tags,
+  source-first pattern).

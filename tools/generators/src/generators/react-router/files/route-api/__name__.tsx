@@ -1,9 +1,7 @@
-import type { Route } from '@/app/routes/+types/<%= name %>';
-
-export const loader = async (_args: Route.LoaderArgs) => {
-  return {};
-};
-
-export const action = async (_args: Route.ActionArgs) => {
-  return {};
+/**
+ * @description Resource route: no UI, a placeholder JSON payload until the
+ * data layer exists.
+ */
+export const loader = async (): Promise<Response> => {
+  return Response.json({ data: [] });
 };

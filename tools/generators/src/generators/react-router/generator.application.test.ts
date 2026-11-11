@@ -28,6 +28,21 @@ describe('generatorReactRouterApplication', () => {
     ]);
   });
 
+  test('declares the packages its inferred start target and route template run on', async () => {
+    await generatorReactRouterApplication(tree, { name });
+    const packageJsonPath = tree
+      .listChanges()
+      .map((change) => change.path)
+      .find((path) => path.startsWith('applications/') && path.endsWith('/package.json')); // prettier-ignore
+    const { dependencies } = readJson(tree, packageJsonPath ?? '');
+
+    // `start` runs `react-router-serve`; the route template imports lucide-react.
+    expect(dependencies).toMatchObject({
+      '@react-router/serve': 'catalog:',
+      'lucide-react': 'catalog:',
+    });
+  });
+
   test('should run successfully', async () => {
     await generatorReactRouterApplication(tree, { name });
 

@@ -16,6 +16,10 @@ describe('getRouteTitleVariables', () => {
     ['pull-requests._index', 'Pull requests', 'Pull requests'],
     ['settings.mcp._index', 'MCP | Settings', 'MCP'],
     ['ide.files', 'Files | IDE', 'Files'],
+    ['components.$uuid', 'Component | Components', 'Component'],
+    ['schemas.$uuid._index', 'Schema | Schemas', 'Schema'],
+    ['render.$uuid', 'Render', 'Render'],
+    ['$slug', 'Slug', 'Slug'],
   ])('%s -> %s', (name, nameTitle, nameTitleLeaf) => {
     expect(getRouteTitleVariables(name)).toStrictEqual({
       nameTitle,

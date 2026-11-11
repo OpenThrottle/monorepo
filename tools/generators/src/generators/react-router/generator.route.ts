@@ -9,6 +9,7 @@ import {
   getTargetApplication,
   parsePossibleNames,
 } from '../../utils/questions.ts';
+import { getRoutePathVariables } from '../../utils/route-path.ts';
 import { getRouteTitleVariables } from '../../utils/route-title.ts';
 
 export interface ReactRouterRouteGeneratorSchema {
@@ -58,6 +59,7 @@ export const generatorReactRouterRoute = async (
     const templates = join(import.meta.dirname, 'files', template);
     const variables = {
       ...getCommonVariables(name),
+      ...getRoutePathVariables(name),
       ...getRouteTitleVariables(name),
     };
 

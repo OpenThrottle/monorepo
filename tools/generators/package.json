@@ -15,6 +15,7 @@
   },
   "devDependencies": {
     "@tools/dotfiles": "workspace:^",
+    "eslint": "catalog:",
     "vitest": "catalog:"
   },
   "__exports": {
