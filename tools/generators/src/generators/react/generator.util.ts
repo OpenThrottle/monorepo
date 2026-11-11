@@ -56,6 +56,21 @@ export async function utilGenerator(
 
   const names = parsePossibleNames(nameString);
 
+  // The name is the exported identifier; the file name is derived from it
+  // (`moveListItem` → `move-list-item.ts`), so anything but camelCase would
+  // emit an unparseable `export const move-list-item`.
+  const invalidNames = names.flatMap((name: string) => {
+    const error = validateCamelCase(name);
+
+    return error ? [`${error}: ${name}`] : [];
+  });
+
+  if (invalidNames.length > 0) {
+    throw new Error(
+      `Invalid util name(s) — pass camelCase, e.g. --name=moveListItem:\n${invalidNames.join('\n')}`,
+    );
+  }
+
   for await (const name of names) {
     const destination = join(project.data.root, 'src/utils');
     const templates = join(import.meta.dirname, 'files/util');

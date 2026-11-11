@@ -36,23 +36,51 @@ describe('utilGenerator', () => {
 
   const target = '@openthrottle/react-router-ui';
   const packageName = 'react-router-ui';
-  const name = 'exampleUtil';
+  const name = 'moveListItem';
+  const utilPath = `packages/${packageName}/src/utils/move-list-item.ts`;
+  const testPath = `packages/${packageName}/src/utils/__tests__/move-list-item.test.ts`;
 
-  test('should run successfully', async () => {
-    await utilGenerator(tree, { destination: target, name });
+  describe('when the name is camelCase', () => {
+    test('writes kebab-case .ts files exporting the camelCase identifier', async () => {
+      await utilGenerator(tree, { destination: target, name });
 
-    const changes = tree.listChanges();
-    const files = changes
-      .filter((change) => change.type === 'CREATE') // Doesn't help
-      .map((change) => change.path);
+      const files = tree
+        .listChanges()
+        .filter((change) => change.type === 'CREATE')
+        .map((change) => change.path);
 
-    expect(files).toStrictEqual([
-      '.prettierrc',
-      'package.json',
-      'nx.json',
-      'tsconfig.base.json',
-      `packages/${packageName}/src/utils/${name}.tsx`,
-      `packages/${packageName}/src/utils/__tests__/${name}.test.tsx`,
-    ]);
+      expect(files).toStrictEqual([
+        '.prettierrc',
+        'package.json',
+        'nx.json',
+        'tsconfig.base.json',
+        utilPath,
+        testPath,
+      ]);
+      expect(tree.read(utilPath, 'utf-8')).toContain(
+        'export const moveListItem = ',
+      );
+      expect(tree.read(testPath, 'utf-8')).toContain(
+        `import { moveListItem } from '../move-list-item';`,
+      );
+    });
+  });
+
+  describe('when a name is not camelCase', () => {
+    test('rejects it, naming the bad value, and writes nothing', async () => {
+      await expect(
+        utilGenerator(tree, {
+          destination: target,
+          name: 'validName,move-list-item',
+        }),
+      ).rejects.toThrow(/Must be camel case: move-list-item/);
+
+      const written = tree
+        .listChanges()
+        .map((change) => change.path)
+        .filter((path) => path.startsWith('packages/'));
+
+      expect(written).toStrictEqual([]);
+    });
   });
 });
