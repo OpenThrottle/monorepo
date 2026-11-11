@@ -60,6 +60,8 @@ on:
 # spurious "cancelled" (non-error) result AND leaving that commit only partially
 # validated. It matters because `main` is the branch every PR's Actions cache is
 # restored from, so a half-validated main commit seeds every downstream build.
+# A push the merge queue already validated runs only `warm-cache` (see the ♻️
+# step in `changes`): it refreshes that seed without re-testing the tree.
 # Merge-queue refs are `gh-readonly-queue/.../pr-N-<sha>` and therefore unique per
 # entry, so they naturally do NOT cancel each other; each queue candidate keeps its
 # own ref-shaped concurrency group.
@@ -112,12 +114,59 @@ jobs:
       deps: ${{ steps.filter.outputs.deps }}
       graph: ${{ steps.filter.outputs.graph }}
       model_text: ${{ steps.filter.outputs.model_text }}
+      # 'true' only on a push to `main` whose exact SHA already went green in
+      # the merge queue. See the ♻️ step below and the `warm-cache` job.
+      queue_validated: ${{ steps.queue.outputs.validated }}
       run: ${{ steps.filter.outputs.run }}
     steps:
       - name: '📦 Checkout the code'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 1
+
+      # ♻️ The merge queue fast-forwards `main` to merge_group.head_sha, the
+      # exact commit its CI run just validated. Re-running the whole matrix on
+      # the push that follows tests an identical tree a second time: 9–14 min
+      # and four runners that the queue could be using (OT plan 80b62f5e).
+      # When a green merge_group run of THIS workflow exists for this SHA,
+      # `build` and `gates` skip and `warm-cache` refreshes the main-scoped
+      # caches that PRs restore from.
+      #
+      # FAILS CLOSED. Anything other than a confirmed green queue run for this
+      # exact SHA — a direct push, a workflow_dispatch, a failed API call, a
+      # queue run that went red or was cancelled — means validated=false and
+      # the full matrix runs, exactly as before.
+      - name: '♻️ Was this SHA already validated in the merge queue?'
+        id: queue
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          GH_TOKEN: ${{ github.token }}
+          REF: ${{ github.ref }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          if [ "$EVENT_NAME" != "push" ] || [ "$REF" != "refs/heads/main" ]; then
+            echo "validated=false" >> "$GITHUB_OUTPUT"
+            echo "event=$EVENT_NAME ref=$REF → validated=false (only a push to main can skip)"
+            exit 0
+          fi
+
+          if ! count="$(gh api "repos/$REPO/actions/workflows/continuous-integration.yml/runs?event=merge_group&head_sha=$SHA&status=success&per_page=1" --jq '.total_count' 2>&1)"; then
+            echo "validated=false" >> "$GITHUB_OUTPUT"
+            echo "→ validated=false (could not query merge-queue runs; failing closed)"
+            echo "$count"
+            exit 0
+          fi
+
+          if [ "$count" -ge 1 ] 2>/dev/null; then
+            echo "validated=true" >> "$GITHUB_OUTPUT"
+            echo "→ validated=true ($count green merge_group run(s) for $SHA)"
+          else
+            echo "validated=false" >> "$GITHUB_OUTPUT"
+            echo "→ validated=false (no green merge_group run for $SHA: direct push?)"
+          fi
 
       - name: '🔎 Detect non-docs changes'
         id: filter
@@ -359,6 +408,7 @@ jobs:
     # Also skips when the `changes` gate found only docs/markdown edits.
     if: |
       needs.changes.outputs.run == 'true' &&
+      needs.changes.outputs.queue_validated != 'true' &&
       (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
 
     # 💰 Cost/wall-clock tradeoffs in this job are priced in
@@ -473,6 +523,9 @@ jobs:
         uses: ./.github/actions/node-setup
         with:
           cache-suffix: shard-${{ matrix.jobIndex }}
+          # 💰 Restore-only in the merge queue: its ref is unique per entry, so
+          # nothing could ever restore a save from it (see node-setup).
+          save-cache: ${{ github.event_name != 'merge_group' }}
 
       # ot-skill-sync's .agents/skills → skills/ symlinks (and the editor fan-out) are
       # generated artifacts, gitignored by design, so a fresh checkout lacks them.
@@ -613,45 +666,125 @@ jobs:
             echo "🧠 shard ${{ matrix.jobIndex }}/${{ env.jobCount }} → $selector"
           fi
 
-          # Both invocations below run at Nx's default concurrency of 3 — the bare
-          # `--parallel` here is not "full", see the flag-semantics note above.
-          # Sharding does NOT license widening `test`: that stays evidence-gated,
-          # and splitting one suite across boxes changes nothing about co-running
-          # two heavy jsdom suites on ONE box. Which targets run, and
+          # ⏩ OVERLAP (OT plan 80b62f5e). The suite-sharded `--shard` run used to
+          # start only after lint/typecheck AND every other test had finished, so
+          # its ~3 min sat at the end of the critical path on every box while
+          # earlier phases left task slots idle. It now runs in the BACKGROUND
+          # from the start of this step, beside the two foreground invocations.
+          #
+          # Why two Nx processes cannot race here: the only thing they could
+          # share is a dependency task (both would delete and rewrite the same
+          # outputs). So the background run's dependency tasks, read from Nx's
+          # own task graph rather than restated, run SYNCHRONOUSLY first, and
+          # the background run then passes --excludeTaskDependencies. When the
+          # foreground later reaches the same task it is a cache hit whose
+          # outputs already match, which Nx leaves untouched.
+          #
+          # Memory: this adds one Vitest pool to the box's three Nx test slots.
+          # --parallel=4 peaked at ~7.7 GB of 16 GB (OT plan 0494d906), the same
+          # order of load. The OOM failure mode is SILENT-PASSING, so the end of
+          # this step fails the job on any OOM kill and on any `(0 test)` file.
+          # 📈 NX_PROFILE: each invocation writes a Chrome trace of its tasks'
+          # real durations. The 📈 upload below ships them, and
+          # `generate-shard-weights.ts --from-ci` turns them into the committed
+          # shard-weights.json, measured on this hardware. Nx joins the value
+          # onto the cwd, so it MUST be a relative path.
+          sharded_log="$RUNNER_TEMP/suite-shard.log"
+          sharded_pid=""
+
+          if [ -n "$suiteShardProjects" ]; then
+            graph="$RUNNER_TEMP/suite-shard-graph.json"
+            pnpm exec nx run-many --projects="$suiteShardProjects" --target=test --graph="$graph" >/dev/null
+            deps="$(node -e 'const g=require(process.argv[1]); console.log(Object.keys(g.tasks.tasks).filter((id) => !id.endsWith(":test")).join("\n"))' "$graph")"
+
+            echo "🧱 Building the --shard run's dependency tasks first:"; echo "$deps"
+            while IFS= read -r task; do
+              [ -z "$task" ] || pnpm exec nx run "$task" ${{ env.OUTPUT_DEBUG }}
+            done <<<"$deps"
+
+            echo "✂️  Vitest --shard=$suiteShard of $suiteShardProjects starts in the background (lint/typecheck for it stay on the partition)"
+            # `--outputStyle=stream` is load-bearing, not cosmetic: under Nx's CI
+            # default the task's output is buffered into one block, and for a
+            # suite this size the run that introduced sharding lost Vitest's
+            # `Test Files N passed (N)` summary on all three legs. That summary
+            # is the ONE number separating "this box ran its third" from "this
+            # box ran nothing and went green". The log file is printed in full
+            # below and the summary line is echoed on its own.
+            NX_PROFILE=.nx/profiles/suite-shard.json pnpm exec nx run-many --projects="$suiteShardProjects" --target=test --shard="$suiteShard" --excludeTaskDependencies --outputStyle=stream ${{ env.OUTPUT_DEBUG }} >"$sharded_log" 2>&1 &
+            sharded_pid=$!
+            trap '[ -n "$sharded_pid" ] && kill "$sharded_pid" 2>/dev/null || true' EXIT
+          fi
+
+          # Both foreground invocations run at Nx's default concurrency of 3 — the
+          # bare `--parallel` here is not "full", see the flag-semantics note
+          # above. Widening `test` stays evidence-gated. Which targets run, and
           # how, is the workflow's business — the partitioner only answers which
           # projects, and which slice of a sharded suite, are mine.
           if [ -n "$selector" ]; then
-            pnpm exec nx affected --exclude="*,$selector" --target=lint,typecheck,bundle-hooks-check --parallel ${{ env.OUTPUT_DEBUG }}
+            NX_PROFILE=.nx/profiles/lint-typecheck.json pnpm exec nx affected --exclude="*,$selector" --target=lint,typecheck,bundle-hooks-check --parallel ${{ env.OUTPUT_DEBUG }}
           fi
 
           # `testSelector`, not `selector`: a suite-sharded project is absent from
-          # EVERY box's test partition and covered by the --shard run below
-          # instead. Empty when this box's whole chunk was suite-sharded away.
+          # EVERY box's test partition and covered by the --shard run instead.
+          # Empty when this box's whole chunk was suite-sharded away.
           if [ -n "$testSelector" ]; then
-            pnpm exec nx affected --exclude="*,$testSelector" --target=test ${{ env.OUTPUT_DEBUG }}
+            NX_PROFILE=.nx/profiles/test.json pnpm exec nx affected --exclude="*,$testSelector" --target=test ${{ env.OUTPUT_DEBUG }}
           fi
 
           # ⚠️ `--shard` MUST stay on its own invocation. Attaching it to the
           # `nx affected --target=test` line above would shard every OTHER
-          # project's suite too, running a third of each and reporting green —
-          # the same silent-pass disaster this step exists to prevent, wearing a
-          # different hat. Vitest prints the collected file count per shard; three
-          # boxes' counts summing to the full suite is the check that matters.
-          #
-          # `--outputStyle=stream` is load-bearing, not cosmetic. Under Nx's CI
-          # default the task's whole output is buffered and emitted as one block,
-          # and for a suite this size GitHub keeps only part of it: the run that
-          # introduced this sharding lost Vitest's `Test Files N passed (N)`
-          # summary entirely on all three legs, and 257 of 679 per-file lines with
-          # it. That summary is the ONE number that distinguishes "this box ran its
-          # third of the suite" from "this box ran nothing and went green", so
-          # losing it guts the review check this whole step exists to enable.
-          # Streaming pipes Vitest's output through live instead. If you ever see
-          # the count go missing again, fix it here — do not settle for the ✅.
-          if [ -n "$suiteShardProjects" ]; then
-            echo "✂️  Vitest --shard=$suiteShard of $suiteShardProjects (lint/typecheck for it stayed on the partition above)"
-            pnpm exec nx run-many --projects="$suiteShardProjects" --target=test --shard="$suiteShard" --outputStyle=stream ${{ env.OUTPUT_DEBUG }}
+          # project's suite too, running a third of each and reporting green.
+          # Vitest prints the collected file count per shard; three boxes'
+          # counts summing to the full suite is the check that matters.
+          if [ -n "$sharded_pid" ]; then
+            echo "⏳ Waiting for the background --shard run…"
+            if wait "$sharded_pid"; then sharded_rc=0; else sharded_rc=$?; fi
+            sharded_pid=""
+
+            echo "::group::✂️  Vitest --shard=$suiteShard of $suiteShardProjects (full output)"
+            cat "$sharded_log"
+            echo "::endgroup::"
+
+            echo "✂️  --shard=$suiteShard summary:"
+            grep -E 'Test Files|Tests  ' "$sharded_log" || echo "❌ no Vitest summary line found"
+
+            if [ "$sharded_rc" -ne 0 ]; then
+              echo "❌ the --shard run failed (exit $sharded_rc)"
+              exit "$sharded_rc"
+            fi
+
+            if ! grep -qE 'Test Files' "$sharded_log"; then
+              echo "❌ the --shard run printed no 'Test Files' summary; refusing to report green"
+              exit 1
+            fi
+
+            if grep -qE '\(0 test\)' "$sharded_log"; then
+              echo "❌ a file collected (0 test): the signature of an OOM-killed worker"
+              grep -E '\(0 test\)' "$sharded_log"
+              exit 1
+            fi
           fi
+
+          if sudo dmesg 2>/dev/null | grep -qiE 'out of memory|killed process'; then
+            echo "❌ the kernel OOM-killed a process on this box during the run:"
+            sudo dmesg | grep -iE 'out of memory|killed process'
+            exit 1
+          fi
+
+      # 📈 Per-task timings for the shard-weights table (see the 📈 note in
+      # the step above). Uploaded only from merge-queue entries: that is where
+      # `build` runs for every commit that lands (a push to `main` the queue
+      # already validated skips it, see `warm-cache`), it is the code that
+      # actually merges, and the regeneration reads nothing else. Artifacts are
+      # per-run, not branch-scoped, so a queue ref's are downloadable later.
+      - name: '📈 Upload Nx task profile'
+        if: success() && github.event_name == 'merge_group'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          if-no-files-found: ignore
+          name: nx-profile-shard-${{ matrix.jobIndex }}
+          path: .nx/profiles/
+          retention-days: 30
 
       # ⏏️ MERGE QUEUE ONLY: eject a red entry now, not when the slowest job ends.
       # The queue removes an entry only once the required `ci-success` reports,
@@ -732,6 +865,7 @@ jobs:
     needs: changes
     if: |
       needs.changes.outputs.run == 'true' &&
+      needs.changes.outputs.queue_validated != 'true' &&
       (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
     runs-on: ubuntu-26.04
     timeout-minutes: 15
@@ -760,6 +894,9 @@ jobs:
         uses: ./.github/actions/node-setup
         with:
           cache-suffix: gates
+          # 💰 Restore-only in the merge queue: its ref is unique per entry, so
+          # nothing could ever restore a save from it (see node-setup).
+          save-cache: ${{ github.event_name != 'merge_group' }}
 
       # check-agent-assets-ssot and the frontmatter validator read the
       # .agents/skills -> skills/ fan-out, which is generated and gitignored.
@@ -1034,8 +1171,50 @@ jobs:
   # cancel, and it reads the canceller as `failure`/`cancelled` and the rest as
   # `cancelled`. NEVER accept `cancelled` below, or a cancelled queue entry
   # could read green on the one required check.
+  # ♻️ Runs INSTEAD OF `build` + `gates` on a push to `main` whose exact SHA
+  # already went green in the merge queue (`changes` → queue_validated).
+  #
+  # Why not skip outright: Actions caches are branch-scoped. The queue's caches
+  # live under `gh-readonly-queue/*` refs, which neither `main` nor any PR can
+  # restore. `main` is the one scope every PR can read, so if nothing on `main`
+  # ever ran Node Setup again, a lockfile change would never re-seed the pnpm
+  # store and PRs would restore a stale Nx cache forever.
+  #
+  # Why `typecheck`: it is what PRs reuse. A PR re-runs lint/test only for
+  # projects whose inputs it changed, which cannot hit a cache; what DOES hit
+  # is the `^build` / `^typecheck` / codegen of unchanged upstream projects,
+  # and `typecheck`'s dependsOn pulls exactly those in. One box, nobody waits.
+  warm-cache:
+    needs: changes
+    if: needs.changes.outputs.queue_validated == 'true'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
+    concurrency:
+      cancel-in-progress: false
+      group: continuous-integration-${{ github.ref }}-warm-cache
+    steps:
+      - name: '📦 Checkout the code'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          filter: 'blob:none'
+
+      - name: '🤖 Node Setup'
+        uses: ./.github/actions/node-setup
+        with:
+          cache-suffix: warm
+
+      - name: "🕵️‍♂️ NX Setup SHA's"
+        uses: nrwl/nx-set-shas@e602fada7ad5987b0f7b1905e7a99ea1c661514c # v5.1.0
+
+      - name: '🔥 Warm the Nx cache (codegen + typecheck, affected)'
+        run: |
+          pnpm exec nx affected --target=codegen-graphql,codegen-react-router --parallel ${{ env.OUTPUT_DEBUG }}
+          pnpm exec nx affected --target=typecheck --parallel ${{ env.OUTPUT_DEBUG }}
+
   ci-success:
-    needs: [attribution-guard, changes, build, gates, model-facing-text]
+    needs:
+      [attribution-guard, changes, build, gates, model-facing-text, warm-cache]
     if: always()
     runs-on: ubuntu-26.04
     timeout-minutes: 2
@@ -1047,6 +1226,7 @@ jobs:
           build_result="${{ needs.build.result }}"
           gates_result="${{ needs.gates.result }}"
           model_text_result="${{ needs.model-facing-text.result }}"
+          warm_result="${{ needs.warm-cache.result }}"
 
           echo "attribution-guard: $attribution_result | changes: $changes_result | build: $build_result | gates: $gates_result | model-facing-text: $model_text_result"
 
@@ -1072,6 +1252,13 @@ jobs:
 
           # Path-gated on `model_text` and skipped on drafts, so 'skipped' is
           # legitimate; anything else is not.
+          # A red warm-cache leaves this push red, so nx-set-shas never treats
+          # it as the "last successful" base for the next affected range.
+          if [ "$warm_result" != "success" ] && [ "$warm_result" != "skipped" ]; then
+            echo "❌ cache warm-up did not succeed ($warm_result)"
+            exit 1
+          fi
+
           if [ "$model_text_result" != "success" ] && [ "$model_text_result" != "skipped" ]; then
             echo "❌ model-facing-text byte budget did not succeed ($model_text_result)"
             exit 1
@@ -1085,8 +1272,12 @@ jobs:
           echo "❌ CI gate failed (build: $build_result)"
           exit 1
 
+  # 💰 Manual dispatch only, as the trigger comment at the top of this file
+  # always said. It was gated on `github.ref == 'refs/heads/main'`, which every
+  # push to main satisfies, so it spent ~1.5 min of a runner and saved one more
+  # ~215 MB Nx cache entry per merge, for an artifact nobody downloaded.
   nx-dependency-graph:
-    if: ${{ github.ref == 'refs/heads/main' }}
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-26.04
     timeout-minutes: 10
 
