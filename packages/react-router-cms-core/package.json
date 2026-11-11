@@ -1,14 +1,29 @@
 {
   "name": "@openthrottle/react-router-cms-core",
-  "description": "TODO: Add a description",
+  "description": "OpenThrottle CMS foundation: content-model types, Jotai editor-state atoms, fragment-tree utils and drag-to-reorder primitives for the openthrottle-cms app.",
   "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
-  "dependencies": {},
-  "devDependencies": {},
+  "dependencies": {
+    "@openthrottle/react-router-shadcn": "workspace:^",
+    "@phosphor-icons/react": "catalog:",
+    "@types/json-schema": "catalog:",
+    "dnd-core": "catalog:",
+    "jotai": "catalog:",
+    "json-schema": "catalog:",
+    "react-dnd": "catalog:"
+  },
+  "devDependencies": {
+    "@storybook/react-vite": "catalog:",
+    "@testing-library/jest-dom": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "catalog:",
+    "react-dnd-html5-backend": "catalog:",
+    "vitest": "catalog:"
+  },
   "main": "./src/index.ts",
   "module": "./src/index.ts",
   "nx": {
@@ -31,7 +46,9 @@
       "typecheck": {}
     }
   },
-  "peerDependencies": {},
+  "peerDependencies": {
+    "react": "catalog:"
+  },
   "private": true,
   "publishConfig": {
     "access": "restricted",
