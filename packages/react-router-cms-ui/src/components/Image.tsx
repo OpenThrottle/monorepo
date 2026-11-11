@@ -26,7 +26,7 @@ export interface ImageProps {
   /**
    * @default "ui-border border indent-4"
    * @description Classes to be applied onto the wrapping div of the image
-   * @TJS-type className
+   * @cmsWidget className
    */
   readonly className?: string;
 

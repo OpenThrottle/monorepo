@@ -1,0 +1,34 @@
+{
+  "$comment": "GENERATED — DO NOT EDIT. Regenerate with `pnpm nx run <project>:cms-schemas:write` (scripts/generate-cms-schemas.ts).",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "description": "A call-to-action button built on the shadcn `Button`.",
+  "properties": {
+    "className": {
+      "default": "uppercase",
+      "description": "Classes to be applied on the component.",
+      "type": "string",
+      "x-cms-widget": "className"
+    },
+    "cta": {
+      "default": "Call to action",
+      "description": "The label shown on the button",
+      "type": "string"
+    },
+    "size": {
+      "default": "md",
+      "description": "Controls the sizing of the button",
+      "enum": ["lg", "md", "sm", "xl"],
+      "type": "string"
+    },
+    "variant": {
+      "default": "primary",
+      "description": "\"secondary\" is the same button without the fill or outline.",
+      "enum": ["primary", "secondary"],
+      "type": "string"
+    }
+  },
+  "required": ["cta"],
+  "title": "Button",
+  "type": "object"
+}

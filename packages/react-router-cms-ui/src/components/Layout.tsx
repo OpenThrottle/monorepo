@@ -19,13 +19,13 @@ export interface LayoutProps {
   /**
    * @default []
    * @description The child components to be rendered via this Layout component.
-   * @TJS-type children
+   * @cmsWidget children
    */
   readonly children: React.ReactNode;
 
   /**
    * @description Classes to be applied on the component.
-   * @TJS-type className
+   * @cmsWidget className
    */
   readonly className?: string;
 }

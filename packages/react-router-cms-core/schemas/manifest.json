@@ -1,0 +1,25 @@
+{
+  "$comment": "GENERATED — DO NOT EDIT. Regenerate with `pnpm nx run <project>:cms-schemas:write` (scripts/generate-cms-schemas.ts).",
+  "schemas": [
+    {
+      "file": "LayoutColumn.schema.json",
+      "typename": "LayoutColumn",
+      "version": "392e57f20024268f"
+    },
+    {
+      "file": "LayoutGrid.schema.json",
+      "typename": "LayoutGrid",
+      "version": "17b7421ff136c13c"
+    },
+    {
+      "file": "LogicCookies.schema.json",
+      "typename": "LogicCookies",
+      "version": "dc624a083a04f0df"
+    },
+    {
+      "file": "LogicParams.schema.json",
+      "typename": "LogicParams",
+      "version": "d8062ec1cf14e9a8"
+    }
+  ]
+}

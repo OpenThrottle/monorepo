@@ -1,0 +1,37 @@
+{
+  "$comment": "GENERATED — DO NOT EDIT. Regenerate with `pnpm nx run <project>:cms-schemas:write` (scripts/generate-cms-schemas.ts).",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "description": "A single post from X (formerly Twitter): avatar, author and body.",
+  "properties": {
+    "className": {
+      "default": "",
+      "description": "Classes to be applied on the component.",
+      "type": "string",
+      "x-cms-widget": "className"
+    },
+    "handle": {
+      "default": "visormatt",
+      "description": "The user who tweeted",
+      "type": "string"
+    },
+    "image": {
+      "default": "https://picsum.photos/40/40",
+      "description": "The users profile photo on \"X\"",
+      "type": "string"
+    },
+    "tweet": {
+      "default": "The tweet goes <b>here</b>",
+      "description": "The tweet \"content\" to be displayed. Rendered as HTML with no client-side sanitization: it must be pre-sanitized by the server that supplies it. Never pass user-typed input here directly.",
+      "type": "string"
+    },
+    "username": {
+      "default": "Matthew Scholta",
+      "description": "The username to be displayed",
+      "type": "string"
+    }
+  },
+  "required": ["handle", "image", "tweet", "username"],
+  "title": "Tweet",
+  "type": "object"
+}

@@ -3,19 +3,21 @@ import type { JSONSchema7, JSONSchema7TypeName } from 'json-schema';
 import type { CmsSchema } from './cms-records';
 
 /**
- * @description JSON Schema `type` values plus the CMS's own field types. Upstream listed both
- * `classname` and `className`; only `className` is kept.
+ * @description The CMS's own field widgets. A generated block schema carries one in the custom
+ * `x-cms-widget` keyword next to a standard `type` (`scripts/generate-cms-schemas.ts`, from a
+ * prop's `@cmsWidget` tag), so the schema stays valid JSON Schema.
  * @public
  */
-export type CmsSchemaInstanceType =
-  | 'children'
-  | 'className'
-  | 'color'
-  | 'image'
-  | 'json'
-  | 'link'
-  | 'wysiwyg'
-  | JSONSchema7TypeName;
+export type CmsSchemaWidget =
+  'children' | 'className' | 'color' | 'image' | 'json' | 'link' | 'wysiwyg';
+
+/**
+ * @description JSON Schema `type` values plus the CMS's widgets. A widget in `type` is the legacy
+ * RocketCMS shape — not valid JSON Schema — still mapped so old stored rows render; new schemas put
+ * it in `x-cms-widget`. Upstream listed both `classname` and `className`; only `className` is kept.
+ * @public
+ */
+export type CmsSchemaInstanceType = CmsSchemaWidget | JSONSchema7TypeName;
 
 /**
  * @description JSON Schema draft 7 widened to accept {@link CmsSchemaInstanceType}. Its members stay
@@ -28,7 +30,12 @@ export interface CmsJsonSchema<TType = CmsSchemaInstanceType> extends Omit<
 > {
   readonly definitions?: Readonly<Record<string, CmsJsonSchema>>;
   readonly properties?: Readonly<Record<string, CmsJsonSchema>>;
+  /**
+   * @description A widget name here is the legacy RocketCMS shape, kept readable for old rows; new
+   * schemas use a standard type plus `x-cms-widget`.
+   */
   readonly type?: TType;
+  readonly 'x-cms-widget'?: CmsSchemaWidget;
 }
 
 /**

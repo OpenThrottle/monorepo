@@ -309,7 +309,7 @@ behind `./unstable/*`).
 | typescript-eslint (`lint`)                                         | 6.0.3                | `import ts from 'typescript'` |
 | Vite / Vitest (`test`)                                             | 6.0.3                | same                          |
 | ts-morph (`packages/openthrottle-ide`)                             | 6.0.3                | same                          |
-| typescript-json-schema                                             | 6.0.3                | same                          |
+| `scripts/generate-cms-schemas.ts`                                  | 6.0.3                | same                          |
 | `@nx/js/typescript` config analysis + project graph                | 6.0.3                | same                          |
 | `react-router typegen`                                             | 6.0.3                | same                          |
 | knip                                                               | 6.0.3                | same                          |

@@ -1,0 +1,22 @@
+{
+  "$comment": "GENERATED — DO NOT EDIT. Regenerate with `pnpm nx run <project>:cms-schemas:write` (scripts/generate-cms-schemas.ts).",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "description": "Hooks into the available cookies so a layout can make decisions based on them. Upstream never got past rendering its children, which is all this does too.",
+  "properties": {
+    "children": {
+      "description": "The child components to be rendered via this Logic component.",
+      "type": "array",
+      "x-cms-widget": "children"
+    },
+    "cookies": {
+      "additionalProperties": { "type": "string" },
+      "default": {},
+      "description": "The cookies to match against, by name.",
+      "type": "object"
+    }
+  },
+  "required": ["cookies"],
+  "title": "LogicCookies",
+  "type": "object"
+}

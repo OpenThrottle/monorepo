@@ -1,0 +1,32 @@
+{
+  "$comment": "GENERATED — DO NOT EDIT. Regenerate with `pnpm nx run <project>:cms-schemas:write` (scripts/generate-cms-schemas.ts).",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "description": "The \"Hero\" component is a large headline with a smaller subheading.",
+  "properties": {
+    "className": {
+      "default": "my-20",
+      "description": "Classes to be applied on the component.",
+      "type": "string",
+      "x-cms-widget": "className"
+    },
+    "heading": {
+      "default": "A custom CMS",
+      "description": "First part of the heading (non gradient)",
+      "type": "string"
+    },
+    "highlight": {
+      "default": "using your code",
+      "description": "Highlighted part of the heading (gradient)",
+      "type": "string"
+    },
+    "subheading": {
+      "default": "Build, ship, and Iterate on your content with ease. ",
+      "description": "Smaller but longer copy...",
+      "type": "string"
+    }
+  },
+  "required": ["heading", "highlight", "subheading"],
+  "title": "Hero",
+  "type": "object"
+}

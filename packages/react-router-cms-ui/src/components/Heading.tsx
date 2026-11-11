@@ -13,7 +13,7 @@ export interface HeadingProps {
   /**
    * @default "text-3xl text-highlight"
    * @description Classes to be applied on the component.
-   * @TJS-type className
+   * @cmsWidget className
    */
   readonly className?: string;
 

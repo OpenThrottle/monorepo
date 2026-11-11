@@ -42,6 +42,15 @@ one-way: cms-ui must never import cms-core.
   row (drop target + preview) and `handleRef` on the handle.
 - `CmsFragment.children` is always an array (upstream allowed one-or-many). Normalise at the data
   boundary, not in consumers.
+- **`LayoutColumn`, `LayoutGrid`, `LogicCookies` and `LogicParams` are content blocks too**: their
+  props follow the cms-ui tag contract ([../react-router-cms-ui/AGENTS.md](../react-router-cms-ui/AGENTS.md))
+  and their generated schemas live in [schemas/](schemas/) — regenerate with
+  `pnpm nx run @openthrottle/react-router-cms-core:cms-schemas:write`.
+  [tests/block-schemas.test.ts](tests/block-schemas.test.ts) checks both packages' schemas
+  (coverage, strict Ajv, defaults) and needs `// @vitest-environment node` to read them.
+- **Widgets live in `x-cms-widget`, not `type`.** `getFormFieldKind` reads the keyword before
+  `enum`/`anyOf`/`type`. A widget name in `type` (the RocketCMS shape) still maps, only so old
+  stored rows render; never emit it.
 - **Registered components narrow their own props.** A registry entry receives
   `{ properties, children }` — the stored, untrusted JSON — and `registerComponent(Block, toProps)`
   turns that into typed props with fallbacks. Adding a block means adding a `to*Props` adapter in
@@ -71,8 +80,11 @@ one-way: cms-ui must never import cms-core.
   `utils/forms.ts` (dead formik WIP); `components/library.ts` and the `LayoutComponents` path
   tuples (a Vite transpile shim); `SurveyRenderer`; TinyMCE in `FormWysiwyg`, which shipped an API
   key in source. `FormWysiwyg` edits HTML source in a `TextArea` until an editor is chosen.
-- The react `component` generator's stub fails `no-empty-pattern` as generated; give the props a
-  `className` before linting.
+- The react `util` generator uses `name` for both the identifier and the filename: pass camelCase
+  and keep the file it writes (`getFormFieldKind.ts`) — a single-export file is named after its
+  export ([code-style.md § Naming](../../docs/monorepo/code-style.md#naming-conventions)). This
+  package's older utils are still kebab-case until the rename plan lands. Its `component` stub fails `no-empty-pattern` as
+  generated; give the props a `className` before linting.
 
 ## Pointers
 

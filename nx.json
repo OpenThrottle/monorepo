@@ -287,6 +287,7 @@
         "{workspaceRoot}/.cursor/hooks/*.cjs",
         "{workspaceRoot}/.gitattributes",
         "{workspaceRoot}/applications/*/schema.gql",
+        "{workspaceRoot}/packages/*/schemas/*.json",
         "{workspaceRoot}/plugins/*/**",
         "{workspaceRoot}/scripts/check-generated-attributes.ts"
       ]
@@ -415,6 +416,25 @@
       },
       "options": {
         "command": "tsx ./scripts/check-side-effects.ts --strict",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "cms-schemas": {
+      "cache": false,
+      "configurations": {
+        "check": {
+          "command": "tsx ./scripts/generate-cms-schemas.ts --package={projectRoot} --check"
+        },
+        "write": {
+          "command": "tsx ./scripts/generate-cms-schemas.ts --package={projectRoot} --write"
+        }
+      },
+      "defaultConfiguration": "check",
+      "executor": "nx:run-commands",
+      "metadata": {
+        "description": "Emit or verify a CMS block package's committed {projectRoot}/schemas/ (configurations: check, write; default check) via scripts/generate-cms-schemas.ts: one JSON Schema (draft 7) per content block (an export of src/index.ts carrying a `debug` static, paired with its `<Name>Props` interface) plus manifest.json with each block's content-hash version. A package opts in by declaring an empty `cms-schemas` target, like `graphql-schema`. Static: reads the package with the TypeScript compiler API, so no Postgres, Redis or running server. `check` fails on drift; `write` regenerates in place. Not cached: a block's schema depends on types from its dependencies, which project inputs do not capture."
+      },
+      "options": {
         "cwd": "{workspaceRoot}"
       }
     },

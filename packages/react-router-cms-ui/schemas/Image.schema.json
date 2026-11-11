@@ -1,0 +1,32 @@
+{
+  "$comment": "GENERATED — DO NOT EDIT. Regenerate with `pnpm nx run <project>:cms-schemas:write` (scripts/generate-cms-schemas.ts).",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "description": "A responsive image block with a configurable aspect ratio.",
+  "properties": {
+    "alt": {
+      "default": "",
+      "description": "Alt text should describe the imaage, or can be left blank if the image is purely decorative.",
+      "type": "string"
+    },
+    "aspectRatio": {
+      "default": "auto",
+      "description": "The aspect-ratio CSS property allows you to define the desired width-to-height ratio of an element's box.",
+      "type": "string"
+    },
+    "className": {
+      "default": "ui-border border indent-4",
+      "description": "Classes to be applied onto the wrapping div of the image",
+      "type": "string",
+      "x-cms-widget": "className"
+    },
+    "src": {
+      "default": "https://picsum.photos/id/503/2500/800",
+      "description": "The image to be displayed",
+      "type": "string"
+    }
+  },
+  "required": ["alt", "aspectRatio", "src"],
+  "title": "Image",
+  "type": "object"
+}

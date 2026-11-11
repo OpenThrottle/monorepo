@@ -1,4 +1,4 @@
-import type { CmsJsonSchema } from '../types/cms-json-schema';
+import type { CmsJsonSchema, CmsSchemaWidget } from '../types/cms-json-schema';
 import { getSchemaRef } from './schema-property';
 
 /**
@@ -36,10 +36,21 @@ const KIND_BY_TYPE: Readonly<Record<string, CmsFormFieldKind>> = {
   wysiwyg: 'wysiwyg',
 };
 
+const KIND_BY_WIDGET: Readonly<Record<CmsSchemaWidget, CmsFormFieldKind>> = {
+  children: 'children',
+  className: 'className',
+  color: 'string',
+  image: 'string',
+  json: 'wysiwyg',
+  link: 'link',
+  wysiwyg: 'wysiwyg',
+};
+
 /**
- * @description The field kind for one property of an object schema: `select` when it lists an
- * `enum`, `anyOf` when it has branches, otherwise by its `type` (following a local `$ref`).
- * `none` for a missing property or a type no field edits.
+ * @description The field kind for one property of an object schema: by its `x-cms-widget` when it
+ * has one, else `select` when it lists an `enum`, `anyOf` when it has branches, otherwise by its
+ * `type` (following a local `$ref`; a legacy widget name in `type` still maps). `none` for a
+ * missing property or a type no field edits.
  * @public
  */
 export const getFormFieldKind = (
@@ -49,6 +60,8 @@ export const getFormFieldKind = (
   const property = schema.properties?.[key];
 
   if (property === undefined) return 'none';
+  const widget = property['x-cms-widget'];
+  if (widget !== undefined) return KIND_BY_WIDGET[widget];
   if (property.enum !== undefined) return 'select';
   if (property.anyOf !== undefined) return 'anyOf';
 

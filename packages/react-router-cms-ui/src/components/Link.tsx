@@ -14,7 +14,7 @@ export interface LinkProps {
   /**
    * @default "uppercase"
    * @description Classes to be applied on the component.
-   * @TJS-type className
+   * @cmsWidget className
    */
   readonly className?: string;
 
