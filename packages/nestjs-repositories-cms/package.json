@@ -1,0 +1,77 @@
+{
+  "author": {
+    "email": "matthew.scholta@gmail.com",
+    "name": "Matthew Scholta",
+    "url": "https://mattscholta.com"
+  },
+  "dependencies": {
+    "@nestjs/common": "catalog:",
+    "@nestjs/typeorm": "catalog:",
+    "@openthrottle/openthrottle-agentic-utils": "workspace:^",
+    "fishery": "catalog:",
+    "pg": "catalog:",
+    "typeorm": "catalog:"
+  },
+  "description": "NestJS TypeORM data access for the OpenThrottle cms database: schemas, fragments, layouts, component libraries and related entities.",
+  "devDependencies": {
+    "@faker-js/faker": "catalog:",
+    "@golevelup/ts-vitest": "catalog:",
+    "@nestjs/testing": "catalog:",
+    "vitest": "catalog:"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js",
+      "require": "./dist/src/index.js"
+    },
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "import": "./dist/*.js",
+      "require": "./dist/*.js"
+    }
+  },
+  "main": "./dist/src/index.js",
+  "module": "./dist/src/index.js",
+  "name": "@openthrottle/nestjs-repositories-cms",
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "projectType": "library",
+    "sourceRoot": "./",
+    "tags": [
+      "name:@openthrottle/nestjs-repositories-cms",
+      "production:true",
+      "publish:false",
+      "technology:nestjs",
+      "type:package"
+    ],
+    "targets": {
+      "build": {
+        "executor": "@nx/js:tsc"
+      },
+      "dev": {
+        "cache": false,
+        "continuous": true,
+        "executor": "@nx/js:tsc",
+        "options": {
+          "clean": false,
+          "watch": true
+        }
+      },
+      "lint": {},
+      "test": {},
+      "typecheck": {}
+    }
+  },
+  "private": true,
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "repository": "git://github.com/OpenThrottle/monorepo.git",
+  "scripts": {},
+  "sideEffects": false,
+  "type": "module",
+  "types": "./dist/src/index.d.ts",
+  "version": "1.0.0",
+  "license": "Apache-2.0"
+}

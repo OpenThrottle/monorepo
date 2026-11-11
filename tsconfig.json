@@ -246,6 +246,9 @@
     },
     {
       "path": "./packages/react-router-cms-ui"
+    },
+    {
+      "path": "./packages/nestjs-repositories-cms"
     }
   ]
 }
