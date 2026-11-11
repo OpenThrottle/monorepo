@@ -1,9 +1,14 @@
-import * as React from 'react';
+import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalErrorBoundary,
+  GlobalHeading,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import { BookOpenIcon } from 'lucide-react';
-import { GlobalHeading, GlobalLayoutBreadcrumbsHandle, GlobalScreen } from '@openthrottle/react-router-ui-global';
-import { SITE_TITLE } from '~/global/config/settings';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import * as React from 'react';
+
 import type { Route } from '@/app/routes/+types/<%= name %>';
+import { SITE_TITLE } from '~/global/config/settings';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -12,7 +17,9 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
   links: (_match) => [],
 };
 
-export const loader = async (_args: Route.LoaderArgs) => {
+export const loader = async (
+  _args: Route.LoaderArgs,
+): Promise<Record<string, never>> => {
   return {};
 };
 
@@ -20,7 +27,7 @@ export const links: Route.LinksFunction = () => {
   return [];
 };
 
-export const meta = (_args: Route.MetaArgs) => {
+export const meta: Route.MetaFunction = (_args) => {
   return [{ title: `<%= nameTitle %> | ${SITE_TITLE}` }];
 };
 
@@ -59,7 +66,9 @@ export default function Component(
   );
 }
 
-export const action = async (_args: Route.ActionArgs) => {
+export const action = async (
+  _args: Route.ActionArgs,
+): Promise<Record<string, never>> => {
   return {};
 };
 

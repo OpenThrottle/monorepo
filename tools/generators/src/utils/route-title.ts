@@ -46,6 +46,17 @@ const humanizeParamSegment = (segment: string): string => {
   return humanizeSegment(withoutId === '' ? withoutParam : withoutId);
 };
 
+/**
+ * Param names that say nothing about the entity they identify; a route keyed
+ * on one is titled after its parent section instead (`components.$uuid` ->
+ * `Component`, not `Uuid`).
+ */
+const GENERIC_PARAM_NAMES: readonly string[] = ['id', 'key', 'slug', 'uuid'];
+
+const isGenericParamSegment = (segment: string): boolean => {
+  return GENERIC_PARAM_NAMES.includes(segment.replace(/^\$/, '').toLowerCase());
+};
+
 const isParamSegment = (segment: string) => {
   return segment.startsWith('$');
 };
@@ -59,6 +70,7 @@ const isParamSegment = (segment: string) => {
  * `notifications._index`     -> `Notifications`
  * `personas.create`          -> `Create persona | Personas`
  * `plans.$planId._index`     -> `Plan | Plans`
+ * `components.$uuid`         -> `Component | Components`
  *
  * @public
  */
@@ -93,6 +105,10 @@ export const getRouteTitleVariables = (name: string) => {
       const entity = pluralize.singular(section).toLowerCase();
 
       return `${humanizeSegment(leafSegment)} ${entity}`;
+    }
+
+    if (isGenericParamSegment(leafSegment) && section !== undefined) {
+      return pluralize.singular(section);
     }
 
     if (isParamSegment(leafSegment)) return humanizeParamSegment(leafSegment);
